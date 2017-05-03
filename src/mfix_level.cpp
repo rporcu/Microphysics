@@ -599,12 +599,9 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
     }
 
-    // Calculate volume fraction, ep_g.
-    if (solve_dem)
-	mfix_comp_mean_fields(lev);	//
-
     // Initial fluid arrays: pressure, velocity, density, viscosity
     mfix_init_fluid(lev);
+
 
     // Call user-defined subroutine to set constants, check data, etc.
     if (call_udf)
@@ -669,67 +666,47 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
 void
 mfix_level::mfix_init_fluid(int lev)
 {
-    Box domain(geom[lev].Domain());
+  Box domain(geom[lev].Domain());
 
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
 
-    Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
-    Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-    Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+  Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+  Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+  Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
 
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-    {
-	const Box& bx = mfi.validbox();
-	const Box& sbx = (*ep_g[lev])[mfi].box();
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+  {
+     const Box& bx = mfi.validbox();
+     const Box& sbx = (*ep_g[lev])[mfi].box();
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+     Box ubx((*u_g[lev])[mfi].box());
+     Box vbx((*v_g[lev])[mfi].box());
+     Box wbx((*w_g[lev])[mfi].box());
 
-	init_fluid(sbx.loVect(), sbx.hiVect(),
-		   ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-		   bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(),
-		   (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
-		   (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
-		   (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-		   (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
-		   &dx, &dy, &dz, &xlen, &ylen, &zlen );
-    }
+     init_fluid(sbx.loVect(), sbx.hiVect(),
+       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+        bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(),
+       (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
+       (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
+       (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+       (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
+       &dx, &dy, &dz, &xlen, &ylen, &zlen );
+  }
 
-    fill_mf_bc(lev,*p_g[lev]);
-    fill_mf_bc(lev,*ep_g[lev]);
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
+  fill_mf_bc(lev,*p_g[lev]);
+  fill_mf_bc(lev,*ep_g[lev]);
+  fill_mf_bc(lev,*ro_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
 
-    u_g[lev]->FillBoundary(geom[lev].periodicity());
-    v_g[lev]->FillBoundary(geom[lev].periodicity());
-    w_g[lev]->FillBoundary(geom[lev].periodicity());
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
 
-    fill_mf_bc(lev,*mu_g[lev]);
-    fill_mf_bc(lev,*lambda_g[lev]);
-}
+  fill_mf_bc(lev,*mu_g[lev]);
+  fill_mf_bc(lev,*lambda_g[lev]);
 
-
-
-void mfix_level::mfix_comp_mean_fields(int lev)
-{
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-    {
-	const Box& sbx   = (*ep_g[lev])[mfi].box();
-	const int np     = pc -> NumberOfParticles(lev, mfi);
-	void*  particles = pc -> GetParticlesData( lev, mfi );
-
-	comp_mean_fields_aos(sbx.loVect(), sbx.hiVect(), &np,  particles,
-			     &dx, &dy, &dz, (*ep_g[lev])[mfi].dataPtr() );
-
-    }
-    fill_mf_bc(lev,*ep_g[lev]);
 }
 
 void
