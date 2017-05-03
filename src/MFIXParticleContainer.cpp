@@ -33,6 +33,17 @@ void MFIXParticleContainer::AllocData ()
 
 
 
+void* MFIXParticleContainer::GetParticlesData( const int& lev, const MFIter& mfi )
+{ 
+
+    const int gridIndex = mfi.index();
+    const int tileIndex = mfi.LocalTileIndex();
+    auto&     particles = GetParticles(lev)[std::make_pair(gridIndex,tileIndex)];
+    return  particles.GetArrayOfStructs().data(); 
+}
+
+
+
 void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
     // only read the file on the IO proc
