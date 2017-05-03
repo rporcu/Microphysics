@@ -25,7 +25,7 @@ contains
    subroutine calc_force_dem( particles, fc, tow )
 
       use particle_mod,   only: particle_t  
-      use cfrelvel_module, only: cfrelvel_aos
+      use cfrelvel_module, only: cfrelvel
       use discretelement, only: des_coll_model_enum, dtsolid, NONEXISTENT
       use discretelement, only: des_etan, des_etat, hert_kt, hert_kn
       use discretelement, only: s_time, des_crossprdct
@@ -111,7 +111,7 @@ contains
 
             ! calculate the components of translational relative velocity for a
             ! contacting particle pair and the tangent to the plane of contact
-            call cfrelvel_aos(ll, ii, v_rel_trans_norm, vrel_t, normal(:), dist_mag, particles )
+            call cfrelvel(ll, ii, v_rel_trans_norm, vrel_t, normal(:), dist_mag, particles )
 
             radiusll = particles(ll) % radius
             phasell  = particles(ll) % phase
