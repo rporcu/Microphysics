@@ -56,13 +56,9 @@ public:
    using amrex::ParIter<0,0,realData::count,intData::count>::ParIter;
 };
 
-
-
-
 class MFIXParticleContainer
    : public amrex::ParticleContainer<0,0,realData::count,intData::count>
 {
-
 public:
 
    // Get number of particles
@@ -131,6 +127,10 @@ public:
 
    void output(int lev, int estatus, int finish, int nstep, Real dt, Real time);
 
+    ///
+    /// Write out all particles at a level
+    ///
+    void writeAllAtLevel(int lev = 0);
 
 private:
 

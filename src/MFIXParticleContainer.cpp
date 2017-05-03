@@ -1,5 +1,6 @@
 #include <AMReX.H>
 #include "AMReX_Particles.H"
+#include "AMReX_RealVect.H"
 #include <iostream>
 #include <MFIXParticleContainer.H>
 
@@ -154,101 +155,6 @@ void
 MFIXParticleContainer::InitData()
 {
 }
-
-
-
-// void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
-// 					    const Array< unique_ptr<MultiFab> >& u_g,
-// 					    const Array< unique_ptr<MultiFab> >& v_g,
-// 					    const Array< unique_ptr<MultiFab> >& w_g,
-// 					    const Array< unique_ptr<MultiFab> >& p_g,
-// 					    const Array< unique_ptr<MultiFab> >& ro_g,
-// 					    const Array< unique_ptr<MultiFab> >& mu_g,
-// 					    int lev, int nstep, Real dt, Real time )
-// {
-
-//     Box domain(Geom(lev).Domain());
-
-//     Real dx = Geom(lev).CellSize(0);
-//     Real dy = Geom(lev).CellSize(1);
-//     Real dz = Geom(lev).CellSize(2);
-
-//     Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
-//     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
-//     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
-
-
-//     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-//     {
-
-// 	//number of particles
-// 	const int np =  NumberOfParticles(pti);
-
-// 	// Temporary arrays
-// 	Real         *pradius, *pdensity, *pvol, *pmass, *pomoi;
-// 	Real         *ppos, *pvel, *pomega, *pacc, *palpha, *pdrag;
-// 	int          *pstate, *pphase;
-// 	int          nsubsteps;
-
-
-// 	GetIntData( pti, intData::state, &pstate );
-// 	GetIntData( pti, intData::phase, &pphase );
-
-// 	GetRealData( pti, realData::radius, &pradius );
-// 	GetRealData( pti, realData::volume, &pvol );
-// 	GetRealData( pti, realData::mass, &pmass );
-// 	GetRealData( pti, realData::oneOverI, &pomoi );
-
-// 	GetPosition( pti, &ppos );
-
-// 	GetVectorData( pti, realData::velx, &pvel );
-// 	GetVectorData( pti, realData::omegax, &pomega );
-// 	GetVectorData( pti, realData::accx, &pacc );
-// 	GetVectorData( pti, realData::alphax, &palpha );
-// 	GetVectorData( pti, realData::dragx, &pdrag );
-
-
-// 	mfix_des_init_time_loop( &np,
-// 				 pstate, pphase, pradius, pvol, ppos,  pvel, pomega,
-// 				 pdrag, &time, &dt, &dx, &dy, &dz,
-// 				 &xlen, &ylen, &zlen, &nstep, &nsubsteps);
-
-// 	int quit;
-
-// 	for ( int n = 0; n < nsubsteps; ++n ) {
-// 	    mfix_des_time_loop_ops( &np,
-// 				    pstate, pphase, pradius, pvol, pmass, pomoi, ppos,  pvel, pomega,
-// 				    pacc,  palpha, pdrag, &time, &dt, &dx, &dy, &dz,
-// 				    &xlen, &ylen, &zlen, &nstep, &quit);
-
-// 	    if ( quit ) break;
-// 	}
-
-
-// 	mfix_des_finalize_time_loop( &np, &dt, ppos, pvel, pomega );
-
-
-// 	RestoreIntData( &pstate );
-// 	RestoreIntData( &pphase );
-
-// 	RestoreRealData( &pradius );
-// 	RestoreRealData( &pvol );
-// 	RestoreRealData( &pmass );
-// 	RestoreRealData( &pomoi );
-
-// 	RestorePosition( pti, &ppos );
-
-// 	RestoreVectorData( pti, realData::velx, &pvel );
-// 	RestoreVectorData( pti, realData::omegax, &pomega );
-// 	RestoreVectorData( pti, realData::accx, &pacc );
-// 	RestoreVectorData( pti, realData::alphax, &palpha );
-// 	RestoreVectorData( pti, realData::dragx, &pdrag );
-//     }
-
-//     Redistribute();
-
-// }
-
 
 
 void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
@@ -414,4 +320,26 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
 
     }
 
+}
+
+void MFIXParticleContainer::writeAllAtLevel(int lev)
+{
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
+      auto& particles = pti.GetArrayOfStructs();
+      size_t Np = pti.numParticles();
+      cout << "Particles: " << Np << " << at level " << lev << endl;
+      for (unsigned i = 0; i < Np; ++i)
+        {
+          const ParticleType& p = particles[i];
+          const IntVect& iv = Index(p, lev);
+
+          RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
+
+          cout << "[" << i << "]: id " << p.id()
+               << " mass " << p.rdata(0)
+               << " index " << iv
+               << " position " << xyz << endl;
+        }
+    }
 }
