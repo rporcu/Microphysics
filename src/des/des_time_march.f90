@@ -40,11 +40,11 @@ module des_time_march_module
       !    real(c_real), intent(inout) :: omega(np,3)
       ! end subroutine usr2_des
 
-      subroutine usr3_des(np, pos, vel, omega)
-         import  c_real
-         integer     , intent(in)    :: np
-         real(c_real), intent(in)    :: pos(np,3), vel(np,3), omega(np,3)
-      end subroutine usr3_des
+      ! subroutine usr3_des(np, pos, vel, omega)
+      !    import  c_real
+      !    integer     , intent(in)    :: np
+      !    real(c_real), intent(in)    :: pos(np,3), vel(np,3), omega(np,3)
+      ! end subroutine usr3_des
 
    end interface
 
@@ -131,7 +131,7 @@ contains
       real(c_real),     intent(inout) :: dt
       type(particle_t), intent(inout) :: particles(np)
       
-      !if ( call_usr ) call usr3_des(np, pos, vel, omega)
+      if ( call_usr ) call usr3_des(np, particles)
 
       ! When coupled, and if needed, reset the discrete time step accordingly
       if ( DT < DTSOLID_TMP ) then
