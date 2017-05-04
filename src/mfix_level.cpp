@@ -133,9 +133,6 @@ void mfix_level::Init(int lev, Real dt, Real time)
 	DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
 	MakeNewLevelFromScratch(0, time, ba, dm);
-
-	// Create mask for particle ghost cells
-	pc -> InitLevelMask( lev, geom[lev], dm, ba );
 	
 	Real dx = geom[lev].CellSize(0);
 	Real dy = geom[lev].CellSize(1);
@@ -175,8 +172,10 @@ void mfix_level::Init(int lev, Real dt, Real time)
 
 	// Always allocate data for pc
 	pc -> AllocData();
-
 	InitLevelData(lev,dt,time);
+
+	//  Create mask for particle ghost cells
+	pc -> InitLevelMask( lev, geom[lev], dm, ba );
 
 	InitIOData ();
     }
