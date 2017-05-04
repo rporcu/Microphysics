@@ -283,7 +283,7 @@ void MFIXParticleContainer::fillGhosts( int lev ) {
         const IntVect& hi = tile_box.bigEnd();
         
         Box shrink_box = pti.tilebox();
-        shrink_box.grow(-1);
+        shrink_box.grow(-ng);
         
         auto& particles = pti.GetArrayOfStructs();
         for (unsigned i = 0; i < pti.numParticles(); ++i) {
@@ -295,13 +295,13 @@ void MFIXParticleContainer::fillGhosts( int lev ) {
             if (shrink_box.contains(iv)) continue;
             
             // shift stores whether we are near the tile boundary in each direction.
-            // -1 means lo, 1 means hi, 0 means not near the boundary
+            // -ng means lo, ng means hi, 0 means not near the boundary
             IntVect shift = IntVect::TheZeroVector();
             for (int idim = 0; idim < BL_SPACEDIM; ++idim) {
                 if (iv[idim] == lo[idim])
-                    shift[idim] = -1;
+                    shift[idim] = -ng;
                 else if (iv[idim] == hi[idim])
-                    shift[idim] = 1;
+                    shift[idim] = ng;
             }
             
             // Based on the value of shift, we add the particle to a map to be sent

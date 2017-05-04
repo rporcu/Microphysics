@@ -148,8 +148,6 @@ private:
     ///
     void fillGhostsMPI(GhostCommMap& ghosts_to_comm);
 
-
-
     
     // runtime parameters
     static int do_tiling;
@@ -158,8 +156,10 @@ private:
     //
     // This members are for the handling of ghost particles
     // 
-    const size_t pdata_size = (BL_SPACEDIM + realData::count)*sizeof(RealType) +
-	(2+intData::count)*sizeof(int);
+    const int ng = 2;  // number of ghost layers
+    const size_t pdata_size = sizeof( ParticleType );
+    // const size_t pdata_size = (BL_SPACEDIM + realData::count)*sizeof(RealType) +
+    // 	(2+intData::count)*sizeof(int);
     FabArray< BaseFab<int> > mask;
     std::map<PairIndex, Array<char> > ghosts; 
 
