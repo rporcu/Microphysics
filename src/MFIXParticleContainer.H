@@ -132,10 +132,34 @@ private:
 
     static void ReadStaticParameters ();
 
+    void fillGhosts( int lev );
+
+    ///
+    /// Pack a particle's data into the proper neighbor buffer, or put it into
+    /// the structure to be sent to the other processes
+    ///
+    void packGhostParticle( int lev, 
+			    const IntVect& neighbor_cell,
+			    const BaseFab<int>& mask,
+			    const ParticleType& p,
+			    GhostCommMap& ghosts_to_comm);
+    ///
+    /// Perform the MPI communication neccesary to fill ghost buffers
+    ///
+    void fillGhostsMPI(GhostCommMap& ghosts_to_comm);
+
+
+
+    
     // runtime parameters
     static int do_tiling;
     static IntVect tile_size;
-    
+
+    //
+    // This members are for the handling of ghost particles
+    // 
+    const size_t pdata_size = (BL_SPACEDIM + realData::count)*sizeof(RealType) +
+	(2+intData::count)*sizeof(int);
     FabArray< BaseFab<int> > mask;
     std::map<PairIndex, Array<char> > ghosts; 
 
