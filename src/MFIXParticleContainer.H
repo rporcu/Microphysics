@@ -10,6 +10,29 @@
 using namespace amrex;
 using namespace std;
 
+
+namespace {
+
+struct GhostCommTag {
+
+    GhostCommTag(int pid, int gid, int tid)
+        : proc_id(pid), grid_id(gid), tile_id(tid)
+    {}
+
+    int proc_id;
+    int grid_id;
+    int tile_id;
+};
+
+bool operator<(const GhostCommTag& l, const GhostCommTag& r) {
+    return (l.proc_id < r.proc_id || 
+           (l.proc_id == r.proc_id && l.grid_id < r.grid_id) ||
+           (l.proc_id == r.proc_id && l.grid_id == r.grid_id && l.tile_id < r.tile_id ));
+}
+
+}
+
+
 struct realData
 {
     enum { // Particle data stored in p.m_data
@@ -61,8 +84,10 @@ class MFIXParticleContainer
 {
 public:
 
+    using PairIndex = std::pair<int, int>;
+    using GhostCommMap = std::map<GhostCommTag, Array<char> >;
+    
     // Get number of particles
-
     const int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
 
     const int NumberOfParticles(int& lev, MFIter& mfi)
@@ -80,6 +105,8 @@ public:
 
     virtual ~MFIXParticleContainer() {};
 
+    void InitLevelMask ( int lev, const Geometry &geom, const DistributionMapping &dmap, const BoxArray &ba );
+    
     void InitData ();
 
     void InitParticlesAscii (const std::string& file);
@@ -92,34 +119,6 @@ public:
 
     void* GetParticlesData( MFIXParIter& pti) {return pti.GetArrayOfStructs().data();};    
 
-//    void GetIntData ( MFIXParIter& pti, int dataIdx, int** dataPtr );
-
-    // void GetIntData ( const int& lev, const MFIter& mfi, int dataIdx, int** dataPtr );
-
-    // void RestoreIntData ( int** dataPtr ) { *dataPtr = NULL;};
-
-    // void GetRealData ( MFIXParIter& pti, int dataIdx, Real** dataPtr );
-
-    // void GetRealData ( const int& lev, const MFIter& mfi, int dataIdx, Real** dataPtr );
-
-    // void RestoreRealData ( Real** dataPtr ) { *dataPtr = NULL;};
-
-    // void GetPosition ( MFIXParIter& pti, Real** dataPtr );
-
-    // void GetPosition ( const int& lev, const MFIter& mfi, Real** dataPtr );
-
-    // void RestorePosition ( MFIXParIter& pti, Real** dataPtr );
-
-    // void RestorePosition ( const int& lev, const MFIter& mfi, Real** dataPtr );
-
-    // void GetVectorData ( MFIXParIter& pti, int firstCompIdx, Real** dataPtr );
-
-    // void GetVectorData ( const int& lev, const MFIter& mfi, int firstCompIdx, Real** dataPtr );
-
-    // void RestoreVectorData ( MFIXParIter& pti, int firstCompIdx, Real** dataPtr);
-
-    // void RestoreVectorData ( const int& lev, const MFIter& mfi, int firstCompIdx, Real** dataPtr );
-
     void EvolveParticles ( int lev, int nstep, Real dt, Real time );
     
     void output ( int lev, int estatus, int finish, int nstep, Real dt, Real time );
@@ -131,28 +130,14 @@ public:
 
 private:
 
-    // void Pack3DArrays( Array<Real>& vec, const Array<Real>& comp1,
-    // 		       const Array<Real>& comp2, const Array<Real>& comp3 );
-
-    // void Unpack3DArrays( Array<Real>& comp1,  Array<Real>& comp2, Array<Real>& comp3,
-    // 			 const Array<Real>& vec );
-
     static void ReadStaticParameters ();
-
-
 
     // runtime parameters
     static int do_tiling;
     static IntVect tile_size;
-
-    // These are working arrays used to pack 3D components into a 3D vector
-    // Array<Real>      pos;
-    // Array<Real>      vel;
-    // Array<Real>      acc;
-    // Array<Real>    omega;
-    // Array<Real>    alpha;
-    // Array<Real>     drag;
-
+    
+    FabArray< BaseFab<int> > mask;
+    std::map<PairIndex, Array<char> > ghosts; 
 
 };
 #endif

@@ -134,6 +134,9 @@ void mfix_level::Init(int lev, Real dt, Real time)
 
 	MakeNewLevelFromScratch(0, time, ba, dm);
 
+	// Create mask for particle ghost cells
+	pc -> InitLevelMask( lev, geom[lev], dm, ba );
+	
 	Real dx = geom[lev].CellSize(0);
 	Real dy = geom[lev].CellSize(1);
 	Real dz = geom[lev].CellSize(2);

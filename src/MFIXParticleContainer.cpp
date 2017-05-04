@@ -31,6 +31,26 @@ void MFIXParticleContainer::AllocData ()
     resizeData();
 }
 
+void MFIXParticleContainer::InitLevelMask ( int lev,
+					    const Geometry &geom,
+					    const DistributionMapping &dmap,
+					    const BoxArray &ba )
+{
+    BL_ASSERT( lev == 0 );
+	
+    mask.define(ba, dmap, 2, 1);
+    mask.setVal(-1, 1);
+    for (MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+        const Box& box = mfi.tilebox();
+        const int grid_id = mfi.index();
+        const int tile_id = mfi.LocalTileIndex();
+        mask.setVal(grid_id, box, 0, 1);
+        mask.setVal(tile_id, box, 1, 1);
+    }
+    mask.FillBoundary();
+}
+
+
 
 
 void* MFIXParticleContainer::GetParticlesData( const int& lev, const MFIter& mfi )
