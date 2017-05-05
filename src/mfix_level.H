@@ -39,6 +39,8 @@ public:
 
     void InitFromCheckpoint (int *nstep, Real *dt, Real *time) const;
 
+    void WriteParticleAscii () { if (write_particle_ascii) pc -> WriteAsciiFile("particles.txt");};
+    
     void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
 
@@ -236,7 +238,7 @@ private:
     std::string plot_file {"plt"};
     int check_int = -1;
     int plot_int = -1;
-
+    int write_particle_ascii = -1;
 
     // Variables to simplify IO
     Array< const Array< std::unique_ptr<MultiFab> >* > vectorVars;

@@ -129,6 +129,8 @@ int main (int argc, char* argv[])
 
   my_mfix.usr3(0);
 
+  my_mfix.WriteParticleAscii();
+  
   Real end_time = ParallelDescriptor::second() - strt_time;
 
   if (ParallelDescriptor::IOProcessor())
