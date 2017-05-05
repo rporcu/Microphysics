@@ -24,14 +24,13 @@ contains
    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine calc_force_dem( particles, fc, tow )
 
-      use particle_mod,   only: particle_t  
+      use particle_mod,   only: particle_t
       use cfrelvel_module, only: cfrelvel
       use discretelement, only: des_coll_model_enum, dtsolid, NONEXISTENT
       use discretelement, only: des_etan, des_etat, hert_kt, hert_kn
       use discretelement, only: s_time, des_crossprdct
       use discretelement, only: kn, kt, mew, hertzian
       use param,          only: SMALL_NUMBER
-      use drag_gs_des1_module, only: drag_gs_des
       use error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
 
       type(particle_t), intent(in   ) :: particles(:)
@@ -76,7 +75,7 @@ contains
       real(c_real) :: fnmd, mag_overlap_t, tangent(3)
       integer      ::  np
       real(c_real) :: radiusii, radiusll
-      
+
       np = size(particles)
 
       do ll = 1, np-1
@@ -91,7 +90,7 @@ contains
             if ( particles(ii) % state == NONEXISTENT ) cycle
 
             dist     = particles(ii) % pos - pos_tmp(:)
-            dist_mag = dot_product( dist, dist ) 
+            dist_mag = dot_product( dist, dist )
             r_lm     = rad + particles(ii) % radius
 
             if ( dist_mag > ( r_lm - SMALL_NUMBER )**2 ) cycle
@@ -117,7 +116,7 @@ contains
             phasell  = particles(ll) % phase
             radiusii = particles(ii) % radius
             phaseii  = particles(ii) % phase
-            
+
             ! hertz spring-dashpot contact model
             if ( des_coll_model_enum == hertzian ) then
                sqrt_overlap = sqrt(overlap_n)
