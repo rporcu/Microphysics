@@ -21,6 +21,7 @@ program fcompare_par
 
    integer                         :: nr=0, ni=0, np
    integer                         :: fh1, fh2, p, tmp
+   integer                         :: comparison_failed = 0
    type (particle_t)               :: single_particle
    type (particle_t), allocatable  :: particles1 (:), particles2 (:)
    character(:),      allocatable  :: file1, file2
@@ -47,21 +48,20 @@ program fcompare_par
       call read_particle_data ( particles1, fh1 )
       call read_particle_data ( particles2, fh2 )
    end do
-     
     
    ! Do the actual comparison
    do p = 1, np
       if ( any( ( abs (particles1(p) % rdata - particles2(p) % rdata) ) > tol ) .or. &
            any( ( particles1(p) % idata /= particles1(p) % idata ) ) ) then   
          call print_diff ( particles1, particles2, p )
-         close ( fh1 )
-         close ( fh2 )
-         call check( .false., " comparison failed for particle" ) 
+         comparison_failed = 1
       end if
    end do
 
    close ( fh1 )
    close ( fh2 )
+
+   call check( ( comparison_failed == 0), " file1 and file2 differ" )
    
 contains
 
@@ -89,13 +89,13 @@ contains
       character (*), intent (in) :: arg_name, arg_value
 
       select case (trim (arg_name))
-      case ( "--file1" )
+      case ( "--file1", "-f1" )
          file1 = trim (arg_value)
-      case ( "--file2" )
+      case ( "--file2", "-f2" )
          file2 = trim (arg_value)
-      case ( "--nreals" )
+      case ( "--nreals", "-r" )
          read ( arg_value,' (I8)' ) nr   
-      case ( "--nints" )
+      case ( "--nints", "-i" )
          read ( arg_value,' (I8)' ) ni
       case default
          call check ( .false., "Option "//trim (arg_name)//" not recognized")
@@ -106,12 +106,12 @@ contains
 
    subroutine print_inputs ()
 
-      write (*," (/,A,/)")  repeat ("<",36) // " fcompare_par " // repeat (">",36)
-      write (*," (A)")      "file 1 = "//file1
-      write (*," (A)")      "file 2 = "//file2
-      write (*," (A,I0)")   "nreals = ", nr
-      write (*," (A,I0)")   "nints  = ", ni
-      
+      write (*,"(/,A/)")  repeat ("<",36) // " fcompare_par " // repeat (">",36)
+      write (*,"(3X,A)")      "file 1 = "//file1
+      write (*,"(3X,A)")      "file 2 = "//file2
+      write (*,"(3X,A,I0)")   "nreals = ", nr
+      write (*,"(3X,A,I0/)")  "nints  = ", ni
+    
    end subroutine print_inputs
 
    
