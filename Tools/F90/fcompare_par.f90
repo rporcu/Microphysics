@@ -93,9 +93,9 @@ contains
          file1 = trim (arg_value)
       case ( "--file2" )
          file2 = trim (arg_value)
-      case ( "-nreals" )
+      case ( "--nreals" )
          read ( arg_value,' (I8)' ) nr   
-      case ( "-nints" )
+      case ( "--nints" )
          read ( arg_value,' (I8)' ) ni
       case default
          call check ( .false., "Option "//trim (arg_name)//" not recognized")
