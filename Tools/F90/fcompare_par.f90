@@ -19,9 +19,11 @@ program fcompare_par
       integer,    allocatable :: idata (:)  
    end type particle_t
 
-   integer                         :: nr=0, ni=0, np
+   integer                         :: nr=0, ni=0, np, nfails 
    integer                         :: fh1, fh2, p, tmp
-   integer                         :: comparison_failed = 0
+   integer                         :: comparison_failed
+   integer,           allocatable  :: fails(:)
+   logical                         :: brief = .false.
    type (particle_t)               :: single_particle
    type (particle_t), allocatable  :: particles1 (:), particles2 (:)
    character(:),      allocatable  :: file1, file2
@@ -40,7 +42,7 @@ program fcompare_par
    call check (  ( np == tmp ), "number of particles in file1 and file2 differs" )
 
    ! Allocate types
-   allocate ( particles1 (np), particles2 (np) )
+   allocate ( particles1 (np), particles2 (np), fails (np) )
    call alloc_particle ( single_particle ) ! this is used as tmp during reads
 
    ! Read the data into the types
@@ -50,18 +52,28 @@ program fcompare_par
    end do
     
    ! Do the actual comparison
+   nfails = 0
+   comparison_failed = 0 
+   fails  = 0
+
    do p = 1, np
-      if ( any( ( abs (particles1(p) % rdata - particles2(p) % rdata) ) > tol ) .or. &
-           any( ( particles1(p) % idata /= particles1(p) % idata ) ) ) then   
-         call print_diff ( particles1, particles2, p )
-         comparison_failed = 1
-      end if
+      if ( all( ( abs (particles1(p) % rdata - particles2(p) % rdata) ) <= tol ) .and. &
+           all( ( particles1(p) % idata == particles1(p) % idata ) ) ) cycle    
+      nfails = nfails + 1
+      fails (nfails) = p 
+      write (*,'(2X,A,I0)') "Comparison failed for particle ID ", p
    end do
 
    close ( fh1 )
    close ( fh2 )
 
-   call check( ( comparison_failed == 0), " file1 and file2 differ" )
+   if (  nfails > 0  ) then
+      if ( .not. brief ) &
+           call print_diff ( particles1, particles2, fails(1:nfails) )
+      call check ( .false. , " file1 and file2 differ" )
+   end if
+
+   
    
 contains
 
@@ -97,6 +109,8 @@ contains
          read ( arg_value,' (I8)' ) nr   
       case ( "--nints", "-i" )
          read ( arg_value,' (I8)' ) ni
+      case ( "--brief" )
+         brief = .true.
       case default
          call check ( .false., "Option "//trim (arg_name)//" not recognized")
       end select
@@ -176,32 +190,37 @@ contains
       particles( single_particle % idata (1) ) = single_particle
       
    end subroutine read_particle_data
-
    
-   subroutine print_diff ( p1, p2, idx )
+   
+   subroutine print_diff ( p1, p2, ids )
 
       type(particle_t), intent(in) :: p1(:), p2(:)
-      integer,          intent(in) :: idx
-      integer                      :: i
+      integer,          intent(in) :: ids(:)
+      integer                      :: i, n, p
       real(dp)                     :: diff, diff_pc
-      character(max_char_len)      :: cidx
-      
-      write (cidx,*) idx
-      write(*,'(/,A,I0,A)')   repeat ("+",32) // " Diff for particle ",idx, " "//repeat ("+",32)  
-      write(*,'(/,4(A19),/)') "File1", "File2", "Diff", "  % Rel Diff"
+    
+      do n = 1, size(ids)
 
-      do i = 1, nr_min + nr
-         diff    = p1(idx) % rdata(i) - p2(idx) % rdata(i)
-         diff_pc = diff / ( p1(idx) % rdata(i) + epsilon ( p1(idx) % rdata(i) ) ) * 100.0_dp
-         write(*,'(4(es20.6))') p1(idx) % rdata(i), p2(idx) % rdata(i), diff, diff_pc
-      end do
-      do i = 1, ni_min + ni
-         diff    = p1(idx) % idata(i) - p2(idx) % idata(i)
-         diff_pc = diff / ( p1(idx) % rdata(i) + epsilon ( p1(idx) % rdata(i) ) ) * 100.0_dp
-         write(*,'(3(I20),es20.6)') p1(idx) % idata(i), p2(idx) % idata(i), int(diff), diff_pc
-      end do
+         p = ids(n) 
+
+         write(*,'(/,A,I0,A)')   repeat ("+",32) // " Diff for particle ",p, " "//repeat ("+",32)  
+         write(*,'(/,4(A19),/)') "File1", "File2", "Diff", "  % Rel Diff"
+
+         do i = 1, nr_min + nr
+            diff    = p1(p) % rdata(i) - p2(p) % rdata(i)
+            diff_pc = diff / ( p1(p) % rdata(i) + epsilon ( p1(P) % rdata(i) ) ) * 100.0_dp
+            write(*,'(4(es20.6))') p1(p) % rdata(i), p2(p) % rdata(i), diff, diff_pc
+         end do
          
-      write(*,*)      
+         do i = 1, ni_min + ni
+            diff    = p1(p) % idata(i) - p2(p) % idata(i)
+            diff_pc = diff / ( p1(p) % rdata(i) + epsilon ( p1(p) % rdata(i) ) ) * 100.0_dp
+            write(*,'(3(I20),es20.6)') p1(p) % idata(i), p2(p) % idata(i), int(diff), diff_pc
+         end do
+         
+         write(*,*)
+
+      end do
 
    end subroutine print_diff
 
@@ -212,6 +231,7 @@ contains
       character (*), intent (in) :: msg
 
       if  ( .not. condition ) then
+         write (*,*) 
          write (*,*) "ERROR: "//msg
          write (*,*) "STOP" 
          error stop 1
