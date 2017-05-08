@@ -107,7 +107,8 @@ mfix_level::ReadParameters ()
 	pp.query("plot_int", plot_int);
 	pp.query("restart_chkfile", restart_chkfile);
 	pp.query("verbose", verbose);
-	pp.query("write_particle_ascii", write_particle_ascii);
+	pp.query("par_ascii_file", par_ascii_file);
+	pp.query("par_ascii_int", par_ascii_int);
     }
 }
 

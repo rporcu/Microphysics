@@ -209,19 +209,34 @@ If the name of the plotfile is not provided, MFIX will default to _plt_.
 To dump a checkfile every N time steps, add the following to the _inputs_
 file:
 ```shell
-mfix.check_int=N
+amr.check_int=N
 ```
 The name of the checkfile can be specified by adding
 ```shell
-mfix.check_file=<checkfile_name>
+amr.check_file=<checkfile_name>
 ```
 to the _inputs_ file. In order to restart a calculation from a checkpoint,
 add add the following to the _inputs_
 file:
 ```shell
-mfix.restart_chkfile=<checkfile_name>
+amr.restart_chkfile=<checkfile_name>
 ```
 
+### Writing particles ASCII files
+To dump a ASCII file with particles info every N time steps, add the following to the _inputs_
+file:
+```shell
+amr.par_ascii_int=N
+```
+N needs to be > 1 for the ASCII files to be written out. For transient solves,
+N indicates the number of time steps between two consecutive writes.
+For steady state solve, N does not have any meaning: an ASCII file will be written
+after the steady state is reached, as long as N > 0. The name of the ASCII file 
+can be specified by adding
+```shell
+amr.par_ascii_file=<ascii_file_name>
+```
+to the _inputs_ file. 
 --------------------------------------------------------------------
 
 ## Notice
