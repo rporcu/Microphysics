@@ -49,3 +49,14 @@ enable_testing()
 add_subdirectory( tests )
 add_subdirectory( benchmarks )
 
+# Add a target to generate API documentation with Doxygen
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+   set(DOC_DIR ${CMAKE_SOURCE_DIR}/doc)
+   configure_file(${DOC_DIR}/Doxyfile.in ${DOC_DIR}/Doxyfile)
+   add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${DOC_DIR}/Doxyfile
+      WORKING_DIRECTORY ${DOC_DIR}
+      COMMENT "Generating API documentation with Doxygen" VERBATIM
+      )
+endif (DOXYGEN_FOUND)
+
