@@ -34,9 +34,10 @@ subroutine calc_solids_volume( slo, shi, np, particles, dx, dy, dz, ep_g) &
    ody = 1.0d0 / dy
    odz = 1.0d0 / dz
 
-   ! Calculate the gas phae forces acting on each particle.
+
+   ! Calculate the gas phase forces acting on each particle.
    do n = 1, np
-      
+     
       if ( particles(n) % state  == normal_particle) then
 
          ! Fluid cell containing the particle

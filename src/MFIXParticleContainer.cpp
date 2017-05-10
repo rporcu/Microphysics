@@ -53,15 +53,30 @@ void MFIXParticleContainer::InitLevelMask ( int lev,
 
 
 
-void* MFIXParticleContainer::GetParticlesData( const int& lev, const MFIter& mfi )
-{ 
+void* MFIXParticleContainer::GetParticlesData( const int& lev, const MFIter& mfi ) { 
 
     const int gridIndex = mfi.index();
     const int tileIndex = mfi.LocalTileIndex();
     auto&     particles = GetParticles(lev)[std::make_pair(gridIndex,tileIndex)];
-    return  particles.GetArrayOfStructs().data(); 
+
+    void* ptr = NULL;
+
+    if ( particles.GetArrayOfStructs().size() > 0 )
+	ptr = particles.GetArrayOfStructs().data(); 
+	
+    return  ptr; //particles.GetArrayOfStructs().data(); 
 }
 
+
+void* MFIXParticleContainer::GetParticlesData( MFIXParIter& pti ) { 
+
+    void* ptr = NULL;
+
+    if ( pti.GetArrayOfStructs().size() > 0 )
+	ptr = pti.GetArrayOfStructs().data(); 
+	
+    return  ptr;  
+}
 
 
 void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {

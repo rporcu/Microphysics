@@ -117,7 +117,7 @@ public:
 
     void* GetParticlesData( const int& lev, const MFIter& mfi );
 
-    void* GetParticlesData( MFIXParIter& pti) {return pti.GetArrayOfStructs().data();};    
+    void* GetParticlesData( MFIXParIter& pti);    
 
     void EvolveParticles ( int lev, int nstep, Real dt, Real time );
     
@@ -148,6 +148,8 @@ private:
     ///
     void fillGhostsMPI(GhostCommMap& ghosts_to_comm);
 
+
+    void clearGhosts( int lev );
     
     // runtime parameters
     static int do_tiling;
