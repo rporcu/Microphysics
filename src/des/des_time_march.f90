@@ -16,8 +16,6 @@ module des_time_march_module
    ! changes in solid time step
    real(c_real),   save  :: TMP_DTS
 
-   real(c_real),   allocatable :: fc(:,:), tow(:,:)
-
    ! Define interface for external functions so there will be no
    ! warning at compile time
    interface
@@ -70,11 +68,6 @@ contains
       type(particle_t), intent(inout) :: particles(np)
       integer(c_int),   intent(inout) :: nstep
       integer(c_int),   intent(out)   :: nsubsteps
-
-      allocate ( tow(np,3), fc(np,3) )
-     
-      tow        = zero
-      fc         = zero
 
       ! In case of restarts assign S_TIME from MFIX TIME
       S_TIME = TIME
@@ -143,8 +136,6 @@ contains
          TMP_DTS = ZERO
       endif
 
-      deallocate( tow, fc )
-
    end subroutine des_finalize_time_loop
 
   
@@ -168,9 +159,12 @@ contains
       type(particle_t), intent(inout) :: particles(np)
       integer(c_int),   intent(inout) :: nstep
       integer(c_int),   intent(out  ) :: quit
-
+      real(c_real)                    :: tow(np,3), fc(np,3)
+      
       quit = 0
-
+      tow  = 0
+      fc   = 0
+      
       if ( des_continuum_coupled ) then
          ! If the current time in the discrete loop exceeds the current time in
          ! the continuum simulation, exit the discrete loop
