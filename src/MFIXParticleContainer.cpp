@@ -215,29 +215,36 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-    {
-	const int np     = NumberOfParticles(pti);
-	void* particles  = GetParticlesData(pti);
-	int   nsubsteps;
-	
-	mfix_des_init_time_loop( &np, particles, &time, &dt, &dx, &dy, &dz,
-				 &xlen, &ylen, &zlen, &nstep, &nsubsteps);
+    int   nsubsteps;
+    Real  dts, dts_tmp;
+    
+    mfix_des_set_dt( &time, &dt, &nsubsteps, &dts, &dts_tmp ); 
+
+    for ( int n = 0; n < nsubsteps; ++n ) {
 
 	int quit;
 
-	for ( int n = 0; n < nsubsteps; ++n ) {
+	mfix_des_check_dt( &quit, &dt, &time, &dts_tmp );
+
+	if ( quit ) break;
+	
+	for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+	{
+	    const int np     = NumberOfParticles(pti);
+	    void* particles  = GetParticlesData(pti);
+
 	    mfix_des_time_loop_ops( &np, particles, &time, &dt, &dx, &dy, &dz,
-				    &xlen, &ylen, &zlen, &nstep, &quit);
-		
-	    if ( quit ) break;
+				    &xlen, &ylen, &zlen, &nstep, &dts, &dts_tmp );
+
+	    mfix_call_usr2_des( &np, particles );
+	    
+	    mfix_call_usr3_des( &np, particles );
 	}
-
-
-	mfix_des_finalize_time_loop( &np, &dt, particles );
 	
     }
 
+    mfix_des_finalize_time_loop( &dt, &dts, &dts_tmp  );
+   
     Redistribute();
 }
 
