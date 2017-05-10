@@ -39,6 +39,14 @@ foreach( THIS_TEST ${TESTS})
    # Accumulate the build for each test into target "build_tests"
    add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
 
+   # Create test dir in build path if needed
+   # Update test files if needed
+   add_custom_command(TARGET ${TEST_EXE} PRE_BUILD
+      COMMAND [ -d ${TEST_DIR} ] || mkdir ${TEST_DIR}
+      COMMAND cp -R --update ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST}/* .
+      WORKING_DIRECTORY  ${TEST_DIR}
+      COMMENT "Updating test folder")
+
    # Setup for running the a single test
    set(TEST_RUN run_${TEST_NAME})
    add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
