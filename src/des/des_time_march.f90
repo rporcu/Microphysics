@@ -40,7 +40,7 @@ contains
    subroutine des_set_dt( time, dt, nsteps, dtsolid_tmp, tmp_dts) &
         bind(C, name="mfix_des_set_dt")
 
-      use discretelement,  only: dtsolid,des_continuum_coupled
+      use discretelement,  only: dtsolid, des_continuum_coupled
       use run,             only: tstop
       use param,           only: zero
       
@@ -51,6 +51,20 @@ contains
       ! In case of restarts assign S_TIME from MFIX TIME
       TMP_DTS = ZERO
 
+
+      ! ! In case of restarts assign S_TIME from MFIX TIME
+      ! s_time = time
+      ! tmp_dts = zero
+
+      ! ! Initialize time stepping variables for coupled gas/solids simulations.
+      ! if ( dt >= dtsolid ) then
+      !    nsteps = ceiling(real(dt/dtsolid))
+      ! else
+      !    nsteps = 1
+      !    dtsolid_tmp = dtsolid
+      !    dtsolid = dt
+      ! end if
+      
       ! Initialize time stepping variables for coupled gas/solids simulations.
       if ( des_continuum_coupled ) then
 
@@ -174,7 +188,6 @@ contains
       real(c_real)                    :: tow(np,3), fc(np,3)
       real(c_real),     intent(inout) :: dtsolid_tmp, tmp_dts
 
-
       tow  = 0
       fc   = 0
 
@@ -196,7 +209,7 @@ contains
       ! the following section targets data writes for dem only cases:
       if ( .not. des_continuum_coupled ) then
          ! keep track of time and number of steps for dem simulations
-         time  = s_time
+         time  = time + dtsolid 
          nstep = nstep + 1
          
       end if 

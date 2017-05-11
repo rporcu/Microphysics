@@ -236,10 +236,22 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 	    mfix_des_time_loop_ops( &np, particles, &time, &dt, &dx, &dy, &dz,
 				    &xlen, &ylen, &zlen, &nstep, &dts, &dts_tmp );
 
+	    if ( mfix_des_continuum_coupled () == 0 )
+		mfix_output_manager( &np, &time, &dt,  &xlen, &ylen, &zlen, 
+				     &nstep, particles, 0 );
+
 	    mfix_call_usr2_des( &np, particles );
-	    
-	    mfix_call_usr3_des( &np, particles );
 	}
+	
+    }
+
+    
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+	
+	const int np     = NumberOfParticles(pti);
+	void* particles  = GetParticlesData(pti);
+	
+	mfix_call_usr3_des( &np, particles );
 	
     }
 
