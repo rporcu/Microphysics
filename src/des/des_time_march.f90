@@ -201,7 +201,7 @@ contains
       if ( call_usr ) call usr1_des
 
       ! update position and velocities
-      call cfnewvalues( particles, fc, tow )
+      call cfnewvalues( particles, fc, tow, dtsolid )
 
       ! update time to reflect changes
       s_time = s_time + dtsolid

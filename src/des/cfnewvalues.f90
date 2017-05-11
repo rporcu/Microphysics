@@ -21,9 +21,8 @@ contains
    !           position, angular velocity etc                             !
    !                                                                      !
    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine cfnewvalues( particles, fc, tow )
+   subroutine cfnewvalues( particles, fc, tow, dtsolid )
 
-      use discretelement, only: dtsolid
       use discretelement, only: normal_particle, exiting_particle
       use param,          only: zero
       use constant,       only: gravity
@@ -33,6 +32,7 @@ contains
 
       type(particle_t), intent(inout) :: particles(:)
       real(c_real),     intent(inout) :: fc(:,:), tow(:,:)
+      real(c_real),     intent(in)    :: dtsolid
       integer                         :: L
       real(c_real)                    :: DD(3), lVELo(3), lPOSo(3)
       logical, save                   :: first_pass = .true.
