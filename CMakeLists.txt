@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 enable_language(Fortran)
 
+# Not used by MFiX-Exa directly, but by AMReX Superbuild
+enable_language(C)
+
 # Load MFIX Cmake Tools
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/)
 include(MFIXTools)
@@ -22,7 +25,7 @@ else (ENABLE_SUPERBUILD)
    find_amrex()
 endif (ENABLE_SUPERBUILD)
 
-# Set build flags ( provides MFIX_INCLUDES, 
+# Set build flags ( provides MFIX_INCLUDES,
 # MFIX_EXT_LINK_STRING  and MFIX_EXT_LINK_DIRS )
 set_build_flags()
 
@@ -37,7 +40,7 @@ set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 include_directories(${MFIX_INCLUDES})
 link_directories(${MFIX_EXT_LINK_DIRS})
 
-# Main 
+# Main
 add_subdirectory( src )
 
 FILE(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
@@ -59,4 +62,3 @@ if (DOXYGEN_FOUND)
       COMMENT "Generating API documentation with Doxygen" VERBATIM
       )
 endif (DOXYGEN_FOUND)
-
