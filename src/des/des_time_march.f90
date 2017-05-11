@@ -50,21 +50,7 @@ contains
       
       ! In case of restarts assign S_TIME from MFIX TIME
       TMP_DTS = ZERO
-
-
-      ! ! In case of restarts assign S_TIME from MFIX TIME
-      ! s_time = time
-      ! tmp_dts = zero
-
-      ! ! Initialize time stepping variables for coupled gas/solids simulations.
-      ! if ( dt >= dtsolid ) then
-      !    nsteps = ceiling(real(dt/dtsolid))
-      ! else
-      !    nsteps = 1
-      !    dtsolid_tmp = dtsolid
-      !    dtsolid = dt
-      ! end if
-      
+     
       ! Initialize time stepping variables for coupled gas/solids simulations.
       if ( des_continuum_coupled ) then
 
@@ -83,10 +69,56 @@ contains
          DT = DTSOLID
          
       end if
+
+      write(*,*) "DT = ",  tstop-time, "DTSOLID = ", dtsolid, "NSUBSTEPS ", nsteps 
       
    end subroutine des_set_dt
 
- 
+
+
+   subroutine des_init_time_loop ( tstart, dt, nsubsteps, subdt ) &
+        bind(C, name="mfix_des_init_time_loop")
+
+      use discretelement,  only: dtsolid, des_continuum_coupled
+      use run,             only: tstop
+      use param,           only: zero
+      
+      real(c_real),   intent(in   ) :: tstart, dt
+      integer(c_int), intent(  out) :: nsubsteps
+      real(c_real),   intent(  out) :: subdt
+     
+      ! Initialize time stepping variables for coupled gas/solids simulations.
+      if ( des_continuum_coupled ) then
+
+         if ( dt >= dtsolid ) then
+            nsubsteps = ceiling ( real ( dt / dtsolid ) )
+            subdt     =  dt / nsubsteps
+         else
+            nsubsteps = 1
+            subdt     = dtsolid
+            !dt = DTSOLID
+         end if
+         write(*,*) "NSUBSTEPS = ", nsubsteps, "DT = ", dt, "DTSOLID = ", dtsolid
+
+         ! Initialize time stepping variable for pure granular simulations.
+      else
+
+         nsubsteps = ceiling ( real ( (tstop - tstart) / dtsolid ) )
+         subdt     = ( tstop - tstart ) / nsubsteps
+         ! DT = DTSOLID
+      !   print*,"Non coupled"
+!         write(*,*) "DT = ", tstart - tstop, "DTSOLID = ", dtsolid
+      end if
+
+ !     write(*,*) "From fortran nsubsteps = ", nsubsteps
+  !    write(*,*) "SUBDT = ", subdt
+      !read*
+      
+   end subroutine des_init_time_loop
+
+
+
+   
 
    subroutine call_usr3_des( np, particles ) &
         bind(c, name="mfix_call_usr3_des")
@@ -169,7 +201,7 @@ contains
 
 
    
-   subroutine des_time_loop_ops ( np, particles, time, dx, dy, dz, &
+   subroutine des_time_loop_ops ( np, particles, subdt, time, dx, dy, dz, &
         & xlength, ylength, zlength, nstep )  &
         bind(C, name="mfix_des_time_loop_ops")
 
@@ -183,7 +215,7 @@ contains
       use run,                     only: call_usr
 
       integer(c_int),   intent(in   ) :: np
-      real(c_real),     intent(in   ) :: xlength, ylength, zlength, dx, dy, dz
+      real(c_real),     intent(in   ) :: subdt, xlength, ylength, zlength, dx, dy, dz
       real(c_real),     intent(inout) :: time
       type(particle_t), intent(inout) :: particles(np)
       integer(c_int),   intent(inout) :: nstep
@@ -193,25 +225,25 @@ contains
       fc   = 0
 
       ! calculate forces from particle-wall collisions
-      call calc_dem_force_with_wall_stl( particles, fc, tow, xlength, ylength, zlength )
+      call calc_dem_force_with_wall_stl( particles, fc, tow, xlength, ylength, zlength, subdt )
 
       ! calculate forces from particle-particle collisions
-      call calc_force_dem( particles, fc, tow )
+      call calc_force_dem( particles, fc, tow, subdt )
 
       ! call user functions.
       if ( call_usr ) call usr1_des
 
       ! update position and velocities
-      call cfnewvalues( particles, fc, tow, dtsolid )
+      call cfnewvalues( particles, fc, tow, subdt )
 
       ! update time to reflect changes
-      s_time = s_time + dtsolid
+      s_time = s_time + subdt
 
       ! the following section targets data writes for dem only cases:
       if ( .not. des_continuum_coupled ) then
          ! keep track of time and number of steps for dem simulations
-         time  = time + dtsolid 
-         nstep = nstep + 1
+         time  = time + subdt 
+        ! nstep = nstep + 1
          
       end if 
 

@@ -22,11 +22,11 @@ contains
    !           accounting for the wall properties                         !
    !                                                                      !
    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_force_dem( particles, fc, tow )
+   subroutine calc_force_dem( particles, fc, tow, dtsolid )
 
       use particle_mod,   only: particle_t
       use cfrelvel_module, only: cfrelvel
-      use discretelement, only: des_coll_model_enum, dtsolid, NONEXISTENT
+      use discretelement, only: des_coll_model_enum, NONEXISTENT!, dtsolid
       use discretelement, only: des_etan, des_etat, hert_kt, hert_kn
       use discretelement, only: s_time, des_crossprdct
       use discretelement, only: kn, kt, mew, hertzian
@@ -35,7 +35,7 @@ contains
 
       type(particle_t), intent(in   ) :: particles(:)
       real(c_real),     intent(inout) :: fc(:,:), tow(:,:)
-
+      real(c_real),     intent(in   ) :: dtsolid
       logical,      parameter     :: report_excess_overlap = .false.
       real(c_real), parameter     :: flag_overlap = 0.20d0 ! % of particle radius when excess overlap will be flagged
       real(c_real), parameter     :: q2           = 0.5_c_real

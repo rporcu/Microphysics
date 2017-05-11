@@ -202,8 +202,8 @@ MFIXParticleContainer::InitData()
 
 
 
-void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time )
-{
+void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time ) {
+    
 
     Box domain(Geom(lev).Domain());
 
@@ -220,33 +220,36 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     Real  tstop; 
     int   nsubsteps;
-    Real  dts, dts_tmp;
+    Real  dts, dts_tmp, subdt;
     
-    mfix_des_set_dt( &time, &dt, &nsubsteps, &dts, &dts_tmp ); 
-
+    //  mfix_des_set_dt( &time, &dt, &nsubsteps, &dts, &dts_tmp ); 
+    mfix_des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
+    
     for ( int n = 0; n < nsubsteps; ++n ) {
 
 	int quit;
 
-	mfix_des_check_dt( &quit, &dt, &time, &dts_tmp );
 
-	if ( quit ) break;
+//	std::cout << "N substeps "<< nsubsteps << std::endl;
+	// mfix_des_check_dt( &quit, &dt, &time, &dts_tmp );
+
+	// if ( quit ) break;
 	
-	for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-	{
+	for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+	
 	    const int np     = NumberOfParticles(pti);
 	    void* particles  = GetParticlesData(pti);
 
-	    mfix_des_time_loop_ops( &np, particles, &time, &dx, &dy, &dz,
+	    mfix_des_time_loop_ops( &np, particles, &subdt, &time, &dx, &dy, &dz,
 				    &xlen, &ylen, &zlen, &nstep );
 
 	    if ( mfix_des_continuum_coupled () == 0 )
-		mfix_output_manager( &np, &time, &dt,  &xlen, &ylen, &zlen, 
-				     &nstep, particles, 0 );
+		mfix_output_manager( &np, &time, &subdt,  &xlen, &ylen, &zlen, 
+				     &n, particles, 0 );
 
 	    mfix_call_usr2_des( &np, particles );
 	}
-	
+
     }
 
     
@@ -259,7 +262,16 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 	
     }
 
-    mfix_des_finalize_time_loop( &dt, &dts, &dts_tmp  );
+    if ( mfix_des_continuum_coupled () ) {
+	nstep = nstep + 1;
+	time  = time + nsubsteps * subdt ;
+    }
+    else {
+	nstep = nsubsteps;
+	time  = nsubsteps * subdt ;
+    }
+    
+    //mfix_des_finalize_time_loop( &dt, &dts, &dts_tmp  );
    
     Redistribute();
 }

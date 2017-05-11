@@ -18,7 +18,7 @@ module calc_collision_wall
    use discretelement, only: des_coll_model_enum
    use discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
    use discretelement, only: des_crossprdct
-   use discretelement, only: kn_w, kt_w, mew_w, dtsolid
+   use discretelement, only: kn_w, kt_w, mew_w!, dtsolid
    use error_manager, only: err_msg, flush_err_msg, init_err_msg
    use param, only: small_number, zero
 
@@ -34,7 +34,7 @@ module calc_collision_wall
 contains
 
 
-   subroutine calc_dem_force_with_wall_stl ( particles, fc, tow, xlength, ylength, zlength )
+   subroutine calc_dem_force_with_wall_stl ( particles, fc, tow, xlength, ylength, zlength, dtsolid )
 
       use bc,            only: cyclic_x, cyclic_y, cyclic_z
       use param,         only: zero, one
@@ -43,7 +43,7 @@ contains
 
       type(particle_t), intent(in)    :: particles(:)
       real(c_real)  ,   intent(inout) :: fc(:,:), tow(:,:)
-      real(c_real)  ,   intent(in   ) :: xlength, ylength, zlength
+      real(c_real)  ,   intent(in   ) :: xlength, ylength, zlength, dtsolid 
      
       integer :: ll, nf
 
