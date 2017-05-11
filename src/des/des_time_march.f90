@@ -167,11 +167,13 @@ contains
 
    end subroutine des_check_dt
 
- 
-   subroutine des_time_loop_ops ( np, particles, time, dt, dx, dy, dz, &
-        & xlength, ylength, zlength, nstep, dtsolid_tmp, tmp_dts )  &
+
+   
+   subroutine des_time_loop_ops ( np, particles, time, dx, dy, dz, &
+        & xlength, ylength, zlength, nstep )  &
         bind(C, name="mfix_des_time_loop_ops")
 
+   
       use particle_mod
       use calc_collision_wall,     only: calc_dem_force_with_wall_stl
       use calc_force_dem_module,   only: calc_force_dem
@@ -182,11 +184,10 @@ contains
 
       integer(c_int),   intent(in   ) :: np
       real(c_real),     intent(in   ) :: xlength, ylength, zlength, dx, dy, dz
-      real(c_real),     intent(inout) :: time, dt
+      real(c_real),     intent(inout) :: time
       type(particle_t), intent(inout) :: particles(np)
       integer(c_int),   intent(inout) :: nstep
       real(c_real)                    :: tow(np,3), fc(np,3)
-      real(c_real),     intent(inout) :: dtsolid_tmp, tmp_dts
 
       tow  = 0
       fc   = 0

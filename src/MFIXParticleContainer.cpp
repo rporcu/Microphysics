@@ -215,6 +215,10 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
+    // dt   = the time step of the simulation
+    // time = the starting time
+
+    Real  tstop; 
     int   nsubsteps;
     Real  dts, dts_tmp;
     
@@ -233,8 +237,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 	    const int np     = NumberOfParticles(pti);
 	    void* particles  = GetParticlesData(pti);
 
-	    mfix_des_time_loop_ops( &np, particles, &time, &dt, &dx, &dy, &dz,
-				    &xlen, &ylen, &zlen, &nstep, &dts, &dts_tmp );
+	    mfix_des_time_loop_ops( &np, particles, &time, &dx, &dy, &dz,
+				    &xlen, &ylen, &zlen, &nstep );
 
 	    if ( mfix_des_continuum_coupled () == 0 )
 		mfix_output_manager( &np, &time, &dt,  &xlen, &ylen, &zlen, 
