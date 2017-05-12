@@ -264,20 +264,13 @@ extern "C"
 
     int mfix_adjustdt(int* ier, int* nit, Real* dt);
 
-
-    void mfix_des_set_dt( Real* time, Real* dt, int * nsteps, Real* dts, Real* dts_tmp);
-
     void mfix_call_usr3_des( const int* np, void* particles );
 
     void mfix_call_usr2_des( const int* np, void* particles );
-    
-    void mfix_des_check_dt( int* quit, Real* dt, Real* time, Real* tmp_dts );
 
     void mfix_des_init_time_loop ( const  Real* tstart, const Real* dt, int* nsubsteps, Real* subdt );
-  
-    void mfix_des_finalize_time_loop( const Real* dt, Real* dts, Real* dts_tmp);
 
-    void mfix_des_time_loop_ops( const int* np,  void* particles, Real* subdt, Real* time, Real* dx,
+    void mfix_des_time_loop_ops( const int* np,  void* particles, Real* subdt, Real* dx,
 				 Real* dy, Real* dz, Real* xlength, Real* ylength, Real* zlength,
 				 int * nstep );
 

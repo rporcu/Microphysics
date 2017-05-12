@@ -215,32 +215,20 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
-    // dt   = the time step of the simulation
-    // time = the starting time
-
-    Real  tstop; 
     int   nsubsteps;
-    Real  dts, dts_tmp, subdt;
+    Real  subdt;
     
-    //  mfix_des_set_dt( &time, &dt, &nsubsteps, &dts, &dts_tmp ); 
+
     mfix_des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
     
     for ( int n = 0; n < nsubsteps; ++n ) {
-
-	int quit;
-
-
-//	std::cout << "N substeps "<< nsubsteps << std::endl;
-	// mfix_des_check_dt( &quit, &dt, &time, &dts_tmp );
-
-	// if ( quit ) break;
 	
 	for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 	
 	    const int np     = NumberOfParticles(pti);
 	    void* particles  = GetParticlesData(pti);
 
-	    mfix_des_time_loop_ops( &np, particles, &subdt, &time, &dx, &dy, &dz,
+	    mfix_des_time_loop_ops( &np, particles, &subdt, &dx, &dy, &dz,
 				    &xlen, &ylen, &zlen, &nstep );
 
 	    if ( mfix_des_continuum_coupled () == 0 )
@@ -262,17 +250,12 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 	
     }
 
-    if ( mfix_des_continuum_coupled () ) {
-	nstep = nstep + 1;
-	time  = time + nsubsteps * subdt ;
+    if ( mfix_des_continuum_coupled () != 0 ) {
+    	nstep = nsubsteps;
+    	time  = time + nsubsteps * subdt ;
     }
-    else {
-	nstep = nsubsteps;
-	time  = nsubsteps * subdt ;
-    }
+
     
-    //mfix_des_finalize_time_loop( &dt, &dts, &dts_tmp  );
-   
     Redistribute();
 }
 
