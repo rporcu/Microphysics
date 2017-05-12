@@ -108,7 +108,6 @@ contains
       use particle_mod
       use calc_collision_wall,     only: calc_dem_force_with_wall_stl
       use calc_force_dem_module,   only: calc_force_dem
-      use cfnewvalues_module,      only: cfnewvalues
       use discretelement,          only: dtsolid
       use output_manager_module,   only: output_manager
       use run,                     only: call_usr

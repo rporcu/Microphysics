@@ -49,7 +49,6 @@ set(F90_sources
    des/calc_force_dem.f90
    des/calc_volume_fraction.f90
    des/cffctowall.f90
-   des/cfnewvalues.f90
    des/cfrelvel.f90
    des/cfslide.f90
    des/des_bc_mod.f90
