@@ -27,7 +27,7 @@ contains
         bind(C, name="mfix_des_continuum_coupled")
 
       use discretelement, only: des_continuum_coupled
-      
+
       integer  :: is_coupled
 
       is_coupled = 0
@@ -43,11 +43,11 @@ contains
       use discretelement,  only: dtsolid, des_continuum_coupled
       use run,             only: tstop
       use param,           only: zero
-      
+
       real(c_real),   intent(in   ) :: tstart, dt
       integer(c_int), intent(  out) :: nsubsteps
       real(c_real),   intent(  out) :: subdt
-     
+
       ! Initialize time stepping variables for
       ! coupled gas/solids simulations.
       if ( des_continuum_coupled ) then
@@ -70,41 +70,41 @@ contains
 
    end subroutine des_init_time_loop
 
-  
+
 
    subroutine call_usr3_des( np, particles ) &
         bind(c, name="mfix_call_usr3_des")
 
       use run,            only: call_usr
       use particle_mod,   only: particle_t
-      
+
       integer(c_int),   intent(in)    :: np
       type(particle_t), intent(inout) :: particles(np)
-            
+
       if ( call_usr ) call usr3_des(np, particles)
 
    end subroutine call_usr3_des
 
 
-   
+
    subroutine call_usr2_des( np, particles ) &
         bind(c, name="mfix_call_usr2_des")
 
       use run,            only: call_usr
       use particle_mod,   only: particle_t
-      
+
       integer(c_int),   intent(in)    :: np
       type(particle_t), intent(inout) :: particles(np)
-                  
+
       if ( call_usr ) call usr2_des(np, particles)
 
    end subroutine call_usr2_des
 
-   
+
    subroutine des_time_loop_ops ( np, particles, subdt, dx, dy, dz, &
         & xlength, ylength, zlength, nstep )  &
         bind(C, name="mfix_des_time_loop_ops")
-   
+
       use particle_mod
       use calc_collision_wall,     only: calc_dem_force_with_wall_stl
       use calc_force_dem_module,   only: calc_force_dem
@@ -132,8 +132,47 @@ contains
       if ( call_usr ) call usr1_des
 
       ! update position and velocities
-      call cfnewvalues( particles, fc, tow, subdt )
-
+      call des_euler_update ( particles, fc, tow, subdt )
+      
    end subroutine des_time_loop_ops
+
+
+
+
+
+   subroutine des_euler_update ( particles, fc, tow, dt )
+
+      use discretelement, only: normal_particle, exiting_particle
+      use param,          only: zero
+      use constant,       only: gravity
+      use particle_mod,   only: particle_t
+
+      type(particle_t), intent(inout)  :: particles(:)
+      real(c_real),     intent(inout)  :: fc(:,:), tow(:,:)
+      real(c_real),     intent(in   )  :: dt
+      integer                          :: p
+      real(c_real)                     :: vel_old(3)
+      real(c_real),     parameter      :: q2 = 0.5_c_real
+
+      do p = 1, size ( particles )
+
+         if ( ( particles(p) % state /= normal_particle ) .and. &
+              ( particles(p) % state /= exiting_particle )  )  cycle
+
+         associate ( vel => particles(p) % vel, pos => particles(p) % pos, &
+              drag => particles(p) % drag, mass => particles(p) % mass,    &
+              omega => particles(p) % omega, omoi => particles(p) % omoi )
+
+            vel_old = vel 
+            vel     = vel   + dt * ( ( fc(p,:) +  drag ) / mass + gravity )  
+            pos     = pos   + dt * ( q2 * ( vel + vel_old ) )  
+            omega   = omega + dt * tow(p,:) * omoi  
+            
+         end associate
+         
+      end do
+        
+   end subroutine des_euler_update
+   
 
 end module des_time_march_module

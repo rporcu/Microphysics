@@ -596,7 +596,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
     {
 
 	pc -> InitParticlesAscii("particle_input.dat");
-	pc -> printParticles();
+//	pc -> printParticles();
 
 	for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
 	    mfix_init_collision();
