@@ -47,12 +47,6 @@ struct realData
 	omegax,
 	omegay,
 	omegaz,
-	accx,
-	accy,
-	accz,
-	alphax,  //angular acceleration
-	alphay,
-	alphaz,
 	dragx,
 	dragy,
 	dragz,

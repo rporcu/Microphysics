@@ -17,9 +17,7 @@ module particle_mod
      real(c_real)    :: density
      real(c_real)    :: omoi       !< One over momentum of inertia
      real(c_real)    :: vel(3)     !< Linear velocity
-     real(c_real)    :: acc(3)     !< Linear acceleration
      real(c_real)    :: omega(3)   !< Angular velocity
-     real(c_real)    :: alpha(3)   !< Angular acceleration
      real(c_real)    :: drag(3)    !< Drag
      integer(c_int)  :: id
      integer(c_int)  :: cpu
