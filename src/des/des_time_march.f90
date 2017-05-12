@@ -48,7 +48,8 @@ contains
       integer(c_int), intent(  out) :: nsubsteps
       real(c_real),   intent(  out) :: subdt
      
-      ! Initialize time stepping variables for coupled gas/solids simulations.
+      ! Initialize time stepping variables for
+      ! coupled gas/solids simulations.
       if ( des_continuum_coupled ) then
 
          if ( dt >= dtsolid ) then
@@ -69,9 +70,7 @@ contains
 
    end subroutine des_init_time_loop
 
-
-
-   
+  
 
    subroutine call_usr3_des( np, particles ) &
         bind(c, name="mfix_call_usr3_des")
@@ -86,6 +85,8 @@ contains
 
    end subroutine call_usr3_des
 
+
+   
    subroutine call_usr2_des( np, particles ) &
         bind(c, name="mfix_call_usr2_des")
 
@@ -99,8 +100,6 @@ contains
 
    end subroutine call_usr2_des
 
-
-
    
    subroutine des_time_loop_ops ( np, particles, subdt, dx, dy, dz, &
         & xlength, ylength, zlength, nstep )  &
@@ -110,7 +109,7 @@ contains
       use calc_collision_wall,     only: calc_dem_force_with_wall_stl
       use calc_force_dem_module,   only: calc_force_dem
       use cfnewvalues_module,      only: cfnewvalues
-      use discretelement,          only: dtsolid, s_time, des_continuum_coupled
+      use discretelement,          only: dtsolid
       use output_manager_module,   only: output_manager
       use run,                     only: call_usr
 
@@ -134,9 +133,6 @@ contains
 
       ! update position and velocities
       call cfnewvalues( particles, fc, tow, subdt )
-
-      ! update time to reflect changes
-      s_time = s_time + subdt
 
    end subroutine des_time_loop_ops
 

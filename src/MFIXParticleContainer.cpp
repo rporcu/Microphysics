@@ -231,10 +231,14 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 	    mfix_des_time_loop_ops( &np, particles, &subdt, &dx, &dy, &dz,
 				    &xlen, &ylen, &zlen, &nstep );
 
-	    if ( mfix_des_continuum_coupled () == 0 )
-		mfix_output_manager( &np, &time, &subdt,  &xlen, &ylen, &zlen, 
+	    if ( mfix_des_continuum_coupled () == 0 ) {
+		Real stime;
+		stime = time + (n+1)*subdt;
+		mfix_output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen, 
 				     &n, particles, 0 );
 
+	    }
+	    
 	    mfix_call_usr2_des( &np, particles );
 	}
 

@@ -26,9 +26,9 @@ contains
 
       use particle_mod,   only: particle_t
       use cfrelvel_module, only: cfrelvel
-      use discretelement, only: des_coll_model_enum, NONEXISTENT!, dtsolid
+      use discretelement, only: des_coll_model_enum, NONEXISTENT
       use discretelement, only: des_etan, des_etat, hert_kt, hert_kn
-      use discretelement, only: s_time, des_crossprdct
+      use discretelement, only: des_crossprdct
       use discretelement, only: kn, kt, mew, hertzian
       use param,          only: SMALL_NUMBER
       use error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
@@ -199,14 +199,14 @@ contains
          if(overlap_n > flag_overlap*radiusll .or.                  &
               overlap_n > flag_overlap*radiusii) then
 
-            write(err_msg,1000) trim(ival(ll)), trim(ival(ii)), s_time,    &
+            write(err_msg,1000) trim(ival(ll)), trim(ival(ii)),     &
                  radiusll, radiusii, overlap_n
 
             call flush_err_msg(header=.false., footer=.false.)
          endif
 
 1000     format('warning: excessive overplay detected between ',          &
-              'particles ',a,' and ',/a,' at time ',g11.4,'.',/             &
+              'particles ',a,' and ',/a,'.',/             &
               'radii:  ',g11.4,' and ',g11.4,4x,'overlap: ',g11.4)
 
       end subroutine print_excess_overlap
