@@ -38,7 +38,7 @@ void MFIXParticleContainer::InitLevelMask ( int lev,
 {
     BL_ASSERT( lev == 0 );
 	
-    mask.define(ba, dmap, 2, 1);
+    mask.define(ba, dmap, 2, ng);
     mask.setVal(-1, 1);
     for (MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const Box& box = mfi.tilebox();
@@ -264,11 +264,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 }
 
 
-
-
-
-
-
 void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
 {
 
@@ -289,6 +284,7 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
     }
 
 }
+
 
 void MFIXParticleContainer::writeAllAtLevel(int lev)
 {
@@ -311,6 +307,7 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
 	}
     }
 }
+
 
 void MFIXParticleContainer::fillGhosts( int lev ) {
     GhostCommMap ghosts_to_comm;
@@ -380,6 +377,7 @@ void MFIXParticleContainer::fillGhosts( int lev ) {
     
     fillGhostsMPI(ghosts_to_comm);
 }
+
 
 void MFIXParticleContainer::packGhostParticle(int lev,
 					      const IntVect& neighbor_cell,
