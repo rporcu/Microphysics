@@ -39,7 +39,7 @@ program fcompare_par
    read (fh1,*) np
    read (fh2,*) tmp
 
-   call check (  ( np == tmp ), "number of particles in file1 and file2 differs" )
+   call check ( ( np == tmp ), "number of particles in file1 and file2 differs" )
 
    ! Allocate types
    allocate ( particles1 (np), particles2 (np), fails (np) )
@@ -58,7 +58,7 @@ program fcompare_par
 
    do p = 1, np
       if ( all( ( abs (particles1(p) % rdata - particles2(p) % rdata) ) <= tol ) .and. &
-           all( ( particles1(p) % idata == particles1(p) % idata ) ) ) cycle    
+           all( ( particles1(p) % idata == particles2(p) % idata ) ) ) cycle    
       nfails = nfails + 1
       fails (nfails) = p 
       write (*,'(2X,A,I0)') "Comparison failed for particle ID ", p
@@ -73,8 +73,7 @@ program fcompare_par
       call check ( .false. , " file1 and file2 differ" )
    end if
 
-   
-   
+      
 contains
 
    
@@ -86,9 +85,11 @@ contains
       
       do i = 1, command_argument_count (), 2
          call get_command_argument ( i, val1, length  )
-         call check ( length <= max_char_len, "Argument length exceeds max char length" ) 
+         call check ( length <= max_char_len, &
+              & "Argument length exceeds max char length" ) 
          call get_command_argument ( i+1, val2, length  )
-         call check ( length <= max_char_len, "Command length exceeds max char length" )
+         call check ( length <= max_char_len, &
+              & "Command length exceeds max char length" )
          call set_inputs ( val1, val2 ) 
       end do      
       
@@ -160,37 +161,90 @@ contains
    end subroutine alloc_particle
 
 
+
    subroutine read_particle_data ( particles, fh )
 
       type (particle_t), intent (inout) :: particles (:)
       integer,           intent (in)    :: fh
       character(max_char_len)           :: record
-      integer                           :: i, is, ie, ios
+      integer                           :: is, ie, ios
+      integer                           :: n_r, n_i
       
       read (fh,' (A)', iostat = ios) record
       call check (  (ios==0), "cannot read input file " )
+
+      n_r = 0
+      n_i = 0
+      is  = 0
+      ie  = 0
       
-      is      = 1
-      ie      = scan (record, " ") - 1
+      do
 
-      do i = 1, nr + nr_min 
-         read ( record (is:ie), * ) single_particle % rdata (i) 
-         is = ie + 2 ! 2 = 1 space + 1 next character
-         ie = is + scan ( record (is:), " " ) - 2              
+         if ( ( n_i == ni + ni_min ) .and. (n_r == nr + nr_min ) ) exit
+
+         is = find_next_start ( record, ie + 1 )
+         ie = find_next_end ( record, is )
+              
+         if ( n_r < ( nr + nr_min ) ) then
+            n_r = n_r + 1
+            read ( record (is:ie), * ) single_particle % rdata (n_r)
+         else
+            n_i = n_i + 1
+            read ( record (is:ie), * ) single_particle % idata (n_i)
+         end if
+
       end do
-      do i = 1, ni + ni_min
-         read ( record (is:ie), * ) single_particle % idata (i) 
-         is = ie + 2 ! 2 = 1 space + 1 next character
-         ie = is + scan ( record (is:), " " ) - 2              
-      end do 
 
-      ! Assign values to particles array; idata (1) is the ID
-      ! that starts from 1
       call alloc_particle ( particles ( single_particle % idata (1) ) )
       particles( single_particle % idata (1) ) = single_particle
       
    end subroutine read_particle_data
+
    
+   function find_next_start ( record, istart )  result ( next_start )
+
+      character(*), intent(in) :: record
+      integer,      intent(in) :: istart  
+      integer                  :: next_start, i, ascii 
+
+      i = istart
+      
+      do
+         ascii = iachar ( record(i:i) )
+         if ( ( ascii >= iachar ("0") ) .and. ( ascii <= iachar("9") ) .or. &
+              ( ascii == iachar ("-") ) ) then
+            next_start = i
+            exit 
+         else
+            i = i + 1
+         end if    
+      end do
+      
+   end function find_next_start
+
+
+   function find_next_end ( record, istart ) result ( next_end )
+
+      character(*), intent(in) :: record
+      integer,      intent(in) :: istart 
+      integer                  :: next_end
+      integer                  :: ascii, i 
+      character(1), parameter  :: HT = achar(9)
+      
+      i = istart
+      
+      do
+         ascii = iachar ( record(i:i) )
+         if ( ( ascii == iachar (" ") ) .or. ( ascii == iachar(HT) ) ) then
+            next_end = i - 1
+            exit 
+         else
+            i = i + 1
+         end if    
+      end do
+      
+   end function find_next_end
+
    
    subroutine print_diff ( p1, p2, ids )
 
@@ -203,19 +257,25 @@ contains
 
          p = ids(n) 
 
-         write(*,'(/,A,I0,A)')   repeat ("+",32) // " Diff for particle ",p, " "//repeat ("+",32)  
+         write(*,'(/,A,I0,A)')   repeat ("+",32) // " Diff for particle ",p, &
+              & " "//repeat ("+",32)
+         
          write(*,'(/,4(A19),/)') "File1", "File2", "Diff", "  % Rel Diff"
 
          do i = 1, nr_min + nr
             diff    = p1(p) % rdata(i) - p2(p) % rdata(i)
-            diff_pc = diff / ( p1(p) % rdata(i) + epsilon ( p1(P) % rdata(i) ) ) * 100.0_dp
-            write(*,'(4(es20.6))') p1(p) % rdata(i), p2(p) % rdata(i), diff, diff_pc
+            diff_pc = diff / ( p1(p) % rdata(i) + epsilon ( p1(P) % rdata(i) ) )
+            diff_pc = diff_pc * 100.0_dp
+            write(*,'(4(es20.6))') p1(p) % rdata(i), p2(p) % rdata(i), diff, &
+                 & diff_pc
          end do
          
          do i = 1, ni_min + ni
             diff    = p1(p) % idata(i) - p2(p) % idata(i)
-            diff_pc = diff / ( p1(p) % rdata(i) + epsilon ( p1(p) % rdata(i) ) ) * 100.0_dp
-            write(*,'(3(I20),es20.6)') p1(p) % idata(i), p2(p) % idata(i), int(diff), diff_pc
+            diff_pc = diff / ( p1(p) % idata(i) + epsilon ( 0.0_dp ) )
+            diff_pc = diff_pc * 100.0_dp
+            write(*,'(3(I20),es20.6)') p1(p) % idata(i), p2(p) % idata(i), &
+                 & int(diff), diff_pc
          end do
          
          write(*,*)
