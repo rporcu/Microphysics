@@ -218,18 +218,30 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     int   nsubsteps;
     Real  subdt;
     
-
+    fillGhosts(lev);
+    
     mfix_des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
     
     for ( int n = 0; n < nsubsteps; ++n ) {
 	
 	for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-	
+
+	    // Real particles
 	    const int np     = NumberOfParticles(pti);
 	    void* particles  = GetParticlesData(pti);
 
-	    mfix_des_time_loop_ops( &np, particles, &subdt, &dx, &dy, &dz,
+	    // Ghost particles
+	    int nstride = pti.GetArrayOfStructs().dataShape().first;
+	    PairIndex index(pti.index(), pti.LocalTileIndex());
+	    int ng = ghosts[index].size() / pdata_size;
+
+	    mfix_des_time_loop_ops( &np, particles, &ng, ghosts[index].dataPtr(),
+				    &subdt, &dx, &dy, &dz,
 				    &xlen, &ylen, &zlen, &nstep );
+
+	    
+	    // mfix_des_time_loop_ops( &np, particles, &subdt, &dx, &dy, &dz,
+	    // 			    &xlen, &ylen, &zlen, &nstep );
 
 	    if ( mfix_des_continuum_coupled () == 0 ) {
 		Real stime;
@@ -244,6 +256,9 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     }
 
+    clearGhosts(lev);
+
+    Redistribute();
     
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 	
@@ -258,9 +273,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     	nstep = nsubsteps;
     	time  = time + nsubsteps * subdt ;
     }
-
     
-    Redistribute();
+    // Redistribute();
 }
 
 
@@ -542,4 +556,13 @@ void MFIXParticleContainer::fillGhostsMPI(GhostCommMap& ghosts_to_comm) {
         }
     }
 #endif
+}
+
+void MFIXParticleContainer::clearGhosts( int lev ) {
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+        const int grid_id = pti.index();
+        const int tile_id = pti.LocalTileIndex();
+        auto& ghost_particles = ghosts[std::make_pair(grid_id, tile_id)];
+        Array<char>().swap(ghost_particles);
+    }
 }

@@ -270,9 +270,15 @@ extern "C"
 
     void mfix_des_init_time_loop ( const  Real* tstart, const Real* dt, int* nsubsteps, Real* subdt );
 
-    void mfix_des_time_loop_ops( const int* np,  void* particles, Real* subdt, Real* dx,
-				 Real* dy, Real* dz, Real* xlength, Real* ylength, Real* zlength,
+    void mfix_des_time_loop_ops( const int* nrp,  void* rparticles,
+				 const int* ngp,  void* gparticles,
+				 Real* subdt, Real* dx, Real* dy, Real* dz,
+				 Real* xlength, Real* ylength, Real* zlength,
 				 int * nstep );
+
+    // void mfix_des_time_loop_ops( const int* np,  void* particles, Real* subdt, Real* dx,
+    // 				 Real* dy, Real* dz, Real* xlength, Real* ylength, Real* zlength,
+    // 				 int * nstep );
 
     int mfix_des_continuum_coupled ();
     

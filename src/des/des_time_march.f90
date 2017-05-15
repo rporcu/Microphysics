@@ -101,8 +101,43 @@ contains
    end subroutine call_usr2_des
 
 
-   subroutine des_time_loop_ops ( np, particles, subdt, dx, dy, dz, &
-        & xlength, ylength, zlength, nstep )  &
+   ! subroutine des_time_loop_ops ( np, particles, subdt, dx, dy, dz, &
+   !      & xlength, ylength, zlength, nstep )  &
+   !      bind(C, name="mfix_des_time_loop_ops")
+
+   !    use particle_mod
+   !    use calc_collision_wall,     only: calc_dem_force_with_wall_stl
+   !    use calc_force_dem_module,   only: calc_force_dem
+   !    use discretelement,          only: dtsolid
+   !    use output_manager_module,   only: output_manager
+   !    use run,                     only: call_usr
+
+   !    integer(c_int),   intent(in   ) :: np
+   !    real(c_real),     intent(in   ) :: subdt, xlength, ylength, zlength, dx, dy, dz
+   !    type(particle_t), intent(inout) :: particles(np)
+   !    integer(c_int),   intent(inout) :: nstep
+   !    real(c_real)                    :: tow(np,3), fc(np,3)
+
+   !    tow  = 0
+   !    fc   = 0
+
+   !    ! calculate forces from particle-wall collisions
+   !    call calc_dem_force_with_wall_stl( particles, fc, tow, xlength, ylength, zlength, subdt )
+
+   !    ! calculate forces from particle-particle collisions
+   !    call calc_force_dem( particles, fc, tow, subdt )
+
+   !    ! call user functions.
+   !    if ( call_usr ) call usr1_des
+
+   !    ! update position and velocities
+   !    call des_euler_update ( particles, fc, tow, subdt )
+
+   ! end subroutine des_time_loop_ops
+
+
+   subroutine des_time_loop_ops ( nrp, rparticles, ngp, gparticles, &
+        & subdt, dx, dy, dz, xlength, ylength, zlength, nstep )  &
         bind(C, name="mfix_des_time_loop_ops")
 
       use particle_mod
@@ -112,30 +147,38 @@ contains
       use output_manager_module,   only: output_manager
       use run,                     only: call_usr
 
-      integer(c_int),   intent(in   ) :: np
-      real(c_real),     intent(in   ) :: subdt, xlength, ylength, zlength, dx, dy, dz
-      type(particle_t), intent(inout) :: particles(np)
-      integer(c_int),   intent(inout) :: nstep
-      real(c_real)                    :: tow(np,3), fc(np,3)
+      integer(c_int),   intent(in   )     :: nrp, ngp
+      real(c_real),     intent(in   )     :: subdt, dx, dy, dz
+      real(c_real),     intent(in   )     :: xlength, ylength, zlength
+      type(particle_t), intent(inout)     :: rparticles(nrp), gparticles(ngp)
+      integer(c_int),   intent(inout)     :: nstep
+      real(c_real)                        :: tow(nrp+ngp,3), fc(nrp+ngp,3)
+      type(particle_t)                    :: particles(nrp+ngp)
 
+
+      particles(    1:nrp) = rparticles
+      particles(nrp+1:   ) = gparticles
+      
       tow  = 0
       fc   = 0
 
       ! calculate forces from particle-wall collisions
-      call calc_dem_force_with_wall_stl( particles, fc, tow, xlength, ylength, zlength, subdt )
+      call calc_dem_force_with_wall_stl ( particles, fc, tow, &
+           xlength, ylength, zlength, subdt )
 
       ! calculate forces from particle-particle collisions
-      call calc_force_dem( particles, fc, tow, subdt )
+      call calc_force_dem ( particles, fc, tow, subdt )
 
       ! call user functions.
       if ( call_usr ) call usr1_des
 
       ! update position and velocities
       call des_euler_update ( particles, fc, tow, subdt )
-
+      
+      rparticles = particles(    1: nrp)   
+      gparticles = particles(nrp+1:    )
+      
    end subroutine des_time_loop_ops
-
-
 
 
 
