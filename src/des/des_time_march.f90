@@ -132,7 +132,7 @@ contains
 
       ! update position and velocities
       call des_euler_update ( particles, fc, tow, subdt )
-      
+
    end subroutine des_time_loop_ops
 
 
@@ -150,28 +150,26 @@ contains
       real(c_real),     intent(inout)  :: fc(:,:), tow(:,:)
       real(c_real),     intent(in   )  :: dt
       integer                          :: p
-      real(c_real)                     :: vel_old(3)
-      real(c_real),     parameter      :: q2 = 0.5_c_real
 
       do p = 1, size ( particles )
 
-         if ( ( particles(p) % state /= normal_particle ) .and. &
-              ( particles(p) % state /= exiting_particle )  )  cycle
+         if ( ( particles(p) % state == normal_particle ) .or. &
+              ( particles(p) % state == exiting_particle )  ) then
 
-         associate ( vel => particles(p) % vel, pos => particles(p) % pos, &
-              drag => particles(p) % drag, mass => particles(p) % mass,    &
-              omega => particles(p) % omega, omoi => particles(p) % omoi )
+            associate ( vel => particles(p) % vel, pos => particles(p) % pos, &
+               drag => particles(p) % drag, mass => particles(p) % mass,    &
+               omega => particles(p) % omega, omoi => particles(p) % omoi )
 
-            vel_old = vel 
-            vel     = vel   + dt * ( ( fc(p,:) +  drag ) / mass + gravity )  
-            pos     = pos   + dt * ( q2 * ( vel + vel_old ) )  
-            omega   = omega + dt * tow(p,:) * omoi  
-            
-         end associate
-         
+              vel     = vel   + dt * ( ( fc(p,:) +  drag ) / mass + gravity )
+              pos     = pos   + dt * vel
+              omega   = omega + dt * tow(p,:) * omoi
+
+            end associate
+
+         end if
       end do
-        
+
    end subroutine des_euler_update
-   
+
 
 end module des_time_march_module
