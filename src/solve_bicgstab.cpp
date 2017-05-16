@@ -299,6 +299,13 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         ret = 3; break;
       }
 
+
+      if ( verbose > 0 && ParallelDescriptor::IOProcessor())
+        {
+          std::cout << "v1 " << vals[1] << "   v0 "<< vals[0] << '\n';
+        }
+
+
       sxay(sol, sol,  alpha, ph);
       sxay(sol, sol,  omega, sh);
 
@@ -309,6 +316,14 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       rnorm = dotxy(r,r,geom[lev].periodicity(),true);
       rnorm = sqrt(rnorm);
+
+
+
+      // if ( verbose > 0 && ParallelDescriptor::IOProcessor())
+      //   {
+      //     std::cout << "BiCGStab:       Rnorm " << nit << " L-2 "<< rnorm/(rnorm0) << '\n';
+      //   }
+
 
       if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
 

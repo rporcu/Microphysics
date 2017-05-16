@@ -80,6 +80,8 @@ module solve_pp_module
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real), intent(  out) :: resid(8,2)
 
+      integer :: i,j,k
+
       ! Initialize A_m and b_m
       A_m(:,:,:,:)  =  0.0d0
       A_m(:,:,:,0)  = -1.0d0
@@ -99,6 +101,17 @@ module solve_pp_module
 
       call calc_resid_pp (alo, ahi, b_m, b_mmax, &
          resid(resid_p,1), resid(resid_p,2))
+
+      write(2300,"(10/,80('*'),2/)")
+      do j=alo(2), ahi(2)
+         write(2300,"(2/'J=',I3)") j
+         do k=ahi(3),alo(3),-1
+            do i=alo(1),ahi(1)
+               write(2300,"(8(2x,es15.8))")a_m(i,j,k,:),b_m(i,j,k)
+            enddo
+         enddo
+      enddo
+
 
       end subroutine solve_pp_g
 
