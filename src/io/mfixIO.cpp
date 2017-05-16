@@ -439,15 +439,6 @@ void mfix_level::WriteParticleAscii ( int nstep )   {
     // Condition nstep !=0 ensures that plotfile is dumped if WritePlotFile is 
     // called without arguments (useful for steady state case).
     if ( (par_ascii_int < 1) || ( nstep % par_ascii_int != 0 && nstep != 0) )  return;
-
-
-    std::cout << "Inside writeparticleascii " << std::endl;
-
-    std::cout << "par_ascii_int " << par_ascii_int << std::endl;
-    std::cout << "par_ascii_file " << par_ascii_file<< std::endl;
-    std::cout << "nstep " << nstep  << std::endl;
-
-
     
     const std::string& par_filename = amrex::Concatenate(par_ascii_file,nstep);
     
