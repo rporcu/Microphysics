@@ -770,6 +770,22 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
 void
 mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 {
+    mfix_solve_for_u(lev, dt, residuals);
+    mfix_solve_for_v(lev, dt, residuals);
+    mfix_solve_for_w(lev, dt, residuals);
+
+    MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());
+    MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, v_g[lev]->nGrow());
+    MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, w_g[lev]->nGrow());
+
+    u_g[lev]->FillBoundary(geom[lev].periodicity());
+    v_g[lev]->FillBoundary(geom[lev].periodicity());
+    w_g[lev]->FillBoundary(geom[lev].periodicity());
+}
+
+void
+mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
+{
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -810,9 +826,56 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 		       &dt, &dx, &dy, &dz, residuals);
     }
 
+#if 1
+    MultiFab rhs, sol, mat;
+    {
+    Box minBox(u_gt[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    sol.define(MinBA, dm, u_gt[lev]->nComp(), u_gt[lev]->nGrow());
+    sol.setVal(0.);
+    sol.copy((*u_gt[lev]),0,0,u_gt[lev]->nComp());
+    sol.FillBoundary(geom[lev].periodicity());
+    }
+ 
+    {
+    Box minBox(b_m[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    rhs.define(MinBA, dm, b_m[lev]->nComp(), b_m[lev]->nGrow());
+    rhs.setVal(0.);
+    rhs.copy((*b_m[lev]),0,0,b_m[lev]->nComp());
+    rhs.FillBoundary(geom[lev].periodicity());
+    }
+ 
+    {
+    Box minBox(A_m[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    mat.define(MinBA, dm, A_m[lev]->nComp(), A_m[lev]->nGrow());
+    mat.setVal(0.);
+    mat.copy(*A_m[lev],0,0,A_m[lev]->nComp());
+    mat.FillBoundary(geom[lev].periodicity());
+    }
 
     int eq_id=2;
+    mfix_solve_linear_equation(eq_id,lev,sol,mat,rhs);
+    u_gt[lev]->copy(sol,0,0,u_gt[lev]->nComp());
+#else
+    int eq_id=2;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
+#endif
+
+}
+
+void
+mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
+{
+    Box domain(geom[lev].Domain());
+
+    Real dx = geom[lev].CellSize(0);
+    Real dy = geom[lev].CellSize(1);
+    Real dz = geom[lev].CellSize(2);
 
     // Solve V-Momentum equation
 
@@ -849,8 +912,73 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 		       &dt, &dx, &dy, &dz, residuals);
     }
 
-    eq_id=3;
+#if 1
+    MultiFab rhs, sol, mat;
+    {
+    Box minBox(v_gt[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    sol.define(MinBA, dm, v_gt[lev]->nComp(), v_gt[lev]->nGrow());
+    sol.setVal(0.);
+    sol.copy((*v_gt[lev]),0,0,v_gt[lev]->nComp());
+    sol.FillBoundary(geom[lev].periodicity());
+    }
+ 
+    {
+    Box minBox(b_m[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    rhs.define(MinBA, dm, b_m[lev]->nComp(), b_m[lev]->nGrow());
+    rhs.setVal(0.);
+    rhs.copy((*b_m[lev]),0,0,b_m[lev]->nComp());
+    rhs.FillBoundary(geom[lev].periodicity());
+    }
+ 
+    {
+    Box minBox(A_m[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    mat.define(MinBA, dm, A_m[lev]->nComp(), A_m[lev]->nGrow());
+    mat.setVal(0.);
+    mat.copy(*A_m[lev],0,0,A_m[lev]->nComp());
+    mat.FillBoundary(geom[lev].periodicity());
+    }
+
+    int eq_id=3;
+    if (sol.contains_nan()) 
+    {
+        std::cout << "SOL HAS NANS" << std::endl;
+        std::cout << "DOES V HAVE NANS " << v_gt[lev]->contains_nan() << std::endl;
+        std::cout << "VGT " << (*v_gt[lev])[0] << std::endl;
+        std::cout << "SOL " << sol[0] << std::endl;
+        exit(0);
+    }
+    if (rhs.contains_nan()) 
+    {
+        std::cout << "RHS HAS NANS" << std::endl;
+        exit(0);
+    }
+    if (mat.contains_nan()) 
+    {
+        std::cout << "MAT HAS NANS" << std::endl;
+        exit(0);
+    }
+    mfix_solve_linear_equation(eq_id,lev,sol,mat,rhs);
+    v_gt[lev]->copy(sol,0,0,v_gt[lev]->nComp());
+#else
+    int eq_id=3;
     mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
+#endif
+}
+
+void
+mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
+{
+    Box domain(geom[lev].Domain());
+
+    Real dx = geom[lev].CellSize(0);
+    Real dy = geom[lev].CellSize(1);
+    Real dz = geom[lev].CellSize(2);
 
     // Solve W-Momentum equation
 
@@ -887,16 +1015,45 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 		       &dt, &dx, &dy, &dz, residuals);
     }
 
-    eq_id=4;
+#if 1
+    MultiFab rhs, sol, mat;
+    {
+    Box minBox(w_gt[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    sol.define(MinBA, dm, w_gt[lev]->nComp(), w_gt[lev]->nGrow());
+    sol.setVal(0.);
+    sol.copy((*w_gt[lev]),0,0,w_gt[lev]->nComp());
+    sol.FillBoundary(geom[lev].periodicity());
+    }
+ 
+    {
+    Box minBox(b_m[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    rhs.define(MinBA, dm, b_m[lev]->nComp(), b_m[lev]->nGrow());
+    rhs.setVal(0.);
+    rhs.copy((*b_m[lev]),0,0,b_m[lev]->nComp());
+    rhs.FillBoundary(geom[lev].periodicity());
+    }
+ 
+    {
+    Box minBox(A_m[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    mat.define(MinBA, dm, A_m[lev]->nComp(), A_m[lev]->nGrow());
+    mat.setVal(0.);
+    mat.copy(*A_m[lev],0,0,A_m[lev]->nComp());
+    mat.FillBoundary(geom[lev].periodicity());
+    }
+
+    int eq_id=4;
+    mfix_solve_linear_equation(eq_id,lev,sol,mat,rhs);
+    w_gt[lev]->copy(sol,0,0,w_gt[lev]->nComp());
+#else
+    int eq_id=4;
     mfix_solve_linear_equation(eq_id,lev,(*w_gt[lev]),(*A_m[lev]),(*b_m[lev]));
-
-    MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());
-    MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, v_g[lev]->nGrow());
-    MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, w_g[lev]->nGrow());
-
-    u_g[lev]->FillBoundary(geom[lev].periodicity());
-    v_g[lev]->FillBoundary(geom[lev].periodicity());
-    w_g[lev]->FillBoundary(geom[lev].periodicity());
+#endif
 }
 
 void
@@ -941,8 +1098,41 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
     }
     pp_g[lev]->setVal(0.);
 
+    MultiFab rhs, sol, mat;
+    {
+    Box minBox(pp_g[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    sol.define(MinBA, dm, pp_g[lev]->nComp(), pp_g[lev]->nGrow());
+    sol.copy((*pp_g[lev]),0,0,pp_g[lev]->nComp());
+    sol.FillBoundary(geom[lev].periodicity());
+    }
+ 
+    {
+    Box minBox(b_m[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    rhs.define(MinBA, dm, b_m[lev]->nComp(), b_m[lev]->nGrow());
+    rhs.copy((*b_m[lev]),0,0,b_m[lev]->nComp());
+    rhs.FillBoundary(geom[lev].periodicity());
+    }
+ 
+    {
+    Box minBox(A_m[lev]->boxArray().minimalBox());
+    BoxArray MinBA(minBox);
+    DistributionMapping dm(MinBA);
+    mat.define(MinBA, dm, A_m[lev]->nComp(), A_m[lev]->nGrow());
+    mat.copy(*A_m[lev],0,0,A_m[lev]->nComp());
+    mat.copy((*A_m[lev]),0,0,A_m[lev]->nComp());
+    mat.FillBoundary(geom[lev].periodicity());
+    }
+
     int eq_id=1;
-    mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
+    mfix_solve_linear_equation(eq_id,lev,sol,mat,rhs);
+    pp_g[lev]->copy(sol,0,0,pp_g[lev]->nComp());
+
+//  mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
+    pp_g[lev]->FillBoundary(geom[lev].periodicity());
     fill_mf_bc(lev,*pp_g[lev]);
 }
 
@@ -1092,8 +1282,6 @@ void mfix_level::mfix_calc_volume_fraction(int lev)
     fill_mf_bc(lev,*ep_g[lev]);
     fill_mf_bc(lev,*rop_g[lev]);
 }
-
-
 
 void mfix_level::mfix_calc_drag_fluid(int lev)
 {
