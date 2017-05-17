@@ -1134,6 +1134,34 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
 //  mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
     pp_g[lev]->FillBoundary(geom[lev].periodicity());
     fill_mf_bc(lev,*pp_g[lev]);
+
+#if 0
+    std::cout << "PRINTING A " << std::endl;
+    for (MFIter mfi(*A_m[lev]); mfi.isValid(); ++mfi)
+      {
+        Box bx((*A_m[lev])[mfi].box());
+        out_matrix((*A_m[lev])[mfi].dataPtr(), bx.loVect(), bx.hiVect());
+      }
+#endif
+
+#if 0
+    std::cout << "PRINTING P " << std::endl;
+    for (MFIter mfi(*pp_g[lev]); mfi.isValid(); ++mfi)
+      {
+        Box bx((*pp_g[lev])[mfi].box());
+        out_array((*pp_g[lev])[mfi].dataPtr(), bx.loVect(), bx.hiVect());
+      }
+#endif
+
+#if 0
+    std::cout << "PRINTING B " << std::endl;
+    for (MFIter mfi(*b_m[lev]); mfi.isValid(); ++mfi)
+      {
+        Box bx((*b_m[lev])[mfi].box());
+        out_array((*b_m[lev])[mfi].dataPtr(), bx.loVect(), bx.hiVect());
+      }
+#endif
+//  exit(0);
 }
 
 
@@ -1144,27 +1172,6 @@ mfix_level::mfix_correct_0(int lev)
 {
     Box domain(geom[lev].Domain());
 
-
-
-
-
-    for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
-      {
-        Box bx((*u_g[lev])[mfi].box());
-        out_array((*d_n[lev])[mfi].dataPtr(), bx.loVect(), bx.hiVect());
-      }
-
-
-
-
-
-
-
-
-
-
-
-
     for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
@@ -1174,9 +1181,9 @@ mfix_level::mfix_correct_0(int lev)
       Box vbx((*v_g[lev])[mfi].box());
       Box wbx((*w_g[lev])[mfi].box());
 
-      correct_0(sbx.loVect(), sbx.hiVect(),
+      correct_0( bx.loVect(),  bx.hiVect(),
                 ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-                bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(),
+                sbx.loVect(),  sbx.hiVect(), domain.loVect(), domain.hiVect(),
                 (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
                 (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                 (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr());
