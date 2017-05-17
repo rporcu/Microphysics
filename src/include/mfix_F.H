@@ -306,6 +306,9 @@ extern "C"
 		      const Real*, const int*, const int*,
 		      const Real*, const int*, const int*);
 
+  void out_array(const Real*, const int*, const int*);
+  void out_matrix(const Real*, const int*, const int*);
+
     void leq_matvec(const Real*, const int*, const int*,
 		    const Real*, const int*, const int*,
 		    const Real*, const int*, const int*);

@@ -114,4 +114,55 @@ contains
 
   end subroutine leq_residual
 
+
+
+
+
+
+  subroutine out_array(array, lo, hi) &
+    bind(C, name = "out_array")
+
+    integer(c_int), intent(in   ) :: lo(3),hi(3)
+
+    real(c_real)  , intent(in   ) :: array&
+         (lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))
+
+    integer :: i, j, k
+
+    do j = lo(2),hi(2)
+       do k = lo(3),hi(3)
+          do i = lo(1),hi(1)
+             write(*,*) i,j,k,array(i,j,k)
+          enddo
+       enddo
+    enddo
+
+  end subroutine out_array
+
+
+  subroutine out_matrix(matrix, lo, hi) &
+       bind(C, name = "out_matrix")
+
+    integer(c_int), intent(in   ) :: lo(3),hi(3)
+
+    real(c_real)  , intent(in   ) :: matrix&
+         (lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),-3:3)
+
+    integer :: i, j, k
+
+    do j = lo(2),hi(2)
+       do k = lo(3),hi(3)
+          do i = lo(1),hi(1)
+             write(*,*) i,j,k,matrix(i,j,k,:)
+          enddo
+       enddo
+    enddo
+
+  end subroutine out_matrix
+
+
+
+
+
+
 end module matvec_module

@@ -1136,25 +1136,50 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
     fill_mf_bc(lev,*pp_g[lev]);
 }
 
+
+
+
 void
 mfix_level::mfix_correct_0(int lev)
 {
     Box domain(geom[lev].Domain());
+
+
+
+
+
+    for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
+      {
+        Box bx((*u_g[lev])[mfi].box());
+        out_array((*d_n[lev])[mfi].dataPtr(), bx.loVect(), bx.hiVect());
+      }
+
+
+
+
+
+
+
+
+
+
+
+
     for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.validbox();
-	const Box& sbx = (*p_g[lev])[mfi].box();
+      const Box& bx = mfi.validbox();
+      const Box& sbx = (*p_g[lev])[mfi].box();
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+      Box ubx((*u_g[lev])[mfi].box());
+      Box vbx((*v_g[lev])[mfi].box());
+      Box wbx((*w_g[lev])[mfi].box());
 
-	correct_0(sbx.loVect(), sbx.hiVect(),
-		  ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-		  bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(),
-		  (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
-		  (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-		  (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr());
+      correct_0(sbx.loVect(), sbx.hiVect(),
+                ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+                bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(),
+                (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
+                (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+                (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr());
     }
 
     fill_mf_bc(lev,*p_g[lev]);
@@ -1164,17 +1189,20 @@ mfix_level::mfix_correct_0(int lev)
     w_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
+
+
+
 void
 mfix_level::mfix_physical_prop(int lev, int calc_flag)
 {
     for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.validbox();
-	const Box& sbx = (*p_g[lev])[mfi].box();
+      const Box& bx = mfi.validbox();
+      const Box& sbx = (*p_g[lev])[mfi].box();
 
-	physical_prop(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),&calc_flag,
-		      (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
-		      (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
+      physical_prop(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),&calc_flag,
+                    (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+                    (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
     }
     fill_mf_bc(lev,*ro_g[lev]);
     fill_mf_bc(lev,*rop_g[lev]);
