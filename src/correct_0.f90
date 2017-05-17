@@ -65,12 +65,10 @@ MODULE CORRECT_0_MODULE
       do k = lo(3), hi(3)
         do j = lo(2), hi(2)
           do i = lo(1), hi(1)+1
-            if (j.eq.17 .and. k.eq.3) print *,'U_G ', i, u_g(i,j,k), d_e(i,j,k), (pp_g(i,j,k)-pp_g(i-1,j,k))
             u_g(i,j,k) = u_g(i,j,k) - d_e(i,j,k)*(pp_g(i,j,k)-pp_g(i-1,j,k))
           enddo
         enddo
      enddo
-     stop
 
       do k = lo(3), hi(3)
         do j = lo(2), hi(2)+1
@@ -80,8 +78,8 @@ MODULE CORRECT_0_MODULE
        enddo
      enddo
 
-      do k = lo(3), hi(3)
-        do j = lo(2), hi(2)+1
+      do k = lo(3), hi(3)+1
+        do j = lo(2), hi(2)
           do i = lo(1), hi(1)
            w_g(i,j,k) = w_g(i,j,k) - d_t(i,j,k)*(pp_g(i,j,k)-pp_g(i,j,k-1))
          enddo
