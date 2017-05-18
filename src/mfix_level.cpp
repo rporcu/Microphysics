@@ -886,6 +886,7 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
     b_m[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,0));
 
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
+
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
 	const Box& bx = mfi.validbox();
@@ -912,7 +913,7 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 		       &dt, &dx, &dy, &dz, residuals);
     }
 
-#if 1
+#if 0
     MultiFab rhs, sol, mat;
     {
     Box minBox(v_gt[lev]->boxArray().minimalBox());
@@ -963,6 +964,7 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
         std::cout << "MAT HAS NANS" << std::endl;
         exit(0);
     }
+
     mfix_solve_linear_equation(eq_id,lev,sol,mat,rhs);
     v_gt[lev]->copy(sol,0,0,v_gt[lev]->nComp());
 #else
@@ -971,7 +973,7 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 #endif
 
 #if 1
-    std::cout << "PRINTING B FOR V BEFORE " << std::endl;
+    std::cout << "PRINTING B FOR V " << std::endl;
     for (MFIter mfi(*b_m[lev]); mfi.isValid(); ++mfi)
       {
         Box bx((*b_m[lev])[mfi].box());
