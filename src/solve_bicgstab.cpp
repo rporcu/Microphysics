@@ -300,10 +300,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       }
 
 
-      if ( verbose > 0 && ParallelDescriptor::IOProcessor())
-        {
-          std::cout << "v1 " << vals[1] << "   v0 "<< vals[0] << '\n';
-        }
+//    if ( verbose > 0 && ParallelDescriptor::IOProcessor())
+//      {
+//        std::cout << "v1 " << vals[1] << "   v0 "<< vals[0] << '\n';
+//      }
 
 
       sxay(sol, sol,  alpha, ph);

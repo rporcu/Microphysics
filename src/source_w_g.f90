@@ -165,41 +165,38 @@ contains
 
 ! Local variables
 !-----------------------------------------------
-      real(c_real) :: odx, ody
-
-      integer :: bcv, i,j,k
-
-      integer :: nlft, nrgt, nbot, ntop, nup, ndwn
+      real(c_real) :: odx,ody
+      integer      :: bcv,kbc,i,j,k
 !---------------------------------------------------------------------//
 
       odx = 1.0d0/dx
       ody = 1.0d0/dy
 
-      nlft = max(0,domlo(1)-slo(1))
-      nbot = max(0,domlo(2)-slo(2))
-      ndwn = max(0,domlo(3)-slo(3))
+! ------------------------------------------------------------->
 
-      nrgt = max(0,shi(1)-domhi(1))
-      ntop = max(0,shi(2)-domhi(2))
-      nup  = max(0,shi(3)-domhi(3))
+      ! At left boundary
+      if (slo(1) .lt. domlo(1)) then
 
-! --- EAST FLUID ---------------------------------------------------------->
-
-      if (nlft .gt. 0) then
          i = alo(1)
-         do k=alo(3),ahi(3)
-            do j=alo(2),ahi(2)
-               bcv = bc_ilo_type(j,k,2)
 
-               if(bc_ilo_type(j,k,1) == NSW_) then
+         do k=alo(3),ahi(3)
+
+           ! bc's on i-faces only defined within (domlo(1):domhi(1),domlo(2):domhi(2))
+            kbc = max(min(k,domhi(3)),domlo(3))
+
+            do j=alo(2),ahi(2)
+
+               bcv = bc_ilo_type(j,kbc,2)
+
+               if(bc_ilo_type(j,kbc,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
                   A_m(i,j,k,w) = zero
 
-               else if(bc_ilo_type(j,k,1) == FSW_) then
+               else if(bc_ilo_type(j,kbc,1) == FSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,w)
                   A_m(i,j,k,w) = zero
 
-               else if(bc_ilo_type(j,k,1) == PSW_) then
+               else if(bc_ilo_type(j,kbc,1) == PSW_) then
                   if (is_undefined(bc_hw_g(bcv))) then
                      A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
                      b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,w)*bc_ww_g(bcv)
@@ -211,9 +208,9 @@ contains
                   endif
                   A_m(i,j,k,w) = zero
 
-               else if(bc_ilo_type(j,k,1) == PINF_ .or. &
-                       bc_ilo_type(j,k,1) == POUT_ .or. &
-                       bc_ilo_type(j,k,1) == MINF_) then
+               else if(bc_ilo_type(j,kbc,1) == PINF_ .or. &
+                       bc_ilo_type(j,kbc,1) == POUT_ .or. &
+                       bc_ilo_type(j,kbc,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -223,23 +220,33 @@ contains
          end do
       endif
 
-! --- WEST FLUID ---------------------------------------------------------->
+! ------------------------------------------------------------->
 
-      if (nrgt .gt. 0) then
+      ! At right boundary
+      if (shi(1) .gt. domhi(1)) then
+
          i = ahi(1)
          do k=alo(3),ahi(3)
-            do j=alo(2),ahi(2)
-               bcv = bc_ihi_type(j,k,2)
 
-               if(bc_ihi_type(j,k,1) == NSW_) then
+            ! bc's on i-faces only defined within (domlo(1):domhi(1),domlo(2):domhi(2))
+            kbc = max(min(k,domhi(3)),domlo(3))
+
+            do j=alo(2),ahi(2)
+
+               bcv = bc_ihi_type(j,kbc,2)
+
+               if(bc_ihi_type(j,kbc,1) == NSW_) then
+
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
                   A_m(i,j,k,e) = zero
 
-               else if(bc_ihi_type(j,k,1) == FSW_) then
+               else if(bc_ihi_type(j,kbc,1) == FSW_) then
+
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,e)
                   A_m(i,j,k,e) = zero
 
-               else if(bc_ihi_type(j,k,1) == PSW_) then
+               else if(bc_ihi_type(j,kbc,1) == PSW_) then
+
                   if (is_undefined(bc_hw_g(bcv))) then
                      A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
                      b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,e)*bc_ww_g(bcv)
@@ -251,9 +258,9 @@ contains
                   endif
                   A_m(i,j,k,e) = zero
 
-               else if(bc_ihi_type(j,k,1) == PINF_ .or. &
-                       bc_ihi_type(j,k,1) == POUT_ .or. &
-                       bc_ihi_type(j,k,1) == MINF_) then
+               else if(bc_ihi_type(j,kbc,1) == PINF_ .or. &
+                       bc_ihi_type(j,kbc,1) == POUT_ .or. &
+                       bc_ihi_type(j,kbc,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -264,23 +271,31 @@ contains
          end do
       endif
 
-! --- NORTH FLUID --------------------------------------------------------->
+! ------------------------------------------------------------->
 
-      if (nbot .gt. 0) then
+      ! At bottom boundary
+      if (slo(2) .lt. domlo(2)) then
+
          j = alo(2)
+
          do k=alo(3),ahi(3)
-            do i=alo(1),ahi(1)
-               bcv = bc_jlo_type(i,k,2)
-               if(bc_jlo_type(i,k,1) == NSW_) then
+
+            ! bc's on j-faces only defined within (domlo(1):domhi(1),domlo(3):domhi(3))
+            kbc = max(min(k,domhi(3)),domlo(3))
+
+            do i = alo(1),ahi(1)
+
+               bcv = bc_jlo_type(i,kbc,2)
+
+               if(bc_jlo_type(i,kbc,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
 
-               else if(bc_jlo_type(i,k,1) == FSW_ .or. &
-                       bc_jlo_type(i,k,1) == cycl_) then
+               else if(bc_jlo_type(i,kbc,1) == FSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
 
-               else if(bc_jlo_type(i,k,1) == PSW_) then
+               else if(bc_jlo_type(i,kbc,1) == PSW_) then
                   if (is_undefined(bc_hw_g(bcv))) then
                      A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,s)
                      b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,s)*bc_ww_g(bcv)
@@ -292,9 +307,9 @@ contains
                   endif
                   A_m(i,j,k,s) = zero
 
-               else if(bc_jlo_type(i,k,1) == PINF_ .or. &
-                       bc_jlo_type(i,k,1) == POUT_ .or. &
-                       bc_jlo_type(i,k,1) == MINF_) then
+               else if(bc_jlo_type(i,kbc,1) == PINF_ .or. &
+                       bc_jlo_type(i,kbc,1) == POUT_ .or. &
+                       bc_jlo_type(i,kbc,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -305,24 +320,31 @@ contains
          end do
       endif
 
-! --- SOUTH FLUID --------------------------------------------------------->
+! ------------------------------------------------------------->
 
-      if (ntop .gt. 0) then
+      ! At top boundary
+      if (shi(2) .gt. domhi(2)) then
+
          j = ahi(2)
-         do k=alo(3),ahi(3)
-            do i=alo(1),ahi(1)
-               bcv = bc_jhi_type(i,k,2)
 
-               if(bc_jhi_type(i,k,1) == NSW_) then
+         do k=alo(3),ahi(3)
+
+            ! bc's on j-faces only defined within (domlo(1):domhi(1),domlo(3):domhi(3))
+            kbc = max(min(k,domhi(3)),domlo(3))
+
+            do i=alo(1),ahi(1)
+
+               bcv = bc_jhi_type(i,kbc,2)
+
+               if(bc_jhi_type(i,kbc,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,n)
                   A_m(i,j,k,n) = zero
 
-               else if(bc_jhi_type(i,k,1) == FSW_ .or. &
-                       bc_jhi_type(i,k,1) == cycl_) then
+               else if(bc_jhi_type(i,kbc,1) == FSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
                   A_m(i,j,k,n) = zero
 
-               else if(bc_jhi_type(i,k,1) == PSW_) then
+               else if(bc_jhi_type(i,kbc,1) == PSW_) then
                   if (is_undefined(bc_hw_g(bcv))) then
                      A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,n)
                      b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,n)*bc_ww_g(bcv)
@@ -334,9 +356,9 @@ contains
                   endif
                   A_m(i,j,k,n) = zero
 
-               else if(bc_jhi_type(i,k,1) == PINF_ .or. &
-                       bc_jhi_type(i,k,1) == POUT_ .or. &
-                       bc_jhi_type(i,k,1) == MINF_) then
+               else if(bc_jhi_type(i,kbc,1) == PINF_ .or. &
+                       bc_jhi_type(i,kbc,1) == POUT_ .or. &
+                       bc_jhi_type(i,kbc,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -347,10 +369,13 @@ contains
          end do
       endif
 
-! --- TOP FLUID ----------------------------------------------------------->
+! ------------------------------------------------------------->
 
-      if (ndwn .gt. 0) then
+      ! At down boundary
+      if (slo(3) .lt. domlo(3)) then
+
          k = alo(3)
+
          do j=alo(2),ahi(2)
             do i=alo(1),ahi(1)
                bcv = bc_klo_type(i,j,2)
@@ -379,10 +404,13 @@ contains
          end do
       endif
 
-! --- BOTTOM FLUID -------------------------------------------------------->
+! ------------------------------------------------------------->
 
-      if (nup .gt. 0) then
+      ! At up boundary
+      if (shi(3) .gt. domhi(3)) then
+
          k = ahi(3)
+
          do j=alo(2),ahi(2)
             do i=alo(1),ahi(1)
                bcv = bc_khi_type(i,j,2)

@@ -93,7 +93,17 @@ contains
                 bms = A_m(i,j,k,s)*v_g(i,j  ,k)
                 bmt = A_m(i,j,k,t)*w_g(i,j,k+1)
                 bmb = A_m(i,j,k,b)*w_g(i,j,k  )
+
                 b_m(i,j,k) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
+                if (j.eq. 1 .and. k.eq.1) then
+!                 print *,'MAKING B EW ', bme, bmw
+                  print *,'MAKING B NS ', bmn, bms
+                  print *,'  USING N: A U ',A_m(i,j,k,n),v_g(i,j+1,k)
+                  print *,'  USING S: A U ',A_m(i,j,k,s),v_g(i,j  ,k)
+!                 print *,'MAKING B TB ', bmt, bmb
+                  print *,'MAKING B TOTAL ',i,j,k,b_m(i,j,k)
+                  print *,' ' 
+                end if
 
                 b_mmax(i,j,k) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), &
                    abs(bms), abs(bmt), abs(bmb))
