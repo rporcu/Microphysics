@@ -24,7 +24,7 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  TSTOP =  0.05
+  TSTOP =  0.35
 
   DT =     1.00d-3
   DT_MAX = 1.00d-3
@@ -54,6 +54,28 @@
   RO_g0 = 1.2      ! (kg/m^3)
   MU_g0 = 1.8d-5   ! (Pa.s)
 
+! Particle Section
+!---------------------------------------------------------------------//
+
+  PARTICLE_TYPES = 1
+
+! Normal collision spring constant. (N/m)
+  KN =   0.1                   ! particle-particle
+  KN_W = 0.1                   ! particle-wall
+
+! Restitution coefficient. (1)
+  DES_EN_INPUT =      1.0      ! particle-particle
+  DES_EN_WALL_INPUT = 1.0      ! particle-wall
+
+! Friction coefficients. (1)
+  MEW =   0.0                  ! particle-particle
+  MEW_W = 0.0                  ! particle-wall
+
+
+! Solids phase 1:
+!---------------------------------------------------------------------//
+  D_p0(1) =  1.0d-4  ! (m)
+  RO_s0(1) = 2.0d3   ! (kg/m^3)
 
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION

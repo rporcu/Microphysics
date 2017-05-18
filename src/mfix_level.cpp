@@ -972,33 +972,6 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
     mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 #endif
 
-#if 1
-    std::cout << "PRINTING B FOR V " << std::endl;
-    for (MFIter mfi(*b_m[lev]); mfi.isValid(); ++mfi)
-      {
-        Box bx((*b_m[lev])[mfi].box());
-        out_array((*b_m[lev])[mfi].dataPtr(), bx.loVect(), bx.hiVect());
-      }
-#endif
-
-#if 1
-    std::cout << "PRINTING A FOR V " << std::endl;
-    for (MFIter mfi(*A_m[lev]); mfi.isValid(); ++mfi)
-      {
-        Box bx((*A_m[lev])[mfi].box());
-        out_matrix((*A_m[lev])[mfi].dataPtr(), bx.loVect(), bx.hiVect());
-      }
-#endif
-
-#if 1
-    std::cout << "PRINTING V " << std::endl;
-    for (MFIter mfi(*v_gt[lev]); mfi.isValid(); ++mfi)
-      {
-        Box bx((*v_gt[lev])[mfi].box());
-        out_array((*v_gt[lev])[mfi].dataPtr(), bx.loVect(), bx.hiVect());
-      }
-#endif
-exit(0);
 }
 
 void

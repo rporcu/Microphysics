@@ -222,7 +222,7 @@ private:
 
 
     // runtime parameters
-    int verbose = 10;
+    int verbose = 0;
 
     int solve_fluid;
     int solve_dem;

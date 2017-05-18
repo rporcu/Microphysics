@@ -47,9 +47,6 @@ MODULE CORRECT_0_MODULE
 !-----------------------------------------------
 ! Indices
       integer :: i,j,k
-      integer :: llo(3), lhi(3)
-      integer :: nlft, nrgt, nbot, ntop, nup, ndwn
-      real(c_real) :: umax,vmax,wmax
 !-----------------------------------------------
 
 
@@ -63,39 +60,29 @@ MODULE CORRECT_0_MODULE
          enddo
       enddo
 
-      umax = 0.
-      vmax = 0.
-      wmax = 0.
       do k = lo(3), hi(3)
         do j = lo(2), hi(2)
           do i = lo(1), hi(1)+1
             u_g(i,j,k) = u_g(i,j,k) - d_e(i,j,k)*(pp_g(i,j,k)-pp_g(i-1,j,k))
-            if (abs(u_g(i,j,k)) .gt. 5.e-5) print *,'HI U ',i,j,k,u_g(i,j,k),pp_g(i,j,k),pp_g(i-1,j,k)
-            umax = max(umax,abs(u_g(i,j,k)))
           enddo
         enddo
      enddo
-     print *,'UMAX ',umax
 
       do k = lo(3), hi(3)
         do j = lo(2), hi(2)+1
           do i = lo(1), hi(1)
            v_g(i,j,k) = v_g(i,j,k) - d_n(i,j,k)*(pp_g(i,j,k)-pp_g(i,j-1,k))
-            vmax = max(vmax,abs(v_g(i,j,k)))
          enddo
        enddo
      enddo
-     print *,'VMAX ',vmax
 
       do k = lo(3), hi(3)+1
         do j = lo(2), hi(2)
           do i = lo(1), hi(1)
            w_g(i,j,k) = w_g(i,j,k) - d_t(i,j,k)*(pp_g(i,j,k)-pp_g(i,j,k-1))
-           wmax = max(wmax,abs(w_g(i,j,k)))
          enddo
        enddo
      enddo
-     print *,'WMAX ',wmax
 
      end subroutine correct_0
 

@@ -111,8 +111,6 @@ module solve_vel_star_module
       integer(c_int), intent(in   ) :: bc_khi_type&
          (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
 
-      integer :: i,j,k
-
       real(c_real) :: vol
       vol = dx*dy*dz
 
@@ -158,18 +156,6 @@ module solve_vel_star_module
          resid_u, resid(resid_u,1), resid(resid_u,2), domlo, domhi)
 
      call under_relax (u_g, ulo, uhi, A_m, b_m, alo, ahi, resid_u)
-
-
-     write(2000,"(10/,80('*'),2/)")
-     do j=alo(2), ahi(2)
-        write(2000,"(2/'J=',I3)") j
-        do k=ahi(3),alo(3),-1
-           do i=alo(1),ahi(1)
-              write(2000,"(8(2x,es15.8))")a_m(i,j,k,:),b_m(i,j,k)
-           enddo
-        enddo
-     enddo
-
 
    end subroutine solve_u_g_star
 
@@ -278,7 +264,7 @@ module solve_vel_star_module
          (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
 !.....................................................................//
       real(c_real) :: vol
-      integer :: i,j,k
+
       vol = dx*dy*dz
 
 ! Initialize A_m and b_m
@@ -323,16 +309,6 @@ module solve_vel_star_module
          resid_v, resid(resid_v,1), resid(resid_v,2), domlo, domhi)
 
       call under_relax (v_g, vlo, vhi, A_m, b_m, alo, ahi, resid_v)
-
-      write(2100,"(10/,80('*'),2/)")
-      do j=alo(2), ahi(2)
-         write(2100,"(2/'J=',I3)") j
-         do k=ahi(3),alo(3),-1
-            do i=alo(1),ahi(1)
-               write(2100,"(8(2x,es15.8))")a_m(i,j,k,:),b_m(i,j,k)
-            enddo
-         enddo
-      enddo
 
    end subroutine solve_v_g_star
 
@@ -440,7 +416,7 @@ module solve_vel_star_module
          (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
 !.....................................................................//
       real(c_real) :: vol
-      integer :: i,j,k
+
       vol = dx*dy*dz
 
       ! Initialize A_m and b_m
@@ -486,15 +462,6 @@ module solve_vel_star_module
 
       call under_relax (w_g, wlo, whi, A_m, b_m, alo, ahi, resid_w)
 
-      write(2200,"(10/,80('*'),2/)")
-      do j=alo(2), ahi(2)
-         write(2200,"(2/'J=',I3)") j
-         do k=ahi(3),alo(3),-1
-            do i=alo(1),ahi(1)
-               write(2200,"(8(2x,es15.8))")a_m(i,j,k,:),b_m(i,j,k)
-            enddo
-         enddo
-      enddo
    end subroutine solve_w_g_star
 
 end module solve_vel_star_module
