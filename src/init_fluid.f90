@@ -381,7 +381,7 @@ module init_fluid_module
             enddo
          enddo
 
-      else if(abs(gravity(3)) > epsilon(0.0d0)) then
+      else if(abs(gravity(2)) > epsilon(0.0d0)) then
          if (is_undefined(ro_g0)) then
             dpody = -gravity(2)*eosg(mw_avg,pj,295.15d0)
          else
