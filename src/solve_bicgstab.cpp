@@ -120,6 +120,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect());
     }
 
+    // Enforce periodicity on sol in case it hasn't been done yet
+    sol.FillBoundary(geom[lev].periodicity());
+
     // Compute initial residual r = rhs - A*sol
     //-------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
