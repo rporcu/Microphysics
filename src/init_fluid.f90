@@ -371,8 +371,8 @@ module init_fluid_module
             dpodx = -gravity(1)*ro_g0
          endif
 
-         pj = pj - dpodx*dx*(hi(1)-domhi(1)+1)
-         do i = shi(1), slo(1), -1
+         pj = pj - dpodx*dx*(hi(1)-domhi(1))
+         do i = shi(1)+1, slo(1), -1
             pj = pj + dpodx*dx
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
@@ -388,8 +388,8 @@ module init_fluid_module
             dpody = -gravity(2)*ro_g0
          endif
 
-         pj = pj - dpody*dy*(hi(2)-domhi(2)+1)
-         do j = hi(2), lo(2), -1
+         pj = pj - dpody*dy*(hi(2)-domhi(2))
+         do j = hi(2)+1, lo(2), -1
             pj = pj + dpody*dy
             do k = lo(3), hi(3)
                do i = lo(1), hi(1)
@@ -405,8 +405,8 @@ module init_fluid_module
             dpodz = -gravity(3)*ro_g0
          endif
 
-         pj = pj - dpodz*dz*(hi(3)-domhi(3)+1)
-         do k = hi(3), lo(3), -1
+         pj = pj - dpodz*dz*(hi(3)-domhi(3))
+         do k = hi(3)+1, lo(3), -1
             pj = pj + dpodz*dz
             do j = lo(2), hi(2)
                do i = lo(1), hi(1)
