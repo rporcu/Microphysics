@@ -212,10 +212,6 @@ contains
                        bc_ilo_type(jbc,k,1) == POUT_ .or. &
                        bc_ilo_type(jbc,k,1) == MINF_) then
 
-                  print *,'SETTING ILO ',i,j,k
-                  print *,'PINF_ ',(bc_ilo_type(jbc,k,1) == PINF_), bc_ilo_type(jbc,k,1)
-                  print *,'POUT_ ',(bc_ilo_type(jbc,k,1) == POUT_), bc_ilo_type(jbc,k,1)
-                  print *,'MINF_ ',(bc_ilo_type(jbc,k,1) == MINF_), bc_ilo_type(jbc,k,1)
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k) = zero
@@ -269,7 +265,6 @@ contains
                        bc_ihi_type(jbc,k,1) == POUT_ .or. &
                        bc_ihi_type(jbc,k,1) == MINF_) then
 
-                  print *,'SETTING IHI ',i,j,k
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k) = zero
