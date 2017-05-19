@@ -12,6 +12,6 @@ amr.plot_file=FLD01
 
 # Geometry
 geometry.coord_sys   = 0                  # 0: Cartesian
-geometry.is_periodic = 1     1     1      # Is periodic in each direction?
+geometry.is_periodic = 0     0     1      # Is periodic in each direction?
 geometry.prob_lo     = 0.    0.    0.       # lo corner of physical domain
 geometry.prob_hi     = 0.01  1.0   0.2      # hi corner of physical domain
