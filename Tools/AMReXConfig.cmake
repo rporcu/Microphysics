@@ -27,10 +27,11 @@ function ( build_amrex )
    set(AMREX_SOURCE_DIR  ${CMAKE_SOURCE_DIR}/ThirdParty/amrex )
    set(AMREX_ROOT        ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty PARENT_SCOPE )
    set(AMREX_LIB_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/lib PARENT_SCOPE )
+   set(AMREX_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/bin PARENT_SCOPE )
    set(AMREX_GIT         ${CMAKE_SOURCE_DIR}/ThirdParty/amrex PARENT_SCOPE )
    set(AMREX_TOOLS       ${CMAKE_SOURCE_DIR}/ThirdParty/amrex/Tools PARENT_SCOPE )
    set(AMREX_INCLUDES    ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/include PARENT_SCOPE )
-
+   
    # Set mpi-specific flags ( defined by CCSEFind )
    if (ENABLE_MPI)
       find_package(MPI REQUIRED)
@@ -108,7 +109,7 @@ function (find_amrex)
 
    # Set AMReX paths to use in mfix config
    set(AMREX_ROOT        $ENV{AMREX_HOME}       PARENT_SCOPE )
-   set(AMREX_LIB_DIR     $ENV{AMREX_HOME}/lib   PARENT_SCOPE )
+   set(AMREX_BIN_DIR     $ENV{AMREX_HOME}/bin   PARENT_SCOPE )
    set(AMREX_TOOLS       $ENV{AMREX_HOME}/Tools PARENT_SCOPE )
    set(AMREX_INCLUDES    ${CCSE_INCLUDE_DIR}    PARENT_SCOPE )
    set(AMREX_LIBRARIES   ${CCSE_LIBRARIES}      PARENT_SCOPE )
