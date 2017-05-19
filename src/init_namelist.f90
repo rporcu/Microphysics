@@ -373,16 +373,6 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
-!    Flag for making the x-direction cyclic without pressure drop. No other
-!    boundary conditions for the x-direction should be specified.
-!</description>
-!  <valid value=".FALSE." note="No cyclic condition at x-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition at x-boundary."/>
-      cyclic_x = .FALSE.
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
 !    Flag for making the x-direction cyclic with pressure drop. If the
 !    keyword FLUX_G is given a value this becomes a cyclic boundary
 !    condition with specified mass flux. No other boundary conditions
@@ -401,17 +391,6 @@ MODULE INIT_NAMELIST_MODULE
       delp_x = UNDEFINED
 !</keyword>
 
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    Flag for making the y-direction cyclic without pressure drop. No
-!    other boundary conditions for the y-direction should be specified.
-!  </description>
-!  <valid value=".FALSE." note="No cyclic condition at y-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition at x-boundary."/>
-      cyclic_y = .FALSE.
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
 !  <description>
 !    Flag for making the y-direction cyclic with pressure drop. If the
 !    keyword FLUX_G is given a value this becomes a cyclic boundary
@@ -429,16 +408,6 @@ MODULE INIT_NAMELIST_MODULE
 !    with pressure drop is imposed in the y-direction.
 !  </description>
       delp_y = UNDEFINED
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    Flag for making the z-direction cyclic without pressure drop. No
-!    other boundary conditions for the z-direction should be specified.
-!  </description>
-!  <valid value=".FALSE." note="No cyclic condition at z-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition at z-boundary."/>
-      cyclic_z = .FALSE.
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">

@@ -6,9 +6,9 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       NAMELIST / GEOMETRY_LOCKED /&
 
-      CYCLIC_X, CYCLIC_X_PD, &
-      CYCLIC_Y, CYCLIC_Y_PD, &
-      CYCLIC_Z, CYCLIC_Z_PD
+      CYCLIC_X_PD, &
+      CYCLIC_Y_PD, &
+      CYCLIC_Z_PD
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  Namelist: GEOMETRY_UNLOCKED                                         !
