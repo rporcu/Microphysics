@@ -1085,7 +1085,6 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (&residuals)[16])
 {
-    std::cout << "SOLVING FOR PP " << std::endl;
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
