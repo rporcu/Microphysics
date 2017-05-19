@@ -1,6 +1,7 @@
 set( TESTS  FLD01-x FLD01-y FLD01-z
             FLD02-x FLD02-y FLD02-z
             FLD03-x FLD03-y FLD03-z
+	    FLD04-x FLD04-y FLD04-z
             DEM01-x DEM01-y DEM01-z
             DEM02-x DEM02-y DEM02-z
             DEM03-x DEM03-y DEM03-z
@@ -21,7 +22,7 @@ foreach( THIS_TEST ${TESTS})
 
    # Copy file to binary dir
    FILE( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
-
+   
    # Setup for building a test
    FILE(GLOB USR_OVERRIDES ${SOURCE_DIR}/*.f90)
 
