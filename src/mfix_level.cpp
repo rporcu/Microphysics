@@ -826,7 +826,7 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
 		       &dt, &dx, &dy, &dz, residuals);
     }
 
-#if 1
+#if 0
     MultiFab rhs, sol, mat;
     {
     Box minBox(u_gt[lev]->boxArray().minimalBox());
@@ -865,6 +865,11 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
     int eq_id=2;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 #endif
+    if (u_gt[lev]->contains_nan()) 
+    {
+        std::cout << "U_GT HAS NANS" << std::endl;
+        exit(0);
+    }
 
 }
 
@@ -913,6 +918,8 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 		       &dt, &dx, &dy, &dz, residuals);
     }
 
+    int eq_id=3;
+
 #if 0
     MultiFab rhs, sol, mat;
     {
@@ -945,32 +952,33 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
     mat.FillBoundary(geom[lev].periodicity());
     }
 
-    int eq_id=3;
-    if (sol.contains_nan()) 
-    {
-        std::cout << "SOL HAS NANS" << std::endl;
-        std::cout << "DOES V HAVE NANS " << v_gt[lev]->contains_nan() << std::endl;
-        std::cout << "VGT " << (*v_gt[lev])[0] << std::endl;
-        std::cout << "SOL " << sol[0] << std::endl;
-        exit(0);
-    }
-    if (rhs.contains_nan()) 
+    mfix_solve_linear_equation(eq_id,lev,sol,mat,rhs);
+    v_gt[lev]->copy(sol,0,0,v_gt[lev]->nComp());
+
+#else
+    if (b_m[lev]->contains_nan()) 
+    mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
+#endif
+
+    if (b_m[lev]->contains_nan()) 
     {
         std::cout << "RHS HAS NANS" << std::endl;
+        std::cout << (*b_m[lev])[0] << std::endl;
         exit(0);
     }
-    if (mat.contains_nan()) 
+    if (A_m[lev]->contains_nan()) 
     {
         std::cout << "MAT HAS NANS" << std::endl;
+        std::cout << (*A_m[lev])[0] << std::endl;
+        exit(0);
+    }
+    if (v_gt[lev]->contains_nan()) 
+    {
+        std::cout << "V_GT HAS NANS" << std::endl;
+        std::cout << (*v_gt[lev])[0] << std::endl;
         exit(0);
     }
 
-    mfix_solve_linear_equation(eq_id,lev,sol,mat,rhs);
-    v_gt[lev]->copy(sol,0,0,v_gt[lev]->nComp());
-#else
-    int eq_id=3;
-    mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
-#endif
 
 }
 
@@ -1018,7 +1026,9 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
 		       &dt, &dx, &dy, &dz, residuals);
     }
 
-#if 1
+    int eq_id = 4;
+
+#if 0
     MultiFab rhs, sol, mat;
     {
     Box minBox(w_gt[lev]->boxArray().minimalBox());
@@ -1050,18 +1060,32 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
     mat.FillBoundary(geom[lev].periodicity());
     }
 
-    int eq_id=4;
     mfix_solve_linear_equation(eq_id,lev,sol,mat,rhs);
     w_gt[lev]->copy(sol,0,0,w_gt[lev]->nComp());
 #else
-    int eq_id=4;
     mfix_solve_linear_equation(eq_id,lev,(*w_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 #endif
+    if (b_m[lev]->contains_nan()) 
+    {
+        std::cout << "RHS HAS NANS" << std::endl;
+        exit(0);
+    }
+    if (A_m[lev]->contains_nan()) 
+    {
+        std::cout << "MAT HAS NANS" << std::endl;
+        exit(0);
+    }
+    if (w_gt[lev]->contains_nan()) 
+    {
+        std::cout << "W_GT HAS NANS" << std::endl;
+        exit(0);
+    }
 }
 
 void
 mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (&residuals)[16])
 {
+    std::cout << "SOLVING FOR PP " << std::endl;
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -1101,6 +1125,7 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
     }
     pp_g[lev]->setVal(0.);
 
+#if 0
     MultiFab rhs, sol, mat;
     {
     Box minBox(pp_g[lev]->boxArray().minimalBox());
@@ -1134,9 +1159,30 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
     mfix_solve_linear_equation(eq_id,lev,sol,mat,rhs);
     pp_g[lev]->copy(sol,0,0,pp_g[lev]->nComp());
 
-//  mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
+#else
+    int eq_id=1;
+    mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
+#endif
+
+    if (A_m[lev]->contains_nan()) 
+    {
+        std::cout << "A_M FOR PP_G HAS NANS" << std::endl;
+        exit(0);
+    }
+    if (b_m[lev]->contains_nan()) 
+    {
+        std::cout << "b_M FOR PP_G HAS NANS" << std::endl;
+        exit(0);
+    }
+
     pp_g[lev]->FillBoundary(geom[lev].periodicity());
     fill_mf_bc(lev,*pp_g[lev]);
+    if (pp_g[lev]->contains_nan()) 
+    {
+        std::cout << "PP_G HAS NANS" << std::endl;
+        std::cout << (*pp_g[lev])[0] << std::endl;
+        exit(0);
+    }
 }
 
 
