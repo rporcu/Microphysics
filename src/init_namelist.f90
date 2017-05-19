@@ -48,7 +48,7 @@ MODULE INIT_NAMELIST_MODULE
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
       use run, only: undefined_i
-      use run, only: call_usr, description, detect_stall, discretize, tstop
+      use run, only: call_usr, description, tstop
       use run, only: dt_fac, dt_max, dt_min, run_name, solids_model
       use drag, only: drag_type
       use scales, only: p_ref, p_scale
@@ -255,16 +255,6 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Numerical Parameters" required="false">
 !  <description>
-!    Reduce the time step if the residuals stop decreasing. Disabling this
-!    feature may help overcome initial non-convergence.
-!  </description>
-!  <valid value=".FALSE." note="Continue iterating if residuals stall."/>
-!  <valid value=".TRUE."  note="Reduce time step if residuals stall."/>
-      DETECT_STALL = .TRUE.
-!</keyword>
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
 !    Linear Equation tolerance [1.0d-4].
 !  </description>
 !  <arg index="1" id="Equation ID Number" min="1" max="DIM_EQS"/>
@@ -326,23 +316,6 @@ MODULE INIT_NAMELIST_MODULE
       UR_FAC(2)  = 0.5D0     ! U
       UR_FAC(3)  = 0.5D0     ! V
       UR_FAC(4)  = 0.5D0     ! W
-!</keyword>
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>Discretization scheme of equations.</description>
-!  <arg index="1" id="Equation ID Number" min="1" max="DIM_EQS"/>
-!  <valid value="0" note="First-order upwinding."/>
-!  <valid value="2" note="Superbee (recommended method)."/>
-      DISCRETIZE(:) = 0
-!</keyword>
-
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
-!    Solve transpose of linear system. (BICGSTAB ONLY).
-!  </description>
-!  <dependent keyword="LEQ_METHOD" value="2"/>
-      DO_TRANSPOSE = .FALSE.
 !</keyword>
 
 !<keyword category="Numerical Parameters" required="false">

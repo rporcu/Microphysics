@@ -748,18 +748,23 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
     for (MFIter mfi(*rop_g[lev]); mfi.isValid(); ++mfi)
     {
 	const Box& bx = mfi.validbox();
-	const Box& sbx = (*rop_g[lev])[mfi].box();
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+	Box  sbx((*rop_g[lev])[mfi].box());
+	Box  ubx((  *u_g[lev])[mfi].box());
+	Box  vbx((  *v_g[lev])[mfi].box());
+	Box  wbx((  *w_g[lev])[mfi].box());
+	Box rxbx(( *ropX[lev])[mfi].box());
+	Box rybx(( *ropY[lev])[mfi].box());
+	Box rzbx(( *ropZ[lev])[mfi].box());
 
-	conv_rop(sbx.loVect(), sbx.hiVect(),
-		 ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-		 bx.loVect(),  bx.hiVect(),
-		 (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-		 (*rop_g[lev])[mfi].dataPtr(),
-		 (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr());
+	conv_rop( bx.loVect(),  bx.hiVect(), 
+                 (*rop_g[lev])[mfi].dataPtr(),  sbx.loVect(),  sbx.hiVect(),
+                 (  *u_g[lev])[mfi].dataPtr(),  ubx.loVect(),  ubx.hiVect(), 
+                 (  *v_g[lev])[mfi].dataPtr(),  vbx.loVect(),  vbx.hiVect(), 
+                 (  *w_g[lev])[mfi].dataPtr(),  wbx.loVect(),  wbx.hiVect(), 
+                 ( *ropX[lev])[mfi].dataPtr(), rxbx.loVect(), rxbx.hiVect(),
+                 ( *ropY[lev])[mfi].dataPtr(), rybx.loVect(), rybx.hiVect(),
+                 ( *ropZ[lev])[mfi].dataPtr(), rzbx.loVect(), rzbx.hiVect());
     }
 
     ropX[lev]->FillBoundary(geom[lev].periodicity());

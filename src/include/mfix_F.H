@@ -131,14 +131,14 @@ extern "C"
 	Real* dx,       Real* dy,       Real* dz);
 
     void conv_rop(
-	const int* slo,       const int* shi,
-	const int* ulo, const int* uhi,
-	const int* vlo, const int* vhi,
-	const int* wlo, const int* whi,
 	const int*  lo,       const int*  hi,
-	Real* u_g,            Real* v_g,            Real* w_g,
-	Real* rop_g,
-	Real* ropX,         Real* ropY,         Real* ropZ);
+	Real* rop_g, const int*  slo, const int*  shi,
+	Real*   u_g, const int*  ulo, const int*  uhi,
+	Real*   v_g, const int*  vlo, const int*  vhi,
+	Real*   w_g, const int*  wlo, const int*  whi,
+	Real* ropX , const int* rxlo, const int* rxhi,
+	Real* ropY , const int* rylo, const int* ryhi,
+	Real* ropZ , const int* rzlo, const int* rzhi);
 
     void calc_mflux(
 	const int* ulo, const int* uhi,

@@ -60,7 +60,6 @@ set(F90_sources
    des/init_collision.f90
    des/set_particle_properties.f90
    des/stl_functions_des_mod.f90
-   discretization_mod.f90
    display_resid.f90
    drag_mod.f90
    eos_mod.f90
@@ -122,7 +121,6 @@ set(F90_sources
    usr/write_usr1.f90
    utilities_mod.f90
    vavg_g.f90
-   xsi_mod.f90
    boxlib_to_mfix.F90)
 
 # Generate AMReX_buildInfo.cpp
