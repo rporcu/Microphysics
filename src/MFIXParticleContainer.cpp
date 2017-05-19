@@ -39,7 +39,7 @@ void MFIXParticleContainer::InitLevelMask ( int lev,
     BL_ASSERT( lev == 0 );
 	
     mask.define(ba, dmap, 2, ng);
-    mask.setVal(-1, 1);
+    mask.setVal(-1, ng);
     for (MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
         const Box& box = mfi.tilebox();
         const int grid_id = mfi.index();
@@ -49,9 +49,6 @@ void MFIXParticleContainer::InitLevelMask ( int lev,
     }
     mask.FillBoundary();
 }
-
-
-
 
 void* MFIXParticleContainer::GetParticlesData( const int& lev, const MFIter& mfi ) { 
 
@@ -332,12 +329,12 @@ void MFIXParticleContainer::fillGhosts( int lev ) {
         
         Box shrink_box = pti.tilebox();
         shrink_box.grow(-ng);
-        
+
         auto& particles = pti.GetArrayOfStructs();
         for (unsigned i = 0; i < pti.numParticles(); ++i) {
             const ParticleType& p = particles[i];
             const IntVect& iv = Index(p, lev);
-            
+
             // if the particle is more than one cell away from 
             // the tile boundary, it's not anybody's neighbor
             if (shrink_box.contains(iv)) continue;
@@ -377,7 +374,6 @@ void MFIXParticleContainer::fillGhosts( int lev ) {
                 }
             }
             
-
             // Finally, add the particle for the "vertex" neighbors (only relevant in 3D)
             if (shift[0] != 0 and shift[1] != 0 and shift[2] != 0) {
                 IntVect neighbor_cell = iv;
@@ -391,7 +387,6 @@ void MFIXParticleContainer::fillGhosts( int lev ) {
     
     fillGhostsMPI(ghosts_to_comm);
 }
-
 
 void MFIXParticleContainer::packGhostParticle(int lev,
 					      const IntVect& neighbor_cell,
