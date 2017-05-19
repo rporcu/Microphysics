@@ -372,7 +372,7 @@ module init_fluid_module
          endif
 
          pj = pj - dpodx*dx*(hi(1)-domhi(1))
-         do i = shi(1)+1, slo(1), -1
+         do i = hi(1)+1, lo(1), -1
             pj = pj + dpodx*dx
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
