@@ -3,7 +3,7 @@ module calc_d_mod
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   use param, only: ZERO, SMALL_NUMBER
+   use param, only: zero, small_number
 
    ! Flag: Coupled DEM simulation
    use discretelement, only: DES_CONTINUUM_COUPLED
@@ -113,15 +113,13 @@ module calc_d_mod
       logical      :: coupled
       integer :: llo(3), lhi(3)
 
-      COUPLED = (DES_CONTINUUM_COUPLED .AND. .NOT.DES_ONEWAY_COUPLED)
+      coupled = (des_continuum_coupled .and. .not.des_oneway_coupled)
 
       axz = dx*dz
       vol = dx*dy*dz
 
       llo = alo
       lhi = ahi
-
-      ! if(.not.cyclic_y .and. alo(2) == domlo(2)) llo(2) = alo(2)+1
 
       do k = llo(3), lhi(3)
          do j = llo(2), lhi(2)
@@ -186,14 +184,20 @@ module calc_d_mod
         do j = llo(2), lhi(2)
            do i = llo(1), lhi(1)
               Am0 = -A_m(I,J,K,0)
-              IF(abs(Am0) > SMALL_NUMBER) THEN
+
+              if (abs(Am0) > small_number) THEN
+
                  epga = axy*0.5d0*(ep_g(i,j,k-1)+ep_g(i,j,k))
                  if(coupled) Am0 = Am0 + 0.5d0*vol* &
                     (f_gds(i,j,k-1) + f_gds(i,j,k))
                  d_t(i,j,k) = p_scale*epga/am0
+
               else
+
                  d_t(i,j,k) = zero
+
               endif
+
            enddo
         enddo
      enddo

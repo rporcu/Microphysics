@@ -8,6 +8,7 @@ set( TESTS  FLD01-x FLD01-y FLD01-z
             DEM04-x DEM04-y DEM04-z
             DEM05-x DEM05-y DEM05-z
             DEM06-x DEM06-y DEM06-z
+            DEM06p-x DEM06p-y DEM06p-z
    )
 
 set (BUILD_TEST build_tests)
