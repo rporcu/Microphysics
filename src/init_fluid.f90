@@ -322,11 +322,11 @@ module init_fluid_module
             enddo
          enddo
       endif
+
 ! ----------------------------------------------------------------<<<
+
       GOTO 100   ! pressure in all intial condition region cells was defined
-
    60 CONTINUE   ! pressure in an initial condition region cell was undefined
-
 
 ! ---------------------------------------------------------------->>>
 ! Search for an outflow boundary condition where pressure is specified

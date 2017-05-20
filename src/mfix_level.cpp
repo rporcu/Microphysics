@@ -423,7 +423,6 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
 	if (solve_fluid)
 	    mfix_calc_drag_particle(lev);
 
-	//pc -> EvolveParticles( ep_g, u_g, v_g, w_g, p_g, ro_g, mu_g, lev, nstep, dt, time);
 	pc ->  EvolveParticles( lev, nstep, dt, time);
     }
 }
@@ -596,7 +595,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
     {
 
 	pc -> InitParticlesAscii("particle_input.dat");
-//	pc -> printParticles();
 
 	for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
 	    mfix_init_collision();
@@ -1150,9 +1148,6 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
     }
 }
 
-
-
-
 void
 mfix_level::mfix_correct_0(int lev)
 {
@@ -1259,8 +1254,12 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 {
     Box domain(geom[lev].Domain());
 
-    // Impose periodic bc's at domain boundaries and fine-fine copies in the interio
+    if (!mf.boxArray().ixType().cellCentered())
+      amrex::Error("fill_mf_bc only used for cell-centered arrays!");
+
+    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
     mf.FillBoundary(geom[lev].periodicity());
+
     // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
     for (MFIter mfi(mf); mfi.isValid(); ++mfi)
     {
@@ -1271,35 +1270,31 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
     }
 }
 
-
 void mfix_level::mfix_calc_volume_fraction(int lev)
 {
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    ep_g[lev]->setVal(0.0L);
+    // This re-calculates the volume fraction within the domain
+    // but does not change the values outside the domain
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
 	const Box& sbx = (*ep_g[lev])[mfi].box();
+	const Box&  bx = mfi.validbox();
 	const int np = pc -> NumberOfParticles(lev, mfi);
 
 	void* particles = pc -> GetParticlesData( lev, mfi );
 
-	calc_solids_volume(sbx.loVect(), sbx.hiVect(), &np,
-			   particles, &dx, &dy, &dz,
-			   (*ep_g[lev])[mfi].dataPtr() );
+	calc_volume_fraction( bx.loVect(), bx.hiVect(),
+                             sbx.loVect(), sbx.hiVect(),
+			     &np, particles, &dx, &dy, &dz,
+  			     (*ep_g[lev])[mfi].dataPtr(),
+  			     (*rop_g[lev])[mfi].dataPtr(),
+  			     (*ro_g[lev])[mfi].dataPtr() );
     }
 
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-    {
-	const Box& sbx = (*ep_g[lev])[mfi].box();
-	const Box& bx = mfi.validbox();
-
-	calc_volume_fraction(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
-			     (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
-			     (*ro_g[lev])[mfi].dataPtr(), &dx, &dy, &dz );
-    }
+    // This sets the values outside walls or periodic boundaries
     fill_mf_bc(lev,*ep_g[lev]);
     fill_mf_bc(lev,*rop_g[lev]);
 }

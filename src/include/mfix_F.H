@@ -77,18 +77,12 @@ extern "C"
 			       int* nstep, void* particles, int* finsh);
 
 
-    void calc_solids_volume ( const int* slo, const int* shi, const int* np,
-			      void* particles, Real* dx, Real* dy, Real* dz,
-			      Real* ep_g );
-
-    void calc_volume_fraction(
-	const int* slo, const int* shi,
-	const int*  lo, const int*  hi,
-	Real* rop_g, Real* ep_g, Real* ro_g,
-	Real* dx,    Real* dy,   Real* dz);
-    
-
-
+    void calc_volume_fraction ( 
+        const int*  lo, const int*  hi, 
+        const int* slo, const int* shi, 
+        const int*  np, void* particles, 
+        Real* dx, Real* dy, Real* dz,
+        Real* ep_g , Real* rop_g, Real* ro_g );
 
     void calc_drag_fluid(
 	const int* slo, const int* shi,
