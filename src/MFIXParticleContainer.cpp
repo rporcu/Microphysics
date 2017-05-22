@@ -215,11 +215,11 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     int   nsubsteps;
     Real  subdt;
     
-    fillGhosts(lev);
-    
     mfix_des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
     
     for ( int n = 0; n < nsubsteps; ++n ) {
+    
+        fillGhosts(lev);
 	
 	for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
@@ -236,10 +236,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 				    &subdt, &dx, &dy, &dz,
 				    &xlen, &ylen, &zlen, &nstep );
 
-	    
-	    // mfix_des_time_loop_ops( &np, particles, &subdt, &dx, &dy, &dz,
-	    // 			    &xlen, &ylen, &zlen, &nstep );
-
 	    if ( mfix_des_continuum_coupled () == 0 ) {
 		Real stime;
 		stime = time + (n+1)*subdt;
@@ -251,11 +247,13 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 	    mfix_call_usr2_des( &np, particles );
 	}
 
+        clearGhosts(lev);
+
+        Redistribute();
     }
 
-    clearGhosts(lev);
-
-    Redistribute();
+    // WRITING ALL AFTER REDISTRIBUTE 
+    writeAllAtLevel(lev);
     
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 	
@@ -348,7 +346,7 @@ void MFIXParticleContainer::fillGhosts( int lev ) {
                 else if (iv[idim] == hi[idim])
                     shift[idim] = ng;
             }
-            
+
             // Based on the value of shift, we add the particle to a map to be sent
             // to the neighbors. A particle can be sent to up to 3 neighbors in 2D
             // and up to 7 in 3D, depending on whether is near the tile box corners,
@@ -384,7 +382,6 @@ void MFIXParticleContainer::fillGhosts( int lev ) {
 
         }
     }
-    
     fillGhostsMPI(ghosts_to_comm);
 }
 
@@ -554,9 +551,11 @@ void MFIXParticleContainer::fillGhostsMPI(GhostCommMap& ghosts_to_comm) {
 }
 
 void MFIXParticleContainer::clearGhosts( int lev ) {
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-        const int grid_id = pti.index();
-        const int tile_id = pti.LocalTileIndex();
+
+    for (auto kv:ghosts) 
+    {
+        const int grid_id = kv.first.first;
+        const int tile_id = kv.first.second;
         auto& ghost_particles = ghosts[std::make_pair(grid_id, tile_id)];
         Array<char>().swap(ghost_particles);
     }
