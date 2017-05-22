@@ -251,9 +251,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
         Redistribute();
     }
-
-    // WRITING ALL AFTER REDISTRIBUTE 
-    writeAllAtLevel(lev);
     
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 	
