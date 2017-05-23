@@ -114,7 +114,7 @@
       real(c_real) function Re(Vs)
 
       use constant, only: D_p0
-      use fld_const, only: RO_G0, MUug0
+      use fld_const, only: RO_G0, Mu_g0
 
       implicit none
 
