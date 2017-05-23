@@ -106,7 +106,7 @@ contains
                            (u_g(i+1,j,k) - u_g(i+1,j,k-1))*odz*ayz - &
                      avg_h(avg_h(mu_g(i-1,j,k-1), mu_g(i,j,k-1)),    &
                            avg_h(mu_g(i-1,j,k  ), mu_g(i,j,k  )))*   &
-                           (u_g(i  ,j,k) - u_g(i  ,j,k-1))*odz*axz
+                           (u_g(i  ,j,k) - u_g(i  ,j,k-1))*odz*ayz
 
 ! part of d/dy (tau_zy) xdxdydz =>
 !         d/dy (mu/x dv/dz) xdxdydz =>

@@ -97,10 +97,10 @@ possible values, and their effect on the build.
 
 | Option name          |  Description                                 | Possible values              | Default value  |
 | ---------------------|----------------------------------------------|------------------------------|----------------|
-| ENABLE\_MPI          | Enable build with MPI                        |   0/1                        |   0            |
-| ENABLE\_OpenMP       | Enable build with OpenMP                     |   0/1                        |   0            |
-| ENABLE\_PROFILING    | Include profiling information in AMReX build |   0/1                        |   0            |
-| ENABLE\_BACKTRACE    | Include backtrace information in AMReX build |   0/1                        |   1            |
+| ENABLE_MPI           | Enable build with MPI                        |   0/1                        |   0            |
+| ENABLE_OpenMP        | Enable build with OpenMP                     |   0/1                        |   0            |
+| ENABLE_PROFILING     | Include profiling information in AMReX build |   0/1                        |   0            |
+| ENABLE_BACKTRACE     | Include backtrace information in AMReX build |   0/1                        |   1            |
 | FFLAGS               | User-defined Fortran flags                   | all compiler-supported flags |   None         |
 | CXXFLAGS             | User-defined C++ flags                       | all compiler-supported flags |   None         |
 
@@ -195,18 +195,32 @@ If the name of the plotfile is not provided, MFIX will default to _plt_.
 To dump a checkfile every N time steps, add the following to the _inputs_
 file:
 ```shell
-mfix.check_int=N
+amr.check_int=N
 ```
 The name of the checkfile can be specified by adding
 ```shell
-mfix.check_file=<checkfile_name>
+amr.check_file=<checkfile_name>
 ```
 to the _inputs_ file. In order to restart a calculation from a checkpoint,
 add add the following to the _inputs_
 file:
 ```shell
-mfix.restart_chkfile=<checkfile_name>
+amr.restart_chkfile=<checkfile_name>
 ```
+
+# Writing particles ASCII files
+To write an ASCII file with particles data every N time steps, add the
+following to the _inputs_ file:
+```shell
+amr.par_ascii_file=<ascii_file_name>
+amr.par_ascii_int=N
+```
+N needs to be > 1 for the ASCII files to be written out. For transient solves,
+N indicates the number of time steps between two consecutive writes.
+For steady state solve, N does not have any meaning: an ASCII file will be written
+after the steady state is reached, as long as N > 0. Specifying the
+ASCII file name is optional.
+
 
 # Regression testing
 
@@ -276,7 +290,10 @@ Clone AMReX from the official Git repository and checkout the _development_ bran
 > cd amrex
 > git checkout development
 ```
-Set the environment variable AMREX_HOME to point to *installdir*, an installation directory of choice. If *installdir* does not exist, the build system will create it for you. __It is strongly recommended that *installdir* not be placed in the same folder as the AMReX source files.__
+Set the environment variable `AMREX_HOME` to point to *installdir*, an installation
+directory of choice. If *installdir* does not exist, the build system will
+create it for you. __It is strongly recommended that *installdir* not
+be placed in the same folder as the AMReX source files.__
 ```shell
 > export AMREX_HOME=absolute-path-to-installdir
 ```

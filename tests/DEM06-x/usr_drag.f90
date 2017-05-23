@@ -1,6 +1,6 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Module name: USR_DRAG                                               !
+!  Module name: usr_drag                                               !
 !                                                                      !
 !  Purpose: Provide a hook for user defined drag law implementation.   !
 !                                                                      !
@@ -22,44 +22,51 @@
 !  ******************************************************************  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DRAG_USR(I,J,K, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
-         ROs, lUg, lVg, lWg)
+      subroutine drag_usr(i,j,k, M_NP, lDgA, EPg, Mug, ROg, &
+                          Vrel, DPM, ROs, lUg, lVg, lWg)
 
-      use usr, only: Re, Cd
+      use amrex_fort_module, only: c_real => amrex_real
+      use iso_c_binding    , only: c_int
+      use usr              , only: Re, Cd
 
-      IMPLICIT NONE
+      implicit none
 
-! Index of fluid cell:
-      INTEGER, INTENT(IN) :: I,J,K
+      ! Index of fluid cell:
+      integer(c_int), intent(in) :: i,j,k
 
-! TFM SOLIDS --> Index of phase (M)
-! DES SOLIDS --> Index of particle (NP); M = particle_phase(NP,5)
-      INTEGER, INTENT(IN) :: M_NP
+      ! DES SOLIDS --> Index of particle (NP); M = particle_phase(NP,5)
+      integer(c_int), intent(in) :: M_NP
 
-! drag coefficient
-      DOUBLE PRECISION, INTENT(OUT) :: lDgA
-! gas volume fraction
-      DOUBLE PRECISION, INTENT(IN) :: EPg
-! gas laminar viscosity
-      DOUBLE PRECISION, INTENT(IN) :: Mug
-! gas density
-      DOUBLE PRECISION, INTENT(IN) :: ROg
-! Magnitude of gas-solids relative velocity
-      DOUBLE PRECISION, INTENT(IN) :: VREL
-! particle diameter of solids phase M or
-! average particle diameter if PCF
-      DOUBLE PRECISION, INTENT(IN) :: DPM
-! particle density of solids phase M
-      DOUBLE PRECISION, INTENT(IN) :: ROs
-! fluid velocity components:
-! o TFM: Averaged from faces to cell center
-! o DES: Interpolated to the particle's position
-      DOUBLE PRECISION, INTENT(IN) :: lUg, lVg, lWg
+      ! drag coefficient
+      real(c_real), intent(out) :: lDgA
+
+      ! gas volume fraction
+      real(c_real), intent(in) :: EPg
+
+      ! gas laminar viscosity
+      real(c_real), intent(in) :: Mug
+
+      ! gas density
+      real(c_real), intent(in) :: ROg
+
+      ! Magnitude of gas-solids relative velocity
+      real(c_real), intent(in) :: Vrel
+
+      ! particle diameter of solids phase M or
+      ! average particle diameter if PCF
+      real(c_real), intent(in) :: DPM
+
+      ! particle density of solids phase M
+      real(c_real), intent(in) :: ROs
+
+      ! fluid velocity components:
+      ! o TFM: Averaged from faces to cell center
+      ! o DES: Interpolated to the particle's position
+      real(c_real), intent(in) :: lUg, lVg, lWg
 
 !......................................................................!
 
-! Drag force
-      lDgA = 0.75*(ROg*VREL/DPM) * Cd(Re(VREL))
+      ! Drag force
+      lDgA = 0.75d0*(ROg*Vrel/DPM) * Cd(Re(Vrel))
 
-      RETURN
-      END SUBROUTINE DRAG_USR
+      end subroutine drag_usr

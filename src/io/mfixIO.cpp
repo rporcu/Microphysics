@@ -116,14 +116,14 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
 	for (int i = 0; i < vectorVars.size(); i++ ) {
 	    VisMF::Write( *((*vectorVars[i])[lev]),
 			  amrex::MultiFabFileFullPrefix(lev, checkpointname, 
-							 level_prefix, vecVarsName[i]));
+							level_prefix, vecVarsName[i]));
 	}
 
 	// Write scalar variables
 	for (int i = 0; i < scalarVars.size(); i++ ) {
 	    VisMF::Write( *((*scalarVars[i])[lev]),
 			  amrex::MultiFabFileFullPrefix(lev, checkpointname, 
-							 level_prefix, scaVarsName[i]));
+							level_prefix, scaVarsName[i]));
 	}
 
     }
@@ -222,9 +222,9 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
 
     int nghost;
     if (ParallelDescriptor::NProcs() == 1) {
-       nghost = 1;
+	nghost = 1;
     } else {
-       nghost = 2;
+	nghost = 2;
     }
 
     // Initialize the field data
@@ -234,7 +234,7 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
 	for (int i = 0; i < vectorVars.size(); i++ ) {
     	    MultiFab mf;
 	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix,
-							   vecVarsName[i]));
+							  vecVarsName[i]));
 	    (*vectorVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
 	}
 
@@ -242,7 +242,7 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
 	for (int i = 0; i < scalarVars.size(); i++ ) {
     	    MultiFab mf;
 	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix,
-							   scaVarsName[i]));
+							  scaVarsName[i]));
 	    (*scalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
 	}
     }
@@ -430,5 +430,19 @@ void mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
     WriteMfixHeader(plotfilename, nstep, dt, time);
 }
 
+void mfix_level::WriteParticleAscii ( int nstep )   {
 
+    BL_PROFILE("mfix_level::WriteParticleASCII()");
+
+    // Return if it's not time to dump plotfile yet or 
+    // plotfile have not been enabled ( par_ascii_int < 1 )
+    // Condition nstep !=0 ensures that plotfile is dumped if WritePlotFile is 
+    // called without arguments (useful for steady state case).
+    if ( (par_ascii_int < 1) || ( nstep % par_ascii_int != 0 && nstep != 0) )  return;
+    
+    const std::string& par_filename = amrex::Concatenate(par_ascii_file,nstep);
+    
+    pc -> WriteAsciiFile(par_filename);
+
+}
 

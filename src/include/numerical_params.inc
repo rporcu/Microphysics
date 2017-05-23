@@ -7,7 +7,5 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       NAMELIST / NUMERICAL_PARAM_UNLOCKED /&
 
-      MAX_NIT, DETECT_STALL, NORM_G, TOL_RESID, &
-      TOL_DIVERGE, &
-      LEQ_IT, LEQ_SWEEP, LEQ_TOL, LEQ_PC, DO_TRANSPOSE, &
-      UR_FAC, DISCRETIZE
+      MAX_NIT, NORM_G, TOL_RESID, &
+      TOL_DIVERGE, LEQ_IT, LEQ_SWEEP, LEQ_TOL, LEQ_PC, UR_FAC

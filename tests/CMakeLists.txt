@@ -1,12 +1,14 @@
 set( TESTS  FLD01-x FLD01-y FLD01-z
             FLD02-x FLD02-y FLD02-z
             FLD03-x FLD03-y FLD03-z
+	    FLD04-x FLD04-y FLD04-z
             DEM01-x DEM01-y DEM01-z
             DEM02-x DEM02-y DEM02-z
             DEM03-x DEM03-y DEM03-z
             DEM04-x DEM04-y DEM04-z
             DEM05-x DEM05-y DEM05-z
             DEM06-x DEM06-y DEM06-z
+            DEM06p-x DEM06p-y DEM06p-z
    )
 
 set (BUILD_TEST build_tests)
@@ -21,7 +23,7 @@ foreach( THIS_TEST ${TESTS})
 
    # Copy file to binary dir
    FILE( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
-
+   
    # Setup for building a test
    FILE(GLOB USR_OVERRIDES ${SOURCE_DIR}/*.f90)
 
@@ -53,6 +55,11 @@ foreach( THIS_TEST ${TESTS})
       COMMAND ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${AMREX_BIN_DIR} 
       WORKING_DIRECTORY  ${TEST_DIR} )
 
+   # Make sure that fcompare is always built before a test is run
+   # message( "${FCOMPARE_PAR_EXE}" )
+   add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE})
+   
+   
    # Setup for running the whole suite of tests via ctest
    add_test(NAME ${TEST_NAME}
       COMMAND make  ${TEST_RUN}

@@ -1,226 +1,182 @@
 module des_time_march_module
 
-  use amrex_fort_module, only: c_real => amrex_real
-  use iso_c_binding ,    only: c_int
+   use amrex_fort_module, only: c_real => amrex_real
+   use iso_c_binding ,    only: c_int
 
-  implicit none
+   implicit none
 
-  private
-  ! public des_time_march
+   private
 
-  ! Let's make some variables module variables to make the transition
-  ! to C++ easier ( even though it is really a nasty thing to do ).
-  real(c_real),   save  :: dtsolid_tmp
+   ! Define interface for external functions so there will be no
+   ! warning at compile time
+   interface
 
-  ! Temporary variables when des_continuum_coupled is T to track
-  ! changes in solid time step
-  real(c_real),   save  :: TMP_DTS
+      subroutine usr0_des()
+      end subroutine usr0_des
 
-  real(c_real),   allocatable :: fc(:,:), tow(:,:)
+      subroutine usr1_des()
+      end subroutine usr1_des
 
-  ! Define interface for external functions so there will be no
-  ! warning at compile time
-  interface
-
-     subroutine usr0_des()
-     end subroutine usr0_des
-
-     subroutine usr1_des()
-     end subroutine usr1_des
-
-     subroutine usr2_des(np, pos, vel, omega)
-       import  c_real
-       integer     , intent(in)    :: np
-       real(c_real), intent(in)    :: pos(np,3), vel(np,3)
-       real(c_real), intent(inout) :: omega(np,3)
-     end subroutine usr2_des
-
-     subroutine usr3_des(np, pos, vel, omega)
-       import  c_real
-       integer     , intent(in)    :: np
-       real(c_real), intent(in)    :: pos(np,3), vel(np,3), omega(np,3)
-     end subroutine usr3_des
-
-  end interface
+   end interface
 
 
 contains
 
 
-  subroutine des_init_time_loop( np, state, phase, radius, vol, pos, vel, omega, drag,&
-       & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep, nsubsteps) &
-       bind(C, name="mfix_des_init_time_loop")
+   function des_is_continuum_coupled () result( is_coupled ) &
+        bind(C, name="mfix_des_continuum_coupled")
 
-    use discretelement,          only: dtsolid, s_time
-    use discretelement,          only: des_continuum_coupled
-    use output_manager_module,   only: output_manager
-    use run,                     only: call_usr, tstop
-    use param,                   only: zero
-    use error_manager,           only: err_msg, ival, flush_err_msg
+      use discretelement, only: des_continuum_coupled
 
-    integer(c_int), intent(in)    :: np
-    real(c_real),   intent(in)    :: xlength, ylength, zlength, dx, dy, dz
-    real(c_real),   intent(inout) :: time, dt
+      integer  :: is_coupled
 
-    real(c_real), intent(inout) :: vol(np), radius(np)
-    real(c_real), intent(inout) :: drag(np,3), omega(np,3)
-    real(c_real), intent(inout) :: pos(np,3), vel(np,3)
+      is_coupled = 0
 
-    integer(c_int), intent(inout) :: nstep, state(np), phase(np)
-    integer(c_int), intent(out)   :: nsubsteps
+      if ( des_continuum_coupled ) is_coupled = 1
 
-    allocate ( tow(np,3), fc(np,3) )
+   end function des_is_continuum_coupled
 
-    tow        = zero
-    fc         = zero
 
-    ! In case of restarts assign S_TIME from MFIX TIME
-    S_TIME = TIME
-    TMP_DTS = ZERO
+   subroutine des_init_time_loop ( tstart, dt, nsubsteps, subdt ) &
+        bind(C, name="mfix_des_init_time_loop")
 
-    ! Initialize time stepping variables for coupled gas/solids simulations.
-    if ( des_continuum_coupled ) then
+      use discretelement,  only: dtsolid, des_continuum_coupled
+      use run,             only: tstop
+      use param,           only: zero
 
-       if ( DT >= DTSOLID ) then
-          nsubsteps = ceiling(real(DT/DTSOLID))
-       else
-          nsubsteps = 1
-          DTSOLID_TMP = DTSOLID
-          DT = DTSOLID
-       end if
+      real(c_real),   intent(in   ) :: tstart, dt
+      integer(c_int), intent(  out) :: nsubsteps
+      real(c_real),   intent(  out) :: subdt
 
-       ! Initialize time stepping variable for pure granular simulations.
-    else
+      ! Initialize time stepping variables for
+      ! coupled gas/solids simulations.
+      if ( des_continuum_coupled ) then
 
-       nsubsteps = ceiling(real((TSTOP-TIME)/DTSOLID))
-       DT = DTSOLID
-       call output_manager(np, time, dt, xlength, ylength, zlength, nstep, &
-            state, radius, pos, vel, omega, 0)
+         if ( dt >= dtsolid ) then
+            nsubsteps = ceiling ( real ( dt / dtsolid ) )
+            subdt     =  dt / nsubsteps
+         else
+            nsubsteps = 1
+            subdt     = dtsolid
+         end if
 
-    end if
+         ! Initialize time stepping variable for pure granular simulations.
+      else
 
-    if (des_continuum_coupled) then
-       write(ERR_MSG, 1000) trim(iVal(nsubsteps))
-       call FLUSH_ERR_MSG(HEADER=.false., FOOTER=.false., LOG=.false.)
-    else
-       write(ERR_MSG, 1100) TIME, DTSOLID, trim(iVal(nsubsteps))
-       call FLUSH_ERR_MSG(HEADER=.false., FOOTER=.false., LOG=.false.)
-    endif
+         nsubsteps = ceiling ( real ( (tstop - tstart) / dtsolid ) )
+         subdt     = ( tstop - tstart ) / nsubsteps
 
-1000 FORMAT(/'DEM NITs: ',A)
-1100 FORMAT(/'Time: ',g12.5,3x,'DT: ',g12.5,3x,'DEM NITs: ',A)
+      end if
 
-    IF(call_usr) call USR0_DES
-
-  end subroutine des_init_time_loop
+   end subroutine des_init_time_loop
 
 
 
-  subroutine des_finalize_time_loop( np, dt, pos, vel, omega ) &
-       bind(C, name="mfix_des_finalize_time_loop")
+   subroutine call_usr3_des( np, particles ) &
+        bind(c, name="mfix_call_usr3_des")
 
-    use discretelement, only: dtsolid
-    use param,          only: zero
-    use run,            only: call_usr
+      use run,            only: call_usr
+      use particle_mod,   only: particle_t
 
-    integer(c_int), intent(in)    :: np
-    real(c_real),   intent(inout) :: dt, pos(np,3), vel(np,3), omega(np,3)
+      integer(c_int),   intent(in)    :: np
+      type(particle_t), intent(inout) :: particles(np)
 
-    if ( call_usr ) call usr3_des(np, pos, vel, omega)
+      if ( call_usr ) call usr3_des(np, particles)
 
-    ! When coupled, and if needed, reset the discrete time step accordingly
-    if ( DT < DTSOLID_TMP ) then
-       DTSOLID = DTSOLID_TMP
-    endif
-
-    if ( abs(TMP_DTS) > ZERO ) then
-       DTSOLID = TMP_DTS
-       TMP_DTS = ZERO
-    endif
-
-    deallocate( tow, fc )
-
-  end subroutine des_finalize_time_loop
+   end subroutine call_usr3_des
 
 
 
-  subroutine des_time_loop_ops( np, &
-       & state, phase, radius, vol, mass, omoi, pos, vel, omega, acc, alpha, drag,&
-       & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep, quit )  &
-       bind(C, name="mfix_des_time_loop_ops")
+   subroutine call_usr2_des( np, particles ) &
+        bind(c, name="mfix_call_usr2_des")
 
-    use calc_collision_wall,     only: calc_dem_force_with_wall_stl
-    use calc_force_dem_module,   only: calc_force_dem
-    use cfnewvalues_module,      only: cfnewvalues
-    use discretelement,          only: dtsolid, s_time, des_continuum_coupled
-    use output_manager_module,   only: output_manager
-    use run,                     only: call_usr
+      use run,            only: call_usr
+      use particle_mod,   only: particle_t
 
-    integer(c_int), intent(in)    :: np
-    real(c_real),   intent(in)    :: xlength, ylength, zlength, dx, dy, dz
-    real(c_real),   intent(inout) :: time, dt
+      integer(c_int),   intent(in)    :: np
+      type(particle_t), intent(inout) :: particles(np)
 
-    real(c_real), intent(inout) :: vol(np), mass(np), radius(np), omoi(np)
-    real(c_real), intent(inout) :: alpha(np,3), drag(np,3), omega(np,3)
-    real(c_real), intent(inout) :: pos(np,3), vel(np,3), acc(np,3)
+      if ( call_usr ) call usr2_des(np, particles)
 
-    integer(c_int), intent(inout) :: nstep, state(np), phase(np)
-    integer(c_int), intent(out)   :: quit
+   end subroutine call_usr2_des
 
-    quit = 0
+   subroutine des_time_loop_ops ( nrp, rparticles, ngp, gparticles, &
+        & subdt, dx, dy, dz, xlength, ylength, zlength, nstep )  &
+        bind(C, name="mfix_des_time_loop_ops")
 
-    if ( des_continuum_coupled ) then
-       ! If the current time in the discrete loop exceeds the current time in
-       ! the continuum simulation, exit the discrete loop
-       if ( S_TIME > (TIME+DT) ) then
-          quit = 1
-          return
-       end if
-       ! If next time step in the discrete loop will exceed the current time
-       ! in the continuum simulation, modify the discrete time step so final
-       ! time will match
-       if ( (S_TIME+DTSOLID) > (TIME+DT) ) then
-          TMP_DTS = DTSOLID
-          DTSOLID = TIME + DT - S_TIME
-       end if
-    end if
+      use particle_mod
+      use calc_collision_wall,     only: calc_dem_force_with_wall_stl
+      use calc_force_dem_module,   only: calc_force_dem
+      use discretelement,          only: dtsolid
+      use output_manager_module,   only: output_manager
+      use run,                     only: call_usr
 
-    ! calculate forces from particle-wall collisions
-    call calc_dem_force_with_wall_stl( phase, state, radius, &
-         pos, vel, omega, fc, tow, xlength, ylength, zlength )
+      integer(c_int),   intent(in   )     :: nrp, ngp
+      real(c_real),     intent(in   )     :: subdt, dx, dy, dz
+      real(c_real),     intent(in   )     :: xlength, ylength, zlength
+      type(particle_t), intent(inout)     :: rparticles(nrp), gparticles(ngp)
+      integer(c_int),   intent(inout)     :: nstep
+      real(c_real)                        :: tow(nrp+ngp,3), fc(nrp+ngp,3)
+      type(particle_t)                    :: particles(nrp+ngp)
 
-    ! calculate forces from particle-particle collisions
-    call calc_force_dem(phase, radius, pos, vel, omega, state, &
-         fc, tow)
 
-    ! call user functions.
-    if ( call_usr ) call usr1_des
+      particles(    1:nrp) = rparticles
+      particles(nrp+1:   ) = gparticles
+      
+      tow  = 0
+      fc   = 0
 
-    ! update position and velocities
-    call cfnewvalues(np, state, mass, omoi, drag, &
-         pos, vel, omega, fc, tow, &
-         acc, alpha)
+      ! calculate forces from particle-wall collisions
+      call calc_dem_force_with_wall_stl ( particles, fc, tow, &
+           xlength, ylength, zlength, subdt )
 
-    ! update time to reflect changes
-    s_time = s_time + dtsolid
+      ! calculate forces from particle-particle collisions
+      call calc_force_dem ( particles, fc, tow, subdt )
 
-    ! the following section targets data writes for dem only cases:
-    if(.not.des_continuum_coupled) then
-       ! keep track of time and number of steps for dem simulations
-       time = s_time
-       nstep = nstep + 1
+      ! call user functions.
+      if ( call_usr ) call usr1_des
 
-       ! call the output manager to write res data.
-       call output_manager(np, time, dt, &
-            xlength, ylength, zlength, nstep, &
-            state, radius, &
-            pos, vel, omega, 0)
-    endif  ! end if (.not.des_continuum_coupled)
+      ! update position and velocities
+      call des_euler_update ( particles, fc, tow, subdt )
+      
+      rparticles = particles(    1: nrp)   
+      gparticles = particles(nrp+1:    )
+      
+   end subroutine des_time_loop_ops
 
-    if(call_usr) call usr2_des(np, pos, vel, omega)
 
-  end subroutine des_time_loop_ops
 
+   subroutine des_euler_update ( particles, fc, tow, dt )
+
+      use discretelement, only: normal_particle, exiting_particle
+      use param,          only: zero
+      use constant,       only: gravity
+      use particle_mod,   only: particle_t
+
+      type(particle_t), intent(inout)  :: particles(:)
+      real(c_real),     intent(inout)  :: fc(:,:), tow(:,:)
+      real(c_real),     intent(in   )  :: dt
+      integer                          :: p
+
+      do p = 1, size ( particles )
+
+         if ( ( particles(p) % state == normal_particle ) .or. &
+              ( particles(p) % state == exiting_particle )  ) then
+
+            associate ( vel => particles(p) % vel, pos => particles(p) % pos, &
+               drag => particles(p) % drag, mass => particles(p) % mass,    &
+               omega => particles(p) % omega, omoi => particles(p) % omoi )
+
+              vel     = vel   + dt * ( ( fc(p,:) +  drag ) / mass + gravity )
+              pos     = pos   + dt * vel
+              omega   = omega + dt * tow(p,:) * omoi
+
+            end associate
+
+         end if
+      end do
+
+   end subroutine des_euler_update
 
 
 end module des_time_march_module

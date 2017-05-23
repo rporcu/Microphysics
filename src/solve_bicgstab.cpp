@@ -120,6 +120,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect());
     }
 
+    // Enforce periodicity on sol in case it hasn't been done yet
+    sol.FillBoundary(geom[lev].periodicity());
+
     // Compute initial residual r = rhs - A*sol
     //-------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
@@ -299,6 +302,13 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         ret = 3; break;
       }
 
+
+//    if ( verbose > 0 && ParallelDescriptor::IOProcessor())
+//      {
+//        std::cout << "v1 " << vals[1] << "   v0 "<< vals[0] << '\n';
+//      }
+
+
       sxay(sol, sol,  alpha, ph);
       sxay(sol, sol,  omega, sh);
 
@@ -309,6 +319,14 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       rnorm = dotxy(r,r,geom[lev].periodicity(),true);
       rnorm = sqrt(rnorm);
+
+
+
+      // if ( verbose > 0 && ParallelDescriptor::IOProcessor())
+      //   {
+      //     std::cout << "BiCGStab:       Rnorm " << nit << " L-2 "<< rnorm/(rnorm0) << '\n';
+      //   }
+
 
       if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
 

@@ -85,8 +85,6 @@
 
 ! Value of solids time step based on particle properties
       real(c_real) :: dtsolid
-! Run time value of simulation time used in dem simulation
-      real(c_real) :: s_time
 
 ! End neighbor search related quantities
 !-----------------------------------------------------------------<<<

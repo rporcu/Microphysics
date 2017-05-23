@@ -21,7 +21,7 @@ contains
     use bc, only: cyclic_z, cyclic_z_pd, cyclic_z_mf
     use bc, only: flux_g
 
-    use run, only: detect_stall, dem_solids
+    use run, only: dem_solids
 
     use constant, only: mmax
     use discretelement, only: particle_types
@@ -48,9 +48,6 @@ contains
 
     ! Read in the namelist variables from the ascii input file.
     call read_namelist(dt)
-
-    ! Disable detect stall for steady state
-    if(is_undefined(dt)) detect_stall = .false.
 
     ! Determine the cyclic direction with a specified mass flux
     cyclic_x_mf = (is_defined(flux_g) .and. cyclic_x_pd)

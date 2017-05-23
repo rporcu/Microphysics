@@ -39,6 +39,8 @@ public:
 
     void InitFromCheckpoint (int *nstep, Real *dt, Real *time) const;
 
+    void WriteParticleAscii (int nstep = 0);
+    
     void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
 
@@ -84,6 +86,9 @@ protected:
     void mfix_calc_mflux (int lev);
 
     void mfix_solve_for_vels (int lev, Real dt, Real (&residuals)[16]);
+    void mfix_solve_for_u    (int lev, Real dt, Real (&residuals)[16]);
+    void mfix_solve_for_v    (int lev, Real dt, Real (&residuals)[16]);
+    void mfix_solve_for_w    (int lev, Real dt, Real (&residuals)[16]);
 
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
@@ -231,12 +236,13 @@ private:
     Real cfl = 0.7;
 
     std::string restart_chkfile {"no_restart"};
-
     std::string check_file {"chk"};
     std::string plot_file {"plt"};
+    std::string par_ascii_file {"par"};
+
     int check_int = -1;
     int plot_int = -1;
-
+    int par_ascii_int = -1;
 
     // Variables to simplify IO
     Array< const Array< std::unique_ptr<MultiFab> >* > vectorVars;

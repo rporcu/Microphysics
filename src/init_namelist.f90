@@ -48,7 +48,7 @@ MODULE INIT_NAMELIST_MODULE
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
       use run, only: undefined_i
-      use run, only: call_usr, description, detect_stall, discretize, tstop
+      use run, only: call_usr, description, tstop
       use run, only: dt_fac, dt_max, dt_min, run_name, solids_model
       use drag, only: drag_type
       use scales, only: p_ref, p_scale
@@ -255,16 +255,6 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Numerical Parameters" required="false">
 !  <description>
-!    Reduce the time step if the residuals stop decreasing. Disabling this
-!    feature may help overcome initial non-convergence.
-!  </description>
-!  <valid value=".FALSE." note="Continue iterating if residuals stall."/>
-!  <valid value=".TRUE."  note="Reduce time step if residuals stall."/>
-      DETECT_STALL = .TRUE.
-!</keyword>
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
 !    Linear Equation tolerance [1.0d-4].
 !  </description>
 !  <arg index="1" id="Equation ID Number" min="1" max="DIM_EQS"/>
@@ -329,23 +319,6 @@ MODULE INIT_NAMELIST_MODULE
 !</keyword>
 
 !<keyword category="Numerical Parameters" required="false">
-!  <description>Discretization scheme of equations.</description>
-!  <arg index="1" id="Equation ID Number" min="1" max="DIM_EQS"/>
-!  <valid value="0" note="First-order upwinding."/>
-!  <valid value="2" note="Superbee (recommended method)."/>
-      DISCRETIZE(:) = 0
-!</keyword>
-
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
-!    Solve transpose of linear system. (BICGSTAB ONLY).
-!  </description>
-!  <dependent keyword="LEQ_METHOD" value="2"/>
-      DO_TRANSPOSE = .FALSE.
-!</keyword>
-
-!<keyword category="Numerical Parameters" required="false">
 !  <description>
 !    Frequency to check for convergence. (BICGSTAB ONLY)
 !  </description>
@@ -373,16 +346,6 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
-!    Flag for making the x-direction cyclic without pressure drop. No other
-!    boundary conditions for the x-direction should be specified.
-!</description>
-!  <valid value=".FALSE." note="No cyclic condition at x-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition at x-boundary."/>
-      cyclic_x = .FALSE.
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
 !    Flag for making the x-direction cyclic with pressure drop. If the
 !    keyword FLUX_G is given a value this becomes a cyclic boundary
 !    condition with specified mass flux. No other boundary conditions
@@ -401,17 +364,6 @@ MODULE INIT_NAMELIST_MODULE
       delp_x = UNDEFINED
 !</keyword>
 
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    Flag for making the y-direction cyclic without pressure drop. No
-!    other boundary conditions for the y-direction should be specified.
-!  </description>
-!  <valid value=".FALSE." note="No cyclic condition at y-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition at x-boundary."/>
-      cyclic_y = .FALSE.
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
 !  <description>
 !    Flag for making the y-direction cyclic with pressure drop. If the
 !    keyword FLUX_G is given a value this becomes a cyclic boundary
@@ -429,16 +381,6 @@ MODULE INIT_NAMELIST_MODULE
 !    with pressure drop is imposed in the y-direction.
 !  </description>
       delp_y = UNDEFINED
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    Flag for making the z-direction cyclic without pressure drop. No
-!    other boundary conditions for the z-direction should be specified.
-!  </description>
-!  <valid value=".FALSE." note="No cyclic condition at z-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition at z-boundary."/>
-      cyclic_z = .FALSE.
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">

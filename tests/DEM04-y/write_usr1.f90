@@ -4,25 +4,22 @@
 !  Purpose: Write user-defined output                                  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new)
+subroutine write_usr1(l, np, time, dt, particles )
 
-      use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only: c_real => amrex_real
+   use particle_mod,      only: particle_t
 
-      IMPLICIT NONE
+   implicit none
 
-      integer,      intent(in   ) :: l, max_pip
-      real(c_real), intent(in   ) :: time, dt
-      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
-      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
-      real(c_real), intent(in   ) :: omega_new(max_pip,3)
+   integer,          intent(in   ) :: l, np
+   real(c_real),     intent(in   ) :: time, dt
+   type(particle_t), intent(in   ) :: particles(np)
 
-      SELECT CASE(L)
-      CASE(1); CALL WRITE_DES_OUT(TIME, max_pip, &
-         des_pos_new, des_vel_new, omega_new)
-      END SELECT
+   select case(L)
+   case(1); call write_des_out(TIME, np, particles)
+   end SELECT
 
-      RETURN
-      END SUBROUTINE WRITE_USR1
+end subroutine write_usr1
 
 
 !......................................................................!
@@ -37,92 +34,91 @@
 !  open-source MFIX-DEM software for gas-solids flows," from URL:      !
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !......................................................................!
-      SUBROUTINE WRITE_DES_Out(lTime, max_pip, &
-         des_pos_new, des_vel_new, omega_new)
+SUBROUTINE WRITE_DES_Out(lTime, np, particles)
 
-      Use discretelement, only: mew, mew_w
-      use constant, only: gravity
-      use param, only: zero
-      use param, only: equal
-      use usr, only: u0
-      use amrex_fort_module, only : c_real => amrex_real
+   Use discretelement, only: mew, mew_w
+   use constant, only: gravity
+   use param, only: zero
+   use param, only: equal
+   use usr, only: u0
+   use amrex_fort_module, only : c_real => amrex_real
+   use particle_mod,      only: particle_t
 
-      implicit none
+   implicit none
 
-! Passed variables
-!---------------------------------------------------------------------//
-      real(c_real), intent(in   ) :: ltime
-      integer,      intent(in   ) :: max_pip
-      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
-      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
-      real(c_real), intent(in   ) :: omega_new(max_pip,3)
+   ! Passed variables
+   !---------------------------------------------------------------------//
+   integer,          intent(in   ) ::  np
+   real(c_real),     intent(in   ) :: ltime
+   type(particle_t), intent(in   ) :: particles(np)
 
-! Local variables
-!---------------------------------------------------------------------//
-! file unit for heat transfer data
-      INTEGER, PARAMETER :: lUNIT = 2030
-! Slip velocity at contact, error, non-dimensional values.
-      REAL(C_REAL) :: SLIP, ERR, ANL_ND, DEM_ND
-! Flag that rolling friction already ended.
-      LOGICAL, SAVE :: ROLLFRIC_END = .FALSE.
+   ! Local variables
+   !---------------------------------------------------------------------//
+   ! file unit for heat transfer data
+   INTEGER, PARAMETER :: lUNIT = 2030
+   ! Slip velocity at contact, error, non-dimensional values.
+   REAL(C_REAL) :: SLIP, ERR, ANL_ND, DEM_ND
+   ! Flag that rolling friction already ended.
+   LOGICAL, SAVE :: ROLLFRIC_END = .FALSE.
 
-      real(c_real), parameter :: lRad = 0.00050
-! Return: Rolling friction already ended.
-      IF(ROLLFRIC_END) RETURN
+   real(c_real), parameter :: lRad = 0.00050
 
-! Calculate the slip velocity.
-      SLIP = DES_VEL_NEW(1,1) + OMEGA_NEW(1,3)*lRad
+   ! Return: Rolling friction already ended.
+   IF(ROLLFRIC_END) RETURN
 
-! Check for a sign flip or a small difference.
-      IF(equal(abs(SLIP),1.0d-6) .OR. SLIP < ZERO) THEN
-         ROLLFRIC_END = .TRUE.
+   ! Calculate the slip velocity.
+   SLIP = particles(1) % vel(1) + particles(1) % omega(3)*lRad
 
-! Open the files.
-         OPEN(UNIT=lUnit,FILE='POST_TIME.dat', &
-            POSITION="APPEND",STATUS='OLD')
+   ! Check for a sign flip or a small difference.
+   IF(equal(abs(SLIP),1.0d-6) .OR. SLIP < ZERO) THEN
+      ROLLFRIC_END = .TRUE.
 
-! Calculate the non-dimensional end slip times
-         ANL_ND = 2.0d0/7.0d0
-         DEM_ND = abs(MEW*gravity(2)/u0) * lTime
+      ! Open the files.
+      OPEN(UNIT=lUnit,FILE='POST_TIME.dat', &
+           POSITION="APPEND",STATUS='OLD')
 
-         Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
+      ! Calculate the non-dimensional end slip times
+      ANL_ND = 2.0d0/7.0d0
+      DEM_ND = abs(MEW*gravity(2)/u0) * lTime
 
-! Write the results to a file.
-         WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND, Err
-         CLOSE(lUNIT)
+      Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
-! Open the files.
-         OPEN(UNIT=lUnit,FILE='POST_TVEL.dat', &
-            POSITION="APPEND",STATUS='OLD')
+      ! Write the results to a file.
+      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND, Err
+      CLOSE(lUNIT)
 
-! Calculate the non-dimensional translational velocity.
-         ANL_ND = 5.0d0/7.0d0
-         DEM_ND = abs(DES_VEL_NEW(1,1)/u0)
+      ! Open the files.
+      OPEN(UNIT=lUnit,FILE='POST_TVEL.dat', &
+           POSITION="APPEND",STATUS='OLD')
 
-         Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
+      ! Calculate the non-dimensional translational velocity.
+      ANL_ND = 5.0d0/7.0d0
+      DEM_ND = abs(particles(1) % vel(1)/u0)
 
-! Write the results to a file.
-         WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND, Err
-         CLOSE(lUNIT)
+      Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
-! Open the files.
-         OPEN(UNIT=lUnit,FILE='POST_AVEL.dat', &
-            POSITION="APPEND",STATUS='OLD')
+      ! Write the results to a file.
+      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND, Err
+      CLOSE(lUNIT)
 
-! Calculate the non-dimensional angular velocity.
-         ANL_ND = 5.0d0/7.0d0
-         DEM_ND = abs(OMEGA_NEW(1,3)*lRad/u0)
+      ! Open the files.
+      OPEN(UNIT=lUnit,FILE='POST_AVEL.dat', &
+           POSITION="APPEND",STATUS='OLD')
 
-         Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
+      ! Calculate the non-dimensional angular velocity.
+      ANL_ND = 5.0d0/7.0d0
+      DEM_ND = abs(particles(1) % omega(3)*lRad/u0)
 
-! Write the results to a file.
-         WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND, Err
-         CLOSE(lUNIT)
+      Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
-      ENDIF
+      ! Write the results to a file.
+      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND, Err
+      CLOSE(lUNIT)
 
-      RETURN
+   ENDIF
 
- 1000 FORMAT(3x,F15.8,5X,F15.8,2(3x,F15.8))
+   RETURN
 
-      END SUBROUTINE WRITE_DES_Out
+1000 FORMAT(3x,F15.8,5X,F15.8,2(3x,F15.8))
+
+END SUBROUTINE WRITE_DES_Out

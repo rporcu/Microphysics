@@ -1,5 +1,4 @@
-set( BENCHMARKS  FLD01-x FLD01-y FLD01-z
-   )
+set( BENCHMARKS   )
 
 set (BUILD_BENCHMARK build_benchmarks)
 add_custom_target(${BUILD_BENCHMARK})

@@ -264,6 +264,7 @@ module solve_vel_star_module
          (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
 !.....................................................................//
       real(c_real) :: vol
+
       vol = dx*dy*dz
 
 ! Initialize A_m and b_m
@@ -415,6 +416,7 @@ module solve_vel_star_module
          (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
 !.....................................................................//
       real(c_real) :: vol
+
       vol = dx*dy*dz
 
       ! Initialize A_m and b_m

@@ -62,9 +62,6 @@
 !-----------------------------------------------
 
 !
-      DATA DISCR_NAME/'FOUP', '    ', 'Superbee'/
-      DATA DISCR_NAME1/'FOUP', '    ', 'Fourth Order'/
-
       MMAX_TOT = MMAX
 
       open(unit=unit_out, file=trim(run_name)//'.out', status='unknown', &

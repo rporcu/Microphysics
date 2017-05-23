@@ -93,6 +93,7 @@ contains
                 bms = A_m(i,j,k,s)*v_g(i,j  ,k)
                 bmt = A_m(i,j,k,t)*w_g(i,j,k+1)
                 bmb = A_m(i,j,k,b)*w_g(i,j,k  )
+
                 b_m(i,j,k) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
 
                 b_mmax(i,j,k) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), &

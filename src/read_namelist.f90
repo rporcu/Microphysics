@@ -33,14 +33,14 @@ MODULE read_namelist_module
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      use leqsol, only: do_transpose, leq_it
+      use leqsol, only: leq_it
       use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, ival
       use run, only: full_log, nlog
       use output, only: usr_dt
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_w
-      use run, only: call_usr, description, detect_stall, discretize, tstop
+      use run, only: call_usr, description, tstop
       use run, only: dt_fac, dt_max, dt_min, run_name, solids_model
       use drag, only: drag_type
       use scales, only: p_ref, p_scale
