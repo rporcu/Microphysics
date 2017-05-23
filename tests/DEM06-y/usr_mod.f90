@@ -142,7 +142,7 @@
       real(c_real), intent(in) :: Re  ! particle height.
 
       Cd = 0.0d0
-      if (Re > 0.0d0) Cd = (24.0d0/Re)*(1.0d0 + 0.15d0*(Re**0.687))
+      if (Re > 0.0d0) Cd = (24.0d0/Re)*(1.0d0 + 0.15d0*(Re**0.687d0))
 
       end function Cd
 
@@ -158,7 +158,7 @@
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !  page 26, Equation (74).                                             !
 !......................................................................!
-      function Fb( )
+      real(c_real) function Fb( )
 
       use constant , only: gravity, RO_s0
       use fld_const, only: RO_g0
@@ -183,7 +183,7 @@
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !  page 26, Equation (74).                                             !
 !......................................................................!
-      function Fd(Vp)
+      real(c_real) function Fd(Vp)
 
       use constant, only: RO_s0, D_p0
       use fld_const, only: RO_g0
