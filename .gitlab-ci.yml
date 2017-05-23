@@ -31,13 +31,24 @@ build:
   tags:
     - joule
 
-test:
+fld-test:
   stage: test
   script:
     - mkdir build
     - cd build
     - cmake ..
     - make -j 4
-    - make test
+    - ctest -R FLD
+  tags:
+    - joule
+
+dem-test:
+  stage: test
+  script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make -j 4
+    - ctest -R DEM
   tags:
     - joule
