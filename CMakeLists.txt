@@ -51,7 +51,7 @@ add_subdirectory( Tools/F90 )
 # Tests
 enable_testing()
 add_subdirectory( tests )
-add_subdirectory( benchmarks )
+#add_subdirectory( benchmarks )
 
 # Add a target to generate API documentation with Doxygen
 find_package(Doxygen)
