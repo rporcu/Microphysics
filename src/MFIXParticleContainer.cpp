@@ -549,5 +549,5 @@ void MFIXParticleContainer::fillGhostsMPI(GhostCommMap& ghosts_to_comm) {
 
 void MFIXParticleContainer::clearGhosts( int lev ) 
 {
-    for (auto& kv : ghosts) kv.second.clear();
+    ghosts.clear();
 }
