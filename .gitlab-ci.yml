@@ -12,10 +12,10 @@ stages:
 
 variables:
   CTEST_OUTPUT_ON_FAILURE: "1"
-  LD_LIBRARY_PATH: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64"
-  CC:  "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpicc"
+  LD_LIBRARY_PATH: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64:/nfs/apps/Compilers/GNU/6.1.0/lib"
+  CC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpicc"
   CXX: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpic++"
-  FC:  "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
+  FC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
   F77: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
   F90: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
   MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
