@@ -15,26 +15,34 @@ module set_bc_type_module
    subroutine set_bc_type(slo, shi, &
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
-                          bc_klo_type, bc_khi_type) &
+                          bc_klo_type, bc_khi_type, &
+                          domlo, domhi, dx, dy, dz, &
+                          xlength, ylength, zlength) &
                bind(c,name='set_bc_type')
 
       use bc, only: bc_defined, bc_type, bc_plane
-      use bc, only: bc_k_b, bc_k_t
-      use bc, only: bc_j_s, bc_j_n
-      use bc, only: bc_i_w, bc_i_e
 
-      use ic, only: NSW_, FSW_, PSW_
-      use ic, only: PINF_, POUT_
-      use ic, only: MINF_, MOUT_
-      use ic, only: UNDEF_CELL, cycl_
+      use bc, only: nsw_, fsw_, psw_
+      use bc, only: pinf_, pout_
+      use bc, only: minf_
+      use bc, only: undef_cell, cycl_
 
-      use geometry, only: cyclic_x, cyclic_y, cyclic_z
-      use geometry, only: domlo, domhi
-      use param, only: dimension_bc
+      use bc, only: cyclic_x, cyclic_y, cyclic_z
+      use bc, only: bc_x_w, bc_y_s, bc_z_b
+      use bc, only: bc_x_e, bc_y_n, bc_z_t
+
+      use param, only: dim_bc
+      use param, only: equal
+      use calc_cell_module, only: calc_cell_bc_flow
+      use calc_cell_module, only: calc_cell_bc_wall
 
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
+
+      real(c_real), intent(in) :: dx, dy, dz
+      real(c_real)  , intent(in) :: xlength, ylength, zlength
 
       integer(c_int), intent(inout) :: bc_ilo_type&
          (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
@@ -54,6 +62,8 @@ module set_bc_type_module
       integer    nlft, nrgt, nbot, ntop, nup, ndwn
       integer :: i,j,k
 
+      integer :: i_w, j_s, k_b, i_e, j_n, k_t
+
       nlft = 2!max(0,domlo(1)-slo(1))
       nbot = 2!max(0,domlo(2)-slo(2))
       ndwn = 2!max(0,domlo(3)-slo(3))
@@ -67,108 +77,98 @@ module set_bc_type_module
          bc_ilo_type(domlo(2):domhi(2),domlo(3):domhi(3),1) = cycl_
          bc_ihi_type(domlo(2):domhi(2),domlo(3):domhi(3),1) = cycl_
       else
-         bc_ilo_type(:,:,1) = UNDEF_CELL
-         bc_ihi_type(:,:,1) = UNDEF_CELL
+         bc_ilo_type(:,:,1) = undef_cell
+         bc_ihi_type(:,:,1) = undef_cell
       endif
 
       if(cyclic_y)then
          bc_jlo_type(:,:,1) = cycl_
          bc_jhi_type(:,:,1) = cycl_
       else
-         bc_jlo_type(:,:,1) = UNDEF_CELL
-         bc_jhi_type(:,:,1) = UNDEF_CELL
+         bc_jlo_type(:,:,1) = undef_cell
+         bc_jhi_type(:,:,1) = undef_cell
       endif
 
       if(cyclic_z) then
          bc_klo_type(:,:,1) = cycl_
          bc_khi_type(:,:,1) = cycl_
       else
-         bc_klo_type(:,:,1) = UNDEF_CELL
-         bc_khi_type(:,:,1) = UNDEF_CELL
+         bc_klo_type(:,:,1) = undef_cell
+         bc_khi_type(:,:,1) = undef_cell
       endif
 
-      do bcv = 1, dimension_bc
+      do bcv = 1, dim_bc
          if (bc_defined(bcv)) then
 
             select case (trim(bc_type(bcv)))
-               case('FREE_SLIP_WALL'); type = fsw_
-               case('NO_SLIP_WALL'  ); type = nsw_
-               case('PAR_SLIP_WALL' ); type = psw_
-               case('P_INFLOW');       type = pinf_
-               case('P_OUTFLOW');      type = pout_
-               case('MASS_INFLOW');    type = minf_
-               case('MASS_OUTFLOW');   type = mout_
+               case('FREE_SLIP_WALL','FSW'); type = fsw_
+               case('NO_SLIP_WALL'  ,'NSW'); type = nsw_
+               case('PAR_SLIP_WALL' ,'PSW'); type = psw_
+               case('P_INFLOW'      ,'PI' ); type = pinf_
+               case('P_OUTFLOW'     ,'PO' ); type = pout_
+               case('MASS_INFLOW'   ,'MI' ); type = minf_
                case default
                   write(6,*) 'unknown bc type'
                   stop 7655
             end select
 
-            if (bc_i_w(bcv) == bc_i_e(bcv)) then
-               if(bc_i_w(bcv) == domlo(1)-1) then
-                  bc_ilo_type(&
-                           bc_j_s(bcv):bc_j_n(bcv),&
-                           bc_k_b(bcv):bc_k_t(bcv),1) = type
-                  bc_ilo_type(&
-                           bc_j_s(bcv):bc_j_n(bcv),&
-                           bc_k_b(bcv):bc_k_t(bcv),2) = bcv
+            select case(type)
+            case(nsw_, fsw_, psw_)
+               call calc_cell_bc_wall(domlo, domhi, &
+                  xlength, ylength, zlength, dx, dy, dz, &
+                  bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+                  bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
+            case(pinf_, pout_, minf_)
+               call calc_cell_bc_flow(&
+                  xlength, ylength, zlength, dx, dy, dz, &
+                  bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+                  bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
+            end select
+
+            if (i_w == i_e) then
+               if(i_w == domlo(1)-1) then
+                  bc_ilo_type(j_s:j_n, k_b:k_t,1) = type
+                  bc_ilo_type(j_s:j_n, k_b:k_t,2) = bcv
 
                   bc_plane(bcv) = 'E' ! Fluid is to East of bc!
 
-               else if(bc_i_w(bcv) == domhi(1)+1) then
-                  bc_ihi_type(&
-                           bc_j_s(bcv):bc_j_n(bcv),&
-                           bc_k_b(bcv):bc_k_t(bcv),1) = type
-                  bc_ihi_type(&
-                           bc_j_s(bcv):bc_j_n(bcv),&
-                           bc_k_b(bcv):bc_k_t(bcv),2) = bcv
+               else if(i_w == domhi(1)+1) then
+                  bc_ihi_type(j_s:j_n, k_b:k_t,1) = type
+                  bc_ihi_type(j_s:j_n, k_b:k_t,2) = bcv
 
                   bc_plane(bcv) = 'W' ! Fluid is to West of bc!
 
                endif
             endif
 
-            if (bc_j_s(bcv) == bc_j_n(bcv)) then
-               if(bc_j_s(bcv) == domlo(2)-1) then
-                  bc_jlo_type(&
-                           bc_i_w(bcv):bc_i_e(bcv),&
-                           bc_k_b(bcv):bc_k_t(bcv),1) = type
-                  bc_jlo_type(&
-                           bc_i_w(bcv):bc_i_e(bcv),&
-                           bc_k_b(bcv):bc_k_t(bcv),2) = bcv
+            if (j_s == j_n) then
+               if(j_s == domlo(2)-1) then
+                  bc_jlo_type(i_w:i_e, k_b:k_t,1) = type
+                  bc_jlo_type(i_w:i_e, k_b:k_t,2) = bcv
 
                   bc_plane(bcv) = 'N' ! Fluid is to North of bc!
 
-               else if(bc_j_s(bcv) == domhi(2)+1) then
-                  bc_jhi_type(&
-                           bc_i_w(bcv):bc_i_e(bcv),&
-                           bc_k_b(bcv):bc_k_t(bcv),1) = type
-                  bc_jhi_type(&
-                           bc_i_w(bcv):bc_i_e(bcv),&
-                           bc_k_b(bcv):bc_k_t(bcv),2) = bcv
+               else if(j_s == domhi(2)+1) then
+                  bc_jhi_type(i_w:i_e, k_b:k_t,1) = type
+                  bc_jhi_type(i_w:i_e, k_b:k_t,2) = bcv
 
                   bc_plane(bcv) = 'S' ! Fluid is to South of bc!
 
                endif
             endif
 
-            if (bc_k_b(bcv) == bc_k_t(bcv)) then
-               if(bc_k_b(bcv) == domlo(3)-1) then
-                  bc_klo_type(&
-                           bc_i_w(bcv):bc_i_e(bcv),&
-                           bc_j_s(bcv):bc_j_n(bcv),1) = type
-                  bc_klo_type(&
-                           bc_i_w(bcv):bc_i_e(bcv),&
-                           bc_j_s(bcv):bc_j_n(bcv),2) = bcv
+            if (k_b == k_t) then
+               if(k_b == domlo(3)-1) then
+                  bc_klo_type(i_w:i_e, j_s:j_n,1) = type
+                  bc_klo_type(i_w:i_e, j_s:j_n,2) = bcv
 
                   bc_plane(bcv) = 'T' ! Fluid is to Top of bc!
 
-               elseif(bc_k_b(bcv) == domhi(3)+1) then
-                  bc_khi_type(&
-                           bc_i_w(bcv):bc_i_e(bcv),&
-                           bc_j_s(bcv):bc_j_n(bcv),1) = type
-                  bc_khi_type(&
-                           bc_i_w(bcv):bc_i_e(bcv),&
-                           bc_j_s(bcv):bc_j_n(bcv),2) = bcv
+               elseif(k_b == domhi(3)+1) then
+                  bc_khi_type(i_w:i_e, j_s:j_n,1) = type
+                  bc_khi_type(i_w:i_e, j_s:j_n,2) = bcv
 
                   bc_plane(bcv) = 'B' ! Fluid is to Bottom of bc!
 

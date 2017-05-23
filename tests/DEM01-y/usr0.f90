@@ -13,8 +13,8 @@
       SUBROUTINE USR0
 
       use usr, only: b_r, h0, time_c, time_r, vel_c, vel_r, w0_r, y_s2, dydt_s2
-      use discretelement, only: particles, dtsolid, kn_w, des_etan_wall, des_en_wall_input
-      use exit_mod, only: mfix_exit
+      use discretelement, only: dtsolid, kn_w, des_etan_wall, des_en_wall_input
+
       use constant, only: gravity, pi
 
       IMPLICIT NONE
@@ -22,11 +22,6 @@
       double precision :: lRad
       double precision :: lMass
       double precision :: lGrav
-
-      if(particles /= 1) then
-         write(*,"(3x, 'invalid setup for test case')")
-         call mfix_exit(0)
-      endif
 
       lRad   = 0.1d0
       h0     = 0.5d0
@@ -113,7 +108,7 @@
          write(*,"(3x,'Fatal Error: fa*fb >= 0')")
          write(*,"(3x,'fa: ',g12.4,3x,'a: ',g12.4)") fa, ak
          write(*,"(3x,'fb: ',g12.4,3x,'b: ',g12.4)") fb, bk
-         call mfix_exit(0)
+         stop 1000
       endif
 
       ck = ak

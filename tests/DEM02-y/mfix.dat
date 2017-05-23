@@ -21,10 +21,6 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  RUN_TYPE = 'NEW'
-  UNITS = 'SI'
-
-  TIME =   0.0
   TSTOP = 10.0
 
   DT =     1.0d-4
@@ -32,42 +28,25 @@
 
   CALL_USR = .T.
 
-
-#_______________________________________________________________________
-# GEOMETRY SECTION
-
-  COORDINATES = 'CARTESIAN'
-
-  XLENGTH  = 1.0   IMAX = 1
-  YLENGTH  = 1.0   JMAX = 1
-  ZLENGTH  = 1.0   KMAX = 1
-
+  FULL_LOG = .F.  ! display residuals on screen
+  NLOG = 250      ! time steps between updates to (.LOG) file
 
 #_______________________________________________________________________
 # MATERIAL SECTION
 
 ! Gas Section
 !---------------------------------------------------------------------//
-
   RO_g0 = 0.0
-  MU_g0 = 0.2
 
 
 ! PARTICLE SECTION
 !---------------------------------------------------------------------//
 
-
-  PARTICLES = 1                ! Number of partiles
+  PARTICLE_TYPES = 1
 
 ! Friction coefficients. (1)
   MEW =   0.0                  ! particle-particle
   MEW_W = 0.0                  ! particle-wall
-
-
-
-
-
-
 
 !......................................................................!
 ! The following keywords are required inputs for the simulation. They  !
@@ -85,8 +64,6 @@
 
 ! Solids phase 1
 !---------------------------------------------------------------------//
-  SOLIDS_MODEL(1) = 'DEM'
-
   D_p0(1) =       0.20   ! (m)
   RO_s0(1) =   2600.00   ! (kg/m)
 
@@ -127,24 +104,3 @@
 # USER OUTPUT CONTROL
 
   USR_DT(1) = 1.0
-  USR_TYPE(1) = 'ASCII'
-  USR_VAR(1) =  'Max bounce height'
-
-
-#_______________________________________________________________________
-# OUTPUT CONROL SECTION
-
-  RES_DT = 1.0d3  ! interval to update restart (.RES) file
-
-  FULL_LOG = .F.  ! display residuals on screen
-  NLOG = 250      ! time steps between updates to (.LOG) file
-
-  GROUP_RESID = .T.
-
-  PRINT_DES_DATA = .F.
-
-
-#_______________________________________________________________________
-# DMP SETUP
-
-  ENABLE_DMP_LOG = .F.

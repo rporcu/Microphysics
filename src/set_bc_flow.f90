@@ -1,417 +1,304 @@
 module set_bc_flow_module
 
-  use constant,      only: mmax
-  use param1,        only: zero, one, undefined, is_undefined, is_defined, equal
-  use param,         only: dimension_bc
-  use run,           only: IFILE_NAME
-  use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, err_msg
-  use bc,            only: bc_defined, bc_type, bc_rop_s, bc_ep_s, bc_ep_g, &
-                         & bc_u_g, bc_v_g, bc_w_g, bc_u_s, bc_v_s, bc_w_s,  &
-                         & bc_plane
+  use amrex_fort_module, only : c_real => amrex_real
+  use iso_c_binding , only: c_int
+
+  use bc, only: bc_type, bc_plane
+
+  use param,  only: dim_m
+  use param, only: zero, one, equal, is_defined
+
+  use bc, only: bc_u_g, bc_v_g, bc_w_g
+  use bc, only: bc_massflow_g, bc_volflow_g
+
+  use bc, only: bc_u_s, bc_v_s, bc_w_s
+  use bc, only: bc_massflow_s, bc_volflow_s
 
   implicit none
-  private 
+  private
 
   public set_bc_flow
 
-
 contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: SET_BC_FLOW                                             !
+!                                                                      !
+!  Purpose: Check boundary condition specifications                    !
+!     - convert physical locations to i, j, k's                        !
+!     - convert mass and volumetric flows to velocities (FLOW_TO_VEL)  !
+!     - check specification of physical quantities                     !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine set_bc_flow(xlength, ylength, zlength, dx, dy, dz) &
+     bind(C,name ="set_bc_flow")
 
-  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  !                                                                      !
-  !  Subroutine: SET_BC_FLOW                                             !
-  !  Author: P. Nicoletti                               Date: 10-DEC-91  !
-  !                                                                      !
-  !  Purpose: Check boundary condition specifications                    !
-  !     - convert physical locations to i, j, k's                        !
-  !     - compute area of boundary surfaces (GET_BC_AREA)                !
-  !     - convert mass and volumetric flows to velocities (FLOW_TO_VEL)  !
-  !     - check specification of physical quantities                     !
-  !                                                                      !
-  !  Comments:                                                           !
-  !                                                                      !
-  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine set_bc_flow
+     use param,    only: dim_bc
+     use bc,       only: bc_defined, bc_type
+     use bc,       only: bc_ep_s
 
-    use flow_to_vel_new_module, only: flow_to_vel_new
-    use param,                  only: dim_m
+    implicit none
 
-    integer :: bcv, i, mmax_tot
-    logical :: skip(1:dim_m)     ! Flag to skip checks on indexed solid phase.
+    real(c_real)  , intent(in) :: xlength, ylength, zlength
+    real(c_real)  , intent(in) :: dx, dy, dz
 
-    ! Initialize the error manager.
-    call init_err_msg("SET_BC_FLOW")
-    
-    ! Total number of solids.
-    mmax_tot = mmax
-    
+    integer :: bcv, i
+    logical :: check(dim_m)  ! Flag to skip checks on indexed solid phase.
+
     ! Loop over each defined BC and check the user data.
-    do bcv = 1, dimension_bc
-       
-       if(.not.bc_defined(bcv)) cycle
-       
-       ! Determine which solids phases are present.
-       skip = .false.
-       do i = 1, dim_m
-          if ((equal(bc_rop_s(bcv,i), undefined).or.equal(bc_rop_s(bcv,i), zero)) &
-               .and.(equal(bc_ep_s(bcv,i), undefined).or.equal(bc_ep_s(bcv,i), zero))) then
-             skip = .true.
-          endif
-       end do
-       
-       if(mmax_tot == 1 .and. .not.equal(bc_ep_g(bcv), one)) skip(1) = .false.
-       
-       select case (trim(BC_TYPE(BCV)))
-          
-       case ('MASS_INFLOW')
-          call flow_to_vel_new(.true., mmax_tot, skip, bcv)
-          call check_bc_vel_inflow(mmax_tot, skip, bcv)
-          
-       case ('MASS_OUTFLOW')
-          call flow_to_vel_new(.true., mmax_tot, skip, bcv)
-          call check_bc_vel_outflow(mmax_tot, skip, bcv)
-       end select
-    enddo
-    
-    ! Cleanup and exit.
-    call finl_err_msg
+    do bcv = 1, dim_bc
 
-    
+       if(bc_defined(bcv)) then
+
+          ! Determine which solids phases are present.
+          do i = 1, dim_m
+             check(i) = (bc_ep_s(bcv,i) > zero)
+          end do
+
+          select case (trim(bc_type(bcv)))
+          case ('MASS_INFLOW','MI','MASS_OUTFLOW','MO')
+             call flow_to_vel(bcv, check, xlength, ylength, zlength, &
+                dx, dy, dz)
+          end select
+       endif
+    enddo
+
   end subroutine set_bc_flow
-  
-  
-  
-  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  !                                                                      !
-  ! Subroutine: CHECK_BC_VEL_INFLOW                                      !
-  ! Author: J.Musser                                    Date: 01-Mar-14  !
-  !                                                                      !
-  ! Purpose: Provided a detailed error message when the sum of volume    !
-  !                                                                      !
-  ! Comments:                                                            !
-  !     The velocities at the inflow face are fixed and the momentum     !
-  !     equations are not solved in the inflow cells. Since the flow is  !
-  !     into the domain all other scalars that are used need to be       !
-  !     specified (e.g., mass fractions, void fraction, etc.,)           !
-  !                                                                      !
-  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_bc_vel_inflow(m_tot, skip, bcv)
 
-    use param, only: dim_m
-   
-    integer, intent(in)           :: bcv, m_tot    
-    logical, intent(in)           :: skip(dim_m)
-    integer                       :: m
-    character(len=:), allocatable :: fmt1, fmt2
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: FLOW_TO_VEL                                             !
+!                                                                      !
+!  Purpose: Convert volumetric and mass flow rates to velocities       !
+!     A specified mass flow rate is first converted to volumetric      !
+!     flow rate. The volumetric flow rate is then converted to a       !
+!     velocity.                                                        !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine flow_to_vel(bcv, check, xlength, ylength, zlength, &
+     dx, dy, dz)
+
+      integer, intent(in) :: bcv
+      logical, intent(in) :: check(dim_m)
+      real(c_real)  , intent(in) :: xlength, ylength, zlength
+      real(c_real)  , intent(in) :: dx, dy, dz
+
+      integer :: m
+
+      ! mass flows rates are converted to volumetric flow rates.
+      if(is_defined(bc_massflow_g(bcv))) &
+         call gas_massflow_to_volflow(bcv)
+
+      ! volumetric flow rates are converted to velocities.
+      if(is_defined(bc_volflow_g(bcv))) &
+         call gas_volflow_to_velocity(bcv, xlength, ylength, zlength, dx, dy, dz)
 
 
-    ! Define format for error messages
-    fmt1 = "('Error 1300: Invalid flow direction.'," //&
-          & "A,' should be ', A,' zero. ',/"               //&
-          & "'Please correct the "//trim(IFILE_NAME)//" file.')"
- 
-    fmt2 = "('Error 1000: Required input not specified: ',A,/'Please ',"//&
-         & "'correct the "//trim(IFILE_NAME)//" file.')"
-    
-    call init_err_msg("CHECK_BC_VEL_INFLOW")
-    
-    
-    ! Check that gas phase velocities are defined.
-    if(IS_UNDEFINED(BC_U_G(BCV))) then
-       write(err_msg,fmt2) trim(iVar('BC_U_g',BCV))
-       call flush_err_msg(ABORT=.true.)
+      do m=1,dim_m
+         if(check(m)) then
+            if(is_defined(bc_massflow_s(bcv,m))) &
+               call solids_massflow_to_volflow(bcv,m)
+
+            if(is_defined(bc_volflow_s(bcv,m))) &
+               call solids_volflow_to_velocity(bcv,m, &
+               xlength, ylength, zlength, dx, dy, dz)
+         endif
+      enddo
+
+   end subroutine flow_to_vel
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: GAS_MASSFLOW_TO_VOLFLOW                                 !
+!                                                                      !
+!  Purpose: Convert a gas phase BC input from a mass flow rate to      !
+!  a volumetric flow rate.                                             !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine gas_massflow_to_volflow(bcv)
+
+    use bc,        only: bc_p_g, bc_t_g
+    use eos,       only: eosg
+    use fld_const, only: mw_avg, ro_g0
+    use scales   , only: p_ref
+
+    integer, intent(in) :: bcv
+    real(c_real)        :: volflow
+    real(c_real)        :: mw
+
+    ! No need to convert if the mass flow is zero.
+    if(equal(bc_massflow_g(bcv),zero)) then
+       volflow = zero
+
+    ! incompressible gas bc.
+    elseif(is_defined(ro_g0)) then
+       volflow = bc_massflow_g(bcv)/ro_g0
+
+    ! well-defined compresible gas bc.
+    elseif(is_defined(bc_p_g(bcv)) .and. is_defined(bc_t_g(bcv))) then
+       mw = mw_avg
+       volflow = bc_massflow_g(bcv) / &
+          eosg(mw,(bc_p_g(bcv)-p_ref),bc_t_g(bcv))
+
     endif
-    
-    if (IS_UNDEFINED(BC_V_G(BCV))) then
-       write(err_msg,fmt2) trim(iVar('BC_V_g',BCV))
-       call flush_err_msg(ABORT=.true.)
-    endif
-    
-    if(IS_UNDEFINED(BC_W_G(BCV))) then
-       write(err_msg,fmt2) trim(iVar('BC_W_g',BCV))
-       call flush_err_msg(ABORT=.true.)
-    endif
-    
-    ! Check that solids phase velocities are defined.
-    do M = 1, M_TOT
-       if(IS_UNDEFINED(BC_U_S(BCV,M))) then
-          if(SKIP(M)) then
-             BC_U_S(BCV,M) = ZERO
-          else
-             write(err_msg,fmt2) trim(iVar('BC_U_s',BCV,M))
-             call flush_err_msg(ABORT=.true.)
-          endif
-       endif
-       
-       if(IS_UNDEFINED(BC_V_S(BCV,M))) then
-          if(SKIP(M)) then
-             BC_V_S(BCV,M) = ZERO
-          else
-             WRITE(err_msg,fmt2) trim(iVar('BC_V_s',BCV,M))
-             call flush_err_msg(ABORT=.true.)
-          endif
-       endif
-       
-       if(IS_UNDEFINED(BC_W_S(BCV,M))) then
-          if(SKIP(M)) then
-             BC_W_S(BCV,M) = ZERO
-          else
-             write(err_msg,fmt2) trim(iVar('BC_W_s',BCV,M))
-             call flush_err_msg(ABORT=.true.)
-          endif
-       endif
-    enddo
-    
-    ! Check that gas phase velocities are consistent.
-    select case (bc_plane(bcv))
-       
-    case ('W')
-       if(BC_U_G(BCV) > ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_U_g',BCV)), '<'
-          call flush_err_msg
-       endif
-       do M = 1, M_TOT
-          if(BC_U_S(BCV,M) > ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_U_s',BCV,M)), '<'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
-    case('E')
-       if(BC_U_G(BCV) < ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_U_g',BCV)), '>'
-          call flush_err_msg
-       endif
-       do M = 1, M_TOT
-          if(BC_U_S(BCV,M) < ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_U_s',BCV,M)), '>'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
-    case('S')
-       if(BC_V_G(BCV) > ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_V_g',BCV)), '<'
-          call flush_err_msg
-       endif
-       do M = 1, M_TOT
-          if(BC_V_S(BCV,M) > ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_V_s',BCV,M)), '<'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
-    case('N')
-       if(BC_V_G(BCV) < ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_V_g',BCV)), '>'
-          call flush_err_msg
-       endif
-       do M = 1, M_TOT
-          if(BC_V_S(BCV,M) < ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_V_s',BCV,M)), '>'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
-    case('B')
-       if(BC_W_G(BCV) > ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_W_g',BCV)), '<'
-          call flush_err_msg
-       endif
-       do M = 1, M_TOT
-          if(BC_W_S(BCV,M) > ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_W_s',BCV,M)), '<'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
-    case('T')
-       if(BC_W_G(BCV) < ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_W_g',BCV)), '>'
-          call flush_err_msg
-       endif
-       do M = 1, M_TOT
-          if(BC_W_S(BCV,M) < ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_W_s',BCV,M)), '>'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
-    end select    
-    
-    call finl_err_msg
 
-    deallocate( fmt1, fmt2 )
+! store the calculated volumetric flow rate.
+    bc_volflow_g(bcv) = volflow
 
-  end subroutine check_bc_vel_inflow
+  end subroutine gas_massflow_to_volflow
 
 
 
-  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  !                                                                      !
-  ! Subroutine: CHECK_BC_VEL_OUTFLOW                                     !
-  ! Author: J.Musser                                    Date: 01-Mar-14  !
-  !                                                                      !
-  ! Purpose: Provided a detailed error message when the sum of volume    !
-  !                                                                      !
-  ! Comments:                                                            !
-  !     The velocities at the outflow face are fixed and the momentum    !
-  !     equations are not solved in the outflow cells. Since the flow    !
-  !     is out of the domain none of the other scalars should need to    !
-  !     be specified (e.g., mass fractions, void fraction, etc.,).       !
-  !     Such values will become defined according to their adjacent      !
-  !     fluid cell                                                       !
-  !                                                                      !
-  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_bc_vel_outflow(m_tot, skip, bcv)
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: SOLIDS_MASSFLOW_TO_VOLFLOW                              !
+!                                                                      !
+!  Purpose: Convert solids phase BC input from a mass flow rate to     !
+!  a volumetric flow rate.                                             !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine solids_massflow_to_volflow(bcv,m)
 
-    use bc, only: dim_m
+      use constant, only: ro_s0
 
-    ! loop/variable indices
-    integer, intent(in)           :: bcv, m_tot
-    logical, intent(in)           :: skip(dim_m)
-    integer                       :: m
-    character(len=:), allocatable :: fmt1, fmt2
+      integer, intent(in) :: bcv, m
+
+      bc_volflow_s(bcv,m) = bc_massflow_s(bcv,m)/ro_s0(m)
 
 
-    ! Set format for error messages
-    fmt1 = "('Error 1300: Invalid flow direction. ',A,' should be ',"// &
-         & " A,' zero. ',/'Please correct the "//trim(IFILE_NAME)//" file.')"
-    fmt2 = " ('Error 1000: Required input not specified: ',A,/'Please ',"// &
-         & " 'correct the "//trim(IFILE_NAME)//" file.')"
+  end subroutine solids_massflow_to_volflow
 
-    call init_err_msg("CHECK_BC_VEL_OUTFLOW")
 
-    ! Check that gas phase velocities are defined.
-    if(IS_UNDEFINED(BC_U_G(BCV))) then
-       write(err_msg,fmt2) trim(iVar('BC_U_g',BCV))
-       call flush_err_msg(ABORT=.true.)
-    endif
-    
-    if (IS_UNDEFINED(BC_V_G(BCV))) then
-       write(err_msg,fmt2) trim(iVar('BC_V_g',BCV))
-       call flush_err_msg(ABORT=.true.)
-    endif
-    
-    if(IS_UNDEFINED(BC_W_G(BCV))) then
-       write(err_msg,fmt2) trim(iVar('BC_W_g',BCV))
-       call flush_err_msg(ABORT=.true.)
-    endif
-    
-    ! Check that solids phase velocities are defined.
-    do M = 1, M_TOT
-       if(IS_UNDEFINED(BC_U_S(BCV,M))) then
-          if(SKIP(M)) then
-             BC_U_S(BCV,M) = ZERO
-          else
-             write(err_msg,fmt2) trim(iVar('BC_U_s',BCV,M))
-             call flush_err_msg(ABORT=.true.)
-          endif
-       endif
-       
-       if(IS_UNDEFINED(BC_V_S(BCV,M))) then
-          if(SKIP(M)) then
-             BC_V_S(BCV,M) = ZERO
-          else
-             write(err_msg,fmt2) trim(iVar('BC_V_s',BCV,M))
-             call flush_err_msg(ABORT=.true.)
-          endif
-       endif
-       
-       if(IS_UNDEFINED(BC_W_S(BCV,M))) then
-          if(SKIP(M)) then
-             BC_W_S(BCV,M) = ZERO
-          else
-             write(err_msg,fmt2) trim(iVar('BC_W_s',BCV,M))
-             call flush_err_msg(ABORT=.true.)
-          endif
-       endif
-    enddo
-    
-    
-    ! Check that gas phase velocities are consistent.
-    select case (bc_plane(BCV))
-       
-    case ('W')
-       if(BC_U_G(BCV) < ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_U_g',BCV)), '>'
-          call flush_err_msg
-       endif
-       do M = 1, M_TOT
-          if(BC_U_S(BCV,M) < ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_U_s',BCV,M)), '>'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
-    case('E')
-       if(BC_U_G(BCV) > ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_U_g',BCV)), '<'
-          call flush_err_msg
-       endif
-       do M = 1, M_TOT
-          if(BC_U_S(BCV,M) > ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_U_s',BCV,M)), '<'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
-    case('S')
-       if(BC_V_G(BCV) < ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_V_g',BCV)), '>'
-          call flush_err_msg
-       endif
-       do M = 1, M_TOT
-          if(BC_V_S(BCV,M) < ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_V_s',BCV,M)), '>'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
-    case('N')
-       if(BC_V_G(BCV) > ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_V_g',BCV)), '<'
-          call flush_err_msg
-       endif
-       do M = 1, M_TOT
-          if(BC_V_S(BCV,M) > ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_V_s',BCV,M)), '<'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
-    case('B')
-       if(BC_W_G(BCV) < ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_W_g',BCV)), '>'
-          call flush_err_msg
-       endif
-       do M = 1, M_TOT
-          if(BC_W_S(BCV,M) < ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_W_s',BCV,M)), '>'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
-    case('T')
-       if(BC_W_G(BCV) > ZERO) then
-          write(err_msg,fmt1) trim(iVar('BC_W_g',BCV)), '<'
-          call flush_err_msg
-       ENDIF
-       do M = 1, M_TOT
-          if(BC_W_S(BCV,M) > ZERO) then
-             write(err_msg, fmt1) trim(iVar('BC_W_s',BCV,M)), '<'
-             call flush_err_msg(ABORT=.true.)
-          endif
-       enddo
-       
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: GAS_VOLFLOW_TO_VELOCITY                                 !
+!                                                                      !
+!  Purpose: Convert gas phase volumetric rate to a velocity.           !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine gas_volflow_to_velocity(bcv, xlength, ylength, zlength, &
+     dx, dy, dz)
+
+     use bc, only: bc_ep_g
+     use bc, only: bc_x_w, bc_y_s, bc_z_b
+     use bc, only: bc_x_e, bc_y_n, bc_z_t
+     use calc_cell_module, only: calc_cell_bc_flow
+
+     implicit none
+
+     integer,        intent(in) :: bcv
+     real(c_real)  , intent(in) :: xlength, ylength, zlength
+     real(c_real)  , intent(in) :: dx, dy, dz
+
+     real(c_real) :: sgn, off, vel, area
+     integer      :: i_w, i_e, j_s, j_n, k_b, k_t
+
+    select case (trim(bc_type(bcv)))
+    case ('MASS_INFLOW', 'MI'); SGN =  ONE; OFF = ZERO
+    case ('MASS_OUTFLOW','MO'); SGN = -ONE; OFF = ONE
     end select
-    
-    
-    call finl_err_msg
-    
-    deallocate(fmt1, fmt2)
-    
-  end subroutine check_bc_vel_outflow
-  
-  
+
+    select case (bc_plane(bcv))
+    case ('W'); sgn = -sgn
+    case ('S'); sgn = -sgn
+    case ('B'); sgn = -sgn
+    end select
+
+    call calc_cell_bc_flow(&
+       xlength, ylength, zlength, dx, dy, dz, &
+       bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+       bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+       i_w, i_e, j_s, j_n, k_b, k_t)
+
+    select case(bc_plane(bcv))
+    case('W','E')
+       area = dy*dble(j_n-j_s+1)*dz*dble(k_t-k_b+1)
+       vel = sgn*bc_volflow_g(bcv)/(area*bc_ep_g(bcv))
+       bc_u_g(bcv) = vel
+       bc_v_g(bcv) = off * bc_v_g(bcv)
+       bc_w_g(bcv) = off * bc_w_g(bcv)
+    case('S','N')
+       area = dx*dble(i_e-i_w+1)*dz*dble(k_t-k_b+1)
+       vel = sgn*bc_volflow_g(bcv)/(area*bc_ep_g(bcv))
+       bc_v_g(bcv) = vel
+       bc_u_g(bcv) = off * bc_u_g(bcv)
+       bc_w_g(bcv) = off * bc_w_g(bcv)
+    case('B','Y')
+       area = dx*dble(i_e-i_w+1)*dy*dble(j_n-j_s+1)
+       vel = sgn*bc_volflow_g(bcv)/(area*bc_ep_g(bcv))
+       bc_w_g(bcv) = vel
+       bc_u_g(bcv) = off * bc_u_g(bcv)
+       bc_v_g(bcv) = off * bc_v_g(bcv)
+    end select
+
+  end subroutine gas_volflow_to_velocity
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: SOLIDS_VOLFLOW_TO_VELOCITY                              !
+!  Author: M. Syamlal                                 Date: 28-JUL-92  !
+!                                                                      !
+!  Purpose: Convert volumetric and mass flow rates to velocities       !
+!     A specified mass flow rate is first converted to volumetric      !
+!     flow rate. The volumetric flow rate is then converted to a       !
+!     velocity.                                                        !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine solids_volflow_to_velocity(bcv, m, &
+     xlength, ylength, zlength, dx, dy, dz)
+
+
+     use bc, only: bc_ep_s
+     use bc, only: bc_x_w, bc_y_s, bc_z_b
+     use bc, only: bc_x_e, bc_y_n, bc_z_t
+     use calc_cell_module, only: calc_cell_bc_flow
+
+     implicit none
+
+     integer,        intent(in) :: bcv, m
+     real(c_real)  , intent(in) :: xlength, ylength, zlength
+     real(c_real)  , intent(in) :: dx, dy, dz
+
+     real(c_real) :: vel, sgn, off, area
+     integer      :: i_w, i_e, j_s, j_n, k_b, k_t
+
+     select case (trim(bc_type(bcv)))
+     case ('MASS_INFLOW', 'MI'); sgn =  one; off = zero
+     case ('MASS_OUTFLOW','MO'); sgn = -one; off = one
+     end select
+
+     select case (bc_plane(BCV))
+     case ('W'); sgn = -sgn
+     case ('S'); sgn = -sgn
+     case ('B'); sgn = -sgn
+     end select
+
+    call calc_cell_bc_flow(&
+       xlength, ylength, zlength, dx, dy, dz, &
+       bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+       bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+       i_w, i_e, j_s, j_n, k_b, k_t)
+
+     select case(bc_plane(bcv))
+     case('W','E')
+        area = dy*dble(j_n-j_s+1)*dz*dble(k_t-k_b+1)
+        vel = sgn * bc_volflow_s(bcv,m)/(area*bc_ep_s(bcv,m))
+        bc_u_s(bcv,m) = vel
+        bc_v_s(bcv,m) = off * bc_v_s(bcv,m)
+        bc_w_s(bcv,m) = off * bc_w_s(bcv,m)
+     case('S','N')
+        area = dx*dble(i_e-i_w+1)*dz*dble(k_t-k_b+1)
+        vel = sgn * bc_volflow_s(bcv,m)/(area*bc_ep_s(bcv,m))
+        bc_v_s(bcv,m) = vel
+        bc_u_s(bcv,m) = off * bc_u_s(bcv,m)
+        bc_w_s(bcv,m) = off * bc_w_s(bcv,m)
+     case('B','Y')
+        area = dx*dble(i_e-i_w+1)*dy*dble(j_n-j_s+1)
+        vel = sgn * bc_volflow_s(bcv,m)/(area*bc_ep_s(bcv,m))
+        bc_w_s(bcv,m) = vel
+        bc_u_s(bcv,m) = off * bc_u_s(bcv,m)
+        bc_v_s(bcv,m) = off * bc_v_s(bcv,m)
+     end select
+
+  end subroutine solids_volflow_to_velocity
 end module set_bc_flow_module

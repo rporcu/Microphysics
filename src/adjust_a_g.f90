@@ -17,9 +17,9 @@
 
       subroutine adjust_a_g(axis, slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
-         USE functions, only: avg
-         USE matrix, only: e, w, s, n, t, b
-         USE param1, only: ONE, ZERO, small_number
+         use functions, only: avg
+         use matrix, only: e, w, s, n, t, b
+         use param, only: ONE, ZERO, small_number
 
          implicit none
 

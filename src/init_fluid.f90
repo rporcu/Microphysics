@@ -6,8 +6,8 @@ module init_fluid_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine init_fluid(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                         ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
-                         mu_g, lambda_g, dx, dy, dz) &
+                         domlo, domhi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
+                         mu_g, lambda_g, dx, dy, dz, xlength, ylength, zlength) &
       bind(C, name="init_fluid")
 
       use amrex_fort_module, only : c_real => amrex_real
@@ -16,7 +16,7 @@ module init_fluid_module
       use calc_ro_g_module, only: calc_ro_g
       use calc_mu_g_module, only: calc_mu_g
 
-      use param1, only: is_undefined, undefined
+      use param, only: is_undefined, undefined
       use fld_const, only: ro_g0, mu_g0
 
       implicit none
@@ -24,6 +24,7 @@ module init_fluid_module
 ! Dummy arguments .....................................................//
       integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -47,12 +48,15 @@ module init_fluid_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: xlength, ylength, zlength
 
       ! Set user specified initial conditions (IC)
-      call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, p_g, u_g, v_g, w_g)
+      call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
+         domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
 
       ! Set the initial pressure field
-      call set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz)
+      call set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz, &
+                   xlength, ylength, zlength, domlo, domhi)
 
       ! Set the initial fluid density
       if (is_undefined(ro_g0)) then
@@ -63,7 +67,7 @@ module init_fluid_module
       endif
 
       ! Remove undefined values at wall cells for scalars
-      where(rop_g == undefined) rop_g = 0.0
+      where(rop_g .eq. undefined) rop_g = 0.0
 
       ! Set the initial viscosity
       if (is_undefined(mu_g0)) then
@@ -83,22 +87,27 @@ module init_fluid_module
 !  Purpose: This module sets all the initial conditions.               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, p_g, u_g, v_g, w_g)
+   subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
+      domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
 
-      use geometry, only: domlo, domhi
-      use ic, only: dimension_ic, ic_defined
-      use ic, only: ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
+      use ic, only: dim_ic, ic_defined
       use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
+      use ic, only: ic_x_e, ic_y_n, ic_z_t
+      use ic, only: ic_x_w, ic_y_s, ic_z_b
       use scales, only: scale_pressure
-      use param1, only: undefined, is_defined
+      use param, only: undefined, is_defined
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      IMPLICIT NONE
+      use calc_cell_module, only: calc_cell_ic
+
+      implicit none
 
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
+      real(c_real), intent(in   ) :: dx, dy, dz
 
       real(c_real), intent(inout) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -123,9 +132,17 @@ module init_fluid_module
       ! Temporary variables for storing IC values
       real(c_real) :: pgx, ugx, vgx, wgx
 
+      integer :: i_w, j_s, k_b
+      integer :: i_e, j_n, k_t
+
 !  Set the initial conditions.
-      do icv = 1, dimension_ic
+      do icv = 1, dim_ic
          if (ic_defined(icv)) then
+
+            call calc_cell_ic(dx, dy, dz, &
+              ic_x_w(icv), ic_y_s(icv), ic_z_b(icv), &
+              ic_x_e(icv), ic_y_n(icv), ic_z_t(icv), &
+              i_w, i_e, j_s, j_n, k_b, k_t)
 
             ! Use the volume fraction already calculated from particle data
             pgx = ic_p_g(icv)
@@ -134,12 +151,12 @@ module init_fluid_module
             wgx = ic_w_g(icv)
 
             if (is_defined(ugx)) then
-               istart = max(ulo(1), ic_i_w(icv))
-               jstart = max(ulo(2), ic_j_s(icv))
-               kstart = max(ulo(3), ic_k_b(icv))
-               iend   = min(uhi(1), ic_i_e(icv))
-               jend   = min(uhi(2), ic_j_n(icv))
-               kend   = min(uhi(3), ic_k_t(icv))
+               istart = max(ulo(1), i_w)
+               jstart = max(ulo(2), j_s)
+               kstart = max(ulo(3), k_b)
+               iend   = min(uhi(1), i_e)
+               jend   = min(uhi(2), j_n)
+               kend   = min(uhi(3), k_t)
                u_g(istart:iend,jstart:jend,kstart:kend) = ugx
                if (ulo(1).lt.domlo(1)) &
                   u_g(ulo(1):istart-1,jstart:jend,kstart:kend) = ugx
@@ -148,12 +165,12 @@ module init_fluid_module
             end if
 
             if (is_defined(ugx)) then
-               istart = max(vlo(1), ic_i_w(icv))
-               jstart = max(vlo(2), ic_j_s(icv))
-               kstart = max(vlo(3), ic_k_b(icv))
-               iend   = min(vhi(1), ic_i_e(icv))
-               jend   = min(vhi(2), ic_j_n(icv))
-               kend   = min(vhi(3), ic_k_t(icv))
+               istart = max(vlo(1), i_w)
+               jstart = max(vlo(2), j_s)
+               kstart = max(vlo(3), k_b)
+               iend   = min(vhi(1), i_e)
+               jend   = min(vhi(2), j_n)
+               kend   = min(vhi(3), k_t)
                v_g(istart:iend,jstart:jend,kstart:kend) = vgx
                if (vlo(2).lt.domlo(2)) &
                   v_g(istart:iend,vlo(2):jstart-1,kstart:kend) = vgx
@@ -162,12 +179,12 @@ module init_fluid_module
             end if
 
             if (is_defined(ugx)) then
-               istart = max(wlo(1), ic_i_w(icv))
-               jstart = max(wlo(2), ic_j_s(icv))
-               kstart = max(wlo(3), ic_k_b(icv))
-               iend   = min(whi(1), ic_i_e(icv))
-               jend   = min(whi(2), ic_j_n(icv))
-               kend   = min(whi(3), ic_k_t(icv))
+               istart = max(wlo(1), i_w)
+               jstart = max(wlo(2), j_s)
+               kstart = max(wlo(3), k_b)
+               iend   = min(whi(1), i_e)
+               jend   = min(whi(2), j_n)
+               kend   = min(whi(3), k_t)
                w_g(istart:iend,jstart:jend,kstart:kend) = wgx
                if (wlo(3).lt.domlo(3)) &
                   w_g(istart:iend,jstart:jend,wlo(3):kstart-1) = wgx
@@ -175,12 +192,12 @@ module init_fluid_module
                   w_g(istart:iend,jstart:jend,kend+1:whi(3)  ) = wgx
             end if
 
-            istart = max(slo(1), ic_i_w(icv))
-            jstart = max(slo(2), ic_j_s(icv))
-            kstart = max(slo(3), ic_k_b(icv))
-            iend   = min(shi(1), ic_i_e(icv))
-            jend   = min(shi(2), ic_j_n(icv))
-            kend   = min(shi(3), ic_k_t(icv))
+            istart = max(slo(1), i_w)
+            jstart = max(slo(2), j_s)
+            kstart = max(slo(3), k_b)
+            iend   = min(shi(1), i_e)
+            jend   = min(shi(2), j_n)
+            kend   = min(shi(3), k_t)
             do k = kstart, kend
                do j = jstart, jend
                   do i = istart, iend
@@ -204,30 +221,28 @@ module init_fluid_module
 !           is acting in the negative y-direction.                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz)
+      subroutine set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz, &
+                         xlength, ylength, zlength, domlo, domhi)
 
-      USE bc, only: delp_x, delp_y, delp_z
-      USE bc, only: dimension_ic
-      USE bc, only: dimension_bc, bc_type, bc_p_g, bc_defined, bc_plane
-      USE compar, only: myPE
-      USE constant , only: gravity
-      USE eos, ONLY: EOSG
-      USE fld_const, only: mw_avg, ro_g0
-      USE geometry, only: xlength, ylength, zlength
-      USE ic       , only: ic_p_g, ic_defined
-      USE scales   , only: scale_pressure
-      use exit_mod, only: mfix_exit
-      use funits   , only: dmp_log, unit_log
-      USE geometry, only: domhi
+      use bc, only: delp_x, delp_y, delp_z
+      use bc, only: dim_bc, bc_type, bc_p_g, bc_defined
+      use constant , only: gravity
+      use eos, ONLY: EOSG
+      use fld_const, only: mw_avg, ro_g0
+      use ic       , only: ic_p_g, ic_defined
+      use scales   , only: scale_pressure
+
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
-      USE param1   , only: zero, undefined
-      USE param1   , only: is_defined, is_undefined
+      use param   , only: zero, undefined
+      use param   , only: is_defined, is_undefined
+      use param, only: dim_ic
 
-      IMPLICIT NONE
+      implicit none
 
       integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
+      integer, intent(in) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -235,13 +250,14 @@ module init_fluid_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: xlength, ylength, zlength
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
 ! Local loop counter
-      INTEGER :: L
+      integer :: L
 ! Gas pressure at the axial location j
       real(c_real) :: PJ
 ! Bed weight per unit area
@@ -256,7 +272,7 @@ module init_fluid_module
 
 ! If any initial pressures are unspecified skip next section
 ! calculations.
-      do l = 1, dimension_ic
+      do l = 1, dim_ic
          if (ic_defined(l)) then
             if (is_undefined(ic_p_g(l))) goto 60
             pj = ic_p_g(l)
@@ -306,17 +322,20 @@ module init_fluid_module
             enddo
          enddo
       endif
+
 ! ----------------------------------------------------------------<<<
+
       GOTO 100   ! pressure in all intial condition region cells was defined
-
    60 CONTINUE   ! pressure in an initial condition region cell was undefined
-
 
 ! ---------------------------------------------------------------->>>
 ! Search for an outflow boundary condition where pressure is specified
       pj = undefined
-      do l = 1, dimension_bc
-         if (bc_defined(l) .and. bc_type(l)=='P_OUTFLOW') pj = bc_p_g(l)
+      do l = 1, dim_bc
+         if (bc_defined(l)) then
+            if(bc_type(l)=='P_OUTFLOW' .or. bc_type(l)=='PO') &
+               pj = bc_p_g(l)
+         endif
       enddo
 
       if (is_undefined(pj)) then
@@ -334,8 +353,8 @@ module init_fluid_module
 ! if a case is compressible and pressure in any of the initial
 ! conditions regions is unspecified, then a PO is effectively required
 ! (i.e., is specifies a bc_p_g).
-            if(dmp_log)write (unit_log, 1000)
-            call mfix_exit(mype)
+            write (*, 1000)
+            stop 20014
          endif
       endif
 
@@ -344,107 +363,62 @@ module init_fluid_module
 ! specified
 
       if(abs(gravity(1)) > epsilon(0.0d0)) then
-         do i = hi(1), lo(1), -1
 
 ! Find the average weight per unit area over an x-z slice
-            bed_weight = 0.0
-            area = 0.0
-            darea = dy*dz
+         if (is_undefined(ro_g0)) then
+            dpodx = -gravity(1)*eosg(mw_avg,pj,295.15d0)
+         else
+            dpodx = -gravity(1)*ro_g0
+         endif
+
+         pj = pj - dpodx*dx*(hi(1)-domhi(1))
+         do i = hi(1)+1, lo(1), -1
+            pj = pj + dpodx*dx
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
-                  area = area + darea
-                  if (is_undefined(ro_g0)) then
-                     bed_weight = bed_weight - dx*gravity(1)*&
-                        ep_g(i,j,k)*eosg(mw_avg,pj,295.15d0)*darea
-                  else
-                     bed_weight = bed_weight - dx*gravity(1)*&
-                        ep_g(i,j,k)*ro_g0*darea
-                  endif
-               enddo
-            enddo
-
-! Global Sum
-            if (0.0 < abs(area)) bed_weight = bed_weight/area
-
-            pj = pj + bed_weight
-            do k = lo(3),hi(3)
-               do j = lo(2),hi(2)
-                  if(is_undefined(p_g(i,j,k))) p_g(i,j,k)=scale_pressure(pj)
+                  p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
 
-      else if(abs(gravity(3)) > epsilon(0.0d0)) then
-         do k = hi(3), lo(3), -1
+      else if(abs(gravity(2)) > epsilon(0.0d0)) then
+         if (is_undefined(ro_g0)) then
+            dpody = -gravity(2)*eosg(mw_avg,pj,295.15d0)
+         else
+            dpody = -gravity(2)*ro_g0
+         endif
 
-! Find the average weight per unit area over an x-z slice
-            bed_weight = 0.0
-            area = 0.0
-            darea = dx*dy
-            do j = lo(2), hi(2)
+         pj = pj - dpody*dy*(hi(2)-domhi(2))
+         do j = hi(2)+1, lo(2), -1
+            pj = pj + dpody*dy
+            do k = lo(3), hi(3)
                do i = lo(1), hi(1)
-                  area = area + darea
-                  if (is_undefined(ro_g0)) then
-                     bed_weight = bed_weight - dz*gravity(3)*&
-                        ep_g(i,j,k)*eosg(mw_avg,pj,295.15d0)*darea
-                  else
-                     bed_weight = bed_weight - dz*gravity(3)*&
-                        ep_g(i,j,k)*ro_g0*darea
-                  endif
-               enddo
-            enddo
-
-! Global Sum
-            if (0.0 < abs(area)) bed_weight = bed_weight/area
-
-            pj = pj + bed_weight
-            do j = lo(2),hi(2)
-               do i = lo(1),hi(1)
-                  if(is_undefined(p_g(i,j,k))) p_g(i,j,k)=scale_pressure(pj)
+                  p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
 
       else
-         do j = hi(2), lo(2), -1
+         if (is_undefined(ro_g0)) then
+            dpodz = -gravity(3)*eosg(mw_avg,pj,295.15d0)
+         else
+            dpodz = -gravity(3)*ro_g0
+         endif
 
-! Find the average weight per unit area over an x-z slice
-            bed_weight = 0.0
-            area = 0.0
-            darea = dx*dz
-            do k = lo(3), hi(3)
+         pj = pj - dpodz*dz*(hi(3)-domhi(3))
+         do k = hi(3)+1, lo(3), -1
+            pj = pj + dpodz*dz
+            do j = lo(2), hi(2)
                do i = lo(1), hi(1)
-                  area = area + darea
-                  if (is_undefined(ro_g0)) then
-                     bed_weight = bed_weight - dy*gravity(2)*ep_g(i,j,k)*&
-                        eosg(mw_avg,pj,295.15d0)*darea
-                  else
-                     bed_weight = bed_weight - dy*gravity(2)*ep_g(i,j,k)*&
-                        ro_g0*darea
-                  endif
-               enddo
-            enddo
-
-! Global Sum
-         ! call global_all_sum(bed_weight)
-         ! call global_all_sum(area)
-            IF (0.0 < ABS(AREA)) BED_WEIGHT = BED_WEIGHT/AREA
-
-            pj = pj + bed_weight
-            do k = lo(3),hi(3)
-               do i = lo(1),hi(1)
-                  if (is_undefined(p_g(i,j,k)))&
-                     p_g(i,j,k)=scale_pressure(pj)
+                  p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
       endif
-! end setting an undefined pressure in an initial condition region
-! ----------------------------------------------------------------<<<
 
-  100 CONTINUE
+  100 continue
 
-      RETURN
+      return
 
  1000 FORMAT(/1X,70('*')//' From: SET_FLUIDBED_P'/' Message: Outflow ',&
          'pressure boundary condition (P_OUTFLOW) not found.',/&

@@ -21,7 +21,6 @@ MODULE WRITE_ERROR_MODULE
 !
       SUBROUTINE WRITE_ERROR(NAME, LINE, LMAX)
 
-      USE funits, only: unit_log, dmp_log
 
       IMPLICIT NONE
 
@@ -32,18 +31,17 @@ MODULE WRITE_ERROR_MODULE
       CHARACTER(LEN=*)    LINE(*)
 
 !                      Dimension of message array
-      INTEGER          LMAX
+      integer          LMAX
 
 !                      Index
-      INTEGER          L
+      integer          L
 
 !-----------------------------------------------
 
-      IF(DMP_LOG)WRITE (UNIT_LOG, 1000) NAME
+      WRITE(*, 1000) NAME
       DO L = 1, LMAX
-         IF(DMP_LOG)WRITE (UNIT_LOG, 1010) LINE(L)
+         WRITE (*, 1010) LINE(L)
       END DO
-      IF(DMP_LOG)WRITE (UNIT_LOG, 1020)
       RETURN
  1000 FORMAT(1X,70('*'),/,/,1X,'From : ',A)
  1010 FORMAT(1X,A)

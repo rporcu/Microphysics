@@ -15,26 +15,24 @@
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE USR2_DES(max_pip, des_pos_new, des_vel_new, omega_new)
+subroutine USR2_DES( np, particles )
 
-      use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only: c_real => amrex_real
+   use particle_mod,      only: particle_t
+   
+   implicit none
 
-      implicit none
+   integer,          intent(in   ) :: np
+   type(particle_t), intent(inout) :: particles(np)
+   integer                         :: p
 
-      integer     , intent(in   ) :: max_pip
-      real(c_real), intent(inout) :: des_pos_new(max_pip,3)
-      real(c_real), intent(inout) :: des_vel_new(max_pip,3)
-      real(c_real), intent(inout) :: omega_new(max_pip,3)
-
-      integer :: ll
-
-! Move particles 63-93 below particles 32-62 to fake a wall.
-      DO LL=63,MAX_PIP
-         DES_VEL_NEW(LL,:) = 0.0d0
-         DES_POS_NEW(LL,1) = 0.0475d0
-         DES_POS_NEW(LL,2) = DES_POS_NEW(LL-31,2)
-         DES_POS_NEW(LL,3) = DES_POS_NEW(LL-31,3)
-         OMEGA_NEW(LL,:) = 0.0d0
-      ENDDO
-
-      END SUBROUTINE USR2_DES
+   ! Move particles 63-93 below particles 32-62 to fake a wall.
+   do p = 63, np
+      particles(p) % vel(:)   = 0.0d0
+      particles(p) % pos(1)   = 0.0475d0
+      particles(p) % pos(2)   = particles(p-31) % pos(2)
+      particles(p) % pos(3)   = particles(p-31) % pos(3)
+      particles(p) % omega(:) = 0.0d0
+   end do
+   
+end subroutine USR2_DES

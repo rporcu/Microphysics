@@ -13,10 +13,6 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  RUN_TYPE = 'NEW'
-  UNITS = 'SI'
-
-  TIME =  0.0000
   TSTOP = 0.0025
 
   DT =     1.0d-04
@@ -30,6 +26,8 @@
   GENER_PART_CONFIG = .T.
   CALL_USR = .T.
 
+  FULL_LOG = .T.
+
 #_______________________________________________________________________
 # NUMERICAL SECTION
 
@@ -38,24 +36,11 @@
   MAX_NIT = 500
   DETECT_STALL=.FALSE.
 
-  DISCRETIZE = 9*2
-
-#_______________________________________________________________________
-# GEOMETRY SECTION
-
-  COORDINATES = 'cartesian'
-
-  XLENGTH = 0.004   IMAX = 20
-  YLENGTH = 0.004   JMAX = 20
-  ZLENGTH = 0.004   KMAX = 20
-
-
 #_______________________________________________________________________
 # MATERIAL SECTION
 
 ! Gas Section
 !---------------------------------------------------------------------//
-
   RO_g0 = 1.0      ! (kg/m3)
   MU_g0 = 2.0d-5   ! (Pa.sec)
 
@@ -63,6 +48,7 @@
 ! Particle Section
 !---------------------------------------------------------------------//
 
+  PARTICLE_TYPES = 1
 
 ! Friction coefficient. (1)
   MEW =   0.0                ! particle-particle
@@ -79,8 +65,6 @@
 
 ! Sold phase 1
 !---------------------------------------------------------------------//
-  SOLIDS_MODEL(1) = 'DEM'
-
   D_p0(1) =   100.0d-6  ! (m)
   RO_s0(1) = 1000.0     ! (kg/m3)
 
@@ -100,24 +84,8 @@
   IC_V_g(1) =   0.000   ! (m)
   IC_W_g(1) =   0.000   ! (m)
 
-#_______________________________________________________________________
-# BOUNDARY CONDITIONS SECTION
-
-  CYCLIC_X = .T.
-  CYCLIC_Y = .T.
-  CYCLIC_Z = .T.
 
 #_______________________________________________________________________
 # USER OUTPUT CONTROL
 
   USR_DT(1) = 1.0d-4
-  USR_TYPE(1) = 'ASCII'
-  USR_VAR(1) =  'Granular temperature'
-
-#_______________________________________________________________________
-# OUTPUT CONTROL SECTION
-
-  RES_DT = 0.1
-
-  FULL_LOG = .T.
-  GROUP_RESID = .T.

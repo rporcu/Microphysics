@@ -13,17 +13,12 @@
       SUBROUTINE USR0
 
       use run, only: TSTOP
-      use discretelement, only: mew_w, particles
+      use discretelement, only: mew_w
       use constant, only: gravity
-      use exit_mod, only: mfix_exit
+
       use usr, only: tsa, u0
 
       IMPLICIT NONE
-
-      if(particles /= 1) then
-         write(*,"(3x, 'invalid setup for test case')")
-         call mfix_exit(0)
-      endif
 
 ! Store the initial particle velocity.
       u0 = 0.10d0
@@ -33,7 +28,7 @@
 
       if(TSTOP < tsA) then
          write(*,"(3x,'simulation not long enough.')")
-         call mfix_exit(0)
+         stop 1000
       endif
 
       return

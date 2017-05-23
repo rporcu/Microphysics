@@ -12,13 +12,12 @@ MODULE DEPRECATED_OR_UNKNOWN_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DEPRECATED_OR_UNKNOWN(LINE_NO, INPUT)
 
-      use compar, only: myPE
-      use exit_mod, only: mfix_exit
+
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: LINE_NO
+      integer, INTENT(IN) :: LINE_NO
       CHARACTER(len=*), INTENT(IN) :: INPUT
 
 ! 2015-2 Deprecated list:
@@ -46,12 +45,12 @@ MODULE DEPRECATED_OR_UNKNOWN_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE UNKNOWN_KEYWORD(LINE_NO, INPUT)
 
-      INTEGER, INTENT(IN) :: LINE_NO
+      integer, INTENT(IN) :: LINE_NO
       CHARACTER(len=*), INTENT(IN) :: INPUT
 
-      IF(myPE == 0) WRITE(*,2000) trim(iVAL(LINE_NO)), trim(INPUT)
+      WRITE(*,2000) trim(iVAL(LINE_NO)), trim(INPUT)
 
-      CALL MFIX_EXIT(myPE)
+      stop 19832
 
  2000 FORMAT(//1X,70('*')/' From: UNKNOWN_KEYWORD',/' Error 2000: ',   &
          'Unable to process line ',A,' of the mfix.dat file.',2/3x,    &

@@ -45,9 +45,9 @@ contains
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
                trd_g(i,j,k) = &
-                  (u_g(i,j,k)-u_g(i-1,j,k))*odx + &
-                  (v_g(i,j,k)-v_g(i,j-1,k))*ody + &
-                  (w_g(i,j,k)-w_g(i,j,k-1))*odz
+                  (u_g(i+1,j,k)-u_g(i,j,k))*odx + &
+                  (v_g(i,j+1,k)-v_g(i,j,k))*ody + &
+                  (w_g(i,j,k+1)-w_g(i,j,k))*odz
             end do
          end do
       end do

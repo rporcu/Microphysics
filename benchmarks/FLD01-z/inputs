@@ -1,8 +1,0 @@
-# Maximum allowable size of each subdomain in the problem domain;
-#    this is used to decompose the domain for parallel calculations.
-amr.max_grid_size = 1024
-
-# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
-amr.max_level = 0
-mfix.plot_int=1
-mfix.plot_file=FLD01

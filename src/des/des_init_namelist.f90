@@ -27,34 +27,28 @@ MODULE DES_INIT_NAMELIST_MODULE
 
       SUBROUTINE DES_INIT_NAMELIST
 
-      USE discretelement, only: des_intg_method
-      usE discretelement, only: des_coll_model
 
-      USE discretelement, only: des_continuum_coupled
-      USE discretelement, only: des_explicitly_coupled
-      USE discretelement, only: des_oneway_coupled
+      use discretelement, only: des_coll_model
 
-      USE discretelement, only: kn, kn_w
-      USE discretelement, only: kt_fac, kt_w_fac
+      use discretelement, only: des_continuum_coupled
+      use discretelement, only: des_explicitly_coupled
+      use discretelement, only: des_oneway_coupled
 
-      USE discretelement, only: mew, mew_w
+      use discretelement, only: kn, kn_w
+      use discretelement, only: kt_fac, kt_w_fac
 
-      USE discretelement, only: des_en_input, des_en_wall_input
-      USE discretelement, only: des_et_input, des_et_wall_input
+      use discretelement, only: mew, mew_w
 
-      USE discretelement, only: e_young, ew_young
-      USE discretelement, only: v_poisson, vw_poisson
+      use discretelement, only: des_en_input, des_en_wall_input
+      use discretelement, only: des_et_input, des_et_wall_input
 
-      USE discretelement, only: des_etat_fac, des_etat_w_fac
+      use discretelement, only: e_young, ew_young
+      use discretelement, only: v_poisson, vw_poisson
 
-      USE discretelement, only: particles
-      USE discretelement, only: des_usr_var_size
+      use discretelement, only: des_etat_fac, des_etat_w_fac
 
-      USE discretelement, only: print_des_data
-      USE discretelement, only: vtp_findex
-
-      USE discretelement, only: dim_m
-      USE param1, only: undefined_i, undefined
+      use discretelement, only: dim_m
+      use param, only: undefined_i, undefined, half
 
 
       IMPLICIT NONE
@@ -64,62 +58,9 @@ MODULE DES_INIT_NAMELIST_MODULE
 
 !-----------------------------------------------
 
-      INCLUDE 'desnamelist.inc'
-
-
-
-!#####################################################################!
-!                             Run Control                             !
-!#####################################################################!
-
-
-
-
-!#####################################################################!
-!                           Physical Parameters                       !
-!#####################################################################!
-
-
-
-!#####################################################################!
-!                          Numerical Parameters                       !
-!#####################################################################!
-
-
-
-!#####################################################################!
-!                          Output Control                             !
-!#####################################################################!
-
-
-!<keyword category="Output Control" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Allows writing of discrete particle data to output files. Relevant
-!    to both granular and coupled simulations.
-!  </description>
-      PRINT_DES_DATA = .FALSE.
-!</keyword>
-
-
-
 !#####################################################################!
 ! DEM/PIC COMMON:      Discrete Element Simulation                    !
 !#####################################################################!
-
-
-!<keyword category="Discrete Element Simulation" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Number of particles to be read in from the particle_input.dat file.
-!    This value is overwritten when using automatic particle generation.
-!    A simulation with a mass inflow BC can start without solids by
-!    setting PARTICLES = 0.
-!  </description>
-!  <range min="0" max="+Inf" />
-      PARTICLES = UNDEFINED_I
-!</keyword>
-
 
 !<keyword category="Discrete Element Simulation" required="false"
 !  dem="true" pic="true">
@@ -128,7 +69,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 !    and dispersed phase flows.
 !  </description>
 !  <valid value=".true." note="Performs coupled simulations. "/>
-      DES_CONTINUUM_COUPLED = .FALSE.
+      des_continuum_coupled = .FALSE.
 !</keyword>
 
 !<keyword category="Discrete Element Simulation" required="false"
@@ -139,27 +80,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 ! </description>
       DES_ONEWAY_COUPLED = .FALSE.
 !</keyword>
-
-!<keyword category="Discrete Element Simulation" required="false" dem="true">
-!  <description>
-!    Time stepping scheme.
-!  </description>
-!  <valid value="EULER"
-!    note="First-Order Euler Scheme."/>
-!  <valid value="ADAMS BASHFORTH"
-!    note="Second order ADAMS BASHFORTH scheme (DEM only)"/>
-      DES_INTG_METHOD = 'EULER'
-!</keyword>
-
-!<keyword category="Discrete Element Simulation" required="false" dem="true">
-!  <description>
-!    Defines the size of the particle-based user variable:
-!    DES_USR_VAR(SIZE, PARTICLES). Information in this array follows
-!    the particle throughout a simulation.
-!  </description>
-      DES_USR_VAR_SIZE = 0
-!</keyword>
-
 
 !<keyword category="Discrete Element Simulation" required="false" dem="true">
 !  <description>
@@ -320,9 +240,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 !  </description>
 !  <dependent keyword="DES_COLL_MODEL" value="LSD"/>
 !  <range min="0.0" max="1.0" />
-!  <valid value="UNDEFINED" note="For LSD model, if left undefined, MFIX
-!   reverts to default value of 0.5" />
-      DES_ETAT_FAC = UNDEFINED
+      DES_ETAT_FAC = HALF
 !</keyword>
 
 
@@ -339,7 +257,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 ! <range min="0.0" max="1.0" />
 ! <valid value="UNDEFINED" note="For LSD model, if left undefined, MFIX
 ! will revert to default value of 0.5" />
-      DES_ETAT_W_FAC = UNDEFINED
+      DES_ETAT_W_FAC = HALF
 !</keyword>
 
 
@@ -385,13 +303,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 
 
 
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!
-!                            UNSUPPORTED KEYWORDS                      !
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!
-
-
-! These need to be inialized to 0, but they are not part of the namelist
-      VTP_FINDEX = 0
 
       RETURN
       END SUBROUTINE DES_INIT_NAMELIST

@@ -15,13 +15,15 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      USE param, only: dim_m
-      USE param1, only: undefined, one, zero, half
-      IMPLICIT NONE
+      use param, only: dim_m
+      use param, only: undefined, one, zero, half
+      implicit none
 !-----------------------------------------------
 
+      integer :: particle_types = 0
+
 ! Total number of particles in simulation: read from input or generated
-      INTEGER :: PARTICLES
+!      integer :: PARTICLES
 
 ! Start particle tracking quantities
 !----------------------------------------------------------------->>>
@@ -60,62 +62,29 @@
       integer, parameter :: entering_ghost=5
       integer, parameter :: exiting_ghost=6
 
-
-! Output/debug controls
-!----------------------------------------------------------------->>>
-! Logic that controls whether to print data dem simulations (granular or
-! coupled)
-      LOGICAL :: PRINT_DES_DATA
-      CHARACTER(LEN=255) :: VTP_DIR
-
-! Output file count for .vtp type files and for tecplot files;
-! for vtp output used to label .vtp file names in sequential order
-! and is saved so restarts begin at the correct count
-      INTEGER :: VTP_FINDEX
 ! End Output/debug controls
 !-----------------------------------------------------------------<<<
 
 ! DES - Continuum
-      LOGICAL :: DES_CONTINUUM_COUPLED
-      LOGICAL :: DES_EXPLICITLY_COUPLED
+      logical :: des_continuum_coupled
+      logical :: des_explicitly_coupled
 
 ! With this logic the particles see the fluid but the fluid does
 ! not see the particles.
-      LOGICAL :: DES_ONEWAY_COUPLED
+      logical :: des_oneway_coupled
 
 ! Collision model, options are as follows
 !   linear spring dashpot model (default/undefined)
 !   'hertzian' model
-      CHARACTER(LEN=64) :: DES_COLL_MODEL
-      INTEGER :: DES_COLL_MODEL_ENUM
-      INTEGER,PARAMETER :: HERTZIAN=0
-      INTEGER,PARAMETER :: LSD=1
+      character(len=64) :: des_coll_model
+      integer,parameter :: invalid_coll=-1
+      integer,parameter :: hertzian=0
+      integer,parameter :: lsd=1
 
-! Integration method, options are as follows
-!   'euler' first-order scheme (default)
-!   'adams_bashforth' second-order scheme (by T.Li)
-      CHARACTER(LEN=64) :: DES_INTG_METHOD
-      LOGICAL :: INTG_ADAMS_BASHFORTH
-      LOGICAL :: INTG_EULER
+      integer :: des_coll_model_enum = invalid_coll
 
 ! Value of solids time step based on particle properties
-      real(c_real) :: DTSOLID
-! Run time value of simulation time used in dem simulation
-      real(c_real) :: S_TIME
-
-
-! Neighbor search related quantities
-!----------------------------------------------------------------->>>
-! Quantities used to determine whether neighbor search should be called
-
-      LOGICAL :: DO_NSEARCH
-
-! Flag on whether to have DES_*_OLD arrays, if either Adams Bashforth or PIC is used
-      LOGICAL :: DO_OLD
-
-! Quantities used for reporting: max no. neighbors and max overlap
-! that exists during last solid time step of dem simulation
-      real(c_real) :: OVERLAP_MAX
+      real(c_real) :: dtsolid
 
 ! End neighbor search related quantities
 !-----------------------------------------------------------------<<<
@@ -159,18 +128,6 @@
 ! End particle-particle and particle-wall collision model parameters
 !-----------------------------------------------------------------<<<
 
-! Additional quantities
-      real(c_real) :: MIN_RADIUS, MAX_RADIUS
-
-! Defining user defined allocatable array
-      INTEGER :: DES_USR_VAR_SIZE = 0
-
-!-----------------------------------------------------------------<<<
-
-
-
-
-
       CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -181,7 +138,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       FUNCTION DES_CROSSPRDCT(XX,YY)
 
-      IMPLICIT NONE
+      implicit none
 
 ! Dummy arguments
 !---------------------------------------------------------------------//

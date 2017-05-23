@@ -14,10 +14,8 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  RUN_TYPE = 'NEW'
   UNITS = 'CGS'
 
-  TIME =   0.0
   TSTOP =  1.0
 
   DT =     5.0d-4
@@ -25,22 +23,14 @@
 
   DRAG_TYPE = 'GIDASPOW'
 
+  NLOG = 25       ! time steps between updates to (.LOG) file
+  FULL_LOG = .T.  ! display residuals on screen
+
 #_______________________________________________________________________
 # NUMERICAL SECTION
 
   MAX_NIT = 50
   TOL_RESID = 1.0d-3
-
-
-#_______________________________________________________________________
-# GEOMETRY SECTION
-
-  COORDINATES = 'CARTESIAN'
-
-  XLENGTH  =  15.0   IMAX = 15
-  YLENGTH  =  90.0   JMAX = 45
-  ZLENGTH  =   0.4   NO_K = .T.
-
 
 #_______________________________________________________________________
 # MATERIAL SECTION
@@ -54,7 +44,6 @@
 
 ! PARTICLE SECTION
 !---------------------------------------------------------------------//
-
 
   PARTICLES = 2400             ! Number of partiles.
 
@@ -126,25 +115,3 @@
   BC_TYPE(2) =   'PO'
 
   BC_P_g(2) =    0.0
-
-
-#_______________________________________________________________________
-# OUTPUT CONROL SECTION
-
-  RES_DT = 0.1      ! interval write restart (.RES) file
-
-  NLOG = 25       ! time steps between updates to (.LOG) file
-  FULL_LOG = .T.  ! display residuals on screen
-
-  GROUP_RESID = .F.  ! Group residuals by equation
-
-  RESID_STRING  = 'P0' 'U0', 'V0'
-
-  VTP_DT = 0.05
-
-
-
-#_______________________________________________________________________
-# DMP SETUP
-
-  ENABLE_DMP_LOG = .F.

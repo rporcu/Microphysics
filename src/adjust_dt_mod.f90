@@ -1,9 +1,17 @@
 module adjust_dt
 
-   use amrex_fort_module, only : c_real => amrex_real
-   use iso_c_binding , only: c_int
+  use amrex_fort_module, only : c_real => amrex_real
+  use iso_c_binding , only: c_int
 
-   contains
+! Current DT (1/DT) and direction of last change (+/-)
+! +1 -> increase dt; -1 decrease dt
+  integer, save :: DT_dir = -1
+
+  private
+
+  public adjust
+
+contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -22,20 +30,16 @@ module adjust_dt
       use leqsol, only: MAX_NIT
 ! User defined: min, max DT and adjustment factor
       use run, only: DT_MIN, DT_MAX, DT_FAC
-! Current DT (1/DT) and direction of last change (+/-)
-      use run, only: DT_DIR
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: ZERO, ONE, IS_UNDEFINED
+      use param, only: ZERO, ONE, IS_UNDEFINED
 
 ! Module proceedures:
 !---------------------------------------------------------------------//
 ! Routine to break successive time step reductions.
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg
       use error_manager, only: init_err_msg, ival
-
-      use calc_coeff_module, only: calc_coeff_all
 
       IMPLICIT NONE
 
@@ -51,16 +55,17 @@ module adjust_dt
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Number of steps in between DT adjustments.
-      INTEGER, PARAMETER :: STEPS_MIN = 5
+      integer, PARAMETER :: STEPS_MIN = 5
 ! Number of time steps since last DT adjustment
-      INTEGER, SAVE :: STEPS_TOT=0
+      integer, SAVE :: STEPS_TOT=0
 ! number of iterations since last DT adjustment
-      INTEGER, SAVE :: NIT_TOT=0
+      integer, SAVE :: NIT_TOT=0
 ! Iterations per second for last dt
       real(c_real), SAVE :: NIToS=0.0
 ! Current number of iterations per second
       real(c_real) :: NITOS_NEW
 !......................................................................!
+
 
 ! Initialize the function result.
       adjustdt = 0

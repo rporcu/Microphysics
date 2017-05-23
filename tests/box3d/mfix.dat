@@ -15,12 +15,9 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  RUN_TYPE = 'NEW'
   UNITS = 'CGS'
 
-  Time   =   0.0
   Tstop  =   0.1
-
   DT =     1.0d-4
   DT_MAX = 5.0d-4
 
@@ -31,37 +28,27 @@
 
   GENER_PART_CONFIG = .T.
 
-
-
-
-
-
   DES_EXPLICITLY_COUPLED = .T.
 
   DRAG_TYPE = 'GIDASPOW'
+
+  FULL_LOG = .T.
+  NLOG = 50
 
 #_______________________________________________________________________
 # NUMERICAL SECTION
 
 ! Set the max-number of iterations before "stalled"
   MAX_NIT = 50
-  LEQ_PC = 9*'NONE'
+  LEQ_PC = 4*'NONE'
   NORM_G = 0
 
 #_______________________________________________________________________
 # GEOMETRY SECTION
 
-  COORDINATES = 'CARTESIAN'
-
   XLENGTH =   64   IMAX = 64
   ZLENGTH =   64   KMAX = 64
   YLENGTH =  200   JMAX = 200
-
-! Search grid for DEM
-
-
-
-
 
 #_______________________________________________________________________
 # MATERIAL SECTION
@@ -74,8 +61,6 @@
 
 ! Particle Section
 !---------------------------------------------------------------------//
-
-
 
 !  PARTICLES = 2560   ! Number of particles
 
@@ -95,8 +80,6 @@
 
 ! Solids phase 1:
 !---------------------------------------------------------------------//
-  SOLIDS_MODEL(1) = 'DEM'
-
   RO_s0(1) =   2.7   ! solids density
   D_p0(1) =    0.4   ! particle diameter
 
@@ -197,45 +180,3 @@
 
   BC_Type(3:6) = 4*'NSW'
 
-#_______________________________________________________________________
-# OUTPUT CONTROL SECTION
-
-  RES_DT = 0.10
-
-  SPX_DT(1) = @(1.0/32.0) ! EP_g
-  SPX_DT(2:9) = 8*1.00
-
-  PRINT_DES_DATA = .F.
-
-  GROUP_RESID = .T.
-
-  NLOG = 50
-  FULL_LOG = .T.
-  WRITE_DASHBOARD = .T.
-
-  WRITE_VTK_FILES  = .T.
-  TIME_DEPENDENT_FILENAME = .T.
-  VTK_DT = @(1.0/32.0)
-
-! Available flags for VTK_VAR are :
-!  1 : Void fraction (EP_g)
-!  2 : Gas pressure, solids pressure (P_g, P_star)
-!  3 : Gas velocity (U_g, V_g, W_g)
-!  4 : Solids velocity (U_s, V_s, W_s)
-!  5 : Solids density (ROP_s)
-!  6 : Gas and solids temperature (T_g, T_s1, T_s2)
-!  7 : Gas and solids mass fractions (X_g, X_s)
-!  8 : Granular temperature (G)
-! 11 : Turbulence quantities (k and ε)
-! 12 : Gas Vorticity magnitude and Lambda_2 (VORTICITY, LAMBDA_2)
-!100 : Processor assigned to scalar cell (Partition)
-!101 : Boundary condition flag for scalar cell (BC_ID)
-
-  VTK_VAR = 1 2 3
-
-
-#_______________________________________________________________________
-# DMP SETUP
-
-  ENABLE_DMP_LOG = .F.
-  TERM_BUFFER =        900  ! 1 Hr

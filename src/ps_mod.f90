@@ -24,70 +24,56 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use param, only: dimension_ps, dim_n_g, dim_m, dim_n_s
+      use param, only: dim_ps, dim_n_g, dim_m, dim_n_s
 
 ! Run-time logical indicating that point sources are present.
-      LOGICAL :: POINT_SOURCE
-
-      LOGICAL :: PS_DEFINED(DIMENSION_PS)
+      logical :: POINT_SOURCE
 
 ! Physical location of point sources.
-      real(c_real) :: PS_X_w(DIMENSION_PS)  ! West
-      real(c_real) :: PS_X_e(DIMENSION_PS)  ! East
-      real(c_real) :: PS_Y_s(DIMENSION_PS)  ! South
-      real(c_real) :: PS_Y_n(DIMENSION_PS)  ! North
-      real(c_real) :: PS_Z_b(DIMENSION_PS)  ! Bottom
-      real(c_real) :: PS_Z_t(DIMENSION_PS)  ! Top
-
-! Cell indices delineating point source region:
-      INTEGER :: PS_I_w(DIMENSION_PS)  ! West
-      INTEGER :: PS_I_e(DIMENSION_PS)  ! East
-      INTEGER :: PS_J_s(DIMENSION_PS)  ! South
-      INTEGER :: PS_J_n(DIMENSION_PS)  ! North
-      INTEGER :: PS_K_b(DIMENSION_PS)  ! Bottom
-      INTEGER :: PS_K_t(DIMENSION_PS)  ! Top
+      real(c_real) :: PS_X_w(DIM_PS)  ! West
+      real(c_real) :: PS_X_e(DIM_PS)  ! East
+      real(c_real) :: PS_Y_s(DIM_PS)  ! South
+      real(c_real) :: PS_Y_n(DIM_PS)  ! North
+      real(c_real) :: PS_Z_b(DIM_PS)  ! Bottom
+      real(c_real) :: PS_Z_t(DIM_PS)  ! Top
 
 ! Gas mass flow rate through the point source:
-      real(c_real) PS_MASSFLOW_g (DIMENSION_PS)
+      real(c_real) :: PS_MASSFLOW_g (DIM_PS)
 
 ! Velocity vector for gas point source: (normalized)
-      real(c_real) :: PS_U_g(DIMENSION_PS) ! X-axis
-      real(c_real) :: PS_V_g(DIMENSION_PS) ! Y-axis
-      real(c_real) :: PS_W_g(DIMENSION_PS) ! Z-axis
+      real(c_real) :: PS_U_g(DIM_PS) ! X-axis
+      real(c_real) :: PS_V_g(DIM_PS) ! Y-axis
+      real(c_real) :: PS_W_g(DIM_PS) ! Z-axis
 
 ! Gas phase velocity magnitude: (calculated)
-      real(c_real) :: PS_VEL_MAG_G(DIMENSION_PS)
+      real(c_real) :: PS_VEL_MAG_G(DIM_PS)
 
 ! Gas phase species mass fractions
-      real(c_real) :: PS_X_g(DIMENSION_PS, DIM_N_g)
+      real(c_real) :: PS_X_g(DIM_PS, DIM_N_g)
 
 ! Gas phase temperature.
-      real(c_real) :: PS_T_g(DIMENSION_PS)
-      real(c_real) :: PS_CpxMFLOW_g(DIMENSION_PS)
+      real(c_real) :: PS_T_g(DIM_PS)
+      real(c_real) :: PS_CpxMFLOW_g(DIM_PS)
 
-! Solids mass flow rate through the point source:
-      real(c_real) PS_MASSFLOW_s (DIMENSION_PS, DIM_M)
+   contains
 
-! Velocity vector for solids point sources: (normalized)
-      real(c_real) :: PS_U_s(DIMENSION_PS, DIM_M) ! X-axis
-      real(c_real) :: PS_V_s(DIMENSION_PS, DIM_M) ! Y-axis
-      real(c_real) :: PS_W_s(DIMENSION_PS, DIM_M) ! Z-axis
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+! Subroutine: ps_defined                                               !
+!                                                                      !
+! Purpose: Return if a PS region has been defined based on coordinates !
+! defined in the input deck.                                           !
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+   logical function ps_defined(icv)
 
-! Solids phase velocity magnitude: (calculated)
-      real(c_real) :: PS_VEL_MAG_S(DIMENSION_PS, DIM_M)
+      use param, only: is_defined
 
-! Solids phase species mass fractions
-      real(c_real) :: PS_X_s(DIMENSION_PS, DIM_M, DIM_N_s)
+      integer, intent(in) :: icv
 
-! Solids phase temperature.
-      real(c_real) :: PS_T_s(DIMENSION_PS, DIM_M)
-      real(c_real) :: PS_CpxMFLOW_s(DIMENSION_PS, DIM_M)
+      ps_defined = is_defined(ps_x_w(icv)) .or. is_defined(ps_x_e(icv)) .or. &
+                   is_defined(ps_y_s(icv)) .or. is_defined(ps_y_n(icv)) .or. &
+                   is_defined(ps_z_b(icv)) .or. is_defined(ps_z_t(icv))
 
-! Total volume of cells comprising point source cells (calculated)
-      real(c_real) :: PS_VOLUME(DIMENSION_PS)
+   end function ps_defined
 
-! Legacy variable... to be deleated
-      INTEGER, DIMENSION(:), ALLOCATABLE :: POINT_SOURCES
-
-
-      END MODULE ps
+end module ps

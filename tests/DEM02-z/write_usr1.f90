@@ -40,7 +40,7 @@
 
       use amrex_fort_module, only : c_real => amrex_real
 
-      use compar, only: mype, pe_io
+
       Use usr, only: bounce_count, max_height_hs, max_height
 
       IMPLICIT NONE
@@ -59,7 +59,7 @@
 ! Save the last location of the loop counter
       integer, save :: last_k = 0
 
-      IF(myPE /= PE_IO) RETURN
+
 
 ! Open the files.
       OPEN(UNIT=uHeight,FILE='POST_HEIGHT.dat', &

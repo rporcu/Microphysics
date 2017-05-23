@@ -6,7 +6,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       NAMELIST / RUN_CONTROL_LOCKED /&
 
-      RUN_NAME, UNITS, RUN_TYPE, TIME
+      RUN_NAME
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -19,4 +19,4 @@
       NAMELIST / RUN_CONTROL_UNLOCKED /&
 
       DESCRIPTION, TSTOP, DT, DT_MAX, DT_MIN, DT_FAC,  &
-      DRAG_TYPE, DRAG_C1, DRAG_D1
+      DRAG_TYPE, DRAG_C1, DRAG_D1, NLOG, FULL_LOG

@@ -1,7 +1,7 @@
       MODULE usr
 
         ! Use param
-        ! Use param1
+        ! Use param
 
 
 ! a dummy variable listed in usrnlst.inc

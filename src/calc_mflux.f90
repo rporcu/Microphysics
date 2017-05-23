@@ -14,8 +14,8 @@ module calc_mflux_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine calc_mflux (ulo, uhi, vlo, vhi, wlo, whi, &
-         u_g, v_g, w_g, rop_e, rop_n, rop_t, &
-         flux_e, flux_n, flux_t, dx, dy, dz) bind(C, name="calc_mflux")
+         u_g, v_g, w_g, ropX, ropY, ropZ, &
+         fluxX, fluxY, fluxZ, dx, dy, dz) bind(C, name="calc_mflux")
 
       implicit none
 
@@ -31,18 +31,18 @@ module calc_mflux_module
       real(c_real), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(in   ) :: rop_e&
+      real(c_real), intent(in   ) :: ropX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: rop_n&
+      real(c_real), intent(in   ) :: ropY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: rop_t&
+      real(c_real), intent(in   ) :: ropZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(  out) :: flux_e&
+      real(c_real), intent(  out) :: fluxX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(  out) :: flux_n&
+      real(c_real), intent(  out) :: fluxY&
         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(  out) :: flux_t&
+      real(c_real), intent(  out) :: fluxZ&
         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 
@@ -57,29 +57,26 @@ module calc_mflux_module
       axz = dx*dz
       ayz = dy*dz
 
-      ! East face (i+1/2, j, k)
       do k = ulo(3), uhi(3)
          do j = ulo(2), uhi(2)
             do i = ulo(1), uhi(1)
-               flux_e(i,j,k) = rop_e(i,j,k)*ayz*u_g(i,j,k)
+               fluxX(i,j,k) = ropX(i,j,k)*ayz*u_g(i,j,k)
             enddo
          enddo
       enddo
 
-      ! North face (i, j+1/2, k)
       do k = vlo(3), vhi(3)
          do j = vlo(2), vhi(2)
             do i = vlo(1), vhi(1)
-               flux_n(i,j,k) = rop_n(i,j,k)*axz*v_g(i,j,k)
+               fluxY(i,j,k) = ropY(i,j,k)*axz*v_g(i,j,k)
             enddo
          enddo
       enddo
 
-      ! Top face (i, j, k+1/2)
       do k = wlo(3), whi(3)
          do j = wlo(2), whi(2)
             do i = wlo(1), whi(1)
-               flux_t(i,j,k) = rop_t(i,j,k)*axy*w_g(i,j,k)
+               fluxZ(i,j,k) = ropZ(i,j,k)*axy*w_g(i,j,k)
             enddo
          enddo
       enddo

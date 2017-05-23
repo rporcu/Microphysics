@@ -1,6 +1,6 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: USR0                                                   C
+!  Module name: usr0                                                   C
 !                                                                      C
 !  Purpose: This routine is called before the time loop starts and is  C
 !           user-definable.  The user may insert code in this routine  C
@@ -10,15 +10,14 @@
 !           all indices are undefined.                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE USR0
+      subroutine usr0
 
-      use exit_mod, only: mfix_exit
       use usr, only: rk4_pos, rk4_vel
 
-      IMPLICIT NONE
+      implicit none
 
-! Store the initial position and velocity
+      ! Store the initial position and velocity
       RK4_POS(:) = (/0.0925d0, 0.0050d0, 0.0050d0/)
       RK4_VEL(:) = (/0.0000d0, 0.0000d0, 0.0000d0/)
 
-      END SUBROUTINE USR0
+      end subroutine usr0

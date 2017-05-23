@@ -1,5 +1,3 @@
-MODULE PARSE_RESID_STRING_MODULE
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: Parse_RESID_string(IER)                                C
@@ -8,12 +6,13 @@ MODULE PARSE_RESID_STRING_MODULE
 !  Purpose: Initialize residuals                                       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE PARSE_RESID_STRING()
+      subroutine parse_resid_string() &
+         bind(C, name="parse_resid_string")
 
-      USE param1, only: undefined_c, undefined_i
-      USE residual, only: resid_grp_string, resid_index, max_resid_index, resid_x, resid_prefix
-      USE residual, only: resid_string, energy_grp, group_resid, ke_grp, nprefix, scalar_grp, hydro_grp, theta_grp
-      USE write_error_module, only: write_error
+      use param, only: undefined_c, undefined_i
+      use residual, only: resid_grp_string, resid_index, max_resid_index, resid_x, resid_prefix
+      use residual, only: resid_string, energy_grp, group_resid, ke_grp, nprefix, scalar_grp, hydro_grp, theta_grp
+      use write_error_module, only: write_error
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -22,13 +21,13 @@ MODULE PARSE_RESID_STRING_MODULE
 
 !
 !                      local index
-      INTEGER          L, L1
+      integer          L, L1
 !
 !                      error message
       CHARACTER(LEN=80)     LINE
 !
-!                      LOGICAL
-      LOGICAL          STRING_DEFINED
+!                      logical
+      logical          STRING_DEFINED
 
 !
 !-----------------------------------------------
@@ -96,6 +95,5 @@ MODULE PARSE_RESID_STRING_MODULE
               + ICHAR(RESID_STRING(L)(4:4)) - 48 - 1
          ENDIF
       END DO
-      RETURN
-      END SUBROUTINE PARSE_RESID_STRING
-END MODULE PARSE_RESID_STRING_MODULE
+
+      end subroutine parse_resid_string

@@ -18,13 +18,13 @@ MODULE CFFCTOWALL_MODULE
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE discretelement, only: des_crossprdct
+      use discretelement, only: des_crossprdct
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
 ! particle index
-      INTEGER, INTENT(IN) :: L
+      integer, INTENT(IN) :: L
 ! distance between particle center and wall
       real(c_real), INTENT(IN) :: DIST_LI
 ! unit normal vector along the line of contact pointing from

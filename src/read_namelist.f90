@@ -14,81 +14,78 @@ MODULE read_namelist_module
 !     Purpose: Read in the NAMELIST variables                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_NAMELIST(time, dt)
+      SUBROUTINE READ_NAMELIST(dt)
 
       use bc
-      use compar, only: mype, pe_io
-      use constant, only: c, c_name, d_p0, drag_c1, drag_d1, gravity, ro_s0
+      use drag, only: drag_c1, drag_d1
+      use constant, only: d_p0, gravity, ro_s0
       use deprecated_or_unknown_module, only: deprecated_or_unknown
-      use discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input
+      use discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input, particle_types
       use discretelement, only: des_etat_fac, des_etat_w_fac, v_poisson, vw_poisson
-      use discretelement, only: des_explicitly_coupled, des_intg_method, des_oneway_coupled, des_usr_var_size, e_young, ew_young
-      use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, particles, des_etat_w_fac, print_des_data
+      use discretelement, only: des_explicitly_coupled, des_oneway_coupled, e_young, ew_young
+      use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, des_etat_w_fac
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
-      use exit_mod, only: mfix_exit
+
       use fld_const, only: mu_g0, mw_avg
       use fld_const, only: ro_g0
-      use funits, only: unit_dat
-      use geometry, only: coordinates
-      use geometry, only: cyclic_x, cyclic_y, cyclic_z
-      use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use geometry, only: imax, jmax, kmax
-      use geometry, only: xlength, ylength, zlength
-      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_rop_s, ic_t_g, ic_t_s, ic_des_fit_to_region, ic_x_w, ic_type
-      use ic, only: ic_i_e, ic_i_w, ic_j_n, ic_j_s, ic_k_b, ic_k_t
+      use bc, only: cyclic_x, cyclic_y, cyclic_z
+      use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
+      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
-      use ic, only: ic_x_e, ic_x_g, ic_x_s, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      use leqsol, only: do_transpose, leq_it, leq_method
+      use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
+      use leqsol, only: leq_it
       use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, ival
-      use output, only: dbgprn_layout, enable_dmp_log, full_log, nlog, out_dt, report_mass_balance_dt, res_backup_dt, res_dt, vtp_dt
-      use output, only: usr_dt, usr_ext, usr_format, res_backups, usr_type, usr_var
-      use output, only: usr_x_e, usr_x_w, usr_y_n, usr_y_s, usr_z_b, usr_z_t
-      use ps, only: ps_i_e, ps_i_w, ps_j_n, ps_j_s, ps_k_b, ps_k_t, ps_massflow_g, ps_massflow_s
-      use ps, only: ps_t_g, ps_t_s, ps_u_g, ps_u_s, ps_v_g, ps_v_s, ps_w_g, ps_w_s
-      use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_s, ps_x_w
-      use remove_comment_module, only: remove_comment
-      use remove_comment_module, only: remove_par_blanks
-      use residual, only: group_resid, resid_string
-      use run, only: call_usr, description, detect_stall, discretize, tstop, units
-      use run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model
-      use run, only: IFILE_NAME
+      use run, only: full_log, nlog
+      use output, only: usr_dt
+      use ps, only: ps_massflow_g
+      use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
+      use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_w
+      use run, only: call_usr, description, tstop
+      use run, only: dt_fac, dt_max, dt_min, run_name, solids_model
+      use drag, only: drag_type
       use scales, only: p_ref, p_scale
-      use toleranc, only: max_inlet_vel_fac, norm_g, tol_diverge, tol_resid
+      use residual, only: norm_g, tol_diverge, tol_resid
       use ur_facs, only: ur_fac
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
       use utilities, only: make_upper_case, replace_tab
+      use param, only: undefined
+
+
+      use remove_comment_module, only: remove_comment
+      use remove_comment_module, only: remove_par_blanks
 
       IMPLICIT NONE
 
 ! Dummy Arguments:
 !------------------------------------------------------------------------//
-      real(c_real), intent(  out) :: time, dt
+      real(c_real), intent(  out) :: dt
 
 ! Local Variables:
 !------------------------------------------------------------------------//
+      integer, parameter :: unit_dat = 51
 ! LINE_STRING(1:MAXCOL) has valid input data
-      INTEGER, PARAMETER :: MAXCOL = 80
+      integer, PARAMETER :: MAXCOL = 80
 ! Holds one line in the input file
       CHARACTER(LEN=512) :: LINE_STRING
 ! Length of noncomment string
-      INTEGER :: LINE_LEN
+      integer :: LINE_LEN
 ! Line number
-      INTEGER :: LINE_NO
+      integer :: LINE_NO
 ! Coefficient of restitution (old symbol)
       real(c_real) :: e
 ! Indicate whether to do a namelist read on the line
-      LOGICAL :: READ_FLAG
+      logical :: READ_FLAG
 ! Logical to check if file exits.
-      LOGICAL :: lEXISTS
+      logical :: lEXISTS
 ! Error flag
-      LOGICAL :: ERROR
+      logical :: ERROR
 
       CHARACTER(len=256) :: STRING
-      INTEGER :: IOS, II
+      integer :: IOS, II
 
 ! Flags restricting what data from the mfix.dat to process
-      LOGICAL :: READ_LOCKED, READ_FULL
+      logical :: READ_LOCKED, READ_FULL
 
       E = UNDEFINED
       READ_FLAG = .TRUE.
@@ -97,25 +94,24 @@ MODULE read_namelist_module
       READ_LOCKED = .TRUE.
       READ_FULL = .TRUE.
 
-      time = undefined
       dt = undefined
 
-! Open the mfix.dat file. Report errors if the file is not located or
-! there is difficulties opening it.
-      inquire(file=trim(IFILE_NAME),exist=lEXISTS)
+      ! Open the mfix.dat file. Report errors if the file is not located or
+      ! there is difficulties opening it.
+      inquire(file='mfix.dat',exist=lEXISTS)
       IF(.NOT.lEXISTS) THEN
-         IF(myPE == PE_IO) WRITE(*,1000) trim(IFILE_NAME)
-         CALL MFIX_EXIT(myPE)
+         WRITE(*,1000)
+         stop 20010
 
  1000 FORMAT(2/,1X,70('*')/' From: READ_NAMELIST',/' Error 1000: ',    &
-         'The input data file, ',A,', is missing. Aborting.',/1x,   &
+         'The input data file, mfix.dat, is missing. Aborting.',/1x,   &
          70('*'),2/)
 
       ELSE
-         OPEN(UNIT=UNIT_DAT, FILE=trim(IFILE_NAME), STATUS='OLD', IOSTAT=IOS)
+         OPEN(UNIT=UNIT_DAT, FILE='mfix.dat', STATUS='OLD', IOSTAT=IOS)
          IF(IOS /= 0) THEN
-            IF(myPE == PE_IO) WRITE (*,1100)
-            CALL MFIX_EXIT(myPE)
+            WRITE (*,1100)
+            stop 20011
          ENDIF
 
       ENDIF
@@ -127,21 +123,21 @@ MODULE read_namelist_module
          LINE_NO = LINE_NO + 1
 
          LINE_LEN = SEEK_COMMENT(LINE_STRING,LEN(LINE_STRING)) - 1
-         CALL REMOVE_COMMENT(LINE_STRING, LINE_LEN+1, LEN(LINE_STRING))
+         call remove_comment(LINE_STRING, LINE_LEN+1, LEN(LINE_STRING))
 
          IF(LINE_LEN <= 0) CYCLE READ_LP           ! comment line
          IF(BLANK_LINE(LINE_STRING)) CYCLE READ_LP ! blank line
 
          IF(LINE_TOO_BIG(LINE_STRING,LINE_LEN,MAXCOL) > 0) THEN
-            write (*, 1100)  trim(iVAL(LINE_NO)), trim(IFILE_NAME), &
-                 &  trim(trim(ival(MAXCOL))), LINE_STRING(1:MAXCOL), trim( IFILE_NAME )
-            CALL MFIX_EXIT(myPE)
+            write (*, 1100)  trim(iVAL(LINE_NO)), &
+                 &  trim(trim(ival(MAXCOL))), LINE_STRING(1:MAXCOL)
+            stop 20012
          ENDIF
 
  1100 FORMAT(//1X,70('*')/1x,'From: READ_NAMELIST',/1x,'Error 1100: ', &
-         'Line ',A,' in file ', A, ' is too long. Input lines should', &
-         /1x,'not pass column ',A,'.',2/3x,A,2/1x,'Please correct ',   &
-         'file ',A,'.',/1X,70('*'),2/)
+         'Line ',A,' in file mfix.dat is too long. Input lines should', &
+         /1x,'not pass column ',A,'.',2/3x,A,2/1x,&
+         'Please correct input deck.',/1X,70('*'),2/)
 
 ! All subsequent lines are thermochemical data
          IF(LINE_STRING(1:11) == 'THERMO DATA') EXIT READ_LP
@@ -183,31 +179,28 @@ MODULE read_namelist_module
 
       IMPLICIT NONE
 
-      LOGICAL, intent(OUT) ::ERROR
-
-
+      logical, intent(OUT) ::ERROR
 
 ! External namelist files:
 !---------------------------------------------------------------------//
-      INCLUDE 'run_control.inc'
-      INCLUDE 'physical_params.inc'
-      INCLUDE 'numerical_params.inc'
-      INCLUDE 'geometry.inc'
-      INCLUDE 'gas_phase.inc'
-      INCLUDE 'solids_phase.inc'
-      INCLUDE 'initial_conditions.inc'
-      INCLUDE 'boundary_conditions.inc'
-      INCLUDE 'point_sources.inc'
-      INCLUDE 'output_control.inc'
-      INCLUDE 'usr_hooks.inc'
-      INCLUDE 'desnamelist.inc'
-      INCLUDE 'usrnlst.inc'
+      include 'run_control.inc'
+      include 'physical_params.inc'
+      include 'numerical_params.inc'
+      include 'geometry.inc'
+      include 'gas_phase.inc'
+      include 'solids_phase.inc'
+      include 'initial_conditions.inc'
+      include 'boundary_conditions.inc'
+      include 'point_sources.inc'
+      include 'usr_hooks.inc'
+      include 'desnamelist.inc'
+      include 'usrnlst.inc'
 
       ERROR = .FALSE.
 
       CALL MAKE_UPPER_CASE (LINE_STRING, LINE_LEN)
       CALL REPLACE_TAB (LINE_STRING, LINE_LEN)
-      CALL REMOVE_PAR_BLANKS(LINE_STRING)
+      call remove_par_blanks(LINE_STRING)
 
 ! Complete arithmetic operations and expand line
       CALL PARSE_LINE (LINE_STRING, LINE_LEN, READ_FLAG)
@@ -288,13 +281,6 @@ MODULE read_namelist_module
 
 
 ! Initial condtion keywords
-      IF(READ_LOCKED) THEN
-         STRING=''; STRING = '&INITIAL_CONDITIONS_LOCKED '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=INITIAL_CONDITIONS_LOCKED, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-      ENDIF
-
       STRING=''; STRING = '&INITIAL_CONDITIONS_UNLOCKED '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=INITIAL_CONDITIONS_UNLOCKED, IOSTAT=IOS)
@@ -319,20 +305,6 @@ MODULE read_namelist_module
       STRING=''; STRING = '&POINT_SOURCES_UNLOCKED '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=POINT_SOURCES_UNLOCKED, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
-
-
-! Output control keywords
-      IF(READ_LOCKED) THEN
-         STRING=''; STRING = '&OUTPUT_CONTROL_LOCKED '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=OUTPUT_CONTROL_LOCKED, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-      ENDIF
-
-      STRING=''; STRING = '&OUTPUT_CONTROL_UNLOCKED '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=OUTPUT_CONTROL_UNLOCKED, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 

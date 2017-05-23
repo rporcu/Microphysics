@@ -2,7 +2,7 @@ module source_w_g_module
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
-   use param1        , only: zero, half, one, undefined, is_undefined
+   use param        , only: zero, half, one, undefined, is_undefined
 
    implicit none
 
@@ -19,21 +19,22 @@ contains
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine source_w_g(slo, shi, wlo, whi, alo, ahi, lo, hi, &
-        A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, w_go, &
-        tau_w_g, dx, dy, dz)
+        A_m, b_m, dt, p_g, ep_g, ro_g, rop_go, w_go, &
+        tau_w_g, dx, dy, dz, domlo, domhi)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE constant, only: gravity
-      USE bc, only: delp_z
+      use constant, only: gravity
+      use bc, only: delp_z
 
-      USE functions, only: avg
-      USE geometry , only: domlo, domhi, cyclic_z_pd
+      use functions, only: avg
+      use bc , only: cyclic_z_pd
 
       use matrix, only: e, w, s, n, t, b
-      USE scales, only: p_scale
+      use scales, only: p_scale
 
       integer     , intent(in   ) :: slo(3),shi(3),wlo(3),whi(3),alo(3),ahi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
@@ -49,8 +50,6 @@ contains
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_go&
@@ -65,11 +64,9 @@ contains
 ! Indices
       integer :: i,j,k
 ! Pressure at top cell
-      real(c_real) :: PgT
+      real(c_real) :: PgB
 ! Average volume fraction
       real(c_real) :: EPGA
-! Average density
-      real(c_real) :: ROPGA, ROGA
 ! Source terms (Surface)
       real(c_real) Sdp
 ! Source terms (Volumetric)
@@ -83,31 +80,29 @@ contains
       axy = dx*dy
       vol = dx*dy*dz
 
-      do k = lo(3)-1,hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
+      do k = alo(3),ahi(3)
+         do j = alo(2),ahi(2)
+            do i = alo(1),ahi(1)
 
-               epga = avg(ep_g(i,j,k),ep_g(i,j,k+1))
+               epga = half*(ep_g(i,j,k-1) + ep_g(i,j,k))
 
-! Pressure term
-               pgt = p_g(i,j,k+1)
+               ! Pressure term
+               pgb = p_g(i,j,k-1)
+
                if(cyclic_z_pd) then
-                  if((k==domlo(3)-1) .or. (k==domhi(3)) ) &
-                     pgt = p_g(i,j,k+1) - delp_z
+                  if((k==domlo(3)) .or. (k==domhi(3)+1) ) &
+                     pgb = pgb + delp_z
                end if
-               sdp = -p_scale*epga*(pgt - p_g(i,j,k))*axy
 
-! Volumetric forces
-               roga  = avg( ro_g(i,j,k), ro_g(i,j,k+1))
-               ropga = avg(rop_g(i,j,k),rop_g(i,j,k+1))
+               sdp = -p_scale*epga*(p_g(i,j,k) - pgb)*axy
 
-! Previous time step
-               v0 = avg(rop_go(i,j,k),rop_go(i,j,k+1))*odt
+               ! Previous time step
+               v0 = half*(rop_go(i,j,k-1) + rop_go(i,j,k))*odt
 
-! Body force
-               vbf = ropga*gravity(3)
+               ! Body force
+               vbf = half*(ro_g(i,j,k-1) + ro_g(i,j,k))*gravity(3)
 
-! Collect the terms
+               ! Collect the terms
                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
                                 A_m(i,j,k,n) + A_m(i,j,k,s) + &
                                 A_m(i,j,k,t) + A_m(i,j,k,b) + v0*vol)
@@ -119,7 +114,6 @@ contains
          enddo
       enddo
 
-      return
       end subroutine source_w_g
 
 
@@ -135,21 +129,21 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine source_w_g_bc(slo,shi,alo,ahi,A_m,b_m, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-         bc_klo_type, bc_khi_type, dx, dy)
+         bc_klo_type, bc_khi_type, domlo, domhi, dx, dy)
 
 
-      use ic, only: NSW_, FSW_, PSW_
-      use ic, only: PINF_, POUT_
-      use ic, only: MINF_, MOUT_
-      use ic, only: cycl_
+      use bc, only: nsw_, fsw_, psw_
+      use bc, only: pinf_, pout_
+      use bc, only: minf_
+      use bc, only: cycl_
 
       use bc, only: bc_hw_g, bc_ww_g, bc_w_g
-      use geometry, only: domlo, domhi
 
       use matrix, only: e, w, s, n, t, b
-      use param1, only: is_defined
+      use param, only: is_defined
 
       integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dx, dy
 
       real(c_real), intent(INOUT) :: A_m&
@@ -172,41 +166,38 @@ contains
 
 ! Local variables
 !-----------------------------------------------
-      real(c_real) :: odx, ody
-
-      integer :: bcv, i,j,k
-
-      integer :: nlft, nrgt, nbot, ntop, nup, ndwn
+      real(c_real) :: odx,ody
+      integer      :: bcv,kbc,i,j,k
 !---------------------------------------------------------------------//
 
       odx = 1.0d0/dx
       ody = 1.0d0/dy
 
-      nlft = max(0,domlo(1)-slo(1))
-      nbot = max(0,domlo(2)-slo(2))
-      ndwn = max(0,domlo(3)-slo(3))
+! ------------------------------------------------------------->
 
-      nrgt = max(0,shi(1)-domhi(1))
-      ntop = max(0,shi(2)-domhi(2))
-      nup  = max(0,shi(3)-domhi(3))
+      ! At left boundary
+      if (slo(1) .lt. domlo(1)) then
 
-! --- EAST FLUID ---------------------------------------------------------->
-
-      if (nlft .gt. 0) then
          i = alo(1)
-         do k=alo(3),ahi(3)
-            do j=alo(2),ahi(2)
-               bcv = bc_ilo_type(j,k,2)
 
-               if(bc_ilo_type(j,k,1) == NSW_) then
+         do k=alo(3),ahi(3)
+
+           ! bc's on i-faces only defined within (domlo(1):domhi(1),domlo(2):domhi(2))
+            kbc = max(min(k,domhi(3)),domlo(3))
+
+            do j=alo(2),ahi(2)
+
+               bcv = bc_ilo_type(j,kbc,2)
+
+               if(bc_ilo_type(j,kbc,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
                   A_m(i,j,k,w) = zero
 
-               else if(bc_ilo_type(j,k,1) == FSW_) then
+               else if(bc_ilo_type(j,kbc,1) == FSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,w)
                   A_m(i,j,k,w) = zero
 
-               else if(bc_ilo_type(j,k,1) == PSW_) then
+               else if(bc_ilo_type(j,kbc,1) == PSW_) then
                   if (is_undefined(bc_hw_g(bcv))) then
                      A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
                      b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,w)*bc_ww_g(bcv)
@@ -218,10 +209,9 @@ contains
                   endif
                   A_m(i,j,k,w) = zero
 
-               else if(bc_ilo_type(j,k,1) == PINF_ .or. &
-                       bc_ilo_type(j,k,1) == POUT_ .or. &
-                       bc_ilo_type(j,k,1) == MINF_ .or. &
-                       bc_ilo_type(j,k,1) == MOUT_) then
+               else if(bc_ilo_type(j,kbc,1) == PINF_ .or. &
+                       bc_ilo_type(j,kbc,1) == POUT_ .or. &
+                       bc_ilo_type(j,kbc,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -231,23 +221,33 @@ contains
          end do
       endif
 
-! --- WEST FLUID ---------------------------------------------------------->
+! ------------------------------------------------------------->
 
-      if (nrgt .gt. 0) then
+      ! At right boundary
+      if (shi(1) .gt. domhi(1)) then
+
          i = ahi(1)
          do k=alo(3),ahi(3)
-            do j=alo(2),ahi(2)
-               bcv = bc_ihi_type(j,k,2)
 
-               if(bc_ihi_type(j,k,1) == NSW_) then
+            ! bc's on i-faces only defined within (domlo(1):domhi(1),domlo(2):domhi(2))
+            kbc = max(min(k,domhi(3)),domlo(3))
+
+            do j=alo(2),ahi(2)
+
+               bcv = bc_ihi_type(j,kbc,2)
+
+               if(bc_ihi_type(j,kbc,1) == NSW_) then
+
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
                   A_m(i,j,k,e) = zero
 
-               else if(bc_ihi_type(j,k,1) == FSW_) then
+               else if(bc_ihi_type(j,kbc,1) == FSW_) then
+
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,e)
                   A_m(i,j,k,e) = zero
 
-               else if(bc_ihi_type(j,k,1) == PSW_) then
+               else if(bc_ihi_type(j,kbc,1) == PSW_) then
+
                   if (is_undefined(bc_hw_g(bcv))) then
                      A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
                      b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,e)*bc_ww_g(bcv)
@@ -259,10 +259,9 @@ contains
                   endif
                   A_m(i,j,k,e) = zero
 
-               else if(bc_ihi_type(j,k,1) == PINF_ .or. &
-                       bc_ihi_type(j,k,1) == POUT_ .or. &
-                       bc_ihi_type(j,k,1) == MINF_ .or. &
-                       bc_ihi_type(j,k,1) == MOUT_) then
+               else if(bc_ihi_type(j,kbc,1) == PINF_ .or. &
+                       bc_ihi_type(j,kbc,1) == POUT_ .or. &
+                       bc_ihi_type(j,kbc,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -273,23 +272,31 @@ contains
          end do
       endif
 
-! --- NORTH FLUID --------------------------------------------------------->
+! ------------------------------------------------------------->
 
-      if (nbot .gt. 0) then
+      ! At bottom boundary
+      if (slo(2) .lt. domlo(2)) then
+
          j = alo(2)
+
          do k=alo(3),ahi(3)
-            do i=alo(1),ahi(1)
-               bcv = bc_jlo_type(i,k,2)
-               if(bc_jlo_type(i,k,1) == NSW_) then
+
+            ! bc's on j-faces only defined within (domlo(1):domhi(1),domlo(3):domhi(3))
+            kbc = max(min(k,domhi(3)),domlo(3))
+
+            do i = alo(1),ahi(1)
+
+               bcv = bc_jlo_type(i,kbc,2)
+
+               if(bc_jlo_type(i,kbc,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
 
-               else if(bc_jlo_type(i,k,1) == FSW_ .or. &
-                       bc_jlo_type(i,k,1) == cycl_) then
+               else if(bc_jlo_type(i,kbc,1) == FSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
 
-               else if(bc_jlo_type(i,k,1) == PSW_) then
+               else if(bc_jlo_type(i,kbc,1) == PSW_) then
                   if (is_undefined(bc_hw_g(bcv))) then
                      A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,s)
                      b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,s)*bc_ww_g(bcv)
@@ -301,10 +308,9 @@ contains
                   endif
                   A_m(i,j,k,s) = zero
 
-               else if(bc_jlo_type(i,k,1) == PINF_ .or. &
-                       bc_jlo_type(i,k,1) == POUT_ .or. &
-                       bc_jlo_type(i,k,1) == MINF_ .or. &
-                       bc_jlo_type(i,k,1) == MOUT_) then
+               else if(bc_jlo_type(i,kbc,1) == PINF_ .or. &
+                       bc_jlo_type(i,kbc,1) == POUT_ .or. &
+                       bc_jlo_type(i,kbc,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -315,24 +321,31 @@ contains
          end do
       endif
 
-! --- SOUTH FLUID --------------------------------------------------------->
+! ------------------------------------------------------------->
 
-      if (ntop .gt. 0) then
+      ! At top boundary
+      if (shi(2) .gt. domhi(2)) then
+
          j = ahi(2)
-         do k=alo(3),ahi(3)
-            do i=alo(1),ahi(1)
-               bcv = bc_jhi_type(i,k,2)
 
-               if(bc_jhi_type(i,k,1) == NSW_) then
+         do k=alo(3),ahi(3)
+
+            ! bc's on j-faces only defined within (domlo(1):domhi(1),domlo(3):domhi(3))
+            kbc = max(min(k,domhi(3)),domlo(3))
+
+            do i=alo(1),ahi(1)
+
+               bcv = bc_jhi_type(i,kbc,2)
+
+               if(bc_jhi_type(i,kbc,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,n)
                   A_m(i,j,k,n) = zero
 
-               else if(bc_jhi_type(i,k,1) == FSW_ .or. &
-                       bc_jhi_type(i,k,1) == cycl_) then
+               else if(bc_jhi_type(i,kbc,1) == FSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
                   A_m(i,j,k,n) = zero
 
-               else if(bc_jhi_type(i,k,1) == PSW_) then
+               else if(bc_jhi_type(i,kbc,1) == PSW_) then
                   if (is_undefined(bc_hw_g(bcv))) then
                      A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,n)
                      b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,n)*bc_ww_g(bcv)
@@ -344,10 +357,9 @@ contains
                   endif
                   A_m(i,j,k,n) = zero
 
-               else if(bc_jhi_type(i,k,1) == PINF_ .or. &
-                       bc_jhi_type(i,k,1) == POUT_ .or. &
-                       bc_jhi_type(i,k,1) == MINF_ .or. &
-                       bc_jhi_type(i,k,1) == MOUT_) then
+               else if(bc_jhi_type(i,kbc,1) == PINF_ .or. &
+                       bc_jhi_type(i,kbc,1) == POUT_ .or. &
+                       bc_jhi_type(i,kbc,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -358,10 +370,13 @@ contains
          end do
       endif
 
-! --- TOP FLUID ----------------------------------------------------------->
+! ------------------------------------------------------------->
 
-      if (ndwn .gt. 0) then
+      ! At down boundary
+      if (slo(3) .lt. domlo(3)) then
+
          k = alo(3)
+
          do j=alo(2),ahi(2)
             do i=alo(1),ahi(1)
                bcv = bc_klo_type(i,j,2)
@@ -372,8 +387,7 @@ contains
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,b)
                   A_m(i,j,k,b) = zero
 
-               else if (bc_klo_type(i,j,1) == MINF_ .or. &
-                        bc_klo_type(i,j,1) == MOUT_) then
+               else if (bc_klo_type(i,j,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -391,10 +405,13 @@ contains
          end do
       endif
 
-! --- BOTTOM FLUID -------------------------------------------------------->
+! ------------------------------------------------------------->
 
-      if (nup .gt. 0) then
+      ! At up boundary
+      if (shi(3) .gt. domhi(3)) then
+
          k = ahi(3)
+
          do j=alo(2),ahi(2)
             do i=alo(1),ahi(1)
                bcv = bc_khi_type(i,j,2)
@@ -405,8 +422,7 @@ contains
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,t)
                   A_m(i,j,k,t) = zero
 
-               else if(bc_khi_type(i,j,1) == MINF_ .or. &
-                       bc_khi_type(i,j,1) == MOUT_) then
+               else if(bc_khi_type(i,j,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -442,47 +458,47 @@ contains
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use param1  , only: small_number, zero
-      use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
-      use ps, only: ps_w_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
+      ! use param  , only: small_number, zero
+      ! use ps, only: dim_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
+      ! use ps, only: ps_w_g
 
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
       real(c_real)  , intent(inout) :: b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real)  , intent(in   ) :: vol
 
-      integer(c_int) :: I, J, K
-      integer(c_int) :: psv
-      integer(c_int) :: lKT, lKB
-      real(c_real)  :: pSource
+      ! integer(c_int) :: I, J, K
+      ! integer(c_int) :: psv
+      ! integer(c_int) :: lKT, lKB
+      ! real(c_real)  :: pSource
 
-      ! Calculate the mass going into each (i,j,k) cell. This is done for each
-      ! call in case the point source is time dependent.
-      ps_lp: do psv = 1, dimension_ps
-         if (.not.ps_defined(psv)) cycle ps_lp
-         if (abs(PS_W_g(psv)) < small_number) cycle ps_lp
+      ! ! Calculate the mass going into each (i,j,k) cell. This is done for each
+      ! ! call in case the point source is time dependent.
+      ! ps_lp: do psv = 1, dim_ps
+      !    if (.not.ps_defined(psv)) cycle ps_lp
+      !    if (abs(PS_W_g(psv)) < small_number) cycle ps_lp
 
-         if(PS_W_g(psv) < ZERO) then
-            lKB = PS_K_B(psv)-1
-            lKT = PS_K_T(psv)-1
-         else
-            lKB = PS_K_B(psv)
-            lKT = PS_K_T(psv)
-         endif
+      !    if(PS_W_g(psv) < ZERO) then
+      !       lKB = PS_K_B(psv)-1
+      !       lKT = PS_K_T(psv)-1
+      !    else
+      !       lKB = PS_K_B(psv)
+      !       lKT = PS_K_T(psv)
+      !    endif
 
-         do k = lKB, lKT
-         do j = PS_J_S(psv), PS_J_N(psv)
-         do i = PS_I_W(psv), PS_I_E(psv)
+      !    do k = lKB, lKT
+      !    do j = PS_J_S(psv), PS_J_N(psv)
+      !    do i = PS_I_W(psv), PS_I_E(psv)
 
-            pSource =  PS_MASSFLOW_G(psv) * (VOL/PS_VOLUME(psv))
+      !       pSource =  PS_MASSFLOW_G(psv) * (VOL/PS_VOLUME(psv))
 
-            b_m(I,J,K) = b_m(I,J,K) - pSource * &
-               PS_W_g(psv) * PS_VEL_MAG_g(psv)
+      !       b_m(I,J,K) = b_m(I,J,K) - pSource * &
+      !          PS_W_g(psv) * PS_VEL_MAG_g(psv)
 
-         enddo
-         enddo
-         enddo
+      !    enddo
+      !    enddo
+      !    enddo
 
-      enddo ps_lp
+      ! enddo ps_lp
 
       end subroutine point_source_w_g
 end module source_w_g_module

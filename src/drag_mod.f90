@@ -1,23 +1,30 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: drag                                                   C
-!  Purpose: Common block containing drag arrays                        C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 20-MAY-92  C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-MODULE drag
+module drag
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   use param1, only: one, half, zero, small_number, large_number
+   use param, only: one, half, zero, small_number, large_number
 
-! Off diagonal friction coefficient in HYS drag relation
-  real(c_real), DIMENSION(:, :, :), ALLOCATABLE ::  beta_ij
+   integer,parameter :: invalid_drag=-1
+   integer,parameter :: syam_obrien=0
+   integer,parameter :: gidaspow=1
+   integer,parameter :: gidaspow_pcf=2
+   integer,parameter :: gidaspow_blend=3
+   integer,parameter :: gidaspow_blend_pcf=4
+   integer,parameter :: wen_yu=5
+   integer,parameter :: wen_yu_pcf=6
+   integer,parameter :: koch_hill=7
+   integer,parameter :: koch_hill_pcf=8
+   integer,parameter :: bvk=9
+   integer,parameter :: user_drag=11
 
-CONTAINS
+   character(64) :: drag_type
+   integer :: drag_type_enum = invalid_drag
+
+! Coefficients for calibrating Syamlal-O'Brien drag correlation
+   real(c_real) :: drag_c1, drag_d1
+
+contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -84,7 +91,6 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE constant, only : drag_c1, drag_d1
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -247,7 +253,7 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE constant, only : PI
+      use constant, only : PI
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments

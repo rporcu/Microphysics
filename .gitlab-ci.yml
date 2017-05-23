@@ -12,30 +12,43 @@ stages:
 
 variables:
   CTEST_OUTPUT_ON_FAILURE: "1"
-  LD_LIBRARY_PATH: "/nfs/apps/Compilers/GNU/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64"
-  CC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gcc"
-  CXX: "/nfs/apps/Compilers/GNU/6.1.0/bin/g++"
-  F77: "/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran"
-  FC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran"
-  AMREX_HOME: "/nfs/home/0/users/jenkins/amrex/install"
+  LD_LIBRARY_PATH: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64:/nfs/apps/Compilers/GNU/6.1.0/lib"
+  CC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpicc"
+  CXX: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpic++"
+  FC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
+  F77: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
+  F90: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
   MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
-  FEXTRACT: "/nfs/home/0/users/jenkins/local/bin/fextract.Linux.gfortran.exe"
-  FCOMPARE: "/nfs/home/0/users/jenkins/local/bin/fcompare.Linux.gfortran.exe"
 
 build:
   stage: build
   script:
     - mkdir build
     - cd build
-    - cmake CMAKE_CONFIG_OPTIONS -DENABLE_SUPERBUILD=0 ..
+    - cmake -DENABLE_MPI=1 ..
+    - make -j 4
     - make build_tests
-  artifacts:
-    expire_in: 1 day
-    paths:
-    - build
+  tags:
+    - joule
 
-test:
+fld-test:
   stage: test
   script:
+    - mkdir build
     - cd build
-    - make test
+    - cmake -DENABLE_MPI=1 ..
+    - make -j 4
+    - ctest -R FLD
+  tags:
+    - joule
+
+dem-test:
+  stage: test
+  script:
+    - mkdir build
+    - cd build
+    - cmake -DENABLE_MPI=1 ..
+    - make -j 4
+    - ctest -R DEM
+  tags:
+    - joule

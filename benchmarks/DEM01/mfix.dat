@@ -13,10 +13,6 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  RUN_TYPE = 'NEW'
-  UNITS = 'SI'
-
-  TIME =  0.0000
   TSTOP = 0.0025
 
   DT =     1.0d-04
@@ -31,12 +27,9 @@
 
   GRAVITY(1:3) = 3*0.0
 
-
-
-
-
   GENER_PART_CONFIG = .T.
   CALL_USR = .T.
+  FULL_LOG = .T.
 
 #_______________________________________________________________________
 # NUMERICAL SECTION
@@ -87,8 +80,6 @@
 
 ! Sold phase 1
 !---------------------------------------------------------------------//
-  SOLIDS_MODEL(1) = 'DEM'
-
   D_p0(1) =   100.0d-6  ! (m)
   RO_s0(1) = 1000.0     ! (kg/m3)
 
@@ -119,18 +110,3 @@
 # USER OUTPUT CONTROL
 
   USR_DT(1) = 1.0d-4
-  USR_TYPE(1) = 'ASCII'
-  USR_VAR(1) =  'Granular temperature'
-
-#_______________________________________________________________________
-# OUTPUT CONTROL SECTION
-
-  RES_DT = 0.1
-
-  FULL_LOG = .T.
-  GROUP_RESID = .T.
-
-#_______________________________________________________________________
-# DMP SETUP
-
- NODESI = 1  NODESJ = 1  NODESK = 1

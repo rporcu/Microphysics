@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 enable_language(Fortran)
 
+# Not used by MFiX-Exa directly, but by AMReX Superbuild
+enable_language(C)
+
 # Load MFIX Cmake Tools
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/)
 include(MFIXTools)
@@ -22,7 +25,7 @@ else (ENABLE_SUPERBUILD)
    find_amrex()
 endif (ENABLE_SUPERBUILD)
 
-# Set build flags ( provides MFIX_INCLUDES, 
+# Set build flags ( provides MFIX_INCLUDES,
 # MFIX_EXT_LINK_STRING  and MFIX_EXT_LINK_DIRS )
 set_build_flags()
 
@@ -37,14 +40,29 @@ set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 include_directories(${MFIX_INCLUDES})
 link_directories(${MFIX_EXT_LINK_DIRS})
 
-# Main 
+# Main
 add_subdirectory( src )
 
-FILE(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
+file(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
 add_executable(mfix ${MAIN} ${USR_OVERRIDES})
 target_link_libraries( mfix mfixcore ${MFIX_EXT_LINK_STRING} )
+
+# Tools
+set( MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/F90) 
+add_subdirectory( Tools/F90 )
 
 # Tests
 enable_testing()
 add_subdirectory( tests )
+#add_subdirectory( benchmarks )
 
+# Add a target to generate API documentation with Doxygen
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+   set(DOC_DIR ${CMAKE_SOURCE_DIR}/doc)
+   configure_file(${DOC_DIR}/Doxyfile.in ${DOC_DIR}/Doxyfile)
+   add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${DOC_DIR}/Doxyfile
+      WORKING_DIRECTORY ${DOC_DIR}
+      COMMENT "Generating API documentation with Doxygen" VERBATIM
+      )
+endif (DOXYGEN_FOUND)

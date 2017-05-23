@@ -15,14 +15,11 @@ contains
    integer(c_int) function check_convergence(nit, resid) &
       bind(C, name="check_convergence")
 
-      use residual, only: max_resid_index, nresid
+      use residual, only: nresid, sum5_resid
       use residual, only: resid_p, resid_u, resid_v, resid_w
-      use residual, only: resid_index, resid_string, resid_x
-      use residual, only: sum5_resid, group_resid, resid_prefix, resid_grp, hydro_grp
-      use run, only: detect_stall
-      use toleranc, only: tol_resid, tol_diverge
+      use residual, only: tol_resid, tol_diverge
 
-      use param1, only: zero, undefined_i, is_undefined, large_number
+      use param, only: zero, undefined_i, is_undefined, large_number
 
       implicit none
 
@@ -43,7 +40,7 @@ contains
 !-----------------------------------------------
 
 ! Normalize residuals
-      do lc=1, 8
+      do lc=1, nresid
          if (resid(lc,2) > zero) then
             resid(lc,1) = resid(lc,1)/resid(lc,2)
          elseif (abs(resid(lc,1)) < epsilon(resid(lc,1))) then
@@ -56,34 +53,6 @@ contains
 ! add pressure correction residual to momentum residuals
       sum_resid = resid(resid_p,1) + resid(resid_u,1) + &
          resid(resid_v,1) + resid(resid_w,1)
-
-! find the variable with maximum residual
-      if (is_undefined(resid_index(max_resid_index,1))) then
-         maxres = -1.0d0
-         maxl = 0
-         do lc = 1, 8
-            if (resid(lc,1) >= maxres) then
-               maxres = resid(lc,1)
-               maxl = lc
-            endif
-         enddo
-         write (resid_string(max_resid_index), '(a1,i1)') &
-            resid_prefix(maxl), 0
-      endif
-      if (group_resid) resid_grp(hydro_grp) = sum_resid
-
-! Every 5 iterations detect whether the run is stalled by checking
-! that the total residual has decreased.
-      if(detect_stall .and. mod(nit,5) == 0) then
-         if(nit > 10) then
-            if(sum5_resid <= sum_resid) then
-! The run is stalled. Reduce the time step.
-               check_convergence = 2
-               return
-            endif
-         endif
-         sum5_resid = sum_resid
-      endif
 
 ! Require at least two iterations.
       if(nit == 1) then

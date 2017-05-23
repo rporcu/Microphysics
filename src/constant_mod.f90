@@ -14,31 +14,18 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      Use param, only: dim_m, dimension_c
+      Use param, only: dim_m
 !---------------------------------------------------------------------//
 
-! Coefficients for calibrating Syamlal-O'Brien drag correlation with
-! Umf data
-      real(c_real) :: drag_c1, drag_d1
 
 ! Gravitational acceleration
-      real(c_real) :: GRAVITY(3)
+      real(c_real) :: gravity(3)
 
 ! Universal gas constant; (Pa.m3/kmol.K)
-      real(c_real), parameter :: GAS_CONST = 8314.56D0
+      real(c_real), parameter :: gas_const = 8314.56D0
 
 ! Pi, the ubiquitous irrational number
-      real(c_real), PARAMETER :: Pi = 4.D0*ATAN(1.D0)
-
-! Maximum pressure correction allowed in one iteration
-      real(c_real) :: MAX_DELP
-
-! User defined constants
-      real(c_real) :: C (DIMENSION_C)
-
-! Names of user defined constants (for output file only)
-      CHARACTER(LEN=20) :: C_NAME (DIMENSION_C)
-
+      real(c_real), PARAMETER :: pi = 4.d0*atan(1.d0)
 
 ! Solids phase constants
 !-----------------------------------------------------------------------

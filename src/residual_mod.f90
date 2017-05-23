@@ -3,51 +3,22 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      Use param, only: DIM_n
+      ! Tolerance in residuals allowed for convergence
+      real(c_real) :: tol_resid
+      ! Minimum residual for declaring divergence
+      real(c_real) :: tol_diverge
+      ! Factor for normalizing the residual of gas cont. eq.
+      real(c_real) :: norm_g
 
-      integer, parameter :: MAX_resid_INDEX = 8
-!
-      integer, parameter :: Nresid = 8
+      integer, parameter :: nresid = 8
 
       integer, parameter :: resid_p  =  1 ! Pressure
-      integer, parameter :: resid_ro =  2 ! Density, volume fraction
-      integer, parameter :: resid_u  =  3 ! U-velocity
-      integer, parameter :: resid_v  =  4 ! V-velocity
-      integer, parameter :: resid_w  =  5 ! W-velocity
-      integer, parameter :: resid_t  =  6 ! Temperature
-      integer, parameter :: resid_th =  7 ! Granular temperature
-      integer, parameter :: resid_sc =  8 ! User-defined scalar
-      integer, parameter :: resid_ke =  9 ! K-epsilon equations
-      integer, parameter :: resid_x  = 10 ! Mass fraction
-
-! Group residuals by equation
-      integer, parameter :: HYDRO_GRP   = 1     !hydrodynamics
-      integer, parameter :: THETA_GRP   = 2     !Granular Energy
-      integer, parameter :: ENERGY_GRP  = 3     !Energy
-      integer, parameter :: SCALAR_GRP  = 5     !Scalars
-      integer, parameter :: KE_GRP      = 6     !K-Epsilon
-
-! Prefix of Residuals string
-      integer, parameter :: NPREFIX  = 10
-      CHARACTER, parameter, DIMENSION(NPREFIX) :: resid_PREFIX = &
-        (/ 'P', 'R', 'U', 'V', 'W', 'T', 'G', 'S', 'K', 'X' /)
+      integer, parameter :: resid_u  =  2 ! U-velocity
+      integer, parameter :: resid_v  =  3 ! V-velocity
+      integer, parameter :: resid_w  =  4 ! W-velocity
 
 ! sum of residuals every 5 iterations
       real(c_real) :: SUM5_resid
-
-! Residual sum within a group of equations
-      logical :: group_resid
-      real(c_real) :: resid_GRP(6)
-
-! Residuals to be printed out
-      CHARACTER(LEN=4) :: resid_STRING(MAX_resid_INDEX)
-      CHARACTER(LEN=8) :: resid_GRP_STRING(6)
-
-! Indices of residuals to be printed out
-      integer :: resid_INDEX(MAX_resid_INDEX, 2)
-
-! For checking the over-all fluid mass balance
-      real(c_real) :: accum_resid_g
 
    contains
 
@@ -61,14 +32,13 @@
       subroutine calc_resid_vel(alo, ahi, &
          v0lo, v0hi, v1lo, v1hi, v2lo, v2hi, &
          vel, vels1, vels2, A_m, b_m, &
-         eq_id, num, den)
+         eq_id, num, den, domlo, domhi)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use param1  , only: small_number
+      use param  , only: small_number
       use matrix  , only: e, w, s, n, t, b
-      use geometry, only: domlo
 
       implicit none
 
@@ -76,6 +46,7 @@
       integer     , intent(in   ) :: v0lo(3),v0hi(3)
       integer     , intent(in   ) :: v1lo(3),v1hi(3)
       integer     , intent(in   ) :: v2lo(3),v2hi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! primary velocity component
       real(c_real), intent(IN) :: vel&
@@ -106,7 +77,7 @@
       real(c_real) :: magvel
 
       ! Indices
-      INTEGER :: i, j, k
+      integer :: i, j, k
 
       ! Numerators and denominators
       real(c_real) :: num1, den1
@@ -119,9 +90,9 @@
       llo = alo
       lhi = ahi
 
-      if(eq_id == resid_u .and. alo(1) /= domlo(1)-1) llo(1) = alo(1)+1
-      if(eq_id == resid_v .and. alo(2) /= domlo(2)-1) llo(2) = alo(2)+1
-      if(eq_id == resid_w .and. alo(3) /= domlo(3)-1) llo(3) = alo(3)+1
+      if(eq_id == resid_u .and. alo(1) /= domlo(1)) llo(1) = alo(1)+1
+      if(eq_id == resid_v .and. alo(2) /= domlo(2)) llo(2) = alo(2)+1
+      if(eq_id == resid_w .and. alo(3) /= domlo(3)) llo(3) = alo(3)+1
 
 ! initializing
 
@@ -175,8 +146,6 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine calc_resid_pp(alo, ahi, b_m, b_mmax, num, den)
-
-      use toleranc, only: norm_g
 
       implicit none
 

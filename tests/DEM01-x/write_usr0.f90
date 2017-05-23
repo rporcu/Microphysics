@@ -7,18 +7,13 @@
 !  Reviewer:                                          Date: dd-mmm-yy  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE WRITE_USR0
+      subroutine write_usr0() &
+        bind(C, name="write_usr0")
 
-      use compar, only: myPE, PE_IO
+      implicit none
 
-      IMPLICIT NONE
-
-      IF(myPE /= PE_IO) RETURN
-
-      CALL WRITE_DAT_HEADER('POST_POS.dat','Pos')
-      CALL WRITE_DAT_HEADER('POST_VEL.dat','Vel')
-
-      RETURN
+      call write_dat_header('POST_POS.dat','Pos')
+      call write_dat_header('POST_VEL.dat','Vel')
 
       CONTAINS
 
@@ -27,10 +22,10 @@
 !                                                                      !
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE WRITE_DAT_HEADER(FNAME, VAR)
+      subroutine write_dat_header(FNAME, VAR)
 
       use run, only: DESCRIPTION
-      use discretelement, only: DES_INTG_METHOD
+
       use discretelement, only: KN, KN_W
       use discretelement, only: DES_EN_WALL_INPUT
 
@@ -52,7 +47,7 @@
          OPEN(UNIT=fUNIT,FILE=FNAME,POSITION="APPEND",STATUS='OLD')
       ENDIF
 
-      WRITE(fUNIT, 1100) trim(adjustl(DES_INTG_METHOD))
+
 
       WRITE(fUNIT, 1110) KN, KN_W
       WRITE(fUNIT, 1120) DES_EN_WALL_INPUT(1), DES_EN_WALL_INPUT(1)
@@ -75,7 +70,7 @@
          9X,'%REL DIFF',9x,'ABS DIFF')
 
       CLOSE(fUNIT)
-      RETURN
-      END SUBROUTINE WRITE_DAT_HEADER
 
-      END SUBROUTINE WRITE_USR0
+      end subroutine write_dat_header
+
+      end subroutine write_usr0

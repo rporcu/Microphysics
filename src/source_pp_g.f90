@@ -23,9 +23,8 @@ contains
       use eos, only: droodp_g
       use fld_const, only: ro_g0
       use matrix, only: e, w, n, s, t, b
-      use param1, only: is_defined, is_undefined
+      use param, only: is_defined, is_undefined
       use ur_facs, only: ur_fac
-      use write_error_module, only: write_error
 
       implicit none
 
@@ -88,27 +87,29 @@ contains
              do i = alo(1),ahi(1)
 
                 bma = (rop_g(i,j,k)-rop_go(i,j,k))*vol*odt
-                bme = A_m(i,j,k,e)*u_g(i,j,k)
-                bmw = A_m(i,j,k,w)*u_g(i-1,j,k)
-                bmn = A_m(i,j,k,n)*v_g(i,j,k)
-                bms = A_m(i,j,k,s)*v_g(i,j-1,k)
-                bmt = A_m(i,j,k,t)*w_g(i,j,k)
-                bmb = A_m(i,j,k,b)*w_g(i,j,k-1)
+                bme = A_m(i,j,k,e)*u_g(i+1,j,k)
+                bmw = A_m(i,j,k,w)*u_g(i  ,j,k)
+                bmn = A_m(i,j,k,n)*v_g(i,j+1,k)
+                bms = A_m(i,j,k,s)*v_g(i,j  ,k)
+                bmt = A_m(i,j,k,t)*w_g(i,j,k+1)
+                bmb = A_m(i,j,k,b)*w_g(i,j,k  )
+
                 b_m(i,j,k) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
 
                 b_mmax(i,j,k) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), &
                    abs(bms), abs(bmt), abs(bmb))
 
-                A_m(i,j,k,e) = A_m(i,j,k,e)*d_e(i,j,k)
-                A_m(i,j,k,w) = A_m(i,j,k,w)*d_e(i-1,j,k)
-                A_m(i,j,k,n) = A_m(i,j,k,n)*d_n(i,j,k)
-                A_m(i,j,k,s) = A_m(i,j,k,s)*d_n(i,j-1,k)
-                A_m(i,j,k,t) = A_m(i,j,k,t)*d_t(i,j,k)
-                A_m(i,j,k,b) = A_m(i,j,k,b)*d_t(i,j,k-1)
+                A_m(i,j,k,e) = A_m(i,j,k,e)*d_e(i+1,j,k)
+                A_m(i,j,k,w) = A_m(i,j,k,w)*d_e(i  ,j,k)
+                A_m(i,j,k,n) = A_m(i,j,k,n)*d_n(i,j+1,k)
+                A_m(i,j,k,s) = A_m(i,j,k,s)*d_n(i,j  ,k)
+                A_m(i,j,k,t) = A_m(i,j,k,t)*d_t(i,j,k+1)
+                A_m(i,j,k,b) = A_m(i,j,k,b)*d_t(i,j,k  )
 
                 A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
                                  A_m(i,j,k,n) + A_m(i,j,k,s) + &
                                  A_m(i,j,k,t) + A_m(i,j,k,b))
+
              enddo
           enddo
       enddo
@@ -140,47 +141,46 @@ contains
 !         conv_Pp_g                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_pp_g_bc(slo, shi, alo, ahi, A_m)
+   subroutine source_pp_g_bc(slo, shi, alo, ahi, domlo, domhi, A_m)
 
-      use geometry, only: domlo, domhi
       use matrix, only: e, n, t, w, s, b
-      use param1, only: zero
+      use param, only: zero
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3),domlo(3),domhi(3)
 
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
 ! --- EAST FLUID ---------------------------------------------------------->
 
-      if (slo(1).lt.domlo(1)) &
+      if (alo(1) == domlo(1)) &
          A_m(domlo(1),alo(2):ahi(2),alo(3):ahi(3),w) =  zero
 
 ! --- WEST FLUID ---------------------------------------------------------->
 
-      if (shi(1).gt.domhi(1)) &
+      if (ahi(1) == domhi(1)) &
          A_m(domhi(1),alo(2):ahi(2),alo(3):ahi(3),e) =  zero
 
 ! --- NORTH FLUID --------------------------------------------------------->
 
-      if (slo(2).lt.domlo(2)) &
+      if (alo(2) == domlo(2)) &
          A_m(alo(1):ahi(1),domlo(2),alo(3):ahi(3),s) =  zero
 
 ! --- SOUTH FLUID --------------------------------------------------------->
 
-      if (shi(2).gt.domhi(2)) &
+      if (ahi(2) == domhi(2)) &
          A_m(alo(1):ahi(1),domhi(2),alo(3):ahi(3),n) =  zero
 
 ! --- TOP FLUID ----------------------------------------------------------->
 
-      if (slo(3).lt.domlo(3)) &
+      if (alo(3) == domlo(3)) &
          A_m(alo(1):ahi(1),alo(2):ahi(2),domlo(3),b) =  zero
 
 ! --- BOTTOM FLUID -------------------------------------------------------->
 
-      if (shi(3).gt.domhi(3)) &
+      if (ahi(3) == domhi(3)) &
          A_m(alo(1):ahi(1),alo(2):ahi(2),domhi(3),t) =  zero
 
    end subroutine source_pp_g_bc

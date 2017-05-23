@@ -12,21 +12,16 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE USR0
 
-      use compar, only: myPE, PE_IO
+
       use constant, only: PI
-      use discretelement, only: PARTICLES
-      use exit_mod, only: mfix_exit
+
+
       use usr, only: init_vel_t, init_angle
 
       IMPLICIT NONE
 
       INTEGER :: NP
       double precision :: lTMP(62,3)
-
-      IF(PARTICLES /= 93) THEN
-         write(*,"(3x, 'invalid setup for test case')")
-         call mfix_exit(0)
-      ENDIF
 
       INIT_VEL_T = 0.0d0
       INIT_ANGLE = 0.0d0
@@ -96,11 +91,9 @@
       ltmp(62,:) = (/ -1.648211,   3.515237,-0.369466 /)
 
 ! Store the collision angle and initial tangential velocity
-      IF(myPE == PE_IO) THEN
-         DO NP=1, 62
-            INIT_VEL_T(NP) = sqrt(lTMP(NP,2)**2 + lTMP(NP,3)**2)
-            INIT_ANGLE(NP) = abs(atan(INIT_VEL_T(NP)/lTMP(NP,1)))*180.0/PI
-         ENDDO
-      ENDIF
+      DO NP=1, 62
+         INIT_VEL_T(NP) = sqrt(lTMP(NP,2)**2 + lTMP(NP,3)**2)
+         INIT_ANGLE(NP) = abs(atan(INIT_VEL_T(NP)/lTMP(NP,1)))*180.0/PI
+      ENDDO
 
       END SUBROUTINE USR0

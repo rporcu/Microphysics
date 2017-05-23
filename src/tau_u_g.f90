@@ -2,7 +2,6 @@ module calc_tau_u_g_module
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
-   use geometry      , only: domlo, domhi
 
 contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -73,7 +72,7 @@ contains
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
 ! Source terms (Surface)
       real(c_real) :: Sbv, Ssx, Ssy, Ssz
       real(c_real) :: odx, axy, axz, ayz
@@ -85,7 +84,7 @@ contains
 
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
-            do i = lo(1)-1,hi(1)
+            do i = lo(1),hi(1)+1
 
 ! Surface forces at i+1/2, j, k
 ! bulk viscosity term
@@ -93,35 +92,35 @@ contains
 ! combines 1/x d/dx (x.lambda.trcD) xdxdydz - (lambda/x.trcD) xdxdydz =>
 !              d/dx (lambda.trcD) xdxdydz
 ! delta (lambda.trcD)Ap |E-W : at (i+1 - i-1), j, k
-               sbv = (lambda_g(i+1,j,k)*trd_g(i+1,j,k)-&
-                      lambda_g(i  ,j,k)*trd_g(i,j,k))*ayz
+               sbv = (lambda_g(i  ,j,k)*trd_g(i  ,j,k)-&
+                      lambda_g(i-1,j,k)*trd_g(i-1,j,k))*ayz
 
 ! shear stress terms at i+1/2, j, k
 ! part of 1/x d/dx(x.tau_xx) xdxdydz =>
 !         1/x d/dx (x.mu.du/dx) xdxdydz =>
 ! delta (mu du/dx)Ayz |E-W : at (i+1 - i-1), j, k
-               ssx = mu_g(i+1,j,k)*(u_g(i+1,j,k)-u_g(i  ,j,k))*odx*ayz - &
-                     mu_g(i  ,j,k)*(u_g(i  ,j,k)-u_g(i-1,j,k))*odx*ayz
+               ssx = mu_g(i  ,j,k)*(u_g(i+1,j,k)-u_g(i  ,j,k))*odx*ayz - &
+                     mu_g(i-1,j,k)*(u_g(i  ,j,k)-u_g(i-1,j,k))*odx*ayz
 
 ! part of d/dy (tau_xy) xdxdydz =>
 !         d/dy (mu.dv/dx) xdxdydz =>
 ! delta (mu.dv/dx)Axz |N-S : at i+1/2, (j+1/2 - j-1/2), k
-               ssy = avg_h(avg_h(mu_g(i  ,j,k), mu_g(i,  j+1,k)),    &
-                           avg_h(mu_g(i+1,j,k), mu_g(i+1,j+1,k)))*   &
-                           (v_g(i+1,j  ,k)-v_g(i,j  ,k))*odx*axz -   &
-                     avg_h(avg_h(mu_g(i,  j-1,k), mu_g(i,  j,k)),    &
-                           avg_h(mu_g(i+1,j-1,k), mu_g(i+1,j,k)))*   &
-                           (v_g(i+1,j-1,k)-v_g(i,j-1,k))*odx*axz
+               ssy = avg_h(avg_h(mu_g(i-1,j,k), mu_g(i-1,j+1,k)),    &
+                           avg_h(mu_g(i  ,j,k), mu_g(i  ,j+1,k)))*   &
+                           (v_g(i,j+1,k) - v_g(i-1,j+1,k))*odx*axz - &
+                     avg_h(avg_h(mu_g(i-1,j-1,k), mu_g(i-1,j,k)),    &
+                           avg_h(mu_g(i  ,j-1,k), mu_g(i  ,j,k)))*   &
+                           (v_g(i,j  ,k) - v_g(i-1,j  ,k))*odx*axz
 
 ! part of 1/x d/dz (tau_xz) xdxdydz =>
 !         1/x d/dz (mu.dw/dx) xdxdydz =>
 ! delta (mu.dw/dx)Axy |T-B : at i+1/2, j, (k+1/2 - k-1/2)
-               ssz = avg_h(avg_h(mu_g(i  ,j,k), mu_g(i  ,j,k+1)),    &
-                           avg_h(mu_g(i+1,j,k), mu_g(i+1,j,k+1))) *  &
-                           (w_g(i+1,j,k  )-w_g(i,j,k  ))*odx*axy -   &
-                     avg_h(avg_h(mu_g(i  ,j,k-1), mu_g(i  ,j,k  )),  &
-                           avg_h(mu_g(i+1,j,k-1), mu_g(i+1,j,k  )))* &
-                           (w_g(i+1,j,k-1)-w_g(i,j,k-1))*odx*axy
+               ssz = avg_h(avg_h(mu_g(i-1,j,k), mu_g(i-1,j,k+1)),    &
+                           avg_h(mu_g(i  ,j,k), mu_g(i  ,j,k+1))) *  &
+                           (w_g(i,j,k+1) - w_g(i-1,j,k+1))*odx*axy - &
+                     avg_h(avg_h(mu_g(i-1,j,k-1), mu_g(i-1,j,k  )),  &
+                           avg_h(mu_g(i  ,j,k-1), mu_g(i  ,j,k  )))* &
+                           (w_g(i,j,k  ) - w_g(i-1,j,k  ))*odx*axy
 
 
                ltau_u_g(i,j,k) = SBV + SSX + SSY + SSZ

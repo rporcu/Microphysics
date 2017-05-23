@@ -14,19 +14,18 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    integer(c_int) function &
        goal_seek_mflux(ulo, uhi, vlo, vhi, wlo, whi, NIT, gsmf, delp_n, mdot_n, &
-                       flux_ge, flux_gn, flux_gt, dx, dy, dz)&
+                       fluxX, fluxY, fluxZ, dx, dy, dz)&
       bind(C, name="goal_seek_mflux")
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE bc, only: delp_x, delp_y, delp_z, flux_g
-      USE param1, only: one
-      USE compar   ,only: myPE, PE_IO
-      USE exit_mod, only: mfix_exit
-      USE geometry, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
-      USE utilities, ONLY: mfix_isnan
-      USE vavg_mod, ONLY: vavg_flux_g
+      use bc, only: delp_x, delp_y, delp_z, flux_g
+      use param, only: one
+
+      use bc, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
+      use utilities, ONLY: mfix_isnan
+      use vavg_mod, ONLY: vavg_flux_g
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg
 
       IMPLICIT NONE
@@ -37,18 +36,18 @@ contains
       integer(c_int), intent(inout) :: gsmf
       real(c_real), intent(inout) :: delp_n, mdot_n
 
-      real(c_real), intent(in   ) :: flux_ge&
+      real(c_real), intent(in   ) :: fluxX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: flux_gn&
+      real(c_real), intent(in   ) :: fluxY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: flux_gt&
+      real(c_real), intent(in   ) :: fluxZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
-      INTEGER, PARAMETER :: MAXGSMF = 500
+      integer, parameter :: MAXGSMF = 500
       real(c_real), PARAMETER :: omega = 0.9
       real(c_real), PARAMETER :: TOL = 1E-03
 
@@ -67,13 +66,13 @@ contains
 ! Calculate the average gas mass flux and error
       if (cyclic_x_mf) then
          delp_n = delp_x
-         mdot_n = vavg_flux_g(ulo, uhi, flux_ge, ayz)
+         mdot_n = vavg_flux_g(ulo, uhi, fluxX, ayz)
       elseif (cyclic_y_mf) then
          delp_n = delp_y
-         mdot_n = vavg_flux_g(vlo, vhi, flux_gn, axz)
+         mdot_n = vavg_flux_g(vlo, vhi, fluxY, axz)
       elseif (cyclic_z_mf) then
          delp_n = delp_z
-         mdot_n = vavg_flux_g(wlo, whi, flux_gt, axy)
+         mdot_n = vavg_flux_g(wlo, whi, fluxZ, axy)
       else
          return
       end if
@@ -81,12 +80,12 @@ contains
       GSMF = gsmf + 1
 
       IF(GSMF > MAXGSMF) THEN
-         IF (myPE.EQ.PE_IO) write(*,5400) MAXGSMF
-         CALL mfix_exit(0)
+         write(*,5400) MAXGSMF
+         stop 20008
       ENDIF
 
       IF (mfix_isnan(mdot_n) .OR. mfix_isnan(delp_n)) THEN
-         IF (myPE.eq.PE_IO) write(*,*) mdot_n, delp_n, &
+         write(*,*) mdot_n, delp_n, &
             ' NaN being caught in GoalSeekMassFlux '
          stop  32232
          RETURN
@@ -118,11 +117,11 @@ contains
 5500  Format('Mass Flux Iterations:', I0,'   DelP=', &
       G12.5, ' Gas Flux=', G12.5)
 
-      if (CYCLIC_X_MF) then
+      if (cyclic_x_mf) then
          delp_x = delp_xyz
-      elseif (CYCLIC_Y_MF) then
+      elseif (cyclic_y_mf) then
          delp_y = delp_xyz
-      elseif (CYCLIC_Z_MF) then
+      elseif (cyclic_z_mf) then
          delp_z = delp_xyz
       end if
 

@@ -26,16 +26,15 @@ module des_drag_gp_module
       subroutine des_drag_gp(slo, shi, NP, particle_vel, fluid_vel, EPg,&
                              ro_g, mu_g, f_gp, i,j,k, des_radius,  pvol, particle_phase)
 
-      use compar  , only: myPE
-      use exit_mod, only: mfix_exit
+
+
       use drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend,&
          drag_wen_yu, drag_koch_hill, drag_bvk
-      use run, only: syam_obrien, gidaspow, gidaspow_blend, bvk,&
+      use drag, only: syam_obrien, gidaspow, gidaspow_blend, bvk,&
          drag_type_enum, drag_type
-      use run, only: wen_yu, koch_hill, user_drag
-      use run, only: wen_yu_pcf, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
-      use funits  , only: dmp_log, unit_log
-      use param1, only: one
+      use drag, only: wen_yu, koch_hill, user_drag
+      use drag, only: wen_yu_pcf, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
+      use param, only: one
       use constant, only: ro_s0
       use constant, only: D_p0
 
@@ -205,10 +204,8 @@ module des_drag_gp_module
             CALL DRAG_BVK(DgA,EPg,Mu,ROPg,VREL,DPM,DPA,phis)
 
          CASE DEFAULT
-            IF(dmp_log) WRITE (*, '(A,A)') &
-               'Unknown DRAG_TYPE: ', DRAG_TYPE
-            WRITE (unit_log, '(A,A)') 'Unknown DRAG_TYPE: ', DRAG_TYPE
-            CALL mfix_exit(myPE)
+            WRITE (*, '(A,A)') 'Unknown DRAG_TYPE: ', DRAG_TYPE
+            stop 20013
          end SELECT   ! end selection of drag_type
 
 

@@ -12,7 +12,7 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      IMPLICIT NONE
+      implicit none
 
 ! Use this module only to define functions and subroutines.
       CONTAINS
@@ -26,9 +26,9 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       Subroutine ClosestPtPointTriangle(pointp, points, closest_point)
-      USE param1, only: zero, one
+      use param, only: zero, one
 
-      IMPLICIT NONE
+      implicit none
 
 ! points are the three nodes of the triangle
 ! point p is the sphere center
@@ -120,9 +120,9 @@
       Subroutine intersectLnPlane(ref_line, dir_line, ref_plane,       &
          norm_plane, line_param)
 
-      USE param1, only: zero
+      use param, only: zero
 
-      IMPLICIT NONE
+      implicit none
 
 ! Reference point and direction of the line
       real(c_real), INTENT(IN) :: REF_LINE(3),  DIR_LINE(3)
@@ -160,11 +160,11 @@
 !......................................................................!
       SUBROUTINE TRI_BOX_OVERLAP(pCENTER, pHALFSIZE, pVERTS, pOVERLAP)
 
-      IMPLICIT NONE
+      implicit none
 
       real(c_real), INTENT(IN) :: pCENTER(3), pHALFSIZE(3)
       real(c_real), INTENT(IN) :: pVERTS(3,3)
-      LOGICAL, INTENT(OUT) :: pOVERLAP
+      logical, INTENT(OUT) :: pOVERLAP
 
       real(c_real) :: v0(3), v1(3), v2(3)
       real(c_real) :: fex, fey, fez
@@ -230,7 +230,7 @@
 ! Function: planeBoxOverlap                                            !
 ! Support function for TRI_BOX_OVERLAP                                 !
 !``````````````````````````````````````````````````````````````````````!
-      LOGICAL FUNCTION planeBoxOverlap(norm, vert, maxbox)
+      logical FUNCTION planeBoxOverlap(norm, vert, maxbox)
 
       real(c_real) :: norm(3), vert(3), maxbox(3)
 
@@ -298,7 +298,7 @@
 ! Function: ATEST_X01                                                  !
 ! Support function for TRI_BOX_OVERLAP                                 !
 !``````````````````````````````````````````````````````````````````````!
-      LOGICAL FUNCTION ATEST_X01(a,b,fa,fb)
+      logical FUNCTION ATEST_X01(a,b,fa,fb)
 
       real(c_real) :: a, b, fa, fb
       real(c_real) :: lMin, lMax, p0, p2, rad
@@ -318,7 +318,7 @@
 ! Function: ATEST_X2                                                   !
 ! Support function for TRI_BOX_OVERLAP                                 !
 !``````````````````````````````````````````````````````````````````````!
-      LOGICAL FUNCTION ATEST_X2(a,b,fa,fb)
+      logical FUNCTION ATEST_X2(a,b,fa,fb)
 
       real(c_real) :: a, b, fa, fb
       real(c_real) :: lMin, lMax, p0, p1, rad
@@ -338,7 +338,7 @@
 ! Function: ATEST_Y02                                                  !
 ! Support function for TRI_BOX_OVERLAP                                 !
 !``````````````````````````````````````````````````````````````````````!
-      LOGICAL FUNCTION ATEST_Y02(a,b,fa,fb)
+      logical FUNCTION ATEST_Y02(a,b,fa,fb)
 
       real(c_real) :: a, b, fa, fb
       real(c_real) :: lMin, lMax, p0, p2, rad
@@ -358,7 +358,7 @@
 ! Function: ATEST_Y1                                                   !
 ! Support function for TRI_BOX_OVERLAP                                 !
 !``````````````````````````````````````````````````````````````````````!
-      LOGICAL FUNCTION ATEST_Y1(a,b,fa,fb)
+      logical FUNCTION ATEST_Y1(a,b,fa,fb)
 
       real(c_real) :: a, b, fa, fb
       real(c_real) :: lMin, lMax, p0, p1, rad
@@ -378,7 +378,7 @@
 ! Function: ATEST_Z12                                                  !
 ! Support function for TRI_BOX_OVERLAP                                 !
 !``````````````````````````````````````````````````````````````````````!
-      LOGICAL FUNCTION ATEST_Z12(a,b,fa,fb)
+      logical FUNCTION ATEST_Z12(a,b,fa,fb)
 
       real(c_real) :: a, b, fa, fb
       real(c_real) :: lMin, lMax, p1, p2, rad
@@ -398,7 +398,7 @@
 ! Function: ATEST_Z0                                                   !
 ! Support function for TRI_BOX_OVERLAP                                 !
 !``````````````````````````````````````````````````````````````````````!
-      LOGICAL FUNCTION ATEST_Z0(a,b,fa,fb)
+      logical FUNCTION ATEST_Z0(a,b,fa,fb)
 
       real(c_real) :: a, b, fa, fb
       real(c_real) :: lMin, lMax, p0, p1, rad

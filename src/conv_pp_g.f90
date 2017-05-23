@@ -25,7 +25,7 @@ module conv_pp_g_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine conv_pp_g(ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-         A_m, rop_ge, rop_gn, rop_gt, dx, dy, dz)
+         A_m, ropX, ropY, ropZ, dx, dy, dz)
 
 ! Modules
 !-----------------------------------------------
@@ -41,11 +41,11 @@ module conv_pp_g_module
       real(c_real), INTENT(INOUT) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
-      real(c_real), intent(in   ) :: rop_ge&
+      real(c_real), intent(in   ) :: ropX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: rop_gn&
+      real(c_real), intent(in   ) :: ropY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: rop_gt&
+      real(c_real), intent(in   ) :: ropZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 ! Local variables
@@ -64,14 +64,14 @@ module conv_pp_g_module
          do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
 
-               A_m(i,j,k,e) = rop_ge(i  ,j,k)*ayz
-               A_m(i,j,k,w) = rop_ge(i-1,j,k)*ayz
+               A_m(i,j,k,e) = ropX(i+1,j,k)*ayz
+               A_m(i,j,k,w) = ropX(i  ,j,k)*ayz
 
-               A_m(i,j,k,n) = rop_gn(i,j  ,k)*axz
-               A_m(i,j,k,s) = rop_gn(i,j-1,k)*axz
+               A_m(i,j,k,n) = ropY(i,j+1,k)*axz
+               A_m(i,j,k,s) = ropY(i,j  ,k)*axz
 
-               A_m(i,j,k,t) = rop_gt(i,j,k  )*axy
-               A_m(i,j,k,b) = rop_gt(i,j,k-1)*axy
+               A_m(i,j,k,t) = ropZ(i,j,k+1)*axy
+               A_m(i,j,k,b) = ropZ(i,j,k  )*axy
 
             enddo
          enddo

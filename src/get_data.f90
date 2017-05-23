@@ -1,82 +1,95 @@
-MODULE GET_DATA_MODULE
+module get_data_module
 
-   use amrex_fort_module, only : c_real => amrex_real
-   use iso_c_binding , only: c_int
+  use amrex_fort_module, only : c_real => amrex_real
+  use iso_c_binding , only: c_int
 
-   CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  SUBROUTINE: GET_DATA                                                C
-!  Purpose: read and verify input data, open files                     C
-!                                                                      C
-!  Author: P. Nicoletti                               Date: 04-DEC-91  C
-!  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_DATA(time, dt)
+contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  subroutine: get_data                                                !
+!  Purpose: read and verify input data, open files                     !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine get_data(dt)
 
-      USE check_gas_phase_module, only: check_gas_phase
-      USE check_geometry_prereqs_module, only: check_geometry_prereqs
-      USE check_numerics_module, only: check_numerics
-      USE check_output_control_module, only: check_output_control
-      USE check_run_control_module, only: check_run_control
-      USE check_solids_model_prereqs_module, only: check_solids_model_prereqs
-      USE check_solids_phases_module, only: check_solids_phases
-      USE error_manager  , only: init_error_manager
-      USE get_bc_area_module, only: get_bc_area
-      USE init_namelist_module, only: init_namelist
-      USE open_files_mod, only: open_files
-      USE read_namelist_module, only: read_namelist
-      USE run            , only: run_type, run_name
-      USE set_bc_flow_module, only: set_bc_flow
-      USE set_parameters_module, only: set_parameters
-      USE write_header_module, only: write_header
+    use init_namelist_module, only: init_namelist
+    use read_namelist_module, only: read_namelist
 
-      use geometry, only: domlo, domhi
-      use geometry, only: imax, jmax, kmax
+    ! Cyclic domain flags.
+    use bc, only: cyclic_x, cyclic_x_pd, cyclic_x_mf
+    use bc, only: cyclic_y, cyclic_y_pd, cyclic_y_mf
+    use bc, only: cyclic_z, cyclic_z_pd, cyclic_z_mf
+    use bc, only: flux_g
 
-      IMPLICIT NONE
+    use run, only: dem_solids
 
-      real(c_real), intent(  out) :: time, dt
+    use constant, only: mmax
+    use discretelement, only: particle_types
 
-! This module call routines to initialize the namelist variables.
-      CALL INIT_NAMELIST
-! Read in the namelist variables from the ascii input file.
-      CALL READ_NAMELIST(time, dt)
+    use discretelement, only: des_continuum_coupled, des_oneway_coupled
+    use fld_const, only: ro_g0
 
-! Initialize the error manager. This call occurs after the mfix.dat
-! is read so that message verbosity can be set and the .LOG file
-! can be opened.
-      CALL INIT_ERROR_MANAGER
+    use discretelement, only: des_coll_model, des_coll_model_enum, &
+                              lsd, hertzian
 
-! Write header in the .LOG file and to screen.
-! Not sure if the values are correct or useful
-      CALL WRITE_HEADER
+    use drag, only: drag_type, drag_type_enum, syam_obrien, gidaspow, &
+                    gidaspow_pcf, gidaspow_blend, gidaspow_blend_pcf, &
+                    wen_yu, wen_yu_pcf, koch_hill, koch_hill_pcf, bvk,&
+                    user_drag
 
-! Open files
-      CALL OPEN_FILES(RUN_NAME, RUN_TYPE)
+    use param, only: is_undefined, is_defined
 
-! These checks verify that sufficient information was provided
-! to setup the domain indices and DMP gridmap.
-      CALL CHECK_GEOMETRY_PREREQS
+    implicit none
 
-      domlo(1) = 0
-      domlo(2) = 0
-      domlo(3) = 0
-      domhi(1) = imax-1
-      domhi(2) = jmax-1
-      domhi(3) = kmax-1
+    real(c_real), intent(  out) :: dt
 
-      ! Check the minimum solids phase requirements.
-      CALL CHECK_SOLIDS_MODEL_PREREQS
+    ! This module call routines to initialize the namelist variables.
+    call init_namelist
 
-      CALL CHECK_RUN_CONTROL(time, dt)
-      CALL CHECK_NUMERICS
-      CALL CHECK_OUTPUT_CONTROL
+    ! Read in the namelist variables from the ascii input file.
+    call read_namelist(dt)
 
-      CALL CHECK_GAS_PHASE
-      CALL CHECK_SOLIDS_PHASES
-      CALL SET_PARAMETERS
+    ! Determine the cyclic direction with a specified mass flux
+    cyclic_x_mf = (is_defined(flux_g) .and. cyclic_x_pd)
+    cyclic_y_mf = (is_defined(flux_g) .and. cyclic_y_pd)
+    cyclic_z_mf = (is_defined(flux_g) .and. cyclic_z_pd)
 
-      END SUBROUTINE GET_DATA
-END MODULE GET_DATA_MODULE
+    ! Force the cyclic flag if cyclic with pressure drop.
+    if (cyclic_x_pd) cyclic_x = .true.
+    if (cyclic_y_pd) cyclic_y = .true.
+    if (cyclic_z_pd) cyclic_z = .true.
+
+    ! Set flag for coupled simulations
+    des_continuum_coupled = (particle_types>0) .and. (abs(ro_g0) > 0.0d0)
+    dem_solids = (particle_types > 0)
+
+    mmax = particle_types
+    ! Overwrite user settings if no Lagrangian solids
+    if(particle_types==0) then
+       des_continuum_coupled = .false.
+       des_oneway_coupled = .false.
+    endif
+
+    select case(trim(adjustl(drag_type)))
+    case ('SYAM_OBRIEN'); drag_type_enum = syam_obrien
+    case ('GIDASPOW'); drag_type_enum = gidaspow
+    case ('GIDASPOW_BLEND'); drag_type_enum = gidaspow_blend
+    case ('WEN_YU'); drag_type_enum = wen_yu
+    case ('KOCH_HILL'); drag_type_enum = koch_hill
+    case ('BVK'); drag_type_enum = bvk
+    case ('GIDASPOW_PCF'); drag_type_enum = gidaspow_pcf
+    case ('GIDASPOW_BLEND_PCF'); drag_type_enum = gidaspow_blend_pcf
+    case ('WEN_YU_PCF'); drag_type_enum = wen_yu_pcf
+    case ('KOCH_HILL_PCF'); drag_type_enum = koch_hill_pcf
+    case ('USER_DRAG','USR_DRAG'); drag_type_enum = user_drag
+    end select
+
+    ! Check collision model specific parameters.
+    select case (trim(adjustl(des_coll_model)))
+    case('LSD'); des_coll_model_enum = lsd
+    case('HERTZIAN'); des_coll_model_enum = hertzian
+    end select
+
+  end subroutine get_data
+
+end module get_data_module

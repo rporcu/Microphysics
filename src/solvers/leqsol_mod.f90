@@ -1,30 +1,25 @@
 module leqsol
 
-   use compar, only: mype
    use error_manager, only: ival, flush_err_msg, err_msg
-   use exit_mod, only: mfix_exit
-   use funits, only: dmp_log, unit_log
+
    use param, only: DIM_EQS
-   use param1, only: zero
+   use param, only: zero
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
 ! Maximum number of outer iterations
-  INTEGER :: MAX_NIT
+  integer :: MAX_NIT
 
 ! Automatic adjustment of leq parameters possible (set in iterate after
 ! the completion of first iteration).
-  LOGICAL :: LEQ_ADJUST
+  logical :: LEQ_ADJUST
 
 ! Maximum number of linear equation solver iterations
-  INTEGER :: LEQ_IT(DIM_EQS)
-
-! Linear equation solver method
-  INTEGER :: LEQ_METHOD(DIM_EQS)
+  integer :: LEQ_IT(DIM_EQS)
 
 ! Total Iterations
-  INTEGER :: ITER_TOT(DIM_EQS) = 0
+  integer :: ITER_TOT(DIM_EQS) = 0
 
 ! Linear equation solver sweep direction
   CHARACTER(LEN=4) :: LEQ_SWEEP(DIM_EQS)
@@ -36,21 +31,21 @@ module leqsol
   CHARACTER(LEN=4) :: LEQ_PC(DIM_EQS)
 
 ! Option to minimize dot products
-  LOGICAL :: MINIMIZE_DOTPRODUCTS
+  logical :: MINIMIZE_DOTPRODUCTS
 
 ! Option to transpose A_m
-  LOGICAL :: DO_TRANSPOSE
+  logical :: DO_TRANSPOSE
 
 ! Frequency of convergence check in BiCGStab
-  INTEGER :: ICHECK_BICGS
+  integer :: ICHECK_BICGS
 
 ! Optimize for massively parallel machine
-  LOGICAL :: OPT_PARALLEL
+  logical :: OPT_PARALLEL
 
 ! Linear and non-linear solver statistics
-  LOGICAL :: SOLVER_STATISTICS
+  logical :: SOLVER_STATISTICS
 
-  LOGICAL :: USE_DOLOOP
+  logical :: USE_DOLOOP
 
 CONTAINS
 
@@ -102,7 +97,7 @@ CONTAINS
 
   subroutine leq_msolve1(b_m, blo, bhi, A_m, alo, ahi, var, vlo, vhi) &
      bind(C, name = "leq_msolve1")
-   use param1, only: small_number
+   use param, only: small_number
 
     IMPLICIT NONE
 

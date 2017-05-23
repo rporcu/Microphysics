@@ -8,71 +8,41 @@ module boxlib_to_mfix_module
 
 contains
 
-
-  subroutine mfix_set_ifile( fname, len ) bind(C, name="mfix_set_ifile")
-
-    use run, only: IFILE_NAME, IFILE_NAME_DEFAULT
-
-    integer(c_int),         intent(in), value :: len        
-    character(kind=c_char), intent(in)        :: fname(len)
-    integer                                   :: nc
-
-    if ( len < 1 ) then
-       IFILE_NAME = IFILE_NAME_DEFAULT
-    else
-       do nc = 1, len
-          IFILE_NAME(nc:nc) = fname(nc)
-       end do
-    end if
-
-
-  end subroutine mfix_set_ifile
-
-
 !**************************************************************************!
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_get_data(imax_to_c, jmax_to_c, kmax_to_c, fluid, &
+  subroutine mfix_get_data(fluid, &
      dem, steady_state, dt, dt_minC, dt_maxC, tstopC, &
-     time, max_nitC, normg, set_normg, call_udf, &
+     max_nitC, normg, set_normg, call_udf, &
      cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf, &
-     xlength_C,ylength_C, zlength_C, coord_C) &
+     coord_C) &
      bind(C, name="mfix_get_data")
 
     use fld_const, only: ro_g0
-    use geometry, only: coordinates
-    use geometry, only: cyclic_x,    cyclic_y,    cyclic_z
-    use geometry, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
-    use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-    use geometry, only: imax, jmax, kmax
-    use geometry, only: xlength, ylength, zlength
+    use bc, only: cyclic_x,    cyclic_y,    cyclic_z
+    use bc, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
+    use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
     use get_data_module, only: get_data
     use leqsol, only: max_nit
-    use param1, only: is_undefined
+    use param, only: is_undefined
     use run, only: dem_solids, call_usr
     use run, only: dt_min, dt_max, tstop
-    use toleranc, only: norm_g
+    use residual, only: norm_g
 
     implicit none
 
-    integer(c_int), intent(out) :: imax_to_c, jmax_to_c, kmax_to_c
     integer(c_int), intent(out) :: fluid
     integer(c_int), intent(out) :: dem, call_udf
     integer(c_int), intent(out) :: steady_state
     real(c_real), intent(out) :: dt_minC, dt_maxC, tstopC
-    real(c_real), intent(out) :: dt, time
-    real(c_real), intent(out) :: xlength_C, ylength_C, zlength_C
+    real(c_real), intent(out) :: dt
     integer(c_int)         , intent(out) :: max_nitC, coord_C
     real(c_real), intent(out) :: normg
     integer(c_int), intent(out) :: set_normg
     integer(c_int), intent(out) :: cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf
 
-    call get_data(time, dt)
-
-    imax_to_c = imax
-    jmax_to_c = jmax
-    kmax_to_c = kmax
+    call get_data(dt)
 
 ! Flags for fluid setup
     fluid =  merge(1,0,ro_g0 /= 0.0d0)
@@ -95,17 +65,6 @@ contains
     cyclic_zC = merge(1,0,cyclic_z .or. cyclic_z_pd .or. cyclic_z_mf)
 
     cyclic_mf = merge(1,0,cyclic_x_mf .or. cyclic_y_mf .or. cyclic_z_mf)
-
-    xlength_C = xlength
-    ylength_C = ylength
-    zlength_C = zlength
-
-    if (coordinates .eq. 'CARTESIAN') then
-       coord_C = 0
-    else
-       print *,'UNKNOWN COORDINATES'
-       stop
-    end if
 
   end subroutine mfix_get_data
 

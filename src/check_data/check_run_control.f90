@@ -2,9 +2,12 @@ module check_run_control_module
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
-  use run,            only: IFILE_NAME
-  use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, &
-                          & ivar, ival, err_msg
+
+  use error_manager,  only: init_err_msg, flush_err_msg, finl_err_msg, &
+                            err_msg, ivar, ival
+
+    use param, only: undefined_c, zero
+    use param, only: is_defined, is_undefined
 
   implicit none
   private
@@ -19,82 +22,62 @@ contains
 !  Purpose: Check the run control namelist section                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_run_control(time, dt)
+  subroutine check_run_control(dt)
 
-    use run,    only: RUN_TYPE, DESCRIPTION, UNITS, TSTOP
-    use param1, only: UNDEFINED_C, IS_UNDEFINED, ZERO
-! Flag to adjust dt when residuals diverge
-      use run, only: DETECT_STALL
-
-    real(c_real), intent(inout) :: time, dt
+    use run,    only: tstop, nlog, discretize
+    use param, only: dim_eqs
 
 
-    ! Initialize the error manager.
+    real(c_real), intent(in) :: dt
+
+    integer  :: lc
+
     CALL init_err_msg("CHECK_RUN_CONTROL")
 
+    if(is_defined(dt)) then
 
-    ! Clear out the run description if not specified.
-    if (DESCRIPTION == UNDEFINED_C) DESCRIPTION = ' '
+       if (dt < zero) then
+          write(err_msg,1002) 'DT', dt
+          call flush_err_msg(abort=.true.)
+       endif
 
-    ! Verify UNITS input.
-    if(UNITS == UNDEFINED_C) then
-       write(ERR_MSG,1000) 'UNITS', trim(IFILE_NAME)
-       call flush_err_msg(ABORT=.true.)
-    elseif((UNITS /= 'CGS') .and. (UNITS /= 'SI')) then
-       write(ERR_MSG,1001) 'UNITS', UNITS, trim(IFILE_NAME)
-       call flush_err_msg(ABORT=.true.)
-    endif
+       if (is_undefined(tstop)) then
+          write(err_msg,1000) 'TSTOP'
+          call flush_err_msg(abort=.true.)
 
-    ! Verify that DT is valid.
-    if (DT < ZERO) then
-       write(ERR_MSG,1002) 'DT', DT, trim(IFILE_NAME)
-       call flush_err_msg(ABORT=.true.)
-
-       ! Steady-state simulation.
-    elseif(IS_UNDEFINED(DT) .or. IS_UNDEFINED(DT)) then
-       DETECT_STALL = .FALSE.
-       TIME = ZERO
-
-       ! Transient simulation.
-    else
-       ! Verify the remaining time settings.
-       if (IS_UNDEFINED(TIME)) then
-          write(ERR_MSG,1000) 'TIME', trim(IFILE_NAME)
-          call flush_err_msg(ABORT=.true.)
-
-       elseif (IS_UNDEFINED(TSTOP)) then
-          write(ERR_MSG,1000) 'TSTOP', trim(IFILE_NAME)
-          call flush_err_msg(ABORT=.true.)
-
-       elseif (TIME < ZERO) then
-          write(ERR_MSG,1002)'TIME', TIME, trim(IFILE_NAME)
-          call flush_err_msg(ABORT=.true.)
-
-       elseif (TSTOP < ZERO) then
-          write(ERR_MSG,1002) 'TSTOP', TSTOP, trim(IFILE_NAME)
-          call flush_err_msg(ABORT=.true.)
+       elseif (tstop < zero) then
+          write(err_msg,1002) 'tstop', tstop
+          call flush_err_msg(abort=.true.)
        endif
     endif
 
-    ! Verify the run type.
-    if(.not.(RUN_TYPE=='NEW')) then
-       write(ERR_MSG,1001) 'RUN_TYPE', RUN_TYPE, trim(IFILE_NAME)
-       call flush_err_msg(ABORT=.true.)
+    do lc = 1,dim_eqs
+       if(discretize(lc) /= 0 .and. discretize(lc) /= 2) then
+          write(err_msg,2002) trim(ivar('DISCRETIZE',lc)),&
+            trim(ival(discretize(lc)))
+          call flush_err_msg(abort=.true.)
+       endif
+    enddo
+
+    if(nlog <= 0) then
+       write(err_msg,1001) 'NLOG', ival(nlog)
+       call flush_err_msg(abort=.true.)
     endif
 
+2002 format('Error 2002: Invalid option ', A,' = ', A, '.',/  &
+       'Please correct the input deck.')
 
     ! Clear the error manager
     call finl_err_msg
 
-
 1000 format('Error 1000: Required input not specified: ',A,/'Please ',&
-          'correct the ',A,' file.')
+          'correct the input deck.')
 
 1001 format('Error 1001: Illegal or unknown input: ',A,' = ',A,/      &
-          'Please correct the ',A,' file.')
+          'Please correct the input deck.')
 
 1002 format('Error 1002: Illegal or unknown input: ',A,' = ',G14.4,/  &
-          'Please correct the ',A,' file.')
+          'Please correct the input deck.')
 
   end subroutine check_run_control
 
