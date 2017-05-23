@@ -25,7 +25,7 @@
       subroutine drag_usr(i,j,k, M_NP, lDgA, EPg, Mug, ROg, &
                           Vrel, DPM, ROs, lUg, lVg, lWg)
 
-      use amrex_fort_module, only  c_real => amrex_real
+      use amrex_fort_module, only: c_real => amrex_real
       use iso_c_binding    , only: c_int
       use usr              , only: Re, Cd
 
@@ -38,7 +38,7 @@
       integer(c_int), intent(in) :: M_NP
 
       ! drag coefficient
-      real(c_real), intent(OUT) :: lDgA
+      real(c_real), intent(out) :: lDgA
 
       ! gas volume fraction
       real(c_real), intent(in) :: EPg

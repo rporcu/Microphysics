@@ -73,7 +73,6 @@ subroutine WRITE_DES_Out(lTime, np, particles)
    ! file unit for heat transfer data
    integer, parameter :: lUNIT = 2030
 
-
    ! Open the file.
    OPEN(UNIT=lUNIT, FILE='POST_POS.dat',                            &
         POSITION="APPEND", STATUS='OLD')

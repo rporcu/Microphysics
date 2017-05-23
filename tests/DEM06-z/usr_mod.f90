@@ -158,14 +158,14 @@
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !  page 26, Equation (74).                                             !
 !......................................................................!
-      real(c_real) function Fb()
+      function Fb()
 
       use constant , only: gravity, RO_s0
       use fld_const, only: RO_g0
 
       implicit none
 
-      real(c_real), dimension(3) :: Fb
+      real(c_real) :: Fb(3)
 
       Fb(:) = gravity(:) * (RO_s0(1)-RO_g0)/RO_s0(1)
 
@@ -183,7 +183,7 @@
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !  page 26, Equation (74).                                             !
 !......................................................................!
-      real(c_real) function Fd(Vp)
+      function Fd(Vp)
 
       use constant, only: RO_s0, D_p0
       use fld_const, only: RO_g0
