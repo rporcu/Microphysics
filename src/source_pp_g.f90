@@ -82,9 +82,9 @@ contains
 
 ! Calculate convection-diffusion fluxes through each of the faces
 
-        do k = alo(3),ahi(3)
-           do j = alo(2),ahi(2)
-             do i = alo(1),ahi(1)
+        do k = lo(3),hi(3)
+           do j = lo(2),hi(2)
+             do i = lo(1),hi(1)
 
                 bma = (rop_g(i,j,k)-rop_go(i,j,k))*vol*odt
                 bme = A_m(i,j,k,e)*u_g(i+1,j,k)

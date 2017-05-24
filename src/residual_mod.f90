@@ -145,11 +145,11 @@
 !  based on its value in the first iteration                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_resid_pp(alo, ahi, b_m, b_mmax, num, den)
+   subroutine calc_resid_pp(alo, ahi, lo, hi, b_m, b_mmax, num, den)
 
       implicit none
 
-      integer, intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: alo(3),ahi(3),lo(3),hi(3)
       real(c_real), intent(inout) :: num, den
 
 !   Vector b_m
@@ -161,24 +161,24 @@
 
       integer :: i, j, k
 
-      do k = alo(3),ahi(3)
-         do j = alo(2),ahi(2)
-            do i = alo(1),ahi(1)
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
                num = num  + abs(b_m(i,j,k))
             enddo
          enddo
       enddo
 
       if(norm_g <= epsilon(0.0)) then
-         do k = alo(3),ahi(3)
-            do j = alo(2),ahi(2)
-               do i = alo(1),ahi(1)
+         do k = lo(3),hi(3)
+            do j = lo(2),hi(2)
+               do i = lo(1),hi(1)
                   den = den + 10.d0*abs(b_mmax(i,j,k))
                enddo
             enddo
          enddo
       else
-         den = den + (ahi(3)-alo(3)+1)*(ahi(2)-alo(2)+1)*(ahi(1)-alo(1)+1)
+         den = den + (hi(3)-lo(3)+1)*(hi(2)-lo(2)+1)*(hi(1)-lo(1)+1)
       endif
 
       return

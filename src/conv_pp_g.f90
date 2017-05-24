@@ -24,7 +24,7 @@ module conv_pp_g_module
 !         boundaries are set to zero.                                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine conv_pp_g(ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
+      subroutine conv_pp_g(ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
          A_m, ropX, ropY, ropZ, dx, dy, dz)
 
 ! Modules
@@ -34,7 +34,7 @@ module conv_pp_g_module
       implicit none
 
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
-      integer(c_int), intent(in   ) :: alo(3),ahi(3)
+      integer(c_int), intent(in   ) :: alo(3),ahi(3),lo(3),hi(3)
       real(c_real), intent(in   ) :: dx,dy,dz
 
       ! Septadiagonal matrix A_m
@@ -60,9 +60,9 @@ module conv_pp_g_module
       ayz = dy*dz
 
       ! Calculate convection fluxes through each of the faces
-      do k = alo(3),ahi(3)
-         do j = alo(2),ahi(2)
-            do i = alo(1),ahi(1)
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
 
                A_m(i,j,k,e) = ropX(i+1,j,k)*ayz
                A_m(i,j,k,w) = ropX(i  ,j,k)*ayz
