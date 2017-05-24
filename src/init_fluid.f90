@@ -278,7 +278,7 @@ module init_fluid_module
 ! is already defined in all initial condition regions (otherwise this
 ! section would be skipped)
 ! ---------------------------------------------------------------->>>
-      if (is_defined(delp_x)) then
+      if (abs(delp_x) > epsilon(zero)) then
          dpodx = delp_x/xlength
          pj = pj - dpodx*dx*(hi(1)-domhi(1)+1)
          do i = shi(1), slo(1), -1
@@ -291,7 +291,7 @@ module init_fluid_module
          enddo
       endif
 
-      if (is_defined(delp_y)) then
+      if (abs(delp_y) > epsilon(zero)) then
          dpody = delp_y/ylength
          pj = pj - dpody*dy*(hi(2)-domhi(2)+1)
          do j = hi(2), lo(2), -1
@@ -304,7 +304,7 @@ module init_fluid_module
          enddo
       endif
 
-      if (is_defined(delp_z)) then
+      if (abs(delp_z) > epsilon(zero)) then
          dpodz = delp_z/zlength
          pj = pj - dpodz*dz*(hi(3)-domhi(3)+1)
          do k = hi(3), lo(3), -1
