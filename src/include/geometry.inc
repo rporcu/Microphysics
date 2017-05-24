@@ -4,11 +4,8 @@
 !                                                                      !
 !  Purpose: List MFIX keywords that CANNOT be edited during a run.     !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      NAMELIST / GEOMETRY_LOCKED /&
+!      NAMELIST / GEOMETRY_LOCKED /&
 
-      CYCLIC_X_PD, &
-      CYCLIC_Y_PD, &
-      CYCLIC_Z_PD
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  Namelist: GEOMETRY_UNLOCKED                                         !

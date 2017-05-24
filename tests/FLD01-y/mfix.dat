@@ -60,9 +60,8 @@
 ! The north and south boundaries are set at cyclic with a specified
 ! pressure drop (delP_Y).
 !---------------------------------------------------------------------//
-  CYCLIC_Y_PD = .T.
-
   DELP_Y = 240.0
+
 
 ! Bottom and top walls are no-slip
 !---------------------------------------------------------------------//

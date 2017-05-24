@@ -25,8 +25,6 @@ contains
       use bc, only: delp_y
 
       use functions, only: avg
-      use bc,  only: cyclic_y_pd
-
       use matrix, only: e, w, s, n, t, b
 
       use scales, only: p_scale
@@ -85,10 +83,7 @@ contains
 
                ! Pressure term
                pgs = p_g(i,j-1,k)
-               if (cyclic_y_pd) then
-                  if((j==domlo(2)) .or. (j==domhi(2)+1) ) &
-                     pgs = pgs + delp_y
-               end if
+               if((j==domlo(2)) .or. (j==domhi(2)+1) ) pgs = pgs + delp_y
                sdp = -p_scale*epga*(p_g(i,j,k) - pgs)*axz
 
                ! Previous time step

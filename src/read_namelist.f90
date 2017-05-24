@@ -28,8 +28,6 @@ MODULE read_namelist_module
 
       use fld_const, only: mu_g0, mw_avg
       use fld_const, only: ro_g0
-      use bc, only: cyclic_x, cyclic_y, cyclic_z
-      use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
@@ -246,13 +244,6 @@ MODULE read_namelist_module
 
 
 ! Geometry and discretization keywords
-      IF(READ_LOCKED) THEN
-         STRING=''; STRING = '&GEOMETRY_LOCKED '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=GEOMETRY_LOCKED, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-      ENDIF
-
       STRING=''; STRING = '&GEOMETRY_UNLOCKED '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=GEOMETRY_UNLOCKED, IOSTAT=IOS)

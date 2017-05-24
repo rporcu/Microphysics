@@ -60,9 +60,8 @@
 ! The bottom and top boundaries are set at cyclic with a specified
 ! pressure drop (delP_Z).
 !---------------------------------------------------------------------//
-  CYCLIC_Z_PD = .T.
-
   DELP_Z = 240.0
+
 
 ! East and west walls are no-slip
 !---------------------------------------------------------------------//

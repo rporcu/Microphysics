@@ -29,8 +29,6 @@ contains
 
       use functions, only: avg
 
-      use bc, only: cyclic_x_pd
-
       use matrix, only: e, w, s, n, t, b
       use scales, only: p_scale
 
@@ -90,10 +88,7 @@ contains
 
                ! Pressure term
                pgw = p_g(i-1,j,k)
-               if (cyclic_x_pd) then
-                  if(i == domlo(1) .or. i==domhi(1)+1) &
-                     pgw = pgw + delp_x
-               endif
+               if(i == domlo(1) .or. i==domhi(1)+1) pgw = pgw + delp_x
                sdp = -p_scale*epga*(p_g(i,j,k) - pgw)*ayz
 
                ! Previous time step

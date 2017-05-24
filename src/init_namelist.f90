@@ -33,8 +33,6 @@ MODULE INIT_NAMELIST_MODULE
       use fld_const, only: mu_g0, mw_avg
       use fld_const, only: ro_g0
       use fld_const, only: ro_g0, mu_g0, mw_avg
-      use bc, only: cyclic_x, cyclic_y, cyclic_z
-      use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
@@ -345,33 +343,10 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
-!    Flag for making the x-direction cyclic with pressure drop. If the
-!    keyword FLUX_G is given a value this becomes a cyclic boundary
-!    condition with specified mass flux. No other boundary conditions
-!    for the x-direction should be specified.
-!  </description>
-!  <valid value=".FALSE." note="No cyclic condition at x-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition with pressure drop at x-boundary."/>
-      cyclic_x_pd = .FALSE.
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
 !    Fluid pressure drop across xlength when a cyclic boundary condition
 !    with pressure drop is imposed in the x-direction.
 !  </description>
-      delp_x = UNDEFINED
-!</keyword>
-
-!  <description>
-!    Flag for making the y-direction cyclic with pressure drop. If the
-!    keyword FLUX_G is given a value this becomes a cyclic boundary
-!    condition with specified mass flux. No other boundary conditions
-!    for the y-direction should be specified.
-!  </description>
-!  <valid value=".FALSE." note="No cyclic condition at y-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition with pressure drop at y-boundary."/>
-      cyclic_y_pd = .FALSE.
+      delp_x = zero
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -379,20 +354,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Fluid pressure drop across ylength when a cyclic boundary condition
 !    with pressure drop is imposed in the y-direction.
 !  </description>
-      delp_y = UNDEFINED
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    Flag for making the z-direction cyclic with pressure drop. If the
-!    keyword FLUX_G is given a value this becomes a cyclic boundary
-!    condition with specified mass flux. No other boundary conditions
-!    for the z-direction should be specified.
-!  </description>
-!  <valid value=".FALSE." note="No cyclic condition at z-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition with pressure drop at
-!    z-boundary."/>
-      cyclic_z_pd = .FALSE.
+      delp_y = zero
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -400,7 +362,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Fluid pressure drop across zlength when a cyclic boundary condition
 !    with pressure drop is imposed in the z-direction.
 !  </description>
-      delp_z = UNDEFINED
+      delp_z = zero
 !</keyword>
 
 

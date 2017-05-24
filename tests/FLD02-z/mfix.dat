@@ -59,8 +59,8 @@
 ! The bottom and top boundaries are set a runtime as cyclic with a
 ! specified pressure drop (DELP_Z)
 !---------------------------------------------------------------------//
-  CYCLIC_Z_PD = .TRUE.
   DELP_Z = -3.0
+
 
 ! The east wall has a constant velocity of 10.0 m/s, and is set using
 ! a partial slip wall (PSW):  dw/dn + hw(w-ww) = 0 where ww = 10.0 m/s
