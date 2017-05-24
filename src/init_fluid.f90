@@ -260,12 +260,6 @@ module init_fluid_module
       integer :: L
 ! Gas pressure at the axial location j
       real(c_real) :: PJ
-! Bed weight per unit area
-      real(c_real) :: BED_WEIGHT
-! Total area of a x-z plane
-      real(c_real) :: AREA
-! x-z plane area of one cell
-      real(c_real) :: dAREA
 ! Average pressure drop per unit length
       real(c_real) :: DPoDX, DPoDY, DPoDZ
 !-----------------------------------------------

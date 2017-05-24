@@ -31,14 +31,12 @@ contains
     use bc,        only: bc_ep_g, bc_p_g, bc_ep_s, bc_massflow_g
     use param    , only: dim_m
     use fld_const, only: ro_g0
-    use constant , only: ro_s0
     use param,    only: equal
 
     integer, intent(in) :: BCV, M_TOT
     logical, intent(in) :: SKIP(DIM_M)
     integer             :: M
     real(c_real)        :: SUM_EP
-    real(c_real)        :: BC_ROs(DIM_M) ! Solids phase density in BC region.
 
 
     CALL init_err_msg("CHECK_BC_MASS_INFLOW")
@@ -109,12 +107,10 @@ contains
 
     use param    , only: dim_m
     use fld_const, only: ro_g0
-    use bc,        only: bc_p_g, bc_u_g, bc_v_g, bc_w_g, &
-                      &  bc_u_s, bc_v_s, bc_w_s
+    use bc,        only: bc_p_g
 
     integer, intent(in) :: bcv, m_tot
     logical, intent(in) :: skip(dim_m)
-    integer             :: m
 
     call init_err_msg("CHECK_BC_P_INFLOW")
 

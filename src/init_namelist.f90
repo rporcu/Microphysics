@@ -39,7 +39,7 @@ MODULE INIT_NAMELIST_MODULE
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: do_transpose, icheck_bicgs, leq_it, opt_parallel, use_doloop
-      use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, solver_statistics, ival
+      use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, ival
       use run, only: full_log, nlog
       use output, only: dim_usr
       use output, only: usr_dt
@@ -47,7 +47,6 @@ MODULE INIT_NAMELIST_MODULE
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
-      use run, only: undefined_i
       use run, only: call_usr, description, tstop
       use run, only: dt_fac, dt_max, dt_min, run_name, solids_model
       use drag, only: drag_type
@@ -60,7 +59,7 @@ MODULE INIT_NAMELIST_MODULE
 
 
       use param, only: zero, one
-      use param, only: undefined, undefined_i, undefined_c
+      use param, only: undefined, undefined_c
 
       IMPLICIT NONE
 !-----------------------------------------------

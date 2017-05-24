@@ -9,7 +9,7 @@ module output_manager_module
    private
 
    public output_manager
-   
+
 contains
 
    !----------------------------------------------------------------------!
@@ -30,7 +30,7 @@ contains
       use run,          only: tstop, dem_solids
       use particle_mod, only: particle_t
 
-  
+
       integer(c_int),   intent(in   ) :: np
       real(c_real)  ,   intent(in   ) :: time, dt, xlength, ylength, zlength
       integer(c_int),   intent(in   ) :: nstep
@@ -69,7 +69,7 @@ contains
             IDX = IDX + 1
          end if
       end do
-      
+
       if(IDX /=0) call FLUSH_LIST
 
       call FLUSH_NOTIFY_useR
@@ -179,10 +179,6 @@ contains
          use tunit_module, only: get_tunit
          use run, only: FULL_LOG, nlog
 
-         real(c_real) :: WALL_ELAP, WALL_LEFT, WALL_NOW
-         CHARACTER(LEN=9) :: CHAR_ELAP, CHAR_LEFT
-         CHARACTER(LEN=4) :: UNIT_ELAP, UNIT_LEFT
-
          integer :: TNITS
          logical :: SCR_LOG
 
@@ -205,8 +201,6 @@ contains
 1100        FORMAT(/'Time: ',g12.5,3x,'DT: ',g12.5,3x,'DEM NITs: ',A)
 
          ENDIF
-
-2000     FORMAT('Wall Time - ',2(A,1X,A,A,4X))
 
       end subroutine flush_notify_user
 

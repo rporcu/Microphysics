@@ -18,8 +18,7 @@ contains
       use residual, only: nresid, sum5_resid
       use residual, only: resid_p, resid_u, resid_v, resid_w
       use residual, only: tol_resid, tol_diverge
-
-      use param, only: zero, undefined_i, is_undefined, large_number
+      use param, only: zero, is_undefined, large_number
 
       implicit none
 
@@ -33,10 +32,8 @@ contains
 !-----------------------------------------------
 ! sum of residuals
       real(c_real) :: SUM_RESID
-! max of residuals
-      real(c_real) :: maxres
 ! index
-      integer :: lc, maxl
+      integer :: lc
 !-----------------------------------------------
 
 ! Normalize residuals

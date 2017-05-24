@@ -124,7 +124,6 @@ contains
             endif
 1640  format(9X,'Gas phase volume fraction (IC_EP_g) ....... ',g12.5)
 1641  format(9X,'Gas pressure (IC_P_g) ..................... ',g12.5)
-1642  format(9X,'Gas temperature (IC_T_g) .................. ',g12.5)
 1650  format(9X,'X-component of gas velocity (IC_U_g) ...... ',g12.5)
 1651  format(9X,'Y-component of gas velocity (IC_V_g) ...... ',g12.5)
 1652  format(9X,'Z-component of gas velocity (IC_W_g) ...... ',g12.5)

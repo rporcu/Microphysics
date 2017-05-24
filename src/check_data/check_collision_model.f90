@@ -31,10 +31,9 @@ contains
   subroutine check_collision_model_lsd
 
     use constant,       only: MMAX
-    use discretelement, only: kn, kn_w, kt, kt_w, kt_fac, kt_w_fac, &
-         & des_etan, des_etan_wall, des_etat, des_etat_wall,        &
-         & des_en_input, des_en_wall_input, des_et_input, dtsolid,  &
-         & des_et_wall_input, des_etat_fac, des_etat_w_fac
+    use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, &
+         & des_en_input, des_en_wall_input, &
+         & des_etat_fac, des_etat_w_fac
 
     integer :: m, l, lc
 
@@ -129,7 +128,6 @@ contains
 subroutine check_collision_model_hertz
 
   use constant,       only: mmax
-  use param,          only: dim_m
   use discretelement, only: des_en_input, des_en_wall_input,  &
     des_et_input, des_et_wall_input, e_young, ew_young, v_poisson, vw_poisson
 

@@ -45,7 +45,7 @@ contains
    subroutine calc_cell_ic(dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
      i_w, i_e, j_s, j_n, k_b, k_t)
 
-     use param, only: zero, equal
+     use param, only: equal
 
      implicit none
 
