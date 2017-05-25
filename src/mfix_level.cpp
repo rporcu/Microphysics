@@ -1074,12 +1074,12 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
     b_mmax.setVal(0.);
 
     // Solve the pressure correction equation
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*A_m[lev],true); mfi.isValid(); ++mfi)
     {
        const Box& bx = mfi.validbox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
-       Box abx((*A_m[lev])[mfi].box());
      
+       Box abx((*A_m[lev])[mfi].box());
        Box ubx((*u_g[lev])[mfi].box());
        Box vbx((*v_g[lev])[mfi].box());
        Box wbx((*w_g[lev])[mfi].box());
@@ -1093,49 +1093,16 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
           (*ro_g[lev])[mfi].dataPtr(),
           (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
           (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
-       (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
+          (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
           &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), residuals);
     }
+
     pp_g[lev]->setVal(0.);
 
     int eq_id = 1;
 
-#if 0
-    MultiFab rhs, sol, mat;
-    {
-    Box minBox(pp_g[lev]->boxArray().minimalBox());
-    BoxArray MinBA(minBox);
-    DistributionMapping dm(MinBA);
-    sol.define(MinBA, dm, pp_g[lev]->nComp(), pp_g[lev]->nGrow());
-    sol.copy((*pp_g[lev]),0,0,pp_g[lev]->nComp());
-    sol.FillBoundary(geom[lev].periodicity());
-    }
-
-    {
-    Box minBox(b_m[lev]->boxArray().minimalBox());
-    BoxArray MinBA(minBox);
-    DistributionMapping dm(MinBA);
-    rhs.define(MinBA, dm, b_m[lev]->nComp(), b_m[lev]->nGrow());
-    rhs.copy((*b_m[lev]),0,0,b_m[lev]->nComp());
-    rhs.FillBoundary(geom[lev].periodicity());
-    }
-
-    {
-    Box minBox(A_m[lev]->boxArray().minimalBox());
-    BoxArray MinBA(minBox);
-    DistributionMapping dm(MinBA);
-    mat.define(MinBA, dm, A_m[lev]->nComp(), A_m[lev]->nGrow());
-    mat.copy(*A_m[lev],0,0,A_m[lev]->nComp());
-    mat.copy((*A_m[lev]),0,0,A_m[lev]->nComp());
-    mat.FillBoundary(geom[lev].periodicity());
-    }
-
-    mfix_solve_linear_equation(eq_id,lev,sol,mat,rhs);
-    pp_g[lev]->copy(sol,0,0,pp_g[lev]->nComp());
-
-#else
     mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
-#endif
+
     fill_mf_bc(lev,*pp_g[lev]);
 
     if (pp_g[lev]->contains_nan())

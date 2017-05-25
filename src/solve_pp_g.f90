@@ -80,10 +80,10 @@ module solve_pp_module
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real), intent(  out) :: resid(8,2)
 
-      ! Initialize A_m and b_m
-      A_m(:,:,:,:)  =  0.0d0
-      A_m(:,:,:,0)  = -1.0d0
-      b_m(:,:,:)    =  0.0d0
+      ! Initialize A_m and b_m -- but only on the current tile!
+      A_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),:)  =  0.0d0
+      A_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),0)  = -1.0d0
+      b_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))    =  0.0d0
 
       ! Forming the sparse matrix equation.
       call conv_pp_g (ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &

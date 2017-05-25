@@ -60,9 +60,9 @@ module conv_pp_g_module
       ayz = dy*dz
 
       ! Calculate convection fluxes through each of the faces
-      do k = alo(3),ahi(3)
-         do j = alo(2),ahi(2)
-            do i = alo(1),ahi(1)
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
 
                A_m(i,j,k,e) = ropX(i+1,j,k)*ayz
                A_m(i,j,k,w) = ropX(i  ,j,k)*ayz
