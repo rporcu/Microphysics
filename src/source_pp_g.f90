@@ -141,14 +141,14 @@ contains
 !         conv_Pp_g                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_pp_g_bc(slo, shi, alo, ahi, domlo, domhi, A_m)
+   subroutine source_pp_g_bc(slo, shi, alo, ahi, lo, hi, domlo, domhi, A_m)
 
       use matrix, only: e, n, t, w, s, b
       use param, only: zero
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3),domlo(3),domhi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3),lo(3),hi(3),domlo(3),domhi(3)
 
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)

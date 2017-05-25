@@ -145,11 +145,11 @@
 !  based on its value in the first iteration                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_resid_pp(alo, ahi, b_m, b_mmax, num, den)
+   subroutine calc_resid_pp(alo, ahi, lo, hi, b_m, b_mmax, num, den)
 
       implicit none
 
-      integer, intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: alo(3),ahi(3),lo(3),hi(3)
       real(c_real), intent(inout) :: num, den
 
 !   Vector b_m

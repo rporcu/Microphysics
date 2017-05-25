@@ -86,18 +86,18 @@ module solve_pp_module
       b_m(:,:,:)    =  0.0d0
 
       ! Forming the sparse matrix equation.
-      call conv_pp_g (ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
+      call conv_pp_g (ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
          A_m, ropX, ropY, ropZ, dx, dy, dz)
 
       call source_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
          A_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, dx, dy, dz)
 
-      call source_pp_g_bc(slo, shi, alo, ahi, domlo, domhi, A_m)
+      call source_pp_g_bc(slo, shi, alo, ahi, lo, hi, domlo, domhi, A_m)
 
       if (point_source) call point_source_pp_g (alo, ahi, b_m, b_mmax, dx, dy, dz)
 
-      call calc_resid_pp (alo, ahi, b_m, b_mmax, &
+      call calc_resid_pp (alo, ahi, lo, hi, b_m, b_mmax, &
          resid(resid_p,1), resid(resid_p,2))
 
       end subroutine solve_pp_g
