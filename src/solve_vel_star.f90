@@ -114,11 +114,10 @@ module solve_vel_star_module
       real(c_real) :: vol
       vol = dx*dy*dz
 
-      ! Initialize A_m and b_m
-      A_m(:,:,:,:) =  0.0d0
-      A_m(:,:,:,0) = -1.0d0
-      b_m(:,:,:)   =  0.0d0
-      d_e(:,:,:)   =  0.0d0
+      ! Initialize A_m, b_m -- but only on the current tile!
+      A_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),:) =  0.0d0
+      A_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),0) = -1.0d0
+      b_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))   =  0.0d0
 
       ! calculate the convection-diffusion terms
       call conv_dif_u_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
@@ -267,10 +266,10 @@ module solve_vel_star_module
 
       vol = dx*dy*dz
 
-! Initialize A_m and b_m
-      A_m(:,:,:,:) =  0.0d0
-      A_m(:,:,:,0) = -1.0d0
-      b_m(:,:,:)   =  0.0d0
+      ! Initialize A_m, b_m -- but only on the current tile!
+      A_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),:) =  0.0d0
+      A_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),0) = -1.0d0
+      b_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))   =  0.0d0
 
 ! calculate the convection-diffusion terms
       call conv_dif_v_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
@@ -419,11 +418,10 @@ module solve_vel_star_module
 
       vol = dx*dy*dz
 
-      ! Initialize A_m and b_m
-      A_m(:,:,:,:) =  0.0d0
-      A_m(:,:,:,0) = -1.0d0
-      b_m(:,:,:)   =  0.0d0
-      d_t(:,:,:)   =  0.0d0
+      ! Initialize A_m, b_m -- but only on the current tile!
+      A_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),:) =  0.0d0
+      A_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),0) = -1.0d0
+      b_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))   =  0.0d0
 
       ! calculate the convection-diffusion terms
       call conv_dif_w_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
