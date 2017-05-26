@@ -58,25 +58,11 @@ int main (int argc, char* argv[])
     if ( ParallelDescriptor::IOProcessor() )
 	check_inputs(&dt);
 
-#if 0
-    // This sets the boundary conditions to be doubly or triply periodic
-    Array<int> is_per(3);
-    is_per[0] = cyclic_x;
-    is_per[1] = cyclic_y;
-    is_per[2] = cyclic_z;
-
-    // This is equivalent to reading "geometry.is_per = ..." from the inputs file,
-    // but here we read cyclic_* from the mfix input file and initialize the ParmParse
-    // table here so when we call Geometry::Setup from the AmrCore constructor it will see it.
-    ParmParse pp("geometry");
-    pp.addarr("is_periodic",is_per);
-#endif
 
     int lev = 0;
 
     // Note that the constructor constructs the Geometry object now.
     mfix_level my_mfix;
-//mfix_level my_mfix(rb_ptr,max_level,n_cell,coord);
 
     my_mfix.InitParams(solve_fluid,solve_dem,cyclic_mf,max_nit,call_udf);
 
