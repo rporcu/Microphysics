@@ -167,10 +167,10 @@ program fextract3d
      enddo
   endif
 
-  ! get the index bounds and dx for the coarse level.  Note, lo and hi are
-  ! ZERO based indicies
-  lo(:) = ZERO
-  hi(:) = ZERO
+  ! Get the index bounds and dx for the coarse level.  
+  ! Note, lo and hi are 0-based indices
+  lo(:) = 0
+  hi(:) = 0
 
   lo(1:pf%dim) = lwb(plotfile_get_pd_box(pf, 1))
   hi(1:pf%dim) = upb(plotfile_get_pd_box(pf, 1))
@@ -414,9 +414,9 @@ program fextract3d
 
 
  998 format("# 1-d slice in ", a1, "-direction, file: ", a)
- 999 format("# time = ", g24.12)
+ 999 format("# time = ", g24.10)
 1000 format("#",100(a24,1x))
-1001 format(1x, 100(g24.12,1x))
+1001 format(1x, 100(g24.10,1x))
 
   ! slicefile
   uno =  unit_new()
@@ -473,7 +473,7 @@ program fextract3d
      do j = 1, cnt
         write(uno,1001, advance="no") sv(isv(j),1)
         do i = 1, ivar
-           write(uno, "(g24.12,1x)", advance="no") sv(isv(j), var_indices(i)+1)
+           write(uno, "(g24.10,1x)", advance="no") sv(isv(j), var_indices(i)+1)
         enddo
         write(uno, *) ""
      enddo
