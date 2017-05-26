@@ -20,8 +20,8 @@ fi
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MFIX} inputs
 
-${FEXTRACT} -p FLD0300000/ -d 2 -v u_g && mv FLD0300000.slice POST_UG.dat
-${FEXTRACT} -p FLD0300000/ -d 1 -v p_g && mv FLD0300000.slice POST_PG.dat
+${FEXTRACT} -p FLD0300000/ -d 2 -v u_g -s POST_UG.dat
+${FEXTRACT} -p FLD0300000/ -d 1 -v p_g -s POST_PG.dat
 
 post_dats=POST*.dat
 for result in ${post_dats}; do

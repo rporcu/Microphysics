@@ -17,8 +17,8 @@ rm -rf ${RUN_NAME}* POST_* &> /dev/null
 time -p ${MFIX} inputs
 
 if ! [ -z "${FEXTRACT}" ]; then
-  ${FEXTRACT} -p FLD0100000/ -d 3 -v v_g && mv FLD0100000.slice POST_UG.dat
-  ${FEXTRACT} -p FLD0100000/ -d 2 -v w_g && mv FLD0100000.slice POST_VG.dat
+  ${FEXTRACT} -p FLD0100000/ -d 3 -v v_g -s POST_UG.dat
+  ${FEXTRACT} -p FLD0100000/ -d 2 -v w_g -s POST_VG.dat
 
   post_dats=POST*.dat
   for result in ${post_dats}; do
