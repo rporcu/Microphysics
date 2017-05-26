@@ -42,12 +42,8 @@ function ( build_amrex )
 
    # Set manually list of libraries
    # ( not using cmake find utilities in this case)
-   if (ENABLE_MPI)
-      set( AMREX_LIBRARIES fboxlib;cboxlib;fboxlib;cfboxlib;box_camrdata PARENT_SCOPE )
-   else (ENABLE_MPI)
-      set( AMREX_LIBRARIES cboxlib;fboxlib;cfboxlib;box_camrdata PARENT_SCOPE )
-   endif (ENABLE_MPI)
-
+   set( AMREX_LIBRARIES fboxlib;cboxlib;fboxlib;cfboxlib;box_camrdata PARENT_SCOPE )
+   
    # Add Cmake Tools from AMReX
    set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/ThirdParty/amrex/Tools/CMake/)
 
