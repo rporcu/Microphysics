@@ -57,7 +57,8 @@ foreach( THIS_TEST ${TESTS})
       WORKING_DIRECTORY  ${TEST_DIR} )
 
    # Make sure that fcompare and fextract are always built before a test is run
-   add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
+   add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} ) 
+   # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
    
    # Setup for running the whole suite of tests via ctest
    add_test(NAME ${TEST_NAME}
@@ -108,7 +109,7 @@ if ( ENABLE_MPI )
 	WORKING_DIRECTORY  ${TEST_DIR} )
 
       # Make sure that fcompare and fextract are always built before a test is run
-      add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
+      add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} ) #${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
       # Setup for running the whole suite of tests via ctest
       add_test(NAME MPI_${TEST_NAME}
