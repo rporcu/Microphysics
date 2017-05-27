@@ -53,7 +53,7 @@ foreach( THIS_TEST ${TESTS})
    # Setup for running the a single test
    set(TEST_RUN run_${TEST_NAME})
    add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-      COMMAND ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} 
+      COMMAND ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${AMREX_BIN_DIR} 
       WORKING_DIRECTORY  ${TEST_DIR} )
 
    # Make sure that fcompare and fextract are always built before a test is run
@@ -104,7 +104,7 @@ if ( ENABLE_MPI )
       # Setup for running the a single test
       set(TEST_RUN run_MPI_${TEST_NAME})
       add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-	 COMMAND ${TEST_DIR}/runtests-dmp.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE}
+	 COMMAND ${TEST_DIR}/runtests-dmp.sh ${TEST_DIR}/${TEST_EXE} ${AMREX_BIN_DIR}
 	 WORKING_DIRECTORY  ${TEST_DIR} )
 
       # Setup for running the whole suite of tests via ctest
