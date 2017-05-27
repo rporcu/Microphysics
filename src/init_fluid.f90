@@ -73,8 +73,8 @@ module init_fluid_module
       if (is_undefined(mu_g0)) then
          call calc_mu_g(slo,shi,lambda_g,mu_g)
       else
-             mu_g(:,:,:) = mu_g0
-         lambda_g(:,:,:) = -(2.0d0/3.0d0)*mu_g0
+             mu_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = mu_g0
+         lambda_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = -(2.0d0/3.0d0)*mu_g0
       endif
 
    end subroutine init_fluid

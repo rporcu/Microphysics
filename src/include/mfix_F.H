@@ -235,16 +235,28 @@ extern "C"
 	const int* domlo , const int* domhi,
 	Real (&residuals)[16]);
 
-    void correct_0(
+    void correct_p_0(
+	const int*  lo,  const int*  hi,
+	const int* slo,  const int* shi,
+	Real* p_g,      Real* pp_g);
+
+    void correct_u_0(
 	const int*  lo,  const int*  hi,
 	const int* ulo,  const int* uhi,
+	const int* slo,  const int* shi,
+	Real* pp_g,      Real* u_g,      Real* d_e);
+
+    void correct_v_0(
+	const int*  lo,  const int*  hi,
 	const int* vlo,  const int* vhi,
+	const int* slo,  const int* shi,
+	Real* pp_g,      Real* v_g,      Real* d_n);
+
+    void correct_w_0(
+	const int*  lo,  const int*  hi,
 	const int* wlo,  const int* whi,
 	const int* slo,  const int* shi,
-	const int* domlo,  const int* domhi,
-	Real* p_g,      Real* pp_g,
-	Real* u_g,      Real* v_g,      Real* w_g,
-	Real* d_e,      Real* d_n,      Real* d_t);
+	Real* pp_g,      Real* w_g,      Real* d_t);
 
     void display_resid(int* nit, Real (&residuals)[16]);
 

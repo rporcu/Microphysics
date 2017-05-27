@@ -41,9 +41,8 @@ module calc_coeff_module
         ro_g (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
         rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-! Calculate physical properties: (density, specific heat, diameter)
+      ! Calculate physical properties: (density, specific heat, diameter)
       call physical_prop(slo, shi, lo, hi, plevel, ro_g, p_g, ep_g, rop_g)
-
 
       end subroutine calc_coeff
 
