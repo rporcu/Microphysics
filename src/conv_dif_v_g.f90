@@ -19,7 +19,7 @@ module v_g_conv_dif
 !  See source_v_g                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine conv_dif_v_g(&
+   subroutine conv_dif_v_g(lo, hi, &
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
       A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ,&
       dx, dy, dz)
@@ -29,6 +29,7 @@ module v_g_conv_dif
 !---------------------------------------------------------------------//
       use run, only: discretize
 
+      integer     , intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: slo(3),shi(3)
       integer     , intent(in   ) :: ulo(3),uhi(3)
       integer     , intent(in   ) :: vlo(3),vhi(3)
@@ -60,7 +61,7 @@ module v_g_conv_dif
 
 !---------------------------------------------------------------------//
 
-      call store_a_v_g0(&
+      call store_a_v_g0(lo, hi, &
            slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
            A_m, mu_g, fluxX, fluxY, fluxZ, dx, dy, dz)
 
@@ -77,7 +78,7 @@ module v_g_conv_dif
 !  Implement FOUP discretization                                       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine store_a_v_g0(&
+      subroutine store_a_v_g0(lo, hi, &
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, mu_g, fluxX, fluxY, fluxZ, dx, dy, dz)
 
@@ -86,6 +87,7 @@ module v_g_conv_dif
 
       implicit none
 
+      integer     , intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: slo(3),shi(3)
       integer     , intent(in   ) :: ulo(3),uhi(3)
       integer     , intent(in   ) :: vlo(3),vhi(3)
@@ -127,9 +129,9 @@ module v_g_conv_dif
 !---------------------------------------------------------------------//
 
 
-      do k = alo(3),ahi(3)
-         do j = alo(2),ahi(2)
-            do i = alo(1)-1,ahi(1)
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1)-1, hi(1)
 
                ! Calculate convection-diffusion fluxes through each of the faces
                lflux = HALF * (fluxX(i+1,j-1,k) + fluxX(i+1,j  ,k))
@@ -149,9 +151,9 @@ module v_g_conv_dif
          enddo
       enddo
 
-      do k = alo(3),ahi(3)
-         do j = alo(2)-1,ahi(2)
-            do i = alo(1),ahi(1)
+      do k = lo(3), hi(3)
+         do j = lo(2)-1, hi(2)
+            do i = lo(1), hi(1)
 
                lflux = HALF * (fluxY(i,j  ,k) + fluxY(i,j+1,k))
                d_f = mu_g(i,j,k) * axz_y
@@ -168,9 +170,9 @@ module v_g_conv_dif
          enddo
       enddo
 
-      do k = alo(3)-1,ahi(3)
-         do j = alo(2),ahi(2)
-            do i = alo(1),ahi(1)
+      do k = lo(3)-1, hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
                lflux = HALF * (fluxZ(i,j-1,k+1) + fluxZ(i,j  ,k+1))
 

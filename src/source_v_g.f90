@@ -17,7 +17,7 @@ contains
 !  The drag terms are excluded from the source at this stage.          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_v_g(slo, shi, vlo, vhi, alo, ahi, lo, hi, &
+   subroutine source_v_g(lo, hi, slo, shi, vlo, vhi, alo, ahi, &
       A_m, b_m, dt, p_g, ep_g, ro_g, rop_go, &
       v_go, tau_v_g, dx, dy, dz, domlo, domhi)
 
@@ -29,7 +29,8 @@ contains
 
       use scales, only: p_scale
 
-      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3),alo(3),ahi(3),lo(3),hi(3)
+      integer     , intent(in   ) ::  lo(3), hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3),alo(3),ahi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! Septadiagonal matrix A_m
@@ -75,9 +76,9 @@ contains
       axz = dx*dz
       vol = dx*dy*dz
 
-      do k = alo(3), ahi(3)
-         do j = alo(2), ahi(2)
-            do i = alo(1), ahi(1)
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
                epga = half*(ep_g(i,j-1,k) + ep_g(i,j,k))
 
@@ -117,7 +118,7 @@ contains
 !     The drag terms are excluded from the source at this stage        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine source_v_g_bc(slo, shi, alo, ahi, A_m, b_m, &
+      subroutine source_v_g_bc(lo, hi, slo, shi, alo, ahi, A_m, b_m, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
          bc_klo_type, bc_khi_type, domlo, domhi, dx, dz)
 
@@ -131,6 +132,7 @@ contains
       use matrix, only: e, w, n, s, t, b
       use param, only: is_defined
 
+      integer     , intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dx, dz
@@ -167,12 +169,12 @@ contains
 ! ------------------------------------------------------------->
 
       ! At left boundary
-      if (slo(1) .lt. domlo(1)) then
+      if (slo(1) .lt. domlo(1) .and. lo(1).eq.alo(1)) then
 
          i = alo(1)
 
-         do k=alo(3),ahi(3)
-            do j=alo(2),ahi(2)
+         do k = lo(3), hi(3)
+            do  j= lo(2), hi(2)
 
                ! bc's on i-faces only defined within (domlo(2):domhi(2),domlo(3):domhi(3))
                jbc = max(min(j,domhi(2)),domlo(2))
@@ -220,12 +222,12 @@ contains
 ! ------------------------------------------------------------->
 
       ! At right boundary
-      if (shi(1) .gt. domhi(1)) then
+      if (shi(1) .gt. domhi(1) .and. hi(1).eq.ahi(1)) then
 
          i = ahi(1)
 
-         do k=alo(3),ahi(3)
-            do j=alo(2),ahi(2)
+         do k = lo(3), hi(3)
+            do  j= lo(2), hi(2)
 
                ! bc's on i-faces only defined within (domlo(2):domhi(2),domlo(3):domhi(3))
                jbc = max(min(j,domhi(2)),domlo(2))
@@ -272,12 +274,12 @@ contains
 ! ------------------------------------------------------------->
 
       ! At bottom boundary
-      if (slo(2) .lt. domlo(2)) then
+      if (slo(2) .lt. domlo(2) .and. lo(2).eq.alo(2)) then
 
          j = alo(2)
 
-         do k=alo(3),ahi(3)
-            do i=alo(1),ahi(1)
+         do k = lo(3), hi(3)
+            do i = lo(1), hi(1)
                bcv = bc_jlo_type(i,k,2)
 
                if (bc_jlo_type(i,k,1) == PINF_ .or. &
@@ -307,12 +309,12 @@ contains
 ! ------------------------------------------------------------->
 
       ! At top boundary
-      if (shi(2) .gt. domhi(2)) then
+      if (shi(2) .gt. domhi(2) .and. hi(2).eq.ahi(2)) then
 
          j = ahi(2)
 
-         do k=alo(3),ahi(3)
-            do i=alo(1),ahi(1)
+         do k = lo(3), hi(3)
+            do i = lo(1), hi(1)
 
                bcv = bc_jhi_type(i,k,2)
 
@@ -342,12 +344,12 @@ contains
 ! ------------------------------------------------------------->
 
       ! At down boundary
-      if (slo(3) .lt. domlo(3)) then
+      if (slo(3) .lt. domlo(3) .and. lo(3).eq.alo(3)) then
 
          k = alo(3)
 
-         do j=alo(2),ahi(2)
-            do i=alo(1),ahi(1)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
                ! bc's on k-faces only defined within (domlo(1):domhi(1),domlo(2):domhi(2))
                jbc = max(min(j,domhi(2)),domlo(2))
@@ -394,12 +396,12 @@ contains
 ! ------------------------------------------------------------->
 
       ! At up boundary
-      if (shi(3) .gt. domhi(3)) then
+      if (shi(3) .gt. domhi(3) .and. hi(3).eq.ahi(3)) then
 
          k = ahi(3)
 
-         do j=alo(2),ahi(2)
-            do i=alo(1),ahi(1)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
                ! bc's on k-faces only defined within (domlo(1):domhi(1),domlo(2):domhi(2))
                jbc = max(min(j,domhi(2)),domlo(2))
@@ -452,11 +454,12 @@ contains
 !  Purpose: Adds point sources to the gas phase V-Momentum equation.   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine point_source_v_g(alo,ahi,b_m,vol)
+      subroutine point_source_v_g(lo, hi, alo,ahi,b_m,vol)
 
       ! use ps, only: dim_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       ! use ps, only: ps_v_g
 
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
       real(c_real)  , intent(inout) :: b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real)  , intent(in   ) :: vol

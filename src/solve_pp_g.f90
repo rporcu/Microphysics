@@ -95,7 +95,7 @@ module solve_pp_module
 
       call source_pp_g_bc(slo, shi, alo, ahi, lo, hi, domlo, domhi, A_m)
 
-      if (point_source) call point_source_pp_g (alo, ahi, b_m, b_mmax, dx, dy, dz)
+      if (point_source) call point_source_pp_g (lo, hi, alo, ahi, b_m, b_mmax, dx, dy, dz)
 
       call calc_resid_pp (alo, ahi, lo, hi, b_m, b_mmax, &
          resid(resid_p,1), resid(resid_p,2))
@@ -104,7 +104,7 @@ module solve_pp_module
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: POINT_SOURCE_Pp_g                                       C
+!  Subroutine: point_source_pp_g                                       C
 !  Purpose: Adds point sources to the Pressure correction equation.    C
 !                                                                      C
 !  Notes: The off-diagonal coefficients are positive. The center       C
@@ -115,11 +115,12 @@ module solve_pp_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_PP_G(alo, ahi, b_m, B_mmax, dx, dy, dz)
+      subroutine point_source_pp_g(lo, hi, alo, ahi, b_m, B_mmax, dx, dy, dz)
 
       ! use param  , only: small_number
       ! use ps, only: dim_ps, ps_defined, ps_massflow_g
 
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
       real(c_real)  , intent(in   ) :: dx,dy,dz
 

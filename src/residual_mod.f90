@@ -29,7 +29,7 @@
 !  Purpose: Calculate residuals for momentum equations                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_resid_vel(alo, ahi, &
+      subroutine calc_resid_vel(lo, hi, alo, ahi, &
          v0lo, v0hi, v1lo, v1hi, v2lo, v2hi, &
          vel, vels1, vels2, A_m, b_m, &
          eq_id, num, den, domlo, domhi)
@@ -42,6 +42,7 @@
 
       implicit none
 
+      integer     , intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
       integer     , intent(in   ) :: v0lo(3),v0hi(3)
       integer     , intent(in   ) :: v1lo(3),v1hi(3)
@@ -90,19 +91,17 @@
       llo = alo
       lhi = ahi
 
-      if(eq_id == resid_u .and. alo(1) /= domlo(1)) llo(1) = alo(1)+1
-      if(eq_id == resid_v .and. alo(2) /= domlo(2)) llo(2) = alo(2)+1
-      if(eq_id == resid_w .and. alo(3) /= domlo(3)) llo(3) = alo(3)+1
+!     if(eq_id == resid_u .and. alo(1) /= domlo(1)) llo(1) = alo(1)+1
+!     if(eq_id == resid_v .and. alo(2) /= domlo(2)) llo(2) = alo(2)+1
+!     if(eq_id == resid_w .and. alo(3) /= domlo(3)) llo(3) = alo(3)+1
 
-! initializing
+!     Evaluate the residual at cell (i,j,k):
+!     RESp = B-sum(Anb*VARnb)-Ap*VARp
+!       (where nb = neighbor cells and p = center/0 cell)
 
-      do k = llo(3),lhi(3)
-         do j = llo(2),lhi(2)
-            do i = llo(1),lhi(1)
-
-! evaluating the residual at cell (i,j,k):
-!   RESp = B-sum(Anb*VARnb)-Ap*VARp
-!   (where nb = neighbor cells and p = center/0 cell)
+      do k = lo(3),  hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
                num1 = b_m(i,j,k) - (&
                   a_m(i,j,k,0)*vel(i,j,k)+&

@@ -804,9 +804,9 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
   // Initialize d_e to 0
   d_e[lev]->setVal(0.);
 
-  for (MFIter mfi(*u_g[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
     {
-      const Box& bx = mfi.validbox();
+      const Box& bx = mfi.tilebox();
       const Box& sbx = (*ep_g[lev])[mfi].box();
       Box abx((*A_m[lev])[mfi].box());
 
@@ -839,6 +839,12 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
         std::cout << "U_GT HAS NANS AFTER SOLVE" << std::endl;
         exit(0);
     }
+#if 0
+    std::cout << "A FROM SOLVER " << (*A_m[lev])[0] << std::endl;
+    std::cout << "B FROM SOLVER " << (*b_m[lev])[0] << std::endl;
+    std::cout << "U FROM SOLVER " << (*u_gt[lev])[0] << std::endl;
+//  exit(0);
+#endif
 }
 
 void
@@ -865,7 +871,7 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 
     for (MFIter mfi(*v_g[lev]); mfi.isValid(); ++mfi)
     {
-       const Box& bx = mfi.validbox();
+       const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
 
@@ -925,7 +931,7 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
 
     for (MFIter mfi(*w_g[lev]); mfi.isValid(); ++mfi)
     {
-       const Box& bx = mfi.validbox();
+       const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
 

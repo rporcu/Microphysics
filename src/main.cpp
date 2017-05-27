@@ -43,7 +43,6 @@ int main (int argc, char* argv[])
     int nstep=0;  // Number of time steps
     Real normg;
     int set_normg;
-    int coord;
     int cyclic_x, cyclic_y, cyclic_z, cyclic_mf;
 
     mfix_get_data( &solve_fluid,
@@ -52,8 +51,7 @@ int main (int argc, char* argv[])
 		   &dt, &dt_min, &dt_max, &tstop, &max_nit,
 		   &normg, &set_normg, &call_udf,
 		   &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf,
-		   &xlength, &ylength, &zlength, &coord);
-
+		   &xlength, &ylength, &zlength);
 
     if ( ParallelDescriptor::IOProcessor() )
 	check_inputs(&dt);

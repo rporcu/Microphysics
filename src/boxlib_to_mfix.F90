@@ -15,8 +15,7 @@ contains
   subroutine mfix_get_data(fluid, &
      dem, steady_state, dt, dt_minC, dt_maxC, tstopC, &
      max_nitC, normg, set_normg, call_udf, &
-     cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf, &
-     coord_C) &
+     cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf) &
      bind(C, name="mfix_get_data")
 
     use fld_const, only: ro_g0
@@ -37,7 +36,7 @@ contains
     integer(c_int), intent(out) :: steady_state
     real(c_real), intent(out) :: dt_minC, dt_maxC, tstopC
     real(c_real), intent(out) :: dt
-    integer(c_int)         , intent(out) :: max_nitC, coord_C
+    integer(c_int)         , intent(out) :: max_nitC
     real(c_real), intent(out) :: normg
     integer(c_int), intent(out) :: set_normg
     integer(c_int), intent(out) :: cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf
