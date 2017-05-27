@@ -94,7 +94,7 @@ subroutine WRITE_DES_Out(lTime, np, particles)
 
    RETURN
 
-1000 FORMAT(3x,F15.6,5X,F15.6,2(3x,F15.6))
+1000 FORMAT(3x,F15.6,5X,F15.6,3x,F15.6,3x,F15.4)
 
 CONTAINS
 
