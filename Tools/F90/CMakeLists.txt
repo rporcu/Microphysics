@@ -1,9 +1,9 @@
 set( FCOMPARE_PAR_EXE fcompare_par.exe )
 set( FEXTRACT_EXE     fextract.exe )
 
-add_executable( ${FCOMPARE_PAR_EXE} fcompare_par.f90 )
+add_executable( ${FCOMPARE_PAR_EXE} EXCLUDE_FROM_ALL fcompare_par.f90 )
 
-add_executable( ${FEXTRACT_EXE} fextract.f90 )
+add_executable( ${FEXTRACT_EXE} EXCLUDE_FROM_ALL fextract.f90 )
 target_link_libraries( ${FEXTRACT_EXE} ${MFIX_EXT_LINK_STRING} )
 SET_TARGET_PROPERTIES(${FEXTRACT_EXE} PROPERTIES LINKER_LANGUAGE CXX)
 
