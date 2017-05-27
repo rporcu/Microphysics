@@ -48,7 +48,7 @@ add_executable(mfix ${MAIN} ${USR_OVERRIDES})
 target_link_libraries( mfix mfixcore ${MFIX_EXT_LINK_STRING} )
 
 # Tools
-set( MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/F90) 
+set( MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 
 add_subdirectory( Tools/F90 )
 
 # Tests
