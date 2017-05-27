@@ -1,5 +1,5 @@
-set( FCOMPARE_PAR_EXE fcompare_par.exe )
-set( FEXTRACT_EXE     fextract.exe )
+set( FCOMPARE_PAR_EXE fcompare_par )
+set( FEXTRACT_EXE     fextract )
 
 add_executable( ${FCOMPARE_PAR_EXE} EXCLUDE_FROM_ALL fcompare_par.f90 )
 
