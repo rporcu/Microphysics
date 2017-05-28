@@ -141,7 +141,7 @@ module solve_vel_star_module
       call calc_d_e(lo, hi, slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
                     ep_g, f_gds, dx, dy, dz, domlo, domhi)
 
-! Handle special case where center coefficient is zero
+      ! Handle special case where center coefficient is zero
       call adjust_a_g ('U', slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
       ! Add in source terms for DEM drag coupling.

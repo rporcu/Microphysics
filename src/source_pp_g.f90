@@ -109,7 +109,6 @@ contains
                 A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
                                  A_m(i,j,k,n) + A_m(i,j,k,s) + &
                                  A_m(i,j,k,t) + A_m(i,j,k,b))
-
              enddo
           enddo
       enddo
