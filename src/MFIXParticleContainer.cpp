@@ -47,7 +47,7 @@ void MFIXParticleContainer::InitLevelMask ( int lev,
         mask.setVal(grid_id, box, 0, 1);
         mask.setVal(tile_id, box, 1, 1);
     }
-    mask.FillBoundary();
+    mask.FillBoundary(geom.periodicity());
 }
 
 void* MFIXParticleContainer::GetParticlesData( const int& lev, const MFIter& mfi ) { 
@@ -219,7 +219,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     
     for ( int n = 0; n < nsubsteps; ++n ) {
     
-        fillGhosts(lev);
+        fillNeighbors(lev);
 	
 	for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
@@ -227,12 +227,12 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 	    const int np     = NumberOfParticles(pti);
 	    void* particles  = GetParticlesData(pti);
 
-	    // Ghost particles
+	    // Neighbor particles
 	    int nstride = pti.GetArrayOfStructs().dataShape().first;
 	    PairIndex index(pti.index(), pti.LocalTileIndex());
-	    int ng = ghosts[index].size() / pdata_size;
+	    int ng = neighbors[index].size() / pdata_size;
 
-	    mfix_des_time_loop_ops( &np, particles, &ng, ghosts[index].dataPtr(),
+	    mfix_des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
 				    &subdt, &dx, &dy, &dz,
 				    &xlen, &ylen, &zlen, &nstep );
 
@@ -247,7 +247,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 	    mfix_call_usr2_des( &np, particles );
 	}
 
-        clearGhosts(lev);
+        clearNeighbors(lev);
 
         Redistribute();
     }
@@ -315,8 +315,8 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
 }
 
 
-void MFIXParticleContainer::fillGhosts( int lev ) {
-    GhostCommMap ghosts_to_comm;
+void MFIXParticleContainer::fillNeighbors( int lev ) {
+    NeighborCommMap neighbors_to_comm;
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
         const Box& tile_box = pti.tilebox();
         const IntVect& lo = tile_box.smallEnd();
@@ -353,7 +353,7 @@ void MFIXParticleContainer::fillGhosts( int lev ) {
                 IntVect neighbor_cell = iv;
                 neighbor_cell.shift(idim, shift[idim]);
                 BL_ASSERT(mask[pti].box().contains(neighbor_cell));
-                packGhostParticle(lev,neighbor_cell, mask[pti], p, ghosts_to_comm);
+                packNeighborParticle(lev,neighbor_cell, mask[pti], p, neighbors_to_comm);
             }
             
             // Now add the particle to the "edge" neighbors
@@ -364,7 +364,7 @@ void MFIXParticleContainer::fillGhosts( int lev ) {
                         neighbor_cell.shift(idim, shift[idim]);
                         neighbor_cell.shift(jdim, shift[jdim]);
                         BL_ASSERT(mask[pti].box().contains(neighbor_cell));
-                        packGhostParticle(lev,neighbor_cell, mask[pti], p, ghosts_to_comm);
+                        packNeighborParticle(lev,neighbor_cell, mask[pti], p, neighbors_to_comm);
                     }
                 }
             }
@@ -374,43 +374,66 @@ void MFIXParticleContainer::fillGhosts( int lev ) {
                 IntVect neighbor_cell = iv;
                 neighbor_cell.shift(shift);
                 BL_ASSERT(mask[pti].box().contains(neighbor_cell));
-                packGhostParticle(lev,neighbor_cell, mask[pti], p, ghosts_to_comm);
+                packNeighborParticle(lev,neighbor_cell, mask[pti], p, neighbors_to_comm);
             }
 
         }
     }
-    fillGhostsMPI(ghosts_to_comm);
+    fillNeighborsMPI(neighbors_to_comm);
 }
 
-void MFIXParticleContainer::packGhostParticle(int lev,
+void MFIXParticleContainer::applyPeriodicShift(int lev, ParticleType& p,
+                                              const IntVect& neighbor_cell) {
+ 
+    const Periodicity& periodicity = Geom(lev).periodicity();
+    if (not periodicity.isAnyPeriodic()) return;
+ 
+    const Box& domain = Geom(lev).Domain();
+    const IntVect& lo = domain.smallEnd();
+    const IntVect& hi = domain.bigEnd();
+    const RealBox& prob_domain = Geom(lev).ProbDomain();
+ 
+    for (int dir = 0; dir < BL_SPACEDIM; ++dir) {
+        if (not periodicity.isPeriodic(dir)) continue;
+        if (neighbor_cell[dir] < lo[dir]) {
+            p.pos(dir) += prob_domain.length(dir);
+        }
+        else if (neighbor_cell[dir] > hi[dir]) {
+            p.pos(dir) -= prob_domain.length(dir);
+        }
+    }
+}
+
+void MFIXParticleContainer::packNeighborParticle(int lev,
 					      const IntVect& neighbor_cell,
 					      const BaseFab<int>& mask,
 					      const ParticleType& p,
-					      GhostCommMap& ghosts_to_comm) {
+					      NeighborCommMap& neighbors_to_comm) {
     const int neighbor_grid = mask(neighbor_cell, 0);
     if (neighbor_grid >= 0) {
         const int who = ParticleDistributionMap(lev)[neighbor_grid];
         const int MyProc = ParallelDescriptor::MyProc();
         const int neighbor_tile = mask(neighbor_cell, 1);
         PairIndex dst_index(neighbor_grid, neighbor_tile);
+        ParticleType particle = p;
+        applyPeriodicShift(lev, particle, neighbor_cell);
         if (who == MyProc) {
-            size_t old_size = ghosts[dst_index].size();
-            size_t new_size = ghosts[dst_index].size() + pdata_size;
-            ghosts[dst_index].resize(new_size);
-            std::memcpy(&ghosts[dst_index][old_size], &p, pdata_size);
+            size_t old_size = neighbors[dst_index].size();
+            size_t new_size = neighbors[dst_index].size() + pdata_size;
+            neighbors[dst_index].resize(new_size);
+            std::memcpy(&neighbors[dst_index][old_size], &particle, pdata_size);
         } else {
-            GhostCommTag tag(who, neighbor_grid, neighbor_tile);
-            Array<char>& buffer = ghosts_to_comm[tag];
+            NeighborCommTag tag(who, neighbor_grid, neighbor_tile);
+            Array<char>& buffer = neighbors_to_comm[tag];
             size_t old_size = buffer.size();
             size_t new_size = buffer.size() + pdata_size;
             buffer.resize(new_size);
-            std::memcpy(&buffer[old_size], &p, pdata_size);
+            std::memcpy(&buffer[old_size], &particle, pdata_size);
         }
     }
 }
 
-
-void MFIXParticleContainer::fillGhostsMPI(GhostCommMap& ghosts_to_comm) {
+void MFIXParticleContainer::fillNeighborsMPI(NeighborCommMap& neighbors_to_comm) {
 
 #ifdef BL_USE_MPI
     const int MyProc = ParallelDescriptor::MyProc();
@@ -418,7 +441,7 @@ void MFIXParticleContainer::fillGhostsMPI(GhostCommMap& ghosts_to_comm) {
     
     // count the number of tiles to be sent to each proc
     std::map<int, int> tile_counts;
-    for (const auto& kv: ghosts_to_comm) {
+    for (const auto& kv: neighbors_to_comm) {
         tile_counts[kv.first.proc_id] += 1;
     }
     
@@ -427,13 +450,13 @@ void MFIXParticleContainer::fillGhostsMPI(GhostCommMap& ghosts_to_comm) {
     // the buffer will be packed like:
     // ntiles, gid1, tid1, size1, data1....  gid2, tid2, size2, data2... etc. 
     std::map<int, Array<char> > send_data;
-    for (const auto& kv: ghosts_to_comm) {
+    for (const auto& kv: neighbors_to_comm) {
         Array<char>& buffer = send_data[kv.first.proc_id];
         buffer.resize(sizeof(int));
         std::memcpy(&buffer[0], &tile_counts[kv.first.proc_id], sizeof(int));
     }
     
-    for (auto& kv : ghosts_to_comm) {
+    for (auto& kv : neighbors_to_comm) {
         int data_size = kv.second.size();
         Array<char>& buffer = send_data[kv.first.proc_id];
         size_t old_size = buffer.size();
@@ -521,7 +544,7 @@ void MFIXParticleContainer::fillGhostsMPI(GhostCommMap& ghosts_to_comm) {
         ParallelDescriptor::Send(kv.second.data(), Cnt, Who, SeqNum);
     }
     
-    // unpack the received data and put them into the proper ghost buffers
+    // unpack the received data and put them into the proper neighbor buffers
     if (nrcvs > 0) {
         BL_MPI_REQUIRE( MPI_Waitall(nrcvs, rreqs.data(), stats.data()) );
         for (int i = 0; i < nrcvs; ++i) {
@@ -537,17 +560,17 @@ void MFIXParticleContainer::fillGhostsMPI(GhostCommMap& ghosts_to_comm) {
                 if (size == 0) continue;
                 
                 PairIndex dst_index(gid, tid);
-                size_t old_size = ghosts[dst_index].size();
-                size_t new_size = ghosts[dst_index].size() + size;
-                ghosts[dst_index].resize(new_size);
-                std::memcpy(&ghosts[dst_index][old_size], buffer, size); buffer += size;
+                size_t old_size = neighbors[dst_index].size();
+                size_t new_size = neighbors[dst_index].size() + size;
+                neighbors[dst_index].resize(new_size);
+                std::memcpy(&neighbors[dst_index][old_size], buffer, size); buffer += size;
             }
         }
     }
 #endif
 }
 
-void MFIXParticleContainer::clearGhosts( int lev ) 
+void MFIXParticleContainer::clearNeighbors( int lev ) 
 {
-    ghosts.clear();
+    neighbors.clear();
 }
