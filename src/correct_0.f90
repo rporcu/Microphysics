@@ -61,7 +61,7 @@ module correct_0_module
 
       do k = lo(3), hi(3)
         do j = lo(2), hi(2)
-          do i = lo(1), hi(1)+1
+          do i = lo(1), hi(1)
             u_g(i,j,k) = u_g(i,j,k) - d_e(i,j,k)*(pp_g(i,j,k)-pp_g(i-1,j,k))
           enddo
         enddo
@@ -88,7 +88,7 @@ module correct_0_module
       integer(c_int) :: i,j,k
 
       do k = lo(3), hi(3)
-        do j = lo(2), hi(2)+1
+        do j = lo(2), hi(2)
           do i = lo(1), hi(1)
            v_g(i,j,k) = v_g(i,j,k) - d_n(i,j,k)*(pp_g(i,j,k)-pp_g(i,j-1,k))
          enddo
