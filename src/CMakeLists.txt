@@ -18,7 +18,6 @@ set(F90_sources
    calc_coeff.f90
    calc_d.f90
    calc_mflux.f90
-   calc_mu_g.f90
    calc_ro_g.f90
    calc_trd_g.f90
    check_convergence.f90
