@@ -213,7 +213,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         MultiFab::Copy(ph,p,0,0,1,nghost);
       }
 
-      // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
       ph.FillBoundary(geom[lev].periodicity());
 
       for (MFIter mfi(ph); mfi.isValid(); ++mfi)
