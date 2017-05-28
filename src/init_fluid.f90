@@ -14,7 +14,6 @@ module init_fluid_module
       use iso_c_binding , only: c_int
 
       use calc_ro_g_module, only: calc_ro_g
-      use calc_mu_g_module, only: calc_mu_g
 
       use param, only: is_undefined, undefined
       use fld_const, only: ro_g0, mu_g0
@@ -50,6 +49,8 @@ module init_fluid_module
       real(c_real), intent(in   ) :: dx, dy, dz
       real(c_real), intent(in   ) :: xlength, ylength, zlength
 
+      real(c_real) :: mu_val, lambda_val
+
       ! Set user specified initial conditions (IC)
       call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
          domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
@@ -71,11 +72,19 @@ module init_fluid_module
 
       ! Set the initial viscosity
       if (is_undefined(mu_g0)) then
-         call calc_mu_g(slo,shi,lambda_g,mu_g)
+
+         mu_val     = 1.7d-5 * (293.15d0/273.0d0)**1.5d0 * (383.d0/(293.15d0+110.d0))
+         lambda_val = (2.d0 / 3.d0) * mu_val
+
       else
-             mu_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = mu_g0
-         lambda_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = -(2.0d0/3.0d0)*mu_g0
+
+         mu_val     = mu_g0
+         lambda_val = -(2.0d0/3.0d0)*mu_g0
+
       endif
+
+      mu_g     = mu_val
+      lambda_g = lambda_val
 
    end subroutine init_fluid
 

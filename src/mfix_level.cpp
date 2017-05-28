@@ -616,8 +616,8 @@ void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
 {
     for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
     {
-       const Box& sbx = (*ep_g[lev])[mfi].box();
        const Box& bx = mfi.tilebox();
+       const Box& sbx = (*ep_g[lev])[mfi].box();
 
        calc_coeff(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(), &calc_flag,
             (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
@@ -900,7 +900,6 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
         std::cout << "V_GT HAS NANS AFTER SOLVE" << std::endl;
         exit(0);
     }
-
 }
 
 void
@@ -1025,7 +1024,7 @@ mfix_level::mfix_correct_0(int lev)
 
     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
-      const Box& bx = mfi.tilebox();
+      const Box& bx = mfi.growntilebox();
       const Box& sbx = (*p_g[lev])[mfi].box();
 
       Box ubx((*u_g[lev])[mfi].box());
@@ -1199,10 +1198,10 @@ void mfix_level::mfix_calc_volume_fraction(int lev)
 
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
-    for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
-       const Box&  bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
+       const Box&  bx = mfi.validbox();
        const int np = pc -> NumberOfParticles(lev, mfi);
 
        void* particles = pc -> GetParticlesData( lev, mfi );
@@ -1250,6 +1249,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
            (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
            particles, &dx, &dy, &dz );
     }
+
     fill_mf_bc(lev,*f_gds[lev]);
     fill_mf_bc(lev,*drag_bm[lev]);
 }
