@@ -21,23 +21,20 @@ module w_g_conv_dif
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine conv_dif_w_g(lo, hi, &
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-      A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ,&
-      dx, dy, dz)
+      A_m, mu_g, fluxX, fluxY, fluxZ, dx, dy, dz)
 
 
 ! Modules
 !---------------------------------------------------------------------//
-      use run, only: discretize
-
       implicit none
 
-      integer     , intent(in   ) ::  lo(3), hi(3)
-      integer     , intent(in   ) :: slo(3),shi(3)
-      integer     , intent(in   ) :: ulo(3),uhi(3)
-      integer     , intent(in   ) :: vlo(3),vhi(3)
-      integer     , intent(in   ) :: wlo(3),whi(3)
-      integer     , intent(in   ) :: alo(3),ahi(3)
-      real(c_real), intent(in   ) :: dx, dy, dz
+      integer(c_int), intent(in   ) ::  lo(3), hi(3) 
+      integer(c_int), intent(in   ) :: slo(3),shi(3) 
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3) 
+      integer(c_int), intent(in   ) :: vlo(3),vhi(3) 
+      integer(c_int), intent(in   ) :: wlo(3),whi(3) 
+      integer(c_int), intent(in   ) :: alo(3),ahi(3) 
+      real(c_real)  , intent(in   ) :: dx, dy, dz
 
       ! Septadiagonal matrix A_m
       real(c_real) :: A_m&
@@ -46,18 +43,10 @@ module w_g_conv_dif
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: fluxX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-
-      real(c_real), intent(in   ) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: fluxY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-
-      real(c_real), intent(in   ) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: fluxZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 !---------------------------------------------------------------------//

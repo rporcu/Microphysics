@@ -122,10 +122,8 @@ contains
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
          bc_klo_type, bc_khi_type, domlo, domhi, dx, dz)
 
-      use bc, only: nsw_, fsw_, psw_
-      use bc, only: pinf_, pout_
-      use bc, only: minf_
-      use bc, only: cycl_
+      use bc, only: NSW_, FSW_, PSW_
+      use bc, only: PINF_, POUT_, MINF_
 
       use bc, only: bc_hw_g, bc_vw_g, bc_v_g
 
@@ -181,12 +179,12 @@ contains
 
                bcv = bc_ilo_type(jbc,k,2)
 
-               if(bc_ilo_type(jbc,k,1) == NSW_) then
+               if (bc_ilo_type(jbc,k,1) == NSW_) then
 
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
                   A_m(i,j,k,w) = zero
 
-               else if(bc_ilo_type(jbc,k,1) == FSW_) then
+               else if (bc_ilo_type(jbc,k,1) == FSW_) then
 
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,w)
                   A_m(i,j,k,w) = zero
