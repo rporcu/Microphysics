@@ -97,83 +97,70 @@ module w_g_conv_dif
       real(c_real), intent(in   ) :: fluxZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-!     Local variables
-!---------------------------------------------------------------------//
-      integer :: i, j, k
-
-      ! Face mass flux
-      real(c_real) :: lflux
-
-      ! Diffusion parameter
-      real(c_real) :: d_f
-
-      real(c_real) :: ayz_x,axz_y,axy_z
+      integer(c_int) :: i, j, k
+      real(c_real)   :: lflux_lo, lflux_hi
+      real(c_real)   :: ayz_x,axz_y,axy_z
 
       ayz_x = dy*dz / dx
       axz_y = dx*dz / dy
       axy_z = dx*dy / dz
 
-!---------------------------------------------------------------------//
+      ! Diffusion terms
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
+               A_m(i,j,k,e) = avg_h(avg_h(mu_g(i  ,j,k-1),mu_g(i+1,j,k-1)),&
+                                    avg_h(mu_g(i  ,j,k  ),mu_g(i+1,j,k  ))) * ayz_x
+               A_m(i,j,k,w) = avg_h(avg_h(mu_g(i-1,j,k-1),mu_g(i  ,j,k-1)),&
+                                    avg_h(mu_g(i-1,j,k  ),mu_g(i  ,j,k  ))) * ayz_x
+ 
+               A_m(i,j,k,n) = avg_h(avg_h(mu_g(i,j+1,k  ),mu_g(i,j+1,k-1)),&
+                                    avg_h(mu_g(i,j  ,k  ),mu_g(i,j  ,k-1))) * axz_y
+               A_m(i,j,k,s) = avg_h(avg_h(mu_g(i,j-1,k  ),mu_g(i,j-1,k-1)),&
+                                    avg_h(mu_g(i,j  ,k  ),mu_g(i,j  ,k-1))) * axz_y
+ 
+               A_m(i,j,k,t) = mu_g(i,j,k  ) * axy_z
+               A_m(i,j,k,b) = mu_g(i,j,k-1) * axy_z
+ 
+            enddo
+         enddo
+      enddo
 
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
-            do i = lo(1)-1, hi(1)
+            do i = lo(1), hi(1)
 
                ! Calculate convection-diffusion fluxes through each of the faces
-               lflux = HALF * (fluxX(i+1,j,k-1) + fluxX(i+1,j,k  ))
+               lflux_hi = HALF * (fluxX(i+1,j,k-1) + fluxX(i+1,j,k))
+               lflux_lo = HALF * (fluxX(i  ,j,k-1) + fluxX(i  ,j,k))
 
-               d_f = avg_h(avg_h(mu_g(i,j,k-1),mu_g(i+1,j,k-1)),&
-                           avg_h(mu_g(i,j,k  ),mu_g(i+1,j,k  ))) * ayz_x
+               if (lflux_hi .lt. zero) &
+                  A_m(i,j,k,e) = A_m(i,j,k,e) - lflux_hi
 
-               ! East face (i+1, j, k)
-               if (lflux >= zero) then
-                  if (i.ge.alo(1)) A_m(i,  j,k,e) = d_f
-                  if (i.lt.ahi(1)) A_m(i+1,j,k,w) = d_f + lflux
-               else
-                  if (i.ge.alo(1)) A_m(i,  j,k,e) = d_f - lflux
-                  if (i.lt.ahi(1)) A_m(i+1,j,k,w) = d_f
-               endif
+               if (lflux_lo .ge. zero) &
+                  A_m(i,j,k,w) = A_m(i,j,k,w) + lflux_lo
 
-            enddo
-         enddo
-      enddo
+               ! *******************************************************
 
-      do k = lo(3), hi(3)
-         do j = lo(2)-1, hi(2)
-            do i = lo(1), hi(1)
+               lflux_hi = HALF * (fluxY(i,j+1,k-1) + fluxY(i,j+1,k))
+               lflux_lo = HALF * (fluxY(i,j  ,k-1) + fluxY(i,j  ,k))
 
-               lflux = HALF * (fluxY(i,j+1,k-1) + fluxY(i,j+1,k  ))
+               if (lflux_hi .lt. zero) &
+                  A_m(i,j,k,n) = A_m(i,j,k,n) - lflux_hi
 
-               d_f = avg_h(avg_h(mu_g(i,j-1,k),mu_g(i,j-1,k+1)),&
-                           avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1))) * axz_y
+               if (lflux_lo .ge. zero) &
+                  A_m(i,j,k,s) = A_m(i,j,k,s) + lflux_lo
 
-               if (lflux >= zero) then
-                  if (j.ge.alo(2)) A_m(i,j,  k,n) = d_f
-                  if (j.lt.ahi(2)) A_m(i,j+1,k,s) = d_f + lflux
-               else
-                  if (j.ge.alo(2)) A_m(i,j,  k,n) = d_f - lflux
-                  if (j.lt.ahi(2)) A_m(i,j+1,k,s) = d_f
-               endif
+               ! *******************************************************
 
-            enddo
-         enddo
-      enddo
+               lflux_hi = HALF * (fluxZ(i,j,k  ) + fluxZ(i,j,k+1))
+               lflux_lo = HALF * (fluxZ(i,j,k-1) + fluxZ(i,j,k  ))
 
-      do k = lo(3)-1, hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
+               if (lflux_hi .lt. zero) &
+                  A_m(i,j,k,t) = A_m(i,j,k,t) - lflux_hi
 
-               lflux = HALF * (fluxZ(i,j,k) + fluxZ(i,j,k+1))
-
-               d_f = mu_g(i,j,k) * axy_z
-
-               if (lflux >= zero) then
-                  if (k.ge.alo(3)) A_m(i,j,k,  t) = d_f
-                  if (k.lt.ahi(3)) A_m(i,j,k+1,b) = d_f + lflux
-               else
-                  if (k.ge.alo(3)) A_m(i,j,k,  t) = d_f - lflux
-                  if (k.lt.ahi(3)) A_m(i,j,k+1,b) = d_f
-               endif
+               if (lflux_lo .ge. zero) &
+                  A_m(i,j,k,b) = A_m(i,j,k,b) + lflux_lo
 
             enddo
          enddo
