@@ -21,8 +21,7 @@ variables:
   script:
     - mkdir build
     - cd build
-    - echo env CC=$CC CXX=$CXX FC=$FC F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI ..
-    - env CC=$CC CXX=$CXX FC=$FC F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI ..
+    - env CC=$CC CXX=$CXX FC=$FC F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OpenMP=$ENABLE_OpenMP ..
     - make -j 4
     - ctest -R $TEST_REGEX
   tags:
@@ -31,6 +30,7 @@ variables:
 .serial: &serial_template
   variables:
     ENABLE_MPI: "0"
+    ENABLE_OpenMP: "0"
     CC: "$GCC_PREFIX/bin/gcc"
     CXX: "$GCC_PREFIX/bin/g++"
     FC: "$GCC_PREFIX/bin/gfortran"
@@ -40,28 +40,49 @@ variables:
 .mpi: &mpi_template
   variables:
     ENABLE_MPI: "1"
+    ENABLE_OpenMP: "0"
     CC: "$MPI_PREFIX/bin/mpicc"
     CXX: "$MPI_PREFIX/bin/mpic++"
     FC: "$MPI_PREFIX/bin/mpifort"
     LD_LIBRARY_PATH: "$MPI_PREFIX/lib"
   <<: *test_template
 
+.openmp: &openmp_template
+  variables:
+    ENABLE_MPI: "0"
+    ENABLE_OpenMP: "1"
+    CC: "$GCC_PREFIX/bin/gcc"
+    CXX: "$GCC_PREFIX/bin/g++"
+    FC: "$GCC_PREFIX/bin/gfortran"
+    LD_LIBRARY_PATH: "$GCC_PREFIX/lib64:$GCC_PREFIX/lib"
+  <<: *test_template
+
 fld-test-serial:
   variables:
-    TEST_REGEX: FLD
+    TEST_REGEX: "FLD01"
   <<: *serial_template
 
 fld-test-mpi:
   variables:
-    TEST_REGEX: FLD
+    TEST_REGEX: "FLD01"
   <<: *mpi_template
+
+fld-test-openmp:
+  variables:
+    TEST_REGEX: "FLD01"
+  <<: *openmp_template
 
 dem-test-serial:
   variables:
-    TEST_REGEX: DEM
+    TEST_REGEX: "DEM01"
   <<: *serial_template
 
 dem-test-mpi:
   variables:
-    TEST_REGEX: DEM
+    TEST_REGEX: "DEM01"
   <<: *mpi_template
+
+dem-test-openmp:
+  variables:
+    TEST_REGEX: "DEM01"
+  <<: *openmp_template
