@@ -15,13 +15,11 @@ contains
   subroutine mfix_get_data(fluid, &
      dem, steady_state, dt, dt_minC, dt_maxC, tstopC, &
      max_nitC, normg, set_normg, call_udf, &
-     cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf) &
+     cyclic_mf) &
      bind(C, name="mfix_get_data")
 
     use fld_const, only: ro_g0
-    use bc, only: cyclic_x,    cyclic_y,    cyclic_z
     use bc, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
-    use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
     use get_data_module, only: get_data
     use leqsol, only: max_nit
     use param, only: is_undefined
@@ -39,7 +37,7 @@ contains
     integer(c_int)         , intent(out) :: max_nitC
     real(c_real), intent(out) :: normg
     integer(c_int), intent(out) :: set_normg
-    integer(c_int), intent(out) :: cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf
+    integer(c_int), intent(out) :: cyclic_mf
 
     call get_data(dt)
 
@@ -58,10 +56,6 @@ contains
 
     normg = norm_g
     set_normg = merge(1,0,norm_g /= 1.0d0)
-
-    cyclic_xC = merge(1,0,cyclic_x .or. cyclic_x_pd .or. cyclic_x_mf)
-    cyclic_yC = merge(1,0,cyclic_y .or. cyclic_y_pd .or. cyclic_y_mf)
-    cyclic_zC = merge(1,0,cyclic_z .or. cyclic_z_pd .or. cyclic_z_mf)
 
     cyclic_mf = merge(1,0,cyclic_x_mf .or. cyclic_y_mf .or. cyclic_z_mf)
 

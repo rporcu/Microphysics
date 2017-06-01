@@ -20,7 +20,7 @@ extern "C"
 			int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
 			Real* tstop, int* max_nit,
 			Real* normg, int* set_normg, int* call_udf,
-			int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf,
+			int* cyclic_mf,
 			Real* xlength, Real* ylength, Real* zlength);
 
     void check_inputs(Real* dt);
