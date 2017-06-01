@@ -528,7 +528,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
 
       // Display current iteration residuals
       if ( ParallelDescriptor::IOProcessor() )
-    display_resid(&nit, residuals);
+        display_resid(&time, &dt, &nit, residuals);
 
       // Iterate over cyclic mass flux bc
       if(cyclic_mf==1 && (converged==1 || nit >= max_nit))

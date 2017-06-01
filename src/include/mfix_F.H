@@ -260,7 +260,7 @@ extern "C"
   const int* slo,  const int* shi,
   Real* pp_g,      Real* w_g,      Real* d_t);
 
-    void display_resid(int* nit, Real (&residuals)[16]);
+  void display_resid(Real* time, Real* dt, int* nit, Real (&residuals)[16]);
 
     int check_convergence(int* nit, Real (&residuals)[16]);
 
