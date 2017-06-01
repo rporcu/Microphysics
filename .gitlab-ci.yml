@@ -31,8 +31,8 @@ variables:
 .serial: &serial_template
   variables:
     ENABLE_MPI: "0"
-    CC: "$GCC_PREFIX/bin/cc"
-    CXX: "$GCC_PREFIX/bin/c++"
+    CC: "$GCC_PREFIX/bin/gcc"
+    CXX: "$GCC_PREFIX/bin/g++"
     FC: "$GCC_PREFIX/bin/gfortran"
     LD_LIBRARY_PATH: "$GCC_PREFIX/lib64:$GCC_PREFIX/lib"
   <<: *test_template
