@@ -87,6 +87,12 @@ int main (int argc, char* argv[])
     // only if solve_fluid = T
     Real prev_dt = dt;
 
+    if (!steady_state) {
+    	my_mfix.WritePlotFile( nstep, dt, time );
+    	my_mfix.WriteParticleAscii( nstep ); 
+    }
+
+    
     while (finish == 0) {
 
 	mfix_usr1();
