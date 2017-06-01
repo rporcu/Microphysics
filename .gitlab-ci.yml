@@ -32,7 +32,7 @@ variables:
 
 .serial: &serial_template
   variables:
-    ENABLE_MPI=0
+    ENABLE_MPI: "0"
     CC: "$GCC_BIN/cc"
     CXX: "$GCC_BIN/c++"
     FC: "$GCC_BIN/gfortran"
@@ -40,7 +40,7 @@ variables:
 
 .mpi: &mpi_template
   variables:
-    ENABLE_MPI=1
+    ENABLE_MPI: "1"
     CC: "$MPI_BIN/mpicc"
     CXX: "$MPI_BIN/mpic++"
     FC: "$MPI_BIN/mpifort"
@@ -48,20 +48,20 @@ variables:
 
 fld-test-serial:
   variables:
-    TEST_REGEX=FLD
+    TEST_REGEX: FLD
   <<: *serial_template
 
 fld-test-mpi:
   variables:
-    TEST_REGEX=FLD
+    TEST_REGEX: FLD
   <<: *mpi_template
 
 dem-test-serial:
   variables:
-    TEST_REGEX=DEM
+    TEST_REGEX: DEM
   <<: *serial_template
 
 dem-test-mpi:
   variables:
-    TEST_REGEX=DEM
+    TEST_REGEX: DEM
   <<: *mpi_template
