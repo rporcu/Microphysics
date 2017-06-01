@@ -14,9 +14,6 @@ variables:
   CTEST_OUTPUT_ON_FAILURE: "1"
   GCC_PREFIX: "/nfs/apps/Compilers/GNU/6.1.0"
   MPI_PREFIX: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0"
-  LD_LIBRARY_PATH: "$MPI_PREFIX/lib:$GCC_PREFIX/lib64:$GCC_PREFIX/lib"
-  GCC_BIN: "$GCC_PREFIX/bin"
-  MPI_BIN: "$MPI_PREFIX/bin"
   MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
 
 .test: &test_template
@@ -34,17 +31,19 @@ variables:
 .serial: &serial_template
   variables:
     ENABLE_MPI: "0"
-    CC: "$GCC_BIN/cc"
-    CXX: "$GCC_BIN/c++"
-    FC: "$GCC_BIN/gfortran"
+    CC: "$GCC_PREFIX/bin/cc"
+    CXX: "$GCC_PREFIX/bin/c++"
+    FC: "$GCC_PREFIX/bin/gfortran"
+    LD_LIBRARY_PATH: "$GCC_PREFIX/lib64:$GCC_PREFIX/lib"
   <<: *test_template
 
 .mpi: &mpi_template
   variables:
     ENABLE_MPI: "1"
-    CC: "$MPI_BIN/mpicc"
-    CXX: "$MPI_BIN/mpic++"
-    FC: "$MPI_BIN/mpifort"
+    CC: "$MPI_PREFIX/bin/mpicc"
+    CXX: "$MPI_PREFIX/bin/mpic++"
+    FC: "$MPI_PREFIX/bin/mpifort"
+    LD_LIBRARY_PATH: "$MPI_PREFIX/lib"
   <<: *test_template
 
 fld-test-serial:
