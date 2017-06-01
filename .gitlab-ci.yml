@@ -24,6 +24,7 @@ variables:
   script:
     - mkdir build
     - cd build
+    - echo env CC=$CC CXX=$CXX FC=$FC F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI ..
     - env CC=$CC CXX=$CXX FC=$FC F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI ..
     - make -j 4
     - ctest -R $TEST_REGEX
