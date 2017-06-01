@@ -12,43 +12,56 @@ stages:
 
 variables:
   CTEST_OUTPUT_ON_FAILURE: "1"
-  LD_LIBRARY_PATH: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64:/nfs/apps/Compilers/GNU/6.1.0/lib"
-  CC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpicc"
-  CXX: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpic++"
-  FC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
-  F77: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
-  F90: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
+  GCC_PREFIX: "/nfs/apps/Compilers/GNU/6.1.0"
+  MPI_PREFIX: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0"
+  LD_LIBRARY_PATH: "$MPI_PREFIX/lib:$GCC_PREFIX/lib64:$GCC_PREFIX/lib"
+  GCC_BIN: "$GCC_PREFIX/bin"
+  MPI_BIN: "$MPI_PREFIX/bin"
   MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
 
-build:
-  stage: build
-  script:
-    - mkdir build
-    - cd build
-    - cmake -DENABLE_MPI=1 ..
-    - make -j 4
-    - make build_tests
-  tags:
-    - joule
-
-fld-test:
+.test: &test_template
   stage: test
   script:
     - mkdir build
     - cd build
-    - cmake -DENABLE_MPI=1 ..
+    - env CC=$CC CXX=$CXX FC=$FC F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI ..
     - make -j 4
-    - ctest -R FLD
+    - ctest -R $TEST_REGEX
   tags:
     - joule
 
-dem-test:
-  stage: test
-  script:
-    - mkdir build
-    - cd build
-    - cmake -DENABLE_MPI=1 ..
-    - make -j 4
-    - ctest -R DEM
-  tags:
-    - joule
+.serial: &serial_template
+  variables:
+    ENABLE_MPI=0
+    CC: "$GCC_BIN/cc"
+    CXX: "$GCC_BIN/c++"
+    FC: "$GCC_BIN/gfortran"
+  <<: *test_template
+
+.mpi: &mpi_template
+  variables:
+    ENABLE_MPI=1
+    CC: "$MPI_BIN/mpicc"
+    CXX: "$MPI_BIN/mpic++"
+    FC: "$MPI_BIN/mpifort"
+  <<: *test_template
+
+fld-test-serial:
+  variables:
+    TEST_REGEX=FLD
+  <<: *serial_template
+
+fld-test-mpi:
+  variables:
+    TEST_REGEX=FLD
+  <<: *mpi_template
+
+dem-test-serial:
+  variables:
+    TEST_REGEX=DEM
+  <<: *serial_template
+
+dem-test-mpi:
+  variables:
+    TEST_REGEX=DEM
+  <<: *mpi_template
