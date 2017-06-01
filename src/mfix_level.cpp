@@ -146,6 +146,13 @@ void mfix_level::Init(int lev, Real dt, Real time)
 
   Box domain(geom[0].Domain());
 
+  int cyc_x=0, cyc_y=0, cyc_z=0;
+  if(geom[lev].isPeriodic(0)) cyc_x = 1;
+  if(geom[lev].isPeriodic(1)) cyc_y = 1;
+  if(geom[lev].isPeriodic(2)) cyc_z = 1;
+
+  mfix_set_cyclic(&cyc_x, &cyc_y, &cyc_z);
+
   // Since these involving writing to output files we only do these on the IOProcessor
   if ( ParallelDescriptor::IOProcessor() )
     {
@@ -983,7 +990,7 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
     {
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
-     
+
        Box abx((*A_m[lev])[mfi].box());
        Box ubx((*u_g[lev])[mfi].box());
        Box vbx((*v_g[lev])[mfi].box());
@@ -1032,8 +1039,8 @@ mfix_level::mfix_correct_0(int lev)
       Box wbx((*w_g[lev])[mfi].box());
 
       correct_p_0( bx.loVect(),  bx.hiVect(),
-                  sbx.loVect(),  sbx.hiVect(), 
-                  (*p_g[lev])[mfi].dataPtr(),      
+                  sbx.loVect(),  sbx.hiVect(),
+                  (*p_g[lev])[mfi].dataPtr(),
                   (*pp_g[lev])[mfi].dataPtr());
     }
 
@@ -1048,8 +1055,8 @@ mfix_level::mfix_correct_0(int lev)
 
       correct_u_0( bx.loVect(),  bx.hiVect(),
                   ubx.loVect(), ubx.hiVect(),
-                  sbx.loVect(),  sbx.hiVect(), 
-                  (*pp_g[lev])[mfi].dataPtr(), 
+                  sbx.loVect(),  sbx.hiVect(),
+                  (*pp_g[lev])[mfi].dataPtr(),
                   (*u_g[lev])[mfi].dataPtr(),
                   (*d_e[lev])[mfi].dataPtr());
     }
@@ -1065,8 +1072,8 @@ mfix_level::mfix_correct_0(int lev)
 
       correct_v_0( bx.loVect(),  bx.hiVect(),
                   vbx.loVect(), vbx.hiVect(),
-                  sbx.loVect(),  sbx.hiVect(), 
-                  (*pp_g[lev])[mfi].dataPtr(), 
+                  sbx.loVect(),  sbx.hiVect(),
+                  (*pp_g[lev])[mfi].dataPtr(),
                   (*v_g[lev])[mfi].dataPtr(),
                   (*d_n[lev])[mfi].dataPtr());
     }
@@ -1082,8 +1089,8 @@ mfix_level::mfix_correct_0(int lev)
 
       correct_w_0( bx.loVect(),  bx.hiVect(),
                   wbx.loVect(), wbx.hiVect(),
-                  sbx.loVect(),  sbx.hiVect(), 
-                  (*pp_g[lev])[mfi].dataPtr(), 
+                  sbx.loVect(),  sbx.hiVect(),
+                  (*pp_g[lev])[mfi].dataPtr(),
                   (*w_g[lev])[mfi].dataPtr(),
                   (*d_t[lev])[mfi].dataPtr());
     }

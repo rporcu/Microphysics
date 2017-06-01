@@ -28,7 +28,6 @@ contains
       use bc, only: delp_z
 
       use functions, only: avg
-      use bc , only: cyclic_z_pd
 
       use matrix, only: e, w, s, n, t, b
       use scales, only: p_scale

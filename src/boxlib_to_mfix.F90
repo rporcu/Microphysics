@@ -19,7 +19,7 @@ contains
      bind(C, name="mfix_get_data")
 
     use fld_const, only: ro_g0
-    use bc, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
+    use bc, only: flux_g
     use get_data_module, only: get_data
     use leqsol, only: max_nit
     use param, only: is_undefined
@@ -57,7 +57,7 @@ contains
     normg = norm_g
     set_normg = merge(1,0,norm_g /= 1.0d0)
 
-    cyclic_mf = merge(1,0,cyclic_x_mf .or. cyclic_y_mf .or. cyclic_z_mf)
+    cyclic_mf = merge(1,0,abs(flux_g) > epsilon(0.0d0))
 
   end subroutine mfix_get_data
 

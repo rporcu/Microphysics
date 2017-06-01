@@ -375,7 +375,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Even for this case a pressure drop must also be specified, which
 !    is used as the initial guess in the simulations.
 !  </description>
-      Flux_g = UNDEFINED
+      Flux_g = zero
 !</keyword>
 
 
