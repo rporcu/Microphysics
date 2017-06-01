@@ -25,11 +25,12 @@ module calc_d_mod
 !           pressure correction                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_d_e(slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
+   subroutine calc_d_e(lo, hi, slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
                        ep_g, f_gds, dx, dy, dz, domlo, domhi)
 
       use bc, only: cyclic_x
 
+      integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: ulo(3),uhi(3)
       integer, intent(in   ) :: alo(3),ahi(3)
@@ -53,21 +54,15 @@ module calc_d_mod
       real(c_real) :: ayz, vol
       real(c_real) :: Am0, epga
       logical      :: coupled
-      integer :: llo(3), lhi(3)
 
       COUPLED = (DES_CONTINUUM_COUPLED .AND. .NOT.DES_ONEWAY_COUPLED)
 
       ayz = dy*dz
       vol = dx*dy*dz
 
-      llo = alo
-      lhi = ahi
-
-      ! if(.not.cyclic_x .and. alo(1) == domlo(1)) llo(1) = alo(1)+1
-
-      do k = llo(3), lhi(3)
-         do j = llo(2), lhi(2)
-            do i = llo(1), lhi(1)
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
                Am0 = -A_m(i,j,k,0)
                if (abs(am0) > small_number) then
                   epga = ayz*0.5d0*(ep_g(i-1,j,k)+ep_g(i,j,k))
@@ -83,11 +78,12 @@ module calc_d_mod
 
    end subroutine calc_d_e
 
-   subroutine calc_d_n(slo, shi, vlo, vhi, alo, ahi, d_n, A_m,&
+   subroutine calc_d_n(lo, hi, slo, shi, vlo, vhi, alo, ahi, d_n, A_m,&
                        ep_g, f_gds, dx, dy, dz, domlo, domhi)
 
       use bc, only: cyclic_y
 
+      integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: vlo(3),vhi(3)
       integer, intent(in   ) :: alo(3),ahi(3)
@@ -111,19 +107,15 @@ module calc_d_mod
       real(c_real) :: axz, vol
       real(c_real) :: Am0, epga
       logical      :: coupled
-      integer :: llo(3), lhi(3)
 
       coupled = (des_continuum_coupled .and. .not.des_oneway_coupled)
 
       axz = dx*dz
       vol = dx*dy*dz
 
-      llo = alo
-      lhi = ahi
-
-      do k = llo(3), lhi(3)
-         do j = llo(2), lhi(2)
-            do i = llo(1), lhi(1)
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
                Am0 = -A_m(i,j,k,0)
                if(abs(Am0) > small_number) then
                   epga = axz*0.5d0*(ep_g(i,j-1,k)+ep_g(i,j,k))
@@ -140,11 +132,12 @@ module calc_d_mod
 
    end subroutine calc_d_n
 
-   subroutine calc_d_t(slo, shi, wlo, whi, alo, ahi, d_t, A_m,&
+   subroutine calc_d_t(lo, hi, slo, shi, wlo, whi, alo, ahi, d_t, A_m,&
       ep_g, f_gds, dx, dy, dz, domlo, domhi)
 
       use bc, only: cyclic_z
 
+      integer, intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: slo(3),shi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
@@ -168,21 +161,15 @@ module calc_d_mod
       real(c_real) :: axy, vol
       real(c_real) :: Am0, epga
       logical      :: coupled
-      integer :: llo(3), lhi(3)
 
       coupled = (des_continuum_coupled .and. .not.des_oneway_coupled)
 
       axy = dx*dy
       vol = dx*dy*dz
 
-      llo = alo
-      lhi = ahi
-
-      ! if(.not.cyclic_z .and. alo(3) == domlo(3)) llo(3) = alo(3)+1
-
-      do k = llo(3), lhi(3)
-        do j = llo(2), lhi(2)
-           do i = llo(1), lhi(1)
+      do k = lo(3), hi(3)
+        do j = lo(2), hi(2)
+           do i = lo(1), hi(1)
               Am0 = -A_m(I,J,K,0)
 
               if (abs(Am0) > small_number) THEN

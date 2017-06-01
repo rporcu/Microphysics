@@ -33,9 +33,6 @@ module leqsol
 ! Option to minimize dot products
   logical :: MINIMIZE_DOTPRODUCTS
 
-! Option to transpose A_m
-  logical :: DO_TRANSPOSE
-
 ! Frequency of convergence check in BiCGStab
   integer :: ICHECK_BICGS
 

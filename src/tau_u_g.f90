@@ -82,6 +82,7 @@ contains
       axz = dx*dz
       ayz = dy*dz
 
+      ! Note that lo and hi come in as cell-centered tiles!
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)+1

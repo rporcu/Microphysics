@@ -36,7 +36,7 @@ MODULE INIT_NAMELIST_MODULE
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      use leqsol, only: do_transpose, icheck_bicgs, leq_it, opt_parallel, use_doloop
+      use leqsol, only: icheck_bicgs, leq_it, opt_parallel, use_doloop
       use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, ival
       use run, only: full_log, nlog
       use output, only: dim_usr

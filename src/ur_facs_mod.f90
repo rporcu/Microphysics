@@ -21,12 +21,13 @@ contains
 !  Purpose: Under-relax equation.                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine under_relax(var, varlo, varhi, A_m, b_m, alo, ahi, eq)
+   subroutine under_relax(lo, hi, var, varlo, varhi, A_m, b_m, alo, ahi, eq)
 
    use param, only: one, equal
 
    implicit none
 
+   integer(c_int), intent(in   ) ::    lo(3),   hi(3)
    integer(c_int), intent(in   ) :: varlo(3),varhi(3)
    integer(c_int), intent(in   ) ::   alo(3),  ahi(3)
    real(c_real)  , intent(in   ) :: var(varlo(1):varhi(1),varlo(2):varhi(2),varlo(3):varhi(3))
@@ -46,9 +47,9 @@ contains
    F1 = ONE/UR_FAC(eq)
    F2 = F1 - ONE
 
-   do k = alo(3),ahi(3)
-      do j = alo(2),ahi(2)
-         do i = alo(1),ahi(1)
+   do k = lo(3), hi(3)
+      do j = lo(2), hi(2)
+         do i = lo(1), hi(1)
             Ap = A_m(I,J,K,0)
             A_m(I,J,K,0) = Ap*F1
             b_m(I,J,K) = b_m(I,J,K) + Ap*VAR(i,j,k)*F2

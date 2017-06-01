@@ -13,9 +13,9 @@ using namespace std;
 
 namespace {
 
-struct GhostCommTag {
+struct NeighborCommTag {
 
-    GhostCommTag(int pid, int gid, int tid)
+    NeighborCommTag(int pid, int gid, int tid)
         : proc_id(pid), grid_id(gid), tile_id(tid)
     {}
 
@@ -24,7 +24,7 @@ struct GhostCommTag {
     int tile_id;
 };
 
-bool operator<(const GhostCommTag& l, const GhostCommTag& r) {
+bool operator<(const NeighborCommTag& l, const NeighborCommTag& r) {
     return (l.proc_id < r.proc_id || 
            (l.proc_id == r.proc_id && l.grid_id < r.grid_id) ||
            (l.proc_id == r.proc_id && l.grid_id == r.grid_id && l.tile_id < r.tile_id ));
@@ -79,7 +79,7 @@ class MFIXParticleContainer
 public:
 
     using PairIndex = std::pair<int, int>;
-    using GhostCommMap = std::map<GhostCommTag, Array<char> >;
+    using NeighborCommMap = std::map<NeighborCommTag, Array<char> >;
     
     // Get number of particles
     const int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
@@ -126,38 +126,44 @@ private:
 
     static void ReadStaticParameters ();
 
-    void fillGhosts( int lev );
+    ///
+    /// Apply periodic shift to particle position, so naive distance calculation
+    /// between neighbors and regular particles will be correct.
+    ///
+    void applyPeriodicShift(int lev, ParticleType& p, const amrex::IntVect& neighbor_cell);
+
+    void fillNeighbors( int lev );
 
     ///
     /// Pack a particle's data into the proper neighbor buffer, or put it into
     /// the structure to be sent to the other processes
     ///
-    void packGhostParticle( int lev, 
+    void packNeighborParticle( int lev, 
 			    const IntVect& neighbor_cell,
 			    const BaseFab<int>& mask,
 			    const ParticleType& p,
-			    GhostCommMap& ghosts_to_comm);
+			    NeighborCommMap& neighbors_to_comm);
     ///
-    /// Perform the MPI communication neccesary to fill ghost buffers
+    /// Perform the MPI communication neccesary to fill neighbor buffers
     ///
-    void fillGhostsMPI(GhostCommMap& ghosts_to_comm);
+    void fillNeighborsMPI(NeighborCommMap& neighbors_to_comm);
 
 
-    void clearGhosts( int lev );
+    void clearNeighbors( int lev );
     
     // runtime parameters
     static int do_tiling;
     static IntVect tile_size;
 
     //
-    // This members are for the handling of ghost particles
+    // This members are for the handling of neighbor particles
     // 
-    const int ng = 2;  // number of ghost layers
+    const int ng = 2;  // number of neighbor layers
     const size_t pdata_size = sizeof( ParticleType );
     // const size_t pdata_size = (BL_SPACEDIM + realData::count)*sizeof(RealType) +
     // 	(2+intData::count)*sizeof(int);
     FabArray< BaseFab<int> > mask;
-    std::map<PairIndex, Array<char> > ghosts; 
+    std::map<PairIndex, Array<char> > neighbors; 
 
 };
 #endif

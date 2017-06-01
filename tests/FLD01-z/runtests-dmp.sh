@@ -20,8 +20,8 @@ fi
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p  mpirun -np 4 ${MFIX} inputs
 
-${FEXTRACT} -p FLD0100000/ -d 1 -v w_g -s POST_WG_MPI.dat
-${FEXTRACT} -p FLD0100000/ -d 3 -v p_g -s POST_PG_MPI.dat
+${FEXTRACT} -p FLD0100000/ -d 1 -v w_g -s POST_WG.dat
+${FEXTRACT} -p FLD0100000/ -d 3 -v p_g -s POST_PG.dat
 
 post_dats=POST*.dat
 for result in ${post_dats}; do
