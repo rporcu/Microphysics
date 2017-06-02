@@ -31,23 +31,17 @@ variables:
 
 fld-test-serial:
   variables:
-    ENABLE_MPI: "0"
-    ENABLE_OpenMP: "0"
     TEST_REGEX: "FLD"
   <<: *test_template
 
 fld-test-serial-multigrid:
   variables:
-    ENABLE_MPI: "0"
-    ENABLE_OpenMP: "0"
     MULTIGRID: "1"
     TEST_REGEX: "FLD"
   <<: *test_template
 
 fld-test-serial-tiled:
   variables:
-    ENABLE_MPI: "0"
-    ENABLE_OpenMP: "0"
     TILED: "1"
     TEST_REGEX: "FLD"
   <<: *test_template
@@ -55,7 +49,6 @@ fld-test-serial-tiled:
 fld-test-mpi:
   variables:
     ENABLE_MPI: "1"
-    ENABLE_OpenMP: "0"
     CC: "$MPI_CC"
     CXX: "$MPI_CXX"
     FC: "$MPI_FC"
@@ -64,7 +57,6 @@ fld-test-mpi:
 
 .fld-test-openmp:
   variables:
-    ENABLE_MPI: "0"
     ENABLE_OpenMP: "1"
     TEST_REGEX: "FLD"
   <<: *test_template
@@ -72,14 +64,23 @@ fld-test-mpi:
 
 dem-test-serial:
   variables:
-    ENABLE_MPI: "0"
-    ENABLE_OpenMP: "0"
     TEST_REGEX: "DEM"
+  <<: *test_template
+
+dem-test-serial-multigrid:
+  variables:
+    TEST_REGEX: "DEM"
+    MULTIGRID: "1"
+  <<: *test_template
+
+dem-test-serial-tiled:
+  variables:
+    TEST_REGEX: "DEM"
+    TILED: "1"
   <<: *test_template
 
 .dem-test-openmp:
   variables:
-    ENABLE_MPI: "0"
     ENABLE_OpenMP: "1"
     TEST_REGEX: "DEM"
   <<: *test_template
