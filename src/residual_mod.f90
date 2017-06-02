@@ -31,7 +31,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine calc_resid_vel(lo, hi, alo, ahi, &
          v0lo, v0hi, v1lo, v1hi, v2lo, v2hi, &
-         vel, vels1, vels2, A_m, b_m, &
+         vel, vels1, vels2, A_m, b_m, mask, &
          eq_id, num, den, domlo, domhi)
 
 !-----------------------------------------------
@@ -65,6 +65,9 @@
 
       ! Vector b_m
       real(c_real) :: b_m&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+
+      real(c_real) :: mask&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       ! Residual ID, numerator and denominator
@@ -121,8 +124,8 @@
                   den1 = abs(a_m(i,j,k,0)*magvel)
 
                   ! Adding to terms that are accumulated
-                  num = num + num1
-                  den = den + den1
+                  num = num + num1/mask(i,j,k)
+                  den = den + den1/mask(i,j,k)
                endif
             enddo
          enddo

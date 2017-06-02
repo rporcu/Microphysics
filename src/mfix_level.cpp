@@ -813,6 +813,8 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
   // Initialize d_e to 0
   d_e[lev]->setVal(0.);
 
+  auto mask = u_g[lev]->OverlapMask(geom[lev].periodicity());
+
   for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.tilebox();
@@ -834,6 +836,7 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
            (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
            (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
            (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
+           (*mask)[mfi].dataPtr(),
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, residuals);
@@ -853,27 +856,29 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 {
-    Box domain(geom[lev].Domain());
+  Box domain(geom[lev].Domain());
 
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
 
-    // Solve V-Momentum equation
+  // Solve V-Momentum equation
 
-    // Matrix and rhs vector
-    BoxArray y_edge_ba = grids[lev];
-    y_edge_ba.surroundingNodes(1);
-    A_m[lev].reset(new MultiFab(y_edge_ba,dmap[lev],7,0));
-    b_m[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,0));
+  // Matrix and rhs vector
+  BoxArray y_edge_ba = grids[lev];
+  y_edge_ba.surroundingNodes(1);
+  A_m[lev].reset(new MultiFab(y_edge_ba,dmap[lev],7,0));
+  b_m[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,0));
 
-    MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
+  MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
 
-    // Initialize d_n to 0
-    d_n[lev]->setVal(0.);
+  // Initialize d_n to 0
+  d_n[lev]->setVal(0.);
 
-    for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
-    {
+  auto mask = v_g[lev]->OverlapMask(geom[lev].periodicity());
+
+  for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
+  {
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
@@ -893,10 +898,11 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
            (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
            (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
            (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
+           (*mask)[mfi].dataPtr(),
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, residuals);
-    }
+  }
 
     int eq_id = 3;
 
@@ -912,27 +918,28 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
 {
-    Box domain(geom[lev].Domain());
+  Box domain(geom[lev].Domain());
 
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
 
-    // Solve W-Momentum equation
+  // Solve W-Momentum equation
 
-    // Matrix and rhs vector
-    BoxArray z_edge_ba = grids[lev];
-    z_edge_ba.surroundingNodes(2);
-    A_m[lev].reset(new MultiFab(z_edge_ba,dmap[lev],7,0));
-    b_m[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,0));
+  // Matrix and rhs vector
+  BoxArray z_edge_ba = grids[lev];
+  z_edge_ba.surroundingNodes(2);
+  A_m[lev].reset(new MultiFab(z_edge_ba,dmap[lev],7,0));
+  b_m[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,0));
 
-    MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
+  MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
 
-    // Initialize d_t to 0
-    d_t[lev]->setVal(0.);
+  // Initialize d_t to 0
+  d_t[lev]->setVal(0.);
+  auto mask = w_g[lev]->OverlapMask(geom[lev].periodicity());
 
-    for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
-    {
+  for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
+  {
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
@@ -952,10 +959,11 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
            (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
            (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
            (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
+           (*mask)[mfi].dataPtr(),
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, residuals);
-    }
+  }
 
     int eq_id = 4;
 
