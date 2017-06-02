@@ -1,5 +1,7 @@
 #!/bin/bash -exl
 
+set -euo pipefail
+
 # set case directory
 RUN_NAME="FLD01"
 
@@ -17,17 +19,25 @@ if [ -z "${FEXTRACT}" ]; then
     exit 1
 fi
 
+if [ "$ENABLE_MPI" -eq "1" ]; then
+    MPIRUN="mpirun -np 4"
+    REL_ERR="-r 0.0"
+else
+    MPIRUN=""
+    REL_ERR=""
+fi
+
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
-time -p ${MFIX} inputs
+time -p ${MPIRUN} "${MFIX}" inputs
 
 ${FEXTRACT} -p FLD0100000/ -d 2 -v u_g -s POST_UG.dat
 ${FEXTRACT} -p FLD0100000/ -d 1 -v p_g -s POST_PG.dat
 
 post_dats=POST*.dat
 for result in ${post_dats}; do
-    numdiff -a 0.0 AUTOTEST/${result} ${result}
+    numdiff -a 0.0 ${REL_ERR} "AUTOTEST/${result}" "${result}"
 done
 
 if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then
-    ${FCOMPARE} --infile1 ${MFIX_BENCHMARKS_HOME}/FLD01-x_FLD01-x_plt00000 --infile2 FLD0100000/
+    ${FCOMPARE} --infile1 "${MFIX_BENCHMARKS_HOME}/FLD01-x_FLD01-x_plt00000" --infile2 FLD0100000/
 fi
