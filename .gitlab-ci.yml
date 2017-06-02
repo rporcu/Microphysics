@@ -17,6 +17,12 @@ variables:
   FC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran"
   MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
 
+  # defaults
+  ENABLE_MPI: "0"
+  ENABLE_OpenMP: "0"
+  MULTIGRID: "0"
+  TILED: "0"
+
 
 .test: &test_template
   script:
