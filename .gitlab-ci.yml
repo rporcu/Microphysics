@@ -6,112 +6,75 @@
 
 # image: mfixexa
 
-stages:
-  - build
-  - test
-
 variables:
   CTEST_OUTPUT_ON_FAILURE: "1"
   GCC_PREFIX: "/nfs/apps/Compilers/GNU/6.1.0"
   MPI_PREFIX: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0"
   MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
   LD_LIBRARY_PATH: "$MPI_PREFIX/lib:$GCC_PREFIX/lib64:$GCC_PREFIX/lib"
+  MPI_CC: "$MPI_PREFIX/bin/mpicc"
+  MPI_CXX: "$MPI_PREFIX/bin/mpic++"
+  MPI_FC: "$MPI_PREFIX/bin/mpifort"
+  CC: "$GCC_PREFIX/bin/gcc"
+  CXX: "$GCC_PREFIX/bin/g++"
+  FC: "$GCC_PREFIX/bin/gfortran"
 
-.build_test: &buildtest_template
+
+.test: &test_template
   script:
     - mkdir build
     - cd build
     - env CC=$CC CXX=$CXX FC=$FC F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OpenMP=$ENABLE_OpenMP ..
-    - make -j 4 build_tests
-  stage: build
+    - ctest -j 4 $TEST_REGEX
   tags:
     - joule
-  artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 day
-    paths:
-      - tests/?????-?/mfix_?????-?
-
-buildtest_serial:
-  variables:
-    ENABLE_MPI: "0"
-    ENABLE_OpenMP: "0"
-    CC: "$GCC_PREFIX/bin/gcc"
-    CXX: "$GCC_PREFIX/bin/g++"
-    FC: "$GCC_PREFIX/bin/gfortran"
-  <<: *buildtest_template
-
-buildtest_mpi:
-  variables:
-    ENABLE_MPI: "1"
-    ENABLE_OpenMP: "0"
-    CC: "$MPI_PREFIX/bin/mpicc"
-    CXX: "$MPI_PREFIX/bin/mpic++"
-    FC: "$MPI_PREFIX/bin/mpifort"
-  <<: *buildtest_template
-
-buildtest_openmp:
-  variables:
-    ENABLE_MPI: "0"
-    ENABLE_OpenMP: "1"
-    CC: "$GCC_PREFIX/bin/gcc"
-    CXX: "$GCC_PREFIX/bin/g++"
-    FC: "$GCC_PREFIX/bin/gfortran"
-  <<: *buildtest_template
-
-
-.serial: &serial_test_template
-  variables:
-    ENABLE_MPI: "0"
-    ENABLE_OpenMP: "0"
-  stage: test
-  dependencies:
-    - buildtest_serial
-
-.mpi: &mpi_test_template
-  variables:
-    ENABLE_MPI: "1"
-    ENABLE_OpenMP: "0"
-  stage: test
-  dependencies:
-    - buildtest_mpi
-
-.openmp: &openmp_test_template
-  variables:
-    ENABLE_MPI: "0"
-    ENABLE_OpenMP: "1"
-  stage: test
-  dependencies:
-    - buildtest_openmp
-
 
 
 fld-test-serial:
-  script:
-    - ctest -R FLD
-  <<: *serial_test_template
+  variables:
+    ENABLE_MPI: "0"
+    ENABLE_OpenMP: "0"
+    TEST_REGEX: "FLD"
+  <<: *test_template
 
 fld-test-mpi:
-  script:
-    - ctest -R FLD
-  <<: *mpi_test_template
+  variables:
+    ENABLE_MPI: "1"
+    ENABLE_OpenMP: "0"
+    CC: "$MPI_CC"
+    CXX: "$MPI_CXX"
+    FC: "$MPI_FC"
+    TEST_REGEX: "FLD"
+  <<: *test_template
 
 fld-test-openmp:
-  script:
-    - ctest -R FLD
-  <<: *openmp_test_template
+  variables:
+    ENABLE_MPI: "0"
+    ENABLE_OpenMP: "1"
+    TEST_REGEX: "FLD"
+  <<: *test_template
+
 
 dem-test-serial:
-  script:
-    - ctest -R DEM
-  <<: *serial_test_template
+  variables:
+    ENABLE_MPI: "0"
+    ENABLE_OpenMP: "0"
+    TEST_REGEX: "DEM"
+  <<: *test_template
 
 dem-test-mpi:
-  script:
-    - ctest -R DEM
-  <<: *mpi_test_template
+  variables:
+    ENABLE_MPI: "1"
+    ENABLE_OpenMP: "0"
+    CC: "$MPI_CC"
+    CXX: "$MPI_CXX"
+    FC: "$MPI_FC"
+    TEST_REGEX: "DEM"
+  <<: *test_template
 
 dem-test-openmp:
-  script:
-    - ctest -R DEM
-  <<: *openmp_test_template
+  variables:
+    ENABLE_MPI: "0"
+    ENABLE_OpenMP: "1"
+    TEST_REGEX: "DEM"
+  <<: *test_template
