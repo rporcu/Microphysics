@@ -53,7 +53,7 @@ foreach( THIS_TEST ${TESTS})
    # Setup for running the a single test
    set(TEST_RUN run_${TEST_NAME})
    add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=${ENABLE_MPI} ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE}
+      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=${ENABLE_MPI} MULTIGRID=${MULTIGRID} TILED=${TILED} ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE}
       WORKING_DIRECTORY  ${TEST_DIR} )
 
    # Make sure that fcompare and fextract are always built before a test is run

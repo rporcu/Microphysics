@@ -17,12 +17,18 @@ variables:
   FC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran"
   MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
 
+  # defaults
+  ENABLE_MPI: "0"
+  ENABLE_OpenMP: "0"
+  MULTIGRID: "0"
+  TILED: "0"
+
 
 .test: &test_template
   script:
     - mkdir build
     - cd build
-    - env F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OpenMP=$ENABLE_OpenMP ..
+    - env F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OpenMP=$ENABLE_OpenMP -DMULTIGRID=$MULTIGRID -DTILED=$TILED ..
     - make -j 4
     - ctest -R $TEST_REGEX
   tags:
@@ -31,15 +37,24 @@ variables:
 
 fld-test-serial:
   variables:
-    ENABLE_MPI: "0"
-    ENABLE_OpenMP: "0"
+    TEST_REGEX: "FLD"
+  <<: *test_template
+
+fld-test-serial-multigrid:
+  variables:
+    MULTIGRID: "1"
+    TEST_REGEX: "FLD"
+  <<: *test_template
+
+fld-test-serial-tiled:
+  variables:
+    TILED: "1"
     TEST_REGEX: "FLD"
   <<: *test_template
 
 fld-test-mpi:
   variables:
     ENABLE_MPI: "1"
-    ENABLE_OpenMP: "0"
     CC: "$MPI_CC"
     CXX: "$MPI_CXX"
     FC: "$MPI_FC"
@@ -48,7 +63,6 @@ fld-test-mpi:
 
 .fld-test-openmp:
   variables:
-    ENABLE_MPI: "0"
     ENABLE_OpenMP: "1"
     TEST_REGEX: "FLD"
   <<: *test_template
@@ -56,14 +70,23 @@ fld-test-mpi:
 
 dem-test-serial:
   variables:
-    ENABLE_MPI: "0"
-    ENABLE_OpenMP: "0"
     TEST_REGEX: "DEM"
+  <<: *test_template
+
+dem-test-serial-multigrid:
+  variables:
+    TEST_REGEX: "DEM"
+    MULTIGRID: "1"
+  <<: *test_template
+
+dem-test-serial-tiled:
+  variables:
+    TEST_REGEX: "DEM"
+    TILED: "1"
   <<: *test_template
 
 .dem-test-openmp:
   variables:
-    ENABLE_MPI: "0"
     ENABLE_OpenMP: "1"
     TEST_REGEX: "DEM"
   <<: *test_template
