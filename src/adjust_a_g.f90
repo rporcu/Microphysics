@@ -18,7 +18,7 @@ contains
    subroutine adjust_a_g(axis, slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
       use functions, only: avg
-      use matrix, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t
       use param, only: ONE, ZERO, small_number
 
       implicit none
@@ -29,11 +29,11 @@ contains
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3)
-  
+
       ! Vector b_m
       real(c_real), intent(inout) :: B_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
- 
+
       real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 

@@ -42,7 +42,7 @@ contains
     call get_data(dt)
 
 ! Flags for fluid setup
-    fluid =  merge(1,0,ro_g0 /= 0.0d0)
+    fluid =  merge(1,0,abs(ro_g0) > tiny(0.0d0))
 
     dem      =  merge(1,0,dem_solids)
     call_udf =  merge(1,0,call_usr)
@@ -55,7 +55,7 @@ contains
     max_nitC = max_nit
 
     normg = norm_g
-    set_normg = merge(1,0,norm_g /= 1.0d0)
+    set_normg = merge(1,0, abs(norm_g - 1.0d0) > tiny(0.0d0))
 
     cyclic_mf = merge(1,0,abs(flux_g) > epsilon(0.0d0))
 

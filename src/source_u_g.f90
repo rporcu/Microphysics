@@ -131,7 +131,6 @@ contains
       use bc, only: nsw_, fsw_, psw_
       use bc, only: pinf_, pout_
       use bc, only: minf_
-      use bc, only: cycl_
 
       use bc, only: bc_hw_g, bc_uw_g, bc_u_g
 

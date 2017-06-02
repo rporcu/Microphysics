@@ -15,7 +15,7 @@ contains
    integer(c_int) function check_convergence(nit, resid) &
       bind(C, name="check_convergence")
 
-      use residual, only: nresid, sum5_resid
+      use residual, only: nresid
       use residual, only: resid_p, resid_u, resid_v, resid_w
       use residual, only: tol_resid, tol_diverge
       use param, only: zero, is_undefined, large_number
