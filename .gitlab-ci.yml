@@ -8,7 +8,6 @@
 
 variables:
   CTEST_OUTPUT_ON_FAILURE: "1"
-  MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
   LD_LIBRARY_PATH: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64:/nfs/apps/Compilers/GNU/6.1.0/lib"
   MPI_CC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpicc"
   MPI_CXX: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpic++"
@@ -16,6 +15,7 @@ variables:
   CC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gcc"
   CXX: "/nfs/apps/Compilers/GNU/6.1.0/bin/g++"
   FC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran"
+  MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
 
 
 .test: &test_template
@@ -24,7 +24,7 @@ variables:
     - cd build
     - env F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OpenMP=$ENABLE_OpenMP ..
     - make -j 4
-    - ctest $TEST_REGEX
+    - ctest -R $TEST_REGEX
   tags:
     - joule
 
