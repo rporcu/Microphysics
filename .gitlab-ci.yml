@@ -22,7 +22,7 @@ variables:
   script:
     - mkdir build
     - cd build
-    - env F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OpenMP=$ENABLE_OpenMP ..
+    - env F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OpenMP=$ENABLE_OpenMP -DMULTIGRID=$MULTIGRID -DTILED=$TILED ..
     - make -j 4
     - ctest -R $TEST_REGEX
   tags:
