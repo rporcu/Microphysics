@@ -43,7 +43,7 @@ fld-test-mpi:
     CC: "$MPI_CC"
     CXX: "$MPI_CXX"
     FC: "$MPI_FC"
-    TEST_REGEX: "FLD"
+    TEST_REGEX: "FLD0[1-3]"
   <<: *test_template
 
 .fld-test-openmp:

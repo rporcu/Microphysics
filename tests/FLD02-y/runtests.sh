@@ -19,7 +19,7 @@ if [ -z "${FEXTRACT}" ]; then
 fi
 
 if [ "$ENABLE_MPI" -eq "1" ]; then
-    MPIRUN="mpirun -np 4"
+    MPIRUN="mpirun -np 2"
     REL_ERR="-r 0.0"
 else
     MPIRUN=""
