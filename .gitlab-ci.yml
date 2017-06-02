@@ -46,7 +46,7 @@ fld-test-mpi:
     TEST_REGEX: "FLD"
   <<: *test_template
 
-fld-test-openmp:
+.fld-test-openmp:
   variables:
     ENABLE_MPI: "0"
     ENABLE_OpenMP: "1"
@@ -54,14 +54,14 @@ fld-test-openmp:
   <<: *test_template
 
 
-dem-test-serial:
+.dem-test-serial:
   variables:
     ENABLE_MPI: "0"
     ENABLE_OpenMP: "0"
     TEST_REGEX: "DEM"
   <<: *test_template
 
-dem-test-mpi:
+.dem-test-mpi:
   variables:
     ENABLE_MPI: "1"
     ENABLE_OpenMP: "0"
@@ -71,7 +71,7 @@ dem-test-mpi:
     TEST_REGEX: "DEM"
   <<: *test_template
 
-dem-test-openmp:
+.dem-test-openmp:
   variables:
     ENABLE_MPI: "0"
     ENABLE_OpenMP: "1"
