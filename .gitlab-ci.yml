@@ -8,23 +8,20 @@
 
 variables:
   CTEST_OUTPUT_ON_FAILURE: "1"
-  GCC_PREFIX: "/nfs/apps/Compilers/GNU/6.1.0"
-  MPI_PREFIX: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0"
   MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
-  LD_LIBRARY_PATH: "$MPI_PREFIX/lib:$GCC_PREFIX/lib64:$GCC_PREFIX/lib"
-  MPI_CC: "$MPI_PREFIX/bin/mpicc"
-  MPI_CXX: "$MPI_PREFIX/bin/mpic++"
-  MPI_FC: "$MPI_PREFIX/bin/mpifort"
-  CC: "$GCC_PREFIX/bin/gcc"
-  CXX: "$GCC_PREFIX/bin/g++"
-  FC: "$GCC_PREFIX/bin/gfortran"
+  LD_LIBRARY_PATH: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64:/nfs/apps/Compilers/GNU/6.1.0/lib"
+  MPI_CC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/mpicc"
+  MPI_CXX: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/mpic++"
+  MPI_FC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/mpifort"
+  CC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gcc"
+  CXX: "/nfs/apps/Compilers/GNU/6.1.0/bin/g++"
+  FC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran"
 
 
 .test: &test_template
   script:
     - mkdir build
     - cd build
-    - echo env CC=$CC CXX=$CXX FC=$FC F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OpenMP=$ENABLE_OpenMP ..
     - env CC=$CC CXX=$CXX FC=$FC F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OpenMP=$ENABLE_OpenMP ..
     - ctest -j 4 $TEST_REGEX
   tags:
