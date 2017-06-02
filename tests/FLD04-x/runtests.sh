@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # set case directory
-RUN_NAME="FLD01"
+RUN_NAME="FLD04"
 
 MFIX=./mfix
 if [ -n "$1" ]; then
