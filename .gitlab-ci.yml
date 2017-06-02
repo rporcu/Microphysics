@@ -36,6 +36,22 @@ fld-test-serial:
     TEST_REGEX: "FLD"
   <<: *test_template
 
+fld-test-serial-multigrid:
+  variables:
+    ENABLE_MPI: "0"
+    ENABLE_OpenMP: "0"
+    MULTIGRID: "1"
+    TEST_REGEX: "FLD"
+  <<: *test_template
+
+fld-test-serial-tiled:
+  variables:
+    ENABLE_MPI: "0"
+    ENABLE_OpenMP: "0"
+    TILED: "1"
+    TEST_REGEX: "FLD"
+  <<: *test_template
+
 fld-test-mpi:
   variables:
     ENABLE_MPI: "1"

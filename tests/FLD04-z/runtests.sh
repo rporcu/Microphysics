@@ -24,8 +24,22 @@ else
     POST_V=POST_VG.dat
 fi
 
+if [ "$MULTIGRID" -eq "1" ]; then
+    if [ "$TILED" -eq "1" ]; then
+        exit -1 # unsupported
+    else
+        INPUTS=inputs_multiple
+    fi
+else
+    if [ "$TILED" -eq "1" ]; then
+        INPUTS=inputs_tiled
+    else
+        INPUTS=inputs_single
+    fi
+fi
+
 rm -rf ${RUN_NAME}* POST_* &> /dev/null
-time -p ${MPIRUN} "${MFIX}" inputs
+time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
 if ! [ -z "${FEXTRACT}" ]; then
   ${FEXTRACT} -p FLD0100000/ -d 1 -v w_g -s "${POST_U}"

@@ -27,8 +27,22 @@ else
     REL_ERR=""
 fi
 
+if [ "$MULTIGRID" -eq "1" ]; then
+    if [ "$TILED" -eq "1" ]; then
+        exit -1 # unsupported
+    else
+        INPUTS=inputs_multiple
+    fi
+else
+    if [ "$TILED" -eq "1" ]; then
+        INPUTS=inputs_tiled
+    else
+        INPUTS=inputs_single
+    fi
+fi
+
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
-time -p ${MPIRUN} "${MFIX}" inputs
+time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
 ${FEXTRACT} -p FLD0300000/ -d 3 -v v_g -s POST_VG.dat
 ${FEXTRACT} -p FLD0300000/ -d 2 -v p_g -s POST_PG.dat
