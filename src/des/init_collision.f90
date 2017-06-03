@@ -250,6 +250,7 @@ subroutine init_collision_hertz
        ! Calculate the collision time scale.
        tcoll_tmp = pi/sqrt(hert_kwn(m)/mass_eff -                    &
             ((des_etan_wall(m)/mass_eff)**2)/4.d0)
+       tcoll = min(tcoll_tmp, tcoll)
     enddo
 
     dtsolid = tcoll/50.d0
