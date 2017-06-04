@@ -146,7 +146,7 @@ contains
 
    subroutine des_euler_update ( particles, fc, tow, dt )
 
-      use discretelement, only: normal_particle, exiting_particle
+      use discretelement, only: normal_particle
       use constant,       only: gravity
       use particle_mod,   only: particle_t
 
@@ -157,8 +157,7 @@ contains
 
       do p = 1, size ( particles )
 
-         if ( ( particles(p) % state == normal_particle ) .or. &
-              ( particles(p) % state == exiting_particle )  ) then
+         if ( particles(p) % state == normal_particle ) then
 
             associate ( vel => particles(p) % vel, pos => particles(p) % pos, &
                drag => particles(p) % drag, mass => particles(p) % mass,    &
