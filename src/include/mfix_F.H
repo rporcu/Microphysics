@@ -68,7 +68,7 @@ extern "C"
         Real* xlength, Real* ylength, Real* zlength);
 
     void mfix_set_particle_properties(const int* pstate, Real* pradius, Real* pdensity,
-        Real* pvol, Real* pmass, Real* omoi);
+        Real* pvol, Real* pmass, Real* omoi, Real* omega);
 
     void mfix_init_collision();
 

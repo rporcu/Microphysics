@@ -92,7 +92,7 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	// Issue an error if nparticles = 0 is specified
 	if ( np == -1 ){
 	    Abort("\nCannot read number of particles from particle_input.dat: file is corrupt.\
-\nPerhaps you forgot to specify the number of particles on the first line??? ");
+                   \nPerhaps you forgot to specify the number of particles on the first line??? ");
 	}
 
 	// we add all the particles to grid 0 and tile 0 and let
@@ -103,7 +103,7 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
 	ParticleType p;
 	int        pstate, pphase;
-	Real       pradius, pdensity, pvolume, pomoi, pmass;
+	Real       pradius, pdensity, pvolume, pomoi, pmass, pomega;
 
 	pstate = 1;
 
@@ -125,7 +125,7 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	    p.cpu() = ParallelDescriptor::MyProc();
 
 	    // Compute other particle properties
-	    mfix_set_particle_properties( &pstate, &pradius, &pdensity, &pvolume, &pmass, &pomoi);
+	    mfix_set_particle_properties( &pstate, &pradius, &pdensity, &pvolume, &pmass, &pomoi, &pomega);
 
 	    // Set other particle properties
 	    p.idata(intData::phase)     = pphase;
@@ -135,6 +135,9 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	    p.rdata(realData::mass)     = pmass;
 	    p.rdata(realData::oneOverI) = pomoi;
 	    p.rdata(realData::radius)   = pradius;
+	    p.rdata(realData::omegax)   = pomega;
+	    p.rdata(realData::omegay)   = pomega;
+	    p.rdata(realData::omegaz)   = pomega;
 
 	    // Add everything to the data structure
 	    auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
