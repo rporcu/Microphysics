@@ -40,7 +40,7 @@ public:
     void InitFromCheckpoint (int *nstep, Real *dt, Real *time) const;
 
     void WriteParticleAscii (int nstep = 0);
-    
+
     void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
 
