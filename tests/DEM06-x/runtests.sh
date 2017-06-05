@@ -29,7 +29,7 @@ rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MFIX} "${INPUTS}" DES_ONEWAY_COUPLED=.F.
 
 if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then
-  ${FCOMPARE} --infile1 "${MFIX_BENCHMARKS_HOME}/DEM06-x_plt00350" --infile2 DEM0600350/
+  ${FCOMPARE} --infile1 "${MFIX_BENCHMARKS_HOME}/DEM06-x_plt00350" --infile2 DEM06_plt00350/
 fi
 
 post_dats=POST*.dat

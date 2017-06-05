@@ -90,8 +90,6 @@ public:
 	    const int tileIndex = mfi.LocalTileIndex();
 	    auto&     particles = GetParticles(lev)[std::make_pair(gridIndex,tileIndex)];
 	    auto&     structs   = particles.GetArrayOfStructs();
-	    const int np        = structs.size();
-
 	    return structs.size();
 	}
 
@@ -114,6 +112,11 @@ public:
     void* GetParticlesData( MFIXParIter& pti);    
 
     void EvolveParticles ( int lev, int nstep, Real dt, Real time );
+
+    ///
+    /// Write out all particles at a level in the format fcompare_par can read
+    ///
+    void writeAllForComparison(int lev);
     
     void output ( int lev, int estatus, int finish, int nstep, Real dt, Real time );
 

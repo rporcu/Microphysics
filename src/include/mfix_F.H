@@ -33,15 +33,17 @@ extern "C"
 
     void set_bc_flow(Real* xlength, Real* ylength, Real* zlength,
         Real* dx,      Real* dy,      Real* dz  );
+
     void check_bc_flow();
 
-    void set_bc_type(const int* slo, const int* shi,
+    void set_bc_type(
         int* bc_ilo, int* bc_ihi,
         int* bc_jlo, int* bc_jhi,
         int* bc_klo, int* bc_khi,
         const int* domlo , const int* domhi,
         Real* dx, Real* dy, Real* dz,
-        Real* xlen, Real* ylen, Real* zlen);
+        Real* xlen, Real* ylen, Real* zlen,
+        const int* nghost_bc);
 
     void set_bc0(const int* slo, const int* shi,
         const int* ulo, const int* uhi,

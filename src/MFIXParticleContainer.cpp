@@ -200,8 +200,6 @@ MFIXParticleContainer::InitData()
 {
 }
 
-
-
 void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time ) {
     
 
@@ -293,30 +291,6 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
     }
 
 }
-
-
-void MFIXParticleContainer::writeAllAtLevel(int lev)
-{
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-    {
-	auto& particles = pti.GetArrayOfStructs();
-	size_t Np = pti.numParticles();
-	cout << "Particles: " << Np << " << at level " << lev << endl;
-	for (unsigned i = 0; i < Np; ++i)
-	{
-	    const ParticleType& p = particles[i];
-	    const IntVect& iv = Index(p, lev);
-
-	    RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
-
-	    cout << "[" << i << "]: id " << p.id()
-		 << " mass " << p.rdata(0)
-		 << " index " << iv
-		 << " position " << xyz << endl;
-	}
-    }
-}
-
 
 void MFIXParticleContainer::fillNeighbors( int lev ) {
     NeighborCommMap neighbors_to_comm;
@@ -577,3 +551,51 @@ void MFIXParticleContainer::clearNeighbors( int lev )
 {
     neighbors.clear();
 }
+
+void MFIXParticleContainer::writeAllAtLevel(int lev)
+{
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
+	auto& particles = pti.GetArrayOfStructs();
+	size_t Np = pti.numParticles();
+	cout << "Particles: " << Np << " << at level " << lev << endl;
+	for (unsigned i = 0; i < Np; ++i)
+	{
+	    const ParticleType& p = particles[i];
+	    const IntVect& iv = Index(p, lev);
+
+	    RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
+
+	    cout << "[" << i << "]: id " << p.id()
+		 << " index " << iv
+		 << " position " << xyz << endl;
+	}
+    }
+}
+
+void MFIXParticleContainer::writeAllForComparison(int lev)
+{
+  size_t Np_tot = 0;
+
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      Np_tot += pti.numParticles();
+ 
+  cout << Np_tot << std::endl;
+ 
+  Real dummy = 0.;
+ 
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
+      auto& particles = pti.GetArrayOfStructs();
+      size_t Np = pti.numParticles();
+      for (unsigned i = 0; i < Np; ++i)
+        {
+          const ParticleType& p = particles[i];
+ 
+          cout << p.pos(0)   << " " << p.pos(1)   << " " << p.pos(2) <<  " " <<
+                  p.rdata(1) << " " << p.rdata(2) << " " << p.rdata(2) <<  " " <<
+                  ParallelDescriptor::MyProc() << " " << p.id() << std::endl;
+        }
+    }
+}
+
