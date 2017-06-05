@@ -164,6 +164,15 @@ o To compare point-by-point field data, the environment variable
 > cd to mfix-build-dir
 > make run_DEM01-x  # running "DEM01-x" and output to the screen
 ```
+
+## Run specific
+
+If the environment variable GRID is defined, it specifies which grid types to run for the test(s).
+If GRID variable is not defined, the default is to run the tests for all grid types.
+> env GRID="tiled" ctest -R DEM01  # running all tests with "DEM01" for tiled grid
+> env GRID="single multiple" ctest -R DEM01  # running all tests with "DEM01" for single grid and multiple grid
+> ctest -R DEM01  # running all tests with "DEM01" for all grid types (single, multiple, tiled)
+
 ## Run a user-defined case
 ```shell
 > ./mfix inputs  mfix.input_file=<user_file_name>
