@@ -33,7 +33,7 @@ public:
 
     void WritePlotFile ( std::string& plot_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
 
-    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time) const;
+    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time);
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
     

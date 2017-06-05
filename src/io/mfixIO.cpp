@@ -149,7 +149,7 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
 }
 
 void
-mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time) const
+mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time) 
 {
     BL_PROFILE("mfix_level::Restart()");
 
@@ -192,36 +192,38 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 	*time = real_tmp;
      	GotoNextLine(is);
 
-//     	Real prob_lo[BL_SPACEDIM];
-//     	std::getline(is, line);
-//     	{
-//     	    std::istringstream lis(line);
-//     	    int i = 0;
-//     	    while (lis >> word) {
-//     		prob_lo[i++] = std::stod(word);
-//     	    }
-//     	}
-	
-//     	Real prob_hi[BL_SPACEDIM];
-//     	std::getline(is, line);
-//     	{
-//     	    std::istringstream lis(line);
-//     	    int i = 0;
-//     	    while (lis >> word) {
-//     		prob_hi[i++] = std::stod(word);
-//     	    }
-//     	}
+       	Real prob_lo[BL_SPACEDIM];
+       	std::getline(is, line);
+       	{
+       	    std::istringstream lis(line);
+       	    int i = 0;
+       	    while (lis >> word) {
+       		prob_lo[i++] = std::stod(word);
+       	    }
+       	}
+ 
+       	Real prob_hi[BL_SPACEDIM];
+       	std::getline(is, line);
+       	{
+       	    std::istringstream lis(line);
+       	    int i = 0;
+       	    while (lis >> word) {
+       		prob_hi[i++] = std::stod(word);
+       	    }
+       	}
 
-//     	// Geometry::ProbDomain(RealBox(prob_lo,prob_hi));
+     	Geometry::ProbDomain(RealBox(prob_lo,prob_hi));
 
-//     	// for (int lev = 0; lev < nlevs; ++lev) {
-//     	//     BoxArray ba;
-//     	//     ba.readFrom(is);
-//     	//     GotoNextLine(is);
-//     	//     DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
-//     	//     MakeNewLevel(lev, ba, dm);
-//     	// }
-
+       	for (int lev = 0; lev < nlevs; ++lev) {
+       	    BoxArray ba;
+       	    ba.readFrom(is);
+       	    GotoNextLine(is);
+            SetBoxArray(lev, ba);
+       	    DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
+            SetDistributionMap(lev, dm);
+//     	    MakeNewLevel(lev, ba, dm);
+            AllocateArrays(lev);
+       	}
     }
 
     // Initialize the field data
@@ -231,7 +233,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 	for (int i = 0; i < vectorVars.size(); i++ ) {
     	    MultiFab mf;
 	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,
-							  vecVarsName[i]));
+  					  vecVarsName[i]));
 	    (*vectorVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
 	}
 
@@ -239,7 +241,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 	for (int i = 0; i < scalarVars.size(); i++ ) {
     	    MultiFab mf;
 	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,
-							  scaVarsName[i]));
+  					  scaVarsName[i]));
 	    (*scalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
 	}
     }
