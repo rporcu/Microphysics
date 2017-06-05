@@ -76,6 +76,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                             int             maxiter,
                             Real            eps_rel, int lev)
 {
+    int bicg_verbose = 0;
     int ret = 0, nit = 1;
 
     const int ncomp  = 1;
@@ -147,7 +148,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     Real rnorm = dotxy(r,r,geom[lev].periodicity(),true);
     const Real rnorm0   = sqrt(rnorm);
 
-    if ( verbose > 0 && ParallelDescriptor::IOProcessor() )
+    if ( bicg_verbose > 0 && ParallelDescriptor::IOProcessor() )
     {
       std::cout << "BiCGStab: Initial error (error0) = " << rnorm0 << '\n';
     }
@@ -155,7 +156,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
     if ( rnorm0 == 0 || rnorm0 < eps_abs )
     {
-      if ( verbose > 0 && ParallelDescriptor::IOProcessor())
+      if ( bicg_verbose > 0 && ParallelDescriptor::IOProcessor())
       {
         std::cout << "BiCGStab: niter = 0,"
                   << ", rnorm = " << rnorm
@@ -302,7 +303,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       }
 
 
-//    if ( verbose > 0 && ParallelDescriptor::IOProcessor())
+//    if ( bicg_verbose > 0 && ParallelDescriptor::IOProcessor())
 //      {
 //        std::cout << "v1 " << vals[1] << "   v0 "<< vals[0] << '\n';
 //      }
@@ -321,7 +322,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
 
 
-      // if ( verbose > 0 && ParallelDescriptor::IOProcessor())
+      // if ( bicg_verbose > 0 && ParallelDescriptor::IOProcessor())
       //   {
       //     std::cout << "BiCGStab:       Rnorm " << nit << " L-2 "<< rnorm/(rnorm0) << '\n';
       //   }
@@ -336,7 +337,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       rho_1 = rho;
     }
 
-    if ( verbose > 0 && ParallelDescriptor::IOProcessor())
+    if ( bicg_verbose > 0 && ParallelDescriptor::IOProcessor())
     {
       std::cout << "BiCGStab: final Rnorm " << rnorm << '\n';
       std::cout << "BiCGStab: ratio " << nit << " L-2 "<< rnorm/(rnorm0) << '\n';

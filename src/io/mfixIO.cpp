@@ -7,12 +7,10 @@
 
 #include "mfix_level.H"
 
-
 namespace
 {
     const std::string level_prefix {"Level_"};
 }
-
 
 // This function iniatializes the attributes vectorVars, scalarVars, vecVarsName and
 // scaVarsName.				
@@ -34,13 +32,12 @@ mfix_level::InitIOData ()
     scalarVars  = { &ep_g, &p_g, &ro_g,  &rop_g,  &mu_g};
 }
 
-
 void
-mfix_level::WriteMfixHeader(const std::string& name, int nstep, Real dt, Real time) const
+mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time) const
 {
     if (ParallelDescriptor::IOProcessor())
     {
-    	std::string HeaderFileName(name + "/MfixHeader");
+    	std::string HeaderFileName(name + "/Header");
     	std::ofstream HeaderFile(HeaderFileName.c_str(), std::ofstream::out   |
 				 std::ofstream::trunc |
 				 std::ofstream::binary);
@@ -89,13 +86,9 @@ mfix_level::WriteMfixHeader(const std::string& name, int nstep, Real dt, Real ti
 }
 
 void
-mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
+mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time ) const 
 {
     BL_PROFILE("mfix_level::WriteCheckPointFile()");
-
-    // Return if it's not time to dump checkfile yet or 
-    // checkfiles have not been enabled ( check_int < 1 )
-    if ( (check_int < 1) || ( nstep % check_int != 0 ) )  return;
 
     const std::string& checkpointname = amrex::Concatenate( check_file, nstep );
 
@@ -106,7 +99,7 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
     const int nlevels = finestLevel()+1;
     amrex::PreBuildDirectorHierarchy(checkpointname, level_prefix, nlevels, true);
 
-    WriteMfixHeader(checkpointname, nstep, dt, time);
+    WriteHeader(checkpointname, nstep, dt, time);
     
     WriteJobInfo(checkpointname);
 
@@ -129,31 +122,43 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
     }
 
     if ( solve_dem )
-	pc -> Checkpoint(checkpointname, "particles", false);
+    {
+        Array<std::string> real_comp_names;
+        Array<std::string>  int_comp_names;
+        real_comp_names.push_back("radius");
+        real_comp_names.push_back("volume");
+        real_comp_names.push_back("mass");
+        real_comp_names.push_back("density");
+        real_comp_names.push_back("omoi");
+        real_comp_names.push_back("velx");
+        real_comp_names.push_back("vely");
+        real_comp_names.push_back("velz");
+        real_comp_names.push_back("omegax");
+        real_comp_names.push_back("omegay");
+        real_comp_names.push_back("omegaz");
+        real_comp_names.push_back("dragx");
+        real_comp_names.push_back("dragy");
+        real_comp_names.push_back("dragz");
+         int_comp_names.push_back("phase");
+         int_comp_names.push_back("state");
+
+       bool is_checkpoint = true;  
+       pc->writeAllForComparison(0);
+       pc -> Checkpoint(checkpointname, "particles", is_checkpoint, real_comp_names, int_comp_names);
+    }
 }
-
-
-
-int
-mfix_level::IsRestartEnabled () const
-{
-    return ( restart_chkfile.compare("no_restart") != 0 );
-}
-
 
 void
-mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
+mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time) const
 {
-    BL_PROFILE("mfix_level::InitFromCheckpoint()");
+    BL_PROFILE("mfix_level::Restart()");
 
-    if (ParallelDescriptor::IOProcessor()) {
-	std::cout << "  Restarting from checkpoint " << restart_chkfile << std::endl;
-    }
-
+    if (ParallelDescriptor::IOProcessor()) 
+	std::cout << "  Restarting from checkpoint " << restart_file << std::endl;
 
     // Header
     {
-    	std::string File(restart_chkfile + "/MfixHeader");
+    	std::string File(restart_file + "/Header");
 
     	VisMF::IO_Buffer io_buffer(VisMF::GetIOBufferSize());
 
@@ -217,14 +222,6 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
 //     	//     MakeNewLevel(lev, ba, dm);
 //     	// }
 
-// //	pc->ReadHeader(is);
-    }
-
-    int nghost;
-    if (ParallelDescriptor::NProcs() == 1) {
-	nghost = 1;
-    } else {
-	nghost = 2;
     }
 
     // Initialize the field data
@@ -233,7 +230,7 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
 	// Read vector variables
 	for (int i = 0; i < vectorVars.size(); i++ ) {
     	    MultiFab mf;
-	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix,
+	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,
 							  vecVarsName[i]));
 	    (*vectorVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
 	}
@@ -241,16 +238,22 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
 	// Read scalar variables
 	for (int i = 0; i < scalarVars.size(); i++ ) {
     	    MultiFab mf;
-	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix,
+	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,
 							  scaVarsName[i]));
 	    (*scalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
 	}
     }
 
-    // Initilize particles
-    pc->Restart(restart_chkfile, "particle");
-}
+    // Initialize particles
+    pc->Restart(restart_file, "particles");
 
+    pc->writeAllForComparison(0);
+
+    //  Create mask for particle ghost cells
+    //  HACK HACK HACK 
+    int lev = 0;
+    pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
+}
 
 void
 mfix_level::GotoNextLine (std::istream& is)
@@ -362,22 +365,14 @@ void mfix_level::WriteJobInfo (const std::string& dir) const
 }
 
 
-void mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
+void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time ) const
 {
     BL_PROFILE("mfix_level::WritePlotFile()");
 
-    // Return if it's not time to dump plotfile yet or 
-    // plotfile have not been enabled ( check_int < 1 )
-    // Condition nstep !=0 ensures that plotfile is dumped if WritePlotFile is 
-    // called without arguments (useful for steady state case).
-    if ( (plot_int < 1) || ( nstep % plot_int != 0 && nstep != 0) )  return;
-
     const std::string& plotfilename = amrex::Concatenate(plot_file,nstep);
 
-    if (ParallelDescriptor::IOProcessor()) {
+    if (ParallelDescriptor::IOProcessor())  
 	std::cout << "  Writing plotfile " << plotfilename << std::endl;
-    }
-    
     {
 	Array< std::unique_ptr<MultiFab> > mf(finest_level+1);
     
@@ -422,27 +417,41 @@ void mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
 				       Geom(), time, istep, refRatio());
     }
 
-    if ( solve_dem )
-	pc -> Checkpoint(plotfilename, "particles", false);
-
     WriteJobInfo(plotfilename);
 
-    WriteMfixHeader(plotfilename, nstep, dt, time);
+    if ( solve_dem )
+    {
+        Array<std::string> real_comp_names;
+        Array<std::string>  int_comp_names;
+        real_comp_names.push_back("radius");
+        real_comp_names.push_back("volume");
+        real_comp_names.push_back("mass");
+        real_comp_names.push_back("density");
+        real_comp_names.push_back("omoi");
+        real_comp_names.push_back("velx");
+        real_comp_names.push_back("vely");
+        real_comp_names.push_back("velz");
+        real_comp_names.push_back("omegax");
+        real_comp_names.push_back("omegay");
+        real_comp_names.push_back("omegaz");
+        real_comp_names.push_back("dragx");
+        real_comp_names.push_back("dragy");
+        real_comp_names.push_back("dragz");
+         int_comp_names.push_back("phase");
+         int_comp_names.push_back("state");
+
+       bool is_checkpoint = false;  
+       pc -> Checkpoint(plotfilename, "particles", is_checkpoint, real_comp_names, int_comp_names);
+    }
 }
 
-void mfix_level::WriteParticleAscii ( int nstep )   {
-
+void 
+mfix_level::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const 
+{
     BL_PROFILE("mfix_level::WriteParticleASCII()");
 
-    // Return if it's not time to dump plotfile yet or 
-    // plotfile have not been enabled ( par_ascii_int < 1 )
-    // Condition nstep !=0 ensures that plotfile is dumped if WritePlotFile is 
-    // called without arguments (useful for steady state case).
-    if ( (par_ascii_int < 1) || ( nstep % par_ascii_int != 0 && nstep != 0) )  return;
-    
     const std::string& par_filename = amrex::Concatenate(par_ascii_file,nstep);
     
     pc -> WriteAsciiFile(par_filename);
-
 }
 

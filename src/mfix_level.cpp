@@ -12,8 +12,6 @@ mfix_level::mfix_level ()
 //mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord)
 // AmrCore(rb,max_level_in,n_cell_in,coord)
 {
-    ReadParameters();
-
     // Geometry on all levels has just been defined in the AmrCore constructor
 
     // No valid BoxArray and DistributionMapping have been defined.
@@ -82,34 +80,6 @@ mfix_level::mfix_level ()
 
     f_gds.resize(nlevs_max);
     drag_bm.resize(nlevs_max);
-
-}
-
-void
-mfix_level::ReadParameters ()
-{
-  // Traditionally, max_step and stop_time do not have prefix.
-  {
-    ParmParse pp;
-    pp.query("max_step", max_step);
-    pp.query("stop_time", stop_time);
-  }
-
-  // Traditionally, these have prefix "amr", but we will
-  // give them prefix mfix to make it clear that they affect the
-  // behavior of the solver and not amr (even thought they are read
-  // via AMReX
-  {
-    ParmParse pp("amr");
-    pp.query("check_file", check_file);
-    pp.query("check_int", check_int);
-    pp.query("plot_file", plot_file);
-    pp.query("plot_int", plot_int);
-    pp.query("restart_chkfile", restart_chkfile);
-    pp.query("verbose", verbose);
-    pp.query("par_ascii_file", par_ascii_file);
-    pp.query("par_ascii_int", par_ascii_int);
-  }
 }
 
 void
@@ -125,10 +95,9 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int cyclic_mf_in,
 
 void mfix_level::Init(int lev, Real dt, Real time)
 {
-    BL_ASSERT(max_level == 0);
+  BL_ASSERT(max_level == 0);
 
-    // define coarse level BoxArray and DistributionMap
-    {
+  // Define coarse level BoxArray and DistributionMap
   finest_level = 0;
 
   const BoxArray& ba = MakeBaseGrids();
@@ -178,20 +147,9 @@ void mfix_level::Init(int lev, Real dt, Real time)
       amrex::Abort("Bad data in set_ps");
   }
 
-  // Always allocate data for pc
-  pc -> AllocData();
-  InitLevelData(lev,dt,time);
-
-  //  Create mask for particle ghost cells
-  pc -> InitLevelMask( lev, geom[lev], dm, ba );
-
   InitIOData ();
-    }
-}
 
-void
-mfix_level::Restart()
-{
+  mfix_set_bc_type(lev);
 }
 
 BoxArray
@@ -244,12 +202,12 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     Box box_khi = amrex::adjCellHi(domainz,2,1);
 
     // Note that each of these is a single IArrayBox so every process has a copy of them
-    bc_ilo.resize(box_ilo,2);
-    bc_ihi.resize(box_ihi,2);
-    bc_jlo.resize(box_jlo,2);
-    bc_jhi.resize(box_jhi,2);
-    bc_klo.resize(box_klo,2);
-    bc_khi.resize(box_khi,2);
+    bc_ilo.resize(box_ilo,nghost_bc);
+    bc_ihi.resize(box_ihi,nghost_bc);
+    bc_jlo.resize(box_jlo,nghost_bc);
+    bc_jhi.resize(box_jhi,nghost_bc);
+    bc_klo.resize(box_klo,nghost_bc);
+    bc_khi.resize(box_khi,nghost_bc);
 
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
@@ -270,7 +228,13 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
 
     // Only call this check on one processor since it has a bunch of print statements
     if ( ParallelDescriptor::IOProcessor() )
-      check_bc_flow();
+       check_bc_flow();
+}
+
+void
+mfix_level::AllocateArrays (int lev)
+{
+    int nghost = 2;
 
     // ********************************************************************************
     // Cell-based arrays
@@ -407,12 +371,7 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
 
     ropZ[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost));
     ropZ[lev]->setVal(0.);
-
-    // ********************************************************************************
-
-    mfix_set_bc_type(lev);
 }
-
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
@@ -560,27 +519,27 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
     } while (reiterate==1);
 }
 
-
-
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
+    AllocateArrays(lev);
+
     Box domain(geom[lev].Domain());
 
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
-  const Box& sbx = (*ep_g[lev])[mfi].box();
+       const Box& sbx = (*ep_g[lev])[mfi].box();
 
-  Box ubx((*u_g[lev])[mfi].box());
-  Box vbx((*v_g[lev])[mfi].box());
-  Box wbx((*w_g[lev])[mfi].box());
+       Box ubx((*u_g[lev])[mfi].box());
+       Box vbx((*v_g[lev])[mfi].box());
+       Box wbx((*w_g[lev])[mfi].box());
 
-  set_bc0(sbx.loVect(), sbx.hiVect(),
-    ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-    (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-    (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
-    bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-    bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+       set_bc0(sbx.loVect(), sbx.hiVect(),
+         ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+         (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+         (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+         bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+         bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
 
     fill_mf_bc(lev,*p_g[lev]);
@@ -592,31 +551,27 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
     v_g[lev]->FillBoundary(geom[lev].periodicity());
     w_g[lev]->FillBoundary(geom[lev].periodicity());
 
-
-
     // Allocate the particle arrays
     if (solve_dem)
     {
-
-  pc -> InitParticlesAscii("particle_input.dat");
-
-  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-      mfix_init_collision();
-
+       pc -> AllocData();
+       pc -> InitParticlesAscii("particle_input.dat");
+       for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+           mfix_init_collision();
+      //  Create mask for particle ghost cells
+      pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
     }
 
     // Initial fluid arrays: pressure, velocity, density, viscosity
     mfix_init_fluid(lev);
 
-
     // Call user-defined subroutine to set constants, check data, etc.
     if (call_udf)
-  mfix_usr0();
+       mfix_usr0();
 
     // Calculate all the coefficients once before entering the time loop
     int calc_flag = 2;
     mfix_calc_coeffs(lev,calc_flag);
-
 }
 
 void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
@@ -1176,14 +1131,12 @@ mfix_level::mfix_set_bc_type(int lev)
     Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
     Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
     Box domain(geom[lev].Domain());
-    for (MFIter mfi((*ep_g[lev])); mfi.isValid(); ++mfi)
-    {
-       const Box& sbx = (*ep_g[lev])[mfi].box();
-       set_bc_type(sbx.loVect(),sbx.hiVect(), bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-             bc_jlo.dataPtr(), bc_jhi.dataPtr(), bc_klo.dataPtr(), bc_khi.dataPtr(),
-             domain.loVect(),domain.hiVect(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
-    }
 
+    set_bc_type(bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                bc_jlo.dataPtr(), bc_jhi.dataPtr(), 
+                bc_klo.dataPtr(), bc_khi.dataPtr(),
+                domain.loVect(),domain.hiVect(), 
+                &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost_bc);
 }
 
 void
