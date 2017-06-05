@@ -218,7 +218,7 @@ module set_bc_type_module
          enddo
          do i=1,ng
             bc_jlo_type(domhi(1)+i,domlo(3)-1:domhi(3)+1,:) = bc_ihi_type(domlo(2),domlo(3)-1:domhi(3)+1,:)
-            bc_jhi_type(domhi(1)+i,domlo(3)-1:domhi(3)+1,:) = bc_ihi_type(domhi(1),domlo(3)-1:domhi(3)+1,:)
+            bc_jhi_type(domhi(1)+i,domlo(3)-1:domhi(3)+1,:) = bc_ihi_type(domhi(2),domlo(3)-1:domhi(3)+1,:)
          enddo
          do k=1,ng
             bc_jlo_type(domlo(1)-1:domhi(1)+1,domlo(3)-k,:) = bc_klo_type(domlo(1)-1:domhi(1)+1,domlo(2),:)

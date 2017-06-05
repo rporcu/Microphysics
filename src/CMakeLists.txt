@@ -120,7 +120,7 @@ set(F90_sources
    usr/write_usr1.f90
    utilities_mod.f90
    vavg_g.f90
-   boxlib_to_mfix.F90)
+   amrex_to_mfix.F90)
 
 # Generate AMReX_buildInfo.cpp
 add_custom_command(

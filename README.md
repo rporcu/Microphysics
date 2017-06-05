@@ -168,7 +168,7 @@ o To compare point-by-point field data, the environment variable
 ```shell
 > ./mfix inputs  mfix.input_file=<user_file_name>
 ```
-_inputs_ is a text file containing the BoxLib input parameters.
+_inputs_ is a text file containing the AMReX input parameters.
 _inputs_  __has to be provided and cannot be renamed__.
 _user_file_name_ is the name of a user-defined text file containing the MFIX input parameters.
 If _mfix.input_file=input_file_name_ is not given, MFIX will try to read the file

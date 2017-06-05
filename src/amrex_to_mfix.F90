@@ -1,4 +1,4 @@
-module boxlib_to_mfix_module
+module amrex_to_mfix_module
 ! _________________________________________________________________
 
   use amrex_fort_module, only : c_real => amrex_real
@@ -185,4 +185,4 @@ contains
 
   end subroutine get_solver_params
 
-end module boxlib_to_mfix_module
+end module amrex_to_mfix_module
