@@ -28,6 +28,8 @@ else
 fi
 
 GRID=${GRID:-"single multiple tiled"}
+MFIX_BENCHMARKS_HOME=${MFIX_BENCHMARKS_HOME:-}
+FCOMPARE=${FCOMPARE:-}
 
 for grid_type in $GRID; do
     INPUTS=inputs_${grid_type}
