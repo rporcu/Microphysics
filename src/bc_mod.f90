@@ -15,9 +15,9 @@ module bc
   character(len=16) :: BC_Type(dim_bc)
 
   ! Flags for periodic boundary conditions
-  logical :: cyclic_x, cyclic_x_mf
-  logical :: cyclic_y, cyclic_y_mf
-  logical :: cyclic_z, cyclic_z_mf
+  logical :: cyclic_x = .false., cyclic_x_mf = .false.
+  logical :: cyclic_y = .false., cyclic_y_mf = .false.
+  logical :: cyclic_z = .false., cyclic_z_mf = .false.
 
   ! Boundary condition coordinates
   real(c_real) :: BC_X_w(dim_bc), BC_X_e(dim_bc)

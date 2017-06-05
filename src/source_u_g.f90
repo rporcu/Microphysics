@@ -131,7 +131,6 @@ contains
       use bc, only: nsw_, fsw_, psw_
       use bc, only: pinf_, pout_
       use bc, only: minf_
-      use bc, only: cycl_
 
       use bc, only: bc_hw_g, bc_uw_g, bc_u_g
 
@@ -180,7 +179,6 @@ contains
          i = alo(1)
          do k = lo(3),hi(3)
             do j = lo(2),hi(2)
-               bcv = bc_ilo_type(j,k,2)
 
                if (bc_ilo_type(j,k,1) == PINF_ .or. &
                    bc_ilo_type(j,k,1) == POUT_) then
@@ -192,6 +190,8 @@ contains
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
+
+                  bcv = bc_ilo_type(j,k,2)
                   b_m(i,j,k) = -bc_u_g(bcv)
 
                else if(bc_ilo_type(j,k,1) == NSW_ .or. &
@@ -215,7 +215,6 @@ contains
 
          do k = lo(3),hi(3)
             do j = lo(2),hi(2)
-               bcv = bc_ihi_type(j,k,2)
 
                if(bc_ihi_type(j,k,1) == PINF_ .or. &
                   bc_ihi_type(j,k,1) == POUT_) then
@@ -227,6 +226,8 @@ contains
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
+
+                  bcv = bc_ihi_type(j,k,2)
                   b_m(i,j,k) = -bc_u_g(bcv)
 
                else if(bc_ihi_type(j,k,1) == NSW_ .or. &
@@ -254,7 +255,6 @@ contains
                ! bc's on j-faces only defined within (domlo(1):domhi(1),domlo(3):domhi(3))
                ibc = max(min(i,domhi(1)),domlo(1))
 
-               bcv = bc_jlo_type(ibc,k,2)
                if(bc_jlo_type(i,k,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
@@ -264,6 +264,8 @@ contains
                   A_m(i,j,k,s) = zero
 
                else if(bc_jlo_type(ibc,k,1) == PSW_) then
+
+                  bcv = bc_jlo_type(ibc,k,2)
                   if (is_undefined(bc_hw_g(bcv))) then
                      A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,s)
                      b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,s)*bc_uw_g(bcv)

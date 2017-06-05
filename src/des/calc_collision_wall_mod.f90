@@ -119,11 +119,8 @@ contains
 
          associate ( radius => particles(ll) % radius, pos => particles(ll) % pos, &
               & vel => particles(ll) % vel, omega => particles(ll) % omega )
-
         
             ! skipping non-existent particles or ghost particles
-            ! make sure the particle is not classified as a new 'entering' particle
-            ! or is already marked as a potential exiting particle
             if ( .not. ( NORMAL_PARTICLE == particles(ll) % state ) ) cycle
 
             ! Check particle LL for wall contacts
