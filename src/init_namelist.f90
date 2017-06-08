@@ -520,7 +520,7 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial gas phase temperature in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_T_G(LC) = UNDEFINED
+         IC_T_G(LC) = 293.15d0
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
@@ -769,14 +769,14 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase temperature at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_T_G(LC) = UNDEFINED
+         BC_T_G(LC) = 293.15d0
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Solids phase-m temperature at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_T_S(LC,:DIM_M) = UNDEFINED
+         BC_T_S(LC,:DIM_M) = 293.15d0
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -932,7 +932,7 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Point Source" required="false">
 !  <description>Temperature of incoming gas.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_T_G(LC) = UNDEFINED
+         PS_T_G(LC) = 293.15d0
 !</keyword>
 
 !<keyword category="Point Source" required="false">

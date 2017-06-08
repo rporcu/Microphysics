@@ -56,6 +56,8 @@ extern "C"
         const int* wlo, const int* whi,
         Real* u_g,     Real* v_g,      Real* w_g,
         Real* p_g,     Real* ep_g,
+        Real* ro_g,     Real* rop_g,
+        Real* mu_g,     Real* lambda_g,
         int* bc_ilo, int* bc_ihi,
         int* bc_jlo, int* bc_jhi,
         int* bc_klo, int* bc_khi,
@@ -74,12 +76,6 @@ extern "C"
         Real* dx,       Real* dy,       Real* dz,
         Real* xlength, Real* ylength, Real* zlength);
 
-    void init_fluid_from_restart( const int* slo, const int* shi,
-				  const int*  lo, const int*  hi,
-				  Real* ep_g,    Real* ro_g,
-				  Real* rop_g,   Real* p_g,
-				  Real* mu_g,    Real* lambda_g);
-    
     void mfix_set_particle_properties(const int* pstate, Real* pradius, Real* pdensity,
         Real* pvol, Real* pmass, Real* omoi, Real* omega);
 

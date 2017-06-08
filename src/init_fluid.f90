@@ -17,6 +17,7 @@ module init_fluid_module
 
       use param, only: is_undefined, undefined
       use fld_const, only: ro_g0, mu_g0
+      use eos      , only: sutherland
 
       implicit none
 
@@ -72,84 +73,17 @@ module init_fluid_module
 
       ! Set the initial viscosity
       if (is_undefined(mu_g0)) then
-
-         mu_val     = 1.7d-5 * (293.15d0/273.0d0)**1.5d0 * (383.d0/(293.15d0+110.d0))
+         mu_val     = sutherland(293.15d0)
          lambda_val = -(2.0d0/3.0d0) * mu_val
-
       else
-
          mu_val     = mu_g0
          lambda_val = -(2.0d0/3.0d0) * mu_g0
-
       endif
 
       mu_g     = mu_val
       lambda_g = lambda_val
 
    end subroutine init_fluid
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-
-   subroutine init_fluid_from_restart(slo, shi, lo, hi, &
-                         ep_g, ro_g, rop_g, p_g, mu_g, lambda_g) &
-      bind(C, name="init_fluid_from_restart")
-
-      use amrex_fort_module, only : c_real => amrex_real
-      use iso_c_binding , only: c_int
-
-      use calc_ro_g_module, only: calc_ro_g
-
-      use param, only: is_undefined, undefined
-      use fld_const, only: ro_g0, mu_g0
-
-      implicit none
-
-! Dummy arguments .....................................................//
-      integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
-
-      real(c_real), intent(inout) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ro_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(c_real), intent(inout) :: mu_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: lambda_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(c_real) :: mu_val, lambda_val
-
-      ! Set the initial fluid density
-      if (is_undefined(ro_g0)) then
-         call calc_ro_g(slo,shi,lo,hi,ro_g,rop_g,p_g,ep_g)
-      else
-         ro_g = ro_g0
-         rop_g = ro_g0*ep_g
-      endif
-
-      ! Set the initial viscosity
-      if (is_undefined(mu_g0)) then
-
-          mu_val     = 1.7d-5 * (293.15d0/273.0d0)**1.5d0 * (383.d0/(293.15d0+110.d0))
-          lambda_val = (2.d0 / 3.d0) * mu_val
-
-       else
-
-          mu_val     = mu_g0
-          lambda_val = -(2.0d0/3.0d0)*mu_g0
-
-       endif
-
-      ! mu_g     = mu_val
-      lambda_g = -(2.0d0/3.0d0)*mu_g
-
-   end subroutine init_fluid_from_restart
 
 
 
