@@ -21,7 +21,8 @@ contains
   !  Purpose: Check point source specifications.                         !
   !                                                                      !
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_point_sources(dx,dy,dz)
+  subroutine check_point_sources(dx,dy,dz) &
+      bind(C, name="check_point_sources")
 
     use ps,    only: ps_defined
     use param, only: dim_ps

@@ -27,9 +27,14 @@ extern "C"
 
     void mfix_set_cyclic(int* cyc_x, int* cyc_y, int* cyc_z);
 
-    void check_domain(Real* dx, Real* dy, Real* dz,
+    void check_initial_conditions(Real* dx, Real* dy, Real* dz,
+        const int* domlo, const int* domhi);
+
+    void check_boundary_conditions(Real* dx, Real* dy, Real* dz,
         Real* xlength, Real* ylength, Real* zlength,
         const int* domlo, const int* domhi);
+
+    void check_point_sources(Real* dx, Real* dy, Real* dz);
 
     void set_bc_flow(Real* xlength, Real* ylength, Real* zlength,
         Real* dx,      Real* dy,      Real* dz  );
@@ -69,6 +74,12 @@ extern "C"
         Real* dx,       Real* dy,       Real* dz,
         Real* xlength, Real* ylength, Real* zlength);
 
+    void init_fluid_from_restart( const int* slo, const int* shi,
+				  const int*  lo, const int*  hi,
+				  Real* ep_g,    Real* ro_g,
+				  Real* rop_g,   Real* p_g,
+				  Real* mu_g,    Real* lambda_g);
+    
     void mfix_set_particle_properties(const int* pstate, Real* pradius, Real* pdensity,
         Real* pvol, Real* pmass, Real* omoi, Real* omega);
 

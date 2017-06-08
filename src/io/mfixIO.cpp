@@ -19,14 +19,12 @@ namespace
 void
 mfix_level::InitIOData ()
 {
-    // Define the list of vector variables that need to be written
+    // Define the list of vector variables on faces that need to be written
     // to plotfile/checkfile.
-    // These are the variables that need interpolation from face to 
-    // node when written to plotfile
     vecVarsName = {"u_g", "v_g", "w_g"}; 
     vectorVars  = { &u_g, &v_g, &w_g };
 
-    // Define the list of scalar variables that need to be written
+    // Define the list of scalar variables at cell centers that need to be written
     // to plotfile/checkfile.
     scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g"}; 
     scalarVars  = { &ep_g, &p_g, &ro_g,  &rop_g,  &mu_g};

@@ -29,6 +29,8 @@ public:
 
     void InitLevelData (int lev, Real dt, Real time);
 
+    void InitLevelDataFromRestart (int lev, Real dt, Real time);
+    
     void WriteCheckPointFile ( std::string& check_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 )  const;
 
     void WritePlotFile ( std::string& plot_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
@@ -46,7 +48,7 @@ public:
   { pc -> output( lev, estatus, finish, nstep, dt, time);};
 
     void make_mg_bc (int mg_bc[]);
-
+    
 protected:
 
     //! Tagging cells for refinement
@@ -75,7 +77,7 @@ protected:
 
     void mfix_calc_trd_and_tau (int lev);
 
-    void mfix_init_fluid (int lev);
+    void mfix_init_fluid (int lev, int is_restarting = 0);
 
     void mfix_conv_rop (int lev, Real dt);
 
@@ -104,6 +106,8 @@ protected:
     void AllocateArrays(int lev);
 
 private:
+
+    void check_data (int lev);
 
     void InitIOData ();
 

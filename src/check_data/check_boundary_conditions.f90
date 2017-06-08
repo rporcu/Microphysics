@@ -23,7 +23,8 @@ module check_boundary_conditions_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine check_boundary_conditions(dx, dy, dz, &
-         xlength, ylength, zlength, domlo, domhi)
+         xlength, ylength, zlength, domlo, domhi) &
+         bind(C, name="check_boundary_conditions")
 
 ! Global Variables:
 !---------------------------------------------------------------------//

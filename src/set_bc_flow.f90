@@ -56,9 +56,11 @@ contains
           end do
 
           select case (trim(bc_type(bcv)))
-          case ('MASS_INFLOW','MI','MASS_OUTFLOW','MO')
-             call flow_to_vel(bcv, check, xlength, ylength, zlength, &
-                dx, dy, dz)
+
+             case ('MASS_INFLOW','MI','MASS_OUTFLOW','MO')
+                call flow_to_vel(bcv, check, &
+                                 xlength, ylength, zlength, dx, dy, dz)
+
           end select
        endif
     enddo
@@ -92,7 +94,6 @@ contains
       ! volumetric flow rates are converted to velocities.
       if(is_defined(bc_volflow_g(bcv))) &
          call gas_volflow_to_velocity(bcv, xlength, ylength, zlength, dx, dy, dz)
-
 
       do m=1,dim_m
          if(check(m)) then
@@ -146,8 +147,6 @@ contains
     bc_volflow_g(bcv) = volflow
 
   end subroutine gas_massflow_to_volflow
-
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

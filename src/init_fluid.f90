@@ -21,7 +21,8 @@ module init_fluid_module
       implicit none
 
 ! Dummy arguments .....................................................//
-      integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in   ) ::  lo(3),  hi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
@@ -53,10 +54,10 @@ module init_fluid_module
 
       ! Set user specified initial conditions (IC)
       call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-         domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
+                  domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
 
       ! Set the initial pressure field
-      call set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz, &
+      call set_p_g(slo, shi, lo, hi, p_g, dx, dy, dz, &
                    xlength, ylength, zlength, domlo, domhi)
 
       ! Set the initial fluid density
@@ -68,7 +69,6 @@ module init_fluid_module
       endif
 
       ! Remove undefined values at wall cells for scalars
-      where(rop_g .eq. undefined) rop_g = 0.0
 
       ! Set the initial viscosity
       if (is_undefined(mu_g0)) then
@@ -89,6 +89,71 @@ module init_fluid_module
    end subroutine init_fluid
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+
+   subroutine init_fluid_from_restart(slo, shi, lo, hi, &
+                         ep_g, ro_g, rop_g, p_g, mu_g, lambda_g) &
+      bind(C, name="init_fluid_from_restart")
+
+      use amrex_fort_module, only : c_real => amrex_real
+      use iso_c_binding , only: c_int
+
+      use calc_ro_g_module, only: calc_ro_g
+
+      use param, only: is_undefined, undefined
+      use fld_const, only: ro_g0, mu_g0
+
+      implicit none
+
+! Dummy arguments .....................................................//
+      integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
+
+      real(c_real), intent(inout) :: ep_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: ro_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: rop_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: p_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      real(c_real), intent(inout) :: mu_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: lambda_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      real(c_real) :: mu_val, lambda_val
+
+      ! Set the initial fluid density
+      if (is_undefined(ro_g0)) then
+         call calc_ro_g(slo,shi,lo,hi,ro_g,rop_g,p_g,ep_g)
+      else
+         ro_g = ro_g0
+         rop_g = ro_g0*ep_g
+      endif
+
+      ! Set the initial viscosity
+      if (is_undefined(mu_g0)) then
+
+          mu_val     = 1.7d-5 * (293.15d0/273.0d0)**1.5d0 * (383.d0/(293.15d0+110.d0))
+          lambda_val = (2.d0 / 3.d0) * mu_val
+
+       else
+
+          mu_val     = mu_g0
+          lambda_val = -(2.0d0/3.0d0)*mu_g0
+
+       endif
+
+      ! mu_g     = mu_val
+      lambda_g = -(2.0d0/3.0d0)*mu_g
+
+   end subroutine init_fluid_from_restart
+
+
+   
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_IC                                                  !
 !  Author: M. Syamlal                                 Date: 21-JAN-92  !
@@ -97,7 +162,7 @@ module init_fluid_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-      domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
+                     domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
 
       use ic, only: dim_ic, ic_defined
       use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
@@ -230,7 +295,7 @@ module init_fluid_module
 !           is acting in the negative y-direction.                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz, &
+      subroutine set_p_g(slo, shi, lo, hi, p_g, dx, dy, dz, &
                          xlength, ylength, zlength, domlo, domhi)
 
       use bc, only: delp_x, delp_y, delp_z
@@ -254,8 +319,6 @@ module init_fluid_module
       integer, intent(in) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
