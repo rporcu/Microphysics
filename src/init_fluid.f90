@@ -74,7 +74,7 @@ module init_fluid_module
       if (is_undefined(mu_g0)) then
 
          mu_val     = 1.7d-5 * (293.15d0/273.0d0)**1.5d0 * (383.d0/(293.15d0+110.d0))
-         lambda_val = 1(2.0d0/3.0d0) * mu_val
+         lambda_val = -(2.0d0/3.0d0) * mu_val
 
       else
 
