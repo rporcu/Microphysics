@@ -16,12 +16,8 @@ fi
 
 if [ "$ENABLE_MPI" -eq "1" ]; then
     MPIRUN="mpirun -np 4"
-    POST_U=POST_UG_MPI.dat
-    POST_V=POST_VG_MPI.dat
 else
     MPIRUN=""
-    POST_U=POST_UG.dat
-    POST_V=POST_VG.dat
 fi
 
 GRID=${GRID:-"single multiple tiled"}
@@ -32,8 +28,8 @@ for grid_type in $GRID; do
     time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
     if ! [ -z "${FEXTRACT}" ]; then
-    ${FEXTRACT} -p FLD0100000/ -d 2 -v u_g -s "${POST_U}"
-    ${FEXTRACT} -p FLD0100000/ -d 1 -v v_g -s "${POST_V}"
+    ${FEXTRACT} -p FLD0100000/ -d 2 -v u_g -s POST_UG.dat
+    ${FEXTRACT} -p FLD0100000/ -d 1 -v v_g -s POST_VG.dat
 
     post_dats=POST*.dat
     for result in ${post_dats}; do
