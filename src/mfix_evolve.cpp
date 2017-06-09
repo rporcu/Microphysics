@@ -8,18 +8,18 @@
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
 mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
-                   Real time, Real normg) 
+                   Real time, Real normg)
 {
 
     if (solve_fluid)
-	EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
+  EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
 
     if (solve_dem)
     {
-	if (solve_fluid)
-	    mfix_calc_drag_particle(lev);
+  if (solve_fluid)
+      mfix_calc_drag_particle(lev);
 
-	pc ->  EvolveParticles( lev, nstep, dt, time);
+  pc ->  EvolveParticles( lev, nstep, dt, time);
     }
 }
 
@@ -31,8 +31,23 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+      {
+        Box domain(geom[lev].Domain());
+        const Box& sbx = (*ep_g[lev])[mfi].box();
+        Box ubx((*u_g[lev])[mfi].box());
+        Box vbx((*v_g[lev])[mfi].box());
+        Box wbx((*w_g[lev])[mfi].box());
+
+        set_bc1(sbx.loVect(), sbx.hiVect(),
+                ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+                bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+      }
+
     if (solve_dem)
-	mfix_calc_volume_fraction(lev);
+      mfix_calc_volume_fraction(lev);
 
     // Calculate transport coefficients
     int calc_flag = 2;
@@ -54,7 +69,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
     // Loop over iterate for auto time-step size adjustment
     int reiterate;
     do {
-	prev_dt = dt;
+  prev_dt = dt;
 
         // Calculate bulk density (epg*ro_g) at cell faces
         mfix_conv_rop(lev,dt);
@@ -74,63 +89,63 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
 
         ///////////////// ---- call to iterate -------- /////////////////
         do {
-	    nit++;
+      nit++;
 
-	    Real residuals[2*8];
-	    for (int i=0; i<=2*8; ++i)
-		residuals[i] = 0.0L;
+      Real residuals[2*8];
+      for (int i=0; i<=2*8; ++i)
+    residuals[i] = 0.0L;
 
-	    // User hooks
-	    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-		mfix_usr2();
+      // User hooks
+      for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+    mfix_usr2();
 
-	    // Calculate transport coefficients
-	    calc_flag = 1;
-	    mfix_calc_coeffs(lev,calc_flag);
+      // Calculate transport coefficients
+      calc_flag = 1;
+      mfix_calc_coeffs(lev,calc_flag);
 
-	    // Calculate drag coefficient
-	    if (solve_dem)
-		mfix_calc_drag_fluid(lev);
+      // Calculate drag coefficient
+      if (solve_dem)
+    mfix_calc_drag_fluid(lev);
 
-	    // Solve momentum equations
-	    mfix_solve_for_vels(lev, dt, residuals);
+      // Solve momentum equations
+      mfix_solve_for_vels(lev, dt, residuals);
 
-	    // Calculate transport coefficients
-	    mfix_physical_prop(lev,0);
+      // Calculate transport coefficients
+      mfix_physical_prop(lev,0);
 
-	    // Calculate bulk density (epg*ro_g) at cell faces
-	    mfix_conv_rop(lev,dt);
+      // Calculate bulk density (epg*ro_g) at cell faces
+      mfix_conv_rop(lev,dt);
 
-	    // Solve the pressure correction equation
-	    mfix_solve_for_pp(lev,dt,lnormg,resg, residuals);
+      // Solve the pressure correction equation
+      mfix_solve_for_pp(lev,dt,lnormg,resg, residuals);
 
-	    // Apply pressure correction to all Pg, Ug, Vg, Wg
-	    mfix_correct_0(lev);
+      // Apply pressure correction to all Pg, Ug, Vg, Wg
+      mfix_correct_0(lev);
 
-	    // Update fluid density
-	    mfix_physical_prop(lev,0);
+      // Update fluid density
+      mfix_physical_prop(lev,0);
 
-	    // Calculate face mass fluxes
-	    mfix_calc_mflux(lev);
+      // Calculate face mass fluxes
+      mfix_calc_mflux(lev);
 
-	    // Check for convergence
-	    ParallelDescriptor::ReduceRealSum(residuals,16);
-	    converged = check_convergence(&nit, residuals);
+      // Check for convergence
+      ParallelDescriptor::ReduceRealSum(residuals,16);
+      converged = check_convergence(&nit, residuals);
 
-	    // Display current iteration residuals
-	    if ( ParallelDescriptor::IOProcessor() )
-		display_resid(&time, &dt, &nit, residuals);
+      // Display current iteration residuals
+      if ( ParallelDescriptor::IOProcessor() )
+    display_resid(&time, &dt, &nit, residuals);
 
-	    // Iterate over cyclic mass flux bc
-	    if(cyclic_mf==1 && (converged==1 || nit >= max_nit))
-		for (MFIter mfi(*fluxX[lev]); mfi.isValid(); ++mfi)
-		{
-		    const Box& sbx = (*ep_g[lev])[mfi].box();
+      // Iterate over cyclic mass flux bc
+      if(cyclic_mf==1 && (converged==1 || nit >= max_nit))
+    for (MFIter mfi(*fluxX[lev]); mfi.isValid(); ++mfi)
+    {
+        const Box& sbx = (*ep_g[lev])[mfi].box();
 
-		    converged = goal_seek_mflux(sbx.loVect(), sbx.hiVect(), &nit, &gsmf, &delP_MF, &lMFlux,
-						(*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
-						&dx, &dy, &dz);
-		}
+        converged = goal_seek_mflux(sbx.loVect(), sbx.hiVect(), &nit, &gsmf, &delP_MF, &lMFlux,
+            (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
+            &dx, &dy, &dz);
+    }
 
         } while(converged==0 && nit<max_nit);
 
@@ -138,16 +153,15 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
         reiterate = mfix_adjustdt(&converged, &nit, &dt);
         if(reiterate == 1) {
 
-	    // Reset the field variables
-	    MultiFab::Copy(*ep_g[lev],  *ep_go[lev],  0, 0, 1, nghost);
-	    MultiFab::Copy(*p_g[lev],   *p_go[lev],   0, 0, 1, nghost);
-	    MultiFab::Copy(*ro_g[lev],  *ro_go[lev],  0, 0, 1, nghost);
-	    MultiFab::Copy(*rop_g[lev], *rop_go[lev], 0, 0, 1, nghost);
-	    MultiFab::Copy(*u_g[lev],   *u_go[lev],   0, 0, 1, nghost);
-	    MultiFab::Copy(*v_g[lev],   *v_go[lev],   0, 0, 1, nghost);
-	    MultiFab::Copy(*w_g[lev],   *w_go[lev],   0, 0, 1, nghost);
+      // Reset the field variables
+      MultiFab::Copy(*ep_g[lev],  *ep_go[lev],  0, 0, 1, nghost);
+      MultiFab::Copy(*p_g[lev],   *p_go[lev],   0, 0, 1, nghost);
+      MultiFab::Copy(*ro_g[lev],  *ro_go[lev],  0, 0, 1, nghost);
+      MultiFab::Copy(*rop_g[lev], *rop_go[lev], 0, 0, 1, nghost);
+      MultiFab::Copy(*u_g[lev],   *u_go[lev],   0, 0, 1, nghost);
+      MultiFab::Copy(*v_g[lev],   *v_go[lev],   0, 0, 1, nghost);
+      MultiFab::Copy(*w_g[lev],   *w_go[lev],   0, 0, 1, nghost);
 
         }
     } while (reiterate==1);
 }
-

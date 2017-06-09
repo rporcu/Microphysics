@@ -20,6 +20,7 @@ set(F90_sources
    calc_coeff.f90
    calc_d.f90
    calc_mflux.f90
+   calc_mu_g.f90
    calc_ro_g.f90
    calc_trd_g.f90
    check_convergence.f90
@@ -90,6 +91,7 @@ set(F90_sources
    run_mod.f90
    scales_mod.f90
    set_bc0.f90
+   set_bc1.f90
    set_bc_flow.f90
    set_bc_type.f90
    set_ps.f90

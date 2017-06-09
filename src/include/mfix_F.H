@@ -63,6 +63,16 @@ extern "C"
         int* bc_klo, int* bc_khi,
         const int* domlo , const int* domhi);
 
+  void set_bc1(const int* slo, const int* shi,
+               const int* ulo, const int* uhi,
+               const int* vlo, const int* vhi,
+               const int* wlo, const int* whi,
+               Real* u_g,     Real* v_g,      Real* w_g,
+               int* bc_ilo, int* bc_ihi,
+               int* bc_jlo, int* bc_jhi,
+               int* bc_klo, int* bc_khi,
+               const int* domlo , const int* domhi);
+
     void init_fluid(const int* slo, const int* shi,
         const int* ulo, const int* uhi,
         const int* vlo, const int* vhi,
@@ -75,6 +85,10 @@ extern "C"
         Real* mu_g,    Real* lambda_g,
         Real* dx,       Real* dy,       Real* dz,
         Real* xlength, Real* ylength, Real* zlength);
+
+  void init_fluid_restart(const int* slo, const int* shi,
+        const int*  lo, const int*  hi,
+        Real* mu_g,    Real* lambda_g);
 
     void mfix_set_particle_properties(const int* pstate, Real* pradius, Real* pdensity,
         Real* pvol, Real* pmass, Real* omoi, Real* omega);

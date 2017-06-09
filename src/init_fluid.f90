@@ -14,10 +14,9 @@ module init_fluid_module
       use iso_c_binding , only: c_int
 
       use calc_ro_g_module, only: calc_ro_g
+      use calc_mu_g_module, only: calc_mu_g
 
       use param, only: is_undefined, undefined
-      use fld_const, only: ro_g0, mu_g0
-      use eos      , only: sutherland
 
       implicit none
 
@@ -51,8 +50,6 @@ module init_fluid_module
       real(c_real), intent(in   ) :: dx, dy, dz
       real(c_real), intent(in   ) :: xlength, ylength, zlength
 
-      real(c_real) :: mu_val, lambda_val
-
       ! Set user specified initial conditions (IC)
       call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
@@ -61,31 +58,41 @@ module init_fluid_module
       call set_p_g(slo, shi, lo, hi, p_g, dx, dy, dz, &
                    xlength, ylength, zlength, domlo, domhi)
 
-      ! Set the initial fluid density
-      if (is_undefined(ro_g0)) then
-         call calc_ro_g(slo,shi,lo,hi,ro_g,rop_g,p_g,ep_g)
-      else
-         ro_g = ro_g0
-         rop_g = ro_g0*ep_g
-      endif
+      ! Set the initial fluid density and viscosity
+      call calc_ro_g(slo, shi, lo, hi, ro_g, rop_g, p_g, ep_g)
 
-      ! Remove undefined values at wall cells for scalars
-
-      ! Set the initial viscosity
-      if (is_undefined(mu_g0)) then
-         mu_val     = sutherland(293.15d0)
-         lambda_val = -(2.0d0/3.0d0) * mu_val
-      else
-         mu_val     = mu_g0
-         lambda_val = -(2.0d0/3.0d0) * mu_g0
-      endif
-
-      mu_g     = mu_val
-      lambda_g = lambda_val
+      call calc_mu_g(slo, shi, lo, hi, mu_g, lambda_g)
 
    end subroutine init_fluid
 
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: init_fluid_restart                                      !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine init_fluid_restart(slo, shi, lo, hi, mu_g, lambda_g) &
+      bind(C, name="init_fluid_restart")
 
+      use amrex_fort_module, only : c_real => amrex_real
+      use iso_c_binding , only: c_int
+
+      use calc_ro_g_module, only: calc_ro_g
+      use calc_mu_g_module, only: calc_mu_g
+
+      implicit none
+
+! Dummy arguments .....................................................//
+      integer(c_int), intent(in   ) ::  lo(3),  hi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
+
+      real(c_real), intent(inout) :: mu_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: lambda_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      call calc_mu_g(slo, shi, lo, hi, mu_g, lambda_g)
+
+    end subroutine init_fluid_restart
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -370,16 +377,16 @@ module init_fluid_module
          else
             dpodx = -gravity(1)*ro_g0
          endif
-
          pj = pj - dpodx*dx*(hi(1)-domhi(1))
          do i = hi(1)+1, lo(1), -1
-            pj = pj + dpodx*dx
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
                   p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
+            pj = pj + dpodx*dx
          enddo
+
 
       else if(abs(gravity(2)) > epsilon(0.0d0)) then
          if (is_undefined(ro_g0)) then
@@ -388,15 +395,30 @@ module init_fluid_module
             dpody = -gravity(2)*ro_g0
          endif
 
-         pj = pj - dpody*dy*(hi(2)-domhi(2))
-         do j = hi(2)+1, lo(2), -1
-            pj = pj + dpody*dy
-            do k = lo(3), hi(3)
-               do i = lo(1), hi(1)
-                  p_g(i,j,k) = scale_pressure(pj)
+         if(gravity(2) <= 0.0d0) then
+            pj = pj - dpody*dy*(hi(2)-domhi(2))
+            do j = hi(2)+1, lo(2), -1
+               ! write(*,*) '................................',j,pj
+               do k = lo(3), hi(3)
+                  do i = lo(1), hi(1)
+                     p_g(i,j,k) = scale_pressure(pj)
+                  enddo
                enddo
+               pj = pj + dpody*dy
             enddo
-         enddo
+         else
+            pj = pj - dpody*dy*(hi(2)-domhi(2))
+            do j = lo(2),hi(2)+1
+               ! write(*,*) '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',j,pj
+               do k = lo(3), hi(3)
+                  do i = lo(1), hi(1)
+                     p_g(i,j,k) = scale_pressure(pj)
+                  enddo
+               enddo
+               pj = pj - dpody*dy
+            enddo
+         endif
+
 
       else
          if (is_undefined(ro_g0)) then
@@ -407,12 +429,12 @@ module init_fluid_module
 
          pj = pj - dpodz*dz*(hi(3)-domhi(3))
          do k = hi(3)+1, lo(3), -1
-            pj = pj + dpodz*dz
             do j = lo(2), hi(2)
                do i = lo(1), hi(1)
                   p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
+            pj = pj + dpodz*dz
          enddo
       endif
 

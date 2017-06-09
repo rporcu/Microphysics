@@ -443,7 +443,12 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
   const Box& bx = mfi.validbox();
   const Box& sbx = (*ep_g[lev])[mfi].box();
 
-  if ( !is_restarting ) {
+  if ( is_restarting ) {
+    init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
+        (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr());
+
+  }
+  else {
       const Box& ubx = (*u_g[lev])[mfi].box();
       const Box& vbx = (*v_g[lev])[mfi].box();
       const Box& wbx = (*w_g[lev])[mfi].box();

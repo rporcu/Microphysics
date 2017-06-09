@@ -6,11 +6,12 @@ module calc_d_mod
    use param, only: zero, small_number
 
    ! Flag: Coupled DEM simulation
-   use discretelement, only: DES_CONTINUUM_COUPLED
-   use discretelement, only: DES_ONEWAY_COUPLED
+   use discretelement, only: des_continuum_coupled
+   use discretelement, only: des_oneway_coupled
 
    ! Pressure scale factor
-   use scales, only: P_SCALE
+   use scales, only: p_scale
+   use bc, only: minf_, nsw_, psw_, fsw_
 
    implicit none
 
@@ -26,7 +27,7 @@ module calc_d_mod
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine calc_d_e(lo, hi, slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
-                       ep_g, f_gds, dx, dy, dz, domlo, domhi)
+        ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_ilo_type, bc_ihi_type)
 
       integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
@@ -46,14 +47,19 @@ module calc_d_mod
       real(c_real), intent(in   ) :: f_gds&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+           (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+           (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
+
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      integer      :: i,j,k
+      integer      :: i,j,k, bcv
       real(c_real) :: ayz, vol
       real(c_real) :: Am0, epga
       logical      :: coupled
 
-      COUPLED = (DES_CONTINUUM_COUPLED .AND. .NOT.DES_ONEWAY_COUPLED)
+      coupled = (des_continuum_coupled .and. .not.des_oneway_coupled)
 
       ayz = dy*dz
       vol = dx*dy*dz
@@ -74,10 +80,46 @@ module calc_d_mod
          enddo
       enddo
 
+      ! At left boundary
+      if (slo(1) .lt. domlo(1) .and. lo(1).eq.alo(1)) then
+         i = alo(1)
+         do k = lo(3),hi(3)
+            do j = lo(2),hi(2)
+               if(bc_ilo_type(j,k,1) == MINF_ .or. &
+                  bc_ilo_type(j,k,1) == NSW_ .or. &
+                  bc_ilo_type(j,k,1) == FSW_ .or. &
+                  bc_ilo_type(j,k,1) == PSW_) then
+                  d_e(i,j,k) =  0.0d0
+               endif
+            end do
+         end do
+      endif
+
+      ! At right boundary
+      if (shi(1) .gt. domhi(1) .and. hi(1).eq.ahi(1)) then
+         i = ahi(1)
+         do k = lo(3),hi(3)
+            do j = lo(2),hi(2)
+               if(bc_ihi_type(j,k,1) == MINF_ .or. &
+                  bc_ihi_type(j,k,1) == NSW_  .or. &
+                  bc_ihi_type(j,k,1) == FSW_  .or. &
+                  bc_ihi_type(j,k,1) == PSW_) then
+                  d_e(i,j,k) = 0.0d0
+               endif
+
+            end do
+         end do
+      endif
+
+
    end subroutine calc_d_e
 
+
+
+
    subroutine calc_d_n(lo, hi, slo, shi, vlo, vhi, alo, ahi, d_n, A_m,&
-                       ep_g, f_gds, dx, dy, dz, domlo, domhi)
+        ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_jlo_type, bc_jhi_type)
+
 
       integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
@@ -95,11 +137,16 @@ module calc_d_mod
       real(c_real), intent(in   ):: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: f_gds&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+           (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+           (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      integer      :: i,j,k
+      integer      :: i,j,k, bcv
       real(c_real) :: axz, vol
       real(c_real) :: Am0, epga
       logical      :: coupled
@@ -126,10 +173,45 @@ module calc_d_mod
          enddo
       enddo
 
+      ! At bottom boundary
+      if (slo(2) .lt. domlo(2) .and. lo(2).eq.alo(2)) then
+         j = alo(2)
+         do k = lo(3), hi(3)
+            do i = lo(1), hi(1)
+               bcv = bc_jlo_type(i,k,2)
+               if(bc_jlo_type(i,k,1) == MINF_ .or. &
+                  bc_jlo_type(i,k,1) == NSW_  .or. &
+                  bc_jlo_type(i,k,1) == PSW_  .or. &
+                  bc_jlo_type(i,k,1) == FSW_) then
+                  d_n(i,j,k) =  zero
+               endif
+            end do
+         end do
+      endif
+
+      ! At top boundary
+      if (shi(2) .gt. domhi(2) .and. hi(2).eq.ahi(2)) then
+         j = ahi(2)
+         do k = lo(3), hi(3)
+            do i = lo(1), hi(1)
+               bcv = bc_jhi_type(i,k,2)
+               if(bc_jhi_type(i,k,1) == MINF_ .or. &
+                  bc_jhi_type(i,k,1) == NSW_  .or. &
+                  bc_jhi_type(i,k,1) == PSW_  .or. &
+                  bc_jhi_type(i,k,1) == FSW_ ) then
+                  d_n(i,j,k) =  zero
+               endif
+            end do
+         end do
+      endif
+
    end subroutine calc_d_n
 
+
+
+
    subroutine calc_d_t(lo, hi, slo, shi, wlo, whi, alo, ahi, d_t, A_m,&
-      ep_g, f_gds, dx, dy, dz, domlo, domhi)
+      ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_klo_type, bc_khi_type)
 
       integer, intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: slo(3),shi(3)
@@ -147,11 +229,16 @@ module calc_d_mod
       real(c_real), intent(in   ):: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: f_gds&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      integer(c_int), intent(in   ) :: bc_klo_type&
+           (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+           (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      integer      :: i,j,k
+      integer      :: i,j,k, bcv
       real(c_real) :: axy, vol
       real(c_real) :: Am0, epga
       logical      :: coupled
@@ -182,6 +269,38 @@ module calc_d_mod
            enddo
         enddo
      enddo
+
+      ! At down boundary
+     if (slo(3) .lt. domlo(3) .and. lo(3).eq.alo(3)) then
+        k = alo(3)
+        do j = lo(2), hi(2)
+           do i = lo(1), hi(1)
+              bcv = bc_klo_type(i,j,2)
+              if (bc_klo_type(i,j,1) == MINF_ .or. &
+                   bc_klo_type(i,j,1) == NSW_ .or. &
+                   bc_klo_type(i,j,1) == FSW_ .or. &
+                   bc_klo_type(i,j,1) == PSW_) then
+                 d_t(i,j,k) = 0.0d0
+              endif
+           end do
+        end do
+      endif
+
+      ! At up boundary
+      if (shi(3) .gt. domhi(3) .and. hi(3).eq.ahi(3)) then
+         k = ahi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+               bcv = bc_khi_type(i,j,2)
+               if(bc_khi_type(i,j,1) == MINF_ .or. &
+                  bc_khi_type(i,j,1) == NSW_ .or. &
+                  bc_khi_type(i,j,1) == FSW_ .or. &
+                  bc_khi_type(i,j,1) == PSW_) then
+                  d_t(i,j,k) = 0.0d0
+               endif
+            end do
+         end do
+      endif
 
    end subroutine calc_d_t
 
