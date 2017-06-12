@@ -84,19 +84,21 @@ contains
          do j = lo(2),hi(2)+1
             do i = lo(1),hi(1)
 
-! Surface forces at i, j+1/2, k
-! bulk viscosity term
-! part of d/dy (tau_yy) xdxdydz =>
-!         d/dy (lambda.trcD) xdxdydz =>
-! delta (lambda.trcD)Ap|N-S  : at (i, j+1 - j-1, k)
+               ! Surface forces at i, j+1/2, k
+               ! bulk viscosity term
+               ! part of d/dy (tau_yy) xdxdydz =>
+               !         d/dy (lambda.trcD) xdxdydz =>
+               ! delta (lambda.trcD)Ap|N-S  : at (i, j+1 - j-1, k)
+
                sbv = (lambda_g(i,j  ,k)*trd_g(i,j  ,k)-&
                       lambda_g(i,j-1,k)*trd_g(i,j-1,k))*axz
 
-! shear stress terms at i, j+1/2, k
+               ! shear stress terms at i, j+1/2, k
 
-! part of 1/x d/dx(x.tau_xy) xdxdydz =>
-!         1/x d/dx (x.mu.du/dy) xdxdydz =>
-! delta (x.mu.du/dy)Ayz |E-W
+               ! part of 1/x d/dx(x.tau_xy) xdxdydz =>
+               !         1/x d/dx (x.mu.du/dy) xdxdydz =>
+               ! delta (x.mu.du/dy)Ayz |E-W
+
                ssx = avg_h(avg_h(mu_g(i,j-1,k), mu_g(i+1,j-1,k)),    &
                            avg_h(mu_g(i,j  ,k), mu_g(i+1,j  ,k)))*   &
                            (u_g(i+1,j,k) - u_g(i+1,j-1,k))*ody*ayz - &
@@ -104,15 +106,17 @@ contains
                            avg_h(mu_g(i-1,j  ,k), mu_g(i,j  ,k)))*   &
                            (u_g(i  ,j,k) - u_g(i  ,j-1,k))*ody*ayz
 
-! part of d/dy (tau_xy) xdxdydz =>
-!         d/dy (mu.dv/dy) xdxdydz =>
-! delta (mu.dv/dx)Axz |N-S : at (i, j+1 - j-1, k)
+               ! part of d/dy (tau_xy) xdxdydz =>
+               !         d/dy (mu.dv/dy) xdxdydz =>
+               ! delta (mu.dv/dx)Axz |N-S : at (i, j+1 - j-1, k)
+
                ssy = mu_g(i,j  ,k)*(v_g(i,j+1,k)-v_g(i,j  ,k))*ody*axz - &
                      mu_g(i,j-1,k)*(v_g(i,j  ,k)-v_g(i,j-1,k))*ody*axz
 
-! part of 1/x d/dz (tau_xz) xdxdydz =>
-!         1/x d/dz (mu.dw/dy) xdxdydz =>
-! delta (mu.dw/dx)Axy |T-B
+               ! part of 1/x d/dz (tau_xz) xdxdydz =>
+               !         1/x d/dz (mu.dw/dy) xdxdydz =>
+               ! delta (mu.dw/dx)Axy |T-B
+
                ssz = avg_h(avg_h(mu_g(i,j-1,k), mu_g(i,j-1,k+1)),    &
                            avg_h(mu_g(i,j  ,k), mu_g(i,j  ,k+1)))*   &
                            (w_g(i,j,k+1) - w_g(i,j-1,k+1))*ody*axy - &
