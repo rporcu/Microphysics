@@ -150,10 +150,6 @@ private:
 
     void clearNeighbors( int lev );
 
-    // runtime parameters
-    static int do_tiling;
-    static IntVect tile_size;
-
     //
     // This members are for the handling of neighbor particles
     //

@@ -12,9 +12,7 @@
 using namespace amrex;
 using namespace std;
 
-
-int     MFIXParticleContainer::do_tiling = 0;
-IntVect MFIXParticleContainer::tile_size   { D_DECL(1024000,8,8) };
+// IntVect MFIXParticleContainer::tile_size   { D_DECL(1024000,8,8) };
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     : ParticleContainer<realData::count,intData::count,0,0>
@@ -155,17 +153,18 @@ void MFIXParticleContainer::ReadStaticParameters ()
 
     if (!initialized)
     {
-  ParmParse pp("particles");
+        ParmParse pp("particles");
 
-  pp.query("do_tiling",  do_tiling);
+        do_tiling = true;  // because the default in amrex is false
 
-  Array<int> ts(BL_SPACEDIM);
+        pp.query("do_tiling",  do_tiling);
 
-  if (pp.queryarr("tile_size", ts)) {
-      tile_size = IntVect(ts);
-  }
+        Array<int> ts(BL_SPACEDIM);
 
-  initialized = true;
+        if (pp.queryarr("tile_size", ts))  
+            tile_size = IntVect(ts);
+
+        initialized = true;
     }
 }
 
