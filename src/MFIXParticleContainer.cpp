@@ -50,32 +50,6 @@ void MFIXParticleContainer::InitLevelMask ( int lev,
     mask.FillBoundary(geom.periodicity());
 }
 
-void* MFIXParticleContainer::GetParticlesData( const int& lev, const MFIter& mfi ) {
-
-    const int gridIndex = mfi.index();
-    const int tileIndex = mfi.LocalTileIndex();
-    auto&     particles = GetParticles(lev)[std::make_pair(gridIndex,tileIndex)];
-
-    void* ptr = NULL;
-
-    if ( particles.GetArrayOfStructs().size() > 0 )
-  ptr = particles.GetArrayOfStructs().data();
-
-    return  ptr; //particles.GetArrayOfStructs().data();
-}
-
-
-void* MFIXParticleContainer::GetParticlesData( MFIXParIter& pti ) {
-
-    void* ptr = NULL;
-
-    if ( pti.GetArrayOfStructs().size() > 0 )
-  ptr = pti.GetArrayOfStructs().data();
-
-    return  ptr;
-}
-
-
 void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
     // only read the file on the IO proc
@@ -220,22 +194,22 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     for ( int n = 0; n < nsubsteps; ++n ) {
 
-        fillNeighbors(lev);
+      fillNeighbors(lev);
 
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-      // Real particles
-      const int np     = NumberOfParticles(pti);
-      void* particles  = GetParticlesData(pti);
+         // Real particles
+         const int np     = NumberOfParticles(pti);
+         void* particles  = pti.GetArrayOfStructs().data();
 
-      // Neighbor particles
-      int nstride = pti.GetArrayOfStructs().dataShape().first;
-      PairIndex index(pti.index(), pti.LocalTileIndex());
-      int ng = neighbors[index].size() / pdata_size;
+         // Neighbor particles
+         int nstride = pti.GetArrayOfStructs().dataShape().first;
+         PairIndex index(pti.index(), pti.LocalTileIndex());
+         int ng = neighbors[index].size() / pdata_size;
 
-      mfix_des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
-            &subdt, &dx, &dy, &dz,
-            &xlen, &ylen, &zlen, &nstep );
+         mfix_des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
+               &subdt, &dx, &dy, &dz,
+               &xlen, &ylen, &zlen, &nstep );
 
       if ( mfix_des_continuum_coupled () == 0 ) {
     Real stime;
@@ -256,7 +230,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
   const int np     = NumberOfParticles(pti);
-  void* particles  = GetParticlesData(pti);
+  void* particles  = pti.GetArrayOfStructs().data();
 
   mfix_call_usr3_des( &np, particles );
 
@@ -284,7 +258,7 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
 
   //number of particles
   const int     np = NumberOfParticles(pti);
-  void*  particles = GetParticlesData(pti);
+  void* particles  = pti.GetArrayOfStructs().data();
 
   mfix_output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
            particles, &finish);
@@ -558,7 +532,6 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
     {
 	auto& particles = pti.GetArrayOfStructs();
 	size_t Np = pti.numParticles();
-	cout << "Particles: " << Np << " << at level " << lev << endl;
 	for (unsigned i = 0; i < Np; ++i)
 	{
 	    const ParticleType& p = particles[i];

@@ -107,10 +107,6 @@ public:
 
     void AllocData ();
 
-    void* GetParticlesData( const int& lev, const MFIter& mfi );
-
-    void* GetParticlesData( MFIXParIter& pti);
-
     void EvolveParticles ( int lev, int nstep, Real dt, Real time );
 
     ///
