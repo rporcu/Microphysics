@@ -23,7 +23,8 @@ module check_boundary_conditions_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine check_boundary_conditions(dx, dy, dz, &
-         xlength, ylength, zlength, domlo, domhi)
+         xlength, ylength, zlength, domlo, domhi) &
+         bind(C, name="check_boundary_conditions")
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -138,11 +139,11 @@ module check_boundary_conditions_module
       subroutine check_bc_range(BCV)
 
       ! Gas phase BC varaibles
-      use bc, only: BC_EP_g, BC_T_g, BC_X_g, BC_P_g
+      use bc, only: BC_EP_g, BC_X_g, BC_P_g
       use bc, only: BC_U_g, BC_V_g, BC_W_g
 
       ! Solids phase BC variables.
-      use bc, only: BC_EP_s, BC_T_s, BC_X_s
+      use bc, only: BC_EP_s, BC_X_s
       use bc, only: BC_U_s, BC_V_s, BC_W_s
 
 ! Global Parameters:
@@ -193,10 +194,6 @@ module check_boundary_conditions_module
          write(err_msg,1100) trim(ivar('BC_P_g',bcv))
          call flush_err_msg(abort=.true.)
       endif
-      if (is_defined(bc_t_g(bcv))) then
-         write(err_msg,1100) trim(ivar('BC_T_g',bcv))
-         call flush_err_msg(abort=.true.)
-      ENDIF
 
       DO N = 1, DIM_N_G
          IF(IS_DEFINED(BC_X_G(BCV,N))) THEN
@@ -222,10 +219,6 @@ module check_boundary_conditions_module
 
          if(.not.equal(bc_w_s(bcv,m),zero)) then
             write(err_msg,1100) trim(ivar('BC_W_s',BCV,M))
-            call flush_err_msg(abort=.true.)
-         endif
-         if(is_defined(bc_t_s(bcv,m))) then
-            write(err_msg,1100) trim(ivar('BC_T_s',BCV,M))
             call flush_err_msg(abort=.true.)
          endif
 

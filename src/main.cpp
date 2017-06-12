@@ -98,8 +98,7 @@ int main (int argc, char* argv[])
        &xlength, &ylength, &zlength);
 
     if ( ParallelDescriptor::IOProcessor() )
-  check_inputs(&dt);
-
+	check_inputs(&dt);
 
     int lev = 0;
 
@@ -116,6 +115,7 @@ int main (int argc, char* argv[])
        my_mfix.InitLevelData(lev,dt,time);
     } else {
        my_mfix.Restart( restart_file, &nstep, &dt, &time);
+       my_mfix.InitLevelDataFromRestart( lev, dt, time );
     }
 
     int finish  = 0;
@@ -123,7 +123,7 @@ int main (int argc, char* argv[])
 
     // Call to output before entering time march loop
     if (solve_fluid && ParallelDescriptor::IOProcessor()  && solve_dem )
-  my_mfix.output(lev,estatus,finish,nstep,dt,time);
+	my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
     // only if solve_fluid = T

@@ -27,7 +27,7 @@ variables:
     - cd build
     - env F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OpenMP=$ENABLE_OpenMP ..
     - make -j 4
-    - ctest -R $TEST_REGEX
+    - env GRID="$GRID" ctest -R $TEST_REGEX
   tags:
     - joule
 
@@ -43,13 +43,15 @@ fld-test-mpi:
     CC: "$MPI_CC"
     CXX: "$MPI_CXX"
     FC: "$MPI_FC"
-    TEST_REGEX: "FLD0[1-3]"
+    TEST_REGEX: "FLD0[1-4]"
+    GRID: "multiple"
   <<: *test_template
 
 .fld-test-openmp:
   variables:
     ENABLE_OpenMP: "1"
     TEST_REGEX: "FLD"
+    GRID: "tiled"
   <<: *test_template
 
 
@@ -62,4 +64,5 @@ dem-test-serial:
   variables:
     ENABLE_OpenMP: "1"
     TEST_REGEX: "DEM"
+    GRID: "tiled"
   <<: *test_template

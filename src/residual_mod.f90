@@ -31,8 +31,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine calc_resid_vel(lo, hi, alo, ahi, &
          v0lo, v0hi, v1lo, v1hi, v2lo, v2hi, &
-         vel, vels1, vels2, A_m, b_m, mask, &
-         eq_id, num, den, domlo, domhi)
+         vel, vels1, vels2, A_m, b_m, mask, num, den)
 
 !-----------------------------------------------
 ! Modules
@@ -47,7 +46,6 @@
       integer     , intent(in   ) :: v0lo(3),v0hi(3)
       integer     , intent(in   ) :: v1lo(3),v1hi(3)
       integer     , intent(in   ) :: v2lo(3),v2hi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! primary velocity component
       real(c_real), intent(IN) :: vel&
@@ -71,7 +69,6 @@
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       ! Residual ID, numerator and denominator
-      integer,      intent(in   ) :: eq_id
       real(c_real), intent(  out) :: num, den
 
 !-----------------------------------------------
@@ -93,10 +90,6 @@
 
       llo = alo
       lhi = ahi
-
-!     if(eq_id == resid_u .and. alo(1) /= domlo(1)) llo(1) = alo(1)+1
-!     if(eq_id == resid_v .and. alo(2) /= domlo(2)) llo(2) = alo(2)+1
-!     if(eq_id == resid_w .and. alo(3) /= domlo(3)) llo(3) = alo(3)+1
 
 !     Evaluate the residual at cell (i,j,k):
 !     RESp = B-sum(Anb*VARnb)-Ap*VARp

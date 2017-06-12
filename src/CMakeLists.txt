@@ -1,5 +1,7 @@
 set(CXX_sources
    main.cpp
+   mfix_evolve.cpp
+   mfix_init.cpp
    mfix_level.cpp
    solve_bicgstab.cpp
    MFIXParticleContainer.cpp
@@ -28,7 +30,6 @@ set(F90_sources
    check_data/check_bc_walls.f90
    check_data/check_boundary_conditions.f90
    check_data/check_collision_model.f90
-   check_data/check_domain.f90
    check_data/check_gas_properties.f90
    check_data/check_initial_conditions.f90
    check_data/check_inputs.f90

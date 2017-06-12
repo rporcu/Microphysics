@@ -27,9 +27,14 @@ extern "C"
 
     void mfix_set_cyclic(int* cyc_x, int* cyc_y, int* cyc_z);
 
-    void check_domain(Real* dx, Real* dy, Real* dz,
+    void check_initial_conditions(Real* dx, Real* dy, Real* dz,
+        const int* domlo, const int* domhi);
+
+    void check_boundary_conditions(Real* dx, Real* dy, Real* dz,
         Real* xlength, Real* ylength, Real* zlength,
         const int* domlo, const int* domhi);
+
+    void check_point_sources(Real* dx, Real* dy, Real* dz);
 
     void set_bc_flow(Real* xlength, Real* ylength, Real* zlength,
         Real* dx,      Real* dy,      Real* dz  );
@@ -51,6 +56,8 @@ extern "C"
         const int* wlo, const int* whi,
         Real* u_g,     Real* v_g,      Real* w_g,
         Real* p_g,     Real* ep_g,
+        Real* ro_g,     Real* rop_g,
+        Real* mu_g,     Real* lambda_g,
         int* bc_ilo, int* bc_ihi,
         int* bc_jlo, int* bc_jhi,
         int* bc_klo, int* bc_khi,

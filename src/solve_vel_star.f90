@@ -154,7 +154,7 @@ module solve_vel_star_module
       call calc_resid_vel (lo, hi, alo, ahi, &
          ulo, uhi, vlo, vhi, wlo, whi, &
          u_g, v_g, w_g, A_m, b_m, mask, &
-         resid_u, resid(resid_u,1), resid(resid_u,2), domlo, domhi)
+         resid(resid_u,1), resid(resid_u,2))
 
      call under_relax (lo, hi, u_g, ulo, uhi, A_m, b_m, alo, ahi, resid_u)
 
@@ -308,7 +308,7 @@ module solve_vel_star_module
       call calc_resid_vel (lo, hi, alo, ahi, &
          vlo, vhi, wlo, whi, ulo, uhi, &
          v_g, w_g, u_g, A_m, b_m, mask, &
-         resid_v, resid(resid_v,1), resid(resid_v,2), domlo, domhi)
+         resid(resid_v,1), resid(resid_v,2))
 
       call under_relax (lo, hi, v_g, vlo, vhi, A_m, b_m, alo, ahi, resid_v)
 
@@ -461,7 +461,7 @@ module solve_vel_star_module
       call calc_resid_vel (lo, hi, alo, ahi, &
          wlo, whi, ulo, uhi, vlo, vhi, &
          w_g, u_g, v_g, A_m, b_m, mask, &
-         resid_w, resid(resid_w,1), resid(resid_w,2), domlo, domhi)
+         resid(resid_w,1), resid(resid_w,2))
 
       call under_relax (lo, hi, w_g, wlo, whi, A_m, b_m, alo, ahi, resid_w)
 
