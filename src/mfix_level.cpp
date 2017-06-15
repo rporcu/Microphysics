@@ -625,20 +625,19 @@ void mfix_level::mfix_calc_volume_fraction(int lev)
 
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+    for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)  
     {
-	const Box& sbx = (*ep_g[lev])[mfi].box();
-	const Box&  bx = mfi.validbox();
-	const int np = pc -> NumberOfParticles(lev, mfi);
+	const Box& sbx = (*ep_g[lev])[pti].box();
+        const Box& tile_bx = pti.tilebox();
+	auto& particles = pti.GetArrayOfStructs();
+	const int np = particles.size();
 
-	void* particles = pc -> GetParticlesData( lev, mfi );
-
-	calc_volume_fraction( bx.loVect(), bx.hiVect(),
+	calc_volume_fraction( tile_bx.loVect(), tile_bx.hiVect(),
 			      sbx.loVect(), sbx.hiVect(),
-			      &np, particles, &dx, &dy, &dz,
-			      (*ep_g[lev])[mfi].dataPtr(),
-			      (*rop_g[lev])[mfi].dataPtr(),
-			      (*ro_g[lev])[mfi].dataPtr() );
+			      &np, particles.data(), &dx, &dy, &dz,
+			      (*ep_g[lev])[pti].dataPtr(),
+			      (*rop_g[lev])[pti].dataPtr(),
+			      (*ro_g[lev])[pti].dataPtr() );
     }
 
     // This sets the values outside walls or periodic boundaries
@@ -654,34 +653,35 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
 
     f_gds[lev]->setVal(0.0L);
     drag_bm[lev]->setVal(0.0L);
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+
+    for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
     {
-	const Box& sbx = (*ep_g[lev])[mfi].box();
+        const Box& sbx = (*ep_g[lev])[pti].box();
+        auto& particles = pti.GetArrayOfStructs(); 
+        const int np = particles.size();
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
-
-	const int np = pc -> NumberOfParticles(lev, mfi);
-	void* particles = pc -> GetParticlesData( lev, mfi );
+	Box ubx((*u_g[lev])[pti].box());
+	Box vbx((*v_g[lev])[pti].box());
+	Box wbx((*w_g[lev])[pti].box());
 
 	calc_drag_fluid(
 	    sbx.loVect(), sbx.hiVect(),
 	    ubx.loVect(), ubx.hiVect(),
 	    vbx.loVect(), vbx.hiVect(),
 	    wbx.loVect(), wbx.hiVect(), &np,
-	    (*ep_g[lev])[mfi].dataPtr(), (*ro_g[lev])[mfi].dataPtr(),
-	    (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),
-	    (*w_g[lev])[mfi].dataPtr(),  (*mu_g[lev])[mfi].dataPtr(),
-	    (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
-	    particles, &dx, &dy, &dz );
+	    (*ep_g[lev])[pti].dataPtr(), (*ro_g[lev])[pti].dataPtr(),
+	    (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(),
+	    (*w_g[lev])[pti].dataPtr(),  (*mu_g[lev])[pti].dataPtr(),
+	    (*f_gds[lev])[pti].dataPtr(), (*drag_bm[lev])[pti].dataPtr(),
+	    particles.data(), &dx, &dy, &dz );
     }
 
     fill_mf_bc(lev,*f_gds[lev]);
     fill_mf_bc(lev,*drag_bm[lev]);
 }
 
-void mfix_level::mfix_calc_drag_particle(int lev)
+void 
+mfix_level::mfix_calc_drag_particle(int lev)
 {
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
@@ -691,24 +691,23 @@ void mfix_level::mfix_calc_drag_particle(int lev)
     Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
     Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
 
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+    for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
     {
-	const Box& sbx = (*ep_g[lev])[mfi].box();
+        const Box& sbx = (*ep_g[lev])[pti].box();
+        auto& particles = pti.GetArrayOfStructs(); 
+        const int np = particles.size();
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
-
-	const int np = pc -> NumberOfParticles(lev, mfi);
-	void* particles = pc -> GetParticlesData( lev, mfi );
+	Box ubx((*u_g[lev])[pti].box());
+	Box vbx((*v_g[lev])[pti].box());
+	Box wbx((*w_g[lev])[pti].box());
 
 	calc_drag_particle(
 	    sbx.loVect(), sbx.hiVect(),
 	    ubx.loVect(), ubx.hiVect(),
 	    vbx.loVect(), vbx.hiVect(),
 	    wbx.loVect(), wbx.hiVect(), &np,
-	    (*p_g[lev])[mfi].dataPtr(), (*u_g[lev])[mfi].dataPtr(),
-	    (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
-	    particles, &dx, &dy, &dz, &xlen, &ylen, &zlen);
+	    (*p_g[lev])[pti].dataPtr(), (*u_g[lev])[pti].dataPtr(),
+	    (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
+	    particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
     }
 }

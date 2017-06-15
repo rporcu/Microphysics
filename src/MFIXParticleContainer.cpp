@@ -12,9 +12,7 @@
 using namespace amrex;
 using namespace std;
 
-
-int     MFIXParticleContainer::do_tiling = 0;
-IntVect MFIXParticleContainer::tile_size   { D_DECL(1024000,8,8) };
+// IntVect MFIXParticleContainer::tile_size   { D_DECL(1024000,8,8) };
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     : ParticleContainer<realData::count,intData::count,0,0>
@@ -50,32 +48,6 @@ void MFIXParticleContainer::InitLevelMask ( int lev,
     mask.FillBoundary(geom.periodicity());
 }
 
-void* MFIXParticleContainer::GetParticlesData( const int& lev, const MFIter& mfi ) {
-
-    const int gridIndex = mfi.index();
-    const int tileIndex = mfi.LocalTileIndex();
-    auto&     particles = GetParticles(lev)[std::make_pair(gridIndex,tileIndex)];
-
-    void* ptr = NULL;
-
-    if ( particles.GetArrayOfStructs().size() > 0 )
-  ptr = particles.GetArrayOfStructs().data();
-
-    return  ptr; //particles.GetArrayOfStructs().data();
-}
-
-
-void* MFIXParticleContainer::GetParticlesData( MFIXParIter& pti ) {
-
-    void* ptr = NULL;
-
-    if ( pti.GetArrayOfStructs().size() > 0 )
-  ptr = pti.GetArrayOfStructs().data();
-
-    return  ptr;
-}
-
-
 void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
     // only read the file on the IO proc
@@ -100,6 +72,8 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
   const int lev  = 0;
   const int grid = 0;
   const int tile = 0;
+
+  auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
 
   ParticleType p;
   int        pstate, pphase;
@@ -140,7 +114,6 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
       p.rdata(realData::omegaz)   = pomega;
 
       // Add everything to the data structure
-      auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
       particle_tile.push_back(p);
   }
     }
@@ -148,32 +121,32 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
 }
 
-
-void MFIXParticleContainer:: printParticles() {
+void MFIXParticleContainer:: printParticles() 
+{
     const int lev = 0;
     const auto& plevel = GetParticles(lev);
-    for (const auto& kv : plevel) {
-  const auto& particles = kv.second.GetArrayOfStructs();
 
-  for (unsigned i = 0; i < particles.numParticles(); ++i) {
+    for (const auto& kv : plevel) 
+    {
+       const auto& particles = kv.second.GetArrayOfStructs();
 
-      std::cout << "Particle ID  = " << i << " " << std::endl;
-      std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
-      std::cout << "Y            = " << particles[i].pos(1) << " " << std::endl;
-      std::cout << "Z            = " << particles[i].pos(2) << " " << std::endl;
-      std::cout << "state        = " << particles[i].idata(intData::state) << " " << std::endl;
-      std::cout << "phase        = " << particles[i].idata(intData::phase) << " " << std::endl;
-      std::cout << "Real properties = " << std::endl;
+       for (unsigned i = 0; i < particles.numParticles(); ++i) 
+       {
+          std::cout << "Particle ID  = " << i << " " << std::endl;
+          std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
+          std::cout << "Y            = " << particles[i].pos(1) << " " << std::endl;
+          std::cout << "Z            = " << particles[i].pos(2) << " " << std::endl;
+          std::cout << "state        = " << particles[i].idata(intData::state) << " " << std::endl;
+          std::cout << "phase        = " << particles[i].idata(intData::phase) << " " << std::endl;
+          std::cout << "Real properties = " << std::endl;
 
-      for (int j = 0; j < realData::count; j++) {
-    std::cout << "property " << j << "  = " << particles[i].rdata(j) << " " << std::endl;
-      }
+          for (int j = 0; j < realData::count; j++)  
+            std::cout << "property " << j << "  = " << particles[i].rdata(j) << " " << std::endl;
 
-      std::cout << std::endl;
-  }
+          std::cout << std::endl;
+       }
     }
 }
-
 
 void MFIXParticleContainer::ReadStaticParameters ()
 {
@@ -181,17 +154,18 @@ void MFIXParticleContainer::ReadStaticParameters ()
 
     if (!initialized)
     {
-  ParmParse pp("particles");
+        ParmParse pp("particles");
 
-  pp.query("do_tiling",  do_tiling);
+        do_tiling = true;  // because the default in amrex is false
 
-  Array<int> ts(BL_SPACEDIM);
+        pp.query("do_tiling",  do_tiling);
 
-  if (pp.queryarr("tile_size", ts)) {
-      tile_size = IntVect(ts);
-  }
+        Array<int> ts(BL_SPACEDIM);
 
-  initialized = true;
+        if (pp.queryarr("tile_size", ts))  
+            tile_size = IntVect(ts);
+
+        initialized = true;
     }
 }
 
@@ -220,22 +194,22 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     for ( int n = 0; n < nsubsteps; ++n ) {
 
-        fillNeighbors(lev);
+      fillNeighbors(lev);
 
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-      // Real particles
-      const int np     = NumberOfParticles(pti);
-      void* particles  = GetParticlesData(pti);
+         // Real particles
+         const int np     = NumberOfParticles(pti);
+         void* particles  = pti.GetArrayOfStructs().data();
 
-      // Neighbor particles
-      int nstride = pti.GetArrayOfStructs().dataShape().first;
-      PairIndex index(pti.index(), pti.LocalTileIndex());
-      int ng = neighbors[index].size() / pdata_size;
+         // Neighbor particles
+         int nstride = pti.GetArrayOfStructs().dataShape().first;
+         PairIndex index(pti.index(), pti.LocalTileIndex());
+         int ng = neighbors[index].size() / pdata_size;
 
-      mfix_des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
-            &subdt, &dx, &dy, &dz,
-            &xlen, &ylen, &zlen, &nstep );
+         mfix_des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
+               &subdt, &dx, &dy, &dz,
+               &xlen, &ylen, &zlen, &nstep );
 
       if ( mfix_des_continuum_coupled () == 0 ) {
     Real stime;
@@ -256,7 +230,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
   const int np     = NumberOfParticles(pti);
-  void* particles  = GetParticlesData(pti);
+  void* particles  = pti.GetArrayOfStructs().data();
 
   mfix_call_usr3_des( &np, particles );
 
@@ -284,7 +258,7 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
 
   //number of particles
   const int     np = NumberOfParticles(pti);
-  void*  particles = GetParticlesData(pti);
+  void* particles  = pti.GetArrayOfStructs().data();
 
   mfix_output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
            particles, &finish);
@@ -557,16 +531,14 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
 	auto& particles = pti.GetArrayOfStructs();
-	size_t Np = pti.numParticles();
-	cout << "Particles: " << Np << " << at level " << lev << endl;
-	for (unsigned i = 0; i < Np; ++i)
+
+	for (const auto& p: particles)
 	{
-	    const ParticleType& p = particles[i];
 	    const IntVect& iv = Index(p, lev);
 
 	    RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
 
-	    cout << "[" << i << "]: id " << p.id()
+	    cout << " id " << p.id()
 		 << " index " << iv
 		 << " position " << xyz << endl;
 	}
@@ -585,17 +557,13 @@ void MFIXParticleContainer::writeAllForComparison(int lev)
   Real dummy = 0.;
  
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-    {
+  {
       auto& particles = pti.GetArrayOfStructs();
-      size_t Np = pti.numParticles();
-      for (unsigned i = 0; i < Np; ++i)
-        {
-          const ParticleType& p = particles[i];
- 
-          cout << p.pos(0)   << " " << p.pos(1)   << " " << p.pos(2) <<  " " <<
-                  p.rdata(1) << " " << p.rdata(2) << " " << p.rdata(2) <<  " " <<
-                  ParallelDescriptor::MyProc() << " " << p.id() << std::endl;
-        }
-    }
+
+      for (const auto& p: particles)
+         cout << p.pos(0)   << " " << p.pos(1)   << " " << p.pos(2) <<  " " <<
+                 p.rdata(1) << " " << p.rdata(2) << " " << p.rdata(2) <<  " " <<
+                 ParallelDescriptor::MyProc() << " " << p.id() << std::endl;
+  }
 }
 

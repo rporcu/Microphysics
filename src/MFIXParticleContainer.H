@@ -107,10 +107,6 @@ public:
 
     void AllocData ();
 
-    void* GetParticlesData( const int& lev, const MFIter& mfi );
-
-    void* GetParticlesData( MFIXParIter& pti);
-
     void EvolveParticles ( int lev, int nstep, Real dt, Real time );
 
     ///
@@ -153,10 +149,6 @@ private:
 
 
     void clearNeighbors( int lev );
-
-    // runtime parameters
-    static int do_tiling;
-    static IntVect tile_size;
 
     //
     // This members are for the handling of neighbor particles

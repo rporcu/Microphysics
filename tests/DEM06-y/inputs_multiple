@@ -8,10 +8,20 @@ amr.max_grid_size = 5
 # Maximum tile size within each grid
 fabarray.mfiter_tile_size = 20 20 20
 
+# Maximum particle tile size
+particles.tile_size = 20 20 20
+
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
-amr.plot_int=50
-amr.plot_file=DEM06
+
+amr.plot_int   = 50
+amr.plot_file  = DEM06_plt
+ 
+amr.check_int  = 50
+amr.check_file = DEM06_chk
+ 
+amr.par_ascii_int  = -50
+amr.par_ascii_file = DEM06_par
 
 # Geometry
 geometry.coord_sys   = 0                  # 0: Cartesian   
