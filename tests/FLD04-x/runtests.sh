@@ -28,12 +28,12 @@ for grid_type in $GRID; do
     time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
     if ! [ -z "${FEXTRACT}" ]; then
-    ${FEXTRACT} -p FLD0100000/ -d 2 -v u_g -s POST_UG.dat
-    ${FEXTRACT} -p FLD0100000/ -d 1 -v v_g -s POST_VG.dat
+    ${FEXTRACT} -p FLD0400000/ -d 2 -v u_g -s POST_UG.dat
+    ${FEXTRACT} -p FLD0400000/ -d 1 -v v_g -s POST_VG.dat
 
     post_dats=POST*.dat
     for result in ${post_dats}; do
-        numdiff -a 0.0 "AUTOTEST/${result}" "${result}"
+        diff "AUTOTEST/${result}" "${result}"
     done
     fi
 done

@@ -41,7 +41,7 @@ for grid_type in $GRID; do
 
     post_dats=POST*.dat
     for result in ${post_dats}; do
-    numdiff -a 0.0 ${REL_ERR} "AUTOTEST/${result}" "${result}"
+    diff ${REL_ERR} "AUTOTEST/${result}" "${result}"
     done
 
     if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then

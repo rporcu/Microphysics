@@ -23,5 +23,5 @@ fi
 
 post_dats=POST*.dat
 for result in ${post_dats}; do
-    numdiff -a 0.0 "AUTOTEST/${result}" "${result}"
+    diff "AUTOTEST/${result}" "${result}"
 done

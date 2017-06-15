@@ -174,9 +174,12 @@ int main (int argc, char* argv[])
 
     // Dump plotfile at the end if enabled for steady state
     if (steady_state) {
-        my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
-        my_mfix.WritePlotFile      ( plot_file     , nstep, dt, time );
-        my_mfix.WriteParticleAscii ( par_ascii_file, nstep ); 
+        if ( check_int > 0)
+           my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
+        if ( plot_int > 0 ) 
+           my_mfix.WritePlotFile      ( plot_file     , nstep, dt, time );
+        if ( par_ascii_int > 0 )  
+           my_mfix.WriteParticleAscii ( par_ascii_file, nstep ); 
     }
 
     my_mfix.usr3(0);

@@ -73,6 +73,8 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
   const int grid = 0;
   const int tile = 0;
 
+  auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
+
   ParticleType p;
   int        pstate, pphase;
   Real       pradius, pdensity, pvolume, pomoi, pmass, pomega;
@@ -112,7 +114,6 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
       p.rdata(realData::omegaz)   = pomega;
 
       // Add everything to the data structure
-      auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
       particle_tile.push_back(p);
   }
     }
@@ -120,32 +121,32 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
 }
 
-
-void MFIXParticleContainer:: printParticles() {
+void MFIXParticleContainer:: printParticles() 
+{
     const int lev = 0;
     const auto& plevel = GetParticles(lev);
-    for (const auto& kv : plevel) {
-  const auto& particles = kv.second.GetArrayOfStructs();
 
-  for (unsigned i = 0; i < particles.numParticles(); ++i) {
+    for (const auto& kv : plevel) 
+    {
+       const auto& particles = kv.second.GetArrayOfStructs();
 
-      std::cout << "Particle ID  = " << i << " " << std::endl;
-      std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
-      std::cout << "Y            = " << particles[i].pos(1) << " " << std::endl;
-      std::cout << "Z            = " << particles[i].pos(2) << " " << std::endl;
-      std::cout << "state        = " << particles[i].idata(intData::state) << " " << std::endl;
-      std::cout << "phase        = " << particles[i].idata(intData::phase) << " " << std::endl;
-      std::cout << "Real properties = " << std::endl;
+       for (unsigned i = 0; i < particles.numParticles(); ++i) 
+       {
+          std::cout << "Particle ID  = " << i << " " << std::endl;
+          std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
+          std::cout << "Y            = " << particles[i].pos(1) << " " << std::endl;
+          std::cout << "Z            = " << particles[i].pos(2) << " " << std::endl;
+          std::cout << "state        = " << particles[i].idata(intData::state) << " " << std::endl;
+          std::cout << "phase        = " << particles[i].idata(intData::phase) << " " << std::endl;
+          std::cout << "Real properties = " << std::endl;
 
-      for (int j = 0; j < realData::count; j++) {
-    std::cout << "property " << j << "  = " << particles[i].rdata(j) << " " << std::endl;
-      }
+          for (int j = 0; j < realData::count; j++)  
+            std::cout << "property " << j << "  = " << particles[i].rdata(j) << " " << std::endl;
 
-      std::cout << std::endl;
-  }
+          std::cout << std::endl;
+       }
     }
 }
-
 
 void MFIXParticleContainer::ReadStaticParameters ()
 {
@@ -530,15 +531,14 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
 	auto& particles = pti.GetArrayOfStructs();
-	size_t Np = pti.numParticles();
-	for (unsigned i = 0; i < Np; ++i)
+
+	for (const auto& p: particles)
 	{
-	    const ParticleType& p = particles[i];
 	    const IntVect& iv = Index(p, lev);
 
 	    RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
 
-	    cout << "[" << i << "]: id " << p.id()
+	    cout << " id " << p.id()
 		 << " index " << iv
 		 << " position " << xyz << endl;
 	}
@@ -557,17 +557,13 @@ void MFIXParticleContainer::writeAllForComparison(int lev)
   Real dummy = 0.;
  
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-    {
+  {
       auto& particles = pti.GetArrayOfStructs();
-      size_t Np = pti.numParticles();
-      for (unsigned i = 0; i < Np; ++i)
-        {
-          const ParticleType& p = particles[i];
- 
-          cout << p.pos(0)   << " " << p.pos(1)   << " " << p.pos(2) <<  " " <<
-                  p.rdata(1) << " " << p.rdata(2) << " " << p.rdata(2) <<  " " <<
-                  ParallelDescriptor::MyProc() << " " << p.id() << std::endl;
-        }
-    }
+
+      for (const auto& p: particles)
+         cout << p.pos(0)   << " " << p.pos(1)   << " " << p.pos(2) <<  " " <<
+                 p.rdata(1) << " " << p.rdata(2) << " " << p.rdata(2) <<  " " <<
+                 ParallelDescriptor::MyProc() << " " << p.id() << std::endl;
+  }
 }
 

@@ -15,5 +15,5 @@ time -p ${MFIX} inputs
 post_dats=AUTOTEST/POST*.dat
 
 for test_post_file in ${post_dats}; do
-    numdiff -a 0.000001 -r 0.05 ${test_post_file} $(basename ${test_post_file})
+    diff ${test_post_file} $(basename ${test_post_file})
 done
