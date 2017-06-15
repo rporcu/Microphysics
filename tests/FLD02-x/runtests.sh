@@ -20,10 +20,8 @@ fi
 
 if [ "$ENABLE_MPI" -eq "1" ]; then
     MPIRUN="mpirun -np 2"
-    REL_ERR="-r 0.0"
 else
     MPIRUN=""
-    REL_ERR=""
 fi
 
 GRID=${GRID:-"single multiple tiled"}
@@ -40,7 +38,7 @@ for grid_type in $GRID; do
 
     post_dats=POST*.dat
     for result in ${post_dats}; do
-        diff ${REL_ERR} "AUTOTEST/${result}" "${result}"
+        diff "AUTOTEST/${result}" "${result}"
     done
 
     if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then
