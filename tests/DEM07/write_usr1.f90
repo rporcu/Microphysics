@@ -58,7 +58,7 @@ subroutine write_test_data(np, particles, time)
   gtemp = gtemp/(3.0d0*dble(lc2))
   ltime = time*sqrt(0.1d0)/100.0e-6
 
-  write(fUnit,"(3(2x,es13.6))") ltime, ToT0(time), gTemp/0.1d0
+  write(fUnit,"(3(2x,es13.3))") ltime, ToT0(time), gTemp/0.1d0
 
   close(fUnit)
 

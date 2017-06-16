@@ -12,11 +12,10 @@ fi
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MFIX} inputs_single
 
-#post_dats=POST*.dat
-#for post_dats in ${post_dats}; do
-#    numdiff "AUTOTEST/${post_dats}" "${post_dats}"
-#done
-
+post_dats=POST*.dat
+for post_dats in ${post_dats}; do
+   numdiff "AUTOTEST/${post_dats}" "${post_dats}"
+done
 
 GRID=${GRID:-"multiple tiled"}
 for grid_type in $GRID; do
