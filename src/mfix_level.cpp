@@ -191,6 +191,8 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
 void
 mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 {
+    BL_PROFILE("mfix_level::solve_for_vels()"); 
+
     mfix_solve_for_u(lev, dt, residuals);
     mfix_solve_for_v(lev, dt, residuals);
     mfix_solve_for_w(lev, dt, residuals);
@@ -207,6 +209,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
 {
+    BL_PROFILE("mfix_level::solve_for_u()"); 
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -268,6 +271,7 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 {
+    BL_PROFILE("mfix_level::solve_for_v()"); 
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -330,6 +334,7 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
 {
+    BL_PROFILE("mfix_level::solve_for_w()"); 
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -391,6 +396,7 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (&residuals)[16])
 {
+    BL_PROFILE("mfix_level::solve_for_pp()"); 
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);

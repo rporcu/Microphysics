@@ -62,15 +62,17 @@ int main (int argc, char* argv[])
     //        command line arguments are in mfix-format so it will just ignore them.
     amrex::Initialize(argc,argv);
 
+    BL_PROFILE("mfix_level::main()");
+
     // Copy arguments into MFIX -- note that the first argument is now the name of the
     //      inputs file to be read by AMReX, so we only pass the arguments after that
     for(int i=2; i < argc; i++) {
-  int nlen = strlen(argv[i]);
-  // If-statement avoids passing the name of the mfix input file if it is
-  // specified on the command line or any AMReX command.
-  if ( strstr(argv[i], "input_file") == NULL && strstr(argv[i], "amr") == NULL) {
-      mfix_add_argument(argv[i], &nlen);
-  }
+       int nlen = strlen(argv[i]);
+
+       // If-statement avoids passing the name of the mfix input file if it is
+       // specified on the command line or any AMReX command.
+       if ( strstr(argv[i], "input_file") == NULL && strstr(argv[i], "amr") == NULL)
+         mfix_add_argument(argv[i], &nlen);
     }
 
     Real strt_time = ParallelDescriptor::second();
