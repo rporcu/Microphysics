@@ -33,12 +33,12 @@ for grid_type in $GRID; do
     rm -rf POST_* ${RUN_NAME}* &> /dev/null
     time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
-    ${FEXTRACT} -p FLD0200000/ -d 1 -v w_g -s POST_WG.dat
+    ${FEXTRACT} -p FLD0200000/ -d 1 -v w_g -s POST_VG.dat
     ${FEXTRACT} -p FLD0200000/ -d 3 -v p_g -s POST_PG.dat
 
     post_dats=POST*.dat
     for result in ${post_dats}; do
-        diff "AUTOTEST/${result}" "${result}"
+        diff -u -I '#.*' "../FLD02-y/AUTOTEST/${result}" "${result}"
     done
 
     if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then

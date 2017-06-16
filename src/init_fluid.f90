@@ -294,7 +294,7 @@ module init_fluid_module
       if (abs(delp_x) > epsilon(zero)) then
          dpodx = delp_x/xlength
          pj = pj - dpodx*dx*(hi(1)-domhi(1)+1)
-         do i = shi(1), slo(1), -1
+         do i = hi(1), lo(1), -1
             pj = pj + dpodx*dx
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
@@ -377,16 +377,27 @@ module init_fluid_module
          else
             dpodx = -gravity(1)*ro_g0
          endif
-         pj = pj - dpodx*dx*(hi(1)-domhi(1))
-         do i = hi(1)+1, lo(1), -1
-            do k = lo(3), hi(3)
-               do j = lo(2), hi(2)
-                  p_g(i,j,k) = scale_pressure(pj)
+         if(gravity(1) <= 0.0d0) then
+            pj = pj - dpodx*dx*(hi(1)-domhi(1))
+            do i = hi(1)+1, lo(1), -1
+               do k = lo(3), hi(3)
+                  do j = lo(2), hi(2)
+                     p_g(i,j,k) = scale_pressure(pj)
+                  enddo
                enddo
+               pj = pj + dpodx*dx
             enddo
-            pj = pj + dpodx*dx
-         enddo
-
+         else
+            pj = pj - dpodx*dx*(hi(1)-domhi(1))
+            do i = lo(1), hi(1)+1
+               do k = lo(3), hi(3)
+                  do j = lo(2), hi(2)
+                     p_g(i,j,k) = scale_pressure(pj)
+                  enddo
+               enddo
+               pj = pj - dpodx*dx
+            enddo
+         endif
 
       else if(abs(gravity(2)) > epsilon(0.0d0)) then
          if (is_undefined(ro_g0)) then
@@ -398,7 +409,6 @@ module init_fluid_module
          if(gravity(2) <= 0.0d0) then
             pj = pj - dpody*dy*(hi(2)-domhi(2))
             do j = hi(2)+1, lo(2), -1
-               ! write(*,*) '................................',j,pj
                do k = lo(3), hi(3)
                   do i = lo(1), hi(1)
                      p_g(i,j,k) = scale_pressure(pj)
@@ -409,7 +419,6 @@ module init_fluid_module
          else
             pj = pj - dpody*dy*(hi(2)-domhi(2))
             do j = lo(2),hi(2)+1
-               ! write(*,*) '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',j,pj
                do k = lo(3), hi(3)
                   do i = lo(1), hi(1)
                      p_g(i,j,k) = scale_pressure(pj)
@@ -427,15 +436,27 @@ module init_fluid_module
             dpodz = -gravity(3)*ro_g0
          endif
 
-         pj = pj - dpodz*dz*(hi(3)-domhi(3))
-         do k = hi(3)+1, lo(3), -1
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
-                  p_g(i,j,k) = scale_pressure(pj)
+         if(gravity(3) <= 0.0d0) then
+            pj = pj - dpodz*dz*(hi(3)-domhi(3))
+            do k = hi(3)+1, lo(3), -1
+               do j = lo(2), hi(2)
+                  do i = lo(1), hi(1)
+                     p_g(i,j,k) = scale_pressure(pj)
+                  enddo
                enddo
+               pj = pj + dpodz*dz
             enddo
-            pj = pj + dpodz*dz
-         enddo
+         else
+            pj = pj - dpodz*dz*(hi(3)-domhi(3))
+            do k = lo(3), hi(3)+1
+               do j = lo(2), hi(2)
+                  do i = lo(1), hi(1)
+                     p_g(i,j,k) = scale_pressure(pj)
+                  enddo
+               enddo
+               pj = pj - dpodz*dz
+            enddo
+         endif
       endif
 
   100 continue
