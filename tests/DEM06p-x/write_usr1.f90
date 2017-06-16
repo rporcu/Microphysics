@@ -1,4 +1,3 @@
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: WRITE_USR1 (L)                                         C
@@ -32,7 +31,7 @@ subroutine write_usr1(l, np, time, dt, particles)
    real(c_real),     intent(in   ) :: time, dt
    type(particle_t), intent(in   ) :: particles(np)
 
-   
+
    SELECT CASE(L)
    CASE(1)
       CALL UPDATE_RK4_SOL(TIME)
@@ -59,14 +58,14 @@ subroutine WRITE_DES_Out(lTime, np, particles)
    use amrex_fort_module, only: c_real => amrex_real
    use usr,               only: RK4_POS, RK4_VEL
    use particle_mod,      only: particle_t
-   
+
    implicit none
 
    ! Dummy Arguments
    !---------------------------------------------------------------------//
    real(c_real),     intent(in   ) :: ltime
    integer,          intent(in   ) :: np
-   type(particle_t), intent(in   ) :: particles(np)   
+   type(particle_t), intent(in   ) :: particles(np)
 
    ! Local variables
    !---------------------------------------------------------------------//
@@ -77,8 +76,7 @@ subroutine WRITE_DES_Out(lTime, np, particles)
    OPEN(UNIT=lUNIT, FILE='POST_POS.dat',                            &
         POSITION="APPEND", STATUS='OLD')
    ! Write the results to file.
-   WRITE(lUNIT,1000) lTime, RK4_POS(1), particles(1) % pos(1),        &
-        ABS_ERR(RK4_POS(1), particles(1) % pos(1))
+   WRITE(lUNIT,1000) lTime, RK4_POS(1), particles(1) % pos(1)
    ! Close the output file.
    CLOSE(lUNIT)
 
@@ -87,14 +85,14 @@ subroutine WRITE_DES_Out(lTime, np, particles)
    OPEN(UNIT=lUNIT, FILE='POST_VEL.dat',                            &
         POSITION="APPEND", STATUS='OLD')
    ! Write the results to file.
-   WRITE(lUNIT,1000) lTime, RK4_VEL(1), particles(1) % vel(1),        &
-        ABS_ERR(RK4_VEL(1), particles(1) % vel(1))
+   WRITE(lUNIT,2000) lTime, RK4_VEL(1), particles(1) % vel(1)
    ! Close the output file.
    CLOSE(lUNIT)
 
    RETURN
 
-1000 FORMAT(3x,F15.6,5X,F15.6,3x,F15.5,3x,F15.2)
+1000 FORMAT(3x,F15.6,5X,F15.6,3x,F15.5)
+2000 FORMAT(3x,F15.6,5X,F15.6,3x,F15.4)
 
 CONTAINS
 
@@ -124,4 +122,3 @@ CONTAINS
    END FUNCTION ABS_ERR
 
 end subroutine WRITE_DES_Out
-

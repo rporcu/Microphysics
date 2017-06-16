@@ -23,5 +23,5 @@ fi
 
 post_dats=POST*.dat
 for result in ${post_dats}; do
-    diff "AUTOTEST/${result}" "${result}"
+    diff "../DEM06p-y/AUTOTEST/${result}" "${result}"
 done
