@@ -33,7 +33,7 @@ for grid_type in $GRID; do
 
     post_dats=POST*.dat
     for result in ${post_dats}; do
-        diff "AUTOTEST/${result}" "${result}"
+        diff -u -I '#.*' "../FLD04-y/AUTOTEST/${result}" "${result}"
     done
     fi
 done
