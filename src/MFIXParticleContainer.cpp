@@ -121,16 +121,16 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
 }
 
-void MFIXParticleContainer:: printParticles() 
+void MFIXParticleContainer:: printParticles()
 {
     const int lev = 0;
     const auto& plevel = GetParticles(lev);
 
-    for (const auto& kv : plevel) 
+    for (const auto& kv : plevel)
     {
        const auto& particles = kv.second.GetArrayOfStructs();
 
-       for (unsigned i = 0; i < particles.numParticles(); ++i) 
+       for (unsigned i = 0; i < particles.numParticles(); ++i)
        {
           std::cout << "Particle ID  = " << i << " " << std::endl;
           std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
@@ -140,7 +140,7 @@ void MFIXParticleContainer:: printParticles()
           std::cout << "phase        = " << particles[i].idata(intData::phase) << " " << std::endl;
           std::cout << "Real properties = " << std::endl;
 
-          for (int j = 0; j < realData::count; j++)  
+          for (int j = 0; j < realData::count; j++)
             std::cout << "property " << j << "  = " << particles[i].rdata(j) << " " << std::endl;
 
           std::cout << std::endl;
@@ -162,7 +162,7 @@ void MFIXParticleContainer::ReadStaticParameters ()
 
         Array<int> ts(BL_SPACEDIM);
 
-        if (pp.queryarr("tile_size", ts))  
+        if (pp.queryarr("tile_size", ts))
             tile_size = IntVect(ts);
 
         initialized = true;
@@ -176,6 +176,7 @@ MFIXParticleContainer::InitData()
 
 void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time ) {
 
+  BL_PROFILE("mfix_dem::EvolveParticles()");
 
     Box domain(Geom(lev).Domain());
 
@@ -211,28 +212,28 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
                &subdt, &dx, &dy, &dz,
                &xlen, &ylen, &zlen, &nstep );
 
-      if ( mfix_des_continuum_coupled () == 0 ) {
-    Real stime;
-    stime = time + (n+1)*subdt;
-    mfix_output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
-             &n, particles, 0 );
+         if ( mfix_des_continuum_coupled () == 0 ) {
+           Real stime;
+           stime = time + (n+1)*subdt;
+           mfix_output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
+                                &n, particles, 0 );
 
+         }
+
+         mfix_call_usr2_des( &np, particles );
       }
 
-      mfix_call_usr2_des( &np, particles );
-  }
+      clearNeighbors(lev);
 
-        clearNeighbors(lev);
-
-        Redistribute();
+      Redistribute();
     }
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-  const int np     = NumberOfParticles(pti);
-  void* particles  = pti.GetArrayOfStructs().data();
+      const int np     = NumberOfParticles(pti);
+      void* particles  = pti.GetArrayOfStructs().data();
 
-  mfix_call_usr3_des( &np, particles );
+      mfix_call_usr3_des( &np, particles );
 
     }
 
@@ -256,22 +257,25 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
 
-  //number of particles
-  const int     np = NumberOfParticles(pti);
-  void* particles  = pti.GetArrayOfStructs().data();
+      //number of particles
+      const int     np = NumberOfParticles(pti);
+      void* particles  = pti.GetArrayOfStructs().data();
 
-  mfix_output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
-           particles, &finish);
+      mfix_output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
+                           particles, &finish);
     }
 
 }
 
 void MFIXParticleContainer::fillNeighbors( int lev ) {
-    NeighborCommMap neighbors_to_comm;
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-        const Box& tile_box = pti.tilebox();
-        const IntVect& lo = tile_box.smallEnd();
-        const IntVect& hi = tile_box.bigEnd();
+  NeighborCommMap neighbors_to_comm;
+
+  BL_PROFILE("mfix_dem::fillNeighbors()");
+
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+    const Box& tile_box = pti.tilebox();
+    const IntVect& lo = tile_box.smallEnd();
+    const IntVect& hi = tile_box.bigEnd();
 
         Box shrink_box = pti.tilebox();
         shrink_box.grow(-ng);
@@ -335,6 +339,8 @@ void MFIXParticleContainer::fillNeighbors( int lev ) {
 
 void MFIXParticleContainer::applyPeriodicShift(int lev, ParticleType& p,
                                               const IntVect& neighbor_cell) {
+
+  BL_PROFILE("mfix_dem::applyPeriodicShift()");
 
     const Periodicity& periodicity = Geom(lev).periodicity();
     if (not periodicity.isAnyPeriodic()) return;
@@ -530,18 +536,18 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
 {
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
-	auto& particles = pti.GetArrayOfStructs();
+  auto& particles = pti.GetArrayOfStructs();
 
-	for (const auto& p: particles)
-	{
-	    const IntVect& iv = Index(p, lev);
+  for (const auto& p: particles)
+  {
+      const IntVect& iv = Index(p, lev);
 
-	    RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
+      RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
 
-	    cout << " id " << p.id()
-		 << " index " << iv
-		 << " position " << xyz << endl;
-	}
+      cout << " id " << p.id()
+     << " index " << iv
+     << " position " << xyz << endl;
+  }
     }
 }
 
@@ -551,11 +557,11 @@ void MFIXParticleContainer::writeAllForComparison(int lev)
 
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       Np_tot += pti.numParticles();
- 
+
   cout << Np_tot << std::endl;
- 
+
   Real dummy = 0.;
- 
+
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
       auto& particles = pti.GetArrayOfStructs();
@@ -566,4 +572,3 @@ void MFIXParticleContainer::writeAllForComparison(int lev)
                  ParallelDescriptor::MyProc() << " " << p.id() << std::endl;
   }
 }
-

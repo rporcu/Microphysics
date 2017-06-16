@@ -20,7 +20,7 @@ mfix_level::mfix_level ()
     istep.resize(nlevs_max, 0);
     nsubsteps.resize(nlevs_max, 1);
     for (int lev = 1; lev <= maxLevel(); ++lev) {
-	nsubsteps[lev] = MaxRefRatio(lev-1);
+  nsubsteps[lev] = MaxRefRatio(lev-1);
     }
 #endif
 
@@ -86,12 +86,12 @@ void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
     {
         const Box& bx = mfi.tilebox();
         const Box& sbx = (*ep_g[lev])[mfi].box();
- 
+
         calc_coeff(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(), &calc_flag,
                    (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
                    (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
     }
- 
+
     fill_mf_bc(lev,*ro_g[lev]);
     fill_mf_bc(lev,*rop_g[lev]);
 }
@@ -99,27 +99,28 @@ void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
 void
 mfix_level::mfix_calc_trd_and_tau(int lev)
 {
+  BL_PROFILE("mfix_level::mfix_calc_trd_and_tau()");
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
     for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.tilebox();
-	const Box& sbx = (*ep_g[lev])[mfi].box();
+  const Box& bx = mfi.tilebox();
+  const Box& sbx = (*ep_g[lev])[mfi].box();
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+  Box ubx((*u_g[lev])[mfi].box());
+  Box vbx((*v_g[lev])[mfi].box());
+  Box wbx((*w_g[lev])[mfi].box());
 
-	calc_trd_and_tau(sbx.loVect(), sbx.hiVect(),
-			 ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-			 bx.loVect(),  bx.hiVect(),
-			 (*tau_u_g[lev])[mfi].dataPtr(),  (*tau_v_g[lev])[mfi].dataPtr(), (*tau_w_g[lev])[mfi].dataPtr(),
-			 (*trD_g[lev])[mfi].dataPtr(),
-			 (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),     (*w_g[lev])[mfi].dataPtr(),
-			 (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
-			 &dx, &dy, &dz);
+  calc_trd_and_tau(sbx.loVect(), sbx.hiVect(),
+       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+       bx.loVect(),  bx.hiVect(),
+       (*tau_u_g[lev])[mfi].dataPtr(),  (*tau_v_g[lev])[mfi].dataPtr(), (*tau_w_g[lev])[mfi].dataPtr(),
+       (*trD_g[lev])[mfi].dataPtr(),
+       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),     (*w_g[lev])[mfi].dataPtr(),
+       (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
+       &dx, &dy, &dz);
     }
 
     tau_u_g[lev]->FillBoundary(geom[lev].periodicity());
@@ -132,22 +133,23 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
 void
 mfix_level::mfix_calc_mflux(int lev)
 {
+  BL_PROFILE("mfix_level::mfix_calc_mflux()");
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
     for (MFIter mfi(*u_g[lev]); mfi.isValid(); ++mfi)
     {
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+  Box ubx((*u_g[lev])[mfi].box());
+  Box vbx((*v_g[lev])[mfi].box());
+  Box wbx((*w_g[lev])[mfi].box());
 
-	calc_mflux(
-	    ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-	    (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-	    (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
-	    (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
-	    &dx, &dy, &dz);
+  calc_mflux(
+      ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+      (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+      (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
+      (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
+      &dx, &dy, &dz);
     }
 
     // Impose periodic bc's at domain boundaries and fine-fine copies in the interio
@@ -159,6 +161,7 @@ mfix_level::mfix_calc_mflux(int lev)
 void
 mfix_level::mfix_conv_rop(int lev, Real dt)
 {
+  BL_PROFILE("mfix_level::mfix_conv_rop()");
     Box domain(geom[lev].Domain());
 
     for (MFIter mfi(*rop_g[lev], true); mfi.isValid(); ++mfi)
@@ -191,7 +194,7 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
 void
 mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 {
-    BL_PROFILE("mfix_level::solve_for_vels()"); 
+    BL_PROFILE("mfix_level::solve_for_vels()");
 
     mfix_solve_for_u(lev, dt, residuals);
     mfix_solve_for_v(lev, dt, residuals);
@@ -209,7 +212,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
 {
-    BL_PROFILE("mfix_level::solve_for_u()"); 
+    BL_PROFILE("mfix_level::solve_for_u()");
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -232,29 +235,29 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
 
     for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.tilebox();
-	const Box& sbx = (*ep_g[lev])[mfi].box();
-	Box abx((*A_m[lev])[mfi].box());
+  const Box& bx = mfi.tilebox();
+  const Box& sbx = (*ep_g[lev])[mfi].box();
+  Box abx((*A_m[lev])[mfi].box());
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+  Box ubx((*u_g[lev])[mfi].box());
+  Box vbx((*v_g[lev])[mfi].box());
+  Box wbx((*w_g[lev])[mfi].box());
 
-	solve_u_g_star(sbx.loVect(), sbx.hiVect(),
-		       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
-		       wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
-		       bx.loVect(),  bx.hiVect(),
-		       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-		       (*u_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
-		       (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
-		       (*tau_u_g[lev])[mfi].dataPtr(),  (*d_e[lev])[mfi].dataPtr(),
-		       (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
-		       (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
-		       (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-		       (*mask)[mfi].dataPtr(),
-		       bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-		       bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
-		       &dt, &dx, &dy, &dz, residuals);
+  solve_u_g_star(sbx.loVect(), sbx.hiVect(),
+           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
+           wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
+           bx.loVect(),  bx.hiVect(),
+           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+           (*u_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
+           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
+           (*tau_u_g[lev])[mfi].dataPtr(),  (*d_e[lev])[mfi].dataPtr(),
+           (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
+           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
+           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
+           (*mask)[mfi].dataPtr(),
+           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+           bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
+           &dt, &dx, &dy, &dz, residuals);
     }
 
     int eq_id=2;
@@ -271,7 +274,7 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 {
-    BL_PROFILE("mfix_level::solve_for_v()"); 
+    BL_PROFILE("mfix_level::solve_for_v()");
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -295,29 +298,29 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 
     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.tilebox();
-	const Box& sbx = (*ep_g[lev])[mfi].box();
-	Box abx((*A_m[lev])[mfi].box());
+  const Box& bx = mfi.tilebox();
+  const Box& sbx = (*ep_g[lev])[mfi].box();
+  Box abx((*A_m[lev])[mfi].box());
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+  Box ubx((*u_g[lev])[mfi].box());
+  Box vbx((*v_g[lev])[mfi].box());
+  Box wbx((*w_g[lev])[mfi].box());
 
-	solve_v_g_star(sbx.loVect(), sbx.hiVect(),
-		       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
-		       wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
-		       bx.loVect(),  bx.hiVect(),
-		       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-		       (*v_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
-		       (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
-		       (*tau_v_g[lev])[mfi].dataPtr(),  (*d_n[lev])[mfi].dataPtr(),
-		       (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
-		       (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
-		       (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-		       (*mask)[mfi].dataPtr(),
-		       bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-		       bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
-		       &dt, &dx, &dy, &dz, residuals);
+  solve_v_g_star(sbx.loVect(), sbx.hiVect(),
+           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
+           wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
+           bx.loVect(),  bx.hiVect(),
+           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+           (*v_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
+           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
+           (*tau_v_g[lev])[mfi].dataPtr(),  (*d_n[lev])[mfi].dataPtr(),
+           (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
+           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
+           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
+           (*mask)[mfi].dataPtr(),
+           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+           bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
+           &dt, &dx, &dy, &dz, residuals);
     }
 
     int eq_id = 3;
@@ -334,7 +337,7 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
 {
-    BL_PROFILE("mfix_level::solve_for_w()"); 
+    BL_PROFILE("mfix_level::solve_for_w()");
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -357,29 +360,29 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
 
     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.tilebox();
-	const Box& sbx = (*ep_g[lev])[mfi].box();
-	Box abx((*A_m[lev])[mfi].box());
+  const Box& bx = mfi.tilebox();
+  const Box& sbx = (*ep_g[lev])[mfi].box();
+  Box abx((*A_m[lev])[mfi].box());
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+  Box ubx((*u_g[lev])[mfi].box());
+  Box vbx((*v_g[lev])[mfi].box());
+  Box wbx((*w_g[lev])[mfi].box());
 
-	solve_w_g_star(sbx.loVect(), sbx.hiVect(),
-		       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
-		       wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
-		       bx.loVect(),  bx.hiVect(),
-		       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-		       (*w_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
-		       (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
-		       (*tau_w_g[lev])[mfi].dataPtr(),  (*d_t[lev])[mfi].dataPtr(),
-		       (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
-		       (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
-		       (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-		       (*mask)[mfi].dataPtr(),
-		       bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-		       bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
-		       &dt, &dx, &dy, &dz, residuals);
+  solve_w_g_star(sbx.loVect(), sbx.hiVect(),
+           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
+           wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
+           bx.loVect(),  bx.hiVect(),
+           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+           (*w_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
+           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
+           (*tau_w_g[lev])[mfi].dataPtr(),  (*d_t[lev])[mfi].dataPtr(),
+           (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
+           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
+           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
+           (*mask)[mfi].dataPtr(),
+           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+           bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
+           &dt, &dx, &dy, &dz, residuals);
     }
 
     int eq_id = 4;
@@ -396,7 +399,7 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (&residuals)[16])
 {
-    BL_PROFILE("mfix_level::solve_for_pp()"); 
+    BL_PROFILE("mfix_level::solve_for_pp()");
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -414,27 +417,27 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
     // Solve the pressure correction equation
     for (MFIter mfi(*A_m[lev],true); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.tilebox();
-	const Box& sbx = (*ep_g[lev])[mfi].box();
+  const Box& bx = mfi.tilebox();
+  const Box& sbx = (*ep_g[lev])[mfi].box();
 
-	Box abx((*A_m[lev])[mfi].box());
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+  Box abx((*A_m[lev])[mfi].box());
+  Box ubx((*u_g[lev])[mfi].box());
+  Box vbx((*v_g[lev])[mfi].box());
+  Box wbx((*w_g[lev])[mfi].box());
 
-	solve_pp_g(sbx.loVect(), sbx.hiVect(),
-		   ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-		   abx.loVect(), abx.hiVect(), bx.loVect(),  bx.hiVect(),
-		   (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-		   (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
-		   (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
-		   (*ro_g[lev])[mfi].dataPtr(),
-		   (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
-		   (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
-		   (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
-		   bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-		   bc_klo.dataPtr(), bc_khi.dataPtr(),
-		   &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), residuals);
+  solve_pp_g(sbx.loVect(), sbx.hiVect(),
+       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+       abx.loVect(), abx.hiVect(), bx.loVect(),  bx.hiVect(),
+       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+       (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
+       (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
+       (*ro_g[lev])[mfi].dataPtr(),
+       (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
+       (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
+       (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
+       bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+       bc_klo.dataPtr(), bc_khi.dataPtr(),
+       &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), residuals);
     }
 
     pp_g[lev]->setVal(0.);
@@ -455,72 +458,73 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
 void
 mfix_level::mfix_correct_0(int lev)
 {
+  BL_PROFILE("mfix_level::correct0()");
     Box domain(geom[lev].Domain());
 
     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.growntilebox();
-	const Box& sbx = (*p_g[lev])[mfi].box();
+  const Box& bx = mfi.growntilebox();
+  const Box& sbx = (*p_g[lev])[mfi].box();
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+  Box ubx((*u_g[lev])[mfi].box());
+  Box vbx((*v_g[lev])[mfi].box());
+  Box wbx((*w_g[lev])[mfi].box());
 
-	correct_p_0( bx.loVect(),  bx.hiVect(),
-		     sbx.loVect(),  sbx.hiVect(),
-		     (*p_g[lev])[mfi].dataPtr(),
-		     (*pp_g[lev])[mfi].dataPtr());
+  correct_p_0( bx.loVect(),  bx.hiVect(),
+         sbx.loVect(),  sbx.hiVect(),
+         (*p_g[lev])[mfi].dataPtr(),
+         (*pp_g[lev])[mfi].dataPtr());
     }
 
     for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.tilebox();
-	const Box& sbx = (*p_g[lev])[mfi].box();
+  const Box& bx = mfi.tilebox();
+  const Box& sbx = (*p_g[lev])[mfi].box();
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+  Box ubx((*u_g[lev])[mfi].box());
+  Box vbx((*v_g[lev])[mfi].box());
+  Box wbx((*w_g[lev])[mfi].box());
 
-	correct_u_0( bx.loVect(),  bx.hiVect(),
-		     ubx.loVect(), ubx.hiVect(),
-		     sbx.loVect(),  sbx.hiVect(),
-		     (*pp_g[lev])[mfi].dataPtr(),
-		     (*u_g[lev])[mfi].dataPtr(),
-		     (*d_e[lev])[mfi].dataPtr());
+  correct_u_0( bx.loVect(),  bx.hiVect(),
+         ubx.loVect(), ubx.hiVect(),
+         sbx.loVect(),  sbx.hiVect(),
+         (*pp_g[lev])[mfi].dataPtr(),
+         (*u_g[lev])[mfi].dataPtr(),
+         (*d_e[lev])[mfi].dataPtr());
     }
 
     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.tilebox();
-	const Box& sbx = (*p_g[lev])[mfi].box();
+  const Box& bx = mfi.tilebox();
+  const Box& sbx = (*p_g[lev])[mfi].box();
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+  Box ubx((*u_g[lev])[mfi].box());
+  Box vbx((*v_g[lev])[mfi].box());
+  Box wbx((*w_g[lev])[mfi].box());
 
-	correct_v_0( bx.loVect(),  bx.hiVect(),
-		     vbx.loVect(), vbx.hiVect(),
-		     sbx.loVect(),  sbx.hiVect(),
-		     (*pp_g[lev])[mfi].dataPtr(),
-		     (*v_g[lev])[mfi].dataPtr(),
-		     (*d_n[lev])[mfi].dataPtr());
+  correct_v_0( bx.loVect(),  bx.hiVect(),
+         vbx.loVect(), vbx.hiVect(),
+         sbx.loVect(),  sbx.hiVect(),
+         (*pp_g[lev])[mfi].dataPtr(),
+         (*v_g[lev])[mfi].dataPtr(),
+         (*d_n[lev])[mfi].dataPtr());
     }
 
     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.tilebox();
-	const Box& sbx = (*p_g[lev])[mfi].box();
+  const Box& bx = mfi.tilebox();
+  const Box& sbx = (*p_g[lev])[mfi].box();
 
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+  Box ubx((*u_g[lev])[mfi].box());
+  Box vbx((*v_g[lev])[mfi].box());
+  Box wbx((*w_g[lev])[mfi].box());
 
-	correct_w_0( bx.loVect(),  bx.hiVect(),
-		     wbx.loVect(), wbx.hiVect(),
-		     sbx.loVect(),  sbx.hiVect(),
-		     (*pp_g[lev])[mfi].dataPtr(),
-		     (*w_g[lev])[mfi].dataPtr(),
-		     (*d_t[lev])[mfi].dataPtr());
+  correct_w_0( bx.loVect(),  bx.hiVect(),
+         wbx.loVect(), wbx.hiVect(),
+         sbx.loVect(),  sbx.hiVect(),
+         (*pp_g[lev])[mfi].dataPtr(),
+         (*w_g[lev])[mfi].dataPtr(),
+         (*d_t[lev])[mfi].dataPtr());
     }
 
     fill_mf_bc(lev,*p_g[lev]);
@@ -536,14 +540,15 @@ mfix_level::mfix_correct_0(int lev)
 void
 mfix_level::mfix_physical_prop(int lev, int calc_flag)
 {
+  BL_PROFILE("mfix_level::mfix_physical_prop()");
     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.tilebox();
-	const Box& sbx = (*p_g[lev])[mfi].box();
+  const Box& bx = mfi.tilebox();
+  const Box& sbx = (*p_g[lev])[mfi].box();
 
-	physical_prop(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),&calc_flag,
-		      (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
-		      (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
+  physical_prop(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),&calc_flag,
+          (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+          (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
     }
     fill_mf_bc(lev,*ro_g[lev]);
     fill_mf_bc(lev,*rop_g[lev]);
@@ -560,16 +565,16 @@ mfix_level::usr3(int lev)
     //    over bc's on faces and it makes more sense to do this one grid at a time
     for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
     {
-	const Box& sbx = (*p_g[lev])[mfi].box();
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
+  const Box& sbx = (*p_g[lev])[mfi].box();
+  Box ubx((*u_g[lev])[mfi].box());
+  Box vbx((*v_g[lev])[mfi].box());
+  Box wbx((*w_g[lev])[mfi].box());
 
-	mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
-		  (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
-		  (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
-		  (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-		  &dx, &dy, &dz);
+  mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
+      (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
+      (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
+      (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+      &dx, &dy, &dz);
     }
 }
 
@@ -579,6 +584,7 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
     int sweep_type, precond_type, max_it;
     Real tol;
 
+    BL_PROFILE("mfix_level::mfix_solve_linear_equation()");
     get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
 
     solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol, lev);
@@ -596,9 +602,9 @@ mfix_level::mfix_set_bc_type(int lev)
     Box domain(geom[lev].Domain());
 
     set_bc_type(bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                bc_jlo.dataPtr(), bc_jhi.dataPtr(), 
+                bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                 bc_klo.dataPtr(), bc_khi.dataPtr(),
-                domain.loVect(),domain.hiVect(), 
+                domain.loVect(),domain.hiVect(),
                 &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost_bc);
 }
 
@@ -608,7 +614,7 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
     Box domain(geom[lev].Domain());
 
     if (!mf.boxArray().ixType().cellCentered())
-	amrex::Error("fill_mf_bc only used for cell-centered arrays!");
+  amrex::Error("fill_mf_bc only used for cell-centered arrays!");
 
     // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
     mf.FillBoundary(geom[lev].periodicity());
@@ -616,34 +622,35 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
     // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
     for (MFIter mfi(mf); mfi.isValid(); ++mfi)
     {
-	const Box& sbx = mf[mfi].box();
-	fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
-		 bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-		 bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+  const Box& sbx = mf[mfi].box();
+  fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
+     bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+     bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
 }
 
 void mfix_level::mfix_calc_volume_fraction(int lev)
 {
+  BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
-    for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)  
+    for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
     {
-	const Box& sbx = (*ep_g[lev])[pti].box();
+  const Box& sbx = (*ep_g[lev])[pti].box();
         const Box& tile_bx = pti.tilebox();
-	auto& particles = pti.GetArrayOfStructs();
-	const int np = particles.size();
+  auto& particles = pti.GetArrayOfStructs();
+  const int np = particles.size();
 
-	calc_volume_fraction( tile_bx.loVect(), tile_bx.hiVect(),
-			      sbx.loVect(), sbx.hiVect(),
-			      &np, particles.data(), &dx, &dy, &dz,
-			      (*ep_g[lev])[pti].dataPtr(),
-			      (*rop_g[lev])[pti].dataPtr(),
-			      (*ro_g[lev])[pti].dataPtr() );
+  calc_volume_fraction( tile_bx.loVect(), tile_bx.hiVect(),
+            sbx.loVect(), sbx.hiVect(),
+            &np, particles.data(), &dx, &dy, &dz,
+            (*ep_g[lev])[pti].dataPtr(),
+            (*rop_g[lev])[pti].dataPtr(),
+            (*ro_g[lev])[pti].dataPtr() );
     }
 
     // This sets the values outside walls or periodic boundaries
@@ -653,6 +660,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev)
 
 void mfix_level::mfix_calc_drag_fluid(int lev)
 {
+  BL_PROFILE("mfix_level::mfix_calc_drag_fluid()");
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -663,32 +671,33 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
     for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
     {
         const Box& sbx = (*ep_g[lev])[pti].box();
-        auto& particles = pti.GetArrayOfStructs(); 
+        auto& particles = pti.GetArrayOfStructs();
         const int np = particles.size();
 
-	Box ubx((*u_g[lev])[pti].box());
-	Box vbx((*v_g[lev])[pti].box());
-	Box wbx((*w_g[lev])[pti].box());
+  Box ubx((*u_g[lev])[pti].box());
+  Box vbx((*v_g[lev])[pti].box());
+  Box wbx((*w_g[lev])[pti].box());
 
-	calc_drag_fluid(
-	    sbx.loVect(), sbx.hiVect(),
-	    ubx.loVect(), ubx.hiVect(),
-	    vbx.loVect(), vbx.hiVect(),
-	    wbx.loVect(), wbx.hiVect(), &np,
-	    (*ep_g[lev])[pti].dataPtr(), (*ro_g[lev])[pti].dataPtr(),
-	    (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(),
-	    (*w_g[lev])[pti].dataPtr(),  (*mu_g[lev])[pti].dataPtr(),
-	    (*f_gds[lev])[pti].dataPtr(), (*drag_bm[lev])[pti].dataPtr(),
-	    particles.data(), &dx, &dy, &dz );
+  calc_drag_fluid(
+      sbx.loVect(), sbx.hiVect(),
+      ubx.loVect(), ubx.hiVect(),
+      vbx.loVect(), vbx.hiVect(),
+      wbx.loVect(), wbx.hiVect(), &np,
+      (*ep_g[lev])[pti].dataPtr(), (*ro_g[lev])[pti].dataPtr(),
+      (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(),
+      (*w_g[lev])[pti].dataPtr(),  (*mu_g[lev])[pti].dataPtr(),
+      (*f_gds[lev])[pti].dataPtr(), (*drag_bm[lev])[pti].dataPtr(),
+      particles.data(), &dx, &dy, &dz );
     }
 
     fill_mf_bc(lev,*f_gds[lev]);
     fill_mf_bc(lev,*drag_bm[lev]);
 }
 
-void 
+void
 mfix_level::mfix_calc_drag_particle(int lev)
 {
+  BL_PROFILE("mfix_level::mfix_calc_drag_particles()");
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -700,20 +709,20 @@ mfix_level::mfix_calc_drag_particle(int lev)
     for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
     {
         const Box& sbx = (*ep_g[lev])[pti].box();
-        auto& particles = pti.GetArrayOfStructs(); 
+        auto& particles = pti.GetArrayOfStructs();
         const int np = particles.size();
 
-	Box ubx((*u_g[lev])[pti].box());
-	Box vbx((*v_g[lev])[pti].box());
-	Box wbx((*w_g[lev])[pti].box());
+  Box ubx((*u_g[lev])[pti].box());
+  Box vbx((*v_g[lev])[pti].box());
+  Box wbx((*w_g[lev])[pti].box());
 
-	calc_drag_particle(
-	    sbx.loVect(), sbx.hiVect(),
-	    ubx.loVect(), ubx.hiVect(),
-	    vbx.loVect(), vbx.hiVect(),
-	    wbx.loVect(), wbx.hiVect(), &np,
-	    (*p_g[lev])[pti].dataPtr(), (*u_g[lev])[pti].dataPtr(),
-	    (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
-	    particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
+  calc_drag_particle(
+      sbx.loVect(), sbx.hiVect(),
+      ubx.loVect(), ubx.hiVect(),
+      vbx.loVect(), vbx.hiVect(),
+      wbx.loVect(), wbx.hiVect(), &np,
+      (*p_g[lev])[pti].dataPtr(), (*u_g[lev])[pti].dataPtr(),
+      (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
+      particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
     }
 }
