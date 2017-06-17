@@ -253,7 +253,6 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
-
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
 
@@ -338,9 +337,9 @@ void MFIXParticleContainer::fillNeighbors( int lev ) {
 }
 
 void MFIXParticleContainer::applyPeriodicShift(int lev, ParticleType& p,
-                                              const IntVect& neighbor_cell) {
-
-  BL_PROFILE("mfix_dem::applyPeriodicShift()");
+                                              const IntVect& neighbor_cell) 
+{
+    BL_PROFILE("mfix_dem::applyPeriodicShift()");
 
     const Periodicity& periodicity = Geom(lev).periodicity();
     if (not periodicity.isAnyPeriodic()) return;
@@ -365,15 +364,20 @@ void MFIXParticleContainer::packNeighborParticle(int lev,
                 const IntVect& neighbor_cell,
                 const BaseFab<int>& mask,
                 const ParticleType& p,
-                NeighborCommMap& neighbors_to_comm) {
+                NeighborCommMap& neighbors_to_comm) 
+{
     const int neighbor_grid = mask(neighbor_cell, 0);
+
     if (neighbor_grid >= 0) {
         const int who = ParticleDistributionMap(lev)[neighbor_grid];
         const int MyProc = ParallelDescriptor::MyProc();
         const int neighbor_tile = mask(neighbor_cell, 1);
         PairIndex dst_index(neighbor_grid, neighbor_tile);
         ParticleType particle = p;
-        applyPeriodicShift(lev, particle, neighbor_cell);
+
+        if (Geom(lev).isAnyPeriodic())
+           applyPeriodicShift(lev, particle, neighbor_cell);
+
         if (who == MyProc) {
             size_t old_size = neighbors[dst_index].size();
             size_t new_size = neighbors[dst_index].size() + pdata_size;
