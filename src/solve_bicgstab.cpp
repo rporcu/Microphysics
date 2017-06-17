@@ -114,10 +114,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     //-------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
+        const Box&  bx = mfi.tilebox();
         const Box& rbx = rhs[mfi].box();
         const Box& abx = A_m[mfi].box();
 
-        leq_scale(rhs[mfi].dataPtr(), rbx.loVect(), rbx.hiVect(),
+        leq_scale(bx.loVect(), bx.hiVect(), 
+                  rhs[mfi].dataPtr(), rbx.loVect(), rbx.hiVect(),
                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect());
     }
 
@@ -128,13 +130,15 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     //-------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
+      const Box&  bx = mfi.tilebox();
       const Box& hbx = rhs[mfi].box();
       const Box& rbx =   r[mfi].box();
       const Box& abx = A_m[mfi].box();
       const Box& sbx = sol[mfi].box();
 
       // Compute r = rhs - A_m*sol
-      leq_residual(rhs[mfi].dataPtr(), hbx.loVect(), hbx.hiVect(),
+      leq_residual( bx.loVect(), bx.hiVect(), 
+                   rhs[mfi].dataPtr(), hbx.loVect(), hbx.hiVect(),
                    sol[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
                    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                      r[mfi].dataPtr(), rbx.loVect(), rbx.hiVect());
@@ -218,10 +222,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       for (MFIter mfi(ph); mfi.isValid(); ++mfi)
       {
+        const Box&  bx = mfi.tilebox();
         const Box& pbx =  ph[mfi].box();
         const Box& abx = A_m[mfi].box();
         const Box& vbx =   v[mfi].box();
-        leq_matvec(ph[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
+        leq_matvec( bx.loVect(), bx.hiVect(), 
+                   ph[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                     v[mfi].dataPtr(), vbx.loVect(), vbx.hiVect());
       }
@@ -263,10 +269,8 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
           leq_msolve1(  s[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
                         A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                         sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
-
-          // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
-          sh.FillBoundary(geom[lev].periodicity());
         }
+        sh.FillBoundary(geom[lev].periodicity());
       }
       else // pc_type ==None
       {
@@ -275,11 +279,13 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       for (MFIter mfi(A_m); mfi.isValid(); ++mfi)
       {
+        const Box&  bx = mfi.tilebox();
         const Box& sbx =  sh[mfi].box();
         const Box& abx = A_m[mfi].box();
         const Box& tbx =   t[mfi].box();
 
-        leq_matvec(sh[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+        leq_matvec( bx.loVect(), bx.hiVect(), 
+                   sh[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                     t[mfi].dataPtr(), tbx.loVect(), tbx.hiVect());
       }
@@ -302,17 +308,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         ret = 3; break;
       }
 
-
-//    if ( bicg_verbose > 0 && ParallelDescriptor::IOProcessor())
-//      {
-//        std::cout << "v1 " << vals[1] << "   v0 "<< vals[0] << '\n';
-//      }
-
-
       sxay(sol, sol,  alpha, ph);
       sxay(sol, sol,  omega, sh);
 
-      // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
       sol.FillBoundary(geom[lev].periodicity());
 
       sxay(r,     s, -omega,  t);
@@ -320,13 +318,8 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       rnorm = dotxy(r,r,geom[lev].periodicity(),true);
       rnorm = sqrt(rnorm);
 
-
-
-      // if ( bicg_verbose > 0 && ParallelDescriptor::IOProcessor())
-      //   {
-      //     std::cout << "BiCGStab:       Rnorm " << nit << " L-2 "<< rnorm/(rnorm0) << '\n';
-      //   }
-
+      if ( bicg_verbose > 0 && ParallelDescriptor::IOProcessor())
+        std::cout << "BiCGStab:       Rnorm " << nit << " L-2 "<< rnorm/(rnorm0) << '\n';
 
       if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
 

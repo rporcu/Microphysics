@@ -7,11 +7,13 @@ module matvec_module
 
 contains
 
-   subroutine leq_scale(rhs, rlo, rhi, A_m, alo, ahi) &
+   subroutine leq_scale(lo, hi, rhs, rlo, rhi, A_m, alo, ahi) &
       bind(C, name = "leq_scale")
    use param, only: small_number, one
 
-   integer(c_int), intent(in   ) :: rlo(3),rhi(3),alo(3),ahi(3)
+   integer(c_int), intent(in   ) ::  lo(3), hi(3)
+   integer(c_int), intent(in   ) :: rlo(3),rhi(3)
+   integer(c_int), intent(in   ) :: alo(3),ahi(3)
 
    real(c_real)  , intent(inout) :: rhs&
       (rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
@@ -21,14 +23,14 @@ contains
    integer :: i,j,k
    real(c_real) :: aijmax, oam
 
-   do k = alo(3),ahi(3)
-      do j = alo(2),ahi(2)
-         do i = alo(1),ahi(1)
+   do k = lo(3), hi(3)
+      do j = lo(2), hi(2)
+         do i = lo(1), hi(1)
             aijmax = maxval(abs(a_m(i,j,k,:)) )
-            if(aijmax > small_number) then
+            if (aijmax > small_number) then
                oam = one/aijmax
                a_m(i,j,k,:) = a_m(i,j,k,:)*oam
-               rhs(i,j,k)   = rhs(i,j,k)*oam
+               rhs(i,j,k)   = rhs(i,j,k  )*oam
             endif
          enddo
       enddo
@@ -37,9 +39,10 @@ contains
   end subroutine leq_scale
 
   ! returns Am*Var
-  subroutine leq_matvec(var, vlo, vhi, A_m, alo, ahi, res, rlo, rhi)&
+  subroutine leq_matvec(lo, hi, var, vlo, vhi, A_m, alo, ahi, res, rlo, rhi)&
     bind(C, name = "leq_matvec")
 
+    integer(c_int), intent(in   ) ::  lo(3), hi(3)
     integer(c_int), intent(in   ) :: vlo(3),vhi(3)
     integer(c_int), intent(in   ) :: alo(3),ahi(3)
     integer(c_int), intent(in   ) :: rlo(3),rhi(3)
@@ -59,9 +62,9 @@ contains
     integer :: I, J, K
 !-----------------------------------------------
 
-    do k = alo(3),ahi(3)
-       do j = alo(2),ahi(2)
-          do i = alo(1),ahi(1)
+    do k = lo(3), hi(3)
+       do j = lo(2), hi(2)
+          do i = lo(1), hi(1)
              res(i,j,k) = &
                           ( A_m(i,j,k,-3) * Var(i,j,k-1)    &
                           + A_m(i,j,k,-2) * Var(i,j-1,k)    &
@@ -77,9 +80,10 @@ contains
   end subroutine leq_matvec
 
 ! returns (Rhs - Am*Var)
-  subroutine leq_residual(rhs, hlo, hhi, var, vlo, vhi, A_m, alo, ahi, res, rlo, rhi) &
+  subroutine leq_residual(lo, hi, rhs, hlo, hhi, var, vlo, vhi, A_m, alo, ahi, res, rlo, rhi) &
     bind(C, name = "leq_residual")
 
+    integer(c_int), intent(in   ) ::  lo(3), hi(3)
     integer(c_int), intent(in   ) :: hlo(3),hhi(3),vlo(3),vhi(3)
     integer(c_int), intent(in   ) :: alo(3),ahi(3),rlo(3),rhi(3)
 
@@ -97,9 +101,9 @@ contains
 
     integer :: I, J, K
 
-    do k = alo(3),ahi(3)
-       do j = alo(2),ahi(2)
-          do i = alo(1),ahi(1)
+    do k = lo(3), hi(3)
+       do j = lo(2), hi(2)
+          do i = lo(1),hi(1)
              res(i,j,k) = rhs(i,j,k) -  &
                 ( A_m(i,j,k,-3) * Var(i,j,k-1)    &
                 + A_m(i,j,k,-2) * Var(i,j-1,k)    &

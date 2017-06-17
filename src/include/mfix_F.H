@@ -329,7 +329,8 @@ extern "C"
       int* max_it, int* ier,
       int* slo, int* shi, const int* lo, const int* hi);
 
-  void leq_residual(const Real*, const int*, const int*,
+  void leq_residual(const int* lo, const int* hi,
+      const Real*, const int*, const int*,
       const Real*, const int*, const int*,
       const Real*, const int*, const int*,
       const Real*, const int*, const int*);
@@ -337,12 +338,14 @@ extern "C"
   void out_array(const Real*, const int*, const int*);
   void out_matrix(const Real*, const int*, const int*);
 
-  void leq_matvec(const Real*, const int*, const int*,
+  void leq_matvec(const int* lo, const int* hi,
+      const Real*, const int*, const int*,
       const Real*, const int*, const int*,
       const Real*, const int*, const int*);
 
-  void leq_scale(const Real*, const int*, const int*,
-      const Real*, const int*, const int*);
+  void leq_scale(const int* lo, const int* hi,
+                 const Real*, const int*, const int*,
+                 const Real*, const int*, const int*);
 
   void leq_msolve1(const Real*, const int*, const int*,
       const Real*, const int*, const int*,
