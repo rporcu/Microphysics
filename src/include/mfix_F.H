@@ -347,7 +347,8 @@ extern "C"
                  const Real*, const int*, const int*,
                  const Real*, const int*, const int*);
 
-  void leq_msolve1(const Real*, const int*, const int*,
+  void leq_msolve1(const int* lo, const int* hi,
+      const Real*, const int*, const int*,
       const Real*, const int*, const int*,
       const Real*, const int*, const int*);
 

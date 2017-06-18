@@ -117,7 +117,6 @@ set(F90_sources
    usr/usr3.f90
    usr/usr3_des.f90
    usr/usr_drag.f90
-   usr/usr_init_namelist.f90
    usr/usr_mod.f90
    usr/write_usr0.f90
    usr/write_usr1.f90

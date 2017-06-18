@@ -189,7 +189,7 @@ int main (int argc, char* argv[])
     Real end_time = ParallelDescriptor::second() - strt_time;
 
     if (ParallelDescriptor::IOProcessor())
-  std::cout << "Time spent in main " << end_time << std::endl;
+       std::cout << "Time spent in main " << end_time << std::endl;
 
     amrex::Finalize();
     return 0;

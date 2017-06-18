@@ -135,7 +135,7 @@ subroutine init_collision_hertz
                            &  DES_ETAT_FAC, DES_ETAT_W_FAC,    &
                            &  E_YOUNG, Ew_YOUNG,               &
                            &  V_POISSON, Vw_POISSON,           &
-                           &  DTSOLID
+                           &  dtsolid
 
     integer           :: m, l, lc
     character(len=64) :: msg

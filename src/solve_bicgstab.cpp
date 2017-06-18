@@ -204,11 +204,13 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       {
         for (MFIter mfi(p); mfi.isValid(); ++mfi)
         {
+          const Box&  bx = mfi.tilebox();
           const Box& pbx =   p[mfi].box();
           const Box& abx = A_m[mfi].box();
           const Box& hbx =  ph[mfi].box();
 
-          leq_msolve1(  p[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
+          leq_msolve1( bx.loVect(), bx.hiVect() ,
+                        p[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
                       A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                        ph[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
         }
@@ -262,11 +264,13 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       {
         for (MFIter mfi(A_m); mfi.isValid(); ++mfi)
         {
+          const Box&  bx = mfi.tilebox();
           const Box& sbx =   s[mfi].box();
           const Box& abx = A_m[mfi].box();
           const Box& hbx =  sh[mfi].box();
 
-          leq_msolve1(  s[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+          leq_msolve1( bx.loVect(), bx.hiVect() ,
+                          s[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
                         A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                         sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
         }

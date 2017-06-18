@@ -3,9 +3,9 @@ module adjust_dt
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
 
-! Current DT (1/DT) and direction of last change (+/-)
+! Current dt (1/dt) and direction of last change (+/-)
 ! +1 -> increase dt; -1 decrease dt
-  integer, save :: DT_dir = -1
+  integer, save :: dt_dir = -1
 
   private
 
@@ -15,7 +15,7 @@ contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Module name: ADJUST_DT                                              !
+!  Module name: adjust_dt                                              !
 !  Author: M. Syamlal                                 Date: FEB-10-97  !
 !                                                                      !
 !  Purpose: Automatically adjust time step.                            !
@@ -24,14 +24,14 @@ contains
    integer(c_int) function adjustdt (converged, nit, dt) &
       bind(C, name="mfix_adjustdt")
 
-! Global Variables:
 !---------------------------------------------------------------------//
-! User defined aximum number of iterations
-      use leqsol, only: MAX_NIT
-! User defined: min, max DT and adjustment factor
-      use run, only: DT_MIN, DT_MAX, DT_FAC
 
-! Global Parameters:
+      ! User defined aximum number of iterations
+      use leqsol, only: max_nit
+
+      ! User defined: min, max dt and adjustment factor
+      use run, only: dt_min, dt_max, dt_fac
+
 !---------------------------------------------------------------------//
       use param, only: ZERO, ONE, IS_UNDEFINED
 
@@ -54,11 +54,11 @@ contains
 
 ! Local Variables:
 !---------------------------------------------------------------------//
-! Number of steps in between DT adjustments.
+! Number of steps in between dt adjustments.
       integer, PARAMETER :: STEPS_MIN = 5
-! Number of time steps since last DT adjustment
+! Number of time steps since last dt adjustment
       integer, SAVE :: STEPS_TOT=0
-! number of iterations since last DT adjustment
+! number of iterations since last dt adjustment
       integer, SAVE :: NIT_TOT=0
 ! Iterations per second for last dt
       real(c_real), SAVE :: NIToS=0.0
@@ -77,7 +77,7 @@ contains
 !---------------------------------------------------------------------//
       if(converged == 1) then
 
-! Calculate a new DT every STEPS_MIN time steps.
+! Calculate a new dt every STEPS_MIN time steps.
          if(steps_tot >= steps_min) then
             nitos_new = dble(nit_tot)/(steps_tot*dt)
             if (nitos_new > nitos) dt_dir = dt_dir*(-1)
@@ -92,7 +92,7 @@ contains
 
 ! Write the convergence stats to the screen/log file.
             WRITE(ERR_MSG,"('DT=',g11.4,3x,'NIT/s=',A)")  &
-               DT, trim(iVal(nint(NITOS)))
+               dt, trim(iVal(nint(NITOS)))
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., &
                FOOTER=.FALSE., LOG=.FALSE.)
 
@@ -112,10 +112,10 @@ contains
          nitos = 0.
          nit_tot = 0
 
-! Reduce the step size.
+         ! Reduce the step size.
          dt = dt*dt_fac
 
-! The step size has decreased to the minimum.
+         ! The step size has decreased to the minimum.
          if (dt_fac >= one) then
 
             write(err_msg,"(3x,a)") &
@@ -125,22 +125,21 @@ contains
 
          elseif (dt > dt_min) then
 
-            WRITE(ERR_MSG,"(3X,'Recovered: Dt=',G12.5,' :-)')") DT
+            WRITE(ERR_MSG,"(3X,'Recovered: Dt=',G12.5,' :-)')") dt
             call flush_err_msg(header=.false., footer=.false.)
 
-! Iterate again with new dt
+            ! Iterate again with new dt
             adjustdt = 1
 
-! Set the return flag stop iterating.
-         ELSE
+         ! Set the return flag stop iterating.
+         else
 
-! Prevent DT from dropping below DT_MIN.
+            ! Prevent dt from dropping below dt_min.
             adjustdt = 0
-         ENDIF
+         end if
 
-      ENDIF
+      end if
 
-      RETURN
-      END FUNCTION ADJUSTDT
+      end function adjustdt
 
-      END MODULE ADJUST_DT
+      end module adjust_dt

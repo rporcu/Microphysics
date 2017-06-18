@@ -90,7 +90,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Simulation stop time.
 !  </description>
 !  <range min="0.0" max="+Inf" />
-      TSTOP = UNDEFINED
+      tstop = UNDEFINED
 !</keyword>
 
 !<keyword category="Run Control" required="false">
@@ -98,7 +98,7 @@ MODULE INIT_NAMELIST_MODULE
 !  <dependent keyword="TIME" value="DEFINED"/>
 !  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="+Inf" />
-      DT_MAX = ONE
+      dt_max = ONE
 !</keyword>
 
 !<keyword category="Run Control" required="false">
@@ -106,7 +106,7 @@ MODULE INIT_NAMELIST_MODULE
 !  <dependent keyword="TIME" value="DEFINED"/>
 !  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="+Inf" />
-      DT_MIN = 1.0D-6
+      dt_min = 1.0D-6
 !</keyword>
 
 !<keyword category="Run Control" required="false">
@@ -119,7 +119,7 @@ MODULE INIT_NAMELIST_MODULE
 !  <dependent keyword="TIME" value="DEFINED"/>
 !  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="1" />
-      DT_FAC = 0.9D0
+      dt_fac = 0.9D0
 !</keyword>
 
 !<keyword category="Run Control" required="false">
@@ -976,27 +976,18 @@ MODULE INIT_NAMELIST_MODULE
       CALL_USR = .FALSE.
 !</keyword>
 
-
-      DO LC=1, DIM_USR
+      do LC=1, DIM_USR
 !<keyword category="UDF Control" required="false">
 !  <description>
 !    Intervals at which subroutine write_usr1 is called.
 !  </description>
 !  <arg index="1" id="USR" max="DIM_USR" min="1"/>
-         USR_DT(LC) = UNDEFINED
+         usr_dt(LC) = UNDEFINED
 !</keyword>
 
+      end do
 
-      ENDDO
+      call des_init_namelist
 
-
-
-
-
-      CALL DES_INIT_NAMELIST
-
-      CALL USR_INIT_NAMELIST
-
-      RETURN
-      END SUBROUTINE INIT_NAMELIST
-END MODULE INIT_NAMELIST_MODULE
+      end subroutine init_namelist
+end module init_namelist_module

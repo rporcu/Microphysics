@@ -31,7 +31,7 @@
       CHARACTER(LEN=60) :: DESCRIPTION
 
 ! Stop-time of the run.
-      real(c_real) :: TSTOP
+      real(c_real) :: tstop
 
 ! Discretization scheme for different equations
       integer :: DISCRETIZE(DIM_EQS)
@@ -40,13 +40,13 @@
       logical :: CALL_USR
 
 ! Maximum Time step.
-      real(c_real) :: DT_MAX
+      real(c_real) :: dt_max
 
 ! Minimum Time step.
-      real(c_real) :: DT_MIN
+      real(c_real) :: dt_min
 
 ! Time step adjustment factor (<1.0)
-      real(c_real) :: DT_FAC
+      real(c_real) :: dt_fac
 
   integer :: nlog
   ! Flag to display messages and residuals on the screen
