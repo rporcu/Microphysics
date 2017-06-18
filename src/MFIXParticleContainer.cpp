@@ -174,9 +174,9 @@ MFIXParticleContainer::InitData()
 {
 }
 
-void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time ) {
-
-  BL_PROFILE("mfix_dem::EvolveParticles()");
+void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time ) 
+{
+    BL_PROFILE("mfix_dem::EvolveParticles()");
 
     Box domain(Geom(lev).Domain());
 
@@ -208,9 +208,11 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          PairIndex index(pti.index(), pti.LocalTileIndex());
          int ng = neighbors[index].size() / pdata_size;
 
+         BL_PROFILE_VAR("des_time_loop()", des_time_loop); 
          mfix_des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
                &subdt, &dx, &dy, &dz,
                &xlen, &ylen, &zlen, &nstep );
+         BL_PROFILE_VAR_STOP(des_time_loop); 
 
          if ( mfix_des_continuum_coupled () == 0 ) {
            Real stime;
