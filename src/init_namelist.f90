@@ -36,8 +36,7 @@ MODULE INIT_NAMELIST_MODULE
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      use leqsol, only: icheck_bicgs, leq_it, opt_parallel, use_doloop
-      use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, ival
+      use leqsol, only: leq_it, leq_pc, leq_sweep, leq_tol, max_nit, ival
       use run, only: full_log, nlog
       use output, only: dim_usr
       use output, only: usr_dt
@@ -313,28 +312,6 @@ MODULE INIT_NAMELIST_MODULE
       UR_FAC(2)  = 0.5D0     ! U
       UR_FAC(3)  = 0.5D0     ! V
       UR_FAC(4)  = 0.5D0     ! W
-!</keyword>
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
-!    Frequency to check for convergence. (BICGSTAB ONLY)
-!  </description>
-!  <dependent keyword="LEQ_METHOD" value="2"/>
-      icheck_bicgs = 1
-!</keyword>
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
-!    Sets optimal LEQ flags for parallel runs.
-!  </description>
-      OPT_PARALLEL = .FALSE.
-!</keyword>
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
-!    Use do-loop assignment over direct vector assignment.
-!  </description>
-      use_DOLOOP = .FALSE.
 !</keyword>
 
 !#####################################################################!
