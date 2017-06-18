@@ -70,7 +70,6 @@ set(F90_sources
    functions_mod.f90
    get_data.f90
    get_tunit.f90
-   goal_seek_mflux.f90
    ic_mod.f90
    init_fluid.f90
    init_namelist.f90
@@ -121,7 +120,6 @@ set(F90_sources
    usr/write_usr0.f90
    usr/write_usr1.f90
    utilities_mod.f90
-   vavg_g.f90
    amrex_to_mfix.F90)
 
 # Generate AMReX_buildInfo.cpp

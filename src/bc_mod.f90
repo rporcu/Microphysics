@@ -15,9 +15,9 @@ module bc
   character(len=16) :: BC_Type(dim_bc)
 
   ! Flags for periodic boundary conditions
-  logical :: cyclic_x = .false., cyclic_x_mf = .false.
-  logical :: cyclic_y = .false., cyclic_y_mf = .false.
-  logical :: cyclic_z = .false., cyclic_z_mf = .false.
+  logical :: cyclic_x = .false.
+  logical :: cyclic_y = .false.
+  logical :: cyclic_z = .false.
 
   ! Boundary condition coordinates
   real(c_real) :: BC_X_w(dim_bc), BC_X_e(dim_bc)
@@ -42,7 +42,7 @@ module bc
   real(c_real) :: BC_MassFlow_g(dim_bc), BC_MassFlow_s(dim_bc, dim_m)
 
   ! Specified pressure drop cyclic boundary
-  real(c_real) :: delp_x, delp_y, delp_z, flux_g
+  real(c_real) :: delp_x, delp_y, delp_z
 
   ! Partial slip wall boundary condition (gas only)
   real(c_real) :: BC_hw_g(dim_bc)
@@ -93,12 +93,6 @@ contains
     cyclic_x = (cyc_x == 1)
     cyclic_y = (cyc_y == 1)
     cyclic_z = (cyc_z == 1)
-
-    if(abs(flux_g) > epsilon(0.0d0)) then
-       cyclic_x_mf = (cyclic_x .and. abs(delp_x) > epsilon(0.0d0))
-       cyclic_y_mf = (cyclic_y .and. abs(delp_y) > epsilon(0.0d0))
-       cyclic_z_mf = (cyclic_z .and. abs(delp_z) > epsilon(0.0d0))
-    endif
 
   end subroutine set_cyclic
 

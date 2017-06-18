@@ -6,12 +6,11 @@
 #include <AMReX_Box.H>
 
 void
-mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int cyclic_mf_in,
+mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
                        int max_nit_in, int call_udf_in)
 {
     solve_fluid  = solve_fluid_in;
     solve_dem    = solve_dem_in;
-    cyclic_mf    = cyclic_mf_in;
     max_nit      = max_nit_in;
     call_udf     = call_udf_in;
 }

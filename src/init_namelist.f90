@@ -343,19 +343,6 @@ MODULE INIT_NAMELIST_MODULE
 !</keyword>
 
 
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    If a value is specified (in units of kg/m^2.s), the domain-averaged gas
-!    flux is held constant at that value in simulations over a periodic
-!    domain.  A pair of boundaries specified as periodic with fixed
-!    pressure drop is then treated as periodic with fixed mass flux.
-!    Even for this case a pressure drop must also be specified, which
-!    is used as the initial guess in the simulations.
-!  </description>
-      Flux_g = zero
-!</keyword>
-
-
 !#####################################################################!
 !                               Gas Phase                             !
 !#####################################################################!

@@ -32,7 +32,7 @@ void ReadParameters ()
   pp.query("max_step", max_step);
   pp.query("stop_time", stop_time);
   }
- 
+
   // Traditionally, these have prefix "amr", but we will
   // give them prefix mfix to make it clear that they affect the
   // behavior of the solver and not amr (even thought they are read
@@ -86,28 +86,25 @@ int main (int argc, char* argv[])
     int call_udf;
     Real dt, dt_min, dt_max, tstop;
     Real time=0.0L;
-    Real xlength, ylength, zlength;
     int nstep = 0;  // Which time step are we on
     Real normg;
     int set_normg;
-    int cyclic_mf;
 
     mfix_get_data( &solve_fluid,
        &solve_dem,
        &steady_state,
        &dt, &dt_min, &dt_max, &tstop, &max_nit,
-       &normg, &set_normg, &call_udf, &cyclic_mf,
-       &xlength, &ylength, &zlength);
+       &normg, &set_normg, &call_udf);
 
     if ( ParallelDescriptor::IOProcessor() )
-	check_inputs(&dt);
+  check_inputs(&dt);
 
     int lev = 0;
 
     // Note that the constructor constructs the Geometry object now.
     mfix_level my_mfix;
 
-    my_mfix.InitParams(solve_fluid,solve_dem,cyclic_mf,max_nit,call_udf);
+    my_mfix.InitParams(solve_fluid,solve_dem,max_nit,call_udf);
 
     my_mfix.Init(lev,dt,time);
 
@@ -125,7 +122,7 @@ int main (int argc, char* argv[])
 
     // Call to output before entering time march loop
     if (solve_fluid && ParallelDescriptor::IOProcessor()  && solve_dem )
-	my_mfix.output(lev,estatus,finish,nstep,dt,time);
+  my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
     // only if solve_fluid = T
@@ -133,7 +130,7 @@ int main (int argc, char* argv[])
 
     // We automatically write checkpoint and plotfiles with the initial data
     //    if plot_int > 0
-    if ( plot_int > 0 ) 
+    if ( plot_int > 0 )
        my_mfix.WritePlotFile( plot_file, nstep, dt, time );
 
     // We automatically write checkpoint files with the initial data
@@ -141,12 +138,12 @@ int main (int argc, char* argv[])
     if ( check_int > 0 )
        my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
 
-    // We automatically write ASCII files with the particle data 
-    //    if par_ascii_int > 0 
-    if ( par_ascii_int > 0 )  
-       my_mfix.WriteParticleAscii( par_ascii_file, nstep ); 
-    
-    while (finish == 0) 
+    // We automatically write ASCII files with the particle data
+    //    if par_ascii_int > 0
+    if ( par_ascii_int > 0 )
+       my_mfix.WriteParticleAscii( par_ascii_file, nstep );
+
+    while (finish == 0)
     {
        mfix_usr1();
 
@@ -157,16 +154,16 @@ int main (int argc, char* argv[])
           time += prev_dt;
           nstep++;
 
-          if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) ) 
+          if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
              my_mfix.WritePlotFile( plot_file, nstep, dt, time );
 
-          if ( ( check_int > 0) && ( nstep %  check_int == 0 ) ) 
+          if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
              my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
 
-          if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) ) 
-             my_mfix.WriteParticleAscii( par_ascii_file, nstep ); 
+          if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
+             my_mfix.WriteParticleAscii( par_ascii_file, nstep );
        }
-	
+
        if (ParallelDescriptor::IOProcessor() && solve_dem )
           my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
@@ -178,10 +175,10 @@ int main (int argc, char* argv[])
     if (steady_state) {
         if ( check_int > 0)
            my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
-        if ( plot_int > 0 ) 
+        if ( plot_int > 0 )
            my_mfix.WritePlotFile      ( plot_file     , nstep, dt, time );
-        if ( par_ascii_int > 0 )  
-           my_mfix.WriteParticleAscii ( par_ascii_file, nstep ); 
+        if ( par_ascii_int > 0 )
+           my_mfix.WriteParticleAscii ( par_ascii_file, nstep );
     }
 
     my_mfix.usr3(0);
