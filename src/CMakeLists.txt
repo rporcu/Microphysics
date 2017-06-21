@@ -120,6 +120,7 @@ set(F90_sources
    usr/write_usr0.f90
    usr/write_usr1.f90
    utilities_mod.f90
+   zero_wall_norm_vel.f90
    amrex_to_mfix.F90)
 
 # Generate AMReX_buildInfo.cpp

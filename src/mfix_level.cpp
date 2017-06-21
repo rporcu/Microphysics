@@ -100,34 +100,61 @@ void
 mfix_level::mfix_calc_trd_and_tau(int lev)
 {
   BL_PROFILE("mfix_level::mfix_calc_trd_and_tau()");
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
 
-    for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
+
+  for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
     {
-  const Box& bx = mfi.tilebox();
-  const Box& sbx = (*ep_g[lev])[mfi].box();
+      const Box& bx = mfi.tilebox();
+      const Box& sbx = (*ep_g[lev])[mfi].box();
 
-  Box ubx((*u_g[lev])[mfi].box());
-  Box vbx((*v_g[lev])[mfi].box());
-  Box wbx((*w_g[lev])[mfi].box());
+      Box ubx((*u_g[lev])[mfi].box());
+      Box vbx((*v_g[lev])[mfi].box());
+      Box wbx((*w_g[lev])[mfi].box());
 
-  calc_trd_and_tau(sbx.loVect(), sbx.hiVect(),
-       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-       bx.loVect(),  bx.hiVect(),
-       (*tau_u_g[lev])[mfi].dataPtr(),  (*tau_v_g[lev])[mfi].dataPtr(), (*tau_w_g[lev])[mfi].dataPtr(),
-       (*trD_g[lev])[mfi].dataPtr(),
-       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),     (*w_g[lev])[mfi].dataPtr(),
-       (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
-       &dx, &dy, &dz);
+      calc_trd_g(sbx.loVect(), sbx.hiVect(),
+                 ubx.loVect(), ubx.hiVect(),
+                 vbx.loVect(), vbx.hiVect(),
+                 wbx.loVect(), wbx.hiVect(),
+                 bx.loVect(),  bx.hiVect(),
+                 (*trD_g[lev])[mfi].dataPtr(),
+                 (*u_g[lev])[mfi].dataPtr(),
+                 (*v_g[lev])[mfi].dataPtr(),
+                 (*w_g[lev])[mfi].dataPtr(),
+                 &dx, &dy, &dz);
     }
+  fill_mf_bc(lev,*trD_g[lev]);
 
-    tau_u_g[lev]->FillBoundary(geom[lev].periodicity());
-    tau_v_g[lev]->FillBoundary(geom[lev].periodicity());
-    tau_w_g[lev]->FillBoundary(geom[lev].periodicity());
+  for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
+    {
+      const Box& bx = mfi.tilebox();
+      const Box& sbx = (*ep_g[lev])[mfi].box();
 
-    fill_mf_bc(lev,*trD_g[lev]);
+      Box ubx((*u_g[lev])[mfi].box());
+      Box vbx((*v_g[lev])[mfi].box());
+      Box wbx((*w_g[lev])[mfi].box());
+
+      calc_tau_g(sbx.loVect(), sbx.hiVect(),
+                 ubx.loVect(), ubx.hiVect(),
+                 vbx.loVect(), vbx.hiVect(),
+                 wbx.loVect(), wbx.hiVect(),
+                 bx.loVect(),  bx.hiVect(),
+                 (*tau_u_g[lev])[mfi].dataPtr(),
+                 (*tau_v_g[lev])[mfi].dataPtr(),
+                 (*tau_w_g[lev])[mfi].dataPtr(),
+                 (*u_g[lev])[mfi].dataPtr(),
+                 (*v_g[lev])[mfi].dataPtr(),
+                 (*w_g[lev])[mfi].dataPtr(),
+                 (*trD_g[lev])[mfi].dataPtr(),
+                 (*lambda_g[lev])[mfi].dataPtr(),
+                 (*mu_g[lev])[mfi].dataPtr(),
+                 &dx, &dy, &dz);
+    }
+  tau_u_g[lev]->FillBoundary(geom[lev].periodicity());
+  tau_v_g[lev]->FillBoundary(geom[lev].periodicity());
+  tau_w_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void

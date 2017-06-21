@@ -48,15 +48,15 @@ module calc_coeff_module
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: CALC_TRD_AND_TAU                                        !
+!  Subroutine: calc_tau_g                                              !
 !  Purpose: This routine directs the calculation of all physical and   !
 !           transport properties, and exchange rates.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_trd_and_tau(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
-         tau_u_g,tau_v_g,tau_w_g,trd_g,&
-         u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz) &
-        bind(C, name="calc_trd_and_tau")
+      subroutine calc_tau_g(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
+         tau_u_g, tau_v_g, tau_w_g,&
+         u_g,v_g,w_g,trd_g,lambda_g,mu_g,dx,dy,dz) &
+        bind(C, name="calc_tau_g")
 
       implicit none
 
@@ -65,32 +65,20 @@ module calc_coeff_module
       integer(c_int), intent(in ) ::  lo(3), hi(3)
 
       ! Stress tensor cross terms.
-      real(c_real), intent(inout) :: tau_u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(inout) :: tau_v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(inout) :: tau_w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      real(c_real), intent(inout) :: &
+           tau_u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
+           tau_v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+           tau_w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(inout) :: trd_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(c_real), intent(in   ) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      real(c_real), intent(in   ) :: lambda_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: mu_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: &
+           u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
+           v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+           w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
+           trd_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           lambda_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           mu_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: dx,dy,dz
-
-      ! Calculate the trace of the stress tensor (gas phase; m=0)
-      call calc_trd_g(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
-         trd_g,u_g,v_g,w_g,dx,dy,dz)
 
       ! Calculate the cross terms of the stress tensor (gas phase; m=0)
       call calc_tau_u_g (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
@@ -100,6 +88,6 @@ module calc_coeff_module
       call calc_tau_w_g (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
          tau_w_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
 
-      end subroutine calc_trd_and_tau
+    end subroutine calc_tau_g
 
 end module calc_coeff_module
