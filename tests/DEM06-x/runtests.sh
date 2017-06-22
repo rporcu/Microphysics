@@ -19,11 +19,17 @@ if [ -n "$3" ]; then
 fi
 echo "Using INPUTS file ${INPUTS}"
 
+if [ "$ENABLE_MPI" -eq "1" ]; then
+    MPIRUN="mpirun -np 4"
+else
+    MPIRUN=""
+fi
+
 MFIX_BENCHMARKS_HOME=${MFIX_BENCHMARKS_HOME:-}
 FCOMPARE=${FCOMPARE:-}
 
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
-time -p ${MFIX} "${INPUTS}" DES_ONEWAY_COUPLED=.F.
+time -p ${MPIRUN} ${MFIX} "${INPUTS}" DES_ONEWAY_COUPLED=.F.
 
     # if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then
     #     ${FCOMPARE} --infile1 "${MFIX_BENCHMARKS_HOME}/DEM06-x_plt00350" --infile2 DEM06_plt00350/
