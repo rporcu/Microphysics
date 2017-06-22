@@ -88,6 +88,16 @@ extern "C"
         const int*  lo, const int*  hi,
         Real* mu_g,    Real* lambda_g);
 
+  void zero_wall_norm_vel(const int* slo, const int* shi,
+               const int* ulo, const int* uhi,
+               const int* vlo, const int* vhi,
+               const int* wlo, const int* whi,
+               Real* u_g,     Real* v_g,      Real* w_g,
+               int* bc_ilo, int* bc_ihi,
+               int* bc_jlo, int* bc_jhi,
+               int* bc_klo, int* bc_khi,
+               const int* domlo , const int* domhi);
+
     void mfix_set_particle_properties(const int* pstate, Real* pradius, Real* pdensity,
         Real* pvol, Real* pmass, Real* omoi, Real* omega);
 
@@ -130,16 +140,24 @@ extern "C"
     const int* slo, const int* shi, const int* lo,  const int* hi, int* level,
     Real* ro_g, Real* p_g, Real* ep_g, Real* rop_g);
 
-  void calc_trd_and_tau(
+  void calc_trd_g(const int* slo, const int* shi,
+                  const int* ulo, const int* uhi,
+                  const int* vlo, const int* vhi,
+                  const int* wlo, const int* whi,
+                  const int* lo,  const int* hi,
+                  Real* trd_g,
+                  Real* u_g, Real* v_g, Real* w_g,
+                  Real* dx,  Real* dy,  Real* dz);
+
+  void calc_tau_g(
       const int* slo, const int* shi,
       const int* ulo, const int* uhi,
       const int* vlo, const int* vhi,
       const int* wlo, const int* whi,
       const int* lo,  const int* hi,
-      Real* tau_u_g,  Real* tau_v_g, Real* tau_w_g,
-      Real* trd_g,
-      Real* u_g,      Real* v_g,     Real* w_g,
-      Real* lambda_g, Real* mu_g,
+      Real* tau_u_g,  Real* tau_v_g,  Real* tau_w_g,
+      Real* u_g,      Real* v_g,      Real* w_g,
+      Real* trd_g,    Real* lambda_g, Real* mu_g,
       Real* dx,       Real* dy,       Real* dz);
 
   void conv_rop(
