@@ -48,6 +48,9 @@ program fextract3d
 
   logical :: ji_exist, valid, center
   integer :: io
+  integer :: sig_figs = 10
+
+  character(len=32) ::  io_format
 
   unit = unit_new()
 
@@ -85,6 +88,11 @@ program fextract3d
      case ('-l', '--lower_left')
         center = .false.
 
+     case ('-f', '--format')
+        farg = farg + 1
+        call get_command_argument(farg, value = fname)
+        read(fname,*) sig_figs
+
      case default
         exit
 
@@ -110,6 +118,7 @@ program fextract3d
      print *, "     [-v|--variable]  varname(s) : only output the values of variable varname"
      print *, "                                  (space separated string for multiple variables)"
      print *, "     [-l|--lower_left]           : slice through lower left corner instead of center"
+     print *, "     [-f|--format]               : Output format, Number of sig-figs to write {10 (default)} "
      print *, " "
      print *, "Note the plotfile at the end of the commandline is only required if you do"
      print *, "not use the depreciated '-p' option"
@@ -167,7 +176,7 @@ program fextract3d
      enddo
   endif
 
-  ! Get the index bounds and dx for the coarse level.  
+  ! Get the index bounds and dx for the coarse level.
   ! Note, lo and hi are 0-based indices
   lo(:) = 0
   hi(:) = 0
@@ -418,6 +427,15 @@ program fextract3d
 1000 format("#",100(a24,1x))
 1001 format(1x, 100(g24.10,1x))
 
+
+  io_format=''
+  if(sig_figs < 10) then
+     write(io_format,"('(g24.',I1,',1x)')") sig_figs
+  else
+     write(io_format,"('(g24.',I2,',1x)')") sig_figs
+  endif
+
+
   ! slicefile
   uno =  unit_new()
   open(unit=uno, file=slicefile, status = 'replace')
@@ -473,7 +491,7 @@ program fextract3d
      do j = 1, cnt
         write(uno,1001, advance="no") sv(isv(j),1)
         do i = 1, ivar
-           write(uno, "(g24.10,1x)", advance="no") sv(isv(j), var_indices(i)+1)
+           write(uno, trim(io_format), advance="no") sv(isv(j), var_indices(i)+1)
         enddo
         write(uno, *) ""
      enddo
