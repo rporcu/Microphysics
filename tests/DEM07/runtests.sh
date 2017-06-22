@@ -9,17 +9,18 @@ if [ -n "$1" ]; then
     MFIX=$1
 fi
 
+INPUTS=inputs_single
+if [ -n "$3" ]; then
+    INPUTS=$3
+fi
+echo "Using INPUTS file ${INPUTS}"
+
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
-time -p ${MFIX} inputs_single
+time -p ${MFIX} ${INPUTS}
 
-post_dats=POST*.dat
-for post_dats in ${post_dats}; do
-   numdiff "AUTOTEST/${post_dats}" "${post_dats}"
-done
-
-GRID=${GRID:-"multiple tiled"}
-for grid_type in $GRID; do
-    INPUTS=inputs_${grid_type}
-    rm -rf POST_* ${RUN_NAME}* &> /dev/null
-    time -p ${MFIX} "${INPUTS}"
-done
+if [ ${INPUTS} = 'inputs_single' ]; then
+   post_dats=POST*.dat
+   for post_dats in ${post_dats}; do
+       numdiff "AUTOTEST/${post_dats}" "${post_dats}"
+   done
+fi
