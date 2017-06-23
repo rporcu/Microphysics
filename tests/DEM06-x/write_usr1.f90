@@ -76,8 +76,7 @@ subroutine WRITE_DES_Out(lTime, np, particles)
    OPEN(UNIT=lUNIT, FILE='POST_POS.dat',                            &
         POSITION="APPEND", STATUS='OLD')
    ! Write the results to file.
-   WRITE(lUNIT,1000) lTime, RK4_POS(1), particles(1) % pos(1),        &
-        ABS_ERR(RK4_POS(1), particles(1) % pos(1))
+   WRITE(lUNIT,1000) lTime, RK4_POS(1), particles(1) % pos(1)
    ! Close the output file.
    CLOSE(lUNIT)
 
@@ -86,41 +85,13 @@ subroutine WRITE_DES_Out(lTime, np, particles)
    OPEN(UNIT=lUNIT, FILE='POST_VEL.dat',                            &
         POSITION="APPEND", STATUS='OLD')
    ! Write the results to file.
-   WRITE(lUNIT,2000) lTime, RK4_VEL(1), particles(1) % vel(1),        &
-        ABS_ERR(RK4_VEL(1), particles(1) % vel(1))
+   WRITE(lUNIT,2000) lTime, RK4_VEL(1), particles(1) % vel(1)
    ! Close the output file.
    CLOSE(lUNIT)
 
    RETURN
 
-1000 FORMAT(3x,F15.6,5X,F15.6,3x,F15.5,3x,F15.2)
-2000 FORMAT(3x,F15.6,5X,F15.6,3x,F15.4,3x,F15.2)
-
-CONTAINS
-
-
-   !......................................................................!
-   !                                                                      !
-   !  Subroutine name: ABS_ERR                                            !
-   !  Author: J.Musser                                   Date:  May-2014  !
-   !                                                                      !
-   !  Purpose: Calculate either the absolute percent relative error or    !
-   !  the absolute error.                                                 !
-   !                                                                      !
-   !......................................................................!
-   REAL(C_REAL) FUNCTION ABS_ERR(EXT, NUM)
-
-      use param, only: SMALL_NUMBER
-
-      IMPLICIT NONE
-
-      REAL(C_REAL), INTENT(IN) :: EXT, NUM
-
-      IF(ABS(EXT) > SMALL_NUMBER) THEN
-         ABS_ERR = ABS((EXT - NUM)/EXT)*1.0d2
-      ELSE
-         ABS_ERR = ABS(EXT - NUM)*1.0d2
-      ENDIF
-   END FUNCTION ABS_ERR
+1000 FORMAT(3x,F15.6,5X,F15.6,3x,F15.5)
+2000 FORMAT(3x,F15.6,5X,F15.6,3x,F15.4)
 
 end subroutine WRITE_DES_Out

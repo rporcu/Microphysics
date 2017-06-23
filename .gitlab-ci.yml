@@ -51,7 +51,7 @@ multiple-grid-parallel:
     TEST_REGEX: "MGP"
   <<: *test_template
 
-tiled-grid-single:
+tiled-grid-serial:
   variables:
     TEST_REGEX: "TGS"
   <<: *test_template
