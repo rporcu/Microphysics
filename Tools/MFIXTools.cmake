@@ -30,11 +30,11 @@ macro(set_defaults)
    set (Fortran_FLAGS_RELEASE_GNU "-g -std=f2008 -fcheck=all -Wall -O2" CACHE STRING "" FORCE)
 
    # Intel compiler flags
-   set (CXX_FLAGS_RELEASE_Intel "" CACHE STRING "" FORCE)  
-   set (CXX_FLAGS_DEBUG_Intel   "" CACHE STRING "" FORCE) 
-   set (Fortran_FLAGS_DEBUG_Intel "" 
+   set (CXX_FLAGS_RELEASE_Intel "-std=c++11 -O2 -ip -qopt-report=5 -qopt-report-phase=vec" CACHE STRING "" FORCE)  
+   set (CXX_FLAGS_DEBUG_Intel   "-std=c++11 -O0 -traceback -Wcheck" CACHE STRING "" FORCE) 
+   set (Fortran_FLAGS_DEBUG_Intel "-traceback -check bounds,uninit,pointers " 
       CACHE STRING "" FORCE)
-   set (Fortran_FLAGS_RELEASE_Intel "" CACHE STRING "" FORCE)
+   set (Fortran_FLAGS_RELEASE_Intel "-O2 -ip -qopt-report=5 -qopt-report-phase=vec" CACHE STRING "" FORCE)
 
    # User-defined flags
    set (CXXFLAGS "" CACHE STRING "User-defined C++ flags" )
