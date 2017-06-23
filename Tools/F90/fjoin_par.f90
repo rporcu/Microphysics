@@ -97,6 +97,11 @@ program fjoin_par
       lc2 = lc2 + 1
    enddo
 
+   if(fcount == 0)then
+      write(*,*) 'No files detected.'
+      stop 2
+   endif
+
    if(verbose) then
       write(*,*) 'Number of files:    ',fcount
       write(*,*) 'Number of particles:',np

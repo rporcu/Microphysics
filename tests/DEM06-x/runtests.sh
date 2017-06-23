@@ -32,8 +32,8 @@ FCOMPARE=${FCOMPARE:-}
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} ${MFIX} "${INPUTS}" DES_ONEWAY_COUPLED=.F.
 
-${FJOIN_PAR} -f DEM06_par --end 350 --var  2 --format 5 --dt 0.001 &> POST_POS.NEW
-${FJOIN_PAR} -f DEM06_par --end 350 --var 10 --format 4 --dt 0.001 &> POST_VEL.NEW
+${FJOIN_PAR} -f DEM06_par --end 350 --var  1 --format 5 --dt 0.001 &> POST_POS.NEW
+${FJOIN_PAR} -f DEM06_par --end 350 --var  9 --format 4 --dt 0.001 &> POST_VEL.NEW
 
 post_dats=POST*.NEW
 for result in ${post_dats}; do
