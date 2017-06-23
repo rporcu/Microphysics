@@ -1,22 +1,51 @@
-cmake_minimum_required(VERSION 3.3.2)
+cmake_minimum_required (VERSION 3.6)
 
-enable_language(CXX)
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+project (MFIX)
 
-enable_language(Fortran)
+# Define the languages used by the project
+enable_language (C)
+enable_language (CXX)
+enable_language (Fortran)
 
-# Not used by MFiX-Exa directly, but by AMReX Superbuild
-enable_language(C)
+#
+# Require C++11 standard
+#
+set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD_REQUIRED ON) 
+set (CMAKE_CXX_EXTENSIONS OFF)
 
-# Load MFIX Cmake Tools
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/)
+#
+# Always verbose output during make
+# 
+set ( CMAKE_VERBOSE_MAKEFILE on )
+
+#
+# Set the search path for cmake modules
+#
+set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/)
+
+#
+# Initialize all the global variables
+#
+include ( MFIX_CMakeVariables )
+
+#
+# Include modules with custom macros and functions
+#
+include ( MFIX_Utils )
+
+
+# Additional build options
+include ( MFIX_Options )
+include ( MFIX_Config )
+
+
 include(MFIXTools)
 include(AMReXConfig)
 
 check_build_tree_path()
 set_defaults()
-set_compiler_flags()
+#set_compiler_flags()
 
 # Config Amrex
 if (ENABLE_SUPERBUILD)
