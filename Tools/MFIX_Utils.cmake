@@ -33,6 +33,19 @@ function ( append new_var all_var )
 endfunction ()
 
 #
+# Function to append to link line
+#
+function ( append_to_link_line flags libs link_line )
+   
+   set ( tmp "${${link_line}} ${${flags}} ${${libs}} " )
+   string ( STRIP "${tmp}" tmp )
+   set ( ${link_line} ${tmp} PARENT_SCOPE )
+   
+endfunction ()
+
+
+
+#
 # Function to accumulate preprocessor directives
 #
 function ( add_define new_define all_defines )
