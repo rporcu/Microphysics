@@ -57,6 +57,10 @@ check_option_value ( "ENABLE_PIC" ${ENABLE_PIC} 0 1 )
 set (BL_SPACEDIM 3 CACHE INT "Dimension of AMReX build")
 check_option_value ( "BL_SPACEDIM" ${BL_SPACEDIM} 2 3 )
 
+
+set (ENABLE_SUPERBUILD 1 CACHE INT "Build AMReX as part of MFIX")
+check_option_value ( "ENABLE_SUPERBUILD" ${ENABLE_SUPERBUILD} 0 1 )
+
 set (ENABLE_MPI 1 CACHE INT "Enable build with MPI")
 check_option_value ( "ENABLE_MPI" ${ENABLE_MPI} 0 1 )
 

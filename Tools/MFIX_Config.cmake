@@ -104,33 +104,47 @@ endif ()
 #    Setup third party packages 
 # ------------------------------------------------------------- #
 
-# if (ENABLE_MPI)
-#    find_package (MPI REQUIRED)
-#    # Includes
-#    list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH "${MPI_Fortran_INCLUDE_PATH}")
-#    list (APPEND MFIX_EXTRA_C_INCLUDE_PATH "${MPI_C_INCLUDE_PATH}")
-#    list (APPEND MFIX_EXTRA_CXX_INCLUDE_PATH "${MPI_CXX_INCLUDE_PATH}")
-#    # Compile flags
-#    append ( MPI_Fortran_COMPILE_FLAGS MFIX_EXTRA_Fortran_FLAGS ) 
-#    append ( MPI_C_COMPILE_FLAGS MFIX_EXTRA_C_FLAGS )
-#    append ( MPI_CXX_COMPILE_FLAGS MFIX_EXTRA_CXX_FLAGS )
-#    # Libraries
-#    list (APPEND MFIX_EXTRA_Fortran_LIBRARIES "${MPI_Fortran_LIBRARIES}")
-#    list (APPEND MFIX_EXTRA_C_LIBRARIES "${MPI_C_LIBRARIES}")
-#    list (APPEND MFIX_EXTRA_CXX_LIBRARIES "${MPI_CXX_LIBRARIES}")
-#    # Link flags
-#    list (APPEND MFIX_EXTRA_Fortran_LINK_FLAGS "${MPI_Fortran_LINK_FLAGS}")
-#    list (APPEND MFIX_EXTRA_C_LINK_FLAGS "${MPI_C_LINK_FLAGS}")
-#    list (APPEND MFIX_EXTRA_CXX_LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
-# endif ()
 
-# if (ENABLE_OMP)
-#    find_package (OpenMP REQUIRED)
-#    # Compile flags
-#    append ( OpenMP_Fortran_FLAGS MFIX_EXTRA_Fortran_FLAGS ) 
-#    append ( OpenMP_C_FLAGS MFIX_EXTRA_C_FLAGS )
-#    append ( OpenMP_CXX_FLAGS MFIX_EXTRA_CXX_FLAGS )
-# endif()
+if ( NOT ENABLE_SUPERBUILD )
+   find_amrex ()
+   list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH "${AMREX_INCLUDES}")
+   list (APPEND MFIX_EXTRA_C_INCLUDE_PATH "${AMREX_INCLUDES}")
+   list (APPEND MFIX_EXTRA_CXX_INCLUDE_PATH "${AMREX_INCLUDES}")   
+   # message (  "CCSE_INCLUDE_DIR = ${AMREX_INCLUDES}" )
+   # message (  "CCSE_LIBRARIES   = ${AMREX_LIBRARIES}" )
+   # message (  "CCSE_LIBRARY_DIR = ${AMREX_LIB_DIR}"  )
+endif()
+
+
+if (ENABLE_MPI)
+   find_package (MPI REQUIRED)
+   # Includes
+   list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH "${MPI_Fortran_INCLUDE_PATH}")
+   list (APPEND MFIX_EXTRA_C_INCLUDE_PATH "${MPI_C_INCLUDE_PATH}")
+   list (APPEND MFIX_EXTRA_CXX_INCLUDE_PATH "${MPI_CXX_INCLUDE_PATH}")
+   # Compile flags
+   append ( MPI_Fortran_COMPILE_FLAGS MFIX_EXTRA_Fortran_FLAGS ) 
+   append ( MPI_C_COMPILE_FLAGS MFIX_EXTRA_C_FLAGS )
+   append ( MPI_CXX_COMPILE_FLAGS MFIX_EXTRA_CXX_FLAGS )
+   # Libraries
+   list (APPEND MFIX_EXTRA_Fortran_LIBRARIES "${MPI_Fortran_LIBRARIES}")
+   list (APPEND MFIX_EXTRA_C_LIBRARIES "${MPI_C_LIBRARIES}")
+   list (APPEND MFIX_EXTRA_CXX_LIBRARIES "${MPI_CXX_LIBRARIES}")
+   # Link flags
+   list (APPEND MFIX_EXTRA_Fortran_LINK_FLAGS "${MPI_Fortran_LINK_FLAGS}")
+   list (APPEND MFIX_EXTRA_C_LINK_FLAGS "${MPI_C_LINK_FLAGS}")
+   list (APPEND MFIX_EXTRA_CXX_LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+endif ()
+
+if (ENABLE_OMP)
+   find_package (OpenMP REQUIRED)
+   # Compile flags
+   append ( OpenMP_Fortran_FLAGS MFIX_EXTRA_Fortran_FLAGS ) 
+   append ( OpenMP_C_FLAGS MFIX_EXTRA_C_FLAGS )
+   append ( OpenMP_CXX_FLAGS MFIX_EXTRA_CXX_FLAGS )
+endif()
+
+
 
 
 # ------------------------------------------------------------- #

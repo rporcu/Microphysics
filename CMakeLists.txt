@@ -35,24 +35,28 @@ include ( MFIX_CMakeVariables )
 include ( MFIX_Utils )
 
 
-# Additional build options
-include ( MFIX_Options )
-include ( MFIX_Config )
 
 
 include(MFIXTools)
 include(AMReXConfig)
 
+
+
 check_build_tree_path()
 set_defaults()
 #set_compiler_flags()
 
+# Additional build options
+include ( MFIX_Options )
+include ( MFIX_Config )
+
+
 # Config Amrex
-if (ENABLE_SUPERBUILD)
-   build_amrex()
-else (ENABLE_SUPERBUILD)
-   find_amrex()
-endif (ENABLE_SUPERBUILD)
+# if (ENABLE_SUPERBUILD)
+#    build_amrex()
+# else (ENABLE_SUPERBUILD)
+#    find_amrex()
+# endif (ENABLE_SUPERBUILD)
 
 # Set build flags ( provides MFIX_INCLUDES,
 # MFIX_EXT_LINK_STRING  and MFIX_EXT_LINK_DIRS )
@@ -75,6 +79,7 @@ add_subdirectory( src )
 file(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
 add_executable(mfix ${MAIN} ${USR_OVERRIDES})
 target_link_libraries( mfix mfixcore ${MFIX_EXT_LINK_STRING} )
+
 
 # Tools
 set( MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 

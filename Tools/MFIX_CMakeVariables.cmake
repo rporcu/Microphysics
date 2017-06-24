@@ -96,6 +96,7 @@ set (MFIX_EXTRA_Fortran_LINK_FLAGS)
 set (MFIX_EXTRA_C_LINK_LINE)
 set (MFIX_EXTRA_CXX_LINK_LINE)
 set (MFIX_EXTRA_Fortran_LINK_LINE)
+set (MFIX_EXTRA_LINK_LINE)
 
 # Variable to show this file was loaded
 set ( MFIX_VARIABLES_LOADED "TRUE" )
