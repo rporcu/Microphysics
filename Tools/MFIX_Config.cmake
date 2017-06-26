@@ -103,8 +103,6 @@ endif ()
 # ------------------------------------------------------------- #
 #    Setup third party packages 
 # ------------------------------------------------------------- #
-
-
 if ( NOT ENABLE_SUPERBUILD )
    find_amrex ()
    list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH "${AMREX_INCLUDES}")
@@ -113,6 +111,7 @@ if ( NOT ENABLE_SUPERBUILD )
 endif()
 
 append_to_link_line ( AMREX_LIBRARIES MFIX_EXTRA_LINK_LINE )
+list (APPEND MFIX_EXTRA_LIBRARIES_PATH "${AMREX_LIB_DIR}")
 
 if (ENABLE_MPI)
    find_package (MPI REQUIRED)
@@ -177,6 +176,9 @@ append ( MFIX_${CXX_ID}_CXXLAGS_REQUIRED MFIX_CXX_FLAGS )
 set ( CMAKE_Fortran_FLAGS_${MFIX_BUILD_TYPE} "${MFIX_Fortran_FLAGS}" ) 
 set ( CMAKE_CXX_FLAGS_${MFIX_BUILD_TYPE} "${MFIX_CXX_FLAGS}" )
 
+# Set total extra  includes path
+set ( MFIX_EXTRA_INCLUDE_PATH  ${MFIX_EXTRA_Fortran_INCLUDE_PATH}
+   ${MFIX_EXTRA_C_INCLUDE_PATH} ${MFIX_EXTRA_CXX_INCLUDE_PATH} )
 
 #
 # Config summary
