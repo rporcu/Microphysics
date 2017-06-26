@@ -14,12 +14,32 @@
 !
 !  --id      ID of particle for data extraction.
 !
-!  --var     Index of particle property for extraction. This input
-!            may be passed multiple times.
-!
 !  --dt      This is the simulation dt separating the ascii output
 !            files. When this is passed, the output tries to reconstruct
 !            the simulation output time.
+!
+!  --var     Index of particle property for extraction. This input
+!            may be passed multiple times.
+!                1 - position-x
+!                2 - position-y
+!                3 - position-z
+!                4 - radius
+!                5 - volume
+!                6 - mass
+!                7 - density
+!                8 - oneOverI
+!                9 - velocity-x
+!               10 - velocity-y
+!               11 - velocity-z
+!               12 - omega-x
+!               13 - omega-y
+!               14 - omega-z
+!               15 - drag-x
+!               16 - drag-y
+!               17 - drag-z
+!
+!              100 - kinetic energy
+!
 
 program fjoin_par
 
@@ -57,7 +77,7 @@ program fjoin_par
    logical :: fexist
    integer :: var_count = 0
    character(len=1000) :: output
-   real (dp) :: val
+   real (dp) :: val(10)
 
    character(len=32) ::  io_format
    integer :: fcount = 0
@@ -113,9 +133,9 @@ program fjoin_par
 
    io_format=''
    if(iformat < 10) then
-      write(io_format,"('(A,f24.',I1,',1x)')") iformat
+      write(io_format,"('(f24.',I1,',1x)')") iformat
    else
-      write(io_format,"('(A,f24.',I2,',1x)')") iformat
+      write(io_format,"('(f24.',I2,',1x)')") iformat
    endif
 
    lc1=0
@@ -132,26 +152,11 @@ program fjoin_par
          lc1 = lc1 + 1
 
          output = ''
-         if(dt /= -1.0) write(output,"(3x,f15.6)") dt*lc2
+         if(dt /= -1.0) write(*,"(3x,f15.6)",advance='no') dt*lc2
 
-         if(id == -1) then
-
-            do lc3=1,np
-               do lc4=1,var_count
-                  val = particles(lc3) % rdata(var(lc4))
-                  if(abs(val) < epsilon(0.0d0)) val = 0.0d0
-                  write(output,trim(io_format)) trim(output), val
-               enddo
-               write(*,*) trim(output)
-            enddo
-         else
-            do lc4=1,var_count
-               val = particles(id) % rdata(var(lc4))
-               if(abs(val) < epsilon(0.0d0)) val = 0.0d0
-               write(output,trim(io_format)) trim(output), val
-            enddo
-            write(*,*) trim(output)
-         endif
+         do lc4=1,var_count
+            call write_var(var(lc4))
+         enddo
 
       endif
       if(istart + lc2 >= iend) exit
@@ -245,7 +250,72 @@ contains
       end if
 
 
-   end subroutine check
+    end subroutine check
+
+!-----------------------------------------------------------------------!
+!                                                                       !
+!                                                                       !
+!                                                                       !
+!-----------------------------------------------------------------------!
+    subroutine write_var(llc)
+
+     implicit none
+
+     integer, intent(in) :: llc
+     integer :: lc
+     real(dp) :: tmp
+
+     if(llc == 100) then
+        write(*,trim(io_format),advance='no') &
+           clean_value(calc_granular_temperature())
+     else
+        if(id == -1) then
+           do lc=1,np
+              write(*,trim(io_format),advance='no') &
+                 clean_value(particles(lc) % rdata(llc))
+           enddo
+        else
+           write(*,trim(io_format),advance='no') &
+              clean_value(particles(id) % rdata(llc))
+        endif
+     endif
+     write(*,*)' '
+
+   end subroutine write_var
+
+
+   real(dp) function clean_value(vv)
+     real(dp),  intent(in) :: vv
+     clean_value = vv
+     if(abs(clean_value) < epsilon(0.0d0)) clean_value = 0.0d0
+   end function clean_value
+
+
+!-----------------------------------------------------------------------!
+!                                                                       !
+!                                                                       !
+!                                                                       !
+!-----------------------------------------------------------------------!
+   real(dp) function calc_granular_temperature()
+
+     implicit none
+
+     integer :: lc
+     real(dp) :: gtmp, tvel
+
+     calc_granular_temperature = 0.0d0
+     if(np <= 0) return
+
+     gtmp=0.0d0
+     do lc=1,np
+        gtmp = gtmp + dot_product( &
+             particles(lc) % rdata(9:11), &
+             particles(lc) % rdata(9:11) )
+     enddo
+     calc_granular_temperature = gtmp/(3.0d0*dble(np))
+
+   end function calc_granular_temperature
+
 
 !-----------------------------------------------------------------------!
 !                                                                       !

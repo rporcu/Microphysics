@@ -190,6 +190,7 @@ set( MGP_TESTS
      FLD03-x FLD03-y FLD03-z
      FLD04-x FLD04-y FLD04-z
      DEM06-x DEM06-y DEM06-z
+     DEM07
    )
 
 
