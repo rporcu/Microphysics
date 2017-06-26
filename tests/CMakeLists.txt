@@ -38,7 +38,7 @@ foreach( THIS_TEST ${SGS_TESTS})
    set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
       RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
 
-   target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXT_LINK_STRING} )
+   target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXTRA_LINK_LINE} )
 
    # Accumulate the build for each test into target "build_tests"
    add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
@@ -102,7 +102,7 @@ foreach( THIS_TEST ${MGS_TESTS})
    set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
       RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
 
-   target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXT_LINK_STRING} )
+   target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXTRA_LINK_LINE} )
 
    # Accumulate the build for each test into target "build_tests"
    add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
@@ -159,7 +159,7 @@ foreach( THIS_TEST ${TGS_TESTS})
    set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
       RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
 
-   target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXT_LINK_STRING} )
+   target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXTRA_LINK_LINE} )
 
    # Accumulate the build for each test into target "build_tests"
    add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
@@ -212,7 +212,7 @@ foreach( THIS_TEST ${MGP_TESTS})
    set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
       RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
 
-   target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXT_LINK_STRING} )
+   target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXTRA_LINK_LINE} )
 
    # Accumulate the build for each test into target "build_tests"
    add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
