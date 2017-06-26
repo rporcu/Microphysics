@@ -110,12 +110,9 @@ if ( NOT ENABLE_SUPERBUILD )
    list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH "${AMREX_INCLUDES}")
    list (APPEND MFIX_EXTRA_C_INCLUDE_PATH "${AMREX_INCLUDES}")
    list (APPEND MFIX_EXTRA_CXX_INCLUDE_PATH "${AMREX_INCLUDES}")   
-   # message (  "CCSE_INCLUDE_DIR = ${AMREX_INCLUDES}" )
-   # message (  "CCSE_LIBRARIES   = ${AMREX_LIBRARIES}" )
-   # message (  "CCSE_LIBRARY_DIR = ${AMREX_LIB_DIR}"  )
 endif()
 
-set ( MFIX_EXTRA_LINK_LINE ${AMREX_LIBRARIES} )
+append_to_link_line ( AMREX_LIBRARIES MFIX_EXTRA_LINK_LINE )
 
 if (ENABLE_MPI)
    find_package (MPI REQUIRED)
@@ -136,10 +133,8 @@ if (ENABLE_MPI)
    list (APPEND MFIX_EXTRA_C_LINK_FLAGS "${MPI_C_LINK_FLAGS}")
    list (APPEND MFIX_EXTRA_CXX_LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
 
-   append_to_link_line ( MFIX_EXTRA_CXX_LINK_FLAGS
-      MFIX_EXTRA_CXX_LIBRARIES MFIX_EXTRA_LINK_LINE )
-
-   message ("LINK LINE ${MFIX_EXTRA_LINK_LINE}")
+   append_to_link_line ( MFIX_EXTRA_CXX_LIBRARIES MFIX_EXTRA_LINK_LINE 
+      MFIX_EXTRA_CXX_LINK_FLAGS )
       
 endif ()
 
@@ -199,3 +194,4 @@ message( STATUS "   C++ external libs     = ${MFIX_EXTRA_CXX_LIBRARIES}")
 message( STATUS "   Fortran external libs = ${MFIX_EXTRA_Fortran_LIBRARIES}")
 message( STATUS "   C++ link flags        = ${MFIX_EXTRA_CXX_LINK_FLAGS}") 
 message( STATUS "   Fortran link flags    = ${MFIX_EXTRA_LINK_FLAGS}")
+message( STATUS "   MFIX extra link line  = ${MFIX_EXTRA_LINK_LINE}")

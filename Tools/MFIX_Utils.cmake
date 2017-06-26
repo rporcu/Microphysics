@@ -35,7 +35,13 @@ endfunction ()
 #
 # Function to append to link line
 #
-function ( append_to_link_line flags libs link_line )
+function ( append_to_link_line libs link_line )
+
+   if ( ${ARGC} EQUAL 3 )  # Third one is optional flags
+      set ( flags  ${ARGV2} )
+   else ()
+      set ( flags )
+   endif ()
    
    set ( tmp "${${link_line}} ${${flags}} ${${libs}} " )
    string ( STRIP "${tmp}" tmp )
