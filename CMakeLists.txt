@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.6)
 
-project (MFIX)
+project (MFIX-Exa)
 
 # Define the languages used by the project
 enable_language (C)
@@ -22,7 +22,7 @@ set ( CMAKE_VERBOSE_MAKEFILE on )
 #
 # Set the search path for cmake modules
 #
-set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/)
+set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/ )
 
 #
 # Initialize all the global variables
@@ -33,7 +33,7 @@ include ( MFIX_CMakeVariables )
 # Include modules with custom macros and functions
 #
 include ( MFIX_Utils )
-include (AMReXConfig)
+include ( AMReXConfig )
 
 check_build_tree_path ()
 set_defaults ()
@@ -48,11 +48,6 @@ include ( MFIX_Config )
 # else (ENABLE_SUPERBUILD)
 #    find_amrex()
 # endif (ENABLE_SUPERBUILD)
-
-# Print summary of config settings
-#summary()
-
-project (MFI-Exa)
 
 # This is the main file
 set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
