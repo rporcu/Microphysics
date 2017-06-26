@@ -146,8 +146,6 @@ if (ENABLE_OMP)
 endif()
 
 
-
-
 # ------------------------------------------------------------- #
 #    Setup compiler flags 
 # ------------------------------------------------------------- #
@@ -170,7 +168,7 @@ append ( MFIX_EXTRA_CXX_FLAGS MFIX_CXX_FLAGS )
 
 # Add required flags
 append ( MFIX_${FC_ID}_FFLAGS_REQUIRED MFIX_Fortran_FLAGS )
-append ( MFIX_${CXX_ID}_CXXLAGS_REQUIRED MFIX_CXX_FLAGS )
+append ( MFIX_${CXX_ID}_CXXFLAGS_REQUIRED MFIX_CXX_FLAGS )
 
 # Set CMake compiler flags
 set ( CMAKE_Fortran_FLAGS_${MFIX_BUILD_TYPE} "${MFIX_Fortran_FLAGS}" ) 
@@ -180,6 +178,8 @@ set ( CMAKE_CXX_FLAGS_${MFIX_BUILD_TYPE} "${MFIX_CXX_FLAGS}" )
 set ( MFIX_EXTRA_INCLUDE_PATH  ${MFIX_EXTRA_Fortran_INCLUDE_PATH}
    ${MFIX_EXTRA_C_INCLUDE_PATH} ${MFIX_EXTRA_CXX_INCLUDE_PATH} )
 
+# Remove duplicates from lists
+list ( REMOVE_DUPLICATES MFIX_EXTRA_INCLUDE_PATH )
 #
 # Config summary
 #
@@ -197,3 +197,4 @@ message( STATUS "   Fortran external libs = ${MFIX_EXTRA_Fortran_LIBRARIES}")
 message( STATUS "   C++ link flags        = ${MFIX_EXTRA_CXX_LINK_FLAGS}") 
 message( STATUS "   Fortran link flags    = ${MFIX_EXTRA_LINK_FLAGS}")
 message( STATUS "   MFIX extra link line  = ${MFIX_EXTRA_LINK_LINE}")
+message( STATUS "   MFIX extra includes   = ${MFIX_EXTRA_INCLUDE_PATH}")

@@ -33,13 +33,10 @@ include ( MFIX_CMakeVariables )
 # Include modules with custom macros and functions
 #
 include ( MFIX_Utils )
-
-include(MFIXTools)
-include(AMReXConfig)
+include (AMReXConfig)
 
 check_build_tree_path ()
 set_defaults ()
-#set_compiler_flags()
 
 # Additional build options
 include ( MFIX_Options )
@@ -52,14 +49,10 @@ include ( MFIX_Config )
 #    find_amrex()
 # endif (ENABLE_SUPERBUILD)
 
-# Set build flags ( provides MFIX_INCLUDES,
-# MFIX_EXT_LINK_STRING  and MFIX_EXT_LINK_DIRS )
-#set_build_flags()
-
 # Print summary of config settings
-summary()
+#summary()
 
-project(MFIXEXA)
+project (MFI-Exa)
 
 # This is the main file
 set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
@@ -68,19 +61,19 @@ include_directories (${MFIX_INCLUDE_PATH} ${MFIX_EXTRA_INCLUDE_PATH})
 link_directories (${MFIX_EXTRA_LIBRARIES_PATH})
 
 # Main
-add_subdirectory( src )
+add_subdirectory (src)
 
-file(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
-add_executable(mfix ${MAIN} ${USR_OVERRIDES})
-target_link_libraries( mfix mfixcore ${MFIX_EXTRA_LINK_LINE} ) 
+file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
+add_executable (mfix ${MAIN} ${USR_OVERRIDES} )
+target_link_libraries ( mfix mfixcore ${MFIX_EXTRA_LINK_LINE} ) 
 
 # Tools
-set( MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 
-add_subdirectory( Tools/F90 )
+set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 
+add_subdirectory (Tools/F90)
 
 # Tests
-enable_testing()
-add_subdirectory( tests )
+enable_testing ()
+add_subdirectory ( tests )
 #add_subdirectory( benchmarks )
 
 # Add a target to generate API documentation with Doxygen
