@@ -26,7 +26,7 @@ MODULE INIT_NAMELIST_MODULE
       use bc
       use ic
       use drag, only: drag_c1, drag_d1
-      use constant, only: d_p0, gravity, ro_s0
+      use constant, only: gravity
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use des_init_namelist_module, only: des_init_namelist
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
@@ -45,7 +45,7 @@ MODULE INIT_NAMELIST_MODULE
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
       use run, only: call_usr, description, tstop
-      use run, only: dt_fac, dt_max, dt_min, run_name, solids_model
+      use run, only: dt_fac, dt_max, dt_min, run_name
       use drag, only: drag_type
       use scales, only: p_ref, p_scale
       use residual, only: norm_g, tol_diverge, tol_resid
@@ -375,41 +375,6 @@ MODULE INIT_NAMELIST_MODULE
       MW_AVG = UNDEFINED
 !</keyword>
 
-
-
-!#####################################################################!
-!                            Solids Phase                             !
-!#####################################################################!
-
-!<keyword category="Solids Phase" required="false">
-!  <description>
-!    Defines the model used for the solids phase.
-!  </description>
-!  <arg index="1" id="Phase" min="1" max="DIM_M"/>
-!  <valid value='DEM' note='Discrete Element Model' />
-      SOLIDS_MODEL(:DIM_M) = '---'
-!</keyword>
-
-!<keyword category="Solids Phase" required="false"
-!  tfm="true" dem="true" pic="true">
-!  <description>
-!    Initial particle diameters [cm in CGS].
-!  </description>
-!  <arg index="1" id="Phase" min="1" max="DIM_M"/>
-      D_P0(:DIM_M) = UNDEFINED
-!</keyword>
-
-!<keyword category="Solids Phase" required="false"
-!  tfm="true" dem="true" pic="true">
-!  <description>
-!    Specified constant solids density [g/cm^3 in CGS]. Reacting flows
-!    may use variable solids density by leaving this parameter
-!    undefined and specifying X_S0 and RO_XS0 as well as the index
-!    of the inert species.
-!  </description>
-!  <arg index="1" id="Phase" min="1" max="DIM_M"/>
-      RO_S0(:DIM_M) = UNDEFINED
-!</keyword>
 
 
 !#####################################################################!

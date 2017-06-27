@@ -92,7 +92,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       nit++;
 
       Real residuals[2*8];
-      for (int i=0; i<=2*8; ++i)
+      for (int i=0; i<2*8; ++i)
         residuals[i] = 0.0L;
 
       // User hooks

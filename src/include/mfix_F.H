@@ -101,7 +101,11 @@ extern "C"
     void mfix_set_particle_properties(const int* pstate, Real* pradius, Real* pdensity,
         Real* pvol, Real* pmass, Real* omoi, Real* omega);
 
-    void mfix_init_collision();
+  void mfix_init_collision(Real (&sum_dp)[10], Real (&sum_ro)[10]);
+
+  void mfix_sum_particle_props( const int* nrp,  void* particles,
+                                Real (&sum_np)[10], Real (&sum_dp)[10], Real (&sum_ro)[10]);
+
 
     void mfix_output_manager ( const int* np,  Real* time, Real* dt,
         Real* xlength, Real* ylength, Real* zlength,

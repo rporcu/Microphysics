@@ -317,58 +317,62 @@ mfix_level::AllocateArrays (int lev)
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
-    AllocateArrays(lev);
+  AllocateArrays(lev);
 
-    Box domain(geom[lev].Domain());
+  Box domain(geom[lev].Domain());
 
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-    {
-  const Box& sbx = (*ep_g[lev])[mfi].box();
-
-  Box ubx((*u_g[lev])[mfi].box());
-  Box vbx((*v_g[lev])[mfi].box());
-  Box wbx((*w_g[lev])[mfi].box());
-
-  set_bc0(sbx.loVect(), sbx.hiVect(),
-    ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-    (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-    (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
-    (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
-    (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
-    bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-    bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
-    }
-
-    fill_mf_bc(lev,*p_g[lev]);
-    fill_mf_bc(lev,*ep_g[lev]);
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-
-    u_g[lev]->FillBoundary(geom[lev].periodicity());
-    v_g[lev]->FillBoundary(geom[lev].periodicity());
-    w_g[lev]->FillBoundary(geom[lev].periodicity());
-
-    // Allocate the particle arrays
-    if (solve_dem)
-    {
-  pc -> AllocData();
-  pc -> InitParticlesAscii("particle_input.dat");
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-      mfix_init_collision();
-  //  Create mask for particle ghost cells
-  pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
+    {
+      const Box& sbx = (*ep_g[lev])[mfi].box();
+
+      Box ubx((*u_g[lev])[mfi].box());
+      Box vbx((*v_g[lev])[mfi].box());
+      Box wbx((*w_g[lev])[mfi].box());
+
+      set_bc0(sbx.loVect(), sbx.hiVect(),
+              ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+              (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+              (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+              (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
+              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
 
-    // Initial fluid arrays: pressure, velocity, density, viscosity
-    mfix_init_fluid(lev);
+  fill_mf_bc(lev,*p_g[lev]);
+  fill_mf_bc(lev,*ep_g[lev]);
+  fill_mf_bc(lev,*ro_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
 
-    // Call user-defined subroutine to set constants, check data, etc.
-    if (call_udf)
-  mfix_usr0();
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
 
-    // Calculate all the coefficients once before entering the time loop
-    int calc_flag = 2;
-    mfix_calc_coeffs(lev,calc_flag);
+  // Initial fluid arrays: pressure, velocity, density, viscosity
+  mfix_init_fluid(lev);
+
+  // Allocate the particle arrays
+  if (solve_dem)
+    {
+      pc -> AllocData();
+      pc -> InitParticlesAscii("particle_input.dat");
+
+      Real avg_dp[10], avg_ro[10];
+      pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
+
+      mfix_init_collision(avg_dp, avg_ro);
+
+      //  Create mask for particle ghost cells
+      pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
+    }
+
+  // Call user-defined subroutine to set constants, check data, etc.
+  if (call_udf)
+    mfix_usr0();
+
+  // Calculate all the coefficients once before entering the time loop
+  int calc_flag = 2;
+  mfix_calc_coeffs(lev,calc_flag);
 }
 
 void
@@ -406,8 +410,9 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
     w_g[lev]->FillBoundary(geom[lev].periodicity());
 
     if (solve_dem) {
-      for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-          mfix_init_collision();
+      Real avg_dp[10], avg_ro[10];
+      pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
+      mfix_init_collision(avg_dp, avg_ro);
     }
 
     // // Initial fluid arrays: pressure, velocity, density, viscosity

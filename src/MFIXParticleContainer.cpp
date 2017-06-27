@@ -50,38 +50,38 @@ void MFIXParticleContainer::InitLevelMask ( int lev,
 
 void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
-    // only read the file on the IO proc
-    if (ParallelDescriptor::MyProc() ==  ParallelDescriptor::IOProcessorNumber()) {
-  std::ifstream ifs;
-  ifs.open(file.c_str(), std::ios::in);
+  // only read the file on the IO proc
+  if (ParallelDescriptor::MyProc() ==  ParallelDescriptor::IOProcessorNumber()) {
+    std::ifstream ifs;
+    ifs.open(file.c_str(), std::ios::in);
 
-  if (!ifs.good())
+    if (!ifs.good())
       amrex::FileOpenFailed(file);
 
-  int np = -1;
-  ifs >> np >> std::ws;
+    int np = -1;
+    ifs >> np >> std::ws;
 
-  // Issue an error if nparticles = 0 is specified
-  if ( np == -1 ){
+    // Issue an error if nparticles = 0 is specified
+    if ( np == -1 ){
       Abort("\nCannot read number of particles from particle_input.dat: file is corrupt.\
                    \nPerhaps you forgot to specify the number of particles on the first line??? ");
   }
 
-  // we add all the particles to grid 0 and tile 0 and let
-  // Redistribute() put them in the right places.
-  const int lev  = 0;
-  const int grid = 0;
-  const int tile = 0;
+    // we add all the particles to grid 0 and tile 0 and let
+    // Redistribute() put them in the right places.
+    const int lev  = 0;
+    const int grid = 0;
+    const int tile = 0;
 
-  auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
+    auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
 
-  ParticleType p;
-  int        pstate, pphase;
-  Real       pradius, pdensity, pvolume, pomoi, pmass, pomega;
+    ParticleType p;
+    int        pstate, pphase;
+    Real       pradius, pdensity, pvolume, pomoi, pmass, pomega;
 
-  pstate = 1;
+    pstate = 1;
 
-  for (int i = 0; i < np; i++) {
+    for (int i = 0; i < np; i++) {
 
       // Read from input file
       ifs >> pphase;
@@ -99,7 +99,8 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
       p.cpu() = ParallelDescriptor::MyProc();
 
       // Compute other particle properties
-      mfix_set_particle_properties( &pstate, &pradius, &pdensity, &pvolume, &pmass, &pomoi, &pomega);
+      mfix_set_particle_properties( &pstate, &pradius, &pdensity,
+                                    &pvolume, &pmass, &pomoi, &pomega);
 
       // Set other particle properties
       p.idata(intData::phase)     = pphase;
@@ -115,9 +116,9 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
       // Add everything to the data structure
       particle_tile.push_back(p);
-  }
     }
-    Redistribute();
+  }
+  Redistribute();
 
 }
 
@@ -174,7 +175,7 @@ MFIXParticleContainer::InitData()
 {
 }
 
-void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time ) 
+void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time )
 {
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
@@ -208,11 +209,11 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          PairIndex index(pti.index(), pti.LocalTileIndex());
          int ng = neighbors[index].size() / pdata_size;
 
-         BL_PROFILE_VAR("des_time_loop()", des_time_loop); 
+         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
          mfix_des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
                &subdt, &dx, &dy, &dz,
                &xlen, &ylen, &zlen, &nstep );
-         BL_PROFILE_VAR_STOP(des_time_loop); 
+         BL_PROFILE_VAR_STOP(des_time_loop);
 
          if ( mfix_des_continuum_coupled () == 0 ) {
            Real stime;
@@ -339,7 +340,7 @@ void MFIXParticleContainer::fillNeighbors( int lev ) {
 }
 
 void MFIXParticleContainer::applyPeriodicShift(int lev, ParticleType& p,
-                                              const IntVect& neighbor_cell) 
+                                              const IntVect& neighbor_cell)
 {
     BL_PROFILE("mfix_dem::applyPeriodicShift()");
 
@@ -366,7 +367,7 @@ void MFIXParticleContainer::packNeighborParticle(int lev,
                 const IntVect& neighbor_cell,
                 const BaseFab<int>& mask,
                 const ParticleType& p,
-                NeighborCommMap& neighbors_to_comm) 
+                NeighborCommMap& neighbors_to_comm)
 {
     const int neighbor_grid = mask(neighbor_cell, 0);
 
@@ -576,5 +577,49 @@ void MFIXParticleContainer::writeAllForComparison(int lev)
          cout << p.pos(0)   << " " << p.pos(1)   << " " << p.pos(2) <<  " " <<
                  p.rdata(1) << " " << p.rdata(2) << " " << p.rdata(2) <<  " " <<
                  ParallelDescriptor::MyProc() << " " << p.id() << std::endl;
+  }
+}
+
+void MFIXParticleContainer::GetParticleAvgProp(int lev,
+         Real (&avg_dp)[10], Real (&avg_ro)[10])
+{
+
+  Real sum_np[10];
+  Real sum_dp[10];
+  Real sum_ro[10];
+  for (int i=0; i<10; ++i){
+    sum_np[i] = 0.0;
+    sum_dp[i] = 0.0;
+    sum_ro[i] = 0.0;
+  }
+
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+    // Real particles
+    const int np     = NumberOfParticles(pti);
+    void* particles  = pti.GetArrayOfStructs().data();
+
+    mfix_sum_particle_props( &np, particles, sum_np, sum_dp, sum_ro);
+
+  }
+
+  Real sum_props[30];
+  for (int i=0; i<10; ++i){
+    sum_props[i   ] = sum_np[i];
+    sum_props[i+10] = sum_dp[i];
+    sum_props[i+20] = sum_ro[i];
+  }
+
+  ParallelDescriptor::ReduceRealSum(sum_props,30);
+
+  for (int i=0; i<10; ++i){
+
+    if(sum_props[i]) {
+      avg_dp[i] = sum_props[i+10]/sum_props[i];
+      avg_ro[i] = sum_props[i+20]/sum_props[i];
+      // std::cout << "avg_props: " << i <<
+      //   "   np: " << sum_props[i] <<
+      //   "   dp: " << avg_dp[i]   <<
+      //   "   ro: " << avg_ro[i]   << std::endl;
+    }
   }
 }

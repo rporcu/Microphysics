@@ -4,15 +4,18 @@
 !  Purpose: DES - allocating DES arrays                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine init_collision() bind(C, name="mfix_init_collision")
+subroutine init_collision(d_p0, ro_s0)&
+     bind(C, name="mfix_init_collision")
 
   use discretelement, only: des_coll_model_enum, lsd, hertzian
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
-  use param,         only: zero
+  use param,         only: zero, dim_m
 
   implicit none
+
+  real(c_real), intent(in) :: d_p0(dim_m), ro_s0(dim_m)
 
   select case (des_coll_model_enum)
   case(lsd); call init_collision_lsd
@@ -34,17 +37,17 @@ contains
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine init_collision_lsd
 
-  use constant,       only: D_P0, RO_s0, PI, MMAX
+  use constant,       only: pi, mmax
   use discretelement, only: kn, kn_w, kt, kt_w, kt_fac, kt_w_fac, &
       & des_etan, des_etan_wall, des_etat, des_etat_wall,        &
       & des_en_input, des_en_wall_input, des_et_input, dtsolid,  &
       & des_et_wall_input, des_etat_fac, des_etat_w_fac
 
-  integer      :: M, L, LC
-  logical      :: FLAG_WARN
-  real(c_real) :: TCOLL, TCOLL_TMP
-  real(c_real) :: MASS_M, MASS_L, MASS_EFF
-  real(c_real) :: EN
+  integer      :: m, l, lc
+  logical      :: flag_warn
+  real(c_real) :: tcoll, tcoll_tmp
+  real(c_real) :: mass_m, mass_l, mass_eff
+  real(c_real) :: en
 
   tcoll = 1.0d0
 
@@ -124,18 +127,18 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine init_collision_hertz
 
-  use constant,       only: MMAX, D_P0, RO_s0, PI
-  use param,          only: DIM_M
-  use discretelement, only: DES_EN_INPUT, DES_EN_WALL_INPUT,   &
-                           &  DES_ET_INPUT, DES_ET_WALL_INPUT, &
-                           &  DES_ETAN, DES_ETAN_WALL,         &
-                           &  DES_ETAT, DES_ETAT_WALL,         &
-                           &  HERT_KN, HERT_Kwn,               &
-                           &  HERT_KT, HERT_Kwt,               &
-                           &  DES_ETAT_FAC, DES_ETAT_W_FAC,    &
-                           &  E_YOUNG, Ew_YOUNG,               &
-                           &  V_POISSON, Vw_POISSON,           &
-                           &  dtsolid
+  use constant,       only: mmax, pi
+  use param,          only: dim_m
+  use discretelement, only: des_en_input, des_en_wall_input,   &
+                              des_et_input, des_et_wall_input, &
+                              des_etan, des_etan_wall,         &
+                              des_etat, des_etat_wall,         &
+                              hert_kn, hert_kwn,               &
+                              hert_kt, hert_kwt,               &
+                              des_etat_fac, des_etat_w_fac,    &
+                              e_young, ew_young,               &
+                              v_poisson, vw_poisson,           &
+                              dtsolid
 
     integer           :: m, l, lc
     character(len=64) :: msg
@@ -258,3 +261,39 @@ subroutine init_collision_hertz
   end subroutine init_collision_hertz
 
 end subroutine init_collision
+
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+! Procedure Name: sum_particle_props                                   !
+!                                                                      !
+! Purpose: Sum diameter, density and count number of particles. This   !
+! is used to calculate the average particle diameter and density which !
+! go into calculating the particle collision time scale.               !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+subroutine sum_particle_props ( np, particles, sum_np, sum_dp, sum_ro) &
+     bind(C, name="mfix_sum_particle_props")
+
+  use amrex_fort_module, only: c_real => amrex_real
+  use iso_c_binding ,    only: c_int
+
+  use param, only: dim_m
+  use particle_mod
+
+  integer(c_int),   intent(in   ) :: np
+  type(particle_t), intent(in   ) :: particles(np)
+
+  real(c_real), intent(inout) :: sum_np(dim_m)
+  real(c_real), intent(inout) :: sum_dp(dim_m)
+  real(c_real), intent(inout) :: sum_ro(dim_m)
+
+  integer :: p, m
+
+  do p=1, np
+     m = particles(p) % phase
+     sum_np(m) = sum_np(m) + 1.0d0
+     sum_dp(m) = sum_dp(m) + particles(p) % radius * 2.0d0
+     sum_ro(m) = sum_ro(m) + particles(p) % density
+  enddo
+
+end subroutine sum_particle_props

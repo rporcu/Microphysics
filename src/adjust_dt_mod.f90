@@ -90,12 +90,6 @@ contains
                dt = dt*dt_fac
             endif
 
-! Write the convergence stats to the screen/log file.
-            WRITE(ERR_MSG,"('DT=',g11.4,3x,'NIT/s=',A)")  &
-               dt, trim(iVal(nint(NITOS)))
-            CALL FLUSH_ERR_MSG(HEADER=.FALSE., &
-               FOOTER=.FALSE., LOG=.FALSE.)
-
          else
             steps_tot = steps_tot + 1
             nit_tot = nit_tot + nit

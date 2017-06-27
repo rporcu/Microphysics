@@ -53,9 +53,6 @@
   logical :: full_log
 
 
-! Specifies the type of solids: TFM, DEM, MPPIC
-      CHARACTER(len=3), DIMENSION(DIM_M) :: SOLIDS_MODEL
-
 ! Flags for various solids phase models.
       logical :: TFM_SOLIDS
       logical :: DEM_SOLIDS

@@ -18,7 +18,6 @@ contains
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Runtime flag specifying DEM solids
-    use constant, only: d_p0, ro_s0
     use discretelement, only: mew, mew_w
     use drag, only: drag_type, drag_type_enum, invalid_drag
     use discretelement, only: particle_types
@@ -45,36 +44,6 @@ contains
 ! Initialize the error manager.
     call init_err_msg("CHECK_SOLIDS_PHASES")
 
-
-    do m = 1, particle_types
-       if(is_undefined(d_p0(m))) then
-          write(err_msg, 1000) trim(ivar('D_p0',m))
-          call flush_err_msg(abort=.true.)
-       elseif(d_p0(m) <= zero)then
-          write(err_msg, 1001) trim(ivar('D_p0',m)), ival(d_p0(m))
-          call flush_err_msg(abort=.true.)
-       endif
-
-       if(is_undefined(ro_s0(m))) then
-          write(err_msg, 1000) trim(ivar('RO_s0',m))
-          call flush_err_msg(abort=.true.)
-       elseif(ro_s0(m) <= zero)then
-          write(err_msg, 1001) trim(ivar('RO_s0',m)), ival(ro_s0(m))
-          call flush_err_msg(abort=.true.)
-       endif
-    enddo
-
-    ! Check for input overflow.
-    do m = particle_types+1, dim_m
-       if(is_defined(d_p0(m)))then
-          write(err_msg,1002) trim(ivar('D_p0',m))
-          call flush_err_msg(abort=.true.)
-       endif
-       if(is_defined(ro_s0(m))) then
-          write(err_msg,1002) trim(ivar('RO_s0',m))
-          call flush_err_msg(abort=.true.)
-       endif
-    enddo
 
     if(particle_types > 0) then
 
