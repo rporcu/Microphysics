@@ -47,51 +47,54 @@ set ( MFIX_BUILD_TYPE ${CMAKE_BUILD_TYPE} )
 string ( TOUPPER ${MFIX_BUILD_TYPE} MFIX_BUILD_TYPE) 
 
 message ( STATUS "   CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE} (STRING:\
- Debug|Release|RelWithDebInfo|MinSizeRel)" )
-
-
-set (ENABLE_PIC 0 CACHE INT
-   "Compile with position-independent code enabled")
-check_option_value ( "ENABLE_PIC" ${ENABLE_PIC} 0 1 )
-
-set (BL_SPACEDIM 3 CACHE INT "Dimension of AMReX build")
-check_option_value ( "BL_SPACEDIM" ${BL_SPACEDIM} 2 3 )
-
-
-# set (ENABLE_SUPERBUILD 1 CACHE INT "Build AMReX as part of MFIX")
-# check_option_value ( "ENABLE_SUPERBUILD" ${ENABLE_SUPERBUILD} 0 1 )
-
-set (ENABLE_MPI 1 CACHE INT "Enable build with MPI")
-check_option_value ( "ENABLE_MPI" ${ENABLE_MPI} 0 1 )
-
-set (ENABLE_OMP 0 CACHE INT "Enable build with OpenMP")
-check_option_value ( "ENABLE_OMP" ${ENABLE_OMP} 0 1 )
-
-set (ENABLE_DP 1 CACHE INT "Enable double precision build")
-check_option_value ( "ENABLE_DP" ${ENABLE_DP} 0 1 )
-
-set (ENABLE_PARTICLES 0 CACHE INT "Include Particles classes in AMReX build")
-check_option_value ( "ENABLE_PARTICLES" ${ENABLE_PARTICLES} 0 1 )
-
-set (ENABLE_DP_PARTICLES 1 CACHE INT "Enable double-precision for particles data") 
-check_option_value ( "ENABLE_DP_PARTICLES" ${ENABLE_DP_PARTICLES} 0 1 )
-
-set (ENABLE_PROFILING 0 CACHE INT "Include profiling information in AMReX build")
-check_option_value ( "ENABLE_PROFILING" ${ENABLE_PROFILING} 0 1 )
-
-set (ENABLE_TINY_PROFILING 0 CACHE INT "Include 'tiny'-profiling information in AMReX build")
-check_option_value ( "ENABLE_TINY_PROFILING" ${ENABLE_TINY_PROFILING} 0 1 )
-
-set (ENABLE_BACKTRACE 1 CACHE INT "Include backtrace information in AMReX build")
-check_option_value ( "ENABLE_BACKTRACE" ${ENABLE_BACKTRACE} 0 1 )
-
-set (MFIX_FFLAGS_OVERRIDES "" CACHE STRING "User-defined Fortran compiler flags" )
-
-set (MFIX_CXXLAGS_OVERRIDES "" CACHE STRING "User-defined C++ compiler flags" )
+ Debug|Release)" )
 
 set (AMREX_INSTALL_DIR "" CACHE PATH "Path to installation directory (leave empty for superbuild)")
 
 
+#
+# AMReX options are needed only if AMReX is built as part of MFIX
+# 
+if (NOT AMREX_INSTALL_DIR) 
+
+   message (STATUS "Configuring AMReX with the following options: ")
+   
+   set (ENABLE_PIC 0 CACHE INT
+      "Compile with position-independent code enabled")
+   check_option_value ( "ENABLE_PIC" ${ENABLE_PIC} 0 1 )
+
+   set (BL_SPACEDIM 3 CACHE INT "Dimension of AMReX build")
+   check_option_value ( "BL_SPACEDIM" ${BL_SPACEDIM} 2 3 )
+
+   set (ENABLE_MPI 1 CACHE INT "Enable build with MPI")
+   check_option_value ( "ENABLE_MPI" ${ENABLE_MPI} 0 1 )
+
+   set (ENABLE_OMP 0 CACHE INT "Enable build with OpenMP")
+   check_option_value ( "ENABLE_OMP" ${ENABLE_OMP} 0 1 )
+
+   set (ENABLE_DP 1 CACHE INT "Enable double precision build")
+   check_option_value ( "ENABLE_DP" ${ENABLE_DP} 0 1 )
+
+   set (ENABLE_PARTICLES 0 CACHE INT "Include Particles classes in AMReX build")
+   check_option_value ( "ENABLE_PARTICLES" ${ENABLE_PARTICLES} 0 1 )
+
+   set (ENABLE_DP_PARTICLES 1 CACHE INT "Enable double-precision for particles data") 
+   check_option_value ( "ENABLE_DP_PARTICLES" ${ENABLE_DP_PARTICLES} 0 1 )
+
+   set (ENABLE_PROFILING 0 CACHE INT "Include profiling information in AMReX build")
+   check_option_value ( "ENABLE_PROFILING" ${ENABLE_PROFILING} 0 1 )
+
+   set (ENABLE_TINY_PROFILING 0 CACHE INT "Include 'tiny'-profiling information in AMReX build")
+   check_option_value ( "ENABLE_TINY_PROFILING" ${ENABLE_TINY_PROFILING} 0 1 )
+
+   set (ENABLE_BACKTRACE 1 CACHE INT "Include backtrace information in AMReX build")
+   check_option_value ( "ENABLE_BACKTRACE" ${ENABLE_BACKTRACE} 0 1 )
+endif ()
+
+
+set (MFIX_FFLAGS_OVERRIDES "" CACHE STRING "User-defined Fortran compiler flags" )
+
+set (MFIX_CXXLAGS_OVERRIDES "" CACHE STRING "User-defined C++ compiler flags" )
 
 
 

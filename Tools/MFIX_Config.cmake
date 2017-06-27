@@ -13,24 +13,16 @@ included before MFIX_Config.cmake" )
 endif ()
 
 
-#
-# Decide whether or not to use PIC 
-#
-if (ENABLE_PIC)
-   set (CMAKE_POSITION_INDEPENDENT_CODE TRUE)
-endif ()
-
-
 # Check if superbuild is enabled
 if ( AMREX_INSTALL_DIR )
    check_path ( ${AMREX_INSTALL_DIR} FATAL_ERROR )
    check_path ( ${AMREX_INSTALL_DIR}/cmake FATAL_ERROR )
-   set ( ENABLE_SUPERBUILD 0 )
+   set (ENABLE_SUPERBUILD 0)
    set ( AMREX_INSTALL_PATH ${AMREX_INSTALL_DIR} )
 else ()
-   set ( AMREX_INSTALL_PATH ${CMAKE_BINARY_DIR}/ThirdParty )
+   set (AMREX_INSTALL_PATH ${CMAKE_BINARY_DIR}/ThirdParty )
+   set (ENABLE_SUPERBUILD 1)
 endif ()
-
 
 
 # ------------------------------------------------------------- #
@@ -54,11 +46,18 @@ endif ()
 # ------------------------------------------------------------- #
 #  Setup amrex and its dependencies 
 # ------------------------------------------------------------- #
+print (ENABLE_SUPERBUILD)
+
 if (ENABLE_SUPERBUILD)  # Enable superbuild
    message (FATAL_ERROR "SUPERBUILD not yet supported")
 endif () # No superbuild
 
 find_package (AMReX CONFIG REQUIRED HINTS ${AMREX_INSTALL_PATH}/cmake )
+
+# Check and print (if not superbuild) amrex options
+if (NOT AMREX_ENABLE_PARTICLES)
+   message ( "AMReX must be configured with -DENABLE_PARTICLES=1" FATAL_ERROR )
+endif ()
 
 # Need to add both amrex include directory + amrex external includes
 list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH  "${AMREX_EXTRA_Fortran_INCLUDE_PATH}")
@@ -81,9 +80,6 @@ list (APPEND MFIX_EXTRA_LIBRARIES_PATH "${AMREX_LIBRARY_DIR}")
 append ( AMREX_EXTRA_Fortran_FLAGS MFIX_EXTRA_Fortran_FLAGS )
 append ( AMREX_EXTRA_C_FLAGS MFIX_EXTRA_C_FLAGS )
 append ( AMREX_EXTRA_CXX_FLAGS MFIX_EXTRA_CXX_FLAGS )
-
-
-
 
 # ------------------------------------------------------------- #
 #  Finalize configuration 

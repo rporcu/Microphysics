@@ -33,13 +33,20 @@ include ( MFIX_CMakeVariables )
 # Include modules with custom macros and functions
 #
 include ( MFIX_Utils )
-include ( AMReXConfig )
 
+#
+# Stop if building in source
+# 
 check_build_tree_path ()
-set_defaults ()
 
-# Additional build options
+# 
+# Load MFIX options
+# 
 include ( MFIX_Options )
+
+#
+# Config MFIX build
+# 
 include ( MFIX_Config )
 
 # This is the main file

@@ -48,8 +48,6 @@ function ( append_to_link_line libs link_line )
    
 endfunction ()
 
-
-
 #
 # Function to accumulate preprocessor directives
 #
@@ -87,22 +85,3 @@ function (print var)
    message ("${var} = ${${var}}")
 endfunction ()
 
-
-
-#
-# To be removed as soon as find amrex is fixed
-#
-macro(set_defaults)
-
-   # Set some defaults
-   set(BL_SPACEDIM 3 CACHE INT "Dimension of AMReX build")
-   set(ENABLE_MPI 0 CACHE INT "Enable build with MPI")
-   set(ENABLE_OpenMP 0 CACHE INT "Enable build with OpenMP")
-   set(BL_PRECISION "DOUBLE" CACHE INT "Precision of AMReX build")
-   set(BL_USE_PARTICLES 1 CACHE INT "Include Particles classes in AMReX build")
-   set(ENABLE_PROFILING 0 CACHE INT "Include profiling information in AMReX build")
-   set(ENABLE_BACKTRACE 1 CACHE INT "Include backtrace information in AMReX build")
-   set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mod)
-   set(ENABLE_SUPERBUILD 1 CACHE INT  "Allow CMake to build and install AMReX")
-      
-endmacro(set_defaults)
