@@ -126,7 +126,7 @@ set(F90_sources
 # Generate AMReX_buildInfo.cpp
 add_custom_command(
    COMMAND  ${AMREX_TOOLS}/C_scripts/makebuildinfo_C.py
-   --amrex_home "${AMREX_ROOT}"
+   --amrex_home "${AMREX_INSTALL_PATH}"
    --COMP ${CMAKE_C_COMPILER_ID} --COMP_VERSION ${CMAKE_C_COMPILER_VERSION}
    --FCOMP ${CMAKE_Fortran_COMPILER_ID} --FCOMP_VERSION ${CMAKE_C_COMPILER_VERSION}
    --GIT ". ${AMREX_GIT}"

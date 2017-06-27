@@ -58,8 +58,8 @@ set (BL_SPACEDIM 3 CACHE INT "Dimension of AMReX build")
 check_option_value ( "BL_SPACEDIM" ${BL_SPACEDIM} 2 3 )
 
 
-set (ENABLE_SUPERBUILD 1 CACHE INT "Build AMReX as part of MFIX")
-check_option_value ( "ENABLE_SUPERBUILD" ${ENABLE_SUPERBUILD} 0 1 )
+# set (ENABLE_SUPERBUILD 1 CACHE INT "Build AMReX as part of MFIX")
+# check_option_value ( "ENABLE_SUPERBUILD" ${ENABLE_SUPERBUILD} 0 1 )
 
 set (ENABLE_MPI 1 CACHE INT "Enable build with MPI")
 check_option_value ( "ENABLE_MPI" ${ENABLE_MPI} 0 1 )
@@ -88,6 +88,11 @@ check_option_value ( "ENABLE_BACKTRACE" ${ENABLE_BACKTRACE} 0 1 )
 set (MFIX_FFLAGS_OVERRIDES "" CACHE STRING "User-defined Fortran compiler flags" )
 
 set (MFIX_CXXLAGS_OVERRIDES "" CACHE STRING "User-defined C++ compiler flags" )
+
+set (AMREX_INSTALL_DIR "" CACHE PATH "Path to installation directory (leave empty for superbuild)")
+
+
+
 
 
 # After the options are set, define the following variable

@@ -75,21 +75,14 @@ function (find_amrex)
 
    message( STATUS "Configuring build to use external AMReX install")
 
-   # Exit if AMREX_HOME is not set
-   if ( "$ENV{AMREX_HOME}" STREQUAL "" )
-      message( FATAL_ERROR "AMREX_HOME is not set" )
-   endif ( "$ENV{AMREX_HOME}" STREQUAL "" )
-
-   message( STATUS "AMREX_HOME is set to $ENV{AMREX_HOME}")
-
    # Exit if path given by AMREX_HOME is not set
-   check_path( $ENV{AMREX_HOME} FATAL_ERROR )
+   check_path ( ${AMREX_INSTALL_PATH} FATAL_ERROR )
 
    # Check if cmake folder is in the installation path
-   check_path( $ENV{AMREX_HOME}/cmake FATAL_ERROR )
+   check_path ( ${AMREX_INSTALL_PATH}/cmake FATAL_ERROR )
 
    # Check if FindCCSE.cmake is in path given by AMREX_TOOLS
-   check_path( $ENV{AMREX_HOME}/cmake/FindCCSE.cmake FATAL_ERROR )
+   check_path ( ${AMREX_INSTALL_PATH}/cmake/FindCCSE.cmake FATAL_ERROR )
 
    # Issue warning
    if (ENABLE_MPI)
@@ -102,14 +95,13 @@ function (find_amrex)
       message( STATUS "")
    endif (ENABLE_MPI)
 
-   set(CCSE_DIR $ENV{AMREX_HOME})
-   list(APPEND CMAKE_MODULE_PATH $ENV{AMREX_HOME}/cmake)
+   set(CCSE_DIR ${AMREX_INSTALL_PATH})
+   list(APPEND CMAKE_MODULE_PATH ${AMREX_INSTALL_PATH}/cmake)
+
    find_package(CCSE REQUIRED)
 
    # Set AMReX paths to use in mfix config
-   set(AMREX_ROOT        $ENV{AMREX_HOME}       PARENT_SCOPE )
-   set(AMREX_BIN_DIR     $ENV{AMREX_HOME}/bin   PARENT_SCOPE )
-   set(AMREX_TOOLS       $ENV{AMREX_HOME}/Tools PARENT_SCOPE )
+   set(AMREX_TOOLS       ${AMREX_INSTALL_DIR}/Tools PARENT_SCOPE )
    set(AMREX_INCLUDES    ${CCSE_INCLUDE_DIR}    PARENT_SCOPE )
    set(AMREX_LIBRARIES   ${CCSE_LIBRARIES}      PARENT_SCOPE )
    set(AMREX_LIB_DIR     ${CCSE_LIBRARY_DIR}    PARENT_SCOPE )

@@ -29,6 +29,13 @@ endif ()
 #   set(CMAKE_FIND_LIBRARY_SUFFIXES .a .lib)
 # endif(PREFER_STATIC_LIBRARIES)
 
+# Check if superbuild is enabled
+if ( AMREX_INSTALL_DIR )
+   set ( ENABLE_SUPERBUILD 0 )
+   set ( AMREX_INSTALL_PATH ${AMREX_INSTALL_DIR} )
+else ()
+   set ( AMREX_INSTALL_PATH ${CMAKE_BINARY_DIR}/ThirdParty )
+endif ()
 
 
 # #
@@ -103,17 +110,20 @@ endif ()
 # ------------------------------------------------------------- #
 #    Setup third party packages 
 # ------------------------------------------------------------- #
-if ( NOT ENABLE_SUPERBUILD )
+if (ENABLE_SUPERBILD)  # Enable superbuild
+   message (FATAL_ERROR "SUPERBUILD not yet supported")
+else () # No superbuild
    find_amrex ()
    list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH "${AMREX_INCLUDES}")
    list (APPEND MFIX_EXTRA_C_INCLUDE_PATH "${AMREX_INCLUDES}")
    list (APPEND MFIX_EXTRA_CXX_INCLUDE_PATH "${AMREX_INCLUDES}")   
-endif()
+endif ()
 
 append_to_link_line ( AMREX_LIBRARIES MFIX_EXTRA_LINK_LINE )
 list (APPEND MFIX_EXTRA_LIBRARIES_PATH "${AMREX_LIB_DIR}")
 
 if (ENABLE_MPI)
+   
    find_package (MPI REQUIRED)
    # Includes
    list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH "${MPI_Fortran_INCLUDE_PATH}")

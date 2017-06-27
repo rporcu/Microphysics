@@ -20,6 +20,12 @@ set ( CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DI
 # The type of build ( will need to be uppercase )
 set ( MFIX_BUILD_TYPE )
 
+# Flags to enable/disable superbuild
+set ( ENABLE_SUPERBUILD )
+
+# Variable to hold amrex install path
+set ( AMREX_INSTALL_PATH )
+
 # Whether AMReX_Options.cmake has been included already
 if ( NOT MFIX_OPTIONS_SET )
    set ( MFIX_OPTIONS_SET )

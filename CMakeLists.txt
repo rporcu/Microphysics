@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.6)
+cmake_minimum_required (VERSION 3.3)
 
 project (MFIX-Exa)
 
@@ -41,13 +41,6 @@ set_defaults ()
 # Additional build options
 include ( MFIX_Options )
 include ( MFIX_Config )
-
-# Config Amrex
-# if (ENABLE_SUPERBUILD)
-#    build_amrex()
-# else (ENABLE_SUPERBUILD)
-#    find_amrex()
-# endif (ENABLE_SUPERBUILD)
 
 # This is the main file
 set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
