@@ -80,6 +80,12 @@ macro ( check_build_tree_path )
 endmacro( check_build_tree_path )
 
 
+#
+# Print variable (useful for debug) 
+#
+function (print var)
+   message ("${var} = ${${var}}")
+endfunction ()
 
 
 

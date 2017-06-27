@@ -21,16 +21,10 @@ if (ENABLE_PIC)
 endif ()
 
 
-# No idea why we need this.
-# I think it was required for Franklin build. -- lpritch
-# if(PREFER_STATIC_LIBRARIES)
-#   # Prefer static libraries, but don't require that everything must be static. 
-#   # This appears to be necessary on Franklin at NERSC right now.  --RTM
-#   set(CMAKE_FIND_LIBRARY_SUFFIXES .a .lib)
-# endif(PREFER_STATIC_LIBRARIES)
-
 # Check if superbuild is enabled
 if ( AMREX_INSTALL_DIR )
+   check_path ( ${AMREX_INSTALL_DIR} FATAL_ERROR )
+   check_path ( ${AMREX_INSTALL_DIR}/cmake FATAL_ERROR )
    set ( ENABLE_SUPERBUILD 0 )
    set ( AMREX_INSTALL_PATH ${AMREX_INSTALL_DIR} )
 else ()
@@ -38,126 +32,9 @@ else ()
 endif ()
 
 
-# #
-# # Detect Fortran name mangling scheme for C/Fortran interface 
-# #
-# include(FortranCInterface)
-# include(${FortranCInterface_BINARY_DIR}/Output.cmake)
-
-# if ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "" )  AND
-#       ( FortranCInterface_GLOBAL_CASE STREQUAL "UPPER") )
-#    message(STATUS "Fortran name mangling scheme to UPPERCASE \
-# (upper case, no append underscore)")
-#    add_define ( BL_FORT_USE_UPPERCASE MFIX_DEFINES )
-# elseif ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "") AND
-#       ( FortranCInterface_GLOBAL_CASE STREQUAL "LOWER") )
-#    message(STATUS "Fortran name mangling scheme to LOWERCASE \
-# (lower case, no append underscore)")
-#    add_define ( BL_FORT_USE_LOWERCASE MFIX_DEFINES )
-# elseif ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "_" ) AND
-#       ( FortranCInterface_GLOBAL_CASE STREQUAL "LOWER") )
-#    message(STATUS "Fortran name mangling scheme to UNDERSCORE \
-# (lower case, append underscore)")
-#    add_define ( BL_FORT_USE_UNDERSCORE MFIX_DEFINES )
-# else ()
-#    message(AUTHOR_WARNING "Fortran to C mangling not backward\
-#  compatible with older style BoxLib code") 
-# endif ()
-
 
 # ------------------------------------------------------------- #
-#    Set preprocessor flags 
-# ------------------------------------------------------------- #
-
-#
-# This defines were always on in older version
-# of AMReX/CMake. Need more details on these???
-#
-# add_define (BL_NOLINEVALUES MFIX_DEFINES)
-# add_define (BL_PARALLEL_IO MFIX_DEFINES)
-# add_define (BL_SPACEDIM=${BL_SPACEDIM} MFIX_DEFINES)
-# add_define (BL_${CMAKE_SYSTEM_NAME} MFIX_DEFINES)
-
-
-# if ( ENABLE_DP )
-#    add_define (BL_USE_DOUBLE MFIX_DEFINES)
-# else ()
-#    add_define (BL_USE_FLOAT MFIX_DEFINES)
-# endif ()
-
-# add_define (USE_PARTICLES MFIX_DEFINES ENABLE_PARTICLES)
-# add_define (BL_PROFILING MFIX_DEFINES ENABLE_PROFILING) 
-# add_define (BL_COMM_PROFILING MFIX_DEFINES ENABLE_COMM_PROFILING)
-
-# if ( ENABLE_PARTICLES AND ( NOT ENABLE_DP_PARTICLES ) ) 
-#    add_define ( BL_SINGLE_PRECISION_PARTICLES MFIX_DEFINES )
-# endif ()
-
-# if (ENABLE_FORTRAN_MPI AND ENABLE_MPI)
-#    add_define ( BL_USE_FORTRAN_MPI=1 MFIX_DEFINES )
-# endif ()
-
-# add_define (MG_USE_FBOXIB=1 MFIX_DEFINES ENABLE_MG_FBOXLIB)
-# add_define (BL_USE_F_BASELIB=1  MFIX_DEFINES ENABLE_FBASELIB)
-# add_define ( BL_USE_MPI MFIX_DEFINES ENABLE_MPI)
-# add_define (BL_USE_OMP MFIX_DEFINES ENABLE_OMP)
-
-# #
-# # Add all preprocessor definitions to compile string
-# # 
-# add_definitions ( ${MFIX_DEFINES} )
-
-# ------------------------------------------------------------- #
-#    Setup third party packages 
-# ------------------------------------------------------------- #
-if (ENABLE_SUPERBILD)  # Enable superbuild
-   message (FATAL_ERROR "SUPERBUILD not yet supported")
-else () # No superbuild
-   find_amrex ()
-   list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH "${AMREX_INCLUDES}")
-   list (APPEND MFIX_EXTRA_C_INCLUDE_PATH "${AMREX_INCLUDES}")
-   list (APPEND MFIX_EXTRA_CXX_INCLUDE_PATH "${AMREX_INCLUDES}")   
-endif ()
-
-append_to_link_line ( AMREX_LIBRARIES MFIX_EXTRA_LINK_LINE )
-list (APPEND MFIX_EXTRA_LIBRARIES_PATH "${AMREX_LIB_DIR}")
-
-if (ENABLE_MPI)
-   
-   find_package (MPI REQUIRED)
-   # Includes
-   list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH "${MPI_Fortran_INCLUDE_PATH}")
-   list (APPEND MFIX_EXTRA_C_INCLUDE_PATH "${MPI_C_INCLUDE_PATH}")
-   list (APPEND MFIX_EXTRA_CXX_INCLUDE_PATH "${MPI_CXX_INCLUDE_PATH}")
-   # Compile flags
-   append ( MPI_Fortran_COMPILE_FLAGS MFIX_EXTRA_Fortran_FLAGS ) 
-   append ( MPI_C_COMPILE_FLAGS MFIX_EXTRA_C_FLAGS )
-   append ( MPI_CXX_COMPILE_FLAGS MFIX_EXTRA_CXX_FLAGS )
-   # Libraries
-   list (APPEND MFIX_EXTRA_Fortran_LIBRARIES "${MPI_Fortran_LIBRARIES}")
-   list (APPEND MFIX_EXTRA_C_LIBRARIES "${MPI_C_LIBRARIES}")
-   list (APPEND MFIX_EXTRA_CXX_LIBRARIES "${MPI_CXX_LIBRARIES}")
-   # Link flags
-   list (APPEND MFIX_EXTRA_Fortran_LINK_FLAGS "${MPI_Fortran_LINK_FLAGS}")
-   list (APPEND MFIX_EXTRA_C_LINK_FLAGS "${MPI_C_LINK_FLAGS}")
-   list (APPEND MFIX_EXTRA_CXX_LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
-
-   append_to_link_line ( MFIX_EXTRA_CXX_LIBRARIES MFIX_EXTRA_LINK_LINE 
-      MFIX_EXTRA_CXX_LINK_FLAGS )
-      
-endif ()
-
-if (ENABLE_OMP)
-   find_package (OpenMP REQUIRED)
-   # Compile flags
-   append ( OpenMP_Fortran_FLAGS MFIX_EXTRA_Fortran_FLAGS ) 
-   append ( OpenMP_C_FLAGS MFIX_EXTRA_C_FLAGS )
-   append ( OpenMP_CXX_FLAGS MFIX_EXTRA_CXX_FLAGS )
-endif()
-
-
-# ------------------------------------------------------------- #
-#    Setup compiler flags 
+#  Setup core compiler flags 
 # ------------------------------------------------------------- #
 if ( MFIX_FFLAGS_OVERRIDES )
    set ( MFIX_Fortran_FLAGS ${MFIX_FFLAGS_OVERRIDES} )
@@ -173,6 +50,44 @@ else ()
       MFIX_CXX_FLAGS )
 endif ()
 
+
+# ------------------------------------------------------------- #
+#  Setup amrex and its dependencies 
+# ------------------------------------------------------------- #
+if (ENABLE_SUPERBUILD)  # Enable superbuild
+   message (FATAL_ERROR "SUPERBUILD not yet supported")
+endif () # No superbuild
+
+find_package (AMReX CONFIG REQUIRED HINTS ${AMREX_INSTALL_PATH}/cmake )
+
+# Need to add both amrex include directory + amrex external includes
+list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH  "${AMREX_EXTRA_Fortran_INCLUDE_PATH}")
+list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH  "${AMREX_INCLUDE_DIR}")
+list (APPEND MFIX_EXTRA_C_INCLUDE_PATH "${AMREX_EXTRA_C_INCLUDE_PATH}")
+list (APPEND MFIX_EXTRA_C_INCLUDE_PATH  "${AMREX_INCLUDE_DIR}")
+list (APPEND MFIX_EXTRA_CXX_INCLUDE_PATH "${AMREX_EXTRA_CXX_INCLUDE_PATH}")
+list (APPEND MFIX_EXTRA_CXX_INCLUDE_PATH  "${AMREX_INCLUDE_DIR}")
+
+# Add amrex definitions (needed for amrex headers)
+set ( MFIX_DEFINES  ${AMREX_DEFINES} )
+add_definitions ( ${MFIX_DEFINES} )
+
+# Add amrex library path and extra link line
+append_to_link_line ( AMREX_LIBRARIES MFIX_EXTRA_LINK_LINE )
+append_to_link_line ( AMREX_EXTRA_CXX_LINK_LINE MFIX_EXTRA_LINK_LINE )
+list (APPEND MFIX_EXTRA_LIBRARIES_PATH "${AMREX_LIBRARY_DIR}")
+
+# Add amrex extra compiler flags
+append ( AMREX_EXTRA_Fortran_FLAGS MFIX_EXTRA_Fortran_FLAGS )
+append ( AMREX_EXTRA_C_FLAGS MFIX_EXTRA_C_FLAGS )
+append ( AMREX_EXTRA_CXX_FLAGS MFIX_EXTRA_CXX_FLAGS )
+
+
+
+
+# ------------------------------------------------------------- #
+#  Finalize configuration 
+# ------------------------------------------------------------- #
 append ( MFIX_EXTRA_Fortran_FLAGS MFIX_Fortran_FLAGS )
 append ( MFIX_EXTRA_CXX_FLAGS MFIX_CXX_FLAGS )
 

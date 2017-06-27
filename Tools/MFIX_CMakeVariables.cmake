@@ -49,8 +49,7 @@ set (MFIX_GNU_FFLAGS_DEBUG "-g -O0 -ggdb -fbounds-check -fbacktrace\
  -Wuninitialized -Wunused -ffpe-trap=invalid,zero -finit-real=snan\
  -finit-integer=2147483647 -ftrapv")
 set (MFIX_GNU_FFLAGS_RELEASE "-O3 -DNDEBUG")
-set (MFIX_GNU_FFLAGS_REQUIRED "-ffixed-line-length-none -ffree-line-length-none\
- -fno-range-check -fno-second-underscore")
+set (MFIX_GNU_FFLAGS_REQUIRED "")
 
 set (MFIX_GNU_CXXFLAGS_DEBUG "-g -O0 -fno-inline -ggdb -Wall -Wno-sign-compare -ftrapv")
 set (MFIX_GNU_CXXFLAGS_RELEASE "-O3 -DNDEBUG")

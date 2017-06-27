@@ -73,6 +73,8 @@ endfunction (build_amrex)
 
 function (find_amrex)
 
+
+      
    message( STATUS "Configuring build to use external AMReX install")
 
    # Exit if path given by AMREX_HOME is not set
@@ -99,7 +101,10 @@ function (find_amrex)
    list(APPEND CMAKE_MODULE_PATH ${AMREX_INSTALL_PATH}/cmake)
 
    find_package(CCSE REQUIRED)
+   find_package(AMReX CONFIG REQUIRED HINTS ${AMREX_INSTALL_PATH}/cmake )
 
+   print (AMREX_DEFINES)
+   
    # Set AMReX paths to use in mfix config
    set(AMREX_TOOLS       ${AMREX_INSTALL_DIR}/Tools PARENT_SCOPE )
    set(AMREX_INCLUDES    ${CCSE_INCLUDE_DIR}    PARENT_SCOPE )
@@ -113,4 +118,11 @@ function (find_amrex)
       set( MPI_LIBS     ${MPI_CXX_LIBRARIES}    PARENT_SCOPE )
    endif (ENABLE_MPI)
 
+   # Test
+   include (${AMREX_INSTALL_DIR}/cmake/AMReXConfig.cmake)
+
+   print (AMREX_Fortran_FLAGS)
+   
+
+   
 endfunction (find_amrex)
