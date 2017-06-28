@@ -158,11 +158,11 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solids_massflow_to_volflow(bcv,m)
 
-      use constant, only: ro_s0
 
       integer, intent(in) :: bcv, m
 
-      bc_volflow_s(bcv,m) = bc_massflow_s(bcv,m)/ro_s0(m)
+      bc_volflow_s(bcv,m) = 0.0d0
+      stop 343143
 
 
   end subroutine solids_massflow_to_volflow

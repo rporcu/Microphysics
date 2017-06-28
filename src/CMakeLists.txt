@@ -20,6 +20,7 @@ set(F90_sources
    calc_coeff.f90
    calc_d.f90
    calc_mflux.f90
+   calc_mu_g.f90
    calc_ro_g.f90
    calc_trd_g.f90
    check_convergence.f90
@@ -69,7 +70,6 @@ set(F90_sources
    functions_mod.f90
    get_data.f90
    get_tunit.f90
-   goal_seek_mflux.f90
    ic_mod.f90
    init_fluid.f90
    init_namelist.f90
@@ -90,6 +90,7 @@ set(F90_sources
    run_mod.f90
    scales_mod.f90
    set_bc0.f90
+   set_bc1.f90
    set_bc_flow.f90
    set_bc_type.f90
    set_ps.f90
@@ -115,12 +116,11 @@ set(F90_sources
    usr/usr3.f90
    usr/usr3_des.f90
    usr/usr_drag.f90
-   usr/usr_init_namelist.f90
    usr/usr_mod.f90
    usr/write_usr0.f90
    usr/write_usr1.f90
    utilities_mod.f90
-   vavg_g.f90
+   zero_wall_norm_vel.f90
    amrex_to_mfix.F90)
 
 # Generate AMReX_buildInfo.cpp

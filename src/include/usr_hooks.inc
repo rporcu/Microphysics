@@ -14,6 +14,4 @@
 !  Purpose: List MFIX keywords that may be edited during a run by      !
 !  invoking a REFRESH.                                                 !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      NAMELIST / USER_HOOKS_UNLOCKED /&
-
-      CALL_USR, USR_DT
+      NAMELIST / USER_HOOKS_UNLOCKED / call_usr, usr_dt

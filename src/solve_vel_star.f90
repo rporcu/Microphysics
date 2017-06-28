@@ -128,7 +128,8 @@ module solve_vel_star_module
 
       ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(lo, hi, slo, shi, ulo, uhi, alo, ahi, A_m, b_m, dt, &
-         p_g, ep_g, ro_g, rop_go, u_go, tau_u_g, dx, dy, dz, domlo, domhi)
+           p_g, ep_g, ro_g, rop_go, u_go, tau_u_g, dx, dy, dz, domlo, domhi)
+
 
       ! modifications for bc
       call source_u_g_bc (lo, hi, slo, shi, alo, ahi, A_m, b_m, &
@@ -142,7 +143,7 @@ module solve_vel_star_module
 
       ! Calculate coefficients for the pressure correction equation
       call calc_d_e(lo, hi, slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
-                    ep_g, f_gds, dx, dy, dz, domlo, domhi)
+           ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_ilo_type, bc_ihi_type)
 
       ! Handle special case where center coefficient is zero
       call adjust_a_g ('U', slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
@@ -296,7 +297,7 @@ module solve_vel_star_module
 
       ! Calculate coefficients for the pressure correction equation
       call calc_d_n(lo, hi, slo, shi, vlo, vhi, alo, ahi, d_n, A_m, &
-         ep_g, f_gds, dx, dy, dz, domlo, domhi)
+           ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_jlo_type, bc_jhi_type)
 
       ! Handle special case where center coefficient is zero
       call adjust_a_g('V',slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
@@ -448,8 +449,8 @@ module solve_vel_star_module
       if(point_source) call point_source_w_g (lo, hi, alo, ahi, b_m, vol)
 
       ! calculate coefficients for the pressure correction equation
-      call calc_d_t(lo, hi, slo, shi, wlo, whi, alo, ahi, &
-         d_t, A_m, ep_g, f_gds, dx, dy, dz, domlo, domhi)
+      call calc_d_t(lo, hi, slo, shi, wlo, whi, alo, ahi, d_t, A_m, &
+           ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_klo_type, bc_khi_type)
 
       ! handle special case where center coefficient is zero
       call adjust_a_g('W',slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)

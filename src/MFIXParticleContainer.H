@@ -109,11 +109,13 @@ public:
 
     void EvolveParticles ( int lev, int nstep, Real dt, Real time );
 
+    void GetParticleAvgProp ( int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);
+
     ///
     /// Write out all particles at a level in the format fcompare_par can read
     ///
     void writeAllForComparison(int lev);
-    
+
     void output ( int lev, int estatus, int finish, int nstep, Real dt, Real time );
 
     ///

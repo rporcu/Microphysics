@@ -23,14 +23,14 @@ public:
     mfix_level ();
     ~mfix_level ();
 
-    void InitParams(int solve_fluid, int solve_dem, int cyclic_mf, int max_nit, int call_udf);
+    void InitParams(int solve_fluid, int solve_dem, int max_nit, int call_udf);
 
     void Init (int lev, Real dt, Real time);
 
     void InitLevelData (int lev, Real dt, Real time);
 
     void InitLevelDataFromRestart (int lev, Real dt, Real time);
-    
+
     void WriteCheckPointFile ( std::string& check_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 )  const;
 
     void WritePlotFile ( std::string& plot_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
@@ -38,7 +38,7 @@ public:
     void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time);
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
-    
+
     void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
 
@@ -48,7 +48,7 @@ public:
   { pc -> output( lev, estatus, finish, nstep, dt, time);};
 
     void make_mg_bc (int mg_bc[]);
-    
+
 protected:
 
     //! Tagging cells for refinement
@@ -220,7 +220,6 @@ private:
 
     int solve_fluid;
     int solve_dem;
-    int cyclic_mf;
     int max_nit;
     int call_udf;
 

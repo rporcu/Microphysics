@@ -13,8 +13,12 @@ particles.tile_size       = 20 20 20
 
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
-amr.plot_int=1
+
+amr.plot_int=25
 amr.plot_file=DEM07
+
+amr.par_ascii_int  = 1
+amr.par_ascii_file = DEM07_par
 
 # Geometry
 geometry.coord_sys   = 0                       # 0: Cartesian

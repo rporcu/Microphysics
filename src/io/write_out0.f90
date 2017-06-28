@@ -20,9 +20,9 @@
       use leqsol, only: leq_it, leq_sweep, leq_tol, leq_pc
       use param, only: dim_ic, dim_bc
       use param, only: half, undefined, zero, is_defined
-      use constant, only: mmax, ro_s0, d_p0
+      use constant, only: mmax
       use run, only: description, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, tstop
-      use run, only: discretize, solids_model
+      use run, only: discretize
       use scales, only: p_scale, p_ref
       use ur_facs, only: ur_fac
 
@@ -146,19 +146,6 @@
  1401 FORMAT(7X,'Number of particulate phases (MMAX) = ',I2)
 
       IF(MMAX_TOT > 0) THEN
-
-         WRITE (UNIT_OUT, 1405)
-         DO M = 1, MMAX_TOT
-            TMP_DP = RO_s0(M)
-            WRITE (UNIT_OUT, 1406) M, SOLIDS_MODEL(M), D_P0(M),     &
-               TMP_DP, .TRUE.
-         END DO
-
-
- 1405 FORMAT(/7x,'M',4x,'Model',5x,'Diameter',8x,'Density',6x,         &
-         'Close_Packed')
- 1406 FORMAT(6x,I2,4x,A3,5X,G12.5,3x,G12.5,9x,L1)
-
 
          IF(DEM_SOLIDS) THEN
             IF(.NOT.DES_CONTINUUM_COUPLED) THEN

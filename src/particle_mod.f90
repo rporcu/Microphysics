@@ -8,7 +8,7 @@ module particle_mod
 
   public  particle_t
   public  print_particles
-  
+
   type, bind(C)  :: particle_t
      real(c_real)    :: pos(3)     !< Position
      real(c_real)    :: radius
@@ -24,7 +24,7 @@ module particle_mod
      integer(c_int)  :: phase
      integer(c_int)  :: state
   end type particle_t
-  
+
 contains
 
    subroutine print_particles( particles )
@@ -40,8 +40,8 @@ contains
          write(*,'(A,es15.6)')         "Radius      = ", particles(p) % radius
          write(*,'(A,es15.6)')         "Mass        = ", particles(p) % mass
          write(*,'(A,es15.6)')         "Volume      = ", particles(p) % volume
-         
-      end do     
+
+      end do
 
 
    end subroutine print_particles
