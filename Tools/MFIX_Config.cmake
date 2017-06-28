@@ -12,19 +12,6 @@ if ( NOT MFIX_OPTIONS_SET )
 included before MFIX_Config.cmake" )
 endif ()
 
-
-# Check if superbuild is enabled
-if ( AMREX_INSTALL_DIR )
-   check_path ( ${AMREX_INSTALL_DIR} FATAL_ERROR )
-   check_path ( ${AMREX_INSTALL_DIR}/cmake FATAL_ERROR )
-   set (ENABLE_SUPERBUILD 0)
-   set ( AMREX_INSTALL_PATH ${AMREX_INSTALL_DIR} )
-else ()
-   set (AMREX_INSTALL_PATH ${CMAKE_BINARY_DIR}/ThirdParty )
-   set (ENABLE_SUPERBUILD 1)
-endif ()
-
-
 # ------------------------------------------------------------- #
 #  Setup core compiler flags 
 # ------------------------------------------------------------- #
@@ -46,18 +33,40 @@ endif ()
 # ------------------------------------------------------------- #
 #  Setup amrex and its dependencies 
 # ------------------------------------------------------------- #
-print (ENABLE_SUPERBUILD)
+if (AMREX_INSTALL_DIR) # No superbuild
+   check_path ( ${AMREX_INSTALL_DIR} FATAL_ERROR )
+   check_path ( ${AMREX_INSTALL_DIR}/cmake FATAL_ERROR )
+   set (ENABLE_SUPERBUILD 0)
+   set (AMREX_INSTALL_PATH ${AMREX_INSTALL_DIR} )
+   find_package (AMReX CONFIG REQUIRED HINTS ${AMREX_INSTALL_PATH}/cmake )   
+   # Check and print (if not superbuild) amrex options
+   if (NOT ENABLE_PARTICLES)
+      message ( FATAL_ERROR "AMReX must be configured with -DENABLE_PARTICLES=1" )
+   endif ()
 
-if (ENABLE_SUPERBUILD)  # Enable superbuild
-   message (FATAL_ERROR "SUPERBUILD not yet supported")
-endif () # No superbuild
-
-find_package (AMReX CONFIG REQUIRED HINTS ${AMREX_INSTALL_PATH}/cmake )
-
-# Check and print (if not superbuild) amrex options
-if (NOT AMREX_ENABLE_PARTICLES)
-   message ( "AMReX must be configured with -DENABLE_PARTICLES=1" FATAL_ERROR )
+   #
+   # Echo amrex config options
+   #
+   message (STATUS "AMReX configuration options: ")
+   print_option (AMREX_BUILD_TYPE ${AMREX_BUILD_TYPE})
+   print_option (FORTRAN_ENABLE_MPI ${FORTRAN_ENABLE_MPI})
+   print_option (ENABLE_FBASELIB ${ENABLE_FBASELIB})
+   print_option (ENABLE_PIC ${ENABLE_PIC})
+   print_option (BL_SPACEDIM ${BL_SPACEDIM})
+   print_option (ENABLE_MPI ${ENABLE_MPI})
+   print_option (ENABLE_OMP ${ENABLE_OMP})
+   print_option (ENABLE_DP ${ENABLE_DP})
+   print_option (ENABLE_PARTICLES ${ENABLE_PARTICLES})
+   print_option (ENABLE_DP_PARTICLES ${ENABLE_DP_PARTICLES})
+   print_option (ENABLE_PROFILING ${ENABLE_PROFILING})
+   print_option (ENABLE_TINY_PROFILING ${ENABLE_TINY_PROFILING})
+   print_option (ENABLE_BACKTRACE ${ENABLE_BACKTRACE})
+   print_option (ENABLE_MG_BOXLIB ${ENABLE_MG_BOXLIB})
+else ()
+   set (ENABLE_SUPERBUILD 1)
+   include (MFIX_ConfigSuperbuild)
 endif ()
+
 
 # Need to add both amrex include directory + amrex external includes
 list (APPEND MFIX_EXTRA_Fortran_INCLUDE_PATH  "${AMREX_EXTRA_Fortran_INCLUDE_PATH}")
@@ -100,7 +109,9 @@ set ( MFIX_EXTRA_INCLUDE_PATH  ${MFIX_EXTRA_Fortran_INCLUDE_PATH}
    ${MFIX_EXTRA_C_INCLUDE_PATH} ${MFIX_EXTRA_CXX_INCLUDE_PATH} )
 
 # Remove duplicates from lists
-list ( REMOVE_DUPLICATES MFIX_EXTRA_INCLUDE_PATH )
+if ( MFIX_EXTRA_INCLUDE_PATH )
+   list ( REMOVE_DUPLICATES MFIX_EXTRA_INCLUDE_PATH )
+endif ()
 #
 # Config summary
 #

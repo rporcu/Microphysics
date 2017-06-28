@@ -1,8 +1,10 @@
-cmake_minimum_required (VERSION 3.3)
+cmake_minimum_required (VERSION 3.5)
 
 project (MFIX-Exa)
 
+#
 # Define the languages used by the project
+#
 enable_language (C)
 enable_language (CXX)
 enable_language (Fortran)
@@ -24,20 +26,22 @@ set ( CMAKE_VERBOSE_MAKEFILE on )
 #
 set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/ )
 
-#
-# Initialize all the global variables
-#
-include ( MFIX_CMakeVariables )
 
 #
-# Include modules with custom macros and functions
+# Include module with custom macros and functions
 #
 include ( MFIX_Utils )
 
+get_git_info ( var1 var2 )
 #
 # Stop if building in source
 # 
 check_build_tree_path ()
+
+#
+# Initialize all the global variables
+#
+include ( MFIX_CMakeVariables )
 
 # 
 # Load MFIX options
@@ -48,6 +52,7 @@ include ( MFIX_Options )
 # Config MFIX build
 # 
 include ( MFIX_Config )
+
 
 # This is the main file
 set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )

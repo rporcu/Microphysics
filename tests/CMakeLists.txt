@@ -54,7 +54,7 @@ foreach( THIS_TEST ${SGS_TESTS})
    # Setup for running the a single test
    set(TEST_RUN run_${TEST_NAME}_SGS)
    add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OpenMP=0
+      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OMP=0
          ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_single
          WORKING_DIRECTORY  ${TEST_DIR} )
 
@@ -111,7 +111,7 @@ foreach( THIS_TEST ${MGS_TESTS})
    # Setup for running the a single test
    set(TEST_RUN run_${TEST_NAME}_MGS)
    add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OpenMP=0
+      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OMP=0
          ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_multiple
          WORKING_DIRECTORY  ${TEST_DIR} )
 
@@ -167,7 +167,7 @@ foreach( THIS_TEST ${TGS_TESTS})
    # Setup for running the a single test
    set(TEST_RUN run_${TEST_NAME}_TGS)
    add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OpenMP=0
+      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OMP=0
          ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_tiled
          WORKING_DIRECTORY  ${TEST_DIR} )
 
@@ -220,7 +220,7 @@ foreach( THIS_TEST ${MGP_TESTS})
    # Setup for running the a single test
    set(TEST_RUN run_${TEST_NAME}_MGP)
    add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=1 ENABLE_OpenMP=0
+      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=1 ENABLE_OMP=0
          ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_multiple
          WORKING_DIRECTORY  ${TEST_DIR} )
 

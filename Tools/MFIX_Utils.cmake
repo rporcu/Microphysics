@@ -82,6 +82,58 @@ endmacro( check_build_tree_path )
 # Print variable (useful for debug) 
 #
 function (print var)
-   message ("${var} = ${${var}}")
+   message (STATUS "   ${var} = ${${var}}")
 endfunction ()
+
+
+#
+# Print option 
+#
+function (print_option name value)
+   message (STATUS "   ${name} = ${value}")
+endfunction ()
+
+#
+# Find git info
+#
+function ( get_git_info branch commit )
+
+ 
+   # Find branch
+   execute_process (
+      COMMAND git branch
+      COMMAND grep \*
+      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} 
+      OUTPUT_VARIABLE out
+      ERROR_VARIABLE  err
+      )
+
+   if (err)
+      message (WARNING "Failing to retrieve MFIX Git branch")
+   else ()
+      string ( REPLACE "*" "" out ${out} )
+      string ( STRIP ${out} out)
+      message (STATUS "MFIX branch: ${out}" )
+      set ( ${branch} ${out} PARENT_SCOPE)
+   endif ()
+
+   
+   # Find commit
+   execute_process (
+      COMMAND git rev-parse HEAD
+      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} 
+      OUTPUT_VARIABLE out
+      ERROR_VARIABLE  err
+      )
+
+   if (err)
+      message (WARNING "Failing to retrieve MFIX Git commit")
+   else ()
+      string (STRIP ${out} out)
+      message (STATUS "MFIX commit: ${out}" )
+      set ( ${commit} ${out} PARENT_SCOPE)
+   endif ()
+  
+endfunction ()
+
 
