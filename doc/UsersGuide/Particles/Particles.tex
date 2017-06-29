@@ -1,14 +1,26 @@
 This section provides an overview of MFIX-Exa's Discrete Element Modelling (DEM)
-abilities. MFIX-Exa's DEM simulations retain all the capabilities of MFIX-DEM. 
-It can be run in both a pure granular (particles only) mode  
+abilities. MFIX-Exa's DEM simulations retain all the functionality of MFIX-DEM. 
+MFIX-Exa can be run in both a pure granular (particles only) mode  
 as well as a particle fluid-coupling mode. In the latter case, MFIX-Exa models 
 the fluid phase as a continuum and models the
 particles of the solid phase individually. This approach supports a wide range 
 of customization for particle dynamics, including mutliple particle collision 
 force and drag schemes. For more information on the DEM capabilities of MFIX-Exa
-see {\sf DEM doc 12-1} on the MFIX Documentation webpage 
+see \demdoc\ on the MFIX Documentation webpage 
 {\url{https://mfix.netl.doe.gov/download/mfix/mfix_current_documentation/dem_doc_2012-1.pdf/}}.  
 
+\section{Overview}
+
+\begin{figure}
+    \includegraphics[width=\linewidth,natwidth=800, natheight=600]{./Particles/MFIX-Particle-Diagram.png} 
+    \caption{Particle Routines Flowchart}
+    \label{fig:pflowchart}
+\end{figure}
+
+\mfix\ retains all the functionality of MFIX-DEM. A detailed discription of the
+particles dynamics and thus be found in \demdoc.
+In addition, figure \ref{fig:pflowchart} provides a visual representation
+of the particle routines in \mfix. 
 
 \section{Equations}
 
