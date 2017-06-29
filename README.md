@@ -289,27 +289,6 @@ For the Joule environment, load the gnu module and set environment variables fir
 > export F77=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
 > export FC=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
 ```
-## Prerequisite: Building and installing AMReX (not needed if SUPERBUILD is enabled: see below)
-Clone AMReX from the official Git repository and checkout the _development_ branch.
-```shell
-> git clone https://bitbucket.org/berkeleylab/amrex.git
-> cd amrex
-> git checkout development
-```
-Set the environment variable `AMREX_HOME` to point to *installdir*, an installation
-directory of choice. If *installdir* does not exist, the build system will
-create it for you. __It is strongly recommended that *installdir* not
-be placed in the same folder as the AMReX source files.__
-```shell
-> export AMREX_HOME=absolute-path-to-installdir
-```
-From the AMReX source directory, run CMake to build and install AMReX.
-```shell
-> cmake CMAKE_CONFIG_OPTIONS -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME .
-> make install
-```
-CMAKE_CONFIG_OPTIONS represents a string of CMake configuration options as explained below.
-
 --------------------------------------------------------------------
 
 ## Notice
