@@ -25,7 +25,7 @@ foreach( THIS_BENCHMARK ${BENCHMARKS})
    set_target_properties( ${BENCHMARK_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${BENCHMARK_DIR}
       RUNTIME_OUTPUT_DIRECTORY ${BENCHMARK_DIR} )
 
-   target_link_libraries(${BENCHMARK_EXE} mfixcore ${MFIX_EXT_LINK_STRING} )
+   target_link_libraries(${BENCHMARK_EXE} mfixcore ${MFIX_EXTRA_LINK_LINE} )
 
    # Accumulate the build for each test into target "build_tests"
    add_dependencies ( ${BUILD_BENCHMARK} ${BENCHMARK_EXE} )
@@ -68,7 +68,7 @@ if ( ENABLE_MPI )
     set_target_properties( ${BENCHMARK_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${BENCHMARK_DIR}
       RUNTIME_OUTPUT_DIRECTORY ${BENCHMARK_DIR} )
 
-    target_link_libraries(${BENCHMARK_EXE} mfixcore ${MFIX_EXT_LINK_STRING} )
+    target_link_libraries(${BENCHMARK_EXE} mfixcore ${MFIX_EXTRA_LINK_LINE} )
 
     # Accumulate the build for each test into target "build_tests"
     add_dependencies ( ${BUILD_BENCHMARK} ${BENCHMARK_EXE} )
