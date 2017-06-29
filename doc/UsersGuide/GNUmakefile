@@ -6,8 +6,7 @@ eps_source = $(wildcard *.eps)
 
 pdf_source = $(eps_source:.eps=.pdf)
 
-section_sources = Introduction/Introduction.tex \
-                  GettingStarted/GettingStarted.tex \
+section_sources = GettingStarted/GettingStarted.tex \
 	          Inputs/Inputs.tex \
 	          UnitsAndConstants/Units.tex \
                   Particles/Particles.tex \
