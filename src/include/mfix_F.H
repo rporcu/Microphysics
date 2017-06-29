@@ -19,9 +19,7 @@ extern "C"
     void mfix_get_data( int* fluid, int* dem,
         int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
         Real* tstop, int* max_nit,
-        Real* normg, int* set_normg, int* call_udf,
-        int* cyclic_mf,
-        Real* xlength, Real* ylength, Real* zlength);
+        Real* normg, int* set_normg, int* call_udf);
 
     void check_inputs(Real* dt);
 
@@ -63,6 +61,16 @@ extern "C"
         int* bc_klo, int* bc_khi,
         const int* domlo , const int* domhi);
 
+  void set_bc1(const int* slo, const int* shi,
+               const int* ulo, const int* uhi,
+               const int* vlo, const int* vhi,
+               const int* wlo, const int* whi,
+               Real* u_g,     Real* v_g,      Real* w_g,
+               int* bc_ilo, int* bc_ihi,
+               int* bc_jlo, int* bc_jhi,
+               int* bc_klo, int* bc_khi,
+               const int* domlo , const int* domhi);
+
     void init_fluid(const int* slo, const int* shi,
         const int* ulo, const int* uhi,
         const int* vlo, const int* vhi,
@@ -76,10 +84,28 @@ extern "C"
         Real* dx,       Real* dy,       Real* dz,
         Real* xlength, Real* ylength, Real* zlength);
 
+  void init_fluid_restart(const int* slo, const int* shi,
+        const int*  lo, const int*  hi,
+        Real* mu_g,    Real* lambda_g);
+
+  void zero_wall_norm_vel(const int* slo, const int* shi,
+               const int* ulo, const int* uhi,
+               const int* vlo, const int* vhi,
+               const int* wlo, const int* whi,
+               Real* u_g,     Real* v_g,      Real* w_g,
+               int* bc_ilo, int* bc_ihi,
+               int* bc_jlo, int* bc_jhi,
+               int* bc_klo, int* bc_khi,
+               const int* domlo , const int* domhi);
+
     void mfix_set_particle_properties(const int* pstate, Real* pradius, Real* pdensity,
         Real* pvol, Real* pmass, Real* omoi, Real* omega);
 
-    void mfix_init_collision();
+  void mfix_init_collision(Real (&sum_dp)[10], Real (&sum_ro)[10]);
+
+  void mfix_sum_particle_props( const int* nrp,  void* particles,
+                                Real (&sum_np)[10], Real (&sum_dp)[10], Real (&sum_ro)[10]);
+
 
     void mfix_output_manager ( const int* np,  Real* time, Real* dt,
         Real* xlength, Real* ylength, Real* zlength,
@@ -118,16 +144,24 @@ extern "C"
     const int* slo, const int* shi, const int* lo,  const int* hi, int* level,
     Real* ro_g, Real* p_g, Real* ep_g, Real* rop_g);
 
-  void calc_trd_and_tau(
+  void calc_trd_g(const int* slo, const int* shi,
+                  const int* ulo, const int* uhi,
+                  const int* vlo, const int* vhi,
+                  const int* wlo, const int* whi,
+                  const int* lo,  const int* hi,
+                  Real* trd_g,
+                  Real* u_g, Real* v_g, Real* w_g,
+                  Real* dx,  Real* dy,  Real* dz);
+
+  void calc_tau_g(
       const int* slo, const int* shi,
       const int* ulo, const int* uhi,
       const int* vlo, const int* vhi,
       const int* wlo, const int* whi,
       const int* lo,  const int* hi,
-      Real* tau_u_g,  Real* tau_v_g, Real* tau_w_g,
-      Real* trd_g,
-      Real* u_g,      Real* v_g,     Real* w_g,
-      Real* lambda_g, Real* mu_g,
+      Real* tau_u_g,  Real* tau_v_g,  Real* tau_w_g,
+      Real* u_g,      Real* v_g,      Real* w_g,
+      Real* trd_g,    Real* lambda_g, Real* mu_g,
       Real* dx,       Real* dy,       Real* dz);
 
   void conv_rop(
@@ -315,7 +349,8 @@ extern "C"
       int* max_it, int* ier,
       int* slo, int* shi, const int* lo, const int* hi);
 
-  void leq_residual(const Real*, const int*, const int*,
+  void leq_residual(const int* lo, const int* hi,
+      const Real*, const int*, const int*,
       const Real*, const int*, const int*,
       const Real*, const int*, const int*,
       const Real*, const int*, const int*);
@@ -323,14 +358,17 @@ extern "C"
   void out_array(const Real*, const int*, const int*);
   void out_matrix(const Real*, const int*, const int*);
 
-  void leq_matvec(const Real*, const int*, const int*,
+  void leq_matvec(const int* lo, const int* hi,
+      const Real*, const int*, const int*,
       const Real*, const int*, const int*,
       const Real*, const int*, const int*);
 
-  void leq_scale(const Real*, const int*, const int*,
-      const Real*, const int*, const int*);
+  void leq_scale(const int* lo, const int* hi,
+                 const Real*, const int*, const int*,
+                 const Real*, const int*, const int*);
 
-  void leq_msolve1(const Real*, const int*, const int*,
+  void leq_msolve1(const int* lo, const int* hi,
+      const Real*, const int*, const int*,
       const Real*, const int*, const int*,
       const Real*, const int*, const int*);
 

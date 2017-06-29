@@ -18,7 +18,7 @@ MODULE read_namelist_module
 
       use bc
       use drag, only: drag_c1, drag_d1
-      use constant, only: d_p0, gravity, ro_s0
+      use constant, only: gravity
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input, particle_types
       use discretelement, only: des_etat_fac, des_etat_w_fac, v_poisson, vw_poisson
@@ -39,7 +39,7 @@ MODULE read_namelist_module
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_w
       use run, only: call_usr, description, tstop
-      use run, only: dt_fac, dt_max, dt_min, run_name, solids_model
+      use run, only: dt_fac, dt_max, dt_min, run_name
       use drag, only: drag_type
       use scales, only: p_ref, p_scale
       use residual, only: norm_g, tol_diverge, tol_resid
@@ -186,7 +186,6 @@ MODULE read_namelist_module
       include 'numerical_params.inc'
       include 'geometry.inc'
       include 'gas_phase.inc'
-      include 'solids_phase.inc'
       include 'initial_conditions.inc'
       include 'boundary_conditions.inc'
       include 'point_sources.inc'
@@ -254,20 +253,6 @@ MODULE read_namelist_module
       STRING=''; STRING = '&GAS_PHASE_UNLOCKED '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=GAS_PHASE_UNLOCKED, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
-
-
-! Solidss phase keywords
-      IF(READ_LOCKED) THEN
-         STRING=''; STRING = '&SOLIDS_PHASE_LOCKED '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=SOLIDS_PHASE_LOCKED, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-      ENDIF
-
-      STRING=''; STRING = '&SOLIDS_PHASE_UNLOCKED '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=SOLIDS_PHASE_UNLOCKED, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 

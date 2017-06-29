@@ -19,50 +19,45 @@ variables:
 
   # defaults
   ENABLE_MPI: "0"
-  ENABLE_OpenMP: "0"
+  ENABLE_OMP: "0"
 
 .test: &test_template
   script:
     - mkdir build
     - cd build
-    - env F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OpenMP=$ENABLE_OpenMP ..
+    - env F77=$FC F90=$FC cmake -DAMREX_ENABLE_MPI=$ENABLE_MPI -DAMREX_ENABLE_OMP=$ENABLE_OMP ..
     - make -j 4
-    - env GRID="$GRID" ctest -R $TEST_REGEX
+    - ctest -R $TEST_REGEX
   tags:
     - joule
 
 
-fld-test-serial:
+single-grid-serial:
   variables:
-    TEST_REGEX: "FLD"
+    TEST_REGEX: "SGS"
   <<: *test_template
 
-fld-test-mpi:
+multiple-grid-serial:
+  variables:
+    TEST_REGEX: "MGS"
+  <<: *test_template
+
+multiple-grid-parallel:
   variables:
     ENABLE_MPI: "1"
     CC: "$MPI_CC"
     CXX: "$MPI_CXX"
     FC: "$MPI_FC"
-    TEST_REGEX: "FLD0[1-4]"
-    GRID: "multiple"
+    TEST_REGEX: "MGP"
   <<: *test_template
 
-.fld-test-openmp:
+tiled-grid-serial:
   variables:
-    ENABLE_OpenMP: "1"
-    TEST_REGEX: "FLD"
-    GRID: "tiled"
+    TEST_REGEX: "TGS"
   <<: *test_template
 
-
-dem-test-serial:
+.tiled-grid-parallel-openmp:
   variables:
-    TEST_REGEX: "DEM"
-  <<: *test_template
-
-.dem-test-openmp:
-  variables:
-    ENABLE_OpenMP: "1"
-    TEST_REGEX: "DEM"
-    GRID: "tiled"
+    ENABLE_OMP: "1"
+    TEST_REGEX: "TGP"
   <<: *test_template

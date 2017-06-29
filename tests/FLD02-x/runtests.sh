@@ -18,32 +18,32 @@ if [ -z "${FEXTRACT}" ]; then
     exit 1
 fi
 
+INPUTS=inputs_single
+if [ -n "$3" ]; then
+    INPUTS=$3
+fi
+echo "Using INPUTS file ${INPUTS}"
+
 if [ "$ENABLE_MPI" -eq "1" ]; then
     MPIRUN="mpirun -np 2"
-    REL_ERR="-r 0.0"
 else
     MPIRUN=""
-    REL_ERR=""
 fi
 
-GRID=${GRID:-"single multiple tiled"}
 MFIX_BENCHMARKS_HOME=${MFIX_BENCHMARKS_HOME:-}
 FCOMPARE=${FCOMPARE:-}
 
-for grid_type in $GRID; do
-    INPUTS=inputs_${grid_type}
-    rm -rf POST_* ${RUN_NAME}* &> /dev/null
-    time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
+rm -rf POST_* ${RUN_NAME}* &> /dev/null
+time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
-    ${FEXTRACT} -p FLD0200000/ -d 2 -v u_g -s POST_UG.dat
-    ${FEXTRACT} -p FLD0200000/ -d 1 -v p_g -s POST_PG.dat
+${FEXTRACT} -p FLD0200000/ -d 2 -v u_g -s POST_VG.dat
+${FEXTRACT} -p FLD0200000/ -d 1 -v p_g -s POST_PG.dat
 
-    post_dats=POST*.dat
-    for result in ${post_dats}; do
-        numdiff -a 0.0 ${REL_ERR} "AUTOTEST/${result}" "${result}"
-    done
-
-    if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then
-        ${FCOMPARE} --infile1 "${MFIX_BENCHMARKS_HOME}/FLD02-x_FLD02-x_plt00000" --infile2 FLD0200000/
-    fi
+post_dats=POST*.dat
+for result in ${post_dats}; do
+    diff -u -I '#.*' "../FLD02-y/AUTOTEST/${result}" "${result}"
 done
+
+if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then
+    ${FCOMPARE} --infile1 "${MFIX_BENCHMARKS_HOME}/FLD02-x_FLD02-x_plt00000" --infile2 FLD0200000/
+fi

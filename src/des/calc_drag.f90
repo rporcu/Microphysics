@@ -71,8 +71,9 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
 
       ! Calculate drag coefficient, beta
       call des_drag_gp(slo, shi, p, velp, velfp, ep_g(i,j,k),  &
-           & ro_g, mu_g, beta, i, j, k, particles(p) % radius, &
-           & particles(p) % volume, particles(p) % phase )
+           ro_g, mu_g, beta, i, j, k, particles(p) % radius,   &
+           particles(p) % volume, particles(p) % density,      &
+           particles(p) % phase )
 
       f_gp = beta*ovol
 

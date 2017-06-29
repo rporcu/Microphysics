@@ -31,9 +31,5 @@
 !-----------------------------------------------------------------------
 ! Number of solids phases
       integer :: mmax = 0
-! Particle diameters
-      real(c_real) :: d_p0(dim_m)
-! Constant solids phase densities.
-      real(c_real) :: ro_s0(dim_m)
 
       END MODULE constant

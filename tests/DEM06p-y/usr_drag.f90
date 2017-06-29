@@ -27,7 +27,6 @@
 
       use amrex_fort_module, only: c_real => amrex_real
       use iso_c_binding    , only: c_int
-      use usr              , only: Re, Cd
 
       implicit none
 
@@ -68,5 +67,54 @@
 
       ! Drag force
       lDgA = 0.75d0*(ROg*Vrel/DPM) * Cd(Re(Vrel))
+
+    contains
+
+!......................................................................!
+!                                                                      !
+!  Function name: Re                                                   !
+!  Author: J.Musser                                   Date:  May-2014  !
+!                                                                      !
+!  Purpose: Calculate the particle Reynods Number.                     !
+!                                                                      !
+!  Ref: R. Garg, J. Galvin, T. Li, and S. Pannala, Documentation of    !
+!  open-source MFIX-DEM software for gas-solids flows," from URL:      !
+!  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
+!  page 22, Equation (67).                                             !
+!......................................................................!
+      real(c_real) function Re(Vs)
+
+      use fld_const, only: RO_G0, Mu_g0
+
+      implicit none
+
+      ! Slip velocity magnitude
+      real(c_real), intent(in) :: Vs
+
+      Re = (RO_g0 * DPM * Vs) / Mu_g0
+
+      end function Re
+
+!......................................................................!
+!                                                                      !
+!  Function name: Cd                                                   !
+!  Author: J.Musser                                   Date:  May-2014  !
+!                                                                      !
+!  Purpose: Calculate a single particle drag coefficient.              !
+!                                                                      !
+!  Ref: Schiller and Naumman. (1933) 'A drag coefficient correlation', !
+!  Z.Ver. Deutsch Ing., pages 318-320.                                 !
+!......................................................................!
+      real(c_real) function Cd(Re)
+
+      implicit none
+
+      real(c_real), intent(in) :: Re  ! particle height.
+
+      Cd = 0.0d0
+      if (Re > 0.0d0) Cd = (24.0d0/Re)*(1.0d0 + 0.15d0*(Re**0.687d0))
+
+      end function Cd
+
 
       end subroutine drag_usr

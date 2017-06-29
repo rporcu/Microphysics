@@ -32,7 +32,7 @@ void ReadParameters ()
   pp.query("max_step", max_step);
   pp.query("stop_time", stop_time);
   }
- 
+
   // Traditionally, these have prefix "amr", but we will
   // give them prefix mfix to make it clear that they affect the
   // behavior of the solver and not amr (even thought they are read
@@ -62,15 +62,17 @@ int main (int argc, char* argv[])
     //        command line arguments are in mfix-format so it will just ignore them.
     amrex::Initialize(argc,argv);
 
+    BL_PROFILE("mfix_level::main()");
+
     // Copy arguments into MFIX -- note that the first argument is now the name of the
     //      inputs file to be read by AMReX, so we only pass the arguments after that
     for(int i=2; i < argc; i++) {
-  int nlen = strlen(argv[i]);
-  // If-statement avoids passing the name of the mfix input file if it is
-  // specified on the command line or any AMReX command.
-  if ( strstr(argv[i], "input_file") == NULL && strstr(argv[i], "amr") == NULL) {
-      mfix_add_argument(argv[i], &nlen);
-  }
+       int nlen = strlen(argv[i]);
+
+       // If-statement avoids passing the name of the mfix input file if it is
+       // specified on the command line or any AMReX command.
+       if ( strstr(argv[i], "input_file") == NULL && strstr(argv[i], "amr") == NULL)
+         mfix_add_argument(argv[i], &nlen);
     }
 
     Real strt_time = ParallelDescriptor::second();
@@ -84,28 +86,25 @@ int main (int argc, char* argv[])
     int call_udf;
     Real dt, dt_min, dt_max, tstop;
     Real time=0.0L;
-    Real xlength, ylength, zlength;
     int nstep = 0;  // Which time step are we on
     Real normg;
     int set_normg;
-    int cyclic_mf;
 
     mfix_get_data( &solve_fluid,
        &solve_dem,
        &steady_state,
        &dt, &dt_min, &dt_max, &tstop, &max_nit,
-       &normg, &set_normg, &call_udf, &cyclic_mf,
-       &xlength, &ylength, &zlength);
+       &normg, &set_normg, &call_udf);
 
     if ( ParallelDescriptor::IOProcessor() )
-	check_inputs(&dt);
+       check_inputs(&dt);
 
     int lev = 0;
 
     // Note that the constructor constructs the Geometry object now.
     mfix_level my_mfix;
 
-    my_mfix.InitParams(solve_fluid,solve_dem,cyclic_mf,max_nit,call_udf);
+    my_mfix.InitParams(solve_fluid,solve_dem,max_nit,call_udf);
 
     my_mfix.Init(lev,dt,time);
 
@@ -123,62 +122,67 @@ int main (int argc, char* argv[])
 
     // Call to output before entering time march loop
     if (solve_fluid && ParallelDescriptor::IOProcessor()  && solve_dem )
-	my_mfix.output(lev,estatus,finish,nstep,dt,time);
+       my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
     // only if solve_fluid = T
     Real prev_dt = dt;
 
-    if (!steady_state) 
+    // We automatically write checkpoint and plotfiles with the initial data
+    //    if plot_int > 0
+    if ( restart_file.empty() && plot_int > 0 )
+       my_mfix.WritePlotFile( plot_file, nstep, dt, time );
+
+    // We automatically write checkpoint files with the initial data
+    //    if check_int > 0
+    if ( restart_file.empty() && check_int > 0 )
+       my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+
+    // We automatically write ASCII files with the particle data
+    //    if par_ascii_int > 0
+    if ( par_ascii_int > 0 )
+       my_mfix.WriteParticleAscii( par_ascii_file, nstep );
+
+    std::cout << "TIME TSTOP " << time << " " << tstop << std::endl;
+    if (time <  tstop)
     {
-       // We automatically write checkpoint and plotfiles with the initial data
-       //    if plot_int > 0
-       if ( plot_int > 0 ) 
-          my_mfix.WritePlotFile( plot_file, nstep, dt, time );
+       while (finish == 0)
+       {
+          mfix_usr1();
 
-       // We automatically write checkpoint files with the initial data
-       //    if check_int > 0
-       if ( check_int > 0 )
-          my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+          my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
 
-       // We automatically write ASCII files with the particle data 
-       //    if par_ascii_int > 0 
-       if ( par_ascii_int > 0 )  
- 	  my_mfix.WriteParticleAscii( par_ascii_file, nstep ); 
-    }
-    
-    while (finish == 0) 
-    {
-       mfix_usr1();
+          if (!steady_state)  
+          {
+             time += prev_dt;
+             nstep++;
 
-       my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
+             if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
+                my_mfix.WritePlotFile( plot_file, nstep, dt, time );
+   
+             if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
+                my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+   
+             if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
+                my_mfix.WriteParticleAscii( par_ascii_file, nstep );
+          }
 
-       if (!steady_state)  {
+          if (ParallelDescriptor::IOProcessor() && solve_dem )
+             my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
-          time += prev_dt;
-          nstep++;
-
-          if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) ) 
-             my_mfix.WritePlotFile( plot_file, nstep, dt, time );
-
-          if ( ( check_int > 0) && ( nstep %  check_int == 0 ) ) 
-             my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
-
-          if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) ) 
-             my_mfix.WriteParticleAscii( par_ascii_file, nstep ); 
+          // Mechanism to terminate MFIX normally.
+          if (steady_state || (time + 0.1*dt >= tstop) || (solve_dem && !solve_fluid)) finish = 1;
        }
-	
-       if (ParallelDescriptor::IOProcessor() && solve_dem )
-          my_mfix.output(lev,estatus,finish,nstep,dt,time);
-
-       // Mechanism to terminate MFIX normally.
-       if (steady_state || (time + 0.1*dt >= tstop) || (solve_dem && !solve_fluid)) finish = 1;
-    }
+    } 
 
     // Dump plotfile at the end if enabled for steady state
     if (steady_state) {
-        my_mfix.WritePlotFile( plot_file, nstep, dt, time );
-        my_mfix.WriteParticleAscii( par_ascii_file, nstep ); 
+        if ( check_int > 0)
+           my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
+        if ( plot_int > 0 )
+           my_mfix.WritePlotFile      ( plot_file     , nstep, dt, time );
+        if ( par_ascii_int > 0 )
+           my_mfix.WriteParticleAscii ( par_ascii_file, nstep );
     }
 
     my_mfix.usr3(0);
@@ -186,7 +190,7 @@ int main (int argc, char* argv[])
     Real end_time = ParallelDescriptor::second() - strt_time;
 
     if (ParallelDescriptor::IOProcessor())
-  std::cout << "Time spent in main " << end_time << std::endl;
+       std::cout << "Time spent in main " << end_time << std::endl;
 
     amrex::Finalize();
     return 0;

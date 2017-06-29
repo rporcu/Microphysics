@@ -16,4 +16,4 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       NAMELIST / GEOMETRY_UNLOCKED /&
 
-      FLUX_G, DELP_X, DELP_Y, DELP_Z
+      DELP_X, DELP_Y, DELP_Z

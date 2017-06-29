@@ -6,12 +6,11 @@
 #include <AMReX_Box.H>
 
 void
-mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int cyclic_mf_in,
+mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
                        int max_nit_in, int call_udf_in)
 {
     solve_fluid  = solve_fluid_in;
     solve_dem    = solve_dem_in;
-    cyclic_mf    = cyclic_mf_in;
     max_nit      = max_nit_in;
     call_udf     = call_udf_in;
 }
@@ -318,58 +317,62 @@ mfix_level::AllocateArrays (int lev)
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
-    AllocateArrays(lev);
+  AllocateArrays(lev);
 
-    Box domain(geom[lev].Domain());
+  Box domain(geom[lev].Domain());
 
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-    {
-  const Box& sbx = (*ep_g[lev])[mfi].box();
-
-  Box ubx((*u_g[lev])[mfi].box());
-  Box vbx((*v_g[lev])[mfi].box());
-  Box wbx((*w_g[lev])[mfi].box());
-
-  set_bc0(sbx.loVect(), sbx.hiVect(),
-    ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-    (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-    (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
-    (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
-    (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
-    bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-    bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
-    }
-
-    fill_mf_bc(lev,*p_g[lev]);
-    fill_mf_bc(lev,*ep_g[lev]);
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-
-    u_g[lev]->FillBoundary(geom[lev].periodicity());
-    v_g[lev]->FillBoundary(geom[lev].periodicity());
-    w_g[lev]->FillBoundary(geom[lev].periodicity());
-
-    // Allocate the particle arrays
-    if (solve_dem)
-    {
-  pc -> AllocData();
-  pc -> InitParticlesAscii("particle_input.dat");
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-      mfix_init_collision();
-  //  Create mask for particle ghost cells
-  pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
+    {
+      const Box& sbx = (*ep_g[lev])[mfi].box();
+
+      Box ubx((*u_g[lev])[mfi].box());
+      Box vbx((*v_g[lev])[mfi].box());
+      Box wbx((*w_g[lev])[mfi].box());
+
+      set_bc0(sbx.loVect(), sbx.hiVect(),
+              ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+              (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+              (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+              (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
+              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
 
-    // Initial fluid arrays: pressure, velocity, density, viscosity
-    mfix_init_fluid(lev);
+  fill_mf_bc(lev,*p_g[lev]);
+  fill_mf_bc(lev,*ep_g[lev]);
+  fill_mf_bc(lev,*ro_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
 
-    // Call user-defined subroutine to set constants, check data, etc.
-    if (call_udf)
-  mfix_usr0();
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
 
-    // Calculate all the coefficients once before entering the time loop
-    int calc_flag = 2;
-    mfix_calc_coeffs(lev,calc_flag);
+  // Initial fluid arrays: pressure, velocity, density, viscosity
+  mfix_init_fluid(lev);
+
+  // Allocate the particle arrays
+  if (solve_dem)
+    {
+      pc -> AllocData();
+      pc -> InitParticlesAscii("particle_input.dat");
+
+      Real avg_dp[10], avg_ro[10];
+      pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
+
+      mfix_init_collision(avg_dp, avg_ro);
+
+      //  Create mask for particle ghost cells
+      pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
+    }
+
+  // Call user-defined subroutine to set constants, check data, etc.
+  if (call_udf)
+    mfix_usr0();
+
+  // Calculate all the coefficients once before entering the time loop
+  int calc_flag = 2;
+  mfix_calc_coeffs(lev,calc_flag);
 }
 
 void
@@ -407,8 +410,9 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
     w_g[lev]->FillBoundary(geom[lev].periodicity());
 
     if (solve_dem) {
-      for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-          mfix_init_collision();
+      Real avg_dp[10], avg_ro[10];
+      pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
+      mfix_init_collision(avg_dp, avg_ro);
     }
 
     // // Initial fluid arrays: pressure, velocity, density, viscosity
@@ -426,24 +430,29 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
 void
 mfix_level::mfix_init_fluid(int lev, int is_restarting)
 {
-    Box domain(geom[lev].Domain());
+  Box domain(geom[lev].Domain());
 
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
 
-    Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
-    Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-    Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+  Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+  Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+  Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
 
-    // We deliberately don't tile this loop since we will be looping
-    //    over bc's on faces and it makes more sense to do this one grid at a time
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
+  // We deliberately don't tile this loop since we will be looping
+  //    over bc's on faces and it makes more sense to do this one grid at a time
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
 
-  const Box& bx = mfi.validbox();
-  const Box& sbx = (*ep_g[lev])[mfi].box();
+    const Box& bx = mfi.validbox();
+    const Box& sbx = (*ep_g[lev])[mfi].box();
 
-  if ( !is_restarting ) {
+    if ( is_restarting ) {
+      init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
+           (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr());
+
+    }
+    else {
       const Box& ubx = (*u_g[lev])[mfi].box();
       const Box& vbx = (*v_g[lev])[mfi].box();
       const Box& wbx = (*w_g[lev])[mfi].box();
@@ -460,19 +469,42 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
            (*w_g[lev])[mfi].dataPtr(),
            (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
            &dx, &dy, &dz, &xlen, &ylen, &zlen );
-  }
     }
+  }
 
-    fill_mf_bc(lev,*p_g[lev]);
-    fill_mf_bc(lev,*ep_g[lev]);
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
+  // We deliberately don't tile this loop since we will be looping
+  //    over bc's on faces and it makes more sense to do this one grid at a time
+  if ( !is_restarting ) {
 
-    u_g[lev]->FillBoundary(geom[lev].periodicity());
-    v_g[lev]->FillBoundary(geom[lev].periodicity());
-    w_g[lev]->FillBoundary(geom[lev].periodicity());
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
 
-    fill_mf_bc(lev,*mu_g[lev]);
-    fill_mf_bc(lev,*lambda_g[lev]);
+      const Box& sbx = (*ep_g[lev])[mfi].box();
+      const Box& ubx = (*u_g[lev])[mfi].box();
+      const Box& vbx = (*v_g[lev])[mfi].box();
+      const Box& wbx = (*w_g[lev])[mfi].box();
+
+      zero_wall_norm_vel(sbx.loVect(), sbx.hiVect(),
+              ubx.loVect(), ubx.hiVect(),
+              vbx.loVect(), vbx.hiVect(),
+              wbx.loVect(), wbx.hiVect(),
+              (*u_g[lev])[mfi].dataPtr(),
+              (*v_g[lev])[mfi].dataPtr(),
+              (*w_g[lev])[mfi].dataPtr(),
+              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+    }
+  }
+
+  fill_mf_bc(lev,*p_g[lev]);
+  fill_mf_bc(lev,*ep_g[lev]);
+  fill_mf_bc(lev,*ro_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
+
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
+
+  fill_mf_bc(lev,*mu_g[lev]);
+  fill_mf_bc(lev,*lambda_g[lev]);
 
 }

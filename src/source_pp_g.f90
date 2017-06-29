@@ -73,7 +73,7 @@ contains
 ! terms of bm expression
       real(c_real) bma, bme, bmw, bmn, bms, bmt, bmb
 ! error message
-      real(c_real) :: oDT, vol
+      real(c_real) :: odt, vol
 !-----------------------------------------------
 
       odt = 1.0d0/dt
