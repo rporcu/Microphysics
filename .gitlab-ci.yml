@@ -58,6 +58,6 @@ tiled-grid-serial:
 
 .tiled-grid-parallel-openmp:
   variables:
-    ENABLE_OpenMP: "1"
+    ENABLE_OMP: "1"
     TEST_REGEX: "TGP"
   <<: *test_template
