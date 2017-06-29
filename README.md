@@ -89,7 +89,7 @@ Next, configure, build and install AMReX as follows:
 Here,`AMREX_CONFIG_OPTIONS` are optional configure options for AMReX. Please refer to the AMReX user guide
 for a list of all the possible configuration options. The only option required is __-DENABLE_PARTICLES=1__.
 
-### Build MFIX-Exa
+### Building MFIX-Exa
 Clone and build MFIX-Exa.
 ```shell
 > git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
@@ -102,15 +102,16 @@ Here, `CONFIG_OPTIONS` are MFIX-Exa specific configuration options, that is, any
 in the table above. Options prefixed by `AMREX_` are always ignored 
 when using an external AMReX installation.
 
-
-## Custom configurations (`CMAKE_CONFIG_OPTIONS`)
-
-The system defaults compilers can be overwritten as well by setting the flags
-`FC` and `CXX` before invoking the cmake command.
+## Few more notes on building MFIX-Exa
+The system defaults compilers can be overwritten as follows:
 ```shell
-> FC=fortran-compiler CXX=c++-compiler cmake CMAKE_CONFIG_OPTIONS  ..
+> cmake -DCMAKE_CXX_COMPILER=<c++-compiler> -DCMAKE_Fortran_COMPILER=<f90-compiler> CONFIG_OPTIONS  ..
 ```
-
+When building on a platform that uses the `module` utility, use either the above command (with full
+path to the compilers) or the following:
+```shell
+> cmake -DCMAKE_CXX_COMPILER=CC -DCMAKE_Fortran_COMPILER=ftn CONFIG_OPTIONS  ..
+```
 
 # Running MFIX Test Suite
 MFIX-Exa comes  with several tests aimed at evaluating software functionalities.
