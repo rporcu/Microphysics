@@ -46,12 +46,14 @@ says the domain is periodic in the y-direction only.
 \begin{tabular}{|l|l|l|l|} \hline
 Parameter & Definition & Acceptable Values &Default\\
 \hline
-{\bf amr.max\_level}         &  what is the finest possible level (only relevant if we were doing AMR) & Integer & must be set \\
-{\bf amr.n\_cell}            &  number of cells in each coordinate direction of the domain & Integer $> 0$ & must be set \\
-{\bf amr.max\_grid\_size}    &  maximum allowable number of cells of one grid in any direction & Integer & 32 \\
-{\bf amr.max\_grid\_size\_x} &  maximum allowable number of cells of one grid in x-direction & Integer & 32 \\
-{\bf amr.max\_grid\_size\_y} &  maximum allowable number of cells of one grid in y-direction & Integer & 32 \\
-{\bf amr.max\_grid\_size\_z} &  maximum allowable number of cells of one grid in z-direction & Integer & 32 \\
+{\bf amr.max\_level}         &  finest possible level (only relevant if we were doing AMR)     & Integer        & must be set \\
+{\bf amr.n\_cell}            &  number of cells in each coordinate direction of the domain     & Integers $> 0$ & must be set \\
+{\bf amr.max\_grid\_size}    &  maximum allowable number of cells of one grid in any direction & Integer        & 32 \\
+{\bf amr.max\_grid\_size\_x} &  maximum allowable number of cells of one grid in x-direction   & Integer        & 32 \\
+{\bf amr.max\_grid\_size\_y} &  maximum allowable number of cells of one grid in y-direction   & Integer        & 32 \\
+{\bf amr.max\_grid\_size\_z} &  maximum allowable number of cells of one grid in z-direction   & Integer        & 32 \\ \\
+{\bf fabarray.mfiter\_tile\_size} & tile size for mesh data     & Integers       & (1024000,8,8) \\
+{\bf particles.tile\_size}        & tile size for particle data & Integer        & (1024000,8,8) \\
 \hline
 \end{tabular}
 %\caption{Input Parameters -- Resolution}
@@ -64,10 +66,16 @@ Parameter & Definition & Acceptable Values &Default\\
 
 \begin{itemize}
 
-\item Either 
-{\bf amr.max\_grid\_size} or all three of 
+\item Either one value of {\bf amr.max\_grid\_size} should be specified that will be used for
+all coordinate directions,  or each of 
 {\bf amr.max\_grid\_size\_x}, {\bf amr.max\_grid\_size\_y} and {\bf amr.max\_grid\_size\_z}
-should be used
+should be specified independently.
+
+\item If {\bf fabarray.mfiter\_tile\_size} is included in the inputs file, three integers (one for each coordinate direction)
+must be specified.  
+
+\item Similarly, if {\bf particles.tile\_size} is included in the inputs file, three integers (one for each coordinate direction)
+must be specified.  
 
 \end{itemize}
 
@@ -173,9 +181,43 @@ save space by writing them in single precision, set the fab.format flag to IEEE3
 \item {\bf amr.plot\_int} = 10
 
 means that plot files (really directories) starting with the prefix "plt\_run" will be
-generated every 10 level 0 time steps.  The directory names will be {\it plt\_run00000}, 
-{\it plt\_run00010}, {\it plt\_run00020}, etc.  These plotfiles can be visualized with the
+generated every 10 level 0 time steps.  The directory names will be {\it plt\_run00000}, {\it plt\_run00010}, {\it plt\_run00020}, etc.  These plotfiles can be visualized with the
 tools described further in Chapter 9 of the \amrex\ User's Guide.
 
 \end{itemize}
+
+\section{Writing ASCII Particle Files}
+\label{sec:AsciiFiles}
+Sometimes it's simplest for debugging purposes to write out all the particles in a single ASCII file.
+The following options in the inputs file control the writing of these particle files.
+
+\subsection{List of Parameters}
+
+\begin{table*}[h]
+\begin{scriptsize}
+\begin{center}
+\begin{tabular}{|l|l|l|l|} \hline
+Parameter & Definition & Acceptable Values &Default\\
+\hline
+{\bf amr.par\_ascii\_file} & prefix for ASCII particle files & Text & "par" \\
+{\bf amr.par\_ascii\_int}  & how often to write ASCII particle files & Integer $> 0$ & -1  \\
+\hline
+\end{tabular}
+\end{center}
+\end{scriptsize}
+\end{table*}
+
+\subsection{Examples of Usage}
+
+\begin{itemize}
+
+\item {\bf amr.par\_ascii\_file} = DEM\_par
+\item {\bf amr.par\_ascii\_int} = 10
+
+means that ASCII particle files starting with the prefix "DEM\_par" will be
+generated every 10 time steps.  The file names will be 
+{\it DEM\_par00000}, {\it DEM\_par00010}, {\it DEM\_par00020}, etc.  
+
+\end{itemize}
+
 
