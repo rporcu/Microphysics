@@ -20,74 +20,39 @@ of MFIX-Exa, a multiphase flow solver hosted on the NETL gitlab site.
 git clone https://github.com/AMReX-Codes/amrex
 \end{verbatim}
 
-You will want to periodically update \amrex\ by typing
-\begin{verbatim}
-git pull
-\end{verbatim}
-in the {\tt AMReX/} directory.
-
 \item Clone/fork the \mfix\ repository:
 \begin{verbatim}
-git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
+git clone http://mfix.netl.doe.gov/gitlab/exa/mfix
 \end{verbatim}
 
-Note: when you check out AMReX (and MFIX-Exa), you will get the {\tt master}
-branch.   The MFIX-Exa master branch is guaranteed to be compatible
+Note: when you check out \mfix\ and \amrex\, you will get the {\tt master}
+branch of each.   The \mfix\ master branch is guaranteed to be compatible
 with the AMReX master branch.
 Active development is done on the {\tt development} branch
 in each repo, and merged into the {\tt master} branch monthly.
-If you wish to use the \amrex\ {\tt development} branch, then you
+If you wish to use the \mfix\ {\tt development} branch, then you
 should also switch to the {\tt development} branch for \amrex.
+Note that in order to use the most recent version of the code you 
+will need to update \amrex\ by typing
+\begin{verbatim}
+git pull
+\end{verbatim}
+in the \amrex\ directory, and similarly in the \mfix\ directory.
 
 \end{enumerate}
 
-\section{Building the Code}
+\section{Building and Running the Code}
 
-\begin{enumerate}
+There are detailed instructions for how to build and run the \mfix\ code in
+the README.md file in the home directory.   The README.md is also readable at
 
-\item From the directory in which you checked out MFIX-Exa, type
-
-cd {\tt MFIX-Exa/Exec/LyA}
-
-This will put you into a directory in which you can run a small
-version of the Santa Barbara test problem.
-
-\item In {\tt MFIX-Exa/Exec/LyA}, edit the GNUmakefile, and set
-
-COMP = your favorite compiler (e.g, gnu, Intel)
-
-DEBUG = FALSE
-
-We like COMP = gnu.
-
-\item Now type "make". The resulting executable will look something like 
-"Nyx3d.Linux.gnu.ex", which means this is a 3-d version of the code, 
-made on a Linux machine, with COMP = gnu.
-
-\end{enumerate}
-
-\section{Running the Code}
-
-\begin{enumerate}
-
-\item Type ``Nyx3d.Linux.gnu.ex inputs.32''
-
-\item You will notice that running the code generates directories that look like 
-plt00000, plt00020, etc, and chk00000, chk00020, etc. These are "plotfiles" and 
-"checkpoint" files. The plotfiles are used for visualization, the checkpoint files are 
-used for restarting the code.
-
-\end{enumerate}
+\begin{verbatim}
+https://mfix.netl.doe.gov/gitlab/exa/mfix
+\end{verbatim}
 
 \section{Visualization}
 
-There are several visualization tools that can be used for MFIX-Exa
-plotfiles.  The standard tool used within the
-\amrex-community is \amrvis, a package developed and supported
-by CCSE that is designed specifically for highly efficient visualization
-of block-structured hierarchical AMR data.
-Plotfiles can also be viewed using the \visit, \paraview, and \yt\ packages.
-Particle data can be viewed using \paraview.
-
+Plotfiles written by MFIX-Exa can be viewed using the 
+\visit, \paraview, and \yt\ packages.  Particle data can be viewed using \paraview.
 Please see Chapter 9 of the AMReX User's Guide (available in AMReX/Docs)
 for more detail about using all of these visualization packages.
