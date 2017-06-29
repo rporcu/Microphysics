@@ -6,19 +6,9 @@ the fluid phase as a continuum and models the
 particles of the solid phase individually. This approach supports a wide range 
 of customization for particle dynamics, including mutliple particle collision 
 force and drag schemes. For more information on the DEM capabilities of MFIX-Exa
-see   
+see {\sf DEM doc 12-1} on the MFIX Documentation webpage 
+{\url{https://mfix.netl.doe.gov/download/mfix/mfix_current_documentation/dem_doc_2012-1.pdf/}}.  
 
-
-For the moment, assume that we are running in comoving coordinates, 
-with dark matter particles only (no hydro) and that the particles all exist at level 0.   These assumptions are
-encapsulated in the following lines in the inputs file: \\
-
-\noindent {\bf mfix.use\_comoving = t} \\
-\noindent {\bf mfix.do\_dm\_particles = 1} \\
-\noindent {\bf amr.max\_level =  0} \\
-\noindent {\bf mfix.do\_hydro = 0} \\
-\noindent {\bf mfix.do\_react = 0} \\
-\noindent {\bf mfix.do\_grav =  1} 
 
 \section{Equations}
 
