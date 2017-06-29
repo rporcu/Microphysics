@@ -1,0 +1,58 @@
+
+\section{Introduction}
+
+Welcome to the MFIX-Exa User's Guide!  In this document is an overview 
+of MFIX-Exa, a multiphase flow solver hosted on the NETL gitlab site. 
+
+\section{Downloading the Code}
+
+\mfix\ is built on top of the \amrex\ framework.  In order to run
+\mfix\, you must download two separate git modules.
+
+\vspace{.1in}
+
+\vspace{.1in}
+
+\begin{enumerate}
+
+\item Clone/fork the \amrex\ repository:
+\begin{verbatim}
+git clone https://github.com/AMReX-Codes/amrex
+\end{verbatim}
+
+\item Clone/fork the \mfix\ repository:
+\begin{verbatim}
+git clone http://mfix.netl.doe.gov/gitlab/exa/mfix
+\end{verbatim}
+
+Note: When you check out \mfix\ and \amrex\, you will get the {\tt master}
+branch of each.   The \mfix\ master branch is guaranteed to be compatible
+with the AMReX master branch.
+Active development is done on the {\tt development} branch
+in each repo, and merged into the {\tt master} branch monthly.
+If you wish to use the \mfix\ {\tt development} branch, then you
+should also switch to the {\tt development} branch for \amrex.
+Note that in order to use the most recent version of the code you 
+will need to update \amrex\ by typing
+\begin{verbatim}
+git pull
+\end{verbatim}
+in the \amrex\ directory, and similarly in the \mfix\ directory.
+
+\end{enumerate}
+
+\section{Building and Running the Code}
+
+There are detailed instructions for how to build and run the \mfix\ code in
+the README.md file in the home directory.   The README.md is also readable at
+
+\begin{verbatim}
+https://mfix.netl.doe.gov/gitlab/exa/mfix
+\end{verbatim}
+
+\section{Visualization}
+
+Plot files written by MFIX-Exa can be viewed using the 
+\visit, \paraview, and \yt\ packages.  Particle data can be viewed using \paraview.
+Please see Chapter 9 of the AMReX User's Guide (available in AMReX/Docs)
+for more detail about using all of these visualization packages.
