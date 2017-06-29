@@ -2,12 +2,12 @@ For the moment, assume that we are running in comoving coordinates,
 with dark matter particles only (no hydro) and that the particles all exist at level 0.   These assumptions are
 encapsulated in the following lines in the inputs file: \\
 
-\noindent {\bf nyx.use\_comoving = t} \\
-\noindent {\bf nyx.do\_dm\_particles = 1} \\
+\noindent {\bf mfix.use\_comoving = t} \\
+\noindent {\bf mfix.do\_dm\_particles = 1} \\
 \noindent {\bf amr.max\_level =  0} \\
-\noindent {\bf nyx.do\_hydro = 0} \\
-\noindent {\bf nyx.do\_react = 0} \\
-\noindent {\bf nyx.do\_grav =  1} 
+\noindent {\bf mfix.do\_hydro = 0} \\
+\noindent {\bf mfix.do\_react = 0} \\
+\noindent {\bf mfix.do\_grav =  1} 
 
 \section{Equations}
 
@@ -28,8 +28,8 @@ ${\mathbf g}_i = {\mathbf g}({\mathbf x}_i,t).$
 
 To enable this option, set \\
 
-\noindent {\bf nyx.particle\_init\_type = AsciiFile} \\
-\noindent {\bf nyx.ascii\_particle\_file =}{\em particle\_file}
+\noindent {\bf mfix.particle\_init\_type = AsciiFile} \\
+\noindent {\bf mfix.ascii\_particle\_file =}{\em particle\_file}
 
 Here {\em particle\_file} is the user-specified name of the file.  The first line in this file is
 assumed to contain the number of particles.  Each line after that contains  \\
@@ -43,8 +43,8 @@ so we must multiply ${\bf \dot{x}}$, by $a$ when we initialize the particles.
 
 To enable this option, set \\
 
-\noindent {\bf nyx.particle\_init\_type = BinaryFile} \\
-\noindent {\bf nyx.binary\_particle\_file =}{\em particle\_file} \\
+\noindent {\bf mfix.particle\_init\_type = BinaryFile} \\
+\noindent {\bf mfix.binary\_particle\_file =}{\em particle\_file} \\
 
 As with the ASCII read, the first line in this file is
 assumed to contain the number of particles.  Each line after that contains  \\
@@ -59,8 +59,8 @@ so we must multiply ${\bf \dot{x}}$, by $a$ when we initialize the particles.
 This option allows you to read particles from a series of files rather than 
 just a single file.   To enable this option, set \\
 
-\noindent {\bf nyx.particle\_init\_type = BinaryMetaFile} \\
-\noindent {\bf nyx.binary\_particle\_file =}{\em particle\_file} \\
+\noindent {\bf mfix.particle\_init\_type = BinaryMetaFile} \\
+\noindent {\bf mfix.binary\_particle\_file =}{\em particle\_file} \\
 
 In this case the {\em particle\_file} you specify is an ASCII file specifying a
 list of file names with full paths.   Each of the files in this list is assumed
@@ -72,19 +72,19 @@ the order listed.
 For some applications it is useful to initialize the grid data with SPH-type
 particles.   To enable this option, you must set \\
 
-\noindent {\bf nyx.do\_santa\_barbara = 1} \\
-\noindent {\bf nyx.init\_with\_sph\_particles = 1} \\
+\noindent {\bf mfix.do\_santa\_barbara = 1} \\
+\noindent {\bf mfix.init\_with\_sph\_particles = 1} \\
 
 \noindent The SPH-type particles can then be read in by setting \\
 
-\noindent {\bf nyx.sph\_particle\_file =}{\em sph\_particle\_file} \\
+\noindent {\bf mfix.sph\_particle\_file =}{\em sph\_particle\_file} \\
 
 \noindent where {\em sph\_particle\_file} is the user-specified name of the file
 containing the SPH particles.  The type of {\em sph\_particle\_file} 
 must be the same (Ascii, Binary or BinaryMeta) as the dark matter particle 
 file as specified by   \\
 
-\noindent {\bf nyx.particle\_init\_type = } \\
+\noindent {\bf mfix.particle\_init\_type = } \\
 
 \noindent The SPH particles will be discarded by the code once the grid data has been initialized.
 
@@ -92,33 +92,33 @@ file as specified by   \\
 
 To enable this option, set \\
 
-\noindent {\bf nyx.nyx.particle\_init\_type = Random} \\
+\noindent {\bf mfix.mfix.particle\_init\_type = Random} \\
 
 \noindent There are then a number of parameters to set, for example: \\
 
-\noindent {\bf nyx.particle\_initrandom\_count = 100000}
+\noindent {\bf mfix.particle\_initrandom\_count = 100000}
 
-\noindent {\bf nyx.particle\_initrandom\_mass  = 1}
+\noindent {\bf mfix.particle\_initrandom\_mass  = 1}
 
-\noindent {\bf nyx.particle\_initrandom\_iseed = 15}
+\noindent {\bf mfix.particle\_initrandom\_iseed = 15}
 
 \subsection{Cosmological}
 
 Using cosmological initial conditions is a three step process:
 \begin{enumerate}
 	\item Generating a transfer function (e.g. with \texttt{camb})
-	\item Generating an initial displacement field (with \texttt{nyx-ic})
-	\item Starting nyx
+	\item Generating an initial displacement field (with \texttt{mfix-ic})
+	\item Starting mfix
 \end{enumerate}
 
 In the following we will look at each step a bit closer.
 
 \subsubsection{Generating a transfer function}
 
-	The transfer function is used in \texttt{nyx-ic} to generate the power
+	The transfer function is used in \texttt{mfix-ic} to generate the power
 	spectrum. The usual way is to use \texttt{camb}\footnote{See \url{http://camb.info/}}
 	to calculate it for the desired universe. A sample \texttt{camb.ini} is
-	provided with \texttt{nyx-ic}. The important options are: 
+	provided with \texttt{mfix-ic}. The important options are: 
 	\begin{itemize}
 		\item {\bf transfer\_redshift(1) = 50}
 		\item {\bf transfer\_matterpower(1) = tf} 		
@@ -135,13 +135,13 @@ In the following we will look at each step a bit closer.
 \subsubsection{Setting up the initial displacements}
 	
 	We calculate the initial displacements with a stand-alone program called
-	\texttt{nyx-ic}. This takes a transfer function and some cosmological parameters
+	\texttt{mfix-ic}. This takes a transfer function and some cosmological parameters
 	as an argument and outputs an "init" directory which basically contains initial
 	displacements for every grid point in an AMReX MultiFAB. Furthermore the mf 
 	contains a fourth field containing the density contrast as initial condition
 	for the baryonic matter. \\
-	\texttt{nyx-ic} is started with an ``inputs``
-	file similar to the one from Nyx. A sample one is provided. The options are
+	\texttt{mfix-ic} is started with an ``inputs``
+	file similar to the one from MFIX-Exa. A sample one is provided. The options are
 \begin{verbatim}
 #Omega_{Matter}
 cosmo.omegam = 0.272
@@ -190,12 +190,12 @@ cosmo.init_sigma8_init = 2.0463364E-02
 	Non-gaussian effects as well as neutrino contributions are planned for the
 	future.
 	
-\subsubsection{Using Nyx with cosmological initial conditions}
+\subsubsection{Using MFIX-Exa with cosmological initial conditions}
 	\begin{itemize}
-		\item {\bf nyx.nyx.particle\_init\_type = Cosmological} \\ 
+		\item {\bf mfix.mfix.particle\_init\_type = Cosmological} \\ 
 			set the \emph{right} init type
 		\item {\bf cosmo.initDirName = init} \\
-			set the name of the displacements directory (amrex format)
+			set the name of the displacements directory (AMReX format)
 		\item {\bf cosmo.particle\_mass = 0.19178304E+10} \\
 			sets the mass [$M_\odot$] of each particle
 		\item {\bf cosmo.omegam = 0.272} \\
@@ -222,7 +222,7 @@ cosmo.init_sigma8_init = 2.0463364E-02
 
 \noindent To enable this option, set \\
 
-\noindent {\bf nyx.particle\_move\_type = Random} \\
+\noindent {\bf mfix.particle\_move\_type = Random} \\
 
 \noindent Update the particle positions at the end of each coarse time step using a 
 random number between 0 and 1 multiplied by 0.25 dx.
@@ -231,7 +231,7 @@ random number between 0 and 1 multiplied by 0.25 dx.
 
 \noindent To enable this option, set \\
 
-\noindent {\bf nyx.particle\_move\_type = Gravitational} \\
+\noindent {\bf mfix.particle\_move\_type = Gravitational} \\
 
 \subsubsection{Move-Kick-Drift Algorithm}
 
@@ -359,7 +359,7 @@ grid time step, containing \\
 There are a number of flags that control the verbosity written to the screen at run-time.  These are:
 
 \noindent {\bf amr.v } \\
-\noindent {\bf nyx.v } \\
+\noindent {\bf mfix.v } \\
 \noindent {\bf gravity.v } \\
 \noindent {\bf mg.v } \\
 \noindent {\bf particles.v } \\

@@ -1,16 +1,16 @@
 
 \section{Introduction}
 
-Welcome to the Nyx User's Guide!  In this document is an overview of Nyx, an 
+Welcome to the MFIX-Exa User's Guide!  In this document is an overview of MFIX-Exa, an 
 open-source multiphase flow solver. 
-Another place to look for information about what is being done with Nyx is
-{\url{https://amrex-astro.github.io/Nyx}}. There you can find papers published
-and the latest science being done with Nyx.
+Another place to look for information about what is being done with MFIX-Exa is
+{\url{https://amrex-astro.github.io/mfix}}. There you can find papers published
+and the latest science being done with MFIX-Exa.
 
 \section{Downloading the Code}
 
-\nyx\ is built on top of the \amrex\ framework.  In order to run
-\nyx\, you must download two separate git modules.
+\amrex\ is built on top of the \amrex\ framework.  In order to run
+\amrex\, you must download two separate git modules.
 
 \vspace{.1in}
 
@@ -29,14 +29,14 @@ You will want to periodically update \amrex\ by typing
 \begin{verbatim}
 git pull
 \end{verbatim}
-in the {\tt amrex/} directory.
+in the {\tt AMReX/} directory.
 
-Note: when you check out amrex (and Nyx), you will get the {\tt master}
-branch.   The Nyx master branch is guaranteed to be compatible
-with the amrex master branch.
+Note: when you check out AMReX (and MFIX-Exa), you will get the {\tt master}
+branch.   The MFIX-Exa master branch is guaranteed to be compatible
+with the AMReX master branch.
 Active development is done on the {\tt development} branch
 in each repo, and merged into the {\tt master} branch monthly.
-If you wish to use the \nyx\ {\tt development} branch, then you
+If you wish to use the \amrex\ {\tt development} branch, then you
 should also switch to the {\tt development} branch for \amrex.
 
 \item Set the environment variable, {\tt AMREX\_HOME}, on your
@@ -50,14 +50,14 @@ or to your {\tt .cshrc} as:
 setenv AMREX_HOME {\em /path/to/amrex/}
 \end{Verbatim}
 where you replace \texttt{\em /path/to/amrex/} will the full path to the
-{\tt amrex/} directory.
+{\tt AMReX/} directory.
 
-\item Clone/fork the \nyx\ repository:
+\item Clone/fork the \amrex\ repository:
 \begin{verbatim}
-git clone https://github.com/AMReX-Astro/Nyx
+git clone https://github.com/AMReX-Astro/mfix
 \end{verbatim}
 
-As with \amrex, development on \nyx\ is done in the
+As with \amrex, development on \amrex\ is done in the
 {\tt development} branch, so you should work there if you want
 the latest source.
 
@@ -67,14 +67,14 @@ the latest source.
 
 \begin{enumerate}
 
-\item From the directory in which you checked out Nyx, type
+\item From the directory in which you checked out MFIX-Exa, type
 
-cd {\tt Nyx/Exec/LyA}
+cd {\tt MFIX-Exa/Exec/LyA}
 
 This will put you into a directory in which you can run a small
 version of the Santa Barbara test problem.
 
-\item In {\tt Nyx/Exec/LyA}, edit the GNUmakefile, and set
+\item In {\tt MFIX-Exa/Exec/LyA}, edit the GNUmakefile, and set
 
 COMP = your favorite compiler (e.g, gnu, Intel)
 
@@ -103,7 +103,7 @@ used for restarting the code.
 
 \section{Visualization}
 
-There are several visualization tools that can be used for Nyx
+There are several visualization tools that can be used for MFIX-Exa
 plotfiles.  The standard tool used within the
 \amrex-community is \amrvis, a package developed and supported
 by CCSE that is designed specifically for highly efficient visualization
@@ -111,5 +111,5 @@ of block-structured hierarchical AMR data.
 Plotfiles can also be viewed using the \visit, \paraview, and \yt\ packages.
 Particle data can be viewed using \paraview.
 
-Please see Chapter 9 of the AMReX User's Guide (available in amrex/Docs)
+Please see Chapter 9 of the AMReX User's Guide (available in AMReX/Docs)
 for more detail about using all of these visualization packages.

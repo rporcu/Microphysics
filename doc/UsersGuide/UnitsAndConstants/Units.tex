@@ -1,6 +1,6 @@
 \section{Units and Constants}
 
-We support two different systems of units in Nyx: CGS and Cosmological.
+We support two different systems of units in MFIX-Exa: CGS and Cosmological.
 All inputs and problem initialization should be specified consistently with one of these sets of units.  
 No internal conversions of units occur within the code, so the output must be interpreted appropriately. \\
 
@@ -188,23 +188,23 @@ Also, we set
 \begin{itemize}
 \item {\bf subroutine ctoprim}:  if $\rho e < 0$, then \\
 
- call subroutine nyx\_eos\_given\_RTX (e,...,small\_temp,...) in order to compute a new energy, $e$.  \\
+ call subroutine mfix\_eos\_given\_RTX (e,...,small\_temp,...) in order to compute a new energy, $e$.  \\
 
  This energy is then used to  \\
 
- call subroutine nyx\_eos\_given\_ReX in order to compute the sound speed, $c.$ \\
+ call subroutine mfix\_eos\_given\_ReX in order to compute the sound speed, $c.$ \\
 
 Coming out of this the temperature is equal to small\_temp and the energy $e$ has been reset.
 
 \item {\bf subroutine react\_state}:  if $\rho e < 0$, then \\
 
- call subroutine nyx\_eos\_given\_RTX (e,...,small\_temp,...) in order to compute a new energy, $e$.  \\
+ call subroutine mfix\_eos\_given\_RTX (e,...,small\_temp,...) in order to compute a new energy, $e$.  \\
 
  This energy is then used to proceed with the burner routine. \\
 
 \item {\bf subroutine reset\_internal\_energy}:  if $e < 0$ and $E - ke < 0$  then  \\
 
- call subroutine nyx\_eos\_given\_RTX (e,...,small\_temp,...) in order to compute a new energy, $e$.  This energy is also used to  \\
+ call subroutine mfix\_eos\_given\_RTX (e,...,small\_temp,...) in order to compute a new energy, $e$.  This energy is also used to  \\
 
  define a new $E = e + ke$ 
 

@@ -1,4 +1,4 @@
-The Nyx executable reads run-time information from an "inputs" file (which you put on the command line) 
+The MFIX-Exa executable reads run-time information from an "inputs" file (which you put on the command line) 
 and from a "probin" file, the name of which is usually defined in the inputs file, but which defaults to "probin".  
 To set the "probin" file name in the inputs file:\\
 
@@ -52,8 +52,8 @@ says the domain is periodic in the y-direction only.
 \begin{tabular}{|l|l|l|l|} \hline
 Parameter & Definition & Acceptable Values &Default\\
 \hline
-{\bf nyx.lo\_bc} & boundary type of each low face  & 0,1,2,3,4,5 & must be set \\
-{\bf nyx.hi\_bc} & boundary type of each high face & 0,1,2,3,4,5 & must be set \\
+{\bf mfix.lo\_bc} & boundary type of each low face  & 0,1,2,3,4,5 & must be set \\
+{\bf mfix.hi\_bc} & boundary type of each high face & 0,1,2,3,4,5 & must be set \\
 \hline
 \end{tabular}
 \label{Table:BC}
@@ -75,7 +75,7 @@ Boundary types are:
 \end{center}
 \end{table*}
 
-\noindent Note -- {\bf nyx.lo\_bc} and {\bf nyx.hi\_bc} must be consistent with 
+\noindent Note -- {\bf mfix.lo\_bc} and {\bf mfix.hi\_bc} must be consistent with 
 {\bf geometry.is\_periodic} -- if the domain is periodic in a particular
 direction then the low and high bc's must be set to 0 for that direction.
 
@@ -83,9 +83,9 @@ direction then the low and high bc's must be set to 0 for that direction.
 
 \begin{itemize}
 
-\item {\bf nyx.lo\_bc} = 1 4 0 
+\item {\bf mfix.lo\_bc} = 1 4 0 
 
-\item {\bf nyx.hi\_bc} = 2 4 0 
+\item {\bf mfix.hi\_bc} = 2 4 0 
 
 \item {\bf geometry.is\_periodic} = 0 0 1
 
@@ -157,7 +157,7 @@ new level 2 grids will be created every 2 level 1 time steps.
 \begin{tabular}{|l|l|l|l|} \hline
 Parameter & Definition & Acceptable Values &Default\\
 \hline
-{\bf nyx.allow\_untagging} & are cells allowed to be "untagged" & 0 or 1 & 0 \\
+{\bf mfix.allow\_untagging} & are cells allowed to be "untagged" & 0 or 1 & 0 \\
 \hline
 \end{tabular}
 \label{Table:Tagging}
@@ -170,7 +170,7 @@ Parameter & Definition & Acceptable Values &Default\\
 \begin{itemize}
 \item Typically cells at a given level can be tagged as needing refinement by any of a number
 of criteria, but cannot be "untagged", i.e. once tagged no other criteria can untag them.   If
-we set {\bf nyx.allow\_untagging} = 1 then the user is allowed to "untag" cells in the
+we set {\bf mfix.allow\_untagging} = 1 then the user is allowed to "untag" cells in the
 Fortran tagging routines
 \end{itemize}
 
@@ -296,8 +296,8 @@ Parameter & Definition & Acceptable Values &Default \\
 \hline
 {\bf max\_step}  & maximum number of level 0 time steps & Integer $\geq 0$ & -1 \\
 {\bf stop\_time} & final simulation time & Real $\geq 0$ & -1.0 \\
-{\bf nyx.final\_a}   & if {\bf nyx.use\_comoving = t} and positive value then this is final value of $a$  & Real $> 0$ & -1.0 \\
-{\bf nyx.final\_z}   & if {\bf nyx.use\_comoving = t} and positive value then this is final value of $z$  & Real $> 0$ & -1.0 \\
+{\bf mfix.final\_a}   & if {\bf mfix.use\_comoving = t} and positive value then this is final value of $a$  & Real $> 0$ & -1.0 \\
+{\bf mfix.final\_z}   & if {\bf mfix.use\_comoving = t} and positive value then this is final value of $z$  & Real $> 0$ & -1.0 \\
 \hline
 \end{tabular}
 \label{Table:TimeInputs}
@@ -313,8 +313,8 @@ Note that if the code reaches {\bf stop\_time} then the final time step will be 
 exactly at {\bf stop\_time}, not pass it.
 
 If running in comoving coordinates you can also set 
-a final value of $a$ by setting {\bf nyx.final\_a}, 
-or a final value of $z$ by setting {\bf nyx.final\_z}.
+a final value of $a$ by setting {\bf mfix.final\_a}, 
+or a final value of $z$ by setting {\bf mfix.final\_z}.
 You may only specify one or the other of these.
 Once this value of $a$ or $z$ is reached in a time step, 
 the code will stop at the end of this full coarse time step.  
@@ -332,10 +332,10 @@ the number of level 0 steps taken equals 1000, whichever comes first.
 
 \section{Time Step}
 \begin{itemize}
-\item If {\bf nyx.do\_hydro}$ = 1$, then typically 
+\item If {\bf mfix.do\_hydro}$ = 1$, then typically 
 the code chooses a time step based on the CFL number (dt = cfl * dx / max(u+c) ).
 
-\item If {\bf nyx.do\_hydro}$ = 0$ and we are running with dark matter particles, then we use a time step
+\item If {\bf mfix.do\_hydro}$ = 0$ and we are running with dark matter particles, then we use a time step
 based on the velocity of the particles, i.e. we set $\Delta t$ so that the particle goes no further than
 $f \Delta t$ in a coordinate direction where $0 \leq f \leq 1.$   The value for $f$ is currently hard-wired
 in Particles.H, but it will become an inputs parameter.
@@ -349,13 +349,13 @@ in Particles.H, but it will become an inputs parameter.
 \begin{tabular}{|l|l|l|l|} \hline
 Parameter & Definition & Acceptable Values &Default\\
 \hline
-{\bf nyx.cfl}    & CFL number for hydro    & Real $> 0$ and $\leq 1$ & 0.8 \\ 
+{\bf mfix.cfl}    & CFL number for hydro    & Real $> 0$ and $\leq 1$ & 0.8 \\ 
 {\bf particles.cfl} & CFL number for particles& Real $> 0$ and $\leq 1$ & 0.5 \\ 
-{\bf nyx.init\_shrink} & factor by which to shrink the initial time step & Real $> 0$ and $\leq 1$ & 1.0 \\ 
-{\bf nyx.change\_max} & factor by which the time step can grow in subsequent steps & Real $\geq 1$ & 1.1 \\ 
-{\bf nyx.fixed\_dt} &  level 0 time step regardless of cfl or other settings & Real $> 0$ & unused if not set \\
-{\bf nyx.initial\_dt} &  initial level 0 time step regardless of other settings & Real $> 0$ & unused if not set \\
-{\bf nyx.dt\_cutoff} & time step below which calculation will abort & Real $> 0$ & 0.0 \\
+{\bf mfix.init\_shrink} & factor by which to shrink the initial time step & Real $> 0$ and $\leq 1$ & 1.0 \\ 
+{\bf mfix.change\_max} & factor by which the time step can grow in subsequent steps & Real $\geq 1$ & 1.1 \\ 
+{\bf mfix.fixed\_dt} &  level 0 time step regardless of cfl or other settings & Real $> 0$ & unused if not set \\
+{\bf mfix.initial\_dt} &  initial level 0 time step regardless of other settings & Real $> 0$ & unused if not set \\
+{\bf mfix.dt\_cutoff} & time step below which calculation will abort & Real $> 0$ & 0.0 \\
 \hline
 \end{tabular}
 \label{Table:TimeStepInputs}
@@ -367,31 +367,31 @@ Parameter & Definition & Acceptable Values &Default\\
 
 \begin{itemize}
 
-\item {\bf nyx.cfl} = 0.9 \\
+\item {\bf mfix.cfl} = 0.9 \\
 defines the timestep as dt = cfl * dx / umax\_hydro.
 
 \item {\bf particles.cfl} = 0.9 \\
 defines the timestep as dt = cfl * dx / umax\_particles where umax\_particles is the maximum velocity 
 of any particle in the domain.
 
-\item {\bf nyx.init\_shrink} = 0.01 \\
+\item {\bf mfix.init\_shrink} = 0.01 \\
 sets the initial time step to 1\% of what it would be otherwise.  
 
-\item {\bf nyx.change\_max} = 1.1\\
+\item {\bf mfix.change\_max} = 1.1\\
 allows the time step to increase by no more than 10\% in this case.    Note that the time step
 can shrink by any factor; this only controls the extent to which it can grow.
 
-\item {\bf nyx.fixed\_dt} = 1.e-4\\
+\item {\bf mfix.fixed\_dt} = 1.e-4\\
 sets the level 0 time step to be 1.e-4 for the entire simulation, 
-ignoring the other timestep controls.   Note that if {\bf nyx.init\_shrink} $\neq 1$
-then the first time step will in fact be {\bf nyx.init\_shrink} * {\bf nyx.fixed\_dt}.
+ignoring the other timestep controls.   Note that if {\bf mfix.init\_shrink} $\neq 1$
+then the first time step will in fact be {\bf mfix.init\_shrink} * {\bf mfix.fixed\_dt}.
 
-\item {\bf nyx.initial\_dt} = 1.e-4\\
+\item {\bf mfix.initial\_dt} = 1.e-4\\
 sets the {\it initial} level 0 time step to be 1.e-4 regardless of 
-{\bf nyx.cfl} or {\bf nyx.fixed\_dt}.  The time step can
-grow in subsequent steps by a factor of {\bf nyx.change\_max} each step.
+{\bf mfix.cfl} or {\bf mfix.fixed\_dt}.  The time step can
+grow in subsequent steps by a factor of {\bf mfix.change\_max} each step.
 
-\item {\bf nyx.dt\_cutoff} = 1.e-20\\
+\item {\bf mfix.dt\_cutoff} = 1.e-20\\
 tells the code to abort if the time step ever gets below 1.e-20. 
 This is a safety mechanism so that if things go nuts you don't burn through your 
 entire computer allocation because you don't realize the code is misbehaving.
@@ -536,7 +536,7 @@ To restart from {\it chk\_run00061},for example, then set
 
 \section{Controlling PlotFile Generation}
 \label{sec:PlotFiles}
-The main output from Nyx is in the form of plotfiles (which are really directories).
+The main output from MFIX-Exa is in the form of plotfiles (which are really directories).
 The following options in the inputs file control the generation of plotfiles 
 
 \subsection{List of Parameters}
@@ -558,7 +558,7 @@ Parameter & Definition & Acceptable Values &Default\\
 {\bf amr.plotfile\_on\_restart} & should we write a plotfile immediately after restarting 
   & 0 or 1 & 0 \\
 {\bf amr.plot\_nfiles}  & how parallel is the writing of the plotfiles & Integer $\geq 1$ & 64 \\
-{\bf nyx.plot\_phiGrav} & Should we plot the gravitational potential & 0 or 1 & 0 \\
+{\bf mfix.plot\_phiGrav} & Should we plot the gravitational potential & 0 or 1 & 0 \\
                         & plot the gravitational potential & 0 or 1 & 0 \\
 {\bf particles.write\_in\_plotfile} & Should we write the particles in a file within the plotfile & 0 or 1 & 0 \\
 {\bf fab.format} & Should we write the plotfile in double or single precision & NATIVE or IEEE32 & NATIVE \\
@@ -568,7 +568,7 @@ Parameter & Definition & Acceptable Values &Default\\
 \end{scriptsize}
 \end{table*}
 
-All the options for {\bf amr.derive\_plot\_vars} are kept in \texttt{derive\_lst} in Nyx\_setup.cpp.  Feel free to look at it and see what's there. 
+All the options for {\bf amr.derive\_plot\_vars} are kept in \texttt{derive\_lst} in MFIX-Exa\_setup.cpp.  Feel free to look at it and see what's there. 
 
 
 \subsection{Notes}
@@ -587,8 +587,8 @@ than if you didn't set this flag.
 \item If you are doing a scaling study then set {\bf amr.plot\_files\_output} = 0
 so you can test scaling of the algorithm without I/O.
 
-\item {\bf nyx.plot\_phiGrav} is only relevant if 
-{\bf nyx.do\_grav} = 1 and {\bf gravity.gravity\_type} = PoissonGrav
+\item {\bf mfix.plot\_phiGrav} is only relevant if 
+{\bf mfix.do\_grav} = 1 and {\bf gravity.gravity\_type} = PoissonGrav
 
 \item By default, plotfiles are written in double precision (NATIVE format).  If you want to 
 save space by writing them in single precision, set the fab.format flag to IEEE32.
@@ -633,7 +633,7 @@ $t = 0.2$ after 61 level 0 steps, etc.
 Parameter & Definition & Acceptable Values &Default\\
 \hline
 {\bf amr.v} & verbosity of Amr.cpp & 0 or 1 & 0 \\
-{\bf nyx.v} & verbosity of Nyx.cpp & 0 or 1 & 0 \\
+{\bf mfix.v} & verbosity of MFIX-Exa.cpp & 0 or 1 & 0 \\
 {\bf gravity.v} & verbosity of Gravity.cpp & 0 or 1 & 0 \\
 {\bf mg.v} & verbosity of multigrid solver (for gravity) & 0,1,2,3,4 & 0 \\
 {\bf particles.v} & verbosity of particle-related processes & 0,1,2,3,4 & 0 \\
@@ -642,7 +642,7 @@ Parameter & Definition & Acceptable Values &Default\\
 {\bf amr.run\_log\_terse} & name of the file to which certain (terser) output is written & Text & not used if not set \\
 {\bf amr.sum\_interval}   & if $> 0,$ how often (in level 0 time steps) & &  \\  
                           & to compute and print integral quantities & Integer & -1 \\  
-{\bf nyx.do\_special\_tagging} & & 0 or 1 & 1 \\
+{\bf mfix.do\_special\_tagging} & & 0 or 1 & 1 \\
 \hline
 \end{tabular}
 \end{center}
@@ -653,7 +653,7 @@ Parameter & Definition & Acceptable Values &Default\\
 
 \begin{itemize}
 
-\item {\bf nyx.do\_special\_tagging} = 1 allows the user to set a special flag based on
+\item {\bf mfix.do\_special\_tagging} = 1 allows the user to set a special flag based on
 user-specified criteria.  This can be used, for example, to calculate the bounce time in a 
 core collapse simulation; the bounce time is defined as the first time at which the maximum
 density in the domain exceeds a user-specified value.   This time can then be printed into
@@ -682,9 +682,9 @@ of the form \\
 in which "10" is the number of steps taken, "0.2" is the simulation time, and "0.005" is the 
 level 0 time step.  This file can be plotted very easily to monitor the time step.
 
-\item {\bf nyx.sum\_interval} = 2 \\
-if {\bf nyx.sum\_interval} $> 0$ then the code computes and prints certain integral quantities, 
-such as total mass, momentum and energy in the domain every {\bf nyx.sum\_interval} level 0 steps. 
+\item {\bf mfix.sum\_interval} = 2 \\
+if {\bf mfix.sum\_interval} $> 0$ then the code computes and prints certain integral quantities, 
+such as total mass, momentum and energy in the domain every {\bf mfix.sum\_interval} level 0 steps. 
 In this example the code will print these quantities every two coarse time steps.  The print 
 statements have the form \\
 TIME= 1.91717746 MASS= 1.792410279e+34 \\
@@ -703,8 +703,8 @@ If this line is commented out then it will not compute and print these quanititi
 \begin{tabular}{|l|l|l|l|} \hline
 Parameter & Definition & Acceptable Values &Default\\
 \hline
-{\bf nyx.do\_grav}  & Include gravity as a forcing term & 0 if false, 1 if true & must be set if USE\_GRAV = TRUE  \\
-{\bf gravity.gravity\_type} & if {\bf nyx.do\_grav} = 1, how shall gravity be calculated & CompositeGrav, & \\
+{\bf mfix.do\_grav}  & Include gravity as a forcing term & 0 if false, 1 if true & must be set if USE\_GRAV = TRUE  \\
+{\bf gravity.gravity\_type} & if {\bf mfix.do\_grav} = 1, how shall gravity be calculated & CompositeGrav, & \\
 & & PoissonGrav & must be set \\
 {\bf gravity.no\_sync} & if {\bf gravity.gravity\_type} = PoissonGrav, whether to perform the "sync solve" &  0 or 1 & 0 \\
 {\bf gravity.no\_composite} & if {\bf gravity.gravity\_type} = PoissonGrav, whether to perform a composite solve & 0 or 1 & 0 \\
@@ -723,9 +723,9 @@ Gravity types are CompositeGrav or PoissonGrav.  See the Gravity section for mor
 \item To include gravity you must set 
 \begin{itemize}
 \item USE\_GRAV  = TRUE in the GNUmakefile 
-\item {\bf nyx.do\_grav} = 1 in the inputs file
+\item {\bf mfix.do\_grav} = 1 in the inputs file
 \end{itemize}
-\item {\bf gravity.gravity\_type} is  only relevant if {\bf nyx.do\_grav} = 1 
+\item {\bf gravity.gravity\_type} is  only relevant if {\bf mfix.do\_grav} = 1 
 \item {\bf gravity.no\_sync} and {\bf gravity.no\_composite} are only relevant if {\bf gravity.gravity\_type} = PoissonGrav,
 i.e. the code does a full Poisson solve for self-gravity.
 \end{itemize}
@@ -740,12 +740,12 @@ i.e. the code does a full Poisson solve for self-gravity.
 \begin{tabular}{|l|l|l|l|} \hline
 Parameter & Definition & Acceptable Values &Default\\
 \hline
-{\bf nyx.do\_hydro} & Time-advance the fluid dynamical equations & 0 if false, 1 if true & must be set \\
-{\bf nyx.do\_react} & Include reactions                          & 0 if false, 1 if true & must be set \\
-{\bf nyx.add\_ext\_src} & Include additional user-specified source term & 0 if false, 1 if true & 0 \\
-{\bf nyx.use\_const\_species} & If 1 then read h\_species and he\_species & 0 or 1 & 0 \\
-{\bf nyx.h\_species}  & Concentration of H  & 0 $<$ X $<$ 1 & 0 \\
-{\bf nyx.he\_species} & Concentration of He & 0 $<$ X $<$ 1 & 0 \\
+{\bf mfix.do\_hydro} & Time-advance the fluid dynamical equations & 0 if false, 1 if true & must be set \\
+{\bf mfix.do\_react} & Include reactions                          & 0 if false, 1 if true & must be set \\
+{\bf mfix.add\_ext\_src} & Include additional user-specified source term & 0 if false, 1 if true & 0 \\
+{\bf mfix.use\_const\_species} & If 1 then read h\_species and he\_species & 0 or 1 & 0 \\
+{\bf mfix.h\_species}  & Concentration of H  & 0 $<$ X $<$ 1 & 0 \\
+{\bf mfix.he\_species} & Concentration of He & 0 $<$ X $<$ 1 & 0 \\
 \hline
 \end{tabular}
 \label{Table:Physics}
