@@ -1,20 +1,15 @@
 
 \section{Introduction}
 
-Welcome to the MFIX-Exa User's Guide!  In this document is an overview of MFIX-Exa, an 
-open-source multiphase flow solver. 
-Another place to look for information about what is being done with MFIX-Exa is
-{\url{https://amrex-astro.github.io/mfix}}. There you can find papers published
-and the latest science being done with MFIX-Exa.
+Welcome to the MFIX-Exa User's Guide!  In this document is an overview 
+of MFIX-Exa, a multiphase flow solver hosted on the NETL gitlab site. 
 
 \section{Downloading the Code}
 
-\amrex\ is built on top of the \amrex\ framework.  In order to run
-\amrex\, you must download two separate git modules.
+\mfix\ is built on top of the \amrex\ framework.  In order to run
+\mfix\, you must download two separate git modules.
 
 \vspace{.1in}
-
-\noindent First, make sure that {\tt git} is installed on your machine---we recommend version 1.7.x or higher.
 
 \vspace{.1in}
 
@@ -31,6 +26,11 @@ git pull
 \end{verbatim}
 in the {\tt AMReX/} directory.
 
+\item Clone/fork the \mfix\ repository:
+\begin{verbatim}
+git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
+\end{verbatim}
+
 Note: when you check out AMReX (and MFIX-Exa), you will get the {\tt master}
 branch.   The MFIX-Exa master branch is guaranteed to be compatible
 with the AMReX master branch.
@@ -38,28 +38,6 @@ Active development is done on the {\tt development} branch
 in each repo, and merged into the {\tt master} branch monthly.
 If you wish to use the \amrex\ {\tt development} branch, then you
 should also switch to the {\tt development} branch for \amrex.
-
-\item Set the environment variable, {\tt AMREX\_HOME}, on your
-  machine to point to the path name where you have put \amrex.
-  You can add this to your {\tt .bashrc} as:
-\begin{Verbatim}[commandchars=\\\{\}]
-export AMREX_HOME={\em /path/to/amrex/}
-\end{Verbatim}
-or to your {\tt .cshrc} as:
-\begin{Verbatim}[commandchars=\\\{\}]
-setenv AMREX_HOME {\em /path/to/amrex/}
-\end{Verbatim}
-where you replace \texttt{\em /path/to/amrex/} will the full path to the
-{\tt AMReX/} directory.
-
-\item Clone/fork the \amrex\ repository:
-\begin{verbatim}
-git clone https://github.com/AMReX-Astro/mfix
-\end{verbatim}
-
-As with \amrex, development on \amrex\ is done in the
-{\tt development} branch, so you should work there if you want
-the latest source.
 
 \end{enumerate}
 
