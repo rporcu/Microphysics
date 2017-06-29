@@ -97,7 +97,7 @@ int main (int argc, char* argv[])
        &normg, &set_normg, &call_udf);
 
     if ( ParallelDescriptor::IOProcessor() )
-  check_inputs(&dt);
+       check_inputs(&dt);
 
     int lev = 0;
 
@@ -122,7 +122,7 @@ int main (int argc, char* argv[])
 
     // Call to output before entering time march loop
     if (solve_fluid && ParallelDescriptor::IOProcessor()  && solve_dem )
-  my_mfix.output(lev,estatus,finish,nstep,dt,time);
+       my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
     // only if solve_fluid = T
@@ -130,12 +130,12 @@ int main (int argc, char* argv[])
 
     // We automatically write checkpoint and plotfiles with the initial data
     //    if plot_int > 0
-    if ( plot_int > 0 )
+    if ( restart_file.empty() && plot_int > 0 )
        my_mfix.WritePlotFile( plot_file, nstep, dt, time );
 
     // We automatically write checkpoint files with the initial data
     //    if check_int > 0
-    if ( check_int > 0 )
+    if ( restart_file.empty() && check_int > 0 )
        my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
 
     // We automatically write ASCII files with the particle data
@@ -143,33 +143,37 @@ int main (int argc, char* argv[])
     if ( par_ascii_int > 0 )
        my_mfix.WriteParticleAscii( par_ascii_file, nstep );
 
-    while (finish == 0)
+    std::cout << "TIME TSTOP " << time << " " << tstop << std::endl;
+    if (time <  tstop)
     {
-       mfix_usr1();
+       while (finish == 0)
+       {
+          mfix_usr1();
 
-       my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
+          my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
 
-       if (!steady_state)  {
+          if (!steady_state)  
+          {
+             time += prev_dt;
+             nstep++;
 
-          time += prev_dt;
-          nstep++;
+             if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
+                my_mfix.WritePlotFile( plot_file, nstep, dt, time );
+   
+             if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
+                my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+   
+             if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
+                my_mfix.WriteParticleAscii( par_ascii_file, nstep );
+          }
 
-          if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
-             my_mfix.WritePlotFile( plot_file, nstep, dt, time );
+          if (ParallelDescriptor::IOProcessor() && solve_dem )
+             my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
-          if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
-             my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
-
-          if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
-             my_mfix.WriteParticleAscii( par_ascii_file, nstep );
+          // Mechanism to terminate MFIX normally.
+          if (steady_state || (time + 0.1*dt >= tstop) || (solve_dem && !solve_fluid)) finish = 1;
        }
-
-       if (ParallelDescriptor::IOProcessor() && solve_dem )
-          my_mfix.output(lev,estatus,finish,nstep,dt,time);
-
-       // Mechanism to terminate MFIX normally.
-       if (steady_state || (time + 0.1*dt >= tstop) || (solve_dem && !solve_fluid)) finish = 1;
-    }
+    } 
 
     // Dump plotfile at the end if enabled for steady state
     if (steady_state) {
