@@ -130,12 +130,12 @@ int main (int argc, char* argv[])
 
     // We automatically write checkpoint and plotfiles with the initial data
     //    if plot_int > 0
-    if ( plot_int > 0 )
+    if ( restart_file.empty() && plot_int > 0 )
        my_mfix.WritePlotFile( plot_file, nstep, dt, time );
 
     // We automatically write checkpoint files with the initial data
     //    if check_int > 0
-    if ( check_int > 0 )
+    if ( restart_file.empty() && check_int > 0 )
        my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
 
     // We automatically write ASCII files with the particle data
