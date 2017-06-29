@@ -113,7 +113,7 @@ set (MFIX_EXTRA_LIBRARIES_PATH)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
-set (AMREX_GIT_COMMIT_DEVELOP c861721c4fea0ce2da5ea12bd336bd649a1fee72 )
+set (AMREX_GIT_COMMIT_DEVELOP b8fe4dfd4436de3d116b1732c56735505544e911 )
 set (AMREX_GIT_TAG)  # The commit id or branch to download 
 
 
