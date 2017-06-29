@@ -1,59 +1,79 @@
-cmake_minimum_required(VERSION 3.3.2)
+cmake_minimum_required (VERSION 3.5)
 
-enable_language(CXX)
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+project (MFIX-Exa)
 
-enable_language(Fortran)
+#
+# Define the languages used by the project
+#
+enable_language (C)
+enable_language (CXX)
+enable_language (Fortran)
 
-# Not used by MFiX-Exa directly, but by AMReX Superbuild
-enable_language(C)
+#
+# Require C++11 standard
+#
+set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD_REQUIRED ON) 
+set (CMAKE_CXX_EXTENSIONS OFF)
 
-# Load MFIX Cmake Tools
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/)
-include(MFIXTools)
-include(AMReXConfig)
+#
+# Always verbose output during make
+# 
+set ( CMAKE_VERBOSE_MAKEFILE on )
 
-check_build_tree_path()
-set_defaults()
-set_compiler_flags()
+#
+# Set the search path for cmake modules
+#
+set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/ )
 
-# Config Amrex
-if (ENABLE_SUPERBUILD)
-   build_amrex()
-else (ENABLE_SUPERBUILD)
-   find_amrex()
-endif (ENABLE_SUPERBUILD)
 
-# Set build flags ( provides MFIX_INCLUDES,
-# MFIX_EXT_LINK_STRING  and MFIX_EXT_LINK_DIRS )
-set_build_flags()
+#
+# Include module with custom macros and functions
+#
+include ( MFIX_Utils )
 
-# Print summary of config settings
-summary()
+get_git_info ( var1 var2 )
+#
+# Stop if building in source
+# 
+check_build_tree_path ()
 
-project(MFIXEXA)
+#
+# Initialize all the global variables
+#
+include ( MFIX_CMakeVariables )
+
+# 
+# Load MFIX options
+# 
+include ( MFIX_Options )
+
+#
+# Config MFIX build
+# 
+include ( MFIX_Config )
+
 
 # This is the main file
-set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
+set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
-include_directories(${MFIX_INCLUDES})
-link_directories(${MFIX_EXT_LINK_DIRS})
+include_directories (${MFIX_INCLUDE_PATH} ${MFIX_EXTRA_INCLUDE_PATH})
+link_directories (${MFIX_EXTRA_LIBRARIES_PATH})
 
 # Main
-add_subdirectory( src )
+add_subdirectory (src)
 
-file(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
-add_executable(mfix ${MAIN} ${USR_OVERRIDES})
-target_link_libraries( mfix mfixcore ${MFIX_EXT_LINK_STRING} )
+file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
+add_executable (mfix ${MAIN} ${USR_OVERRIDES} )
+target_link_libraries ( mfix mfixcore ${MFIX_EXTRA_LINK_LINE} ) 
 
 # Tools
-set( MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 
-add_subdirectory( Tools/F90 )
+set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 
+add_subdirectory (Tools/F90)
 
 # Tests
-enable_testing()
-add_subdirectory( tests )
+enable_testing ()
+add_subdirectory ( tests )
 #add_subdirectory( benchmarks )
 
 # Add a target to generate API documentation with Doxygen
