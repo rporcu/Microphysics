@@ -14,14 +14,12 @@ section_sources = Introduction/Introduction.tex \
 
 UserGuide.dvi: UserGuide.tex $(eps_source) $(section_sources) $(eps_source)
 	latex UserGuide.tex < /dev/null
-	bibtex UserGuide
 	latex UserGuide.tex < /dev/null
 	latex UserGuide.tex < /dev/null
 	latex UserGuide.tex < /dev/null
 
 UserGuide.pdf: UserGuide.tex $(pdf_source) $(section_sources) $(pdf_source)
 	pdflatex UserGuide.tex < /dev/null
-	bibtex UserGuide
 	pdflatex UserGuide.tex < /dev/null
 	pdflatex UserGuide.tex < /dev/null
 	pdflatex UserGuide.tex < /dev/null
