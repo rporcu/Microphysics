@@ -1,13 +1,26 @@
-For the moment, assume that we are running in comoving coordinates, 
-with dark matter particles only (no hydro) and that the particles all exist at level 0.   These assumptions are
-encapsulated in the following lines in the inputs file: \\
+This section provides an overview of MFIX-Exa's Discrete Element Modelling (DEM)
+abilities. MFIX-Exa's DEM simulations retain all the functionality of MFIX-DEM. 
+MFIX-Exa can be run in both a pure granular (particles only) mode  
+as well as a particle fluid-coupling mode. In the latter case, MFIX-Exa models 
+the fluid phase as a continuum and models the
+particles of the solid phase individually. This approach supports a wide range 
+of customization for particle dynamics, including mutliple particle collision 
+force and drag schemes. For more information on the DEM capabilities of MFIX-Exa
+see \demdoc\ on the MFIX Documentation webpage 
+{\url{https://mfix.netl.doe.gov/download/mfix/mfix_current_documentation/dem_doc_2012-1.pdf/}}.  
 
-\noindent {\bf mfix.use\_comoving = t} \\
-\noindent {\bf mfix.do\_dm\_particles = 1} \\
-\noindent {\bf amr.max\_level =  0} \\
-\noindent {\bf mfix.do\_hydro = 0} \\
-\noindent {\bf mfix.do\_react = 0} \\
-\noindent {\bf mfix.do\_grav =  1} 
+\section{Overview}
+
+\begin{figure}
+    \includegraphics[width=\linewidth,natwidth=800, natheight=600]{./Particles/MFIX-Particle-Diagram.png} 
+    \caption{Particle Routines Flowchart}
+    \label{fig:pflowchart}
+\end{figure}
+
+\mfix\ retains all the functionality of MFIX-DEM. A detailed discription of the
+particles dynamics and thus be found in \demdoc.
+In addition, figure \ref{fig:pflowchart} provides a visual representation
+of the particle routines in \mfix. 
 
 \section{Equations}
 

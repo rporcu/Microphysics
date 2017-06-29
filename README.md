@@ -180,53 +180,18 @@ _user_file_name_ is the name of a user-defined text file containing the MFIX inp
 If _mfix.input_file=input_file_name_ is not given, MFIX will try to read the file
 _mfix.dat_. MFIX __requires__ either _user_file_name_ or _mfix.dat_.
 
+# See the User's Guide for more about MFIX-Exa
 
-# Writing plotfiles
-In order to write out plotfiles, add the following to the _inputs_ file:
-```shell
-amr.plot_int=N
-```
-N needs to be > 1 for the plotfiles to be written out. For transient solves,
-N indicates the number of time steps between two consecutive writes.
-For steady state solve, N does not have any meaning: a plotfile will be written
-after the steady state is reached, as long as N > 0. To specify the name of the
-plotfiles directories, add the following to the _inputs_ file:
-```shell
-amr.plot_file=<plotfile_name>
-```
-If the name of the plotfile is not provided, MFIX will default to _plt_.
+To build the User's Guide, 
 
-
-# Writing checkfiles
-To dump a checkfile every N time steps, add the following to the _inputs_
-file:
 ```shell
-amr.check_int=N
-```
-The name of the checkfile can be specified by adding
-```shell
-amr.check_file=<checkfile_name>
-```
-to the _inputs_ file. In order to restart a calculation from a checkpoint,
-add add the following to the _inputs_
-file:
-```shell
-amr.restart_chkfile=<checkfile_name>
+> cd doc/UsersGuide
+> make 
 ```
 
-# Writing particles ASCII files
-To write an ASCII file with particles data every N time steps, add the
-following to the _inputs_ file:
-```shell
-amr.par_ascii_file=<ascii_file_name>
-amr.par_ascii_int=N
-```
-N needs to be > 1 for the ASCII files to be written out. For transient solves,
-N indicates the number of time steps between two consecutive writes.
-For steady state solve, N does not have any meaning: an ASCII file will be written
-after the steady state is reached, as long as N > 0. Specifying the
-ASCII file name is optional.
-
+This will build a pdf of the MFIX-Exa User's Guide, which contains information
+about the equations being solved, run-time parameters, checkpoint/restart
+capability, options for visualization and more.
 
 # Regression testing
 
