@@ -21,26 +21,57 @@ o __SUPERBUILD (default):__  Utilities download and build AMReX as
 o __Using an existing AMReX Library:__  MFIX-Exa is linked to an
    existing AMReX installation. This is ideal for continuous
    integration severs (CI) and regression testing applications.
-   AMReX library version and configure options must meet MFIX-Exa
-   requirements.
+   AMReX library version must meet MFIX-Exa requirements.
 
 ## SUPERBUILD Instructions (recommended)
 
-The following commands build MFIX-Exa and AMReX in a single step.
-AMReX is only built the first time the `make` command is issued.
-No external installation of AMReX is needed, however, internet access
-to the AMReX github repository is required.
+When building in __SUPERBUILD__ mode, MFIX-Exa build system will take 
+care of downloading, configuring and installing AMReX as part of the
+MFIX-Exa build. The following commands build MFIX-Exa and AMReX in a single step.
 
 ```shell
 > git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
 > cd mfix
 > mkdir build
 > cd build
-> cmake CMAKE_CONFIG_OPTIONS  ..
+> cmake CONFIG_OPTIONS ..
 > make -j
 ```
+AMReX is built the first time the `make` command is issued.
+No external installation of AMReX is needed. However, internet access
+to the AMReX github repository is required.
+The optional string `CONFIG_OPTIONS` allows to customize the build of both AMReX and MFIX-Exa.
+`CONFIG_OPTIONS` is a list of one or more configuration options given in the form
+__-D__*OPTION=VALUE*`.
+ 
+The table below lists configuration options, possible values, and their effect on the build.
+Options prefixed by `AMREX_` are specific to the build of AMReX.
 
-## Building MFIX-Exa using an existing AMReX Library
+| Option name                  |  Description                                 | Possible values              | Default value       |
+| -----------------------------|----------------------------------------------|------------------------------|---------------------|
+| CMAKE_BUILD_TYPE             | Configuration of the build                   |   Debug/Release              |   Debug             |
+| MFIX_FFLAGS_OVERRIDES        | User-defined Fortran flags                   | valid F90 compiler flags     |   None              |
+| MFIX_CXXLAGS_OVERRIDES       | User-defined C++ flags                       | valid C++ compiler flags     |   None              |
+| AMREX_ENABLE_MPI             | Enable build with MPI                        |   0/1                        |   1                 |
+| AMREX_ENABLE_OMP             | Enable build with OpenMP                     |   0/1                        |   0                 |
+| AMREX_ENABLE_DP              | Enable double precision                      |   0/1                        |   1                 |
+| AMREX_ENABLE_DP_PARTICLES    | Enable double precision in particles classes |   0/1                        |   1                 |
+| AMREX_ENABLE_PROFILING       | Include profiling info                       |   0/1                        |   0                 |
+| AMREX_ENABLE_TINY_PROFILING  | Include tiny profiling info                  |   0/1                        |   0                 |
+| AMREX_ENABLE_BACKTRACE       | Include backtrace info                       |   0/1                        |   1                 |
+| AMREX_ENABLE_PIC             | Build position-independent code              |   0/1                        |   0                 |
+| AMREX_GIT_COMMIT             | AMReX commit to be used in the build         | valid git commit id/branch   |   None              |
+| AMREX_INSTALL_DIR            | Global path to AMReX install directory       | valid global path            |   None (superbuild) |
+ 
+`__SUPERBUILD__ mode is enabled automatically when _AMREX_INSTALL_DIR_ is not given.`
+
+Example: build mfix with custom fortran flags, AMReX profiling enabled and single precision particles:
+
+```
+cmake -DMFIX_FFLAGS_OVERRIDES="custom flags" -DAMREX_ENABLE_PROFILING=1 -DAMREX_ENABLE_DP_PARTICLES=0 ..
+```  
+
+## Building MFIX-Exa using a separate AMReX installation (no superbuild)
 
 ### Build AMReX Library
 
@@ -50,65 +81,30 @@ Clone AMReX from the official Git repository and checkout the _development_ bran
 > cd amrex
 > git checkout development
 ```
-
-Set the environment variable `AMREX_HOME` to point to the *installdir*,
-the directory were the AMReX library will be installed. If *installdir*
-does not exist, the build system will create it for you. __It is strongly
-recommended that *installdir* not be placed in the same folder as the
-AMReX source files.__
+Next, configure, build and install AMReX as follows: 
 ```shell
-> export AMREX_HOME=absolute-path-to-installdir
-```
-
-Run CMake to build and install AMReX from the AMReX source directory. Here,
-`CMAKE_CONFIG_OPTIONS` are optional configure options. A list of typical
-configure options are provided below.
-```shell
-> cmake CMAKE_CONFIG_OPTIONS -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME .
+> cmake AMREX_CONFIG_OPTIONS -DENABLE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=/absolute/path/to/installdir .
 > make install
 ```
+Here,`AMREX_CONFIG_OPTIONS` are optional configure options for AMReX. Please refer to the AMReX user guide
+for a list of all the possible configuration options. The only option required is __-DENABLE_PARTICLES=1__.
 
+### Build MFIX-Exa
 Clone and build MFIX-Exa.
 ```shell
 > git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
 > mkdir build
 > cd build
-> cmake CMAKE_CONFIG_OPTIONS -DENABLE_SUPERBUILD=0 ..
+> cmake CONFIG_OPTIONS -DAMREX_INSTALL_DIR=/absolute/path/to/amrex/installdir ..
 > make -j
 ```
-Here, `CMAKE_CONFIG_OPTIONS` are optional configure options. A list of typical
-configure options are provided below. __Note, the configure options used
-to build MFIX-Exa must match the AMReX configure options.__ For example,
-if MPI is enabled when building the AMReX library, then MPI must below
-enabled when building MFIX-Exa.
+Here, `CONFIG_OPTIONS` are MFIX-Exa specific configuration options, that is, any option prefixed by `MFIX_`
+in the table above. Options prefixed by `AMREX_` are always ignored 
+when using an external AMReX installation.
 
 
 ## Custom configurations (`CMAKE_CONFIG_OPTIONS`)
 
-The optional string `CMAKE_CONFIG_OPTIONS` allows features to be enable or
-disable of both AMReX and MFIX-Exa. If AMReX is built separately, MFIX-Exa
-must be configured with the same `CMAKE_CONFIG_OPTIONS`. If SUPERBUILD is
-used, the MFIX-Exa build system ensures the same configure options are used.
-
-
-`CMAKE_CONFIG_OPTIONS` consists of a series of options of the form
-__-D__*OPTION=VALUE*`. The following table below lists possible options,
-possible values, and their effect on the build.
-
-| Option name          |  Description                                 | Possible values              | Default value  |
-| ---------------------|----------------------------------------------|------------------------------|----------------|
-| ENABLE_MPI           | Enable build with MPI                        |   0/1                        |   0            |
-| ENABLE_OpenMP        | Enable build with OpenMP                     |   0/1                        |   0            |
-| ENABLE_PROFILING     | Include profiling information in AMReX build |   0/1                        |   0            |
-| ENABLE_BACKTRACE     | Include backtrace information in AMReX build |   0/1                        |   1            |
-| FFLAGS               | User-defined Fortran flags                   | all compiler-supported flags |   None         |
-| CXXFLAGS             | User-defined C++ flags                       | all compiler-supported flags |   None         |
-
-For example, invoking cmake as follows adds the flag *-fcray-pointer* to
-the Fortran compilation command and enables MPI subroutines.
-```shell
-> cmake -DFFLAGS=-fcray-pointer -DENABLE_MPI=1 ..
-```
 The system defaults compilers can be overwritten as well by setting the flags
 `FC` and `CXX` before invoking the cmake command.
 ```shell
