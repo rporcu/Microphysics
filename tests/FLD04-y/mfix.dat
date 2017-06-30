@@ -63,11 +63,11 @@
 ! partial slip wall (PSW) implemented as dv/dn + Hw(V-Vw) = 0.0
 ! where Vw is the wall speed and Hw is undefined (Inf).
 !---------------------------------------------------------------------//
-  BC_X_w(1) =   1.00  ! (m)
+  BC_X_w(1) =   0.00  ! (m)
   BC_X_e(1) =   1.00  ! (m)
   BC_Y_s(1) =   0.00  ! (m)
   BC_Y_n(1) =   1.00  ! (m)
-  BC_Z_b(1) =   0.00  ! (m)
+  BC_Z_b(1) =   1.00  ! (m)
   BC_Z_t(1) =   1.00  ! (m)
 
   BC_TYPE(1) = 'PSW'
@@ -77,25 +77,25 @@
   BC_Ww_g(1) =  0.00  ! (m/sec)
 
 
-! Front and back walls are free-slip
+! East and west walls are free-slip
 !---------------------------------------------------------------------//
-  BC_X_w(2:3) =   0.00    0.00  ! (m)
-  BC_X_e(2:3) =   1.00    1.00  ! (m)
+  BC_X_w(2:3) =   0.00    1.00  ! (m)
+  BC_X_e(2:3) =   0.00    1.00  ! (m)
   BC_Y_s(2:3) =   0.00    0.00  ! (m)
   BC_Y_n(2:3) =   1.00    1.00  ! (m)
-  BC_Z_b(2:3) =   0.00    1.00  ! (m)
-  BC_Z_t(2:3) =   0.00    1.00  ! (m)
+  BC_Z_b(2:3) =   0.00    0.00  ! (m)
+  BC_Z_t(2:3) =   1.00    1.00  ! (m)
 
   BC_Type(2:3) = 'FSW'    'FSW'
 
 
-! North, south and east walls  are No-Slip Walls
+! North, south and bottom walls  are No-Slip Walls
 !---------------------------------------------------------------------//
   BC_X_w(4:6) =   0.00    0.00    0.00   ! (m)
-  BC_X_e(4:6) =   1.00    1.00    0.00   ! (m)
+  BC_X_e(4:6) =   1.00    1.00    1.00   ! (m)
   BC_Y_s(4:6) =   1.00    0.00    0.00   ! (m)
   BC_Y_n(4:6) =   1.00    0.00    1.00   ! (m)
   BC_Z_b(4:6) =   0.00    0.00    0.00   ! (m)
-  BC_Z_t(4:6) =   1.00    1.00    1.00   ! (m)
+  BC_Z_t(4:6) =   1.00    1.00    0.00   ! (m)
 
   BC_Type(4:6) = 'NSW'   'NSW'   'NSW'

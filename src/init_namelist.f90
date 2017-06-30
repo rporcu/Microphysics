@@ -26,20 +26,17 @@ MODULE INIT_NAMELIST_MODULE
       use bc
       use ic
       use drag, only: drag_c1, drag_d1
-      use constant, only: d_p0, gravity, ro_s0
+      use constant, only: gravity
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use des_init_namelist_module, only: des_init_namelist
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
       use fld_const, only: mu_g0, mw_avg
       use fld_const, only: ro_g0
       use fld_const, only: ro_g0, mu_g0, mw_avg
-      use bc, only: cyclic_x, cyclic_y, cyclic_z
-      use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      use leqsol, only: do_transpose, icheck_bicgs, leq_it, opt_parallel, use_doloop
-      use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, solver_statistics, ival
+      use leqsol, only: leq_it, leq_pc, leq_sweep, leq_tol, max_nit, ival
       use run, only: full_log, nlog
       use output, only: dim_usr
       use output, only: usr_dt
@@ -47,9 +44,8 @@ MODULE INIT_NAMELIST_MODULE
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
-      use run, only: undefined_i
       use run, only: call_usr, description, tstop
-      use run, only: dt_fac, dt_max, dt_min, run_name, solids_model
+      use run, only: dt_fac, dt_max, dt_min, run_name
       use drag, only: drag_type
       use scales, only: p_ref, p_scale
       use residual, only: norm_g, tol_diverge, tol_resid
@@ -60,7 +56,7 @@ MODULE INIT_NAMELIST_MODULE
 
 
       use param, only: zero, one
-      use param, only: undefined, undefined_i, undefined_c
+      use param, only: undefined, undefined_c
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -93,7 +89,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Simulation stop time.
 !  </description>
 !  <range min="0.0" max="+Inf" />
-      TSTOP = UNDEFINED
+      tstop = UNDEFINED
 !</keyword>
 
 !<keyword category="Run Control" required="false">
@@ -101,7 +97,7 @@ MODULE INIT_NAMELIST_MODULE
 !  <dependent keyword="TIME" value="DEFINED"/>
 !  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="+Inf" />
-      DT_MAX = ONE
+      dt_max = ONE
 !</keyword>
 
 !<keyword category="Run Control" required="false">
@@ -109,7 +105,7 @@ MODULE INIT_NAMELIST_MODULE
 !  <dependent keyword="TIME" value="DEFINED"/>
 !  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="+Inf" />
-      DT_MIN = 1.0D-6
+      dt_min = 1.0D-6
 !</keyword>
 
 !<keyword category="Run Control" required="false">
@@ -122,7 +118,7 @@ MODULE INIT_NAMELIST_MODULE
 !  <dependent keyword="TIME" value="DEFINED"/>
 !  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="1" />
-      DT_FAC = 0.9D0
+      dt_fac = 0.9D0
 !</keyword>
 
 !<keyword category="Run Control" required="false">
@@ -318,61 +314,16 @@ MODULE INIT_NAMELIST_MODULE
       UR_FAC(4)  = 0.5D0     ! W
 !</keyword>
 
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
-!    Frequency to check for convergence. (BICGSTAB ONLY)
-!  </description>
-!  <dependent keyword="LEQ_METHOD" value="2"/>
-      icheck_bicgs = 1
-!</keyword>
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
-!    Sets optimal LEQ flags for parallel runs.
-!  </description>
-      OPT_PARALLEL = .FALSE.
-!</keyword>
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
-!    Use do-loop assignment over direct vector assignment.
-!  </description>
-      use_DOLOOP = .FALSE.
-!</keyword>
-
 !#####################################################################!
 !                      Geometry and Discretization                    !
 !#####################################################################!
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
-!    Flag for making the x-direction cyclic with pressure drop. If the
-!    keyword FLUX_G is given a value this becomes a cyclic boundary
-!    condition with specified mass flux. No other boundary conditions
-!    for the x-direction should be specified.
-!  </description>
-!  <valid value=".FALSE." note="No cyclic condition at x-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition with pressure drop at x-boundary."/>
-      cyclic_x_pd = .FALSE.
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
 !    Fluid pressure drop across xlength when a cyclic boundary condition
 !    with pressure drop is imposed in the x-direction.
 !  </description>
-      delp_x = UNDEFINED
-!</keyword>
-
-!  <description>
-!    Flag for making the y-direction cyclic with pressure drop. If the
-!    keyword FLUX_G is given a value this becomes a cyclic boundary
-!    condition with specified mass flux. No other boundary conditions
-!    for the y-direction should be specified.
-!  </description>
-!  <valid value=".FALSE." note="No cyclic condition at y-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition with pressure drop at y-boundary."/>
-      cyclic_y_pd = .FALSE.
+      delp_x = zero
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -380,20 +331,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Fluid pressure drop across ylength when a cyclic boundary condition
 !    with pressure drop is imposed in the y-direction.
 !  </description>
-      delp_y = UNDEFINED
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    Flag for making the z-direction cyclic with pressure drop. If the
-!    keyword FLUX_G is given a value this becomes a cyclic boundary
-!    condition with specified mass flux. No other boundary conditions
-!    for the z-direction should be specified.
-!  </description>
-!  <valid value=".FALSE." note="No cyclic condition at z-boundary."/>
-!  <valid value=".TRUE." note="Cyclic condition with pressure drop at
-!    z-boundary."/>
-      cyclic_z_pd = .FALSE.
+      delp_y = zero
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -401,20 +339,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Fluid pressure drop across zlength when a cyclic boundary condition
 !    with pressure drop is imposed in the z-direction.
 !  </description>
-      delp_z = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    If a value is specified (in units of kg/m^2.s), the domain-averaged gas
-!    flux is held constant at that value in simulations over a periodic
-!    domain.  A pair of boundaries specified as periodic with fixed
-!    pressure drop is then treated as periodic with fixed mass flux.
-!    Even for this case a pressure drop must also be specified, which
-!    is used as the initial guess in the simulations.
-!  </description>
-      Flux_g = UNDEFINED
+      delp_z = zero
 !</keyword>
 
 
@@ -450,41 +375,6 @@ MODULE INIT_NAMELIST_MODULE
       MW_AVG = UNDEFINED
 !</keyword>
 
-
-
-!#####################################################################!
-!                            Solids Phase                             !
-!#####################################################################!
-
-!<keyword category="Solids Phase" required="false">
-!  <description>
-!    Defines the model used for the solids phase.
-!  </description>
-!  <arg index="1" id="Phase" min="1" max="DIM_M"/>
-!  <valid value='DEM' note='Discrete Element Model' />
-      SOLIDS_MODEL(:DIM_M) = '---'
-!</keyword>
-
-!<keyword category="Solids Phase" required="false"
-!  tfm="true" dem="true" pic="true">
-!  <description>
-!    Initial particle diameters [cm in CGS].
-!  </description>
-!  <arg index="1" id="Phase" min="1" max="DIM_M"/>
-      D_P0(:DIM_M) = UNDEFINED
-!</keyword>
-
-!<keyword category="Solids Phase" required="false"
-!  tfm="true" dem="true" pic="true">
-!  <description>
-!    Specified constant solids density [g/cm^3 in CGS]. Reacting flows
-!    may use variable solids density by leaving this parameter
-!    undefined and specifying X_S0 and RO_XS0 as well as the index
-!    of the inert species.
-!  </description>
-!  <arg index="1" id="Phase" min="1" max="DIM_M"/>
-      RO_S0(:DIM_M) = UNDEFINED
-!</keyword>
 
 
 !#####################################################################!
@@ -559,7 +449,7 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial gas phase temperature in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_T_G(LC) = UNDEFINED
+         IC_T_G(LC) = 293.15d0
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
@@ -808,14 +698,14 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase temperature at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_T_G(LC) = UNDEFINED
+         BC_T_G(LC) = 293.15d0
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Solids phase-m temperature at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_T_S(LC,:DIM_M) = UNDEFINED
+         BC_T_S(LC,:DIM_M) = 293.15d0
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -971,7 +861,7 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Point Source" required="false">
 !  <description>Temperature of incoming gas.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_T_G(LC) = UNDEFINED
+         PS_T_G(LC) = 293.15d0
 !</keyword>
 
 !<keyword category="Point Source" required="false">
@@ -1015,27 +905,18 @@ MODULE INIT_NAMELIST_MODULE
       CALL_USR = .FALSE.
 !</keyword>
 
-
-      DO LC=1, DIM_USR
+      do LC=1, DIM_USR
 !<keyword category="UDF Control" required="false">
 !  <description>
 !    Intervals at which subroutine write_usr1 is called.
 !  </description>
 !  <arg index="1" id="USR" max="DIM_USR" min="1"/>
-         USR_DT(LC) = UNDEFINED
+         usr_dt(LC) = UNDEFINED
 !</keyword>
 
+      end do
 
-      ENDDO
+      call des_init_namelist
 
-
-
-
-
-      CALL DES_INIT_NAMELIST
-
-      CALL USR_INIT_NAMELIST
-
-      RETURN
-      END SUBROUTINE INIT_NAMELIST
-END MODULE INIT_NAMELIST_MODULE
+      end subroutine init_namelist
+end module init_namelist_module

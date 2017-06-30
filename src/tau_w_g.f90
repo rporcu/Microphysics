@@ -84,23 +84,26 @@ contains
       axz = dx*dz
       ayz = dy*dz
 
+      ! Note that lo and hi come in as cell-centered tiles!
       do k = lo(3),hi(3)+1
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
 
-! Surface forces
-! Bulk viscosity term
-! part of 1/x d/dz (tau_zz) xdxdydz =>
-!         1/x d/dz (lambda.trcD) xdxdydz=>
-! delta (lambda.trcD)Ap |T-B : at (i, j, k+1 - k-1)
+               ! Surface forces
+               ! Bulk viscosity term
+               ! part of 1/x d/dz (tau_zz) xdxdydz =>
+               !         1/x d/dz (lambda.trcD) xdxdydz=>
+               ! delta (lambda.trcD)Ap |T-B : at (i, j, k+1 - k-1)
+
                sbv = (lambda_g(i,j,k  )*trd_g(i,j,k  )-&
                       lambda_g(i,j,k-1)*trd_g(i,j,k-1))*axy
 
-! shear stress terms
-! part of 1/x^2 d/dx (x^2 tau_xz) xdxdydz => or equivalently
-! part of (tau_xz/x + 1/x d/dx (x tau_xz) ) xdxdydz =>
-!         1/x d/dx(mu.du/dz) xdxdydz =>
-! delta (mu/x du/dz)Ayz |E-W : at (i+1/2-i-1/2, j, k+1/2)
+               ! shear stress terms
+               ! part of 1/x^2 d/dx (x^2 tau_xz) xdxdydz => or equivalently
+               ! part of (tau_xz/x + 1/x d/dx (x tau_xz) ) xdxdydz =>
+               !         1/x d/dx(mu.du/dz) xdxdydz =>
+               ! delta (mu/x du/dz)Ayz |E-W : at (i+1/2-i-1/2, j, k+1/2)
+
                ssx = avg_h(avg_h(mu_g(i,j,k-1), mu_g(i+1,j,k-1)),    &
                            avg_h(mu_g(i,j,k  ), mu_g(i+1,j,k  )))*   &
                            (u_g(i+1,j,k) - u_g(i+1,j,k-1))*odz*ayz - &
@@ -108,9 +111,10 @@ contains
                            avg_h(mu_g(i-1,j,k  ), mu_g(i,j,k  )))*   &
                            (u_g(i  ,j,k) - u_g(i  ,j,k-1))*odz*ayz
 
-! part of d/dy (tau_zy) xdxdydz =>
-!         d/dy (mu/x dv/dz) xdxdydz =>
-! delta (mu/x dv/dz)Axz |N-S : at (i, j+1/2 - j-1/2, k+1/2)
+               ! part of d/dy (tau_zy) xdxdydz =>
+               !         d/dy (mu/x dv/dz) xdxdydz =>
+               ! delta (mu/x dv/dz)Axz |N-S : at (i, j+1/2 - j-1/2, k+1/2)
+
                ssy = avg_h(avg_h(mu_g(i,j,k-1), mu_g(i,j+1,k-1)),    &
                            avg_h(mu_g(i,j,k  ), mu_g(i,j+1,k  )))*   &
                            (v_g(i,j+1,k) - v_g(i,j+1,k-1))*odz*axz - &
@@ -118,9 +122,10 @@ contains
                            avg_h(mu_g(i,j-1,k  ), mu_g(i,j,k  )))*   &
                            (v_g(i,j  ,k) - v_g(i,j  ,k-1))*odz*axz
 
-! part of 1/x d/dz (tau_zz) xdxdydz =>
-!         1/x d/dz (mu/x dw/dz) xdxdydz =>
-! delta (mu/x dw/dz)Axy |T-B : at (i, j, k+1 - k-1)
+               ! part of 1/x d/dz (tau_zz) xdxdydz =>
+               !         1/x d/dz (mu/x dw/dz) xdxdydz =>
+               ! delta (mu/x dw/dz)Axy |T-B : at (i, j, k+1 - k-1)
+
                ssz = mu_g(i,j,k  )*(w_g(i,j,k+1)-w_g(i,j,k  ))*odz*axy - &
                      mu_g(i,j,k-1)*(w_g(i,j,k  )-w_g(i,j,k-1))*odz*axy
 

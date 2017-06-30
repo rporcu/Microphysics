@@ -29,10 +29,9 @@
 !  Purpose: Calculate residuals for momentum equations                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_resid_vel(alo, ahi, &
+      subroutine calc_resid_vel(lo, hi, alo, ahi, &
          v0lo, v0hi, v1lo, v1hi, v2lo, v2hi, &
-         vel, vels1, vels2, A_m, b_m, &
-         eq_id, num, den, domlo, domhi)
+         vel, vels1, vels2, A_m, b_m, mask, num, den)
 
 !-----------------------------------------------
 ! Modules
@@ -42,11 +41,11 @@
 
       implicit none
 
+      integer     , intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
       integer     , intent(in   ) :: v0lo(3),v0hi(3)
       integer     , intent(in   ) :: v1lo(3),v1hi(3)
       integer     , intent(in   ) :: v2lo(3),v2hi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! primary velocity component
       real(c_real), intent(IN) :: vel&
@@ -66,8 +65,10 @@
       real(c_real) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
+      real(c_real) :: mask&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+
       ! Residual ID, numerator and denominator
-      integer,      intent(in   ) :: eq_id
       real(c_real), intent(  out) :: num, den
 
 !-----------------------------------------------
@@ -90,19 +91,13 @@
       llo = alo
       lhi = ahi
 
-      if(eq_id == resid_u .and. alo(1) /= domlo(1)) llo(1) = alo(1)+1
-      if(eq_id == resid_v .and. alo(2) /= domlo(2)) llo(2) = alo(2)+1
-      if(eq_id == resid_w .and. alo(3) /= domlo(3)) llo(3) = alo(3)+1
+!     Evaluate the residual at cell (i,j,k):
+!     RESp = B-sum(Anb*VARnb)-Ap*VARp
+!       (where nb = neighbor cells and p = center/0 cell)
 
-! initializing
-
-      do k = llo(3),lhi(3)
-         do j = llo(2),lhi(2)
-            do i = llo(1),lhi(1)
-
-! evaluating the residual at cell (i,j,k):
-!   RESp = B-sum(Anb*VARnb)-Ap*VARp
-!   (where nb = neighbor cells and p = center/0 cell)
+      do k = lo(3),  hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
                num1 = b_m(i,j,k) - (&
                   a_m(i,j,k,0)*vel(i,j,k)+&
@@ -122,8 +117,8 @@
                   den1 = abs(a_m(i,j,k,0)*magvel)
 
                   ! Adding to terms that are accumulated
-                  num = num + num1
-                  den = den + den1
+                  num = num + num1/mask(i,j,k)
+                  den = den + den1/mask(i,j,k)
                endif
             enddo
          enddo
@@ -145,11 +140,11 @@
 !  based on its value in the first iteration                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_resid_pp(alo, ahi, b_m, b_mmax, num, den)
+   subroutine calc_resid_pp(alo, ahi, lo, hi, b_m, b_mmax, num, den)
 
       implicit none
 
-      integer, intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: alo(3),ahi(3),lo(3),hi(3)
       real(c_real), intent(inout) :: num, den
 
 !   Vector b_m
@@ -161,24 +156,24 @@
 
       integer :: i, j, k
 
-      do k = alo(3),ahi(3)
-         do j = alo(2),ahi(2)
-            do i = alo(1),ahi(1)
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
                num = num  + abs(b_m(i,j,k))
             enddo
          enddo
       enddo
 
       if(norm_g <= epsilon(0.0)) then
-         do k = alo(3),ahi(3)
-            do j = alo(2),ahi(2)
-               do i = alo(1),ahi(1)
+         do k = lo(3),hi(3)
+            do j = lo(2),hi(2)
+               do i = lo(1),hi(1)
                   den = den + 10.d0*abs(b_mmax(i,j,k))
                enddo
             enddo
          enddo
       else
-         den = den + (ahi(3)-alo(3)+1)*(ahi(2)-alo(2)+1)*(ahi(1)-alo(1)+1)
+         den = den + (hi(3)-lo(3)+1)*(hi(2)-lo(2)+1)*(hi(1)-lo(1)+1)
       endif
 
       return

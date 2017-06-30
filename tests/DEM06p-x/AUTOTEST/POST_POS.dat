@@ -1,9 +1,0 @@
-
-
-                         DEM06: SINGLE PARTICLE, TERMINAL VELOCITY
-
-
-       DES_ONEWAY_COUPLED =      F
-       DES_EXPLICITLY_COUPLED =  F
-
-          Time                 Pos             Pos_MFIX         %REL DIFF

@@ -65,16 +65,15 @@ contains
       real(c_real), intent(in   ) :: d_t&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-! Local Variables
 !-----------------------------------------------
-! Indices
       integer :: i,j,k
+
 ! under relaxation factor for pressure
       real(c_real) fac
 ! terms of bm expression
       real(c_real) bma, bme, bmw, bmn, bms, bmt, bmb
 ! error message
-      real(c_real) :: oDT, vol
+      real(c_real) :: odt, vol
 !-----------------------------------------------
 
       odt = 1.0d0/dt
@@ -82,9 +81,9 @@ contains
 
 ! Calculate convection-diffusion fluxes through each of the faces
 
-        do k = alo(3),ahi(3)
-           do j = alo(2),ahi(2)
-             do i = alo(1),ahi(1)
+        do k = lo(3),hi(3)
+           do j = lo(2),hi(2)
+             do i = lo(1),hi(1)
 
                 bma = (rop_g(i,j,k)-rop_go(i,j,k))*vol*odt
                 bme = A_m(i,j,k,e)*u_g(i+1,j,k)
@@ -109,7 +108,6 @@ contains
                 A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
                                  A_m(i,j,k,n) + A_m(i,j,k,s) + &
                                  A_m(i,j,k,t) + A_m(i,j,k,b))
-
              enddo
           enddo
       enddo
@@ -133,7 +131,7 @@ contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: SOURCE_Pp_g_bc                                          !
+!  Subroutine: source_pp_g_bc                                          !
 !  Purpose: Determine source terms for Pressure correction equation.   !
 !                                                                      !
 !  Notes: The off-diagonal coefficients are positive. The center       !
@@ -141,47 +139,100 @@ contains
 !         conv_Pp_g                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_pp_g_bc(slo, shi, alo, ahi, domlo, domhi, A_m)
 
+   subroutine source_pp_g_bc(alo, ahi, lo, hi, domlo, domhi, A_m, &
+                             bc_ilo_type, bc_ihi_type, &
+                             bc_jlo_type, bc_jhi_type, &
+                             bc_klo_type, bc_khi_type)
+
+      use bc, only: POUT_
       use matrix, only: e, n, t, w, s, b
       use param, only: zero
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3),domlo(3),domhi(3)
+      integer     , intent(in   ) :: alo(3),ahi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
 
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
-! --- EAST FLUID ---------------------------------------------------------->
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
+      integer(c_int), intent(in   ) :: bc_klo_type&
+         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
 
-      if (alo(1) == domlo(1)) &
-         A_m(domlo(1),alo(2):ahi(2),alo(3):ahi(3),w) =  zero
+      integer(c_int) :: i,j,k
 
-! --- WEST FLUID ---------------------------------------------------------->
+!-----------------------------------------------
 
-      if (ahi(1) == domhi(1)) &
-         A_m(domhi(1),alo(2):ahi(2),alo(3):ahi(3),e) =  zero
+      ! At west boundary
+      if (lo(1) .eq. domlo(1) .and. lo(1).eq.alo(1)) then
+         i = alo(1)
+         do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            if (bc_ilo_type(j,k,1) == POUT_) A_m(i,j,k,w) = zero
+         end do
+         end do
+      endif
 
-! --- NORTH FLUID --------------------------------------------------------->
+      ! At east boundary
+      if (hi(1) .eq. domhi(1) .and. hi(1).eq.ahi(1)) then
+         i = ahi(1)
+         do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            if (bc_ihi_type(j,k,1) == POUT_) A_m(i,j,k,e) = zero
+         end do
+         end do
+      endif
 
-      if (alo(2) == domlo(2)) &
-         A_m(alo(1):ahi(1),domlo(2),alo(3):ahi(3),s) =  zero
+      ! At south boundary
+      if (lo(2) .eq. domlo(2) .and. lo(2).eq.alo(2)) then
+         j = alo(2)
+         do k = lo(3),hi(3)
+         do i = lo(1),hi(1)
+            if (bc_jlo_type(i,k,1) == POUT_) A_m(i,j,k,s) = zero
+         end do
+         end do
+      endif
 
-! --- SOUTH FLUID --------------------------------------------------------->
+      ! At north boundary
+      if (hi(2) .eq. domhi(2) .and. hi(2).eq.ahi(2)) then
+         j = ahi(2)
+         do k = lo(3),hi(3)
+         do i = lo(1),hi(1)
+            if (bc_jhi_type(i,k,1) == POUT_) A_m(i,j,k,n) = zero
+         end do
+         end do
+      endif
 
-      if (ahi(2) == domhi(2)) &
-         A_m(alo(1):ahi(1),domhi(2),alo(3):ahi(3),n) =  zero
+      ! At bottom boundary
+      if (lo(3) .eq. domlo(3) .and. lo(3).eq.alo(3)) then
+         k = alo(3)
+         do j = lo(2),hi(2)
+         do i = lo(1),hi(1)
+            if (bc_klo_type(i,j,1) == POUT_) A_m(i,j,k,b) = zero
+         end do
+         end do
+      endif
 
-! --- TOP FLUID ----------------------------------------------------------->
-
-      if (alo(3) == domlo(3)) &
-         A_m(alo(1):ahi(1),alo(2):ahi(2),domlo(3),b) =  zero
-
-! --- BOTTOM FLUID -------------------------------------------------------->
-
-      if (ahi(3) == domhi(3)) &
-         A_m(alo(1):ahi(1),alo(2):ahi(2),domhi(3),t) =  zero
+      ! At top boundary
+      if (hi(3) .eq. domhi(3) .and. hi(3).eq.ahi(3)) then
+         k = ahi(3)
+         do j = lo(2),hi(2)
+         do i = lo(1),hi(1)
+            if (bc_khi_type(i,j,1) == POUT_) A_m(i,j,k,t) = zero
+         end do
+         end do
+      endif
 
    end subroutine source_pp_g_bc
 

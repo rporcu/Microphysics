@@ -59,8 +59,8 @@
 ! The east and west boundaries are set a runtime as cyclic with a
 ! specified pressure drop (DELP_X)
 !---------------------------------------------------------------------//
-  CYCLIC_X_PD = .TRUE.
   DELP_X = -3.0
+
 
 ! The north was has a constant velocity of 10.0 m/s, and is set using
 ! a partial slip wall (PSW):  dU/dn + hw(U-Uw) = 0 where Uw = 10.0 m/s

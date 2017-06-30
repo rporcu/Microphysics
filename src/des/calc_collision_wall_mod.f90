@@ -119,11 +119,8 @@ contains
 
          associate ( radius => particles(ll) % radius, pos => particles(ll) % pos, &
               & vel => particles(ll) % vel, omega => particles(ll) % omega )
-
         
             ! skipping non-existent particles or ghost particles
-            ! make sure the particle is not classified as a new 'entering' particle
-            ! or is already marked as a potential exiting particle
             if ( .not. ( NORMAL_PARTICLE == particles(ll) % state ) ) cycle
 
             ! Check particle LL for wall contacts
@@ -248,8 +245,8 @@ contains
                     ETAN_DES_W * V_REL_TRANS_NORM * NORMAL(:))
 
                ! Calculate the tangential displacement.
-               OVERLAP_T(:) = DTSOLID*VREL_T(:)
-               MAG_OVERLAP_T = sqrt(DOT_product(OVERLAP_T, OVERLAP_T))
+               overlap_t(:) = dtsolid*vrel_t(:)
+               mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t))
 
                ! Check for Coulombs friction law and limit the maximum value of the
                ! tangential force on a particle in contact with a wall.
@@ -266,7 +263,7 @@ contains
                ! Add the collision force to the total forces acting on the particle.
                FC(LL,:) = FC(LL,:) + FN(:) + FT(:)
 
-               ! Add the torque force to the toal torque acting on the particle.
+               ! Add the torque force to the total torque acting on the particle.
                TOW(LL,:) = TOW(LL,:) + DISTMOD*DES_CROSSPRDCT(NORMAL,FT)
                
             end do

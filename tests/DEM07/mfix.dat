@@ -19,22 +19,17 @@
   DT_MAX = 1.0d-02
   DT_MIN = 1.0d-10
 
-  DRAG_TYPE = 'BVK'
-
   GRAVITY(1:3) = 3*0.0
 
-  GENER_PART_CONFIG = .T.
+  DRAG_TYPE = 'BVK'
   CALL_USR = .T.
-
-  FULL_LOG = .T.
 
 #_______________________________________________________________________
 # NUMERICAL SECTION
 
   TOL_RESID = 1.0E-3
 
-  MAX_NIT = 500
-  DETECT_STALL=.FALSE.
+  MAX_NIT = 50
 
 #_______________________________________________________________________
 # MATERIAL SECTION
@@ -62,11 +57,6 @@
   DES_EN_INPUT = 0.8         ! particle-particle
   DES_EN_WALL_INPUT = 1.0    ! particle-wall
 
-
-! Sold phase 1
-!---------------------------------------------------------------------//
-  D_p0(1) =   100.0d-6  ! (m)
-  RO_s0(1) = 1000.0     ! (kg/m3)
 
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION

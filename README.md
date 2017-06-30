@@ -21,26 +21,57 @@ o __SUPERBUILD (default):__  Utilities download and build AMReX as
 o __Using an existing AMReX Library:__  MFIX-Exa is linked to an
    existing AMReX installation. This is ideal for continuous
    integration severs (CI) and regression testing applications.
-   AMReX library version and configure options must meet MFIX-Exa
-   requirements.
+   AMReX library version must meet MFIX-Exa requirements.
 
 ## SUPERBUILD Instructions (recommended)
 
-The following commands build MFIX-Exa and AMReX in a single step.
-AMReX is only built the first time the `make` command is issued.
-No external installation of AMReX is needed, however, internet access
-to the AMReX github repository is required.
+When building in __SUPERBUILD__ mode, MFIX-Exa build system will take 
+care of downloading, configuring and installing AMReX as part of the
+MFIX-Exa build. The following commands build MFIX-Exa and AMReX in a single step.
 
 ```shell
 > git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
 > cd mfix
 > mkdir build
 > cd build
-> cmake CMAKE_CONFIG_OPTIONS  ..
+> cmake CONFIG_OPTIONS ..
 > make -j
 ```
+AMReX is built the first time the `make` command is issued.
+No external installation of AMReX is needed. However, internet access
+to the AMReX github repository is required.
+The optional string `CONFIG_OPTIONS` allows to customize the build of both AMReX and MFIX-Exa.
+`CONFIG_OPTIONS` is a list of one or more configuration options given in the form
+__-D__*OPTION=VALUE*`.
+ 
+The table below lists configuration options, possible values, and their effect on the build.
+Options prefixed by `AMREX_` are specific to the build of AMReX.
 
-## Building MFIX-Exa using an existing AMReX Library
+| Option name                  |  Description                                 | Possible values              | Default value       |
+| -----------------------------|----------------------------------------------|------------------------------|---------------------|
+| CMAKE_BUILD_TYPE             | Configuration of the build                   |   Debug/Release              |   Debug             |
+| MFIX_FFLAGS_OVERRIDES        | User-defined Fortran flags                   | valid F90 compiler flags     |   None              |
+| MFIX_CXXLAGS_OVERRIDES       | User-defined C++ flags                       | valid C++ compiler flags     |   None              |
+| AMREX_ENABLE_MPI             | Enable build with MPI                        |   0/1                        |   1                 |
+| AMREX_ENABLE_OMP             | Enable build with OpenMP                     |   0/1                        |   0                 |
+| AMREX_ENABLE_DP              | Enable double precision                      |   0/1                        |   1                 |
+| AMREX_ENABLE_DP_PARTICLES    | Enable double precision in particles classes |   0/1                        |   1                 |
+| AMREX_ENABLE_PROFILING       | Include profiling info                       |   0/1                        |   0                 |
+| AMREX_ENABLE_TINY_PROFILING  | Include tiny profiling info                  |   0/1                        |   0                 |
+| AMREX_ENABLE_BACKTRACE       | Include backtrace info                       |   0/1                        |   1                 |
+| AMREX_ENABLE_PIC             | Build position-independent code              |   0/1                        |   0                 |
+| AMREX_GIT_COMMIT             | AMReX commit to be used in the build         | valid git commit id/branch   |   None              |
+| AMREX_INSTALL_DIR            | Global path to AMReX install directory       | valid global path            |   None (superbuild) |
+ 
+`__SUPERBUILD__ mode is enabled automatically when _AMREX_INSTALL_DIR_ is not given.`
+
+Example: build mfix with custom fortran flags, AMReX profiling enabled and single precision particles:
+
+```
+cmake -DMFIX_FFLAGS_OVERRIDES="custom flags" -DAMREX_ENABLE_PROFILING=1 -DAMREX_ENABLE_DP_PARTICLES=0 ..
+```  
+
+## Building MFIX-Exa using a separate AMReX installation (no superbuild)
 
 ### Build AMReX Library
 
@@ -50,71 +81,37 @@ Clone AMReX from the official Git repository and checkout the _development_ bran
 > cd amrex
 > git checkout development
 ```
-
-Set the environment variable `AMREX_HOME` to point to the *installdir*,
-the directory were the AMReX library will be installed. If *installdir*
-does not exist, the build system will create it for you. __It is strongly
-recommended that *installdir* not be placed in the same folder as the
-AMReX source files.__
+Next, configure, build and install AMReX as follows: 
 ```shell
-> export AMREX_HOME=absolute-path-to-installdir
-```
-
-Run CMake to build and install AMReX from the AMReX source directory. Here,
-`CMAKE_CONFIG_OPTIONS` are optional configure options. A list of typical
-configure options are provided below.
-```shell
-> cmake CMAKE_CONFIG_OPTIONS -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME .
+> cmake AMREX_CONFIG_OPTIONS -DENABLE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=/absolute/path/to/installdir .
 > make install
 ```
+Here,`AMREX_CONFIG_OPTIONS` are optional configure options for AMReX. Please refer to the AMReX user guide
+for a list of all the possible configuration options. The only option required is __-DENABLE_PARTICLES=1__.
 
+### Building MFIX-Exa
 Clone and build MFIX-Exa.
 ```shell
 > git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
 > mkdir build
 > cd build
-> cmake CMAKE_CONFIG_OPTIONS -DENABLE_SUPERBUILD=0 ..
+> cmake CONFIG_OPTIONS -DAMREX_INSTALL_DIR=/absolute/path/to/amrex/installdir ..
 > make -j
 ```
-Here, `CMAKE_CONFIG_OPTIONS` are optional configure options. A list of typical
-configure options are provided below. __Note, the configure options used
-to build MFIX-Exa must match the AMReX configure options.__ For example,
-if MPI is enabled when building the AMReX library, then MPI must below
-enabled when building MFIX-Exa.
+Here, `CONFIG_OPTIONS` are MFIX-Exa specific configuration options, that is, any option prefixed by `MFIX_`
+in the table above. Options prefixed by `AMREX_` are always ignored 
+when using an external AMReX installation.
 
-
-## Custom configurations (`CMAKE_CONFIG_OPTIONS`)
-
-The optional string `CMAKE_CONFIG_OPTIONS` allows features to be enable or
-disable of both AMReX and MFIX-Exa. If AMReX is built separately, MFIX-Exa
-must be configured with the same `CMAKE_CONFIG_OPTIONS`. If SUPERBUILD is
-used, the MFIX-Exa build system ensures the same configure options are used.
-
-
-`CMAKE_CONFIG_OPTIONS` consists of a series of options of the form
-__-D__*OPTION=VALUE*`. The following table below lists possible options,
-possible values, and their effect on the build.
-
-| Option name          |  Description                                 | Possible values              | Default value  |
-| ---------------------|----------------------------------------------|------------------------------|----------------|
-| ENABLE_MPI           | Enable build with MPI                        |   0/1                        |   0            |
-| ENABLE_OpenMP        | Enable build with OpenMP                     |   0/1                        |   0            |
-| ENABLE_PROFILING     | Include profiling information in AMReX build |   0/1                        |   0            |
-| ENABLE_BACKTRACE     | Include backtrace information in AMReX build |   0/1                        |   1            |
-| FFLAGS               | User-defined Fortran flags                   | all compiler-supported flags |   None         |
-| CXXFLAGS             | User-defined C++ flags                       | all compiler-supported flags |   None         |
-
-For example, invoking cmake as follows adds the flag *-fcray-pointer* to
-the Fortran compilation command and enables MPI subroutines.
+## Few more notes on building MFIX-Exa
+The system defaults compilers can be overwritten as follows:
 ```shell
-> cmake -DFFLAGS=-fcray-pointer -DENABLE_MPI=1 ..
+> cmake -DCMAKE_CXX_COMPILER=<c++-compiler> -DCMAKE_Fortran_COMPILER=<f90-compiler> CONFIG_OPTIONS  ..
 ```
-The system defaults compilers can be overwritten as well by setting the flags
-`FC` and `CXX` before invoking the cmake command.
+When building on a platform that uses the `module` utility, use either the above command (with full
+path to the compilers) or the following:
 ```shell
-> FC=fortran-compiler CXX=c++-compiler cmake CMAKE_CONFIG_OPTIONS  ..
+> cmake -DCMAKE_CXX_COMPILER=CC -DCMAKE_Fortran_COMPILER=ftn CONFIG_OPTIONS  ..
 ```
-
 
 # Running MFIX Test Suite
 MFIX-Exa comes  with several tests aimed at evaluating software functionalities.
@@ -164,63 +161,37 @@ o To compare point-by-point field data, the environment variable
 > cd to mfix-build-dir
 > make run_DEM01-x  # running "DEM01-x" and output to the screen
 ```
+
+## Run specific
+
+If the environment variable GRID is defined, it specifies which grid types to run for the test(s).
+If GRID variable is not defined, the default is to run the tests for all grid types.
+> env GRID="tiled" ctest -R DEM01  # running all tests with "DEM01" for tiled grid
+> env GRID="single multiple" ctest -R DEM01  # running all tests with "DEM01" for single grid and multiple grid
+> ctest -R DEM01  # running all tests with "DEM01" for all grid types (single, multiple, tiled)
+
 ## Run a user-defined case
 ```shell
 > ./mfix inputs  mfix.input_file=<user_file_name>
 ```
-_inputs_ is a text file containing the BoxLib input parameters.
+_inputs_ is a text file containing the AMReX input parameters.
 _inputs_  __has to be provided and cannot be renamed__.
 _user_file_name_ is the name of a user-defined text file containing the MFIX input parameters.
 If _mfix.input_file=input_file_name_ is not given, MFIX will try to read the file
 _mfix.dat_. MFIX __requires__ either _user_file_name_ or _mfix.dat_.
 
+# See the User's Guide for more about MFIX-Exa
 
-# Writing plotfiles
-In order to write out plotfiles, add the following to the _inputs_ file:
-```shell
-amr.plot_int=N
-```
-N needs to be > 1 for the plotfiles to be written out. For transient solves,
-N indicates the number of time steps between two consecutive writes.
-For steady state solve, N does not have any meaning: a plotfile will be written
-after the steady state is reached, as long as N > 0. To specify the name of the
-plotfiles directories, add the following to the _inputs_ file:
-```shell
-amr.plot_file=<plotfile_name>
-```
-If the name of the plotfile is not provided, MFIX will default to _plt_.
+To build the User's Guide, 
 
-
-# Writing checkfiles
-To dump a checkfile every N time steps, add the following to the _inputs_
-file:
 ```shell
-amr.check_int=N
-```
-The name of the checkfile can be specified by adding
-```shell
-amr.check_file=<checkfile_name>
-```
-to the _inputs_ file. In order to restart a calculation from a checkpoint,
-add add the following to the _inputs_
-file:
-```shell
-amr.restart_chkfile=<checkfile_name>
+> cd doc/UsersGuide
+> make 
 ```
 
-# Writing particles ASCII files
-To write an ASCII file with particles data every N time steps, add the
-following to the _inputs_ file:
-```shell
-amr.par_ascii_file=<ascii_file_name>
-amr.par_ascii_int=N
-```
-N needs to be > 1 for the ASCII files to be written out. For transient solves,
-N indicates the number of time steps between two consecutive writes.
-For steady state solve, N does not have any meaning: an ASCII file will be written
-after the steady state is reached, as long as N > 0. Specifying the
-ASCII file name is optional.
-
+This will build a pdf of the MFIX-Exa User's Guide, which contains information
+about the equations being solved, run-time parameters, checkpoint/restart
+capability, options for visualization and more.
 
 # Regression testing
 
@@ -283,27 +254,6 @@ For the Joule environment, load the gnu module and set environment variables fir
 > export F77=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
 > export FC=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
 ```
-## Prerequisite: Building and installing AMReX (not needed if SUPERBUILD is enabled: see below)
-Clone AMReX from the official Git repository and checkout the _development_ branch.
-```shell
-> git clone https://bitbucket.org/berkeleylab/amrex.git
-> cd amrex
-> git checkout development
-```
-Set the environment variable `AMREX_HOME` to point to *installdir*, an installation
-directory of choice. If *installdir* does not exist, the build system will
-create it for you. __It is strongly recommended that *installdir* not
-be placed in the same folder as the AMReX source files.__
-```shell
-> export AMREX_HOME=absolute-path-to-installdir
-```
-From the AMReX source directory, run CMake to build and install AMReX.
-```shell
-> cmake CMAKE_CONFIG_OPTIONS -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME .
-> make install
-```
-CMAKE_CONFIG_OPTIONS represents a string of CMake configuration options as explained below.
-
 --------------------------------------------------------------------
 
 ## Notice

@@ -17,7 +17,8 @@ module solve_pp_module
    subroutine solve_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
       ro_g, ropX, ropY, ropZ, d_e,d_n, d_t, A_m, b_m, b_mmax, &
-      dt, dx, dy, dz, domlo, domhi, resid)&
+      bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+      bc_klo_type, bc_khi_type, dt, dx, dy, dz, domlo, domhi, resid)&
       bind(C, name="solve_pp_g")
 
       use residual, only: resid_p
@@ -80,31 +81,47 @@ module solve_pp_module
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real), intent(  out) :: resid(8,2)
 
-      ! Initialize A_m and b_m
-      A_m(:,:,:,:)  =  0.0d0
-      A_m(:,:,:,0)  = -1.0d0
-      b_m(:,:,:)    =  0.0d0
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
+      integer(c_int), intent(in   ) :: bc_klo_type&
+         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+
+      ! Initialize A_m and b_m -- but only on the current tile!
+      A_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),:)  =  0.0d0
+      A_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),0)  = -1.0d0
+      b_m(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))    =  0.0d0
 
       ! Forming the sparse matrix equation.
-      call conv_pp_g (ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
+      call conv_pp_g (ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
          A_m, ropX, ropY, ropZ, dx, dy, dz)
 
       call source_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
          A_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, dx, dy, dz)
 
-      call source_pp_g_bc(slo, shi, alo, ahi, domlo, domhi, A_m)
+      call source_pp_g_bc(alo, ahi, lo, hi, domlo, domhi, A_m, &
+                          bc_ilo_type, bc_ihi_type, &
+                          bc_jlo_type, bc_jhi_type, &
+                          bc_klo_type, bc_khi_type)
 
-      if (point_source) call point_source_pp_g (alo, ahi, b_m, b_mmax, dx, dy, dz)
+      if (point_source) call point_source_pp_g (lo, hi, alo, ahi, b_m, b_mmax, dx, dy, dz)
 
-      call calc_resid_pp (alo, ahi, b_m, b_mmax, &
+      call calc_resid_pp (alo, ahi, lo, hi, b_m, b_mmax, &
          resid(resid_p,1), resid(resid_p,2))
 
       end subroutine solve_pp_g
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: POINT_SOURCE_Pp_g                                       C
+!  Subroutine: point_source_pp_g                                       C
 !  Purpose: Adds point sources to the Pressure correction equation.    C
 !                                                                      C
 !  Notes: The off-diagonal coefficients are positive. The center       C
@@ -115,11 +132,12 @@ module solve_pp_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_PP_G(alo, ahi, b_m, B_mmax, dx, dy, dz)
+      subroutine point_source_pp_g(lo, hi, alo, ahi, b_m, B_mmax, dx, dy, dz)
 
       ! use param  , only: small_number
       ! use ps, only: dim_ps, ps_defined, ps_massflow_g
 
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
       real(c_real)  , intent(in   ) :: dx,dy,dz
 

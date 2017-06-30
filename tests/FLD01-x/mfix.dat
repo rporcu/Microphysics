@@ -58,8 +58,6 @@
 ! The east and west boundaries are set at cyclic with a specified
 ! pressure drop (delP_X).
 !---------------------------------------------------------------------//
-  CYCLIC_X_PD = .T.
-
   DELP_X = 240.0
 
 ! North and south walls are no-slip

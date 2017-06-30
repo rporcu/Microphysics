@@ -24,7 +24,8 @@ contains
 !     - check specification of physical quantities                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_initial_conditions(dx,dy,dz,domlo,domhi)
+  subroutine check_initial_conditions(dx,dy,dz,domlo,domhi) &
+      bind(C, name="check_initial_conditions")
 
     use ic,                    only: ic_defined
     use run,                   only: dem_solids

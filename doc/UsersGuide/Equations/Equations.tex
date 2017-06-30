@@ -1,0 +1,44 @@
+In \mfix\ the gas-phase governing equations for mass and momentum
+conservation are similar to those in traditional gas-phase CFD
+but with additional coupling terms due to drag from the solids–phase.
+The solids-phase is modeled using discrete particles via the
+\emph{Discrete Element Method} (DEM). In what follows, we provide
+a brief summary of the governing equations solved in \mfix\ .
+The interested user is directed to the 
+\href{https://mfix.netl.doe.gov/download/mfix/mfix_current_documentation/dem_doc_2012-1.pdf}{MFIX-DEM user's manual}
+for a detailed explanations of the models and implementations used in
+\mfix\ .
+
+\section{Gas-phase governing equations}
+The governing equations, implemented in \mfix\ for the gas-phase mass
+and momentum conservation in the absence of phase change, chemical
+reactions, growth, aggregation, breakage phenomena, are
+\begin{equation}
+  \dfrac{\partial (\varepsilon_g\rho_g) }{\partial t} +\nabla\cdot(\varepsilon_g\rho_g\boldsymbol v_g) = 0,
+\end{equation}
+and 
+\begin{equation}
+  \dfrac{D}{D t}(\varepsilon_g\rho_g\boldsymbol v_g) =
+  \nabla\cdot \overline{\overline{S}}_g + \varepsilon_g\rho_g\boldsymbol g - \sum\limits_{m=1}^M \boldsymbol I _{gm} = 0.
+\end{equation}
+In the above equations, $\varepsilon_g$ is the gas-phase 
+volume fraction, $\rho_g$ is the thermodynamic density of
+the gas phase, $\boldsymbol v_g$ is the volume-averaged gas-phase
+velocity and  $\boldsymbol I_{gm}$ is the momentum transfer term
+between the gas and the m-th solid phase. The gas-phase stress tensor 
+$\overline{\overline{S}}_g$ is given by
+\begin{equation}
+  \overline{\overline{S}}_g = -P_g  \overline{\overline{I}} +  \overline{\overline{\tau}}_g
+\end{equation}
+where $P_g$ is the gas-phase pressure and $\overline{\overline{\tau}}_g$ the gas-phase shear
+stress tensor defined as
+\begin{equation}
+  \overline{\overline{\tau}}_g = 2\mu_g \overline{\overline{D}}_g  +\lambda_g \nabla\cdot Tr(\overline{\overline{D}}_g )
+  \overline{\overline{I}}.
+\end{equation}
+In the gas-stress tensor definition, $\mu_g$ and $\lambda_g$ are the dynamic
+and second coefficients of viscosity respectively, and
+$\overline{\overline{D}}_g$ the strain-rate tensor:
+\begin{equation}
+  \overline{\overline{D}}_g = \dfrac{1}{2}\left[\nabla\boldsymbol v_g + (\nabla\boldsymbol v_g)^T\right].
+\end{equation}

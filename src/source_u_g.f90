@@ -17,7 +17,7 @@ contains
 !  The drag terms are excluded from the source at this stage.          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_u_g(slo, shi, ulo, uhi, alo, ahi, lo, hi, A_m, b_m, &
+   subroutine source_u_g(lo, hi, slo, shi, ulo, uhi, alo, ahi, A_m, b_m, &
       dt, p_g, ep_g, ro_g, rop_go, u_go, &
       tau_u_g, dx, dy, dz, domlo, domhi)
 
@@ -29,12 +29,11 @@ contains
 
       use functions, only: avg
 
-      use bc, only: cyclic_x_pd
-
       use matrix, only: e, w, s, n, t, b
       use scales, only: p_scale
 
-      integer     , intent(in   ) :: slo(3),shi(3),ulo(3),uhi(3),alo(3),ahi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),ulo(3),uhi(3),alo(3),ahi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
@@ -82,18 +81,15 @@ contains
       ayz = dy*dz
       vol = dx*dy*dz
 
-      do k = alo(3), ahi(3)
-         do j = alo(2), ahi(2)
-            do i = alo(1), ahi(1)
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
                epga = half*(ep_g(i-1,j,k) + ep_g(i,j,k))
 
                ! Pressure term
                pgw = p_g(i-1,j,k)
-               if (cyclic_x_pd) then
-                  if(i == domlo(1) .or. i==domhi(1)+1) &
-                     pgw = pgw + delp_x
-               endif
+               if(i == domlo(1) .or. i==domhi(1)+1) pgw = pgw + delp_x
                sdp = -p_scale*epga*(p_g(i,j,k) - pgw)*ayz
 
                ! Previous time step
@@ -128,20 +124,20 @@ contains
 !     The drag terms are excluded from the source at this stage.       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_u_g_bc(slo, shi, alo, ahi, A_m, b_m, &
+   subroutine source_u_g_bc(lo, hi, slo, shi, alo, ahi, A_m, b_m, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, domlo, domhi, dy, dz)
 
       use bc, only: nsw_, fsw_, psw_
       use bc, only: pinf_, pout_
       use bc, only: minf_
-      use bc, only: cycl_
 
       use bc, only: bc_hw_g, bc_uw_g, bc_u_g
 
       use matrix, only: e, w, s, n, t, b
       use param, only: is_defined
 
+      integer     , intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: slo(3),shi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
@@ -178,12 +174,11 @@ contains
 ! ------------------------------------------------------------->
 
       ! At left boundary
-      if (slo(1) .lt. domlo(1)) then
+      if (slo(1) .lt. domlo(1) .and. lo(1).eq.alo(1)) then
 
          i = alo(1)
-         do k=alo(3),ahi(3)
-            do j=alo(2),ahi(2)
-               bcv = bc_ilo_type(j,k,2)
+         do k = lo(3),hi(3)
+            do j = lo(2),hi(2)
 
                if (bc_ilo_type(j,k,1) == PINF_ .or. &
                    bc_ilo_type(j,k,1) == POUT_) then
@@ -195,6 +190,8 @@ contains
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
+
+                  bcv = bc_ilo_type(j,k,2)
                   b_m(i,j,k) = -bc_u_g(bcv)
 
                else if(bc_ilo_type(j,k,1) == NSW_ .or. &
@@ -212,13 +209,12 @@ contains
 ! ------------------------------------------------------------->
 
       ! At right boundary
-      if (shi(1) .gt. domhi(1)) then
+      if (shi(1) .gt. domhi(1) .and. hi(1).eq.ahi(1)) then
 
          i = ahi(1)
 
-         do k=alo(3),ahi(3)
-            do j=alo(2),ahi(2)
-               bcv = bc_ihi_type(j,k,2)
+         do k = lo(3),hi(3)
+            do j = lo(2),hi(2)
 
                if(bc_ihi_type(j,k,1) == PINF_ .or. &
                   bc_ihi_type(j,k,1) == POUT_) then
@@ -230,6 +226,8 @@ contains
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
+
+                  bcv = bc_ihi_type(j,k,2)
                   b_m(i,j,k) = -bc_u_g(bcv)
 
                else if(bc_ihi_type(j,k,1) == NSW_ .or. &
@@ -248,16 +246,15 @@ contains
 ! ------------------------------------------------------------->
 
       ! At bottom boundary
-      if (slo(2) .lt. domlo(2)) then
+      if (slo(2) .lt. domlo(2) .and. lo(2).eq.alo(2)) then
 
          j = alo(2)
-         do k=alo(3),ahi(3)
-            do i=alo(1),ahi(1)
+         do k = lo(3),hi(3)
+            do i = lo(1),hi(1)
 
                ! bc's on j-faces only defined within (domlo(1):domhi(1),domlo(3):domhi(3))
                ibc = max(min(i,domhi(1)),domlo(1))
 
-               bcv = bc_jlo_type(ibc,k,2)
                if(bc_jlo_type(i,k,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
@@ -267,6 +264,8 @@ contains
                   A_m(i,j,k,s) = zero
 
                else if(bc_jlo_type(ibc,k,1) == PSW_) then
+
+                  bcv = bc_jlo_type(ibc,k,2)
                   if (is_undefined(bc_hw_g(bcv))) then
                      A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,s)
                      b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,s)*bc_uw_g(bcv)
@@ -294,11 +293,11 @@ contains
 ! ------------------------------------------------------------->
 
       ! At top boundary
-      if (shi(2) .gt. domhi(2)) then
+      if (shi(2) .gt. domhi(2) .and. hi(2).eq.ahi(2)) then
 
          j = ahi(2)
-         do k=alo(3),ahi(3)
-            do i=alo(1),ahi(1)
+         do k = lo(3),hi(3)
+            do i = lo(1),hi(1)
 
                ! bc's on j-faces only defined within (domlo(1):domhi(1),domlo(3):domhi(3))
                ibc = max(min(i,domhi(1)),domlo(1))
@@ -341,11 +340,11 @@ contains
 ! ------------------------------------------------------------->
 
      ! At down boundary
-      if (slo(3) .lt. domlo(3)) then
+      if (slo(3) .lt. domlo(3) .and. lo(3).eq.alo(3)) then
 
          k = alo(3)
-         do j=alo(2),ahi(2)
-            do i=alo(1),ahi(1)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
 
                ! bc's on k-faces only defined within (domlo(1):domhi(1),domlo(2):domhi(2))
                ibc = max(min(i,domhi(1)),domlo(1))
@@ -390,11 +389,11 @@ contains
 ! ------------------------------------------------------------->
 
      ! At up boundary
-      if (shi(3) .gt. domhi(3)) then
+      if (shi(3) .gt. domhi(3) .and. hi(3).eq.ahi(3)) then
 
          k = ahi(3)
-         do j=alo(2),ahi(2)
-            do i=alo(1),ahi(1)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
 
                ! bc's on k-faces only defined within (domlo(1):domhi(1),domlo(2):domhi(2))
                ibc = max(min(i,domhi(1)),domlo(1))
@@ -448,11 +447,12 @@ contains
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine point_source_u_g(alo, ahi, b_m, vol)
+      subroutine point_source_u_g(lo, hi, alo, ahi, b_m, vol)
 
       ! use ps, only: dim_ps, ps_defined, ps_vel_mag_g, ps_massflow_g
       ! use ps, only: ps_u_g
 
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
       real(c_real)  , intent(inout) :: b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real)  , intent(in   ) :: vol

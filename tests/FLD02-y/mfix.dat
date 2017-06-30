@@ -59,8 +59,8 @@
 ! The north and south boundaries are set a runtime as cyclic with a
 ! specified pressure drop (DELP_Y)
 !---------------------------------------------------------------------//
-  CYCLIC_Y_PD = .TRUE.
   DELP_Y = -3.0
+
 
 ! The top wall has a constant velocity of 10.0 m/s, and is set using
 ! a partial slip wall (PSW):  dV/dn + hw(V-Vw) = 0 where Vw = 10.0 m/s

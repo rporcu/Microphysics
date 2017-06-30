@@ -1,5 +1,7 @@
 #!/bin/bash -exl
 
+set -euo pipefail
+
 # set case directory
 RUN_NAME="FLD01"
 
@@ -17,17 +19,32 @@ if [ -z "${FEXTRACT}" ]; then
     exit 1
 fi
 
-rm -rf POST_* ${RUN_NAME}* &> /dev/null
-time -p ${MFIX} inputs
+INPUTS=inputs_single
+if [ -n "$3" ]; then
+    INPUTS=$3
+fi
+echo "Using INPUTS file ${INPUTS}"
 
-${FEXTRACT} -p FLD0100000/ -d 3 -v v_g && mv FLD0100000.slice POST_VG.dat
-${FEXTRACT} -p FLD0100000/ -d 2 -v p_g && mv FLD0100000.slice POST_PG.dat
+if [ "$ENABLE_MPI" -eq "1" ]; then
+    MPIRUN="mpirun -np 4"
+else
+    MPIRUN=""
+fi
+
+MFIX_BENCHMARKS_HOME=${MFIX_BENCHMARKS_HOME:-}
+FCOMPARE=${FCOMPARE:-}
+
+rm -rf POST_* ${RUN_NAME}* &> /dev/null
+time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
+
+${FEXTRACT} -p FLD0100000/ -d 3 -v v_g -s POST_VG.dat
+${FEXTRACT} -p FLD0100000/ -d 2 -v p_g -s POST_PG.dat
 
 post_dats=POST*.dat
 for result in ${post_dats}; do
-  numdiff -a 0.0 AUTOTEST/${result} ${result}
+    diff "AUTOTEST/${result}" "${result}"
 done
 
 if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then
-    ${FCOMPARE} --infile1 ${MFIX_BENCHMARKS_HOME}/FLD01-y_FLD01-y_plt00000 --infile2 FLD0100000/
+    ${FCOMPARE} --infile1 "${MFIX_BENCHMARKS_HOME}/FLD01-y_FLD01-y_plt00000" --infile2 FLD0100000/
 fi

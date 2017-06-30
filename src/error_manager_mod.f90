@@ -53,8 +53,6 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
       use run, only: RUN_NAME
-! Flag: Provide the full log.
-      use run, only: FULL_LOG
 ! Undefined character string.
       use param, only: UNDEFINED_C
 

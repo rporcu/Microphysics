@@ -24,5 +24,5 @@ time -p ${MFIX} inputs DES_COLL_MODEL=\"HERTZIAN\" \
 post_dats=../DEM05-y/AUTOTEST/POST*.dat
 
 for test_post_file in ${post_dats}; do
-    numdiff -a 0.000001 -r 0.05 ${test_post_file} $(basename ${test_post_file})
+    diff ${test_post_file} $(basename ${test_post_file})
 done

@@ -6,49 +6,58 @@
 
 # image: mfixexa
 
-stages:
-  - build
-  - test
-
 variables:
   CTEST_OUTPUT_ON_FAILURE: "1"
   LD_LIBRARY_PATH: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64:/nfs/apps/Compilers/GNU/6.1.0/lib"
-  CC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpicc"
-  CXX: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpic++"
-  FC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
-  F77: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
-  F90: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
+  MPI_CC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpicc"
+  MPI_CXX: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpic++"
+  MPI_FC: "/nfs/apps/MPI/openmpi/1.10.2/gnu/6.1.0/bin/mpifort"
+  CC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gcc"
+  CXX: "/nfs/apps/Compilers/GNU/6.1.0/bin/g++"
+  FC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran"
   MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
 
-build:
-  stage: build
+  # defaults
+  ENABLE_MPI: "0"
+  ENABLE_OMP: "0"
+
+.test: &test_template
   script:
     - mkdir build
     - cd build
-    - cmake -DENABLE_MPI=1 ..
+    - env F77=$FC F90=$FC cmake -DAMREX_ENABLE_MPI=$ENABLE_MPI -DAMREX_ENABLE_OMP=$ENABLE_OMP ..
     - make -j 4
-    - make build_tests
+    - ctest -R $TEST_REGEX
   tags:
     - joule
 
-fld-test:
-  stage: test
-  script:
-    - mkdir build
-    - cd build
-    - cmake -DENABLE_MPI=1 ..
-    - make -j 4
-    - ctest -R FLD
-  tags:
-    - joule
 
-dem-test:
-  stage: test
-  script:
-    - mkdir build
-    - cd build
-    - cmake -DENABLE_MPI=1 ..
-    - make -j 4
-    - ctest -R DEM
-  tags:
-    - joule
+single-grid-serial:
+  variables:
+    TEST_REGEX: "SGS"
+  <<: *test_template
+
+multiple-grid-serial:
+  variables:
+    TEST_REGEX: "MGS"
+  <<: *test_template
+
+multiple-grid-parallel:
+  variables:
+    ENABLE_MPI: "1"
+    CC: "$MPI_CC"
+    CXX: "$MPI_CXX"
+    FC: "$MPI_FC"
+    TEST_REGEX: "MGP"
+  <<: *test_template
+
+tiled-grid-serial:
+  variables:
+    TEST_REGEX: "TGS"
+  <<: *test_template
+
+.tiled-grid-parallel-openmp:
+  variables:
+    ENABLE_OMP: "1"
+    TEST_REGEX: "TGP"
+  <<: *test_template

@@ -48,7 +48,7 @@ MODULE DES_INIT_NAMELIST_MODULE
       use discretelement, only: des_etat_fac, des_etat_w_fac
 
       use discretelement, only: dim_m
-      use param, only: undefined_i, undefined, half
+      use param, only: undefined, half
 
 
       IMPLICIT NONE

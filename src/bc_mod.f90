@@ -15,9 +15,9 @@ module bc
   character(len=16) :: BC_Type(dim_bc)
 
   ! Flags for periodic boundary conditions
-  logical :: cyclic_x, cyclic_x_pd, cyclic_x_mf
-  logical :: cyclic_y, cyclic_y_pd, cyclic_y_mf
-  logical :: cyclic_z, cyclic_z_pd, cyclic_z_mf
+  logical :: cyclic_x = .false.
+  logical :: cyclic_y = .false.
+  logical :: cyclic_z = .false.
 
   ! Boundary condition coordinates
   real(c_real) :: BC_X_w(dim_bc), BC_X_e(dim_bc)
@@ -42,7 +42,7 @@ module bc
   real(c_real) :: BC_MassFlow_g(dim_bc), BC_MassFlow_s(dim_bc, dim_m)
 
   ! Specified pressure drop cyclic boundary
-  real(c_real) :: delp_x, delp_y, delp_z, flux_g
+  real(c_real) :: delp_x, delp_y, delp_z
 
   ! Partial slip wall boundary condition (gas only)
   real(c_real) :: BC_hw_g(dim_bc)
@@ -78,6 +78,24 @@ module bc
 
 
 contains
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+! Subroutine: set_cyclic                                               !
+!                                                                      !
+! Purpose: Function to set cyclic flags.                               !
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  subroutine set_cyclic(cyc_x, cyc_y, cyc_z) &
+    bind(C, name="mfix_set_cyclic")
+
+    integer, intent(in) :: cyc_x, cyc_y, cyc_z
+
+    cyclic_x = (cyc_x == 1)
+    cyclic_y = (cyc_y == 1)
+    cyclic_z = (cyc_z == 1)
+
+  end subroutine set_cyclic
+
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -138,19 +156,19 @@ contains
     write (unit_out, 1600)
 1600  format(//,3x,'7. BOUNDARY CONDITIONS')
 
-    if (cyclic_x_pd) then
+    if (cyclic_x .and. abs(delp_x) > epsilon(0.0d0)) then
        write (unit_out, 1602) 'X', ' with pressure drop'
        write (unit_out, 1603) 'X', DELP_X
     else if (cyclic_x) then
        write (unit_out, 1602) 'X'
     endif
-    if (cyclic_y_pd) then
+    if (cyclic_y .and. abs(delp_y) > epsilon(0.0d0)) then
        write (unit_out, 1602) 'Y', ' with pressure drop'
        write (unit_out, 1603) 'Y', DELP_Y
     else if (cyclic_y) then
        write (unit_out, 1602) 'Y'
     endif
-    if (cyclic_z_pd) then
+    if (cyclic_z .and. abs(delp_z) > epsilon(0.0d0)) then
        write (unit_out, 1602) 'Z', ' with pressure drop'
        write (unit_out, 1603) 'Z', DELP_Z
     else if (cyclic_z) then

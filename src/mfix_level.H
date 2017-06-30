@@ -23,24 +23,22 @@ public:
     mfix_level ();
     ~mfix_level ();
 
-    int Verbose () const { return verbose; }
-
-    void InitParams(int solve_fluid, int solve_dem, int cyclic_mf, int max_nit, int call_udf);
+    void InitParams(int solve_fluid, int solve_dem, int max_nit, int call_udf);
 
     void Init (int lev, Real dt, Real time);
 
-    void Restart();
+    void InitLevelData (int lev, Real dt, Real time);
 
-    void WriteCheckPointFile ( int nstep = 0, Real dt = 0.0, Real time = 0.0 )  const;
+    void InitLevelDataFromRestart (int lev, Real dt, Real time);
 
-    int IsRestartEnabled () const;
+    void WriteCheckPointFile ( std::string& check_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 )  const;
 
-    void WritePlotFile ( int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
+    void WritePlotFile ( std::string& plot_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
 
-    void InitFromCheckpoint (int *nstep, Real *dt, Real *time) const;
+    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time);
 
-    void WriteParticleAscii (int nstep = 0);
-    
+    void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
+
     void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
 
@@ -79,7 +77,7 @@ protected:
 
     void mfix_calc_trd_and_tau (int lev);
 
-    void mfix_init_fluid (int lev);
+    void mfix_init_fluid (int lev, int is_restarting = 0);
 
     void mfix_conv_rop (int lev, Real dt);
 
@@ -105,18 +103,18 @@ protected:
     void mfix_calc_drag_fluid(int lev);
     void mfix_calc_drag_particle(int lev);
 
+    void AllocateArrays(int lev);
+
 private:
 
-    void ReadParameters ();
-
-    void InitLevelData (int lev, Real dt, Real time);
+    void check_data (int lev);
 
     void InitIOData ();
 
     void MakeNewLevelFromScratch(int lev, Real time,
            const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
-    void WriteMfixHeader(const std::string& name, int nstep, Real dt, Real time) const;
+    void WriteHeader(const std::string& name, int nstep, Real dt, Real time) const;
 
     void WriteJobInfo(const std::string& dir ) const;
 
@@ -220,29 +218,14 @@ private:
     Array< std::unique_ptr<MultiFab> > f_gds  ;
     Array< std::unique_ptr<MultiFab> > drag_bm;
 
-
-    // runtime parameters
-    int verbose = 0;
-
     int solve_fluid;
     int solve_dem;
-    int cyclic_mf;
     int max_nit;
     int call_udf;
 
-    int max_step;
-    Real stop_time;
-
     Real cfl = 0.7;
 
-    std::string restart_chkfile {"no_restart"};
-    std::string check_file {"chk"};
-    std::string plot_file {"plt"};
-    std::string par_ascii_file {"par"};
-
-    int check_int = -1;
-    int plot_int = -1;
-    int par_ascii_int = -1;
+    int nghost_bc = 2;
 
     // Variables to simplify IO
     Array< const Array< std::unique_ptr<MultiFab> >* > vectorVars;

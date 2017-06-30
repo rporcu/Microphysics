@@ -1,5 +1,7 @@
 set(CXX_sources
    main.cpp
+   mfix_evolve.cpp
+   mfix_init.cpp
    mfix_level.cpp
    solve_bicgstab.cpp
    MFIXParticleContainer.cpp
@@ -29,7 +31,6 @@ set(F90_sources
    check_data/check_bc_walls.f90
    check_data/check_boundary_conditions.f90
    check_data/check_collision_model.f90
-   check_data/check_domain.f90
    check_data/check_gas_properties.f90
    check_data/check_initial_conditions.f90
    check_data/check_inputs.f90
@@ -69,7 +70,6 @@ set(F90_sources
    functions_mod.f90
    get_data.f90
    get_tunit.f90
-   goal_seek_mflux.f90
    ic_mod.f90
    init_fluid.f90
    init_namelist.f90
@@ -90,6 +90,7 @@ set(F90_sources
    run_mod.f90
    scales_mod.f90
    set_bc0.f90
+   set_bc1.f90
    set_bc_flow.f90
    set_bc_type.f90
    set_ps.f90
@@ -115,18 +116,17 @@ set(F90_sources
    usr/usr3.f90
    usr/usr3_des.f90
    usr/usr_drag.f90
-   usr/usr_init_namelist.f90
    usr/usr_mod.f90
    usr/write_usr0.f90
    usr/write_usr1.f90
    utilities_mod.f90
-   vavg_g.f90
-   boxlib_to_mfix.F90)
+   zero_wall_norm_vel.f90
+   amrex_to_mfix.F90)
 
 # Generate AMReX_buildInfo.cpp
 add_custom_command(
-   COMMAND  ${AMREX_TOOLS}/C_scripts/makebuildinfo_C.py
-   --amrex_home "${AMREX_ROOT}"
+   COMMAND  ${AMREX_INSTALL_PATH}/Tools/C_scripts/makebuildinfo_C.py
+   --amrex_home "${AMREX_INSTALL_PATH}"
    --COMP ${CMAKE_C_COMPILER_ID} --COMP_VERSION ${CMAKE_C_COMPILER_VERSION}
    --FCOMP ${CMAKE_Fortran_COMPILER_ID} --FCOMP_VERSION ${CMAKE_C_COMPILER_VERSION}
    --GIT ". ${AMREX_GIT}"

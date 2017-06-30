@@ -15,12 +15,6 @@ contains
     use init_namelist_module, only: init_namelist
     use read_namelist_module, only: read_namelist
 
-    ! Cyclic domain flags.
-    use bc, only: cyclic_x, cyclic_x_pd, cyclic_x_mf
-    use bc, only: cyclic_y, cyclic_y_pd, cyclic_y_mf
-    use bc, only: cyclic_z, cyclic_z_pd, cyclic_z_mf
-    use bc, only: flux_g
-
     use run, only: dem_solids
 
     use constant, only: mmax
@@ -48,16 +42,6 @@ contains
 
     ! Read in the namelist variables from the ascii input file.
     call read_namelist(dt)
-
-    ! Determine the cyclic direction with a specified mass flux
-    cyclic_x_mf = (is_defined(flux_g) .and. cyclic_x_pd)
-    cyclic_y_mf = (is_defined(flux_g) .and. cyclic_y_pd)
-    cyclic_z_mf = (is_defined(flux_g) .and. cyclic_z_pd)
-
-    ! Force the cyclic flag if cyclic with pressure drop.
-    if (cyclic_x_pd) cyclic_x = .true.
-    if (cyclic_y_pd) cyclic_y = .true.
-    if (cyclic_z_pd) cyclic_z = .true.
 
     ! Set flag for coupled simulations
     des_continuum_coupled = (particle_types>0) .and. (abs(ro_g0) > 0.0d0)

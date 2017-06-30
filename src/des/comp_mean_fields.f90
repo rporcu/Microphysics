@@ -25,7 +25,6 @@ contains
 
       use param,          only: zero
       use discretelement, only: nonexistent, normal_ghost
-      use discretelement, only: entering_ghost, exiting_ghost
       use particle_mod,   only: particle_t
       
       implicit none
@@ -61,9 +60,7 @@ contains
       ! Calculate the gas phae forces acting on each particle.
       do n = 1, np
          if ( NONEXISTENT  == particles(n) % state  ) cycle
-         if ( NORMAL_GHOST == particles(n) % state  .or. &
-              ENTERING_GHOST == particles(n) % state  .or. &
-              EXITING_GHOST == particles(n) % state ) cycle
+         if ( NORMAL_GHOST == particles(n) % state) cycle
 
          ! Fluid cell containing the particle
          i = floor( particles(n) % pos(1) * odx )

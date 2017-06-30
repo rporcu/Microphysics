@@ -36,7 +36,7 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
    real(c_real), intent(in   ) :: dx, dy, dz
 
    type(particle_t), intent(inout) :: particles(np)
-   real(c_real),     intent(out  ) :: & 
+   real(c_real),     intent(out  ) :: &
         f_gs(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
         rhs(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
@@ -70,9 +70,10 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
       velp(:) = particles(p) % vel
 
       ! Calculate drag coefficient, beta
-      call des_drag_gp(slo, shi, np, velp, velfp, ep_g(i,j,k), &
-           & ro_g, mu_g, beta, i, j, k, particles(p) % radius, &
-           & particles(p) % volume, particles(p) % phase )
+      call des_drag_gp(slo, shi, p, velp, velfp, ep_g(i,j,k),  &
+           ro_g, mu_g, beta, i, j, k, particles(p) % radius,   &
+           particles(p) % volume, particles(p) % density,      &
+           particles(p) % phase )
 
       f_gp = beta*ovol
 
@@ -103,8 +104,6 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
    use des_drag_gp_module, only: des_drag_gp
-   ! Flags for cyclic BC with pressure drop
-   use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
    ! Specified pressure drop
    use bc, only: delp_x, delp_y, delp_z
    use particle_mod, only: particle_t
@@ -141,14 +140,14 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       beta(p) = particles(p) % drag(1)
    end do
 
-   cpg(1) = merge(delp_x/xlen, 0.0d0, cyclic_x_pd)
-   cpg(2) = merge(delp_y/ylen, 0.0d0, cyclic_y_pd)
-   cpg(3) = merge(delp_z/zlen, 0.0d0, cyclic_z_pd)
+   cpg(1) = delp_x/xlen
+   cpg(2) = delp_y/ylen
+   cpg(3) = delp_z/zlen
 
    ! Calculate the gas phase forces acting on each particle.
 
    do p = 1, np
-      
+
       i = floor(particles(p) % pos(1)*odx)
       j = floor(particles(p) % pos(2)*ody)
       k = floor(particles(p) % pos(3)*odz)
@@ -166,12 +165,9 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       gradpg(3) = odz*(0.5d0*(p_g(i,j,k) + p_g(i,j,k+1)) - &
            0.5d0*(p_g(i,j,k) + p_g(i,j,k-1)))
 
-      particles(p) % drag = beta(np)*(velfp - particles(p) % vel) + &
-           (cpg(:) - gradpg(:)) *particles(p) % volume
+      particles(p) % drag = beta(p)*(velfp - particles(p) % vel) + &
+           (cpg(:) - gradpg(:)) * particles(p) % volume
 
    enddo
 
 end subroutine calc_drag_particle
-
-
-
