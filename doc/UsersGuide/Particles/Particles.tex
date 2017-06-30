@@ -5,7 +5,7 @@ as well as a particle fluid-coupling mode. In the latter case, \mfix\ models
 the fluid phase as a continuum and models the
 particles of the solid phase individually. This approach supports a wide range 
 of customization for particle dynamics, including mutliple particle collision 
-force and drag schemes. For more information on the DEM capabilities of \mfix\
+forces. For more information on the DEM capabilities of \mfix\
 see \demdoc\ on the MFIX Documentation webpage at  
 {\url{https://mfix.netl.doe.gov/download/mfix/mfix_current_documentation/dem_doc_2012-1.pdf/}}.  
 
@@ -24,7 +24,7 @@ of the particle routines in \mfix.
 
 \section{Equations}
 
-\mfix natively supports two soft-sphere contact force models, the linear 
+\mfix\ natively supports two soft-sphere contact force models, the linear 
 spring-dashpot model and a Hertzian model. The linear spring-dashpot
 model is discussed in section {\bf 2.2.1: Contact Forces} of \demdoc. The 
 Hertzian model is discussed in section {\bf 2.2.3: Hertzian Model} of the same
@@ -40,15 +40,15 @@ contain the details of each particle in the format: \\
 {\sf phase x y z radius density $\omega_x$ $\omega_y$ $\omega_z$}  \\
 
 \noindent
-where $\omega_x$, $\omega_y$, $\omega_z$ refer to the angular velocities of the
-particle. All quantities are entered as real numbers separated by a single space
-except phase which takes an integer value.   
+where {\sf $\omega_x$, $\omega_y$, $\omega_z$} refer to the angular velocities
+ of the particle. All quantities are entered as real numbers separated by a 
+single space except {\sf phase} which takes an integer value.   
 
 
-\subsection{Random placement}
-
-The option to initialize particle with random placement will be enabled in 
-the future. 
+%\subsection{Random placement}
+%
+%The option to initialize particle with random placement will be enabled in 
+%the future. 
 
 
 	
@@ -61,78 +61,54 @@ aproach is available in section {\bf 3.1: Time Integration} of \demdoc.
 \section{Output Format}
 
 Simulation output parameters are set in the inputs file that is passed to mfix
-as the first argument when the program in called. In this section will refer
+as the first argument when the program in called. This section will refer
 to this file as {\sf inputs}. Output options that can be set in this file are 
-show in the table.  
+shown in table \ref{table:amropts}.  
+
+\begin{table}
+\begin{center}
+  \begin{tabular}{||c| l||}
+    \hline
+    Command & Function \\ [0.5ex]
+    \hline\hline
+    {\sf amr.plot\_int} & Sets the plot frequency in terms of fluid simulation\\
+                        & time steps, i.e. {\sf amr.plot\_int=2} will output a
+                          plot file \\
+                        & every two time steps. \\   
+     \hline
+    {\sf amr.plot\_file} & Sets the plot filename prefix. \\
+     \hline
+  \end{tabular}
+\end{center}
+\caption{\amrex\ Output Options}
+\label{table:amropts}
+\end{table}
 
 \subsection{Checkpoint Files}
 
-The particle positions and velocities are stored in a binary file in each checkpoint directory.  
-This format is designed for being read by the code at restart rather than for diagnostics. \\
+All particle information is stored in a binary file within each checkpoint 
+directory. This format is designed for being read by the code at restart rather 
+than for diagnostics. Full details on checkpoints files are available in the
+\amrex\ User's Guide under section {\bf 4.17.2: Checkpoint File}.
 
-We note that the value of $a$ is also written in each checkpoint directory, 
-in a separate ASCII file called {\em comoving\_a}, containing only the single value. \\
 
 \subsection{Plot Files}
 
+\mfix\ uses \amrex's framework for plot files. Visualization of particles is 
+most readily achieved with the ParaView software. See \amrex User's Guide section 
+{\bf 9.3: ParaView} for instructions on how to generate particle plot files. 
 
-
-%If {\bf particles.write\_in\_plotfile =} 1 in the inputs file 
-%then the particle positions and velocities will be written in a binary file in each plotfile directory.  
-%
-%In addition, we can also
-%visualize the particle locations as represented on the grid.  There are two ``derived quantities''
-%which represent the particles.  Setting \\
-%
-%\noindent {\bf amr.derive\_plot\_vars = particle\_count particle\_mass\_density} \\
-%\noindent {\bf amr.plot\_vars = NONE} \\
-%
-%\noindent in the inputs file will generate plotfiles with only two variables.  
-%{\bf particle\_count} represents the number of particles in a grid cell; 
-%{\bf particle\_mass\_density} is the density on the grid resulting from the particles.
-%
-%We note that the value of $a$ is also written in each plotfile directory, 
-%in a separate ASCII file called {\em comoving\_a}, containing only the single value. \\
 
 \subsection{ASCII Particle Files}
+Writing ASCII particle files is explained in \hyperref[sec:AsciiFiles]{Writing ASCII 
+Particle Files}.
 
-To generate an ASCII file containing the particle positions and velocities, 
-one needs to restart from a checkpoint
-file but doesn't need to run any steps.  For example, if chk00350 exists, then one can set: \\
-
-\noindent {\bf amr.restart = chk00350} \\
-\noindent {\bf max\_step = 350} \\
-\noindent {\bf particles.particle\_output\_file =} {\em particle\_output} \\
-
-\noindent which would tell the code to restart from chk00350, not to take any further time steps, and to write an ASCII-format 
-file called {\em particle\_output}. \\
-
-\noindent This file has the same format as the ASCII input file: \\
-
-\noindent number of particles \\ 
-x y z mass xdot ydot zdot \\
-
-\subsection{Run-time Data Logs}
-
-If you set \\
-
-\noindent {\bf amr.data\_log = }{\em log\_file}  \\
-
-\noindent in the inputs file, then at run-time the code will write a log file with entries every coarse
-grid time step, containing \\
-
-\noindent nstep  time   dt   redshift   a
+%\subsection{Run-time Data Logs}
 
 
-\subsection{Run-time Screen Output}
+%\noindent {\bf amr.data\_log = }{\em log\_file}  \\
 
-There are a number of flags that control the verbosity written to the screen at run-time.  These are:
 
-\noindent {\bf amr.v } \\
-\noindent {\bf mfix.v } \\
-\noindent {\bf gravity.v } \\
-\noindent {\bf mg.v } \\
-\noindent {\bf particles.v } \\
 
-These control printing  about the state of the calculation (time, value of $a$, etc) as well as
-timing information.
+%\subsection{Run-time Screen Output}
+
