@@ -39,6 +39,8 @@ void ReadParameters ()
   // via BoxLib
   ParmParse pp("amr");
 
+  pp.add("blocking_factor",1);
+
   pp.query("check_file", check_file);
   pp.query("check_int", check_int);
 
@@ -56,7 +58,7 @@ int main (int argc, char* argv[])
 {
     // Issue an error if AMR input file is not given
     if ( argc < 2 )
-  amrex::Abort("AMReX input file missing");
+       amrex::Abort("AMReX input file missing");
 
     // AMReX will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
