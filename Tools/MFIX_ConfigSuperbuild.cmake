@@ -87,16 +87,19 @@ if ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "" )  AND
    message(STATUS "Fortran name mangling scheme to UPPERCASE \
 (upper case, no append underscore)")
    add_define ( BL_FORT_USE_UPPERCASE AMREX_DEFINES )
+   add_define ( AMREX_FORT_USE_UPPERCASE AMREX_DEFINES )
 elseif ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "") AND
       ( FortranCInterface_GLOBAL_CASE STREQUAL "LOWER") )
    message(STATUS "Fortran name mangling scheme to LOWERCASE \
 (lower case, no append underscore)")
    add_define ( BL_FORT_USE_LOWERCASE AMREX_DEFINES )
+   add_define ( AMREX_FORT_USE_LOWERCASE AMREX_DEFINES )
 elseif ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "_" ) AND
       ( FortranCInterface_GLOBAL_CASE STREQUAL "LOWER") )
    message(STATUS "Fortran name mangling scheme to UNDERSCORE \
 (lower case, append underscore)")
    add_define ( BL_FORT_USE_UNDERSCORE AMREX_DEFINES )
+   add_define ( AMREX_FORT_USE_UNDERSCORE AMREX_DEFINES )
 else ()
    message(AUTHOR_WARNING "Fortran to C mangling not backward\
  compatible with older style BoxLib code") 
