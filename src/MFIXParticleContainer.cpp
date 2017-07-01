@@ -114,12 +114,16 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
       p.rdata(realData::omegay)   = pomega;
       p.rdata(realData::omegaz)   = pomega;
 
+      // Initialize these for I/O purposes
+      p.rdata(realData::dragx)    = 0.0;
+      p.rdata(realData::dragy)    = 0.0;
+      p.rdata(realData::dragz)    = 0.0;
+
       // Add everything to the data structure
       particle_tile.push_back(p);
     }
   }
   Redistribute();
-
 }
 
 void MFIXParticleContainer:: printParticles()
