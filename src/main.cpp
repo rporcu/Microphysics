@@ -145,7 +145,6 @@ int main (int argc, char* argv[])
     if ( par_ascii_int > 0 )
        my_mfix.WriteParticleAscii( par_ascii_file, nstep );
 
-    std::cout << "TIME TSTOP " << time << " " << tstop << std::endl;
     if (time <  tstop)
     {
        while (finish == 0)
