@@ -36,8 +36,8 @@ message (STATUS "MFIX configuration options: ")
 
 if ( NOT CMAKE_BUILD_TYPE )
    # Default to debug if no other build type specified
-   set ( CMAKE_BUILD_TYPE "Debug" CACHE STRING
-      "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel."
+   set ( CMAKE_BUILD_TYPE "Release" CACHE STRING
+      "Choose the type of build, options are: Debug Release."
       FORCE )
 endif ()
 
