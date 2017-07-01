@@ -178,6 +178,7 @@ int main (int argc, char* argv[])
 
     // Dump plotfile at the end if enabled for steady state
     if (steady_state) {
+        nstep = 1;
         if ( check_int > 0)
            my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
         if ( plot_int > 0 )
