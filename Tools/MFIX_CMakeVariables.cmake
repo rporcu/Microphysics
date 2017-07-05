@@ -13,6 +13,13 @@ if ( NOT PROJECT_NAME )
 before calling project()" )
 endif ()
 
+# 
+# Check if this file has been loaded already
+#
+if (DEFINED __MFIX_CMAKEVARIABLES__)
+   return ()
+endif ()
+set (__MFIX_CMAKEVARIABLES__ "")
 
 # Set paths for build system
 set ( CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mod)
@@ -25,11 +32,6 @@ set ( ENABLE_SUPERBUILD )
 
 # Variable to hold amrex install path
 set ( AMREX_INSTALL_PATH )
-
-# Whether AMReX_Options.cmake has been included already
-if ( NOT MFIX_OPTIONS_SET )
-   set ( MFIX_OPTIONS_SET )
-endif ()
 
 # Flags to accumulate preprocessor directives
 set ( MFIX_DEFINES ) 
@@ -116,14 +118,9 @@ set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
 set (AMREX_GIT_COMMIT_DEVELOP b8fe4dfd4436de3d116b1732c56735505544e911 )
 set (AMREX_GIT_TAG)  # The commit id or branch to download 
 
-
-
 # AMReX Superbuild variables
 set (AMREX_SUPERBUILD_DIR   ${PROJECT_BINARY_DIR}/ThirdParty)
 
 # MFIX git variables
 set (MFIX_GIT_COMMIT)
 set (MFIX_GIT_BRANCH)
-
-# Variable to show this file was loaded
-set ( MFIX_VARIABLES_LOADED "TRUE" )

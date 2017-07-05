@@ -3,12 +3,16 @@
 # Here we configure the build                 #
 
 ###############################################
+if (DEFINED __MFIX_CONFIG__)
+   return ()
+endif ()
+set ( __MFIX_CONFIG__ "" )
 
 #
-#  Check if AMReX_Options.cmake has been already processed
+#  Check if MFIX_Options.cmake has been already processed
 #
-if ( NOT MFIX_OPTIONS_SET )
-   message ( FATAL_ERROR "MFIX_Options.cmake must be\
+if (NOT (DEFINED __MFIX_OPTIONS__) )
+   message ( FATAL_ERROR "MFIX_Options.cmake must be \
 included before MFIX_Config.cmake" )
 endif ()
 
