@@ -48,8 +48,14 @@ set ( TYPECHECK_DIR  ${CMAKE_BINARY_DIR}/TypeCheckTemp )
 add_library ( typecheckobjs OBJECT EXCLUDE_FROM_ALL ${F90SRC} )
 set_target_properties ( typecheckobjs
    PROPERTIES
-   LIBRARY_OUTPUT_DIRECTORY ${TYPECHECK_DIR}
    Fortran_MODULE_DIRECTORY ${TYPECHECK_DIR} )
+
+   
+if ( ENABLE_SUPERBUILD )
+   # AMReX must be installed before performing typecheck
+   add_dependencies ( typecheckobjs amrex )
+endif ()
+
 
 #
 # Find includes needed for typecheck
@@ -119,7 +125,6 @@ foreach ( file ${CXXINCLUDES} )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMENT "Generating ${CPPD_FILE} " )
    list (APPEND CXXHEADERS ${CPPD_FILE})
-   print (CPPD_FILE)
 endforeach ()
 
 
