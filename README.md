@@ -172,13 +172,11 @@ If GRID variable is not defined, the default is to run the tests for all grid ty
 
 ## Run a user-defined case
 ```shell
-> ./mfix inputs  mfix.input_file=<user_file_name>
+> ./mfix inputs-myrun 
 ```
-_inputs_ is a text file containing the AMReX input parameters.
-_inputs_  __has to be provided and cannot be renamed__.
-_user_file_name_ is the name of a user-defined text file containing the MFIX input parameters.
-If _mfix.input_file=input_file_name_ is not given, MFIX will try to read the file
-_mfix.dat_. MFIX __requires__ either _user_file_name_ or _mfix.dat_.
+_inputs-myrun_ is a text file containing the AMReX input parameters; this can be named anything
+as long as it is the __first__ argument following the executable.  Note that many of the problem
+parameters are still defined in _mfix.dat_. 
 
 # See the User's Guide for more about MFIX-Exa
 
