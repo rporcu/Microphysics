@@ -48,7 +48,8 @@ set ( TYPECHECK_DIR  ${CMAKE_BINARY_DIR}/TypeCheckTemp )
 add_library ( typecheckobjs OBJECT EXCLUDE_FROM_ALL ${F90SRC} )
 set_target_properties ( typecheckobjs
    PROPERTIES
-   Fortran_MODULE_DIRECTORY ${TYPECHECK_DIR} )
+   Fortran_MODULE_DIRECTORY ${TYPECHECK_DIR} ) 
+
 
    
 if ( ENABLE_SUPERBUILD )

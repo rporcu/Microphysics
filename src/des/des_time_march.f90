@@ -24,7 +24,7 @@ contains
 
 
    function des_is_continuum_coupled () result( is_coupled ) &
-        bind(C, name="mfix_des_continuum_coupled")
+        bind(C, name="des_continuum_coupled")
 
       use discretelement, only: des_continuum_coupled
 
@@ -38,7 +38,7 @@ contains
 
 
    subroutine des_init_time_loop ( tstart, dt, nsubsteps, subdt ) &
-        bind(C, name="mfix_des_init_time_loop")
+        bind(C, name="des_init_time_loop")
 
       use discretelement,  only: dtsolid, des_continuum_coupled
       use run,             only: tstop
@@ -72,7 +72,7 @@ contains
 
 
    subroutine call_usr3_des( np, particles ) &
-        bind(c, name="mfix_call_usr3_des")
+        bind(c, name="call_usr3_des")
 
       use run,            only: call_usr
       use particle_mod,   only: particle_t
@@ -87,7 +87,7 @@ contains
 
 
    subroutine call_usr2_des( np, particles ) &
-        bind(c, name="mfix_call_usr2_des")
+        bind(c, name="call_usr2_des")
 
       use run,            only: call_usr
       use particle_mod,   only: particle_t
@@ -101,7 +101,7 @@ contains
 
    subroutine des_time_loop_ops ( nrp, rparticles, ngp, gparticles, &
         & subdt, dx, dy, dz, xlength, ylength, zlength, nstep )  &
-        bind(C, name="mfix_des_time_loop_ops")
+        bind(C, name="des_time_loop_ops")
 
       use particle_mod
       use calc_collision_wall,     only: calc_dem_force_with_wall_stl

@@ -99,7 +99,7 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
       p.cpu() = ParallelDescriptor::MyProc();
 
       // Compute other particle properties
-      mfix_set_particle_properties( &pstate, &pradius, &pdensity,
+      set_particle_properties( &pstate, &pradius, &pdensity,
                                     &pvolume, &pmass, &pomoi, &pomega);
 
       // Set other particle properties
@@ -196,7 +196,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     int   nsubsteps;
     Real  subdt;
 
-    mfix_des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
+    des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
     for ( int n = 0; n < nsubsteps; ++n ) {
 
@@ -214,20 +214,20 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          int ng = neighbors[index].size() / pdata_size;
 
          BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-         mfix_des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
+         des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
                &subdt, &dx, &dy, &dz,
                &xlen, &ylen, &zlen, &nstep );
          BL_PROFILE_VAR_STOP(des_time_loop);
 
-         if ( mfix_des_continuum_coupled () == 0 ) {
+         if ( des_continuum_coupled () == 0 ) {
            Real stime;
            stime = time + (n+1)*subdt;
-           mfix_output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
+           output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
                                 &n, particles, 0 );
 
          }
 
-         mfix_call_usr2_des( &np, particles );
+         call_usr2_des( &np, particles );
       }
 
       clearNeighbors(lev);
@@ -240,11 +240,11 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       const int np     = NumberOfParticles(pti);
       void* particles  = pti.GetArrayOfStructs().data();
 
-      mfix_call_usr3_des( &np, particles );
+      call_usr3_des( &np, particles );
 
     }
 
-    if ( mfix_des_continuum_coupled () != 0 ) {
+    if ( des_continuum_coupled () != 0 ) {
       nstep = nsubsteps;
       time  = time + nsubsteps * subdt ;
     }
@@ -267,7 +267,7 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
       const int     np = NumberOfParticles(pti);
       void* particles  = pti.GetArrayOfStructs().data();
 
-      mfix_output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
+      output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
                            particles, &finish);
     }
 
@@ -602,7 +602,7 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
     const int np     = NumberOfParticles(pti);
     void* particles  = pti.GetArrayOfStructs().data();
 
-    mfix_sum_particle_props( &np, particles, sum_np, sum_dp, sum_ro);
+    sum_particle_props( &np, particles, sum_np, sum_dp, sum_ro);
 
   }
 

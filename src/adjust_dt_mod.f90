@@ -22,7 +22,7 @@ contains
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    integer(c_int) function adjustdt (converged, nit, dt) &
-      bind(C, name="mfix_adjustdt")
+      bind(C, name="adjustdt")
 
 !---------------------------------------------------------------------//
 
