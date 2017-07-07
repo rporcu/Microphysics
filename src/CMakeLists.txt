@@ -144,3 +144,8 @@ endif ( ENABLE_SUPERBUILD )
 add_custom_command(TARGET mfixcore POST_BUILD COMMAND rm AMReX_buildInfo.cpp
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Removing AMReX_buildInfo.cpp" )
+
+# Define sources for type checking
+#set (F90SRC ${F90_sources})
+#set (CXXINCLUDES ${CXX_includes})
+#include (MFIX_Typecheck)

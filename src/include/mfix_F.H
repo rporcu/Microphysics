@@ -1,7 +1,8 @@
 #include <AMReX_REAL.H>
-
+#ifdef __cplusplus
 extern "C"
 {
+#endif
     void mfix_add_argument(char* fname, int* nlen);
 
     void set_resid_p(amrex::Real& val);
@@ -371,4 +372,6 @@ extern "C"
       const amrex::Real*, const int*, const int*);
 
   void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, amrex::Real* tol);
+#ifdef __cplusplus
 }
+#endif

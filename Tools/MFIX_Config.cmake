@@ -95,7 +95,7 @@ append ( AMREX_EXTRA_C_FLAGS MFIX_EXTRA_C_FLAGS )
 append ( AMREX_EXTRA_CXX_FLAGS MFIX_EXTRA_CXX_FLAGS )
 
 # Set amrex typecheker path
-set ( AMREX_TYPECHECKER  "${AMREX_LIBRARY_DIR}/Tools/typechecker/typechecker.py" )
+set ( AMREX_TYPECHECKER  "${AMREX_INSTALL_PATH}/Tools/typechecker/typechecker.py" )
 
 
 # ------------------------------------------------------------- #
