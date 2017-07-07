@@ -344,11 +344,6 @@ extern "C"
 
     void mfix_finl_err_msg();
 
-    // void mfix_solve_lin_eq(int* vno, amrex::Real* var, amrex::Real* A_m, amrex::Real* b_m,
-    // 			   int* sweep_type, amrex::Real* tol, int* precond_type,
-    // 			   int* max_it, int* ier,
-    // 			   int* slo, int* shi, const int* lo, const int* hi);
-
     void leq_residual(const int* lo, const int* hi,
 		      const amrex::Real*, const int*, const int*,
 		      const amrex::Real*, const int*, const int*,
