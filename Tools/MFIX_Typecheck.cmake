@@ -109,9 +109,10 @@ endif ()
 set (CXXHEADERS)
 foreach ( file ${CXXINCLUDES} )
    get_filename_component ( fname ${file} NAME ) # This strips away the path
-   set ( CPPD_FILE ${TYPECHECK_DIR}/${fname}-cppd.h )
+   set ( CPPD_FILE ${fname}-cppd.h )
+   get_filename_component ( fullname ${file} ABSOLUTE ) # This add the absolute path to fname
    add_custom_command ( OUTPUT  ${CPPD_FILE} COMMAND ${CMAKE_C_COMPILER}
-      ARGS ${DEFINES} ${INCLUDES} -E -P -x c -std=c99 ${file} > ${CPPD_FILE}
+      ARGS ${DEFINES} ${INCLUDES} -E -P -x c -std=c99 ${fullname} > ${CPPD_FILE}
       COMMAND sed
       ARGS -i -e 's/amrex::Real/${AMREX_REAL}/g' ${CPPD_FILE} 
       COMMAND sed
@@ -123,7 +124,7 @@ foreach ( file ${CXXINCLUDES} )
       COMMAND sed
       ARGS -i -e 's/\\&/*/g' ${CPPD_FILE} 
       DEPENDS ${file} typecheckobjs # Leave dependency to typecheck so typecheckdir is created
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      WORKING_DIRECTORY ${TYPECHECK_DIR}  
       COMMENT "Generating ${CPPD_FILE} " )
    list (APPEND CXXHEADERS ${CPPD_FILE})
 endforeach ()
@@ -135,11 +136,12 @@ endforeach ()
 set (F90ORIG)
 foreach ( file ${F90SRC} )
    get_filename_component ( fname ${file} NAME ) # This strips away the path
-   set ( ORIG_FILE ${TYPECHECK_DIR}/${fname}.orig )
+   set ( ORIG_FILE ${fname}.orig )
+   get_filename_component ( fullname ${file} ABSOLUTE ) # This add the absolute path to fname
    add_custom_command ( OUTPUT  ${ORIG_FILE} COMMAND ${CMAKE_Fortran_COMPILER}
-      ARGS ${DEFINES} ${INCLUDES} -fsyntax-only -fdump-fortran-original ${file} > ${ORIG_FILE}
+      ARGS ${DEFINES} ${INCLUDES} -fsyntax-only -fdump-fortran-original ${fullname} > ${ORIG_FILE}
       DEPENDS ${file} typecheckobjs
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      WORKING_DIRECTORY ${TYPECHECK_DIR} 
       COMMENT "Generating ${ORIG_FILE} " )
    list (APPEND F90ORIG ${ORIG_FILE}) 
 endforeach ()
