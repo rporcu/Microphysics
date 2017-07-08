@@ -5,7 +5,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine init_collision(d_p0, ro_s0)&
-     bind(C, name="mfix_init_collision")
+     bind(C, name="init_collision")
 
   use discretelement, only: des_coll_model_enum, lsd, hertzian
 
@@ -272,7 +272,7 @@ end subroutine init_collision
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine sum_particle_props ( np, particles, sum_np, sum_dp, sum_ro) &
-     bind(C, name="mfix_sum_particle_props")
+     bind(C, name="sum_particle_props")
 
   use amrex_fort_module, only: c_real => amrex_real
   use iso_c_binding ,    only: c_int

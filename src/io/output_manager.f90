@@ -23,7 +23,7 @@ contains
    !----------------------------------------------------------------------!
    subroutine output_manager( np, time, dt, xlength, ylength, zlength, &
         & nstep, particles, finished ) &
-        & bind(C, name="mfix_output_manager")
+        & bind(C, name="output_manager")
 
       use output,       only: USR_TIME, USR_DT
       use param,        only: DIM_USR

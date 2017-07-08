@@ -5,13 +5,22 @@
 
 ###############################################
 
+if (DEFINED __MFIX_OPTIONS__)
+   return ()
+endif ()
+# Define the following variable
+# so that other included file can check if this file has been
+# run already
+set (__MFIX_OPTIONS__ "")
+
+
 #
-# Check weather the AMReX_CMakeVariables.cmake
+# Check weather the MFIX_CMakeVariables.cmake
 # has been loaded; abort if not
 #
-if ( NOT MFIX_VARIABLES_LOADED )
-   message ( FATAL_ERROR "AMReX_Options.cmake must be included\
-after including AMReX_CMakeVariables.cmake" )
+if (NOT (DEFINED __MFIX_CMAKEVARIABLES__) )
+   message ( FATAL_ERROR "MFIX_Options.cmake must be included \
+after including MFIX_CMakeVariables.cmake" )
 endif ()
 
 
@@ -97,8 +106,4 @@ endif ()
 
 
 
-# After the options are set, define the following variable
-# so that other included file can check if this file has been
-# run already
-set ( MFIX_OPTIONS_SET  "TRUE" )  
 
