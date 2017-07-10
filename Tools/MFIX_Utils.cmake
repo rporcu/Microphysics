@@ -23,7 +23,7 @@ endfunction ()
 # 
 function ( append new_var all_var )
    if ( ${new_var} )
-      set ( tmp  ${${all_var}} ${${new_var}} )
+      set ( tmp  "${${all_var}} ${${new_var}}" )
 
       # Since I am OCD, remove the double spaces.
       string ( REPLACE "  " " " tmp ${tmp} )
