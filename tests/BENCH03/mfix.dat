@@ -40,9 +40,10 @@
   RO_g0 = 1.0      ! (kg/m3)
   MU_g0 = 2.0d-5   ! (Pa.sec)
 
-
 ! Particle Section
 !---------------------------------------------------------------------//
+!
+  particle_types = 1
 
 ! Friction coefficient. (1)
   MEW =   0.0                ! particle-particle
