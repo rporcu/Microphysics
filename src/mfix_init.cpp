@@ -360,7 +360,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
 
-      mfix_init_collision(avg_dp, avg_ro);
+      init_collision(avg_dp, avg_ro);
 
       //  Create mask for particle ghost cells
       pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
@@ -412,7 +412,7 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
     if (solve_dem) {
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
-      mfix_init_collision(avg_dp, avg_ro);
+      init_collision(avg_dp, avg_ro);
     }
 
     // // Initial fluid arrays: pressure, velocity, density, viscosity
@@ -420,7 +420,7 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
 
     // // Call user-defined subroutine to set constants, check data, etc.
     // if (call_udf)
-    //  mfix_usr0();
+    //  usr0();
 
     // Calculate all the coefficients once before entering the time loop
     int calc_flag = 2;

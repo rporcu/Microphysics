@@ -1,5 +1,5 @@
 subroutine set_particle_properties(pstate, pradius, pdensity, pvol, pmass, omoi, omega) &
-     bind(C, name="mfix_set_particle_properties")
+     bind(C, name="set_particle_properties")
 
   use amrex_fort_module, only: c_real => amrex_real
   use iso_c_binding ,    only: c_int

@@ -139,7 +139,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
     } while(converged==0 && nit<max_nit);
 
     // Adjust time step if iteration failed.
-    reiterate = mfix_adjustdt(&converged, &nit, &dt);
+    reiterate = adjustdt(&converged, &nit, &dt);
     if(reiterate == 1) {
 
       // Reset the field variables
