@@ -46,8 +46,19 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
               bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
 
+  Real sum_vol;
   if (solve_dem)
-    mfix_calc_volume_fraction(lev);
+    mfix_calc_volume_fraction(lev,sum_vol);
+
+  if (nstep == 0) 
+  {
+     sum_vol_orig = sum_vol;
+     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+  } else {
+     Print() << "Testing new sum_vol " << sum_vol << " against original sum_vol " << sum_vol_orig << std::endl;
+     if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) amrex::Abort("Volume fraction in domain has changed!");
+  }
+  
 
   // Calculate transport coefficients
   int calc_flag = 2;

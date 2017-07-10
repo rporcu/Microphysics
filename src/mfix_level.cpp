@@ -656,7 +656,7 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
     }
 }
 
-void mfix_level::mfix_calc_volume_fraction(int lev)
+void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
 {
   BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
     Real dx = geom[lev].CellSize(0);
@@ -683,6 +683,9 @@ void mfix_level::mfix_calc_volume_fraction(int lev)
     // This sets the values outside walls or periodic boundaries
     fill_mf_bc(lev,*ep_g[lev]);
     fill_mf_bc(lev,*rop_g[lev]);
+
+    // Sum up all the values of ep_g[lev] -- this value should never change!
+    sum_vol = ep_g[lev]->sum();
 }
 
 void mfix_level::mfix_calc_drag_fluid(int lev)

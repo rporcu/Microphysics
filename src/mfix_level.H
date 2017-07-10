@@ -99,7 +99,7 @@ protected:
     int solve_bicgstab (MultiFab& sol, const MultiFab& rhs, const MultiFab& matrix,
            int sweep_type, int precond_type, int maxiter, Real eps_rel, int lev);
 
-    void mfix_calc_volume_fraction(int lev);
+    void mfix_calc_volume_fraction(int lev, Real& sum_vol);
     void mfix_calc_drag_fluid(int lev);
     void mfix_calc_drag_particle(int lev);
 
@@ -224,6 +224,8 @@ private:
     int call_udf;
 
     Real cfl = 0.7;
+
+    Real sum_vol_orig;
 
     int nghost_bc = 2;
 
