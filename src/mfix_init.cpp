@@ -47,26 +47,25 @@ void mfix_level::Init(int lev, Real dt, Real time)
     // Since these involving writing to output files we only do these on the IOProcessor
     if ( ParallelDescriptor::IOProcessor() )
     {
+       // Write the initial part of the standard output file
+       write_out0(&time, &dt, &dx, &dy, &dz, &xlen, &ylen, &zlen,
+                  domain.loVect(), domain.hiVect());
 
-  // Write the initial part of the standard output file
-  write_out0(&time, &dt, &dx, &dy, &dz, &xlen, &ylen, &zlen,
-       domain.loVect(), domain.hiVect());
-
-  // Write the initial part of the special output file(s)
-  write_usr0();
+       // Write the initial part of the special output file(s)
+       write_usr0();
     }
 
     // Set point sources.
     {
-  int err_ps = 0;
-  int is_ioproc = 0;
-  if ( ParallelDescriptor::IOProcessor() )
-      is_ioproc = 1;
+       int err_ps = 0;
+       int is_ioproc = 0;
+       if ( ParallelDescriptor::IOProcessor() )
+           is_ioproc = 1;
 
-  set_ps(&dx,&dy,&dz,&err_ps,&is_ioproc);
+       set_ps(&dx,&dy,&dz,&err_ps,&is_ioproc);
 
-  if (err_ps == 1)
-      amrex::Abort("Bad data in set_ps");
+       if (err_ps == 1)
+           amrex::Abort("Bad data in set_ps");
     }
 
     InitIOData ();
@@ -366,6 +365,12 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
     }
 
+  if (solve_dem)
+  {
+     mfix_calc_volume_fraction(lev,sum_vol_orig);
+     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+  }
+
   // Call user-defined subroutine to set constants, check data, etc.
   if (call_udf)
     mfix_usr0();
@@ -425,6 +430,12 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
     // Calculate all the coefficients once before entering the time loop
     int calc_flag = 2;
     mfix_calc_coeffs(lev,calc_flag);
+
+    if (solve_dem)
+    {
+       mfix_calc_volume_fraction(lev,sum_vol_orig);
+       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+    }
 }
 
 void

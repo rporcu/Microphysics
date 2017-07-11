@@ -100,7 +100,7 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
       // Compute other particle properties
       set_particle_properties( &pstate, &pradius, &pdensity,
-                                    &pvolume, &pmass, &pomoi, &pomega);
+                               &pvolume, &pmass, &pomoi, &pomega);
 
       // Set other particle properties
       p.idata(intData::phase)     = pphase;

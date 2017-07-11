@@ -31,7 +31,6 @@ contains
       type(particle_t), intent(in) :: particles(:)
       integer                      :: p
 
-
       do p = 1, size(particles)
 
          write(*,'(2/,A,I0)')        "Particle ID = ", particles(p) % id
@@ -42,7 +41,6 @@ contains
          write(*,'(A,es15.6)')         "Volume      = ", particles(p) % volume
 
       end do
-
 
    end subroutine print_particles
 

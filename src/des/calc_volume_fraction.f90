@@ -46,8 +46,6 @@ subroutine calc_volume_fraction(lo, hi,  slo, shi, np, particles, &
 
    oovol = odx*ody*odz
 
-   ep_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 1.d0
-
    ! Calculate the gas phase forces acting on each particle.
    do n = 1, np
      

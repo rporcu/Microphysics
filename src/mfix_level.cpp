@@ -665,19 +665,23 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
 
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
+
+    // Initialize the volume fraction in the domain to 1
+    ep_g[lev]->setVal(1.);
+
     for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
     {
-  const Box& sbx = (*ep_g[lev])[pti].box();
+        const Box& sbx = (*ep_g[lev])[pti].box();
         const Box& tile_bx = pti.tilebox();
-  auto& particles = pti.GetArrayOfStructs();
-  const int np = particles.size();
+        auto& particles = pti.GetArrayOfStructs();
+        const int np = particles.size();
 
-  calc_volume_fraction( tile_bx.loVect(), tile_bx.hiVect(),
-            sbx.loVect(), sbx.hiVect(),
-            &np, particles.data(), &dx, &dy, &dz,
-            (*ep_g[lev])[pti].dataPtr(),
-            (*rop_g[lev])[pti].dataPtr(),
-            (*ro_g[lev])[pti].dataPtr() );
+        calc_volume_fraction( tile_bx.loVect(), tile_bx.hiVect(),
+                              sbx.loVect(), sbx.hiVect(),
+                              &np, particles.data(), &dx, &dy, &dz,
+                               (*ep_g[lev])[pti].dataPtr(),
+                              (*rop_g[lev])[pti].dataPtr(),
+                               (*ro_g[lev])[pti].dataPtr() );
     }
 
     // This sets the values outside walls or periodic boundaries
