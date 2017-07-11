@@ -61,9 +61,9 @@ subroutine calc_volume_fraction(lo, hi,  slo, shi, np, particles, &
       end if
    end do
 
-   rop_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = &
-    ro_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) * &
-    ep_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))
+!  rop_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = &
+!   ro_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) * &
+!   ep_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))
 
 end subroutine calc_volume_fraction
 

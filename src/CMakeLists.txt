@@ -80,6 +80,7 @@ set(F90_sources
    matrix_mod.f90
    output_mod.f90
    particle_mod.f90
+   particle_pic.f90
    param_mod.f90
    parse_line.f90
    physical_prop.f90

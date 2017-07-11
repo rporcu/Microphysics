@@ -666,6 +666,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
 
+#if 1
     // Initialize the volume fraction in the domain to 1
     ep_g[lev]->setVal(1.);
 
@@ -683,6 +684,14 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
                               (*rop_g[lev])[pti].dataPtr(),
                                (*ro_g[lev])[pti].dataPtr() );
     }
+#else
+    // This call simply deposits the particle volume onto the grid in a PIC-like manner
+    pc->CalcVolumeFraction(*ep_g[lev]);
+#endif
+ 
+    // Now define rop_g = ro_g * ep_g
+    rop_g[lev]->copy((*ro_g[lev]));
+    MultiFab::Multiply((*rop_g[lev]), (*ep_g[lev]), 0, 0, 1, rop_g[lev]->nGrow());
 
     // This sets the values outside walls or periodic boundaries
     fill_mf_bc(lev,*ep_g[lev]);

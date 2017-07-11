@@ -1,4 +1,14 @@
 #include <AMReX_REAL.H>
+ 
+#include <AMReX_BLFort.H>
+#include <AMReX_SPACE.H>
+ 
+#ifdef BL_SINGLE_PRECISION_PARTICLES
+typedef float amrex_particle_real;
+#else
+typedef double amrex_particle_real;
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -117,6 +127,14 @@ extern "C"
         const int*  np, void* particles,
         amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
         amrex::Real* ep_g , amrex::Real* rop_g, amrex::Real* ro_g );
+
+    void mfix_deposit_cic(const amrex_particle_real*, int ns, int np, int nc,
+                          amrex_real* rho, const int* lo, const int* hi,
+                          const amrex_real* plo, const amrex_real* dx);
+ 
+    void mfix_interpolate_cic(const amrex_particle_real*, int ns, int np,
+                              const amrex::Real* acc, const int* lo, const int* hi, int ncomp,
+                              const amrex::Real* plo, const amrex::Real* dx);
 
     void calc_drag_fluid(
 	const int* slo, const int* shi,
