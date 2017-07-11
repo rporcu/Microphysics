@@ -123,6 +123,11 @@ public:
     ///
     void writeAllAtLevel(int lev = 0);
 
+    ///
+    /// Calculate gas volume fraction using a PIC deposition of particle volume
+    ///
+    void CalcVolumeFraction(amrex::MultiFab& mf);
+
 private:
 
     static void ReadStaticParameters ();

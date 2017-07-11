@@ -252,6 +252,108 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     // Redistribute();
 }
 
+void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled)
+{
+    BL_PROFILE("MFIXParticleContainer::CalcVolumeFraction()");
+
+    int   lev = 0;
+    int ncomp = 1;
+    
+    MultiFab* mf_pointer;
+
+    if (OnSameGrids(lev, mf_to_be_filled)) {
+      // If we are already working with the internal mf defined on the 
+      // particle_box_array, then we just work with this.
+      mf_pointer = &mf_to_be_filled;
+    }
+    else {
+      // If mf_to_be_filled is not defined on the particle_box_array, then we need 
+      // to make a temporary here and copy into mf_to_be_filled at the end.
+      mf_pointer = new MultiFab(ParticleBoxArray(lev), 
+				ParticleDistributionMap(lev),
+				ncomp, mf_to_be_filled.nGrow());
+    }
+
+    // We must have ghost cells for each FAB so that a particle in one grid can spread 
+    // its effect to an adjacent grid by first putting the value into ghost cells of its
+    // own grid.  The mf->sumBoundary call then adds the value from one grid's ghost cell
+    // to another grid's valid region.
+    if (mf_pointer->nGrow() < 1) 
+       amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
+
+    const Real      strttime    = ParallelDescriptor::second();
+    const Geometry& gm          = Geom(lev);
+    const Real*     plo         = gm.ProbLo();
+    const Real*     dx_particle = Geom(lev).CellSize();
+    const Real*     dx          = gm.CellSize();
+    
+    for (MFIter mfi(*mf_pointer); mfi.isValid(); ++mfi) {
+        (*mf_pointer)[mfi].setVal(0);
+    }
+
+    using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    {
+        FArrayBox local_vol;
+        for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
+            const auto& particles = pti.GetArrayOfStructs();
+            int nstride = particles.dataShape().first;
+            const long np = pti.numParticles();
+            FArrayBox& fab = (*mf_pointer)[pti];
+            const Box& box = fab.box();
+            Real* data_ptr;
+            const int *lo, *hi;
+#ifdef _OPENMP
+            Box tile_box = pti.tilebox();
+            tile_box.grow(1);
+            local_vol.resize(tile_box,ncomp);
+            local_vol = 0.0;
+            data_ptr = local_vol.dataPtr();
+            lo = tile_box.loVect();
+            hi = tile_box.hiVect();
+#else
+            data_ptr = fab.dataPtr();
+            lo = box.loVect();
+            hi = box.hiVect();
+#endif
+
+            mfix_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr, lo, hi, plo, dx);
+
+#ifdef _OPENMP
+            amrex_atomic_accumulate_fab(local_vol.dataPtr(), 
+                                        tile_box.loVect(), tile_box.hiVect(),
+                                        fab.dataPtr(),
+                                        box.loVect(), box.hiVect(), ncomp);
+#endif
+
+        }
+    }
+
+    mf_pointer->SumBoundary(gm.periodicity());
+    
+    // If mf_to_be_filled is not defined on the particle_box_array, then we need
+    // to copy here from mf_pointer into mf_to_be_filled. I believe that we don't
+    // need any information in ghost cells so we don't copy those.
+    if (mf_pointer != &mf_to_be_filled) {
+      mf_to_be_filled.copy(*mf_pointer,0,0,ncomp);
+      delete mf_pointer;
+    }
+
+    // Now define this mf = (1 - particle_vol)
+    mf_to_be_filled.mult(-1.0,mf_to_be_filled.nGrow());
+    mf_to_be_filled.plus( 1.0,mf_to_be_filled.nGrow());
+    
+    if (m_verbose > 1) {
+      Real stoptime = ParallelDescriptor::second() - strttime;
+      
+      ParallelDescriptor::ReduceRealMax(stoptime,ParallelDescriptor::IOProcessorNumber());
+      
+      amrex::Print() << "MFIXParticleContainer::CalcVolumeFraction time: " << stoptime << '\n';
+    }
+}
 
 void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
 {
