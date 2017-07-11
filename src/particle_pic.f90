@@ -11,7 +11,7 @@ module mfix_particle_pic_module
 
 contains
 
-  subroutine mfix_deposit_cic(particles, ns, np, nc, vol, lo, hi, plo, dx) &
+  subroutine mfix_deposit_cic(particles, ns, np, nc, vol, lo, hi, plo, dx, particle_comp) &
        bind(c,name='mfix_deposit_cic')
     integer, value                :: ns, np, nc
     real(amrex_particle_real)     :: particles(ns,np)
@@ -20,6 +20,7 @@ contains
     real(amrex_real)              :: vol(lo(1):hi(1), lo(2):hi(2), lo(3):hi(3),nc)
     real(amrex_real)              :: plo(3)
     real(amrex_real)              :: dx(3)
+    integer                       :: particle_comp
 
     integer i, j, k, n, comp
     real(amrex_real) wx_lo, wy_lo, wz_lo, wx_hi, wy_hi, wz_hi
@@ -47,7 +48,7 @@ contains
        wy_lo = 1.0d0 - wy_hi
        wz_lo = 1.0d0 - wz_hi
 
-       pvol = particles(5,n) * oovol
+       pvol = particles(particle_comp,n) * oovol
 
        vol(i-1, j-1, k-1, 1) = vol(i-1, j-1, k-1, 1) + wx_lo*wy_lo*wz_lo*pvol
        vol(i-1, j-1, k  , 1) = vol(i-1, j-1, k  , 1) + wx_lo*wy_lo*wz_hi*pvol
@@ -61,6 +62,72 @@ contains
     end do
 
   end subroutine mfix_deposit_cic
+
+  subroutine mfix_multi_deposit_cic(particles, ns, np, nc, mf, lo, hi, plo, dx, beta_comp, vel_comp) &
+       bind(c,name='mfix_multi_deposit_cic')
+    integer, value                :: ns, np, nc
+    real(amrex_particle_real)     :: particles(ns,np)
+    integer                       :: lo(3)
+    integer                       :: hi(3)
+    real(amrex_real)              :: mf(lo(1):hi(1), lo(2):hi(2), lo(3):hi(3),nc)
+    real(amrex_real)              :: plo(3)
+    real(amrex_real)              :: dx(3)
+    integer                       :: beta_comp, vel_comp
+
+    integer i, j, k, n, idim
+    real(amrex_real) wx_lo, wy_lo, wz_lo, wx_hi, wy_hi, wz_hi
+    real(amrex_real) lx, ly, lz, pbeta, pvel(3)
+    real(amrex_real) inv_dx(3), oovol
+    inv_dx = 1.0d0/dx
+
+    oovol = 1.0d0/(dx(1)*dx(2)*dx(3))
+
+    do n = 1, np
+
+       lx = (particles(1, n) - plo(1))*inv_dx(1) + 0.5d0
+       ly = (particles(2, n) - plo(2))*inv_dx(2) + 0.5d0
+       lz = (particles(3, n) - plo(3))*inv_dx(3) + 0.5d0
+
+       i = floor(lx)
+       j = floor(ly)
+       k = floor(lz)
+
+       wx_hi = lx - i
+       wy_hi = ly - j
+       wz_hi = lz - k
+
+       wx_lo = 1.0d0 - wx_hi
+       wy_lo = 1.0d0 - wy_hi
+       wz_lo = 1.0d0 - wz_hi
+
+       pbeta   = particles(beta_comp,n) * oovol
+       pvel(1) = particles(vel_comp  ,n)
+       pvel(2) = particles(vel_comp+1,n)
+       pvel(3) = particles(vel_comp+2,n)
+
+       mf(i-1, j-1, k-1, 1) = mf(i-1, j-1, k-1, 1) + wx_lo*wy_lo*wz_lo*pbeta
+       mf(i-1, j-1, k  , 1) = mf(i-1, j-1, k  , 1) + wx_lo*wy_lo*wz_hi*pbeta
+       mf(i-1, j,   k-1, 1) = mf(i-1, j,   k-1, 1) + wx_lo*wy_hi*wz_lo*pbeta
+       mf(i-1, j,   k  , 1) = mf(i-1, j,   k,   1) + wx_lo*wy_hi*wz_hi*pbeta
+       mf(i,   j-1, k-1, 1) = mf(i,   j-1, k-1, 1) + wx_hi*wy_lo*wz_lo*pbeta
+       mf(i,   j-1, k  , 1) = mf(i,   j-1, k  , 1) + wx_hi*wy_lo*wz_hi*pbeta
+       mf(i,   j,   k-1, 1) = mf(i,   j,   k-1, 1) + wx_hi*wy_hi*wz_lo*pbeta
+       mf(i,   j,   k  , 1) = mf(i,   j,   k  , 1) + wx_hi*wy_hi*wz_hi*pbeta
+
+       do idim = 1, 3
+          mf(i-1, j-1, k-1, idim+1) = mf(i-1, j-1, k-1, idim+1) + wx_lo*wy_lo*wz_lo*pbeta*pvel(idim)
+          mf(i-1, j-1, k  , idim+1) = mf(i-1, j-1, k  , idim+1) + wx_lo*wy_lo*wz_hi*pbeta*pvel(idim)
+          mf(i-1, j,   k-1, idim+1) = mf(i-1, j,   k-1, idim+1) + wx_lo*wy_hi*wz_lo*pbeta*pvel(idim)
+          mf(i-1, j,   k  , idim+1) = mf(i-1, j,   k,   idim+1) + wx_lo*wy_hi*wz_hi*pbeta*pvel(idim)
+          mf(i,   j-1, k-1, idim+1) = mf(i,   j-1, k-1, idim+1) + wx_hi*wy_lo*wz_lo*pbeta*pvel(idim)
+          mf(i,   j-1, k  , idim+1) = mf(i,   j-1, k  , idim+1) + wx_hi*wy_lo*wz_hi*pbeta*pvel(idim)
+          mf(i,   j,   k-1, idim+1) = mf(i,   j,   k-1, idim+1) + wx_hi*wy_hi*wz_lo*pbeta*pvel(idim)
+          mf(i,   j,   k  , idim+1) = mf(i,   j,   k  , idim+1) + wx_hi*wy_hi*wz_hi*pbeta*pvel(idim)
+       end do
+
+    end do
+
+  end subroutine mfix_multi_deposit_cic
 
   subroutine mfix_interpolate_cic(particles, ns, np, acc, lo, hi, ncomp, plo, dx) &
        bind(c,name='mfix_interpolate_cic')

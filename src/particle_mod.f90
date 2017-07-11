@@ -10,15 +10,15 @@ module particle_mod
   public  print_particles
 
   type, bind(C)  :: particle_t
-     real(c_real)    :: pos(3)     !< Position
-     real(c_real)    :: radius
-     real(c_real)    :: volume
-     real(c_real)    :: mass
-     real(c_real)    :: density
-     real(c_real)    :: omoi       !< One over momentum of inertia
-     real(c_real)    :: vel(3)     !< Linear velocity
-     real(c_real)    :: omega(3)   !< Angular velocity
-     real(c_real)    :: drag(3)    !< Drag
+     real(c_real)    :: pos(3)     !< Position -- fortran components 1,2,3
+     real(c_real)    :: radius     !< Radius   -- fortran component  4
+     real(c_real)    :: volume     !< Volume   -- fortran component  5
+     real(c_real)    :: mass       !< Mass     -- fortran component  6
+     real(c_real)    :: density    !< Density  -- fortran component  7
+     real(c_real)    :: omoi       !< One over momentum of inertia -- fortran component 8
+     real(c_real)    :: vel(3)     !< Linear velocity              -- fortran components 9,10,11
+     real(c_real)    :: omega(3)   !< Angular velocity             -- fortran components 12,13,14
+     real(c_real)    :: drag(3)    !< Drag                         -- fortran components 15,16,17
      integer(c_int)  :: id
      integer(c_int)  :: cpu
      integer(c_int)  :: phase

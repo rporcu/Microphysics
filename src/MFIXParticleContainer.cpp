@@ -254,7 +254,24 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
 void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled)
 {
-    BL_PROFILE("MFIXParticleContainer::CalcVolumeFraction()");
+    int fortran_volume_comp = 5;
+    PICDeposition(mf_to_be_filled, fortran_volume_comp);
+
+    // Now define this mf = (1 - particle_vol)
+    mf_to_be_filled.mult(-1.0,mf_to_be_filled.nGrow());
+    mf_to_be_filled.plus( 1.0,mf_to_be_filled.nGrow());
+}
+
+void MFIXParticleContainer::CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf)
+{
+    int fortran_beta_comp = 15;
+    int fortran_vel_comp  =  9;
+    PICMultiDeposition(beta_mf, beta_vel_mf, fortran_beta_comp, fortran_vel_comp);
+}
+
+void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled, int fortran_particle_comp)
+{
+    BL_PROFILE("MFIXParticleContainer::PICDeposition()");
 
     int   lev = 0;
     int ncomp = 1;
@@ -320,7 +337,7 @@ void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled)
             hi = box.hiVect();
 #endif
 
-            mfix_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr, lo, hi, plo, dx);
+            mfix_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr, lo, hi, plo, dx, &fortran_particle_comp);
 
 #ifdef _OPENMP
             amrex_atomic_accumulate_fab(local_vol.dataPtr(), 
@@ -341,17 +358,94 @@ void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled)
       mf_to_be_filled.copy(*mf_pointer,0,0,ncomp);
       delete mf_pointer;
     }
-
-    // Now define this mf = (1 - particle_vol)
-    mf_to_be_filled.mult(-1.0,mf_to_be_filled.nGrow());
-    mf_to_be_filled.plus( 1.0,mf_to_be_filled.nGrow());
     
     if (m_verbose > 1) {
       Real stoptime = ParallelDescriptor::second() - strttime;
       
       ParallelDescriptor::ReduceRealMax(stoptime,ParallelDescriptor::IOProcessorNumber());
       
-      amrex::Print() << "MFIXParticleContainer::CalcVolumeFraction time: " << stoptime << '\n';
+      amrex::Print() << "MFIXParticleContainer::PICDeposition time: " << stoptime << '\n';
+    }
+}
+
+void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf, 
+                                               int fortran_beta_comp, int fortran_vel_comp)
+{
+    BL_PROFILE("MFIXParticleContainer::PICMultiDeposition()");
+
+    int   lev = 0;
+    int ncomp = 1+BL_SPACEDIM;
+    
+    MultiFab* mf_pointer;
+
+    // Make a single temporary here and copy into beta_mf and beta_vel_mf at the end.
+    mf_pointer = new MultiFab(ParticleBoxArray(lev), 
+		              ParticleDistributionMap(lev),
+			      ncomp, beta_mf.nGrow());
+
+    const Real      strttime    = ParallelDescriptor::second();
+    const Geometry& gm          = Geom(lev);
+    const Real*     plo         = gm.ProbLo();
+    const Real*     dx_particle = Geom(lev).CellSize();
+    const Real*     dx          = gm.CellSize();
+    
+    for (MFIter mfi(*mf_pointer); mfi.isValid(); ++mfi) 
+        (*mf_pointer)[mfi].setVal(0);
+
+    using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    {
+        FArrayBox local_vol;
+        for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
+            const auto& particles = pti.GetArrayOfStructs();
+            int nstride = particles.dataShape().first;
+            const long np = pti.numParticles();
+            FArrayBox& fab = (*mf_pointer)[pti];
+            const Box& box = fab.box();
+            Real* data_ptr;
+            const int *lo, *hi;
+#ifdef _OPENMP
+            Box tile_box = pti.tilebox();
+            tile_box.grow(1);
+            local_vol.resize(tile_box,ncomp);
+            local_vol = 0.0;
+            data_ptr = local_vol.dataPtr();
+            lo = tile_box.loVect();
+            hi = tile_box.hiVect();
+#else
+            data_ptr = fab.dataPtr();
+            lo = box.loVect();
+            hi = box.hiVect();
+#endif
+
+            mfix_multi_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr, lo, hi, plo, dx, &fortran_beta_comp, &fortran_vel_comp);
+
+#ifdef _OPENMP
+            amrex_atomic_accumulate_fab(local_vol.dataPtr(), 
+                                        tile_box.loVect(), tile_box.hiVect(),
+                                        fab.dataPtr(),
+                                        box.loVect(), box.hiVect(), ncomp);
+#endif
+
+        }
+    }
+
+    mf_pointer->SumBoundary(gm.periodicity());
+    
+    // Copy back from mf_pointer 
+    beta_mf.copy    (*mf_pointer,0,0,1);
+    beta_vel_mf.copy(*mf_pointer,1,0,BL_SPACEDIM);
+    delete mf_pointer;
+    
+    if (m_verbose > 1) {
+      Real stoptime = ParallelDescriptor::second() - strttime;
+      
+      ParallelDescriptor::ReduceRealMax(stoptime,ParallelDescriptor::IOProcessorNumber());
+      
+      amrex::Print() << "MFIXParticleContainer::PICMultiDeposition time: " << stoptime << '\n';
     }
 }
 

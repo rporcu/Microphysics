@@ -223,6 +223,8 @@ private:
     int max_nit;
     int call_udf;
 
+    int use_pic;
+
     Real cfl = 0.7;
 
     Real sum_vol_orig;

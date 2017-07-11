@@ -11,16 +11,17 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
                    Real time, Real normg)
 {
 
-    if (solve_fluid)
-  EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
-
-    if (solve_dem)
-    {
   if (solve_fluid)
-      mfix_calc_drag_particle(lev);
+     EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
 
-  pc ->  EvolveParticles( lev, nstep, dt, time);
-    }
+  if (solve_dem)
+  {
+     // This returns the drag force on the particle
+     if (solve_fluid)
+        mfix_calc_drag_particle(lev);
+
+     pc -> EvolveParticles( lev, nstep, dt, time);
+  }
 }
 
 void

@@ -128,6 +128,21 @@ public:
     ///
     void CalcVolumeFraction(amrex::MultiFab& mf);
 
+    ///
+    /// Do the actual PIC deposition for CalcVolumeFraction
+    ///
+    void PICDeposition(amrex::MultiFab& mf, int fortran_particle_comp);
+
+    ///
+    /// Calculate particle-induced drag on the fluid
+    ///
+    void CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf);
+
+    ///
+    /// Do the actual PIC deposition for CalcDragOnFluid
+    ///
+    void PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf, int fortran_beta_comp, int fortran_vel_comp);
+
 private:
 
     static void ReadStaticParameters ();

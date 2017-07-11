@@ -126,11 +126,17 @@ extern "C"
         const int* slo, const int* shi,
         const int*  np, void* particles,
         amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-        amrex::Real* ep_g , amrex::Real* rop_g, amrex::Real* ro_g );
+        amrex::Real* ep_g );
 
     void mfix_deposit_cic(const amrex_particle_real*, int ns, int np, int nc,
-                          amrex_real* rho, const int* lo, const int* hi,
-                          const amrex_real* plo, const amrex_real* dx);
+                          amrex_real* mf, const int* lo, const int* hi,
+                          const amrex_real* plo, const amrex_real* dx,
+                          const int* fortran_comp);
+
+    void mfix_multi_deposit_cic(const amrex_particle_real*, int ns, int np, int nc,
+                                amrex_real* mf, const int* lo, const int* hi,
+                                const amrex_real* plo, const amrex_real* dx,
+                                const int* beta_comp, const int* beta_vel_comp);
  
     void mfix_interpolate_cic(const amrex_particle_real*, int ns, int np,
                               const amrex::Real* acc, const int* lo, const int* hi, int ncomp,
@@ -146,7 +152,8 @@ extern "C"
 	amrex::Real* u_g,  amrex::Real* v_g,   amrex::Real* w_g,
 	amrex::Real* mu_g, amrex::Real* f_gds, amrex::Real* drag_bm,
 	void* particles,
-	amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz);
+	amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
+	const int* use_pic);
 
     void calc_drag_particle(
 	const int* slo, const int* shi,

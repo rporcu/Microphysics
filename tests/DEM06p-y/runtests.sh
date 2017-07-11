@@ -32,7 +32,7 @@ FCOMPARE=${FCOMPARE:-}
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} ${MFIX} ${INPUTS}
 
-${FJOIN_PAR} -f DEM06_par --end 350 --var  2 --format 5 --dt 0.001 &> POST_POS.NEW
+${FJOIN_PAR} -f DEM06_par --end 350 --var  2 --format 4 --dt 0.001 &> POST_POS.NEW
 ${FJOIN_PAR} -f DEM06_par --end 350 --var 10 --format 4 --dt 0.001 &> POST_VEL.NEW
 
 post_dats=POST*.NEW
