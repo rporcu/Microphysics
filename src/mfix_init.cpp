@@ -372,8 +372,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   }
 
   // Call user-defined subroutine to set constants, check data, etc.
-  if (call_udf)
-    mfix_usr0();
+  if (call_udf) mfix_usr0();
 
   // Calculate all the coefficients once before entering the time loop
   int calc_flag = 2;
