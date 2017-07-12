@@ -157,14 +157,11 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       velfp(2) = 0.5d0*(v_g(i,j,k) + v_g(i,j+1,k))
       velfp(3) = 0.5d0*(w_g(i,j,k) + w_g(i,j,k+1))
 
-      gradpg(1) = odx*(0.5d0*(p_g(i,j,k) + p_g(i+1,j,k)) - &
-           0.5d0*(p_g(i,j,k) + p_g(i-1,j,k)))
+      gradpg(1) = 0.5d0 * odx * ( p_g(i+1,j,k) - p_g(i-1,j,k) )
 
-      gradpg(2) = ody*(0.5d0*(p_g(i,j,k) + p_g(i,j+1,k)) - &
-           0.5d0*(p_g(i,j,k) + p_g(i,j-1,k)))
+      gradpg(2) = 0.5d0 * ody * ( p_g(i,j+1,k) - p_g(i,j-1,k) )
 
-      gradpg(3) = odz*(0.5d0*(p_g(i,j,k) + p_g(i,j,k+1)) - &
-           0.5d0*(p_g(i,j,k) + p_g(i,j,k-1)))
+      gradpg(3) = 0.5d0 * odz * ( p_g(i,j,k+1) - p_g(i,j,k-1) )
 
       particles(p) % drag = beta(p)*(velfp - particles(p) % vel) + &
            (cpg(:) - gradpg(:)) * particles(p) % volume
