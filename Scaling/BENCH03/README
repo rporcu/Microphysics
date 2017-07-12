@@ -1,0 +1,36 @@
+In order to run the cases other than the single-core case, you must first
+generate the particle_input.dat file for each case.
+
+To do this, first build the stand-alone executable of dup.f90, e.g. if using
+the GNU compiler simply type 
+
+gfortran dup.f90
+
+Then, starting in BENCH3, for each Size*** case where *** != 001, do
+
+cp Size001/particle_inputs.dat Size004
+cd Size004
+../a.out 2
+cd ..
+
+cp Size001/particle_inputs.dat Size016
+cd Size016
+../a.out 4
+cd ..
+
+cp Size001/particle_inputs.dat Size064
+cd Size064
+../a.out 8
+cd ..
+
+cp Size001/particle_inputs.dat Size256
+cd Size256
+../a.out 16
+cd ..
+
+cp Size001/particle_inputs.dat Size1024
+cd Size1024
+../a.out 32
+cd ..
+
+
