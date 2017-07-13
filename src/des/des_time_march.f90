@@ -146,7 +146,6 @@ contains
 
    subroutine des_euler_update ( particles, fc, tow, dt )
 
-      use discretelement, only: normal_particle
       use constant,       only: gravity
       use particle_mod,   only: particle_t
 
@@ -157,19 +156,16 @@ contains
 
       do p = 1, size ( particles )
 
-         if ( particles(p) % state == normal_particle ) then
+         associate ( vel => particles(p) % vel, pos => particles(p) % pos, &
+            drag => particles(p) % drag, mass => particles(p) % mass,    &
+            omega => particles(p) % omega, omoi => particles(p) % omoi )
 
-            associate ( vel => particles(p) % vel, pos => particles(p) % pos, &
-               drag => particles(p) % drag, mass => particles(p) % mass,    &
-               omega => particles(p) % omega, omoi => particles(p) % omoi )
+            vel     = vel   + dt * ( ( fc(p,:) +  drag ) / mass + gravity )
+            pos     = pos   + dt * vel
+            omega   = omega + dt * tow(p,:) * omoi
 
-              vel     = vel   + dt * ( ( fc(p,:) +  drag ) / mass + gravity )
-              pos     = pos   + dt * vel
-              omega   = omega + dt * tow(p,:) * omoi
+         end associate
 
-            end associate
-
-         end if
       end do
 
    end subroutine des_euler_update

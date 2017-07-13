@@ -26,7 +26,7 @@ contains
 
       use particle_mod,   only: particle_t
       use cfrelvel_module, only: cfrelvel
-      use discretelement, only: des_coll_model_enum, NONEXISTENT
+      use discretelement, only: des_coll_model_enum
       use discretelement, only: des_etan, des_etat, hert_kt, hert_kn
       use discretelement, only: des_crossprdct
       use discretelement, only: kn, kt, mew, hertzian
@@ -80,14 +80,10 @@ contains
 
       do ll = 1, np-1
 
-         if ( particles(ll) % state == NONEXISTENT ) cycle
-
          pos_tmp = particles(ll) % pos
          rad     = particles(ll) % radius
 
          do ii = ll+1, np
-
-            if ( particles(ii) % state == NONEXISTENT ) cycle
 
             dist     = particles(ii) % pos - pos_tmp(:)
             dist_mag = dot_product( dist, dist )
