@@ -82,9 +82,9 @@ public:
     using NeighborCommMap = std::map<NeighborCommTag, Array<char> >;
 
     // Get number of particles
-    const int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
+    int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
 
-    const int NumberOfParticles(int& lev, MFIter& mfi)
+    int NumberOfParticles(int& lev, MFIter& mfi)
     {
       const int gridIndex = mfi.index();
       const int tileIndex = mfi.LocalTileIndex();
