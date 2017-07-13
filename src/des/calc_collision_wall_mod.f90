@@ -23,7 +23,6 @@ module calc_collision_wall
    use param, only: small_number, zero
 
    use stl_functions_des, only: closestptpointtriangle
-   use discretelement, only: normal_particle
 
    implicit none
    private
@@ -120,16 +119,13 @@ contains
          associate ( radius => particles(ll) % radius, pos => particles(ll) % pos, &
               & vel => particles(ll) % vel, omega => particles(ll) % omega )
         
-            ! skipping non-existent particles or ghost particles
-            if ( .not. ( NORMAL_PARTICLE == particles(ll) % state ) ) cycle
+         ! Check particle LL for wall contacts
+         radsq = radius * radius
 
-            ! Check particle LL for wall contacts
-            radsq = radius * radius
+         particle_max(:) = pos + radius
+         particle_min(:) = pos - radius
 
-            particle_max(:) = pos + radius
-            particle_min(:) = pos - radius
-
-            do nf = 1, 6
+         do nf = 1, 6
 
                if ( nf == 1 ) then
                   if ( pos(1) >  radius ) cycle
@@ -266,7 +262,7 @@ contains
                ! Add the torque force to the total torque acting on the particle.
                TOW(LL,:) = TOW(LL,:) + DISTMOD*DES_CROSSPRDCT(NORMAL,FT)
                
-            end do
+         end do
 
          end associate
 

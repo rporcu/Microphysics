@@ -25,22 +25,6 @@
 ! Total number of particles in simulation: read from input or generated
 !      integer :: PARTICLES
 
-! Start particle tracking quantities
-!----------------------------------------------------------------->>>
-! Generally for inlet/outlet related routines but also employed in
-! tracking for parallelization
-
-! Dynamic particle states:
-
-! NONEXISTENT: This state is used with the inlet/outlet to skip
-! indices that do not represent particles in the system or indices
-! that represent particles that have exited the system.
-
-! GHOST: for ghost particles
-      integer, parameter :: nonexistent=0
-      integer, parameter :: normal_particle=1
-      integer, parameter :: normal_ghost=4
-
 ! End Output/debug controls
 !-----------------------------------------------------------------<<<
 

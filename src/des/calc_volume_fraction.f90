@@ -14,7 +14,6 @@ subroutine calc_volume_fraction(lo, hi,  slo, shi, np, particles, &
    use amrex_fort_module, only: c_real => amrex_real
    use iso_c_binding ,    only: c_int
    use particle_mod,      only: particle_t
-   use discretelement,    only: normal_particle
 
    implicit none
 
@@ -44,17 +43,14 @@ subroutine calc_volume_fraction(lo, hi,  slo, shi, np, particles, &
 
    ! Calculate the gas phase forces acting on each particle.
    do n = 1, np
-     
-      if ( particles(n) % state  == normal_particle) then
 
-         ! Fluid cell containing the particle
-         i = floor( particles(n) % pos(1) * odx )
-         j = floor( particles(n) % pos(2) * ody )
-         k = floor( particles(n) % pos(3) * odz)
+      ! Fluid cell containing the particle
+      i = floor( particles(n) % pos(1) * odx )
+      j = floor( particles(n) % pos(2) * ody )
+      k = floor( particles(n) % pos(3) * odz)
 
-         ep_g(i,j,k) = ep_g(i,j,k) - oovol * particles(n) % volume
+      ep_g(i,j,k) = ep_g(i,j,k) - oovol * particles(n) % volume
 
-      end if
    end do
 
 end subroutine calc_volume_fraction
