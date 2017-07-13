@@ -119,6 +119,12 @@ int main (int argc, char* argv[])
        my_mfix.InitLevelDataFromRestart( lev, dt, time );
     }
 
+    Real end_init = ParallelDescriptor::second() - strt_time;
+    ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
+
+    if (ParallelDescriptor::IOProcessor())
+       std::cout << "Time spent in init      " << end_init << std::endl;
+
     int finish  = 0;
     int estatus = 0;
 
@@ -190,9 +196,13 @@ int main (int argc, char* argv[])
     my_mfix.usr3(0);
 
     Real end_time = ParallelDescriptor::second() - strt_time;
+    ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());
 
     if (ParallelDescriptor::IOProcessor())
-       std::cout << "Time spent in main " << end_time << std::endl;
+    {
+       std::cout << "Time spent in main      " << end_time << std::endl;
+       std::cout << "Time spent in main-init " << end_time-end_init << std::endl;
+    }
 
     amrex::Finalize();
     return 0;
