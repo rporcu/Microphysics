@@ -123,7 +123,7 @@ int main (int argc, char* argv[])
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
 
     if (ParallelDescriptor::IOProcessor())
-       std::cout << "Time spent in init " << end_init << std::endl;
+       std::cout << "Time spent in init      " << end_init << std::endl;
 
     int finish  = 0;
     int estatus = 0;
@@ -199,7 +199,10 @@ int main (int argc, char* argv[])
     ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());
 
     if (ParallelDescriptor::IOProcessor())
-       std::cout << "Time spent in main " << end_time << std::endl;
+    {
+       std::cout << "Time spent in main      " << end_time << std::endl;
+       std::cout << "Time spent in main-init " << end_time-end_init << std::endl;
+    }
 
     amrex::Finalize();
     return 0;
