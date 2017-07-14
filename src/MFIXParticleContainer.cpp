@@ -184,7 +184,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
       fillNeighbors(lev);
 
-      //      buildNeighborList(lev);
+      // we really only want to this every 25 substeps, not every time...
+      buildNeighborList(lev);
 
       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
