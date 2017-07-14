@@ -8,6 +8,7 @@
 
 #include "mfix_F.H"
 
+bool MFIXParticleContainer::use_neighbor_list = false;
 
 using namespace amrex;
 using namespace std;
@@ -183,8 +184,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
       fillNeighbors(lev);
 
-#if 0
-      if (use_neighbor_lists) 
+      if (use_neighbor_list) 
       {
          if (n%25 == 0)
             buildNeighborList(lev);
@@ -222,9 +222,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
             call_usr2_des( &np, particles );
          }
 
-      } else 
-#endif
-{
+      } else {
 
          for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 

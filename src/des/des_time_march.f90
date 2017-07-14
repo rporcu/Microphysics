@@ -69,8 +69,6 @@ contains
 
    end subroutine des_init_time_loop
 
-
-
    subroutine call_usr3_des( np, particles ) &
         bind(c, name="call_usr3_des")
 
@@ -83,8 +81,6 @@ contains
       if ( call_usr ) call usr3_des(np, particles)
 
    end subroutine call_usr3_des
-
-
 
    subroutine call_usr2_des( np, particles ) &
         bind(c, name="call_usr2_des")
@@ -114,47 +110,87 @@ contains
       real(c_real),     intent(in   )     :: xlength, ylength, zlength
       type(particle_t), intent(inout)     :: rparticles(nrp), gparticles(ngp)
       integer(c_int),   intent(inout)     :: nstep
+
+      ! Temporaries
       real(c_real)                        :: tow(nrp+ngp,3), fc(nrp+ngp,3)
       type(particle_t)                    :: particles(nrp+ngp)
-
-
-      particles(    1:nrp) = rparticles
-      particles(nrp+1:   ) = gparticles
 
       tow  = 0
       fc   = 0
 
       ! calculate forces from particle-wall collisions
-      call calc_dem_force_with_wall_stl ( particles, fc, tow, &
+      call calc_dem_force_with_wall_stl ( rparticles, gparticles, fc, tow, &
            xlength, ylength, zlength, subdt )
 
       ! calculate forces from particle-particle collisions
+      particles(    1:nrp) = rparticles
+      particles(nrp+1:   ) = gparticles
+
       call calc_force_dem ( particles, fc, tow, subdt )
+
+      rparticles = particles(    1: nrp)
+      gparticles = particles(nrp+1:    )
 
       ! call user functions.
       if ( call_usr ) call usr1_des
 
       ! update position and velocities
-      call des_euler_update ( particles, fc, tow, subdt )
-
-      rparticles = particles(    1: nrp)
-      gparticles = particles(nrp+1:    )
+      call des_euler_update ( rparticles, gparticles, fc, tow, subdt )
 
    end subroutine des_time_loop_ops
 
+   subroutine des_time_loop_ops_nl ( nrp, rparticles, ngp, gparticles, size_nl, nbor_list, &
+        & subdt, dx, dy, dz, xlength, ylength, zlength, nstep )  &
+        bind(C, name="des_time_loop_ops_nl")
 
+      use particle_mod
+      use calc_collision_wall,     only: calc_dem_force_with_wall_stl
+      use calc_force_dem_module,   only: calc_force_dem_nl
+      use output_manager_module,   only: output_manager
+      use run,                     only: call_usr
 
-   subroutine des_euler_update ( particles, fc, tow, dt )
+      integer(c_int),   intent(in   )     :: nrp, ngp, size_nl
+      real(c_real),     intent(in   )     :: subdt, dx, dy, dz
+      real(c_real),     intent(in   )     :: xlength, ylength, zlength
+      type(particle_t), intent(inout)     :: rparticles(nrp), gparticles(ngp)
+      integer,          intent(in   )     :: nbor_list(size_nl)
+      integer(c_int),   intent(inout)     :: nstep
+      real(c_real)                        :: tow(nrp+ngp,3), fc(nrp+ngp,3)
+      type(particle_t)                    :: particles(nrp+ngp)
+
+      tow  = 0
+      fc   = 0
+
+      ! calculate forces from particle-wall collisions
+      call calc_dem_force_with_wall_stl ( rparticles, gparticles, fc, tow, &
+           xlength, ylength, zlength, subdt )
+
+      ! calculate forces from particle-particle collisions
+      call calc_force_dem_nl ( rparticles, gparticles, fc, tow, subdt )
+
+      ! call user functions.
+      if ( call_usr ) call usr1_des
+
+      ! update position and velocities
+      call des_euler_update ( rparticles, gparticles, fc, tow, subdt )
+
+   end subroutine des_time_loop_ops_nl
+
+   subroutine des_euler_update ( particles, grid_nbors, fc, tow, dt )
 
       use constant,       only: gravity
       use particle_mod,   only: particle_t
 
       type(particle_t), intent(inout)  :: particles(:)
+      type(particle_t), intent(inout)  :: grid_nbors(:)
       real(c_real),     intent(inout)  :: fc(:,:), tow(:,:)
       real(c_real),     intent(in   )  :: dt
-      integer                          :: p
+      integer                          :: p,np,ng
+   
+      np = size (particles)
+      ng = size (grid_nbors)
 
-      do p = 1, size ( particles )
+      do p = 1, np
 
          associate ( vel => particles(p) % vel, pos => particles(p) % pos, &
             drag => particles(p) % drag, mass => particles(p) % mass,    &
@@ -163,6 +199,23 @@ contains
             vel     = vel   + dt * ( ( fc(p,:) +  drag ) / mass + gravity )
             pos     = pos   + dt * vel
             omega   = omega + dt * tow(p,:) * omoi
+
+         end associate
+
+      end do
+
+      do p = 1, ng
+
+         associate ( vel   => grid_nbors(p) % vel,   &
+                     pos   => grid_nbors(p) % pos,   &
+                     drag  => grid_nbors(p) % drag,  &
+                     mass  => grid_nbors(p) % mass,  &
+                     omega => grid_nbors(p) % omega, &
+                      omoi => grid_nbors(p) % omoi )
+
+            vel     = vel   + dt * ( ( fc(np+p,:) +  drag ) / mass + gravity )
+            pos     = pos   + dt * vel
+            omega   = omega + dt * tow(np+p,:) * omoi
 
          end associate
 

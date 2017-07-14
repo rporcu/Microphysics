@@ -128,5 +128,7 @@ private:
 
     static void ReadStaticParameters ();
 
+    static bool use_neighbor_list;
+
 };
 #endif
