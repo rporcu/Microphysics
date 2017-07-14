@@ -531,9 +531,9 @@ void MFIXParticleContainer::fillNeighbors( int lev ) {
             // -ng means lo, ng means hi, 0 means not near the boundary
             IntVect shift = IntVect::TheZeroVector();
             for (int idim = 0; idim < BL_SPACEDIM; ++idim) {
-                if (iv[idim] == lo[idim])
+                if (iv[idim] <= lo[idim]+ng-1)
                     shift[idim] = -ng;
-                else if (iv[idim] == hi[idim])
+                else if (iv[idim] >= hi[idim]-ng+1)
                     shift[idim] = ng;
             }
 
@@ -569,7 +569,6 @@ void MFIXParticleContainer::fillNeighbors( int lev ) {
                 BL_ASSERT(mask[pti].box().contains(neighbor_cell));
                 packNeighborParticle(lev,neighbor_cell, mask[pti], p, neighbors_to_comm);
             }
-
         }
     }
     fillNeighborsMPI(neighbors_to_comm);
