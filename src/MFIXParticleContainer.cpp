@@ -32,7 +32,7 @@ void MFIXParticleContainer::AllocData ()
 void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
   // only read the file on the IO proc
-  if (ParallelDescriptor::MyProc() ==  ParallelDescriptor::IOProcessorNumber()) {
+  if (ParallelDescriptor::IOProcessor())  {
     std::ifstream ifs;
     ifs.open(file.c_str(), std::ios::in);
 
@@ -179,39 +179,79 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
-
     for ( int n = 0; n < nsubsteps; ++n ) {
 
       fillNeighbors(lev);
 
-      // we really only want to this every 25 substeps, not every time...
-      buildNeighborList(lev);
+#if 0
+      if (use_neighbor_lists) 
+      {
+         if (n%25 == 0)
+            buildNeighborList(lev);
 
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-         // Real particles
-         const int np     = NumberOfParticles(pti);
-         void* particles  = pti.GetArrayOfStructs().data();
+            // Real particles
+            const int np     = NumberOfParticles(pti);
+            void* particles  = pti.GetArrayOfStructs().data();
 
-         // Neighbor particles
-         PairIndex index(pti.index(), pti.LocalTileIndex());
-         int ng = neighbors[index].size() / pdata_size;
+            // Neighbor particles
+            PairIndex index(pti.index(), pti.LocalTileIndex());
+            int size_ng = neighbors[index].size() / pdata_size;
+            int size_nl = neighbor_list[index].size();
 
-         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-         des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
-               &subdt, &dx, &dy, &dz,
-               &xlen, &ylen, &zlen, &nstep );
-         BL_PROFILE_VAR_STOP(des_time_loop);
+            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+            des_time_loop_ops_nl( &np, particles, 
+                                 &size_ng, neighbors[index].dataPtr(),
+                                 &size_nl, neighbor_list[index].dataPtr(), 
+                                 &subdt, &dx, &dy, &dz,
+                                 &xlen, &ylen, &zlen, &nstep );
+            BL_PROFILE_VAR_STOP(des_time_loop);
 
-         if ( des_continuum_coupled () == 0 ) {
-           Real stime;
-           stime = time + (n+1)*subdt;
-           output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
-                                &n, particles, 0 );
+            if ( des_continuum_coupled () == 0 ) {
+              Real stime;
+              stime = time + (n+1)*subdt;
+              output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
+                                   &n, particles, 0 );
+   
+            }
 
+            call_usr2_des( &np, particles );
          }
 
-         call_usr2_des( &np, particles );
+      } else 
+#endif
+{
+
+         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+
+            // Real particles
+            const int np     = NumberOfParticles(pti);
+            void* particles  = pti.GetArrayOfStructs().data();
+
+            // Neighbor particles
+            PairIndex index(pti.index(), pti.LocalTileIndex());
+            int ng = neighbors[index].size() / pdata_size;
+
+            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+            des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
+                  &subdt, &dx, &dy, &dz,
+                  &xlen, &ylen, &zlen, &nstep );
+            BL_PROFILE_VAR_STOP(des_time_loop);
+   
+            if ( des_continuum_coupled () == 0 ) {
+              Real stime;
+              stime = time + (n+1)*subdt;
+              output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
+                                   &n, particles, 0 );
+
+            }
+
+            call_usr2_des( &np, particles );
+         }
       }
 
       clearNeighbors(lev);
@@ -219,13 +259,15 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       Redistribute();
     }
 
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
       const int np     = NumberOfParticles(pti);
       void* particles  = pti.GetArrayOfStructs().data();
 
       call_usr3_des( &np, particles );
-
     }
 
 
@@ -233,10 +275,13 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     // with the goal of veriftying a particle cannot travel more than
     // a single cell per fluid time step. 
 
-    Real Max_vel_x = 0.0;
-    Real Max_vel_y = 0.0;
-    Real Max_vel_z = 0.0;
+    Real Max_vel[3];
+    for (int i = 0; i < BL_SPACEDIM; i++)
+       Max_vel[i] = 0.;
 
+#ifdef _OPENMP
+#pragma omp parallel reduction(max:Max_vel)
+#endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
       const int np     = NumberOfParticles(pti);
@@ -245,23 +290,23 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     
       for (const auto& p: particles)
       {
-          if (abs(p.rdata(realData::velx)) > Max_vel_x ) 
-            Max_vel_x = p.rdata(realData::velx);
-          if (abs(p.rdata(realData::vely)) > Max_vel_y ) 
-            Max_vel_y = p.rdata(realData::vely);
-          if (abs(p.rdata(realData::velz)) > Max_vel_z ) 
-            Max_vel_z = p.rdata(realData::velz);
+          Max_vel[0] = std::max(p.rdata(realData::velx), Max_vel[0]);
+          Max_vel[1] = std::max(p.rdata(realData::vely), Max_vel[1]);
+          Max_vel[2] = std::max(p.rdata(realData::velz), Max_vel[2]);
       }
     }
 
-    //cout << "Max velocity x= " << Max_vel_x << " y= " << Max_vel_y << " z= " 
-    //  << Max_vel_z << std::endl;
-    cout << "Maximum possible distance traveled:" << endl;
-    cout <<  "x= " << Max_vel_x * dt
-         << " y= " << Max_vel_y * dt
-         << " z= " << Max_vel_z * dt << endl;
-    //End max velocities
+    ParallelDescriptor::ReduceRealMax(Max_vel,BL_SPACEDIM,ParallelDescriptor::IOProcessorNumber());
 
+    if (ParallelDescriptor::IOProcessor()) 
+    {
+       const Real* dx = Geom(0).CellSize();
+       cout << "Maximum possible distance traveled:" << endl;
+       cout <<  "x=  " << Max_vel[0] * dt
+            << " y=  " << Max_vel[1] * dt
+            << " z=  " << Max_vel[2] * dt  << " and note that "
+            << " dx= " << dx[0] << endl;
+    }
 
     if ( des_continuum_coupled () != 0 ) {
       nstep = nsubsteps;
@@ -475,6 +520,9 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
 
@@ -492,18 +540,17 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
 {
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
-  auto& particles = pti.GetArrayOfStructs();
+        auto& particles = pti.GetArrayOfStructs();
 
-  for (const auto& p: particles)
-  {
-      const IntVect& iv = Index(p, lev);
+        for (const auto& p: particles)
+        {
+           const IntVect& iv = Index(p, lev);
 
-      RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
-
-      cout << " id " << p.id()
-     << " index " << iv
-     << " position " << xyz << endl;
-  }
+           RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
+           cout << " id " << p.id()
+                << " index " << iv
+                << " position " << xyz << endl;
+       }
     }
 }
 
@@ -542,6 +589,9 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
     sum_ro[i] = 0.0;
   }
 
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
     // Real particles
     const int np     = NumberOfParticles(pti);
