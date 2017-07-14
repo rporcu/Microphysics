@@ -273,12 +273,20 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     // with the goal of veriftying a particle cannot travel more than
     // a single cell per fluid time step. 
 
+
     Real Max_vel[3];
+
+    //Added these variables to make omp statement work
+    Real v_x, v_y, v_z;
+    v_x = 0.0;
+    v_y = 0.0;
+    v_z = 0.0;
+
     for (int i = 0; i < BL_SPACEDIM; i++)
        Max_vel[i] = 0.;
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(max:Max_vel)
+#pragma omp parallel reduction(max:v_x,v_y,v_z)
 #endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
@@ -288,11 +296,16 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     
       for (const auto& p: particles)
       {
-          Max_vel[0] = std::max(p.rdata(realData::velx), Max_vel[0]);
-          Max_vel[1] = std::max(p.rdata(realData::vely), Max_vel[1]);
-          Max_vel[2] = std::max(p.rdata(realData::velz), Max_vel[2]);
+       v_x = std::max(p.rdata(realData::velx),v_x); 
+       v_y = std::max(p.rdata(realData::vely),v_y); 
+       v_z = std::max(p.rdata(realData::velz),v_z); 
       }
     }
+    
+    Max_vel[0]=v_x;
+    Max_vel[1]=v_y;
+    Max_vel[2]=v_z;
+
 
     ParallelDescriptor::ReduceRealMax(Max_vel,BL_SPACEDIM,ParallelDescriptor::IOProcessorNumber());
 

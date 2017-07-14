@@ -320,6 +320,8 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
   Box domain(geom[lev].Domain());
 
+  BL_PROFILE("mfix_level::InitLevelData");
+
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
       const Box& sbx = (*ep_g[lev])[mfi].box();
