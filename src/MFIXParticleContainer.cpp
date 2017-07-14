@@ -198,6 +198,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
+
     for ( int n = 0; n < nsubsteps; ++n ) {
 
       fillNeighbors(lev);
@@ -209,7 +210,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          void* particles  = pti.GetArrayOfStructs().data();
 
          // Neighbor particles
-         int nstride = pti.GetArrayOfStructs().dataShape().first;
+         int nstride = pti.GetArrayOfStructs().dataShape().first;  //Does this get used here?
          PairIndex index(pti.index(), pti.LocalTileIndex());
          int ng = neighbors[index].size() / pdata_size;
 
@@ -243,6 +244,41 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       call_usr3_des( &np, particles );
 
     }
+
+
+    // Check maxmium particle velocties at each fluid time step
+    // with the goal of veriftying a particle cannot travel more than
+    // a single cell per fluid time step. 
+
+    Real Max_vel_x = 0.0;
+    Real Max_vel_y = 0.0;
+    Real Max_vel_z = 0.0;
+
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+
+      const int np     = NumberOfParticles(pti);
+
+      auto& particles = pti.GetArrayOfStructs();
+    
+      for (const auto& p: particles)
+      {
+          if (abs(p.rdata(realData::velx)) > Max_vel_x ) 
+            Max_vel_x = p.rdata(realData::velx);
+          if (abs(p.rdata(realData::vely)) > Max_vel_y ) 
+            Max_vel_y = p.rdata(realData::vely);
+          if (abs(p.rdata(realData::velz)) > Max_vel_z ) 
+            Max_vel_z = p.rdata(realData::velz);
+      }
+    }
+
+    //cout << "Max velocity x= " << Max_vel_x << " y= " << Max_vel_y << " z= " 
+    //  << Max_vel_z << std::endl;
+    cout << "Maximum possible distance traveled:" << endl;
+    cout <<  "x= " << Max_vel_x * dt
+         << " y= " << Max_vel_y * dt
+         << " z= " << Max_vel_z * dt << endl;
+    //End max velocities
+
 
     if ( des_continuum_coupled () != 0 ) {
       nstep = nsubsteps;
