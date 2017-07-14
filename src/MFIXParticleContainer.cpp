@@ -272,21 +272,12 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     // Check maxmium particle velocties at each fluid time step
     // with the goal of veriftying a particle cannot travel more than
     // a single cell per fluid time step. 
-
-
-    Real Max_vel[3];
-
-    //Added these variables to make omp statement work
-    Real v_x, v_y, v_z;
-    v_x = 0.0;
-    v_y = 0.0;
-    v_z = 0.0;
-
-    for (int i = 0; i < BL_SPACEDIM; i++)
-       Max_vel[i] = 0.;
+    Real max_vel_x = 0.0;
+    Real max_vel_y = 0.0;
+    Real max_vel_z = 0.0;
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(max:v_x,v_y,v_z)
+#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z)
 #endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
@@ -296,9 +287,9 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     
       for (const auto& p: particles)
       {
-       v_x = std::max(p.rdata(realData::velx),v_x); 
-       v_y = std::max(p.rdata(realData::vely),v_y); 
-       v_z = std::max(p.rdata(realData::velz),v_z); 
+          max_vel_x = std::max(p.rdata(realData::velx), max_vel_x);
+          max_vel_y = std::max(p.rdata(realData::vely), max_vel_y);
+          max_vel_z = std::max(p.rdata(realData::velz), max_vel_z);
       }
     }
     
@@ -307,15 +298,17 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     Max_vel[2]=v_z;
 
 
-    ParallelDescriptor::ReduceRealMax(Max_vel,BL_SPACEDIM,ParallelDescriptor::IOProcessorNumber());
+    ParallelDescriptor::ReduceRealMax(max_vel_x,ParallelDescriptor::IOProcessorNumber());
+    ParallelDescriptor::ReduceRealMax(max_vel_y,ParallelDescriptor::IOProcessorNumber());
+    ParallelDescriptor::ReduceRealMax(max_vel_z,ParallelDescriptor::IOProcessorNumber());
 
     if (ParallelDescriptor::IOProcessor()) 
     {
        const Real* dx = Geom(0).CellSize();
        cout << "Maximum possible distance traveled:" << endl;
-       cout <<  "x=  " << Max_vel[0] * dt
-            << " y=  " << Max_vel[1] * dt
-            << " z=  " << Max_vel[2] * dt  << " and note that "
+       cout <<  "x=  " << max_vel_x * dt
+            << " y=  " << max_vel_y * dt
+            << " z=  " << max_vel_z * dt  << " and note that "
             << " dx= " << dx[0] << endl;
     }
 
