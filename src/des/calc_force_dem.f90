@@ -78,6 +78,8 @@ contains
 
       np = size(particles)
 
+      print *,'NP IN CALC_FORCE_DEM ',np
+
       do ll = 1, np-1
 
          pos_tmp = particles(ll) % pos
