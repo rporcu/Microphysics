@@ -196,11 +196,13 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          // Neighbor particles
          PairIndex index(pti.index(), pti.LocalTileIndex());
          int ng = neighbors[index].size() / pdata_size;
+         int size_nl = neighbor_list[index].size();
 
          BL_PROFILE_VAR("des_time_loop()", des_time_loop);
          des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
-               &subdt, &dx, &dy, &dz,
-               &xlen, &ylen, &zlen, &nstep );
+                            neighbor_list[index].dataPtr(), &size_nl,
+                            &subdt, &dx, &dy, &dz,
+                            &xlen, &ylen, &zlen, &nstep );
          BL_PROFILE_VAR_STOP(des_time_loop);
 
          if ( des_continuum_coupled () == 0 ) {

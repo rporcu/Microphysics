@@ -99,21 +99,22 @@ contains
 
    end subroutine call_usr2_des
 
-   subroutine des_time_loop_ops ( nrp, rparticles, ngp, gparticles, &
+   subroutine des_time_loop_ops ( nrp, rparticles, ngp, gparticles, nbor_list, size_nl, &
         & subdt, dx, dy, dz, xlength, ylength, zlength, nstep )  &
         bind(C, name="des_time_loop_ops")
 
       use particle_mod
       use calc_collision_wall,     only: calc_dem_force_with_wall_stl
-      use calc_force_dem_module,   only: calc_force_dem
+      use calc_force_dem_module,   only: calc_force_dem, calc_force_dem_nl
       use output_manager_module,   only: output_manager
       use run,                     only: call_usr
 
-      integer(c_int),   intent(in   )     :: nrp, ngp
+      integer(c_int),   intent(in   )     :: nrp, ngp, size_nl
       real(c_real),     intent(in   )     :: subdt, dx, dy, dz
       real(c_real),     intent(in   )     :: xlength, ylength, zlength
       type(particle_t), intent(inout)     :: rparticles(nrp), gparticles(ngp)
       integer(c_int),   intent(inout)     :: nstep
+      integer(c_int),   intent(in   )     :: nbor_list(size_nl)
       real(c_real)                        :: tow(nrp+ngp,3), fc(nrp+ngp,3)
       type(particle_t)                    :: particles(nrp+ngp)
 
@@ -129,7 +130,10 @@ contains
            xlength, ylength, zlength, subdt )
 
       ! calculate forces from particle-particle collisions
-      call calc_force_dem ( particles, fc, tow, subdt )
+!      call calc_force_dem ( particles, fc, tow, subdt )
+
+      call calc_force_dem_nl ( particles, nbor_list, size_nl, fc, tow, subdt )
+
 
       ! call user functions.
       if ( call_usr ) call usr1_des
