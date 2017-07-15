@@ -112,7 +112,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
     // Unit scaling
     //-------------------------------------------------------------------
-    for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+    for (MFIter mfi(rhs, true); mfi.isValid(); ++mfi)
     {
         const Box&  bx = mfi.tilebox();
         const Box& rbx = rhs[mfi].box();
@@ -128,7 +131,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
     // Compute initial residual r = rhs - A*sol
     //-------------------------------------------------------------------
-    for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+    for (MFIter mfi(rhs, true); mfi.isValid(); ++mfi)
     {
       const Box&  bx = mfi.tilebox();
       const Box& hbx = rhs[mfi].box();
@@ -202,7 +208,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       }
       else if ( precond_type == 1) // pc_type == diag
       {
-        for (MFIter mfi(p); mfi.isValid(); ++mfi)
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+        for (MFIter mfi(p, true); mfi.isValid(); ++mfi)
         {
           const Box&  bx = mfi.tilebox();
           const Box& pbx =   p[mfi].box();
@@ -222,7 +231,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       ph.FillBoundary(geom[lev].periodicity());
 
-      for (MFIter mfi(ph); mfi.isValid(); ++mfi)
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+      for (MFIter mfi(ph, true); mfi.isValid(); ++mfi)
       {
         const Box&  bx = mfi.tilebox();
         const Box& pbx =  ph[mfi].box();
@@ -262,7 +274,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       }
       else if ( precond_type == 1 ) // pc_type == diag
       {
-        for (MFIter mfi(A_m); mfi.isValid(); ++mfi)
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+        for (MFIter mfi(A_m, true); mfi.isValid(); ++mfi)
         {
           const Box&  bx = mfi.tilebox();
           const Box& sbx =   s[mfi].box();
@@ -281,7 +296,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         MultiFab::Copy(sh,s,0,0,1,nghost);
       }
 
-      for (MFIter mfi(A_m); mfi.isValid(); ++mfi)
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+      for (MFIter mfi(A_m, true); mfi.isValid(); ++mfi)
       {
         const Box&  bx = mfi.tilebox();
         const Box& sbx =  sh[mfi].box();

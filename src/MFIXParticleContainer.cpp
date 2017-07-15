@@ -224,6 +224,9 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
       } else {
 
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
          for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
             // Real particles
@@ -293,11 +296,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       }
     }
     
-    Max_vel[0]=v_x;
-    Max_vel[1]=v_y;
-    Max_vel[2]=v_z;
-
-
     ParallelDescriptor::ReduceRealMax(max_vel_x,ParallelDescriptor::IOProcessorNumber());
     ParallelDescriptor::ReduceRealMax(max_vel_y,ParallelDescriptor::IOProcessorNumber());
     ParallelDescriptor::ReduceRealMax(max_vel_z,ParallelDescriptor::IOProcessorNumber());
@@ -372,7 +370,10 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled, int 
     const Real*     dx_particle = Geom(lev).CellSize();
     const Real*     dx          = gm.CellSize();
     
-    for (MFIter mfi(*mf_pointer); mfi.isValid(); ++mfi) {
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+    for (MFIter mfi(*mf_pointer, true); mfi.isValid(); ++mfi) {
         (*mf_pointer)[mfi].setVal(0);
     }
 
@@ -457,7 +458,10 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::
     const Real*     dx_particle = Geom(lev).CellSize();
     const Real*     dx          = gm.CellSize();
     
-    for (MFIter mfi(*mf_pointer); mfi.isValid(); ++mfi) 
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+    for (MFIter mfi(*mf_pointer, true); mfi.isValid(); ++mfi) 
         (*mf_pointer)[mfi].setVal(0);
 
     using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
@@ -524,6 +528,7 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
+    //EP - should this be threaded since its output(?) 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -542,6 +547,7 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
 
 void MFIXParticleContainer::writeAllAtLevel(int lev)
 {
+    //EP - not threaded because its print to terminal(?)
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
         auto& particles = pti.GetArrayOfStructs();
@@ -562,6 +568,9 @@ void MFIXParticleContainer::writeAllForComparison(int lev)
 {
   size_t Np_tot = 0;
 
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:Np_tot)
+#endif 
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       Np_tot += pti.numParticles();
 
@@ -569,6 +578,7 @@ void MFIXParticleContainer::writeAllForComparison(int lev)
 
   Real dummy = 0.;
 
+ //EP - not threaded because its print to terminal(?)
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
       auto& particles = pti.GetArrayOfStructs();

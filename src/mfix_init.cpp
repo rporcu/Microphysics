@@ -320,9 +320,10 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
   Box domain(geom[lev].Domain());
 
-  BL_PROFILE("mfix_level::InitLevelData");
-
-  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+  for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
     {
       const Box& sbx = (*ep_g[lev])[mfi].box();
 
@@ -388,7 +389,10 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
     // Array already allocated when restart is called
     Box domain(geom[lev].Domain());
 
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+    for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
     {
       const Box& sbx = (*ep_g[lev])[mfi].box();
 

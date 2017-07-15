@@ -106,7 +106,10 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
         residuals[i] = 0.0L;
 
       // User hooks
-      for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+      for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
         mfix_usr2();
 
       // Calculate transport coefficients
