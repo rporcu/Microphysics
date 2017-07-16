@@ -284,6 +284,8 @@ contains
 
             ii = nbor_list(jj)
 
+            if (ii .le. ll) cycle
+
             dist     = particles(ii) % pos - pos_tmp(:)
             dist_mag = dot_product( dist, dist )
             r_lm     = rad + particles(ii) % radius
