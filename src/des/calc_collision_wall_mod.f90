@@ -33,15 +33,14 @@ module calc_collision_wall
 contains
 
 
-   subroutine calc_dem_force_with_wall_stl ( rparticles, gparticles, fc, tow, xlength, ylength, zlength, dtsolid )
+   subroutine calc_dem_force_with_wall_stl ( particles, fc, tow, xlength, ylength, zlength, dtsolid )
 
       use bc,            only: cyclic_x, cyclic_y, cyclic_z
       use param,         only: zero, one
       use particle_mod,  only: particle_t
       
 
-      type(particle_t), intent(in)    :: rparticles(:)
-      type(particle_t), intent(in)    :: gparticles(:)
+      type(particle_t), intent(in)    :: particles(:)
       real(c_real)  ,   intent(inout) :: fc(:,:), tow(:,:)
       real(c_real)  ,   intent(in   ) :: xlength, ylength, zlength, dtsolid 
      
@@ -114,10 +113,11 @@ contains
       VERTEX(3,:,6) = (/ZERO, 2*YLENGTH, ZLENGTH/)
       NORM_FACE(:,6) = (/ZERO, ZERO, -ONE/)
 
-      do ll = 1, size( rparticles )
+      do ll = 1, size( particles )
 
-         associate ( radius => rparticles(ll) % radius, pos => rparticles(ll) % pos, &
-              & vel => rparticles(ll) % vel, omega => rparticles(ll) % omega )
+
+         associate ( radius => particles(ll) % radius, pos => particles(ll) % pos, &
+              & vel => particles(ll) % vel, omega => particles(ll) % omega )
         
          ! Check particle LL for wall contacts
          radsq = radius * radius
@@ -216,164 +216,10 @@ contains
 
                ! Calculate the translational relative velocity
                call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normal, distmod, &
-                    & rparticles )
+                    & particles )
 
                ! Calculate the spring model parameters.
-               phaseLL = rparticles(ll) % phase
-
-               ! Hertz vs linear spring-dashpot contact model
-               if ( DES_COLL_MODEL_ENUM == HERTZIAN ) then
-                  sqrt_overlap = sqrt(OVERLAP_N)
-                  KN_DES_W     = hert_kwn(phaseLL)*sqrt_overlap
-                  KT_DES_W     = hert_kwt(phaseLL)*sqrt_overlap
-                  sqrt_overlap = SQRT(sqrt_overlap)
-                  ETAN_DES_W   = DES_ETAN_WALL(phaseLL)*sqrt_overlap
-                  ETAT_DES_W   = DES_ETAT_WALL(phaseLL)*sqrt_overlap
-               else
-                  KN_DES_W     = KN_W
-                  KT_DES_W     = KT_W
-                  ETAN_DES_W   = DES_ETAN_WALL(phaseLL)
-                  ETAT_DES_W   = DES_ETAT_WALL(phaseLL)
-               end if
-
-               ! Calculate the normal contact force
-               FN(:) = -(KN_DES_W * OVERLAP_N * NORMAL(:) + &
-                    ETAN_DES_W * V_REL_TRANS_NORM * NORMAL(:))
-
-               ! Calculate the tangential displacement.
-               overlap_t(:) = dtsolid*vrel_t(:)
-               mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t))
-
-               ! Check for Coulombs friction law and limit the maximum value of the
-               ! tangential force on a particle in contact with a wall.
-               if ( MAG_OVERLAP_T > 0.0 ) then
-                  ! Max force before the on set of frictional slip.
-                  FNMD = MEW_W*sqrt(DOT_PRODUCT(FN,FN))
-                  ! Direction of tangential force.
-                  TANGENT = OVERLAP_T/MAG_OVERLAP_T
-                  FT = -FNMD * TANGENT
-               else
-                  FT = 0.0
-               end if
-
-               ! Add the collision force to the total forces acting on the particle.
-               FC(LL,:) = FC(LL,:) + FN(:) + FT(:)
-
-               ! Add the torque force to the total torque acting on the particle.
-               TOW(LL,:) = TOW(LL,:) + DISTMOD*DES_CROSSPRDCT(NORMAL,FT)
-               
-         end do
-
-         end associate
-
-      end do
-
-      do ll = 1, size( gparticles )
-
-         associate ( radius => gparticles(ll) % radius, pos => gparticles(ll) % pos, &
-              & vel => gparticles(ll) % vel, omega => gparticles(ll) % omega )
-        
-         ! Check particle LL for wall contacts
-         radsq = radius * radius
-
-         particle_max(:) = pos + radius
-         particle_min(:) = pos - radius
-
-         do nf = 1, 6
-
-               if ( nf == 1 ) then
-                  if ( pos(1) >  radius ) cycle
-               else if ( nf == 2) then
-                  if ( pos(1) < ( xlength - radius ) ) cycle
-               else if ( nf == 3 ) then
-                  if ( pos(2) > radius ) cycle
-               else if ( nf == 4 ) then
-                  if ( pos(2) < ( ylength - radius ) ) cycle
-               else if ( nf == 5 ) then
-                  if ( pos(3) > radius ) cycle
-               else if ( nf == 6 ) then
-                  if ( pos(3) < ( zlength - radius ) ) cycle
-               end if
-
-
-               ! Checking all the facets is time consuming due to the expensive
-               ! separating axis test. Remove this facet from contention based on
-               ! a simple orthogonal projection test.
-               
-               ! Parametrize a line as p = p_0 + t normal and intersect with the
-               ! triangular plane. If t>0, then point is on the non-fluid side of
-               ! the plane. If the plane normal is assumed to point toward the fluid.
-               
-               ! -undefined, because non zero values will imply the sphere center
-               ! is on the non-fluid side of the plane. Since the testing
-               ! is with extended plane, this could very well happen even
-               ! when the particle is well inside the domain (assuming the plane
-               ! normal points toward the fluid). See the pic below. So check
-               ! only when line_t is negative
-               
-               !                 \   Solid  /
-               !                  \  Side  /
-               !                   \      /
-               !                    \    /
-               ! Wall 1, fluid side  \  /  Wall 2, fluid side
-               !                      \/
-               !                        o particle
-               !
-               ! line_t will be positive for wall 1 (incorrectly indicating center
-               ! is outside the domain) and line_t will be negative for wall 2.
-               !
-               ! Therefore, only stick with this test when line_t is negative and let
-               ! the separating axis test take care of the other cases.
-               
-               ! Since this is for checking static config, line's direction is the
-               ! same as plane's normal. For moving particles, the line's normal will
-               ! be along the point joining new and old positions.
-               
-               line_t = DOT_product( ( VERTEX(1,:,nf) - pos ), NORM_FACE(:,nf) )
-
-               ! k - rad >= tol_orth, where k = -line_t, then orthogonal
-               ! projection is false. Substituting for k
-               ! => line_t + rad <= -tol_orth
-               ! choosing tol_orth = 0.01% of des_radius = 0.0001*des_radius
-
-               ! Orthogonal projection will detect false positives even
-               ! when the particle does not overlap the triangle.
-               ! However, if the orthogonal projection shows no overlap, then
-               ! that is a big fat negative and overlaps are not possible.
-               if ( line_t  <= ( -1.0001d0 * radius ) ) cycle
-
-               POS_TMP = pos
-               
-               call ClosestPtPointTriangle( POS_TMP,  VERTEX(:,:,nf), CLOSEST_PT(:) )
-
-               DIST(:) = CLOSEST_PT(:) - pos
-               DISTSQ = DOT_PRODUCT(DIST, DIST)
-
-               IF(DISTSQ .GE. RADSQ - SMALL_NUMBER) CYCLE
-
-               MAX_DISTSQ = DISTSQ
-               MAX_NF = NF
-
-               ! Assign the collision normal based on the facet with the
-               ! largest overlap.
-               NORMAL(:) = DIST(:)/sqrt(DISTSQ)
-
-               ! Facet's normal is correct normal only when the intersection is with
-               ! the face. When the intersection is with edge or vertex, then the
-               ! normal is based on closest pt and sphere center. The definition above
-               ! of the normal is generic enough to account for differences between
-               ! vertex, edge, and facet.
-
-               ! Calculate the particle/wall overlap.
-               DISTMOD = sqrt(MAX_DISTSQ)
-               OVERLAP_N = radius - DISTMOD
-
-               ! Calculate the translational relative velocity
-               call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normal, distmod, &
-                    & gparticles )
-
-               ! Calculate the spring model parameters.
-               phaseLL = gparticles(ll) % phase
+               phaseLL = particles(ll) % phase
 
                ! Hertz vs linear spring-dashpot contact model
                if ( DES_COLL_MODEL_ENUM == HERTZIAN ) then

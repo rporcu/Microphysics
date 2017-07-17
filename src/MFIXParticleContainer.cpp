@@ -8,7 +8,8 @@
 
 #include "mfix_F.H"
 
-bool MFIXParticleContainer::use_neighbor_list = false;
+//bool MFIXParticleContainer::use_neighbor_list = false;
+bool MFIXParticleContainer::use_neighbor_list = true;
 
 using namespace amrex;
 using namespace std;
@@ -180,13 +181,17 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
+    int ncoll_total = 0;
+
     for ( int n = 0; n < nsubsteps; ++n ) {
 
       fillNeighbors(lev);
 
+      int ncoll = 0;
+
       if (use_neighbor_list) 
       {
-         if (n%25 == 0)
+//       if (n%25 == 0)
             buildNeighborList(lev);
 
 #ifdef _OPENMP
@@ -204,11 +209,10 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
             int size_nl = neighbor_list[index].size();
 
             BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-            des_time_loop_ops_nl( &np, particles, 
-                                 &size_ng, neighbors[index].dataPtr(),
-                                 &size_nl, neighbor_list[index].dataPtr(), 
-                                 &subdt, &dx, &dy, &dz,
-                                 &xlen, &ylen, &zlen, &nstep );
+            des_time_loop_ops_nl ( &np, particles, &size_ng, neighbors[index].dataPtr(),
+                                   &size_nl, neighbor_list[index].dataPtr(),
+                                   &subdt, &dx, &dy, &dz,
+                                   &xlen, &ylen, &zlen, &nstep, &ncoll );
             BL_PROFILE_VAR_STOP(des_time_loop);
 
             if ( des_continuum_coupled () == 0 ) {
@@ -239,8 +243,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
             BL_PROFILE_VAR("des_time_loop()", des_time_loop);
             des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
-                  &subdt, &dx, &dy, &dz,
-                  &xlen, &ylen, &zlen, &nstep );
+                               &subdt, &dx, &dy, &dz,
+                               &xlen, &ylen, &zlen, &nstep, &ncoll );
             BL_PROFILE_VAR_STOP(des_time_loop);
    
             if ( des_continuum_coupled () == 0 ) {
@@ -255,10 +259,15 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          }
       }
 
+      Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
+      ncoll_total +=  ncoll;
+
       clearNeighbors(lev);
 
       Redistribute();
     }
+
+    Print() << "Number of collisions: " << ncoll_total << " at end of fluid step " << std::endl;
 
 #ifdef _OPENMP
 #pragma omp parallel

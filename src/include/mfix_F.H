@@ -351,14 +351,14 @@ extern "C"
 		            const int* ngp,  void* gparticles,
 			    amrex::Real* subdt, amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
 			    amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-			    int * nstep );
+			    int* nstep, int* ncoll );
 
     void des_time_loop_ops_nl( const int* nrp,  void* rparticles,
    		               const int* ngp,  void* gparticles,
-                               const int* nl_size, const int* neighbor_list,
+                               const int* size_nl, const int* nbor_list,
 			       amrex::Real* subdt, amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
 			       amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-			       int * nstep );
+			       int* nstep, int* ncoll );
 
     int des_continuum_coupled ();
 

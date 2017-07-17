@@ -21,7 +21,7 @@ contains
    !           accounting for the wall properties                         !
    !                                                                      !
    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_force_dem( particles, fc, tow, dtsolid )
+   subroutine calc_force_dem( particles, fc, tow, dtsolid, ncoll )
 
       use particle_mod,   only: particle_t
       use cfrelvel_module, only: cfrelvel
@@ -35,6 +35,7 @@ contains
       type(particle_t), intent(in   ) :: particles(:)
       real(c_real),     intent(inout) :: fc(:,:), tow(:,:)
       real(c_real),     intent(in   ) :: dtsolid
+      integer(c_int),   intent(inout) :: ncoll
       logical,      parameter     :: report_excess_overlap = .false.
       real(c_real), parameter     :: flag_overlap = 0.20d0 ! % of particle radius when excess overlap will be flagged
       real(c_real), parameter     :: q2           = 0.5_c_real
@@ -95,6 +96,8 @@ contains
                stop "division by zero"
 8550           format('distance between particles is zero:',2(2x,i10))
             endif
+
+            ncoll = ncoll + 1
 
             dist_mag  = sqrt( dist_mag )
             normal(:) = dist(:) / dist_mag
@@ -180,7 +183,7 @@ contains
 
    end subroutine calc_force_dem
 
-   subroutine calc_force_dem_nl( rparticles, gparticles, fc, tow, dtsolid )
+   subroutine calc_force_dem_nl( particles, nbor_list, size_nl, fc, tow, dtsolid, ncoll )
 
       use particle_mod,   only: particle_t
       use cfrelvel_module, only: cfrelvel
@@ -191,16 +194,18 @@ contains
       use param,          only: SMALL_NUMBER
       use error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
 
-      type(particle_t), intent(in   ) :: rparticles(:)
-      type(particle_t), intent(in   ) :: gparticles(:)
+      integer,          intent(in   ) :: size_nl
+      type(particle_t), intent(in   ) :: particles(:)
+      integer,          intent(in   ) :: nbor_list(size_nl)
       real(c_real),     intent(inout) :: fc(:,:), tow(:,:)
       real(c_real),     intent(in   ) :: dtsolid
+      integer(c_int),   intent(inout) :: ncoll
       logical,      parameter     :: report_excess_overlap = .false.
       real(c_real), parameter     :: flag_overlap = 0.20d0 ! % of particle radius when excess overlap will be flagged
       real(c_real), parameter     :: q2           = 0.5_c_real
 
       ! particle no. indices
-      integer :: ii, ll
+      integer :: ii, ll, jj
       ! the overlap occuring between particle-particle or particle-wall
       ! collision in the normal direction
       real(c_real) :: overlap_n, overlap_t(3)
@@ -232,21 +237,29 @@ contains
       ! local values used spring constants and damping coefficients
       real(c_real) :: etan_des, etat_des, kn_des, kt_des
       real(c_real) :: fnmd, mag_overlap_t, tangent(3)
-      integer      ::  np
+      integer      ::  np, index, nneighbors
       real(c_real) :: radiusii, radiusll
 
-      np = size(rparticles)
+      np = size(particles)
 
-      do ll = 1, np-1
+      index = 1
+      do ll = 1, np
 
-         pos_tmp = rparticles(ll) % pos
-         rad     = rparticles(ll) % radius
+         pos_tmp = particles(ll) % pos
+         rad     = particles(ll) % radius
 
-         do ii = ll+1, np
+         nneighbors = nbor_list(index)
+         index = index + 1
 
-            dist     = rparticles(ii) % pos - pos_tmp(:)
+         do jj = index, index + nneighbors - 1
+
+            ii = nbor_list(jj)
+
+            if (ii .le. ll) cycle
+
+            dist     = particles(ii) % pos - pos_tmp(:)
             dist_mag = dot_product( dist, dist )
-            r_lm     = rad + rparticles(ii) % radius
+            r_lm     = rad + particles(ii) % radius
 
             if ( dist_mag > ( r_lm - SMALL_NUMBER )**2 ) cycle
 
@@ -256,21 +269,23 @@ contains
 8550           format('distance between particles is zero:',2(2x,i10))
             endif
 
+            ncoll = ncoll + 1
+
             dist_mag  = sqrt( dist_mag )
             normal(:) = dist(:) / dist_mag
 
             ! calcuate the normal overlap
             overlap_n = r_lm-dist_mag
-!           if(report_excess_overlap) call print_excess_overlap
+            if(report_excess_overlap) call print_excess_overlap
 
             ! calculate the components of translational relative velocity for a
             ! contacting particle pair and the tangent to the plane of contact
-            call cfrelvel(ll, ii, v_rel_trans_norm, vrel_t, normal(:), dist_mag, rparticles )
+            call cfrelvel(ll, ii, v_rel_trans_norm, vrel_t, normal(:), dist_mag, particles )
 
-            radiusll = rparticles(ll) % radius
-            phasell  = rparticles(ll) % phase
-            radiusii = rparticles(ii) % radius
-            phaseii  = rparticles(ii) % phase
+            radiusll = particles(ll) % radius
+            phasell  = particles(ll) % phase
+            radiusii = particles(ii) % radius
+            phaseii  = particles(ii) % phase
 
             ! hertz spring-dashpot contact model
             if ( des_coll_model_enum == hertzian ) then
@@ -336,9 +351,12 @@ contains
             tow(ii,3)  = tow(ii,3)  + tow_tmp(3,2)
 
          end do
+
+         index = index + nneighbors
+
       end do
 
-    contains
+   contains
 
       include 'functions.inc'
 
