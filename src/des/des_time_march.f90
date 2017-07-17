@@ -109,7 +109,8 @@ contains
       real(c_real),     intent(in   )     :: subdt, dx, dy, dz
       real(c_real),     intent(in   )     :: xlength, ylength, zlength
       type(particle_t), intent(inout)     :: rparticles(nrp), gparticles(ngp)
-      integer(c_int),   intent(inout)     :: nstep, ncoll
+      integer(c_int),   intent(in   )     :: nstep
+      integer(c_int),   intent(inout)     :: ncoll
 
       real(c_real)                        :: tow(nrp+ngp,3), fc(nrp+ngp,3)
       type(particle_t)                    :: particles(nrp+ngp)
@@ -125,7 +126,7 @@ contains
       particles(nrp+1:   ) = gparticles
 
       ! calculate forces from particle-particle collisions
-      call calc_force_dem ( particles, fc, tow, subdt, ncoll )
+      call calc_force_dem ( particles, fc, tow, subdt, nstep, ncoll )
 
       rparticles = particles(    1: nrp)
       gparticles = particles(nrp+1:    )
@@ -153,7 +154,9 @@ contains
       real(c_real),     intent(in   )     :: xlength, ylength, zlength
       type(particle_t), intent(inout)     :: rparticles(nrp), gparticles(ngp)
       integer(c_int),   intent(in   )     :: nbor_list(size_nl)
-      integer(c_int),   intent(inout)     :: nstep, ncoll
+      integer(c_int),   intent(in   )     :: nstep
+      integer(c_int),   intent(inout)     :: ncoll
+
       real(c_real)                        :: tow(nrp+ngp,3), fc(nrp+ngp,3)
       type(particle_t)                    :: particles(nrp+ngp)
 
@@ -168,7 +171,7 @@ contains
                                           xlength, ylength, zlength, subdt )
 
       ! calculate forces from particle-particle collisions
-      call calc_force_dem_nl ( particles, nbor_list, size_nl, fc, tow, subdt, ncoll )
+      call calc_force_dem_nl ( particles, nbor_list, size_nl, fc, tow, subdt, nstep, ncoll )
 
       rparticles = particles(    1:nrp)
       gparticles = particles(nrp+1:   )

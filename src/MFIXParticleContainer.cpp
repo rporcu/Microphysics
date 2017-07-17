@@ -212,7 +212,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
             des_time_loop_ops_nl ( &np, particles, &size_ng, neighbors[index].dataPtr(),
                                    &size_nl, neighbor_list[index].dataPtr(),
                                    &subdt, &dx, &dy, &dz,
-                                   &xlen, &ylen, &zlen, &nstep, &ncoll );
+                                   &xlen, &ylen, &zlen, &n, &ncoll );
             BL_PROFILE_VAR_STOP(des_time_loop);
 
             if ( des_continuum_coupled () == 0 ) {
@@ -244,7 +244,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
             BL_PROFILE_VAR("des_time_loop()", des_time_loop);
             des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
                                &subdt, &dx, &dy, &dz,
-                               &xlen, &ylen, &zlen, &nstep, &ncoll );
+                               &xlen, &ylen, &zlen, &n, &ncoll );
             BL_PROFILE_VAR_STOP(des_time_loop);
    
             if ( des_continuum_coupled () == 0 ) {
@@ -259,14 +259,17 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          }
       }
 
-      Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
       ncoll_total +=  ncoll;
+
+      ParallelDescriptor::ReduceIntSum(ncoll,ParallelDescriptor::IOProcessorNumber());
+      // Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
 
       clearNeighbors(lev);
 
       Redistribute();
     }
 
+    ParallelDescriptor::ReduceIntSum(ncoll_total,ParallelDescriptor::IOProcessorNumber());
     Print() << "Number of collisions: " << ncoll_total << " at end of fluid step " << std::endl;
 
 #ifdef _OPENMP

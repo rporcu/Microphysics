@@ -21,7 +21,7 @@ contains
    !           accounting for the wall properties                         !
    !                                                                      !
    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_force_dem( particles, fc, tow, dtsolid, ncoll )
+   subroutine calc_force_dem( particles, fc, tow, dtsolid, nstep, ncoll )
 
       use particle_mod,   only: particle_t
       use cfrelvel_module, only: cfrelvel
@@ -35,6 +35,7 @@ contains
       type(particle_t), intent(in   ) :: particles(:)
       real(c_real),     intent(inout) :: fc(:,:), tow(:,:)
       real(c_real),     intent(in   ) :: dtsolid
+      integer(c_int),   intent(in   ) :: nstep
       integer(c_int),   intent(inout) :: ncoll
       logical,      parameter     :: report_excess_overlap = .false.
       real(c_real), parameter     :: flag_overlap = 0.20d0 ! % of particle radius when excess overlap will be flagged
@@ -97,10 +98,10 @@ contains
 8550           format('distance between particles is zero:',2(2x,i10))
             endif
 
-            ncoll = ncoll + 1
-
             dist_mag  = sqrt( dist_mag )
             normal(:) = dist(:) / dist_mag
+
+            ncoll = ncoll + 1
 
             ! calcuate the normal overlap
             overlap_n = r_lm-dist_mag
@@ -151,6 +152,17 @@ contains
                ft = 0.0
             end if
 
+            ! **********************************************************
+
+            ! calculate the total force fc of a collision pair
+            ! total contact force
+            fc_tmp(:) = fn(:) + ft(:)
+
+            fc(ll,:) = fc(ll,:) + fc_tmp(:)
+            fc(ii,:) = fc(ii,:) - fc_tmp(:)
+
+            ! **********************************************************
+
             ! calculate the distance from the particles' centers to the contact point,
             ! which is taken as the radical line
             ! dist_ci+dist_cl=dist_li; dist_ci^2+a^2=ri^2;  dist_cl^2+a^2=rl^2
@@ -161,29 +173,18 @@ contains
             tow_tmp(:,1) = dist_cl*tow_force(:)
             tow_tmp(:,2) = dist_ci*tow_force(:)
 
-            ! calculate the total force fc of a collision pair
-            ! total contact force
-            fc_tmp(:) = fn(:) + ft(:)
-
-            fc(ll,:) = fc(ll,:) + fc_tmp(:)
-
-            fc(ii,1) = fc(ii,1) - fc_tmp(1)
-            fc(ii,2) = fc(ii,2) - fc_tmp(2)
-            fc(ii,3) = fc(ii,3) - fc_tmp(3)
-
             ! for each particle the signs of norm and ft both flip, so add the same torque
             tow(ll,:) = tow(ll,:) + tow_tmp(:,1)
+            tow(ii,:) = tow(ii,:) + tow_tmp(:,2)
 
-            tow(ii,1)  = tow(ii,1)  + tow_tmp(1,2)
-            tow(ii,2)  = tow(ii,2)  + tow_tmp(2,2)
-            tow(ii,3)  = tow(ii,3)  + tow_tmp(3,2)
+            ! **********************************************************
 
          end do
       end do
 
    end subroutine calc_force_dem
 
-   subroutine calc_force_dem_nl( particles, nbor_list, size_nl, fc, tow, dtsolid, ncoll )
+   subroutine calc_force_dem_nl( particles, nbor_list, size_nl, fc, tow, dtsolid, nstep, ncoll )
 
       use particle_mod,   only: particle_t
       use cfrelvel_module, only: cfrelvel
@@ -199,6 +200,7 @@ contains
       integer,          intent(in   ) :: nbor_list(size_nl)
       real(c_real),     intent(inout) :: fc(:,:), tow(:,:)
       real(c_real),     intent(in   ) :: dtsolid
+      integer(c_int),   intent(in   ) :: nstep
       integer(c_int),   intent(inout) :: ncoll
       logical,      parameter     :: report_excess_overlap = .false.
       real(c_real), parameter     :: flag_overlap = 0.20d0 ! % of particle radius when excess overlap will be flagged
@@ -323,6 +325,15 @@ contains
                ft = 0.0
             end if
 
+            ! calculate the total force fc of a collision pair
+            ! total contact force
+            fc_tmp(:) = fn(:) + ft(:)
+
+            fc(ll,:) = fc(ll,:) + fc_tmp(:)
+            fc(ii,:) = fc(ii,:) - fc_tmp(:)
+
+            ! **********************************************************
+
             ! calculate the distance from the particles' centers to the contact point,
             ! which is taken as the radical line
             ! dist_ci+dist_cl=dist_li; dist_ci^2+a^2=ri^2;  dist_cl^2+a^2=rl^2
@@ -333,22 +344,11 @@ contains
             tow_tmp(:,1) = dist_cl*tow_force(:)
             tow_tmp(:,2) = dist_ci*tow_force(:)
 
-            ! calculate the total force fc of a collision pair
-            ! total contact force
-            fc_tmp(:) = fn(:) + ft(:)
-
-            fc(ll,:) = fc(ll,:) + fc_tmp(:)
-
-            fc(ii,1) = fc(ii,1) - fc_tmp(1)
-            fc(ii,2) = fc(ii,2) - fc_tmp(2)
-            fc(ii,3) = fc(ii,3) - fc_tmp(3)
-
             ! for each particle the signs of norm and ft both flip, so add the same torque
             tow(ll,:) = tow(ll,:) + tow_tmp(:,1)
-
-            tow(ii,1)  = tow(ii,1)  + tow_tmp(1,2)
-            tow(ii,2)  = tow(ii,2)  + tow_tmp(2,2)
-            tow(ii,3)  = tow(ii,3)  + tow_tmp(3,2)
+            tow(ii,:) = tow(ii,:) + tow_tmp(:,2)
+ 
+            ! **********************************************************
 
          end do
 
