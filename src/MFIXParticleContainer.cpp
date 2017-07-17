@@ -8,13 +8,11 @@
 
 #include "mfix_F.H"
 
-//bool MFIXParticleContainer::use_neighbor_list = false;
-bool MFIXParticleContainer::use_neighbor_list = true;
-
 using namespace amrex;
 using namespace std;
 
-// IntVect MFIXParticleContainer::tile_size   { D_DECL(1024000,8,8) };
+bool MFIXParticleContainer::use_neighbor_list  {true};
+bool MFIXParticleContainer::sort_neighbor_list {false};
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     : NeighborParticleContainer<realData::count,intData::count,realData::count+2>
@@ -153,6 +151,9 @@ void MFIXParticleContainer::ReadStaticParameters ()
         if (pp.queryarr("tile_size", ts))
             tile_size = IntVect(ts);
 
+        pp.query("use_neighbor_list", use_neighbor_list);
+        pp.query("sort_neighbor_list", sort_neighbor_list);
+
         initialized = true;
     }
 }
@@ -183,16 +184,19 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     int ncoll_total = 0;
 
-    for ( int n = 0; n < nsubsteps; ++n ) {
-
-      fillNeighbors(lev);
-
+    for ( int n = 0; n < nsubsteps; ++n ) 
+    {
       int ncoll = 0;
 
       if (use_neighbor_list) 
       {
 //       if (n%25 == 0)
-            buildNeighborList(lev);
+         {
+            clearNeighbors(lev);
+            Redistribute();
+            fillNeighbors(lev);
+            buildNeighborList(lev,sort_neighbor_list);
+         }
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -228,6 +232,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
       } else {
 
+         fillNeighbors(lev);
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif 
@@ -257,17 +263,21 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
             call_usr2_des( &np, particles );
          }
+
+         clearNeighbors(lev);
+         Redistribute();
+
       }
 
       ncoll_total +=  ncoll;
 
       ParallelDescriptor::ReduceIntSum(ncoll,ParallelDescriptor::IOProcessorNumber());
       // Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
-
-      clearNeighbors(lev);
-
-      Redistribute();
     }
+
+    clearNeighbors(lev);
+
+    Redistribute();
 
     ParallelDescriptor::ReduceIntSum(ncoll_total,ParallelDescriptor::IOProcessorNumber());
     Print() << "Number of collisions: " << ncoll_total << " at end of fluid step " << std::endl;
