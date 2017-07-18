@@ -112,10 +112,6 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
         mfix_usr2();
 
-      // Calculate transport coefficients
-      calc_flag = 1;
-      mfix_calc_coeffs(lev,calc_flag);
-
       // Calculate drag coefficient
       if (solve_dem)
         mfix_calc_drag_fluid(lev);
