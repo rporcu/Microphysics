@@ -192,21 +192,13 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       {
 //       if (n%25 == 0)
          {
-            BL_PROFILE_VAR("clearNeighbors()", clearNeighbors);
             clearNeighbors(lev);
-            BL_PROFILE_VAR_STOP(clearNeighbors);
 
-            BL_PROFILE_VAR("Redistribute_sub()", Redistribute_sub);
             Redistribute();
-            BL_PROFILE_VAR_STOP(Redistribute_sub);
 
-            BL_PROFILE_VAR("fillNeighbors()", fillNeighbors);
             fillNeighbors(lev);
-            BL_PROFILE_VAR_STOP(fillNeighbors);
 
-            BL_PROFILE_VAR("buildNeighborList()", buildNeighborList);
             buildNeighborList(lev,sort_neighbor_list);
-            BL_PROFILE_VAR_STOP(buildNeighborList);
          }
 
 #ifdef _OPENMP
