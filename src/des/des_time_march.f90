@@ -118,12 +118,12 @@ contains
       tow  = 0
       fc   = 0
 
+      particles(    1:nrp) = rparticles
+      particles(nrp+1:   ) = gparticles
+
       ! calculate forces from particle-wall collisions
       call calc_dem_force_with_wall_stl ( particles, fc, tow, &
                                           xlength, ylength, zlength, subdt )
-
-      particles(    1:nrp) = rparticles
-      particles(nrp+1:   ) = gparticles
 
       ! calculate forces from particle-particle collisions
       call calc_force_dem ( particles, fc, tow, subdt, nstep, ncoll )
