@@ -63,7 +63,7 @@ set (AMREX_INSTALL_DIR "" CACHE PATH "Path to installation directory (leave empt
 
 set (MFIX_FFLAGS_OVERRIDES "" CACHE STRING "User-defined Fortran compiler flags" )
 message (STATUS "   MFIX_FFLAGS_OVERRIDES = ${MFIX_FFLAGS_OVERRIDES}" )
-set (MFIX_CXXLAGS_OVERRIDES "" CACHE STRING "User-defined C++ compiler flags" )
+set (MFIX_CXXFLAGS_OVERRIDES "" CACHE STRING "User-defined C++ compiler flags" )
 message (STATUS "   MFIX_CXXFLAGS_OVERRIDES = ${MFIX_CXXFLAGS_OVERRIDES}" )
 
 set (ENABLE_FPE 0 CACHE INT "Enable Floating Point Exceptions checks")
