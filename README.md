@@ -51,7 +51,8 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 | -----------------------------|----------------------------------------------|------------------------------|---------------------|
 | CMAKE_BUILD_TYPE             | Configuration of the build                   |   Debug/Release              |   Debug             |
 | MFIX_FFLAGS_OVERRIDES        | User-defined Fortran flags                   | valid F90 compiler flags     |   None              |
-| MFIX_CXXLAGS_OVERRIDES       | User-defined C++ flags                       | valid C++ compiler flags     |   None              |
+| MFIX_CXXFLAGS_OVERRIDES      | User-defined C++ flags                       | valid C++ compiler flags     |   None              |
+| ENABLE_FPE                   | Build with Floating-Point Exceptions checks  |   0/1                        |   0                 |
 | AMREX_ENABLE_MPI             | Enable build with MPI                        |   0/1                        |   1                 |
 | AMREX_ENABLE_OMP             | Enable build with OpenMP                     |   0/1                        |   0                 |
 | AMREX_ENABLE_DP              | Enable double precision                      |   0/1                        |   1                 |

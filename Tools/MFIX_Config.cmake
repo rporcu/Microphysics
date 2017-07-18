@@ -108,6 +108,13 @@ append ( MFIX_EXTRA_CXX_FLAGS MFIX_CXX_FLAGS )
 append ( MFIX_${FC_ID}_FFLAGS_REQUIRED MFIX_Fortran_FLAGS )
 append ( MFIX_${CXX_ID}_CXXFLAGS_REQUIRED MFIX_CXX_FLAGS )
 
+# Add FPE flags if required 
+if (ENABLE_FPE)
+   append ( MFIX_${FC_ID}_FFLAGS_FPE MFIX_Fortran_FLAGS )
+   append ( MFIX_${CXX_ID}_CXXFLAGS_FPE MFIX_CXX_FLAGS )
+endif ()
+
+
 # Set CMake compiler flags
 set ( CMAKE_Fortran_FLAGS_${MFIX_BUILD_TYPE} "${MFIX_Fortran_FLAGS}" ) 
 set ( CMAKE_CXX_FLAGS_${MFIX_BUILD_TYPE} "${MFIX_CXX_FLAGS}" )
