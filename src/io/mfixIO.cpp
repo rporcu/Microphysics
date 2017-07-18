@@ -440,7 +440,7 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
          int_comp_names.push_back("phase");
          int_comp_names.push_back("state");
 
-       bool is_checkpoint = false;  
+       bool is_checkpoint = true;
        pc -> Checkpoint(plotfilename, "particles", is_checkpoint, real_comp_names, int_comp_names);
     }
 }
