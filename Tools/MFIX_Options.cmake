@@ -66,6 +66,9 @@ message (STATUS "   MFIX_FFLAGS_OVERRIDES = ${MFIX_FFLAGS_OVERRIDES}" )
 set (MFIX_CXXLAGS_OVERRIDES "" CACHE STRING "User-defined C++ compiler flags" )
 message (STATUS "   MFIX_CXXFLAGS_OVERRIDES = ${MFIX_CXXFLAGS_OVERRIDES}" )
 
+set (ENABLE_FPE 0 CACHE INT "Enable Floating Point Exceptions checks")
+check_option_value ( "ENABLE_FPE" ${ENABLE_FPE} 0 1 )
+
 
 #
 # AMReX options are needed only if AMReX is built as part of MFIX (superbuild)
