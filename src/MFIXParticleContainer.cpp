@@ -190,17 +190,15 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
       if (use_neighbor_list) 
       {
-          //          if (n%25 == 0)
-         {
-            clearNeighbors(lev);
-
-            Redistribute();
-
-            fillNeighbors(lev);
-
-            buildNeighborListFort(lev,sort_neighbor_list);
-         }
-
+          if (n % 25 == 0) {
+              clearNeighbors(lev);              
+              Redistribute();              
+              fillNeighbors(lev);              
+              buildNeighborList(lev,sort_neighbor_list);
+          } else {
+              updateNeighbors(lev);
+          }
+          
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
