@@ -193,8 +193,11 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
           //          if (n%25 == 0)
          {
             clearNeighbors(lev);
+
             Redistribute();
+
             fillNeighbors(lev);
+
             buildNeighborListFort(lev,sort_neighbor_list);
          }
 
@@ -280,7 +283,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     Redistribute();
 
     ParallelDescriptor::ReduceIntSum(ncoll_total,ParallelDescriptor::IOProcessorNumber());
-    Print() << "Number of collisions: " << ncoll_total << " at end of fluid step " << std::endl;
+    Print() << "Number of collisions: " << ncoll_total << " in " << nsubsteps << " substeps " << std::endl;
 
 #ifdef _OPENMP
 #pragma omp parallel
