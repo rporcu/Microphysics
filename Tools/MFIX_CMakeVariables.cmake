@@ -83,12 +83,12 @@ set (MFIX_PGI_CXXFLAGS_FPE "")
 
 # Cray compiler specific flags
 set (MFIX_Cray_FFLAGS_DEBUG "-O0 -e -i")
-set (MFIX_Cray_FFLAGS_RELEASE "-02")
+set (MFIX_Cray_FFLAGS_RELEASE "-O2")
 set (MFIX_Cray_FFLAGS_REQUIRED "-extend")
 set (MFIX_Cray_FFLAGS_FPE "")
 
 set (MFIX_Cray_CXXFLAGS_DEBUG "-O0")
-set (MFIX_Cray_CXXFLAGS_RELEASE "-02")
+set (MFIX_Cray_CXXFLAGS_RELEASE "-O2")
 set (MFIX_Cray_CXXFLAGS_REQUIRED "")#-ftemplate-depth-64 -Wno-deprecated")
 set (MFIX_Cray_CXXFLAGS_FPE "")
 
