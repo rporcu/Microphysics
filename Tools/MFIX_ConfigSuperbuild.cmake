@@ -20,14 +20,21 @@ include(ExternalProject)
 
 set (AMREX_INSTALL_PATH ${CMAKE_BINARY_DIR}/ThirdParty/amrex/installdir)
 
+# Check that MFIX_CXX_FLAGS and MFIX_Fortran_FLAGS
+# has been defined already
+if ( (NOT MFIX_CXX_FLAGS) OR (NOT MFIX_Fortran_FLAGS) )
+message (FATAL_ERROR "MFIX_CXX_FLAGS and MFIX_Fortran_FLAGS must be defined \
+before including MFIX_ConfigSuperbuild.cmake.")
+endif ()
+
 
 ExternalProject_Add ( amrex
    PREFIX          ${AMREX_SUPERBUILD_DIR}
-   #      SOURCE_DIR      ${AMREX_SOURCE_DIR}
    INSTALL_DIR     ${AMREX_INSTALL_PATH}
    GIT_REPOSITORY  ${AMREX_GIT_REPO}
    GIT_TAG         ${AMREX_GIT_TAG}
-   CMAKE_ARGS  -DENABLE_MPI=${ENABLE_MPI}
+   CMAKE_ARGS
+   -DENABLE_MPI=${ENABLE_MPI}
    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
    -DENABLE_PIC=${AMREX_ENABLE_PIC}
    -DENABLE_OMP=${AMREX_ENABLE_OMP}
@@ -44,6 +51,8 @@ ExternalProject_Add ( amrex
    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
    -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
+   -DAMREX_FFLAGS_OVERRIDES=${MFIX_Fortran_FLAGS}
+   -DAMREX_CXXFLAGS_OVERRIDES=${MFIX_CXX_FLAGS}
    # LOG_CONFIGURE 1
    # LOG_BUILD 1
    # LOG_INSTALL 1
