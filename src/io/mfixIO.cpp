@@ -247,7 +247,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     // Initialize particles
     pc->Restart(restart_file, "particles");
 
-    pc->writeAllForComparison(0);
+    // pc->writeAllForComparison(0);
 
     //  Create mask for particle ghost cells
     //  HACK HACK HACK 
