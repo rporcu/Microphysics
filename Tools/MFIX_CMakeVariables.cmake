@@ -83,12 +83,12 @@ set (MFIX_PGI_CXXFLAGS_FPE "")
 
 # Cray compiler specific flags
 set (MFIX_Cray_FFLAGS_DEBUG "-O0 -e -i")
-set (MFIX_Cray_FFLAGS_RELEASE "-02")
+set (MFIX_Cray_FFLAGS_RELEASE "-O2")
 set (MFIX_Cray_FFLAGS_REQUIRED "-extend")
 set (MFIX_Cray_FFLAGS_FPE "")
 
 set (MFIX_Cray_CXXFLAGS_DEBUG "-O0")
-set (MFIX_Cray_CXXFLAGS_RELEASE "-02")
+set (MFIX_Cray_CXXFLAGS_RELEASE "-O2")
 set (MFIX_Cray_CXXFLAGS_REQUIRED "")#-ftemplate-depth-64 -Wno-deprecated")
 set (MFIX_Cray_CXXFLAGS_FPE "")
 
@@ -122,7 +122,7 @@ set (MFIX_EXTRA_LIBRARIES_PATH)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
-set (AMREX_GIT_COMMIT_DEVELOP b4d550904abff4bd269963681f39e5af7d12be32 )
+set (AMREX_GIT_COMMIT_DEVELOP 3816af2d41e84f26bf5d447acb073f2273405f92 )
 set (AMREX_GIT_TAG)  # The commit id or branch to download 
 
 # AMReX Superbuild variables

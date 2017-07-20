@@ -50,7 +50,7 @@ public:
     using amrex::ParIter<realData::count,intData::count,0,0>::ParIter;
 };
 
-class MFIXParticleContainer
+class MFIXParticleContainer final
     : public amrex::NeighborParticleContainer<realData::count,intData::count,realData::count+2>
 {
 public:
