@@ -122,7 +122,8 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       mfix_conv_rop(lev,dt);
 
       // Solve the pressure correction equation
-      Real num_p, denom_p;
+      Real   num_p = 0.0L;
+      Real denom_p = 0.0L;
       mfix_solve_for_pp(lev,dt,num_p,denom_p);
       residuals[0] = num_p;
       residuals[8] = denom_p;
