@@ -276,9 +276,10 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
 
     auto mask = u_g[lev]->OverlapMask(geom[lev].periodicity());
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif 
+//Not currently thread safe. Suspect that the cause is the `residuals` variable.
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif 
     for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -342,9 +343,10 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 
     auto mask = v_g[lev]->OverlapMask(geom[lev].periodicity());
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif 
+//Not currently thread safe. Suspect that the cause is the `residuals` variable.
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif 
     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -407,9 +409,10 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
     d_t[lev]->setVal(0.);
     auto mask = w_g[lev]->OverlapMask(geom[lev].periodicity());
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif 
+//Not currently thread safe. Suspect that the cause is the `residuals` variable.
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif 
     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -467,9 +470,10 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
     b_mmax.setVal(0.);
 
     // Solve the pressure correction equation
-#ifdef _OPENMP
-#pragma omp parallel
-#endif 
+//Not currently thread safe. Suspect that the cause is the `residuals` variable.
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif 
     for (MFIter mfi(*A_m[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -533,6 +537,11 @@ mfix_level::mfix_correct_0(int lev)
          (*p_g[lev])[mfi].dataPtr(),
          (*pp_g[lev])[mfi].dataPtr());
     }
+    //std::cout << "PP AT CORRECT0 " << (*pp_g[0])[0] << std::endl;
+    //std::cout << "PP AT CORRECT0 " << (*pp_g[0])[1] << std::endl;
+    //std::cout << "PP AT CORRECT0 " << (*pp_g[0])[2] << std::endl;
+    //std::cout << "PP AT CORRECT0 " << (*pp_g[0])[3] << std::endl;
+    //exit(0);
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -553,6 +562,11 @@ mfix_level::mfix_correct_0(int lev)
          (*u_g[lev])[mfi].dataPtr(),
          (*d_e[lev])[mfi].dataPtr());
     }
+    //std::cout << "U AT CORRECT0 " << (*u_g[0])[0] << std::endl;
+    //std::cout << "U AT CORRECT0 " << (*u_g[0])[1] << std::endl;
+    //std::cout << "U AT CORRECT0 " << (*u_g[0])[2] << std::endl;
+    //std::cout << "U AT CORRECT0 " << (*u_g[0])[3] << std::endl;
+    //exit(0);
 
 #ifdef _OPENMP
 #pragma omp parallel
