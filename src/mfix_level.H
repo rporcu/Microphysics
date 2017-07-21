@@ -90,7 +90,7 @@ protected:
 
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
-    void mfix_solve_for_pp (int lev, Real dt, Real& lnormg, Real& resg, Real (&residuals)[16]);
+    void mfix_solve_for_pp (int lev, Real dt, Real num_p, Real denom_p); 
 
     void mfix_physical_prop (int lev, int calc_flag);
 

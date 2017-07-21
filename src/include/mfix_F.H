@@ -304,7 +304,7 @@ extern "C"
 	int* bc_klo, int* bc_khi,
 	amrex::Real* dt,       amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
 	const int* domlo , const int* domhi,
-	amrex::Real *residuals);
+	amrex::Real *num_p, amrex::Real *denom_p); 
 
     void correct_p_0(
 	const int*  lo,  const int*  hi,

@@ -452,7 +452,7 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
 }
 
 void
-mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (&residuals)[16])
+mfix_level::mfix_solve_for_pp(int lev, Real dt, Real num_p, Real denom_p)
 {
     BL_PROFILE("mfix_level::solve_for_pp()");
     Box domain(geom[lev].Domain());
@@ -465,38 +465,36 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
     A_m[lev].reset(new MultiFab(grids[lev],dmap[lev],7,0));
     b_m[lev].reset(new MultiFab(grids[lev],dmap[lev],1,0));
 
-    // Solve the pressure correction equation
     MultiFab b_mmax(b_m[lev]->boxArray(),dmap[lev],1,b_m[lev]->nGrow());
     b_mmax.setVal(0.);
 
     // Solve the pressure correction equation
-//Not currently thread safe. Suspect that the cause is the `residuals` variable.
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif 
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:num_p,denom_p)
+#endif
     for (MFIter mfi(*A_m[lev],true); mfi.isValid(); ++mfi)
     {
-  const Box& bx = mfi.tilebox();
-  const Box& sbx = (*ep_g[lev])[mfi].box();
+       const Box& bx = mfi.tilebox();
+       const Box& sbx = (*ep_g[lev])[mfi].box();
 
-  Box abx((*A_m[lev])[mfi].box());
-  Box ubx((*u_g[lev])[mfi].box());
-  Box vbx((*v_g[lev])[mfi].box());
-  Box wbx((*w_g[lev])[mfi].box());
+       Box abx((*A_m[lev])[mfi].box());
+       Box ubx((*u_g[lev])[mfi].box());
+       Box vbx((*v_g[lev])[mfi].box());
+       Box wbx((*w_g[lev])[mfi].box());
 
-  solve_pp_g(sbx.loVect(), sbx.hiVect(),
-       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-       abx.loVect(), abx.hiVect(), bx.loVect(),  bx.hiVect(),
-       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-       (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
-       (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
-       (*ro_g[lev])[mfi].dataPtr(),
-       (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
-       (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
-       (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
-       bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-       bc_klo.dataPtr(), bc_khi.dataPtr(),
-       &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), residuals);
+       solve_pp_g(sbx.loVect(), sbx.hiVect(),
+            ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+            abx.loVect(), abx.hiVect(), bx.loVect(),  bx.hiVect(),
+            (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+            (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
+            (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
+            (     *ro_g[lev])[mfi].dataPtr(),
+            (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
+            (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
+            (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
+            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+            bc_klo.dataPtr(), bc_khi.dataPtr(),
+            &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), &num_p, &denom_p);
     }
 
     pp_g[lev]->setVal(0.);

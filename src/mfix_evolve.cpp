@@ -92,10 +92,6 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
     int gsmf=0;         // number of outer iterations for goal seek mass flux (GSMF)
     Real delP_MF=0.0L;  // actual GSMF pressure drop
     Real lMFlux=0.0L;   // actual GSMF mass flux
-    Real resg=0.0L;     // fluid pressure residual
-
-    // int lset_normg=1-set_normg;
-    Real lnormg=normg;
 
     ///////////////// ---- call to iterate -------- /////////////////
     do {
@@ -126,7 +122,10 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       mfix_conv_rop(lev,dt);
 
       // Solve the pressure correction equation
-      mfix_solve_for_pp(lev,dt,lnormg,resg, residuals);
+      Real num_p, denom_p;
+      mfix_solve_for_pp(lev,dt,num_p,denom_p);
+      residuals[0] = num_p;
+      residuals[8] = denom_p;
 
       // Apply pressure correction to all Pg, Ug, Vg, Wg
       mfix_correct_0(lev);

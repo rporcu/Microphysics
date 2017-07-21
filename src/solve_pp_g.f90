@@ -18,10 +18,8 @@ module solve_pp_module
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
       ro_g, ropX, ropY, ropZ, d_e,d_n, d_t, A_m, b_m, b_mmax, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, dt, dx, dy, dz, domlo, domhi, resid)&
+      bc_klo_type, bc_khi_type, dt, dx, dy, dz, domlo, domhi, num_p, denom_p)&
       bind(C, name="solve_pp_g")
-
-      use residual, only: resid_p
 
 ! Module procedures ..................................................//
       use conv_pp_g_module, only: conv_pp_g
@@ -79,7 +77,7 @@ module solve_pp_module
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real), intent(  out) :: b_mmax&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
-      real(c_real), intent(  out) :: resid(8,2)
+      real(c_real), intent(  out) :: num_p, denom_p
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
@@ -114,8 +112,7 @@ module solve_pp_module
 
       if (point_source) call point_source_pp_g (lo, hi, alo, ahi, b_m, b_mmax, dx, dy, dz)
 
-      call calc_resid_pp (alo, ahi, lo, hi, b_m, b_mmax, &
-         resid(resid_p,1), resid(resid_p,2))
+      call calc_resid_pp (alo, ahi, lo, hi, b_m, b_mmax, num_p, denom_p)
 
       end subroutine solve_pp_g
 
