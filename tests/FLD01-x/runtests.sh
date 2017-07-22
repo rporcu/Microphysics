@@ -24,9 +24,12 @@ if [ -n "$3" ]; then
     INPUTS=$3
 fi
 echo "Using INPUTS file ${INPUTS}"
-
 if [ "$ENABLE_MPI" -eq "1" ]; then
-    MPIRUN="mpirun -np 4"
+    if [ "$ENABLE_OMP" -eq "1" ]; then
+	MPIRUN="mpirun -np 2"
+    else
+	MPIRUN="mpirun -np 4"
+    fi
 else
     MPIRUN=""
 fi
