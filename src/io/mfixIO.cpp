@@ -141,7 +141,7 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
          int_comp_names.push_back("state");
 
        bool is_checkpoint = true;  
-       pc->writeAllForComparison(0);
+       // pc->writeAllForComparison(0);
        pc -> Checkpoint(checkpointname, "particles", is_checkpoint, real_comp_names, int_comp_names);
     }
 }
