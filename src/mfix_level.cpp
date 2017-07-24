@@ -452,7 +452,7 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
 }
 
 void
-mfix_level::mfix_solve_for_pp(int lev, Real dt, Real num_p, Real denom_p)
+mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p)
 {
     BL_PROFILE("mfix_level::solve_for_pp()");
     Box domain(geom[lev].Domain());
@@ -468,9 +468,12 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real num_p, Real denom_p)
     MultiFab b_mmax(b_m[lev]->boxArray(),dmap[lev],1,b_m[lev]->nGrow());
     b_mmax.setVal(0.);
 
-    // Solve the pressure correction equation
+    // We make temporaries because the omp parallel reduction won't take reference values.
+    Real temp_num = num_p;
+    Real temp_denom = denom_p;
+
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:num_p,denom_p)
+#pragma omp parallel reduction(+:temp_num,temp_denom)
 #endif
     for (MFIter mfi(*A_m[lev],true); mfi.isValid(); ++mfi)
     {
@@ -482,6 +485,7 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real num_p, Real denom_p)
        Box vbx((*v_g[lev])[mfi].box());
        Box wbx((*w_g[lev])[mfi].box());
 
+       // Solve the pressure correction equation
        solve_pp_g(sbx.loVect(), sbx.hiVect(),
             ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
             abx.loVect(), abx.hiVect(), bx.loVect(),  bx.hiVect(),
@@ -494,8 +498,10 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real num_p, Real denom_p)
             (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
             bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
             bc_klo.dataPtr(), bc_khi.dataPtr(),
-            &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), &num_p, &denom_p);
+            &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), &temp_num, &temp_denom);
     }
+    num_p = temp_num;
+    denom_p = temp_denom;
 
     pp_g[lev]->setVal(0.);
 

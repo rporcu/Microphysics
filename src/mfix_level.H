@@ -35,7 +35,9 @@ public:
 
     void WritePlotFile ( std::string& plot_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
 
-    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time);
+    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time); 
+//  void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time, 
+//                IntVect& Nrep);
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
 
@@ -90,7 +92,7 @@ protected:
 
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
-    void mfix_solve_for_pp (int lev, Real dt, Real num_p, Real denom_p); 
+    void mfix_solve_for_pp (int lev, Real dt, Real& num_p, Real& denom_p); 
 
     void mfix_physical_prop (int lev, int calc_flag);
 
