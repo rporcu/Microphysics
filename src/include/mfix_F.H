@@ -283,7 +283,10 @@ extern "C"
 	int* bc_klo,    int* bc_khi,
 	const int* domlo , const int* domhi,
 	amrex::Real* dt,
-	amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz, amrex::Real *residuals);
+	amrex::Real* dx,       
+    amrex::Real* dy, 
+    amrex::Real* dz, 
+	amrex::Real *num_w, amrex::Real *denom_w); 
 
     void solve_pp_g(
 	const int* slo, const int* shi,

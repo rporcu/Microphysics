@@ -115,6 +115,35 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       // Solve momentum equations
       mfix_solve_for_vels(lev, dt, residuals);
 
+      /* HACK 
+       * changes to make the momentum equations thread safe. 
+       */
+      //Real num_u = 0.0L;
+      //Real num_v = 0.0L;
+      Real num_w = 0.0L;
+      //Real denom_u = 0.0L;
+      //Real denom_v = 0.0L;
+      Real denom_w = 0.0L;
+
+      mfix_solve_for_w(lev, dt, num_w, denom_w); 
+      residuals[4] = num_w;
+      residuals[12] = denom_w;
+
+      //Called after each variable solve
+      MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());
+      MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, v_g[lev]->nGrow());
+      MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, w_g[lev]->nGrow());
+
+      u_g[lev]->FillBoundary(geom[lev].periodicity());
+      v_g[lev]->FillBoundary(geom[lev].periodicity());
+      w_g[lev]->FillBoundary(geom[lev].periodicity());
+
+      for (int i=0; i<16; ++i)
+        std::cout << "residuals[" << i << "] = " << residuals[i] << std::endl;
+      /*
+       * END HACK
+       */
+
       // Calculate transport coefficients
       mfix_physical_prop(lev,0);
 
