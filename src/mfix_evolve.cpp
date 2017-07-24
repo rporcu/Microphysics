@@ -126,8 +126,8 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       Real denom_w = 0.0L;
 
       mfix_solve_for_w(lev, dt, num_w, denom_w); 
-      residuals[4] = num_w;
-      residuals[12] = denom_w;
+      residuals[3] = num_w;
+      residuals[11] = denom_w;
 
       //Called after each variable solve
       MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());

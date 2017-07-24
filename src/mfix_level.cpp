@@ -413,9 +413,9 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
     Real temp_num = num_w;
     Real temp_denom = denom_w;
 
-//#ifdef _OPENMP
-//#pragma omp parallel reduction(+:temp_num,temp_denom)
-//#endif
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:temp_num,temp_denom)
+#endif
     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
