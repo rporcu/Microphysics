@@ -85,7 +85,6 @@ protected:
 
     void mfix_calc_mflux (int lev);
 
-    void mfix_solve_for_vels (int lev, Real dt, Real (&residuals)[16]);
     void mfix_solve_for_u    (int lev, Real dt, Real& num_u, Real& denom_u);
     void mfix_solve_for_v    (int lev, Real dt, Real& num_v, Real& denom_v);
     void mfix_solve_for_w    (int lev, Real dt, Real& num_w, Real& denom_w);
