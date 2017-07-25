@@ -235,24 +235,6 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
 }
 
 void
-mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
-{
-    BL_PROFILE("mfix_level::solve_for_vels()");
-
-    //mfix_solve_for_u(lev, dt, residuals);
-    //mfix_solve_for_v(lev, dt, residuals);
-    //mfix_solve_for_w(lev, dt, residuals[4], residuals[12]);
-
-    //MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());
-    //MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, v_g[lev]->nGrow());
-    //MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, w_g[lev]->nGrow());
-
-    //u_g[lev]->FillBoundary(geom[lev].periodicity());
-    //v_g[lev]->FillBoundary(geom[lev].periodicity());
-    //w_g[lev]->FillBoundary(geom[lev].periodicity());
-}
-
-void
 mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
 {
     BL_PROFILE("mfix_level::solve_for_u()");
