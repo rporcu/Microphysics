@@ -239,21 +239,21 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 {
     BL_PROFILE("mfix_level::solve_for_vels()");
 
-    mfix_solve_for_u(lev, dt, residuals);
-    mfix_solve_for_v(lev, dt, residuals);
-    mfix_solve_for_w(lev, dt, residuals);
+    //mfix_solve_for_u(lev, dt, residuals);
+    //mfix_solve_for_v(lev, dt, residuals);
+    //mfix_solve_for_w(lev, dt, residuals[4], residuals[12]);
 
-    MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());
-    MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, v_g[lev]->nGrow());
-    MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, w_g[lev]->nGrow());
+    //MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());
+    //MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, v_g[lev]->nGrow());
+    //MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, w_g[lev]->nGrow());
 
-    u_g[lev]->FillBoundary(geom[lev].periodicity());
-    v_g[lev]->FillBoundary(geom[lev].periodicity());
-    w_g[lev]->FillBoundary(geom[lev].periodicity());
+    //u_g[lev]->FillBoundary(geom[lev].periodicity());
+    //v_g[lev]->FillBoundary(geom[lev].periodicity());
+    //w_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
-mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
+mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
 {
     BL_PROFILE("mfix_level::solve_for_u()");
     Box domain(geom[lev].Domain());
@@ -276,10 +276,13 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
 
     auto mask = u_g[lev]->OverlapMask(geom[lev].periodicity());
 
-//Not currently thread safe. Suspect that the cause is the `residuals` variable.
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif 
+    // We make temporaries because the omp parallel reduction won't take reference values.
+    Real temp_num = num_u;
+    Real temp_denom = denom_u;
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:temp_num,temp_denom)
+#endif
     for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -304,8 +307,11 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
            (*mask)[mfi].dataPtr(),
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
-           &dt, &dx, &dy, &dz, residuals);
+           &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
     }
+
+    num_u = temp_num;
+    denom_u = temp_denom;
 
     int eq_id=2;
 
@@ -319,7 +325,7 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real (&residuals)[16])
 }
 
 void
-mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
+mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
 {
     BL_PROFILE("mfix_level::solve_for_v()");
     Box domain(geom[lev].Domain());
@@ -343,10 +349,13 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 
     auto mask = v_g[lev]->OverlapMask(geom[lev].periodicity());
 
-//Not currently thread safe. Suspect that the cause is the `residuals` variable.
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif 
+    // We make temporaries because the omp parallel reduction won't take reference values.
+    Real temp_num = num_v;
+    Real temp_denom = denom_v;
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:temp_num,temp_denom)
+#endif
     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -371,8 +380,11 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
            (*mask)[mfi].dataPtr(),
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
-           &dt, &dx, &dy, &dz, residuals);
+           &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
     }
+
+    num_v = temp_num;
+    denom_v = temp_denom;
 
     int eq_id = 3;
 
@@ -386,7 +398,7 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real (&residuals)[16])
 }
 
 void
-mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
+mfix_level::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
 {
     BL_PROFILE("mfix_level::solve_for_w()");
     Box domain(geom[lev].Domain());
@@ -409,10 +421,13 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
     d_t[lev]->setVal(0.);
     auto mask = w_g[lev]->OverlapMask(geom[lev].periodicity());
 
-//Not currently thread safe. Suspect that the cause is the `residuals` variable.
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif 
+    // We make temporaries because the omp parallel reduction won't take reference values.
+    Real temp_num = num_w;
+    Real temp_denom = denom_w;
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:temp_num,temp_denom)
+#endif
     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -437,8 +452,11 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real (&residuals)[16])
            (*mask)[mfi].dataPtr(),
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
-           &dt, &dx, &dy, &dz, residuals);
+           &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
     }
+
+    num_w = temp_num;
+    denom_w = temp_denom;
 
     int eq_id = 4;
 
