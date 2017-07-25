@@ -313,9 +313,9 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     
       for (const auto& p: particles)
       {
-          max_vel_x = std::max(p.rdata(realData::velx), max_vel_x);
-          max_vel_y = std::max(p.rdata(realData::vely), max_vel_y);
-          max_vel_z = std::max(p.rdata(realData::velz), max_vel_z);
+          max_vel_x = std::max(Real(p.rdata(realData::velx)), max_vel_x);
+          max_vel_y = std::max(Real(p.rdata(realData::vely)), max_vel_y);
+          max_vel_z = std::max(Real(p.rdata(realData::velz)), max_vel_z);
       }
     }
     
