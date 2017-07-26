@@ -722,10 +722,13 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 
 void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
 {
-  BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
+    BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
+
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
+
+    Box domain(geom[lev].Domain());
 
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
@@ -734,6 +737,20 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
     {
        // This call simply deposits the particle volume onto the grid in a PIC-like manner
        pc->CalcVolumeFraction(*ep_g[lev]);
+
+       // Move any particle volume deposited outside the domain back into the domain 
+       // (at all domain boundaries except periodid)
+       for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
+ 
+         const Box& sbx = (*ep_g[lev])[mfi].box();
+ 
+         flip_particle_vol(sbx.loVect(), sbx.hiVect(),
+                           (*ep_g[lev])[mfi].dataPtr(),
+                           bc_ilo.dataPtr(), bc_ihi.dataPtr(), 
+                           bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                           bc_klo.dataPtr(), bc_khi.dataPtr(), 
+                           domain.loVect(), domain.hiVect());
+       }
 
     } else {
 
