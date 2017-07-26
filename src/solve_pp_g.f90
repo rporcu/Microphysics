@@ -139,11 +139,11 @@ module solve_pp_module
       real(c_real)  , intent(in   ) :: dx,dy,dz
 
       ! Vector b_m
-      real(c_real), intent(INOUT) :: b_m&
+      real(c_real), intent(inout) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       ! maximum term in b_m expression
-      real(c_real), intent(INOUT) :: b_mmax&
+      real(c_real), intent(inout) :: b_mmax&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
 !-----------------------------------------------

@@ -453,7 +453,6 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled, int 
     const Real      strttime    = ParallelDescriptor::second();
     const Geometry& gm          = Geom(lev);
     const Real*     plo         = gm.ProbLo();
-    const Real*     dx_particle = Geom(lev).CellSize();
     const Real*     dx          = gm.CellSize();
     
 #ifdef _OPENMP
@@ -492,7 +491,8 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled, int 
             hi = box.hiVect();
 #endif
 
-            mfix_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr, lo, hi, plo, dx, &fortran_particle_comp);
+            mfix_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr, 
+                             lo, hi, plo, dx, &fortran_particle_comp);
 
 #ifdef _OPENMP
             amrex_atomic_accumulate_fab(local_vol.dataPtr(), 
@@ -541,7 +541,6 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::
     const Real      strttime    = ParallelDescriptor::second();
     const Geometry& gm          = Geom(lev);
     const Real*     plo         = gm.ProbLo();
-    const Real*     dx_particle = Geom(lev).CellSize();
     const Real*     dx          = gm.CellSize();
     
     mf_pointer->setVal(0.0);
