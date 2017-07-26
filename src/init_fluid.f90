@@ -179,7 +179,7 @@ module init_fluid_module
                   u_g(iend+1:uhi(1)  ,jstart:jend,kstart:kend) = ugx
             end if
 
-            if (is_defined(ugx)) then
+            if (is_defined(vgx)) then
                istart = max(vlo(1), i_w)
                jstart = max(vlo(2), j_s)
                kstart = max(vlo(3), k_b)
@@ -193,7 +193,7 @@ module init_fluid_module
                   v_g(istart:iend,jend+1:vhi(2)  ,kstart:kend) = vgx
             end if
 
-            if (is_defined(ugx)) then
+            if (is_defined(wgx)) then
                istart = max(wlo(1), i_w)
                jstart = max(wlo(2), j_s)
                kstart = max(wlo(3), k_b)
