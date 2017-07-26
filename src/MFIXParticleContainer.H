@@ -75,6 +75,8 @@ public:
 
     void InitParticlesAscii (const std::string& file);
 
+    void Replicate (IntVect& Nrep, amrex::Array<Real>& orig_domain_size);
+
     void printParticles ();
 
     void AllocData ();

@@ -35,9 +35,8 @@ public:
 
     void WritePlotFile ( std::string& plot_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
 
-    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time); 
-//  void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time, 
-//                IntVect& Nrep);
+    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time, 
+                  IntVect& Nrep);
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
 
@@ -47,7 +46,7 @@ public:
     void usr3 (int lev);
 
     void output (int lev, int estatus, int finish, int nstep, Real dt, Real time)
-  { pc -> output( lev, estatus, finish, nstep, dt, time);};
+       { pc -> output( lev, estatus, finish, nstep, dt, time);};
 
     void make_mg_bc (int mg_bc[]);
 
