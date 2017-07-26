@@ -114,6 +114,8 @@
                   rop_g(slo(1):domlo(1)-1,j,k) = bc_ro_g*bc_ep_g(bcv)
                    mu_g(slo(1):domlo(1)-1,j,k) = bc_mu_g
 
+                  lambda_g(slo(1):domlo(1)-1,j,k) = bc_lambda_g
+
                end if
 
                if (bc_ilo_type(j,k,1) == PINF_ .or. &
@@ -160,6 +162,8 @@
                    rop_g(domhi(1)+1:shi(1),j,k) = bc_ro_g*bc_ep_g(bcv)
                     mu_g(domhi(1)+1:shi(1),j,k) = bc_mu_g
 
+                   lambda_g(slo(1):domlo(1)-1,j,k) = bc_lambda_g
+
                end if
 
                if (bc_ihi_type(j,k,1) == PINF_ .or. &
@@ -204,6 +208,8 @@
                    ro_g(i,slo(2):domlo(2)-1,k) = bc_ro_g
                   rop_g(i,slo(2):domlo(2)-1,k) = bc_ro_g*bc_ep_g(bcv)
                    mu_g(i,slo(2):domlo(2)-1,k) = bc_mu_g
+
+                  lambda_g(i,slo(2):domlo(2)-1,k) = bc_lambda_g
 
                end if
 
@@ -251,6 +257,8 @@
                    rop_g(i,domhi(2)+1:shi(2),k) = bc_ro_g*bc_ep_g(bcv)
                     mu_g(i,domhi(2)+1:shi(2),k) = bc_mu_g
 
+                  lambda_g(i,domhi(2)+1:shi(2),k) = bc_lambda_g
+
                end if
 
                if (bc_jhi_type(i,k,1) == PINF_ .or. &
@@ -297,6 +305,8 @@
                    rop_g(i,j,slo(3):domlo(3)-1) = bc_ro_g*bc_ep_g(bcv)
                     mu_g(i,j,slo(3):domlo(3)-1) = bc_mu_g
 
+                   lambda_g(i,j,slo(3):domlo(3)-1) = bc_lambda_g
+
                end if
 
                if (bc_klo_type(i,j,1) == PINF_ .or. &
@@ -342,6 +352,8 @@
                     ro_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g
                    rop_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g*bc_ep_g(bcv)
                     mu_g(i,j,domhi(3)+1:shi(3)) = bc_mu_g
+
+                   lambda_g(i,j,domhi(3)+1:shi(3)) = bc_lambda_g
 
                end if
 
