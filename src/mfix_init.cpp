@@ -320,10 +320,8 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
   Box domain(geom[lev].Domain());
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif 
-  for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+  // Don't tile this -- at least for now
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
       const Box& sbx = (*ep_g[lev])[mfi].box();
 
@@ -389,10 +387,8 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
     // Array already allocated when restart is called
     Box domain(geom[lev].Domain());
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif 
-    for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+   // Don't tile this -- at least for now
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
       const Box& sbx = (*ep_g[lev])[mfi].box();
 
@@ -467,8 +463,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
       init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
            (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr());
 
-    }
-    else {
+    } else {
       const Box& ubx = (*u_g[lev])[mfi].box();
       const Box& vbx = (*v_g[lev])[mfi].box();
       const Box& wbx = (*w_g[lev])[mfi].box();
