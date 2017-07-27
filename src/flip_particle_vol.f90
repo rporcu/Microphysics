@@ -8,7 +8,7 @@
 !  (e.g., check_boundary_conditions).                                  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-subroutine flip_particle_vol(slo, shi, ep_g, &
+subroutine flip_particle_vol(slo, shi, vol, &
                              bc_ilo_type, bc_ihi_type, &
                              bc_jlo_type, bc_jhi_type, &
                              bc_klo_type, bc_khi_type, domlo, domhi) &
@@ -25,7 +25,7 @@ subroutine flip_particle_vol(slo, shi, ep_g, &
   integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
   real(c_real), intent(inout) :: &
-       ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+       vol(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
   integer(c_int), intent(in   ) :: &
        bc_ilo_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
@@ -39,10 +39,8 @@ subroutine flip_particle_vol(slo, shi, ep_g, &
 !--------------------------------------------------------------------//
   integer(c_int) :: i,j,k
   integer(c_int) :: ilo, ihi, jlo, jhi, klo, khi
-  real(c_real)   :: vol_outside
 
 !--------------------------------------------------------------------//
-
 
   if (slo(1).lt.domlo(1)) then
      ilo = domlo(1)
@@ -55,8 +53,7 @@ subroutine flip_particle_vol(slo, shi, ep_g, &
                bc_ilo_type(j,k,1) == MINF_ .or. &
                bc_ilo_type(j,k,1) == POUT_) then
  
-               vol_outside = 1.0 - ep_g(ilo-1,j,k)
-               ep_g(ilo,j,k) = ep_g(ilo,j,k) - vol_outside
+               vol(ilo,j,k) = vol(ilo,j,k) + vol(ilo-1,j,k)
 
            end if
         end do
@@ -74,8 +71,7 @@ subroutine flip_particle_vol(slo, shi, ep_g, &
                bc_ihi_type(j,k,1) == MINF_ .or. &
                bc_ihi_type(j,k,1) == POUT_) then
 
-               vol_outside = 1.0 - ep_g(ihi+1,j,k)
-               ep_g(ihi,j,k) = ep_g(ihi,j,k) - vol_outside
+               vol(ihi,j,k) = vol(ihi,j,k) + vol(ihi+1,j,k)
 
            end if
         end do
@@ -89,12 +85,11 @@ subroutine flip_particle_vol(slo, shi, ep_g, &
            if (bc_jlo_type(i,k,1) == NSW_ .or. &
                bc_jlo_type(i,k,1) == PSW_ .or. &
                bc_jlo_type(i,k,1) == FSW_ .or. &
-               bc_jlo_type(j,k,1) == PINF_ .or. &
-               bc_jlo_type(j,k,1) == MINF_ .or. &
-               bc_jlo_type(j,k,1) == POUT_) then
+               bc_jlo_type(i,k,1) == PINF_ .or. &
+               bc_jlo_type(i,k,1) == MINF_ .or. &
+               bc_jlo_type(i,k,1) == POUT_) then
 
-               vol_outside = 1.0 - ep_g(i,jlo-1,k)
-               ep_g(i,jlo,k) = ep_g(i,jlo,k) - vol_outside
+               vol(i,jlo,k) = vol(i,jlo,k) + vol(i,jlo-1,k)
 
            end if
         end do
@@ -108,12 +103,11 @@ subroutine flip_particle_vol(slo, shi, ep_g, &
            if (bc_jhi_type(i,k,1) == NSW_ .or. &
                bc_jhi_type(i,k,1) == PSW_ .or. &
                bc_jhi_type(i,k,1) == FSW_ .or. &
-               bc_jhi_type(j,k,1) == PINF_ .or. &
-               bc_jhi_type(j,k,1) == MINF_ .or. &
-               bc_jhi_type(j,k,1) == POUT_) then
+               bc_jhi_type(i,k,1) == PINF_ .or. &
+               bc_jhi_type(i,k,1) == MINF_ .or. &
+               bc_jhi_type(i,k,1) == POUT_) then
 
-               vol_outside = 1.0 - ep_g(i,jhi+1,k)
-               ep_g(i,jhi,k) = ep_g(i,jhi,k) - vol_outside
+               vol(i,jhi,k) = vol(i,jhi,k) + vol(i,jhi+1,k)
 
            end if
         end do
@@ -126,10 +120,12 @@ subroutine flip_particle_vol(slo, shi, ep_g, &
         do i=slo(1),shi(1)
            if (bc_klo_type(i,j,1) == NSW_ .or. &
                bc_klo_type(i,j,1) == PSW_ .or. &
-               bc_klo_type(i,j,1) == FSW_) then
+               bc_klo_type(i,j,1) == FSW_ .or. &
+               bc_klo_type(i,j,1) == PINF_ .or. &
+               bc_klo_type(i,j,1) == MINF_ .or. &
+               bc_klo_type(i,j,1) == POUT_) then
 
-               vol_outside = 1.0 - ep_g(i,j,klo-1)
-               ep_g(i,j,klo) = ep_g(i,j,klo) - vol_outside
+               vol(i,j,klo) = vol(i,j,klo) + vol(i,j,klo-1)
 
            end if
         end do
@@ -142,10 +138,12 @@ subroutine flip_particle_vol(slo, shi, ep_g, &
         do i=slo(1),shi(1)
            if (bc_khi_type(i,j,1) == NSW_ .or. &
                bc_khi_type(i,j,1) == PSW_ .or. &
-               bc_khi_type(i,j,1) == FSW_) then
+               bc_khi_type(i,j,1) == FSW_ .or. &
+               bc_khi_type(i,j,1) == PINF_ .or. &
+               bc_khi_type(i,j,1) == MINF_ .or. &
+               bc_khi_type(i,j,1) == POUT_) then
 
-               vol_outside = 1.0 - ep_g(i,j,khi+1)
-               ep_g(i,j,khi) = ep_g(i,j,khi) - vol_outside
+               vol(i,j,khi) = vol(i,j,khi) + vol(i,j,khi+1)
 
            end if
         end do

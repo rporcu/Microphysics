@@ -404,10 +404,14 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     // Redistribute();
 }
 
-void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled)
+void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled,
+                                               IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                                               IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                                               IArrayBox& bc_klo, IArrayBox& bc_khi)
 {
     int fortran_volume_comp = 5;
-    PICDeposition(mf_to_be_filled, fortran_volume_comp);
+    PICDeposition(mf_to_be_filled, bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
+                  fortran_volume_comp);
 
     // Now define this mf = (1 - particle_vol)
     mf_to_be_filled.mult(-1.0,mf_to_be_filled.nGrow());
@@ -421,7 +425,11 @@ void MFIXParticleContainer::CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::Mul
     PICMultiDeposition(beta_mf, beta_vel_mf, fortran_beta_comp, fortran_vel_comp);
 }
 
-void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled, int fortran_particle_comp)
+void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled, 
+                                          IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                                          IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                                          IArrayBox& bc_klo, IArrayBox& bc_khi,
+                                          int fortran_particle_comp)
 {
     BL_PROFILE("MFIXParticleContainer::PICDeposition()");
 
@@ -502,6 +510,23 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled, int 
 #endif
 
         }
+    }
+
+    // Move any field deposited outside the domain back into the domain
+    // (at all domain boundaries except periodic)
+
+    Box domain(Geom(lev).Domain());
+
+    for (MFIter mfi(*mf_pointer); mfi.isValid(); ++mfi) {
+ 
+      const Box& sbx = (*mf_pointer)[mfi].box();
+
+      flip_particle_vol(sbx.loVect(), sbx.hiVect(),
+                        (*mf_pointer)[mfi].dataPtr(),
+                        bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                        bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                        bc_klo.dataPtr(), bc_khi.dataPtr(),
+                        domain.loVect(), domain.hiVect());
     }
 
     mf_pointer->SumBoundary(gm.periodicity());

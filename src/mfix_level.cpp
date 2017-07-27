@@ -736,21 +736,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
     if (use_pic == 1)
     {
        // This call simply deposits the particle volume onto the grid in a PIC-like manner
-       pc->CalcVolumeFraction(*ep_g[lev]);
-
-       // Move any particle volume deposited outside the domain back into the domain 
-       // (at all domain boundaries except periodid)
-       for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
- 
-         const Box& sbx = (*ep_g[lev])[mfi].box();
- 
-         flip_particle_vol(sbx.loVect(), sbx.hiVect(),
-                           (*ep_g[lev])[mfi].dataPtr(),
-                           bc_ilo.dataPtr(), bc_ihi.dataPtr(), 
-                           bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                           bc_klo.dataPtr(), bc_khi.dataPtr(), 
-                           domain.loVect(), domain.hiVect());
-       }
+       pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
 
     } else {
 
