@@ -40,8 +40,6 @@ contains
     ody = 1.d0 / dy
     odz = 1.d0 / dz
 
-    print *,"VG IN TRD ",v_g(0,49,0)
-
     do k = lo(3),hi(3)
        do j = lo(2),hi(2)
           do i = lo(1),hi(1)
