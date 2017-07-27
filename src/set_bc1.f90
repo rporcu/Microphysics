@@ -19,6 +19,7 @@
 
       use bc, only: pinf_, pout_, minf_
       use bc, only: bc_v_g
+      use bc, only: bc_u_g, bc_v_g, bc_w_g
 
       implicit none
 
@@ -52,7 +53,6 @@
       integer :: bcv, i,j,k
 
       integer    nlft, nrgt, nbot, ntop, nup, ndwn
-      integer    ilo, ihi, jlo, jhi, klo, khi
 !--------------------------------------------------------------------//
 
 
@@ -66,103 +66,126 @@
 
 
       if (nlft .gt. 0) then
-         ilo = domlo(1)
-         do i = 1, nlft
-            do k=slo(3),shi(3)
-               do j=slo(2),shi(2)
-                  bcv = bc_ilo_type(j,k,2)
-                  if(bc_ilo_type(j,k,1) == PINF_ .or. &
-                     bc_ilo_type(j,k,1) == POUT_) then
+         do k=slo(3),shi(3)
+            do j=slo(2),shi(2)
+               bcv = bc_ilo_type(j,k,2)
+               if(bc_ilo_type(j,k,1) == PINF_ .or. &
+                  bc_ilo_type(j,k,1) == POUT_) then
 
-                     u_g(ilo-i,j,k) = u_g(ilo,j,k)
+                  u_g(ulo(1):domlo(1)-1,j,k) = u_g(domlo(1),j,k)
 
-                  end if
-               end do
+               else if (bc_ilo_type(j,k,1) == MINF_) then
+
+                  ! Note we index u_g differently to catch the inflow face
+                  u_g(ulo(1):domlo(1)  ,j,k) = bc_u_g(bcv)
+                  v_g(vlo(1):domlo(1)-1,j,k) = 0.0d0
+                  w_g(wlo(1):domlo(1)-1,j,k) = 0.0d0
+
+               end if
             end do
          end do
       endif
 
       if (nrgt .gt. 0) then
-         ihi = domhi(1)
-         do i = 1, nrgt
-            do k=slo(3),shi(3)
-               do j=slo(2),shi(2)
-                  bcv = bc_ihi_type(j,k,2)
-                  if(bc_ihi_type(j,k,1) == PINF_ .or. &
-                     bc_ihi_type(j,k,1) == POUT_) then
+         do k=slo(3),shi(3)
+            do j=slo(2),shi(2)
+               bcv = bc_ihi_type(j,k,2)
+               if(bc_ihi_type(j,k,1) == PINF_ .or. &
+                  bc_ihi_type(j,k,1) == POUT_) then
 
-                     u_g(ihi+1+i,j,k) = u_g(ihi+1,j,k)
+                  u_g(domhi(1)+2:uhi(1),j,k) = u_g(domhi(1)+1,j,k)
 
-                  end if
-               end do
+               else if (bc_ihi_type(j,k,1) == MINF_) then
+
+                  ! Note we index the same on the high side
+                  u_g(domhi(1)+1:uhi(1),j,k) = bc_u_g(bcv)
+                  v_g(domhi(1)+1:vhi(1),j,k) = 0.0d0
+                  w_g(domhi(1)+1:whi(1),j,k) = 0.0d0
+               end if
+
             end do
          end do
       endif
 
       if (nbot .gt. 0) then
-         jlo = domlo(2)
-         do j = 1, nbot
-            do k=slo(3),shi(3)
-               do i=slo(1),shi(1)
-                  bcv = bc_jlo_type(i,k,2)
-                  if(bc_jlo_type(i,k,1) == PINF_ .or. &
-                     bc_jlo_type(i,k,1) == POUT_) then
+         do k=slo(3),shi(3)
+            do i=slo(1),shi(1)
+               bcv = bc_jlo_type(i,k,2)
+               if(bc_jlo_type(i,k,1) == PINF_ .or. &
+                    bc_jlo_type(i,k,1) == POUT_) then
 
-                     v_g(i,jlo-j,k) = v_g(i,jlo,k)
+                  v_g(i,vlo(2):domlo(2)-1,k) = v_g(i,domlo(2),k)
 
-                  end if
-               end do
+               else if (bc_jlo_type(i,k,1) == MINF_)then
+
+                  ! Note we index v_g differently to catch the inflow face
+                  u_g(i,ulo(2):domlo(2)-1,k) = 0.0d0
+                  v_g(i,vlo(2):domlo(2)  ,k) = bc_v_g(bcv)
+                  w_g(i,wlo(2):domlo(2)-1,k) = 0.0d0
+
+               end if
+
             end do
          end do
       endif
 
       if (ntop .gt. 0) then
-         jhi = domhi(2)
-         do j = 1, ntop
-            do k=slo(3),shi(3)
-               do i=slo(1),shi(1)
-                  bcv = bc_jhi_type(i,k,2)
-                  if(bc_jhi_type(i,k,1) == PINF_ .or. &
-                     bc_jhi_type(i,k,1) == POUT_) then
+         do k=slo(3),shi(3)
+            do i=slo(1),shi(1)
+               bcv = bc_jhi_type(i,k,2)
+               if(bc_jhi_type(i,k,1) == PINF_ .or. &
+                  bc_jhi_type(i,k,1) == POUT_) then
 
-                     v_g(i,jhi+1+j,k) = v_g(i,jhi+1,k)
+                  v_g(i,domhi(2)+2:vhi(2),k) = v_g(i,domhi(2)+1,k)
 
-                  end if
-               end do
+               else if (bc_jhi_type(i,k,1) == MINF_) then
+
+                  ! Note we index the same on the high side
+                  u_g(i,domhi(2)+1:uhi(2),k) = 0.0d0
+                  v_g(i,domhi(2)+1:vhi(2),k) = bc_v_g(bcv)
+                  w_g(i,domhi(2)+1:whi(2),k) = 0.0d0
+               end if
             end do
          end do
       endif
 
       if (ndwn .gt. 0) then
-         klo = domlo(3)
-         do k = 1, ndwn
-            do j=slo(2),shi(2)
-               do i=slo(1),shi(1)
-                  bcv = bc_klo_type(i,j,2)
-                  if(bc_klo_type(i,j,1) == PINF_ .or. &
-                     bc_klo_type(i,j,1) == POUT_) then
+         do j=slo(2),shi(2)
+            do i=slo(1),shi(1)
+               bcv = bc_klo_type(i,j,2)
+               if(bc_klo_type(i,j,1) == PINF_ .or. &
+                  bc_klo_type(i,j,1) == POUT_) then
 
-                     w_g(i,j,klo-k) = w_g(i,j,klo)
+                  w_g(i,j,wlo(3):domlo(3)-1) = w_g(i,j,domlo(3))
 
-                  end if
-               end do
+               else if (bc_klo_type(i,j,1) == MINF_) then
+
+                  ! Note we index w_g differently to catch the inflow face
+                  u_g(i,j,ulo(3):domlo(3)-1) = 0.0d0
+                  v_g(i,j,vlo(3):domlo(3)-1) = 0.0d0
+                  w_g(i,j,wlo(3):domlo(3)  ) = bc_w_g(bcv)
+               end if
             end do
          end do
       endif
 
       if (nup .gt. 0) then
-         khi = domhi(3)
-         do k = 1, nup
-            do j=slo(2),shi(2)
-               do i=slo(1),shi(1)
-                  bcv = bc_khi_type(i,j,2)
-                  if(bc_khi_type(i,j,1) == PINF_ .or. &
-                     bc_khi_type(i,j,1) == POUT_) then
+         do j=slo(2),shi(2)
+            do i=slo(1),shi(1)
+               bcv = bc_khi_type(i,j,2)
+               if(bc_khi_type(i,j,1) == PINF_ .or. &
+                  bc_khi_type(i,j,1) == POUT_) then
 
-                     w_g(i,j,khi+1+k) = w_g(i,j,khi+1)
+                  w_g(i,j,domhi(3)+2:whi(3)) = w_g(i,j,domhi(3)+1)
 
-                  end if
-               end do
+               else if (bc_khi_type(i,j,1) == MINF_) then
+
+                  ! Note we index the same on the high side
+                  u_g(i,j,domhi(3)+1:uhi(3)) = 0.0d0
+                  v_g(i,j,domhi(3)+1:vhi(3)) = 0.0d0
+                  w_g(i,j,domhi(3)+1:whi(3)) = bc_w_g(bcv)
+
+               end if
             end do
          end do
       endif

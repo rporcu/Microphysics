@@ -111,7 +111,7 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
   for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.tilebox();
@@ -136,7 +136,7 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
   for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.tilebox();
@@ -177,7 +177,7 @@ mfix_level::mfix_calc_mflux(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*u_g[lev], true); mfi.isValid(); ++mfi)
     {
       Box ubx((*u_g[lev])[mfi].box());
@@ -206,7 +206,7 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*rop_g[lev], true); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.tilebox();
@@ -526,7 +526,7 @@ mfix_level::mfix_correct_0(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.growntilebox();
@@ -549,7 +549,7 @@ mfix_level::mfix_correct_0(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -574,7 +574,7 @@ mfix_level::mfix_correct_0(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -594,7 +594,7 @@ mfix_level::mfix_correct_0(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -628,7 +628,7 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
   BL_PROFILE("mfix_level::mfix_physical_prop()");
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -710,7 +710,7 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
     // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
     {
   const Box& sbx = mf[mfi].box();
@@ -738,17 +738,17 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
        // This call simply deposits the particle volume onto the grid in a PIC-like manner
        pc->CalcVolumeFraction(*ep_g[lev]);
 
-       // Move any particle volume deposited outside the domain back into the domain 
+       // Move any particle volume deposited outside the domain back into the domain
        // (at all domain boundaries except periodid)
        for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
- 
+
          const Box& sbx = (*ep_g[lev])[mfi].box();
- 
+
          flip_particle_vol(sbx.loVect(), sbx.hiVect(),
                            (*ep_g[lev])[mfi].dataPtr(),
-                           bc_ilo.dataPtr(), bc_ihi.dataPtr(), 
+                           bc_ilo.dataPtr(), bc_ihi.dataPtr(),
                            bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                           bc_klo.dataPtr(), bc_khi.dataPtr(), 
+                           bc_klo.dataPtr(), bc_khi.dataPtr(),
                            domain.loVect(), domain.hiVect());
        }
 
@@ -759,7 +759,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
        for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
        {
            const Box& sbx = (*ep_g[lev])[pti].box();
@@ -773,7 +773,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
                                   (*ep_g[lev])[pti].dataPtr());
        }
     }
- 
+
     // Now define rop_g = ro_g * ep_g
     rop_g[lev]->copy((*ro_g[lev]));
     MultiFab::Multiply((*rop_g[lev]), (*ep_g[lev]), 0, 0, 1, rop_g[lev]->nGrow());
@@ -800,7 +800,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
     {
         const Box& sbx = (*ep_g[lev])[pti].box();
@@ -823,7 +823,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
             particles.data(), &dx, &dy, &dz , &use_pic);
     }
 
-    // If use_pic == 0 we have already deposited the drag coefficients into 
+    // If use_pic == 0 we have already deposited the drag coefficients into
     //   f_gds and drag_bm.  If use_pic == 1 we do it here.
     if (use_pic == 1)
        pc -> CalcDragOnFluid(*f_gds[lev],*drag_bm[lev]);
@@ -833,7 +833,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
 }
 
 void
-mfix_level::mfix_calc_drag_particle(int lev) 
+mfix_level::mfix_calc_drag_particle(int lev)
 {
     BL_PROFILE("mfix_level::mfix_calc_drag_particle()");
 
@@ -847,7 +847,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
     {
         const Box& sbx = (*ep_g[lev])[pti].box();
@@ -866,5 +866,29 @@ mfix_level::mfix_calc_drag_particle(int lev)
             (*p_g[lev])[pti].dataPtr(), (*u_g[lev])[pti].dataPtr(),
             (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
             particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
+    }
+}
+
+void
+mfix_level::mfix_set_bc1(int lev)
+{
+  BL_PROFILE("mfix_level::mfix_set_bc1()");
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+  for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+    {
+      Box domain(geom[lev].Domain());
+      const Box& sbx = (*ep_g[lev])[mfi].box();
+      Box ubx((*u_g[lev])[mfi].box());
+      Box vbx((*v_g[lev])[mfi].box());
+      Box wbx((*w_g[lev])[mfi].box());
+
+      set_bc1(sbx.loVect(), sbx.hiVect(),
+              ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+              (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
 }
