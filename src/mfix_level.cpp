@@ -262,6 +262,7 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
     Real temp_num = num_u;
     Real temp_denom = denom_u;
 
+
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:temp_num,temp_denom)
 #endif
@@ -340,15 +341,15 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
 #endif
     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
     {
-  const Box& bx = mfi.tilebox();
-  const Box& sbx = (*ep_g[lev])[mfi].box();
-  Box abx((*A_m[lev])[mfi].box());
+       const Box& bx = mfi.tilebox();
+       const Box& sbx = (*ep_g[lev])[mfi].box();
+       Box abx((*A_m[lev])[mfi].box());
 
-  Box ubx((*u_g[lev])[mfi].box());
-  Box vbx((*v_g[lev])[mfi].box());
-  Box wbx((*w_g[lev])[mfi].box());
+       Box ubx((*u_g[lev])[mfi].box());
+       Box vbx((*v_g[lev])[mfi].box());
+       Box wbx((*w_g[lev])[mfi].box());
 
-  solve_v_g_star(sbx.loVect(), sbx.hiVect(),
+       solve_v_g_star(sbx.loVect(), sbx.hiVect(),
            ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
            wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
            bx.loVect(),  bx.hiVect(),
@@ -761,7 +762,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
     }
 
     // Now define rop_g = ro_g * ep_g
-    rop_g[lev]->copy((*ro_g[lev]));
+    rop_g[lev]->copy((*ro_g[lev]),0,0,1,rop_g[lev]->nGrow(),rop_g[lev]->nGrow());
     MultiFab::Multiply((*rop_g[lev]), (*ep_g[lev]), 0, 0, 1, rop_g[lev]->nGrow());
 
     // This sets the values outside walls or periodic boundaries
