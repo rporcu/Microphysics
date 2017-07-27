@@ -33,24 +33,6 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
-    {
-      Box domain(geom[lev].Domain());
-      const Box& sbx = (*ep_g[lev])[mfi].box();
-      Box ubx((*u_g[lev])[mfi].box());
-      Box vbx((*v_g[lev])[mfi].box());
-      Box wbx((*w_g[lev])[mfi].box());
-
-      set_bc1(sbx.loVect(), sbx.hiVect(),
-                ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-              (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
-    }
-
   Real sum_vol;
   if (solve_dem)
   {
@@ -104,7 +86,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       // User hooks
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
       for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
         mfix_usr2();
 
@@ -112,7 +94,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       if (solve_dem)
         mfix_calc_drag_fluid(lev);
 
-      // Solve momentum equations in a thread safe way. 
+      // Solve momentum equations in a thread safe way.
       Real num_u = 0.0L;
       Real num_v = 0.0L;
       Real num_w = 0.0L;
@@ -121,9 +103,9 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       Real denom_v = 0.0L;
       Real denom_w = 0.0L;
 
-      mfix_solve_for_u(lev, dt, num_u, denom_u); 
-      mfix_solve_for_v(lev, dt, num_v, denom_v); 
-      mfix_solve_for_w(lev, dt, num_w, denom_w); 
+      mfix_solve_for_u(lev, dt, num_u, denom_u);
+      mfix_solve_for_v(lev, dt, num_v, denom_v);
+      mfix_solve_for_w(lev, dt, num_w, denom_w);
 
       residuals[1] = num_u;
       residuals[2] = num_v;
@@ -144,6 +126,9 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
 
       // Calculate transport coefficients
       mfix_physical_prop(lev,0);
+
+      // Reimpose boundary conditions
+      mfix_set_bc1(lev);
 
       // Calculate bulk density (epg*ro_g) at cell faces
       mfix_conv_rop(lev,dt);
