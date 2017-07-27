@@ -102,6 +102,7 @@ contains
             normal(:) = dist(:) / dist_mag
 
             ncoll = ncoll + 1
+            print *, "Particle: ", particles(ll)%id, "Collided with particle: ", particles(ii)%id            
 
             ! calcuate the normal overlap
             overlap_n = r_lm-dist_mag
@@ -272,6 +273,11 @@ contains
             endif
 
             ncoll = ncoll + 1
+            print *, "Particle: ", particles(ll)%id, "Collided with particle: ", particles(ii)%id, &
+                     "at distance= ", (dist_mag - r_lm**2)         
+            print *, "SMALL_NUMBER=" , SMALL_NUMBER
+            print *, "dist_mag=" , dist_mag, "other side=", (r_lm - SMALL_NUMBER)**2
+
 
             dist_mag  = sqrt( dist_mag )
             normal(:) = dist(:) / dist_mag
