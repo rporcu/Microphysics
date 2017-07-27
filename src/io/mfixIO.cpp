@@ -230,7 +230,8 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        	    orig_ba.readFrom(is);
        	    GotoNextLine(is);
             Box orig_domain(orig_ba.minimalBox());
-            std::cout << " OLD BA     " << orig_ba << std::endl;
+            if (ParallelDescriptor::IOProcessor())
+               std::cout << " OLD BA HAS " << orig_ba.size() << " GRIDS " << std::endl;
 
             BoxList bl;
             for (int nb = 0; nb < orig_ba.size(); nb++) {
@@ -251,7 +252,8 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
             }
             ba.define(bl);
 
-            std::cout << " NEW BA " << ba << std::endl;
+            if (ParallelDescriptor::IOProcessor())
+               std::cout << " NEW BA HAS " << ba.size() << " GRIDS " << std::endl;
             SetBoxArray(lev, ba);
        	    DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
             SetDistributionMap(lev, dm);
