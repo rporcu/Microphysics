@@ -172,11 +172,15 @@ module init_fluid_module
                iend   = min(uhi(1), i_e)
                jend   = min(uhi(2), j_n)
                kend   = min(uhi(3), k_t)
+
+               ! Make sure we don't over-write the values set by boundary conditions
+               istart = max(i_w,domlo(1)+1)
+               iend   = min(i_e,domhi(1)  )
                u_g(istart:iend,jstart:jend,kstart:kend) = ugx
-               if (ulo(1).lt.domlo(1)) &
-                  u_g(ulo(1):istart-1,jstart:jend,kstart:kend) = ugx
-               if (uhi(1).gt.domhi(1)) &
-                  u_g(iend+1:uhi(1)  ,jstart:jend,kstart:kend) = ugx
+               ! if (ulo(1).lt.domlo(1)) &
+               !    u_g(ulo(1):istart-1,jstart:jend,kstart:kend) = ugx
+               ! if (uhi(1).gt.domhi(1)) &
+               !    u_g(iend+1:uhi(1)  ,jstart:jend,kstart:kend) = ugx
             end if
 
             if (is_defined(vgx)) then
@@ -186,11 +190,16 @@ module init_fluid_module
                iend   = min(vhi(1), i_e)
                jend   = min(vhi(2), j_n)
                kend   = min(vhi(3), k_t)
+
+               ! Make sure we don't over-write the values set by boundary conditions
+               jstart = max(j_s,domlo(2)+1)
+               jend   = min(j_n,domhi(2)  )
                v_g(istart:iend,jstart:jend,kstart:kend) = vgx
-               if (vlo(2).lt.domlo(2)) &
-                  v_g(istart:iend,vlo(2):jstart-1,kstart:kend) = vgx
-               if (vhi(2).gt.domhi(2)) &
-                  v_g(istart:iend,jend+1:vhi(2)  ,kstart:kend) = vgx
+
+               ! if (vlo(2).lt.domlo(2)) &
+               !    v_g(istart:iend,vlo(2):jstart-1,kstart:kend) = vgx
+               ! if (vhi(2).gt.domhi(2)) &
+               !    v_g(istart:iend,jend+1:vhi(2)  ,kstart:kend) = vgx
             end if
 
             if (is_defined(wgx)) then
@@ -200,11 +209,16 @@ module init_fluid_module
                iend   = min(whi(1), i_e)
                jend   = min(whi(2), j_n)
                kend   = min(whi(3), k_t)
+
+               ! Make sure we don't over-write the values set by boundary conditions
+               kstart = max(k_b,domlo(3)+1)
+               kend   = min(k_t,domhi(3)  )
                w_g(istart:iend,jstart:jend,kstart:kend) = wgx
-               if (wlo(3).lt.domlo(3)) &
-                  w_g(istart:iend,jstart:jend,wlo(3):kstart-1) = wgx
-               if (whi(3).gt.domhi(3)) &
-                  w_g(istart:iend,jstart:jend,kend+1:whi(3)  ) = wgx
+
+               ! if (wlo(3).lt.domlo(3)) &
+               !    w_g(istart:iend,jstart:jend,wlo(3):kstart-1) = wgx
+               ! if (whi(3).gt.domhi(3)) &
+               !    w_g(istart:iend,jstart:jend,kend+1:whi(3)  ) = wgx
             end if
 
             istart = max(slo(1), i_w)
@@ -213,6 +227,14 @@ module init_fluid_module
             iend   = min(shi(1), i_e)
             jend   = min(shi(2), j_n)
             kend   = min(shi(3), k_t)
+
+            ! Make sure we don't over-write the values set by boundary conditions
+            istart = max(i_w,domlo(1))
+            iend   = min(i_e,domhi(1))
+            jstart = max(j_s,domlo(2))
+            jend   = min(j_n,domhi(2))
+            kstart = max(k_b,domlo(3))
+            kend   = min(k_t,domhi(3))
             do k = kstart, kend
                do j = jstart, jend
                   do i = istart, iend
