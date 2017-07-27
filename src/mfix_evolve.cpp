@@ -41,6 +41,9 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
     if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) amrex::Abort("Volume fraction in domain has changed!");
   }
 
+  // Reimpose boundary conditions -- make sure to do this before we compute tau
+  mfix_set_bc1(lev);
+
   // Calculate transport coefficients
   int calc_flag = 2;
   mfix_calc_coeffs(lev,calc_flag);

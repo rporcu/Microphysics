@@ -364,22 +364,22 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
 
   mfix_set_bc0(lev);
 
-    // // Initial fluid arrays: pressure, velocity, density, viscosity
-    mfix_init_fluid(lev,1);
+  // Initial fluid arrays: pressure, velocity, density, viscosity
+  mfix_init_fluid(lev,1);
 
-    // // Call user-defined subroutine to set constants, check data, etc.
-    // if (call_udf)
-    //  usr0();
+  // Call user-defined subroutine to set constants, check data, etc.
+  // if (call_udf)
+  //  usr0();
 
-    // Calculate all the coefficients once before entering the time loop
-    int calc_flag = 2;
-    mfix_calc_coeffs(lev,calc_flag);
+  // Calculate all the coefficients once before entering the time loop
+  int calc_flag = 2;
+  mfix_calc_coeffs(lev,calc_flag);
 
-    if (solve_dem)
-    {
-       mfix_calc_volume_fraction(lev,sum_vol_orig);
-       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
-    }
+  if (solve_dem)
+  {
+     mfix_calc_volume_fraction(lev,sum_vol_orig);
+     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+  }
 }
 
 void
