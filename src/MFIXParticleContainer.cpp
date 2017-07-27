@@ -230,6 +230,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 {
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
+    bool debug = false;
+
     Box domain(Geom(lev).Domain());
 
     Real dx = Geom(lev).CellSize(0);
@@ -333,18 +335,21 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
       }
 
-      ncoll_total +=  ncoll;
-
-      ParallelDescriptor::ReduceIntSum(ncoll,ParallelDescriptor::IOProcessorNumber());
-      // Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
+      if (debug) {
+         ncoll_total +=  ncoll;
+         ParallelDescriptor::ReduceIntSum(ncoll,ParallelDescriptor::IOProcessorNumber());
+         Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
+      }
     }
 
     clearNeighbors(lev);
 
     Redistribute();
 
-    ParallelDescriptor::ReduceIntSum(ncoll_total,ParallelDescriptor::IOProcessorNumber());
-    Print() << "Number of collisions: " << ncoll_total << " in " << nsubsteps << " substeps " << std::endl;
+    if (debug) {
+       ParallelDescriptor::ReduceIntSum(ncoll_total,ParallelDescriptor::IOProcessorNumber());
+       Print() << "Number of collisions: " << ncoll_total << " in " << nsubsteps << " substeps " << std::endl;
+    }
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -357,43 +362,44 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       call_usr3_des( &np, particles );
     }
 
-
-    // Check maxmium particle velocties at each fluid time step
-    // with the goal of veriftying a particle cannot travel more than
-    // a single cell per fluid time step. 
-    Real max_vel_x = 0.0;
-    Real max_vel_y = 0.0;
-    Real max_vel_z = 0.0;
+    if (debug) {
+       // Check maxmium particle velocties at each fluid time step
+       // with the goal of veriftying a particle cannot travel more than
+       // a single cell per fluid time step. 
+       Real max_vel_x = 0.0;
+       Real max_vel_y = 0.0;
+       Real max_vel_z = 0.0;
 
 #ifdef _OPENMP
 #pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z)
 #endif
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-      const int np     = NumberOfParticles(pti);
+         const int np     = NumberOfParticles(pti);
 
-      auto& particles = pti.GetArrayOfStructs();
+         auto& particles = pti.GetArrayOfStructs();
     
-      for (const auto& p: particles)
-      {
-          max_vel_x = std::max(p.rdata(realData::velx), max_vel_x);
-          max_vel_y = std::max(p.rdata(realData::vely), max_vel_y);
-          max_vel_z = std::max(p.rdata(realData::velz), max_vel_z);
-      }
-    }
+         for (const auto& p: particles)
+         {
+             max_vel_x = std::max(p.rdata(realData::velx), max_vel_x);
+             max_vel_y = std::max(p.rdata(realData::vely), max_vel_y);
+             max_vel_z = std::max(p.rdata(realData::velz), max_vel_z);
+         }
+       }
     
-    ParallelDescriptor::ReduceRealMax(max_vel_x,ParallelDescriptor::IOProcessorNumber());
-    ParallelDescriptor::ReduceRealMax(max_vel_y,ParallelDescriptor::IOProcessorNumber());
-    ParallelDescriptor::ReduceRealMax(max_vel_z,ParallelDescriptor::IOProcessorNumber());
+       ParallelDescriptor::ReduceRealMax(max_vel_x,ParallelDescriptor::IOProcessorNumber());
+       ParallelDescriptor::ReduceRealMax(max_vel_y,ParallelDescriptor::IOProcessorNumber());
+       ParallelDescriptor::ReduceRealMax(max_vel_z,ParallelDescriptor::IOProcessorNumber());
 
-    if (ParallelDescriptor::IOProcessor()) 
-    {
-       const Real* dx = Geom(0).CellSize();
-       cout << "Maximum possible distance traveled:" << endl;
-       cout <<  "x=  " << max_vel_x * dt
-            << " y=  " << max_vel_y * dt
-            << " z=  " << max_vel_z * dt  << " and note that "
-            << " dx= " << dx[0] << endl;
+       if (ParallelDescriptor::IOProcessor()) 
+       {
+          const Real* dx = Geom(0).CellSize();
+          cout << "Maximum possible distance traveled:" << endl;
+          cout <<  "x=  " << max_vel_x * dt
+               << " y=  " << max_vel_y * dt
+               << " z=  " << max_vel_z * dt  << " and note that "
+               << " dx= " << dx[0] << endl;
+       }
     }
 
     if ( des_continuum_coupled () != 0 ) {
