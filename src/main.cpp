@@ -167,7 +167,14 @@ int main (int argc, char* argv[])
        {
           mfix_usr1();
 
+          Real strt_step = ParallelDescriptor::second();
+
           my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
+
+          Real end_step = ParallelDescriptor::second() - strt_step;
+          ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
+          if (ParallelDescriptor::IOProcessor())
+             std::cout << "Time per step        " << end_step << std::endl;
 
           if (!steady_state)  
           {
