@@ -116,7 +116,8 @@ endif ()
 
 
 # Set CMake compiler flags
-set ( CMAKE_Fortran_FLAGS_${MFIX_BUILD_TYPE} "${MFIX_Fortran_FLAGS}" ) 
+set ( CMAKE_Fortran_FLAGS_${MFIX_BUILD_TYPE}
+   "${MFIX_Fortran_FLAGS} ${AMREX_Fortran_DEFINITIONS}" ) 
 set ( CMAKE_CXX_FLAGS_${MFIX_BUILD_TYPE} "${MFIX_CXX_FLAGS}" )
 
 # Set total extra  includes path
