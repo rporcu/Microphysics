@@ -199,9 +199,9 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
               updateNeighbors(lev);
           }
           
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
          for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
             // Real particles
@@ -214,6 +214,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
             int size_nl = neighbor_list[index].size();
 
             BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+            //std::cout << "Num threads: " << omp_get_num_threads() << std::endl;
             des_time_loop_ops_nl ( &np, particles, &size_ng, neighbors[index].dataPtr(),
                                    &size_nl, neighbor_list[index].dataPtr(),
                                    &subdt, &dx, &dy, &dz,
@@ -235,9 +236,9 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
          fillNeighbors(lev);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif 
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif 
          for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
             // Real particles
@@ -249,6 +250,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
             int ng = neighbors[index].size() / pdata_size;
 
             BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+            //std::cout << "Num threads: " << omp_get_num_threads() << std::endl;
             des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
                                &subdt, &dx, &dy, &dz,
                                &xlen, &ylen, &zlen, &n, &ncoll );
