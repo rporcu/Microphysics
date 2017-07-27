@@ -108,7 +108,7 @@ contains
                 A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
                                  A_m(i,j,k,n) + A_m(i,j,k,s) + &
                                  A_m(i,j,k,t) + A_m(i,j,k,b))
-                if (i.eq.0.and.k.eq.0) print *,'A B ',j,A_m(i,j,k,0),b_m(i,j,k)
+
              enddo
           enddo
       enddo

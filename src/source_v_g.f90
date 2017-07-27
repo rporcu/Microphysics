@@ -101,8 +101,6 @@ contains
                b_m(i,j,k) = b_m(i,j,k) - (sdp + tau_v_g(i,j,k) +  &
                   ((v0)*v_go(i,j,k) + vbf)*vol )
 
-               if (i.eq.0 .and. k.eq.0) print *,'BV ',j,b_m(i,j,k),tau_v_g(i,j,k)
-
             enddo
          enddo
       enddo
