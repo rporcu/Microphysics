@@ -98,11 +98,13 @@ contains
 8550           format('distance between particles is zero:',2(2x,i10))
             endif
 
+            print *, "PID: ", particles(ll)%id, "CPU:", particles(ll)%state, &
+          "Coll PID: ", particles(ii)%id, "CPU:", particles(ll)%state             
+
             dist_mag  = sqrt( dist_mag )
             normal(:) = dist(:) / dist_mag
 
             ncoll = ncoll + 1
-            print *, "Particle: ", particles(ll)%id, "Collided with particle: ", particles(ii)%id            
 
             ! calcuate the normal overlap
             overlap_n = r_lm-dist_mag
@@ -110,7 +112,8 @@ contains
 
             ! calculate the components of translational relative velocity for a
             ! contacting particle pair and the tangent to the plane of contact
-            call cfrelvel(ll, ii, v_rel_trans_norm, vrel_t, normal(:), dist_mag, particles )
+            !call cfrelvel(ll, ii, v_rel_trans_norm, vrel_t, normal(:), dist_mag, particles )
+            call cfrelvel(particles(ll), particles(ii), v_rel_trans_norm, vrel_t, normal(:), dist_mag)
 
             radiusll = particles(ll) % radius
             phasell  = particles(ll) % phase
@@ -273,10 +276,12 @@ contains
             endif
 
             ncoll = ncoll + 1
-            print *, "Particle: ", particles(ll)%id, "Collided with particle: ", particles(ii)%id, &
-                     "at distance= ", (dist_mag - r_lm**2)         
-            print *, "SMALL_NUMBER=" , SMALL_NUMBER
-            print *, "dist_mag=" , dist_mag, "other side=", (r_lm - SMALL_NUMBER)**2
+            print *, "PID: ", particles(ll)%id, "CPU:", particles(ll)%state, &
+          "Coll PID: ", particles(ii)%id, "CPU:", particles(ll)%state             
+            !print *, "Particle: ", particles(ll)%id, "Collided with particle: ", particles(ii)%id!, &
+               !      "at distance= ", (dist_mag - r_lm**2)!, &         
+               !      "SMALL_NUMBER=" , SMALL_NUMBER, &
+               !      "dist_mag=" , dist_mag, "other side=", (r_lm - SMALL_NUMBER)**2
 
 
             dist_mag  = sqrt( dist_mag )
@@ -288,7 +293,8 @@ contains
 
             ! calculate the components of translational relative velocity for a
             ! contacting particle pair and the tangent to the plane of contact
-            call cfrelvel(ll, ii, v_rel_trans_norm, vrel_t, normal(:), dist_mag, particles )
+            !call cfrelvel(ll, ii, v_rel_trans_norm, vrel_t, normal(:), dist_mag, particles )
+            call cfrelvel(particles(ll), particles(ii), v_rel_trans_norm, vrel_t, normal(:), dist_mag)
 
             radiusll = particles(ll) % radius
             phasell  = particles(ll) % phase

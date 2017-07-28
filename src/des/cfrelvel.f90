@@ -28,7 +28,9 @@ contains
    !    horizontal pipe", Powder technology, 71, 239-250, 1992
    !
    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   subroutine cfrelvel(L, II, VRN, VSLIP, NORM, DIST_LI, particles)
+   !subroutine cfrelvel(L, II, VRN, VSLIP, NORM, DIST_LI, particles)
+   subroutine cfrelvel(particle_1, particle_2, VRN, VSLIP, NORM, dist_mag)
+ 
 
       !-----------------------------------------------
       ! Modules
@@ -36,15 +38,15 @@ contains
       use discretelement, only: DES_CROSSPRDCT
       use particle_mod,   only: particle_t
 
-      type(particle_t),  intent(in)  :: particles(:) 
+      !type(particle_t),  intent(in)  :: particles(:) 
 
       !-----------------------------------------------
       ! Dummy arguments
       !-----------------------------------------------
       ! indices of particle-particle contact pair
-      integer, INTENT(IN) :: L, II
+      !integer, INTENT(IN) :: L, II
       ! distance between particle centers
-      real(c_real), INTENT(IN) :: DIST_LI
+      !real(c_real), INTENT(IN) :: DIST_LI
       ! unit normal vector along the line of contact pointing from
       ! particle L to particle II
       real(c_real), INTENT(IN) :: NORM(3)
@@ -52,6 +54,14 @@ contains
       real(c_real), INTENT(OUT) :: VSLIP(3)
       ! normal component of relative contact velocity (scalar)
       real(c_real), INTENT(OUT) :: VRN
+      !HACK Version
+      !Colliding particle pair
+      type(particle_t),     intent(in   ) :: particle_1, particle_2
+      !distance magnitude
+      real(c_real),         intent(in   ) :: dist_mag
+         
+
+
       !-----------------------------------------------
       ! Local variables
       !-----------------------------------------------
@@ -64,17 +74,22 @@ contains
       !-----------------------------------------------
 
       ! translational relative velocity
-      VRELTRANS(:) = ( particles(l) % vel  -  particles(ii) % vel )
+      !VRELTRANS(:) = ( particles(l) % vel  -  particles(ii) % vel )
+      VRELTRANS(:) = ( particle_1 % vel  -  particle_2 % vel )
+      
 
       ! calculate the distance from the particle center to the contact point,
       ! which is taken as the radical line
       ! dist_ci+dist_cl=dist_li; dist_ci^2+a^2=ri^2;  dist_cl^2+a^2=rl^2
-      DIST_CL = ( DIST_LI**2 + particles(l) % radius**2 - particles(ii) % radius**2 )/&
-           (2.d0*DIST_LI)
-      DIST_CI = DIST_LI - DIST_CL
+      !DIST_CL = ( DIST_LI**2 + particles(l) % radius**2 - particles(ii) % radius**2 )/&
+      !     (2.d0*DIST_LI)
+      DIST_CL = ( dist_mag**2 + particle_1 % radius**2 - particle_2 % radius**2 )/&
+           (2.d0*dist_mag)
+      !DIST_CI = DIST_LI - DIST_CL
+      DIST_CI = dist_mag - DIST_CL
 
-      OMEGA_SUM(:) = particles(l) % omega * DIST_CL + &
-           particles(ii) % omega * DIST_CI
+      OMEGA_SUM(:) = particle_1 % omega * DIST_CL + &
+           particle_2 % omega * DIST_CI
 
       ! calculate the rotational relative velocity
       V_ROT = DES_CROSSPRDCT(OMEGA_SUM, NORM)
