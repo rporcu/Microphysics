@@ -597,6 +597,8 @@ void MFIXParticleContainer::writeAllForComparison(int lev)
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       Np_tot += pti.numParticles();
 
+  ParallelDescriptor::ReduceIntSum(Np_tot,ParallelDescriptor::IOProcessorNumber());
+
   cout << Np_tot << std::endl;
 
   Real dummy = 0.;

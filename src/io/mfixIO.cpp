@@ -141,7 +141,7 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
          int_comp_names.push_back("state");
 
        bool is_checkpoint = true;  
-       // pc->writeAllForComparison(0);
+
        pc -> Checkpoint(checkpointname, "particles", is_checkpoint, real_comp_names, int_comp_names);
     }
 }
@@ -250,7 +250,6 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     // pc->writeAllForComparison(0);
 
     //  Create mask for particle ghost cells
-    //  HACK HACK HACK 
     int lev = 0;
     pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
 }
