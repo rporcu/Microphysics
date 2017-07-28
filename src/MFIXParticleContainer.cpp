@@ -619,35 +619,16 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
          Real (&avg_dp)[10], Real (&avg_ro)[10])
 {
 
-  Real sum_np[10] = {0};
-  Real sum_dp[10] = {0};
-  Real sum_ro[10] = {0};
-  // initialize to 0 when declared instead. 
-  //for (int i=0; i<10; ++i){
-  //  sum_np[i] = 0.0;
-  //  sum_dp[i] = 0.0;
-  //  sum_ro[i] = 0.0;
-  //}
+   // The number of phases was previously hard set at 10, however lowering
+   //  this number would be faster. 
+   int num_of_phases_in_use = 10; //Number of different phases being simulated
 
-  Real sum_props[30] = {0};
-
-   /*
-    * Loop through each phase type to calculate average values. 
-    * This assumes a small number of phase types, or a way to test how
-    * many are actually in use. 
-    */
-   // New code
-   int num_of_phases_in_use = 10; 
-
-   Real avg_dp_test[10] = {0};
-   Real avg_ro_test[10] = {0};
-
+   // Cycle through the different phases, starting from 1
    for (int phse=1; phse<=num_of_phases_in_use; ++phse){
-     //std::cout << "phse" << phse << std::endl;     
 
-     Real p_num  = 0.0;
-     Real p_diam = 0.0;
-     Real p_dens = 0.0;
+     Real p_num  = 0.0; //number of particle 
+     Real p_diam = 0.0; //particle diameters
+     Real p_dens = 0.0; //particle density 
 
    #ifdef _OPENMP
    #pragma omp parallel reduction(+:p_num, p_diam, p_dens)
@@ -657,7 +638,6 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
        auto& particles = pti.GetArrayOfStructs();
    
        for (const auto& p: particles){
-         int m = p.idata(intData::phase);
          if ( phse==p.idata(intData::phase) ){
            p_num  += 1.0; 
            p_diam += p.rdata(realData::radius) * 2.0;
@@ -665,88 +645,17 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
          }
        }
      }
- //  ParallelDescriptor::ReduceRealSum(p_num);
- //  ParallelDescriptor::ReduceRealSum(p_diam);
- //  ParallelDescriptor::ReduceRealSum(p_dens);
-    //A single MPI call reduces communication but achieves the same goal as the 
-    // three above. 
+
+    // A single MPI call passes all three variables 
     ParallelDescriptor::ReduceRealSum({p_num,p_diam,p_dens}); 
 
+   //calculate averages or set = zero if no particles of that phase
    if (p_num==0){
      avg_dp[phse-1] = 0.0;
      avg_ro[phse-1] = 0.0;   
-     avg_dp_test[phse-1] = 0.0;
-     avg_ro_test[phse-1] = 0.0;   
    } else {
      avg_dp[phse-1] = p_diam/p_num;
      avg_ro[phse-1] = p_dens/p_num;   
-     avg_dp_test[phse-1] = p_diam/p_num;
-     avg_ro_test[phse-1] = p_dens/p_num;   
    } 
-   //std::cout << "p_num = " << p_num << std::endl;
-   std::cout << "avg_dp_test[" << phse-1 << "] = " <<  avg_dp_test[phse-1] << std::endl;
-   std::cout << "avg_ro_test[" << phse-1 << "] = " <<  avg_ro_test[phse-1] << std::endl;
-   }
-    
-/* orig code */
-
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif
-  //for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-  //  //Real particles //originally commented out. 
-
-  //  //const int np     = NumberOfParticles(pti);
-  //  //void* particles  = pti.GetArrayOfStructs().data();
-
-  //  //sum_particle_props( &np, particles, sum_np, sum_dp, sum_ro);
-
-
-
-  //  auto& particles = pti.GetArrayOfStructs();
-
-  //  //for (const auto& p: particles){
-  //  //  int m = p.idata(intData::phase);
-  //  //  sum_np[m-1] += 1.0; 
-  //  //  sum_dp[m-1] += p.rdata(realData::radius) * 2.0;
-  //  //  sum_ro[m-1] += p.rdata(realData::density); 
-  //  //}
-
-  //  for (const auto& p: particles){
-  //    int m = p.idata(intData::phase);
-  //    sum_props[m-1     ] += 1.0; 
-  //    sum_props[m-1 + 10] += p.rdata(realData::radius) * 2.0;
-  //    sum_props[m-1 + 20] += p.rdata(realData::density); 
-  //  }
-
-
-  //}
-
-  ////Real sum_props[30];
-  ////for (int i=0; i<10; ++i){
-  ////  std::cout <<  "sum_np[" << i << "] = " << sum_np[i] 
-  ////            << " sum_dp[" << i << "] = " << sum_dp[i] 
-  ////            << " sum_ro[" << i << "] = " << sum_ro[i] << std::endl; 
-  ////  sum_props[i   ] = sum_np[i];
-  ////  sum_props[i+10] = sum_dp[i];
-  ////  sum_props[i+20] = sum_ro[i];
-  ////}
-
-
-  //ParallelDescriptor::ReduceRealSum(sum_props,30);
-
-  //for (int i=0; i<10; ++i){
-
-  //  if(sum_props[i]) {
-  //    avg_dp[i] = sum_props[i+10]/sum_props[i];
-  //    avg_ro[i] = sum_props[i+20]/sum_props[i];
-  //    // std::cout << "avg_props: " << i <<
-  //    //   "   np: " << sum_props[i] <<
-  //    //   "   dp: " << avg_dp[i]   <<
-  //    //   "   ro: " << avg_ro[i]   << std::endl;
-  //  }
-  //    std::cout << "avg_dp[" << i << "] = " <<  avg_dp[i] << std::endl;
-  //    std::cout << "avg_ro[" << i << "] = " <<  avg_ro[i] << std::endl;
-  //}  
-    
+ }
 }
