@@ -649,9 +649,9 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
      Real p_diam = 0.0;
      Real p_dens = 0.0;
 
-   //#ifdef _OPENMP
-   //#pragma omp parallel
-   //#endif
+   #ifdef _OPENMP
+   #pragma omp parallel reduction(+:p_num, p_diam, p_dens)
+   #endif
      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
    
        auto& particles = pti.GetArrayOfStructs();
@@ -665,9 +665,12 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
          }
        }
      }
-   ParallelDescriptor::ReduceRealSum(p_num);
-   ParallelDescriptor::ReduceRealSum(p_diam);
-   ParallelDescriptor::ReduceRealSum(p_dens);
+ //  ParallelDescriptor::ReduceRealSum(p_num);
+ //  ParallelDescriptor::ReduceRealSum(p_diam);
+ //  ParallelDescriptor::ReduceRealSum(p_dens);
+    //A single MPI call reduces communication but achieves the same goal as the 
+    // three above. 
+    ParallelDescriptor::ReduceRealSum({p_num,p_diam,p_dens}); 
 
    if (p_num==0){
      avg_dp[phse-1] = 0.0;
