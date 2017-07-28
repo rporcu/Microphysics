@@ -9,7 +9,7 @@ module tunit_module
 
       implicit none
 
-      real(c_real), INTENT(INOUT) :: TLEFT
+      real(c_real), INTENT(inout) :: TLEFT
       CHARACTER(LEN=4) :: TUNIT
 
       IF (TLEFT < 3600.0d0) THEN

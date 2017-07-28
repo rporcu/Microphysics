@@ -14,7 +14,7 @@
 # RUN CONTROL SECTION
 
   #TSTOP = 0.05
-  TSTOP = 0.001
+  TSTOP = 0.0002
 
   DT =     1.0d-04
   DT_MAX = 1.0d-02

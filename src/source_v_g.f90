@@ -63,7 +63,7 @@ contains
 ! Pressure at north cell
       real(c_real) :: PgS
 ! Average volume fraction
-      real(c_real) :: EPGA
+      real(c_real) :: epga
 ! Source terms (Surface)
       real(c_real) :: Sdp
 ! Source terms (Volumetric)
@@ -135,10 +135,10 @@ contains
       integer     , intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dx, dz
 
-      real(c_real), intent(INOUT) :: A_m&
+      real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
-      real(c_real), intent(INOUT) :: b_m&
+      real(c_real), intent(inout) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&

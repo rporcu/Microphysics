@@ -318,37 +318,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
   AllocateArrays(lev);
 
-  Box domain(geom[lev].Domain());
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif 
-  for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
-    {
-      const Box& sbx = (*ep_g[lev])[mfi].box();
-
-      Box ubx((*u_g[lev])[mfi].box());
-      Box vbx((*v_g[lev])[mfi].box());
-      Box wbx((*w_g[lev])[mfi].box());
-
-      set_bc0(sbx.loVect(), sbx.hiVect(),
-              ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-              (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-              (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
-              (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
-              (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
-              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
-    }
-
-  fill_mf_bc(lev,*p_g[lev]);
-  fill_mf_bc(lev,*ep_g[lev]);
-  fill_mf_bc(lev,*ro_g[lev]);
-  fill_mf_bc(lev,*rop_g[lev]);
-
-  u_g[lev]->FillBoundary(geom[lev].periodicity());
-  v_g[lev]->FillBoundary(geom[lev].periodicity());
-  w_g[lev]->FillBoundary(geom[lev].periodicity());
+  mfix_set_bc0(lev);
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
   mfix_init_fluid(lev);
@@ -386,61 +356,30 @@ void
 mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
 {
 
-    // Array already allocated when restart is called
-    Box domain(geom[lev].Domain());
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif 
-    for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
-    {
-      const Box& sbx = (*ep_g[lev])[mfi].box();
-
-        Box ubx((*u_g[lev])[mfi].box());
-        Box vbx((*v_g[lev])[mfi].box());
-        Box wbx((*w_g[lev])[mfi].box());
-
-        set_bc0(sbx.loVect(), sbx.hiVect(),
-          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-          (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-          (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
-          (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
-          (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
-          bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-          bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
-    }
-
-    fill_mf_bc(lev,*p_g[lev]);
-    fill_mf_bc(lev,*ep_g[lev]);
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-
-    u_g[lev]->FillBoundary(geom[lev].periodicity());
-    v_g[lev]->FillBoundary(geom[lev].periodicity());
-    w_g[lev]->FillBoundary(geom[lev].periodicity());
-
-    if (solve_dem) {
+  if (solve_dem) {
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
       init_collision(avg_dp, avg_ro);
-    }
+  }
 
-    // // Initial fluid arrays: pressure, velocity, density, viscosity
-    mfix_init_fluid(lev,1);
+  mfix_set_bc0(lev);
 
-    // // Call user-defined subroutine to set constants, check data, etc.
-    // if (call_udf)
-    //  usr0();
+  // Initial fluid arrays: pressure, velocity, density, viscosity
+  mfix_init_fluid(lev,1);
 
-    // Calculate all the coefficients once before entering the time loop
-    int calc_flag = 2;
-    mfix_calc_coeffs(lev,calc_flag);
+  // Call user-defined subroutine to set constants, check data, etc.
+  // if (call_udf)
+  //  usr0();
 
-    if (solve_dem)
-    {
-       mfix_calc_volume_fraction(lev,sum_vol_orig);
-       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
-    }
+  // Calculate all the coefficients once before entering the time loop
+  int calc_flag = 2;
+  mfix_calc_coeffs(lev,calc_flag);
+
+  if (solve_dem)
+  {
+     mfix_calc_volume_fraction(lev,sum_vol_orig);
+     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+  }
 }
 
 void
@@ -467,8 +406,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
       init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
            (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr());
 
-    }
-    else {
+    } else {
       const Box& ubx = (*u_g[lev])[mfi].box();
       const Box& vbx = (*v_g[lev])[mfi].box();
       const Box& wbx = (*w_g[lev])[mfi].box();
@@ -523,4 +461,41 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
   fill_mf_bc(lev,*mu_g[lev]);
   fill_mf_bc(lev,*lambda_g[lev]);
 
+}
+
+
+void
+mfix_level::mfix_set_bc0(int lev)
+{
+
+  // Array already allocated when restart is called
+  Box domain(geom[lev].Domain());
+
+  // Don't tile this -- at least for now
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+    {
+      const Box& sbx = (*ep_g[lev])[mfi].box();
+
+      Box ubx((*u_g[lev])[mfi].box());
+      Box vbx((*v_g[lev])[mfi].box());
+      Box wbx((*w_g[lev])[mfi].box());
+
+      set_bc0(sbx.loVect(), sbx.hiVect(),
+              ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+              (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+              (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+              (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
+              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+    }
+
+  fill_mf_bc(lev,*p_g[lev]);
+  fill_mf_bc(lev,*ep_g[lev]);
+  fill_mf_bc(lev,*ro_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
+
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
 }

@@ -35,10 +35,10 @@ module conv_pp_g_module
 
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3),lo(3),hi(3)
-      real(c_real), intent(in   ) :: dx,dy,dz
+      real(c_real)  , intent(in   ) :: dx,dy,dz
 
       ! Septadiagonal matrix A_m
-      real(c_real), INTENT(INOUT) :: A_m&
+      real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       real(c_real), intent(in   ) :: ropX&
