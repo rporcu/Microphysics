@@ -97,6 +97,13 @@ extern "C"
 			    const int*  lo, const int*  hi,
 			    amrex::Real* mu_g,    amrex::Real* lambda_g);
 
+    void flip_particle_vol(const int* slo, const int* shi,
+			   amrex::Real* ep_g, 
+			   int* bc_ilo, int* bc_ihi,
+			   int* bc_jlo, int* bc_jhi,
+			   int* bc_klo, int* bc_khi,
+			   const int* domlo , const int* domhi);
+
     void zero_wall_norm_vel(const int* slo, const int* shi,
 			    const int* ulo, const int* uhi,
 			    const int* vlo, const int* vhi,

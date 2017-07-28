@@ -19,7 +19,7 @@ MODULE REMOVE_COMMENT_MODULE
 ! Passed Variables: Dummy argument format required by ODEPACK.
 !---------------------------------------------------------------------//
 ! Input data line
-      CHARACTER(len=*), intent(INOUT) :: LINE
+      CHARACTER(len=*), intent(inout) :: LINE
 !Start of comments
       integer, intent(IN) :: LSTART
 ! Maximum column of input data line to search
@@ -57,7 +57,7 @@ MODULE REMOVE_COMMENT_MODULE
 ! Passed Variables: Dummy argument format required by ODEPACK.
 !---------------------------------------------------------------------//
 ! Input data line
-      CHARACTER(len=*), intent(INOUT) :: LINE
+      CHARACTER(len=*), intent(inout) :: LINE
 
 ! Local Variables:
 !---------------------------------------------------------------------//

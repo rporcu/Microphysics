@@ -202,7 +202,7 @@ CONTAINS
 ! Dummy Arguments
 !---------------------------------------------------------------------//
 ! Input line to change to uppercase
-      CHARACTER(len=*), intent(INOUT) :: LINE_STRING
+      CHARACTER(len=*), intent(inout) :: LINE_STRING
 ! Number of characters to look at in LINE_STRING
       integer, intent(IN) :: MAXCOL
 
@@ -246,7 +246,7 @@ CONTAINS
 ! Dummy Arguments
 !---------------------------------------------------------------------//
 ! Input line to change to uppercase
-      CHARACTER(len=*), intent(INOUT) :: LINE_STRING
+      CHARACTER(len=*), intent(inout) :: LINE_STRING
 ! Number of characters to look at in LINE_STRING
       integer, intent(IN) :: MAXCOL
 

@@ -141,18 +141,24 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
          int_comp_names.push_back("state");
 
        bool is_checkpoint = true;  
-
        pc -> Checkpoint(checkpointname, "particles", is_checkpoint, real_comp_names, int_comp_names);
     }
 }
 
 void
-mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time) 
+mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time, 
+                     IntVect& Nrep) 
 {
     BL_PROFILE("mfix_level::Restart()");
 
     if (ParallelDescriptor::IOProcessor()) 
 	std::cout << "  Restarting from checkpoint " << restart_file << std::endl;
+
+    if (ParallelDescriptor::IOProcessor()) 
+	std::cout << "  Replication " << Nrep << std::endl;
+
+    Real prob_lo[BL_SPACEDIM];
+    Real prob_hi[BL_SPACEDIM];
 
     // Header
     {
@@ -190,7 +196,6 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 	*time = real_tmp;
      	GotoNextLine(is);
 
-       	Real prob_lo[BL_SPACEDIM];
        	std::getline(is, line);
        	{
        	    std::istringstream lis(line);
@@ -200,7 +205,6 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        	    }
        	}
  
-       	Real prob_hi[BL_SPACEDIM];
        	std::getline(is, line);
        	{
        	    std::istringstream lis(line);
@@ -210,16 +214,49 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        	    }
        	}
 
-     	Geometry::ProbDomain(RealBox(prob_lo,prob_hi));
+     	
+        if (Nrep != IntVect::TheUnitVector())
+        {
+           for (int d = 0; d < BL_SPACEDIM; d++)
+           {
+              prob_lo[d] = Nrep[d]*prob_lo[d];
+              prob_hi[d] = Nrep[d]*prob_hi[d];
+           }
+        } 
+        Geometry::ProbDomain(RealBox(prob_lo,prob_hi));
 
        	for (int lev = 0; lev < nlevs; ++lev) {
-       	    BoxArray ba;
-       	    ba.readFrom(is);
+       	    BoxArray orig_ba,ba;
+       	    orig_ba.readFrom(is);
        	    GotoNextLine(is);
+            Box orig_domain(orig_ba.minimalBox());
+            if (ParallelDescriptor::IOProcessor())
+               std::cout << " OLD BA HAS " << orig_ba.size() << " GRIDS " << std::endl;
+
+            BoxList bl;
+            for (int nb = 0; nb < orig_ba.size(); nb++) {
+             for (int k = 0; k < Nrep[2]; k++) {
+                 for (int j = 0; j < Nrep[1]; j++) {
+                   for (int i = 0; i < Nrep[0]; i++) {
+                      Box b(orig_ba[nb]);
+                      IntVect lo(b.smallEnd());
+                      IntVect hi(b.bigEnd());
+                      IntVect shift_vec(i*orig_domain.length(0),
+                                        j*orig_domain.length(1),
+                                        k*orig_domain.length(2));
+                      b.shift(shift_vec);
+                      bl.push_back(b);
+                   }
+                 }
+               }
+            }
+            ba.define(bl);
+
+            if (ParallelDescriptor::IOProcessor())
+               std::cout << " NEW BA HAS " << ba.size() << " GRIDS " << std::endl;
             SetBoxArray(lev, ba);
        	    DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
             SetDistributionMap(lev, dm);
-//     	    MakeNewLevel(lev, ba, dm);
             AllocateArrays(lev);
        	}
     }
@@ -232,7 +269,33 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     	    MultiFab mf;
 	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,
   					  vecVarsName[i]));
-	    (*vectorVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
+
+            if (Nrep == IntVect::TheUnitVector())
+            {
+
+   	       // Simply copy mf into vectorVars
+   	       (*vectorVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
+
+            } else {
+
+               if (mf.boxArray().size() > 1) 
+                   amrex::Abort("Replication only works if one initial grid");
+
+               mf.FillBoundary(geom[lev].periodicity());
+
+               Box edge_bx = mf.boxArray()[0];
+               edge_bx.surroundingNodes(i);
+
+               FArrayBox single_fab(edge_bx,1);
+   	       mf.copyTo(single_fab);
+
+   	       // Copy and replicate mf into vectorVars
+	       for (MFIter mfi( *(*vectorVars[i])[lev] ); mfi.isValid(); ++mfi)
+	       {
+                   int ib = mfi.index();
+	           (*(*vectorVars[i])[lev])[ib].copy(single_fab,single_fab.box(),0,mfi.validbox(),0,1);
+	       }
+            }
 	}
 
 	// Read scalar variables
@@ -240,14 +303,40 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     	    MultiFab mf;
 	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,
   					  scaVarsName[i]));
-	    (*scalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
+            if (Nrep == IntVect::TheUnitVector())
+            {
+
+   	       // Simply copy mf into scalarVars
+	       (*scalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
+
+            } else {
+
+               if (mf.boxArray().size() > 1) 
+                   amrex::Abort("Replication only works if one initial grid");
+
+               mf.FillBoundary(geom[lev].periodicity());
+
+               FArrayBox single_fab(mf.boxArray()[0],1);
+   	       mf.copyTo(single_fab);
+
+   	       // Copy and replicate mf into scalarVars
+	       for (MFIter mfi( *(*scalarVars[i])[lev] ); mfi.isValid(); ++mfi)
+	       {
+                   int ib = mfi.index();
+	           (*(*scalarVars[i])[lev])[ib].copy(single_fab,single_fab.box(),0,mfi.validbox(),0,1);
+	       }
+            }
 	}
     }
 
     // Initialize particles
     pc->Restart(restart_file, "particles");
 
-    // pc->writeAllForComparison(0);
+    Array<Real> orig_domain_size;
+    orig_domain_size.resize(BL_SPACEDIM);
+    for (int d = 0; d < BL_SPACEDIM; d++)
+       orig_domain_size[d] = (prob_hi[d] - prob_lo[d]) / Nrep[d];
+    pc->Replicate(Nrep,orig_domain_size);
 
     //  Create mask for particle ghost cells
     int lev = 0;
@@ -256,7 +345,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 
 void
 mfix_level::GotoNextLine (std::istream& is)
-{
+{ 
     constexpr std::streamsize bl_ignore_max { 100000 };
     is.ignore(bl_ignore_max, '\n');
 }

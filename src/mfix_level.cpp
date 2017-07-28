@@ -111,7 +111,7 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
   for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.tilebox();
@@ -136,7 +136,7 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
   for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.tilebox();
@@ -177,7 +177,7 @@ mfix_level::mfix_calc_mflux(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*u_g[lev], true); mfi.isValid(); ++mfi)
     {
       Box ubx((*u_g[lev])[mfi].box());
@@ -206,7 +206,7 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*rop_g[lev], true); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.tilebox();
@@ -261,6 +261,7 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
     // We make temporaries because the omp parallel reduction won't take reference values.
     Real temp_num = num_u;
     Real temp_denom = denom_u;
+
 
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:temp_num,temp_denom)
@@ -340,15 +341,15 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
 #endif
     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
     {
-  const Box& bx = mfi.tilebox();
-  const Box& sbx = (*ep_g[lev])[mfi].box();
-  Box abx((*A_m[lev])[mfi].box());
+       const Box& bx = mfi.tilebox();
+       const Box& sbx = (*ep_g[lev])[mfi].box();
+       Box abx((*A_m[lev])[mfi].box());
 
-  Box ubx((*u_g[lev])[mfi].box());
-  Box vbx((*v_g[lev])[mfi].box());
-  Box wbx((*w_g[lev])[mfi].box());
+       Box ubx((*u_g[lev])[mfi].box());
+       Box vbx((*v_g[lev])[mfi].box());
+       Box wbx((*w_g[lev])[mfi].box());
 
-  solve_v_g_star(sbx.loVect(), sbx.hiVect(),
+       solve_v_g_star(sbx.loVect(), sbx.hiVect(),
            ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
            wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
            bx.loVect(),  bx.hiVect(),
@@ -526,7 +527,7 @@ mfix_level::mfix_correct_0(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.growntilebox();
@@ -549,7 +550,7 @@ mfix_level::mfix_correct_0(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -574,7 +575,7 @@ mfix_level::mfix_correct_0(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -594,7 +595,7 @@ mfix_level::mfix_correct_0(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -628,7 +629,7 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
   BL_PROFILE("mfix_level::mfix_physical_prop()");
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
   const Box& bx = mfi.tilebox();
@@ -710,7 +711,7 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
     // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
     {
   const Box& sbx = mf[mfi].box();
@@ -722,10 +723,13 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 
 void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
 {
-  BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
+    BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
+
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
+
+    Box domain(geom[lev].Domain());
 
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
@@ -733,7 +737,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
     if (use_pic == 1)
     {
        // This call simply deposits the particle volume onto the grid in a PIC-like manner
-       pc->CalcVolumeFraction(*ep_g[lev]);
+       pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
 
     } else {
 
@@ -742,7 +746,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
        for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
        {
            const Box& sbx = (*ep_g[lev])[pti].box();
@@ -756,9 +760,9 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
                                   (*ep_g[lev])[pti].dataPtr());
        }
     }
- 
+
     // Now define rop_g = ro_g * ep_g
-    rop_g[lev]->copy((*ro_g[lev]));
+    rop_g[lev]->copy((*ro_g[lev]),0,0,1,rop_g[lev]->nGrow(),rop_g[lev]->nGrow());
     MultiFab::Multiply((*rop_g[lev]), (*ep_g[lev]), 0, 0, 1, rop_g[lev]->nGrow());
 
     // This sets the values outside walls or periodic boundaries
@@ -783,7 +787,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
     {
         const Box& sbx = (*ep_g[lev])[pti].box();
@@ -806,7 +810,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
             particles.data(), &dx, &dy, &dz , &use_pic);
     }
 
-    // If use_pic == 0 we have already deposited the drag coefficients into 
+    // If use_pic == 0 we have already deposited the drag coefficients into
     //   f_gds and drag_bm.  If use_pic == 1 we do it here.
     if (use_pic == 1)
        pc -> CalcDragOnFluid(*f_gds[lev],*drag_bm[lev]);
@@ -816,7 +820,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
 }
 
 void
-mfix_level::mfix_calc_drag_particle(int lev) 
+mfix_level::mfix_calc_drag_particle(int lev)
 {
     BL_PROFILE("mfix_level::mfix_calc_drag_particle()");
 
@@ -830,7 +834,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
     {
         const Box& sbx = (*ep_g[lev])[pti].box();
@@ -849,5 +853,29 @@ mfix_level::mfix_calc_drag_particle(int lev)
             (*p_g[lev])[pti].dataPtr(), (*u_g[lev])[pti].dataPtr(),
             (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
             particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
+    }
+}
+
+void
+mfix_level::mfix_set_bc1(int lev)
+{
+  BL_PROFILE("mfix_level::mfix_set_bc1()");
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+  for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+    {
+      Box domain(geom[lev].Domain());
+      const Box& sbx = (*ep_g[lev])[mfi].box();
+      Box ubx((*u_g[lev])[mfi].box());
+      Box vbx((*v_g[lev])[mfi].box());
+      Box wbx((*w_g[lev])[mfi].box());
+
+      set_bc1(sbx.loVect(), sbx.hiVect(),
+              ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+              (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
 }

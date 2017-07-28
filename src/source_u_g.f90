@@ -38,11 +38,11 @@ contains
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       ! Septadiagonal matrix A_m
-      real(c_real), intent(INOUT) :: A_m&
+      real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       ! Vector b_m
-      real(c_real), intent(INOUT) :: b_m&
+      real(c_real), intent(inout) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       real(c_real), intent(in   ) :: p_g&
@@ -66,7 +66,7 @@ contains
 ! Pressure at east cell
       real(c_real) :: PgW
 ! Average volume fraction
-      real(c_real) :: EPGA
+      real(c_real) :: epga
 ! Source terms (Surface)
       real(c_real) :: Sdp
 ! Source terms (Volumetric)

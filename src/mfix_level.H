@@ -35,9 +35,8 @@ public:
 
     void WritePlotFile ( std::string& plot_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
 
-    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time); 
-//  void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time, 
-//                IntVect& Nrep);
+    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time,
+                  IntVect& Nrep);
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
 
@@ -47,7 +46,7 @@ public:
     void usr3 (int lev);
 
     void output (int lev, int estatus, int finish, int nstep, Real dt, Real time)
-  { pc -> output( lev, estatus, finish, nstep, dt, time);};
+       { pc -> output( lev, estatus, finish, nstep, dt, time);};
 
     void make_mg_bc (int mg_bc[]);
 
@@ -80,6 +79,7 @@ protected:
     void mfix_calc_trd_and_tau (int lev);
 
     void mfix_init_fluid (int lev, int is_restarting = 0);
+    void mfix_set_bc0 (int lev);
 
     void mfix_conv_rop (int lev, Real dt);
 
@@ -91,7 +91,7 @@ protected:
 
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
-    void mfix_solve_for_pp (int lev, Real dt, Real& num_p, Real& denom_p); 
+    void mfix_solve_for_pp (int lev, Real dt, Real& num_p, Real& denom_p);
 
     void mfix_physical_prop (int lev, int calc_flag);
 
@@ -128,6 +128,7 @@ private:
     BoxArray MakeBaseGrids () const;
 
   void mfix_set_bc_type(int lev);
+  void mfix_set_bc1(int lev);
 
   void fill_mf_bc(int lev,  MultiFab& mf);
 #if 0

@@ -15,11 +15,17 @@ Real stop_time = -1.0;
 
 std::string restart_file {""};
 
+int repl_x = 1;
+int repl_y = 1;
+int repl_z = 1;
+
 int  check_int = -1;
 std::string check_file {"chk"};
 
 int   plot_int = -1;
 std::string plot_file {"plt"};
+
+bool plotfile_on_restart = false;
 
 int par_ascii_int = -1;
 std::string par_ascii_file {"par"};
@@ -47,10 +53,15 @@ void ReadParameters ()
   pp.query("plot_file", plot_file);
   pp.query("plot_int", plot_int);
 
+  pp.query("plotfile_on_restart", plotfile_on_restart);
+
   pp.query("par_ascii_file", par_ascii_file);
   pp.query("par_ascii_int", par_ascii_int);
 
   pp.query("restart_file", restart_file);
+  pp.query("repl_x", repl_x);
+  pp.query("repl_y", repl_y);
+  pp.query("repl_z", repl_z);
   pp.query("verbose", verbose);
 }
 
@@ -113,7 +124,8 @@ int main (int argc, char* argv[])
     {
        my_mfix.InitLevelData(lev,dt,time);
     } else {
-       my_mfix.Restart( restart_file, &nstep, &dt, &time);
+       IntVect Nrep(repl_x,repl_y,repl_z);
+       my_mfix.Restart( restart_file, &nstep, &dt, &time, Nrep);
        my_mfix.InitLevelDataFromRestart( lev, dt, time );
     }
 
@@ -136,7 +148,7 @@ int main (int argc, char* argv[])
 
     // We automatically write checkpoint and plotfiles with the initial data
     //    if plot_int > 0
-    if ( restart_file.empty() && plot_int > 0 )
+    if ( (restart_file.empty() || plotfile_on_restart) && plot_int > 0 )
        my_mfix.WritePlotFile( plot_file, nstep, dt, time );
 
     // We automatically write checkpoint files with the initial data
@@ -155,7 +167,14 @@ int main (int argc, char* argv[])
        {
           mfix_usr1();
 
+          Real strt_step = ParallelDescriptor::second();
+
           my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
+
+          Real end_step = ParallelDescriptor::second() - strt_step;
+          ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
+          if (ParallelDescriptor::IOProcessor())
+             std::cout << "Time per step        " << end_step << std::endl;
 
           if (!steady_state)  
           {

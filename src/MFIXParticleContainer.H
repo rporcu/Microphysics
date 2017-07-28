@@ -4,6 +4,7 @@
 
 #include <AMReX.H>
 #include <AMReX_AmrParGDB.H>
+#include <AMReX_IArrayBox.H>
 #include "AMReX_Particles.H"
 #include "AMReX_NeighborParticles.H"
 
@@ -75,6 +76,8 @@ public:
 
     void InitParticlesAscii (const std::string& file);
 
+    void Replicate (IntVect& Nrep, amrex::Array<Real>& orig_domain_size);
+
     void printParticles ();
 
     void AllocData ();
@@ -98,12 +101,19 @@ public:
     ///
     /// Calculate gas volume fraction using a PIC deposition of particle volume
     ///
-    void CalcVolumeFraction(amrex::MultiFab& mf);
+    void CalcVolumeFraction(amrex::MultiFab& mf,
+                            IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                            IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                            IArrayBox& bc_klo, IArrayBox& bc_khi);
 
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction
     ///
-    void PICDeposition(amrex::MultiFab& mf, int fortran_particle_comp);
+    void PICDeposition(amrex::MultiFab& mf, 
+                       IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                       IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                       IArrayBox& bc_klo, IArrayBox& bc_khi,
+                       int fortran_particle_comp);
 
     ///
     /// Calculate particle-induced drag on the fluid
