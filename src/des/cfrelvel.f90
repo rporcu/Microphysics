@@ -84,7 +84,6 @@ contains
       V_ROT = DES_CROSSPRDCT(OMEGA_SUM, NORM)
 
       ! total relative velocity
-      !VRELTRANS(:) =  VRELTRANS(:) + particle_1%radius * V_ROT(:) !Line should be corrected to this. 
       VRELTRANS(:) =  VRELTRANS(:) + V_ROT(:)
 
       ! normal component of relative velocity (scalar)
