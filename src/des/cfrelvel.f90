@@ -28,7 +28,7 @@ contains
    !    horizontal pipe", Powder technology, 71, 239-250, 1992
    !
    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   subroutine cfrelvel(particle_1, particle_2, VRN, VSLIP, NORM, dist_mag)
+   subroutine cfrelvel(particle_1, particle_2, VRN, VSLIP, NORM, dist_cc)
  
 
       !-----------------------------------------------
@@ -43,8 +43,8 @@ contains
       !-----------------------------------------------
       !Colliding particle pair
       type(particle_t),     intent(in   ) :: particle_1, particle_2
-      !distance magnitude - distance from particle centers squared
-      real(c_real),         intent(in   ) :: dist_mag
+      !distance from particle center to particle center 
+      real(c_real),         intent(in   ) :: dist_cc
       ! unit normal vector along the line of contact pointing from
       ! particle L to particle II
       real(c_real), INTENT(IN) :: NORM(3)
@@ -73,9 +73,9 @@ contains
       ! calculate the distance from the particle center to the contact point,
       ! which is taken as the radical line
       ! dist_ci+dist_cl=dist_li; dist_ci^2+a^2=ri^2;  dist_cl^2+a^2=rl^2
-      DIST_CL = ( dist_mag**2 + particle_1%radius**2 - particle_2%radius**2 )/&
-           (2.d0*dist_mag)
-      DIST_CI = dist_mag - DIST_CL
+      DIST_CL = ( dist_cc**2 + particle_1%radius**2 - particle_2%radius**2 )/&
+           (2.d0*dist_cc)
+      DIST_CI = dist_cc - DIST_CL
 
       OMEGA_SUM(:) = particle_1%omega * DIST_CL + &
            particle_2%omega * DIST_CI
@@ -84,6 +84,7 @@ contains
       V_ROT = DES_CROSSPRDCT(OMEGA_SUM, NORM)
 
       ! total relative velocity
+      !VRELTRANS(:) =  VRELTRANS(:) + particle_1%radius * V_ROT(:) !Line should be corrected to this. 
       VRELTRANS(:) =  VRELTRANS(:) + V_ROT(:)
 
       ! normal component of relative velocity (scalar)
