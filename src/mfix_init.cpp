@@ -85,7 +85,7 @@ mfix_level::MakeBaseGrids () const
         ba = grids[0];  // to avoid dupliates
     }
     if ( ParallelDescriptor::IOProcessor() )
-        std::cout << "BA " << ba << std::endl;
+        std::cout << "In MakeBaseGrids: BA HAS " << ba.size() << " GRIDS " << std::endl;
     return ba;
 }
 
