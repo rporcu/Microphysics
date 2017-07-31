@@ -67,7 +67,7 @@ set (MFIX_Intel_FFLAGS_FPE "")
 
 set (MFIX_Intel_CXXFLAGS_DEBUG "-g -O0 -traceback -Wcheck")
 set (MFIX_Intel_CXXFLAGS_RELEASE "-O3 -ip -qopt-report=5 -qopt-report-phase=vec")
-set (MFIX_Intel_CXXFLAGS_REQUIRED "")#-ftemplate-depth-64 -Wno-deprecated")
+set (MFIX_Intel_CXXFLAGS_REQUIRED  "-std=c++11")#-ftemplate-depth-64 -Wno-deprecated")
 set (MFIX_Intel_CXXFLAGS_FPE "")
 
 # PGI compiler specific flags
