@@ -35,16 +35,22 @@ endfunction ()
 # Function to append to link line
 #
 function ( append_to_link_line libs link_line )
-
-   if ( ${ARGC} EQUAL 3 )  # Third one is optional flags
-      set ( flags  ${ARGV2} )
+   
+   string ( STRIP "${${libs}}" libs )
+   
+   if ( ${ARGC} EQUAL 3 )  # Third one is optional flags                                                                                         
+      set ( flags  ${${ARGV2}} )
+      string ( STRIP "${flags}" flags )
+      set (tmp "${flags} ${libs}")
    else ()
-      set ( flags )
+      set ( flags "")
+      set (tmp "${libs}")
    endif ()
    
-   set ( tmp "${${link_line}} ${${flags}} ${${libs}} " )
-   string ( STRIP "${tmp}" tmp )
-   set ( ${link_line} ${tmp} PARENT_SCOPE )
+   if (tmp)
+      list (APPEND ${link_line} ${tmp})
+      set ( ${link_line} ${${link_line}} PARENT_SCOPE )
+   endif ()
    
 endfunction ()
 
