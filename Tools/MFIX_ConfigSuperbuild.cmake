@@ -202,5 +202,5 @@ append ( AMREX_EXTRA_Fortran_FLAGS AMREX_Fortran_FLAGS )
 append ( AMREX_EXTRA_CXX_FLAGS AMREX_CXX_FLAGS )
 
 # Set amrex libs
-set (AMREX_LIBRARIES     fboxlib;cboxlib;fboxlib;cfboxlib;box_camrdata)
+set (AMREX_LIBRARIES     amrex)
 set (AMREX_LIBRARY_DIR   ${AMREX_INSTALL_PATH}/lib)
