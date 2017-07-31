@@ -61,13 +61,13 @@ set (MFIX_GNU_CXXFLAGS_FPE "-ftrapv")
 
 # Intel compiler specific flags
 set (MFIX_Intel_FFLAGS_DEBUG "-g -O0 -traceback -check bounds,uninit,pointers")
-set (MFIX_Intel_FFLAGS_RELEASE "-O2 -ip -qopt-report=5 -qopt-report-phase=vec")
+set (MFIX_Intel_FFLAGS_RELEASE "-O3 -ip -qopt-report=5 -qopt-report-phase=vec")
 set (MFIX_Intel_FFLAGS_REQUIRED "-extend_source")
 set (MFIX_Intel_FFLAGS_FPE "")
 
 set (MFIX_Intel_CXXFLAGS_DEBUG "-g -O0 -traceback -Wcheck")
-set (MFIX_Intel_CXXFLAGS_RELEASE "-O2 -ip -qopt-report=5 -qopt-report-phase=vec")
-set (MFIX_Intel_CXXFLAGS_REQUIRED "")#-ftemplate-depth-64 -Wno-deprecated")
+set (MFIX_Intel_CXXFLAGS_RELEASE "-O3 -ip -qopt-report=5 -qopt-report-phase=vec")
+set (MFIX_Intel_CXXFLAGS_REQUIRED  "-std=c++11")#-ftemplate-depth-64 -Wno-deprecated")
 set (MFIX_Intel_CXXFLAGS_FPE "")
 
 # PGI compiler specific flags
@@ -122,7 +122,7 @@ set (MFIX_EXTRA_LIBRARIES_PATH)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
-set (AMREX_GIT_COMMIT_DEVELOP 5b2ca6129a7903efdcedab7ad8b5533336705d88 )
+set (AMREX_GIT_COMMIT_DEVELOP 5e010d0f18cb4d8d33d8382ca0d0c12d9abc3659 )
 set (AMREX_GIT_TAG)  # The commit id or branch to download 
 
 # AMReX Superbuild variables

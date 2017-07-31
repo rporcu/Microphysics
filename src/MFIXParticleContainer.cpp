@@ -509,10 +509,8 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
                              lo, hi, plo, dx, &fortran_particle_comp);
 
 #ifdef _OPENMP
-            amrex_atomic_accumulate_fab(local_vol.dataPtr(), 
-                                        tile_box.loVect(), tile_box.hiVect(),
-                                        fab.dataPtr(),
-                                        box.loVect(), box.hiVect(), ncomp);
+            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
+                                        BL_TO_FORTRAN_3D(fab), ncomp);
 #endif
 
         }
@@ -608,10 +606,8 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::
             mfix_multi_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr, lo, hi, plo, dx, &fortran_beta_comp, &fortran_vel_comp);
 
 #ifdef _OPENMP
-            amrex_atomic_accumulate_fab(local_vol.dataPtr(), 
-                                        tile_box.loVect(), tile_box.hiVect(),
-                                        fab.dataPtr(),
-                                        box.loVect(), box.hiVect(), ncomp);
+            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
+                                        BL_TO_FORTRAN_3D(fab), ncomp);
 #endif
 
         }
