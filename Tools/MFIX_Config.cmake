@@ -85,7 +85,8 @@ set ( MFIX_DEFINES  ${AMREX_DEFINES} )
 add_definitions ( ${MFIX_DEFINES} )
 
 # Add amrex library path and extra link line
-append_to_link_line ( AMREX_LIBRARIES MFIX_EXTRA_LINK_LINE )
+set (AMREX_LIB_FULLPATH ${AMREX_LIBRARY_DIR}/libamrex.a)
+append_to_link_line ( AMREX_LIB_FULLPATH MFIX_EXTRA_LINK_LINE )
 append_to_link_line ( AMREX_EXTRA_CXX_LINK_LINE MFIX_EXTRA_LINK_LINE )
 list (APPEND MFIX_EXTRA_LIBRARIES_PATH "${AMREX_LIBRARY_DIR}")
 
