@@ -182,6 +182,37 @@ contains
          end do
       end do
 
+   contains
+
+      include 'functions.inc'
+
+     
+      !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+      !                                                                      !
+      !  subroutine: print_excess_overlap                                    !
+      !                                                                      !
+      !  purpose: print overlap warning messages.                            !
+      !                                                                      !
+      !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      subroutine print_excess_overlap
+
+         if(overlap_n > flag_overlap*radiusll .or.                  &
+              overlap_n > flag_overlap*radiusii) then
+
+            write(err_msg,1000) trim(ival(ll)), trim(ival(ii)),     &
+                 radiusll, radiusii, overlap_n
+
+            call flush_err_msg(header=.false., footer=.false.)
+         endif
+
+1000     format('warning: excessive overplay detected between ',          &
+              'particles ',a,' and ',/a,'.',/             &
+              'radii:  ',g11.4,' and ',g11.4,4x,'overlap: ',g11.4)
+
+      end subroutine print_excess_overlap
+
+
+      
    end subroutine calc_force_dem
 
    subroutine calc_force_dem_nl( particles, nbor_list, size_nl, fc, tow, dtsolid, nstep, ncoll )
