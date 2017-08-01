@@ -4,34 +4,12 @@
 
 #include <AMReX.H>
 #include <AMReX_AmrParGDB.H>
+#include <AMReX_IArrayBox.H>
 #include "AMReX_Particles.H"
-
+#include "AMReX_NeighborParticles.H"
 
 using namespace amrex;
 using namespace std;
-
-
-namespace {
-
-struct NeighborCommTag {
-
-    NeighborCommTag(int pid, int gid, int tid)
-        : proc_id(pid), grid_id(gid), tile_id(tid)
-    {}
-
-    int proc_id;
-    int grid_id;
-    int tile_id;
-};
-
-bool operator<(const NeighborCommTag& l, const NeighborCommTag& r) {
-    return (l.proc_id < r.proc_id ||
-           (l.proc_id == r.proc_id && l.grid_id < r.grid_id) ||
-           (l.proc_id == r.proc_id && l.grid_id == r.grid_id && l.tile_id < r.tile_id ));
-}
-
-}
-
 
 struct realData
 {
@@ -73,18 +51,15 @@ public:
     using amrex::ParIter<realData::count,intData::count,0,0>::ParIter;
 };
 
-class MFIXParticleContainer
-    : public amrex::ParticleContainer<realData::count,intData::count,0,0>
+class MFIXParticleContainer final
+    : public amrex::NeighborParticleContainer<realData::count,intData::count,realData::count+2>
 {
 public:
 
-    using PairIndex = std::pair<int, int>;
-    using NeighborCommMap = std::map<NeighborCommTag, Array<char> >;
-
     // Get number of particles
-    const int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
+    int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
 
-    const int NumberOfParticles(int& lev, MFIter& mfi)
+    int NumberOfParticles(int& lev, MFIter& mfi)
     {
       const int gridIndex = mfi.index();
       const int tileIndex = mfi.LocalTileIndex();
@@ -97,11 +72,11 @@ public:
 
     virtual ~MFIXParticleContainer() {};
 
-    void InitLevelMask ( int lev, const Geometry &geom, const DistributionMapping &dmap, const BoxArray &ba );
-
     void InitData ();
 
     void InitParticlesAscii (const std::string& file);
+
+    void Replicate (IntVect& Nrep, amrex::Array<Real>& orig_domain_size);
 
     void printParticles ();
 
@@ -123,44 +98,48 @@ public:
     ///
     void writeAllAtLevel(int lev = 0);
 
+    ///
+    /// Calculate gas volume fraction using a PIC deposition of particle volume
+    ///
+    void CalcVolumeFraction(amrex::MultiFab& mf,
+                            IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                            IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                            IArrayBox& bc_klo, IArrayBox& bc_khi);
+
+    ///
+    /// Do the actual PIC deposition for CalcVolumeFraction
+    ///
+    void PICDeposition(amrex::MultiFab& mf, 
+                       IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                       IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                       IArrayBox& bc_klo, IArrayBox& bc_khi,
+                       int fortran_particle_comp);
+
+    ///
+    /// Calculate particle-induced drag on the fluid
+    ///
+    void CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf);
+
+    ///
+    /// Do the actual PIC deposition for CalcDragOnFluid
+    ///
+    void PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf, int fortran_beta_comp, int fortran_vel_comp);
+
 private:
+
+    ///
+    /// We add a particle to the neighbor list if it's center is within 3 particle radii
+    ///
+    inline virtual bool check_pair(const ParticleType& p1, const ParticleType& p2) final {
+        return AMREX_D_TERM(   (p1.pos(0) - p2.pos(0))*(p1.pos(0) - p2.pos(0)) ,
+                             + (p1.pos(1) - p2.pos(1))*(p1.pos(1) - p2.pos(1)) ,
+                             + (p1.pos(2) - p2.pos(2))*(p1.pos(2) - p2.pos(2)) ) <= 9.0*p1.rdata(0)*p1.rdata(0);
+    }
 
     static void ReadStaticParameters ();
 
-    ///
-    /// Apply periodic shift to particle position, so naive distance calculation
-    /// between neighbors and regular particles will be correct.
-    ///
-    void applyPeriodicShift(int lev, ParticleType& p, const amrex::IntVect& neighbor_cell);
-
-    void fillNeighbors( int lev );
-
-    ///
-    /// Pack a particle's data into the proper neighbor buffer, or put it into
-    /// the structure to be sent to the other processes
-    ///
-    void packNeighborParticle( int lev,
-          const IntVect& neighbor_cell,
-          const BaseFab<int>& mask,
-          const ParticleType& p,
-          NeighborCommMap& neighbors_to_comm);
-    ///
-    /// Perform the MPI communication neccesary to fill neighbor buffers
-    ///
-    void fillNeighborsMPI(NeighborCommMap& neighbors_to_comm);
-
-
-    void clearNeighbors( int lev );
-
-    //
-    // This members are for the handling of neighbor particles
-    //
-    const int ng = 2;  // number of neighbor layers
-    const size_t pdata_size = sizeof( ParticleType );
-    // const size_t pdata_size = (BL_SPACEDIM + realData::count)*sizeof(RealType) +
-    //  (2+intData::count)*sizeof(int);
-    FabArray< BaseFab<int> > mask;
-    std::map<PairIndex, Array<char> > neighbors;
+    static bool use_neighbor_list;
+    static bool sort_neighbor_list;
 
 };
 #endif

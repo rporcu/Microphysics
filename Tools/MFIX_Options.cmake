@@ -5,13 +5,22 @@
 
 ###############################################
 
+if (DEFINED __MFIX_OPTIONS__)
+   return ()
+endif ()
+# Define the following variable
+# so that other included file can check if this file has been
+# run already
+set (__MFIX_OPTIONS__ "")
+
+
 #
-# Check weather the AMReX_CMakeVariables.cmake
+# Check weather the MFIX_CMakeVariables.cmake
 # has been loaded; abort if not
 #
-if ( NOT MFIX_VARIABLES_LOADED )
-   message ( FATAL_ERROR "AMReX_Options.cmake must be included\
-after including AMReX_CMakeVariables.cmake" )
+if (NOT (DEFINED __MFIX_CMAKEVARIABLES__) )
+   message ( FATAL_ERROR "MFIX_Options.cmake must be included \
+after including MFIX_CMakeVariables.cmake" )
 endif ()
 
 
@@ -54,8 +63,11 @@ set (AMREX_INSTALL_DIR "" CACHE PATH "Path to installation directory (leave empt
 
 set (MFIX_FFLAGS_OVERRIDES "" CACHE STRING "User-defined Fortran compiler flags" )
 message (STATUS "   MFIX_FFLAGS_OVERRIDES = ${MFIX_FFLAGS_OVERRIDES}" )
-set (MFIX_CXXLAGS_OVERRIDES "" CACHE STRING "User-defined C++ compiler flags" )
+set (MFIX_CXXFLAGS_OVERRIDES "" CACHE STRING "User-defined C++ compiler flags" )
 message (STATUS "   MFIX_CXXFLAGS_OVERRIDES = ${MFIX_CXXFLAGS_OVERRIDES}" )
+
+set (ENABLE_FPE 0 CACHE INT "Enable Floating Point Exceptions checks")
+check_option_value ( "ENABLE_FPE" ${ENABLE_FPE} 0 1 )
 
 
 #
@@ -97,8 +109,4 @@ endif ()
 
 
 
-# After the options are set, define the following variable
-# so that other included file can check if this file has been
-# run already
-set ( MFIX_OPTIONS_SET  "TRUE" )  
 

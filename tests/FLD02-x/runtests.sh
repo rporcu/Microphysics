@@ -36,8 +36,8 @@ FCOMPARE=${FCOMPARE:-}
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
-${FEXTRACT} -p FLD0200000/ -d 2 -v u_g -s POST_VG.dat
-${FEXTRACT} -p FLD0200000/ -d 1 -v p_g -s POST_PG.dat
+${FEXTRACT} -p FLD0200001/ -d 2 -v u_g -s POST_VG.dat
+${FEXTRACT} -p FLD0200001/ -d 1 -v p_g -s POST_PG.dat
 
 post_dats=POST*.dat
 for result in ${post_dats}; do

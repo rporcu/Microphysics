@@ -3,12 +3,16 @@
 # Here we configure the build                 #
 
 ###############################################
+if (DEFINED __MFIX_CONFIG__)
+   return ()
+endif ()
+set ( __MFIX_CONFIG__ "" )
 
 #
-#  Check if AMReX_Options.cmake has been already processed
+#  Check if MFIX_Options.cmake has been already processed
 #
-if ( NOT MFIX_OPTIONS_SET )
-   message ( FATAL_ERROR "MFIX_Options.cmake must be\
+if (NOT (DEFINED __MFIX_OPTIONS__) )
+   message ( FATAL_ERROR "MFIX_Options.cmake must be \
 included before MFIX_Config.cmake" )
 endif ()
 
@@ -22,7 +26,7 @@ else ()
       MFIX_Fortran_FLAGS )
 endif ()
 
-if ( MFIX_CXXLAGS_OVERRIDES )
+if ( MFIX_CXXFLAGS_OVERRIDES )
    set ( MFIX_CXX_FLAGS ${MFIX_CXXFLAGS_OVERRIDES} )
 else ()
    append ( MFIX_${CXX_ID}_CXXFLAGS_${MFIX_BUILD_TYPE}
@@ -81,7 +85,8 @@ set ( MFIX_DEFINES  ${AMREX_DEFINES} )
 add_definitions ( ${MFIX_DEFINES} )
 
 # Add amrex library path and extra link line
-append_to_link_line ( AMREX_LIBRARIES MFIX_EXTRA_LINK_LINE )
+set (AMREX_LIB_FULLPATH ${AMREX_LIBRARY_DIR}/libamrex.a)
+append_to_link_line ( AMREX_LIB_FULLPATH MFIX_EXTRA_LINK_LINE )
 append_to_link_line ( AMREX_EXTRA_CXX_LINK_LINE MFIX_EXTRA_LINK_LINE )
 list (APPEND MFIX_EXTRA_LIBRARIES_PATH "${AMREX_LIBRARY_DIR}")
 
@@ -89,6 +94,10 @@ list (APPEND MFIX_EXTRA_LIBRARIES_PATH "${AMREX_LIBRARY_DIR}")
 append ( AMREX_EXTRA_Fortran_FLAGS MFIX_EXTRA_Fortran_FLAGS )
 append ( AMREX_EXTRA_C_FLAGS MFIX_EXTRA_C_FLAGS )
 append ( AMREX_EXTRA_CXX_FLAGS MFIX_EXTRA_CXX_FLAGS )
+
+# Set amrex typecheker path
+set ( AMREX_TYPECHECKER  "${AMREX_INSTALL_PATH}/Tools/typechecker/typechecker.py" )
+
 
 # ------------------------------------------------------------- #
 #  Finalize configuration 
@@ -100,8 +109,16 @@ append ( MFIX_EXTRA_CXX_FLAGS MFIX_CXX_FLAGS )
 append ( MFIX_${FC_ID}_FFLAGS_REQUIRED MFIX_Fortran_FLAGS )
 append ( MFIX_${CXX_ID}_CXXFLAGS_REQUIRED MFIX_CXX_FLAGS )
 
+# Add FPE flags if required 
+if (ENABLE_FPE)
+   append ( MFIX_${FC_ID}_FFLAGS_FPE MFIX_Fortran_FLAGS )
+   append ( MFIX_${CXX_ID}_CXXFLAGS_FPE MFIX_CXX_FLAGS )
+endif ()
+
+
 # Set CMake compiler flags
-set ( CMAKE_Fortran_FLAGS_${MFIX_BUILD_TYPE} "${MFIX_Fortran_FLAGS}" ) 
+set ( CMAKE_Fortran_FLAGS_${MFIX_BUILD_TYPE}
+   "${MFIX_Fortran_FLAGS} ${AMREX_Fortran_DEFINITIONS}" ) 
 set ( CMAKE_CXX_FLAGS_${MFIX_BUILD_TYPE} "${MFIX_CXX_FLAGS}" )
 
 # Set total extra  includes path
@@ -121,12 +138,12 @@ message( STATUS "   Preprocessor flags    = ${MFIX_DEFINES}")
 message( STATUS "   C++ compiler          = ${CMAKE_CXX_COMPILER}")
 message( STATUS "   Fortran compiler      = ${CMAKE_Fortran_COMPILER}")
 message( STATUS "   C++ flags             = ${CMAKE_CXX_FLAGS_${MFIX_BUILD_TYPE}}")
-# message( STATUS "   Fortran flags         = ${CMAKE_Fortran_FLAGS_${MFIX_BUILD_TYPE}}")
+message( STATUS "   Fortran flags         = ${CMAKE_Fortran_FLAGS_${MFIX_BUILD_TYPE}}")
 # message( STATUS "   C++ include paths     = ${MFIX_EXTRA_CXX_INCLUDE_PATH}") 
 # message( STATUS "   Fortran include paths = ${MFIX_EXTRA_Fortran_INCLUDE_PATH}")
 # message( STATUS "   C++ external libs     = ${MFIX_EXTRA_CXX_LIBRARIES}") 
 # message( STATUS "   Fortran external libs = ${MFIX_EXTRA_Fortran_LIBRARIES}")
 # message( STATUS "   C++ link flags        = ${MFIX_EXTRA_CXX_LINK_FLAGS}") 
-message( STATUS "   Fortran link flags    = ${MFIX_EXTRA_LINK_FLAGS}")
+#message( STATUS "   Fortran link flags    = ${MFIX_EXTRA_LINK_FLAGS}")
 message( STATUS "   MFIX extra link line  = ${MFIX_EXTRA_LINK_LINE}")
 message( STATUS "   MFIX extra includes   = ${MFIX_EXTRA_INCLUDE_PATH}")

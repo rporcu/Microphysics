@@ -35,7 +35,8 @@ public:
 
     void WritePlotFile ( std::string& plot_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
 
-    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time);
+    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time,
+                  IntVect& Nrep);
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
 
@@ -45,7 +46,7 @@ public:
     void usr3 (int lev);
 
     void output (int lev, int estatus, int finish, int nstep, Real dt, Real time)
-  { pc -> output( lev, estatus, finish, nstep, dt, time);};
+       { pc -> output( lev, estatus, finish, nstep, dt, time);};
 
     void make_mg_bc (int mg_bc[]);
 
@@ -78,19 +79,19 @@ protected:
     void mfix_calc_trd_and_tau (int lev);
 
     void mfix_init_fluid (int lev, int is_restarting = 0);
+    void mfix_set_bc0 (int lev);
 
     void mfix_conv_rop (int lev, Real dt);
 
     void mfix_calc_mflux (int lev);
 
-    void mfix_solve_for_vels (int lev, Real dt, Real (&residuals)[16]);
-    void mfix_solve_for_u    (int lev, Real dt, Real (&residuals)[16]);
-    void mfix_solve_for_v    (int lev, Real dt, Real (&residuals)[16]);
-    void mfix_solve_for_w    (int lev, Real dt, Real (&residuals)[16]);
+    void mfix_solve_for_u    (int lev, Real dt, Real& num_u, Real& denom_u);
+    void mfix_solve_for_v    (int lev, Real dt, Real& num_v, Real& denom_v);
+    void mfix_solve_for_w    (int lev, Real dt, Real& num_w, Real& denom_w);
 
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
-    void mfix_solve_for_pp (int lev, Real dt, Real& lnormg, Real& resg, Real (&residuals)[16]);
+    void mfix_solve_for_pp (int lev, Real dt, Real& num_p, Real& denom_p);
 
     void mfix_physical_prop (int lev, int calc_flag);
 
@@ -99,7 +100,7 @@ protected:
     int solve_bicgstab (MultiFab& sol, const MultiFab& rhs, const MultiFab& matrix,
            int sweep_type, int precond_type, int maxiter, Real eps_rel, int lev);
 
-    void mfix_calc_volume_fraction(int lev);
+    void mfix_calc_volume_fraction(int lev, Real& sum_vol);
     void mfix_calc_drag_fluid(int lev);
     void mfix_calc_drag_particle(int lev);
 
@@ -127,6 +128,7 @@ private:
     BoxArray MakeBaseGrids () const;
 
   void mfix_set_bc_type(int lev);
+  void mfix_set_bc1(int lev);
 
   void fill_mf_bc(int lev,  MultiFab& mf);
 #if 0
@@ -223,7 +225,11 @@ private:
     int max_nit;
     int call_udf;
 
+    int use_pic;
+
     Real cfl = 0.7;
+
+    Real sum_vol_orig;
 
     int nghost_bc = 2;
 

@@ -6,10 +6,10 @@ amr.n_cell = 5 5 20
 amr.max_grid_size = 1024
 
 # Maximum tile size within each grid
-fabarray.mfiter_tile_size = 5 5 5
+fabarray.mfiter_tile_size = 1024 1024 1024
 
 # Maximum particle tile size
-particles.tile_size = 5 5 5
+particles.tile_size = 1024 1024 1024
 
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0

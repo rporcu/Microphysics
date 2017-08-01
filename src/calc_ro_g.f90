@@ -15,8 +15,7 @@ contains
 
       use eos      , only: eosg
       use fld_const, only: ro_g0, mw_avg
-
-      use param, only: is_undefined
+      use param,     only: is_undefined
 
       implicit none
 
@@ -34,20 +33,29 @@ contains
       integer :: i,j,k
       real(c_real) :: ro_val
 
-      if (is_undefined(ro_g0)) then
-         ro_val = eosg(mw_avg,p_g(i,j,k),295.15d0)
-      else
-         ro_val = ro_g0
-      endif
+      if ( is_undefined( ro_g0 ) ) then
 
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-               ro_g(i,j,k) = ro_val
-               rop_g(i,j,k) = ep_g(i,j,k)*ro_val
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
+                  ro_g(i,j,k)  = eosg(mw_avg,p_g(i,j,k),295.15d0)
+                  rop_g(i,j,k) = ep_g(i,j,k) * rop_g(i,j,k)
+               enddo
             enddo
          enddo
-      enddo
+         
+      else
+
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
+                  ro_g(i,j,k)  = ro_g0
+                  rop_g(i,j,k) = ep_g(i,j,k) * ro_g0
+               enddo
+            enddo
+         enddo
+         
+      endif
 
    end subroutine calc_ro_g
 

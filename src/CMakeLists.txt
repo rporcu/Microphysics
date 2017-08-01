@@ -67,6 +67,7 @@ set(F90_sources
    error_manager_mod.f90
    fill_bc0.f90
    fld_constants_mod.f90
+   flip_particle_vol.f90
    functions_mod.f90
    get_data.f90
    get_tunit.f90
@@ -80,6 +81,7 @@ set(F90_sources
    matrix_mod.f90
    output_mod.f90
    particle_mod.f90
+   particle_pic.f90
    param_mod.f90
    parse_line.f90
    physical_prop.f90
@@ -144,3 +146,8 @@ endif ( ENABLE_SUPERBUILD )
 add_custom_command(TARGET mfixcore POST_BUILD COMMAND rm AMReX_buildInfo.cpp
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Removing AMReX_buildInfo.cpp" )
+
+# Define sources for type checking
+set (F90SRC ${F90_sources})
+set (CXXINCLUDES ${CXX_includes})
+include (MFIX_Typecheck)

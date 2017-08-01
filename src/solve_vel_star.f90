@@ -26,7 +26,7 @@ module solve_vel_star_module
          rop_go, ep_g, tau_u_g, d_e, fluxX, fluxY, fluxZ ,mu_g,  &
          f_gds, A_m, b_m, drag_bm, mask, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-         bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, resid) &
+         bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, num_u, denom_u) &
          bind(C, name="solve_u_g_star")
 
       use u_g_conv_dif, only: conv_dif_u_g
@@ -99,7 +99,7 @@ module solve_vel_star_module
 
       real(c_real), intent(  out) :: d_e&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(  out) :: resid(8,2)
+      real(c_real), intent(  out) :: num_u, denom_u
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
@@ -155,7 +155,7 @@ module solve_vel_star_module
       call calc_resid_vel (lo, hi, alo, ahi, &
          ulo, uhi, vlo, vhi, wlo, whi, &
          u_g, v_g, w_g, A_m, b_m, mask, &
-         resid(resid_u,1), resid(resid_u,2))
+         num_u, denom_u)
 
      call under_relax (lo, hi, u_g, ulo, uhi, A_m, b_m, alo, ahi, resid_u)
 
@@ -175,7 +175,7 @@ module solve_vel_star_module
       rop_go, ep_g, tau_v_g, d_n, fluxX, fluxY, fluxZ, mu_g,  &
       f_gds, A_m, b_m, drag_bm, mask, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, resid) &
+      bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, num_v, denom_v) &
       bind(C, name="solve_v_g_star")
 
 
@@ -252,7 +252,7 @@ module solve_vel_star_module
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real), intent(  out) :: mask&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
-      real(c_real), intent(  out) :: resid(8,2)
+      real(c_real), intent(  out) :: num_v, denom_v
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
@@ -309,7 +309,7 @@ module solve_vel_star_module
       call calc_resid_vel (lo, hi, alo, ahi, &
          vlo, vhi, wlo, whi, ulo, uhi, &
          v_g, w_g, u_g, A_m, b_m, mask, &
-         resid(resid_v,1), resid(resid_v,2))
+         num_v, denom_v)
 
       call under_relax (lo, hi, v_g, vlo, vhi, A_m, b_m, alo, ahi, resid_v)
 
@@ -330,7 +330,7 @@ module solve_vel_star_module
       rop_go, ep_g, tau_w_g, d_t, fluxX, fluxY, fluxZ, mu_g,  &
       f_gds, A_m, b_m, drag_bm, mask, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, resid) &
+      bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, num_w, denom_w) &
       bind(C, name="solve_w_g_star")
 
 ! Module procedures ..................................................//
@@ -406,7 +406,7 @@ module solve_vel_star_module
       real(c_real), intent(  out) :: mask&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-      real(c_real), intent(  out) :: resid(8,2)
+      real(c_real), intent(  out) :: num_w, denom_w
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
@@ -462,7 +462,7 @@ module solve_vel_star_module
       call calc_resid_vel (lo, hi, alo, ahi, &
          wlo, whi, ulo, uhi, vlo, vhi, &
          w_g, u_g, v_g, A_m, b_m, mask, &
-         resid(resid_w,1), resid(resid_w,2))
+         num_w, denom_w)
 
       call under_relax (lo, hi, w_g, wlo, whi, A_m, b_m, alo, ahi, resid_w)
 

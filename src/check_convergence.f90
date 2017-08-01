@@ -49,7 +49,7 @@ contains
 
 ! add pressure correction residual to momentum residuals
       sum_resid = resid(resid_p,1) + resid(resid_u,1) + &
-         resid(resid_v,1) + resid(resid_w,1)
+                  resid(resid_v,1) + resid(resid_w,1)
 
 ! Require at least two iterations.
       if(nit == 1) then

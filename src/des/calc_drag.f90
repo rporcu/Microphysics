@@ -9,7 +9,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
-     np, ep_g, ro_g, u_g, v_g, w_g, mu_g, f_gs, rhs, particles, dx, dy, dz ) &
+     np, ep_g, ro_g, u_g, v_g, w_g, mu_g, f_gs, rhs, particles, dx, dy, dz, use_pic ) &
      bind(C, name="calc_drag_fluid")
 
    use amrex_fort_module,  only : c_real => amrex_real
@@ -23,7 +23,7 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
    integer(c_int), intent(in   ) :: ulo(3),uhi(3)
    integer(c_int), intent(in   ) :: vlo(3),vhi(3)
    integer(c_int), intent(in   ) :: wlo(3),whi(3)
-   integer(c_int), intent(in   ) :: np
+   integer(c_int), intent(in   ) :: np, use_pic
 
    real(c_real), intent(in   ) :: &
         ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -75,12 +75,13 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
            particles(p) % volume, particles(p) % density,      &
            particles(p) % phase )
 
-      f_gp = beta*ovol
-
-      f_gs(i,j,k)  = f_gs(i,j,k)  + f_gp
-      rhs(i,j,k,:) = rhs(i,j,k,:) + f_gp*velp(:)
-
       particles(p) % drag(1) = beta
+
+      if (use_pic .eq. 0) then
+         f_gp = beta*ovol
+         f_gs(i,j,k  )  = f_gs(i,j,k)  + f_gp
+          rhs(i,j,k,:) = rhs(i,j,k,:) + f_gp*velp(:)
+      end if
 
    end do
 
@@ -91,10 +92,10 @@ end subroutine calc_drag_fluid
 !                                                                      !
 !  Subroutine: calc_drag_particle                                      !
 !                                                                      !
-!  Purpose: This routine is called before the FLUID solve.             !
-!  It calculates the source terms for the center coefficients and RHS  !
-!  for the momentum equations. It also saves the drag coefficient for  !
-!  each particle.                                                      !
+!  Purpose: This routine must be called after calc_drag_fluid because  !
+!  it assumes you have already computed beta and stored it in          !
+!  particles(p)%drag(1).   Here we compute the actual drag on the      !
+!  particle.                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
@@ -156,14 +157,11 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       velfp(2) = 0.5d0*(v_g(i,j,k) + v_g(i,j+1,k))
       velfp(3) = 0.5d0*(w_g(i,j,k) + w_g(i,j,k+1))
 
-      gradpg(1) = odx*(0.5d0*(p_g(i,j,k) + p_g(i+1,j,k)) - &
-           0.5d0*(p_g(i,j,k) + p_g(i-1,j,k)))
+      gradpg(1) = 0.5d0 * odx * ( p_g(i+1,j,k) - p_g(i-1,j,k) )
 
-      gradpg(2) = ody*(0.5d0*(p_g(i,j,k) + p_g(i,j+1,k)) - &
-           0.5d0*(p_g(i,j,k) + p_g(i,j-1,k)))
+      gradpg(2) = 0.5d0 * ody * ( p_g(i,j+1,k) - p_g(i,j-1,k) )
 
-      gradpg(3) = odz*(0.5d0*(p_g(i,j,k) + p_g(i,j,k+1)) - &
-           0.5d0*(p_g(i,j,k) + p_g(i,j,k-1)))
+      gradpg(3) = 0.5d0 * odz * ( p_g(i,j,k+1) - p_g(i,j,k-1) )
 
       particles(p) % drag = beta(p)*(velfp - particles(p) % vel) + &
            (cpg(:) - gradpg(:)) * particles(p) % volume

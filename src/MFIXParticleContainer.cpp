@@ -8,15 +8,15 @@
 
 #include "mfix_F.H"
 
-
 using namespace amrex;
 using namespace std;
 
-// IntVect MFIXParticleContainer::tile_size   { D_DECL(1024000,8,8) };
+bool MFIXParticleContainer::use_neighbor_list  {true};
+bool MFIXParticleContainer::sort_neighbor_list {false};
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
-    : ParticleContainer<realData::count,intData::count,0,0>
-    (amr_core->GetParGDB())
+    : NeighborParticleContainer<realData::count,intData::count,realData::count+2>
+      (amr_core->GetParGDB(), 1)
 {
     ReadStaticParameters();
 
@@ -29,29 +29,10 @@ void MFIXParticleContainer::AllocData ()
     resizeData();
 }
 
-void MFIXParticleContainer::InitLevelMask ( int lev,
-              const Geometry &geom,
-              const DistributionMapping &dmap,
-              const BoxArray &ba )
-{
-    BL_ASSERT( lev == 0 );
-
-    mask.define(ba, dmap, 2, ng);
-    mask.setVal(-1, ng);
-    for (MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
-        const Box& box = mfi.tilebox();
-        const int grid_id = mfi.index();
-        const int tile_id = mfi.LocalTileIndex();
-        mask.setVal(grid_id, box, 0, 1);
-        mask.setVal(tile_id, box, 1, 1);
-    }
-    mask.FillBoundary(geom.periodicity());
-}
-
 void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
   // only read the file on the IO proc
-  if (ParallelDescriptor::MyProc() ==  ParallelDescriptor::IOProcessorNumber()) {
+  if (ParallelDescriptor::IOProcessor())  {
     std::ifstream ifs;
     ifs.open(file.c_str(), std::ios::in);
 
@@ -99,8 +80,8 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
       p.cpu() = ParallelDescriptor::MyProc();
 
       // Compute other particle properties
-      mfix_set_particle_properties( &pstate, &pradius, &pdensity,
-                                    &pvolume, &pmass, &pomoi, &pomega);
+      set_particle_properties( &pstate, &pradius, &pdensity,
+                               &pvolume, &pmass, &pomoi, &pomega);
 
       // Set other particle properties
       p.idata(intData::phase)     = pphase;
@@ -114,12 +95,79 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
       p.rdata(realData::omegay)   = pomega;
       p.rdata(realData::omegaz)   = pomega;
 
+      // Initialize these for I/O purposes
+      p.rdata(realData::dragx)    = 0.0;
+      p.rdata(realData::dragy)    = 0.0;
+      p.rdata(realData::dragz)    = 0.0;
+
       // Add everything to the data structure
       particle_tile.push_back(p);
     }
   }
   Redistribute();
+}
 
+void MFIXParticleContainer::Replicate(IntVect& Nrep, Array<Real>& orig_domain_size)
+{
+    int lev = 0;
+    ParticleType p_rep;
+
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
+        auto& particles = pti.GetArrayOfStructs();
+
+        for (const auto& p: particles)
+        {
+           const IntVect& iv = Index(p, lev);
+
+           //
+           // Shift the position.
+           //
+           for (int k = 0; k < Nrep[2]; k++) {
+               for (int j = 0; j < Nrep[1]; j++) {
+                 for (int i = 0; i < Nrep[0]; i++) {
+
+                   if ( !(i == 0 && j == 0 && k == 0) ) 
+                   {
+
+                    p_rep.m_rdata.pos[0] = p.m_rdata.pos[0] + i * orig_domain_size[0];
+                    p_rep.m_rdata.pos[1] = p.m_rdata.pos[1] + j * orig_domain_size[1];
+                    p_rep.m_rdata.pos[2] = p.m_rdata.pos[2] + k * orig_domain_size[2];
+
+                    p_rep.rdata(realData::velx)   = p.rdata(realData::velx);
+                    p_rep.rdata(realData::vely)   = p.rdata(realData::vely);
+                    p_rep.rdata(realData::velz)   = p.rdata(realData::velz);
+
+                    // Set other particle properties
+                    p_rep.idata(intData::phase)     = p.idata(intData::phase);
+                    p_rep.idata(intData::state)     = p.idata(intData::state);
+                    p_rep.rdata(realData::volume)   = p.rdata(realData::volume);
+                    p_rep.rdata(realData::density)  = p.rdata(realData::density);
+                    p_rep.rdata(realData::mass)     = p.rdata(realData::mass);
+                    p_rep.rdata(realData::oneOverI) = p.rdata(realData::oneOverI);
+                    p_rep.rdata(realData::radius)   = p.rdata(realData::radius);
+                    p_rep.rdata(realData::omegax)   = p.rdata(realData::omegax);
+                    p_rep.rdata(realData::omegay)   = p.rdata(realData::omegay);
+                    p_rep.rdata(realData::omegaz)   = p.rdata(realData::omegaz);
+                    p_rep.rdata(realData::dragx)    = p.rdata(realData::dragx);
+                    p_rep.rdata(realData::dragy)    = p.rdata(realData::dragy);
+                    p_rep.rdata(realData::dragz)    = p.rdata(realData::dragz);
+
+                    // Set id and cpu for this particle
+                    p_rep.id()  = ParticleType::NextID();
+                    p_rep.cpu() = ParallelDescriptor::MyProc();
+
+                    // Add everything to the data structure
+                    particles.push_back(p_rep);
+
+                   } // not copying itself
+                 } // i
+              } // j
+           } // k
+        } // p
+    } // pti
+
+    Redistribute();
 }
 
 void MFIXParticleContainer:: printParticles()
@@ -166,6 +214,9 @@ void MFIXParticleContainer::ReadStaticParameters ()
         if (pp.queryarr("tile_size", ts))
             tile_size = IntVect(ts);
 
+        pp.query("use_neighbor_list", use_neighbor_list);
+        pp.query("sort_neighbor_list", sort_neighbor_list);
+
         initialized = true;
     }
 }
@@ -178,6 +229,8 @@ MFIXParticleContainer::InitData()
 void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time )
 {
     BL_PROFILE("mfix_dem::EvolveParticles()");
+
+    bool debug = false;
 
     Box domain(Geom(lev).Domain());
 
@@ -192,55 +245,164 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     int   nsubsteps;
     Real  subdt;
 
-    mfix_des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
+    des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
-    for ( int n = 0; n < nsubsteps; ++n ) {
+    int ncoll_total = 0;
 
-      fillNeighbors(lev);
+    for ( int n = 0; n < nsubsteps; ++n ) 
+    {
+      int ncoll = 0;
 
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+      if (use_neighbor_list) 
+      {
+          if (n % 25 == 0) {
+              clearNeighbors(lev);              
+              Redistribute();              
+              fillNeighbors(lev);              
+              buildNeighborListFort(lev,sort_neighbor_list);
+          } else {
+              updateNeighbors(lev);
+          }
+          
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-         // Real particles
-         const int np     = NumberOfParticles(pti);
-         void* particles  = pti.GetArrayOfStructs().data();
+            // Real particles
+            const int np     = NumberOfParticles(pti);
+            void* particles  = pti.GetArrayOfStructs().data();
 
-         // Neighbor particles
-         int nstride = pti.GetArrayOfStructs().dataShape().first;
-         PairIndex index(pti.index(), pti.LocalTileIndex());
-         int ng = neighbors[index].size() / pdata_size;
+            // Neighbor particles
+            PairIndex index(pti.index(), pti.LocalTileIndex());
+            int size_ng = neighbors[index].size() / pdata_size;
+            int size_nl = neighbor_list[index].size();
 
-         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-         mfix_des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
-               &subdt, &dx, &dy, &dz,
-               &xlen, &ylen, &zlen, &nstep );
-         BL_PROFILE_VAR_STOP(des_time_loop);
+            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+            des_time_loop_ops_nl ( &np, particles, &size_ng, neighbors[index].dataPtr(),
+                                   &size_nl, neighbor_list[index].dataPtr(),
+                                   &subdt, &dx, &dy, &dz,
+                                   &xlen, &ylen, &zlen, &n, &ncoll );
+            BL_PROFILE_VAR_STOP(des_time_loop);
 
-         if ( mfix_des_continuum_coupled () == 0 ) {
-           Real stime;
-           stime = time + (n+1)*subdt;
-           mfix_output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
-                                &n, particles, 0 );
+            if ( des_continuum_coupled () == 0 ) {
+              Real stime;
+              stime = time + (n+1)*subdt;
+              output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
+                                   &n, particles, 0 );
+   
+            }
 
+            call_usr2_des( &np, particles );
          }
 
-         mfix_call_usr2_des( &np, particles );
+      } else {
+
+         fillNeighbors(lev);
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+
+            // Real particles
+            const int np     = NumberOfParticles(pti);
+            void* particles  = pti.GetArrayOfStructs().data();
+
+            // Neighbor particles
+            PairIndex index(pti.index(), pti.LocalTileIndex());
+            int ng = neighbors[index].size() / pdata_size;
+
+            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+            des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
+                               &subdt, &dx, &dy, &dz,
+                               &xlen, &ylen, &zlen, &n, &ncoll );
+            BL_PROFILE_VAR_STOP(des_time_loop);
+   
+            if ( des_continuum_coupled () == 0 ) {
+              Real stime;
+              stime = time + (n+1)*subdt;
+              output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
+                                   &n, particles, 0 );
+
+            }
+
+            call_usr2_des( &np, particles );
+         }
+
+         clearNeighbors(lev);
+         Redistribute();
+
       }
 
-      clearNeighbors(lev);
-
-      Redistribute();
+      if (debug) {
+         ncoll_total +=  ncoll;
+         ParallelDescriptor::ReduceIntSum(ncoll,ParallelDescriptor::IOProcessorNumber());
+         Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
+      }
     }
 
+    clearNeighbors(lev);
+
+    Redistribute();
+
+    if (debug) {
+       ParallelDescriptor::ReduceIntSum(ncoll_total,ParallelDescriptor::IOProcessorNumber());
+       Print() << "Number of collisions: " << ncoll_total << " in " << nsubsteps << " substeps " << std::endl;
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
       const int np     = NumberOfParticles(pti);
       void* particles  = pti.GetArrayOfStructs().data();
 
-      mfix_call_usr3_des( &np, particles );
-
+      call_usr3_des( &np, particles );
     }
 
-    if ( mfix_des_continuum_coupled () != 0 ) {
+    if (debug) {
+       // Check maxmium particle velocties at each fluid time step
+       // with the goal of veriftying a particle cannot travel more than
+       // a single cell per fluid time step. 
+       Real max_vel_x = 0.0;
+       Real max_vel_y = 0.0;
+       Real max_vel_z = 0.0;
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z)
+#endif
+       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+
+         const int np     = NumberOfParticles(pti);
+
+         auto& particles = pti.GetArrayOfStructs();
+    
+      for (const auto& p: particles)
+      {
+          max_vel_x = std::max(Real(p.rdata(realData::velx)), max_vel_x);
+          max_vel_y = std::max(Real(p.rdata(realData::vely)), max_vel_y);
+          max_vel_z = std::max(Real(p.rdata(realData::velz)), max_vel_z);
+      }
+    }
+    
+       ParallelDescriptor::ReduceRealMax(max_vel_x,ParallelDescriptor::IOProcessorNumber());
+       ParallelDescriptor::ReduceRealMax(max_vel_y,ParallelDescriptor::IOProcessorNumber());
+       ParallelDescriptor::ReduceRealMax(max_vel_z,ParallelDescriptor::IOProcessorNumber());
+
+       if (ParallelDescriptor::IOProcessor()) 
+       {
+          const Real* dx = Geom(0).CellSize();
+          cout << "Maximum possible distance traveled:" << endl;
+          cout <<  "x=  " << max_vel_x * dt
+               << " y=  " << max_vel_y * dt
+               << " z=  " << max_vel_z * dt  << " and note that "
+               << " dx= " << dx[0] << endl;
+       }
+    }
+
+    if ( des_continuum_coupled () != 0 ) {
       nstep = nsubsteps;
       time  = time + nsubsteps * subdt ;
     }
@@ -248,6 +410,224 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     // Redistribute();
 }
 
+void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled,
+                                               IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                                               IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                                               IArrayBox& bc_klo, IArrayBox& bc_khi)
+{
+    int fortran_volume_comp = 5;
+    PICDeposition(mf_to_be_filled, bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
+                  fortran_volume_comp);
+
+    // Now define this mf = (1 - particle_vol)
+    mf_to_be_filled.mult(-1.0,mf_to_be_filled.nGrow());
+    mf_to_be_filled.plus( 1.0,mf_to_be_filled.nGrow());
+}
+
+void MFIXParticleContainer::CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf)
+{
+    int fortran_beta_comp = 15;
+    int fortran_vel_comp  =  9;
+    PICMultiDeposition(beta_mf, beta_vel_mf, fortran_beta_comp, fortran_vel_comp);
+}
+
+void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled, 
+                                          IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                                          IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                                          IArrayBox& bc_klo, IArrayBox& bc_khi,
+                                          int fortran_particle_comp)
+{
+    BL_PROFILE("MFIXParticleContainer::PICDeposition()");
+
+    int   lev = 0;
+    int ncomp = 1;
+    
+    MultiFab* mf_pointer;
+
+    if (OnSameGrids(lev, mf_to_be_filled)) {
+      // If we are already working with the internal mf defined on the 
+      // particle_box_array, then we just work with this.
+      mf_pointer = &mf_to_be_filled;
+    }
+    else {
+      // If mf_to_be_filled is not defined on the particle_box_array, then we need 
+      // to make a temporary here and copy into mf_to_be_filled at the end.
+      mf_pointer = new MultiFab(ParticleBoxArray(lev), 
+				ParticleDistributionMap(lev),
+				ncomp, mf_to_be_filled.nGrow());
+    }
+
+    // We must have ghost cells for each FAB so that a particle in one grid can spread 
+    // its effect to an adjacent grid by first putting the value into ghost cells of its
+    // own grid.  The mf->sumBoundary call then adds the value from one grid's ghost cell
+    // to another grid's valid region.
+    if (mf_pointer->nGrow() < 1) 
+       amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
+
+    const Real      strttime    = ParallelDescriptor::second();
+    const Geometry& gm          = Geom(lev);
+    const Real*     plo         = gm.ProbLo();
+    const Real*     dx          = gm.CellSize();
+    
+#ifdef _OPENMP
+#pragma omp parallel
+#endif 
+    for (MFIter mfi(*mf_pointer, true); mfi.isValid(); ++mfi) {
+        (*mf_pointer)[mfi].setVal(0);
+    }
+
+    using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    {
+        FArrayBox local_vol;
+        for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
+            const auto& particles = pti.GetArrayOfStructs();
+            int nstride = particles.dataShape().first;
+            const long np = pti.numParticles();
+            FArrayBox& fab = (*mf_pointer)[pti];
+            const Box& box = fab.box();
+            Real* data_ptr;
+            const int *lo, *hi;
+#ifdef _OPENMP
+            Box tile_box = pti.tilebox();
+            tile_box.grow(1);
+            local_vol.resize(tile_box,ncomp);
+            local_vol = 0.0;
+            data_ptr = local_vol.dataPtr();
+            lo = tile_box.loVect();
+            hi = tile_box.hiVect();
+#else
+            data_ptr = fab.dataPtr();
+            lo = box.loVect();
+            hi = box.hiVect();
+#endif
+
+            mfix_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr, 
+                             lo, hi, plo, dx, &fortran_particle_comp);
+
+#ifdef _OPENMP
+            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
+                                        BL_TO_FORTRAN_3D(fab), ncomp);
+#endif
+
+        }
+    }
+
+    // Move any field deposited outside the domain back into the domain
+    // (at all domain boundaries except periodic)
+
+    Box domain(Geom(lev).Domain());
+
+    for (MFIter mfi(*mf_pointer); mfi.isValid(); ++mfi) {
+ 
+      const Box& sbx = (*mf_pointer)[mfi].box();
+
+      flip_particle_vol(sbx.loVect(), sbx.hiVect(),
+                        (*mf_pointer)[mfi].dataPtr(),
+                        bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                        bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                        bc_klo.dataPtr(), bc_khi.dataPtr(),
+                        domain.loVect(), domain.hiVect());
+    }
+
+    mf_pointer->SumBoundary(gm.periodicity());
+    
+    // If mf_to_be_filled is not defined on the particle_box_array, then we need
+    // to copy here from mf_pointer into mf_to_be_filled. I believe that we don't
+    // need any information in ghost cells so we don't copy those.
+    if (mf_pointer != &mf_to_be_filled) {
+      mf_to_be_filled.copy(*mf_pointer,0,0,ncomp);
+      delete mf_pointer;
+    }
+    
+    if (m_verbose > 1) {
+      Real stoptime = ParallelDescriptor::second() - strttime;
+      
+      ParallelDescriptor::ReduceRealMax(stoptime,ParallelDescriptor::IOProcessorNumber());
+      
+      amrex::Print() << "MFIXParticleContainer::PICDeposition time: " << stoptime << '\n';
+    }
+}
+
+void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf, 
+                                               int fortran_beta_comp, int fortran_vel_comp)
+{
+    BL_PROFILE("MFIXParticleContainer::PICMultiDeposition()");
+
+    int   lev = 0;
+    int ncomp = 1+BL_SPACEDIM;
+    
+    MultiFab* mf_pointer;
+
+    // Make a single temporary here and copy into beta_mf and beta_vel_mf at the end.
+    mf_pointer = new MultiFab(ParticleBoxArray(lev), 
+		              ParticleDistributionMap(lev),
+			      ncomp, beta_mf.nGrow());
+
+    const Real      strttime    = ParallelDescriptor::second();
+    const Geometry& gm          = Geom(lev);
+    const Real*     plo         = gm.ProbLo();
+    const Real*     dx          = gm.CellSize();
+    
+    mf_pointer->setVal(0.0);
+
+    using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    {
+        FArrayBox local_vol;
+        for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
+            const auto& particles = pti.GetArrayOfStructs();
+            int nstride = particles.dataShape().first;
+            const long np = pti.numParticles();
+            FArrayBox& fab = (*mf_pointer)[pti];
+            const Box& box = fab.box();
+            Real* data_ptr;
+            const int *lo, *hi;
+#ifdef _OPENMP
+            Box tile_box = pti.tilebox();
+            tile_box.grow(1);
+            local_vol.resize(tile_box,ncomp);
+            local_vol = 0.0;
+            data_ptr = local_vol.dataPtr();
+            lo = tile_box.loVect();
+            hi = tile_box.hiVect();
+#else
+            data_ptr = fab.dataPtr();
+            lo = box.loVect();
+            hi = box.hiVect();
+#endif
+
+            mfix_multi_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr, lo, hi, plo, dx, &fortran_beta_comp, &fortran_vel_comp);
+
+#ifdef _OPENMP
+            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
+                                        BL_TO_FORTRAN_3D(fab), ncomp);
+#endif
+
+        }
+    }
+
+    mf_pointer->SumBoundary(gm.periodicity());
+    
+    // Copy back from mf_pointer 
+    beta_mf.copy    (*mf_pointer,0,0,1);
+    beta_vel_mf.copy(*mf_pointer,1,0,BL_SPACEDIM);
+    delete mf_pointer;
+    
+    if (m_verbose > 1) {
+      Real stoptime = ParallelDescriptor::second() - strttime;
+      
+      ParallelDescriptor::ReduceRealMax(stoptime,ParallelDescriptor::IOProcessorNumber());
+      
+      amrex::Print() << "MFIXParticleContainer::PICMultiDeposition time: " << stoptime << '\n';
+    }
+}
 
 void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
 {
@@ -256,6 +636,7 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
+    // Not threaded because its writing output
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
 
@@ -263,312 +644,48 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
       const int     np = NumberOfParticles(pti);
       void* particles  = pti.GetArrayOfStructs().data();
 
-      mfix_output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
+      output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
                            particles, &finish);
     }
 
 }
 
-void MFIXParticleContainer::fillNeighbors( int lev ) {
-  NeighborCommMap neighbors_to_comm;
-
-  BL_PROFILE("mfix_dem::fillNeighbors()");
-
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-    const Box& tile_box = pti.tilebox();
-    const IntVect& lo = tile_box.smallEnd();
-    const IntVect& hi = tile_box.bigEnd();
-
-        Box shrink_box = pti.tilebox();
-        shrink_box.grow(-ng);
-
-        auto& particles = pti.GetArrayOfStructs();
-        for (unsigned i = 0; i < pti.numParticles(); ++i) {
-            const ParticleType& p = particles[i];
-            const IntVect& iv = Index(p, lev);
-
-            // if the particle is more than one cell away from
-            // the tile boundary, it's not anybody's neighbor
-            if (shrink_box.contains(iv)) continue;
-
-            // shift stores whether we are near the tile boundary in each direction.
-            // -ng means lo, ng means hi, 0 means not near the boundary
-            IntVect shift = IntVect::TheZeroVector();
-            for (int idim = 0; idim < BL_SPACEDIM; ++idim) {
-                if (iv[idim] == lo[idim])
-                    shift[idim] = -ng;
-                else if (iv[idim] == hi[idim])
-                    shift[idim] = ng;
-            }
-
-            // Based on the value of shift, we add the particle to a map to be sent
-            // to the neighbors. A particle can be sent to up to 3 neighbors in 2D
-            // and up to 7 in 3D, depending on whether is near the tile box corners,
-            // edges, or just the faces. First, add the particle for the "face" neighbors
-            for (int idim = 0; idim < BL_SPACEDIM; ++idim) {
-                if (shift[idim] == 0) continue;
-                IntVect neighbor_cell = iv;
-                neighbor_cell.shift(idim, shift[idim]);
-                BL_ASSERT(mask[pti].box().contains(neighbor_cell));
-                packNeighborParticle(lev,neighbor_cell, mask[pti], p, neighbors_to_comm);
-            }
-
-            // Now add the particle to the "edge" neighbors
-            for (int idim = 0; idim < BL_SPACEDIM; ++idim) {
-                for (int jdim = 0; jdim < idim; ++jdim) {
-                    if (shift[idim] != 0 and shift[jdim] != 0) {
-                        IntVect neighbor_cell = iv;
-                        neighbor_cell.shift(idim, shift[idim]);
-                        neighbor_cell.shift(jdim, shift[jdim]);
-                        BL_ASSERT(mask[pti].box().contains(neighbor_cell));
-                        packNeighborParticle(lev,neighbor_cell, mask[pti], p, neighbors_to_comm);
-                    }
-                }
-            }
-
-            // Finally, add the particle for the "vertex" neighbors (only relevant in 3D)
-            if (shift[0] != 0 and shift[1] != 0 and shift[2] != 0) {
-                IntVect neighbor_cell = iv;
-                neighbor_cell.shift(shift);
-                BL_ASSERT(mask[pti].box().contains(neighbor_cell));
-                packNeighborParticle(lev,neighbor_cell, mask[pti], p, neighbors_to_comm);
-            }
-
-        }
-    }
-    fillNeighborsMPI(neighbors_to_comm);
-}
-
-void MFIXParticleContainer::applyPeriodicShift(int lev, ParticleType& p,
-                                              const IntVect& neighbor_cell)
-{
-    BL_PROFILE("mfix_dem::applyPeriodicShift()");
-
-    const Periodicity& periodicity = Geom(lev).periodicity();
-    if (not periodicity.isAnyPeriodic()) return;
-
-    const Box& domain = Geom(lev).Domain();
-    const IntVect& lo = domain.smallEnd();
-    const IntVect& hi = domain.bigEnd();
-    const RealBox& prob_domain = Geom(lev).ProbDomain();
-
-    for (int dir = 0; dir < BL_SPACEDIM; ++dir) {
-        if (not periodicity.isPeriodic(dir)) continue;
-        if (neighbor_cell[dir] < lo[dir]) {
-            p.pos(dir) += prob_domain.length(dir);
-        }
-        else if (neighbor_cell[dir] > hi[dir]) {
-            p.pos(dir) -= prob_domain.length(dir);
-        }
-    }
-}
-
-void MFIXParticleContainer::packNeighborParticle(int lev,
-                const IntVect& neighbor_cell,
-                const BaseFab<int>& mask,
-                const ParticleType& p,
-                NeighborCommMap& neighbors_to_comm)
-{
-    const int neighbor_grid = mask(neighbor_cell, 0);
-
-    if (neighbor_grid >= 0) {
-        const int who = ParticleDistributionMap(lev)[neighbor_grid];
-        const int MyProc = ParallelDescriptor::MyProc();
-        const int neighbor_tile = mask(neighbor_cell, 1);
-        PairIndex dst_index(neighbor_grid, neighbor_tile);
-        ParticleType particle = p;
-
-        if (Geom(lev).isAnyPeriodic())
-           applyPeriodicShift(lev, particle, neighbor_cell);
-
-        if (who == MyProc) {
-            size_t old_size = neighbors[dst_index].size();
-            size_t new_size = neighbors[dst_index].size() + pdata_size;
-            neighbors[dst_index].resize(new_size);
-            std::memcpy(&neighbors[dst_index][old_size], &particle, pdata_size);
-        } else {
-            NeighborCommTag tag(who, neighbor_grid, neighbor_tile);
-            Array<char>& buffer = neighbors_to_comm[tag];
-            size_t old_size = buffer.size();
-            size_t new_size = buffer.size() + pdata_size;
-            buffer.resize(new_size);
-            std::memcpy(&buffer[old_size], &particle, pdata_size);
-        }
-    }
-}
-
-void MFIXParticleContainer::fillNeighborsMPI(NeighborCommMap& neighbors_to_comm) {
-
-#ifdef BL_USE_MPI
-    const int MyProc = ParallelDescriptor::MyProc();
-    const int NProcs = ParallelDescriptor::NProcs();
-
-    // count the number of tiles to be sent to each proc
-    std::map<int, int> tile_counts;
-    for (const auto& kv: neighbors_to_comm) {
-        tile_counts[kv.first.proc_id] += 1;
-    }
-
-    // flatten all the data for each proc into a single buffer
-    // once this is done, each dst proc will have an Array<char>
-    // the buffer will be packed like:
-    // ntiles, gid1, tid1, size1, data1....  gid2, tid2, size2, data2... etc.
-    std::map<int, Array<char> > send_data;
-    for (const auto& kv: neighbors_to_comm) {
-        Array<char>& buffer = send_data[kv.first.proc_id];
-        buffer.resize(sizeof(int));
-        std::memcpy(&buffer[0], &tile_counts[kv.first.proc_id], sizeof(int));
-    }
-
-    for (auto& kv : neighbors_to_comm) {
-        int data_size = kv.second.size();
-        Array<char>& buffer = send_data[kv.first.proc_id];
-        size_t old_size = buffer.size();
-        size_t new_size = buffer.size() + 2*sizeof(int) + sizeof(int) + data_size;
-        buffer.resize(new_size);
-        char* dst = &buffer[old_size];
-        std::memcpy(dst, &(kv.first.grid_id), sizeof(int)); dst += sizeof(int);
-        std::memcpy(dst, &(kv.first.tile_id), sizeof(int)); dst += sizeof(int);
-        std::memcpy(dst, &data_size,          sizeof(int)); dst += sizeof(int);
-        if (data_size == 0) continue;
-        std::memcpy(dst, &kv.second[0], data_size);
-        Array<char>().swap(kv.second);
-    }
-
-    // each proc figures out how many bytes it will send, and how
-    // many it will receive
-    Array<long> snds(NProcs, 0), rcvs(NProcs, 0);
-    long num_snds = 0;
-    for (const auto& kv : send_data) {
-        num_snds      += kv.second.size();
-        snds[kv.first] = kv.second.size();
-    }
-    ParallelDescriptor::ReduceLongMax(num_snds);
-    if (num_snds == 0) return;
-
-    // communicate that information
-    BL_COMM_PROFILE(BLProfiler::Alltoall, sizeof(long),
-                    ParallelDescriptor::MyProc(), BLProfiler::BeforeCall());
-
-    BL_MPI_REQUIRE( MPI_Alltoall(snds.dataPtr(),
-                                 1,
-                                 ParallelDescriptor::Mpi_typemap<long>::type(),
-                                 rcvs.dataPtr(),
-                                 1,
-                                 ParallelDescriptor::Mpi_typemap<long>::type(),
-                                 ParallelDescriptor::Communicator()) );
-    BL_ASSERT(rcvs[MyProc] == 0);
-
-    BL_COMM_PROFILE(BLProfiler::Alltoall, sizeof(long),
-                    ParallelDescriptor::MyProc(), BLProfiler::AfterCall());
-
-    Array<int> RcvProc;
-    Array<std::size_t> rOffset; // Offset (in bytes) in the receive buffer
-
-    std::size_t TotRcvBytes = 0;
-    for (int i = 0; i < NProcs; ++i) {
-        if (rcvs[i] > 0) {
-            RcvProc.push_back(i);
-            rOffset.push_back(TotRcvBytes);
-            TotRcvBytes += rcvs[i];
-        }
-    }
-
-    const int nrcvs = RcvProc.size();
-    Array<MPI_Status>  stats(nrcvs);
-    Array<MPI_Request> rreqs(nrcvs);
-
-    const int SeqNum = ParallelDescriptor::SeqNum();
-
-    // Allocate data for rcvs as one big chunk.
-    Array<char> recvdata(TotRcvBytes);
-
-    // Post receives.
-    for (int i = 0; i < nrcvs; ++i) {
-        const auto Who    = RcvProc[i];
-        const auto offset = rOffset[i];
-        const auto Cnt    = rcvs[Who];
-
-        BL_ASSERT(Cnt > 0);
-        BL_ASSERT(Cnt < std::numeric_limits<int>::max());
-        BL_ASSERT(Who >= 0 && Who < NProcs);
-
-        rreqs[i] = ParallelDescriptor::Arecv(&recvdata[offset], Cnt, Who, SeqNum).req();
-    }
-
-    // Send.
-    for (const auto& kv : send_data) {
-        const auto Who = kv.first;
-        const auto Cnt = kv.second.size();
-
-        BL_ASSERT(Cnt > 0);
-        BL_ASSERT(Who >= 0 && Who < NProcs);
-        BL_ASSERT(Cnt < std::numeric_limits<int>::max());
-
-        ParallelDescriptor::Send(kv.second.data(), Cnt, Who, SeqNum);
-    }
-
-    // unpack the received data and put them into the proper neighbor buffers
-    if (nrcvs > 0) {
-        BL_MPI_REQUIRE( MPI_Waitall(nrcvs, rreqs.data(), stats.data()) );
-        for (int i = 0; i < nrcvs; ++i) {
-            const int offset = rOffset[i];
-            char* buffer = &recvdata[offset];
-            int num_tiles, gid, tid, size;
-            std::memcpy(&num_tiles, buffer, sizeof(int)); buffer += sizeof(int);
-            for (int j = 0; j < num_tiles; ++j) {
-                std::memcpy(&gid,  buffer, sizeof(int)); buffer += sizeof(int);
-                std::memcpy(&tid,  buffer, sizeof(int)); buffer += sizeof(int);
-                std::memcpy(&size, buffer, sizeof(int)); buffer += sizeof(int);
-
-                if (size == 0) continue;
-
-                PairIndex dst_index(gid, tid);
-                size_t old_size = neighbors[dst_index].size();
-                size_t new_size = neighbors[dst_index].size() + size;
-                neighbors[dst_index].resize(new_size);
-                std::memcpy(&neighbors[dst_index][old_size], buffer, size); buffer += size;
-            }
-        }
-    }
-#endif
-}
-
-void MFIXParticleContainer::clearNeighbors( int lev )
-{
-    neighbors.clear();
-}
-
 void MFIXParticleContainer::writeAllAtLevel(int lev)
 {
+    // Not threaded because its print to terminal
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
-  auto& particles = pti.GetArrayOfStructs();
+        auto& particles = pti.GetArrayOfStructs();
 
-  for (const auto& p: particles)
-  {
-      const IntVect& iv = Index(p, lev);
+        for (const auto& p: particles)
+        {
+           const IntVect& iv = Index(p, lev);
 
-      RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
-
-      cout << " id " << p.id()
-     << " index " << iv
-     << " position " << xyz << endl;
-  }
+           RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
+           cout << " id " << p.id()
+                << " index " << iv
+                << " position " << xyz << endl;
+       }
     }
 }
 
 void MFIXParticleContainer::writeAllForComparison(int lev)
 {
-  size_t Np_tot = 0;
+  int Np_tot = 0;
 
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:Np_tot)
+#endif 
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       Np_tot += pti.numParticles();
+
+  ParallelDescriptor::ReduceIntSum(Np_tot,ParallelDescriptor::IOProcessorNumber());
 
   cout << Np_tot << std::endl;
 
   Real dummy = 0.;
 
+  // Not threaded because its print to terminal
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
       auto& particles = pti.GetArrayOfStructs();
@@ -584,42 +701,43 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
          Real (&avg_dp)[10], Real (&avg_ro)[10])
 {
 
-  Real sum_np[10];
-  Real sum_dp[10];
-  Real sum_ro[10];
-  for (int i=0; i<10; ++i){
-    sum_np[i] = 0.0;
-    sum_dp[i] = 0.0;
-    sum_ro[i] = 0.0;
-  }
+   // The number of phases was previously hard set at 10, however lowering
+   //  this number would make this code faster. 
+   int num_of_phases_in_use = 10; //Number of different phases being simulated
 
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-    // Real particles
-    const int np     = NumberOfParticles(pti);
-    void* particles  = pti.GetArrayOfStructs().data();
+   // Cycle through the different phases, starting from 1
+   for (int phse=1; phse<=num_of_phases_in_use; ++phse){
 
-    mfix_sum_particle_props( &np, particles, sum_np, sum_dp, sum_ro);
+     Real p_num  = 0.0; //number of particle 
+     Real p_diam = 0.0; //particle diameters
+     Real p_dens = 0.0; //particle density 
 
-  }
+   #ifdef _OPENMP
+   #pragma omp parallel reduction(+:p_num, p_diam, p_dens)
+   #endif
+     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+   
+       auto& particles = pti.GetArrayOfStructs();
+   
+       for (const auto& p: particles){
+         if ( phse==p.idata(intData::phase) ){
+           p_num  += 1.0; 
+           p_diam += p.rdata(realData::radius) * 2.0;
+           p_dens += p.rdata(realData::density); 
+         }
+       }
+     }
 
-  Real sum_props[30];
-  for (int i=0; i<10; ++i){
-    sum_props[i   ] = sum_np[i];
-    sum_props[i+10] = sum_dp[i];
-    sum_props[i+20] = sum_ro[i];
-  }
+    // A single MPI call passes all three variables 
+    ParallelDescriptor::ReduceRealSum({p_num,p_diam,p_dens}); 
 
-  ParallelDescriptor::ReduceRealSum(sum_props,30);
-
-  for (int i=0; i<10; ++i){
-
-    if(sum_props[i]) {
-      avg_dp[i] = sum_props[i+10]/sum_props[i];
-      avg_ro[i] = sum_props[i+20]/sum_props[i];
-      // std::cout << "avg_props: " << i <<
-      //   "   np: " << sum_props[i] <<
-      //   "   dp: " << avg_dp[i]   <<
-      //   "   ro: " << avg_ro[i]   << std::endl;
-    }
-  }
+   //calculate averages or set = zero if no particles of that phase
+   if (p_num==0){
+     avg_dp[phse-1] = 0.0;
+     avg_ro[phse-1] = 0.0;   
+   } else {
+     avg_dp[phse-1] = p_diam/p_num;
+     avg_ro[phse-1] = p_dens/p_num;   
+   } 
+ }
 }

@@ -13,6 +13,13 @@ if ( NOT PROJECT_NAME )
 before calling project()" )
 endif ()
 
+# 
+# Check if this file has been loaded already
+#
+if (DEFINED __MFIX_CMAKEVARIABLES__)
+   return ()
+endif ()
+set (__MFIX_CMAKEVARIABLES__ "")
 
 # Set paths for build system
 set ( CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mod)
@@ -25,11 +32,6 @@ set ( ENABLE_SUPERBUILD )
 
 # Variable to hold amrex install path
 set ( AMREX_INSTALL_PATH )
-
-# Whether AMReX_Options.cmake has been included already
-if ( NOT MFIX_OPTIONS_SET )
-   set ( MFIX_OPTIONS_SET )
-endif ()
 
 # Flags to accumulate preprocessor directives
 set ( MFIX_DEFINES ) 
@@ -46,42 +48,49 @@ set ( MFIX_CXX_FLAGS )
 
 # GNU compiler specific flags
 set (MFIX_GNU_FFLAGS_DEBUG "-g -O0 -ggdb -fbounds-check -fbacktrace\
- -Wuninitialized -Wunused -ffpe-trap=invalid,zero -finit-real=snan\
- -finit-integer=2147483647 -ftrapv")
+ -Wuninitialized -Wunused -finit-real=snan  -finit-integer=2147483647")
 set (MFIX_GNU_FFLAGS_RELEASE "-O3 -DNDEBUG")
-set (MFIX_GNU_FFLAGS_REQUIRED "")
+set (MFIX_GNU_FFLAGS_REQUIRED "-ffixed-line-length-none -ffree-line-length-none\
+ -fno-range-check -fno-second-underscore")
+set (MFIX_GNU_FFLAGS_FPE "-ffpe-trap=invalid,zero -ftrapv" )
 
-set (MFIX_GNU_CXXFLAGS_DEBUG "-g -O0 -fno-inline -ggdb -Wall -Wno-sign-compare -ftrapv")
+set (MFIX_GNU_CXXFLAGS_DEBUG "-g -O0 -fno-inline -ggdb -Wall -Wno-sign-compare")
 set (MFIX_GNU_CXXFLAGS_RELEASE "-O3 -DNDEBUG")
 set (MFIX_GNU_CXXFLAGS_REQUIRED "") #-ftemplate-depth-64 -Wno-deprecated")
+set (MFIX_GNU_CXXFLAGS_FPE "-ftrapv")
 
 # Intel compiler specific flags
 set (MFIX_Intel_FFLAGS_DEBUG "-g -O0 -traceback -check bounds,uninit,pointers")
-set (MFIX_Intel_FFLAGS_RELEASE "-O2 -ip -qopt-report=5 -qopt-report-phase=vec")
+set (MFIX_Intel_FFLAGS_RELEASE "-O3 -ip -qopt-report=5 -qopt-report-phase=vec")
 set (MFIX_Intel_FFLAGS_REQUIRED "-extend_source")
+set (MFIX_Intel_FFLAGS_FPE "")
 
 set (MFIX_Intel_CXXFLAGS_DEBUG "-g -O0 -traceback -Wcheck")
-set (MFIX_Intel_CXXFLAGS_RELEASE "-O2 -ip -qopt-report=5 -qopt-report-phase=vec")
-set (MFIX_Intel_CXXFLAGS_REQUIRED "")#-ftemplate-depth-64 -Wno-deprecated")
+set (MFIX_Intel_CXXFLAGS_RELEASE "-O3 -ip -qopt-report=5 -qopt-report-phase=vec")
+set (MFIX_Intel_CXXFLAGS_REQUIRED  "-std=c++11")#-ftemplate-depth-64 -Wno-deprecated")
+set (MFIX_Intel_CXXFLAGS_FPE "")
 
 # PGI compiler specific flags
 set (MFIX_PGI_FFLAGS_DEBUG "-O0 -Mbounds -Ktrap=divz,inv -Mchkptr")
 set (MFIX_PGI_FFLAGS_RELEASE "-gopt -fast")
 set (MFIX_PGI_FFLAGS_REQUIRED "-extend")
+set (MFIX_PGI_FFLAGS_FPE "")
 
 set (MFIX_PGI_CXXFLAGS_DEBUG "-O0 -Mbounds")
 set (MFIX_PGI_CXXFLAGS_RELEASE "-gopt -fast")
 set (MFIX_PGI_CXXFLAGS_REQUIRED "")#-ftemplate-depth-64 -Wno-deprecated")
-
+set (MFIX_PGI_CXXFLAGS_FPE "")
 
 # Cray compiler specific flags
 set (MFIX_Cray_FFLAGS_DEBUG "-O0 -e -i")
-set (MFIX_Cray_FFLAGS_RELEASE "-02")
+set (MFIX_Cray_FFLAGS_RELEASE "-O2")
 set (MFIX_Cray_FFLAGS_REQUIRED "-extend")
+set (MFIX_Cray_FFLAGS_FPE "")
 
 set (MFIX_Cray_CXXFLAGS_DEBUG "-O0")
-set (MFIX_Cray_CXXFLAGS_RELEASE "-02")
+set (MFIX_Cray_CXXFLAGS_RELEASE "-O2")
 set (MFIX_Cray_CXXFLAGS_REQUIRED "")#-ftemplate-depth-64 -Wno-deprecated")
+set (MFIX_Cray_CXXFLAGS_FPE "")
 
 #
 # Compile- and link-time variables 
@@ -113,10 +122,8 @@ set (MFIX_EXTRA_LIBRARIES_PATH)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
-set (AMREX_GIT_COMMIT_DEVELOP b8fe4dfd4436de3d116b1732c56735505544e911 )
+set (AMREX_GIT_COMMIT_DEVELOP 5e010d0f18cb4d8d33d8382ca0d0c12d9abc3659 )
 set (AMREX_GIT_TAG)  # The commit id or branch to download 
-
-
 
 # AMReX Superbuild variables
 set (AMREX_SUPERBUILD_DIR   ${PROJECT_BINARY_DIR}/ThirdParty)
@@ -124,6 +131,3 @@ set (AMREX_SUPERBUILD_DIR   ${PROJECT_BINARY_DIR}/ThirdParty)
 # MFIX git variables
 set (MFIX_GIT_COMMIT)
 set (MFIX_GIT_BRANCH)
-
-# Variable to show this file was loaded
-set ( MFIX_VARIABLES_LOADED "TRUE" )

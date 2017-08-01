@@ -23,7 +23,7 @@ contains
    !----------------------------------------------------------------------!
    subroutine output_manager( np, time, dt, xlength, ylength, zlength, &
         & nstep, particles, finished ) &
-        & bind(C, name="mfix_output_manager")
+        & bind(C, name="output_manager")
 
       use output,       only: USR_TIME, USR_DT
       use param,        only: DIM_USR
@@ -34,7 +34,7 @@ contains
       integer(c_int),   intent(in   ) :: np
       real(c_real)  ,   intent(in   ) :: time, dt, xlength, ylength, zlength
       integer(c_int),   intent(in   ) :: nstep
-      type(particle_t), intent(inout) :: particles(np)
+      type(particle_t), intent(in   ) :: particles(np)
 
       ! Dummy Arguments:
       !---------------------------------------------------------------------//

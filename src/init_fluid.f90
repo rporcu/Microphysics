@@ -145,7 +145,7 @@ module init_fluid_module
       integer :: icv
 
       ! Temporary variables for storing IC values
-      real(c_real) :: pgx, ugx, vgx, wgx
+      real(c_real) :: pgx, ugx, vgx, wgx, pval
 
       integer :: i_w, j_s, k_b
       integer :: i_e, j_n, k_t
@@ -179,7 +179,7 @@ module init_fluid_module
                   u_g(iend+1:uhi(1)  ,jstart:jend,kstart:kend) = ugx
             end if
 
-            if (is_defined(ugx)) then
+            if (is_defined(vgx)) then
                istart = max(vlo(1), i_w)
                jstart = max(vlo(2), j_s)
                kstart = max(vlo(3), k_b)
@@ -193,7 +193,7 @@ module init_fluid_module
                   v_g(istart:iend,jend+1:vhi(2)  ,kstart:kend) = vgx
             end if
 
-            if (is_defined(ugx)) then
+            if (is_defined(wgx)) then
                istart = max(wlo(1), i_w)
                jstart = max(wlo(2), j_s)
                kstart = max(wlo(3), k_b)
@@ -213,14 +213,8 @@ module init_fluid_module
             iend   = min(shi(1), i_e)
             jend   = min(shi(2), j_n)
             kend   = min(shi(3), k_t)
-            do k = kstart, kend
-               do j = jstart, jend
-                  do i = istart, iend
-                        p_g(i,j,k) = merge(scale_pressure(pgx),&
-                                      undefined, is_defined(pgx))
-                  enddo
-               enddo
-            enddo
+            pval = merge(scale_pressure(pgx),undefined,is_defined(pgx))
+            p_g(istart:iend,jstart:jend,kstart:kend) = pval
 
          endif
       enddo

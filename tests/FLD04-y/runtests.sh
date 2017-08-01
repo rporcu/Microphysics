@@ -21,7 +21,11 @@ fi
 echo "Using INPUTS file ${INPUTS}"
 
 if [ "$ENABLE_MPI" -eq "1" ]; then
-    MPIRUN="mpirun -np 4"
+    if [ "$ENABLE_OMP" -eq "1" ]; then
+	MPIRUN="mpirun -np 2"
+    else
+	MPIRUN="mpirun -np 4"
+    fi
 else
     MPIRUN=""
 fi
@@ -30,11 +34,11 @@ rm -rf ${RUN_NAME}* POST_* &> /dev/null
 time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
 if ! [ -z "${FEXTRACT}" ]; then
-    ${FEXTRACT} -p FLD0400000/ -d 3 -v v_g -f 8 -s POST_UG.dat
-    ${FEXTRACT} -p FLD0400000/ -d 2 -v w_g -f 8 -s POST_VG.dat
+    ${FEXTRACT} -p FLD0400001/ -d 3 -v v_g -f 8 -s POST_UG.dat
+    ${FEXTRACT} -p FLD0400001/ -d 2 -v w_g -f 8 -s POST_VG.dat
 
     post_dats=POST*.dat
     for result in ${post_dats}; do
-        diff "AUTOTEST/${result}" "${result}"
+        diff -u -I '#.*' "AUTOTEST/${result}" "${result}"
     done
 fi

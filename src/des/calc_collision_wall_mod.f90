@@ -23,7 +23,6 @@ module calc_collision_wall
    use param, only: small_number, zero
 
    use stl_functions_des, only: closestptpointtriangle
-   use discretelement, only: normal_particle
 
    implicit none
    private
@@ -32,7 +31,6 @@ module calc_collision_wall
    public :: calc_dem_force_with_wall_stl
    
 contains
-
 
    subroutine calc_dem_force_with_wall_stl ( particles, fc, tow, xlength, ylength, zlength, dtsolid )
 
@@ -47,17 +45,18 @@ contains
      
       integer :: ll, nf
 
-      real(c_real) ::OVERLAP_N, SQRT_OVERLAP
+      real(c_real) ::overlap_n, SQRT_OVERLAP
 
-      real(c_real) :: V_REL_TRANS_NORM, DISTSQ, RADSQ, CLOSEST_PT(3)
+      real(c_real) :: v_rel_trans_norm, distsq, radsq, closest_pt(3)
+
       ! local normal and tangential forces
-      real(c_real) :: NORMAL(3), VREL_T(3), DIST(3), DISTMOD
-      real(c_real) :: FT(3), FN(3), OVERLAP_T(3)
+      real(c_real) :: normal(3), vrel_t(3), dist(3), distmod
+      real(c_real) :: ft(3), fn(3), overlap_t(3)
 
       integer :: PHASELL
 
-      real(c_real) :: TANGENT(3)
-      real(c_real) :: FNMD
+      real(c_real) :: tangent(3)
+      real(c_real) :: fnmd
       ! local values used spring constants and damping coefficients
       real(c_real) ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
 
@@ -67,52 +66,57 @@ contains
       ! flag to tell if the orthogonal projection of sphere center to
       ! extended plane detects an overlap
 
-      real(c_real) :: MAX_DISTSQ
+      real(c_real) :: MAX_distsq
       integer :: MAX_NF
       real(c_real), dimension(3) :: PARTICLE_MIN, PARTICLE_MAX, POS_TMP
       !     Vertex Coordinates X ,Y and Z
-      real(c_real), dimension(3,3,6) :: VERTEX
+      real(c_real), dimension(3,3,6) :: vertex
       !     Face normal vector (normalized)
-      real(c_real), dimension(3,6) :: NORM_FACE
+      real(c_real), dimension(3,6) :: norm_face
+
+      ! additional relative translational motion due to rotation
+      real(c_real) :: v_rot(3)
+      ! total relative velocity at contact point
+      real(c_real) :: vreltrans(3)
 
       ! Skip this routine if the system is fully periodic.
-      if(cyclic_x .and. cyclic_y .and. cyclic_z) return
+      if (cyclic_x .and. cyclic_y .and. cyclic_z) return
 
       ! West Face
-      VERTEX(1,:,1) = (/ZERO, ZERO, ZERO/)
-      VERTEX(2,:,1) = (/ZERO, 2*YLENGTH, ZERO/)
-      VERTEX(3,:,1) = (/ZERO, ZERO, 2*ZLENGTH/)
-      NORM_FACE(:,1) = (/ONE, ZERO, ZERO/)
+      vertex(1,:,1) = (/ZERO, ZERO, ZERO/)
+      vertex(2,:,1) = (/ZERO, 2*YLENGTH, ZERO/)
+      vertex(3,:,1) = (/ZERO, ZERO, 2*ZLENGTH/)
+      norm_face(:,1) = (/ONE, ZERO, ZERO/)
 
       ! East Face
-      VERTEX(1,:,2) = (/XLENGTH, ZERO, ZERO/)
-      VERTEX(2,:,2) = (/XLENGTH, 2*YLENGTH, ZERO/)
-      VERTEX(3,:,2) = (/XLENGTH, ZERO, 2*ZLENGTH/)
-      NORM_FACE(:,2) = (/-ONE, ZERO, ZERO/)
+      vertex(1,:,2) = (/XLENGTH, ZERO, ZERO/)
+      vertex(2,:,2) = (/XLENGTH, 2*YLENGTH, ZERO/)
+      vertex(3,:,2) = (/XLENGTH, ZERO, 2*ZLENGTH/)
+      norm_face(:,2) = (/-ONE, ZERO, ZERO/)
 
       ! South Face
-      VERTEX(1,:,3) = (/ZERO, ZERO, ZERO/)
-      VERTEX(2,:,3) = (/2*XLENGTH, ZERO, ZERO/)
-      VERTEX(3,:,3) = (/ZERO, ZERO, 2*ZLENGTH/)
-      NORM_FACE(:,3) = (/ZERO, ONE, ZERO/)
+      vertex(1,:,3) = (/ZERO, ZERO, ZERO/)
+      vertex(2,:,3) = (/2*XLENGTH, ZERO, ZERO/)
+      vertex(3,:,3) = (/ZERO, ZERO, 2*ZLENGTH/)
+      norm_face(:,3) = (/ZERO, ONE, ZERO/)
 
       ! North Face
-      VERTEX(1,:,4) = (/ZERO, YLENGTH, ZERO/)
-      VERTEX(2,:,4) = (/2*XLENGTH, YLENGTH, ZERO/)
-      VERTEX(3,:,4) = (/ZERO, YLENGTH, 2*ZLENGTH/)
-      NORM_FACE(:,4) = (/ZERO, -ONE, ZERO/)
+      vertex(1,:,4) = (/ZERO, YLENGTH, ZERO/)
+      vertex(2,:,4) = (/2*XLENGTH, YLENGTH, ZERO/)
+      vertex(3,:,4) = (/ZERO, YLENGTH, 2*ZLENGTH/)
+      norm_face(:,4) = (/ZERO, -ONE, ZERO/)
 
       ! Bottom Face
-      VERTEX(1,:,5) = (/ZERO, ZERO, ZERO/)
-      VERTEX(2,:,5) = (/2*XLENGTH, ZERO, ZERO/)
-      VERTEX(3,:,5) = (/ZERO, 2*YLENGTH, ZERO/)
-      NORM_FACE(:,5) = (/ZERO, ZERO, ONE/)
+      vertex(1,:,5) = (/ZERO, ZERO, ZERO/)
+      vertex(2,:,5) = (/2*XLENGTH, ZERO, ZERO/)
+      vertex(3,:,5) = (/ZERO, 2*YLENGTH, ZERO/)
+      norm_face(:,5) = (/ZERO, ZERO, ONE/)
 
       ! Top Face
-      VERTEX(1,:,6) = (/ZERO, ZERO, ZLENGTH/)
-      VERTEX(2,:,6) = (/2*XLENGTH, ZERO, ZLENGTH/)
-      VERTEX(3,:,6) = (/ZERO, 2*YLENGTH, ZLENGTH/)
-      NORM_FACE(:,6) = (/ZERO, ZERO, -ONE/)
+      vertex(1,:,6) = (/ZERO, ZERO, ZLENGTH/)
+      vertex(2,:,6) = (/2*XLENGTH, ZERO, ZLENGTH/)
+      vertex(3,:,6) = (/ZERO, 2*YLENGTH, ZLENGTH/)
+      norm_face(:,6) = (/ZERO, ZERO, -ONE/)
 
       do ll = 1, size( particles )
 
@@ -120,28 +124,22 @@ contains
          associate ( radius => particles(ll) % radius, pos => particles(ll) % pos, &
               & vel => particles(ll) % vel, omega => particles(ll) % omega )
         
-            ! skipping non-existent particles or ghost particles
-            if ( .not. ( NORMAL_PARTICLE == particles(ll) % state ) ) cycle
+         ! Check particle LL for wall contacts
+         radsq = radius * radius
 
-            ! Check particle LL for wall contacts
-            radsq = radius * radius
+         do nf = 1, 6
 
-            particle_max(:) = pos + radius
-            particle_min(:) = pos - radius
-
-            do nf = 1, 6
-
-               if ( nf == 1 ) then
+               if ( nf == 1 .and. .not.cyclic_x) then
                   if ( pos(1) >  radius ) cycle
-               else if ( nf == 2) then
+               else if ( nf == 2.and. .not.cyclic_x) then
                   if ( pos(1) < ( xlength - radius ) ) cycle
-               else if ( nf == 3 ) then
+               else if ( nf == 3 .and. .not.cyclic_y) then
                   if ( pos(2) > radius ) cycle
-               else if ( nf == 4 ) then
+               else if ( nf == 4 .and. .not.cyclic_y) then
                   if ( pos(2) < ( ylength - radius ) ) cycle
-               else if ( nf == 5 ) then
+               else if ( nf == 5 .and. .not.cyclic_z) then
                   if ( pos(3) > radius ) cycle
-               else if ( nf == 6 ) then
+               else if ( nf == 6 .and. .not.cyclic_z) then
                   if ( pos(3) < ( zlength - radius ) ) cycle
                end if
 
@@ -179,7 +177,7 @@ contains
                ! same as plane's normal. For moving particles, the line's normal will
                ! be along the point joining new and old positions.
                
-               line_t = DOT_product( ( VERTEX(1,:,nf) - pos ), NORM_FACE(:,nf) )
+               line_t = DOT_product( ( vertex(1,:,nf) - pos ), norm_face(:,nf) )
 
                ! k - rad >= tol_orth, where k = -line_t, then orthogonal
                ! projection is false. Substituting for k
@@ -194,19 +192,19 @@ contains
 
                POS_TMP = pos
                
-               call ClosestPtPointTriangle( POS_TMP,  VERTEX(:,:,nf), CLOSEST_PT(:) )
+               call ClosestPtPointTriangle( POS_TMP,  vertex(:,:,nf), closest_pt(:) )
 
-               DIST(:) = CLOSEST_PT(:) - pos
-               DISTSQ = DOT_PRODUCT(DIST, DIST)
+               dist(:) = closest_pt(:) - pos
+               distsq = dot_product(dist, dist)
 
-               IF(DISTSQ .GE. RADSQ - SMALL_NUMBER) CYCLE
+               if (distsq .ge. radsq - small_number) cycle
 
-               MAX_DISTSQ = DISTSQ
-               MAX_NF = NF
+               max_distsq = distsq
+               max_nf = nf
 
                ! Assign the collision normal based on the facet with the
                ! largest overlap.
-               NORMAL(:) = DIST(:)/sqrt(DISTSQ)
+               normal(:) = dist(:)/sqrt(distsq)
 
                ! Facet's normal is correct normal only when the intersection is with
                ! the face. When the intersection is with edge or vertex, then the
@@ -215,19 +213,32 @@ contains
                ! vertex, edge, and facet.
 
                ! Calculate the particle/wall overlap.
-               DISTMOD = sqrt(MAX_DISTSQ)
-               OVERLAP_N = radius - DISTMOD
+               distmod = sqrt(MAX_distsq)
+               overlap_n = radius - distmod
 
+               ! *****************************************************************************
                ! Calculate the translational relative velocity
-               call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normal, distmod, &
-                    & particles )
+               call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normal, distmod, particles)
+               ! subroutine cfrelvel_wall (ll, vrn, vrt, norm, dist, particles )
+               ! *****************************************************************************
+               ! total relative velocity + rotational contribution
+               ! v_rot = distmod * particles(ll) % omega
+               ! vreltrans(:) =  particles(ll) % vel  + des_crossprdct(v_rot, normal)
+
+               ! magnitude of normal component of relative velocity (scalar)
+               ! v_rel_trans_norm = dot_product(vreltrans,normal)
+
+               ! total relative translational slip velocity at the contact point
+               ! equation (8) in tsuji et al. 1992
+               ! vrel_t(:) =  vreltrans(:) - v_rel_trans_norm*normal(:)
+               ! *****************************************************************************
 
                ! Calculate the spring model parameters.
                phaseLL = particles(ll) % phase
 
                ! Hertz vs linear spring-dashpot contact model
                if ( DES_COLL_MODEL_ENUM == HERTZIAN ) then
-                  sqrt_overlap = sqrt(OVERLAP_N)
+                  sqrt_overlap = sqrt(overlap_n)
                   KN_DES_W     = hert_kwn(phaseLL)*sqrt_overlap
                   KT_DES_W     = hert_kwt(phaseLL)*sqrt_overlap
                   sqrt_overlap = SQRT(sqrt_overlap)
@@ -241,8 +252,8 @@ contains
                end if
 
                ! Calculate the normal contact force
-               FN(:) = -(KN_DES_W * OVERLAP_N * NORMAL(:) + &
-                    ETAN_DES_W * V_REL_TRANS_NORM * NORMAL(:))
+               FN(:) = -(KN_DES_W * overlap_n * normal(:) + &
+                    ETAN_DES_W * V_REL_TRANS_NORM * normal(:))
 
                ! Calculate the tangential displacement.
                overlap_t(:) = dtsolid*vrel_t(:)
@@ -252,10 +263,10 @@ contains
                ! tangential force on a particle in contact with a wall.
                if ( MAG_OVERLAP_T > 0.0 ) then
                   ! Max force before the on set of frictional slip.
-                  FNMD = MEW_W*sqrt(DOT_PRODUCT(FN,FN))
+                  FNMD = MEW_W*sqrt(dot_product(FN,FN))
                   ! Direction of tangential force.
-                  TANGENT = OVERLAP_T/MAG_OVERLAP_T
-                  FT = -FNMD * TANGENT
+                  tangent = OVERLAP_T/MAG_OVERLAP_T
+                  FT = -FNMD * tangent
                else
                   FT = 0.0
                end if
@@ -264,16 +275,15 @@ contains
                FC(LL,:) = FC(LL,:) + FN(:) + FT(:)
 
                ! Add the torque force to the total torque acting on the particle.
-               TOW(LL,:) = TOW(LL,:) + DISTMOD*DES_CROSSPRDCT(NORMAL,FT)
+               TOW(LL,:) = TOW(LL,:) + distmod*DES_CROSSPRDCT(normal,FT)
                
-            end do
+         end do
 
          end associate
 
       end do
 
    end subroutine calc_dem_force_with_wall_stl
-
 
 
    !----------------------------------------------------------------------!

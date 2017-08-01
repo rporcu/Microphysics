@@ -11,43 +11,38 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
                    Real time, Real normg)
 {
 
-    if (solve_fluid)
-  EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
-
-    if (solve_dem)
-    {
   if (solve_fluid)
-      mfix_calc_drag_particle(lev);
+     EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
 
-  pc ->  EvolveParticles( lev, nstep, dt, time);
-    }
+  if (solve_dem)
+  {
+     // This returns the drag force on the particle
+     if (solve_fluid)
+        mfix_calc_drag_particle(lev);
+
+     pc -> EvolveParticles( lev, nstep, dt, time);
+  }
 }
 
 void
 mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
                         Real dt, Real& prev_dt, Real time, Real normg)
 {
+
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-    {
-      Box domain(geom[lev].Domain());
-      const Box& sbx = (*ep_g[lev])[mfi].box();
-      Box ubx((*u_g[lev])[mfi].box());
-      Box vbx((*v_g[lev])[mfi].box());
-      Box wbx((*w_g[lev])[mfi].box());
-
-      set_bc1(sbx.loVect(), sbx.hiVect(),
-                ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-              (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
-    }
-
+  Real sum_vol;
   if (solve_dem)
-    mfix_calc_volume_fraction(lev);
+  {
+    mfix_calc_volume_fraction(lev,sum_vol);
+    Print() << "Testing new sum_vol " << sum_vol << " against original sum_vol " << sum_vol_orig << std::endl;
+    if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) amrex::Abort("Volume fraction in domain has changed!");
+  }
+
+  // Reimpose boundary conditions -- make sure to do this before we compute tau
+  mfix_set_bc1(lev);
 
   // Calculate transport coefficients
   int calc_flag = 2;
@@ -82,10 +77,6 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
     int gsmf=0;         // number of outer iterations for goal seek mass flux (GSMF)
     Real delP_MF=0.0L;  // actual GSMF pressure drop
     Real lMFlux=0.0L;   // actual GSMF mass flux
-    Real resg=0.0L;     // fluid pressure residual
-
-    // int lset_normg=1-set_normg;
-    Real lnormg=normg;
 
     ///////////////// ---- call to iterate -------- /////////////////
     do {
@@ -96,28 +87,61 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
         residuals[i] = 0.0L;
 
       // User hooks
-      for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+      for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
         mfix_usr2();
-
-      // Calculate transport coefficients
-      calc_flag = 1;
-      mfix_calc_coeffs(lev,calc_flag);
 
       // Calculate drag coefficient
       if (solve_dem)
         mfix_calc_drag_fluid(lev);
 
-      // Solve momentum equations
-      mfix_solve_for_vels(lev, dt, residuals);
+      // Solve momentum equations in a thread safe way.
+      Real num_u = 0.0L;
+      Real num_v = 0.0L;
+      Real num_w = 0.0L;
+
+      Real denom_u = 0.0L;
+      Real denom_v = 0.0L;
+      Real denom_w = 0.0L;
+
+      mfix_solve_for_u(lev, dt, num_u, denom_u);
+      mfix_solve_for_v(lev, dt, num_v, denom_v);
+      mfix_solve_for_w(lev, dt, num_w, denom_w);
+
+      residuals[1] = num_u;
+      residuals[2] = num_v;
+      residuals[3] = num_w;
+
+      residuals[9]  = denom_u;
+      residuals[10] = denom_v;
+      residuals[11] = denom_w;
+
+      //Called after each momentum equation variable solve
+      MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());
+      MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, v_g[lev]->nGrow());
+      MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, w_g[lev]->nGrow());
+
+      u_g[lev]->FillBoundary(geom[lev].periodicity());
+      v_g[lev]->FillBoundary(geom[lev].periodicity());
+      w_g[lev]->FillBoundary(geom[lev].periodicity());
 
       // Calculate transport coefficients
       mfix_physical_prop(lev,0);
+
+      // Reimpose boundary conditions
+      mfix_set_bc1(lev);
 
       // Calculate bulk density (epg*ro_g) at cell faces
       mfix_conv_rop(lev,dt);
 
       // Solve the pressure correction equation
-      mfix_solve_for_pp(lev,dt,lnormg,resg, residuals);
+      Real   num_p = 0.0L;
+      Real denom_p = 0.0L;
+      mfix_solve_for_pp(lev,dt,num_p,denom_p);
+      residuals[0] = num_p;
+      residuals[8] = denom_p;
 
       // Apply pressure correction to all Pg, Ug, Vg, Wg
       mfix_correct_0(lev);
@@ -139,7 +163,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
     } while(converged==0 && nit<max_nit);
 
     // Adjust time step if iteration failed.
-    reiterate = mfix_adjustdt(&converged, &nit, &dt);
+    reiterate = adjustdt(&converged, &nit, &dt);
     if(reiterate == 1) {
 
       // Reset the field variables
