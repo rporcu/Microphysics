@@ -98,6 +98,7 @@ contains
 8550           format('distance between particles is zero:',2(2x,i10))
             endif
 
+
             dist_mag  = sqrt( dist_mag )
             normal(:) = dist(:) / dist_mag
 
@@ -109,7 +110,7 @@ contains
 
             ! calculate the components of translational relative velocity for a
             ! contacting particle pair and the tangent to the plane of contact
-            call cfrelvel(ll, ii, v_rel_trans_norm, vrel_t, normal(:), dist_mag, particles )
+            call cfrelvel(particles(ll), particles(ii), v_rel_trans_norm, vrel_t, normal(:), dist_mag)
 
             radiusll = particles(ll) % radius
             phasell  = particles(ll) % phase
@@ -304,6 +305,7 @@ contains
 
             ncoll = ncoll + 1
 
+
             dist_mag  = sqrt( dist_mag )
             normal(:) = dist(:) / dist_mag
 
@@ -313,7 +315,7 @@ contains
 
             ! calculate the components of translational relative velocity for a
             ! contacting particle pair and the tangent to the plane of contact
-            call cfrelvel(ll, ii, v_rel_trans_norm, vrel_t, normal(:), dist_mag, particles )
+            call cfrelvel(particles(ll), particles(ii), v_rel_trans_norm, vrel_t, normal(:), dist_mag)
 
             radiusll = particles(ll) % radius
             phasell  = particles(ll) % phase

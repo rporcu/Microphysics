@@ -34,7 +34,7 @@ contains
       integer(c_int),   intent(in   ) :: np
       real(c_real)  ,   intent(in   ) :: time, dt, xlength, ylength, zlength
       integer(c_int),   intent(in   ) :: nstep
-      type(particle_t), intent(inout) :: particles(np)
+      type(particle_t), intent(in   ) :: particles(np)
 
       ! Dummy Arguments:
       !---------------------------------------------------------------------//
