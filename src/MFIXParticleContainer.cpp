@@ -379,13 +379,13 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
          auto& particles = pti.GetArrayOfStructs();
     
-         for (const auto& p: particles)
-         {
-             max_vel_x = std::max(p.rdata(realData::velx), max_vel_x);
-             max_vel_y = std::max(p.rdata(realData::vely), max_vel_y);
-             max_vel_z = std::max(p.rdata(realData::velz), max_vel_z);
-         }
-       }
+      for (const auto& p: particles)
+      {
+          max_vel_x = std::max(Real(p.rdata(realData::velx)), max_vel_x);
+          max_vel_y = std::max(Real(p.rdata(realData::vely)), max_vel_y);
+          max_vel_z = std::max(Real(p.rdata(realData::velz)), max_vel_z);
+      }
+    }
     
        ParallelDescriptor::ReduceRealMax(max_vel_x,ParallelDescriptor::IOProcessorNumber());
        ParallelDescriptor::ReduceRealMax(max_vel_y,ParallelDescriptor::IOProcessorNumber());
@@ -701,45 +701,43 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
          Real (&avg_dp)[10], Real (&avg_ro)[10])
 {
 
-  Real sum_np[10];
-  Real sum_dp[10];
-  Real sum_ro[10];
-  for (int i=0; i<10; ++i){
-    sum_np[i] = 0.0;
-    sum_dp[i] = 0.0;
-    sum_ro[i] = 0.0;
-  }
+   // The number of phases was previously hard set at 10, however lowering
+   //  this number would make this code faster. 
+   int num_of_phases_in_use = 10; //Number of different phases being simulated
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-    // Real particles
-    const int np     = NumberOfParticles(pti);
-    void* particles  = pti.GetArrayOfStructs().data();
+   // Cycle through the different phases, starting from 1
+   for (int phse=1; phse<=num_of_phases_in_use; ++phse){
 
-    sum_particle_props( &np, particles, sum_np, sum_dp, sum_ro);
+     Real p_num  = 0.0; //number of particle 
+     Real p_diam = 0.0; //particle diameters
+     Real p_dens = 0.0; //particle density 
 
-  }
+   #ifdef _OPENMP
+   #pragma omp parallel reduction(+:p_num, p_diam, p_dens)
+   #endif
+     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+   
+       auto& particles = pti.GetArrayOfStructs();
+   
+       for (const auto& p: particles){
+         if ( phse==p.idata(intData::phase) ){
+           p_num  += 1.0; 
+           p_diam += p.rdata(realData::radius) * 2.0;
+           p_dens += p.rdata(realData::density); 
+         }
+       }
+     }
 
-  Real sum_props[30];
-  for (int i=0; i<10; ++i){
-    sum_props[i   ] = sum_np[i];
-    sum_props[i+10] = sum_dp[i];
-    sum_props[i+20] = sum_ro[i];
-  }
+    // A single MPI call passes all three variables 
+    ParallelDescriptor::ReduceRealSum({p_num,p_diam,p_dens}); 
 
-  ParallelDescriptor::ReduceRealSum(sum_props,30);
-
-  for (int i=0; i<10; ++i){
-
-    if(sum_props[i]) {
-      avg_dp[i] = sum_props[i+10]/sum_props[i];
-      avg_ro[i] = sum_props[i+20]/sum_props[i];
-      // std::cout << "avg_props: " << i <<
-      //   "   np: " << sum_props[i] <<
-      //   "   dp: " << avg_dp[i]   <<
-      //   "   ro: " << avg_ro[i]   << std::endl;
-    }
-  }
+   //calculate averages or set = zero if no particles of that phase
+   if (p_num==0){
+     avg_dp[phse-1] = 0.0;
+     avg_ro[phse-1] = 0.0;   
+   } else {
+     avg_dp[phse-1] = p_diam/p_num;
+     avg_ro[phse-1] = p_dens/p_num;   
+   } 
+ }
 }
