@@ -66,6 +66,7 @@ if (AMREX_INSTALL_DIR) # No superbuild
    print_option (ENABLE_TINY_PROFILING ${ENABLE_TINY_PROFILING})
    print_option (ENABLE_BACKTRACE ${ENABLE_BACKTRACE})
    print_option (ENABLE_MG_BOXLIB ${ENABLE_MG_BOXLIB})
+   print_option (ENABLE_ASSERTIONS ${ENABLE_ASSERTIONS})
 else ()
    set (ENABLE_SUPERBUILD 1)
    include (MFIX_ConfigSuperbuild)

@@ -103,6 +103,9 @@ in AMReX build")
    set (AMREX_ENABLE_BACKTRACE 1 CACHE INT "Include backtrace information in AMReX build")
    check_option_value ( "ENABLE_BACKTRACE" ${AMREX_ENABLE_BACKTRACE} 0 1 )
 
+   set (AMREX_ENABLE_ASSERTIONS 0 CACHE INT "Include assertions in AMReX build")
+   check_option_value ( "ENABLE_ASSERTIONS" ${AMREX_ENABLE_ASSERTIONS} 0 1 )
+   
    set (AMREX_GIT_COMMIT "" CACHE STRING "AMReX git commit to use in superbuild")
    
 endif ()
