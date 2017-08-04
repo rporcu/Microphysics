@@ -59,6 +59,7 @@ ExternalProject_Add ( amrex
    -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
    -DAMREX_FFLAGS_OVERRIDES=${MFIX_Fortran_FLAGS}
    -DAMREX_CXXFLAGS_OVERRIDES=${MFIX_CXX_FLAGS}
+   UPDATE_COMMAND ""
    # LOG_CONFIGURE 1
    # LOG_BUILD 1
    # LOG_INSTALL 1
@@ -92,10 +93,41 @@ set (BL_SPACEDIM 3)
 set (ENABLE_FBASELIB  0 )
 set (ENABLE_PARTICLES 1 )
 
+#
+# Detect Fortran name mangling scheme for C/Fortran interface 
+#
+include(FortranCInterface)
+include(${FortranCInterface_BINARY_DIR}/Output.cmake)
 
-# ------------------------------------------------------------- #
-#    Set preprocessor flags 
-# ------------------------------------------------------------- #
+if ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "" )  AND
+      ( FortranCInterface_GLOBAL_CASE STREQUAL "UPPER") )
+   message(STATUS "Fortran name mangling scheme to UPPERCASE \
+(upper case, no append underscore)")
+   add_define ( BL_FORT_USE_UPPERCASE AMREX_DEFINES )
+   add_define ( AMREX_FORT_USE_UPPERCASE AMREX_DEFINES )
+elseif ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "") AND
+      ( FortranCInterface_GLOBAL_CASE STREQUAL "LOWER") )
+   message(STATUS "Fortran name mangling scheme to LOWERCASE \
+(lower case, no append underscore)")
+   add_define ( BL_FORT_USE_LOWERCASE AMREX_DEFINES )
+   add_define ( AMREX_FORT_USE_LOWERCASE AMREX_DEFINES )
+elseif ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "_" ) AND
+      ( FortranCInterface_GLOBAL_CASE STREQUAL "LOWER") )
+   message(STATUS "Fortran name mangling scheme to UNDERSCORE \
+(lower case, append underscore)")
+   add_define ( BL_FORT_USE_UNDERSCORE AMREX_DEFINES )
+   add_define ( AMREX_FORT_USE_UNDERSCORE AMREX_DEFINES )
+else ()
+   message(AUTHOR_WARNING "Fortran to C mangling not backward\
+ compatible with older style BoxLib code") 
+endif ()
+
+#
+# We set the AMReX preprocessor flags according to the options
+# set by user and amrex defaults, i.e. mfix user can modify only
+# a subset of all the amrex options so for all the others we use defaults
+#  and here we set defines accordingly.
+#
 add_define (BL_NOLINEVALUES AMREX_DEFINES)
 add_define (AMREX_NOLINEVALUES AMREX_DEFINES)
 add_define (BL_PARALLEL_IO AMREX_DEFINES)
@@ -146,87 +178,6 @@ add_define (BL_USE_F_INTERFACES AMREX_DEFINES ENABLE_FORTRAN_INTERFACES)
 
 add_define (BL_USE_ASSERTION AMREX_DEFINES ENABLE_ASSERTIONS) 
 
-
-
-
-#
-# Add all preprocessor definitions to compile string
-# 
-add_definitions ( ${AMREX_DEFINES} )
-
-
-#
-# Detect Fortran name mangling scheme for C/Fortran interface 
-#
-include(FortranCInterface)
-include(${FortranCInterface_BINARY_DIR}/Output.cmake)
-
-if ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "" )  AND
-      ( FortranCInterface_GLOBAL_CASE STREQUAL "UPPER") )
-   message(STATUS "Fortran name mangling scheme to UPPERCASE \
-(upper case, no append underscore)")
-   add_define ( BL_FORT_USE_UPPERCASE AMREX_DEFINES )
-   add_define ( AMREX_FORT_USE_UPPERCASE AMREX_DEFINES )
-elseif ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "") AND
-      ( FortranCInterface_GLOBAL_CASE STREQUAL "LOWER") )
-   message(STATUS "Fortran name mangling scheme to LOWERCASE \
-(lower case, no append underscore)")
-   add_define ( BL_FORT_USE_LOWERCASE AMREX_DEFINES )
-   add_define ( AMREX_FORT_USE_LOWERCASE AMREX_DEFINES )
-elseif ( ( FortranCInterface_GLOBAL_SUFFIX STREQUAL "_" ) AND
-      ( FortranCInterface_GLOBAL_CASE STREQUAL "LOWER") )
-   message(STATUS "Fortran name mangling scheme to UNDERSCORE \
-(lower case, append underscore)")
-   add_define ( BL_FORT_USE_UNDERSCORE AMREX_DEFINES )
-   add_define ( AMREX_FORT_USE_UNDERSCORE AMREX_DEFINES )
-else ()
-   message(AUTHOR_WARNING "Fortran to C mangling not backward\
- compatible with older style BoxLib code") 
-endif ()
-
-#
-# We set the AMReX preprocessor flags according to the options
-# set by user and amrex defaults, i.e. mfix user can modify only
-# a subset of all the amrex options so for all the others we use defaults
-#  and here we set defines accordingly.
-add_define (BL_NOLINEVALUES AMREX_DEFINES)
-add_define (AMREX_NOLINEVALUES AMREX_DEFINES)
-add_define (BL_PARALLEL_IO AMREX_DEFINES)
-add_define (AMREX_PARALLEL_IO AMREX_DEFINES)
-add_define (BL_SPACEDIM=${BL_SPACEDIM} AMREX_DEFINES)
-add_define (AMREX_SPACEDIM=${BL_SPACEDIM} AMREX_DEFINES)
-add_define (BL_${CMAKE_SYSTEM_NAME} AMREX_DEFINES)
-add_define (AMREX_${CMAKE_SYSTEM_NAME} AMREX_DEFINES)
-
-if ( ENABLE_DP )
-   add_define (BL_USE_DOUBLE AMREX_DEFINES)
-   add_define (AMREX_USE_DOUBLE AMREX_DEFINES)
-else ()
-   add_define (BL_USE_FLOAT AMREX_DEFINES)
-   add_define (AMREX_USE_FLOAT AMREX_DEFINES)
-endif ()
-
-add_define (USE_PARTICLES AMREX_DEFINES ENABLE_PARTICLES)
-add_define (BL_PROFILING AMREX_DEFINES ENABLE_PROFILING)
-add_define (AMREX_PROFILING AMREX_DEFINES ENABLE_PROFILING) 
-add_define (BL_TINY_PROFILING AMREX_DEFINES ENABLE_TINY_PROFILING)
-add_define (AMREX_TINY_PROFILING AMREX_DEFINES ENABLE_TINY_PROFILING)
-add_define (AMREX_ENABLE_ASSERTIONS AMREX_DEFINES ENABLE_)
-
-if ( ENABLE_PARTICLES AND ( NOT ENABLE_DP_PARTICLES ) ) 
-   add_define ( BL_SINGLE_PRECISION_PARTICLES AMREX_DEFINES )
-   add_define ( AMREX_SINGLE_PRECISION_PARTICLES AMREX_DEFINES )
-endif ()
-
-add_define (BL_USE_FORTRAN_MPI=1 AMREX_DEFINES ENABLE_MPI)
-add_define (AMREX_USE_FORTRAN_MPI=1 AMREX_DEFINES ENABLE_MPI)
-add_define (BL_USE_MPI AMREX_DEFINES ENABLE_MPI)
-add_define (BL_USE_OMP AMREX_DEFINES ENABLE_OMP)
-add_define (AMREX_USE_MPI AMREX_DEFINES ENABLE_MPI)
-add_define (AMREX_USE_OMP AMREX_DEFINES ENABLE_OMP)
-add_define (BL_USE_ASSERTION AMREX_DEFINES ENABLE_ASSERTIONS)
-
-add_definitions ( ${AMREX_DEFINES} )
 
 # ------------------------------------------------------------- #
 #    Setup third party packages 
