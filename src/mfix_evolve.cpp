@@ -67,7 +67,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
     prev_dt = dt;
 
     // Calculate bulk density (epg*ro_g) at cell faces
-    mfix_conv_rop(lev,dt);
+    mfix_conv_rop(lev);
 
     // Calculate face mass fluxes
     mfix_calc_mflux(lev);
@@ -134,7 +134,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       mfix_set_bc1(lev);
 
       // Calculate bulk density (epg*ro_g) at cell faces
-      mfix_conv_rop(lev,dt);
+      mfix_conv_rop(lev);
 
       // Solve the pressure correction equation
       Real   num_p = 0.0L;

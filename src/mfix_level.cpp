@@ -199,7 +199,7 @@ mfix_level::mfix_calc_mflux(int lev)
 }
 
 void
-mfix_level::mfix_conv_rop(int lev, Real dt)
+mfix_level::mfix_conv_rop(int lev)
 {
   BL_PROFILE("mfix_level::mfix_conv_rop()");
     Box domain(geom[lev].Domain());
