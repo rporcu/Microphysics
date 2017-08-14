@@ -4,12 +4,10 @@
 !
 !   pargen --size INTEGER --enable-vtp
 !
-!  --size          The domain size scale. 1 is the base (serial) case.
 !  --enable-vtp    write vtp output file for visualization
 !
 module data
 
-  integer :: size = 1
   logical :: enable_vtp = .false.
 
   ! base domain length and particle count
@@ -165,20 +163,22 @@ end subroutine scale_vel
 !                                                                      !
 !                                                                      !
 !----------------------------------------------------------------------!
-subroutine write_dat(pc, pos, vel)
+subroutine write_dat(size, pc, pos, vel)
 
   implicit none
 
-  integer, intent(in   ) :: pc
+  integer, intent(in   ) :: size, pc
 
   double precision, intent(in   ) :: pos(pc,3)
   double precision, intent(in   ) :: vel(pc,3)
 
   integer :: lc1
   integer, parameter :: fUnit = 2227
+  character(len=4) :: char4
 
-  ! Generate particle_input.dat
-  open(unit=fUnit, file='particle_input.dat', status='unknown')
+  write(char4,"(I4.4)") size**3
+
+  open(file='Size'//char4//'/particle_input.dat',unit=funit,status='unknown')
   write(fUnit,"(i9)") pc
   do lc1 = 1, pc
      write(fUnit,"(i1,8(1x,es13.6))") &
@@ -220,7 +220,7 @@ subroutine write_vtp(pc, pos, vel)
   write(100,"(12x,a)") '<DataArray type="Float32" Name="Diameter" &
        &NumberOfComponents="1" format="ascii">'
   do lc1 = 1, pc
-     write (100,"(15x,es12.6)") real(dp)
+     write (100,"(15x,es13.6)") real(dp)
   end do
   write(100,"(12x,a)") '</DataArray>'
 
@@ -276,17 +276,6 @@ subroutine read_inputs ()
      case ( "--enable-vtp" )
         enable_vtp = .true.
 
-     case ( "--size","--Size","--SIZE");
-        call get_command_argument(lc, val2, length); lc = lc+1
-        read(val2,"(I4)",iostat=ios) size
-        cbrt = size**(1./3.)
-        if(cbrt**3 /= size) then
-           write(*,*)'Unknown size error.'
-           stop 8877
-        else
-           size = cbrt
-        endif
-
      case default
         write(*,*) "Option "//trim(val1)//" not recognized"
         stop 2299
@@ -310,6 +299,30 @@ program main
 
   implicit none
 
+  integer :: lc
+  integer, parameter :: sizes(6) = (/1,2,3,4,6,10/)
+
+  call read_inputs()
+
+  do lc=1,6
+     call set_case(sizes(lc))
+  enddo
+
+contains
+
+!----------------------------------------------------------------------!
+!                                                                      !
+!                                                                      !
+!                                                                      !
+!----------------------------------------------------------------------!
+   subroutine set_case(size)
+
+  use data
+
+  implicit none
+
+  integer, intent(in) :: size
+
   integer :: lo, hi, np, fails, pc
   double precision :: problo, probhi, dx, meanVel(3)
   double precision, allocatable :: pos(:,:), vel(:,:)
@@ -317,20 +330,27 @@ program main
   integer, allocatable :: pinc(:,:,:), pbin(:,:,:,:)
 
   double precision :: ru(4)
+  character(len=4) :: char4
 
-  call read_inputs()
+  write(char4,"(I4.4)") size**3
 
   lo =  1
   hi = 10*size
 
-  pc = pcount*(2**(size-1))
+  pc = pcount*(size**3)
 
   problo = 0.00d0
   probhi = length * dble(size)
   dx = probhi/dble(hi)
 
-  write(*,"(/2x,'Domain length:  ',f9.3)"), probhi
-  write(*,"( 2x,'Particle count: ',i9  )"), pc
+  write(*,"(/2x,'Size',A4,/2x,36('-'))")char4
+  write(*,"( 2x,'Domain length:  ',f9.3)") probhi
+  write(*,"( 2x,'Particle count: ',i9  )") pc
+
+  if(allocated(pinc)) deallocate(pinc)
+  if(allocated(pbin)) deallocate(pbin)
+  if(allocated(pos )) deallocate(pos )
+  if(allocated(vel )) deallocate(vel )
 
   allocate(pinc(hi,hi,hi))
   allocate(pbin(hi,hi,hi,2))
@@ -359,11 +379,12 @@ program main
   call scale_vel(pc, meanVel, vel)
 
   write(*,"( 2x,'Writing dat file.')")
-  call write_dat(pc, pos, vel)
+  call write_dat(size, pc, pos, vel)
 
   if(enable_vtp) then
      write(*,"( 2x,'Writing vtp file.')")
      call write_vtp(pc, pos, vel)
   endif
+end subroutine set_case
 
 end program main
