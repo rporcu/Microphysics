@@ -7,13 +7,13 @@
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'DEM04'
+  RUN_NAME = 'BENCH04'
   DESCRIPTION = 'Riser flow'
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  TSTOP = 0.50
+  TSTOP = 0.10
 
   DT =     1.0d-04
   DT_FAC = 1.0
@@ -39,6 +39,8 @@
 
 ! Particle Section
 !---------------------------------------------------------------------//
+  PARTICLE_TYPES = 1
+
 ! Friction coefficient. (1)
   MEW =   0.0                ! particle-particle
   MEW_W = 0.0                ! particle-wall

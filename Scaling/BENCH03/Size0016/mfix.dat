@@ -16,8 +16,7 @@
   TSTOP = 0.01
 
   DT =     1.0d-04
-  DT_MAX = 1.0d-02
-  DT_MIN = 1.0d-10
+  DT_FAC = 1.0
 
   DRAG_TYPE = 'KOCH_HILL'
 

@@ -7,13 +7,13 @@
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'DEM02'
+  RUN_NAME = 'BENCH02'
   DESCRIPTION = 'Settling'
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  TSTOP = 0.25
+  TSTOP = 0.05
 
   DT =     1.0d-04
   DT_FAC = 1.0
@@ -27,21 +27,19 @@
 
   TOL_RESID = 1.0E-3
 
-  MAX_NIT = 500
-
+  MAX_NIT = 50
 
 #_______________________________________________________________________
 # MATERIAL SECTION
 
 ! Gas Section
 !---------------------------------------------------------------------//
-
   RO_g0 = 1.0      ! (kg/m3)
   MU_g0 = 2.0d-5   ! (Pa.sec)
 
-
 ! Particle Section
 !---------------------------------------------------------------------//
+  PARTICLE_TYPES=1
 
 ! Friction coefficient. (1)
   MEW =   0.0                ! particle-particle
@@ -54,7 +52,6 @@
 ! Restitution coefficient. (1)
   DES_EN_INPUT = 0.8         ! particle-particle
   DES_EN_WALL_INPUT = 1.0    ! particle-wall
-
 
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
