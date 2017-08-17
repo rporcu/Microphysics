@@ -9,10 +9,11 @@
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-   subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, u_g, v_g, w_g, &
-                         bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-                         bc_klo_type, bc_khi_type, domlo, domhi) &
-      bind(C, name="set_bc1")
+subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
+     p_g, u_g, v_g, w_g, &
+     bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+     bc_klo_type, bc_khi_type, domlo, domhi) &
+     bind(C, name="set_bc1")
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
@@ -27,6 +28,8 @@
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
+      real(c_real), intent(inout) ::  p_g&
+           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) ::  v_g&
@@ -117,6 +120,9 @@
                   v_g(i,vlo(2):domlo(2)-1,k) = v_g(i,domlo(2),k)
 
                else if (bc_jlo_type(i,k,1) == MINF_)then
+
+                  p_g(i,slo(2):domlo(2)-1,k) = &
+                       2*p_g(i,domlo(2),k) - p_g(i,domlo(2)+1,k)
 
                   ! Note we index v_g differently to catch the inflow face
                   u_g(i,ulo(2):domlo(2)-1,k) = 0.0d0
