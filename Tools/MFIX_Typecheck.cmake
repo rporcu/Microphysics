@@ -69,12 +69,6 @@ foreach (item ${TMP})
    list ( APPEND INCLUDES -I${item} )
 endforeach ()
 
-#
-# Find defines needed for typecheck
-#
-set (DEFINES)
-string (STRIP ${MFIX_DEFINES} DEFINES) 
-string (REPLACE " " ";" DEFINES ${DEFINES})
 
 #
 # Find C headers needed for type check
@@ -112,7 +106,7 @@ foreach ( file ${CXXINCLUDES} )
    set ( CPPD_FILE ${fname}-cppd.h )
    get_filename_component ( fullname ${file} ABSOLUTE ) # This add the absolute path to fname
    add_custom_command ( OUTPUT  ${CPPD_FILE} COMMAND ${CMAKE_C_COMPILER}
-      ARGS ${DEFINES} ${INCLUDES} -E -P -x c -std=c99 ${fullname} > ${CPPD_FILE}
+      ARGS ${MFIX_DEFINES} ${INCLUDES} -E -P -x c -std=c99 ${fullname} > ${CPPD_FILE}
       COMMAND sed
       ARGS -i -e 's/amrex::Real/${AMREX_REAL}/g' ${CPPD_FILE} 
       COMMAND sed

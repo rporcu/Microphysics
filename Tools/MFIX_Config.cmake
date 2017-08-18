@@ -38,11 +38,15 @@ endif ()
 #  Setup amrex and its dependencies 
 # ------------------------------------------------------------- #
 if (AMREX_INSTALL_DIR) # No superbuild
+
    check_path ( ${AMREX_INSTALL_DIR} FATAL_ERROR )
    check_path ( ${AMREX_INSTALL_DIR}/cmake FATAL_ERROR )
+
    set (ENABLE_SUPERBUILD 0)
    set (AMREX_INSTALL_PATH ${AMREX_INSTALL_DIR} )
+
    find_package (AMReX CONFIG REQUIRED HINTS ${AMREX_INSTALL_PATH}/cmake )   
+
    # Check and print (if not superbuild) amrex options
    if (NOT ENABLE_PARTICLES)
       message ( FATAL_ERROR "AMReX must be configured with -DENABLE_PARTICLES=1" )
@@ -52,28 +56,37 @@ if (AMREX_INSTALL_DIR) # No superbuild
    if (NOT ENABLE_FBASELIB)
       message ( FATAL_ERROR "AMReX must be configured with -DENABLE_FBASELIB=1" )
    endif ()
+
+  
+   # Check and print (if not superbuild) amrex options
+   if ( NOT (${AMREX_DIM} EQUAL 3) )
+      message ( FATAL_ERROR "AMReX must be configured with -DDIM=3" )
+   endif ()
+
    
    #
    # Echo amrex config options
    #
-   message (STATUS "AMReX configuration options: ")
-   print_option (AMREX_BUILD_TYPE ${AMREX_BUILD_TYPE})
-   print_option (ENABLE_PIC ${ENABLE_PIC})
-   print_option (BL_SPACEDIM ${BL_SPACEDIM})
-   print_option (ENABLE_MPI ${ENABLE_MPI})
-   print_option (ENABLE_OMP ${ENABLE_OMP})
-   print_option (ENABLE_DP ${ENABLE_DP})
-   print_option (ENABLE_PARTICLES ${ENABLE_PARTICLES})
-   print_option (ENABLE_DP_PARTICLES ${ENABLE_DP_PARTICLES})
-   print_option (ENABLE_PROFILING ${ENABLE_PROFILING})
-   print_option (ENABLE_TINY_PROFILING  ${ENABLE_TINY_PROFILING})
-   print_option (ENABLE_TRACE_PROFILING ${ENABLE_TRACE_PROFILING})
-   print_option (ENABLE_COMM_PROFILING  ${ENABLE_COMM_PROFILING})   
-   print_option (ENABLE_BACKTRACE ${ENABLE_BACKTRACE})
-   print_option (ENABLE_ASSERTIONS ${ENABLE_ASSERTIONS})
-   print_option (ENABLE_FBASELIB ${ENABLE_FBASELIB})
-   print_option (ENABLE_LINEAR_SOLVERS ${ENABLE_LINEAR_SOLVERS})
-   print_option (ENABLE_FORTRAN_INTERFACES ${ENABLE_FORTRAN_INTERFACES})
+   echo_amrex_config_options ()
+   # message (STATUS "AMReX configuration options: ")
+   # print_option (AMREX_DEBUG ${AMREX_DEBUG})
+   # print_option (AMRED_DIM ${AMREX_DIM})
+   # print_option (ENABLE_PIC ${ENABLE_PIC})
+   # print_option (ENABLE_MPI ${ENABLE_MPI})
+   # print_option (ENABLE_OMP ${ENABLE_OMP})
+   # print_option (ENABLE_DP ${ENABLE_DP})
+   # print_option (ENABLE_FORTRAN_INTERFACES ${ENABLE_FORTRAN_INTERFACES})
+   # print_option (ENABLE_LINEAR_SOLVERS ${ENABLE_LINEAR_SOLVERS})
+   # print_option (ENABLE_FBASELIB ${ENABLE_FBASELIB})
+   # print_option (ENABLE_AMRDATA ${ENABLE_AMRDATA})
+   # print_option (ENABLE_PARTICLES ${ENABLE_PARTICLES})
+   # print_option (ENABLE_DP_PARTICLES ${ENABLE_DP_PARTICLES})
+   # print_option (ENABLE_PROFILING ${ENABLE_PROFILING})
+   # print_option (ENABLE_TINY_PROFILING  ${ENABLE_TINY_PROFILING})
+   # print_option (ENABLE_TRACE_PROFILING ${ENABLE_TRACE_PROFILING})
+   # print_option (ENABLE_COMM_PROFILING  ${ENABLE_COMM_PROFILING})   
+   # print_option (ENABLE_BACKTRACE ${ENABLE_BACKTRACE})
+
 else ()
    set (ENABLE_SUPERBUILD 1)
    include (MFIX_ConfigSuperbuild)
