@@ -51,13 +51,6 @@ set_target_properties ( typecheckobjs
    Fortran_MODULE_DIRECTORY ${TYPECHECK_DIR} ) 
 
 
-   
-if ( ENABLE_SUPERBUILD )
-   # AMReX must be installed before performing typecheck
-   add_dependencies ( typecheckobjs amrex )
-endif ()
-
-
 #
 # Find includes needed for typecheck
 #

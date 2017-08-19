@@ -28,19 +28,11 @@ set ( CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DI
 # The type of build ( will need to be uppercase )
 set ( MFIX_BUILD_TYPE )
 
-# Flags to enable/disable superbuild
-set ( ENABLE_SUPERBUILD )
-
 # Variable to hold amrex install path
 set ( AMREX_INSTALL_PATH )
 
 # Flags to accumulate preprocessor directives
 set ( MFIX_DEFINES ) 
-
-# Shorter-name variables for the compilers id
-set ( FC_ID ${CMAKE_Fortran_COMPILER_ID} )
-set ( CC_ID ${CMAKE_C_COMPILER_ID} )
-set ( CXX_ID ${CMAKE_CXX_COMPILER_ID} )
 
 # Compiler flags
 set ( MFIX_Fortran_FLAGS )
