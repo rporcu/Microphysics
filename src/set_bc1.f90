@@ -79,6 +79,9 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 
                else if (bc_ilo_type(j,k,1) == MINF_) then
 
+                  p_g(slo(1):domlo(1)-1,j,k) = &
+                       2*p_g(domlo(1),j,k) - p_g(domlo(1)+1,j,k)
+
                   ! Note we index u_g differently to catch the inflow face
                   u_g(ulo(1):domlo(1)  ,j,k) = bc_u_g(bcv)
                   v_g(vlo(1):domlo(1)-1,j,k) = 0.0d0
@@ -99,6 +102,9 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   u_g(domhi(1)+2:uhi(1),j,k) = u_g(domhi(1)+1,j,k)
 
                else if (bc_ihi_type(j,k,1) == MINF_) then
+
+                  p_g(domhi(1)+1:shi(1),j,k) = &
+                       2*p_g(domhi(1),j,k) - p_g(domhi(1)-1,j,k)
 
                   ! Note we index the same on the high side
                   u_g(domhi(1)+1:uhi(1),j,k) = bc_u_g(bcv)
@@ -146,6 +152,9 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 
                else if (bc_jhi_type(i,k,1) == MINF_) then
 
+                  p_g(i,domhi(2)+1:shi(2),k) = &
+                       2*p_g(i,domhi(2),k) - p_g(i,domhi(2)-1,k)
+
                   ! Note we index the same on the high side
                   u_g(i,domhi(2)+1:uhi(2),k) = 0.0d0
                   v_g(i,domhi(2)+1:vhi(2),k) = bc_v_g(bcv)
@@ -166,6 +175,9 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 
                else if (bc_klo_type(i,j,1) == MINF_) then
 
+                  p_g(i,j,slo(3):domlo(3)-1) = &
+                       2*p_g(i,j,domlo(3)) - p_g(i,j,domlo(3)+1)
+
                   ! Note we index w_g differently to catch the inflow face
                   u_g(i,j,ulo(3):domlo(3)-1) = 0.0d0
                   v_g(i,j,vlo(3):domlo(3)-1) = 0.0d0
@@ -185,6 +197,9 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   w_g(i,j,domhi(3)+2:whi(3)) = w_g(i,j,domhi(3)+1)
 
                else if (bc_khi_type(i,j,1) == MINF_) then
+
+                  p_g(i,j,domhi(3)+1:shi(3)) = &
+                       2*p_g(i,j,domhi(2)) - p_g(i,j,domhi(3)-1)
 
                   ! Note we index the same on the high side
                   u_g(i,j,domhi(3)+1:uhi(3)) = 0.0d0
