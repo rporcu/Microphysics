@@ -94,6 +94,14 @@ file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
 add_executable (mfix ${MAIN} ${USR_OVERRIDES} )
 target_link_libraries ( mfix mfixcore ${MFIX_EXTRA_LINK_LINE} ) 
 
+# Add rule to generate TAGS
+add_custom_target ( tags
+   COMMAND ctags-exuberant -R    --fortran-kinds=+i . 
+   COMMAND ctags-exuberant -R -e --fortran-kinds=+i . 
+   COMMENT "Generating tags files"
+   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
+
+
 # Tools
 set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 
 add_subdirectory (Tools/F90)
