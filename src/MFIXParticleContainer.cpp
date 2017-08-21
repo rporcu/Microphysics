@@ -259,7 +259,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
               clearNeighbors(lev);              
               Redistribute();              
               fillNeighbors(lev);              
-              buildNeighborListFort(lev,sort_neighbor_list);
+              buildNeighborList(lev,sort_neighbor_list);
           } else {
               updateNeighbors(lev);
           }
