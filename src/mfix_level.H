@@ -81,7 +81,7 @@ protected:
     void mfix_init_fluid (int lev, int is_restarting = 0);
     void mfix_set_bc0 (int lev);
 
-    void mfix_conv_rop (int lev, Real dt);
+    void mfix_conv_rop (int lev);
 
     void mfix_calc_mflux (int lev);
 

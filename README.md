@@ -49,7 +49,7 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 
 | Option name                  |  Description                                 | Possible values              | Default value       |
 | -----------------------------|----------------------------------------------|------------------------------|---------------------|
-| CMAKE_BUILD_TYPE             | Configuration of the build                   |   Debug/Release              |   Debug             |
+| CMAKE_BUILD_TYPE             | Configuration of the build                   |   Debug/Release              |   Release             |
 | MFIX_FFLAGS_OVERRIDES        | User-defined Fortran flags                   | valid F90 compiler flags     |   None              |
 | MFIX_CXXFLAGS_OVERRIDES      | User-defined C++ flags                       | valid C++ compiler flags     |   None              |
 | ENABLE_FPE                   | Build with Floating-Point Exceptions checks  |   0/1                        |   0                 |
@@ -58,13 +58,21 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 | AMREX_ENABLE_DP              | Enable double precision                      |   0/1                        |   1                 |
 | AMREX_ENABLE_DP_PARTICLES    | Enable double precision in particles classes |   0/1                        |   1                 |
 | AMREX_ENABLE_PROFILING       | Include profiling info                       |   0/1                        |   0                 |
-| AMREX_ENABLE_TINY_PROFILING  | Include tiny profiling info                  |   0/1                        |   0                 |
-| AMREX_ENABLE_BACKTRACE       | Include backtrace info                       |   0/1                        |   1                 |
-| AMREX_ENABLE_PIC             | Build position-independent code              |   0/1                        |   0                 |
+| AMREX_ENABLE_TINY_PROFILING  | Include tiny profiling info                  |   0/1                        |   0                
+|
+| AMREX_ENABLE_COMM_PROFILING  | Include communicators profiling info         |   0/1                        |   0                
+|
+| AMREX_ENABLE_TRACE_PROFILING | Include trace profiling info                 |   0/1                        |   0                
+|
+| AMREX_ENABLE_BACKTRACE       | Include backtrace info                       |   0/1                        |   0                 |
+| AMREX_ENABLE_PIC             | Build position-independent code              |   0/1                        |   0                 
+|
+| AMREX_ENABLE_ASSERTIONS      | Build position-independent code              |   0/1                        |   0                
+|
 | AMREX_GIT_COMMIT             | AMReX commit to be used in the build         | valid git commit id/branch   |   None              |
 | AMREX_INSTALL_DIR            | Global path to AMReX install directory       | valid global path            |   None (superbuild) |
  
-`__SUPERBUILD__ mode is enabled automatically when _AMREX_INSTALL_DIR_ is not given.`
+`SUPERBUILD mode is enabled automatically when AMREX_INSTALL_DIR is not given.`
 
 Example: build mfix with custom fortran flags, AMReX profiling enabled and single precision particles:
 
@@ -99,7 +107,7 @@ Clone and build MFIX-Exa.
 > cmake CONFIG_OPTIONS -DAMREX_INSTALL_DIR=/absolute/path/to/amrex/installdir ..
 > make -j
 ```
-Here, `CONFIG_OPTIONS` are MFIX-Exa specific configuration options, that is, any option prefixed by `MFIX_`
+Here, `CONFIG_OPTIONS` are MFIX-Exa specific configuration options, that is, any option NOT prefixed by `AMREX_`
 in the table above. Options prefixed by `AMREX_` are always ignored 
 when using an external AMReX installation.
 
