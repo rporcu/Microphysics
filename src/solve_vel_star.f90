@@ -150,7 +150,8 @@ module solve_vel_star_module
 
       ! Add in source terms for DEM drag coupling.
       if (des_continuum_coupled) &
-         call gas_drag_u(lo, hi, slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
+         call gas_drag_u(lo, hi, slo, shi, alo, ahi, A_m, b_m, &
+         f_gds, drag_bm, vol, domlo, domhi)
 
       call calc_resid_vel (lo, hi, alo, ahi, &
          ulo, uhi, vlo, vhi, wlo, whi, &
@@ -304,7 +305,8 @@ module solve_vel_star_module
 
       ! Add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_v(lo, hi, slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
+         call gas_drag_v(lo, hi, slo, shi, alo, ahi, A_m, b_m, &
+         f_gds, drag_bm, vol, domlo, domhi)
 
       call calc_resid_vel (lo, hi, alo, ahi, &
          vlo, vhi, wlo, whi, ulo, uhi, &
@@ -457,7 +459,8 @@ module solve_vel_star_module
 
       ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_w(lo, hi, slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
+         call gas_drag_w(lo, hi, slo, shi, alo, ahi, A_m, b_m, &
+         f_gds, drag_bm, vol, domlo, domhi)
 
       call calc_resid_vel (lo, hi, alo, ahi, &
          wlo, whi, ulo, uhi, vlo, vhi, &

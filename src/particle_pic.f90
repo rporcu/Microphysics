@@ -75,7 +75,9 @@ contains
     integer                       :: beta_comp, vel_comp
 
     integer i, j, k, n, idim
+    integer ii, jj, kk
     real(amrex_real) wx_lo, wy_lo, wz_lo, wx_hi, wy_hi, wz_hi
+    real(amrex_real) wu_lo, wv_lo, ww_lo, wu_hi, wv_hi, ww_hi
     real(amrex_real) lx, ly, lz, pbeta, pvel(3)
     real(amrex_real) inv_dx(3), oovol
     inv_dx = 1.0d0/dx
@@ -106,24 +108,61 @@ contains
        pvel(3) = particles(vel_comp+2,n)
 
        mf(i-1, j-1, k-1, 1) = mf(i-1, j-1, k-1, 1) + wx_lo*wy_lo*wz_lo*pbeta
-       mf(i-1, j-1, k  , 1) = mf(i-1, j-1, k  , 1) + wx_lo*wy_lo*wz_hi*pbeta
+       mf(i-1, j-1, k  , 1) = mf(i-1, j-1, k,   1) + wx_lo*wy_lo*wz_hi*pbeta
        mf(i-1, j,   k-1, 1) = mf(i-1, j,   k-1, 1) + wx_lo*wy_hi*wz_lo*pbeta
        mf(i-1, j,   k  , 1) = mf(i-1, j,   k,   1) + wx_lo*wy_hi*wz_hi*pbeta
        mf(i,   j-1, k-1, 1) = mf(i,   j-1, k-1, 1) + wx_hi*wy_lo*wz_lo*pbeta
-       mf(i,   j-1, k  , 1) = mf(i,   j-1, k  , 1) + wx_hi*wy_lo*wz_hi*pbeta
+       mf(i,   j-1, k  , 1) = mf(i,   j-1, k,   1) + wx_hi*wy_lo*wz_hi*pbeta
        mf(i,   j,   k-1, 1) = mf(i,   j,   k-1, 1) + wx_hi*wy_hi*wz_lo*pbeta
-       mf(i,   j,   k  , 1) = mf(i,   j,   k  , 1) + wx_hi*wy_hi*wz_hi*pbeta
+       mf(i,   j,   k  , 1) = mf(i,   j,   k,   1) + wx_hi*wy_hi*wz_hi*pbeta
 
-       do idim = 1, 3
-          mf(i-1, j-1, k-1, idim+1) = mf(i-1, j-1, k-1, idim+1) + wx_lo*wy_lo*wz_lo*pbeta*pvel(idim)
-          mf(i-1, j-1, k  , idim+1) = mf(i-1, j-1, k  , idim+1) + wx_lo*wy_lo*wz_hi*pbeta*pvel(idim)
-          mf(i-1, j,   k-1, idim+1) = mf(i-1, j,   k-1, idim+1) + wx_lo*wy_hi*wz_lo*pbeta*pvel(idim)
-          mf(i-1, j,   k  , idim+1) = mf(i-1, j,   k,   idim+1) + wx_lo*wy_hi*wz_hi*pbeta*pvel(idim)
-          mf(i,   j-1, k-1, idim+1) = mf(i,   j-1, k-1, idim+1) + wx_hi*wy_lo*wz_lo*pbeta*pvel(idim)
-          mf(i,   j-1, k  , idim+1) = mf(i,   j-1, k  , idim+1) + wx_hi*wy_lo*wz_hi*pbeta*pvel(idim)
-          mf(i,   j,   k-1, idim+1) = mf(i,   j,   k-1, idim+1) + wx_hi*wy_hi*wz_lo*pbeta*pvel(idim)
-          mf(i,   j,   k  , idim+1) = mf(i,   j,   k  , idim+1) + wx_hi*wy_hi*wz_hi*pbeta*pvel(idim)
-       end do
+
+       lx = (particles(1, n) - plo(1))*inv_dx(1)
+       ii = floor(lx)
+       wu_hi = lx - ii
+       wu_lo = 1.0d0 - wu_hi
+
+       idim = 1
+       mf(ii,   j-1, k-1, idim+1) = mf(ii,   j-1, k-1, idim+1) + wu_lo*wy_lo*wz_lo*pbeta*pvel(idim)
+       mf(ii,   j-1, k  , idim+1) = mf(ii,   j-1, k,   idim+1) + wu_lo*wy_lo*wz_hi*pbeta*pvel(idim)
+       mf(ii,   j,   k-1, idim+1) = mf(ii,   j,   k-1, idim+1) + wu_lo*wy_hi*wz_lo*pbeta*pvel(idim)
+       mf(ii,   j,   k  , idim+1) = mf(ii,   j,   k,   idim+1) + wu_lo*wy_hi*wz_hi*pbeta*pvel(idim)
+       mf(ii+1, j-1, k-1, idim+1) = mf(ii+1, j-1, k-1, idim+1) + wu_hi*wy_lo*wz_lo*pbeta*pvel(idim)
+       mf(ii+1, j-1, k  , idim+1) = mf(ii+1, j-1, k,   idim+1) + wu_hi*wy_lo*wz_hi*pbeta*pvel(idim)
+       mf(ii+1, j,   k-1, idim+1) = mf(ii+1, j,   k-1, idim+1) + wu_hi*wy_hi*wz_lo*pbeta*pvel(idim)
+       mf(ii+1, j,   k  , idim+1) = mf(ii+1, j,   k,   idim+1) + wu_hi*wy_hi*wz_hi*pbeta*pvel(idim)
+
+
+       ly = (particles(2, n) - plo(2))*inv_dx(2)
+       jj = floor(ly)
+       wv_hi = ly - jj
+       wv_lo = 1.0d0 - wv_hi
+
+       idim = 2
+       mf(i-1, jj,   k-1, idim+1) = mf(i-1, jj,   k-1, idim+1) + wx_lo*wv_lo*wz_lo*pbeta*pvel(idim)
+       mf(i-1, jj,   k  , idim+1) = mf(i-1, jj,   k,   idim+1) + wx_lo*wv_lo*wz_hi*pbeta*pvel(idim)
+       mf(i-1, jj+1, k-1, idim+1) = mf(i-1, jj+1, k-1, idim+1) + wx_lo*wv_hi*wz_lo*pbeta*pvel(idim)
+       mf(i-1, jj+1, k  , idim+1) = mf(i-1, jj+1, k,   idim+1) + wx_lo*wv_hi*wz_hi*pbeta*pvel(idim)
+       mf(i,   jj,   k-1, idim+1) = mf(i,   jj,   k-1, idim+1) + wx_hi*wv_lo*wz_lo*pbeta*pvel(idim)
+       mf(i,   jj,   k  , idim+1) = mf(i,   jj,   k,   idim+1) + wx_hi*wv_lo*wz_hi*pbeta*pvel(idim)
+       mf(i,   jj+1, k-1, idim+1) = mf(i,   jj+1, k-1, idim+1) + wx_hi*wv_hi*wz_lo*pbeta*pvel(idim)
+       mf(i,   jj+1, k  , idim+1) = mf(i,   jj+1, k,   idim+1) + wx_hi*wv_hi*wz_hi*pbeta*pvel(idim)
+
+
+       lz = (particles(3, n) - plo(3))*inv_dx(3)
+       kk = floor(lz)
+       ww_hi = lz - kk
+       ww_lo = 1.0d0 - ww_hi
+
+       idim = 3
+       mf(i-1, j-1, kk,   idim+1) = mf(i-1, j-1, kk,   idim+1) + wx_lo*wy_lo*ww_lo*pbeta*pvel(idim)
+       mf(i-1, j-1, kk+1, idim+1) = mf(i-1, j-1, kk+1, idim+1) + wx_lo*wy_lo*ww_hi*pbeta*pvel(idim)
+       mf(i-1, j,   kk,   idim+1) = mf(i-1, j,   kk,   idim+1) + wx_lo*wy_hi*ww_lo*pbeta*pvel(idim)
+       mf(i-1, j,   kk+1, idim+1) = mf(i-1, j,   kk+1, idim+1) + wx_lo*wy_hi*ww_hi*pbeta*pvel(idim)
+       mf(i,   j-1, kk,   idim+1) = mf(i,   j-1, kk,   idim+1) + wx_hi*wy_lo*ww_lo*pbeta*pvel(idim)
+       mf(i,   j-1, kk+1, idim+1) = mf(i,   j-1, kk+1, idim+1) + wx_hi*wy_lo*ww_hi*pbeta*pvel(idim)
+       mf(i,   j,   kk,   idim+1) = mf(i,   j,   kk,   idim+1) + wx_hi*wy_hi*ww_lo*pbeta*pvel(idim)
+       mf(i,   j,   kk+1, idim+1) = mf(i,   j,   kk+1, idim+1) + wx_hi*wy_hi*ww_hi*pbeta*pvel(idim)
 
     end do
 
@@ -172,7 +211,7 @@ contains
                              wx_hi*wy_lo*wz_hi*acc(i,   j-1, k  , nc) + &
                              wx_hi*wy_hi*wz_lo*acc(i,   j,   k-1, nc) + &
                              wx_hi*wy_hi*wz_hi*acc(i,   j,   k  , nc)
-       
+
           if (abs(acceleration(nc) - 5.d0) .ge. 1.0d-9) then
              print *, particles(1, n), particles(2, n), particles(3, n)
           end if

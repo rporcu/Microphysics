@@ -18,7 +18,7 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use bc, only: pinf_, pout_, minf_
+      use bc, only: pinf_, pout_, minf_, nsw_, fsw_
       use bc, only: bc_v_g
       use bc, only: bc_u_g, bc_v_g, bc_w_g
 
@@ -58,7 +58,6 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       integer    nlft, nrgt, nbot, ntop, nup, ndwn
 !--------------------------------------------------------------------//
 
-
       nlft = max(0,domlo(1)-slo(1))
       nbot = max(0,domlo(2)-slo(2))
       ndwn = max(0,domlo(3)-slo(3))
@@ -87,6 +86,20 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   v_g(vlo(1):domlo(1)-1,j,k) = 0.0d0
                   w_g(wlo(1):domlo(1)-1,j,k) = 0.0d0
 
+               else if (bc_ilo_type(j,k,1) == NSW_) then
+
+                  ! Note we index u_g differently to catch the inflow face
+                  u_g(ulo(1):domlo(1)  ,j,k) =  0.0d0
+                  v_g(vlo(1):domlo(1)-1,j,k) = -v_g(domlo(1),j,k)
+                  w_g(wlo(1):domlo(1)-1,j,k) = -w_g(domlo(1),j,k)
+
+               else if (bc_ilo_type(j,k,1) == FSW_) then
+
+                  ! Note we index u_g differently to catch the inflow face
+                  u_g(ulo(1):domlo(1)  ,j,k) = 0.0d0
+                  v_g(vlo(1):domlo(1)-1,j,k) = v_g(domlo(1),j,k)
+                  w_g(wlo(1):domlo(1)-1,j,k) = w_g(domlo(1),j,k)
+
                end if
             end do
          end do
@@ -110,6 +123,20 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   u_g(domhi(1)+1:uhi(1),j,k) = bc_u_g(bcv)
                   v_g(domhi(1)+1:vhi(1),j,k) = 0.0d0
                   w_g(domhi(1)+1:whi(1),j,k) = 0.0d0
+
+               else if (bc_ihi_type(j,k,1) == NSW_) then
+
+                  ! Note we index the same on the high side
+                  u_g(domhi(1)+1:uhi(1),j,k) =  0.0d0
+                  v_g(domhi(1)+1:vhi(1),j,k) = -v_g(domhi(1),j,k)
+                  w_g(domhi(1)+1:whi(1),j,k) = -w_g(domhi(1),j,k)
+
+               else if (bc_ihi_type(j,k,1) == FSW_) then
+
+                  ! Note we index the same on the high side
+                  u_g(domhi(1)+1:uhi(1),j,k) = 0.0d0
+                  v_g(domhi(1)+1:vhi(1),j,k) = v_g(domhi(1),j,k)
+                  w_g(domhi(1)+1:whi(1),j,k) = w_g(domhi(1),j,k)
                end if
 
             end do
@@ -135,6 +162,20 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   v_g(i,vlo(2):domlo(2)  ,k) = bc_v_g(bcv)
                   w_g(i,wlo(2):domlo(2)-1,k) = 0.0d0
 
+               else if (bc_jlo_type(i,k,1) == NSW_)then
+
+                  ! Note we index v_g differently to catch the inflow face
+                  u_g(i,ulo(2):domlo(2)-1,k) = -u_g(i,domlo(2),k)
+                  v_g(i,vlo(2):domlo(2)  ,k) =  0.0d0
+                  w_g(i,wlo(2):domlo(2)-1,k) = -w_g(i,domlo(2),k)
+
+               else if (bc_jlo_type(i,k,1) == FSW_)then
+
+                  ! Note we index v_g differently to catch the inflow face
+                  u_g(i,ulo(2):domlo(2)-1,k) = u_g(i,domlo(2),k)
+                  v_g(i,vlo(2):domlo(2)  ,k) = 0.0d0
+                  w_g(i,wlo(2):domlo(2)-1,k) = w_g(i,domlo(2),k)
+
                end if
 
             end do
@@ -159,6 +200,21 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   u_g(i,domhi(2)+1:uhi(2),k) = 0.0d0
                   v_g(i,domhi(2)+1:vhi(2),k) = bc_v_g(bcv)
                   w_g(i,domhi(2)+1:whi(2),k) = 0.0d0
+
+               else if (bc_jhi_type(i,k,1) == NSW_) then
+
+                  ! Note we index the same on the high side
+                  u_g(i,domhi(2)+1:uhi(2),k) = -u_g(i,domhi(2),k)
+                  v_g(i,domhi(2)+1:vhi(2),k) =  0.0d0
+                  w_g(i,domhi(2)+1:whi(2),k) = -w_g(i,domhi(2),k)
+
+
+               else if (bc_jhi_type(i,k,1) == FSW_) then
+
+                  ! Note we index the same on the high side
+                  u_g(i,domhi(2)+1:uhi(2),k) = u_g(i,domhi(2),k)
+                  v_g(i,domhi(2)+1:vhi(2),k) = 0.0d0
+                  w_g(i,domhi(2)+1:whi(2),k) = w_g(i,domhi(2),k)
                end if
             end do
          end do
@@ -182,6 +238,20 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   u_g(i,j,ulo(3):domlo(3)-1) = 0.0d0
                   v_g(i,j,vlo(3):domlo(3)-1) = 0.0d0
                   w_g(i,j,wlo(3):domlo(3)  ) = bc_w_g(bcv)
+
+               else if (bc_klo_type(i,j,1) == NSW_) then
+
+                  ! Note we index w_g differently to catch the inflow face
+                  u_g(i,j,ulo(3):domlo(3)-1) = -u_g(i,j,domlo(3))
+                  v_g(i,j,vlo(3):domlo(3)-1) = -v_g(i,j,domlo(3))
+                  w_g(i,j,wlo(3):domlo(3)  ) =  0.0d0
+
+               else if (bc_klo_type(i,j,1) == FSW_) then
+
+                  ! Note we index w_g differently to catch the inflow face
+                  u_g(i,j,ulo(3):domlo(3)-1) = u_g(i,j,domlo(3))
+                  v_g(i,j,vlo(3):domlo(3)-1) = v_g(i,j,domlo(3))
+                  w_g(i,j,wlo(3):domlo(3)  ) = 0.0d0
                end if
             end do
          end do
@@ -205,6 +275,19 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   u_g(i,j,domhi(3)+1:uhi(3)) = 0.0d0
                   v_g(i,j,domhi(3)+1:vhi(3)) = 0.0d0
                   w_g(i,j,domhi(3)+1:whi(3)) = bc_w_g(bcv)
+
+               else if (bc_khi_type(i,j,1) == NSW_) then
+
+                  ! Note we index the same on the high side
+                  u_g(i,j,domhi(3)+1:uhi(3)) = -u_g(i,j,domhi(3))
+                  v_g(i,j,domhi(3)+1:vhi(3)) = -v_g(i,j,domhi(3))
+                  w_g(i,j,domhi(3)+1:whi(3)) =  0.0d0
+
+               else if (bc_khi_type(i,j,1) == FSW_) then
+
+                  u_g(i,j,domhi(3)+1:uhi(3)) = u_g(i,j,domhi(3))
+                  v_g(i,j,domhi(3)+1:vhi(3)) = v_g(i,j,domhi(3))
+                  w_g(i,j,domhi(3)+1:whi(3)) = 0.0d0
 
                end if
             end do
