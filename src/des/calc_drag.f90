@@ -219,6 +219,33 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       sy_hi = ly - j;  sy_lo = 1.0d0 - sy_hi
       sz_hi = lz - k;  sz_lo = 1.0d0 - sz_hi
 
+      gradpg(1) = - sy_lo*sz_lo*p_g(i-1, j-1, k-1) &
+                  - sy_lo*sz_hi*p_g(i-1, j-1, k  ) &
+                  - sy_hi*sz_lo*p_g(i-1, j  , k-1) &
+                  - sy_hi*sz_hi*p_g(i-1, j  , k  ) &
+                  + sy_lo*sz_lo*p_g(i  , j-1, k-1) &
+                  + sy_lo*sz_hi*p_g(i  , j-1, k  ) &
+                  + sy_hi*sz_lo*p_g(i  , j  , k-1) &
+                  + sy_hi*sz_hi*p_g(i  , j  , k  )
+
+      gradpg(2) = - sx_lo*sz_lo*p_g(i-1, j-1, k-1) &
+                  - sx_lo*sz_hi*p_g(i-1, j-1, k  ) &
+                  + sx_lo*sz_lo*p_g(i-1, j  , k-1) &
+                  + sx_lo*sz_hi*p_g(i-1, j  , k  ) &
+                  - sx_hi*sz_lo*p_g(i  , j-1, k-1) &
+                  - sx_hi*sz_hi*p_g(i  , j-1, k  ) &
+                  + sx_hi*sz_lo*p_g(i  , j  , k-1) &
+                  + sx_hi*sz_hi*p_g(i  , j  , k  )
+
+      gradpg(3) = - sx_lo*sy_lo*p_g(i-1, j-1, k-1) &
+                  + sx_lo*sy_lo*p_g(i-1, j-1, k  ) &
+                  - sx_lo*sy_hi*p_g(i-1, j  , k-1) &
+                  + sx_lo*sy_hi*p_g(i-1, j  , k  ) &
+                  - sx_hi*sy_lo*p_g(i  , j-1, k-1) &
+                  + sx_hi*sy_lo*p_g(i  , j-1, k  ) &
+                  - sx_hi*sy_hi*p_g(i  , j  , k-1) &
+                  + sx_hi*sy_hi*p_g(i  , j  , k  )
+
       lx = (particles(p) % pos(1) - plo(1))*odx
       ly = (particles(p) % pos(2) - plo(2))*ody
       lz = (particles(p) % pos(3) - plo(3))*odz
@@ -258,10 +285,6 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                  sx_hi*sy_lo*wz_hi*w_g(i  , j-1, kk+1) + &
                  sx_hi*sy_hi*wz_lo*w_g(i  , j  , kk  ) + &
                  sx_hi*sy_hi*wz_hi*w_g(i  , j  , kk+1)
-
-      gradpg(1) = 0.5d0 * odx * ( p_g(i+1,j,k) - p_g(i-1,j,k) )
-      gradpg(2) = 0.5d0 * ody * ( p_g(i,j+1,k) - p_g(i,j-1,k) )
-      gradpg(3) = 0.5d0 * odz * ( p_g(i,j,k+1) - p_g(i,j,k-1) )
 
       particles(p) % drag = beta(p)*(velfp - particles(p) % vel) + &
            (cpg(:) - gradpg(:)) * particles(p) % volume
