@@ -153,7 +153,7 @@ module solve_vel_star_module
          call gas_drag_u(lo, hi, slo, shi, alo, ahi, A_m, b_m, &
          f_gds, drag_bm, vol, domlo, domhi)
 
-      call calc_resid_vel (lo, hi, alo, ahi, &
+      call calc_resid_vel (1, lo, hi, alo, ahi, &
          ulo, uhi, vlo, vhi, wlo, whi, &
          u_g, v_g, w_g, A_m, b_m, mask, &
          num_u, denom_u)
@@ -308,7 +308,7 @@ module solve_vel_star_module
          call gas_drag_v(lo, hi, slo, shi, alo, ahi, A_m, b_m, &
          f_gds, drag_bm, vol, domlo, domhi)
 
-      call calc_resid_vel (lo, hi, alo, ahi, &
+      call calc_resid_vel (2, lo, hi, alo, ahi, &
          vlo, vhi, wlo, whi, ulo, uhi, &
          v_g, w_g, u_g, A_m, b_m, mask, &
          num_v, denom_v)
@@ -462,7 +462,7 @@ module solve_vel_star_module
          call gas_drag_w(lo, hi, slo, shi, alo, ahi, A_m, b_m, &
          f_gds, drag_bm, vol, domlo, domhi)
 
-      call calc_resid_vel (lo, hi, alo, ahi, &
+      call calc_resid_vel (3, lo, hi, alo, ahi, &
          wlo, whi, ulo, uhi, vlo, vhi, &
          w_g, u_g, v_g, A_m, b_m, mask, &
          num_w, denom_w)
