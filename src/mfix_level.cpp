@@ -542,11 +542,6 @@ mfix_level::mfix_correct_0(int lev)
          (*p_g[lev])[mfi].dataPtr(),
          (*pp_g[lev])[mfi].dataPtr());
     }
-    //std::cout << "PP AT CORRECT0 " << (*pp_g[0])[0] << std::endl;
-    //std::cout << "PP AT CORRECT0 " << (*pp_g[0])[1] << std::endl;
-    //std::cout << "PP AT CORRECT0 " << (*pp_g[0])[2] << std::endl;
-    //std::cout << "PP AT CORRECT0 " << (*pp_g[0])[3] << std::endl;
-    //exit(0);
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -567,10 +562,6 @@ mfix_level::mfix_correct_0(int lev)
          (*u_g[lev])[mfi].dataPtr(),
          (*d_e[lev])[mfi].dataPtr());
     }
-    //std::cout << "U AT CORRECT0 " << (*u_g[0])[0] << std::endl;
-    //std::cout << "U AT CORRECT0 " << (*u_g[0])[1] << std::endl;
-    //std::cout << "U AT CORRECT0 " << (*u_g[0])[2] << std::endl;
-    //std::cout << "U AT CORRECT0 " << (*u_g[0])[3] << std::endl;
     //exit(0);
 
 #ifdef _OPENMP
