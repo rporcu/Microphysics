@@ -209,32 +209,32 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       sy_hi = ly - j;  sy_lo = 1.0d0 - sy_hi
       sz_hi = lz - k;  sz_lo = 1.0d0 - sz_hi
 
-      gradpg(1) = - sy_lo*sz_lo*p_g(i-1, j-1, k-1) &
-                  - sy_lo*sz_hi*p_g(i-1, j-1, k  ) &
-                  - sy_hi*sz_lo*p_g(i-1, j  , k-1) &
-                  - sy_hi*sz_hi*p_g(i-1, j  , k  ) &
-                  + sy_lo*sz_lo*p_g(i  , j-1, k-1) &
-                  + sy_lo*sz_hi*p_g(i  , j-1, k  ) &
-                  + sy_hi*sz_lo*p_g(i  , j  , k-1) &
-                  + sy_hi*sz_hi*p_g(i  , j  , k  )
+      gradpg(1) = (- sy_lo*sz_lo*p_g(i-1, j-1, k-1) &
+                   - sy_lo*sz_hi*p_g(i-1, j-1, k  ) &
+                   - sy_hi*sz_lo*p_g(i-1, j  , k-1) &
+                   - sy_hi*sz_hi*p_g(i-1, j  , k  ) &
+                   + sy_lo*sz_lo*p_g(i  , j-1, k-1) &
+                   + sy_lo*sz_hi*p_g(i  , j-1, k  ) &
+                   + sy_hi*sz_lo*p_g(i  , j  , k-1) &
+                   + sy_hi*sz_hi*p_g(i  , j  , k  ) ) * odx
 
-      gradpg(2) = - sx_lo*sz_lo*p_g(i-1, j-1, k-1) &
-                  - sx_lo*sz_hi*p_g(i-1, j-1, k  ) &
-                  + sx_lo*sz_lo*p_g(i-1, j  , k-1) &
-                  + sx_lo*sz_hi*p_g(i-1, j  , k  ) &
-                  - sx_hi*sz_lo*p_g(i  , j-1, k-1) &
-                  - sx_hi*sz_hi*p_g(i  , j-1, k  ) &
-                  + sx_hi*sz_lo*p_g(i  , j  , k-1) &
-                  + sx_hi*sz_hi*p_g(i  , j  , k  )
+      gradpg(2) = (- sx_lo*sz_lo*p_g(i-1, j-1, k-1) &
+                   - sx_lo*sz_hi*p_g(i-1, j-1, k  ) &
+                   + sx_lo*sz_lo*p_g(i-1, j  , k-1) &
+                   + sx_lo*sz_hi*p_g(i-1, j  , k  ) &
+                   - sx_hi*sz_lo*p_g(i  , j-1, k-1) &
+                   - sx_hi*sz_hi*p_g(i  , j-1, k  ) &
+                   + sx_hi*sz_lo*p_g(i  , j  , k-1) &
+                   + sx_hi*sz_hi*p_g(i  , j  , k  ) ) * ody
 
-      gradpg(3) = - sx_lo*sy_lo*p_g(i-1, j-1, k-1) &
-                  + sx_lo*sy_lo*p_g(i-1, j-1, k  ) &
-                  - sx_lo*sy_hi*p_g(i-1, j  , k-1) &
-                  + sx_lo*sy_hi*p_g(i-1, j  , k  ) &
-                  - sx_hi*sy_lo*p_g(i  , j-1, k-1) &
-                  + sx_hi*sy_lo*p_g(i  , j-1, k  ) &
-                  - sx_hi*sy_hi*p_g(i  , j  , k-1) &
-                  + sx_hi*sy_hi*p_g(i  , j  , k  )
+      gradpg(3) = (- sx_lo*sy_lo*p_g(i-1, j-1, k-1) &
+                   + sx_lo*sy_lo*p_g(i-1, j-1, k  ) &
+                   - sx_lo*sy_hi*p_g(i-1, j  , k-1) &
+                   + sx_lo*sy_hi*p_g(i-1, j  , k  ) &
+                   - sx_hi*sy_lo*p_g(i  , j-1, k-1) &
+                   + sx_hi*sy_lo*p_g(i  , j-1, k  ) &
+                   - sx_hi*sy_hi*p_g(i  , j  , k-1) &
+                   + sx_hi*sy_hi*p_g(i  , j  , k  ) ) * odz
 
       lx = (particles(p) % pos(1) - plo(1))*odx
       ly = (particles(p) % pos(2) - plo(2))*ody
