@@ -1,6 +1,6 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: calc_drag_fluid                                         !
+!  Subroutine: calc_particle_beta                                         !
 !                                                                      !
 !  Purpose: This routine is called before the FLUID solve.             !
 !  It calculates the source terms for the center coefficients and RHS  !
@@ -8,9 +8,9 @@
 !  each particle.                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
-     np, ep_g, ro_g, u_g, v_g, w_g, mu_g, f_gs, rhs, particles, dx, dy, dz, use_pic ) &
-     bind(C, name="calc_drag_fluid")
+subroutine calc_particle_beta ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
+     np, ep_g, ro_g, u_g, v_g, w_g, mu_g, particles, dx, dy, dz) &
+     bind(C, name="calc_particle_beta")
 
    use amrex_fort_module,  only : c_real => amrex_real
    use iso_c_binding ,     only: c_int
@@ -23,7 +23,7 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
    integer(c_int), intent(in   ) :: ulo(3),uhi(3)
    integer(c_int), intent(in   ) :: vlo(3),vhi(3)
    integer(c_int), intent(in   ) :: wlo(3),whi(3)
-   integer(c_int), intent(in   ) :: np, use_pic
+   integer(c_int), intent(in   ) :: np
 
    real(c_real), intent(in   ) :: &
         ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -36,15 +36,12 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
    real(c_real), intent(in   ) :: dx, dy, dz
 
    type(particle_t), intent(inout) :: particles(np)
-   real(c_real),     intent(out  ) :: &
-        f_gs(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-        rhs(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
    ! Local variables
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer :: p, i, j, k, ii, jj, kk
-   real(c_real) :: velfp(3), velp(3), beta, f_gp
+   real(c_real) :: velfp(3), velp(3), beta
    real(c_real) :: odx, ody, odz, ovol
    real(c_real) :: lx, ly, lz
    real(c_real) :: sx_lo, sy_lo, sz_lo
@@ -128,23 +125,16 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
 
       particles(p) % drag(1) = beta
 
-      if (use_pic .eq. 0) then
-         f_gp = beta*ovol
-         f_gs(i,j,k  )  = f_gs(i,j,k)  + f_gp
-          rhs(i,j,k,:) = rhs(i,j,k,:) + f_gp*velp(:)
-      end if
-
    end do
 
-end subroutine calc_drag_fluid
-
+end subroutine calc_particle_beta
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: calc_drag_particle                                      !
 !                                                                      !
-!  Purpose: This routine must be called after calc_drag_fluid because  !
-!  it assumes you have already computed beta and stored it in          !
+!  Purpose: This routine must be called after calc_particle_beta       !
+!  because it assumes you have already computed beta and stored it in  !
 !  particles(p)%drag(1).   Here we compute the actual drag on the      !
 !  particle.                                                           !
 !                                                                      !

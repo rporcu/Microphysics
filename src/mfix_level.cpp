@@ -24,8 +24,6 @@ mfix_level::mfix_level ()
     }
 #endif
 
-    use_pic = 1;
-
     // Particle Container
     pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
 
@@ -725,32 +723,8 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
 
-    if (use_pic == 1)
-    {
-       // This call simply deposits the particle volume onto the grid in a PIC-like manner
-       pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
-
-    } else {
-
-       // Initialize the volume fraction in the domain to 1
-       ep_g[lev]->setVal(1.);
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
-       {
-           const Box& sbx = (*ep_g[lev])[pti].box();
-           const Box& tile_bx = pti.tilebox();
-           auto& particles = pti.GetArrayOfStructs();
-           const int np = particles.size();
-
-           calc_volume_fraction( tile_bx.loVect(), tile_bx.hiVect(),
-                                 sbx.loVect(), sbx.hiVect(),
-                                 &np, particles.data(), &dx, &dy, &dz,
-                                  (*ep_g[lev])[pti].dataPtr());
-       }
-    }
+    // This call simply deposits the particle volume onto the grid in a PIC-like manner
+    pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
 
     // Now define rop_g = ro_g * ep_g
     rop_g[lev]->copy((*ro_g[lev]),0,0,1,rop_g[lev]->nGrow(),rop_g[lev]->nGrow());
@@ -789,7 +763,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
         Box vbx((*v_g[lev])[pti].box());
         Box wbx((*w_g[lev])[pti].box());
 
-        calc_drag_fluid(
+        calc_particle_beta(
             sbx.loVect(), sbx.hiVect(),
             ubx.loVect(), ubx.hiVect(),
             vbx.loVect(), vbx.hiVect(),
@@ -797,14 +771,10 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
             (*ep_g[lev])[pti].dataPtr(), (*ro_g[lev])[pti].dataPtr(),
             (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(),
             (*w_g[lev])[pti].dataPtr(),  (*mu_g[lev])[pti].dataPtr(),
-            (*f_gds[lev])[pti].dataPtr(), (*drag_bm[lev])[pti].dataPtr(),
-            particles.data(), &dx, &dy, &dz , &use_pic);
+            particles.data(), &dx, &dy, &dz);
     }
 
-    // If use_pic == 0 we have already deposited the drag coefficients into
-    //   f_gds and drag_bm.  If use_pic == 1 we do it here.
-    if (use_pic == 1)
-       pc -> CalcDragOnFluid(*f_gds[lev],*drag_bm[lev]);
+    pc -> CalcDragOnFluid(*f_gds[lev],*drag_bm[lev]);
 
     fill_mf_bc(lev,*f_gds[lev]);
     fill_mf_bc(lev,*drag_bm[lev]);

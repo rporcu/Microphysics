@@ -150,18 +150,17 @@ extern "C"
                               const amrex::Real* acc, const int* lo, const int* hi, int ncomp,
                               const amrex::Real* plo, const amrex::Real* dx);
 
-    void calc_drag_fluid(
-  const int* slo, const int* shi,
-  const int* ulo, const int* uhi,
-  const int* vlo, const int* vhi,
-  const int* wlo, const int* whi,
-  const int* np,
-  amrex::Real* ep_g, amrex::Real* ro_g,
-  amrex::Real* u_g,  amrex::Real* v_g,   amrex::Real* w_g,
-  amrex::Real* mu_g, amrex::Real* f_gds, amrex::Real* drag_bm,
-  void* particles,
-  amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
-  const int* use_pic);
+    void calc_particle_beta(
+       const int* slo, const int* shi,
+       const int* ulo, const int* uhi,
+       const int* vlo, const int* vhi,
+       const int* wlo, const int* whi,
+       const int* np,
+       amrex::Real* ep_g, amrex::Real* ro_g,
+       amrex::Real* u_g,  amrex::Real* v_g,   amrex::Real* w_g,
+       amrex::Real* mu_g, 
+       void* particles,
+       amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz);
 
     void calc_drag_particle(
   const int* slo, const int* shi,
