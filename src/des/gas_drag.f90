@@ -18,7 +18,7 @@ module gas_drag_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine gas_drag_u(lo, hi, slo, shi, alo, ahi, &
-                            A_m, b_m, f_gds, drag_bm, vol)
+                            A_m, b_m, f_gds, drag_bm, vol, domlo, domhi)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -30,6 +30,7 @@ module gas_drag_module
       integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
@@ -50,7 +51,7 @@ module gas_drag_module
       ! Average the interpolated drag force from the cell corners to the cell face.
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
+            do i = max(domlo(1)+1,lo(1)), min(domhi(1), hi(1))
                   A_m(i,j,k,0) = A_m(i,j,k,0) - 0.5d0*vol * &
                      (f_gds(i-1,j,k) + f_gds(i,j,k))
                   b_m(i,j,k) = b_m(i,j,k) - 0.5d0* vol *&
@@ -73,7 +74,7 @@ module gas_drag_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine gas_drag_v(lo, hi, slo, shi, alo, ahi, &
-                            A_m, b_m, f_gds, drag_bm, vol)
+                            A_m, b_m, f_gds, drag_bm, vol, domlo, domhi)
 
 
       ! Flag: Gas sees the effect of particles in gas/solids flows.
@@ -82,6 +83,7 @@ module gas_drag_module
       integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
@@ -99,7 +101,7 @@ module gas_drag_module
       if (DES_ONEWAY_COUPLED) RETURN
 
       do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
+         do j = max(domlo(2)+1,lo(2)), min(domhi(2), hi(2))
             do i = lo(1), hi(1)
                   A_m(I,J,K,0) = A_m(i,j,k,0) - vol * 0.5d0*&
                      (f_gds(i,j-1,k) + f_gds(i,j,k))
@@ -122,7 +124,7 @@ module gas_drag_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine gas_drag_w(lo, hi, slo, shi, alo, ahi, &
-                            A_m, b_m, f_gds, drag_bm, vol)
+                            A_m, b_m, f_gds, drag_bm, vol, domlo, domhi)
 
       ! Flag: Gas sees the effect of particles in gas/solids flows.
       use discretelement, only: DES_ONEWAY_COUPLED
@@ -130,6 +132,7 @@ module gas_drag_module
       integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: a_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
@@ -146,7 +149,7 @@ module gas_drag_module
       ! Skip this routine if the gas/solids are only one-way coupled.
       IF(DES_ONEWAY_COUPLED) RETURN
 
-      do k = lo(3), hi(3)
+      do k = max(domlo(1)+1,lo(3)), min(domhi(3), hi(3))
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
                A_m(i,j,k,0) = A_m(i,j,k,0) - vol * 0.5d0*&
