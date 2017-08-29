@@ -21,7 +21,11 @@ fi
 echo "Using INPUTS file ${INPUTS}"
 
 if [ "$ENABLE_MPI" -eq "1" ]; then
-    MPIRUN="mpirun -np 4"
+    if [ "$ENABLE_OMP" -eq "1" ]; then
+        MPIRUN="mpirun -np 2"
+    else
+        MPIRUN="mpirun -np 4"
+    fi
 else
     MPIRUN=""
 fi
@@ -31,6 +35,7 @@ FCOMPARE=${FCOMPARE:-}
 
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} ${MFIX} ${INPUTS}
+
 
 ${FJOIN_PAR} -f DEM06_par --end 350 --var  2 --format 4 --dt 0.001 &> POST_POS.NEW
 ${FJOIN_PAR} -f DEM06_par --end 350 --var 10 --format 4 --dt 0.001 &> POST_VEL.NEW
