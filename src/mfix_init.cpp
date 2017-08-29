@@ -250,7 +250,7 @@ mfix_level::AllocateArrays (int lev)
 
     f_gds_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,1));
     f_gds_u[lev]->setVal(0.);
-    
+
     drag_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,1));
     drag_u[lev]->setVal(0.);
 
@@ -281,7 +281,7 @@ mfix_level::AllocateArrays (int lev)
 
     ropY[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     ropY[lev]->setVal(0.);
-    
+
     f_gds_v[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,1));
     f_gds_v[lev]->setVal(0.);
 
@@ -346,6 +346,8 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
       //  Create mask for particle ghost cells
       pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
+
+      pc -> BalanceParticleLoad_KDTree ();
     }
 
   if (solve_dem)
@@ -370,6 +372,7 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
       init_collision(avg_dp, avg_ro);
+      pc -> BalanceParticleLoad_KDTree ();
   }
 
   mfix_set_bc0(lev);
