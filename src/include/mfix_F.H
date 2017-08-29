@@ -105,7 +105,7 @@ extern "C"
          int* bc_klo, int* bc_khi,
          const int* domlo , const int* domhi);
 
-    void zero_normal_drag_on_walls(
+    void set_drag_bcs(
          const int* ulo, const int* uhi,
          const int* vlo, const int* vhi,
          const int* wlo, const int* whi,

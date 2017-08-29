@@ -761,23 +761,24 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
 
     Box domain(Geom(lev).Domain());
 
-    // Make sure there is zero normal drag force on walls 
+    // Make sure there is zero normal drag force on walls, and reflect the tangential 
+    // drag force around slip walls only
     for (MFIter mfi(beta_u_mf); mfi.isValid(); ++mfi) {
 
       const Box& xbx = beta_u_mf[mfi].box();
       const Box& ybx = beta_v_mf[mfi].box();
       const Box& zbx = beta_w_mf[mfi].box();
 
-      zero_normal_drag_on_walls(xbx.loVect(), xbx.hiVect(),
-                                ybx.loVect(), ybx.hiVect(),
-                                zbx.loVect(), zbx.hiVect(),
-                                beta_u_mf[mfi].dataPtr(),
-                                beta_v_mf[mfi].dataPtr(),
-                                beta_w_mf[mfi].dataPtr(),
-                                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                                bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                                bc_klo.dataPtr(), bc_khi.dataPtr(),
-                                domain.loVect(), domain.hiVect());
+      set_drag_bcs(xbx.loVect(), xbx.hiVect(),
+                   ybx.loVect(), ybx.hiVect(),
+                   zbx.loVect(), zbx.hiVect(),
+                   beta_u_mf[mfi].dataPtr(),
+                   beta_v_mf[mfi].dataPtr(),
+                   beta_w_mf[mfi].dataPtr(),
+                   bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                   bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                   bc_klo.dataPtr(), bc_khi.dataPtr(),
+                   domain.loVect(), domain.hiVect());
     }
     
     if (m_verbose > 1) {

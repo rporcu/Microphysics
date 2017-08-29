@@ -94,6 +94,7 @@ set(F90_sources
    set_bc1.f90
    set_bc_flow.f90
    set_bc_type.f90
+   set_drag_bcs.f90
    set_ps.f90
    solve_pp_g.f90
    solve_vel_star.f90
@@ -121,7 +122,6 @@ set(F90_sources
    usr/write_usr0.f90
    usr/write_usr1.f90
    utilities_mod.f90
-   zero_normal_drag.f90
    zero_wall_norm_vel.f90
    amrex_to_mfix.F90)
 

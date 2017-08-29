@@ -118,14 +118,14 @@ contains
        wu_hi = lx - ii
        wu_lo = 1.0d0 - wu_hi
 
-       mf_x(ii,   j-1, k-1) = mf_u(ii,   j-1, k-1) + wu_lo*wy_lo*wz_lo*pbeta
-       mf_x(ii,   j-1, k  ) = mf_u(ii,   j-1, k  ) + wu_lo*wy_lo*wz_hi*pbeta
-       mf_x(ii,   j,   k-1) = mf_u(ii,   j,   k-1) + wu_lo*wy_hi*wz_lo*pbeta
-       mf_x(ii,   j,   k  ) = mf_u(ii,   j,   k  ) + wu_lo*wy_hi*wz_hi*pbeta
-       mf_x(ii+1, j-1, k-1) = mf_u(ii+1, j-1, k-1) + wu_hi*wy_lo*wz_lo*pbeta
-       mf_x(ii+1, j-1, k  ) = mf_u(ii+1, j-1, k  ) + wu_hi*wy_lo*wz_hi*pbeta
-       mf_x(ii+1, j,   k-1) = mf_u(ii+1, j,   k-1) + wu_hi*wy_hi*wz_lo*pbeta
-       mf_x(ii+1, j,   k  ) = mf_u(ii+1, j,   k  ) + wu_hi*wy_hi*wz_hi*pbeta
+       mf_x(ii,   j-1, k-1) = mf_x(ii,   j-1, k-1) + wu_lo*wy_lo*wz_lo*pbeta
+       mf_x(ii,   j-1, k  ) = mf_x(ii,   j-1, k  ) + wu_lo*wy_lo*wz_hi*pbeta
+       mf_x(ii,   j,   k-1) = mf_x(ii,   j,   k-1) + wu_lo*wy_hi*wz_lo*pbeta
+       mf_x(ii,   j,   k  ) = mf_x(ii,   j,   k  ) + wu_lo*wy_hi*wz_hi*pbeta
+       mf_x(ii+1, j-1, k-1) = mf_x(ii+1, j-1, k-1) + wu_hi*wy_lo*wz_lo*pbeta
+       mf_x(ii+1, j-1, k  ) = mf_x(ii+1, j-1, k  ) + wu_hi*wy_lo*wz_hi*pbeta
+       mf_x(ii+1, j,   k-1) = mf_x(ii+1, j,   k-1) + wu_hi*wy_hi*wz_lo*pbeta
+       mf_x(ii+1, j,   k  ) = mf_x(ii+1, j,   k  ) + wu_hi*wy_hi*wz_hi*pbeta
 
        mf_u(ii,   j-1, k-1) = mf_u(ii,   j-1, k-1) + wu_lo*wy_lo*wz_lo*pvel(1)
        mf_u(ii,   j-1, k  ) = mf_u(ii,   j-1, k  ) + wu_lo*wy_lo*wz_hi*pvel(1)
@@ -141,14 +141,14 @@ contains
        wv_hi = ly - jj
        wv_lo = 1.0d0 - wv_hi
 
-       mf_y(i-1, jj,   k-1) = mf_v(i-1, jj,   k-1) + wx_lo*wv_lo*wz_lo*pbeta
-       mf_y(i-1, jj,   k  ) = mf_v(i-1, jj,   k  ) + wx_lo*wv_lo*wz_hi*pbeta
-       mf_y(i-1, jj+1, k-1) = mf_v(i-1, jj+1, k-1) + wx_lo*wv_hi*wz_lo*pbeta
-       mf_y(i-1, jj+1, k  ) = mf_v(i-1, jj+1, k  ) + wx_lo*wv_hi*wz_hi*pbeta
-       mf_y(i,   jj,   k-1) = mf_v(i,   jj,   k-1) + wx_hi*wv_lo*wz_lo*pbeta
-       mf_y(i,   jj,   k  ) = mf_v(i,   jj,   k  ) + wx_hi*wv_lo*wz_hi*pbeta
-       mf_y(i,   jj+1, k-1) = mf_v(i,   jj+1, k-1) + wx_hi*wv_hi*wz_lo*pbeta
-       mf_y(i,   jj+1, k  ) = mf_v(i,   jj+1, k  ) + wx_hi*wv_hi*wz_hi*pbeta
+       mf_y(i-1, jj,   k-1) = mf_y(i-1, jj,   k-1) + wx_lo*wv_lo*wz_lo*pbeta
+       mf_y(i-1, jj,   k  ) = mf_y(i-1, jj,   k  ) + wx_lo*wv_lo*wz_hi*pbeta
+       mf_y(i-1, jj+1, k-1) = mf_y(i-1, jj+1, k-1) + wx_lo*wv_hi*wz_lo*pbeta
+       mf_y(i-1, jj+1, k  ) = mf_y(i-1, jj+1, k  ) + wx_lo*wv_hi*wz_hi*pbeta
+       mf_y(i,   jj,   k-1) = mf_y(i,   jj,   k-1) + wx_hi*wv_lo*wz_lo*pbeta
+       mf_y(i,   jj,   k  ) = mf_y(i,   jj,   k  ) + wx_hi*wv_lo*wz_hi*pbeta
+       mf_y(i,   jj+1, k-1) = mf_y(i,   jj+1, k-1) + wx_hi*wv_hi*wz_lo*pbeta
+       mf_y(i,   jj+1, k  ) = mf_y(i,   jj+1, k  ) + wx_hi*wv_hi*wz_hi*pbeta
 
        mf_v(i-1, jj,   k-1) = mf_v(i-1, jj,   k-1) + wx_lo*wv_lo*wz_lo*pvel(2)
        mf_v(i-1, jj,   k  ) = mf_v(i-1, jj,   k  ) + wx_lo*wv_lo*wz_hi*pvel(2)
@@ -164,14 +164,14 @@ contains
        ww_hi = lz - kk
        ww_lo = 1.0d0 - ww_hi
 
-       mf_z(i-1, j-1, kk  ) = mf_w(i-1, j-1, kk  ) + wx_lo*wy_lo*ww_lo*pbeta
-       mf_z(i-1, j-1, kk+1) = mf_w(i-1, j-1, kk+1) + wx_lo*wy_lo*ww_hi*pbeta
-       mf_z(i-1, j,   kk  ) = mf_w(i-1, j,   kk  ) + wx_lo*wy_hi*ww_lo*pbeta
-       mf_z(i-1, j,   kk+1) = mf_w(i-1, j,   kk+1) + wx_lo*wy_hi*ww_hi*pbeta
-       mf_z(i,   j-1, kk  ) = mf_w(i,   j-1, kk  ) + wx_hi*wy_lo*ww_lo*pbeta
-       mf_z(i,   j-1, kk+1) = mf_w(i,   j-1, kk+1) + wx_hi*wy_lo*ww_hi*pbeta
-       mf_z(i,   j,   kk  ) = mf_w(i,   j,   kk  ) + wx_hi*wy_hi*ww_lo*pbeta
-       mf_z(i,   j,   kk+1) = mf_w(i,   j,   kk+1) + wx_hi*wy_hi*ww_hi*pbeta
+       mf_z(i-1, j-1, kk  ) = mf_z(i-1, j-1, kk  ) + wx_lo*wy_lo*ww_lo*pbeta
+       mf_z(i-1, j-1, kk+1) = mf_z(i-1, j-1, kk+1) + wx_lo*wy_lo*ww_hi*pbeta
+       mf_z(i-1, j,   kk  ) = mf_z(i-1, j,   kk  ) + wx_lo*wy_hi*ww_lo*pbeta
+       mf_z(i-1, j,   kk+1) = mf_z(i-1, j,   kk+1) + wx_lo*wy_hi*ww_hi*pbeta
+       mf_z(i,   j-1, kk  ) = mf_z(i,   j-1, kk  ) + wx_hi*wy_lo*ww_lo*pbeta
+       mf_z(i,   j-1, kk+1) = mf_z(i,   j-1, kk+1) + wx_hi*wy_lo*ww_hi*pbeta
+       mf_z(i,   j,   kk  ) = mf_z(i,   j,   kk  ) + wx_hi*wy_hi*ww_lo*pbeta
+       mf_z(i,   j,   kk+1) = mf_z(i,   j,   kk+1) + wx_hi*wy_hi*ww_hi*pbeta
 
        mf_w(i-1, j-1, kk  ) = mf_w(i-1, j-1, kk  ) + wx_lo*wy_lo*ww_lo*pvel(3)
        mf_w(i-1, j-1, kk+1) = mf_w(i-1, j-1, kk+1) + wx_lo*wy_lo*ww_hi*pvel(3)

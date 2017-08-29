@@ -52,7 +52,7 @@ module gas_drag_module
       ! Average the interpolated drag force from the cell corners to the cell face.
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
-            do i = max(domlo(1)+1,lo(1)), min(domhi(1), hi(1))
+            do i = lo(1), hi(1)
                A_m(i,j,k,0) = A_m(i,j,k,0) - vol * f_gds_u(i,j,k)
                b_m(i,j,k  ) = b_m(i,j,k  ) - vol *  drag_u(i,j,k)
             end do
@@ -100,7 +100,7 @@ module gas_drag_module
       if (DES_ONEWAY_COUPLED) return
 
       do k = lo(3), hi(3)
-         do j = max(domlo(2)+1,lo(2)), min(domhi(2), hi(2))
+         do j = lo(2), hi(2)
             do i = lo(1), hi(1)
                A_m(i,j,k,0) = A_m(i,j,k,0) - vol * f_gds_v(i,j,k)
                b_m(i,j,k  ) = b_m(i,j,k  ) - vol *  drag_v(i,j,k)
