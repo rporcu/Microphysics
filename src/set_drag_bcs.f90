@@ -56,7 +56,7 @@ subroutine set_drag_bcs( &
      do k=vlo(3),vhi(3)
         do j=vlo(2),vhi(2)
            if (bc_ilo_type(j,k,1) == FSW_) then
-               drag_v(domlo(1),j,k) = drag_v(domlo(1),j,k) + drag_v(domlo(1)-1,j,k) 
+               drag_v(domlo(1),j,k) = drag_v(domlo(1),j,k) + drag_v(domlo(1)-1,j,k)
            end if
            drag_v(domlo(1)-1,j,k) = 1.d200
         end do
@@ -64,7 +64,7 @@ subroutine set_drag_bcs( &
      do k=wlo(3),whi(3)
         do j=wlo(2),whi(2)
            if (bc_ilo_type(j,k,1) == FSW_) then
-               drag_w(domlo(1),j,k) = drag_w(domlo(1),j,k) + drag_w(domlo(1)-1,j,k) 
+               drag_w(domlo(1),j,k) = drag_w(domlo(1),j,k) + drag_w(domlo(1)-1,j,k)
            end if
            drag_w(domlo(1)-1,j,k) = 1.d200
         end do
@@ -75,7 +75,7 @@ subroutine set_drag_bcs( &
      do k=vlo(3),vhi(3)
         do j=vlo(2),vhi(2)
            if (bc_ihi_type(j,k,1) == FSW_) then
-               drag_v(domhi(1),j,k) = drag_v(domhi(1),j,k) + drag_v(domhi(1)+1,j,k) 
+               drag_v(domhi(1),j,k) = drag_v(domhi(1),j,k) + drag_v(domhi(1)+1,j,k)
            end if
            drag_v(domhi(1)+1,j,k) = 1.d200
         end do
@@ -83,7 +83,7 @@ subroutine set_drag_bcs( &
      do k=wlo(3),whi(3)
         do j=wlo(2),whi(2)
            if (bc_ihi_type(j,k,1) == FSW_) then
-               drag_w(domhi(1),j,k) = drag_w(domhi(1),j,k) + drag_w(domhi(1)+1,j,k) 
+               drag_w(domhi(1),j,k) = drag_w(domhi(1),j,k) + drag_w(domhi(1)+1,j,k)
            end if
            drag_w(domhi(1)+1,j,k) = 1.d200
         end do
@@ -91,55 +91,58 @@ subroutine set_drag_bcs( &
   endif
 
   if (vlo(2).le.domlo(2)) then
+
      do k=ulo(3),uhi(3)
         do i=ulo(1),uhi(1)
-           if (bc_jlo_type(j,k,1) == FSW_) then
-               drag_u(i,domlo(2),k) = drag_u(i,domlo(2),k) + drag_u(i, domlo(2)-1,k) 
+           if (bc_jlo_type(i,k,1) == FSW_) then
+               drag_u(i,domlo(2),k) = drag_u(i,domlo(2),k) + drag_u(i, domlo(2)-1,k)
            end if
            drag_u(i,domlo(2)-1,k) = 1.d200
         end do
      end do
      do k=wlo(3),whi(3)
         do i=wlo(1),whi(1)
-           if (bc_jlo_type(j,k,1) == FSW_) then
-               drag_w(i,domlo(2),k) = drag_w(i,domlo(2),k) + drag_w(i,domlo(2)-1,k) 
+           if (bc_jlo_type(i,k,1) == FSW_) then
+               drag_w(i,domlo(2),k) = drag_w(i,domlo(2),k) + drag_w(i,domlo(2)-1,k)
            end if
            drag_w(i,domlo(2)-1,k) = 1.d200
         end do
      end do
+
   endif
 
   if (vhi(2).ge.domhi(2)+1) then
      do k=ulo(3),uhi(3)
         do i=ulo(1),uhi(1)
-           if (bc_jhi_type(j,k,1) == FSW_) then
-               drag_u(i,domhi(2),k) = drag_u(i,domhi(2),k) + drag_u(i,domhi(2)+1,k) 
+           if (bc_jhi_type(i,k,1) == FSW_) then
+               drag_u(i,domhi(2),k) = drag_u(i,domhi(2),k) + drag_u(i,domhi(2)+1,k)
            end if
            drag_u(i,domhi(2)+1,k) = 1.d200
         end do
      end do
      do k=wlo(3),whi(3)
         do i=wlo(1),whi(1)
-           if (bc_jhi_type(j,k,1) == FSW_) then
-               drag_w(i,domhi(2),k) = drag_w(i,domhi(2),k) + drag_w(i,domhi(2)+1,k) 
+           if (bc_jhi_type(i,k,1) == FSW_) then
+               drag_w(i,domhi(2),k) = drag_w(i,domhi(2),k) + drag_w(i,domhi(2)+1,k)
            end if
            drag_w(i,domhi(2)+1,k) = 1.d200
         end do
      end do
   endif
 
+
   if (wlo(3).le.domlo(3)) then
      do j=ulo(2),uhi(2)
         do i=ulo(1),uhi(1)
-           if (bc_klo_type(j,k,1) == FSW_) then
-               drag_u(i,j,domlo(3)) = drag_u(i,j,domlo(3)) + drag_u(i,j,domlo(3)-1) 
+           if (bc_klo_type(i,j,1) == FSW_) then
+               drag_u(i,j,domlo(3)) = drag_u(i,j,domlo(3)) + drag_u(i,j,domlo(3)-1)
            end if
            drag_u(i,j,domlo(3)-1) = 1.d200
         end do
      end do
      do j=vlo(2),vhi(2)
         do i=vlo(1),vhi(1)
-           if (bc_klo_type(j,k,1) == FSW_) then
+           if (bc_klo_type(i,j,1) == FSW_) then
                drag_v(i,j,domlo(3)) = drag_v(i,j,domlo(3)) + drag_v(i,j,domlo(3)-1)
            end if
            drag_v(i,j,domlo(3)-1) = 1.d200
@@ -147,24 +150,26 @@ subroutine set_drag_bcs( &
      end do
   endif
 
+
   if (whi(3).ge.domhi(3)+1) then
      do j=ulo(2),uhi(2)
         do i=ulo(1),uhi(1)
-           if (bc_khi_type(j,k,1) == FSW_) then
-               drag_u(i,j,domhi(3)) = drag_u(i,j,domhi(3)) + drag_u(i,j,domhi(3)+1) 
+           if (bc_khi_type(i,j,1) == FSW_) then
+               drag_u(i,j,domhi(3)) = drag_u(i,j,domhi(3)) + drag_u(i,j,domhi(3)+1)
            end if
            drag_u(i,j,domhi(3)+1) = 1.d200
         end do
      end do
      do j=vlo(2),vhi(2)
         do i=vlo(1),vhi(1)
-           if (bc_khi_type(j,k,1) == FSW_) then
-               drag_v(i,j,domhi(3)) = drag_v(i,j,domhi(3)) + drag_v(i,j,domhi(3)+1) 
+           if (bc_khi_type(i,j,1) == FSW_) then
+               drag_v(i,j,domhi(3)) = drag_v(i,j,domhi(3)) + drag_v(i,j,domhi(3)+1)
            end if
            drag_v(i,j,domhi(3)+1) = 1.d200
         end do
      end do
   endif
+
 
 !--------------------------------------------------------------------//
 !-  Now set drag on normal wall faces to zero
@@ -180,7 +185,7 @@ subroutine set_drag_bcs( &
                bc_ilo_type(j,k,1) == PINF_ .or. &
                bc_ilo_type(j,k,1) == MINF_ .or. &
                bc_ilo_type(j,k,1) == POUT_) then
- 
+
                drag_u(ilo,j,k) = 0.d0
 
            end if
@@ -277,5 +282,4 @@ subroutine set_drag_bcs( &
         end do
      end do
   endif
-
 end subroutine set_drag_bcs
