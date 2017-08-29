@@ -151,7 +151,7 @@ subroutine set_drag_bcs( &
      do j=ulo(2),uhi(2)
         do i=ulo(1),uhi(1)
            if (bc_khi_type(j,k,1) == FSW_) then
-               drag_u(i,j,domhi(2)) = drag_u(i,j,domhi(3)) + drag_u(i,j,domhi(3)+1) 
+               drag_u(i,j,domhi(3)) = drag_u(i,j,domhi(3)) + drag_u(i,j,domhi(3)+1) 
            end if
            drag_u(i,j,domhi(3)+1) = 1.d200
         end do
