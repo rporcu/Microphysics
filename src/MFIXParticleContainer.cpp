@@ -424,11 +424,52 @@ void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled,
     mf_to_be_filled.plus( 1.0,mf_to_be_filled.nGrow());
 }
 
-void MFIXParticleContainer::CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf)
+void MFIXParticleContainer::CalcDragOnFluid(amrex::MultiFab& beta_x_mf, 
+                                            amrex::MultiFab& beta_y_mf,
+                                            amrex::MultiFab& beta_z_mf,
+                                            amrex::MultiFab& beta_u_mf,
+                                            amrex::MultiFab& beta_v_mf,
+                                            amrex::MultiFab& beta_w_mf,
+                                            IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                                            IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                                            IArrayBox& bc_klo, IArrayBox& bc_khi)
 {
     int fortran_beta_comp = 15;
     int fortran_vel_comp  =  9;
-    PICMultiDeposition(beta_mf, beta_vel_mf, fortran_beta_comp, fortran_vel_comp);
+    PICMultiDeposition(beta_x_mf, beta_y_mf, beta_z_mf, 
+                       beta_u_mf, beta_v_mf, beta_w_mf, 
+                       bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
+                       fortran_beta_comp, fortran_vel_comp);
+    if (beta_x_mf.contains_nan())
+    {
+        std::cout << "BETA_X HAS NANS AFTER SOLVE" << std::endl;
+        exit(0);
+    }
+    if (beta_y_mf.contains_nan())
+    {
+        std::cout << "BETA_Y HAS NANS AFTER SOLVE" << std::endl;
+        exit(0);
+    }
+    if (beta_z_mf.contains_nan())
+    {
+        std::cout << "BETA_Z HAS NANS AFTER SOLVE" << std::endl;
+        exit(0);
+    }
+    if (beta_u_mf.contains_nan())
+    {
+        std::cout << "BETA_U HAS NANS AFTER SOLVE" << std::endl;
+        exit(0);
+    }
+    if (beta_v_mf.contains_nan())
+    {
+        std::cout << "BETA_V HAS NANS AFTER SOLVE" << std::endl;
+        exit(0);
+    }
+    if (beta_w_mf.contains_nan())
+    {
+        std::cout << "BETA_W HAS NANS AFTER SOLVE" << std::endl;
+        exit(0);
+    }
 }
 
 void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled, 
@@ -552,7 +593,15 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
     }
 }
 
-void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf, 
+void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf, 
+                                               amrex::MultiFab& beta_y_mf, 
+                                               amrex::MultiFab& beta_z_mf, 
+                                               amrex::MultiFab& beta_u_mf, 
+                                               amrex::MultiFab& beta_v_mf, 
+                                               amrex::MultiFab& beta_w_mf, 
+                                               IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                                               IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                                               IArrayBox& bc_klo, IArrayBox& bc_khi,
                                                int fortran_beta_comp, int fortran_vel_comp)
 {
     BL_PROFILE("MFIXParticleContainer::PICMultiDeposition()");
@@ -560,19 +609,37 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::
     int   lev = 0;
     int ncomp = 1+BL_SPACEDIM;
     
-    MultiFab* mf_pointer;
+    MultiFab *beta_x_ptr, *beta_y_ptr, *beta_z_ptr; 
+    MultiFab *beta_u_ptr, *beta_v_ptr, *beta_w_ptr; 
 
-    // Make a single temporary here and copy into beta_mf and beta_vel_mf at the end.
-    mf_pointer = new MultiFab(ParticleBoxArray(lev), 
-		              ParticleDistributionMap(lev),
-			      ncomp, beta_mf.nGrow());
+    // Make temporaries here and copy into beta_mf and beta_vel_mf at the end.
+
+    BoxArray x_face_ba = ParticleBoxArray(lev); 
+    x_face_ba.surroundingNodes(0);
+    beta_x_ptr = new MultiFab(x_face_ba, ParticleDistributionMap(lev), 1, beta_x_mf.nGrow());
+    beta_u_ptr = new MultiFab(x_face_ba, ParticleDistributionMap(lev), 1, beta_x_mf.nGrow());
+
+    BoxArray y_face_ba = ParticleBoxArray(lev); 
+    y_face_ba.surroundingNodes(1);
+    beta_y_ptr = new MultiFab(y_face_ba, ParticleDistributionMap(lev), 1, beta_y_mf.nGrow());
+    beta_v_ptr = new MultiFab(y_face_ba, ParticleDistributionMap(lev), 1, beta_y_mf.nGrow());
+
+    BoxArray z_face_ba = ParticleBoxArray(lev); 
+    z_face_ba.surroundingNodes(2);
+    beta_z_ptr = new MultiFab(z_face_ba, ParticleDistributionMap(lev), 1, beta_z_mf.nGrow());
+    beta_w_ptr = new MultiFab(z_face_ba, ParticleDistributionMap(lev), 1, beta_z_mf.nGrow());
 
     const Real      strttime    = ParallelDescriptor::second();
     const Geometry& gm          = Geom(lev);
     const Real*     plo         = gm.ProbLo();
     const Real*     dx          = gm.CellSize();
     
-    mf_pointer->setVal(0.0);
+    beta_x_ptr->setVal(0.0);
+    beta_y_ptr->setVal(0.0);
+    beta_z_ptr->setVal(0.0);
+    beta_u_ptr->setVal(0.0);
+    beta_v_ptr->setVal(0.0);
+    beta_w_ptr->setVal(0.0);
 
     using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
 
@@ -580,45 +647,138 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::
 #pragma omp parallel
 #endif
     {
-        FArrayBox local_vol;
+        FArrayBox local_x_vol, local_y_vol, local_z_vol;
+        FArrayBox local_u_vol, local_v_vol, local_w_vol;
         for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
             const auto& particles = pti.GetArrayOfStructs();
             int nstride = particles.dataShape().first;
             const long np = pti.numParticles();
-            FArrayBox& fab = (*mf_pointer)[pti];
-            const Box& box = fab.box();
-            Real* data_ptr;
-            const int *lo, *hi;
+            FArrayBox& beta_x_fab = (*beta_x_ptr)[pti]; 
+            FArrayBox& beta_y_fab = (*beta_y_ptr)[pti]; 
+            FArrayBox& beta_z_fab = (*beta_z_ptr)[pti];
+            FArrayBox& beta_u_fab = (*beta_u_ptr)[pti]; 
+            FArrayBox& beta_v_fab = (*beta_v_ptr)[pti];
+            FArrayBox& beta_w_fab = (*beta_w_ptr)[pti];
+
+            const Box& x_box = beta_x_fab.box();
+            const Box& y_box = beta_y_fab.box();
+            const Box& z_box = beta_z_fab.box();
+            Real *bx_dataptr, *by_dataptr, *bz_dataptr;
+            Real *bu_dataptr, *bv_dataptr, *bw_dataptr;
+            const int *lo_x, *hi_x, *lo_y, *hi_y, *lo_z, *hi_z; 
 #ifdef _OPENMP
-            Box tile_box = pti.tilebox();
-            tile_box.grow(1);
-            local_vol.resize(tile_box,ncomp);
-            local_vol = 0.0;
-            data_ptr = local_vol.dataPtr();
-            lo = tile_box.loVect();
-            hi = tile_box.hiVect();
+            Box tile_xbox = pti.tilebox();
+            tile_xbox.surroundingNodes(0);
+            tile_xbox.grow(1);
+
+            Box tile_ybox = pti.tilebox();
+            tile_ybox.surroundingNodes(1);
+            tile_ybox.grow(1);
+
+            Box tile_zbox = pti.tilebox();
+            tile_zbox.surroundingNodes(2);
+            tile_zbox.grow(1);
+
+            local_x_vol.resize(tile_xbox,ncomp);
+            local_u_vol.resize(tile_xbox,ncomp);
+            local_y_vol.resize(tile_ybox,ncomp);
+            local_v_vol.resize(tile_ybox,ncomp);
+            local_z_vol.resize(tile_zbox,ncomp);
+            local_w_vol.resize(tile_zbox,ncomp);
+
+            local_x_vol = 0.0; local_y_vol = 0.0; local_z_vol = 0.0;
+            local_u_vol = 0.0; local_v_vol = 0.0; local_w_vol = 0.0;
+
+            bx_dataptr = local_x_vol.dataPtr();
+            by_dataptr = local_y_vol.dataPtr();
+            bz_dataptr = local_z_vol.dataPtr();
+            bu_dataptr = local_u_vol.dataPtr();
+            bv_dataptr = local_v_vol.dataPtr();
+            bw_dataptr = local_w_vol.dataPtr();
+
+            lo_x = tile_xbox.loVect();
+            hi_x = tile_xbox.hiVect();
+            lo_y = tile_ybox.loVect();
+            hi_y = tile_ybox.hiVect();
+            lo_z = tile_zbox.loVect();
+            hi_z = tile_zbox.hiVect();
 #else
-            data_ptr = fab.dataPtr();
-            lo = box.loVect();
-            hi = box.hiVect();
+            bx_dataptr = beta_x_fab.dataPtr(); 
+            by_dataptr = beta_y_fab.dataPtr(); 
+            bz_dataptr = beta_z_fab.dataPtr();
+            bu_dataptr = beta_u_fab.dataPtr(); 
+            bv_dataptr = beta_v_fab.dataPtr(); 
+            bw_dataptr = beta_w_fab.dataPtr();
+
+            lo_x = x_box.loVect();
+            hi_x = x_box.hiVect();
+            lo_y = y_box.loVect();
+            hi_y = y_box.hiVect();
+            lo_z = z_box.loVect();
+            hi_z = z_box.hiVect();
 #endif
 
-            mfix_multi_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr, lo, hi, plo, dx, &fortran_beta_comp, &fortran_vel_comp);
+            mfix_multi_deposit_cic(particles.data(), nstride, np, 
+                                   bx_dataptr, by_dataptr, bz_dataptr, 
+                                   bu_dataptr, bv_dataptr, bw_dataptr,
+                                   lo_x, hi_x, lo_y, hi_y, lo_z, hi_z,
+                                   plo, dx, &fortran_beta_comp, &fortran_vel_comp);
 
 #ifdef _OPENMP
-            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
-                                        BL_TO_FORTRAN_3D(fab), ncomp);
+            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_x_vol),
+                                        BL_TO_FORTRAN_3D(beta_x_fab), 1);
+            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_y_vol),
+                                        BL_TO_FORTRAN_3D(beta_y_fab), 1);
+            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_z_vol),
+                                        BL_TO_FORTRAN_3D(beta_z_fab), 1);
+            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_u_vol),
+                                        BL_TO_FORTRAN_3D(beta_u_fab), 1);
+            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_v_vol),
+                                        BL_TO_FORTRAN_3D(beta_v_fab), 1);
+            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_w_vol),
+                                        BL_TO_FORTRAN_3D(beta_w_fab), 1);
 #endif
 
         }
     }
 
-    mf_pointer->SumBoundary(gm.periodicity());
+    beta_x_ptr->SumBoundary(gm.periodicity());
+    beta_y_ptr->SumBoundary(gm.periodicity());
+    beta_z_ptr->SumBoundary(gm.periodicity());
+    beta_u_ptr->SumBoundary(gm.periodicity());
+    beta_v_ptr->SumBoundary(gm.periodicity());
+    beta_w_ptr->SumBoundary(gm.periodicity());
     
     // Copy back from mf_pointer 
-    beta_mf.copy    (*mf_pointer,0,0,1);
-    beta_vel_mf.copy(*mf_pointer,1,0,BL_SPACEDIM);
-    delete mf_pointer;
+    beta_x_mf.copy(*beta_x_ptr,0,0,1);
+    beta_y_mf.copy(*beta_y_ptr,0,0,1);
+    beta_z_mf.copy(*beta_z_ptr,0,0,1);
+    beta_u_mf.copy(*beta_u_ptr,0,0,1);
+    beta_v_mf.copy(*beta_v_ptr,0,0,1);
+    beta_w_mf.copy(*beta_w_ptr,0,0,1);
+    delete beta_x_ptr, beta_y_ptr, beta_z_ptr;
+    delete beta_u_ptr, beta_v_ptr, beta_w_ptr;
+
+    Box domain(Geom(lev).Domain());
+
+    // Make sure there is zero normal drag force on walls 
+    for (MFIter mfi(beta_u_mf); mfi.isValid(); ++mfi) {
+
+      const Box& xbx = beta_u_mf[mfi].box();
+      const Box& ybx = beta_v_mf[mfi].box();
+      const Box& zbx = beta_w_mf[mfi].box();
+
+      zero_normal_drag_on_walls(xbx.loVect(), xbx.hiVect(),
+                                ybx.loVect(), ybx.hiVect(),
+                                zbx.loVect(), zbx.hiVect(),
+                                beta_u_mf[mfi].dataPtr(),
+                                beta_v_mf[mfi].dataPtr(),
+                                beta_w_mf[mfi].dataPtr(),
+                                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                                bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                                bc_klo.dataPtr(), bc_khi.dataPtr(),
+                                domain.loVect(), domain.hiVect());
+    }
     
     if (m_verbose > 1) {
       Real stoptime = ParallelDescriptor::second() - strttime;

@@ -1,14 +1,11 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: set_bc0                                                 C
-!  Purpose: This subroutine does the initial setting of all boundary   C
-!  conditions. The user specifications of the boundary conditions are  C
-!  checked for veracity in various check_data/ routines:               C
-!  (e.g., check_boundary_conditions).                                  C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 29-JAN-92  C
+!  Subroutine: set_bc1                                                 C
+!  Purpose: This subroutine sets boundary conditions for pressure      C
+!  at mass inflow and velocity (normal and tangential at all walls).   C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+
 subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
      p_g, u_g, v_g, w_g, &
      bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
@@ -66,7 +63,6 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       nrgt = max(0,shi(1)-domhi(1))
       ntop = max(0,shi(2)-domhi(2))
       nup  = max(0,shi(3)-domhi(3))
-
 
       if (nlft .gt. 0) then
          do k=slo(3),shi(3)

@@ -220,14 +220,6 @@ mfix_level::AllocateArrays (int lev)
     trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     trD_g[lev]->setVal(0.);
 
-    //
-    f_gds[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    f_gds[lev]->setVal(0.);
-
-    //
-    drag_bm[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost));
-    drag_bm[lev]->setVal(0.);
-
     // ********************************************************************************
     // X-face-based arrays
     // ********************************************************************************
@@ -256,6 +248,12 @@ mfix_level::AllocateArrays (int lev)
     ropX[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     ropX[lev]->setVal(0.);
 
+    f_gds_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,1));
+    f_gds_u[lev]->setVal(0.);
+    
+    drag_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,1));
+    drag_u[lev]->setVal(0.);
+
     // ********************************************************************************
     // Y-face-based arrays
     // ********************************************************************************
@@ -272,17 +270,23 @@ mfix_level::AllocateArrays (int lev)
     v_go[lev]->setVal(0.);
     v_gt[lev]->setVal(0.);
 
-    d_n[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    d_n[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     d_n[lev]->setVal(0.);
 
-    tau_v_g[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    tau_v_g[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     tau_v_g[lev]->setVal(0.);
 
-    fluxY[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    fluxY[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     fluxY[lev]->setVal(0.);
 
-    ropY[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    ropY[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     ropY[lev]->setVal(0.);
+    
+    f_gds_v[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,1));
+    f_gds_v[lev]->setVal(0.);
+
+    drag_v[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,1));
+    drag_v[lev]->setVal(0.);
 
     // ********************************************************************************
     // Z-face-based arrays
@@ -311,6 +315,12 @@ mfix_level::AllocateArrays (int lev)
 
     ropZ[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost));
     ropZ[lev]->setVal(0.);
+
+    f_gds_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
+    f_gds_w[lev]->setVal(0.);
+
+    drag_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
+    drag_w[lev]->setVal(0.);
 }
 
 void

@@ -105,6 +105,16 @@ extern "C"
          int* bc_klo, int* bc_khi,
          const int* domlo , const int* domhi);
 
+    void zero_normal_drag_on_walls(
+         const int* ulo, const int* uhi,
+         const int* vlo, const int* vhi,
+         const int* wlo, const int* whi,
+         amrex::Real* drag_u, amrex::Real* drag_v, amrex::Real* drag_w, 
+         int* bc_ilo, int* bc_ihi,
+         int* bc_jlo, int* bc_jhi,
+         int* bc_klo, int* bc_khi,
+         const int* domlo , const int* domhi);
+
     void zero_wall_norm_vel(const int* slo, const int* shi,
           const int* ulo, const int* uhi,
           const int* vlo, const int* vhi,
@@ -141,8 +151,12 @@ extern "C"
                           const amrex_real* plo, const amrex_real* dx,
                           const int* fortran_comp);
 
-    void mfix_multi_deposit_cic(const amrex_particle_real*, int ns, int np, int nc,
-                                amrex_real* mf, const int* lo, const int* hi,
+    void mfix_multi_deposit_cic(const amrex_particle_real*, int ns, int np, 
+                                amrex_real* mf_bx, amrex_real* mf_by, amrex_real* mf_bz, 
+                                amrex_real* mf_bu, amrex_real* mf_bv, amrex_real* mf_bw, 
+                                const int* lo_x, const int* hi_x,
+                                const int* lo_y, const int* hi_y,
+                                const int* lo_z, const int* hi_z,
                                 const amrex_real* plo, const amrex_real* dx,
                                 const int* beta_comp, const int* beta_vel_comp);
 
@@ -163,18 +177,18 @@ extern "C"
        amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz);
 
     void calc_drag_particle(
-  const int* slo, const int* shi,
-  const int* ulo, const int* uhi,
-  const int* vlo, const int* vhi,
-  const int* wlo, const int* whi,
-  const int* np,
-  amrex::Real* p_g, amrex::Real* u_g,  amrex::Real* v_g,   amrex::Real* w_g,
-  void* particles,
-  amrex::Real* dx, amrex::Real* dy, amrex::Real* dz, amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen);
+       const int* slo, const int* shi,
+       const int* ulo, const int* uhi,
+       const int* vlo, const int* vhi,
+       const int* wlo, const int* whi,
+       const int* np,
+       amrex::Real* p_g, amrex::Real* u_g,  amrex::Real* v_g,   amrex::Real* w_g,
+       void* particles,
+       amrex::Real* dx, amrex::Real* dy, amrex::Real* dz, amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen);
 
     void calc_coeff(
-  const int* slo, const int* shi, const int* lo,  const int* hi, int* level,
-  amrex::Real* ro_g, amrex::Real* p_g, amrex::Real* ep_g, amrex::Real* rop_g);
+       const int* slo, const int* shi, const int* lo,  const int* hi, int* level,
+       amrex::Real* ro_g, amrex::Real* p_g, amrex::Real* ep_g, amrex::Real* rop_g);
 
     void calc_trd_g(const int* slo, const int* shi,
         const int* ulo, const int* uhi,
@@ -186,34 +200,34 @@ extern "C"
         amrex::Real* dx,  amrex::Real* dy,  amrex::Real* dz);
 
     void calc_tau_g(
-  const int* slo, const int* shi,
-  const int* ulo, const int* uhi,
-  const int* vlo, const int* vhi,
-  const int* wlo, const int* whi,
-  const int* lo,  const int* hi,
-  amrex::Real* tau_u_g,  amrex::Real* tau_v_g,  amrex::Real* tau_w_g,
-  amrex::Real* u_g,      amrex::Real* v_g,      amrex::Real* w_g,
-  amrex::Real* trd_g,    amrex::Real* lambda_g, amrex::Real* mu_g,
-  amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz);
+       const int* slo, const int* shi,
+       const int* ulo, const int* uhi,
+       const int* vlo, const int* vhi,
+       const int* wlo, const int* whi,
+       const int* lo,  const int* hi,
+       amrex::Real* tau_u_g,  amrex::Real* tau_v_g,  amrex::Real* tau_w_g,
+       amrex::Real* u_g,      amrex::Real* v_g,      amrex::Real* w_g,
+       amrex::Real* trd_g,    amrex::Real* lambda_g, amrex::Real* mu_g,
+       amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz);
 
     void conv_rop(
-  const int*  lo,       const int*  hi,
-  amrex::Real* rop_g, const int*  slo, const int*  shi,
-  amrex::Real*   u_g, const int*  ulo, const int*  uhi,
-  amrex::Real*   v_g, const int*  vlo, const int*  vhi,
-  amrex::Real*   w_g, const int*  wlo, const int*  whi,
-  amrex::Real* ropX , const int* rxlo, const int* rxhi,
-  amrex::Real* ropY , const int* rylo, const int* ryhi,
-  amrex::Real* ropZ , const int* rzlo, const int* rzhi);
+       const int*  lo,       const int*  hi,
+       amrex::Real* rop_g, const int*  slo, const int*  shi,
+       amrex::Real*   u_g, const int*  ulo, const int*  uhi,
+       amrex::Real*   v_g, const int*  vlo, const int*  vhi,
+       amrex::Real*   w_g, const int*  wlo, const int*  whi,
+       amrex::Real* ropX , const int* rxlo, const int* rxhi,
+       amrex::Real* ropY , const int* rylo, const int* ryhi,
+       amrex::Real* ropZ , const int* rzlo, const int* rzhi);
 
     void calc_mflux(
-  const int* ulo, const int* uhi,
-  const int* vlo, const int* vhi,
-  const int* wlo, const int* whi,
-  amrex::Real* u_g,            amrex::Real* v_g,            amrex::Real* w_g,
-  amrex::Real* ropX,         amrex::Real* ropY,         amrex::Real* ropZ,
-  amrex::Real* fluxX,        amrex::Real* fluxY,        amrex::Real* fluxZ,
-  amrex::Real* dx,             amrex::Real* dy,             amrex::Real* dz);
+       const int* ulo, const int* uhi,
+       const int* vlo, const int* vhi,
+       const int* wlo, const int* whi,
+       amrex::Real* u_g,            amrex::Real* v_g,            amrex::Real* w_g,
+       amrex::Real* ropX,         amrex::Real* ropY,         amrex::Real* ropZ,
+       amrex::Real* fluxX,        amrex::Real* fluxY,        amrex::Real* fluxZ,
+       amrex::Real* dx,             amrex::Real* dy,             amrex::Real* dz);
 
     void physical_prop(const int* slo, const int* shi,
            const int* lo, const int* hi,
@@ -227,129 +241,127 @@ extern "C"
       const int* domlo , const int* domhi);
 
     void solve_u_g_star(
-  const int* slo, const int* shi,
-  const int* ulo, const int* uhi,
-  const int* vlo, const int* vhi,
-  const int* wlo, const int* whi,
-  const int* alo, const int* ahi,
-  const int*  lo, const int*  hi,
-  amrex::Real* u_g,      amrex::Real* v_g,      amrex::Real* w_g,
-  amrex::Real* u_go,     amrex::Real* p_g,      amrex::Real* ro_g,
-  amrex::Real* rop_g,    amrex::Real* rop_go,   amrex::Real* ep_g,
-  amrex::Real* tau_u_g,  amrex::Real* d_e,
-  amrex::Real* fluxX,  amrex::Real* fluxY,  amrex::Real* fluxZ,
-  amrex::Real* mu_g,     amrex::Real* f_gds,
-  amrex::Real* A_m,      amrex::Real* b_m,      amrex::Real* drag_bm,
-  amrex::Real* mask,
-  int* bc_ilo,    int* bc_ihi,
-  int* bc_jlo,    int* bc_jhi,
-  int* bc_klo,    int* bc_khi,
-  const int* domlo , const int* domhi,
-  amrex::Real* dt,
-  amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
-  amrex::Real *num_u, amrex::Real *denom_u);
+       const int* slo, const int* shi,
+       const int* ulo, const int* uhi,
+       const int* vlo, const int* vhi,
+       const int* wlo, const int* whi,
+       const int* alo, const int* ahi,
+       const int* dlo, const int* dhi,
+       const int*  lo, const int*  hi,
+       amrex::Real* u_g,      amrex::Real* v_g,     amrex::Real* w_g,
+       amrex::Real* u_go,     amrex::Real* p_g,     amrex::Real* ro_g,
+       amrex::Real* rop_g,    amrex::Real* rop_go,  amrex::Real* ep_g,
+       amrex::Real* tau_u_g,  amrex::Real* d_e,
+       amrex::Real* fluxX,  amrex::Real* fluxY,     amrex::Real* fluxZ,
+       amrex::Real* mu_g,     amrex::Real* f_gds_u, amrex::Real* drag_u,
+       amrex::Real* A_m,      amrex::Real* b_m,     amrex::Real* mask,
+       int* bc_ilo,    int* bc_ihi,
+       int* bc_jlo,    int* bc_jhi,
+       int* bc_klo,    int* bc_khi,
+       const int* domlo , const int* domhi,
+       amrex::Real* dt,
+       amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
+       amrex::Real *num_u, amrex::Real *denom_u);
 
     void solve_v_g_star(
-  const int* slo, const int* shi,
-  const int* ulo, const int* uhi,
-  const int* vlo, const int* vhi,
-  const int* wlo, const int* whi,
-  const int* alo, const int* ahi,
-  const int* lo,  const int* hi,
-  amrex::Real* u_g,      amrex::Real* v_g,      amrex::Real* w_g,
-  amrex::Real* v_go,     amrex::Real* p_g,      amrex::Real* ro_g,
-  amrex::Real* rop_g,    amrex::Real* rop_go,   amrex::Real* ep_g,
-  amrex::Real* tau_v_g,  amrex::Real* d_n,
-  amrex::Real* fluxX,  amrex::Real* fluxY,  amrex::Real* fluxZ,
-  amrex::Real* mu_g,     amrex::Real* f_gds,
-  amrex::Real* A_m,      amrex::Real* b_m,      amrex::Real* drag_bm,
-  amrex::Real* mask,
-  int* bc_ilo,    int* bc_ihi,
-  int* bc_jlo,    int* bc_jhi,
-  int* bc_klo,    int* bc_khi,
-  const int* domlo , const int* domhi,
-  amrex::Real* dt,
-  amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
-  amrex::Real *num_v, amrex::Real *denom_v);
+       const int* slo, const int* shi,
+       const int* ulo, const int* uhi,
+       const int* vlo, const int* vhi,
+       const int* wlo, const int* whi,
+       const int* alo, const int* ahi,
+       const int* dlo, const int* dhi,
+       const int* lo,  const int* hi,
+       amrex::Real* u_g,      amrex::Real* v_g,     amrex::Real* w_g,
+       amrex::Real* v_go,     amrex::Real* p_g,     amrex::Real* ro_g,
+       amrex::Real* rop_g,    amrex::Real* rop_go,  amrex::Real* ep_g,
+       amrex::Real* tau_v_g,  amrex::Real* d_n,
+       amrex::Real* fluxX,    amrex::Real* fluxY,   amrex::Real* fluxZ,
+       amrex::Real* mu_g,     amrex::Real* f_gds_v, amrex::Real* drag_v,
+       amrex::Real* A_m,      amrex::Real* b_m,     amrex::Real* mask,
+       int* bc_ilo,    int* bc_ihi,
+       int* bc_jlo,    int* bc_jhi,
+       int* bc_klo,    int* bc_khi,
+       const int* domlo , const int* domhi,
+       amrex::Real* dt,
+       amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
+       amrex::Real *num_v, amrex::Real *denom_v);
 
     void solve_w_g_star(
-  const int* slo, const int* shi,
-  const int* ulo,  const int* uhi,
-  const int* vlo,  const int* vhi,
-  const int* wlo,  const int* whi,
-  const int* alo, const int* ahi,
-  const int* lo,  const int* hi,
-  amrex::Real* u_g,      amrex::Real* v_g,      amrex::Real* w_g,
-  amrex::Real* w_go,     amrex::Real* p_g,      amrex::Real* ro_g,
-  amrex::Real* rop_g,    amrex::Real* rop_go,   amrex::Real* ep_g,
-  amrex::Real* tau_w_g,  amrex::Real* d_t,
-  amrex::Real* fluxX,  amrex::Real* fluxY,  amrex::Real* fluxZ,
-  amrex::Real* mu_g,     amrex::Real* f_gds,
-  amrex::Real* A_m,      amrex::Real* b_m,      amrex::Real* drag_bm,
-  amrex::Real* mask,
-  int* bc_ilo,    int* bc_ihi,
-  int* bc_jlo,    int* bc_jhi,
-  int* bc_klo,    int* bc_khi,
-  const int* domlo , const int* domhi,
-  amrex::Real* dt,
-  amrex::Real* dx,
-    amrex::Real* dy,
-    amrex::Real* dz,
-  amrex::Real *num_w, amrex::Real *denom_w);
+       const int* slo, const int* shi,
+       const int* ulo,  const int* uhi,
+       const int* vlo,  const int* vhi,
+       const int* wlo,  const int* whi,
+       const int* alo, const int* ahi,
+       const int* dlo, const int* dhi,
+       const int* lo,  const int* hi,
+       amrex::Real* u_g,      amrex::Real* v_g,     amrex::Real* w_g,
+       amrex::Real* w_go,     amrex::Real* p_g,     amrex::Real* ro_g,
+       amrex::Real* rop_g,    amrex::Real* rop_go,  amrex::Real* ep_g,
+       amrex::Real* tau_w_g,  amrex::Real* d_t,
+       amrex::Real* fluxX,    amrex::Real* fluxY,   amrex::Real* fluxZ,
+       amrex::Real* mu_g,     amrex::Real* f_gds_w, amrex::Real* drag_w,
+       amrex::Real* A_m,      amrex::Real* b_m,     amrex::Real* mask,
+       int* bc_ilo,    int* bc_ihi,
+       int* bc_jlo,    int* bc_jhi,
+       int* bc_klo,    int* bc_khi,
+       const int* domlo , const int* domhi,
+       amrex::Real* dt,
+       amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
+       amrex::Real *num_w, amrex::Real *denom_w);
 
     void solve_pp_g(
-  const int* slo, const int* shi,
-  const int* ulo,  const int* uhi,
-  const int* vlo,  const int* vhi,
-  const int* wlo,  const int* whi,
-  const int* alo,  const int* ahi,
-  const int* lo,  const int* hi,
-  amrex::Real* u_g,      amrex::Real* v_g,      amrex::Real* w_g,
-  amrex::Real* p_g,      amrex::Real* ep_g,
-  amrex::Real* rop_g,    amrex::Real* rop_go,
-  amrex::Real* ro_g,
-  amrex::Real* ropX,   amrex::Real* ropY,   amrex::Real* ropZ,
-  amrex::Real* d_e,      amrex::Real* d_n,      amrex::Real* d_t,
-  amrex::Real* A_m,      amrex::Real* b_m,      amrex::Real* b_mmax,
-  int* bc_ilo, int* bc_ihi,
-  int* bc_jlo, int* bc_jhi,
-  int* bc_klo, int* bc_khi,
-  amrex::Real* dt,       amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-  const int* domlo , const int* domhi,
-  amrex::Real *num_p, amrex::Real *denom_p);
+       const int* slo, const int* shi,
+       const int* ulo,  const int* uhi,
+       const int* vlo,  const int* vhi,
+       const int* wlo,  const int* whi,
+       const int* alo,  const int* ahi,
+       const int* lo,  const int* hi,
+       amrex::Real* u_g,      amrex::Real* v_g,      amrex::Real* w_g,
+       amrex::Real* p_g,      amrex::Real* ep_g,
+       amrex::Real* rop_g,    amrex::Real* rop_go,
+       amrex::Real* ro_g,
+       amrex::Real* ropX,   amrex::Real* ropY,   amrex::Real* ropZ,
+       amrex::Real* d_e,      amrex::Real* d_n,      amrex::Real* d_t,
+       amrex::Real* A_m,      amrex::Real* b_m,      amrex::Real* b_mmax,
+       int* bc_ilo, int* bc_ihi,
+       int* bc_jlo, int* bc_jhi,
+       int* bc_klo, int* bc_khi,
+       amrex::Real* dt,       amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
+       const int* domlo , const int* domhi,
+       amrex::Real *num_p, amrex::Real *denom_p);
 
     void correct_p_0(
-  const int*  lo,  const int*  hi,
-  const int* slo,  const int* shi,
-  amrex::Real* p_g,      amrex::Real* pp_g);
+       const int*  lo,  const int*  hi,
+       const int* slo,  const int* shi,
+       amrex::Real* p_g,      amrex::Real* pp_g);
 
     void correct_u_0(
-  const int*  lo,  const int*  hi,
-  const int* ulo,  const int* uhi,
-  const int* slo,  const int* shi,
-  amrex::Real* pp_g,      amrex::Real* u_g,      amrex::Real* d_e);
+       const int*  lo,  const int*  hi,
+       const int* ulo,  const int* uhi,
+       const int* slo,  const int* shi,
+       amrex::Real* pp_g,      amrex::Real* u_g,      amrex::Real* d_e);
 
     void correct_v_0(
-  const int*  lo,  const int*  hi,
-  const int* vlo,  const int* vhi,
-  const int* slo,  const int* shi,
-  amrex::Real* pp_g,      amrex::Real* v_g,      amrex::Real* d_n);
+       const int*  lo,  const int*  hi,
+       const int* vlo,  const int* vhi,
+       const int* slo,  const int* shi,
+       amrex::Real* pp_g,      amrex::Real* v_g,      amrex::Real* d_n);
 
     void correct_w_0(
-  const int*  lo,  const int*  hi,
-  const int* wlo,  const int* whi,
-  const int* slo,  const int* shi,
-  amrex::Real* pp_g,      amrex::Real* w_g,      amrex::Real* d_t);
+       const int*  lo,  const int*  hi,
+       const int* wlo,  const int* whi,
+       const int* slo,  const int* shi,
+       amrex::Real* pp_g,      amrex::Real* w_g,      amrex::Real* d_t);
 
     void display_resid(amrex::Real* time, amrex::Real* dt, int* nit, amrex::Real *residuals);
 
     int check_convergence(int* nit, amrex::Real *residuals);
 
     int goal_seek_mflux(
-  const int* slo, const int* shi,
-  int *nit,       int* gsmf,      amrex::Real* delP_MF,  amrex::Real* lMFlux,
-  amrex::Real* fluxX,  amrex::Real* fluxY,  amrex::Real* fluxZ,
-  amrex::Real* dx     ,  amrex::Real* dy,       amrex::Real* dz);
+       const int* slo, const int* shi,
+       int *nit,       int* gsmf,      amrex::Real* delP_MF,  amrex::Real* lMFlux,
+       amrex::Real* fluxX,  amrex::Real* fluxY,  amrex::Real* fluxZ,
+       amrex::Real* dx     ,  amrex::Real* dy,       amrex::Real* dz);
 
     int adjustdt(int* ier, int* nit, amrex::Real* dt);
 
