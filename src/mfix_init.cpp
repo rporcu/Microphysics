@@ -9,6 +9,10 @@ void
 mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
                        int max_nit_in, int call_udf_in)
 {
+    // Note that the default type is "AsciiFile" but we can over-write that in the inputs file
+    ParmParse pp("mfix");
+    pp.query("particle_init_type", particle_init_type);
+
     solve_fluid  = solve_fluid_in;
     solve_dem    = solve_dem_in;
     max_nit      = max_nit_in;
@@ -337,7 +341,40 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   if (solve_dem)
     {
       pc -> AllocData();
-      pc -> InitParticlesAscii("particle_input.dat");
+
+      if (particle_init_type == "AsciiFile")
+      {
+         amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
+         pc -> InitParticlesAscii("particle_input.dat");
+      } 
+      else if (particle_init_type == "Random") 
+      {
+         int n_per_cell = 1;
+         amrex::Print() << "Randomly initializing " << n_per_cell << " particles per cell ..." << std::endl;
+         Real  radius = 1.0;
+         Real  volume = 1.0;
+         Real    mass = 1.0;
+         Real density = 1.0;
+         Real    omoi = 1.0;
+         Real    velx = 0.0;
+         Real    vely = 0.0;
+         Real    velz = 0.0;
+         Real   dragx = 0.0;
+         Real   dragy = 0.0;
+         Real   dragz = 0.0;
+         Real  omegax = 0.0;
+         Real  omegay = 0.0;
+         Real  omegaz = 0.0;
+         int phase = 0;
+         int state = 0;
+         MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,velx,vely,velz,omegax,omegax,omegaz,dragx,dragy,dragz,phase,state};
+         pc->InitNRandomPerCell(n_per_cell, pdata);
+         pc->WriteAsciiFile ("random_particles");
+         exit(0);
+      } else {
+         amrex::Abort("Bad particle_init_type");
+      } 
+      
 
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );

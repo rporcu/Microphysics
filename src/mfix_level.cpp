@@ -5,6 +5,8 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
+std::string mfix_level::particle_init_type = "AsciiFile";
+
 mfix_level::~mfix_level ()
 {};
 
