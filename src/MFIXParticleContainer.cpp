@@ -908,7 +908,6 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
 void
 MFIXParticleContainer::BalanceParticleLoad_KDTree()
 {
-
   BoxArray new_ba;
   loadBalanceKD::balance<MFIXParticleContainer>(*this, new_ba, ParallelDescriptor::NProcs());
 
@@ -917,12 +916,8 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
     new_pmap.push_back(0);
   }
 
-  // My guess is we need a function that redistributes the
-  // fluid grid information.
-  // Uncommenting below causes DEM06 and DEM07 MGS to fail.
-
-  //DistributionMapping new_dm(new_pmap);
-  //SetParticleBoxArray(0, new_ba);
-  //SetParticleDistributionMap(0, new_dm);
-  //Redistribute();
+  SetParticleBoxArray(0, new_ba);
+ 
+  DistributionMapping new_dm(new_pmap);
+  SetParticleDistributionMap(0, new_dm);
 }

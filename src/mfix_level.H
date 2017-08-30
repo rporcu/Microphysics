@@ -126,10 +126,10 @@ private:
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
 
-  void mfix_set_bc_type(int lev);
-  void mfix_set_bc1(int lev);
+    void mfix_set_bc_type(int lev);
+    void mfix_set_bc1(int lev);
 
-  void fill_mf_bc(int lev,  MultiFab& mf);
+    void fill_mf_bc(int lev,  MultiFab& mf);
 #if 0
     void WritePlotFile () const;
 
@@ -229,6 +229,7 @@ private:
     int call_udf;
 
     static std::string particle_init_type;
+    static std::string load_balance_type;
 
     Real cfl = 0.7;
 

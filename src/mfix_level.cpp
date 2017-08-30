@@ -6,6 +6,7 @@
 #include <AMReX_Box.H>
 
 std::string mfix_level::particle_init_type = "AsciiFile";
+std::string mfix_level::load_balance_type = "FixedSize";
 
 mfix_level::~mfix_level ()
 {};
