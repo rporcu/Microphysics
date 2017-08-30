@@ -19,7 +19,6 @@ class mfix_level
 {
 public:
 
-//  mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord);
     mfix_level ();
     ~mfix_level ();
 
@@ -229,7 +228,7 @@ private:
     int max_nit;
     int call_udf;
 
-    int use_pic;
+    static std::string particle_init_type;
 
     Real cfl = 0.7;
 
