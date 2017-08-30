@@ -920,4 +920,5 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
  
   DistributionMapping new_dm(new_pmap);
   SetParticleDistributionMap(0, new_dm);
+  Redistribute();
 }
