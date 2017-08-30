@@ -345,8 +345,8 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       {
          amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
          pc -> InitParticlesAscii("particle_input.dat");
-      } 
-      else if (particle_init_type == "Random") 
+      }
+      else if (particle_init_type == "Random")
       {
          int n_per_cell = 1;
          amrex::Print() << "Randomly initializing " << n_per_cell << " particles per cell ..." << std::endl;
@@ -373,7 +373,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
          exit(0);
       } else {
          amrex::Abort("Bad particle_init_type");
-      } 
+      }
 
       if (load_balance_type == "KDTree")
       {
@@ -381,7 +381,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
          SetBoxArray(lev, pc->ParticleBoxArray(lev));
          SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
          amrex::Print() << "After KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
-      } 
+      }
 
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
@@ -422,9 +422,6 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
       init_collision(avg_dp, avg_ro);
-      pc -> BalanceParticleLoad_KDTree ();
-      SetBoxArray(lev, pc->ParticleBoxArray(lev));
-      SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
   }
 
   mfix_set_bc0(lev);
