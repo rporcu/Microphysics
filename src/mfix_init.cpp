@@ -9,6 +9,10 @@ void
 mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
                        int max_nit_in, int call_udf_in)
 {
+    // Note that the default type is "AsciiFile" but we can over-write that in the inputs file
+    ParmParse pp("mfix");
+    pp.query("particle_init_type", particle_init_type);
+
     solve_fluid  = solve_fluid_in;
     solve_dem    = solve_dem_in;
     max_nit      = max_nit_in;
@@ -220,14 +224,6 @@ mfix_level::AllocateArrays (int lev)
     trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     trD_g[lev]->setVal(0.);
 
-    //
-    f_gds[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    f_gds[lev]->setVal(0.);
-
-    //
-    drag_bm[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost));
-    drag_bm[lev]->setVal(0.);
-
     // ********************************************************************************
     // X-face-based arrays
     // ********************************************************************************
@@ -256,6 +252,12 @@ mfix_level::AllocateArrays (int lev)
     ropX[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     ropX[lev]->setVal(0.);
 
+    f_gds_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,1));
+    f_gds_u[lev]->setVal(0.);
+    
+    drag_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,1));
+    drag_u[lev]->setVal(0.);
+
     // ********************************************************************************
     // Y-face-based arrays
     // ********************************************************************************
@@ -272,17 +274,23 @@ mfix_level::AllocateArrays (int lev)
     v_go[lev]->setVal(0.);
     v_gt[lev]->setVal(0.);
 
-    d_n[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    d_n[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     d_n[lev]->setVal(0.);
 
-    tau_v_g[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    tau_v_g[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     tau_v_g[lev]->setVal(0.);
 
-    fluxY[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    fluxY[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     fluxY[lev]->setVal(0.);
 
-    ropY[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    ropY[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     ropY[lev]->setVal(0.);
+    
+    f_gds_v[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,1));
+    f_gds_v[lev]->setVal(0.);
+
+    drag_v[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,1));
+    drag_v[lev]->setVal(0.);
 
     // ********************************************************************************
     // Z-face-based arrays
@@ -311,6 +319,12 @@ mfix_level::AllocateArrays (int lev)
 
     ropZ[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost));
     ropZ[lev]->setVal(0.);
+
+    f_gds_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
+    f_gds_w[lev]->setVal(0.);
+
+    drag_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
+    drag_w[lev]->setVal(0.);
 }
 
 void
@@ -327,7 +341,40 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   if (solve_dem)
     {
       pc -> AllocData();
-      pc -> InitParticlesAscii("particle_input.dat");
+
+      if (particle_init_type == "AsciiFile")
+      {
+         amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
+         pc -> InitParticlesAscii("particle_input.dat");
+      } 
+      else if (particle_init_type == "Random") 
+      {
+         int n_per_cell = 1;
+         amrex::Print() << "Randomly initializing " << n_per_cell << " particles per cell ..." << std::endl;
+         Real  radius = 1.0;
+         Real  volume = 1.0;
+         Real    mass = 1.0;
+         Real density = 1.0;
+         Real    omoi = 1.0;
+         Real    velx = 0.0;
+         Real    vely = 0.0;
+         Real    velz = 0.0;
+         Real   dragx = 0.0;
+         Real   dragy = 0.0;
+         Real   dragz = 0.0;
+         Real  omegax = 0.0;
+         Real  omegay = 0.0;
+         Real  omegaz = 0.0;
+         int phase = 0;
+         int state = 0;
+         MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,velx,vely,velz,omegax,omegax,omegaz,dragx,dragy,dragz,phase,state};
+         pc->InitNRandomPerCell(n_per_cell, pdata);
+         pc->WriteAsciiFile ("random_particles");
+         exit(0);
+      } else {
+         amrex::Abort("Bad particle_init_type");
+      } 
+      
 
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );

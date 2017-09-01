@@ -1,6 +1,6 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: calc_drag_fluid                                         !
+!  Subroutine: calc_particle_beta                                         !
 !                                                                      !
 !  Purpose: This routine is called before the FLUID solve.             !
 !  It calculates the source terms for the center coefficients and RHS  !
@@ -8,9 +8,9 @@
 !  each particle.                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
-     np, ep_g, ro_g, u_g, v_g, w_g, mu_g, f_gs, rhs, particles, dx, dy, dz, use_pic ) &
-     bind(C, name="calc_drag_fluid")
+subroutine calc_particle_beta ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
+     np, ep_g, ro_g, u_g, v_g, w_g, mu_g, particles, dx, dy, dz) &
+     bind(C, name="calc_particle_beta")
 
    use amrex_fort_module,  only : c_real => amrex_real
    use iso_c_binding ,     only: c_int
@@ -23,7 +23,7 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
    integer(c_int), intent(in   ) :: ulo(3),uhi(3)
    integer(c_int), intent(in   ) :: vlo(3),vhi(3)
    integer(c_int), intent(in   ) :: wlo(3),whi(3)
-   integer(c_int), intent(in   ) :: np, use_pic
+   integer(c_int), intent(in   ) :: np
 
    real(c_real), intent(in   ) :: &
         ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -36,16 +36,19 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
    real(c_real), intent(in   ) :: dx, dy, dz
 
    type(particle_t), intent(inout) :: particles(np)
-   real(c_real),     intent(out  ) :: &
-        f_gs(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-        rhs(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
    ! Local variables
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
-   integer :: p, i, j, k
-   real(c_real) :: velfp(3), velp(3), beta, f_gp
+   integer :: p, i, j, k, ii, jj, kk
+   real(c_real) :: velfp(3), velp(3), beta
    real(c_real) :: odx, ody, odz, ovol
+   real(c_real) :: lx, ly, lz
+   real(c_real) :: sx_lo, sy_lo, sz_lo
+   real(c_real) :: sx_hi, sy_hi, sz_hi
+   real(c_real) :: ux_lo, vy_lo, wz_lo
+   real(c_real) :: ux_hi, vy_hi, wz_hi
+   real(c_real) :: plo(3)
    !......................................................................!
 
    odx = 1.0d0/dx
@@ -54,18 +57,63 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
 
    ovol = 1.0d0/(dx*dy*dz)
 
+   plo = 0.0d0 ! HACK -- This should get passed into routine
+
    ! Calculate the gas phase forces acting on each particle.
 
    do p = 1, np
 
-      i = floor(particles(p) % pos(1)*odx)
-      j = floor(particles(p) % pos(2)*ody)
-      k = floor(particles(p) % pos(3)*odz)
+      lx = (particles(p) % pos(1) - plo(1))*odx + 0.5d0
+      ly = (particles(p) % pos(2) - plo(2))*ody + 0.5d0
+      lz = (particles(p) % pos(3) - plo(3))*odz + 0.5d0
 
-      ! Gas volume fraction, velocity, at the particle's position.
-      velfp(1) = 0.5d0*(u_g(i,j,k) + u_g(i+1,j,k))
-      velfp(2) = 0.5d0*(v_g(i,j,k) + v_g(i,j+1,k))
-      velfp(3) = 0.5d0*(w_g(i,j,k) + w_g(i,j,k+1))
+      i = floor(lx)
+      j = floor(ly)
+      k = floor(lz)
+
+      sx_hi = lx - i;  sx_lo = 1.0d0 - sx_hi
+      sy_hi = ly - j;  sy_lo = 1.0d0 - sy_hi
+      sz_hi = lz - k;  sz_lo = 1.0d0 - sz_hi
+
+      lx = (particles(p) % pos(1) - plo(1))*odx
+      ly = (particles(p) % pos(2) - plo(2))*ody
+      lz = (particles(p) % pos(3) - plo(3))*odz
+
+      ii = floor(lx)
+      jj = floor(ly)
+      kk = floor(lz)
+
+      ux_hi = lx - ii;  ux_lo = 1.0d0 - ux_hi
+      vy_hi = ly - jj;  vy_lo = 1.0d0 - vy_hi
+      wz_hi = lz - kk;  wz_lo = 1.0d0 - wz_hi
+
+      ! Fluid velocity at the particle's position.
+      velfp(1) = ux_lo*sy_lo*sz_lo*u_g(ii  , j-1, k-1) + &
+                 ux_lo*sy_lo*sz_hi*u_g(ii  , j-1, k  ) + &
+                 ux_lo*sy_hi*sz_lo*u_g(ii  , j  , k-1) + &
+                 ux_lo*sy_hi*sz_hi*u_g(ii  , j  , k  ) + &
+                 ux_hi*sy_lo*sz_lo*u_g(ii+1, j-1, k-1) + &
+                 ux_hi*sy_lo*sz_hi*u_g(ii+1, j-1, k  ) + &
+                 ux_hi*sy_hi*sz_lo*u_g(ii+1, j  , k-1) + &
+                 ux_hi*sy_hi*sz_hi*u_g(ii+1, j  , k  )
+
+      velfp(2) = sx_lo*vy_lo*sz_lo*v_g(i-1, jj  , k-1) + &
+                 sx_lo*vy_lo*sz_hi*v_g(i-1, jj  , k  ) + &
+                 sx_lo*vy_hi*sz_lo*v_g(i-1, jj+1, k-1) + &
+                 sx_lo*vy_hi*sz_hi*v_g(i-1, jj+1, k  ) + &
+                 sx_hi*vy_lo*sz_lo*v_g(i  , jj  , k-1) + &
+                 sx_hi*vy_lo*sz_hi*v_g(i  , jj  , k  ) + &
+                 sx_hi*vy_hi*sz_lo*v_g(i  , jj+1, k-1) + &
+                 sx_hi*vy_hi*sz_hi*v_g(i  , jj+1, k  )
+
+      velfp(3) = sx_lo*sy_lo*wz_lo*w_g(i-1, j-1, kk  ) + &
+                 sx_lo*sy_lo*wz_hi*w_g(i-1, j-1, kk+1) + &
+                 sx_lo*sy_hi*wz_lo*w_g(i-1, j  , kk  ) + &
+                 sx_lo*sy_hi*wz_hi*w_g(i-1, j  , kk+1) + &
+                 sx_hi*sy_lo*wz_lo*w_g(i  , j-1, kk  ) + &
+                 sx_hi*sy_lo*wz_hi*w_g(i  , j-1, kk+1) + &
+                 sx_hi*sy_hi*wz_lo*w_g(i  , j  , kk  ) + &
+                 sx_hi*sy_hi*wz_hi*w_g(i  , j  , kk+1)
 
       velp(:) = particles(p) % vel
 
@@ -77,23 +125,16 @@ subroutine calc_drag_fluid ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
 
       particles(p) % drag(1) = beta
 
-      if (use_pic .eq. 0) then
-         f_gp = beta*ovol
-         f_gs(i,j,k  )  = f_gs(i,j,k)  + f_gp
-          rhs(i,j,k,:) = rhs(i,j,k,:) + f_gp*velp(:)
-      end if
-
    end do
 
-end subroutine calc_drag_fluid
-
+end subroutine calc_particle_beta
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: calc_drag_particle                                      !
 !                                                                      !
-!  Purpose: This routine must be called after calc_drag_fluid because  !
-!  it assumes you have already computed beta and stored it in          !
+!  Purpose: This routine must be called after calc_particle_beta       !
+!  because it assumes you have already computed beta and stored it in  !
 !  particles(p)%drag(1).   Here we compute the actual drag on the      !
 !  particle.                                                           !
 !                                                                      !
@@ -127,11 +168,18 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
    ! Local variables
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
-   integer :: p, i, j, k
+   integer :: p, i, j, k, ii, jj, kk
    real(c_real) :: velfp(3), velp(3), cpg(3), gradpg(3)
    real(c_real) :: beta(np)
    real(c_real) :: odx, ody, odz
+   real(c_real) :: lx, ly, lz
+   real(c_real) :: sx_lo, sy_lo, sz_lo
+   real(c_real) :: sx_hi, sy_hi, sz_hi
+   real(c_real) :: ux_lo, vy_lo, wz_lo
+   real(c_real) :: ux_hi, vy_hi, wz_hi
+   real(c_real) :: plo(3)
    !......................................................................!
+   plo = 0.0d0 ! HACK -- This should get passed into routine
 
    odx = 1.0d0/dx
    ody = 1.0d0/dy
@@ -149,19 +197,84 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 
    do p = 1, np
 
-      i = floor(particles(p) % pos(1)*odx)
-      j = floor(particles(p) % pos(2)*ody)
-      k = floor(particles(p) % pos(3)*odz)
+      lx = (particles(p) % pos(1) - plo(1))*odx + 0.5d0
+      ly = (particles(p) % pos(2) - plo(2))*ody + 0.5d0
+      lz = (particles(p) % pos(3) - plo(3))*odz + 0.5d0
 
-      velfp(1) = 0.5d0*(u_g(i,j,k) + u_g(i+1,j,k))
-      velfp(2) = 0.5d0*(v_g(i,j,k) + v_g(i,j+1,k))
-      velfp(3) = 0.5d0*(w_g(i,j,k) + w_g(i,j,k+1))
+      i = floor(lx)
+      j = floor(ly)
+      k = floor(lz)
 
-      gradpg(1) = 0.5d0 * odx * ( p_g(i+1,j,k) - p_g(i-1,j,k) )
+      sx_hi = lx - i;  sx_lo = 1.0d0 - sx_hi
+      sy_hi = ly - j;  sy_lo = 1.0d0 - sy_hi
+      sz_hi = lz - k;  sz_lo = 1.0d0 - sz_hi
 
-      gradpg(2) = 0.5d0 * ody * ( p_g(i,j+1,k) - p_g(i,j-1,k) )
+      gradpg(1) = (- sy_lo*sz_lo*p_g(i-1, j-1, k-1) &
+                   - sy_lo*sz_hi*p_g(i-1, j-1, k  ) &
+                   - sy_hi*sz_lo*p_g(i-1, j  , k-1) &
+                   - sy_hi*sz_hi*p_g(i-1, j  , k  ) &
+                   + sy_lo*sz_lo*p_g(i  , j-1, k-1) &
+                   + sy_lo*sz_hi*p_g(i  , j-1, k  ) &
+                   + sy_hi*sz_lo*p_g(i  , j  , k-1) &
+                   + sy_hi*sz_hi*p_g(i  , j  , k  ) ) * odx
 
-      gradpg(3) = 0.5d0 * odz * ( p_g(i,j,k+1) - p_g(i,j,k-1) )
+      gradpg(2) = (- sx_lo*sz_lo*p_g(i-1, j-1, k-1) &
+                   - sx_lo*sz_hi*p_g(i-1, j-1, k  ) &
+                   + sx_lo*sz_lo*p_g(i-1, j  , k-1) &
+                   + sx_lo*sz_hi*p_g(i-1, j  , k  ) &
+                   - sx_hi*sz_lo*p_g(i  , j-1, k-1) &
+                   - sx_hi*sz_hi*p_g(i  , j-1, k  ) &
+                   + sx_hi*sz_lo*p_g(i  , j  , k-1) &
+                   + sx_hi*sz_hi*p_g(i  , j  , k  ) ) * ody
+
+      gradpg(3) = (- sx_lo*sy_lo*p_g(i-1, j-1, k-1) &
+                   + sx_lo*sy_lo*p_g(i-1, j-1, k  ) &
+                   - sx_lo*sy_hi*p_g(i-1, j  , k-1) &
+                   + sx_lo*sy_hi*p_g(i-1, j  , k  ) &
+                   - sx_hi*sy_lo*p_g(i  , j-1, k-1) &
+                   + sx_hi*sy_lo*p_g(i  , j-1, k  ) &
+                   - sx_hi*sy_hi*p_g(i  , j  , k-1) &
+                   + sx_hi*sy_hi*p_g(i  , j  , k  ) ) * odz
+
+      lx = (particles(p) % pos(1) - plo(1))*odx
+      ly = (particles(p) % pos(2) - plo(2))*ody
+      lz = (particles(p) % pos(3) - plo(3))*odz
+
+      ii = floor(lx)
+      jj = floor(ly)
+      kk = floor(lz)
+
+      ux_hi = lx - ii;  ux_lo = 1.0d0 - ux_hi
+      vy_hi = ly - jj;  vy_lo = 1.0d0 - vy_hi
+      wz_hi = lz - kk;  wz_lo = 1.0d0 - wz_hi
+
+      ! Fluid velocity at the particle's position.
+      velfp(1) = ux_lo*sy_lo*sz_lo*u_g(ii  , j-1, k-1) + &
+                 ux_lo*sy_lo*sz_hi*u_g(ii  , j-1, k  ) + &
+                 ux_lo*sy_hi*sz_lo*u_g(ii  , j  , k-1) + &
+                 ux_lo*sy_hi*sz_hi*u_g(ii  , j  , k  ) + &
+                 ux_hi*sy_lo*sz_lo*u_g(ii+1, j-1, k-1) + &
+                 ux_hi*sy_lo*sz_hi*u_g(ii+1, j-1, k  ) + &
+                 ux_hi*sy_hi*sz_lo*u_g(ii+1, j  , k-1) + &
+                 ux_hi*sy_hi*sz_hi*u_g(ii+1, j  , k  )
+
+      velfp(2) = sx_lo*vy_lo*sz_lo*v_g(i-1, jj  , k-1) + &
+                 sx_lo*vy_lo*sz_hi*v_g(i-1, jj  , k  ) + &
+                 sx_lo*vy_hi*sz_lo*v_g(i-1, jj+1, k-1) + &
+                 sx_lo*vy_hi*sz_hi*v_g(i-1, jj+1, k  ) + &
+                 sx_hi*vy_lo*sz_lo*v_g(i  , jj  , k-1) + &
+                 sx_hi*vy_lo*sz_hi*v_g(i  , jj  , k  ) + &
+                 sx_hi*vy_hi*sz_lo*v_g(i  , jj+1, k-1) + &
+                 sx_hi*vy_hi*sz_hi*v_g(i  , jj+1, k  )
+
+      velfp(3) = sx_lo*sy_lo*wz_lo*w_g(i-1, j-1, kk  ) + &
+                 sx_lo*sy_lo*wz_hi*w_g(i-1, j-1, kk+1) + &
+                 sx_lo*sy_hi*wz_lo*w_g(i-1, j  , kk  ) + &
+                 sx_lo*sy_hi*wz_hi*w_g(i-1, j  , kk+1) + &
+                 sx_hi*sy_lo*wz_lo*w_g(i  , j-1, kk  ) + &
+                 sx_hi*sy_lo*wz_hi*w_g(i  , j-1, kk+1) + &
+                 sx_hi*sy_hi*wz_lo*w_g(i  , j  , kk  ) + &
+                 sx_hi*sy_hi*wz_hi*w_g(i  , j  , kk+1)
 
       particles(p) % drag = beta(p)*(velfp - particles(p) % vel) + &
            (cpg(:) - gradpg(:)) * particles(p) % volume

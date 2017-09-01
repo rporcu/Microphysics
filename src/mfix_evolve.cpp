@@ -11,35 +11,32 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
                    Real time, Real normg)
 {
 
+  Real sum_vol;
+  if (solve_dem && solve_fluid)
+  {
+    mfix_calc_volume_fraction(lev,sum_vol);
+    Print() << "Testing new sum_vol " << sum_vol << " against original sum_vol " << sum_vol_orig << std::endl;
+    if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) amrex::Abort("Volume fraction in domain has changed!");
+  }
+
   if (solve_fluid)
      EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
 
-  if (solve_dem)
-  {
-     // This returns the drag force on the particle
-     if (solve_fluid)
-        mfix_calc_drag_particle(lev);
+  // This returns the drag force on the particle
+  if (solve_dem && solve_fluid)
+     mfix_calc_drag_particle(lev);
 
+  if (solve_dem)
      pc -> EvolveParticles( lev, nstep, dt, time);
-  }
 }
 
 void
 mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
                         Real dt, Real& prev_dt, Real time, Real normg)
 {
-
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
-
-  Real sum_vol;
-  if (solve_dem)
-  {
-    mfix_calc_volume_fraction(lev,sum_vol);
-    Print() << "Testing new sum_vol " << sum_vol << " against original sum_vol " << sum_vol_orig << std::endl;
-    if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) amrex::Abort("Volume fraction in domain has changed!");
-  }
 
   // Reimpose boundary conditions -- make sure to do this before we compute tau
   mfix_set_bc1(lev);
@@ -67,7 +64,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
     prev_dt = dt;
 
     // Calculate bulk density (epg*ro_g) at cell faces
-    mfix_conv_rop(lev,dt);
+    mfix_conv_rop(lev);
 
     // Calculate face mass fluxes
     mfix_calc_mflux(lev);
@@ -134,7 +131,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       mfix_set_bc1(lev);
 
       // Calculate bulk density (epg*ro_g) at cell faces
-      mfix_conv_rop(lev,dt);
+      mfix_conv_rop(lev);
 
       // Solve the pressure correction equation
       Real   num_p = 0.0L;

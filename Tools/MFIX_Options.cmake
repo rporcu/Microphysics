@@ -100,9 +100,19 @@ in AMReX build")
    set (AMREX_ENABLE_TINY_PROFILING 0 CACHE INT "Include 'tiny'-profiling information in AMReX build")
    check_option_value ( "ENABLE_TINY_PROFILING" ${AMREX_ENABLE_TINY_PROFILING} 0 1 )
 
-   set (AMREX_ENABLE_BACKTRACE 1 CACHE INT "Include backtrace information in AMReX build")
+   set (AMREX_ENABLE_TRACE_PROFILING 0 CACHE INT "Include trace-profiling information in AMReX build")
+   check_option_value ( "ENABLE_TRACE_PROFILING" ${AMREX_ENABLE_TRACE_PROFILING} 0 1 )
+
+   set (AMREX_ENABLE_COMM_PROFILING 0 CACHE INT "Include comm-profiling information in AMReX build")
+   check_option_value ( "ENABLE_COMM_PROFILING" ${AMREX_ENABLE_COMM_PROFILING} 0 1 )
+
+   
+   set (AMREX_ENABLE_BACKTRACE 0 CACHE INT "Include backtrace information in AMReX build")
    check_option_value ( "ENABLE_BACKTRACE" ${AMREX_ENABLE_BACKTRACE} 0 1 )
 
+   set (AMREX_ENABLE_ASSERTIONS 0 CACHE INT "Include assertions in AMReX build")
+   check_option_value ( "ENABLE_ASSERTIONS" ${AMREX_ENABLE_ASSERTIONS} 0 1 )
+   
    set (AMREX_GIT_COMMIT "" CACHE STRING "AMReX git commit to use in superbuild")
    
 endif ()

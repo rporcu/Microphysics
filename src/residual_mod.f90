@@ -29,7 +29,7 @@
 !  Purpose: Calculate residuals for momentum equations                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_resid_vel(lo, hi, alo, ahi, &
+      subroutine calc_resid_vel(dir, lo, hi, alo, ahi, &
          v0lo, v0hi, v1lo, v1hi, v2lo, v2hi, &
          vel, vels1, vels2, A_m, b_m, mask, num, den)
 
@@ -41,6 +41,7 @@
 
       implicit none
 
+      integer     , intent(in   ) :: dir
       integer     , intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
       integer     , intent(in   ) :: v0lo(3),v0hi(3)
@@ -77,24 +78,23 @@
       ! Velocity magnitude
       real(c_real) :: magvel
 
-      ! Indices
-      integer :: i, j, k
+      ! Tangential velocity averaged onto normal face
+      real(c_real) :: uavg, vavg, wavg
 
       ! Numerators and denominators
-      real(c_real) :: num1, den1
+      real(c_real)   :: num1, den1
 
-      ! Number of fluid cells
+      ! Indices
+      integer(c_int) :: i, j, k
+      integer(c_int) :: llo(3),lhi(3) 
 
-!-----------------------------------------------
-      integer :: llo(3),lhi(3)
-
-      llo = alo
-      lhi = ahi
+      llo = alo; lhi = ahi
 
 !     Evaluate the residual at cell (i,j,k):
 !     RESp = B-sum(Anb*VARnb)-Ap*VARp
 !       (where nb = neighbor cells and p = center/0 cell)
 
+      ! Note these are the dimensions of the normal velocity array which is face-based
       do k = lo(3),  hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
@@ -110,7 +110,25 @@
 
                ! Ignore momentum residual in stagnant regions.  Need an alternative
                ! criteria for residual scaling for such cases.
-               magvel = sqrt(vel(i,j,k)**2 + vels1(i,j,k)**2+ vels2(i,j,k)**2)
+               if (dir.eq.1) then
+                  vavg = 0.25d0 * (vels1(i  ,j,k) + vels1(i  ,j+1,k) + & 
+                                   vels1(i-1,j,k) + vels1(i-1,j+1,k) )
+                  wavg = 0.25d0 * (vels2(i  ,j,k) + vels2(i  ,j,k+1) + & 
+                                   vels2(i-1,j,k) + vels2(i-1,j,k+1) )
+                  magvel = sqrt(vel(i,j,k)**2 + vavg**2 + wavg**2)
+               else if (dir.eq.2) then
+                  wavg = 0.25d0 * (vels1(i,j  ,k) + vels1(i,j  ,k+1) + & 
+                                   vels1(i,j-1,k) + vels1(i,j-1,k+1) )
+                  uavg = 0.25d0 * (vels2(i,j  ,k) + vels2(i+1,j  ,k) + & 
+                                   vels2(i,j-1,k) + vels2(i+1,j-1,k) )
+                  magvel = sqrt(vel(i,j,k)**2 + wavg**2 + uavg**2)
+               else if (dir.eq.3) then
+                  uavg = 0.25d0 * (vels1(i,j,k  ) + vels1(i+1,j,k  ) + & 
+                                   vels1(i,j,k-1) + vels1(i+1,j,k-1) )
+                  vavg = 0.25d0 * (vels2(i,j,k  ) + vels2(i,j+1,k  ) + & 
+                                   vels2(i,j,k-1) + vels2(i,j+1,k-1) )
+                  magvel = sqrt(vel(i,j,k)**2 + uavg**2 + vavg**2)
+               end if
 
                if (magvel > small_number) then
                   num1 = abs(num1)

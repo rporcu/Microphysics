@@ -78,6 +78,7 @@ set( MGS_TESTS
      FLD03-x FLD03-y FLD03-z
      FLD04-x FLD04-y FLD04-z
      DEM06-x DEM06-y DEM06-z
+     DEM06p-x DEM06p-y DEM06p-z
      DEM07
    )
 
@@ -205,7 +206,7 @@ if ( ENABLE_OMP )
       target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
 
       set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
-	 RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
+   RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
 
       target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXTRA_LINK_LINE} )
 
@@ -215,7 +216,7 @@ if ( ENABLE_OMP )
       # Setup for running the a single test
       set(TEST_RUN run_${TEST_NAME}_TGSO)
       add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-	 COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OMP=1 OMP_NUM_THREADS=4
+   COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OMP=1 OMP_NUM_THREADS=4
          ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_tiled
          WORKING_DIRECTORY  ${TEST_DIR} )
 
@@ -225,11 +226,11 @@ if ( ENABLE_OMP )
 
       # Setup for running the whole suite of tests via ctest
       add_test(NAME ${TEST_NAME}_TGSO
-	 COMMAND make  ${TEST_RUN}
-	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+   COMMAND make  ${TEST_RUN}
+   WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
 
    endforeach( THIS_TEST ${TGS_TESTS} )
-   
+
 endif ()
 
 
@@ -239,6 +240,7 @@ set( TGM_TESTS
      FLD03-x FLD03-y FLD03-z
      FLD04-x FLD04-y FLD04-z
      DEM06-x DEM06-y DEM06-z
+     DEM06p-x DEM06p-y DEM06p-z
    )
 
 if (ENABLE_OMP AND ENABLE_MPI)
@@ -261,7 +263,7 @@ if (ENABLE_OMP AND ENABLE_MPI)
       target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
 
       set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
-	 RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
+   RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
 
       target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXTRA_LINK_LINE} )
 
@@ -271,7 +273,7 @@ if (ENABLE_OMP AND ENABLE_MPI)
       # Setup for running the a single test
       set(TEST_RUN run_${TEST_NAME}_TGPO)
       add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-	 COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=1 ENABLE_OMP=1 OMP_NUM_THREADS=2
+   COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=1 ENABLE_OMP=1 OMP_NUM_THREADS=2
          ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_multiple_tiled
          WORKING_DIRECTORY  ${TEST_DIR} )
 
@@ -281,8 +283,8 @@ if (ENABLE_OMP AND ENABLE_MPI)
 
       # Setup for running the whole suite of tests via ctest
       add_test(NAME ${TEST_NAME}_TGPO
-	 COMMAND make  ${TEST_RUN}
-	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+   COMMAND make  ${TEST_RUN}
+   WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
 
    endforeach( THIS_TEST ${TGM_TESTS} )
 endif()
@@ -296,6 +298,7 @@ set( MGP_TESTS
      FLD03-x FLD03-y FLD03-z
      FLD04-x FLD04-y FLD04-z
      DEM06-x DEM06-y DEM06-z
+     DEM06p-x DEM06p-y DEM06p-z
      DEM07
    )
 
@@ -343,5 +346,3 @@ foreach( THIS_TEST ${MGP_TESTS})
 
 endforeach( THIS_TEST ${MGP_TESTS} )
 endif (ENABLE_MPI)
-
-

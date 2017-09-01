@@ -19,7 +19,6 @@ class mfix_level
 {
 public:
 
-//  mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord);
     mfix_level ();
     ~mfix_level ();
 
@@ -81,7 +80,7 @@ protected:
     void mfix_init_fluid (int lev, int is_restarting = 0);
     void mfix_set_bc0 (int lev);
 
-    void mfix_conv_rop (int lev, Real dt);
+    void mfix_conv_rop (int lev);
 
     void mfix_calc_mflux (int lev);
 
@@ -199,33 +198,37 @@ private:
     // Molecular viscosity
     Array< std::unique_ptr<MultiFab> > mu_g ;
 
-    //
-    Array< std::unique_ptr<MultiFab> > lambda_g ;
-    Array< std::unique_ptr<MultiFab> > trD_g ;
+    // Cell-based
+    Array< std::unique_ptr<MultiFab> > lambda_g;
+    Array< std::unique_ptr<MultiFab> > trD_g;
 
-    //
-    Array< std::unique_ptr<MultiFab> > tau_u_g ;
-    Array< std::unique_ptr<MultiFab> > tau_v_g ;
-    Array< std::unique_ptr<MultiFab> > tau_w_g ;
-
-    Array< std::unique_ptr<MultiFab> > fluxX ;
-    Array< std::unique_ptr<MultiFab> > fluxY ;
-    Array< std::unique_ptr<MultiFab> > fluxZ ;
-
-    Array< std::unique_ptr<MultiFab> > ropX ;
-    Array< std::unique_ptr<MultiFab> > ropY ;
-    Array< std::unique_ptr<MultiFab> > ropZ ;
-
-    //
-    Array< std::unique_ptr<MultiFab> > f_gds  ;
-    Array< std::unique_ptr<MultiFab> > drag_bm;
+    // Face-based
+    Array< std::unique_ptr<MultiFab> > tau_u_g;
+    Array< std::unique_ptr<MultiFab> > tau_v_g;
+    Array< std::unique_ptr<MultiFab> > tau_w_g;
+    
+    Array< std::unique_ptr<MultiFab> > fluxX;
+    Array< std::unique_ptr<MultiFab> > fluxY;
+    Array< std::unique_ptr<MultiFab> > fluxZ;
+   
+    Array< std::unique_ptr<MultiFab> > ropX;
+    Array< std::unique_ptr<MultiFab> > ropY;
+    Array< std::unique_ptr<MultiFab> > ropZ;
+  
+    Array< std::unique_ptr<MultiFab> > f_gds_u;
+    Array< std::unique_ptr<MultiFab> > f_gds_v;
+    Array< std::unique_ptr<MultiFab> > f_gds_w;
+ 
+    Array< std::unique_ptr<MultiFab> > drag_u;
+    Array< std::unique_ptr<MultiFab> > drag_v;
+    Array< std::unique_ptr<MultiFab> > drag_w;
 
     int solve_fluid;
     int solve_dem;
     int max_nit;
     int call_udf;
 
-    int use_pic;
+    static std::string particle_init_type;
 
     Real cfl = 0.7;
 

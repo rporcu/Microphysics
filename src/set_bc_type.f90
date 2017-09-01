@@ -26,6 +26,7 @@ module set_bc_type_module
       use bc, only: pinf_, pout_
       use bc, only: minf_
       use bc, only: undef_cell, cycl_
+      use bc, only: cyclic_x, cyclic_y, cyclic_z
 
       use bc, only: bc_x_w, bc_y_s, bc_z_b
       use bc, only: bc_x_e, bc_y_n, bc_z_t
@@ -62,12 +63,12 @@ module set_bc_type_module
 
       integer :: i_w, j_s, k_b, i_e, j_n, k_t
 
-      bc_ilo_type(:,:,1) = undef_cell
-      bc_ihi_type(:,:,1) = undef_cell
-      bc_jlo_type(:,:,1) = undef_cell
-      bc_jhi_type(:,:,1) = undef_cell
-      bc_klo_type(:,:,1) = undef_cell
-      bc_khi_type(:,:,1) = undef_cell
+      bc_ilo_type(:,:,1) = merge(undef_cell, nsw_, cyclic_x)
+      bc_ihi_type(:,:,1) = merge(undef_cell, nsw_, cyclic_x)
+      bc_jlo_type(:,:,1) = merge(undef_cell, nsw_, cyclic_y)
+      bc_jhi_type(:,:,1) = merge(undef_cell, nsw_, cyclic_y)
+      bc_klo_type(:,:,1) = merge(undef_cell, nsw_, cyclic_z)
+      bc_khi_type(:,:,1) = merge(undef_cell, nsw_, cyclic_z)
 
       do bcv = 1, dim_bc
          if (bc_defined(bcv)) then

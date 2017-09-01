@@ -118,12 +118,25 @@ public:
     ///
     /// Calculate particle-induced drag on the fluid
     ///
-    void CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf);
+    void CalcDragOnFluid(amrex::MultiFab& beta_mf_u, 
+                         amrex::MultiFab& beta_mf_v,
+                         amrex::MultiFab& beta_mf_w,
+                         amrex::MultiFab& beta_u_mf,
+                         amrex::MultiFab& beta_v_mf,
+                         amrex::MultiFab& beta_w_mf,
+                         IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                         IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                         IArrayBox& bc_klo, IArrayBox& bc_khi);
 
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-    void PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf, int fortran_beta_comp, int fortran_vel_comp);
+    void PICMultiDeposition(amrex::MultiFab& beta_x_mf, amrex::MultiFab& beta_y_mf, amrex::MultiFab& beta_z_mf, 
+                            amrex::MultiFab& beta_u_mf, amrex::MultiFab& beta_v_mf, amrex::MultiFab& beta_w_mf, 
+                            IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                            IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                            IArrayBox& bc_klo, IArrayBox& bc_khi,
+                            int fortran_beta_comp, int fortran_vel_comp);
 
 private:
 
