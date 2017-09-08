@@ -104,6 +104,7 @@ protected:
     void mfix_calc_drag_particle(int lev);
 
     void AllocateArrays(int lev);
+    void Regrid(int lev, BoxArray& new_grids, DistributionMapping& new_dmap);
 
 private:
 
@@ -112,7 +113,8 @@ private:
     void InitIOData ();
 
     void MakeNewLevelFromScratch(int lev, Real time,
-           const BoxArray& new_grids, const DistributionMapping& new_dmap);
+          const BoxArray& new_grids, const DistributionMapping& new_dmap);
+
 
     void WriteHeader(const std::string& name, int nstep, Real dt, Real time) const;
 

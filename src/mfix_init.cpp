@@ -101,14 +101,10 @@ mfix_level::MakeBaseGrids () const
 void
 mfix_level::MakeNewLevelFromScratch (int lev, Real time,
              const BoxArray& new_grids, const DistributionMapping& new_dmap)
+
 {
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
-
-#if 0
-    t_new[lev] = time;
-    t_old[lev] = time - 1.e200;
-#endif
 
     int nghost = 2;
 
@@ -223,8 +219,7 @@ mfix_level::AllocateArrays (int lev)
 
     //
     lambda_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    lambda_g[lev]->setVal(0.);
-
+    lambda_g[lev]->setVal(0.); 
     //
     trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     trD_g[lev]->setVal(0.);
@@ -377,10 +372,11 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
       if (load_balance_type == "KDTree")
       {
+         amrex::Print() << "Before KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
          pc -> BalanceParticleLoad_KDTree ();
          SetBoxArray(lev, pc->ParticleBoxArray(lev));
          SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
-         amrex::Print() << "After KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
+         amrex::Print() << "After  KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
       }
 
       Real avg_dp[10], avg_ro[10];
