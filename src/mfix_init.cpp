@@ -373,10 +373,14 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       if (load_balance_type == "KDTree")
       {
          amrex::Print() << "Before KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
+         if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+            amrex::Print() << "Before:" << grids[lev] << std::endl;
          pc -> BalanceParticleLoad_KDTree ();
          SetBoxArray(lev, pc->ParticleBoxArray(lev));
          SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
          amrex::Print() << "After  KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
+         if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+            amrex::Print() << "After:" << grids[lev] << std::endl;
       }
 
       Real avg_dp[10], avg_ro[10];
