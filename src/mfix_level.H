@@ -104,6 +104,7 @@ protected:
     void mfix_calc_drag_particle(int lev);
 
     void AllocateArrays(int lev);
+    void Regrid(int lev, BoxArray& new_grids, DistributionMapping& new_dmap);
 
 private:
 
@@ -112,7 +113,8 @@ private:
     void InitIOData ();
 
     void MakeNewLevelFromScratch(int lev, Real time,
-           const BoxArray& new_grids, const DistributionMapping& new_dmap);
+          const BoxArray& new_grids, const DistributionMapping& new_dmap);
+
 
     void WriteHeader(const std::string& name, int nstep, Real dt, Real time) const;
 
@@ -126,10 +128,10 @@ private:
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
 
-  void mfix_set_bc_type(int lev);
-  void mfix_set_bc1(int lev);
+    void mfix_set_bc_type(int lev);
+    void mfix_set_bc1(int lev);
 
-  void fill_mf_bc(int lev,  MultiFab& mf);
+    void fill_mf_bc(int lev,  MultiFab& mf);
 #if 0
     void WritePlotFile () const;
 
@@ -229,6 +231,7 @@ private:
     int call_udf;
 
     static std::string particle_init_type;
+    static std::string load_balance_type;
 
     Real cfl = 0.7;
 

@@ -3,6 +3,7 @@ set(CXX_sources
    mfix_evolve.cpp
    mfix_init.cpp
    mfix_level.cpp
+   mfix_regrid.cpp
    solve_bicgstab.cpp
    MFIXParticleContainer.cpp
    io/mfixIO.cpp)

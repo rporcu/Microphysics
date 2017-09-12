@@ -18,8 +18,8 @@ subroutine init_collision(d_p0, ro_s0)&
   real(c_real), intent(in) :: d_p0(dim_m), ro_s0(dim_m)
 
   select case (des_coll_model_enum)
-  case(lsd); call init_collision_lsd
-  case(hertzian); call init_collision_hertz
+     case(lsd)     ; call init_collision_lsd
+     case(hertzian); call init_collision_hertz
   end select
 
 contains
