@@ -92,11 +92,11 @@ Clone AMReX from the official Git repository and checkout the _development_ bran
 ```
 Next, configure, build and install AMReX as follows: 
 ```shell
-> cmake AMREX_CONFIG_OPTIONS -DENABLE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=/absolute/path/to/installdir .
+> cmake AMREX_CONFIG_OPTIONS -DENABLE_PARTICLES=1 -DENABLE_FBASELIB=1 -DCMAKE_INSTALL_PREFIX:PATH=/absolute/path/to/installdir .
 > make install
 ```
 Here,`AMREX_CONFIG_OPTIONS` are optional configure options for AMReX. Please refer to the AMReX user guide
-for a list of all the possible configuration options. The only option required is __-DENABLE_PARTICLES=1__.
+for a list of all the possible configuration options. The only options required are __-DENABLE_PARTICLES=1__ and __-DENABLE_FBASELIB=1__.
 
 ### Building MFIX-Exa
 Clone and build MFIX-Exa.

@@ -758,8 +758,13 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
     beta_u_mf.copy(*beta_u_ptr,0,0,1);
     beta_v_mf.copy(*beta_v_ptr,0,0,1);
     beta_w_mf.copy(*beta_w_ptr,0,0,1);
-    delete beta_x_ptr, beta_y_ptr, beta_z_ptr;
-    delete beta_u_ptr, beta_v_ptr, beta_w_ptr;
+
+    delete beta_x_ptr;
+    delete beta_y_ptr; 
+    delete beta_z_ptr;
+    delete beta_u_ptr; 
+    delete beta_v_ptr; 
+    delete beta_w_ptr;
 
     Box domain(Geom(lev).Domain());
 
