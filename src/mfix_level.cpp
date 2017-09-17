@@ -284,7 +284,7 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
 
        Box dbx((*drag_u[lev])[mfi].box());
 
-  solve_u_g_star(sbx.loVect(), sbx.hiVect(),
+       solve_u_g_star(sbx.loVect(), sbx.hiVect(),
            ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
            wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(), 
            dbx.loVect(), dbx.hiVect(), bx.loVect(),  bx.hiVect(),
@@ -304,22 +304,6 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
     denom_u = temp_denom;
 
     int eq_id=2;
-
-    if (u_gt[lev]->contains_nan())
-    {
-        std::cout << "U_GT HAS NANS BEFORE SOLVE" << std::endl;
-        exit(0);
-    }
-    if (A_m[lev]->contains_nan())
-    {
-        std::cout << "A HAS NANS BEFORE SOLVE" << std::endl;
-        exit(0);
-    }
-    if (b_m[lev]->contains_nan())
-    {
-        std::cout << "B HAS NANS BEFORE SOLVE" << std::endl;
-        exit(0);
-    }
 
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
@@ -613,19 +597,19 @@ mfix_level::mfix_correct_0(int lev)
 #endif
     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
     {
-  const Box& bx = mfi.tilebox();
-  const Box& sbx = (*p_g[lev])[mfi].box();
+       const Box& bx = mfi.tilebox();
+       const Box& sbx = (*p_g[lev])[mfi].box();
 
-  Box ubx((*u_g[lev])[mfi].box());
-  Box vbx((*v_g[lev])[mfi].box());
-  Box wbx((*w_g[lev])[mfi].box());
+       Box ubx((*u_g[lev])[mfi].box());
+       Box vbx((*v_g[lev])[mfi].box());
+       Box wbx((*w_g[lev])[mfi].box());
 
-  correct_w_0( bx.loVect(),  bx.hiVect(),
-         wbx.loVect(), wbx.hiVect(),
-         sbx.loVect(),  sbx.hiVect(),
-         (*pp_g[lev])[mfi].dataPtr(),
-         (*w_g[lev])[mfi].dataPtr(),
-         (*d_t[lev])[mfi].dataPtr());
+       correct_w_0( bx.loVect(),  bx.hiVect(),
+              wbx.loVect(), wbx.hiVect(),
+              sbx.loVect(),  sbx.hiVect(),
+              (*pp_g[lev])[mfi].dataPtr(),
+              (*w_g[lev])[mfi].dataPtr(),
+              (*d_t[lev])[mfi].dataPtr());
     }
 
     fill_mf_bc(lev,*p_g[lev]);
@@ -634,9 +618,6 @@ mfix_level::mfix_correct_0(int lev)
     v_g[lev]->FillBoundary(geom[lev].periodicity());
     w_g[lev]->FillBoundary(geom[lev].periodicity());
 }
-
-
-
 
 void
 mfix_level::mfix_physical_prop(int lev, int calc_flag)
@@ -647,12 +628,12 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
 #endif
     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
-  const Box& bx = mfi.tilebox();
-  const Box& sbx = (*p_g[lev])[mfi].box();
+       const Box& bx = mfi.tilebox();
+       const Box& sbx = (*p_g[lev])[mfi].box();
 
-  physical_prop(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),&calc_flag,
-          (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
-          (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
+       physical_prop(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),&calc_flag,
+               (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+               (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
     }
     fill_mf_bc(lev,*ro_g[lev]);
     fill_mf_bc(lev,*rop_g[lev]);
