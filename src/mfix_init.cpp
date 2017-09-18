@@ -106,9 +106,6 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
-    std::cout << "NEW_DMAP IN MAKE NEW " << new_dmap << std::endl;
-    std::cout << "    DMAP IN MAKE NEW " << dmap[lev] << std::endl;
-
     int nghost = 2;
 
     // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
@@ -381,31 +378,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
          amrex::Abort("Bad particle_init_type");
       }
 
-#if 0
-      if (load_balance_type == "KDTree")
-      {
-         amrex::Print() << "Before KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
-         if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
-         {
-            amrex::Print() << "Before:" << grids[lev] << std::endl;
-            amrex::Print() << "Before:" << dmap[lev] << std::endl;
-         }
-
-         pc -> BalanceParticleLoad_KDTree ();
-
-         SetBoxArray(lev, pc->ParticleBoxArray(lev));
-         SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
-
-         amrex::Print() << "After  KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
-         if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
-         {
-            amrex::Print() << "After:" << grids[lev] << std::endl;
-            amrex::Print() << "PCDM:" << pc->ParticleDistributionMap(lev) << std::endl;
-            amrex::Print() << "After:" << dmap[lev] << std::endl;
-         }
-      }
-#endif
-
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
 
@@ -423,10 +395,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   {
      amrex::Print() << "Before KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
      if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
-     {
         amrex::Print() << "Before:" << grids[lev] << std::endl;
-        amrex::Print() << "Before:" << dmap[lev] << std::endl;
-     }
 
      pc -> BalanceParticleLoad_KDTree ();
 
@@ -435,10 +404,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
      amrex::Print() << "After  KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
      if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
-     {
         amrex::Print() << "After:" << grids[lev] << std::endl;
-        amrex::Print() << "After:" << dmap[lev] << std::endl;
-     }
  
      // Since we have already allocated the fluid data we need to re-define those arrays
      //   and copy from the old BoxArray to the new one.  Note that the SetBoxArray and
