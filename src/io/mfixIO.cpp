@@ -263,7 +263,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 
     // Initialize the field data
     for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
-    {	
+    {
 	// Read vector variables
 	for (int i = 0; i < vectorVars.size(); i++ ) {
     	    MultiFab mf;
@@ -332,15 +332,9 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     // Initialize particles
     pc->Restart(restart_file, "particles");
 
-    Array<Real> orig_domain_size;
-    orig_domain_size.resize(BL_SPACEDIM);
-    for (int d = 0; d < BL_SPACEDIM; d++)
-       orig_domain_size[d] = (prob_hi[d] - prob_lo[d]) / Nrep[d];
-    pc->Replicate(Nrep,orig_domain_size);
-
-    //  Create mask for particle ghost cells
+    // This call to Replicate adds the new particles, then calls BuildLevelMask and Redistribute
     int lev = 0;
-    pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
+    pc->Replicate(Nrep,geom[lev],dmap[lev],grids[lev]);
 }
 
 void

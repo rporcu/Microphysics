@@ -340,7 +340,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
   // Allocate the particle arrays
   if (solve_dem)
-    {
+  {
       int lev = 0;
       pc -> AllocData();
 
@@ -382,10 +382,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
 
       init_collision(avg_dp, avg_ro);
-
-      //  Create mask for particle ghost cells
-      pc -> InitLevelMask( lev, geom[lev], dmap[lev], grids[lev] );
-    }
+  }
 
   // Note we allocate the arrays *after* we have potentially re-made the BoxArray (grids)
   //    based on the particle distribution
@@ -410,6 +407,9 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
      //   and copy from the old BoxArray to the new one.  Note that the SetBoxArray and
      //   SetDistributionMap calls above have re-defined grids and dmap to be the new ones.
      Regrid(lev,grids[lev],dmap[lev]);
+
+    //  Re-create mask for particle ghost cells
+    pc -> Regrid( dmap[lev], grids[lev] );
   }
 
   mfix_set_bc0(lev);

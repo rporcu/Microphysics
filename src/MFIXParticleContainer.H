@@ -59,6 +59,7 @@ public:
     // Get number of particles
     int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
 
+#if 0
     int NumberOfParticles(int& lev, MFIter& mfi)
     {
       const int gridIndex = mfi.index();
@@ -67,6 +68,7 @@ public:
       auto&     structs   = particles.GetArrayOfStructs();
       return structs.size();
     }
+#endif
 
     MFIXParticleContainer (AmrCore* amr_core);
 
@@ -76,7 +78,7 @@ public:
 
     void InitParticlesAscii (const std::string& file);
 
-    void Replicate (IntVect& Nrep, amrex::Array<Real>& orig_domain_size);
+    void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 
     void printParticles ();
 

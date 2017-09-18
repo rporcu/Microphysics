@@ -106,12 +106,16 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
     }
   }
   Redistribute();
-
 }
 
-void MFIXParticleContainer::Replicate(IntVect& Nrep, Array<Real>& orig_domain_size)
+void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba)
 {
     int lev = 0;
+
+    Array<Real> orig_domain_size;
+    orig_domain_size.resize(BL_SPACEDIM);
+    for (int d = 0; d < BL_SPACEDIM; d++) orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
+
     ParticleType p_rep;
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
@@ -167,6 +171,7 @@ void MFIXParticleContainer::Replicate(IntVect& Nrep, Array<Real>& orig_domain_si
         } // p
     } // pti
 
+    BuildLevelMask(lev,geom,dmap,ba);
     Redistribute();
 }
 
