@@ -325,6 +325,14 @@ mfix_level::AllocateArrays (int lev)
 
     drag_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
     drag_w[lev]->setVal(0.);
+
+    Array<long> num_part = pc->NumberOfParticlesInGrid(lev);
+
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+    {
+       std::cout << "GRID BOX         " << grids[lev][mfi.index()] << std::endl;
+       std::cout << "NUM PART IN GRID " << mfi.index() << " " << num_part[mfi.index()] << std::endl;
+    }
 }
 
 void
@@ -362,7 +370,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
          int phase = 0;
          int state = 0;
          MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
-            velx,vely,velz,omegax,omegax,omegaz,dragx,dragy,dragz,phase,state};
+            velx,vely,velz,omegax,omegay,omegaz,dragx,dragy,dragz,phase,state};
          pc->InitNRandomPerCell(n_per_cell, pdata);
          pc->WriteAsciiFile ("random_particles");
          exit(0);
@@ -370,18 +378,26 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
          amrex::Abort("Bad particle_init_type");
       }
 
+#if 0
       if (load_balance_type == "KDTree")
       {
          amrex::Print() << "Before KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
          if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+         {
             amrex::Print() << "Before:" << grids[lev] << std::endl;
+            amrex::Print() << "Before:" << dmap[lev] << std::endl;
+         }
          pc -> BalanceParticleLoad_KDTree ();
          SetBoxArray(lev, pc->ParticleBoxArray(lev));
          SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
          amrex::Print() << "After  KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
          if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+         {
             amrex::Print() << "After:" << grids[lev] << std::endl;
+            amrex::Print() << "After:" << dmap[lev] << std::endl;
+         }
       }
+#endif
 
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
@@ -395,6 +411,27 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   // Note we allocate the arrays *after* we have potentially re-made the BoxArray (grids)
   //    based on the particle distribution
   AllocateArrays(lev);
+
+  if (load_balance_type == "KDTree")
+  {
+     amrex::Print() << "Before KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
+     if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+        amrex::Print() << "Before:" << grids[lev] << std::endl;
+
+     pc -> BalanceParticleLoad_KDTree ();
+
+     SetBoxArray(lev, pc->ParticleBoxArray(lev));
+     SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
+
+     amrex::Print() << "After  KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
+     if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+        amrex::Print() << "After:" << grids[lev] << std::endl;
+ 
+     // Since we have already allocated the fluid data we need to re-define those arrays
+     //   and copy from the old BoxArray to the new one.  Note that the SetBoxArray and
+     //   SetDistributionMap calls above have re-defined grids and dmap to be the new ones.
+     Regrid(lev,grids[lev],dmap[lev]);
+  }
 
   mfix_set_bc0(lev);
 
