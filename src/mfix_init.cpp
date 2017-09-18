@@ -378,6 +378,8 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
          amrex::Abort("Bad particle_init_type");
       }
 
+      pc -> BuildLevelMask(lev,geom[lev],dmap[lev],grids[lev]);
+
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
 
