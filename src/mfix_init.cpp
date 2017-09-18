@@ -400,7 +400,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   mfix_init_fluid(lev);
 
   if (solve_dem)
-    {
+  {
      mfix_calc_volume_fraction(lev,sum_vol_orig);
      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
   }
@@ -520,7 +520,6 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
 
   fill_mf_bc(lev,*mu_g[lev]);
   fill_mf_bc(lev,*lambda_g[lev]);
-
 }
 
 

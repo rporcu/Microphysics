@@ -236,4 +236,20 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     std::unique_ptr<MultiFab> drag_w_new(new MultiFab(z_edge_ba,new_dmap,1,drag_w[lev]->nGrow()));
     drag_w_new->copy(*drag_w[lev]);
     drag_w[lev] = std::move(drag_w_new);
+
+    // ********************************************************************************
+    // Make sure we fill the ghost cells as appropriate -- this is copied from init_fluid
+    // ********************************************************************************
+
+    fill_mf_bc(lev,*p_g[lev]);
+    fill_mf_bc(lev,*ep_g[lev]);
+    fill_mf_bc(lev,*ro_g[lev]);
+    fill_mf_bc(lev,*rop_g[lev]);
+
+    u_g[lev]->FillBoundary(geom[lev].periodicity());
+    v_g[lev]->FillBoundary(geom[lev].periodicity());
+    w_g[lev]->FillBoundary(geom[lev].periodicity());
+
+    fill_mf_bc(lev,*mu_g[lev]);
+    fill_mf_bc(lev,*lambda_g[lev]);
 }
