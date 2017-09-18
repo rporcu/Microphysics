@@ -721,10 +721,6 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
 {
     BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
 
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-
     Box domain(geom[lev].Domain());
 
     // This re-calculates the volume fraction within the domain
@@ -758,8 +754,6 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
     drag_u[lev]->setVal(0.0L);
     drag_v[lev]->setVal(0.0L);
     drag_w[lev]->setVal(0.0L);
-
-    int use_dummy = 1;
 
 #ifdef _OPENMP
 #pragma omp parallel

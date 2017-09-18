@@ -17,6 +17,11 @@ mfix_level::Regrid (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)
     ep_g_new->copy(*ep_g[lev]);
     ep_g[lev] = std::move(ep_g_new);
 
+    // Old void fraction
+    std::unique_ptr<MultiFab> ep_go_new(new MultiFab(new_grids,new_dmap,1,ep_go[lev]->nGrow()));
+    ep_go_new->copy(*ep_go[lev]);
+    ep_go[lev] = std::move(ep_go_new);
+
     // Gas pressure fraction
     std::unique_ptr<MultiFab> p_g_new(new MultiFab(new_grids,new_dmap,1,p_g[lev]->nGrow()));
     p_g_new->copy(*p_g[lev]);

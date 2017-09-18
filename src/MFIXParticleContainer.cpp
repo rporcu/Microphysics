@@ -120,8 +120,6 @@ void MFIXParticleContainer::Replicate(IntVect& Nrep, Array<Real>& orig_domain_si
 
         for (const auto& p: particles)
         {
-           const IntVect& iv = Index(p, lev);
-
            //
            // Shift the position.
            //
@@ -377,17 +375,15 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 #endif
        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-         const int np     = NumberOfParticles(pti);
-
          auto& particles = pti.GetArrayOfStructs();
 
-      for (const auto& p: particles)
-      {
-          max_vel_x = std::max(Real(p.rdata(realData::velx)), max_vel_x);
-          max_vel_y = std::max(Real(p.rdata(realData::vely)), max_vel_y);
-          max_vel_z = std::max(Real(p.rdata(realData::velz)), max_vel_z);
-      }
-    }
+         for (const auto& p: particles)
+         {
+             max_vel_x = std::max(Real(p.rdata(realData::velx)), max_vel_x);
+             max_vel_y = std::max(Real(p.rdata(realData::vely)), max_vel_y);
+             max_vel_z = std::max(Real(p.rdata(realData::velz)), max_vel_z);
+         }
+       }
 
        ParallelDescriptor::ReduceRealMax(max_vel_x,ParallelDescriptor::IOProcessorNumber());
        ParallelDescriptor::ReduceRealMax(max_vel_y,ParallelDescriptor::IOProcessorNumber());
@@ -850,8 +846,6 @@ void MFIXParticleContainer::writeAllForComparison(int lev)
   ParallelDescriptor::ReduceIntSum(Np_tot,ParallelDescriptor::IOProcessorNumber());
 
   cout << Np_tot << std::endl;
-
-  Real dummy = 0.;
 
   // Not threaded because its print to terminal
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
