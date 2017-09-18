@@ -9,8 +9,9 @@
 #include <mfix_level.H>
 #include <mfix_F.H>
 
-int   max_step = -1;
-int   verbose  = -1;
+int   max_step    = -1;
+int   verbose     = -1;
+int   regrid_int  = -1;
 Real stop_time = -1.0;
 
 std::string restart_file {""};
@@ -63,6 +64,8 @@ void ReadParameters ()
   pp.query("repl_y", repl_y);
   pp.query("repl_z", repl_z);
   pp.query("verbose", verbose);
+
+  pp.query("regrid_int",regrid_int);
 }
 
 int main (int argc, char* argv[])
@@ -168,6 +171,9 @@ int main (int argc, char* argv[])
           mfix_usr1();
 
           Real strt_step = ParallelDescriptor::second();
+
+          if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
+             my_mfix.Regrid(lev,nstep);
 
           my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
 

@@ -39,6 +39,8 @@ public:
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
 
+    void Regrid (int lev, int nstep);
+
     void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
 
@@ -104,7 +106,7 @@ protected:
     void mfix_calc_drag_particle(int lev);
 
     void AllocateArrays(int lev);
-    void Regrid(int lev, BoxArray& new_grids, DistributionMapping& new_dmap);
+    void RegridArrays(int lev, BoxArray& new_grids, DistributionMapping& new_dmap);
 
 private:
 

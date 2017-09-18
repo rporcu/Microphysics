@@ -6,7 +6,37 @@
 #include <AMReX_Box.H>
 
 void
-mfix_level::Regrid (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)
+mfix_level::Regrid (int lev, int nstep)
+{
+    amrex::Print() << "In Regrid at step " << nstep << std::endl;
+
+    if (load_balance_type == "KDTree")
+    {
+       amrex::Print() << "Before KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
+       if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+          amrex::Print() << "Before:" << grids[lev] << std::endl;
+  
+       pc -> BalanceParticleLoad_KDTree ();
+  
+       SetBoxArray(lev, pc->ParticleBoxArray(lev));
+       SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
+  
+       amrex::Print() << "After  KDTree BA HAS " << grids[lev].size() << " GRIDS " << std::endl;
+       if (grids[lev].size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+          amrex::Print() << "After:" << grids[lev] << std::endl;
+
+       // Since we have already allocated the fluid data we need to re-define those arrays
+       //   and copy from the old BoxArray to the new one.  Note that the SetBoxArray and
+       //   SetDistributionMap calls above have re-defined grids and dmap to be the new ones.
+       RegridArrays(lev,grids[lev],dmap[lev]);
+
+      //  Re-create mask for particle ghost cells
+      pc -> Regrid( dmap[lev], grids[lev] );
+    }
+}
+
+void
+mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)
 {
     // ********************************************************************************
     // Cell-based arrays
