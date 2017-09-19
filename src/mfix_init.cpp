@@ -219,7 +219,7 @@ mfix_level::AllocateArrays (int lev)
 
     //
     lambda_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    lambda_g[lev]->setVal(0.); 
+    lambda_g[lev]->setVal(0.);
     //
     trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     trD_g[lev]->setVal(0.);
@@ -392,8 +392,7 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
   mfix_init_fluid(lev,restart_flag);
 
   // Call user-defined subroutine to set constants, check data, etc.
-  // if (call_udf)
-  //  usr0();
+  if (call_udf) mfix_usr0();
 
   // Calculate all the coefficients once before entering the time loop
   int calc_flag = 2;
