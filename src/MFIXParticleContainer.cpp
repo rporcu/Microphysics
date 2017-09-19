@@ -912,17 +912,30 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
 void
 MFIXParticleContainer::BalanceParticleLoad_KDTree()
 {
+  BoxArray old_ba = ParticleBoxArray(0);
+  amrex::Print() << "Before KDTree BA HAS " << old_ba.size() << " GRIDS " << std::endl;
+       if (old_ba.size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+          amrex::Print() << "Before:" << old_ba << std::endl;
+
+  Array<long> num_part;
+  num_part = NumberOfParticlesInGrid(0);
+  for (int i = 0; i < old_ba.size(); i++)
+     amrex::Print() << "NUM PART IN GRID BEFORE " << i << " " << num_part[i] << std::endl;
+
   BoxArray new_ba;
-  loadBalanceKD::balance<MFIXParticleContainer>(*this, new_ba, ParallelDescriptor::NProcs());
+  Real cell_weight = 0.;
+  loadBalanceKD::balance<MFIXParticleContainer>(*this, new_ba, ParallelDescriptor::NProcs(), cell_weight);
 
-  Array<int> new_pmap;
-  for (int i = 0; i < new_ba.size(); ++i) {
-    new_pmap.push_back(0);
-  }
+  amrex::Print() << "After  KDTree BA HAS " << new_ba.size() << " GRIDS " << std::endl;
+  if (new_ba.size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+         amrex::Print() << "After:" << new_ba << std::endl;
 
-  SetParticleBoxArray(0, new_ba);
- 
-  DistributionMapping new_dm(new_pmap);
-  SetParticleDistributionMap(0, new_dm);
-  Redistribute();
+  num_part = NumberOfParticlesInGrid(0);
+  for (int i = 0; i < old_ba.size(); i++)
+     amrex::Print() << "NUM PART IN GRID AFTER  " << i << " " << num_part[i] << std::endl;
+
+  // Create a new DM to go with the new BA
+  DistributionMapping new_dm(new_ba);
+  
+  Regrid(new_dm, new_ba);
 }

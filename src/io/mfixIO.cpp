@@ -254,6 +254,11 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 
             if (ParallelDescriptor::IOProcessor())
                std::cout << " NEW BA HAS " << ba.size() << " GRIDS " << std::endl;
+
+            // Initialize particles before we reset the ParticleBoxArray by calling SetBoxArray
+            if (lev == 0)
+               pc->Restart(restart_file, "particles");
+
             SetBoxArray(lev, ba);
        	    DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
             SetDistributionMap(lev, dm);
@@ -328,9 +333,6 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
             }
 	}
     }
-
-    // Initialize particles
-    pc->Restart(restart_file, "particles");
 
     // This call to Replicate adds the new particles, then calls BuildLevelMask and Redistribute
     int lev = 0;
