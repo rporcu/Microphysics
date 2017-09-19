@@ -123,14 +123,17 @@ int main (int argc, char* argv[])
     my_mfix.Init(lev,dt,time);
 
     // Either init from scratch or from the checkpoint file
+    int restart_flag = 0;
     if (restart_file.empty())
     {
        my_mfix.InitLevelData(lev,dt,time);
     } else {
+       restart_flag = 1;
        IntVect Nrep(repl_x,repl_y,repl_z);
        my_mfix.Restart( restart_file, &nstep, &dt, &time, Nrep);
-       my_mfix.InitLevelDataFromRestart( lev, dt, time );
     }
+
+    my_mfix.PostInit( lev, dt, time, nstep, restart_flag );
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());

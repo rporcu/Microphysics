@@ -325,14 +325,6 @@ mfix_level::AllocateArrays (int lev)
 
     drag_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
     drag_w[lev]->setVal(0.);
-
-    Array<long> num_part = pc->NumberOfParticlesInGrid(lev);
-
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-    {
-       std::cout << "GRID BOX         " << grids[lev][mfi.index()] << std::endl;
-       std::cout << "NUM PART IN GRID " << mfi.index() << " " << num_part[mfi.index()] << std::endl;
-    }
 }
 
 void
@@ -379,43 +371,15 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       }
 
       pc -> BuildLevelMask(lev,geom[lev],dmap[lev],grids[lev]);
-
-      Real avg_dp[10], avg_ro[10];
-      pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
-
-      init_collision(avg_dp, avg_ro);
   }
-
-  // Note we allocate the arrays *after* we have potentially re-made the BoxArray (grids)
-  //    based on the particle distribution
   AllocateArrays(lev);
-
-  // This checks if we want to regrid using the KDTree approach -- if not then it does nothing
-  int nstep = 0;
-  Regrid(lev,nstep);
-
-  mfix_set_bc0(lev);
-
-  // Initial fluid arrays: pressure, velocity, density, viscosity
-  mfix_init_fluid(lev);
-
-  if (solve_dem)
-  {
-     mfix_calc_volume_fraction(lev,sum_vol_orig);
-     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
-  }
-
-  // Call user-defined subroutine to set constants, check data, etc.
-  if (call_udf) mfix_usr0();
-
-  // Calculate all the coefficients once before entering the time loop
-  int calc_flag = 2;
-  mfix_calc_coeffs(lev,calc_flag);
 }
 
-void
-mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
+void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag)
 {
+  // This checks if we want to regrid using the KDTree approach -- if not then it does nothing
+  Regrid(lev,nstep);
+
   if (solve_dem) {
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
@@ -425,7 +389,7 @@ mfix_level::InitLevelDataFromRestart(int lev, Real dt, Real time)
   mfix_set_bc0(lev);
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
-  mfix_init_fluid(lev,1);
+  mfix_init_fluid(lev,restart_flag);
 
   // Call user-defined subroutine to set constants, check data, etc.
   // if (call_udf)
