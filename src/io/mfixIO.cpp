@@ -229,9 +229,9 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        	    BoxArray orig_ba,ba;
        	    orig_ba.readFrom(is);
        	    GotoNextLine(is);
+
+
             Box orig_domain(orig_ba.minimalBox());
-            if (ParallelDescriptor::IOProcessor())
-               std::cout << " OLD BA HAS " << orig_ba.size() << " GRIDS " << std::endl;
 
             BoxList bl;
             for (int nb = 0; nb < orig_ba.size(); nb++) {
@@ -252,8 +252,13 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
             }
             ba.define(bl);
 
-            if (ParallelDescriptor::IOProcessor())
-               std::cout << " NEW BA HAS " << ba.size() << " GRIDS " << std::endl;
+            Box new_domain(ba.minimalBox());
+            geom[lev].Domain(new_domain);
+
+            amrex::Print() << " OLD BA had " << orig_ba.size()  << " GRIDS " << std::endl;
+            amrex::Print() << " NEW BA has " <<      ba.size()  << " GRIDS " << std::endl;
+            amrex::Print() << " OLD Domain" << orig_domain      << std::endl;
+            amrex::Print() << " NEW Domain" << geom[0].Domain() << std::endl;
 
             // Initialize particles before we reset the ParticleBoxArray by calling SetBoxArray
             if (lev == 0)

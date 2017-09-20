@@ -489,8 +489,6 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
 void
 mfix_level::mfix_set_bc0(int lev)
 {
-
-  // Array already allocated when restart is called
   Box domain(geom[lev].Domain());
 
   // Don't tile this -- at least for now
