@@ -16,7 +16,12 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
   {
     mfix_calc_volume_fraction(lev,sum_vol);
 //  Print() << "Testing new sum_vol " << sum_vol << " against original sum_vol " << sum_vol_orig << std::endl;
-    if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) amrex::Abort("Volume fraction in domain has changed!");
+    if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) 
+    {
+       amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
+       amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
+       amrex::Abort("Volume fraction in domain has changed!");
+    }
   }
 
   if (solve_fluid)

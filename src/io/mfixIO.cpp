@@ -229,9 +229,21 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        	    BoxArray orig_ba,ba;
        	    orig_ba.readFrom(is);
        	    GotoNextLine(is);
+
+            SetBoxArray(lev,orig_ba);
+       	    DistributionMapping orig_dm { orig_ba, ParallelDescriptor::NProcs() };
+            SetDistributionMap(lev,orig_dm);
+
             Box orig_domain(orig_ba.minimalBox());
-            if (ParallelDescriptor::IOProcessor())
-               std::cout << " OLD BA HAS " << orig_ba.size() << " GRIDS " << std::endl;
+
+            if (Nrep != IntVect::TheUnitVector())
+            {
+               amrex::Print() << " OLD BA had " << orig_ba.size()  << " GRIDS " << std::endl;
+               amrex::Print() << " OLD Domain" << orig_domain      << std::endl;
+            }
+
+            if (lev == 0)
+               pc->Restart(restart_file, "particles");
 
             BoxList bl;
             for (int nb = 0; nb < orig_ba.size(); nb++) {
@@ -252,11 +264,18 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
             }
             ba.define(bl);
 
-            if (ParallelDescriptor::IOProcessor())
-               std::cout << " NEW BA HAS " << ba.size() << " GRIDS " << std::endl;
-            SetBoxArray(lev, ba);
-       	    DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
-            SetDistributionMap(lev, dm);
+            if (Nrep != IntVect::TheUnitVector())
+            {
+               Box new_domain(ba.minimalBox());
+               geom[lev].Domain(new_domain);
+
+               amrex::Print() << " NEW BA has " <<      ba.size()  << " GRIDS " << std::endl;
+               amrex::Print() << " NEW Domain" << geom[0].Domain() << std::endl;
+
+       	       DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
+               ReMakeNewLevelFromScratch(lev,ba,dm);
+            }
+
             AllocateArrays(lev);
        	}
     }
@@ -329,12 +348,18 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 	}
     }
 
-    // Initialize particles
-    pc->Restart(restart_file, "particles");
+    if (Nrep != IntVect::TheUnitVector())
+    {
+       // This call to Replicate adds the new particles, 
+       //      then calls BuildLevelMask and Redistribute
+       int lev = 0;
+       pc->Replicate(Nrep,geom[lev],dmap[lev],grids[lev]);
 
-    // This call to Replicate adds the new particles, then calls BuildLevelMask and Redistribute
-    int lev = 0;
-    pc->Replicate(Nrep,geom[lev],dmap[lev],grids[lev]);
+       // Fill the bc's after the replication just in case
+       u_g[lev]->FillBoundary(geom[lev].periodicity());
+       v_g[lev]->FillBoundary(geom[lev].periodicity());
+       w_g[lev]->FillBoundary(geom[lev].periodicity());
+    }
 }
 
 void

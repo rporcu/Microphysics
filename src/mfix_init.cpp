@@ -137,16 +137,54 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
 
     check_data(lev);
 
-    Box domain(geom[0].Domain());
-
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
     // This is separate from check_data because it is only called on initialization,
     // not on restart
+    Box domain(geom[0].Domain());
     if ( ParallelDescriptor::IOProcessor() )
        check_initial_conditions(&dx,&dy,&dz,domain.loVect(),domain.hiVect());
+}
+
+void
+mfix_level::ReMakeNewLevelFromScratch (int lev, const BoxArray& new_grids, const DistributionMapping& new_dmap)
+{
+    SetBoxArray(lev, new_grids);
+    SetDistributionMap(lev, new_dmap);
+
+    int nghost = 2;
+
+    // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
+    Box domainx(geom[0].Domain());
+    domainx.grow(1,nghost);
+    domainx.grow(2,nghost);
+    Box box_ilo = amrex::adjCellLo(domainx,0,1);
+    Box box_ihi = amrex::adjCellHi(domainx,0,1);
+
+    Box domainy(geom[0].Domain());
+    domainy.grow(0,nghost);
+    domainy.grow(2,nghost);
+    Box box_jlo = amrex::adjCellLo(domainy,1,1);
+    Box box_jhi = amrex::adjCellHi(domainy,1,1);
+
+    Box domainz(geom[0].Domain());
+    domainz.grow(0,nghost);
+    domainz.grow(1,nghost);
+    Box box_klo = amrex::adjCellLo(domainz,2,1);
+    Box box_khi = amrex::adjCellHi(domainz,2,1);
+
+    // Note that each of these is a single IArrayBox so every process has a copy of them
+    bc_ilo.resize(box_ilo,nghost_bc);
+    bc_ihi.resize(box_ihi,nghost_bc);
+    bc_jlo.resize(box_jlo,nghost_bc);
+    bc_jhi.resize(box_jhi,nghost_bc);
+    bc_klo.resize(box_klo,nghost_bc);
+    bc_khi.resize(box_khi,nghost_bc);
+
+    // We need to re-fill these arrays for the larger domain (after replication).
+    mfix_set_bc_type(lev);
 }
 
 void
@@ -489,8 +527,6 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
 void
 mfix_level::mfix_set_bc0(int lev)
 {
-
-  // Array already allocated when restart is called
   Box domain(geom[lev].Domain());
 
   // Don't tile this -- at least for now

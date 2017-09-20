@@ -59,17 +59,6 @@ public:
     // Get number of particles
     int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
 
-#if 0
-    int NumberOfParticles(int& lev, MFIter& mfi)
-    {
-      const int gridIndex = mfi.index();
-      const int tileIndex = mfi.LocalTileIndex();
-      auto&     particles = GetParticles(lev)[std::make_pair(gridIndex,tileIndex)];
-      auto&     structs   = particles.GetArrayOfStructs();
-      return structs.size();
-    }
-#endif
-
     MFIXParticleContainer (AmrCore* amr_core);
 
     virtual ~MFIXParticleContainer() {};

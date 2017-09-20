@@ -117,6 +117,8 @@ private:
     void MakeNewLevelFromScratch(int lev, Real time,
           const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
+    void ReMakeNewLevelFromScratch(int lev, 
+          const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
     void WriteHeader(const std::string& name, int nstep, Real dt, Real time) const;
 
