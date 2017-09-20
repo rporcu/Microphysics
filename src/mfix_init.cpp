@@ -150,7 +150,6 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
 
 void
 mfix_level::ReMakeNewLevelFromScratch (int lev, const BoxArray& new_grids, const DistributionMapping& new_dmap)
-
 {
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
@@ -183,6 +182,9 @@ mfix_level::ReMakeNewLevelFromScratch (int lev, const BoxArray& new_grids, const
     bc_jhi.resize(box_jhi,nghost_bc);
     bc_klo.resize(box_klo,nghost_bc);
     bc_khi.resize(box_khi,nghost_bc);
+
+    // We need to re-fill these arrays for the larger domain (after replication).
+    mfix_set_bc_type(lev);
 }
 
 void

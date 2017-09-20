@@ -114,7 +114,8 @@ void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, Distributio
 
     Array<Real> orig_domain_size;
     orig_domain_size.resize(BL_SPACEDIM);
-    for (int d = 0; d < BL_SPACEDIM; d++) orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
+    for (int d = 0; d < BL_SPACEDIM; d++) 
+        orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
 
     ParticleType p_rep;
 
@@ -133,7 +134,6 @@ void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, Distributio
 
                    if ( !(i == 0 && j == 0 && k == 0) )
                    {
-
                     p_rep.m_rdata.pos[0] = p.m_rdata.pos[0] + i * orig_domain_size[0];
                     p_rep.m_rdata.pos[1] = p.m_rdata.pos[1] + j * orig_domain_size[1];
                     p_rep.m_rdata.pos[2] = p.m_rdata.pos[2] + k * orig_domain_size[2];

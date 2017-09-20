@@ -348,9 +348,18 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 	}
     }
 
-    // This call to Replicate adds the new particles, then calls BuildLevelMask and Redistribute
-    int lev = 0;
-    pc->Replicate(Nrep,geom[lev],dmap[lev],grids[lev]);
+    if (Nrep != IntVect::TheUnitVector())
+    {
+       // This call to Replicate adds the new particles, 
+       //      then calls BuildLevelMask and Redistribute
+       int lev = 0;
+       pc->Replicate(Nrep,geom[lev],dmap[lev],grids[lev]);
+
+       // Fill the bc's after the replication just in case
+       u_g[lev]->FillBoundary(geom[lev].periodicity());
+       v_g[lev]->FillBoundary(geom[lev].periodicity());
+       w_g[lev]->FillBoundary(geom[lev].periodicity());
+    }
 }
 
 void
