@@ -230,8 +230,20 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        	    orig_ba.readFrom(is);
        	    GotoNextLine(is);
 
+            SetBoxArray(lev,orig_ba);
+       	    DistributionMapping orig_dm { orig_ba, ParallelDescriptor::NProcs() };
+            SetDistributionMap(lev,orig_dm);
 
             Box orig_domain(orig_ba.minimalBox());
+
+            if (Nrep != IntVect::TheUnitVector())
+            {
+               amrex::Print() << " OLD BA had " << orig_ba.size()  << " GRIDS " << std::endl;
+               amrex::Print() << " OLD Domain" << orig_domain      << std::endl;
+            }
+
+            if (lev == 0)
+               pc->Restart(restart_file, "particles");
 
             BoxList bl;
             for (int nb = 0; nb < orig_ba.size(); nb++) {
@@ -252,21 +264,18 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
             }
             ba.define(bl);
 
-            Box new_domain(ba.minimalBox());
-            geom[lev].Domain(new_domain);
+            if (Nrep != IntVect::TheUnitVector())
+            {
+               Box new_domain(ba.minimalBox());
+               geom[lev].Domain(new_domain);
 
-            amrex::Print() << " OLD BA had " << orig_ba.size()  << " GRIDS " << std::endl;
-            amrex::Print() << " NEW BA has " <<      ba.size()  << " GRIDS " << std::endl;
-            amrex::Print() << " OLD Domain" << orig_domain      << std::endl;
-            amrex::Print() << " NEW Domain" << geom[0].Domain() << std::endl;
+               amrex::Print() << " NEW BA has " <<      ba.size()  << " GRIDS " << std::endl;
+               amrex::Print() << " NEW Domain" << geom[0].Domain() << std::endl;
 
-            // Initialize particles before we reset the ParticleBoxArray by calling SetBoxArray
-            if (lev == 0)
-               pc->Restart(restart_file, "particles");
+       	       DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
+               ReMakeNewLevelFromScratch(lev,ba,dm);
+            }
 
-            SetBoxArray(lev, ba);
-       	    DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
-            SetDistributionMap(lev, dm);
             AllocateArrays(lev);
        	}
     }
