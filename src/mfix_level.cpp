@@ -286,14 +286,14 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
 
        solve_u_g_star(sbx.loVect(), sbx.hiVect(),
            ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
-           wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(), 
+           wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
            dbx.loVect(), dbx.hiVect(), bx.loVect(),  bx.hiVect(),
            (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
            (*u_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
            (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
            (*tau_u_g[lev])[mfi].dataPtr(),  (*d_e[lev])[mfi].dataPtr(),
            (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
-           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds_u[lev])[mfi].dataPtr(), (*drag_u[lev])[mfi].dataPtr(),   
+           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds_u[lev])[mfi].dataPtr(), (*drag_u[lev])[mfi].dataPtr(),
            (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*mask)[mfi].dataPtr(),
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
@@ -848,8 +848,10 @@ mfix_level::mfix_set_bc1(int lev)
 
       set_bc1(sbx.loVect(), sbx.hiVect(),
               ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-              (*p_g[lev])[mfi].dataPtr(), (*u_g[lev])[mfi].dataPtr(),
-              (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
+              (*u_g[lev])[mfi].dataPtr(), (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
+              (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+              (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+              (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
               bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }

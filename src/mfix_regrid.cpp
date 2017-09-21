@@ -17,7 +17,7 @@ mfix_level::Regrid (int lev, int nstep)
        // This creates a new BA and new DM, re-defines the particle BA and DM to be these new ones,
        //      and calls Redistribute.  This doesn't touch the fluid grids.
        pc -> BalanceParticleLoad_KDTree ();
-  
+
        if (!dual_grid)
        {
           SetBoxArray(lev, pc->ParticleBoxArray(lev));
@@ -28,6 +28,8 @@ mfix_level::Regrid (int lev, int nstep)
           //   SetDistributionMap calls above have re-defined grids and dmap to be the new ones.
           RegridArrays(lev,grids[lev],dmap[lev]);
        }
+
+       mfix_set_bc0(lev);
     }
 }
 
@@ -83,7 +85,7 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     pp_g_new->copy(*pp_g[lev]);
     pp_g[lev] = std::move(pp_g_new);
 
-    // Molecular viscosity 
+    // Molecular viscosity
     std::unique_ptr<MultiFab> mu_g_new(new MultiFab(new_grids,new_dmap,1,mu_g[lev]->nGrow()));
     mu_g_new->copy(*mu_g[lev]);
     mu_g[lev] = std::move(mu_g_new);
