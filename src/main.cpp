@@ -12,6 +12,7 @@
 int   max_step    = -1;
 int   verbose     = -1;
 int   regrid_int  = -1;
+int   dual_grid   =  0;
 Real stop_time = -1.0;
 
 std::string restart_file {""};
@@ -65,7 +66,7 @@ void ReadParameters ()
   pp.query("repl_z", repl_z);
   pp.query("verbose", verbose);
 
-  pp.query("regrid_int",regrid_int);
+  pp.query("dual_grid",dual_grid);
 }
 
 int main (int argc, char* argv[])
@@ -133,6 +134,9 @@ int main (int argc, char* argv[])
        my_mfix.Restart( restart_file, &nstep, &dt, &time, Nrep);
     }
 
+    // This checks if we want to regrid using the KDTree approach -- if not then it does nothing
+    my_mfix.Regrid(lev,nstep,dual_grid);
+
     my_mfix.PostInit( lev, dt, time, nstep, restart_flag );
 
     Real end_init = ParallelDescriptor::second() - strt_time;
@@ -176,7 +180,7 @@ int main (int argc, char* argv[])
           Real strt_step = ParallelDescriptor::second();
 
           if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
-             my_mfix.Regrid(lev,nstep);
+             my_mfix.Regrid(lev,nstep,dual_grid);
 
           my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
 

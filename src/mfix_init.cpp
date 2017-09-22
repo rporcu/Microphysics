@@ -415,9 +415,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
 void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag)
 {
-  // This checks if we want to regrid using the KDTree approach -- if not then it does nothing
-  Regrid(lev,nstep);
-
   if (solve_dem) {
       Real avg_dp[10], avg_ro[10];
       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );

@@ -6,11 +6,9 @@
 #include <AMReX_Box.H>
 
 void
-mfix_level::Regrid (int lev, int nstep)
+mfix_level::Regrid (int lev, int nstep, int dual_grid)
 {
     amrex::Print() << "In Regrid at step " << nstep << std::endl;
-
-    bool dual_grid = true;
 
     if (load_balance_type == "KDTree")
     {
@@ -18,7 +16,7 @@ mfix_level::Regrid (int lev, int nstep)
        //      and calls Redistribute.  This doesn't touch the fluid grids.
        pc -> BalanceParticleLoad_KDTree ();
 
-       if (!dual_grid)
+       if (dual_grid == 0)
        {
           SetBoxArray(lev, pc->ParticleBoxArray(lev));
           SetDistributionMap(lev, pc->ParticleDistributionMap(lev));

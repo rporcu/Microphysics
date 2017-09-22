@@ -39,7 +39,7 @@ public:
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
 
-    void Regrid (int lev, int nstep);
+    void Regrid (int lev, int nstep, int dual_grid);
 
     void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);

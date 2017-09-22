@@ -669,6 +669,7 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
             Real *bx_dataptr, *by_dataptr, *bz_dataptr;
             Real *bu_dataptr, *bv_dataptr, *bw_dataptr;
             const int *lo_x, *hi_x, *lo_y, *hi_y, *lo_z, *hi_z;
+
 #ifdef _OPENMP
             Box tile_xbox = pti.tilebox();
             tile_xbox.surroundingNodes(0);
@@ -726,6 +727,7 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
                                    bu_dataptr, bv_dataptr, bw_dataptr,
                                    lo_x, hi_x, lo_y, hi_y, lo_z, hi_z,
                                    plo, dx, &fortran_beta_comp, &fortran_vel_comp);
+//          std::cout << "BETAX " << beta_x_fab << std::endl;
 
 #ifdef _OPENMP
             amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_x_vol),
@@ -912,27 +914,41 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
 void
 MFIXParticleContainer::BalanceParticleLoad_KDTree()
 {
+  bool verbose = false;
   BoxArray old_ba = ParticleBoxArray(0);
-  amrex::Print() << "Before KDTree BA HAS " << old_ba.size() << " GRIDS " << std::endl;
-       if (old_ba.size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
-          amrex::Print() << "Before:" << old_ba << std::endl;
+
+  if (verbose) 
+  {
+     amrex::Print() << "Before KDTree BA HAS " << old_ba.size() << " GRIDS " << std::endl;
+     if (old_ba.size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+        amrex::Print() << "Before:" << old_ba << std::endl;
+  }
 
   Array<long> num_part;
   num_part = NumberOfParticlesInGrid(0);
-  for (int i = 0; i < old_ba.size(); i++)
-     amrex::Print() << "NUM PART IN GRID BEFORE " << i << " " << num_part[i] << std::endl;
+  if (verbose) 
+  {
+     for (int i = 0; i < old_ba.size(); i++)
+        amrex::Print() << "NUM PART IN GRID BEFORE " << i << " " << num_part[i] << std::endl;
+  }
 
   BoxArray new_ba;
   Real cell_weight = 0.;
   loadBalanceKD::balance<MFIXParticleContainer>(*this, new_ba, ParallelDescriptor::NProcs(), cell_weight);
 
-  amrex::Print() << "After  KDTree BA HAS " << new_ba.size() << " GRIDS " << std::endl;
-  if (new_ba.size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
-         amrex::Print() << "After:" << new_ba << std::endl;
+  if (verbose) 
+  {
+     amrex::Print() << "After  KDTree BA HAS " << new_ba.size() << " GRIDS " << std::endl;
+     if (new_ba.size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
+            amrex::Print() << "After:" << new_ba << std::endl;
+  }
 
-  num_part = NumberOfParticlesInGrid(0);
-  for (int i = 0; i < old_ba.size(); i++)
-     amrex::Print() << "NUM PART IN GRID AFTER  " << i << " " << num_part[i] << std::endl;
+  if (verbose) 
+  {
+     num_part = NumberOfParticlesInGrid(0);
+     for (int i = 0; i < old_ba.size(); i++)
+        amrex::Print() << "NUM PART IN GRID AFTER  " << i << " " << num_part[i] << std::endl;
+  }
 
   // Create a new DM to go with the new BA
   DistributionMapping new_dm(new_ba);
