@@ -7,7 +7,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
 subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-     p_g, u_g, v_g, w_g, &
+     u_g, v_g, w_g, p_g, ep_g, ro_g, rop_g, mu_g, lambda_g, &
      bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
      bc_klo_type, bc_khi_type, domlo, domhi) &
      bind(C, name="set_bc1")
@@ -28,6 +28,17 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 
       real(c_real), intent(inout) ::  p_g&
            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: ep_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: ro_g&
+           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: rop_g&
+           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: mu_g&
+           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: lambda_g&
+           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       real(c_real), intent(inout) ::  u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) ::  v_g&
@@ -71,9 +82,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                if(bc_ilo_type(j,k,1) == PINF_ .or. &
                   bc_ilo_type(j,k,1) == POUT_) then
 
-                  u_g(ulo(1):domlo(1)-1,j,k) = u_g(domlo(1),j,k)
-                  v_g(vlo(1):domlo(1)-1,j,k) = v_g(domlo(1),j,k)
-                  w_g(wlo(1):domlo(1)-1,j,k) = w_g(domlo(1),j,k)
+                       u_g(ulo(1):domlo(1)-1,j,k) =      u_g(domlo(1),j,k)
+                       v_g(vlo(1):domlo(1)-1,j,k) =      v_g(domlo(1),j,k)
+                       w_g(wlo(1):domlo(1)-1,j,k) =      w_g(domlo(1),j,k)
+
+                      ep_g(slo(1):domlo(1)-1,j,k) =     ep_g(domlo(1),j,k)
+                      ro_g(slo(1):domlo(1)-1,j,k) =     ro_g(domlo(1),j,k)
+                     rop_g(slo(1):domlo(1)-1,j,k) =    rop_g(domlo(1),j,k)
+                      mu_g(slo(1):domlo(1)-1,j,k) =     mu_g(domlo(1),j,k)
+                  lambda_g(slo(1):domlo(1)-1,j,k) = lambda_g(domlo(1),j,k)
 
                else if (bc_ilo_type(j,k,1) == MINF_) then
 
@@ -108,7 +125,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                if(bc_ihi_type(j,k,1) == PINF_ .or. &
                   bc_ihi_type(j,k,1) == POUT_) then
 
-                  u_g(domhi(1)+2:uhi(1),j,k) = u_g(domhi(1)+1,j,k)
+                       u_g(domhi(1)+2:uhi(1),j,k) =      u_g(domhi(1)+1,j,k)
+                       v_g(domhi(1)+1:vhi(1),j,k) =      v_g(domhi(1)  ,j,k)
+                       w_g(domhi(1)+1:whi(1),j,k) =      w_g(domhi(1)  ,j,k)
+
+                      ep_g(domhi(1)+1:shi(1),j,k) =     ep_g(domhi(1)  ,j,k)
+                      ro_g(domhi(1)+1:shi(1),j,k) =     ro_g(domhi(1)  ,j,k)
+                     rop_g(domhi(1)+1:shi(1),j,k) =    rop_g(domhi(1)  ,j,k)
+                      mu_g(domhi(1)+1:shi(1),j,k) =     mu_g(domhi(1)  ,j,k)
+                  lambda_g(domhi(1)+1:shi(1),j,k) = lambda_g(domhi(1)  ,j,k)
 
                else if (bc_ihi_type(j,k,1) == MINF_) then
 
@@ -144,7 +169,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                if(bc_jlo_type(i,k,1) == PINF_ .or. &
                     bc_jlo_type(i,k,1) == POUT_) then
 
-                  v_g(i,vlo(2):domlo(2)-1,k) = v_g(i,domlo(2),k)
+                       u_g(i,ulo(2):domlo(2)-1,k) =      u_g(i,domlo(2),k)
+                       v_g(i,vlo(2):domlo(2)-1,k) =      v_g(i,domlo(2),k)
+                       w_g(i,wlo(2):domlo(2)-1,k) =      w_g(i,domlo(2),k)
+
+                      ep_g(i,slo(1):domlo(2)-1,k) =     ep_g(i,domlo(2),k)
+                      ro_g(i,slo(1):domlo(2)-1,k) =     ro_g(i,domlo(2),k)
+                     rop_g(i,slo(1):domlo(2)-1,k) =    rop_g(i,domlo(2),k)
+                      mu_g(i,slo(1):domlo(2)-1,k) =     mu_g(i,domlo(2),k)
+                  lambda_g(i,slo(1):domlo(2)-1,k) = lambda_g(i,domlo(2),k)
 
                else if (bc_jlo_type(i,k,1) == MINF_)then
 
@@ -180,7 +213,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                if(bc_jhi_type(i,k,1) == PINF_ .or. &
                   bc_jhi_type(i,k,1) == POUT_) then
 
-                  v_g(i,domhi(2)+2:vhi(2),k) = v_g(i,domhi(2)+1,k)
+                       u_g(i,domhi(2)+1:uhi(2),k) =      u_g(i,domhi(2)  ,k)
+                       v_g(i,domhi(2)+2:vhi(2),k) =      v_g(i,domhi(2)+1,k)
+                       w_g(i,domhi(2)+1:whi(2),k) =      w_g(i,domhi(2)  ,k)
+
+                      ep_g(i,domhi(2)+1:shi(2),k) =     ep_g(i,domhi(2)  ,k)
+                      ro_g(i,domhi(2)+1:shi(2),k) =     ro_g(i,domhi(2)  ,k)
+                     rop_g(i,domhi(2)+1:shi(2),k) =    rop_g(i,domhi(2)  ,k)
+                      mu_g(i,domhi(2)+1:shi(2),k) =     mu_g(i,domhi(2)  ,k)
+                  lambda_g(i,domhi(2)+1:shi(2),k) = lambda_g(i,domhi(2)  ,k)
 
                else if (bc_jhi_type(i,k,1) == MINF_) then
 
@@ -215,7 +256,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                if(bc_klo_type(i,j,1) == PINF_ .or. &
                   bc_klo_type(i,j,1) == POUT_) then
 
-                  w_g(i,j,wlo(3):domlo(3)-1) = w_g(i,j,domlo(3))
+                       u_g(i,j,ulo(3):domlo(3)-1) =      u_g(i,j,domlo(3))
+                       v_g(i,j,vlo(3):domlo(3)-1) =      v_g(i,j,domlo(3))
+                       w_g(i,j,wlo(3):domlo(3)-1) =      w_g(i,j,domlo(3))
+
+                      ep_g(i,j,slo(3):domlo(3)-1) =     ep_g(i,j,domlo(3))
+                      ro_g(i,j,slo(3):domlo(3)-1) =     ro_g(i,j,domlo(3))
+                     rop_g(i,j,slo(3):domlo(3)-1) =    rop_g(i,j,domlo(3))
+                      mu_g(i,j,slo(3):domlo(3)-1) =     mu_g(i,j,domlo(3))
+                  lambda_g(i,j,slo(3):domlo(3)-1) = lambda_g(i,j,domlo(3))
 
                else if (bc_klo_type(i,j,1) == MINF_) then
 
@@ -249,7 +298,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                if(bc_khi_type(i,j,1) == PINF_ .or. &
                   bc_khi_type(i,j,1) == POUT_) then
 
-                  w_g(i,j,domhi(3)+2:whi(3)) = w_g(i,j,domhi(3)+1)
+                       u_g(i,j,domhi(3)+1:uhi(3)) =      u_g(i,j,domhi(3)  )
+                       v_g(i,j,domhi(3)+1:vhi(3)) =      v_g(i,j,domhi(3)  )
+                       w_g(i,j,domhi(3)+2:whi(3)) =      w_g(i,j,domhi(3)+1)
+
+                      ep_g(i,j,domhi(3)+1:shi(3)) =     ep_g(i,j,domhi(3)  )
+                      ro_g(i,j,domhi(3)+1:shi(3)) =     ro_g(i,j,domhi(3)  )
+                     rop_g(i,j,domhi(3)+1:shi(3)) =    rop_g(i,j,domhi(3)  )
+                      mu_g(i,j,domhi(3)+1:shi(3)) =     mu_g(i,j,domhi(3)  )
+                  lambda_g(i,j,domhi(3)+1:shi(3)) = lambda_g(i,j,domhi(3)  )
 
                else if (bc_khi_type(i,j,1) == MINF_) then
 
@@ -279,7 +336,7 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 
    ! *********************************************************************************
    ! We have to do the PSW bc's last because otherwise non-zero moving wall values
-   ! can get over-written 
+   ! can get over-written
    ! *********************************************************************************
 
       if (nlft .gt. 0) then

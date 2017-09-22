@@ -17,7 +17,7 @@ mfix_level::Regrid (int lev, int nstep)
        // This creates a new BA and new DM, re-defines the particle BA and DM to be these new ones,
        //      and calls Redistribute.  This doesn't touch the fluid grids.
        pc -> BalanceParticleLoad_KDTree ();
-  
+
        if (!dual_grid)
        {
           SetBoxArray(lev, pc->ParticleBoxArray(lev));
@@ -28,6 +28,8 @@ mfix_level::Regrid (int lev, int nstep)
           //   SetDistributionMap calls above have re-defined grids and dmap to be the new ones.
           RegridArrays(lev,grids[lev],dmap[lev]);
        }
+
+       mfix_set_bc0(lev);
     }
 }
 
