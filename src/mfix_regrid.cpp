@@ -92,7 +92,7 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     pp_g_new->copy(*pp_g[lev],0,0,1,ng,ng,geom[lev].periodicity());
     pp_g[lev] = std::move(pp_g_new);
 
-    // Molecular viscosity 
+    // Molecular viscosity
     ng = mu_g[lev]->nGrow();
     std::unique_ptr<MultiFab> mu_g_new(new MultiFab(new_grids,new_dmap,1,mu_g[lev]->nGrow()));
     mu_g_new->copy(*mu_g[lev],0,0,1,ng,ng,geom[lev].periodicity());
@@ -276,14 +276,22 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     // Make sure we fill the ghost cells as appropriate -- this is copied from init_fluid
     // ********************************************************************************
 
-    fill_mf_bc(lev,*p_g[lev]);
     fill_mf_bc(lev,*ep_g[lev]);
+    fill_mf_bc(lev,*ep_go[lev]);
+    fill_mf_bc(lev,*p_g[lev]);
+    fill_mf_bc(lev,*p_go[lev]);
     fill_mf_bc(lev,*ro_g[lev]);
+    fill_mf_bc(lev,*ro_go[lev]);
     fill_mf_bc(lev,*rop_g[lev]);
+    fill_mf_bc(lev,*rop_go[lev]);
 
     u_g[lev]->FillBoundary(geom[lev].periodicity());
     v_g[lev]->FillBoundary(geom[lev].periodicity());
     w_g[lev]->FillBoundary(geom[lev].periodicity());
+
+    u_go[lev]->FillBoundary(geom[lev].periodicity());
+    v_go[lev]->FillBoundary(geom[lev].periodicity());
+    w_go[lev]->FillBoundary(geom[lev].periodicity());
 
     fill_mf_bc(lev,*mu_g[lev]);
     fill_mf_bc(lev,*lambda_g[lev]);
