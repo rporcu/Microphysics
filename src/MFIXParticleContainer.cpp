@@ -727,7 +727,6 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
                                    bu_dataptr, bv_dataptr, bw_dataptr,
                                    lo_x, hi_x, lo_y, hi_y, lo_z, hi_z,
                                    plo, dx, &fortran_beta_comp, &fortran_vel_comp);
-//          std::cout << "BETAX " << beta_x_fab << std::endl;
 
 #ifdef _OPENMP
             amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_x_vol),
