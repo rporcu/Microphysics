@@ -82,6 +82,12 @@ public:
     /// Write out all particles at a level in the format fcompare_par can read
     ///
     void writeAllForComparison(int lev);
+ 
+    ///
+    /// Write out all particles in the format of the particle_input.dat files so we
+    ///       can initialize a run with them
+    ///
+    void WriteAsciiFileForInit(const std::string& filename);
 
     void output ( int lev, int estatus, int finish, int nstep, Real dt, Real time );
 

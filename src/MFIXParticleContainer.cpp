@@ -839,7 +839,8 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
     }
 }
 
-void MFIXParticleContainer::writeAllForComparison(int lev)
+void 
+MFIXParticleContainer::writeAllForComparison(int lev)
 {
   int Np_tot = 0;
 
@@ -863,6 +864,99 @@ void MFIXParticleContainer::writeAllForComparison(int lev)
                  p.rdata(1) << " " << p.rdata(2) << " " << p.rdata(2) <<  " " <<
                  ParallelDescriptor::MyProc() << " " << p.id() << std::endl;
   }
+}
+
+void
+MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
+{
+    BL_ASSERT(!filename.empty());
+
+    const Real strttime = ParallelDescriptor::second();
+
+    int lev = 0;
+    long nparticles = NumberOfParticlesAtLevel (lev);
+
+    if (ParallelDescriptor::IOProcessor())
+    {
+        //
+        // Have I/O processor open file and write out particle metadata.
+        //
+        std::ofstream File;
+
+        File.open(filename.c_str(), std::ios::out|std::ios::trunc);
+
+        if (!File.good())
+            amrex::FileOpenFailed(filename);
+
+        File << nparticles  << '\n';
+            
+        File.flush();
+
+        File.close();
+
+        if (!File.good())
+            amrex::Abort("ParticleContainer<NStructReal, NStructInt, NArrayReal, NArrayInt>::WriteAsciiFile(): problem writing file");
+    }
+
+    ParallelDescriptor::Barrier();
+
+    const int MyProc = ParallelDescriptor::MyProc();
+
+    for (int i = 0; i < ParallelDescriptor::NProcs(); i++)
+    {
+        if (MyProc == i)
+        {
+            //
+            // Each CPU opens the file for appending and adds its particles.
+            //
+            std::ofstream File;
+
+            VisMF::IO_Buffer io_buffer(VisMF::IO_Buffer_Size);
+
+            File.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
+
+            File.open(filename.c_str(), std::ios::out|std::ios::app);
+
+            File.precision(15);
+
+            if (!File.good())
+                amrex::FileOpenFailed(filename);
+
+            for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+
+              auto& particles = pti.GetArrayOfStructs();
+
+		int index = 0;
+                for (const auto& p: particles)
+                {
+		    if (p.id() > 0) {
+                        File << p.idata(intData::phase) << ' ';  
+                        File << p.pos(0) << ' ';
+                        File << p.pos(1) << ' ';
+                        File << p.pos(2) << ' ';
+                        File << p.rdata(realData::radius) << ' ';
+                        File << p.rdata(realData::density) << ' ';
+                        File << p.rdata(realData::velx) << ' ';
+                        File << p.rdata(realData::vely) << ' ';
+                        File << p.rdata(realData::velz) << ' ';
+
+                        File << '\n';                            
+                        
+                        index++;		      
+                    }
+                }
+              }
+	    
+            File.flush();
+	    
+            File.close();
+            
+            if (!File.good())
+                amrex::Abort("MFIXParticleContainer::WriteAsciiFileForInit(): problem writing file");
+	    
+        }
+        ParallelDescriptor::Barrier();
+    }
 }
 
 void MFIXParticleContainer::GetParticleAvgProp(int lev,

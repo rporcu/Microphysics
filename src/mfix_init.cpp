@@ -397,12 +397,12 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
          Real  omegax = 0.0;
          Real  omegay = 0.0;
          Real  omegaz = 0.0;
-         int phase = 0;
+         int phase = 1;
          int state = 0;
          MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
             velx,vely,velz,omegax,omegay,omegaz,dragx,dragy,dragz,phase,state};
          pc->InitNRandomPerCell(n_per_cell, pdata);
-         pc->WriteAsciiFile ("random_particles");
+         pc->WriteAsciiFileForInit ("random_particles");
          exit(0);
       } else {
          amrex::Abort("Bad particle_init_type");
