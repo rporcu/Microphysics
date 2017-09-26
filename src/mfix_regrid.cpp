@@ -24,7 +24,8 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
           // Since we have already allocated the fluid data we need to re-define those arrays
           //   and copy from the old BoxArray to the new one.  Note that the SetBoxArray and
           //   SetDistributionMap calls above have re-defined grids and dmap to be the new ones.
-          RegridArrays(lev,grids[lev],dmap[lev]);
+          if (solve_fluid) 
+             RegridArrays(lev,grids[lev],dmap[lev]);
        }
 
        mfix_set_bc0(lev);
@@ -38,6 +39,10 @@ mfix_level::RegridOnRestart (int lev)
 
     if (load_balance_type == "FixedSize")
     {
+       // We hold on to the old_ba so that we can test the new BoxArray against it
+       //   to see if the grids have changed
+       BoxArray old_ba(grids[lev]);
+
        // This creates a new BoxArray (based on the new max_grid_size)
        const BoxArray& ba = MakeBaseGrids();
 
@@ -50,9 +55,10 @@ mfix_level::RegridOnRestart (int lev)
        // This sets dmap[lev] = dm
        SetDistributionMap(lev, dm);
 
-       // Since we have already allocated the fluid data we need to re-define those arrays
-       //   and copy from the old BoxArray to the new one.  
-       RegridArrays(lev,grids[lev],dmap[lev]);
+       // If the grids have changed, we need to re-define those arrays 
+       // and copy from the old BoxArray to the new one since we have already read in the old fluid data
+       if ( (grids[0] != old_ba) && solve_fluid) 
+          RegridArrays(lev,grids[lev],dmap[lev]);
 
        mfix_set_bc0(lev);
     }
