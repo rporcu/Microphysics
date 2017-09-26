@@ -128,13 +128,23 @@ int main (int argc, char* argv[])
     if (restart_file.empty())
     {
        my_mfix.InitLevelData(lev,dt,time);
-    } else {
+    } 
+    else
+    {
        restart_flag = 1;
        IntVect Nrep(repl_x,repl_y,repl_z);
        my_mfix.Restart( restart_file, &nstep, &dt, &time, Nrep);
+
+       // This call checks if we want to regrid using the 
+       //   max_grid_size just read in from the inputs file used to restart
+       //   (only relevant if load_balance_type = "FixedSize")
+
+       // Note that this call does not depend on regrid_int
+       my_mfix.RegridOnRestart(lev);
     }
 
-    // This checks if we want to regrid using the KDTree approach -- if not then it does nothing
+    // This checks if we want to regrid using the KDTree approach
+    //    (only if load_balance_type = "KDTree")
     my_mfix.Regrid(lev,nstep,dual_grid);
 
     my_mfix.PostInit( lev, dt, time, nstep, restart_flag );

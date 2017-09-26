@@ -32,6 +32,33 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
 }
 
 void
+mfix_level::RegridOnRestart (int lev)
+{
+    amrex::Print() << "In RegridOnRestart " << std::endl;
+
+    if (load_balance_type == "FixedSize")
+    {
+       // This creates a new BoxArray (based on the new max_grid_size)
+       const BoxArray& ba = MakeBaseGrids();
+
+       // This creates the associated Distribution Mapping
+       DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+
+       // This sets grids[lev] = ba 
+       SetBoxArray(lev, ba);
+
+       // This sets dmap[lev] = dm
+       SetDistributionMap(lev, dm);
+
+       // Since we have already allocated the fluid data we need to re-define those arrays
+       //   and copy from the old BoxArray to the new one.  
+       RegridArrays(lev,grids[lev],dmap[lev]);
+
+       mfix_set_bc0(lev);
+    }
+}
+
+void
 mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)
 {
     // ********************************************************************************
