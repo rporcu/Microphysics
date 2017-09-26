@@ -151,11 +151,10 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 {
     BL_PROFILE("mfix_level::Restart()");
 
-    if (ParallelDescriptor::IOProcessor())
-  std::cout << "  Restarting from checkpoint " << restart_file << std::endl;
+    amrex::Print() << "  Restarting from checkpoint " << restart_file << std::endl;
 
-    if (ParallelDescriptor::IOProcessor())
-  std::cout << "  Replication " << Nrep << std::endl;
+    if (Nrep != IntVect::TheUnitVector())
+       amrex::Print() << "  Replication " << Nrep << std::endl;
 
     Real prob_lo[BL_SPACEDIM];
     Real prob_hi[BL_SPACEDIM];
@@ -176,24 +175,24 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
       std::getline(is, line);
 
       int  nlevs;
-  int  int_tmp;
-  Real real_tmp;
+      int  int_tmp;
+      Real real_tmp;
 
       is >> nlevs;
       GotoNextLine(is);
       // finest_level = nlevs-1;
 
-  // Time stepping controls
-  is >> int_tmp;
-  *nstep = int_tmp;
+      // Time stepping controls
+      is >> int_tmp;
+      *nstep = int_tmp;
       GotoNextLine(is);
 
-  is >> real_tmp;
-  *dt = real_tmp;
+      is >> real_tmp;
+      *dt = real_tmp;
       GotoNextLine(is);
 
-  is >> real_tmp;
-  *time = real_tmp;
+      is >> real_tmp;
+      *time = real_tmp;
       GotoNextLine(is);
 
         std::getline(is, line);
@@ -201,7 +200,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
             std::istringstream lis(line);
             int i = 0;
             while (lis >> word) {
-          prob_lo[i++] = std::stod(word);
+               prob_lo[i++] = std::stod(word);
             }
         }
 
@@ -210,7 +209,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
             std::istringstream lis(line);
             int i = 0;
             while (lis >> word) {
-          prob_hi[i++] = std::stod(word);
+               prob_hi[i++] = std::stod(word);
             }
         }
 
@@ -283,17 +282,16 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     // Initialize the field data
     for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
     {
-  // Read vector variables
-  for (int i = 0; i < vectorVars.size(); i++ ) {
-          MultiFab mf;
-      VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,
-              vecVarsName[i]));
+       // Read vector variables
+       for (int i = 0; i < vectorVars.size(); i++ ) {
+           MultiFab mf;
+           VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,vecVarsName[i]));
 
             if (Nrep == IntVect::TheUnitVector())
             {
 
-           // Simply copy mf into vectorVars
-           (*vectorVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
+               // Simply copy mf into vectorVars
+               (*vectorVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
 
             } else {
 
@@ -306,46 +304,45 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
                edge_bx.surroundingNodes(i);
 
                FArrayBox single_fab(edge_bx,1);
-           mf.copyTo(single_fab);
+              mf.copyTo(single_fab);
 
-           // Copy and replicate mf into vectorVars
-         for (MFIter mfi( *(*vectorVars[i])[lev] ); mfi.isValid(); ++mfi)
-         {
-                   int ib = mfi.index();
-             (*(*vectorVars[i])[lev])[ib].copy(single_fab,single_fab.box(),0,mfi.validbox(),0,1);
-         }
+              // Copy and replicate mf into vectorVars
+               for (MFIter mfi( *(*vectorVars[i])[lev] ); mfi.isValid(); ++mfi)
+               {
+                  int ib = mfi.index();
+                  (*(*vectorVars[i])[lev])[ib].copy(single_fab,single_fab.box(),0,mfi.validbox(),0,1);
+               }
             }
-  }
+       }
 
-  // Read scalar variables
-  for (int i = 0; i < scalarVars.size(); i++ ) {
+       // Read scalar variables
+       for (int i = 0; i < scalarVars.size(); i++ ) {
           MultiFab mf;
-      VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,
-              scaVarsName[i]));
-            if (Nrep == IntVect::TheUnitVector())
-            {
+          VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,scaVarsName[i]));
 
-           // Simply copy mf into scalarVars
-         (*scalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
+          if (Nrep == IntVect::TheUnitVector())
+          {
+              // Simply copy mf into scalarVars
+              (*scalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
 
-            } else {
+          } else {
 
-               if (mf.boxArray().size() > 1)
-                   amrex::Abort("Replication only works if one initial grid");
+             if (mf.boxArray().size() > 1)
+                 amrex::Abort("Replication only works if one initial grid");
 
-               mf.FillBoundary(geom[lev].periodicity());
+             mf.FillBoundary(geom[lev].periodicity());
 
-               FArrayBox single_fab(mf.boxArray()[0],1);
-           mf.copyTo(single_fab);
+             FArrayBox single_fab(mf.boxArray()[0],1);
+             mf.copyTo(single_fab);
 
-           // Copy and replicate mf into scalarVars
-         for (MFIter mfi( *(*scalarVars[i])[lev] ); mfi.isValid(); ++mfi)
-         {
-                   int ib = mfi.index();
-             (*(*scalarVars[i])[lev])[ib].copy(single_fab,single_fab.box(),0,mfi.validbox(),0,1);
+             // Copy and replicate mf into scalarVars
+             for (MFIter mfi( *(*scalarVars[i])[lev] ); mfi.isValid(); ++mfi)
+             {
+                int ib = mfi.index();
+                (*(*scalarVars[i])[lev])[ib].copy(single_fab,single_fab.box(),0,mfi.validbox(),0,1);
+             }
          }
-            }
-  }
+       }
     }
 
     int lev = 0;
