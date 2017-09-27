@@ -186,7 +186,6 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     std::unique_ptr<MultiFab> d_e_new(new MultiFab(x_edge_ba,new_dmap,1,ng));
     d_e_new->copy(*d_e[lev],0,0,1,ng,ng);
     d_e_new->FillBoundary(geom[lev].periodicity());
-    u_gt[lev] = std::move(u_gt_new);
     d_e[lev] = std::move(d_e_new);
 
     ng = tau_u_g[lev]->nGrow();
