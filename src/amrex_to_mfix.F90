@@ -156,7 +156,7 @@ contains
        sweep_type = sweep_asas;
 
     else
-       print *,'DONT KNOW THIS LEQ_SWEEP FLAG'
+       print *,'Dont know this leq_sweep flag'
        stop
     end if
 
@@ -171,7 +171,7 @@ contains
        pc_type = pc_none;
 
     else
-       print *,'DONT KNOW THIS LEQ_SWEEP FLAG'
+       print *,'Dont know this leq_sweep flag'
        stop
     end if
 

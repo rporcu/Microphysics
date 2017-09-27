@@ -13,22 +13,22 @@ module leqsol
 
 ! Automatic adjustment of leq parameters possible (set in iterate after
 ! the completion of first iteration).
-  logical :: LEQ_ADJUST
+  logical :: leq_adjust
 
 ! Maximum number of linear equation solver iterations
-  integer :: LEQ_IT(DIM_EQS)
+  integer :: leq_it(DIM_EQS)
 
 ! Total Iterations
   integer :: ITER_TOT(DIM_EQS) = 0
 
 ! Linear equation solver sweep direction
-  CHARACTER(LEN=4) :: LEQ_SWEEP(DIM_EQS)
+  CHARACTER(LEN=4) :: leq_sweep(DIM_EQS)
 
 ! Linear equation solver tolerance
-  real(c_real) :: LEQ_TOL(DIM_EQS)
+  real(c_real) :: leq_tol(DIM_EQS)
 
 ! Preconditioner option
-  CHARACTER(LEN=4) :: LEQ_PC(DIM_EQS)
+  CHARACTER(LEN=4) :: leq_pc(DIM_EQS)
 
 contains
 
