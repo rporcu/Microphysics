@@ -17,8 +17,8 @@ module gas_drag_module
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine gas_drag_u(lo, hi, slo, shi, alo, ahi, &
-                            A_m, b_m, f_gds, drag_bm, vol)
+      subroutine gas_drag_u(lo, hi, slo, shi, alo, ahi, dlo, dhi, &
+                            A_m, b_m, f_gds_u, drag_u, vol, domlo, domhi)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -30,15 +30,17 @@ module gas_drag_module
       integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: dlo(3),dhi(3)
+      integer, intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
       real(c_real), intent(inout) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
-      real(c_real), intent(in   ) :: f_gds&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: drag_bm&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
+      real(c_real), intent(in   ) :: f_gds_u&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
+      real(c_real), intent(in   ) :: drag_u&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
       real(c_real), intent(in   ) :: vol
 
       integer :: I, J, K
@@ -51,11 +53,8 @@ module gas_drag_module
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-                  A_m(i,j,k,0) = A_m(i,j,k,0) - 0.5d0*vol * &
-                     (f_gds(i-1,j,k) + f_gds(i,j,k))
-                  b_m(i,j,k) = b_m(i,j,k) - 0.5d0* vol *&
-                     (drag_bm(i-1,j,k,1) + drag_bm(i,j,k,1))
-!              end if
+               A_m(i,j,k,0) = A_m(i,j,k,0) - vol * f_gds_u(i,j,k)
+               b_m(i,j,k  ) = b_m(i,j,k  ) - vol *  drag_u(i,j,k)
             end do
          end do
       end do
@@ -72,8 +71,8 @@ module gas_drag_module
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine gas_drag_v(lo, hi, slo, shi, alo, ahi, &
-                            A_m, b_m, f_gds, drag_bm, vol)
+      subroutine gas_drag_v(lo, hi, slo, shi, alo, ahi, dlo, dhi, &
+                            A_m, b_m, f_gds_v, drag_v, vol, domlo, domhi)
 
 
       ! Flag: Gas sees the effect of particles in gas/solids flows.
@@ -82,29 +81,29 @@ module gas_drag_module
       integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: dlo(3),dhi(3)
+      integer, intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
       real(c_real), intent(inout) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
-      real(c_real), intent(in   ) :: f_gds&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: drag_bm&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
+      real(c_real), intent(in   ) :: f_gds_v&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
+      real(c_real), intent(in   ) :: drag_v&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
       real(c_real), intent(in   ) :: vol
 
       integer :: i, j, k
 
       ! Skip this routine if the gas/solids are only one-way coupled.
-      if (DES_ONEWAY_COUPLED) RETURN
+      if (DES_ONEWAY_COUPLED) return
 
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-                  A_m(I,J,K,0) = A_m(i,j,k,0) - vol * 0.5d0*&
-                     (f_gds(i,j-1,k) + f_gds(i,j,k))
-                  b_m(i,j,k) = b_m(i,j,k) - vol * 0.5d0*&
-                     (drag_bm(i,j-1,k,2)+drag_bm(i,j,k,2))
+               A_m(i,j,k,0) = A_m(i,j,k,0) - vol * f_gds_v(i,j,k)
+               b_m(i,j,k  ) = b_m(i,j,k  ) - vol *  drag_v(i,j,k)
             end do
          end do
       end do
@@ -121,8 +120,8 @@ module gas_drag_module
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine gas_drag_w(lo, hi, slo, shi, alo, ahi, &
-                            A_m, b_m, f_gds, drag_bm, vol)
+      subroutine gas_drag_w(lo, hi, slo, shi, alo, ahi, dlo, dhi, &
+                            A_m, b_m, f_gds_w, drag_w, vol, domlo, domhi)
 
       ! Flag: Gas sees the effect of particles in gas/solids flows.
       use discretelement, only: DES_ONEWAY_COUPLED
@@ -130,29 +129,29 @@ module gas_drag_module
       integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: dlo(3),dhi(3)
+      integer, intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: a_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
       real(c_real), intent(inout) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
-      real(c_real), intent(in   ) :: f_gds&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: drag_bm&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
+      real(c_real), intent(in   ) :: f_gds_w&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
+      real(c_real), intent(in   ) :: drag_w&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
       real(c_real), intent(in   ) :: vol
 
       integer :: i, j, k
 
       ! Skip this routine if the gas/solids are only one-way coupled.
-      IF(DES_ONEWAY_COUPLED) RETURN
+      IF(DES_ONEWAY_COUPLED) return
 
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               A_m(i,j,k,0) = A_m(i,j,k,0) - vol * 0.5d0*&
-                  (f_gds(i,j,k-1) + f_gds(i,j,k))
-               b_m(i,j,k) = b_m(i,j,k) - vol * 0.5d0*&
-                  (drag_bm(i,j,k-1,3) + drag_bm(i,j,k,3))
+               A_m(i,j,k,0) = A_m(i,j,k,0) - vol * f_gds_w(i,j,k)
+               b_m(i,j,k  ) = b_m(i,j,k  ) - vol *  drag_w(i,j,k)
             end do
          end do
       end do

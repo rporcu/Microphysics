@@ -19,7 +19,6 @@ class mfix_level
 {
 public:
 
-//  mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord);
     mfix_level ();
     ~mfix_level ();
 
@@ -29,7 +28,7 @@ public:
 
     void InitLevelData (int lev, Real dt, Real time);
 
-    void InitLevelDataFromRestart (int lev, Real dt, Real time);
+    void PostInit (int lev, Real dt, Real time, int nstep, int restart_flag);
 
     void WriteCheckPointFile ( std::string& check_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 )  const;
 
@@ -39,6 +38,10 @@ public:
                   IntVect& Nrep);
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
+
+    void Regrid (int lev, int nstep, int dual_grid);
+
+    void RegridOnRestart (int lev);
 
     void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
@@ -105,6 +108,7 @@ protected:
     void mfix_calc_drag_particle(int lev);
 
     void AllocateArrays(int lev);
+    void RegridArrays(int lev, BoxArray& new_grids, DistributionMapping& new_dmap);
 
 private:
 
@@ -113,7 +117,10 @@ private:
     void InitIOData ();
 
     void MakeNewLevelFromScratch(int lev, Real time,
-           const BoxArray& new_grids, const DistributionMapping& new_dmap);
+          const BoxArray& new_grids, const DistributionMapping& new_dmap);
+
+    void ReMakeNewLevelFromScratch(int lev, 
+          const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
     void WriteHeader(const std::string& name, int nstep, Real dt, Real time) const;
 
@@ -126,11 +133,12 @@ private:
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
+    void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
 
-  void mfix_set_bc_type(int lev);
-  void mfix_set_bc1(int lev);
+    void mfix_set_bc_type(int lev);
+    void mfix_set_bc1(int lev);
 
-  void fill_mf_bc(int lev,  MultiFab& mf);
+    void fill_mf_bc(int lev,  MultiFab& mf);
 #if 0
     void WritePlotFile () const;
 
@@ -199,33 +207,38 @@ private:
     // Molecular viscosity
     Array< std::unique_ptr<MultiFab> > mu_g ;
 
-    //
-    Array< std::unique_ptr<MultiFab> > lambda_g ;
-    Array< std::unique_ptr<MultiFab> > trD_g ;
+    // Cell-based
+    Array< std::unique_ptr<MultiFab> > lambda_g;
+    Array< std::unique_ptr<MultiFab> > trD_g;
 
-    //
-    Array< std::unique_ptr<MultiFab> > tau_u_g ;
-    Array< std::unique_ptr<MultiFab> > tau_v_g ;
-    Array< std::unique_ptr<MultiFab> > tau_w_g ;
-
-    Array< std::unique_ptr<MultiFab> > fluxX ;
-    Array< std::unique_ptr<MultiFab> > fluxY ;
-    Array< std::unique_ptr<MultiFab> > fluxZ ;
-
-    Array< std::unique_ptr<MultiFab> > ropX ;
-    Array< std::unique_ptr<MultiFab> > ropY ;
-    Array< std::unique_ptr<MultiFab> > ropZ ;
-
-    //
-    Array< std::unique_ptr<MultiFab> > f_gds  ;
-    Array< std::unique_ptr<MultiFab> > drag_bm;
+    // Face-based
+    Array< std::unique_ptr<MultiFab> > tau_u_g;
+    Array< std::unique_ptr<MultiFab> > tau_v_g;
+    Array< std::unique_ptr<MultiFab> > tau_w_g;
+    
+    Array< std::unique_ptr<MultiFab> > fluxX;
+    Array< std::unique_ptr<MultiFab> > fluxY;
+    Array< std::unique_ptr<MultiFab> > fluxZ;
+   
+    Array< std::unique_ptr<MultiFab> > ropX;
+    Array< std::unique_ptr<MultiFab> > ropY;
+    Array< std::unique_ptr<MultiFab> > ropZ;
+  
+    Array< std::unique_ptr<MultiFab> > f_gds_u;
+    Array< std::unique_ptr<MultiFab> > f_gds_v;
+    Array< std::unique_ptr<MultiFab> > f_gds_w;
+ 
+    Array< std::unique_ptr<MultiFab> > drag_u;
+    Array< std::unique_ptr<MultiFab> > drag_v;
+    Array< std::unique_ptr<MultiFab> > drag_w;
 
     int solve_fluid;
     int solve_dem;
     int max_nit;
     int call_udf;
 
-    int use_pic;
+    static std::string particle_init_type;
+    static std::string load_balance_type;
 
     Real cfl = 0.7;
 

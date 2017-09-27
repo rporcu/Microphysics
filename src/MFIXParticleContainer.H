@@ -59,15 +59,6 @@ public:
     // Get number of particles
     int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
 
-    int NumberOfParticles(int& lev, MFIter& mfi)
-    {
-      const int gridIndex = mfi.index();
-      const int tileIndex = mfi.LocalTileIndex();
-      auto&     particles = GetParticles(lev)[std::make_pair(gridIndex,tileIndex)];
-      auto&     structs   = particles.GetArrayOfStructs();
-      return structs.size();
-    }
-
     MFIXParticleContainer (AmrCore* amr_core);
 
     virtual ~MFIXParticleContainer() {};
@@ -76,7 +67,7 @@ public:
 
     void InitParticlesAscii (const std::string& file);
 
-    void Replicate (IntVect& Nrep, amrex::Array<Real>& orig_domain_size);
+    void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 
     void printParticles ();
 
@@ -86,10 +77,17 @@ public:
 
     void GetParticleAvgProp ( int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);
 
+    void BalanceParticleLoad_KDTree ();
     ///
     /// Write out all particles at a level in the format fcompare_par can read
     ///
     void writeAllForComparison(int lev);
+ 
+    ///
+    /// Write out all particles in the format of the particle_input.dat files so we
+    ///       can initialize a run with them
+    ///
+    void WriteAsciiFileForInit(const std::string& filename);
 
     void output ( int lev, int estatus, int finish, int nstep, Real dt, Real time );
 
@@ -109,7 +107,7 @@ public:
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction
     ///
-    void PICDeposition(amrex::MultiFab& mf, 
+    void PICDeposition(amrex::MultiFab& mf,
                        IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                        IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                        IArrayBox& bc_klo, IArrayBox& bc_khi,
@@ -118,12 +116,25 @@ public:
     ///
     /// Calculate particle-induced drag on the fluid
     ///
-    void CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf);
+    void CalcDragOnFluid(amrex::MultiFab& beta_mf_u,
+                         amrex::MultiFab& beta_mf_v,
+                         amrex::MultiFab& beta_mf_w,
+                         amrex::MultiFab& beta_u_mf,
+                         amrex::MultiFab& beta_v_mf,
+                         amrex::MultiFab& beta_w_mf,
+                         IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                         IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                         IArrayBox& bc_klo, IArrayBox& bc_khi);
 
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-    void PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf, int fortran_beta_comp, int fortran_vel_comp);
+    void PICMultiDeposition(amrex::MultiFab& beta_x_mf, amrex::MultiFab& beta_y_mf, amrex::MultiFab& beta_z_mf,
+                            amrex::MultiFab& beta_u_mf, amrex::MultiFab& beta_v_mf, amrex::MultiFab& beta_w_mf,
+                            IArrayBox& bc_ilo, IArrayBox& bc_ihi,
+                            IArrayBox& bc_jlo, IArrayBox& bc_jhi,
+                            IArrayBox& bc_klo, IArrayBox& bc_khi,
+                            int fortran_beta_comp, int fortran_vel_comp);
 
 private:
 

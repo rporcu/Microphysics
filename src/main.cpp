@@ -9,8 +9,10 @@
 #include <mfix_level.H>
 #include <mfix_F.H>
 
-int   max_step = -1;
-int   verbose  = -1;
+int   max_step    = -1;
+int   verbose     = -1;
+int   regrid_int  = -1;
+int   dual_grid   =  0;
 Real stop_time = -1.0;
 
 std::string restart_file {""};
@@ -58,11 +60,13 @@ void ReadParameters ()
   pp.query("par_ascii_file", par_ascii_file);
   pp.query("par_ascii_int", par_ascii_int);
 
-  pp.query("restart_file", restart_file);
+  pp.query("restart", restart_file);
   pp.query("repl_x", repl_x);
   pp.query("repl_y", repl_y);
   pp.query("repl_z", repl_z);
   pp.query("verbose", verbose);
+
+  pp.query("dual_grid",dual_grid);
 }
 
 int main (int argc, char* argv[])
@@ -120,14 +124,30 @@ int main (int argc, char* argv[])
     my_mfix.Init(lev,dt,time);
 
     // Either init from scratch or from the checkpoint file
+    int restart_flag = 0;
     if (restart_file.empty())
     {
        my_mfix.InitLevelData(lev,dt,time);
-    } else {
+    } 
+    else
+    {
+       restart_flag = 1;
        IntVect Nrep(repl_x,repl_y,repl_z);
        my_mfix.Restart( restart_file, &nstep, &dt, &time, Nrep);
-       my_mfix.InitLevelDataFromRestart( lev, dt, time );
+
+       // This call checks if we want to regrid using the 
+       //   max_grid_size just read in from the inputs file used to restart
+       //   (only relevant if load_balance_type = "FixedSize")
+
+       // Note that this call does not depend on regrid_int
+       my_mfix.RegridOnRestart(lev);
     }
+
+    // This checks if we want to regrid using the KDTree approach
+    //    (only if load_balance_type = "KDTree")
+    my_mfix.Regrid(lev,nstep,dual_grid);
+
+    my_mfix.PostInit( lev, dt, time, nstep, restart_flag );
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
@@ -168,6 +188,9 @@ int main (int argc, char* argv[])
           mfix_usr1();
 
           Real strt_step = ParallelDescriptor::second();
+
+          if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
+             my_mfix.Regrid(lev,nstep,dual_grid);
 
           my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
 

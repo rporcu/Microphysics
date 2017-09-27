@@ -13,20 +13,20 @@ export OMP_PLACES=threads
 export OMP_PROC_BIND=spread
 
 #run the application:
-#cd /global/cscratch1/sd/almgren/BENCH03/Size001
-#srun -n 1 -c 4 --cpu_bind=cores ../mfix inputs >& out.001
+#cd /global/cscratch1/sd/almgren/BENCH03/Size0001
+#srun -n 1 -c 4 --cpu_bind=cores ../mfix inputs >& out.0001
 
-#cd /global/cscratch1/sd/almgren/BENCH03/Size004
-#srun -n 4 -c 4 --cpu_bind=cores ../mfix inputs >& out.004
+#cd /global/cscratch1/sd/almgren/BENCH03/Size0004
+#srun -n 4 -c 4 --cpu_bind=cores ../mfix inputs >& out.0004
 
-#cd /global/cscratch1/sd/almgren/BENCH03/Size016
-#srun -n 16 -c 4 --cpu_bind=cores ../mfix inputs >& out.016
+#cd /global/cscratch1/sd/almgren/BENCH03/Size0016
+#srun -n 16 -c 4 --cpu_bind=cores ../mfix inputs >& out.0016
 
-#cd /global/cscratch1/sd/almgren/BENCH03/Size064
-#srun -n 64 -c 4 --cpu_bind=cores ../mfix inputs >& out.064.new
+#cd /global/cscratch1/sd/almgren/BENCH03/Size0064
+#srun -n 64 -c 4 --cpu_bind=cores ../mfix inputs >& out.0064.new
 
-#cd /global/cscratch1/sd/almgren/BENCH03/Size256
-#srun -n 256 -c 4 --cpu_bind=cores ../mfix inputs >& out.256.right
+#cd /global/cscratch1/sd/almgren/BENCH03/Size0256
+#srun -n 256 -c 4 --cpu_bind=cores ../mfix inputs >& out.0256.right
 
 cd /global/cscratch1/sd/almgren/BENCH03/Size1024
 srun -n 1024 -c 4 --cpu_bind=cores ../mfix inputs >& out.1024

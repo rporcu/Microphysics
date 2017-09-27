@@ -16,8 +16,7 @@
   TSTOP = 0.0025
 
   DT =     1.0d-04
-  DT_MAX = 1.0d-02
-  DT_MIN = 1.0d-10
+  DT_FAC = 1.0
 
   GRAVITY(1:3) = 3*0.0
 

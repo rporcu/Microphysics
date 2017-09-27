@@ -157,8 +157,13 @@ contains
       integer(c_int),   intent(in   )     :: nstep
       integer(c_int),   intent(inout)     :: ncoll
 
-      real(c_real)                        :: tow(nrp+ngp,3), fc(nrp+ngp,3)
-      type(particle_t)                    :: particles(nrp+ngp)
+      type(particle_t), allocatable       :: particles(:)
+
+      real(c_real), allocatable :: tow(:,:), fc(:,:)
+
+      allocate(tow(nrp+ngp,3))
+      allocate( fc(nrp+ngp,3))
+      allocate(particles(nrp+ngp))
 
       tow  = 0
       fc   = 0
@@ -182,6 +187,8 @@ contains
       ! update position and velocities
       call des_euler_update ( rparticles, gparticles, fc, tow, subdt )
 
+      deallocate(tow, fc, particles)
+
    end subroutine des_time_loop_ops_nl
 
    subroutine des_euler_update ( particles, grid_nbors, fc, tow, dt )
@@ -194,7 +201,7 @@ contains
       real(c_real),     intent(inout)  :: fc(:,:), tow(:,:)
       real(c_real),     intent(in   )  :: dt
       integer                          :: p,np,ng
-   
+
       np = size (particles)
       ng = size (grid_nbors)
 

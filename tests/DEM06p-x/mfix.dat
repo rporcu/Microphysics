@@ -44,7 +44,12 @@
 # NUMERICAL SECTION
 
   MAX_NIT = 250
-  TOL_RESID = 1.E-4
+  TOL_RESID = 1.E-8
+
+  LEQ_IT(1) = 50
+  LEQ_IT(2:4) = 3*20
+
+  LEQ_TOL(1:4) = 4*1.0d-10
 
 #_______________________________________________________________________
 # MATERIAL SECTION

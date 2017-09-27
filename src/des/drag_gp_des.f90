@@ -93,15 +93,10 @@ module des_drag_gp_module
       real(c_real) :: Mu
 ! drag coefficient
       real(c_real) :: DgA
-! correction factors for implementing polydisperse drag model
-! proposed by van der Hoef et al. (2005)
-      real(c_real) :: F_cor, tSUM
-! average particle diameter in polydisperse systems
-      real(c_real) :: DPA
-! diameter ratio in polydisperse systems
-      real(c_real) :: Y_i
+
 ! total solids volume fraction
       real(c_real) :: PHIS
+ 
 ! aliases for void fraction, gas density, gas bulk density,
 ! solids volume fraction, particle diameter, particle density
       real(c_real) :: ROg, ROPg, DPM

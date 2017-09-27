@@ -54,6 +54,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
                bc_ilo_type(j,k,1) == POUT_) then
  
                vol(ilo,j,k) = vol(ilo,j,k) + vol(ilo-1,j,k)
+               vol(ilo-1,j,k) = 0.d0
 
            end if
         end do
@@ -72,6 +73,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
                bc_ihi_type(j,k,1) == POUT_) then
 
                vol(ihi,j,k) = vol(ihi,j,k) + vol(ihi+1,j,k)
+               vol(ihi+1,j,k) = 0.d0
 
            end if
         end do
@@ -90,6 +92,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
                bc_jlo_type(i,k,1) == POUT_) then
 
                vol(i,jlo,k) = vol(i,jlo,k) + vol(i,jlo-1,k)
+               vol(i,jlo-1,k) = 0.d0
 
            end if
         end do
@@ -108,6 +111,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
                bc_jhi_type(i,k,1) == POUT_) then
 
                vol(i,jhi,k) = vol(i,jhi,k) + vol(i,jhi+1,k)
+               vol(i,jhi+1,k) = 0.d0
 
            end if
         end do
@@ -126,6 +130,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
                bc_klo_type(i,j,1) == POUT_) then
 
                vol(i,j,klo) = vol(i,j,klo) + vol(i,j,klo-1)
+               vol(i,j,klo-1) = 0.d0
 
            end if
         end do
@@ -144,6 +149,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
                bc_khi_type(i,j,1) == POUT_) then
 
                vol(i,j,khi) = vol(i,j,khi) + vol(i,j,khi+1)
+               vol(i,j,khi+1) = 0.d0
 
            end if
         end do
