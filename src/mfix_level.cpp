@@ -730,7 +730,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
     pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
 
     // Now define rop_g = ro_g * ep_g
-    rop_g[lev]->copy((*ro_g[lev]),0,0,1,rop_g[lev]->nGrow(),rop_g[lev]->nGrow());
+    MultiFab::Copy(*rop_g[lev], *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow());
     MultiFab::Multiply((*rop_g[lev]), (*ep_g[lev]), 0, 0, 1, rop_g[lev]->nGrow());
 
     // This sets the values outside walls or periodic boundaries
@@ -804,30 +804,36 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
        // Temporary arrays
        int ng = ep_g[lev]->nGrow();
        std::unique_ptr<MultiFab> ep_g_pba(new MultiFab(pba,pdm,ep_g[lev]->nComp(),ng));
-       ep_g_pba->copy(*ep_g[lev],0,0,1,ng,ng,geom[lev].periodicity());
+       ep_g_pba->copy(*ep_g[lev],0,0,1,ng,ng);
+       ep_g_pba->FillBoundary(geom[lev].periodicity());
 
        ng = ro_g[lev]->nGrow();
        std::unique_ptr<MultiFab> ro_g_pba(new MultiFab(pba,pdm,ro_g[lev]->nComp(),ro_g[lev]->nGrow()));
-       ro_g_pba->copy(*ro_g[lev],0,0,1,ng,ng,geom[lev].periodicity());
+       ro_g_pba->copy(*ro_g[lev],0,0,1,ng,ng);
+       ro_g_pba->FillBoundary(geom[lev].periodicity());
 
        ng = mu_g[lev]->nGrow();
        std::unique_ptr<MultiFab> mu_g_pba(new MultiFab(pba,pdm,mu_g[lev]->nComp(),mu_g[lev]->nGrow()));
-       mu_g_pba->copy(*mu_g[lev],0,0,1,ng,ng,geom[lev].periodicity());
+       mu_g_pba->copy(*mu_g[lev],0,0,1,ng,ng);
+       mu_g_pba->FillBoundary(geom[lev].periodicity());
 
        BoxArray x_face_ba = pba;
        x_face_ba.surroundingNodes(0);
        std::unique_ptr<MultiFab> u_g_pba(new MultiFab(x_face_ba,pdm,u_g[lev]->nComp(),u_g[lev]->nGrow()));
-       u_g_pba->copy(*u_g[lev],0,0,1,ng,ng,geom[lev].periodicity());
+       u_g_pba->copy(*u_g[lev],0,0,1,ng,ng);
+       u_g_pba->FillBoundary(geom[lev].periodicity());
 
        BoxArray y_face_ba = pba;
        y_face_ba.surroundingNodes(1);
        std::unique_ptr<MultiFab> v_g_pba(new MultiFab(y_face_ba,pdm,v_g[lev]->nComp(),v_g[lev]->nGrow()));
-       v_g_pba->copy(*v_g[lev]);
+       v_g_pba->copy(*v_g[lev],0,0,1,ng,ng);
+       v_g_pba->FillBoundary(geom[lev].periodicity());
 
        BoxArray z_face_ba = pba;
        z_face_ba.surroundingNodes(2);
        std::unique_ptr<MultiFab> w_g_pba(new MultiFab(z_face_ba,pdm,w_g[lev]->nComp(),w_g[lev]->nGrow()));
-       w_g_pba->copy(*w_g[lev]);
+       w_g_pba->copy(*w_g[lev],0,0,1,ng,ng);
+       w_g_pba->FillBoundary(geom[lev].periodicity());
 
        // ************************************************************
        // First create the beta of individual particles 
@@ -953,25 +959,29 @@ mfix_level::mfix_calc_drag_particle(int lev)
        // Temporary arrays
        int ng = p_g[lev]->nGrow();
        std::unique_ptr<MultiFab> p_g_pba(new MultiFab(pba,pdm,p_g[lev]->nComp(),ng));
-       p_g_pba->copy(*p_g[lev],0,0,1,ng,ng,geom[lev].periodicity());
+       p_g_pba->copy(*p_g[lev],0,0,1,ng,ng);
+       p_g_pba->FillBoundary(geom[lev].periodicity());
 
        BoxArray x_face_ba = pba;
        x_face_ba.surroundingNodes(0);
        ng = u_g[lev]->nGrow();
        std::unique_ptr<MultiFab> u_g_pba(new MultiFab(x_face_ba,pdm,u_g[lev]->nComp(),ng));
-       u_g_pba->copy(*u_g[lev],0,0,1,ng,ng,geom[lev].periodicity());
+       u_g_pba->copy(*u_g[lev],0,0,1,ng,ng);
+       u_g_pba->FillBoundary(geom[lev].periodicity());
 
        BoxArray y_face_ba = pba;
        y_face_ba.surroundingNodes(1);
        ng = v_g[lev]->nGrow();
        std::unique_ptr<MultiFab> v_g_pba(new MultiFab(y_face_ba,pdm,v_g[lev]->nComp(),ng));
-       v_g_pba->copy(*v_g[lev],0,0,1,ng,ng,geom[lev].periodicity());
+       v_g_pba->copy(*v_g[lev],0,0,1,ng,ng);
+       v_g_pba->FillBoundary(geom[lev].periodicity());
 
        BoxArray z_face_ba = pba;
        z_face_ba.surroundingNodes(2);
        ng = w_g[lev]->nGrow();
        std::unique_ptr<MultiFab> w_g_pba(new MultiFab(z_face_ba,pdm,w_g[lev]->nComp(),ng));
-       w_g_pba->copy(*w_g[lev],0,0,1,ng,ng,geom[lev].periodicity());
+       w_g_pba->copy(*w_g[lev],0,0,1,ng,ng);
+       w_g_pba->FillBoundary(geom[lev].periodicity());
 
 #ifdef _OPENMP
 #pragma omp parallel
