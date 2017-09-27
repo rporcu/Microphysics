@@ -664,18 +664,6 @@ mfix_level::usr3(int lev)
 }
 
 void
-mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs)
-{
-    int sweep_type, precond_type, max_it;
-    Real tol;
-
-    BL_PROFILE("mfix_level::mfix_solve_linear_equation()");
-    get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
-
-    solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol, lev);
-}
-
-void
 mfix_level::mfix_set_bc_type(int lev)
 {
     Real dx = geom[lev].CellSize(0);
