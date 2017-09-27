@@ -133,6 +133,7 @@ private:
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
+    void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
 
     void mfix_set_bc_type(int lev);
     void mfix_set_bc1(int lev);
