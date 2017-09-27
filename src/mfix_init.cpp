@@ -94,7 +94,9 @@ mfix_level::MakeBaseGrids () const
     //    create enough grids to have at least one grid per processor.
     // This option is controlled by "refine_grid_layout" which defaults to true.
 
-    if ( refine_grid_layout && ba.size() < ParallelDescriptor::NProcs()) {
+    if ( refine_grid_layout && 
+         ba.size() < ParallelDescriptor::NProcs() &&
+         load_balance_type == "FixedSize") {
         ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
     }
 
@@ -108,7 +110,8 @@ mfix_level::MakeBaseGrids () const
 void
 mfix_level::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 {
-    amrex::Warning("Using max_grid_size only did not make enough grids for the number of processors");
+    if ( ParallelDescriptor::IOProcessor() )
+       amrex::Warning("Using max_grid_size only did not make enough grids for the number of processors");
 
     // Here we hard-wire the maximum number of times we divide the boxes.
     int n = 10;
@@ -142,7 +145,8 @@ mfix_level::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
         else 
         {
             // chunk[j] was the biggest chunk -- if this is too small then we're done
-            amrex::Warning("ChopGrids was unable to make enough grids for the number of processors");
+            if ( ParallelDescriptor::IOProcessor() )
+               amrex::Warning("ChopGrids was unable to make enough grids for the number of processors");
             return;
         } 
 
