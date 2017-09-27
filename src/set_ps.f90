@@ -17,9 +17,7 @@
       use iso_c_binding , only: c_int
 
       use ps, only: dim_ps, point_source
-      use ps, only: ps_vel_mag_g, ps_massflow_g, ps_defined
-      use ps, only: ps_x_w, ps_x_e, ps_y_s, ps_y_n, ps_z_b, ps_z_t
-      use ps, only: ps_u_g, ps_v_g, ps_w_g
+      ! use ps, only: ps_vel_mag_g, ps_massflow_g, ps_defined
 
       use param  , only: zero, small_number
 
@@ -33,14 +31,14 @@
       ! If err = 1  is passed back to the C++ then amrex::Abort is called.
       integer(c_int), intent(  out) :: err
 
-      integer(c_int) :: psv, ps_size
+      ! integer(c_int) :: psv, ps_size
       real(c_real)   :: vol
 
       CHARACTER(LEN=64) :: eMsg
 
       logical, parameter :: dbg_ps = .FALSE.
 
-      integer :: i_w , i_e , j_s , j_n , k_b , k_t
+      ! integer :: i_w , i_e , j_s , j_n , k_b , k_t
 
       err = 0
 
@@ -91,13 +89,13 @@
 
       return
 
-  500 continue
+      ! 500 continue
 
       if (is_ioproc .eq. 1) &
          write(*,"('PointSource setup Error: ',A)") trim(eMsg)
       err = 1
 
-  501 continue
+      ! 501 continue
 
       if (is_ioproc .eq. 1) &
          write(*,"('PointSource setup Error: ',A)") trim(eMsg)
@@ -162,7 +160,7 @@
       ! Number of cells comprising the point source.
       integer, intent(in) :: lps_size
 
-      integer :: lc1
+      ! integer :: lc1
 
       ! write(*,"(3/,3x,'Debug Point Source Index: ',I3)") lPSV
       ! write(*,"(/3x,'Size: ',I4)") lps_size

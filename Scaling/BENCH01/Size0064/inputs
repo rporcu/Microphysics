@@ -3,9 +3,9 @@ amr.n_cell = 80 80 80
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
-amr.max_grid_size_x =  4
+amr.max_grid_size_x = 20
 amr.max_grid_size_y = 20
-amr.max_grid_size_z =  4
+amr.max_grid_size_z = 20
 
 # Maximum tile size within each grid
 fabarray.mfiter_tile_size = 20 20 20

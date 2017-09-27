@@ -26,13 +26,14 @@ module calc_d_mod
 !           pressure correction                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_d_e(lo, hi, slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
-        ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_ilo_type, bc_ihi_type)
+   subroutine calc_d_e(lo, hi, slo, shi, ulo, uhi, alo, ahi, dlo, dhi, &
+        d_e, A_m, ep_g, f_gds_u, dx, dy, dz, domlo, domhi, bc_ilo_type, bc_ihi_type)
 
       integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: ulo(3),uhi(3)
       integer, intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: dlo(3),dhi(3)
       integer, intent(in   ) :: domlo(3),domhi(3)
 
       ! Pressure correction
@@ -44,8 +45,8 @@ module calc_d_mod
 
       real(c_real), intent(in   ):: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: f_gds&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: f_gds_u&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
            (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
@@ -67,15 +68,21 @@ module calc_d_mod
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
+
                Am0 = -A_m(i,j,k,0)
+
                if (abs(am0) > small_number) then
+
                   epga = ayz*0.5d0*(ep_g(i-1,j,k)+ep_g(i,j,k))
-                  if(coupled) Am0 = Am0 + 0.5d0*vol* &
-                     (f_gds(i-1,j,k) + f_gds(i,j,k))
+                  if (coupled) Am0 = Am0 + vol * f_gds_u(i,j,k)
                   d_e(i,j,k) = p_scale*epga/am0
+
                else
+
                   d_e(i,j,k) = zero
+
                endif
+
             enddo
          enddo
       enddo
@@ -114,17 +121,15 @@ module calc_d_mod
 
    end subroutine calc_d_e
 
-
-
-
-   subroutine calc_d_n(lo, hi, slo, shi, vlo, vhi, alo, ahi, d_n, A_m,&
-        ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_jlo_type, bc_jhi_type)
+   subroutine calc_d_n(lo, hi, slo, shi, vlo, vhi, alo, ahi, dlo, dhi, &
+        d_n, A_m, ep_g, f_gds_v, dx, dy, dz, domlo, domhi, bc_jlo_type, bc_jhi_type)
 
 
       integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: vlo(3),vhi(3)
       integer, intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: dlo(3),dhi(3)
       integer, intent(in   ) :: domlo(3),domhi(3)
 
       ! Pressure correction
@@ -136,8 +141,8 @@ module calc_d_mod
 
       real(c_real), intent(in   ):: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: f_gds&
-           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: f_gds_v&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
       integer(c_int), intent(in   ) :: bc_jlo_type&
            (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
@@ -159,14 +164,19 @@ module calc_d_mod
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
+
                Am0 = -A_m(i,j,k,0)
+
                if(abs(Am0) > small_number) then
+
                   epga = axz*0.5d0*(ep_g(i,j-1,k)+ep_g(i,j,k))
-                  if(coupled) Am0 = Am0 + 0.5d0*vol* &
-                     (f_gds(i,j-1,k) + f_gds(i,j,k))
+                  if (coupled) Am0 = Am0 + vol * f_gds_v(i,j,k)
                   d_n(i,j,k) = p_scale*epga/am0
+
                else
+
                   d_n(i,j,k) = zero
+
                endif
 
             enddo
@@ -207,16 +217,14 @@ module calc_d_mod
 
    end subroutine calc_d_n
 
-
-
-
-   subroutine calc_d_t(lo, hi, slo, shi, wlo, whi, alo, ahi, d_t, A_m,&
-      ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_klo_type, bc_khi_type)
+   subroutine calc_d_t(lo, hi, slo, shi, wlo, whi, alo, ahi, dlo, dhi, &
+      d_t, A_m, ep_g, f_gds_w, dx, dy, dz, domlo, domhi, bc_klo_type, bc_khi_type)
 
       integer, intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: slo(3),shi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: dlo(3),dhi(3)
       integer, intent(in   ) :: domlo(3),domhi(3)
 
       ! Pressure correction
@@ -228,8 +236,8 @@ module calc_d_mod
 
       real(c_real), intent(in   ):: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: f_gds&
-           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: f_gds_w&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
       integer(c_int), intent(in   ) :: bc_klo_type&
            (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
@@ -256,8 +264,7 @@ module calc_d_mod
               if (abs(Am0) > small_number) THEN
 
                  epga = axy*0.5d0*(ep_g(i,j,k-1)+ep_g(i,j,k))
-                 if(coupled) Am0 = Am0 + 0.5d0*vol* &
-                    (f_gds(i,j,k-1) + f_gds(i,j,k))
+                 if (coupled) Am0 = Am0 + vol * f_gds_w(i,j,k)
                  d_t(i,j,k) = p_scale*epga/am0
 
               else

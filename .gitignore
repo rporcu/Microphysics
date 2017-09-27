@@ -12,3 +12,4 @@ tmp.*
 *.RES
 *.LOG
 build
+Size*

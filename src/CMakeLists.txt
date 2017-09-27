@@ -3,6 +3,8 @@ set(CXX_sources
    mfix_evolve.cpp
    mfix_init.cpp
    mfix_level.cpp
+   mfix_linear_solve.cpp
+   mfix_regrid.cpp
    solve_bicgstab.cpp
    MFIXParticleContainer.cpp
    io/mfixIO.cpp)
@@ -48,7 +50,6 @@ set(F90_sources
    des/calc_collision_wall_mod.f90
    des/calc_drag.f90
    des/calc_force_dem.f90
-   des/calc_volume_fraction.f90
    des/cffctowall.f90
    des/cfrelvel.f90
    des/cfslide.f90
@@ -95,6 +96,7 @@ set(F90_sources
    set_bc1.f90
    set_bc_flow.f90
    set_bc_type.f90
+   set_drag_bcs.f90
    set_ps.f90
    solve_pp_g.f90
    solve_vel_star.f90

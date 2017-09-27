@@ -21,10 +21,10 @@ module solve_vel_star_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine solve_u_g_star(&
-         slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
+         slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, dlo, dhi, lo, hi, &
          u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
-         rop_go, ep_g, tau_u_g, d_e, fluxX, fluxY, fluxZ ,mu_g,  &
-         f_gds, A_m, b_m, drag_bm, mask, &
+         rop_go, ep_g, tau_u_g, d_e, fluxX, fluxY, fluxZ, &
+         mu_g, f_gds_u, drag_u, A_m, b_m, mask, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
          bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, num_u, denom_u) &
          bind(C, name="solve_u_g_star")
@@ -50,6 +50,7 @@ module solve_vel_star_module
       integer(c_int)     , intent(in   ) :: vlo(3),vhi(3)
       integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
       integer(c_int)     , intent(in   ) :: alo(3),ahi(3)
+      integer(c_int)     , intent(in   ) :: dlo(3),dhi(3)
       integer(c_int)     , intent(in   ) :: domlo(3),domhi(3)
       integer(c_int)     , intent(in   ) ::  lo(3), hi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
@@ -85,10 +86,10 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: f_gds&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: drag_bm&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: f_gds_u&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
+      real(c_real), intent(in   ) :: drag_u&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
       real(c_real), intent(  out) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
@@ -142,17 +143,18 @@ module solve_vel_star_module
       if(point_source) call point_source_u_g (lo, hi, alo, ahi, b_m, vol)
 
       ! Calculate coefficients for the pressure correction equation
-      call calc_d_e(lo, hi, slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
-           ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_ilo_type, bc_ihi_type)
+      call calc_d_e(lo, hi, slo, shi, ulo, uhi, alo, ahi, dlo, dhi, &
+                    d_e, A_m, ep_g, f_gds_u, dx, dy, dz, domlo, domhi, bc_ilo_type, bc_ihi_type)
 
       ! Handle special case where center coefficient is zero
       call adjust_a_g ('U', slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
       ! Add in source terms for DEM drag coupling.
       if (des_continuum_coupled) &
-         call gas_drag_u(lo, hi, slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
+         call gas_drag_u(lo, hi, slo, shi, alo, ahi, dlo, dhi,&
+                         A_m, b_m, f_gds_u, drag_u, vol, domlo, domhi)
 
-      call calc_resid_vel (lo, hi, alo, ahi, &
+      call calc_resid_vel (1, lo, hi, alo, ahi, &
          ulo, uhi, vlo, vhi, wlo, whi, &
          u_g, v_g, w_g, A_m, b_m, mask, &
          num_u, denom_u)
@@ -170,10 +172,10 @@ module solve_vel_star_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_v_g_star(&
-      slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
+      slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, dlo, dhi, lo, hi, &
       u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
-      rop_go, ep_g, tau_v_g, d_n, fluxX, fluxY, fluxZ, mu_g,  &
-      f_gds, A_m, b_m, drag_bm, mask, &
+      rop_go, ep_g, tau_v_g, d_n, fluxX, fluxY, fluxZ, &
+      mu_g, f_gds_v, drag_v, A_m, b_m, mask, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, num_v, denom_v) &
       bind(C, name="solve_v_g_star")
@@ -204,6 +206,7 @@ module solve_vel_star_module
       integer(c_int)     , intent(in   ) :: vlo(3),vhi(3)
       integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
       integer(c_int)     , intent(in   ) :: alo(3),ahi(3)
+      integer(c_int)     , intent(in   ) :: dlo(3),dhi(3)
       integer(c_int)     , intent(in   ) :: domlo(3),domhi(3)
       integer(c_int)     , intent(in   ) ::  lo(3), hi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
@@ -239,10 +242,10 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: f_gds&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: drag_bm&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: f_gds_v&
+        (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
+      real(c_real), intent(in   ) :: drag_v&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
       real(c_real), intent(  out) :: d_n&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
@@ -296,17 +299,18 @@ module solve_vel_star_module
       if(point_source) call point_source_v_g (lo, hi, alo, ahi, b_m, vol)
 
       ! Calculate coefficients for the pressure correction equation
-      call calc_d_n(lo, hi, slo, shi, vlo, vhi, alo, ahi, d_n, A_m, &
-           ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_jlo_type, bc_jhi_type)
+      call calc_d_n(lo, hi, slo, shi, vlo, vhi, alo, ahi, dlo, dhi, &
+                    d_n, A_m, ep_g, f_gds_v, dx, dy, dz, domlo, domhi, bc_jlo_type, bc_jhi_type)
 
       ! Handle special case where center coefficient is zero
       call adjust_a_g('V',slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
       ! Add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_v(lo, hi, slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
+         call gas_drag_v(lo, hi, slo, shi, alo, ahi, dlo, dhi,&
+                         A_m, b_m, f_gds_v, drag_v, vol, domlo, domhi)
 
-      call calc_resid_vel (lo, hi, alo, ahi, &
+      call calc_resid_vel (2, lo, hi, alo, ahi, &
          vlo, vhi, wlo, whi, ulo, uhi, &
          v_g, w_g, u_g, A_m, b_m, mask, &
          num_v, denom_v)
@@ -325,10 +329,10 @@ module solve_vel_star_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_w_g_star(&
-      slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
+      slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, dlo, dhi, lo, hi, &
       u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
-      rop_go, ep_g, tau_w_g, d_t, fluxX, fluxY, fluxZ, mu_g,  &
-      f_gds, A_m, b_m, drag_bm, mask, &
+      rop_go, ep_g, tau_w_g, d_t, fluxX, fluxY, fluxZ, &
+      mu_g,  f_gds_w, drag_w, A_m, b_m, mask, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, num_w, denom_w) &
       bind(C, name="solve_w_g_star")
@@ -357,6 +361,7 @@ module solve_vel_star_module
       integer(c_int)     , intent(in   ) :: vlo(3),vhi(3)
       integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
       integer(c_int)     , intent(in   ) :: alo(3),ahi(3)
+      integer(c_int)     , intent(in   ) :: dlo(3),dhi(3)
       integer(c_int)     , intent(in   ) :: domlo(3),domhi(3)
       integer(c_int)     , intent(in   ) ::  lo(3), hi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
@@ -392,10 +397,10 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: f_gds&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: drag_bm&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: f_gds_w&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
+      real(c_real), intent(in   ) :: drag_w&
+         (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
       real(c_real), intent(  out) :: d_t&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
@@ -449,17 +454,18 @@ module solve_vel_star_module
       if(point_source) call point_source_w_g (lo, hi, alo, ahi, b_m, vol)
 
       ! calculate coefficients for the pressure correction equation
-      call calc_d_t(lo, hi, slo, shi, wlo, whi, alo, ahi, d_t, A_m, &
-           ep_g, f_gds, dx, dy, dz, domlo, domhi, bc_klo_type, bc_khi_type)
+      call calc_d_t(lo, hi, slo, shi, wlo, whi, alo, ahi, dlo, dhi, &
+                    d_t, A_m, ep_g, f_gds_w, dx, dy, dz, domlo, domhi, bc_klo_type, bc_khi_type)
 
       ! handle special case where center coefficient is zero
       call adjust_a_g('W',slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
       ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_w(lo, hi, slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
+         call gas_drag_w(lo, hi, slo, shi, alo, ahi, dlo, dhi, &
+                         A_m, b_m, f_gds_w, drag_w, vol, domlo, domhi)
 
-      call calc_resid_vel (lo, hi, alo, ahi, &
+      call calc_resid_vel (3, lo, hi, alo, ahi, &
          wlo, whi, ulo, uhi, vlo, vhi, &
          w_g, u_g, v_g, A_m, b_m, mask, &
          num_w, denom_w)
