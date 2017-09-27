@@ -421,8 +421,6 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
       init_collision(avg_dp, avg_ro);
   }
 
-  mfix_set_bc0(lev);
-
   // Initial fluid arrays: pressure, velocity, density, viscosity
   mfix_init_fluid(lev,restart_flag);
 
@@ -452,6 +450,9 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
   Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
   Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
   Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+
+  // Here we set bc values for p and u,v,w before the IC's are set
+  mfix_set_bc0(lev);
 
   // We deliberately don't tile this loop since we will be looping
   //    over bc's on faces and it makes more sense to do this one grid at a time
@@ -483,6 +484,10 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
            &dx, &dy, &dz, &xlen, &ylen, &zlen );
     }
   }
+
+  // Here we re-set the bc values for p and u,v,w just in case init_fluid
+  //      over-wrote some of the bc values with ic values
+  mfix_set_bc0(lev);
 
   // We deliberately don't tile this loop since we will be looping
   //    over bc's on faces and it makes more sense to do this one grid at a time
