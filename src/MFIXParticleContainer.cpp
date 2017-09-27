@@ -871,8 +871,6 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
 {
     BL_ASSERT(!filename.empty());
 
-    const Real strttime = ParallelDescriptor::second();
-
     int lev = 0;
     long nparticles = NumberOfParticlesAtLevel (lev);
 
@@ -1007,8 +1005,9 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
 void
 MFIXParticleContainer::BalanceParticleLoad_KDTree()
 {
+  int lev = 0;
   bool verbose = false;
-  BoxArray old_ba = ParticleBoxArray(0);
+  BoxArray old_ba = ParticleBoxArray(lev);
 
   if (verbose) 
   {
@@ -1017,8 +1016,15 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
         amrex::Print() << "Before:" << old_ba << std::endl;
   }
 
+  if (NumberOfParticlesAtLevel(lev) == 0)
+  {
+     amrex::Print() << "No particles so can't use KDTree approach " << std::endl;
+     return;
+  }
+
   Array<long> num_part;
   num_part = NumberOfParticlesInGrid(0);
+
   if (verbose) 
   {
      for (int i = 0; i < old_ba.size(); i++)
