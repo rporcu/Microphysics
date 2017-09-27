@@ -117,8 +117,7 @@
 
                end if
 
-               if (bc_ilo_type(j,k,1) == PINF_ .or. &
-                   bc_ilo_type(j,k,1) == MINF_) then
+               if (bc_ilo_type(j,k,1) == MINF_) then
 
                    ! Note we index u_g differently to catch the inflow face
                    u_g(ulo(1):domlo(1)  ,j,k) = bc_u_g(bcv)
@@ -164,8 +163,7 @@
 
                end if
 
-               if (bc_ihi_type(j,k,1) == PINF_ .or. &
-                   bc_ihi_type(j,k,1) == MINF_) then
+               if (bc_ihi_type(j,k,1) == MINF_) then
 
                    ! Note we index the same on the high side
                    u_g(domhi(1)+1:uhi(1),j,k) = bc_u_g(bcv)
@@ -210,8 +208,7 @@
 
                end if
 
-               if (bc_jlo_type(i,k,1) == PINF_ .or. &
-                   bc_jlo_type(i,k,1) == MINF_) then
+               if (bc_jlo_type(i,k,1) == MINF_) then
 
                    ! Note we index v_g differently to catch the inflow face
                    u_g(i,ulo(2):domlo(2)-1,k) = 0.0d0
@@ -257,8 +254,7 @@
 
                end if
 
-               if (bc_jhi_type(i,k,1) == PINF_ .or. &
-                   bc_jhi_type(i,k,1) == MINF_) then
+               if (bc_jhi_type(i,k,1) == MINF_) then
 
                    ! Note we index the same on the high side
                    u_g(i,domhi(2)+1:uhi(2),k) = 0.0d0
@@ -304,8 +300,7 @@
 
                end if
 
-               if (bc_klo_type(i,j,1) == PINF_ .or. &
-                   bc_klo_type(i,j,1) == MINF_) then
+               if (bc_klo_type(i,j,1) == MINF_) then
 
                    ! Note we index w_g differently to catch the inflow face
                    u_g(i,j,ulo(3):domlo(3)-1) = 0.0d0
@@ -351,8 +346,7 @@
 
                end if
 
-               if (bc_khi_type(i,j,1) == PINF_ .or. &
-                   bc_khi_type(i,j,1) == MINF_) then
+               if (bc_khi_type(i,j,1) == MINF_) then
 
                    ! Note we index the same on the high side
                    u_g(i,j,domhi(3)+1:uhi(3)) = 0.0d0
