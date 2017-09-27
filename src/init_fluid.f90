@@ -401,13 +401,15 @@ module init_fluid_module
          endif
 
          if(gravity(2) <= 0.0d0) then
-            pj = pj - dpody*dy*(hi(2)-domhi(2))
-            do j = hi(2)+1, lo(2), -1
-               do k = lo(3), hi(3)
-                  do i = lo(1), hi(1)
-                     p_g(i,j,k) = scale_pressure(pj)
+            !pj = pj - dpody*dy*(hi(2)-domhi(2))
+            do j=domhi(2)+1, domlo(2), -1
+               if(j <= hi(2)+1 .and. j>= lo(2)) then
+                  do k = lo(3), hi(3)
+                     do i = lo(1), hi(1)
+                        p_g(i,j,k) = scale_pressure(pj)
+                     enddo
                   enddo
-               enddo
+               endif
                pj = pj + dpody*dy
             enddo
          else
