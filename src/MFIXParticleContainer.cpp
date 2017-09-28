@@ -489,13 +489,11 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
     MultiFab* mf_pointer;
 
     if (OnSameGrids(lev, mf_to_be_filled)) {
-        amrex::Print() << "on same grids \n";
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
       mf_pointer = &mf_to_be_filled;
     }
     else {
-        amrex::Print() << "on different grids \n";
       // If mf_to_be_filled is not defined on the particle_box_array, then we need
       // to make a temporary here and copy into mf_to_be_filled at the end.
       mf_pointer = new MultiFab(ParticleBoxArray(lev),
