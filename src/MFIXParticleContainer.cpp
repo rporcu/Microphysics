@@ -755,6 +755,13 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
     beta_v_ptr->SumBoundary(gm.periodicity());
     beta_w_ptr->SumBoundary(gm.periodicity());
 
+    beta_x_ptr->OverrideSync(gm.periodicity());
+    beta_y_ptr->OverrideSync(gm.periodicity());
+    beta_z_ptr->OverrideSync(gm.periodicity());
+    beta_u_ptr->OverrideSync(gm.periodicity());
+    beta_v_ptr->OverrideSync(gm.periodicity());
+    beta_w_ptr->OverrideSync(gm.periodicity());
+
     // Copy back from mf_pointer
     beta_x_mf.copy(*beta_x_ptr,0,0,1);
     beta_y_mf.copy(*beta_y_ptr,0,0,1);
