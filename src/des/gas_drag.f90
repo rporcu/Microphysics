@@ -53,8 +53,8 @@ module gas_drag_module
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               A_m(i,j,k,0) = A_m(i,j,k,0) - vol * f_gds_u(i,j,k)
-               b_m(i,j,k  ) = b_m(i,j,k  ) - vol *  drag_u(i,j,k)
+               A_m(i,j,k,0) = A_m(i,j,k,0) - f_gds_u(i,j,k)
+               b_m(i,j,k  ) = b_m(i,j,k  ) -  drag_u(i,j,k)
             end do
          end do
       end do
@@ -102,8 +102,8 @@ module gas_drag_module
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               A_m(i,j,k,0) = A_m(i,j,k,0) - vol * f_gds_v(i,j,k)
-               b_m(i,j,k  ) = b_m(i,j,k  ) - vol *  drag_v(i,j,k)
+               A_m(i,j,k,0) = A_m(i,j,k,0) - f_gds_v(i,j,k)
+               b_m(i,j,k  ) = b_m(i,j,k  ) -  drag_v(i,j,k)
             end do
          end do
       end do
@@ -150,8 +150,8 @@ module gas_drag_module
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               A_m(i,j,k,0) = A_m(i,j,k,0) - vol * f_gds_w(i,j,k)
-               b_m(i,j,k  ) = b_m(i,j,k  ) - vol *  drag_w(i,j,k)
+               A_m(i,j,k,0) = A_m(i,j,k,0) - f_gds_w(i,j,k)
+               b_m(i,j,k  ) = b_m(i,j,k  ) -  drag_w(i,j,k)
             end do
          end do
       end do

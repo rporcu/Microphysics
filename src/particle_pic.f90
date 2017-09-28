@@ -108,7 +108,7 @@ contains
        wy_lo = 1.0d0 - wy_hi
        wz_lo = 1.0d0 - wz_hi
 
-       pbeta   = particles(beta_comp,n) * oovol
+       pbeta   = particles(beta_comp,n)
        pvel(1) = particles(vel_comp  ,n) * pbeta
        pvel(2) = particles(vel_comp+1,n) * pbeta
        pvel(3) = particles(vel_comp+2,n) * pbeta

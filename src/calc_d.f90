@@ -56,14 +56,13 @@ module calc_d_mod
       real(c_real), intent(in   ) :: dx, dy, dz
 
       integer      :: i,j,k, bcv
-      real(c_real) :: ayz, vol
+      real(c_real) :: ayz
       real(c_real) :: Am0, epga
       logical      :: coupled
 
       coupled = (des_continuum_coupled .and. .not.des_oneway_coupled)
 
       ayz = dy*dz
-      vol = dx*dy*dz
 
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
@@ -74,7 +73,7 @@ module calc_d_mod
                if (abs(am0) > small_number) then
 
                   epga = ayz*0.5d0*(ep_g(i-1,j,k)+ep_g(i,j,k))
-                  if (coupled) Am0 = Am0 + vol * f_gds_u(i,j,k)
+                  if (coupled) Am0 = Am0 + f_gds_u(i,j,k)
                   d_e(i,j,k) = p_scale*epga/am0
 
                else
@@ -152,14 +151,13 @@ module calc_d_mod
       real(c_real), intent(in   ) :: dx, dy, dz
 
       integer      :: i,j,k, bcv
-      real(c_real) :: axz, vol
+      real(c_real) :: axz
       real(c_real) :: Am0, epga
       logical      :: coupled
 
       coupled = (des_continuum_coupled .and. .not.des_oneway_coupled)
 
       axz = dx*dz
-      vol = dx*dy*dz
 
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
@@ -170,7 +168,7 @@ module calc_d_mod
                if(abs(Am0) > small_number) then
 
                   epga = axz*0.5d0*(ep_g(i,j-1,k)+ep_g(i,j,k))
-                  if (coupled) Am0 = Am0 + vol * f_gds_v(i,j,k)
+                  if (coupled) Am0 = Am0 + f_gds_v(i,j,k)
                   d_n(i,j,k) = p_scale*epga/am0
 
                else
@@ -247,14 +245,13 @@ module calc_d_mod
       real(c_real), intent(in   ) :: dx, dy, dz
 
       integer      :: i,j,k, bcv
-      real(c_real) :: axy, vol
+      real(c_real) :: axy
       real(c_real) :: Am0, epga
       logical      :: coupled
 
       coupled = (des_continuum_coupled .and. .not.des_oneway_coupled)
 
       axy = dx*dy
-      vol = dx*dy*dz
 
       do k = lo(3), hi(3)
         do j = lo(2), hi(2)
@@ -264,7 +261,7 @@ module calc_d_mod
               if (abs(Am0) > small_number) THEN
 
                  epga = axy*0.5d0*(ep_g(i,j,k-1)+ep_g(i,j,k))
-                 if (coupled) Am0 = Am0 + vol * f_gds_w(i,j,k)
+                 if (coupled) Am0 = Am0 + f_gds_w(i,j,k)
                  d_t(i,j,k) = p_scale*epga/am0
 
               else
