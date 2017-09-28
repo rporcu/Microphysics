@@ -55,7 +55,7 @@ module calc_d_mod
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      integer      :: i,j,k, bcv
+      integer      :: i,j,k
       real(c_real) :: ayz
       real(c_real) :: Am0, epga
       logical      :: coupled
@@ -150,7 +150,7 @@ module calc_d_mod
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      integer      :: i,j,k, bcv
+      integer      :: i,j,k
       real(c_real) :: axz
       real(c_real) :: Am0, epga
       logical      :: coupled
@@ -186,7 +186,6 @@ module calc_d_mod
          j = alo(2)
          do k = lo(3), hi(3)
             do i = lo(1), hi(1)
-               bcv = bc_jlo_type(i,k,2)
                if(bc_jlo_type(i,k,1) == MINF_ .or. &
                   bc_jlo_type(i,k,1) == NSW_  .or. &
                   bc_jlo_type(i,k,1) == PSW_  .or. &
@@ -202,7 +201,6 @@ module calc_d_mod
          j = ahi(2)
          do k = lo(3), hi(3)
             do i = lo(1), hi(1)
-               bcv = bc_jhi_type(i,k,2)
                if(bc_jhi_type(i,k,1) == MINF_ .or. &
                   bc_jhi_type(i,k,1) == NSW_  .or. &
                   bc_jhi_type(i,k,1) == PSW_  .or. &
@@ -244,7 +242,7 @@ module calc_d_mod
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      integer      :: i,j,k, bcv
+      integer      :: i,j,k
       real(c_real) :: axy
       real(c_real) :: Am0, epga
       logical      :: coupled
@@ -279,7 +277,6 @@ module calc_d_mod
         k = alo(3)
         do j = lo(2), hi(2)
            do i = lo(1), hi(1)
-              bcv = bc_klo_type(i,j,2)
               if (bc_klo_type(i,j,1) == MINF_ .or. &
                    bc_klo_type(i,j,1) == NSW_ .or. &
                    bc_klo_type(i,j,1) == FSW_ .or. &
@@ -295,7 +292,6 @@ module calc_d_mod
          k = ahi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               bcv = bc_khi_type(i,j,2)
                if(bc_khi_type(i,j,1) == MINF_ .or. &
                   bc_khi_type(i,j,1) == NSW_ .or. &
                   bc_khi_type(i,j,1) == FSW_ .or. &
