@@ -61,6 +61,10 @@ mfix_level::RegridOnRestart (int lev)
           RegridArrays(lev,grids[lev],dmap[lev]);
 
        mfix_set_bc0(lev);
+
+       pc->BuildLevelMask(lev, geom[lev], dm, ba); 
+       pc->Redistribute();
+
     }
 }
 
