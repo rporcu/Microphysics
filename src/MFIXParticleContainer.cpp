@@ -1040,9 +1040,11 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
         amrex::Print() << "NUM PART IN GRID BEFORE " << i << " " << num_part[i] << std::endl;
   }
 
+  Array<Real> box_costs;
+
   BoxArray new_ba;
   Real cell_weight = 0.;
-  loadBalanceKD::balance<MFIXParticleContainer>(*this, new_ba, ParallelDescriptor::NProcs(), cell_weight);
+  loadBalanceKD::balance<MFIXParticleContainer>(*this, new_ba, ParallelDescriptor::NProcs(), cell_weight, box_costs);
 
   if (verbose) 
   {
@@ -1059,7 +1061,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
   }
 
   // Create a new DM to go with the new BA
-  DistributionMapping new_dm(new_ba);
+  DistributionMapping new_dm = DistributionMapping::makeKnapSack(box_costs);
   
   Regrid(new_dm, new_ba);
 }
