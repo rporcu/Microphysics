@@ -65,7 +65,10 @@ contains
 
   subroutine mfix_multi_deposit_cic(particles, ns, np, mf_x, mf_y, mf_z, mf_u, mf_v, mf_w, &
                                     lo_x, hi_x, lo_y, hi_y, lo_z, hi_z, plo, dx, beta_comp, vel_comp) &
-       bind(c,name='mfix_multi_deposit_cic')
+                                    bind(c,name='mfix_multi_deposit_cic')
+
+    use discretelement, only: des_oneway_coupled
+
     integer, value                :: ns, np
     real(amrex_particle_real)     :: particles(ns,np)
     integer                       :: lo_x(3), lo_y(3), lo_z(3)
@@ -86,8 +89,13 @@ contains
     real(amrex_real) wu_lo, wv_lo, ww_lo, wu_hi, wv_hi, ww_hi
     real(amrex_real) lx, ly, lz, pbeta, pvel(3)
     real(amrex_real) inv_dx(3), oovol
-    inv_dx = 1.0d0/dx
 
+
+    ! Do not deposit drag forces if one-way coupled
+    if (des_oneway_coupled)return
+
+
+    inv_dx = 1.0d0/dx
     oovol = 1.0d0/(dx(1)*dx(2)*dx(3))
 
     do n = 1, np
