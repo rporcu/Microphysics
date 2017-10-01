@@ -1057,11 +1057,10 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
      num_part = NumberOfParticlesInGrid(0);
      long min_number = num_part[0];
      long max_number = num_part[0];
-     for (int i = 0; i < old_ba.size(); i++)
+     for (int i = 0; i < new_ba.size(); i++)
      {
         max_number = std::max(max_number, num_part[i]);
         min_number = std::min(min_number, num_part[i]);
-//      amrex::Print() << "NUM PART IN GRID AFTER  " << i << " " << num_part[i] << std::endl;
      }
      amrex::Print() << "After  KDTree: BA had " << new_ba.size() << " GRIDS " << std::endl;
      amrex::Print() << "After  KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<  
