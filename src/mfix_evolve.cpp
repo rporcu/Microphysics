@@ -15,8 +15,13 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
   if (solve_dem && solve_fluid)
   {
     mfix_calc_volume_fraction(lev,sum_vol);
-    Print() << "Testing new sum_vol " << sum_vol << " against original sum_vol " << sum_vol_orig << std::endl;
-    if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) amrex::Abort("Volume fraction in domain has changed!");
+//  Print() << "Testing new sum_vol " << sum_vol << " against original sum_vol " << sum_vol_orig << std::endl;
+    if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) 
+    {
+       amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
+       amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
+       amrex::Abort("Volume fraction in domain has changed!");
+    }
   }
 
   if (solve_fluid)
@@ -34,10 +39,6 @@ void
 mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
                         Real dt, Real& prev_dt, Real time, Real normg)
 {
-  Real dx = geom[lev].CellSize(0);
-  Real dy = geom[lev].CellSize(1);
-  Real dz = geom[lev].CellSize(2);
-
   // Reimpose boundary conditions -- make sure to do this before we compute tau
   mfix_set_bc1(lev);
 
@@ -50,8 +51,9 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
 
   // Backup field variable to old
   int nghost = ep_go[lev]->nGrow();
+
   MultiFab::Copy(*ep_go[lev],  *ep_g[lev],  0, 0, 1, nghost);
-  MultiFab::Copy(*p_go[lev],   *p_g[lev],   0, 0, 1, nghost);
+  MultiFab::Copy( *p_go[lev],   *p_g[lev],  0, 0, 1, nghost);
   MultiFab::Copy(*ro_go[lev],  *ro_g[lev],  0, 0, 1, nghost);
   MultiFab::Copy(*rop_go[lev], *rop_g[lev], 0, 0, 1, nghost);
   MultiFab::Copy(*u_go[lev],   *u_g[lev],   0, 0, 1, nghost);
@@ -71,9 +73,6 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
 
     int converged=0;
     int nit=0;          // number of iterations
-    int gsmf=0;         // number of outer iterations for goal seek mass flux (GSMF)
-    Real delP_MF=0.0L;  // actual GSMF pressure drop
-    Real lMFlux=0.0L;   // actual GSMF mass flux
 
     ///////////////// ---- call to iterate -------- /////////////////
     do {

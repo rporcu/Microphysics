@@ -76,6 +76,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                             int             maxiter,
                             Real            eps_rel, int lev)
 {
+    BL_PROFILE("solve_bicgstab");
+    Real strt_time = ParallelDescriptor::second();
+
     int bicg_verbose = 0;
     int ret = 0, nit = 1;
 
@@ -198,6 +201,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         sxay(p, r,   beta, p);
       }
 
+      // Enforce periodicity on sol in case it hasn't been done yet
+      p.FillBoundary(geom[lev].periodicity());
+
       //  A*ph = p
       //  v = A*Ph
       //-----------------------------------------------------------------
@@ -246,6 +252,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                     v[mfi].dataPtr(), vbx.loVect(), vbx.hiVect());
       }
 
+      // Enforce periodicity on sol in case it hasn't been done yet
+      rh.FillBoundary(geom[lev].periodicity());
+       v.FillBoundary(geom[lev].periodicity());
+
       Real rhTv = dotxy(rh,v,geom[lev].periodicity(),true);
 
       // Compute alpha
@@ -258,6 +268,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       {
         ret = 2; break;
       }
+
       // Compute s
       //----------------------------------------------------------------
       sxay(s,     r, -alpha,  v);
@@ -312,12 +323,14 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                     t[mfi].dataPtr(), tbx.loVect(), tbx.hiVect());
       }
 
+      // Enforce periodicity on sol in case it hasn't been done yet
+      sh.FillBoundary(geom[lev].periodicity());
+
       // This is a little funky.  I want to elide one of the reductions
       // in the following two dotxy()s.  We do that by calculating the "local"
       // values and then reducing the two local values at the same time.
       Real vals[2] = { dotxy(t,t,geom[lev].periodicity(),true),
                        dotxy(t,s,geom[lev].periodicity(),true) };
-
 
       // Compute omega
       // ---------------------------------------------------------------
@@ -357,6 +370,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       std::cout << "BiCGStab: final Rnorm " << rnorm << '\n';
       std::cout << "BiCGStab: ratio " << nit << " L-2 "<< rnorm/(rnorm0) << '\n';
     }
+
+    Real end_time = ParallelDescriptor::second() - strt_time;
+    ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());
+    amrex::Print() << "Time spent in bicgsolve " << end_time << std::endl;
 
     return ret;
 }

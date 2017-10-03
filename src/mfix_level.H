@@ -28,7 +28,7 @@ public:
 
     void InitLevelData (int lev, Real dt, Real time);
 
-    void InitLevelDataFromRestart (int lev, Real dt, Real time);
+    void PostInit (int lev, Real dt, Real time, int nstep, int restart_flag);
 
     void WriteCheckPointFile ( std::string& check_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 )  const;
 
@@ -38,6 +38,10 @@ public:
                   IntVect& Nrep);
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
+
+    void Regrid (int lev, int nstep, int dual_grid);
+
+    void RegridOnRestart (int lev);
 
     void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
@@ -104,6 +108,7 @@ protected:
     void mfix_calc_drag_particle(int lev);
 
     void AllocateArrays(int lev);
+    void RegridArrays(int lev, BoxArray& new_grids, DistributionMapping& new_dmap);
 
 private:
 
@@ -112,7 +117,10 @@ private:
     void InitIOData ();
 
     void MakeNewLevelFromScratch(int lev, Real time,
-           const BoxArray& new_grids, const DistributionMapping& new_dmap);
+          const BoxArray& new_grids, const DistributionMapping& new_dmap);
+
+    void ReMakeNewLevelFromScratch(int lev, 
+          const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
     void WriteHeader(const std::string& name, int nstep, Real dt, Real time) const;
 
@@ -125,11 +133,12 @@ private:
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
+    void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
 
-  void mfix_set_bc_type(int lev);
-  void mfix_set_bc1(int lev);
+    void mfix_set_bc_type(int lev);
+    void mfix_set_bc1(int lev);
 
-  void fill_mf_bc(int lev,  MultiFab& mf);
+    void fill_mf_bc(int lev,  MultiFab& mf);
 #if 0
     void WritePlotFile () const;
 
@@ -229,6 +238,7 @@ private:
     int call_udf;
 
     static std::string particle_init_type;
+    static std::string load_balance_type;
 
     Real cfl = 0.7;
 

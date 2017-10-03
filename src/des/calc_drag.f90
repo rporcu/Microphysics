@@ -169,7 +169,7 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer :: p, i, j, k, ii, jj, kk
-   real(c_real) :: velfp(3), velp(3), cpg(3), gradpg(3)
+   real(c_real) :: velfp(3), cpg(3), gradpg(3)
    real(c_real) :: beta(np)
    real(c_real) :: odx, ody, odz
    real(c_real) :: lx, ly, lz

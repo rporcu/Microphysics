@@ -108,21 +108,19 @@
                      bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                   endif
 
-                    p_g(slo(1):domlo(1)-1,j,k) = scale_pressure(bc_p_g(bcv))
-                   ep_g(slo(1):domlo(1)-1,j,k) = bc_ep_g(bcv)
-                   ro_g(slo(1):domlo(1)-1,j,k) = bc_ro_g
-                  rop_g(slo(1):domlo(1)-1,j,k) = bc_ro_g*bc_ep_g(bcv)
-                   mu_g(slo(1):domlo(1)-1,j,k) = bc_mu_g
-
+                       p_g(slo(1):domlo(1)-1,j,k) = scale_pressure(bc_p_g(bcv))
+                      ep_g(slo(1):domlo(1)-1,j,k) = bc_ep_g(bcv)
+                      ro_g(slo(1):domlo(1)-1,j,k) = bc_ro_g
+                     rop_g(slo(1):domlo(1)-1,j,k) = bc_ro_g*bc_ep_g(bcv)
+                      mu_g(slo(1):domlo(1)-1,j,k) = bc_mu_g
                   lambda_g(slo(1):domlo(1)-1,j,k) = bc_lambda_g
 
                end if
 
-               if (bc_ilo_type(j,k,1) == PINF_ .or. &
-                   bc_ilo_type(j,k,1) == MINF_) then
+               if (bc_ilo_type(j,k,1) == MINF_) then
 
                    ! Note we index u_g differently to catch the inflow face
-                   u_g(ulo(1):domlo(1)  ,j,k) = bc_u_g(bcv) 
+                   u_g(ulo(1):domlo(1)  ,j,k) = bc_u_g(bcv)
                    v_g(vlo(1):domlo(1)-1,j,k) = 0.0d0
                    w_g(wlo(1):domlo(1)-1,j,k) = 0.0d0
 
@@ -156,18 +154,16 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                     p_g(domhi(1)+1:shi(1),j,k) = scale_pressure(bc_p_g(bcv))
-                    ep_g(domhi(1)+1:shi(1),j,k) = bc_ep_g(bcv)
-                    ro_g(domhi(1)+1:shi(1),j,k) = bc_ro_g
-                   rop_g(domhi(1)+1:shi(1),j,k) = bc_ro_g*bc_ep_g(bcv)
-                    mu_g(domhi(1)+1:shi(1),j,k) = bc_mu_g
-
-                   lambda_g(slo(1):domlo(1)-1,j,k) = bc_lambda_g
+                         p_g(domhi(1)+1:shi(1),j,k) = scale_pressure(bc_p_g(bcv))
+                        ep_g(domhi(1)+1:shi(1),j,k) = bc_ep_g(bcv)
+                        ro_g(domhi(1)+1:shi(1),j,k) = bc_ro_g
+                       rop_g(domhi(1)+1:shi(1),j,k) = bc_ro_g*bc_ep_g(bcv)
+                        mu_g(domhi(1)+1:shi(1),j,k) = bc_mu_g
+                    lambda_g(domhi(1)+1:shi(1),j,k) = bc_lambda_g
 
                end if
 
-               if (bc_ihi_type(j,k,1) == PINF_ .or. &
-                   bc_ihi_type(j,k,1) == MINF_) then
+               if (bc_ihi_type(j,k,1) == MINF_) then
 
                    ! Note we index the same on the high side
                    u_g(domhi(1)+1:uhi(1),j,k) = bc_u_g(bcv)
@@ -203,18 +199,16 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                    p_g(i,slo(2):domlo(2)-1,k) = scale_pressure(bc_p_g(bcv))
-                   ep_g(i,slo(2):domlo(2)-1,k) = bc_ep_g(bcv)
-                   ro_g(i,slo(2):domlo(2)-1,k) = bc_ro_g
-                  rop_g(i,slo(2):domlo(2)-1,k) = bc_ro_g*bc_ep_g(bcv)
-                   mu_g(i,slo(2):domlo(2)-1,k) = bc_mu_g
-
+                       p_g(i,slo(2):domlo(2)-1,k) = scale_pressure(bc_p_g(bcv))
+                      ep_g(i,slo(2):domlo(2)-1,k) = bc_ep_g(bcv)
+                      ro_g(i,slo(2):domlo(2)-1,k) = bc_ro_g
+                     rop_g(i,slo(2):domlo(2)-1,k) = bc_ro_g*bc_ep_g(bcv)
+                      mu_g(i,slo(2):domlo(2)-1,k) = bc_mu_g
                   lambda_g(i,slo(2):domlo(2)-1,k) = bc_lambda_g
 
                end if
 
-               if (bc_jlo_type(i,k,1) == PINF_ .or. &
-                   bc_jlo_type(i,k,1) == MINF_) then
+               if (bc_jlo_type(i,k,1) == MINF_) then
 
                    ! Note we index v_g differently to catch the inflow face
                    u_g(i,ulo(2):domlo(2)-1,k) = 0.0d0
@@ -251,18 +245,16 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                     p_g(i,domhi(2)+1:shi(2),k) = scale_pressure(bc_p_g(bcv))
-                    ep_g(i,domhi(2)+1:shi(2),k) = bc_ep_g(bcv)
-                    ro_g(i,domhi(2)+1:shi(2),k) = bc_ro_g
-                   rop_g(i,domhi(2)+1:shi(2),k) = bc_ro_g*bc_ep_g(bcv)
-                    mu_g(i,domhi(2)+1:shi(2),k) = bc_mu_g
-
+                       p_g(i,domhi(2)+1:shi(2),k) = scale_pressure(bc_p_g(bcv))
+                      ep_g(i,domhi(2)+1:shi(2),k) = bc_ep_g(bcv)
+                      ro_g(i,domhi(2)+1:shi(2),k) = bc_ro_g
+                     rop_g(i,domhi(2)+1:shi(2),k) = bc_ro_g*bc_ep_g(bcv)
+                      mu_g(i,domhi(2)+1:shi(2),k) = bc_mu_g
                   lambda_g(i,domhi(2)+1:shi(2),k) = bc_lambda_g
 
                end if
 
-               if (bc_jhi_type(i,k,1) == PINF_ .or. &
-                   bc_jhi_type(i,k,1) == MINF_) then
+               if (bc_jhi_type(i,k,1) == MINF_) then
 
                    ! Note we index the same on the high side
                    u_g(i,domhi(2)+1:uhi(2),k) = 0.0d0
@@ -299,18 +291,16 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                     p_g(i,j,slo(3):domlo(3)-1) = scale_pressure(bc_p_g(bcv))
-                    ep_g(i,j,slo(3):domlo(3)-1) = bc_ep_g(bcv)
-                    ro_g(i,j,slo(3):domlo(3)-1) = bc_ro_g
-                   rop_g(i,j,slo(3):domlo(3)-1) = bc_ro_g*bc_ep_g(bcv)
-                    mu_g(i,j,slo(3):domlo(3)-1) = bc_mu_g
-
+                        p_g(i,j,slo(3):domlo(3)-1) = scale_pressure(bc_p_g(bcv))
+                       ep_g(i,j,slo(3):domlo(3)-1) = bc_ep_g(bcv)
+                       ro_g(i,j,slo(3):domlo(3)-1) = bc_ro_g
+                      rop_g(i,j,slo(3):domlo(3)-1) = bc_ro_g*bc_ep_g(bcv)
+                       mu_g(i,j,slo(3):domlo(3)-1) = bc_mu_g
                    lambda_g(i,j,slo(3):domlo(3)-1) = bc_lambda_g
 
                end if
 
-               if (bc_klo_type(i,j,1) == PINF_ .or. &
-                   bc_klo_type(i,j,1) == MINF_) then
+               if (bc_klo_type(i,j,1) == MINF_) then
 
                    ! Note we index w_g differently to catch the inflow face
                    u_g(i,j,ulo(3):domlo(3)-1) = 0.0d0
@@ -347,18 +337,16 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                     p_g(i,j,domhi(3)+1:shi(3)) = scale_pressure(bc_p_g(bcv))
-                    ep_g(i,j,domhi(3)+1:shi(3)) = bc_ep_g(bcv)
-                    ro_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g
-                   rop_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g*bc_ep_g(bcv)
-                    mu_g(i,j,domhi(3)+1:shi(3)) = bc_mu_g
-
+                        p_g(i,j,domhi(3)+1:shi(3)) = scale_pressure(bc_p_g(bcv))
+                       ep_g(i,j,domhi(3)+1:shi(3)) = bc_ep_g(bcv)
+                       ro_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g
+                      rop_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g*bc_ep_g(bcv)
+                       mu_g(i,j,domhi(3)+1:shi(3)) = bc_mu_g
                    lambda_g(i,j,domhi(3)+1:shi(3)) = bc_lambda_g
 
                end if
 
-               if (bc_khi_type(i,j,1) == PINF_ .or. &
-                   bc_khi_type(i,j,1) == MINF_) then
+               if (bc_khi_type(i,j,1) == MINF_) then
 
                    ! Note we index the same on the high side
                    u_g(i,j,domhi(3)+1:uhi(3)) = 0.0d0
