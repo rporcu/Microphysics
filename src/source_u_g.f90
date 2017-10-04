@@ -2,7 +2,7 @@ module source_u_g_module
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
-   use param        , only: zero, half, one, undefined, is_undefined, small_number
+   use param        , only: zero, half, one, undefined, is_undefined
 
    implicit none
 
@@ -17,47 +17,42 @@ contains
 !  The drag terms are excluded from the source at this stage.          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_u_g(lo, hi, slo, shi, ulo, uhi, alo, ahi, A_m, b_m, &
-      dt, p_g, ep_g, ro_g, rop_go, u_go, &
-      tau_u_g, dx, dy, dz, domlo, domhi)
-
+  subroutine source_u_g(lo, hi, slo, shi, ulo, uhi, alo, ahi, dlo, dhi, &
+       A_m, b_m, p_g, ep_g, ro_g, rop_go, u_go, tau_u_g, f_gds_u, drag_u, &
+       dt, dx, dy, dz, domlo, domhi)
 
 ! Modules
 !---------------------------------------------------------------------//
       use constant, only: gravity
       use bc      , only: delp_x
 
-      use functions, only: avg
-
       use matrix, only: e, w, s, n, t, b
       use scales, only: p_scale
 
-      integer     , intent(in   ) :: lo(3),hi(3)
-      integer     , intent(in   ) :: slo(3),shi(3),ulo(3),uhi(3),alo(3),ahi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
+      integer     , intent(in   ) :: lo(3),    hi(3)
+      integer     , intent(in   ) :: slo(3),   shi(3)
+      integer     , intent(in   ) :: ulo(3),   uhi(3)
+      integer     , intent(in   ) :: alo(3),   ahi(3)
+      integer     , intent(in   ) :: dlo(3),   dhi(3)
+      integer     , intent(in   ) :: domlo(3), domhi(3)
+
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
-      ! Septadiagonal matrix A_m
-      real(c_real), intent(inout) :: A_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
+      real(c_real), intent(inout) :: &
+           A_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3), &
+           b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-      ! Vector b_m
-      real(c_real), intent(inout) :: b_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(c_real), intent(in   ) :: &
+           p_g    (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ep_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ro_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           rop_go (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
 
-      real(c_real), intent(in   ) :: p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: ro_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: rop_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           u_go   (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
+           tau_u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
 
-      real(c_real), intent(in   ) :: u_go&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: tau_u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+           f_gds_u(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3)), &
+           drag_u (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -85,7 +80,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               epga = half*(ep_g(i-1,j,k) + ep_g(i,j,k))
+               epga = 0.5d0*(ep_g(i-1,j,k) + ep_g(i,j,k))
 
                ! Pressure term
                pgw = p_g(i-1,j,k)
@@ -102,9 +97,9 @@ contains
                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
                                 A_m(i,j,k,n) + A_m(i,j,k,s) + &
                                 A_m(i,j,k,t) + A_m(i,j,k,b) + &
-                                v0*vol)
+                                v0*vol + f_gds_u(i,j,k))
 
-               b_m(i,j,k) = b_m(i,j,k) -(sdp + tau_u_g(i,j,k) + &
+               b_m(i,j,k) = -(sdp + tau_u_g(i,j,k) + drag_u(i,j,k) + &
                   ((v0)*u_go(i,j,k) + vbf)*vol)
 
             enddo

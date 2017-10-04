@@ -76,6 +76,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                             int             maxiter,
                             Real            eps_rel, int lev)
 {
+    BL_PROFILE("solve_bicgstab");
+    Real strt_time = ParallelDescriptor::second();
+
     int bicg_verbose = 0;
     int ret = 0, nit = 1;
 
@@ -367,6 +370,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       std::cout << "BiCGStab: final Rnorm " << rnorm << '\n';
       std::cout << "BiCGStab: ratio " << nit << " L-2 "<< rnorm/(rnorm0) << '\n';
     }
+
+    Real end_time = ParallelDescriptor::second() - strt_time;
+    ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());
+    amrex::Print() << "Time spent in bicgsolve " << end_time << std::endl;
 
     return ret;
 }

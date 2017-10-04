@@ -226,7 +226,7 @@ MODULE INIT_NAMELIST_MODULE
 !    dominant term in the continuity equation. This setting may speed up
 !    calculations, especially near a steady state and incompressible
 !    fluids. But, the number of iterations for the gas phase pressure
-!    should be increased, LEQ_IT(1), to ensure mass balance
+!    should be increased, leq_it(1), to ensure mass balance
 !  </description>
       NORM_G = 1.0d0
 !</keyword>
@@ -254,9 +254,9 @@ MODULE INIT_NAMELIST_MODULE
 !    Linear Equation tolerance [1.0d-4].
 !  </description>
 !  <arg index="1" id="Equation ID Number" min="1" max="DIM_EQS"/>
-!  <dependent keyword="LEQ_METHOD" value="2"/>
-!  <dependent keyword="LEQ_METHOD" value="3"/>
-      LEQ_TOL(:) = 1.0D-4
+!  <dependent keyword="leq_method" value="2"/>
+!  <dependent keyword="leq_method" value="3"/>
+      leq_tol(:) = 1.0D-4
 !</keyword>
 
 !<keyword category="Numerical Parameters" required="false">
@@ -284,19 +284,19 @@ MODULE INIT_NAMELIST_MODULE
 !  <valid value="JSJS" note="(Sweep in J, Send Receive) repeated twice"/>
 !  <valid value="KSKS" note="(Sweep in K, Send Receive) repeated twice"/>
 !  <valid value="ASAS" note="(All Sweep, Send Receive) repeated twice"/>
-      LEQ_SWEEP(:) = 'RSRS'
+      leq_sweep(:) = 'RSRS'
 !</keyword>
 
 !<keyword category="Numerical Parameters" required="false">
 !  <description>
-!    Linear precondition used by the BiCGSTAB and CG LEQ solvers. 'LINE'
+!    Linear precondition used by the BiCGSTAB and CG leq solvers. 'LINE'
 !    is the default for all equation types.
 !  </description>
 !  <arg index="1" id="Equation ID Number" min="1" max="DIM_EQS"/>
 !  <valid value="NONE" note="No preconditioner"/>
 !  <valid value="LINE" note="Line relaxation"/>
 !  <valid value="DIAG" note="Diagonal Scaling"/>
-      LEQ_PC(:) = 'DIAG'
+      leq_pc(:) = 'DIAG'
 !</keyword>
 
 

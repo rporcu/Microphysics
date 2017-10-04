@@ -46,19 +46,13 @@
       integer :: L, M, N
 
       integer :: MMAX_TOT
-      real(c_real) :: TMP_DP
-
-      real(c_real), DIMENSION(6) :: LOC
 
 ! Coefficient of restitution (old symbol)
       CHARACTER(LEN=3), DIMENSION(3) :: LEGEND
       CHARACTER(LEN=12), DIMENSION(0:2) :: DISCR_NAME
-      CHARACTER(LEN=12), DIMENSION(0:2) :: DISCR_NAME1
 ! RUN_NAME.OUT file unit number
       integer, PARAMETER :: UNIT_OUT = 52
       integer :: ier
-      integer :: i_w, j_s, k_b
-      integer :: i_e, j_n, k_t
 !-----------------------------------------------
 
 !
@@ -99,8 +93,8 @@
       WRITE (UNIT_OUT, 1150)
       WRITE (UNIT_OUT, 1157) P_REF, P_SCALE, GRAVITY(2)
       WRITE (UNIT_OUT, 1158)
-      WRITE (UNIT_OUT, 1159) (UR_FAC(L),LEQ_IT(L),'BiCGSTAB',&
-                          LEQ_SWEEP(L), LEQ_TOL(L), LEQ_PC(L),&
+      WRITE (UNIT_OUT, 1159) (UR_FAC(L),leq_it(L),'BiCGSTAB',&
+                          leq_sweep(L), leq_tol(L), leq_pc(L),&
                           DISCR_NAME(DISCRETIZE(L)),L=1,4)
 
 ! Geometry and Discretization.
@@ -248,9 +242,9 @@
          'Pressure scale-factor (P_scale) = ',G12.5,/7X,&
          'Gravitational acceleration (GRAVITY) = ',G12.5)
  1158 FORMAT(7X,'Under relaxation (UR_FAC) and',&
-         ' Iterations in Leq solver (LEQ_IT):'/,9X,&
-         '                        UR_FAC',2X,'LEQ_IT','  LEQ_METHOD',&
-         '  LEQ_SWEEP', '  LEQ_TOL', '    LEQ_PC', '  DISCRETIZE')
+         ' Iterations in Leq solver (leq_it):'/,9X,&
+         '                        UR_FAC',2X,'leq_it','  leq_method',&
+         '  leq_sweep', '  leq_tol', '    leq_pc', '  DISCRETIZE')
  1159 FORMAT(9X,&
          'Fluid cont.  and P_g  = ',F6.3,2X,I4,6X,A8,5x,A4,4X,G11.4,3X,A4,3X,A12/9X,&
          'Solids cont. and P_s  = ',F6.3,2X,I4,6X,A8,5x,A4,4X,G11.4,3X,A4,3X,A12/9X,&

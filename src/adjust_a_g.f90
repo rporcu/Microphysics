@@ -3,111 +3,168 @@
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: adjust_a(A_m, B_m, IER)                            C
-!  Author: M. Syamlal                                 Date:  2-AUG-96  C
-!                                                                      C
-!  Purpose: Handle the special case of the center coefficient in       C
-!  U_g momentum eq. becoming zero.                                     C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!  Module name: adjust_a                                               !
+!                                                                      !
+!  Purpose: Handle the special case of the center coefficient in       !
+!           momentum eqs becoming zero.                                !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
 contains
 
-   subroutine adjust_a_g(axis, slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
+  subroutine adjust_a_u(slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dy, dz)
 
-      use functions, only: avg
-      use param, only: ONE, ZERO, small_number
+    use param, only: one, zero, small_number
 
-      implicit none
+    implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),alo(3),ahi(3),lo(3),hi(3)
-      character     , intent(in   ) :: axis
+    integer(c_int), intent(in   ) :: lo(3),hi(3)
+    integer(c_int), intent(in   ) :: alo(3),ahi(3)
+    integer(c_int), intent(in   ) :: slo(3),shi(3)
 
-      ! Septadiagonal matrix A_m
-      real(c_real), intent(inout) :: A_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3)
+    real(c_real), intent(inout) :: &
+         A_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3), &
+         b_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-      ! Vector b_m
-      real(c_real), intent(inout) :: B_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+    real(c_real), intent(in   ) :: &
+         rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(c_real), intent(in   ) :: dx, dy, dz
+    real(c_real), intent(in   ) :: dy, dz
 !---------------------------------------------------------------------//
 
-      integer      :: i, j, k, is, js, ks
-      real(c_real) :: denominator, xxxm, xxxp
-      real(c_real) :: axy, ayz, axz
+    integer      :: i, j, k
+    real(c_real) :: half_ayz
 
-      axy = dx*dy
-      axz = dx*dz
-      ayz = dy*dz
+    half_ayz = 0.5d0*dy*dz
 
-      is = lo(1)
-      js = lo(2)
-      ks = lo(3)
-
-!     if (axis.eq.'x') then
-!         is = lo(1)-1
-!     else if (axis.eq.'y') then
-!         js = lo(2)-1
-!     else if (axis.eq.'z') then
-!         ks = lo(3)-1
-!     endif
-
-      do k = lo(3), hi(3)
-        do j = lo(2), hi(2)
+    do k = lo(3), hi(3)
+       do j = lo(2), hi(2)
           do i = lo(1), hi(1)
 
-         if (abs(A_m(i,j,k,0)) < SMALL_NUMBER) THEN
+             if (abs(A_m(i,j,k,0)) < small_number) then
 
-            A_m(i,j,k,:) = ZERO
-            A_m(i,j,k,0) = -ONE
+                A_m(i,j,k,:) = zero
+                A_m(i,j,k,0) = -one
 
-            if (b_m(i,j,k) < ZERO) THEN
+                if (b_m(i,j,k) < zero) then
 
-               if (axis .eq. 'U') then
-                  denominator = rop_g(i+1,j,k)*AYZ
-               else if (axis .eq. 'V') then
-                  denominator = rop_g(i,j+1,k)*AXZ
-               else if (axis .eq. 'W') then
-                  denominator = rop_g(i,j,k+1)*AXY
-               end if
+                   b_m(i,j,k) = sqrt(abs(b_m(i,j,k))/(half_ayz*rop_g(i+1,j,k)))
 
-               xxxm = ONE
-               xxxp = ZERO
+                else if (b_m(i,j,k) > zero) then
 
-            else if (b_m(i,j,k) > ZERO) THEN
+                   b_m(i,j,k) = sqrt(abs(b_m(i,j,k))/(half_ayz*rop_g(i  ,j,k)))
 
-               if (axis .eq. 'U') then
-                  denominator = rop_g(i,j,k)*AYZ
-               else if (axis .eq. 'V') then
-                  denominator = rop_g(i,j,k)*AXZ
-               else if (axis .eq. 'W') then
-                  denominator = rop_g(i,j,k)*AXY
-               end if
+                end if
 
-               xxxm = ZERO
-               xxxp = ONE
+             end if
+          end do
+       end do
+    end do
 
-            else
-               denominator = ZERO
-            end if
+  end subroutine adjust_a_u
 
-            if (denominator > SMALL_NUMBER) THEN
-               b_m(i,j,k) = SQRT(ABS(b_m(i,j,k))/(denominator*AVG(xxxm,xxxp)))
-            else
-               b_m(i,j,k) = ZERO
-            end if
-         end if
-      end do
-      end do
-      end do
 
-      end subroutine adjust_a_g
+  subroutine adjust_a_v(slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dz)
 
+    use param, only: one, zero, small_number
+
+    implicit none
+
+    integer(c_int), intent(in   ) :: lo(3),hi(3)
+    integer(c_int), intent(in   ) :: alo(3),ahi(3)
+    integer(c_int), intent(in   ) :: slo(3),shi(3)
+
+    real(c_real), intent(inout) :: &
+         A_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3), &
+         b_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+
+    real(c_real), intent(in   ) :: &
+         rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+    real(c_real), intent(in   ) :: dx, dz
+!---------------------------------------------------------------------//
+
+    integer      :: i, j, k
+    real(c_real) :: half_axz
+
+    half_axz = 0.5d0*dx*dz
+
+    do k = lo(3), hi(3)
+       do j = lo(2), hi(2)
+          do i = lo(1), hi(1)
+
+             if (abs(A_m(i,j,k,0)) < small_number) then
+
+                A_m(i,j,k,:) = zero
+                A_m(i,j,k,0) = -one
+
+                if (b_m(i,j,k) < zero) then
+
+                   b_m(i,j,k) = sqrt(abs(b_m(i,j,k))/(half_axz*rop_g(i,j+1,k)))
+
+                else if (b_m(i,j,k) > zero) then
+
+                   b_m(i,j,k) = sqrt(abs(b_m(i,j,k))/(half_axz*rop_g(i,j  ,k)))
+
+                end if
+
+             end if
+          end do
+       end do
+    end do
+
+  end subroutine adjust_a_v
+
+
+  subroutine adjust_a_w(slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy)
+
+    use param, only: one, zero, small_number
+
+    implicit none
+
+    integer(c_int), intent(in   ) :: lo(3),hi(3)
+    integer(c_int), intent(in   ) :: alo(3),ahi(3)
+    integer(c_int), intent(in   ) :: slo(3),shi(3)
+
+    real(c_real), intent(inout) :: &
+         A_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3), &
+         b_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+
+    real(c_real), intent(in   ) :: &
+         rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+    real(c_real), intent(in   ) :: dx, dy
+!---------------------------------------------------------------------//
+
+    integer      :: i, j, k
+    real(c_real) :: half_axy
+
+    half_axy = 0.5d0*dx*dy
+
+    do k = lo(3), hi(3)
+       do j = lo(2), hi(2)
+          do i = lo(1), hi(1)
+
+             if (abs(A_m(i,j,k,0)) < small_number) then
+
+                A_m(i,j,k,:) = zero
+                A_m(i,j,k,0) = -one
+
+                if (b_m(i,j,k) < zero) then
+
+                   b_m(i,j,k) = sqrt(abs(b_m(i,j,k))/(half_axy*rop_g(i,j,k+1)))
+
+                else if (b_m(i,j,k) > zero) then
+
+                   b_m(i,j,k) = sqrt(abs(b_m(i,j,k))/(half_axy*rop_g(i,j,k  )))
+
+                end if
+
+             end if
+          end do
+       end do
+    end do
+
+  end subroutine adjust_a_w
    end module adjust_a
