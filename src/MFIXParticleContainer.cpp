@@ -489,11 +489,13 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
     MultiFab* mf_pointer;
 
     if (OnSameGrids(lev, mf_to_be_filled)) {
+        amrex::Print() << "on same grids \n";
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
       mf_pointer = &mf_to_be_filled;
     }
     else {
+        amrex::Print() << "on different grids \n";
       // If mf_to_be_filled is not defined on the particle_box_array, then we need
       // to make a temporary here and copy into mf_to_be_filled at the end.
       mf_pointer = new MultiFab(ParticleBoxArray(lev),
@@ -753,6 +755,13 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
     beta_v_ptr->SumBoundary(gm.periodicity());
     beta_w_ptr->SumBoundary(gm.periodicity());
 
+    beta_x_ptr->OverrideSync(gm.periodicity());
+    beta_y_ptr->OverrideSync(gm.periodicity());
+    beta_z_ptr->OverrideSync(gm.periodicity());
+    beta_u_ptr->OverrideSync(gm.periodicity());
+    beta_v_ptr->OverrideSync(gm.periodicity());
+    beta_w_ptr->OverrideSync(gm.periodicity());
+
     // Copy back from mf_pointer
     beta_x_mf.copy(*beta_x_ptr,0,0,1);
     beta_y_mf.copy(*beta_y_ptr,0,0,1);
@@ -1006,15 +1015,8 @@ void
 MFIXParticleContainer::BalanceParticleLoad_KDTree()
 {
   int lev = 0;
-  bool verbose = false;
+  bool verbose = true;
   BoxArray old_ba = ParticleBoxArray(lev);
-
-  if (verbose) 
-  {
-     amrex::Print() << "Before KDTree BA HAS " << old_ba.size() << " GRIDS " << std::endl;
-     if (old_ba.size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
-        amrex::Print() << "Before:" << old_ba << std::endl;
-  }
 
   if (NumberOfParticlesAtLevel(lev) == 0)
   {
@@ -1022,35 +1024,46 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
      return;
   }
 
-  Array<long> num_part;
-  num_part = NumberOfParticlesInGrid(0);
-
   if (verbose) 
   {
+     Array<long> num_part;
+     num_part = NumberOfParticlesInGrid(0);
+     long min_number = num_part[0];
+     long max_number = num_part[0];
      for (int i = 0; i < old_ba.size(); i++)
-        amrex::Print() << "NUM PART IN GRID BEFORE " << i << " " << num_part[i] << std::endl;
+     {
+        max_number = std::max(max_number, num_part[i]);
+        min_number = std::min(min_number, num_part[i]);
+     }
+     amrex::Print() << "Before KDTree: BA had " << old_ba.size() << " GRIDS " << std::endl;
+     amrex::Print() << "Before KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<  
+                        min_number << " " << max_number << std::endl;
   }
+
+  Array<Real> box_costs;
 
   BoxArray new_ba;
   Real cell_weight = 0.;
-  loadBalanceKD::balance<MFIXParticleContainer>(*this, new_ba, ParallelDescriptor::NProcs(), cell_weight);
-
-  if (verbose) 
-  {
-     amrex::Print() << "After  KDTree BA HAS " << new_ba.size() << " GRIDS " << std::endl;
-     if (new_ba.size() < 32) // This is an arbitrary cut-off so we don't spew for large problems
-            amrex::Print() << "After:" << new_ba << std::endl;
-  }
-
-  if (verbose) 
-  {
-     num_part = NumberOfParticlesInGrid(0);
-     for (int i = 0; i < old_ba.size(); i++)
-        amrex::Print() << "NUM PART IN GRID AFTER  " << i << " " << num_part[i] << std::endl;
-  }
+  loadBalanceKD::balance<MFIXParticleContainer>(*this, new_ba, ParallelDescriptor::NProcs(), cell_weight, box_costs);
 
   // Create a new DM to go with the new BA
-  DistributionMapping new_dm(new_ba);
+  DistributionMapping new_dm = DistributionMapping::makeKnapSack(box_costs);
   
   Regrid(new_dm, new_ba);
+
+  if (verbose)
+  {
+     Array<long> num_part;
+     num_part = NumberOfParticlesInGrid(0);
+     long min_number = num_part[0];
+     long max_number = num_part[0];
+     for (int i = 0; i < new_ba.size(); i++)
+     {
+        max_number = std::max(max_number, num_part[i]);
+        min_number = std::min(min_number, num_part[i]);
+     }
+     amrex::Print() << "After  KDTree: BA had " << new_ba.size() << " GRIDS " << std::endl;
+     amrex::Print() << "After  KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<  
+                        min_number << " " << max_number << std::endl;
+  }
 }

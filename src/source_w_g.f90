@@ -18,44 +18,41 @@ contains
 !     The drag terms are excluded from the source at this stage.       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_w_g(lo, hi, slo, shi, wlo, whi, alo, ahi, &
-        A_m, b_m, dt, p_g, ep_g, ro_g, rop_go, w_go, &
-        tau_w_g, dx, dy, dz, domlo, domhi)
+  subroutine source_w_g(lo, hi, slo, shi, wlo, whi, alo, ahi, dlo, dhi, &
+       A_m, b_m, p_g, ep_g, ro_g, rop_go, w_go, tau_w_g, f_gds_w, drag_w, &
+       dt, dx, dy, dz, domlo, domhi)
 
 ! Modules
 !---------------------------------------------------------------------//
       use constant, only: gravity
       use bc, only: delp_z
 
-      use functions, only: avg
-
       use matrix, only: e, w, s, n, t, b
       use scales, only: p_scale
 
-      integer     , intent(in   ) ::  lo(3), hi(3)
-      integer     , intent(in   ) :: slo(3),shi(3),wlo(3),whi(3),alo(3),ahi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
+      integer     , intent(in   ) :: lo(3),    hi(3)
+      integer     , intent(in   ) :: slo(3),   shi(3)
+      integer     , intent(in   ) :: wlo(3),   whi(3)
+      integer     , intent(in   ) :: alo(3),   ahi(3)
+      integer     , intent(in   ) :: dlo(3),   dhi(3)
+      integer     , intent(in   ) :: domlo(3), domhi(3)
 
       ! Septadiagonal matrix A_m
-      real(c_real), intent(inout) :: A_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
+      real(c_real), intent(inout) :: &
+           A_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3), &
+           b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-      ! Vector b_m
-      real(c_real), intent(inout) :: b_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(c_real), intent(in   ) :: &
+           p_g    (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ep_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ro_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           rop_go (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
 
-      real(c_real), intent(in   ) :: p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: ro_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: rop_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: w_go&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      real(c_real), intent(in   ) :: tau_w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+           w_go   (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
+           tau_w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
+
+           f_gds_w(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3)), &
+           drag_w (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
@@ -88,9 +85,7 @@ contains
 
                ! Pressure term
                pgb = p_g(i,j,k-1)
-
                if((k==domlo(3)) .or. (k==domhi(3)+1) ) pgb = pgb + delp_z
-
                sdp = -p_scale*epga*(p_g(i,j,k) - pgb)*axy
 
                ! Previous time step
@@ -102,10 +97,11 @@ contains
                ! Collect the terms
                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
                                 A_m(i,j,k,n) + A_m(i,j,k,s) + &
-                                A_m(i,j,k,t) + A_m(i,j,k,b) + v0*vol)
+                                A_m(i,j,k,t) + A_m(i,j,k,b) + &
+                                v0*vol + f_gds_w(i,j,k))
 
-               b_m(i,j,k) = b_m(i,j,k) - ( sdp + tau_w_g(i,j,k)  + &
-                  ( (v0)*w_go(i,j,k) + vbf)*vol)
+               b_m(i,j,k) = -(sdp + tau_w_g(i,j,k) + drag_w(i,j,k) + &
+                    ( (v0)*w_go(i,j,k) + vbf)*vol)
 
             enddo
          enddo

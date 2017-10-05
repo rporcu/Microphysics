@@ -137,7 +137,6 @@ module init_fluid_module
 ! Local variables
 !-----------------------------------------------
 ! indices
-      integer :: i, j, k
       integer :: istart, iend
       integer :: jstart, jend
       integer :: kstart, kend
@@ -363,69 +362,53 @@ module init_fluid_module
 ! balances the weight of the bed, if the initial pressure-field is not
 ! specified
 
-      if(abs(gravity(1)) > epsilon(0.0d0)) then
+      if (abs(gravity(1)) > epsilon(0.0d0)) then
 
-! Find the average weight per unit area over an x-z slice
+         ! Find the average weight per unit area over an x-z slice
          if (is_undefined(ro_g0)) then
             dpodx = -gravity(1)*eosg(mw_avg,pj,295.15d0)
          else
             dpodx = -gravity(1)*ro_g0
          endif
-         if(gravity(1) <= 0.0d0) then
-            pj = pj - dpodx*dx*(hi(1)-domhi(1))
-            do i = hi(1)+1, lo(1), -1
-               do k = lo(3), hi(3)
-                  do j = lo(2), hi(2)
-                     p_g(i,j,k) = scale_pressure(pj)
-                  enddo
-               enddo
+
+         if (gravity(1) <= 0.0d0) then
+            do i = domhi(1)+1, domlo(1), -1
+               if (i <= hi(1)+1 .and. i >= lo(1)) &
+                  p_g(i,:,:) = scale_pressure(pj)
                pj = pj + dpodx*dx
             enddo
          else
-            pj = pj - dpodx*dx*(hi(1)-domhi(1))
-            do i = lo(1), hi(1)+1
-               do k = lo(3), hi(3)
-                  do j = lo(2), hi(2)
-                     p_g(i,j,k) = scale_pressure(pj)
-                  enddo
-               enddo
+            do i = domlo(1), domhi(1)+1
+               if (i <= hi(1)+1 .and. i >= lo(1)) &
+                  p_g(i,:,:) = scale_pressure(pj)
                pj = pj - dpodx*dx
             enddo
          endif
 
-      else if(abs(gravity(2)) > epsilon(0.0d0)) then
+      else if (abs(gravity(2)) > epsilon(0.0d0)) then
+
          if (is_undefined(ro_g0)) then
             dpody = -gravity(2)*eosg(mw_avg,pj,295.15d0)
          else
             dpody = -gravity(2)*ro_g0
          endif
 
-         if(gravity(2) <= 0.0d0) then
-            !pj = pj - dpody*dy*(hi(2)-domhi(2))
-            do j=domhi(2)+1, domlo(2), -1
-               if(j <= hi(2)+1 .and. j>= lo(2)) then
-                  do k = lo(3), hi(3)
-                     do i = lo(1), hi(1)
-                        p_g(i,j,k) = scale_pressure(pj)
-                     enddo
-                  enddo
-               endif
+         if (gravity(2) <= 0.0d0) then
+            do j = domhi(2)+1, domlo(2), -1
+               if (j <= hi(2)+1 .and. j>= lo(2)) &
+                  p_g(:,j,:) = scale_pressure(pj)
                pj = pj + dpody*dy
             enddo
          else
-            pj = pj - dpody*dy*(hi(2)-domhi(2))
-            do j = lo(2),hi(2)+1
-               do k = lo(3), hi(3)
-                  do i = lo(1), hi(1)
-                     p_g(i,j,k) = scale_pressure(pj)
-                  enddo
-               enddo
+            do j = domlo(2),domhi(2)+1
+               if (j <= hi(2)+1 .and. j >= lo(2)) &
+                  p_g(:,j,:) = scale_pressure(pj)
                pj = pj - dpody*dy
             enddo
          endif
 
+      else if (abs(gravity(3)) > epsilon(0.0d0)) then
 
-      else
          if (is_undefined(ro_g0)) then
             dpodz = -gravity(3)*eosg(mw_avg,pj,295.15d0)
          else
@@ -433,23 +416,15 @@ module init_fluid_module
          endif
 
          if(gravity(3) <= 0.0d0) then
-            pj = pj - dpodz*dz*(hi(3)-domhi(3))
-            do k = hi(3)+1, lo(3), -1
-               do j = lo(2), hi(2)
-                  do i = lo(1), hi(1)
-                     p_g(i,j,k) = scale_pressure(pj)
-                  enddo
-               enddo
+            do k = domhi(3)+1, domlo(3), -1
+               if (k <= hi(3)+1 .and. k >= lo(3)) &
+                  p_g(:,:,k) = scale_pressure(pj)
                pj = pj + dpodz*dz
             enddo
          else
-            pj = pj - dpodz*dz*(hi(3)-domhi(3))
-            do k = lo(3), hi(3)+1
-               do j = lo(2), hi(2)
-                  do i = lo(1), hi(1)
-                     p_g(i,j,k) = scale_pressure(pj)
-                  enddo
-               enddo
+            do k = domlo(3),domhi(3)+1
+               if (k <= hi(3)+1 .and. k >= lo(3)) &
+                  p_g(:,:,k) = scale_pressure(pj)
                pj = pj - dpodz*dz
             enddo
          endif

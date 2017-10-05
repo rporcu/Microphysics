@@ -58,7 +58,6 @@ set(F90_sources
    des/des_time_march.f90
    des/discretelement_mod.f90
    des/drag_gp_des.f90
-   des/gas_drag.f90
    des/init_collision.f90
    des/set_particle_properties.f90
    des/stl_functions_des_mod.f90
