@@ -22,7 +22,7 @@ public:
     mfix_level ();
     ~mfix_level ();
 
-    void InitParams(int solve_fluid, int solve_dem, int max_nit, int call_udf);
+    void InitParams(int solve_fluid, int solve_dem, int max_nit, int call_udf );
 
     void Init (int lev, Real dt, Real time);
 
@@ -234,6 +234,7 @@ private:
 
     int solve_fluid;
     int solve_dem;
+    int use_proj_method = 0; // Whether to use projection to solve NS eqs.
     int max_nit;
     int call_udf;
 

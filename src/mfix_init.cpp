@@ -11,6 +11,9 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
 {
     ParmParse pp("mfix");
 
+    // Whether to use projection method
+    pp.query("use_proj_method", use_proj_method );
+	
     // The default type is "AsciiFile" but we can over-write that in the inputs file
     //  with "Random"
     pp.query("particle_init_type", particle_init_type);

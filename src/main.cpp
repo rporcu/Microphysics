@@ -120,7 +120,7 @@ int main (int argc, char* argv[])
     mfix_level my_mfix;
 
     my_mfix.InitParams(solve_fluid,solve_dem,max_nit,call_udf);
-
+    
     my_mfix.Init(lev,dt,time);
 
     // Either init from scratch or from the checkpoint file
