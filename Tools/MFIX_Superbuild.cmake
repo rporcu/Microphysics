@@ -33,7 +33,7 @@ set (CMAKE_CXX_EXTENSIONS OFF)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
-set (AMREX_GIT_COMMIT_DEVELOP 9a7e2833c839baf20551017c5f0ab3c3dc27bb9c )
+set (AMREX_GIT_COMMIT_DEVELOP ef248e1a2172054eeb7615109030bc3a39096071 )
 set (AMREX_GIT_TAG)  # The commit id or branch to download 
 
 # AMReX Superbuild variables

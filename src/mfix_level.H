@@ -143,10 +143,10 @@ private:
     void WritePlotFile () const;
 
       // which step?
-    Array<int> nsubsteps;  // how many substeps on each level?
+    Vector<int> nsubsteps;  // how many substeps on each level?
 #endif
 
-    Array<int> istep = {1} ;
+    Vector<int> istep = {1} ;
 
     // Particle container
     std::unique_ptr<MFIXParticleContainer> pc;
@@ -161,76 +161,76 @@ private:
     IArrayBox bc_klo;
     IArrayBox bc_khi;
 
-    Array< std::unique_ptr<iMultiFab> > flag;
+    Vector< std::unique_ptr<iMultiFab> > flag;
 
     // Matrix and rhs vector
-    Array< std::unique_ptr<MultiFab> > A_m;
-    Array< std::unique_ptr<MultiFab> > b_m;
+    Vector< std::unique_ptr<MultiFab> > A_m;
+    Vector< std::unique_ptr<MultiFab> > b_m;
 
     // Void fraction
-    Array< std::unique_ptr<MultiFab> > ep_g ;
-    Array< std::unique_ptr<MultiFab> > ep_go;
+    Vector< std::unique_ptr<MultiFab> > ep_g ;
+    Vector< std::unique_ptr<MultiFab> > ep_go;
 
     // Gas pressure fraction
-    Array< std::unique_ptr<MultiFab> > p_g ;
-    Array< std::unique_ptr<MultiFab> > p_go;
+    Vector< std::unique_ptr<MultiFab> > p_g ;
+    Vector< std::unique_ptr<MultiFab> > p_go;
 
     // Gas density
-    Array< std::unique_ptr<MultiFab> > ro_g ;
-    Array< std::unique_ptr<MultiFab> > ro_go;
+    Vector< std::unique_ptr<MultiFab> > ro_g ;
+    Vector< std::unique_ptr<MultiFab> > ro_go;
 
     // Gas bulk density
-    Array< std::unique_ptr<MultiFab> > rop_g ;
-    Array< std::unique_ptr<MultiFab> > rop_go;
+    Vector< std::unique_ptr<MultiFab> > rop_g ;
+    Vector< std::unique_ptr<MultiFab> > rop_go;
 
     // X-axis gas velocity
-    Array< std::unique_ptr<MultiFab> > u_g ;
-    Array< std::unique_ptr<MultiFab> > u_go;
-    Array< std::unique_ptr<MultiFab> > u_gt;
+    Vector< std::unique_ptr<MultiFab> > u_g ;
+    Vector< std::unique_ptr<MultiFab> > u_go;
+    Vector< std::unique_ptr<MultiFab> > u_gt;
 
     // Y-axis gas velocity
-    Array< std::unique_ptr<MultiFab> > v_g ;
-    Array< std::unique_ptr<MultiFab> > v_go;
-    Array< std::unique_ptr<MultiFab> > v_gt;
+    Vector< std::unique_ptr<MultiFab> > v_g ;
+    Vector< std::unique_ptr<MultiFab> > v_go;
+    Vector< std::unique_ptr<MultiFab> > v_gt;
 
     // Z-axis gas velocity
-    Array< std::unique_ptr<MultiFab> > w_g ;
-    Array< std::unique_ptr<MultiFab> > w_go;
-    Array< std::unique_ptr<MultiFab> > w_gt;
+    Vector< std::unique_ptr<MultiFab> > w_g ;
+    Vector< std::unique_ptr<MultiFab> > w_go;
+    Vector< std::unique_ptr<MultiFab> > w_gt;
 
     // Pressure correction equation
-    Array< std::unique_ptr<MultiFab> > pp_g;
-    Array< std::unique_ptr<MultiFab> > d_e ;
-    Array< std::unique_ptr<MultiFab> > d_n ;
-    Array< std::unique_ptr<MultiFab> > d_t ;
+    Vector< std::unique_ptr<MultiFab> > pp_g;
+    Vector< std::unique_ptr<MultiFab> > d_e ;
+    Vector< std::unique_ptr<MultiFab> > d_n ;
+    Vector< std::unique_ptr<MultiFab> > d_t ;
 
     // Molecular viscosity
-    Array< std::unique_ptr<MultiFab> > mu_g ;
+    Vector< std::unique_ptr<MultiFab> > mu_g ;
 
     // Cell-based
-    Array< std::unique_ptr<MultiFab> > lambda_g;
-    Array< std::unique_ptr<MultiFab> > trD_g;
+    Vector< std::unique_ptr<MultiFab> > lambda_g;
+    Vector< std::unique_ptr<MultiFab> > trD_g;
 
     // Face-based
-    Array< std::unique_ptr<MultiFab> > tau_u_g;
-    Array< std::unique_ptr<MultiFab> > tau_v_g;
-    Array< std::unique_ptr<MultiFab> > tau_w_g;
+    Vector< std::unique_ptr<MultiFab> > tau_u_g;
+    Vector< std::unique_ptr<MultiFab> > tau_v_g;
+    Vector< std::unique_ptr<MultiFab> > tau_w_g;
     
-    Array< std::unique_ptr<MultiFab> > fluxX;
-    Array< std::unique_ptr<MultiFab> > fluxY;
-    Array< std::unique_ptr<MultiFab> > fluxZ;
+    Vector< std::unique_ptr<MultiFab> > fluxX;
+    Vector< std::unique_ptr<MultiFab> > fluxY;
+    Vector< std::unique_ptr<MultiFab> > fluxZ;
    
-    Array< std::unique_ptr<MultiFab> > ropX;
-    Array< std::unique_ptr<MultiFab> > ropY;
-    Array< std::unique_ptr<MultiFab> > ropZ;
+    Vector< std::unique_ptr<MultiFab> > ropX;
+    Vector< std::unique_ptr<MultiFab> > ropY;
+    Vector< std::unique_ptr<MultiFab> > ropZ;
   
-    Array< std::unique_ptr<MultiFab> > f_gds_u;
-    Array< std::unique_ptr<MultiFab> > f_gds_v;
-    Array< std::unique_ptr<MultiFab> > f_gds_w;
+    Vector< std::unique_ptr<MultiFab> > f_gds_u;
+    Vector< std::unique_ptr<MultiFab> > f_gds_v;
+    Vector< std::unique_ptr<MultiFab> > f_gds_w;
  
-    Array< std::unique_ptr<MultiFab> > drag_u;
-    Array< std::unique_ptr<MultiFab> > drag_v;
-    Array< std::unique_ptr<MultiFab> > drag_w;
+    Vector< std::unique_ptr<MultiFab> > drag_u;
+    Vector< std::unique_ptr<MultiFab> > drag_v;
+    Vector< std::unique_ptr<MultiFab> > drag_w;
 
     int solve_fluid;
     int solve_dem;
@@ -247,10 +247,10 @@ private:
     int nghost_bc = 2;
 
     // Variables to simplify IO
-    Array< const Array< std::unique_ptr<MultiFab> >* > vectorVars;
-    Array< const Array< std::unique_ptr<MultiFab> >* > scalarVars;
-    Array< std::string > vecVarsName;
-    Array< std::string > scaVarsName;
+    Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
+    Vector< const Vector< std::unique_ptr<MultiFab> >* > scalarVars;
+    Vector< std::string > vecVarsName;
+    Vector< std::string > scaVarsName;
 
 };
 

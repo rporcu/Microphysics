@@ -112,7 +112,7 @@ void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, Distributio
 {
     int lev = 0;
 
-    Array<Real> orig_domain_size;
+    Vector<Real> orig_domain_size;
     orig_domain_size.resize(BL_SPACEDIM);
     for (int d = 0; d < BL_SPACEDIM; d++) 
         orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
@@ -214,7 +214,7 @@ void MFIXParticleContainer::ReadStaticParameters ()
 
         pp.query("do_tiling",  do_tiling);
 
-        Array<int> ts(BL_SPACEDIM);
+        Vector<int> ts(BL_SPACEDIM);
 
         if (pp.queryarr("tile_size", ts))
             tile_size = IntVect(ts);
@@ -1026,7 +1026,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
 
   if (verbose) 
   {
-     Array<long> num_part;
+     Vector<long> num_part;
      num_part = NumberOfParticlesInGrid(0);
      long min_number = num_part[0];
      long max_number = num_part[0];
@@ -1040,7 +1040,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
                         min_number << " " << max_number << std::endl;
   }
 
-  Array<Real> box_costs;
+  Vector<Real> box_costs;
 
   BoxArray new_ba;
   Real cell_weight = 0.;
@@ -1053,7 +1053,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
 
   if (verbose)
   {
-     Array<long> num_part;
+     Vector<long> num_part;
      num_part = NumberOfParticlesInGrid(0);
      long min_number = num_part[0];
      long max_number = num_part[0];

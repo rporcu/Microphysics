@@ -121,8 +121,8 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
 
     if ( solve_dem )
     {
-        Array<std::string> real_comp_names;
-        Array<std::string>  int_comp_names;
+        Vector<std::string> real_comp_names;
+        Vector<std::string>  int_comp_names;
         real_comp_names.push_back("radius");
         real_comp_names.push_back("volume");
         real_comp_names.push_back("mass");
@@ -165,7 +165,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 
       VisMF::IO_Buffer io_buffer(VisMF::GetIOBufferSize());
 
-      Array<char> fileCharPtr;
+      Vector<char> fileCharPtr;
       ParallelDescriptor::ReadAndBcastFile(File, fileCharPtr);
       std::string fileCharPtrString(fileCharPtr.dataPtr());
       std::istringstream is(fileCharPtrString, std::istringstream::in);
@@ -500,7 +500,7 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
     if (ParallelDescriptor::IOProcessor())
   std::cout << "  Writing plotfile " << plotfilename << std::endl;
     {
-  Array< std::unique_ptr<MultiFab> > mf(finest_level+1);
+  Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
 
   for (int lev = 0; lev <= finest_level; ++lev) {
 
@@ -511,7 +511,7 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
       // Vector variables
       int dcomp = 0;
-      Array<const MultiFab*> srcmf(3);
+      Vector<const MultiFab*> srcmf(3);
 
       for( dcomp = 0; dcomp < vectorVars.size(); dcomp=dcomp+3 ) {
     srcmf[0] = (*vectorVars[dcomp])[lev].get();
@@ -528,14 +528,14 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
   }
 
-  Array<const MultiFab*> mf2(finest_level+1);
+  Vector<const MultiFab*> mf2(finest_level+1);
 
   for (int lev = 0; lev <= finest_level; ++lev) {
       mf2[lev] = mf[lev].get();
   }
 
   // Concatenate scalar and vector var names
-  Array<std::string>  names;
+  Vector<std::string>  names;
   names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
   names.insert( names.end(), scaVarsName.begin(), scaVarsName.end());
 
@@ -547,8 +547,8 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
     if ( solve_dem )
     {
-        Array<std::string> real_comp_names;
-        Array<std::string>  int_comp_names;
+        Vector<std::string> real_comp_names;
+        Vector<std::string>  int_comp_names;
         real_comp_names.push_back("radius");
         real_comp_names.push_back("volume");
         real_comp_names.push_back("mass");
