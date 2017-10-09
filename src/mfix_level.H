@@ -129,8 +129,12 @@ private:
     static void GotoNextLine (std::istream& is);
 
     void EvolveFluid (int lev, int nstep, int set_normg,
-          Real dt, Real& prev_dt, Real time, Real normg);
+		      Real dt, Real& prev_dt, Real time, Real normg);
 
+    void EvolveFluidProjection  (int lev, int nstep, int set_normg,
+				 Real dt, Real& prev_dt, Real time, Real normg);
+
+    
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
     void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
