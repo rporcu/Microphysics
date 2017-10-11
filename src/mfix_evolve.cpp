@@ -230,7 +230,13 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
   MultiFab::Copy(*v_go[lev],   *v_g[lev],   0, 0, 1, nghost);
   MultiFab::Copy(*w_go[lev],   *w_g[lev],   0, 0, 1, nghost);
 
-  // Loop over iterate for auto time-step size adjustment
+
+
+  // This is just a test for compilation
+  mfix_compute_convection_term ( lev );  
+
+
+// Loop over iterate for auto time-step size adjustment
   int reiterate;
   do {
     prev_dt = dt;

@@ -1022,3 +1022,71 @@ mfix_level::mfix_set_bc1(int lev)
               bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
 }
+
+
+
+
+
+
+//
+//
+//  Projection-related functions
+//
+//
+void
+mfix_level::mfix_compute_convection_term (int lev)
+{
+    BL_PROFILE("mfix_level::mfix_compute_convection_term");
+
+    // Compute (ugrad(u))_x
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+    for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	const Box&  bx = mfi.tilebox();
+      
+	compute_ugradu_x ( BL_TO_FORTRAN_BOX(bx),  
+			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			   (*ugradu_x[lev])[mfi].dataPtr(),
+			   geom[lev].CellSize() );
+    }
+
+    // Compute (ugrad(u))_y
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+    for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	const Box&  bx = mfi.tilebox();
+      
+	compute_ugradu_y ( BL_TO_FORTRAN_BOX(bx),  
+			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			   (*ugradu_y[lev])[mfi].dataPtr(),
+			   geom[lev].CellSize() );
+    }
+
+
+    // Compute (ugrad(u))_z
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+    for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	const Box&  bx = mfi.tilebox();
+      
+	compute_ugradu_z ( BL_TO_FORTRAN_BOX(bx),  
+			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			   (*ugradu_z[lev])[mfi].dataPtr(),
+			   geom[lev].CellSize() );
+    }
+
+
+    
+}

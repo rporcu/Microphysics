@@ -126,6 +126,12 @@ set(F90_sources
    zero_wall_norm_vel.f90
    amrex_to_mfix.F90)
 
+#
+# Add sources for projection method
+# 
+list ( APPEND F90_sources convection_mod.f90 )
+
+
 # Generate AMReX_buildInfo.cpp
 add_custom_command(
    COMMAND  ${AMREX_INSTALL_PATH}/Tools/C_scripts/makebuildinfo_C.py

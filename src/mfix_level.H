@@ -92,6 +92,8 @@ protected:
     void mfix_solve_for_v    (int lev, Real dt, Real& num_v, Real& denom_v);
     void mfix_solve_for_w    (int lev, Real dt, Real& num_w, Real& denom_w);
 
+    void mfix_compute_convection_term  (int lev);
+    
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
     void mfix_solve_for_pp (int lev, Real dt, Real& num_p, Real& denom_p);
@@ -236,6 +238,14 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag_v;
     Vector< std::unique_ptr<MultiFab> > drag_w;
 
+
+    // Projection
+    Vector< std::unique_ptr<MultiFab> > ugradu_x;
+    Vector< std::unique_ptr<MultiFab> > ugradu_y;
+    Vector< std::unique_ptr<MultiFab> > ugradu_z;
+    
+
+    
     int solve_fluid;
     int solve_dem;
     int use_proj_method = 0; // Whether to use projection to solve NS eqs.

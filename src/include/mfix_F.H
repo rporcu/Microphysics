@@ -426,6 +426,34 @@ extern "C"
          const amrex::Real*, const int*, const int*);
 
     void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, amrex::Real* tol);
+
+    //
+    // Signatures for new subroutines for projection
+    //  
+    void compute_ugradu_x (
+       const int* lo,  const int*  hi,
+       amrex::Real* u_g, const int* ulo, const int* uhi,
+       amrex::Real* v_g, const int* vlo, const int* vhi,
+       amrex::Real* w_g, const int* wlo, const int* whi,
+       amrex::Real* ugradu_x, const amrex::Real* dx );
+
+    
+    void compute_ugradu_y (
+       const int* lo,  const int*  hi,
+       amrex::Real* u_g, const int* ulo, const int* uhi,
+       amrex::Real* v_g, const int* vlo, const int* vhi,
+       amrex::Real* w_g, const int* wlo, const int* whi,
+       amrex::Real* ugradu_y, const amrex::Real* dx );
+    
+
+    void compute_ugradu_z (
+       const int* lo,  const int*  hi,
+       amrex::Real* u_g, const int* ulo, const int* uhi,
+       amrex::Real* v_g, const int* vlo, const int* vhi,
+       amrex::Real* w_g, const int* wlo, const int* whi,
+       amrex::Real* ugradu_z, const amrex::Real* dx );
+    
+    
 #ifdef __cplusplus
 }
 #endif
