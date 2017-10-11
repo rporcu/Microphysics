@@ -59,6 +59,11 @@ mfix_level::mfix_level ()
     w_go.resize(nlevs_max);
     w_gt.resize(nlevs_max);
 
+    ugradu_x.resize(nlevs_max);
+    ugradu_y.resize(nlevs_max);
+    ugradu_z.resize(nlevs_max);
+
+
     d_e.resize(nlevs_max);
     d_n.resize(nlevs_max);
     d_t.resize(nlevs_max);
