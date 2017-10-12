@@ -235,6 +235,8 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
   // This is just a test for compilation
   mfix_compute_convection_term ( lev );  
 
+  mfix_compute_diffusion_term ( lev );
+  
 
 // Loop over iterate for auto time-step size adjustment
   int reiterate;

@@ -92,7 +92,10 @@ protected:
     void mfix_solve_for_v    (int lev, Real dt, Real& num_v, Real& denom_v);
     void mfix_solve_for_w    (int lev, Real dt, Real& num_w, Real& denom_w);
 
+    // Projection
     void mfix_compute_convection_term  (int lev);
+    void mfix_compute_diffusion_term  (int lev);
+    // End projection
     
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
@@ -244,6 +247,9 @@ private:
     Vector< std::unique_ptr<MultiFab> > ugradu_y;
     Vector< std::unique_ptr<MultiFab> > ugradu_z;
     
+    Vector< std::unique_ptr<MultiFab> > divtau_x;
+    Vector< std::unique_ptr<MultiFab> > divtau_y;
+    Vector< std::unique_ptr<MultiFab> > divtau_z;
 
     
     int solve_fluid;
