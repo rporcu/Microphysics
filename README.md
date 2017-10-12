@@ -49,7 +49,7 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 
 | Option name                  |  Description                                 | Possible values              | Default value       |
 | -----------------------------|----------------------------------------------|------------------------------|---------------------|
-| CMAKE_BUILD_TYPE             | Configuration of the build                   |   Debug/Release              |   Release             |
+| DEBUG                        | Build in debug mode                          |   ON/OFF                     |   OFF             |
 | MFIX_FFLAGS_OVERRIDES        | User-defined Fortran flags                   | valid F90 compiler flags     |   None              |
 | MFIX_CXXFLAGS_OVERRIDES      | User-defined C++ flags                       | valid C++ compiler flags     |   None              |
 | ENABLE_FPE                   | Build with Floating-Point Exceptions checks  |   0/1                        |   0                 |
@@ -57,18 +57,15 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 | AMREX_ENABLE_OMP             | Enable build with OpenMP                     |   0/1                        |   0                 |
 | AMREX_ENABLE_DP              | Enable double precision                      |   0/1                        |   1                 |
 | AMREX_ENABLE_DP_PARTICLES    | Enable double precision in particles classes |   0/1                        |   1                 |
-| AMREX_ENABLE_PROFILING       | Include profiling info                       |   0/1                        |   0                 |
-| AMREX_ENABLE_TINY_PROFILING  | Include tiny profiling info                  |   0/1                        |   0                
-|
-| AMREX_ENABLE_COMM_PROFILING  | Include communicators profiling info         |   0/1                        |   0                
-|
-| AMREX_ENABLE_TRACE_PROFILING | Include trace profiling info                 |   0/1                        |   0                
-|
+| AMREX_ENABLE_BASE_PROFILE    | Include profiling info                       |   0/1                        |   0                 |
+| AMREX_ENABLE_TINY_PROFILE    | Include tiny profiling info                  |   0/1                        |   0                 |
+| AMREX_ENABLE_COMM_PROFILE    | Include communicators profiling info         |   0/1                        |   0                 |               
+| AMREX_ENABLE_TRACE_PROFILE   | Include trace profiling info                 |   0/1                        |   0                 |              
+| AMREX_ENABLE_MEM_PROFILE     | Include memory profiling info                |   0/1                        |   0                 |
 | AMREX_ENABLE_BACKTRACE       | Include backtrace info                       |   0/1                        |   0                 |
-| AMREX_ENABLE_PIC             | Build position-independent code              |   0/1                        |   0                 
-|
-| AMREX_ENABLE_ASSERTIONS      | Build position-independent code              |   0/1                        |   0                
-|
+| AMREX_ENABLE_PROFPARSER      | Include profile parser                       |   0/1                        |   0                 |
+| AMREX_ENABLE_PIC             | Build position-independent code              |   0/1                        |   0                 |              
+| AMREX_ENABLE_ASSERTION       | Build position-independent code              |   0/1                        |   0                 |
 | AMREX_GIT_COMMIT             | AMReX commit to be used in the build         | valid git commit id/branch   |   None              |
 | AMREX_INSTALL_DIR            | Global path to AMReX install directory       | valid global path            |   None (superbuild) |
  
@@ -77,7 +74,7 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 Example: build mfix with custom fortran flags, AMReX profiling enabled and single precision particles:
 
 ```
-cmake -DMFIX_FFLAGS_OVERRIDES="custom flags" -DAMREX_ENABLE_PROFILING=1 -DAMREX_ENABLE_DP_PARTICLES=0 ..
+cmake -DMFIX_FFLAGS_OVERRIDES="custom flags" -DAMREX_ENABLE_BASE_PROFILE=1 -DAMREX_ENABLE_DP_PARTICLES=0 ..
 ```  
 
 ## Building MFIX-Exa using a separate AMReX installation (no superbuild)

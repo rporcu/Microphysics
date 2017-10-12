@@ -17,44 +17,41 @@ contains
 !  The drag terms are excluded from the source at this stage.          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_v_g(lo, hi, slo, shi, vlo, vhi, alo, ahi, &
-      A_m, b_m, dt, p_g, ep_g, ro_g, rop_go, &
-      v_go, tau_v_g, dx, dy, dz, domlo, domhi)
+  subroutine source_v_g(lo, hi, slo, shi, vlo, vhi, alo, ahi, dlo, dhi, &
+       A_m, b_m, p_g, ep_g, ro_g, rop_go, v_go, tau_v_g, f_gds_v, drag_v, &
+       dt, dx, dy, dz, domlo, domhi)
 
       use constant, only: gravity
       use bc, only: delp_y
 
-      use functions, only: avg
       use matrix, only: e, w, s, n, t, b
 
       use scales, only: p_scale
 
-      integer     , intent(in   ) ::  lo(3), hi(3)
-      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3),alo(3),ahi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
-
-      ! Septadiagonal matrix A_m
-      real(c_real), intent(inout) :: A_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
-
-      ! vector b_m
-      real(c_real), intent(inout) :: b_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
-
-      real(c_real), intent(in   ) :: p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: ro_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: rop_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: v_go&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: tau_v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      integer     , intent(in   ) :: lo(3),    hi(3)
+      integer     , intent(in   ) :: slo(3),   shi(3)
+      integer     , intent(in   ) :: vlo(3),   vhi(3)
+      integer     , intent(in   ) :: alo(3),   ahi(3)
+      integer     , intent(in   ) :: dlo(3),   dhi(3)
+      integer     , intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
+
+      real(c_real), intent(inout) :: &
+           A_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3), &
+           b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+
+      real(c_real), intent(in   ) :: &
+           p_g    (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ep_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ro_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           rop_go (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+
+           v_go   (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+           tau_v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+
+           f_gds_v(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3)), &
+           drag_v (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -96,9 +93,10 @@ contains
                ! Collect the terms
                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
                                 A_m(i,j,k,n) + A_m(i,j,k,s) + &
-                                A_m(i,j,k,t) + A_m(i,j,k,b)+ v0*vol)
+                                A_m(i,j,k,t) + A_m(i,j,k,b) + &
+                                v0*vol + f_gds_v(i,j,k))
 
-               b_m(i,j,k) = b_m(i,j,k) - (sdp + tau_v_g(i,j,k) +  &
+               b_m(i,j,k) = -(sdp + tau_v_g(i,j,k) + drag_v(i,j,k) + &
                   ((v0)*v_go(i,j,k) + vbf)*vol )
 
             enddo

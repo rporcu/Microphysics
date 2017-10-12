@@ -1,5 +1,36 @@
 cmake_minimum_required (VERSION 3.5)
 
+#
+# Set the search path for cmake modules
+#
+set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/ )
+
+#
+# Here we set the only options that decide if superbuild
+# is enabled or not
+# 
+set ( AMREX_INSTALL_DIR "" CACHE PATH
+   "Path to installation directory (leave empty for superbuild)")
+
+set ( SUPERBUILD  ON )
+
+if ( AMREX_INSTALL_DIR )
+   set ( SUPERBUILD OFF )
+endif ()
+
+#
+# Now decide if invoking superbuild. If so, this listfile will be
+# re-read by the MFIX_Superbuild.cmake 
+# 
+if ( SUPERBUILD )
+   include ( MFIX_Superbuild )
+   return ()
+endif ()
+
+
+#
+# This is where the MFIX-standalone config starts
+# 
 project (MFIX-Exa)
 
 #
@@ -21,11 +52,6 @@ set (CMAKE_CXX_EXTENSIONS OFF)
 # 
 # set ( CMAKE_VERBOSE_MAKEFILE on )
 
-#
-# Set the search path for cmake modules
-#
-set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/ )
-
 
 #
 # Include module with custom macros and functions
@@ -33,6 +59,7 @@ set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/ )
 include ( MFIX_Utils )
 
 get_git_info ( var1 var2 )
+
 #
 # Stop if building in source
 # 
@@ -66,6 +93,14 @@ add_subdirectory (src)
 file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
 add_executable (mfix ${MAIN} ${USR_OVERRIDES} )
 target_link_libraries ( mfix mfixcore ${MFIX_EXTRA_LINK_LINE} ) 
+
+# Add rule to generate TAGS
+add_custom_target ( tags
+   COMMAND ctags-exuberant -R    --fortran-kinds=+i . 
+   COMMAND ctags-exuberant -R -e --fortran-kinds=+i . 
+   COMMENT "Generating tags files"
+   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
+
 
 # Tools
 set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 
