@@ -1039,127 +1039,210 @@ mfix_level::mfix_set_bc1(int lev)
 //
 //
 void
-mfix_level::mfix_compute_convection_term (int lev)
+mfix_level::mfix_compute_u_star (int lev, amrex::Real dt)
 {
-    BL_PROFILE("mfix_level::mfix_compute_convection_term");
+    BL_PROFILE("mfix_level::mfix_compute_u_star");
 
-    // Compute (ugrad(u))_x
+
+    // U
+    // Compute (ugrad(u))_x and 
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
-    for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*u_go[lev],true); mfi.isValid(); ++mfi)
     {
 	const Box&  bx = mfi.tilebox();
-      
+
+	// Compute convection term
 	compute_ugradu_x ( BL_TO_FORTRAN_BOX(bx),  
-			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
 			   (*ugradu_x[lev])[mfi].dataPtr(),
 			   geom[lev].CellSize() );
-    }
 
-    // Compute (ugrad(u))_y
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-    for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box&  bx = mfi.tilebox();
-      
-	compute_ugradu_y ( BL_TO_FORTRAN_BOX(bx),  
-			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-			   (*ugradu_y[lev])[mfi].dataPtr(),
-			   geom[lev].CellSize() );
-    }
-
-
-    // Compute (ugrad(u))_z
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-    for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box&  bx = mfi.tilebox();
-      
-	compute_ugradu_z ( BL_TO_FORTRAN_BOX(bx),  
-			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-			   (*ugradu_z[lev])[mfi].dataPtr(),
-			   geom[lev].CellSize() );
-    }
-   
-}
-
-
-void
-mfix_level::mfix_compute_diffusion_term (int lev)
-{
-    BL_PROFILE("mfix_level::mfix_compute_diffusion_term");
-
-    // Compute (div(tau))_x
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-    for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box&  bx = mfi.tilebox();
-      
+	// Compute diffusion term
 	compute_divtau_x ( BL_TO_FORTRAN_BOX(bx),  
-			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
 			   BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
 			   (*lambda_g[lev])[mfi].dataPtr(),
 			   (*trD_g[lev])[mfi].dataPtr(),
 			   (*divtau_x[lev])[mfi].dataPtr(),
 			   geom[lev].CellSize() );
+
+	int dir = 1;
+	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(bx),  
+					BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+					(*u_go[lev])[mfi].dataPtr(),
+					(*ugradu_x[lev])[mfi].dataPtr(),
+					(*divtau_x[lev])[mfi].dataPtr(),
+					(*drag_u[lev])[mfi].dataPtr(),
+					(*f_gds_u[lev])[mfi].dataPtr(),
+					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+					&dt, &dir);
+
+
     }
+
+}
+
+
+void
+mfix_level::mfix_compute_v_star (int lev, amrex::Real dt)
+{
+    BL_PROFILE("mfix_level::mfix_compute_v_star");
+
+
     
-    // Compute (div(tau))_y
+    
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
-
-   for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*v_go[lev],true); mfi.isValid(); ++mfi)
     {
 	const Box&  bx = mfi.tilebox();
-      
+
+	// Compute convection term
+	compute_ugradu_y ( BL_TO_FORTRAN_BOX(bx),  
+			   BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
+			   (*ugradu_y[lev])[mfi].dataPtr(),
+			   geom[lev].CellSize() );
+
+	// Compute diffusion term
 	compute_divtau_y ( BL_TO_FORTRAN_BOX(bx),  
-			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
 			   BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
 			   (*lambda_g[lev])[mfi].dataPtr(),
 			   (*trD_g[lev])[mfi].dataPtr(),
 			   (*divtau_y[lev])[mfi].dataPtr(),
 			   geom[lev].CellSize() );
-    }
-    
 
-       
-    // Compute (div(tau))_z
+	int dir = 2;
+	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(bx),  
+					BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+					(*v_go[lev])[mfi].dataPtr(),
+					(*ugradu_y[lev])[mfi].dataPtr(),
+					(*divtau_y[lev])[mfi].dataPtr(),
+					(*drag_u[lev])[mfi].dataPtr(),
+					(*f_gds_u[lev])[mfi].dataPtr(),
+					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+					&dt, &dir);
+
+
+    }
+
+    
+}
+
+
+void
+mfix_level::mfix_compute_w_star (int lev, amrex::Real dt)
+{
+    BL_PROFILE("mfix_level::mfix_compute_w_star");
+  
+    
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
-
-   for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*w_go[lev],true); mfi.isValid(); ++mfi)
     {
 	const Box&  bx = mfi.tilebox();
-      
-	compute_divtau_y ( BL_TO_FORTRAN_BOX(bx),  
-			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+
+	// Compute convection term
+	compute_ugradu_z ( BL_TO_FORTRAN_BOX(bx),  
+			   BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
+			   (*ugradu_z[lev])[mfi].dataPtr(),
+			   geom[lev].CellSize() );
+
+	// Compute diffusion term
+	compute_divtau_z ( BL_TO_FORTRAN_BOX(bx),  
+			   BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
 			   BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
 			   (*lambda_g[lev])[mfi].dataPtr(),
 			   (*trD_g[lev])[mfi].dataPtr(),
 			   (*divtau_z[lev])[mfi].dataPtr(),
 			   geom[lev].CellSize() );
+
+	int dir = 3;
+	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(bx),  
+					BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+					(*w_go[lev])[mfi].dataPtr(),
+					(*ugradu_z[lev])[mfi].dataPtr(),
+					(*divtau_z[lev])[mfi].dataPtr(),
+					(*drag_u[lev])[mfi].dataPtr(),
+					(*f_gds_u[lev])[mfi].dataPtr(),
+					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+					&dt, &dir);
+
+
     }
+
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// void
+// mfix_level::mfix_compute_convection_term (int lev)
+// {
+//     BL_PROFILE("mfix_level::mfix_compute_convection_term");
+
+//     // Compute (ugrad(u))_x
+// #ifdef _OPENMP
+// #pragma omp parallel 
+// #endif
+//     for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
+//     {
+// 	const Box&  bx = mfi.tilebox();
+      
+// 	compute_ugradu_x ( BL_TO_FORTRAN_BOX(bx),  
+// 			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+// 			   (*ugradu_x[lev])[mfi].dataPtr(),
+// 			   geom[lev].CellSize() );
+//     }
+
+//     // Compute (ugrad(u))_y
+// #ifdef _OPENMP
+// #pragma omp parallel 
+// #endif
+//     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
+//     {
+// 	const Box&  bx = mfi.tilebox();
+      
+// 	compute_ugradu_y ( BL_TO_FORTRAN_BOX(bx),  
+// 			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+// 			   (*ugradu_y[lev])[mfi].dataPtr(),
+// 			   geom[lev].CellSize() );
+//     }
 
 
 //     // Compute (ugrad(u))_z
@@ -1177,4 +1260,93 @@ mfix_level::mfix_compute_diffusion_term (int lev)
 // 			   (*ugradu_z[lev])[mfi].dataPtr(),
 // 			   geom[lev].CellSize() );
 //     }
-}
+   
+// }
+
+
+// void
+// mfix_level::mfix_compute_diffusion_term (int lev)
+// {
+//     BL_PROFILE("mfix_level::mfix_compute_diffusion_term");
+
+//     // Compute (div(tau))_x
+// #ifdef _OPENMP
+// #pragma omp parallel 
+// #endif
+//     for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
+//     {
+// 	const Box&  bx = mfi.tilebox();
+      
+// 	compute_divtau_x ( BL_TO_FORTRAN_BOX(bx),  
+// 			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
+// 			   (*lambda_g[lev])[mfi].dataPtr(),
+// 			   (*trD_g[lev])[mfi].dataPtr(),
+// 			   (*divtau_x[lev])[mfi].dataPtr(),
+// 			   geom[lev].CellSize() );
+//     }
+    
+//     // Compute (div(tau))_y
+// #ifdef _OPENMP
+// #pragma omp parallel 
+// #endif
+
+//    for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
+//     {
+// 	const Box&  bx = mfi.tilebox();
+      
+// 	compute_divtau_y ( BL_TO_FORTRAN_BOX(bx),  
+// 			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
+// 			   (*lambda_g[lev])[mfi].dataPtr(),
+// 			   (*trD_g[lev])[mfi].dataPtr(),
+// 			   (*divtau_y[lev])[mfi].dataPtr(),
+// 			   geom[lev].CellSize() );
+//     }
+    
+
+       
+//     // Compute (div(tau))_z
+// #ifdef _OPENMP
+// #pragma omp parallel 
+// #endif
+
+//    for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
+//     {
+// 	const Box&  bx = mfi.tilebox();
+      
+// 	compute_divtau_y ( BL_TO_FORTRAN_BOX(bx),  
+// 			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+// 			   BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
+// 			   (*lambda_g[lev])[mfi].dataPtr(),
+// 			   (*trD_g[lev])[mfi].dataPtr(),
+// 			   (*divtau_z[lev])[mfi].dataPtr(),
+// 			   geom[lev].CellSize() );
+//     }
+
+
+// //     // Compute (ugrad(u))_z
+// // #ifdef _OPENMP
+// // #pragma omp parallel 
+// // #endif
+// //     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
+// //     {
+// // 	const Box&  bx = mfi.tilebox();
+      
+// // 	compute_ugradu_z ( BL_TO_FORTRAN_BOX(bx),  
+// // 			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+// // 			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+// // 			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+// // 			   (*ugradu_z[lev])[mfi].dataPtr(),
+// // 			   geom[lev].CellSize() );
+// //     }
+// }
+
+
+

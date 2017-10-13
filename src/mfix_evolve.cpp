@@ -215,10 +215,8 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
   // Calculate transport coefficients
   int calc_flag = 2;
   mfix_calc_coeffs(lev,calc_flag);
-
-  // Calculate the stress tensor trace and cross terms for all phases.
-  mfix_calc_trd_and_tau(lev);
-
+  
+  // Back up field
   // Backup field variable to old
   int nghost = ep_go[lev]->nGrow();
 
@@ -231,12 +229,53 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
   MultiFab::Copy(*w_go[lev],   *w_g[lev],   0, 0, 1, nghost);
 
 
+  // Compute the divergence of the velocity field, div(u).
+  // div(u) is needed to compute the volumetric term in the
+  // stress tensor
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+  for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
+  {
+      const Box& bx = mfi.tilebox();
 
-  // This is just a test for compilation
-  mfix_compute_convection_term ( lev );  
+      compute_divu ( BL_TO_FORTRAN_BOX(bx),
+		     BL_TO_FORTRAN_ANYD((*trD_g[lev])[mfi]),
+		     BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+		     BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+		     BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+		     geom[lev].CellSize() );		     
 
-  mfix_compute_diffusion_term ( lev );
+  }
   
+  fill_mf_bc(lev,*trD_g[lev]);
+
+
+
+  // User hooks
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+  for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+      mfix_usr2();
+
+  // Calculate drag coefficient
+  if (solve_dem)
+      mfix_calc_drag_fluid(lev);
+  
+
+  // Here we should check the CFL condition
+
+  
+  // Compute intermediate velocity
+  mfix_compute_u_star ( lev, dt );
+  mfix_compute_v_star ( lev, dt );
+  mfix_compute_w_star ( lev, dt );
+  
+  // Reimpose boundary conditions
+  mfix_set_bc1(lev);
+
+  //  Do projection HERE
 
 // Loop over iterate for auto time-step size adjustment
   int reiterate;
@@ -259,17 +298,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
       Real residuals[2*8];
       for (int i=0; i<2*8; ++i)
         residuals[i] = 0.0L;
-
-      // User hooks
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-      for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
-        mfix_usr2();
-
-      // Calculate drag coefficient
-      if (solve_dem)
-        mfix_calc_drag_fluid(lev);
 
       // Solve momentum equations in a thread safe way.
       Real num_u = 0.0L;

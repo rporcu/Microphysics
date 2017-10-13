@@ -93,8 +93,10 @@ protected:
     void mfix_solve_for_w    (int lev, Real dt, Real& num_w, Real& denom_w);
 
     // Projection
-    void mfix_compute_convection_term  (int lev);
-    void mfix_compute_diffusion_term  (int lev);
+    void mfix_compute_u_star (int lev, amrex::Real dt );
+    void mfix_compute_v_star (int lev, amrex::Real dt );
+    void mfix_compute_w_star (int lev, amrex::Real dt );
+    
     // End projection
     
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);

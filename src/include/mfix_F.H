@@ -481,6 +481,23 @@ extern "C"
        amrex::Real* lambda, amrex::Real* divu, 
        amrex::Real* divtau_z, const amrex::Real* dx );
 
+    void compute_intermediate_velocity (
+       const int* lo,  const int*  hi,
+       amrex::Real* u_i_star, const int* ulo, const int* uhi,
+       amrex::Real* u_i,    amrex::Real* ugradu_i,
+       amrex::Real* divtau_i, 
+       amrex::Real* drag_i, amrex::Real* f_gds_i,
+       amrex::Real* rop,  const int* slo, const int* shi,
+       const amrex::Real* dt, const int* dir );
+
+
+    void compute_divu (
+	const int* lo,  const int*  hi,
+	amrex::Real* divu,  const int* slo, const int* shi,
+	amrex::Real* u_g,   const int* ulo, const int* uhi,
+	amrex::Real* v_g,   const int* vlo, const int* vhi,
+	amrex::Real* w_g,   const int* wlo, const int* whi,
+	const amrex::Real* dx );
 
     
 #ifdef __cplusplus
