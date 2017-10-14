@@ -63,7 +63,11 @@ mfix_level::mfix_level ()
     ugradu_y.resize(nlevs_max);
     ugradu_z.resize(nlevs_max);
 
+    divtau_x.resize(nlevs_max);
+    divtau_y.resize(nlevs_max);
+    divtau_z.resize(nlevs_max);
 
+    
     d_e.resize(nlevs_max);
     d_n.resize(nlevs_max);
     d_t.resize(nlevs_max);
