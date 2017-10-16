@@ -130,7 +130,7 @@ set(F90_sources
 # Add sources for projection method
 # 
 list ( APPEND F90_sources convection_mod.f90 diffusion_mod.f90 projection_mod.f90 )
-
+list ( APPEND CXX_sources mfix_projection.cpp )
 
 # Generate AMReX_buildInfo.cpp
 add_custom_command(

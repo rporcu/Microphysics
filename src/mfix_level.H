@@ -96,6 +96,8 @@ protected:
     void mfix_compute_u_star (int lev, amrex::Real dt );
     void mfix_compute_v_star (int lev, amrex::Real dt );
     void mfix_compute_w_star (int lev, amrex::Real dt );
+
+    void mfix_apply_projection (int lev, amrex::Real dt);
     
     // End projection
     
@@ -140,6 +142,11 @@ private:
 
     void EvolveFluidProjection  (int lev, int nstep, int set_normg,
 				 Real dt, Real& prev_dt, Real time, Real normg);
+
+    // Projection-related methods
+    void solve_poisson_equation ( int lev, MultiFab& b, MultiFab& phi, MultiFab& rhs );
+    // End of projection-related methods
+
 
     
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
