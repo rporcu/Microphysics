@@ -31,6 +31,8 @@ MODULE read_namelist_module
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
+      use ic, only: ic_dp_dist, ic_dp_mean, ic_dp_std, ic_dp_min, ic_dp_max
+      use ic, only: ic_ro_s_dist, ic_ro_s_mean, ic_ro_s_std, ic_ro_s_min, ic_ro_s_max
       use leqsol, only: leq_it
       use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, ival
       use run, only: full_log, nlog

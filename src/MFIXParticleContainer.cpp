@@ -108,13 +108,54 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
   Redistribute();
 }
 
+
+void MFIXParticleContainer::InitParticlesAuto(int lev, int pcount) {
+
+  // Add all the particles to grid 0 and tile 0 and let
+  // Redistribute() put them in the right places.
+  const int grid = 0;
+  const int tile = 0;
+
+  auto& particles = GetParticles(lev)[std::make_pair(grid,tile)];
+
+  ParticleType p_new;
+  for (int i = 0; i < pcount; i++) {
+    // Set id and cpu for this particle
+    p_new.id()  = ParticleType::NextID();
+    p_new.cpu() = ParallelDescriptor::MyProc();
+
+    // Add to the data structure
+    particles.push_back(p_new);
+
+  }
+
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+
+    // Real particles
+    const int np     = NumberOfParticles(pti);
+    void* particles  = pti.GetArrayOfStructs().data();
+
+    mfix_particle_generator_prop( &np, particles);
+  }
+
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+
+    // Real particles
+    const int np     = NumberOfParticles(pti);
+    void* particles  = pti.GetArrayOfStructs().data();
+  }
+
+  Redistribute();
+}
+
+
 void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba)
 {
     int lev = 0;
 
     Vector<Real> orig_domain_size;
     orig_domain_size.resize(BL_SPACEDIM);
-    for (int d = 0; d < BL_SPACEDIM; d++) 
+    for (int d = 0; d < BL_SPACEDIM; d++)
         orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
 
     ParticleType p_rep;
@@ -771,10 +812,10 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
     beta_w_mf.copy(*beta_w_ptr,0,0,1);
 
     delete beta_x_ptr;
-    delete beta_y_ptr; 
+    delete beta_y_ptr;
     delete beta_z_ptr;
-    delete beta_u_ptr; 
-    delete beta_v_ptr; 
+    delete beta_u_ptr;
+    delete beta_v_ptr;
     delete beta_w_ptr;
 
     Box domain(Geom(lev).Domain());
@@ -848,7 +889,7 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
     }
 }
 
-void 
+void
 MFIXParticleContainer::writeAllForComparison(int lev)
 {
   int Np_tot = 0;
@@ -896,7 +937,7 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
             amrex::FileOpenFailed(filename);
 
         File << nparticles  << '\n';
-            
+
         File.flush();
 
         File.close();
@@ -933,11 +974,11 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
 
               auto& particles = pti.GetArrayOfStructs();
 
-		int index = 0;
+    int index = 0;
                 for (const auto& p: particles)
                 {
-		    if (p.id() > 0) {
-                        File << p.idata(intData::phase) << ' ';  
+        if (p.id() > 0) {
+                        File << p.idata(intData::phase) << ' ';
                         File << p.pos(0) << ' ';
                         File << p.pos(1) << ' ';
                         File << p.pos(2) << ' ';
@@ -947,20 +988,20 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
                         File << p.rdata(realData::vely) << ' ';
                         File << p.rdata(realData::velz) << ' ';
 
-                        File << '\n';                            
-                        
-                        index++;		      
+                        File << '\n';
+
+                        index++;
                     }
                 }
               }
-	    
+
             File.flush();
-	    
+
             File.close();
-            
+
             if (!File.good())
                 amrex::Abort("MFIXParticleContainer::WriteAsciiFileForInit(): problem writing file");
-	    
+
         }
         ParallelDescriptor::Barrier();
     }
@@ -1024,7 +1065,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
      return;
   }
 
-  if (verbose) 
+  if (verbose)
   {
      Vector<long> num_part;
      num_part = NumberOfParticlesInGrid(0);
@@ -1036,7 +1077,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
         min_number = std::min(min_number, num_part[i]);
      }
      amrex::Print() << "Before KDTree: BA had " << old_ba.size() << " GRIDS " << std::endl;
-     amrex::Print() << "Before KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<  
+     amrex::Print() << "Before KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<
                         min_number << " " << max_number << std::endl;
   }
 
@@ -1048,7 +1089,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
 
   // Create a new DM to go with the new BA
   DistributionMapping new_dm = DistributionMapping::makeKnapSack(box_costs);
-  
+
   Regrid(new_dm, new_ba);
 
   if (verbose)
@@ -1063,7 +1104,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
         min_number = std::min(min_number, num_part[i]);
      }
      amrex::Print() << "After  KDTree: BA had " << new_ba.size() << " GRIDS " << std::endl;
-     amrex::Print() << "After  KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<  
+     amrex::Print() << "After  KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<
                         min_number << " " << max_number << std::endl;
   }
 }

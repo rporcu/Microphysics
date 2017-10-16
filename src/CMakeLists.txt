@@ -59,6 +59,7 @@ set(F90_sources
    des/discretelement_mod.f90
    des/drag_gp_des.f90
    des/init_collision.f90
+   des/particle_generator.f90
    des/set_particle_properties.f90
    des/stl_functions_des_mod.f90
    display_resid.f90
