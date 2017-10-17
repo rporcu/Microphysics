@@ -85,7 +85,10 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     mfix_compute_v_star ( lev, dt );
     mfix_compute_w_star ( lev, dt );
   
-    // Reimpose boundary conditions
+    // Fill ghost cells and reimpose boundary conditions
+    u_g[lev] -> FillBoundary (geom[lev].periodicity());
+    v_g[lev] -> FillBoundary (geom[lev].periodicity());
+    w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_bc1(lev);
 
     //  Do projection HERE
@@ -241,7 +244,6 @@ mfix_level::mfix_compute_u_star (int lev, amrex::Real dt)
 					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 					&dt, &dir);
 
-
     }
 
 }
@@ -321,7 +323,7 @@ mfix_level::mfix_compute_w_star (int lev, amrex::Real dt)
 	// Compute diffusion term
 	compute_divtau_z ( BL_TO_FORTRAN_BOX(bx),  
 			   BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
-/			   BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
 			   BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
 			   BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
 			   (*lambda_g[lev])[mfi].dataPtr(),
@@ -482,7 +484,7 @@ mfix_level::compute_ppe_coefficients (int lev)
 
 	compute_ppe_coeffs_x (BL_TO_FORTRAN_BOX(bx),
 			      BL_TO_FORTRAN_ANYD((*(ppe_coeffs[lev][0]))[mfi]),
-			      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+			      BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 			      (*ep_g[lev])[mfi].dataPtr() );
     }
 
@@ -497,7 +499,7 @@ mfix_level::compute_ppe_coefficients (int lev)
 
 	compute_ppe_coeffs_y (BL_TO_FORTRAN_BOX(bx),
 			      BL_TO_FORTRAN_ANYD((*(ppe_coeffs[lev][1]))[mfi]),
-			      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+			      BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 			      (*ep_g[lev])[mfi].dataPtr() );
     }
 
@@ -512,10 +514,22 @@ mfix_level::compute_ppe_coefficients (int lev)
 
 	compute_ppe_coeffs_z (BL_TO_FORTRAN_BOX(bx),
 			      BL_TO_FORTRAN_ANYD((*(ppe_coeffs[lev][2]))[mfi]),
-			      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+			      BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 			      (*ep_g[lev])[mfi].dataPtr() );
     }
     
     ppe_coeffs[lev][2] -> FillBoundary(geom[lev].periodicity());
+    
+}
+
+//
+// Apply the pressure correction u = u^* + dt * grad(p)
+// 
+// 
+void
+mfix_level::apply_pressure_correction ( int lev )
+{
+    BL_PROFILE("mfix_level::apply_pressure_correction");
+
     
 }
