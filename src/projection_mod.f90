@@ -74,5 +74,152 @@ contains
 
    end subroutine compute_intermediate_velocity
 
+
+
+   !
+   ! Compute the RHS of the pressure poisson equation: rhs = - div(u*)/dt
+   ! 
+   subroutine compute_ppe_rhs ( lo, hi, rhs, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, &
+        & w_g, wlo, whi, dx, dt )  bind(C, name="compute_ppe_rhs")
+
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      real(ar),       intent(in   ) :: dx(3), dt
       
+      real(ar),       intent(  out) :: &
+           rhs(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      
+      real(ar),       intent(in   ) :: &
+           u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
+           v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+           w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
+      integer      :: i, j, k
+      real(ar)     :: odx, ody, odz, odt
+
+      odx = 1.d0 / dx(1)
+      ody = 1.d0 / dx(2)
+      odz = 1.d0 / dx(3)
+      odt = 1.d0 / dt
+
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
+               rhs(i,j,k) = - odt * ( &
+                    (u_g(i+1,j,k)-u_g(i,j,k))*odx + &
+                    (v_g(i,j+1,k)-v_g(i,j,k))*ody + &
+                    (w_g(i,j,k+1)-w_g(i,j,k))*odz )
+            end do
+         end do
+      end do
+
+   end subroutine compute_ppe_rhs
+
+
+
+
+   !
+   ! Compute the coefficients of the PPE, i.e. eps_g/rho_g, at the faces of
+   ! the pressure cells along the x-axis (u-velocity locations).
+   ! 
+   subroutine compute_ppe_coeffs_x ( lo, hi, coeffs, ulo, uhi, &
+        rop_g, slo, shi, ep_g)  bind(C, name="compute_ppe_coeffs_x")
+
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3)
+      
+      real(ar),       intent(in   ) :: &
+           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+            ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      real(ar),       intent(  out) :: &
+           coeffs(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      
+      integer      :: i, j, k
+
+
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
+               coeffs(i,j,k) = half * (              &
+                    ep_g(i,j,k) / rop_g(i,j,k)     + &
+                    ep_g(i-1,j,k) / rop_g(i-1,j,k) )
+            end do
+         end do
+      end do
+
+   end subroutine compute_ppe_coeffs_x
+
+   
+   !
+   ! Compute the coefficients of the PPE, i.e. eps_g/rho_g, at the faces of
+   ! the pressure cells along the y-axis (v-velocity locations).
+   ! 
+   subroutine compute_ppe_coeffs_y ( lo, hi, coeffs, vlo, vhi, &
+        rop_g, slo, shi, ep_g)  bind(C, name="compute_ppe_coeffs_y")
+      
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+      integer(c_int), intent(in   ) :: vlo(3),vhi(3)
+      
+      real(ar),       intent(in   ) :: &
+           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      
+      real(ar),       intent(  out) :: &
+           coeffs(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      
+      integer      :: i, j, k
+      
+      
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
+               coeffs(i,j,k) = half * (              &
+                    ep_g(i,j,k) / rop_g(i,j,k)     + &
+                    ep_g(i,j-1,k) / rop_g(i,j-1,k) )
+            end do
+         end do
+      end do
+      
+   end subroutine compute_ppe_coeffs_y
+
+
+
+   !
+   ! Compute the coefficients of the PPE, i.e. eps_g/rho_g, at the faces of
+   ! the pressure cells along the z-axis (w-velocity locations).
+   ! 
+   subroutine compute_ppe_coeffs_z ( lo, hi, coeffs, wlo, whi, &
+        rop_g, slo, shi, ep_g)  bind(C, name="compute_ppe_coeffs_z")
+      
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+      integer(c_int), intent(in   ) :: wlo(3),whi(3)
+      
+      real(ar),       intent(in   ) :: &
+           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      
+      real(ar),       intent(  out) :: &
+           coeffs(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      
+      integer      :: i, j, k
+      
+      
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
+               coeffs(i,j,k) = half * (              &
+                    ep_g(i,j,k) / rop_g(i,j,k)     + &
+                    ep_g(i,j,k-1) / rop_g(i,j,k-1) )
+            end do
+         end do
+      end do
+      
+   end subroutine compute_ppe_coeffs_z
+
+   
 end module projection_mod

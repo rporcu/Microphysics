@@ -98,7 +98,6 @@ protected:
     void mfix_compute_w_star (int lev, amrex::Real dt );
 
     void mfix_apply_projection (int lev, amrex::Real dt);
-    
     // End projection
     
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
@@ -144,7 +143,13 @@ private:
 				 Real dt, Real& prev_dt, Real time, Real normg);
 
     // Projection-related methods
-    void solve_poisson_equation ( int lev, MultiFab& b, MultiFab& phi, MultiFab& rhs );
+    //void solve_poisson_equation ( MultiFab& b, MultiFab& phi, MultiFab& rhs );
+    void solve_poisson_equation ( int lev,
+				  Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+				  Vector< std::unique_ptr<MultiFab> >& phi,
+				  Vector< std::unique_ptr<MultiFab> >& rhs );
+
+    void compute_ppe_coefficients ( int lev );
     // End of projection-related methods
 
 
@@ -260,6 +265,9 @@ private:
     Vector< std::unique_ptr<MultiFab> > divtau_y;
     Vector< std::unique_ptr<MultiFab> > divtau_z;
 
+    Vector< Vector< std::unique_ptr<MultiFab> > > ppe_coeffs; // PPE coefficients
+
+    
     
     int solve_fluid;
     int solve_dem;

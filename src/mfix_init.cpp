@@ -336,11 +336,13 @@ mfix_level::AllocateArrays (int lev)
     u_gt[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     ugradu_x[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     divtau_x[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    ppe_coeffs[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_g[lev]->setVal(0.);
     u_go[lev]->setVal(0.);
     u_gt[lev]->setVal(0.);
     ugradu_x[lev]->setVal(0.);
     divtau_x[lev]->setVal(0.);
+    ppe_coeffs[lev][0]->setVal(0.);
     
     d_e[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     d_e[lev]->setVal(0.);
@@ -374,12 +376,14 @@ mfix_level::AllocateArrays (int lev)
     v_gt[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     ugradu_y[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     divtau_y[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    ppe_coeffs[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_g[lev]->setVal(0.);
     v_go[lev]->setVal(0.);
     v_gt[lev]->setVal(0.);
     ugradu_y[lev]->setVal(0.);
     divtau_y[lev]->setVal(0.);
-    
+    ppe_coeffs[lev][1]->setVal(0.);
+	
     d_n[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     d_n[lev]->setVal(0.);
 
@@ -412,12 +416,14 @@ mfix_level::AllocateArrays (int lev)
     w_gt[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     ugradu_z[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     divtau_z[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    ppe_coeffs[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_g[lev]->setVal(0.);
     w_go[lev]->setVal(0.);
     w_gt[lev]->setVal(0.);
     ugradu_z[lev]->setVal(0.);
     divtau_z[lev]->setVal(0.);
-    
+    ppe_coeffs[lev][2]->setVal(0.);
+	
     d_t[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     d_t[lev]->setVal(0.);
 
@@ -436,6 +442,7 @@ mfix_level::AllocateArrays (int lev)
     drag_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
     drag_w[lev]->setVal(0.);
 }
+
 
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)

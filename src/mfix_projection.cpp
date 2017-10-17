@@ -11,14 +11,17 @@
 #include <AMReX_stencil_types.H>
 
 
-
-
-
-
 void
 mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
 				  Real dt, Real& prev_dt, Real time, Real normg)
 {
+
+    // Extrapolate boundary values for density and volume fraction
+    // The subsequent call to mfix_set_bc1 will only overwrite
+    // rop_g and ep_g ghost values for PINF and POUT
+    fill_mf_bc(lev,*rop_g[lev]);
+    fill_mf_bc(lev,*ep_g[lev]);
+    
     // Reimpose boundary conditions -- make sure to do this before we compute tau
     mfix_set_bc1(lev);
 
@@ -57,9 +60,9 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
 		       geom[lev].CellSize() );		     
 
     }
-  
-    fill_mf_bc(lev,*trD_g[lev]);
 
+    // BCs 
+    fill_mf_bc(lev,*trD_g[lev]);
 
 
     // User hooks
@@ -318,7 +321,7 @@ mfix_level::mfix_compute_w_star (int lev, amrex::Real dt)
 	// Compute diffusion term
 	compute_divtau_z ( BL_TO_FORTRAN_BOX(bx),  
 			   BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
+/			   BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
 			   BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
 			   BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
 			   (*lambda_g[lev])[mfi].dataPtr(),
@@ -355,17 +358,24 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     {
 	const Box& bx = mfi.tilebox();
 
-	compute_divu ( BL_TO_FORTRAN_BOX(bx),
-		       BL_TO_FORTRAN_ANYD((*trD_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-		       geom[lev].CellSize() );		     
+	compute_ppe_rhs ( BL_TO_FORTRAN_BOX(bx),
+			  BL_TO_FORTRAN_ANYD((*trD_g[lev])[mfi]),
+			  BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+			  BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+			  BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			  geom[lev].CellSize(), &dt );		     
 
     }
   
-    fill_mf_bc(lev,*trD_g[lev]);
+    fill_mf_bc ( lev, *trD_g[lev] );
 
+    // Compute the PPE coefficients
+    compute_ppe_coefficients ( lev );
+    
+    // Solve PPE
+    solve_poisson_equation ( lev, ppe_coeffs, p_g, trD_g );
+
+    // Apply pressure correction
     
 }
 
@@ -375,9 +385,12 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
 //
 // phi and rhs are cell-centered
 // b           is  face-centered
-// 
+//
 void
-mfix_level::solve_poisson_equation ( int lev, MultiFab& b, MultiFab& phi, MultiFab& rhs )
+mfix_level::solve_poisson_equation (  int lev,
+				      Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+				      Vector< std::unique_ptr<MultiFab> >& phi,
+				      Vector< std::unique_ptr<MultiFab> >& rhs )
 {
     BL_PROFILE("mfix_level::solve_poisson_equation");
 
@@ -396,9 +409,113 @@ mfix_level::solve_poisson_equation ( int lev, MultiFab& b, MultiFab& phi, MultiF
     solver.set_stencil (stencil);
     solver.set_verbose (verbose);
     solver.set_bc (bc.dataPtr());
-    solver.set_const_gravity_coeffs ();
+    
 
-    solver.solve ( phi, rhs, rel_tol, abs_tol, 0, 0, 1 );
+    solver.set_gravity_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
+
+    solver.solve ( *phi[lev], *rhs[lev], rel_tol, abs_tol, 0, 0, 1 );
 
 }
 
+//
+// This version could be used to solve all levels at once
+// 
+// //
+// // Solves - div ( b grad(phi) ) = rhs via Multigrid
+// //
+// // phi and rhs are cell-centered
+// // b           is  face-centered
+// // 
+// void
+// mfix_level::solve_poisson_equation (  Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+// 				      Vector< std::unique_ptr<MultiFab> >& phi,
+// 				      Vector< std::unique_ptr<MultiFab> >& rhs )
+// {
+//     BL_PROFILE("mfix_level::solve_poisson_equation");
+
+//     // Multigrid inputs
+//     Vector<int>                         bc(2*AMREX_SPACEDIM, 2); // Neumann boundaries
+//     bool                                nodal = false;
+//     int                                 stencil =  amrex::CC_CROSS_STENCIL;
+//     bool                                have_rhcc = false;;
+//     int                                 nc = 0; // Don't know what it is but it should not
+//                                                 // make any difference in the solve 
+//     int                                 verbose = 1;
+//     Real                                rel_tol = 1.0e-14;
+//     Real                                abs_tol = 1.0e-14;
+//     amrex::FMultiGrid                   solver(geom);
+
+//     solver.set_stencil (stencil);
+//     solver.set_verbose (verbose);
+//     solver.set_bc (bc.dataPtr());
+
+
+//     // Convert
+//     Vector< Vector<MultiFab*> > b_ptrs;
+
+//     b_ptrs.resize ( b.size() );
+
+//     for (int i=0; i<b.size(); ++i )
+// 	b_ptrs[i] = amrex::GetVecOfPtrs (b[i]);
+    
+
+//     solver.set_gravity_coeffs (b_ptrs);
+
+//     solver.solve ( amrex::GetVecOfPtrs ( phi ),
+// 		   amrex::GetVecOfPtrs ( rhs ),
+// 		   rel_tol, abs_tol, 0, 0, 1 );
+
+// }
+
+void
+mfix_level::compute_ppe_coefficients (int lev)
+{
+    BL_PROFILE("mfix_level::compute_ppe_coefficients");
+
+    // Compute the PPE coefficients
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	const Box& bx = mfi.tilebox();
+
+	compute_ppe_coeffs_x (BL_TO_FORTRAN_BOX(bx),
+			      BL_TO_FORTRAN_ANYD((*(ppe_coeffs[lev][0]))[mfi]),
+			      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+			      (*ep_g[lev])[mfi].dataPtr() );
+    }
+
+    ppe_coeffs[lev][0] -> FillBoundary(geom[lev].periodicity());
+    
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	const Box& bx = mfi.tilebox();
+
+	compute_ppe_coeffs_y (BL_TO_FORTRAN_BOX(bx),
+			      BL_TO_FORTRAN_ANYD((*(ppe_coeffs[lev][1]))[mfi]),
+			      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+			      (*ep_g[lev])[mfi].dataPtr() );
+    }
+
+    ppe_coeffs[lev][1] -> FillBoundary(geom[lev].periodicity());
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	const Box& bx = mfi.tilebox();
+
+	compute_ppe_coeffs_z (BL_TO_FORTRAN_BOX(bx),
+			      BL_TO_FORTRAN_ANYD((*(ppe_coeffs[lev][2]))[mfi]),
+			      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+			      (*ep_g[lev])[mfi].dataPtr() );
+    }
+    
+    ppe_coeffs[lev][2] -> FillBoundary(geom[lev].periodicity());
+    
+}
