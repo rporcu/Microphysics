@@ -507,21 +507,21 @@ extern "C"
 	amrex::Real* w_g,   const int* wlo, const int* whi,
 	const amrex::Real* dx, const amrex::Real* dt );
 
-    void compute_ppe_coeffs_x (
+    void compute_oro_g_x (
 	const int* lo,  const int*  hi,
-	amrex::Real* coeffs, const int* ulo, const int* uhi,
+	amrex::Real* oro_g_x, const int* ulo, const int* uhi,
 	amrex::Real* rop_g,  const int* slo, const int* shi,
 	const amrex::Real* ep_g );
         
-    void compute_ppe_coeffs_y (
+    void compute_oro_g_y (
 	const int* lo,  const int*  hi,
-	amrex::Real* coeffs, const int* vlo, const int* vhi,
+	amrex::Real* oro_g_y, const int* vlo, const int* vhi,
 	amrex::Real* rop_g,  const int* slo, const int* shi,
 	const amrex::Real* ep_g );
 
-    void compute_ppe_coeffs_z (
+    void compute_oro_g_z (
 	const int* lo,  const int*  hi,
-	amrex::Real* coeffs, const int* wlo, const int* whi,
+	amrex::Real* oro_g_z, const int* wlo, const int* whi,
 	amrex::Real* rop_g,  const int* slo, const int* shi,
 	const amrex::Real* ep_g );
     

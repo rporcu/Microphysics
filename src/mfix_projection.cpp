@@ -92,7 +92,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     mfix_set_bc1(lev);
 
     //  Do projection HERE
-    mfix_apply_projection( lev, dt );
+    // mfix_apply_projection ( lev, dt );
     
 // Loop over iterate for auto time-step size adjustment
     int reiterate;
@@ -372,10 +372,10 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     fill_mf_bc ( lev, *trD_g[lev] );
 
     // Compute the PPE coefficients
-    compute_ppe_coefficients ( lev );
+    compute_oro_g ( lev );
     
     // Solve PPE
-    solve_poisson_equation ( lev, ppe_coeffs, p_g, trD_g );
+    solve_poisson_equation ( lev, oro_g, p_g, trD_g );
 
     // Apply pressure correction
     
@@ -419,60 +419,11 @@ mfix_level::solve_poisson_equation (  int lev,
 
 }
 
-//
-// This version could be used to solve all levels at once
-// 
-// //
-// // Solves - div ( b grad(phi) ) = rhs via Multigrid
-// //
-// // phi and rhs are cell-centered
-// // b           is  face-centered
-// // 
-// void
-// mfix_level::solve_poisson_equation (  Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-// 				      Vector< std::unique_ptr<MultiFab> >& phi,
-// 				      Vector< std::unique_ptr<MultiFab> >& rhs )
-// {
-//     BL_PROFILE("mfix_level::solve_poisson_equation");
-
-//     // Multigrid inputs
-//     Vector<int>                         bc(2*AMREX_SPACEDIM, 2); // Neumann boundaries
-//     bool                                nodal = false;
-//     int                                 stencil =  amrex::CC_CROSS_STENCIL;
-//     bool                                have_rhcc = false;;
-//     int                                 nc = 0; // Don't know what it is but it should not
-//                                                 // make any difference in the solve 
-//     int                                 verbose = 1;
-//     Real                                rel_tol = 1.0e-14;
-//     Real                                abs_tol = 1.0e-14;
-//     amrex::FMultiGrid                   solver(geom);
-
-//     solver.set_stencil (stencil);
-//     solver.set_verbose (verbose);
-//     solver.set_bc (bc.dataPtr());
-
-
-//     // Convert
-//     Vector< Vector<MultiFab*> > b_ptrs;
-
-//     b_ptrs.resize ( b.size() );
-
-//     for (int i=0; i<b.size(); ++i )
-// 	b_ptrs[i] = amrex::GetVecOfPtrs (b[i]);
-    
-
-//     solver.set_gravity_coeffs (b_ptrs);
-
-//     solver.solve ( amrex::GetVecOfPtrs ( phi ),
-// 		   amrex::GetVecOfPtrs ( rhs ),
-// 		   rel_tol, abs_tol, 0, 0, 1 );
-
-// }
 
 void
-mfix_level::compute_ppe_coefficients (int lev)
+mfix_level::compute_oro_g (int lev)
 {
-    BL_PROFILE("mfix_level::compute_ppe_coefficients");
+    BL_PROFILE("mfix_level::compute_oro_g");
 
     // Compute the PPE coefficients
 #ifdef _OPENMP
@@ -482,13 +433,13 @@ mfix_level::compute_ppe_coefficients (int lev)
     {
 	const Box& bx = mfi.tilebox();
 
-	compute_ppe_coeffs_x (BL_TO_FORTRAN_BOX(bx),
-			      BL_TO_FORTRAN_ANYD((*(ppe_coeffs[lev][0]))[mfi]),
+	compute_oro_g_x (BL_TO_FORTRAN_BOX(bx),
+			      BL_TO_FORTRAN_ANYD((*(oro_g[lev][0]))[mfi]),
 			      BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 			      (*ep_g[lev])[mfi].dataPtr() );
     }
 
-    ppe_coeffs[lev][0] -> FillBoundary(geom[lev].periodicity());
+    oro_g[lev][0] -> FillBoundary(geom[lev].periodicity());
     
 #ifdef _OPENMP
 #pragma omp parallel
@@ -497,13 +448,13 @@ mfix_level::compute_ppe_coefficients (int lev)
     {
 	const Box& bx = mfi.tilebox();
 
-	compute_ppe_coeffs_y (BL_TO_FORTRAN_BOX(bx),
-			      BL_TO_FORTRAN_ANYD((*(ppe_coeffs[lev][1]))[mfi]),
+	compute_oro_g_y (BL_TO_FORTRAN_BOX(bx),
+			      BL_TO_FORTRAN_ANYD((*(oro_g[lev][1]))[mfi]),
 			      BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 			      (*ep_g[lev])[mfi].dataPtr() );
     }
 
-    ppe_coeffs[lev][1] -> FillBoundary(geom[lev].periodicity());
+    oro_g[lev][1] -> FillBoundary(geom[lev].periodicity());
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -512,13 +463,13 @@ mfix_level::compute_ppe_coefficients (int lev)
     {
 	const Box& bx = mfi.tilebox();
 
-	compute_ppe_coeffs_z (BL_TO_FORTRAN_BOX(bx),
-			      BL_TO_FORTRAN_ANYD((*(ppe_coeffs[lev][2]))[mfi]),
+	compute_oro_g_z (BL_TO_FORTRAN_BOX(bx),
+			      BL_TO_FORTRAN_ANYD((*(oro_g[lev][2]))[mfi]),
 			      BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 			      (*ep_g[lev])[mfi].dataPtr() );
     }
     
-    ppe_coeffs[lev][2] -> FillBoundary(geom[lev].periodicity());
+    oro_g[lev][2] -> FillBoundary(geom[lev].periodicity());
     
 }
 
@@ -526,10 +477,10 @@ mfix_level::compute_ppe_coefficients (int lev)
 // Apply the pressure correction u = u^* + dt * grad(p)
 // 
 // 
-void
-mfix_level::apply_pressure_correction ( int lev )
-{
-    BL_PROFILE("mfix_level::apply_pressure_correction");
+// void
+// mfix_level::apply_pressure_correction ( int lev )
+// {
+//     BL_PROFILE("mfix_level::apply_pressure_correction");
 
     
-}
+// }

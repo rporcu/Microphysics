@@ -73,10 +73,10 @@ mfix_level::mfix_level ()
     divtau_y.resize(nlevs_max);
     divtau_z.resize(nlevs_max);
 
-    ppe_coeffs.resize(nlevs_max);
+    oro_g.resize(nlevs_max);
     for (int i; i < nlevs_max; ++i )
     {
-	ppe_coeffs[i].resize(3);
+	oro_g[i].resize(3);
     }
     
     d_e.resize(nlevs_max);

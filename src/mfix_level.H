@@ -149,7 +149,7 @@ private:
 				  Vector< std::unique_ptr<MultiFab> >& phi,
 				  Vector< std::unique_ptr<MultiFab> >& rhs );
 
-    void compute_ppe_coefficients ( int lev );
+    void compute_oro_g ( int lev );
     // End of projection-related methods
 
 
@@ -265,7 +265,7 @@ private:
     Vector< std::unique_ptr<MultiFab> > divtau_y;
     Vector< std::unique_ptr<MultiFab> > divtau_z;
 
-    Vector< Vector< std::unique_ptr<MultiFab> > > ppe_coeffs; // PPE coefficients
+    Vector< Vector< std::unique_ptr<MultiFab> > > oro_g; // Over ro_g = ep_g / rop_g
 
     
     
