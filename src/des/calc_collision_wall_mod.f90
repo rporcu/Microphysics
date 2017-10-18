@@ -120,27 +120,28 @@ contains
 
       do ll = 1, size( particles )
 
-
-         associate ( radius => particles(ll) % radius, pos => particles(ll) % pos, &
-              & vel => particles(ll) % vel, omega => particles(ll) % omega )
-        
          ! Check particle LL for wall contacts
-         radsq = radius * radius
+         radsq = particles(ll) % radius * particles(ll) % radius
 
          do nf = 1, 6
 
                if ( nf == 1 .and. .not.cyclic_x) then
-                  if ( pos(1) >  radius ) cycle
+                  if ( particles(ll) % pos(1) >  particles(ll) % radius ) cycle
+
                else if ( nf == 2.and. .not.cyclic_x) then
-                  if ( pos(1) < ( xlength - radius ) ) cycle
+                  if ( particles(ll) % pos(1) < ( xlength - particles(ll) % radius ) ) cycle
+
                else if ( nf == 3 .and. .not.cyclic_y) then
-                  if ( pos(2) > radius ) cycle
+                  if ( particles(ll) % pos(2) > particles(ll) % radius ) cycle
+
                else if ( nf == 4 .and. .not.cyclic_y) then
-                  if ( pos(2) < ( ylength - radius ) ) cycle
+                  if ( particles(ll) % pos(2) < ( ylength - particles(ll) % radius ) ) cycle
+
                else if ( nf == 5 .and. .not.cyclic_z) then
-                  if ( pos(3) > radius ) cycle
+                  if ( particles(ll) % pos(3) > particles(ll) % radius ) cycle
+
                else if ( nf == 6 .and. .not.cyclic_z) then
-                  if ( pos(3) < ( zlength - radius ) ) cycle
+                  if ( particles(ll) % pos(3) < ( zlength - particles(ll) % radius ) ) cycle
                end if
 
 
@@ -177,7 +178,7 @@ contains
                ! same as plane's normal. For moving particles, the line's normal will
                ! be along the point joining new and old positions.
                
-               line_t = DOT_product( ( vertex(1,:,nf) - pos ), norm_face(:,nf) )
+               line_t = DOT_product( ( vertex(1,:,nf) - particles(ll) % pos ), norm_face(:,nf) )
 
                ! k - rad >= tol_orth, where k = -line_t, then orthogonal
                ! projection is false. Substituting for k
@@ -188,13 +189,13 @@ contains
                ! when the particle does not overlap the triangle.
                ! However, if the orthogonal projection shows no overlap, then
                ! that is a big fat negative and overlaps are not possible.
-               if ( line_t  <= ( -1.0001d0 * radius ) ) cycle
+               if ( line_t  <= ( -1.0001d0 * particles(ll) % radius ) ) cycle
 
-               POS_TMP = pos
+               POS_TMP = particles(ll) % pos
                
                call ClosestPtPointTriangle( POS_TMP,  vertex(:,:,nf), closest_pt(:) )
 
-               dist(:) = closest_pt(:) - pos
+               dist(:) = closest_pt(:) - particles(ll) % pos
                distsq = dot_product(dist, dist)
 
                if (distsq .ge. radsq - small_number) cycle
@@ -214,7 +215,7 @@ contains
 
                ! Calculate the particle/wall overlap.
                distmod = sqrt(MAX_distsq)
-               overlap_n = radius - distmod
+               overlap_n = particles(ll) % radius - distmod
 
                ! *****************************************************************************
                ! Calculate the translational relative velocity
@@ -278,8 +279,6 @@ contains
                TOW(LL,:) = TOW(LL,:) + distmod*DES_CROSSPRDCT(normal,FT)
                
          end do
-
-         end associate
 
       end do
 

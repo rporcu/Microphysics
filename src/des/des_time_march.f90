@@ -207,32 +207,19 @@ contains
 
       do p = 1, np
 
-         associate ( vel => particles(p) % vel, pos => particles(p) % pos, &
-            drag => particles(p) % drag, mass => particles(p) % mass,    &
-            omega => particles(p) % omega, omoi => particles(p) % omoi )
-
-            vel     = vel   + dt * ( ( fc(p,:) +  drag ) / mass + gravity )
-            pos     = pos   + dt * vel
-            omega   = omega + dt * tow(p,:) * omoi
-
-         end associate
+            particles(p) % vel     = particles(p) % vel   + dt * &
+                ( ( fc(p,:) +  particles(p) % drag ) / particles(p) % mass + gravity )
+            particles(p) % pos     = particles(p) % pos   + dt * particles(p) % vel
+            particles(p) % omega   = particles(p) % omega + dt * tow(p,:) * particles(p) % omoi
 
       end do
 
       do p = 1, ng
 
-         associate ( vel   => grid_nbors(p) % vel,   &
-                     pos   => grid_nbors(p) % pos,   &
-                     drag  => grid_nbors(p) % drag,  &
-                     mass  => grid_nbors(p) % mass,  &
-                     omega => grid_nbors(p) % omega, &
-                      omoi => grid_nbors(p) % omoi )
-
-            vel     = vel   + dt * ( ( fc(np+p,:) +  drag ) / mass + gravity )
-            pos     = pos   + dt * vel
-            omega   = omega + dt * tow(np+p,:) * omoi
-
-         end associate
+            grid_nbors(p) % vel     = grid_nbors(p) % vel   + dt * &
+                ( ( fc(np+p,:) +  grid_nbors(p) % drag ) / grid_nbors(p) % mass + gravity )
+            grid_nbors(p) % pos     = grid_nbors(p) % pos   + dt * grid_nbors(p) % vel
+            grid_nbors(p) % omega   = grid_nbors(p) % omega + dt * tow(np+p,:) * grid_nbors(p) % omoi
 
       end do
 
