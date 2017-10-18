@@ -153,7 +153,8 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
       mfix_particle_generator_prop(&np, particles.GetArrayOfStructs().data());
   }
 
-  // We shouldn't actually need this but let's leave it here for now
+  // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
+  // we do need this to move particles from tile 0 to the correct tile.
   Redistribute();
 }
 
@@ -661,7 +662,6 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
     BL_PROFILE("MFIXParticleContainer::PICMultiDeposition()");
 
     int   lev = 0;
-    int ncomp = 1+BL_SPACEDIM;
 
     MultiFab *beta_x_ptr, *beta_y_ptr, *beta_z_ptr;
     MultiFab *beta_u_ptr, *beta_v_ptr, *beta_w_ptr;
@@ -734,6 +734,7 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
             tile_zbox.surroundingNodes(2);
             tile_zbox.grow(1);
 
+            int ncomp = 1+BL_SPACEDIM;
             local_x_vol.resize(tile_xbox,ncomp);
             local_u_vol.resize(tile_xbox,ncomp);
             local_y_vol.resize(tile_ybox,ncomp);
