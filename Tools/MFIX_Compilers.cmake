@@ -64,7 +64,7 @@ elseif ( ${COMPILER} STREQUAL "Intel" )
 elseif (${COMPILER} STREQUAL "PGI")
 
    # PGI compiler specific flags
-   set (MFIX_FFLAGS_DEBUG "-O0 -Mbounds -Ktrap=divz,inv -Mchkptr")
+   set (MFIX_FFLAGS_DEBUG "-g -O0 -Mbounds -Ktrap=divz,inv -Mchkptr")
    set (MFIX_FFLAGS_RELEASE "-gopt -fast")
    set (MFIX_FFLAGS_REQUIRED "-extend")
    set (MFIX_FFLAGS_FPE "")
@@ -77,14 +77,14 @@ elseif (${COMPILER} STREQUAL "PGI")
 elseif ( ${COMPILER} STREQUAL "Cray" )
 
    # Cray compiler specific flags
-   set (MFIX_FFLAGS_DEBUG "-O0 -e -i")
+   set (MFIX_FFLAGS_DEBUG "-g -O0 -e i")
    set (MFIX_FFLAGS_RELEASE "-O2")
-   set (MFIX_FFLAGS_REQUIRED "-extend")
+   set (MFIX_FFLAGS_REQUIRED "-N 255 -h list=a")
    set (MFIX_FFLAGS_FPE "")
    
-   set (MFIX_CXXFLAGS_DEBUG "-O0")
+   set (MFIX_CXXFLAGS_DEBUG "-g -O0")
    set (MFIX_CXXFLAGS_RELEASE "-O2")
-   set (MFIX_CXXFLAGS_REQUIRED "")#-ftemplate-depth-64 -Wno-deprecated")
+   set (MFIX_CXXFLAGS_REQUIRED "-h std=c++11 -h list=a")#-ftemplate-depth-64 -Wno-deprecated")
    set (MFIX_CXXFLAGS_FPE "")
 
 elseif ()
