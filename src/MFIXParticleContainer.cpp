@@ -109,45 +109,53 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 }
 
 
-void MFIXParticleContainer::InitParticlesAuto(int lev, int pcount) {
+void MFIXParticleContainer::InitParticlesAuto(int lev)
+{
 
-  // Add all the particles to grid 0 and tile 0 and let
-  // Redistribute() put them in the right places.
-  const int grid = 0;
-  const int tile = 0;
+  Box domain(Geom(lev).Domain());
 
-  auto& particles = GetParticles(lev)[std::make_pair(grid,tile)];
+  Real dx = Geom(lev).CellSize(0);
+  Real dy = Geom(lev).CellSize(1);
+  Real dz = Geom(lev).CellSize(2);
 
-  ParticleType p_new;
-  for (int i = 0; i < pcount; i++) {
-    // Set id and cpu for this particle
-    p_new.id()  = ParticleType::NextID();
-    p_new.cpu() = ParallelDescriptor::MyProc();
+  // Deliberately didn't tile this loop
+  for (MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
 
-    // Add to the data structure
-    particles.push_back(p_new);
+      // This is particles per grid so we reset to 0 
+      int pcount = 0;
 
+      // Define the real particle data for one grid-at-a-time's worth of particles
+      // We don't know pcount (number of particles per grid) before this call
+      const Box& bx = mfi.validbox();
+      mfix_particle_generator(&pcount, bx.loVect(),  bx.hiVect(), &dx, &dy, &dz);
+
+      const int grid_id = mfi.index();
+      const int tile_id = 0;
+
+      // Now that we know pcount, go ahead and create a particle container for this 
+      // grid and add the particles to it
+      auto&  particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
+
+      ParticleType p_new;
+      for (int i = 0; i < pcount; i++) {
+        // Set id and cpu for this particle
+        p_new.id()  = ParticleType::NextID();
+        p_new.cpu() = ParallelDescriptor::MyProc();
+ 
+        // Add to the data structure
+        particles.push_back(p_new);
+      }
+
+      const int np = pcount;
+
+      // Now define the rest of the particle data and store it directly in the particles
+      // std::cout << pcount << " particles " << " in grid " << grid_id << std::endl;
+      mfix_particle_generator_prop(&np, particles.GetArrayOfStructs().data());
   }
 
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-
-    // Real particles
-    const int np     = NumberOfParticles(pti);
-    void* particles  = pti.GetArrayOfStructs().data();
-
-    mfix_particle_generator_prop( &np, particles);
-  }
-
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-
-    // Real particles
-    const int np     = NumberOfParticles(pti);
-    void* particles  = pti.GetArrayOfStructs().data();
-  }
-
+  // We shouldn't actually need this but let's leave it here for now
   Redistribute();
 }
-
 
 void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba)
 {

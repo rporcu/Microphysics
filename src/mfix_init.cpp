@@ -462,33 +462,20 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
         pc->InitNRandomPerCell(n_per_cell, pdata);
         pc->WriteAsciiFileForInit ("random_particles");
         exit(0);
-      } else if (particle_init_type == "Auto")
-      {
+
+      } else if (particle_init_type == "Auto") {
 
         amrex::Print() << "Auto generating particles ..." << std::endl;
 
-        int pcount=0;
-
-        Box domain(Geom(lev).Domain());
-
-        Real dx = Geom(lev).CellSize(0);
-        Real dy = Geom(lev).CellSize(1);
-        Real dz = Geom(lev).CellSize(2);
-
-        // Deliberately didn't tile this loop
-        for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
-          const Box& bx = mfi.validbox();
-          mfix_particle_generator(&pcount, bx.loVect(),  bx.hiVect(), &dx, &dy, &dz);
-        }
-
-        pc -> InitParticlesAuto(lev, pcount);
-        // pc -> printParticles();
+        pc -> InitParticlesAuto(lev);
 
       } else {
+
       amrex::Abort("Bad particle_init_type");
     }
 
     pc -> BuildLevelMask(lev,geom[lev],dmap[lev],grids[lev]);
+
   }
 }
 

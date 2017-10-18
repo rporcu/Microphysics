@@ -66,7 +66,7 @@ public:
     void InitData ();
 
     void InitParticlesAscii (const std::string& file);
-    void InitParticlesAuto (int lev, int pcount);
+    void InitParticlesAuto (int lev);
 
     void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 
