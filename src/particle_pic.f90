@@ -22,7 +22,7 @@ contains
     real(amrex_real)              :: dx(3)
     integer                       :: particle_comp
 
-    integer i, j, k, n, comp
+    integer i, j, k, n
     real(amrex_real) wx_lo, wy_lo, wz_lo, wx_hi, wy_hi, wz_hi
     real(amrex_real) lx, ly, lz, pvol
     real(amrex_real) inv_dx(3), oovol

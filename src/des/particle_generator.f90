@@ -69,7 +69,7 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   real(c_real) :: ic_vol, type_vol, acc_vol
   real(c_real) :: ic_dlo(3), ic_dhi(3)
   real(c_real) :: max_dp
-  real(c_real) :: rp(3), pvol, tVOL, dp2
+  real(c_real) :: rp(3)
   real(c_real) :: x(3)
 
   real(c_real), allocatable :: dp(:), ro_s(:)
@@ -223,7 +223,6 @@ subroutine mfix_particle_generator_prop(nrp, particles) &
 
   integer :: p
 
-  integer(c_int) :: pstate
   real(c_real)   :: rad, rho
   real(c_real)   :: vol, mass, omoi
 
@@ -274,7 +273,7 @@ subroutine nor_rno(dp, mean, sigma, dp_min, dp_max)
   !-----------------------------------------------
   real(c_real) :: lmean, lvariance, lsigma
   real(c_real) :: x(2), w, dp1, dp2
-  integer i, nsize, n
+  integer i, nsize
   logical :: debug = .false.
   !-----------------------------------------------
 
