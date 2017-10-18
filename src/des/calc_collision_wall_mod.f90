@@ -68,16 +68,16 @@ contains
 
       real(c_real) :: MAX_distsq
       integer :: MAX_NF
-      real(c_real), dimension(3) :: PARTICLE_MIN, PARTICLE_MAX, POS_TMP
+      real(c_real), dimension(3) :: POS_TMP
       !     Vertex Coordinates X ,Y and Z
       real(c_real), dimension(3,3,6) :: vertex
       !     Face normal vector (normalized)
       real(c_real), dimension(3,6) :: norm_face
 
       ! additional relative translational motion due to rotation
-      real(c_real) :: v_rot(3)
+      ! real(c_real) :: v_rot(3)
       ! total relative velocity at contact point
-      real(c_real) :: vreltrans(3)
+      ! real(c_real) :: vreltrans(3)
 
       ! Skip this routine if the system is fully periodic.
       if (cyclic_x .and. cyclic_y .and. cyclic_z) return

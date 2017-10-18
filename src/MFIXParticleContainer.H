@@ -66,6 +66,7 @@ public:
     void InitData ();
 
     void InitParticlesAscii (const std::string& file);
+    void InitParticlesAuto (int lev);
 
     void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 
@@ -82,7 +83,7 @@ public:
     /// Write out all particles at a level in the format fcompare_par can read
     ///
     void writeAllForComparison(int lev);
- 
+
     ///
     /// Write out all particles in the format of the particle_input.dat files so we
     ///       can initialize a run with them

@@ -89,12 +89,12 @@ mfix_level::MakeBaseGrids () const
     BoxArray ba(geom[0].Domain());
 
     ba.maxSize(max_grid_size[0]);
-  
-    // We only call ChopGrids if dividing up the grid using max_grid_size didn't 
+
+    // We only call ChopGrids if dividing up the grid using max_grid_size didn't
     //    create enough grids to have at least one grid per processor.
     // This option is controlled by "refine_grid_layout" which defaults to true.
 
-    if ( refine_grid_layout && 
+    if ( refine_grid_layout &&
          ba.size() < ParallelDescriptor::NProcs() &&
          load_balance_type == "FixedSize") {
         ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
@@ -138,17 +138,17 @@ mfix_level::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
         }
         chunk[j] /= 2;
 
-        if (chunk[j] >= min_grid_size) 
+        if (chunk[j] >= min_grid_size)
         {
             ba.maxSize(chunk);
         }
-        else 
+        else
         {
             // chunk[j] was the biggest chunk -- if this is too small then we're done
             if ( ParallelDescriptor::IOProcessor() )
                amrex::Warning("ChopGrids was unable to make enough grids for the number of processors");
             return;
-        } 
+        }
 
         // Test if we now have enough grids
         if (ba.size() >= target_size) return;
@@ -425,49 +425,58 @@ mfix_level::AllocateArrays (int lev)
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
+  AllocateArrays(lev);
   // Allocate the particle arrays
   if (solve_dem)
   {
-      int lev = 0;
-      pc -> AllocData();
+    //int lev = 0;
+    pc -> AllocData();
 
-      if (particle_init_type == "AsciiFile")
+    if (particle_init_type == "AsciiFile")
       {
-         amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
-         pc -> InitParticlesAscii("particle_input.dat");
-      }
-      else if (particle_init_type == "Random")
+        amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
+        pc -> InitParticlesAscii("particle_input.dat");
+
+      } else if (particle_init_type == "Random")
       {
-         int n_per_cell = 1;
-         amrex::Print() << "Randomly initializing " << n_per_cell << " particles per cell ..." << std::endl;
-         Real  radius = 1.0;
-         Real  volume = 1.0;
-         Real    mass = 1.0;
-         Real density = 1.0;
-         Real    omoi = 1.0;
-         Real    velx = 0.0;
-         Real    vely = 0.0;
-         Real    velz = 0.0;
-         Real   dragx = 0.0;
-         Real   dragy = 0.0;
-         Real   dragz = 0.0;
-         Real  omegax = 0.0;
-         Real  omegay = 0.0;
-         Real  omegaz = 0.0;
-         int phase = 1;
-         int state = 0;
-         MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
-            velx,vely,velz,omegax,omegay,omegaz,dragx,dragy,dragz,phase,state};
-         pc->InitNRandomPerCell(n_per_cell, pdata);
-         pc->WriteAsciiFileForInit ("random_particles");
-         exit(0);
+        int n_per_cell = 1;
+        amrex::Print() << "Randomly initializing " << n_per_cell << " particles per cell ..." << std::endl;
+        Real  radius = 1.0;
+        Real  volume = 1.0;
+        Real    mass = 1.0;
+        Real density = 1.0;
+        Real    omoi = 1.0;
+        Real    velx = 0.0;
+        Real    vely = 0.0;
+        Real    velz = 0.0;
+        Real   dragx = 0.0;
+        Real   dragy = 0.0;
+        Real   dragz = 0.0;
+        Real  omegax = 0.0;
+        Real  omegay = 0.0;
+        Real  omegaz = 0.0;
+        int phase = 1;
+        int state = 0;
+        MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
+                velx,vely,velz,omegax,omegay,omegaz,dragx,dragy,dragz,phase,state};
+        pc->InitNRandomPerCell(n_per_cell, pdata);
+        pc->WriteAsciiFileForInit ("random_particles");
+        exit(0);
+
+      } else if (particle_init_type == "Auto") {
+
+        amrex::Print() << "Auto generating particles ..." << std::endl;
+
+        pc -> InitParticlesAuto(lev);
+
       } else {
-         amrex::Abort("Bad particle_init_type");
-      }
 
-      pc -> BuildLevelMask(lev,geom[lev],dmap[lev],grids[lev]);
+      amrex::Abort("Bad particle_init_type");
+    }
+
+    pc -> BuildLevelMask(lev,geom[lev],dmap[lev],grids[lev]);
+
   }
-  AllocateArrays(lev);
 }
 
 void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag)

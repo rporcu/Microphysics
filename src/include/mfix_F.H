@@ -388,6 +388,15 @@ extern "C"
 
     int des_continuum_coupled ();
 
+  void mfix_particle_write( const int* nrp,  void* particles);
+
+  void mfix_particle_generator(int* pcount, const int* domlo , const int* domhi,
+                               amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
+
+
+  void mfix_particle_generator_prop( const int* nrp,  void* particles);
+
+
     void mfix_usr0();
 
     void mfix_usr1();
@@ -426,6 +435,10 @@ extern "C"
          const amrex::Real*, const int*, const int*);
 
     void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, amrex::Real* tol);
+
+
+
+
 #ifdef __cplusplus
 }
 #endif
