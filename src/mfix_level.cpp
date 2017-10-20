@@ -14,6 +14,14 @@
 std::string mfix_level::particle_init_type = "AsciiFile";
 std::string mfix_level::load_balance_type = "FixedSize";
 
+
+
+// Define unit vectors for easily convert indeces
+amrex::IntVect mfix_level::e_x(1,0,0);
+amrex::IntVect mfix_level::e_y(0,1,0);
+amrex::IntVect mfix_level::e_z(0,0,1);
+
+
 mfix_level::~mfix_level ()
 {};
 
@@ -73,8 +81,13 @@ mfix_level::mfix_level ()
     divtau_y.resize(nlevs_max);
     divtau_z.resize(nlevs_max);
 
+    fp_x.resize(nlevs_max);
+    fp_y.resize(nlevs_max);
+    fp_z.resize(nlevs_max);
+
+    
     oro_g.resize(nlevs_max);
-    for (int i; i < nlevs_max; ++i )
+    for (int i = 0; i < nlevs_max; ++i )
     {
 	oro_g[i].resize(3);
     }

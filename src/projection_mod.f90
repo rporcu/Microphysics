@@ -18,6 +18,91 @@ module projection_mod
    private
 
 contains
+
+
+
+   !
+   ! Compute new dt
+   !
+   subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, dx, dt ) &
+
+   ! subroutine compute_new_dt ( umax, vmax, wmax, fgdsumax, fgdsvmax fgdswmax, &
+   !      dragumax, dragvmax, dragwmax, mumax, romin, dx, dt ) &
+        bind(C, name = "compute_new_dt")
+
+      use constant, only: gravity 
+      
+      real(ar),       intent(in   ) :: umax, vmax, wmax
+      ! real(ar),       intent(in   ) :: fgdsumax, fgdsvmax fgdswmax
+      ! real(ar),       intent(in   ) :: dragumax, dragvmax, dragwmax
+      real(ar),       intent(in   ) :: mumax, romin
+      real(ar),       intent(in   ) :: dx(3)
+      integer(c_int), intent(  out) :: dt
+
+      real(ar)                      :: uodx, vody, wodz
+      real(ar)                      :: odx, ody, odz
+      real(ar)                      :: fp_x, fp_y, fp_z
+      real(ar)                      :: dt_c, dt_v
+      real(ar)                      :: dt_gx, dt_gy, dt_gz, dt_g
+      real(ar)                      :: dt_px, dt_py, dt_pz, dt_p
+      real(ar),       parameter     :: cfl = 0.5_ar
+      real(ar),       parameter     :: two = 2.0_ar, four = two*two
+      real(ar),       parameter     :: eps = epsilon (zero)
+      
+      odx  = one / dx(1)
+      ody  = one / dx(2)
+      odz  = one / dx(3)
+      uodx = umax * odx
+      vody = vmax * ody
+      wodz = wmax * odz
+
+      ! Convection
+      dt_c  = cfl / max ( uodx, vody, wodz )
+
+      ! Viscous
+      dt_v  = cfl * romin / ( two * ( mumax + eps ) * &
+             & max ( odx*odx, ody*ody, odz*odz ) )
+
+      !  Gravity
+      dt_gx = cfl * two / helper ( uodx, gravity(1), odx ) 
+
+      dt_gy = cfl * two / helper ( vody, gravity(2), ody ) 
+
+      dt_gz = cfl * two / helper ( wodz, gravity(3), odz )
+
+      dt_g  = min ( dt_gx, dt_gy, dt_gz )
+
+      ! ! Particle-fluid momentum exchange
+      ! fp_x  = fgdsumax * umax - dragumax
+
+
+      ! dt_px = cfl * two / helper ( uodx, fp_x, odx ) 
+
+      ! dt_py = cfl * two / helper ( vody, fp_y, ody ) 
+
+      ! dt_pz = cfl * two / helper ( wodz, fp_z, odz )
+
+      ! dt_p  = min ( dt_px, dt_py, dt_pz )
+
+
+      dt = min ( dt_c, dt_v, dt_g )
+
+   contains
+
+
+      ! Compute root = b + sqrt ( b^2 + 4*f*odx )
+      
+      function helper ( b, f, odx )  result (res)
+
+         real(ar), intent(in   ) :: b, f, odx
+         real(ar)                :: res
+
+         res = b + sqrt ( b*b + four * f * odx ) 
+
+      end function helper
+
+   end subroutine compute_new_dt
+
    
    !
    ! Computes  u_i* = u_i + dt * RHS
@@ -59,11 +144,12 @@ contains
 
                irho = half / rop(i,j,k) + half / rop(i-1,j,k) 
 
+               
                ! Remeber the minus sign between the two parts
                f    = f_gds_i(i,j,k) * u_i(i,j,k) - drag_i(i,j,k)
                
-               rhs  = - ugradu_i(i,j,k) + gravity(dir) + &
-                    & irho * ( divtau_i(i,j,k) + f )
+               rhs  = - ugradu_i(i,j,k) + gravity(dir)  + &
+                     & irho * ( divtau_i(i,j,k) ) !+ f )
 
                u_i_star(i,j,k) = u_i(i,j,k) + dt * rhs      
               
@@ -80,12 +166,14 @@ contains
    ! Compute the RHS of the pressure poisson equation: rhs = - div(u*)/dt
    ! 
    subroutine compute_ppe_rhs ( lo, hi, rhs, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, &
-        & w_g, wlo, whi, dx, dt )  bind(C, name="compute_ppe_rhs")
+        & w_g, wlo, whi, dx, dt, sum_rhsdv )  bind(C, name="compute_ppe_rhs")
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       real(ar),       intent(in   ) :: dx(3), dt
+
+      real(ar),       intent(  out) :: sum_rhsdv
       
       real(ar),       intent(  out) :: &
            rhs(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -96,20 +184,24 @@ contains
            w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       integer      :: i, j, k
-      real(ar)     :: odx, ody, odz, odt
+      real(ar)     :: odtdx, odtdy, odtdz, dv
 
-      odx = 1.d0 / dx(1)
-      ody = 1.d0 / dx(2)
-      odz = 1.d0 / dx(3)
-      odt = 1.d0 / dt
+      odtdx = one / ( dt * dx(1) )
+      odtdy = one / ( dt * dx(2) )
+      odtdz = one / ( dt * dx(3) )
 
+      dv    = dx(1) * dx(2) * dx(3)
+
+      sum_rhsdv = zero
+      
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
-               rhs(i,j,k) = - odt * ( &
-                    (u_g(i+1,j,k)-u_g(i,j,k))*odx + &
-                    (v_g(i,j+1,k)-v_g(i,j,k))*ody + &
-                    (w_g(i,j,k+1)-w_g(i,j,k))*odz )
+               rhs(i,j,k) =  -  ( ( u_g(i+1,j,k) - u_g(i,j,k) ) * odtdx + &
+                                  ( v_g(i,j+1,k) - v_g(i,j,k) ) * odtdy + &
+                                  ( w_g(i,j,k+1) - w_g(i,j,k) ) * odtdz )
+               
+               sum_rhsdv = sum_rhsdv + rhs(i,j,k) !* dv
             end do
          end do
       end do
@@ -153,6 +245,78 @@ contains
    end subroutine apply_pressure_correction_x
 
 
+
+   !
+   ! Apply the pressure correction v = v^* - dt (ep_g/rop_g) dp/dy
+   ! Note that the scalar ep_g/rop_g is 1/ro_g, hence the name oro_g 
+   ! 
+   subroutine apply_pressure_correction_y ( lo, hi, p_g, slo, shi, &
+     &  v_g, vlo, vhi, oro_g, dx, dt )  bind(C, name="apply_pressure_correction_y")
+
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+      integer(c_int), intent(in   ) :: vlo(3),vhi(3)
+      real(ar),       intent(in   ) :: dx(3), dt
+      
+      real(ar),       intent(in   ) :: &
+           p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      
+      real(ar),       intent(inout) :: &
+           v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+           oro_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+           
+      integer      :: i, j, k
+      real(ar)     :: dtody
+
+      dtody = dt / dx(2)
+
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
+               v_g(i,j,k) = v_g(i,j,k) -  dtody *  oro_g(i,j,k) * &
+                    ( p_g(i,j,k) - p_g(i,j-1,k) )   
+            end do
+         end do
+      end do
+
+   end subroutine apply_pressure_correction_y
+
+
+   
+   !
+   ! Apply the pressure correction w = w^* - dt (ep_g/rop_g) dp/dz
+   ! Note that the scalar ep_g/rop_g is 1/ro_g, hence the name oro_g 
+   ! 
+   subroutine apply_pressure_correction_z ( lo, hi, p_g, slo, shi, &
+     &  w_g, wlo, whi, oro_g, dx, dt )  bind(C, name="apply_pressure_correction_z")
+
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+      integer(c_int), intent(in   ) :: wlo(3),whi(3)
+      real(ar),       intent(in   ) :: dx(3), dt
+      
+      real(ar),       intent(in   ) :: &
+           p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      
+      real(ar),       intent(inout) :: &
+           w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
+           oro_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+           
+      integer      :: i, j, k
+      real(ar)     :: dtodz
+
+      dtodz = dt / dx(3)
+
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
+               w_g(i,j,k) = w_g(i,j,k) -  dtodz *  oro_g(i,j,k) * &
+                    ( p_g(i,j,k) - p_g(i,j,k-1) )   
+            end do
+         end do
+      end do
+
+   end subroutine apply_pressure_correction_z
    
    !
    ! Compute the coefficients of the PPE, i.e. 1 / ro_g = eps_g/rho_g,

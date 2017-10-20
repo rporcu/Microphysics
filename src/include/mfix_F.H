@@ -505,7 +505,8 @@ extern "C"
 	amrex::Real* u_g,   const int* ulo, const int* uhi,
 	amrex::Real* v_g,   const int* vlo, const int* vhi,
 	amrex::Real* w_g,   const int* wlo, const int* whi,
-	const amrex::Real* dx, const amrex::Real* dt );
+	const amrex::Real* dx, const amrex::Real* dt,
+	amrex::Real* sum_rhsdv );
 
     void compute_oro_g_x (
 	const int* lo,  const int*  hi,
@@ -524,7 +525,47 @@ extern "C"
 	amrex::Real* oro_g_z, const int* wlo, const int* whi,
 	amrex::Real* rop_g,  const int* slo, const int* shi,
 	const amrex::Real* ep_g );
+
+    void apply_pressure_correction_x (
+	const int* lo,  const int*  hi,
+	amrex::Real* p_g, const int* slo, const int* shi,
+	amrex::Real* u_g, const int* ulo, const int* uhi,
+	const amrex::Real* oro_g_x,
+	const amrex::Real* dx, const amrex::Real* dt );
+
     
+    void apply_pressure_correction_y (
+	const int* lo,  const int*  hi,
+	amrex::Real* p_g, const int* slo, const int* shi,
+	amrex::Real* v_g, const int* vlo, const int* vhi,
+	const amrex::Real* oro_g_y,
+	const amrex::Real* dx, const amrex::Real* dt );
+
+
+    void apply_pressure_correction_z (
+	const int* lo,  const int*  hi,
+	amrex::Real* p_g, const int* slo, const int* shi,
+	amrex::Real* w_g, const int* wlo, const int* whi,
+	const amrex::Real* oro_g_z,
+	const amrex::Real* dx, const amrex::Real* dt );
+
+    void compute_new_dt ( const amrex::Real* umax,
+			  const amrex::Real* vmax,
+			  const amrex::Real* wmax,
+			  const amrex::Real* romin,
+			  const amrex::Real* mumax,
+			  const amrex::Real* dx,
+			  amrex::Real*  dt ); 
+
+    void init_periodic_vorteces (
+	const int* utlo, const int* uthi,
+	amrex::Real* u,  const int* ulo, const int* uhi,
+        const int* vtlo, const int* vthi,
+	amrex::Real* v,  const int* vlo, const int* vhi,
+	const int* wtlo, const int* wthi,
+	amrex::Real* w,  const int* wlo, const int* whi,
+	const amrex::Real* dx,
+	const int*  domlo );
     
 #ifdef __cplusplus
 }

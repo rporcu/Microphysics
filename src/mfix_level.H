@@ -14,6 +14,7 @@
 
 #include <MFIXParticleContainer.H>
 
+
 class mfix_level
     : public AmrCore
 {
@@ -150,7 +151,12 @@ private:
 				  Vector< std::unique_ptr<MultiFab> >& rhs );
 
     void compute_oro_g ( int lev );
-    // End of projection-related methods
+    void apply_pressure_correction ( int lev , amrex::Real dt );
+    
+    void init_tests_projection (int lev);
+	
+    amrex::Real compute_dt (int lev);
+// End of projection-related methods
 
 
     
@@ -174,9 +180,15 @@ private:
     // Particle container
     std::unique_ptr<MFIXParticleContainer> pc;
 
+
+    // Unit vectors in Cartesian space
+    static amrex::IntVect e_x;
+    static amrex::IntVect e_y;
+    static amrex::IntVect e_z;
+
+    
 //  Array< std::unique_ptr<iMultiFab> > bc_type;
 //  Array< std::unique_ptr<iMultiFab> > bc_ptr;
-
     IArrayBox bc_ilo;
     IArrayBox bc_ihi;
     IArrayBox bc_jlo;
@@ -265,6 +277,11 @@ private:
     Vector< std::unique_ptr<MultiFab> > divtau_y;
     Vector< std::unique_ptr<MultiFab> > divtau_z;
 
+    Vector< std::unique_ptr<MultiFab> > fp_x;
+    Vector< std::unique_ptr<MultiFab> > fp_y;
+    Vector< std::unique_ptr<MultiFab> > fp_z;
+
+    
     Vector< Vector< std::unique_ptr<MultiFab> > > oro_g; // Over ro_g = ep_g / rop_g
 
     
