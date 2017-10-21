@@ -15,6 +15,8 @@ int   regrid_int  = -1;
 int   dual_grid   =  0;
 Real stop_time = -1.0;
 
+int   use_eb      =  1;
+
 std::string restart_file {""};
 
 int repl_x = 1;
@@ -122,6 +124,9 @@ int main (int argc, char* argv[])
     my_mfix.InitParams(solve_fluid,solve_dem,max_nit,call_udf);
 
     my_mfix.Init(lev,dt,time);
+
+    if (use_eb)
+       my_mfix.make_eb_geometry(lev);
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;

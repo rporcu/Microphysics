@@ -53,6 +53,8 @@ public:
 
     void make_mg_bc (int mg_bc[]);
 
+    void make_eb_geometry (int lev);
+
 protected:
 
     //! Tagging cells for refinement

@@ -436,8 +436,12 @@ extern "C"
 
     void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, amrex::Real* tol);
 
-
-
+    void amrex_bounce_walls(const void* particles, const int* np,
+                            const amrex_real* plo, const amrex_real* dx,
+                            const void* flag, const int* fglo, const int* fghi,
+                            const amrex_real* bcent, const int* blo, const int* bhi,
+                            const amrex_real* ax, const int* axlo, const int* axhi,
+                            const amrex_real* ay, const int* aylo, const int* ayhi);
 
 #ifdef __cplusplus
 }

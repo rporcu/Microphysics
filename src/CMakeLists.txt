@@ -1,5 +1,6 @@
 set(CXX_sources
    main.cpp
+   mfix_eb.cpp
    mfix_evolve.cpp
    mfix_init.cpp
    mfix_level.cpp
@@ -64,6 +65,7 @@ set(F90_sources
    des/stl_functions_des_mod.f90
    display_resid.f90
    drag_mod.f90
+   ebparticles_3d.f90 
    eos_mod.f90
    error_manager_mod.f90
    fill_bc0.f90

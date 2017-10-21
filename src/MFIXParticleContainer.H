@@ -56,6 +56,8 @@ class MFIXParticleContainer final
 {
 public:
 
+    using MyConstParIter = ParConstIter<realData::count,intData::count,0,0>;
+
     // Get number of particles
     int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
 
@@ -136,6 +138,9 @@ public:
                             IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                             IArrayBox& bc_klo, IArrayBox& bc_khi,
                             int fortran_beta_comp, int fortran_vel_comp);
+
+    void bounceWalls(const MultiFab& dummy, const MultiFab* volfrac, const MultiCutFab* bndrycent,
+                     std::array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac);
 
 private:
 

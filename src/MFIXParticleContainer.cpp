@@ -4,6 +4,8 @@
 #include <iostream>
 #include <MFIXParticleContainer.H>
 #include <AMReX_LoadBalanceKD.H>
+#include <AMReX_EBFArrayBox.H>
+#include <AMReX_MultiCutFab.H>
 
 #include<math.h>
 
@@ -1117,3 +1119,43 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
                         min_number << " " << max_number << std::endl;
   }
 }
+
+void 
+MFIXParticleContainer::bounceWalls(const MultiFab& dummy, const MultiFab* volfrac, const MultiCutFab* bndrycent,
+                                   std::array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac)
+{
+
+    BL_PROFILE("EBParticleContainer::bounceWalls");
+
+    const int lev = 0;
+    const Geometry& gm          = Geom(lev);
+    const Real*     plo         = gm.ProbLo();
+    const Real*     dx          = gm.CellSize();
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (MyConstParIter pti(*this, lev); pti.isValid(); ++pti) {
+        const Box& bx = pti.tilebox();
+        const AoS& particles = pti.GetArrayOfStructs();
+        int Np = particles.size();
+
+        const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
+        const auto& flag = sfab.getEBCellFlagFab();
+
+        if (flag.getType(bx) == FabType::regular) {
+            continue;
+        } else {
+            amrex_bounce_walls(particles.data(), &Np, plo, dx,
+                               flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                               (*bndrycent)[pti].dataPtr(),
+                               (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
+                               (*areafrac[0])[pti].dataPtr(),
+                               (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
+                               (*areafrac[1])[pti].dataPtr(),
+                               (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect());
+        }
+    }
+}
+
+
