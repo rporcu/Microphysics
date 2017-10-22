@@ -68,7 +68,7 @@ endif ()
 #
 # AMReX-related config options
 # 
-option ( AMREX_ENABLE_EB "Build EB code" OFF)
+option ( AMREX_ENABLE_EB "Build EB code" ON)
 
 option ( AMREX_ENABLE_PIC "Build position-independent code" OFF)
 

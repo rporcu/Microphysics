@@ -283,7 +283,8 @@ MFIXParticleContainer::InitData()
 {
 }
 
-void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time )
+void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time,
+                                            EBFArrayBoxFactory* ebfactory )
 {
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
@@ -391,6 +392,21 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          Redistribute();
 
       }
+
+#if 0
+      std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+      const MultiFab* volfrac;
+      const MultiCutFab* bndrycent;
+ 
+      areafrac  =  ebfactory->getAreaFrac();
+      volfrac   = &(ebfactory->getVolFrac());
+      bndrycent = &(ebfactory->getBndryCent());
+
+      //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
+      MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
+
+      bounceWalls(dummy,volfrac,bndrycent,areafrac);
+#endif
 
       if (debug) {
          ncoll_total +=  ncoll;

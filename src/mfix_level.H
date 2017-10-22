@@ -14,6 +14,12 @@
 
 #include <MFIXParticleContainer.H>
 
+#include <AMReX_GeometryShop.H>
+#include <AMReX_EBIndexSpace.H>
+#include <AMReX_EBFabFactory.H>
+#include <AMReX_EBTower.H>
+#include <AMReX_EBFArrayBox.H>
+
 class mfix_level
     : public AmrCore
 {
@@ -254,6 +260,7 @@ private:
     Vector< std::string > vecVarsName;
     Vector< std::string > scaVarsName;
 
+    amrex::EBFArrayBoxFactory* ebfactory;
 };
 
 #endif
