@@ -134,7 +134,7 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
       const int grid_id = mfi.index();
       const int tile_id = 0;
 
-      // Now that we know pcount, go ahead and create a particle container for this 
+      // Now that we know pcount, go ahead and create a particle container for this
       // grid and add the particles to it
       auto&  particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
 
@@ -143,7 +143,7 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
         // Set id and cpu for this particle
         p_new.id()  = ParticleType::NextID();
         p_new.cpu() = ParallelDescriptor::MyProc();
- 
+
         // Add to the data structure
         particles.push_back(p_new);
       }
@@ -292,9 +292,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     Box domain(Geom(lev).Domain());
 
-    Real dx = Geom(lev).CellSize(0);
-    Real dy = Geom(lev).CellSize(1);
-    Real dz = Geom(lev).CellSize(2);
+    const Real* dx = Geom(lev).CellSize();
 
     Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
@@ -303,131 +301,75 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     int   nsubsteps;
     Real  subdt;
 
+    Real  stime=time;
+
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
     int ncoll_total = 0;
 
-    for ( int n = 0; n < nsubsteps; ++n )
+    int n    = 0;
+    int n_do = 1;
+
+    while (n < nsubsteps)
     {
       int ncoll = 0;
 
-      if (use_neighbor_list)
-      {
-          if (n % 25 == 0) {
-              clearNeighbors(lev);
-              Redistribute();
-              fillNeighbors(lev);
-              buildNeighborList(lev,sort_neighbor_list);
-          } else {
-              updateNeighbors(lev);
-          }
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-
-            // Real particles
-            const int np     = NumberOfParticles(pti);
-            void* particles  = pti.GetArrayOfStructs().data();
-
-            // Neighbor particles
-            PairIndex index(pti.index(), pti.LocalTileIndex());
-            int size_ng = neighbors[index].size() / pdata_size;
-            int size_nl = neighbor_list[index].size();
-
-            std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
-            const MultiCutFab* bndrycent;
-
-            areafrac  =  ebfactory->getAreaFrac();
-            bndrycent = &(ebfactory->getBndryCent());
-
-            //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
-            MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
-            const Box& bx = pti.tilebox();
-
-            const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
-            const auto& flag = sfab.getEBCellFlagFab();
-
-            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-            des_time_loop_ops_nl ( &np, particles, &size_ng, neighbors[index].dataPtr(),
-               &size_nl, neighbor_list[index].dataPtr(),
-               &subdt, &dx, &dy, &dz,
-               &xlen, &ylen, &zlen, &n, &ncoll,
-               flag.dataPtr(), flag.loVect(), flag.hiVect(),
-               (*bndrycent)[pti].dataPtr(),
-               (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
-               (*areafrac[0])[pti].dataPtr(),
-               (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-               (*areafrac[1])[pti].dataPtr(),
-               (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-               (*areafrac[2])[pti].dataPtr(),
-               (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
-
-            BL_PROFILE_VAR_STOP(des_time_loop);
-
-            if ( des_continuum_coupled () == 0 ) {
-              Real stime;
-              stime = time + (n+1)*subdt;
-              output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
-                                   &n, particles, 0 );
-
-            }
-
-            call_usr2_des( &np, particles );
-         }
-
+      if (n % 25 == 0) {
+          clearNeighbors(lev);
+          Redistribute();
+          fillNeighbors(lev);
+          buildNeighborList(lev,sort_neighbor_list);
       } else {
-
-         fillNeighbors(lev);
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-
-            // Real particles
-            const int np     = NumberOfParticles(pti);
-            void* particles  = pti.GetArrayOfStructs().data();
-
-            // Neighbor particles
-            PairIndex index(pti.index(), pti.LocalTileIndex());
-            int ng = neighbors[index].size() / pdata_size;
-
-            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-            des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
-                               &subdt, &dx, &dy, &dz,
-                               &xlen, &ylen, &zlen, &n, &ncoll );
-            BL_PROFILE_VAR_STOP(des_time_loop);
-
-            if ( des_continuum_coupled () == 0 ) {
-              Real stime;
-              stime = time + (n+1)*subdt;
-              output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
-                                   &n, particles, 0 );
-
-            }
-
-            call_usr2_des( &np, particles );
-         }
-
-         clearNeighbors(lev);
-         Redistribute();
-
+          updateNeighbors(lev);
       }
 
-      std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
-      const MultiFab* volfrac;
-      const MultiCutFab* bndrycent;
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      {
+         // Real particles
+         const int np     = NumberOfParticles(pti);
+         void* particles  = pti.GetArrayOfStructs().data();
 
-      areafrac  =  ebfactory->getAreaFrac();
-      volfrac   = &(ebfactory->getVolFrac());
-      bndrycent = &(ebfactory->getBndryCent());
+         // Neighbor particles
+         PairIndex index(pti.index(), pti.LocalTileIndex());
+         int size_ng = neighbors[index].size() / pdata_size;
+         int size_nl = neighbor_list[index].size();
 
-      //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
-      MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
+         std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+         const MultiFab* volfrac;
+         const MultiCutFab* bndrycent;
 
-      bounceWalls(dummy,volfrac,bndrycent,areafrac,dt);
+         //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
+         MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
+
+         const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
+         const auto& flag = sfab.getEBCellFlagFab();
+
+         areafrac  =  ebfactory->getAreaFrac();
+         volfrac   = &(ebfactory->getVolFrac());
+         bndrycent = &(ebfactory->getBndryCent());
+
+         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+         des_time_loop_ops_nl ( &n_do, &np, particles, &size_ng,
+                                neighbors[index].dataPtr(),
+                                &size_nl, neighbor_list[index].dataPtr(),
+                                &subdt, dx,
+                                &xlen, &ylen, &zlen, &ncoll, &stime,
+                                flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                (*bndrycent)[pti].dataPtr(),
+                                (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
+                                (*areafrac[0])[pti].dataPtr(),
+                                (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
+                                (*areafrac[1])[pti].dataPtr(),
+                                (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
+                                (*areafrac[2])[pti].dataPtr(),
+                                (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
+
+         BL_PROFILE_VAR_STOP(des_time_loop);
+      }
+      n += n_do;
 
       if (debug) {
          ncoll_total +=  ncoll;
@@ -435,6 +377,16 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
       }
     }
+
+    if ( des_continuum_coupled () == 0 )
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+        {
+          // Real particles
+          const int np     = NumberOfParticles(pti);
+          void* particles  = pti.GetArrayOfStructs().data();
+          output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
+                          &n, particles, 0 );
+        }
 
     clearNeighbors(lev);
 
@@ -1155,45 +1107,4 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
      amrex::Print() << "After  KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<
                         min_number << " " << max_number << std::endl;
   }
-}
-
-void
-MFIXParticleContainer::bounceWalls(const MultiFab& dummy, const MultiFab* volfrac, const MultiCutFab* bndrycent,
-                                   std::array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac, const Real dt)
-{
-
-    BL_PROFILE("EBParticleContainer::bounceWalls");
-
-    const int lev = 0;
-    const Geometry& gm          = Geom(lev);
-    const Real*     plo         = gm.ProbLo();
-    const Real*     dx          = gm.CellSize();
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MyConstParIter pti(*this, lev); pti.isValid(); ++pti) {
-        const Box& bx = pti.tilebox();
-        const AoS& particles = pti.GetArrayOfStructs();
-        int Np = particles.size();
-
-        const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
-        const auto& flag = sfab.getEBCellFlagFab();
-
-
-        if (flag.getType(bx) == FabType::regular) {
-            continue;
-        } else {
-            amrex_bounce_walls(particles.data(), &Np, plo, dx, &dt,
-                               flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                               (*bndrycent)[pti].dataPtr(),
-                               (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
-                               (*areafrac[0])[pti].dataPtr(),
-                               (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-                               (*areafrac[1])[pti].dataPtr(),
-                               (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-                               (*areafrac[2])[pti].dataPtr(),
-                               (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
-        }
-    }
 }

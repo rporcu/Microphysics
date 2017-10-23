@@ -373,34 +373,25 @@ extern "C"
 
     void des_init_time_loop ( const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt );
 
-    void des_time_loop_ops( const int* nrp,  void* rparticles,
-                const int* ngp,  void* gparticles,
-          amrex::Real* subdt, amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-          amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-          int* nstep, int* ncoll );
-
-    void des_time_loop_ops_nl( const int* nrp,  void* rparticles,
+    void des_time_loop_ops_nl( const int* n_do, const int* nrp,  void* rparticles,
              const int* ngp,  void* gparticles, const int* size_nl, const int* nbor_list,
-             amrex::Real* subdt, amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
+             amrex::Real* subdt, const amrex::Real* dx, 
              amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-             int* nstep, int* ncoll,
+             int* ncoll, amrex::Real* stime,
              const void* flag, const int* fglo, const int* fghi,
              const amrex_real* bcent, const int* blo, const int* bhi,
              const amrex_real* ax, const int* axlo, const int* axhi,
              const amrex_real* ay, const int* aylo, const int* ayhi,
              const amrex_real* az, const int* azlo, const int* azhi);
 
-
-
     int des_continuum_coupled ();
 
-  void mfix_particle_write( const int* nrp,  void* particles);
+    void mfix_particle_write( const int* nrp,  void* particles);
 
-  void mfix_particle_generator(int* pcount, const int* domlo , const int* domhi,
-                               amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
+    void mfix_particle_generator(int* pcount, const int* domlo , const int* domhi,
+                                 amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
 
-
-  void mfix_particle_generator_prop( const int* nrp,  void* particles);
+    void mfix_particle_generator_prop( const int* nrp,  void* particles);
 
 
     void mfix_usr0();

@@ -1,6 +1,7 @@
 #include <AMReX.H>
 #include <AMReX_PlaneIF.H>
 #include <AMReX_SphereIF.H>
+#include <AMReX_IntersectionIF.H>
 
 #include <mfix_level.H>
 
@@ -30,14 +31,55 @@ mfix_level::make_eb_geometry(int lev)
        workshop = new GeometryShop(sphere);
     }
 
+#if 1
+    RealVect normal = RealVect(0,0,1);
+    RealVect center = RealVect(0,0,1.e-15);
+    PlaneIF plane(normal,center,true);
+    workshop = new GeometryShop(plane);
+#else
+
     // Set up a plane
     if (make_planes) 
     {
-       RealVect normal = RealVect(0,0,1);
-       RealVect center = RealVect(0,0,0.2);
-       PlaneIF plane(normal,center,true);
-       workshop = new GeometryShop(plane);
+       RealVect normal, center;
+       PlaneIF* plane;
+       Vector<BaseIF*> planes;
+       planes.resize(0);
+
+       normal = RealVect(0,0,1);
+       center = RealVect(0,0,1e-15);
+       plane = new PlaneIF(normal,center,true);
+       planes.push_back(plane);
+
+       normal = RealVect(0,0,-1);
+       center = RealVect(0,0,0.9999999999999);
+       plane = new PlaneIF(normal,center,true);
+       planes.push_back(plane);
+
+       normal = RealVect(0,1,0);
+       center = RealVect(0,1.e-15,0);
+       plane = new PlaneIF(normal,center,true);
+       planes.push_back(plane);
+
+       normal = RealVect(0,-1,0);
+       center = RealVect(0,0.9999999999999,0);
+       plane = new PlaneIF(normal,center,true);
+       planes.push_back(plane);
+
+       normal = RealVect(1,0,0);
+       center = RealVect(1.e-15,0,0);
+       plane = new PlaneIF(normal,center,true);
+       planes.push_back(plane);
+
+       normal = RealVect(-1,0,0);
+       center = RealVect(0.9999999999999,0,0);
+       plane = new PlaneIF(normal,center,true);
+       planes.push_back(plane);
+
+       IntersectionIF all_planes(planes);
+       workshop = new GeometryShop(all_planes);
     }
+#endif
 
     // This part is generic once you have defined the workshop
     EBIndexSpace* ebis = AMReX_EBIS::instance();

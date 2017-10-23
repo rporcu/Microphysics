@@ -26,26 +26,50 @@ module calc_collision_wall
 
    implicit none
    private
-   
 
-   public :: calc_dem_force_with_wall_stl
+   public :: calc_dem_force_with_wall
    
 contains
 
-   subroutine calc_dem_force_with_wall_stl ( particles, fc, tow, xlength, ylength, zlength, dtsolid )
+   subroutine calc_dem_force_with_wall ( particles, fc, tow, dtsolid, & 
+       flag, fglo, fghi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, &
+        apz, azlo, azhi, dx)  
 
-      use bc,            only: cyclic_x, cyclic_y, cyclic_z
-      use param,         only: zero, one
-      use particle_mod,  only: particle_t
-      
+     use bc,            only: cyclic_x, cyclic_y, cyclic_z
+     use param,         only: zero, one
+     use particle_mod,  only: particle_t
+     use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell
 
-      type(particle_t), intent(in)    :: particles(:)
-      real(c_real)  ,   intent(inout) :: fc(:,:), tow(:,:)
-      real(c_real)  ,   intent(in   ) :: xlength, ylength, zlength, dtsolid 
-     
-      integer :: ll, nf
+     type(particle_t), intent(in   ), target :: particles(:)
+     real(c_real)  ,   intent(inout)         :: fc(:,:), tow(:,:)
+     real(c_real)  ,   intent(in   )         :: dtsolid 
 
-      real(c_real) ::overlap_n, SQRT_OVERLAP
+     integer, dimension(3), intent(in) :: axlo,axhi
+     integer, dimension(3), intent(in) :: aylo,ayhi
+     integer, dimension(3), intent(in) :: azlo,azhi
+     integer, dimension(3), intent(in) :: fglo,fghi
+     integer, dimension(3), intent(in) :: blo,bhi
+
+      integer,      intent(in) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
+      real(c_real), intent(in) :: bcent  (blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
+      real(c_real), intent(in) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
+      real(c_real), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
+      real(c_real), intent(in) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
+      real(c_real), intent(in) :: dx(3)
+
+      type(particle_t), pointer :: p
+
+       real(c_real) :: lx, ly, lz
+       real(c_real) :: axm, axp, aym, ayp, azm, azp
+       real(c_real) :: speed, vxnorm, vynorm, vznorm, dotp
+       real(c_real) :: apnorm, apnorminv, anrmx, anrmy, anrmz
+       real(c_real) :: bcentx, bcenty, bcentz
+       real(c_real) :: sqrt_overlap
+
+      integer :: ll, nf, ii, jj, kk, i, j, k
+
+      real(c_real) ::overlap_n
+      real(c_real) :: inv_dx(3)
 
       real(c_real) :: v_rel_trans_norm, distsq, radsq, closest_pt(3)
 
@@ -69,10 +93,6 @@ contains
       real(c_real) :: MAX_distsq
       integer :: MAX_NF
       real(c_real), dimension(3) :: POS_TMP
-      !     Vertex Coordinates X ,Y and Z
-      real(c_real), dimension(3,3,6) :: vertex
-      !     Face normal vector (normalized)
-      real(c_real), dimension(3,6) :: norm_face
 
       ! additional relative translational motion due to rotation
       ! real(c_real) :: v_rot(3)
@@ -82,144 +102,98 @@ contains
       ! Skip this routine if the system is fully periodic.
       if (cyclic_x .and. cyclic_y .and. cyclic_z) return
 
-      ! West Face
-      vertex(1,:,1) = (/ZERO, ZERO, ZERO/)
-      vertex(2,:,1) = (/ZERO, 2*YLENGTH, ZERO/)
-      vertex(3,:,1) = (/ZERO, ZERO, 2*ZLENGTH/)
-      norm_face(:,1) = (/ONE, ZERO, ZERO/)
+      inv_dx = 1.0d0 / dx
 
-      ! East Face
-      vertex(1,:,2) = (/XLENGTH, ZERO, ZERO/)
-      vertex(2,:,2) = (/XLENGTH, 2*YLENGTH, ZERO/)
-      vertex(3,:,2) = (/XLENGTH, ZERO, 2*ZLENGTH/)
-      norm_face(:,2) = (/-ONE, ZERO, ZERO/)
+!      do kk = 0,9
+!      do jj = 0,9
+!      do ii = 0,9
 
-      ! South Face
-      vertex(1,:,3) = (/ZERO, ZERO, ZERO/)
-      vertex(2,:,3) = (/2*XLENGTH, ZERO, ZERO/)
-      vertex(3,:,3) = (/ZERO, ZERO, 2*ZLENGTH/)
-      norm_face(:,3) = (/ZERO, ONE, ZERO/)
+!           if (.not. is_regular_cell(flag(ii,jj,kk)) ) then
+!              print *,'CEL ',ii,jj,kk 
 
-      ! North Face
-      vertex(1,:,4) = (/ZERO, YLENGTH, ZERO/)
-      vertex(2,:,4) = (/2*XLENGTH, YLENGTH, ZERO/)
-      vertex(3,:,4) = (/ZERO, YLENGTH, 2*ZLENGTH/)
-      norm_face(:,4) = (/ZERO, -ONE, ZERO/)
+!          axm = apx(ii,  jj  , kk  )
+!          axp = apx(ii+1,jj  , kk  )
+!          aym = apy(ii,  jj  , kk  )
+!          ayp = apy(ii,  jj+1, kk  )
+!          azm = apz(ii,  jj  , kk  )
+!          azp = apz(ii,  jj  , kk+1)
 
-      ! Bottom Face
-      vertex(1,:,5) = (/ZERO, ZERO, ZERO/)
-      vertex(2,:,5) = (/2*XLENGTH, ZERO, ZERO/)
-      vertex(3,:,5) = (/ZERO, 2*YLENGTH, ZERO/)
-      norm_face(:,5) = (/ZERO, ZERO, ONE/)
+!          apnorm = sqrt((axm-axp)**2 + (aym-ayp)**2 + (azm-azp)**2)
 
-      ! Top Face
-      vertex(1,:,6) = (/ZERO, ZERO, ZLENGTH/)
-      vertex(2,:,6) = (/2*XLENGTH, ZERO, ZLENGTH/)
-      vertex(3,:,6) = (/ZERO, 2*YLENGTH, ZLENGTH/)
-      norm_face(:,6) = (/ZERO, ZERO, -ONE/)
+!          apnorminv = 1.d0 / apnorm
+!          anrmx = (axp-axm) * apnorminv   ! pointing to the wall
+!          anrmy = (ayp-aym) * apnorminv
+!          anrmz = (azp-azm) * apnorminv
+
+!          ! To fit the convention of previous mfix
+!          normal(1) = anrmx
+!          normal(2) = anrmy
+!          normal(3) = anrmz
+
+!          print *,"NORMAL ", normal(:)
+!          end if
+
+!      end do
+!      end do
+!      end do
+!      stop
 
       do ll = 1, size( particles )
 
-         ! Check particle LL for wall contacts
-         radsq = particles(ll) % radius * particles(ll) % radius
+          p => particles(ll)
 
-         do nf = 1, 6
+          lx = p%pos(1)*inv_dx(1)
+          ly = p%pos(2)*inv_dx(2)
+          lz = p%pos(3)*inv_dx(3)
 
-               if ( nf == 1 .and. .not.cyclic_x) then
-                  if ( particles(ll) % pos(1) >  particles(ll) % radius ) cycle
+          i = floor(lx)
+          j = floor(ly)
+          k = floor(lz)
 
-               else if ( nf == 2.and. .not.cyclic_x) then
-                  if ( particles(ll) % pos(1) < ( xlength - particles(ll) % radius ) ) cycle
+          do kk = k-1,k+1
+          do jj = j-1,j+1
+          do ii = i-1,i+1
 
-               else if ( nf == 3 .and. .not.cyclic_y) then
-                  if ( particles(ll) % pos(2) > particles(ll) % radius ) cycle
+           if (.not. is_regular_cell(flag(ii,jj,kk)) ) then
 
-               else if ( nf == 4 .and. .not.cyclic_y) then
-                  if ( particles(ll) % pos(2) < ( ylength - particles(ll) % radius ) ) cycle
+           axm = apx(ii,  jj  , kk  )
+           axp = apx(ii+1,jj  , kk  )
+           aym = apy(ii,  jj  , kk  )
+           ayp = apy(ii,  jj+1, kk  )
+           azm = apz(ii,  jj  , kk  )
+           azp = apz(ii,  jj  , kk+1)
 
-               else if ( nf == 5 .and. .not.cyclic_z) then
-                  if ( particles(ll) % pos(3) > particles(ll) % radius ) cycle
+           apnorm = sqrt((axm-axp)**2 + (aym-ayp)**2 + (azm-azp)**2)
 
-               else if ( nf == 6 .and. .not.cyclic_z) then
-                  if ( particles(ll) % pos(3) < ( zlength - particles(ll) % radius ) ) cycle
-               end if
+           apnorminv = 1.d0 / apnorm
+           anrmx = (axp-axm) * apnorminv   ! pointing to the wall
+           anrmy = (ayp-aym) * apnorminv
+           anrmz = (azp-azm) * apnorminv
 
+           ! To fit the convention of previous mfix
+           normal(1) = -anrmx
+           normal(2) = -anrmy
+           normal(3) = -anrmz
 
-               ! Checking all the facets is time consuming due to the expensive
-               ! separating axis test. Remove this facet from contention based on
-               ! a simple orthogonal projection test.
-               
-               ! Parametrize a line as p = p_0 + t normal and intersect with the
-               ! triangular plane. If t>0, then point is on the non-fluid side of
-               ! the plane. If the plane normal is assumed to point toward the fluid.
-               
-               ! -undefined, because non zero values will imply the sphere center
-               ! is on the non-fluid side of the plane. Since the testing
-               ! is with extended plane, this could very well happen even
-               ! when the particle is well inside the domain (assuming the plane
-               ! normal points toward the fluid). See the pic below. So check
-               ! only when line_t is negative
-               
-               !                 \   Solid  /
-               !                  \  Side  /
-               !                   \      /
-               !                    \    /
-               ! Wall 1, fluid side  \  /  Wall 2, fluid side
-               !                      \/
-               !                        o particle
-               !
-               ! line_t will be positive for wall 1 (incorrectly indicating center
-               ! is outside the domain) and line_t will be negative for wall 2.
-               !
-               ! Therefore, only stick with this test when line_t is negative and let
-               ! the separating axis test take care of the other cases.
-               
-               ! Since this is for checking static config, line's direction is the
-               ! same as plane's normal. For moving particles, the line's normal will
-               ! be along the point joining new and old positions.
-               
-               line_t = DOT_product( ( vertex(1,:,nf) - particles(ll) % pos ), norm_face(:,nf) )
+           ! convert bcent to global coordinate system centered at plo
+           bcentx = bcent(ii, jj, kk, 1)*dx(1) + (dble(i) + 0.5d0)*dx(1)
+           bcenty = bcent(ii, jj, kk, 2)*dx(2) + (dble(j) + 0.5d0)*dx(2)
+           bcentz = bcent(ii, jj, kk, 3)*dx(3) + (dble(k) + 0.5d0)*dx(3)
 
-               ! k - rad >= tol_orth, where k = -line_t, then orthogonal
-               ! projection is false. Substituting for k
-               ! => line_t + rad <= -tol_orth
-               ! choosing tol_orth = 0.01% of des_radius = 0.0001*des_radius
+           ! distance to boundary
+           distmod = dabs( (p%pos(1) - bcentx) * anrmx + (p%pos(2) - bcenty) * anrmy + (p%pos(3) - bcentz) * anrmz )
+           distsq = distmod*distmod
 
-               ! Orthogonal projection will detect false positives even
-               ! when the particle does not overlap the triangle.
-               ! However, if the orthogonal projection shows no overlap, then
-               ! that is a big fat negative and overlaps are not possible.
-               if ( line_t  <= ( -1.0001d0 * particles(ll) % radius ) ) cycle
-
-               POS_TMP = particles(ll) % pos
-               
-               call ClosestPtPointTriangle( POS_TMP,  vertex(:,:,nf), closest_pt(:) )
-
-               dist(:) = closest_pt(:) - particles(ll) % pos
-               distsq = dot_product(dist, dist)
-
-               if (distsq .ge. radsq - small_number) cycle
-
-               max_distsq = distsq
-               max_nf = nf
-
-               ! Assign the collision normal based on the facet with the
-               ! largest overlap.
-               normal(:) = dist(:)/sqrt(distsq)
-
-               ! Facet's normal is correct normal only when the intersection is with
-               ! the face. When the intersection is with edge or vertex, then the
-               ! normal is based on closest pt and sphere center. The definition above
-               ! of the normal is generic enough to account for differences between
-               ! vertex, edge, and facet.
+           if (distmod .lt. p%radius) then
 
                ! Calculate the particle/wall overlap.
-               distmod = sqrt(MAX_distsq)
                overlap_n = particles(ll) % radius - distmod
 
                ! *****************************************************************************
                ! Calculate the translational relative velocity
+
                call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normal, distmod, particles)
+
                ! subroutine cfrelvel_wall (ll, vrn, vrt, norm, dist, particles )
                ! *****************************************************************************
                ! total relative velocity + rotational contribution
@@ -253,8 +227,7 @@ contains
                end if
 
                ! Calculate the normal contact force
-               FN(:) = -(KN_DES_W * overlap_n * normal(:) + &
-                    ETAN_DES_W * V_REL_TRANS_NORM * normal(:))
+               FN(:) = -(KN_DES_W * overlap_n  + ETAN_DES_W * V_REL_TRANS_NORM) * normal(:)
 
                ! Calculate the tangential displacement.
                overlap_t(:) = dtsolid*vrel_t(:)
@@ -277,12 +250,18 @@ contains
 
                ! Add the torque force to the total torque acting on the particle.
                TOW(LL,:) = TOW(LL,:) + distmod*DES_CROSSPRDCT(normal,FT)
-               
-         end do
 
-      end do
+           end if ! if test on (d < radius)
 
-   end subroutine calc_dem_force_with_wall_stl
+           end if ! if test on regular cell
+
+          end do ! ii
+          end do ! jj
+          end do ! kk
+
+      end do ! loop over particles
+
+   end subroutine calc_dem_force_with_wall
 
 
    !----------------------------------------------------------------------!
@@ -311,9 +290,9 @@ contains
       real(c_real), intent(out):: vrn
       ! total relative translational velocity (vector).
       real(c_real), intent(out):: vrt(3)
-      ! unit normal from particle center to closest point on stl (wall)
+      ! unit normal from particle center to closest point on wall
       real(c_real), intent(in) :: norm(3)
-      ! distance between particle center and stl (wall).
+      ! distance between particle center and wall.
       real(c_real), intent(in) :: dist
 
       ! local variables
