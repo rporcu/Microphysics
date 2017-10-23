@@ -304,90 +304,62 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     int ncoll_total = 0;
 
-    for ( int n = 0; n < nsubsteps; ++n )
+    int n = 0;
+    while (n < nsubsteps)
     {
       int ncoll = 0;
 
-      if (use_neighbor_list)
-      {
-          if (n % 25 == 0) {
-              clearNeighbors(lev);
-              Redistribute();
-              fillNeighbors(lev);
-              buildNeighborList(lev,sort_neighbor_list);
-          } else {
-              updateNeighbors(lev);
-          }
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-
-            // Real particles
-            const int np     = NumberOfParticles(pti);
-            void* particles  = pti.GetArrayOfStructs().data();
-
-            // Neighbor particles
-            PairIndex index(pti.index(), pti.LocalTileIndex());
-            int size_ng = neighbors[index].size() / pdata_size;
-            int size_nl = neighbor_list[index].size();
-
-            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-            des_time_loop_ops_nl ( &np, particles, &size_ng, neighbors[index].dataPtr(),
-                                   &size_nl, neighbor_list[index].dataPtr(),
-                                   &subdt, &dx, &dy, &dz,
-                                   &xlen, &ylen, &zlen, &n, &ncoll );
-            BL_PROFILE_VAR_STOP(des_time_loop);
-
-            if ( des_continuum_coupled () == 0 ) {
-              Real stime;
-              stime = time + (n+1)*subdt;
-              output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
-                                   &n, particles, 0 );
-
-            }
-
-            call_usr2_des( &np, particles );
-         }
-
+      if (n % 25 == 0) {
+          clearNeighbors(lev);
+          Redistribute();
+          fillNeighbors(lev);
+          buildNeighborList(lev,sort_neighbor_list);
       } else {
+          updateNeighbors(lev);
+      }
 
-         fillNeighbors(lev);
+      int n_do = std::min(25,nsubsteps-n);
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
+      {
+         // Real particles
+         const int np     = NumberOfParticles(pti);
+         void* particles  = pti.GetArrayOfStructs().data();
+   
+         // Neighbor particles
+         PairIndex index(pti.index(), pti.LocalTileIndex());
+         int size_ng = neighbors[index].size() / pdata_size;
+         int size_nl = neighbor_list[index].size();
 
+         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+         des_time_loop_ops_nl ( &n_do, &np, particles, &size_ng, neighbors[index].dataPtr(),
+                                &size_nl, neighbor_list[index].dataPtr(),
+                                &subdt, &dx, &dy, &dz,
+                                &xlen, &ylen, &zlen, &ncoll );
+         BL_PROFILE_VAR_STOP(des_time_loop);
+      }
+      n += n_do;
+
+      if ( des_continuum_coupled () == 0 ) 
+         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
+         {
             // Real particles
             const int np     = NumberOfParticles(pti);
             void* particles  = pti.GetArrayOfStructs().data();
-
-            // Neighbor particles
-            PairIndex index(pti.index(), pti.LocalTileIndex());
-            int ng = neighbors[index].size() / pdata_size;
-
-            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-            des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
-                               &subdt, &dx, &dy, &dz,
-                               &xlen, &ylen, &zlen, &n, &ncoll );
-            BL_PROFILE_VAR_STOP(des_time_loop);
-
-            if ( des_continuum_coupled () == 0 ) {
-              Real stime;
-              stime = time + (n+1)*subdt;
-              output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
-                                   &n, particles, 0 );
-
-            }
-
-            call_usr2_des( &np, particles );
+            Real stime;
+            stime = time + (n+1)*subdt;
+            output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
+                                 &n, particles, 0 );
          }
 
-         clearNeighbors(lev);
-         Redistribute();
-
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
+      {
+         const int np     = NumberOfParticles(pti);
+         void* particles  = pti.GetArrayOfStructs().data();
+         call_usr2_des( &np, particles );
       }
 
       if (debug) {
