@@ -121,7 +121,7 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
   // Deliberately didn't tile this loop
   for (MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
 
-      // This is particles per grid so we reset to 0 
+      // This is particles per grid so we reset to 0
       int pcount = 0;
 
       // Define the real particle data for one grid-at-a-time's worth of particles
@@ -132,7 +132,7 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
       const int grid_id = mfi.index();
       const int tile_id = 0;
 
-      // Now that we know pcount, go ahead and create a particle container for this 
+      // Now that we know pcount, go ahead and create a particle container for this
       // grid and add the particles to it
       auto&  particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
 
@@ -141,7 +141,7 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
         // Set id and cpu for this particle
         p_new.id()  = ParticleType::NextID();
         p_new.cpu() = ParallelDescriptor::MyProc();
- 
+
         // Add to the data structure
         particles.push_back(p_new);
       }
@@ -300,6 +300,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     int   nsubsteps;
     Real  subdt;
 
+    Real  stime=time;
+
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
     int ncoll_total = 0;
@@ -323,39 +325,29 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
          // Real particles
          const int np     = NumberOfParticles(pti);
          void* particles  = pti.GetArrayOfStructs().data();
-   
+
          // Neighbor particles
          PairIndex index(pti.index(), pti.LocalTileIndex());
          int size_ng = neighbors[index].size() / pdata_size;
          int size_nl = neighbor_list[index].size();
 
          BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-         des_time_loop_ops_nl ( &n_do, &np, particles, &size_ng, neighbors[index].dataPtr(),
+         des_time_loop_ops_nl ( &n_do, &np, particles, &size_ng,
+                                neighbors[index].dataPtr(),
                                 &size_nl, neighbor_list[index].dataPtr(),
                                 &subdt, &dx, &dy, &dz,
-                                &xlen, &ylen, &zlen, &ncoll );
+                                &xlen, &ylen, &zlen, &ncoll, &stime);
          BL_PROFILE_VAR_STOP(des_time_loop);
       }
       n += n_do;
 
-      if ( des_continuum_coupled () == 0 ) 
-         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
-         {
-            // Real particles
-            const int np     = NumberOfParticles(pti);
-            void* particles  = pti.GetArrayOfStructs().data();
-            Real stime;
-            stime = time + (n+1)*subdt;
-            output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
-                                 &n, particles, 0 );
-         }
 
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
          const int np     = NumberOfParticles(pti);
          void* particles  = pti.GetArrayOfStructs().data();
@@ -368,6 +360,16 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
       }
     }
+
+    if ( des_continuum_coupled () == 0 )
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+        {
+          // Real particles
+          const int np     = NumberOfParticles(pti);
+          void* particles  = pti.GetArrayOfStructs().data();
+          output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
+                          &n, particles, 0 );
+        }
 
     clearNeighbors(lev);
 

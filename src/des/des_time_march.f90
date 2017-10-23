@@ -94,8 +94,8 @@ contains
 
    end subroutine call_usr2_des
 
-   subroutine des_time_loop_ops_nl ( n_do, nrp, rparticles, ngp, gparticles, size_nl, nbor_list, &
-        & subdt, dx, dy, dz, xlength, ylength, zlength, ncoll )  &
+   subroutine des_time_loop_ops_nl ( n_do, nrp, rparticles, ngp, gparticles, &
+        size_nl, nbor_list, subdt, dx, dy, dz, xlength, ylength, zlength, ncoll, stime )&
         bind(C, name="des_time_loop_ops_nl")
 
       use particle_mod
@@ -103,6 +103,7 @@ contains
       use calc_force_dem_module,   only: calc_force_dem_nl
       use output_manager_module,   only: output_manager
       use run,                     only: call_usr
+      use discretelement,          only: des_continuum_coupled
 
       integer(c_int),   intent(in   )     :: n_do, nrp, ngp, size_nl
       real(c_real),     intent(in   )     :: subdt, dx, dy, dz
@@ -110,6 +111,7 @@ contains
       type(particle_t), intent(inout)     :: rparticles(nrp), gparticles(ngp)
       integer(c_int),   intent(in   )     :: nbor_list(size_nl)
       integer(c_int),   intent(inout)     :: ncoll
+      real(c_real),     intent(inout)     :: stime
 
       type(particle_t), allocatable       :: particles(:)
 
@@ -140,12 +142,18 @@ contains
 
          ! call user functions.
          if ( call_usr ) call usr1_des
-   
+
          ! update position and velocities
          call des_euler_update ( rparticles, gparticles, fc, tow, subdt )
 
+
+         if ( .not.des_continuum_coupled ) call output_manager(nrp+ngp,  &
+              stime, subdt, xlength, ylength, zlength, nstep, particles, 0)
+
+         stime = stime + subdt
+
       end do
-   
+
       deallocate(tow, fc, particles)
 
    end subroutine des_time_loop_ops_nl
