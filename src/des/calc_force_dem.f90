@@ -10,7 +10,7 @@ module calc_force_dem_module
 
 contains
 
-   subroutine calc_force_dem_nl( particles, nbor_list, size_nl, fc, tow, dtsolid, ncoll )
+   subroutine calc_force_dem_nl( particles, nrp, nbor_list, size_nl, fc, tow, dtsolid, ncoll )
 
       use particle_mod,   only: particle_t
       use cfrelvel_module, only: cfrelvel
@@ -21,7 +21,7 @@ contains
       use param,          only: SMALL_NUMBER
       use error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
 
-      integer,          intent(in   ) :: size_nl
+      integer,          intent(in   ) :: nrp, size_nl
       type(particle_t), intent(in   ) :: particles(:)
       integer,          intent(in   ) :: nbor_list(size_nl)
       real(c_real),     intent(inout) :: fc(:,:), tow(:,:)
@@ -70,7 +70,9 @@ contains
       np = size(particles)
 
       index = 1
-      do ll = 1, np
+      ! Particles is np long but that includes nrp "valid" particles and (np-nrp) "neighbor" particles --
+      !   we only need to calculate forces on the "valid" particles
+      do ll = 1, nrp
 
          pos_tmp = particles(ll) % pos
          rad     = particles(ll) % radius

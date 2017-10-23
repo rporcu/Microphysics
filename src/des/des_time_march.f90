@@ -122,7 +122,7 @@ contains
                                           xlength, ylength, zlength, subdt )
 
          ! calculate forces from particle-particle collisions
-         call calc_force_dem_nl ( particles, nbor_list, size_nl, fc, tow, subdt, ncoll )
+         call calc_force_dem_nl ( particles, nrp, nbor_list, size_nl, fc, tow, subdt, ncoll )
 
          ! call user functions.
          if ( call_usr ) call usr1_des
