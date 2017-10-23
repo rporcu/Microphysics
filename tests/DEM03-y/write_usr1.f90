@@ -57,47 +57,54 @@ subroutine write_des_out(lTime, np, particles, length)
    real(c_real), save :: rk4_time = 0.0d0
    real(c_real) :: rk4_dt, rk4_dt_last
    real(c_real) time_interval
+   real(c_real) rel_diff
    real(c_real), parameter :: rk4_dt_default = 1.0d-6
    integer :: i, rk4_steps
 
-
    ! Open the files.
-   OPEN(UNIT=uPos1,FILE='POST_POS1.dat', &
-        POSITION="APPEND",STATUS='OLD')
+   open(unit=uPos1,FILE='POST_POS1.dat', &
+        position="APPEND",STATUS='OLD')
 
-   OPEN(UNIT=uPos2,FILE='POST_POS2.dat', &
-        POSITION="APPEND",STATUS='OLD')
+   open(unit=uPos2,FILE='POST_POS2.dat', &
+        position="APPEND",STATUS='OLD')
 
    ! Calculate the value for the RK4 solutions.
-   TIME_INTERVAL = lTime - RK4_TIME
-   IF(TIME_INTERVAL .LE. RK4_DT) THEN
-      RK4_STEPS = 1
-      RK4_DT = TIME_INTERVAL
-      RK4_DT_LAST = UNDEFINED
-   ELSE
-      RK4_STEPS = floor(real(TIME_INTERVAL/RK4_DT_DEFAULT))
-      RK4_DT = RK4_DT_DEFAULT
-      RK4_DT_LAST = lTime - (RK4_TIME + RK4_STEPS*RK4_DT)
-   ENDIF
+   time_interval = lTime - rk4_time
 
-   DO I=1, RK4_STEPS
-      CALL RK4_V4(RK4_DT, gY1, gX1, gY2, gX2, length)
-      RK4_TIME = RK4_TIME + RK4_DT
-   ENDDO
+   rk4_dt = rk4_dt_default
 
-   IF(IS_DEFINED(RK4_DT_LAST)) THEN
-      CALL RK4_V4(RK4_DT_LAST, gY1, gX1, gY2, gX2, length)
-      RK4_TIME = RK4_TIME + RK4_DT_LAST
-   ENDIF
+   if (time_interval .le. rk4_dt) then
+      rk4_steps = 1
+      rk4_dt = time_interval
+      rk4_dt_last = undefined
+   else
+      rk4_steps = floor(real(time_interval/rk4_dt_default))
+      rk4_dt = rk4_dt_default
+      rk4_dt_last = ltime - (rk4_time + rk4_steps*rk4_dt)
+   endif
+
+   do i = 1, rk4_steps
+      call rk4_v4(rk4_dt, gy1, gx1, gy2, gx2, length)
+      rk4_time = rk4_time + rk4_dt
+   end do
+
+   if (is_defined(rk4_dt_last)) then
+      call rk4_v4(rk4_dt_last, gy1, gx1, gy2, gx2, length)
+      rk4_time = rk4_time + rk4_dt_last
+   end if
+
+   rel_diff = (gY1 - particles(1) % pos(2)) / gY1
+   rel_diff = dabs(rel_diff) * 100.d0
 
    ! Write the results to a file.
-   WRITE(uPos1,"(3x,F15.8,5X,F15.8,2(3x,F15.8))") lTime, gY1,   &
-        particles(1) % pos(2), (ABS(gY1 - particles(1) % pos(2))/ABS(gY1))*100
+   write(uPos1,"(3x,F15.8,5X,3(3x,F15.8))") lTime, gY1, particles(1) % pos(2), rel_diff
 
-   WRITE(uPos2,"(3x,F15.8,5X,F15.8,2(3x,F15.8))") lTime, gY2,   &
-        particles(2) % pos(2), (ABS(gY2 - particles(2) % pos(2))/ABS(gY1))*100
+   rel_diff = (gY2 - particles(2) % pos(2)) / gY2
+   rel_diff = dabs(rel_diff) * 100.d0
 
-   CLOSE(uPos1)
-   CLOSE(uPos2)
+   write(uPos2,"(3x,F15.8,5X,3(3x,F15.8))") lTime, gY2, particles(2) % pos(2), rel_diff
+
+   close(uPos1)
+   close(uPos2)
 
 end subroutine write_des_out
