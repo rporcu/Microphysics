@@ -346,14 +346,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       }
       n += n_do;
 
-
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-      {
-         const int np     = NumberOfParticles(pti);
-         void* particles  = pti.GetArrayOfStructs().data();
-         call_usr2_des( &np, particles );
-      }
-
       if (debug) {
          ncoll_total +=  ncoll;
          ParallelDescriptor::ReduceIntSum(ncoll,ParallelDescriptor::IOProcessorNumber());

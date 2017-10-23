@@ -146,6 +146,7 @@ contains
          ! update position and velocities
          call des_euler_update ( rparticles, gparticles, fc, tow, subdt )
 
+         call usr2_des(nrp, particles(1:nrp) );
 
          if ( .not.des_continuum_coupled ) call output_manager(nrp+ngp,  &
               stime, subdt, xlength, ylength, zlength, nstep, particles, 0)
