@@ -13,7 +13,7 @@ subroutine write_usr1(l, np, time, dt, particles, xlength, ylength, zlength )
 
    integer,          intent(in   ) :: l, np
    real(c_real),     intent(in   ) :: time, dt, xlength, ylength, zlength
-   type(particle_t), intent(inout) :: particles(np)
+   type(particle_t), intent(in   ) :: particles(np)
 
    select case(L)
    case(1); call write_des_out( time, np, particles, ylength )
@@ -46,7 +46,7 @@ subroutine write_des_out(lTime, np, particles, length)
    !---------------------------------------------------------------------//
    integer,          intent(in   ) ::  np
    real(c_real),     intent(in   ) :: ltime, length
-   type(particle_t), intent(inout) :: particles(np)
+   type(particle_t), intent(in   ) :: particles(np)
    
    ! Local variables
    !---------------------------------------------------------------------//
