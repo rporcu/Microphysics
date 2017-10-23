@@ -124,14 +124,11 @@ contains
          ! calculate forces from particle-particle collisions
          call calc_force_dem_nl ( particles, nbor_list, size_nl, fc, tow, subdt, ncoll )
 
-         rparticles = particles(    1:nrp)
-         gparticles = particles(nrp+1:   )
-
          ! call user functions.
          if ( call_usr ) call usr1_des
 
          ! update position and velocities
-         call des_euler_update ( rparticles, gparticles, fc, tow, subdt )
+         call des_euler_update ( rparticles, fc, tow, subdt )
 
          if ( call_usr ) call usr2_des(nrp, rparticles );
 
@@ -146,19 +143,17 @@ contains
 
    end subroutine des_time_loop_ops_nl
 
-   subroutine des_euler_update ( particles, grid_nbors, fc, tow, dt )
+   subroutine des_euler_update ( particles, fc, tow, dt )
 
       use constant,       only: gravity
       use particle_mod,   only: particle_t
 
       type(particle_t), intent(inout)  :: particles(:)
-      type(particle_t), intent(inout)  :: grid_nbors(:)
       real(c_real),     intent(inout)  :: fc(:,:), tow(:,:)
       real(c_real),     intent(in   )  :: dt
-      integer                          :: p,np,ng
+      integer                          :: p,np
 
       np = size (particles)
-      ng = size (grid_nbors)
 
       do p = 1, np
 
@@ -166,15 +161,6 @@ contains
                 ( ( fc(p,:) +  particles(p) % drag ) / particles(p) % mass + gravity )
             particles(p) % pos     = particles(p) % pos   + dt * particles(p) % vel
             particles(p) % omega   = particles(p) % omega + dt * tow(p,:) * particles(p) % omoi
-
-      end do
-
-      do p = 1, ng
-
-            grid_nbors(p) % vel     = grid_nbors(p) % vel   + dt * &
-                ( ( fc(np+p,:) +  grid_nbors(p) % drag ) / grid_nbors(p) % mass + gravity )
-            grid_nbors(p) % pos     = grid_nbors(p) % pos   + dt * grid_nbors(p) % vel
-            grid_nbors(p) % omega   = grid_nbors(p) % omega + dt * tow(np+p,:) * grid_nbors(p) % omoi
 
       end do
 

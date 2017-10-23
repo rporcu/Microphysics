@@ -306,7 +306,9 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     int ncoll_total = 0;
 
-    int n = 0;
+    int n    = 0;
+    int n_do = 1;
+
     while (n < nsubsteps)
     {
       int ncoll = 0;
@@ -319,8 +321,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       } else {
           updateNeighbors(lev);
       }
-
-      int n_do = std::min(25,nsubsteps-n);
 
 #ifdef _OPENMP
 #pragma omp parallel
