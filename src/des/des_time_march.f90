@@ -139,23 +139,37 @@ contains
 
    end subroutine des_time_loop_ops
 
-   subroutine des_time_loop_ops_nl ( nrp, rparticles, ngp, gparticles, size_nl, nbor_list, &
-        & subdt, dx, dy, dz, xlength, ylength, zlength, nstep, ncoll )  &
-        bind(C, name="des_time_loop_ops_nl")
+   subroutine des_time_loop_ops_nl ( nrp, rparticles, ngp, gparticles, size_nl, &
+        nbor_list, subdt, dx, dy, dz, xlength, ylength, zlength, nstep, ncoll, &
+        flag, fglo, fghi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, &
+        apz, azlo, azhi)  &
+          bind(C, name="des_time_loop_ops_nl")
 
-      use particle_mod
-      use calc_collision_wall,     only: calc_dem_force_with_wall_stl
-      use calc_force_dem_module,   only: calc_force_dem_nl
-      use output_manager_module,   only: output_manager
-      use run,                     only: call_usr
+     use particle_mod
+     use calc_collision_wall,     only: calc_dem_force_with_wall_stl
+     use calc_force_dem_module,   only: calc_force_dem_nl
+     use output_manager_module,   only: output_manager
+     use run,                     only: call_usr
 
-      integer(c_int),   intent(in   )     :: nrp, ngp, size_nl
-      real(c_real),     intent(in   )     :: subdt, dx, dy, dz
-      real(c_real),     intent(in   )     :: xlength, ylength, zlength
-      type(particle_t), intent(inout)     :: rparticles(nrp), gparticles(ngp)
-      integer(c_int),   intent(in   )     :: nbor_list(size_nl)
-      integer(c_int),   intent(in   )     :: nstep
-      integer(c_int),   intent(inout)     :: ncoll
+     integer(c_int),   intent(in   )     :: nrp, ngp, size_nl
+     real(c_real),     intent(in   )     :: subdt, dx, dy, dz
+     real(c_real),     intent(in   )     :: xlength, ylength, zlength
+     type(particle_t), intent(inout)     :: rparticles(nrp), gparticles(ngp)
+     integer(c_int),   intent(in   )     :: nbor_list(size_nl)
+     integer(c_int),   intent(in   )     :: nstep
+     integer(c_int),   intent(inout)     :: ncoll
+
+     integer, dimension(3), intent(in) :: axlo,axhi
+     integer, dimension(3), intent(in) :: aylo,ayhi
+     integer, dimension(3), intent(in) :: azlo,azhi
+     integer, dimension(3), intent(in) :: fglo,fghi
+     integer, dimension(3), intent(in) :: blo,bhi
+
+      integer,      intent(in) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
+      real(c_real), intent(in) :: bcent  (blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
+      real(c_real), intent(in) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
+      real(c_real), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
+      real(c_real), intent(in) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
 
       type(particle_t), allocatable       :: particles(:)
 
