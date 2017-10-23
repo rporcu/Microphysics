@@ -81,19 +81,6 @@ contains
 
    end subroutine call_usr3_des
 
-   subroutine call_usr2_des( np, particles ) &
-        bind(c, name="call_usr2_des")
-
-      use run,            only: call_usr
-      use particle_mod,   only: particle_t
-
-      integer(c_int),   intent(in)    :: np
-      type(particle_t), intent(inout) :: particles(np)
-
-      if ( call_usr ) call usr2_des(np, particles)
-
-   end subroutine call_usr2_des
-
    subroutine des_time_loop_ops_nl ( n_do, nrp, rparticles, ngp, gparticles, &
         size_nl, nbor_list, subdt, dx, dy, dz, xlength, ylength, zlength, ncoll, stime )&
         bind(C, name="des_time_loop_ops_nl")
@@ -146,7 +133,7 @@ contains
          ! update position and velocities
          call des_euler_update ( rparticles, gparticles, fc, tow, subdt )
 
-         call usr2_des(nrp, particles(1:nrp) );
+         if ( call_usr ) call usr2_des(nrp, rparticles );
 
          if ( .not.des_continuum_coupled ) call output_manager(nrp+ngp,  &
               stime, subdt, xlength, ylength, zlength, nstep, particles, 0)
