@@ -27,6 +27,8 @@
     use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell
     use amrex_error_module,      only : amrex_abort
 
+    implicit none
+
     integer,          intent(in   )         :: np
     type(particle_t), intent(inout), target :: particles(np)
     integer, dimension(3), intent(in) :: axlo,axhi,aylo,ayhi,azlo,azhi,fglo,fghi,blo,bhi
@@ -43,7 +45,7 @@
     real(amrex_real) :: axm, axp, aym, ayp, azm, azp
     real(amrex_real) :: speed, vxnorm, vynorm, vznorm, dotp
     real(amrex_real) :: apnorm, apnorminv, anrmx, anrmy, anrmz
-    real(amrex_real) :: bcentx, bcenty, d
+    real(amrex_real) :: bcentx, bcenty, bcentz, d
     integer i, j, k, n
     type(particle_t), pointer :: p
 

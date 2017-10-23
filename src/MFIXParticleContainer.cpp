@@ -393,7 +393,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
       }
 
-#if 0
       std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
       const MultiFab* volfrac;
       const MultiCutFab* bndrycent;
@@ -406,7 +405,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
 
       bounceWalls(dummy,volfrac,bndrycent,areafrac);
-#endif
 
       if (debug) {
          ncoll_total +=  ncoll;
@@ -1159,6 +1157,7 @@ MFIXParticleContainer::bounceWalls(const MultiFab& dummy, const MultiFab* volfra
         const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
         const auto& flag = sfab.getEBCellFlagFab();
 
+
         if (flag.getType(bx) == FabType::regular) {
             continue;
         } else {
@@ -1169,7 +1168,9 @@ MFIXParticleContainer::bounceWalls(const MultiFab& dummy, const MultiFab* volfra
                                (*areafrac[0])[pti].dataPtr(),
                                (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
                                (*areafrac[1])[pti].dataPtr(),
-                               (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect());
+                               (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
+                               (*areafrac[2])[pti].dataPtr(),
+                               (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
         }
     }
 }
