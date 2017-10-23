@@ -141,7 +141,7 @@ public:
                             int fortran_beta_comp, int fortran_vel_comp);
 
     void bounceWalls(const MultiFab& dummy, const MultiFab* volfrac, const MultiCutFab* bndrycent,
-                     std::array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac);
+                     std::array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac, const Real dt);
 
 private:
 

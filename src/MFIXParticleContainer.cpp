@@ -404,7 +404,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
       MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
 
-      bounceWalls(dummy,volfrac,bndrycent,areafrac);
+      bounceWalls(dummy,volfrac,bndrycent,areafrac,dt);
 
       if (debug) {
          ncoll_total +=  ncoll;
@@ -1136,7 +1136,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
 
 void 
 MFIXParticleContainer::bounceWalls(const MultiFab& dummy, const MultiFab* volfrac, const MultiCutFab* bndrycent,
-                                   std::array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac)
+                                   std::array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac, const Real dt)
 {
 
     BL_PROFILE("EBParticleContainer::bounceWalls");
@@ -1161,7 +1161,7 @@ MFIXParticleContainer::bounceWalls(const MultiFab& dummy, const MultiFab* volfra
         if (flag.getType(bx) == FabType::regular) {
             continue;
         } else {
-            amrex_bounce_walls(particles.data(), &Np, plo, dx,
+            amrex_bounce_walls(particles.data(), &Np, plo, dx, &dt, 
                                flag.dataPtr(), flag.loVect(), flag.hiVect(),
                                (*bndrycent)[pti].dataPtr(),
                                (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),

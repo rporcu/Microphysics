@@ -17,7 +17,7 @@
     
   end module eb_particle_module
 
-  subroutine amrex_bounce_walls(particles, np, plo, dx, &
+  subroutine amrex_bounce_walls(particles, np, plo, dx, dt, &
        flag, fglo, fghi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, apz, azlo, azhi) &
        bind(c,name='amrex_bounce_walls')
     
@@ -38,7 +38,7 @@
     real(amrex_real), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
     real(amrex_real), intent(in) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
     real(amrex_real), intent(in) :: plo(3)
-    real(amrex_real), intent(in) :: dx(3)
+    real(amrex_real), intent(in) :: dx(3), dt
 
     real(amrex_real) inv_dx(3)
     real(amrex_real) :: lx, ly, lz
@@ -69,9 +69,9 @@
 
        if (is_covered_cell(flag(i, j, k))) then
 
-          p%pos(1) = p%pos(1) - 0.0005d0 * p%vel(1)
-          p%pos(2) = p%pos(2) - 0.0005d0 * p%vel(2)
-          p%pos(3) = p%pos(3) - 0.0005d0 * p%vel(3)
+          p%pos(1) = p%pos(1) - dt * p%vel(1)
+          p%pos(2) = p%pos(2) - dt * p%vel(2)
+          p%pos(3) = p%pos(3) - dt * p%vel(3)
 
           lx = (p%pos(1) - plo(1))*inv_dx(1)
           ly = (p%pos(2) - plo(2))*inv_dx(2)
@@ -81,9 +81,9 @@
           j = floor(ly)
           k = floor(lz)
 
-          p%pos(1) = p%pos(1) + 0.0005d0 * p%vel(1)
-          p%pos(2) = p%pos(2) + 0.0005d0 * p%vel(2)
-          p%pos(3) = p%pos(3) + 0.0005d0 * p%vel(3)
+          p%pos(1) = p%pos(1) + dt * p%vel(1)
+          p%pos(2) = p%pos(2) + dt * p%vel(2)
+          p%pos(3) = p%pos(3) + dt * p%vel(3)
        end if
 
 ! this is a cut cell. compute normal
