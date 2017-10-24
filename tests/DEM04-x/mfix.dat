@@ -13,7 +13,7 @@
 ########################################################################
 
   RUN_NAME = 'DEM04'
-  DESCRIPTION = 'DEM03: Ball slipping on a rough surface'
+  DESCRIPTION = 'DEM04: Ball slipping on a rough surface'
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
