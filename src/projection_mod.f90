@@ -201,7 +201,7 @@ contains
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
-               rhs(i,j,k) =     ( ( u_g(i+1,j,k) - u_g(i,j,k) ) * odtdx + &
+               rhs(i,j,k) =  -  ( ( u_g(i+1,j,k) - u_g(i,j,k) ) * odtdx + &
                                   ( v_g(i,j+1,k) - v_g(i,j,k) ) * odtdy + &
                                   ( w_g(i,j,k+1) - w_g(i,j,k) ) * odtdz )
                
@@ -213,114 +213,89 @@ contains
    end subroutine compute_ppe_rhs
 
 
-   !
-   ! Apply the pressure correction u = u^* - dt (ep_g/rop_g) dp/dx
-   ! Note that the scalar ep_g/rop_g is 1/ro_g, hence the name oro_g 
-   ! 
-   subroutine apply_pressure_correction_x ( lo, hi, p_g, slo, shi, &
-     &  u_g, ulo, uhi, oro_g, dx, dt )  bind(C, name="apply_pressure_correction_x")
-
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-      integer(c_int), intent(in   ) :: ulo(3),uhi(3)
-      real(ar),       intent(in   ) :: dx(3), dt
-      
-      real(ar),       intent(in   ) :: &
-           p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      
-      real(ar),       intent(inout) :: &
-           u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
-           oro_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-           
-      integer      :: i, j, k
-      real(ar)     :: dtodx
-
-      dtodx = dt / dx(1)
-
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
-               u_g(i,j,k) = u_g(i,j,k) -  dtodx *  oro_g(i,j,k) * &
-                    ( p_g(i,j,k) - p_g(i-1,j,k) )   
-            end do
-         end do
-      end do
-
-   end subroutine apply_pressure_correction_x
-
-
-
-   !
-   ! Apply the pressure correction v = v^* - dt (ep_g/rop_g) dp/dy
-   ! Note that the scalar ep_g/rop_g is 1/ro_g, hence the name oro_g 
-   ! 
-   subroutine apply_pressure_correction_y ( lo, hi, p_g, slo, shi, &
-     &  v_g, vlo, vhi, oro_g, dx, dt )  bind(C, name="apply_pressure_correction_y")
-
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-      integer(c_int), intent(in   ) :: vlo(3),vhi(3)
-      real(ar),       intent(in   ) :: dx(3), dt
-      
-      real(ar),       intent(in   ) :: &
-           p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      
-      real(ar),       intent(inout) :: &
-           v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
-           oro_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-           
-      integer      :: i, j, k
-      real(ar)     :: dtody
-
-      dtody = dt / dx(2)
-
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
-               v_g(i,j,k) = v_g(i,j,k) -  dtody *  oro_g(i,j,k) * &
-                    ( p_g(i,j,k) - p_g(i,j-1,k) )   
-            end do
-         end do
-      end do
-
-   end subroutine apply_pressure_correction_y
 
 
    
    !
-   ! Apply the pressure correction w = w^* - dt (ep_g/rop_g) dp/dz
+   ! Apply the pressure correction u = u^* - dt (ep_g/rop_g) grad(p)
    ! Note that the scalar ep_g/rop_g is 1/ro_g, hence the name oro_g 
    ! 
-   subroutine apply_pressure_correction_z ( lo, hi, p_g, slo, shi, &
-     &  w_g, wlo, whi, oro_g, dx, dt )  bind(C, name="apply_pressure_correction_z")
+   subroutine apply_pressure_correction ( utlo, uthi, ug, ulo, uhi, oro_x,  &
+        & vtlo, vthi, vg, vlo, vhi, oro_y, wtlo, wthi, wg, wlo, whi, oro_z, &
+        & pg, slo, shi, dx, dt )  bind(C, name="apply_pressure_correction")
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-      integer(c_int), intent(in   ) :: wlo(3),whi(3)
-      real(ar),       intent(in   ) :: dx(3), dt
+      ! Array bounds
+      integer(c_int),   intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int),   intent(in   ) :: vlo(3), vhi(3)
+      integer(c_int),   intent(in   ) :: wlo(3), whi(3)
+      integer(c_int),   intent(in   ) :: slo(3), shi(3)
       
-      real(ar),       intent(in   ) :: &
-           p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      ! Tile bounds
+      integer(c_int),   intent(in   ) :: utlo(3), uthi(3)
+      integer(c_int),   intent(in   ) :: vtlo(3), vthi(3)
+      integer(c_int),   intent(in   ) :: wtlo(3), wthi(3)
       
-      real(ar),       intent(inout) :: &
-           w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
-           oro_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      ! Grid and time step
+      real(ar),         intent(in   ) :: dt
+      real(ar),         intent(in   ) :: dx(3)
            
-      integer      :: i, j, k
-      real(ar)     :: dtodz
+      ! Arrays
+      real(ar),         intent(inout) ::                    &
+           & ug(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), & 
+           & vg(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+           & wg(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
+      real(ar),         intent(in   ) ::                    &
+           & oro_x(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), & 
+           & oro_y(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+           & oro_z(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      
+      real(ar),         intent(in   ) ::                    &
+           & pg(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) 
+
+      ! Local variables
+      integer      :: i, j, k
+      real(ar)     :: dtodx, dtody, dtodz
+
+      dtodx = dt / dx(1)
+      dtody = dt / dx(2)
       dtodz = dt / dx(3)
 
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
-               w_g(i,j,k) = w_g(i,j,k) -  dtodz *  oro_g(i,j,k) * &
-                    ( p_g(i,j,k) - p_g(i,j,k-1) )   
+      ! x component
+      do k = utlo(3), uthi(3)
+         do j = utlo(2), uthi(2)
+            do i = utlo(1), uthi(1)
+               ug(i,j,k) = ug(i,j,k) - dtodx *  & !oro_x(i,j,k) * &
+                    ( pg(i,j,k) - pg(i-1,j,k) )   
             end do
          end do
       end do
 
-   end subroutine apply_pressure_correction_z
+
+      ! y component
+      do k = vtlo(3), vthi(3)
+         do j = vtlo(2), vthi(2)
+            do i = vtlo(1), vthi(1)
+               vg(i,j,k) = vg(i,j,k) - dtody *  & !oro_x(i,j,k) * &
+                    ( pg(i,j,k) - pg(i,j-1,k) )   
+            end do
+         end do
+      end do
+
+      
+      ! z component
+      do k = wtlo(3), wthi(3)
+         do j = wtlo(2), wthi(2)
+            do i = wtlo(1), wthi(1)
+               wg(i,j,k) = wg(i,j,k) - dtodz *  & !oro_x(i,j,k) * &
+                    ( pg(i,j,k) - pg(i,j,k-1) )   
+            end do
+         end do
+      end do
+
+      
+   end subroutine apply_pressure_correction
+
    
    !
    ! Compute the coefficients of the PPE, i.e. 1 / ro_g = eps_g/rho_g,

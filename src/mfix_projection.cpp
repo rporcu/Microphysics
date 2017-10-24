@@ -125,8 +125,10 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     check_for_nans (lev);
     
     //  Do projection HERE
+    amrex::Print () << "max(abs(wg)) BEFORE projection = " << w_g[lev] -> norm0 () << "\n";
     mfix_apply_projection ( lev, dt );
-
+    amrex::Print () << "max(abs(wg)) AFTER  projection = " << w_g[lev] -> norm0 () << "\n";
+    
     check_for_nans (lev);
     
     // // Calculate transport coefficients
@@ -140,7 +142,11 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     // Compute the divergence of the velocity field, div(u).
     // div(u) is needed to compute the volumetric term in the
     // stress tensor
-    mfix_set_bc1(lev);
+    u_g[lev] -> FillBoundary (geom[lev].periodicity());
+    v_g[lev] -> FillBoundary (geom[lev].periodicity());
+    w_g[lev] -> FillBoundary (geom[lev].periodicity());
+   
+    // mfix_set_bc1(lev);
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -391,8 +397,28 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     p_g[lev] -> FillBoundary(geom[lev].periodicity());
 
     amrex::Print () << "max(abs(p_g)) = " << p_g[lev] -> norm0 () << "\n";
+
     // Apply pressure correction
-    apply_pressure_correction ( lev, dt );
+    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	Box ubx = amrex::convert ( mfi.tilebox(), e_x );
+	Box vbx = amrex::convert ( mfi.tilebox(), e_y );
+	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
+
+	apply_pressure_correction ( BL_TO_FORTRAN_BOX(ubx),  
+				    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+				    (*(oro_g[lev][0]))[mfi].dataPtr(),
+				    BL_TO_FORTRAN_BOX(vbx),  
+				    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+				    (*(oro_g[lev][1]))[mfi].dataPtr(),
+				    BL_TO_FORTRAN_BOX(wbx),  
+				    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+				    (*(oro_g[lev][2]))[mfi].dataPtr(),
+				    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+				    geom[lev].CellSize (),
+				    &dt );
+    }
+
 }
 
 
@@ -436,9 +462,9 @@ mfix_level::solve_poisson_equation (  int lev,
 
     amrex::Print() << " HAS NANs = " << has_nans << "\n";
     
-    //solver.set_gravity_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
+    solver.set_mac_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
 
-    solver.set_const_gravity_coeffs ();
+    //solver.set_const_gravity_coeffs ();
     solver.solve ( *phi[lev], *rhs[lev], rel_tol, abs_tol, 0, 0, 1 );
 
 }
@@ -497,63 +523,6 @@ mfix_level::compute_oro_g (int lev)
     
 }
 
-//
-// Apply the pressure correction u = u^* + dt * grad(p)
-// 
-// 
-void
-mfix_level::apply_pressure_correction ( int lev , amrex::Real dt )
-{
-    BL_PROFILE("mfix_level::apply_pressure_correction");
-
-    
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box& bx = mfi.tilebox();
-
-	apply_pressure_correction_x ( BL_TO_FORTRAN_BOX(bx),
-				      BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
-				      BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-				      (*oro_g[lev][0])[mfi].dataPtr(),
-				      geom[lev].CellSize(), &dt);
-    }
-
-   
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box& bx = mfi.tilebox();
-
-	apply_pressure_correction_y ( BL_TO_FORTRAN_BOX(bx),
-				      BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
-				      BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-				      (*oro_g[lev][1])[mfi].dataPtr(),
-				      geom[lev].CellSize(), &dt);
-    }
-
-        
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box& bx = mfi.tilebox();
-
-	apply_pressure_correction_z ( BL_TO_FORTRAN_BOX(bx),
-				      BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
-				      BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-				      (*oro_g[lev][2])[mfi].dataPtr(),
-				      geom[lev].CellSize(), &dt);
-    }
-
-
-   
-}
 
 void
 mfix_level::check_for_nans (int lev)

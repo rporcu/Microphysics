@@ -151,7 +151,6 @@ private:
 				  Vector< std::unique_ptr<MultiFab> >& rhs );
 
     void compute_oro_g ( int lev );
-    void apply_pressure_correction ( int lev , amrex::Real dt );
     
     void init_tests_projection (int lev);
 

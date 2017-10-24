@@ -549,6 +549,22 @@ extern "C"
 	const amrex::Real* oro_g_z,
 	const amrex::Real* dx, const amrex::Real* dt );
 
+
+    void apply_pressure_correction (
+	const int* utlo,  const int* uthi,
+	amrex::Real* ug,  const int* ulo, const int* uhi,
+	const amrex::Real* oro_x,
+	const int* vtlo,  const int* vthi,
+	amrex::Real* vg,  const int* vlo, const int* vhi,
+	const amrex::Real* oro_y,
+	const int* wtlo,  const int* wthi,
+	amrex::Real* wg,  const int* wlo, const int* whi,
+	const amrex::Real* oro_z,
+	const amrex::Real* pg, const int* slo, const int* shi,
+	const amrex::Real* dx, const amrex::Real* dt );
+
+
+    
     void compute_new_dt ( const amrex::Real* umax,
 			  const amrex::Real* vmax,
 			  const amrex::Real* wmax,
