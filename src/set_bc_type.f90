@@ -255,7 +255,11 @@ module set_bc_type_module
 
       real(c_real) :: x, y, z
 
+      real(c_real), parameter :: offset = 1.0d-15
+
       if (bc_defined(bcv)) then
+
+         write(*,*) ' '
          exists = 1;
 
          select case (trim(bc_type(bcv)))
@@ -264,53 +268,46 @@ module set_bc_type_module
               'NO_SLIP_WALL'  ,'NSW', &
               'PAR_SLIP_WALL' ,'PSW')
 
+            x = 0.0d0
+            y = 0.0d0
+            z = 0.0d0
+
             select case (trim(bc_plane(bcv)))
             case('E');
-               write(*,*)'setting BC', bcv,'E'
-               x = bc_x_w(bcv)
+               x = bc_x_w(bcv) + offset
                y = bc_y_s(bcv) + 0.5d0*(bc_y_s(bcv) + bc_y_n(bcv))
                z = bc_z_b(bcv) + 0.5d0*(bc_z_b(bcv) + bc_z_t(bcv))
-
                normal = (/ 1.0d0, 0.0d0, 0.0d0/)
             case('W');
-               write(*,*)'setting BC', bcv,'W'
-               x = bc_x_w(bcv)
+               x = bc_x_e(bcv) - offset
                y = bc_y_s(bcv) + 0.5d0*(bc_y_s(bcv) + bc_y_n(bcv))
                z = bc_z_b(bcv) + 0.5d0*(bc_z_b(bcv) + bc_z_t(bcv))
-
                normal = (/-1.0d0, 0.0d0, 0.0d0/)
             case('N');
-               write(*,*)'setting BC', bcv,'N'
                x = bc_x_w(bcv) + 0.5d0*(bc_x_w(bcv) + bc_x_e(bcv))
-               y = bc_y_s(bcv)
+               y = bc_y_s(bcv) + offset
                z = bc_z_b(bcv) + 0.5d0*(bc_z_b(bcv) + bc_z_t(bcv))
-
                normal = (/ 0.0d0, 1.0d0, 0.0d0/)
             case('S');
-               write(*,*)'setting BC', bcv,'S'
                x = bc_x_w(bcv) + 0.5d0*(bc_x_w(bcv) + bc_x_e(bcv))
-               y = bc_y_s(bcv)
+               y = bc_y_n(bcv) - offset
                z = bc_z_b(bcv) + 0.5d0*(bc_z_b(bcv) + bc_z_t(bcv))
-
                normal = (/ 0.0d0,-1.0d0, 0.0d0/)
             case('T');
-               write(*,*)'setting BC', bcv,'T'
                x = bc_x_w(bcv) + 0.5d0*(bc_x_w(bcv) + bc_x_e(bcv))
                y = bc_y_s(bcv) + 0.5d0*(bc_y_s(bcv) + bc_y_n(bcv))
-               z = bc_z_b(bcv)
-
+               z = bc_z_b(bcv) + offset
                normal = (/ 0.0d0, 0.0d0, 1.0d0/)
             case('B');
-               write(*,*)'setting BC', bcv,'B'
                x = bc_x_w(bcv) + 0.5d0*(bc_x_w(bcv) + bc_x_e(bcv))
                y = bc_y_s(bcv) + 0.5d0*(bc_y_s(bcv) + bc_y_n(bcv))
-               z = bc_z_b(bcv)
-
+               z = bc_z_t(bcv) - offset
                normal = (/ 0.0d0, 0.0d0,-1.0d0/)
             end select
 
          end select
 
+         write(*,*)'setting BC', bcv, bc_type(bcv)
          center = (/ x, y, z/)
 
       else
