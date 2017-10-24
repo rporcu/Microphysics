@@ -90,7 +90,7 @@ contains
       ! flag to tell if the orthogonal projection of sphere center to
       ! extended plane detects an overlap
 
-      real(c_real) :: MAX_distsq
+      real(c_real) :: distmod_temp
       integer :: MAX_NF
       real(c_real), dimension(3) :: POS_TMP
 
@@ -104,40 +104,6 @@ contains
 
       inv_dx = 1.0d0 / dx
 
-!      do kk = 0,9
-!      do jj = 0,9
-!      do ii = 0,9
-
-!           if (.not. is_regular_cell(flag(ii,jj,kk)) ) then
-!              print *,'CEL ',ii,jj,kk 
-
-!          axm = apx(ii,  jj  , kk  )
-!          axp = apx(ii+1,jj  , kk  )
-!          aym = apy(ii,  jj  , kk  )
-!          ayp = apy(ii,  jj+1, kk  )
-!          azm = apz(ii,  jj  , kk  )
-!          azp = apz(ii,  jj  , kk+1)
-
-!          apnorm = sqrt((axm-axp)**2 + (aym-ayp)**2 + (azm-azp)**2)
-
-!          apnorminv = 1.d0 / apnorm
-!          anrmx = (axp-axm) * apnorminv   ! pointing to the wall
-!          anrmy = (ayp-aym) * apnorminv
-!          anrmz = (azp-azm) * apnorminv
-
-!          ! To fit the convention of previous mfix
-!          normal(1) = anrmx
-!          normal(2) = anrmy
-!          normal(3) = anrmz
-
-!          print *,"NORMAL ", normal(:)
-!          end if
-
-!      end do
-!      end do
-!      end do
-!      stop
-
       do ll = 1, size( particles )
 
           p => particles(ll)
@@ -150,41 +116,57 @@ contains
           j = floor(ly)
           k = floor(lz)
 
+          distmod = 1.e20
+
           do kk = k-1,k+1
           do jj = j-1,j+1
           do ii = i-1,i+1
 
-           if (.not. is_regular_cell(flag(ii,jj,kk)) ) then
+             if (.not. is_regular_cell(flag(ii,jj,kk)) ) then
 
-           axm = apx(ii,  jj  , kk  )
-           axp = apx(ii+1,jj  , kk  )
-           aym = apy(ii,  jj  , kk  )
-           ayp = apy(ii,  jj+1, kk  )
-           azm = apz(ii,  jj  , kk  )
-           azp = apz(ii,  jj  , kk+1)
+               axm = apx(ii,  jj  , kk  )
+               axp = apx(ii+1,jj  , kk  )
+               aym = apy(ii,  jj  , kk  )
+               ayp = apy(ii,  jj+1, kk  )
+               azm = apz(ii,  jj  , kk  )
+               azp = apz(ii,  jj  , kk+1)
 
-           apnorm = sqrt((axm-axp)**2 + (aym-ayp)**2 + (azm-azp)**2)
+               apnorm = sqrt((axm-axp)**2 + (aym-ayp)**2 + (azm-azp)**2)
 
-           apnorminv = 1.d0 / apnorm
-           anrmx = (axp-axm) * apnorminv   ! pointing to the wall
-           anrmy = (ayp-aym) * apnorminv
-           anrmz = (azp-azm) * apnorminv
+               apnorminv = 1.d0 / apnorm
+               anrmx = (axp-axm) * apnorminv   ! pointing to the wall
+               anrmy = (ayp-aym) * apnorminv
+               anrmz = (azp-azm) * apnorminv
 
-           ! To fit the convention of previous mfix
-           normal(1) = -anrmx
-           normal(2) = -anrmy
-           normal(3) = -anrmz
+               ! convert bcent to global coordinate system centered at plo
+               bcentx = bcent(ii, jj, kk, 1)*dx(1) + (dble(ii) + 0.5d0)*dx(1)
+               bcenty = bcent(ii, jj, kk, 2)*dx(2) + (dble(jj) + 0.5d0)*dx(2)
+               bcentz = bcent(ii, jj, kk, 3)*dx(3) + (dble(kk) + 0.5d0)*dx(3)
 
-           ! convert bcent to global coordinate system centered at plo
-           bcentx = bcent(ii, jj, kk, 1)*dx(1) + (dble(i) + 0.5d0)*dx(1)
-           bcenty = bcent(ii, jj, kk, 2)*dx(2) + (dble(j) + 0.5d0)*dx(2)
-           bcentz = bcent(ii, jj, kk, 3)*dx(3) + (dble(k) + 0.5d0)*dx(3)
+               ! Distance to boundary
+               distmod_temp = dabs( (p%pos(1) - bcentx) * anrmx + (p%pos(2) - bcenty) * anrmy + (p%pos(3) - bcentz) * anrmz )
 
-           ! distance to boundary
-           distmod = dabs( (p%pos(1) - bcentx) * anrmx + (p%pos(2) - bcenty) * anrmy + (p%pos(3) - bcentz) * anrmz )
-           distsq = distmod*distmod
+               ! Only keep the closest one
+               if (distmod_temp .lt. distmod) then  
 
-           if (distmod .lt. p%radius) then
+                 distmod = distmod_temp
+
+                 ! To fit the convention of previous mfix
+                 normal(1) = -anrmx
+                 normal(2) = -anrmy
+                 normal(3) = -anrmz
+
+               end if ! if dist lt distmod
+
+             end if ! if .not. regular
+
+          end do
+          end do
+          end do
+
+          if (distmod .lt. p%radius) then
+
+               distsq = distmod*distmod
 
                ! Calculate the particle/wall overlap.
                overlap_n = particles(ll) % radius - distmod
@@ -228,6 +210,7 @@ contains
 
                ! Calculate the normal contact force
                FN(:) = -(KN_DES_W * overlap_n  + ETAN_DES_W * V_REL_TRANS_NORM) * normal(:)
+!              print *,'Vertical dist / force ',distmod, fn(3)
 
                ! Calculate the tangential displacement.
                overlap_t(:) = dtsolid*vrel_t(:)
@@ -252,12 +235,6 @@ contains
                TOW(LL,:) = TOW(LL,:) + distmod*DES_CROSSPRDCT(normal,FT)
 
            end if ! if test on (d < radius)
-
-           end if ! if test on regular cell
-
-          end do ! ii
-          end do ! jj
-          end do ! kk
 
       end do ! loop over particles
 

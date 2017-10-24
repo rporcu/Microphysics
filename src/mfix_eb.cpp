@@ -31,9 +31,9 @@ mfix_level::make_eb_geometry(int lev)
        workshop = new GeometryShop(sphere);
     }
 
-#if 1
-    RealVect normal = RealVect(0,0,1);
-    RealVect center = RealVect(0,0,1.e-15);
+#if 0
+    RealVect normal = RealVect(0,1,0);
+    RealVect center = RealVect(0,1e-15,0);
     PlaneIF plane(normal,center,true);
     workshop = new GeometryShop(plane);
 #else
@@ -57,7 +57,7 @@ mfix_level::make_eb_geometry(int lev)
        planes.push_back(plane);
 
        normal = RealVect(0,1,0);
-       center = RealVect(0,1.e-15,0);
+       center = RealVect(0,1e-15,0);
        plane = new PlaneIF(normal,center,true);
        planes.push_back(plane);
 
@@ -67,7 +67,7 @@ mfix_level::make_eb_geometry(int lev)
        planes.push_back(plane);
 
        normal = RealVect(1,0,0);
-       center = RealVect(1.e-15,0,0);
+       center = RealVect(1e-15,0,0);
        plane = new PlaneIF(normal,center,true);
        planes.push_back(plane);
 
@@ -86,8 +86,8 @@ mfix_level::make_eb_geometry(int lev)
     ebis->define(domain, RealVect::Zero, dx, *workshop);
 
     // set up ebfactory
-    int m_eb_basic_grow_cells = 5;
-    int m_eb_volume_grow_cells = 4;
+    int m_eb_basic_grow_cells = 2;
+    int m_eb_volume_grow_cells = 2;
     int m_eb_full_grow_cells = 2;
     EBSupport m_eb_support_level = EBSupport::full;
 
