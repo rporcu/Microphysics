@@ -132,11 +132,9 @@ contains
          particles(nrp+1:   ) = gparticles
 
          ! calculate forces from particle-wall collisions
-         call calc_dem_force_with_wall ( particles, fc, tow, subdt, &
+         call calc_dem_force_with_wall (particles, nrp+ngp, nrp, fc, tow, subdt, &
               flag, fglo, fghi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, &
-              apz, azlo, azhi, dx) 
-
-!                                        xlength, ylength, zlength, subdt )
+              apz, azlo, azhi, dx)
 
          ! calculate forces from particle-particle collisions
          call calc_force_dem_nl ( particles, nrp, nbor_list, size_nl, fc, tow, subdt, ncoll )
@@ -145,7 +143,7 @@ contains
          if ( call_usr ) call usr1_des
 
          ! update position and velocities
-         call des_euler_update ( rparticles, fc, tow, subdt )
+         call des_euler_update ( rparticles, nrp+ngp, nrp, fc, tow, subdt )
 
          if ( call_usr ) call usr2_des(nrp, rparticles );
 
@@ -160,19 +158,18 @@ contains
 
    end subroutine des_time_loop_ops_nl
 
-   subroutine des_euler_update ( particles, fc, tow, dt )
+   subroutine des_euler_update ( particles, np, nrp, fc, tow, dt )
 
       use constant,       only: gravity
       use particle_mod,   only: particle_t
 
-      type(particle_t), intent(inout)  :: particles(:)
-      real(c_real),     intent(inout)  :: fc(:,:), tow(:,:)
+      type(particle_t), intent(inout)  :: particles(np)
+      real(c_real),     intent(inout)  :: fc(np,3), tow(np,3)
       real(c_real),     intent(in   )  :: dt
-      integer                          :: p,np
+      integer,          intent(in   )  :: np, nrp
+      integer                          :: p
 
-      np = size (particles)
-
-      do p = 1, np
+      do p = 1, nrp
 
             particles(p) % vel     = particles(p) % vel   + dt * &
                 ( ( fc(p,:) +  particles(p) % drag ) / particles(p) % mass + gravity )

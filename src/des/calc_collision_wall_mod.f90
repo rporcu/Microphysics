@@ -12,233 +12,233 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 module calc_collision_wall
 
-   use amrex_fort_module, only : c_real => amrex_real
-   use iso_c_binding , only: c_int
+  use amrex_fort_module, only : c_real => amrex_real
+  use iso_c_binding , only: c_int
 
-   use discretelement, only: des_coll_model_enum
-   use discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
-   use discretelement, only: des_crossprdct
-   use discretelement, only: kn_w, kt_w, mew_w!, dtsolid
-   use error_manager, only: err_msg, flush_err_msg, init_err_msg
-   use param, only: small_number, zero
+  use discretelement, only: des_coll_model_enum
+  use discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
+  use discretelement, only: des_crossprdct
+  use discretelement, only: kn_w, kt_w, mew_w!, dtsolid
+  use error_manager, only: err_msg, flush_err_msg, init_err_msg
+  use param, only: small_number, zero
 
-   use stl_functions_des, only: closestptpointtriangle
+  use stl_functions_des, only: closestptpointtriangle
 
-   implicit none
-   private
+  implicit none
+  private
 
-   public :: calc_dem_force_with_wall
-   
+  public :: calc_dem_force_with_wall
+
 contains
 
-   subroutine calc_dem_force_with_wall ( particles, fc, tow, dtsolid, & 
+  subroutine calc_dem_force_with_wall ( particles, np, nrp, fc, tow, dtsolid, &
        flag, fglo, fghi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, &
-        apz, azlo, azhi, dx)  
+       apz, azlo, azhi, dx)
 
-     use bc,            only: cyclic_x, cyclic_y, cyclic_z
-     use param,         only: zero, one
-     use particle_mod,  only: particle_t
-     use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell
+    use bc,            only: cyclic_x, cyclic_y, cyclic_z
+    use param,         only: zero, one
+    use particle_mod,  only: particle_t
+    use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell
 
-     type(particle_t), intent(in   ), target :: particles(:)
-     real(c_real)  ,   intent(inout)         :: fc(:,:), tow(:,:)
-     real(c_real)  ,   intent(in   )         :: dtsolid 
+    integer, intent(in) :: np, nrp
 
-     integer, dimension(3), intent(in) :: axlo,axhi
-     integer, dimension(3), intent(in) :: aylo,ayhi
-     integer, dimension(3), intent(in) :: azlo,azhi
-     integer, dimension(3), intent(in) :: fglo,fghi
-     integer, dimension(3), intent(in) :: blo,bhi
+    type(particle_t), intent(in   ), target :: particles(np)
+    real(c_real)  ,   intent(inout)         :: fc(np,3), tow(np,3)
+    real(c_real)  ,   intent(in   )         :: dtsolid
 
-      integer,      intent(in) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
-      real(c_real), intent(in) :: bcent  (blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
-      real(c_real), intent(in) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
-      real(c_real), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
-      real(c_real), intent(in) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
-      real(c_real), intent(in) :: dx(3)
+    integer, dimension(3), intent(in) :: axlo,axhi
+    integer, dimension(3), intent(in) :: aylo,ayhi
+    integer, dimension(3), intent(in) :: azlo,azhi
+    integer, dimension(3), intent(in) :: fglo,fghi
+    integer, dimension(3), intent(in) :: blo,bhi
 
-      type(particle_t), pointer :: p
+    integer,      intent(in) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
+    real(c_real), intent(in) :: bcent  (blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
+    real(c_real), intent(in) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
+    real(c_real), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
+    real(c_real), intent(in) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
+    real(c_real), intent(in) :: dx(3)
 
-       real(c_real) :: lx, ly, lz
-       real(c_real) :: axm, axp, aym, ayp, azm, azp
-       real(c_real) :: speed, vxnorm, vynorm, vznorm, dotp
-       real(c_real) :: apnorm, apnorminv, anrmx, anrmy, anrmz
-       real(c_real) :: bcentx, bcenty, bcentz
-       real(c_real) :: sqrt_overlap
+    type(particle_t), pointer :: p
 
-      integer :: ll, nf, ii, jj, kk, i, j, k
+     real(c_real) :: lx, ly, lz
+     real(c_real) :: axm, axp, aym, ayp, azm, azp
+     real(c_real) :: speed, vxnorm, vynorm, vznorm, dotp
+     real(c_real) :: apnorm, apnorminv, anrmx, anrmy, anrmz
+     real(c_real) :: bcentx, bcenty, bcentz
+     real(c_real) :: sqrt_overlap
 
-      real(c_real) ::overlap_n
-      real(c_real) :: inv_dx(3)
+    integer :: ll, nf, ii, jj, kk, i, j, k
 
-      real(c_real) :: v_rel_trans_norm, distsq, radsq, closest_pt(3)
+    real(c_real) ::overlap_n
+    real(c_real) :: inv_dx(3)
 
-      ! local normal and tangential forces
-      real(c_real) :: normal(3), vrel_t(3), dist(3), distmod
-      real(c_real) :: ft(3), fn(3), overlap_t(3)
+    real(c_real) :: v_rel_trans_norm, radsq, closest_pt(3)
 
-      integer :: PHASELL
+    ! local normal and tangential forces
+    real(c_real) :: normal(3), vrel_t(3), dist(3), distmod
+    real(c_real) :: ft(3), fn(3), overlap_t(3)
 
-      real(c_real) :: tangent(3)
-      real(c_real) :: fnmd
-      ! local values used spring constants and damping coefficients
-      real(c_real) ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
+    integer :: PHASELL
 
-      real(c_real) :: MAG_OVERLAP_T
+    real(c_real) :: tangent(3)
+    real(c_real) :: fnmd
+    ! local values used spring constants and damping coefficients
+    real(c_real) ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
 
-      real(c_real) :: line_t
-      ! flag to tell if the orthogonal projection of sphere center to
-      ! extended plane detects an overlap
+    real(c_real) :: MAG_OVERLAP_T
 
-      real(c_real) :: distmod_temp
-      integer :: MAX_NF
-      real(c_real), dimension(3) :: POS_TMP
+    real(c_real) :: line_t
+    ! flag to tell if the orthogonal projection of sphere center to
+    ! extended plane detects an overlap
 
-      ! additional relative translational motion due to rotation
-      ! real(c_real) :: v_rot(3)
-      ! total relative velocity at contact point
-      ! real(c_real) :: vreltrans(3)
+    real(c_real) :: distmod_temp
+    integer :: MAX_NF
+    real(c_real), dimension(3) :: POS_TMP
 
-      ! Skip this routine if the system is fully periodic.
-      if (cyclic_x .and. cyclic_y .and. cyclic_z) return
+    ! additional relative translational motion due to rotation
+    ! real(c_real) :: v_rot(3)
+    ! total relative velocity at contact point
+    ! real(c_real) :: vreltrans(3)
 
-      inv_dx = 1.0d0 / dx
+    inv_dx = 1.0d0 / dx
 
-      do ll = 1, size( particles )
+    do ll = 1, nrp
 
-          p => particles(ll)
+       p => particles(ll)
 
-          lx = p%pos(1)*inv_dx(1)
-          ly = p%pos(2)*inv_dx(2)
-          lz = p%pos(3)*inv_dx(3)
+       lx = p%pos(1)*inv_dx(1)
+       ly = p%pos(2)*inv_dx(2)
+       lz = p%pos(3)*inv_dx(3)
 
-          i = floor(lx)
-          j = floor(ly)
-          k = floor(lz)
+       i = floor(lx)
+       j = floor(ly)
+       k = floor(lz)
 
-          distmod = 1.e20
+       distmod = 1.e20
 
-          do kk = k-1,k+1
+       do kk = k-1,k+1
           do jj = j-1,j+1
-          do ii = i-1,i+1
+             do ii = i-1,i+1
 
-             if (.not. is_regular_cell(flag(ii,jj,kk)) ) then
+                if (.not. is_regular_cell(flag(ii,jj,kk)) ) then
 
-               axm = apx(ii,  jj  , kk  )
-               axp = apx(ii+1,jj  , kk  )
-               aym = apy(ii,  jj  , kk  )
-               ayp = apy(ii,  jj+1, kk  )
-               azm = apz(ii,  jj  , kk  )
-               azp = apz(ii,  jj  , kk+1)
+                   axm = apx(ii,  jj  , kk  )
+                   axp = apx(ii+1,jj  , kk  )
+                   aym = apy(ii,  jj  , kk  )
+                   ayp = apy(ii,  jj+1, kk  )
+                   azm = apz(ii,  jj  , kk  )
+                   azp = apz(ii,  jj  , kk+1)
 
-               apnorm = sqrt((axm-axp)**2 + (aym-ayp)**2 + (azm-azp)**2)
+                   apnorm = sqrt((axm-axp)**2 + (aym-ayp)**2 + (azm-azp)**2)
 
-               apnorminv = 1.d0 / apnorm
-               anrmx = (axp-axm) * apnorminv   ! pointing to the wall
-               anrmy = (ayp-aym) * apnorminv
-               anrmz = (azp-azm) * apnorminv
+                   apnorminv = 1.d0 / apnorm
+                   anrmx = (axp-axm) * apnorminv   ! pointing to the wall
+                   anrmy = (ayp-aym) * apnorminv
+                   anrmz = (azp-azm) * apnorminv
 
-               ! convert bcent to global coordinate system centered at plo
-               bcentx = bcent(ii, jj, kk, 1)*dx(1) + (dble(ii) + 0.5d0)*dx(1)
-               bcenty = bcent(ii, jj, kk, 2)*dx(2) + (dble(jj) + 0.5d0)*dx(2)
-               bcentz = bcent(ii, jj, kk, 3)*dx(3) + (dble(kk) + 0.5d0)*dx(3)
+                   ! convert bcent to global coordinate system centered at plo
+                   bcentx = bcent(ii, jj, kk, 1)*dx(1) + (dble(ii) + 0.5d0)*dx(1)
+                   bcenty = bcent(ii, jj, kk, 2)*dx(2) + (dble(jj) + 0.5d0)*dx(2)
+                   bcentz = bcent(ii, jj, kk, 3)*dx(3) + (dble(kk) + 0.5d0)*dx(3)
 
-               ! Distance to boundary
-               distmod_temp = dabs( (p%pos(1) - bcentx) * anrmx + (p%pos(2) - bcenty) * anrmy + (p%pos(3) - bcentz) * anrmz )
+                   ! Distance to boundary
+                   distmod_temp = dabs( (p%pos(1) - bcentx) * anrmx + &
+                                        (p%pos(2) - bcenty) * anrmy + &
+                                        (p%pos(3) - bcentz) * anrmz )
 
-               ! Only keep the closest one
-               if (distmod_temp .lt. distmod) then  
+                   ! Only keep the closest one
+                   if (distmod_temp .lt. distmod) then
 
-                 distmod = distmod_temp
+                      distmod = distmod_temp
 
-                 ! To fit the convention of previous mfix
-                 normal(1) = -anrmx
-                 normal(2) = -anrmy
-                 normal(3) = -anrmz
+                      ! To fit the convention of previous mfix
+                      normal(1) = -anrmx
+                      normal(2) = -anrmy
+                      normal(3) = -anrmz
 
-               end if ! if dist lt distmod
+                   end if ! if dist lt distmod
 
-             end if ! if .not. regular
+                end if ! if .not. regular
 
+             end do
           end do
-          end do
-          end do
+       end do
 
-          if (distmod .lt. p%radius) then
 
-               distsq = distmod*distmod
+       if (distmod .lt. p%radius) then
 
-               ! Calculate the particle/wall overlap.
-               overlap_n = particles(ll) % radius - distmod
+          ! Calculate the particle/wall overlap.
+          overlap_n = particles(ll) % radius - distmod
 
-               ! *****************************************************************************
-               ! Calculate the translational relative velocity
+          ! *****************************************************************************
+          ! Calculate the translational relative velocity
 
-               call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normal, distmod, particles)
+          call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normal, distmod, particles)
 
-               ! subroutine cfrelvel_wall (ll, vrn, vrt, norm, dist, particles )
-               ! *****************************************************************************
-               ! total relative velocity + rotational contribution
-               ! v_rot = distmod * particles(ll) % omega
-               ! vreltrans(:) =  particles(ll) % vel  + des_crossprdct(v_rot, normal)
+          ! subroutine cfrelvel_wall (ll, vrn, vrt, norm, dist, particles )
+          ! *****************************************************************************
+          ! total relative velocity + rotational contribution
+          ! v_rot = distmod * particles(ll) % omega
+          ! vreltrans(:) =  particles(ll) % vel  + des_crossprdct(v_rot, normal)
 
-               ! magnitude of normal component of relative velocity (scalar)
-               ! v_rel_trans_norm = dot_product(vreltrans,normal)
+          ! magnitude of normal component of relative velocity (scalar)
+          ! v_rel_trans_norm = dot_product(vreltrans,normal)
 
-               ! total relative translational slip velocity at the contact point
-               ! equation (8) in tsuji et al. 1992
-               ! vrel_t(:) =  vreltrans(:) - v_rel_trans_norm*normal(:)
-               ! *****************************************************************************
+          ! total relative translational slip velocity at the contact point
+          ! equation (8) in tsuji et al. 1992
+          ! vrel_t(:) =  vreltrans(:) - v_rel_trans_norm*normal(:)
+          ! *****************************************************************************
 
-               ! Calculate the spring model parameters.
-               phaseLL = particles(ll) % phase
+          ! Calculate the spring model parameters.
+          phaseLL = particles(ll) % phase
 
-               ! Hertz vs linear spring-dashpot contact model
-               if ( DES_COLL_MODEL_ENUM == HERTZIAN ) then
-                  sqrt_overlap = sqrt(overlap_n)
-                  KN_DES_W     = hert_kwn(phaseLL)*sqrt_overlap
-                  KT_DES_W     = hert_kwt(phaseLL)*sqrt_overlap
-                  sqrt_overlap = SQRT(sqrt_overlap)
-                  ETAN_DES_W   = DES_ETAN_WALL(phaseLL)*sqrt_overlap
-                  ETAT_DES_W   = DES_ETAT_WALL(phaseLL)*sqrt_overlap
-               else
-                  KN_DES_W     = KN_W
-                  KT_DES_W     = KT_W
-                  ETAN_DES_W   = DES_ETAN_WALL(phaseLL)
-                  ETAT_DES_W   = DES_ETAT_WALL(phaseLL)
-               end if
+          ! Hertz vs linear spring-dashpot contact model
+          if ( DES_COLL_MODEL_ENUM == HERTZIAN ) then
+             sqrt_overlap = sqrt(overlap_n)
+             KN_DES_W     = hert_kwn(phaseLL)*sqrt_overlap
+             KT_DES_W     = hert_kwt(phaseLL)*sqrt_overlap
+             sqrt_overlap = SQRT(sqrt_overlap)
+             ETAN_DES_W   = DES_ETAN_WALL(phaseLL)*sqrt_overlap
+             ETAT_DES_W   = DES_ETAT_WALL(phaseLL)*sqrt_overlap
+          else
+             KN_DES_W     = KN_W
+             KT_DES_W     = KT_W
+             ETAN_DES_W   = DES_ETAN_WALL(phaseLL)
+             ETAT_DES_W   = DES_ETAT_WALL(phaseLL)
+          end if
 
-               ! Calculate the normal contact force
-               FN(:) = -(KN_DES_W * overlap_n  + ETAN_DES_W * V_REL_TRANS_NORM) * normal(:)
-!              print *,'Vertical dist / force ',distmod, fn(3)
+          ! Calculate the normal contact force
+          FN(:) = -(KN_DES_W * overlap_n  + ETAN_DES_W * V_REL_TRANS_NORM) * normal(:)
+          ! print *,'Vertical dist / force ',distmod, fn(3)
 
-               ! Calculate the tangential displacement.
-               overlap_t(:) = dtsolid*vrel_t(:)
-               mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t))
+          ! Calculate the tangential displacement.
+          overlap_t(:) = dtsolid*vrel_t(:)
+          mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t))
 
-               ! Check for Coulombs friction law and limit the maximum value of the
-               ! tangential force on a particle in contact with a wall.
-               if ( MAG_OVERLAP_T > 0.0 ) then
-                  ! Max force before the on set of frictional slip.
-                  FNMD = MEW_W*sqrt(dot_product(FN,FN))
-                  ! Direction of tangential force.
-                  tangent = OVERLAP_T/MAG_OVERLAP_T
-                  FT = -FNMD * tangent
-               else
-                  FT = 0.0
-               end if
+          ! Check for Coulombs friction law and limit the maximum value of the
+          ! tangential force on a particle in contact with a wall.
+          if ( MAG_OVERLAP_T > 0.0 ) then
+             ! Max force before the on set of frictional slip.
+             FNMD = MEW_W*sqrt(dot_product(FN,FN))
+             ! Direction of tangential force.
+             tangent = OVERLAP_T/MAG_OVERLAP_T
+             FT = -FNMD * tangent
+          else
+             FT = 0.0
+          end if
 
-               ! Add the collision force to the total forces acting on the particle.
-               FC(LL,:) = FC(LL,:) + FN(:) + FT(:)
+          ! Add the collision force to the total forces acting on the particle.
+          FC(LL,:) = FC(LL,:) + FN(:) + FT(:)
 
-               ! Add the torque force to the total torque acting on the particle.
-               TOW(LL,:) = TOW(LL,:) + distmod*DES_CROSSPRDCT(normal,FT)
+          ! Add the torque force to the total torque acting on the particle.
+          TOW(LL,:) = TOW(LL,:) + distmod*DES_CROSSPRDCT(normal,FT)
 
-           end if ! if test on (d < radius)
+       end if ! if test on (d < radius)
 
-      end do ! loop over particles
+    end do ! loop over particles
 
-   end subroutine calc_dem_force_with_wall
+  end subroutine calc_dem_force_with_wall
 
 
    !----------------------------------------------------------------------!
@@ -292,5 +292,5 @@ contains
 
    end subroutine cfrelvel_wall
 
-   
+
 end module CALC_COLLISION_WALL
