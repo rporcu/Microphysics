@@ -4,12 +4,18 @@
 #include <AMReX_IntersectionIF.H>
 
 #include <mfix_level.H>
+#include <mfix_F.H>
 
 void
 mfix_level::make_eb_geometry(int lev)
 {
     bool make_sphere = false;
-    bool make_planes = true;
+
+    bool make_planes = false;
+    bool mfix_walls  = true;
+
+    // bool make_planes = true;
+    // bool mfix_walls  = false;
 
     if (make_sphere && make_planes)
        amrex::Abort("Need to choose between planes and sphere");
@@ -30,13 +36,6 @@ mfix_level::make_eb_geometry(int lev)
        SphereIF sphere(radius, center, insideRegular);
        workshop = new GeometryShop(sphere);
     }
-
-#if 0
-    RealVect normal = RealVect(0,1,0);
-    RealVect center = RealVect(0,1e-15,0);
-    PlaneIF plane(normal,center,true);
-    workshop = new GeometryShop(plane);
-#else
 
     // Set up a plane
     if (make_planes)
@@ -91,7 +90,29 @@ mfix_level::make_eb_geometry(int lev)
        IntersectionIF all_planes(planes);
        workshop = new GeometryShop(all_planes);
     }
-#endif
+
+    // Set up a plane
+    if (mfix_walls)
+      {
+        int exists;
+        RealVect normal, center;
+        PlaneIF* plane;
+        Vector<BaseIF*> planes;
+
+        for (int i = 1; i <= 500; i++) {
+          mfix_get_walls(&i, &exists, &normal, &center);
+          if(exists){
+            std::cout << "Normal " << normal << std::endl;
+            std::cout << "Center " << center << std::endl;
+            plane = new PlaneIF(normal,center,true);
+            planes.push_back(plane);
+          }
+        }
+        IntersectionIF all_planes(planes);
+        workshop = new GeometryShop(all_planes);
+      }
+
+
 
     // This part is generic once you have defined the workshop
     EBIndexSpace* ebis = AMReX_EBIS::instance();

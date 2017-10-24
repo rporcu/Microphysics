@@ -2,6 +2,7 @@
 
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
+#include "AMReX_RealVect.H"
 
 #ifdef BL_SINGLE_PRECISION_PARTICLES
 typedef float amrex_particle_real;
@@ -375,7 +376,7 @@ extern "C"
 
     void des_time_loop_ops_nl( const int* n_do, const int* nrp,  void* rparticles,
              const int* ngp,  void* gparticles, const int* size_nl, const int* nbor_list,
-             amrex::Real* subdt, const amrex::Real* dx, 
+             amrex::Real* subdt, const amrex::Real* dx,
              amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
              int* ncoll, amrex::Real* stime,
              const void* flag, const int* fglo, const int* fghi,
@@ -393,6 +394,8 @@ extern "C"
 
     void mfix_particle_generator_prop( const int* nrp,  void* particles);
 
+  void mfix_get_walls(int* bcv, int* exists,
+                      amrex::RealVect* normal, amrex::RealVect* center);
 
     void mfix_usr0();
 

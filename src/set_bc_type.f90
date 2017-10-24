@@ -210,4 +210,118 @@ module set_bc_type_module
 
    end subroutine set_bc_type
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
+!                                                                      C
+!  Subroutine: mfix_get_walls                                          C
+!                                                                      C
+!  Author: J. Musser                                  Date: 05-FEB-17  C
+!                                                                      C
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+   subroutine mfix_get_walls(bcv, exists, normal, center) &
+        bind(c,name='mfix_get_walls')
+
+      use bc, only: bc_defined, bc_type, bc_plane
+      use bc, only: nsw_, fsw_, psw_
+
+      use bc, only: bc_x_w, bc_y_s, bc_z_b
+      use bc, only: bc_x_e, bc_y_n, bc_z_t
+
+      implicit none
+
+      integer(c_int), intent(in   ) :: bcv
+      integer(c_int), intent(  out) :: exists
+
+      real(c_real),   intent(  out) :: normal(3), center(3)
+
+      real(c_real) :: x, y, z
+
+      if (bc_defined(bcv)) then
+         exists = 1;
+
+         select case (trim(bc_type(bcv)))
+
+         case('FREE_SLIP_WALL','FSW', &
+              'NO_SLIP_WALL'  ,'NSW', &
+              'PAR_SLIP_WALL' ,'PSW')
+
+            select case (trim(bc_plane(bcv)))
+            case('E');
+               write(*,*)'setting BC', bcv,'E'
+               x = bc_x_w(bcv)
+               y = bc_y_s(bcv) + 0.5d0*(bc_y_s(bcv) + bc_y_n(bcv))
+               z = bc_z_b(bcv) + 0.5d0*(bc_z_b(bcv) + bc_z_t(bcv))
+
+               normal = (/ 1.0d0, 0.0d0, 0.0d0/)
+            case('W');
+               write(*,*)'setting BC', bcv,'W'
+               x = bc_x_w(bcv)
+               y = bc_y_s(bcv) + 0.5d0*(bc_y_s(bcv) + bc_y_n(bcv))
+               z = bc_z_b(bcv) + 0.5d0*(bc_z_b(bcv) + bc_z_t(bcv))
+
+               normal = (/-1.0d0, 0.0d0, 0.0d0/)
+            case('N');
+               write(*,*)'setting BC', bcv,'N'
+               x = bc_x_w(bcv) + 0.5d0*(bc_x_w(bcv) + bc_x_e(bcv))
+               y = bc_y_s(bcv)
+               z = bc_z_b(bcv) + 0.5d0*(bc_z_b(bcv) + bc_z_t(bcv))
+
+               normal = (/ 0.0d0, 1.0d0, 0.0d0/)
+            case('S');
+               write(*,*)'setting BC', bcv,'S'
+               x = bc_x_w(bcv) + 0.5d0*(bc_x_w(bcv) + bc_x_e(bcv))
+               y = bc_y_s(bcv)
+               z = bc_z_b(bcv) + 0.5d0*(bc_z_b(bcv) + bc_z_t(bcv))
+
+               normal = (/ 0.0d0,-1.0d0, 0.0d0/)
+            case('T');
+               write(*,*)'setting BC', bcv,'T'
+               x = bc_x_w(bcv) + 0.5d0*(bc_x_w(bcv) + bc_x_e(bcv))
+               y = bc_y_s(bcv) + 0.5d0*(bc_y_s(bcv) + bc_y_n(bcv))
+               z = bc_z_b(bcv)
+
+               normal = (/ 0.0d0, 0.0d0, 1.0d0/)
+            case('B');
+               write(*,*)'setting BC', bcv,'B'
+               x = bc_x_w(bcv) + 0.5d0*(bc_x_w(bcv) + bc_x_e(bcv))
+               y = bc_y_s(bcv) + 0.5d0*(bc_y_s(bcv) + bc_y_n(bcv))
+               z = bc_z_b(bcv)
+
+               normal = (/ 0.0d0, 0.0d0,-1.0d0/)
+            end select
+
+         end select
+
+         center = (/ x, y, z/)
+
+      else
+
+         exists = 0;
+      endif
+
+
+
+    end subroutine mfix_get_walls
+
+
+
    end module set_bc_type_module
