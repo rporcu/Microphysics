@@ -255,12 +255,12 @@ module set_bc_type_module
 
       real(c_real) :: x, y, z
 
-      real(c_real), parameter :: offset = 1.0d-15
+      real(c_real), parameter :: offset = 1.0d-18
+
+      exists = 0;
 
       if (bc_defined(bcv)) then
 
-         write(*,*) ' '
-         exists = 1;
 
          select case (trim(bc_type(bcv)))
 
@@ -268,9 +268,8 @@ module set_bc_type_module
               'NO_SLIP_WALL'  ,'NSW', &
               'PAR_SLIP_WALL' ,'PSW')
 
-            x = 0.0d0
-            y = 0.0d0
-            z = 0.0d0
+            write(*,*) ' '
+            exists = 1;
 
             select case (trim(bc_plane(bcv)))
             case('E');
@@ -305,14 +304,9 @@ module set_bc_type_module
                normal = (/ 0.0d0, 0.0d0,-1.0d0/)
             end select
 
+            write(*,*)'setting BC', bcv, bc_type(bcv)
+            center = (/ x, y, z/)
          end select
-
-         write(*,*)'setting BC', bcv, bc_type(bcv)
-         center = (/ x, y, z/)
-
-      else
-
-         exists = 0;
       endif
 
 

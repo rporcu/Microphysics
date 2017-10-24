@@ -35,7 +35,6 @@ contains
        flag, fglo, fghi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, &
        apz, azlo, azhi, dx)
 
-    use bc,            only: cyclic_x, cyclic_y, cyclic_z
     use param,         only: zero, one
     use particle_mod,  only: particle_t
     use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell
@@ -63,20 +62,19 @@ contains
 
      real(c_real) :: lx, ly, lz
      real(c_real) :: axm, axp, aym, ayp, azm, azp
-     real(c_real) :: speed, vxnorm, vynorm, vznorm, dotp
      real(c_real) :: apnorm, apnorminv, anrmx, anrmy, anrmz
      real(c_real) :: bcentx, bcenty, bcentz
      real(c_real) :: sqrt_overlap
 
-    integer :: ll, nf, ii, jj, kk, i, j, k
+    integer :: ll, ii, jj, kk, i, j, k
 
     real(c_real) ::overlap_n
     real(c_real) :: inv_dx(3)
 
-    real(c_real) :: v_rel_trans_norm, radsq, closest_pt(3)
+    real(c_real) :: v_rel_trans_norm
 
     ! local normal and tangential forces
-    real(c_real) :: normal(3), vrel_t(3), dist(3), distmod
+    real(c_real) :: normal(3), vrel_t(3), distmod
     real(c_real) :: ft(3), fn(3), overlap_t(3)
 
     integer :: PHASELL
@@ -88,18 +86,7 @@ contains
 
     real(c_real) :: MAG_OVERLAP_T
 
-    real(c_real) :: line_t
-    ! flag to tell if the orthogonal projection of sphere center to
-    ! extended plane detects an overlap
-
     real(c_real) :: distmod_temp
-    integer :: MAX_NF
-    real(c_real), dimension(3) :: POS_TMP
-
-    ! additional relative translational motion due to rotation
-    ! real(c_real) :: v_rot(3)
-    ! total relative velocity at contact point
-    ! real(c_real) :: vreltrans(3)
 
     inv_dx = 1.0d0 / dx
 
