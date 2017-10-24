@@ -19,10 +19,10 @@ mfix_level::make_eb_geometry(int lev)
 
     Real size = 1.0;
 
-    GeometryShop* workshop;  
+    GeometryShop* workshop;
 
     // Set up our sphere
-    if (make_sphere) 
+    if (make_sphere)
     {
        Real radius = 0.25*size;
        RealVect center = 0.5*size*RealVect::Unit;
@@ -39,7 +39,7 @@ mfix_level::make_eb_geometry(int lev)
 #else
 
     // Set up a plane
-    if (make_planes) 
+    if (make_planes)
     {
        RealVect normal, center;
        PlaneIF* plane;
@@ -47,20 +47,22 @@ mfix_level::make_eb_geometry(int lev)
        planes.resize(0);
 
        if (!geom[lev].isPeriodic(0))
-       { 
-          normal = RealVect(0,0,1);
-          center = RealVect(0,0,1e-15);
-          plane = new PlaneIF(normal,center,true);
-          planes.push_back(plane);
+         {
+           // std::cout << "make x walls" << std::endl;
+           normal = RealVect(1,0,0);
+           center = RealVect(1e-15,0,0);
+           plane = new PlaneIF(normal,center,true);
+           planes.push_back(plane);
 
-          normal = RealVect(0,0,-1);
-          center = RealVect(0,0,0.9999999999999);
-          plane = new PlaneIF(normal,center,true);
-          planes.push_back(plane);
-       } 
+           normal = RealVect(-1,0,0);
+           center = RealVect(0.9999999999999,0,0);
+           plane = new PlaneIF(normal,center,true);
+           planes.push_back(plane);
+         }
 
        if (!geom[lev].isPeriodic(1))
-       { 
+       {
+         // std::cout << "make y walls" << std::endl;
           normal = RealVect(0,1,0);
           center = RealVect(0,1e-15,0);
           plane = new PlaneIF(normal,center,true);
@@ -70,20 +72,21 @@ mfix_level::make_eb_geometry(int lev)
           center = RealVect(0,0.9999999999999,0);
           plane = new PlaneIF(normal,center,true);
           planes.push_back(plane);
-       } 
+       }
 
        if (!geom[lev].isPeriodic(2))
-       { 
-          normal = RealVect(1,0,0);
-          center = RealVect(1e-15,0,0);
-          plane = new PlaneIF(normal,center,true);
-          planes.push_back(plane);
+         {
+           // std::cout << "make z walls" << std::endl;
+           normal = RealVect(0,0,1);
+           center = RealVect(0,0,1e-15);
+           plane = new PlaneIF(normal,center,true);
+           planes.push_back(plane);
 
-          normal = RealVect(-1,0,0);
-          center = RealVect(0.9999999999999,0,0);
-          plane = new PlaneIF(normal,center,true);
-          planes.push_back(plane);
-       } 
+           normal = RealVect(0,0,-1);
+           center = RealVect(0,0,0.9999999999999);
+           plane = new PlaneIF(normal,center,true);
+           planes.push_back(plane);
+         }
 
        IntersectionIF all_planes(planes);
        workshop = new GeometryShop(all_planes);
