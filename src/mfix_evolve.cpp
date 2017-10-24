@@ -7,7 +7,7 @@
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
-mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
+mfix_level::Evolve(int lev, int nstep, int set_normg, Real &dt, Real& prev_dt,
                    Real time, Real normg)
 {
 

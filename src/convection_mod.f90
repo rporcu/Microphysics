@@ -61,7 +61,7 @@ contains
                u_w = edge_velocity ( ug(i-1,j,k), ug(i,j,k)   )
 
                ududx = ug(i,j,k) * ( u_e - u_w ) * idx
-
+               
                ! vdu/dy
                v_n = half * ( vg(i,j+1,k) + vg(i-1,j+1,k) )
                v_s = half * ( vg(i,j,k)   + vg(i-1,j,k)   )
@@ -79,13 +79,12 @@ contains
                wdudz = half * ( w_t + w_b ) * dudz
 
                ! Assemble terms
-               ugradu_x(i,j,k) = ududx + vdudy + wdudz
+               ugradu_x(i,j,k) = ududx  + vdudy + wdudz
                
             end do
          end do
       end do
 
-      
    end subroutine compute_ugradu_x
 
 
@@ -221,11 +220,13 @@ contains
                
                ! Assemble terms
                ugradu_z(i,j,k) = udwdx + vdwdy + wdwdz
-               
+
+               !print*, udwdx, vdwdy, wdwdz
             end do
          end do
       end do
 
+      print*, "Maxval ugradu_z = ", maxval(ugradu_z(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)))
       
    end subroutine compute_ugradu_z
 

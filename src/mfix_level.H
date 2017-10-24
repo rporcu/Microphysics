@@ -45,7 +45,7 @@ public:
     void RegridOnRestart (int lev);
 
     void Evolve(int lev, int nstep, int set_normg,
-                       Real dt, Real& prev_dt, Real time, Real normg);
+                       Real& dt, Real& prev_dt, Real time, Real normg);
 
     void usr3 (int lev);
 
@@ -141,7 +141,7 @@ private:
 		      Real dt, Real& prev_dt, Real time, Real normg);
 
     void EvolveFluidProjection  (int lev, int nstep, int set_normg,
-				 Real dt, Real& prev_dt, Real time, Real normg);
+				 Real& dt, Real& prev_dt, Real time, Real normg);
 
     // Projection-related methods
     //void solve_poisson_equation ( MultiFab& b, MultiFab& phi, MultiFab& rhs );
@@ -154,7 +154,9 @@ private:
     void apply_pressure_correction ( int lev , amrex::Real dt );
     
     void init_tests_projection (int lev);
-	
+
+    void check_for_nans (int lev);
+    
     amrex::Real compute_dt (int lev);
 // End of projection-related methods
 

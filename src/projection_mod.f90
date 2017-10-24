@@ -37,7 +37,7 @@ contains
       ! real(ar),       intent(in   ) :: dragumax, dragvmax, dragwmax
       real(ar),       intent(in   ) :: mumax, romin
       real(ar),       intent(in   ) :: dx(3)
-      integer(c_int), intent(  out) :: dt
+      real(ar),       intent(inout) :: dt
 
       real(ar)                      :: uodx, vody, wodz
       real(ar)                      :: odx, ody, odz
@@ -84,8 +84,12 @@ contains
 
       ! dt_p  = min ( dt_px, dt_py, dt_pz )
 
+      print*, "umax, vmax, wmax = ", umax, vmax, wmax
+      print*, "uodx, uody, uodz = ", uodx, vody, wodz
+      print*, "dx               = ", dx
+      print*, "dt, dt_c         = ", dt, dt_c
 
-      dt = min ( dt_c, dt_v, dt_g )
+      dt = min ( dt, dt_c ) !, dt_v, dt_g )
 
    contains
 
@@ -148,8 +152,8 @@ contains
                ! Remeber the minus sign between the two parts
                f    = f_gds_i(i,j,k) * u_i(i,j,k) - drag_i(i,j,k)
                
-               rhs  = - ugradu_i(i,j,k) + gravity(dir)  + &
-                     & irho * ( divtau_i(i,j,k) ) !+ f )
+               rhs  = - ugradu_i(i,j,k) ! + gravity(dir)  + &
+                     ! & irho * ( divtau_i(i,j,k) ) !+ f )
 
                u_i_star(i,j,k) = u_i(i,j,k) + dt * rhs      
               
@@ -197,11 +201,11 @@ contains
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
-               rhs(i,j,k) =  -  ( ( u_g(i+1,j,k) - u_g(i,j,k) ) * odtdx + &
+               rhs(i,j,k) =     ( ( u_g(i+1,j,k) - u_g(i,j,k) ) * odtdx + &
                                   ( v_g(i,j+1,k) - v_g(i,j,k) ) * odtdy + &
                                   ( w_g(i,j,k+1) - w_g(i,j,k) ) * odtdz )
                
-               sum_rhsdv = sum_rhsdv + rhs(i,j,k) !* dv
+               sum_rhsdv = sum_rhsdv + rhs(i,j,k) * dv
             end do
          end do
       end do
