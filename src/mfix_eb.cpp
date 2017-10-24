@@ -46,35 +46,44 @@ mfix_level::make_eb_geometry(int lev)
        Vector<BaseIF*> planes;
        planes.resize(0);
 
-       normal = RealVect(0,0,1);
-       center = RealVect(0,0,1e-15);
-       plane = new PlaneIF(normal,center,true);
-       planes.push_back(plane);
+       if (!geom[lev].isPeriodic(0))
+       { 
+          normal = RealVect(0,0,1);
+          center = RealVect(0,0,1e-15);
+          plane = new PlaneIF(normal,center,true);
+          planes.push_back(plane);
 
-       normal = RealVect(0,0,-1);
-       center = RealVect(0,0,0.9999999999999);
-       plane = new PlaneIF(normal,center,true);
-       planes.push_back(plane);
+          normal = RealVect(0,0,-1);
+          center = RealVect(0,0,0.9999999999999);
+          plane = new PlaneIF(normal,center,true);
+          planes.push_back(plane);
+       } 
 
-       normal = RealVect(0,1,0);
-       center = RealVect(0,1e-15,0);
-       plane = new PlaneIF(normal,center,true);
-       planes.push_back(plane);
+       if (!geom[lev].isPeriodic(1))
+       { 
+          normal = RealVect(0,1,0);
+          center = RealVect(0,1e-15,0);
+          plane = new PlaneIF(normal,center,true);
+          planes.push_back(plane);
 
-       normal = RealVect(0,-1,0);
-       center = RealVect(0,0.9999999999999,0);
-       plane = new PlaneIF(normal,center,true);
-       planes.push_back(plane);
+          normal = RealVect(0,-1,0);
+          center = RealVect(0,0.9999999999999,0);
+          plane = new PlaneIF(normal,center,true);
+          planes.push_back(plane);
+       } 
 
-       normal = RealVect(1,0,0);
-       center = RealVect(1e-15,0,0);
-       plane = new PlaneIF(normal,center,true);
-       planes.push_back(plane);
+       if (!geom[lev].isPeriodic(2))
+       { 
+          normal = RealVect(1,0,0);
+          center = RealVect(1e-15,0,0);
+          plane = new PlaneIF(normal,center,true);
+          planes.push_back(plane);
 
-       normal = RealVect(-1,0,0);
-       center = RealVect(0.9999999999999,0,0);
-       plane = new PlaneIF(normal,center,true);
-       planes.push_back(plane);
+          normal = RealVect(-1,0,0);
+          center = RealVect(0.9999999999999,0,0);
+          plane = new PlaneIF(normal,center,true);
+          planes.push_back(plane);
+       } 
 
        IntersectionIF all_planes(planes);
        workshop = new GeometryShop(all_planes);
