@@ -66,7 +66,7 @@
          10x,'DES_EN_INPUT = ',T30,G12.4,/&
          10x,'DES_EN_WALL_INPUT = ',T30,G12.4)
 
- 1200 FORMAT(2/11X,'Time',17X,A,12X,A,'_MFIX',10X,'%REL ERR')
+ 1200 FORMAT(2/11X,'Time',17X,A,12X,A,'_MFIX')
 
 
       CLOSE(fUNIT)

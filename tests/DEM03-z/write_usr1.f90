@@ -39,7 +39,7 @@ subroutine write_des_out(lTime, np, particles, length)
    use usr,               only: gy1, gy2, gz1, gz2, rk4_v4
    use param,             only: undefined, is_defined
    use particle_mod,      only: particle_t
-   
+
    IMPLICIT NONE
 
    ! Passed variables
@@ -47,7 +47,7 @@ subroutine write_des_out(lTime, np, particles, length)
    integer,          intent(in   ) ::  np
    real(c_real),     intent(in   ) :: ltime, length
    type(particle_t), intent(inout) :: particles(np)
-   
+
    ! Local variables
    !---------------------------------------------------------------------//
    ! file unit for heat transfer data
@@ -93,11 +93,11 @@ subroutine write_des_out(lTime, np, particles, length)
 
 
    ! Write the results to a file.
-   WRITE(uPos1,"(3x,F15.8,5X,F15.8,2(3x,F15.8))") lTime, gz1,   &
-        particles(1) % pos(3), (ABS(gz1 - particles(1) % pos(3))/ABS(gz1))*100
+   WRITE(uPos1,"(3x,F15.8,5X,F15.8,3x,F15.8)") lTime, gz1,   &
+        particles(1) % pos(3)
 
-   WRITE(uPos2,"(3x,F15.8,5X,F15.8,2(3x,F15.8))") lTime, gz2,   &
-        particles(2) % pos(3), (abs(gz2 - particles(2) % pos(3))/abs(gz1))*100
+   WRITE(uPos2,"(3x,F15.8,5X,F15.8,3x,F15.8)") lTime, gz2,   &
+        particles(2) % pos(3)
 
    CLOSE(uPos1)
    CLOSE(uPos2)

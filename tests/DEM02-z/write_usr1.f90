@@ -50,8 +50,6 @@
 !---------------------------------------------------------------------//
 ! file unit for heat transfer data
       INTEGER, PARAMETER :: uHeight = 2030
-! Absolute relative percent differnece with hard sphere model.
-      real(c_real) :: apDiff
 ! Max height of hard-sphere bounce
       real(c_real) :: maxHS
 ! Loop counter
@@ -59,25 +57,19 @@
 ! Save the last location of the loop counter
       integer, save :: last_k = 0
 
-
-
 ! Open the files.
       OPEN(UNIT=uHeight,FILE='POST_HEIGHT.dat', &
          POSITION="APPEND",STATUS='OLD')
 
-
-! Loop through the bounces and output the results.
+      ! Loop through the bounces and output the results.
       do k=last_k, BOUNCE_COUNT
 
 ! Calculate the hard sphere max bounce height.
          maxHS = MAX_HEIGHT_HS(k)
 
-! Calculate the absolute relative percent difference.
-         apDiff = (abs(MAX_HEIGHT(k) - maxHS)/abs(maxHS))*1.0d2
-
 ! Write the results to a file.
-         WRITE(uHeight,"(3x,I2,5X,F15.8,2(3x,F15.8))") k, &
-            maxHS, MAX_HEIGHT(k), apDiff
+         WRITE(uHeight,"(3x,I2,5X,F15.8,3x,F15.8)") k, &
+            maxHS, MAX_HEIGHT(k)
 
       enddo
       last_k = k
