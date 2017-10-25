@@ -38,7 +38,8 @@ subroutine mfix_get_walls(bcv, exists, normal, center) &
 
      case('FREE_SLIP_WALL','FSW', &
           'NO_SLIP_WALL'  ,'NSW', &
-          'PAR_SLIP_WALL' ,'PSW')
+          'PAR_SLIP_WALL' ,'PSW', &
+          'MASS_INFLOW'   ,'MI')
 
         write(*,*) ' '
         exists = 1;
