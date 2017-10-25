@@ -58,6 +58,10 @@ if (NOT ENABLE_PARTICLES)
    message ( FATAL_ERROR "AMReX must be configured with -DENABLE_PARTICLES=1" )
 endif ()
 
+if (NOT ENABLE_EB)
+   message ( FATAL_ERROR "AMReX must be configured with -DENABLE_EB=1" )
+endif ()
+
 # Check and print (if not superbuild) amrex options
 if (NOT ENABLE_FBASELIB)
    message ( FATAL_ERROR "AMReX must be configured with -DENABLE_FBASELIB=1" )
