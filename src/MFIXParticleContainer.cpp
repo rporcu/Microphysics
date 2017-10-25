@@ -307,9 +307,10 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     int ncoll_total = 0;
 
-    int n    = 0;
-    int n_do = 1;
+    Vector<Real> tow;
+    Vector<Real> fc;
 
+    int n = 0;
     while (n < nsubsteps)
     {
       int ncoll = 0;
@@ -337,39 +338,51 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          int size_ng = neighbors[index].size() / pdata_size;
          int size_nl = neighbor_list[index].size();
 
-         std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
-         const MultiFab* volfrac;
-         const MultiCutFab* bndrycent;
-
-         //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
-         MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
-
-         const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
-         const auto& flag = sfab.getEBCellFlagFab();
-
-         areafrac  =  ebfactory->getAreaFrac();
-         volfrac   = &(ebfactory->getVolFrac());
-         bndrycent = &(ebfactory->getBndryCent());
+         tow.resize((np+size_ng)*3);
+          fc.resize((np+size_ng)*3);
 
          BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-         des_time_loop_ops_nl ( &n_do, &np, particles, &size_ng,
+         if (Geom(0).isAllPeriodic()) 
+         {
+
+            des_time_loop_per ( &np, particles, &size_ng,
                                 neighbors[index].dataPtr(),
                                 &size_nl, neighbor_list[index].dataPtr(),
-                                &subdt, dx,
-                                &xlen, &ylen, &zlen, &ncoll, &stime,
-                                flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                                (*bndrycent)[pti].dataPtr(),
-                                (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
-                                (*areafrac[0])[pti].dataPtr(),
-                                (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-                                (*areafrac[1])[pti].dataPtr(),
-                                (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-                                (*areafrac[2])[pti].dataPtr(),
-                                (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
+                                tow.dataPtr(), fc.dataPtr(), &subdt, dx,
+                                &xlen, &ylen, &zlen, &ncoll, &stime);
+         } else {
 
+            std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+            const MultiCutFab* bndrycent;
+
+            //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
+            MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
+   
+            const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
+            const auto& flag = sfab.getEBCellFlagFab();
+
+            areafrac  =  ebfactory->getAreaFrac();
+            bndrycent = &(ebfactory->getBndryCent());
+
+            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+            des_time_loop (  &np, particles, &size_ng,
+                            neighbors[index].dataPtr(),
+                            &size_nl, neighbor_list[index].dataPtr(),
+                            tow.dataPtr(), fc.dataPtr(), &subdt, dx,
+                            &xlen, &ylen, &zlen, &ncoll, &stime,
+                            flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                            (*bndrycent)[pti].dataPtr(),
+                            (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
+                            (*areafrac[0])[pti].dataPtr(),
+                            (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
+                            (*areafrac[1])[pti].dataPtr(),
+                            (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
+                            (*areafrac[2])[pti].dataPtr(),
+                            (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
+         }
          BL_PROFILE_VAR_STOP(des_time_loop);
       }
-      n += n_do;
+      n += 1;
 
       if (debug) {
          ncoll_total +=  ncoll;

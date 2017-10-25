@@ -374,8 +374,9 @@ extern "C"
 
     void des_init_time_loop ( const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt );
 
-    void des_time_loop_ops_nl( const int* n_do, const int* nrp,  void* rparticles,
+    void des_time_loop ( const int* nrp,  void* rparticles,
              const int* ngp,  void* gparticles, const int* size_nl, const int* nbor_list,
+             amrex::Real* tow, amrex::Real* fc, 
              amrex::Real* subdt, const amrex::Real* dx,
              amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
              int* ncoll, amrex::Real* stime,
@@ -384,6 +385,13 @@ extern "C"
              const amrex_real* ax, const int* axlo, const int* axhi,
              const amrex_real* ay, const int* aylo, const int* ayhi,
              const amrex_real* az, const int* azlo, const int* azhi);
+
+    void des_time_loop_per ( const int* nrp,  void* rparticles,
+             const int* ngp,  void* gparticles, const int* size_nl, const int* nbor_list,
+             amrex::Real* tow, amrex::Real* fc, 
+             amrex::Real* subdt, const amrex::Real* dx,
+             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
+             int* ncoll, amrex::Real* stime);
 
     int des_continuum_coupled ();
 

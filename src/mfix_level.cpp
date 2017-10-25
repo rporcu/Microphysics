@@ -10,9 +10,8 @@ std::string mfix_level::load_balance_type = "FixedSize";
 
 mfix_level::~mfix_level ()
 {
-    int use_eb = 1;
-//  if (use_eb)
-//     EBTower::Destroy();
+   if (!geom[0].isAllPeriodic())
+      EBTower::Destroy();
 };
 
 

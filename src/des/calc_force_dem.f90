@@ -22,7 +22,7 @@ contains
       use error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
 
       integer,          intent(in   ) :: nrp, size_nl
-      type(particle_t), intent(in   ) :: particles(:)
+      type(particle_t), intent(in   ), target :: particles(:)
       integer,          intent(in   ) :: nbor_list(size_nl)
       real(c_real),     intent(inout) :: fc(:,:), tow(:,:)
       real(c_real),     intent(in   ) :: dtsolid
@@ -30,6 +30,8 @@ contains
       logical,      parameter     :: report_excess_overlap = .false.
       real(c_real), parameter     :: flag_overlap = 0.20d0 ! % of particle radius when excess overlap will be flagged
       real(c_real), parameter     :: q2           = 0.5_c_real
+
+      type(particle_t), pointer :: pll
 
       ! particle no. indices
       integer :: ii, ll, jj
@@ -74,11 +76,16 @@ contains
       !   we only need to calculate forces on the "valid" particles
       do ll = 1, nrp
 
+         pll => particles(ll)
+
          pos_tmp = particles(ll) % pos
          rad     = particles(ll) % radius
 
          nneighbors = nbor_list(index)
          index = index + 1
+
+         radiusll = particles(ll) % radius
+         phasell  = particles(ll) % phase
 
          do jj = index, index + nneighbors - 1
 
@@ -100,20 +107,17 @@ contains
 
             ncoll = ncoll + 1
 
-
             dist_mag  = sqrt( dist_mag )
             normal(:) = dist(:) / dist_mag
 
             ! calcuate the normal overlap
             overlap_n = r_lm-dist_mag
-            if(report_excess_overlap) call print_excess_overlap
+            if (report_excess_overlap) call print_excess_overlap
 
             ! calculate the components of translational relative velocity for a
             ! contacting particle pair and the tangent to the plane of contact
             call cfrelvel(particles(ll), particles(ii), v_rel_trans_norm, vrel_t, normal(:), dist_mag)
 
-            radiusll = particles(ll) % radius
-            phasell  = particles(ll) % phase
             radiusii = particles(ii) % radius
             phaseii  = particles(ii) % phase
 

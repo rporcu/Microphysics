@@ -9,31 +9,12 @@
 void
 mfix_level::make_eb_geometry(int lev)
 {
-    bool make_sphere = false;
-
-    // bool make_planes = false;
-    // bool mfix_walls  = true;
-
-    bool make_planes = true;
-    bool mfix_walls  = false;
-
-    if (make_sphere && make_planes)
-       amrex::Abort("Need to choose between planes and sphere");
+    if (geom[lev].isAllPeriodic()) return;
 
     Box domain(geom[lev].Domain());
     Real dx = geom[lev].CellSize()[0];
 
     GeometryShop* workshop;
-
-    // // Set up our sphere
-    // if (make_sphere)
-    // {
-    //    Real radius = 0.25*size;
-    //    RealVect center = 0.5*size*RealVect::Unit;
-    //    bool insideRegular = true;
-    //    SphereIF sphere(radius, center, insideRegular);
-    //    workshop = new GeometryShop(sphere);
-    // }
 
     int exists;
     RealVect normal, center;
