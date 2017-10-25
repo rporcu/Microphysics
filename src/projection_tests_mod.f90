@@ -54,7 +54,7 @@ contains
       ! x-direction
       do k = utlo(3), uthi(3) 
          do j = utlo(2), uthi(2)
-            y = domlo(2) + ( real(j,ar) + half ) * dx(2)
+            y =  ( real(j,ar) + half ) * dx(2)
             do i = utlo(1), uthi(1)
                u(i,j,k) = tanh ( 30.0_ar * (0.25_ar - abs ( y - 0.5_ar ) ) )
             end do
@@ -65,7 +65,7 @@ contains
       do k = vtlo(3), vthi(3) 
          do j = vtlo(2), vthi(2)
             do i = vtlo(1), vthi(1)
-               x = domlo(1) + real (i,ar) * dx(1)
+               x =  ( real(i,ar) + half ) * dx(1)
                v(i,j,k) = 0.05_ar * sin ( twopi * x )
             end do
          end do
