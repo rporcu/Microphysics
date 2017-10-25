@@ -73,6 +73,7 @@ set(F90_sources
    flip_particle_vol.f90
    functions_mod.f90
    get_data.f90
+   get_eb_walls.f90
    get_tunit.f90
    ic_mod.f90
    init_fluid.f90

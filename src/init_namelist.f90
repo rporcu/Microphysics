@@ -550,6 +550,18 @@ MODULE INIT_NAMELIST_MODULE
       BC_Z_T(:) = UNDEFINED
 !</keyword>
 
+!<keyword category="Boundary Condition" required="false">
+!  <description>Z coordinate of the top face or edge.</description>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
+      BC_NORMAL(:,:) = UNDEFINED
+!</keyword>
+
+!<keyword category="Boundary Condition" required="false">
+!  <description>Z coordinate of the top face or edge.</description>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
+      BC_CENTER(:,:) = UNDEFINED
+!</keyword>
+
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Type of boundary.</description>
