@@ -438,7 +438,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     
     // Solve PPE
     solve_poisson_equation ( lev, oro_g, phi, trD_g );
-    phi[lev] -> FillBoundary(geom[lev].periodicity());
+    p_g[lev] -> FillBoundary(geom[lev].periodicity());
 
     // Update pressure
 #ifdef _OPENMP
