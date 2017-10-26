@@ -45,9 +45,10 @@ contains
       real(ar)                      :: dt_c, dt_v
       real(ar)                      :: dt_gx, dt_gy, dt_gz, dt_g
       real(ar)                      :: dt_px, dt_py, dt_pz, dt_p
-      real(ar),       parameter     :: cfl = 0.5_ar
+      real(ar),       parameter     :: cfl = 0.9_ar
       real(ar),       parameter     :: two = 2.0_ar, four = two*two
       real(ar),       parameter     :: eps = epsilon (zero)
+      real(ar),       parameter     :: small = 1.0D-8
       
       odx  = one / dx(1)
       ody  = one / dx(2)
@@ -57,7 +58,12 @@ contains
       wodz = wmax * odz
 
       ! Convection
-      dt_c  = cfl / max ( uodx, vody, wodz )
+      ! Smaller components of velocity are not accounted for in the
+      ! computation of the new time step (see IAMR )
+      dt_c = dt
+      if ( umax > small ) dt_c = min ( dt_c, cfl / uodx )
+      if ( vmax > small ) dt_c = min ( dt_c, cfl / vody )
+      if ( wmax > small ) dt_c = min ( dt_c, cfl / wodz )
 
       ! Viscous
       dt_v  = cfl * romin / ( two * ( mumax + eps ) * &
@@ -84,10 +90,10 @@ contains
 
       ! dt_p  = min ( dt_px, dt_py, dt_pz )
 
-      print*, "umax, vmax, wmax = ", umax, vmax, wmax
-      print*, "uodx, uody, uodz = ", uodx, vody, wodz
-      print*, "dx               = ", dx
-      print*, "dt, dt_c         = ", dt, dt_c
+      ! print*, "umax, vmax, wmax = ", umax, vmax, wmax
+      ! print*, "uodx, uody, uodz = ", uodx, vody, wodz
+      ! print*, "dx               = ", dx
+      ! print*, "dt, dt_c         = ", dt, dt_c
 
       dt = min ( dt, dt_c ) !, dt_v, dt_g )
 
@@ -139,14 +145,24 @@ contains
            & f_gds_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),  &
            & rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
            
-      integer(c_int)                 :: i, j, k
+      integer(c_int)                 :: i, j, k, i0, j0, k0
       real(ar)                       :: rhs, irho, f 
+
+      i0 = 0
+      if ( dir == 1 ) i0 = 1
+
+      j0 = 0
+      if ( dir == 2 ) j0 = 1
+
+      k0 = 0
+      if ( dir == 3 ) k0 = 1
+      
       
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               irho = half / rop(i,j,k) + half / rop(i-1,j,k) 
+               irho = half / rop(i,j,k) + half / rop(i-i0,j-j0,k-k0) 
 
                
                ! Remeber the minus sign between the two parts
@@ -198,9 +214,9 @@ contains
 
       sum_rhsdv = zero
       
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
                rhs(i,j,k) =  -  ( ( u_g(i+1,j,k) - u_g(i,j,k) ) * odtdx + &
                                   ( v_g(i,j+1,k) - v_g(i,j,k) ) * odtdy + &
                                   ( w_g(i,j,k+1) - w_g(i,j,k) ) * odtdz )
@@ -260,7 +276,7 @@ contains
       dtodx = dt / dx(1)
       dtody = dt / dx(2)
       dtodz = dt / dx(3)
-
+      
       ! x component
       do k = utlo(3), uthi(3)
          do j = utlo(2), uthi(2)
