@@ -277,6 +277,14 @@ mfix_level::mfix_compute_u_star (int lev, amrex::Real dt)
 					(*f_gds_u[lev])[mfi].dataPtr(),
 					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 					&dt, &dir);
+
+	add_pressure_gradient (
+	    BL_TO_FORTRAN_BOX(bx),  
+	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+	    (*(oro_g[lev][0]))[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+	    geom[lev].CellSize(), &dt, &dir );
+
     }
 
 }
@@ -325,6 +333,13 @@ mfix_level::mfix_compute_v_star (int lev, amrex::Real dt)
 					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 					&dt, &dir);
 
+
+	add_pressure_gradient (
+	    BL_TO_FORTRAN_BOX(bx),  
+	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+	    (*(oro_g[lev][1]))[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+	    geom[lev].CellSize(), &dt, &dir );
 
     }
 
@@ -376,6 +391,14 @@ mfix_level::mfix_compute_w_star (int lev, amrex::Real dt)
 					&dt, &dir);
 
 
+	add_pressure_gradient (
+	    BL_TO_FORTRAN_BOX(bx),  
+	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+	    (*(oro_g[lev][2]))[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+	    geom[lev].CellSize(), &dt, &dir );
+
+	
     }
     
 }
@@ -414,12 +437,33 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     compute_oro_g ( lev );
     
     // Solve PPE
-    solve_poisson_equation ( lev, oro_g, p_g, trD_g );
+    solve_poisson_equation ( lev, oro_g, phi, trD_g );
+    phi[lev] -> FillBoundary(geom[lev].periodicity());
+
+    // Update pressure
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	const Box& bx = mfi.tilebox ();
+
+	update_pressure (
+	    BL_TO_FORTRAN_BOX(bx),  
+	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
+	    (*p_g[lev])[mfi].dataPtr () );	    
+	
+    }
     p_g[lev] -> FillBoundary(geom[lev].periodicity());
 
     std::cout << "max(abs(p_g)) = " << p_g[lev] -> norm0 () << "\n";
 
+
+    
     // Apply pressure correction
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
 	Box ubx = amrex::convert ( mfi.tilebox(), e_x );
@@ -435,7 +479,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
 				    BL_TO_FORTRAN_BOX(wbx),  
 				    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
 				    (*(oro_g[lev][2]))[mfi].dataPtr(),
-				    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+				    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
 				    geom[lev].CellSize (),
 				    &dt );
     }
@@ -487,7 +531,7 @@ mfix_level::solve_poisson_equation (  int lev,
     solver.set_mac_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
     phi[lev] -> setVal (0.);
     
-    VisMF::Write(*rhs[lev], "rhs");
+//    VisMF::Write(*rhs[lev], "rhs");
 	
     //solver.set_const_gravity_coeffs ();
     solver.solve ( *phi[lev], *rhs[lev], rel_tol, abs_tol, 0, 0, 1 );

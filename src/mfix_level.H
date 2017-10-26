@@ -285,6 +285,7 @@ private:
     
     Vector< Vector< std::unique_ptr<MultiFab> > > oro_g; // Over ro_g = ep_g / rop_g
 
+    Vector< std::unique_ptr<MultiFab> > phi; // Pressure increment
     
     
     int solve_fluid;

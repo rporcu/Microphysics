@@ -582,6 +582,22 @@ extern "C"
 	amrex::Real* w,  const int* wlo, const int* whi,
 	const amrex::Real* dx,
 	const int*  domlo );
+
+    void add_pressure_gradient (
+	const int* lo, const int* hi,
+	amrex::Real* u_i, const int* ulo, const int* uhi,
+	const amrex::Real* oro_g_i,
+        const amrex::Real* pg, const int* slo, const int* shi,
+	const amrex::Real* dx, const amrex::Real* dt,
+	const int* dir );
+
+    void update_pressure (
+	const int* lo, const int* hi,
+	const amrex::Real* phi, const int* slo, const int* shi,
+	amrex::Real* pg );
+
+
+
     
 #ifdef __cplusplus
 }

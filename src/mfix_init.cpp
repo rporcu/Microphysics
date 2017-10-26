@@ -322,6 +322,12 @@ mfix_level::AllocateArrays (int lev)
     trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     trD_g[lev]->setVal(0.);
 
+
+    // Pressure increment
+    phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    phi[lev]->setVal(0.);
+
+    
     // ********************************************************************************
     // X-face-based arrays
     // ********************************************************************************

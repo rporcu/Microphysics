@@ -17,6 +17,13 @@ module projection_mod
    implicit none
    private
 
+   ! Define here the unit vectors
+   ! This is used to shift index  based on how the variable is staggered
+   ! Check e_x, e_y and e_z in mfix_level.H
+   integer(c_int), parameter :: e_i(3,3) = reshape ( [1,0,0,0,1,0,0,0,1], [3,3] )  
+
+
+   
 contains
 
 
@@ -113,6 +120,105 @@ contains
 
    end subroutine compute_new_dt
 
+
+
+   ! 
+   ! Given a pressure increment phi = p^(n+1) - p^(n) and the pressure
+   ! at the previous time step, p^(n), this routine performs the update
+   !
+   !                          p^(n) --> p^(n+1)
+   !
+   subroutine update_pressure ( lo, hi, phi, slo, shi, pg ) bind(C)
+
+      ! Loop bounds
+      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
+
+      ! Array bounds
+      integer(c_int),  intent(in   ) :: slo(3), shi(3)
+
+      ! Arrays
+      real(ar),        intent(inout) ::                           &
+           & pg(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+   
+      real(ar),        intent(in   ) ::                           &
+           & phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! Local variables
+      integer(c_int)                 :: i, j, k
+      
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+               pg(i,j,k) = phi(i,j,k) + pg(i,j,k)              
+            end do
+         end do
+      end do
+ 
+      
+   end subroutine update_pressure
+
+   !
+   ! Computes  u_i = u_i + dt * (1/ro) * (dp/dx_i)
+   !
+   ! Here u_i is the i-th component of velocity.
+   !
+   ! oro_g_i = 1/ro_g at u_i locations.
+   !
+   ! dir = 1,2,3 indicates x, y, z direction respectively.
+   !  
+   subroutine add_pressure_gradient ( lo, hi, u_i, ulo, uhi, oro_g_i,    &
+        & pg, slo, shi, dx, dt, dir ) bind (C)
+
+      ! Loop bounds
+      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
+
+      ! Array bounds
+      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int),  intent(in   ) :: slo(3), shi(3)
+
+      ! Grid and time spacing
+      real(ar),        intent(in   ) :: dt, dx(3)
+
+      ! Direction
+      integer(c_int),  intent(in   ) :: dir
+
+      ! Arrays
+      real(ar),        intent(in   ) ::                           &
+           & oro_g_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),  &
+           & pg(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+            
+      real(ar),        intent(inout) ::                           &
+           & u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
+      ! Local variables
+      integer(c_int)                 :: i, j, k, i0, j0, k0
+      real(ar)                       :: dtodx 
+
+      i0 = e_i(dir,1)
+
+      j0 = e_i(dir,2)
+
+      k0 = e_i(dir,3)
+      
+      dtodx = dt / dx(dir)
+      
+      
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+
+               u_i(i,j,k) = u_i(i,j,k) - dtodx * oro_g_i(i,j,k) * &
+                    &      ( pg(i,j,k) - pg(i-i0,j-j0,k-k0) )
+         
+              
+            end do
+         end do
+      end do
+
+   end subroutine add_pressure_gradient
+
+
+
    
    !
    ! Computes  u_i* = u_i + dt * RHS
@@ -148,14 +254,12 @@ contains
       integer(c_int)                 :: i, j, k, i0, j0, k0
       real(ar)                       :: rhs, irho, f 
 
-      i0 = 0
-      if ( dir == 1 ) i0 = 1
+      
+      i0 = e_i(dir,1)
 
-      j0 = 0
-      if ( dir == 2 ) j0 = 1
+      j0 = e_i(dir,2)
 
-      k0 = 0
-      if ( dir == 3 ) k0 = 1
+      k0 = e_i(dir,3)
       
       
       do k = lo(3), hi(3)
@@ -281,7 +385,7 @@ contains
       do k = utlo(3), uthi(3)
          do j = utlo(2), uthi(2)
             do i = utlo(1), uthi(1)
-               ug(i,j,k) = ug(i,j,k) - dtodx *  & !oro_x(i,j,k) * &
+               ug(i,j,k) = ug(i,j,k) - dtodx * oro_x(i,j,k) * &
                     ( pg(i,j,k) - pg(i-1,j,k) )   
             end do
          end do
@@ -292,7 +396,7 @@ contains
       do k = vtlo(3), vthi(3)
          do j = vtlo(2), vthi(2)
             do i = vtlo(1), vthi(1)
-               vg(i,j,k) = vg(i,j,k) - dtody *  & !oro_x(i,j,k) * &
+               vg(i,j,k) = vg(i,j,k) - dtody * oro_y(i,j,k) * &
                     ( pg(i,j,k) - pg(i,j-1,k) )   
             end do
          end do
@@ -303,7 +407,7 @@ contains
       do k = wtlo(3), wthi(3)
          do j = wtlo(2), wthi(2)
             do i = wtlo(1), wthi(1)
-               wg(i,j,k) = wg(i,j,k) - dtodz *  & !oro_x(i,j,k) * &
+               wg(i,j,k) = wg(i,j,k) - dtodz * oro_z(i,j,k) * &
                     ( pg(i,j,k) - pg(i,j,k-1) )   
             end do
          end do

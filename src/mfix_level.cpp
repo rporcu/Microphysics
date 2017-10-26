@@ -61,6 +61,8 @@ mfix_level::mfix_level ()
     rop_g.resize(nlevs_max);
     rop_go.resize(nlevs_max);
 
+    phi.resize(nlevs_max);
+    
     u_g.resize(nlevs_max);
     u_go.resize(nlevs_max);
     u_gt.resize(nlevs_max);
