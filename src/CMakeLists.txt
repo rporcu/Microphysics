@@ -48,9 +48,9 @@ set(F90_sources
    conv_rop.f90
    correct_0.f90
    deprecated.f90
-   des/calc_collision_wall_mod.f90
    des/calc_drag.f90
-   des/calc_force_dem.f90
+   des/calc_particle_collisions.f90
+   des/calc_wall_collisions.f90
    des/cffctowall.f90
    des/cfrelvel.f90
    des/cfslide.f90

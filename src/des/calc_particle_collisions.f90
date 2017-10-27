@@ -1,4 +1,4 @@
-module calc_force_dem_module
+module calc_particle_collisions_module
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
@@ -6,11 +6,11 @@ module calc_force_dem_module
    implicit none
    private
 
-   public calc_force_dem_nl
+   public calc_particle_collisions
 
 contains
 
-   subroutine calc_force_dem_nl( particles, nrp, nbor_list, size_nl, tow, fc, dtsolid, ncoll )
+   subroutine calc_particle_collisions( particles, nrp, nbor_list, size_nl, tow, fc, dtsolid, ncoll )
 
       use particle_mod,   only: particle_t
       use cfrelvel_module, only: cfrelvel
@@ -216,6 +216,6 @@ contains
 
       end subroutine print_excess_overlap
 
-   end subroutine calc_force_dem_nl
+   end subroutine calc_particle_collisions
 
-end module calc_force_dem_module
+end module calc_particle_collisions_module

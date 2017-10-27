@@ -87,7 +87,7 @@ contains
           bind(C, name="des_time_loop")
 
       use particle_mod
-      use calc_force_dem_module,   only: calc_force_dem_nl
+      use calc_particle_collisions_module,   only: calc_particle_collisions
       use discretelement       ,   only: des_continuum_coupled
       use output_manager_module,   only: output_manager
       use run,                     only: call_usr
@@ -110,7 +110,7 @@ contains
       particles(nrp+1:   ) = gparticles
 
       ! calculate forces from particle-particle collisions
-      call calc_force_dem_nl ( particles, nrp, nbor_list, size_nl, tow, fc, subdt, ncoll )
+      call calc_particle_collisions ( particles, nrp, nbor_list, size_nl, tow, fc, subdt, ncoll )
 
       ! call user functions.
       if ( call_usr ) call usr1_des
