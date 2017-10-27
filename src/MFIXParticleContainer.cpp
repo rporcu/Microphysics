@@ -309,6 +309,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     Vector<Real> tow;
     Vector<Real> fc;
+    tow.resize(1,0.0);
+     fc.resize(1,0.0);
 
     int n = 0;
     while (n < nsubsteps)
@@ -330,7 +332,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
          // Real particles
-         const int np     = NumberOfParticles(pti);
+         const int nrp    = NumberOfParticles(pti);
          void* particles  = pti.GetArrayOfStructs().data();
 
          // Neighbor particles
@@ -338,20 +340,17 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          int size_ng = neighbors[index].size() / pdata_size;
          int size_nl = neighbor_list[index].size();
 
-         tow.resize((np+size_ng)*3);
-          fc.resize((np+size_ng)*3);
+         int ntot = nrp + size_ng;
 
-         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-         if (Geom(0).isAllPeriodic()) 
+         // We need these to be zero every time we start a new batch of particles
+         tow.clear();
+          fc.clear();
+         tow.resize(ntot*3,0.0);
+          fc.resize(ntot*3,0.0);
+
+         // Only call the routine for wall collisions if we are not triply periodic
+         if (!Geom(0).isAllPeriodic()) 
          {
-
-            des_time_loop_per ( &np, particles, &size_ng,
-                                neighbors[index].dataPtr(),
-                                &size_nl, neighbor_list[index].dataPtr(),
-                                tow.dataPtr(), fc.dataPtr(), &subdt, dx,
-                                &xlen, &ylen, &zlen, &ncoll, &stime);
-         } else {
-
             std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
             const MultiCutFab* bndrycent;
 
@@ -364,22 +363,28 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
             areafrac  =  ebfactory->getAreaFrac();
             bndrycent = &(ebfactory->getBndryCent());
 
-            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-            des_time_loop (  &np, particles, &size_ng,
-                            neighbors[index].dataPtr(),
-                            &size_nl, neighbor_list[index].dataPtr(),
-                            tow.dataPtr(), fc.dataPtr(), &subdt, dx,
-                            &xlen, &ylen, &zlen, &ncoll, &stime,
-                            flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                            (*bndrycent)[pti].dataPtr(),
-                            (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
-                            (*areafrac[0])[pti].dataPtr(),
-                            (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-                            (*areafrac[1])[pti].dataPtr(),
-                            (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-                            (*areafrac[2])[pti].dataPtr(),
-                            (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
+            // Calculate forces from particle-wall collisions
+            BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
+            calc_wall_collisions (particles, &ntot, &nrp, tow.dataPtr(), fc.dataPtr(), &subdt,
+                                  flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                  (*bndrycent)[pti].dataPtr(),
+                                  (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
+                                  (*areafrac[0])[pti].dataPtr(),
+                                  (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
+                                  (*areafrac[1])[pti].dataPtr(),
+                                  (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
+                                  (*areafrac[2])[pti].dataPtr(),
+                                  (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect(),
+                                  dx);
+            BL_PROFILE_VAR_STOP(calc_wall_collisions);
          }
+
+         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+         des_time_loop ( &nrp     , particles, 
+                         &size_ng, neighbors[index].dataPtr(),
+                         &size_nl, neighbor_list[index].dataPtr(),
+                         tow.dataPtr(), fc.dataPtr(), &subdt, dx,
+                         &xlen, &ylen, &zlen, &ncoll, &stime, &n);
          BL_PROFILE_VAR_STOP(des_time_loop);
       }
       n += 1;
@@ -395,9 +400,9 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
           // Real particles
-          const int np     = NumberOfParticles(pti);
+          const int nrp     = NumberOfParticles(pti);
           void* particles  = pti.GetArrayOfStructs().data();
-          output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
+          output_manager( &nrp, &stime, &subdt,  &xlen, &ylen, &zlen,
                           &n, particles, 0 );
         }
 
@@ -415,10 +420,10 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 #endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-      const int np     = NumberOfParticles(pti);
+      const int nrp     = NumberOfParticles(pti);
       void* particles  = pti.GetArrayOfStructs().data();
 
-      call_usr3_des( &np, particles );
+      call_usr3_des( &nrp, particles );
     }
 
     if (debug) {
@@ -585,7 +590,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
         for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
             const auto& particles = pti.GetArrayOfStructs();
             int nstride = particles.dataShape().first;
-            const long np = pti.numParticles();
+            const long nrp = pti.numParticles();
             FArrayBox& fab = (*mf_pointer)[pti];
             const Box& box = fab.box();
             Real* data_ptr;
@@ -604,7 +609,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
             hi = box.hiVect();
 #endif
 
-            mfix_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr,
+            mfix_deposit_cic(particles.data(), nstride, nrp, ncomp, data_ptr,
                              lo, hi, plo, dx, &fortran_particle_comp);
 
 #ifdef _OPENMP

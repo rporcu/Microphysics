@@ -10,7 +10,7 @@ module calc_force_dem_module
 
 contains
 
-   subroutine calc_force_dem_nl( particles, nrp, nbor_list, size_nl, fc, tow, dtsolid, ncoll )
+   subroutine calc_force_dem_nl( particles, nrp, nbor_list, size_nl, tow, fc, dtsolid, ncoll )
 
       use particle_mod,   only: particle_t
       use cfrelvel_module, only: cfrelvel
@@ -24,7 +24,7 @@ contains
       integer,          intent(in   ) :: nrp, size_nl
       type(particle_t), intent(in   ), target :: particles(:)
       integer,          intent(in   ) :: nbor_list(size_nl)
-      real(c_real),     intent(inout) :: fc(:,:), tow(:,:)
+      real(c_real),     intent(inout) :: tow(:,:), fc(:,:)
       real(c_real),     intent(in   ) :: dtsolid
       integer(c_int),   intent(inout) :: ncoll
       logical,      parameter     :: report_excess_overlap = .false.

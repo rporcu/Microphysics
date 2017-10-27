@@ -1,48 +1,26 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: CALC_COLLISION_WALL                                    C
-!  Author: Rahul Garg                               Date: 1-Dec-2013   C
-!                                                                      C
-!  Purpose: subroutines for particle-wall collisions when cutcell is   C
-!           used. Also contains rehack of routines for cfslide and     C
-!           cffctow which might be different from the stand alone      C
-!           routines. Eventually all the DEM routines will be          C
-!           consolidated.                                              C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-module calc_collision_wall
 
-  use amrex_fort_module, only : c_real => amrex_real
-  use iso_c_binding , only: c_int
-
-  use discretelement, only: des_coll_model_enum
-  use discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
-  use discretelement, only: des_crossprdct
-  use discretelement, only: kn_w, kt_w, mew_w!, dtsolid
-  use error_manager, only: err_msg, flush_err_msg, init_err_msg
-  use param, only: small_number, zero
-
-  use stl_functions_des, only: closestptpointtriangle
-
-  implicit none
-  private
-
-  public :: calc_dem_force_with_wall
-
-contains
-
-  subroutine calc_dem_force_with_wall ( particles, np, nrp, fc, tow, dtsolid, &
+  subroutine calc_wall_collisions ( particles, np, nrp, tow, fc, dtsolid, &
        flag, fglo, fghi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, &
-       apz, azlo, azhi, dx)
+       apz, azlo, azhi, dx) &
+      bind(C, name="calc_wall_collisions")
 
-    use param,         only: zero, one
+    use amrex_fort_module, only : c_real => amrex_real
+    use iso_c_binding    , only: c_int
+
+    use discretelement, only: des_coll_model_enum
+    use discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
+    use discretelement, only: des_crossprdct
+    use discretelement, only: kn_w, kt_w, mew_w!, dtsolid
+    use error_manager, only: err_msg, flush_err_msg, init_err_msg
+
+    use param        , only: small_number, zero, one
     use particle_mod,  only: particle_t
     use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell
 
     integer, intent(in) :: np, nrp
 
     type(particle_t), intent(in   ), target :: particles(np)
-    real(c_real)  ,   intent(inout)         :: fc(np,3), tow(np,3)
+    real(c_real)  ,   intent(inout)         :: tow(np,3), fc(np,3)
     real(c_real)  ,   intent(in   )         :: dtsolid
 
     integer, dimension(3), intent(in) :: axlo,axhi
@@ -197,7 +175,6 @@ contains
 
           ! Calculate the normal contact force
           FN(:) = -(KN_DES_W * overlap_n  + ETAN_DES_W * V_REL_TRANS_NORM) * normal(:)
-          ! print *,'Vertical dist / force ',distmod, fn(3)
 
           ! Calculate the tangential displacement.
           overlap_t(:) = dtsolid*vrel_t(:)
@@ -217,6 +194,7 @@ contains
 
           ! Add the collision force to the total forces acting on the particle.
           FC(LL,:) = FC(LL,:) + FN(:) + FT(:)
+          ! print *,'Vertical dist / force ',distmod, fn(1), fc(ll,1)
 
           ! Add the torque force to the total torque acting on the particle.
           TOW(LL,:) = TOW(LL,:) + distmod*DES_CROSSPRDCT(normal,FT)
@@ -225,8 +203,7 @@ contains
 
     end do ! loop over particles
 
-  end subroutine calc_dem_force_with_wall
-
+   contains
 
    !----------------------------------------------------------------------!
    !                                                                      !
@@ -239,6 +216,9 @@ contains
    !  whereas the full tangential vector is returned.                     !
    !----------------------------------------------------------------------!
    subroutine cfrelvel_wall (ll, vrn, vrt, norm, dist, particles )
+
+      use amrex_fort_module, only : c_real => amrex_real
+      use iso_c_binding , only: c_int
 
       ! function for calculating the cross prodcut
       use discretelement, only: des_crossprdct
@@ -279,5 +259,4 @@ contains
 
    end subroutine cfrelvel_wall
 
-
-end module CALC_COLLISION_WALL
+  end subroutine calc_wall_collisions
