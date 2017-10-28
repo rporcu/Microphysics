@@ -583,20 +583,42 @@ extern "C"
 	const amrex::Real* dx,
 	const int*  domlo );
 
-    void add_pressure_gradient (
+  void add_gradient (
 	const int* lo, const int* hi,
 	amrex::Real* u_i, const int* ulo, const int* uhi,
-	const amrex::Real* oro_g_i,
-        const amrex::Real* pg, const int* slo, const int* shi,
-	const amrex::Real* dx, const amrex::Real* dt,
+	const amrex::Real* beta,
+        const amrex::Real* phi, const int* slo, const int* shi,
+	const amrex::Real* dx, const amrex::Real* c,
 	const int* dir );
 
+    
     void update_pressure (
 	const int* lo, const int* hi,
 	const amrex::Real* phi, const int* slo, const int* shi,
-	amrex::Real* pg );
+	amrex::Real* pg, const amrex::Real* scale );
+
+    void apply_pcm_prediction (
+	const int* lo, const int* hi,
+	      amrex::Real* comp, const int* clo, const int* chi, 
+	const amrex::Real* uo,   const int* ulo, const int* uhi, 
+	const amrex::Real* vo,   const int* vlo, const int* vhi, 
+	const amrex::Real* wo,   const int* wlo, const int* whi, 
+	const amrex::Real* mu,   const int* slo, const int* shi, 
+	const amrex::Real* rop,  const amrex::Real* dx,
+	const amrex::Real* dt,   const int* dir );
 
 
+    
+    void apply_pcm_correction (
+	const int* lo, const int* hi,
+	      amrex::Real* comp, const int* clo, const int* chi,
+	const amrex::Real* compo,
+	const amrex::Real* us,   const int* ulo, const int* uhi, 
+	const amrex::Real* vs,   const int* vlo, const int* vhi, 
+	const amrex::Real* ws,   const int* wlo, const int* whi, 
+	const amrex::Real* mu,   const int* slo, const int* shi, 
+	const amrex::Real* rop,  const amrex::Real* dx,
+	const amrex::Real* dt,   const int* dir );
 
     
 #ifdef __cplusplus

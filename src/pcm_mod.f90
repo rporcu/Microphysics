@@ -17,9 +17,9 @@
 !          u** = 0.5 * ( u^n + u* ) + 0.5 * dt * RU(u*) =
 !              = 0.5 * ( u^n + u* + dt * RU(u*) )  
 !  
-!  Author: Michele Rosso
-! 
-!  Date: October 26, 2017
+! Author: Michele Rosso
+!
+! Date: October 26, 2017
 !
 ! NOTE: this module makes use of automatic arrays for the time being.
 !       If this proves to be too slow, I will replace this at a later
@@ -40,9 +40,8 @@ module pcm_mod
 contains
 
 
-
    !
-   ! Performs the prediction step (STEP 1) of the PCMalgorithm
+   ! Performs the prediction step (STEP 1) of the PCM algorithm
    ! along direction "dir" for component "comp" of the velocity
    ! field.
    !
@@ -52,11 +51,6 @@ contains
    ! ulo,uhi,vlo,vhi,wlo,whi are the array bounds for uo,vo,wo
    ! respectively
    !
-   ! "comp" can be either u*, v*, w* and must be passed in with
-   ! the appropriate velocity component at the previous time step,
-   ! i.e. if "comp" is "u", upon entry into this routine "comp"
-   ! MUST be set to u0 = u^n
-   !    
    ! This routine is direction-agnostic because the array bounds
    ! for "comp", namely clo and chi, are passed explicity instead
    ! of using the array bounds for uo, vo, wo.
@@ -106,19 +100,35 @@ contains
       case (1) 
          call compute_ugradu_x ( lo, hi, uo, ulo, uhi, vo, vlo, vhi, &
               & wo, wlo, whi, conv, dx )  
+         
+         ! No diffusion term for the time being
+         diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+         
+         ! Perform Euler step
+         call apply_euler ( lo, hi, comp, uo, clo, chi, conv, diff, dt )      
+
       case(2)
          call compute_ugradu_y ( lo, hi, uo, ulo, uhi, vo, vlo, vhi, &
               & wo, wlo, whi, conv, dx )
+         ! No diffusion term for the time being
+         diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+
+         ! Perform Euler step
+         call apply_euler ( lo, hi, comp, vo, clo, chi, conv, diff, dt )      
+
+         
       case(3)         
          call compute_ugradu_z ( lo, hi, uo, ulo, uhi, vo, vlo, vhi, &
               & wo, wlo, whi, conv, dx )
+
+         ! No diffusion term for the time being
+         diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+         
+         ! Perform Euler step
+         call apply_euler ( lo, hi, comp, wo, clo, chi, conv, diff, dt )      
+
       end select
       
-      ! No diffusion term for the time being
-      diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
-
-      ! Perform Euler step
-      call apply_euler ( lo, hi, comp, clo, chi, conv, diff, dt )      
 
    end subroutine apply_pcm_prediction
 
@@ -183,7 +193,7 @@ contains
            & mu, slo, shi, rop, dx, dt, dir ) 
 
       ! Compute corrected value
-      ! Before the loop, comp = u* + dt * R(u*)
+      ! Before the following loop, comp = u* + dt * R(u*)
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
@@ -191,7 +201,6 @@ contains
             end do
          end do
       end do
-      
 
    end subroutine apply_pcm_correction
 
@@ -200,12 +209,9 @@ contains
    ! Compute a single Euler time integration step for the x-component
    ! of velocity:
    ! 
-   !      u = u + dt * RU(u)  with  RU(u) = CONV(U) + DIFF(u)
+   !      unew = uold + dt * RU(u)  with  RU(u) = CONV(U) + DIFF(u)
    !
-   ! u is overwritten by this routine.
-   !
-   ! 
-   subroutine apply_euler ( lo, hi, u, ulo, uhi, conv, diff, dt )
+   subroutine apply_euler ( lo, hi, unew, uold, ulo, uhi, conv, diff, dt )
 
       ! Loop bounds
       integer(c_int), intent(in   ) :: lo(3), hi(3)
@@ -218,11 +224,12 @@ contains
       
       ! Arrays
       real(ar),       intent(in   ) ::                        &
+           & uold(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
            & conv(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
            & diff(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
-      real(ar),       intent(inout) ::                        &
-           &   u(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(ar),       intent(  out) ::                        &
+           & unew(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
       ! Local variables
       integer                       :: i, j, k
@@ -230,7 +237,7 @@ contains
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               u(i,j,k) = u(i,j,k) + dt * ( - conv(i,j,k) + diff(i,j,k) )      
+               unew(i,j,k) = uold(i,j,k) + dt * ( -conv(i,j,k) + diff(i,j,k) )      
             end do
          end do
       end do

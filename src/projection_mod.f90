@@ -123,12 +123,15 @@ contains
 
 
    ! 
-   ! Given a pressure increment phi = p^(n+1) - p^(n) and the pressure
-   ! at the previous time step, p^(n), this routine performs the update
+   ! Given a pressure increment phi = scale * ( p^(n+1) - p^(n) )
+   ! and the pressure at the previous time step, p^(n), this routine
+   ! performs the update
    !
-   !                          p^(n) --> p^(n+1)
+   !                   p^(n+1) = phi/scale +  p^(n)
    !
-   subroutine update_pressure ( lo, hi, phi, slo, shi, pg ) bind(C)
+   !  where scale is a chosen scaling factor
+   !
+   subroutine update_pressure ( lo, hi, phi, slo, shi, pg, scale ) bind(C)
 
       ! Loop bounds
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)
@@ -136,6 +139,9 @@ contains
       ! Array bounds
       integer(c_int),  intent(in   ) :: slo(3), shi(3)
 
+      ! Scaling factor
+      real(ar),        intent(in   ) :: scale
+      
       ! Arrays
       real(ar),        intent(inout) ::                           &
            & pg(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -145,11 +151,14 @@ contains
 
       ! Local variables
       integer(c_int)                 :: i, j, k
+      real(ar)                       :: oscale
+
+      oscale = one / scale
       
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               pg(i,j,k) = phi(i,j,k) + pg(i,j,k)              
+               pg(i,j,k) = oscale * phi(i,j,k) + pg(i,j,k)              
             end do
          end do
       end do
@@ -157,17 +166,23 @@ contains
       
    end subroutine update_pressure
 
+
+
    !
-   ! Computes  u_i = u_i + dt * (1/ro) * (dp/dx_i)
+   ! Computes  u_i = u_i + C * (beta) * (dphi/dx_i)
    !
-   ! Here u_i is the i-th component of velocity.
+   ! u_i  = i-th component of a staggered vector field u.
    !
-   ! oro_g_i = 1/ro_g at u_i locations.
+   ! beta = scalar field defined at u_i location.
    !
-   ! dir = 1,2,3 indicates x, y, z direction respectively.
+   ! phi  = scalar field defined at cell centers
+   ! 
+   ! C    = real constant
+   !
+   ! dir  = 1,2,3 indicates x, y, z direction respectively.
    !  
-   subroutine add_pressure_gradient ( lo, hi, u_i, ulo, uhi, oro_g_i,    &
-        & pg, slo, shi, dx, dt, dir ) bind (C)
+   subroutine add_gradient ( lo, hi, u_i, ulo, uhi, beta,    &
+        & phi, slo, shi, dx, c, dir ) bind (C)
 
       ! Loop bounds
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)
@@ -177,47 +192,45 @@ contains
       integer(c_int),  intent(in   ) :: slo(3), shi(3)
 
       ! Grid and time spacing
-      real(ar),        intent(in   ) :: dt, dx(3)
+      real(ar),        intent(in   ) :: c, dx(3)
 
       ! Direction
       integer(c_int),  intent(in   ) :: dir
 
       ! Arrays
-      real(ar),        intent(in   ) ::                           &
-           & oro_g_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),  &
-           & pg(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(ar),        intent(in   ) ::                        &
+           & beta(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),  &
+           &  phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
             
       real(ar),        intent(inout) ::                           &
            & u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
       ! Local variables
       integer(c_int)                 :: i, j, k, i0, j0, k0
-      real(ar)                       :: dtodx 
-
+      real(ar)                       :: codx
+      
       i0 = e_i(dir,1)
-
       j0 = e_i(dir,2)
-
       k0 = e_i(dir,3)
       
-      dtodx = dt / dx(dir)
+      codx = c / dx(dir) 
       
       
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               u_i(i,j,k) = u_i(i,j,k) - dtodx * oro_g_i(i,j,k) * &
-                    &      ( pg(i,j,k) - pg(i-i0,j-j0,k-k0) )
+               u_i(i,j,k) = u_i(i,j,k) - codx * beta(i,j,k) * &
+                    &      ( phi(i,j,k) - phi(i-i0,j-j0,k-k0) )
          
               
             end do
          end do
       end do
 
-   end subroutine add_pressure_gradient
+   end subroutine add_gradient
 
-
+   
 
    
    !
@@ -307,9 +320,10 @@ contains
            v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
            w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      integer      :: i, j, k
-      real(ar)     :: odtdx, odtdy, odtdz, dv
-
+      integer             :: i, j, k
+      real(ar)            :: odtdx, odtdy, odtdz, dv
+      real(ar), parameter :: two = one / half 
+      
       odtdx = one / ( dt * dx(1) )
       odtdy = one / ( dt * dx(2) )
       odtdz = one / ( dt * dx(3) )
@@ -377,9 +391,9 @@ contains
       integer      :: i, j, k
       real(ar)     :: dtodx, dtody, dtodz
 
-      dtodx = dt / dx(1)
-      dtody = dt / dx(2)
-      dtodz = dt / dx(3)
+      dtodx = dt / dx(1) 
+      dtody = dt / dx(2) 
+      dtodz = dt / dx(3) 
       
       ! x component
       do k = utlo(3), uthi(3)

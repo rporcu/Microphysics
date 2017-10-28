@@ -94,10 +94,6 @@ protected:
     void mfix_solve_for_w    (int lev, Real dt, Real& num_w, Real& denom_w);
 
     // Projection
-    void mfix_compute_u_star (int lev, amrex::Real dt );
-    void mfix_compute_v_star (int lev, amrex::Real dt );
-    void mfix_compute_w_star (int lev, amrex::Real dt );
-
     void mfix_apply_projection (int lev, amrex::Real dt);
     // End projection
     
@@ -157,6 +153,13 @@ private:
     void check_for_nans (int lev);
     
     amrex::Real compute_dt (int lev);
+
+    void mfix_apply_pcm_prediction (int lev, amrex::Real dt);
+
+    void mfix_apply_pcm_correction (int lev, amrex::Real dt);
+
+    void mfix_apply_forcing_terms (int lev, amrex::Real dt);
+    
 // End of projection-related methods
 
 

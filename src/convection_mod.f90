@@ -18,6 +18,11 @@ module convection_mod
    implicit none
    private
 
+   ! Public members
+   public compute_ugradu_x
+   public compute_ugradu_y
+   public compute_ugradu_z
+   
 contains
 
    !
@@ -28,23 +33,26 @@ contains
         & wg, wlo, whi, ugradu_x, dx )  bind(C, name="compute_ugradu_x")
 
       ! Tile bounds
-      integer(c_int),  intent(in)    :: lo(3),  hi(3)
+      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
 
       ! Array Bounds
-      integer(c_int),  intent(in)    :: ulo(3), uhi(3)
-      integer(c_int),  intent(in)    :: vlo(3), vhi(3)
+      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int),  intent(in   ) :: vlo(3), vhi(3)
       integer(c_int),  intent(in   ) :: wlo(3), whi(3)
 
       ! Grid
       real(ar),        intent(in   ) :: dx(3)
 
       ! Arrays
-      real(ar),        intent(inout) ::                           &
-           & ugradu_x(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), & 
+      real(ar),        intent(in   ) ::                           &
            & ug(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),       &
            & vg(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)),       &
            & wg(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
+      real(ar),        intent(  out) ::                           &
+           & ugradu_x(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+           
+      
       ! Local variables
       integer(c_int)                 :: i, j, k
       real(ar)                       :: idx, idy, idz
@@ -98,18 +106,21 @@ contains
    subroutine compute_ugradu_y ( lo, hi, ug, ulo, uhi, vg, vlo, vhi, &
         & wg, wlo, whi, ugradu_y, dx )  bind(C, name="compute_ugradu_y")
 
-      integer(c_int),  intent(in)    :: lo(3),  hi(3)   ! Tile indeces for mf associated to vg
-      integer(c_int),  intent(in)    :: ulo(3), uhi(3)
-      integer(c_int),  intent(in)    :: vlo(3), vhi(3)
+      integer(c_int),  intent(in   ) :: lo(3),  hi(3)   ! Tile indeces for mf associated to vg
+      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int),  intent(in   ) :: vlo(3), vhi(3)
       integer(c_int),  intent(in   ) :: wlo(3), whi(3)
       real(ar),        intent(in   ) :: dx(3)
       
-      real(ar),        intent(inout) ::                           &
-           & ugradu_y(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), & 
+      real(ar),        intent(in   ) ::                           &
            & ug(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),       &
            & vg(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)),       &
            & wg(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-           
+
+      real(ar),        intent(  out) ::                           &
+           & ugradu_y(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      
+      
       integer(c_int)                 :: i, j, k
       real(ar)                       :: idx, idy, idz
       real(ar)                       :: u, v, w
@@ -165,18 +176,21 @@ contains
 
       implicit none
 
-      integer(c_int),  intent(in)    :: lo(3),  hi(3)   ! Tile indeces for mf associated to vg
-      integer(c_int),  intent(in)    :: ulo(3), uhi(3)
-      integer(c_int),  intent(in)    :: vlo(3), vhi(3)
+      integer(c_int),  intent(in   ) :: lo(3),  hi(3)   ! Tile indeces for mf associated to vg
+      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int),  intent(in   ) :: vlo(3), vhi(3)
       integer(c_int),  intent(in   ) :: wlo(3), whi(3)
       real(ar),        intent(in   ) :: dx(3)
       
-      real(ar),        intent(inout) ::                           &
-           & ugradu_z(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), & 
+      real(ar),        intent(  out) ::                           &
+           & ugradu_z(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+          
+      real(ar),        intent(in   ) ::                           &
            & ug(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),       &
            & vg(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)),       &
            & wg(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-           
+
+      
       integer(c_int)                 :: i, j, k
       real(ar)                       :: idx, idy, idz
       real(ar)                       :: udwdx, vdwdy, wdwdz
