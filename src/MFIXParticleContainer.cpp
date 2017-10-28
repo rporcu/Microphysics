@@ -298,6 +298,43 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
+    //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
+    MultiFab dummy;
+    MultiFab normal;
+
+    // Only call the routine for wall collisions if we are not triply periodic
+    if (!Geom(0).isAllPeriodic()) 
+    {
+        dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
+        std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+
+        // We pre-compute the normals
+        normal.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 1);
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+        {
+            Box tile_box = pti.tilebox();
+            const int* lo = tile_box.loVect();
+            const int* hi = tile_box.hiVect();
+
+            const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
+            const auto& flag = sfab.getEBCellFlagFab();
+
+            areafrac  =  ebfactory->getAreaFrac();
+
+            BL_PROFILE_VAR("compute_normals()", compute_normals);
+            compute_normals ( lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                             normal[pti].dataPtr(),
+                             normal[pti].loVect(), normal[pti].hiVect(),
+                             (*areafrac[0])[pti].dataPtr(),
+                             (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
+                             (*areafrac[1])[pti].dataPtr(),
+                             (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
+                             (*areafrac[2])[pti].dataPtr(),
+                             (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
+        }
+        normal.FillBoundary(Geom(0).periodicity());
+    }
+
     int   nsubsteps;
     Real  subdt;
 
@@ -353,9 +390,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          {
             std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
             const MultiCutFab* bndrycent;
-
-            //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
-            MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
    
             const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
             const auto& flag = sfab.getEBCellFlagFab();
@@ -367,6 +401,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
             BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
             calc_wall_collisions (particles, &ntot, &nrp, tow.dataPtr(), fc.dataPtr(), &subdt,
                                   flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                  normal[pti].dataPtr(),
+                                  normal[pti].loVect(), normal[pti].hiVect(),
                                   (*bndrycent)[pti].dataPtr(),
                                   (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
                                   (*areafrac[0])[pti].dataPtr(),

@@ -1,6 +1,7 @@
 
   subroutine calc_wall_collisions ( particles, np, nrp, tow, fc, dtsolid, &
-       flag, fglo, fghi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, &
+       flag, fglo, fghi, normal, nlo, nhi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, &
+
        apz, azlo, azhi, dx) &
       bind(C, name="calc_wall_collisions")
 
@@ -28,9 +29,11 @@
     integer, dimension(3), intent(in) :: azlo,azhi
     integer, dimension(3), intent(in) :: fglo,fghi
     integer, dimension(3), intent(in) :: blo,bhi
+    integer, dimension(3), intent(in) :: nlo,nhi
 
     integer,      intent(in) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
     real(c_real), intent(in) :: bcent  (blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
+    real(c_real), intent(in) :: normal(nlo(1):nhi(1),nlo(2):nhi(2),nlo(3):nhi(3),3)
     real(c_real), intent(in) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
     real(c_real), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
     real(c_real), intent(in) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
@@ -44,6 +47,8 @@
      real(c_real) :: bcentx, bcenty, bcentz
      real(c_real) :: sqrt_overlap
 
+     real(c_real) :: normul(3)
+
     integer :: ll, ii, jj, kk, i, j, k
 
     real(c_real) ::overlap_n
@@ -52,7 +57,7 @@
     real(c_real) :: v_rel_trans_norm
 
     ! local normal and tangential forces
-    real(c_real) :: normal(3), vrel_t(3), distmod
+    real(c_real) :: vrel_t(3), distmod
     real(c_real) :: ft(3), fn(3), overlap_t(3)
 
     integer :: PHASELL
@@ -88,39 +93,24 @@
 
                 if (.not. is_regular_cell(flag(ii,jj,kk)) ) then
 
-                   axm = apx(ii,  jj  , kk  )
-                   axp = apx(ii+1,jj  , kk  )
-                   aym = apy(ii,  jj  , kk  )
-                   ayp = apy(ii,  jj+1, kk  )
-                   azm = apz(ii,  jj  , kk  )
-                   azp = apz(ii,  jj  , kk+1)
-
-                   apnorm = sqrt((axm-axp)**2 + (aym-ayp)**2 + (azm-azp)**2)
-
-                   apnorminv = 1.d0 / apnorm
-                   anrmx = (axp-axm) * apnorminv   ! pointing to the wall
-                   anrmy = (ayp-aym) * apnorminv
-                   anrmz = (azp-azm) * apnorminv
-
                    ! convert bcent to global coordinate system centered at plo
                    bcentx = bcent(ii, jj, kk, 1)*dx(1) + (dble(ii) + 0.5d0)*dx(1)
                    bcenty = bcent(ii, jj, kk, 2)*dx(2) + (dble(jj) + 0.5d0)*dx(2)
                    bcentz = bcent(ii, jj, kk, 3)*dx(3) + (dble(kk) + 0.5d0)*dx(3)
 
                    ! Distance to boundary
-                   distmod_temp = dabs( (p%pos(1) - bcentx) * anrmx + &
-                                        (p%pos(2) - bcenty) * anrmy + &
-                                        (p%pos(3) - bcentz) * anrmz )
+                   distmod_temp = dabs( (p%pos(1) - bcentx) * (-normal(ii,jj,kk,1)) + &
+                                        (p%pos(2) - bcenty) * (-normal(ii,jj,kk,2)) + &
+                                        (p%pos(3) - bcentz) * (-normal(ii,jj,kk,3)) )
 
                    ! Only keep the closest one
                    if (distmod_temp .lt. distmod) then
 
                       distmod = distmod_temp
 
-                      ! To fit the convention of previous mfix
-                      normal(1) = -anrmx
-                      normal(2) = -anrmy
-                      normal(3) = -anrmz
+                      normul(1) = normal(ii,jj,kk,1)
+                      normul(2) = normal(ii,jj,kk,2)
+                      normul(3) = normal(ii,jj,kk,3)
 
                    end if ! if dist lt distmod
 
@@ -139,7 +129,7 @@
           ! *****************************************************************************
           ! Calculate the translational relative velocity
 
-          call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normal, distmod, particles)
+          call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normul, distmod, particles)
 
           ! subroutine cfrelvel_wall (ll, vrn, vrt, norm, dist, particles )
           ! *****************************************************************************
@@ -174,7 +164,7 @@
           end if
 
           ! Calculate the normal contact force
-          FN(:) = -(KN_DES_W * overlap_n  + ETAN_DES_W * V_REL_TRANS_NORM) * normal(:)
+          FN(:) = -(KN_DES_W * overlap_n  + ETAN_DES_W * V_REL_TRANS_NORM) * normul(:)
 
           ! Calculate the tangential displacement.
           overlap_t(:) = dtsolid*vrel_t(:)
@@ -197,7 +187,7 @@
           ! print *,'Vertical dist / force ',distmod, fn(1), fc(ll,1)
 
           ! Add the torque force to the total torque acting on the particle.
-          TOW(LL,:) = TOW(LL,:) + distmod*DES_CROSSPRDCT(normal,FT)
+          TOW(LL,:) = TOW(LL,:) + distmod*DES_CROSSPRDCT(normul(:),FT)
 
        end if ! if test on (d < radius)
 

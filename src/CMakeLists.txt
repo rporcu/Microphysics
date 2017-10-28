@@ -40,6 +40,7 @@ set(F90_sources
    check_data/check_particle_properties.f90
    check_data/check_point_sources.f90
    check_data/check_run_control.f90
+   compute_normals.f90
    constant_mod.f90
    conv_dif_u_g.f90
    conv_dif_v_g.f90

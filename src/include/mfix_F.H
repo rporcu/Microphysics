@@ -384,11 +384,20 @@ extern "C"
     void calc_wall_collisions ( void* rparticles, const int* ntot, const int* nrp,  
              amrex::Real* tow, amrex::Real* fc, amrex::Real* subdt, 
              const void* flag, const int* fglo, const int* fghi,
+             const amrex_real* normal, const int* nlo, const int* nhi,
              const amrex_real* bcent, const int* blo, const int* bhi,
              const amrex_real* ax, const int* axlo, const int* axhi,
              const amrex_real* ay, const int* aylo, const int* ayhi,
              const amrex_real* az, const int* azlo, const int* azhi,
              const amrex::Real* dx);
+
+    void compute_normals ( 
+             const int* lo , const int* hi,
+             const void* flag, const int* fglo, const int* fghi,
+             const amrex_real* normal, const int* nlo, const int* nhi,
+             const amrex_real* ax, const int* axlo, const int* axhi,
+             const amrex_real* ay, const int* aylo, const int* ayhi,
+             const amrex_real* az, const int* azlo, const int* azhi);
 
     void des_time_loop_per ( const int* nrp,  void* rparticles,
              const int* ngp,  void* gparticles, const int* size_nl, const int* nbor_list,
@@ -447,15 +456,6 @@ extern "C"
          const amrex::Real*, const int*, const int*);
 
     void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, amrex::Real* tol);
-
-    void amrex_bounce_walls(const void* particles, const int* np,
-                            const amrex_real* plo, const amrex_real* dx,
-                            const amrex_real* dt,
-                            const void* flag, const int* fglo, const int* fghi,
-                            const amrex_real* bcent, const int* blo, const int* bhi,
-                            const amrex_real* ax, const int* axlo, const int* axhi,
-                            const amrex_real* ay, const int* aylo, const int* ayhi,
-                            const amrex_real* az, const int* azlo, const int* azhi);
 
 #ifdef __cplusplus
 }
