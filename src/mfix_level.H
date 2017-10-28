@@ -61,6 +61,8 @@ public:
 
     void make_eb_geometry (int lev);
 
+    void InitIOData ();
+
 protected:
 
     //! Tagging cells for refinement
@@ -121,8 +123,6 @@ protected:
 private:
 
     void check_data (int lev);
-
-    void InitIOData ();
 
     void MakeNewLevelFromScratch(int lev, Real time,
           const BoxArray& new_grids, const DistributionMapping& new_dmap);
@@ -260,7 +260,7 @@ private:
     Vector< std::string > vecVarsName;
     Vector< std::string > scaVarsName;
 
-    amrex::EBFArrayBoxFactory* ebfactory;
+    std::unique_ptr<amrex::EBFArrayBoxFactory> ebfactory;
 };
 
 #endif

@@ -284,7 +284,7 @@ MFIXParticleContainer::InitData()
 }
 
 void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time,
-                                            EBFArrayBoxFactory* ebfactory )
+                                            std::unique_ptr<EBFArrayBoxFactory>& ebfactory )
 {
     BL_PROFILE("mfix_dem::EvolveParticles()");
 

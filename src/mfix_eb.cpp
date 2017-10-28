@@ -46,7 +46,7 @@ mfix_level::make_eb_geometry(int lev)
 
     EBTower::Build();
 
-    ebfactory = new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+    ebfactory = std::unique_ptr<EBFArrayBoxFactory>(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
                  {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                  m_eb_support_level);
+                  m_eb_support_level));
 }

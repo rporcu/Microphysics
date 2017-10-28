@@ -78,8 +78,6 @@ void mfix_level::Init(int lev, Real dt, Real time)
            amrex::Abort("Bad data in set_ps");
     }
 
-    InitIOData ();
-
     mfix_set_bc_type(lev);
 }
 

@@ -26,8 +26,12 @@ mfix_level::InitIOData ()
 
     // Define the list of scalar variables at cell centers that need to be written
     // to plotfile/checkfile.
-    scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "volfrac"};
-    scalarVars  = { &ep_g, &p_g, &ro_g,  &rop_g,  &mu_g};
+    if (ebfactory == NULL) {
+       scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g"};
+    } else {
+       scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "volfrac"};
+    }
+    scalarVars  = {&ep_g, &p_g, &ro_g,  &rop_g,  &mu_g};
 }
 
 void
@@ -499,50 +503,54 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
     amrex::Print() << "  Writing plotfile " << plotfilename << std::endl;
 
-    {
-       Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
+    const int ngrow = 0;
 
-       for (int lev = 0; lev <= finest_level; ++lev) {
+    Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
 
+    for (int lev = 0; lev <= finest_level; ++lev) {
+
+       if (ebfactory == NULL) {
+          const int ncomp = vectorVars.size() + scalarVars.size();
+          mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
+       } else {
           // the "+1" here is for volfrac
           const int ncomp = vectorVars.size() + scalarVars.size() + 1;
-          const int ngrow = 0;
-
           mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
+       }
 
-          // Vector variables
-          int dcomp = 0;
-          Vector<const MultiFab*> srcmf(3);
+       // Vector variables
+       int dcomp = 0;
+       Vector<const MultiFab*> srcmf(3);
 
-          for( dcomp = 0; dcomp < vectorVars.size(); dcomp=dcomp+3 ) {
-             srcmf[0] = (*vectorVars[dcomp])[lev].get();
-             srcmf[1] = (*vectorVars[dcomp+1])[lev].get();
-             srcmf[2] = (*vectorVars[dcomp+2])[lev].get();
-             amrex::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
-          };
+       for( dcomp = 0; dcomp < vectorVars.size(); dcomp=dcomp+3 ) {
+          srcmf[0] = (*vectorVars[dcomp])[lev].get();
+          srcmf[1] = (*vectorVars[dcomp+1])[lev].get();
+          srcmf[2] = (*vectorVars[dcomp+2])[lev].get();
+          amrex::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
+       };
 
-          // Scalar variables
-          for( int i = 0; i < scalarVars.size(); i++ ) {
-             MultiFab::Copy(*mf[lev], *((*scalarVars[i])[lev].get()), 0, dcomp, 1, 0);
-             dcomp++;
-          }
-          std::cout << "VOLFRAC " << (ebfactory->getVolFrac())[0] << std::endl;
-          MultiFab::Copy(*mf[lev], ebfactory->getVolFrac(), 0, dcomp, 1, 0);
-      }
+       // Scalar variables
+       for( int i = 0; i < scalarVars.size(); i++ ) {
+           MultiFab::Copy(*mf[lev], *((*scalarVars[i])[lev].get()), 0, dcomp, 1, 0);
+           dcomp++;
+       }
 
-      Vector<const MultiFab*> mf2(finest_level+1);
-
-      for (int lev = 0; lev <= finest_level; ++lev) {
-          mf2[lev] = mf[lev].get();
-      }
-
-      // Concatenate scalar and vector var names
-      Vector<std::string>  names;
-      names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
-      names.insert( names.end(), scaVarsName.begin(), scaVarsName.end());
-    
-      amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
-                   Geom(), time, istep, refRatio());
+       if (ebfactory) 
+           MultiFab::Copy(*mf[lev], ebfactory->getVolFrac(), 0, dcomp, 1, 0);
+ 
+       Vector<const MultiFab*> mf2(finest_level+1);
+ 
+       for (int lev = 0; lev <= finest_level; ++lev) {
+           mf2[lev] = mf[lev].get();
+       }
+ 
+       // Concatenate scalar and vector var names
+       Vector<std::string>  names;
+       names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
+       names.insert( names.end(), scaVarsName.begin(), scaVarsName.end());
+     
+       amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
+                    Geom(), time, istep, refRatio());
     }
 
     WriteJobInfo(plotfilename);
