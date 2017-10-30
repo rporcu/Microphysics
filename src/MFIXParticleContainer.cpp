@@ -380,6 +380,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
          int ntot = nrp + size_ng;
 
+         const Box& bx = pti.tilebox();
+
          // We need these to be zero every time we start a new batch of particles
          tow.clear();
           fc.clear();
@@ -389,31 +391,35 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          // Only call the routine for wall collisions if we actually have walls
          if (ebfactory != NULL)
          {
-            std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
-            const MultiCutFab* bndrycent;
-   
             const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
             const auto& flag = sfab.getEBCellFlagFab();
 
-            areafrac  =  ebfactory->getAreaFrac();
-            bndrycent = &(ebfactory->getBndryCent());
+            if (flag.getType(amrex::grow(bx,1)) != FabType::regular)
+            {
 
-            // Calculate forces from particle-wall collisions
-            BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-            calc_wall_collisions (particles, &ntot, &nrp, tow.dataPtr(), fc.dataPtr(), &subdt,
-                                  flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                                  normal[pti].dataPtr(),
-                                  normal[pti].loVect(), normal[pti].hiVect(),
-                                  (*bndrycent)[pti].dataPtr(),
-                                  (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
-                                  (*areafrac[0])[pti].dataPtr(),
-                                  (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-                                  (*areafrac[1])[pti].dataPtr(),
-                                  (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-                                  (*areafrac[2])[pti].dataPtr(),
-                                  (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect(),
-                                  dx);
-            BL_PROFILE_VAR_STOP(calc_wall_collisions);
+               std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+               const MultiCutFab* bndrycent;
+   
+               areafrac  =  ebfactory->getAreaFrac();
+               bndrycent = &(ebfactory->getBndryCent());
+   
+               // Calculate forces from particle-wall collisions
+               BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
+               calc_wall_collisions (particles, &ntot, &nrp, tow.dataPtr(), fc.dataPtr(), &subdt,
+                                     flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                     normal[pti].dataPtr(),
+                                     normal[pti].loVect(), normal[pti].hiVect(),
+                                     (*bndrycent)[pti].dataPtr(),
+                                     (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
+                                     (*areafrac[0])[pti].dataPtr(),
+                                     (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
+                                     (*areafrac[1])[pti].dataPtr(),
+                                     (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
+                                     (*areafrac[2])[pti].dataPtr(),
+                                     (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect(),
+                                     dx);
+               BL_PROFILE_VAR_STOP(calc_wall_collisions);
+            }
          }
 
          BL_PROFILE_VAR("des_time_loop()", des_time_loop);
