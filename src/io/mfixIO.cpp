@@ -26,11 +26,7 @@ mfix_level::InitIOData ()
 
     // Define the list of scalar variables at cell centers that need to be written
     // to plotfile/checkfile.
-    if (ebfactory == NULL) {
-       scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g"};
-    } else {
-       scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "volfrac"};
-    }
+    scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "volfrac"};
     scalarVars  = {&ep_g, &p_g, &ro_g,  &rop_g,  &mu_g};
 }
 
@@ -509,14 +505,9 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
     for (int lev = 0; lev <= finest_level; ++lev) {
 
-       if (ebfactory == NULL) {
-          const int ncomp = vectorVars.size() + scalarVars.size();
-          mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
-       } else {
-          // the "+1" here is for volfrac
-          const int ncomp = vectorVars.size() + scalarVars.size() + 1;
-          mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
-       }
+       // the "+1" here is for volfrac
+       const int ncomp = vectorVars.size() + scalarVars.size() + 1;
+       mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
 
        // Vector variables
        int dcomp = 0;
@@ -535,8 +526,11 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
            dcomp++;
        }
 
-       if (ebfactory) 
+       if (ebfactory) {
            MultiFab::Copy(*mf[lev], ebfactory->getVolFrac(), 0, dcomp, 1, 0);
+       } else {
+           mf[lev]->setVal(1.0,dcomp,1,0);
+       }
  
        Vector<const MultiFab*> mf2(finest_level+1);
  

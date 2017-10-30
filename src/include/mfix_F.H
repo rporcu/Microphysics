@@ -399,13 +399,6 @@ extern "C"
              const amrex_real* ay, const int* aylo, const int* ayhi,
              const amrex_real* az, const int* azlo, const int* azhi);
 
-    void des_time_loop_per ( const int* nrp,  void* rparticles,
-             const int* ngp,  void* gparticles, const int* size_nl, const int* nbor_list,
-             amrex::Real* tow, amrex::Real* fc, 
-             amrex::Real* subdt, const amrex::Real* dx,
-             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-             int* ncoll, amrex::Real* stime);
-
     int des_continuum_coupled ();
 
     void mfix_particle_write( const int* nrp,  void* particles);

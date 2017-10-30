@@ -16,7 +16,8 @@
 
     use param        , only: small_number, zero, one
     use particle_mod,  only: particle_t
-    use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell
+    use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell, is_single_valued_cell, &
+                                        get_neighbor_cells
 
     integer, intent(in) :: np, nrp
 
@@ -53,6 +54,7 @@
 
     real(c_real) ::overlap_n
     real(c_real) :: inv_dx(3)
+    integer      :: nbr(-1:1,-1:1,-1:1)
 
     real(c_real) :: v_rel_trans_norm
 
@@ -67,7 +69,7 @@
     ! local values used spring constants and damping coefficients
     real(c_real) ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
 
-    real(c_real) :: MAG_OVERLAP_T
+    real(c_real) :: mag_overlap_t
 
     real(c_real) :: distmod_temp
 
@@ -87,39 +89,44 @@
 
        distmod = 1.e20
 
-       do kk = k-1,k+1
-          do jj = j-1,j+1
-             do ii = i-1,i+1
+       call get_neighbor_cells(flag(i,j,k),nbr)
 
-                if (.not. is_regular_cell(flag(ii,jj,kk)) ) then
+       do kk = k-1, k+1
+          do jj = j-1, j+1
+             do ii = i-1, i+1
 
-                   ! convert bcent to global coordinate system centered at plo
-                   bcentx = bcent(ii, jj, kk, 1)*dx(1) + (dble(ii) + 0.5d0)*dx(1)
-                   bcenty = bcent(ii, jj, kk, 2)*dx(2) + (dble(jj) + 0.5d0)*dx(2)
-                   bcentz = bcent(ii, jj, kk, 3)*dx(3) + (dble(kk) + 0.5d0)*dx(3)
+                if (nbr(ii-i,jj-j,kk-k) .eq. 1) then
 
-                   ! Distance to boundary
-                   distmod_temp = dabs( (p%pos(1) - bcentx) * (-normal(ii,jj,kk,1)) + &
-                                        (p%pos(2) - bcenty) * (-normal(ii,jj,kk,2)) + &
-                                        (p%pos(3) - bcentz) * (-normal(ii,jj,kk,3)) )
+                   if (is_single_valued_cell(flag(ii,jj,kk))) then
 
-                   ! Only keep the closest one
-                   if (distmod_temp .lt. distmod) then
+                      ! convert bcent to global coordinate system centered at plo
+                      bcentx = bcent(ii, jj, kk, 1)*dx(1) + (dble(ii) + 0.5d0)*dx(1)
+                      bcenty = bcent(ii, jj, kk, 2)*dx(2) + (dble(jj) + 0.5d0)*dx(2)
+                      bcentz = bcent(ii, jj, kk, 3)*dx(3) + (dble(kk) + 0.5d0)*dx(3)
 
-                      distmod = distmod_temp
+                      ! Distance to boundary
+                      distmod_temp = dabs( (p%pos(1) - bcentx) * (-normal(ii,jj,kk,1)) + &
+                                           (p%pos(2) - bcenty) * (-normal(ii,jj,kk,2)) + &
+                                           (p%pos(3) - bcentz) * (-normal(ii,jj,kk,3)) )
+   
+                      ! Only keep the closest one
+                      if (distmod_temp .lt. distmod) then
+   
+                         distmod = distmod_temp
+   
+                         normul(1) = normal(ii,jj,kk,1)
+                         normul(2) = normal(ii,jj,kk,2)
+                         normul(3) = normal(ii,jj,kk,3)
+   
+                      end if ! if dist lt distmod
 
-                      normul(1) = normal(ii,jj,kk,1)
-                      normul(2) = normal(ii,jj,kk,2)
-                      normul(3) = normal(ii,jj,kk,3)
+                   end if ! if single_valued
 
-                   end if ! if dist lt distmod
-
-                end if ! if .not. regular
+                end if ! if nbr = 1
 
              end do
           end do
        end do
-
 
        if (distmod .lt. p%radius) then
 
@@ -172,12 +179,16 @@
 
           ! Check for Coulombs friction law and limit the maximum value of the
           ! tangential force on a particle in contact with a wall.
-          if ( MAG_OVERLAP_T > 0.0 ) then
+          if ( mag_overlap_t > 0.0 ) then
+
              ! Max force before the on set of frictional slip.
-             FNMD = MEW_W*sqrt(dot_product(FN,FN))
+             fnmd = MEW_W*sqrt(dot_product(FN,FN))
+
              ! Direction of tangential force.
-             tangent = OVERLAP_T/MAG_OVERLAP_T
-             FT = -FNMD * tangent
+             tangent = overlap_t/mag_overlap_t
+
+             FT = -fnmd * tangent
+
           else
              FT = 0.0
           end if

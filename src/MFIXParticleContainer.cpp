@@ -303,7 +303,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     MultiFab normal;
 
     // Only call the routine for wall collisions if we are not triply periodic
-    if (!Geom(0).isAllPeriodic()) 
+    if (ebfactory != NULL)
     {
         dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
         std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
@@ -331,6 +331,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
                              (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
                              (*areafrac[2])[pti].dataPtr(),
                              (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
+            BL_PROFILE_VAR_STOP(compute_normals);
         }
         normal.FillBoundary(Geom(0).periodicity());
     }
@@ -385,8 +386,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          tow.resize(ntot*3,0.0);
           fc.resize(ntot*3,0.0);
 
-         // Only call the routine for wall collisions if we are not triply periodic
-         if (!Geom(0).isAllPeriodic()) 
+         // Only call the routine for wall collisions if we actually have walls
+         if (ebfactory != NULL)
          {
             std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
             const MultiCutFab* bndrycent;
