@@ -1,63 +1,63 @@
-module calc_particle_collisions_module
+   subroutine calc_particle_collisions( rparticles, nrp, gparticles, ngp, nbor_list, size_nl, tow, fc, dtsolid, ncoll ) &
+      bind(C, name="calc_particle_collisions")
 
-   use amrex_fort_module, only : c_real => amrex_real
-   use iso_c_binding , only: c_int
-
-   implicit none
-   private
-
-   public calc_particle_collisions
-
-contains
-
-   subroutine calc_particle_collisions( particles, nrp, nbor_list, size_nl, tow, fc, dtsolid, ncoll )
-
-      use particle_mod,   only: particle_t
+      use amrex_fort_module, only : c_real => amrex_real
+      use iso_c_binding  , only: c_int
+      use particle_mod   , only: particle_t
       use cfrelvel_module, only: cfrelvel
-      use discretelement, only: des_coll_model_enum
-      use discretelement, only: des_etan, des_etat, hert_kt, hert_kn
-      use discretelement, only: des_crossprdct
-      use discretelement, only: kn, kt, mew, hertzian
-      use param,          only: SMALL_NUMBER
-      use error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
+      use discretelement , only: des_coll_model_enum, des_crossprdct
+      use discretelement , only: des_etan, des_etat, hert_kt, hert_kn, kn, kt, mew, hertzian
+      use error_manager  , only: init_err_msg, flush_err_msg, err_msg, ival
+      use param          , only: small_number
 
-      integer,          intent(in   ) :: nrp, size_nl
-      type(particle_t), intent(in   ), target :: particles(:)
+      implicit none
+
+      integer,          intent(in   ) :: nrp, ngp, size_nl
+      type(particle_t), intent(in   ) :: rparticles(nrp), gparticles(ngp)
       integer,          intent(in   ) :: nbor_list(size_nl)
-      real(c_real),     intent(inout) :: tow(:,:), fc(:,:)
+      real(c_real),     intent(inout) :: tow(nrp+ngp,3), fc(nrp+ngp,3)
       real(c_real),     intent(in   ) :: dtsolid
       integer(c_int),   intent(inout) :: ncoll
+
       logical,      parameter     :: report_excess_overlap = .false.
       real(c_real), parameter     :: flag_overlap = 0.20d0 ! % of particle radius when excess overlap will be flagged
       real(c_real), parameter     :: q2           = 0.5_c_real
 
-      type(particle_t), pointer :: pll
-
       ! particle no. indices
       integer :: ii, ll, jj
+
       ! the overlap occuring between particle-particle or particle-wall
       ! collision in the normal direction
       real(c_real) :: overlap_n, overlap_t(3)
+
       ! square root of the overlap
       real(c_real) :: sqrt_overlap
+
       ! distance vector between two particle centers or between a particle
       ! center and wall when the two surfaces are just at contact (i.e. no
       ! overlap)
       real(c_real) :: r_lm,dist_ci,dist_cl
+
       ! the normal and tangential components of the translational relative
       ! velocity
       real(c_real) :: v_rel_trans_norm, rad
+
       ! distance vector between two particle centers or between a particle
       ! center and wall at current and previous time steps
       real(c_real) :: dist(3), normal(3), dist_mag, pos_tmp(3)
+
       ! tangent to the plane of contact at current time step
       real(c_real) :: vrel_t(3)
+
       ! normal and tangential forces
       real(c_real) :: fn(3), ft(3)
+
       ! temporary storage of force
       real(c_real) :: fc_tmp(3)
+
       ! temporary storage of force for torque
       real(c_real) :: tow_force(3)
+
       ! temporary storage of torque
       real(c_real) :: tow_tmp(3,2)
 
@@ -69,7 +69,14 @@ contains
       integer      ::  np, index, nneighbors
       real(c_real) :: radiusii, radiusll
 
-      np = size(particles)
+      type(particle_t), pointer :: pll
+      type(particle_t), allocatable, target  :: particles(:)
+
+      allocate(particles(nrp+ngp))
+      particles(    1:nrp) = rparticles
+      particles(nrp+1:   ) = gparticles
+
+      np = nrp+ngp
 
       index = 1
       ! Particles is np long but that includes nrp "valid" particles and (np-nrp) "neighbor" particles --
@@ -97,7 +104,7 @@ contains
             dist_mag = dot_product( dist, dist )
             r_lm     = rad + particles(ii) % radius
 
-            if ( dist_mag > ( r_lm - SMALL_NUMBER )**2 ) cycle
+            if ( dist_mag > ( r_lm - small_number )**2 ) cycle
 
             if (abs(dist_mag) < epsilon(dist_mag)) then
                write(*,8550) ll, ii
@@ -217,5 +224,3 @@ contains
       end subroutine print_excess_overlap
 
    end subroutine calc_particle_collisions
-
-end module calc_particle_collisions_module

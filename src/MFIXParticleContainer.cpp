@@ -421,14 +421,40 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
                BL_PROFILE_VAR_STOP(calc_wall_collisions);
             }
          }
+#if 1
+         BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
+         calc_particle_collisions ( particles                     , &nrp,
+                                    neighbors[index].dataPtr()    , &size_ng,
+                                    neighbor_list[index].dataPtr(), &size_nl,
+                                    tow.dataPtr(), fc.dataPtr(), &subdt, &ncoll);
+         BL_PROFILE_VAR_STOP(calc_particle_collisions);
 
          BL_PROFILE_VAR("des_time_loop()", des_time_loop);
          des_time_loop ( &nrp     , particles, 
-                         &size_ng, neighbors[index].dataPtr(),
-                         &size_nl, neighbor_list[index].dataPtr(),
-                         tow.dataPtr(), fc.dataPtr(), &subdt, dx,
-                         &xlen, &ylen, &zlen, &ncoll, &stime, &n);
+                         &ntot, tow.dataPtr(), fc.dataPtr(), &subdt, 
+                         &xlen, &ylen, &zlen, &stime, &n);
          BL_PROFILE_VAR_STOP(des_time_loop);
+#else
+         Vector<Real> x(nrp);
+         Vector<Real> y(nrp);
+         Vector<Real> z(nrp);
+         particle_get_position (particles, nrp, x, y, z);
+
+         BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
+         calc_particle_collisions_soa ( particles                     , &nrp,
+                                        neighbors[index].dataPtr()    , &size_ng,
+                                        neighbor_list[index].dataPtr(), &size_nl,
+                                        tow.dataPtr(), fc.dataPtr(), &subdt, &ncoll);
+         BL_PROFILE_VAR_STOP(calc_particle_collisions);
+
+         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+         des_time_loop_soa ( &nrp, particles,
+                             &ntot, tow.dataPtr(), fc.dataPtr(), &subdt,
+                             &xlen, &ylen, &zlen, &stime, &n);
+         BL_PROFILE_VAR_STOP(des_time_loop);
+#endif
+
+
       }
       n += 1;
 

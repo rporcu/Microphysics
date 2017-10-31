@@ -375,11 +375,17 @@ extern "C"
     void des_init_time_loop ( const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt );
 
     void des_time_loop ( const int* nrp,  void* rparticles,
-             const int* ngp,  void* gparticles, const int* size_nl, const int* nbor_list,
-             amrex::Real* tow, amrex::Real* fc, 
-             amrex::Real* subdt, const amrex::Real* dx,
-             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-             int* ncoll, amrex::Real* stime, int* nstep);
+                         const int* nf, amrex::Real* tow, amrex::Real* fc, 
+                         amrex::Real* subdt, amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
+                         amrex::Real* stime, int* nstep);
+
+    void particle_get_position (void* particles, const int* nrp, amrex::Real* x, amrex::Real* y, amrex::Real* z);
+
+    void calc_particle_collisions ( void* rparticles, const int* nrp,
+                                    void* gparticles, const int* ngp,  
+                                    const int* nbor_list, const int* size_nl, 
+                                    amrex::Real* tow, amrex::Real* fc, 
+                                    amrex::Real* subdt, int* ncoll);
 
     void calc_wall_collisions ( void* rparticles, const int* ntot, const int* nrp,  
              amrex::Real* tow, amrex::Real* fc, amrex::Real* subdt, 

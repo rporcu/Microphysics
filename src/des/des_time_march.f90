@@ -79,76 +79,48 @@ contains
 
    end subroutine call_usr3_des
 
-   subroutine des_time_loop ( nrp    , rparticles, &
-                              ngp    , gparticles, &
-                              size_nl, nbor_list , &
-                              tow, fc, subdt, dx, &
-                              xlength, ylength, zlength, ncoll, stime, nstep) & 
+   subroutine des_time_loop ( np, particles, &
+                              nf , tow, fc, subdt, &
+                              xlength, ylength, zlength, stime, nstep) & 
           bind(C, name="des_time_loop")
 
       use particle_mod
-      use calc_particle_collisions_module,   only: calc_particle_collisions
-      use discretelement       ,   only: des_continuum_coupled
-      use output_manager_module,   only: output_manager
-      use run,                     only: call_usr
+      use constant                       , only: gravity
+      use discretelement                 , only: des_continuum_coupled
+      use output_manager_module          , only: output_manager
+      use run                            , only: call_usr
  
-      integer(c_int),   intent(in   )     :: nrp, ngp, size_nl
-      real(c_real),     intent(in   )     :: subdt, dx(3)
-      real(c_real),     intent(in   )     :: xlength, ylength, zlength
-      type(particle_t), intent(inout)     :: rparticles(nrp), gparticles(ngp)
-      integer(c_int),   intent(in   )     :: nbor_list(size_nl)
-      real(c_real),     intent(inout)     :: tow(nrp+ngp,3)
-      real(c_real),     intent(inout)     ::  fc(nrp+ngp,3)
-      integer(c_int),   intent(inout)     :: ncoll
+      integer(c_int),   intent(in   )     :: nf, np
+      real(c_real),     intent(in   )     :: subdt, xlength, ylength, zlength
+      type(particle_t), intent(inout)     :: particles(np)
+      real(c_real),     intent(inout)     :: tow(nf,3)
+      real(c_real),     intent(inout)     ::  fc(nf,3)
       real(c_real),     intent(inout)     :: stime
       integer(c_int),   intent(in   )     :: nstep
 
-      type(particle_t), allocatable       :: particles(:)
-
-      allocate(particles(nrp+ngp))
-      particles(    1:nrp) = rparticles
-      particles(nrp+1:   ) = gparticles
-
-      ! calculate forces from particle-particle collisions
-      call calc_particle_collisions ( particles, nrp, nbor_list, size_nl, tow, fc, subdt, ncoll )
+      integer :: p
 
       ! call user functions.
       if ( call_usr ) call usr1_des
 
-      ! update position and velocities
-      call des_euler_update ( rparticles, nrp+ngp, nrp, fc, tow, subdt )
-
-      if ( call_usr ) call usr2_des(nrp, rparticles );
-
-      if ( .not.des_continuum_coupled ) call output_manager(nrp+ngp,  &
+      if ( .not.des_continuum_coupled ) call output_manager(np,  &
            stime, subdt, xlength, ylength, zlength, nstep, particles, 0)
 
+      ! Update the time for the purpose of printing
       stime = stime + subdt
 
-      deallocate(particles)
+      ! Update position and velocities
+      do p = 1, np
 
-   end subroutine des_time_loop
-
-   subroutine des_euler_update ( particles, np, nrp, fc, tow, dt )
-
-      use constant,       only: gravity
-      use particle_mod,   only: particle_t
-
-      type(particle_t), intent(inout)  :: particles(np)
-      real(c_real),     intent(inout)  :: fc(np,3), tow(np,3)
-      real(c_real),     intent(in   )  :: dt
-      integer,          intent(in   )  :: np, nrp
-      integer                          :: p
-
-      do p = 1, nrp
-
-            particles(p) % vel     = particles(p) % vel   + dt * &
+            particles(p) % vel     = particles(p) % vel   + subdt * &
                 ( ( fc(p,:) +  particles(p) % drag ) / particles(p) % mass + gravity )
-            particles(p) % pos     = particles(p) % pos   + dt * particles(p) % vel
-            particles(p) % omega   = particles(p) % omega + dt * tow(p,:) * particles(p) % omoi
+            particles(p) % pos     = particles(p) % pos   + subdt * particles(p) % vel
+            particles(p) % omega   = particles(p) % omega + subdt * tow(p,:) * particles(p) % omoi
 
       end do
 
-   end subroutine des_euler_update
+      if ( call_usr ) call usr2_des(np, particles );
+
+   end subroutine des_time_loop
 
 end module des_time_march_module

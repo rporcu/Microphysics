@@ -65,12 +65,13 @@
     integer :: PHASELL
 
     real(c_real) :: tangent(3)
-    real(c_real) :: fnmd
+
+    real(c_real) :: xp, yp, zp
+
     ! local values used spring constants and damping coefficients
-    real(c_real) ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
-
+    real(c_real) :: ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
+    real(c_real) :: fnmd
     real(c_real) :: mag_overlap_t
-
     real(c_real) :: distmod_temp
 
     inv_dx = 1.0d0 / dx
@@ -79,9 +80,13 @@
 
        p => particles(ll)
 
-       lx = p%pos(1)*inv_dx(1)
-       ly = p%pos(2)*inv_dx(2)
-       lz = p%pos(3)*inv_dx(3)
+       xp = p%pos(1)
+       yp = p%pos(2)
+       zp = p%pos(3)
+
+       lx = xp*inv_dx(1)
+       ly = yp*inv_dx(2)
+       lz = zp*inv_dx(3)
 
        i = floor(lx)
        j = floor(ly)
@@ -105,9 +110,9 @@
                       bcentz = bcent(ii, jj, kk, 3)*dx(3) + (dble(kk) + 0.5d0)*dx(3)
 
                       ! Distance to boundary
-                      distmod_temp = dabs( (p%pos(1) - bcentx) * (-normal(ii,jj,kk,1)) + &
-                                           (p%pos(2) - bcenty) * (-normal(ii,jj,kk,2)) + &
-                                           (p%pos(3) - bcentz) * (-normal(ii,jj,kk,3)) )
+                      distmod_temp = dabs( (xp - bcentx) * (-normal(ii,jj,kk,1)) + &
+                                           (yp - bcenty) * (-normal(ii,jj,kk,2)) + &
+                                           (zp - bcentz) * (-normal(ii,jj,kk,3)) )
    
                       ! Only keep the closest one
                       if (distmod_temp .lt. distmod) then
