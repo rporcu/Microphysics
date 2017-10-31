@@ -55,6 +55,7 @@
     real(c_real) ::overlap_n
     real(c_real) :: inv_dx(3)
     integer      :: nbr(-1:1,-1:1,-1:1)
+    integer      :: ilo,ihi,jlo,jhi,klo,khi
 
     real(c_real) :: v_rel_trans_norm
 
@@ -96,9 +97,24 @@
 
        call get_neighbor_cells(flag(i,j,k),nbr)
 
-       do kk = k-1, k+1
-          do jj = j-1, j+1
-             do ii = i-1, i+1
+       klo = k-1
+       khi = k+1
+       jlo = j-1
+       jhi = j+1
+       ilo = i-1
+       ihi = i+1
+
+       if ( (p%pos(1)-i*dx(1)) .gt. p%radius) ilo = i
+       if ( (p%pos(2)-j*dx(2)) .gt. p%radius) jlo = j
+       if ( (p%pos(3)-k*dx(3)) .gt. p%radius) klo = k
+
+       if ( ((i+1)*dx(1)-p%pos(1)) .gt. p%radius) ihi = i
+       if ( ((j+1)*dx(2)-p%pos(2)) .gt. p%radius) jhi = j
+       if ( ((k+1)*dx(3)-p%pos(3)) .gt. p%radius) khi = k
+
+       do kk = klo, khi
+          do jj = jlo, jhi
+             do ii = ilo, ihi
 
                 if (nbr(ii-i,jj-j,kk-k) .eq. 1) then
 
