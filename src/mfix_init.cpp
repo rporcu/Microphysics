@@ -370,6 +370,10 @@ mfix_level::AllocateArrays (int lev)
     drag_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,1));
     drag_u[lev]->setVal(0.);
 
+    // u-velocity slopes. Note that the number of components is not 1, but 3!
+    slopes_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],3,1));
+    slopes_u[lev] -> setVal(0.);
+    
     // ********************************************************************************
     // Y-face-based arrays
     // ********************************************************************************
@@ -412,6 +416,13 @@ mfix_level::AllocateArrays (int lev)
     drag_v[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,1));
     drag_v[lev]->setVal(0.);
 
+    // v-velocity slopes. Note that the number of components is not 1, but 3!
+    slopes_v[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],3,1));
+    slopes_v[lev] -> setVal(0.);
+
+
+
+    
     // ********************************************************************************
     // Z-face-based arrays
     // ********************************************************************************
@@ -453,6 +464,11 @@ mfix_level::AllocateArrays (int lev)
 
     drag_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
     drag_w[lev]->setVal(0.);
+
+    // w-velocity slopes. Note that the number of components is not 1, but 3!
+    slopes_w[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],3,1));
+    slopes_w[lev] -> setVal(0.);
+
 }
 
 

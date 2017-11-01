@@ -421,6 +421,48 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt)
 	
 
 
+void
+mfix_level::mfix_compute_velocity_slopes (int lev)
+{
+    BL_PROFILE("mfix_level::mfix_velocity_slopes");
+
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	// Boxes for staggered components
+	Box domain(geom[lev].Domain());
+	Box ubx = amrex::convert ( mfi.tilebox(), e_x );
+	Box vbx = amrex::convert ( mfi.tilebox(), e_y );
+	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
+
+	compute_u_slopes ( BL_TO_FORTRAN_BOX(ubx),
+			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+			   (*slopes_u[lev])[mfi].dataPtr (),
+			   domain.loVect (), domain.hiVect (),
+			   bc_ilo.dataPtr(), bc_ihi.dataPtr() );
+
+	compute_v_slopes ( BL_TO_FORTRAN_BOX(vbx),
+			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+			   (*slopes_v[lev])[mfi].dataPtr (),
+			   domain.loVect (), domain.hiVect (),
+			   bc_jlo.dataPtr(), bc_jhi.dataPtr() );
+
+	compute_w_slopes ( BL_TO_FORTRAN_BOX(wbx),
+			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			   (*slopes_w[lev])[mfi].dataPtr (),
+			   domain.loVect (), domain.hiVect (),
+			   bc_klo.dataPtr(), bc_khi.dataPtr() );
+    }
+
+    // Fill halo cells
+    slopes_u[lev] -> FillBoundary(geom[lev].periodicity());
+    slopes_v[lev] -> FillBoundary(geom[lev].periodicity());
+    slopes_w[lev] -> FillBoundary(geom[lev].periodicity());
+}
+
+
 
 void 
 mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
@@ -559,7 +601,7 @@ mfix_level::solve_poisson_equation (  int lev,
     bool                                have_rhcc = false;
     int                                 nc = 0; // Don't know what it is but it should not
                                                 // make any difference in the solve 
-    int                                 verbose = 1;
+    int                                 verbose = 0;
     Real                                rel_tol = 1.0e-13;
     Real                                abs_tol = 1.0e-14;
     amrex::FMultiGrid                   solver(geom[lev]);
@@ -584,7 +626,6 @@ mfix_level::solve_poisson_equation (  int lev,
     
 //    VisMF::Write(*rhs[lev], "rhs");
 	
-    //solver.set_const_gravity_coeffs ();
     solver.solve ( *phi[lev], *rhs[lev], rel_tol, abs_tol, 0, 0, 1 );
 
 }

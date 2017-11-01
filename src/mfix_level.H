@@ -159,6 +159,9 @@ private:
     void mfix_apply_pcm_correction (int lev, amrex::Real dt);
 
     void mfix_apply_forcing_terms (int lev, amrex::Real dt);
+
+    void mfix_compute_velocity_slopes (int lev);
+
     
 // End of projection-related methods
 
@@ -273,14 +276,22 @@ private:
 
 
     // Projection
+    // These can probably go
     Vector< std::unique_ptr<MultiFab> > ugradu_x;
     Vector< std::unique_ptr<MultiFab> > ugradu_y;
     Vector< std::unique_ptr<MultiFab> > ugradu_z;
-    
+
+    // These can probably go
     Vector< std::unique_ptr<MultiFab> > divtau_x;
     Vector< std::unique_ptr<MultiFab> > divtau_y;
     Vector< std::unique_ptr<MultiFab> > divtau_z;
 
+    // These are multi-component multifab
+    Vector< std::unique_ptr<MultiFab> > slopes_u;
+    Vector< std::unique_ptr<MultiFab> > slopes_v;
+    Vector< std::unique_ptr<MultiFab> > slopes_w;
+    
+    
     Vector< std::unique_ptr<MultiFab> > fp_x;
     Vector< std::unique_ptr<MultiFab> > fp_y;
     Vector< std::unique_ptr<MultiFab> > fp_z;

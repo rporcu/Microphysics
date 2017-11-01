@@ -453,6 +453,35 @@ extern "C"
        amrex::Real* w_g, const int* wlo, const int* whi,
        amrex::Real* ugradu_z, const amrex::Real* dx );
 
+
+    void compute_divuu_x (
+       const int* lo,  const int*  hi,
+       amrex::Real* u_g, const int* ulo, const int* uhi,
+       const amrex::Real* slopes,
+       amrex::Real* v_g, const int* vlo, const int* vhi,
+       amrex::Real* w_g, const int* wlo, const int* whi,
+       amrex::Real* divuu_x, const amrex::Real* dx );
+
+    
+    void compute_divuu_y (
+       const int* lo,  const int*  hi,
+       amrex::Real* u_g, const int* ulo, const int* uhi,
+       amrex::Real* v_g, const int* vlo, const int* vhi,
+       const amrex::Real* slopes,
+       amrex::Real* w_g, const int* wlo, const int* whi,
+       amrex::Real* divuu_y, const amrex::Real* dx );
+    
+
+    void compute_divuu_z (
+       const int* lo,  const int*  hi,
+       amrex::Real* u_g, const int* ulo, const int* uhi,
+       amrex::Real* v_g, const int* vlo, const int* vhi,
+       amrex::Real* w_g, const int* wlo, const int* whi,
+       const amrex::Real* slopes,
+       amrex::Real* divuu_z, const amrex::Real* dx );
+
+
+    
     void compute_divtau_x (
        const int* lo,  const int*  hi,
        amrex::Real* u_g, const int* ulo, const int* uhi,
@@ -620,6 +649,26 @@ extern "C"
 	const amrex::Real* rop,  const amrex::Real* dx,
 	const amrex::Real* dt,   const int* dir );
 
+    void compute_u_slopes (
+	const int* lo, const int* hi,
+	const amrex::Real* u,   const int* ulo, const int* uhi, 
+	amrex::Real* slopes,
+	const int* domlo, const int* domhi,
+	const int* bc_ilo_type, const int* bc_ihi_type );
+
+    void compute_v_slopes (
+	const int* lo, const int* hi,
+	const amrex::Real* v,   const int* vlo, const int* vhi, 
+	amrex::Real* slopes,
+	const int* domlo, const int* domhi,
+	const int* bc_jlo_type, const int* bc_jhi_type );
+    
+    void compute_w_slopes (
+	const int* lo, const int* hi,
+	const amrex::Real* w, const int* wlo, const int* whi, 
+	amrex::Real* slopes,
+	const int* domlo, const int* domhi,
+	const int* bc_klo_type, const int* bc_khi_type );
     
 #ifdef __cplusplus
 }
