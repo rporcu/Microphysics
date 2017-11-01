@@ -145,7 +145,7 @@ contains
 
    ! 
    !
-   ! Computes d(uv)/dx + d(vv)/dy + d(vw)/dz at the
+   ! Computes d(vu)/dx + d(vv)/dy + d(vw)/dz at the
    ! y-edges ( v-component location )
    !
    ! 
@@ -308,7 +308,7 @@ contains
                !
 
                ! East face
-               u_e   = half * ( ug(i+1,j,k) + ug(i,j,k-1) )
+               u_e   = half * ( ug(i+1,j,k) + ug(i+1,j,k-1) )
                wpls  = wg(i+1,j,k) - half * slopes(i+1,j,k,1)
                wmns  = wg(i,j,k)   + half * slopes(i,j,k,1)
                w_e   = merge ( wmns, wpls, u_e > zero )

@@ -34,7 +34,7 @@
 !  However, for Dirichlet's BCs in the longitudinal direction, the velocity
 !  is not known outside the domain since the BC is applied directly at the first
 !  valid node which lies on the boundary itself. Therefore, the scheme must be
-!  arranged as follows to use values from inside the domain only.
+!  arranged as follows to use ONLY values from inside the domain.
 !  For a left boundary (i=0), the u-variations are:
 !  the value
 !
@@ -414,15 +414,16 @@ contains
      
    end subroutine compute_w_slopes
 
-
    
    
-
+   !
+   ! Monotonized Central (MC) limiter
+   ! 
    function mc_limiter ( dleft, dcenter, dright )  result (slope)
 
       real(ar), intent(in   ) :: dleft, dcenter, dright
       real(ar)                :: slope
-      real(ar), parameter     :: two = 0.2_ar
+      real(ar), parameter     :: two = 2.0_ar
 
       slope = min ( two * dleft, dcenter, two * dright )
       slope = max ( zero, slope )
