@@ -345,11 +345,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     int ncoll_total = 0;
 
-    Vector<Real> tow;
-    Vector<Real> fc;
-    tow.resize(1,0.0);
-     fc.resize(1,0.0);
-
     int n = 0;
     while (n < nsubsteps)
     {
@@ -367,6 +362,12 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
+    {
+      Vector<Real> tow;
+      Vector<Real> fc;
+      tow.resize(1,0.0);
+      fc.resize(1,0.0);
+
       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
          // Real particles
@@ -421,6 +422,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
                BL_PROFILE_VAR_STOP(calc_wall_collisions);
             }
          }
+
 #if 1
          BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
          calc_particle_collisions ( particles                     , &nrp,
@@ -453,9 +455,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
                              &xlen, &ylen, &zlen, &stime, &n);
          BL_PROFILE_VAR_STOP(des_time_loop);
 #endif
-
-
       }
+    }
       n += 1;
 
       if (debug) {
@@ -463,6 +464,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          ParallelDescriptor::ReduceIntSum(ncoll,ParallelDescriptor::IOProcessorNumber());
          Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
       }
+
     }
 
     if ( des_continuum_coupled () == 0 )
