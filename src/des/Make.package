@@ -1,6 +1,6 @@
-f90EXE_sources += calc_collision_wall_mod.f90
+f90EXE_sources += calc_wall_collisions.f90
 f90EXE_sources += calc_drag.f90
-f90EXE_sources += calc_force_dem.f90
+f90EXE_sources += calc_particle_collisions.f90
 f90EXE_sources += cffctowall.f90
 f90EXE_sources += cfnewvalues.f90
 f90EXE_sources += cfrelvel.f90

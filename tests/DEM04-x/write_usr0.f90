@@ -51,7 +51,7 @@
 
  1100 FORMAT(2/,7x,'Time Stepping Scheme: ',A)
 
- 1300 FORMAT(2/11X,A,17X,A,12X,A,'_MFIX',9X,'%REL ERR')
+ 1300 FORMAT(2/11X,A,17X,A,12X,A,'_MFIX')
 
       CLOSE(fUNIT)
       RETURN

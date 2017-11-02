@@ -34,6 +34,20 @@ module ic
   ! Species transfer boundary condition
   real(c_real) :: IC_X_g(dim_ic, dim_n_g), IC_X_s(dim_ic, dim_m, dim_n_s)
 
+  ! Particle Size properties
+  character(len=16) :: ic_dp_dist(dim_ic, dim_m)
+  real(c_real) :: ic_dp_mean(dim_ic, dim_m)
+  real(c_real) :: ic_dp_std(dim_ic, dim_m)
+  real(c_real) :: ic_dp_min(dim_ic, dim_m)
+  real(c_real) :: ic_dp_max(dim_ic, dim_m)
+
+  ! Particle density properties
+  character(len=16) :: ic_ro_s_dist(dim_ic, dim_m)
+  real(c_real) :: ic_ro_s_mean(dim_ic, dim_m)
+  real(c_real) :: ic_ro_s_std(dim_ic, dim_m)
+  real(c_real) :: ic_ro_s_min(dim_ic, dim_m)
+  real(c_real) :: ic_ro_s_max(dim_ic, dim_m)
+
 contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

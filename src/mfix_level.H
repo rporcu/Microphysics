@@ -14,6 +14,12 @@
 
 #include <MFIXParticleContainer.H>
 
+#include <AMReX_GeometryShop.H>
+#include <AMReX_EBIndexSpace.H>
+#include <AMReX_EBFabFactory.H>
+#include <AMReX_EBTower.H>
+#include <AMReX_EBFArrayBox.H>
+
 class mfix_level
     : public AmrCore
 {
@@ -52,6 +58,10 @@ public:
        { pc -> output( lev, estatus, finish, nstep, dt, time);};
 
     void make_mg_bc (int mg_bc[]);
+
+    void make_eb_geometry (int lev);
+
+    void InitIOData ();
 
 protected:
 
@@ -113,8 +123,6 @@ protected:
 private:
 
     void check_data (int lev);
-
-    void InitIOData ();
 
     void MakeNewLevelFromScratch(int lev, Real time,
           const BoxArray& new_grids, const DistributionMapping& new_dmap);
@@ -252,6 +260,7 @@ private:
     Vector< std::string > vecVarsName;
     Vector< std::string > scaVarsName;
 
+    std::unique_ptr<amrex::EBFArrayBoxFactory> ebfactory;
 };
 
 #endif

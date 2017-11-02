@@ -44,4 +44,23 @@ contains
 
    end subroutine print_particles
 
+   subroutine particle_get_position (particles, np, x, y, z) &
+       bind(c,name='particle_get_position')
+
+    use amrex_fort_module, only: amrex_real
+
+    integer         ,  intent(in   )  :: np
+    type(particle_t),  intent(in   )  :: particles(np)
+    real(amrex_real),  intent(  out)  :: x(np), y(np), z(np)
+
+    integer :: i
+
+    do i = 1, size(particles)
+       x(i) = particles(i)%pos(1)
+       y(i) = particles(i)%pos(2)
+       z(i) = particles(i)%pos(3)
+    end do
+
+  end subroutine particle_get_position
+
 end module

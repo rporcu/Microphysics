@@ -50,5 +50,5 @@ for result in ${post_dats}; do
 done
 
 if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then
-    ${FCOMPARE} --infile1 "${MFIX_BENCHMARKS_HOME}/FLD03-x_FLD03-x_plt00000" --infile2 FLD0300000/
+    ${FCOMPARE} --infile1 "${MFIX_BENCHMARKS_HOME}/FLD03-x_FLD03-x_plt00001" --infile2 FLD0300001/
 fi

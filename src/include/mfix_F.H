@@ -2,6 +2,7 @@
 
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
+#include "AMReX_RealVect.H"
 
 #ifdef BL_SINGLE_PRECISION_PARTICLES
 typedef float amrex_particle_real;
@@ -373,20 +374,48 @@ extern "C"
 
     void des_init_time_loop ( const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt );
 
-    void des_time_loop_ops( const int* nrp,  void* rparticles,
-                const int* ngp,  void* gparticles,
-          amrex::Real* subdt, amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-          amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-          int* nstep, int* ncoll );
+    void des_time_loop ( const int* nrp,  void* rparticles,
+                         const int* nf, amrex::Real* tow, amrex::Real* fc, 
+                         amrex::Real* subdt, amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
+                         amrex::Real* stime, int* nstep);
 
-    void des_time_loop_ops_nl( const int* nrp,  void* rparticles,
-                     const int* ngp,  void* gparticles,
-                               const int* size_nl, const int* nbor_list,
-             amrex::Real* subdt, amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-             int* nstep, int* ncoll );
+    void particle_get_position (void* particles, const int* nrp, amrex::Real* x, amrex::Real* y, amrex::Real* z);
+
+    void calc_particle_collisions ( void* rparticles, const int* nrp,
+                                    void* gparticles, const int* ngp,  
+                                    const int* nbor_list, const int* size_nl, 
+                                    amrex::Real* tow, amrex::Real* fc, 
+                                    amrex::Real* subdt, int* ncoll);
+
+    void calc_wall_collisions ( void* rparticles, const int* ntot, const int* nrp,  
+             amrex::Real* tow, amrex::Real* fc, amrex::Real* subdt, 
+             const void* flag, const int* fglo, const int* fghi,
+             const amrex_real* normal, const int* nlo, const int* nhi,
+             const amrex_real* bcent, const int* blo, const int* bhi,
+             const amrex_real* ax, const int* axlo, const int* axhi,
+             const amrex_real* ay, const int* aylo, const int* ayhi,
+             const amrex_real* az, const int* azlo, const int* azhi,
+             const amrex::Real* dx);
+
+    void compute_normals ( 
+             const int* lo , const int* hi,
+             const void* flag, const int* fglo, const int* fghi,
+             const amrex_real* normal, const int* nlo, const int* nhi,
+             const amrex_real* ax, const int* axlo, const int* axhi,
+             const amrex_real* ay, const int* aylo, const int* ayhi,
+             const amrex_real* az, const int* azlo, const int* azhi);
 
     int des_continuum_coupled ();
+
+    void mfix_particle_write( const int* nrp,  void* particles);
+
+    void mfix_particle_generator(int* pcount, const int* domlo , const int* domhi,
+                                 amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
+
+    void mfix_particle_generator_prop( const int* nrp,  void* particles);
+
+  void mfix_get_walls(int* bcv, int* exists,
+                      amrex::RealVect* normal, amrex::RealVect* center);
 
     void mfix_usr0();
 
@@ -426,6 +455,7 @@ extern "C"
          const amrex::Real*, const int*, const int*);
 
     void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, amrex::Real* tol);
+
 #ifdef __cplusplus
 }
 #endif

@@ -31,7 +31,6 @@ contains
 
 ! Local variables .....................................................//
       integer :: i,j,k
-      real(c_real) :: ro_val
 
       if ( is_undefined( ro_g0 ) ) then
 

@@ -1,5 +1,6 @@
 set(CXX_sources
    main.cpp
+   mfix_eb.cpp
    mfix_evolve.cpp
    mfix_init.cpp
    mfix_level.cpp
@@ -39,6 +40,7 @@ set(F90_sources
    check_data/check_particle_properties.f90
    check_data/check_point_sources.f90
    check_data/check_run_control.f90
+   compute_normals.f90
    constant_mod.f90
    conv_dif_u_g.f90
    conv_dif_v_g.f90
@@ -47,9 +49,9 @@ set(F90_sources
    conv_rop.f90
    correct_0.f90
    deprecated.f90
-   des/calc_collision_wall_mod.f90
    des/calc_drag.f90
-   des/calc_force_dem.f90
+   des/calc_particle_collisions.f90
+   des/calc_wall_collisions.f90
    des/cffctowall.f90
    des/cfrelvel.f90
    des/cfslide.f90
@@ -59,6 +61,7 @@ set(F90_sources
    des/discretelement_mod.f90
    des/drag_gp_des.f90
    des/init_collision.f90
+   des/particle_generator.f90
    des/set_particle_properties.f90
    des/stl_functions_des_mod.f90
    display_resid.f90
@@ -70,6 +73,7 @@ set(F90_sources
    flip_particle_vol.f90
    functions_mod.f90
    get_data.f90
+   get_eb_walls.f90
    get_tunit.f90
    ic_mod.f90
    init_fluid.f90

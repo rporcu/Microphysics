@@ -123,6 +123,11 @@ int main (int argc, char* argv[])
 
     my_mfix.Init(lev,dt,time);
 
+    my_mfix.make_eb_geometry(lev);
+
+    // Note this must be called after make_eb_geometry so that we know whether there are EB boundaries or not
+    my_mfix.InitIOData();
+
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())

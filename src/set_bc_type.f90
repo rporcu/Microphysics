@@ -209,5 +209,4 @@ module set_bc_type_module
       enddo
 
    end subroutine set_bc_type
-
-   end module set_bc_type_module
+ end module set_bc_type_module
