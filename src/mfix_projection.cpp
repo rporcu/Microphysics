@@ -54,32 +54,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, nghost);
     MultiFab::Copy (*v_go[lev],   *v_g[lev],   0, 0, 1, nghost);
     MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, nghost);
-
-   
-
-    // Compute the divergence of the velocity field, div(u).
-    // div(u) is needed to compute the volumetric term in the
-    // stress tensor
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*trD_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box& bx = mfi.tilebox();
-
-	compute_divu ( BL_TO_FORTRAN_BOX(bx),
-		       BL_TO_FORTRAN_ANYD((*trD_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-		       geom[lev].CellSize() );		     
-
-    }
-
-    // BCs 
-    fill_mf_bc ( lev, *trD_g[lev] );
-
-    amrex::Print() << " Initial max(abs(div(u)))  = " << trD_g[lev] ->  norm0 () << "\n"; 
+  
 
  
 //     // User hooks
@@ -118,31 +93,33 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     // Time integration step
     //
     
-    // Step 1: compute u* (predictor step) and store it in u_gt,
-    // v_gt, and w_gt
+    // Step 1: compute u* (predictor step) and store it in u_g,
+    // v_g, and w_g
+    mfix_compute_velocity_slopes ( lev );
     mfix_apply_pcm_prediction ( lev, dt );
-
+    mfix_add_pressure_gradient ( lev, -dt );
+    
     // Exchange halo nodes and apply BCs
-    u_gt[lev] -> FillBoundary (geom[lev].periodicity());
-    v_gt[lev] -> FillBoundary (geom[lev].periodicity());
-    w_gt[lev] -> FillBoundary (geom[lev].periodicity());
-  
-    // Here we should call set_bc1 () but it works for
-    // u)g, v_g, w_g only. Gotta take care of that
-
+    u_g[lev] -> FillBoundary (geom[lev].periodicity());
+    v_g[lev] -> FillBoundary (geom[lev].periodicity());
+    w_g[lev] -> FillBoundary (geom[lev].periodicity());
+    mfix_set_bc1 ( lev );
+	
     // Step 2: compute u** (corrector step) and store it in
     //  u_g, v_g, and w_g
+    mfix_compute_velocity_slopes ( lev );
     mfix_apply_pcm_correction ( lev, dt );
+    mfix_add_pressure_gradient ( lev, -0.5*dt );
     
-    // Add forcing terms ( previous pressure, gravity, and momentum
+    // Add forcing terms ( gravity and/or momentum
     // exchange with particles )
-    mfix_apply_forcing_terms ( lev, dt );
+//    mfix_apply_forcing_terms ( lev, dt );
 
     // Fill ghost cells and reimpose boundary conditions
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
     w_g[lev] -> FillBoundary (geom[lev].periodicity());
-    // mfix_set_bc1(lev);
+    mfix_set_bc1(lev);
 
     //
     std::cout << "\nAfter predictor step :\n";
@@ -252,11 +229,26 @@ mfix_level::init_tests_projection (int lev)
 }
 
 
+
+//
+// Computes:
+//
+//           u_g = u_g + dt * R_u
+//           v_g = v_g + dt * R_v
+//           w_g = w_g + dt * R_w
+//
+// where R_u, R_v, and R_w are the convective + diffusive term of
+// the u,v, and w momentum equations respectively.
+// 
 void
 mfix_level::mfix_apply_pcm_prediction (int lev, amrex::Real dt)
 {
     BL_PROFILE("mfix_level::mfix_apply_pcm_prediction");
 
+    int xdir = 1;
+    int ydir = 2;
+    int zdir = 3;
+        
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
@@ -267,44 +259,41 @@ mfix_level::mfix_apply_pcm_prediction (int lev, amrex::Real dt)
 	Box vbx = amrex::convert ( mfi.tilebox(), e_y );
 	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
 	
-        // U velocity ( u* stored in u_gt )
-	int dir = 1;
-	
+        // U velocity ( u* stored in u_g )
 	apply_pcm_prediction (
 	    BL_TO_FORTRAN_BOX(ubx),  
-	    BL_TO_FORTRAN_ANYD((*u_gt[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+	    (*slopes_u[lev])[mfi].dataPtr (),
 	    BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
             (*rop_g[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &dt, &dir );
+	    geom[lev].CellSize (), &dt, &xdir );
 
-	// V velocity ( v* stored in v_gt )
-	dir = 2;
-	
+	// V velocity ( v* stored in v_g )
 	apply_pcm_prediction (
 	    BL_TO_FORTRAN_BOX(vbx),  
-	    BL_TO_FORTRAN_ANYD((*v_gt[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+	    (*slopes_v[lev])[mfi].dataPtr (),
 	    BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
             (*rop_g[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &dt, &dir );
+	    geom[lev].CellSize (), &dt, &ydir );
 
-	// W velocity ( w* stored in w_gt )
-	dir = 3;
-	
+	// W velocity ( w* stored in w_g )
 	apply_pcm_prediction (
 	    BL_TO_FORTRAN_BOX(wbx),  
-	    BL_TO_FORTRAN_ANYD((*w_gt[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+	    (*slopes_w[lev])[mfi].dataPtr (),
 	    BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
             (*rop_g[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &dt, &dir );
+	    geom[lev].CellSize (), &dt, &zdir );
     }
 }
 
@@ -313,6 +302,14 @@ mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
 {
     BL_PROFILE("mfix_level::mfix_apply_pcm_correction");
 
+
+    int nghost = u_g[lev] -> nGrow();
+    
+    // Store u*, v*, w* in u_gt, v_gt, w_gt
+    MultiFab::Copy (*u_gt[lev],   *u_g[lev],   0, 0, 1, nghost);
+    MultiFab::Copy (*v_gt[lev],   *v_g[lev],   0, 0, 1, nghost);
+    MultiFab::Copy (*w_gt[lev],   *w_g[lev],   0, 0, 1, nghost);
+    
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
@@ -323,13 +320,14 @@ mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
 	Box vbx = amrex::convert ( mfi.tilebox(), e_y );
 	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
 	
-        // U velocity ( u* stored in u_gt )
+        // U velocity ( u** stored in u_g )
 	int dir = 1;
 	
 	apply_pcm_correction (
 	    BL_TO_FORTRAN_BOX(ubx),  
 	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
 	    (*u_go[lev])[mfi].dataPtr (),
+	    (*slopes_u[lev])[mfi].dataPtr (),
 	    BL_TO_FORTRAN_ANYD((*u_gt[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v_gt[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w_gt[lev])[mfi]),
@@ -337,13 +335,14 @@ mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
             (*rop_g[lev])[mfi].dataPtr (),
 	    geom[lev].CellSize (), &dt, &dir );
 
-        // V velocity ( v* stored in v_gt )
+        // V velocity ( v** stored in v_g )
 	dir = 2;
 	
 	apply_pcm_correction (
 	    BL_TO_FORTRAN_BOX(vbx),  
 	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
 	    (*v_go[lev])[mfi].dataPtr (),
+	    (*slopes_v[lev])[mfi].dataPtr (),
 	    BL_TO_FORTRAN_ANYD((*u_gt[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v_gt[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w_gt[lev])[mfi]),
@@ -351,13 +350,14 @@ mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
             (*rop_g[lev])[mfi].dataPtr (),
 	    geom[lev].CellSize (), &dt, &dir );
 	
-        // V velocity ( v* stored in v_gt )
+        // W velocity ( w** stored in w_g )
 	dir = 3;
 	
 	apply_pcm_correction (
 	    BL_TO_FORTRAN_BOX(wbx),  
 	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
 	    (*w_go[lev])[mfi].dataPtr (),
+	    (*slopes_w[lev])[mfi].dataPtr (),
 	    BL_TO_FORTRAN_ANYD((*u_gt[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v_gt[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w_gt[lev])[mfi]),
@@ -369,6 +369,64 @@ mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
       
 
 }
+
+
+
+
+//
+// Perform the following operations:
+//
+//       u_g = u_g + coeff * ( dp_g/dx ) * (1/ro_g)
+//       v_g = v_g + coeff * ( dp_g/dy ) * (1/ro_g)
+//       w_g = w_g + coeff * ( dp_g/dz ) * (1/ro_g)
+//
+// 1/ro_g is stored in the class member oro_g[lev][<0,1,2>] 
+// 
+void
+mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
+{
+    BL_PROFILE("mfix_level::mfix_add_pressure_gradient");
+
+    int xdir = 1;
+    int ydir = 2;
+    int zdir = 3;
+    
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	// Boxes for staggered components
+	Box ubx = amrex::convert ( mfi.tilebox(), e_x );
+	Box vbx = amrex::convert ( mfi.tilebox(), e_y );
+	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
+
+	add_gradient (
+	    BL_TO_FORTRAN_BOX(ubx),  
+	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+	    (*(oro_g[lev][0]))[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+	    geom[lev].CellSize(), &coeff, &xdir );
+	
+	add_gradient (
+	    BL_TO_FORTRAN_BOX(vbx),  
+	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+	    (*(oro_g[lev][1]))[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+	    geom[lev].CellSize(), &coeff, &ydir );
+	
+	add_gradient (
+	    BL_TO_FORTRAN_BOX(wbx),  
+	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+	    (*(oro_g[lev][2]))[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+	    geom[lev].CellSize(), &coeff, &zdir );
+
+	
+    }
+}
+
+
 
 
 void
@@ -418,13 +476,14 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt)
 	
     }
 }
-	
 
-
+//
+// Compute the slopes of each velocity component in the
+// three directions.
 void
 mfix_level::mfix_compute_velocity_slopes (int lev)
 {
-    BL_PROFILE("mfix_level::mfix_velocity_slopes");
+    BL_PROFILE("mfix_level::mfix_compute_velocity_slopes");
 
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -460,6 +519,7 @@ mfix_level::mfix_compute_velocity_slopes (int lev)
     slopes_u[lev] -> FillBoundary(geom[lev].periodicity());
     slopes_v[lev] -> FillBoundary(geom[lev].periodicity());
     slopes_w[lev] -> FillBoundary(geom[lev].periodicity());
+
 }
 
 
@@ -486,9 +546,6 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
 		       geom[lev].CellSize() );		     
 
     }
-
-//    amrex::ParallelDescriptor::ReduceRealSum (offset);
-//    trD_g[lev] -> plus ( -offset, 1 );
 
     // RHS BCs (probably we do not need this)
     trD_g[lev] -> FillBoundary(geom[lev].periodicity());
@@ -561,20 +618,6 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
 	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
 	    geom[lev].CellSize(), &coeff, &zdir );
 
-
-	
-	// apply_pressure_correction ( BL_TO_FORTRAN_BOX(ubx),  
-	// 			    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-	// 			    (*(oro_g[lev][0]))[mfi].dataPtr(),
-	// 			    BL_TO_FORTRAN_BOX(vbx),  
-	// 			    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-	// 			    (*(oro_g[lev][1]))[mfi].dataPtr(),
-	// 			    BL_TO_FORTRAN_BOX(wbx),  
-	// 			    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-	// 			    (*(oro_g[lev][2]))[mfi].dataPtr(),
-	// 			    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
-	// 			    geom[lev].CellSize (),
-	// 			    &dt );
     }
 
 }
@@ -611,8 +654,8 @@ mfix_level::solve_poisson_equation (  int lev,
     solver.set_bc (bc.dataPtr());
     // solver.set_maxorder ();
     
-    amrex::Print() << "RHS HAS NANS = " << rhs[lev] -> contains_nan () << "\n";
-    amrex::Print() << "norm0(ppe rhs) = " << rhs[lev]  -> norm0 () << "\n";
+    // amrex::Print() << "RHS HAS NANS = " << rhs[lev] -> contains_nan () << "\n";
+    // amrex::Print() << "norm0(ppe rhs) = " << rhs[lev]  -> norm0 () << "\n";
     // amrex::Print() << "norm0(b_x) = "     << b[lev][0] -> norm0 () << "\n";
     // amrex::Print() << "norm0(b_y) = "     << b[lev][1] -> norm0 () << "\n";
     // amrex::Print() << "norm0(b_z) = "     << b[lev][2] -> norm0 () << "\n";
@@ -623,9 +666,7 @@ mfix_level::solve_poisson_equation (  int lev,
     
     solver.set_mac_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
     phi[lev] -> setVal (0.);
-    
-//    VisMF::Write(*rhs[lev], "rhs");
-	
+ 	
     solver.solve ( *phi[lev], *rhs[lev], rel_tol, abs_tol, 0, 0, 1 );
 
 }

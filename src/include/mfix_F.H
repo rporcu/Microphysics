@@ -510,15 +510,6 @@ extern "C"
        amrex::Real* lambda, amrex::Real* divu, 
        amrex::Real* divtau_z, const amrex::Real* dx );
 
-    void compute_intermediate_velocity (
-       const int* lo,  const int*  hi,
-       amrex::Real* u_i_star, const int* ulo, const int* uhi,
-       amrex::Real* u_i,    amrex::Real* ugradu_i,
-       amrex::Real* divtau_i, 
-       amrex::Real* drag_i, amrex::Real* f_gds_i,
-       amrex::Real* rop,  const int* slo, const int* shi,
-       const amrex::Real* dt, const int* dir );
-
 
     void compute_divu (
 	const int* lo,  const int*  hi,
@@ -629,6 +620,7 @@ extern "C"
     void apply_pcm_prediction (
 	const int* lo, const int* hi,
 	      amrex::Real* comp, const int* clo, const int* chi, 
+	const amrex::Real* sl,
 	const amrex::Real* uo,   const int* ulo, const int* uhi, 
 	const amrex::Real* vo,   const int* vlo, const int* vhi, 
 	const amrex::Real* wo,   const int* wlo, const int* whi, 
@@ -641,7 +633,7 @@ extern "C"
     void apply_pcm_correction (
 	const int* lo, const int* hi,
 	      amrex::Real* comp, const int* clo, const int* chi,
-	const amrex::Real* compo,
+	const amrex::Real* compo,const amrex::Real* sl,
 	const amrex::Real* us,   const int* ulo, const int* uhi, 
 	const amrex::Real* vs,   const int* vlo, const int* vhi, 
 	const amrex::Real* ws,   const int* wlo, const int* whi, 

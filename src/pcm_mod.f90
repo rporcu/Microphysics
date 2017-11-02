@@ -7,15 +7,29 @@
 ! STEP 1: Using I order Euler, predict the value of the velocity field at
 !         the next time step:
 !
-!          u* = u^n + dt * RU(u^n)
+!          u_t = u^n + dt * RU(u^n)
 !
-!        RU = velocity acceleration term ( convection + diffusion only )
-!        u* = predicted velocity field 
+!        RU  = velocity acceleration term ( convection + diffusion only )
+!        u_t = predicted velocity field (WITHOUT external forcing)
+!
+! STEP 1a: The calling subroutine should add any external forcing, F, to
+!          u_t to obtain u*
+!
+!         u*  = u_t + dt * F
+!
+!         u* = predicted velocity field (WITH external forcing)
 !
 ! STEP 2: Evaluate RU(u*) and correct u*
 !
-!          u** = 0.5 * ( u^n + u* ) + 0.5 * dt * RU(u*) =
-!              = 0.5 * ( u^n + u* + dt * RU(u*) )  
+!          u*_t = 0.5 * ( u^n + u* ) + 0.5 * dt * RU(u*) =
+!               = 0.5 * ( u^n + u* + dt * RU(u*) )
+!
+! STEP 2a: the calling subroutine should add once again any external forcing,
+!          F, to u*_t to obtain u**, the corrected velocity at the next time
+!          step
+!
+!          u**  = u*_t + 0.5 * dt * F 
+!
 !  
 ! Author: Michele Rosso
 !
@@ -55,9 +69,10 @@ contains
    ! for "comp", namely clo and chi, are passed explicity instead
    ! of using the array bounds for uo, vo, wo.
    ! 
+   ! sl contains the slopes of comp in the 3 directions 
    ! 
-   subroutine apply_pcm_prediction ( lo, hi, comp, clo, chi, &
-        & uo, ulo, uhi, vo, vlo, vhi, wo, wlo, whi,            &
+   subroutine apply_pcm_prediction ( lo, hi, comp, clo, chi, sl,&
+        & uo, ulo, uhi, vo, vlo, vhi, wo, wlo, whi,             &
         & mu, slo, shi, rop, dx, dt, dir ) bind(C)
       
       ! Loop bounds
@@ -82,8 +97,9 @@ contains
            &  vo(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
            &  wo(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
            &  mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           & rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
+           & rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           &  sl(clo(1):chi(1),clo(2):chi(2),clo(3):chi(3))
+      
       real(ar),       intent(inout) ::                       &
            & comp(clo(1):chi(1),clo(2):chi(2),clo(3):chi(3))
       
@@ -97,9 +113,13 @@ contains
       
       ! Compute convection term
       select case ( dir )
-      case (1) 
-         call compute_ugradu_x ( lo, hi, uo, ulo, uhi, vo, vlo, vhi, &
+      case (1)
+         call compute_divuu_x ( lo, hi, uo, ulo, uhi, sl, vo, vlo, vhi, &
               & wo, wlo, whi, conv, dx )  
+
+         ! call compute_ugradu_x ( lo, hi, uo, ulo, uhi, vo, vlo, vhi, &
+         !      & wo, wlo, whi, conv, dx )  
+ 
          
          ! No diffusion term for the time being
          diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
@@ -108,8 +128,12 @@ contains
          call apply_euler ( lo, hi, comp, uo, clo, chi, conv, diff, dt )      
 
       case(2)
-         call compute_ugradu_y ( lo, hi, uo, ulo, uhi, vo, vlo, vhi, &
+         call compute_divuu_y ( lo, hi, uo, ulo, uhi, vo, vlo, vhi, sl, &
               & wo, wlo, whi, conv, dx )
+         
+         ! call compute_ugradu_y ( lo, hi, uo, ulo, uhi, vo, vlo, vhi,  &
+         !      & wo, wlo, whi, conv, dx )
+         
          ! No diffusion term for the time being
          diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
 
@@ -118,9 +142,13 @@ contains
 
          
       case(3)         
-         call compute_ugradu_z ( lo, hi, uo, ulo, uhi, vo, vlo, vhi, &
-              & wo, wlo, whi, conv, dx )
+         call compute_divuu_z ( lo, hi, uo, ulo, uhi, vo, vlo, vhi, &
+              & wo, wlo, whi, sl, conv, dx )
 
+         ! call compute_ugradu_z ( lo, hi, uo, ulo, uhi, vo, vlo, vhi,  &
+         !      & wo, wlo, whi, conv, dx )
+         
+         
          ! No diffusion term for the time being
          diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
          
@@ -152,8 +180,9 @@ contains
    !          3) compo must be set to the old value of comp, i.e. the value
    !             at the previous time step
    ! 
-   subroutine apply_pcm_correction ( lo, hi, comp, clo, chi, compo, &
-        & us, ulo, uhi, vs, vlo, vhi, ws, wlo, whi,                 &
+   subroutine apply_pcm_correction ( lo, hi,        &
+        & comp, clo, chi, compo, sl,                &
+        & us, ulo, uhi, vs, vlo, vhi, ws, wlo, whi, &
         & mu, slo, shi, rop, dx, dt, dir ) bind(C)
       
       ! Loop bounds
@@ -173,14 +202,15 @@ contains
       integer(c_int), intent(in   ) :: dir
       
       ! Arrays
-      real(ar),       intent(in   ) ::                       &
+      real(ar),       intent(in   ) ::                        &
            & compo(clo(1):chi(1),clo(2):chi(2),clo(3):chi(3)),&  
-           &  us(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
-           &  vs(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
-           &  ws(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
-           &  mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           & rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
+           &  us(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),  &
+           &  vs(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)),  &
+           &  ws(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)),  &
+           &  mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
+           & rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
+           &  sl(clo(1):chi(1),clo(2):chi(2),clo(3):chi(3))
+      
       real(ar),       intent(inout) ::                       &
            & comp(clo(1):chi(1),clo(2):chi(2),clo(3):chi(3))
       
@@ -188,8 +218,8 @@ contains
       integer                       :: i, j, k
 
       ! u* + dt * R(u*) is like applying the prediction on u*
-      call apply_pcm_prediction ( lo, hi, comp, clo, chi,  &
-           & us, ulo, uhi, vs, vlo, vhi, ws, wlo, whi,     &
+      call apply_pcm_prediction ( lo, hi, comp, clo, chi, sl, &
+           & us, ulo, uhi, vs, vlo, vhi, ws, wlo, whi,        &
            & mu, slo, shi, rop, dx, dt, dir ) 
 
       ! Compute corrected value
@@ -209,7 +239,7 @@ contains
    ! Compute a single Euler time integration step for the x-component
    ! of velocity:
    ! 
-   !      unew = uold + dt * RU(u)  with  RU(u) = CONV(U) + DIFF(u)
+   !      unew = uold + dt * RU(u)  with  RU(u) = CONV(u) + DIFF(u)
    !
    subroutine apply_euler ( lo, hi, unew, uold, ulo, uhi, conv, diff, dt )
 

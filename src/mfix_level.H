@@ -160,6 +160,8 @@ private:
 
     void mfix_apply_forcing_terms (int lev, amrex::Real dt);
 
+    void mfix_add_pressure_gradient (int lev, amrex::Real coeff);
+    
     void mfix_compute_velocity_slopes (int lev);
 
     

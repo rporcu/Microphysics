@@ -89,7 +89,7 @@ elseif ( ${COMPILER} STREQUAL "Cray" )
 
 elseif ()
 
-   message ( FATAl_ERROR "Compiler NOT recognized: ID is ${COMPILER}" )
+   message ( FATAL_ERROR "Compiler NOT recognized: ID is ${COMPILER}" )
 
 endif ()
 
