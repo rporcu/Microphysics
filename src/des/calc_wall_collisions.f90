@@ -79,7 +79,7 @@
 
     inv_dx = 1.0d0 / dx
 
-    fudge = one - small_number
+    fudge = one - 1.d-8
 
     do ll = 1, nrp
 
@@ -134,7 +134,7 @@
                       distmod_temp = dabs( (xp - bcentx) * (-normal(ii,jj,kk,1)) + &
                                            (yp - bcenty) * (-normal(ii,jj,kk,2)) + &
                                            (zp - bcentz) * (-normal(ii,jj,kk,3)) )
-   
+
                       ! Only keep the closest one
                       if (distmod_temp .lt. distmod) then
                          if (distmod_temp .lt. rp) then
