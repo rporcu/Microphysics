@@ -18,6 +18,8 @@
     use particle_mod,  only: particle_t
     use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell, is_single_valued_cell, &
                                         get_neighbor_cells
+ 
+    implicit none
 
     integer, intent(in) :: np, nrp
 
@@ -43,15 +45,14 @@
     type(particle_t), pointer :: p
 
      real(c_real) :: lx, ly, lz
-     real(c_real) :: axm, axp, aym, ayp, azm, azp
-     real(c_real) :: apnorm, apnorminv, anrmx, anrmy, anrmz
      real(c_real) :: bcentx, bcenty, bcentz
      real(c_real) :: sqrt_overlap
 
      real(c_real) :: normul(3)
 
-    integer :: ll, ii, jj, kk, i, j, k
+    integer :: ll, ii, jj, kk, i, j, k, i_pt, j_pt, k_pt
 
+    real(c_real) :: fudge
     real(c_real) ::overlap_n
     real(c_real) :: inv_dx(3)
     integer      :: nbr(-1:1,-1:1,-1:1)
@@ -67,7 +68,8 @@
 
     real(c_real) :: tangent(3)
 
-    real(c_real) :: xp, yp, zp
+    real(c_real) :: xp, yp, zp, rp
+    real(c_real) :: pt_x, pt_y, pt_z
 
     ! local values used spring constants and damping coefficients
     real(c_real) :: ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
@@ -77,6 +79,8 @@
 
     inv_dx = 1.0d0 / dx
 
+    fudge = one - small_number
+
     do ll = 1, nrp
 
        p => particles(ll)
@@ -84,6 +88,7 @@
        xp = p%pos(1)
        yp = p%pos(2)
        zp = p%pos(3)
+       rp = p%radius
 
        lx = xp*inv_dx(1)
        ly = yp*inv_dx(2)
@@ -104,13 +109,13 @@
        ilo = i-1
        ihi = i+1
 
-       if ( (p%pos(1)-i*dx(1)) .gt. p%radius) ilo = i
-       if ( (p%pos(2)-j*dx(2)) .gt. p%radius) jlo = j
-       if ( (p%pos(3)-k*dx(3)) .gt. p%radius) klo = k
+       if ( (xp-i*dx(1)) .gt. rp) ilo = i
+       if ( (yp-j*dx(2)) .gt. rp) jlo = j
+       if ( (zp-k*dx(3)) .gt. rp) klo = k
 
-       if ( ((i+1)*dx(1)-p%pos(1)) .gt. p%radius) ihi = i
-       if ( ((j+1)*dx(2)-p%pos(2)) .gt. p%radius) jhi = j
-       if ( ((k+1)*dx(3)-p%pos(3)) .gt. p%radius) khi = k
+       if ( ((i+1)*dx(1)-xp) .gt. rp) ihi = i
+       if ( ((j+1)*dx(2)-yp) .gt. rp) jhi = j
+       if ( ((k+1)*dx(3)-zp) .gt. rp) khi = k
 
        do kk = klo, khi
           do jj = jlo, jhi
@@ -132,13 +137,28 @@
    
                       ! Only keep the closest one
                       if (distmod_temp .lt. distmod) then
+                         if (distmod_temp .lt. rp) then
+
+                            ! Point where the normal from the particle to the plane intersects the plane
+                            !   Note we go slightly less than the full normal in order to avoid precision problems
+                            pt_x = xp + normal(ii,jj,kk,1) * distmod_temp * fudge
+                            pt_y = yp + normal(ii,jj,kk,2) * distmod_temp * fudge
+                            pt_z = zp + normal(ii,jj,kk,3) * distmod_temp * fudge
+
+                            ! Cell that point is in
+                            i_pt = floor(pt_x*inv_dx(1))
+                            j_pt = floor(pt_y*inv_dx(2))
+                            k_pt = floor(pt_z*inv_dx(3))
+
+                            if ( (i_pt .eq. ii) .and. (j_pt .eq. jj) .and. (k_pt .eq. kk)) then
+                               distmod = distmod_temp
    
-                         distmod = distmod_temp
+                               normul(1) = normal(ii,jj,kk,1)
+                               normul(2) = normal(ii,jj,kk,2)
+                               normul(3) = normal(ii,jj,kk,3)
+                            end if
    
-                         normul(1) = normal(ii,jj,kk,1)
-                         normul(2) = normal(ii,jj,kk,2)
-                         normul(3) = normal(ii,jj,kk,3)
-   
+                         end if ! if dist lt rp
                       end if ! if dist lt distmod
 
                    end if ! if single_valued
@@ -152,7 +172,7 @@
        if (distmod .lt. p%radius) then
 
           ! Calculate the particle/wall overlap.
-          overlap_n = particles(ll) % radius - distmod
+          overlap_n = rp - distmod
 
           ! *****************************************************************************
           ! Calculate the translational relative velocity
