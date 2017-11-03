@@ -30,7 +30,6 @@ else
     MPIRUN=""
 fi
 
-MFIX_BENCHMARKS_HOME=${MFIX_BENCHMARKS_HOME:-}
 FCOMPARE=${FCOMPARE:-}
 
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
