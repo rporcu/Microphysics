@@ -519,15 +519,6 @@ extern "C"
 	amrex::Real* w_g,   const int* wlo, const int* whi,
 	const amrex::Real* dx );
 
-    void compute_ppe_rhs (
-	const int* lo,  const int*  hi,
-	amrex::Real* divu,  const int* slo, const int* shi,
-	amrex::Real* u_g,   const int* ulo, const int* uhi,
-	amrex::Real* v_g,   const int* vlo, const int* vhi,
-	amrex::Real* w_g,   const int* wlo, const int* whi,
-	const amrex::Real* dx, const amrex::Real* dt,
-	amrex::Real* sum_rhsdv );
-
     void compute_oro_g_x (
 	const int* lo,  const int*  hi,
 	amrex::Real* oro_g_x, const int* ulo, const int* uhi,
@@ -545,44 +536,6 @@ extern "C"
 	amrex::Real* oro_g_z, const int* wlo, const int* whi,
 	amrex::Real* rop_g,  const int* slo, const int* shi,
 	const amrex::Real* ep_g );
-
-    void apply_pressure_correction_x (
-	const int* lo,  const int*  hi,
-	amrex::Real* p_g, const int* slo, const int* shi,
-	amrex::Real* u_g, const int* ulo, const int* uhi,
-	const amrex::Real* oro_g_x,
-	const amrex::Real* dx, const amrex::Real* dt );
-
-    
-    void apply_pressure_correction_y (
-	const int* lo,  const int*  hi,
-	amrex::Real* p_g, const int* slo, const int* shi,
-	amrex::Real* v_g, const int* vlo, const int* vhi,
-	const amrex::Real* oro_g_y,
-	const amrex::Real* dx, const amrex::Real* dt );
-
-
-    void apply_pressure_correction_z (
-	const int* lo,  const int*  hi,
-	amrex::Real* p_g, const int* slo, const int* shi,
-	amrex::Real* w_g, const int* wlo, const int* whi,
-	const amrex::Real* oro_g_z,
-	const amrex::Real* dx, const amrex::Real* dt );
-
-
-    void apply_pressure_correction (
-	const int* utlo,  const int* uthi,
-	amrex::Real* ug,  const int* ulo, const int* uhi,
-	const amrex::Real* oro_x,
-	const int* vtlo,  const int* vthi,
-	amrex::Real* vg,  const int* vlo, const int* vhi,
-	const amrex::Real* oro_y,
-	const int* wtlo,  const int* wthi,
-	amrex::Real* wg,  const int* wlo, const int* whi,
-	const amrex::Real* oro_z,
-	const amrex::Real* pg, const int* slo, const int* shi,
-	const amrex::Real* dx, const amrex::Real* dt );
-
 
     
     void compute_new_dt ( const amrex::Real* umax,
@@ -617,6 +570,15 @@ extern "C"
 	const amrex::Real* phi, const int* slo, const int* shi,
 	amrex::Real* pg, const amrex::Real* scale );
 
+
+    
+    void rescale_pressure (
+	const int* lo, const int* hi,
+	const amrex::Real* pg, const int* slo, const int* shi,
+	const amrex::Real* scale );
+
+
+    
     void apply_pcm_prediction (
 	const int* lo, const int* hi,
 	      amrex::Real* comp, const int* clo, const int* chi, 

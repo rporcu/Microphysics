@@ -170,6 +170,52 @@ contains
 
 
 
+   ! 
+   ! Given a pressure increment phi = scale * ( p^(n+1) - p^(n) )
+   ! and the pressure at the previous time step, p^(n), this routine
+   ! performs the update
+   !
+   !                   p^(n+1) = phi/scale +  p^(n)
+   !
+   !  where scale is a chosen scaling factor.
+   !
+   ! WARNING: the old value of p_g is overwritten with the new value.
+   !
+   subroutine rescale_pressure ( lo, hi, pg, slo, shi, scale ) bind(C)
+
+      ! Loop bounds
+      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
+
+      ! Array bounds
+      integer(c_int),  intent(in   ) :: slo(3), shi(3)
+
+      ! Scaling factor
+      real(ar),        intent(in   ) :: scale
+      
+      ! Arrays
+      real(ar),        intent(inout) ::                           &
+           & pg(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+   
+      ! Local variables
+      integer(c_int)                 :: i, j, k
+      real(ar)                       :: oscale
+
+      oscale = one / scale
+      
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+               pg(i,j,k) = oscale * pg(i,j,k)              
+            end do
+         end do
+      end do
+ 
+      
+   end subroutine rescale_pressure
+
+   
+
+
    !
    ! Computes  u_i = u_i + C * (beta) * (dphi/dx_i)
    !
@@ -232,137 +278,6 @@ contains
 
    end subroutine add_gradient
 
-
-   !
-   ! Compute the RHS of the pressure poisson equation: rhs = - div(u*)/dt
-   ! 
-   subroutine compute_ppe_rhs ( lo, hi, rhs, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, &
-        & w_g, wlo, whi, dx, dt, sum_rhsdv )  bind(C, name="compute_ppe_rhs")
-
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
-      real(ar),       intent(in   ) :: dx(3), dt
-
-      real(ar),       intent(  out) :: sum_rhsdv
-      
-      real(ar),       intent(  out) :: &
-           rhs(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      
-      real(ar),       intent(in   ) :: &
-           u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
-           v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
-           w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-
-      integer             :: i, j, k
-      real(ar)            :: odtdx, odtdy, odtdz, dv
-      real(ar), parameter :: two = one / half 
-      
-      odtdx = one / ( dt * dx(1) )
-      odtdy = one / ( dt * dx(2) )
-      odtdz = one / ( dt * dx(3) )
-
-      dv    = dx(1) * dx(2) * dx(3)
-
-      sum_rhsdv = zero
-      
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-               rhs(i,j,k) =  -  ( ( u_g(i+1,j,k) - u_g(i,j,k) ) * odtdx + &
-                                  ( v_g(i,j+1,k) - v_g(i,j,k) ) * odtdy + &
-                                  ( w_g(i,j,k+1) - w_g(i,j,k) ) * odtdz )
-               
-               sum_rhsdv = sum_rhsdv + rhs(i,j,k) * dv
-            end do
-         end do
-      end do
-
-   end subroutine compute_ppe_rhs
-
-
-
-
-   
-   !
-   ! Apply the pressure correction u = u^* - dt (ep_g/rop_g) grad(p)
-   ! Note that the scalar ep_g/rop_g is 1/ro_g, hence the name oro_g 
-   ! 
-   subroutine apply_pressure_correction ( utlo, uthi, ug, ulo, uhi, oro_x,  &
-        & vtlo, vthi, vg, vlo, vhi, oro_y, wtlo, wthi, wg, wlo, whi, oro_z, &
-        & pg, slo, shi, dx, dt )  bind(C, name="apply_pressure_correction")
-
-      ! Array bounds
-      integer(c_int),   intent(in   ) :: ulo(3), uhi(3)
-      integer(c_int),   intent(in   ) :: vlo(3), vhi(3)
-      integer(c_int),   intent(in   ) :: wlo(3), whi(3)
-      integer(c_int),   intent(in   ) :: slo(3), shi(3)
-      
-      ! Tile bounds
-      integer(c_int),   intent(in   ) :: utlo(3), uthi(3)
-      integer(c_int),   intent(in   ) :: vtlo(3), vthi(3)
-      integer(c_int),   intent(in   ) :: wtlo(3), wthi(3)
-      
-      ! Grid and time step
-      real(ar),         intent(in   ) :: dt
-      real(ar),         intent(in   ) :: dx(3)
-           
-      ! Arrays
-      real(ar),         intent(inout) ::                    &
-           & ug(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), & 
-           & vg(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
-           & wg(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-
-      real(ar),         intent(in   ) ::                    &
-           & oro_x(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), & 
-           & oro_y(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
-           & oro_z(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      
-      real(ar),         intent(in   ) ::                    &
-           & pg(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) 
-
-      ! Local variables
-      integer      :: i, j, k
-      real(ar)     :: dtodx, dtody, dtodz
-
-      dtodx = dt / dx(1) 
-      dtody = dt / dx(2) 
-      dtodz = dt / dx(3) 
-      
-      ! x component
-      do k = utlo(3), uthi(3)
-         do j = utlo(2), uthi(2)
-            do i = utlo(1), uthi(1)
-               ug(i,j,k) = ug(i,j,k) - dtodx * oro_x(i,j,k) * &
-                    ( pg(i,j,k) - pg(i-1,j,k) )   
-            end do
-         end do
-      end do
-
-
-      ! y component
-      do k = vtlo(3), vthi(3)
-         do j = vtlo(2), vthi(2)
-            do i = vtlo(1), vthi(1)
-               vg(i,j,k) = vg(i,j,k) - dtody * oro_y(i,j,k) * &
-                    ( pg(i,j,k) - pg(i,j-1,k) )   
-            end do
-         end do
-      end do
-
-      
-      ! z component
-      do k = wtlo(3), wthi(3)
-         do j = wtlo(2), wthi(2)
-            do i = wtlo(1), wthi(1)
-               wg(i,j,k) = wg(i,j,k) - dtodz * oro_z(i,j,k) * &
-                    ( pg(i,j,k) - pg(i,j,k-1) )   
-            end do
-         end do
-      end do
-
-      
-   end subroutine apply_pressure_correction
 
    
    !

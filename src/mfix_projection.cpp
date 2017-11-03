@@ -106,10 +106,13 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     mfix_set_bc1 ( lev );
 	
     // Step 2: compute u** (corrector step) and store it in
-    //  u_g, v_g, and w_g
+    // u_g, v_g, and w_g.
+    // Instead of only adding -0.5*dt*grad(p)/rho,
+    // add -dt*grad(p)/dt so that the term -0.5*dt*grad(p)/rho
+    // will not show up in the projection step
     mfix_compute_velocity_slopes ( lev );
     mfix_apply_pcm_correction ( lev, dt );
-    mfix_add_pressure_gradient ( lev, -0.5*dt );
+    mfix_add_pressure_gradient ( lev, -dt );
     
     // Add forcing terms ( gravity and/or momentum
     // exchange with particles )
@@ -371,8 +374,6 @@ mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
 }
 
 
-
-
 //
 // Perform the following operations:
 //
@@ -554,33 +555,11 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     compute_oro_g ( lev );
     
     // Solve PPE
-    solve_poisson_equation ( lev, oro_g, phi, trD_g );
-    phi[lev] -> FillBoundary(geom[lev].periodicity());
+    solve_poisson_equation ( lev, oro_g, p_g, trD_g );
     p_g[lev] -> FillBoundary(geom[lev].periodicity());
-
-    // Update pressure
-    amrex::Real scale = dt * 0.5;
-	
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box& bx = mfi.tilebox ();
-
-	update_pressure (
-	    BL_TO_FORTRAN_BOX(bx),  
-	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
-	    (*p_g[lev])[mfi].dataPtr (), &scale );	    
-	
-    }
-    p_g[lev] -> FillBoundary(geom[lev].periodicity());
-
-    std::cout << "max(abs(p_g)) = " << p_g[lev] -> norm0 () << "\n";
-
-
     
     // Apply pressure correction
+    //  p_g is now p_g = p^{n+1}*dt/2
     Real coeff = -1.0;
     int  xdir  = 1;
     int  ydir  = 2;
@@ -600,7 +579,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
 	    BL_TO_FORTRAN_BOX(ubx),  
 	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
 	    (*(oro_g[lev][0]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
 	    geom[lev].CellSize(), &coeff, &xdir );
 
 	
@@ -608,19 +587,43 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
 	    BL_TO_FORTRAN_BOX(vbx),  
 	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
 	    (*(oro_g[lev][1]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
 	    geom[lev].CellSize(), &coeff, &ydir );
 
 	add_gradient (
 	    BL_TO_FORTRAN_BOX(wbx),  
 	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
 	    (*(oro_g[lev][2]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
 	    geom[lev].CellSize(), &coeff, &zdir );
 
     }
 
-}
+
+    // 
+    // Rescale pressure p_g = p_g * 2 / dt
+    // 
+    int nghost = p_g[lev] -> nGrow ();
+    p_g[lev] -> mult ( 2.0/dt, nghost );
+	
+// #ifdef _OPENMP
+// #pragma omp parallel
+// #endif
+//     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
+//     {
+// 	const Box& bx = mfi.tilebox ();
+
+// 	rescale_pressure (
+// 	    BL_TO_FORTRAN_BOX(bx),  
+// 	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+// 	    &scale );	    
+	
+//     }
+//     p_g[lev] -> FillBoundary(geom[lev].periodicity());
+
+//     std::cout << "max(abs(p_g)) = " << p_g[lev] -> norm0 () << "\n";
+    
+ }
 
 
 //
