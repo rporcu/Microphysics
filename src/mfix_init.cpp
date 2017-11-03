@@ -340,15 +340,11 @@ mfix_level::AllocateArrays (int lev)
     u_g[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_go[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_gt[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    ugradu_x[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    divtau_x[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     fp_x[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     oro_g[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_g[lev]->setVal(0.);
     u_go[lev]->setVal(0.);
     u_gt[lev]->setVal(0.);
-    ugradu_x[lev]->setVal(0.);
-    divtau_x[lev]->setVal(0.);
     fp_x[lev]->setVal(0.);
     oro_g[lev][0]->setVal(0.);
     
@@ -386,15 +382,11 @@ mfix_level::AllocateArrays (int lev)
     v_g[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_go[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_gt[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    ugradu_y[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    divtau_y[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     fp_y[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     oro_g[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_g[lev]->setVal(0.);
     v_go[lev]->setVal(0.);
     v_gt[lev]->setVal(0.);
-    ugradu_y[lev]->setVal(0.);
-    divtau_y[lev]->setVal(0.);
     fp_y[lev]->setVal(0.);
     oro_g[lev][1]->setVal(0.);
 	
@@ -435,15 +427,11 @@ mfix_level::AllocateArrays (int lev)
     w_g[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_go[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_gt[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    ugradu_z[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    divtau_z[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     fp_z[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     oro_g[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_g[lev]->setVal(0.);
     w_go[lev]->setVal(0.);
     w_gt[lev]->setVal(0.);
-    ugradu_z[lev]->setVal(0.);
-    divtau_z[lev]->setVal(0.);
     fp_z[lev]->setVal(0.);
     oro_g[lev][2]->setVal(0.);
 	

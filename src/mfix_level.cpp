@@ -75,18 +75,9 @@ mfix_level::mfix_level ()
     w_go.resize(nlevs_max);
     w_gt.resize(nlevs_max);
 
-    ugradu_x.resize(nlevs_max);
-    ugradu_y.resize(nlevs_max);
-    ugradu_z.resize(nlevs_max);
-
-    divtau_x.resize(nlevs_max);
-    divtau_y.resize(nlevs_max);
-    divtau_z.resize(nlevs_max);
-
     fp_x.resize(nlevs_max);
     fp_y.resize(nlevs_max);
     fp_z.resize(nlevs_max);
-
     
     oro_g.resize(nlevs_max);
     for (int i = 0; i < nlevs_max; ++i )

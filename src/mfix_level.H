@@ -278,15 +278,15 @@ private:
 
 
     // Projection
-    // These can probably go
-    Vector< std::unique_ptr<MultiFab> > ugradu_x;
-    Vector< std::unique_ptr<MultiFab> > ugradu_y;
-    Vector< std::unique_ptr<MultiFab> > ugradu_z;
+    // // These can probably go
+    // Vector< std::unique_ptr<MultiFab> > ugradu_x;
+    // Vector< std::unique_ptr<MultiFab> > ugradu_y;
+    // Vector< std::unique_ptr<MultiFab> > ugradu_z;
 
-    // These can probably go
-    Vector< std::unique_ptr<MultiFab> > divtau_x;
-    Vector< std::unique_ptr<MultiFab> > divtau_y;
-    Vector< std::unique_ptr<MultiFab> > divtau_z;
+    // // These can probably go
+    // Vector< std::unique_ptr<MultiFab> > divtau_x;
+    // Vector< std::unique_ptr<MultiFab> > divtau_y;
+    // Vector< std::unique_ptr<MultiFab> > divtau_z;
 
     // These are multi-component multifab
     Vector< std::unique_ptr<MultiFab> > slopes_u;
