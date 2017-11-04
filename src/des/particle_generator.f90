@@ -115,16 +115,20 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
               pos = -1.0d20
               np = 0
               k  = 0
-              klp: do while(pos(3) < ic_dhi(3))
-                 pos(3) = ic_dlo(3) + max_rp*(1.0d0 + k*2.0d0*sqrt(6.0d0)/3.0d0)
+              klp: do
+                 pos(3) = ic_dlo(3) + max_rp*(1.0d0 + &
+                      k*2.0d0*sqrt(6.0d0)/3.0d0)
+                 if(pos(3) + max_rp > ic_dhi(3)) exit klp
                  j=0
-                 jlp: do while(pos(2) + max_dp < ic_dhi(2))
+                 jlp: do
                     pos(2) = ic_dlo(2) + max_rp*(1.0d0 + &
                          sqrt(3.0d0)*(j+(1.0d0/3.0d0)*mod(k,2)))
+                    if(pos(2) + max_rp > ic_dhi(2)) exit jlp
                     i=0
-                    ilp: do while(pos(1) + max_dp < ic_dhi(1))
-
-                       pos(1) = ic_dlo(1) + max_rp*(1.0d0 + 2.0d0*i + (mod(j+k,2)))
+                    ilp: do
+                       pos(1) = ic_dlo(1) + max_rp*(1.0d0 + &
+                            2.0d0*i + (mod(j+k,2)))
+                       if(pos(1) + max_rp > ic_dhi(1)) exit ilp
                        i=i+1
 
                        np = np + 1 ! local to type
@@ -135,13 +139,9 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
                        rdata(pc,1:3) = pos
 
                     enddo ilp
-                    j=j+1
-                    i=1
-                    pos(1) = ic_dlo(1)
+                    j=j+1; i=0
                  enddo jlp
-                 k=k+1
-                 j=1
-                 pos(2) = ic_dlo(2)
+                 k=k+1; j=0
               enddo klp
 
               allocate(dp(np))
