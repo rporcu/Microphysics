@@ -5,8 +5,8 @@ module par_gen_module
 
   implicit none
 
-  real(c_real),   allocatable :: rdata(:,:)
-  integer(c_int), allocatable :: idata(:,:)
+  real(c_real), allocatable :: rdata(:,:)
+  integer,      allocatable :: idata(:,:)
 
   !< Position............... 1,2,3
   !< Radius................. 4
@@ -65,12 +65,11 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   integer :: j_s, j_n
   integer :: k_b, k_t
 
-  integer :: np, type, i,j,k, imax, jmax, kmax, pmax, init_pc
-  real(c_real) :: ic_vol, type_vol, acc_vol
+  integer :: np, np0, type, i,j,k, init_pc
+  real(c_real) :: ic_vol, type_vol, acc_vol, pvol
   real(c_real) :: ic_dlo(3), ic_dhi(3)
-  real(c_real) :: max_dp
-  real(c_real) :: rp(3)
-  real(c_real) :: x(3)
+  real(c_real) :: max_dp, max_rp, ldp
+  real(c_real) :: pos(3)
 
   real(c_real), allocatable :: dp(:), ro_s(:)
 
@@ -95,34 +94,58 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
 
         ! physical volume of local piece of IC region
         ic_vol = (ic_dhi(1) - ic_dlo(1)) * &
-                 (ic_dhi(2) - ic_dlo(2)) * &
-                 (ic_dhi(3) - ic_dlo(3))
+             (ic_dhi(2) - ic_dlo(2)) * &
+             (ic_dhi(3) - ic_dlo(3))
 
         do type=1, particle_types
 
-           acc_vol = 0.0d0
            type_vol = ic_ep_s(icv,type) * ic_vol
-           if(type_vol > 0.0d0) then
+           if(type_vol > 0.0d0 .and. &
+              ic_dhi(1) > ic_dlo(1) .and. &
+              ic_dhi(2) > ic_dlo(2) .and. &
+              ic_dhi(3) > ic_dlo(3)) then
 
               if(is_defined(ic_dp_max(icv,type))) then
                  max_dp = ic_dp_max(icv,type)
               else
                  max_dp = ic_dp_mean(icv,type)
               endif
+              max_rp = 0.5d0 * max_dp
 
-              ic_dlo = ic_dlo + 0.5d0*max_dp
+              pos = -1.0d20
+              np = 0
+              k  = 0
+              klp: do while(pos(3) < ic_dhi(3))
+                 pos(3) = ic_dlo(3) + max_rp*(1.0d0 + k*2.0d0*sqrt(6.0d0)/3.0d0)
+                 j=0
+                 jlp: do while(pos(2) + max_dp < ic_dhi(2))
+                    pos(2) = ic_dlo(2) + max_rp*(1.0d0 + &
+                         sqrt(3.0d0)*(j+(1.0d0/3.0d0)*mod(k,2)))
+                    i=0
+                    ilp: do while(pos(1) + max_dp < ic_dhi(1))
 
-              imax = floor((ic_dhi(1)-ic_dlo(1))/max_dp)
-              jmax = floor((ic_dhi(2)-ic_dlo(2))/max_dp)
-              kmax = floor((ic_dhi(3)-ic_dlo(3))/max_dp)
-              pmax = imax*jmax*kmax
+                       pos(1) = ic_dlo(1) + max_rp*(1.0d0 + 2.0d0*i + (mod(j+k,2)))
+                       i=i+1
 
-              rp(1) = 0.5d0 * (ic_dhi(1)-ic_dlo(1))/imax
-              rp(2) = 0.5d0 * (ic_dhi(2)-ic_dlo(2))/jmax
-              rp(3) = 0.5d0 * (ic_dhi(3)-ic_dlo(3))/kmax
+                       np = np + 1 ! local to type
+                       pc = pc + 1 ! local to routine
 
-              call grow_pdata(pmax)
-              allocate(dp(pmax))
+                       call grow_pdata(pc)
+
+                       rdata(pc,1:3) = pos
+
+                    enddo ilp
+                    j=j+1
+                    i=1
+                    pos(1) = ic_dlo(1)
+                 enddo jlp
+                 k=k+1
+                 j=1
+                 pos(2) = ic_dlo(2)
+              enddo klp
+
+              allocate(dp(np))
+              allocate(ro_s(np))
 
               ! Setup particle diameters
               if(ic_dp_dist(icv,type) == 'NORMAL') then
@@ -135,37 +158,6 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
                  dp = ic_dp_mean(icv,type)
               endif
 
-              np = 0
-              klp: do k = 0, kmax-1
-
-                 x(3) = (2.0d0*sqrt(6.0d0)/3.0d0 * k)
-
-                 do j = 0, jmax-1
-
-                    x(2) = (sqrt(3.0d0)*(j + (1.0d0/3.0d0)*mod(k,2)))
-
-                    do i = 0, imax-1
-
-                       x(1) = (2.0d0*i + (mod(j+k,2)))
-
-                       np = np + 1
-                       pc = pc + 1
-
-                       rdata(pc,1:3) = ic_dlo + rp*x
-                       rdata(pc,4) = 0.5d0*dp(np)
-
-                       acc_vol = acc_vol + (pi/6.0d0)*dp(np)**3
-                       if(acc_vol >= type_vol) exit klp
-
-                    enddo
-                 enddo
-              enddo klp
-              if(allocated(dp)) deallocate(dp)
-
-              ! At this point, np particles were created. Now given
-              ! then some properties
-
-              allocate(ro_s(np))
               if(ic_ro_s_dist(icv,type) == 'NORMAL') then
                  call nor_rno(ro_s, ic_ro_s_mean(icv,type), ic_ro_s_std(icv,type), &
                       ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
@@ -176,22 +168,37 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
                  ro_s = ic_ro_s_mean(icv,type)
               endif
 
+              pc = init_pc
+              acc_vol = 0.0d0
+              nplp: do i=1,np
 
-              do i=1,np
+                 pvol = (pi/6.0d0)*dp(i)**3
+                 if(acc_vol <= type_vol) then
 
-                 !< Density................ 5
-                 rdata(pc-np+i,5) = ro_s(i)
+                    pc = pc + 1
 
-                 !< Linear velocity........ 6,7,8
-                 rdata(pc-np+i,6) = ic_u_s(icv,type)
-                 rdata(pc-np+i,7) = ic_v_s(icv,type)
-                 rdata(pc-np+i,8) = ic_w_s(icv,type)
+                    !< Radius................. 4
+                    rdata(pc,4) = 0.5d0*dp(i)
 
-                 !< Type................... 1
-                 idata(pc-np+i,1) = type
+                    !< Density................ 5
+                    rdata(pc,5) = ro_s(i)
 
-              enddo
+                    !< Linear velocity........ 6,7,8
+                    rdata(pc,6) = ic_u_s(icv,type)
+                    rdata(pc,7) = ic_v_s(icv,type)
+                    rdata(pc,8) = ic_w_s(icv,type)
+
+                    !< Type................... 1
+                    idata(pc,1) = type
+
+                    acc_vol = acc_vol + pvol
+                 else
+                    exit nplp
+                 endif
+              enddo nplp
+
               if(allocated(ro_s)) deallocate(ro_s)
+              if(allocated(dp  )) deallocate(dp)
 
            endif
         enddo
@@ -257,6 +264,7 @@ subroutine mfix_particle_generator_prop(nrp, particles) &
   if(allocated(idata)) deallocate(idata)
 
 end subroutine mfix_particle_generator_prop
+
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !                                                                     !
@@ -360,7 +368,6 @@ subroutine uni_rno(dp, dp_min, dp_max)
      dp(lc) = dp_min + lscale*dp(lc)
 
   enddo
-
   return
 
 end subroutine uni_rno
@@ -412,28 +419,30 @@ subroutine grow_pdata(gsize)
 
   ! Increase real data
   if(.not.(allocated(rdata))) then
-     allocate(rdata(gsize,nr))
+     allocate(rdata(max(gsize,1024),nr))
   else
 
      csize = size(rdata,1)
-     nsize = csize + gsize
-     allocate(rtmp(nsize,nr))
-
-     rtmp(1:csize,:) = rdata(1:csize,:)
-     call move_alloc(rtmp,rdata)
+     if(gsize >= csize) then
+        nsize = max(2*csize, gsize)
+        allocate(rtmp(nsize,nr))
+        rtmp(1:csize,:) = rdata(1:csize,:)
+        call move_alloc(rtmp,rdata)
+     endif
   endif
 
   ! Increase integer data
   if(.not.(allocated(idata))) then
-     allocate(idata(gsize,ni))
+     allocate(idata(max(gsize,1024),ni))
   else
 
      csize = size(idata,1)
-     nsize = csize + gsize
-     allocate(itmp(nsize,ni))
-
-     itmp(1:csize,:) = idata(1:csize,:)
-     call move_alloc(itmp,idata)
+     if(gsize >= csize) then
+        nsize = max(2*csize, gsize)
+        allocate(itmp(nsize,ni))
+        itmp(1:csize,:) = idata(1:csize,:)
+        call move_alloc(itmp,idata)
+     endif
   endif
 
 end subroutine grow_pdata

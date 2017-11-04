@@ -120,6 +120,8 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
   Real dy = Geom(lev).CellSize(1);
   Real dz = Geom(lev).CellSize(2);
 
+  int total_np = 0;
+
   // Deliberately didn't tile this loop
   for (MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
 
@@ -149,11 +151,15 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
       }
 
       const int np = pcount;
+      total_np += np;
 
       // Now define the rest of the particle data and store it directly in the particles
       // std::cout << pcount << " particles " << " in grid " << grid_id << std::endl;
       mfix_particle_generator_prop(&np, particles.GetArrayOfStructs().data());
   }
+
+  ParallelDescriptor::ReduceIntSum(total_np,ParallelDescriptor::IOProcessorNumber());
+  amrex::Print() << "Total number of generated particles: " << total_np << std::endl;
 
   // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
   // we do need this to move particles from tile 0 to the correct tile.
@@ -400,10 +406,10 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
                std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
                const MultiCutFab* bndrycent;
-   
+
                areafrac  =  ebfactory->getAreaFrac();
                bndrycent = &(ebfactory->getBndryCent());
-   
+
                // Calculate forces from particle-wall collisions
                BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
                calc_wall_collisions (particles, &ntot, &nrp, tow.dataPtr(), fc.dataPtr(), &subdt,
@@ -432,8 +438,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          BL_PROFILE_VAR_STOP(calc_particle_collisions);
 
          BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-         des_time_loop ( &nrp     , particles, 
-                         &ntot, tow.dataPtr(), fc.dataPtr(), &subdt, 
+         des_time_loop ( &nrp     , particles,
+                         &ntot, tow.dataPtr(), fc.dataPtr(), &subdt,
                          &xlen, &ylen, &zlen, &stime, &n);
          BL_PROFILE_VAR_STOP(des_time_loop);
 #else
