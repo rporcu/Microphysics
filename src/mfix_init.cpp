@@ -623,3 +623,50 @@ mfix_level::mfix_set_bc0(int lev)
   v_g[lev]->FillBoundary(geom[lev].periodicity());
   w_g[lev]->FillBoundary(geom[lev].periodicity());
 }
+
+void mfix_level::WriteEBSurface(int lev) {
+  if (Geom(0).isAllPeriodic()) return;
+
+  const Real* dx = Geom(lev).CellSize();
+
+  BoxArray ba = grids[lev];
+
+  // This creates the associated Distribution Mapping
+  // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+
+  MultiFab dummy(ba, dmap[lev], 1, 0, MFInfo(), *ebfactory);
+
+  // // // Deliberately didn't time this loop.
+  for (MFIter mfi(dummy); mfi.isValid(); ++mfi) {
+
+    const auto& sfab = dynamic_cast<EBFArrayBox const&>((dummy)[mfi]);
+    const auto& flag = sfab.getEBCellFlagFab();
+
+    const Box& bx = mfi.validbox();
+
+    std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+    const MultiCutFab* bndrycent;
+
+    areafrac  =  ebfactory->getAreaFrac();
+    bndrycent = &(ebfactory->getBndryCent());
+
+    mfix_eb_to_polygon(dx, bx.loVect(), bx.hiVect(),
+         flag.dataPtr(), flag.loVect(), flag.hiVect(),
+         (*bndrycent)[mfi].dataPtr(),
+         (*bndrycent)[mfi].loVect(), (*bndrycent)[mfi].hiVect(),
+         (*areafrac[0])[mfi].dataPtr(),
+         (*areafrac[0])[mfi].loVect(), (*areafrac[0])[mfi].hiVect(),
+         (*areafrac[1])[mfi].dataPtr(),
+         (*areafrac[1])[mfi].loVect(), (*areafrac[1])[mfi].hiVect(),
+         (*areafrac[2])[mfi].dataPtr(),
+         (*areafrac[2])[mfi].loVect(), (*areafrac[2])[mfi].hiVect());
+  }
+
+  int cpu = ParallelDescriptor::MyProc();
+  mfix_write_eb_vtp(&cpu);
+
+  int nProcs = ParallelDescriptor::NProcs();
+  if(ParallelDescriptor::IOProcessor())
+    mfix_write_pvtp(&nProcs);
+
+}

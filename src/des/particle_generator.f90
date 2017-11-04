@@ -160,7 +160,7 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
                     enddo
                  enddo
               enddo klp
-              deallocate(dp)
+              if(allocated(dp)) deallocate(dp)
 
               ! At this point, np particles were created. Now given
               ! then some properties
@@ -191,7 +191,7 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
                  idata(pc-np+i,1) = type
 
               enddo
-              deallocate(ro_s)
+              if(allocated(ro_s)) deallocate(ro_s)
 
            endif
         enddo
@@ -253,7 +253,8 @@ subroutine mfix_particle_generator_prop(nrp, particles) &
 
   end do
 
-  deallocate(rdata, idata)
+  if(allocated(rdata)) deallocate(rdata)
+  if(allocated(idata)) deallocate(idata)
 
 end subroutine mfix_particle_generator_prop
 
@@ -388,7 +389,7 @@ subroutine init_random_seed
   iseed = iseed * (idate(8)-500) ! idate(8) contains millisecond
   call random_seed(put=iseed)
 
-  deallocate( iseed )
+  if(allocated(iseed)) deallocate( iseed )
 
 end subroutine init_random_seed
 

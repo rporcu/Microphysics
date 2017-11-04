@@ -375,20 +375,20 @@ extern "C"
     void des_init_time_loop ( const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt );
 
     void des_time_loop ( const int* nrp,  void* rparticles,
-                         const int* nf, amrex::Real* tow, amrex::Real* fc, 
+                         const int* nf, amrex::Real* tow, amrex::Real* fc,
                          amrex::Real* subdt, amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
                          amrex::Real* stime, int* nstep);
 
     void particle_get_position (void* particles, const int* nrp, amrex::Real* x, amrex::Real* y, amrex::Real* z);
 
     void calc_particle_collisions ( void* rparticles, const int* nrp,
-                                    void* gparticles, const int* ngp,  
-                                    const int* nbor_list, const int* size_nl, 
-                                    amrex::Real* tow, amrex::Real* fc, 
+                                    void* gparticles, const int* ngp,
+                                    const int* nbor_list, const int* size_nl,
+                                    amrex::Real* tow, amrex::Real* fc,
                                     amrex::Real* subdt, int* ncoll);
 
-    void calc_wall_collisions ( void* rparticles, const int* ntot, const int* nrp,  
-             amrex::Real* tow, amrex::Real* fc, amrex::Real* subdt, 
+    void calc_wall_collisions ( void* rparticles, const int* ntot, const int* nrp,
+             amrex::Real* tow, amrex::Real* fc, amrex::Real* subdt,
              const void* flag, const int* fglo, const int* fghi,
              const amrex_real* normal, const int* nlo, const int* nhi,
              const amrex_real* bcent, const int* blo, const int* bhi,
@@ -397,7 +397,7 @@ extern "C"
              const amrex_real* az, const int* azlo, const int* azhi,
              const amrex::Real* dx);
 
-    void compute_normals ( 
+    void compute_normals (
              const int* lo , const int* hi,
              const void* flag, const int* fglo, const int* fghi,
              const amrex_real* normal, const int* nlo, const int* nhi,
@@ -455,6 +455,17 @@ extern "C"
          const amrex::Real*, const int*, const int*);
 
     void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, amrex::Real* tol);
+
+  void mfix_eb_to_polygon ( const amrex::Real* dx,
+            const int* slo, const int* shi,
+            const void* flag, const int* fglo, const int* fghi,
+            const amrex_real* bcent, const int* blo, const int* bhi,
+            const amrex_real* ax, const int* axlo, const int* axhi,
+            const amrex_real* ay, const int* aylo, const int* ayhi,
+            const amrex_real* az, const int* azlo, const int* azhi);
+
+  void mfix_write_eb_vtp ( int* myID);
+  void mfix_write_pvtp ( int* nProcs);
 
 #ifdef __cplusplus
 }
