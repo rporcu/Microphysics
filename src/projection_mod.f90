@@ -122,53 +122,6 @@ contains
 
 
 
-   ! 
-   ! Given a pressure increment phi = scale * ( p^(n+1) - p^(n) )
-   ! and the pressure at the previous time step, p^(n), this routine
-   ! performs the update
-   !
-   !                   p^(n+1) = phi/scale +  p^(n)
-   !
-   !  where scale is a chosen scaling factor.
-   !
-   ! WARNING: the old value of p_g is overwritten with the new value.
-   !
-   subroutine update_pressure ( lo, hi, phi, slo, shi, pg, scale ) bind(C)
-
-      ! Loop bounds
-      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
-
-      ! Array bounds
-      integer(c_int),  intent(in   ) :: slo(3), shi(3)
-
-      ! Scaling factor
-      real(ar),        intent(in   ) :: scale
-      
-      ! Arrays
-      real(ar),        intent(inout) ::                           &
-           & pg(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-   
-      real(ar),        intent(in   ) ::                           &
-           & phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      ! Local variables
-      integer(c_int)                 :: i, j, k
-      real(ar)                       :: oscale
-
-      oscale = one / scale
-      
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-               pg(i,j,k) = oscale * phi(i,j,k) + pg(i,j,k)              
-            end do
-         end do
-      end do
- 
-      
-   end subroutine update_pressure
-
-
 
    ! 
    ! Given a pressure increment phi = scale * ( p^(n+1) - p^(n) )

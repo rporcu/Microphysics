@@ -564,12 +564,6 @@ extern "C"
 	const amrex::Real* dx, const amrex::Real* c,
 	const int* dir );
 
-    
-    void update_pressure (
-	const int* lo, const int* hi,
-	const amrex::Real* phi, const int* slo, const int* shi,
-	amrex::Real* pg, const amrex::Real* scale );
-
 
     
     void rescale_pressure (
