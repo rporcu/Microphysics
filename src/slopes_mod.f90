@@ -423,20 +423,11 @@ contains
    function mc_limiter ( dleft, dcenter, dright )  result (slope)
 
       real(ar), intent(in   ) :: dleft, dcenter, dright
-      real(ar)                :: slope, sgn, sflg, slim
+      real(ar)                :: slope
       real(ar), parameter     :: two = 2.0_ar
       
-      slim = two*min(abs(dleft), abs(dright))
-      slim = merge(slim, zero, (dleft*dright) >= zero )
-      sflg = sign(one,dcenter)
-      slope = sflg*min(slim,abs(dcenter))
-      
-      ! slope = dcenter !min( abs (two*dleft), abs (two*dright) )
-      ! slope = merge (slope, zero, (dleft*dright) >= zero )
-      ! slope = sign ( one, dcenter ) * min ( slope, abs(dcenter) )
-      ! sgn   = sign ( one, dcenter )
-      ! slope = min ( two * dleft, dcenter, two * dright )
-      ! slope = sgn * max ( zero, slope )
+      slope = min ( two * dleft, dcenter, two * dright )
+      slope = sign ( one, dcenter ) * max ( zero, slope )
       
    end function mc_limiter
 

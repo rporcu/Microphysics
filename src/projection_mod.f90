@@ -120,7 +120,103 @@ contains
 
    end subroutine compute_new_dt
 
-   
+
+
+
+   !
+   ! Computes the term RHS = - div (uu) + div (tau)/rop
+   ! along direction "dir"
+   !
+   ! dir = 1, 2, 3 ( 1=x, 2=y, 3=z) 
+   !
+   subroutine compute_fluid_acceleration ( lo, hi, rhs, rlo, rhi, sl, &
+        & u, ulo, uhi, v, vlo, vhi, w, wlo, whi, mu, slo, shi, rop,   &
+        & dx, dir ) bind(C)
+
+      use convection_mod
+      use diffusion_mod
+      
+      ! Loop bounds
+      integer(c_int), intent(in   ) :: lo(3), hi(3)
+
+      ! Array bounds
+      integer(c_int), intent(in   ) :: rlo(3), rhi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int), intent(in   ) :: vlo(3), vhi(3)
+      integer(c_int), intent(in   ) :: wlo(3), whi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
+
+      ! Grid 
+      real(ar),       intent(in   ) :: dx(3)
+
+      ! Direction
+      integer(c_int), intent(in   ) :: dir
+      
+      ! Arrays
+      real(ar),       intent(in   ) ::                       &
+           &   u(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
+           &   v(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+           &   w(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
+           &  mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           & rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           &  sl(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
+      
+      real(ar),       intent(inout) ::                       &
+           & rhs(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
+      
+      ! Local working arrays
+      real(ar)                      ::                        &
+           & conv(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3)), &
+           & diff(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
+
+      ! Local variables
+      integer                       :: i, j, k
+      
+      ! Compute convection term
+      select case ( dir )
+      case (1)
+         call compute_divuu_x ( lo, hi, u, ulo, uhi, sl, v, vlo, vhi, &
+              & w, wlo, whi, conv, dx )  
+
+         ! call compute_ugradu_x ( lo, hi, uo, ulo, uhi, vo, vlo, vhi, &
+         !      & wo, wlo, whi, conv, dx )  
+ 
+         
+         ! No diffusion term for the time being
+         diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+
+      case(2)
+         call compute_divuu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, sl, &
+              & w, wlo, whi, conv, dx )
+         
+         ! call compute_ugradu_y ( lo, hi, uo, ulo, uhi, vo, vlo, vhi,  &
+         !      & wo, wlo, whi, conv, dx )
+         
+         ! No diffusion term for the time being
+         diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+         
+      case(3)         
+         call compute_divuu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
+              & w, wlo, whi, sl, conv, dx )
+
+         ! call compute_ugradu_z ( lo, hi, uo, ulo, uhi, vo, vlo, vhi,  &
+         !      & wo, wlo, whi, conv, dx )
+         
+         
+         ! No diffusion term for the time being
+         diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+
+      end select
+
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+               rhs(i,j,k) = -conv(i,j,k) + diff(i,j,k)
+            end do
+         end do
+      end do
+
+   end subroutine compute_fluid_acceleration
 
 
    !

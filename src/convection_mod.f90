@@ -63,7 +63,7 @@ contains
       real(ar)                       :: idx, idy, idz
       real(ar)                       :: duu, duv, duw
       real(ar)                       :: upls, umns ! Plus, minus
-      real(ar)                       :: u_e1, u_w1, u_e2, u_w2
+      real(ar)                       :: u_e1, u_w1, u_e2, u_w2, u_e, u_w
       real(ar)                       :: u_n, u_s, v_n, v_s
       real(ar)                       :: u_t, u_b, w_t, w_b
       real(ar),        parameter     :: over4 = half * half
@@ -81,18 +81,21 @@ contains
                !
 
                ! East face
-               u_e1  = half * ( ug(i+1,j,k) + ug(i,j,k) )
+               ! u_e1  = half * ( ug(i+1,j,k) + ug(i,j,k) )
                upls  = ug(i+1,j,k) - half * slopes(i+1,j,k,1)
                umns  = ug(i,j,k)   + half * slopes(i,j,k,1)
-               u_e2  = merge ( umns, upls, u_e1 > zero )
+               u_e   = edge_velocity ( umns, upls )
+               ! u_e2  = merge ( umns, upls, u_e1 > zero )
 
                ! West face
-               u_w1  = half * ( ug(i,j,k) + ug(i-1,j,k) )
+               ! u_w1  = half * ( ug(i,j,k) + ug(i-1,j,k) )
                upls  = ug(i,j,k)   - half * slopes(i,j,k,1)
                umns  = ug(i-1,j,k) + half * slopes(i-1,j,k,1)
-               u_w2  = merge ( umns, upls, u_w1 > zero )
+               u_w   = edge_velocity ( umns, upls )
+               ! u_w2  = merge ( umns, upls, u_w1 > zero )
 
-               duu   = u_e1*u_e2 - u_w1*u_w2
+               duu   = u_e*u_e - u_w*u_w
+               ! duu   = u_e1*u_e2 - u_w1*u_w2
                
                !
                ! d(uv)/dy
@@ -178,7 +181,7 @@ contains
       real(ar)                       :: idx, idy, idz
       real(ar)                       :: dvu, dvv, dvw
       real(ar)                       :: vpls, vmns ! Plus, minus
-      real(ar)                       :: v_n1, v_s1, v_n2, v_s2
+      real(ar)                       :: v_n1, v_s1, v_n2, v_s2, v_n, v_s
       real(ar)                       :: u_e, u_w, v_e, v_w
       real(ar)                       :: v_t, v_b, w_t, w_b
       real(ar),        parameter     :: over4 = half * half
@@ -214,18 +217,20 @@ contains
                !
 
                ! North face
-               v_n1  = half * ( vg(i,j+1,k) + vg(i,j,k) )
+               ! v_n1  = half * ( vg(i,j+1,k) + vg(i,j,k) )
                vpls  = vg(i,j+1,k) - half * slopes(i,j+1,k,2)
                vmns  = vg(i,j,k)   + half * slopes(i,j,k,2)
-               v_n2  = merge ( vmns, vpls, v_n1 > zero )   
+               v_n   = edge_velocity ( vmns, vpls ) 
+               ! v_n2  = merge ( vmns, vpls, v_n1 > zero )   
 
                ! South face
-               v_s1  = half * ( vg(i,j,k)   + vg(i,j-1,k)   )
+               ! v_s1  = half * ( vg(i,j,k)   + vg(i,j-1,k)   )
                vpls  = vg(i,j,k)   - half * slopes(i,j,k,2)
                vmns  = vg(i,j-1,k) + half * slopes(i,j-1,k,2)
-               v_s2  = merge ( vmns, vpls, v_s1 > zero )   
+               v_s   = edge_velocity ( vmns, vpls )
+               ! v_s2  = merge ( vmns, vpls, v_s1 > zero )   
                               
-               dvv   = v_n1*v_n2 - v_s1*v_s2   
+               dvv   =  v_n*v_n - v_s*v_s     !v_n1*v_n2 - v_s1*v_s2   
                 
                !
                ! d(uw)/dz
@@ -291,7 +296,7 @@ contains
       real(ar)                       :: idx, idy, idz
       real(ar)                       :: dwu, dwv, dww
       real(ar)                       :: wpls, wmns ! Plus, minus
-      real(ar)                       :: w_t1, w_b1, w_t2, w_b2
+      real(ar)                       :: w_t1, w_b1, w_t2, w_b2, w_t, w_b
       real(ar)                       :: u_e, u_w, w_e, w_w
       real(ar)                       :: v_n, v_s, w_n, w_s
       
@@ -344,18 +349,21 @@ contains
                !
 
                ! Top face
-               w_t1  = half * ( wg(i,j,k+1) + wg(i,j,k) )
+               ! w_t1  = half * ( wg(i,j,k+1) + wg(i,j,k) )
                wpls  = wg(i,j,k+1) - half * slopes(i,j,k+1,3)
                wmns  = wg(i,j,k)   + half * slopes(i,j,k,3)
-               w_t2  = merge ( wmns, wpls, w_t1 > zero ) 
+               w_t   = edge_velocity ( wmns, wpls )
+               ! w_t2  = merge ( wmns, wpls, w_t1 > zero ) 
 
                ! Bottom face
-               w_b1  = half * ( wg(i,j,k)   + wg(i-1,j,k)   )
+               ! w_b1  = half * ( wg(i,j,k)   + wg(i-1,j,k)   )
                wpls  = wg(i,j,k)   - half * slopes(i,j,k,3)
                wmns  = wg(i,j,k-1) + half * slopes(i,j,k-1,3)
-               w_b2   = merge ( wmns, wpls, w_b1 > zero ) 
+               w_b   = edge_velocity ( wmns, wpls )
+               ! w_b2   = merge ( wmns, wpls, w_b1 > zero ) 
 
-               dww   = w_t1*w_t2 - w_b1*w_b2
+               dww   = w_t*w_t - w_b*w_b
+               !dww   = w_t1*w_t2 - w_b1*w_b2 
                
                ! Assemble terms
                divuu_z(i,j,k) = dwu*idx + dwv*idy + dww*idz
@@ -576,24 +584,46 @@ contains
       
    end subroutine compute_ugradu_z
 
-   
-   ! Upwind along the same direction as the velocity component
-   function edge_velocity (u_minus, u_plus) result (ev)
-      
-      real(ar), intent(in) :: u_minus, u_plus
-      real(ar)             :: ev
-      
-      if ( ( u_minus >= zero ) .and. ( u_plus >= zero ) ) then
-         ev = u_minus
-      else if ( ( u_minus <= zero ) .and. ( u_plus <= zero ) ) then
-         ev = u_plus
-      else if ( ( u_minus > zero ) .and. ( u_plus < zero ) ) then
-         ev = half * ( u_minus + u_plus ) ! "Shock"
+
+
+
+   ! Upwind along direction normal to velocity component
+   function edge_velocity ( umns, upls ) result (ev)
+    
+      real(ar), intent(in) :: umns, upls
+      real(ar)             :: ev, avg
+
+      if ( umns < zero .and. upls > zero ) then
+         ev = zero
       else
-         ev = zero              ! "Expantion fan"
+         avg = half * ( upls + umns )
+         ev = merge ( umns, upls, avg >= zero ) 
       end if
-      
+
    end function edge_velocity
+
+   
+   
+   ! ! Upwind along the same direction as the velocity component
+   ! function edge_velocity (u_minus, u_plus) result (ev)
+      
+   !    real(ar), intent(in) :: u_minus, u_plus
+   !    real(ar)             :: ev
+      
+   !    if ( ( u_minus >= zero ) .and. ( u_plus >= zero ) ) then
+   !       ev = u_minus
+   !    else if ( ( u_minus <= zero ) .and. ( u_plus <= zero ) ) then
+   !       ev = u_plus
+   !    else if ( ( u_minus > zero ) .and. ( u_plus < zero ) ) then
+   !       ev = half * ( u_minus + u_plus ) ! "Shock"
+   !    else
+   !       ev = zero              ! "Expantion fan"
+   !    end if
+      
+   ! end function edge_velocity
+
+
+
 
    
    ! ! Upwind along direction normal to velocity component

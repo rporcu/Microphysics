@@ -117,6 +117,10 @@ mfix_level::mfix_level ()
     slopes_v.resize(nlevs_max);
     slopes_w.resize(nlevs_max);
 
+    uacc.resize(nlevs_max);
+    vacc.resize(nlevs_max);
+    wacc.resize(nlevs_max);
+    
 }
 
 void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)

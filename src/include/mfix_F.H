@@ -564,30 +564,17 @@ extern "C"
 	const amrex::Real* dx, const amrex::Real* c,
 	const int* dir );
 
-    
-    void apply_pcm_prediction (
+
+    void compute_fluid_acceleration (
 	const int* lo, const int* hi,
-	      amrex::Real* comp, const int* clo, const int* chi, 
+	      amrex::Real* rhs, const int* rlo, const int* rhi, 
 	const amrex::Real* sl,
-	const amrex::Real* uo,   const int* ulo, const int* uhi, 
-	const amrex::Real* vo,   const int* vlo, const int* vhi, 
-	const amrex::Real* wo,   const int* wlo, const int* whi, 
-	const amrex::Real* mu,   const int* slo, const int* shi, 
-	const amrex::Real* rop,  const amrex::Real* dx,
-	const amrex::Real* dt,   const int* dir );
-
-
-    
-    void apply_pcm_correction (
-	const int* lo, const int* hi,
-	      amrex::Real* comp, const int* clo, const int* chi,
-	const amrex::Real* compo,const amrex::Real* sl,
-	const amrex::Real* us,   const int* ulo, const int* uhi, 
-	const amrex::Real* vs,   const int* vlo, const int* vhi, 
-	const amrex::Real* ws,   const int* wlo, const int* whi, 
-	const amrex::Real* mu,   const int* slo, const int* shi, 
-	const amrex::Real* rop,  const amrex::Real* dx,
-	const amrex::Real* dt,   const int* dir );
+	const amrex::Real* u,   const int* ulo, const int* uhi, 
+	const amrex::Real* v,   const int* vlo, const int* vhi, 
+	const amrex::Real* w,   const int* wlo, const int* whi, 
+	const amrex::Real* mu,  const int* slo, const int* shi, 
+	const amrex::Real* rop, const amrex::Real* dx,
+	const int* dir );
 
     void compute_u_slopes (
 	const int* lo, const int* hi,

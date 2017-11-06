@@ -369,6 +369,10 @@ mfix_level::AllocateArrays (int lev)
     // u-velocity slopes. Note that the number of components is not 1, but 3!
     slopes_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],3,nghost));
     slopes_u[lev] -> setVal(0.);
+
+    // u acceleration terms
+    uacc[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    uacc[lev] -> setVal(0.);
     
     // ********************************************************************************
     // Y-face-based arrays
@@ -412,6 +416,9 @@ mfix_level::AllocateArrays (int lev)
     slopes_v[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],3,nghost));
     slopes_v[lev] -> setVal(0.);
 
+    // v acceleration terms
+    vacc[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    vacc[lev] -> setVal(0.);
 
 
     
@@ -457,6 +464,10 @@ mfix_level::AllocateArrays (int lev)
     slopes_w[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],3,nghost));
     slopes_w[lev] -> setVal(0.);
 
+    // w acceleration terms
+    wacc[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    wacc[lev] -> setVal(0.);
+    
 }
 
 

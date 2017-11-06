@@ -131,7 +131,7 @@ set(F90_sources
 # 
 list ( APPEND F90_sources convection_mod.f90 diffusion_mod.f90 )
 list ( APPEND F90_sources projection_mod.f90 projection_tests_mod.f90 )
-list ( APPEND F90_sources pcm_mod.f90 slopes_mod.f90 )
+list ( APPEND F90_sources slopes_mod.f90 )
 list ( APPEND CXX_sources mfix_projection.cpp )
 
 # Generate AMReX_buildInfo.cpp

@@ -156,6 +156,8 @@ private:
 
     void mfix_apply_pcm_prediction (int lev, amrex::Real dt);
 
+    void mfix_compute_fluid_acceleration (int lev);
+    
     void mfix_apply_pcm_correction (int lev, amrex::Real dt);
 
     void mfix_apply_forcing_terms (int lev, amrex::Real dt);
@@ -278,15 +280,10 @@ private:
 
 
     // Projection
-    // // These can probably go
-    // Vector< std::unique_ptr<MultiFab> > ugradu_x;
-    // Vector< std::unique_ptr<MultiFab> > ugradu_y;
-    // Vector< std::unique_ptr<MultiFab> > ugradu_z;
-
-    // // These can probably go
-    // Vector< std::unique_ptr<MultiFab> > divtau_x;
-    // Vector< std::unique_ptr<MultiFab> > divtau_y;
-    // Vector< std::unique_ptr<MultiFab> > divtau_z;
+    // Fluid acceleration (convection + diffusion)
+    Vector< std::unique_ptr<MultiFab> > uacc;
+    Vector< std::unique_ptr<MultiFab> > vacc;
+    Vector< std::unique_ptr<MultiFab> > wacc;
 
     // These are multi-component multifab
     Vector< std::unique_ptr<MultiFab> > slopes_u;
