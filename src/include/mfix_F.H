@@ -564,14 +564,6 @@ extern "C"
 	const amrex::Real* dx, const amrex::Real* c,
 	const int* dir );
 
-
-    
-    void rescale_pressure (
-	const int* lo, const int* hi,
-	const amrex::Real* pg, const int* slo, const int* shi,
-	const amrex::Real* scale );
-
-
     
     void apply_pcm_prediction (
 	const int* lo, const int* hi,
