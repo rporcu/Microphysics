@@ -1,8 +1,25 @@
 #include <AMReX.H>
 #include <AMReX_PlaneIF.H>
 #include <AMReX_SphereIF.H>
+#include <AMReX_PolynomialIF.H>
 #include <AMReX_IntersectionIF.H>
 #include <AMReX_ParmParse.H>
+#include <AMReX_TransformIF.H>
+#include <AMReX_UnionIF.H>
+
+// #include <AMReX_FlatPlateGeom.H>
+// #include <AMReX_EBISLayout.H>
+// #include <AMReX_EBGraph.H>
+// #include <AMReX_EBDebugOut.H>
+// #include <AMReX_EBCellFAB.H>
+// #include <AMReX_EBCellFactory.H>
+// #include <AMReX_EBIndexSpace.H>
+// #include <AMReX_ComplementIF.H>
+// #include <AMReX_IntersectionIF.H>
+// #include <AMReX_LatheIF.H>
+
+
+
 
 #include <mfix_level.H>
 #include <mfix_F.H>
@@ -15,65 +32,119 @@ mfix_level::make_eb_geometry(int lev)
     Box domain(geom[lev].Domain());
     Real dx = geom[lev].CellSize()[0];
 
-
-    GeometryShop* workshop;
-
     int exists;
     RealVect normal, center;
     PlaneIF* plane;
     Vector<BaseIF*> planes;
     planes.resize(0);
 
+    std::unique_ptr<BaseIF> impfunc;
+
     ParmParse pp("mfix");
 
     bool use_walls = true;
-    pp.query("use_walls", use_walls);
+    bool use_poly2 = false;
 
-    if(use_walls){
+    pp.query("use_walls", use_walls);
+    pp.query("use_poly2", use_poly2);
+
+
+    if(use_poly2){
+
+      amrex::Print() << "Using poly2 geometry\n";
+
+      Vector<PolyTerm> poly;
+
+      PolyTerm mono;
+      Real coef;
+      IntVect powers;
+
+      Vector<Real> coefvec(SpaceDim);
+      Vector<int>  powersvec(SpaceDim);
+      Vector<Real> transvec(SpaceDim);
+
+      for(int idir = 0; idir < 3; idir++) {
+        if( idir == 0) {
+          pp.getarr("poly2_x_coeffs",  coefvec,   0, SpaceDim);
+        } else if( idir == 1) {
+          pp.getarr("poly2_y_coeffs",  coefvec,   0, SpaceDim);
+        } else if( idir == 2) {
+          pp.getarr("poly2_z_coeffs",  coefvec,   0, SpaceDim);
+        }
+
+        for(int lc = 0; lc < 3; lc++) {
+
+          // x^(lc) term
+          coef = coefvec[lc];
+          powers = IntVect::Zero;
+          powers[idir] = lc;
+
+            mono.coef   = coef;
+          mono.powers = powers;
+
+          poly.push_back(mono);
+
+        }
+      }
+
+      bool flip = false;
+      pp.query("poly2_mirror", flip);
+
+      PolynomialIF mirror(poly,flip);
+      RealVect translation;
+
+      pp.getarr("poly2_translate", transvec,  0, SpaceDim);
+
+      for(int idir = 0; idir < 3; idir++) {
+        translation[idir] = transvec[idir];
+      }
+
+      TransformIF poly2(mirror);
+      poly2.translate(translation);
+
+      if(use_walls){ // Combine poly2 with walls
+        for (int i = 1; i <= 500; i++) {
+          mfix_get_walls(&i, &exists, &normal, &center);
+          if(exists){
+            amrex::Print() << "Normal " << normal << std::endl;
+            amrex::Print() << "Center " << center << std::endl;
+            plane = new PlaneIF(normal,center,true);
+            planes.push_back(plane);
+          }
+        }
+        IntersectionIF all_planes(planes);
+
+        Vector<BaseIF*> funcs(2);
+        funcs[0] = &poly2;
+        funcs[1] = &all_planes;
+        IntersectionIF implicit(funcs);
+        impfunc.reset(implicit.newImplicitFunction());
+
+      } else {
+        impfunc.reset(poly2.newImplicitFunction());
+      }
+
+    } else if(use_walls){ // Just walls
+
       for (int i = 1; i <= 500; i++) {
         mfix_get_walls(&i, &exists, &normal, &center);
         if(exists){
-          std::cout << "Normal " << normal << std::endl;
-          std::cout << "Center " << center << std::endl;
+          amrex::Print() << "Normal " << normal << std::endl;
+          amrex::Print() << "Center " << center << std::endl;
           plane = new PlaneIF(normal,center,true);
           planes.push_back(plane);
         }
       }
       IntersectionIF all_planes(planes);
-      workshop = new GeometryShop(all_planes);
 
-      // This part is generic once you have defined the workshop
-      EBIndexSpace* ebis = AMReX_EBIS::instance();
-      ebis->define(domain, RealVect::Zero, dx, *workshop);
+      impfunc.reset(all_planes.newImplicitFunction());
     }
 
-    // Sphere Geometry Setup -------
+    ///////////////////////////////////////////////////
 
-    bool use_sphere   = false;
-    pp.query("use_sphere", use_sphere);
-
-    if(use_sphere){
-
-      amrex::Print() << "Using sphere geometry\n";
-      Real radius;
-      pp.get(   "sphere_radius", radius);
-      Vector<Real> centervec(SpaceDim);
-      pp.getarr("sphere_center", centervec, 0, SpaceDim);
-      RealVect center;
-      for(int idir = 0; idir < 3; idir++) {
-        center[idir] = centervec[idir];
-      }
-      amrex::Print() << "radius  "<< radius << "\n";
-      amrex::Print() << "center  "<< center << "\n";
-
-      std::unique_ptr<BaseIF> impfunc;
-      bool insideRegular = false;
-      impfunc.reset(static_cast<BaseIF*>(new SphereIF(radius, center, insideRegular)));
-
-      bool eb_verbosity = true;
-      GeometryShop gshop(*impfunc, eb_verbosity);
-      AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop);
-    }
+    bool eb_verbosity = true;
+    GeometryShop gshop(*impfunc, eb_verbosity);
+    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop);
 
 
     // set up ebfactory

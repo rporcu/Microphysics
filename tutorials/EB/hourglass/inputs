@@ -1,12 +1,12 @@
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell = 40 40 40
+amr.n_cell = 16 16 48
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
 #amr.max_grid_size = 1024
-amr.max_grid_size_x =  25
-amr.max_grid_size_y =  25
-amr.max_grid_size_z =  25
+amr.max_grid_size_x =  8
+amr.max_grid_size_y =  8
+amr.max_grid_size_z = 50
 
 # Maximum tile size within each grid
 fabarray.mfiter_tile_size = 1024 1024 1024
@@ -20,28 +20,26 @@ amr.max_level = 0
 amr.plot_int  =  -1
 amr.check_int  = -1
 
-amr.par_ascii_int  =  50
+amr.par_ascii_int  = 25
 amr.par_ascii_file = vis
 
 mfix.particle_init_type = "Auto"
 
-mfix.use_walls = true
+mfix.use_walls  = true
 
 mfix.use_poly2    = true
-mfix.poly2_mirror = false   # Use outside
+mfix.poly2_mirror = true    # Use inside
 
-# Sphere ::  x^2 + y^2 + z^2 = R^2
+# Hyperbolid ::  x^2 + y^2 - z^2 = 0.01
 
-# Coefficients           A*k^0    B*k^1    C*k^2
 mfix.poly2_x_coeffs =    0.00     0.00     1.00
 mfix.poly2_y_coeffs =    0.00     0.00     1.00
-mfix.poly2_z_coeffs =   -1.00e-2  0.00     1.00
+mfix.poly2_z_coeffs =   -0.12e-6  0.00    -1.00
 
-mfix.poly2_translate =   0.50     0.50     0.50
-
+mfix.poly2_translate =   1.6e-3   1.6e-3   0.0048
 
 # Geometry
-geometry.coord_sys   = 0                   # 0: Cartesian
-geometry.is_periodic = 0      0     0      # Is periodic in each direction?
-geometry.prob_lo     = 0.     0.    0.     # lo corner of physical domain
-geometry.prob_hi     = 1.0    1.0   1.0    # hi corner of physical domain
+geometry.coord_sys   = 0                       # 0: Cartesian
+geometry.is_periodic = 0       0       1       # Is periodic in each direction?
+geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
+geometry.prob_hi     = 0.0032  0.0032  0.0096  # hi corner of physical domain
