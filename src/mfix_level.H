@@ -146,7 +146,7 @@ private:
 				  Vector< std::unique_ptr<MultiFab> >& phi,
 				  Vector< std::unique_ptr<MultiFab> >& rhs );
 
-    void compute_oro_g ( int lev );
+    void mfix_compute_oro_g ( int lev );
     
     void init_tests_projection (int lev);
 

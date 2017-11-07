@@ -271,7 +271,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               u_i(i,j,k) = u_i(i,j,k) - codx * beta(i,j,k) * &
+               u_i(i,j,k) = u_i(i,j,k) + codx * beta(i,j,k) * &
                     &      ( phi(i,j,k) - phi(i-i0,j-j0,k-k0) )
          
               
@@ -282,111 +282,52 @@ contains
    end subroutine add_gradient
 
 
-   
+
    !
    ! Compute the coefficients of the PPE, i.e. 1 / ro_g = eps_g/rho_g,
-   ! at the faces of the pressure cells along the x-axis
-   ! (u-velocity locations).
+   ! at the faces of the pressure cells along the "dir"-axis.
    ! 
-   subroutine compute_oro_g_x ( lo, hi, oro_g_x, ulo, uhi, &
-        rop_g, slo, shi, ep_g)  bind(C, name="compute_oro_g_x")
+   subroutine compute_oro_g ( lo, hi, oro_g, alo, ahi, &
+        rop_g, slo, shi, ep_g, dir )  bind(C)
 
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
-      integer(c_int), intent(in   ) ::  lo(3),  hi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3)
-      
-      real(ar),       intent(in   ) :: &
-           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-            ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(ar),       intent(  out) :: &
-           oro_g_x(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      
-      integer      :: i, j, k
-
-
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
-               oro_g_x(i,j,k) = half * (              &
-                    ep_g(i,j,k) / rop_g(i,j,k)     + &
-                    ep_g(i-1,j,k) / rop_g(i-1,j,k) )
-            end do
-         end do
-      end do
-
-   end subroutine compute_oro_g_x
-
-   
-   !
-   ! Compute the coefficients of the PPE, i.e. 1 / ro_g = eps_g/rho_g,
-   ! at the faces of the pressure cells along the y-axis
-   ! (v-velocity locations).
-   ! 
-   subroutine compute_oro_g_y ( lo, hi, oro_g_y, vlo, vhi, &
-        rop_g, slo, shi, ep_g)  bind(C, name="compute_oro_g_y")
-      
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
-      integer(c_int), intent(in   ) :: vlo(3),vhi(3)
+
+      ! Array bounds
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: alo(3),ahi(3)
+
+      ! Direction
+      integer(c_int), intent(in   ) :: dir
       
+      ! Arrays
       real(ar),       intent(in   ) :: &
            rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       
       real(ar),       intent(  out) :: &
-           oro_g_y(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+           oro_g(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       
-      integer      :: i, j, k
+      integer      :: i, j, k, i0, j0, k0
+
+      i0 = e_i(dir,1)
+      j0 = e_i(dir,2)
+      k0 = e_i(dir,3)
       
       
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
-               oro_g_y(i,j,k) = half * (              &
-                    ep_g(i,j,k) / rop_g(i,j,k)     + &
-                    ep_g(i,j-1,k) / rop_g(i,j-1,k) )
+               oro_g(i,j,k) = half * ( ep_g(i,j,k) / rop_g(i,j,k) + &
+                    & ep_g(i-i0,j-j0,k-k0) / rop_g(i-i0,j-j0,k-k0) )
             end do
          end do
       end do
       
-   end subroutine compute_oro_g_y
+   end subroutine compute_oro_g
+
 
 
    
-   !
-   ! Compute the coefficients of the PPE, i.e. 1 / ro_g = eps_g/rho_g,
-   ! at the faces of the pressure cells along the z-axis
-   ! (w-velocity locations).
-   ! 
-   subroutine compute_oro_g_z ( lo, hi, oro_g_z, wlo, whi, &
-        rop_g, slo, shi, ep_g)  bind(C, name="compute_oro_g_z")
-      
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-      integer(c_int), intent(in   ) :: wlo(3),whi(3)
-      
-      real(ar),       intent(in   ) :: &
-           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      
-      real(ar),       intent(  out) :: &
-           oro_g_z(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      
-      integer      :: i, j, k
-      
-      
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
-               oro_g_z(i,j,k) = half * (              &
-                    ep_g(i,j,k) / rop_g(i,j,k)     + &
-                    ep_g(i,j,k-1) / rop_g(i,j,k-1) )
-            end do
-         end do
-      end do
-      
-   end subroutine compute_oro_g_z
-
    
 end module projection_mod

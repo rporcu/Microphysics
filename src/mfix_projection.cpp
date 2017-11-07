@@ -86,7 +86,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
 
     std::cout << "\nTentative velocity computation at  time = " << time
 	      << " ( dt = "<< dt << " )\n";
-    std::cout << "Before predictor step :\n";
+    std::cout << "At beginning of time step :\n";
     std::cout << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
     std::cout << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
     std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
@@ -100,7 +100,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     mfix_compute_velocity_slopes ( lev );
     mfix_compute_fluid_acceleration ( lev ); 
     mfix_apply_pcm_prediction ( lev, dt );
-    // mfix_add_pressure_gradient ( lev, -dt );
     
     // Exchange halo nodes and apply BCs
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
@@ -110,13 +109,9 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
 	
     // Step 2: compute u** (corrector step) and store it in
     // u_g, v_g, and w_g.
-    // Instead of only adding -0.5*dt*grad(p)/rho,
-    // add -dt*grad(p)/dt so that the term -0.5*dt*grad(p)/rho
-    // will not show up in the projection step
     mfix_compute_velocity_slopes ( lev );
     mfix_compute_fluid_acceleration ( lev );     
     mfix_apply_pcm_correction ( lev, dt );
-//    mfix_add_pressure_gradient ( lev, -dt );
     
     // Add forcing terms ( gravity and/or momentum
     // exchange with particles )
@@ -129,7 +124,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     mfix_set_bc1(lev);
 
     //
-    std::cout << "\nAfter predictor step :\n";
+    std::cout << "\nBefore projection step :\n";
     std::cout << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
     std::cout << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
     std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n\n";
@@ -303,147 +298,6 @@ mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
 
 
 
-// //
-// // Computes:
-// //
-// //           u_g = u_g + dt * R_u
-// //           v_g = v_g + dt * R_v
-// //           w_g = w_g + dt * R_w
-// //
-// // where R_u, R_v, and R_w are the convective + diffusive term of
-// // the u,v, and w momentum equations respectively.
-// // 
-// void
-// mfix_level::mfix_apply_pcm_prediction (int lev, amrex::Real dt)
-// {
-//     BL_PROFILE("mfix_level::mfix_apply_pcm_prediction");
-
-//     int xdir = 1;
-//     int ydir = 2;
-//     int zdir = 3;
-        
-// #ifdef _OPENMP
-// #pragma omp parallel 
-// #endif
-//     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
-//     {
-// 	// Boxes for staggered components
-// 	Box ubx = amrex::convert ( mfi.tilebox(), e_x );
-// 	Box vbx = amrex::convert ( mfi.tilebox(), e_y );
-// 	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
-	
-//         // U velocity ( u* stored in u_g )
-// 	apply_pcm_prediction (
-// 	    BL_TO_FORTRAN_BOX(ubx),  
-// 	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-// 	    (*slopes_u[lev])[mfi].dataPtr (),
-// 	    BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
-//             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
-//             (*rop_g[lev])[mfi].dataPtr (),
-// 	    geom[lev].CellSize (), &dt, &xdir );
-
-// 	// V velocity ( v* stored in v_g )
-// 	apply_pcm_prediction (
-// 	    BL_TO_FORTRAN_BOX(vbx),  
-// 	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-// 	    (*slopes_v[lev])[mfi].dataPtr (),
-// 	    BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
-//             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
-//             (*rop_g[lev])[mfi].dataPtr (),
-// 	    geom[lev].CellSize (), &dt, &ydir );
-
-// 	// W velocity ( w* stored in w_g )
-// 	apply_pcm_prediction (
-// 	    BL_TO_FORTRAN_BOX(wbx),  
-// 	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-// 	    (*slopes_w[lev])[mfi].dataPtr (),
-// 	    BL_TO_FORTRAN_ANYD((*u_go[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*v_go[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*w_go[lev])[mfi]),
-//             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
-//             (*rop_g[lev])[mfi].dataPtr (),
-// 	    geom[lev].CellSize (), &dt, &zdir );
-//     }
-// }
-
-// void
-// mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
-// {
-//     BL_PROFILE("mfix_level::mfix_apply_pcm_correction");
-
-
-//     int nghost = u_g[lev] -> nGrow();
-    
-//     // Store u*, v*, w* in u_gt, v_gt, w_gt
-//     MultiFab::Copy (*u_gt[lev],   *u_g[lev],   0, 0, 1, nghost);
-//     MultiFab::Copy (*v_gt[lev],   *v_g[lev],   0, 0, 1, nghost);
-//     MultiFab::Copy (*w_gt[lev],   *w_g[lev],   0, 0, 1, nghost);
-    
-// #ifdef _OPENMP
-// #pragma omp parallel 
-// #endif
-//     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
-//     {
-// 	// Boxes for staggered components
-// 	Box ubx = amrex::convert ( mfi.tilebox(), e_x );
-// 	Box vbx = amrex::convert ( mfi.tilebox(), e_y );
-// 	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
-	
-//         // U velocity ( u** stored in u_g )
-// 	int dir = 1;
-	
-// 	apply_pcm_correction (
-// 	    BL_TO_FORTRAN_BOX(ubx),  
-// 	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-// 	    (*u_go[lev])[mfi].dataPtr (),
-// 	    (*slopes_u[lev])[mfi].dataPtr (),
-// 	    BL_TO_FORTRAN_ANYD((*u_gt[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*v_gt[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*w_gt[lev])[mfi]),
-//             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
-//             (*rop_g[lev])[mfi].dataPtr (),
-// 	    geom[lev].CellSize (), &dt, &dir );
-
-//         // V velocity ( v** stored in v_g )
-// 	dir = 2;
-	
-// 	apply_pcm_correction (
-// 	    BL_TO_FORTRAN_BOX(vbx),  
-// 	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-// 	    (*v_go[lev])[mfi].dataPtr (),
-// 	    (*slopes_v[lev])[mfi].dataPtr (),
-// 	    BL_TO_FORTRAN_ANYD((*u_gt[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*v_gt[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*w_gt[lev])[mfi]),
-//             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
-//             (*rop_g[lev])[mfi].dataPtr (),
-// 	    geom[lev].CellSize (), &dt, &dir );
-	
-//         // W velocity ( w** stored in w_g )
-// 	dir = 3;
-	
-// 	apply_pcm_correction (
-// 	    BL_TO_FORTRAN_BOX(wbx),  
-// 	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-// 	    (*w_go[lev])[mfi].dataPtr (),
-// 	    (*slopes_w[lev])[mfi].dataPtr (),
-// 	    BL_TO_FORTRAN_ANYD((*u_gt[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*v_gt[lev])[mfi]),
-// 	    BL_TO_FORTRAN_ANYD((*w_gt[lev])[mfi]),
-//             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
-//             (*rop_g[lev])[mfi].dataPtr (),
-// 	    geom[lev].CellSize (), &dt, &dir );
-
-//     }
-      
-
-// }
-
-
 //
 // Perform the following operations:
 //
@@ -577,35 +431,7 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt)
 	Box vbx = amrex::convert ( mfi.tilebox(), e_y );
 	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
 
-	amrex::Real mdto2 = - dt*0.5; 
-
-	int dir = 1;
-
-	add_gradient (
-	    BL_TO_FORTRAN_BOX(ubx),  
-	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-	    (*(oro_g[lev][0]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
-	    geom[lev].CellSize(), &mdto2, &dir );
-
-	dir = 2 ;
-	
-	add_gradient (
-	    BL_TO_FORTRAN_BOX(vbx),  
-	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-	    (*(oro_g[lev][1]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
-	    geom[lev].CellSize(), &mdto2, &dir );
-
-	dir = 3;
-	
-	add_gradient (
-	    BL_TO_FORTRAN_BOX(wbx),  
-	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-	    (*(oro_g[lev][2]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
-	    geom[lev].CellSize(), &mdto2, &dir );
-
+	// To be filled
 	
     }
 }
@@ -613,6 +439,7 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt)
 //
 // Compute the slopes of each velocity component in the
 // three directions.
+// 
 void
 mfix_level::mfix_compute_velocity_slopes (int lev)
 {
@@ -684,7 +511,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     trD_g[lev] -> FillBoundary(geom[lev].periodicity());
 
     // Compute the PPE coefficients
-    compute_oro_g ( lev );
+    mfix_compute_oro_g ( lev );
     
     // Solve PPE
     solve_poisson_equation ( lev, oro_g, p_g, trD_g );
@@ -740,7 +567,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
 
 
 //
-// Solves - div ( b grad(phi) ) = rhs via Multigrid
+// Solves   div ( b grad(phi) ) = rhs   via Multigrid
 //
 // phi and rhs are cell-centered
 // b           is  face-centered
@@ -755,11 +582,7 @@ mfix_level::solve_poisson_equation (  int lev,
 
     // Multigrid inputs
     Vector<int>                         bc(2*AMREX_SPACEDIM, -1); // Periodic boundaries
-    bool                                nodal = false;
     int                                 stencil =  amrex::CC_CROSS_STENCIL;
-    bool                                have_rhcc = false;
-    int                                 nc = 0; // Don't know what it is but it should not
-                                                // make any difference in the solve 
     int                                 verbose = 0;
     Real                                rel_tol = 1.0e-13;
     Real                                abs_tol = 1.0e-14;
@@ -768,19 +591,13 @@ mfix_level::solve_poisson_equation (  int lev,
     solver.set_stencil (stencil);
     solver.set_verbose (verbose);
     solver.set_bc (bc.dataPtr());
-    // solver.set_maxorder ();
-    
-    // amrex::Print() << "RHS HAS NANS = " << rhs[lev] -> contains_nan () << "\n";
-    // amrex::Print() << "norm0(ppe rhs) = " << rhs[lev]  -> norm0 () << "\n";
-    // amrex::Print() << "norm0(b_x) = "     << b[lev][0] -> norm0 () << "\n";
-    // amrex::Print() << "norm0(b_y) = "     << b[lev][1] -> norm0 () << "\n";
-    // amrex::Print() << "norm0(b_z) = "     << b[lev][2] -> norm0 () << "\n";
 
-    bool has_nans = rhs[lev] -> contains_nan ();
-
-    amrex::Print() << " HAS NANs = " << has_nans << "\n";
     
-    solver.set_mac_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
+    // bool has_nans = rhs[lev] -> contains_nan ();
+
+    // amrex::Print() << " HAS NANs = " << has_nans << "\n";
+   
+    solver.set_gravity_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
     phi[lev] -> setVal (0.);
  	
     solver.solve ( *phi[lev], *rhs[lev], rel_tol, abs_tol, 0, 0, 1 );
@@ -788,57 +605,56 @@ mfix_level::solve_poisson_equation (  int lev,
 }
 
 
+
+
+//
+// Computes 1/ro_g = ep_g/rop_g at the faces of the scalar cells
+// 
 void
-mfix_level::compute_oro_g (int lev)
+mfix_level::mfix_compute_oro_g (int lev)
 {
-    BL_PROFILE("mfix_level::compute_oro_g");
+    BL_PROFILE("mfix_level::mfix_compute_oro_g");
 
-    // Compute the PPE coefficients
+    // Directions
+    int xdir = 1;
+    int ydir = 2;
+    int zdir = 3;
+    
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel 
 #endif
-    for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
-	const Box& bx = mfi.tilebox();
+	// Boxes for staggered components
+	Box ubx = amrex::convert ( mfi.tilebox(), e_x );
+	Box vbx = amrex::convert ( mfi.tilebox(), e_y );
+	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
 
-	compute_oro_g_x (BL_TO_FORTRAN_BOX(bx),
-			 BL_TO_FORTRAN_ANYD((*(oro_g[lev][0]))[mfi]),
-			 BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-			 (*ep_g[lev])[mfi].dataPtr() );
+	// X direction
+	compute_oro_g (BL_TO_FORTRAN_BOX(ubx),
+		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][0]))[mfi]),
+		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+		       (*ep_g[lev])[mfi].dataPtr(), &xdir );
+
+	// Y direction
+	compute_oro_g (BL_TO_FORTRAN_BOX(vbx),
+		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][1]))[mfi]),
+		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+		       (*ep_g[lev])[mfi].dataPtr(), &ydir );
+
+	// Z direction
+	compute_oro_g (BL_TO_FORTRAN_BOX(wbx),
+		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][2]))[mfi]),
+		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+		       (*ep_g[lev])[mfi].dataPtr(), &zdir );
+	
+	
     }
 
     oro_g[lev][0] -> FillBoundary(geom[lev].periodicity());
-    
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box& bx = mfi.tilebox();
-
-	compute_oro_g_y (BL_TO_FORTRAN_BOX(bx),
-			 BL_TO_FORTRAN_ANYD((*(oro_g[lev][1]))[mfi]),
-			 BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-			 (*ep_g[lev])[mfi].dataPtr() );
-    }
-
     oro_g[lev][1] -> FillBoundary(geom[lev].periodicity());
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box& bx = mfi.tilebox();
-
-	compute_oro_g_z (BL_TO_FORTRAN_BOX(bx),
-			 BL_TO_FORTRAN_ANYD((*(oro_g[lev][2]))[mfi]),
-			 BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-			 (*ep_g[lev])[mfi].dataPtr() );
-    }
-    
     oro_g[lev][2] -> FillBoundary(geom[lev].periodicity());
-    
+
 }
 
 
