@@ -78,6 +78,7 @@ set(F90_sources
    ic_mod.f90
    init_fluid.f90
    init_namelist.f90
+   io/eb_to_pvd.f90
    io/output_manager.f90
    io/write_error.f90
    io/write_out0.f90

@@ -30,7 +30,6 @@ else
     MPIRUN=""
 fi
 
-MFIX_BENCHMARKS_HOME=${MFIX_BENCHMARKS_HOME:-}
 FCOMPARE=${FCOMPARE:-}
 
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
@@ -43,7 +42,3 @@ post_dats=POST*.dat
 for result in ${post_dats}; do
     diff -u -I '#.*' "../FLD02-y/AUTOTEST/${result}" "${result}"
 done
-
-if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then
-    ${FCOMPARE} --infile1 "${MFIX_BENCHMARKS_HOME}/FLD02-x_FLD02-x_plt00001" --infile2 FLD0200001/
-fi

@@ -61,6 +61,8 @@ public:
 
     void make_eb_geometry (int lev);
 
+    void WriteEBSurface(int lev);
+
     void InitIOData ();
 
 protected:
@@ -127,7 +129,7 @@ private:
     void MakeNewLevelFromScratch(int lev, Real time,
           const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
-    void ReMakeNewLevelFromScratch(int lev, 
+    void ReMakeNewLevelFromScratch(int lev,
           const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
     void WriteHeader(const std::string& name, int nstep, Real dt, Real time) const;
@@ -223,19 +225,19 @@ private:
     Vector< std::unique_ptr<MultiFab> > tau_u_g;
     Vector< std::unique_ptr<MultiFab> > tau_v_g;
     Vector< std::unique_ptr<MultiFab> > tau_w_g;
-    
+
     Vector< std::unique_ptr<MultiFab> > fluxX;
     Vector< std::unique_ptr<MultiFab> > fluxY;
     Vector< std::unique_ptr<MultiFab> > fluxZ;
-   
+
     Vector< std::unique_ptr<MultiFab> > ropX;
     Vector< std::unique_ptr<MultiFab> > ropY;
     Vector< std::unique_ptr<MultiFab> > ropZ;
-  
+
     Vector< std::unique_ptr<MultiFab> > f_gds_u;
     Vector< std::unique_ptr<MultiFab> > f_gds_v;
     Vector< std::unique_ptr<MultiFab> > f_gds_w;
- 
+
     Vector< std::unique_ptr<MultiFab> > drag_u;
     Vector< std::unique_ptr<MultiFab> > drag_v;
     Vector< std::unique_ptr<MultiFab> > drag_w;
