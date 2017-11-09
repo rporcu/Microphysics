@@ -27,15 +27,14 @@ subroutine USR2_DES( np, particle )
 
   integer, save :: passes = 0
 
-  character(len=6) :: cpass
+  character(len=4) :: cpass
   integer :: lc1, lc2
 
-
   return
+
   passes = passes + 1
 
-  if(.not.(mod(passes,50)==0)) return
-  write(cpass,"(I6.6)") passes
+  write(cpass,"(I4.4)") passes
 
   open(unit=100, file='out.'//cpass//'.vtp', status='unknown')
 

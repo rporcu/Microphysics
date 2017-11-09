@@ -10,7 +10,7 @@
           DES_EN_INPUT =       0.9000    
           DES_EN_WALL_INPUT =  0.9000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00586510     1         -0.05751701       -0.05751701
      0.01026393     1         -0.10065477       -0.10065477
@@ -121,7 +121,7 @@
           DES_EN_INPUT =       0.8000    
           DES_EN_WALL_INPUT =  0.8000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00586510     1         -0.05751701       -0.05751701
      0.01026393     1         -0.10065477       -0.10065477
@@ -232,7 +232,7 @@
           DES_EN_INPUT =       0.7000    
           DES_EN_WALL_INPUT =  0.7000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00589971     1         -0.05785634       -0.05785634
      0.01032448     1         -0.10124860       -0.10124860
@@ -343,7 +343,7 @@
           DES_EN_INPUT =       0.6000    
           DES_EN_WALL_INPUT =  0.6000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00593472     1         -0.05819970       -0.05819970
      0.01038576     1         -0.10184948       -0.10184948
@@ -454,7 +454,7 @@
           DES_EN_INPUT =        1.000    
           DES_EN_WALL_INPUT =   1.000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00555556     1         -0.05448139       -0.05448139
      0.01018519     1         -0.09988255       -0.09988255
@@ -565,7 +565,7 @@
           DES_EN_INPUT =       0.9000    
           DES_EN_WALL_INPUT =  0.9000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00556586     1         -0.05458247       -0.05458247
      0.01020408     1         -0.10006786       -0.10006786
@@ -676,7 +676,7 @@
           DES_EN_INPUT =       0.8000    
           DES_EN_WALL_INPUT =  0.8000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00557621     1         -0.05468392       -0.05468392
      0.01022305     1         -0.10025386       -0.10025386
@@ -787,7 +787,7 @@
           DES_EN_INPUT =       0.7000    
           DES_EN_WALL_INPUT =  0.7000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00559701     1         -0.05488797       -0.05488797
      0.01026119     1         -0.10062794       -0.10062794
@@ -898,7 +898,7 @@
           DES_EN_INPUT =       0.6000    
           DES_EN_WALL_INPUT =  0.6000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00562852     1         -0.05519690       -0.05519690
      0.01031895     1         -0.10119432       -0.10119432
@@ -1009,7 +1009,7 @@
           DES_EN_INPUT =        1.000    
           DES_EN_WALL_INPUT =   1.000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00524246     1         -0.05141101       -0.05141101
      0.01048493     1         -0.10282202       -0.10282202
@@ -1120,7 +1120,7 @@
           DES_EN_INPUT =       0.9000    
           DES_EN_WALL_INPUT =  0.9000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00524246     1         -0.05141101       -0.05141101
      0.01048493     1         -0.10282202       -0.10282202
@@ -1231,7 +1231,7 @@
           DES_EN_INPUT =       0.8000    
           DES_EN_WALL_INPUT =  0.8000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00525624     1         -0.05154612       -0.05154612
      0.01051248     1         -0.10309225       -0.10309225
@@ -1342,7 +1342,7 @@
           DES_EN_INPUT =       0.7000    
           DES_EN_WALL_INPUT =  0.7000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00527704     1         -0.05175013       -0.05175013
      0.01055409     1         -0.10350026       -0.10350026
@@ -1453,7 +1453,7 @@
           DES_EN_INPUT =       0.6000    
           DES_EN_WALL_INPUT =  0.6000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00531208     1         -0.05209376       -0.05209376
      0.00996016     1         -0.09767580       -0.09767580
@@ -1564,7 +1564,7 @@
           DES_EN_INPUT =        1.000    
           DES_EN_WALL_INPUT =   1.000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00509731     1         -0.04998756       -0.04998756
      0.01019462     1         -0.09997512       -0.09997512
@@ -1675,7 +1675,7 @@
           DES_EN_INPUT =       0.9000    
           DES_EN_WALL_INPUT =  0.9000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00510204     1         -0.05003393       -0.05003393
      0.01020408     1         -0.10006786       -0.10006786
@@ -1786,7 +1786,7 @@
           DES_EN_INPUT =       0.8000    
           DES_EN_WALL_INPUT =  0.8000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00511152     1         -0.05012693       -0.05012693
      0.01022305     1         -0.10025386       -0.10025386
@@ -1897,7 +1897,7 @@
           DES_EN_INPUT =       0.7000    
           DES_EN_WALL_INPUT =  0.7000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00513060     1         -0.05031397       -0.05031397
      0.01026119     1         -0.10062794       -0.10062794
@@ -2008,7 +2008,7 @@
           DES_EN_INPUT =       0.6000    
           DES_EN_WALL_INPUT =  0.6000    
 
-       Time       Stage           Vel             Vel_MFIX         %REL DIFF         ABS DIFF
+       Time       Stage           Vel             Vel_MFIX
      0.00000000     1         -0.00000000        0.00000000
      0.00516432     1         -0.05064467       -0.05064467
      0.01032864     1         -0.10128934       -0.10128934

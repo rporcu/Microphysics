@@ -34,9 +34,9 @@ end subroutine write_usr1
 !  open-source MFIX-DEM software for gas-solids flows," from URL:      !
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !......................................................................!
-subroutine write_des_out(ltime, np, particles)
+SUBROUTINE WRITE_DES_Out(lTime, np, particles)
 
-   use discretelement, only: mew, mew_w
+   Use discretelement, only: mew, mew_w
    use constant, only: gravity
    use param, only: zero
    use param, only: equal
@@ -55,72 +55,69 @@ subroutine write_des_out(ltime, np, particles)
    ! Local variables
    !---------------------------------------------------------------------//
    ! file unit for heat transfer data
-   integer, parameter :: lunit = 2030
+   INTEGER, PARAMETER :: lUNIT = 2030
    ! Slip velocity at contact, error, non-dimensional values.
-   real(c_real) :: slip, err, anl_nd, dem_nd
+   REAL(C_REAL) :: SLIP, ERR, ANL_ND, DEM_ND
    ! Flag that rolling friction already ended.
-   logical, save :: rollfric_end = .false.
+   LOGICAL, SAVE :: ROLLFRIC_END = .FALSE.
 
-   real(c_real) :: lVel
    real(c_real), parameter :: lRad = 0.00050
 
    ! Return: Rolling friction already ended.
-   if(rollfric_end) return
-
-   lVel = dsqrt(particles(1)%vel(1)**2 + particles(1)%vel(2)**2)
+   IF(ROLLFRIC_END) RETURN
 
    ! Calculate the slip velocity.
-   slip = lvel + particles(1) % omega(3)*lrad
+   SLIP = particles(1) % vel(1) + particles(1) % omega(3)*lRad
 
    ! Check for a sign flip or a small difference.
-   if(equal(abs(slip),1.0d-6) .or. slip < zero) then
-      rollfric_end = .true.
+   IF(equal(abs(SLIP),1.0d-6) .OR. SLIP < ZERO) THEN
+      ROLLFRIC_END = .TRUE.
 
       ! Open the files.
-      open(unit=lunit,file='POST_TIME.dat', &
-           position="append",status='old')
+      OPEN(UNIT=lUnit,FILE='POST_TIME.dat', &
+           POSITION="APPEND",STATUS='OLD')
 
       ! Calculate the non-dimensional end slip times
-      anl_nd = 2.0d0/7.0d0
-      dem_nd = abs(mew*9.80665/u0) * ltime
+      ANL_ND = 2.0d0/7.0d0
+      DEM_ND = abs(MEW*gravity(2)/u0) * lTime
 
-      err = (abs(anl_nd-dem_nd)/abs(anl_nd) )*100.
+      Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
       ! Write the results to a file.
-      write(lunit,1000) mew_w, anl_nd, dem_nd
-      close(lunit)
+      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND
+      CLOSE(lUNIT)
 
       ! Open the files.
-      open(unit=lunit,file='POST_TVEL.dat', &
-           position="append",status='old')
+      OPEN(UNIT=lUnit,FILE='POST_TVEL.dat', &
+           POSITION="APPEND",STATUS='OLD')
 
       ! Calculate the non-dimensional translational velocity.
       ANL_ND = 5.0d0/7.0d0
-      DEM_ND = abs(lVel/u0)
+      DEM_ND = abs(particles(1) % vel(1)/u0)
 
-      err = (abs(anl_nd-dem_nd)/abs(anl_nd) )*100.
+      Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
       ! Write the results to a file.
-      write(lunit,1000) mew_w, anl_nd, dem_nd
-      close(lunit)
+      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND
+      CLOSE(lUNIT)
 
       ! Open the files.
-      open(unit=lunit,file='POST_AVEL.dat', &
-           position="append",status='old')
+      OPEN(UNIT=lUnit,FILE='POST_AVEL.dat', &
+           POSITION="APPEND",STATUS='OLD')
 
       ! Calculate the non-dimensional angular velocity.
-      anl_nd = 5.0d0/7.0d0
-      dem_nd = abs(particles(1) % omega(3)*lrad/u0)
+      ANL_ND = 5.0d0/7.0d0
+      DEM_ND = abs(particles(1) % omega(3)*lRad/u0)
 
-      err = (abs(anl_nd-dem_nd)/abs(anl_nd) )*100.
+      Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
       ! Write the results to a file.
-      write(lunit,1000) mew_w, anl_nd, dem_nd
-      close(lunit)
+      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND
+      CLOSE(lUNIT)
 
-   endif
+   ENDIF
 
-   return
+   RETURN
 
 1000 FORMAT(3x,F15.8,5X,F15.8,3x,F15.8)
 
