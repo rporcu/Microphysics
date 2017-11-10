@@ -12,8 +12,8 @@
 
       implicit none
 
-      CALL WRITE_DAT_HEADER('POST_POS.dat','Pos')
-      CALL WRITE_DAT_HEADER('POST_VEL.dat','Vel')
+      CALL WRITE_DAT_HEADER('POST_POS1.dat','Pos')
+      CALL WRITE_DAT_HEADER('POST_POS2.dat','Pos')
 
       contains
 
@@ -27,7 +27,7 @@
       use run, only: DESCRIPTION
 
       use discretelement, only: KN, KN_W
-      use discretelement, only: DES_EN_WALL_INPUT
+      use discretelement, only: DES_EN_INPUT, DES_EN_WALL_INPUT
 
       IMPLICIT NONE
 
@@ -47,8 +47,10 @@
          OPEN(UNIT=fUNIT,FILE=FNAME,POSITION="APPEND",STATUS='OLD')
       ENDIF
 
+
+
       WRITE(fUNIT, 1110) KN, KN_W
-      WRITE(fUNIT, 1120) DES_EN_WALL_INPUT(1), DES_EN_WALL_INPUT(1)
+      WRITE(fUNIT, 1120) DES_EN_INPUT(1), DES_EN_WALL_INPUT(1)
 
       WRITE(fUNIT, 1200) VAR, VAR
 
@@ -64,7 +66,8 @@
          10x,'DES_EN_INPUT = ',T30,G12.4,/&
          10x,'DES_EN_WALL_INPUT = ',T30,G12.4)
 
- 1200 FORMAT(/7X,'Time',7x,'Stage',11X,A,13X,A,'_MFIX')
+ 1200 FORMAT(2/11X,'Time',17X,A,12X,A,'_MFIX')
+
 
       CLOSE(fUNIT)
       RETURN

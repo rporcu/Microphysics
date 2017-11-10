@@ -15,29 +15,24 @@
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine usr2_des( np, particles )
+subroutine USR2_DES( np, particles )
 
    use amrex_fort_module, only: c_real => amrex_real
-   use usr,               only: bounce_count, max_bounce, yvelo, yposo, max_height
    use particle_mod,      only: particle_t
-
+   
    implicit none
 
    integer,          intent(in   ) :: np
-   type(particle_t), intent(in   ) :: particles(np)
+   type(particle_t), intent(inout) :: particles(np)
+   integer                         :: p
 
-   ! Check if particle reached the peak of the bounce.
-   if ( particles(1) % vel(1) < 0.0) then
-      if(yvelo > 0.0) then
-         if(bounce_count < max_bounce) then
-            bounce_count = bounce_count + 1
-            max_height(bounce_count) = max(yposo, particles(1) % pos(1) )
-         endif
-      endif
-   endif
-
-   yvelo = particles(1) % vel(1)
-   yposo = particles(1) % pos(1)
-
-   return
-end subroutine usr2_des
+   ! Move particles 63-93 below particles 32-62 to fake a wall.
+   do p = 63, np
+      particles(p) % vel(:)   = 0.0d0
+      particles(p) % pos(2)   = 0.0475d0
+      particles(p) % pos(1)   = particles(p-31) % pos(1)
+      particles(p) % pos(3)   = particles(p-31) % pos(3)
+      particles(p) % omega(:) = 0.0d0
+   end do
+   
+end subroutine USR2_DES
