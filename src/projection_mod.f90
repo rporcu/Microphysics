@@ -178,8 +178,8 @@ contains
          call compute_divuu_x ( lo, hi, u, ulo, uhi, sl, v, vlo, vhi, &
               & w, wlo, whi, conv, dx )  
 
-         ! call compute_ugradu_x ( lo, hi, uo, ulo, uhi, vo, vlo, vhi, &
-         !      & wo, wlo, whi, conv, dx )  
+         ! call compute_ugradu_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
+         !      & w, wlo, whi, conv, dx )  
  
          
          ! No diffusion term for the time being
@@ -189,8 +189,8 @@ contains
          call compute_divuu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, sl, &
               & w, wlo, whi, conv, dx )
          
-         ! call compute_ugradu_y ( lo, hi, uo, ulo, uhi, vo, vlo, vhi,  &
-         !      & wo, wlo, whi, conv, dx )
+         ! call compute_ugradu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
+         !      & w, wlo, whi, conv, dx )
          
          ! No diffusion term for the time being
          diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
@@ -199,10 +199,9 @@ contains
          call compute_divuu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
               & w, wlo, whi, sl, conv, dx )
 
-         ! call compute_ugradu_z ( lo, hi, uo, ulo, uhi, vo, vlo, vhi,  &
-         !      & wo, wlo, whi, conv, dx )
-         
-         
+         ! call compute_ugradu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
+         !      & w, wlo, whi, conv, dx )
+
          ! No diffusion term for the time being
          diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
 

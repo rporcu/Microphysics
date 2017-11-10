@@ -20,7 +20,8 @@
 !
 !  Finally, the u-variation at cell "i" is given by :
 !
-!      MC limiter:    du(i) = max(0, min(du_l, du_c, du_r))
+!       du(i) = sign(du_c) min(2|du_l|, |du_c|, 2|du_r|)) if du_l*du_r > 0
+!       du(i) = 0                                         otherwise 
 !
 !  The above procedure is applied direction by direction.
 !
@@ -36,8 +37,6 @@
 !  valid node which lies on the boundary itself. Therefore, the scheme must be
 !  arranged as follows to use ONLY values from inside the domain.
 !  For a left boundary (i=0), the u-variations are:
-!  the value
-!
 !
 !       du_l = 0                             Don't use values on the left
 !       du_c = -1.5*u(0) + 2*u(1) -0.5*u(2)  2nd order right-biased  
@@ -180,7 +179,15 @@ contains
             end do
          end do
       end if
-     
+
+      ! block
+      !    real(ar)   :: usl_x, usl_y, usl_z
+      !    usl_x = maxval ( slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),1) )
+      !    usl_y = maxval ( slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),2) )
+      !    usl_z = maxval ( slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),3) )
+      !    print*, "Max u slopes = ", usl_x, usl_y, usl_z
+      ! end block
+      
    end subroutine compute_u_slopes
 
 
@@ -298,7 +305,16 @@ contains
          end do
          
       end if
-     
+
+      ! block
+      !    real(ar)   :: usl_x, usl_y, usl_z
+      !    usl_x = maxval ( slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),1) )
+      !    usl_y = maxval ( slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),2) )
+      !    usl_z = maxval ( slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),3) )
+      !    print*, "Max v slopes = ", usl_x, usl_y, usl_z
+      ! end block
+
+      
    end subroutine compute_v_slopes
 
 
@@ -412,7 +428,15 @@ contains
             end do
          end do
       end if
-     
+
+      ! block
+      !    real(ar)   :: usl_x, usl_y, usl_z
+      !    usl_x = maxval ( slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),1) )
+      !    usl_y = maxval ( slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),2) )
+      !    usl_z = maxval ( slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),3) )
+      !    print*, "Max w slopes = ", usl_x, usl_y, usl_z
+      ! end block
+      
    end subroutine compute_w_slopes
 
    
@@ -425,10 +449,11 @@ contains
       real(ar), intent(in   ) :: dleft, dcenter, dright
       real(ar)                :: slope
       real(ar), parameter     :: two = 2.0_ar
-      
-      slope = min ( two * dleft, dcenter, two * dright )
-      slope = sign ( one, dcenter ) * max ( zero, slope )
-      
+     
+      slope = min ( abs(two * dleft), abs(dcenter), abs(two * dright) )
+      slope = merge ( slope, zero, dleft*dright >= zero )
+      slope = sign ( one, dcenter ) * slope 
+     
    end function mc_limiter
 
 end module

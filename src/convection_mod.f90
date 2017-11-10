@@ -81,22 +81,17 @@ contains
                !
 
                ! East face
-               ! u_e1  = half * ( ug(i+1,j,k) + ug(i,j,k) )
                upls  = ug(i+1,j,k) - half * slopes(i+1,j,k,1)
                umns  = ug(i,j,k)   + half * slopes(i,j,k,1)
                u_e   = edge_velocity ( umns, upls )
-               ! u_e2  = merge ( umns, upls, u_e1 > zero )
-
+               
                ! West face
-               ! u_w1  = half * ( ug(i,j,k) + ug(i-1,j,k) )
                upls  = ug(i,j,k)   - half * slopes(i,j,k,1)
                umns  = ug(i-1,j,k) + half * slopes(i-1,j,k,1)
                u_w   = edge_velocity ( umns, upls )
-               ! u_w2  = merge ( umns, upls, u_w1 > zero )
-
-               duu   = u_e*u_e - u_w*u_w
-               ! duu   = u_e1*u_e2 - u_w1*u_w2
                
+               duu   = u_e*u_e - u_w*u_w
+                              
                !
                ! d(uv)/dy
                !
@@ -217,20 +212,16 @@ contains
                !
 
                ! North face
-               ! v_n1  = half * ( vg(i,j+1,k) + vg(i,j,k) )
                vpls  = vg(i,j+1,k) - half * slopes(i,j+1,k,2)
                vmns  = vg(i,j,k)   + half * slopes(i,j,k,2)
                v_n   = edge_velocity ( vmns, vpls ) 
-               ! v_n2  = merge ( vmns, vpls, v_n1 > zero )   
 
                ! South face
-               ! v_s1  = half * ( vg(i,j,k)   + vg(i,j-1,k)   )
                vpls  = vg(i,j,k)   - half * slopes(i,j,k,2)
                vmns  = vg(i,j-1,k) + half * slopes(i,j-1,k,2)
                v_s   = edge_velocity ( vmns, vpls )
-               ! v_s2  = merge ( vmns, vpls, v_s1 > zero )   
                               
-               dvv   =  v_n*v_n - v_s*v_s     !v_n1*v_n2 - v_s1*v_s2   
+               dvv   =  v_n*v_n - v_s*v_s   
                 
                !
                ! d(uw)/dz

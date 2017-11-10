@@ -100,19 +100,26 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     mfix_compute_velocity_slopes ( lev );
     mfix_compute_fluid_acceleration ( lev ); 
     mfix_apply_pcm_prediction ( lev, dt );
-    
+
+    std::cout << "\n Fluid accelerations :\n";
+    std::cout << "max(abs(ru))  = " << uacc[lev] -> norm0 () << "\n";
+    std::cout << "max(abs(rv))  = " << vacc[lev] -> norm0 () << "\n";	
+    std::cout << "max(abs(rw))  = " << wacc[lev] -> norm0 () << "\n\n";
+
+  
     // Exchange halo nodes and apply BCs
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
     w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_bc1 ( lev );
-	
+    
     // Step 2: compute u** (corrector step) and store it in
     // u_g, v_g, and w_g.
     mfix_compute_velocity_slopes ( lev );
     mfix_compute_fluid_acceleration ( lev );     
     mfix_apply_pcm_correction ( lev, dt );
-    
+
+
     // Add forcing terms ( gravity and/or momentum
     // exchange with particles )
 //    mfix_apply_forcing_terms ( lev, dt );
@@ -127,23 +134,28 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     std::cout << "\nBefore projection step :\n";
     std::cout << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
     std::cout << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-    std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n\n";
+    std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+    std::cout << "max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
 
-    
     check_for_nans (lev);
 
     // 
     //  Projection Step
     // 
-    mfix_apply_projection ( lev, dt );
-
+    mfix_apply_projection ( lev, dt ); 
+    
     //
     std::cout << "\nAfter projection step :\n";
     std::cout << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
     std::cout << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-    std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n \n";
-
-    
+    std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+    std::cout << "max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
+    // std::cout << "\nAfter projection step : ";
+    // std::cout << "max(abs(u)), max(abs(v)),max(abs(w)) =  ";
+    // std::cout << u_g[lev] -> norm0 () << "   ";
+    // std::cout << v_g[lev] -> norm0 () << "   ";	
+    // std::cout << w_g[lev] -> norm0 () << "\n \n";
+   
     
     check_for_nans (lev);
     
@@ -156,13 +168,12 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
 
 
     // Compute the divergence of the velocity field, div(u).
-    // div(u) is needed to compute the volumetric term in the
-    // stress tensor
+    // to check if div(u) = 0 is satisfied
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
     w_g[lev] -> FillBoundary (geom[lev].periodicity());
-   
-    // mfix_set_bc1(lev);
+    mfix_set_bc1(lev);
+    
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -196,6 +207,12 @@ mfix_level::init_tests_projection (int lev)
 
     if (!first_access) return;
 
+    // Read in direction
+    ParmParse pp;
+    int vp = 1;			//  1=xy 2=xz 3=yz
+    pp.query ("vorteces_plane", vp );
+
+    std::cout << "2D vorteces initialized on plane " << vp << std::endl;
     
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -213,7 +230,8 @@ mfix_level::init_tests_projection (int lev)
 				 BL_TO_FORTRAN_BOX(wbx),  
 				 BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
 				 geom[lev].CellSize (),
-				 (geom[lev].Domain ()).loVect ()); 
+				 (geom[lev].Domain ()).loVect (),
+				 &vp ); 
 	
     }
 
@@ -293,6 +311,8 @@ mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
     v_g[lev] -> mult ( 0.5, 0 );
     w_g[lev] -> mult ( 0.5, 0 );
 
+    // // Temporary for testing
+    // mfix_add_pressure_gradient ( lev, -0.5*dt );
 }
 
 
@@ -479,7 +499,6 @@ mfix_level::mfix_compute_velocity_slopes (int lev)
     slopes_u[lev] -> FillBoundary(geom[lev].periodicity());
     slopes_v[lev] -> FillBoundary(geom[lev].periodicity());
     slopes_w[lev] -> FillBoundary(geom[lev].periodicity());
-
 }
 
 
@@ -489,8 +508,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
 {
    BL_PROFILE("mfix_level::mfix_apply_projection");
 
-   // Compute right hand side
-   amrex::Real offset;
+   // Compute right hand side, AKA div(u)
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -562,6 +580,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     // 
     int nghost = p_g[lev] -> nGrow ();
     p_g[lev] -> mult ( 2.0/dt, nghost ); 
+    //MultiFab::Xpay ( *p_g[lev], -2.0/dt, *p_go[lev], 0, 0, 1, nghost );
     
  }
 

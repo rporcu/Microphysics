@@ -20,10 +20,15 @@ module projection_tests_mod
 contains
 
 
+   !
+   ! plane = 1  --> init xy
+   ! plane = 2  --> init yz
+   ! plane = 3  --> init xz
+   ! 
 
    subroutine init_periodic_vorteces ( utlo, uthi, u, ulo, uhi,  &
         & vtlo, vthi, v, vlo, vhi, wtlo, wthi, w, wlo, whi, dx,  &
-        & domlo )  bind(C, name="init_periodic_vorteces")
+        & domlo,  plane )  bind(C)
 
       ! Array bounds
       integer(c_int),   intent(in   ) :: ulo(3), uhi(3)
@@ -38,8 +43,10 @@ contains
       ! Grid and domain lower bound
       integer(c_int),   intent(in   ) :: domlo(3)
       real(ar),         intent(in   ) :: dx(3)
+
+      ! Plane
+      integer(c_int),   intent(in   ) :: plane
       
-     
       ! Arrays
       real(ar),         intent(inout) ::                   &
            & u(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), & 
@@ -48,39 +55,108 @@ contains
 
       ! Local variables
       integer(c_int)                  :: i, j, k
-      real(ar)                        :: x, y
+      real(ar)                        :: x, y, z
       real(ar)                        :: twopi = 8.0_ar * atan(one) 
 
-      ! x-direction
-      do k = utlo(3), uthi(3) 
-         do j = utlo(2), uthi(2)
-            y =  ( real(j,ar) + half ) * dx(2)
-            do i = utlo(1), uthi(1)
-               u(i,j,k) = tanh ( 30.0_ar * (0.25_ar - abs ( y - 0.5_ar ) ) )
-            end do
-         end do
-      end do
-      
-      ! y-direction
-      do k = vtlo(3), vthi(3) 
-         do j = vtlo(2), vthi(2)
-            do i = vtlo(1), vthi(1)
-               x =  ( real(i,ar) + half ) * dx(1)
-               v(i,j,k) = 0.05_ar * sin ( twopi * x )
-            end do
-         end do
-      end do
 
-      ! z-direction
-      do k = wtlo(3), wthi(3) 
-         do j = wtlo(2), wthi(2)
-            do i = wtlo(1), wthi(1)
-               w(i,j,k) = zero
+      select case ( plane )
+
+      case (1)  ! x-y plane
+         
+         ! x-direction
+         do k = utlo(3), uthi(3)
+            do j = utlo(2), uthi(2)
+               y =  ( real(j,ar) + half ) * dx(2)
+               do i = utlo(1), uthi(1)
+                  u(i,j,k) = tanh ( 30.0_ar * (0.25_ar - abs ( y - 0.5_ar ) ) )
+               end do
             end do
          end do
-      end do
+         
+         ! y-direction
+         do k = vtlo(3), vthi(3) 
+            do j = vtlo(2), vthi(2)
+               do i = vtlo(1), vthi(1)
+                  x =  ( real(i,ar) + half ) * dx(1)
+                  v(i,j,k) = 0.05_ar * sin ( twopi * x )
+               end do
+            end do
+         end do
+         
+         ! z-direction
+         do k = wtlo(3), wthi(3) 
+            do j = wtlo(2), wthi(2)
+               do i = wtlo(1), wthi(1)
+                  w(i,j,k) = zero
+               end do
+            end do
+         end do
+         
+      case (2)  ! x-z plane
+         
+         ! x-direction
+         do k = utlo(3), uthi(3)
+            z =  ( real(k,ar) + half ) * dx(3)
+            do j = utlo(2), uthi(2)
+               do i = utlo(1), uthi(1)
+                  u(i,j,k) = tanh ( 30.0_ar * (0.25_ar - abs ( z - 0.5_ar ) ) )
+               end do
+            end do
+         end do
+         
+         ! y-direction
+         do k = vtlo(3), vthi(3) 
+            do j = vtlo(2), vthi(2)
+               do i = vtlo(1), vthi(1)
+                  v(i,j,k) = zero
+               end do
+            end do
+         end do
+         
+         ! z-direction
+         do k = wtlo(3), wthi(3) 
+            do j = wtlo(2), wthi(2)
+               do i = wtlo(1), wthi(1)
+                  x =  ( real(i,ar) + half ) * dx(1)
+                  w(i,j,k) = 0.05_ar * sin ( twopi * x )
+               end do
+            end do
+         end do
 
-      
+         
+      case (3)  ! y-z plane
+         
+         ! x-direction
+         do k = utlo(3), uthi(3)
+            do j = utlo(2), uthi(2)
+               do i = utlo(1), uthi(1)
+                  u(i,j,k) = zero 
+               end do
+            end do
+         end do
+         
+         ! y-direction
+         do k = vtlo(3), vthi(3) 
+            z =  ( real(k,ar) + half ) * dx(3)
+            do j = vtlo(2), vthi(2)
+               do i = vtlo(1), vthi(1)
+                  v(i,j,k) = tanh ( 30.0_ar * (0.25_ar - abs ( z - 0.5_ar ) ) )
+               end do
+            end do
+         end do
+         
+         ! z-direction
+         do k = wtlo(3), wthi(3) 
+            do j = wtlo(2), wthi(2)
+               y =  ( real(j,ar) + half ) * dx(2)
+               do i = wtlo(1), wthi(1)
+                  w(i,j,k) = 0.05_ar * sin ( twopi * y )
+               end do
+            end do
+         end do
+
+      end select 
+         
    end subroutine init_periodic_vorteces
 
 end module projection_tests_mod

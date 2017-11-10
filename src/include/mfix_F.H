@@ -543,7 +543,7 @@ extern "C"
 	const int* wtlo, const int* wthi,
 	amrex::Real* w,  const int* wlo, const int* whi,
 	const amrex::Real* dx,
-	const int*  domlo );
+	const int*  domlo, const int* plane );
 
   void add_gradient (
 	const int* lo, const int* hi,
