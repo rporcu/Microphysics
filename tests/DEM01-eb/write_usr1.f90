@@ -60,22 +60,18 @@ subroutine WRITE_DES_Out(lTime, np, particles)
 
    ! Analytic position and velocity
    real(c_real) :: lPos_Y, lVel_Y
-   ! Absolute relative error between MFIX solution and analytic solution.
-   real(c_real) :: Pos_aErr, Pos_rErr
-   real(c_real) :: Vel_aErr, Vel_rErr
+   real(c_real) :: mfixPos, mfixVel
 
    real(c_real) :: lGrav
    real(c_real) :: lRad
    integer      :: lStage
-
-
 
    ! Open the files.
    OPEN(UNIT=uPOS,FILE='POST_POS.dat',POSITION="APPEND",STATUS='OLD')
    OPEN(UNIT=uVEL,FILE='POST_VEL.dat',POSITION="APPEND",STATUS='OLD')
 
    ! Set local variables.
-   lGrav  = -gravity(1)
+   lGrav  = sqrt(gravity(1)**2 + gravity(2)**2 + gravity(3)**2)
    lRad   = 0.1d0
    lStage = 0
 
@@ -98,27 +94,15 @@ subroutine WRITE_DES_Out(lTime, np, particles)
       lVel_Y = dydt_s3(lGrav, lTime)
    endif
 
-   ! Calculate the absolute and absolute relative errors.
-   Pos_aErr = abs(lPos_Y - particles(1) % pos(1) )
-   if(lPos_Y > 0.0d0) then
-      Pos_rErr = Pos_aErr/lPos_Y*100
-   else
-      Pos_rErr = Pos_aErr*100
-   endif
-
-   Vel_aErr = abs( lVel_Y - particles(1) % vel(1) )
-   if(lVel_Y > 0.0d0) then
-      Vel_rErr = Vel_aErr/lVel_Y*100
-   else
-      Vel_rErr = Vel_aErr*100
-   endif
+   mfixPos = sqrt(particles(1)%pos(1)**2 + particles(1)%pos(2)**2) - 0.5d0
+   mfixVel = sqrt(particles(1)%vel(1)**2 + particles(1)%vel(2)**2)
 
    ! Write the results to a file.
-   write(uPos,"(F15.8,5x,I1,5X,F15.8,3(3x,F15.8))") lTime, lStage, lPos_Y, particles(1)%pos(1)
+   write(uPos,"(F15.8,5x,I1,5X,F15.8,3x,F15.8)") lTime, lStage, lPos_Y, mfixPos
    close(uPos)
 
 
-   write(uVel,"(F15.8,5x,I1,5X,F15.8,3(3x,F15.8))") lTime, lStage, lVel_Y, particles(1)%vel(1)
+   write(uVel,"(F15.8,5x,I1,5X,F15.8,3x,F15.8)") lTime, lStage, lVel_Y, mfixVel
    close(uVel)
 
 

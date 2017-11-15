@@ -26,18 +26,24 @@ subroutine usr2_des( np, particles )
    integer,          intent(in   ) :: np
    type(particle_t), intent(in   ) :: particles(np)
 
+   real(c_real) :: pPos, pVel
+
    ! Check if particle reached the peak of the bounce.
-   if ( particles(1) % vel(1) < 0.0) then
+
+   pVel = minval(particles(1)%vel(1:2))
+   pPos = sqrt(particles(1)%pos(1)**2 + particles(1)%pos(2)**2) - 0.5d0
+
+   if ( pVel < 0.0 ) then
       if(yvelo > 0.0) then
          if(bounce_count < max_bounce) then
             bounce_count = bounce_count + 1
-            max_height(bounce_count) = max(yposo, particles(1) % pos(1) )
+            max_height(bounce_count) = max(yPoso, pPos)
          endif
       endif
    endif
 
-   yvelo = particles(1) % vel(1)
-   yposo = particles(1) % pos(1)
+   yVelo = pVel
+   yPoso = pPos
 
-   return
-end subroutine usr2_des
+   RETURN
+END SUBROUTINE USR2_DES
