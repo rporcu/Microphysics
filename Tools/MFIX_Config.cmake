@@ -94,6 +94,8 @@ add_definitions ( ${MFIX_DEFINES} )
 set (AMREX_LIB_FULLPATH ${AMREX_LIBRARY_DIR}/libamrex.a)
 append_to_link_line ( AMREX_LIB_FULLPATH MFIX_EXTRA_LINK_LINE )
 append_to_link_line ( AMREX_EXTRA_CXX_LINK_LINE MFIX_EXTRA_LINK_LINE )
+append_to_link_line ( AMREX_EXTRA_Fortran_LINK_LINE MFIX_EXTRA_LINK_LINE )
+list ( REMOVE_DUPLICATES MFIX_EXTRA_LINK_LINE )
 list (APPEND MFIX_EXTRA_LIBRARIES_PATH "${AMREX_LIBRARY_DIR}")
 
 # Add amrex extra compiler flags
