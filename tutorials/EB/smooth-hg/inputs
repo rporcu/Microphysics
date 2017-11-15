@@ -1,0 +1,52 @@
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell = 70 32 32
+
+# Maximum allowable size of each subdomain in the problem domain;
+#    this is used to decompose the domain for parallel calculations.
+#amr.max_grid_size = 1024
+amr.max_grid_size_x = 512
+amr.max_grid_size_y =  32
+amr.max_grid_size_z =  32
+
+# Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Maximum particle title size
+particles.tile_size = 1024 1024 1024
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+amr.plot_int  =  -1
+amr.check_int  = -1
+
+amr.par_ascii_int  =  50
+amr.par_ascii_file = vis
+
+mfix.particle_init_type = "Auto"
+
+
+mfix.poly1_mirror = true    # Use outside
+
+# Coefficients           A*k^0    B*k^1     C*k^2    D*k^3    E*k^4
+mfix.poly1_x_coeffs =    0.00     0.00      0.00    -0.50     1.00
+mfix.poly1_y_coeffs =    0.00     0.00      0.25     0.00     0.00
+mfix.poly1_z_coeffs =    0.00     0.00      0.25     0.00     0.00
+
+mfix.poly1_translate =   0.3845 0.20  0.20
+
+mfix.poly2_mirror = true    # Use outside
+
+# Coefficients           A*k^0    B*k^1     C*k^2    D*k^3    E*k^4
+mfix.poly2_x_coeffs =    0.00     0.00      0.00     0.50     1.00
+mfix.poly2_y_coeffs =    0.00     0.00      0.25     0.00     0.00
+mfix.poly2_z_coeffs =    0.00     0.00      0.25     0.00     0.00
+
+mfix.poly2_translate =   0.49  0.20  0.20
+
+
+# Geometry
+geometry.coord_sys   = 0                   # 0: Cartesian
+geometry.is_periodic = 0      1     1      # Is periodic in each direction?
+geometry.prob_lo     = 0.     0.    0.     # lo corner of physical domain
+geometry.prob_hi     = 0.875  0.4   0.4    # hi corner of physical domain
