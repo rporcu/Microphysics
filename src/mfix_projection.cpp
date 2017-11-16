@@ -97,7 +97,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     
     // Step 1: compute u* (predictor step) and store it in u_g,
     // v_g, and w_g
-    mfix_compute_velocity_slopes ( lev );
+    mfix_compute_velocity_slopes ( lev ); 
     mfix_compute_fluid_acceleration ( lev ); 
     mfix_apply_pcm_prediction ( lev, dt );
 
@@ -145,11 +145,11 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     mfix_apply_projection ( lev, dt ); 
     
     //
-    std::cout << "\nAfter projection step :\n";
-    std::cout << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-    std::cout << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-    std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
-    std::cout << "max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
+    // std::cout << "\nAfter projection step :\n";
+    std::cout << "Final max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
+    std::cout << "Final max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
+    std::cout << "Final max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+    std::cout << "Final max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
     // std::cout << "\nAfter projection step : ";
     // std::cout << "max(abs(u)), max(abs(v)),max(abs(w)) =  ";
     // std::cout << u_g[lev] -> norm0 () << "   ";
@@ -272,7 +272,7 @@ mfix_level::mfix_apply_pcm_prediction (int lev, amrex::Real dt)
     MultiFab::Saxpy (*w_g[lev], dt, *wacc[lev], 0, 0, 1, 0);
 
     // The add the pressure gradient
-    mfix_add_pressure_gradient ( lev, -dt );
+    mfix_add_pressure_gradient ( lev, -dt ); 
 
 }
 
@@ -280,21 +280,20 @@ mfix_level::mfix_apply_pcm_prediction (int lev, amrex::Real dt)
 //
 // Computes:
 //
-//           u_g = 0.5 * ( u_g + u_go + dt * uacc)
-//           v_g = 0.5 * ( v_g + v_go + dt * vacc)
-//           w_g = 0.5 * ( w_g + w_go + dt * wacc)
+//   u_g = 0.5 * ( u_g + u_go + dt * uacc) + 0.5 * dt * (dp/dx) / ro_g
+//   v_g = 0.5 * ( v_g + v_go + dt * vacc) + 0.5 * dt * (dp/dy) / ro_g
+//   w_g = 0.5 * ( w_g + w_go + dt * wacc) + 0.5 * dt * (dp/dz) / ro_g
 //
 //  This is the correction step of the Heun's integration
 //  scheme, AKA Predictor-Corrector Method (PCM).
 // 
-// NOTE: the pressure gradient term is not included since
-//       it cancels out in the PPE
+// NOTE: the pressure gradient term is added instead of being subtracted
+//       so that the lagged pressure will not show up in the PPE
 //  
 void
 mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
 {
     BL_PROFILE("mfix_level::mfix_apply_pcm_correction");
-
 
     // First add the fluid acceleration
     MultiFab::Saxpy (*u_g[lev], dt, *uacc[lev], 0, 0, 1, 0);
@@ -311,8 +310,8 @@ mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
     v_g[lev] -> mult ( 0.5, 0 );
     w_g[lev] -> mult ( 0.5, 0 );
 
-    // // Temporary for testing
-    // mfix_add_pressure_gradient ( lev, -0.5*dt );
+    // Temporary for testing
+    mfix_add_pressure_gradient ( lev, 0.5*dt );
 }
 
 
@@ -325,7 +324,7 @@ mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
 //       v_g = v_g + coeff * ( dp_g/dy ) * (1/ro_g)
 //       w_g = w_g + coeff * ( dp_g/dz ) * (1/ro_g)
 //
-// 1/ro_g is stored in the class member oro_g[lev][<0,1,2>] 
+// 1/ro_g is stored in oro_g[lev][<0,1,2>] 
 // 
 void
 mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
@@ -374,7 +373,7 @@ mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
 
 
 //
-// Compute uacc, vacc, and wacc by suing u_g, v_g, and w_g
+// Compute uacc, vacc, and wacc by using u_g, v_g, and w_g
 //
 void
 mfix_level::mfix_compute_fluid_acceleration (int lev)
@@ -530,6 +529,8 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
 
     // Compute the PPE coefficients
     mfix_compute_oro_g ( lev );
+    // For the time being set oro_g to 1
+    
     
     // Solve PPE
     solve_poisson_equation ( lev, oro_g, p_g, trD_g );
@@ -579,7 +580,9 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     // Rescale pressure p_g = p_g * 2 / dt
     // 
     int nghost = p_g[lev] -> nGrow ();
-    p_g[lev] -> mult ( 2.0/dt, nghost ); 
+    p_g[lev] -> mult ( 1.0/dt, nghost );
+    p_g[lev] -> FillBoundary(geom[lev].periodicity());
+    
     //MultiFab::Xpay ( *p_g[lev], -2.0/dt, *p_go[lev], 0, 0, 1, nghost );
     
  }
