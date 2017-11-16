@@ -280,15 +280,12 @@ mfix_level::mfix_apply_pcm_prediction (int lev, amrex::Real dt)
 //
 // Computes:
 //
-//   u_g = 0.5 * ( u_g + u_go + dt * uacc) + 0.5 * dt * (dp/dx) / ro_g
-//   v_g = 0.5 * ( v_g + v_go + dt * vacc) + 0.5 * dt * (dp/dy) / ro_g
-//   w_g = 0.5 * ( w_g + w_go + dt * wacc) + 0.5 * dt * (dp/dz) / ro_g
+//   u_g = 0.5 * ( u_g + u_go + dt * uacc) 
+//   v_g = 0.5 * ( v_g + v_go + dt * vacc) 
+//   w_g = 0.5 * ( w_g + w_go + dt * wacc) 
 //
 //  This is the correction step of the Heun's integration
 //  scheme, AKA Predictor-Corrector Method (PCM).
-// 
-// NOTE: the pressure gradient term is added instead of being subtracted
-//       so that the lagged pressure will not show up in the PPE
 //  
 void
 mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
@@ -309,11 +306,7 @@ mfix_level::mfix_apply_pcm_correction (int lev, amrex::Real dt)
     u_g[lev] -> mult ( 0.5, 0 );
     v_g[lev] -> mult ( 0.5, 0 );
     w_g[lev] -> mult ( 0.5, 0 );
-
-    // Temporary for testing
-    mfix_add_pressure_gradient ( lev, 0.5*dt );
 }
-
 
 
 
@@ -580,10 +573,8 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     // Rescale pressure p_g = p_g * 2 / dt
     // 
     int nghost = p_g[lev] -> nGrow ();
-    p_g[lev] -> mult ( 1.0/dt, nghost );
+    p_g[lev] -> mult ( 2.0/dt, nghost );
     p_g[lev] -> FillBoundary(geom[lev].periodicity());
-    
-    //MultiFab::Xpay ( *p_g[lev], -2.0/dt, *p_go[lev], 0, 0, 1, nghost );
     
  }
 
@@ -641,37 +632,42 @@ mfix_level::mfix_compute_oro_g (int lev)
     int xdir = 1;
     int ydir = 2;
     int zdir = 3;
+
+    // For now, set everything to 1
+    oro_g[lev][0] -> setVal (1.0);
+    oro_g[lev][1] -> setVal (1.0);
+    oro_g[lev][2] -> setVal (1.0);
     
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	// Boxes for staggered components
-	Box ubx = amrex::convert ( mfi.tilebox(), e_x );
-	Box vbx = amrex::convert ( mfi.tilebox(), e_y );
-	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
+// #ifdef _OPENMP
+// #pragma omp parallel 
+// #endif
+//     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
+//     {
+// 	// Boxes for staggered components
+// 	Box ubx = amrex::convert ( mfi.tilebox(), e_x );
+// 	Box vbx = amrex::convert ( mfi.tilebox(), e_y );
+// 	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
 
-	// X direction
-	compute_oro_g (BL_TO_FORTRAN_BOX(ubx),
-		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][0]))[mfi]),
-		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-		       (*ep_g[lev])[mfi].dataPtr(), &xdir );
+// 	// X direction
+// 	compute_oro_g (BL_TO_FORTRAN_BOX(ubx),
+// 		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][0]))[mfi]),
+// 		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+// 		       (*ep_g[lev])[mfi].dataPtr(), &xdir );
 
-	// Y direction
-	compute_oro_g (BL_TO_FORTRAN_BOX(vbx),
-		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][1]))[mfi]),
-		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-		       (*ep_g[lev])[mfi].dataPtr(), &ydir );
+// 	// Y direction
+// 	compute_oro_g (BL_TO_FORTRAN_BOX(vbx),
+// 		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][1]))[mfi]),
+// 		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+// 		       (*ep_g[lev])[mfi].dataPtr(), &ydir );
 
-	// Z direction
-	compute_oro_g (BL_TO_FORTRAN_BOX(wbx),
-		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][2]))[mfi]),
-		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-		       (*ep_g[lev])[mfi].dataPtr(), &zdir );
+// 	// Z direction
+// 	compute_oro_g (BL_TO_FORTRAN_BOX(wbx),
+// 		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][2]))[mfi]),
+// 		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+// 		       (*ep_g[lev])[mfi].dataPtr(), &zdir );
 	
 	
-    }
+//     }
 
     oro_g[lev][0] -> FillBoundary(geom[lev].periodicity());
     oro_g[lev][1] -> FillBoundary(geom[lev].periodicity());
@@ -705,3 +701,33 @@ mfix_level::check_for_nans (int lev)
 	std::cout << "WARNING: rop_g contains NaNs!!!";
 
 }
+
+
+
+
+//
+// Estimate pressure by applying projection for one time step
+// and then rolling back velocities:
+//
+//           u_g = u_g + dt * R_u - dt * (dp/dx) / ro_g
+//           v_g = v_g + dt * R_v - dt * (dp/dy) / ro_g
+//           w_g = w_g + dt * R_w - dt * (dp/dz) / ro_g 
+//
+//  This is the prediction step of the Heun's integration
+//  scheme, AKA Predictor-Corrector Method (PCM)
+// 
+// void
+// mfix_level::mfix_compute_initial_pressure (int lev, amrex::Real dt)
+// {
+//     BL_PROFILE("mfix_level::mfix_compute_initial_pressure");
+
+
+//     // First add the fluid acceleration
+//     MultiFab::Saxpy (*u_g[lev], dt, *uacc[lev], 0, 0, 1, 0);
+//     MultiFab::Saxpy (*v_g[lev], dt, *vacc[lev], 0, 0, 1, 0);
+//     MultiFab::Saxpy (*w_g[lev], dt, *wacc[lev], 0, 0, 1, 0);
+
+//     // The add the pressure gradient
+//     mfix_add_pressure_gradient ( lev, -dt ); 
+
+// }
