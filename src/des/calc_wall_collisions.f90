@@ -11,7 +11,7 @@
     use discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
     use discretelement, only: des_crossprdct
     use discretelement, only: kn_w, kt_w, mew_w!, dtsolid
-    use error_manager, only: err_msg, flush_err_msg, init_err_msg
+    use error_manager,  only: err_msg, flush_err_msg, init_err_msg
 
     use param        , only: small_number, zero, one
     use particle_mod,  only: particle_t
@@ -126,21 +126,21 @@
        ihi = i+1
 
        ! ingore stencil element that couldn't possibly be interacting with particle
-       if ( (xp-i*dx(1)) .gt. rp) ilo = i
-       if ( (yp-j*dx(2)) .gt. rp) jlo = j
-       if ( (zp-k*dx(3)) .gt. rp) klo = k
+       ! if ( (xp-i*dx(1)) .gt. rp) ilo = i
+       ! if ( (yp-j*dx(2)) .gt. rp) jlo = j
+       ! if ( (zp-k*dx(3)) .gt. rp) klo = k
 
-       if ( ((i+1)*dx(1)-xp) .gt. rp) ihi = i
-       if ( ((j+1)*dx(2)-yp) .gt. rp) jhi = j
-       if ( ((k+1)*dx(3)-zp) .gt. rp) khi = k
+       ! if ( ((i+1)*dx(1)-xp) .gt. rp) ihi = i
+       ! if ( ((j+1)*dx(2)-yp) .gt. rp) jhi = j
+       ! if ( ((k+1)*dx(3)-zp) .gt. rp) khi = k
 
        ! itterate over stencil
        do kk = klo, khi
           do jj = jlo, jhi
              do ii = ilo, ihi
 
-                if (nbr(ii-i,jj-j,kk-k) .eq. 1) then
-                ! if (.true.) then
+                ! if (nbr(ii-i,jj-j,kk-k) .eq. 1) then
+                if (.true.) then
 
                    ! if (is_single_valued_cell(flag(ii,jj,kk))) then
                    ! only consider cells that contain EB's
@@ -266,18 +266,17 @@
                                         pt_z = c_vec(3)
 
                                         ! check if there is still overlap
-                                        ! NOTE: should check dist^2 first... will implement later
-                                        distmod_temp = sqrt((xp - pt_x) * ( xp - pt_x ) + & 
+                                        distmod_temp = ((xp - pt_x) * ( xp - pt_x ) + & 
                                             (yp - pt_y) * ( yp - pt_y ) + &
                                             (zp - pt_z) * ( zp - pt_z ))
                                         if (distmod_temp .lt. distmod) then 
-                                            if (distmod_temp .lt. rp) then
-                                                distmod = distmod_temp
+                                            if (distmod_temp .lt. rp*rp) then
+                                                distmod = sqrt(distmod_temp)
                                                 
                                                 ! this normal is wrong, but it will do for now...
-                                                normul(1) = normal(ii,jj,kk,1)
-                                                normul(2) = normal(ii,jj,kk,2)
-                                                normul(3) = normal(ii,jj,kk,3)
+                                                normul(1) = -(xp - pt_x) / distmod ! normal(ii,jj,kk,1)
+                                                normul(2) = -(yp - pt_y) / distmod ! normal(ii,jj,kk,2)
+                                                normul(3) = -(zp - pt_z) / distmod ! normal(ii,jj,kk,3)
 
                                             end if
                                         end if
