@@ -210,9 +210,9 @@ mfix_level::init_tests_projection (int lev)
     // Read in direction
     ParmParse pp;
     int vp = 1;			//  1=xy 2=xz 3=yz
-    pp.query ("vorteces_plane", vp );
+    pp.query ("vortices_plane", vp );
 
-    std::cout << "2D vorteces initialized on plane " << vp << std::endl;
+    std::cout << "2D vortices initialized on plane " << vp << std::endl;
     
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -223,7 +223,7 @@ mfix_level::init_tests_projection (int lev)
 	Box vbx = amrex::convert(mfi.tilebox(),e_y);
 	Box wbx = amrex::convert(mfi.tilebox(),e_z);
 
-	init_periodic_vorteces ( BL_TO_FORTRAN_BOX(ubx),  
+	init_periodic_vortices ( BL_TO_FORTRAN_BOX(ubx),  
 				 BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
 				 BL_TO_FORTRAN_BOX(vbx),  
 				 BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),

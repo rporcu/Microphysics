@@ -1,5 +1,4 @@
-RUN_NAME="Periodic vorteces"
-
+RUN_NAME="Periodic vortices"
 
 GRAVITY(1:3) = 3*0.0
 

@@ -26,7 +26,7 @@ contains
    ! plane = 3  --> init xz
    ! 
 
-   subroutine init_periodic_vorteces ( utlo, uthi, u, ulo, uhi,  &
+   subroutine init_periodic_vortices ( utlo, uthi, u, ulo, uhi,  &
         & vtlo, vthi, v, vlo, vhi, wtlo, wthi, w, wlo, whi, dx,  &
         & domlo,  plane )  bind(C)
 
@@ -157,6 +157,6 @@ contains
 
       end select 
          
-   end subroutine init_periodic_vorteces
+   end subroutine init_periodic_vortices
 
 end module projection_tests_mod

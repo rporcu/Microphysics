@@ -535,7 +535,7 @@ extern "C"
 			  const amrex::Real* dx,
 			  amrex::Real*  dt ); 
 
-    void init_periodic_vorteces (
+    void init_periodic_vortices (
 	const int* utlo, const int* uthi,
 	amrex::Real* u,  const int* ulo, const int* uhi,
         const int* vtlo, const int* vthi,
