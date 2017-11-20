@@ -159,6 +159,13 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     trD_g_new->FillBoundary(geom[lev].periodicity());
     trD_g[lev] = std::move(trD_g_new);
 
+    // Vorticity
+    ng = vort[lev]->nGrow();
+    std::unique_ptr<MultiFab> vort_new(new MultiFab(new_grids,new_dmap,1,vort[lev]->nGrow()));
+    vort_new->copy(*vort[lev],0,0,1,ng,ng);
+    vort_new->FillBoundary(geom[lev].periodicity());
+    vort[lev] = std::move(vort_new);
+
     // ********************************************************************************
     // X-face-based arrays
     // ********************************************************************************

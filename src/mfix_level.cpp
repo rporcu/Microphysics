@@ -92,6 +92,7 @@ mfix_level::mfix_level ()
     mu_g.resize(nlevs_max);
     lambda_g.resize(nlevs_max);
     trD_g.resize(nlevs_max);
+    vort.resize(nlevs_max);
 
     fluxX.resize(nlevs_max);
     fluxY.resize(nlevs_max);

@@ -165,12 +165,9 @@ private:
     void mfix_add_pressure_gradient (int lev, amrex::Real coeff);
     
     void mfix_compute_velocity_slopes (int lev);
-
     
 // End of projection-related methods
 
-
-    
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
     void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
@@ -191,12 +188,10 @@ private:
     // Particle container
     std::unique_ptr<MFIXParticleContainer> pc;
 
-
     // Unit vectors in Cartesian space
     static amrex::IntVect e_x;
     static amrex::IntVect e_y;
     static amrex::IntVect e_z;
-
     
 //  Array< std::unique_ptr<iMultiFab> > bc_type;
 //  Array< std::unique_ptr<iMultiFab> > bc_ptr;
@@ -256,6 +251,7 @@ private:
     // Cell-based
     Vector< std::unique_ptr<MultiFab> > lambda_g;
     Vector< std::unique_ptr<MultiFab> > trD_g;
+    Vector< std::unique_ptr<MultiFab> > vort;
 
     // Face-based
     Vector< std::unique_ptr<MultiFab> > tau_u_g;
@@ -319,8 +315,12 @@ private:
     // Variables to simplify IO
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
     Vector< const Vector< std::unique_ptr<MultiFab> >* > scalarVars;
+    Vector< const Vector< std::unique_ptr<MultiFab> >* > scalarPlotVars;
     Vector< std::string > vecVarsName;
     Vector< std::string > scaVarsName;
+
+    // This is the list of names for the plotfiles -- it is the same as scaVarsName but with vorticity added
+    Vector< std::string > scaVarsPlotName;
 
 };
 
