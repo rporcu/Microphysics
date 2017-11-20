@@ -453,7 +453,6 @@ extern "C"
        amrex::Real* w_g, const int* wlo, const int* whi,
        amrex::Real* ugradu_z, const amrex::Real* dx );
 
-
     void compute_divuu_x (
        const int* lo,  const int*  hi,
        amrex::Real* u_g, const int* ulo, const int* uhi,
@@ -461,7 +460,6 @@ extern "C"
        amrex::Real* v_g, const int* vlo, const int* vhi,
        amrex::Real* w_g, const int* wlo, const int* whi,
        amrex::Real* divuu_x, const amrex::Real* dx );
-
     
     void compute_divuu_y (
        const int* lo,  const int*  hi,
@@ -479,8 +477,6 @@ extern "C"
        amrex::Real* w_g, const int* wlo, const int* whi,
        const amrex::Real* slopes,
        amrex::Real* divuu_z, const amrex::Real* dx );
-
-
     
     void compute_divtau_x (
        const int* lo,  const int*  hi,
@@ -510,7 +506,6 @@ extern "C"
        amrex::Real* lambda, amrex::Real* divu, 
        amrex::Real* divtau_z, const amrex::Real* dx );
 
-
     void compute_divu (
 	const int* lo,  const int*  hi,
 	amrex::Real* divu,  const int* slo, const int* shi,
@@ -519,6 +514,13 @@ extern "C"
 	amrex::Real* w_g,   const int* wlo, const int* whi,
 	const amrex::Real* dx );
 
+    void compute_vort (
+	const int* lo,  const int*  hi,
+	amrex::Real* vort,  const int* slo, const int* shi,
+	amrex::Real* u_g,   const int* ulo, const int* uhi,
+	amrex::Real* v_g,   const int* vlo, const int* vhi,
+	amrex::Real* w_g,   const int* wlo, const int* whi,
+	const amrex::Real* dx );
 
 
     void compute_oro_g (
@@ -585,7 +587,7 @@ extern "C"
 	amrex::Real* slopes,
 	const int* domlo, const int* domhi,
 	const int* bc_klo_type, const int* bc_khi_type );
-    
+
 #ifdef __cplusplus
 }
 #endif

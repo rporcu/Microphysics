@@ -105,7 +105,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     std::cout << "max(abs(ru))  = " << uacc[lev] -> norm0 () << "\n";
     std::cout << "max(abs(rv))  = " << vacc[lev] -> norm0 () << "\n";	
     std::cout << "max(abs(rw))  = " << wacc[lev] -> norm0 () << "\n\n";
-
   
     // Exchange halo nodes and apply BCs
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
@@ -165,8 +164,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     // // Update fluid density
     // mfix_physical_prop(lev,0);
 
-
-
     // Compute the divergence of the velocity field, div(u).
     // to check if div(u) = 0 is satisfied
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
@@ -192,6 +189,22 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
 
     // BCs 
     fill_mf_bc(lev,*trD_g[lev]);
+    
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (MFIter mfi(*vort[lev],true); mfi.isValid(); ++mfi)
+    {
+	const Box& bx = mfi.tilebox();
+
+	compute_vort ( BL_TO_FORTRAN_BOX(bx),
+		       BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
+		       BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+		       BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+		       BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+		       geom[lev].CellSize() );		     
+
+    }
 
     amrex::Print() << "Max(abs(divu)) = "<< trD_g[lev] -> norm0 () << "\n";
 }
