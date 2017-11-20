@@ -25,6 +25,10 @@ module convection_mod
    public compute_ugradu_x
    public compute_ugradu_y
    public compute_ugradu_z
+
+   ! This is for debugging purposes only: TO BE REMOVED
+   integer, parameter  :: upw_order = 1 ! Order of the upwind scheme <1,2>
+
    
 contains
 
@@ -221,7 +225,7 @@ contains
                vmns  = vg(i,j-1,k) + half * slopes(i,j-1,k,2)
                v_s   = edge_velocity ( vmns, vpls )
                               
-               dvv   =  v_n*v_n - v_s*v_s   
+               dvv   = v_n*v_n - v_s*v_s   
                 
                !
                ! d(uw)/dz
@@ -249,7 +253,6 @@ contains
       end do
 
    end subroutine compute_divuu_y
-
 
 
    ! 
@@ -397,44 +400,89 @@ contains
       ! Local variables
       integer(c_int)                 :: i, j, k
       real(ar)                       :: idx, idy, idz
-      real(ar)                       :: ududx, vdudy, wdudz
+      real(ar)                       :: udu, vdu, wdu
+      real(ar)                       :: dpls, dmns  
       real(ar)                       :: u, v, w
       real(ar),        parameter     :: over4 = half * half
-      
+      real(ar),        parameter     :: w1 = 1.5_ar
+      real(ar),        parameter     :: w2 = 2.0_ar
+      real(ar),        parameter     :: w3 = half      
+
       idx = one / dx(1)
       idy = one / dx(2)
       idz = one / dx(3)
       
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
+      if ( upw_order == 1 ) then 
 
-               ! udu/dx
-               u     = ug(i,j,k) 
-               ududx = ( max ( u, zero ) * ( u - ug(i-1,j,k) )  + &
-                     &   min ( u, zero ) * ( ug(i+1,j,k) - u ) ) * idx
-               
-               ! vdu/dy
-               v     = over4 * ( vg(i,j+1,k) + vg(i-1,j+1,k) + &
-                     &           vg(i,j,k)   + vg(i-1,j,k)   )
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
 
-               vdudy = ( max ( v, zero ) * ( ug(i,j,k)   - ug(i,j-1,k) ) + &
-                     &   min ( v, zero ) * ( ug(i,j+1,k) - ug(i,j,k)   ) ) * idy  
-                
+                  ! udu/dx
+                  u     = ug(i,j,k)
+                  dmns  = u - ug(i-1,j,k)
+                  dpls  = ug(i+1,j,k) - u 
+                  udu   = u * merge ( dmns, dpls, u > zero ) 
 
-               ! wdu/dz
-               w     = over4 * ( wg(i,j,k+1) + wg(i-1,j,k+1) + &
-                     &           wg(i,j,k)   + wg(i-1,j,k)   )
+                  ! vdu/dy
+                  v     = over4 * ( vg(i,j+1,k) + vg(i-1,j+1,k) + &
+                       &            vg(i,j,k)   + vg(i-1,j,k)   )
+                  dmns  = ug(i,j,k)   - ug(i,j-1,k)
+                  dpls  = ug(i,j+1,k) - ug(i,j,k)
+                  vdu   = v * merge ( dmns, dpls, v > zero ) 
 
-               wdudz = ( max ( w, zero ) * ( ug(i,j,k)   - ug(i,j,k-1) ) + &
-                     &   min ( w, zero ) * ( ug(i,j,k+1) - ug(i,j,k)   ) ) * idz  
+                  ! wdu/dz
+                  w     = over4 * ( wg(i,j,k+1) + wg(i-1,j,k+1) + &
+                       &           wg(i,j,k)   + wg(i-1,j,k)   )
+                  dmns  = ug(i,j,k)   - ug(i,j,k-1)
+                  dpls  = ug(i,j,k+1) - ug(i,j,k)
+                  wdu   = w * merge ( dmns, dpls, w > zero )
 
-               ! Assemble terms
-               ugradu_x(i,j,k) = ududx + vdudy + wdudz
-               
+                  ! Assemble terms
+                  ugradu_x(i,j,k) = udu*idx + vdu*idy + wdu*idz
+
+               end do
             end do
          end do
-      end do
+
+      else if ( upw_order == 2 ) then
+         
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
+
+                  ! udu/dx
+                  u     = ug(i,j,k)
+                  dmns  =  w1*ug(i,j,k)   - w2*ug(i-1,j,k) + w3*ug(i-2,j,k)
+                  dpls  = -w3*ug(i+2,j,k) + w2*ug(i+1,j,k) - w1*ug(i,j,k)   
+                  udu   = u * merge ( dmns, dpls, u > zero ) 
+
+                  ! vdu/dy
+                  v     = over4 * ( vg(i,j+1,k) + vg(i-1,j+1,k) + &
+                       &            vg(i,j,k)   + vg(i-1,j,k)   )
+                  dmns  =  w1*ug(i,j,k)   - w2*ug(i,j-1,k) + w3*ug(i,j-2,k)
+                  dpls  = -w3*ug(i,j+2,k) + w2*ug(i,j+1,k) - w1*ug(i,j,k)   
+                  vdu   = v * merge ( dmns, dpls, v > zero ) 
+
+                  ! wdu/dz
+                  w     = over4 * ( wg(i,j,k+1) + wg(i-1,j,k+1) + &
+                       &           wg(i,j,k)   + wg(i-1,j,k)   )
+                  dmns  =  w1*ug(i,j,k)   - w2*ug(i,j,k-1) + w3*ug(i,j,k-2)
+                  dpls  = -w3*ug(i,j,k+2) + w2*ug(i,j,k+1) - w1*ug(i,j,k)
+                  wdu   = w * merge ( dmns, dpls, w > zero )
+
+                  ! Assemble terms
+                  ugradu_x(i,j,k) = udu*idx + vdu*idy + wdu*idz
+
+               end do
+            end do
+         end do
+
+      else
+
+         print*, " upw_order can only be 1 or 2 ! " 
+         
+      end if
 
    end subroutine compute_ugradu_x
 
@@ -465,42 +513,86 @@ contains
       integer(c_int)                 :: i, j, k
       real(ar)                       :: idx, idy, idz
       real(ar)                       :: u, v, w
-      real(ar)                       :: udvdx, vdvdy, wdvdz
+      real(ar)                       :: dpls, dmns
+      real(ar)                       :: udv, vdv, wdv
       real(ar),        parameter     :: over4 = half * half
+      real(ar),        parameter     :: w1 = 1.5_ar
+      real(ar),        parameter     :: w2 = 2.0_ar
+      real(ar),        parameter     :: w3 = half      
       
       idx = one / dx(1)
       idy = one / dx(2)
       idz = one / dx(3)
-      
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
 
-               ! udvdx
-               u     = over4 * ( ug(i+1,j,k) + ug(i+1,j-1,k) + &
-                     &           ug(i,j,k)   + ug(i,j-1,k)   )
-              
-               udvdx = ( max ( u, zero ) * ( vg(i,j,k) - vg(i-1,j,k) ) + &
-                     &   min ( u, zero ) * ( vg(i+1,j,k) - vg(i,j,k) ) ) * idx
-               
-               ! vdv/dy
-               v     = vg(i,j,k)
-               vdvdy = ( max ( v, zero ) * ( v - vg(i,j-1,k) ) + &
-                     &   min ( v, zero ) * ( vg(i,j+1,k) - v ) ) * idy
-               
-               ! wdv/dz
-               w     = over4 * ( wg(i,j,k+1) + wg(i,j-1,k+1) + &
-                     &           wg(i,j,k)   + wg(i,j-1,k)   )
-                           
-               wdvdz = ( max ( w, zero ) * ( vg(i,j,k) - vg(i,j,k-1) ) + &
-                     &   min ( w, zero ) * ( vg(i,j,k+1) - vg(i,j,k) ) ) * idz
+      if ( upw_order == 1 ) then 
 
-               ! Assemble terms
-               ugradu_y(i,j,k) = udvdx + vdvdy + wdvdz
-               
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
+
+                  ! udvdx
+                  u     = over4 * ( ug(i+1,j,k) + ug(i+1,j-1,k) + &
+                       &            ug(i,j,k)   + ug(i,j-1,k)   )
+                  dmns  = vg(i,j,k) - vg(i-1,j,k)
+                  dpls  = vg(i+1,j,k) - vg(i,j,k)
+                  udv   = u * merge ( dmns, dpls, u > zero )
+
+                  ! vdv/dy
+                  v     = vg(i,j,k)
+                  dmns  = vg(i,j,k) - vg(i,j-1,k)
+                  dpls  = vg(i,j+1,k) - vg(i,j,k)
+                  vdv   = v * merge ( dmns, dpls, v > zero )
+
+                  ! wdv/dz
+                  w     = over4 * ( wg(i,j,k+1) + wg(i,j-1,k+1) + &
+                       &           wg(i,j,k)   + wg(i,j-1,k)   )
+                  dmns  = vg(i,j,k) - vg(i,j,k-1)
+                  dpls  = vg(i,j,k+1) - vg(i,j,k)
+                  wdv   = w * merge ( dmns, dpls, w > zero )
+
+                  ! Assemble terms
+                  ugradu_y(i,j,k) = udv*idx + vdv*idy + wdv*idz
+
+               end do
             end do
          end do
-      end do
+         
+      else if ( upw_order == 2 ) then
+
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
+
+                  ! udvdx
+                  u     = over4 * ( ug(i+1,j,k) + ug(i+1,j-1,k) + &
+                       &            ug(i,j,k)   + ug(i,j-1,k)   )
+                  dmns  =  w1*vg(i,j,k)   - w2*vg(i-1,j,k) + w3*vg(i-2,j,k)
+                  dpls  = -w3*vg(i+2,j,k) + w2*vg(i+1,j,k) - w1*vg(i,j,k)
+                  udv   = u * merge ( dmns, dpls, u > zero )
+
+                  ! vdv/dy
+                  v     = vg(i,j,k)
+                  dmns  =  w1*vg(i,j,k)   - w2*vg(i,j,k-1) + w3*vg(i,j,k-2)
+                  dpls  = -w3*vg(i,j+2,k) + w2*vg(i,j,k+1) - w1*vg(i,j,k)
+                  vdv   = v * merge ( dmns, dpls, v > zero )
+
+                  ! wdv/dz
+                  w     = over4 * ( wg(i,j,k+1) + wg(i,j-1,k+1) + &
+                       &           wg(i,j,k)   + wg(i,j-1,k)   )
+                  dmns  =  w1*vg(i,j,k)   - w2*vg(i,j,k-1) + w3*vg(i,j,k-2)
+                  dpls  = -w3*vg(i,j,k+2) + w2*vg(i,j,k+1) - w1*vg(i,j,k)
+                  wdv   = w * merge ( dmns, dpls, w > zero )
+
+                  ! Assemble terms
+                  ugradu_y(i,j,k) = udv*idx + vdv*idy + wdv*idz
+
+               end do
+            end do
+         end do
+         
+      else
+         print*, " upw_order can only be 1 or 2 ! " 
+      end if
 
       
    end subroutine compute_ugradu_y
@@ -514,8 +606,6 @@ contains
    ! 
    subroutine compute_ugradu_z ( lo, hi, ug, ulo, uhi, vg, vlo, vhi, &
         & wg, wlo, whi, ugradu_z, dx )  bind(C, name="compute_ugradu_z")
-
-      implicit none
 
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)   ! Tile indeces for mf associated to vg
       integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
@@ -534,44 +624,87 @@ contains
       
       integer(c_int)                 :: i, j, k
       real(ar)                       :: idx, idy, idz
-      real(ar)                       :: udwdx, vdwdy, wdwdz
+      real(ar)                       :: udw, vdw, wdw
+      real(ar)                       :: dpls, dmns 
       real(ar)                       :: u, v, w
       real(ar),        parameter     :: over4 = half * half
+      real(ar),        parameter     :: w1 = 1.5_ar
+      real(ar),        parameter     :: w2 = 2.0_ar
+      real(ar),        parameter     :: w3 = half      
       
       idx = one / dx(1)
       idy = one / dx(2)
       idz = one / dx(3)
-      
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
 
-               ! udwdx
-               u     = over4 * ( ug(i+1,j,k) + ug(i+1,j,k-1) + &
-                     &           ug(i,j,k)   + ug(i,j,k-1)   )
-               
-               udwdx = ( max ( u, zero ) * ( wg(i,j,k) - wg(i-1,j,k) ) + &
-                     &   min ( u, zero ) * ( wg(i+1,j,k) - wg(i,j,k) ) ) * idx
+      if ( upw_order == 1 ) then
+         
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
 
-               ! vdw/dy
-               v   = over4 * ( vg(i,j+1,k) + vg(i,j+1,k-1) + &
-                               vg(i,j,k)   + vg(i,j,k-1)   )
-               
-               vdwdy = ( max ( v, zero ) * ( wg(i,j,k) - wg(i,j-1,k) ) + &
-                     &   min ( v, zero ) * ( wg(i,j+1,k) - wg(i,j,k) ) ) * idy 
-              
-               ! wdw/dz
-               w     = wg(i,j,k)
-               wdwdz = ( max ( w, zero ) * ( w - wg(i,j,k-1) ) + &
-                     &   min ( w, zero ) * ( wg(i,j,k+1) - w  ) ) * idz  
-               
-               ! Assemble terms
-               ugradu_z(i,j,k) = udwdx + vdwdy + wdwdz
+                  ! udwdx
+                  u     = over4 * ( ug(i+1,j,k) + ug(i+1,j,k-1) + &
+                       &            ug(i,j,k)   + ug(i,j,k-1)   )
+                  dmns  = wg(i,j,k) - wg(i-1,j,k)
+                  dpls  = wg(i+1,j,k) - wg(i,j,k)
+                  udw   = u * merge ( dmns, dpls, u > zero )
 
-               
+                  ! vdw/dy
+                  v   = over4 * ( vg(i,j+1,k) + vg(i,j+1,k-1) + &
+                       &          vg(i,j,k)   + vg(i,j,k-1)   )
+                  dmns  = wg(i,j,k) - wg(i,j-1,k)
+                  dpls  = wg(i,j+1,k) - wg(i,j,k)
+                  vdw   = v * merge ( dmns, dpls, v > zero )
+
+                  ! wdw/dz
+                  w     = wg(i,j,k)
+                  dmns  = wg(i,j,k) - wg(i,j,k-1)
+                  dpls  = wg(i,j,k+1) - wg(i,j,k)
+                  wdw   = w * merge ( dmns, dpls, w > zero )
+
+                  ! Assemble terms
+                  ugradu_z(i,j,k) = udw*idx + vdw*idy + wdw*idz
+
+
+               end do
             end do
          end do
-      end do
+      else if ( upw_order == 2 ) then 
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
+
+                  ! udwdx
+                  u     = over4 * ( ug(i+1,j,k) + ug(i+1,j,k-1) + &
+                       &            ug(i,j,k)   + ug(i,j,k-1)   )
+                  dmns  =  w1*wg(i,j,k)   - w2*wg(i-1,j,k) + w3*wg(i-2,j,k)
+                  dpls  = -w3*wg(i+2,j,k) + w2*wg(i+1,j,k) - w2*wg(i,j,k)
+                  udw   = u * merge ( dmns, dpls, u > zero )
+
+                  ! vdw/dy
+                  v   = over4 * ( vg(i,j+1,k) + vg(i,j+1,k-1) + &
+                       &          vg(i,j,k)   + vg(i,j,k-1)   )
+                  dmns  =  w1*wg(i,j,k)   - w2*wg(i,j-1,k) + w3*wg(i,j-2,k)
+                  dpls  = -w3*wg(i,j+2,k) + w2*wg(i,j+1,k) - w2*wg(i,j,k)
+                  vdw   = v * merge ( dmns, dpls, v > zero )
+
+                  ! wdw/dz
+                  w     = wg(i,j,k)
+                  dmns  =  w1*wg(i,j,k)   - w2*wg(i,j,k-1) + w3*wg(i,j,k-2)
+                  dpls  = -w3*wg(i,j,k+2) + w2*wg(i,j,k+1) - w2*wg(i,j,k)
+                  wdw   = w * merge ( dmns, dpls, w > zero )
+
+                  ! Assemble terms
+                  ugradu_z(i,j,k) = udw*idx + vdw*idy + wdw*idz
+
+
+               end do
+            end do
+         end do
+      else
+         print*, " upw_order can only be 1 or 2 ! " 
+      end if
+
       
    end subroutine compute_ugradu_z
 

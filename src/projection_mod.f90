@@ -23,6 +23,10 @@ module projection_mod
    integer(c_int), parameter :: e_i(3,3) = reshape ( [1,0,0,0,1,0,0,0,1], [3,3] )  
 
 
+   ! This is for debugging purposes only: REMOVE WHEN DONE!
+   logical, parameter        :: convective_form = .false.
+
+   
    
 contains
 
@@ -65,7 +69,7 @@ contains
       wodz = wmax * odz
 
       ! Convection
-      ! Smaller components of velocity are not accounted for in the
+      ! Small components of velocity are not accounted for in the
       ! computation of the new time step (see IAMR )
       dt_c = dt
       if ( umax > small ) dt_c = min ( dt_c, cfl / uodx )
@@ -127,7 +131,7 @@ contains
    ! Computes the term RHS = - div (uu) + div (tau)/rop
    ! along direction "dir"
    !
-   ! dir = 1, 2, 3 ( 1=x, 2=y, 3=z) 
+   ! dir = 1, 2, 3 ( 1=x, 2=y, 3=z ) 
    !
    subroutine compute_fluid_acceleration ( lo, hi, rhs, rlo, rhi, sl, &
         & u, ulo, uhi, v, vlo, vhi, w, wlo, whi, mu, slo, shi, rop,   &
@@ -173,39 +177,53 @@ contains
       integer                       :: i, j, k
       
       ! Compute convection term
-      select case ( dir )
-      case (1)
-         call compute_divuu_x ( lo, hi, u, ulo, uhi, sl, v, vlo, vhi, &
-              & w, wlo, whi, conv, dx )  
+      if ( convective_form ) then 
+         select case ( dir )
+         case (1)
+            call compute_ugradu_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
+                 & w, wlo, whi, conv, dx )  
 
-         ! call compute_ugradu_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-         !      & w, wlo, whi, conv, dx )  
- 
+            ! No diffusion term for the time being
+            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+
+         case(2)
+            call compute_ugradu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
+                 & w, wlo, whi, conv, dx )
          
-         ! No diffusion term for the time being
-         diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+            ! No diffusion term for the time being
+            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
 
-      case(2)
-         call compute_divuu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, sl, &
-              & w, wlo, whi, conv, dx )
+         case(3)         
+            call compute_ugradu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
+                 & w, wlo, whi, conv, dx )
+
+            ! No diffusion term for the time being
+            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+         end select
+      else
+      
+         select case ( dir )
+         case (1)
+            call compute_divuu_x ( lo, hi, u, ulo, uhi, sl, v, vlo, vhi, &
+                 & w, wlo, whi, conv, dx )
+            
+            ! No diffusion term for the time being
+            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+         case(2)
+            call compute_divuu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, sl, &
+                 & w, wlo, whi, conv, dx )
+
+            ! No diffusion term for the time being
+            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
          
-         ! call compute_ugradu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
-         !      & w, wlo, whi, conv, dx )
-         
-         ! No diffusion term for the time being
-         diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
-         
-      case(3)         
-         call compute_divuu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-              & w, wlo, whi, sl, conv, dx )
-
-         ! call compute_ugradu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
-         !      & w, wlo, whi, conv, dx )
-
-         ! No diffusion term for the time being
-         diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
-
-      end select
+         case(3)         
+            call compute_divuu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
+                 & w, wlo, whi, sl, conv, dx )
+            
+            ! No diffusion term for the time being
+            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+         end select
+      end if
 
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
@@ -264,8 +282,7 @@ contains
       k0 = e_i(dir,3)
       
       codx = c / dx(dir) 
-      
-      
+     
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)

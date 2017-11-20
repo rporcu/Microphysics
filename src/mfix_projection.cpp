@@ -609,8 +609,9 @@ mfix_level::solve_poisson_equation (  int lev,
     // bool has_nans = rhs[lev] -> contains_nan ();
 
     // amrex::Print() << " HAS NANs = " << has_nans << "\n";
-   
-    solver.set_gravity_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
+    //solver.set_mac_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
+    solver.set_const_gravity_coeffs ();
+    // solver.set_gravity_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
     phi[lev] -> setVal (0.);
  	
     solver.solve ( *phi[lev], *rhs[lev], rel_tol, abs_tol, 0, 0, 1 );

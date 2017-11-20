@@ -131,54 +131,58 @@ contains
       end do
 
 
-      ! 
-      ! Compute slopes at boundary where physical BCs are imposed
-      ! 
-      if ( lo(1) == domlo(1) ) then
 
-         i = lo(1)
+
+
+      
+      ! ! 
+      ! ! Compute slopes at boundary where physical BCs are imposed
+      ! ! 
+      ! if ( lo(1) == domlo(1) ) then
+
+      !    i = lo(1)
          
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
+      !    do k = lo(3), hi(3)
+      !       do j = lo(2), hi(2)
 
                
-               if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
-                    ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
-                    ( bc_ilo_type(j,k,1) == FSW_ )  ) then
+      !          if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
+      !               ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
+      !               ( bc_ilo_type(j,k,1) == FSW_ )  ) then
 
-                  du_l = zero
-                  du_c = - half*u(i+2,j,k) + two*u(i+1,j,k) - three2nds*u(i,j,k) 
-                  du_r = u(i+1,j,k) - u(i,j,k)
+      !             du_l = zero
+      !             du_c = - half*u(i+2,j,k) + two*u(i+1,j,k) - three2nds*u(i,j,k) 
+      !             du_r = u(i+1,j,k) - u(i,j,k)
                
-                  slopes(i,j,k,1) = mc_limiter ( du_l, du_c, du_r )  
+      !             slopes(i,j,k,1) = mc_limiter ( du_l, du_c, du_r )  
                   
-               end if
-            end do
-         end do
-      end if
+      !          end if
+      !       end do
+      !    end do
+      ! end if
 
-      if ( hi(1) == (domhi(1)+1) ) then
+      ! if ( hi(1) == (domhi(1)+1) ) then
 
-         i = hi(1) 
+      !    i = hi(1) 
          
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
+      !    do k = lo(3), hi(3)
+      !       do j = lo(2), hi(2)
 
                
-               if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
-                    ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
-                    ( bc_ilo_type(j,k,1) == FSW_ )  ) then
+      !          if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
+      !               ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
+      !               ( bc_ilo_type(j,k,1) == FSW_ )  ) then
 
-                  du_l = u(i,j,k) - u(i-1,j,k)
-                  du_c = half*u(i-2,j,k) - two*u(i-1,j,k) + three2nds*u(i,j,k) 
-                  du_r = zero
+      !             du_l = u(i,j,k) - u(i-1,j,k)
+      !             du_c = half*u(i-2,j,k) - two*u(i-1,j,k) + three2nds*u(i,j,k) 
+      !             du_r = zero
                
-                  slopes(i,j,k,1) = mc_limiter ( du_l, du_c, du_r )  
+      !             slopes(i,j,k,1) = mc_limiter ( du_l, du_c, du_r )  
                   
-               end if
-            end do
-         end do
-      end if
+      !          end if
+      !       end do
+      !    end do
+      ! end if
 
       ! block
       !    real(ar)   :: usl_x, usl_y, usl_z
@@ -257,54 +261,54 @@ contains
       end do
 
       
-      ! 
-      ! Compute slopes at boundary where physical BCs are imposed
-      ! 
-      if ( lo(2) == domlo(2) ) then
+      ! ! 
+      ! ! Compute slopes at boundary where physical BCs are imposed
+      ! ! 
+      ! if ( lo(2) == domlo(2) ) then
 
-         j = lo(2)
+      !    j = lo(2)
          
-         do k = lo(3), hi(3)
-            do i = lo(1), hi(1)
+      !    do k = lo(3), hi(3)
+      !       do i = lo(1), hi(1)
            
-               if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
-                    ( bc_jlo_type(i,k,1) == FSW_ )  ) then
+      !          if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
+      !               ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
+      !               ( bc_jlo_type(i,k,1) == FSW_ )  ) then
 
-                  du_l = zero
-                  du_c = - half*v(i,j+2,k) + two*v(i,j+1,k) - three2nds*v(i,j,k) 
-                  du_r = v(i,j+1,k) - v(i,j,k)
+      !             du_l = zero
+      !             du_c = - half*v(i,j+2,k) + two*v(i,j+1,k) - three2nds*v(i,j,k) 
+      !             du_r = v(i,j+1,k) - v(i,j,k)
                
-                  slopes(i,j,k,2) = mc_limiter ( du_l, du_c, du_r )  
+      !             slopes(i,j,k,2) = mc_limiter ( du_l, du_c, du_r )  
                   
-               end if
-            end do
-         end do
+      !          end if
+      !       end do
+      !    end do
          
-      end if
+      ! end if
 
-      if ( hi(2) == (domhi(2)+1) ) then
+      ! if ( hi(2) == (domhi(2)+1) ) then
 
-         j = hi(2) 
+      !    j = hi(2) 
          
-         do k = lo(3), hi(3)
-            do i = lo(1), hi(1)
+      !    do k = lo(3), hi(3)
+      !       do i = lo(1), hi(1)
 
-               if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
-                    ( bc_jlo_type(i,k,1) == FSW_ )  ) then
+      !          if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
+      !               ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
+      !               ( bc_jlo_type(i,k,1) == FSW_ )  ) then
 
-                  du_l = v(i,j,k) - v(i,j-1,k)
-                  du_c = half*v(i,j-2,k) - two*v(i,j-1,k) + three2nds*v(i,j,k) 
-                  du_r = zero
+      !             du_l = v(i,j,k) - v(i,j-1,k)
+      !             du_c = half*v(i,j-2,k) - two*v(i,j-1,k) + three2nds*v(i,j,k) 
+      !             du_r = zero
                
-                  slopes(i,j,k,2) = mc_limiter ( du_l, du_c, du_r )  
+      !             slopes(i,j,k,2) = mc_limiter ( du_l, du_c, du_r )  
                   
-               end if
-            end do
-         end do
+      !          end if
+      !       end do
+      !    end do
          
-      end if
+      ! end if
 
       ! block
       !    real(ar)   :: usl_x, usl_y, usl_z
@@ -382,52 +386,52 @@ contains
       end do
 
 
-      ! 
-      ! Compute slopes at boundary where physical BCs are imposed
-      ! 
-      if ( lo(3) == domlo(3) ) then
+      ! ! 
+      ! ! Compute slopes at boundary where physical BCs are imposed
+      ! ! 
+      ! if ( lo(3) == domlo(3) ) then
 
-         k = lo(3)
+      !    k = lo(3)
          
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
+      !    do j = lo(2), hi(2)
+      !       do i = lo(1), hi(1)
       
-               if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_klo_type(i,j,1) == NSW_ )  .or. &
-                    ( bc_klo_type(i,j,1) == FSW_ )  ) then
+      !          if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
+      !               ( bc_klo_type(i,j,1) == NSW_ )  .or. &
+      !               ( bc_klo_type(i,j,1) == FSW_ )  ) then
 
-                  du_l = zero
-                  du_c = - half*w(i,j,k+2) + two*w(i,j,k+1) - three2nds*w(i,j,k) 
-                  du_r = w(i,j,k+1) - w(i,j,k)
+      !             du_l = zero
+      !             du_c = - half*w(i,j,k+2) + two*w(i,j,k+1) - three2nds*w(i,j,k) 
+      !             du_r = w(i,j,k+1) - w(i,j,k)
                
-                  slopes(i,j,k,3) = mc_limiter ( du_l, du_c, du_r )  
+      !             slopes(i,j,k,3) = mc_limiter ( du_l, du_c, du_r )  
                   
-               end if
-            end do
-         end do
-      end if
+      !          end if
+      !       end do
+      !    end do
+      ! end if
 
-      if ( hi(3) == (domhi(3)+1) ) then
+      ! if ( hi(3) == (domhi(3)+1) ) then
 
-         k = hi(3) 
+      !    k = hi(3) 
         
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
+      !    do j = lo(2), hi(2)
+      !       do i = lo(1), hi(1)
                
-               if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_klo_type(i,j,1) == NSW_ )  .or. &
-                    ( bc_klo_type(i,j,1) == FSW_ )  ) then
+      !          if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
+      !               ( bc_klo_type(i,j,1) == NSW_ )  .or. &
+      !               ( bc_klo_type(i,j,1) == FSW_ )  ) then
 
-                  du_l = w(i,j,k) - w(i,j,k-1)
-                  du_c = half*w(i,j,k-2) - two*w(i,j,k-1) + three2nds*w(i,j,k) 
-                  du_r = zero
+      !             du_l = w(i,j,k) - w(i,j,k-1)
+      !             du_c = half*w(i,j,k-2) - two*w(i,j,k-1) + three2nds*w(i,j,k) 
+      !             du_r = zero
                
-                  slopes(i,j,k,3) = mc_limiter ( du_l, du_c, du_r )  
+      !             slopes(i,j,k,3) = mc_limiter ( du_l, du_c, du_r )  
                   
-               end if
-            end do
-         end do
-      end if
+      !          end if
+      !       end do
+      !    end do
+      ! end if
 
       ! block
       !    real(ar)   :: usl_x, usl_y, usl_z
