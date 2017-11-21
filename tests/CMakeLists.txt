@@ -45,11 +45,19 @@ foreach( THIS_TEST ${SGS_TESTS})
 
    # Create test dir in build path if needed
    # Update test files if needed
-   add_custom_command(TARGET ${TEST_EXE} PRE_BUILD
-      COMMAND [ -d ${TEST_DIR} ] || mkdir ${TEST_DIR}
-      COMMAND cp -R --update ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST}/* .
-      WORKING_DIRECTORY  ${TEST_DIR}
-      COMMENT "Updating test folder")
+   if(APPLE)
+       add_custom_command(TARGET ${TEST_EXE} PRE_BUILD
+           COMMAND [ -d ${TEST_DIR} ] || mkdir ${TEST_DIR}
+           COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST}/* .
+           WORKING_DIRECTORY ${TEST_DIR}
+           COMMENT "Updation test folder")
+   else()
+       add_custom_command(TARGET ${TEST_EXE} PRE_BUILD
+           COMMAND [ -d ${TEST_DIR} ] || mkdir ${TEST_DIR}
+           COMMAND cp -R --update ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST}/* .
+           WORKING_DIRECTORY  ${TEST_DIR}
+           COMMENT "Updating test folder")
+   endif()
 
    # Setup for running the a single test
    set(TEST_RUN run_${TEST_NAME}_SGS)
