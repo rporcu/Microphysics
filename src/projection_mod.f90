@@ -24,7 +24,7 @@ module projection_mod
 
 
    ! This is for debugging purposes only: REMOVE WHEN DONE!
-   logical, parameter        :: convective_form = .false.
+   logical, parameter        :: convective_form = .true.
 
    
    
@@ -106,7 +106,7 @@ contains
       ! print*, "dx               = ", dx
       ! print*, "dt, dt_c         = ", dt, dt_c
 
-      dt = min ( dt, dt_c ) !, dt_v, dt_g )
+      dt = min ( dt, dt_c ) !, dt_g )
 
    contains
 
@@ -178,53 +178,60 @@ contains
       
       ! Compute convection term
       if ( convective_form ) then 
+
          select case ( dir )
          case (1)
             call compute_ugradu_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
                  & w, wlo, whi, conv, dx )  
 
-            ! No diffusion term for the time being
-            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
-
+            call compute_divtau_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
+                 & w, wlo, whi, mu, slo, shi, diff, dx )
          case(2)
             call compute_ugradu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
                  & w, wlo, whi, conv, dx )
-         
-            ! No diffusion term for the time being
-            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
 
+            call compute_divtau_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
+                 & w, wlo, whi, mu, slo, shi, diff, dx )
          case(3)         
             call compute_ugradu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
                  & w, wlo, whi, conv, dx )
 
-            ! No diffusion term for the time being
-            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+            call compute_divtau_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
+                 & w, wlo, whi, mu, slo, shi, diff, dx )
          end select
+
       else
       
          select case ( dir )
          case (1)
             call compute_divuu_x ( lo, hi, u, ulo, uhi, sl, v, vlo, vhi, &
                  & w, wlo, whi, conv, dx )
-            
-            ! No diffusion term for the time being
-            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+
+            call compute_divtau_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
+                 & w, wlo, whi, mu, slo, shi, diff, dx )
          case(2)
             call compute_divuu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, sl, &
                  & w, wlo, whi, conv, dx )
 
-            ! No diffusion term for the time being
-            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+            call compute_divtau_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
+                 & w, wlo, whi, mu, slo, shi, diff, dx )
          
          case(3)         
             call compute_divuu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
                  & w, wlo, whi, sl, conv, dx )
-            
-            ! No diffusion term for the time being
-            diff(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = zero
+
+            call compute_divtau_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
+                 & w, wlo, whi, mu, slo, shi, diff, dx )
          end select
+         
       end if
 
+
+      !
+      !
+      !  REMEMBER TO DIVIDE div(tau) by rho !!!!!
+      !
+      !
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)

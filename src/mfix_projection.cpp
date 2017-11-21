@@ -32,6 +32,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     // rop_g and ep_g ghost values for PINF and POUT
     fill_mf_bc ( lev, *rop_g[lev] );
     fill_mf_bc ( lev, *ep_g[lev] );
+    fill_mf_bc ( lev, *mu_g[lev] );
     
     // Fill ghost nodes and reimpose boundary conditions
     u_g[lev] -> FillBoundary (geom[lev].periodicity());

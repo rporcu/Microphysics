@@ -480,30 +480,27 @@ extern "C"
     
     void compute_divtau_x (
        const int* lo,  const int*  hi,
-       amrex::Real* u_g, const int* ulo, const int* uhi,
-       amrex::Real* v_g, const int* vlo, const int* vhi,
-       amrex::Real* w_g, const int* wlo, const int* whi,
-       amrex::Real* mu,  const int* slo, const int* shi,
-       amrex::Real* lambda, amrex::Real* divu, 
+       const amrex::Real* u_g, const int* ulo, const int* uhi,
+       const amrex::Real* v_g, const int* vlo, const int* vhi,
+       const amrex::Real* w_g, const int* wlo, const int* whi,
+       const amrex::Real* mu,  const int* slo, const int* shi,
        amrex::Real* divtau_x, const amrex::Real* dx );
 
     void compute_divtau_y (
        const int* lo,  const int*  hi,
-       amrex::Real* u_g, const int* ulo, const int* uhi,
-       amrex::Real* v_g, const int* vlo, const int* vhi,
-       amrex::Real* w_g, const int* wlo, const int* whi,
-       amrex::Real* mu,  const int* slo, const int* shi,
-       amrex::Real* lambda, amrex::Real* divu, 
+       const amrex::Real* u_g, const int* ulo, const int* uhi,
+       const amrex::Real* v_g, const int* vlo, const int* vhi,
+       const amrex::Real* w_g, const int* wlo, const int* whi,
+       const amrex::Real* mu,  const int* slo, const int* shi,
        amrex::Real* divtau_y, const amrex::Real* dx );
  
 
     void compute_divtau_z (
        const int* lo,  const int*  hi,
-       amrex::Real* u_g, const int* ulo, const int* uhi,
-       amrex::Real* v_g, const int* vlo, const int* vhi,
-       amrex::Real* w_g, const int* wlo, const int* whi,
-       amrex::Real* mu,  const int* slo, const int* shi,
-       amrex::Real* lambda, amrex::Real* divu, 
+       const amrex::Real* u_g, const int* ulo, const int* uhi,
+       const amrex::Real* v_g, const int* vlo, const int* vhi,
+       const amrex::Real* w_g, const int* wlo, const int* whi,
+       const amrex::Real* mu,  const int* slo, const int* shi,
        amrex::Real* divtau_z, const amrex::Real* dx );
 
     void compute_divu (
