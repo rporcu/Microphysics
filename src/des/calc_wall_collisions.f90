@@ -126,21 +126,21 @@
        ihi = i+1
 
        ! ingore stencil element that couldn't possibly be interacting with particle
-       ! if ( (xp-i*dx(1)) .gt. rp) ilo = i
-       ! if ( (yp-j*dx(2)) .gt. rp) jlo = j
-       ! if ( (zp-k*dx(3)) .gt. rp) klo = k
+       if ( (xp-i*dx(1)) .gt. rp) ilo = i
+       if ( (yp-j*dx(2)) .gt. rp) jlo = j
+       if ( (zp-k*dx(3)) .gt. rp) klo = k
 
-       ! if ( ((i+1)*dx(1)-xp) .gt. rp) ihi = i
-       ! if ( ((j+1)*dx(2)-yp) .gt. rp) jhi = j
-       ! if ( ((k+1)*dx(3)-zp) .gt. rp) khi = k
+       if ( ((i+1)*dx(1)-xp) .gt. rp) ihi = i
+       if ( ((j+1)*dx(2)-yp) .gt. rp) jhi = j
+       if ( ((k+1)*dx(3)-zp) .gt. rp) khi = k
 
        ! itterate over stencil
        do kk = klo, khi
           do jj = jlo, jhi
              do ii = ilo, ihi
 
-                ! if (nbr(ii-i,jj-j,kk-k) .eq. 1) then
-                if (.true.) then
+                if (nbr(ii-i,jj-j,kk-k) .eq. 1) then
+                ! if (.true.) then
 
                    ! if (is_single_valued_cell(flag(ii,jj,kk))) then
                    ! only consider cells that contain EB's
@@ -202,10 +202,10 @@
                                     ! c_vec: closest point (to particle) on line from b_vec to p_vec still in cell
                                     real(c_real), dimension(3) :: p_vec, b_vec, v_vec, c_vec
 
-                                    ! assing value to vectors (arrays_
-                                    call assign_vector_3d_int ( ind_loop, ii, jj, kk)
-                                    call assign_vector_3d_int ( ind_pt, i_pt, j_pt, k_pt)
-                                    
+                                    ! assing value to vectors (arrays)
+                                    ind_loop = (/ ii, jj, kk /)
+                                    ind_pt   = (/ i_pt, j_pt, k_pt /)
+
                                     ! p_vec is outside cell, determine with cell boundaries might be cut
                                     call determine_cut_facets( ind_pt, ind_loop, ind_facets, n_facets)
 
@@ -213,11 +213,12 @@
                                     lambda = 1.e20 ! HACK: giant number!
                                     if (n_facets .gt. 0) then
                                         ! assign vectorial quantities
-                                        call assign_vector_3d_real (p_vec, pt_x, pt_y, pt_z)
-                                        call assign_vector_3d_real (b_vec, bcentx, bcenty, bcentz)
-                                        
+                                        p_vec = (/ pt_x, pt_y, pt_z /)
+                                        b_vec = (/ bcentx, bcenty, bcentz /)
+
                                         ! v_vec = p_vec - b_vec
                                         call vector_sub_3d_real (v_vec, p_vec, b_vec)
+                                        
                                         ! find minimal lamba
                                         do i_facet = 1, n_facets
                                             ! current guess
@@ -372,31 +373,31 @@
     end do ! loop over particles
    
    contains
-       subroutine assign_vector_3d_int (vec, v_i, v_j, v_k)
-           implicit none
+       ! subroutine assign_vector_3d_int (vec, v_i, v_j, v_k)
+       !     implicit none
+       !
+       !     integer, dimension(3), intent(  out) :: vec
+       !     integer,               intent(in   ) :: v_i, v_j, v_k
+       ! 
+       !     vec(1) = v_i
+       !     vec(2) = v_j
+       !     vec(3) = v_k
+       !
+       ! end subroutine assign_vector_3d_int
 
-           integer, dimension(3), intent(  out) :: vec
-           integer,               intent(in   ) :: v_i, v_j, v_k
+       ! subroutine assign_vector_3d_real (vec, v_i, v_j, v_k)
+       !     implicit none
+       ! 
+       !     real(c_real), dimension(3), intent(  out) :: vec
+       !     real(c_real),               intent(in   ) :: v_i, v_j, v_k
+       ! 
+       !     vec(1) = v_i
+       !     vec(2) = v_j
+       !     vec(3) = v_k
+       ! 
+       ! end subroutine assign_vector_3d_real
 
-           vec(1) = v_i
-           vec(2) = v_j
-           vec(3) = v_k
-
-       end subroutine assign_vector_3d_int
-
-       subroutine assign_vector_3d_real (vec, v_i, v_j, v_k)
-           implicit none
-
-           real(c_real), dimension(3), intent(  out) :: vec
-           real(c_real),               intent(in   ) :: v_i, v_j, v_k
-
-           vec(1) = v_i
-           vec(2) = v_j
-           vec(3) = v_k
-
-       end subroutine assign_vector_3d_real
-
-       subroutine vector_sub_3d_real (res, a, b)
+       pure subroutine vector_sub_3d_real (res, a, b)
            implicit none
 
            real(c_real), dimension(3), intent(  out) :: res
@@ -409,7 +410,7 @@
 
        end subroutine vector_sub_3d_real
 
-       subroutine determine_cut_facets ( ind_pt, ind_loop, ind_facets, n_facets )
+       pure subroutine determine_cut_facets ( ind_pt, ind_loop, ind_facets, n_facets )
            implicit none
 
            integer, dimension(1:3), intent(in   ) :: ind_pt
