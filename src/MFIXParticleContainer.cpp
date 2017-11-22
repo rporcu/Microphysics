@@ -24,6 +24,20 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     ReadStaticParameters();
 
     this->SetVerbose(0);
+
+    // turn off certain components for ghost particle communication
+    setRealCommComp(4, false);
+    setRealCommComp(5, false);
+    setRealCommComp(6, false);
+    setRealCommComp(7, false);
+    setRealCommComp(14, false);
+    setRealCommComp(15, false);
+    setRealCommComp(16, false);
+
+    setIntCommComp(0, false);
+    setIntCommComp(1, false);
+    setIntCommComp(3, false);
+
 }
 
 void MFIXParticleContainer::AllocData ()
@@ -630,7 +644,6 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
       mf_pointer = &mf_to_be_filled;
     }
     else {
-        amrex::Print() << "on different grids \n";
       // If mf_to_be_filled is not defined on the particle_box_array, then we need
       // to make a temporary here and copy into mf_to_be_filled at the end.
       mf_pointer = new MultiFab(ParticleBoxArray(lev),
