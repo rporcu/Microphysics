@@ -135,7 +135,7 @@ contains
    !
    subroutine compute_fluid_acceleration ( lo, hi, rhs, rlo, rhi, sl, &
         & u, ulo, uhi, v, vlo, vhi, w, wlo, whi, mu, slo, shi, rop,   &
-        & dx, dir ) bind(C)
+        & dx, dir, order ) bind(C)
 
       use convection_mod
       use diffusion_mod
@@ -150,6 +150,9 @@ contains
       integer(c_int), intent(in   ) :: wlo(3), whi(3)
       integer(c_int), intent(in   ) :: slo(3), shi(3)
 
+      ! Scheme order
+      integer(c_int), intent(in   ) :: order
+      
       ! Grid 
       real(ar),       intent(in   ) :: dx(3)
 
@@ -177,24 +180,24 @@ contains
       integer                       :: i, j, k
       
       ! Compute convection term
-      if ( convective_form ) then 
+      if ( order == 1 ) then 
 
          select case ( dir )
          case (1)
             call compute_ugradu_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-                 & w, wlo, whi, conv, dx )  
+                 & w, wlo, whi, conv, dx, order )  
 
             call compute_divtau_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
                  & w, wlo, whi, mu, slo, shi, diff, dx )
          case(2)
             call compute_ugradu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
-                 & w, wlo, whi, conv, dx )
+                 & w, wlo, whi, conv, dx, order )
 
             call compute_divtau_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
                  & w, wlo, whi, mu, slo, shi, diff, dx )
          case(3)         
             call compute_ugradu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
-                 & w, wlo, whi, conv, dx )
+                 & w, wlo, whi, conv, dx, order )
 
             call compute_divtau_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
                  & w, wlo, whi, mu, slo, shi, diff, dx )

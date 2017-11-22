@@ -98,9 +98,10 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     
     // Step 1: compute u* (predictor step) and store it in u_g,
     // v_g, and w_g
-    mfix_compute_velocity_slopes ( lev ); 
-    mfix_compute_fluid_acceleration ( lev ); 
-    mfix_apply_pcm_prediction ( lev, dt );
+    mfix_compute_first_predictor ( lev, dt );
+    // mfix_compute_velocity_slopes ( lev ); 
+    // mfix_compute_fluid_acceleration ( lev, 1, u_g, v_g, w_g ); 
+    // mfix_apply_pcm_prediction ( lev, dt );
 
     std::cout << "\n Fluid accelerations :\n";
     std::cout << "max(abs(ru))  = " << uacc[lev] -> norm0 () << "\n";
@@ -115,11 +116,11 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     
     // Step 2: compute u** (corrector step) and store it in
     // u_g, v_g, and w_g.
-    mfix_compute_velocity_slopes ( lev );
-    mfix_compute_fluid_acceleration ( lev );     
-    mfix_apply_pcm_correction ( lev, dt );
-
-
+    // mfix_compute_velocity_slopes ( lev );
+    // mfix_compute_fluid_acceleration ( lev, 1, u_g, v_g, w_g );     
+    // mfix_apply_pcm_correction ( lev, dt );
+    mfix_compute_second_predictor ( lev, dt );
+    
     // Add forcing terms ( gravity and/or momentum
     // exchange with particles )
 //    mfix_apply_forcing_terms ( lev, dt );
@@ -291,6 +292,84 @@ mfix_level::mfix_apply_pcm_prediction (int lev, amrex::Real dt)
 }
 
 
+
+//
+// Compute first predictor:
+//
+//           u_g = u_go + dt * R_u - dt * (dp/dx) / ro_g
+//           v_g = v_go + dt * R_v - dt * (dp/dy) / ro_g
+//           w_g = w_go + dt * R_w - dt * (dp/dz) / ro_g 
+//
+//  This is the prediction step of the Heun's integration
+//  scheme, AKA Predictor-Corrector Method (PCM).
+//  This step is first order in time and space
+// 
+void
+mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
+{
+    BL_PROFILE("mfix_level::mfix_compute_first_predictor");
+
+    // Compute fluid acceleration (convection + diffusion) 
+    mfix_compute_fluid_acceleration ( lev, 1, u_go, v_go, w_go );
+    
+    // First add the fluid acceleration
+    MultiFab::Saxpy (*u_g[lev], dt, *uacc[lev], 0, 0, 1, 0);
+    MultiFab::Saxpy (*v_g[lev], dt, *vacc[lev], 0, 0, 1, 0);
+    MultiFab::Saxpy (*w_g[lev], dt, *wacc[lev], 0, 0, 1, 0);
+
+    mfix_apply_projection (lev,dt);
+
+
+    int nghost = p_g[lev] -> nGrow ();
+    MultiFab::Copy ( *p_g[lev],   *p_go[lev],  0, 0, 1, nghost);    
+    
+    // The add the pressure gradient
+//    mfix_add_pressure_gradient ( lev, -dt ); 
+
+}
+
+
+
+
+//
+// Compute the second predictor:
+//
+//   u_g = u_go + dt * (R_u^* + R_u^n - (dp/dx)*(1/rho)) / 2
+//   v_g = v_go + dt * (R_v^* + R_v^n - (dp/dy)*(1/rho)) / 2
+//   w_g = w_go + dt * (R_w^* + R_w^n - (dp/dz)*(1/rho)) / 2
+//
+//  This is the correction step of the Heun's integration
+//  scheme, AKA Predictor-Corrector Method (PCM).
+//  
+void
+mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
+{
+    BL_PROFILE("mfix_level::mfix_compute_second_predictor");
+
+    // Compute fluid acceleration (convection + diffusion)
+    // using first predictor
+    mfix_compute_fluid_acceleration ( lev, 2, u_g, v_g, w_g );
+        
+    // Use temporary arrays to store u_go + dt * R_u^* / 2
+    MultiFab::LinComb ( *u_g[lev], 1.0, *u_go[lev], 0, dt/2.0, *uacc[lev], 0, 0, 1, 0 ); 
+    MultiFab::LinComb ( *v_g[lev], 1.0, *v_go[lev], 0, dt/2.0, *vacc[lev], 0, 0, 1, 0 );
+    MultiFab::LinComb ( *w_g[lev], 1.0, *w_go[lev], 0, dt/2.0, *wacc[lev], 0, 0, 1, 0 );
+	
+    // Compute fluid acceleration (convection + diffusion) 
+    // using velocity at the beginning of time step
+    mfix_compute_fluid_acceleration ( lev, 2, u_go, v_go, w_go );
+    
+    // Add dt/2 * R_u^n 
+    MultiFab::Saxpy (*u_g[lev], dt/2.0, *uacc[lev], 0, 0, 1, 0);
+    MultiFab::Saxpy (*v_g[lev], dt/2.0, *vacc[lev], 0, 0, 1, 0);
+    MultiFab::Saxpy (*w_g[lev], dt/2.0, *wacc[lev], 0, 0, 1, 0);
+
+    // Add pressure gradient
+    mfix_add_pressure_gradient ( lev, -dt/2.0 ); 
+}
+
+
+
 //
 // Computes:
 //
@@ -383,7 +462,11 @@ mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
 // Compute uacc, vacc, and wacc by using u_g, v_g, and w_g
 //
 void
-mfix_level::mfix_compute_fluid_acceleration (int lev)
+mfix_level::mfix_compute_fluid_acceleration ( int lev,
+					      int order,
+					      Vector< std::unique_ptr<MultiFab> >& u, 
+					      Vector< std::unique_ptr<MultiFab> >& v,
+					      Vector< std::unique_ptr<MultiFab> >& w )
 {
     BL_PROFILE("mfix_level::mfix_compute_fluid_acceleration");
 
@@ -406,36 +489,36 @@ mfix_level::mfix_compute_fluid_acceleration (int lev)
 	    BL_TO_FORTRAN_BOX(ubx),  
 	    BL_TO_FORTRAN_ANYD((*uacc[lev])[mfi]),
 	    (*slopes_u[lev])[mfi].dataPtr (),
-	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
             (*rop_g[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &xdir );
+	    geom[lev].CellSize (), &xdir, &order );
 
 	// y direction
 	compute_fluid_acceleration (
 	    BL_TO_FORTRAN_BOX(vbx),  
 	    BL_TO_FORTRAN_ANYD((*vacc[lev])[mfi]),
 	    (*slopes_v[lev])[mfi].dataPtr (),
-	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
             (*rop_g[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &ydir );
+	    geom[lev].CellSize (), &ydir, &order );
 
 	// z direction
 	compute_fluid_acceleration (
 	    BL_TO_FORTRAN_BOX(wbx),  
 	    BL_TO_FORTRAN_ANYD((*wacc[lev])[mfi]),
 	    (*slopes_w[lev])[mfi].dataPtr (),
-	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
             (*rop_g[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &zdir );
+	    geom[lev].CellSize (), &zdir, &order );
     }
 }
 

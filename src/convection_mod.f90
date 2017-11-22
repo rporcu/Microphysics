@@ -26,9 +26,6 @@ module convection_mod
    public compute_ugradu_y
    public compute_ugradu_z
 
-   ! This is for debugging purposes only: TO BE REMOVED
-   integer, parameter  :: upw_order = 1 ! Order of the upwind scheme <1,2>
-
    
 contains
 
@@ -374,7 +371,7 @@ contains
    ! x-edges ( u-component location )
    ! 
    subroutine compute_ugradu_x ( lo, hi, ug, ulo, uhi, vg, vlo, vhi, &
-        & wg, wlo, whi, ugradu_x, dx )  bind(C, name="compute_ugradu_x")
+        & wg, wlo, whi, ugradu_x, dx, order )  bind(C)
 
       ! Tile bounds
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)
@@ -387,6 +384,9 @@ contains
       ! Grid
       real(ar),        intent(in   ) :: dx(3)
 
+      ! Order of the method
+      integer(c_int),  intent(in   ) :: order
+      
       ! Arrays
       real(ar),        intent(in   ) ::                           &
            & ug(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),       &
@@ -412,7 +412,7 @@ contains
       idy = one / dx(2)
       idz = one / dx(3)
       
-      if ( upw_order == 1 ) then 
+      if ( order == 1 ) then 
 
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -445,7 +445,7 @@ contains
             end do
          end do
 
-      else if ( upw_order == 2 ) then
+      else if ( order == 2 ) then
          
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -480,7 +480,7 @@ contains
 
       else
 
-         print*, " upw_order can only be 1 or 2 ! " 
+         print*, " order can only be 1 or 2 ! " 
          
       end if
 
@@ -493,13 +493,15 @@ contains
    ! y-edges ( v-component location )
    ! 
    subroutine compute_ugradu_y ( lo, hi, ug, ulo, uhi, vg, vlo, vhi, &
-        & wg, wlo, whi, ugradu_y, dx )  bind(C, name="compute_ugradu_y")
+        & wg, wlo, whi, ugradu_y, dx, order )  bind(C)
 
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)   ! Tile indeces for mf associated to vg
       integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
       integer(c_int),  intent(in   ) :: vlo(3), vhi(3)
       integer(c_int),  intent(in   ) :: wlo(3), whi(3)
       real(ar),        intent(in   ) :: dx(3)
+
+      integer(c_int),  intent(in   ) :: order
       
       real(ar),        intent(in   ) ::                           &
            & ug(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),       &
@@ -524,7 +526,7 @@ contains
       idy = one / dx(2)
       idz = one / dx(3)
 
-      if ( upw_order == 1 ) then 
+      if ( order == 1 ) then 
 
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -557,7 +559,7 @@ contains
             end do
          end do
          
-      else if ( upw_order == 2 ) then
+      else if ( order == 2 ) then
 
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -591,7 +593,7 @@ contains
          end do
          
       else
-         print*, " upw_order can only be 1 or 2 ! " 
+         print*, " order can only be 1 or 2 ! " 
       end if
 
       
@@ -605,13 +607,15 @@ contains
    ! z-edges ( w-component location )
    ! 
    subroutine compute_ugradu_z ( lo, hi, ug, ulo, uhi, vg, vlo, vhi, &
-        & wg, wlo, whi, ugradu_z, dx )  bind(C, name="compute_ugradu_z")
+        & wg, wlo, whi, ugradu_z, dx, order )  bind(C)
 
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)   ! Tile indeces for mf associated to vg
       integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
       integer(c_int),  intent(in   ) :: vlo(3), vhi(3)
       integer(c_int),  intent(in   ) :: wlo(3), whi(3)
       real(ar),        intent(in   ) :: dx(3)
+
+      integer(c_int),  intent(in   ) :: order
       
       real(ar),        intent(  out) ::                           &
            & ugradu_z(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
@@ -636,7 +640,7 @@ contains
       idy = one / dx(2)
       idz = one / dx(3)
 
-      if ( upw_order == 1 ) then
+      if ( order == 1 ) then
          
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -669,7 +673,7 @@ contains
                end do
             end do
          end do
-      else if ( upw_order == 2 ) then 
+      else if ( order == 2 ) then 
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
                do i = lo(1), hi(1)
@@ -702,7 +706,7 @@ contains
             end do
          end do
       else
-         print*, " upw_order can only be 1 or 2 ! " 
+         print*, " order can only be 1 or 2 ! " 
       end if
 
       
