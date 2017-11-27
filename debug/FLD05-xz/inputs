@@ -19,7 +19,7 @@ amr.plot_int   = 10
 
 # Use projection method
 mfix.use_proj_method = 1
-vorteces_plane = 2
+vortices_plane = 2
 
 # Geometry
 geometry.coord_sys   = 0                  # 0: Cartesian
