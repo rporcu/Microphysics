@@ -96,29 +96,10 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     // Time integration step
     //
     
-    // Step 1: compute u* (predictor step) and store it in u_g,
-    // v_g, and w_g
+    // Step 1: compute u* (predictor step) and store it in u_g/v_g/w_g
     mfix_compute_first_predictor ( lev, dt );
-    // mfix_compute_velocity_slopes ( lev ); 
-    // mfix_compute_fluid_acceleration ( lev, 1, u_g, v_g, w_g ); 
-    // mfix_apply_pcm_prediction ( lev, dt );
-
-    std::cout << "\n Fluid accelerations :\n";
-    std::cout << "max(abs(ru))  = " << uacc[lev] -> norm0 () << "\n";
-    std::cout << "max(abs(rv))  = " << vacc[lev] -> norm0 () << "\n";	
-    std::cout << "max(abs(rw))  = " << wacc[lev] -> norm0 () << "\n\n";
-  
-    // Exchange halo nodes and apply BCs
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
-    mfix_set_bc1 ( lev );
     
-    // Step 2: compute u** (corrector step) and store it in
-    // u_g, v_g, and w_g.
-    // mfix_compute_velocity_slopes ( lev );
-    // mfix_compute_fluid_acceleration ( lev, 1, u_g, v_g, w_g );     
-    // mfix_apply_pcm_correction ( lev, dt );
+    // Step 2: compute u** (corrector step) and store it in u_g/v_g/w_g
     mfix_compute_second_predictor ( lev, dt );
     
     // Add forcing terms ( gravity and/or momentum
@@ -280,7 +261,6 @@ mfix_level::mfix_apply_pcm_prediction (int lev, amrex::Real dt)
 {
     BL_PROFILE("mfix_level::mfix_apply_pcm_prediction");
 
-
     // First add the fluid acceleration
     MultiFab::Saxpy (*u_g[lev], dt, *uacc[lev], 0, 0, 1, 0);
     MultiFab::Saxpy (*v_g[lev], dt, *vacc[lev], 0, 0, 1, 0);
@@ -288,10 +268,7 @@ mfix_level::mfix_apply_pcm_prediction (int lev, amrex::Real dt)
 
     // The add the pressure gradient
     mfix_add_pressure_gradient ( lev, -dt ); 
-
 }
-
-
 
 //
 // Compute first predictor.
@@ -326,27 +303,37 @@ mfix_level::mfix_apply_pcm_prediction (int lev, amrex::Real dt)
 void
 mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
 {
-    BL_PROFILE("mfix_level::mfix_compute_first_predictor");
+    mfix_compute_velocity_slopes ( lev, u_go, v_go, w_go );
 
     // Compute fluid acceleration (convection + diffusion) 
-    mfix_compute_fluid_acceleration ( lev, 1, u_go, v_go, w_go );
+    mfix_compute_fluid_acceleration ( lev, 2, u_go, v_go, w_go );
     
     // First add the fluid acceleration
     MultiFab::Saxpy (*u_g[lev], dt, *uacc[lev], 0, 0, 1, 0);
     MultiFab::Saxpy (*v_g[lev], dt, *vacc[lev], 0, 0, 1, 0);
     MultiFab::Saxpy (*w_g[lev], dt, *wacc[lev], 0, 0, 1, 0);
 
-    // Project velocity field
+    // Exchange halo nodes and apply BCs
+    u_g[lev] -> FillBoundary (geom[lev].periodicity());
+    v_g[lev] -> FillBoundary (geom[lev].periodicity());
+    w_g[lev] -> FillBoundary (geom[lev].periodicity());
+
     mfix_apply_projection (lev,dt);
 
     // Reset pressure field to initial value forthe subsequent
     // computation of second predictor
     int nghost = p_g[lev] -> nGrow ();
     MultiFab::Copy ( *p_g[lev],   *p_go[lev],  0, 0, 1, nghost);    
+    
+    // The add the pressure gradient
+//    mfix_add_pressure_gradient ( lev, -dt ); 
+
+    // Exchange halo nodes and apply BCs
+    u_g[lev] -> FillBoundary (geom[lev].periodicity());
+    v_g[lev] -> FillBoundary (geom[lev].periodicity());
+    w_g[lev] -> FillBoundary (geom[lev].periodicity());
+    mfix_set_bc1 ( lev );
 }
-
-
-
 
 //
 // Compute the second predictor:
@@ -362,6 +349,9 @@ void
 mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
 {
     BL_PROFILE("mfix_level::mfix_compute_second_predictor");
+
+    // Compute slopes of ustar
+    mfix_compute_velocity_slopes ( lev, u_g, v_g, w_g );
 
     // Compute fluid acceleration (convection + diffusion)
     // using first predictor
@@ -383,9 +373,12 @@ mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
 
     // Add pressure gradient
     mfix_add_pressure_gradient ( lev, -dt/2.0 ); 
+
+    // Fill ghost cells and reimpose boundary conditions
+    u_g[lev] -> FillBoundary (geom[lev].periodicity());
+    v_g[lev] -> FillBoundary (geom[lev].periodicity());
+    w_g[lev] -> FillBoundary (geom[lev].periodicity());
 }
-
-
 
 //
 // Computes:
@@ -567,7 +560,11 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt)
 // three directions.
 // 
 void
-mfix_level::mfix_compute_velocity_slopes (int lev)
+mfix_level::mfix_compute_velocity_slopes (int lev,
+                                          Vector< std::unique_ptr<MultiFab> >& u,
+                                          Vector< std::unique_ptr<MultiFab> >& v,
+                                          Vector< std::unique_ptr<MultiFab> >& w )
+
 {
     BL_PROFILE("mfix_level::mfix_compute_velocity_slopes");
 
@@ -583,19 +580,19 @@ mfix_level::mfix_compute_velocity_slopes (int lev)
 	Box wbx = amrex::convert ( mfi.tilebox(), e_z );
 
 	compute_u_slopes ( BL_TO_FORTRAN_BOX(ubx),
-			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
 			   (*slopes_u[lev])[mfi].dataPtr (),
 			   domain.loVect (), domain.hiVect (),
 			   bc_ilo.dataPtr(), bc_ihi.dataPtr() );
 
 	compute_v_slopes ( BL_TO_FORTRAN_BOX(vbx),
-			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
 			   (*slopes_v[lev])[mfi].dataPtr (),
 			   domain.loVect (), domain.hiVect (),
 			   bc_jlo.dataPtr(), bc_jhi.dataPtr() );
 
 	compute_w_slopes ( BL_TO_FORTRAN_BOX(wbx),
-			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
 			   (*slopes_w[lev])[mfi].dataPtr (),
 			   domain.loVect (), domain.hiVect (),
 			   bc_klo.dataPtr(), bc_khi.dataPtr() );
@@ -637,7 +634,6 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     // Compute the PPE coefficients
     mfix_compute_oro_g ( lev );
     // For the time being set oro_g to 1
-    
     
     // Solve PPE
     solve_poisson_equation ( lev, oro_g, p_g, trD_g );
@@ -756,8 +752,6 @@ mfix_level::solve_poisson_equation (  int lev,
     solver.solve ( GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), rel_tol, abs_tol );
    
 }
-
-
 
 
 //
