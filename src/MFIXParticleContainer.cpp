@@ -329,7 +329,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
         std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
 
         // We pre-compute the normals
-        normal.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 1);
+        normal.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 2);
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
             Box tile_box = pti.tilebox();
