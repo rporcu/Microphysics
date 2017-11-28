@@ -22,15 +22,7 @@ module projection_mod
    ! Check e_x, e_y and e_z in mfix_level.H
    integer(c_int), parameter :: e_i(3,3) = reshape ( [1,0,0,0,1,0,0,0,1], [3,3] )  
 
-
-   ! This is for debugging purposes only: REMOVE WHEN DONE!
-   logical, parameter        :: convective_form = .true.
-
-   
-   
 contains
-
-
 
    !
    ! Compute new dt
@@ -180,55 +172,26 @@ contains
       integer                       :: i, j, k
       
       ! Compute convection term
-      if ( order == 1 ) then 
-
-         select case ( dir )
+      select case ( dir )
          case (1)
             call compute_ugradu_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-                 & w, wlo, whi, conv, dx, order )  
+                 & w, wlo, whi, sl, conv, dx, order )  
 
             call compute_divtau_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
                  & w, wlo, whi, mu, slo, shi, diff, dx )
          case(2)
             call compute_ugradu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
-                 & w, wlo, whi, conv, dx, order )
+                 & w, wlo, whi, sl, conv, dx, order )
 
             call compute_divtau_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
                  & w, wlo, whi, mu, slo, shi, diff, dx )
          case(3)         
             call compute_ugradu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
-                 & w, wlo, whi, conv, dx, order )
+                 & w, wlo, whi, sl, conv, dx, order )
 
             call compute_divtau_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
                  & w, wlo, whi, mu, slo, shi, diff, dx )
          end select
-
-      else
-      
-         select case ( dir )
-         case (1)
-            call compute_divuu_x ( lo, hi, u, ulo, uhi, sl, v, vlo, vhi, &
-                 & w, wlo, whi, conv, dx )
-
-            call compute_divtau_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-                 & w, wlo, whi, mu, slo, shi, diff, dx )
-         case(2)
-            call compute_divuu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, sl, &
-                 & w, wlo, whi, conv, dx )
-
-            call compute_divtau_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-                 & w, wlo, whi, mu, slo, shi, diff, dx )
-         
-         case(3)         
-            call compute_divuu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-                 & w, wlo, whi, sl, conv, dx )
-
-            call compute_divtau_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-                 & w, wlo, whi, mu, slo, shi, diff, dx )
-         end select
-         
-      end if
-
 
       !
       !

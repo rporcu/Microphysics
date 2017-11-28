@@ -95,11 +95,26 @@ contains
            & slopes(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
 
       ! Local variables
-      integer                       :: i, j, k
-      real(ar)                      :: du_l, du_c, du_r
+      integer                       :: i, j, k, slope_order
+      real(ar)                      :: du_l, du_c, du_r, ds
       real(ar),    parameter        :: two = 2.0_ar, three2nds = 1.5_ar  
-      
 
+      integer                       :: cen, lim, flg, frm
+
+      parameter( cen = 1 )
+      parameter( lim = 2 )
+      parameter( flg = 3 )
+      parameter( frm = 4 )
+
+      real(ar), allocatable :: scr(:,:)
+
+      slope_order = 2
+
+      if (slope_order .eq. 0) then
+
+         slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),:) = 0.d0
+
+      else if (slope_order .eq. 2) then
       
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
@@ -130,9 +145,91 @@ contains
          end do
       end do
 
+      else
 
+      allocate (scr(lo(1)-1:hi(1)+1,4))
+      
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
 
+            do i = lo(1)-1, hi(1)+1
+               ! X direction
+               du_l = two * (u(i,j,k) - u(i-1,j,k))
+               du_c = half * ( u(i+1,j,k) - u(i-1,j,k) )
+               du_r = two * (u(i+1,j,k) - u(i,j,k))
 
+               scr(i,cen) = du_c
+               scr(i,lim) = min(abs(du_l),abs(du_r))
+               scr(i,lim) = merge(scr(i,lim),0.d0,du_l*du_r .gt. 0.d0)
+               scr(i,flg) = sign(1.d0,scr(i,cen))
+               scr(i,frm) = scr(i,flg) * min(abs(du_c),scr(i,lim))
+            end do
+
+            do i = lo(1), hi(1)
+               ds = (4.d0/3.d0) * scr(i,cen) - &
+                    (1.d0/6.d0) * (scr(i+1,frm) + scr(i-1,frm))
+               slopes(i,j,k,1) = scr(i,flg)*min(abs(ds),scr(i,lim))
+            end do
+
+         end do
+      end do
+
+      deallocate (scr)
+      allocate (scr(lo(2)-1:hi(2)+1,4))
+      
+      do k = lo(3), hi(3)
+         do i = lo(1), hi(1)
+
+            do j = lo(2)-1, hi(2)+1
+               du_l = two * (u(i,j,k) - u(i,j-1,k))
+               du_c = half * ( u(i,j+1,k) - u(i,j-1,k) )
+               du_r = two * (u(i+1,j,k) - u(i,j,k))
+
+               scr(j,cen) = du_c
+               scr(j,lim) = min(abs(du_l),abs(du_r))
+               scr(j,lim) = merge(scr(j,lim),0.d0,du_l*du_r .gt. 0.d0)
+               scr(j,flg) = sign(1.d0,scr(j,cen))
+               scr(j,frm) = scr(j,flg) * min(abs(du_c),scr(j,lim))
+            end do
+
+            do j = lo(2), hi(2)
+               ds = (4.d0/3.d0) * scr(j,cen) - &
+                    (1.d0/6.d0) * (scr(j+1,frm) + scr(j-1,frm))
+               slopes(i,j,k,2) = scr(j,flg)*min(abs(ds),scr(j,lim))
+            end do
+
+         end do
+      end do
+
+      deallocate (scr)
+      allocate (scr(lo(3)-1:hi(3)+1,4))
+      
+      do i = lo(1), hi(1)
+         do j = lo(2), hi(2)
+
+            do k = lo(3)-1, hi(3)+1
+               du_l = two  * (u(i,j,k) - u(i,j,k-1) )
+               du_c = half * ( u(i,j,k+1) - u(i,j,k-1) )
+               du_r = two  * (u(i,j,k+1) - u(i,j,k) )
+
+               scr(k,cen) = du_c
+               scr(k,lim) = min(abs(du_l),abs(du_r))
+               scr(k,lim) = merge(scr(k,lim),0.d0,du_l*du_r .gt. 0.d0)
+               scr(k,flg) = sign(1.d0,scr(k,cen))
+               scr(k,frm) = scr(k,flg) * min(abs(du_c),scr(k,lim))
+            end do
+
+            do k = lo(3), hi(3)
+               ds = (4.d0/3.d0) * scr(k,cen) - &
+                    (1.d0/6.d0) * (scr(k+1,frm) + scr(k-1,frm))
+               slopes(i,j,k,3) = scr(k,flg)*min(abs(ds),scr(k,lim))
+            end do
+
+         end do
+      end do
+
+      deallocate (scr)
+      end if
 
       
       ! ! 
@@ -194,9 +291,6 @@ contains
       
    end subroutine compute_u_slopes
 
-
-
-
    !
    ! Compute v-velocity slopes
    ! 
@@ -225,11 +319,26 @@ contains
            & slopes(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3)
 
       ! Local variables
-      integer                       :: i, j, k
-      real(ar)                      :: du_l, du_c, du_r
+      integer                       :: i, j, k, slope_order
+      real(ar)                      :: du_l, du_c, du_r, ds
       real(ar),    parameter        :: two = 2.0_ar, three2nds = 1.5_ar  
       
+      integer                       :: cen, lim, flg, frm
 
+      parameter( cen = 1 )
+      parameter( lim = 2 )
+      parameter( flg = 3 )
+      parameter( frm = 4 )
+
+      real(ar), allocatable :: scr(:,:)
+
+      slope_order = 2
+
+      if (slope_order .eq. 0) then
+
+         slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),:) = 0.d0
+
+      else if (slope_order .eq. 2) then
       
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
@@ -260,6 +369,91 @@ contains
          end do
       end do
 
+      else 
+
+      allocate (scr(lo(1)-1:hi(1)+1,4))
+
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+
+            do i = lo(1)-1, hi(1)+1
+               ! X direction
+               du_l = v(i,j,k) - v(i-1,j,k)
+               du_c = half * ( v(i+1,j,k) - v(i-1,j,k) )
+               du_r = v(i+1,j,k) - v(i,j,k)
+
+               scr(i,cen) = du_c
+               scr(i,lim) = 2.0d0*min(abs(du_l),abs(du_r))
+               scr(i,lim) = merge(scr(i,lim),0.d0,du_l*du_r .gt. 0.d0)
+               scr(i,flg) = sign(1.d0,scr(i,cen))
+               scr(i,frm) = scr(i,flg) * min(abs(du_c),scr(i,lim))
+            end do
+
+            do i = lo(1), hi(1)
+               ds = (4.d0/3.d0) * scr(i,cen) - &
+                    (1.d0/6.d0) * (scr(i+1,frm) + scr(i-1,frm))
+               slopes(i,j,k,1) = scr(i,flg)*min(abs(ds),scr(i,lim))
+            end do
+
+         end do
+      end do
+
+      deallocate (scr)
+      allocate (scr(lo(2)-1:hi(2)+1,4))
+      
+      do k = lo(3), hi(3)
+         do i = lo(1), hi(1)
+
+            do j = lo(2)-1, hi(2)+1
+               du_l = two * (v(i,j,k) - v(i,j-1,k))
+               du_c = half * ( v(i,j+1,k) - v(i,j-1,k) )
+               du_r = two * (v(i+1,j,k) - v(i,j,k))
+
+               scr(j,cen) = du_c
+               scr(j,lim) = min(abs(du_l),abs(du_r))
+               scr(j,lim) = merge(scr(j,lim),0.d0,du_l*du_r .gt. 0.d0)
+               scr(j,flg) = sign(1.d0,scr(j,cen))
+               scr(j,frm) = scr(j,flg) * min(abs(du_c),scr(j,lim))
+            end do
+
+            do j = lo(2), hi(2)
+               ds = (4.d0/3.d0) * scr(j,cen) - &
+                    (1.d0/6.d0) * (scr(j+1,frm) + scr(j-1,frm))
+               slopes(i,j,k,2) = scr(j,flg)*min(abs(ds),scr(j,lim))
+            end do
+
+         end do
+      end do
+
+      deallocate (scr)
+      allocate (scr(lo(3)-1:hi(3)+1,4))
+      
+      do i = lo(1), hi(1)
+         do j = lo(2), hi(2)
+
+            do k = lo(3)-1, hi(3)+1
+               du_l = two  * (v(i,j,k) - v(i,j,k-1) )
+               du_c = half * ( v(i,j,k+1) - v(i,j,k-1) )
+               du_r = two  * (v(i,j,k+1) - v(i,j,k) )
+
+               scr(k,cen) = du_c
+               scr(k,lim) = min(abs(du_l),abs(du_r))
+               scr(k,lim) = merge(scr(k,lim),0.d0,du_l*du_r .gt. 0.d0)
+               scr(k,flg) = sign(1.d0,scr(k,cen))
+               scr(k,frm) = scr(k,flg) * min(abs(du_c),scr(k,lim))
+            end do
+
+            do k = lo(3), hi(3)
+               ds = (4.d0/3.d0) * scr(k,cen) - &
+                    (1.d0/6.d0) * (scr(k+1,frm) + scr(k-1,frm))
+               slopes(i,j,k,3) = scr(k,flg)*min(abs(ds),scr(k,lim))
+            end do
+
+         end do
+      end do
+
+      deallocate (scr)
+      end if
       
       ! ! 
       ! ! Compute slopes at boundary where physical BCs are imposed
@@ -350,11 +544,26 @@ contains
            & slopes(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),3)
 
       ! Local variables
-      integer                       :: i, j, k
-      real(ar)                      :: du_l, du_c, du_r
+      integer                       :: i, j, k, slope_order
+      real(ar)                      :: du_l, du_c, du_r, ds
       real(ar),    parameter        :: two = 2.0_ar, three2nds = 1.5_ar  
       
+      integer                       :: cen, lim, flg, frm
 
+      parameter( cen = 1 )
+      parameter( lim = 2 )
+      parameter( flg = 3 )
+      parameter( frm = 4 )
+
+      real(ar), allocatable :: scr(:,:)
+
+      slope_order = 2
+
+      if (slope_order .eq. 0) then
+
+         slopes(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),:) = 0.d0
+
+      else if (slope_order .eq. 2) then
       
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
@@ -384,6 +593,92 @@ contains
             end do
          end do
       end do
+
+      else
+
+      allocate (scr(lo(1)-1:hi(1)+1,4))
+
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+
+            do i = lo(1)-1, hi(1)+1
+               ! X direction
+               du_l = two * (w(i,j,k) - w(i-1,j,k))
+               du_c = half * ( w(i+1,j,k) - w(i-1,j,k) )
+               du_r = two * (w(i+1,j,k) - w(i,j,k))
+
+               scr(i,cen) = du_c
+               scr(i,lim) = min(abs(du_l),abs(du_r))
+               scr(i,lim) = merge(scr(i,lim),0.d0,du_l*du_r .gt. 0.d0)
+               scr(i,flg) = sign(1.d0,scr(i,cen))
+               scr(i,frm) = scr(i,flg) * min(abs(du_c),scr(i,lim))
+            end do
+
+            do i = lo(1), hi(1)
+               ds = (4.d0/3.d0) * scr(i,cen) - &
+                    (1.d0/6.d0) * (scr(i+1,frm) + scr(i-1,frm))
+               slopes(i,j,k,1) = scr(i,flg)*min(abs(ds),scr(i,lim))
+            end do
+
+         end do
+      end do
+
+      deallocate (scr)
+      allocate (scr(lo(2)-1:hi(2)+1,4))
+      
+      do k = lo(3), hi(3)
+         do i = lo(1), hi(1)
+
+            do j = lo(2)-1, hi(2)+1
+               du_l = two * (w(i,j,k) - w(i,j-1,k))
+               du_c = half * ( w(i,j+1,k) - w(i,j-1,k) )
+               du_r = two * (w(i+1,j,k) - w(i,j,k))
+
+               scr(j,cen) = du_c
+               scr(j,lim) = min(abs(du_l),abs(du_r))
+               scr(j,lim) = merge(scr(j,lim),0.d0,du_l*du_r .gt. 0.d0)
+               scr(j,flg) = sign(1.d0,scr(j,cen))
+               scr(j,frm) = scr(j,flg) * min(abs(du_c),scr(j,lim))
+            end do
+
+            do j = lo(2), hi(2)
+               ds = (4.d0/3.d0) * scr(j,cen) - &
+                    (1.d0/6.d0) * (scr(j+1,frm) + scr(j-1,frm))
+               slopes(i,j,k,2) = scr(j,flg)*min(abs(ds),scr(j,lim))
+            end do
+
+         end do
+      end do
+
+      deallocate (scr)
+      allocate (scr(lo(3)-1:hi(3)+1,4))
+      
+      do i = lo(1), hi(1)
+         do j = lo(2), hi(2)
+
+            do k = lo(3)-1, hi(3)+1
+               du_l = two  * (w(i,j,k) - w(i,j,k-1) )
+               du_c = half * ( w(i,j,k+1) - w(i,j,k-1) )
+               du_r = two  * (w(i,j,k+1) - w(i,j,k) )
+
+               scr(k,cen) = du_c
+               scr(k,lim) = min(abs(du_l),abs(du_r))
+               scr(k,lim) = merge(scr(k,lim),0.d0,du_l*du_r .gt. 0.d0)
+               scr(k,flg) = sign(1.d0,scr(k,cen))
+               scr(k,frm) = scr(k,flg) * min(abs(du_c),scr(k,lim))
+            end do
+
+            do k = lo(3), hi(3)
+               ds = (4.d0/3.d0) * scr(k,cen) - &
+                    (1.d0/6.d0) * (scr(k+1,frm) + scr(k-1,frm))
+               slopes(i,j,k,3) = scr(k,flg)*min(abs(ds),scr(k,lim))
+            end do
+
+         end do
+      end do
+
+      deallocate (scr)
+      end if
 
 
       ! ! 
