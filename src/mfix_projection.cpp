@@ -7,8 +7,8 @@
 #include <AMReX_VisMF.H>
 
 // For multigrid
-#include <AMReX_FMultiGrid.H>
-#include <AMReX_stencil_types.H>
+#include <AMReX_MLMG.H>
+#include <AMReX_MLABecLaplacian.H>
 
 
 void
@@ -294,12 +294,31 @@ mfix_level::mfix_apply_pcm_prediction (int lev, amrex::Real dt)
 
 
 //
-// Compute first predictor:
+// Compute first predictor.
 //
-//           u_g = u_go + dt * R_u - dt * (dp/dx) / ro_g
-//           v_g = v_go + dt * R_v - dt * (dp/dy) / ro_g
-//           w_g = w_go + dt * R_w - dt * (dp/dz) / ro_g 
+// This routine solves:
 //
+//      du/dt  + grad(p)/rho  = RHS
+//
+// by using a first order discretization in space and time
+// and a non-incremental projection
+//
+//  1. Compute
+// 
+//     u_g = u_go + dt * R_u 
+//     v_g = v_go + dt * R_v 
+//     w_g = w_go + dt * R_w  
+//
+//  2. Solve
+//
+//     div( grad(p) / rho ) = du_g/dx + dv_g/dy + dw_g/dz
+//
+//  3. Compute
+//
+//     u_g = u_g - dt * (dp/dx) / rho 
+//     v_g = v_g - dt * (dp/dy) / rho 
+//     w_g = w_g - dt * (dp/dz) / rho
+// 
 //  This is the prediction step of the Heun's integration
 //  scheme, AKA Predictor-Corrector Method (PCM).
 //  This step is first order in time and space
@@ -317,15 +336,13 @@ mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
     MultiFab::Saxpy (*v_g[lev], dt, *vacc[lev], 0, 0, 1, 0);
     MultiFab::Saxpy (*w_g[lev], dt, *wacc[lev], 0, 0, 1, 0);
 
+    // Project velocity field
     mfix_apply_projection (lev,dt);
 
-
+    // Reset pressure field to initial value forthe subsequent
+    // computation of second predictor
     int nghost = p_g[lev] -> nGrow ();
     MultiFab::Copy ( *p_g[lev],   *p_go[lev],  0, 0, 1, nghost);    
-    
-    // The add the pressure gradient
-//    mfix_add_pressure_gradient ( lev, -dt ); 
-
 }
 
 
@@ -348,16 +365,16 @@ mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
 
     // Compute fluid acceleration (convection + diffusion)
     // using first predictor
-    mfix_compute_fluid_acceleration ( lev, 2, u_g, v_g, w_g );
+    mfix_compute_fluid_acceleration ( lev, 1, u_g, v_g, w_g );
         
-    // Use temporary arrays to store u_go + dt * R_u^* / 2
+    // Store u_go + dt * R_u^* / 2
     MultiFab::LinComb ( *u_g[lev], 1.0, *u_go[lev], 0, dt/2.0, *uacc[lev], 0, 0, 1, 0 ); 
     MultiFab::LinComb ( *v_g[lev], 1.0, *v_go[lev], 0, dt/2.0, *vacc[lev], 0, 0, 1, 0 );
     MultiFab::LinComb ( *w_g[lev], 1.0, *w_go[lev], 0, dt/2.0, *wacc[lev], 0, 0, 1, 0 );
 	
     // Compute fluid acceleration (convection + diffusion) 
     // using velocity at the beginning of time step
-    mfix_compute_fluid_acceleration ( lev, 2, u_go, v_go, w_go );
+    mfix_compute_fluid_acceleration ( lev, 1, u_go, v_go, w_go );
     
     // Add dt/2 * R_u^n 
     MultiFab::Saxpy (*u_g[lev], dt/2.0, *uacc[lev], 0, 0, 1, 0);
@@ -676,12 +693,6 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
  }
 
 
-//
-// Solves   div ( b grad(phi) ) = rhs   via Multigrid
-//
-// phi and rhs are cell-centered
-// b           is  face-centered
-//
 void
 mfix_level::solve_poisson_equation (  int lev,
 				      Vector< Vector< std::unique_ptr<MultiFab> > >& b,
@@ -689,30 +700,61 @@ mfix_level::solve_poisson_equation (  int lev,
 				      Vector< std::unique_ptr<MultiFab> >& rhs )
 {
     BL_PROFILE("mfix_level::solve_poisson_equation");
-
-    // Multigrid inputs
-    Vector<int>                         bc(2*AMREX_SPACEDIM, -1); // Periodic boundaries
-    int                                 stencil =  amrex::CC_CROSS_STENCIL;
-    int                                 verbose = 0;
-    Real                                rel_tol = 1.0e-13;
-    Real                                abs_tol = 1.0e-14;
-    amrex::FMultiGrid                   solver(geom[lev]);
-
-    solver.set_stencil (stencil);
-    solver.set_verbose (verbose);
-    solver.set_bc (bc.dataPtr());
+    
+    // 
+    // First define the matrix (operator).
+    // Class MLABecLaplacian describes the following operator:
+    //
+    //       (alpha * a - beta * (del dot b grad)) phi
+    //
+    LPInfo                       info;
+    MLABecLaplacian              matrix(geom, grids, dmap, info);
+    Vector<const MultiFab*>      tmp;
+    array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
 
     
-    // bool has_nans = rhs[lev] -> contains_nan ();
+    // Copy the PPE coefficient into the proper data strutcure
+    tmp = amrex::GetVecOfConstPtrs ( b[lev] ) ;
+    b_tmp[0] = tmp[0];
+    b_tmp[1] = tmp[1];
+    b_tmp[2] = tmp[2];
 
-    // amrex::Print() << " HAS NANs = " << has_nans << "\n";
-    //solver.set_mac_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
-    solver.set_const_gravity_coeffs ();
-    // solver.set_gravity_coeffs ( amrex::GetVecOfPtrs ( b[lev] ) );
-    phi[lev] -> setVal (0.);
- 	
-    solver.solve ( *phi[lev], *rhs[lev], rel_tol, abs_tol, 0, 0, 1 );
+    // LinOpBCType Definitions are in Src/Boundary/AMReX_LO_BCTYPES.H 
+    matrix.setDomainBC (
+	{AMREX_D_DECL(LinOpBCType::Periodic,
+ 		      LinOpBCType::Periodic,
+		      LinOpBCType::Periodic) },
+	{AMREX_D_DECL(LinOpBCType::Periodic, 
+		      LinOpBCType::Periodic,
+		      LinOpBCType::Periodic)} );
+    
+    matrix.setScalars ( 0.0, -1.0 );    
+    matrix.setBCoeffs ( lev, b_tmp );
+    matrix.setLevelBC ( lev, nullptr );
+    
+    // 
+    // Then setup the solver ----------------------
+    //
+    MLMG  solver(matrix);
+    int   verbose = 2;
+    int   cg_verbose = 0;
+    int   max_iter = 100;
+    int   max_fmg_iter = 0;
+    Real  rel_tol = 1.0e-12;
+    Real  abs_tol = 1.0e-14;
+    Real  avg;
+	
+    solver.setMaxIter (max_iter);
+    solver.setMaxFmgIter (max_fmg_iter);
+    solver.setVerbose (verbose);
+    solver.setCGVerbose (cg_verbose);
 
+    // 
+    // Finally, solve the system
+    //
+    phi[lev] -> setVal (0.0);
+    solver.solve ( GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), rel_tol, abs_tol );
+   
 }
 
 
