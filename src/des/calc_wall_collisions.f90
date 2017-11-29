@@ -1,4 +1,3 @@
-
   subroutine calc_wall_collisions ( particles, np, nrp, tow, fc, dtsolid, &
        flag, fglo, fghi, normal, nlo, nhi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, &
        apz, azlo, azhi, dx) &
@@ -11,13 +10,12 @@
     use discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
     use discretelement, only: des_crossprdct
     use discretelement, only: kn_w, kt_w, mew_w!, dtsolid
-    use error_manager,  only: err_msg, flush_err_msg, init_err_msg
 
     use param        , only: small_number, zero, one
     use particle_mod,  only: particle_t
     use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell, is_single_valued_cell, &
                                         get_neighbor_cells
- 
+
     implicit none
 
     integer, intent(in) :: np, nrp
@@ -76,13 +74,11 @@
     real(c_real) :: mag_overlap_t
     real(c_real) :: distmod_temp
 
-    integer :: debug_id
-
     ! inverse cell size: used to convert positions to cell indices
     ! dx is a vector, why does this work?
     inv_dx = 1.0d0 / dx
 
-    ! fudge factor: a little less than 1 
+    ! fudge factor: a little less than 1
     fudge = one - 1.d-8
 
     ! itterate over particles
@@ -175,7 +171,7 @@
                             ! Particle is interacting with "flat" EB's
                             if ( (i_pt .eq. ii) .and. (j_pt .eq. jj) .and. (k_pt .eq. kk)) then
                                distmod = distmod_temp
-   
+
                                normul(1) = normal(ii,jj,kk,1)
                                normul(2) = normal(ii,jj,kk,2)
                                normul(3) = normal(ii,jj,kk,3)
@@ -186,12 +182,12 @@
                                     integer, dimension(3) :: ind_loop, ind_pt, ind_facets
                                     ! n_facets: number of possible sides of the cell containing an EB edge
                                     ! tmp_facet: current facet/edge being tested
-                                    ! cur_facet: best-guess of facet most likely a particle-EB edge collision 
+                                    ! cur_facet: best-guess of facet most likely a particle-EB edge collision
                                     ! index_cell: cell index (along direction being tested) in loop
                                     ! ind_nb: neighbour cell index (along direction being tested)
                                     ! i_dim: direction (1,2, or 3) being tested
                                     integer :: n_facets, cur_facet, tmp_facet, ind_cell, ind_nb, i_dim, i_facet
-                                    
+
                                     ! variables keeping track of coordinates on EB edges
                                     ! lambda_tmp: current lambda-value being used in testing for edge collions
                                     ! lambda: minimum (closets to bcentre) lambda value satisfying potential collision
@@ -205,7 +201,7 @@
                                     ! assing value to vectors (arrays_
                                     call assign_vector_3d_int ( ind_loop, ii, jj, kk)
                                     call assign_vector_3d_int ( ind_pt, i_pt, j_pt, k_pt)
-                                    
+
                                     ! p_vec is outside cell, determine with cell boundaries might be cut
                                     call determine_cut_facets( ind_pt, ind_loop, ind_facets, n_facets)
 
@@ -215,19 +211,19 @@
                                         ! assign vectorial quantities
                                         call assign_vector_3d_real (p_vec, pt_x, pt_y, pt_z)
                                         call assign_vector_3d_real (b_vec, bcentx, bcenty, bcentz)
-                                        
+
                                         ! v_vec = p_vec - b_vec
                                         call vector_sub_3d_real (v_vec, p_vec, b_vec)
                                         ! find minimal lamba
                                         do i_facet = 1, n_facets
                                             ! current guess
                                             tmp_facet = ind_facets(i_facet)
-                                            
+
                                             ! cell cell indices for current cell (loop index) and neighbour
                                             ! in the current direction (facet) being tested
                                             ind_cell = ind_loop(tmp_facet)
                                             ind_nb = ind_pt(tmp_facet)
-                                            
+
                                             ! the call face being tested depend on if the neighbour cell is to the
                                             ! "left" or the "right" of the current (loop) cell
                                             if (ind_cell .lt. ind_nb) then
@@ -235,13 +231,13 @@
                                             else ! if (ind_cell .gt. ind_nb) then
                                                 f_c = dble(ind_cell)*dx(tmp_facet)
                                             end if
-                                            
+
                                             ! determin the lambda-value corresponding to the interception between the
                                             ! line b_vec->p_vec and the cell face being tested
                                             p_c = b_vec(tmp_facet)
                                             v_c = v_vec(tmp_facet)
                                             lambda_tmp = (f_c - p_c)/v_c
-                                            
+
                                             ! keep minimal lambda-value and correponding direction (facet) index
                                             if (lambda_tmp .lt. lambda) then
                                                 lambda = lambda_tmp
@@ -259,20 +255,20 @@
                                                 c_vec(i_dim) = lambda*v_vec(i_dim) + b_vec(i_dim)
                                             end if
                                         end do
-                                        
+
                                         ! correct collision coordinates
                                         pt_x = c_vec(1)
                                         pt_y = c_vec(2)
                                         pt_z = c_vec(3)
 
                                         ! check if there is still overlap
-                                        distmod_temp = ((xp - pt_x) * ( xp - pt_x ) + & 
+                                        distmod_temp = ((xp - pt_x) * ( xp - pt_x ) + &
                                             (yp - pt_y) * ( yp - pt_y ) + &
                                             (zp - pt_z) * ( zp - pt_z ))
-                                        if (distmod_temp .lt. distmod) then 
+                                        if (distmod_temp .lt. distmod) then
                                             if (distmod_temp .lt. rp*rp) then
                                                 distmod = sqrt(distmod_temp)
-                                                
+
                                                 ! this normal is wrong, but it will do for now...
                                                 normul(1) = -(xp - pt_x) / distmod ! normal(ii,jj,kk,1)
                                                 normul(2) = -(yp - pt_y) / distmod ! normal(ii,jj,kk,2)
@@ -283,7 +279,7 @@
                                     end if
                                 end block
                             end if
-   
+
                          end if ! if dist lt rp
                       end if ! if dist lt distmod
 
@@ -370,7 +366,7 @@
        end if ! if test on (d < radius)
 
     end do ! loop over particles
-   
+
    contains
        subroutine assign_vector_3d_int (vec, v_i, v_j, v_k)
            implicit none
