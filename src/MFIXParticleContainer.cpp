@@ -322,7 +322,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     MultiFab dummy;
     MultiFab normal;
 
-    // Only call the routine for wall collisions if we are not triply periodic
+    // Only call the routine for wall collisions if the box has a wall
     if (ebfactory != NULL)
     {
         dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
@@ -341,17 +341,20 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
             areafrac  =  ebfactory->getAreaFrac();
 
-            BL_PROFILE_VAR("compute_normals()", compute_normals);
-            compute_normals ( lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                             normal[pti].dataPtr(),
-                             normal[pti].loVect(), normal[pti].hiVect(),
-                             (*areafrac[0])[pti].dataPtr(),
-                             (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-                             (*areafrac[1])[pti].dataPtr(),
-                             (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-                             (*areafrac[2])[pti].dataPtr(),
-                             (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
-            BL_PROFILE_VAR_STOP(compute_normals);
+            if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued)
+            {
+               BL_PROFILE_VAR("compute_normals()", compute_normals);
+               compute_normals ( lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                normal[pti].dataPtr(),
+                                normal[pti].loVect(), normal[pti].hiVect(),
+                                (*areafrac[0])[pti].dataPtr(),
+                                (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
+                                (*areafrac[1])[pti].dataPtr(),
+                                (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
+                                (*areafrac[2])[pti].dataPtr(),
+                                (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
+               BL_PROFILE_VAR_STOP(compute_normals);
+            }
         }
         normal.FillBoundary(Geom(0).periodicity());
     }
@@ -415,9 +418,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
             const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
             const auto& flag = sfab.getEBCellFlagFab();
 
-            if (flag.getType(amrex::grow(bx,1)) != FabType::regular)
+            if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
             {
-
                std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
                const MultiCutFab* bndrycent;
 
