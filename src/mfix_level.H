@@ -140,7 +140,6 @@ private:
 				 Real& dt, Real& prev_dt, Real time, Real normg);
 
     // Projection-related methods
-    //void solve_poisson_equation ( MultiFab& b, MultiFab& phi, MultiFab& rhs );
     void solve_poisson_equation ( int lev,
 				  Vector< Vector< std::unique_ptr<MultiFab> > >& b,
 				  Vector< std::unique_ptr<MultiFab> >& phi,
@@ -154,14 +153,12 @@ private:
     
     amrex::Real compute_dt (int lev);
 
-    void mfix_apply_pcm_prediction (int lev, amrex::Real dt);
 
     void mfix_compute_fluid_acceleration (int lev, int order,
 					  Vector< std::unique_ptr<MultiFab> >& u,
 					  Vector< std::unique_ptr<MultiFab> >& v,
 					  Vector< std::unique_ptr<MultiFab> >& w );
     
-    void mfix_apply_pcm_correction (int lev, amrex::Real dt);
 
     void mfix_compute_first_predictor (int lev, amrex::Real dt);
 
