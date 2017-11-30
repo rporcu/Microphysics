@@ -644,6 +644,8 @@ void mfix_level::WriteEBSurface(int lev) {
 
     const Box& bx = mfi.validbox();
 
+    if (flag.getType(bx) == FabType::covered or flag.getType(bx) == FabType::regular) continue;
+
     std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
     const MultiCutFab* bndrycent;
 

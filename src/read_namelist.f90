@@ -154,7 +154,6 @@ MODULE read_namelist_module
       DO II=1, argc
          line_string = argv(ii)
          line_len = len(line_string)
-         write(*,*) 'string:',line_string, line_len
          CALL SET_KEYWORD(ERROR)
          IF (ERROR) THEN
             CALL DEPRECATED_OR_UNKNOWN(LINE_NO, LINE_STRING(1:LINE_LEN))

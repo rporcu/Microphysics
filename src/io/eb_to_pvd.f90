@@ -48,7 +48,7 @@ contains
   real(amrex_real) :: n0(3), p
   real(amrex_real) :: vertex(8,3), alpha(12), apoints(12,3)
 
-  integer :: i, j, k, lc1, lc2
+  integer :: i, j, k, lc1, lc2, count
 
   real(amrex_real), parameter :: ihat(3) = (/1.0d0, 0.0d0, 0.0d0/)
   real(amrex_real), parameter :: jhat(3) = (/0.0d0, 1.0d0, 0.0d0/)
@@ -135,39 +135,44 @@ contains
                     alpha( 8) = (p - dot_product(n0,vertex(3,:)))/(n0(3)*dx(3))
                  endif
 
-                 call grow_connectivity(nc, connectivity)
-                 connectivity(nc,0) = 0
-
-                 ! calculate intersection points.
-                 apoints( 1,:) = vertex(1,:) + ihat*dx(1)*alpha( 1)
-                 apoints( 2,:) = vertex(2,:) + jhat*dx(2)*alpha( 2)
-                 apoints( 3,:) = vertex(3,:) + ihat*dx(1)*alpha( 3)
-                 apoints( 4,:) = vertex(1,:) + jhat*dx(2)*alpha( 4)
-                 apoints( 5,:) = vertex(1,:) + khat*dx(3)*alpha( 5)
-                 apoints( 6,:) = vertex(2,:) + khat*dx(3)*alpha( 6)
-                 apoints( 7,:) = vertex(4,:) + khat*dx(3)*alpha( 7)
-                 apoints( 8,:) = vertex(3,:) + khat*dx(3)*alpha( 8)
-                 apoints( 9,:) = vertex(5,:) + ihat*dx(1)*alpha( 9)
-                 apoints(10,:) = vertex(6,:) + jhat*dx(2)*alpha(10)
-                 apoints(11,:) = vertex(7,:) + ihat*dx(1)*alpha(11)
-                 apoints(12,:) = vertex(5,:) + jhat*dx(2)*alpha(12)
-
-                 ! store intersections with grid cell alpha in [0,1]
+                 count = 0
                  do lc1=1,12
-                    if(intersects(alpha(lc1))) then
-                       call grow_points(np, points)
-                       points(np,:) = apoints(lc1,:)
-                       lc2 = connectivity(nc,0) + 1
-                       connectivity(nc,0) = lc2
-                       connectivity(nc,lc2) = np
-                    endif
+                    if(intersects(alpha(lc1))) count = count + 1
                  enddo
 
-                 ! reorder points for a convex polygon
-                 if(connectivity(nc,0) >= 3) then
+                 if(count >= 3 .and. count <= 6) then
+
+                    call grow_connectivity(nc, connectivity)
+                    connectivity(nc,0) = 0
+
+                    ! calculate intersection points.
+                    apoints( 1,:) = vertex(1,:) + ihat*dx(1)*alpha( 1)
+                    apoints( 2,:) = vertex(2,:) + jhat*dx(2)*alpha( 2)
+                    apoints( 3,:) = vertex(3,:) + ihat*dx(1)*alpha( 3)
+                    apoints( 4,:) = vertex(1,:) + jhat*dx(2)*alpha( 4)
+                    apoints( 5,:) = vertex(1,:) + khat*dx(3)*alpha( 5)
+                    apoints( 6,:) = vertex(2,:) + khat*dx(3)*alpha( 6)
+                    apoints( 7,:) = vertex(4,:) + khat*dx(3)*alpha( 7)
+                    apoints( 8,:) = vertex(3,:) + khat*dx(3)*alpha( 8)
+                    apoints( 9,:) = vertex(5,:) + ihat*dx(1)*alpha( 9)
+                    apoints(10,:) = vertex(6,:) + jhat*dx(2)*alpha(10)
+                    apoints(11,:) = vertex(7,:) + ihat*dx(1)*alpha(11)
+                    apoints(12,:) = vertex(5,:) + jhat*dx(2)*alpha(12)
+
+                    ! store intersections with grid cell alpha in [0,1]
+                    do lc1=1,12
+                       if(intersects(alpha(lc1))) then
+                          call grow_points(np, points)
+                          points(np,:) = apoints(lc1,:)
+                          lc2 = connectivity(nc,0) + 1
+                          connectivity(nc,0) = lc2
+                          connectivity(nc,lc2) = np
+                       endif
+                    enddo
+
+                    ! reorder points for a convex polygon
                     call reorder_polygon(points, connectivity(nc,:), n0, centroid)
-                 else
-                    nc = nc -1
+
                  endif
 
               endif
