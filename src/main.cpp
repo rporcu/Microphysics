@@ -123,11 +123,6 @@ int main (int argc, char* argv[])
 
     my_mfix.Init(lev,dt,time);
 
-    my_mfix.make_eb_geometry(lev);
-
-    // Note this must be called after make_eb_geometry so that we know whether there are EB boundaries or not
-    my_mfix.InitIOData();
-
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
@@ -151,6 +146,10 @@ int main (int argc, char* argv[])
     // This checks if we want to regrid using the KDTree approach
     //    (only if load_balance_type = "KDTree")
     my_mfix.Regrid(lev,nstep,dual_grid);
+
+    // We move this to after restart and/or regrid so we make the EB data structures with the correct 
+    //    BoxArray and DistributionMapping
+    my_mfix.make_eb_geometry(lev);
 
     my_mfix.PostInit( lev, dt, time, nstep, restart_flag );
 
