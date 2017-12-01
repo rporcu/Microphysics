@@ -1,4 +1,3 @@
-
   subroutine calc_wall_collisions ( particles, np, nrp, tow, fc, dtsolid, &
        flag, fglo, fghi, normal, nlo, nhi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, &
        apz, azlo, azhi, dx) &
@@ -11,13 +10,12 @@
     use discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
     use discretelement, only: des_crossprdct
     use discretelement, only: kn_w, kt_w, mew_w!, dtsolid
-    use error_manager,  only: err_msg, flush_err_msg, init_err_msg
 
     use param        , only: small_number, zero, one
     use particle_mod,  only: particle_t
     use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell, is_single_valued_cell, &
                                         get_neighbor_cells
- 
+
     implicit none
 
     integer, intent(in) :: np, nrp
@@ -63,10 +61,11 @@
     real(c_real) :: vrel_t(3), cur_distmod
     real(c_real) :: ft(3), fn(3), overlap_t(3)
 
+    ! worst-case: overlap with 27 neighbours
     integer                        :: n_collisions, i_collision
     integer, dimension(3,3,3)      :: central_collision, edge_collision
-    real(c_real), dimension(27)    :: distmod ! worst-case: overlap with 27 neighbours
-    real(c_real), dimension(3, 27) :: collision_norms, collision_points ! worst-case: overlap with 27 neighbours
+    real(c_real), dimension(27)    :: distmod 
+    real(c_real), dimension(3, 27) :: collision_norms, collision_points 
     real(c_real), dimension(3)     :: r_vec, eb_normal, eb_p0
 
     integer :: PHASELL
@@ -82,13 +81,11 @@
     real(c_real) :: mag_overlap_t
     real(c_real) :: distmod_temp
 
-    integer :: debug_id
-
     ! inverse cell size: used to convert positions to cell indices
     ! dx is a vector, why does this work?
     inv_dx = 1.0d0 / dx
 
-    ! fudge factor: a little less than 1 
+    ! fudge factor: a little less than 1
     fudge = one - 1.d-8
 
     ! itterate over particles
@@ -157,7 +154,6 @@
                                            (zp - bcentz) * (-normal(ii, jj, kk, 3)) )
 
                     if (distmod_temp .lt. rp) then
-
                         ! Point where the normal from the particle to the plane intersects the plane
                         ! ->Note: slightly less than the full normal avoiding float precision errors
                         pt_x = xp + normal(ii, jj, kk, 1) * distmod_temp * fudge

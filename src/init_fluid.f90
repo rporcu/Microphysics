@@ -172,9 +172,9 @@ module init_fluid_module
                jend   = min(uhi(2), j_n)
                kend   = min(uhi(3), k_t)
                u_g(istart:iend,jstart:jend,kstart:kend) = ugx
-               if (ulo(1).lt.domlo(1)) &
-                  u_g(ulo(1):iend-1,jstart:jend,kstart:kend) = ugx
-               if (uhi(1).gt.domhi(1)) &
+               if (ulo(1).lt.domlo(1) .and. domlo(1) == istart) &
+                  u_g(ulo(1):istart-1,jstart:jend,kstart:kend) = ugx
+               if (uhi(1).gt.domhi(1) .and. domhi(1) == iend  ) &
                   u_g(iend+1:uhi(1)  ,jstart:jend,kstart:kend) = ugx
             end if
 
@@ -186,10 +186,9 @@ module init_fluid_module
                jend   = min(vhi(2), j_n)
                kend   = min(vhi(3), k_t)
                v_g(istart:iend,jstart:jend,kstart:kend) = vgx
-               if (vlo(2).lt.domlo(2)) then
-                  v_g(istart:iend,vlo(2):jend-1,kstart:kend) = vgx
-               endif
-               if (vhi(2).gt.domhi(2)) &
+               if (vlo(2).lt.domlo(2) .and. domlo(2) == jstart) &
+                  v_g(istart:iend,vlo(2):jstart-1,kstart:kend) = vgx
+               if (vhi(2).gt.domhi(2) .and. domhi(2) == jend  ) &
                   v_g(istart:iend,jend+1:vhi(2)  ,kstart:kend) = vgx
             end if
 
@@ -201,9 +200,9 @@ module init_fluid_module
                jend   = min(whi(2), j_n)
                kend   = min(whi(3), k_t)
                w_g(istart:iend,jstart:jend,kstart:kend) = wgx
-               if (wlo(3).lt.domlo(3)) &
-                  w_g(istart:iend,jstart:jend,wlo(3):kend-1) = wgx
-               if (whi(3).gt.domhi(3)) &
+               if (wlo(3).lt.domlo(3) .and. domlo(3) == kstart) &
+                  w_g(istart:iend,jstart:jend,wlo(3):kstart-1) = wgx
+               if (whi(3).gt.domhi(3) .and. domhi(3) == kend  ) &
                   w_g(istart:iend,jstart:jend,kend+1:whi(3)  ) = wgx
             end if
 
