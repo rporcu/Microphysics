@@ -122,6 +122,8 @@ protected:
     void AllocateArrays(int lev);
     void RegridArrays(int lev, BoxArray& new_grids, DistributionMapping& new_dmap);
 
+    void MakeBCArrays();
+
 private:
 
     void check_data (int lev);

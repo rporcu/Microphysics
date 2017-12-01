@@ -32,7 +32,7 @@
     integer, dimension(3), intent(in) :: nlo,nhi
 
     integer,      intent(in) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
-    real(c_real), intent(in) :: bcent  (blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
+    real(c_real), intent(in) :: bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
     real(c_real), intent(in) :: normal(nlo(1):nhi(1),nlo(2):nhi(2),nlo(3):nhi(3),3)
     real(c_real), intent(in) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
     real(c_real), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
@@ -58,8 +58,14 @@
     real(c_real) :: v_rel_trans_norm
 
     ! local normal and tangential forces
-    real(c_real) :: vrel_t(3), distmod
+    real(c_real) :: vrel_t(3), cur_distmod
     real(c_real) :: ft(3), fn(3), overlap_t(3)
+
+    ! worst-case: overlap with 27 neighbours
+    integer                        :: n_collisions, i_collision
+    real(c_real), dimension(27)    :: distmod 
+    real(c_real), dimension(3, 27) :: collision_norms
+    real(c_real), dimension(3)     :: c_vec
 
     integer :: PHASELL
 
@@ -75,7 +81,7 @@
     real(c_real) :: distmod_temp
 
     ! inverse cell size: used to convert positions to cell indices
-    ! dx is a vector, why does this work?
+    !   -> dx is a vector, fortran is amazing!
     inv_dx = 1.0d0 / dx
 
     ! fudge factor: a little less than 1
@@ -104,14 +110,17 @@
        j = floor(ly)
        k = floor(lz)
 
-       ! variable storing EB-particle overlap distance
-       ! is there a FORTRAN MAX_DBL?
-       distmod = 1.e20 ! HACK: larger number
-
        ! ignore disconnected cells
-       ! is this really necessary?
        ! -> one reason for this is the get accurate wall normals...
        call get_neighbor_cells(flag(i,j,k),nbr)
+       
+       ! ******************************************************************** !
+       !                                                                      !
+       ! BEGIN Enumerating Collisons with embedded boundary                   !
+       !                                                                      !
+       ! ******************************************************************** !
+
+       n_collisions = 0
 
        ! 27-point stencil: immediate neighbours in 3-D cubic grid
        klo = k-1
@@ -122,184 +131,111 @@
        ihi = i+1
 
        ! ingore stencil element that couldn't possibly be interacting with particle
-       ! if ( (xp-i*dx(1)) .gt. rp) ilo = i
-       ! if ( (yp-j*dx(2)) .gt. rp) jlo = j
-       ! if ( (zp-k*dx(3)) .gt. rp) klo = k
+       if ( (xp-i*dx(1)) .gt. rp) ilo = i
+       if ( (yp-j*dx(2)) .gt. rp) jlo = j
+       if ( (zp-k*dx(3)) .gt. rp) klo = k
 
-       ! if ( ((i+1)*dx(1)-xp) .gt. rp) ihi = i
-       ! if ( ((j+1)*dx(2)-yp) .gt. rp) jhi = j
-       ! if ( ((k+1)*dx(3)-zp) .gt. rp) khi = k
+       if ( ((i+1)*dx(1)-xp) .gt. rp) ihi = i
+       if ( ((j+1)*dx(2)-yp) .gt. rp) jhi = j
+       if ( ((k+1)*dx(3)-zp) .gt. rp) khi = k
 
-       ! itterate over stencil
        do kk = klo, khi
           do jj = jlo, jhi
              do ii = ilo, ihi
+                ! only consider cells that contain EB's
+                if ( (nbr(ii-i, jj-j, kk-k) .eq. 1) .and. ( .not. is_regular_cell(flag(ii, jj, kk))) ) then
+                    ! convert bcent to global coordinate system centered at plo
+                    bcentx = bcent(ii, jj, kk, 1) * dx(1) + (dble(ii) + 0.5d0) * dx(1)
+                    bcenty = bcent(ii, jj, kk, 2) * dx(2) + (dble(jj) + 0.5d0) * dx(2)
+                    bcentz = bcent(ii, jj, kk, 3) * dx(3) + (dble(kk) + 0.5d0) * dx(3)
 
-                ! if (nbr(ii-i,jj-j,kk-k) .eq. 1) then
-                if (.true.) then
+                    ! Distance to boundary
+                    distmod_temp = dabs( (xp - bcentx) * (-normal(ii, jj, kk, 1)) + &
+                                           (yp - bcenty) * (-normal(ii, jj, kk, 2)) + &
+                                           (zp - bcentz) * (-normal(ii, jj, kk, 3)) )
 
-                   ! if (is_single_valued_cell(flag(ii,jj,kk))) then
-                   ! only consider cells that contain EB's
-                   if ( .not. is_regular_cell(flag(ii,jj,kk))) then
+                    if (distmod_temp .lt. rp) then
+                        ! Point where the normal from the particle to the plane intersects the plane
+                        !  -> Note: slightly less than the full normal avoiding float precision errors
+                        pt_x = xp + normal(ii, jj, kk, 1) * distmod_temp * fudge
+                        pt_y = yp + normal(ii, jj, kk, 2) * distmod_temp * fudge
+                        pt_z = zp + normal(ii, jj, kk, 3) * distmod_temp * fudge
 
-                      ! convert bcent to global coordinate system centered at plo
-                      bcentx = bcent(ii, jj, kk, 1)*dx(1) + (dble(ii) + 0.5d0)*dx(1)
-                      bcenty = bcent(ii, jj, kk, 2)*dx(2) + (dble(jj) + 0.5d0)*dx(2)
-                      bcentz = bcent(ii, jj, kk, 3)*dx(3) + (dble(kk) + 0.5d0)*dx(3)
+                        ! Cell that point is in
+                        i_pt = floor(pt_x * inv_dx(1))
+                        j_pt = floor(pt_y * inv_dx(2))
+                        k_pt = floor(pt_z * inv_dx(3))
 
-                      ! Distance to boundary
-                      distmod_temp = dabs( (xp - bcentx) * (-normal(ii,jj,kk,1)) + &
-                                           (yp - bcenty) * (-normal(ii,jj,kk,2)) + &
-                                           (zp - bcentz) * (-normal(ii,jj,kk,3)) )
+                        ! Check if point-of-collision is in current cell, that's great!
+                        !  -> particle is interacting with "flat" EB's
+                        if ( (i_pt .eq. ii) .and. (j_pt .eq. jj) .and. (k_pt .eq. kk)) then
+                            ! register "head-on" collision:
+                            n_collisions = n_collisions + 1
+                            distmod(n_collisions) = distmod_temp
+                            collision_norms(:, n_collisions) = normal(ii, jj, kk, :)
+                        
+                        else if ( & ! only consider EB-edges if not colliding with EB-face already 
+                            ( abs( normal(ii, jj, kk, 1) - normal(i_pt, j_pt, k_pt, 1) ) .gt. 1.d-8 ) .or. &
+                            ( abs( normal(ii, jj, kk, 2) - normal(i_pt, j_pt, k_pt, 2) ) .gt. 1.d-8 ) .or. &
+                            ( abs( normal(ii, jj, kk, 3) - normal(i_pt, j_pt, k_pt, 3) ) .gt. 1.d-8 )      &
+                            ) then ! EB-facet has different normal => collide with EB-edge
+                            
+                            ! Particle-EB-plain intercept is outside cell
+                            !  -> determine nearest point on EB boundary to particle (candidate for collision)
+                            !  -> c_vec will be on the "edge" of the EB boundary
+                            c_vec = facets_nearest_pt (                                 &
+                                    (/ i_pt, j_pt, k_pt /), (/ ii, jj, kk /),           &
+                                    (/ xp, yp, zp /),                                   &
+                                    normal(ii, jj, kk, :), (/ bcentx, bcenty, bcentz /) &
+                                )
 
-                      ! Only keep the closest one
-                      if (distmod_temp .lt. distmod) then
-                         if (distmod_temp .lt. rp) then
+                            ! correct potential collision coordinates
+                            pt_x = c_vec(1)
+                            pt_y = c_vec(2)
+                            pt_z = c_vec(3)
 
-                            ! Point where the normal from the particle to the plane intersects the plane
-                            !   Note we go slightly less than the full normal in order to avoid precision problems
-                            pt_x = xp + normal(ii,jj,kk,1) * distmod_temp * fudge
-                            pt_y = yp + normal(ii,jj,kk,2) * distmod_temp * fudge
-                            pt_z = zp + normal(ii,jj,kk,3) * distmod_temp * fudge
+                            ! check if there is still overlap
+                            distmod_temp = ((xp - pt_x) * ( xp - pt_x ) + & 
+                                    (yp - pt_y) * ( yp - pt_y ) + &
+                                    (zp - pt_z) * ( zp - pt_z ))
 
-                            ! Cell that point is in
-                            i_pt = floor(pt_x*inv_dx(1))
-                            j_pt = floor(pt_y*inv_dx(2))
-                            k_pt = floor(pt_z*inv_dx(3))
-
-                            ! check if point-of-collision is in current cell, that's great!
-                            ! Particle is interacting with "flat" EB's
-                            if ( (i_pt .eq. ii) .and. (j_pt .eq. jj) .and. (k_pt .eq. kk)) then
-                               distmod = distmod_temp
-
-                               normul(1) = normal(ii,jj,kk,1)
-                               normul(2) = normal(ii,jj,kk,2)
-                               normul(3) = normal(ii,jj,kk,3)
-                            else ! NOTE: particle can still interact with the edge (coner) of neighbour EB's
-                                ! this should be moved to a subroutine
-                                block
-                                    ! variables keepint track of edges/corner of neighbour EB's
-                                    integer, dimension(3) :: ind_loop, ind_pt, ind_facets
-                                    ! n_facets: number of possible sides of the cell containing an EB edge
-                                    ! tmp_facet: current facet/edge being tested
-                                    ! cur_facet: best-guess of facet most likely a particle-EB edge collision
-                                    ! index_cell: cell index (along direction being tested) in loop
-                                    ! ind_nb: neighbour cell index (along direction being tested)
-                                    ! i_dim: direction (1,2, or 3) being tested
-                                    integer :: n_facets, cur_facet, tmp_facet, ind_cell, ind_nb, i_dim, i_facet
-
-                                    ! variables keeping track of coordinates on EB edges
-                                    ! lambda_tmp: current lambda-value being used in testing for edge collions
-                                    ! lambda: minimum (closets to bcentre) lambda value satisfying potential collision
-                                    real(c_real) :: v_c, f_c, p_c, lambda, lambda_tmp
-                                    ! b_vec: vector representation of EB-facet centre in cell
-                                    ! p_vec: vector representation of EB-plain/collision point
-                                    ! v_vec: vector from b_vec to p_vec
-                                    ! c_vec: closest point (to particle) on line from b_vec to p_vec still in cell
-                                    real(c_real), dimension(3) :: p_vec, b_vec, v_vec, c_vec
-
-                                    ! assing value to vectors (arrays_
-                                    call assign_vector_3d_int ( ind_loop, ii, jj, kk)
-                                    call assign_vector_3d_int ( ind_pt, i_pt, j_pt, k_pt)
-
-                                    ! p_vec is outside cell, determine with cell boundaries might be cut
-                                    call determine_cut_facets( ind_pt, ind_loop, ind_facets, n_facets)
-
-                                    ! there could be several candidates, itterate picking the smallest lambda
-                                    lambda = 1.e20 ! HACK: giant number!
-                                    if (n_facets .gt. 0) then
-                                        ! assign vectorial quantities
-                                        call assign_vector_3d_real (p_vec, pt_x, pt_y, pt_z)
-                                        call assign_vector_3d_real (b_vec, bcentx, bcenty, bcentz)
-
-                                        ! v_vec = p_vec - b_vec
-                                        call vector_sub_3d_real (v_vec, p_vec, b_vec)
-                                        ! find minimal lamba
-                                        do i_facet = 1, n_facets
-                                            ! current guess
-                                            tmp_facet = ind_facets(i_facet)
-
-                                            ! cell cell indices for current cell (loop index) and neighbour
-                                            ! in the current direction (facet) being tested
-                                            ind_cell = ind_loop(tmp_facet)
-                                            ind_nb = ind_pt(tmp_facet)
-
-                                            ! the call face being tested depend on if the neighbour cell is to the
-                                            ! "left" or the "right" of the current (loop) cell
-                                            if (ind_cell .lt. ind_nb) then
-                                                f_c = ( dble(ind_cell) + 1.0 )*dx(tmp_facet)
-                                            else ! if (ind_cell .gt. ind_nb) then
-                                                f_c = dble(ind_cell)*dx(tmp_facet)
-                                            end if
-
-                                            ! determin the lambda-value corresponding to the interception between the
-                                            ! line b_vec->p_vec and the cell face being tested
-                                            p_c = b_vec(tmp_facet)
-                                            v_c = v_vec(tmp_facet)
-                                            lambda_tmp = (f_c - p_c)/v_c
-
-                                            ! keep minimal lambda-value and correponding direction (facet) index
-                                            if (lambda_tmp .lt. lambda) then
-                                                lambda = lambda_tmp
-                                                cur_facet = tmp_facet
-                                            end if
-                                        end do
-
-                                        ! now compute the coordinate of this interception point
-                                        ! this will be closest to bcentre and is guaranteed to be int the same cell
-                                        ! that "owns" the EB-facet.
-                                        do i_dim = 1, 3
-                                            if (i_dim .eq. cur_facet) then
-                                                c_vec(i_dim) = f_c
-                                            else
-                                                c_vec(i_dim) = lambda*v_vec(i_dim) + b_vec(i_dim)
-                                            end if
-                                        end do
-
-                                        ! correct collision coordinates
-                                        pt_x = c_vec(1)
-                                        pt_y = c_vec(2)
-                                        pt_z = c_vec(3)
-
-                                        ! check if there is still overlap
-                                        distmod_temp = ((xp - pt_x) * ( xp - pt_x ) + &
-                                            (yp - pt_y) * ( yp - pt_y ) + &
-                                            (zp - pt_z) * ( zp - pt_z ))
-                                        if (distmod_temp .lt. distmod) then
-                                            if (distmod_temp .lt. rp*rp) then
-                                                distmod = sqrt(distmod_temp)
-
-                                                ! this normal is wrong, but it will do for now...
-                                                normul(1) = -(xp - pt_x) / distmod ! normal(ii,jj,kk,1)
-                                                normul(2) = -(yp - pt_y) / distmod ! normal(ii,jj,kk,2)
-                                                normul(3) = -(zp - pt_z) / distmod ! normal(ii,jj,kk,3)
-
-                                            end if
-                                        end if
-                                    end if
-                                end block
+                            if (distmod_temp .lt. rp * rp) then
+                                ! The nearest point on EB edge overlaps with particle
+                                !  => Collison still occurs! => Register collision with EB edge
+                                distmod_temp = sqrt(distmod_temp)
+                                n_collisions = n_collisions + 1
+                                distmod(n_collisions) = distmod_temp
+                                collision_norms(:, n_collisions) = (/ &
+                                        -(xp - pt_x) / distmod_temp,      &
+                                        -(yp - pt_y) / distmod_temp,      &
+                                        -(zp - pt_z) / distmod_temp       &
+                                    /)
                             end if
-
-                         end if ! if dist lt rp
-                      end if ! if dist lt distmod
-
-                   end if ! if single_valued
-
-                end if ! if nbr = 1
-
+                        end if
+                    end if
+                end if
              end do
           end do
        end do
 
-       if (distmod .lt. p%radius) then
+       ! ******************************************************************** !
+       !                                                                      !
+       ! APPLY Enumerated Collisons to particles                              !
+       !                                                                      !
+       ! ******************************************************************** !
+
+       do i_collision = 1, n_collisions
+          
+          cur_distmod = distmod(i_collision)
+          normul(:) = collision_norms(:, i_collision)
 
           ! Calculate the particle/wall overlap.
-          overlap_n = rp - distmod
+          overlap_n = rp - cur_distmod
 
           ! *****************************************************************************
           ! Calculate the translational relative velocity
 
-          call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normul, distmod, particles)
+          call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normul, cur_distmod, particles)
 
           ! subroutine cfrelvel_wall (ll, vrn, vrt, norm, dist, particles )
           ! *****************************************************************************
@@ -361,76 +297,257 @@
           ! print *,'Vertical dist / force ',distmod, fn(1), fc(ll,1)
 
           ! Add the torque force to the total torque acting on the particle.
-          TOW(LL,:) = TOW(LL,:) + distmod*DES_CROSSPRDCT(normul(:),FT)
+          TOW(LL,:) = TOW(LL,:) + cur_distmod*DES_CROSSPRDCT(normul(:),FT)
 
-       end if ! if test on (d < radius)
-
+       !end if ! if test on (d < radius)
+       end do
     end do ! loop over particles
 
-   contains
-       subroutine assign_vector_3d_int (vec, v_i, v_j, v_k)
-           implicit none
+contains
 
-           integer, dimension(3), intent(  out) :: vec
-           integer,               intent(in   ) :: v_i, v_j, v_k
+    pure function dot_3d_real (v1, v2)
+        implicit none
+        
+        real(c_real)                           :: dot_3d_real
+        real(c_real), dimension(3), intent(in) :: v1, v2
 
-           vec(1) = v_i
-           vec(2) = v_j
-           vec(3) = v_k
+        dot_3d_real = v1(1)*v2(1) + v1(2)*v2(2) + v1(3)*v2(3)
 
-       end subroutine assign_vector_3d_int
+    end function dot_3d_real
 
-       subroutine assign_vector_3d_real (vec, v_i, v_j, v_k)
-           implicit none
+    pure function cross_3d_real (v1, v2)
+        implicit none
 
-           real(c_real), dimension(3), intent(  out) :: vec
-           real(c_real),               intent(in   ) :: v_i, v_j, v_k
+        real(c_real), dimension(3)             :: cross_3d_real
+        real(c_real), dimension(3), intent(in) :: v1, v2
 
-           vec(1) = v_i
-           vec(2) = v_j
-           vec(3) = v_k
+        cross_3d_real(1) = v1(2)*v2(3) - v1(3)*v2(2)
+        cross_3d_real(2) = v1(3)*v2(1) - v1(1)*v2(3)
+        cross_3d_real(3) = v1(1)*v2(2) - v1(2)*v2(1)
 
-       end subroutine assign_vector_3d_real
+    end function cross_3d_real
 
-       subroutine vector_sub_3d_real (res, a, b)
-           implicit none
+    pure function pt_in_box (pt, id, id_ignore)
+        implicit none
 
-           real(c_real), dimension(3), intent(  out) :: res
-           real(c_real), dimension(3), intent(in   ) :: a
-           real(c_real), dimension(3), intent(in   ) :: b
+        logical                                :: pt_in_box
+        real(c_real), dimension(3), intent(in) :: pt
+        integer,      dimension(3), intent(in) :: id
+        integer,                    intent(in) :: id_ignore
 
-           res(1) = a(1) - b(1)
-           res(2) = a(2) - b(2)
-           res(3) = a(3) - b(3)
+        real(c_real), dimension(3) :: box_max, box_min
+        integer                    :: i
 
-       end subroutine vector_sub_3d_real
+        box_min(:) = id(:) * dx(:)
+        box_max(:) = (id(:) + 1.) * dx(:)
 
-       subroutine determine_cut_facets ( ind_pt, ind_loop, ind_facets, n_facets )
-           implicit none
+        pt_in_box = .true.
 
-           integer, dimension(1:3), intent(in   ) :: ind_pt
-           integer, dimension(1:3), intent(in   ) :: ind_loop
-           integer, dimension(1:3), intent(  out) :: ind_facets
-           integer,                 intent(  out) :: n_facets
+        do i = 1, 3
+            if (.not. (i .eq. id_ignore) ) then
+                if ( pt(i) .lt. box_min(i) ) then
+                    pt_in_box = .false.
+                    exit
+                end if
 
-           n_facets = 0
+                if ( pt(i) .gt. box_max(i) ) then
+                    pt_in_box = .false.
+                    exit
+                end if
+            end if
+        end do
 
-           if ( .not. (ind_pt(1) .eq. ind_loop(1)) ) then
-               n_facets = n_facets + 1
-               ind_facets(n_facets) = 1
-           end if
+    end function pt_in_box
 
-           if ( .not. (ind_pt(2) .eq. ind_loop(2)) ) then
-               n_facets = n_facets + 1
-               ind_facets(n_facets) = 2
-           end if
+    pure subroutine calc_facet_edge (p0, v, h1, h2, n1, n2)
+        implicit none
 
-           if ( .not. (ind_pt(3) .eq. ind_loop(3)) ) then
-               n_facets = n_facets + 1
-               ind_facets(n_facets) = 3
-           end if
+        real(c_real), dimension(3), intent(  out) :: p0, v
+        real(c_real), dimension(3), intent(in   ) :: n1, n2
+        real(c_real),               intent(in   ) :: h1, h2
 
-       end subroutine determine_cut_facets
+        real(c_real) :: c1, c2, c_dp, c_norm
+
+        c_dp = dot_3d_real(n1, n2)
+        c_norm = 1 - c_dp * c_dp
+
+        c1 = ( h1 - h2 * c_dp ) / c_norm
+        c2 = ( h2 - h1 * c_dp ) / c_norm
+
+        p0(:) = c1 * n1(:) + c2 * n2(:)
+        v = cross_3d_real(n1, n2)
+
+    end subroutine calc_facet_edge
+
+    pure subroutine lines_nearest_pt (lambda_min, nearest_pt, p0, v, pt)
+        implicit none
+
+        real(c_real),               intent(  out) :: lambda_min
+        real(c_real), dimension(3), intent(  out) :: nearest_pt
+        real(c_real), dimension(3), intent(in   ) :: p0, v, pt
+
+        real(c_real), dimension(3) :: c
+
+        c(:) = p0(:) - pt(:)
+        lambda_min = - dot_3d_real(v, c) / dot_3d_real(v, v)
+
+        nearest_pt(:) = p0(:) + lambda_min*v(:)
+
+    end subroutine lines_nearest_pt
+
+    pure subroutine swap_reals(a, b)
+        implicit none
+            
+        real(c_real), intent(inout) :: a, b
+        real(c_real)                :: bucket
+        
+        bucket = a
+        a      = b
+        b      = bucket
+
+    end subroutine swap_reals
+
+    pure subroutine lambda_bounds(lambda_min, lambda_max, id_cell, p0, v)
+        implicit none 
+
+        real(c_real),               intent(  out) :: lambda_min, lambda_max
+        integer,      dimension(3), intent(in   ) :: id_cell
+        real(c_real), dimension(3), intent(in   ) :: p0, v
+
+        real(c_real) :: cx_lo, cy_lo, cz_lo, cx_hi, cy_hi, cz_hi!, c_bucket
+
+        cx_lo = -huge(cx_lo)
+        cy_lo = -huge(cy_lo)
+        cz_lo = -huge(cz_lo)
+
+        cx_hi = huge(cx_hi)
+        cy_hi = huge(cy_hi)
+        cz_hi = huge(cz_hi)
+
+        if ( abs(v(1)) .gt. 1.d-8 ) then
+            cx_lo = -( p0(1) - dble(id_cell(1)) * dx(1) ) / v(1)
+            cx_hi = -( p0(1) - ( dble(id_cell(1)) + 1. ) * dx(1) ) / v(1)
+
+            if ( v(1) .lt. 0. ) then
+                call swap_reals(cx_lo, cx_hi)
+            end if
+        end if
+
+        if ( abs(v(2)) .gt. 1.d-8 ) then
+            cy_lo = -( p0(2) - dble(id_cell(2)) * dx(2) ) / v(2)
+            cy_hi = -( p0(2) - ( dble(id_cell(2)) + 1. ) * dx(2) ) / v(2)
+
+            if ( v(2) .lt. 0. ) then
+                call swap_reals(cy_lo, cy_hi)
+            end if
+        end if
+
+        if ( abs(v(3)) .gt. 1.d-8 )  then
+            cz_lo = -( p0(3) - dble(id_cell(3)) * dx(3) ) / v(3)
+            cz_hi = -( p0(3) - ( dble(id_cell(3)) + 1. ) * dx(3) ) / v(3)
+
+            if ( v(3) .lt. 0. ) then 
+                call swap_reals(cz_lo, cz_hi)
+            end if
+        endif
+
+        lambda_min = max(cx_lo, cy_lo, cz_lo)
+        lambda_max = min(cx_hi, cy_hi, cz_hi)
+        
+        ! write(*,*) cx_lo, cy_lo, cz_lo
+        ! write(*,*) cx_hi, cy_hi, cz_hi
+        ! write(*,*) lambda_min, lambda_max
+        ! write(*,*) v
+
+    end subroutine lambda_bounds
+
+    pure function facets_nearest_pt ( ind_pt, ind_loop, r_vec, eb_normal, eb_p0)
+        implicit none
+        
+        real(c_real), dimension(3)             :: facets_nearest_pt
+        integer,      dimension(3), intent(in) :: ind_pt, ind_loop
+        real(c_real), dimension(3), intent(in) :: r_vec, eb_normal, eb_p0
+        
+        integer,      dimension(3) :: ind_facets
+        integer                    :: n_facets, i_facet, tmp_facet, ind_cell, ind_nb
+        real(c_real), dimension(3) :: c_vec, c_vec_tmp, rc_vec
+        real(c_real), dimension(3) :: facet_normal, facet_p0, edge_p0, edge_v
+        real(c_real)               :: min_dist, min_dist_tmp, eb_h, facet_h
+
+        ! variables keeping track of coordinates on EB edges
+        ! lambda_tmp: current lambda-value being used in testing for edge collions
+        ! lambda: minimum (closets to bcentre) lambda value satisfying potential collision
+        real(c_real) :: f_c, lambda_tmp, lambda_max, lambda_min
+
+        n_facets = 0
+        
+        if ( .not. (ind_pt(1) .eq. ind_loop(1)) ) then
+            n_facets = n_facets + 1
+            ind_facets(n_facets) = 1
+        end if
+        
+        if ( .not. (ind_pt(2) .eq. ind_loop(2)) ) then
+            n_facets = n_facets + 1
+            ind_facets(n_facets) = 2
+        end if
+        
+        if ( .not. (ind_pt(3) .eq. ind_loop(3)) ) then
+            n_facets = n_facets + 1
+            ind_facets(n_facets) = 3
+        end if
+
+        eb_h = dot_3d_real(eb_normal, eb_p0)
+
+        min_dist = huge(min_dist)
+        do i_facet = 1, n_facets
+            tmp_facet = ind_facets(i_facet)
+
+            facet_normal = (/ 0., 0., 0. /)
+            facet_normal(tmp_facet) = 1.  ! wheter facing inwards or outwards is not important here
+
+            ind_cell = ind_loop(tmp_facet)
+            ind_nb = ind_pt(tmp_facet)
+
+            if (ind_cell .lt. ind_nb) then
+                f_c = ( dble(ind_cell) + 1.0 ) * dx(tmp_facet)
+            else ! if (ind_cell .gt. ind_nb) then
+                f_c = dble(ind_cell) * dx(tmp_facet)
+            end if
+            
+            facet_p0 = (/                            & 
+                ( dble(ind_loop(1)) + 0.5 ) * dx(1), &
+                ( dble(ind_loop(2)) + 0.5 ) * dx(2), &
+                ( dble(ind_loop(3)) + 0.5 ) * dx(3)  &
+            /)
+            facet_p0(tmp_facet) = f_c
+            facet_h = dot_3d_real(facet_normal, facet_p0)
+
+            call calc_facet_edge (edge_p0, edge_v, eb_h, facet_h, eb_normal, facet_normal)
+            call lines_nearest_pt (lambda_tmp, c_vec_tmp, edge_p0, edge_v, r_vec)
+            
+            if (.not. pt_in_box(c_vec_tmp, ind_loop, tmp_facet)) then
+                call lambda_bounds(lambda_min, lambda_max, ind_loop, edge_p0, edge_v)
+                if (lambda_tmp .lt. lambda_min) then
+                    lambda_tmp = lambda_min
+                else
+                    lambda_tmp = lambda_max
+                end if
+
+                c_vec_tmp(:) = edge_p0(:) + lambda_tmp*edge_v(:)
+            end if
+            
+            rc_vec(:) = c_vec_tmp(:) - r_vec(:)
+            min_dist_tmp = dot_3d_real(rc_vec, rc_vec)
+
+            if (min_dist_tmp .lt. min_dist) then
+                min_dist = min_dist_tmp
+                c_vec(:) = c_vec_tmp(:)
+            end if
+        end do
+
+        facets_nearest_pt(:) = c_vec(:)
+
+       end function facets_nearest_pt
 
 
    !----------------------------------------------------------------------!

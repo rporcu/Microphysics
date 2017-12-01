@@ -67,6 +67,8 @@ void ReadParameters ()
   pp.query("verbose", verbose);
 
   pp.query("dual_grid",dual_grid);
+
+  pp.query("regrid_int",regrid_int);
 }
 
 int main (int argc, char* argv[])
@@ -123,30 +125,29 @@ int main (int argc, char* argv[])
 
     my_mfix.Init(lev,dt,time);
 
-    my_mfix.make_eb_geometry(lev);
-
-    // Note this must be called after make_eb_geometry so that we know whether there are EB boundaries or not
-    my_mfix.InitIOData();
-
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
     {
        my_mfix.InitLevelData(lev,dt,time);
+       my_mfix.make_eb_geometry(lev);
     }
     else
     {
        restart_flag = 1;
        IntVect Nrep(repl_x,repl_y,repl_z);
        my_mfix.Restart( restart_file, &nstep, &dt, &time, Nrep);
-
-       // This call checks if we want to regrid using the
-       //   max_grid_size just read in from the inputs file used to restart
-       //   (only relevant if load_balance_type = "FixedSize")
-
-       // Note that this call does not depend on regrid_int
-       my_mfix.RegridOnRestart(lev);
     }
+
+    // Create the EB stuff after restart but before regrid
+    my_mfix.make_eb_geometry(lev);
+
+    // This call checks if we want to regrid using the
+    //   max_grid_size just read in from the inputs file used to restart
+    //   (only relevant if load_balance_type = "FixedSize")
+    // Note that this call does not depend on regrid_int
+    if (restart_flag == 1)
+       my_mfix.RegridOnRestart(lev);
 
     // This checks if we want to regrid using the KDTree approach
     //    (only if load_balance_type = "KDTree")

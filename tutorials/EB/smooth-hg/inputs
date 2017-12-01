@@ -21,6 +21,7 @@ amr.par_ascii_int  =  -1
 amr.par_ascii_file = vis
 
 amr.dual_grid = 0
+amr.regrid_int = 5
 mfix.load_balance_type = "KDTree"
 
 mfix.particle_init_type = "Auto"

@@ -36,14 +36,10 @@ contains
 
     implicit none
 
-! Local Variables:
-!---------------------------------------------------------------------//
-    integer :: m
 !......................................................................!
 
 ! Initialize the error manager.
     call init_err_msg("CHECK_SOLIDS_PHASES")
-
 
     if(particle_types > 0) then
 
