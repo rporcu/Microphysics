@@ -126,7 +126,7 @@
 
   BC_U_g(1)   =   0.000    ! (m/sec)
   BC_V_g(1)   =   0.000    ! (m/sec)
-  BC_W_g(1)   =   0.000    ! (m/sec)
+  BC_W_g(1)   =   0.010    ! (m/sec)
 
 
 ! Pressure Outflow:
