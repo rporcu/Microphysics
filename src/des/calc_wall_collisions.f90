@@ -63,10 +63,9 @@
 
     ! worst-case: overlap with 27 neighbours
     integer                        :: n_collisions, i_collision
-    integer, dimension(3,3,3)      :: central_collision, edge_collision
     real(c_real), dimension(27)    :: distmod 
-    real(c_real), dimension(3, 27) :: collision_norms, collision_points 
-    real(c_real), dimension(3)     :: r_vec, eb_normal, eb_p0
+    real(c_real), dimension(3, 27) :: collision_norms
+    real(c_real), dimension(3)     :: r_vec, c_vec
 
     integer :: PHASELL
 
@@ -82,7 +81,7 @@
     real(c_real) :: distmod_temp
 
     ! inverse cell size: used to convert positions to cell indices
-    ! dx is a vector, why does this work?
+    !   -> dx is a vector, fortran is amazing!
     inv_dx = 1.0d0 / dx
 
     ! fudge factor: a little less than 1
@@ -112,9 +111,16 @@
        k = floor(lz)
 
        ! ignore disconnected cells
-       ! is this really necessary?
        ! -> one reason for this is the get accurate wall normals...
        call get_neighbor_cells(flag(i,j,k),nbr)
+       
+       ! ******************************************************************** !
+       !                                                                      !
+       ! BEGIN Enumerating Collisons with embedded boundary                   !
+       !                                                                      !
+       ! ******************************************************************** !
+
+       n_collisions = 0
 
        ! 27-point stencil: immediate neighbours in 3-D cubic grid
        klo = k-1
@@ -133,11 +139,6 @@
        if ( ((j+1)*dx(2)-yp) .gt. rp) jhi = j
        if ( ((k+1)*dx(3)-zp) .gt. rp) khi = k
 
-       n_collisions = 0
-       central_collision(:, :, :) = 0
-       edge_collision(:, :, :) = 0
-       collision_points(:, :) = 0.
-
        do kk = klo, khi
           do jj = jlo, jhi
              do ii = ilo, ihi
@@ -155,7 +156,7 @@
 
                     if (distmod_temp .lt. rp) then
                         ! Point where the normal from the particle to the plane intersects the plane
-                        ! ->Note: slightly less than the full normal avoiding float precision errors
+                        !  -> Note: slightly less than the full normal avoiding float precision errors
                         pt_x = xp + normal(ii, jj, kk, 1) * distmod_temp * fudge
                         pt_y = yp + normal(ii, jj, kk, 2) * distmod_temp * fudge
                         pt_z = zp + normal(ii, jj, kk, 3) * distmod_temp * fudge
@@ -165,72 +166,63 @@
                         j_pt = floor(pt_y * inv_dx(2))
                         k_pt = floor(pt_z * inv_dx(3))
 
-                        ! check if point-of-collision is in current cell, that's great!
-                        ! Particle is interacting with "flat" EB's
+                        ! Check if point-of-collision is in current cell, that's great!
+                        !  -> particle is interacting with "flat" EB's
                         if ( (i_pt .eq. ii) .and. (j_pt .eq. jj) .and. (k_pt .eq. kk)) then
+                            ! register "head-on" collision:
                             n_collisions = n_collisions + 1
-                            central_collision(ii - i, jj - j, kk - k) = 1
-
-                            ! distmod = distmod_temp
                             distmod(n_collisions) = distmod_temp
-                            collision_points(:, n_collisions) = (/ pt_x, pt_y, pt_z /)
-
-                            collision_norms(1, n_collisions) = normal(ii, jj, kk, 1)
-                            collision_norms(2, n_collisions) = normal(ii, jj, kk, 2)
-                            collision_norms(3, n_collisions) = normal(ii, jj, kk, 3)
-                        else if (                                                                          &
+                            collision_norms(:, n_collisions) = normal(ii, jj, kk, :)
+                        
+                        else if ( & ! only consider EB-edges if not colliding with EB-face already 
                             ( abs( normal(ii, jj, kk, 1) - normal(i_pt, j_pt, k_pt, 1) ) .gt. 1.d-8 ) .or. &
                             ( abs( normal(ii, jj, kk, 2) - normal(i_pt, j_pt, k_pt, 2) ) .gt. 1.d-8 ) .or. &
                             ( abs( normal(ii, jj, kk, 3) - normal(i_pt, j_pt, k_pt, 3) ) .gt. 1.d-8 )      &
-                            ) then
-                            block
-                                ! variables keepint track of edges/corner of neighbour EB's
-                                integer, dimension(3) :: ind_loop, ind_pt
-                                ! c_vec: closest point (to particle) on EB-facet edge 
-                                real(c_real), dimension(3) :: c_vec
-                                    
-                                ! assing value to vectors (arrays)
-                                ind_loop = (/ ii, jj, kk /)
-                                ind_pt   = (/ i_pt, j_pt, k_pt /)
-                                
-                                r_vec = (/ xp, yp, zp /)
-                                eb_normal(:) = normal(ii, jj, kk, :)
-                                eb_p0 = (/ bcentx, bcenty, bcentz /)
+                            ) then ! EB-facet has different normal => collide with EB-edge
+                            
+                            ! Particle-EB-plain intercept is outside cell
+                            !  -> determine nearest point on EB boundary to particle (candidate for collision)
+                            !  -> c_vec will be on the "edge" of the EB boundary
+                            c_vec = facets_nearest_pt (                                 &
+                                    (/ i_pt, j_pt, k_pt /), (/ ii, jj, kk /),           &
+                                    (/ xp, yp, zp /),                                   &
+                                    normal(ii, jj, kk, :), (/ bcentx, bcenty, bcentz /) &
+                                )
 
-                                ! p_vec is outside cell, determine with cell boundaries might be cut
-                                c_vec = facets_nearest_pt ( ind_pt, ind_loop, r_vec, eb_normal, eb_p0 )
-                                    
-                                ! correct collision coordinates
-                                pt_x = c_vec(1)
-                                pt_y = c_vec(2)
-                                pt_z = c_vec(3)
+                            ! correct potential collision coordinates
+                            pt_x = c_vec(1)
+                            pt_y = c_vec(2)
+                            pt_z = c_vec(3)
 
-                                ! check if there is still overlap
-                                distmod_temp = ((xp - pt_x) * ( xp - pt_x ) + & 
+                            ! check if there is still overlap
+                            distmod_temp = ((xp - pt_x) * ( xp - pt_x ) + & 
                                     (yp - pt_y) * ( yp - pt_y ) + &
                                     (zp - pt_z) * ( zp - pt_z ))
 
-                                if (distmod_temp .lt. rp * rp) then
-                                    if (.not. point_in_list(collision_points, c_vec, n_collisions)) then
-                                        distmod_temp = sqrt(distmod_temp)
-                                        
-                                        n_collisions = n_collisions + 1
-                            
-                                        distmod(n_collisions) = distmod_temp
-                                        collision_points(:, n_collisions) = (/ pt_x, pt_y, pt_z /)
-
-                                        collision_norms(1, n_collisions) = -(xp - pt_x) / distmod_temp
-                                        collision_norms(2, n_collisions) = -(yp - pt_y) / distmod_temp
-                                        collision_norms(3, n_collisions) = -(zp - pt_z) / distmod_temp
-                                    end if
-                                end if
-                            end block
+                            if (distmod_temp .lt. rp * rp) then
+                                ! The nearest point on EB edge overlaps with particle
+                                !  => Collison still occurs! => Register collision with EB edge
+                                distmod_temp = sqrt(distmod_temp)
+                                n_collisions = n_collisions + 1
+                                distmod(n_collisions) = distmod_temp
+                                collision_norms(:, n_collisions) = (/ &
+                                        -(xp - pt_x) / distmod_temp,      &
+                                        -(yp - pt_y) / distmod_temp,      &
+                                        -(zp - pt_z) / distmod_temp       &
+                                    /)
+                            end if
                         end if
                     end if
                 end if
              end do
           end do
        end do
+
+       ! ******************************************************************** !
+       !                                                                      !
+       ! APPLY Enumerated Collisons to particles                              !
+       !                                                                      !
+       ! ******************************************************************** !
 
        do i_collision = 1, n_collisions
           
@@ -312,35 +304,6 @@
     end do ! loop over particles
 
 contains
-    function point_in_list (list, pt, n_list)
-        implicit none
-
-        logical                                   :: point_in_list
-        real(c_real), dimension(3,27), intent(in) :: list
-        real(c_real), dimension(3),    intent(in) :: pt
-        integer,                       intent(in) :: n_list
-
-        real(c_real), dimension(3) :: current_pt
-        integer                    :: i
-        
-        point_in_list = .false.
-        do i = 1, n_list
-            current_pt(:) = list(:, i)
-            !write(*,*) current_pt
-            if ( &
-                    ( abs( pt(1) - current_pt(1) ) .lt. 1.d-8 ) .and. &
-                    ( abs( pt(2) - current_pt(2) ) .lt. 1.d-8 ) .and. &
-                    ( abs( pt(3) - current_pt(3) ) .lt. 1.d-8 )       &
-                ) then
-                point_in_list = .true.
-                !write(*,*) "Point disqualified:"
-                !write(*,*) pt
-                exit
-            end if
-        end do
-
-
-    end function point_in_list
 
     pure function dot_3d_real (v1, v2)
         implicit none
