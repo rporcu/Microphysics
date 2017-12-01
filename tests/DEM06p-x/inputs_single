@@ -1,5 +1,5 @@
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell = 50 5 5
+amr.n_cell = 20 5 5
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
