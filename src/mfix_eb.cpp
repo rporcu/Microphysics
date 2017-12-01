@@ -1,11 +1,33 @@
-#include <AMReX.H>
-#include <AMReX_PlaneIF.H>
+#include <AMReX_GeometryShop.H>
 #include <AMReX_SphereIF.H>
-#include <AMReX_PolynomialIF.H>
-#include <AMReX_IntersectionIF.H>
-#include <AMReX_ParmParse.H>
-#include <AMReX_TransformIF.H>
+#include <AMReX_PlaneIF.H>
+#include <AMReX_AllRegularService.H>
+#include <AMReX_FlatPlateGeom.H>
+#include <AMReX_EBISLayout.H>
+#include <AMReX_EBGraph.H>
+#include <AMReX_EBDebugOut.H>
+#include <AMReX_EBCellFAB.H>
+#include <AMReX_EBCellFactory.H>
+#include <AMReX_EBIndexSpace.H>
 #include <AMReX_UnionIF.H>
+#include <AMReX_TransformIF.H>
+#include <AMReX_ComplementIF.H>
+#include <AMReX_IntersectionIF.H>
+#include <AMReX_LatheIF.H>
+#include <AMReX_PolynomialIF.H>
+#include <AMReX_AnisotropicDxPlaneIF.H>
+#include <AMReX_AnisotropicIF.H>
+
+// #include <AMReX.H>
+// #include <AMReX_PlaneIF.H>
+// #include <AMReX_AnisotropicIF.H>
+// #include <AMReX_AnisotropicDxPlaneIF.H>
+// #include <AMReX_SphereIF.H>
+// #include <AMReX_PolynomialIF.H>
+// #include <AMReX_IntersectionIF.H>
+// #include <AMReX_ParmParse.H>
+// #include <AMReX_TransformIF.H>
+// #include <AMReX_UnionIF.H>
 
 // #include <AMReX_FlatPlateGeom.H>
 // #include <AMReX_EBISLayout.H>
@@ -95,9 +117,8 @@ mfix_level::make_eb_geometry(int lev)
 
       pp.getarr("poly2_translate", transvec,  0, SpaceDim);
 
-      for(int idir = 0; idir < 3; idir++) {
+      for(int idir = 0; idir < 3; idir++) 
         translation[idir] = transvec[idir];
-      }
 
       TransformIF poly2(mirror);
       poly2.translate(translation);
@@ -106,6 +127,7 @@ mfix_level::make_eb_geometry(int lev)
         for (int i = 1; i <= 500; i++) {
           mfix_get_walls(&i, &exists, &normal, &center);
           if(exists){
+            center[0] = 1.e-3;
             amrex::Print() << "Normal " << normal << std::endl;
             amrex::Print() << "Center " << center << std::endl;
             plane = new PlaneIF(normal,center,true);
@@ -126,12 +148,16 @@ mfix_level::make_eb_geometry(int lev)
 
     } else if(use_walls){ // Just walls
 
+      RealVect dxVec;
+      for(int idir = 0; idir < 3; idir++) 
+        dxVec[idir] = geom[lev].CellSize()[idir];
+
       for (int i = 1; i <= 500; i++) {
         mfix_get_walls(&i, &exists, &normal, &center);
         if(exists){
           amrex::Print() << "Normal " << normal << std::endl;
           amrex::Print() << "Center " << center << std::endl;
-          plane = new PlaneIF(normal,center,true);
+          plane = new AnisotropicDxPlaneIF(normal,center,true,dxVec);
           planes.push_back(plane);
         }
       }
