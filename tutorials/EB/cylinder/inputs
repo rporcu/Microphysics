@@ -20,7 +20,7 @@ amr.max_level = 0
 amr.plot_int  =    -1
 amr.check_int  =   -1
 
-amr.par_ascii_int  =  50
+amr.par_ascii_int  =  1
 amr.par_ascii_file = vis
 
 mfix.particle_init_type = "Auto"
