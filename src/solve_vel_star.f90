@@ -36,7 +36,6 @@ module solve_vel_star_module
       use adjust_a, only: adjust_a_u
       use residual, only: calc_resid_vel
       use ur_facs, only: under_relax
-      use discretelement, only: des_continuum_coupled
 
       ! Flag for existence of point souces
       use ps, only: point_source
@@ -159,12 +158,7 @@ module solve_vel_star_module
       use ur_facs, only: under_relax
 
 ! Global data .........................................................//
-! Fluid array bounds
-! Flag for coupling fluid and dem via gas-solid drag
-   use discretelement, only: des_continuum_coupled
-! Flag for existence of point souces
    use ps, only: point_source
-! Global data arrays for residuals
    use residual, only: resid_v
 
 ! Dummy arguments ....................................................//
@@ -284,11 +278,7 @@ module solve_vel_star_module
       use ur_facs, only: under_relax
 
 ! Global data .........................................................//
-! Flag for coupling fluid and dem via gas-solid drag
-   use discretelement, only: des_continuum_coupled
-! Flag for existence of point souces
    use ps, only: point_source
-! Global data arrays for residuals
    use residual, only: resid_w
 
 ! Dummy arguments ....................................................//

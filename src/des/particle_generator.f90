@@ -65,10 +65,10 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   integer :: j_s, j_n
   integer :: k_b, k_t
 
-  integer :: np, np0, type, i,j,k, init_pc
+  integer :: np, type, i,j,k, init_pc
   real(c_real) :: ic_vol, type_vol, acc_vol, pvol
   real(c_real) :: ic_dlo(3), ic_dhi(3)
-  real(c_real) :: max_dp, max_rp, ldp
+  real(c_real) :: max_dp, max_rp
   real(c_real) :: pos(3)
 
   real(c_real), allocatable :: dp(:), ro_s(:)

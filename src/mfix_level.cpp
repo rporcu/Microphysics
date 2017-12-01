@@ -702,10 +702,10 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 #endif
     for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
     {
-  const Box& sbx = mf[mfi].box();
-  fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
-     bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-     bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+       const Box& sbx = mf[mfi].box();
+       fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
+                bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
 }
 

@@ -65,7 +65,7 @@
     integer                        :: n_collisions, i_collision
     real(c_real), dimension(27)    :: distmod 
     real(c_real), dimension(3, 27) :: collision_norms
-    real(c_real), dimension(3)     :: r_vec, c_vec
+    real(c_real), dimension(3)     :: c_vec
 
     integer :: PHASELL
 
@@ -569,15 +569,15 @@ contains
         real(c_real), dimension(3), intent(in) :: r_vec, eb_normal, eb_p0
         
         integer,      dimension(3) :: ind_facets
-        integer                    :: n_facets, i_facet, tmp_facet, cur_facet, ind_cell, ind_nb, i
-        real(c_real), dimension(3) :: v_vec, c_vec, c_vec_tmp, rc_vec
+        integer                    :: n_facets, i_facet, tmp_facet, ind_cell, ind_nb
+        real(c_real), dimension(3) :: c_vec, c_vec_tmp, rc_vec
         real(c_real), dimension(3) :: facet_normal, facet_p0, edge_p0, edge_v
         real(c_real)               :: min_dist, min_dist_tmp, eb_h, facet_h
 
         ! variables keeping track of coordinates on EB edges
         ! lambda_tmp: current lambda-value being used in testing for edge collions
         ! lambda: minimum (closets to bcentre) lambda value satisfying potential collision
-        real(c_real) :: v_c, f_c, p_c, lambda, lambda_tmp, lambda_max, lambda_min
+        real(c_real) :: f_c, lambda_tmp, lambda_max, lambda_min
 
 
         ! Enumerate the possible EB facet edges invovlved.
