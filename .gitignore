@@ -13,3 +13,9 @@ tmp.*
 *.LOG
 build
 Size*
+vis*
+plt*
+chk*
+eb*
+*vtp
+*pvd
