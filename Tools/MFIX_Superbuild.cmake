@@ -36,8 +36,9 @@ set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
 set (AMREX_GIT_COMMIT_DEVELOP dac8c433fe10b142d67fa455 )
 set (AMREX_GIT_TAG)  # The commit id or branch to download 
 
-# AMReX Superbuild variables
-set (AMREX_SUPERBUILD_DIR   ${PROJECT_BINARY_DIR})
+# AMReX build paths
+set (AMREX_SUPERBUILD_INSTALLDIR ${CMAKE_BINARY_DIR}/amrex/installdir)
+set (AMREX_SUPERBUILD_BUILDDIR   ${CMAKE_BINARY_DIR}/amrex/builddir)
 
 #
 # MFIX-related options
@@ -117,12 +118,9 @@ message (STATUS "AMReX commit: ${AMREX_GIT_TAG}")
 # Include cmake config files to build external projects
 include(ExternalProject)
 
-set (AMREX_INSTALL_PATH ${CMAKE_BINARY_DIR}/amrex/installdir)
-
-
 ExternalProject_Add ( amrex
-   PREFIX          ${AMREX_SUPERBUILD_DIR}
-   INSTALL_DIR     ${AMREX_INSTALL_PATH}
+   PREFIX          ${AMREX_SUPERBUILD_BUILDDIR}
+   INSTALL_DIR     ${AMREX_SUPERBUILD_INSTALLDIR}
    GIT_REPOSITORY  ${AMREX_GIT_REPO}
    GIT_TAG         ${AMREX_GIT_TAG}
    CMAKE_ARGS
@@ -164,17 +162,21 @@ ExternalProject_Add ( amrex
 
 #
 # Now have Cmake call itself to set up mfix
-# 
-ExternalProject_Add ( mfix-superbuild
+#
+set (MFIX_SUPERBUILD_BUILDDIR   ${CMAKE_BINARY_DIR}/mfix)
+
+
+ExternalProject_Add ( mfix
+   PREFIX          ${MFIX_SUPERBUILD_BUILDDIR}
    DEPENDS amrex 
    CMAKE_ARGS
    -DDEBUG=${DEBUG}
    -DMFIX_FFLAGS_OVERRIDES=${MFIX_FFLAGS_OVERRIDES}
    -DMFIX_CXXFLAGS_OVERRIDES=${MFIX_CXXFLAGS_OVERRIDES}
    -DENABLE_FPE=${ENABLE_FPE}
-   -DAMREX_INSTALL_DIR=${AMREX_INSTALL_PATH}
+   -DAMREX_INSTALL_DIR=${AMREX_SUPERBUILD_INSTALLDIR}
    SOURCE_DIR ${PROJECT_SOURCE_DIR}
-   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}
+   BINARY_DIR ${MFIX_SUPERBUILD_BUILDDIR}
    USES_TERMINAL_CONFIGURE 1
    USES_TERMINAL_BUILD 1
    INSTALL_COMMAND ""
