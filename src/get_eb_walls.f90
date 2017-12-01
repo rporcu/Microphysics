@@ -41,10 +41,7 @@ subroutine mfix_get_walls(bcv, exists, normal, center) &
           'PAR_SLIP_WALL' ,'PSW', &
           'MASS_INFLOW'   ,'MI')
 
-        write(*,*) ' '
         exists = 1;
-
-        write(*,*)'setting BC', bcv, bc_type(bcv)
 
         ! Hack to override default plane orientation
         if(is_defined(bc_center(bcv,1))) then
