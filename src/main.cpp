@@ -67,6 +67,7 @@ void ReadParameters ()
   pp.query("verbose", verbose);
 
   pp.query("dual_grid",dual_grid);
+  pp.query("regrid_int",regrid_int);
 }
 
 int main (int argc, char* argv[])
