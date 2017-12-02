@@ -305,16 +305,37 @@
 
 contains
 
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Function: DOT_3D_REAL                                          !
+   !                                                                      !
+   !  Purpose: Returns the cartesian dot product for two vectors in three !
+   !  dimensions.                                                         !
+   !                                                                      !
+   !  Comments: Vectors are represented as one-dimensional arrays of type !
+   !  real(c_real) and of dimension(3) (i.e. indices range from 1..3).    !
+   !----------------------------------------------------------------------!
     pure function dot_3d_real (v1, v2)
         implicit none
         
         real(c_real)                           :: dot_3d_real
         real(c_real), dimension(3), intent(in) :: v1, v2
-
+        
+        ! really naive implementation
         dot_3d_real = v1(1)*v2(1) + v1(2)*v2(2) + v1(3)*v2(3)
 
     end function dot_3d_real
 
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Function: CROSS_3D_REAL                                        !
+   !                                                                      !
+   !  Purpose: Returns the cartesian cross product for two vectors in     !
+   !  three dimensions.                                                   !
+   !                                                                      !
+   !  Comments: Vectors are represented as one-dimensional arrays of type !
+   !  real(c_real) and of dimension(3) (i.e. indices range from 1..3).    !
+   !----------------------------------------------------------------------!
     pure function cross_3d_real (v1, v2)
         implicit none
 
@@ -327,6 +348,20 @@ contains
 
     end function cross_3d_real
 
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Function: PT_IN_BOX                                            !
+   !                                                                      !
+   !  Purpose: Returns true if the coordinate vector represents a point   !
+   !  inside a three-dimensional cube of size dx and origin specified by  !
+   !  integer vector. As a final input, the user specifies a dimension    !
+   !  (axis) to ignore. This allows IN-BOX checking on a box face.        !
+   !                                                                      !
+   !  Comments: Position vectors are represented as one-dimensional arrays!
+   !  of type real(c_real) and of dimension(3) (i.e. indices range        !
+   !  from 1..3). Cells are enumerated using arrays of type integer and   !
+   !  dimension(3).
+   !----------------------------------------------------------------------!
     pure function pt_in_box (pt, id, id_ignore)
         implicit none
 
@@ -337,12 +372,14 @@ contains
 
         real(c_real), dimension(3) :: box_max, box_min
         integer                    :: i
-
+        
+        ! Determine box boundaries
         box_min(:) = id(:) * dx(:)
         box_max(:) = (id(:) + 1.) * dx(:)
 
         pt_in_box = .true.
 
+        ! Check each coordinate. Skip ignored coordinate.
         do i = 1, 3
             if (.not. (i .eq. id_ignore) ) then
                 if ( pt(i) .lt. box_min(i) ) then
@@ -359,6 +396,20 @@ contains
 
     end function pt_in_box
 
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Subroutine: CALC_FACET_EDGE                                    !
+   !                                                                      !
+   !  Purpose: Calculates the line (represented by a position and a       !
+   !  direction vector) given by the intersection of two planes (defined  !
+   !  by two normal (n1, n2) and two positions (h1 = n1.p1, h2 = n2.p2).  !
+   !                                                                      !
+   !  When one plane is the EB surface, and the other is a face of the    !
+   !  cell. Then this line represents the edge of the EB facet.           !
+   !                                                                      !
+   !  Comments: Vectors are represented as one-dimensional arrays of type !
+   !  real(c_real) and of dimension(3) (i.e. indices range from 1..3).    !
+   !----------------------------------------------------------------------!
     pure subroutine calc_facet_edge (p0, v, h1, h2, n1, n2)
         implicit none
 
@@ -379,6 +430,17 @@ contains
 
     end subroutine calc_facet_edge
 
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Subroutine: LINES_NEAREST_PT                                   !
+   !                                                                      !
+   !  Purpose: Given an a line an a point, this subroutine finds the point!
+   !  one the line which minimizes the cartesian distance. It also finds  !
+   !  the corresponing distance along the line corresponding to this point!
+   !                                                                      !
+   !  Comments: Vectors are represented as one-dimensional arrays of type !
+   !  real(c_real) and of dimension(3) (i.e. indices range from 1..3).    !
+   !----------------------------------------------------------------------!
     pure subroutine lines_nearest_pt (lambda_min, nearest_pt, p0, v, pt)
         implicit none
 
@@ -395,6 +457,16 @@ contains
 
     end subroutine lines_nearest_pt
 
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Subroutine: SWAP_REALS                                         !
+   !                                                                      !
+   !  Purpose: Stupid little subroutine which swaps the values of its     !
+   !  inputs.                                                             !
+   !                                                                      !
+   !  Comments: Inputs are of type real(c_real)                           !
+   !                                                                      !
+   !----------------------------------------------------------------------!
     pure subroutine swap_reals(a, b)
         implicit none
             
@@ -407,6 +479,19 @@ contains
 
     end subroutine swap_reals
 
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Subroutine: LAMBDA_BOUNDS                                      !
+   !                                                                      !
+   !  Purpose: Given a line which passes through a box in three dimensions!
+   !  (it can pass through the edges). Let lambda be a real value         !
+   !  representing the coordinate along the line. This subroutine finds   !
+   !  teh min/max values of lambda, in order for the point described by   !
+   !  lambda to be contained within the box.                              !
+   !                                                                      !
+   !  Comments: Vectors are represented as one-dimensional arrays of type !
+   !  real(c_real) and of dimension(3) (i.e. indices range from 1..3).    !
+   !----------------------------------------------------------------------!
     pure subroutine lambda_bounds(lambda_min, lambda_max, id_cell, p0, v)
         implicit none 
 
@@ -414,8 +499,10 @@ contains
         integer,      dimension(3), intent(in   ) :: id_cell
         real(c_real), dimension(3), intent(in   ) :: p0, v
 
-        real(c_real) :: cx_lo, cy_lo, cz_lo, cx_hi, cy_hi, cz_hi!, c_bucket
+        ! c... are the preliminary boundaries
+        real(c_real) :: cx_lo, cy_lo, cz_lo, cx_hi, cy_hi, cz_hi
 
+        ! defaults such that if skipped, min/max will not choose these values anyway
         cx_lo = -huge(cx_lo)
         cy_lo = -huge(cy_lo)
         cz_lo = -huge(cz_lo)
@@ -424,6 +511,9 @@ contains
         cy_hi = huge(cy_hi)
         cz_hi = huge(cz_hi)
 
+        ! if the line runs parrallel to any of these dimensions (which is true for
+        ! EB edges), then skip -> the min/max functions at the end will skip them
+        ! due to the huge(c...) defaults (above).
         if ( abs(v(1)) .gt. 1.d-8 ) then
             cx_lo = -( p0(1) - dble(id_cell(1)) * dx(1) ) / v(1)
             cx_hi = -( p0(1) - ( dble(id_cell(1)) + 1. ) * dx(1) ) / v(1)
@@ -454,13 +544,23 @@ contains
         lambda_min = max(cx_lo, cy_lo, cz_lo)
         lambda_max = min(cx_hi, cy_hi, cz_hi)
         
-        ! write(*,*) cx_lo, cy_lo, cz_lo
-        ! write(*,*) cx_hi, cy_hi, cz_hi
-        ! write(*,*) lambda_min, lambda_max
-        ! write(*,*) v
-
     end subroutine lambda_bounds
 
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Function: FACETS_NEAREST_PT                                    !
+   !                                                                      !
+   !  Purpose: Given a collision between particle and EB surface, and     !
+   !  given that a neighbour cell owns the EB surface, a collision between!
+   !  the particle and the EDGE of the EB facet might occur. This         !
+   !  function returns the coordinates of the closest point on the edge of!
+   !  an EB facet. This function does not check of collisions.            !
+   !                                                                      !
+   !  Comments: Position and normal vectors are represented as            !
+   !  one-dimensional arrays of type real(c_real) and of dimension(3)     !
+   !  (i.e. indices range from 1..3). Cells are enumerated using arrays of!
+   !  type integer and of dimension(3).                                   !
+   !----------------------------------------------------------------------!
     pure function facets_nearest_pt ( ind_pt, ind_loop, r_vec, eb_normal, eb_p0)
         implicit none
         
@@ -479,6 +579,8 @@ contains
         ! lambda: minimum (closets to bcentre) lambda value satisfying potential collision
         real(c_real) :: f_c, lambda_tmp, lambda_max, lambda_min
 
+
+        ! Enumerate the possible EB facet edges invovlved.
         n_facets = 0
         
         if ( .not. (ind_pt(1) .eq. ind_loop(1)) ) then
@@ -496,18 +598,22 @@ contains
             ind_facets(n_facets) = 3
         end if
 
+        ! scalar characterizing EB facet position
         eb_h = dot_3d_real(eb_normal, eb_p0)
 
+        ! itterate over EB facet edges and find whichever has the closest nearest point
         min_dist = huge(min_dist)
         do i_facet = 1, n_facets
             tmp_facet = ind_facets(i_facet)
 
+            ! determine the normal of the cell's facet (cube faces)
             facet_normal = (/ 0., 0., 0. /)
             facet_normal(tmp_facet) = 1.  ! wheter facing inwards or outwards is not important here
 
             ind_cell = ind_loop(tmp_facet)
             ind_nb = ind_pt(tmp_facet)
 
+            ! determine position of the cell's facet
             if (ind_cell .lt. ind_nb) then
                 f_c = ( dble(ind_cell) + 1.0 ) * dx(tmp_facet)
             else ! if (ind_cell .gt. ind_nb) then
@@ -520,12 +626,22 @@ contains
                 ( dble(ind_loop(3)) + 0.5 ) * dx(3)  &
             /)
             facet_p0(tmp_facet) = f_c
+
+            ! scalar characterizing cell facet position
             facet_h = dot_3d_real(facet_normal, facet_p0)
 
+            ! compute EB facet edge by finding the intercept between EB surface (first plane)
+            ! and the cell's facet (second plane)
             call calc_facet_edge (edge_p0, edge_v, eb_h, facet_h, eb_normal, facet_normal)
+            ! this solution is a line representing the closest EB edge, now compute the point
+            ! on the line which minimizes the distance to the particle
             call lines_nearest_pt (lambda_tmp, c_vec_tmp, edge_p0, edge_v, r_vec)
             
+            ! IMPORTANT: this point might be outside the cell
+            !  -> in that case, it will be one of the cell's corners
             if (.not. pt_in_box(c_vec_tmp, ind_loop, tmp_facet)) then
+                ! if closest point is outside cell, determine the furthest we can go along the 
+                ! EB edge line whilst staying within the cell.
                 call lambda_bounds(lambda_min, lambda_max, ind_loop, edge_p0, edge_v)
                 if (lambda_tmp .lt. lambda_min) then
                     lambda_tmp = lambda_min
@@ -536,9 +652,11 @@ contains
                 c_vec_tmp(:) = edge_p0(:) + lambda_tmp*edge_v(:)
             end if
             
+            ! determine new distance to particle
             rc_vec(:) = c_vec_tmp(:) - r_vec(:)
             min_dist_tmp = dot_3d_real(rc_vec, rc_vec)
 
+            ! minimize distance
             if (min_dist_tmp .lt. min_dist) then
                 min_dist = min_dist_tmp
                 c_vec(:) = c_vec_tmp(:)
