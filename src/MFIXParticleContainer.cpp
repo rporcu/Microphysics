@@ -169,7 +169,8 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
 
       // Now define the rest of the particle data and store it directly in the particles
       // std::cout << pcount << " particles " << " in grid " << grid_id << std::endl;
-      mfix_particle_generator_prop(&np, particles.GetArrayOfStructs().data());
+      if (pcount > 0)
+         mfix_particle_generator_prop(&np, particles.GetArrayOfStructs().data());
   }
 
   ParallelDescriptor::ReduceIntSum(total_np,ParallelDescriptor::IOProcessorNumber());
