@@ -294,9 +294,9 @@ mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
     w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_bc1 ( lev );
-
+    
     // Project velocity field
-    mfix_apply_projection (lev,dt);
+    mfix_apply_projection ( lev, dt );
 
     // Reset pressure field to initial value for the subsequent
     // computation of second predictor
@@ -680,7 +680,7 @@ mfix_level::solve_poisson_equation (  int lev,
     // Then setup the solver ----------------------
     //
     MLMG  solver(matrix);
-    int   verbose = 2;
+    int   verbose = 0;
     int   cg_verbose = 0;
     int   max_iter = 100;
     int   max_fmg_iter = 0;

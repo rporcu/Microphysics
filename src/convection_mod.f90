@@ -25,6 +25,9 @@ module convection_mod
    public compute_divuu_x
    public compute_divuu_y
    public compute_divuu_z
+
+   ! Small value to protect against tiny velocities used in upwinding
+   real(ar),        parameter     :: small_vel = 1.0d-10
    
 contains
    
@@ -71,10 +74,7 @@ contains
       real(ar),        parameter     :: w3 = half      
       real(ar)                       :: u_e, u_w, u_s, u_n, u_b, u_t
       real(ar)                       :: v_s, v_n, w_b, w_t
-
-      ! Small value to protect against tiny velocities used in upwinding
-      real(ar),        parameter     :: small_vel = 1.0d-14
-
+      
       idx = one / dx(1)
       idy = one / dx(2)
       idz = one / dx(3)
@@ -151,7 +151,6 @@ contains
                   v_n   = half * ( vg(i,j+1,k) + vg(i-1,j+1,k) )
                   dpls  = ug(i,j+1,k) - half * slopes(i,j+1,k,2)
                   dmns  = ug(i,j,k)   + half * slopes(i,j,k,2)
-                  u_n   = merge ( dmns, dpls, v_n > zero )   
                   if (abs(v_n) .gt. small_vel) then
                      u_n   = merge ( dmns, dpls, v_n > zero )   
                   else
@@ -202,10 +201,9 @@ contains
                   wdu   = 0.5d0 * (w_t + w_b) * (u_t - u_b)
  
                   ! ************************************************************
-
                   ! Assemble terms
                   ugradu_x(i,j,k) = udu*idx + vdu*idy + wdu*idz
-
+                   
                end do
             end do
          end do
@@ -257,9 +255,6 @@ contains
       real(ar),        parameter     :: w3 = half      
       real(ar)                       :: v_e, v_w, v_b, v_t
       real(ar)                       :: u_e, u_w, v_n, v_s, w_b, w_t
-
-      ! Small value to protect against tiny velocities used in upwinding
-      real(ar),        parameter     :: small_vel = 1.0d-14
       
       idx = one / dx(1)
       idy = one / dx(2)
@@ -443,9 +438,6 @@ contains
       real(ar),        parameter     :: w3 = half      
       real(ar)                       :: u_e, u_w, v_n, v_s
       real(ar)                       :: w_e, w_w, w_n, w_s, w_b, w_t
-
-      ! Small value to protect against tiny velocities used in upwinding
-      real(ar),        parameter     :: small_vel = 1.0d-14
       
       idx = one / dx(1)
       idy = one / dx(2)

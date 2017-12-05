@@ -20,8 +20,8 @@
 !
 !  Finally, the u-variation at cell "i" is given by :
 !
-!       du(i) = sign(du_c) min(2|du_l|, |du_c|, 2|du_r|)) if du_l*du_r > 0
-!       du(i) = 0                                         otherwise 
+!       du(i) = sign(du_c) * min(2|du_l|, |du_c|, 2|du_r|)) if du_l*du_r > 0
+!       du(i) = 0                                           otherwise 
 !
 !  The above procedure is applied direction by direction.
 !
