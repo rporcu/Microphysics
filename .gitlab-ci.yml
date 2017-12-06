@@ -27,6 +27,7 @@ variables:
     - cd build
     - env F77=$FC F90=$FC cmake -DAMREX_ENABLE_MPI=$ENABLE_MPI -DAMREX_ENABLE_OMP=$ENABLE_OMP ..
     - make -j 4
+    - cd mfix
     - ctest -R $TEST_REGEX
   tags:
     - joule
