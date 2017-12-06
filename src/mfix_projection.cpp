@@ -106,11 +106,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     // exchange with particles )
 //    mfix_apply_forcing_terms ( lev, dt );
 
-    // Fill ghost cells and reimpose boundary conditions
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
-    mfix_set_bc1(lev);
 
     //
     std::cout << "\nBefore projection step :\n";

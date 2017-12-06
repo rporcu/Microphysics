@@ -73,7 +73,7 @@ contains
       
       ! Convection
       ! c_cfl = umax*odx + vmax*ody + wmax*odz  <-- Too restricting
-      c_cfl = max ( umax*odx, vmax*ody, wmax*odz)
+      c_cfl = max ( umax*odx, vmax*ody, wmax*odz )
       
       ! Viscous 
       v_cfl = two * ( mumax / romin ) * ( odx**2 + ody**2 + odz**2 )
@@ -94,8 +94,6 @@ contains
       else 
          dt = min ( dt, old_dt )
       end if
-
-
       
    end subroutine compute_new_dt
 
@@ -153,7 +151,9 @@ contains
 
       ! Local variables
       integer                       :: i, j, k
-
+      integer                       :: i0, j0, k0
+      real(ar)                      :: qrop
+      
       ! Compute convection term
       select case ( dir )
       case (1)
@@ -181,10 +181,17 @@ contains
       !  REMEMBER TO DIVIDE div(tau) by rho !!!!!
       !
       !
+      i0 = e_i(dir,1)
+      j0 = e_i(dir,2)
+      k0 = e_i(dir,3)
+
+      orop = zero
+
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               rhs(i,j,k) = -conv(i,j,k) + diff(i,j,k)
+               orop       = half * ( one/rop(i,j,k) + one/rop(i-i0,j-j0,k-k0) )
+               rhs(i,j,k) = -conv(i,j,k) + diff(i,j,k) * qrop
             end do
          end do
       end do
