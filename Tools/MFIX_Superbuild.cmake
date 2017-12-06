@@ -36,9 +36,6 @@ set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
 set (AMREX_GIT_COMMIT_DEVELOP e6353a7de7467171f2d777cb763196d55b4615c5 )
 set (AMREX_GIT_TAG)  # The commit id or branch to download 
 
-# AMReX Superbuild variables
-set (AMREX_SUPERBUILD_DIR   ${PROJECT_BINARY_DIR})
-
 #
 # MFIX-related options
 #
@@ -117,12 +114,17 @@ message (STATUS "AMReX commit: ${AMREX_GIT_TAG}")
 # Include cmake config files to build external projects
 include(ExternalProject)
 
-set (AMREX_INSTALL_PATH ${CMAKE_BINARY_DIR}/amrex/installdir)
+# This modify the dir structure in external project directory
+set_directory_properties ( PROPERTIES EP_BASE ${CMAKE_BINARY_DIR}/amrex )
 
+set (AMREX_SUPERBUILD_INSTALLDIR ${CMAKE_BINARY_DIR}/amrex/installdir)
+set (AMREX_SUPERBUILD_BUILDDIR   ${CMAKE_BINARY_DIR}/amrex/builddir)
+set (AMREX_SUPERBUILD_SOURCEDIR  ${CMAKE_BINARY_DIR}/amrex/sourcedir)
 
 ExternalProject_Add ( amrex
-   PREFIX          ${AMREX_SUPERBUILD_DIR}
-   INSTALL_DIR     ${AMREX_INSTALL_PATH}
+   INSTALL_DIR     ${AMREX_SUPERBUILD_INSTALLDIR}
+   BINARY_DIR      ${AMREX_SUPERBUILD_BUILDDIR}
+   SOURCE_DIR      ${AMREX_SUPERBUILD_SOURCEDIR}
    GIT_REPOSITORY  ${AMREX_GIT_REPO}
    GIT_TAG         ${AMREX_GIT_TAG}
    CMAKE_ARGS
@@ -153,6 +155,7 @@ ExternalProject_Add ( amrex
    -DAMREX_FFLAGS_OVERRIDES=${MFIX_Fortran_FLAGS}
    -DAMREX_CXXFLAGS_OVERRIDES=${MFIX_CXX_FLAGS}
    UPDATE_COMMAND ""
+   BUILD_ALWAYS 1
    # LOG_CONFIGURE 1
    # LOG_BUILD 1
    # LOG_INSTALL 1
@@ -164,17 +167,21 @@ ExternalProject_Add ( amrex
 
 #
 # Now have Cmake call itself to set up mfix
-# 
-ExternalProject_Add ( mfix-superbuild
+#
+set (MFIX_SUPERBUILD_BUILDDIR   ${CMAKE_BINARY_DIR}/mfix)
+
+
+ExternalProject_Add ( mfix
+   PREFIX          ${MFIX_SUPERBUILD_BUILDDIR}
    DEPENDS amrex 
    CMAKE_ARGS
    -DDEBUG=${DEBUG}
    -DMFIX_FFLAGS_OVERRIDES=${MFIX_FFLAGS_OVERRIDES}
    -DMFIX_CXXFLAGS_OVERRIDES=${MFIX_CXXFLAGS_OVERRIDES}
    -DENABLE_FPE=${ENABLE_FPE}
-   -DAMREX_INSTALL_DIR=${AMREX_INSTALL_PATH}
+   -DAMREX_INSTALL_DIR=${AMREX_SUPERBUILD_INSTALLDIR}
    SOURCE_DIR ${PROJECT_SOURCE_DIR}
-   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}
+   BINARY_DIR ${MFIX_SUPERBUILD_BUILDDIR}
    USES_TERMINAL_CONFIGURE 1
    USES_TERMINAL_BUILD 1
    INSTALL_COMMAND ""
