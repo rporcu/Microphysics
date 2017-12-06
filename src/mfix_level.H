@@ -314,7 +314,7 @@ private:
     static std::string particle_init_type;
     static std::string load_balance_type;
 
-    Real cfl = 0.7;
+    Real cfl = 0.5;
 
     Real sum_vol_orig;
 

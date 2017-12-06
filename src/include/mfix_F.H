@@ -426,83 +426,6 @@ extern "C"
          const amrex::Real*, const int*, const int*);
 
     void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, amrex::Real* tol);
-
-    //
-    // Signatures for new subroutines for projection
-    //  
-    // void compute_ugradu_x (
-    //    const int* lo,  const int*  hi,
-    //    amrex::Real* u_g, const int* ulo, const int* uhi,
-    //    amrex::Real* v_g, const int* vlo, const int* vhi,
-    //    amrex::Real* w_g, const int* wlo, const int* whi,
-    //    amrex::Real* ugradu_x, const amrex::Real* dx );
-
-    
-    // void compute_ugradu_y (
-    //    const int* lo,  const int*  hi,
-    //    amrex::Real* u_g, const int* ulo, const int* uhi,
-    //    amrex::Real* v_g, const int* vlo, const int* vhi,
-    //    amrex::Real* w_g, const int* wlo, const int* whi,
-    //    amrex::Real* ugradu_y, const amrex::Real* dx );
-    
-
-    // void compute_ugradu_z (
-    //    const int* lo,  const int*  hi,
-    //    amrex::Real* u_g, const int* ulo, const int* uhi,
-    //    amrex::Real* v_g, const int* vlo, const int* vhi,
-    //    amrex::Real* w_g, const int* wlo, const int* whi,
-    //    amrex::Real* ugradu_z, const amrex::Real* dx );
-
-    // void compute_divuu_x (
-    //    const int* lo,  const int*  hi,
-    //    amrex::Real* u_g, const int* ulo, const int* uhi,
-    //    const amrex::Real* slopes,
-    //    amrex::Real* v_g, const int* vlo, const int* vhi,
-    //    amrex::Real* w_g, const int* wlo, const int* whi,
-    //    amrex::Real* divuu_x, const amrex::Real* dx );
-    
-    // void compute_divuu_y (
-    //    const int* lo,  const int*  hi,
-    //    amrex::Real* u_g, const int* ulo, const int* uhi,
-    //    amrex::Real* v_g, const int* vlo, const int* vhi,
-    //    const amrex::Real* slopes,
-    //    amrex::Real* w_g, const int* wlo, const int* whi,
-    //    amrex::Real* divuu_y, const amrex::Real* dx );
-    
-
-    // void compute_divuu_z (
-    //    const int* lo,  const int*  hi,
-    //    amrex::Real* u_g, const int* ulo, const int* uhi,
-    //    amrex::Real* v_g, const int* vlo, const int* vhi,
-    //    amrex::Real* w_g, const int* wlo, const int* whi,
-    //    const amrex::Real* slopes,
-    //    amrex::Real* divuu_z, const amrex::Real* dx );
-    
-    // void compute_divtau_x (
-    //    const int* lo,  const int*  hi,
-    //    const amrex::Real* u_g, const int* ulo, const int* uhi,
-    //    const amrex::Real* v_g, const int* vlo, const int* vhi,
-    //    const amrex::Real* w_g, const int* wlo, const int* whi,
-    //    const amrex::Real* mu,  const int* slo, const int* shi,
-    //    amrex::Real* divtau_x, const amrex::Real* dx );
-
-    // void compute_divtau_y (
-    //    const int* lo,  const int*  hi,
-    //    const amrex::Real* u_g, const int* ulo, const int* uhi,
-    //    const amrex::Real* v_g, const int* vlo, const int* vhi,
-    //    const amrex::Real* w_g, const int* wlo, const int* whi,
-    //    const amrex::Real* mu,  const int* slo, const int* shi,
-    //    amrex::Real* divtau_y, const amrex::Real* dx );
- 
-
-    // void compute_divtau_z (
-    //    const int* lo,  const int*  hi,
-    //    const amrex::Real* u_g, const int* ulo, const int* uhi,
-    //    const amrex::Real* v_g, const int* vlo, const int* vhi,
-    //    const amrex::Real* w_g, const int* wlo, const int* whi,
-    //    const amrex::Real* mu,  const int* slo, const int* shi,
-    //    amrex::Real* divtau_z, const amrex::Real* dx );
-
     void compute_divu (
 	const int* lo,  const int*  hi,
 	amrex::Real* divu,  const int* slo, const int* shi,
@@ -532,6 +455,7 @@ extern "C"
 			  const amrex::Real* romin,
 			  const amrex::Real* mumax,
 			  const amrex::Real* dx,
+			  const amrex::Real* cfl,
 			  amrex::Real*  dt ); 
 
     void init_periodic_vortices (

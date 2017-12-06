@@ -25,9 +25,24 @@ module projection_mod
 contains
 
    !
-   ! Compute new dt
+   ! Compute new dt by using the formula derived in 
+   ! "A Boundary Condition Capturing Method for Multiphase Incompressible Flow"
+   ! by Kang et al. (JCP).
    !
-   subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, dx, dt )  bind(C)
+   !  dt/2 * ( C+V + sqrt( (C+V)**2 + 4Fx/dx + 4Fy/dy + 4Fz/dz )
+   !
+   ! where
+   ! 
+   ! C = max(|U|)/dx + max(|V|)/dy + max(|W|)/dz    --> Convection
+   ! 
+   ! V = 2 * max(mu/ro) * (1/dx^2 + 1/dy^2 +1/dz^2) --> Diffusion
+   !
+   ! Fx, Fy, Fz = net acceleration due to external forces
+   ! 
+   ! WARNING: We use a slightly modified version of C in the implementation below
+   ! 
+   subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, dx, cfl, dt ) &
+        & bind(C)
       
       ! subroutine compute_new_dt ( umax, vmax, wmax, fgdsumax, fgdsvmax fgdswmax, &
       !      dragumax, dragvmax, dragwmax, mumax, romin, dx, dt ) &
@@ -39,81 +54,49 @@ contains
       ! real(ar),       intent(in   ) :: fgdsumax, fgdsvmax fgdswmax
       ! real(ar),       intent(in   ) :: dragumax, dragvmax, dragwmax
       real(ar),       intent(in   ) :: mumax, romin
-      real(ar),       intent(in   ) :: dx(3)
+      real(ar),       intent(in   ) :: dx(3), cfl
       real(ar),       intent(inout) :: dt
-
-      real(ar)                      :: uodx, vody, wodz
+      real(ar)                      :: old_dt
+      real(ar)                      :: c_cfl, v_cfl, f_cfl
       real(ar)                      :: odx, ody, odz
-      real(ar)                      :: fp_x, fp_y, fp_z
-      real(ar)                      :: dt_c, dt_v
-      real(ar)                      :: dt_gx, dt_gy, dt_gz, dt_g
-      real(ar)                      :: dt_px, dt_py, dt_pz, dt_p
-      real(ar),       parameter     :: cfl = 0.9_ar
+      real(ar)                      :: fp_x, fp_y, fp_z, tmp
       real(ar),       parameter     :: two = 2.0_ar, four = two*two
       real(ar),       parameter     :: eps = epsilon (zero)
-      real(ar),       parameter     :: small = 1.0D-8
-
-      odx  = one / dx(1)
-      ody  = one / dx(2)
-      odz  = one / dx(3)
-      uodx = umax * odx
-      vody = vmax * ody
-      wodz = wmax * odz
-
+      
+      odx    = one / dx(1)
+      ody    = one / dx(2)
+      odz    = one / dx(3)
+      c_cfl  = zero
+      v_cfl  = zero
+      f_cfl  = zero
+      old_dt = dt
+      
       ! Convection
-      ! Small components of velocity are not accounted for in the
-      ! computation of the new time step (see IAMR )
-      dt_c = dt
-      if ( umax > small ) dt_c = min ( dt_c, cfl / uodx )
-      if ( vmax > small ) dt_c = min ( dt_c, cfl / vody )
-      if ( wmax > small ) dt_c = min ( dt_c, cfl / wodz )
+      ! c_cfl = umax*odx + vmax*ody + wmax*odz  <-- Too restricting
+      c_cfl = max ( umax*odx, vmax*ody, wmax*odz)
+      
+      ! Viscous 
+      v_cfl = two * ( mumax / romin ) * ( odx**2 + ody**2 + odz**2 )
+              
+      ! Gravity
+      f_cfl = f_cfl + gravity(1) * odx + gravity(2) * ody &
+           &        + gravity(3) * odz
+      
+      ! Put all together
+      tmp = (c_cfl + v_cfl)  + sqrt ( (c_cfl + v_cfl)**2 + four * f_cfl )
+      dt  = cfl * two / tmp
 
-      ! Viscous
-      dt_v  = cfl * romin / ( two * ( mumax + eps ) * &
-           & max ( odx*odx, ody*ody, odz*odz ) )
-
-      !  Gravity
-      dt_gx = cfl * two / helper ( uodx, gravity(1), odx ) 
-
-      dt_gy = cfl * two / helper ( vody, gravity(2), ody ) 
-
-      dt_gz = cfl * two / helper ( wodz, gravity(3), odz )
-
-      dt_g  = min ( dt_gx, dt_gy, dt_gz )
-
-      ! ! Particle-fluid momentum exchange
-      ! fp_x  = fgdsumax * umax - dragumax
-
-
-      ! dt_px = cfl * two / helper ( uodx, fp_x, odx ) 
-
-      ! dt_py = cfl * two / helper ( vody, fp_y, ody ) 
-
-      ! dt_pz = cfl * two / helper ( wodz, fp_z, odz )
-
-      ! dt_p  = min ( dt_px, dt_py, dt_pz )
-
-      ! print*, "umax, vmax, wmax = ", umax, vmax, wmax
-      ! print*, "uodx, uody, uodz = ", uodx, vody, wodz
-      ! print*, "dx               = ", dx
-      ! print*, "dt, dt_c         = ", dt, dt_c
-
-      dt = min ( dt, dt_c ) !, dt_g )
-
-   contains
+      ! Protect against tmp very small
+      ! This may happen, for example, when the initial velocity field
+      ! is zero for an inviscid flow with no external forcing  
+      if ( tmp <= eps ) then
+         dt = old_dt
+      else 
+         dt = min ( dt, old_dt )
+      end if
 
 
-      ! Compute root = b + sqrt ( b^2 + 4*f*odx )
-
-      function helper ( b, f, odx )  result (res)
-
-         real(ar), intent(in   ) :: b, f, odx
-         real(ar)                :: res
-
-         res = b + sqrt ( b*b + four * f * odx ) 
-
-      end function helper
-
+      
    end subroutine compute_new_dt
 
 

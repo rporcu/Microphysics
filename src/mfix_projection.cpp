@@ -81,7 +81,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     Real mumax = mu_g[lev] -> max (0);
     
     compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-		     geom[lev].CellSize(), &dt );
+		     geom[lev].CellSize(), &cfl, &dt );
     prev_dt = dt ;
 
 
