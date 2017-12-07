@@ -32,7 +32,7 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
     }
     else if (load_balance_type == "KnapSack") {
 
-        amrex::Print() << "Load balancing using knapsack " << std::endl;
+        amrex::Print() << "Load balancing using KnapSack " << std::endl;
         
         if (ParallelDescriptor::NProcs() == 1) return;
         
