@@ -756,6 +756,37 @@ mfix_level::mfix_compute_oro_g (int lev)
 }
 
 
+//
+// Check if steady state has been reached by verifying that
+// 
+//      max(abs( u^(n+1) - u^(n) )) < tol * dt
+//      max(abs( v^(n+1) - v^(n) )) < tol * dt
+//      max(abs( w^(n+1) - w^(n) )) < tol * dt
+// 
+
+bool
+mfix_level::check_steady_state (int lev, Real dt)
+{
+
+    // 
+    // Use temporaries to store the difference
+    // between current and previous solution
+    // 
+    MultiFab::LinComb (*u_gt[lev], 1.0, *u_g[lev], 0, -1.0, *u_go[lev], 0, 0, 1, 0);
+    MultiFab::LinComb (*v_gt[lev], 1.0, *v_g[lev], 0, -1.0, *v_go[lev], 0, 0, 1, 0);
+    MultiFab::LinComb (*w_gt[lev], 1.0, *w_g[lev], 0, -1.0, *w_go[lev], 0, 0, 1, 0);
+
+    Real delta_u = u_gt[lev] -> norm0 ();
+    Real delta_v = v_gt[lev] -> norm0 ();
+    Real delta_w = w_gt[lev] -> norm0 ();
+
+    Real tol = 1.0e-4; // This will become an input
+
+    return (delta_u < tol*dt) && (delta_v < tol*dt ) && (delta_w < tol*dt);
+}
+
+
+
 void
 mfix_level::check_for_nans (int lev)
 {

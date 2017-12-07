@@ -159,6 +159,7 @@ private:
 					  Vector< std::unique_ptr<MultiFab> >& v,
 					  Vector< std::unique_ptr<MultiFab> >& w );
     
+    bool check_steady_state (int lev, Real dt);
 
     void mfix_compute_first_predictor (int lev, amrex::Real dt);
 
