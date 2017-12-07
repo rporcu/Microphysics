@@ -12,8 +12,7 @@
 
 
 void
-mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
-				  Real& dt, Real& prev_dt, Real time, Real normg)
+mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time )
 {
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
@@ -50,13 +49,22 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
     // Backup field variable to old
     int nghost = ep_go[lev] -> nGrow();
 
-    MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0, 1, nghost);
-    MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0, 1, nghost);
-    MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0, 1, nghost);
-    MultiFab::Copy (*rop_go[lev], *rop_g[lev], 0, 0, 1, nghost);
-    MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, nghost);
-    MultiFab::Copy (*v_go[lev],   *v_g[lev],   0, 0, 1, nghost);
-    MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, nghost);
+
+    //
+    // Start loop: if we are not seeking a steady state solution,
+    // the loop will execute only once
+    //
+    int keep_looping = 1;
+    do
+    {
+
+	MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0, 1, nghost);
+	MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0, 1, nghost);
+	MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0, 1, nghost);
+	MultiFab::Copy (*rop_go[lev], *rop_g[lev], 0, 0, 1, nghost);
+	MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, nghost);
+	MultiFab::Copy (*v_go[lev],   *v_g[lev],   0, 0, 1, nghost);
+	MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, nghost);
   
 
  
@@ -72,69 +80,75 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int set_normg,
 // 	mfix_calc_drag_fluid(lev);
   
 
-    // Here we should check the CFL condition
-    // Compute dt for this time step
-    Real umax  = u_g[lev] -> norm0 ();
-    Real vmax  = v_g[lev] -> norm0 ();
-    Real wmax  = w_g[lev] -> norm0 ();
-    Real romin = rop_g[lev] -> min (0);
-    Real mumax = mu_g[lev] -> max (0);
+	// Here we should check the CFL condition
+	// Compute dt for this time step
+	Real umax  = u_g[lev] -> norm0 ();
+	Real vmax  = v_g[lev] -> norm0 ();
+	Real wmax  = w_g[lev] -> norm0 ();
+	Real romin = rop_g[lev] -> min (0);
+	Real mumax = mu_g[lev] -> max (0);
     
-    compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-		     geom[lev].CellSize(), &cfl, &dt );
-    prev_dt = dt ;
+	compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
+			 geom[lev].CellSize(), &cfl, &dt );
+	prev_dt = dt ;
 
 
-    std::cout << "\nTentative velocity computation at  time = " << time
-	      << " ( dt = "<< dt << " )\n";
-    std::cout << "At beginning of time step :\n";
-    std::cout << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-    std::cout << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-    std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+	std::cout << "\nTentative velocity computation at  time = " << time
+		  << " ( dt = "<< dt << " )\n";
+	std::cout << "At beginning of time step :\n";
+	std::cout << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
+	std::cout << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
+	std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
 
-    //
-    // Time integration step
-    //
+	//
+	// Time integration step
+	//
     
-    // Step 1: compute u* (predictor step) and store it in u_g/v_g/w_g
-    mfix_compute_first_predictor ( lev, dt );
+	// Step 1: compute u* (predictor step) and store it in u_g/v_g/w_g
+	mfix_compute_first_predictor ( lev, dt );
     
-    // Step 2: compute u** (corrector step) and store it in u_g/v_g/w_g
-    mfix_compute_second_predictor ( lev, dt );
+	// Step 2: compute u** (corrector step) and store it in u_g/v_g/w_g
+	mfix_compute_second_predictor ( lev, dt );
     
-    // Add forcing terms ( gravity and/or momentum
-    // exchange with particles )
+	// Add forcing terms ( gravity and/or momentum
+	// exchange with particles )
 //    mfix_apply_forcing_terms ( lev, dt );
 
 
-    //
-    std::cout << "\nBefore projection step :\n";
-    std::cout << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-    std::cout << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-    std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
-    std::cout << "max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
+	//
+	std::cout << "\nBefore projection step :\n";
+	std::cout << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
+	std::cout << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
+	std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+	std::cout << "max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
 
-    check_for_nans (lev);
+	check_for_nans (lev);
 
-    // 
-    //  Projection Step
-    // 
-    mfix_apply_projection ( lev, dt ); 
+	// 
+	//  Projection Step
+	// 
+	mfix_apply_projection ( lev, dt ); 
     
-    //
-    // std::cout << "\nAfter projection step :\n";
-    std::cout << "Final max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-    std::cout << "Final max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-    std::cout << "Final max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
-    std::cout << "Final max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
-    // std::cout << "\nAfter projection step : ";
-    // std::cout << "max(abs(u)), max(abs(v)),max(abs(w)) =  ";
-    // std::cout << u_g[lev] -> norm0 () << "   ";
-    // std::cout << v_g[lev] -> norm0 () << "   ";	
-    // std::cout << w_g[lev] -> norm0 () << "\n \n";
-   
+	//
+	std::cout << "\nAfter projection step :\n";
+	std::cout << "Final max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
+	std::cout << "Final max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
+	std::cout << "Final max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+	std::cout << "Final max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
     
-    check_for_nans (lev);
+	check_for_nans (lev);
+
+	// 
+        // Check wather to exit the loop or not
+	// 
+	if (steady_state) {
+	    keep_looping = !steady_state_reached ( lev, dt );
+	} else {
+	    keep_looping = 0;
+	}
+	
+    }
+    while ( keep_looping );
     
     // // Calculate transport coefficients
     // mfix_physical_prop(lev,0);
@@ -764,8 +778,8 @@ mfix_level::mfix_compute_oro_g (int lev)
 //      max(abs( w^(n+1) - w^(n) )) < tol * dt
 // 
 
-bool
-mfix_level::check_steady_state (int lev, Real dt)
+int
+mfix_level::steady_state_reached (int lev, Real dt)
 {
 
     // 

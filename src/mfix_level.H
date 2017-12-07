@@ -44,8 +44,8 @@ public:
 
     void RegridOnRestart (int lev);
 
-    void Evolve(int lev, int nstep, int set_normg,
-                       Real& dt, Real& prev_dt, Real time, Real normg);
+    void Evolve(int lev, int nstep, int set_normg, int steady_state,
+		Real& dt, Real& prev_dt, Real time, Real normg);
 
     void usr3 (int lev);
 
@@ -136,8 +136,7 @@ private:
     void EvolveFluid (int lev, int nstep, int set_normg,
 		      Real dt, Real& prev_dt, Real time, Real normg);
 
-    void EvolveFluidProjection  (int lev, int nstep, int set_normg,
-				 Real& dt, Real& prev_dt, Real time, Real normg);
+    void EvolveFluidProjection  (int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time);
 
     // Projection-related methods
     void solve_poisson_equation ( int lev,
@@ -159,7 +158,7 @@ private:
 					  Vector< std::unique_ptr<MultiFab> >& v,
 					  Vector< std::unique_ptr<MultiFab> >& w );
     
-    bool check_steady_state (int lev, Real dt);
+    int  steady_state_reached (int lev, Real dt);
 
     void mfix_compute_first_predictor (int lev, amrex::Real dt);
 

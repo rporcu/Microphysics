@@ -192,7 +192,7 @@ int main (int argc, char* argv[])
           if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
              my_mfix.Regrid(lev,nstep,dual_grid);
 
-          my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
+          my_mfix.Evolve(lev,nstep,set_normg,steady_state,dt,prev_dt,time,normg);
 
           Real end_step = ParallelDescriptor::second() - strt_step;
           ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
