@@ -152,7 +152,7 @@ contains
       ! Local variables
       integer                       :: i, j, k
       integer                       :: i0, j0, k0
-      real(ar)                      :: qrop
+      real(ar)                      :: orop
       
       ! Compute convection term
       select case ( dir )
@@ -191,7 +191,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
                orop       = half * ( one/rop(i,j,k) + one/rop(i-i0,j-j0,k-k0) )
-               rhs(i,j,k) = -conv(i,j,k) + diff(i,j,k) * qrop
+               rhs(i,j,k) = -conv(i,j,k) + diff(i,j,k) * orop
             end do
          end do
       end do
