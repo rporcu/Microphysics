@@ -11,6 +11,8 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
                    Real time, Real normg)
 {
 
+  AMREX_ALWAYS_ASSERT(lev == 0);
+
   Real sum_vol;
   if (solve_dem && solve_fluid)
   {
@@ -32,7 +34,7 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
      mfix_calc_drag_particle(lev);
 
   if (solve_dem)
-     pc -> EvolveParticles( lev, nstep, dt, time, ebfactory);
+     pc -> EvolveParticles( lev, nstep, dt, time, ebfactory, costs[lev]);
 }
 
 void

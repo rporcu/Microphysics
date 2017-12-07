@@ -90,6 +90,8 @@ mfix_level::mfix_level ()
     drag_u.resize(nlevs_max);
     drag_v.resize(nlevs_max);
     drag_w.resize(nlevs_max);
+
+    costs.resize(nlevs_max);
 }
 
 void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)

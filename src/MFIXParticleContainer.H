@@ -77,7 +77,8 @@ public:
     void AllocData ();
 
     void EvolveParticles ( int lev, int nstep, Real dt, Real time,
-                           std::unique_ptr<EBFArrayBoxFactory>& ebfactory );
+                           std::unique_ptr<EBFArrayBoxFactory>& ebfactory,
+                           std::unique_ptr<MultiFab>& cost);
 
     void GetParticleAvgProp ( int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);
 

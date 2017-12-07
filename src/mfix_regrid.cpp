@@ -30,6 +30,25 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
 
        mfix_set_bc0(lev);
     }
+    else if (load_balance_type == "KnapSack") {
+
+        amrex::Print() << "Load balancing using knapsack " << std::endl;
+        
+        if (ParallelDescriptor::NProcs() == 1) return;
+        
+        AMREX_ALWAYS_ASSERT(costs[0] != nullptr);
+
+        for (int lev = 0; lev <= finestLevel(); ++lev)
+        {
+            DistributionMapping newdm = DistributionMapping::makeKnapSack(*costs[lev]);
+            RegridArrays(lev, grids[lev], newdm);
+            SetDistributionMap(lev, newdm);            
+        }
+        
+        pc->Regrid(dmap[lev], grids[lev]);
+
+        mfix_set_bc0(lev);
+    }
 }
 
 void
@@ -37,7 +56,7 @@ mfix_level::RegridOnRestart (int lev)
 {
     amrex::Print() << "In RegridOnRestart " << std::endl;
 
-    if (load_balance_type == "FixedSize")
+    if (load_balance_type == "FixedSize" || load_balance_type == "KnapSack")
     {
        // We hold on to the old_ba so that we can test the new BoxArray against it
        //   to see if the grids have changed
@@ -375,4 +394,8 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     ebfactory.reset(new EBFArrayBoxFactory(geom[lev], new_grids, new_dmap,
                  {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells}, m_eb_support_level));
 
+    if (costs[lev] != nullptr) {
+        costs[lev].reset(new MultiFab(new_grids, new_dmap, 1, 0));
+        costs[lev]->setVal(0.0);
+    }
 }

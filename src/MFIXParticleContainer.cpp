@@ -305,7 +305,8 @@ MFIXParticleContainer::InitData()
 }
 
 void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time,
-                                            std::unique_ptr<EBFArrayBoxFactory>& ebfactory )
+                                             std::unique_ptr<EBFArrayBoxFactory>& ebfactory,
+                                             std::unique_ptr<MultiFab>& cost)
 {
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
@@ -394,6 +395,9 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
+
+         Real wt = ParallelDescriptor::second();
+
          // Real particles
          const int nrp    = NumberOfParticles(pti);
          void* particles  = pti.GetArrayOfStructs().data();
@@ -478,8 +482,15 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
                              &xlen, &ylen, &zlen, &stime, &n);
          BL_PROFILE_VAR_STOP(des_time_loop);
 #endif
+
+         if (cost) {
+             const Box& tbx = pti.tilebox();
+             wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+             (*cost)[pti].plus(wt, tbx);
+         }
       }
     }
+
       n += 1;
 
       if (debug) {

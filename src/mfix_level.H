@@ -244,6 +244,9 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag_v;
     Vector< std::unique_ptr<MultiFab> > drag_w;
 
+    // used if load_balance_type == "KnapSack"
+    Vector<std::unique_ptr<MultiFab> > costs;
+
     int solve_fluid;
     int solve_dem;
     int max_nit;
