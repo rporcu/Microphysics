@@ -306,7 +306,136 @@ contains
    end subroutine compute_oro_g
 
 
+   !
+   ! Set the boundary condition for PPE 
+   ! 
+   subroutine set_ppe_bc ( bc_lo, bc_hi, domlo, domhi, bct_ilo, bct_ihi, &
+        & bct_jlo, bct_jhi, bct_klo, bct_khi )  bind(C)
+      
+      use amrex_lo_bctypes_module
+      use bc
+      
+      ! Array of global BC types
+      integer(c_int), intent(  out) :: bc_lo(3), bc_hi(3)
+
+      ! Domain bounds
+      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
+      
+      ! Arrays of point-by-point BC types 
+      integer(c_int), intent(in   ), target  ::  &
+           & bct_ilo(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
+           & bct_ihi(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
+           & bct_jlo(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
+           & bct_jhi(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
+           & bct_klo(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2), &
+           & bct_khi(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+
+      ! Local variables
+      integer(c_int)                :: bc_face
 
 
+      !
+      ! By default, all the BCs are Neumann
+      !
+      bc_lo = amrex_lo_neumann
+      bc_hi = amrex_lo_neumann
+      
+      !
+      ! BC -- X direction 
+      ! 
+      if ( cyclic_x ) then
+         bc_lo(1) = amrex_lo_periodic
+         bc_hi(1) = amrex_lo_periodic
+      else
 
+         ! X at domlo(1)
+         bc_face = get_bc_face(bct_ilo)
+         if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
+            bc_lo(1) = amrex_lo_dirichlet
+         end if
+
+         ! X at domhi(1)
+         bc_face = get_bc_face(bct_ihi)
+         if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
+            bc_hi(1) = amrex_lo_dirichlet
+         end if
+         
+      end if
+         
+
+      !
+      ! BC -- Y direction 
+      ! 
+      if ( cyclic_y ) then
+         bc_lo(2) = amrex_lo_periodic
+         bc_hi(2) = amrex_lo_periodic
+      else
+
+         ! Y at domlo(2)
+         bc_face = get_bc_face(bct_jlo)
+         if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
+            bc_lo(2) = amrex_lo_dirichlet
+         end if
+
+         ! Y at domhi(2)
+         bc_face = get_bc_face(bct_jhi)
+         if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
+            bc_hi(2) = amrex_lo_dirichlet
+         end if
+         
+      end if
+
+      !
+      ! BC -- Z direction 
+      ! 
+      if ( cyclic_z ) then
+         bc_lo(3) = amrex_lo_periodic
+         bc_hi(3) = amrex_lo_periodic
+      else
+
+         ! Z at domlo(3)
+         bc_face = get_bc_face(bct_klo)
+         if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
+            bc_lo(3) = amrex_lo_dirichlet
+         end if
+
+         ! Z at domhi(3)
+         bc_face = get_bc_face(bct_khi)
+         if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
+            bc_hi(3) = amrex_lo_dirichlet
+         end if
+         
+      end if
+
+
+      contains
+
+         !
+         ! Test whether the BC type is the same everywhere on
+         ! the face. If BC is uniform on face, it returns its value
+         ! 
+         function get_bc_face (bct_array) result (bc_face)
+            integer(c_int), intent(in   ) :: bct_array(:,:,:)
+            integer                       :: bc_face
+            integer                       :: is, ie, js, je
+
+            ! Do not considere the edges: they may cause problemse
+            is = 3
+            ie = size (bct_array,1) - 2
+            js = 3
+            je = size (bct_array,2) - 2
+
+            bc_face = bct_array(is,js,1)
+
+            if ( .not. all (bct_array(is:ie,js:je,1) == bc_face) ) then
+               stop "BC type must be uniform on each face of the domain"
+            end if            
+
+         end function get_bc_face
+               
+
+   end subroutine set_ppe_bc
+
+
+   
 end module projection_mod

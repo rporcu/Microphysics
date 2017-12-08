@@ -509,6 +509,14 @@ extern "C"
 	const int* domlo, const int* domhi,
 	const int* bc_klo_type, const int* bc_khi_type );
 
+    void set_ppe_bc (
+	int* bc_lo, int* bc_hi,
+	const int* domlo, const int* domhi,
+	const int* bct_ilo, const int* bct_ihi, 
+	const int* bct_jlo, const int* bct_jhi,
+	const int* bct_klo, const int* bct_khi );
+
+    
 #ifdef __cplusplus
 }
 #endif

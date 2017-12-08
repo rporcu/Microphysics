@@ -22,7 +22,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     // time it is called, i.e. it will work only as initialization.
     // This fails if the code is restarted since it will initialize the velocity
     // field to the initial value.
-    init_tests_projection (lev);
+//    init_tests_projection (lev);
 
     check_for_nans (lev);
     
@@ -138,6 +138,57 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     
 	check_for_nans (lev);
 
+    
+	// // Calculate transport coefficients
+	// mfix_physical_prop(lev,0);
+
+	// // Update fluid density
+	// mfix_physical_prop(lev,0);
+
+	// Compute the divergence of the velocity field, div(u).
+	// to check if div(u) = 0 is satisfied
+	u_g[lev] -> FillBoundary (geom[lev].periodicity());
+	v_g[lev] -> FillBoundary (geom[lev].periodicity());
+	w_g[lev] -> FillBoundary (geom[lev].periodicity());
+	mfix_set_bc1(lev);
+    
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+	for (MFIter mfi(*trD_g[lev],true); mfi.isValid(); ++mfi)
+	{
+	    const Box& bx = mfi.tilebox();
+
+	    compute_divu ( BL_TO_FORTRAN_BOX(bx),
+			   BL_TO_FORTRAN_ANYD((*trD_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			   geom[lev].CellSize() );		     
+
+	}
+
+	// BCs 
+	fill_mf_bc(lev,*trD_g[lev]);
+    
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+	for (MFIter mfi(*vort[lev],true); mfi.isValid(); ++mfi)
+	{
+	    const Box& bx = mfi.tilebox();
+
+	    compute_vort ( BL_TO_FORTRAN_BOX(bx),
+			   BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			   geom[lev].CellSize() );		     
+
+	}
+
+	amrex::Print() << "Max(abs(divu)) = "<< trD_g[lev] -> norm0 () << "\n";
+
 	// 
         // Check wather to exit the loop or not
 	// 
@@ -149,56 +200,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	
     }
     while ( keep_looping );
-    
-    // // Calculate transport coefficients
-    // mfix_physical_prop(lev,0);
 
-    // // Update fluid density
-    // mfix_physical_prop(lev,0);
-
-    // Compute the divergence of the velocity field, div(u).
-    // to check if div(u) = 0 is satisfied
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
-    mfix_set_bc1(lev);
-    
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*trD_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box& bx = mfi.tilebox();
-
-	compute_divu ( BL_TO_FORTRAN_BOX(bx),
-		       BL_TO_FORTRAN_ANYD((*trD_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-		       geom[lev].CellSize() );		     
-
-    }
-
-    // BCs 
-    fill_mf_bc(lev,*trD_g[lev]);
-    
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*vort[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box& bx = mfi.tilebox();
-
-	compute_vort ( BL_TO_FORTRAN_BOX(bx),
-		       BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-		       geom[lev].CellSize() );		     
-
-    }
-
-    amrex::Print() << "Max(abs(divu)) = "<< trD_g[lev] -> norm0 () << "\n";
 }
 
 //
@@ -667,7 +669,7 @@ mfix_level::solve_poisson_equation (  int lev,
     MLABecLaplacian              matrix(geom, grids, dmap, info);
     Vector<const MultiFab*>      tmp;
     array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
-
+    int                          bc_lo[3], bc_hi[3];
     
     // Copy the PPE coefficient into the proper data strutcure
     tmp = amrex::GetVecOfConstPtrs ( b[lev] ) ;
@@ -675,18 +677,23 @@ mfix_level::solve_poisson_equation (  int lev,
     b_tmp[1] = tmp[1];
     b_tmp[2] = tmp[2];
 
-    // LinOpBCType Definitions are in Src/Boundary/AMReX_LO_BCTYPES.H 
-    matrix.setDomainBC (
-	{AMREX_D_DECL(LinOpBCType::Periodic,
- 		      LinOpBCType::Periodic,
-		      LinOpBCType::Periodic) },
-	{AMREX_D_DECL(LinOpBCType::Periodic, 
-		      LinOpBCType::Periodic,
-		      LinOpBCType::Periodic)} );
-    
+    // LinOpBCType Definitions are in Src/Boundary/AMReX_LO_BCTYPES.H
+    Box domain(geom[lev].Domain());
+    set_ppe_bc (bc_lo, bc_hi,
+		domain.loVect(), domain.hiVect(),
+		bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+		bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+		bc_klo.dataPtr(), bc_khi.dataPtr() );
+   
+    matrix.setDomainBC ( {(LinOpBCType) bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
+			 {(LinOpBCType) bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
+
     matrix.setScalars ( 0.0, -1.0 );    
     matrix.setBCoeffs ( lev, b_tmp );
-    matrix.setLevelBC ( lev, nullptr );
+
+    // Pass the solution vector because it should have
+    // already the Dirichlet's conditions in place
+    matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi)[lev] );
     
     // 
     // Then setup the solver ----------------------
@@ -794,8 +801,14 @@ mfix_level::steady_state_reached (int lev, Real dt)
     Real delta_v = v_gt[lev] -> norm0 ();
     Real delta_w = w_gt[lev] -> norm0 ();
 
-    Real tol = 1.0e-4; // This will become an input
+    Real tol = 1.0e-5; // This will become an input
 
+    
+    std::cout << "Checking time step :\n";
+    std::cout << "du/dt  = " << delta_u/dt << "\n";
+    std::cout << "dv/dt  = " << delta_v/dt << "\n";	
+    std::cout << "dw/dt  = " << delta_w/dt << "\n";
+    
     return (delta_u < tol*dt) && (delta_v < tol*dt ) && (delta_w < tol*dt);
 }
 
