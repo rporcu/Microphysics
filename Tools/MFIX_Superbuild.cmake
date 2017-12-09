@@ -154,6 +154,7 @@ ExternalProject_Add ( amrex
    -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
    -DAMREX_FFLAGS_OVERRIDES=${MFIX_Fortran_FLAGS}
    -DAMREX_CXXFLAGS_OVERRIDES=${MFIX_CXX_FLAGS}
+   -DCMAKE_EXPORT_COMPILE_COMMANDS=${CMAKE_EXPORT_COMPILE_COMMANDS}
    UPDATE_COMMAND ""
    BUILD_ALWAYS 1
    # LOG_CONFIGURE 1
@@ -183,9 +184,26 @@ ExternalProject_Add ( mfix
    -DMFIX_CXXFLAGS_OVERRIDES=${MFIX_CXXFLAGS_OVERRIDES}
    -DENABLE_FPE=${ENABLE_FPE}
    -DAMREX_INSTALL_DIR=${AMREX_SUPERBUILD_INSTALLDIR}
+   -DCMAKE_EXPORT_COMPILE_COMMANDS=${CMAKE_EXPORT_COMPILE_COMMANDS}
    SOURCE_DIR ${PROJECT_SOURCE_DIR}
    BINARY_DIR ${MFIX_SUPERBUILD_BUILDDIR}
    USES_TERMINAL_CONFIGURE 1
    USES_TERMINAL_BUILD 1
    INSTALL_COMMAND ""
    )
+
+# When using superbuidl, the compile commands databases do not exist before compile-time. Hence create a new build target (compile_dB)
+# which collects both mfix's and amrex's compile_commands.json, concattenates them in the project's root directory
+add_custom_target( compile_db
+    # First take mfix's compile database (compile_commands.json) and:
+    # 1.  $d     => deletes (d) last line ($) of a file (in this case the trailing ])
+    # 2.a $      => jumps to end ($) of file, then apply:
+    # 2.b s/$/,/ => string search-and-replace (s/.../.../) for the and of the line ($) there add a comma (,)
+    COMMAND sed "$d" ${MFIX_SUPERBUILD_BUILDDIR}/compile_commands.json | sed "$ s/$/,/" > ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json
+    # Now take amrex's compile database (compile_commands.json) and:
+    # 1. 1d => deletes the first line (in this case the leading [)
+    # 2. >> => appends the the end of mfix's compile database in the root-dir
+    COMMAND sed "1d" ${AMREX_SUPERBUILD_BUILDDIR}/compile_commands.json >> ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json
+    VERBATIM
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
+    )

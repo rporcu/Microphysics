@@ -19,6 +19,9 @@ endif ()
 # run already
 set (__MFIX_OPTIONS__ "")
 
+# Creates `compile_commands.json` in the build build directory
+#  `compile_commands.json` contains compiler flags used by plugins like YouCompleteMe
+set ( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
 #
 # Populate the cache and check the value of the user-definable options 

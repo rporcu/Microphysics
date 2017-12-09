@@ -1,17 +1,5 @@
 cmake_minimum_required (VERSION 3.5)
 
-# Creates `compile_commands.json` in the build build directory
-#  `compile_commands.json` contains compiler flags used by plugins like YouCompleteMe
-SET( CMAKE_EXPORT_COMPILE_COMMANDS ON )
-
-IF( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
-  EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json
-    ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json
-  )
-ENDIF()
-
-
 #
 # Set the search path for cmake modules
 #
@@ -163,3 +151,11 @@ if (DOXYGEN_FOUND)
       COMMENT "Generating API documentation with Doxygen" VERBATIM
       )
 endif (DOXYGEN_FOUND)
+
+# Copy compile_commands.json from the build directory to the project root directory
+if ( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
+    execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json
+        ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json
+  )
+endif ()
