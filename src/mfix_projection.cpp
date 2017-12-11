@@ -789,6 +789,14 @@ int
 mfix_level::steady_state_reached (int lev, Real dt)
 {
 
+    //
+    // Make sure all ghost nodes are up to date
+    // 
+    u_g[lev] -> FillBoundary (geom[lev].periodicity());
+    v_g[lev] -> FillBoundary (geom[lev].periodicity());
+    w_g[lev] -> FillBoundary (geom[lev].periodicity());
+    mfix_set_bc1(lev);
+    
     // 
     // Use temporaries to store the difference
     // between current and previous solution
@@ -808,8 +816,37 @@ mfix_level::steady_state_reached (int lev, Real dt)
     std::cout << "du/dt  = " << delta_u/dt << "\n";
     std::cout << "dv/dt  = " << delta_v/dt << "\n";	
     std::cout << "dw/dt  = " << delta_w/dt << "\n";
+
+
+    int condition1 = (delta_u < tol*dt) && (delta_v < tol*dt ) && (delta_w < tol*dt);
+
+
+    //
+    // Second stop condition
+    //
+    Real tmp1 = (u_gt[lev] -> norm1 ()) / (u_go[lev] -> norm1 ());
+    Real tmp2 = (v_gt[lev] -> norm1 ()) / (v_go[lev] -> norm1 ());
+    Real tmp3 = (w_gt[lev] -> norm1 ()) / (w_go[lev] -> norm1 ());
+
+    if ( (u_go[lev] -> norm1 ()) < 1.0e-8 )
+	tmp1 = 0.0;
+
+    if ( (v_go[lev] -> norm1 ()) < 1.0e-8 )
+	tmp2 = 0.0;
+
+    if ( (w_go[lev] -> norm1 ()) < 1.0e-8 )
+	tmp3 = 0.0;
     
-    return (delta_u < tol*dt) && (delta_v < tol*dt ) && (delta_w < tol*dt);
+    
+    std::cout << "||u-uo||/||uo||  = " << tmp1 << "\n";
+    std::cout << "||v-vo||/||vo||  = " << tmp2 << "\n";	
+    std::cout << "||w-wo||/||wo||  = " << tmp3 << "\n";
+    
+    int condition2 = (tmp1 < tol) && (tmp2 < tol) && (tmp3 < tol );
+    
+    return condition1 || condition2;
+
+
 }
 
 
