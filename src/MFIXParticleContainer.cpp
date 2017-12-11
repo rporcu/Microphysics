@@ -181,6 +181,19 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
   Redistribute();
 }
 
+void MFIXParticleContainer::PrintParticleCounts() {
+  const int lev = 0;
+  amrex::AllPrintToFile("load_balance") << "Particles on each box: \n";
+  long local_count = 0;
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
+      long np = pti.numParticles();
+      local_count += np;
+      amrex::AllPrintToFile("load_balance") << "Box:" << pti.index() << ", count: " << np << std::endl;
+    }
+  amrex::AllPrintToFile("load_balance") << "Total for this process: " << local_count << std::endl << std::endl;
+}
+
 void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba)
 {
     int lev = 0;
