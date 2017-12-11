@@ -44,10 +44,14 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
             RegridArrays(lev, grids[lev], newdm);
             SetDistributionMap(lev, newdm);            
         }
-        
-        pc->Regrid(dmap[lev], grids[lev]);
 
-        mfix_set_bc0(lev);
+        for (int lev = 0; lev <= finestLevel(); ++lev)
+	  {        
+	    pc->Regrid(dmap[lev], grids[lev]);
+	    mfix_set_bc0(lev);
+	  }
+	
+	pc->PrintParticleCounts();
     }
 }
 
