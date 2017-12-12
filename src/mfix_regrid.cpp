@@ -53,8 +53,10 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
 	
 	//	amrex::Print() << grids[0] << std::endl;	
 	//	amrex::Print() << dmap[0] << std::endl;
-
-	pc->PrintParticleCounts();
+	// long np = pc->TotalNumberOfParticles(true, true);
+	// int pid = ParallelDescriptor::MyProc();
+	// amrex::AllPrint() << "Process " << pid << " got " << np << " particles \n";
+	//	pc->PrintParticleCounts();
     }
 }
 
