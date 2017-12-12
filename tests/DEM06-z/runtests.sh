@@ -30,12 +30,11 @@ else
     MPIRUN=""
 fi
 
-MFIX_BENCHMARKS_HOME=${MFIX_BENCHMARKS_HOME:-}
 FCOMPARE=${FCOMPARE:-}
 
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} ${MFIX} "${INPUTS}" TSTOP=0.150
-time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.restart_file=DEM06_chk00150"
+time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.restart=DEM06_chk00150"
 
 ${FJOIN_PAR} -f DEM06_par --end 350 --var  3 --format 4 --dt 0.001 &> POST_POS.NEW
 ${FJOIN_PAR} -f DEM06_par --end 350 --var 11 --format 4 --dt 0.001 &> POST_VEL.NEW

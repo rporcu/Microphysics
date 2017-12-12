@@ -24,6 +24,9 @@ module bc
   real(c_real) :: BC_Y_s(dim_bc), BC_Y_n(dim_bc)
   real(c_real) :: BC_Z_b(dim_bc), BC_Z_t(dim_bc)
 
+  real(c_real) :: BC_Normal(dim_bc,3)
+  real(c_real) :: BC_Center(dim_bc,3)
+
   ! Void fraction in a specified boundary
   real(c_real) :: BC_EP_g(dim_bc), BC_EP_s(dim_bc, dim_m)
 

@@ -67,6 +67,7 @@ void ReadParameters ()
   pp.query("verbose", verbose);
 
   pp.query("dual_grid",dual_grid);
+  pp.query("regrid_int",regrid_int);
 }
 
 int main (int argc, char* argv[])
@@ -128,14 +129,14 @@ int main (int argc, char* argv[])
     if (restart_file.empty())
     {
        my_mfix.InitLevelData(lev,dt,time);
-    } 
+    }
     else
     {
        restart_flag = 1;
        IntVect Nrep(repl_x,repl_y,repl_z);
        my_mfix.Restart( restart_file, &nstep, &dt, &time, Nrep);
 
-       // This call checks if we want to regrid using the 
+       // This call checks if we want to regrid using the
        //   max_grid_size just read in from the inputs file used to restart
        //   (only relevant if load_balance_type = "FixedSize")
 
@@ -143,11 +144,18 @@ int main (int argc, char* argv[])
        my_mfix.RegridOnRestart(lev);
     }
 
+    // We move this to after restart and/or regrid so we make the EB data structures with the correct 
+    //    BoxArray and DistributionMapping
+    my_mfix.make_eb_geometry(lev);
+
     // This checks if we want to regrid using the KDTree approach
     //    (only if load_balance_type = "KDTree")
     my_mfix.Regrid(lev,nstep,dual_grid);
 
     my_mfix.PostInit( lev, dt, time, nstep, restart_flag );
+
+    // Write out EB sruface
+    my_mfix.WriteEBSurface(lev);
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
@@ -199,17 +207,17 @@ int main (int argc, char* argv[])
           if (ParallelDescriptor::IOProcessor())
              std::cout << "Time per step        " << end_step << std::endl;
 
-          if (!steady_state)  
+          if (!steady_state)
           {
              time += prev_dt;
              nstep++;
 
              if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
                 my_mfix.WritePlotFile( plot_file, nstep, dt, time );
-   
+
              if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
                 my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
-   
+
              if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
                 my_mfix.WriteParticleAscii( par_ascii_file, nstep );
           }
@@ -220,7 +228,7 @@ int main (int argc, char* argv[])
           // Mechanism to terminate MFIX normally.
           if (steady_state || (time + 0.1*dt >= tstop) || (solve_dem && !solve_fluid)) finish = 1;
        }
-    } 
+    }
 
     // Dump plotfile at the end if enabled for steady state
     if (steady_state) {

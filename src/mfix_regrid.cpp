@@ -370,4 +370,17 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
 
     fill_mf_bc(lev,*mu_g[lev]);
     fill_mf_bc(lev,*lambda_g[lev]);
+
+    // ********************************************************************************
+    // EB stuff
+    // ********************************************************************************
+    int m_eb_basic_grow_cells = 2;
+    int m_eb_volume_grow_cells = 2;
+    int m_eb_full_grow_cells = 2;
+    EBSupport m_eb_support_level = EBSupport::full;
+
+    if (ebfactory)
+       ebfactory.reset(new EBFArrayBoxFactory(geom[lev], new_grids, new_dmap,
+                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells}, m_eb_support_level));
+
 }

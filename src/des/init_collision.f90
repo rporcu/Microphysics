@@ -40,11 +40,11 @@ contains
   use constant,       only: pi, mmax
   use discretelement, only: kn, kn_w, kt, kt_w, kt_fac, kt_w_fac, &
       & des_etan, des_etan_wall, des_etat, des_etat_wall,        &
-      & des_en_input, des_en_wall_input, des_et_input, dtsolid,  &
-      & des_et_wall_input, des_etat_fac, des_etat_w_fac
+      & des_en_input, des_en_wall_input, &
+      & des_etat_fac, des_etat_w_fac, dtsolid 
+!     & des_et_input, des_et_wall_input
 
   integer      :: m, l, lc
-  logical      :: flag_warn
   real(c_real) :: tcoll, tcoll_tmp
   real(c_real) :: mass_m, mass_l, mass_eff
   real(c_real) :: en
@@ -135,13 +135,12 @@ subroutine init_collision_hertz
                               des_etat, des_etat_wall,         &
                               hert_kn, hert_kwn,               &
                               hert_kt, hert_kwt,               &
-                              des_etat_fac, des_etat_w_fac,    &
                               e_young, ew_young,               &
                               v_poisson, vw_poisson,           &
                               dtsolid
+!                             des_etat_fac, des_etat_w_fac
 
     integer           :: m, l, lc
-    character(len=64) :: msg
     real(c_real)      :: tcoll, tcoll_tmp
     ! Particle and effective mass.
     real(c_real)      :: mass_m, mass_l, mass_eff

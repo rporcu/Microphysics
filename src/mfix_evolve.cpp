@@ -41,7 +41,8 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real &d
 	mfix_calc_drag_particle(lev);
 
     if (solve_dem)
-	pc -> EvolveParticles( lev, nstep, dt, time);
+	pc -> EvolveParticles( lev, nstep, dt, time, ebfactory);
+
 }
 
 void
@@ -182,23 +183,6 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
 
 	}
     } while (reiterate==1);
-
-
-    //
-    // Compute CFL
-    //
-    // Real u_abs = u_g[0] -> norm0 ();
-    // Real v_abs = v_g[0] -> norm0 ();
-    // Real w_abs = w_g[0] -> norm0 ();
-  
-    // Real cfl   = dt * ( u_abs / dx + v_abs / dy + w_abs /dz ); 
-
-      
-    // std::cout << "\nTesting CFL condition:\n";
-    // std::cout << "max(|u|), max(|v|), max(|w|) = " << u_abs << " " << v_abs \
-    // 	    << " " << w_abs << "\n";
-    // std::cout << "DT = " << dt << std::endl;
-    // std::cout << "Courant number =  " << cfl << "\n" << std::endl;
 
 }
 

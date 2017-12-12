@@ -56,6 +56,8 @@ class MFIXParticleContainer final
 {
 public:
 
+    using MyConstParIter = ParConstIter<realData::count,intData::count,0,0>;
+
     // Get number of particles
     int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
 
@@ -66,6 +68,7 @@ public:
     void InitData ();
 
     void InitParticlesAscii (const std::string& file);
+    void InitParticlesAuto (int lev);
 
     void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 
@@ -73,7 +76,8 @@ public:
 
     void AllocData ();
 
-    void EvolveParticles ( int lev, int nstep, Real dt, Real time );
+    void EvolveParticles ( int lev, int nstep, Real dt, Real time,
+                           std::unique_ptr<EBFArrayBoxFactory>& ebfactory );
 
     void GetParticleAvgProp ( int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);
 
@@ -82,7 +86,7 @@ public:
     /// Write out all particles at a level in the format fcompare_par can read
     ///
     void writeAllForComparison(int lev);
- 
+
     ///
     /// Write out all particles in the format of the particle_input.dat files so we
     ///       can initialize a run with them
@@ -135,7 +139,6 @@ public:
                             IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                             IArrayBox& bc_klo, IArrayBox& bc_khi,
                             int fortran_beta_comp, int fortran_vel_comp);
-
 private:
 
     ///

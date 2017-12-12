@@ -23,7 +23,11 @@ amrex::IntVect mfix_level::e_z(0,0,1);
 
 
 mfix_level::~mfix_level ()
-{};
+{
+   if (ebfactory != NULL) 
+      EBTower::Destroy();
+};
+
 
 mfix_level::mfix_level ()
 {

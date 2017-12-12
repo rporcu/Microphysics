@@ -12,7 +12,7 @@ namespace
     const std::string level_prefix {"Level_"};
 }
 
-// This function iniatializes the attributes vectorVars, scalarVars, vecVarsName and
+// This function initializes the attributes vectorVars, scalarVars, vecVarsName and
 // scaVarsName.
 // If new variables need to be added to the output/checkpoint, simply
 // add them here and the IO routines will automatically take care of them.
@@ -26,10 +26,9 @@ mfix_level::InitIOData ()
 
     // Define the list of scalar variables at cell centers that need to be written
     // to plotfile/checkfile.
-    scaVarsName     = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g"};
-    scaVarsPlotName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "vort"};
-    scalarVars      = { &ep_g, &p_g, &ro_g,  &rop_g,  &mu_g};
-    scalarPlotVars  = { &ep_g, &p_g, &ro_g,  &rop_g,  &mu_g, &vort};
+    // "volfrac" MUST always be last without any mf associated to it!!!
+    scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "vort", "volfrac"};
+    scalarVars  = {&ep_g, &p_g, &ro_g,  &rop_g,  &mu_g, &vort};
 }
 
 void
@@ -499,51 +498,55 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
     const std::string& plotfilename = amrex::Concatenate(plot_file,nstep);
 
-    if (ParallelDescriptor::IOProcessor())
-       std::cout << "  Writing plotfile " << plotfilename << std::endl;
+    amrex::Print() << "  Writing plotfile " << plotfilename << std::endl;
 
-    {
-      Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
+    const int ngrow = 0;
 
-      for (int lev = 0; lev <= finest_level; ++lev) {
+    Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
 
-         const int ncomp = vectorVars.size() + scalarPlotVars.size();
-         const int ngrow = 0;
+    for (int lev = 0; lev <= finest_level; ++lev) {
 
-         mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
+       // the "+1" here is for volfrac
+       const int ncomp = vectorVars.size() + scalarVars.size() + 1;
+       mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
 
-         // Vector variables
-         int dcomp = 0;
-         Vector<const MultiFab*> srcmf(3);
+       // Vector variables
+       int dcomp = 0;
+       Vector<const MultiFab*> srcmf(3);
 
-         for( dcomp = 0; dcomp < vectorVars.size(); dcomp=dcomp+3 ) 
-         {
-            srcmf[0] = (*vectorVars[dcomp])[lev].get();
-            srcmf[1] = (*vectorVars[dcomp+1])[lev].get();
-            srcmf[2] = (*vectorVars[dcomp+2])[lev].get();
-            amrex::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
-         };
+       for( dcomp = 0; dcomp < vectorVars.size(); dcomp=dcomp+3 ) {
+          srcmf[0] = (*vectorVars[dcomp])[lev].get();
+          srcmf[1] = (*vectorVars[dcomp+1])[lev].get();
+          srcmf[2] = (*vectorVars[dcomp+2])[lev].get();
+          amrex::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
+       };
 
-         // Scalar variables
-         for( int i = 0; i < scalarPlotVars.size(); i++ ) {
-            MultiFab::Copy(*mf[lev], *((*scalarPlotVars[i])[lev].get()), 0, dcomp, 1, 0);
-            dcomp++;
-         }
-      }
+       // Scalar variables
+       for( int i = 0; i < scalarVars.size(); i++ ) {
+           MultiFab::Copy(*mf[lev], *((*scalarVars[i])[lev].get()), 0, dcomp, 1, 0);
+           dcomp++;
+       }
 
-      Vector<const MultiFab*> mf2(finest_level+1);
+       if (ebfactory) {
+           MultiFab::Copy(*mf[lev], ebfactory->getVolFrac(), 0, dcomp, 1, 0);
+       } else {
+           mf[lev]->setVal(1.0,dcomp,1,0);
+       }
+ 
+       Vector<const MultiFab*> mf2(finest_level+1);
+ 
+       for (int lev = 0; lev <= finest_level; ++lev) {
+           mf2[lev] = mf[lev].get();
+       }
+ 
+       // Concatenate scalar and vector var names
+       Vector<std::string>  names;
+       names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
+       names.insert( names.end(), scaVarsName.begin(), scaVarsName.end());
+     
+       amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
+                    Geom(), time, istep, refRatio());
 
-      for (int lev = 0; lev <= finest_level; ++lev) {
-          mf2[lev] = mf[lev].get();
-      }
-
-      // Concatenate scalar and vector var names
-      Vector<std::string>  names;
-      names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
-      names.insert( names.end(), scaVarsPlotName.begin(), scaVarsPlotName.end());
-
-      amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
-                   Geom(), time, istep, refRatio());
     }
 
     WriteJobInfo(plotfilename);

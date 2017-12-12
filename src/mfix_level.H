@@ -14,6 +14,12 @@
 
 #include <MFIXParticleContainer.H>
 
+#include <AMReX_GeometryShop.H>
+#include <AMReX_EBIndexSpace.H>
+#include <AMReX_EBFabFactory.H>
+#include <AMReX_EBTower.H>
+#include <AMReX_EBFArrayBox.H>
+
 
 class mfix_level
     : public AmrCore
@@ -53,6 +59,12 @@ public:
        { pc -> output( lev, estatus, finish, nstep, dt, time);};
 
     void make_mg_bc (int mg_bc[]);
+
+    void make_eb_geometry (int lev);
+
+    void WriteEBSurface(int lev);
+
+    void InitIOData ();
 
 protected:
 
@@ -115,16 +127,16 @@ protected:
     void AllocateArrays(int lev);
     void RegridArrays(int lev, BoxArray& new_grids, DistributionMapping& new_dmap);
 
+    void MakeBCArrays();
+
 private:
 
     void check_data (int lev);
 
-    void InitIOData ();
-
     void MakeNewLevelFromScratch(int lev, Real time,
           const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
-    void ReMakeNewLevelFromScratch(int lev, 
+    void ReMakeNewLevelFromScratch(int lev,
           const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
     void WriteHeader(const std::string& name, int nstep, Real dt, Real time) const;
@@ -265,19 +277,19 @@ private:
     Vector< std::unique_ptr<MultiFab> > tau_u_g;
     Vector< std::unique_ptr<MultiFab> > tau_v_g;
     Vector< std::unique_ptr<MultiFab> > tau_w_g;
-    
+
     Vector< std::unique_ptr<MultiFab> > fluxX;
     Vector< std::unique_ptr<MultiFab> > fluxY;
     Vector< std::unique_ptr<MultiFab> > fluxZ;
-   
+
     Vector< std::unique_ptr<MultiFab> > ropX;
     Vector< std::unique_ptr<MultiFab> > ropY;
     Vector< std::unique_ptr<MultiFab> > ropZ;
-  
+
     Vector< std::unique_ptr<MultiFab> > f_gds_u;
     Vector< std::unique_ptr<MultiFab> > f_gds_v;
     Vector< std::unique_ptr<MultiFab> > f_gds_w;
- 
+
     Vector< std::unique_ptr<MultiFab> > drag_u;
     Vector< std::unique_ptr<MultiFab> > drag_v;
     Vector< std::unique_ptr<MultiFab> > drag_w;
@@ -327,9 +339,7 @@ private:
     Vector< std::string > vecVarsName;
     Vector< std::string > scaVarsName;
 
-    // This is the list of names for the plotfiles -- it is the same as scaVarsName but with vorticity added
-    Vector< std::string > scaVarsPlotName;
-
+    std::unique_ptr<amrex::EBFArrayBoxFactory> ebfactory;
 };
 
 #endif

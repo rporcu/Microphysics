@@ -4,6 +4,8 @@
 #include <iostream>
 #include <MFIXParticleContainer.H>
 #include <AMReX_LoadBalanceKD.H>
+#include <AMReX_EBFArrayBox.H>
+#include <AMReX_MultiCutFab.H>
 
 #include<math.h>
 
@@ -22,6 +24,20 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     ReadStaticParameters();
 
     this->SetVerbose(0);
+
+    // turn off certain components for ghost particle communication
+    setRealCommComp(4, false);
+    setRealCommComp(5, false);
+    setRealCommComp(6, false);
+    setRealCommComp(7, false);
+    setRealCommComp(14, false);
+    setRealCommComp(15, false);
+    setRealCommComp(16, false);
+
+    setIntCommComp(0, false);
+    setIntCommComp(1, false);
+    setIntCommComp(3, false);
+
 }
 
 void MFIXParticleContainer::AllocData ()
@@ -108,13 +124,70 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
   Redistribute();
 }
 
+
+void MFIXParticleContainer::InitParticlesAuto(int lev)
+{
+
+  Box domain(Geom(lev).Domain());
+
+  Real dx = Geom(lev).CellSize(0);
+  Real dy = Geom(lev).CellSize(1);
+  Real dz = Geom(lev).CellSize(2);
+
+  int total_np = 0;
+
+  // Deliberately didn't tile this loop
+  for (MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+
+      // This is particles per grid so we reset to 0
+      int pcount = 0;
+
+      // Define the real particle data for one grid-at-a-time's worth of particles
+      // We don't know pcount (number of particles per grid) before this call
+      const Box& bx = mfi.validbox();
+      mfix_particle_generator(&pcount, bx.loVect(),  bx.hiVect(), &dx, &dy, &dz);
+
+      const int grid_id = mfi.index();
+      const int tile_id = 0;
+
+      // Now that we know pcount, go ahead and create a particle container for this
+      // grid and add the particles to it
+      auto&  particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
+
+      ParticleType p_new;
+      for (int i = 0; i < pcount; i++) {
+        // Set id and cpu for this particle
+        p_new.id()  = ParticleType::NextID();
+        p_new.cpu() = ParallelDescriptor::MyProc();
+
+        // Add to the data structure
+        particles.push_back(p_new);
+      }
+
+      const int np = pcount;
+      total_np += np;
+
+      // Now define the rest of the particle data and store it directly in the particles
+      // std::cout << pcount << " particles " << " in grid " << grid_id << std::endl;
+      if (pcount > 0)
+         mfix_particle_generator_prop(&np, particles.GetArrayOfStructs().data());
+  }
+
+  ParallelDescriptor::ReduceIntSum(total_np,ParallelDescriptor::IOProcessorNumber());
+  amrex::Print() << "Total number of generated particles: " << total_np << std::endl;
+
+  // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
+  // we do need this to move particles from tile 0 to the correct tile.
+  Redistribute();
+}
+
 void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba)
 {
     int lev = 0;
 
     Vector<Real> orig_domain_size;
     orig_domain_size.resize(BL_SPACEDIM);
-    for (int d = 0; d < BL_SPACEDIM; d++) 
+    for (int d = 0; d < BL_SPACEDIM; d++)
         orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
 
     ParticleType p_rep;
@@ -231,7 +304,8 @@ MFIXParticleContainer::InitData()
 {
 }
 
-void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time )
+void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time,
+                                            std::unique_ptr<EBFArrayBoxFactory>& ebfactory )
 {
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
@@ -239,113 +313,192 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     Box domain(Geom(lev).Domain());
 
-    Real dx = Geom(lev).CellSize(0);
-    Real dy = Geom(lev).CellSize(1);
-    Real dz = Geom(lev).CellSize(2);
+    const Real* dx = Geom(lev).CellSize();
 
     Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
+    //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
+    MultiFab dummy;
+    MultiFab normal;
+
+    // Only call the routine for wall collisions if the box has a wall
+    if (ebfactory != NULL)
+    {
+        dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
+        std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+
+        // We pre-compute the normals
+        normal.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 2);
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+        {
+            Box tile_box = pti.tilebox();
+            const int* lo = tile_box.loVect();
+            const int* hi = tile_box.hiVect();
+
+            const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
+            const auto& flag = sfab.getEBCellFlagFab();
+
+            areafrac  =  ebfactory->getAreaFrac();
+
+            if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued)
+            {
+               BL_PROFILE_VAR("compute_normals()", compute_normals);
+               compute_normals ( lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                normal[pti].dataPtr(),
+                                normal[pti].loVect(), normal[pti].hiVect(),
+                                (*areafrac[0])[pti].dataPtr(),
+                                (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
+                                (*areafrac[1])[pti].dataPtr(),
+                                (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
+                                (*areafrac[2])[pti].dataPtr(),
+                                (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
+               BL_PROFILE_VAR_STOP(compute_normals);
+            }
+        }
+        normal.FillBoundary(Geom(0).periodicity());
+    }
+
     int   nsubsteps;
     Real  subdt;
+
+    Real  stime=time;
 
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
     int ncoll_total = 0;
 
-    for ( int n = 0; n < nsubsteps; ++n )
+    int n = 0;
+    while (n < nsubsteps)
     {
       int ncoll = 0;
 
-      if (use_neighbor_list)
-      {
-          if (n % 25 == 0) {
-              clearNeighbors(lev);
-              Redistribute();
-              fillNeighbors(lev);
-              buildNeighborList(lev,sort_neighbor_list);
-          } else {
-              updateNeighbors(lev);
-          }
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-
-            // Real particles
-            const int np     = NumberOfParticles(pti);
-            void* particles  = pti.GetArrayOfStructs().data();
-
-            // Neighbor particles
-            PairIndex index(pti.index(), pti.LocalTileIndex());
-            int size_ng = neighbors[index].size() / pdata_size;
-            int size_nl = neighbor_list[index].size();
-
-            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-            des_time_loop_ops_nl ( &np, particles, &size_ng, neighbors[index].dataPtr(),
-                                   &size_nl, neighbor_list[index].dataPtr(),
-                                   &subdt, &dx, &dy, &dz,
-                                   &xlen, &ylen, &zlen, &n, &ncoll );
-            BL_PROFILE_VAR_STOP(des_time_loop);
-
-            if ( des_continuum_coupled () == 0 ) {
-              Real stime;
-              stime = time + (n+1)*subdt;
-              output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
-                                   &n, particles, 0 );
-
-            }
-
-            call_usr2_des( &np, particles );
-         }
-
+      if (n % 25 == 0) {
+          clearNeighbors(lev);
+          Redistribute();
+          fillNeighbors(lev);
+          buildNeighborList(lev,sort_neighbor_list);
       } else {
-
-         fillNeighbors(lev);
+          updateNeighbors(lev);
+      }
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+    {
+      Vector<Real> tow;
+      Vector<Real> fc;
+      tow.resize(1,0.0);
+      fc.resize(1,0.0);
 
-            // Real particles
-            const int np     = NumberOfParticles(pti);
-            void* particles  = pti.GetArrayOfStructs().data();
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      {
+         // Real particles
+         const int nrp    = NumberOfParticles(pti);
+         void* particles  = pti.GetArrayOfStructs().data();
 
-            // Neighbor particles
-            PairIndex index(pti.index(), pti.LocalTileIndex());
-            int ng = neighbors[index].size() / pdata_size;
+         // Neighbor particles
+         PairIndex index(pti.index(), pti.LocalTileIndex());
+         int size_ng = neighbors[index].size() / pdata_size;
+         int size_nl = neighbor_list[index].size();
 
-            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-            des_time_loop_ops( &np, particles, &ng, neighbors[index].dataPtr(),
-                               &subdt, &dx, &dy, &dz,
-                               &xlen, &ylen, &zlen, &n, &ncoll );
-            BL_PROFILE_VAR_STOP(des_time_loop);
+         int ntot = nrp + size_ng;
 
-            if ( des_continuum_coupled () == 0 ) {
-              Real stime;
-              stime = time + (n+1)*subdt;
-              output_manager( &np, &stime, &subdt,  &xlen, &ylen, &zlen,
-                                   &n, particles, 0 );
+         const Box& bx = pti.tilebox();
 
+         // We need these to be zero every time we start a new batch of particles
+         tow.clear();
+          fc.clear();
+         tow.resize(ntot*3,0.0);
+          fc.resize(ntot*3,0.0);
+
+         // Only call the routine for wall collisions if we actually have walls
+         if (ebfactory != NULL)
+         {
+            const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
+            const auto& flag = sfab.getEBCellFlagFab();
+
+            if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
+            {
+               std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+               const MultiCutFab* bndrycent;
+
+               areafrac  =  ebfactory->getAreaFrac();
+               bndrycent = &(ebfactory->getBndryCent());
+
+               // Calculate forces from particle-wall collisions
+               BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
+               calc_wall_collisions (particles, &ntot, &nrp, tow.dataPtr(), fc.dataPtr(), &subdt,
+                                     flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                     normal[pti].dataPtr(),
+                                     normal[pti].loVect(), normal[pti].hiVect(),
+                                     (*bndrycent)[pti].dataPtr(),
+                                     (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
+                                     (*areafrac[0])[pti].dataPtr(),
+                                     (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
+                                     (*areafrac[1])[pti].dataPtr(),
+                                     (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
+                                     (*areafrac[2])[pti].dataPtr(),
+                                     (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect(),
+                                     dx);
+               BL_PROFILE_VAR_STOP(calc_wall_collisions);
             }
-
-            call_usr2_des( &np, particles );
          }
 
-         clearNeighbors(lev);
-         Redistribute();
+#if 1
+         BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
+         calc_particle_collisions ( particles                     , &nrp,
+                                    neighbors[index].dataPtr()    , &size_ng,
+                                    neighbor_list[index].dataPtr(), &size_nl,
+                                    tow.dataPtr(), fc.dataPtr(), &subdt, &ncoll);
+         BL_PROFILE_VAR_STOP(calc_particle_collisions);
 
+         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+         des_time_loop ( &nrp     , particles,
+                         &ntot, tow.dataPtr(), fc.dataPtr(), &subdt,
+                         &xlen, &ylen, &zlen, &stime, &n);
+         BL_PROFILE_VAR_STOP(des_time_loop);
+#else
+         Vector<Real> x(nrp);
+         Vector<Real> y(nrp);
+         Vector<Real> z(nrp);
+         particle_get_position (particles, nrp, x, y, z);
+
+         BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
+         calc_particle_collisions_soa ( particles                     , &nrp,
+                                        neighbors[index].dataPtr()    , &size_ng,
+                                        neighbor_list[index].dataPtr(), &size_nl,
+                                        tow.dataPtr(), fc.dataPtr(), &subdt, &ncoll);
+         BL_PROFILE_VAR_STOP(calc_particle_collisions);
+
+         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+         des_time_loop_soa ( &nrp, particles,
+                             &ntot, tow.dataPtr(), fc.dataPtr(), &subdt,
+                             &xlen, &ylen, &zlen, &stime, &n);
+         BL_PROFILE_VAR_STOP(des_time_loop);
+#endif
       }
+    }
+      n += 1;
 
       if (debug) {
          ncoll_total +=  ncoll;
          ParallelDescriptor::ReduceIntSum(ncoll,ParallelDescriptor::IOProcessorNumber());
          Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
       }
+
     }
+
+    if ( des_continuum_coupled () == 0 )
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+        {
+          // Real particles
+          const int nrp     = NumberOfParticles(pti);
+          void* particles  = pti.GetArrayOfStructs().data();
+          output_manager( &nrp, &stime, &subdt,  &xlen, &ylen, &zlen,
+                          &n, particles, 0 );
+        }
 
     clearNeighbors(lev);
 
@@ -361,10 +514,10 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 #endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-      const int np     = NumberOfParticles(pti);
+      const int nrp     = NumberOfParticles(pti);
       void* particles  = pti.GetArrayOfStructs().data();
 
-      call_usr3_des( &np, particles );
+      call_usr3_des( &nrp, particles );
     }
 
     if (debug) {
@@ -489,13 +642,11 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
     MultiFab* mf_pointer;
 
     if (OnSameGrids(lev, mf_to_be_filled)) {
-        amrex::Print() << "on same grids \n";
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
       mf_pointer = &mf_to_be_filled;
     }
     else {
-        amrex::Print() << "on different grids \n";
       // If mf_to_be_filled is not defined on the particle_box_array, then we need
       // to make a temporary here and copy into mf_to_be_filled at the end.
       mf_pointer = new MultiFab(ParticleBoxArray(lev),
@@ -532,7 +683,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
         for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
             const auto& particles = pti.GetArrayOfStructs();
             int nstride = particles.dataShape().first;
-            const long np = pti.numParticles();
+            const long nrp = pti.numParticles();
             FArrayBox& fab = (*mf_pointer)[pti];
             const Box& box = fab.box();
             Real* data_ptr;
@@ -551,7 +702,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
             hi = box.hiVect();
 #endif
 
-            mfix_deposit_cic(particles.data(), nstride, np, ncomp, data_ptr,
+            mfix_deposit_cic(particles.data(), nstride, nrp, ncomp, data_ptr,
                              lo, hi, plo, dx, &fortran_particle_comp);
 
 #ifdef _OPENMP
@@ -612,7 +763,6 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
     BL_PROFILE("MFIXParticleContainer::PICMultiDeposition()");
 
     int   lev = 0;
-    int ncomp = 1+BL_SPACEDIM;
 
     MultiFab *beta_x_ptr, *beta_y_ptr, *beta_z_ptr;
     MultiFab *beta_u_ptr, *beta_v_ptr, *beta_w_ptr;
@@ -685,6 +835,7 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
             tile_zbox.surroundingNodes(2);
             tile_zbox.grow(1);
 
+            int ncomp = 1+BL_SPACEDIM;
             local_x_vol.resize(tile_xbox,ncomp);
             local_u_vol.resize(tile_xbox,ncomp);
             local_y_vol.resize(tile_ybox,ncomp);
@@ -771,10 +922,10 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
     beta_w_mf.copy(*beta_w_ptr,0,0,1);
 
     delete beta_x_ptr;
-    delete beta_y_ptr; 
+    delete beta_y_ptr;
     delete beta_z_ptr;
-    delete beta_u_ptr; 
-    delete beta_v_ptr; 
+    delete beta_u_ptr;
+    delete beta_v_ptr;
     delete beta_w_ptr;
 
     Box domain(Geom(lev).Domain());
@@ -848,7 +999,7 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
     }
 }
 
-void 
+void
 MFIXParticleContainer::writeAllForComparison(int lev)
 {
   int Np_tot = 0;
@@ -896,7 +1047,7 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
             amrex::FileOpenFailed(filename);
 
         File << nparticles  << '\n';
-            
+
         File.flush();
 
         File.close();
@@ -933,11 +1084,11 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
 
               auto& particles = pti.GetArrayOfStructs();
 
-		int index = 0;
+    int index = 0;
                 for (const auto& p: particles)
                 {
-		    if (p.id() > 0) {
-                        File << p.idata(intData::phase) << ' ';  
+        if (p.id() > 0) {
+                        File << p.idata(intData::phase) << ' ';
                         File << p.pos(0) << ' ';
                         File << p.pos(1) << ' ';
                         File << p.pos(2) << ' ';
@@ -947,20 +1098,20 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
                         File << p.rdata(realData::vely) << ' ';
                         File << p.rdata(realData::velz) << ' ';
 
-                        File << '\n';                            
-                        
-                        index++;		      
+                        File << '\n';
+
+                        index++;
                     }
                 }
               }
-	    
+
             File.flush();
-	    
+
             File.close();
-            
+
             if (!File.good())
                 amrex::Abort("MFIXParticleContainer::WriteAsciiFileForInit(): problem writing file");
-	    
+
         }
         ParallelDescriptor::Barrier();
     }
@@ -1024,7 +1175,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
      return;
   }
 
-  if (verbose) 
+  if (verbose)
   {
      Vector<long> num_part;
      num_part = NumberOfParticlesInGrid(0);
@@ -1036,7 +1187,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
         min_number = std::min(min_number, num_part[i]);
      }
      amrex::Print() << "Before KDTree: BA had " << old_ba.size() << " GRIDS " << std::endl;
-     amrex::Print() << "Before KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<  
+     amrex::Print() << "Before KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<
                         min_number << " " << max_number << std::endl;
   }
 
@@ -1048,7 +1199,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
 
   // Create a new DM to go with the new BA
   DistributionMapping new_dm = DistributionMapping::makeKnapSack(box_costs);
-  
+
   Regrid(new_dm, new_ba);
 
   if (verbose)
@@ -1063,7 +1214,7 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
         min_number = std::min(min_number, num_part[i]);
      }
      amrex::Print() << "After  KDTree: BA had " << new_ba.size() << " GRIDS " << std::endl;
-     amrex::Print() << "After  KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<  
+     amrex::Print() << "After  KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<
                         min_number << " " << max_number << std::endl;
   }
 }

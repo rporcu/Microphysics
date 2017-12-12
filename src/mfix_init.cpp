@@ -35,6 +35,8 @@ void mfix_level::Init(int lev, Real dt, Real time)
 {
     BL_ASSERT(max_level == 0);
 
+    InitIOData();
+
     // Define coarse level BoxArray and DistributionMap
     finest_level = 0;
 
@@ -84,8 +86,6 @@ void mfix_level::Init(int lev, Real dt, Real time)
            amrex::Abort("Bad data in set_ps");
     }
 
-    InitIOData ();
-
     mfix_set_bc_type(lev);
 }
 
@@ -95,12 +95,12 @@ mfix_level::MakeBaseGrids () const
     BoxArray ba(geom[0].Domain());
 
     ba.maxSize(max_grid_size[0]);
-  
-    // We only call ChopGrids if dividing up the grid using max_grid_size didn't 
+
+    // We only call ChopGrids if dividing up the grid using max_grid_size didn't
     //    create enough grids to have at least one grid per processor.
     // This option is controlled by "refine_grid_layout" which defaults to true.
 
-    if ( refine_grid_layout && 
+    if ( refine_grid_layout &&
          ba.size() < ParallelDescriptor::NProcs() &&
          load_balance_type == "FixedSize") {
         ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
@@ -144,17 +144,17 @@ mfix_level::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
         }
         chunk[j] /= 2;
 
-        if (chunk[j] >= min_grid_size) 
+        if (chunk[j] >= min_grid_size)
         {
             ba.maxSize(chunk);
         }
-        else 
+        else
         {
             // chunk[j] was the biggest chunk -- if this is too small then we're done
             if ( ParallelDescriptor::IOProcessor() )
                amrex::Warning("ChopGrids was unable to make enough grids for the number of processors");
             return;
-        } 
+        }
 
         // Test if we now have enough grids
         if (ba.size() >= target_size) return;
@@ -169,34 +169,7 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
-    int nghost = 2;
-
-    // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
-    Box domainx(geom[0].Domain());
-    domainx.grow(1,nghost);
-    domainx.grow(2,nghost);
-    Box box_ilo = amrex::adjCellLo(domainx,0,1);
-    Box box_ihi = amrex::adjCellHi(domainx,0,1);
-
-    Box domainy(geom[0].Domain());
-    domainy.grow(0,nghost);
-    domainy.grow(2,nghost);
-    Box box_jlo = amrex::adjCellLo(domainy,1,1);
-    Box box_jhi = amrex::adjCellHi(domainy,1,1);
-
-    Box domainz(geom[0].Domain());
-    domainz.grow(0,nghost);
-    domainz.grow(1,nghost);
-    Box box_klo = amrex::adjCellLo(domainz,2,1);
-    Box box_khi = amrex::adjCellHi(domainz,2,1);
-
-    // Note that each of these is a single IArrayBox so every process has a copy of them
-    bc_ilo.resize(box_ilo,nghost_bc);
-    bc_ihi.resize(box_ihi,nghost_bc);
-    bc_jlo.resize(box_jlo,nghost_bc);
-    bc_jhi.resize(box_jhi,nghost_bc);
-    bc_klo.resize(box_klo,nghost_bc);
-    bc_khi.resize(box_khi,nghost_bc);
+    MakeBCArrays();
 
     check_data(lev);
 
@@ -217,34 +190,9 @@ mfix_level::ReMakeNewLevelFromScratch (int lev, const BoxArray& new_grids, const
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
-    int nghost = 2;
+    MakeBCArrays();
 
-    // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
-    Box domainx(geom[0].Domain());
-    domainx.grow(1,nghost);
-    domainx.grow(2,nghost);
-    Box box_ilo = amrex::adjCellLo(domainx,0,1);
-    Box box_ihi = amrex::adjCellHi(domainx,0,1);
-
-    Box domainy(geom[0].Domain());
-    domainy.grow(0,nghost);
-    domainy.grow(2,nghost);
-    Box box_jlo = amrex::adjCellLo(domainy,1,1);
-    Box box_jhi = amrex::adjCellHi(domainy,1,1);
-
-    Box domainz(geom[0].Domain());
-    domainz.grow(0,nghost);
-    domainz.grow(1,nghost);
-    Box box_klo = amrex::adjCellLo(domainz,2,1);
-    Box box_khi = amrex::adjCellHi(domainz,2,1);
-
-    // Note that each of these is a single IArrayBox so every process has a copy of them
-    bc_ilo.resize(box_ilo,nghost_bc);
-    bc_ihi.resize(box_ihi,nghost_bc);
-    bc_jlo.resize(box_jlo,nghost_bc);
-    bc_jhi.resize(box_jhi,nghost_bc);
-    bc_klo.resize(box_klo,nghost_bc);
-    bc_khi.resize(box_khi,nghost_bc);
+    check_data(lev);
 
     // We need to re-fill these arrays for the larger domain (after replication).
     mfix_set_bc_type(lev);
@@ -270,7 +218,6 @@ mfix_level::check_data (int lev)
     // Only call this check on one processor since it has a bunch of print statements
     if ( ParallelDescriptor::IOProcessor() )
     {
-       check_initial_conditions(&dx,&dy,&dz,domain.loVect(),domain.hiVect());
        check_boundary_conditions(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
        check_point_sources(&dx,&dy,&dz);
        check_bc_flow();
@@ -480,49 +427,58 @@ mfix_level::AllocateArrays (int lev)
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
+  AllocateArrays(lev);
   // Allocate the particle arrays
   if (solve_dem)
   {
-      int lev = 0;
-      pc -> AllocData();
+    //int lev = 0;
+    pc -> AllocData();
 
-      if (particle_init_type == "AsciiFile")
+    if (particle_init_type == "AsciiFile")
       {
-         amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
-         pc -> InitParticlesAscii("particle_input.dat");
-      }
-      else if (particle_init_type == "Random")
+        amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
+        pc -> InitParticlesAscii("particle_input.dat");
+
+      } else if (particle_init_type == "Random")
       {
-         int n_per_cell = 1;
-         amrex::Print() << "Randomly initializing " << n_per_cell << " particles per cell ..." << std::endl;
-         Real  radius = 1.0;
-         Real  volume = 1.0;
-         Real    mass = 1.0;
-         Real density = 1.0;
-         Real    omoi = 1.0;
-         Real    velx = 0.0;
-         Real    vely = 0.0;
-         Real    velz = 0.0;
-         Real   dragx = 0.0;
-         Real   dragy = 0.0;
-         Real   dragz = 0.0;
-         Real  omegax = 0.0;
-         Real  omegay = 0.0;
-         Real  omegaz = 0.0;
-         int phase = 1;
-         int state = 0;
-         MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
-            velx,vely,velz,omegax,omegay,omegaz,dragx,dragy,dragz,phase,state};
-         pc->InitNRandomPerCell(n_per_cell, pdata);
-         pc->WriteAsciiFileForInit ("random_particles");
-         exit(0);
+        int n_per_cell = 1;
+        amrex::Print() << "Randomly initializing " << n_per_cell << " particles per cell ..." << std::endl;
+        Real  radius = 1.0;
+        Real  volume = 1.0;
+        Real    mass = 1.0;
+        Real density = 1.0;
+        Real    omoi = 1.0;
+        Real    velx = 0.0;
+        Real    vely = 0.0;
+        Real    velz = 0.0;
+        Real   dragx = 0.0;
+        Real   dragy = 0.0;
+        Real   dragz = 0.0;
+        Real  omegax = 0.0;
+        Real  omegay = 0.0;
+        Real  omegaz = 0.0;
+        int phase = 1;
+        int state = 0;
+        MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
+                velx,vely,velz,omegax,omegay,omegaz,dragx,dragy,dragz,phase,state};
+        pc->InitNRandomPerCell(n_per_cell, pdata);
+        pc->WriteAsciiFileForInit ("random_particles");
+        exit(0);
+
+      } else if (particle_init_type == "Auto") {
+
+        amrex::Print() << "Auto generating particles ..." << std::endl;
+
+        pc -> InitParticlesAuto(lev);
+
       } else {
-         amrex::Abort("Bad particle_init_type");
-      }
 
-      pc -> BuildLevelMask(lev,geom[lev],dmap[lev],grids[lev]);
+      amrex::Abort("Bad particle_init_type");
+    }
+
+    pc -> BuildLevelMask(lev,geom[lev],dmap[lev],grids[lev]);
+
   }
-  AllocateArrays(lev);
 }
 
 void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag)
@@ -548,6 +504,39 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
      mfix_calc_volume_fraction(lev,sum_vol_orig);
      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
   }
+}
+
+void
+mfix_level::MakeBCArrays ()
+{
+    int nghost = 2;
+
+    // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
+    Box domainx(geom[0].Domain());
+    domainx.grow(1,nghost);
+    domainx.grow(2,nghost);
+    Box box_ilo = amrex::adjCellLo(domainx,0,1);
+    Box box_ihi = amrex::adjCellHi(domainx,0,1);
+
+    Box domainy(geom[0].Domain());
+    domainy.grow(0,nghost);
+    domainy.grow(2,nghost);
+    Box box_jlo = amrex::adjCellLo(domainy,1,1);
+    Box box_jhi = amrex::adjCellHi(domainy,1,1);
+
+    Box domainz(geom[0].Domain());
+    domainz.grow(0,nghost);
+    domainz.grow(1,nghost);
+    Box box_klo = amrex::adjCellLo(domainz,2,1);
+    Box box_khi = amrex::adjCellHi(domainz,2,1);
+
+    // Note that each of these is a single IArrayBox so every process has a copy of them
+    bc_ilo.resize(box_ilo,nghost_bc);
+    bc_ihi.resize(box_ihi,nghost_bc);
+    bc_jlo.resize(box_jlo,nghost_bc);
+    bc_jhi.resize(box_jhi,nghost_bc);
+    bc_klo.resize(box_klo,nghost_bc);
+    bc_khi.resize(box_khi,nghost_bc);
 }
 
 void
@@ -637,7 +626,6 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
   fill_mf_bc(lev,*lambda_g[lev]);
 }
 
-
 void
 mfix_level::mfix_set_bc0(int lev)
 {
@@ -670,4 +658,53 @@ mfix_level::mfix_set_bc0(int lev)
   u_g[lev]->FillBoundary(geom[lev].periodicity());
   v_g[lev]->FillBoundary(geom[lev].periodicity());
   w_g[lev]->FillBoundary(geom[lev].periodicity());
+}
+
+void mfix_level::WriteEBSurface(int lev) {
+  if (Geom(0).isAllPeriodic()) return;
+
+  const Real* dx = Geom(lev).CellSize();
+
+  BoxArray ba = grids[lev];
+
+  // This creates the associated Distribution Mapping
+  // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+
+  MultiFab dummy(ba, dmap[lev], 1, 0, MFInfo(), *ebfactory);
+
+  // // // Deliberately didn't time this loop.
+  for (MFIter mfi(dummy); mfi.isValid(); ++mfi) {
+
+    const auto& sfab = dynamic_cast<EBFArrayBox const&>((dummy)[mfi]);
+    const auto& flag = sfab.getEBCellFlagFab();
+
+    const Box& bx = mfi.validbox();
+
+    if (flag.getType(bx) == FabType::covered or flag.getType(bx) == FabType::regular) continue;
+
+    std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+    const MultiCutFab* bndrycent;
+
+    areafrac  =  ebfactory->getAreaFrac();
+    bndrycent = &(ebfactory->getBndryCent());
+
+    mfix_eb_to_polygon(dx, bx.loVect(), bx.hiVect(),
+         flag.dataPtr(), flag.loVect(), flag.hiVect(),
+         (*bndrycent)[mfi].dataPtr(),
+         (*bndrycent)[mfi].loVect(), (*bndrycent)[mfi].hiVect(),
+         (*areafrac[0])[mfi].dataPtr(),
+         (*areafrac[0])[mfi].loVect(), (*areafrac[0])[mfi].hiVect(),
+         (*areafrac[1])[mfi].dataPtr(),
+         (*areafrac[1])[mfi].loVect(), (*areafrac[1])[mfi].hiVect(),
+         (*areafrac[2])[mfi].dataPtr(),
+         (*areafrac[2])[mfi].loVect(), (*areafrac[2])[mfi].hiVect());
+  }
+
+  int cpu = ParallelDescriptor::MyProc();
+  mfix_write_eb_vtp(&cpu);
+
+  int nProcs = ParallelDescriptor::NProcs();
+  if(ParallelDescriptor::IOProcessor())
+    mfix_write_pvtp(&nProcs);
+
 }

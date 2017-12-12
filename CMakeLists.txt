@@ -95,12 +95,42 @@ add_executable (mfix ${MAIN} ${USR_OVERRIDES} )
 target_link_libraries ( mfix mfixcore ${MFIX_EXTRA_LINK_LINE} ) 
 
 # Add rule to generate TAGS
-add_custom_target ( tags
-   COMMAND ctags-exuberant -R    --fortran-kinds=+i . 
-   COMMAND ctags-exuberant -R -e --fortran-kinds=+i . 
-   COMMENT "Generating tags files"
-   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-
+# on macOS ctags-exuberant is just ctags
+find_program(CTAGS_EXU "ctags-exuberant")
+find_program(CTAGS_CMD "ctags")
+if(CTAGS_EXU)
+    add_custom_target ( tags
+        COMMAND ctags-exuberant -R    --fortran-kinds=+i . 
+        COMMAND ctags-exuberant -R -e --fortran-kinds=+i . 
+        COMMENT "Generating tags files"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
+    # some file systems are case-insensitive so the above will fail:
+    #  the first command would overwrite the second!
+    add_custom_target ( ctags
+        COMMAND ctags-exuberant -R    --fortran-kinds=+i .
+        COMMENT "Generating only ctags file"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
+    add_custom_target( etags
+        COMMAND ctags-exuberant -R -e --fortran-kinds=+i .
+        COMMENT "Generating only etags file"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
+elseif(CTAGS_CMD)
+    add_custom_target ( tags
+        COMMAND ctags -R    --fortran-kinds=+i .
+        COMMAND ctags -R -e --fortran-kinds=+i .
+        COMMENT "Generating tags files"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
+    # some file systems are case-insensitive so the above will fail:
+    #  the first command would overwrite the second!
+    add_custom_target ( ctags
+        COMMAND ctags -R    --fortran-kinds=+i .
+        COMMENT "Generating only ctags file"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
+    add_custom_target( etags
+        COMMAND ctags -R -e --fortran-kinds=+i .
+        COMMENT "Generating only etags file"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
+endif()
 
 # Tools
 set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 
@@ -125,3 +155,11 @@ if (DOXYGEN_FOUND)
       COMMENT "Generating API documentation with Doxygen" VERBATIM
       )
 endif (DOXYGEN_FOUND)
+
+# Copy compile_commands.json from the build directory to the project root directory
+if ( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
+    execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json
+        ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json
+  )
+endif ()

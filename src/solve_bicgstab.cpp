@@ -373,7 +373,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
     Real end_time = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());
-    amrex::Print() << "Time spent in bicgsolve " << end_time << std::endl;
+    // amrex::Print() << "Time spent in bicgsolve " << end_time << std::endl;
 
     return ret;
 }
