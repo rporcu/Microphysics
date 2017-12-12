@@ -51,6 +51,9 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
 	    mfix_set_bc0(lev);
 	  }
 	
+	//	amrex::Print() << grids[0] << std::endl;	
+	//	amrex::Print() << dmap[0] << std::endl;
+
 	pc->PrintParticleCounts();
     }
 }

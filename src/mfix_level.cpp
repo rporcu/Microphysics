@@ -280,6 +280,9 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
 #endif
     for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
@@ -304,8 +307,14 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
-    }
 
+       if (costs[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*costs[lev])[mfi].plus(wt, tbx);
+       }
+    }
+    
     num_u = temp_num;
     denom_u = temp_denom;
 
@@ -354,6 +363,9 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
 #endif
     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
@@ -378,6 +390,12 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
+
+       if (costs[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*costs[lev])[mfi].plus(wt, tbx);
+       }
     }
 
     num_v = temp_num;
@@ -427,6 +445,9 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
 #endif
     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+      
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
@@ -451,6 +472,12 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
+
+       if (costs[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*costs[lev])[mfi].plus(wt, tbx);
+       }
     }
 
     num_w = temp_num;
@@ -493,6 +520,9 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p)
 #endif
     for (MFIter mfi(*A_m[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
 
@@ -515,6 +545,12 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p)
             bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
             bc_klo.dataPtr(), bc_khi.dataPtr(),
             &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), &temp_num, &temp_denom);
+
+       if (costs[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*costs[lev])[mfi].plus(wt, tbx);
+       }
     }
     num_p = temp_num;
     denom_p = temp_denom;
