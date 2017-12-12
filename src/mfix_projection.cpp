@@ -93,12 +93,12 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	prev_dt = dt ;
 
 
-	std::cout << "\nTentative velocity computation at  time = " << time
+	amrex::Print() << "\nTentative velocity computation at  time = " << time
 		  << " ( dt = "<< dt << " )\n";
-	std::cout << "At beginning of time step :\n";
-	std::cout << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-	std::cout << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-	std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+	amrex::Print() << "At beginning of time step :\n";
+	amrex::Print() << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
+	amrex::Print() << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
+	amrex::Print() << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
 
 	//
 	// Time integration step
@@ -116,11 +116,11 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
 
 	//
-	std::cout << "\nBefore projection step :\n";
-	std::cout << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-	std::cout << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-	std::cout << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
-	std::cout << "max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
+	amrex::Print() << "\nBefore projection step :\n";
+	amrex::Print() << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
+	amrex::Print() << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
+	amrex::Print() << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+	amrex::Print() << "max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
 
 	check_for_nans (lev);
 
@@ -130,11 +130,11 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	mfix_apply_projection ( lev, dt ); 
     
 	//
-	std::cout << "\nAfter projection step :\n";
-	std::cout << "Final max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-	std::cout << "Final max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-	std::cout << "Final max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
-	std::cout << "Final max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
+	amrex::Print() << "\nAfter projection step :\n";
+	amrex::Print() << "Final max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
+	amrex::Print() << "Final max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
+	amrex::Print() << "Final max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+	amrex::Print() << "Final max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
     
 	check_for_nans (lev);
 
@@ -812,10 +812,10 @@ mfix_level::steady_state_reached (int lev, Real dt)
     Real tol = 1.0e-5; // This will become an input
 
     
-    std::cout << "Checking time step :\n";
-    std::cout << "du/dt  = " << delta_u/dt << "\n";
-    std::cout << "dv/dt  = " << delta_v/dt << "\n";	
-    std::cout << "dw/dt  = " << delta_w/dt << "\n";
+    amrex::Print() << "Checking time step :\n";
+    amrex::Print() << "du/dt  = " << delta_u/dt << "\n";
+    amrex::Print() << "dv/dt  = " << delta_v/dt << "\n";	
+    amrex::Print() << "dw/dt  = " << delta_w/dt << "\n";
 
 
     int condition1 = (delta_u < tol*dt) && (delta_v < tol*dt ) && (delta_w < tol*dt);
@@ -851,9 +851,9 @@ mfix_level::steady_state_reached (int lev, Real dt)
     };
     
     
-    std::cout << "||u-uo||/||uo||  = " << tmp1 << "\n";
-    std::cout << "||v-vo||/||vo||  = " << tmp2 << "\n";	
-    std::cout << "||w-wo||/||wo||  = " << tmp3 << "\n";
+    amrex::Print() << "||u-uo||/||uo||  = " << tmp1 << "\n";
+    amrex::Print() << "||v-vo||/||vo||  = " << tmp2 << "\n";	
+    amrex::Print() << "||w-wo||/||wo||  = " << tmp3 << "\n";
     
     int condition2 = (tmp1 < tol) && (tmp2 < tol) && (tmp3 < tol );
     
