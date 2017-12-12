@@ -190,7 +190,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	amrex::Print() << "Max(abs(divu)) = "<< trD_g[lev] -> norm0 () << "\n";
 
 	// 
-        // Check wather to exit the loop or not
+        // Check whether to exit the loop or not
 	// 
 	if (steady_state) {
 	    keep_looping = !steady_state_reached ( lev, dt );
@@ -824,18 +824,31 @@ mfix_level::steady_state_reached (int lev, Real dt)
     //
     // Second stop condition
     //
-    Real tmp1 = (u_gt[lev] -> norm1 ()) / (u_go[lev] -> norm1 ());
-    Real tmp2 = (v_gt[lev] -> norm1 ()) / (v_go[lev] -> norm1 ());
-    Real tmp3 = (w_gt[lev] -> norm1 ()) / (w_go[lev] -> norm1 ());
+    Real du_n1 = u_gt[lev] -> norm1 (0, geom[lev].periodicity());
+    Real dv_n1 = v_gt[lev] -> norm1 (0, geom[lev].periodicity());
+    Real dw_n1 = w_gt[lev] -> norm1 (0, geom[lev].periodicity());
+    Real uo_n1 = u_go[lev] -> norm1 (0, geom[lev].periodicity());
+    Real vo_n1 = v_go[lev] -> norm1 (0, geom[lev].periodicity());
+    Real wo_n1 = w_go[lev] -> norm1 (0, geom[lev].periodicity());
+    Real tmp1, tmp2, tmp3;
+    
+    if ( uo_n1 < 1.0e-8 ) {
+    	tmp1 = 0.0;
+    } else {
+    	tmp1 = du_n1 / uo_n1;
+    };
 
-    if ( (u_go[lev] -> norm1 ()) < 1.0e-8 )
-	tmp1 = 0.0;
-
-    if ( (v_go[lev] -> norm1 ()) < 1.0e-8 )
-	tmp2 = 0.0;
-
-    if ( (w_go[lev] -> norm1 ()) < 1.0e-8 )
-	tmp3 = 0.0;
+    if ( vo_n1 < 1.0e-8 ) {
+    	tmp2 = 0.0;
+    } else {
+    	tmp2 = dv_n1 / vo_n1;
+    };
+    
+    if ( wo_n1 < 1.0e-8 ) {
+    	tmp3 = 0.0;
+    } else {
+    	tmp3 = dw_n1 / wo_n1;
+    };
     
     
     std::cout << "||u-uo||/||uo||  = " << tmp1 << "\n";
@@ -845,8 +858,6 @@ mfix_level::steady_state_reached (int lev, Real dt)
     int condition2 = (tmp1 < tol) && (tmp2 < tol) && (tmp3 < tol );
     
     return condition1 || condition2;
-
-
 }
 
 
