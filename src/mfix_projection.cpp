@@ -301,7 +301,7 @@ mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
     MultiFab::Saxpy (*w_g[lev], dt, *wacc[lev], 0, 0, 1, 0);
 
     // Add the pressure gradient
-    mfix_add_pressure_gradient ( lev, -dt ); 
+    //mfix_add_pressure_gradient ( lev, -dt ); 
     
     // Exchange halo nodes and apply BCs
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
