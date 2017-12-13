@@ -270,12 +270,6 @@ mfix_level::AllocateArrays (int lev)
     trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     trD_g[lev]->setVal(0.);
 
-    // used in load balancing 
-    if (load_balance_type == "KnapSack") {
-        costs[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
-        costs[lev]->setVal(0.0);
-    }
-
     // ********************************************************************************
     // X-face-based arrays
     // ********************************************************************************
@@ -382,6 +376,13 @@ mfix_level::AllocateArrays (int lev)
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
+
+  // used in load balancing 
+  if (load_balance_type == "KnapSack") {
+    costs[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+    costs[lev]->setVal(0.0);
+  }
+
   // Allocate the fluid data
   if (solve_fluid)
      AllocateArrays(lev);

@@ -40,13 +40,16 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
 
         for (int lev = 0; lev <= finestLevel(); ++lev)
         {
-            DistributionMapping newdm = DistributionMapping::makeKnapSack(*costs[lev]);
-            RegridArrays(lev, grids[lev], newdm);
-            SetDistributionMap(lev, newdm);            
-        }
+	    DistributionMapping newdm = DistributionMapping::makeKnapSack(*costs[lev]);
+	    if (solve_fluid) 
+	      RegridArrays(lev, grids[lev], newdm);
+	    SetDistributionMap(lev, newdm);            
 
-        for (int lev = 0; lev <= finestLevel(); ++lev)
-	  {        
+	    if (costs[lev] != nullptr) {
+	      costs[lev].reset(new MultiFab(grids[lev], newdm, 1, 0));
+	      costs[lev]->setVal(0.0);
+	    }
+
 	    pc->Regrid(dmap[lev], grids[lev]);
 	    mfix_set_bc0(lev);
 	  }
@@ -401,11 +404,8 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     EBSupport m_eb_support_level = EBSupport::full;
 
     if (ebfactory)
-       ebfactory.reset(new EBFArrayBoxFactory(geom[lev], new_grids, new_dmap,
-                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells}, m_eb_support_level));
-
-    if (costs[lev] != nullptr) {
-        costs[lev].reset(new MultiFab(new_grids, new_dmap, 1, 0));
-        costs[lev]->setVal(0.0);
-    }
+      ebfactory.reset(new EBFArrayBoxFactory(geom[lev], new_grids, new_dmap,
+					     {m_eb_basic_grow_cells,
+						 m_eb_volume_grow_cells,
+						 m_eb_full_grow_cells}, m_eb_support_level));
 }

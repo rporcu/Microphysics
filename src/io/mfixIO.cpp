@@ -278,6 +278,12 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
             }
 
             AllocateArrays(lev);
+
+	    // used in load balancing 
+	    if (load_balance_type == "KnapSack") {
+	      costs[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+	      costs[lev]->setVal(0.0);
+	    }
         }
     }
 
