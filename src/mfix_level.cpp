@@ -716,13 +716,18 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
 {
     BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
 
-    Box domain(geom[lev].Domain());
+    if (solve_dem)
+    {
+       // This re-calculates the volume fraction within the domain
+       // but does not change the values outside the domain
 
-    // This re-calculates the volume fraction within the domain
-    // but does not change the values outside the domain
-
-    // This call simply deposits the particle volume onto the grid in a PIC-like manner
-    pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
+       // This call simply deposits the particle volume onto the grid in a PIC-like manner
+       pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
+    }
+    else
+    {
+       ep_g[lev]->setVal(1.);
+    }
 
     // Now define rop_g = ro_g * ep_g
     MultiFab::Copy(*rop_g[lev], *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow());
