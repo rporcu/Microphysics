@@ -101,22 +101,24 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
 
     WriteJobInfo(checkpointname);
 
-    for (int lev = 0; lev < nlevels; ++lev) {
+    if (solve_fluid) 
+    {
+       for (int lev = 0; lev < nlevels; ++lev) {
 
-  // Write vector variables
-  for (int i = 0; i < vectorVars.size(); i++ ) {
-      VisMF::Write( *((*vectorVars[i])[lev]),
-        amrex::MultiFabFileFullPrefix(lev, checkpointname,
-              level_prefix, vecVarsName[i]));
-  }
+          // Write vector variables
+          for (int i = 0; i < vectorVars.size(); i++ ) {
+              VisMF::Write( *((*vectorVars[i])[lev]),
+                amrex::MultiFabFileFullPrefix(lev, checkpointname,
+                      level_prefix, vecVarsName[i]));
+          }
 
-  // Write scalar variables
-  for (int i = 0; i < scalarVars.size(); i++ ) {
-      VisMF::Write( *((*scalarVars[i])[lev]),
-        amrex::MultiFabFileFullPrefix(lev, checkpointname,
-              level_prefix, scaVarsName[i]));
-  }
-
+          // Write scalar variables
+          for (int i = 0; i < scalarVars.size(); i++ ) {
+              VisMF::Write( *((*scalarVars[i])[lev]),
+                amrex::MultiFabFileFullPrefix(lev, checkpointname,
+                      level_prefix, scaVarsName[i]));
+          }
+       }
     }
 
     if ( solve_dem )

@@ -372,8 +372,11 @@ mfix_level::AllocateArrays (int lev)
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
-  AllocateArrays(lev);
-  // Allocate the particle arrays
+  // Allocate the fluid data
+  if (solve_fluid)
+     AllocateArrays(lev);
+
+  // Allocate the particle data
   if (solve_dem)
   {
     //int lev = 0;
@@ -435,17 +438,18 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
   }
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
-  mfix_init_fluid(lev,restart_flag);
+  if (solve_fluid)
+     mfix_init_fluid(lev,restart_flag);
 
   // Call user-defined subroutine to set constants, check data, etc.
   if (call_udf) mfix_usr0();
 
   // Calculate all the coefficients once before entering the time loop
-  int calc_flag = 2;
-  mfix_calc_coeffs(lev,calc_flag);
-
-  if (solve_dem)
+  if (solve_fluid)
   {
+     int calc_flag = 2;
+     mfix_calc_coeffs(lev,calc_flag);
+
      mfix_calc_volume_fraction(lev,sum_vol_orig);
      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
   }
