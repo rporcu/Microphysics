@@ -684,24 +684,27 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
 void
 mfix_level::usr3(int lev)
 {
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-
-    // We deliberately don't tile this loop since we will be looping
-    //    over bc's on faces and it makes more sense to do this one grid at a time
-    for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
+    if (solve_fluid) 
     {
-  const Box& sbx = (*p_g[lev])[mfi].box();
-  Box ubx((*u_g[lev])[mfi].box());
-  Box vbx((*v_g[lev])[mfi].box());
-  Box wbx((*w_g[lev])[mfi].box());
+       Real dx = geom[lev].CellSize(0);
+       Real dy = geom[lev].CellSize(1);
+       Real dz = geom[lev].CellSize(2);
 
-  mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
-      (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
-      (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
-      (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-      &dx, &dy, &dz);
+       // We deliberately don't tile this loop since we will be looping
+       //    over bc's on faces and it makes more sense to do this one grid at a time
+       for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
+       {
+          const Box& sbx = (*p_g[lev])[mfi].box();
+          Box ubx((*u_g[lev])[mfi].box());
+          Box vbx((*v_g[lev])[mfi].box());
+          Box wbx((*w_g[lev])[mfi].box());
+   
+          mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
+              (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
+              (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
+              (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+              &dx, &dy, &dz);
+       }
     }
 }
 
