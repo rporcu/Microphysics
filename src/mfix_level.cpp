@@ -7,6 +7,10 @@
 
 std::string mfix_level::particle_init_type = "AsciiFile";
 std::string mfix_level::load_balance_type = "FixedSize";
+int mfix_level::m_eb_basic_grow_cells = 2;
+int mfix_level::m_eb_volume_grow_cells = 2;
+int mfix_level::m_eb_full_grow_cells = 2;
+EBSupport mfix_level::m_eb_support_level = EBSupport::full;
 
 mfix_level::~mfix_level ()
 {

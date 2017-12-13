@@ -255,6 +255,11 @@ private:
     static std::string particle_init_type;
     static std::string load_balance_type;
 
+    static int m_eb_basic_grow_cells;
+    static int m_eb_volume_grow_cells;
+    static int m_eb_full_grow_cells;
+    static EBSupport m_eb_support_level;
+
     Real cfl = 0.7;
 
     Real sum_vol_orig;
