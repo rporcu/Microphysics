@@ -28,7 +28,8 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
              RegridArrays(lev,grids[lev],dmap[lev]);
        }
 
-       if (solve_fluid) mfix_set_bc0(lev);
+       if (solve_fluid) 
+          mfix_set_bc0(lev);
 
        if (ebfactory) {
 	 ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
@@ -105,7 +106,8 @@ mfix_level::RegridOnRestart (int lev)
        if ( (grids[0] != old_ba) && solve_fluid) 
           RegridArrays(lev,grids[lev],dmap[lev]);
 
-       mfix_set_bc0(lev);
+       if (solve_fluid)
+          mfix_set_bc0(lev);
 
        pc->BuildLevelMask(lev, geom[lev], dm, ba); 
        pc->Redistribute();
