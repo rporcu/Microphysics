@@ -28,7 +28,7 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
              RegridArrays(lev,grids[lev],dmap[lev]);
        }
 
-       mfix_set_bc0(lev);
+       if (solve_fluid) mfix_set_bc0(lev);
     }
     else if (load_balance_type == "KnapSack") {
 
@@ -39,7 +39,7 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
         AMREX_ALWAYS_ASSERT(costs[0] != nullptr);
 
         for (int lev = 0; lev <= finestLevel(); ++lev)
-        {
+	{
 	    DistributionMapping newdm = DistributionMapping::makeKnapSack(*costs[lev]);
 	    if (solve_fluid) 
 	      RegridArrays(lev, grids[lev], newdm);
@@ -51,7 +51,7 @@ mfix_level::Regrid (int lev, int nstep, int dual_grid)
 	    }
 
 	    pc->Regrid(dmap[lev], grids[lev]);
-	    mfix_set_bc0(lev);
+	    if (solve_fluid) mfix_set_bc0(lev);
 	  }
 	
 	//	amrex::Print() << grids[0] << std::endl;	
