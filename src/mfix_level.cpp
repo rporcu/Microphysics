@@ -646,24 +646,27 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
 void
 mfix_level::usr3(int lev)
 {
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-
-    // We deliberately don't tile this loop since we will be looping
-    //    over bc's on faces and it makes more sense to do this one grid at a time
-    for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
+    if (solve_fluid) 
     {
-  const Box& sbx = (*p_g[lev])[mfi].box();
-  Box ubx((*u_g[lev])[mfi].box());
-  Box vbx((*v_g[lev])[mfi].box());
-  Box wbx((*w_g[lev])[mfi].box());
+       Real dx = geom[lev].CellSize(0);
+       Real dy = geom[lev].CellSize(1);
+       Real dz = geom[lev].CellSize(2);
 
-  mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
-      (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
-      (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
-      (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-      &dx, &dy, &dz);
+       // We deliberately don't tile this loop since we will be looping
+       //    over bc's on faces and it makes more sense to do this one grid at a time
+       for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
+       {
+          const Box& sbx = (*p_g[lev])[mfi].box();
+          Box ubx((*u_g[lev])[mfi].box());
+          Box vbx((*v_g[lev])[mfi].box());
+          Box wbx((*w_g[lev])[mfi].box());
+   
+          mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
+              (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
+              (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
+              (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+              &dx, &dy, &dz);
+       }
     }
 }
 
@@ -713,13 +716,18 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
 {
     BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
 
-    Box domain(geom[lev].Domain());
+    if (solve_dem)
+    {
+       // This re-calculates the volume fraction within the domain
+       // but does not change the values outside the domain
 
-    // This re-calculates the volume fraction within the domain
-    // but does not change the values outside the domain
-
-    // This call simply deposits the particle volume onto the grid in a PIC-like manner
-    pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
+       // This call simply deposits the particle volume onto the grid in a PIC-like manner
+       pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
+    }
+    else
+    {
+       ep_g[lev]->setVal(1.);
+    }
 
     // Now define rop_g = ro_g * ep_g
     MultiFab::Copy(*rop_g[lev], *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow());
