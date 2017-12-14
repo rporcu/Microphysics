@@ -154,8 +154,13 @@ private:
     void solve_poisson_equation ( int lev,
 				  Vector< Vector< std::unique_ptr<MultiFab> > >& b,
 				  Vector< std::unique_ptr<MultiFab> >& phi,
-				  Vector< std::unique_ptr<MultiFab> >& rhs );
+				  Vector< std::unique_ptr<MultiFab> >& phi_bc,
+				  Vector< std::unique_ptr<MultiFab> >& rhs,
+				  int singular );
 
+
+    void apply_grad_phi ( int lev );
+    
     void mfix_compute_oro_g ( int lev );
     
     void init_tests_projection (int lev);

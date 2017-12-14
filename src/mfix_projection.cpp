@@ -67,7 +67,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, nghost);
   
 
- 
+	amrex::Print() << "PRESSURE MAX, MIN = " << p_g[lev] -> max (0) << ", " <<  p_g[lev] -> min (0) << "\n";
 //     // User hooks
 // #ifdef _OPENMP
 // #pragma omp parallel
@@ -629,66 +629,50 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real dt )
     // Compute the PPE coefficients
     mfix_compute_oro_g ( lev );
     // For the time being set oro_g to 1
+
+    // If the system is singular, save the average value of p_g
+    // and add it to the new pressure field: this allows to evolve
+    // a pressure when the initial value for it is given
+    Box domain(geom[lev].Domain());
+    Real pg_mean;
+    pg_mean = ( p_g[lev] -> sum () ) / domain.numPts () ;
     
     // Solve PPE
-    solve_poisson_equation ( lev, oro_g, p_g, trD_g );
-    p_g[lev] -> FillBoundary(geom[lev].periodicity());
+    int singular;
+    singular = 1;  // Init value so compiler does not complain
+    solve_poisson_equation ( lev, oro_g, phi, p_g, trD_g, singular );
+    phi[lev] -> FillBoundary(geom[lev].periodicity());
+
+    // Correct velocity field
+    apply_grad_phi (lev);
+
+    // Compute new pressure: p = 2*phi/dt
+    MultiFab::Copy (*p_g[lev], *phi[lev], 0, 0, 1, 0);
+    p_g[lev] -> mult ( 2.0/dt, 0 );
     
-    // Apply pressure correction
-    //  p_g is now p_g = p^{n+1}*dt/2
-    Real coeff = -1.0;
-    int  xdir  = 1;
-    int  ydir  = 2;
-    int  zdir  = 3;
-    
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*phi[lev],true); mfi.isValid(); ++mfi)
-    {
-	Box ubx = mfi.tilebox (e_x);
-	Box vbx = mfi.tilebox (e_y);
-	Box wbx = mfi.tilebox (e_z);
-
-	add_gradient (
-	    BL_TO_FORTRAN_BOX(ubx),  
-	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-	    (*(oro_g[lev][0]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
-	    geom[lev].CellSize(), &coeff, &xdir );
-	
-	add_gradient (
-	    BL_TO_FORTRAN_BOX(vbx),  
-	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-	    (*(oro_g[lev][1]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
-	    geom[lev].CellSize(), &coeff, &ydir );
-
-	add_gradient (
-	    BL_TO_FORTRAN_BOX(wbx),  
-	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-	    (*(oro_g[lev][2]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
-	    geom[lev].CellSize(), &coeff, &zdir );
-
+    // If singular, add back the mean value to the solution
+    if (singular) {
+	p_g[lev] -> plus ( pg_mean, 0 ); 
     }
-
-
-    // 
-    // Rescale pressure p_g = p_g * 2 / dt
-    // 
-    int nghost = p_g[lev] -> nGrow ();
-    p_g[lev] -> mult ( 2.0/dt, nghost );
-    p_g[lev] -> FillBoundary(geom[lev].periodicity());
     
- }
+    // Fill ghost cells
+    p_g[lev] -> FillBoundary(geom[lev].periodicity());
+
+}
 
 
+//
+// Solve PPE:
+//
+//                  grad( b * div(phi) ) = div(u) 
+// 
 void
 mfix_level::solve_poisson_equation (  int lev,
 				      Vector< Vector< std::unique_ptr<MultiFab> > >& b,
 				      Vector< std::unique_ptr<MultiFab> >& phi,
-				      Vector< std::unique_ptr<MultiFab> >& rhs )
+				      Vector< std::unique_ptr<MultiFab> >& phi_bc,
+				      Vector< std::unique_ptr<MultiFab> >& rhs,
+				      int singular )
 {
     BL_PROFILE("mfix_level::solve_poisson_equation");
     
@@ -703,20 +687,22 @@ mfix_level::solve_poisson_equation (  int lev,
     Vector<const MultiFab*>      tmp;
     array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
     int                          bc_lo[3], bc_hi[3];
-    
+
     // Copy the PPE coefficient into the proper data strutcure
     tmp = amrex::GetVecOfConstPtrs ( b[lev] ) ;
     b_tmp[0] = tmp[0];
     b_tmp[1] = tmp[1];
     b_tmp[2] = tmp[2];
 
-    // LinOpBCType Definitions are in Src/Boundary/AMReX_LO_BCTYPES.H
+    // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
     Box domain(geom[lev].Domain());
+
     set_ppe_bc (bc_lo, bc_hi,
 		domain.loVect(), domain.hiVect(),
 		bc_ilo.dataPtr(), bc_ihi.dataPtr(),
 		bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-		bc_klo.dataPtr(), bc_khi.dataPtr() );
+		bc_klo.dataPtr(), bc_khi.dataPtr(),
+		&singular );
    
     matrix.setDomainBC ( {(LinOpBCType) bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
 			 {(LinOpBCType) bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
@@ -726,8 +712,8 @@ mfix_level::solve_poisson_equation (  int lev,
 
     // Pass the solution vector because it should have
     // already the Dirichlet's conditions in place
-    matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi)[lev] );
-    
+    matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi_bc)[lev] );
+
     // 
     // Then setup the solver ----------------------
     //
@@ -750,9 +736,57 @@ mfix_level::solve_poisson_equation (  int lev,
     //
     phi[lev] -> setVal (0.0);
     solver.solve ( GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), rel_tol, abs_tol );
-   
 }
 
+
+//
+//  Compute
+//
+//      u = u - grad(phi)/ro_g
+// 
+void
+mfix_level::apply_grad_phi (int lev)
+{
+    BL_PROFILE("mfix_level::apply_grad_phi");
+    
+    Real coeff = -1.0;
+    int  xdir  = 1;
+    int  ydir  = 2;
+    int  zdir  = 3;
+    
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (MFIter mfi(*phi[lev],true); mfi.isValid(); ++mfi)
+    {
+	Box ubx = mfi.tilebox (e_x);
+	Box vbx = mfi.tilebox (e_y);
+	Box wbx = mfi.tilebox (e_z);
+
+	add_gradient (
+	    BL_TO_FORTRAN_BOX(ubx),  
+	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+	    (*(oro_g[lev][0]))[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
+	    geom[lev].CellSize(), &coeff, &xdir );
+	
+	add_gradient (
+	    BL_TO_FORTRAN_BOX(vbx),  
+	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+	    (*(oro_g[lev][1]))[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
+	    geom[lev].CellSize(), &coeff, &ydir );
+
+	add_gradient (
+	    BL_TO_FORTRAN_BOX(wbx),  
+	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+	    (*(oro_g[lev][2]))[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
+	    geom[lev].CellSize(), &coeff, &zdir );
+
+    }
+   
+}
 
 //
 // Computes 1/ro_g = ep_g/rop_g at the faces of the scalar cells

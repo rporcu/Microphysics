@@ -545,7 +545,8 @@ extern "C"
 	const int* domlo, const int* domhi,
 	const int* bct_ilo, const int* bct_ihi, 
 	const int* bct_jlo, const int* bct_jhi,
-	const int* bct_klo, const int* bct_khi );
+	const int* bct_klo, const int* bct_khi,
+	int* singular );
 
     void add_forcing (
 	const int* lo, const int* hi,

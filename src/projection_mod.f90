@@ -428,7 +428,7 @@ contains
    ! Set the boundary condition for PPE 
    ! 
    subroutine set_ppe_bc ( bc_lo, bc_hi, domlo, domhi, bct_ilo, bct_ihi, &
-        & bct_jlo, bct_jhi, bct_klo, bct_khi )  bind(C)
+        & bct_jlo, bct_jhi, bct_klo, bct_khi, singular )  bind(C)
       
       use amrex_lo_bctypes_module
       use bc
@@ -438,6 +438,9 @@ contains
 
       ! Domain bounds
       integer(c_int), intent(in   ) :: domlo(3), domhi(3)
+
+      ! Whether the system is singular or not
+      integer(c_int), intent(  out) :: singular
       
       ! Arrays of point-by-point BC types 
       integer(c_int), intent(in   ), target  ::  &
@@ -451,12 +454,12 @@ contains
       ! Local variables
       integer(c_int)                :: bc_face
 
-
       !
       ! By default, all the BCs are Neumann
       !
-      bc_lo = amrex_lo_neumann
-      bc_hi = amrex_lo_neumann
+      singular = 1
+      bc_lo    = amrex_lo_neumann
+      bc_hi    = amrex_lo_neumann
       
       !
       ! BC -- X direction 
@@ -525,6 +528,11 @@ contains
          
       end if
 
+      !
+      ! Check whether the system is non-singular
+      !
+      if ( any ( bc_hi == amrex_lo_dirichlet ) .or. &
+           any ( bc_lo == amrex_lo_dirichlet ) )   singular = 0
 
       contains
 
