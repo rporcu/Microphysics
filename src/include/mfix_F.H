@@ -547,6 +547,14 @@ extern "C"
 	const int* bct_jlo, const int* bct_jhi,
 	const int* bct_klo, const int* bct_khi );
 
+    void add_forcing (
+	const int* lo, const int* hi,
+	      amrex::Real* u_i,  const int* ulo, const int* uhi, 
+	const amrex::Real* ro_g, const int* slo, const int* shi,
+	const int* domlo, const int* domhi,
+	const amrex::Real* dx, const amrex::Real* dt, 
+	const int* dir);
+    
   void mfix_eb_to_polygon ( const amrex::Real* dx,
             const int* slo, const int* shi,
             const void* flag, const int* fglo, const int* fghi,

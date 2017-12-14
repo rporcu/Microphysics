@@ -263,6 +263,124 @@ contains
 
 
    !
+   ! Add forcing (acceleration) terms to velocity component u_i
+   ! 
+   subroutine add_forcing ( lo, hi, u_i, ulo, uhi, ro_g, slo, shi, &
+        & domlo, domhi, dx, dt, dir )  bind(C)
+      
+      use constant, only: gravity
+      use bc      , only: delp_x, delp_y, delp_z 
+      use scales,   only: p_scale
+      
+      ! Loop bounds
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+
+      ! Array bounds
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3)
+
+      ! Direction
+      integer(c_int), intent(in   ) :: dir
+
+      ! Time step width
+      real(ar),       intent(in   ) :: dt
+
+      ! Domain bounds
+      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
+
+      ! Grid
+      real(ar),       intent(in   ) :: dx(3)
+      
+      ! Arrays
+      real(ar),       intent(in   ) :: &
+           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      real(ar),       intent(inout) :: &
+           u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      
+      ! Local variables
+      integer(c_int)                :: i, j, k 
+      real(ar)                      :: odx(3), orog, acc 
+
+
+      ! 1/dx
+      odx = one / dx
+      
+      select case (dir)
+      case(1)                   !X direction
+
+         do k = lo(3),hi(3)
+            do j = lo(2),hi(2)
+               do i = lo(1),hi(1)
+                  acc = zero
+
+                  ! Pressure drop at boundaries if specified
+                  orog = half * ( one/ro_g(i,j,k) + one/ro_g(i-1,j,k) )
+                  if ( i == domlo(1) .or. i == domhi(1)+1 ) then
+                     acc =  p_scale * delp_x * orog * odx(dir)
+                  end if
+
+                  acc = acc + gravity(dir)
+
+                  u_i(i,j,k) = u_i(i,j,k) + dt * acc
+
+               end do
+            end do
+         end do
+
+      case(2)                   !y direction
+
+         do k = lo(3),hi(3)
+            do j = lo(2),hi(2)
+               do i = lo(1),hi(1)
+                  acc = zero
+
+                  ! Pressure drop at boundaries if specified
+                  orog = half * ( one/ro_g(i,j,k) + one/ro_g(i,j-1,k) )
+                  if ( j == domlo(2) .or. j == domhi(2)+1 ) then
+                     acc =  p_scale * delp_y * orog * odx(dir)
+                  end if
+
+                  acc = acc + gravity(dir)
+
+                  u_i(i,j,k) = u_i(i,j,k) + dt * acc
+
+               end do
+            end do
+         end do
+
+      case(3)                   !Z direction
+
+         do k = lo(3),hi(3)
+            do j = lo(2),hi(2)
+               do i = lo(1),hi(1)
+                  acc = zero
+
+                  ! Pressure drop at boundaries if specified
+                  orog = half * ( one/ro_g(i,j,k) + one/ro_g(i,j,k-1) )
+                  if ( k == domlo(3) .or. k == domhi(3)+1 ) then
+                     acc =  p_scale * delp_z * orog * odx(dir)
+                  end if
+
+                  acc = acc + gravity(dir)
+
+                  u_i(i,j,k) = u_i(i,j,k) + dt * acc
+
+               end do
+            end do
+         end do
+
+
+      case default
+         stop "projection_mod: add_forcing: argument dir must be either 1,2, or 3"
+      end select
+
+
+
+   end subroutine add_forcing
+
+
+   !
    ! Compute the coefficients of the PPE, i.e. 1 / ro_g = eps_g/rho_g,
    ! at the faces of the pressure cells along the "dir"-axis.
    ! 

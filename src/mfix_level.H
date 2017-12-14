@@ -177,7 +177,10 @@ private:
     void mfix_compute_second_predictor (int lev, amrex::Real dt);
 
 
-    void mfix_apply_forcing_terms (int lev, amrex::Real dt);
+    void mfix_apply_forcing_terms (int lev, amrex::Real dt,
+				   Vector< std::unique_ptr<MultiFab> >& u,
+				   Vector< std::unique_ptr<MultiFab> >& v,
+				   Vector< std::unique_ptr<MultiFab> >& w );
 
     void mfix_add_pressure_gradient (int lev, amrex::Real coeff);
     

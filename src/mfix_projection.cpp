@@ -300,9 +300,9 @@ mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
     MultiFab::Saxpy (*v_g[lev], dt, *vacc[lev], 0, 0, 1, 0);
     MultiFab::Saxpy (*w_g[lev], dt, *wacc[lev], 0, 0, 1, 0);
 
-    // Add the pressure gradient
-    //mfix_add_pressure_gradient ( lev, -dt ); 
-    
+    // Add the forcing terms
+    mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
+ 
     // Exchange halo nodes and apply BCs
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
@@ -364,9 +364,12 @@ mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
     MultiFab::Saxpy (*v_g[lev], dt/2.0, *vacc[lev], 0, 0, 1, 0);
     MultiFab::Saxpy (*w_g[lev], dt/2.0, *wacc[lev], 0, 0, 1, 0);
 
+    // Add forcing terms
+    mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
+    
     // Add pressure gradient
     mfix_add_pressure_gradient ( lev, -dt/2.0 ); 
-
+    
     // Fill ghost cells and reimpose boundary conditions
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
@@ -498,7 +501,11 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 
 
 void
-mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt)
+mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
+				      Vector< std::unique_ptr<MultiFab> >& u, 
+				      Vector< std::unique_ptr<MultiFab> >& v,
+				      Vector< std::unique_ptr<MultiFab> >& w )
+
 {
     BL_PROFILE("mfix_level::mfix_apply_forcing_terms");
 
@@ -507,13 +514,39 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt)
 #endif
     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
+	// Directions
+	int xdir = 1;
+	int ydir = 2;
+	int zdir = 3;
+	
+	// Whole domain
+	Box domain(geom[lev].Domain());
+	
 	// Boxes for staggered components
 	Box ubx = mfi.tilebox (e_x);
 	Box vbx = mfi.tilebox (e_y);
 	Box wbx = mfi.tilebox (e_z);
 
-	// To be filled
-	
+
+	add_forcing ( BL_TO_FORTRAN_BOX(ubx),  
+		      BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
+		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		      domain.loVect (), domain.hiVect (),
+		      geom[lev].CellSize (), &dt, &xdir );
+
+
+	add_forcing ( BL_TO_FORTRAN_BOX(vbx),  
+		      BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
+		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		      domain.loVect (), domain.hiVect (),
+		      geom[lev].CellSize (), &dt, &ydir );
+
+	add_forcing ( BL_TO_FORTRAN_BOX(wbx),  
+		      BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
+		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		      domain.loVect (), domain.hiVect (),
+		      geom[lev].CellSize (), &dt, &zdir );
+		
     }
 }
 
