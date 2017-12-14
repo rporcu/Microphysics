@@ -226,7 +226,7 @@ int main (int argc, char* argv[])
              my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
           // Mechanism to terminate MFIX normally.
-          if (steady_state || (time + 0.1*dt >= tstop) || (solve_dem && !solve_fluid)) finish = 1;
+          if (steady_state || (time + 0.1*dt >= tstop)) finish = 1;
        }
     }
 

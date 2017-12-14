@@ -249,6 +249,9 @@ private:
     int max_nit;
     int call_udf;
 
+    // enable output_manager during des_time_loop
+    bool subdt_io;
+
     static std::string particle_init_type;
     static std::string load_balance_type;
 

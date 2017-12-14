@@ -34,34 +34,32 @@ contains
 
    end function des_is_continuum_coupled
 
-   subroutine des_init_time_loop ( tstart, dt, nsubsteps, subdt ) &
+   subroutine des_init_time_loop ( tstart, dt, nsubsteps, subdt, subdt_io) &
         bind(C, name="des_init_time_loop")
 
       use discretelement,  only: dtsolid, des_continuum_coupled
-      use run,             only: tstop
+      use run,             only: tstop, glob_subdt_io => subdt_io, des_tstart, des_dt
 
       real(c_real),   intent(in   ) :: tstart, dt
+      logical,        intent(in   ) :: subdt_io
       integer(c_int), intent(  out) :: nsubsteps
       real(c_real),   intent(  out) :: subdt
 
-      ! Initialize time stepping variables for
-      ! coupled gas/solids simulations.
-      if ( des_continuum_coupled ) then
+      ! set the global subdt_io (in run module) to toggle sub-dt I/O
+      glob_subdt_io = subdt_io
 
-         if ( dt >= dtsolid ) then
-            nsubsteps = ceiling ( real ( dt / dtsolid ) )
-            subdt     =  dt / nsubsteps
-         else
-            nsubsteps = 1
-            subdt     = dtsolid
-         end if
+      ! update the global des_tstart, and des_dt (in run module) corresponding to this 
+      ! des run: this enables usr[2,3]_des to know the time
+      des_tstart = tstart
+      des_dt     = dt
 
-         ! Initialize time stepping variable for pure granular simulations.
+      ! Initialize time stepping variables 
+      if ( dt >= dtsolid ) then
+          nsubsteps = ceiling ( real ( dt / dtsolid ) )
+          subdt     =  dt / nsubsteps
       else
-
-         nsubsteps = ceiling ( real ( (tstop - tstart) / dtsolid ) )
-         subdt     = ( tstop - tstart ) / nsubsteps
-
+          nsubsteps = 1
+          subdt     = dt
       end if
 
    end subroutine des_init_time_loop
@@ -88,13 +86,13 @@ contains
       use constant                       , only: gravity
       use discretelement                 , only: des_continuum_coupled
       use output_manager_module          , only: output_manager
-      use run                            , only: call_usr
+      use run                            , only: call_usr, subdt_io
  
       integer(c_int),   intent(in   )     :: nf, np
       real(c_real),     intent(in   )     :: subdt, xlength, ylength, zlength
       type(particle_t), intent(inout)     :: particles(np)
       real(c_real),     intent(inout)     :: tow(nf,3)
-      real(c_real),     intent(inout)     ::  fc(nf,3)
+      real(c_real),     intent(inout)     :: fc(nf,3)
       real(c_real),     intent(inout)     :: stime
       integer(c_int),   intent(in   )     :: nstep
 
@@ -103,7 +101,7 @@ contains
       ! call user functions.
       if ( call_usr ) call usr1_des
 
-      if ( .not.des_continuum_coupled ) call output_manager(np,  &
+      if ( subdt_io ) call output_manager(np,  &
            stime, subdt, xlength, ylength, zlength, nstep, particles, 0)
 
       ! Update the time for the purpose of printing

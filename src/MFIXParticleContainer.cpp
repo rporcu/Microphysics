@@ -305,7 +305,7 @@ MFIXParticleContainer::InitData()
 }
 
 void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time,
-                                            std::unique_ptr<EBFArrayBoxFactory>& ebfactory )
+                                            std::unique_ptr<EBFArrayBoxFactory>& ebfactory, int subdt_io )
 {
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
@@ -365,7 +365,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     Real  stime=time;
 
-    des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
+    des_init_time_loop( &time, &dt, &nsubsteps, &subdt, &subdt_io );
 
     int ncoll_total = 0;
 
@@ -490,16 +490,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     }
 
-    if ( des_continuum_coupled () == 0 )
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-        {
-          // Real particles
-          const int nrp     = NumberOfParticles(pti);
-          void* particles  = pti.GetArrayOfStructs().data();
-          output_manager( &nrp, &stime, &subdt,  &xlen, &ylen, &zlen,
-                          &n, particles, 0 );
-        }
-
     clearNeighbors(lev);
 
     Redistribute();
@@ -514,8 +504,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 #endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-      const int nrp     = NumberOfParticles(pti);
-      void* particles  = pti.GetArrayOfStructs().data();
+      const int nrp   = NumberOfParticles(pti);
+      void* particles = pti.GetArrayOfStructs().data();
 
       call_usr3_des( &nrp, particles );
     }
@@ -558,10 +548,10 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
        }
     }
 
-    if ( des_continuum_coupled () != 0 ) {
-      nstep = nsubsteps;
-      time  = time + nsubsteps * subdt ;
-    }
+    //if ( des_continuum_coupled () != 0 ) {
+    //  nstep = nsubsteps;
+    //  time  = time + nsubsteps * subdt ;
+    //}
 
     // Redistribute();
 }

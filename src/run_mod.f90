@@ -33,6 +33,10 @@
 ! Stop-time of the run.
       real(c_real) :: tstop
 
+! Start-time of des-loop
+! (updated by des_init_time_loop)
+      real(c_real) :: des_tstart
+
 ! Discretization scheme for different equations
       integer :: DISCRETIZE(DIM_EQS)
 
@@ -48,6 +52,10 @@
 ! Time step adjustment factor (<1.0)
       real(c_real) :: dt_fac
 
+! Current time step (super-step)
+! (updated by des_init_time_loop)
+      real(c_real) :: des_dt
+
   integer :: nlog
   ! Flag to display messages and residuals on the screen
   logical :: full_log
@@ -61,5 +69,9 @@
       integer :: TFM_COUNT = 0
       integer :: DEM_COUNT = 0
       integer :: PIC_COUNT = 0
+
+! Enable output (via output_manger) on the subdt time scale
+! (updated by des_init_time_loop)
+      logical :: subdt_io = .false.
 
       END MODULE RUN

@@ -32,7 +32,7 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
      mfix_calc_drag_particle(lev);
 
   if (solve_dem)
-     pc -> EvolveParticles( lev, nstep, dt, time, ebfactory);
+     pc -> EvolveParticles( lev, nstep, dt, time, ebfactory, subdt_io);
 }
 
 void

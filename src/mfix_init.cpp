@@ -19,6 +19,10 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
     //  with "KDTree"
     pp.query("load_balance_type", load_balance_type);
 
+    // If subdt_io is true, des_time_loop calls output_manager
+    subdt_io = false; // default to false (if not present in inputs file)
+    pp.query("subdt_io", subdt_io);
+
     solve_fluid  = solve_fluid_in;
     solve_dem    = solve_dem_in;
     max_nit      = max_nit_in;
