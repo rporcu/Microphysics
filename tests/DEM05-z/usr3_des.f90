@@ -40,7 +40,7 @@ subroutine usr3_des ( np, particles )
    ! YZ Velocity Mag
    REAL(C_REAL) :: VEL_YZ(2), ROT_YZ(2)
 
-   if ( des_tstart + des_dt .ge. tstop ) then
+   if ( des_tstart + 1.5*des_dt .ge. tstop ) then
        ! Particle-Wall Rebound Angle (degrees)
        !---------------------------------------------------------------------//
        ! Open the files.
