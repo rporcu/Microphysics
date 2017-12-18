@@ -66,6 +66,7 @@
     real(c_real), dimension(27)    :: distmod 
     real(c_real), dimension(3, 27) :: collision_norms
     real(c_real), dimension(3)     :: c_vec
+    real(c_real)                   :: len2_collision_norm
 
     integer :: PHASELL
 
@@ -205,11 +206,17 @@
                                 distmod_temp = sqrt(distmod_temp)
                                 n_collisions = n_collisions + 1
                                 distmod(n_collisions) = distmod_temp
-                                collision_norms(:, n_collisions) = (/ &
-                                        -(xp - pt_x) / distmod_temp,      &
-                                        -(yp - pt_y) / distmod_temp,      &
-                                        -(zp - pt_z) / distmod_temp       &
-                                    /)
+                                ! collision_norms(:, n_collisions) = (/    &
+                                !        -(xp - pt_x) / distmod_temp,      &
+                                !        -(yp - pt_y) / distmod_temp,      &
+                                !        -(zp - pt_z) / distmod_temp       &
+                                !    /)
+                                collision_norms(:, n_collisions) = normal(ii, jj, kk, :) + normal(i_pt, j_pt, k_pt, :)
+                                len2_collision_norm = collision_norms(1, n_collisions)**2 + &
+                                                      collision_norms(2, n_collisions)**2 + &
+                                                      collision_norms(2, n_collisions)**2
+                                collision_norms(:, n_collisions) = collision_norms(:, n_collisions) &
+                                                                 / sqrt(len2_collision_norm)
                             end if
                         end if
                     end if
