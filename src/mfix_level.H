@@ -244,6 +244,9 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag_v;
     Vector< std::unique_ptr<MultiFab> > drag_w;
 
+    // used if load_balance_type == "KnapSack"
+    Vector<std::unique_ptr<MultiFab> > costs;
+
     int solve_fluid;
     int solve_dem;
     int max_nit;
@@ -254,6 +257,11 @@ private:
 
     static std::string particle_init_type;
     static std::string load_balance_type;
+
+    static int m_eb_basic_grow_cells;
+    static int m_eb_volume_grow_cells;
+    static int m_eb_full_grow_cells;
+    static EBSupport m_eb_support_level;
 
     Real cfl = 0.7;
 

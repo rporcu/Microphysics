@@ -7,6 +7,10 @@
 
 std::string mfix_level::particle_init_type = "AsciiFile";
 std::string mfix_level::load_balance_type = "FixedSize";
+int mfix_level::m_eb_basic_grow_cells = 2;
+int mfix_level::m_eb_volume_grow_cells = 2;
+int mfix_level::m_eb_full_grow_cells = 2;
+EBSupport mfix_level::m_eb_support_level = EBSupport::full;
 
 mfix_level::~mfix_level ()
 {
@@ -90,6 +94,8 @@ mfix_level::mfix_level ()
     drag_u.resize(nlevs_max);
     drag_v.resize(nlevs_max);
     drag_w.resize(nlevs_max);
+
+    costs.resize(nlevs_max);
 }
 
 void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
@@ -278,6 +284,9 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
 #endif
     for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
@@ -302,8 +311,14 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
-    }
 
+       if (costs[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*costs[lev])[mfi].plus(wt, tbx);
+       }
+    }
+    
     num_u = temp_num;
     denom_u = temp_denom;
 
@@ -352,6 +367,9 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
 #endif
     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
@@ -376,6 +394,12 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
+
+       if (costs[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*costs[lev])[mfi].plus(wt, tbx);
+       }
     }
 
     num_v = temp_num;
@@ -425,6 +449,9 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
 #endif
     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+      
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
@@ -449,6 +476,12 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
+
+       if (costs[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*costs[lev])[mfi].plus(wt, tbx);
+       }
     }
 
     num_w = temp_num;
@@ -491,6 +524,9 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p)
 #endif
     for (MFIter mfi(*A_m[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
 
@@ -513,6 +549,12 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p)
             bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
             bc_klo.dataPtr(), bc_khi.dataPtr(),
             &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), &temp_num, &temp_denom);
+
+       if (costs[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*costs[lev])[mfi].plus(wt, tbx);
+       }
     }
     num_p = temp_num;
     denom_p = temp_denom;

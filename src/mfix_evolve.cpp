@@ -11,16 +11,18 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
                    Real time, Real normg)
 {
 
+  AMREX_ALWAYS_ASSERT(lev == 0);
+
   Real sum_vol;
   if (solve_dem && solve_fluid)
   {
     mfix_calc_volume_fraction(lev,sum_vol);
 //  Print() << "Testing new sum_vol " << sum_vol << " against original sum_vol " << sum_vol_orig << std::endl;
-    if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) 
+    if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
     {
        amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
        amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
-       amrex::Abort("Volume fraction in domain has changed!");
+       // amrex::Abort("Volume fraction in domain has changed!");
     }
   }
 
@@ -32,8 +34,7 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
      mfix_calc_drag_particle(lev);
 
   if (solve_dem)
-     pc -> EvolveParticles( lev, nstep, dt, time, ebfactory, subdt_io);
-}
+     pc -> EvolveParticles( lev, nstep, dt, time, ebfactory, costs[lev], subdt_io);
 
 void
 mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
@@ -181,10 +182,10 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
   // Real u_abs = u_g[0] -> norm0 ();
   // Real v_abs = v_g[0] -> norm0 ();
   // Real w_abs = w_g[0] -> norm0 ();
-  
-  // Real cfl   = dt * ( u_abs / dx + v_abs / dy + w_abs /dz ); 
 
-      
+  // Real cfl   = dt * ( u_abs / dx + v_abs / dy + w_abs /dz );
+
+
   // std::cout << "\nTesting CFL condition:\n";
   // std::cout << "max(|u|), max(|v|), max(|w|) = " << u_abs << " " << v_abs << " " << w_abs << "\n";
   // std::cout << "DT = " << dt << std::endl;

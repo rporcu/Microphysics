@@ -16,8 +16,12 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
     pp.query("particle_init_type", particle_init_type);
 
     // The default type is "FixedSize" but we can over-write that in the inputs file
-    //  with "KDTree"
+    //  with "KDTree" or "KnapSack"
     pp.query("load_balance_type", load_balance_type);
+
+    AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
+                        load_balance_type == "KDTree"    ||
+                        load_balance_type == "KnapSack");
 
     // If subdt_io is true, des_time_loop calls output_manager
     subdt_io = false; // default to false (if not present in inputs file)
@@ -100,7 +104,7 @@ mfix_level::MakeBaseGrids () const
 
     if ( refine_grid_layout &&
          ba.size() < ParallelDescriptor::NProcs() &&
-         load_balance_type == "FixedSize") {
+         (load_balance_type == "FixedSize" || load_balance_type == "KnapSack") ) {
         ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
     }
 
@@ -376,6 +380,13 @@ mfix_level::AllocateArrays (int lev)
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
+
+  // used in load balancing 
+  if (load_balance_type == "KnapSack") {
+    costs[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+    costs[lev]->setVal(0.0);
+  }
+
   // Allocate the fluid data
   if (solve_fluid)
      AllocateArrays(lev);
