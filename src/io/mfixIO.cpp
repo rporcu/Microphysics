@@ -31,7 +31,21 @@ mfix_level::InitIOData ()
 }
 
 void
-mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time) const
+mfix_level::WritePlotHeader(const std::string& name, int nstep, Real dt, Real time) const
+{
+   bool is_checkpoint = 0;
+   WriteHeader(name, nstep, dt, time, is_checkpoint);
+}
+
+void
+mfix_level::WriteCheckHeader(const std::string& name, int nstep, Real dt, Real time) const
+{
+   bool is_checkpoint = 1;
+   WriteHeader(name, nstep, dt, time, is_checkpoint);
+}
+
+void
+mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time, bool is_checkpoint) const
 {
     if (ParallelDescriptor::IOProcessor())
     {
@@ -41,16 +55,17 @@ mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time) 
          std::ofstream::binary);
 
       if ( ! HeaderFile.good() )
-  {
           amrex::FileOpenFailed(HeaderFileName);
-      }
 
       HeaderFile.precision(17);
 
       VisMF::IO_Buffer io_buffer(VisMF::IO_Buffer_Size);
       HeaderFile.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
 
-      HeaderFile << "Checkpoint version: 1\n";
+      if (is_checkpoint)
+         HeaderFile << "Checkpoint version: 1\n";
+      else
+         HeaderFile << "HyperCLaw-V1.1\n";
 
       const int nlevels = finestLevel()+1;
       HeaderFile << nlevels << "\n";
@@ -62,24 +77,19 @@ mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time) 
 
       // Geometry
       for (int i = 0; i < BL_SPACEDIM; ++i)
-  {
             HeaderFile << Geometry::ProbLo(i) << ' ';
-      }
-        HeaderFile << '\n';
+      HeaderFile << '\n';
 
-        for (int i = 0; i < BL_SPACEDIM; ++i)
-  {
-            HeaderFile << Geometry::ProbHi(i) << ' ';
-      }
-        HeaderFile << '\n';
+      for (int i = 0; i < BL_SPACEDIM; ++i)
+         HeaderFile << Geometry::ProbHi(i) << ' ';
+      HeaderFile << '\n';
 
       // BoxArray
       for (int lev = 0; lev < nlevels; ++lev)
-  {
+      {
           boxArray(lev).writeOn(HeaderFile);
           HeaderFile << '\n';
       }
-
     }
 }
 
@@ -97,7 +107,7 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
     const int nlevels = finestLevel()+1;
     amrex::PreBuildDirectorHierarchy(checkpointname, level_prefix, nlevels, true);
 
-    WriteHeader(checkpointname, nstep, dt, time);
+    WriteCheckHeader(checkpointname, nstep, dt, time);
 
     WriteJobInfo(checkpointname);
 
@@ -507,52 +517,62 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
     amrex::Print() << "  Writing plotfile " << plotfilename << std::endl;
 
-    const int ngrow = 0;
+    if (solve_fluid)
+    {
+       const int ngrow = 0;
 
-    Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
+       Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
 
-    for (int lev = 0; lev <= finest_level; ++lev) {
-
-       // the "+1" here is for volfrac
-       const int ncomp = vectorVars.size() + scalarVars.size() + 1;
-       mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
-
-       // Vector variables
-       int dcomp = 0;
-       Vector<const MultiFab*> srcmf(3);
-
-       for( dcomp = 0; dcomp < vectorVars.size(); dcomp=dcomp+3 ) {
-          srcmf[0] = (*vectorVars[dcomp])[lev].get();
-          srcmf[1] = (*vectorVars[dcomp+1])[lev].get();
-          srcmf[2] = (*vectorVars[dcomp+2])[lev].get();
-          amrex::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
-       };
-
-       // Scalar variables
-       for( int i = 0; i < scalarVars.size(); i++ ) {
-           MultiFab::Copy(*mf[lev], *((*scalarVars[i])[lev].get()), 0, dcomp, 1, 0);
-           dcomp++;
-       }
-
-       if (ebfactory) {
-           MultiFab::Copy(*mf[lev], ebfactory->getVolFrac(), 0, dcomp, 1, 0);
-       } else {
-           mf[lev]->setVal(1.0,dcomp,1,0);
-       }
- 
-       Vector<const MultiFab*> mf2(finest_level+1);
- 
        for (int lev = 0; lev <= finest_level; ++lev) {
-           mf2[lev] = mf[lev].get();
-       }
+
+          // the "+1" here is for volfrac
+          const int ncomp = vectorVars.size() + scalarVars.size() + 1;
+          mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
+
+          // Vector variables
+          int dcomp = 0;
+          Vector<const MultiFab*> srcmf(3);
+
+          for( dcomp = 0; dcomp < vectorVars.size(); dcomp=dcomp+3 ) {
+             srcmf[0] = (*vectorVars[dcomp])[lev].get();
+             srcmf[1] = (*vectorVars[dcomp+1])[lev].get();
+             srcmf[2] = (*vectorVars[dcomp+2])[lev].get();
+             amrex::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
+          };
+
+          // Scalar variables
+          for( int i = 0; i < scalarVars.size(); i++ ) {
+              MultiFab::Copy(*mf[lev], *((*scalarVars[i])[lev].get()), 0, dcomp, 1, 0);
+              dcomp++;
+          }
+
+          if (ebfactory) {
+              MultiFab::Copy(*mf[lev], ebfactory->getVolFrac(), 0, dcomp, 1, 0);
+          } else {
+              mf[lev]->setVal(1.0,dcomp,1,0);
+          }
  
-       // Concatenate scalar and vector var names
-       Vector<std::string>  names;
-       names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
-       names.insert( names.end(), scaVarsName.begin(), scaVarsName.end());
+          Vector<const MultiFab*> mf2(finest_level+1);
+ 
+          for (int lev = 0; lev <= finest_level; ++lev) {
+              mf2[lev] = mf[lev].get();
+          }
+    
+          // Concatenate scalar and vector var names
+          Vector<std::string>  names;
+          names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
+          names.insert( names.end(), scaVarsName.begin(), scaVarsName.end());
      
-       amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
-                    Geom(), time, istep, refRatio());
+          amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
+                       Geom(), time, istep, refRatio());
+       }
+    }
+    else // no fluid
+    {
+       if (!UtilCreateDirectory(plotfilename, 0755))
+          CreateDirectoryFailed(plotfilename);
+
+       WritePlotHeader(plotfilename, nstep, dt, time);
     }
 
     WriteJobInfo(plotfilename);

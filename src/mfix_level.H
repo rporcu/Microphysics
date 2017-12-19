@@ -135,7 +135,9 @@ private:
     void ReMakeNewLevelFromScratch(int lev,
           const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
-    void WriteHeader(const std::string& name, int nstep, Real dt, Real time) const;
+    void WriteHeader(const std::string& name, int nstep, Real dt, Real time, bool is_checkpoint) const;
+    void WritePlotHeader(const std::string& name, int nstep, Real dt, Real time) const;
+    void WriteCheckHeader(const std::string& name, int nstep, Real dt, Real time) const;
 
     void WriteJobInfo(const std::string& dir ) const;
 
