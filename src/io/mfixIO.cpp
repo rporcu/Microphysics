@@ -288,12 +288,6 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
             }
 
             AllocateArrays(lev);
-
-	    // used in load balancing 
-	    if (load_balance_type == "KnapSack") {
-	      costs[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
-	      costs[lev]->setVal(0.0);
-	    }
         }
     }
 
@@ -397,6 +391,16 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     u_go[lev]->FillBoundary(geom[lev].periodicity());
     v_go[lev]->FillBoundary(geom[lev].periodicity());
     w_go[lev]->FillBoundary(geom[lev].periodicity());
+
+    // used in load balancing  
+    if (load_balance_type == "KnapSack") { 
+        particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev), 
+                                              pc->ParticleDistributionMap(lev), 1, 0));  
+        particle_cost[lev]->setVal(0.0); 
+            
+        fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));  
+        fluid_cost[lev]->setVal(0.0); 
+    }        
 }
 
 void
@@ -546,8 +550,11 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
               dcomp++;
           }
 
+          std::cout << "DCOMP FOR VOLFRAC " << dcomp << std::endl;
           if (ebfactory) {
               MultiFab::Copy(*mf[lev], ebfactory->getVolFrac(), 0, dcomp, 1, 0);
+              std::cout << "VOLFRAC " << ebfactory->getVolFrac()[0] << std::endl;
+              std::cout << "MF      " << (*mf[lev])[0] << std::endl;
           } else {
               mf[lev]->setVal(1.0,dcomp,1,0);
           }

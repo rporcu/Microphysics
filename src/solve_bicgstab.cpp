@@ -130,10 +130,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                   rhs[mfi].dataPtr(), rbx.loVect(), rbx.hiVect(),
                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect());
 
-       if (costs[lev]) {
+       if (fluid_cost[lev]) {
 	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
 	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	 (*costs[lev])[mfi].plus(wt, tbx);
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
        }
     }
 
@@ -163,10 +163,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                      r[mfi].dataPtr(), rbx.loVect(), rbx.hiVect());
 
-       if (costs[lev]) {
+       if (fluid_cost[lev]) {
 	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
 	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	 (*costs[lev])[mfi].plus(wt, tbx);
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
        }
     }
 
@@ -249,10 +249,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                       A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                        ph[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
 
-	  if (costs[lev]) {
+	  if (fluid_cost[lev]) {
 	    const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
 	    wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	    (*costs[lev])[mfi].plus(wt, tbx);
+	    (*fluid_cost[lev])[mfi].plus(wt, tbx);
 	  }
         }
       }
@@ -280,10 +280,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 		    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                     v[mfi].dataPtr(), vbx.loVect(), vbx.hiVect());
 
-	if (costs[lev]) {
+	if (fluid_cost[lev]) {
 	  const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
 	  wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	  (*costs[lev])[mfi].plus(wt, tbx);
+	  (*fluid_cost[lev])[mfi].plus(wt, tbx);
 	}
       }
 
@@ -338,10 +338,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 		       A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
 		       sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
 
-	  if (costs[lev]) {
+	  if (fluid_cost[lev]) {
 	    const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
 	    wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	    (*costs[lev])[mfi].plus(wt, tbx);
+	    (*fluid_cost[lev])[mfi].plus(wt, tbx);
 	  }
         }
         sh.FillBoundary(geom[lev].periodicity());
@@ -369,10 +369,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 		    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                     t[mfi].dataPtr(), tbx.loVect(), tbx.hiVect());
 
-	if (costs[lev]) {
+	if (fluid_cost[lev]) {
 	  const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
 	  wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	  (*costs[lev])[mfi].plus(wt, tbx);
+	  (*fluid_cost[lev])[mfi].plus(wt, tbx);
 	}
       }
 
