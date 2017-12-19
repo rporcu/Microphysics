@@ -182,7 +182,7 @@
                             i_pt = vindex_pt(1)
                             j_pt = vindex_pt(2) 
                             k_pt = vindex_pt(3)
-                            if ( any( abs( normal(ii, jj, kk, :) - normal(i_pt, j_pt, k_pt, :) ) < 1.d-8 ) ) then
+                            if ( all( abs( normal(ii, jj, kk, :) - normal(i_pt, j_pt, k_pt, :) ) < 1.d-8 ) ) then
                                 ! EB-facet has same normal => skip
                                 cycle
                             end if 
