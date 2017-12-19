@@ -155,8 +155,16 @@ mfix_level::make_eb_geometry(int lev)
 
     EBTower::Build();
 
-    ebfactory = std::unique_ptr<EBFArrayBoxFactory>(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
-                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells}, m_eb_support_level));
+    ebfactory          = std::unique_ptr<EBFArrayBoxFactory>(
+                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                         m_eb_support_level));
+
+    particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
+                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                         m_eb_support_level));
+
     std::cout << "VOLFRACT AT INIT " << ebfactory->getVolFrac()[0] << std::endl;
 }
 
@@ -295,6 +303,13 @@ mfix_level::make_eb_hourglass(int lev)
 
     EBTower::Build();
 
-    ebfactory = std::unique_ptr<EBFArrayBoxFactory>(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
-                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells}, m_eb_support_level));
+    ebfactory          = std::unique_ptr<EBFArrayBoxFactory>(
+                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                         m_eb_support_level));
+
+    particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
+                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                         m_eb_support_level));
 }
