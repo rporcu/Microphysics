@@ -28,7 +28,7 @@ subroutine mfix_get_walls(bcv, exists, normal, center) &
 
   real(c_real) :: x, y, z
 
-  real(c_real), parameter :: offset = 1.0d-12
+  real(c_real), parameter :: offset = 1.0d-15
 
   exists = 0;
 

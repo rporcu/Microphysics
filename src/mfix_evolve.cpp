@@ -35,6 +35,7 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
 
   if (solve_dem)
      pc -> EvolveParticles( lev, nstep, dt, time, ebfactory, costs[lev], subdt_io);
+}
 
 void
 mfix_level::EvolveFluid(int lev, int nstep, int set_normg,

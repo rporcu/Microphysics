@@ -146,7 +146,11 @@ int main (int argc, char* argv[])
 
     // We move this to after restart and/or regrid so we make the EB data structures with the correct 
     //    BoxArray and DistributionMapping
-    my_mfix.make_eb_geometry(lev);
+    bool hourglass = false;
+    if (hourglass)
+       my_mfix.make_eb_hourglass(lev);
+    else
+       my_mfix.make_eb_geometry(lev);
 
     // This checks if we want to regrid using the KDTree approach
     //    (only if load_balance_type = "KDTree")
