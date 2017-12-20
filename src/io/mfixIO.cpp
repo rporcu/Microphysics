@@ -573,10 +573,12 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
     }
     else // no fluid
     {
-       if (!UtilCreateDirectory(plotfilename, 0755))
-          CreateDirectoryFailed(plotfilename);
 
-       WritePlotHeader(plotfilename, nstep, dt, time);
+        Vector<const MultiFab*> mf;
+        Vector<std::string>  names;
+        
+        amrex::WriteMultiLevelPlotfile(plotfilename, 0, mf, names,
+                                       Geom(), time, istep, refRatio());        
     }
 
     WriteJobInfo(plotfilename);
