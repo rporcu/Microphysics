@@ -7,6 +7,7 @@
 
 std::string mfix_level::particle_init_type = "AsciiFile";
 std::string mfix_level::load_balance_type = "FixedSize";
+
 int mfix_level::m_eb_basic_grow_cells = 2;
 int mfix_level::m_eb_volume_grow_cells = 2;
 int mfix_level::m_eb_full_grow_cells = 2;
@@ -95,7 +96,8 @@ mfix_level::mfix_level ()
     drag_v.resize(nlevs_max);
     drag_w.resize(nlevs_max);
 
-    costs.resize(nlevs_max);
+    particle_cost.resize(nlevs_max);
+    fluid_cost.resize(nlevs_max);
 }
 
 void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
@@ -312,10 +314,10 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
 
-       if (costs[lev]) {
+       if (fluid_cost[lev]) {
 	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
 	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	 (*costs[lev])[mfi].plus(wt, tbx);
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
        }
     }
     
@@ -395,10 +397,10 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
 
-       if (costs[lev]) {
+       if (fluid_cost[lev]) {
 	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
 	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	 (*costs[lev])[mfi].plus(wt, tbx);
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
        }
     }
 
@@ -477,10 +479,10 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
 
-       if (costs[lev]) {
+       if (fluid_cost[lev]) {
 	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
 	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	 (*costs[lev])[mfi].plus(wt, tbx);
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
        }
     }
 
@@ -550,10 +552,10 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p)
             bc_klo.dataPtr(), bc_khi.dataPtr(),
             &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), &temp_num, &temp_denom);
 
-       if (costs[lev]) {
+       if (fluid_cost[lev]) {
 	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
 	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	 (*costs[lev])[mfi].plus(wt, tbx);
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
        }
     }
     num_p = temp_num;

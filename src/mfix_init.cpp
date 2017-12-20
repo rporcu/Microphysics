@@ -9,28 +9,44 @@ void
 mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
                        int max_nit_in, int call_udf_in)
 {
-    ParmParse pp("mfix");
+    {
+        ParmParse pp("mfix");
+        
+        // The default type is "AsciiFile" but we can over-write that in the inputs file
+        //  with "Random"
+        pp.query("particle_init_type", particle_init_type);
+        
+        // The default type is "FixedSize" but we can over-write that in the inputs file
+        //  with "KDTree" or "KnapSack"
+        pp.query("load_balance_type", load_balance_type);
 
-    // The default type is "AsciiFile" but we can over-write that in the inputs file
-    //  with "Random"
-    pp.query("particle_init_type", particle_init_type);
+        pp.query("dual_grid", dual_grid);
+        
+        AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
+                            load_balance_type == "KDTree"    ||
+                            load_balance_type == "KnapSack");
+        
+        // If subdt_io is true, des_time_loop calls output_manager
+        subdt_io = false; // default to false (if not present in inputs file)
+        pp.query("subdt_io", subdt_io);
+        
+        solve_fluid  = solve_fluid_in;
+        solve_dem    = solve_dem_in;
+        max_nit      = max_nit_in;
+        call_udf     = call_udf_in;        
+    }
 
-    // The default type is "FixedSize" but we can over-write that in the inputs file
-    //  with "KDTree" or "KnapSack"
-    pp.query("load_balance_type", load_balance_type);
-
-    AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
-                        load_balance_type == "KDTree"    ||
-                        load_balance_type == "KnapSack");
-
-    // If subdt_io is true, des_time_loop calls output_manager
-    subdt_io = false; // default to false (if not present in inputs file)
-    pp.query("subdt_io", subdt_io);
-
-    solve_fluid  = solve_fluid_in;
-    solve_dem    = solve_dem_in;
-    max_nit      = max_nit_in;
-    call_udf     = call_udf_in;
+    {
+        ParmParse pp("amr");
+        pp.query("dual_grid", dual_grid);
+    }
+    
+    {
+        ParmParse pp("particles");
+        pp.query("max_grid_size_x", particle_max_grid_size_x);
+        pp.query("max_grid_size_y", particle_max_grid_size_y);
+        pp.query("max_grid_size_z", particle_max_grid_size_z);        
+    }
 }
 
 void mfix_level::Init(int lev, Real dt, Real time)
@@ -46,7 +62,20 @@ void mfix_level::Init(int lev, Real dt, Real time)
     DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
     MakeNewLevelFromScratch(0, time, ba, dm);
-
+    
+    if (dual_grid                    &&
+        particle_max_grid_size_x > 0 &&
+        particle_max_grid_size_y > 0 &&
+        particle_max_grid_size_z > 0) {
+        BoxArray particle_ba(geom[lev].Domain());
+        IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                       particle_max_grid_size_y,
+                                       particle_max_grid_size_z);
+        particle_ba.maxSize(particle_max_grid_size);
+        DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+        pc->Regrid(particle_dm, particle_ba);
+    }
+    
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -381,12 +410,6 @@ void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
 
-  // used in load balancing 
-  if (load_balance_type == "KnapSack") {
-    costs[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
-    costs[lev]->setVal(0.0);
-  }
-
   // Allocate the fluid data
   if (solve_fluid)
      AllocateArrays(lev);
@@ -439,8 +462,19 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       amrex::Abort("Bad particle_init_type");
     }
 
-    pc -> BuildLevelMask(lev,geom[lev],dmap[lev],grids[lev]);
+    pc->BuildLevelMask(lev, Geom(lev),
+                       pc->ParticleDistributionMap(lev),
+                       pc->ParticleBoxArray(lev));
 
+    // used in load balancing 
+    if (load_balance_type == "KnapSack") {
+        particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
+                                              pc->ParticleDistributionMap(lev), 1, 0));
+        particle_cost[lev]->setVal(0.0);
+        
+        fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+        fluid_cost[lev]->setVal(0.0);
+    }
   }
 }
 

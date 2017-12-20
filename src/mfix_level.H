@@ -45,7 +45,7 @@ public:
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
 
-    void Regrid (int lev, int nstep, int dual_grid);
+    void Regrid (int lev, int nstep);
 
     void RegridOnRestart (int lev);
 
@@ -248,18 +248,24 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag_w;
 
     // used if load_balance_type == "KnapSack"
-    Vector<std::unique_ptr<MultiFab> > costs;
+    Vector<std::unique_ptr<MultiFab> > particle_cost;
+    Vector<std::unique_ptr<MultiFab> > fluid_cost;
 
     int solve_fluid;
     int solve_dem;
     int max_nit;
     int call_udf;
+    int dual_grid = 0;
 
     // enable output_manager during des_time_loop
     bool subdt_io;
 
     static std::string particle_init_type;
     static std::string load_balance_type;
+
+    int particle_max_grid_size_x = -1;
+    int particle_max_grid_size_y = -1;
+    int particle_max_grid_size_z = -1;
 
     static int m_eb_basic_grow_cells;
     static int m_eb_volume_grow_cells;
@@ -279,6 +285,7 @@ private:
     Vector< std::string > scaVarsName;
 
     std::unique_ptr<amrex::EBFArrayBoxFactory> ebfactory;
+    std::unique_ptr<amrex::EBFArrayBoxFactory> particle_ebfactory;
 };
 
 #endif
