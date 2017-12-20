@@ -550,11 +550,8 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
               dcomp++;
           }
 
-          std::cout << "DCOMP FOR VOLFRAC " << dcomp << std::endl;
           if (ebfactory) {
               MultiFab::Copy(*mf[lev], ebfactory->getVolFrac(), 0, dcomp, 1, 0);
-              std::cout << "VOLFRAC " << ebfactory->getVolFrac()[0] << std::endl;
-              std::cout << "MF      " << (*mf[lev])[0] << std::endl;
           } else {
               mf[lev]->setVal(1.0,dcomp,1,0);
           }
