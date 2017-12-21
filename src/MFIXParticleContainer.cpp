@@ -317,24 +317,11 @@ MFIXParticleContainer::InitData()
 {
 }
 
-void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time,
-                                             std::unique_ptr<EBFArrayBoxFactory>& ebfactory,
-                                             std::unique_ptr<MultiFab>& cost, int subdt_io )
+MultiFab MFIXParticleContainer::EBNormals(int lev, std::unique_ptr<EBFArrayBoxFactory>& ebfactory, MultiFab& dummy)
 {
-    BL_PROFILE("mfix_dem::EvolveParticles()");
-
-    bool debug = false;
-
-    Box domain(Geom(lev).Domain());
-
-    const Real* dx = Geom(lev).CellSize();
-
-    Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
-    Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
-    Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
-
     //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
-    MultiFab dummy;
+    
+    // Container for normal data
     MultiFab normal;
 
     // Only call the routine for wall collisions if the box has a wall
@@ -351,10 +338,10 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
             const int* lo = tile_box.loVect();
             const int* hi = tile_box.hiVect();
 
-            const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
+            const auto& sfab = dynamic_cast <EBFArrayBox const&>(dummy[pti]);
             const auto& flag = sfab.getEBCellFlagFab();
 
-            areafrac  =  ebfactory->getAreaFrac();
+            areafrac = ebfactory->getAreaFrac();
 
             if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued)
             {
@@ -373,6 +360,29 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
         }
         normal.FillBoundary(Geom(0).periodicity());
     }
+    
+    return normal;
+}
+
+void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time,
+                                             std::unique_ptr<EBFArrayBoxFactory>& ebfactory,
+                                             std::unique_ptr<MultiFab>& cost, int subdt_io )
+{
+    BL_PROFILE("mfix_dem::EvolveParticles()");
+
+    bool debug = false;
+
+    Box domain(Geom(lev).Domain());
+
+    const Real* dx = Geom(lev).CellSize();
+
+    Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
+    Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
+    Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
+
+    //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
+    MultiFab dummy;
+    MultiFab normal = EBNormals( lev, ebfactory, dummy);
 
     int   nsubsteps;
     Real  subdt;

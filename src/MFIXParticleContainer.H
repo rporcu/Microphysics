@@ -78,6 +78,8 @@ public:
 
     void PrintParticleCounts();
 
+    MultiFab EBNormals( int lev, std::unique_ptr<EBFArrayBoxFactory>& ebfactory, MultiFab& dummy );
+
     void EvolveParticles ( int lev, int nstep, Real dt, Real time,
                            std::unique_ptr<EBFArrayBoxFactory>& ebfactory,
                            std::unique_ptr<MultiFab>& cost, int subdt_io );

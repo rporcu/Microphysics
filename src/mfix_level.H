@@ -30,91 +30,101 @@ public:
 
     void InitParams(int solve_fluid, int solve_dem, int max_nit, int call_udf);
 
-    void Init (int lev, Real dt, Real time);
+    void Init(int lev, Real dt, Real time);
 
-    void InitLevelData (int lev, Real dt, Real time);
+    void InitLevelData(int lev, Real dt, Real time);
 
-    void PostInit (int lev, Real dt, Real time, int nstep, int restart_flag);
+    void PostInit(int lev, Real dt, Real time, int nstep, int restart_flag);
 
-    void WriteCheckPointFile ( std::string& check_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 )  const;
+    void WriteCheckPointFile(std::string& check_file_name,
+            int nstep = 0, Real dt = 0.0, Real time = 0.0)  const;
 
-    void WritePlotFile ( std::string& plot_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
+    void WritePlotFile(std::string& plot_file_name,
+            int nstep = 0, Real dt = 0.0, Real time = 0.0) const;
 
-    void Restart (std::string& restart_chkfile, int *nstep, Real *dt, Real *time,
-                  IntVect& Nrep);
+    void Restart(std::string& restart_chkfile, int *nstep, Real *dt, Real *time,
+            IntVect& Nrep);
 
-    void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
+    void WriteParticleAscii(std::string& par_ascii_file_name, int nstep = 0) const;
 
-    void Regrid (int lev, int nstep);
+    void Regrid(int lev, int nstep);
 
-    void RegridOnRestart (int lev);
+    void RegridOnRestart(int lev);
 
     void Evolve(int lev, int nstep, int set_normg,
-                       Real dt, Real& prev_dt, Real time, Real normg);
+            Real dt, Real& prev_dt, Real time, Real normg);
 
-    void usr3 (int lev);
+    void usr3(int lev);
 
-    void output (int lev, int estatus, int finish, int nstep, Real dt, Real time)
-       { pc -> output( lev, estatus, finish, nstep, dt, time);};
+    void output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
+    {
+        pc -> output( lev, estatus, finish, nstep, dt, time);
+    };
 
-    void make_mg_bc (int mg_bc[]);
+    void make_mg_bc(int mg_bc[]);
 
-    void make_eb_geometry (int lev);
-    void make_eb_hourglass (int lev);
+    void make_eb_geometry(int lev);
+    void make_eb_hourglass(int lev);
 
     void WriteEBSurface(int lev);
 
-    void InitIOData ();
+    void InitIOData();
 
 protected:
 
     //! Tagging cells for refinement
-    virtual void ErrorEst (int lev, amrex::TagBoxArray& tags, amrex::Real time, int /*ngrow*/) override
+    virtual void ErrorEst(int lev, amrex::TagBoxArray& tags, amrex::Real time, int /*ngrow*/) override
         { amrex::Abort("ErrorEst: To be implemented"); }
 
     //! Make a new level using provided BoxArray and
     //! DistributionMapping and fill with interpolated coarse level
     //! data.  Called by AmrCore::regrid.
-    virtual void MakeNewLevelFromCoarse (int lev, amrex::Real time, const amrex::BoxArray& ba,
-                                         const amrex::DistributionMapping& dm) override
-        { amrex::Abort("MakeNewLevelFromCoarse: To be implemented"); }
+    virtual void MakeNewLevelFromCoarse(int lev, amrex::Real time, const amrex::BoxArray& ba,
+            const amrex::DistributionMapping& dm) override
+    {
+        amrex::Abort("MakeNewLevelFromCoarse: To be implemented");
+    }
 
     //! Remake an existing level using provided BoxArray and
     //! DistributionMapping and fill with existing fine and coarse
     //! data.  Called by AmrCore::regrid.
-    virtual void RemakeLevel (int lev, amrex::Real time, const amrex::BoxArray& ba,
-                              const amrex::DistributionMapping& dm) override
-        { amrex::Abort("RemakeLevel: To be implemented"); }
+    virtual void RemakeLevel(int lev, amrex::Real time, const amrex::BoxArray& ba,
+            const amrex::DistributionMapping& dm) override
+    {
+        amrex::Abort("RemakeLevel: To be implemented");
+    }
 
     //! Delete level data.  Called by AmrCore::regrid.
-    virtual void ClearLevel (int lev) override
-        { amrex::Abort("ClearLevel: To be implemented"); }
+    virtual void ClearLevel(int lev) override
+    {
+        amrex::Abort("ClearLevel: To be implemented");
+    }
 
-    void mfix_calc_coeffs (int lev, int calc_flag);
+    void mfix_calc_coeffs(int lev, int calc_flag);
 
-    void mfix_calc_trd_and_tau (int lev);
+    void mfix_calc_trd_and_tau(int lev);
 
-    void mfix_init_fluid (int lev, int is_restarting = 0);
-    void mfix_set_bc0 (int lev);
+    void mfix_init_fluid(int lev, int is_restarting = 0);
+    void mfix_set_bc0(int lev);
 
-    void mfix_conv_rop (int lev);
+    void mfix_conv_rop(int lev);
 
-    void mfix_calc_mflux (int lev);
+    void mfix_calc_mflux(int lev);
 
-    void mfix_solve_for_u    (int lev, Real dt, Real& num_u, Real& denom_u);
-    void mfix_solve_for_v    (int lev, Real dt, Real& num_v, Real& denom_v);
-    void mfix_solve_for_w    (int lev, Real dt, Real& num_w, Real& denom_w);
+    void mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u);
+    void mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v);
+    void mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w);
 
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
-    void mfix_solve_for_pp (int lev, Real dt, Real& num_p, Real& denom_p);
+    void mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p);
 
-    void mfix_physical_prop (int lev, int calc_flag);
+    void mfix_physical_prop(int lev, int calc_flag);
 
-    void mfix_correct_0 (int lev);
+    void mfix_correct_0(int lev);
 
-    int solve_bicgstab (MultiFab& sol, const MultiFab& rhs, const MultiFab& matrix,
-           int sweep_type, int precond_type, int maxiter, Real eps_rel, int lev);
+    int solve_bicgstab(MultiFab& sol, const MultiFab& rhs, const MultiFab& matrix,
+            int sweep_type, int precond_type, int maxiter, Real eps_rel, int lev);
 
     void mfix_calc_volume_fraction(int lev, Real& sum_vol);
     void mfix_calc_drag_fluid(int lev);
@@ -127,13 +137,13 @@ protected:
 
 private:
 
-    void check_data (int lev);
+    void check_data(int lev);
 
     void MakeNewLevelFromScratch(int lev, Real time,
-          const BoxArray& new_grids, const DistributionMapping& new_dmap);
+            const BoxArray& new_grids, const DistributionMapping& new_dmap) override;
 
     void ReMakeNewLevelFromScratch(int lev,
-          const BoxArray& new_grids, const DistributionMapping& new_dmap);
+            const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
     void WriteHeader(const std::string& name, int nstep, Real dt, Real time, bool is_checkpoint) const;
     void WritePlotHeader(const std::string& name, int nstep, Real dt, Real time) const;
@@ -141,21 +151,21 @@ private:
 
     void WriteJobInfo(const std::string& dir ) const;
 
-    static void GotoNextLine (std::istream& is);
+    static void GotoNextLine(std::istream& is);
 
-    void EvolveFluid (int lev, int nstep, int set_normg,
-          Real dt, Real& prev_dt, Real time, Real normg);
+    void EvolveFluid(int lev, int nstep, int set_normg,
+            Real dt, Real& prev_dt, Real time, Real normg);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
-    BoxArray MakeBaseGrids () const;
-    void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
+    BoxArray MakeBaseGrids() const;
+    void ChopGrids(const Box& domain, BoxArray& ba, int target_size) const;
 
     void mfix_set_bc_type(int lev);
     void mfix_set_bc1(int lev);
 
     void fill_mf_bc(int lev,  MultiFab& mf);
 #if 0
-    void WritePlotFile () const;
+    void WritePlotFile() const;
 
       // which step?
     Vector<int> nsubsteps;  // how many substeps on each level?
@@ -286,6 +296,10 @@ private:
 
     std::unique_ptr<amrex::EBFArrayBoxFactory> ebfactory;
     std::unique_ptr<amrex::EBFArrayBoxFactory> particle_ebfactory;
+
+    // stores eb_normals (commond index-space with cells)
+    std::unique_ptr<MultiFab> eb_normals;
+    std::unique_ptr<MultiFab> dummy;
 };
 
 #endif
