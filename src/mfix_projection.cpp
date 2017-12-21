@@ -729,7 +729,7 @@ mfix_level::solve_poisson_equation (  int lev,
     // Then setup the solver ----------------------
     //
     MLMG  solver(matrix);
-    int   verbose = 5;
+    int   verbose = 0;
     int   cg_verbose = 0;
     int   max_iter = 100;
     int   max_fmg_iter = 0;
