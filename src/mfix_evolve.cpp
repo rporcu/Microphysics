@@ -10,38 +10,35 @@ void
 mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real &dt, Real& prev_dt,
                    Real time, Real normg)
 {
+  AMREX_ALWAYS_ASSERT(lev == 0);
 
-    Real sum_vol;
-    if (solve_dem && solve_fluid)
-    {
-	mfix_calc_volume_fraction(lev,sum_vol);
+  Real sum_vol;
+  if (solve_dem && solve_fluid)
+  {
+    mfix_calc_volume_fraction(lev,sum_vol);
 //  Print() << "Testing new sum_vol " << sum_vol << " against original sum_vol " << sum_vol_orig << std::endl;
-	if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) 
-	{
-	    amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
-	    amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
-	    amrex::Abort("Volume fraction in domain has changed!");
-	}
-    }
-
-    if (solve_fluid)
+    if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
     {
-	if ( use_proj_method )
-	{
-	    EvolveFluidProjection(lev,nstep,steady_state,dt,prev_dt,time);
-	}
-	else
-	{
-	    EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
-	}
+       amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
+       amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
+       // amrex::Abort("Volume fraction in domain has changed!");
     }
+  }
   
-    // This returns the drag force on the particle
-    if (solve_dem && solve_fluid)
-	mfix_calc_drag_particle(lev);
-
-    if (solve_dem)
-	pc -> EvolveParticles( lev, nstep, dt, time, ebfactory);
+  if (solve_fluid)  {
+      if ( use_proj_method )	{
+	  EvolveFluidProjection(lev,nstep,steady_state,dt,prev_dt,time);
+      }	else {
+	    EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
+      }
+  }
+  
+  // This returns the drag force on the particle
+  if (solve_dem && solve_fluid)
+      mfix_calc_drag_particle(lev);
+  
+  if (solve_dem)
+      pc -> EvolveParticles( lev, nstep, dt, time, particle_ebfactory, particle_cost[lev], subdt_io);
 
 }
 
@@ -180,6 +177,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
 	    MultiFab::Copy(*u_g[lev],   *u_go[lev],   0, 0, 1, nghost);
 	    MultiFab::Copy(*v_g[lev],   *v_go[lev],   0, 0, 1, nghost);
 	    MultiFab::Copy(*w_g[lev],   *w_go[lev],   0, 0, 1, nghost);
+
 
 	}
     } while (reiterate==1);

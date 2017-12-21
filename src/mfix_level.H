@@ -46,7 +46,7 @@ public:
 
     void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
 
-    void Regrid (int lev, int nstep, int dual_grid);
+    void Regrid (int lev, int nstep);
 
     void RegridOnRestart (int lev);
 
@@ -61,6 +61,7 @@ public:
     void make_mg_bc (int mg_bc[]);
 
     void make_eb_geometry (int lev);
+    void make_eb_hourglass (int lev);
 
     void WriteEBSurface(int lev);
 
@@ -142,7 +143,9 @@ private:
     void ReMakeNewLevelFromScratch(int lev,
           const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
-    void WriteHeader(const std::string& name, int nstep, Real dt, Real time) const;
+    void WriteHeader(const std::string& name, int nstep, Real dt, Real time, bool is_checkpoint) const;
+    void WritePlotHeader(const std::string& name, int nstep, Real dt, Real time) const;
+    void WriteCheckHeader(const std::string& name, int nstep, Real dt, Real time) const;
 
     void WriteJobInfo(const std::string& dir ) const;
 
@@ -307,7 +310,6 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag_v;
     Vector< std::unique_ptr<MultiFab> > drag_w;
 
-
     // Projection
     // Fluid acceleration (convection + diffusion)
     Vector< std::unique_ptr<MultiFab> > uacc;
@@ -328,18 +330,38 @@ private:
     Vector< Vector< std::unique_ptr<MultiFab> > > oro_g; // Over ro_g = ep_g / rop_g
 
     Vector< std::unique_ptr<MultiFab> > phi; // Pressure increment
-    
-    
+   
+
+    // used if load_balance_type == "KnapSack"
+    Vector<std::unique_ptr<MultiFab> > particle_cost;
+    Vector<std::unique_ptr<MultiFab> > fluid_cost;
+
+
     int solve_fluid;
     int solve_dem;
     int use_proj_method = 0; // Whether to use projection to solve NS eqs.
     int max_nit;
     int call_udf;
+    int dual_grid = 0;
+
+    // enable output_manager during des_time_loop
+    bool subdt_io;
 
     static std::string particle_init_type;
     static std::string load_balance_type;
 
+
     Real cfl = 0.5;
+
+    int particle_max_grid_size_x = -1;
+    int particle_max_grid_size_y = -1;
+    int particle_max_grid_size_z = -1;
+
+    static int m_eb_basic_grow_cells;
+    static int m_eb_volume_grow_cells;
+    static int m_eb_full_grow_cells;
+    static EBSupport m_eb_support_level;
+
 
     Real sum_vol_orig;
 
@@ -353,6 +375,7 @@ private:
     Vector< std::string > scaVarsName;
 
     std::unique_ptr<amrex::EBFArrayBoxFactory> ebfactory;
+    std::unique_ptr<amrex::EBFArrayBoxFactory> particle_ebfactory;
 };
 
 #endif

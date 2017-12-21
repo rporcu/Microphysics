@@ -372,7 +372,7 @@ extern "C"
 
     void call_usr2_des( const int* np, void* particles );
 
-    void des_init_time_loop ( const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt );
+    void des_init_time_loop ( const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt, int* subdt_io );
 
     void des_time_loop ( const int* nrp,  void* rparticles,
                          const int* nf, amrex::Real* tow, amrex::Real* fc,

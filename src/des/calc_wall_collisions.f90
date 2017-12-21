@@ -42,10 +42,16 @@
     type(particle_t), pointer :: p
 
     real(c_real) :: lx, ly, lz
-    real(c_real) :: bcentx, bcenty, bcentz
     real(c_real) :: sqrt_overlap
 
     real(c_real) :: normul(3)
+    
+    ! facet barycenter (bcent) in global coordinates
+    real(c_real), dimension(3) :: eb_cent
+    ! position on facet plane, closest to particle
+    real(c_real), dimension(3) :: eb_min_pt
+    ! vector-indices of loop (over neighbour cells) and collision pt
+    integer, dimension(3)      :: vindex_loop, vindex_pt
 
     integer :: ll, ii, jj, kk, i, j, k, i_pt, j_pt, k_pt
 
@@ -65,14 +71,14 @@
     integer                        :: n_collisions, i_collision
     real(c_real), dimension(27)    :: distmod 
     real(c_real), dimension(3, 27) :: collision_norms
-    real(c_real), dimension(3)     :: c_vec
+    real(c_real), dimension(3)     :: c_vec, delta_c_vec
+    real(c_real)                   :: len2_collision_norm
 
     integer :: PHASELL
 
     real(c_real) :: tangent(3)
 
     real(c_real) :: xp, yp, zp, rp
-    real(c_real) :: pt_x, pt_y, pt_z
 
     ! local values used spring constants and damping coefficients
     real(c_real) :: ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
@@ -145,59 +151,49 @@
                 ! only consider cells that contain EB's
                 if ( (nbr(ii-i, jj-j, kk-k) .eq. 1) .and. ( .not. is_regular_cell(flag(ii, jj, kk))) ) then
                     ! convert bcent to global coordinate system centered at plo
-                    bcentx = bcent(ii, jj, kk, 1) * dx(1) + (dble(ii) + 0.5d0) * dx(1)
-                    bcenty = bcent(ii, jj, kk, 2) * dx(2) + (dble(jj) + 0.5d0) * dx(2)
-                    bcentz = bcent(ii, jj, kk, 3) * dx(3) + (dble(kk) + 0.5d0) * dx(3)
+                    ! bcentx = bcent(ii, jj, kk, 1) * dx(1) + (dble(ii) + 0.5d0) * dx(1)
+                    eb_cent(:) = ( bcent(ii, jj, kk, :) + (/dble(ii), dble(jj), dble(kk)/) + (/.5d0, .5d0, .5d0/) )*dx(:)
 
-                    ! Distance to boundary
-                    distmod_temp = dabs( (xp - bcentx) * (-normal(ii, jj, kk, 1)) + &
-                                           (yp - bcenty) * (-normal(ii, jj, kk, 2)) + &
-                                           (zp - bcentz) * (-normal(ii, jj, kk, 3)) )
+                    ! Distance to closest point on EB
+                    distmod_temp = dabs( dot_3d_real( p%pos(:) - eb_cent(:), -normal(ii, jj, kk, :) ) )
 
                     if (distmod_temp .lt. rp) then
+                        ! vector-index of tripple-loop
+                        vindex_loop = (/ii, jj, kk/)
+
                         ! Point where the normal from the particle to the plane intersects the plane
                         !  -> Note: slightly less than the full normal avoiding float precision errors
-                        pt_x = xp + normal(ii, jj, kk, 1) * distmod_temp * fudge
-                        pt_y = yp + normal(ii, jj, kk, 2) * distmod_temp * fudge
-                        pt_z = zp + normal(ii, jj, kk, 3) * distmod_temp * fudge
+                        eb_min_pt(:) = p%pos(:) + normal(ii, jj, kk, :) * distmod_temp * fudge
 
                         ! Cell that point is in
-                        i_pt = floor(pt_x * inv_dx(1))
-                        j_pt = floor(pt_y * inv_dx(2))
-                        k_pt = floor(pt_z * inv_dx(3))
+                        vindex_pt = floor( eb_min_pt(:) * inv_dx(:) )
 
                         ! Check if point-of-collision is in current cell, that's great!
                         !  -> particle is interacting with "flat" EB's
-                        if ( (i_pt .eq. ii) .and. (j_pt .eq. jj) .and. (k_pt .eq. kk)) then
+                        if ( all( vindex_loop == vindex_pt ) ) then
                             ! register "head-on" collision:
                             n_collisions = n_collisions + 1
                             distmod(n_collisions) = distmod_temp
                             collision_norms(:, n_collisions) = normal(ii, jj, kk, :)
                         
-                        else if ( & ! only consider EB-edges if not colliding with EB-face already 
-                            ( abs( normal(ii, jj, kk, 1) - normal(i_pt, j_pt, k_pt, 1) ) .gt. 1.d-8 ) .or. &
-                            ( abs( normal(ii, jj, kk, 2) - normal(i_pt, j_pt, k_pt, 2) ) .gt. 1.d-8 ) .or. &
-                            ( abs( normal(ii, jj, kk, 3) - normal(i_pt, j_pt, k_pt, 3) ) .gt. 1.d-8 )      &
-                            ) then ! EB-facet has different normal => collide with EB-edge
-                            
+                        ! only consider EB-edges if not colliding with EB-face already 
+                        !  -> EB-facet has different normal => collide with EB-edge
+                        else
+                            i_pt = vindex_pt(1)
+                            j_pt = vindex_pt(2) 
+                            k_pt = vindex_pt(3)
+                            if ( all( abs( normal(ii, jj, kk, :) - normal(i_pt, j_pt, k_pt, :) ) < 1.d-8 ) ) then
+                                ! EB-facet has same normal => skip
+                                cycle
+                            end if 
                             ! Particle-EB-plain intercept is outside cell
                             !  -> determine nearest point on EB boundary to particle (candidate for collision)
                             !  -> c_vec will be on the "edge" of the EB boundary
-                            c_vec = facets_nearest_pt (                                 &
-                                    (/ i_pt, j_pt, k_pt /), (/ ii, jj, kk /),           &
-                                    (/ xp, yp, zp /),                                   &
-                                    normal(ii, jj, kk, :), (/ bcentx, bcenty, bcentz /) &
-                                )
-
-                            ! correct potential collision coordinates
-                            pt_x = c_vec(1)
-                            pt_y = c_vec(2)
-                            pt_z = c_vec(3)
+                            c_vec = facets_nearest_pt (vindex_pt, vindex_loop, p%pos, normal(ii, jj, kk, :), eb_cent)
 
                             ! check if there is still overlap
-                            distmod_temp = ((xp - pt_x) * ( xp - pt_x ) + & 
-                                    (yp - pt_y) * ( yp - pt_y ) + &
-                                    (zp - pt_z) * ( zp - pt_z ))
+                            delta_c_vec(:) = p%pos(:) - c_vec(:)
+                            distmod_temp = dot_3d_real(delta_c_vec, delta_c_vec)
 
                             if (distmod_temp .lt. rp * rp) then
                                 ! The nearest point on EB edge overlaps with particle
@@ -205,11 +201,13 @@
                                 distmod_temp = sqrt(distmod_temp)
                                 n_collisions = n_collisions + 1
                                 distmod(n_collisions) = distmod_temp
-                                collision_norms(:, n_collisions) = (/ &
-                                        -(xp - pt_x) / distmod_temp,      &
-                                        -(yp - pt_y) / distmod_temp,      &
-                                        -(zp - pt_z) / distmod_temp       &
-                                    /)
+
+                                ! assign average normal to edge collision:
+                                collision_norms(:, n_collisions) = normal(ii, jj, kk, :) + normal(i_pt, j_pt, k_pt, :)
+                                len2_collision_norm = dot_3d_real( collision_norms(:, n_collisions), &
+                                                                   collision_norms(:, n_collisions))
+                                collision_norms(:, n_collisions) = collision_norms(:, n_collisions)  &
+                                                                   / sqrt(len2_collision_norm)
                             end if
                         end if
                     end if

@@ -12,7 +12,6 @@
 int   max_step    = -1;
 int   verbose     = -1;
 int   regrid_int  = -1;
-int   dual_grid   =  0;
 Real stop_time = -1.0;
 
 std::string restart_file {""};
@@ -66,7 +65,6 @@ void ReadParameters ()
   pp.query("repl_z", repl_z);
   pp.query("verbose", verbose);
 
-  pp.query("dual_grid",dual_grid);
   pp.query("regrid_int",regrid_int);
 }
 
@@ -138,7 +136,7 @@ int main (int argc, char* argv[])
 
        // This call checks if we want to regrid using the
        //   max_grid_size just read in from the inputs file used to restart
-       //   (only relevant if load_balance_type = "FixedSize")
+       //   (only relevant if load_balance_type = "FixedSize" or "KnapSack")
 
        // Note that this call does not depend on regrid_int
        my_mfix.RegridOnRestart(lev);
@@ -146,11 +144,15 @@ int main (int argc, char* argv[])
 
     // We move this to after restart and/or regrid so we make the EB data structures with the correct 
     //    BoxArray and DistributionMapping
-    my_mfix.make_eb_geometry(lev);
+    bool hourglass = false;
+    if (hourglass)
+       my_mfix.make_eb_hourglass(lev);
+    else
+       my_mfix.make_eb_geometry(lev);
 
     // This checks if we want to regrid using the KDTree approach
     //    (only if load_balance_type = "KDTree")
-    my_mfix.Regrid(lev,nstep,dual_grid);
+    my_mfix.Regrid(lev,nstep);
 
     my_mfix.PostInit( lev, dt, time, nstep, restart_flag );
 
@@ -198,7 +200,7 @@ int main (int argc, char* argv[])
           Real strt_step = ParallelDescriptor::second();
 
           if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
-             my_mfix.Regrid(lev,nstep,dual_grid);
+             my_mfix.Regrid(lev,nstep);
 
           my_mfix.Evolve(lev,nstep,set_normg,steady_state,dt,prev_dt,time,normg);
 
@@ -226,7 +228,7 @@ int main (int argc, char* argv[])
              my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
           // Mechanism to terminate MFIX normally.
-          if (steady_state || (time + 0.1*dt >= tstop) || (solve_dem && !solve_fluid)) finish = 1;
+          if (steady_state || (time + 0.1*dt >= tstop)) finish = 1;
        }
     }
 

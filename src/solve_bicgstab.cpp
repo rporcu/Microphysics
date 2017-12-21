@@ -120,6 +120,8 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 #endif 
     for (MFIter mfi(rhs, true); mfi.isValid(); ++mfi)
     {
+        Real wt = ParallelDescriptor::second();
+
         const Box&  bx = mfi.tilebox();
         const Box& rbx = rhs[mfi].box();
         const Box& abx = A_m[mfi].box();
@@ -127,6 +129,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         leq_scale(bx.loVect(), bx.hiVect(), 
                   rhs[mfi].dataPtr(), rbx.loVect(), rbx.hiVect(),
                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect());
+
+       if (fluid_cost[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
+       }
     }
 
     // Enforce periodicity on sol in case it hasn't been done yet
@@ -139,6 +147,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 #endif 
     for (MFIter mfi(rhs, true); mfi.isValid(); ++mfi)
     {
+
+      Real wt = ParallelDescriptor::second();
+
       const Box&  bx = mfi.tilebox();
       const Box& hbx = rhs[mfi].box();
       const Box& rbx =   r[mfi].box();
@@ -151,6 +162,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                    sol[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
                    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                      r[mfi].dataPtr(), rbx.loVect(), rbx.hiVect());
+
+       if (fluid_cost[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
+       }
     }
 
     r.FillBoundary(geom[lev].periodicity());
@@ -219,6 +236,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 #endif 
         for (MFIter mfi(p, true); mfi.isValid(); ++mfi)
         {
+
+	  Real wt = ParallelDescriptor::second();
+
           const Box&  bx = mfi.tilebox();
           const Box& pbx =   p[mfi].box();
           const Box& abx = A_m[mfi].box();
@@ -228,6 +248,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                         p[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
                       A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                        ph[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
+
+	  if (fluid_cost[lev]) {
+	    const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	    wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	    (*fluid_cost[lev])[mfi].plus(wt, tbx);
+	  }
         }
       }
       else // pc_type ==None
@@ -242,14 +268,23 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 #endif 
       for (MFIter mfi(ph, true); mfi.isValid(); ++mfi)
       {
+
+        Real wt = ParallelDescriptor::second();
+
         const Box&  bx = mfi.tilebox();
         const Box& pbx =  ph[mfi].box();
         const Box& abx = A_m[mfi].box();
         const Box& vbx =   v[mfi].box();
         leq_matvec( bx.loVect(), bx.hiVect(), 
-                   ph[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
-                  A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+		    ph[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
+		    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                     v[mfi].dataPtr(), vbx.loVect(), vbx.hiVect());
+
+	if (fluid_cost[lev]) {
+	  const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	  wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	  (*fluid_cost[lev])[mfi].plus(wt, tbx);
+	}
       }
 
       // Enforce periodicity on sol in case it hasn't been done yet
@@ -290,15 +325,24 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 #endif 
         for (MFIter mfi(A_m, true); mfi.isValid(); ++mfi)
         {
+
+	  Real wt = ParallelDescriptor::second();
+
           const Box&  bx = mfi.tilebox();
           const Box& sbx =   s[mfi].box();
           const Box& abx = A_m[mfi].box();
           const Box& hbx =  sh[mfi].box();
 
           leq_msolve1( bx.loVect(), bx.hiVect() ,
-                          s[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-                        A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
-                        sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
+		       s[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+		       A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+		       sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
+
+	  if (fluid_cost[lev]) {
+	    const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	    wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	    (*fluid_cost[lev])[mfi].plus(wt, tbx);
+	  }
         }
         sh.FillBoundary(geom[lev].periodicity());
       }
@@ -312,15 +356,24 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 #endif 
       for (MFIter mfi(A_m, true); mfi.isValid(); ++mfi)
       {
+
+        Real wt = ParallelDescriptor::second();
+
         const Box&  bx = mfi.tilebox();
         const Box& sbx =  sh[mfi].box();
         const Box& abx = A_m[mfi].box();
         const Box& tbx =   t[mfi].box();
 
         leq_matvec( bx.loVect(), bx.hiVect(), 
-                   sh[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-                  A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+		    sh[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+		    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                     t[mfi].dataPtr(), tbx.loVect(), tbx.hiVect());
+
+	if (fluid_cost[lev]) {
+	  const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	  wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	  (*fluid_cost[lev])[mfi].plus(wt, tbx);
+	}
       }
 
       // Enforce periodicity on sol in case it hasn't been done yet

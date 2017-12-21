@@ -3,31 +3,32 @@
 # Author:                                               Date: xx-xxxx  #
 # Modified: J. Musser                                   Date: 09-2016  #
 #                                                                      #
-# Description: Fluidized bed.                                          #
+# Description: A plane of particles collide with a sphere.             #
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'hg'
-  DESCRIPTION = 'Hourglass using EB'
+  RUN_NAME = 'sphere'
+  DESCRIPTION = 'Plane of particles collide with a sphere'
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
 #  TSTOP = 1.0d-04
-  TSTOP = 0.1
+  TSTOP = 10.0
 
   DT =     1.0d-04
   DT_FAC = 1.0
 
-  DRAG_TYPE = 'KOCH_HILL'
+  DRAG_TYPE = 'WEN_YU'
 
   CALL_USR = .T.
   FULL_LOG = .T.
 
-  GRAVITY(1) =  0.d0
+  GRAVITY(1) = -9.80665d0
   GRAVITY(2) =  0.d0
-  GRAVITY(3) = -9.80665d0
+  GRAVITY(3) =  0.d0
 
+  DES_ONEWAY_COUPLED = .TRUE.
 #_______________________________________________________________________
 # NUMERICAL SECTION
 
@@ -50,28 +51,27 @@
   PARTICLE_TYPES=1
 
 ! Friction coefficient. (1)
-  MEW =   0.0                ! particle-particle
-  MEW_W = 0.0                ! particle-wall
+  MEW =   0.2                ! particle-particle
+  MEW_W = 0.2                ! particle-wall
 
 ! Normal collision spring constant. (N/m)
-  KN =   10.0                ! particle-particle
-  KN_W = 10.0                ! particle-wall
+  KN =   150.0              ! particle-particle
+  KN_W = 150.0              ! particle-wall
 
 ! Restitution coefficient. (1)
   DES_EN_INPUT = 0.8         ! particle-particle
-  DES_EN_WALL_INPUT = 1.0    ! particle-wall
+  DES_EN_WALL_INPUT = 0.8    ! particle-wall
 
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
 
 
   IC_X_w(1) =   0.0000  ! (m)
-  IC_X_e(1) =   0.0128  ! (m)
-  IC_Y_s(1) =   0.0000  ! (m)
-  IC_Y_n(1) =   0.0128  ! (m)
-
+  IC_X_e(1) =   0.9000  ! (m)
   IC_Z_b(1) =   0.0000  ! (m)
-  IC_Z_t(1) =   0.0384  ! (m)
+  IC_Z_t(1) =   0.4000  ! (m)
+  IC_Y_s(1) =   0.0000  ! (m)
+  IC_Y_n(1) =   0.4000  ! (m)
 
   IC_EP_g(1) =  1.0000
 
@@ -81,24 +81,28 @@
 
 !---------------------------------------------
 
-  IC_X_w(2) =   0.0004  ! (m)
-  IC_X_e(2) =   0.0124  ! (m)
-  IC_Y_s(2) =   0.0004  ! (m)
-  IC_Y_n(2) =   0.0124  ! (m)
+  IC_X_w(2) =   0.6600  ! (m)
+  IC_X_e(2) =   0.8400  ! (m)
+  IC_Z_b(2) =   0.1100  ! (m)
+  IC_Z_t(2) =   0.2900  ! (m)
 
-  IC_Z_b(2) =   0.0307  ! (m)
-  IC_Z_t(2) =   0.0365  ! (m)
+  IC_Y_s(2) =   0.1100  ! (m)
+  IC_Y_n(2) =   0.2900  ! (m)
 
-  IC_EP_g(2) =  0.30
+  IC_EP_g(2) =  0.25
 
   IC_U_g(2) =   0.0000  ! (m)
   IC_V_g(2) =   0.0000  ! (m)
   IC_W_g(2) =   0.0000  ! (m)
 
-  IC_EP_s(2,1) =  0.70
 
-  ic_dp_dist(2,1) =   'CONSTANT'
-  ic_dp_mean(2,1) =    100.0d-6
+  IC_EP_s(2,1) =  0.75
+
+  ic_dp_dist(2,1) =   'NORMAL'
+  ic_dp_mean(2,1) =   2500.0d-6
+  ic_dp_std(2,1)  =    250.0d-6
+  ic_dp_min(2,1)  =   2000.0d-6
+  ic_dp_max(2,1)  =   3000.0d-6
 
   ic_ro_s_dist(2,1) = 'CONSTANT'
   ic_ro_s_mean(2,1) =  1000.0d0
@@ -110,11 +114,26 @@
 
 ! Free slip walls:
 !---------------------------------------------------------------------//
-  BC_X_w(1:4) =     0.0000   0.0000   0.0000   0.0128   ! (m)
-  BC_X_e(1:4) =     0.0128   0.0128   0.0000   0.0128   ! (m)
-  BC_Y_s(1:4) =     0.0000   0.0128   0.0000   0.0000   ! (m)
-  BC_Y_n(1:4) =     0.0000   0.0128   0.0128   0.0128   ! (m)
-  BC_Z_b(1:4) =     0.0000   0.0000   0.0000   0.0000   ! (m)
-  BC_Z_t(1:4) =     0.0384   0.0384   0.0384   0.0384   ! (m)
+  BC_X_w(1:2) =   0.000   0.900  ! (m)
+  BC_X_e(1:2) =   0.000   0.900  ! (m)
+  BC_Y_s(1:2) =   0.000   0.000  ! (m)
+  BC_Y_n(1:2) =   0.400   0.400  ! (m)
+  BC_Z_b(1:2) =   0.000   0.000  ! (m)
+  BC_Z_t(1:2) =   0.400   0.400  ! (m)
 
-  BC_TYPE(1:4) =  4*'FSW'
+  BC_TYPE(1:2) =  2*'FSW'
+
+  BC_CENTER(2,1:3) = 0.2000   0.874999 0.2000
+  BC_NORMAL(2,1:3) = 0.0000  -1.0000   0.0000
+
+
+  BC_X_w(3:6) =   0.000   0.000   0.000   0.000  ! (m)
+  BC_X_e(3:6) =   0.900   0.900   0.900   0.900  ! (m)
+  BC_Y_s(3:6) =   0.000   0.400   0.000   0.000  ! (m)
+  BC_Y_n(3:6) =   0.000   0.400   0.400   0.400  ! (m)
+  BC_Z_b(3:6) =   0.000   0.000   0.000   0.400  ! (m)
+  BC_Z_t(3:6) =   0.400   0.400   0.000   0.400  ! (m)
+
+  BC_TYPE(3:6) =  4*'PO'
+
+  BC_P_G(3:6) = 4*0.0d0

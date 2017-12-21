@@ -30,10 +30,10 @@ contains
     integer(c_int), intent(out) :: fluid
     integer(c_int), intent(out) :: dem, call_udf
     integer(c_int), intent(out) :: steady_state
-    real(c_real), intent(out) :: dt_minC, dt_maxC, tstopC
-    real(c_real), intent(out) :: dt
-    integer(c_int)         , intent(out) :: max_nitC
-    real(c_real), intent(out) :: normg
+    real(c_real),   intent(out) :: dt_minC, dt_maxC, tstopC
+    real(c_real),   intent(out) :: dt
+    integer(c_int), intent(out) :: max_nitC
+    real(c_real),   intent(out) :: normg
     integer(c_int), intent(out) :: set_normg
 
     call get_data(dt)

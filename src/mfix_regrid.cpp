@@ -6,29 +6,134 @@
 #include <AMReX_Box.H>
 
 void
-mfix_level::Regrid (int lev, int nstep, int dual_grid)
+mfix_level::Regrid (int lev, int nstep)
 {
+  
+    BL_PROFILE("mfix_level::Regrid");
+
     amrex::Print() << "In Regrid at step " << nstep << std::endl;
 
     if (load_balance_type == "KDTree")
     {
+        AMREX_ALWAYS_ASSERT(particle_cost[0] == nullptr);
+        AMREX_ALWAYS_ASSERT(fluid_cost[0]    == nullptr);
+
        // This creates a new BA and new DM, re-defines the particle BA and DM to be these new ones,
        //      and calls Redistribute.  This doesn't touch the fluid grids.
        pc -> BalanceParticleLoad_KDTree ();
 
        if (dual_grid == 0)
        {
-          SetBoxArray(lev, pc->ParticleBoxArray(lev));
-          SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
-
-          // Since we have already allocated the fluid data we need to re-define those arrays
-          //   and copy from the old BoxArray to the new one.  Note that the SetBoxArray and
-          //   SetDistributionMap calls above have re-defined grids and dmap to be the new ones.
-          if (solve_fluid) 
-             RegridArrays(lev,grids[lev],dmap[lev]);
+           SetBoxArray(lev, pc->ParticleBoxArray(lev));
+           SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
+           
+           // Since we have already allocated the fluid data we need to re-define those arrays
+           //   and copy from the old BoxArray to the new one.  Note that the SetBoxArray and
+           //   SetDistributionMap calls above have re-defined grids and dmap to be the new ones.
+           if (solve_fluid) 
+               RegridArrays(lev,grids[lev],dmap[lev]);
        }
+       
+       if (solve_fluid) 
+           mfix_set_bc0(lev);
+       
+       if (ebfactory) {
+           ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                                                  {m_eb_basic_grow_cells,
+                                                          m_eb_volume_grow_cells,
+                                                          m_eb_full_grow_cells}, m_eb_support_level));
+       }
+       
+       if (particle_ebfactory) {
+           particle_ebfactory.reset(new EBFArrayBoxFactory(geom[lev], pc->ParticleBoxArray(lev),
+                                                           pc->ParticleDistributionMap(lev),
+                                                           {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                                                   m_eb_full_grow_cells}, m_eb_support_level));
+       }
+    }
+    else if (load_balance_type == "KnapSack") {
+        
+        amrex::Print() << "Load balancing using KnapSack " << std::endl;
+        
+        AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
+        AMREX_ALWAYS_ASSERT(fluid_cost[0]    != nullptr);
+        
+        if (ParallelDescriptor::NProcs() == 1) return;
 
-       mfix_set_bc0(lev);
+        if (dual_grid) {
+            AMREX_ALWAYS_ASSERT(solve_fluid);
+
+            for (int lev = 0; lev <= finestLevel(); ++lev)
+            {
+                DistributionMapping new_fluid_dm = DistributionMapping::makeKnapSack(*fluid_cost[lev]);
+                RegridArrays(lev, grids[lev], new_fluid_dm);
+                SetDistributionMap(lev, new_fluid_dm);
+                fluid_cost[lev].reset(new MultiFab(grids[lev], new_fluid_dm, 1, 0));
+                fluid_cost[lev]->setVal(0.0);
+
+                if (ebfactory) {
+                    ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                                                           {m_eb_basic_grow_cells,
+                                                                   m_eb_volume_grow_cells,
+                                                                   m_eb_full_grow_cells}, m_eb_support_level));
+                }
+
+                mfix_set_bc0(lev);
+
+                DistributionMapping new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev]);
+                pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev));
+                particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
+                                                      new_particle_dm, 1, 0));
+                particle_cost[lev]->setVal(0.0);
+
+                if (particle_ebfactory) {
+                    particle_ebfactory.reset(new EBFArrayBoxFactory(geom[lev], pc->ParticleBoxArray(lev),
+                                                                    pc->ParticleDistributionMap(lev),
+                                                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                                                            m_eb_full_grow_cells}, m_eb_support_level));
+                }
+            }
+        } else {
+            MultiFab costs(grids[lev], dmap[lev], 1, 0);
+            costs.setVal(0.0);
+            costs.plus(*particle_cost[lev], 0, 1, 0);
+            costs.plus(*fluid_cost[lev], 0, 1, 0);
+
+            DistributionMapping newdm = DistributionMapping::makeKnapSack(costs);
+            if (solve_fluid) 
+                RegridArrays(lev, grids[lev], newdm);
+            SetDistributionMap(lev, newdm);
+
+            fluid_cost[lev].reset(new MultiFab(grids[lev], newdm, 1, 0));
+            fluid_cost[lev]->setVal(0.0);
+
+            particle_cost[lev].reset(new MultiFab(grids[lev], newdm, 1, 0));
+            particle_cost[lev]->setVal(0.0);
+            
+            pc->Regrid(dmap[lev], grids[lev]);
+            if (solve_fluid) mfix_set_bc0(lev);
+            
+            if (ebfactory) {    
+                ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                                                       {m_eb_basic_grow_cells,
+                                                               m_eb_volume_grow_cells,
+                                                               m_eb_full_grow_cells}, m_eb_support_level));
+            }
+            
+            if (particle_ebfactory) {
+                particle_ebfactory.reset(new EBFArrayBoxFactory(geom[lev], pc->ParticleBoxArray(lev),
+                                                                pc->ParticleDistributionMap(lev),
+                                                                {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                                                        m_eb_full_grow_cells}, m_eb_support_level));
+            }
+        }
+
+        // amrex::Print() << grids[0] << std::endl;	
+	// amrex::Print() << dmap[0] << std::endl;
+	// long np = pc->TotalNumberOfParticles(true, true);
+	// int pid = ParallelDescriptor::MyProc();
+	// amrex::AllPrint() << "Process " << pid << " got " << np << " particles \n";
+	//	pc->PrintParticleCounts();
     }
 }
 
@@ -37,7 +142,7 @@ mfix_level::RegridOnRestart (int lev)
 {
     amrex::Print() << "In RegridOnRestart " << std::endl;
 
-    if (load_balance_type == "FixedSize")
+    if (load_balance_type == "FixedSize" || load_balance_type == "KnapSack")
     {
        // We hold on to the old_ba so that we can test the new BoxArray against it
        //   to see if the grids have changed
@@ -60,7 +165,8 @@ mfix_level::RegridOnRestart (int lev)
        if ( (grids[0] != old_ba) && solve_fluid) 
           RegridArrays(lev,grids[lev],dmap[lev]);
 
-       mfix_set_bc0(lev);
+       if (solve_fluid)
+          mfix_set_bc0(lev);
 
        pc->BuildLevelMask(lev, geom[lev], dm, ba); 
        pc->Redistribute();
@@ -370,17 +476,4 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
 
     fill_mf_bc(lev,*mu_g[lev]);
     fill_mf_bc(lev,*lambda_g[lev]);
-
-    // ********************************************************************************
-    // EB stuff
-    // ********************************************************************************
-    int m_eb_basic_grow_cells = 2;
-    int m_eb_volume_grow_cells = 2;
-    int m_eb_full_grow_cells = 2;
-    EBSupport m_eb_support_level = EBSupport::full;
-
-    if (ebfactory)
-       ebfactory.reset(new EBFArrayBoxFactory(geom[lev], new_grids, new_dmap,
-                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells}, m_eb_support_level));
-
 }

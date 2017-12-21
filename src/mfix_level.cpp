@@ -14,12 +14,16 @@
 std::string mfix_level::particle_init_type = "AsciiFile";
 std::string mfix_level::load_balance_type = "FixedSize";
 
-
-
 // Define unit vectors for easily convert indeces
 amrex::IntVect mfix_level::e_x(1,0,0);
 amrex::IntVect mfix_level::e_y(0,1,0);
 amrex::IntVect mfix_level::e_z(0,0,1);
+
+
+int mfix_level::m_eb_basic_grow_cells = 2;
+int mfix_level::m_eb_volume_grow_cells = 2;
+int mfix_level::m_eb_full_grow_cells = 2;
+EBSupport mfix_level::m_eb_support_level = EBSupport::full;
 
 
 mfix_level::~mfix_level ()
@@ -118,6 +122,7 @@ mfix_level::mfix_level ()
     drag_v.resize(nlevs_max);
     drag_w.resize(nlevs_max);
 
+
     slopes_u.resize(nlevs_max);
     slopes_v.resize(nlevs_max);
     slopes_w.resize(nlevs_max);
@@ -126,6 +131,9 @@ mfix_level::mfix_level ()
     vacc.resize(nlevs_max);
     wacc.resize(nlevs_max);
     
+    particle_cost.resize(nlevs_max);
+    fluid_cost.resize(nlevs_max);
+
 }
 
 void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
@@ -314,6 +322,9 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
 #endif
     for (MFIter mfi(*u_g[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
@@ -338,8 +349,14 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
-    }
 
+       if (fluid_cost[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
+       }
+    }
+    
     num_u = temp_num;
     denom_u = temp_denom;
 
@@ -388,6 +405,9 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
 #endif
     for (MFIter mfi(*v_g[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
@@ -412,6 +432,12 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
+
+       if (fluid_cost[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
+       }
     }
 
     num_v = temp_num;
@@ -461,6 +487,9 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
 #endif
     for (MFIter mfi(*w_g[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+      
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
        Box abx((*A_m[lev])[mfi].box());
@@ -485,6 +514,12 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
            &dt, &dx, &dy, &dz, &temp_num, &temp_denom);
+
+       if (fluid_cost[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
+       }
     }
 
     num_w = temp_num;
@@ -527,6 +562,9 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p)
 #endif
     for (MFIter mfi(*A_m[lev],true); mfi.isValid(); ++mfi)
     {
+
+       Real wt = ParallelDescriptor::second();
+
        const Box& bx = mfi.tilebox();
        const Box& sbx = (*ep_g[lev])[mfi].box();
 
@@ -549,6 +587,12 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p)
             bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
             bc_klo.dataPtr(), bc_khi.dataPtr(),
             &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), &temp_num, &temp_denom);
+
+       if (fluid_cost[lev]) {
+	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
+       }
     }
     num_p = temp_num;
     denom_p = temp_denom;
@@ -682,24 +726,27 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
 void
 mfix_level::usr3(int lev)
 {
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-
-    // We deliberately don't tile this loop since we will be looping
-    //    over bc's on faces and it makes more sense to do this one grid at a time
-    for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
+    if (solve_fluid) 
     {
-  const Box& sbx = (*p_g[lev])[mfi].box();
-  Box ubx((*u_g[lev])[mfi].box());
-  Box vbx((*v_g[lev])[mfi].box());
-  Box wbx((*w_g[lev])[mfi].box());
+       Real dx = geom[lev].CellSize(0);
+       Real dy = geom[lev].CellSize(1);
+       Real dz = geom[lev].CellSize(2);
 
-  mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
-      (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
-      (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
-      (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-      &dx, &dy, &dz);
+       // We deliberately don't tile this loop since we will be looping
+       //    over bc's on faces and it makes more sense to do this one grid at a time
+       for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
+       {
+          const Box& sbx = (*p_g[lev])[mfi].box();
+          Box ubx((*u_g[lev])[mfi].box());
+          Box vbx((*v_g[lev])[mfi].box());
+          Box wbx((*w_g[lev])[mfi].box());
+   
+          mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
+              (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
+              (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
+              (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+              &dx, &dy, &dz);
+       }
     }
 }
 
@@ -749,13 +796,18 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
 {
     BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
 
-    Box domain(geom[lev].Domain());
+    if (solve_dem)
+    {
+       // This re-calculates the volume fraction within the domain
+       // but does not change the values outside the domain
 
-    // This re-calculates the volume fraction within the domain
-    // but does not change the values outside the domain
-
-    // This call simply deposits the particle volume onto the grid in a PIC-like manner
-    pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
+       // This call simply deposits the particle volume onto the grid in a PIC-like manner
+       pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
+    }
+    else
+    {
+       ep_g[lev]->setVal(1.);
+    }
 
     // Now define rop_g = ro_g * ep_g
     MultiFab::Copy(*rop_g[lev], *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow());
