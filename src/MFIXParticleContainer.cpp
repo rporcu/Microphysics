@@ -127,7 +127,6 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
 void MFIXParticleContainer::InitParticlesAuto(int lev)
 {
-
   Box domain(Geom(lev).Domain());
 
   Real dx = Geom(lev).CellSize(0);
@@ -179,7 +178,77 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
   // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
   // we do need this to move particles from tile 0 to the correct tile.
   Redistribute();
+
 }
+
+
+
+void MFIXParticleContainer::RemoveOutOfRange(int lev, std::unique_ptr<EBFArrayBoxFactory>& ebfactory)
+{
+
+  // Only call the routine for wall collisions if we actually have walls
+  if (ebfactory != NULL)
+    {
+      Box domain(Geom(lev).Domain());
+      const Real* dx = Geom(lev).CellSize();
+      int total_np = 0;
+      MultiFab dummy;
+      dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
+
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+        {
+          // Real particles
+          const int nrp = NumberOfParticles(pti);
+          // Ghost particles
+          PairIndex index(pti.index(), pti.LocalTileIndex());
+          int ngp = neighbors[index].size() / pdata_size;
+          // Total particles
+          int ntot = nrp + ngp;
+
+          void* particles  = pti.GetArrayOfStructs().data();
+
+          const Box& bx = pti.tilebox();
+
+          const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
+          const auto& flag = sfab.getEBCellFlagFab();
+
+          // if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
+          //   {
+              std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+              const MultiCutFab* bndrycent;
+
+              areafrac  =  ebfactory->getAreaFrac();
+              bndrycent = &(ebfactory->getBndryCent());
+
+              // Calculate forces from particle-wall collisions
+              rm_wall_collisions (particles, &ntot, &nrp, flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                  (*bndrycent)[pti].dataPtr(),
+                                  (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
+                                  (*areafrac[0])[pti].dataPtr(),
+                                  (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
+                                  (*areafrac[1])[pti].dataPtr(),
+                                  (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
+                                  (*areafrac[2])[pti].dataPtr(),
+                                  (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect(),
+                                  dx);
+            // }
+        }
+      Redistribute();
+
+      long fin_np = 0;
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+        long np = pti.numParticles();
+        fin_np += np;
+      }
+
+      ParallelDescriptor::ReduceLongSum(fin_np,ParallelDescriptor::IOProcessorNumber());
+      amrex::Print() << "Final number of particles: " << fin_np << std::endl;
+
+    }
+}
+
+
+
 
 void MFIXParticleContainer::PrintParticleCounts() {
   const int lev = 0;

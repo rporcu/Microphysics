@@ -412,6 +412,17 @@ extern "C"
     void mfix_particle_generator(int* pcount, const int* domlo , const int* domhi,
                                  amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
 
+
+    void rm_wall_collisions ( void* rparticles, const int* ntot, const int* nrp,
+                              const void* flag, const int* fglo, const int* fghi,
+                              const amrex_real* bcent, const int* blo, const int* bhi,
+                              const amrex_real* ax, const int* axlo, const int* axhi,
+                              const amrex_real* ay, const int* aylo, const int* ayhi,
+                              const amrex_real* az, const int* azlo, const int* azhi,
+                              const amrex::Real* dx);
+
+
+
     void mfix_particle_generator_prop( const int* nrp,  void* particles);
 
   void mfix_get_walls(int* bcv, int* exists,
