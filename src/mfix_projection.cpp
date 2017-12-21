@@ -17,17 +17,9 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
       
-    // Just for testing purposes, call a subroutine to initialize the
-    // velocity field. The subroutine will not do anything except the first
-    // time it is called, i.e. it will work only as initialization.
-    // This fails if the code is restarted since it will initialize the velocity
-    // field to the initial value.
-//    init_tests_projection (lev);
-
-//    check_for_nans (lev);
     
     // Extrapolate boundary values for density and volume fraction
-    // The subsequent call to mfix_set_bc1 will only overwrite
+    // The subsequent call to mfix_set_projection_bcs will only overwrite
     // rop_g and ep_g ghost values for PINF and POUT
     fill_mf_bc ( lev, *rop_g[lev] );
     fill_mf_bc ( lev, *ep_g[lev] );
@@ -293,7 +285,7 @@ mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
 
     // Compute fluid acceleration (convection + diffusion) 
     mfix_compute_velocity_slopes ( lev, u_go, v_go, w_go );
-    mfix_compute_fluid_acceleration ( lev, 2, u_go, v_go, w_go );
+    mfix_compute_fluid_acceleration ( lev, u_go, v_go, w_go );
     
     // First add the fluid acceleration
     MultiFab::Saxpy (*u_g[lev], dt, *uacc[lev], 0, 0, 1, 0);
@@ -346,7 +338,7 @@ mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
     // Compute fluid acceleration (convection + diffusion)
     // using first predictor
     mfix_compute_velocity_slopes ( lev, u_g, v_g, w_g );
-    mfix_compute_fluid_acceleration ( lev, 2, u_g, v_g, w_g );
+    mfix_compute_fluid_acceleration ( lev, u_g, v_g, w_g );
         
     // Store u_go + dt * R_u^* / 2
     MultiFab::LinComb ( *u_g[lev], 1.0, *u_go[lev], 0, dt/2.0, *uacc[lev], 0, 0, 1, 0 ); 
@@ -356,7 +348,7 @@ mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
     // Compute fluid acceleration (convection + diffusion) 
     // using velocity at the beginning of time step
     mfix_compute_velocity_slopes ( lev, u_go, v_go, w_go );
-    mfix_compute_fluid_acceleration ( lev, 2, u_go, v_go, w_go );
+    mfix_compute_fluid_acceleration ( lev, u_go, v_go, w_go );
     
     // Add dt/2 * R_u^n 
     MultiFab::Saxpy (*u_g[lev], dt/2.0, *uacc[lev], 0, 0, 1, 0);
@@ -438,7 +430,6 @@ mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
 //
 void
 mfix_level::mfix_compute_fluid_acceleration ( int lev,
-					      int order,
 					      Vector< std::unique_ptr<MultiFab> >& u, 
 					      Vector< std::unique_ptr<MultiFab> >& v,
 					      Vector< std::unique_ptr<MultiFab> >& w )
@@ -469,7 +460,7 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
             (*rop_g[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &xdir, &order );
+	    geom[lev].CellSize (), &xdir );
 
 	// y direction
 	compute_fluid_acceleration (
@@ -481,7 +472,7 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
             (*rop_g[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &ydir, &order );
+	    geom[lev].CellSize (), &ydir );
 
 	// z direction
 	compute_fluid_acceleration (
@@ -493,7 +484,7 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
             (*rop_g[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &zdir, &order );
+	    geom[lev].CellSize (), &zdir );
     }
 }
 
@@ -751,55 +742,6 @@ mfix_level::solve_poisson_equation (  int lev,
 
 
 //
-//  Compute
-//
-//      u = u - grad(phi)/ro_g
-// 
-void
-mfix_level::apply_grad_phi (int lev)
-{
-    BL_PROFILE("mfix_level::apply_grad_phi");
-    
-    Real coeff = -1.0;
-    int  xdir  = 1;
-    int  ydir  = 2;
-    int  zdir  = 3;
-    
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*phi[lev],true); mfi.isValid(); ++mfi)
-    {
-	Box ubx = mfi.tilebox (e_x);
-	Box vbx = mfi.tilebox (e_y);
-	Box wbx = mfi.tilebox (e_z);
-
-	add_gradient (
-	    BL_TO_FORTRAN_BOX(ubx),  
-	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-	    (*(oro_g[lev][0]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
-	    geom[lev].CellSize(), &coeff, &xdir );
-	
-	add_gradient (
-	    BL_TO_FORTRAN_BOX(vbx),  
-	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-	    (*(oro_g[lev][1]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
-	    geom[lev].CellSize(), &coeff, &ydir );
-
-	add_gradient (
-	    BL_TO_FORTRAN_BOX(wbx),  
-	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-	    (*(oro_g[lev][2]))[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
-	    geom[lev].CellSize(), &coeff, &zdir );
-
-    }
-   
-}
-
-//
 // Computes 1/ro_g = ep_g/rop_g at the faces of the scalar cells
 // 
 void
@@ -972,7 +914,6 @@ mfix_level::steady_state_reached (int lev, Real dt)
 }
 
 
-
 void
 mfix_level::mfix_set_phi (int lev, Real scale, int singular)
 {
@@ -998,6 +939,12 @@ mfix_level::mfix_set_phi (int lev, Real scale, int singular)
 }
 
 
+
+//
+// Set the BCs for all the variables EXCEPT pressure
+// Call set_pressure_bcs to impose BCs on pressure
+// field
+// 
 void
 mfix_level::mfix_set_projection_bcs (int lev)
 {

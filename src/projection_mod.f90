@@ -97,9 +97,6 @@ contains
       
    end subroutine compute_new_dt
 
-
-
-
    !
    ! Computes the term RHS = - div (uu) + div (tau)/rop
    ! along direction "dir"
@@ -108,7 +105,7 @@ contains
    !
    subroutine compute_fluid_acceleration ( lo, hi, rhs, rlo, rhi, sl, &
         & u, ulo, uhi, v, vlo, vhi, w, wlo, whi, mu, slo, shi, rop,   &
-        & dx, dir, order ) bind(C)
+        & dx, dir ) bind(C)
 
       use convection_mod
       use diffusion_mod
@@ -122,9 +119,6 @@ contains
       integer(c_int), intent(in   ) :: vlo(3), vhi(3)
       integer(c_int), intent(in   ) :: wlo(3), whi(3)
       integer(c_int), intent(in   ) :: slo(3), shi(3)
-
-      ! Scheme order
-      integer(c_int), intent(in   ) :: order
 
       ! Grid 
       real(ar),       intent(in   ) :: dx(3)
@@ -158,29 +152,24 @@ contains
       select case ( dir )
       case (1)
          call compute_ugradu_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-              & w, wlo, whi, sl, conv, dx, order )  
+              & w, wlo, whi, sl, conv, dx )  
 
          call compute_divtau_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
               & w, wlo, whi, mu, slo, shi, diff, dx )
       case(2)
          call compute_ugradu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
-              & w, wlo, whi, sl, conv, dx, order )
+              & w, wlo, whi, sl, conv, dx )
 
          call compute_divtau_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
               & w, wlo, whi, mu, slo, shi, diff, dx )
       case(3)         
          call compute_ugradu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
-              & w, wlo, whi, sl, conv, dx, order )
+              & w, wlo, whi, sl, conv, dx )
 
          call compute_divtau_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
               & w, wlo, whi, mu, slo, shi, diff, dx )
       end select
 
-      !
-      !
-      !  REMEMBER TO DIVIDE div(tau) by rho !!!!!
-      !
-      !
       i0 = e_i(dir,1)
       j0 = e_i(dir,2)
       k0 = e_i(dir,3)
@@ -411,7 +400,7 @@ contains
       j0 = e_i(dir,2)
       k0 = e_i(dir,3)
 
-
+      ! We may wann directly use ro_g instead of ep_g/rop_g
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
@@ -425,7 +414,12 @@ contains
 
 
    !
-   ! Set the boundary condition for PPE 
+   ! Set the boundary condition for Pressure Poisson Equation (PPE)
+   !
+   ! MLMG expects the BC type to be the uniform on each domain wall.
+   ! Since mfix allows for BC patches on each wall, we first check that
+   ! the user-provided BCs are uniform, and then return a single BC type for
+   ! each domain wall. 
    ! 
    subroutine set_ppe_bc ( bc_lo, bc_hi, domlo, domhi, bct_ilo, bct_ihi, &
         & bct_jlo, bct_jhi, bct_klo, bct_khi, singular )  bind(C)
@@ -562,143 +556,48 @@ contains
 
    end subroutine set_ppe_bc
 
-   
-
-   !
-   ! Subroutine to impose dirichlet's BCs to rhs of PPE 
-   !
-   subroutine set_poisson_solver_bcs ( lo, hi, rhs, slo, shi, phi, &
-        & oro_x, ulo, uhi, oro_y, vlo, vhi, oro_z, wlo, whi,       &
-        & bc_lo, bc_hi, dx, domlo, domhi ) bind(C)
-
-      use amrex_lo_bctypes_module
-      
-      ! Loop bounds
-      integer(c_int), intent(in   ) :: lo(3), hi(3)
-
-      ! Array bounds
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3)
-      integer(c_int), intent(in   ) :: vlo(3), vhi(3)
-      integer(c_int), intent(in   ) :: wlo(3), whi(3)
-
-      ! Boundary conditions
-      integer(c_int), intent(in   ) :: bc_lo(3), bc_hi(3)
-
-      ! Grid bounds
-      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
-
-      ! Grid spacings
-      real(ar),       intent(in   ) :: dx(3)
-
-      ! Arrays
-      real(ar),       intent(in   ) ::                         &
-           & oro_x(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
-           & oro_y(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
-           & oro_z(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      
-      real(ar),       intent(inout) ::                       &
-           & rhs(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           &   phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      
-      ! Local variables
-      integer(c_int)                :: i, j, k
-      integer(c_int)                :: nlft, nbot, ndwn
-      integer(c_int)                :: nrgt, ntop, nup
-      real(ar)                      :: odx2, ody2, odz2
-
-
-      nlft = max(0,domlo(1)-slo(1))
-      nbot = max(0,domlo(2)-slo(2))
-      ndwn = max(0,domlo(3)-slo(3))
-
-      nrgt = max(0,shi(1)-domhi(1))
-      ntop = max(0,shi(2)-domhi(2))
-      nup  = max(0,shi(3)-domhi(3))
-      
-      odx2 = one / dx(1)**2
-      ody2 = one / dx(2)**2
-      odz2 = one / dx(3)**2
-
-      ! West boundary
-      if ( (bc_lo(1) == amrex_lo_dirichlet) .and. (nlft > 0) ) then
-         i = domlo(1) 
-         do k = slo(3), shi(3)
-            do j = slo(2), shi(2)
-               print *, "PHI AT BOUNDARY ", i-1,j,k,phi(i-1,j,k)
-               rhs(i,j,k)   = rhs(i,j,k) - 270.0D0 * odx2 !phi(i-1,j,k) * odx2 * half !* oro_x(i,j,k)
-               phi(i-1,j,k) = zero
-            end do
-         end do
-      end if
-
-      ! ! East boundary
-      ! if ( (bc_hi(1) == amrex_lo_dirichlet) .and. (nrgt > 0) ) then
-      !    i = domhi(1)
-      !    do k = slo(3), shi(3)
-      !       do j = slo(2), shi(2)
-      !          rhs(i,j,k)   = rhs(i,j,k) - phi(i+1,j,k) * odx2 * oro_x(i+1,j,k)
-      !          phi(i+1,j,k) = zero
-      !       end do
-      !    end do
-      ! end if
-
-      ! ! South boundary
-      ! if ( (bc_lo(2) == amrex_lo_dirichlet) .and. (nbot > 0) ) then
-      !    j = domlo(2)
-      !    do k = slo(3), shi(3)
-      !       do i = slo(1), shi(1)
-      !          rhs(i,j,k)   = rhs(i,j,k) - phi(i,j-1,k) * ody2 * oro_y(i,j,k)
-      !          phi(i,j-1,k) = zero
-      !       end do
-      !    end do
-      ! end if
-
-      ! ! North boundary
-      ! if ( (bc_hi(2) == amrex_lo_dirichlet) .and. (ntop > 0) ) then
-      !    j = domhi(2)
-      !    do k = slo(3), shi(3)
-      !       do i = slo(1), shi(1)
-      !          rhs(i,j,k)   = rhs(i,j,k) - phi(i,j+1,k) * ody2 * oro_y(i,j+1,k)
-      !          phi(i,j+1,k) = zero
-      !       end do
-      !    end do
-      ! end if
-
-      ! ! Bottom boundary
-      ! if ( (bc_lo(3) == amrex_lo_dirichlet) .and. (ndwn > 0) ) then
-      !    k = domlo(3)
-      !    do j = slo(2), shi(2)
-      !       do i = slo(1), shi(1)
-      !          rhs(i,j,k)   = rhs(i,j,k) - phi(i,j,k-1) * odz2 * oro_z(i,j,k)
-      !          phi(i,j,k-1) = zero 
-      !       end do
-      !    end do
-      ! end if
-
-      ! ! Top boundary
-      ! if ( (bc_hi(3) == amrex_lo_dirichlet) .and. (nup > 0) ) then
-      !    k = domhi(3)
-      !    do j = slo(2), shi(2)
-      !       do i = slo(1), shi(1)
-      !          rhs(i,j,k)   = rhs(i,j,k) - phi(i,j,k+1) * odz2 * oro_z(i,j,k+1)
-      !          phi(i,j,k+1) = zero 
-      !       end do
-      !    end do
-      ! end if
- 
-      
-   end subroutine set_poisson_solver_bcs
-
-
-
-
 
    !
    ! Set the value of the auxiliary function PHI before the solution of the
    ! poisson equation. The pressure MUST have the correct boundary conditions
-   ! 
+   ! in place.
+   ! The logic of this routine is as follows:
    !
+   !   1) Assign the scaled pressure value to all the interior cells. If the
+   !      system is singular, assign zero to all interior cells instead. This
+   !      is required by MLMG (otherwise it won't converge).
+   !
+   !   2) If the system is not singular, assume all boundaries are Dirichlet's.
+   !      Since MLMG will ignore the boundary values at non-Dirichlet's
+   !      boundaries, there is no harm in doing this. The way the Dirichlet's
+   !      value for phi is computed from the pressure is exemplified by the
+   !      following sketch.
+   !
+   ! 
+   !                 p_b                   p_b = pressure value at the boundary
+   !                  |                    
+   !     EXTERIROR    |    INTERIOR        p_g = pressure value at ghost cells
+   !            |--o--|--o--|--o--|--o--|
+   !                  |                    p_i = pressure value at first 
+   !              p_g | p_i                      interior cell
+   !
+   ! 
+   !      p_b is the pressure boundary value given by the user. The pressure
+   !      ghost value, p_g, is computed via
+   !
+   !            0.5 * ( p_g + p_i ) = p_b  -->   p_g = 2p_b - p_i
+   !
+   !      where p_i is pressure at the first interior point.
+   !      This routine assumes that the ghost nodes for the pressure have been
+   !      computed as shown above. Then, the phi boundary value can be
+   !      computed as follows
+   !
+   !          phi_b = scale * p_b = scale * 0.5 * ( p_g + p_i )
+   !
+   !      Even though phi_b lives on the domain boundary, we store it at the
+   !      first ghost cell outside the domain: this is the format required by
+   !      MLMG.
+   ! 
    ! WARNING: this routine MUST be called before solving the Poisson equation
    !
    subroutine set_phi ( lo, hi, phi, slo, shi, pg, scale, singular,  domlo, domhi ) bind(C)
@@ -748,9 +647,7 @@ contains
          
       ! Next, assign the boundary values.
       ! Here we assume that all the boundaries are Dirichlet's
-      ! and set the boundary nodes accordingly.
-      ! The Poisson's solver will ignore all the values set when
-      ! the boundary is not of Dirichlet's type.
+      ! and set the boundary cells accordingly.
       ! The boundary cell will hold the value at the boundary location, NOT the
       ! value at the boundary CELL!!!
       if ( domlo(1) > slo(1) )  then 

@@ -1,6 +1,28 @@
 ! 
 !              
-!  This subroutine sets the BCs for the pressure field
+!  This subroutine sets the BCs for the pressure field.
+! 
+!  Most of the times, this routines will simply perform
+!  0th-order extrapolation of the pressure values from
+!  iterior cells to exterior cells. This corresponds to
+!  Neumann's BCs on the pressure. 
+!
+!  When the pressure is periodic in a certain direction,
+!  nothing will be done here along that same direction.
+!  Periodicity is handled on the C++ side.
+!
+!  For all the boundary conditions demanding a Dirichlet's
+!  boundary for pressure, this routine will perform
+!  1st-order extrapolation of the pressure value from the
+!  interior cells to the exterior cells.
+!  In particular, when the pressure is imposed at an inlet
+!  /outlet, the pressure at the first external cell is
+!  extrapolated by using the given pressure boundary value
+!  and the pressure value at the first internal cell.
+!  Instead, when a boundary pressure value must be computed
+!  must be computed a part of a mass-inflow condition,
+!  the extrapolation is performed by using the pressure
+!  at the first two interior cells.
 !  
 !  Author: Michele Rosso
 ! 

@@ -163,9 +163,6 @@ private:
 				  Vector< std::unique_ptr<MultiFab> >& rhs,
 				  int bc_lo[], int bc_hi[] );
 
-
-    void apply_grad_phi ( int lev );
-    
     void mfix_compute_oro_g ( int lev );
     
     void init_tests_projection (int lev);
@@ -175,7 +172,7 @@ private:
     amrex::Real compute_dt (int lev);
 
 
-    void mfix_compute_fluid_acceleration (int lev, int order,
+    void mfix_compute_fluid_acceleration (int lev,
 					  Vector< std::unique_ptr<MultiFab> >& u,
 					  Vector< std::unique_ptr<MultiFab> >& v,
 					  Vector< std::unique_ptr<MultiFab> >& w );

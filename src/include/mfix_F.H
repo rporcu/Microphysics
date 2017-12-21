@@ -517,7 +517,7 @@ extern "C"
 	const amrex::Real* w,   const int* wlo, const int* whi, 
 	const amrex::Real* mu,  const int* slo, const int* shi, 
 	const amrex::Real* rop, const amrex::Real* dx,
-	const int* dir, const int* order );
+	const int* dir );
 
     void compute_u_slopes (
 	const int* lo, const int* hi,
