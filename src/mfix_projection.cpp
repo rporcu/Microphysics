@@ -720,23 +720,16 @@ mfix_level::solve_poisson_equation (  int lev,
     // Then setup the solver ----------------------
     //
     MLMG  solver(matrix);
-    int   verbose = 0;
-    int   cg_verbose = 0;
-    int   max_iter = 100;
-    int   max_fmg_iter = 0;
-    Real  rel_tol = 1.0e-11;
-    Real  abs_tol = 1.0e-14;
-    Real  avg;
 	
-    solver.setMaxIter (max_iter);
-    solver.setMaxFmgIter (max_fmg_iter);
-    solver.setVerbose (verbose);
-    solver.setCGVerbose (cg_verbose);
+    solver.setMaxIter (mg_max_iter);
+    solver.setMaxFmgIter (mg_max_fmg_iter);
+    solver.setVerbose (mg_verbose);
+    solver.setCGVerbose (mg_cg_verbose);
 
     // 
     // Finally, solve the system
     //
-    solver.solve ( GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), rel_tol, abs_tol );
+    solver.solve ( GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
 
 }
 
@@ -842,7 +835,7 @@ mfix_level::steady_state_reached (int lev, Real dt)
     Real delta_w = w_gt[lev] -> norm0 ();
     Real delta_p = tmp.norm0 ();
     
-    Real tol = 1.0e-5; // This will become an input
+    Real tol = steady_state_tol; 
 
     
     amrex::Print() << "Checking time step :\n";

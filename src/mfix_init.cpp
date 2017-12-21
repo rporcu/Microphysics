@@ -18,6 +18,17 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
 	// CFL coefficient
 	pp.query("cfl", cfl );
 
+	// Option to control MGML behavior
+	pp.query( "mg_verbose", mg_verbose );
+	pp.query( "mg_cg_verbose", mg_cg_verbose );
+	pp.query( "mg_max_iter", mg_max_iter );
+	pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
+	pp.query( "mg_rtol", mg_rtol );
+	pp.query( "mg_atol", mg_atol );
+
+	// Tolerance to check for steady state (projection only)
+	pp.query( "steady_state_tol", steady_state_tol );
+	
 	
         // The default type is "AsciiFile" but we can over-write that in the inputs file
         //  with "Random"

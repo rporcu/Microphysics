@@ -337,6 +337,16 @@ private:
     int solve_fluid;
     int solve_dem;
     int use_proj_method = 0; // Whether to use projection to solve NS eqs.
+    // Options to control MLMG behavior (projection only)
+    int  mg_verbose = 0;
+    int  mg_cg_verbose = 0;
+    int  mg_max_iter = 100;
+    int  mg_max_fmg_iter = 0;
+    Real mg_rtol = 1.0e-11;
+    Real mg_atol = 1.0e-14;
+    // Tolerance to check for steady state (projection only)
+    Real steady_state_tol = 1.0e-5  ;
+    
     int max_nit;
     int call_udf;
     int dual_grid = 0;
