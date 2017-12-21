@@ -1,0 +1,103 @@
+#########################################################################
+#                                                                       #
+# Author: Avinash Vaidheeswaran                         Date: July 2016 #
+# Couette flow problem:                                                 #
+#                                                                       #
+#   The south wall is held stationary and the north wall moves          #
+# with a velocity U. Cyclic boundary conditions along x direction with  #
+# favorable pressure gradient                                           #
+#                                                                       #
+#                                                                       #
+#########################################################################
+
+  RUN_NAME = 'FLD02'
+  DESCRIPTION   = 'Couette flow test cases'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+  GRAVITY(1:3) = 3*0.0
+
+  CALL_USR = .T.
+
+  FULL_LOG = .T.
+#_______________________________________________________________________
+# NUMERICAL SECTION
+
+  MAX_NIT = 50000
+  TOL_RESID = 1.0E-10
+
+  LEQ_PC = 4*'NONE'
+
+#_______________________________________________________________________
+# GAS-PHASE SECTION
+
+  RO_g0 = 1.00      ! (kg/m3)
+  MU_g0 = 5.00d-6   ! (Pa.s)
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+  IC_X_w(1) =   0.00  ! (m)
+  IC_X_e(1) =   1.00  ! (m)
+  IC_Y_s(1) =   0.00  ! (m)
+  IC_Y_n(1) =   0.01  ! (m)
+  IC_Z_b(1) =   0.00  ! (m)
+  IC_Z_t(1) =   1.00  ! (m)
+
+  IC_EP_g(1) =  1.00
+
+  IC_P_g(1) =   0.00  ! (Pa)
+
+  IC_U_g(1) =   0.00  ! (m/sec)
+  IC_V_g(1) =   0.00  ! (m/sec)
+  IC_W_g(1) =   0.00  ! (m/sec)
+
+#_______________________________________________________________________
+# BOUNDARY CONDITIONS SECTION
+
+! The east and west boundaries are set a runtime as cyclic with a
+! specified pressure drop (DELP_X)
+!---------------------------------------------------------------------//
+  DELP_X = -3.0
+
+
+! The north was has a constant velocity of 10.0 m/s, and is set using
+! a partial slip wall (PSW):  dU/dn + hw(U-Uw) = 0 where Uw = 10.0 m/s
+! and hw=unsepcified (i.e., no-slip moving wall).
+!---------------------------------------------------------------------//
+  BC_X_w(1) =   0.00  ! (m)
+  BC_X_e(1) =   1.00  ! (m)
+  BC_Y_s(1) =   0.01  ! (m)
+  BC_Y_n(1) =   0.01  ! (m)
+  BC_Z_b(1) =   0.00  ! (m)
+  BC_Z_t(1) =   1.00  ! (m)
+
+  BC_TYPE(1)  = 'PSW'
+
+  BC_Uw_g(1) = 10.00   ! (m/sec)
+  BC_Vw_g(1) =  0.00   ! (m/sec)
+  BC_Ww_g(1) =  0.00   ! (m/sec)
+
+
+! The south wall is no-slip.
+!---------------------------------------------------------------------//
+  BC_X_w(2) =   0.00  ! (m)
+  BC_X_e(2) =   1.00  ! (m)
+  BC_Y_s(2) =   0.00  ! (m)
+  BC_Y_n(2) =   0.00  ! (m)
+  BC_Z_b(2) =   0.00  ! (m)
+  BC_Z_t(2) =   1.00  ! (m)
+
+  BC_TYPE(2) =  'NSW'
+
+! Front and back walls are free-slip
+!---------------------------------------------------------------------//
+  BC_X_w(3:4) =   0.00    0.00  ! (m)
+  BC_X_e(3:4) =   1.00    1.00  ! (m)
+  BC_Y_s(3:4) =   0.00    0.00  ! (m)
+  BC_Y_n(3:4) =   0.01    0.01  ! (m)
+  BC_Z_b(3:4) =   0.00    1.00  ! (m)
+  BC_Z_t(3:4) =   0.00    1.00  ! (m)
+
+  BC_Type(3:4) = 'FSW'    'FSW'

@@ -1,0 +1,28 @@
+This folder contains the following tests:
+
+1) FLD05-xy = periodic vorteces on xy plane
+2) FLD05-xz = periodic vorteces on xz plane
+3) FLD05-yz = periodic vorteces on yz plane
+
+To run a test, run "run_FLD05-<plane>" from within
+your build directory. "<plane>" can be "xy", "xz", or "yz".
+The plot files are stored in "<path/to/build/dir>/debug/FLD05-<plane>".
+
+To select the form of the convective term, i.e. conservative or
+convective, edit the parameter "convective_form" at line 27 of "projection_mod.f90"
+and re-compile.
+
+convective_form = .true.   --->  u grad(u)
+
+convective_form = .false.  --->  div(uu)
+
+
+To choose the order of the space discretization ( for convective form ONLY )
+edit the parameter "upw_order" at line 30 of "convection_mod.f90" and re-compile
+
+upw_order = 1   --> I order upwind for ugrad(u)
+
+upw_order = 2   --> II order upwind for ugrad(u)
+
+
+ONLY II order spatial discretization is available for the CONSERVATIVE form.

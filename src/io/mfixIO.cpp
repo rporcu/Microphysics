@@ -26,8 +26,9 @@ mfix_level::InitIOData ()
 
     // Define the list of scalar variables at cell centers that need to be written
     // to plotfile/checkfile.
-    scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "volfrac"};
-    scalarVars  = {&ep_g, &p_g, &ro_g,  &rop_g,  &mu_g};
+    // "volfrac" MUST always be last without any mf associated to it!!!
+    scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "vort", "volfrac"};
+    scalarVars  = {&ep_g, &p_g, &ro_g,  &rop_g,  &mu_g, &vort};
 }
 
 void
@@ -142,7 +143,7 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
         real_comp_names.push_back("omoi");
         real_comp_names.push_back("velx");
         real_comp_names.push_back("vely");
-        real_comp_names.push_back("velz");
+        real_comp_names.push_back("velz, &vor");
         real_comp_names.push_back("omegax");
         real_comp_names.push_back("omegay");
         real_comp_names.push_back("omegaz");
@@ -579,6 +580,7 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
         
         amrex::WriteMultiLevelPlotfile(plotfilename, 0, mf, names,
                                        Geom(), time, istep, refRatio());        
+
     }
 
     WriteJobInfo(plotfilename);

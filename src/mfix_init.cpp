@@ -12,6 +12,23 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
     {
         ParmParse pp("mfix");
 
+	// Whether to use projection method
+	pp.query("use_proj_method", use_proj_method );
+
+	// CFL coefficient
+	pp.query("cfl", cfl );
+
+	// Option to control MGML behavior
+	pp.query( "mg_verbose", mg_verbose );
+	pp.query( "mg_cg_verbose", mg_cg_verbose );
+	pp.query( "mg_max_iter", mg_max_iter );
+	pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
+	pp.query( "mg_rtol", mg_rtol );
+	pp.query( "mg_atol", mg_atol );
+
+	// Tolerance to check for steady state (projection only)
+	pp.query( "steady_state_tol", steady_state_tol );
+
         // The default type is "AsciiFile" but we can over-write that in the inputs file
         //  with "Random"
         pp.query("particle_init_type", particle_init_type);
@@ -35,6 +52,7 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         max_nit      = max_nit_in;
         call_udf     = call_udf_in;
     }
+
 
     {
         ParmParse pp("amr");
@@ -303,6 +321,15 @@ mfix_level::AllocateArrays (int lev)
     trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     trD_g[lev]->setVal(0.);
 
+    // Vorticity
+    vort[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    vort[lev]->setVal(0.);
+
+    // Pressure increment
+    phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    phi[lev]->setVal(0.);
+
+    
     // ********************************************************************************
     // X-face-based arrays
     // ********************************************************************************
@@ -315,10 +342,14 @@ mfix_level::AllocateArrays (int lev)
     u_g[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_go[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_gt[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    fp_x[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    oro_g[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_g[lev]->setVal(0.);
     u_go[lev]->setVal(0.);
     u_gt[lev]->setVal(0.);
-
+    fp_x[lev]->setVal(0.);
+    oro_g[lev][0]->setVal(0.);
+    
     d_e[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     d_e[lev]->setVal(0.);
 
@@ -337,6 +368,14 @@ mfix_level::AllocateArrays (int lev)
     drag_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,1));
     drag_u[lev]->setVal(0.);
 
+    // u-velocity slopes. Note that the number of components is not 1, but 3!
+    slopes_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],3,nghost));
+    slopes_u[lev] -> setVal(0.);
+
+    // u acceleration terms
+    uacc[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    uacc[lev] -> setVal(0.);
+    
     // ********************************************************************************
     // Y-face-based arrays
     // ********************************************************************************
@@ -349,10 +388,14 @@ mfix_level::AllocateArrays (int lev)
     v_g[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_go[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_gt[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    fp_y[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    oro_g[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_g[lev]->setVal(0.);
     v_go[lev]->setVal(0.);
     v_gt[lev]->setVal(0.);
-
+    fp_y[lev]->setVal(0.);
+    oro_g[lev][1]->setVal(0.);
+	
     d_n[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     d_n[lev]->setVal(0.);
 
@@ -371,6 +414,16 @@ mfix_level::AllocateArrays (int lev)
     drag_v[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,1));
     drag_v[lev]->setVal(0.);
 
+    // v-velocity slopes. Note that the number of components is not 1, but 3!
+    slopes_v[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],3,nghost));
+    slopes_v[lev] -> setVal(0.);
+
+    // v acceleration terms
+    vacc[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    vacc[lev] -> setVal(0.);
+
+
+    
     // ********************************************************************************
     // Z-face-based arrays
     // ********************************************************************************
@@ -383,10 +436,14 @@ mfix_level::AllocateArrays (int lev)
     w_g[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_go[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_gt[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    fp_z[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    oro_g[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_g[lev]->setVal(0.);
     w_go[lev]->setVal(0.);
     w_gt[lev]->setVal(0.);
-
+    fp_z[lev]->setVal(0.);
+    oro_g[lev][2]->setVal(0.);
+	
     d_t[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     d_t[lev]->setVal(0.);
 
@@ -404,7 +461,17 @@ mfix_level::AllocateArrays (int lev)
 
     drag_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
     drag_w[lev]->setVal(0.);
+
+    // w-velocity slopes. Note that the number of components is not 1, but 3!
+    slopes_w[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],3,nghost));
+    slopes_w[lev] -> setVal(0.);
+
+    // w acceleration terms
+    wacc[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    wacc[lev] -> setVal(0.);
+    
 }
+
 
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)

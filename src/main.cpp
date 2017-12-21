@@ -119,7 +119,7 @@ int main (int argc, char* argv[])
     mfix_level my_mfix;
 
     my_mfix.InitParams(solve_fluid,solve_dem,max_nit,call_udf);
-
+    
     my_mfix.Init(lev,dt,time);
 
     // Either init from scratch or from the checkpoint file
@@ -202,7 +202,7 @@ int main (int argc, char* argv[])
           if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
              my_mfix.Regrid(lev,nstep);
 
-          my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
+          my_mfix.Evolve(lev,nstep,set_normg,steady_state,dt,prev_dt,time,normg);
 
           Real end_step = ParallelDescriptor::second() - strt_step;
           ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
