@@ -1,7 +1,7 @@
 set( SGS_TESTS
      FLD01-x FLD01-y FLD01-z
      FLD02-x FLD02-y FLD02-z
-     FLD03-x FLD03-y FLD03-z
+     FLD03-x FLD03-y FLD03-z FLD03-x_projection 
      FLD04-x FLD04-y FLD04-z
      DEM01-x DEM01-y DEM01-z DEM01-eb
      DEM02-x DEM02-y DEM02-z DEM02-eb
