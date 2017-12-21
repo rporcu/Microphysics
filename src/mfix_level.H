@@ -106,7 +106,10 @@ protected:
     void mfix_solve_for_w    (int lev, Real dt, Real& num_w, Real& denom_w);
 
     // Projection
-    void mfix_apply_projection (int lev, amrex::Real dt);
+    void mfix_apply_projection (int lev, amrex::Real scaling_factor);
+    void mfix_set_projection_bcs (int lev);
+    void mfix_set_pressure_bcs (int lev);
+    
     // End projection
     
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
@@ -154,9 +157,8 @@ private:
     void solve_poisson_equation ( int lev,
 				  Vector< Vector< std::unique_ptr<MultiFab> > >& b,
 				  Vector< std::unique_ptr<MultiFab> >& phi,
-				  Vector< std::unique_ptr<MultiFab> >& phi_bc,
 				  Vector< std::unique_ptr<MultiFab> >& rhs,
-				  int singular );
+				  int bc_lo[], int bc_hi[] );
 
 
     void apply_grad_phi ( int lev );
@@ -193,6 +195,9 @@ private:
 				       Vector< std::unique_ptr<MultiFab> >& u,
 				       Vector< std::unique_ptr<MultiFab> >& v,
 				       Vector< std::unique_ptr<MultiFab> >& w );
+
+    void mfix_set_phi (int lev, Real scale, int singular );
+
     
 // End of projection-related methods
 

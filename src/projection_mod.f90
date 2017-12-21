@@ -245,7 +245,7 @@ contains
       k0 = e_i(dir,3)
 
       codx = c / dx(dir) 
-
+      
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
@@ -533,7 +533,7 @@ contains
       !
       if ( any ( bc_hi == amrex_lo_dirichlet ) .or. &
            any ( bc_lo == amrex_lo_dirichlet ) )   singular = 0
-
+      
       contains
 
          !
@@ -545,7 +545,7 @@ contains
             integer                       :: bc_face
             integer                       :: is, ie, js, je
 
-            ! Do not considere the edges: they may cause problemse
+            ! Do not considere the edges: they may cause problems
             is = 3
             ie = size (bct_array,1) - 2
             js = 3
@@ -562,6 +562,228 @@ contains
 
    end subroutine set_ppe_bc
 
+   
+
+   !
+   ! Subroutine to impose dirichlet's BCs to rhs of PPE 
+   !
+   subroutine set_poisson_solver_bcs ( lo, hi, rhs, slo, shi, phi, &
+        & oro_x, ulo, uhi, oro_y, vlo, vhi, oro_z, wlo, whi,       &
+        & bc_lo, bc_hi, dx, domlo, domhi ) bind(C)
+
+      use amrex_lo_bctypes_module
+      
+      ! Loop bounds
+      integer(c_int), intent(in   ) :: lo(3), hi(3)
+
+      ! Array bounds
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int), intent(in   ) :: vlo(3), vhi(3)
+      integer(c_int), intent(in   ) :: wlo(3), whi(3)
+
+      ! Boundary conditions
+      integer(c_int), intent(in   ) :: bc_lo(3), bc_hi(3)
+
+      ! Grid bounds
+      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
+
+      ! Grid spacings
+      real(ar),       intent(in   ) :: dx(3)
+
+      ! Arrays
+      real(ar),       intent(in   ) ::                         &
+           & oro_x(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
+           & oro_y(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+           & oro_z(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      
+      real(ar),       intent(inout) ::                       &
+           & rhs(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           &   phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      
+      ! Local variables
+      integer(c_int)                :: i, j, k
+      integer(c_int)                :: nlft, nbot, ndwn
+      integer(c_int)                :: nrgt, ntop, nup
+      real(ar)                      :: odx2, ody2, odz2
+
+
+      nlft = max(0,domlo(1)-slo(1))
+      nbot = max(0,domlo(2)-slo(2))
+      ndwn = max(0,domlo(3)-slo(3))
+
+      nrgt = max(0,shi(1)-domhi(1))
+      ntop = max(0,shi(2)-domhi(2))
+      nup  = max(0,shi(3)-domhi(3))
+      
+      odx2 = one / dx(1)**2
+      ody2 = one / dx(2)**2
+      odz2 = one / dx(3)**2
+
+      ! West boundary
+      if ( (bc_lo(1) == amrex_lo_dirichlet) .and. (nlft > 0) ) then
+         i = domlo(1) 
+         do k = slo(3), shi(3)
+            do j = slo(2), shi(2)
+               print *, "PHI AT BOUNDARY ", i-1,j,k,phi(i-1,j,k)
+               rhs(i,j,k)   = rhs(i,j,k) - 270.0D0 * odx2 !phi(i-1,j,k) * odx2 * half !* oro_x(i,j,k)
+               phi(i-1,j,k) = zero
+            end do
+         end do
+      end if
+
+      ! ! East boundary
+      ! if ( (bc_hi(1) == amrex_lo_dirichlet) .and. (nrgt > 0) ) then
+      !    i = domhi(1)
+      !    do k = slo(3), shi(3)
+      !       do j = slo(2), shi(2)
+      !          rhs(i,j,k)   = rhs(i,j,k) - phi(i+1,j,k) * odx2 * oro_x(i+1,j,k)
+      !          phi(i+1,j,k) = zero
+      !       end do
+      !    end do
+      ! end if
+
+      ! ! South boundary
+      ! if ( (bc_lo(2) == amrex_lo_dirichlet) .and. (nbot > 0) ) then
+      !    j = domlo(2)
+      !    do k = slo(3), shi(3)
+      !       do i = slo(1), shi(1)
+      !          rhs(i,j,k)   = rhs(i,j,k) - phi(i,j-1,k) * ody2 * oro_y(i,j,k)
+      !          phi(i,j-1,k) = zero
+      !       end do
+      !    end do
+      ! end if
+
+      ! ! North boundary
+      ! if ( (bc_hi(2) == amrex_lo_dirichlet) .and. (ntop > 0) ) then
+      !    j = domhi(2)
+      !    do k = slo(3), shi(3)
+      !       do i = slo(1), shi(1)
+      !          rhs(i,j,k)   = rhs(i,j,k) - phi(i,j+1,k) * ody2 * oro_y(i,j+1,k)
+      !          phi(i,j+1,k) = zero
+      !       end do
+      !    end do
+      ! end if
+
+      ! ! Bottom boundary
+      ! if ( (bc_lo(3) == amrex_lo_dirichlet) .and. (ndwn > 0) ) then
+      !    k = domlo(3)
+      !    do j = slo(2), shi(2)
+      !       do i = slo(1), shi(1)
+      !          rhs(i,j,k)   = rhs(i,j,k) - phi(i,j,k-1) * odz2 * oro_z(i,j,k)
+      !          phi(i,j,k-1) = zero 
+      !       end do
+      !    end do
+      ! end if
+
+      ! ! Top boundary
+      ! if ( (bc_hi(3) == amrex_lo_dirichlet) .and. (nup > 0) ) then
+      !    k = domhi(3)
+      !    do j = slo(2), shi(2)
+      !       do i = slo(1), shi(1)
+      !          rhs(i,j,k)   = rhs(i,j,k) - phi(i,j,k+1) * odz2 * oro_z(i,j,k+1)
+      !          phi(i,j,k+1) = zero 
+      !       end do
+      !    end do
+      ! end if
+ 
+      
+   end subroutine set_poisson_solver_bcs
+
+
+
+
+
+   !
+   ! Set the value of the auxiliary function PHI before the solution of the
+   ! poisson equation. The pressure MUST have the correct boundary conditions
+   ! 
+   !
+   ! WARNING: this routine MUST be called before solving the Poisson equation
+   !
+   subroutine set_phi ( lo, hi, phi, slo, shi, pg, scale, singular,  domlo, domhi ) bind(C)
+
+      ! Loop bounds
+      integer(c_int), intent(in   ) :: lo(3), hi(3)
+
+      ! Array bounds
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
+
+      ! Scaling factor
+      real(ar),       intent(in   ) :: scale
+
+      ! Whether the sistem is singular
+      integer(c_int), intent(in   ) :: singular
+
+      ! Grid bounds
+      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
+
+      ! Arrays
+      real(ar),       intent(in   ) :: &
+           & pg(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      real(ar),       intent(inout) :: &
+           & phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! Local variables
+      integer(c_int)                :: is, ie, js, je, ks, ke
+
+
+      is = lo(1)
+      ie = hi(1)
+      js = lo(2)
+      je = hi(2)
+      ks = lo(3)
+      ke = hi(3)
+
+      
+      ! First set the interior points to the current value of pressure
+      ! scaled by "scale"
+      if ( singular == 0 ) then 
+         phi(is:ie,js:je,ks:ke) = scale * pg(is:ie,js:je,ks:ke)
+      else
+         phi(is:ie,js:je,ks:ke) = zero
+         return 
+      end if
+         
+      ! Next, assign the boundary values.
+      ! Here we assume that all the boundaries are Dirichlet's
+      ! and set the boundary nodes accordingly.
+      ! The Poisson's solver will ignore all the values set when
+      ! the boundary is not of Dirichlet's type.
+      ! The boundary cell will hold the value at the boundary location, NOT the
+      ! value at the boundary CELL!!!
+      if ( domlo(1) > slo(1) )  then 
+         phi(domlo(1)-1,js:je,ks:ke) =  scale * half *  &
+              & ( pg(domlo(1)-1,js:je,ks:ke) + pg(domlo(1),js:je,ks:ke) )
+      end if 
+
+      if ( domhi(1) < shi(1) )  then 
+         phi(domhi(1)+1,js:je,ks:ke) =  scale * half *  &
+              & ( pg(domhi(1)+1,js:je,ks:ke) + pg(domhi(1),js:je,ks:ke) )
+      end if 
+
+      if ( domlo(2) > slo(2) )  then 
+         phi(is:ie,domlo(2)-1,ks:ke) =  scale * half *  &
+              & ( pg(is:ie,domlo(2)-1,ks:ke) + pg(is:ie,domlo(2),ks:ke) )
+      end if 
+
+      if ( domhi(2) < shi(2) )  then 
+         phi(is:ie,domhi(2)+1,ks:ke) =  scale * half *  &
+              & ( pg(is:ie,domhi(2)+1,ks:ke) + pg(is:ie,domhi(2),ks:ke) )
+      end if 
+
+      if ( domlo(3) > slo(3) )  then 
+         phi(is:ie,js:je,domlo(3)-1) =  scale * half *  &
+              & ( pg(is:ie,js:je,domlo(3)-1) + pg(is:ie,js:je,domlo(3)) )
+      end if 
+
+      if ( domhi(3) < shi(3) )  then 
+         phi(is:ie,js:je,domhi(3)+1) =  scale * half *  &
+              & ( pg(is:ie,js:je,domhi(3)+1) + pg(is:ie,js:je,domhi(3)) )
+      end if 
+      
+   end subroutine set_phi
 
    
 end module projection_mod

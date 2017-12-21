@@ -93,7 +93,7 @@ contains
             do i = lo(1),hi(1)
                divu(i,j,k) = &
                     (u_g(i+1,j,k)-u_g(i,j,k))*odx + &
-                    (v_g(i,j+1,k)-v_g(i,j,k))*ody + &
+                    (v_g(i,j+1,k)-v_g(i,j,k))*ody  + &
                     (w_g(i,j,k+1)-w_g(i,j,k))*odz
             end do
          end do

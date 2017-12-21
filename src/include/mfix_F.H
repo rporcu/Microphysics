@@ -548,6 +548,18 @@ extern "C"
 	const int* bct_klo, const int* bct_khi,
 	int* singular );
 
+    
+    void set_poisson_solver_bcs (
+	const int* lo, const int* hi,
+	amrex::Real* rhs, const int* slo, const int* shi,
+	amrex::Real* phi, 
+        const amrex::Real* oro_x, const int* ulo, const int* uhi,
+        const amrex::Real* oro_y, const int* vlo, const int* vhi,
+	const amrex::Real* oro_z, const int* wlo, const int* whi,
+	const int* bc_lo, const int* bc_hi,
+	const amrex::Real* dx, const int* domlo, const int* domhi );
+
+    
     void add_forcing (
 	const int* lo, const int* hi,
 	      amrex::Real* u_i,  const int* ulo, const int* uhi, 
@@ -555,18 +567,47 @@ extern "C"
 	const int* domlo, const int* domhi,
 	const amrex::Real* dx, const amrex::Real* dt, 
 	const int* dir);
+
+
+
+    void set_phi (
+	const int* lo, const int* hi,
+	amrex::Real* phi, const int* slo, const int* shi,
+	amrex::Real* pg,
+	const amrex::Real* scale, const int* singular,
+	const int*  domlo, const int *domhi );
+
+    void set_projection_bcs (
+        amrex::Real* u_g, const int* ulo, const int* uhi,
+        amrex::Real* v_g, const int* vlo, const int* vhi,
+	amrex::Real* w_g, const int* wlo, const int* whi,
+	amrex::Real* ep_g, const int* slo, const int* shi,
+	amrex::Real* ro_g,    amrex::Real* rop_g,
+	amrex::Real* mu_g,    amrex::Real* lambda_g,
+	const int* bc_ilo, const int* bc_ihi,
+	const int* bc_jlo, const int* bc_jhi,
+	const int* bc_klo, const int* bc_khi,
+	const int* domlo , const int* domhi);
+
+    void set_pressure_bcs (
+	amrex::Real* p_g, const int* slo, const int* shi,
+	const int* bc_ilo, const int* bc_ihi,
+	const int* bc_jlo, const int* bc_jhi,
+	const int* bc_klo, const int* bc_khi,
+	const int* domlo , const int* domhi);
+
     
-  void mfix_eb_to_polygon ( const amrex::Real* dx,
-            const int* slo, const int* shi,
-            const void* flag, const int* fglo, const int* fghi,
-            const amrex_real* bcent, const int* blo, const int* bhi,
-            const amrex_real* ax, const int* axlo, const int* axhi,
-            const amrex_real* ay, const int* aylo, const int* ayhi,
-            const amrex_real* az, const int* azlo, const int* azhi);
+    void mfix_eb_to_polygon ( const amrex::Real* dx,
+			      const int* slo, const int* shi,
+			      const void* flag, const int* fglo, const int* fghi,
+			      const amrex_real* bcent, const int* blo, const int* bhi,
+			      const amrex_real* ax, const int* axlo, const int* axhi,
+			      const amrex_real* ay, const int* aylo, const int* ayhi,
+			      const amrex_real* az, const int* azlo, const int* azhi);
 
-  void mfix_write_eb_vtp ( int* myID);
-  void mfix_write_pvtp ( int* nProcs);
-
+    void mfix_write_eb_vtp ( int* myID);
+    void mfix_write_pvtp ( int* nProcs);
+    
 #ifdef __cplusplus
 }
 #endif
