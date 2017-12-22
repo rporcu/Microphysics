@@ -143,7 +143,7 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
         real_comp_names.push_back("omoi");
         real_comp_names.push_back("velx");
         real_comp_names.push_back("vely");
-        real_comp_names.push_back("velz, &vor");
+        real_comp_names.push_back("velz");
         real_comp_names.push_back("omegax");
         real_comp_names.push_back("omegay");
         real_comp_names.push_back("omegaz");
