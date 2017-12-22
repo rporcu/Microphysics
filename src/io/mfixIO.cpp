@@ -12,8 +12,9 @@ namespace
     const std::string level_prefix {"Level_"};
 }
 
-// This function initializes the attributes vectorVars, scalarVars, vecVarsName and
-// scaVarsName.
+// This function initializes the attributes vectorVars, vecVarsName, 
+//                                          pltscalarVars, pltscaVarsName,
+//                                          chkscalarVars, chkscaVarsName.
 // If new variables need to be added to the output/checkpoint, simply
 // add them here and the IO routines will automatically take care of them.
 void
@@ -27,8 +28,11 @@ mfix_level::InitIOData ()
     // Define the list of scalar variables at cell centers that need to be written
     // to plotfile/checkfile.
     // "volfrac" MUST always be last without any mf associated to it!!!
-    scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "vort", "volfrac"};
-    scalarVars  = {&ep_g, &p_g, &ro_g,  &rop_g,  &mu_g, &vort};
+    pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "vort", "volfrac"};
+    pltscalarVars  = {&ep_g, &p_g, &ro_g,  &rop_g,  &mu_g, &vort};
+
+    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "volfrac"};
+    chkscalarVars  = {&ep_g, &p_g, &ro_g,  &rop_g,  &mu_g};
 }
 
 void
@@ -124,10 +128,10 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
           }
 
           // Write scalar variables
-          for (int i = 0; i < scalarVars.size(); i++ ) {
-              VisMF::Write( *((*scalarVars[i])[lev]),
+          for (int i = 0; i < chkscalarVars.size(); i++ ) {
+              VisMF::Write( *((*chkscalarVars[i])[lev]),
                 amrex::MultiFabFileFullPrefix(lev, checkpointname,
-                      level_prefix, scaVarsName[i]));
+                      level_prefix, chkscaVarsName[i]));
           }
        }
     }
@@ -255,7 +259,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
             }
 
             if (lev == 0)
-               pc->Restart(restart_file, "particles");
+              pc->Restart(restart_file, "particles");
 
             BoxList bl;
             for (int nb = 0; nb < orig_ba.size(); nb++) {
@@ -329,14 +333,14 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        }
 
        // Read scalar variables
-       for (int i = 0; i < scalarVars.size(); i++ ) {
+       for (int i = 0; i < chkscalarVars.size(); i++ ) {
           MultiFab mf;
-          VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,scaVarsName[i]));
+          VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,chkscaVarsName[i]));
 
           if (Nrep == IntVect::TheUnitVector())
           {
-              // Simply copy mf into scalarVars
-              (*scalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
+              // Simply copy mf into chkscalarVars
+              (*chkscalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
 
           } else {
 
@@ -348,11 +352,11 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
              FArrayBox single_fab(mf.boxArray()[0],1);
              mf.copyTo(single_fab);
 
-             // Copy and replicate mf into scalarVars
-             for (MFIter mfi( *(*scalarVars[i])[lev] ); mfi.isValid(); ++mfi)
+             // Copy and replicate mf into chkscalarVars
+             for (MFIter mfi( *(*chkscalarVars[i])[lev] ); mfi.isValid(); ++mfi)
              {
                 int ib = mfi.index();
-                (*(*scalarVars[i])[lev])[ib].copy(single_fab,single_fab.box(),0,mfi.validbox(),0,1);
+                (*(*chkscalarVars[i])[lev])[ib].copy(single_fab,single_fab.box(),0,mfi.validbox(),0,1);
              }
          }
        }
@@ -531,7 +535,7 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
        for (int lev = 0; lev <= finest_level; ++lev) {
 
           // the "+1" here is for volfrac
-          const int ncomp = vectorVars.size() + scalarVars.size() + 1;
+          const int ncomp = vectorVars.size() + pltscalarVars.size() + 1;
           mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
 
           // Vector variables
@@ -546,8 +550,8 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
           };
 
           // Scalar variables
-          for( int i = 0; i < scalarVars.size(); i++ ) {
-              MultiFab::Copy(*mf[lev], *((*scalarVars[i])[lev].get()), 0, dcomp, 1, 0);
+          for( int i = 0; i < pltscalarVars.size(); i++ ) {
+              MultiFab::Copy(*mf[lev], *((*pltscalarVars[i])[lev].get()), 0, dcomp, 1, 0);
               dcomp++;
           }
 
@@ -566,7 +570,7 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
           // Concatenate scalar and vector var names
           Vector<std::string>  names;
           names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
-          names.insert( names.end(), scaVarsName.begin(), scaVarsName.end());
+          names.insert( names.end(), pltscaVarsName.begin(), pltscaVarsName.end());
      
           amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
                        Geom(), time, istep, refRatio());

@@ -374,12 +374,15 @@ private:
 
     int nghost_bc = 2;
 
-    // Variables to simplify IO
+    // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
-    Vector< const Vector< std::unique_ptr<MultiFab> >* > scalarVars;
-    Vector< const Vector< std::unique_ptr<MultiFab> >* > scalarPlotVars;
     Vector< std::string > vecVarsName;
-    Vector< std::string > scaVarsName;
+
+    Vector< const Vector< std::unique_ptr<MultiFab> >* > chkscalarVars;
+    Vector< std::string > pltscaVarsName;
+
+    Vector< const Vector< std::unique_ptr<MultiFab> >* > pltscalarVars;
+    Vector< std::string > chkscaVarsName;
 
     std::unique_ptr<amrex::EBFArrayBoxFactory> ebfactory;
     std::unique_ptr<amrex::EBFArrayBoxFactory> particle_ebfactory;
