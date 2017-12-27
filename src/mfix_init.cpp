@@ -12,22 +12,22 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
     {
         ParmParse pp("mfix");
 
-	// Whether to use projection method
-	pp.query("use_proj_method", use_proj_method );
+  // Whether to use projection method
+  pp.query("use_proj_method", use_proj_method );
 
-	// CFL coefficient
-	pp.query("cfl", cfl );
+  // CFL coefficient
+  pp.query("cfl", cfl );
 
-	// Option to control MGML behavior
-	pp.query( "mg_verbose", mg_verbose );
-	pp.query( "mg_cg_verbose", mg_cg_verbose );
-	pp.query( "mg_max_iter", mg_max_iter );
-	pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
-	pp.query( "mg_rtol", mg_rtol );
-	pp.query( "mg_atol", mg_atol );
+  // Option to control MGML behavior
+  pp.query( "mg_verbose", mg_verbose );
+  pp.query( "mg_cg_verbose", mg_cg_verbose );
+  pp.query( "mg_max_iter", mg_max_iter );
+  pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
+  pp.query( "mg_rtol", mg_rtol );
+  pp.query( "mg_atol", mg_atol );
 
-	// Tolerance to check for steady state (projection only)
-	pp.query( "steady_state_tol", steady_state_tol );
+  // Tolerance to check for steady state (projection only)
+  pp.query( "steady_state_tol", steady_state_tol );
 
         // The default type is "AsciiFile" but we can over-write that in the inputs file
         //  with "Random"
@@ -329,7 +329,7 @@ mfix_level::AllocateArrays (int lev)
     phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     phi[lev]->setVal(0.);
 
-    
+
     // ********************************************************************************
     // X-face-based arrays
     // ********************************************************************************
@@ -349,7 +349,7 @@ mfix_level::AllocateArrays (int lev)
     u_gt[lev]->setVal(0.);
     fp_x[lev]->setVal(0.);
     oro_g[lev][0]->setVal(0.);
-    
+
     d_e[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     d_e[lev]->setVal(0.);
 
@@ -375,7 +375,7 @@ mfix_level::AllocateArrays (int lev)
     // u acceleration terms
     uacc[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     uacc[lev] -> setVal(0.);
-    
+
     // ********************************************************************************
     // Y-face-based arrays
     // ********************************************************************************
@@ -395,7 +395,7 @@ mfix_level::AllocateArrays (int lev)
     v_gt[lev]->setVal(0.);
     fp_y[lev]->setVal(0.);
     oro_g[lev][1]->setVal(0.);
-	
+
     d_n[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     d_n[lev]->setVal(0.);
 
@@ -423,7 +423,7 @@ mfix_level::AllocateArrays (int lev)
     vacc[lev] -> setVal(0.);
 
 
-    
+
     // ********************************************************************************
     // Z-face-based arrays
     // ********************************************************************************
@@ -443,7 +443,7 @@ mfix_level::AllocateArrays (int lev)
     w_gt[lev]->setVal(0.);
     fp_z[lev]->setVal(0.);
     oro_g[lev][2]->setVal(0.);
-	
+
     d_t[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     d_t[lev]->setVal(0.);
 
@@ -469,7 +469,7 @@ mfix_level::AllocateArrays (int lev)
     // w acceleration terms
     wacc[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     wacc[lev] -> setVal(0.);
-    
+
 }
 
 
@@ -551,7 +551,7 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
 
     // Auto generated particles may be out of the domain. This call will remove them.
     // Note that this has to occur after the EB geometry is created.
-    if (particle_init_type == "Auto")
+    if (particle_init_type == "Auto" && !restart_flag)
       pc -> RemoveOutOfRange( lev, particle_ebfactory);
 
     Real avg_dp[10], avg_ro[10];
