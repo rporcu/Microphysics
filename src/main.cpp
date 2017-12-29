@@ -119,6 +119,8 @@ int main (int argc, char* argv[])
     mfix_level my_mfix;
 
     my_mfix.InitParams(solve_fluid,solve_dem,max_nit,call_udf);
+
+    my_mfix.ResizeArrays();
     
     my_mfix.Init(lev,dt,time);
 

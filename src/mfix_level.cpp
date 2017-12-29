@@ -48,6 +48,12 @@ mfix_level::mfix_level ()
   nsubsteps[lev] = MaxRefRatio(lev-1);
     }
 #endif
+}
+
+void
+mfix_level::ResizeArrays ()
+{
+    int nlevs_max = maxLevel() + 1;
 
     // Particle Container
     pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));

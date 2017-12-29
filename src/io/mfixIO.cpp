@@ -261,6 +261,8 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
             if (lev == 0)
               pc->Restart(restart_file, "particles");
 
+            amrex::Print() << "  Finished reading particle data" << std::endl;
+
             BoxList bl;
             for (int nb = 0; nb < orig_ba.size(); nb++) {
              for (int k = 0; k < Nrep[2]; k++) {
@@ -292,9 +294,12 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
                ReMakeNewLevelFromScratch(lev,ba,dm);
             }
 
-            AllocateArrays(lev);
+            if (solve_fluid)
+               AllocateArrays(lev);
         }
     }
+
+    amrex::Print() << "  Finished reading header" << std::endl;
 
     if (solve_fluid)
     {
@@ -363,6 +368,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
          }
         }
        }
+       amrex::Print() << "  Finished reading fluid data" << std::endl;
     }
 
     int lev = 0;
@@ -404,7 +410,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     }
 
     // used in load balancing  
-    if (load_balance_type == "KnapSack") { 
+    if (load_balance_type == "KnapSack") {
         if (solve_dem)
         {
            particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev), 
@@ -418,6 +424,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
            fluid_cost[lev]->setVal(0.0); 
         }
     }
+    amrex::Print() << "  Done with mfix::Restart " << std::endl;
 }
 
 void

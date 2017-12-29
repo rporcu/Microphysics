@@ -12,22 +12,22 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
     {
         ParmParse pp("mfix");
 
-  // Whether to use projection method
-  pp.query("use_proj_method", use_proj_method );
+        // Whether to use projection method
+        pp.query("use_proj_method", use_proj_method );
+      
+        // CFL coefficient
+        pp.query("cfl", cfl );
+      
+        // Option to control MGML behavior
+        pp.query( "mg_verbose", mg_verbose );
+        pp.query( "mg_cg_verbose", mg_cg_verbose );
+        pp.query( "mg_max_iter", mg_max_iter );
+        pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
+        pp.query( "mg_rtol", mg_rtol );
+        pp.query( "mg_atol", mg_atol );
 
-  // CFL coefficient
-  pp.query("cfl", cfl );
-
-  // Option to control MGML behavior
-  pp.query( "mg_verbose", mg_verbose );
-  pp.query( "mg_cg_verbose", mg_cg_verbose );
-  pp.query( "mg_max_iter", mg_max_iter );
-  pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
-  pp.query( "mg_rtol", mg_rtol );
-  pp.query( "mg_atol", mg_atol );
-
-  // Tolerance to check for steady state (projection only)
-  pp.query( "steady_state_tol", steady_state_tol );
+        // Tolerance to check for steady state (projection only)
+        pp.query( "steady_state_tol", steady_state_tol );
 
         // The default type is "AsciiFile" but we can over-write that in the inputs file
         //  with "Random"
@@ -40,19 +40,18 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         pp.query("dual_grid", dual_grid);
 
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
-                            load_balance_type == "KDTree"    ||
-                            load_balance_type == "KnapSack");
+                      load_balance_type == "KDTree"    ||
+                      load_balance_type == "KnapSack");
 
         // If subdt_io is true, des_time_loop calls output_manager
         subdt_io = false; // default to false (if not present in inputs file)
         pp.query("subdt_io", subdt_io);
-
-        solve_fluid  = solve_fluid_in;
-        solve_dem    = solve_dem_in;
-        max_nit      = max_nit_in;
-        call_udf     = call_udf_in;
     }
 
+    solve_fluid  = solve_fluid_in;
+    solve_dem    = solve_dem_in;
+    max_nit      = max_nit_in;
+    call_udf     = call_udf_in;
 
     {
         ParmParse pp("amr");

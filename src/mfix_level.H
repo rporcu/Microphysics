@@ -35,6 +35,8 @@ public:
 
     void InitLevelData (int lev, Real dt, Real time);
 
+    void ResizeArrays ();
+
     void PostInit (int lev, Real dt, Real time, int nstep, int restart_flag);
 
     void WriteCheckPointFile ( std::string& check_file_name, int nstep = 0, Real dt = 0.0, Real time = 0.0 )  const;
