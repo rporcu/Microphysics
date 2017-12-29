@@ -131,9 +131,10 @@ mfix_level::mfix_level ()
     vacc.resize(nlevs_max);
     wacc.resize(nlevs_max);
     
-    particle_cost.resize(nlevs_max);
-    fluid_cost.resize(nlevs_max);
-
+    if (solve_dem) 
+       particle_cost.resize(nlevs_max);
+    if (solve_fluid) 
+       fluid_cost.resize(nlevs_max);
 }
 
 void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)

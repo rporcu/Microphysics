@@ -539,8 +539,11 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                                               pc->ParticleDistributionMap(lev), 1, 0));
         particle_cost[lev]->setVal(0.0);
 
-        fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
-        fluid_cost[lev]->setVal(0.0);
+        if (solve_fluid)
+        {
+           fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+           fluid_cost[lev]->setVal(0.0);
+        }
     }
   }
 }

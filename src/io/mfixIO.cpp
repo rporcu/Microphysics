@@ -296,11 +296,13 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
         }
     }
 
-    // Initialize the field data
-    for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
+    if (solve_fluid)
     {
-       // Read vector variables
-       for (int i = 0; i < vectorVars.size(); i++ ) {
+       // Initialize the field data
+       for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
+       {
+          // Read vector variables
+          for (int i = 0; i < vectorVars.size(); i++ ) {
            MultiFab mf;
            VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,vecVarsName[i]));
 
@@ -359,6 +361,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
                 (*(*chkscalarVars[i])[lev])[ib].copy(single_fab,single_fab.box(),0,mfi.validbox(),0,1);
              }
          }
+        }
        }
     }
 
@@ -376,36 +379,45 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        pc->Replicate(Nrep,geom[lev],dmap[lev],grids[lev]);
     }
 
-    fill_mf_bc(lev,*ep_g[lev]);
-    fill_mf_bc(lev,*ep_go[lev]);
-    fill_mf_bc(lev,*p_g[lev]);
-    fill_mf_bc(lev,*p_go[lev]);
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*ro_go[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-    fill_mf_bc(lev,*rop_go[lev]);
+    if (solve_fluid)
+    {
+       fill_mf_bc(lev,*ep_g[lev]);
+       fill_mf_bc(lev,*ep_go[lev]);
+       fill_mf_bc(lev,*p_g[lev]);
+       fill_mf_bc(lev,*p_go[lev]);
+       fill_mf_bc(lev,*ro_g[lev]);
+       fill_mf_bc(lev,*ro_go[lev]);
+       fill_mf_bc(lev,*rop_g[lev]);
+       fill_mf_bc(lev,*rop_go[lev]);
 
-    fill_mf_bc(lev,*mu_g[lev]);
-    fill_mf_bc(lev,*lambda_g[lev]);
+       fill_mf_bc(lev,*mu_g[lev]);
+       fill_mf_bc(lev,*lambda_g[lev]);
 
-    // Fill the bc's just in case
-    u_g[lev]->FillBoundary(geom[lev].periodicity());
-    v_g[lev]->FillBoundary(geom[lev].periodicity());
-    w_g[lev]->FillBoundary(geom[lev].periodicity());
+       // Fill the bc's just in case
+       u_g[lev]->FillBoundary(geom[lev].periodicity());
+       v_g[lev]->FillBoundary(geom[lev].periodicity());
+       w_g[lev]->FillBoundary(geom[lev].periodicity());
 
-    u_go[lev]->FillBoundary(geom[lev].periodicity());
-    v_go[lev]->FillBoundary(geom[lev].periodicity());
-    w_go[lev]->FillBoundary(geom[lev].periodicity());
+       u_go[lev]->FillBoundary(geom[lev].periodicity());
+       v_go[lev]->FillBoundary(geom[lev].periodicity());
+       w_go[lev]->FillBoundary(geom[lev].periodicity());
+    }
 
     // used in load balancing  
     if (load_balance_type == "KnapSack") { 
-        particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev), 
-                                              pc->ParticleDistributionMap(lev), 1, 0));  
-        particle_cost[lev]->setVal(0.0); 
+        if (solve_dem)
+        {
+           particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev), 
+                                                 pc->ParticleDistributionMap(lev), 1, 0));  
+           particle_cost[lev]->setVal(0.0); 
+        }
             
-        fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));  
-        fluid_cost[lev]->setVal(0.0); 
-    }        
+        if (solve_fluid)
+        {
+           fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));  
+           fluid_cost[lev]->setVal(0.0); 
+        }
+    }
 }
 
 void
