@@ -116,7 +116,7 @@ mfix_level::Regrid (int lev, int nstep)
                fluid_cost[lev]->setVal(0.0);
             }
 
-            if (solve_fluid)
+            if (solve_dem)
             {
                particle_cost[lev].reset(new MultiFab(grids[lev], newdm, 1, 0));
                particle_cost[lev]->setVal(0.0);
