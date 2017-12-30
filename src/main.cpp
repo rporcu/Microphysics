@@ -12,7 +12,9 @@
 int   max_step    = -1;
 int   verbose     = -1;
 int   regrid_int  = -1;
-Real stop_time = -1.0;
+Real stop_time    = -1.0;
+
+bool hourglass    = false;
 
 std::string restart_file {""};
 
@@ -66,6 +68,11 @@ void ReadParameters ()
   pp.query("verbose", verbose);
 
   pp.query("regrid_int",regrid_int);
+
+  {
+     ParmParse pp("mfix");
+     pp.query("hourglass", hourglass);
+  }
 }
 
 int main (int argc, char* argv[])
@@ -146,7 +153,6 @@ int main (int argc, char* argv[])
 
     // We move this to after restart and/or regrid so we make the EB data structures with the correct 
     //    BoxArray and DistributionMapping
-    bool hourglass = false;
     if (hourglass)
        my_mfix.make_eb_hourglass(lev);
     else
