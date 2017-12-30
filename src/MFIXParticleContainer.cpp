@@ -450,6 +450,20 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt, &subdt_io );
 
+    int max_pti_index = 0;
+
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+       max_pti_index = max(pti.index(), max_pti_index);
+
+    Vector<Real> tow[max_pti_index+1];
+    Vector<Real> fc[max_pti_index+1];
+
+    for (int i = 0; i <= max_pti_index; i++)
+    {
+       tow[i].resize(1,0.0);
+       fc[i].resize(1,0.0);
+    }
+
     int ncoll_total = 0;
 
     int n = 0;
@@ -470,13 +484,9 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 #pragma omp parallel
 #endif
     {
-      Vector<Real> tow;
-      Vector<Real> fc;
-      tow.resize(1,0.0);
-      fc.resize(1,0.0);
-
       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
+         int i = pti.index();
 
          Real wt = ParallelDescriptor::second();
 
@@ -494,10 +504,10 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          const Box& bx = pti.tilebox();
 
          // We need these to be zero every time we start a new batch of particles
-         tow.clear();
-          fc.clear();
-         tow.resize(ntot*3,0.0);
-          fc.resize(ntot*3,0.0);
+         tow[i].clear();
+          fc[i].clear();
+         tow[i].resize(ntot*3,0.0);
+          fc[i].resize(ntot*3,0.0);
 
          // Only call the routine for wall collisions if we actually have walls
          if (ebfactory != NULL)
@@ -515,7 +525,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
                // Calculate forces from particle-wall collisions
                BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-               calc_wall_collisions (particles, &ntot, &nrp, tow.dataPtr(), fc.dataPtr(), &subdt,
+               calc_wall_collisions (particles, &ntot, &nrp, tow[i].dataPtr(), fc[i].dataPtr(), &subdt,
                                      flag.dataPtr(), flag.loVect(), flag.hiVect(),
                                      normal[pti].dataPtr(),
                                      normal[pti].loVect(), normal[pti].hiVect(),
@@ -537,14 +547,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          calc_particle_collisions ( particles                     , &nrp,
                                     neighbors[index].dataPtr()    , &size_ng,
                                     neighbor_list[index].dataPtr(), &size_nl,
-                                    tow.dataPtr(), fc.dataPtr(), &subdt, &ncoll);
+                                    tow[i].dataPtr(), fc[i].dataPtr(), &subdt, &ncoll);
          BL_PROFILE_VAR_STOP(calc_particle_collisions);
-
-         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-         des_time_loop ( &nrp     , particles,
-                         &ntot, tow.dataPtr(), fc.dataPtr(), &subdt,
-                         &xlen, &ylen, &zlen, &stime, &n);
-         BL_PROFILE_VAR_STOP(des_time_loop);
 #else
          Vector<Real> x(nrp);
          Vector<Real> y(nrp);
@@ -555,14 +559,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          calc_particle_collisions_soa ( particles                     , &nrp,
                                         neighbors[index].dataPtr()    , &size_ng,
                                         neighbor_list[index].dataPtr(), &size_nl,
-                                        tow.dataPtr(), fc.dataPtr(), &subdt, &ncoll);
+                                        tow[i].dataPtr(), fc[i].dataPtr(), &subdt, &ncoll);
          BL_PROFILE_VAR_STOP(calc_particle_collisions);
-
-         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-         des_time_loop_soa ( &nrp, particles,
-                             &ntot, tow.dataPtr(), fc.dataPtr(), &subdt,
-                             &xlen, &ylen, &zlen, &stime, &n);
-         BL_PROFILE_VAR_STOP(des_time_loop);
 #endif
 
          if (cost) {
@@ -570,8 +568,43 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
              wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
              (*cost)[pti].plus(wt, tbx);
          }
+
+    // We put this here to make sure all the forces are computed above before we update 
+    //    any positions or velocities below
+    // ParallelDescriptor::Barrier();
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+      BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+#if 0
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      {
+         int i = pti.index();
+         const int ntot   = tow[i].size() / 3;
+         const int nrp    = NumberOfParticles(pti);
+         void* particles  = pti.GetArrayOfStructs().data();
+#endif
+#if 1
+         des_time_loop ( &nrp     , particles,
+                         &ntot, tow[i].dataPtr(), fc[i].dataPtr(), &subdt,
+                         &xlen, &ylen, &zlen, &stime, &n);
+#else
+         des_time_loop_soa ( &nrp, particles,
+                             &ntot, tow[i].dataPtr(), fc[i].dataPtr(), &subdt,
+                             &xlen, &ylen, &zlen, &stime, &n);
+#endif
+//    }
+      BL_PROFILE_VAR_STOP(des_time_loop);
+
       }
     }
+
+      for (int i = 0; i <= max_pti_index; i++)
+      {
+         tow[i].clear();
+         fc[i].clear();
+      }
 
       n += 1;
 

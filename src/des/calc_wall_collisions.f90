@@ -292,6 +292,9 @@
 
           ! Add the collision force to the total forces acting on the particle.
           FC(LL,:) = FC(LL,:) + FN(:) + FT(:)
+!         if (particles(ll)%id .eq. 7573 .and. particles(ll)%cpu .eq. 53) then
+!            print *,'DIST NEW / TOTAL WALL FORCE ', overlap_n, (fn(1)+ft(1)), fc(ll,1)
+!         end if
           ! print *,'Vertical dist / force ',distmod, fn(1), fc(ll,1)
 
           ! Add the torque force to the total torque acting on the particle.

@@ -146,7 +146,7 @@ int main (int argc, char* argv[])
 
     // We move this to after restart and/or regrid so we make the EB data structures with the correct 
     //    BoxArray and DistributionMapping
-    bool hourglass = false;
+    bool hourglass = true;
     if (hourglass)
        my_mfix.make_eb_hourglass(lev);
     else

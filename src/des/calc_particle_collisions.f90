@@ -145,8 +145,8 @@
             end if
 
             ! calculate the normal contact force
-            fn(:) =  -(kn_des * overlap_n * normal(:) + &
-                 etan_des * v_rel_trans_norm * normal(:))
+            fn(:) =  -(   kn_des * overlap_n        * normal(:) + &
+                        etan_des * v_rel_trans_norm * normal(:))
 
             ! calcuate the tangential overlap
             overlap_t(:) = dtsolid*vrel_t(:)
@@ -170,6 +170,18 @@
 
             fc(ll,:) = fc(ll,:) + fc_tmp(:)
             fc(ii,:) = fc(ii,:) - fc_tmp(:)
+
+!           if (particles(ll)%id .eq. 7573 .and. particles(ll)%cpu .eq. 53) then
+!              print *,'LL:DIST / N / T COLL ', particles(ii)%id, particles(ii)%cpu, &
+!                                               overlap_n, fn(1), ft(1)
+!              print *,'LL POS ', particles(ll)%pos(:)
+!              print *,'II POS ', particles(ii)%pos(:)
+!              print *,'LL VEL ', particles(ll)%vel(:)
+!              print *,'II VEL ', particles(ii)%vel(:)
+!           end if
+!           if (particles(ii)%id .eq. 7573 .and. particles(ii)%cpu .eq. 53) then
+!              print *,'II:DIST / N / T COLL ', ll, overlap_n, fn(1), ft(1)
+!           end if
 
             ! **********************************************************
 

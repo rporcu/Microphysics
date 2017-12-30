@@ -126,6 +126,11 @@ contains
 
             ! tranlate particle (Euler-step using updated velocity)
             particles(p) % pos     = particles(p) % pos   + subdt * particles(p) % vel
+!           if (particles(p)%id .eq. 7573 .and. particles(p)%cpu .eq. 53) then
+!              print *,'NEW POS VEL FORCE DV ', particles(p)%pos(1), particles(p)%vel(1), &
+!                                               fc(p,1), subdt*fc(p,1)/particles(p)%mass
+!              print *,' '
+!           end if
 
             ! update particle rotational velocity 
             particles(p) % omega   = particles(p) % omega + subdt * tow(p,:) * particles(p) % omoi
