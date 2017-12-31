@@ -524,7 +524,7 @@ end subroutine particle_write
 !                                                                     !
 !                                                                     !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-subroutine rm_wall_collisions ( particles, np, nrp, flag, fglo, fghi, &
+subroutine rm_wall_collisions ( particles, nrp, flag, fglo, fghi, &
      bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, apz, azlo, azhi, dx) &
      bind(C, name="rm_wall_collisions")
 
@@ -540,9 +540,9 @@ subroutine rm_wall_collisions ( particles, np, nrp, flag, fglo, fghi, &
 
   implicit none
 
-  integer, intent(in) :: np, nrp
+  integer, intent(in) ::  nrp
 
-  type(particle_t), intent(inout), target :: particles(np)
+  type(particle_t), intent(inout), target :: particles(nrp)
 
   integer, dimension(3), intent(in) :: axlo, aylo, azlo, fglo, blo
   integer, dimension(3), intent(in) :: axhi, ayhi, azhi, fghi, bhi

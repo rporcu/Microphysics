@@ -185,54 +185,52 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
 
 void MFIXParticleContainer::RemoveOutOfRange(int lev, std::unique_ptr<EBFArrayBoxFactory>& ebfactory)
 {
-
   // Only call the routine for wall collisions if we actually have walls
   if (ebfactory != NULL)
-    {
+  {
       Box domain(Geom(lev).Domain());
       const Real* dx = Geom(lev).CellSize();
-      int total_np = 0;
       MultiFab dummy;
       dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
 
+      std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+      const MultiCutFab* bndrycent;
+
       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-        {
+      {
           // Real particles
           const int nrp = NumberOfParticles(pti);
-          // Ghost particles
-          PairIndex index(pti.index(), pti.LocalTileIndex());
-          int ngp = neighbors[index].size() / pdata_size;
-          // Total particles
-          int ntot = nrp + ngp;
 
           void* particles  = pti.GetArrayOfStructs().data();
-
-          const Box& bx = pti.tilebox();
 
           const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
           const auto& flag = sfab.getEBCellFlagFab();
 
-          // if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
-          //   {
-              std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
-              const MultiCutFab* bndrycent;
+          areafrac  =  ebfactory->getAreaFrac();
+          bndrycent = &(ebfactory->getBndryCent());
 
-              areafrac  =  ebfactory->getAreaFrac();
-              bndrycent = &(ebfactory->getBndryCent());
+          const Box& bx = pti.tilebox();
 
-              // Calculate forces from particle-wall collisions
-              rm_wall_collisions (particles, &ntot, &nrp, flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                                  (*bndrycent)[pti].dataPtr(),
-                                  (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
-                                  (*areafrac[0])[pti].dataPtr(),
-                                  (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-                                  (*areafrac[1])[pti].dataPtr(),
-                                  (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-                                  (*areafrac[2])[pti].dataPtr(),
-                                  (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect(),
-                                  dx);
-            // }
-        }
+          // Remove particles outside of or touching the walls 
+          if (flag.getType(bx) == FabType::covered)
+          {
+             for (auto& p: pti.GetArrayOfStructs())
+               p.id() = -1;
+          } 
+          else if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
+          {
+             rm_wall_collisions (particles, &nrp, flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                 (*bndrycent)[pti].dataPtr(),
+                                 (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
+                                 (*areafrac[0])[pti].dataPtr(),
+                                 (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
+                                 (*areafrac[1])[pti].dataPtr(),
+                                 (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
+                                 (*areafrac[2])[pti].dataPtr(),
+                                 (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect(),
+                                 dx);
+          }
+      }
       Redistribute();
 
       long fin_np = 0;
@@ -244,11 +242,8 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, std::unique_ptr<EBFArrayBo
       ParallelDescriptor::ReduceLongSum(fin_np,ParallelDescriptor::IOProcessorNumber());
       amrex::Print() << "Final number of particles: " << fin_np << std::endl;
 
-    }
+  }
 }
-
-
-
 
 void MFIXParticleContainer::PrintParticleCounts() {
   const int lev = 0;
@@ -487,7 +482,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
          int i = pti.index();
-
          Real wt = ParallelDescriptor::second();
 
          // Real particles

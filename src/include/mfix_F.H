@@ -413,7 +413,7 @@ extern "C"
                                  amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
 
 
-    void rm_wall_collisions ( void* rparticles, const int* ntot, const int* nrp,
+    void rm_wall_collisions ( void* rparticles, const int* nrp,
                               const void* flag, const int* fglo, const int* fghi,
                               const amrex_real* bcent, const int* blo, const int* bhi,
                               const amrex_real* ax, const int* axlo, const int* axhi,
