@@ -407,15 +407,16 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
         dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
         std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
 
-        // We pre-compute the normals
+        // We pre-compute the normals -- note we do this using mfi not pti since we may
+        // need a normal in a box which has no particles (but is next to a box with particles)
         normal.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 2);
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+        for (MFIter mfi(normal, true); mfi.isValid(); ++mfi) 
         {
-            Box tile_box = pti.tilebox();
+            Box tile_box = mfi.tilebox();
             const int* lo = tile_box.loVect();
             const int* hi = tile_box.hiVect();
 
-            const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
+            const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[mfi]);
             const auto& flag = sfab.getEBCellFlagFab();
 
             areafrac  =  ebfactory->getAreaFrac();
@@ -424,14 +425,14 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
             {
                BL_PROFILE_VAR("compute_normals()", compute_normals);
                compute_normals ( lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                                normal[pti].dataPtr(),
-                                normal[pti].loVect(), normal[pti].hiVect(),
-                                (*areafrac[0])[pti].dataPtr(),
-                                (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-                                (*areafrac[1])[pti].dataPtr(),
-                                (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-                                (*areafrac[2])[pti].dataPtr(),
-                                (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
+                                normal[mfi].dataPtr(),
+                                normal[mfi].loVect(), normal[mfi].hiVect(),
+                                (*areafrac[0])[mfi].dataPtr(),
+                                (*areafrac[0])[mfi].loVect(), (*areafrac[0])[mfi].hiVect(),
+                                (*areafrac[1])[mfi].dataPtr(),
+                                (*areafrac[1])[mfi].loVect(), (*areafrac[1])[mfi].hiVect(),
+                                (*areafrac[2])[mfi].dataPtr(),
+                                (*areafrac[2])[mfi].loVect(), (*areafrac[2])[mfi].hiVect());
                BL_PROFILE_VAR_STOP(compute_normals);
             }
         }

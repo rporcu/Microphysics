@@ -148,6 +148,7 @@
        do kk = klo, khi
           do jj = jlo, jhi
              do ii = ilo, ihi
+
                 ! only consider cells that contain EB's
                 if ( (nbr(ii-i, jj-j, kk-k) .eq. 1) .and. ( .not. is_regular_cell(flag(ii, jj, kk))) ) then
                     ! convert bcent to global coordinate system centered at plo
@@ -158,7 +159,7 @@
                     distmod_temp = dabs( dot_3d_real( p%pos(:) - eb_cent(:), -normal(ii, jj, kk, :) ) )
 
                     if (distmod_temp .lt. rp) then
-                        ! vector-index of tripple-loop
+                        ! vector-index of triple-loop
                         vindex_loop = (/ii, jj, kk/)
 
                         ! Point where the normal from the particle to the plane intersects the plane
@@ -182,10 +183,18 @@
                             i_pt = vindex_pt(1)
                             j_pt = vindex_pt(2) 
                             k_pt = vindex_pt(3)
+
+                            ! Don't ask for a normal in a cell that doesn't have a wall
+                            if ( is_regular_cell(flag(i_pt,j_pt,k_pt)) .or. &
+                                 is_covered_cell(flag(i_pt,j_pt,k_pt)) ) then
+                                cycle
+                            end if 
+
                             if ( all( abs( normal(ii, jj, kk, :) - normal(i_pt, j_pt, k_pt, :) ) < 1.d-8 ) ) then
                                 ! EB-facet has same normal => skip
                                 cycle
                             end if 
+
                             ! Particle-EB-plain intercept is outside cell
                             !  -> determine nearest point on EB boundary to particle (candidate for collision)
                             !  -> c_vec will be on the "edge" of the EB boundary
@@ -292,10 +301,6 @@
 
           ! Add the collision force to the total forces acting on the particle.
           FC(LL,:) = FC(LL,:) + FN(:) + FT(:)
-!         if (particles(ll)%id .eq. 7573 .and. particles(ll)%cpu .eq. 53) then
-!            print *,'DIST NEW / TOTAL WALL FORCE ', overlap_n, (fn(1)+ft(1)), fc(ll,1)
-!         end if
-          ! print *,'Vertical dist / force ',distmod, fn(1), fc(ll,1)
 
           ! Add the torque force to the total torque acting on the particle.
           TOW(LL,:) = TOW(LL,:) + cur_distmod*DES_CROSSPRDCT(normul(:),FT)
