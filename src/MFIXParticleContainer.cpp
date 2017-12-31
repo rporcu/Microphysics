@@ -563,23 +563,23 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
              wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
              (*cost)[pti].plus(wt, tbx);
          }
+      }
+    }
 
     // We put this here to make sure all the forces are computed above before we update 
     //    any positions or velocities below
-    // ParallelDescriptor::Barrier();
+    ParallelDescriptor::Barrier();
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
       BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-#if 0
       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
          int i = pti.index();
          const int ntot   = tow[i].size() / 3;
          const int nrp    = NumberOfParticles(pti);
          void* particles  = pti.GetArrayOfStructs().data();
-#endif
 #if 1
          des_time_loop ( &nrp     , particles,
                          &ntot, tow[i].dataPtr(), fc[i].dataPtr(), &subdt,
@@ -589,11 +589,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
                              &ntot, tow[i].dataPtr(), fc[i].dataPtr(), &subdt,
                              &xlen, &ylen, &zlen, &stime, &n);
 #endif
-//    }
-      BL_PROFILE_VAR_STOP(des_time_loop);
-
       }
-    }
+      BL_PROFILE_VAR_STOP(des_time_loop);
 
       for (int i = 0; i <= max_pti_index; i++)
       {
