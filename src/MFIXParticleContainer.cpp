@@ -494,7 +494,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          const Box& bx = pti.tilebox();
 
          // We need these to be zero every time we start a new batch of particles
-         if (i != 1) std::cout << "PTI " << i << std::endl;
          tow[i].clear();
           fc[i].clear();
          tow[i].resize(ntot*3,0.0);
