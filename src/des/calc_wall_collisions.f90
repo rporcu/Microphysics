@@ -81,7 +81,7 @@
     real(c_real) :: xp, yp, zp, rp
 
     ! local values used spring constants and damping coefficients
-    real(c_real) :: ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
+    real(c_real) :: etan_des_W, etat_des_W, kn_des_W, kt_des_W
     real(c_real) :: fnmd
     real(c_real) :: mag_overlap_t
     real(c_real) :: distmod_temp
@@ -262,22 +262,22 @@
           phaseLL = particles(ll) % phase
 
           ! Hertz vs linear spring-dashpot contact model
-          if ( DES_COLL_MODEL_ENUM == HERTZIAN ) then
+          if ( des_coll_model_enum == HERTZIAN ) then
              sqrt_overlap = sqrt(overlap_n)
-             KN_DES_W     = hert_kwn(phaseLL)*sqrt_overlap
-             KT_DES_W     = hert_kwt(phaseLL)*sqrt_overlap
-             sqrt_overlap = SQRT(sqrt_overlap)
-             ETAN_DES_W   = DES_ETAN_WALL(phaseLL)*sqrt_overlap
-             ETAT_DES_W   = DES_ETAT_WALL(phaseLL)*sqrt_overlap
+             kn_des_w     = hert_kwn(phaseLL)*sqrt_overlap
+             kt_des_w     = hert_kwt(phaseLL)*sqrt_overlap
+             sqrt_overlap = sqrt(sqrt_overlap)
+             etan_des_w   = des_etan_wall(phaseLL)*sqrt_overlap
+             etat_des_w   = des_etat_wall(phaseLL)*sqrt_overlap
           else
-             KN_DES_W     = KN_W
-             KT_DES_W     = KT_W
-             ETAN_DES_W   = DES_ETAN_WALL(phaseLL)
-             ETAT_DES_W   = DES_ETAT_WALL(phaseLL)
+             kn_des_w     = kn_w
+             kt_des_w     = kt_w
+             etan_des_w   = des_etan_wall(phaseLL)
+             etat_des_w   = des_etat_wall(phaseLL)
           end if
 
           ! Calculate the normal contact force
-          FN(:) = -(KN_DES_W * overlap_n  + ETAN_DES_W * V_REL_TRANS_NORM) * normul(:)
+          fn(:) = -(kn_des_w * overlap_n  + etan_des_w * v_rel_trans_norm) * normul(:)
 
           ! Calculate the tangential displacement.
           overlap_t(:) = dtsolid*vrel_t(:)
@@ -288,22 +288,22 @@
           if ( mag_overlap_t > 0.0 ) then
 
              ! Max force before the on set of frictional slip.
-             fnmd = MEW_W*sqrt(dot_product(FN,FN))
+             fnmd = MEW_W*sqrt(dot_product(fn,fn))
 
              ! Direction of tangential force.
              tangent = overlap_t/mag_overlap_t
 
-             FT = -fnmd * tangent
+             ft = -fnmd * tangent
 
           else
-             FT = 0.0
+             ft = 0.0
           end if
 
           ! Add the collision force to the total forces acting on the particle.
-          FC(LL,:) = FC(LL,:) + FN(:) + FT(:)
+          fc(LL,:) = fc(LL,:) + fn(:) + ft(:)
 
           ! Add the torque force to the total torque acting on the particle.
-          TOW(LL,:) = TOW(LL,:) + cur_distmod*DES_CROSSPRDCT(normul(:),FT)
+          tow(LL,:) = tow(LL,:) + cur_distmod*des_CROSSPRDCT(normul(:),ft)
 
        !end if ! if test on (d < radius)
        end do
@@ -676,7 +676,7 @@ contains
 
    !----------------------------------------------------------------------!
    !                                                                      !
-   !  Subroutine: CFRELVEL_WALL                                           !
+   !  Subroutine: cfrelvel_wall                                           !
    !                                                                      !
    !  Purpose: Calculate the normal and tangential components of the      !
    !  relative velocity between a particle and wall contact.              !
