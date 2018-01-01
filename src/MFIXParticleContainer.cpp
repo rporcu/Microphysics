@@ -446,21 +446,10 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt, &subdt_io );
 
-    int max_pti_index = 0;
-
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-       max_pti_index = max(pti.index(), max_pti_index);
-
-    Vector<Real> tow[max_pti_index+1];
-    Vector<Real> fc[max_pti_index+1];
-
-    for (int i = 0; i <= max_pti_index; i++)
-    {
-       tow[i].resize(1,0.0);
-       fc[i].resize(1,0.0);
-    }
-
     int ncoll_total = 0;
+
+    Vector< Vector<Real> > tow;
+    Vector< Vector<Real> > fc;
 
     int n = 0;
     while (n < nsubsteps)
@@ -476,10 +465,16 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
           updateNeighbors(lev);
       }
 
+      int max_pti_index = 0;
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+         max_pti_index = max(pti.index(), max_pti_index);
+
+      tow.resize(max_pti_index+1);
+       fc.resize(max_pti_index+1);
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-    {
       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
          int i = pti.index();
@@ -499,6 +494,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          const Box& bx = pti.tilebox();
 
          // We need these to be zero every time we start a new batch of particles
+         if (i != 1) std::cout << "PTI " << i << std::endl;
          tow[i].clear();
           fc[i].clear();
          tow[i].resize(ntot*3,0.0);
@@ -564,11 +560,10 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
              (*cost)[pti].plus(wt, tbx);
          }
       }
-    }
 
-    // We put this here to make sure all the forces are computed above before we update 
-    //    any positions or velocities below
-    ParallelDescriptor::Barrier();
+      // We put this here to make sure all the forces are computed above before we update 
+      //    any positions or velocities below
+      ParallelDescriptor::Barrier();
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -605,7 +600,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          ParallelDescriptor::ReduceIntSum(ncoll,ParallelDescriptor::IOProcessorNumber());
          Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
       }
-
     }
 
     clearNeighbors(lev);
@@ -665,13 +659,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
                << " dx= " << dx[0] << endl;
        }
     }
-
-    //if ( des_continuum_coupled () != 0 ) {
-    //  nstep = nsubsteps;
-    //  time  = time + nsubsteps * subdt ;
-    //}
-
-    // Redistribute();
 }
 
 void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled,
