@@ -336,11 +336,11 @@ MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiF
             const int* lo = tile_box.loVect();
             const int* hi = tile_box.hiVect();
             
-            std::cout
-                << " lo[0]=" << lo[0] << " lo[1]=" << lo[1] << " lo[2]=" << lo[2]
-                << std::endl
-                << " hi[0]=" << hi[0] << " hi[1]=" << hi[1] << " hi[2]=" << hi[2]
-                << std::endl;
+            //std::cout
+            //    << " lo[0]=" << lo[0] << " lo[1]=" << lo[1] << " lo[2]=" << lo[2]
+            //    << std::endl
+            //    << " hi[0]=" << hi[0] << " hi[1]=" << hi[1] << " hi[2]=" << hi[2]
+            //    << std::endl;
 
             const auto& sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[pti]);
             const auto& flag = sfab.getEBCellFlagFab();
