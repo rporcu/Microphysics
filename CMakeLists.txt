@@ -141,6 +141,10 @@ enable_testing ()
 add_subdirectory ( tests )
 #add_subdirectory( benchmarks )
 
+
+# Add debug runs
+add_subdirectory ( debug )
+
 # Add a target to generate API documentation with Doxygen
 find_package(Doxygen)
 if (DOXYGEN_FOUND)

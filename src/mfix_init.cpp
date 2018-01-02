@@ -11,41 +11,58 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
 {
     {
         ParmParse pp("mfix");
-        
+
+        // Whether to use projection method
+        pp.query("use_proj_method", use_proj_method );
+      
+        // CFL coefficient
+        pp.query("cfl", cfl );
+      
+        // Option to control MGML behavior
+        pp.query( "mg_verbose", mg_verbose );
+        pp.query( "mg_cg_verbose", mg_cg_verbose );
+        pp.query( "mg_max_iter", mg_max_iter );
+        pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
+        pp.query( "mg_rtol", mg_rtol );
+        pp.query( "mg_atol", mg_atol );
+
+        // Tolerance to check for steady state (projection only)
+        pp.query( "steady_state_tol", steady_state_tol );
+
         // The default type is "AsciiFile" but we can over-write that in the inputs file
         //  with "Random"
         pp.query("particle_init_type", particle_init_type);
-        
+
         // The default type is "FixedSize" but we can over-write that in the inputs file
         //  with "KDTree" or "KnapSack"
         pp.query("load_balance_type", load_balance_type);
 
         pp.query("dual_grid", dual_grid);
-        
+
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
-                            load_balance_type == "KDTree"    ||
-                            load_balance_type == "KnapSack");
-        
+                      load_balance_type == "KDTree"    ||
+                      load_balance_type == "KnapSack");
+
         // If subdt_io is true, des_time_loop calls output_manager
         subdt_io = false; // default to false (if not present in inputs file)
         pp.query("subdt_io", subdt_io);
-        
-        solve_fluid  = solve_fluid_in;
-        solve_dem    = solve_dem_in;
-        max_nit      = max_nit_in;
-        call_udf     = call_udf_in;        
     }
+
+    solve_fluid  = solve_fluid_in;
+    solve_dem    = solve_dem_in;
+    max_nit      = max_nit_in;
+    call_udf     = call_udf_in;
 
     {
         ParmParse pp("amr");
         pp.query("dual_grid", dual_grid);
     }
-    
+
     {
         ParmParse pp("particles");
         pp.query("max_grid_size_x", particle_max_grid_size_x);
         pp.query("max_grid_size_y", particle_max_grid_size_y);
-        pp.query("max_grid_size_z", particle_max_grid_size_z);        
+        pp.query("max_grid_size_z", particle_max_grid_size_z);
     }
 }
 
@@ -62,7 +79,7 @@ void mfix_level::Init(int lev, Real dt, Real time)
     DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
     MakeNewLevelFromScratch(0, time, ba, dm);
-    
+
     if (dual_grid                    &&
         particle_max_grid_size_x > 0 &&
         particle_max_grid_size_y > 0 &&
@@ -75,7 +92,7 @@ void mfix_level::Init(int lev, Real dt, Real time)
         DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
         pc->Regrid(particle_dm, particle_ba);
     }
-    
+
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -307,6 +324,15 @@ mfix_level::AllocateArrays (int lev)
     trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     trD_g[lev]->setVal(0.);
 
+    // Vorticity
+    vort[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    vort[lev]->setVal(0.);
+
+    // Pressure increment
+    phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    phi[lev]->setVal(0.);
+
+
     // ********************************************************************************
     // X-face-based arrays
     // ********************************************************************************
@@ -319,9 +345,13 @@ mfix_level::AllocateArrays (int lev)
     u_g[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_go[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_gt[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    fp_x[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    oro_g[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_g[lev]->setVal(0.);
     u_go[lev]->setVal(0.);
     u_gt[lev]->setVal(0.);
+    fp_x[lev]->setVal(0.);
+    oro_g[lev][0]->setVal(0.);
 
     d_e[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     d_e[lev]->setVal(0.);
@@ -341,6 +371,14 @@ mfix_level::AllocateArrays (int lev)
     drag_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,1));
     drag_u[lev]->setVal(0.);
 
+    // u-velocity slopes. Note that the number of components is not 1, but 3!
+    slopes_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],3,nghost));
+    slopes_u[lev] -> setVal(0.);
+
+    // u acceleration terms
+    uacc[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    uacc[lev] -> setVal(0.);
+
     // ********************************************************************************
     // Y-face-based arrays
     // ********************************************************************************
@@ -353,9 +391,13 @@ mfix_level::AllocateArrays (int lev)
     v_g[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_go[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_gt[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    fp_y[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    oro_g[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_g[lev]->setVal(0.);
     v_go[lev]->setVal(0.);
     v_gt[lev]->setVal(0.);
+    fp_y[lev]->setVal(0.);
+    oro_g[lev][1]->setVal(0.);
 
     d_n[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     d_n[lev]->setVal(0.);
@@ -375,6 +417,16 @@ mfix_level::AllocateArrays (int lev)
     drag_v[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,1));
     drag_v[lev]->setVal(0.);
 
+    // v-velocity slopes. Note that the number of components is not 1, but 3!
+    slopes_v[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],3,nghost));
+    slopes_v[lev] -> setVal(0.);
+
+    // v acceleration terms
+    vacc[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    vacc[lev] -> setVal(0.);
+
+
+
     // ********************************************************************************
     // Z-face-based arrays
     // ********************************************************************************
@@ -387,9 +439,13 @@ mfix_level::AllocateArrays (int lev)
     w_g[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_go[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_gt[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    fp_z[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    oro_g[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_g[lev]->setVal(0.);
     w_go[lev]->setVal(0.);
     w_gt[lev]->setVal(0.);
+    fp_z[lev]->setVal(0.);
+    oro_g[lev][2]->setVal(0.);
 
     d_t[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     d_t[lev]->setVal(0.);
@@ -408,7 +464,17 @@ mfix_level::AllocateArrays (int lev)
 
     drag_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
     drag_w[lev]->setVal(0.);
+
+    // w-velocity slopes. Note that the number of components is not 1, but 3!
+    slopes_w[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],3,nghost));
+    slopes_w[lev] -> setVal(0.);
+
+    // w acceleration terms
+    wacc[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    wacc[lev] -> setVal(0.);
+
 }
+
 
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
@@ -470,14 +536,17 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                        pc->ParticleDistributionMap(lev),
                        pc->ParticleBoxArray(lev));
 
-    // used in load balancing 
+    // used in load balancing
     if (load_balance_type == "KnapSack") {
         particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
                                               pc->ParticleDistributionMap(lev), 1, 0));
         particle_cost[lev]->setVal(0.0);
-        
-        fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
-        fluid_cost[lev]->setVal(0.0);
+
+        if (solve_fluid)
+        {
+           fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+           fluid_cost[lev]->setVal(0.0);
+        }
     }
   }
 }
@@ -485,9 +554,15 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag)
 {
   if (solve_dem) {
-      Real avg_dp[10], avg_ro[10];
-      pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
-      init_collision(avg_dp, avg_ro);
+
+    // Auto generated particles may be out of the domain. This call will remove them.
+    // Note that this has to occur after the EB geometry is created.
+    if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory)
+      pc -> RemoveOutOfRange(lev, particle_ebfactory.get());
+
+    Real avg_dp[10], avg_ro[10];
+    pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
+    init_collision(avg_dp, avg_ro);
   }
 
   // Initial fluid arrays: pressure, velocity, density, viscosity

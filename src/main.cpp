@@ -12,7 +12,9 @@
 int   max_step    = -1;
 int   verbose     = -1;
 int   regrid_int  = -1;
-Real stop_time = -1.0;
+Real stop_time    = -1.0;
+
+bool hourglass    = false;
 
 std::string restart_file {""};
 
@@ -66,6 +68,11 @@ void ReadParameters ()
   pp.query("verbose", verbose);
 
   pp.query("regrid_int",regrid_int);
+
+  {
+     ParmParse pp("mfix");
+     pp.query("hourglass", hourglass);
+  }
 }
 
 int main (int argc, char* argv[])
@@ -120,6 +127,8 @@ int main (int argc, char* argv[])
 
     my_mfix.InitParams(solve_fluid,solve_dem,max_nit,call_udf);
 
+    my_mfix.ResizeArrays();
+    
     my_mfix.Init(lev,dt,time);
 
     // Either init from scratch or from the checkpoint file
@@ -144,7 +153,6 @@ int main (int argc, char* argv[])
 
     // We move this to after restart and/or regrid so we make the EB data structures with the correct 
     //    BoxArray and DistributionMapping
-    bool hourglass = false;
     if (hourglass)
        my_mfix.make_eb_hourglass(lev);
     else
@@ -202,7 +210,7 @@ int main (int argc, char* argv[])
           if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
              my_mfix.Regrid(lev,nstep);
 
-          my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
+          my_mfix.Evolve(lev,nstep,set_normg,steady_state,dt,prev_dt,time,normg);
 
           Real end_step = ParallelDescriptor::second() - strt_step;
           ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());

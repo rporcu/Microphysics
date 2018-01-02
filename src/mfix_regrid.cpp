@@ -15,8 +15,10 @@ mfix_level::Regrid (int lev, int nstep)
 
     if (load_balance_type == "KDTree")
     {
-        AMREX_ALWAYS_ASSERT(particle_cost[0] == nullptr);
-        AMREX_ALWAYS_ASSERT(fluid_cost[0]    == nullptr);
+        if (solve_dem)
+           AMREX_ALWAYS_ASSERT(particle_cost[0] == nullptr);
+        if (solve_fluid)
+           AMREX_ALWAYS_ASSERT(fluid_cost[0]    == nullptr);
 
        // This creates a new BA and new DM, re-defines the particle BA and DM to be these new ones,
        //      and calls Redistribute.  This doesn't touch the fluid grids.
@@ -58,8 +60,10 @@ mfix_level::Regrid (int lev, int nstep)
         
         amrex::Print() << "Load balancing using KnapSack " << std::endl;
         
-        AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
-        AMREX_ALWAYS_ASSERT(fluid_cost[0]    != nullptr);
+        if (solve_dem)
+           AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
+        if (solve_fluid)
+           AMREX_ALWAYS_ASSERT(fluid_cost[0]    != nullptr);
         
         if (ParallelDescriptor::NProcs() == 1) return;
 
@@ -99,21 +103,29 @@ mfix_level::Regrid (int lev, int nstep)
         } else {
             MultiFab costs(grids[lev], dmap[lev], 1, 0);
             costs.setVal(0.0);
-            costs.plus(*particle_cost[lev], 0, 1, 0);
-            costs.plus(*fluid_cost[lev], 0, 1, 0);
+            if (solve_dem)
+               costs.plus(*particle_cost[lev], 0, 1, 0);
+            if (solve_fluid)
+                costs.plus(*fluid_cost[lev], 0, 1, 0);
 
             DistributionMapping newdm = DistributionMapping::makeKnapSack(costs);
             if (solve_fluid) 
                 RegridArrays(lev, grids[lev], newdm);
             SetDistributionMap(lev, newdm);
 
-            fluid_cost[lev].reset(new MultiFab(grids[lev], newdm, 1, 0));
-            fluid_cost[lev]->setVal(0.0);
+            if (solve_fluid)
+            {
+               fluid_cost[lev].reset(new MultiFab(grids[lev], newdm, 1, 0));
+               fluid_cost[lev]->setVal(0.0);
+            }
 
-            particle_cost[lev].reset(new MultiFab(grids[lev], newdm, 1, 0));
-            particle_cost[lev]->setVal(0.0);
+            if (solve_dem)
+            {
+               particle_cost[lev].reset(new MultiFab(grids[lev], newdm, 1, 0));
+               particle_cost[lev]->setVal(0.0);
+            }
             
-            pc->Regrid(dmap[lev], grids[lev]);
+            if (solve_dem)   pc->Regrid(dmap[lev], grids[lev]);
             if (solve_fluid) mfix_set_bc0(lev);
             
             if (ebfactory) {    
@@ -267,6 +279,13 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     trD_g_new->copy(*trD_g[lev],0,0,1,ng,ng);
     trD_g_new->FillBoundary(geom[lev].periodicity());
     trD_g[lev] = std::move(trD_g_new);
+
+    // Vorticity
+    ng = vort[lev]->nGrow();
+    std::unique_ptr<MultiFab> vort_new(new MultiFab(new_grids,new_dmap,1,vort[lev]->nGrow()));
+    vort_new->copy(*vort[lev],0,0,1,ng,ng);
+    vort_new->FillBoundary(geom[lev].periodicity());
+    vort[lev] = std::move(vort_new);
 
     // ********************************************************************************
     // X-face-based arrays

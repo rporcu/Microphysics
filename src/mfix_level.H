@@ -20,6 +20,7 @@
 #include <AMReX_EBTower.H>
 #include <AMReX_EBFArrayBox.H>
 
+
 class mfix_level
     : public AmrCore
 {
@@ -28,13 +29,15 @@ public:
     mfix_level ();
     ~mfix_level ();
 
-    void InitParams(int solve_fluid, int solve_dem, int max_nit, int call_udf);
+    void InitParams(int solve_fluid, int solve_dem, int max_nit, int call_udf );
 
     void Init(int lev, Real dt, Real time);
 
     void InitLevelData(int lev, Real dt, Real time);
 
     void PostInit(int lev, Real dt, Real time, int nstep, int restart_flag);
+    
+    void ResizeArrays();
 
     void WriteCheckPointFile(std::string& check_file_name,
             int nstep = 0, Real dt = 0.0, Real time = 0.0)  const;
@@ -51,8 +54,8 @@ public:
 
     void RegridOnRestart(int lev);
 
-    void Evolve(int lev, int nstep, int set_normg,
-            Real dt, Real& prev_dt, Real time, Real normg);
+    void Evolve(int lev, int nstep, int set_normg, int steady_state, Real dt, Real & prev_dt,
+            Real time, Real normg);
 
     void usr3(int lev);
 
@@ -115,6 +118,13 @@ protected:
     void mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v);
     void mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w);
 
+    // Projection
+    void mfix_apply_projection (int lev, amrex::Real scaling_factor);
+    void mfix_set_projection_bcs (int lev);
+    void mfix_set_pressure_bcs (int lev);
+    
+    // End projection
+    
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
     void mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p);
@@ -156,6 +166,55 @@ private:
     void EvolveFluid(int lev, int nstep, int set_normg,
             Real dt, Real& prev_dt, Real time, Real normg);
 
+    void EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time);
+
+
+
+    // Projection-related methods
+    void solve_poisson_equation(int lev,
+            Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+			Vector< std::unique_ptr<MultiFab> >& phi,
+			Vector< std::unique_ptr<MultiFab> >& rhs,
+			int bc_lo[], int bc_hi[] );
+
+    void mfix_compute_oro_g(int lev);
+    
+    void init_tests_projection(int lev);
+
+    void check_for_nans(int lev);
+    
+    amrex::Real compute_dt(int lev);
+
+
+    void mfix_compute_fluid_acceleration(int lev,
+			Vector< std::unique_ptr<MultiFab> >& u,
+            Vector< std::unique_ptr<MultiFab> >& v,
+			Vector< std::unique_ptr<MultiFab> >& w );
+    
+    int  steady_state_reached(int lev, Real dt);
+
+    void mfix_compute_first_predictor(int lev, amrex::Real dt);
+
+    void mfix_compute_second_predictor(int lev, amrex::Real dt);
+
+
+    void mfix_apply_forcing_terms(int lev, amrex::Real dt,
+            Vector< std::unique_ptr<MultiFab> >& u,
+			Vector< std::unique_ptr<MultiFab> >& v,
+			Vector< std::unique_ptr<MultiFab> >& w );
+
+    void mfix_add_pressure_gradient(int lev, amrex::Real coeff);
+    
+    void mfix_compute_velocity_slopes(int lev,
+			Vector< std::unique_ptr<MultiFab> >& u,
+			Vector< std::unique_ptr<MultiFab> >& v,
+			Vector< std::unique_ptr<MultiFab> >& w );
+
+    void mfix_set_phi(int lev, Real scale, int singular );
+    // End of projection-related methods
+
+
+
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids() const;
     void ChopGrids(const Box& domain, BoxArray& ba, int target_size) const;
@@ -176,9 +235,13 @@ private:
     // Particle container
     std::unique_ptr<MFIXParticleContainer> pc;
 
+    // Unit vectors in Cartesian space
+    static amrex::IntVect e_x;
+    static amrex::IntVect e_y;
+    static amrex::IntVect e_z;
+    
 //  Array< std::unique_ptr<iMultiFab> > bc_type;
 //  Array< std::unique_ptr<iMultiFab> > bc_ptr;
-
     IArrayBox bc_ilo;
     IArrayBox bc_ihi;
     IArrayBox bc_jlo;
@@ -235,6 +298,7 @@ private:
     // Cell-based
     Vector< std::unique_ptr<MultiFab> > lambda_g;
     Vector< std::unique_ptr<MultiFab> > trD_g;
+    Vector< std::unique_ptr<MultiFab> > vort;
 
     // Face-based
     Vector< std::unique_ptr<MultiFab> > tau_u_g;
@@ -257,12 +321,46 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag_v;
     Vector< std::unique_ptr<MultiFab> > drag_w;
 
+    // Projection
+    // Fluid acceleration (convection + diffusion)
+    Vector< std::unique_ptr<MultiFab> > uacc;
+    Vector< std::unique_ptr<MultiFab> > vacc;
+    Vector< std::unique_ptr<MultiFab> > wacc;
+
+    // These are multi-component multifab
+    Vector< std::unique_ptr<MultiFab> > slopes_u;
+    Vector< std::unique_ptr<MultiFab> > slopes_v;
+    Vector< std::unique_ptr<MultiFab> > slopes_w;
+    
+    
+    Vector< std::unique_ptr<MultiFab> > fp_x;
+    Vector< std::unique_ptr<MultiFab> > fp_y;
+    Vector< std::unique_ptr<MultiFab> > fp_z;
+
+    
+    Vector< Vector< std::unique_ptr<MultiFab> > > oro_g; // Over ro_g = ep_g / rop_g
+
+    Vector< std::unique_ptr<MultiFab> > phi; // Pressure increment
+   
+
     // used if load_balance_type == "KnapSack"
     Vector<std::unique_ptr<MultiFab> > particle_cost;
     Vector<std::unique_ptr<MultiFab> > fluid_cost;
 
+
     int solve_fluid;
     int solve_dem;
+    int use_proj_method = 0; // Whether to use projection to solve NS eqs.
+    // Options to control MLMG behavior (projection only)
+    int  mg_verbose = 0;
+    int  mg_cg_verbose = 0;
+    int  mg_max_iter = 100;
+    int  mg_max_fmg_iter = 0;
+    Real mg_rtol = 1.0e-11;
+    Real mg_atol = 1.0e-14;
+    // Tolerance to check for steady state (projection only)
+    Real steady_state_tol = 1.0e-5  ;
+    
     int max_nit;
     int call_udf;
     int dual_grid = 0;
@@ -273,6 +371,9 @@ private:
     static std::string particle_init_type;
     static std::string load_balance_type;
 
+
+    Real cfl = 0.5;
+
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;
     int particle_max_grid_size_z = -1;
@@ -282,17 +383,20 @@ private:
     static int m_eb_full_grow_cells;
     static EBSupport m_eb_support_level;
 
-    Real cfl = 0.7;
 
     Real sum_vol_orig;
 
     int nghost_bc = 2;
 
-    // Variables to simplify IO
+    // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
-    Vector< const Vector< std::unique_ptr<MultiFab> >* > scalarVars;
     Vector< std::string > vecVarsName;
-    Vector< std::string > scaVarsName;
+
+    Vector< const Vector< std::unique_ptr<MultiFab> >* > chkscalarVars;
+    Vector< std::string > pltscaVarsName;
+
+    Vector< const Vector< std::unique_ptr<MultiFab> >* > pltscalarVars;
+    Vector< std::string > chkscaVarsName;
 
     std::unique_ptr<amrex::EBFArrayBoxFactory> ebfactory;
     std::unique_ptr<amrex::EBFArrayBoxFactory> particle_ebfactory;

@@ -40,6 +40,7 @@ set(F90_sources
    check_data/check_particle_properties.f90
    check_data/check_point_sources.f90
    check_data/check_run_control.f90
+   compute_vort.f90
    compute_normals.f90
    constant_mod.f90
    conv_dif_u_g.f90
@@ -130,6 +131,15 @@ set(F90_sources
    utilities_mod.f90
    zero_wall_norm_vel.f90
    amrex_to_mfix.F90)
+
+#
+# Add sources for projection method
+# 
+list ( APPEND F90_sources convection_mod.f90 diffusion_mod.f90 )
+list ( APPEND F90_sources projection_mod.f90 projection_tests_mod.f90 )
+list ( APPEND F90_sources slopes_mod.f90 )
+list ( APPEND F90_sources set_pressure_bcs.f90 set_projection_bcs.f90 )
+list ( APPEND CXX_sources mfix_projection.cpp )
 
 # Generate AMReX_buildInfo.cpp
 add_custom_command(

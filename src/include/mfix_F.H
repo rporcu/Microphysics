@@ -412,6 +412,17 @@ extern "C"
     void mfix_particle_generator(int* pcount, const int* domlo , const int* domhi,
                                  amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
 
+
+    void rm_wall_collisions ( void* rparticles, const int* nrp,
+                              const void* flag, const int* fglo, const int* fghi,
+                              const amrex_real* bcent, const int* blo, const int* bhi,
+                              const amrex_real* ax, const int* axlo, const int* axhi,
+                              const amrex_real* ay, const int* aylo, const int* ayhi,
+                              const amrex_real* az, const int* azlo, const int* azhi,
+                              const amrex::Real* dx);
+
+
+
     void mfix_particle_generator_prop( const int* nrp,  void* particles);
 
   void mfix_get_walls(int* bcv, int* exists,
@@ -456,17 +467,158 @@ extern "C"
 
     void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, amrex::Real* tol);
 
-  void mfix_eb_to_polygon ( const amrex::Real* dx,
-            const int* slo, const int* shi,
-            const void* flag, const int* fglo, const int* fghi,
-            const amrex_real* bcent, const int* blo, const int* bhi,
-            const amrex_real* ax, const int* axlo, const int* axhi,
-            const amrex_real* ay, const int* aylo, const int* ayhi,
-            const amrex_real* az, const int* azlo, const int* azhi);
+    
+    void compute_divu (
+	const int* lo,  const int*  hi,
+	amrex::Real* divu,  const int* slo, const int* shi,
+	amrex::Real* u_g,   const int* ulo, const int* uhi,
+	amrex::Real* v_g,   const int* vlo, const int* vhi,
+	amrex::Real* w_g,   const int* wlo, const int* whi,
+	const amrex::Real* dx );
 
-  void mfix_write_eb_vtp ( int* myID);
-  void mfix_write_pvtp ( int* nProcs);
+    void compute_vort (
+	const int* lo,  const int*  hi,
+	amrex::Real* vort,  const int* slo, const int* shi,
+	amrex::Real* u_g,   const int* ulo, const int* uhi,
+	amrex::Real* v_g,   const int* vlo, const int* vhi,
+	amrex::Real* w_g,   const int* wlo, const int* whi,
+	const amrex::Real* dx );
 
+
+    void compute_oro_g (
+	const int* lo,  const int*  hi,
+	      amrex::Real* oro_g, const int* alo, const int* ahi,
+	const amrex::Real* rop_g, const int* slo, const int* shi,
+	const amrex::Real* ep_g, const int* dir );
+    
+    void compute_new_dt ( const amrex::Real* umax,
+			  const amrex::Real* vmax,
+			  const amrex::Real* wmax,
+			  const amrex::Real* romin,
+			  const amrex::Real* mumax,
+			  const amrex::Real* dx,
+			  const amrex::Real* cfl,
+			  amrex::Real*  dt ); 
+
+    void init_periodic_vortices (
+	const int* utlo, const int* uthi,
+	amrex::Real* u,  const int* ulo, const int* uhi,
+        const int* vtlo, const int* vthi,
+	amrex::Real* v,  const int* vlo, const int* vhi,
+	const int* wtlo, const int* wthi,
+	amrex::Real* w,  const int* wlo, const int* whi,
+	const amrex::Real* dx,
+	const int*  domlo, const int* plane );
+
+  void add_gradient (
+	const int* lo, const int* hi,
+	amrex::Real* u_i, const int* ulo, const int* uhi,
+	const amrex::Real* beta,
+        const amrex::Real* phi, const int* slo, const int* shi,
+	const amrex::Real* dx, const amrex::Real* c,
+	const int* dir );
+
+
+    void compute_fluid_acceleration (
+	const int* lo, const int* hi,
+	      amrex::Real* rhs, const int* rlo, const int* rhi, 
+	const amrex::Real* sl,
+	const amrex::Real* u,   const int* ulo, const int* uhi, 
+	const amrex::Real* v,   const int* vlo, const int* vhi, 
+	const amrex::Real* w,   const int* wlo, const int* whi, 
+	const amrex::Real* mu,  const int* slo, const int* shi, 
+	const amrex::Real* rop, const amrex::Real* dx,
+	const int* dir );
+
+    void compute_u_slopes (
+	const int* lo, const int* hi,
+	const amrex::Real* u,   const int* ulo, const int* uhi, 
+	amrex::Real* slopes,
+	const int* domlo, const int* domhi,
+	const int* bc_ilo_type, const int* bc_ihi_type );
+
+    void compute_v_slopes (
+	const int* lo, const int* hi,
+	const amrex::Real* v,   const int* vlo, const int* vhi, 
+	amrex::Real* slopes,
+	const int* domlo, const int* domhi,
+	const int* bc_jlo_type, const int* bc_jhi_type );
+    
+    void compute_w_slopes (
+	const int* lo, const int* hi,
+	const amrex::Real* w, const int* wlo, const int* whi, 
+	amrex::Real* slopes,
+	const int* domlo, const int* domhi,
+	const int* bc_klo_type, const int* bc_khi_type );
+
+    void set_ppe_bc (
+	int* bc_lo, int* bc_hi,
+	const int* domlo, const int* domhi,
+	const int* bct_ilo, const int* bct_ihi, 
+	const int* bct_jlo, const int* bct_jhi,
+	const int* bct_klo, const int* bct_khi,
+	int* singular );
+
+    
+    void set_poisson_solver_bcs (
+	const int* lo, const int* hi,
+	amrex::Real* rhs, const int* slo, const int* shi,
+	amrex::Real* phi, 
+        const amrex::Real* oro_x, const int* ulo, const int* uhi,
+        const amrex::Real* oro_y, const int* vlo, const int* vhi,
+	const amrex::Real* oro_z, const int* wlo, const int* whi,
+	const int* bc_lo, const int* bc_hi,
+	const amrex::Real* dx, const int* domlo, const int* domhi );
+
+    
+    void add_forcing (
+	const int* lo, const int* hi,
+	      amrex::Real* u_i,  const int* ulo, const int* uhi, 
+	const amrex::Real* ro_g, const int* slo, const int* shi,
+	const int* domlo, const int* domhi,
+	const amrex::Real* dx, const amrex::Real* dt, 
+	const int* dir);
+
+
+
+    void set_phi (
+	const int* lo, const int* hi,
+	amrex::Real* phi, const int* slo, const int* shi,
+	amrex::Real* pg,
+	const amrex::Real* scale, const int* singular,
+	const int*  domlo, const int *domhi );
+
+    void set_projection_bcs (
+        amrex::Real* u_g, const int* ulo, const int* uhi,
+        amrex::Real* v_g, const int* vlo, const int* vhi,
+	amrex::Real* w_g, const int* wlo, const int* whi,
+	amrex::Real* ep_g, const int* slo, const int* shi,
+	amrex::Real* ro_g,    amrex::Real* rop_g,
+	amrex::Real* mu_g,    amrex::Real* lambda_g,
+	const int* bc_ilo, const int* bc_ihi,
+	const int* bc_jlo, const int* bc_jhi,
+	const int* bc_klo, const int* bc_khi,
+	const int* domlo , const int* domhi);
+
+    void set_pressure_bcs (
+	amrex::Real* p_g, const int* slo, const int* shi,
+	const int* bc_ilo, const int* bc_ihi,
+	const int* bc_jlo, const int* bc_jhi,
+	const int* bc_klo, const int* bc_khi,
+	const int* domlo , const int* domhi);
+
+    
+    void mfix_eb_to_polygon ( const amrex::Real* dx,
+			      const int* slo, const int* shi,
+			      const void* flag, const int* fglo, const int* fghi,
+			      const amrex_real* bcent, const int* blo, const int* bhi,
+			      const amrex_real* ax, const int* axlo, const int* axhi,
+			      const amrex_real* ay, const int* aylo, const int* ayhi,
+			      const amrex_real* az, const int* azlo, const int* azhi);
+
+    void mfix_write_eb_vtp ( int* myID);
+    void mfix_write_pvtp ( int* nProcs);
+    
 #ifdef __cplusplus
 }
 #endif

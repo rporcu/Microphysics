@@ -71,6 +71,7 @@ public:
 
     void InitParticlesAscii(const std::string& file);
     void InitParticlesAuto(int lev);
+    void RemoveOutOfRange(int lev, EBFArrayBoxFactory * ebfactory);
 
     void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 

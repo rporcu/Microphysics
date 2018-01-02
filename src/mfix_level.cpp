@@ -5,13 +5,26 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
+
+// For multigrid
+#include <AMReX_FMultiGrid.H>
+#include <AMReX_stencil_types.H>
+
+
 std::string mfix_level::particle_init_type = "AsciiFile";
 std::string mfix_level::load_balance_type = "FixedSize";
+
+// Define unit vectors for easily convert indeces
+amrex::IntVect mfix_level::e_x(1,0,0);
+amrex::IntVect mfix_level::e_y(0,1,0);
+amrex::IntVect mfix_level::e_z(0,0,1);
+
 
 int mfix_level::m_eb_basic_grow_cells = 2;
 int mfix_level::m_eb_volume_grow_cells = 2;
 int mfix_level::m_eb_full_grow_cells = 2;
 EBSupport mfix_level::m_eb_support_level = EBSupport::full;
+
 
 mfix_level::~mfix_level ()
 {
@@ -35,6 +48,12 @@ mfix_level::mfix_level ()
   nsubsteps[lev] = MaxRefRatio(lev-1);
     }
 #endif
+}
+
+void
+mfix_level::ResizeArrays ()
+{
+    int nlevs_max = maxLevel() + 1;
 
     // Particle Container
     pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
@@ -56,6 +75,8 @@ mfix_level::mfix_level ()
     rop_g.resize(nlevs_max);
     rop_go.resize(nlevs_max);
 
+    phi.resize(nlevs_max);
+    
     u_g.resize(nlevs_max);
     u_go.resize(nlevs_max);
     u_gt.resize(nlevs_max);
@@ -68,6 +89,16 @@ mfix_level::mfix_level ()
     w_go.resize(nlevs_max);
     w_gt.resize(nlevs_max);
 
+    fp_x.resize(nlevs_max);
+    fp_y.resize(nlevs_max);
+    fp_z.resize(nlevs_max);
+    
+    oro_g.resize(nlevs_max);
+    for (int i = 0; i < nlevs_max; ++i )
+    {
+	oro_g[i].resize(3);
+    }
+    
     d_e.resize(nlevs_max);
     d_n.resize(nlevs_max);
     d_t.resize(nlevs_max);
@@ -75,6 +106,7 @@ mfix_level::mfix_level ()
     mu_g.resize(nlevs_max);
     lambda_g.resize(nlevs_max);
     trD_g.resize(nlevs_max);
+    vort.resize(nlevs_max);
 
     fluxX.resize(nlevs_max);
     fluxY.resize(nlevs_max);
@@ -96,8 +128,19 @@ mfix_level::mfix_level ()
     drag_v.resize(nlevs_max);
     drag_w.resize(nlevs_max);
 
-    particle_cost.resize(nlevs_max);
-    fluid_cost.resize(nlevs_max);
+
+    slopes_u.resize(nlevs_max);
+    slopes_v.resize(nlevs_max);
+    slopes_w.resize(nlevs_max);
+
+    uacc.resize(nlevs_max);
+    vacc.resize(nlevs_max);
+    wacc.resize(nlevs_max);
+    
+    if (solve_dem) 
+       particle_cost.resize(nlevs_max);
+    if (solve_fluid) 
+       fluid_cost.resize(nlevs_max);
 }
 
 void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
@@ -738,7 +781,7 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
     Box domain(geom[lev].Domain());
 
     if (!mf.boxArray().ixType().cellCentered())
-  amrex::Error("fill_mf_bc only used for cell-centered arrays!");
+	amrex::Error("fill_mf_bc only used for cell-centered arrays!");
 
     // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
     mf.FillBoundary(geom[lev].periodicity());
@@ -749,10 +792,10 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 #endif
     for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
     {
-       const Box& sbx = mf[mfi].box();
-       fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
-                bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+	const Box& sbx = mf[mfi].box();
+	fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
+		 bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+		 bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
 }
 

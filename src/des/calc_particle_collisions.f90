@@ -145,8 +145,8 @@
             end if
 
             ! calculate the normal contact force
-            fn(:) =  -(kn_des * overlap_n * normal(:) + &
-                 etan_des * v_rel_trans_norm * normal(:))
+            fn(:) =  -(   kn_des * overlap_n        * normal(:) + &
+                        etan_des * v_rel_trans_norm * normal(:))
 
             ! calcuate the tangential overlap
             overlap_t(:) = dtsolid*vrel_t(:)

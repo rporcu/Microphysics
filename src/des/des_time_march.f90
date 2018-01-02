@@ -37,8 +37,8 @@ contains
    subroutine des_init_time_loop ( tstart, dt, nsubsteps, subdt, subdt_io) &
         bind(C, name="des_init_time_loop")
 
-      use discretelement,  only: dtsolid, des_continuum_coupled
-      use run,             only: tstop, glob_subdt_io => subdt_io, des_tstart, des_dt
+      use discretelement,  only: dtsolid
+      use run,             only: glob_subdt_io => subdt_io, des_tstart, des_dt
 
       real(c_real),   intent(in   ) :: tstart, dt
       logical,        intent(in   ) :: subdt_io
@@ -84,7 +84,6 @@ contains
 
       use particle_mod
       use constant                       , only: gravity
-      use discretelement                 , only: des_continuum_coupled
       use output_manager_module          , only: output_manager
       use run                            , only: call_usr, subdt_io
       use bc                             , only: BC_shaker_A, BC_shaker_F

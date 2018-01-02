@@ -517,4 +517,114 @@ subroutine particle_write(nrp, particles) &
 return
 end subroutine particle_write
 
+
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+!                                                                     !
+!                                                                     !
+!                                                                     !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+subroutine rm_wall_collisions ( particles, nrp, flag, fglo, fghi, &
+     bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, apz, azlo, azhi, dx) &
+     bind(C, name="rm_wall_collisions")
+
+  use amrex_fort_module, only : c_real => amrex_real
+  use iso_c_binding    , only: c_int
+
+
+  use param        , only: small_number, zero, one
+  use particle_mod,  only: particle_t
+
+  use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell, is_single_valued_cell
+  use amrex_ebcellflag_module, only : get_neighbor_cells
+
+  implicit none
+
+  integer, intent(in) ::  nrp
+
+  type(particle_t), intent(inout), target :: particles(nrp)
+
+  integer, dimension(3), intent(in) :: axlo, aylo, azlo, fglo, blo
+  integer, dimension(3), intent(in) :: axhi, ayhi, azhi, fghi, bhi
+
+  integer,      intent(in) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
+  real(c_real), intent(in) :: bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
+  real(c_real), intent(in) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
+  real(c_real), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
+  real(c_real), intent(in) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
+  real(c_real), intent(in) :: dx(3)
+
+  type(particle_t), pointer :: p
+
+  ! facet barycenter (bcent) in global coordinates
+  real(c_real) :: eb_cent(3)
+
+  integer :: ll, ii, jj, kk, i, j, k
+
+  real(c_real), parameter :: fudge = 1.0d0 - 1.0d-8
+  real(c_real) :: inv_dx(3)
+
+  real(c_real) :: adx, ady, adz, apnorminv
+
+  integer :: nbr(-1:1,-1:1,-1:1)
+
+  real(c_real) :: dist, normal(3)
+
+  ! inverse cell size: used to convert positions to cell indices
+  !   -> dx is a vector, fortran is amazing!
+    inv_dx = 1.0d0 / dx
+
+    ! itterate over particles
+    do ll = 1, nrp
+       ! get current particle
+       p => particles(ll)
+
+       ! cell indices for position corresponding to (lx, ly, lz)
+       i = floor(p%pos(1)*inv_dx(1))
+       j = floor(p%pos(2)*inv_dx(2))
+       k = floor(p%pos(3)*inv_dx(3))
+
+       if(is_covered_cell(flag(i,j,k))) then
+          p%id = -1
+       else
+
+          ! ignore disconnected cells
+          ! -> one reason for this is the get accurate wall normals...
+          call get_neighbor_cells(flag(i,j,k),nbr)
+
+          do kk = k-1, k+1
+             do jj = j-1, j+1
+                do ii = i-1, i+1
+                   ! only consider cells that contain EB's
+                   if ( (nbr(ii-i, jj-j, kk-k) == 1) .and. &
+                        (.not. is_regular_cell(flag(ii, jj, kk))) ) then
+
+                      adx = apx(ii,jj,kk) - apx(ii+1,jj  , kk  )
+                      ady = apy(ii,jj,kk) - apy(ii,  jj+1, kk  )
+                      adz = apz(ii,jj,kk) - apz(ii,  jj  , kk+1)
+
+                      apnorminv = 1.d0 / sqrt(adx**2 + ady**2 + adz**2)
+
+                      normal(1) = adx * apnorminv   ! pointing to the wall
+                      normal(2) = ady * apnorminv
+                      normal(3) = adz * apnorminv
+
+                      ! convert bcent to global coordinate system centered at plo
+                      eb_cent(:) = ( bcent(ii, jj, kk, :) + &
+                           (/dble(ii), dble(jj), dble(kk)/) + &
+                           (/0.5d0, 0.5d0, 0.5d0/) )*dx(:)
+
+                      ! Distance to closest point on EB
+                      dist = dot_product( p%pos(:) - eb_cent(:), -normal(:))
+
+                      if (dist .lt. p%radius) p%id = -1
+                   end if
+                end do
+             end do
+          end do
+
+       endif
+
+    end do ! loop over particles
+  end subroutine rm_wall_collisions
 end module par_gen_module

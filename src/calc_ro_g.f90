@@ -38,7 +38,7 @@ contains
             do j = lo(2), hi(2)
                do i = lo(1), hi(1)
                   ro_g(i,j,k)  = eosg(mw_avg,p_g(i,j,k),295.15d0)
-                  rop_g(i,j,k) = ep_g(i,j,k) * rop_g(i,j,k)
+                  rop_g(i,j,k) = ep_g(i,j,k) * ro_g(i,j,k)
                enddo
             enddo
          enddo
