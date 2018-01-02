@@ -34,7 +34,8 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
      mfix_calc_drag_particle(lev);
 
   if (solve_dem)
-      pc -> EvolveParticles( lev, nstep, dt, time, particle_ebfactory, particle_cost[lev], subdt_io);
+      pc -> EvolveParticles(lev, nstep, dt, time, particle_ebfactory.get(), eb_normals.get(), 
+              dummy.get(), particle_cost[lev].get(), subdt_io);
 }
 
 void

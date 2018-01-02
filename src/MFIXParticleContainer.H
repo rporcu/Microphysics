@@ -59,34 +59,36 @@ public:
     using MyConstParIter = ParConstIter<realData::count,intData::count,0,0>;
 
     // Get number of particles
-    int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); }
+    int NumberOfParticles(MFIXParIter& pti){
+        return pti.GetArrayOfStructs().size();
+    }
 
-    MFIXParticleContainer (AmrCore* amr_core);
+    MFIXParticleContainer(AmrCore* amr_core);
 
     virtual ~MFIXParticleContainer() {};
 
-    void InitData ();
+    void InitData();
 
-    void InitParticlesAscii (const std::string& file);
-    void InitParticlesAuto (int lev);
+    void InitParticlesAscii(const std::string& file);
+    void InitParticlesAuto(int lev);
 
     void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 
-    void printParticles ();
+    void printParticles();
 
-    void AllocData ();
+    void AllocData();
 
     void PrintParticleCounts();
 
-    MultiFab EBNormals( int lev, std::unique_ptr<EBFArrayBoxFactory>& ebfactory, MultiFab& dummy );
+    std::unique_ptr<MultiFab> EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiFab * dummy);
 
-    void EvolveParticles ( int lev, int nstep, Real dt, Real time,
-                           std::unique_ptr<EBFArrayBoxFactory>& ebfactory,
-                           std::unique_ptr<MultiFab>& cost, int subdt_io );
+    void EvolveParticles(int lev, int nstep, Real dt, Real time, EBFArrayBoxFactory * ebfactory,
+            MultiFab * eb_normals, MultiFab * dummy, MultiFab * cost,
+            int subdt_io);
 
-    void GetParticleAvgProp ( int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);
+    void GetParticleAvgProp(int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);
 
-    void BalanceParticleLoad_KDTree ();
+    void BalanceParticleLoad_KDTree();
     ///
     /// Write out all particles at a level in the format fcompare_par can read
     ///
@@ -98,7 +100,7 @@ public:
     ///
     void WriteAsciiFileForInit(const std::string& filename);
 
-    void output ( int lev, int estatus, int finish, int nstep, Real dt, Real time );
+    void output(int lev, int estatus, int finish, int nstep, Real dt, Real time);
 
     ///
     /// Write out all particles at a level

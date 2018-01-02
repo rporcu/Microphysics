@@ -118,6 +118,10 @@ void mfix_level::Init(int lev, Real dt, Real time)
     }
 
     mfix_set_bc_type(lev);
+
+    // Allocate container for eb-normals
+    eb_normals = unique_ptr<MultiFab>(new MultiFab);
+    dummy = unique_ptr<MultiFab>(new MultiFab);
 }
 
 BoxArray

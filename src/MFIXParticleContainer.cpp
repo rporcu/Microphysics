@@ -317,28 +317,32 @@ MFIXParticleContainer::InitData()
 {
 }
 
-MultiFab MFIXParticleContainer::EBNormals(int lev, std::unique_ptr<EBFArrayBoxFactory>& ebfactory, MultiFab& dummy)
+std::unique_ptr<MultiFab>
+MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiFab * dummy)
 {
-    //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
-    
     // Container for normal data
-    MultiFab normal;
+    std::unique_ptr<MultiFab> normal = std::unique_ptr<MultiFab>(new MultiFab);
 
     // Only call the routine for wall collisions if the box has a wall
-    if (ebfactory != NULL)
-    {
-        dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
+    if (ebfactory != NULL) {
+        dummy->define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), * ebfactory);
         std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
 
         // We pre-compute the normals
-        normal.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 2);
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-        {
+        normal -> define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 2);
+        
+        for(MFIter pti(* normal, true); pti.isValid(); ++pti){
             Box tile_box = pti.tilebox();
             const int* lo = tile_box.loVect();
             const int* hi = tile_box.hiVect();
+            
+            std::cout
+                << " lo[0]=" << lo[0] << " lo[1]=" << lo[1] << " lo[2]=" << lo[2]
+                << std::endl
+                << " hi[0]=" << hi[0] << " hi[1]=" << hi[1] << " hi[2]=" << hi[2]
+                << std::endl;
 
-            const auto& sfab = dynamic_cast <EBFArrayBox const&>(dummy[pti]);
+            const auto& sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[pti]);
             const auto& flag = sfab.getEBCellFlagFab();
 
             areafrac = ebfactory->getAreaFrac();
@@ -347,8 +351,8 @@ MultiFab MFIXParticleContainer::EBNormals(int lev, std::unique_ptr<EBFArrayBoxFa
             {
                BL_PROFILE_VAR("compute_normals()", compute_normals);
                compute_normals ( lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                                normal[pti].dataPtr(),
-                                normal[pti].loVect(), normal[pti].hiVect(),
+                                (*normal)[pti].dataPtr(),
+                                (*normal)[pti].loVect(), (*normal)[pti].hiVect(),
                                 (*areafrac[0])[pti].dataPtr(),
                                 (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
                                 (*areafrac[1])[pti].dataPtr(),
@@ -358,15 +362,15 @@ MultiFab MFIXParticleContainer::EBNormals(int lev, std::unique_ptr<EBFArrayBoxFa
                BL_PROFILE_VAR_STOP(compute_normals);
             }
         }
-        normal.FillBoundary(Geom(0).periodicity());
+        normal->FillBoundary(Geom(0).periodicity());
     }
     
     return normal;
 }
 
-void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time,
-                                             std::unique_ptr<EBFArrayBoxFactory>& ebfactory,
-                                             std::unique_ptr<MultiFab>& cost, int subdt_io )
+void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
+        EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals,
+        MultiFab * dummy, MultiFab * cost, int subdt_io)
 {
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
@@ -379,10 +383,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
-
-    //NOTE THIS ONLY WORKS IF NOT USING DUAL GRID
-    MultiFab dummy;
-    MultiFab normal = EBNormals( lev, ebfactory, dummy);
 
     int   nsubsteps;
     Real  subdt;
@@ -443,7 +443,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
          // Only call the routine for wall collisions if we actually have walls
          if (ebfactory != NULL)
          {
-            const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
+            const auto& sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[pti]);
             const auto& flag = sfab.getEBCellFlagFab();
 
             if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
@@ -458,8 +458,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
                BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
                calc_wall_collisions (particles, &ntot, &nrp, tow.dataPtr(), fc.dataPtr(), &subdt,
                                      flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                                     normal[pti].dataPtr(),
-                                     normal[pti].loVect(), normal[pti].hiVect(),
+                                     (*eb_normals)[pti].dataPtr(),
+                                     (*eb_normals)[pti].loVect(), (*eb_normals)[pti].hiVect(),
                                      (*bndrycent)[pti].dataPtr(),
                                      (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
                                      (*areafrac[0])[pti].dataPtr(),

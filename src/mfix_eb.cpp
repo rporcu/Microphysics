@@ -164,6 +164,8 @@ mfix_level::make_eb_geometry(int lev)
                          new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
+
+    eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
 
 void
@@ -323,4 +325,7 @@ mfix_level::make_eb_hourglass(int lev)
                          new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
+
+    eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+
 }
