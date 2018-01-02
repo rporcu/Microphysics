@@ -446,6 +446,16 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt, &subdt_io );
 
+    // temporary storage
+    std::map<PairIndex, Vector<Real>> tow;
+    std::map<PairIndex, Vector<Real>> fc;
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
+        PairIndex index(pti.index(), pti.LocalTileIndex());
+        tow[index] = Vector<Real>();
+        fc[index] = Vector<Real>();
+    }
+
     int ncoll_total = 0;
 
     int n = 0;
@@ -460,19 +470,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
           buildNeighborList(lev,sort_neighbor_list);
       } else {
           updateNeighbors(lev);
-      }
-
-      std::map<PairIndex, Vector<Real>> tow;
-      std::map<PairIndex, Vector<Real>> fc;
-
-      tow.clear();
-      fc.clear();
- 
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-      {
-         PairIndex index(pti.index(), pti.LocalTileIndex());
-         tow[index] = Vector<Real>();
-         fc[index] = Vector<Real>();
       }
 
 #ifdef _OPENMP
@@ -589,13 +586,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       }
       BL_PROFILE_VAR_STOP(des_time_loop);
  
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-      {
-         PairIndex index(pti.index(), pti.LocalTileIndex());
-         tow[index].clear();
-          fc[index].clear();
-      }
-
       n += 1;
 
       if (debug) {
