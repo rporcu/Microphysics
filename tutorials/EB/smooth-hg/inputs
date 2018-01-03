@@ -3,12 +3,11 @@ amr.n_cell = 72 32 32
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
-#amr.max_grid_size = 1024
 amr.max_grid_size_x =   4
 amr.max_grid_size_y =   4
 amr.max_grid_size_z =   4
 
-fabarray.mfiter_tile_size =  1024  1024  1024 # Fulid tile size
+fabarray.mfiter_tile_size =  1024  1024  1024 # Fluid tile size
 particles.tile_size =        1024  1024  1024 # Particle title size
 
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
