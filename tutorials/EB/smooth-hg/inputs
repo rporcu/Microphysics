@@ -24,7 +24,14 @@ amr.par_ascii_file = vis
 
 amr.dual_grid = 0
 amr.regrid_int = 25
+
+#default is "FixedSize"; options include FixedSize,KnapSack or KDTree
 mfix.load_balance_type = "KnapSack"
+
+#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+#this option is only relevant if load_balance_type = KnapSack
+mfix.knapsack_weight_type = "NumParticles"
+mfix.knapsack_weight_type = "RunTimeCosts"
 
 mfix.particle_init_type = "Auto"
 
