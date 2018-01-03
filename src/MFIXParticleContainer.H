@@ -81,7 +81,8 @@ public:
 
     void EvolveParticles ( int lev, int nstep, Real dt, Real time,
                            std::unique_ptr<EBFArrayBoxFactory>& ebfactory,
-                           std::unique_ptr<MultiFab>& cost, int subdt_io );
+                           std::unique_ptr<MultiFab>& cost, 
+                           std::string& knapsack_weight_type, int subdt_io );
 
     void GetParticleAvgProp ( int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);
 

@@ -329,12 +329,10 @@ private:
     Vector< Vector< std::unique_ptr<MultiFab> > > oro_g; // Over ro_g = ep_g / rop_g
 
     Vector< std::unique_ptr<MultiFab> > phi; // Pressure increment
-   
 
     // used if load_balance_type == "KnapSack"
     Vector<std::unique_ptr<MultiFab> > particle_cost;
     Vector<std::unique_ptr<MultiFab> > fluid_cost;
-
 
     int solve_fluid;
     int solve_dem;
@@ -358,6 +356,7 @@ private:
 
     static std::string particle_init_type;
     static std::string load_balance_type;
+    static std::string knapsack_weight_type;
 
 
     Real cfl = 0.5;

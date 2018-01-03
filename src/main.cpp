@@ -146,7 +146,6 @@ int main (int argc, char* argv[])
        // This call checks if we want to regrid using the
        //   max_grid_size just read in from the inputs file used to restart
        //   (only relevant if load_balance_type = "FixedSize" or "KnapSack")
-
        // Note that this call does not depend on regrid_int
        my_mfix.RegridOnRestart(lev);
     }
@@ -158,8 +157,7 @@ int main (int argc, char* argv[])
     else
        my_mfix.make_eb_geometry(lev);
 
-    // This checks if we want to regrid using the KDTree approach
-    //    (only if load_balance_type = "KDTree")
+    // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);
 
     my_mfix.PostInit( lev, dt, time, nstep, restart_flag );

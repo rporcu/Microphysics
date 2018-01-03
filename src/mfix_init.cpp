@@ -36,12 +36,16 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         // The default type is "FixedSize" but we can over-write that in the inputs file
         //  with "KDTree" or "KnapSack"
         pp.query("load_balance_type", load_balance_type);
+        pp.query("knapsack_weight_type" , knapsack_weight_type);
 
         pp.query("dual_grid", dual_grid);
 
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
-                      load_balance_type == "KDTree"    ||
-                      load_balance_type == "KnapSack");
+                            load_balance_type == "KDTree"    ||
+                            load_balance_type == "KnapSack");
+
+        AMREX_ALWAYS_ASSERT(knapsack_weight_type == "RunTimeCosts" ||
+                            knapsack_weight_type == "NumParticles"  );
 
         // If subdt_io is true, des_time_loop calls output_manager
         subdt_io = false; // default to false (if not present in inputs file)

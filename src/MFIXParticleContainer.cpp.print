@@ -383,8 +383,7 @@ MFIXParticleContainer::InitData()
 
 void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time,
                                              std::unique_ptr<EBFArrayBoxFactory>& ebfactory,
-                                             std::unique_ptr<MultiFab>& cost, 
-                                             std::string& knapsack_weight_type, int subdt_io)
+                                             std::unique_ptr<MultiFab>& cost, int subdt_io )
 {
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
@@ -447,16 +446,6 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt, &subdt_io );
 
-    // temporary storage
-    std::map<PairIndex, Vector<Real>> tow;
-    std::map<PairIndex, Vector<Real>> fc;
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-    {
-        PairIndex index(pti.index(), pti.LocalTileIndex());
-        tow[index] = Vector<Real>();
-        fc[index] = Vector<Real>();
-    }
-
     int ncoll_total = 0;
 
     int n = 0;
@@ -471,6 +460,19 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
           buildNeighborList(lev,sort_neighbor_list);
       } else {
           updateNeighbors(lev);
+      }
+
+      std::map<PairIndex, Vector<Real>> tow;
+      std::map<PairIndex, Vector<Real>> fc;
+
+      tow.clear();
+      fc.clear();
+ 
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      {
+         PairIndex index(pti.index(), pti.LocalTileIndex());
+         tow[index] = Vector<Real>();
+         fc[index] = Vector<Real>();
       }
 
 #ifdef _OPENMP
@@ -556,14 +558,7 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
          if (cost) {
              const Box& tbx = pti.tilebox();
-             if (knapsack_weight_type == "RunTimeCosts")
-             {
-                wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-             }
-             else if (knapsack_weight_type == "NumParticles")
-             {
-                wt = nrp / tbx.d_numPts();
-             }
+             wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
              (*cost)[pti].plus(wt, tbx);
          }
       }
@@ -594,6 +589,13 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       }
       BL_PROFILE_VAR_STOP(des_time_loop);
  
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      {
+         PairIndex index(pti.index(), pti.LocalTileIndex());
+         tow[index].clear();
+          fc[index].clear();
+      }
+
       n += 1;
 
       if (debug) {
@@ -623,7 +625,8 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
       call_usr3_des( &nrp, particles );
     }
 
-    if (debug) {
+//  if (debug) 
+    {
        // Check maxmium particle velocties at each fluid time step
        // with the goal of veriftying a particle cannot travel more than
        // a single cell per fluid time step.
@@ -640,9 +643,9 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 
          for (const auto& p: particles)
          {
-             max_vel_x = std::max(Real(p.rdata(realData::velx)), max_vel_x);
-             max_vel_y = std::max(Real(p.rdata(realData::vely)), max_vel_y);
-             max_vel_z = std::max(Real(p.rdata(realData::velz)), max_vel_z);
+             max_vel_x = std::max(std::abs(Real(p.rdata(realData::velx))), max_vel_x);
+             max_vel_y = std::max(std::abs(Real(p.rdata(realData::vely))), max_vel_y);
+             max_vel_z = std::max(std::abs(Real(p.rdata(realData::velz))), max_vel_z);
          }
        }
 
@@ -650,15 +653,14 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
        ParallelDescriptor::ReduceRealMax(max_vel_y,ParallelDescriptor::IOProcessorNumber());
        ParallelDescriptor::ReduceRealMax(max_vel_z,ParallelDescriptor::IOProcessorNumber());
 
-       if (ParallelDescriptor::IOProcessor())
-       {
-          const Real* dx = Geom(0).CellSize();
-          cout << "Maximum possible distance traveled:" << endl;
-          cout <<  "x=  " << max_vel_x * dt
-               << " y=  " << max_vel_y * dt
-               << " z=  " << max_vel_z * dt  << " and note that "
-               << " dx= " << dx[0] << endl;
-       }
+       amrex::Print() << "Maximum velocity : " 
+                      <<  max_vel_x << " " << max_vel_y << " " << max_vel_z << std::endl;
+//     const Real* dx = Geom(0).CellSize();
+//     amrex::Print() << "Maximum possible distance traveled:" << endl;
+//     amrex::Print() <<  "x=  " << max_vel_x * dt
+//                    << " y=  " << max_vel_y * dt
+//                    << " z=  " << max_vel_z * dt  << " and note that "
+//                    << " dx= " << dx[0] << endl;
     }
 }
 

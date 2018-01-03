@@ -10,9 +10,9 @@
 #include <AMReX_FMultiGrid.H>
 #include <AMReX_stencil_types.H>
 
-
-std::string mfix_level::particle_init_type = "AsciiFile";
-std::string mfix_level::load_balance_type = "FixedSize";
+std::string mfix_level::particle_init_type   = "AsciiFile";
+std::string mfix_level::load_balance_type    = "FixedSize";
+std::string mfix_level::knapsack_weight_type = "RunTimeCosts";
 
 // Define unit vectors for easily convert indeces
 amrex::IntVect mfix_level::e_x(1,0,0);
