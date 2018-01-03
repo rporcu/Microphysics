@@ -390,39 +390,31 @@ MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiF
     // Only call the routine for wall collisions if the box has a wall
     if (ebfactory != NULL) {
         dummy->define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), * ebfactory);
-        std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+        std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = ebfactory->getAreaFrac();
 
         // We pre-compute the normals
         normal -> define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 2);
         
-        for(MFIter pti(* normal, true); pti.isValid(); ++pti){
-            Box tile_box = pti.tilebox();
+        for(MFIter mfi(* normal, true); mfi.isValid(); ++mfi){
+            Box tile_box = mfi.tilebox();
             const int* lo = tile_box.loVect();
             const int* hi = tile_box.hiVect();
             
-            //std::cout
-            //    << " lo[0]=" << lo[0] << " lo[1]=" << lo[1] << " lo[2]=" << lo[2]
-            //    << std::endl
-            //    << " hi[0]=" << hi[0] << " hi[1]=" << hi[1] << " hi[2]=" << hi[2]
-            //    << std::endl;
-
-            const auto& sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[pti]);
+            const auto& sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
             const auto& flag = sfab.getEBCellFlagFab();
-
-            areafrac = ebfactory->getAreaFrac();
 
             if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued)
             {
                BL_PROFILE_VAR("compute_normals()", compute_normals);
-               compute_normals ( lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                                (*normal)[pti].dataPtr(),
-                                (*normal)[pti].loVect(), (*normal)[pti].hiVect(),
-                                (*areafrac[0])[pti].dataPtr(),
-                                (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-                                (*areafrac[1])[pti].dataPtr(),
-                                (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-                                (*areafrac[2])[pti].dataPtr(),
-                                (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect());
+               compute_normals( lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                (*normal)[mfi].dataPtr(),
+                                (*normal)[mfi].loVect(), (*normal)[mfi].hiVect(),
+                                (*areafrac[0])[mfi].dataPtr(),
+                                (*areafrac[0])[mfi].loVect(), (*areafrac[0])[mfi].hiVect(),
+                                (*areafrac[1])[mfi].dataPtr(),
+                                (*areafrac[1])[mfi].loVect(), (*areafrac[1])[mfi].hiVect(),
+                                (*areafrac[2])[mfi].dataPtr(),
+                                (*areafrac[2])[mfi].loVect(), (*areafrac[2])[mfi].hiVect());
                BL_PROFILE_VAR_STOP(compute_normals);
             }
         }
@@ -431,6 +423,7 @@ MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiF
     
     return normal;
 }
+
 
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
         EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals,
@@ -515,28 +508,18 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
             {
-               std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
-               const MultiCutFab* bndrycent;
-
-               areafrac  =  ebfactory->getAreaFrac();
-               bndrycent = &(ebfactory->getBndryCent());
+               const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
 
                // Calculate forces from particle-wall collisions
                BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-               calc_wall_collisions (particles, &ntot, &nrp, 
-                                     tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-                                     flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                                     (*eb_normals)[pti].dataPtr(),
-                                     (*eb_normals)[pti].loVect(), (*eb_normals)[pti].hiVect(),
-                                     (*bndrycent)[pti].dataPtr(),
-                                     (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
-                                     (*areafrac[0])[pti].dataPtr(),
-                                     (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-                                     (*areafrac[1])[pti].dataPtr(),
-                                     (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-                                     (*areafrac[2])[pti].dataPtr(),
-                                     (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect(),
-                                     dx);
+               calc_wall_collisions(particles, &ntot, &nrp, 
+                                    tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
+                                    flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                    (*eb_normals)[pti].dataPtr(),
+                                    (*eb_normals)[pti].loVect(), (*eb_normals)[pti].hiVect(),
+                                    (*bndrycent)[pti].dataPtr(),
+                                    (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
+                                    dx);
                BL_PROFILE_VAR_STOP(calc_wall_collisions);
             }
          }

@@ -327,5 +327,4 @@ mfix_level::make_eb_hourglass(int lev)
                          m_eb_support_level));
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
-
 }

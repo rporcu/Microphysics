@@ -1,6 +1,6 @@
   subroutine calc_wall_collisions ( particles, np, nrp, tow, fc, dtsolid, &
-       flag, fglo, fghi, normal, nlo, nhi, bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, &
-       apz, azlo, azhi, dx) &
+       flag, fglo, fghi, normal, nlo, nhi, bcent, blo, bhi, &
+       dx) &
       bind(C, name="calc_wall_collisions")
 
     use amrex_fort_module, only : c_real => amrex_real
@@ -24,9 +24,6 @@
     real(c_real)  ,   intent(inout)         :: tow(np,3), fc(np,3)
     real(c_real)  ,   intent(in   )         :: dtsolid
 
-    integer, dimension(3), intent(in) :: axlo,axhi
-    integer, dimension(3), intent(in) :: aylo,ayhi
-    integer, dimension(3), intent(in) :: azlo,azhi
     integer, dimension(3), intent(in) :: fglo,fghi
     integer, dimension(3), intent(in) :: blo,bhi
     integer, dimension(3), intent(in) :: nlo,nhi
@@ -34,9 +31,6 @@
     integer,      intent(in) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
     real(c_real), intent(in) :: bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
     real(c_real), intent(in) :: normal(nlo(1):nhi(1),nlo(2):nhi(2),nlo(3):nhi(3),3)
-    real(c_real), intent(in) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
-    real(c_real), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
-    real(c_real), intent(in) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
     real(c_real), intent(in) :: dx(3)
 
     type(particle_t), pointer :: p
