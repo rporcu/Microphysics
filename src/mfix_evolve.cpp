@@ -39,7 +39,7 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real dt
   
   if (solve_dem)
       pc -> EvolveParticles(lev, nstep, dt, time, particle_ebfactory.get(), eb_normals.get(), 
-              dummy.get(), particle_cost[lev].get(), subdt_io);
+              dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io);
 
 }
 
