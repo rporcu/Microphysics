@@ -3,17 +3,17 @@
 # Author:                                               Date: xx-xxxx  #
 # Modified: J. Musser                                   Date: 09-2016  #
 #                                                                      #
-# Description: A plane of particles collide with a sphere.             #
+# Description: Particles fall under gravity in an hourglass            #
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'sphere'
-  DESCRIPTION = 'Plane of particles collide with a sphere'
+  RUN_NAME = 'hourglass'
+  DESCRIPTION = 'Particles fall under gravity in an hourglass'
 
 #_______________________________________________________________________
+
 # RUN CONTROL SECTION
 
-#  TSTOP = 1.0d-04
   TSTOP = 10.0
 
   DT =     1.0d-04
@@ -43,7 +43,6 @@
 !---------------------------------------------------------------------//
   RO_g0 = 1.0d0    ! (kg/m3)
   Mu_g0 = 2.0d-5   ! (kg/m3)
-
 
 ! Particle Section
 !---------------------------------------------------------------------//
