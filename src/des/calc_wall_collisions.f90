@@ -179,15 +179,15 @@
                             k_pt = vindex_pt(3)
 
                             ! Don't ask for a normal in a cell that doesn't have a wall
-                            if ( is_regular_cell(flag(i_pt,j_pt,k_pt)) .or. &
-                                 is_covered_cell(flag(i_pt,j_pt,k_pt)) ) then
-                                cycle
-                            end if 
+                            if ( .not. ( is_regular_cell(flag(i_pt,j_pt,k_pt)) .or. &
+                                 is_covered_cell(flag(i_pt,j_pt,k_pt)) )) then 
 
-                            if ( all( abs( normal(ii, jj, kk, :) - normal(i_pt, j_pt, k_pt, :) ) < 1.d-8 ) ) then
-                                ! EB-facet has same normal => skip
-                                cycle
-                            end if 
+                                if ( all( abs( normal(ii, jj, kk, :) - normal(i_pt, j_pt, k_pt, :) ) < 1.d-8 ) ) then
+                                    ! EB-facet has same normal => skip
+                                    cycle
+                                end if 
+
+                            end if
 
                             ! Particle-EB-plain intercept is outside cell
                             !  -> determine nearest point on EB boundary to particle (candidate for collision)
