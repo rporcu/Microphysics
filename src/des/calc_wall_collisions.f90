@@ -39,6 +39,7 @@
     real(c_real) :: sqrt_overlap
 
     real(c_real) :: normul(3)
+    real(c_real) :: wca_overlap_factor, wca_strength, wca_radius, wca_inv_r, f_wca
     
     ! facet barycenter (bcent) in global coordinates
     real(c_real), dimension(3) :: eb_cent
@@ -87,6 +88,10 @@
     ! fudge factor: a little less than 1
     fudge = one - 1.d-8
 
+    ! from WCA potential: r_min = wca_overlap_factor * wca_radius
+    wca_overlap_factor = 2.**(1./6.)
+    wca_strength = 10
+
     ! itterate over particles
     do ll = 1, nrp
        ! get current particle
@@ -99,6 +104,11 @@
 
        ! particle radia
        rp = p%radius
+       
+       ! WCA-interaction kicks in _after_ MFIX-interaction
+       !  => wca_radius < particle radius
+       !  => most MFIX collisions don't see WCA interaction
+       wca_radius = rp / 2. 
 
        ! particle position (in units of cells)
        lx = xp*inv_dx(1)
@@ -272,6 +282,18 @@
 
           ! Calculate the normal contact force
           fn(:) = -(kn_des_w * overlap_n  + etan_des_w * v_rel_trans_norm) * normul(:)
+
+          ! Add WCA force (to mittigate wall-penetration)
+          f_wca = 0;
+          if ( dabs(cur_distmod) < wca_overlap_factor * wca_radius ) then
+             wca_inv_r = wca_radius / dabs(cur_distmod)
+             f_wca = 4. * wca_strength * (       &
+                            12. * wca_inv_r**11   &
+                          - 6.  * wca_inv_r**5    )
+          end if
+
+          fn(:) = fn(:) - f_wca * normul(:)
+          
 
           ! Calculate the tangential displacement.
           overlap_t(:) = dtsolid*vrel_t(:)
