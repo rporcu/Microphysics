@@ -47,6 +47,7 @@
     real(c_real), dimension(3) :: eb_min_pt
     ! vector-indices of loop (over neighbour cells) and collision pt
     integer, dimension(3)      :: vindex_loop, vindex_pt
+    logical                    :: nb_normal_valid;
 
     integer :: ll, ii, jj, kk, i, j, k, i_pt, j_pt, k_pt
 
@@ -189,9 +190,14 @@
                             k_pt = vindex_pt(3)
 
                             ! Don't ask for a normal in a cell that doesn't have a wall
-                            if ( .not. ( is_regular_cell(flag(i_pt,j_pt,k_pt)) .or. &
-                                 is_covered_cell(flag(i_pt,j_pt,k_pt)) )) then 
+                            if ( is_regular_cell(flag(i_pt,j_pt,k_pt)) .or. &
+                                 is_covered_cell(flag(i_pt,j_pt,k_pt)) ) then
+                                 nb_normal_valid = .false.
+                             else
+                                 nb_normal_valid = .true.
+                            end if
 
+                            if (nb_normal_valid) then
                                 if ( all( abs( normal(ii, jj, kk, :) - normal(i_pt, j_pt, k_pt, :) ) < 1.d-8 ) ) then
                                     ! EB-facet has same normal => skip
                                     cycle
@@ -216,11 +222,15 @@
                                 distmod(n_collisions) = distmod_temp
 
                                 ! assign average normal to edge collision:
-                                collision_norms(:, n_collisions) = normal(ii, jj, kk, :) + normal(i_pt, j_pt, k_pt, :)
-                                len2_collision_norm = dot_3d_real( collision_norms(:, n_collisions), &
-                                                                   collision_norms(:, n_collisions))
-                                collision_norms(:, n_collisions) = collision_norms(:, n_collisions)  &
-                                                                   / sqrt(len2_collision_norm)
+                                if (nb_normal_valid) then
+                                    collision_norms(:, n_collisions) = normal(ii, jj, kk, :) + normal(i_pt, j_pt, k_pt, :)
+                                    len2_collision_norm = dot_3d_real( collision_norms(:, n_collisions), &
+                                                                       collision_norms(:, n_collisions))
+                                    collision_norms(:, n_collisions) = collision_norms(:, n_collisions)  &
+                                                                     / sqrt(len2_collision_norm)
+                                else
+                                    collision_norms(:, n_collisions) = normal(ii, jj, kk, :)
+                                endif
                             end if
                         end if
                     end if
