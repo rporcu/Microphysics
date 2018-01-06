@@ -193,7 +193,6 @@
                             if ( is_regular_cell(flag(i_pt,j_pt,k_pt)) .or. &
                                  is_covered_cell(flag(i_pt,j_pt,k_pt)) ) then
                                  nb_normal_valid = .false.
-                                 cycle
                              else
                                  nb_normal_valid = .true.
                             end if
