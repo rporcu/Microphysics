@@ -193,6 +193,7 @@
                             if ( is_regular_cell(flag(i_pt,j_pt,k_pt)) .or. &
                                  is_covered_cell(flag(i_pt,j_pt,k_pt)) ) then
                                  nb_normal_valid = .false.
+                                 cycle
                              else
                                  nb_normal_valid = .true.
                             end if
@@ -294,15 +295,15 @@
           fn(:) = -(kn_des_w * overlap_n  + etan_des_w * v_rel_trans_norm) * normul(:)
 
           ! Add WCA force (to mittigate wall-penetration)
-          f_wca = 0;
-          if ( dabs(cur_distmod) < wca_overlap_factor * wca_radius ) then
-             wca_inv_r = wca_radius / dabs(cur_distmod)
-             f_wca = 4. * wca_strength * (       &
-                            12. * wca_inv_r**11   &
-                          - 6.  * wca_inv_r**5    )
-          end if
-
-          fn(:) = fn(:) - f_wca * normul(:)
+          ! f_wca = 0;
+          ! if ( dabs(cur_distmod) < wca_overlap_factor * wca_radius ) then
+          !    wca_inv_r = wca_radius / dabs(cur_distmod)
+          !    f_wca = 4. * wca_strength * (       &
+          !                   12. * wca_inv_r**11   &
+          !                 - 6.  * wca_inv_r**5    )
+          ! end if
+          !
+          ! fn(:) = fn(:) - f_wca * normul(:)
           
 
           ! Calculate the tangential displacement.
