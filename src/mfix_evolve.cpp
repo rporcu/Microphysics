@@ -10,7 +10,9 @@ void
 mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real dt, Real & prev_dt,
                    Real time, Real normg)
 {
-  AMREX_ALWAYS_ASSERT(lev == 0);
+ BL_PROFILE_REGION_START("mfix::Evolve");
+
+ AMREX_ALWAYS_ASSERT(lev == 0);
 
   Real sum_vol;
   if (solve_dem && solve_fluid)
@@ -41,14 +43,18 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real dt
       pc -> EvolveParticles(lev, nstep, dt, time, particle_ebfactory.get(), eb_normals.get(), 
               dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io);
 
+ BL_PROFILE_REGION_STOP("mfix::Evolve");
 }
+ 
 
 void
 mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
                         Real dt, Real& prev_dt, Real time, Real normg)
 {
-    // Reimpose boundary conditions -- make sure to do this before we compute tau
-    mfix_set_bc1(lev);
+  BL_PROFILE_REGION_START("mfix::EvolveFluid");
+
+  // Reimpose boundary conditions -- make sure to do this before we compute tau
+  mfix_set_bc1(lev);
 
     // Calculate transport coefficients
     int calc_flag = 2;
@@ -178,10 +184,9 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
 	    MultiFab::Copy(*u_g[lev],   *u_go[lev],   0, 0, 1, nghost);
 	    MultiFab::Copy(*v_g[lev],   *v_go[lev],   0, 0, 1, nghost);
 	    MultiFab::Copy(*w_g[lev],   *w_go[lev],   0, 0, 1, nghost);
-
-
 	}
     } while (reiterate==1);
 
+  BL_PROFILE_REGION_STOP("mfix::EvolveFluid");
 }
 

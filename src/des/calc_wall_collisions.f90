@@ -157,6 +157,7 @@
 
                 ! only consider cells that contain EB's
                 if ( (nbr(ii-i, jj-j, kk-k) .eq. 1) .and. ( .not. is_regular_cell(flag(ii, jj, kk))) ) then
+!                    call bl_proffortfuncstart_int(1)
                     ! convert bcent to global coordinate system centered at plo
                     ! bcentx = bcent(ii, jj, kk, 1) * dx(1) + (dble(ii) + 0.5d0) * dx(1)
                     eb_cent(:) = ( bcent(ii, jj, kk, :) + (/dble(ii), dble(jj), dble(kk)/) + (/.5d0, .5d0, .5d0/) )*dx(:)
@@ -201,6 +202,7 @@
                             if (nb_normal_valid) then
                                 if ( all( abs( normal(ii, jj, kk, :) - normal(i_pt, j_pt, k_pt, :) ) < 1.d-8 ) ) then
                                     ! EB-facet has same normal => skip
+!                                    call bl_proffortfuncstop_int(1)
                                     cycle
                                 end if 
 
@@ -235,6 +237,7 @@
                             end if
                         end if
                     end if
+!                    call bl_proffortfuncstop_int(1)
                 end if
              end do
           end do
@@ -247,6 +250,7 @@
        ! ******************************************************************** !
 
        do i_collision = 1, n_collisions
+!          call bl_proffortfuncstart_int(2)         
           
           cur_distmod = distmod(i_collision)
           normul(:) = collision_norms(:, i_collision)
@@ -336,6 +340,7 @@
           ! Add the torque force to the total torque acting on the particle.
           tow(LL,:) = tow(LL,:) + cur_distmod*des_CROSSPRDCT(normul(:),ft)
 
+!          call bl_proffortfuncstop_int(2)         
        !end if ! if test on (d < radius)
        end do
     end do ! loop over particles

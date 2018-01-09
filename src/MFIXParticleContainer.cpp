@@ -429,6 +429,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals,
         MultiFab * dummy, MultiFab * cost, std::string & knapsack_weight_type, int subdt_io)
 {
+    BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
     bool debug = false;
@@ -651,8 +652,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                << " dx= " << dx[0] << endl;
        }
     }
-}
-
+    BL_PROFILE_REGION_STOP("mfix_dem::EvolveParticles()");
+} 
+ 
 void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled,
                                                IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                                IArrayBox& bc_jlo, IArrayBox& bc_jhi,
