@@ -145,6 +145,7 @@
 
                 ! only consider cells that contain EB's
                 if ( (nbr(ii-i, jj-j, kk-k) .eq. 1) .and. ( .not. is_regular_cell(flag(ii, jj, kk))) ) then
+                    call bl_proffortfuncstart("mfix::calc_wall_collisions::EB")
                     ! convert bcent to global coordinate system centered at plo
                     ! bcentx = bcent(ii, jj, kk, 1) * dx(1) + (dble(ii) + 0.5d0) * dx(1)
                     eb_cent(:) = ( bcent(ii, jj, kk, :) + (/dble(ii), dble(jj), dble(kk)/) + (/.5d0, .5d0, .5d0/) )*dx(:)
@@ -214,6 +215,7 @@
                             end if
                         end if
                     end if
+                call bl_proffortfuncstop("mfix::calc_wall_collisions::EB")
                 end if
              end do
           end do
@@ -226,6 +228,7 @@
        ! ******************************************************************** !
 
        do i_collision = 1, n_collisions
+          call bl_proffortfuncstart("mfix::calc_wall_collisions::collisions")         
           
           cur_distmod = distmod(i_collision)
           normul(:) = collision_norms(:, i_collision)
@@ -299,6 +302,7 @@
           ! Add the torque force to the total torque acting on the particle.
           tow(LL,:) = tow(LL,:) + cur_distmod*des_CROSSPRDCT(normul(:),ft)
 
+          call bl_proffortfuncstart("mfix::calc_wall_collisions::collisions")         
        !end if ! if test on (d < radius)
        end do
     end do ! loop over particles

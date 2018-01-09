@@ -8,8 +8,7 @@
 void
 mfix_level::Regrid (int lev, int nstep)
 {
-  
-    BL_PROFILE("mfix_level::Regrid");
+    BL_PROFILE_REGION_START("mfix::Regrid()");
 
     amrex::Print() << "In Regrid at step " << nstep << std::endl;
 
@@ -160,6 +159,7 @@ mfix_level::Regrid (int lev, int nstep)
 	// amrex::AllPrint() << "Process " << pid << " got " << np << " particles \n";
 	//	pc->PrintParticleCounts();
     }
+    BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }
 
 void
