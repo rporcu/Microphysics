@@ -20,7 +20,7 @@
 
     integer, intent(in) :: np, nrp
 
-    type(particle_t), intent(in   ), target :: particles(np)
+    type(particle_t), intent(inout), target :: particles(np)
     real(c_real)  ,   intent(inout)         :: tow(np,3), fc(np,3)
     real(c_real)  ,   intent(in   )         :: dtsolid
 
@@ -39,7 +39,8 @@
     real(c_real) :: sqrt_overlap
 
     real(c_real) :: normul(3)
-    real(c_real) :: wca_overlap_factor, wca_strength, wca_radius, wca_inv_r, f_wca
+    real(c_real) :: wca_overlap_factor, wca_strength, wca_radius, wca_inv_r, wca_offset, f_wca
+    real(c_real) :: v_normal;
     
     ! facet barycenter (bcent) in global coordinates
     real(c_real), dimension(3) :: eb_cent
@@ -91,7 +92,7 @@
 
     ! from WCA potential: r_min = wca_overlap_factor * wca_radius
     wca_overlap_factor = 2.**(1./6.)
-    wca_strength = 10
+    wca_strength = 1000
 
     ! itterate over particles
     do ll = 1, nrp
@@ -109,7 +110,7 @@
        ! WCA-interaction kicks in _after_ MFIX-interaction
        !  => wca_radius < particle radius
        !  => most MFIX collisions don't see WCA interaction
-       wca_radius = rp / 2. 
+       wca_radius = rp 
 
        ! particle position (in units of cells)
        lx = xp*inv_dx(1)
@@ -294,15 +295,19 @@
           fn(:) = -(kn_des_w * overlap_n  + etan_des_w * v_rel_trans_norm) * normul(:)
 
           ! Add WCA force (to mittigate wall-penetration)
-          ! f_wca = 0;
-          ! if ( dabs(cur_distmod) < wca_overlap_factor * wca_radius ) then
-          !    wca_inv_r = wca_radius / dabs(cur_distmod)
+          !f_wca = 0;
+          !if ( dabs(cur_distmod + wca_radius/2.) <= wca_overlap_factor * wca_radius ) then
+          !    wca_inv_r = wca_radius / dabs(cur_distmod + wca_radius/2.)
           !    f_wca = 4. * wca_strength * (       &
-          !                   12. * wca_inv_r**11   &
-          !                 - 6.  * wca_inv_r**5    )
-          ! end if
+          !                  12. * wca_inv_r**11   &
+          !                - 6.  * wca_inv_r**5    )
           !
-          ! fn(:) = fn(:) - f_wca * normul(:)
+          !    v_normal = dabs( dot_3d_real( p%vel(:) , -normul(:) ) )
+          !    p%vel(:) = p%vel(:) + normul(:) * v_normal * 2.
+          !    write(*,*) "f_wca = ", f_wca, "distmod = ", cur_distmod
+          !end if
+          !
+          !fn(:) = fn(:) - f_wca * normul(:)
           
 
           ! Calculate the tangential displacement.
