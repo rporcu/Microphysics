@@ -84,6 +84,7 @@ int main (int argc, char* argv[])
     // AMReX will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
     amrex::Initialize(argc,argv);
+    BL_PROFILE_VAR("main()", pmain)
     BL_PROFILE_REGION_START("mfix::main()");
 //    BL_PROFILE_CHANGE_FORT_INT_NAME("mfix::calc_wall_collisions::EB",1);
 //    BL_PROFILE_CHANGE_FORT_INT_NAME("mfix::calc_wall_collisions::collisions",2);
@@ -264,8 +265,8 @@ int main (int argc, char* argv[])
        std::cout << "Time spent in main-init " << end_time-end_init << std::endl;
     }
 
-
     BL_PROFILE_REGION_STOP("mfix::main()");
+    BL_PROFILE_VAR_STOP(pmain);
 
     amrex::Finalize();
     return 0;
