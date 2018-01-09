@@ -85,8 +85,8 @@ int main (int argc, char* argv[])
     //        command line arguments are in mfix-format so it will just ignore them.
     amrex::Initialize(argc,argv);
     BL_PROFILE_REGION_START("mfix::main()");
-    BL_PROFILE_CHANGE_FORT_INT_NAME("mfix::calc_wall_collisions::EB",1);
-    BL_PROFILE_CHANGE_FORT_INT_NAME("mfix::calc_wall_collisions::collisions",2);
+//    BL_PROFILE_CHANGE_FORT_INT_NAME("mfix::calc_wall_collisions::EB",1);
+//    BL_PROFILE_CHANGE_FORT_INT_NAME("mfix::calc_wall_collisions::collisions",2);
 
 
     // Copy arguments into MFIX -- note that the first argument is now the name of the
