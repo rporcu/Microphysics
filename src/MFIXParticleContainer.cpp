@@ -546,19 +546,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          BL_PROFILE_VAR_STOP(calc_particle_collisions);
 #endif
 
-         if (cost) {
-             const Box& tbx = pti.tilebox();
-             if (knapsack_weight_type == "RunTimeCosts")
-             {
-                wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-             }
-             else if (knapsack_weight_type == "NumParticles")
-             {
-                wt = nrp / tbx.d_numPts();
-             }
-             (*cost)[pti].plus(wt, tbx);
-         }
-
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -575,6 +562,19 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         BL_PROFILE_VAR_STOP(des_time_loop);
  
         n += 1;
+
+        if (cost) {
+             const Box& tbx = pti.tilebox();
+             if (knapsack_weight_type == "RunTimeCosts")
+             {
+                wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+             }
+             else if (knapsack_weight_type == "NumParticles")
+             {
+                wt = nrp / tbx.d_numPts();
+             }
+             (*cost)[pti].plus(wt, tbx);
+         }
       }
 
       if (debug) {
