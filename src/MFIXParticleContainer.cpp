@@ -561,8 +561,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 #endif
         BL_PROFILE_VAR_STOP(des_time_loop);
  
-        n += 1;
-
         if (cost) {
              const Box& tbx = pti.tilebox();
              if (knapsack_weight_type == "RunTimeCosts")
@@ -576,6 +574,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              (*cost)[pti].plus(wt, tbx);
          }
       }
+
+      n += 1;
 
       if (debug) {
          ncoll_total +=  ncoll;
