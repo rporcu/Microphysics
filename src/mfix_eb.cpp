@@ -142,10 +142,11 @@ mfix_level::make_eb_geometry(int lev)
 
     ///////////////////////////////////////////////////
 
+    int max_level = 0;
+    int grid_size = 16;
     bool eb_verbosity = true;
     GeometryShop gshop(*impfunc, eb_verbosity);
-    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop);
-
+    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
 
     // set up ebfactory
     int m_eb_basic_grow_cells = 2;
@@ -304,9 +305,11 @@ mfix_level::make_eb_hourglass(int lev)
 
     ///////////////////////////////////////////////////
 
+    int max_level = 0;
+    int grid_size = 16;
     bool eb_verbosity = true;
     GeometryShop gshop(*impfunc, eb_verbosity);
-    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop);
+    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
 
     // set up ebfactory
     int m_eb_basic_grow_cells = 2;
