@@ -55,7 +55,6 @@
     real(c_real) :: fudge
     real(c_real) :: overlap_n
     real(c_real) :: inv_dx(3)
-    integer      :: nbr(-1:1,-1:1,-1:1)
     integer      :: ilo,ihi,jlo,jhi,klo,khi
 
     real(c_real) :: v_rel_trans_norm
@@ -93,7 +92,7 @@
     ! from WCA potential: r_min = wca_overlap_factor * wca_radius
     wca_overlap_factor = 2.**(1./6.)
 
-    ! itterate over particles
+    ! iterate over particles
     do ll = 1, nrp
        ! get current particle
        p => particles(ll)
@@ -122,10 +121,6 @@
        j = floor(ly)
        k = floor(lz)
 
-       ! ignore disconnected cells
-       ! -> one reason for this is the get accurate wall normals...
-       call get_neighbor_cells(flag(i,j,k),nbr)
-       
        ! ******************************************************************** !
        !                                                                      !
        ! BEGIN Enumerating Collisons with embedded boundary                   !
@@ -156,8 +151,7 @@
              do ii = ilo, ihi
 
                 ! only consider cells that contain EB's
-                !if ( (nbr(ii-i, jj-j, kk-k) .eq. 1) .and. ( .not. is_regular_cell(flag(ii, jj, kk))) ) then
-                if ( .not. is_regular_cell(flag(ii, jj, kk)) ) then
+                if ( ( is_single_valued_cell(flag(ii, jj, kk))) ) then
 !                    call bl_proffortfuncstart_int(1)
                     ! convert bcent to global coordinate system centered at plo
                     ! bcentx = bcent(ii, jj, kk, 1) * dx(1) + (dble(ii) + 0.5d0) * dx(1)
@@ -243,14 +237,16 @@
                                 else
                                     collision_norms(:, n_collisions) = normal(ii, jj, kk, :)
                                 endif
-                            end if
-                        end if
-                    end if
+                            end if ! distmod < rp*rp
+
+                        end if ! else of "head-on" test
+                    end if ! if distmod < rp
 !                    call bl_proffortfuncstop_int(1)
-                end if
-             end do
-          end do
-       end do
+
+                end if ! if cut cell
+             end do  ! ii
+          end do  ! jj
+       end do  ! kk
 
        ! ******************************************************************** !
        !                                                                      !

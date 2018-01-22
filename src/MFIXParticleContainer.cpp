@@ -546,7 +546,22 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          BL_PROFILE_VAR_STOP(calc_particle_collisions);
 #endif
 
-         if (cost) {
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+        BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+#if 1
+        des_time_loop ( &nrp     , particles,
+                        &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
+                        &xlen, &ylen, &zlen, &stime, &n);
+#else
+        des_time_loop_soa ( &nrp, particles,
+                            &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
+                            &xlen, &ylen, &zlen, &stime, &n);
+#endif
+        BL_PROFILE_VAR_STOP(des_time_loop);
+ 
+        if (cost) {
              const Box& tbx = pti.tilebox();
              if (knapsack_weight_type == "RunTimeCosts")
              {
@@ -560,32 +575,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          }
       }
 
-      // We put this here to make sure all the forces are computed above before we update 
-      //    any positions or velocities below
-      ParallelDescriptor::Barrier();
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-      BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-      {
-         PairIndex index(pti.index(), pti.LocalTileIndex());
-         const int ntot   = tow[index].size() / 3;
-         const int nrp    = NumberOfParticles(pti);
-         void* particles  = pti.GetArrayOfStructs().data();
-#if 1
-         des_time_loop ( &nrp     , particles,
-                         &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-                         &xlen, &ylen, &zlen, &stime, &n);
-#else
-         des_time_loop_soa ( &nrp, particles,
-                             &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-                             &xlen, &ylen, &zlen, &stime, &n);
-#endif
-      }
-      BL_PROFILE_VAR_STOP(des_time_loop);
- 
       n += 1;
 
       if (debug) {
@@ -593,7 +582,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          ParallelDescriptor::ReduceIntSum(ncoll,ParallelDescriptor::IOProcessorNumber());
          Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
       }
-    }
+    } // end of loop over substeps
 
     clearNeighbors(lev);
 

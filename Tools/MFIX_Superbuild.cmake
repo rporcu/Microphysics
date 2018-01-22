@@ -1,5 +1,4 @@
-#
-# This file perform the Superbuild
+# # This file perform the Superbuild
 # Both amrex and mfix are treated as external project
 # This allows to build amrex and only after to handle
 # mfix ( and read the amrex config file )
@@ -33,7 +32,7 @@ set (CMAKE_CXX_EXTENSIONS OFF)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
-set (AMREX_GIT_COMMIT_DEVELOP 23a04c4a6aa70f2f818341d6adedc3 )
+set (AMREX_GIT_COMMIT_DEVELOP   a7d629b47d8f41c29a18c980c5c )
 set (AMREX_GIT_TAG)  # The commit id or branch to download 
 
 #
