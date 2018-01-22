@@ -20,7 +20,7 @@
 
     integer, intent(in) :: np, nrp
 
-    type(particle_t), intent(inout), target :: particles(np)
+    type(particle_t), intent(in   ), target :: particles(np)
     real(c_real)  ,   intent(inout)         :: tow(np,3), fc(np,3)
     real(c_real)  ,   intent(in   )         :: dtsolid
 
@@ -40,7 +40,7 @@
 
     real(c_real) :: normul(3)
     real(c_real) :: wca_overlap_factor, wca_strength, wca_radius, wca_inv_r, wca_offset, f_wca
-    real(c_real) :: v_normal;
+    real(c_real) :: v_normal, wca_dist
     
     ! facet barycenter (bcent) in global coordinates
     real(c_real), dimension(3) :: eb_cent
@@ -61,12 +61,12 @@
     real(c_real) :: v_rel_trans_norm
 
     ! local normal and tangential forces
-    real(c_real) :: vrel_t(3), cur_distmod
+    real(c_real) :: vrel_t(3), cur_distmod, cur_plane_distmod
     real(c_real) :: ft(3), fn(3), overlap_t(3)
 
     ! worst-case: overlap with 27 neighbours
     integer                        :: n_collisions, i_collision
-    real(c_real), dimension(27)    :: distmod 
+    real(c_real), dimension(27)    :: distmod, plane_distmod; 
     real(c_real), dimension(3, 27) :: collision_norms
     real(c_real), dimension(3)     :: c_vec, delta_c_vec
     real(c_real)                   :: len2_collision_norm
@@ -81,7 +81,7 @@
     real(c_real) :: etan_des_W, etat_des_W, kn_des_W, kt_des_W
     real(c_real) :: fnmd
     real(c_real) :: mag_overlap_t
-    real(c_real) :: distmod_temp
+    real(c_real) :: distmod_temp, distmod_edge
 
     ! inverse cell size: used to convert positions to cell indices
     !   -> dx is a vector, fortran is amazing!
@@ -92,7 +92,6 @@
 
     ! from WCA potential: r_min = wca_overlap_factor * wca_radius
     wca_overlap_factor = 2.**(1./6.)
-    wca_strength = 1000
 
     ! itterate over particles
     do ll = 1, nrp
@@ -111,6 +110,7 @@
        !  => wca_radius < particle radius
        !  => most MFIX collisions don't see WCA interaction
        wca_radius = rp 
+       wca_strength = p%mass * 10000;
 
        ! particle position (in units of cells)
        lx = xp*inv_dx(1)
@@ -156,16 +156,19 @@
              do ii = ilo, ihi
 
                 ! only consider cells that contain EB's
-                if ( (nbr(ii-i, jj-j, kk-k) .eq. 1) .and. ( .not. is_regular_cell(flag(ii, jj, kk))) ) then
+                !if ( (nbr(ii-i, jj-j, kk-k) .eq. 1) .and. ( .not. is_regular_cell(flag(ii, jj, kk))) ) then
+                if ( .not. is_regular_cell(flag(ii, jj, kk)) ) then
 !                    call bl_proffortfuncstart_int(1)
                     ! convert bcent to global coordinate system centered at plo
                     ! bcentx = bcent(ii, jj, kk, 1) * dx(1) + (dble(ii) + 0.5d0) * dx(1)
                     eb_cent(:) = ( bcent(ii, jj, kk, :) + (/dble(ii), dble(jj), dble(kk)/) + (/.5d0, .5d0, .5d0/) )*dx(:)
 
                     ! Distance to closest point on EB
-                    distmod_temp = dabs( dot_3d_real( p%pos(:) - eb_cent(:), -normal(ii, jj, kk, :) ) )
+                    ! distmod_temp = dabs( dot_3d_real( p%pos(:) - eb_cent(:), -normal(ii, jj, kk, :) ) )
+                    distmod_temp =  dot_3d_real( p%pos(:) - eb_cent(:), -normal(ii, jj, kk, :) )
 
-                    if (distmod_temp .lt. rp) then
+
+                    if (dabs(distmod_temp) .lt. rp) then
                         ! vector-index of triple-loop
                         vindex_loop = (/ii, jj, kk/)
 
@@ -181,7 +184,12 @@
                         if ( all( vindex_loop == vindex_pt ) ) then
                             ! register "head-on" collision:
                             n_collisions = n_collisions + 1
-                            distmod(n_collisions) = distmod_temp
+                            distmod(n_collisions) = dabs(distmod_temp)
+                            if ( dabs( distmod_temp ) .lt. 1e-8) then
+                                write(*,*) distmod_temp
+                            end if 
+
+                            plane_distmod(n_collisions) = distmod_temp
                             collision_norms(:, n_collisions) = normal(ii, jj, kk, :)
                         
                         ! only consider EB-edges if not colliding with EB-face already 
@@ -215,14 +223,15 @@
 
                             ! check if there is still overlap
                             delta_c_vec(:) = p%pos(:) - c_vec(:)
-                            distmod_temp = dot_3d_real(delta_c_vec, delta_c_vec)
+                            distmod_edge = dot_3d_real(delta_c_vec, delta_c_vec)
 
-                            if (distmod_temp .lt. rp * rp) then
+                            if (distmod_edge .lt. rp * rp) then
                                 ! The nearest point on EB edge overlaps with particle
                                 !  => Collison still occurs! => Register collision with EB edge
-                                distmod_temp = sqrt(distmod_temp)
+                                distmod_edge = sqrt(distmod_edge)
                                 n_collisions = n_collisions + 1
-                                distmod(n_collisions) = distmod_temp
+                                distmod(n_collisions) = distmod_edge
+                                plane_distmod(n_collisions) = distmod_temp
 
                                 ! assign average normal to edge collision:
                                 if (nb_normal_valid) then
@@ -253,6 +262,7 @@
 !          call bl_proffortfuncstart_int(2)         
           
           cur_distmod = distmod(i_collision)
+          cur_plane_distmod = plane_distmod(i_collision)
           normul(:) = collision_norms(:, i_collision)
 
           ! Calculate the particle/wall overlap.
@@ -299,19 +309,25 @@
           fn(:) = -(kn_des_w * overlap_n  + etan_des_w * v_rel_trans_norm) * normul(:)
 
           ! Add WCA force (to mittigate wall-penetration)
-          !f_wca = 0;
-          !if ( dabs(cur_distmod + wca_radius/2.) <= wca_overlap_factor * wca_radius ) then
-          !    wca_inv_r = wca_radius / dabs(cur_distmod + wca_radius/2.)
-          !    f_wca = 4. * wca_strength * (       &
-          !                  12. * wca_inv_r**11   &
-          !                - 6.  * wca_inv_r**5    )
-          !
-          !    v_normal = dabs( dot_3d_real( p%vel(:) , -normul(:) ) )
-          !    p%vel(:) = p%vel(:) + normul(:) * v_normal * 2.
-          !    write(*,*) "f_wca = ", f_wca, "distmod = ", cur_distmod
-          !end if
-          !
-          !fn(:) = fn(:) - f_wca * normul(:)
+          f_wca = 0;
+          wca_dist = cur_plane_distmod + rp/2 ! * wca_overlap_factor
+
+          if ( wca_dist <= wca_radius * wca_overlap_factor ) then
+             wca_inv_r = wca_radius / dabs(wca_dist)
+             f_wca = 4. * wca_strength * (       &
+                           12. * wca_inv_r**11   &
+                         - 6.  * wca_inv_r**5    )
+
+             !v_normal = dabs( dot_3d_real( p%vel(:) , -normul(:) ) )
+             !p%vel(:) = p%vel(:) + normul(:) * v_normal
+              write(*,*) "f_wca = ", f_wca, "wca_radius = ", wca_radius, "distmod = ", cur_distmod, "plane_distmod = ", cur_plane_distmod
+              write(*,*) "normul = ", normul(:)
+              write(*,*) "f old = ", fn
+              write(*,*) "f new = ", -f_wca*normul(:)
+              write(*,*) " "
+          end if
+          
+          fn(:) = fn(:) - f_wca * normul(:)
           
 
           ! Calculate the tangential displacement.
