@@ -39,7 +39,8 @@ program fextract3d
   integer :: idir
   integer :: narg, farg
   character(len=256) :: fname, varnames, line, temp
-
+  real(kind=dp_t) :: tolerance
+  
   character(len=1) :: dirstr
   integer :: ivar, idx
   integer, allocatable :: var_indices(:)
@@ -59,7 +60,7 @@ program fextract3d
   idir = 1
   varnames = ''
   center = .true.
-
+  tolerance = 0.0D0
   narg = command_argument_count()
 
   farg = 1
@@ -93,6 +94,11 @@ program fextract3d
         call get_command_argument(farg, value = fname)
         read(fname,*) sig_figs
 
+     case ('-t', '--tolerance')
+        farg = farg + 1
+        call get_command_argument(farg, value = fname )
+        read(fname,*) tolerance
+        
      case default
         exit
 
@@ -119,6 +125,7 @@ program fextract3d
      print *, "                                  (space separated string for multiple variables)"
      print *, "     [-l|--lower_left]           : slice through lower left corner instead of center"
      print *, "     [-f|--format]               : Output format, Number of sig-figs to write {10 (default)} "
+     print *, "     [-t|--tolerance]            : All values with smaller abs than tolerance are printed as 0"
      print *, " "
      print *, "Note the plotfile at the end of the commandline is only required if you do"
      print *, "not use the depreciated '-p' option"
@@ -443,6 +450,14 @@ program fextract3d
   write(uno,998) dirstr, trim(pltfile)
   write(uno,999) pf%tm
 
+
+  ! Set to zero all the values lower than a certain tolerance
+  where ( abs(sv(:,2:)) < tolerance )
+     sv(:,2:) = 0.0D0
+  end where
+
+
+  
   if (ivar == -1) then
 
      ! output all variables
