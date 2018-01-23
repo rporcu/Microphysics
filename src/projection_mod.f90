@@ -636,14 +636,16 @@ contains
       ke = hi(3)
 
       
-      ! First set the interior points to the current value of pressure
-      ! scaled by "scale"
-      if ( singular == 0 ) then 
-         phi(is:ie,js:je,ks:ke) = scale * pg(is:ie,js:je,ks:ke)
-      else
-         phi(is:ie,js:je,ks:ke) = zero
-         return 
-      end if
+      ! First set the interior points to 0
+      ! If the system is singular, setting to 0 the initial guess
+      ! may be necessary to obtain convergence
+      ! Even for a NON-singular system, if the initial guess is extremely
+      ! close to the solution, this may not lead to convergence
+      phi(is:ie,js:je,ks:ke) = zero 
+
+      ! If the system is singular, no Dirichlet's condition is present
+      ! se we can safely exit this subroutine now
+      if ( singular /= 0 ) return 
          
       ! Next, assign the boundary values.
       ! Here we assume that all the boundaries are Dirichlet's
@@ -681,6 +683,5 @@ contains
       end if 
       
    end subroutine set_phi
-
    
 end module projection_mod

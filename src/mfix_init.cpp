@@ -22,6 +22,7 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         pp.query( "mg_verbose", mg_verbose );
         pp.query( "mg_cg_verbose", mg_cg_verbose );
         pp.query( "mg_max_iter", mg_max_iter );
+	pp.query( "mg_cg_maxiter", mg_cg_maxiter );
         pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
         pp.query( "mg_rtol", mg_rtol );
         pp.query( "mg_atol", mg_atol );
