@@ -14,6 +14,7 @@ if [ -n "$2" ]; then
     FCOMPARE=$2/plt_compare_diff_grids
     FEXTRACT=$2/fextract
 fi
+
 if [ -z "${FEXTRACT}" ]; then
     echo "FEXTRACT is not set. Aborting test."
     exit 1
@@ -24,6 +25,7 @@ if [ -n "$3" ]; then
     INPUTS=$3
 fi
 echo "Using INPUTS file ${INPUTS}"
+
 if [ "$ENABLE_MPI" -eq "1" ]; then
     if [ "$ENABLE_OMP" -eq "1" ]; then
 	MPIRUN="mpirun -np 2"
@@ -39,8 +41,8 @@ FCOMPARE=${FCOMPARE:-}
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
-${FEXTRACT} -p FLD0100001/ -d 2 -v u_g -s POST_VG.dat
-${FEXTRACT} -p FLD0100001/ -d 1 -v p_g -s POST_PG.dat
+${FEXTRACT} -p FLD0100001/ -d 1 -v w_g -s POST_VG.dat
+${FEXTRACT} -p FLD0100001/ -d 3 -v p_g -s POST_PG.dat
 
 post_dats=POST*.dat
 for result in ${post_dats}; do
