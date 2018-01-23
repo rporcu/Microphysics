@@ -1,15 +1,15 @@
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell = 8 8 4
+amr.n_cell = 8 4 8
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
-amr.max_grid_size = 4
+amr.max_grid_size = 8
 
 # Maximum tile size within each grid
-fabarray.mfiter_tile_size = 8 8 8
+fabarray.mfiter_tile_size = 4 4 4
  
 # Maximum particle tile size
-particles.tile_size       = 8 8 8
+particles.tile_size       = 4 4 4
 
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
@@ -20,7 +20,8 @@ amr.check_int = -1
 amr.par_ascii_int = -1
 
 # Geometry
-geometry.coord_sys   = 0                  # 0: Cartesian
+geometry.coord_sys   = 0                  # 0: Cartesian   
 geometry.is_periodic = 0     0     0      # Is periodic in each direction?
 geometry.prob_lo     = 0.    0.    0.       # lo corner of physical domain
-geometry.prob_hi     = 0.2   0.01  1.0      # hi corner of physical domain
+geometry.prob_hi     = 0.01  1.0   0.2      # hi corner of physical domain
+
