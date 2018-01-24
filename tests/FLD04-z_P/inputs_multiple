@@ -3,7 +3,7 @@ amr.n_cell = 32 32 32
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
-amr.max_grid_size = 64
+amr.max_grid_size = 16
 
 # Maximum tile size within each grid
 fabarray.mfiter_tile_size = 64 64 64
@@ -18,9 +18,6 @@ amr.plot_file=FLD04
 
 amr.check_int = -1
 amr.par_ascii_int = -1
-
-mfix.use_proj_method = 1
-mfix.steady_state_tol=1.0e-8
 
 # Geometry
 geometry.coord_sys   = 0                  # 0: Cartesian

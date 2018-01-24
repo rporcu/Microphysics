@@ -34,8 +34,8 @@ rm -rf ${RUN_NAME}* POST_* &> /dev/null
 time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
 if ! [ -z "${FEXTRACT}" ]; then
-    ${FEXTRACT} -p FLD0400001/ -d 2 -v u_g -f 8 -s POST_UG.dat
-    ${FEXTRACT} -p FLD0400001/ -d 1 -v v_g -f 8 -s POST_VG.dat
+    ${FEXTRACT} -p FLD0400001/ -d 1 -v w_g -f 8 -s POST_UG.dat
+    ${FEXTRACT} -p FLD0400001/ -d 3 -v u_g -f 8 -s POST_VG.dat
 
     post_dats=POST*.dat
     for result in ${post_dats}; do
