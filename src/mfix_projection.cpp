@@ -16,7 +16,10 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 {
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
-      
+
+    // Update values of ro_g and rop_g
+    int calc_flag = 2;
+    mfix_calc_coeffs (lev,calc_flag);
     
     // Extrapolate boundary values for density and volume fraction
     // The subsequent call to mfix_set_projection_bcs will only overwrite
@@ -31,15 +34,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
     mfix_set_pressure_bcs (lev);
-    
-    // Calculate transport coefficients
-    int calc_flag = 2;
-    mfix_calc_coeffs (lev,calc_flag);
-  
-    // Back up field
-    // Backup field variable to old
-    int nghost = ep_go[lev] -> nGrow();
-
 
     //
     // Start loop: if we are not seeking a steady state solution,
@@ -49,7 +43,10 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
     do
     {
-
+ 
+	// Back up field
+	// Backup field variable to old
+	int nghost = ep_go[lev] -> nGrow();
 	MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0, 1, nghost);
 	MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0, 1, nghost);
 	MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0, 1, nghost);
@@ -59,18 +56,17 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, nghost);
   
 
-//     // User hooks
-// #ifdef _OPENMP
-// #pragma omp parallel
-// #endif
-//     for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
-// 	mfix_usr2();
+	// User hooks
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+	for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+	    mfix_usr2();
 
-//     // Calculate drag coefficient
-//     if (solve_dem)
-// 	mfix_calc_drag_fluid(lev);
+	// Calculate drag coefficient
+	if (solve_dem)
+	    mfix_calc_drag_fluid(lev);
   
-
 	// Here we should check the CFL condition
 	// Compute dt for this time step
 	Real umax  = u_g[lev] -> norm0 ();
@@ -84,46 +80,28 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	prev_dt = dt ;
 
 
-	amrex::Print() << "\nTentative velocity computation at  time = " << time
-		  << " ( dt = "<< dt << " )\n";
-	amrex::Print() << "At beginning of time step :\n";
-	amrex::Print() << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-	amrex::Print() << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-	amrex::Print() << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
-
 	//
 	// Time integration step
 	//
-        // Step 1: compute u* (predictor step) and store it in u_g/v_g/w_g
-        mfix_compute_first_predictor ( lev, dt );
 
-	// Step 2: compute u** (corrector step) and store it in u_g/v_g/w_g
-	mfix_compute_second_predictor ( lev, dt );
+        // Predictor step 
+        mfix_apply_predictor ( lev, dt );
 
-
-	//
-	amrex::Print() << "\nBefore projection step :\n";
+	amrex::Print() << "\nAfter predictor step:\n";
 	amrex::Print() << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
 	amrex::Print() << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
 	amrex::Print() << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
 	amrex::Print() << "max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
 
-	//check_for_nans (lev);
-
-	// 
-	//  Projection Step
-	// 
-	mfix_apply_projection ( lev, 0.5*dt ); 
-
-	//
-	amrex::Print() << "\nAfter projection step :\n";
-	amrex::Print() << "Final max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-	amrex::Print() << "Final max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-	amrex::Print() << "Final max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
-	amrex::Print() << "Final max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
-    
-	//check_for_nans (lev);
-
+	
+	// Corrector step 
+	mfix_apply_corrector ( lev, dt );
+	
+	amrex::Print() << "\nAfter corrector step:\n";
+	amrex::Print() << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
+	amrex::Print() << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
+	amrex::Print() << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+	amrex::Print() << "max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
     
 	// // Calculate transport coefficients
 	// mfix_physical_prop(lev,0);
@@ -157,26 +135,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
 	// BCs 
 	fill_mf_bc(lev,*trD_g[lev]);
-    
-// #ifdef _OPENMP
-// #pragma omp parallel
-// #endif
-// 	for (MFIter mfi(*vort[lev],true); mfi.isValid(); ++mfi)
-// 	{
-// 	    const Box& bx = mfi.tilebox();
 
-// 	    compute_vort ( BL_TO_FORTRAN_BOX(bx),
-// 			   BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
-// 			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-// 			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-// 			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-// 			   geom[lev].CellSize() );		     
-
-// 	}
-
-	amrex::Print() << "Max(abs(divu)) = "<< trD_g[lev] -> norm0 () << "\n";
-//	amrex::Print() << "DIVU AFTER PROJECTION = \n" ;
-//	amrex::Print() << (*trD_g[lev])[0] ;
 	// 
         // Check whether to exit the loop or not
 	// 
@@ -188,75 +147,21 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	
 	// Just for debugging
 	//keep_looping = 0;
-	
     }
     while ( keep_looping );
 
 }
 
 //
-//
-// 
-void
-mfix_level::init_tests_projection (int lev) 
-{
-
-    static bool first_access = true;
-
-    if (!first_access) return;
-
-    // Read in direction
-    ParmParse pp;
-    int vp = 1;			//  1=xy 2=xz 3=yz
-    pp.query ("vortices_plane", vp );
-
-    std::cout << "2D vortices initialized on plane " << vp << std::endl;
-    
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-    for (MFIter mfi(*p_go[lev],true); mfi.isValid(); ++mfi)
-    {
-	Box ubx = mfi.tilebox (e_x); 
-	Box vbx = mfi.tilebox (e_y);
-	Box wbx = mfi.tilebox (e_z);
-
-	init_periodic_vortices ( BL_TO_FORTRAN_BOX(ubx),  
-				 BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-				 BL_TO_FORTRAN_BOX(vbx),  
-				 BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-				 BL_TO_FORTRAN_BOX(wbx),  
-				 BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-				 geom[lev].CellSize (),
-				 (geom[lev].Domain ()).loVect (),
-				 &vp ); 
-	
-    }
-
-    std::cout << "Entering the init routine\n";
-
-
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
-
-    //mfix_set_bc1 (lev);
-
-    first_access = false;
-	
-}
-
-
-
-//
-// Compute first predictor.
+// Compute predictor.
 //
 // This routine solves:
 //
 //      du/dt  + grad(p)/rho  = RHS
 //
-// by using a first order discretization in space and time
-// and a non-incremental projection
+// by using a second order discretization in space and
+// a first order discretization in time + 
+// non-incremental projection
 //
 //  1. Compute
 // 
@@ -266,20 +171,25 @@ mfix_level::init_tests_projection (int lev)
 //
 //  2. Solve
 //
-//     div( grad(p) / rho ) = du_g/dx + dv_g/dy + dw_g/dz
+//     div( grad(phi) / rho ) = du_g/dx + dv_g/dy + dw_g/dz
 //
 //  3. Compute
 //
-//     u_g = u_g - dt * (dp/dx) / rho 
-//     v_g = v_g - dt * (dp/dy) / rho 
-//     w_g = w_g - dt * (dp/dz) / rho
-// 
-//  This is the prediction step of the Heun's integration
+//     u_g = u_g -  (dphi/dx) / rho 
+//     v_g = v_g -  (dphi/dy) / rho 
+//     w_g = w_g -  (dphi/dz) / rho
+//
+//  4. Compute
+//
+//     p_g = phi / dt
+//
+//
+//  This is the predictor step of the Heun's integration
 //  scheme, AKA Predictor-Corrector Method (PCM).
-//  This step is first order in time and space
+//  This step is first order in time and second order in space
 // 
 void
-mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
+mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 {
 
     // Compute fluid acceleration (convection + diffusion) 
@@ -314,20 +224,38 @@ mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
 }
 
 
-
-
 //
-// Compute the second predictor:
+// Compute corrector:
 //
-//   u_g = u_go + dt * (R_u^* + R_u^n - (dp/dx)*(1/rho)) / 2
-//   v_g = v_go + dt * (R_v^* + R_v^n - (dp/dy)*(1/rho)) / 2
-//   w_g = w_go + dt * (R_w^* + R_w^n - (dp/dz)*(1/rho)) / 2
+//  1. Compute
+//
+//     u_g = u_go + dt * (R_u^* + R_u^n - (dp*/dx)*(1/rho)) / 2
+//     v_g = v_go + dt * (R_v^* + R_v^n - (dp*/dy)*(1/rho)) / 2
+//     w_g = w_go + dt * (R_w^* + R_w^n - (dp*/dz)*(1/rho)) / 2
+//
+//     where the starred variables are the "predictor-step" variables. 
+//     
+//  2. Solve
+//
+//     div( grad(phi) / rho ) = du_g/dx + dv_g/dy + dw_g/dz
+//
+//  3. Compute
+//
+//     u_g = u_g - (dphi/dx) / rho 
+//     v_g = v_g - (dphi/dy) / rho 
+//     w_g = w_g - (dphi/dz) / rho
+//
+//  4. Compute
+//
+//     p_g = 2 * phi / dt
+//
 //
 //  This is the correction step of the Heun's integration
 //  scheme, AKA Predictor-Corrector Method (PCM).
-//  
+//  This step is second order in time and space.
+// 
 void
-mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
+mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
 {
     BL_PROFILE("mfix_level::mfix_compute_second_predictor");
 
@@ -362,8 +290,10 @@ mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
     w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
-}
 
+    // Apply projection
+    mfix_apply_projection ( lev, 0.5*dt );     
+}
 
 
 //
@@ -809,7 +739,6 @@ mfix_level::steady_state_reached (int lev, Real dt)
     w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
     mfix_set_pressure_bcs (lev);
-//mfix_set_bc1(lev);
     
     // 
     // Use temporaries to store the difference
@@ -822,8 +751,6 @@ mfix_level::steady_state_reached (int lev, Real dt)
     MultiFab tmp( grids[lev], dmap[lev], 1, 0 );
     MultiFab::LinComb (tmp, 1.0, *p_g[lev], 0, -1.0, *p_go[lev], 0, 0, 1, 0);
     
-
-    
     Real delta_u = u_gt[lev] -> norm0 ();
     Real delta_v = v_gt[lev] -> norm0 ();
     Real delta_w = w_gt[lev] -> norm0 ();
@@ -831,13 +758,6 @@ mfix_level::steady_state_reached (int lev, Real dt)
     
     Real tol = steady_state_tol; 
 
-    
-    amrex::Print() << "Checking time step :\n";
-    amrex::Print() << "du/dt  = " << delta_u/dt << "\n";
-    amrex::Print() << "dv/dt  = " << delta_v/dt << "\n";	
-    amrex::Print() << "dw/dt  = " << delta_w/dt << "\n";
-    amrex::Print() << "dp/dt  = " << delta_p/dt << "\n";
-    amrex::Print() << "delta_p  = " << delta_p << "\n";
     int condition1 = (delta_u < tol*dt) && (delta_v < tol*dt ) && (delta_w < tol*dt);
 
 
@@ -878,15 +798,18 @@ mfix_level::steady_state_reached (int lev, Real dt)
     	tmp4 = dp_n1 / po_n1;
     };
 
-    
-    amrex::Print() << "FROM STEADY STATE CHECK  = " << uo_n1 << " " << vo_n1 << " " << wo_n1 << "\n";
-    amrex::Print() << "||u-uo||/||uo||  = " << tmp1 << "\n";
-    amrex::Print() << "||v-vo||/||vo||  = " << tmp2 << "\n";	
-    amrex::Print() << "||w-wo||/||wo||  = " << tmp3 << "\n";
-    amrex::Print() << "||p-po||/||po||  = " << tmp4 << "\n";
-	
     int condition2 = (tmp1 < tol) && (tmp2 < tol) && (tmp3 < tol); // && (tmp4 < tol);
 
+    //
+    // Print out info on steady state checks
+    // 
+    amrex::Print() << "Steady state check:\n";
+    amrex::Print() << "||u-uo||/||uo|| , du/dt  = " << tmp1 <<" , "<< delta_u/dt << "\n";
+    amrex::Print() << "||v-vo||/||vo|| , dv/dt  = " << tmp2 <<" , "<< delta_v/dt << "\n";
+    amrex::Print() << "||w-wo||/||wo|| , dw/dt  = " << tmp3 <<" , "<< delta_w/dt << "\n";
+    amrex::Print() << "||p-po||/||po|| , dp/dt  = " << tmp4 <<" , "<< delta_p/dt << "\n";
+
+    // Count # access
     naccess++;
 
     // 

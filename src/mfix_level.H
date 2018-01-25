@@ -178,8 +178,6 @@ private:
 			int bc_lo[], int bc_hi[] );
 
     void mfix_compute_oro_g(int lev);
-    
-    void init_tests_projection(int lev);
 
     void check_for_nans(int lev);
     
@@ -193,9 +191,9 @@ private:
     
     int  steady_state_reached(int lev, Real dt);
 
-    void mfix_compute_first_predictor(int lev, amrex::Real dt);
+    void mfix_apply_predictor (int lev, amrex::Real dt);
 
-    void mfix_compute_second_predictor(int lev, amrex::Real dt);
+    void mfix_apply_corrector (int lev, amrex::Real dt);
 
 
     void mfix_apply_forcing_terms(int lev, amrex::Real dt,
