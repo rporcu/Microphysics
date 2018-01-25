@@ -46,6 +46,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     // the loop will execute only once
     //
     int keep_looping = 1;
+
     do
     {
 
@@ -94,9 +95,8 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	// Time integration step
 	//
         // Step 1: compute u* (predictor step) and store it in u_g/v_g/w_g
-	mfix_compute_first_predictor ( lev, dt );
+        mfix_compute_first_predictor ( lev, dt );
 
-	
 	// Step 2: compute u** (corrector step) and store it in u_g/v_g/w_g
 	mfix_compute_second_predictor ( lev, dt );
 
@@ -138,7 +138,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	w_g[lev] -> FillBoundary (geom[lev].periodicity());
 	mfix_set_projection_bcs (lev);
 	mfix_set_pressure_bcs (lev);
-//mfix_set_bc1(lev);
     
 #ifdef _OPENMP
 #pragma omp parallel
@@ -186,9 +185,9 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	} else {
 	    keep_looping = 0;
 	}
-
+	
 	// Just for debugging
-//	keep_looping = 0;
+	//keep_looping = 0;
 	
     }
     while ( keep_looping );
@@ -308,12 +307,9 @@ mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
     w_g[lev] -> FillBoundary (geom[lev].periodicity());
+    
     mfix_set_projection_bcs (lev);
-
-    // Reset pressure field to initial value for the subsequent
-    // computation of second predictor
-    int nghost = p_g[lev] -> nGrow ();
-    MultiFab::Copy ( *p_g[lev],  *p_go[lev],  0, 0, 1, nghost);
+    mfix_set_pressure_bcs (lev);
     
 }
 
@@ -366,7 +362,6 @@ mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
     w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
-//    mfix_set_bc1(lev);
 }
 
 
@@ -712,10 +707,8 @@ mfix_level::solve_poisson_equation (  int lev,
     matrix.setScalars ( 0.0, -1.0 );    
     matrix.setBCoeffs ( lev, b_tmp );
 
-    // Pass the solution vector because it is required to have
-    // the Dirichlet's values in place
     matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi)[lev] );
-    
+
     // 
     // Then setup the solver ----------------------
     //
@@ -725,6 +718,7 @@ mfix_level::solve_poisson_equation (  int lev,
     solver.setMaxFmgIter (mg_max_fmg_iter);
     solver.setVerbose (mg_verbose);
     solver.setCGVerbose (mg_cg_verbose);
+    solver.setCGMaxIter (mg_cg_maxiter);
 
     // 
     // Finally, solve the system

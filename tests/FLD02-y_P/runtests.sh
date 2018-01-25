@@ -1,9 +1,8 @@
-#!/bin/bash -exl
+#!/bin/bash -lex
 
 set -euo pipefail
 
-# set case directory
-RUN_NAME="FLD03"
+RUN_NAME="FLD02"
 
 MFIX=./mfix
 if [ -n "$1" ]; then
@@ -26,11 +25,7 @@ fi
 echo "Using INPUTS file ${INPUTS}"
 
 if [ "$ENABLE_MPI" -eq "1" ]; then
-    if [ "$ENABLE_OMP" -eq "1" ]; then
-	MPIRUN="mpirun -np 2"
-    else 
-	MPIRUN="mpirun -np 4"
-    fi
+    MPIRUN="mpirun -np 2"
 else
     MPIRUN=""
 fi
@@ -40,10 +35,10 @@ FCOMPARE=${FCOMPARE:-}
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
-${FEXTRACT} -p FLD0300001/ -d 2 -v u_g -s POST_VG.dat
-${FEXTRACT} -p FLD0300001/ -d 1 -v p_g -s POST_PG.dat
+${FEXTRACT} -p FLD0200001/ -d 3 -t 1.0e-10 -v v_g -s POST_VG.dat
+${FEXTRACT} -p FLD0200001/ -d 2 -t 1.0e-10 -v p_g -s POST_PG.dat
 
 post_dats=POST*.dat
 for result in ${post_dats}; do
-    diff -u -I '#.*' "../FLD03-y/AUTOTEST/${result}" "${result}"
+    diff -u -I '#.*' "AUTOTEST/${result}" "${result}"
 done

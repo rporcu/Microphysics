@@ -361,7 +361,10 @@ endif (ENABLE_MPI)
 # test suite yet
 #  
 set( PTESTS
-     FLD01-x_P FLD02-x_P FLD03-x_P FLD04-x_P 
+   FLD01-x_P FLD01-y_P FLD01-z_P
+   FLD02-x_P FLD02-y_P FLD02-z_P
+   FLD03-x_P FLD03-y_P FLD03-z_P
+   FLD04-x_P FLD04-y_P FLD04-z_P 
    )
 
 # set (BUILD_TEST build_tests)
