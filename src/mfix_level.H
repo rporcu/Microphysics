@@ -209,7 +209,9 @@ private:
 			Vector< std::unique_ptr<MultiFab> >& w );
 
     void mfix_set_phi(int lev, Real scale, int singular );
-    // End of projection-related methods
+
+    void mfix_compute_diveu (int lev);
+// End of projection-related methods
 
 
 
@@ -319,7 +321,10 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag_v;
     Vector< std::unique_ptr<MultiFab> > drag_w;
 
+    // 
     // Projection
+    //
+    
     // Fluid acceleration (convection + diffusion)
     Vector< std::unique_ptr<MultiFab> > uacc;
     Vector< std::unique_ptr<MultiFab> > vacc;
@@ -329,8 +334,11 @@ private:
     Vector< std::unique_ptr<MultiFab> > slopes_u;
     Vector< std::unique_ptr<MultiFab> > slopes_v;
     Vector< std::unique_ptr<MultiFab> > slopes_w;
-    
-    
+
+    // div (ep_g * u)
+    Vector< std::unique_ptr<MultiFab> > diveu;
+
+    // 
     Vector< std::unique_ptr<MultiFab> > fp_x;
     Vector< std::unique_ptr<MultiFab> > fp_y;
     Vector< std::unique_ptr<MultiFab> > fp_z;

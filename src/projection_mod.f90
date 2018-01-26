@@ -683,5 +683,72 @@ contains
       end if 
       
    end subroutine set_phi
+
+   !
+   ! Compute the cell-centered divergence of ep_g * {u_g,v_g,w_g}
+   ! 
+   subroutine compute_diveu ( lo, hi, diveu, slo, shi, ep_g, u_g, ulo, uhi, &
+      & v_g, vlo, vhi, w_g, wlo, whi, dx )  bind(C)
+
+      ! Loop bounds
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+
+      ! Arrays bounds
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3)
+      integer(c_int), intent(in   ) :: vlo(3),vhi(3)
+      integer(c_int), intent(in   ) :: wlo(3),whi(3)
+
+      ! Grid 
+      real(ar),       intent(in   ) :: dx(3)
+
+      ! Array
+      real(ar),       intent(  out) :: &
+           diveu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      
+      real(ar),       intent(in   ) :: &
+           u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
+           v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+           w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
+          ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      
+      ! Local variables
+      integer  :: i, j, k
+      real(ar) :: odx, ody, odz
+      real(ar) :: eu_n, eu_s, eu_t, eu_b, eu_e, eu_w
+
+      odx = one / dx(1)
+      ody = one / dx(2)
+      odz = one / dx(3)
+
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+
+               ! Face values
+               eu_e = u_g(i+1,j,k) * half * ( ep_g(i+1,j,k) + ep_g(i  ,j,k) )
+               eu_w = u_g(i  ,j,k) * half * ( ep_g(i  ,j,k) + ep_g(i-1,j,k) )               
+
+               eu_n = v_g(i,j+1,k) * half * ( ep_g(i,j+1,k) + ep_g(i,j  ,k) )
+               eu_s = v_g(i,j  ,k) * half * ( ep_g(i,j  ,k) + ep_g(i,j-1,k) )
+
+               eu_t = w_g(i,j,k+1) * half * ( ep_g(i,j,k+1) + ep_g(i,j,k  ) )
+               eu_b = w_g(i,j,k  ) * half * ( ep_g(i,j,k  ) + ep_g(i,j,k-1) )
+
+               ! Divergence
+               diveu(i,j,k) = (eu_e - eu_w) * odx + (eu_n - eu_s) * ody + &
+                    &         (eu_t - eu_b) * odz
+
+            end do
+         end do
+      end do
+
+   end subroutine compute_diveu
+
+
+
+
+
+
    
 end module projection_mod

@@ -473,6 +473,17 @@ extern "C"
 	amrex::Real* w_g,   const int* wlo, const int* whi,
 	const amrex::Real* dx );
 
+    
+    void compute_diveu (
+	const int* lo,  const int*  hi,
+	      amrex::Real* diveu,  const int* slo, const int* shi,
+	const amrex::Real* ep_g,
+	const amrex::Real* u_g,    const int* ulo, const int* uhi,
+	const amrex::Real* v_g,    const int* vlo, const int* vhi,
+	const amrex::Real* w_g,    const int* wlo, const int* whi,
+	const amrex::Real* dx );
+
+    
     void compute_vort (
 	const int* lo,  const int*  hi,
 	amrex::Real* vort,  const int* slo, const int* shi,

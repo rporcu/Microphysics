@@ -337,6 +337,9 @@ mfix_level::AllocateArrays (int lev)
     phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     phi[lev]->setVal(0.);
 
+    // diveu
+    diveu[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    diveu[lev]->setVal(0.);
 
     // ********************************************************************************
     // X-face-based arrays
