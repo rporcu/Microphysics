@@ -2,6 +2,7 @@
 
 #include <mfix_F.H>
 #include <mfix_level.H>
+#include <eb_levelset.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 

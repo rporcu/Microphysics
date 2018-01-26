@@ -18,6 +18,7 @@
 #include <AMReX_AnisotropicDxPlaneIF.H>
 #include <AMReX_AnisotropicIF.H>
 
+#include <eb_levelset.H>
 #include <mfix_level.H>
 #include <mfix_F.H>
 
@@ -167,6 +168,8 @@ mfix_level::make_eb_geometry(int lev)
                          m_eb_support_level));
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+
+    LSFactory level_set(lev, pc.get(), particle_ebfactory.get());
 }
 
 void

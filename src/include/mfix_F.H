@@ -372,7 +372,8 @@ extern "C"
 
     void call_usr2_des( const int* np, void* particles );
 
-    void des_init_time_loop ( const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt, int* subdt_io );
+    void des_init_time_loop ( const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt, 
+            const int* subdt_io );
 
     void des_time_loop ( const int* nrp,  void* rparticles,
                          const int* nf, amrex::Real* tow, amrex::Real* fc,
@@ -615,6 +616,11 @@ extern "C"
 
     void mfix_write_eb_vtp ( int* myID);
     void mfix_write_pvtp ( int* nProcs);
+
+    void compute_levelset(const int * lo, const int * hi,
+                          const void * flag, const int * fglo, const int * fghi,
+                          int * valid, const int * vlo, const int * vhi,
+                          amrex_real * phi, const int * phlo, const int * phhi);
     
 #ifdef __cplusplus
 }
