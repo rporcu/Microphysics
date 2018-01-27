@@ -193,7 +193,6 @@ mfix_level::RegridOnRestart (int lev)
        if (solve_fluid)
           mfix_set_bc0(lev);
 
-       pc->BuildLevelMask(lev, geom[lev], dm, ba); 
        pc->Redistribute();
 
     }

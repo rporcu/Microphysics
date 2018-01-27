@@ -321,7 +321,6 @@ void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, Distributio
         } // p
     } // pti
 
-    BuildLevelMask(lev,geom,dmap,ba);
     Redistribute();
 }
 

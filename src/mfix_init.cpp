@@ -537,10 +537,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       amrex::Abort("Bad particle_init_type");
     }
 
-    pc->BuildLevelMask(lev, Geom(lev),
-                       pc->ParticleDistributionMap(lev),
-                       pc->ParticleBoxArray(lev));
-
     // used in load balancing
     if (load_balance_type == "KnapSack") {
         particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),

@@ -374,14 +374,12 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     int lev = 0;
     if (Nrep == IntVect::TheUnitVector())
     {
-       // We need to do these on restart regardless of whether we replicate
-       pc -> BuildLevelMask(lev,geom[lev],dmap[lev],grids[lev]);
-       pc -> Redistribute();
+       // We need to do this on restart regardless of whether we replicate
+        pc -> Redistribute();
 
     } else {
 
-       // This call to Replicate adds the new particles,
-       //      then calls BuildLevelMask and Redistribute
+       // This call to Replicate adds the new particles, then calls Redistribute()
        pc->Replicate(Nrep,geom[lev],dmap[lev],grids[lev]);
     }
 
