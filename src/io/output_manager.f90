@@ -115,7 +115,7 @@ contains
       !----------------------------------------------------------------------!
       subroutine NOTIFY_useR(MSG, EXT)
 
-         use run, only: FULL_LOG
+         use run, only: full_log
 
          CHARACTER(len=*), INTENT(IN) :: MSG
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: EXT
@@ -176,13 +176,12 @@ contains
          use discretelement, only: des_continuum_coupled
          use discretelement, only: DTSOLID
          use error_manager, only: err_msg, flush_err_msg, ival
-         use tunit_module, only: get_tunit
-         use run, only: FULL_LOG, nlog
+         use run, only: full_log, nlog
 
          integer :: TNITS
          logical :: SCR_LOG
 
-         SCR_LOG = (FULL_LOG)
+         SCR_LOG = (full_log)
 
          IF(.NOT.HDR_MSG) THEN
             IF(SCR_LOG) WRITE(*,1000)

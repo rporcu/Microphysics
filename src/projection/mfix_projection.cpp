@@ -14,9 +14,9 @@
 void
 mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time )
 {
+    BL_PROFILE_REGION_START("mfix::EvolveFluidProjection");
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
-      
     
     // Extrapolate boundary values for density and volume fraction
     // The subsequent call to mfix_set_projection_bcs will only overwrite
@@ -192,6 +192,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     }
     while ( keep_looping );
 
+    BL_PROFILE_REGION_STOP("mfix::EvolveFluidProjection");
 }
 
 //
