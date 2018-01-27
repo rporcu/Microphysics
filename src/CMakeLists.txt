@@ -15,6 +15,7 @@ set(F90_sources
    calc_coeff.f90
    calc_mu_g.f90
    calc_ro_g.f90
+   compute_divu.f90
    compute_vort.f90
    constant_mod.f90
    eos_mod.f90
