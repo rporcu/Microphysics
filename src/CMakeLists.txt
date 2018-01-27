@@ -15,21 +15,19 @@ set(F90_sources
    calc_coeff.f90
    calc_mu_g.f90
    calc_ro_g.f90
+   compute_divu.f90
    compute_vort.f90
    constant_mod.f90
    eos_mod.f90
    fill_bc0.f90
    fld_constants_mod.f90
-   functions_mod.f90
    get_data.f90
-   get_tunit.f90
    ic_mod.f90
    init_fluid.f90
    init_namelist.f90
    output_mod.f90
    param_mod.f90
    physical_prop.f90
-   ps_mod.f90
    run_mod.f90
    scales_mod.f90
    set_bc0.f90
@@ -37,7 +35,7 @@ set(F90_sources
    set_bc_flow.f90
    set_bc_type.f90
    set_ps.f90
-   solver_params.f90
+   ps_mod.f90
    utilities_mod.f90
    zero_wall_norm_vel.f90
    amrex_to_mfix.F90)
@@ -52,13 +50,6 @@ set(F90_sources
 # 
 list ( APPEND CXX_sources eb/mfix_eb.cpp )
 list ( APPEND F90_sources eb/get_eb_walls.f90 eb/compute_normals.f90 )
-
-#
-# Linear solvers (for SIMPLE)
-#
-list ( APPEND CXX_sources solvers/mfix_linear_solve.cpp )
-list ( APPEND F90_sources solvers/leqsol_mod.f90  solvers/matvec.f90 )
-list ( APPEND F90_sources solvers/solve_bicgstab.cpp )
 
 #
 # Particles
@@ -79,6 +70,10 @@ list ( APPEND F90_sources des/drag_mod.f90 des/flip_particle_vol.f90 )
 #
 # SIMPLE routines
 # 
+list ( APPEND CXX_sources simple/mfix_simple.cpp )
+list ( APPEND CXX_sources simple/mfix_linear_solve.cpp )
+list ( APPEND F90_sources simple/leqsol_mod.f90  simple/matvec.f90 simple/solver_params.f90 )
+list ( APPEND F90_sources simple/solve_bicgstab.cpp )
 list ( APPEND F90_sources simple/source_u_g.f90 simple/source_v_g.f90 )
 list ( APPEND F90_sources simple/source_w_g.f90 simple/source_pp_g.f90 )
 list ( APPEND F90_sources simple/tau_u_g.f90 simple/tau_v_g.f90 simple/tau_w_g.f90 )
@@ -88,6 +83,7 @@ list ( APPEND F90_sources simple/solve_vel_star.f90 simple/solve_pp_g.f90 simple
 list ( APPEND F90_sources simple/matrix_mod.f90 simple/adjust_dt_mod.f90 simple/calc_trd_g.f90 )
 list ( APPEND F90_sources simple/calc_mflux.f90 simple/calc_d.f90 simple/check_convergence.f90 )
 list ( APPEND F90_sources simple/residual_mod.f90 simple/correct_0.f90 simple/ur_facs_mod.f90 )
+list ( APPEND F90_sources simple/functions_mod.f90 )
    
 #
 # Data checks
