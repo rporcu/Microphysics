@@ -34,6 +34,7 @@ set(F90_sources
    set_bc1.f90
    set_bc_flow.f90
    set_bc_type.f90
+   set_ps.f90
    ps_mod.f90
    utilities_mod.f90
    zero_wall_norm_vel.f90
@@ -82,7 +83,7 @@ list ( APPEND F90_sources simple/solve_vel_star.f90 simple/solve_pp_g.f90 simple
 list ( APPEND F90_sources simple/matrix_mod.f90 simple/adjust_dt_mod.f90 simple/calc_trd_g.f90 )
 list ( APPEND F90_sources simple/calc_mflux.f90 simple/calc_d.f90 simple/check_convergence.f90 )
 list ( APPEND F90_sources simple/residual_mod.f90 simple/correct_0.f90 simple/ur_facs_mod.f90 )
-list ( APPEND F90_sources simple/set_ps.f90 simple/functions_mod.f90 )
+list ( APPEND F90_sources simple/functions_mod.f90 )
    
 #
 # Data checks
