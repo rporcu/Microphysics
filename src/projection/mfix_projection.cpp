@@ -14,6 +14,7 @@
 void
 mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time )
 {
+    BL_PROFILE_REGION_START("mfix::EvolveFluidProjection");
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
 
@@ -130,6 +131,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     }
     while ( keep_looping );
 
+    BL_PROFILE_REGION_STOP("mfix::EvolveFluidProjection");
 }
 
 //

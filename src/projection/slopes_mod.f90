@@ -164,9 +164,9 @@ contains
             do j = lo(2), hi(2)
 
 
-               if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
-                    ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
-                    ( bc_ilo_type(j,k,1) == FSW_ )  ) then
+               if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
+                    ( bc_ihi_type(j,k,1) == NSW_ )  .or. &
+                    ( bc_ihi_type(j,k,1) == FSW_ )  ) then
 
                   du_l = u(i,j,k) - u(i-1,j,k)
                   du_c = half*u(i-2,j,k) - two*u(i-1,j,k) + three2nds*u(i,j,k) 
@@ -278,9 +278,9 @@ contains
          do k = lo(3), hi(3)
             do i = lo(1), hi(1)
 
-               if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
-                    ( bc_jlo_type(i,k,1) == FSW_ )  ) then
+               if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
+                    ( bc_jhi_type(i,k,1) == NSW_ )  .or. &
+                    ( bc_jhi_type(i,k,1) == FSW_ )  ) then
 
                   du_l = v(i,j,k) - v(i,j-1,k)
                   du_c = half*v(i,j-2,k) - two*v(i,j-1,k) + three2nds*v(i,j,k) 
@@ -392,9 +392,9 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_klo_type(i,j,1) == NSW_ )  .or. &
-                    ( bc_klo_type(i,j,1) == FSW_ )  ) then
+               if ( ( bc_khi_type(i,j,1) == MINF_ ) .or. &
+                    ( bc_khi_type(i,j,1) == NSW_ )  .or. &
+                    ( bc_khi_type(i,j,1) == FSW_ )  ) then
 
                   du_l = w(i,j,k) - w(i,j,k-1)
                   du_c = half*w(i,j,k-2) - two*w(i,j,k-1) + three2nds*w(i,j,k) 
