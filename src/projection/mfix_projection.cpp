@@ -17,10 +17,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     BL_PROFILE_REGION_START("mfix::EvolveFluidProjection");
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
-
-    // Update values of ro_g and rop_g
-    int calc_flag = 2;
-    mfix_calc_coeffs (lev,calc_flag);
     
     // Extrapolate boundary values for density and volume fraction
     // The subsequent call to mfix_set_projection_bcs will only overwrite
@@ -38,7 +34,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
     //
     // Start loop: if we are not seeking a steady state solution,
-    // the loop will execute only once
+    // the loop will execute only one time
     //
     int keep_looping = 1;
 
