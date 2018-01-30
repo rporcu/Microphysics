@@ -215,6 +215,8 @@ private:
     BoxArray MakeBaseGrids() const;
     void ChopGrids(const Box& domain, BoxArray& ba, int target_size) const;
 
+    void mfix_print_max_vel(int lev);
+
     void mfix_set_bc_type(int lev);
     void mfix_set_bc1(int lev);
 
