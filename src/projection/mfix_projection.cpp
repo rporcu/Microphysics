@@ -181,7 +181,10 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 
     // Add the forcing terms
     mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
- 
+
+    // Compute intermediate velocity
+    mfix_compute_intermediate_velocity ( lev, dt );
+    
     // Exchange halo nodes and apply BCs to velocity
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
@@ -261,7 +264,10 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
     
     // Add pressure gradient
-    mfix_add_pressure_gradient ( lev, -dt/2.0 ); 
+    mfix_add_pressure_gradient ( lev, -dt/2.0 );
+
+    // Compute intermediate velocity
+    mfix_compute_intermediate_velocity ( lev, dt );
     
     // Fill ghost cells and reimpose boundary conditions
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
@@ -460,6 +466,63 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
     }
 
 }
+
+
+
+
+//
+// Implicit solve for the intermediate velocity.
+// Currently this means accounting for the implicit part of the fluid/particle
+// momentum exchange
+// 
+void
+mfix_level::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
+
+{
+    BL_PROFILE("mfix_level::mfix_compute_intermediate_velocity");
+    
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi) {
+	
+	// Directions
+	int xdir = 1;
+	int ydir = 2;
+	int zdir = 3;
+	
+	// Whole domain
+	Box domain(geom[lev].Domain());
+	
+	// Boxes for staggered components
+	Box ubx = mfi.tilebox (e_x);
+	Box vbx = mfi.tilebox (e_y);
+	Box wbx = mfi.tilebox (e_z);
+	
+
+	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(ubx),  
+					BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+					BL_TO_FORTRAN_ANYD((*f_gds_u[lev])[mfi]),
+					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+					&xdir, &dt );
+
+	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(vbx),  
+					BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+					BL_TO_FORTRAN_ANYD((*f_gds_v[lev])[mfi]),
+					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+					&ydir, &dt );
+	
+	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(wbx),  
+					BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+					BL_TO_FORTRAN_ANYD((*f_gds_w[lev])[mfi]),
+					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+					&zdir, &dt );
+    }
+
+}
+
+
+
 
 //
 // Compute the slopes of each velocity component in the

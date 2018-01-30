@@ -381,6 +381,70 @@ contains
 
 
    !
+   ! This part takes care of performing an implicit solve for the
+   ! intermediate velocity.
+   ! Currently, this is equivalent to dividing by a diagonal coefficient
+   ! since the only implicit term is the fluid/particle momentum exchange.
+   ! 
+   ! Upon entry, u_i contains the rhs of the system to be solved and on exit
+   ! the solution of the system itself. This means that we are solving;
+   !
+   !    A*u_i = rhs  with rhs = u_i upont entry
+   !
+   ! So far the above system reduces to:
+   !
+   !    u_i = u_i / (A)_diagonal
+   !
+   subroutine compute_intermediate_velocity ( lo, hi, u_i, ulo, uhi, &
+        & f_gds_i, flo, fhi, rop, slo, shi, dir, dt ) bind(C)
+
+     
+      ! Loop bounds
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+
+      ! Array bounds
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int), intent(in   ) :: flo(3), fhi(3)
+      
+      ! Direction
+      integer(c_int), intent(in   ) :: dir
+
+      ! Time step width
+      real(ar),       intent(in   ) :: dt
+
+            ! Arrays
+      real(ar),       intent(in   ) :: &
+           rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           f_gds_i(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
+
+      real(ar),       intent(inout) :: &
+           u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      
+      ! Local variables
+      integer(c_int)                :: i, j, k, i0, j0, k0
+      real(ar)                      :: orop, diag_coeff
+      
+      i0 = e_i(dir,1)
+      j0 = e_i(dir,2)
+      k0 = e_i(dir,3)
+      
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+               orop       = half * ( rop(i,j,k) - rop(i-i0,j-j0,k-k0) )
+               diag_coeff = one - dt * f_gds_i(i,j,k) * orop
+               u_i(i,j,k) = u_i(i,j,k) / diag_coeff
+            end do
+         end do
+      end do
+
+      
+   end subroutine compute_intermediate_velocity
+
+
+      
+   !
    ! Compute the coefficients of the PPE, i.e. 1 / ro_g = eps_g/rho_g,
    ! at the faces of the pressure cells along the "dir"-axis.
    ! 

@@ -197,6 +197,9 @@ private:
 			Vector< std::unique_ptr<MultiFab> >& v,
 			Vector< std::unique_ptr<MultiFab> >& w );
 
+    void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
+
+    
     void mfix_add_pressure_gradient(int lev, amrex::Real coeff);
     
     void mfix_compute_velocity_slopes(int lev,

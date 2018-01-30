@@ -589,7 +589,12 @@ extern "C"
 	const amrex::Real* dx, const amrex::Real* dt, 
 	const int* dir);
 
-
+    void compute_intermediate_velocity (
+	const int* lo, const int* hi,
+	      amrex::Real* u_i,  const int* ulo, const int* uhi,
+	const amrex::Real* f_gds_i, const int* flo, const int* fhi,
+	const amrex::Real* rop, const int* slo, const int* shi,
+	const int* dir, const amrex::Real* dt );
 
     void set_phi (
 	const int* lo, const int* hi,
