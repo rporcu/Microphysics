@@ -184,9 +184,10 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
             compute_vort ( BL_TO_FORTRAN_BOX(bx),
                            BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
-                           BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                           BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+                           BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+                           BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
                            geom[lev].CellSize() );
-
         }
 
     BL_PROFILE_REGION_STOP("mfix::EvolveFluidProjection");
