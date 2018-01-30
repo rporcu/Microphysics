@@ -123,7 +123,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	}
 	
 	// Just for debugging
-	//keep_looping = 0;
+	// keep_looping = 0;
     }
     while ( keep_looping );
 
@@ -401,8 +401,10 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 }
 
 
-
-
+//
+// Add explicit forcing terms. These include the body forces and
+// the explicit part of the particle/fluid momentum exchange 
+// 
 void
 mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 				      Vector< std::unique_ptr<MultiFab> >& u, 
@@ -412,11 +414,12 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 {
     BL_PROFILE("mfix_level::mfix_apply_forcing_terms");
 
+    
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
-    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
-    {
+    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi) {
+	
 	// Directions
 	int xdir = 1;
 	int ydir = 2;
@@ -429,28 +432,33 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 	Box ubx = mfi.tilebox (e_x);
 	Box vbx = mfi.tilebox (e_y);
 	Box wbx = mfi.tilebox (e_z);
-
+	
 
 	add_forcing ( BL_TO_FORTRAN_BOX(ubx),  
 		      BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
+		      BL_TO_FORTRAN_ANYD((*drag_u[lev])[mfi]),
 		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		      (*rop_g[lev])[mfi].dataPtr(),
 		      domain.loVect (), domain.hiVect (),
 		      geom[lev].CellSize (), &dt, &xdir );
 
-
 	add_forcing ( BL_TO_FORTRAN_BOX(vbx),  
 		      BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
+		      BL_TO_FORTRAN_ANYD((*drag_v[lev])[mfi]),
 		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		      (*rop_g[lev])[mfi].dataPtr(),
 		      domain.loVect (), domain.hiVect (),
 		      geom[lev].CellSize (), &dt, &ydir );
 
 	add_forcing ( BL_TO_FORTRAN_BOX(wbx),  
 		      BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
+		      BL_TO_FORTRAN_ANYD((*drag_w[lev])[mfi]),
 		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		      (*rop_g[lev])[mfi].dataPtr(),
 		      domain.loVect (), domain.hiVect (),
 		      geom[lev].CellSize (), &dt, &zdir );
-		
     }
+
 }
 
 //

@@ -253,9 +253,11 @@ contains
 
    !
    ! Add forcing (acceleration) terms to velocity component u_i
+   ! These terms include the volumetric forces and the explicit part of the
+   ! particle/fluid momentum exchange
    ! 
-   subroutine add_forcing ( lo, hi, u_i, ulo, uhi, ro_g, slo, shi, &
-        & domlo, domhi, dx, dt, dir )  bind(C)
+   subroutine add_forcing ( lo, hi, u_i, ulo, uhi, drag_i, dlo, dhi, &
+        & ro_g, slo, shi, rop_g, domlo, domhi, dx, dt, dir )  bind(C)
       
       use constant, only: gravity
       use bc      , only: delp_x, delp_y, delp_z 
@@ -267,7 +269,8 @@ contains
       ! Array bounds
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3)
-
+      integer(c_int), intent(in   ) :: dlo(3), dhi(3)
+      
       ! Direction
       integer(c_int), intent(in   ) :: dir
 
@@ -282,14 +285,16 @@ contains
       
       ! Arrays
       real(ar),       intent(in   ) :: &
-           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
+           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           drag_i(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
       real(ar),       intent(inout) :: &
            u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       
       ! Local variables
       integer(c_int)                :: i, j, k 
-      real(ar)                      :: odx(3), orog, acc 
+      real(ar)                      :: odx(3), orog, orop_g, acc 
 
 
       ! 1/dx
@@ -298,9 +303,9 @@ contains
       select case (dir)
       case(1)                   !X direction
 
-         do k = lo(3),hi(3)
-            do j = lo(2),hi(2)
-               do i = lo(1),hi(1)
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
                   acc = zero
 
                   ! Pressure drop at boundaries if specified
@@ -309,7 +314,9 @@ contains
                      acc =  p_scale * delp_x * orog * odx(dir)
                   end if
 
-                  acc = acc + gravity(dir)
+                  orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i-1,j,k) )
+                  
+                  acc = acc + gravity(dir) - drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -330,7 +337,9 @@ contains
                      acc =  p_scale * delp_y * orog * odx(dir)
                   end if
 
-                  acc = acc + gravity(dir)
+                  orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i,j-1,k) )
+                  
+                  acc = acc + gravity(dir) - drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -351,7 +360,9 @@ contains
                      acc =  p_scale * delp_z * orog * odx(dir)
                   end if
 
-                  acc = acc + gravity(dir)
+                  orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i,j,k-1) )
+                  
+                  acc = acc + gravity(dir) - drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
