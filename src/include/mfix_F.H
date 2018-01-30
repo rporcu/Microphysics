@@ -493,9 +493,9 @@ extern "C"
 	const amrex::Real* dx );
 
 
-    void compute_oro_g (
+    void compute_bcoeff (
 	const int* lo,  const int*  hi,
-	      amrex::Real* oro_g, const int* alo, const int* ahi,
+	      amrex::Real* bcoeff, const int* alo, const int* ahi,
 	const amrex::Real* rop_g, const int* slo, const int* shi,
 	const amrex::Real* ep_g, const int* dir );
     

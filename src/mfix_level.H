@@ -173,7 +173,7 @@ private:
 			Vector< std::unique_ptr<MultiFab> >& rhs,
 			int bc_lo[], int bc_hi[] );
 
-    void mfix_compute_oro_g(int lev);
+    void mfix_compute_bcoeff(int lev);
 
     void check_for_nans(int lev);
     
@@ -343,7 +343,8 @@ private:
     Vector< std::unique_ptr<MultiFab> > fp_z;
 
     
-    Vector< Vector< std::unique_ptr<MultiFab> > > oro_g; // Over ro_g = ep_g / rop_g
+    Vector< Vector< std::unique_ptr<MultiFab> > > bcoeff; // Coefficients b of div(b*grad(p))
+    
 
     Vector< std::unique_ptr<MultiFab> > phi; // Pressure increment
 

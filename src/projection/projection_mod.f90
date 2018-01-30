@@ -189,11 +189,11 @@ contains
 
 
    !
-   ! Computes  u_i = u_i + C * (beta) * (dphi/dx_i)
+   ! Computes  u_i = u_i + C * (1/beta) * (dphi/dx_i)
    !
    ! u_i  = i-th component of a staggered vector field u.
    !
-   ! beta = scalar field defined at u_i location.
+   ! beta = scalar field defined at cell centers.
    !
    ! phi  = scalar field defined at cell centers
    ! 
@@ -219,7 +219,7 @@ contains
 
       ! Arrays
       real(ar),        intent(in   ) ::                        &
-           & beta(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),  &
+           & beta(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
            &  phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(ar),        intent(inout) ::                           &
@@ -227,7 +227,7 @@ contains
 
       ! Local variables
       integer(c_int)                 :: i, j, k, i0, j0, k0
-      real(ar)                       :: codx
+      real(ar)                       :: codx, obeta
 
       i0 = e_i(dir,1)
       j0 = e_i(dir,2)
@@ -239,7 +239,9 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               u_i(i,j,k) = u_i(i,j,k) + codx * beta(i,j,k) * &
+               obeta      = half * ( one/beta(i,j,k) + one/beta(i-i0,j-j0,k-k0) )
+               
+               u_i(i,j,k) = u_i(i,j,k) + codx * obeta * &
                     &      ( phi(i,j,k) - phi(i-i0,j-j0,k-k0) )
 
 
@@ -445,11 +447,11 @@ contains
 
       
    !
-   ! Compute the coefficients of the PPE, i.e. 1 / ro_g = eps_g/rho_g,
+   ! Compute the coefficients of the PPE, i.e. ep_g / ro_g,
    ! at the faces of the pressure cells along the "dir"-axis.
    ! 
-   subroutine compute_oro_g ( lo, hi, oro_g, alo, ahi, &
-        rop_g, slo, shi, ep_g, dir )  bind(C)
+   subroutine compute_bcoeff ( lo, hi, bcoeff, alo, ahi, &
+        ro_g, slo, shi, ep_g, dir )  bind(C)
 
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
@@ -463,11 +465,11 @@ contains
 
       ! Arrays
       real(ar),       intent(in   ) :: &
-           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(ar),       intent(  out) :: &
-           oro_g(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+           bcoeff(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       integer      :: i, j, k, i0, j0, k0
 
@@ -475,17 +477,16 @@ contains
       j0 = e_i(dir,2)
       k0 = e_i(dir,3)
 
-      ! We may wann directly use ro_g instead of ep_g/rop_g
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
-               oro_g(i,j,k) = half * ( ep_g(i,j,k) / rop_g(i,j,k) + &
-                    & ep_g(i-i0,j-j0,k-k0) / rop_g(i-i0,j-j0,k-k0) )
+               bcoeff(i,j,k) = half * ( ep_g(i,j,k) / ro_g(i,j,k) + &
+                    & ep_g(i-i0,j-j0,k-k0) / ro_g(i-i0,j-j0,k-k0) )
             end do
          end do
       end do
 
-   end subroutine compute_oro_g
+   end subroutine compute_bcoeff
 
 
    !

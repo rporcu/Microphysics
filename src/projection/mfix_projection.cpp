@@ -80,7 +80,11 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	//
 	// Time integration step
 	//
-
+	
+	// Calculate drag coefficient
+	if (solve_dem)
+	    mfix_calc_drag_fluid(lev);
+	
         // Predictor step 
         mfix_apply_predictor ( lev, dt );
 
@@ -93,6 +97,11 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	amrex::Print() << "max(abs(w))     = " << w_g[lev] -> norm0 () << "\n";
 	amrex::Print() << "max(abs(p))     = " << p_g[lev] -> norm0 () << "\n";
 	amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+
+
+	// Calculate drag coefficient
+	if (solve_dem)
+	    mfix_calc_drag_fluid(lev);
 	
 	// Corrector step 
 	mfix_apply_corrector ( lev, dt );
@@ -296,8 +305,6 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
 //       v_g = v_g + coeff * ( dp_g/dy ) * (1/ro_g)
 //       w_g = w_g + coeff * ( dp_g/dz ) * (1/ro_g)
 //
-// 1/ro_g is stored in oro_g[lev][<0,1,2>] 
-// 
 void
 mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
 {
@@ -320,21 +327,21 @@ mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
 	add_gradient (
 	    BL_TO_FORTRAN_BOX(ubx),  
 	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-	    (*(oro_g[lev][0]))[mfi].dataPtr(),
+	    (*ro_g[lev])[mfi].dataPtr(),
 	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
 	    geom[lev].CellSize(), &coeff, &xdir );
 	
 	add_gradient (
 	    BL_TO_FORTRAN_BOX(vbx),  
 	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-	    (*(oro_g[lev][1]))[mfi].dataPtr(),
+	    (*ro_g[lev])[mfi].dataPtr(),
 	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
 	    geom[lev].CellSize(), &coeff, &ydir );
 	
 	add_gradient (
 	    BL_TO_FORTRAN_BOX(wbx),  
 	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-	    (*(oro_g[lev][2]))[mfi].dataPtr(),
+	    (*ro_g[lev])[mfi].dataPtr(),
 	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
 	    geom[lev].CellSize(), &coeff, &zdir );
 
@@ -577,7 +584,7 @@ mfix_level::mfix_compute_velocity_slopes (int lev,
 //
 // Computes the following decomposition:
 // 
-//    u + grad(phi)/rho = u*,     where div(u) = 0
+//    u + grad(phi)/rho = u*,     where div(eps*u) = 0
 //
 // where u* is a non-div-free velocity field, stored
 // by components in u_g, v_g, and w_g. The resulting div-free
@@ -598,8 +605,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
     mfix_compute_diveu (lev);
 
     // Compute the PPE coefficients
-    // For the time being set oro_g to 1
-    mfix_compute_oro_g ( lev );
+    mfix_compute_bcoeff ( lev );
 
     // Set BCs for Poisson's solver
     int bc_lo[3], bc_hi[3];
@@ -628,7 +634,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
     mfix_set_phi ( lev, scaling_factor, singular );
     
     // Solve PPE
-    solve_poisson_equation ( lev, oro_g, phi, diveu, bc_lo, bc_hi );
+    solve_poisson_equation ( lev, bcoeff, phi, diveu, bc_lo, bc_hi );
    
     // Recover pressure
     MultiFab::Copy (*p_g[lev], *phi[lev], 0, 0, 1, 0);
@@ -741,57 +747,52 @@ mfix_level::mfix_compute_diveu (int lev)
 }
 
 //
-// Computes 1/ro_g = ep_g/rop_g at the faces of the scalar cells
+// Computes bcoeff = ep_g/ro_g at the faces of the scalar cells
 // 
 void
-mfix_level::mfix_compute_oro_g (int lev)
+mfix_level::mfix_compute_bcoeff (int lev)
 {
-    BL_PROFILE("mfix_level::mfix_compute_oro_g");
+    BL_PROFILE("mfix_level::mfix_compute_bcoeff");
 
     // Directions
     int xdir = 1;
     int ydir = 2;
     int zdir = 3;
-
-    // For now, set everything to 1
-    oro_g[lev][0] -> setVal ( 1.0, oro_g[lev][0] -> nGrow () );
-    oro_g[lev][1] -> setVal ( 1.0, oro_g[lev][1] -> nGrow () );
-    oro_g[lev][2] -> setVal ( 1.0, oro_g[lev][2] -> nGrow () );
     
-// #ifdef _OPENMP
-// #pragma omp parallel 
-// #endif
-//     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
-//     {
-// 	// Boxes for staggered components
-// 	Box ubx = mfi.tilebox (e_x);
-// 	Box vbx = mfi.tilebox (e_y);
-// 	Box wbx = mfi.tilebox (e_z);
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	// Boxes for staggered components
+	Box ubx = mfi.tilebox (e_x);
+	Box vbx = mfi.tilebox (e_y);
+	Box wbx = mfi.tilebox (e_z);
 
-// 	// X direction
-// 	compute_oro_g (BL_TO_FORTRAN_BOX(ubx),
-// 		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][0]))[mfi]),
-// 		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-// 		       (*ep_g[lev])[mfi].dataPtr(), &xdir );
+	// X direction
+	compute_bcoeff (BL_TO_FORTRAN_BOX(ubx),
+		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][0]))[mfi]),
+		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		       (*ep_g[lev])[mfi].dataPtr(), &xdir );
 
-// 	// Y direction
-// 	compute_oro_g (BL_TO_FORTRAN_BOX(vbx),
-// 		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][1]))[mfi]),
-// 		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-// 		       (*ep_g[lev])[mfi].dataPtr(), &ydir );
+	// Y direction
+	compute_bcoeff (BL_TO_FORTRAN_BOX(vbx),
+		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][1]))[mfi]),
+		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		       (*ep_g[lev])[mfi].dataPtr(), &ydir );
 
-// 	// Z direction
-// 	compute_oro_g (BL_TO_FORTRAN_BOX(wbx),
-// 		       BL_TO_FORTRAN_ANYD((*(oro_g[lev][2]))[mfi]),
-// 		       BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-// 		       (*ep_g[lev])[mfi].dataPtr(), &zdir );
+	// Z direction
+	compute_bcoeff (BL_TO_FORTRAN_BOX(wbx),
+		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][2]))[mfi]),
+		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		       (*ep_g[lev])[mfi].dataPtr(), &zdir );
 	
 	
-//     }
+    }
 
-    oro_g[lev][0] -> FillBoundary(geom[lev].periodicity());
-    oro_g[lev][1] -> FillBoundary(geom[lev].periodicity());
-    oro_g[lev][2] -> FillBoundary(geom[lev].periodicity());
+    bcoeff[lev][0] -> FillBoundary(geom[lev].periodicity());
+    bcoeff[lev][1] -> FillBoundary(geom[lev].periodicity());
+    bcoeff[lev][2] -> FillBoundary(geom[lev].periodicity());
 
 }
 

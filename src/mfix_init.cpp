@@ -354,12 +354,12 @@ mfix_level::AllocateArrays (int lev)
     u_go[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_gt[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     fp_x[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    oro_g[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    bcoeff[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_g[lev]->setVal(0.);
     u_go[lev]->setVal(0.);
     u_gt[lev]->setVal(0.);
     fp_x[lev]->setVal(0.);
-    oro_g[lev][0]->setVal(0.);
+    bcoeff[lev][0]->setVal(0.);
 
     d_e[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     d_e[lev]->setVal(0.);
@@ -400,12 +400,12 @@ mfix_level::AllocateArrays (int lev)
     v_go[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_gt[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     fp_y[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    oro_g[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    bcoeff[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_g[lev]->setVal(0.);
     v_go[lev]->setVal(0.);
     v_gt[lev]->setVal(0.);
     fp_y[lev]->setVal(0.);
-    oro_g[lev][1]->setVal(0.);
+    bcoeff[lev][1]->setVal(0.);
 
     d_n[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     d_n[lev]->setVal(0.);
@@ -448,12 +448,12 @@ mfix_level::AllocateArrays (int lev)
     w_go[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_gt[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     fp_z[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    oro_g[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    bcoeff[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_g[lev]->setVal(0.);
     w_go[lev]->setVal(0.);
     w_gt[lev]->setVal(0.);
     fp_z[lev]->setVal(0.);
-    oro_g[lev][2]->setVal(0.);
+    bcoeff[lev][2]->setVal(0.);
 
     d_t[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     d_t[lev]->setVal(0.);

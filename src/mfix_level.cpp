@@ -94,10 +94,9 @@ mfix_level::ResizeArrays ()
     fp_y.resize(nlevs_max);
     fp_z.resize(nlevs_max);
     
-    oro_g.resize(nlevs_max);
-    for (int i = 0; i < nlevs_max; ++i )
-    {
-	oro_g[i].resize(3);
+    bcoeff.resize(nlevs_max);
+    for (int i = 0; i < nlevs_max; ++i ) {
+	bcoeff[i].resize(3);
     }
     
     d_e.resize(nlevs_max);
