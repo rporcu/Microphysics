@@ -4,14 +4,14 @@
 
 #include <mfix_F.H>
 
-double LSFactory::value_wall(const double pos[3]){
-    return R2 - ( (pos[0] - xy_centre[0]) * (pos[0] - xy_centre[0]) +
-                  (pos[1] - xy_centre[1]) * (pos[1] - xy_centre[1]) );
-}
+//double LSFactory::value_wall(const double pos[3]){
+//    return R2 - ( (pos[0] - xy_centre[0]) * (pos[0] - xy_centre[0]) +
+//                  (pos[1] - xy_centre[1]) * (pos[1] - xy_centre[1]) );
+//}
 
-double LSFactory::value_bottom(const double pos[3]){
-    return pos[2];
-}
+//double LSFactory::value_bottom(const double pos[3]){
+//    return pos[2];
+//}
 
 
 LSFactory::LSFactory(int lev, const MFIXParticleContainer * pc, const EBFArrayBoxFactory * ebfactory)
@@ -25,7 +25,7 @@ LSFactory::LSFactory(int lev, const MFIXParticleContainer * pc, const EBFArrayBo
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(lev);
 
     ls_phi -> define(phi_ba, dm, 1, 1);
-    ls_valid -> define(particle_ba, dm, 1, 1);
+    ls_valid -> define(particle_ba, dm, 1, 2);
     ls_valid -> setVal(0);
 }
 
@@ -55,7 +55,8 @@ void LSFactory::update(MultiFab * dummy){
             compute_levelset(lo, hi,
                              flag.dataPtr(), flag.loVect(), flag.hiVect(),
                              (* ls_valid)[mfi].dataPtr(), (* ls_valid)[mfi].loVect(), (* ls_valid)[mfi].hiVect(),
-                             (* ls_phi)[mfi].dataPtr(), (* ls_phi)[mfi].loVect(), (* ls_phi)[mfi].hiVect() );
+                             (* ls_phi)[mfi].dataPtr(), (* ls_phi)[mfi].loVect(), (* ls_phi)[mfi].hiVect(),
+                             mfix_pc->Geom(amr_lev).CellSize());
         }
     }
 

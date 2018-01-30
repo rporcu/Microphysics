@@ -170,6 +170,7 @@ mfix_level::make_eb_geometry(int lev)
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
     LSFactory level_set(lev, pc.get(), particle_ebfactory.get());
+    level_set.update(dummy.get());
 }
 
 void

@@ -146,7 +146,7 @@ list ( APPEND CXX_sources mfix_projection.cpp )
 # 
 list ( APPEND CXX_sources  eb_levelset.cpp )
 list ( APPEND CXX_includes eb_levelset.H )
-list ( APPEND F90_sources  compute_levelset.f90)
+list ( APPEND F90_sources  eb_levelset.f90)
 
 # Generate AMReX_buildInfo.cpp
 add_custom_command(

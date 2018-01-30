@@ -620,7 +620,11 @@ extern "C"
     void compute_levelset(const int * lo, const int * hi,
                           const void * flag, const int * fglo, const int * fghi,
                           int * valid, const int * vlo, const int * vhi,
-                          amrex_real * phi, const int * phlo, const int * phhi);
+                          amrex_real * phi, const int * phlo, const int * phhi, 
+                          const amrex_real * dx);
+
+    void calc_wall_collisions_ls();
+
     
 #ifdef __cplusplus
 }
