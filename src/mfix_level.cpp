@@ -67,6 +67,7 @@ mfix_level::ResizeArrays ()
     p_g.resize(nlevs_max);
     p_go.resize(nlevs_max);
 
+    p0_g.resize(nlevs_max);
     pp_g.resize(nlevs_max);
 
     ro_g.resize(nlevs_max);

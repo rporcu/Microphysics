@@ -284,6 +284,9 @@ private:
     Vector< std::unique_ptr<MultiFab> > w_go;
     Vector< std::unique_ptr<MultiFab> > w_gt;
 
+    // Base state pressure
+    Vector< std::unique_ptr<MultiFab> > p0_g;
+
     // Pressure correction equation
     Vector< std::unique_ptr<MultiFab> > pp_g;
     Vector< std::unique_ptr<MultiFab> > d_e ;

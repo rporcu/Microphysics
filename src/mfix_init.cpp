@@ -314,6 +314,10 @@ mfix_level::AllocateArrays (int lev)
     rop_g[lev]->setVal(0.);
     rop_go[lev]->setVal(0.);
 
+    // Base pressure that captures delp and/or p_in and p_out
+    p0_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    p0_g[lev]->setVal(0.);
+
     // Pressure correction equation
     pp_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     pp_g[lev]->setVal(0.);

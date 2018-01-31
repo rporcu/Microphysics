@@ -29,7 +29,7 @@
 !  Date: December 20, 2017
 !
 ! 
-subroutine set_pressure_bcs (  p_g, slo, shi, bct_ilo, bct_ihi, &
+subroutine set_pressure_bcs (  phi, slo, shi, bct_ilo, bct_ihi, &
      bct_jlo, bct_jhi, bct_klo, bct_khi,  domlo, domhi ) bind(C) 
 
    use amrex_fort_module,  only: ar => amrex_real
@@ -56,7 +56,7 @@ subroutine set_pressure_bcs (  p_g, slo, shi, bct_ilo, bct_ihi, &
 
    ! Arrays
    real(ar),      intent(inout) ::  &
-        p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+        phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 
    ! Local variables
@@ -87,17 +87,17 @@ subroutine set_pressure_bcs (  p_g, slo, shi, bct_ilo, bct_ihi, &
      
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               p_g(slo(1):domlo(1)-1,j,k) = two * scale_pressure(bc_p_g(bcv)) &
-                    & - p_g(domlo(1),j,k)
+               phi(slo(1):domlo(1)-1,j,k) = two * scale_pressure(bc_p_g(bcv)) &
+                    & - phi(domlo(1),j,k)
 
             case ( minf_)
 
-               p_g(slo(1):domlo(1)-1,j,k) = &
-                    two * p_g(domlo(1),j,k) - p_g(domlo(1)+1,j,k)
+               phi(slo(1):domlo(1)-1,j,k) = &
+                    two * phi(domlo(1),j,k) - phi(domlo(1)+1,j,k)
 
             case default
 
-               p_g(slo(1):domlo(1)-1,j,k) = p_g(domlo(1),j,k)
+               phi(slo(1):domlo(1)-1,j,k) = phi(domlo(1),j,k)
 
             end select
             
@@ -119,17 +119,17 @@ subroutine set_pressure_bcs (  p_g, slo, shi, bct_ilo, bct_ihi, &
 
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               p_g(domhi(1)+1:shi(1),j,k) = two * scale_pressure(bc_p_g(bcv)) &
-                    & - p_g(domhi(1),j,k)
+               phi(domhi(1)+1:shi(1),j,k) = two * scale_pressure(bc_p_g(bcv)) &
+                    & - phi(domhi(1),j,k)
 
             case ( minf_ )
                
-               p_g(domhi(1)+1:shi(1),j,k) = &
-                    two * p_g(domhi(1),j,k) - p_g(domhi(1)-1,j,k)
+               phi(domhi(1)+1:shi(1),j,k) = &
+                    two * phi(domhi(1),j,k) - phi(domhi(1)-1,j,k)
 
             case default
                
-               p_g(domhi(1)+1:shi(1),j,k) =  p_g(domhi(1),j,k) 
+               phi(domhi(1)+1:shi(1),j,k) =  phi(domhi(1),j,k) 
 
             end select
 
@@ -151,17 +151,17 @@ subroutine set_pressure_bcs (  p_g, slo, shi, bct_ilo, bct_ihi, &
 
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               p_g(i,slo(2):domlo(2)-1,k) = two * scale_pressure(bc_p_g(bcv)) &
-                    & - p_g(i,domlo(2),k)
+               phi(i,slo(2):domlo(2)-1,k) = two * scale_pressure(bc_p_g(bcv)) &
+                    & - phi(i,domlo(2),k)
 
             case ( minf_ )
 
-               p_g(i,slo(2):domlo(2)-1,k) = &
-                    2*p_g(i,domlo(2),k) - p_g(i,domlo(2)+1,k)
+               phi(i,slo(2):domlo(2)-1,k) = &
+                    2*phi(i,domlo(2),k) - phi(i,domlo(2)+1,k)
 
             case default 
 
-               p_g(i,slo(2):domlo(2)-1,k) = p_g(i,domlo(2),k)
+               phi(i,slo(2):domlo(2)-1,k) = phi(i,domlo(2),k)
 
             end select
 
@@ -183,17 +183,17 @@ subroutine set_pressure_bcs (  p_g, slo, shi, bct_ilo, bct_ihi, &
 
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               p_g(i,domhi(2)+1:shi(2),k) = two * scale_pressure(bc_p_g(bcv)) &
-                    & - p_g(i,domhi(2),k)
+               phi(i,domhi(2)+1:shi(2),k) = two * scale_pressure(bc_p_g(bcv)) &
+                    & - phi(i,domhi(2),k)
 
             case ( minf_) 
 
-               p_g(i,domhi(2)+1:shi(2),k) = &
-                    two*p_g(i,domhi(2),k) - p_g(i,domhi(2)-1,k)
+               phi(i,domhi(2)+1:shi(2),k) = &
+                    two*phi(i,domhi(2),k) - phi(i,domhi(2)-1,k)
 
             case default 
 
-               p_g(i,domhi(2)+1:shi(2),k) = p_g(i,domhi(2),k) 
+               phi(i,domhi(2)+1:shi(2),k) = phi(i,domhi(2),k) 
 
             end select
 
@@ -216,17 +216,17 @@ subroutine set_pressure_bcs (  p_g, slo, shi, bct_ilo, bct_ihi, &
 
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               p_g(i,j,slo(3):domlo(3)-1) = two * scale_pressure(bc_p_g(bcv)) &
-                    &                - p_g(i,j,domlo(3))
+               phi(i,j,slo(3):domlo(3)-1) = two * scale_pressure(bc_p_g(bcv)) &
+                    &                - phi(i,j,domlo(3))
  
             case ( minf_ )
 
-               p_g(i,j,slo(3):domlo(3)-1) = &
-                    two*p_g(i,j,domlo(3)) - p_g(i,j,domlo(3)+1)
+               phi(i,j,slo(3):domlo(3)-1) = &
+                    two*phi(i,j,domlo(3)) - phi(i,j,domlo(3)+1)
 
             case default
 
-               p_g(i,j,slo(3):domlo(3)-1) = p_g(i,j,domlo(3))
+               phi(i,j,slo(3):domlo(3)-1) = phi(i,j,domlo(3))
                
             end select
             
@@ -249,17 +249,17 @@ subroutine set_pressure_bcs (  p_g, slo, shi, bct_ilo, bct_ihi, &
                
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               p_g(i,j,domhi(3)+1:shi(3)) =  two * scale_pressure(bc_p_g(bcv)) &
-                    &                 - p_g(i,j,domhi(3))
+               phi(i,j,domhi(3)+1:shi(3)) =  two * scale_pressure(bc_p_g(bcv)) &
+                    &                 - phi(i,j,domhi(3))
 
             case ( minf_ ) 
 
-               p_g(i,j,domhi(3)+1:shi(3)) = &
-                    two*p_g(i,j,domhi(2)) - p_g(i,j,domhi(3)-1)
+               phi(i,j,domhi(3)+1:shi(3)) = &
+                    two*phi(i,j,domhi(2)) - phi(i,j,domhi(3)-1)
 
             case default 
 
-               p_g(i,j,domhi(3)+1:shi(3)) = p_g(i,j,domhi(3)) 
+               phi(i,j,domhi(3)+1:shi(3)) = phi(i,j,domhi(3)) 
 
             end select
             

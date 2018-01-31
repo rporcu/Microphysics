@@ -89,9 +89,11 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	// Time integration step
 	//
         // Step 1: compute u* (predictor step) and store it in u_g/v_g/w_g
+        amrex::Print() << "Calling first predictor " << std::endl;
         mfix_compute_first_predictor ( lev, dt );
 
 	// Step 2: compute u** (corrector step) and store it in u_g/v_g/w_g
+        amrex::Print() << "Calling second predictor " << std::endl;
 	mfix_compute_second_predictor ( lev, dt );
 
 
