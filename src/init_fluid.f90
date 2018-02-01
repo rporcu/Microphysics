@@ -6,7 +6,7 @@ module init_fluid_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine init_fluid(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                         domlo, domhi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
+                         domlo, domhi, ep_g, ro_g, rop_g, p_g, p0_g, u_g, v_g, w_g, &
                          mu_g, lambda_g, dx, dy, dz, xlength, ylength, zlength) &
       bind(C, name="init_fluid")
 
@@ -34,6 +34,8 @@ module init_fluid_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: p0_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(inout) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -50,16 +52,18 @@ module init_fluid_module
       real(c_real), intent(in   ) :: dx, dy, dz
       real(c_real), intent(in   ) :: xlength, ylength, zlength
 
+      integer i
+
       ! Set user specified initial conditions (IC)
       call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-                  domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
+                  domlo, domhi, dx, dy, dz, p0_g, u_g, v_g, w_g)
 
       ! Set the initial pressure field
-      call set_p_g(slo, shi, lo, hi, p_g, dx, dy, dz, &
-                   xlength, ylength, zlength, domlo, domhi)
+      call set_p0(slo, shi, lo, hi, p0_g, dx, dy, dz, &
+                  xlength, ylength, zlength, domlo, domhi)
 
       ! Set the initial fluid density and viscosity
-      call calc_ro_g(slo, shi, lo, hi, ro_g, rop_g, p_g, ep_g)
+      call calc_ro_g(slo, shi, lo, hi, ro_g, rop_g, p_g, p0_g, ep_g)
 
       call calc_mu_g(slo, shi, lo, hi, mu_g, lambda_g)
 
@@ -76,7 +80,6 @@ module init_fluid_module
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use calc_ro_g_module, only: calc_ro_g
       use calc_mu_g_module, only: calc_mu_g
 
       implicit none
@@ -103,7 +106,7 @@ module init_fluid_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-                     domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
+                     domlo, domhi, dx, dy, dz, p0_g, u_g, v_g, w_g)
 
       use ic, only: dim_ic, ic_defined
       use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
@@ -124,7 +127,7 @@ module init_fluid_module
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      real(c_real), intent(inout) ::  p_g&
+      real(c_real), intent(inout) ::  p0_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -213,7 +216,7 @@ module init_fluid_module
             jend   = min(shi(2), j_n)
             kend   = min(shi(3), k_t)
             pval = merge(scale_pressure(pgx),undefined,is_defined(pgx))
-            p_g(istart:iend,jstart:jend,kstart:kend) = pval
+            p0_g(istart:iend,jstart:jend,kstart:kend) = pval
 
          endif
       enddo
@@ -222,15 +225,15 @@ module init_fluid_module
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: set_p_g                                                 !
+!  Subroutine: set_p0                                                 !
 !  Author: M. Syamlal                                 Date: 21-JAN-92  !
 !                                                                      !
 !  Purpose: Set the pressure field inside the bed assuming gravity     !
 !           is acting in the negative y-direction.                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine set_p_g(slo, shi, lo, hi, p_g, dx, dy, dz, &
-                         xlength, ylength, zlength, domlo, domhi)
+      subroutine set_p0(slo, shi, lo, hi, p0_g, dx, dy, dz, &
+                        xlength, ylength, zlength, domlo, domhi)
 
       use bc, only: delp_x, delp_y, delp_z
       use bc, only: dim_bc, bc_type, bc_p_g, bc_defined
@@ -252,7 +255,7 @@ module init_fluid_module
       integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
       integer, intent(in) :: domlo(3), domhi(3)
 
-      real(c_real), intent(inout) :: p_g&
+      real(c_real), intent(inout) :: p0_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
@@ -261,13 +264,13 @@ module init_fluid_module
 ! Local variables
 !-----------------------------------------------
 ! indices
-      integer :: I, J, K
+      integer :: i, j, k, ng
 ! Local loop counter
       integer :: L
 ! Gas pressure at the axial location j
-      real(c_real) :: PJ
+      real(c_real) :: pj
 ! Average pressure drop per unit length
-      real(c_real) :: DPoDX, DPoDY, DPoDZ
+      real(c_real) :: dpodx, dpody, dpodz
 !-----------------------------------------------
 
 ! If any initial pressures are unspecified skip next section
@@ -286,41 +289,29 @@ module init_fluid_module
 ! ---------------------------------------------------------------->>>
       if (abs(delp_x) > epsilon(zero)) then
          dpodx = delp_x/xlength
-         pj = pj - dpodx*dx*(hi(1)-domhi(1)+1)
-         do i = hi(1), lo(1), -1
+         pj = pj - dpodx*dx*(hi(1)-domhi(1)+2)
+         do i = hi(1)+1, lo(1)-1, -1
             pj = pj + dpodx*dx
-            do k = lo(3), hi(3)
-               do j = lo(2), hi(2)
-                  p_g(i,j,k) = scale_pressure(pj)
-               enddo
-            enddo
+            p0_g(i,lo(2):hi(2),lo(3):hi(3)) = scale_pressure(pj)
          enddo
       endif
 
       if (abs(delp_y) > epsilon(zero)) then
          dpody = delp_y/ylength
-         pj = pj - dpody*dy*(hi(2)-domhi(2)+1)
-         do j = hi(2), lo(2), -1
+         pj = pj - dpody*dy*(hi(2)-domhi(2)+2)
+         do j = hi(2)+1, lo(2)-1, -1
             pj = pj + dpody*dy
-            do k = lo(3), hi(3)
-               do i = lo(1), hi(1)
-                  p_g(i,j,k) = scale_pressure(pj)
-               enddo
-            enddo
+            p0_g(lo(1):hi(1),j,lo(3):hi(3)) = scale_pressure(pj)
          enddo
       endif
 
       if (abs(delp_z) > epsilon(zero)) then
          dpodz = delp_z/zlength
-         pj = pj - dpodz*dz*(hi(3)-domhi(3)+1)
-         do k = hi(3), lo(3), -1
+         pj = pj - dpodz*dz*(hi(3)-domhi(3)+2)
+         do k = hi(3)+1, lo(3)-1, -1
             pj = pj + dpodz*dz
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
-                  p_g(i,j,k) = scale_pressure(pj)
-               enddo
-            enddo
-         enddo
+            p0_g(lo(1):hi(1),lo(2):hi(2),k) = scale_pressure(pj)
+         end do
       endif
 
 ! ----------------------------------------------------------------<<<
@@ -344,7 +335,7 @@ module init_fluid_module
          if (is_defined(ro_g0)) then
 
             ! If incompressible flow set P_g to zero
-            p_g = zero
+            p0_g = zero
             goto 100
 
          else   ! compressible case
@@ -373,14 +364,14 @@ module init_fluid_module
 
          if (gravity(1) <= 0.0d0) then
             do i = domhi(1)+1, domlo(1), -1
-               if (i <= hi(1)+1 .and. i >= lo(1)) &
-                  p_g(i,:,:) = scale_pressure(pj)
+               if (i <= hi(1)+1 .and. i >= lo(1)-1) &
+                  p0_g(i,:,:) = scale_pressure(pj)
                pj = pj + dpodx*dx
             enddo
          else
             do i = domlo(1), domhi(1)+1
-               if (i <= hi(1)+1 .and. i >= lo(1)) &
-                  p_g(i,:,:) = scale_pressure(pj)
+               if (i <= hi(1)+1 .and. i >= lo(1)-1) &
+                  p0_g(i,:,:) = scale_pressure(pj)
                pj = pj - dpodx*dx
             enddo
          endif
@@ -395,14 +386,14 @@ module init_fluid_module
 
          if (gravity(2) <= 0.0d0) then
             do j = domhi(2)+1, domlo(2), -1
-               if (j <= hi(2)+1 .and. j>= lo(2)) &
-                  p_g(:,j,:) = scale_pressure(pj)
+               if (j <= hi(2)+1 .and. j>= lo(2)-1) &
+                  p0_g(:,j,:) = scale_pressure(pj)
                pj = pj + dpody*dy
             enddo
          else
             do j = domlo(2),domhi(2)+1
-               if (j <= hi(2)+1 .and. j >= lo(2)) &
-                  p_g(:,j,:) = scale_pressure(pj)
+               if (j <= hi(2)+1 .and. j >= lo(2)-1) &
+                  p0_g(:,j,:) = scale_pressure(pj)
                pj = pj - dpody*dy
             enddo
          endif
@@ -417,14 +408,14 @@ module init_fluid_module
 
          if(gravity(3) <= 0.0d0) then
             do k = domhi(3)+1, domlo(3), -1
-               if (k <= hi(3)+1 .and. k >= lo(3)) &
-                  p_g(:,:,k) = scale_pressure(pj)
+               if (k <= hi(3)+1 .and. k >= lo(3)-1) &
+                  p0_g(:,:,k) = scale_pressure(pj)
                pj = pj + dpodz*dz
             enddo
          else
             do k = domlo(3),domhi(3)+1
-               if (k <= hi(3)+1 .and. k >= lo(3)) &
-                  p_g(:,:,k) = scale_pressure(pj)
+               if (k <= hi(3)+1 .and. k >= lo(3)-1) &
+                  p0_g(:,:,k) = scale_pressure(pj)
                pj = pj - dpodz*dz
             enddo
          endif
@@ -439,5 +430,5 @@ module init_fluid_module
          'All the initial pressures (IC_P_g) or at least one P_OUTFLOW',/&
          'condition need to be specified',/1X,70('*')/)
 
-   end subroutine set_p_g
+   end subroutine set_p0
 end module init_fluid_module

@@ -22,7 +22,7 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine solve_u_g_star(&
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, dlo, dhi, lo, hi, &
-         u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
+         u_g, v_g, w_g, u_go, p_g, p0_g, ro_g, rop_g, &
          rop_go, ep_g, tau_u_g, d_e, fluxX, fluxY, fluxZ, &
          mu_g, f_gds_u, drag_u, A_m, b_m, mask, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
@@ -64,6 +64,7 @@ module solve_vel_star_module
            w_g    (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
            fluxZ  (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
            p_g    (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           p0_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            ro_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            rop_g  (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            rop_go (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -102,7 +103,7 @@ module solve_vel_star_module
 
       ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(lo, hi, slo, shi, ulo, uhi, alo, ahi, dlo, dhi, &
-           A_m, b_m, p_g, ep_g, ro_g, rop_go, u_go, tau_u_g, f_gds_u, drag_u,&
+           A_m, b_m, p_g, p0_g, ep_g, ro_g, rop_go, u_go, tau_u_g, f_gds_u, drag_u,&
            dt, dx, dy, dz, domlo, domhi)
 
 
@@ -140,7 +141,7 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_v_g_star(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, dlo, dhi, lo, hi, &
-      u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
+      u_g, v_g, w_g, v_go, p_g, p0_g, ro_g, rop_g, &
       rop_go, ep_g, tau_v_g, d_n, fluxX, fluxY, fluxZ, &
       mu_g, f_gds_v, drag_v, A_m, b_m, mask, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
@@ -183,6 +184,7 @@ module solve_vel_star_module
            w_g    (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
            fluxZ  (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
            p_g    (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           p0_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            ro_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            rop_g  (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            rop_go (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -223,7 +225,7 @@ module solve_vel_star_module
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_v_g(lo, hi, slo, shi, vlo, vhi, alo, ahi, dlo, dhi, &
-           A_m, b_m, p_g, ep_g, ro_g, rop_go, v_go, tau_v_g, f_gds_v, drag_v,&
+           A_m, b_m, p_g, p0_g, ep_g, ro_g, rop_go, v_go, tau_v_g, f_gds_v, drag_v,&
            dt, dx, dy, dz, domlo, domhi)
 
 ! modifications for bc
@@ -261,7 +263,7 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_w_g_star(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, dlo, dhi, lo, hi, &
-      u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
+      u_g, v_g, w_g, w_go, p_g, p0_g, ro_g, rop_g, &
       rop_go, ep_g, tau_w_g, d_t, fluxX, fluxY, fluxZ, &
       mu_g,  f_gds_w, drag_w, A_m, b_m, mask, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
@@ -303,6 +305,7 @@ module solve_vel_star_module
            fluxZ  (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
            tau_w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
            p_g    (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           p0_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            ro_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            rop_g  (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            rop_go (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -343,7 +346,7 @@ module solve_vel_star_module
 
       ! calculate the source terms for the gas phase u-momentum eqs
       call source_w_g(lo, hi, slo, shi, wlo, whi, alo, ahi, dlo, dhi, &
-           A_m, b_m, p_g, ep_g, ro_g, rop_go, w_go, tau_w_g, f_gds_w, drag_w, &
+           A_m, b_m, p_g, p0_g, ep_g, ro_g, rop_go, w_go, tau_w_g, f_gds_w, drag_w, &
            dt, dx, dy, dz, domlo, domhi)
 
       ! modifications for bc

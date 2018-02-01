@@ -11,7 +11,7 @@ contains
 !  Purpose: Initialize the gas density.                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_ro_g(slo, shi, lo, hi, ro_g, rop_g, p_g, ep_g)
+   subroutine calc_ro_g(slo, shi, lo, hi, ro_g, rop_g, p_g, p0_g, ep_g)
 
       use eos      , only: eosg
       use fld_const, only: ro_g0, mw_avg
@@ -24,6 +24,7 @@ contains
 
       real(c_real), intent(in   ) :: &
           p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+         p0_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
          ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) ::  &
           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -37,7 +38,7 @@ contains
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
                do i = lo(1), hi(1)
-                  ro_g(i,j,k)  = eosg(mw_avg,p_g(i,j,k),295.15d0)
+                  ro_g(i,j,k)  = eosg(mw_avg,(p_g(i,j,k)+p0_g(i,j,k)),295.15d0)
                   rop_g(i,j,k) = ep_g(i,j,k) * ro_g(i,j,k)
                enddo
             enddo

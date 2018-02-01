@@ -12,7 +12,7 @@ contains
 !           with time if directed to do so by the corresponding flag   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine physical_prop(slo, shi, lo, hi, level, ro_g, p_g, ep_g, rop_g) &
+   subroutine physical_prop(slo, shi, lo, hi, level, ro_g, p_g, p0_g, ep_g, rop_g) &
               bind(c, name="physical_prop")
 
       use calc_ro_g_module, only: calc_ro_g
@@ -29,6 +29,7 @@ contains
 
       real(c_real), intent(in   ) :: &
            p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+          p0_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
           ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(  out) :: &
@@ -40,7 +41,7 @@ contains
       ! making it the most frequently called.
       if (level == 0) then
          if(is_undefined(ro_g0)) &
-            call calc_ro_g(slo, shi, lo, hi, ro_g, rop_g, p_g, ep_g)
+            call calc_ro_g(slo, shi, lo, hi, ro_g, rop_g, p_g, p0_g, ep_g)
 
       ! Calculate everything except density. This is called at the start of
       ! each iteration.
@@ -51,7 +52,7 @@ contains
       ! of each step step thereafter.
       elseif(level == 2) then
          if(is_undefined(ro_g0)) &
-            call calc_ro_g(slo, shi, lo, hi, ro_g, rop_g, p_g, ep_g)
+            call calc_ro_g(slo, shi, lo, hi, ro_g, rop_g, p_g, p0_g, ep_g)
       endif
 
    end subroutine physical_prop

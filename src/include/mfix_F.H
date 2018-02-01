@@ -91,7 +91,7 @@ extern "C"
         const int*  lo, const int*  hi,
         const int* domlo , const int* domhi,
         amrex::Real* ep_g,    amrex::Real* ro_g,
-        amrex::Real* rop_g,   amrex::Real* p_g,
+        amrex::Real* rop_g,   amrex::Real* p_g,      amrex::Real* p0_g, 
         amrex::Real* u_g,     amrex::Real* v_g,      amrex::Real* w_g,
         amrex::Real* mu_g,    amrex::Real* lambda_g,
         amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
@@ -185,13 +185,14 @@ extern "C"
        const int* vlo, const int* vhi,
        const int* wlo, const int* whi,
        const int* np,
-       amrex::Real* p_g, amrex::Real* u_g,  amrex::Real* v_g,   amrex::Real* w_g,
+       amrex::Real* p_g, amrex::Real* p0_g, 
+       amrex::Real* u_g,  amrex::Real* v_g,   amrex::Real* w_g,
        void* particles,
        amrex::Real* dx, amrex::Real* dy, amrex::Real* dz, amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen);
 
     void calc_coeff(
        const int* slo, const int* shi, const int* lo,  const int* hi, int* level,
-       amrex::Real* ro_g, amrex::Real* p_g, amrex::Real* ep_g, amrex::Real* rop_g);
+       amrex::Real* ro_g, amrex::Real* p_g, amrex::Real* p0_g, amrex::Real* ep_g, amrex::Real* rop_g);
 
     void calc_trd_g(const int* slo, const int* shi,
         const int* ulo, const int* uhi,
@@ -252,7 +253,7 @@ extern "C"
        const int* dlo, const int* dhi,
        const int*  lo, const int*  hi,
        amrex::Real* u_g,      amrex::Real* v_g,     amrex::Real* w_g,
-       amrex::Real* u_go,     amrex::Real* p_g,     amrex::Real* ro_g,
+       amrex::Real* u_go,     amrex::Real* p_g,     amrex::Real* p0_g,     amrex::Real* ro_g,
        amrex::Real* rop_g,    amrex::Real* rop_go,  amrex::Real* ep_g,
        amrex::Real* tau_u_g,  amrex::Real* d_e,
        amrex::Real* fluxX,  amrex::Real* fluxY,     amrex::Real* fluxZ,
@@ -275,7 +276,7 @@ extern "C"
        const int* dlo, const int* dhi,
        const int* lo,  const int* hi,
        amrex::Real* u_g,      amrex::Real* v_g,     amrex::Real* w_g,
-       amrex::Real* v_go,     amrex::Real* p_g,     amrex::Real* ro_g,
+       amrex::Real* v_go,     amrex::Real* p_g,     amrex::Real* p0_g,     amrex::Real* ro_g,
        amrex::Real* rop_g,    amrex::Real* rop_go,  amrex::Real* ep_g,
        amrex::Real* tau_v_g,  amrex::Real* d_n,
        amrex::Real* fluxX,    amrex::Real* fluxY,   amrex::Real* fluxZ,
@@ -298,7 +299,7 @@ extern "C"
        const int* dlo, const int* dhi,
        const int* lo,  const int* hi,
        amrex::Real* u_g,      amrex::Real* v_g,     amrex::Real* w_g,
-       amrex::Real* w_go,     amrex::Real* p_g,     amrex::Real* ro_g,
+       amrex::Real* w_go,     amrex::Real* p_g,     amrex::Real* p0_g,     amrex::Real* ro_g,
        amrex::Real* rop_g,    amrex::Real* rop_go,  amrex::Real* ep_g,
        amrex::Real* tau_w_g,  amrex::Real* d_t,
        amrex::Real* fluxX,    amrex::Real* fluxY,   amrex::Real* fluxZ,

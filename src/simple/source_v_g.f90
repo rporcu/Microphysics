@@ -18,11 +18,10 @@ contains
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine source_v_g(lo, hi, slo, shi, vlo, vhi, alo, ahi, dlo, dhi, &
-       A_m, b_m, p_g, ep_g, ro_g, rop_go, v_go, tau_v_g, f_gds_v, drag_v, &
+       A_m, b_m, p_g, p0_g, ep_g, ro_g, rop_go, v_go, tau_v_g, f_gds_v, drag_v, &
        dt, dx, dy, dz, domlo, domhi)
 
       use constant, only: gravity
-      use bc, only: delp_y
 
       use matrix, only: e, w, s, n, t, b
 
@@ -43,6 +42,7 @@ contains
 
       real(c_real), intent(in   ) :: &
            p_g    (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           p0_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            ep_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            ro_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            rop_go (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -79,10 +79,8 @@ contains
 
                epga = half*(ep_g(i,j-1,k) + ep_g(i,j,k))
 
-               ! Pressure term
-               pgs = p_g(i,j-1,k)
-               if((j==domlo(2)) .or. (j==domhi(2)+1) ) pgs = pgs + delp_y
-               sdp = -p_scale*epga*(p_g(i,j,k) - pgs)*axz
+               ! Pressure gradient term
+               sdp = -p_scale*epga*axz*(p_g(i,j,k) + p0_g(i,j,k) - p_g(i,j-1,k) - p0_g(i,j-1,k))
 
                ! Previous time step
                v0 = half*(rop_go(i,j-1,k)+rop_go(i,j,k))*odt
