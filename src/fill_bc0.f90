@@ -26,6 +26,7 @@ subroutine fill_bc0(s, slo, shi, &
 !--------------------------------------------------------------------//
       use iso_c_binding , only: c_int
       use amrex_fort_module, only : c_real => amrex_real
+      use bc, only: nsw_, fsw_, psw_
 
       implicit none
 
@@ -72,7 +73,9 @@ subroutine fill_bc0(s, slo, shi, &
          do i = 1, nlft
             do k=slo(3),shi(3)
                do j=slo(2),shi(2)
-                  if(bc_ilo_type(j,k,1) >= 100) then
+               if(bc_ilo_type(j,k,1) == NSW_ .or. &
+                  bc_ilo_type(j,k,1) == FSW_ .or. &
+                  bc_ilo_type(j,k,1) == PSW_) then
                      s(ilo-i,j,k) = s(ilo,j,k)
                   endif
                end do
@@ -85,7 +88,9 @@ subroutine fill_bc0(s, slo, shi, &
          do i = 1, nrgt
             do k=slo(3),shi(3)
                do j=slo(2),shi(2)
-                  if(bc_ihi_type(j,k,1) >= 100) then
+                  if(bc_ihi_type(j,k,1) == NSW_ .or. &
+                     bc_ihi_type(j,k,1) == FSW_ .or. &
+                     bc_ihi_type(j,k,1) == PSW_) then
                      s(ihi+i,j,k) = s(ihi,j,k)
                   endif
                end do
@@ -98,7 +103,9 @@ subroutine fill_bc0(s, slo, shi, &
          do j = 1, nbot
             do k=slo(3),shi(3)
                do i=slo(1),shi(1)
-                  if(bc_jlo_type(i,k,1) >= 100) then
+               if(bc_jlo_type(j,k,1) == NSW_ .or. &
+                  bc_jlo_type(j,k,1) == FSW_ .or. &
+                  bc_jlo_type(j,k,1) == PSW_) then
                      s(i,jlo-j,k) = s(i,jlo,k)
                   endif
                end do
@@ -111,7 +118,9 @@ subroutine fill_bc0(s, slo, shi, &
          do j = 1, ntop
             do k=slo(3),shi(3)
                do i=slo(1),shi(1)
-                  if(bc_jhi_type(i,k,1) >= 100) then
+               if(bc_jhi_type(j,k,1) == NSW_ .or. &
+                  bc_jhi_type(j,k,1) == FSW_ .or. &
+                  bc_jhi_type(j,k,1) == PSW_) then
                      s(i,jhi+j,k) = s(i,jhi,k)
                   endif
                end do
@@ -124,7 +133,9 @@ subroutine fill_bc0(s, slo, shi, &
          do k = 1, ndwn
             do j=slo(2),shi(2)
                do i=slo(1),shi(1)
-                  if(bc_klo_type(i,j,1) >= 100) then
+               if(bc_klo_type(j,k,1) == NSW_ .or. &
+                  bc_klo_type(j,k,1) == FSW_ .or. &
+                  bc_klo_type(j,k,1) == PSW_) then
                      s(i,j,klo-k) = s(i,j,klo)
                   endif
                end do
@@ -137,7 +148,9 @@ subroutine fill_bc0(s, slo, shi, &
          do k = 1, nup
             do j=slo(2),shi(2)
                do i=slo(1),shi(1)
-                  if(bc_khi_type(i,j,1) >= 100) then
+               if(bc_khi_type(j,k,1) == NSW_ .or. &
+                  bc_khi_type(j,k,1) == FSW_ .or. &
+                  bc_khi_type(j,k,1) == PSW_) then
                      s(i,j,khi+k) = s(i,j,khi)
                   endif
                end do
