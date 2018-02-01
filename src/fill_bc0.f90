@@ -74,7 +74,6 @@ subroutine fill_bc0(s, slo, shi, &
                do j=slo(2),shi(2)
                   if(bc_ilo_type(j,k,1) >= 100) then
                      s(ilo-i,j,k) = s(ilo,j,k)
-                     if (j.eq.0.and.k.eq.0) print *,'FILLING ILO ',s(ilo,j,k)
                   endif
                end do
             end do
@@ -88,7 +87,6 @@ subroutine fill_bc0(s, slo, shi, &
                do j=slo(2),shi(2)
                   if(bc_ihi_type(j,k,1) >= 100) then
                      s(ihi+i,j,k) = s(ihi,j,k)
-                     if (j.eq.0.and.k.eq.0) print *,'FILLING IHI ',s(ihi,j,k)
                   endif
                end do
             end do
