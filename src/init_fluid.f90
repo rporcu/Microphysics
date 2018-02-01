@@ -292,7 +292,7 @@ module init_fluid_module
          pj = pj - dpodx*dx*(hi(1)-domhi(1)+2)
          do i = hi(1)+1, lo(1)-1, -1
             pj = pj + dpodx*dx
-            p0_g(i,lo(2):hi(2),lo(3):hi(3)) = scale_pressure(pj)
+            p0_g(i,lo(2)-1:hi(2)+1,lo(3)-1:hi(3)+1) = scale_pressure(pj)
          enddo
       endif
 
@@ -301,7 +301,7 @@ module init_fluid_module
          pj = pj - dpody*dy*(hi(2)-domhi(2)+2)
          do j = hi(2)+1, lo(2)-1, -1
             pj = pj + dpody*dy
-            p0_g(lo(1):hi(1),j,lo(3):hi(3)) = scale_pressure(pj)
+            p0_g(lo(1)-1:hi(1)+1,j,lo(3)-1:hi(3)+1) = scale_pressure(pj)
          enddo
       endif
 
@@ -310,7 +310,7 @@ module init_fluid_module
          pj = pj - dpodz*dz*(hi(3)-domhi(3)+2)
          do k = hi(3)+1, lo(3)-1, -1
             pj = pj + dpodz*dz
-            p0_g(lo(1):hi(1),lo(2):hi(2),k) = scale_pressure(pj)
+            p0_g(lo(1)-1:hi(1)+1,lo(2)-1:hi(2)+1,k) = scale_pressure(pj)
          end do
       endif
 
