@@ -572,7 +572,8 @@ extern "C"
     void add_forcing (
 	const int* lo, const int* hi,
 	      amrex::Real* u_i,  const int* ulo, const int* uhi, 
-	const amrex::Real* ro_g, const int* slo, const int* shi,
+	const amrex::Real* p0_g, const int* slo, const int* shi,
+	const amrex::Real* ro_g, const int* rlo, const int* rhi,
 	const int* domlo, const int* domhi,
 	const amrex::Real* dx, const amrex::Real* dt, 
 	const int* dir);

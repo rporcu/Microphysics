@@ -254,19 +254,20 @@ contains
    !
    ! Add forcing (acceleration) terms to velocity component u_i
    ! 
-   subroutine add_forcing ( lo, hi, u_i, ulo, uhi, ro_g, slo, shi, &
-        & domlo, domhi, dx, dt, dir )  bind(C)
+   subroutine add_forcing ( lo, hi, u_i, ulo, uhi, &
+                            p0_g, slo, shi, ro_g, rlo, rhi, &
+                            domlo, domhi, dx, dt, dir )  bind(C)
       
       use constant, only: gravity
-      use bc      , only: delp_x, delp_y, delp_z 
       use scales,   only: p_scale
       
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
 
       ! Array bounds
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: rlo(3), rhi(3)
 
       ! Direction
       integer(c_int), intent(in   ) :: dir
@@ -282,7 +283,8 @@ contains
       
       ! Arrays
       real(ar),       intent(in   ) :: &
-           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           p0_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ro_g(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
 
       real(ar),       intent(inout) :: &
            u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -305,11 +307,9 @@ contains
 
                   ! Pressure drop at boundaries if specified
                   orog = half * ( one/ro_g(i,j,k) + one/ro_g(i-1,j,k) )
-                  if ( i == domlo(1) .or. i == domhi(1)+1 ) then
-                     acc =  p_scale * delp_x * orog * odx(dir)
-                  end if
 
-                  acc = acc + gravity(dir)
+                  acc = -p_scale * (p0_g(i,j,k)-p0_g(i-1,j,k)) * orog * odx(dir) &
+                        +gravity(dir)
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -326,11 +326,9 @@ contains
 
                   ! Pressure drop at boundaries if specified
                   orog = half * ( one/ro_g(i,j,k) + one/ro_g(i,j-1,k) )
-                  if ( j == domlo(2) .or. j == domhi(2)+1 ) then
-                     acc =  p_scale * delp_y * orog * odx(dir)
-                  end if
 
-                  acc = acc + gravity(dir)
+                  acc = -p_scale * (p0_g(i,j,k)-p0_g(i,j-1,k)) * orog * odx(dir) &
+                        +gravity(dir)
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -347,11 +345,9 @@ contains
 
                   ! Pressure drop at boundaries if specified
                   orog = half * ( one/ro_g(i,j,k) + one/ro_g(i,j,k-1) )
-                  if ( k == domlo(3) .or. k == domhi(3)+1 ) then
-                     acc =  p_scale * delp_z * orog * odx(dir)
-                  end if
 
-                  acc = acc + gravity(dir)
+                  acc = -p_scale * (p0_g(i,j,k)-p0_g(i,j,k-1)) * orog * odx(dir) &
+                        +gravity(dir)
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 

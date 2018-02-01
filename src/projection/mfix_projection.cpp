@@ -473,28 +473,28 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 
 {
     BL_PROFILE("mfix_level::mfix_apply_forcing_terms");
+	
+    //  Whole domain
+    Box domain(geom[lev].Domain());
+
+    // Directions
+    int xdir = 1;
+    int ydir = 2;
+    int zdir = 3;
 
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
     for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
     {
-	// Directions
-	int xdir = 1;
-	int ydir = 2;
-	int zdir = 3;
-	
-	// Whole domain
-	Box domain(geom[lev].Domain());
-	
 	// Boxes for staggered components
 	Box ubx = mfi.tilebox (e_x);
 	Box vbx = mfi.tilebox (e_y);
 	Box wbx = mfi.tilebox (e_z);
 
-
 	add_forcing ( BL_TO_FORTRAN_BOX(ubx),  
 		      BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
+		      BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
 		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
 		      domain.loVect (), domain.hiVect (),
 		      geom[lev].CellSize (), &dt, &xdir );
@@ -502,12 +502,14 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 
 	add_forcing ( BL_TO_FORTRAN_BOX(vbx),  
 		      BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
+		      BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
 		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
 		      domain.loVect (), domain.hiVect (),
 		      geom[lev].CellSize (), &dt, &ydir );
 
 	add_forcing ( BL_TO_FORTRAN_BOX(wbx),  
 		      BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
+		      BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
 		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
 		      domain.loVect (), domain.hiVect (),
 		      geom[lev].CellSize (), &dt, &zdir );
