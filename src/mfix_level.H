@@ -167,12 +167,8 @@ private:
 
     static void GotoNextLine(std::istream& is);
 
-    void EvolveFluid(int lev, int nstep, int set_normg,
-            Real dt, Real& prev_dt, Real time, Real normg);
-
+    void EvolveFluidSimple(int lev, int nstep, int set_normg,Real dt, Real& prev_dt, Real time, Real normg);
     void EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time);
-
-
 
     // Projection-related methods
     void solve_poisson_equation(int lev,
@@ -222,6 +218,8 @@ private:
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids() const;
     void ChopGrids(const Box& domain, BoxArray& ba, int target_size) const;
+
+    void mfix_print_max_vel(int lev);
 
     void mfix_set_bc_type(int lev);
     void mfix_set_bc1(int lev);

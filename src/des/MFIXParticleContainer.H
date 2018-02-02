@@ -52,7 +52,7 @@ public:
 };
 
 class MFIXParticleContainer final
-    : public amrex::NeighborParticleContainer<realData::count,intData::count,realData::count+2>
+    : public amrex::NeighborParticleContainer<realData::count,intData::count>
 {
 public:
 

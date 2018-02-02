@@ -14,9 +14,9 @@
 void
 mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time )
 {
+    BL_PROFILE_REGION_START("mfix::EvolveFluidProjection");
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
-      
     
     // Extrapolate boundary values for density and volume fraction
     // The subsequent call to mfix_set_projection_bcs will only overwrite
@@ -26,9 +26,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     fill_mf_bc ( lev, *mu_g[lev] );
     
     // Fill ghost nodes and reimpose boundary conditions
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
     mfix_set_pressure_bcs (lev);
     
@@ -39,7 +36,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     // Back up field
     // Backup field variable to old
     int nghost = ep_go[lev] -> nGrow();
-
 
     //
     // Start loop: if we are not seeking a steady state solution,
@@ -87,9 +83,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	amrex::Print() << "\nTentative velocity computation at  time = " << time
 		  << " ( dt = "<< dt << " )\n";
 	amrex::Print() << "At beginning of time step :\n";
-	amrex::Print() << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-	amrex::Print() << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-	amrex::Print() << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+        mfix_print_max_vel(lev);
 
 	//
 	// Time integration step
@@ -103,9 +97,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
 	//
 	amrex::Print() << "\nBefore projection step :\n";
-	amrex::Print() << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-	amrex::Print() << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-	amrex::Print() << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+        mfix_print_max_vel(lev);
 	amrex::Print() << "max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
 
 	//check_for_nans (lev);
@@ -117,9 +109,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
 	//
 	amrex::Print() << "\nAfter projection step :\n";
-	amrex::Print() << "Final max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
-	amrex::Print() << "Final max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";	
-	amrex::Print() << "Final max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+        mfix_print_max_vel(lev);
 	amrex::Print() << "Final max(abs(p))  = " << p_g[lev] -> norm0 () << "\n\n";
     
 	//check_for_nans (lev);
@@ -133,9 +123,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
 	// Compute the divergence of the velocity field, div(u).
 	// to check if div(u) = 0 is satisfied
-	u_g[lev] -> FillBoundary (geom[lev].periodicity());
-	v_g[lev] -> FillBoundary (geom[lev].periodicity());
-	w_g[lev] -> FillBoundary (geom[lev].periodicity());
 	mfix_set_projection_bcs (lev);
 	mfix_set_pressure_bcs (lev);
     
@@ -158,25 +145,8 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	// BCs 
 	fill_mf_bc(lev,*trD_g[lev]);
     
-// #ifdef _OPENMP
-// #pragma omp parallel
-// #endif
-// 	for (MFIter mfi(*vort[lev],true); mfi.isValid(); ++mfi)
-// 	{
-// 	    const Box& bx = mfi.tilebox();
-
-// 	    compute_vort ( BL_TO_FORTRAN_BOX(bx),
-// 			   BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
-// 			   BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-// 			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-// 			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-// 			   geom[lev].CellSize() );		     
-
-// 	}
-
 	amrex::Print() << "Max(abs(divu)) = "<< trD_g[lev] -> norm0 () << "\n";
-//	amrex::Print() << "DIVU AFTER PROJECTION = \n" ;
-//	amrex::Print() << (*trD_g[lev])[0] ;
+
 	// 
         // Check whether to exit the loop or not
 	// 
@@ -192,6 +162,22 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     }
     while ( keep_looping );
 
+   #ifdef _OPENMP
+   #pragma omp parallel
+   #endif
+        for (MFIter mfi(*vort[lev],true); mfi.isValid(); ++mfi)
+        {
+            const Box& bx = mfi.tilebox();
+
+            compute_vort ( BL_TO_FORTRAN_BOX(bx),
+                           BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
+                           BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+                           BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+                           BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+                           geom[lev].CellSize() );
+        }
+
+    BL_PROFILE_REGION_STOP("mfix::EvolveFluidProjection");
 }
 
 //
@@ -295,18 +281,12 @@ mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
     mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
  
     // Exchange halo nodes and apply BCs to velocity
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
  
     // Project velocity field
     mfix_apply_projection ( lev, dt );
     
     // Exchange halo nodes and apply BCs
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
     
     mfix_set_projection_bcs (lev);
     mfix_set_pressure_bcs (lev);
@@ -358,9 +338,6 @@ mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
     mfix_add_pressure_gradient ( lev, -dt/2.0 ); 
     
     // Fill ghost cells and reimpose boundary conditions
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
 }
 
@@ -804,9 +781,6 @@ mfix_level::steady_state_reached (int lev, Real dt)
     //
     // Make sure all ghost nodes are up to date
     // 
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
     mfix_set_pressure_bcs (lev);
 //mfix_set_bc1(lev);
@@ -937,6 +911,10 @@ mfix_level::mfix_set_projection_bcs (int lev)
 {
   BL_PROFILE("mfix_level::mfix_set_projection_bcs()");
 
+  u_g[lev] -> FillBoundary (geom[lev].periodicity());
+  v_g[lev] -> FillBoundary (geom[lev].periodicity());
+  w_g[lev] -> FillBoundary (geom[lev].periodicity());
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -947,7 +925,6 @@ mfix_level::mfix_set_projection_bcs (int lev)
       Box ubx((*u_g[lev])[mfi].box());
       Box vbx((*v_g[lev])[mfi].box());
       Box wbx((*w_g[lev])[mfi].box());
-
 
       set_projection_bcs ( BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
 			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
@@ -962,7 +939,6 @@ mfix_level::mfix_set_projection_bcs (int lev)
 			   bc_klo.dataPtr(), bc_khi.dataPtr(),
 			   domain.loVect(), domain.hiVect());
     }			   
-
 }
 
 //
@@ -995,9 +971,6 @@ mfix_level::mfix_set_pressure_bcs (int lev)
 
 }
 
-
-
-
 void
 mfix_level::check_for_nans (int lev)
 {
@@ -1024,4 +997,14 @@ mfix_level::check_for_nans (int lev)
 
 }
 
+//
+// Print the maximum values of the velocity components
+// 
+void 
+mfix_level::mfix_print_max_vel(int lev)
+{
+        amrex::Print() << "max(abs(u))  = " << u_g[lev] -> norm0 () << "\n";
+        amrex::Print() << "max(abs(v))  = " << v_g[lev] -> norm0 () << "\n";
+        amrex::Print() << "max(abs(w))  = " << w_g[lev] -> norm0 () << "\n";
+}
 

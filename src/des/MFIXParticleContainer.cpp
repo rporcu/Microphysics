@@ -18,7 +18,7 @@ bool MFIXParticleContainer::use_neighbor_list  {true};
 bool MFIXParticleContainer::sort_neighbor_list {false};
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
-    : NeighborParticleContainer<realData::count,intData::count,realData::count+2>
+    : NeighborParticleContainer<realData::count,intData::count>
       (amr_core->GetParGDB(), 1)
 {
     ReadStaticParameters();
@@ -321,7 +321,6 @@ void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, Distributio
         } // p
     } // pti
 
-    BuildLevelMask(lev,geom,dmap,ba);
     Redistribute();
 }
 
