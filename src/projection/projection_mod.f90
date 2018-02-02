@@ -296,7 +296,7 @@ contains
       
       ! Local variables
       integer(c_int)                :: i, j, k 
-      real(ar)                      :: odx(3), orog, orop_g, acc 
+      real(ar)                      :: odx(3), orog, orop_g, acc, oep_g 
 
 
       ! 1/dx
@@ -317,8 +317,10 @@ contains
                   end if
 
                   orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i-1,j,k) )
+
+                  oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i-1,j,k)/rop_g(i-1,j,k) )
                   
-                  acc = acc + gravity(dir) - drag_i(i,j,k) * orop_g 
+                  acc = acc - oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -340,8 +342,10 @@ contains
                   end if
 
                   orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i,j-1,k) )
+
+                  oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i,j-1,k)/rop_g(i,j-1,k) )
                   
-                  acc = acc + gravity(dir) - drag_i(i,j,k) * orop_g 
+                  acc = acc - oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -364,7 +368,9 @@ contains
 
                   orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i,j,k-1) )
                   
-                  acc = acc + gravity(dir) - drag_i(i,j,k) * orop_g 
+                  oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i,j,k-1)/rop_g(i,j,k-1) )
+                  
+                  acc = acc - oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -434,13 +440,12 @@ contains
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               orop       = half * ( rop(i,j,k) - rop(i-i0,j-j0,k-k0) )
-               diag_coeff = one - dt * f_gds_i(i,j,k) * orop
+               orop       = half * ( one / rop(i,j,k) + one / rop(i-i0,j-j0,k-k0) )
+               diag_coeff = one + dt * f_gds_i(i,j,k) * orop
                u_i(i,j,k) = u_i(i,j,k) / diag_coeff
             end do
          end do
       end do
-
       
    end subroutine compute_intermediate_velocity
 
@@ -480,8 +485,8 @@ contains
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
-               bcoeff(i,j,k) = half * ( ep_g(i,j,k) / ro_g(i,j,k) + &
-                    & ep_g(i-i0,j-j0,k-k0) / ro_g(i-i0,j-j0,k-k0) )
+               bcoeff(i,j,k) = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) ) * &
+                    & half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
             end do
          end do
       end do
@@ -597,7 +602,7 @@ contains
          end if
          
       end if
-
+      
       !
       ! Check whether the system is non-singular
       !
@@ -716,7 +721,7 @@ contains
       ! If the system is singular, setting to 0 the initial guess
       ! may be necessary to obtain convergence
       ! Even for a NON-singular system, if the initial guess is extremely
-      ! close to the solution, this may not lead to convergence
+      ! close to the solution, non-zero initial guess may not lead to convergence
       phi(is:ie,js:je,ks:ke) = zero 
 
       ! If the system is singular, no Dirichlet's condition is present
@@ -818,7 +823,7 @@ contains
             end do
          end do
       end do
-
+      
    end subroutine compute_diveu
 
 
