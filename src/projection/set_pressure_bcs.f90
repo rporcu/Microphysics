@@ -29,13 +29,12 @@
 !  Date: December 20, 2017
 !
 ! 
-subroutine set_pressure_bcs (  phi, slo, shi, bct_ilo, bct_ihi, &
+subroutine extrap_pressure_to_ghost_cells (  phi, slo, shi, bct_ilo, bct_ihi, &
      bct_jlo, bct_jhi, bct_klo, bct_khi,  domlo, domhi ) bind(C) 
 
    use amrex_fort_module,  only: ar => amrex_real
    use iso_c_binding ,     only: c_int
    use bc
-   use scales,             only: scale_pressure
    
    implicit none
 
@@ -87,8 +86,9 @@ subroutine set_pressure_bcs (  phi, slo, shi, bct_ilo, bct_ihi, &
      
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               phi(slo(1):domlo(1)-1,j,k) = two * scale_pressure(bc_p_g(bcv)) &
-                    & - phi(domlo(1),j,k)
+               if (j.eq.0.and.k.eq.0) print *,'PHI BEFORE ', phi(domlo(1)-1,j,k), phi(domlo(1),j,k)
+               phi(domlo(1)-1,j,k) =  2.d0*phi(domlo(1)-1,j,k) - phi(domlo(1),j,k)
+               if (j.eq.0.and.k.eq.0) print *,'PHI AFTER  ', phi(domlo(1)-1,j,k), phi(domlo(1),j,k)
 
             case ( minf_)
 
@@ -119,8 +119,7 @@ subroutine set_pressure_bcs (  phi, slo, shi, bct_ilo, bct_ihi, &
 
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               phi(domhi(1)+1:shi(1),j,k) = two * scale_pressure(bc_p_g(bcv)) &
-                    & - phi(domhi(1),j,k)
+               phi(domhi(1)+1,j,k) = 2.d0*phi(domhi(1)+1,j,k) - phi(domhi(1),j,k)
 
             case ( minf_ )
                
@@ -151,8 +150,7 @@ subroutine set_pressure_bcs (  phi, slo, shi, bct_ilo, bct_ihi, &
 
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               phi(i,slo(2):domlo(2)-1,k) = two * scale_pressure(bc_p_g(bcv)) &
-                    & - phi(i,domlo(2),k)
+               phi(i,domlo(2)-1,k) =  2.d0*phi(i,domlo(2)-1,k) - phi(i,domlo(2),k)
 
             case ( minf_ )
 
@@ -183,8 +181,7 @@ subroutine set_pressure_bcs (  phi, slo, shi, bct_ilo, bct_ihi, &
 
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               phi(i,domhi(2)+1:shi(2),k) = two * scale_pressure(bc_p_g(bcv)) &
-                    & - phi(i,domhi(2),k)
+               phi(i,domhi(2)+1,k) =  2.d0*phi(i,domhi(2)+1,k) - phi(i,domhi(2),k)
 
             case ( minf_) 
 
@@ -216,8 +213,7 @@ subroutine set_pressure_bcs (  phi, slo, shi, bct_ilo, bct_ihi, &
 
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               phi(i,j,slo(3):domlo(3)-1) = two * scale_pressure(bc_p_g(bcv)) &
-                    &                - phi(i,j,domlo(3))
+               phi(i,j,domlo(3)-1) =  2.d0*phi(i,j,domlo(3)-1) - phi(i,j,domlo(3))
  
             case ( minf_ )
 
@@ -249,8 +245,7 @@ subroutine set_pressure_bcs (  phi, slo, shi, bct_ilo, bct_ihi, &
                
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               phi(i,j,domhi(3)+1:shi(3)) =  two * scale_pressure(bc_p_g(bcv)) &
-                    &                 - phi(i,j,domhi(3))
+               phi(i,j,domhi(3)+1) =  2.d0*phi(i,j,domhi(3)+1) - phi(i,j,domhi(3))
 
             case ( minf_ ) 
 
@@ -267,4 +262,4 @@ subroutine set_pressure_bcs (  phi, slo, shi, bct_ilo, bct_ihi, &
       end do
    endif
 
-end subroutine set_pressure_bcs
+end subroutine extrap_pressure_to_ghost_cells

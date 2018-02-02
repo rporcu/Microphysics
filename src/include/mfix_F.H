@@ -512,10 +512,18 @@ extern "C"
 	const int* lo, const int* hi,
 	amrex::Real* u_i, const int* ulo, const int* uhi,
 	const amrex::Real* beta,
-        const amrex::Real* phi, const int* slo, const int* shi,
+        const amrex::Real* p0, const int* p0_lo, const int* p0_hi,
+        const amrex::Real* p , const int*  p_lo, const int*  p_hi,
 	const amrex::Real* dx, const amrex::Real* c,
 	const int* dir );
 
+  void add_grad_phi (
+	const int* lo, const int* hi,
+	amrex::Real* u_i, const int* ulo, const int* uhi,
+	const amrex::Real* beta,
+        const amrex::Real* phi, const int* slo, const int* shi,
+	const amrex::Real* dx, const amrex::Real* c,
+	const int* dir );
 
     void compute_fluid_acceleration (
 	const int* lo, const int* hi,
@@ -572,7 +580,6 @@ extern "C"
     void add_forcing (
 	const int* lo, const int* hi,
 	      amrex::Real* u_i,  const int* ulo, const int* uhi, 
-	const amrex::Real* p0_g, const int* slo, const int* shi,
 	const amrex::Real* ro_g, const int* rlo, const int* rhi,
 	const int* domlo, const int* domhi,
 	const amrex::Real* dx, const amrex::Real* dt, 
@@ -599,7 +606,7 @@ extern "C"
 	const int* bc_klo, const int* bc_khi,
 	const int* domlo , const int* domhi);
 
-    void set_pressure_bcs (
+    void extrap_pressure_to_ghost_cells (
 	amrex::Real* p_g, const int* slo, const int* shi,
 	const int* bc_ilo, const int* bc_ihi,
 	const int* bc_jlo, const int* bc_jhi,

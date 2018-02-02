@@ -664,7 +664,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
            (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
            (*w_g[lev])[mfi].dataPtr(),
            (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
-           &dx, &dy, &dz, &xlen, &ylen, &zlen );
+           &dx, &dy, &dz, &xlen, &ylen, &zlen); 
     }
   }
 
@@ -695,8 +695,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
     }
   }
 
-  // HACK HACK ???
-  // fill_mf_bc(lev,*p_g[lev]);
+  if ( use_proj_method ) mfix_extrap_pressure(lev,p0_g[lev]);
+
   fill_mf_bc(lev,*ep_g[lev]);
   fill_mf_bc(lev,*ro_g[lev]);
   fill_mf_bc(lev,*rop_g[lev]);

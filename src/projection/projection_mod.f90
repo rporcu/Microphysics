@@ -202,6 +202,69 @@ contains
    ! dir  = 1,2,3 indicates x, y, z direction respectively.
    !  
    subroutine add_gradient ( lo, hi, u_i, ulo, uhi, beta,    &
+        & p0, p0_lo, p0_hi, p, p_lo, p_hi, dx, c, dir ) bind (C)
+
+      ! Loop bounds
+      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
+
+      ! Array bounds
+      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int),  intent(in   ) :: p_lo(3), p_hi(3)
+      integer(c_int),  intent(in   ) :: p0_lo(3), p0_hi(3)
+
+      ! Grid and time spacing
+      real(ar),        intent(in   ) :: c, dx(3)
+
+      ! Direction
+      integer(c_int),  intent(in   ) :: dir
+
+      ! Arrays
+      real(ar),        intent(in   ) ::                        &
+             beta(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),  &
+               p0(p0_lo(1):p0_hi(1),p0_lo(2):p0_hi(2),p0_lo(3):p0_hi(3)), &
+                p( p_lo(1): p_hi(1), p_lo(2): p_hi(2), p_lo(3): p_hi(3))
+
+      real(ar),        intent(inout) ::                           &
+           & u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
+      ! Local variables
+      integer(c_int)                 :: i, j, k, i0, j0, k0
+      real(ar)                       :: codx
+
+      i0 = e_i(dir,1)
+      j0 = e_i(dir,2)
+      k0 = e_i(dir,3)
+
+      codx = c / dx(dir) 
+
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+
+               u_i(i,j,k) = u_i(i,j,k) + codx * beta(i,j,k) * ( &
+                              p(i,j,k) -   p(i-i0,j-j0,k-k0)   &
+                          +  p0(i,j,k) -  p0(i-i0,j-j0,k-k0) )
+
+
+            end do
+         end do
+      end do
+
+   end subroutine add_gradient
+   !
+   ! Computes  u_i = u_i + C * (beta) * (dphi/dx_i)
+   !
+   ! u_i  = i-th component of a staggered vector field u.
+   !
+   ! beta = scalar field defined at u_i location.
+   !
+   ! phi  = scalar field defined at cell centers
+   ! 
+   ! C    = real constant
+   !
+   ! dir  = 1,2,3 indicates x, y, z direction respectively.
+   !  
+   subroutine add_grad_phi ( lo, hi, u_i, ulo, uhi, beta,    &
         & phi, slo, shi, dx, c, dir ) bind (C)
 
       ! Loop bounds
@@ -247,15 +310,13 @@ contains
          end do
       end do
 
-   end subroutine add_gradient
-
-
+   end subroutine add_grad_phi
 
    !
    ! Add forcing (acceleration) terms to velocity component u_i
    ! 
    subroutine add_forcing ( lo, hi, u_i, ulo, uhi, &
-                            p0_g, slo, shi, ro_g, rlo, rhi, &
+                            ro_g, rlo, rhi, &
                             domlo, domhi, dx, dt, dir )  bind(C)
       
       use constant, only: gravity
@@ -266,7 +327,6 @@ contains
 
       ! Array bounds
       integer(c_int), intent(in   ) :: ulo(3), uhi(3)
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: rlo(3), rhi(3)
 
       ! Direction
@@ -283,7 +343,6 @@ contains
       
       ! Arrays
       real(ar),       intent(in   ) :: &
-           p0_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            ro_g(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
 
       real(ar),       intent(inout) :: &
@@ -303,15 +362,8 @@ contains
          do k = lo(3),hi(3)
             do j = lo(2),hi(2)
                do i = lo(1),hi(1)
-                  acc = zero
 
-                  ! Pressure drop at boundaries if specified
-                  orog = half * ( one/ro_g(i,j,k) + one/ro_g(i-1,j,k) )
-
-                  acc = -p_scale * (p0_g(i,j,k)-p0_g(i-1,j,k)) * orog * odx(dir) &
-                        +gravity(dir)
-
-                  u_i(i,j,k) = u_i(i,j,k) + dt * acc
+                  u_i(i,j,k) = u_i(i,j,k) + dt * gravity(dir)
 
                end do
             end do
@@ -322,15 +374,8 @@ contains
          do k = lo(3),hi(3)
             do j = lo(2),hi(2)
                do i = lo(1),hi(1)
-                  acc = zero
 
-                  ! Pressure drop at boundaries if specified
-                  orog = half * ( one/ro_g(i,j,k) + one/ro_g(i,j-1,k) )
-
-                  acc = -p_scale * (p0_g(i,j,k)-p0_g(i,j-1,k)) * orog * odx(dir) &
-                        +gravity(dir)
-
-                  u_i(i,j,k) = u_i(i,j,k) + dt * acc
+                  u_i(i,j,k) = u_i(i,j,k) + dt * gravity(dir)
 
                end do
             end do
@@ -341,29 +386,18 @@ contains
          do k = lo(3),hi(3)
             do j = lo(2),hi(2)
                do i = lo(1),hi(1)
-                  acc = zero
 
-                  ! Pressure drop at boundaries if specified
-                  orog = half * ( one/ro_g(i,j,k) + one/ro_g(i,j,k-1) )
-
-                  acc = -p_scale * (p0_g(i,j,k)-p0_g(i,j,k-1)) * orog * odx(dir) &
-                        +gravity(dir)
-
-                  u_i(i,j,k) = u_i(i,j,k) + dt * acc
+                  u_i(i,j,k) = u_i(i,j,k) + dt * gravity(dir)
 
                end do
             end do
          end do
 
-
       case default
          stop "projection_mod: add_forcing: argument dir must be either 1,2, or 3"
       end select
 
-
-
    end subroutine add_forcing
-
 
    !
    ! Compute the coefficients of the PPE, i.e. 1 / ro_g = eps_g/rho_g,
@@ -535,7 +569,7 @@ contains
             integer                       :: bc_face
             integer                       :: is, ie, js, je
 
-            ! Do not considere the edges: they may cause problems
+            ! Do not consider the edges: they may cause problems
             is = 3
             ie = size (bct_array,1) - 2
             js = 3

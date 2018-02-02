@@ -121,7 +121,7 @@ protected:
     // Projection
     void mfix_apply_projection (int lev, amrex::Real scaling_factor);
     void mfix_set_projection_bcs (int lev);
-    void mfix_set_pressure_bcs (int lev);
+    void mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>&);
     
     // End projection
     
@@ -200,6 +200,7 @@ private:
 			Vector< std::unique_ptr<MultiFab> >& w );
 
     void mfix_add_pressure_gradient(int lev, amrex::Real coeff);
+    void mfix_add_grad_phi         (int lev, amrex::Real coeff);
     
     void mfix_compute_velocity_slopes(int lev,
 			Vector< std::unique_ptr<MultiFab> >& u,
