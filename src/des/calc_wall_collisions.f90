@@ -1,3 +1,10 @@
+module wall_collisions
+    use amrex_fort_module, only : c_real => amrex_real
+    use iso_c_binding    , only: c_int
+
+    implicit none
+contains
+
   subroutine calc_wall_collisions ( particles, np, nrp, tow, fc, dtsolid, &
        flag, fglo, fghi, normal, nlo, nhi, bcent, blo, bhi, &
        dx) &
@@ -39,8 +46,8 @@
     real(c_real) :: sqrt_overlap
 
     real(c_real) :: normul(3)
-    real(c_real) :: wca_overlap_factor, wca_strength, wca_radius, wca_inv_r, wca_offset, f_wca
-    real(c_real) :: v_normal, wca_dist
+    !real(c_real) :: wca_overlap_factor, wca_strength, wca_radius, wca_inv_r, wca_offset, f_wca
+    !real(c_real) :: v_normal, wca_dist
     
     ! facet barycenter (bcent) in global coordinates
     real(c_real), dimension(3) :: eb_cent
@@ -90,7 +97,7 @@
     fudge = one - 1.d-8
 
     ! from WCA potential: r_min = wca_overlap_factor * wca_radius
-    wca_overlap_factor = 2.**(1./6.)
+    !wca_overlap_factor = 2.**(1./6.)
 
     ! iterate over particles
     do ll = 1, nrp
@@ -108,8 +115,8 @@
        ! WCA-interaction kicks in _after_ MFIX-interaction
        !  => wca_radius < particle radius
        !  => most MFIX collisions don't see WCA interaction
-       wca_radius = rp 
-       wca_strength = p%mass * 10000;
+       !wca_radius = rp 
+       !wca_strength = p%mass * 10000;
 
        ! particle position (in units of cells)
        lx = xp*inv_dx(1)
@@ -305,25 +312,25 @@
           fn(:) = -(kn_des_w * overlap_n  + etan_des_w * v_rel_trans_norm) * normul(:)
 
           ! Add WCA force (to mittigate wall-penetration)
-          f_wca = 0;
-          wca_dist = cur_plane_distmod + rp/2 ! * wca_overlap_factor
-
-          if ( wca_dist <= wca_radius * wca_overlap_factor ) then
-             wca_inv_r = wca_radius / dabs(wca_dist)
-             f_wca = 4. * wca_strength * (       &
-                           12. * wca_inv_r**11   &
-                         - 6.  * wca_inv_r**5    )
-
-             !v_normal = dabs( dot_3d_real( p%vel(:) , -normul(:) ) )
-             !p%vel(:) = p%vel(:) + normul(:) * v_normal
-              write(*,*) "f_wca = ", f_wca, "wca_radius = ", wca_radius, "distmod = ", cur_distmod, "plane_distmod = ", cur_plane_distmod
-              write(*,*) "normul = ", normul(:)
-              write(*,*) "f old = ", fn
-              write(*,*) "f new = ", -f_wca*normul(:)
-              write(*,*) " "
-          end if
-          
-          fn(:) = fn(:) - f_wca * normul(:)
+          !f_wca = 0;
+          !wca_dist = cur_plane_distmod + rp/2 ! * wca_overlap_factor
+          !
+          !if ( wca_dist <= wca_radius * wca_overlap_factor ) then
+          !   wca_inv_r = wca_radius / dabs(wca_dist)
+          !   f_wca = 4. * wca_strength * (       &
+          !                 12. * wca_inv_r**11   &
+          !               - 6.  * wca_inv_r**5    )
+          !
+          !   !v_normal = dabs( dot_3d_real( p%vel(:) , -normul(:) ) )
+          !   !p%vel(:) = p%vel(:) + normul(:) * v_normal
+          !    write(*,*) "f_wca = ", f_wca, "wca_radius = ", wca_radius, "distmod = ", cur_distmod, "plane_distmod = ", cur_plane_distmod
+          !    write(*,*) "normul = ", normul(:)
+          !    write(*,*) "f old = ", fn
+          !    write(*,*) "f new = ", -f_wca*normul(:)
+          !    write(*,*) " "
+          !end if
+          !
+          !fn(:) = fn(:) - f_wca * normul(:)
           
 
           ! Calculate the tangential displacement.
@@ -721,6 +728,177 @@ contains
 
        end function facets_nearest_pt
 
+  end subroutine calc_wall_collisions
+
+subroutine calc_wall_collisions_ls(particles, np,   nrp,     &
+                                   tow,       fc,   dtsolid, &
+                                   valid,     vlo,  vhi,     &
+                                   phi,       phlo, phhi,    &
+                                   dx,        n_refine     ) &
+           bind(c, name="calc_wall_collisions_ls")
+
+    use particle_mod,   only: particle_t
+    use discretelement, only: des_coll_model_enum
+    use discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
+    use discretelement, only: des_crossprdct
+    use discretelement, only: kn_w, kt_w, mew_w
+
+    use eb_levelset, only: interp_levelset, normal_levelset
+
+    implicit none
+
+    ! ** input varaibles
+
+    type(particle_t), intent(in   ), target :: particles(np)
+    integer,          intent(in   )         :: np, nrp, vlo(3), vhi(3), phlo(3), phhi(3), n_refine
+
+    real(c_real),     intent(inout)         :: tow(np,3), fc(np,3)
+    real(c_real),     intent(in   )         :: dtsolid, dx(3)
+    integer,          intent(in   )         :: valid( vlo(1): vhi(1),  vlo(2): vhi(2),  vlo(3): vhi(3) )
+    real(c_real),     intent(in   )         :: phi(  phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
+
+    ! ** declare local varaibles:
+    integer :: phasell
+
+    ! p: pointer to current particle (in particles) array
+    type(particle_t), pointer  :: p
+
+    ! inv_dx: inverse cell size
+    ! pos   : current particle's position
+    ! plo   : origin of paritcle coordinates
+    real(c_real), dimension(3) :: inv_dx, pos, plo, ft, fn, overlap_t, vrel_t, normal, tangent
+
+    ! xp, yp, zp: current particle's x, y, z position
+    ! rp:         current particle's radius
+    ! lx, ly, lz: position in units of of cell length
+    ! ls_value:   value of the level-set function
+    ! overlap:    particle-wall overlap
+    real(c_real)               :: xp, yp, zp, rp, lx, ly, lz, ls_value, overlap_n
+
+    ! ll:      do-loop counter itterating over particles
+    ! i, j, k: indices of cell containing current particle
+    integer                    :: ll, i, j, k
+
+    ! ls_valid: indicates if particle is near wall (and level-set needs to be tested)
+    logical                    :: ls_valid
+
+    real(c_real) :: v_rel_trans_norm, sqrt_overlap, kn_des_w, kt_des_w, etan_des_w, etat_des_w
+    real(c_real) :: mag_overlap_t, fnmd
+
+    ! inverse cell size: used to convert positions to cell indices
+    inv_dx(:) = 1.0d0 / dx(:)
+
+    plo = (/ 0., 0., 0. /)
+
+    do ll = 1, nrp
+        ! get current particle
+        p => particles(ll)
+
+        ! particle position
+        xp = p%pos(1)
+        yp = p%pos(2)
+        zp = p%pos(3)
+        ! in units of cell length
+        lx = xp * inv_dx(1)
+        ly = yp * inv_dx(2)
+        lz = zp * inv_dx(3)
+        ! get particle cell index
+        i = floor(lx)
+        j = floor(ly)
+        k = floor(lz)
+
+        ! checking valid seems to take more time than just using the level-set
+        !if (valid(i*n_refine, j*n_refine, k*n_refine) .eq. 1) then
+            ! particle radius
+            rp  = p%radius
+
+            ! compute particle/wall overlap
+            pos = (/ xp, yp, zp /)
+
+            ! interpolates levelset from nodal phi to position pos
+            call interp_levelset(pos, plo, n_refine, phi, phlo, phhi, dx, ls_value);
+            overlap_n = rp - ls_value
+
+            if (ls_value .lt. rp) then
+
+                call normal_levelset(pos, plo, n_refine, phi, phlo, phhi, dx, normal)
+                normal(:) = -normal(:)
+
+                ! *****************************************************************************
+                ! calculate the translational relative velocity
+
+                call cfrelvel_wall(ll, v_rel_trans_norm, vrel_t, normal, ls_value, particles)
+
+                ! subroutine cfrelvel_wall (ll, vrn, vrt, norm, dist, particles )
+                ! *****************************************************************************
+                ! total relative velocity + rotational contribution
+                ! v_rot = distmod * particles(ll) % omega
+                ! vreltrans(:) =  particles(ll) % vel  + des_crossprdct(v_rot, normal)
+
+                ! magnitude of normal component of relative velocity (scalar)
+                ! v_rel_trans_norm = dot_product(vreltrans,normal)
+
+                ! total relative translational slip velocity at the contact point
+                ! equation (8) in tsuji et al. 1992
+                ! vrel_t(:) =  vreltrans(:) - v_rel_trans_norm*normal(:)
+                ! *****************************************************************************
+
+                ! calculate the spring model parameters.
+                phasell = particles(ll) % phase
+
+                ! hertz vs linear spring-dashpot contact model
+                if ( des_coll_model_enum == hertzian ) then
+                    sqrt_overlap = sqrt(overlap_n)
+                    kn_des_w     = hert_kwn(phasell)*sqrt_overlap
+                    kt_des_w     = hert_kwt(phasell)*sqrt_overlap
+                    sqrt_overlap = sqrt(sqrt_overlap)
+                    etan_des_w   = des_etan_wall(phasell)*sqrt_overlap
+                    etat_des_w   = des_etat_wall(phasell)*sqrt_overlap
+                else
+                    kn_des_w     = kn_w
+                    kt_des_w     = kt_w
+                    etan_des_w   = des_etan_wall(phasell)
+                    etat_des_w   = des_etat_wall(phasell)
+                end if
+
+                ! calculate the normal contact force
+                fn(:) = -(kn_des_w * overlap_n  + etan_des_w * v_rel_trans_norm) * normal(:)
+                
+                ! calculate the tangential displacement.
+                overlap_t(:) = dtsolid*vrel_t(:)
+                mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t))
+
+                ! check for coulombs friction law and limit the maximum value of the
+                ! tangential force on a particle in contact with a wall.
+                if ( mag_overlap_t > 0.0 ) then
+
+                    ! max force before the on set of frictional slip.
+                    fnmd = mew_w*sqrt(dot_product(fn,fn))
+
+                    ! direction of tangential force.
+                    tangent = overlap_t/mag_overlap_t
+
+                    ft = -fnmd * tangent
+
+                else
+                    ft = 0.0
+                end if
+
+                ! add the collision force to the total forces acting on the particle.
+                fc(ll,:) = fc(ll,:) + fn(:) + ft(:)
+
+                ! add the torque force to the total torque acting on the particle.
+                tow(ll,:) = tow(ll,:) + ls_value*des_crossprdct(normal(:),ft)
+
+            end if
+
+        !end if
+
+    end do
+
+
+end subroutine calc_wall_collisions_ls
+
 
    !----------------------------------------------------------------------!
    !                                                                      !
@@ -776,4 +954,5 @@ contains
 
    end subroutine cfrelvel_wall
 
-  end subroutine calc_wall_collisions
+
+end module wall_collisions

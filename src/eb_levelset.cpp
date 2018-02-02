@@ -14,8 +14,8 @@
 //}
 
 
-LSFactory::LSFactory(int lev, const MFIXParticleContainer * pc, const EBFArrayBoxFactory * ebfactory)
-    : amr_lev(lev), mfix_pc(pc), eb_factory(ebfactory) 
+LSFactory::LSFactory(int lev, int ref, const MFIXParticleContainer * pc, const EBFArrayBoxFactory * ebfactory)
+    : amr_lev(lev), ls_grid_refinement(ref), mfix_pc(pc), eb_factory(ebfactory) 
 {
     ls_phi   = std::unique_ptr<MultiFab>(new MultiFab);
     ls_valid = std::unique_ptr<iMultiFab>(new iMultiFab);
@@ -24,8 +24,13 @@ LSFactory::LSFactory(int lev, const MFIXParticleContainer * pc, const EBFArrayBo
     const BoxArray & phi_ba        = amrex::convert(particle_ba, IntVect{1,1,1});
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(lev);
 
-    ls_phi -> define(phi_ba, dm, 1, 1);
-    ls_valid -> define(particle_ba, dm, 1, 2);
+    BoxArray phi_ba2 = phi_ba;
+    phi_ba2.refine(ref);
+    BoxArray particle_ba2 = particle_ba;
+    particle_ba2.refine(ref);
+    
+    ls_phi -> define(phi_ba2, dm, 1, ref);
+    ls_valid -> define(particle_ba2, dm, 1, 2 * ref);
     ls_valid -> setVal(0);
 }
 
@@ -48,16 +53,15 @@ void LSFactory::update(MultiFab * dummy){
         const int * lo = tile_box.loVect();
         const int * hi = tile_box.hiVect();
 
-        const auto & sfab = dynamic_cast<EBFArrayBox const &>((* dummy)[mfi]);
-        const auto & flag = sfab.getEBCellFlagFab();
+        //const auto & sfab = dynamic_cast<EBFArrayBox const &>((* dummy)[mfi]);
+        //const auto & flag = sfab.getEBCellFlagFab();
 
-        if(flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued){
-            compute_levelset(lo, hi,
-                             flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                             (* ls_valid)[mfi].dataPtr(), (* ls_valid)[mfi].loVect(), (* ls_valid)[mfi].hiVect(),
-                             (* ls_phi)[mfi].dataPtr(), (* ls_phi)[mfi].loVect(), (* ls_phi)[mfi].hiVect(),
-                             mfix_pc->Geom(amr_lev).CellSize());
-        }
+        //if(flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued){
+            fill_levelset(lo, hi, & ls_grid_refinement,
+                          (* ls_valid)[mfi].dataPtr(), (* ls_valid)[mfi].loVect(), (* ls_valid)[mfi].hiVect(),
+                          (* ls_phi)[mfi].dataPtr(), (* ls_phi)[mfi].loVect(), (* ls_phi)[mfi].hiVect(),
+                          mfix_pc->Geom(amr_lev).CellSize());
+        //}
     }
 
     ls_phi -> FillBoundary(mfix_pc -> Geom(0).periodicity());

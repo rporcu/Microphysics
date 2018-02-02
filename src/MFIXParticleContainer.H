@@ -84,7 +84,8 @@ public:
     std::unique_ptr<MultiFab> EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiFab * dummy);
 
     void EvolveParticles(int lev, int nstep, Real dt, Real time, EBFArrayBoxFactory * ebfactory,
-            MultiFab * eb_normals, MultiFab * dummy, MultiFab * cost, std::string & knapsack_weight_type, int subdt_io);
+            MultiFab * eb_normals, const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
+            MultiFab * dummy, MultiFab * cost, std::string & knapsack_weight_type, int subdt_io);
 
     void GetParticleAvgProp(int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);
 
@@ -146,6 +147,12 @@ public:
                             IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                             IArrayBox& bc_klo, IArrayBox& bc_khi,
                             int fortran_beta_comp, int fortran_vel_comp);
+
+    ///
+    /// Flag switching from calc_wall_collisions and calc_wall_collisions_ls if true
+    ///
+    bool use_ls = false;
+
 private:
 
     ///

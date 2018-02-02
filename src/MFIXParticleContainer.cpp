@@ -426,7 +426,8 @@ MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiF
 
 
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
-        EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals,
+        EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals, 
+        const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
         MultiFab * dummy, MultiFab * cost, std::string & knapsack_weight_type, int subdt_io)
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
@@ -513,7 +514,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                // Calculate forces from particle-wall collisions
                BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-               calc_wall_collisions(particles, &ntot, &nrp, 
+               if(not use_ls){
+                   calc_wall_collisions(particles, &ntot, &nrp, 
                                     tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
                                     flag.dataPtr(), flag.loVect(), flag.hiVect(),
                                     (*eb_normals)[pti].dataPtr(),
@@ -521,6 +523,15 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                                     (*bndrycent)[pti].dataPtr(),
                                     (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
                                     dx);
+               } else {
+                   calc_wall_collisions_ls(particles, & ntot, & nrp, 
+                                       tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                       (* ls_valid)[pti].dataPtr(), 
+                                       (* ls_valid)[pti].loVect(), (* ls_valid)[pti].hiVect(),
+                                       (* ls_phi)[pti].dataPtr(),
+                                       (* ls_phi)[pti].loVect(), (* ls_phi)[pti].hiVect(),
+                                       dx, & ls_refinement);
+               }
                BL_PROFILE_VAR_STOP(calc_wall_collisions);
             }
          }

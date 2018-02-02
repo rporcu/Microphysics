@@ -20,6 +20,7 @@
 #include <AMReX_EBTower.H>
 #include <AMReX_EBFArrayBox.H>
 
+#include <eb_levelset.H>
 
 class mfix_level
     : public AmrCore
@@ -72,6 +73,9 @@ public:
     void WriteEBSurface(int lev);
 
     void InitIOData();
+    
+    // flag switching from calc_wall_collisions and calc_wall_collisions_ls if true
+    bool use_ls = false;
 
 protected:
 
@@ -405,6 +409,9 @@ private:
     // stores eb_normals (commond index-space with cells)
     std::unique_ptr<MultiFab> eb_normals;
     std::unique_ptr<MultiFab> dummy;
+
+    // stores level-set (nodal index space corresponding to cells, but n_refinement times finer)
+    std::unique_ptr<LSFactory> level_set;
 };
 
 #endif

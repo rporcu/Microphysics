@@ -617,13 +617,16 @@ extern "C"
     void mfix_write_eb_vtp ( int* myID);
     void mfix_write_pvtp ( int* nProcs);
 
-    void compute_levelset(const int * lo, const int * hi,
-                          const void * flag, const int * fglo, const int * fghi,
-                          int * valid, const int * vlo, const int * vhi,
-                          amrex_real * phi, const int * phlo, const int * phhi, 
-                          const amrex_real * dx);
+    void fill_levelset(const int * lo, const int * hi, const int * n_refine,
+                       int * valid, const int * vlo, const int * vhi,
+                       amrex_real * phi, const int * phlo, const int * phhi, 
+                       const amrex_real * dx);
 
-    void calc_wall_collisions_ls();
+    void calc_wall_collisions_ls(void * rparticles, const int * ntot, const int * nrp,
+                                 amrex_real * tow, amrex_real * fc, amrex_real * subdt,
+                                 const int * valid, const int * vlo, const int * vhi,
+                                 const amrex_real * phi, const int * phlo, const int * phhi,
+                                 const amrex_real * dx, const int * n_refine);
 
     
 #ifdef __cplusplus

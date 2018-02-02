@@ -59,6 +59,10 @@ mfix_level::ResizeArrays ()
     // Particle Container
     pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
 
+    // HACK: temporary flag used to turn on level-set mode
+    //   (used in evlove particles)
+    pc -> use_ls = use_ls;
+
     A_m.resize(nlevs_max);
     b_m.resize(nlevs_max);
 

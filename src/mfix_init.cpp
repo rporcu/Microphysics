@@ -22,7 +22,7 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         pp.query( "mg_verbose", mg_verbose );
         pp.query( "mg_cg_verbose", mg_cg_verbose );
         pp.query( "mg_max_iter", mg_max_iter );
-	pp.query( "mg_cg_maxiter", mg_cg_maxiter );
+        pp.query( "mg_cg_maxiter", mg_cg_maxiter );
         pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
         pp.query( "mg_rtol", mg_rtol );
         pp.query( "mg_atol", mg_atol );
@@ -51,6 +51,8 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         // If subdt_io is true, des_time_loop calls output_manager
         subdt_io = false; // default to false (if not present in inputs file)
         pp.query("subdt_io", subdt_io);
+
+        pp.query("use_ls", use_ls);
     }
 
     solve_fluid  = solve_fluid_in;

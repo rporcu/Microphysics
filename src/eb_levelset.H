@@ -16,22 +16,16 @@ class LSFactory {
         int amr_lev;
         const MFIXParticleContainer * mfix_pc;
         const EBFArrayBoxFactory * eb_factory;
-
-        // Hack: figure out how to get level eet info out of GeometryShop
-        // For now thoughm we manually hack a cylinder level-set function
-        //double xy_centre[2] = {0.0016, 0.0016};
-        //double R2 = 2.56e-6;
-        
-        //double value_wall(const double pos[3]);
-        //double value_bottom(const double pos[3]);
+        int ls_grid_refinement;
 
     public:
-        LSFactory(int lev, const MFIXParticleContainer * pc, const EBFArrayBoxFactory * ebfactory);
+        LSFactory(int lev, int ref, const MFIXParticleContainer * pc, const EBFArrayBoxFactory * ebfactory);
         ~LSFactory();
 
         void update(MultiFab * dummy);
         const MultiFab * get_data(){return ls_phi.get();};
-
+        const iMultiFab * get_valid(){return ls_valid.get();};
+        const int get_refinement(){return ls_grid_refinement;};
 };
 
 

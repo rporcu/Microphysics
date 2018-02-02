@@ -169,8 +169,8 @@ mfix_level::make_eb_geometry(int lev)
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
-    LSFactory level_set(lev, pc.get(), particle_ebfactory.get());
-    level_set.update(dummy.get());
+    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(), particle_ebfactory.get()));
+    level_set -> update(dummy.get());
 }
 
 void
@@ -334,4 +334,7 @@ mfix_level::make_eb_hourglass(int lev)
                          m_eb_support_level));
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+
+    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(), particle_ebfactory.get()));
+    level_set -> update(dummy.get());
 }
