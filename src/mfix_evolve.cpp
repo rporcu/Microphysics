@@ -41,6 +41,7 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real dt
   
   if (solve_dem)
       pc -> EvolveParticles(lev, nstep, dt, time, particle_ebfactory.get(), eb_normals.get(), 
+              level_set->get_data(), level_set->get_valid(), level_set->get_refinement(),
               dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io);
 
  BL_PROFILE_REGION_STOP("mfix::Evolve");
