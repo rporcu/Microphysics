@@ -207,10 +207,7 @@ private:
 			Vector< std::unique_ptr<MultiFab> >& v,
 			Vector< std::unique_ptr<MultiFab> >& w );
 
-    void mfix_set_phi(int lev, Real scale, int singular );
     // End of projection-related methods
-
-
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids() const;

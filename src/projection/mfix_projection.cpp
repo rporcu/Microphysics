@@ -655,10 +655,10 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
 		bc_klo.dataPtr(), bc_khi.dataPtr(),
 		&singular );
 
-    // Setup phi
+    // Initialize phi to zero (any non-zero bc's are stored in p0)
     phi[lev]->setVal(0.);
     
-    // Solve PPE
+    // Solve for phi
     solve_poisson_equation ( lev, oro_g, phi, trD_g, bc_lo, bc_hi );
     
     // Correct the velocity field
@@ -900,33 +900,6 @@ mfix_level::steady_state_reached (int lev, Real dt)
 	return condition1 || condition2;
     };
 }
-
-
-void
-mfix_level::mfix_set_phi (int lev, Real scale, int singular)
-{
-  BL_PROFILE("mfix_level::mfix_set_phi()");
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(*phi[lev], true); mfi.isValid(); ++mfi) {
-
-      Box domain(geom[lev].Domain());
-      Box sbx = mfi.tilebox ();
-      
-      set_phi (
-	  BL_TO_FORTRAN_BOX(sbx),  
-	  BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),      
-	  (*p_g[lev])[mfi].dataPtr (),
-	  &scale, &singular, domain.loVect(), domain.hiVect());
-  }
-  
-  phi[lev] -> FillBoundary (geom[lev].periodicity());
- 
-}
-
-
 
 //
 // Set the BCs for all the variables EXCEPT pressure
