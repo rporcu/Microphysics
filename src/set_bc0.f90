@@ -10,9 +10,9 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine set_bc0(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-                       u_g, v_g, w_g, p0_g, ep_g, ro_g, rop_g, mu_g, lambda_g, &
-                       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-                       bc_klo_type, bc_khi_type, domlo, domhi) &
+                      u_g, v_g, w_g, p0_g, ep_g, ro_g, rop_g, mu_g, lambda_g, &
+                      bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+                      bc_klo_type, bc_khi_type, domlo, domhi) &
       bind(C, name="set_bc0")
 
       use amrex_fort_module, only : c_real => amrex_real
