@@ -82,8 +82,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	prev_dt = dt ;
         amrex::Print() << "\n   Iteration " << iter << " at time " << time << " with dt = " << dt << "\n" << std::endl;
 
-        mfix_print_max_vel(lev);
-
 	//
 	// Time integration step
 	//
@@ -93,12 +91,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	// Step 2: compute u** (corrector step) and store it in u_g/v_g/w_g
 	mfix_compute_second_predictor ( lev, dt );
 
-	//
-	amrex::Print() << "\nBefore projection step :\n";
-        mfix_print_max_vel(lev);
-
-	//check_for_nans (lev);
-
 	// 
 	//  Projection Step
 	// 
@@ -107,8 +99,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	//
 	amrex::Print() << "\nAfter projection step :\n";
         mfix_print_max_vel(lev);
-    
-	//check_for_nans (lev);
 
 	// // Calculate transport coefficients
 	// mfix_physical_prop(lev,0);
@@ -139,7 +129,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	// BCs 
 	fill_mf_bc(lev,*trD_g[lev]);
     
-	amrex::Print() << "Max(abs(divu)) = "<< trD_g[lev] -> norm0 () << "\n";
+	amrex::Print() << "\nMax(abs(divu)) = "<< trD_g[lev] -> norm0 () << "\n";
 
 	// 
         // Check whether to exit the loop or not
@@ -262,6 +252,8 @@ mfix_level::init_tests_projection (int lev)
 void
 mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
 {
+    amrex::Print() << "\nStart of first predictor :\n";
+    mfix_print_max_vel(lev);
 
     // Compute fluid acceleration (convection + diffusion) 
     mfix_compute_velocity_slopes ( lev, u_go, v_go, w_go );
@@ -284,6 +276,9 @@ mfix_level::mfix_compute_first_predictor (int lev, amrex::Real dt)
     
     // Exchange halo nodes and apply BCs
     mfix_set_projection_bcs (lev);
+
+    amrex::Print() << "\nEnd of first predictor :\n";
+    mfix_print_max_vel(lev);
 }
 
 //
@@ -301,8 +296,7 @@ mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
 {
     BL_PROFILE("mfix_level::mfix_compute_second_predictor");
 
-    // Compute fluid acceleration (convection + diffusion)
-    // using first predictor
+    // Compute fluid acceleration (convection + diffusion) from current ustar
     mfix_compute_velocity_slopes ( lev, u_g, v_g, w_g );
     mfix_compute_fluid_acceleration ( lev, u_g, v_g, w_g );
         
@@ -328,13 +322,15 @@ mfix_level::mfix_compute_second_predictor (int lev, amrex::Real dt)
     // Add forcing terms
     mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
     
-    // Add pressure gradient
-    // mfix_add_pressure_gradient ( lev, -dt/2.0 ); 
-    // HACK HACK 
+    // Add dt * pressure gradient
     mfix_add_pressure_gradient ( lev, -dt); 
     
     // Fill ghost cells and reimpose boundary conditions
     mfix_set_projection_bcs (lev);
+
+    //
+    amrex::Print() << "\nEnd of second predictor:\n";
+    mfix_print_max_vel(lev);
 }
 
 
@@ -641,9 +637,6 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
 		       geom[lev].CellSize() );		     
     }
 
-    // Probably we do not need this
-    // fill_mf_bc ( lev, *trD_g[lev] );
-
     trD_g[lev] -> mult ( 1.0/scaling_factor, 1 );
 
     // Compute the PPE coefficients
@@ -662,17 +655,6 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
 		bc_klo.dataPtr(), bc_khi.dataPtr(),
 		&singular );
 
-    // Save the average value of p_g
-    // and add it to the new pressure field if the system is singular.
-    // This allows to evolve a pressure when the initial value for it is given 
-    Real pg_mean;
-
-    if (singular) {
-	pg_mean = ( p_g[lev] -> sum () ) / domain.numPts () ;
-    } else {
-	pg_mean = 0.0;
-    }
-    
     // Setup phi
     phi[lev]->setVal(0.);
     
@@ -684,7 +666,12 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
    
     // Recover pressure
     MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, 1);
-    p_g[lev] -> plus ( pg_mean, 0 ); // pg_mean is 0 for non-singular case
+
+    if (singular) 
+    {
+       Real phi_mean = ( phi[lev] -> sum () ) / domain.numPts () ;
+       p_g[lev] -> plus ( -phi_mean, 0 ); // pg_mean is 0 for non-singular case
+    }
 }
 
 //
@@ -822,7 +809,6 @@ mfix_level::mfix_compute_oro_g (int lev)
 int
 mfix_level::steady_state_reached (int lev, Real dt)
 {
-
     //
     // Count number of access 
     //
@@ -854,8 +840,8 @@ mfix_level::steady_state_reached (int lev, Real dt)
     Real tol = steady_state_tol; 
 
     
-    amrex::Print() << "Checking time step :\n";
-    amrex::Print() << "du/dt / dvdt / dw/dt / dw/dt  = " << delta_u/dt << " " << delta_v/dt << " " << delta_w/dt << " " << delta_p/dt << std::endl;
+    amrex::Print() << "\nChecking time step :\n";
+    amrex::Print() << "du/dt / dvdt / dw/dt / dp/dt  = " << delta_u/dt << " " << delta_v/dt << " " << delta_w/dt << " " << delta_p/dt << std::endl;
     int condition1 = (delta_u < tol*dt) && (delta_v < tol*dt ) && (delta_w < tol*dt);
 
 

@@ -707,6 +707,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
 
   fill_mf_bc(lev,*mu_g[lev]);
   fill_mf_bc(lev,*lambda_g[lev]);
+
+  std:cout << "Norm of p0: "<< p0_g[lev]->norm0() << std::endl;
 }
 
 void
