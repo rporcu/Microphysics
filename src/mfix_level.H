@@ -201,15 +201,20 @@ private:
 
     
     void mfix_add_pressure_gradient(int lev, amrex::Real coeff);
+
+    void mfix_add_grad_phi (int lev, amrex::Real coeff);
     
     void mfix_compute_velocity_slopes(int lev,
 			Vector< std::unique_ptr<MultiFab> >& u,
 			Vector< std::unique_ptr<MultiFab> >& v,
 			Vector< std::unique_ptr<MultiFab> >& w );
 
-    void mfix_set_phi(int lev, Real scale, int singular );
-
     void mfix_compute_diveu (int lev);
+
+    void mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p);
+
+    
+    void mfix_print_max_vel(int lev);
 // End of projection-related methods
 
 

@@ -526,6 +526,21 @@ extern "C"
 	const amrex::Real* dx, const amrex::Real* c,
 	const int* dir );
 
+  void add_grad_p (
+	const int* lo, const int* hi,
+	amrex::Real* u_i, const int* ulo, const int* uhi,
+        const amrex::Real* ro_g, const int* slo, const int* shi,
+	const amrex::Real* p, const amrex::Real* p0,
+	const amrex::Real* dx, const amrex::Real* c,
+	const int* dir );
+
+  void add_grad_phi (
+	const int* lo, const int* hi,
+	amrex::Real* u_i, const int* ulo, const int* uhi,
+	const amrex::Real* ro_g,
+        const amrex::Real* phi, const int* slo, const int* shi,
+	const amrex::Real* dx, const amrex::Real* c,
+	const int* dir );    
 
     void compute_fluid_acceleration (
 	const int* lo, const int* hi,
@@ -595,13 +610,6 @@ extern "C"
 	const amrex::Real* f_gds_i, const int* flo, const int* fhi,
 	const amrex::Real* rop, const int* slo, const int* shi,
 	const int* dir, const amrex::Real* dt );
-
-    void set_phi (
-	const int* lo, const int* hi,
-	amrex::Real* phi, const int* slo, const int* shi,
-	amrex::Real* pg,
-	const amrex::Real* scale, const int* singular,
-	const int*  domlo, const int *domhi );
 
     void set_projection_bcs (
         amrex::Real* u_g, const int* ulo, const int* uhi,

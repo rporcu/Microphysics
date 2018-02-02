@@ -26,21 +26,22 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     fill_mf_bc ( lev, *mu_g[lev] );
     
     // Fill ghost nodes and reimpose boundary conditions
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
-    mfix_set_pressure_bcs (lev);
 
     //
     // Start loop: if we are not seeking a steady state solution,
     // the loop will execute only one time
     //
     int keep_looping = 1;
-
+    int iter = 1;
+    
     do
     {
- 
+
+
+	amrex::Print() << "\n   Iteration " << iter <<" at time " \
+		       << time << " with dt = " << dt << "\n" << std::endl;
+	
 	// Back up field
 	// Backup field variable to old
 	int nghost = ep_go[lev] -> nGrow();
@@ -52,7 +53,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	MultiFab::Copy (*v_go[lev],   *v_g[lev],   0, 0, 1, nghost);
 	MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, nghost);
   
-
 	// User hooks
 #ifdef _OPENMP
 #pragma omp parallel
@@ -89,13 +89,12 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
         mfix_apply_predictor ( lev, dt );
 
 	// Print info about predictor step
+	amrex::Print() << "\nAfter predictor step:\n";
+	
+	mfix_print_max_vel (lev);
+
 	mfix_compute_diveu (lev);
 	
-	amrex::Print() << "\nAfter predictor step:\n";
-	amrex::Print() << "max(abs(u))     = " << u_g[lev] -> norm0 () << "\n";
-	amrex::Print() << "max(abs(v))     = " << v_g[lev] -> norm0 () << "\n";	
-	amrex::Print() << "max(abs(w))     = " << w_g[lev] -> norm0 () << "\n";
-	amrex::Print() << "max(abs(p))     = " << p_g[lev] -> norm0 () << "\n";
 	amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
 
 
@@ -107,21 +106,14 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	mfix_apply_corrector ( lev, dt );
 
 	// Print info about correction step
-	mfix_compute_diveu (lev);
-
 	amrex::Print() << "\nAfter corrector step:\n";
-	amrex::Print() << "max(abs(u))     = " << u_g[lev] -> norm0 () << "\n";
-	amrex::Print() << "max(abs(v))     = " << v_g[lev] -> norm0 () << "\n";	
-	amrex::Print() << "max(abs(w))     = " << w_g[lev] -> norm0 () << "\n";
-	amrex::Print() << "max(abs(p))     = " << p_g[lev] -> norm0 () << "\n";
+	
+	mfix_print_max_vel (lev);
+
+	mfix_compute_diveu (lev);
+	
 	amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
 	    
-	// // Calculate transport coefficients
-	// mfix_physical_prop(lev,0);
-
-	// // Update fluid density
-	// mfix_physical_prop(lev,0);
-
 	// 
         // Check whether to exit the loop or not
 	// 
@@ -130,6 +122,10 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	} else {
 	    keep_looping = 0;
 	}
+
+
+	// Update interations count
+	++iter;
 	
 	// Just for debugging
 	// keep_looping = 0;
@@ -190,27 +186,19 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 
     // Add the forcing terms
     mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
-
+    mfix_add_pressure_gradient ( lev, -dt);
+    
     // Compute intermediate velocity
     mfix_compute_intermediate_velocity ( lev, dt );
     
     // Exchange halo nodes and apply BCs to velocity
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
  
     // Project velocity field
     mfix_apply_projection ( lev, dt );
     
     // Exchange halo nodes and apply BCs
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
-    
-    mfix_set_projection_bcs (lev);
-    mfix_set_pressure_bcs (lev);
-    
+    mfix_set_projection_bcs (lev); 
 }
 
 
@@ -261,6 +249,9 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
 	
     // Compute fluid acceleration (convection + diffusion) 
     // using velocity at the beginning of time step
+    uacc[lev]->setVal(0.0);
+    vacc[lev]->setVal(0.0);
+    wacc[lev]->setVal(0.0);
     mfix_compute_velocity_slopes ( lev, u_go, v_go, w_go );
     mfix_compute_fluid_acceleration ( lev, u_go, v_go, w_go );
     
@@ -273,28 +264,19 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
     
     // Add pressure gradient
-    mfix_add_pressure_gradient ( lev, -dt/2.0 );
+    mfix_add_pressure_gradient ( lev, dt );
 
     // Compute intermediate velocity
     mfix_compute_intermediate_velocity ( lev, dt );
     
     // Fill ghost cells and reimpose boundary conditions
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
 
     // Apply projection
-    mfix_apply_projection ( lev, 0.5*dt );
+    mfix_apply_projection ( lev, dt );
     
     // Exchange halo nodes and apply BCs
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
-    
     mfix_set_projection_bcs (lev);
-    mfix_set_pressure_bcs (lev);
-
 }
 
 
@@ -324,30 +306,82 @@ mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
 	Box vbx = mfi.tilebox (e_y);
 	Box wbx = mfi.tilebox (e_z);
 
-	add_gradient (
+	add_grad_p (
 	    BL_TO_FORTRAN_BOX(ubx),  
 	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-	    (*ro_g[lev])[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+	    (*p_g[lev])[mfi].dataPtr(),
+	    (*p0_g[lev])[mfi].dataPtr(),
 	    geom[lev].CellSize(), &coeff, &xdir );
 	
-	add_gradient (
+
+	add_grad_p (
 	    BL_TO_FORTRAN_BOX(vbx),  
 	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-	    (*ro_g[lev])[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+	    (*p_g[lev])[mfi].dataPtr(),
+	    (*p0_g[lev])[mfi].dataPtr(),
 	    geom[lev].CellSize(), &coeff, &ydir );
 	
-	add_gradient (
+
+	add_grad_p (
 	    BL_TO_FORTRAN_BOX(wbx),  
 	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-	    (*ro_g[lev])[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+	    (*p_g[lev])[mfi].dataPtr(),
+	    (*p0_g[lev])[mfi].dataPtr(),
 	    geom[lev].CellSize(), &coeff, &zdir );
 
     }
 }
 
+
+
+//
+// Add gradient of phi to velocity field
+//
+void
+mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff)
+{
+    BL_PROFILE("mfix_level::mfix_add_grad_phi");
+
+    int xdir = 1;
+    int ydir = 2;
+    int zdir = 3;
+
+    #ifdef _OPENMP
+    #pragma omp parallel
+    #endif
+    for (MFIter mfi(*phi[lev],true); mfi.isValid(); ++mfi)
+    {
+	// Boxes for staggered components
+	Box ubx = mfi.tilebox (e_x);
+	Box vbx = mfi.tilebox (e_y);
+	Box wbx = mfi.tilebox (e_z);
+	
+	add_grad_phi (
+	    BL_TO_FORTRAN_BOX(ubx),
+	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+	    (*ro_g[lev])[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
+	    geom[lev].CellSize(), &coeff, &xdir );
+
+	add_grad_phi (
+	    BL_TO_FORTRAN_BOX(vbx),
+	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+	    (*ro_g[lev])[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
+	    geom[lev].CellSize(), &coeff, &ydir );
+
+	add_grad_phi (
+	    BL_TO_FORTRAN_BOX(wbx),
+	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+	    (*ro_g[lev])[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
+	    geom[lev].CellSize(), &coeff, &zdir );
+    }
+    
+}
 
 
 //
@@ -603,7 +637,8 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
 
     // Compute right hand side, AKA div(ep_g* u)
     mfix_compute_diveu (lev);
-
+    diveu[lev] -> mult ( 1.0/scaling_factor, 1 );
+    
     // Compute the PPE coefficients
     mfix_compute_bcoeff ( lev );
 
@@ -619,32 +654,22 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
 		bc_klo.dataPtr(), bc_khi.dataPtr(),
 		&singular );
 
-    // Save the average value of p_g
-    // and add it to the new pressure field if the system is singular.
-    // This allows to evolve a pressure when the initial value for it is given 
-    Real pg_mean;
-
-    if (singular) {
-	pg_mean = ( p_g[lev] -> sum () ) / domain.numPts () ;
-    } else {
-	pg_mean = 0.0;
-    }
-    
-    // Setup phi
-    mfix_set_phi ( lev, scaling_factor, singular );
+    // Initialize phi to zero (any non-zero bc's are stored in p0)
+    phi[lev] -> setVal(0.);
     
     // Solve PPE
     solve_poisson_equation ( lev, bcoeff, phi, diveu, bc_lo, bc_hi );
-   
-    // Recover pressure
-    MultiFab::Copy (*p_g[lev], *phi[lev], 0, 0, 1, 0);
-    p_g[lev] -> mult ( 1.0/scaling_factor, 0 );
-    p_g[lev] -> plus ( pg_mean, 0 ); // pg_mean is 0 for non-singular case
-    mfix_set_pressure_bcs (lev);
-    
+
     // Correct the velocity field
-    mfix_add_pressure_gradient ( lev, -scaling_factor );    
-   
+    mfix_add_grad_phi ( lev, -scaling_factor );
+
+    // Recover pressure
+    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, 1);
+    if (singular) {
+	Real phi_mean = ( phi[lev] -> sum () ) / domain.numPts () ;
+	p_g[lev] -> plus ( -phi_mean, 0 ); // pg_mean is 0 for non-singular case
+    }
+    
 }
 
 
@@ -679,15 +704,25 @@ mfix_level::solve_poisson_equation (  int lev,
     b_tmp[1] = tmp[1];
     b_tmp[2] = tmp[2];
 
+
+    // It is essential that we set MaxOrder of the solver to 2
+    // if we want to use the standard phi(i)-phi(i-1) approximation
+    // for the gradient at Dirichlet boundaries.
+    // The solver's default order is 3 and this uses three points for the
+    // gradient at a Dirichlet boundary.
+    matrix.setMaxOrder(2);
+    
     // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
     matrix.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
-			 {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
-    
-    matrix.setScalars ( 0.0, -1.0 );    
+			 {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]});
+
+    matrix.setScalars ( 0.0, -1.0 );
     matrix.setBCoeffs ( lev, b_tmp );
 
+    // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
+    phi[lev]->setVal(0.);
     matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi)[lev] );
-
+    
     // 
     // Then setup the solver ----------------------
     //
@@ -699,10 +734,15 @@ mfix_level::solve_poisson_equation (  int lev,
     solver.setCGVerbose (mg_cg_verbose);
     solver.setCGMaxIter (mg_cg_maxiter);
 
+    // This ensures that ghost cells of phi are correctly filled when returned from the solver
+    // solver.setFinalFillBC(true);
+
     // 
     // Finally, solve the system
     //
     solver.solve ( GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
+
+    phi[lev] -> FillBoundary (geom[lev].periodicity());
 
 }
 
@@ -817,11 +857,7 @@ mfix_level::steady_state_reached (int lev, Real dt)
     //
     // Make sure all ghost nodes are up to date
     // 
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
     mfix_set_projection_bcs (lev);
-    mfix_set_pressure_bcs (lev);
     
     // 
     // Use temporaries to store the difference
@@ -906,33 +942,6 @@ mfix_level::steady_state_reached (int lev, Real dt)
     };
 }
 
-
-void
-mfix_level::mfix_set_phi (int lev, Real scale, int singular)
-{
-  BL_PROFILE("mfix_level::mfix_set_phi()");
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(*phi[lev], true); mfi.isValid(); ++mfi) {
-
-      Box domain(geom[lev].Domain());
-      Box sbx = mfi.tilebox ();
-      
-      set_phi (
-	  BL_TO_FORTRAN_BOX(sbx),  
-	  BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),      
-	  (*p_g[lev])[mfi].dataPtr (),
-	  &scale, &singular, domain.loVect(), domain.hiVect());
-  }
-  
-  phi[lev] -> FillBoundary (geom[lev].periodicity());
- 
-}
-
-
-
 //
 // Set the BCs for all the variables EXCEPT pressure
 // Call set_pressure_bcs to impose BCs on pressure
@@ -943,6 +952,11 @@ mfix_level::mfix_set_projection_bcs (int lev)
 {
   BL_PROFILE("mfix_level::mfix_set_projection_bcs()");
 
+  u_g[lev] -> FillBoundary (geom[lev].periodicity());
+  v_g[lev] -> FillBoundary (geom[lev].periodicity());
+  w_g[lev] -> FillBoundary (geom[lev].periodicity());
+
+  
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -1002,6 +1016,31 @@ mfix_level::mfix_set_pressure_bcs (int lev)
 }
 
 
+//
+// Fills ghost cell values of pressure appropriately for the BC type
+//
+void
+mfix_level::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
+{
+    BL_PROFILE("mfix_level::mfix_extrap_pressure()");
+
+    Box domain(geom[lev].Domain());
+
+    #ifdef _OPENMP
+    #pragma omp parallel
+    #endif
+    for (MFIter mfi(*p, true); mfi.isValid(); ++mfi) {
+
+	const Box& sbx = (*p)[mfi].box();
+
+	extrap_pressure_to_ghost_cells (
+	    BL_TO_FORTRAN_ANYD((*p)[mfi]),
+	    bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+	    bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+	    bc_klo.dataPtr(), bc_khi.dataPtr(),
+	    domain.loVect(), domain.hiVect());
+    }
+}
 
 
 void
@@ -1031,3 +1070,14 @@ mfix_level::check_for_nans (int lev)
 }
 
 
+//
+// Print the maximum values of the velocity components
+//
+void
+mfix_level::mfix_print_max_vel(int lev)
+{
+    amrex::Print() << "max(abs(u/v/w/p))  = " << u_g[lev] -> norm0 () << "  " <<
+	v_g[lev] -> norm0 () << "  " <<
+	w_g[lev] -> norm0 () << "  " <<
+	p_g[lev] -> norm0 () << "  " << std::endl;
+}
