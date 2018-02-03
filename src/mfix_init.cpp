@@ -708,6 +708,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
   v_g[lev]->FillBoundary(geom[lev].periodicity());
   w_g[lev]->FillBoundary(geom[lev].periodicity());
 
+  if ( use_proj_method ) mfix_project_velocity(lev);
+
   fill_mf_bc(lev,*mu_g[lev]);
   fill_mf_bc(lev,*lambda_g[lev]);
 

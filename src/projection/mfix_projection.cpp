@@ -135,6 +135,14 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     BL_PROFILE_REGION_STOP("mfix::EvolveFluidProjection");
 }
 
+void
+mfix_level::mfix_project_velocity (int lev)
+{
+    // Project velocity field to make sure initial velocity is divergence-free
+    Real dummy_dt = 1.0;
+    mfix_apply_projection ( lev, dummy_dt );
+}
+
 //
 // Compute predictor.
 //
@@ -196,6 +204,9 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
  
     // Project velocity field
     mfix_apply_projection ( lev, dt );
+
+    // Recover pressure
+    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, 1);
     
     // Exchange halo nodes and apply BCs
     mfix_set_projection_bcs (lev); 
@@ -274,6 +285,9 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
 
     // Apply projection
     mfix_apply_projection ( lev, dt );
+
+    // Recover pressure
+    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, 1);
     
     // Exchange halo nodes and apply BCs
     mfix_set_projection_bcs (lev);
@@ -662,17 +676,12 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
 
     // Correct the velocity field
     mfix_add_grad_phi ( lev, -scaling_factor );
-
-    // Recover pressure
-    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, 1);
     
     if (singular) {
 	Real phi_mean = ( phi[lev] -> sum () ) / domain.numPts () ;
-	p_g[lev] -> plus ( -phi_mean, 0 ); // pg_mean is 0 for non-singular case
+	phi[lev] -> plus ( -phi_mean, 0 ); // pg_mean is 0 for non-singular case
     }
-    
 }
-
 
 //
 // Solve PPE:
