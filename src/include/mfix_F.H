@@ -528,14 +528,6 @@ extern "C"
 	const amrex::Real* dx,
 	const int*  domlo, const int* plane );
 
-  void add_gradient (
-	const int* lo, const int* hi,
-	amrex::Real* u_i, const int* ulo, const int* uhi,
-	const amrex::Real* beta,
-        const amrex::Real* phi, const int* slo, const int* shi,
-	const amrex::Real* dx, const amrex::Real* c,
-	const int* dir );
-
   void add_grad_p (
 	const int* lo, const int* hi,
 	amrex::Real* u_i, const int* ulo, const int* uhi,
@@ -591,7 +583,6 @@ extern "C"
 	const int* bct_jlo, const int* bct_jhi,
 	const int* bct_klo, const int* bct_khi,
 	int* singular );
-
     
     void set_poisson_solver_bcs (
 	const int* lo, const int* hi,
@@ -602,7 +593,6 @@ extern "C"
 	const amrex::Real* oro_z, const int* wlo, const int* whi,
 	const int* bc_lo, const int* bc_hi,
 	const amrex::Real* dx, const int* domlo, const int* domhi );
-
     
     void add_forcing (
 	const int* lo, const int* hi,

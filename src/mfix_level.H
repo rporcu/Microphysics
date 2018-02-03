@@ -199,7 +199,6 @@ private:
 			Vector< std::unique_ptr<MultiFab> >& w );
 
     void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
-
     
     void mfix_add_pressure_gradient(int lev, amrex::Real coeff);
 
@@ -213,11 +212,9 @@ private:
     void mfix_compute_diveu (int lev);
 
     void mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p);
-
     
     void mfix_print_max_vel(int lev);
 // End of projection-related methods
-
 
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
@@ -294,7 +291,7 @@ private:
     // Base state pressure
     Vector< std::unique_ptr<MultiFab> > p0_g;
     
-    // Pressure correction equation
+    // Pressure correction 
     Vector< std::unique_ptr<MultiFab> > pp_g;
     Vector< std::unique_ptr<MultiFab> > d_e ;
     Vector< std::unique_ptr<MultiFab> > d_n ;
@@ -350,10 +347,8 @@ private:
     Vector< std::unique_ptr<MultiFab> > fp_x;
     Vector< std::unique_ptr<MultiFab> > fp_y;
     Vector< std::unique_ptr<MultiFab> > fp_z;
-
     
     Vector< Vector< std::unique_ptr<MultiFab> > > bcoeff; // Coefficients b of div(b*grad(p))
-    
 
     Vector< std::unique_ptr<MultiFab> > phi; // Pressure increment
 

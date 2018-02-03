@@ -708,16 +708,14 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
   v_g[lev]->FillBoundary(geom[lev].periodicity());
   w_g[lev]->FillBoundary(geom[lev].periodicity());
 
+  fill_mf_bc(lev,*mu_g[lev]);
+  fill_mf_bc(lev,*lambda_g[lev]);
+
   if ( use_proj_method ) 
   {
      mfix_project_velocity(lev);
      mfix_initial_iterations(lev);
   }
-
-  fill_mf_bc(lev,*mu_g[lev]);
-  fill_mf_bc(lev,*lambda_g[lev]);
-
-  std:cout << "Norm of p0: "<< p0_g[lev]->norm0() << std::endl;
 }
 
 void

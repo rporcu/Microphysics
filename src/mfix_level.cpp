@@ -155,7 +155,8 @@ void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
         const Box& sbx = (*ep_g[lev])[mfi].box();
 
         calc_coeff(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(), &calc_flag,
-                   (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(), (*p0_g[lev])[mfi].dataPtr(),
+                   (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(), 
+                   (*p0_g[lev])[mfi].dataPtr(),
                    (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
     }
 

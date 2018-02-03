@@ -52,9 +52,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, nghost);
   
 	// User hooks
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
 	for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
 	    mfix_usr2();
 
@@ -578,9 +575,6 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
     }
 
 }
-
-
-
 
 //
 // Implicit solve for the intermediate velocity.
