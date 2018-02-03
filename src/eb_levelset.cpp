@@ -1,22 +1,29 @@
 #include "eb_levelset.H"
+
+#include <AMReX_REAL.H>
+#include <AMReX_RealVect.H>
 #include <AMReX_EBFArrayBox.H>
-#include <AMReX_EBFabFactory.H>
+//#include <AMReX_EBFabFactory.H>
+#include <AMReX_EBIndexSpace.H>
+
+
+#include "AMReX_BoxIterator.H"
 
 #include <mfix_F.H>
 
-//double LSFactory::value_wall(const double pos[3]){
-//    return R2 - ( (pos[0] - xy_centre[0]) * (pos[0] - xy_centre[0]) +
-//                  (pos[1] - xy_centre[1]) * (pos[1] - xy_centre[1]) );
-//}
 
-//double LSFactory::value_bottom(const double pos[3]){
-//    return pos[2];
-//}
-
-
-LSFactory::LSFactory(int lev, int ref, const MFIXParticleContainer * pc, const EBFArrayBoxFactory * ebfactory)
-    : amr_lev(lev), ls_grid_refinement(ref), mfix_pc(pc), eb_factory(ebfactory) 
+LSFactory::LSFactory(int lev, int ref, const MFIXParticleContainer * pc, 
+        const EBIndexSpace * ebis, const Real * dx
+        //const EBFArrayBoxFactory * ebfactory
+        )
+    : amr_lev(lev), ls_grid_refinement(ref), mfix_pc(pc), 
+    eb_is(ebis), dx_vect(AMREX_D_DECL(mfix_pc->Geom(amr_lev).CellSize()[0]/ref, 
+                                      mfix_pc->Geom(amr_lev).CellSize()[1]/ref, 
+                                      mfix_pc->Geom(amr_lev).CellSize()[2]/ref)) 
+    // eb_factory(ebfactory) 
 {
+    //amrex::Print() << "dx_vect" << dx_vect << "\n";
+
     ls_phi   = std::unique_ptr<MultiFab>(new MultiFab);
     ls_valid = std::unique_ptr<iMultiFab>(new iMultiFab);
 
@@ -34,36 +41,55 @@ LSFactory::LSFactory(int lev, int ref, const MFIXParticleContainer * pc, const E
     ls_valid -> setVal(0);
 }
 
+
 LSFactory::~LSFactory() {
     ls_phi.reset();
     ls_valid.reset();
 }
 
+ 
 void LSFactory::update(MultiFab * dummy){
-    if(eb_factory == NULL)
-        return;
-
-    dummy->define(mfix_pc -> ParticleBoxArray(amr_lev), mfix_pc -> ParticleDistributionMap(amr_lev), 
-                  1, 0, MFInfo(), * eb_factory);
-   
-    std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = eb_factory->getAreaFrac();
+    //if(eb_factory == NULL)
+    //    return;
+    //
+    //dummy->define(mfix_pc -> ParticleBoxArray(amr_lev), mfix_pc -> ParticleDistributionMap(amr_lev), 
+    //              1, 0, MFInfo(), * eb_factory);
+    //
+    //std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = eb_factory->getAreaFrac();
+    //
+    //for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++ mfi){
+    //    Box tile_box = mfi.tilebox();
+    //    const int * lo = tile_box.loVect();
+    //    const int * hi = tile_box.hiVect();
+    //
+    //    //const auto & sfab = dynamic_cast<EBFArrayBox const &>((* dummy)[mfi]);
+    //    //const auto & flag = sfab.getEBCellFlagFab();
+    //
+    //    //if(flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued){
+    //        fill_levelset(lo, hi, & ls_grid_refinement,
+    //                      (* ls_valid)[mfi].dataPtr(), (* ls_valid)[mfi].loVect(), (* ls_valid)[mfi].hiVect(),
+    //                      (* ls_phi)[mfi].dataPtr(), (* ls_phi)[mfi].loVect(), (* ls_phi)[mfi].hiVect(),
+    //                      mfix_pc->Geom(amr_lev).CellSize());
+    //    //}
+    //}
 
     for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++ mfi){
-        Box tile_box = mfi.tilebox();
-        const int * lo = tile_box.loVect();
-        const int * hi = tile_box.hiVect();
-
-        //const auto & sfab = dynamic_cast<EBFArrayBox const &>((* dummy)[mfi]);
-        //const auto & flag = sfab.getEBCellFlagFab();
-
-        //if(flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued){
-            fill_levelset(lo, hi, & ls_grid_refinement,
-                          (* ls_valid)[mfi].dataPtr(), (* ls_valid)[mfi].loVect(), (* ls_valid)[mfi].hiVect(),
-                          (* ls_phi)[mfi].dataPtr(), (* ls_phi)[mfi].loVect(), (* ls_phi)[mfi].hiVect(),
-                          mfix_pc->Geom(amr_lev).CellSize());
-        //}
+        eb_is->fillNodeFarrayBoxFromImplicitFunction(( * ls_phi)[mfi], dx_vect);
     }
 
+    
     ls_phi -> FillBoundary(mfix_pc -> Geom(0).periodicity());
     ls_valid -> FillBoundary(mfix_pc -> Geom(0).periodicity());
+
+    for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++ mfi){
+        FArrayBox & a_fab = (* ls_phi)[mfi];
+        for(BoxIterator bit(a_fab.box()); bit.ok(); ++bit) {
+            //if(a_fab(bit(), 0) > 5e-5){
+                std::cout << "bit()" << bit() << " a_fab(bit(), 0)=" << a_fab(bit(), 0) << std::endl;
+            //}
+        }
+    }
+
+
+
 }

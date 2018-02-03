@@ -76,7 +76,7 @@ mfix_level::make_eb_geometry(int lev)
           powers = IntVect::Zero;
           powers[idir] = lc;
 
-            mono.coef   = coef;
+          mono.coef   = coef;
           mono.powers = powers;
 
           poly.push_back(mono);
@@ -169,7 +169,10 @@ mfix_level::make_eb_geometry(int lev)
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
-    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(), particle_ebfactory.get()));
+    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(),
+                                          AMReX_EBIS::instance(), geom[lev].CellSize()
+                                          //particle_ebfactory.get()
+                                          ));
     level_set -> update(dummy.get());
 }
 
@@ -335,6 +338,9 @@ mfix_level::make_eb_hourglass(int lev)
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
-    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(), particle_ebfactory.get()));
+    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(),
+                                          AMReX_EBIS::instance(), geom[lev].CellSize()
+                                          //particle_ebfactory.get()
+                                          ));
     level_set -> update(dummy.get());
 }

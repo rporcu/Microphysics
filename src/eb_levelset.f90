@@ -230,6 +230,10 @@ subroutine interp_levelset(pos, plo,  n_refine, &
                + phi(i+1, j,   k+1) * wx_hi * wy_lo * wz_hi &
                + phi(i+1, j+1, k+1) * wx_hi * wy_hi * wz_hi
 
+    !phi_interp = -phi_interp
+    !if( phi_interp .le. 0.) then
+    !    write(*,*) i,j,k,  phi_interp
+    !end if 
 end subroutine interp_levelset
 
 subroutine normal_levelset(pos, plo,   n_refine, &
