@@ -19,7 +19,7 @@ module calc_coeff_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
     subroutine calc_coeff(slo, shi, lo, hi, plevel, &
-      ro_g, p_g, ep_g, rop_g) bind(C, name="calc_coeff")
+      ro_g, p_g, p0_g, ep_g, rop_g) bind(C, name="calc_coeff")
 
       implicit none
 
@@ -34,7 +34,8 @@ module calc_coeff_module
       integer(c_int), intent(in   ) :: plevel
 
       real(c_real), intent(in   ) ::  &
-        p_g (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+         p_g (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+        p0_g (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
         ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(inout) :: &
@@ -42,7 +43,7 @@ module calc_coeff_module
         rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Calculate physical properties: (density, specific heat, diameter)
-      call physical_prop(slo, shi, lo, hi, plevel, ro_g, p_g, ep_g, rop_g)
+      call physical_prop(slo, shi, lo, hi, plevel, ro_g, p_g, p0_g, ep_g, rop_g)
 
       end subroutine calc_coeff
 

@@ -121,8 +121,7 @@ protected:
     // Projection
     void mfix_apply_projection (int lev, amrex::Real scaling_factor);
     void mfix_set_projection_bcs (int lev);
-    void mfix_set_pressure_bcs (int lev);
-    
+       
     // End projection
     
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
@@ -290,6 +289,9 @@ private:
     Vector< std::unique_ptr<MultiFab> > w_go;
     Vector< std::unique_ptr<MultiFab> > w_gt;
 
+    // Base state pressure
+    Vector< std::unique_ptr<MultiFab> > p0_g;
+    
     // Pressure correction equation
     Vector< std::unique_ptr<MultiFab> > pp_g;
     Vector< std::unique_ptr<MultiFab> > d_e ;

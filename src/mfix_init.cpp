@@ -314,6 +314,10 @@ mfix_level::AllocateArrays (int lev)
     rop_g[lev]->setVal(0.);
     rop_go[lev]->setVal(0.);
 
+    // Base pressure that captures delp and/or p_in and p_out
+    p0_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    p0_g[lev]->setVal(0.);
+
     // Pressure correction equation
     pp_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     pp_g[lev]->setVal(0.);
@@ -659,11 +663,11 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
            bx.loVect(),  bx.hiVect(),
                        domain.loVect(), domain.hiVect(),
            (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
-           (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
+           (*rop_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(), (*p0_g[lev])[mfi].dataPtr(),
            (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
            (*w_g[lev])[mfi].dataPtr(),
            (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
-           &dx, &dy, &dz, &xlen, &ylen, &zlen );
+           &dx, &dy, &dz, &xlen, &ylen, &zlen); 
     }
   }
 
@@ -694,7 +698,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
     }
   }
 
-  fill_mf_bc(lev,*p_g[lev]);
+  if ( use_proj_method ) mfix_extrap_pressure(lev,p0_g[lev]);
+
   fill_mf_bc(lev,*ep_g[lev]);
   fill_mf_bc(lev,*ro_g[lev]);
   fill_mf_bc(lev,*rop_g[lev]);
@@ -705,6 +710,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
 
   fill_mf_bc(lev,*mu_g[lev]);
   fill_mf_bc(lev,*lambda_g[lev]);
+
+  std:cout << "Norm of p0: "<< p0_g[lev]->norm0() << std::endl;
 }
 
 void
@@ -724,7 +731,7 @@ mfix_level::mfix_set_bc0(int lev)
       set_bc0(sbx.loVect(), sbx.hiVect(),
               ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
               (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-              (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+              (*p0_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
               (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
               (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),

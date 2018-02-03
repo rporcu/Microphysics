@@ -264,7 +264,7 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
     
     // Add pressure gradient
-    mfix_add_pressure_gradient ( lev, dt );
+    mfix_add_pressure_gradient ( lev, -dt );
 
     // Compute intermediate velocity
     mfix_compute_intermediate_velocity ( lev, dt );
@@ -665,6 +665,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
 
     // Recover pressure
     MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, 1);
+    
     if (singular) {
 	Real phi_mean = ( phi[lev] -> sum () ) / domain.numPts () ;
 	p_g[lev] -> plus ( -phi_mean, 0 ); // pg_mean is 0 for non-singular case
@@ -922,7 +923,7 @@ mfix_level::steady_state_reached (int lev, Real dt)
     //
     // Print out info on steady state checks
     // 
-    amrex::Print() << "Steady state check:\n";
+    amrex::Print() << "\nSteady state check:\n";
     amrex::Print() << "||u-uo||/||uo|| , du/dt  = " << tmp1 <<" , "<< delta_u/dt << "\n";
     amrex::Print() << "||v-vo||/||vo|| , dv/dt  = " << tmp2 <<" , "<< delta_v/dt << "\n";
     amrex::Print() << "||w-wo||/||wo|| , dw/dt  = " << tmp3 <<" , "<< delta_w/dt << "\n";
@@ -984,37 +985,6 @@ mfix_level::mfix_set_projection_bcs (int lev)
     }			   
 
 }
-
-//
-// Fills the ghost nodes and applys BCs
-// 
-
-void
-mfix_level::mfix_set_pressure_bcs (int lev)
-{
-  BL_PROFILE("mfix_level::mfix_set_pressure_bcs()");
-
-  //  Fill ghost nodes first
-  p_g[lev] -> FillBoundary (geom[lev].periodicity());
-  
-  
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(*p_g[lev], true); mfi.isValid(); ++mfi) {
-    
-      Box domain(geom[lev].Domain());
-      const Box& sbx = (*p_g[lev])[mfi].box();
-      
-      set_pressure_bcs (  BL_TO_FORTRAN_ANYD((*p_g[lev])[mfi]),
-			   bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-			   bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-			   bc_klo.dataPtr(), bc_khi.dataPtr(),
-			   domain.loVect(), domain.hiVect());
-  }			   
-
-}
-
 
 //
 // Fills ghost cell values of pressure appropriately for the BC type

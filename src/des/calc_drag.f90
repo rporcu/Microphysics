@@ -140,14 +140,13 @@ end subroutine calc_particle_beta
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-     np, p_g, u_g, v_g, w_g, particles, dx, dy, dz, xlen, ylen, zlen )&
+     np, p_g, p0_g, u_g, v_g, w_g, particles, dx, dy, dz, xlen, ylen, zlen )&
      bind(C, name="calc_drag_particle")
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
    use des_drag_gp_module, only: des_drag_gp
    ! Specified pressure drop
-   use bc, only: delp_x, delp_y, delp_z
    use particle_mod, only: particle_t
 
    implicit none
@@ -157,6 +156,7 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 
    real(c_real), intent(in   ) :: &
         p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+       p0_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
         u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
         v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
         w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
@@ -169,7 +169,7 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer :: p, i, j, k, ii, jj, kk
-   real(c_real) :: velfp(3), cpg(3), gradpg(3)
+   real(c_real) :: velfp(3), gradpg(3)
    real(c_real) :: beta(np)
    real(c_real) :: odx, ody, odz
    real(c_real) :: lx, ly, lz
@@ -189,10 +189,6 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       beta(p) = particles(p) % drag(1)
    end do
 
-   cpg(1) = delp_x/xlen
-   cpg(2) = delp_y/ylen
-   cpg(3) = delp_z/zlen
-
    ! Calculate the gas phase forces acting on each particle.
 
    do p = 1, np
@@ -209,32 +205,32 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       sy_hi = ly - j;  sy_lo = 1.0d0 - sy_hi
       sz_hi = lz - k;  sz_lo = 1.0d0 - sz_hi
 
-      gradpg(1) = (- sy_lo*sz_lo*p_g(i-1, j-1, k-1) &
-                   - sy_lo*sz_hi*p_g(i-1, j-1, k  ) &
-                   - sy_hi*sz_lo*p_g(i-1, j  , k-1) &
-                   - sy_hi*sz_hi*p_g(i-1, j  , k  ) &
-                   + sy_lo*sz_lo*p_g(i  , j-1, k-1) &
-                   + sy_lo*sz_hi*p_g(i  , j-1, k  ) &
-                   + sy_hi*sz_lo*p_g(i  , j  , k-1) &
-                   + sy_hi*sz_hi*p_g(i  , j  , k  ) ) * odx
+      gradpg(1) = (- sy_lo*sz_lo*(p_g(i-1, j-1, k-1) + p0_g(i-1,j-1,k-1)) &
+                   - sy_lo*sz_hi*(p_g(i-1, j-1, k  ) + p0_g(i-1,j-1,k  )) &
+                   - sy_hi*sz_lo*(p_g(i-1, j  , k-1) + p0_g(i-1,j  ,k-1)) &
+                   - sy_hi*sz_hi*(p_g(i-1, j  , k  ) + p0_g(i-1,j  ,k  )) &
+                   + sy_lo*sz_lo*(p_g(i  , j-1, k-1) + p0_g(i  ,j-1,k-1)) &
+                   + sy_lo*sz_hi*(p_g(i  , j-1, k  ) + p0_g(i  ,j-1,k  )) &
+                   + sy_hi*sz_lo*(p_g(i  , j  , k-1) + p0_g(i  ,j  ,k-1)) &
+                   + sy_hi*sz_hi*(p_g(i  , j  , k  ) + p0_g(i  ,j  ,k  )) ) * odx
 
-      gradpg(2) = (- sx_lo*sz_lo*p_g(i-1, j-1, k-1) &
-                   - sx_lo*sz_hi*p_g(i-1, j-1, k  ) &
-                   + sx_lo*sz_lo*p_g(i-1, j  , k-1) &
-                   + sx_lo*sz_hi*p_g(i-1, j  , k  ) &
-                   - sx_hi*sz_lo*p_g(i  , j-1, k-1) &
-                   - sx_hi*sz_hi*p_g(i  , j-1, k  ) &
-                   + sx_hi*sz_lo*p_g(i  , j  , k-1) &
-                   + sx_hi*sz_hi*p_g(i  , j  , k  ) ) * ody
+      gradpg(2) = (- sx_lo*sz_lo*(p_g(i-1, j-1, k-1) + p0_g(i-1,j-1,k-1)) &
+                   - sx_lo*sz_hi*(p_g(i-1, j-1, k  ) + p0_g(i-1,j-1,k  )) &
+                   + sx_lo*sz_lo*(p_g(i-1, j  , k-1) + p0_g(i-1,j  ,k-1)) &
+                   + sx_lo*sz_hi*(p_g(i-1, j  , k  ) + p0_g(i-1,j  ,k  )) &
+                   - sx_hi*sz_lo*(p_g(i  , j-1, k-1) + p0_g(i  ,j-1,k-1)) &
+                   - sx_hi*sz_hi*(p_g(i  , j-1, k  ) + p0_g(i  ,j-1,k  )) &
+                   + sx_hi*sz_lo*(p_g(i  , j  , k-1) + p0_g(i  ,j  ,k-1)) &
+                   + sx_hi*sz_hi*(p_g(i  , j  , k  ) + p0_g(i  ,j  ,k  )) ) * ody
 
-      gradpg(3) = (- sx_lo*sy_lo*p_g(i-1, j-1, k-1) &
-                   + sx_lo*sy_lo*p_g(i-1, j-1, k  ) &
-                   - sx_lo*sy_hi*p_g(i-1, j  , k-1) &
-                   + sx_lo*sy_hi*p_g(i-1, j  , k  ) &
-                   - sx_hi*sy_lo*p_g(i  , j-1, k-1) &
-                   + sx_hi*sy_lo*p_g(i  , j-1, k  ) &
-                   - sx_hi*sy_hi*p_g(i  , j  , k-1) &
-                   + sx_hi*sy_hi*p_g(i  , j  , k  ) ) * odz
+      gradpg(3) = (- sx_lo*sy_lo*(p_g(i-1, j-1, k-1) + p0_g(i-1,j-1,k-1)) &
+                   + sx_lo*sy_lo*(p_g(i-1, j-1, k  ) + p0_g(i-1,j-1,k  )) &
+                   - sx_lo*sy_hi*(p_g(i-1, j  , k-1) + p0_g(i-1,j  ,k-1)) &
+                   + sx_lo*sy_hi*(p_g(i-1, j  , k  ) + p0_g(i-1,j  ,k  )) &
+                   - sx_hi*sy_lo*(p_g(i  , j-1, k-1) + p0_g(i  ,j-1,k-1)) &
+                   + sx_hi*sy_lo*(p_g(i  , j-1, k  ) + p0_g(i  ,j-1,k  )) &
+                   - sx_hi*sy_hi*(p_g(i  , j  , k-1) + p0_g(i  ,j  ,k-1)) &
+                   + sx_hi*sy_hi*(p_g(i  , j  , k  ) + p0_g(i  ,j  ,k  )) ) * odz
 
       lx = (particles(p) % pos(1) - plo(1))*odx
       ly = (particles(p) % pos(2) - plo(2))*ody
@@ -276,8 +272,8 @@ subroutine calc_drag_particle( slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                  sx_hi*sy_hi*wz_lo*w_g(i  , j  , kk  ) + &
                  sx_hi*sy_hi*wz_hi*w_g(i  , j  , kk+1)
 
-      particles(p) % drag = beta(p)*(velfp - particles(p) % vel) + &
-           (cpg(:) - gradpg(:)) * particles(p) % volume
+      particles(p) % drag = beta(p)*(velfp - particles(p) % vel) - &
+                            gradpg(:) * particles(p) % volume
 
    enddo
 

@@ -55,7 +55,6 @@ subroutine zero_wall_norm_vel(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
   ntop = max(0,shi(2)-domhi(2))
   nup  = max(0,shi(3)-domhi(3))
 
-
   if (nlft .gt. 0) then
      ilo = domlo(1)
      do i = 0, nlft

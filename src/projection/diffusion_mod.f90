@@ -125,8 +125,6 @@ contains
 
    end subroutine compute_divtau_x
 
-
-
    
    !
    ! Computes d(tyx)/dx + d(tyy)/dy + d(tyz)/dz at the
@@ -229,11 +227,6 @@ contains
 
    end subroutine compute_divtau_y
 
-
-
-
-   
-   
    !
    ! Computes d(tzx)/dx + d(tzy)/dy + d(tzz)/dz at the
    ! y-edges ( v-component location ), where:
