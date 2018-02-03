@@ -37,8 +37,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     
     do
     {
-
-
 	amrex::Print() << "\n   Iteration " << iter <<" at time " \
 		       << time << " with dt = " << dt << "\n" << std::endl;
 	
@@ -75,7 +73,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
 			 geom[lev].CellSize(), &cfl, &dt );
 	prev_dt = dt ;
-
 
 	//
 	// Time integration step
@@ -143,6 +140,71 @@ mfix_level::mfix_project_velocity (int lev)
     mfix_apply_projection ( lev, dummy_dt );
 }
 
+void
+mfix_level::mfix_initial_iterations (int lev)
+{
+    // Copy u_g into u_go
+    MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, u_go[lev]->nGrow());
+    MultiFab::Copy (*v_go[lev],   *v_g[lev],   0, 0, 1, v_go[lev]->nGrow());
+    MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, w_go[lev]->nGrow());
+  
+    //  Here we should check the CFL condition
+    // Compute dt for this time step
+    Real umax  = u_g[lev] -> norm0 ();
+    Real vmax  = v_g[lev] -> norm0 ();
+    Real wmax  = w_g[lev] -> norm0 ();
+    Real romin = rop_g[lev] -> min (0);
+    Real mumax = mu_g[lev] -> max (0);
+    
+    Real dt = 1.e20;
+    compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
+		     geom[lev].CellSize(), &cfl, &dt );
+
+    // Calculate drag coefficient
+    if (solve_dem)
+        mfix_calc_drag_fluid(lev);
+
+    // Compute fluid acceleration (convection + diffusion)
+    mfix_compute_velocity_slopes ( lev, u_go, v_go, w_go );
+    mfix_compute_fluid_acceleration ( lev, u_go, v_go, w_go );
+
+    for (int iter = 0; iter < 3; ++iter)
+    {
+       // First add the fluid acceleration
+       MultiFab::Saxpy (*u_g[lev], dt, *uacc[lev], 0, 0, 1, 0);
+       MultiFab::Saxpy (*v_g[lev], dt, *vacc[lev], 0, 0, 1, 0);
+       MultiFab::Saxpy (*w_g[lev], dt, *wacc[lev], 0, 0, 1, 0);
+
+       // Add the forcing terms
+       mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
+       mfix_add_pressure_gradient ( lev, -dt);
+
+       // Compute intermediate velocity
+       mfix_compute_intermediate_velocity ( lev, dt );
+
+       // Exchange halo nodes and apply BCs to velocity
+       mfix_set_projection_bcs (lev);
+
+       // Project velocity field
+       mfix_apply_projection ( lev, dt );
+
+       // Recover pressure
+       MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, 1);
+
+       // Exchange halo nodes and apply BCs
+       mfix_set_projection_bcs (lev);
+
+       mfix_print_max_vel (lev);
+       mfix_compute_diveu (lev);
+       amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+
+       // Replace u_g by the original values 
+       MultiFab::Copy (*u_g[lev],   *u_go[lev],   0, 0, 1, u_g[lev]->nGrow());
+       MultiFab::Copy (*v_g[lev],   *v_go[lev],   0, 0, 1, v_g[lev]->nGrow());
+       MultiFab::Copy (*w_g[lev],   *w_go[lev],   0, 0, 1, w_g[lev]->nGrow());
+    }
+}
+
 //
 // Compute predictor.
 //
@@ -182,7 +244,6 @@ mfix_level::mfix_project_velocity (int lev)
 void
 mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 {
-
     // Compute fluid acceleration (convection + diffusion) 
     mfix_compute_velocity_slopes ( lev, u_go, v_go, w_go );
     mfix_compute_fluid_acceleration ( lev, u_go, v_go, w_go );
@@ -328,7 +389,6 @@ mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
 	    (*p0_g[lev])[mfi].dataPtr(),
 	    geom[lev].CellSize(), &coeff, &xdir );
 	
-
 	add_grad_p (
 	    BL_TO_FORTRAN_BOX(vbx),  
 	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
@@ -345,11 +405,8 @@ mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
 	    (*p_g[lev])[mfi].dataPtr(),
 	    (*p0_g[lev])[mfi].dataPtr(),
 	    geom[lev].CellSize(), &coeff, &zdir );
-
     }
 }
-
-
 
 //
 // Add gradient of phi to velocity field

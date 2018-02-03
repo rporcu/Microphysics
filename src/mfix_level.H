@@ -119,7 +119,8 @@ protected:
     void mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w);
 
     // Projection
-    void mfix_project_velocity (int lev);
+    void mfix_project_velocity   (int lev);
+    void mfix_initial_iterations (int lev);
     void mfix_apply_projection (int lev, amrex::Real scaling_factor);
     void mfix_set_projection_bcs (int lev);
        

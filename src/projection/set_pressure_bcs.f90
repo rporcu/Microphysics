@@ -86,9 +86,7 @@ subroutine extrap_pressure_to_ghost_cells (  phi, slo, shi, bct_ilo, bct_ihi, &
      
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
-               if (j.eq.0.and.k.eq.0) print *,'PHI BEFORE ', phi(domlo(1)-1,j,k), phi(domlo(1),j,k)
                phi(domlo(1)-1,j,k) =  2.d0*phi(domlo(1)-1,j,k) - phi(domlo(1),j,k)
-               if (j.eq.0.and.k.eq.0) print *,'PHI AFTER  ', phi(domlo(1)-1,j,k), phi(domlo(1),j,k)
 
             case ( minf_)
 
