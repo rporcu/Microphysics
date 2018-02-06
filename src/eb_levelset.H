@@ -2,6 +2,7 @@
 #define _EB_LEVELSET_H_
 
 #include <AMReX_REAL.H>
+#include <AMReX_Vector.H>
 #include <AMReX_RealVect.H>
 #include <AMReX_MultiFab.H>
 #include <AMReX_iMultiFab.H>
@@ -9,6 +10,8 @@
 //#include <AMReX_EBFabFactory.H>
 #include <MFIXParticleContainer.H>
 #include <AMReX_EBIndexSpace.H>
+#include <AMReX_PolynomialIF.H>
+#include <AMReX_IntersectionIF.H>
 
 using namespace amrex;
 
@@ -37,5 +40,33 @@ class LSFactory {
 };
 
 
+class PolynomialDF : public PolynomialIF {
+    private:
+        int order;
+
+    public:
+        PolynomialDF(const Vector<PolyTerm> & a_polynomial,
+                     const bool             & a_inside);
+        
+
+        virtual Real value(const RealVect         & a_point,
+                           const Vector<PolyTerm> & a_polynomial) const;
+
+
+        virtual Real value(const RealVect & a_point) const;
+
+
+        virtual BaseIF * newImplicitFunction() const;
+
+};
+//
+//class  IntersectionDF : public IntersectionIF {
+//    public:
+//        IntersectionDF(const Vector<BaseIF*> & a_impFuncs);
+//
+//    virtual Real value(const RealVect& a_point) const;
+//
+//    virtual BaseIF* newImplicitFunction() const;
+//};
 
 #endif

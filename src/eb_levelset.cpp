@@ -76,20 +76,139 @@ void LSFactory::update(MultiFab * dummy){
     for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++ mfi){
         eb_is->fillNodeFarrayBoxFromImplicitFunction(( * ls_phi)[mfi], dx_vect);
     }
-
+    for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++ mfi){
+        FArrayBox & a_fab = (* ls_phi)[mfi];
+        for(BoxIterator bit(a_fab.box()); bit.ok(); ++bit) 
+                a_fab(bit(), 0) = - a_fab(bit(), 0);
+    }
     
     ls_phi -> FillBoundary(mfix_pc -> Geom(0).periodicity());
     ls_valid -> FillBoundary(mfix_pc -> Geom(0).periodicity());
+}
 
-    for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++ mfi){
-        FArrayBox & a_fab = (* ls_phi)[mfi];
-        for(BoxIterator bit(a_fab.box()); bit.ok(); ++bit) {
-            //if(a_fab(bit(), 0) > 5e-5){
-                std::cout << "bit()" << bit() << " a_fab(bit(), 0)=" << a_fab(bit(), 0) << std::endl;
-            //}
+PolynomialDF::PolynomialDF(const Vector<PolyTerm> & a_polynomial, const bool & a_inside)
+             :PolynomialIF(a_polynomial, a_inside){
+    
+    int size = a_polynomial.size();
+    order = 0;
+    for(int iterm = 0; iterm < size; iterm++){
+        int cur_order = 0;
+        for(int idir = 0; idir < SpaceDim; idir++){
+            cur_order += a_polynomial[iterm].powers[idir];
         }
+        order = cur_order > order ? cur_order : order;
+    }
+}
+
+
+Real PolynomialDF::value(const RealVect & a_point, const Vector<PolyTerm> & a_polynomial) const {
+    Real retval = 0;
+    
+    int size = a_polynomial.size();
+    Real terms[order + 1];
+    for(int i = 0; i <= order; i++)
+        terms[i] = 0;
+
+    // Collect like powers as terms
+    for(int iterm = 0; iterm < size; iterm++){
+        PolyTerm pterm = a_polynomial[iterm];
+        Real coeff     = pterm.coef;
+        Real cur       = coeff;
+        int cur_order  = 0;
+        for(int idir = 0; idir < SpaceDim; idir++){
+            cur *= pow(a_point[idir], pterm.powers[idir]);
+            cur_order += pterm.powers[idir];
+        }
+        terms[cur_order] += cur;
     }
 
+    // Evaluate distance function term-by-term:
+    Real sg_t0 = terms[0] < 0 ? -1. : 1.;
+    retval = sg_t0 * sqrt(sg_t0 * terms[0]); // compatibility for standard PolynomialIF: 
+                                             // spheres, cylinders have r^2 as 0-order term
+                                             // -> hence take sqrt on terms[0] and itterate starting from term 1
+    for(int i = 1; i <= order; i++){
+        retval += pow(terms[i], 1./(double) i);
+    }
+
+    // Change the sign to change inside to outside
+    if (!m_inside)
+      retval = -retval;
+    
+    return retval;
+};
 
 
-}
+  Real PolynomialDF::value(const RealVect& a_point) const
+  {
+    return value(a_point,m_polynomial);
+  }
+  ///
+  BaseIF* PolynomialDF::newImplicitFunction() const
+  {
+    PolynomialIF* polynomialPtr = new PolynomialDF(m_polynomial,
+                                                   m_inside);
+
+    return static_cast<BaseIF*>(polynomialPtr);
+  }
+
+
+//Real IntersectionDF::value(const RealVect& a_point) const
+//{
+//  // Maximum of the implicit functions values
+//  Real retval;
+//
+//  retval = 1.0; 
+//  std::cout << "pt=" << a_point << std::endl;
+//  // Find the maximum value and return it
+//  if (m_numFuncs > 0)
+//  {
+//    retval = m_impFuncs[0]->value(a_point);
+//    std::cout << retval << std::endl;
+//
+//    for (int ifunc = 1; ifunc < m_numFuncs; ifunc++)
+//    {
+//      Real cur;
+//
+//      cur = m_impFuncs[ifunc]->value(a_point);
+//      std::cout << cur << std::endl;
+//      if (cur < retval)
+//        retval = cur;
+//      
+//    }
+//  }
+//  std::cout << " =>" << retval << std::endl;
+//  return retval;
+//}
+//
+//
+//BaseIF* IntersectionDF::newImplicitFunction() const
+//{
+//  IntersectionIF* intersectionPtr = new IntersectionDF(m_impFuncs);
+//
+//  return static_cast<BaseIF*>(intersectionPtr);
+//}
+//
+//IntersectionDF::IntersectionDF(const Vector<BaseIF *>& a_impFuncs)
+//               : IntersectionIF(a_impFuncs)
+//{
+//  // Number of implicit function in intersection
+//  m_numFuncs = a_impFuncs.size();
+//
+//  // Vector of implicit function pointers
+//  m_impFuncs.resize(m_numFuncs);
+//
+//  // Make copies of the implicit functions
+//
+//  for (int ifunc = 0; ifunc < m_numFuncs; ifunc++)
+//  {
+//    if (a_impFuncs[ifunc] == NULL)
+//    {
+//      m_impFuncs[ifunc] = NULL;
+//    }
+//    else
+//    {
+//      m_impFuncs[ifunc] = a_impFuncs[ifunc]->newImplicitFunction();
+//    }
+//  }
+//}

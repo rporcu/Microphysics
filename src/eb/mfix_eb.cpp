@@ -87,7 +87,7 @@ mfix_level::make_eb_geometry(int lev)
       bool flip = false;
       pp.query("poly2_mirror", flip);
 
-      PolynomialIF mirror(poly,flip);
+      PolynomialDF mirror(poly,flip);
       RealVect translation;
 
       pp.getarr("poly2_translate", transvec,  0, SpaceDim);
