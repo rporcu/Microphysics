@@ -316,6 +316,10 @@ mfix_level::AllocateArrays (int lev)
     rop_g[lev]->setVal(0.);
     rop_go[lev]->setVal(0.);
 
+    // Base pressure that captures delp and/or p_in and p_out
+    p0_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    p0_g[lev]->setVal(0.);
+
     // Pressure correction equation
     pp_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     pp_g[lev]->setVal(0.);
@@ -339,6 +343,9 @@ mfix_level::AllocateArrays (int lev)
     phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     phi[lev]->setVal(0.);
 
+    // diveu
+    diveu[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    diveu[lev]->setVal(0.);
 
     // ********************************************************************************
     // X-face-based arrays
@@ -353,12 +360,12 @@ mfix_level::AllocateArrays (int lev)
     u_go[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_gt[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     fp_x[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    oro_g[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    bcoeff[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_g[lev]->setVal(0.);
     u_go[lev]->setVal(0.);
     u_gt[lev]->setVal(0.);
     fp_x[lev]->setVal(0.);
-    oro_g[lev][0]->setVal(0.);
+    bcoeff[lev][0]->setVal(0.);
 
     d_e[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     d_e[lev]->setVal(0.);
@@ -399,12 +406,12 @@ mfix_level::AllocateArrays (int lev)
     v_go[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_gt[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     fp_y[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    oro_g[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    bcoeff[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_g[lev]->setVal(0.);
     v_go[lev]->setVal(0.);
     v_gt[lev]->setVal(0.);
     fp_y[lev]->setVal(0.);
-    oro_g[lev][1]->setVal(0.);
+    bcoeff[lev][1]->setVal(0.);
 
     d_n[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
     d_n[lev]->setVal(0.);
@@ -447,12 +454,12 @@ mfix_level::AllocateArrays (int lev)
     w_go[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_gt[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     fp_z[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    oro_g[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    bcoeff[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_g[lev]->setVal(0.);
     w_go[lev]->setVal(0.);
     w_gt[lev]->setVal(0.);
     fp_z[lev]->setVal(0.);
-    oro_g[lev][2]->setVal(0.);
+    bcoeff[lev][2]->setVal(0.);
 
     d_t[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     d_t[lev]->setVal(0.);
@@ -658,11 +665,11 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
            bx.loVect(),  bx.hiVect(),
                        domain.loVect(), domain.hiVect(),
            (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
-           (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
+           (*rop_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(), (*p0_g[lev])[mfi].dataPtr(),
            (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
            (*w_g[lev])[mfi].dataPtr(),
            (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
-           &dx, &dy, &dz, &xlen, &ylen, &zlen );
+           &dx, &dy, &dz, &xlen, &ylen, &zlen); 
     }
   }
 
@@ -693,7 +700,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
     }
   }
 
-  fill_mf_bc(lev,*p_g[lev]);
+  if ( use_proj_method ) mfix_extrap_pressure(lev,p0_g[lev]);
+
   fill_mf_bc(lev,*ep_g[lev]);
   fill_mf_bc(lev,*ro_g[lev]);
   fill_mf_bc(lev,*rop_g[lev]);
@@ -704,6 +712,12 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
 
   fill_mf_bc(lev,*mu_g[lev]);
   fill_mf_bc(lev,*lambda_g[lev]);
+
+  if ( use_proj_method ) 
+  {
+     mfix_project_velocity(lev);
+     mfix_initial_iterations(lev);
+  }
 }
 
 void
@@ -723,7 +737,7 @@ mfix_level::mfix_set_bc0(int lev)
       set_bc0(sbx.loVect(), sbx.hiVect(),
               ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
               (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-              (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+              (*p0_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
               (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
               (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),

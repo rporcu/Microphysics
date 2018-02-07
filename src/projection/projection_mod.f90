@@ -187,21 +187,20 @@ contains
 
    end subroutine compute_fluid_acceleration
 
-
    !
-   ! Computes  u_i = u_i + C * (beta) * (dphi/dx_i)
+   ! Computes  u_i = u_i + C * (1/ro_g) * (dphi/dx_i)
    !
    ! u_i  = i-th component of a staggered vector field u.
    !
-   ! beta = scalar field defined at u_i location.
+   ! ro_g = gas density field defined at cell centers.
    !
-   ! phi  = scalar field defined at cell centers
+   ! phi  = pressure correction field defined at cell centers
    ! 
    ! C    = real constant
    !
    ! dir  = 1,2,3 indicates x, y, z direction respectively.
    !  
-   subroutine add_gradient ( lo, hi, u_i, ulo, uhi, beta,    &
+   subroutine add_grad_phi ( lo, hi, u_i, ulo, uhi, ro_g,    &
         & phi, slo, shi, dx, c, dir ) bind (C)
 
       ! Loop bounds
@@ -219,7 +218,7 @@ contains
 
       ! Arrays
       real(ar),        intent(in   ) ::                        &
-           & beta(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),  &
+           & ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
            &  phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(ar),        intent(inout) ::                           &
@@ -227,7 +226,7 @@ contains
 
       ! Local variables
       integer(c_int)                 :: i, j, k, i0, j0, k0
-      real(ar)                       :: codx
+      real(ar)                       :: codx, oro_g
 
       i0 = e_i(dir,1)
       j0 = e_i(dir,2)
@@ -239,7 +238,9 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               u_i(i,j,k) = u_i(i,j,k) + codx * beta(i,j,k) * &
+               oro_g    = half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
+               
+               u_i(i,j,k) = u_i(i,j,k) + codx * oro_g * &
                     &      ( phi(i,j,k) - phi(i-i0,j-j0,k-k0) )
 
 
@@ -247,19 +248,86 @@ contains
          end do
       end do
 
-   end subroutine add_gradient
+   end subroutine add_grad_phi
 
 
 
    !
-   ! Add forcing (acceleration) terms to velocity component u_i
+   ! Computes  u_i = u_i + C * (1/ro_g) * ( dp/dx_i + dp0/dx_i )
+   !
+   ! u_i  = i-th component of a staggered vector field u.
+   !
+   ! ro_g = gas density field defined at cell centers.
+   !
+   ! p    = pressure 
+   !
+   ! p0   = base pressure 
    ! 
-   subroutine add_forcing ( lo, hi, u_i, ulo, uhi, ro_g, slo, shi, &
-        & domlo, domhi, dx, dt, dir )  bind(C)
+   ! C    = real constant
+   !
+   ! dir  = 1,2,3 indicates x, y, z direction respectively.
+   !  
+   subroutine add_grad_p ( lo, hi, u_i, ulo, uhi, ro_g, slo, shi, &
+        & p, p0, dx, c, dir ) bind (C)
+
+      ! Loop bounds
+      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
+
+      ! Array bounds
+      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int),  intent(in   ) :: slo(3), shi(3)
+
+      ! Grid and time spacing
+      real(ar),        intent(in   ) :: c, dx(3)
+
+      ! Direction
+      integer(c_int),  intent(in   ) :: dir
+
+      ! Arrays
+      real(ar),        intent(in   ) ::                        &
+           & ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
+           &    p(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
+           &   p0(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           
+      real(ar),        intent(inout) ::                           &
+           & u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
+      ! Local variables
+      integer(c_int)                 :: i, j, k, i0, j0, k0
+      real(ar)                       :: codx, oro_g, dp, dp0
+
+      i0 = e_i(dir,1)
+      j0 = e_i(dir,2)
+      k0 = e_i(dir,3)
+
+      codx = c / dx(dir) 
+      
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+
+               oro_g   = half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
+
+               dp      =  p(i,j,k) -  p(i-i0,j-j0,k-k0)
+               dp0     = p0(i,j,k) - p0(i-i0,j-j0,k-k0)
+
+               u_i(i,j,k) = u_i(i,j,k) + codx * oro_g * ( dp + dp0 )
+         
+            end do
+         end do
+      end do
+
+   end subroutine add_grad_p
+
+   !
+   ! Add forcing (acceleration) terms to velocity component u_i
+   ! These terms include the volumetric forces and the explicit part of the
+   ! particle/fluid momentum exchange
+   ! 
+   subroutine add_forcing ( lo, hi, u_i, ulo, uhi, drag_i, dlo, dhi, &
+        & ro_g, slo, shi, rop_g, domlo, domhi, dx, dt, dir )  bind(C)
       
       use constant, only: gravity
-      use bc      , only: delp_x, delp_y, delp_z 
-      use scales,   only: p_scale
       
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
@@ -267,7 +335,8 @@ contains
       ! Array bounds
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3)
-
+      integer(c_int), intent(in   ) :: dlo(3), dhi(3)
+      
       ! Direction
       integer(c_int), intent(in   ) :: dir
 
@@ -282,34 +351,29 @@ contains
       
       ! Arrays
       real(ar),       intent(in   ) :: &
-           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
+           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           drag_i(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
       real(ar),       intent(inout) :: &
            u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       
       ! Local variables
       integer(c_int)                :: i, j, k 
-      real(ar)                      :: odx(3), orog, acc 
+      real(ar)                      :: orop_g, acc, oep_g 
 
-
-      ! 1/dx
-      odx = one / dx
-      
       select case (dir)
       case(1)                   !X direction
 
-         do k = lo(3),hi(3)
-            do j = lo(2),hi(2)
-               do i = lo(1),hi(1)
-                  acc = zero
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
 
-                  ! Pressure drop at boundaries if specified
-                  orog = half * ( one/ro_g(i,j,k) + one/ro_g(i-1,j,k) )
-                  if ( i == domlo(1) .or. i == domhi(1)+1 ) then
-                     acc =  p_scale * delp_x * orog * odx(dir)
-                  end if
+                  orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i-1,j,k) )
 
-                  acc = acc + gravity(dir)
+                  oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i-1,j,k)/rop_g(i-1,j,k) )
+                  
+                  acc = - oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -322,15 +386,12 @@ contains
          do k = lo(3),hi(3)
             do j = lo(2),hi(2)
                do i = lo(1),hi(1)
-                  acc = zero
 
-                  ! Pressure drop at boundaries if specified
-                  orog = half * ( one/ro_g(i,j,k) + one/ro_g(i,j-1,k) )
-                  if ( j == domlo(2) .or. j == domhi(2)+1 ) then
-                     acc =  p_scale * delp_y * orog * odx(dir)
-                  end if
+                  orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i,j-1,k) )
 
-                  acc = acc + gravity(dir)
+                  oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i,j-1,k)/rop_g(i,j-1,k) )
+                  
+                  acc = - oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -343,15 +404,12 @@ contains
          do k = lo(3),hi(3)
             do j = lo(2),hi(2)
                do i = lo(1),hi(1)
-                  acc = zero
 
-                  ! Pressure drop at boundaries if specified
-                  orog = half * ( one/ro_g(i,j,k) + one/ro_g(i,j,k-1) )
-                  if ( k == domlo(3) .or. k == domhi(3)+1 ) then
-                     acc =  p_scale * delp_z * orog * odx(dir)
-                  end if
-
-                  acc = acc + gravity(dir)
+                  orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i,j,k-1) )
+                  
+                  oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i,j,k-1)/rop_g(i,j,k-1) )
+                  
+                  acc = -oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -364,17 +422,77 @@ contains
          stop "projection_mod: add_forcing: argument dir must be either 1,2, or 3"
       end select
 
-
-
    end subroutine add_forcing
 
-
    !
-   ! Compute the coefficients of the PPE, i.e. 1 / ro_g = eps_g/rho_g,
+   ! This part takes care of performing an implicit solve for the
+   ! intermediate velocity.
+   ! Currently, this is equivalent to dividing by a diagonal coefficient
+   ! since the only implicit term is the fluid/particle momentum exchange.
+   ! 
+   ! Upon entry, u_i contains the rhs of the system to be solved and on exit
+   ! the solution of the system itself. This means that we are solving;
+   !
+   !    A*u_i = rhs  with rhs = u_i upon entry
+   !
+   ! So far the above system reduces to:
+   !
+   !    u_i = u_i / (A)_diagonal
+   !
+   subroutine compute_intermediate_velocity ( lo, hi, u_i, ulo, uhi, &
+        & f_gds_i, flo, fhi, rop, slo, shi, dir, dt ) bind(C)
+
+     
+      ! Loop bounds
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+
+      ! Array bounds
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int), intent(in   ) :: flo(3), fhi(3)
+      
+      ! Direction
+      integer(c_int), intent(in   ) :: dir
+
+      ! Time step width
+      real(ar),       intent(in   ) :: dt
+
+            ! Arrays
+      real(ar),       intent(in   ) :: &
+           rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           f_gds_i(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
+
+      real(ar),       intent(inout) :: &
+           u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      
+      ! Local variables
+      integer(c_int)                :: i, j, k, i0, j0, k0
+      real(ar)                      :: orop, diag_coeff
+      
+      i0 = e_i(dir,1)
+      j0 = e_i(dir,2)
+      k0 = e_i(dir,3)
+      
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+               orop       = half * ( one / rop(i,j,k) + one / rop(i-i0,j-j0,k-k0) )
+               diag_coeff = one + dt * f_gds_i(i,j,k) * orop
+               u_i(i,j,k) = u_i(i,j,k) / diag_coeff
+            end do
+         end do
+      end do
+      
+   end subroutine compute_intermediate_velocity
+
+
+      
+   !
+   ! Compute the coefficients of the PPE, i.e. ep_g / ro_g,
    ! at the faces of the pressure cells along the "dir"-axis.
    ! 
-   subroutine compute_oro_g ( lo, hi, oro_g, alo, ahi, &
-        rop_g, slo, shi, ep_g, dir )  bind(C)
+   subroutine compute_bcoeff ( lo, hi, bcoeff, alo, ahi, &
+        ro_g, slo, shi, ep_g, dir )  bind(C)
 
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
@@ -388,11 +506,11 @@ contains
 
       ! Arrays
       real(ar),       intent(in   ) :: &
-           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(ar),       intent(  out) :: &
-           oro_g(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+           bcoeff(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       integer      :: i, j, k, i0, j0, k0
 
@@ -400,17 +518,16 @@ contains
       j0 = e_i(dir,2)
       k0 = e_i(dir,3)
 
-      ! We may wann directly use ro_g instead of ep_g/rop_g
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
-               oro_g(i,j,k) = half * ( ep_g(i,j,k) / rop_g(i,j,k) + &
-                    & ep_g(i-i0,j-j0,k-k0) / rop_g(i-i0,j-j0,k-k0) )
+               bcoeff(i,j,k) = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) ) * &
+                    & half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
             end do
          end do
       end do
 
-   end subroutine compute_oro_g
+   end subroutine compute_bcoeff
 
 
    !
@@ -521,7 +638,7 @@ contains
          end if
          
       end if
-
+      
       !
       ! Check whether the system is non-singular
       !
@@ -558,130 +675,65 @@ contains
 
 
    !
-   ! Set the value of the auxiliary function PHI before the solution of the
-   ! poisson equation. The pressure MUST have the correct boundary conditions
-   ! in place.
-   ! The logic of this routine is as follows:
-   !
-   !   1) Assign the scaled pressure value to all the interior cells. If the
-   !      system is singular, assign zero to all interior cells instead. This
-   !      is required by MLMG (otherwise it won't converge).
-   !
-   !   2) If the system is not singular, assume all boundaries are Dirichlet's.
-   !      Since MLMG will ignore the boundary values at non-Dirichlet's
-   !      boundaries, there is no harm in doing this. The way the Dirichlet's
-   !      value for phi is computed from the pressure is exemplified by the
-   !      following sketch.
-   !
+   ! Compute the cell-centered divergence of ep_g * {u_g,v_g,w_g}
    ! 
-   !                 p_b                   p_b = pressure value at the boundary
-   !                  |                    
-   !     EXTERIROR    |    INTERIOR        p_g = pressure value at ghost cells
-   !            |--o--|--o--|--o--|--o--|
-   !                  |                    p_i = pressure value at first 
-   !              p_g | p_i                      interior cell
-   !
-   ! 
-   !      p_b is the pressure boundary value given by the user. The pressure
-   !      ghost value, p_g, is computed via
-   !
-   !            0.5 * ( p_g + p_i ) = p_b  -->   p_g = 2p_b - p_i
-   !
-   !      where p_i is pressure at the first interior point.
-   !      This routine assumes that the ghost nodes for the pressure have been
-   !      computed as shown above. Then, the phi boundary value can be
-   !      computed as follows
-   !
-   !          phi_b = scale * p_b = scale * 0.5 * ( p_g + p_i )
-   !
-   !      Even though phi_b lives on the domain boundary, we store it at the
-   !      first ghost cell outside the domain: this is the format required by
-   !      MLMG.
-   ! 
-   ! WARNING: this routine MUST be called before solving the Poisson equation
-   !
-   subroutine set_phi ( lo, hi, phi, slo, shi, pg, scale, singular,  domlo, domhi ) bind(C)
+   subroutine compute_diveu ( lo, hi, diveu, slo, shi, ep_g, u_g, ulo, uhi, &
+      & v_g, vlo, vhi, w_g, wlo, whi, dx )  bind(C)
 
       ! Loop bounds
-      integer(c_int), intent(in   ) :: lo(3), hi(3)
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
 
-      ! Array bounds
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      ! Arrays bounds
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3)
+      integer(c_int), intent(in   ) :: vlo(3),vhi(3)
+      integer(c_int), intent(in   ) :: wlo(3),whi(3)
 
-      ! Scaling factor
-      real(ar),       intent(in   ) :: scale
+      ! Grid 
+      real(ar),       intent(in   ) :: dx(3)
 
-      ! Whether the sistem is singular
-      integer(c_int), intent(in   ) :: singular
-
-      ! Grid bounds
-      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
-
-      ! Arrays
+      ! Array
+      real(ar),       intent(  out) :: &
+           diveu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      
       real(ar),       intent(in   ) :: &
-           & pg(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(ar),       intent(inout) :: &
-           & phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
+           u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
+           v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
+           w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
+          ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      
       ! Local variables
-      integer(c_int)                :: is, ie, js, je, ks, ke
+      integer  :: i, j, k
+      real(ar) :: odx, ody, odz
+      real(ar) :: eu_n, eu_s, eu_t, eu_b, eu_e, eu_w
 
+      odx = one / dx(1)
+      ody = one / dx(2)
+      odz = one / dx(3)
 
-      is = lo(1)
-      ie = hi(1)
-      js = lo(2)
-      je = hi(2)
-      ks = lo(3)
-      ke = hi(3)
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
+               ! Face values
+               eu_e = u_g(i+1,j,k) * half * ( ep_g(i+1,j,k) + ep_g(i  ,j,k) )
+               eu_w = u_g(i  ,j,k) * half * ( ep_g(i  ,j,k) + ep_g(i-1,j,k) )               
+
+               eu_n = v_g(i,j+1,k) * half * ( ep_g(i,j+1,k) + ep_g(i,j  ,k) )
+               eu_s = v_g(i,j  ,k) * half * ( ep_g(i,j  ,k) + ep_g(i,j-1,k) )
+
+               eu_t = w_g(i,j,k+1) * half * ( ep_g(i,j,k+1) + ep_g(i,j,k  ) )
+               eu_b = w_g(i,j,k  ) * half * ( ep_g(i,j,k  ) + ep_g(i,j,k-1) )
+
+               ! Divergence
+               diveu(i,j,k) = (eu_e - eu_w) * odx + (eu_n - eu_s) * ody + &
+                    &         (eu_t - eu_b) * odz
+
+            end do
+         end do
+      end do
       
-      ! First set the interior points to 0
-      ! If the system is singular, setting to 0 the initial guess
-      ! may be necessary to obtain convergence
-      ! Even for a NON-singular system, if the initial guess is extremely
-      ! close to the solution, this may not lead to convergence
-      phi(is:ie,js:je,ks:ke) = zero 
+   end subroutine compute_diveu
 
-      ! If the system is singular, no Dirichlet's condition is present
-      ! se we can safely exit this subroutine now
-      if ( singular /= 0 ) return 
-         
-      ! Next, assign the boundary values.
-      ! Here we assume that all the boundaries are Dirichlet's
-      ! and set the boundary cells accordingly.
-      ! The boundary cell will hold the value at the boundary location, NOT the
-      ! value at the boundary CELL!!!
-      if ( domlo(1) > slo(1) )  then 
-         phi(domlo(1)-1,js:je,ks:ke) =  scale * half *  &
-              & ( pg(domlo(1)-1,js:je,ks:ke) + pg(domlo(1),js:je,ks:ke) )
-      end if 
-
-      if ( domhi(1) < shi(1) )  then 
-         phi(domhi(1)+1,js:je,ks:ke) =  scale * half *  &
-              & ( pg(domhi(1)+1,js:je,ks:ke) + pg(domhi(1),js:je,ks:ke) )
-      end if 
-
-      if ( domlo(2) > slo(2) )  then 
-         phi(is:ie,domlo(2)-1,ks:ke) =  scale * half *  &
-              & ( pg(is:ie,domlo(2)-1,ks:ke) + pg(is:ie,domlo(2),ks:ke) )
-      end if 
-
-      if ( domhi(2) < shi(2) )  then 
-         phi(is:ie,domhi(2)+1,ks:ke) =  scale * half *  &
-              & ( pg(is:ie,domhi(2)+1,ks:ke) + pg(is:ie,domhi(2),ks:ke) )
-      end if 
-
-      if ( domlo(3) > slo(3) )  then 
-         phi(is:ie,js:je,domlo(3)-1) =  scale * half *  &
-              & ( pg(is:ie,js:je,domlo(3)-1) + pg(is:ie,js:je,domlo(3)) )
-      end if 
-
-      if ( domhi(3) < shi(3) )  then 
-         phi(is:ie,js:je,domhi(3)+1) =  scale * half *  &
-              & ( pg(is:ie,js:je,domhi(3)+1) + pg(is:ie,js:je,domhi(3)) )
-      end if 
-      
-   end subroutine set_phi
    
 end module projection_mod

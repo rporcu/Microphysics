@@ -69,7 +69,7 @@ subroutine write_usr1(l, np, time, dt, particles, xlength, ylength, zlength )
 
 ! Calculate the value for the rk4 solutions.
       TIME_INTERVAL = lTime - rk4_TIME
-      IF(TIME_INTERVAL .LE. rk4_DT) THEN
+      IF(TIME_INTERVAL .LE. rk4_DT_default) THEN
          rk4_STEPS = 1
          rk4_DT = TIME_INTERVAL
          rk4_DT_LAST = UNDEFINED

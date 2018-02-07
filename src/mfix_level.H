@@ -123,10 +123,11 @@ protected:
     void mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w);
 
     // Projection
+    void mfix_project_velocity   (int lev);
+    void mfix_initial_iterations (int lev);
     void mfix_apply_projection (int lev, amrex::Real scaling_factor);
     void mfix_set_projection_bcs (int lev);
-    void mfix_set_pressure_bcs (int lev);
-    
+       
     // End projection
     
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
@@ -177,9 +178,7 @@ private:
 			Vector< std::unique_ptr<MultiFab> >& rhs,
 			int bc_lo[], int bc_hi[] );
 
-    void mfix_compute_oro_g(int lev);
-    
-    void init_tests_projection(int lev);
+    void mfix_compute_bcoeff(int lev);
 
     void check_for_nans(int lev);
     
@@ -193,9 +192,9 @@ private:
     
     int  steady_state_reached(int lev, Real dt);
 
-    void mfix_compute_first_predictor(int lev, amrex::Real dt);
+    void mfix_apply_predictor (int lev, amrex::Real dt);
 
-    void mfix_compute_second_predictor(int lev, amrex::Real dt);
+    void mfix_apply_corrector (int lev, amrex::Real dt);
 
 
     void mfix_apply_forcing_terms(int lev, amrex::Real dt,
@@ -203,23 +202,28 @@ private:
 			Vector< std::unique_ptr<MultiFab> >& v,
 			Vector< std::unique_ptr<MultiFab> >& w );
 
+    void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
+    
     void mfix_add_pressure_gradient(int lev, amrex::Real coeff);
+
+    void mfix_add_grad_phi (int lev, amrex::Real coeff);
     
     void mfix_compute_velocity_slopes(int lev,
 			Vector< std::unique_ptr<MultiFab> >& u,
 			Vector< std::unique_ptr<MultiFab> >& v,
 			Vector< std::unique_ptr<MultiFab> >& w );
 
-    void mfix_set_phi(int lev, Real scale, int singular );
-    // End of projection-related methods
+    void mfix_compute_diveu (int lev);
 
+    void mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p);
+    
+    void mfix_print_max_vel(int lev);
+// End of projection-related methods
 
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids() const;
     void ChopGrids(const Box& domain, BoxArray& ba, int target_size) const;
-
-    void mfix_print_max_vel(int lev);
 
     void mfix_set_bc_type(int lev);
     void mfix_set_bc1(int lev);
@@ -288,7 +292,10 @@ private:
     Vector< std::unique_ptr<MultiFab> > w_go;
     Vector< std::unique_ptr<MultiFab> > w_gt;
 
-    // Pressure correction equation
+    // Base state pressure
+    Vector< std::unique_ptr<MultiFab> > p0_g;
+    
+    // Pressure correction 
     Vector< std::unique_ptr<MultiFab> > pp_g;
     Vector< std::unique_ptr<MultiFab> > d_e ;
     Vector< std::unique_ptr<MultiFab> > d_n ;
@@ -323,7 +330,10 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag_v;
     Vector< std::unique_ptr<MultiFab> > drag_w;
 
+    // 
     // Projection
+    //
+    
     // Fluid acceleration (convection + diffusion)
     Vector< std::unique_ptr<MultiFab> > uacc;
     Vector< std::unique_ptr<MultiFab> > vacc;
@@ -333,14 +343,16 @@ private:
     Vector< std::unique_ptr<MultiFab> > slopes_u;
     Vector< std::unique_ptr<MultiFab> > slopes_v;
     Vector< std::unique_ptr<MultiFab> > slopes_w;
-    
-    
+
+    // div (ep_g * u)
+    Vector< std::unique_ptr<MultiFab> > diveu;
+
+    // 
     Vector< std::unique_ptr<MultiFab> > fp_x;
     Vector< std::unique_ptr<MultiFab> > fp_y;
     Vector< std::unique_ptr<MultiFab> > fp_z;
-
     
-    Vector< Vector< std::unique_ptr<MultiFab> > > oro_g; // Over ro_g = ep_g / rop_g
+    Vector< Vector< std::unique_ptr<MultiFab> > > bcoeff; // Coefficients b of div(b*grad(p))
 
     Vector< std::unique_ptr<MultiFab> > phi; // Pressure increment
 

@@ -72,6 +72,7 @@ mfix_level::ResizeArrays ()
     p_g.resize(nlevs_max);
     p_go.resize(nlevs_max);
 
+    p0_g.resize(nlevs_max);
     pp_g.resize(nlevs_max);
 
     ro_g.resize(nlevs_max);
@@ -81,6 +82,7 @@ mfix_level::ResizeArrays ()
     rop_go.resize(nlevs_max);
 
     phi.resize(nlevs_max);
+    diveu.resize(nlevs_max);
     
     u_g.resize(nlevs_max);
     u_go.resize(nlevs_max);
@@ -98,10 +100,9 @@ mfix_level::ResizeArrays ()
     fp_y.resize(nlevs_max);
     fp_z.resize(nlevs_max);
     
-    oro_g.resize(nlevs_max);
-    for (int i = 0; i < nlevs_max; ++i )
-    {
-	oro_g[i].resize(3);
+    bcoeff.resize(nlevs_max);
+    for (int i = 0; i < nlevs_max; ++i ) {
+	bcoeff[i].resize(3);
     }
     
     d_e.resize(nlevs_max);
@@ -159,7 +160,8 @@ void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
         const Box& sbx = (*ep_g[lev])[mfi].box();
 
         calc_coeff(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(), &calc_flag,
-                   (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+                   (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(), 
+                   (*p0_g[lev])[mfi].dataPtr(),
                    (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
     }
 
@@ -489,8 +491,8 @@ mfix_level::mfix_calc_drag_particle(int lev)
                ubx.loVect(), ubx.hiVect(),
                vbx.loVect(), vbx.hiVect(),
                wbx.loVect(), wbx.hiVect(), &np,
-               (*p_g[lev])[pti].dataPtr(), (*u_g[lev])[pti].dataPtr(),
-               (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
+               (*p_g[lev])[pti].dataPtr(), (*p0_g[lev])[pti].dataPtr(),
+               (*u_g[lev])[pti].dataPtr(), (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
                particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
        }
     }
@@ -505,6 +507,11 @@ mfix_level::mfix_calc_drag_particle(int lev)
        std::unique_ptr<MultiFab> p_g_pba(new MultiFab(pba,pdm,p_g[lev]->nComp(),ng));
        p_g_pba->copy(*p_g[lev],0,0,1,ng,ng);
        p_g_pba->FillBoundary(geom[lev].periodicity());
+
+       ng = p0_g[lev]->nGrow();
+       std::unique_ptr<MultiFab> p0_g_pba(new MultiFab(pba,pdm,p0_g[lev]->nComp(),ng));
+       p0_g_pba->copy(*p0_g[lev],0,0,1,ng,ng);
+       p0_g_pba->FillBoundary(geom[lev].periodicity());
 
        BoxArray x_face_ba = pba;
        x_face_ba.surroundingNodes(0);
@@ -545,8 +552,8 @@ mfix_level::mfix_calc_drag_particle(int lev)
                ubx.loVect(), ubx.hiVect(),
                vbx.loVect(), vbx.hiVect(),
                wbx.loVect(), wbx.hiVect(), &np,
-               (*p_g_pba)[pti].dataPtr(), (*u_g_pba)[pti].dataPtr(),
-               (*v_g_pba)[pti].dataPtr(), (*w_g_pba)[pti].dataPtr(),
+               (*p_g_pba)[pti].dataPtr(), (*p0_g_pba)[pti].dataPtr(),
+               (*u_g_pba)[pti].dataPtr(), (*v_g_pba)[pti].dataPtr(), (*w_g_pba)[pti].dataPtr(),
                particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
        }
     }

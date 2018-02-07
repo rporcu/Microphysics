@@ -569,6 +569,8 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
           // Scalar variables
           for( int i = 0; i < pltscalarVars.size(); i++ ) {
               MultiFab::Copy(*mf[lev], *((*pltscalarVars[i])[lev].get()), 0, dcomp, 1, 0);
+              if (pltscaVarsName[i] == "p_g")
+                 MultiFab::Add(*mf[lev], (*p0_g[lev]), 0, dcomp, 1, 0);
               dcomp++;
           }
 

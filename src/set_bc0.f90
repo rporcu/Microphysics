@@ -10,9 +10,9 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine set_bc0(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-                         u_g, v_g, w_g, p_g, ep_g, ro_g, rop_g, mu_g, lambda_g, &
-                         bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-                         bc_klo_type, bc_khi_type, domlo, domhi) &
+                      u_g, v_g, w_g, p0_g, ep_g, ro_g, rop_g, mu_g, lambda_g, &
+                      bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+                      bc_klo_type, bc_khi_type, domlo, domhi) &
       bind(C, name="set_bc0")
 
       use amrex_fort_module, only : c_real => amrex_real
@@ -40,7 +40,7 @@
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(inout) ::  w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      real(c_real), intent(inout) ::  p_g&
+      real(c_real), intent(inout) ::  p0_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -108,7 +108,7 @@
                      bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                   endif
 
-                       p_g(slo(1):domlo(1)-1,j,k) = scale_pressure(bc_p_g(bcv))
+                      p0_g(slo(1):domlo(1)-1,j,k) = scale_pressure(bc_p_g(bcv))
                       ep_g(slo(1):domlo(1)-1,j,k) = bc_ep_g(bcv)
                       ro_g(slo(1):domlo(1)-1,j,k) = bc_ro_g
                      rop_g(slo(1):domlo(1)-1,j,k) = bc_ro_g*bc_ep_g(bcv)
@@ -154,7 +154,7 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                         p_g(domhi(1)+1:shi(1),j,k) = scale_pressure(bc_p_g(bcv))
+                        p0_g(domhi(1)+1:shi(1),j,k) = scale_pressure(bc_p_g(bcv))
                         ep_g(domhi(1)+1:shi(1),j,k) = bc_ep_g(bcv)
                         ro_g(domhi(1)+1:shi(1),j,k) = bc_ro_g
                        rop_g(domhi(1)+1:shi(1),j,k) = bc_ro_g*bc_ep_g(bcv)
@@ -199,7 +199,7 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                       p_g(i,slo(2):domlo(2)-1,k) = scale_pressure(bc_p_g(bcv))
+                      p0_g(i,slo(2):domlo(2)-1,k) = scale_pressure(bc_p_g(bcv))
                       ep_g(i,slo(2):domlo(2)-1,k) = bc_ep_g(bcv)
                       ro_g(i,slo(2):domlo(2)-1,k) = bc_ro_g
                      rop_g(i,slo(2):domlo(2)-1,k) = bc_ro_g*bc_ep_g(bcv)
@@ -245,7 +245,7 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                       p_g(i,domhi(2)+1:shi(2),k) = scale_pressure(bc_p_g(bcv))
+                      p0_g(i,domhi(2)+1:shi(2),k) = scale_pressure(bc_p_g(bcv))
                       ep_g(i,domhi(2)+1:shi(2),k) = bc_ep_g(bcv)
                       ro_g(i,domhi(2)+1:shi(2),k) = bc_ro_g
                      rop_g(i,domhi(2)+1:shi(2),k) = bc_ro_g*bc_ep_g(bcv)
@@ -291,7 +291,7 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                        p_g(i,j,slo(3):domlo(3)-1) = scale_pressure(bc_p_g(bcv))
+                       p0_g(i,j,slo(3):domlo(3)-1) = scale_pressure(bc_p_g(bcv))
                        ep_g(i,j,slo(3):domlo(3)-1) = bc_ep_g(bcv)
                        ro_g(i,j,slo(3):domlo(3)-1) = bc_ro_g
                       rop_g(i,j,slo(3):domlo(3)-1) = bc_ro_g*bc_ep_g(bcv)
@@ -337,7 +337,7 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                        p_g(i,j,domhi(3)+1:shi(3)) = scale_pressure(bc_p_g(bcv))
+                       p0_g(i,j,domhi(3)+1:shi(3)) = scale_pressure(bc_p_g(bcv))
                        ep_g(i,j,domhi(3)+1:shi(3)) = bc_ep_g(bcv)
                        ro_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g
                       rop_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g*bc_ep_g(bcv)
