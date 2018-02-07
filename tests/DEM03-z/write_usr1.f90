@@ -70,7 +70,7 @@ subroutine write_des_out(lTime, np, particles, length)
 
    ! Calculate the value for the RK4 solutions.
    TIME_INTERVAL = lTime - RK4_TIME
-   IF(TIME_INTERVAL .LE. RK4_DT) THEN
+   IF(TIME_INTERVAL .LE. RK4_DT_DEFAULT) THEN
       RK4_STEPS = 1
       RK4_DT = TIME_INTERVAL
       RK4_DT_LAST = UNDEFINED
