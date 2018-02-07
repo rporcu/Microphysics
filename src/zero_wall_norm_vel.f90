@@ -16,7 +16,7 @@ subroutine zero_wall_norm_vel(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
 
-  use bc, only: nsw_, fsw_, psw_, pinf_, pout_, minf_
+  use bc, only: NSW_, FSW_, PSW_
 
   implicit none
 
