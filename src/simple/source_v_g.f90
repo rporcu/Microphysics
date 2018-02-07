@@ -80,8 +80,8 @@ contains
                epga = half*(ep_g(i,j-1,k) + ep_g(i,j,k))
 
                ! Pressure gradient term
-               sdp = -p_scale*epga*( p_g(i,j,k) -  p_g(i,j-1,k))*axz &
-                     -p_scale*epga*(p0_g(i,j,k) - p0_g(i,j-1,k))*axz
+               sdp = -p_scale*epga*( (p_g(i,j  ,k)+p0_g(i,j  ,k))- &
+                                     (p_g(i,j-1,k)+p0_g(i,j-1,k)) )*axz
 
                ! Previous time step
                v0 = half*(rop_go(i,j-1,k)+rop_go(i,j,k))*odt

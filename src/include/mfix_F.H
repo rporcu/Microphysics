@@ -76,7 +76,7 @@ extern "C"
      const int* vlo, const int* vhi,
      const int* wlo, const int* whi,
      amrex::Real* u_g, amrex::Real* v_g,      amrex::Real* w_g,
-     amrex::Real* p_g,     amrex::Real* ep_g,
+     amrex::Real* p_g,     amrex::Real* p0_g,    amrex::Real* ep_g,
      amrex::Real* ro_g,    amrex::Real* rop_g,
      amrex::Real* mu_g,    amrex::Real* lambda_g,
      int* bc_ilo, int* bc_ihi,
