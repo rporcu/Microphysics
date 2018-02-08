@@ -578,15 +578,7 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
   {
      mfix_init_fluid(lev,restart_flag);
 
-#if 1
-     x_regrid.cpp:    lambda_g_new->copy(*lambda_g[lev],0,0,1,ng,ng);
-mfix_regrid.cpp:    trD_g_new->copy(*trD_g[lev],0,0,1,ng,ng);
-mfix_regrid.cpp:    vort_new->copy(*vort[lev],0,0,1,ng,ng);
-mfix_regrid.cpp:    u_g_new->copy(*u_g[lev],0,0,1,ng,ng);
-mfix_regrid.cpp:    u_go_new->copy(*u_go[lev],0,0,1,ng,ng);
-mfix_regrid.cpp:    u_gt_new->copy(*u_gt[lev],0,0,1,ng,ng);
-mfix_regrid.cpp:    d_e_new->copy(*d_e[lev],0,0,1,ng,ng);
-mfix_regrid.cpp:    tau_u_g_new->copy(*tau_uif ( !use_proj_method ) 
+#if 0
      {
         int ng = p_g[lev]->nGrow();
         p_g[lev]->copy(*p0_g[lev],0,0,1,ng,ng);

@@ -111,6 +111,9 @@ mfix_level::EvolveFluidSimple(int lev, int nstep, int set_normg,
 	    // Apply pressure correction to all Pg, Ug, Vg, Wg
 	    mfix_correct_0(lev);
 
+            // Reimpose boundary conditions
+            mfix_set_bc1(lev);
+
 	    // Update fluid density
 	    mfix_physical_prop(lev,0);
 
