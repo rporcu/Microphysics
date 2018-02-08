@@ -7,7 +7,7 @@ module init_fluid_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine init_fluid(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
                          domlo, domhi, ep_g, ro_g, rop_g, p_g, p0_g, u_g, v_g, w_g, &
-                         mu_g, lambda_g, dx, dy, dz, xlength, ylength, zlength) &
+                         mu_g, lambda_g, dx, dy, dz, xlength, ylength, zlength, delp_dir) &
       bind(C, name="init_fluid")
 
       use amrex_fort_module, only : c_real => amrex_real
@@ -16,7 +16,9 @@ module init_fluid_module
       use calc_ro_g_module, only: calc_ro_g
       use calc_mu_g_module, only: calc_mu_g
 
-      use param, only: is_undefined, undefined
+      use param, only: zero
+
+      use bc, only: delp_x, delp_y, delp_z
 
       implicit none
 
@@ -25,6 +27,7 @@ module init_fluid_module
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
+      integer(c_int), intent(inout) :: delp_dir
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -67,6 +70,16 @@ module init_fluid_module
 
       call calc_mu_g(slo, shi, lo, hi, mu_g, lambda_g)
 
+      if (abs(delp_x) > epsilon(zero)) then
+         delp_dir = 0
+      else if (abs(delp_y) > epsilon(zero)) then
+         delp_dir = 1
+      else if (abs(delp_z) > epsilon(zero)) then
+         delp_dir = 2
+      else 
+         delp_dir = -1
+      end if
+
    end subroutine init_fluid
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -74,12 +87,13 @@ module init_fluid_module
 !  Subroutine: init_fluid_restart                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine init_fluid_restart(slo, shi, lo, hi, mu_g, lambda_g) &
+   subroutine init_fluid_restart(slo, shi, lo, hi, mu_g, lambda_g, delp_dir) &
       bind(C, name="init_fluid_restart")
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
-
+      use param, only: zero
+      use bc   , only: delp_x, delp_y, delp_z
       use calc_mu_g_module, only: calc_mu_g
 
       implicit none
@@ -87,6 +101,7 @@ module init_fluid_module
 ! Dummy arguments .....................................................//
       integer(c_int), intent(in   ) ::  lo(3),  hi(3)
       integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(inout) :: delp_dir
 
       real(c_real), intent(inout) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -94,6 +109,16 @@ module init_fluid_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       call calc_mu_g(slo, shi, lo, hi, mu_g, lambda_g)
+
+      if (abs(delp_x) > epsilon(zero)) then
+         delp_dir = 0
+      else if (abs(delp_y) > epsilon(zero)) then
+         delp_dir = 1
+      else if (abs(delp_z) > epsilon(zero)) then
+         delp_dir = 2
+      else 
+         delp_dir = -1
+      end if
 
     end subroutine init_fluid_restart
 

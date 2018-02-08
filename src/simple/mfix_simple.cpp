@@ -11,8 +11,8 @@ mfix_level::EvolveFluidSimple(int lev, int nstep, int set_normg,
 {
   BL_PROFILE_REGION_START("mfix::EvolveFluidSimple");
 
-  // Reimpose boundary conditions -- make sure to do this before we compute tau
-  mfix_set_bc1(lev);
+    // Reimpose boundary conditions -- make sure to do this before we compute tau
+    mfix_set_bc1(lev);
 
     // Calculate transport coefficients
     int calc_flag = 2;
@@ -98,9 +98,6 @@ mfix_level::EvolveFluidSimple(int lev, int nstep, int set_normg,
 	    // Calculate transport coefficients
 	    mfix_physical_prop(lev,0);
 
-	    // Reimpose boundary conditions
-	    mfix_set_bc1(lev);
-
 	    // Calculate bulk density (epg*ro_g) at cell faces
 	    mfix_conv_rop(lev);
 
@@ -144,6 +141,9 @@ mfix_level::EvolveFluidSimple(int lev, int nstep, int set_normg,
 	    MultiFab::Copy(*w_g[lev],   *w_go[lev],   0, 0, 1, nghost);
 	}
     } while (reiterate==1);
+
+    // Reimpose boundary conditions
+    // mfix_set_bc1(lev);
 
   BL_PROFILE_REGION_STOP("mfix::EvolveFluidSimple");
 }

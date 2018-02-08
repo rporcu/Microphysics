@@ -36,6 +36,10 @@ mfix_level::~mfix_level ()
 mfix_level::mfix_level ()
 {
     // Geometry on all levels has just been defined in the AmrCore constructor
+    // Here we set a separate periodicity flag for pressure because when we use
+    // pressure drop (delp) boundary conditions we fill all variables *except* p0
+    // periodically
+    pressure_periodicity = geom[0].periodicity();
 
     // No valid BoxArray and DistributionMapping have been defined.
     // But the arrays for them have been resized.
@@ -506,7 +510,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
        ng = p0_g[lev]->nGrow();
        std::unique_ptr<MultiFab> p0_g_pba(new MultiFab(pba,pdm,p0_g[lev]->nComp(),ng));
        p0_g_pba->copy(*p0_g[lev],0,0,1,ng,ng);
-       p0_g_pba->FillBoundary(geom[lev].periodicity());
+       p0_g_pba->FillBoundary(pressure_periodicity);
 
        BoxArray x_face_ba = pba;
        x_face_ba.surroundingNodes(0);
@@ -558,6 +562,9 @@ void
 mfix_level::mfix_set_bc1(int lev)
 {
   BL_PROFILE("mfix_level::mfix_set_bc1()");
+
+//  p_g[lev]->FillBoundary(geom[lev].periodicity());
+    p0_g[lev]->FillBoundary(pressure_periodicity);
 
 #ifdef _OPENMP
 #pragma omp parallel

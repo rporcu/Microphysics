@@ -96,12 +96,13 @@ extern "C"
 		    amrex::Real* u_g,     amrex::Real* v_g,      amrex::Real* w_g,
 		    amrex::Real* mu_g,    amrex::Real* lambda_g,
 		    amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
-		    amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength);
-
+		    amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength, 
+		    const int* delp_dir);
     
     void init_fluid_restart(const int* slo, const int* shi,
           const int*  lo, const int*  hi,
-          amrex::Real* mu_g,    amrex::Real* lambda_g);
+          amrex::Real* mu_g,    amrex::Real* lambda_g,
+          const int* delp_dir);
 
     void flip_particle_vol(const int* slo, const int* shi,
          amrex::Real* ep_g,

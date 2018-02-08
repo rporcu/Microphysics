@@ -575,7 +575,26 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
   if (solve_fluid)
+  {
      mfix_init_fluid(lev,restart_flag);
+
+#if 1
+     x_regrid.cpp:    lambda_g_new->copy(*lambda_g[lev],0,0,1,ng,ng);
+mfix_regrid.cpp:    trD_g_new->copy(*trD_g[lev],0,0,1,ng,ng);
+mfix_regrid.cpp:    vort_new->copy(*vort[lev],0,0,1,ng,ng);
+mfix_regrid.cpp:    u_g_new->copy(*u_g[lev],0,0,1,ng,ng);
+mfix_regrid.cpp:    u_go_new->copy(*u_go[lev],0,0,1,ng,ng);
+mfix_regrid.cpp:    u_gt_new->copy(*u_gt[lev],0,0,1,ng,ng);
+mfix_regrid.cpp:    d_e_new->copy(*d_e[lev],0,0,1,ng,ng);
+mfix_regrid.cpp:    tau_u_g_new->copy(*tau_uif ( !use_proj_method ) 
+     {
+        int ng = p_g[lev]->nGrow();
+        p_g[lev]->copy(*p0_g[lev],0,0,1,ng,ng);
+        p0_g[lev]->setVal(0.);
+     }
+#endif
+  }
+
 
   // Call user-defined subroutine to set constants, check data, etc.
   if (call_udf) mfix_usr0();
@@ -640,6 +659,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
   // Here we set bc values for p and u,v,w before the IC's are set
   mfix_set_bc0(lev);
 
+  int delp_dir;
+
   // We deliberately don't tile this loop since we will be looping
   //    over bc's on faces and it makes more sense to do this one grid at a time
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
@@ -649,7 +670,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
 
     if ( is_restarting ) {
       init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
-           (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr());
+           (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(), &delp_dir);
 
     } else {
       const Box& ubx = (*u_g[lev])[mfi].box();
@@ -667,9 +688,13 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
            (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
            (*w_g[lev])[mfi].dataPtr(),
            (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
-           &dx, &dy, &dz, &xlen, &ylen, &zlen); 
+           &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir); 
     }
   }
+
+  IntVect press_per = IntVect(geom[lev].isPeriodic(0),geom[lev].isPeriodic(1),geom[lev].isPeriodic(2));
+  if (delp_dir > -1) press_per[delp_dir] = 0;
+  pressure_periodicity = Periodicity(press_per);
 
   // Here we re-set the bc values for p and u,v,w just in case init_fluid
   //      over-wrote some of the bc values with ic values

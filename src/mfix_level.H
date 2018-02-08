@@ -394,6 +394,7 @@ private:
     static int m_eb_full_grow_cells;
     static EBSupport m_eb_support_level;
 
+    Periodicity pressure_periodicity;
 
     Real sum_vol_orig;
 
