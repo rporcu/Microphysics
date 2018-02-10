@@ -48,9 +48,8 @@ mfix_level::mfix_level ()
 #if 0
     istep.resize(nlevs_max, 0);
     nsubsteps.resize(nlevs_max, 1);
-    for (int lev = 1; lev <= maxLevel(); ++lev) {
-  nsubsteps[lev] = MaxRefRatio(lev-1);
-    }
+    for (int lev = 1; lev <= maxLevel(); ++lev) 
+        nsubsteps[lev] = MaxRefRatio(lev-1);
 #endif
 }
 
