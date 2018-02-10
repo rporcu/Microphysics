@@ -575,18 +575,7 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
   if (solve_fluid)
-  {
      mfix_init_fluid(lev,restart_flag);
-
-#if 0
-     {
-        int ng = p_g[lev]->nGrow();
-        p_g[lev]->copy(*p0_g[lev],0,0,1,ng,ng);
-        p0_g[lev]->setVal(0.);
-     }
-#endif
-  }
-
 
   // Call user-defined subroutine to set constants, check data, etc.
   if (call_udf) mfix_usr0();
