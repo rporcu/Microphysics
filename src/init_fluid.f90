@@ -137,6 +137,7 @@ module init_fluid_module
       use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
       use ic, only: ic_x_e, ic_y_n, ic_z_t
       use ic, only: ic_x_w, ic_y_s, ic_z_b
+      use bc, only: delp_x, delp_y, delp_z
       use scales, only: scale_pressure
       use param, only: undefined, is_defined
 
@@ -177,7 +178,20 @@ module init_fluid_module
       integer :: i_w, j_s, k_b
       integer :: i_e, j_n, k_t
 
-!  Set the initial conditions.
+      !  Make sure that ic_p_g is set if using delp pressure conditions
+      do icv = 1, dim_ic
+         if (ic_defined(icv)) then
+            if ( (abs(delp_x) > epsilon(zero)) .or. &
+                 (abs(delp_y) > epsilon(zero)) .or. &
+                 (abs(delp_z) > epsilon(zero)) ) then
+               if (.not. is_defined(ic_p_g(icv))) then
+                  print *,'MUST DEFINE ic_p_g if using the DELP pressure condition'
+                  stop
+               end if
+         end if
+      end do
+
+      !  Set the initial conditions.
       do icv = 1, dim_ic
          if (ic_defined(icv)) then
 
@@ -258,7 +272,8 @@ module init_fluid_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine set_p0(slo, shi, lo, hi, p0_g, dx, dy, dz, &
-                        xlength, ylength, zlength, domlo, domhi)
+                        xlength, ylength, zlength, domlo, domhi) &
+                 bind(C, name="set_p0")
 
       use bc, only: delp_x, delp_y, delp_z
       use bc, only: dim_bc, bc_type, bc_p_g, bc_defined
