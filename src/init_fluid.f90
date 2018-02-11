@@ -62,8 +62,8 @@ module init_fluid_module
                   domlo, domhi, dx, dy, dz, p0_g, u_g, v_g, w_g)
 
       ! Set the initial pressure field
-      call set_p0(slo, shi, lo, hi, p0_g, dx, dy, dz, &
-                  xlength, ylength, zlength, domlo, domhi)
+      call set_p0(slo, shi, lo, hi, domlo, domhi,  &
+                  p0_g, dx, dy, dz, xlength, ylength, zlength)
 
       ! Set the initial fluid density and viscosity
       call calc_ro_g(slo, shi, lo, hi, ro_g, rop_g, p_g, p0_g, ep_g)
@@ -272,8 +272,8 @@ module init_fluid_module
 !           is acting in the negative y-direction.                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine set_p0(slo, shi, lo, hi, p0_g, dx, dy, dz, &
-                        xlength, ylength, zlength, domlo, domhi) &
+      subroutine set_p0(slo, shi, lo, hi, domlo, domhi, &
+                        p0_g, dx, dy, dz, xlength, ylength, zlength) &
                  bind(C, name="set_p0")
 
       use bc, only: delp_x, delp_y, delp_z

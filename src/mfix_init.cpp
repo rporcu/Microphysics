@@ -650,8 +650,14 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
     const Box& sbx = (*ep_g[lev])[mfi].box();
 
     if ( is_restarting ) {
+
       init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
            (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(), &delp_dir);
+
+      set_p0(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
+             domain.loVect(), domain.hiVect(),
+             (*p0_g[lev])[mfi].dataPtr(), 
+             &dx, &dy, &dz, &xlen, &ylen, &zlen);
 
     } else {
       const Box& ubx = (*u_g[lev])[mfi].box();
@@ -663,7 +669,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
            vbx.loVect(), vbx.hiVect(),
            wbx.loVect(), wbx.hiVect(),
            bx.loVect(),  bx.hiVect(),
-                       domain.loVect(), domain.hiVect(),
+           domain.loVect(), domain.hiVect(),
            (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
            (*rop_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(), (*p0_g[lev])[mfi].dataPtr(),
            (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),

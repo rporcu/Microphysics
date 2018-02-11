@@ -104,6 +104,13 @@ extern "C"
           amrex::Real* mu_g,    amrex::Real* lambda_g,
           const int* delp_dir);
 
+    void set_p0(const int* slo, const int* shi,
+                const int*  lo, const int*  hi,
+	        const int* domlo , const int* domhi,
+                amrex::Real* p0_g,    
+	        amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
+	        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength);
+
     void flip_particle_vol(const int* slo, const int* shi,
          amrex::Real* ep_g,
          int* bc_ilo, int* bc_ihi,
