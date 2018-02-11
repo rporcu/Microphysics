@@ -139,7 +139,7 @@ module init_fluid_module
       use ic, only: ic_x_w, ic_y_s, ic_z_b
       use bc, only: delp_x, delp_y, delp_z
       use scales, only: scale_pressure
-      use param, only: undefined, is_defined
+      use param, only: undefined, is_defined, zero
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
@@ -188,6 +188,7 @@ module init_fluid_module
                   print *,'MUST DEFINE ic_p_g if using the DELP pressure condition'
                   stop
                end if
+            end if
          end if
       end do
 
