@@ -145,9 +145,6 @@ mfix_level::EvolveFluidSimple(int lev, int nstep, int set_normg,
 	}
     } while (reiterate==1);
 
-    // Reimpose boundary conditions
-    // mfix_set_bc1(lev);
-
   BL_PROFILE_REGION_STOP("mfix::EvolveFluidSimple");
 }
 
