@@ -36,10 +36,6 @@ mfix_level::~mfix_level ()
 mfix_level::mfix_level ()
 {
     // Geometry on all levels has just been defined in the AmrCore constructor
-    // Here we set a separate periodicity flag for pressure because when we use
-    // pressure drop (delp) boundary conditions we fill all variables *except* p0
-    // periodically
-    pressure_periodicity = geom[0].periodicity();
 
     // No valid BoxArray and DistributionMapping have been defined.
     // But the arrays for them have been resized.
@@ -240,7 +236,11 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
     if (!mf.boxArray().ixType().cellCentered())
 	amrex::Error("fill_mf_bc only used for cell-centered arrays!");
 
-    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
+    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior 
+    // It is essential that we do this before the call to fill_bc0 below since
+    // fill_bc0 can extrapolate out to fill ghost cells outside the domain after we
+    // have filled ghost cells inside the domain, but doing this call after fill_bc0
+    // can't fill ghost cells from ghost cells.
     mf.FillBoundary(geom[lev].periodicity());
 
     // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
@@ -254,6 +254,10 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 		 bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
 		 bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
+
+    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
+    // It's not 100% clear whether we need this call or not.  Worth testing.
+    mf.FillBoundary(geom[lev].periodicity());
 }
 
 void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
@@ -562,8 +566,7 @@ mfix_level::mfix_set_bc1(int lev)
 {
   BL_PROFILE("mfix_level::mfix_set_bc1()");
 
-//  p_g[lev]->FillBoundary(geom[lev].periodicity());
-    p0_g[lev]->FillBoundary(pressure_periodicity);
+    p_g[lev]->FillBoundary(geom[lev].periodicity());
 
 #ifdef _OPENMP
 #pragma omp parallel

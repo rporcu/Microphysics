@@ -673,6 +673,9 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
     }
   }
 
+ // Here we set a separate periodicity flag for p0_g because when we use
+ // pressure drop (delp) boundary conditions we fill all variables *except* p0
+ // periodically
   IntVect press_per = IntVect(geom[lev].isPeriodic(0),geom[lev].isPeriodic(1),geom[lev].isPeriodic(2));
   if (delp_dir > -1) press_per[delp_dir] = 0;
   pressure_periodicity = Periodicity(press_per);

@@ -265,7 +265,7 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     ng = p0_g[lev]->nGrow();
     std::unique_ptr<MultiFab> p0_g_new(new MultiFab(new_grids,new_dmap,1,p0_g[lev]->nGrow()));
     p0_g_new->copy(*p0_g[lev],0,0,1,ng,ng);
-    p0_g_new->FillBoundary(geom[lev].periodicity());
+    p0_g_new->FillBoundary(pressure_periodicity);
     p0_g[lev] = std::move(p0_g_new);
 
     // Pressure correction equation
