@@ -18,7 +18,7 @@ contains
     use discretelement, only: des_crossprdct
     use discretelement, only: kn_w, kt_w, mew_w!, dtsolid
 
-    use param        , only: small_number, zero, one
+    use param,         only: small_number, zero, one
     use particle_mod,  only: particle_t
     use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell, is_single_valued_cell, &
                                         get_neighbor_cells
@@ -48,7 +48,7 @@ contains
     real(c_real) :: normul(3)
     !real(c_real) :: wca_overlap_factor, wca_strength, wca_radius, wca_inv_r, wca_offset, f_wca
     !real(c_real) :: v_normal, wca_dist
-    
+
     ! facet barycenter (bcent) in global coordinates
     real(c_real), dimension(3) :: eb_cent
     ! position on facet plane, closest to particle
@@ -72,7 +72,7 @@ contains
 
     ! worst-case: overlap with 27 neighbours
     integer                        :: n_collisions, i_collision
-    real(c_real), dimension(27)    :: distmod, plane_distmod; 
+    real(c_real), dimension(27)    :: distmod, plane_distmod
     real(c_real), dimension(3, 27) :: collision_norms
     real(c_real), dimension(3)     :: c_vec, delta_c_vec
     real(c_real)                   :: len2_collision_norm
@@ -111,11 +111,11 @@ contains
 
        ! particle radia
        rp = p%radius
-       
+
        ! WCA-interaction kicks in _after_ MFIX-interaction
        !  => wca_radius < particle radius
        !  => most MFIX collisions don't see WCA interaction
-       !wca_radius = rp 
+       !wca_radius = rp
        !wca_strength = p%mass * 10000;
 
        ! particle position (in units of cells)
@@ -186,18 +186,18 @@ contains
                             ! register "head-on" collision:
                             n_collisions = n_collisions + 1
                             distmod(n_collisions) = dabs(distmod_temp)
-                            if ( dabs( distmod_temp ) .lt. 1e-8) then
-                                write(*,*) distmod_temp
-                            end if 
+                            !if ( dabs( distmod_temp ) .lt. 1e-8) then
+                            !    write(*,*) distmod_temp
+                            !end if
 
                             plane_distmod(n_collisions) = distmod_temp
                             collision_norms(:, n_collisions) = normal(ii, jj, kk, :)
-                        
-                        ! only consider EB-edges if not colliding with EB-face already 
+
+                        ! only consider EB-edges if not colliding with EB-face already
                         !  -> EB-facet has different normal => collide with EB-edge
                         else
                             i_pt = vindex_pt(1)
-                            j_pt = vindex_pt(2) 
+                            j_pt = vindex_pt(2)
                             k_pt = vindex_pt(3)
 
                             ! Don't ask for a normal in a cell that doesn't have a wall
@@ -213,7 +213,7 @@ contains
                                     ! EB-facet has same normal => skip
 !                                    call bl_proffortfuncstop_int(1)
                                     cycle
-                                end if 
+                                end if
 
                             end if
 
@@ -262,8 +262,8 @@ contains
        ! ******************************************************************** !
 
        do i_collision = 1, n_collisions
-!          call bl_proffortfuncstart_int(2)         
-          
+!          call bl_proffortfuncstart_int(2)
+
           cur_distmod = distmod(i_collision)
           cur_plane_distmod = plane_distmod(i_collision)
           normul(:) = collision_norms(:, i_collision)
@@ -331,7 +331,7 @@ contains
           !end if
           !
           !fn(:) = fn(:) - f_wca * normul(:)
-          
+
 
           ! Calculate the tangential displacement.
           overlap_t(:) = dtsolid*vrel_t(:)
@@ -359,7 +359,7 @@ contains
           ! Add the torque force to the total torque acting on the particle.
           tow(LL,:) = tow(LL,:) + cur_distmod*des_CROSSPRDCT(normul(:),ft)
 
-!          call bl_proffortfuncstop_int(2)         
+!          call bl_proffortfuncstop_int(2)
        !end if ! if test on (d < radius)
        end do
     end do ! loop over particles
@@ -378,10 +378,10 @@ contains
    !----------------------------------------------------------------------!
     pure function dot_3d_real (v1, v2)
         implicit none
-        
+
         real(c_real)                           :: dot_3d_real
         real(c_real), dimension(3), intent(in) :: v1, v2
-        
+
         ! really naive implementation
         dot_3d_real = v1(1)*v2(1) + v1(2)*v2(2) + v1(3)*v2(3)
 
@@ -433,7 +433,7 @@ contains
 
         real(c_real), dimension(3) :: box_max, box_min
         integer                    :: i
-        
+
         ! Determine box boundaries
         box_min(:) = id(:) * dx(:)
         box_max(:) = (id(:) + 1.) * dx(:)
@@ -530,10 +530,10 @@ contains
    !----------------------------------------------------------------------!
     pure subroutine swap_reals(a, b)
         implicit none
-            
+
         real(c_real), intent(inout) :: a, b
         real(c_real)                :: bucket
-        
+
         bucket = a
         a      = b
         b      = bucket
@@ -554,7 +554,7 @@ contains
    !  real(c_real) and of dimension(3) (i.e. indices range from 1..3).    !
    !----------------------------------------------------------------------!
     pure subroutine lambda_bounds(lambda_min, lambda_max, id_cell, p0, v)
-        implicit none 
+        implicit none
 
         real(c_real),               intent(  out) :: lambda_min, lambda_max
         integer,      dimension(3), intent(in   ) :: id_cell
@@ -597,14 +597,14 @@ contains
             cz_lo = -( p0(3) - dble(id_cell(3)) * dx(3) ) / v(3)
             cz_hi = -( p0(3) - ( dble(id_cell(3)) + 1. ) * dx(3) ) / v(3)
 
-            if ( v(3) .lt. 0. ) then 
+            if ( v(3) .lt. 0. ) then
                 call swap_reals(cz_lo, cz_hi)
             end if
         endif
 
         lambda_min = max(cx_lo, cy_lo, cz_lo)
         lambda_max = min(cx_hi, cy_hi, cz_hi)
-        
+
     end subroutine lambda_bounds
 
    !----------------------------------------------------------------------!
@@ -624,11 +624,11 @@ contains
    !----------------------------------------------------------------------!
     pure function facets_nearest_pt ( ind_pt, ind_loop, r_vec, eb_normal, eb_p0)
         implicit none
-        
+
         real(c_real), dimension(3)             :: facets_nearest_pt
         integer,      dimension(3), intent(in) :: ind_pt, ind_loop
         real(c_real), dimension(3), intent(in) :: r_vec, eb_normal, eb_p0
-        
+
         integer,      dimension(3) :: ind_facets
         integer                    :: n_facets, i_facet, tmp_facet, ind_cell, ind_nb
         real(c_real), dimension(3) :: c_vec, c_vec_tmp, rc_vec
@@ -643,17 +643,17 @@ contains
 
         ! Enumerate the possible EB facet edges invovlved.
         n_facets = 0
-        
+
         if ( .not. (ind_pt(1) .eq. ind_loop(1)) ) then
             n_facets = n_facets + 1
             ind_facets(n_facets) = 1
         end if
-        
+
         if ( .not. (ind_pt(2) .eq. ind_loop(2)) ) then
             n_facets = n_facets + 1
             ind_facets(n_facets) = 2
         end if
-        
+
         if ( .not. (ind_pt(3) .eq. ind_loop(3)) ) then
             n_facets = n_facets + 1
             ind_facets(n_facets) = 3
@@ -680,8 +680,8 @@ contains
             else ! if (ind_cell .gt. ind_nb) then
                 f_c = dble(ind_cell) * dx(tmp_facet)
             end if
-            
-            facet_p0 = (/                            & 
+
+            facet_p0 = (/                            &
                 ( dble(ind_loop(1)) + 0.5 ) * dx(1), &
                 ( dble(ind_loop(2)) + 0.5 ) * dx(2), &
                 ( dble(ind_loop(3)) + 0.5 ) * dx(3)  &
@@ -697,11 +697,11 @@ contains
             ! this solution is a line representing the closest EB edge, now compute the point
             ! on the line which minimizes the distance to the particle
             call lines_nearest_pt (lambda_tmp, c_vec_tmp, edge_p0, edge_v, r_vec)
-            
+
             ! IMPORTANT: this point might be outside the cell
             !  -> in that case, it will be one of the cell's corners
             if (.not. pt_in_box(c_vec_tmp, ind_loop, tmp_facet)) then
-                ! if closest point is outside cell, determine the furthest we can go along the 
+                ! if closest point is outside cell, determine the furthest we can go along the
                 ! EB edge line whilst staying within the cell.
                 call lambda_bounds(lambda_min, lambda_max, ind_loop, edge_p0, edge_v)
                 if (lambda_tmp .lt. lambda_min) then
@@ -712,7 +712,7 @@ contains
 
                 c_vec_tmp(:) = edge_p0(:) + lambda_tmp*edge_v(:)
             end if
-            
+
             ! determine new distance to particle
             rc_vec(:) = c_vec_tmp(:) - r_vec(:)
             min_dist_tmp = dot_3d_real(rc_vec, rc_vec)
@@ -863,7 +863,7 @@ subroutine calc_wall_collisions_ls(particles, np,   nrp,     &
 
                 ! calculate the normal contact force
                 fn(:) = -(kn_des_w * overlap_n  + etan_des_w * v_rel_trans_norm) * normal(:)
-                
+
                 ! calculate the tangential displacement.
                 overlap_t(:) = dtsolid*vrel_t(:)
                 mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t))

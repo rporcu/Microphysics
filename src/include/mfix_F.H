@@ -643,10 +643,23 @@ extern "C"
     void mfix_write_eb_vtp ( int* myID);
     void mfix_write_pvtp ( int* nProcs);
 
+    void init_levelset(const int * lo, const int * hi, const int * n_refine,
+                       int * valid, const int * vlo, const int * vhi,
+                       amrex_real * phi, const int * phlo, const int * phhi);
+
     void fill_levelset(const int * lo, const int * hi, const int * n_refine,
+                       const amrex_real* normal, const int* nlo, const int* nhi,
                        int * valid, const int * vlo, const int * vhi,
                        amrex_real * phi, const int * phlo, const int * phhi, 
                        const amrex_real * dx);
+
+    //void update_levelset(const int * lo, const int * hi, const int * n_refine,
+    //                     const void* flag, const int* fglo, const int* fghi,
+    //                     const amrex_real* normal, const int* nlo, const int* nhi,
+    //                     const amrex_real* bcent, const int* blo, const int* bhi,
+    //                     int * valid, const int * vlo, const int * vhi,
+    //                     amrex_real * phi, const int * phlo, const int * phhi, 
+    //                     const amrex_real * dx);
 
     void calc_wall_collisions_ls(void * rparticles, const int * ntot, const int * nrp,
                                  amrex_real * tow, amrex_real * fc, amrex_real * subdt,
@@ -654,7 +667,17 @@ extern "C"
                                  const amrex_real * phi, const int * phlo, const int * phhi,
                                  const amrex_real * dx, const int * n_refine);
 
-    
+    void count_eb_facets(const int * lo, const int * hi,
+                         const void * flag, const int * flo, const int * fhi,
+                         int * n_facets);
+
+    void eb_as_list(const int * lo, const int * hi, const int * n_refine,
+                    const void * flag, const int * flo, const int * fhi,
+                    const amrex_real * norm, const int * nlo, const int * nhi,
+                    const amrex_real * bcent, const int * blo, const int * bhi,
+                    amrex_real * list_out, const int * llo, const int * lhi,
+                    const amrex_real * dx, int * c_facets);
+
 #ifdef __cplusplus
 }
 #endif

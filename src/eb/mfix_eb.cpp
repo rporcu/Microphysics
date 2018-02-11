@@ -87,7 +87,7 @@ mfix_level::make_eb_geometry(int lev)
       bool flip = false;
       pp.query("poly2_mirror", flip);
 
-      PolynomialDF mirror(poly,flip);
+      PolynomialIF mirror(poly,flip);
       RealVect translation;
 
       pp.getarr("poly2_translate", transvec,  0, SpaceDim);
@@ -97,6 +97,35 @@ mfix_level::make_eb_geometry(int lev)
 
       TransformIF poly2(mirror);
       poly2.translate(translation);
+
+
+
+      // Level-Set: define container for level set
+      // level-set multifab is defined here, and set to (fortran) huge(amrex_real)
+      //            -> use min to intersect new eb boundaries
+      level_set     = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(), geom[lev].CellSize()));
+
+      // refine geom_ls' Domain
+      Box dom_ls = geom[lev].Domain();
+      dom_ls.refine(level_set->get_refinement());
+      Geometry geom_ls(dom_ls);
+      amrex::Print() << "Refined geom_ls: " << geom_ls << std::endl;
+
+      EBIndexSpace * ebis_instance = AMReX_EBIS::instance();
+
+      // Level-Set Hack: generate temporary eb_facotry (containing only single components)
+      amrex::Print() << "Building temporary EB-Geometry for Level-Set" << std::endl;
+      std::unique_ptr<BaseIF> poly2_impfunc = std::unique_ptr<BaseIF>(poly2.newImplicitFunction());
+      GeometryShop gshop_poly2(* poly2_impfunc, true);
+      ebis_instance->define(dom_ls, RealVect::Zero, geom_ls.CellSize()[0], gshop_poly2, 16, 0);
+
+      // Construct EB-Factory, and use it to set the level-set     
+      EBTower::Build();
+      EBFArrayBoxFactory eb_factory(geom_ls, * level_set->get_cc_ba(), dmap[lev], {2, 2, 2}, EBSupport::full);
+      level_set->update_ebf( & eb_factory);
+      EBTower::Destroy();
+
+
 
       if(use_walls){ // Combine poly2 with walls
         for (int i = 1; i <= 500; i++) {
@@ -169,11 +198,11 @@ mfix_level::make_eb_geometry(int lev)
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
-    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(),
-                                          AMReX_EBIS::instance(), geom[lev].CellSize()
-                                          //particle_ebfactory.get()
-                                          ));
-    level_set -> update(dummy.get());
+    //evel_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(),
+    //                                     AMReX_EBIS::instance(), geom[lev].CellSize()
+    //                                     //particle_ebfactory.get()
+    //                                     ));
+    // level_set -> update(dummy.get());
 }
 
 void
@@ -338,9 +367,9 @@ mfix_level::make_eb_hourglass(int lev)
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
-    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(),
-                                          AMReX_EBIS::instance(), geom[lev].CellSize()
-                                          //particle_ebfactory.get()
-                                          ));
-    level_set -> update(dummy.get());
+    //level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(),
+    //                                      AMReX_EBIS::instance(), geom[lev].CellSize()
+    //                                      //particle_ebfactory.get()
+    //                                      ));
+    //level_set -> update(dummy.get());
 }
