@@ -649,7 +649,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
     if ( is_restarting ) {
 
       init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
-           (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(), &delp_dir);
+           (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr());
 
     } else {
       const Box& ubx = (*u_g[lev])[mfi].box();
@@ -667,13 +667,13 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
            (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
            (*w_g[lev])[mfi].dataPtr(),
            (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
-           &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir); 
+           &dx, &dy, &dz, &xlen, &ylen, &zlen); 
     }
 
       set_p0(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
              domain.loVect(), domain.hiVect(),
              (*p0_g[lev])[mfi].dataPtr(), 
-             &dx, &dy, &dz, &xlen, &ylen, &zlen);
+             &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir);
   }
 
  // Here we set a separate periodicity flag for p0_g because when we use

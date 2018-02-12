@@ -96,20 +96,19 @@ extern "C"
 		    amrex::Real* u_g,     amrex::Real* v_g,      amrex::Real* w_g,
 		    amrex::Real* mu_g,    amrex::Real* lambda_g,
 		    amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
-		    amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength, 
-		    const int* delp_dir);
+		    amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength); 
     
     void init_fluid_restart(const int* slo, const int* shi,
           const int*  lo, const int*  hi,
-          amrex::Real* mu_g,    amrex::Real* lambda_g,
-          const int* delp_dir);
+          amrex::Real* mu_g,    amrex::Real* lambda_g);
 
     void set_p0(const int* slo, const int* shi,
                 const int*  lo, const int*  hi,
 	        const int* domlo , const int* domhi,
                 amrex::Real* p0_g,    
 	        amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
-	        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength);
+	        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
+	        int* delp_dir);
 
     void flip_particle_vol(const int* slo, const int* shi,
          amrex::Real* ep_g,
@@ -250,7 +249,6 @@ extern "C"
       int* bc_jlo, int* bc_jhi,
       int* bc_klo, int* bc_khi,
       const int* domlo , const int* domhi);
-
 
     void solve_u_g_star(
 	const int* slo, const int* shi,

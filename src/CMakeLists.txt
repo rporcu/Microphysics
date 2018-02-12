@@ -12,8 +12,8 @@ set(CXX_includes
 set(F90_sources
    bc_mod.f90
    calc_cell.f90
-   calc_coeff.f90
    calc_mu_g.f90
+   calc_tau.f90
    compute_divu.f90
    compute_vort.f90
    constant_mod.f90

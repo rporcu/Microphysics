@@ -8,7 +8,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine set_p0(slo, shi, lo, hi, domlo, domhi, &
-                        p0_g, dx, dy, dz, xlength, ylength, zlength) &
+                        p0_g, dx, dy, dz, xlength, ylength, zlength, delp_dir) &
                  bind(C, name="set_p0")
 
       use bc, only: delp_x, delp_y, delp_z
@@ -18,7 +18,6 @@
       use fld_const, only: mw_avg, ro_g0
       use ic       , only: ic_p_g, ic_defined
       use scales   , only: scale_pressure
-
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
@@ -36,6 +35,7 @@
 
       real(c_real), intent(in   ) :: dx, dy, dz
       real(c_real), intent(in   ) :: xlength, ylength, zlength
+      integer     , intent(  out) :: delp_dir
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -47,6 +47,20 @@
       real(c_real) :: pj
 ! Average pressure drop per unit length
       real(c_real) :: dpodx, dpody, dpodz
+!-----------------------------------------------
+
+      ! First pass out the direction in which we drop by delp (if any)
+      ! so that we can set the correct periodicity flag in the C++
+      if (abs(delp_x) > epsilon(zero)) then
+         delp_dir = 0
+      else if (abs(delp_y) > epsilon(zero)) then
+         delp_dir = 1
+      else if (abs(delp_z) > epsilon(zero)) then
+         delp_dir = 2
+      else 
+         delp_dir = -1
+      end if
+
 !-----------------------------------------------
 
 ! If any initial pressures are unspecified skip next section
@@ -112,14 +126,13 @@
          goto 100
       endif
 
-      ! Set an approximate pressure field assuming that the pressure drop
-      ! balances the weight of the bed, if the initial pressure-field is not
-      ! specified
+! Set an approximate pressure field assuming that the pressure drop
+! balances the weight of the bed, if the initial pressure-field is not
+! specified
 
       if (abs(gravity(1)) > epsilon(0.0d0)) then
 
          ! Find the average weight per unit area over an x-z slice
-
          dpodx = -gravity(1)*ro_g0
 
          if (gravity(1) <= 0.0d0) then
