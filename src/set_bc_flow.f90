@@ -128,18 +128,13 @@ contains
     real(c_real)        :: mw
 
     ! No need to convert if the mass flow is zero.
-    if(equal(bc_massflow_g(bcv),zero)) then
+    if (equal(bc_massflow_g(bcv),zero)) then
        volflow = zero
 
     ! incompressible gas bc.
-    elseif(is_defined(ro_g0)) then
-       volflow = bc_massflow_g(bcv)/ro_g0
+    else 
 
-    ! well-defined compresible gas bc.
-    elseif(is_defined(bc_p_g(bcv)) .and. is_defined(bc_t_g(bcv))) then
-       mw = mw_avg
-       volflow = bc_massflow_g(bcv) / &
-          eosg(mw,(bc_p_g(bcv)-p_ref),bc_t_g(bcv))
+       volflow = bc_massflow_g(bcv)/ro_g0
 
     endif
 

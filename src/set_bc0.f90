@@ -94,11 +94,7 @@
                    bc_ilo_type(j,k,1) == POUT_ .or. &
                    bc_ilo_type(j,k,1) == MINF_) then
 
-                  if (is_undefined(ro_g0)) then
-                     bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                  else
-                     bc_ro_g = ro_g0
-                  endif
+                  bc_ro_g = ro_g0
 
                   if (is_undefined(mu_g0)) then
                      bc_mu_g     = sutherland(bc_t_g(bcv))
@@ -147,11 +143,7 @@
                    bc_ihi_type(j,k,1) == POUT_ .or. &
                    bc_ihi_type(j,k,1) == MINF_) then
 
-                   if (is_undefined(ro_g0)) then
-                      bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                   else
-                      bc_ro_g = ro_g0
-                   endif
+                   bc_ro_g = ro_g0
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
@@ -199,11 +191,7 @@
                    bc_jlo_type(i,k,1) == POUT_ .or. &
                    bc_jlo_type(i,k,1) == MINF_) then
 
-                   if (is_undefined(ro_g0)) then
-                      bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                   else
-                      bc_ro_g = ro_g0
-                   endif
+                   bc_ro_g = ro_g0
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
@@ -252,11 +240,7 @@
                    bc_jhi_type(i,k,1) == POUT_ .or. &
                    bc_jhi_type(i,k,1) == MINF_) then
 
-                   if (is_undefined(ro_g0)) then
-                      bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                   else
-                      bc_ro_g = ro_g0
-                   endif
+                   bc_ro_g = ro_g0
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
@@ -305,11 +289,7 @@
                    bc_klo_type(i,j,1) == POUT_ .or. &
                    bc_klo_type(i,j,1) == MINF_) then
 
-                   if (is_undefined(ro_g0)) then
-                      bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                   else
-                      bc_ro_g = ro_g0
-                   endif
+                   bc_ro_g = ro_g0
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
@@ -358,11 +338,7 @@
                    bc_khi_type(i,j,1) == POUT_ .or. &
                    bc_khi_type(i,j,1) == MINF_) then
 
-                   if (is_undefined(ro_g0)) then
-                      bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                   else
-                      bc_ro_g = ro_g0
-                   endif
+                   bc_ro_g = ro_g0
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
