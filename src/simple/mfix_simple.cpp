@@ -14,10 +14,6 @@ mfix_level::EvolveFluidSimple(int lev, int nstep, int set_normg,
     // Reimpose boundary conditions -- make sure to do this before we compute tau
     mfix_set_bc1(lev);
 
-    // Calculate transport coefficients
-    int calc_flag = 2;
-    mfix_calc_coeffs(lev,calc_flag);
-
     // Calculate the stress tensor trace and cross terms for all phases.
     mfix_calc_trd_and_tau(lev);
 
@@ -95,9 +91,6 @@ mfix_level::EvolveFluidSimple(int lev, int nstep, int set_normg,
 	    v_g[lev]->FillBoundary(geom[lev].periodicity());
 	    w_g[lev]->FillBoundary(geom[lev].periodicity());
 
-	    // Calculate transport coefficients
-	    mfix_physical_prop(lev,0);
-
 	    // Calculate bulk density (epg*ro_g) at cell faces
 	    mfix_conv_rop(lev);
 
@@ -113,9 +106,6 @@ mfix_level::EvolveFluidSimple(int lev, int nstep, int set_normg,
 
             // Reimpose boundary conditions
             mfix_set_bc1(lev);
-
-	    // Update fluid density
-	    mfix_physical_prop(lev,0);
 
 	    // Calculate face mass fluxes
 	    mfix_calc_mflux(lev);

@@ -580,12 +580,9 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
   // Call user-defined subroutine to set constants, check data, etc.
   if (call_udf) mfix_usr0();
 
-  // Calculate all the coefficients once before entering the time loop
+  // Calculate the initial volume fraction
   if (solve_fluid)
   {
-     int calc_flag = 2;
-     mfix_calc_coeffs(lev,calc_flag);
-
      mfix_calc_volume_fraction(lev,sum_vol_orig);
      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
   }
@@ -654,11 +651,6 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
       init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
            (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(), &delp_dir);
 
-      set_p0(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
-             domain.loVect(), domain.hiVect(),
-             (*p0_g[lev])[mfi].dataPtr(), 
-             &dx, &dy, &dz, &xlen, &ylen, &zlen);
-
     } else {
       const Box& ubx = (*u_g[lev])[mfi].box();
       const Box& vbx = (*v_g[lev])[mfi].box();
@@ -677,6 +669,11 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
            (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
            &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir); 
     }
+
+      set_p0(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
+             domain.loVect(), domain.hiVect(),
+             (*p0_g[lev])[mfi].dataPtr(), 
+             &dx, &dy, &dz, &xlen, &ylen, &zlen);
   }
 
  // Here we set a separate periodicity flag for p0_g because when we use
@@ -684,7 +681,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
  // periodically
   IntVect press_per = IntVect(geom[lev].isPeriodic(0),geom[lev].isPeriodic(1),geom[lev].isPeriodic(2));
   if (delp_dir > -1) press_per[delp_dir] = 0;
-  pressure_periodicity = Periodicity(press_per);
+  p0_periodicity = Periodicity(press_per);
 
   // Here we re-set the bc values for p and u,v,w just in case init_fluid
   //      over-wrote some of the bc values with ic values

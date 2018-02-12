@@ -143,46 +143,6 @@ mfix_level::ResizeArrays ()
        fluid_cost.resize(nlevs_max);
 }
 
-void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
-{
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
-    {
-        const Box& bx = mfi.tilebox();
-        const Box& sbx = (*ep_g[lev])[mfi].box();
-
-        calc_coeff(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(), &calc_flag,
-                   (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(), 
-                   (*p0_g[lev])[mfi].dataPtr(),
-                   (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
-    }
-
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-}
-
-void
-mfix_level::mfix_physical_prop(int lev, int calc_flag)
-{
-  BL_PROFILE("mfix_level::mfix_physical_prop()");
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
-    {
-       const Box& bx = mfi.tilebox();
-       const Box& sbx = (*p_g[lev])[mfi].box();
-
-       physical_prop(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),&calc_flag,
-               (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
-               (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
-    }
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-}
-
 void
 mfix_level::usr3(int lev)
 {
@@ -513,7 +473,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
        ng = p0_g[lev]->nGrow();
        std::unique_ptr<MultiFab> p0_g_pba(new MultiFab(pba,pdm,p0_g[lev]->nComp(),ng));
        p0_g_pba->copy(*p0_g[lev],0,0,1,ng,ng);
-       p0_g_pba->FillBoundary(pressure_periodicity);
+       p0_g_pba->FillBoundary(p0_periodicity);
 
        BoxArray x_face_ba = pba;
        x_face_ba.surroundingNodes(0);

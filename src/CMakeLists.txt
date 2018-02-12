@@ -14,7 +14,6 @@ set(F90_sources
    calc_cell.f90
    calc_coeff.f90
    calc_mu_g.f90
-   calc_ro_g.f90
    compute_divu.f90
    compute_vort.f90
    constant_mod.f90
@@ -27,13 +26,13 @@ set(F90_sources
    init_namelist.f90
    output_mod.f90
    param_mod.f90
-   physical_prop.f90
    run_mod.f90
    scales_mod.f90
    set_bc0.f90
    set_bc1.f90
    set_bc_flow.f90
    set_bc_type.f90
+   set_p0.f90
    set_ps.f90
    ps_mod.f90
    utilities_mod.f90

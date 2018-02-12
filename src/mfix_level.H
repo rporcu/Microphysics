@@ -103,8 +103,6 @@ protected:
         amrex::Abort("ClearLevel: To be implemented");
     }
 
-    void mfix_calc_coeffs(int lev, int calc_flag);
-
     void mfix_calc_trd_and_tau(int lev);
 
     void mfix_init_fluid(int lev, int is_restarting = 0);
@@ -129,8 +127,6 @@ protected:
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
     void mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p);
-
-    void mfix_physical_prop(int lev, int calc_flag);
 
     void mfix_correct_0(int lev);
 
@@ -394,7 +390,7 @@ private:
     static int m_eb_full_grow_cells;
     static EBSupport m_eb_support_level;
 
-    Periodicity pressure_periodicity;
+    Periodicity p0_periodicity;
 
     Real sum_vol_orig;
 

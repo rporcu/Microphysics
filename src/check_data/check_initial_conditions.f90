@@ -208,35 +208,21 @@ contains
 
       ! Check that gas phase velocity components are initialized.
       if(is_undefined(ic_u_g(icv))) then
-         write(err_msg, 1000) trim(ivar('IC_U_g',icv))
+         write(err_msg, 1000) trim(ivar('ic_u_g',icv))
          call flush_err_msg(abort=.true.)
       endif
 
       if(is_undefined(ic_v_g(icv))) then
-         write(err_msg, 1000) trim(ivar('IC_V_g',icv))
+         write(err_msg, 1000) trim(ivar('ic_v_g',icv))
          call flush_err_msg(abort=.true.)
       endif
 
       if(is_undefined(ic_w_g(icv))) then
-         write(err_msg, 1000) trim(ivar('IC_W_g',icv))
+         write(err_msg, 1000) trim(ivar('ic_w_g',icv))
          call flush_err_msg(abort=.true.)
       endif
 
 1000  format('Error 1000: Required input not specified: ',A,/&
-         'Please correct the input deck.')
-
-      ! Check that if the gas phase pressure is initialized and the gas is
-      ! compressible that the gas phase pressure is not zero or negative
-      if(is_defined(ic_p_g(icv))) then
-         if(is_undefined(ro_g0).and. ic_p_g(icv)<=zero) then
-            write(err_msg, 1100) trim(iVar('IC_P_g',icv)),             &
-                 ival(ic_p_g(icv))
-            call flush_err_msg(abort=.true.)
-         endif
-      endif
-
-1100  format('Error 1100: Pressure must be greater than 0.0 for ',     &
-         'compressible flow',/'Illegal value: ',A,' = ',A,/&
          'Please correct the input deck.')
 
       call finl_err_msg

@@ -245,11 +245,6 @@ extern "C"
        amrex::Real* fluxX,        amrex::Real* fluxY,        amrex::Real* fluxZ,
        amrex::Real* dx,             amrex::Real* dy,             amrex::Real* dz);
 
-    void physical_prop(const int* slo, const int* shi,
-           const int* lo, const int* hi,
-           int* level, amrex::Real* ro_g, amrex::Real* p_g,
-           amrex::Real* ep_g, amrex::Real* rop_g);
-
     void fill_bc0(amrex::Real* s, const int* slo, const int* shi,
       int* bc_ilo, int* bc_ihi,
       int* bc_jlo, int* bc_jhi,

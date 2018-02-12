@@ -96,7 +96,6 @@ contains
   !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
   subroutine check_bc_p_outflow(BCV)
 
-    use fld_const, only: RO_g0
     use bc       , only: BC_P_g
 
     integer, intent(in) :: BCV
@@ -105,10 +104,6 @@ contains
 
     if (is_undefined(bc_p_g(bcv))) then
        write(err_msg,1000) trim(ivar('BC_P_g',bcv))
-       call flush_err_msg(abort=.true.)
-
-    elseif (bc_p_g(bcv)<=zero .and. is_undefined(ro_g0)) then
-       write(err_msg, 1100) bcv, trim(ival(bc_p_g(bcv)))
        call flush_err_msg(abort=.true.)
     endif
 
