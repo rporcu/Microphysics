@@ -48,8 +48,13 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 			 geom[lev].CellSize(), &cfl, &dt );
 	prev_dt = dt ;
 
-	amrex::Print() << "\n   Iteration " << iter <<" at time " \
-		       << time << " with dt = " << dt << "\n" << std::endl;
+	if (steady_state)
+	{
+	   amrex::Print() << "\n   Iteration " << iter << " with dt = " << dt << "\n" << std::endl;
+	} else {
+	   amrex::Print() << "\n   Step " << nstep <<" at time " \
+	   	          << time << " with dt = " << dt << "\n" << std::endl;
+	}
 
 	// Back up field
 	// Backup field variable to old
@@ -65,10 +70,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	// User hooks
 	for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
 	    mfix_usr2();
-
-	// Calculate drag coefficient
-	if (solve_dem)
-	    mfix_calc_drag_fluid(lev);
 
 	//
 	// Time integration step
@@ -89,7 +90,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	mfix_compute_diveu (lev);
 	
 	amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
-
 
 	// Calculate drag coefficient
 	if (solve_dem)
