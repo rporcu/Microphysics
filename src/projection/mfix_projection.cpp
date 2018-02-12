@@ -37,9 +37,20 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     
     do
     {
+	// Here we should check the CFL condition
+	// Compute dt for this time step
+	Real umax  = u_g[lev] -> norm0 ();
+	Real vmax  = v_g[lev] -> norm0 ();
+	Real wmax  = w_g[lev] -> norm0 ();
+	Real romin = rop_g[lev] -> min (0);
+	Real mumax = mu_g[lev] -> max (0);
+	compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
+			 geom[lev].CellSize(), &cfl, &dt );
+	prev_dt = dt ;
+
 	amrex::Print() << "\n   Iteration " << iter <<" at time " \
 		       << time << " with dt = " << dt << "\n" << std::endl;
-	
+
 	// Back up field
 	// Backup field variable to old
 	int nghost = ep_go[lev] -> nGrow();
@@ -58,18 +69,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	// Calculate drag coefficient
 	if (solve_dem)
 	    mfix_calc_drag_fluid(lev);
-  
-	// Here we should check the CFL condition
-	// Compute dt for this time step
-	Real umax  = u_g[lev] -> norm0 ();
-	Real vmax  = v_g[lev] -> norm0 ();
-	Real wmax  = w_g[lev] -> norm0 ();
-	Real romin = rop_g[lev] -> min (0);
-	Real mumax = mu_g[lev] -> max (0);
-    
-	compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-			 geom[lev].CellSize(), &cfl, &dt );
-	prev_dt = dt ;
 
 	//
 	// Time integration step
