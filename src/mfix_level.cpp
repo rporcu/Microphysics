@@ -406,6 +406,19 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
 
     } // if not OnSameGrids
 
+    // The projection method uses drag to update u, not (cell_vol * u), so we must divide by vol here
+    //     and we will divide by density in the update.
+    if (use_proj_method)
+    {
+        Real ovol = 1./(dx*dy*dz);
+         drag_u[lev]->mult(ovol);
+         drag_v[lev]->mult(ovol);
+         drag_w[lev]->mult(ovol);
+        f_gds_u[lev]->mult(ovol);
+        f_gds_v[lev]->mult(ovol);
+        f_gds_w[lev]->mult(ovol);
+    }
+
     // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
     f_gds_u[lev]->FillBoundary(geom[lev].periodicity());
     f_gds_v[lev]->FillBoundary(geom[lev].periodicity());

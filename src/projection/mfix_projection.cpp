@@ -80,18 +80,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	if (solve_dem)
 	    mfix_calc_drag_fluid(lev);
 
-        Real dx = geom[lev].CellSize()[0];
-        Real dy = geom[lev].CellSize()[1];
-        Real dz = geom[lev].CellSize()[2];
-        Real ovol = 1./(dx*dy*dz);
-
-        drag_u[lev]->mult(ovol);
-        drag_v[lev]->mult(ovol);
-        drag_w[lev]->mult(ovol);
-        f_gds_u[lev]->mult(ovol);
-        f_gds_v[lev]->mult(ovol);
-        f_gds_w[lev]->mult(ovol);
-	
         // Predictor step 
         mfix_apply_predictor ( lev, dt );
 
@@ -108,13 +96,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	if (solve_dem)
 	    mfix_calc_drag_fluid(lev);
 
-        drag_u[lev]->mult(ovol);
-        drag_v[lev]->mult(ovol);
-        drag_w[lev]->mult(ovol);
-        f_gds_u[lev]->mult(ovol);
-        f_gds_v[lev]->mult(ovol);
-        f_gds_w[lev]->mult(ovol);
-	
 	// Corrector step 
 	mfix_apply_corrector ( lev, dt );
 
