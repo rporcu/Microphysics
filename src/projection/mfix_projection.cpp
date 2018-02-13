@@ -728,10 +728,13 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
     // Correct the velocity field
     mfix_add_grad_phi ( lev, -scaling_factor );
     
+#if 0
+    // We shouldn't need to subtract off the mean
     if (singular) {
 	Real phi_mean = ( phi[lev] -> sum () ) / domain.numPts () ;
-	phi[lev] -> plus ( -phi_mean, 0 ); // pg_mean is 0 for non-singular case
+	phi[lev] -> plus ( -phi_mean, 1 ); // pg_mean is 0 for non-singular case
     }
+#endif
 }
 
 //
