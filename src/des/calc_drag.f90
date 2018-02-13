@@ -42,7 +42,7 @@ subroutine calc_particle_beta ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer :: p, i, j, k, ii, jj, kk
    real(c_real) :: velfp(3), velp(3), beta
-   real(c_real) :: odx, ody, odz, ovol
+   real(c_real) :: odx, ody, odz
    real(c_real) :: lx, ly, lz
    real(c_real) :: sx_lo, sy_lo, sz_lo
    real(c_real) :: sx_hi, sy_hi, sz_hi
@@ -54,8 +54,6 @@ subroutine calc_particle_beta ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
    odx = 1.0d0/dx
    ody = 1.0d0/dy
    odz = 1.0d0/dz
-
-   ovol = 1.0d0/(dx*dy*dz)
 
    plo = 0.0d0 ! HACK -- This should get passed into routine
 
