@@ -28,11 +28,11 @@ mfix_level::InitIOData ()
     // Define the list of scalar variables at cell centers that need to be written
     // to plotfile/checkfile.
     // "volfrac" MUST always be last without any mf associated to it!!!
-    pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "vort", "diveu", "volfrac"};
-    pltscalarVars  = {&ep_g, &p_g, &ro_g,  &rop_g,  &mu_g, &vort, &diveu};
+    pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "vort", "diveu", "volfrac"};
+    pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &vort,  &diveu};
 
-    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g", "volfrac"};
-    chkscalarVars  = {&ep_g, &p_g, &ro_g,  &rop_g,  &mu_g};
+    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "volfrac"};
+    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g};
 }
 
 void
@@ -551,7 +551,7 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
        for (int lev = 0; lev <= finest_level; ++lev) {
 
-          // the "+2" here is for volfrac and diveu
+          // the "+1" here is for volfrac 
           const int ncomp = vectorVars.size() + pltscalarVars.size() + 1;
           mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
 

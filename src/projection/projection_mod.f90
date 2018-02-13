@@ -526,7 +526,7 @@ contains
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
                bcoeff(i,j,k) = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) ) * &
-                    & half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
+                             & half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
             end do
          end do
       end do
