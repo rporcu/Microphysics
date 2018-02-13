@@ -725,6 +725,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real stop_time)
 
   if ( use_proj_method ) 
   {
+     // We need to initialize the volume fraction ep_g before the first projection
+     mfix_calc_volume_fraction(lev,sum_vol_orig);
      mfix_project_velocity(lev);
      mfix_initial_iterations(lev,stop_time);
   }
