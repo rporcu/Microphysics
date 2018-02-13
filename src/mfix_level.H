@@ -35,7 +35,7 @@ public:
 
     void InitLevelData(int lev, Real dt, Real time);
 
-    void PostInit(int lev, Real dt, Real time, int nstep, int restart_flag);
+    void PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time);
     
     void ResizeArrays();
 
@@ -55,7 +55,7 @@ public:
     void RegridOnRestart(int lev);
 
     void Evolve(int lev, int nstep, int set_normg, int steady_state, Real dt, Real & prev_dt,
-            Real time, Real normg);
+                Real time, Real stop_time, Real normg);
 
     void usr3(int lev);
 
@@ -105,7 +105,7 @@ protected:
 
     void mfix_calc_trd_and_tau(int lev);
 
-    void mfix_init_fluid(int lev, int is_restarting = 0);
+    void mfix_init_fluid(int lev, int is_restarting = 0, Real stop_time = 0.0);
     void mfix_set_bc0(int lev);
 
     void mfix_conv_rop(int lev);
@@ -118,7 +118,7 @@ protected:
 
     // Projection
     void mfix_project_velocity   (int lev);
-    void mfix_initial_iterations (int lev);
+    void mfix_initial_iterations (int lev, Real stop_time);
     void mfix_apply_projection (int lev, amrex::Real scaling_factor);
     void mfix_set_projection_bcs (int lev);
        
@@ -161,7 +161,7 @@ private:
     static void GotoNextLine(std::istream& is);
 
     void EvolveFluidSimple(int lev, int nstep, int set_normg,Real dt, Real& prev_dt, Real time, Real normg);
-    void EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time);
+    void EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real stop_time, Real time);
 
     // Projection-related methods
     void solve_poisson_equation(int lev,
@@ -377,7 +377,6 @@ private:
     static std::string particle_init_type;
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
-
 
     Real cfl = 0.5;
 

@@ -41,11 +41,11 @@ contains
    ! 
    ! WARNING: We use a slightly modified version of C in the implementation below
    ! 
-   subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, dx, cfl, dt ) &
+   subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, dx, cfl, time, stop_time, dt ) &
         & bind(C)
       
       ! subroutine compute_new_dt ( umax, vmax, wmax, fgdsumax, fgdsvmax fgdswmax, &
-      !      dragumax, dragvmax, dragwmax, mumax, romin, dx, dt ) &
+      !      dragumax, dragvmax, dragwmax, mumax, romin, dx, time, stop_time, dt ) &
       
 
       use constant, only: gravity 
@@ -55,6 +55,7 @@ contains
       ! real(ar),       intent(in   ) :: dragumax, dragvmax, dragwmax
       real(ar),       intent(in   ) :: mumax, romin
       real(ar),       intent(in   ) :: dx(3), cfl
+      real(ar),       intent(in   ) :: time, stop_time
       real(ar),       intent(inout) :: dt
       real(ar)                      :: old_dt
       real(ar)                      :: c_cfl, v_cfl, f_cfl
@@ -90,10 +91,13 @@ contains
       ! This may happen, for example, when the initial velocity field
       ! is zero for an inviscid flow with no external forcing  
       if ( tmp <= eps ) then
-         dt = old_dt
+         dt = .5 * old_dt
       else 
-         dt = min ( dt, old_dt )
+         dt = min ( dt, 1.1*old_dt )
       end if
+
+      if (time+dt .gt. stop_time) &
+        dt = stop_time - time
       
    end subroutine compute_new_dt
 

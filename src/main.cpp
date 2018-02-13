@@ -122,6 +122,8 @@ int main (int argc, char* argv[])
        &dt, &dt_min, &dt_max, &tstop, &max_nit,
        &normg, &set_normg, &call_udf);
 
+    stop_time = tstop;
+
     if ( ParallelDescriptor::IOProcessor() )
        check_inputs(&dt);
 
@@ -165,7 +167,7 @@ int main (int argc, char* argv[])
     // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);
 
-    my_mfix.PostInit( lev, dt, time, nstep, restart_flag );
+    my_mfix.PostInit( lev, dt, time, nstep, restart_flag, stop_time );
 
     // Write out EB sruface
     my_mfix.WriteEBSurface(lev);
@@ -213,7 +215,7 @@ int main (int argc, char* argv[])
           if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
              my_mfix.Regrid(lev,nstep);
 
-          my_mfix.Evolve(lev,nstep,set_normg,steady_state,dt,prev_dt,time,normg);
+          my_mfix.Evolve(lev,nstep,set_normg,steady_state,dt,prev_dt,time,stop_time,normg);
 
           Real end_step = ParallelDescriptor::second() - strt_step;
           ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
@@ -243,16 +245,16 @@ int main (int argc, char* argv[])
        }
     }
 
-    // Dump plotfile at the end if enabled for steady state
-    if (steady_state) {
+    if (steady_state) 
         nstep = 1;
-        if ( check_int > 0)
-           my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
-        if ( plot_int > 0 )
-           my_mfix.WritePlotFile      ( plot_file     , nstep, dt, time );
-        if ( par_ascii_int > 0 )
-           my_mfix.WriteParticleAscii ( par_ascii_file, nstep );
-    }
+
+    // Dump plotfile at the final time 
+    if ( check_int > 0)
+       my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
+    if ( plot_int > 0 )
+       my_mfix.WritePlotFile      ( plot_file     , nstep, dt, time );
+    if ( par_ascii_int > 0 )
+       my_mfix.WriteParticleAscii ( par_ascii_file, nstep );
 
     my_mfix.usr3(0);
 

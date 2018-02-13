@@ -12,7 +12,7 @@
 
 
 void
-mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time )
+mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time, Real stop_time )
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluidProjection");
 
@@ -45,15 +45,16 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	Real romin = rop_g[lev] -> min (0);
 	Real mumax = mu_g[lev] -> max (0);
 	compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-			 geom[lev].CellSize(), &cfl, &dt );
+			 geom[lev].CellSize(), &cfl, &time, &stop_time, &dt );
 	prev_dt = dt ;
 
 	if (steady_state)
 	{
 	   amrex::Print() << "\n   Iteration " << iter << " with dt = " << dt << "\n" << std::endl;
 	} else {
-	   amrex::Print() << "\n   Step " << nstep <<" at time " \
-	   	          << time << " with dt = " << dt << "\n" << std::endl;
+	   amrex::Print() << "\n   Step " << nstep+1 <<": from old_time " \
+	   	          << time << " to new_time " << time+dt 
+                          << " with dt = " << dt << "\n" << std::endl;
 	}
 
 	// Back up field
@@ -78,6 +79,18 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	// Calculate drag coefficient
 	if (solve_dem)
 	    mfix_calc_drag_fluid(lev);
+
+        Real dx = geom[lev].CellSize()[0];
+        Real dy = geom[lev].CellSize()[1];
+        Real dz = geom[lev].CellSize()[2];
+        Real ovol = 1./(dx*dy*dz);
+
+        drag_u[lev]->mult(ovol);
+        drag_v[lev]->mult(ovol);
+        drag_w[lev]->mult(ovol);
+        f_gds_u[lev]->mult(ovol);
+        f_gds_v[lev]->mult(ovol);
+        f_gds_w[lev]->mult(ovol);
 	
         // Predictor step 
         mfix_apply_predictor ( lev, dt );
@@ -94,6 +107,13 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	// Calculate drag coefficient
 	if (solve_dem)
 	    mfix_calc_drag_fluid(lev);
+
+        drag_u[lev]->mult(ovol);
+        drag_v[lev]->mult(ovol);
+        drag_w[lev]->mult(ovol);
+        f_gds_u[lev]->mult(ovol);
+        f_gds_v[lev]->mult(ovol);
+        f_gds_w[lev]->mult(ovol);
 	
 	// Corrector step 
 	mfix_apply_corrector ( lev, dt );
@@ -137,7 +157,7 @@ mfix_level::mfix_project_velocity (int lev)
 }
 
 void
-mfix_level::mfix_initial_iterations (int lev)
+mfix_level::mfix_initial_iterations (int lev, Real stop_time)
 {
     // Copy u_g into u_go
     MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, u_go[lev]->nGrow());
@@ -152,9 +172,10 @@ mfix_level::mfix_initial_iterations (int lev)
     Real romin = rop_g[lev] -> min (0);
     Real mumax = mu_g[lev] -> max (0);
     
-    Real dt = 1.e20;
+    Real time = 0.0;
+    Real dt   = 1.e20;
     compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-		     geom[lev].CellSize(), &cfl, &dt );
+		     geom[lev].CellSize(), &cfl, &time, &stop_time, &dt );
 
     // Calculate drag coefficient
     if (solve_dem)
@@ -604,7 +625,6 @@ mfix_level::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
 	Box vbx = mfi.tilebox (e_y);
 	Box wbx = mfi.tilebox (e_z);
 	
-
 	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(ubx),  
 					BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*f_gds_u[lev])[mfi]),

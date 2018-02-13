@@ -517,6 +517,8 @@ extern "C"
 			  const amrex::Real* mumax,
 			  const amrex::Real* dx,
 			  const amrex::Real* cfl,
+			  amrex::Real*  time,
+			  amrex::Real*  stop_time,
 			  amrex::Real*  dt ); 
 
     void init_periodic_vortices (
