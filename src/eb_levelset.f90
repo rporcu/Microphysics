@@ -11,28 +11,28 @@ module eb_levelset
 
 contains
 
-subroutine init_levelset(lo,    hi,   n_refine, &
-                         valid, vlo,  vhi,      &
-                         phi,   phlo, phhi    ) &
+subroutine init_levelset(lo,    hi,   n_pad, &
+                         valid, vlo,  vhi,   &
+                         phi,   phlo, phhi ) &
            bind(C, name="init_levelset")
 
     implicit none
 
     integer,      dimension(3), intent(in   ) :: lo, hi, vlo, vhi, phlo, phhi
-    integer,                    intent(in   ) :: n_refine
+    integer,                    intent(in   ) :: n_pad
     integer,                    intent(  out) :: valid ( vlo(1):vhi(1),  vlo(2):vhi(2),  vlo(3):vhi(3) )
     real(c_real),               intent(  out) :: phi   (phlo(1):phhi(1),phlo(2):phhi(2),phlo(3):phhi(3))
 
 
     integer :: i, j, k, ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
-    
-    
-    klo = lo(3) - n_refine
-    khi = hi(3) + n_refine
-    jlo = lo(2) - n_refine
-    jhi = hi(2) + n_refine
-    ilo = lo(1) - n_refine
-    ihi = hi(1) + n_refine
+
+
+    klo = lo(3) - n_pad 
+    khi = hi(3) + n_pad 
+    jlo = lo(2) - n_pad 
+    jhi = hi(2) + n_pad 
+    ilo = lo(1) - n_pad 
+    ihi = hi(1) + n_pad 
 
     do kk = klo, khi
         do jj = jlo, jhi
@@ -45,29 +45,27 @@ subroutine init_levelset(lo,    hi,   n_refine, &
 
 end subroutine init_levelset
 
-subroutine fill_levelset(lo,    hi,   n_refine, &
-                         norm,  nlo,  nhi,      &
-                         valid, vlo,  vhi,      &
-                         phi,   phlo, phhi,     &
-                         dx                   ) &
-           bind(C, name="fill_levelset")
+subroutine fill_levelset_eb(lo,      hi,          &
+                            eb_list, eblo, ebhi,  &
+                            valid,   vlo,  vhi,   &
+                            phi,     phlo, phhi,  &
+                            dx,      n_refine   ) &
+            bind(C, name="fill_levelset_eb")
 
     implicit none
 
-    integer,      dimension(3), intent(in   ) :: lo, hi, nlo, nhi, vlo, vhi, phlo, phhi
-    integer,                    intent(in   ) :: n_refine
-    integer,                    intent(  out) :: valid ( vlo(1):vhi(1),  vlo(2):vhi(2),  vlo(3):vhi(3) )
-    real(c_real),               intent(inout) :: phi   (phlo(1):phhi(1),phlo(2):phhi(2),phlo(3):phhi(3))
-    real(c_real),               intent(in   ) :: norm  ( nlo(1):nhi(1),  nlo(2):nhi(2),  nlo(3):nhi(3) )
+    integer,      dimension(3), intent(in   ) :: lo, hi, eblo, ebhi, vlo, vhi, phlo, phhi
+    real(c_real),               intent(in   ) :: eb_list (eblo(1):ebhi(1), eblo(2):ebhi(2), eblo(3):ebhi(3))
+    real(c_real),               intent(  out) :: phi     (phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3))
+    integer,                    intent(  out) :: valid   ( vlo(1):vhi(1),   vlo(2):vhi(2),   vlo(3):vhi(3) )
     real(c_real), dimension(3), intent(in   ) :: dx
+    integer,                    intent(in   ) :: n_refine
 
-    real(c_real), dimension(3) :: pos_node, xy_centre, normal, plo
-    real(c_real)               :: r_edge, h_bottom, levelset_node, phi_interp
+    real(c_real), dimension(3) :: pos_node
+    real(c_real)               :: levelset_node
 
-    integer :: i, j, k, ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
+    integer :: ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
     logical :: valid_cell
-
-    write(*,*) lo, hi, dx
 
     klo = lo(3) - n_refine
     khi = hi(3) + n_refine
@@ -79,84 +77,63 @@ subroutine fill_levelset(lo,    hi,   n_refine, &
     do kk = klo, khi
         do jj = jlo, jhi
             do ii = ilo, ihi
-                pos_node        = (/ ii*dx(1)/n_refine, jj*dx(2)/n_refine, kk*dx(3)/n_refine /)
-                levelset_node   = closest_dist(norm, nlo, nhi, pos_node, n_refine, dx)
+                pos_node      = (/ ii*dx(1)/n_refine, jj*dx(2)/n_refine, kk*dx(3)/n_refine /)
+                levelset_node = closest_dist(eb_list, eblo, ebhi, pos_node, valid_cell, dx, n_refine)
                 !if ( dabs(levelset_node) < 5e-5 ) then
-                !    write(*,*) "pt=", pos_node, "levelset=", levelset_node
-                !end if
-                if ( levelset_node .lt. phi(ii, jj, kk) ) then
-                    phi(ii, jj, kk) = levelset_node
-                    if ( levelset_node .le. 0 ) then
-                        valid(ii, jj, kk) = 1
-                    end if
-                end if
-            end do
-        end do
-    end do
-
-    do k = lo(3), hi(3)
-        do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-                valid_cell = neighbour_is_valid(phi, phlo, phhi, i, j, k, n_refine)
-
+                !    write(*,*) ii, jj, kk, "pt=", pos_node, "valid=", valid_cell, "levelset=", levelset_node
+                !end if 
+                phi(ii, jj, kk) = levelset_node;
                 if ( valid_cell ) then
-                    valid(i, j, k) = 1
+                    valid(ii, jj, kk) = 1
+                else
+                    valid(ii, jj, kk) = 0
                 end if
             end do
         end do
     end do
 
-    contains
+contains
 
     function closest_dist(eb_data, nlo,  nhi,  &
-                          pos,     n_refine, dx)
-
+                          pos,     proj_valid, &
+                          dx,      n_refine   )
         implicit none
 
         real(c_real) :: closest_dist
 
-        integer,                    intent(in) :: n_refine
-        integer,      dimension(3), intent(in) :: nlo, nhi
-        real(c_real), dimension(3), intent(in) :: pos, dx
-        real(c_real),               intent(in) :: eb_data ( nlo(1):nhi(1), nlo(2):nhi(2), nlo(3):nhi(3), 6)
+        integer,                    intent(in)  :: n_refine
+        logical,                    intent(out) :: proj_valid
+        integer,      dimension(3), intent(in)  :: nlo, nhi
+        real(c_real), dimension(3), intent(in)  :: pos, dx
+        real(c_real),               intent(in)  :: eb_data ( nlo(1):nhi(1), nlo(2):nhi(2), nlo(3):nhi(3), 6)
 
-        integer                    :: ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
+        integer                    :: ii, jj, kk
         integer,      dimension(3) :: vindex_pt, vindex_loop
-        real(c_real)               :: fudge, dist_proj, dist2, min_dist2
+        real(c_real)               :: dist_proj, dist2, min_dist2
         real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt
-        logical                    :: proj_valid
 
         inv_dx(:)    = n_refine / dx(:)
-        fudge        = one - 1.d-8
         closest_dist = huge(closest_dist)
         min_dist2    = huge(min_dist2)
 
-        klo = nlo(3)
-        khi = nhi(3)
-        jlo = nlo(2)
-        jhi = nhi(2)
-        ilo = nlo(1)
-        ihi = nhi(1)
-        
         proj_valid = .false.
 
-        do kk = klo, khi
-            do jj = jlo, jhi
-                do ii = ilo, ihi
-                        
-                        eb_cent(:) = eb_data(ii, jj, kk, 1:3)
-                        eb_norm(:) = eb_data(ii, jj, kk, 3:5)
+        do kk = nlo(3), nhi(3)
+            do jj = nlo(2), nhi(2)
+                do ii = nlo(1), nhi(1)
 
-                        dist_proj  = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
-                        eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj * fudge
-                        vindex_pt = floor( eb_min_pt(:) * inv_dx(:) )
-                        vindex_loop = floor( eb_cent(:) * inv_dx(:) )
+                        eb_cent(:) = eb_data(ii, jj, kk, 1:3)
+                        eb_norm(:) = eb_data(ii, jj, kk, 4:6)
+
+                        dist_proj    = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
+                        eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
+                        vindex_pt    = floor( eb_min_pt(:) * inv_dx(:) )
+                        vindex_loop  = floor( eb_cent(:) * inv_dx(:) )
 
                         !write(*,*) vindex_loop(:), eb_cent(:), sqrt( &
                         !    dot_product ( ( eb_cent(1:2) - (/0.0016, 0.0016/) ), &
                         !                  ( eb_cent(1:2) - (/0.0016, 0.0016/) ) )&
                         !)
-
 
                         if ( any( vindex_loop /= vindex_pt ) ) then
                             dist2 = dot_product( pos(:) - eb_cent(:), pos(:) - eb_cent(:) )
@@ -174,10 +151,123 @@ subroutine fill_levelset(lo,    hi,   n_refine, &
         end do
 
         if ( .not. proj_valid ) then
-            !write(*,*) "Level-set fallback."
-            closest_dist = -sqrt( min_dist2)
+            ! write(*,*) "Level-set fallback for:", floor(pos(:) * inv_dx(:))
+            closest_dist = -sqrt( min_dist2 )
         end if
+
     end function closest_dist
+
+end subroutine fill_levelset_eb
+
+subroutine validate_levelset(lo,    hi,   n_pad, &
+                             impf,  imlo, imhi,  &
+                             valid, vlo,  vhi,   &
+                             phi,   phlo, phhi)  &
+           bind(C, name="validate_levelset")
+
+    implicit none
+
+    integer,      dimension(3), intent(in   ) :: lo, hi, imlo, imhi, vlo, vhi, phlo, phhi
+    integer,                    intent(in   ) :: n_pad
+    real(c_real),               intent(in   ) :: impf  ( imlo(1):imhi(1), imlo(2):imhi(2), imlo(3):imhi(3) )
+    integer,                    intent(in   ) :: valid (  vlo(1):vhi(1),   vlo(2):vhi(2),   vlo(3):vhi(3)  )
+    real(c_real),               intent(inout) :: phi   ( phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
+
+    integer      :: ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
+    real(c_real) :: levelset_node
+
+    klo = lo(3) - n_pad
+    khi = hi(3) + n_pad
+    jlo = lo(2) - n_pad
+    jhi = hi(2) + n_pad
+    ilo = lo(1) - n_pad
+    ihi = hi(1) + n_pad
+
+    do kk = klo, khi
+        do jj = jlo, jhi
+            do ii = ilo, ihi
+                !write(*,*) "validating: ", ii, jj, kk, "v:", valid(ii, jj, kk), "if:", impf(ii, jj, kk)
+                if ( valid(ii, jj, kk)  == 0 ) then
+                    levelset_node = dabs( phi(ii, jj, kk) )
+                    if ( impf(ii, jj, kk) <= 0 ) then
+                        phi(ii, jj, kk) = levelset_node
+                    else
+                        phi(ii, jj, kk) = -levelset_node
+                    end if
+                end if
+            end do
+        end do
+    end do
+ 
+end subroutine validate_levelset
+
+
+subroutine update_levelset(lo,    hi,           &
+                           ls_in, lslo, lshi,   &
+                           valid, vlo,  vhi,    &
+                           phi,   phlo, phhi,   &
+                           dx,    n_refine    ) &
+           bind(C, name="update_levelset")
+
+    implicit none
+
+    integer,      dimension(3), intent(in   ) :: lo, hi, lslo, lshi, vlo, vhi, phlo, phhi
+    integer,                    intent(in   ) :: n_refine
+    real(c_real),               intent(in   ) :: ls_in (lslo(1):lshi(1),lslo(2):lshi(2),lslo(3):lshi(3))
+    integer,                    intent(  out) :: valid ( vlo(1):vhi(1),  vlo(2):vhi(2),  vlo(3):vhi(3) )
+    real(c_real),               intent(  out) :: phi   (phlo(1):phhi(1),phlo(2):phhi(2),phlo(3):phhi(3))
+    real(c_real), dimension(3), intent(in   ) :: dx
+
+    real(c_real), dimension(3) :: pos_node
+    real(c_real)               :: levelset_node
+
+    integer :: i, j, k, ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
+    logical :: valid_cell
+
+    klo = lo(3) - n_refine
+    khi = hi(3) + n_refine
+    jlo = lo(2) - n_refine
+    jhi = hi(2) + n_refine
+    ilo = lo(1) - n_refine
+    ihi = hi(1) + n_refine
+
+    do kk = klo, khi
+        do jj = jlo, jhi
+            do ii = ilo, ihi
+                levelset_node = ls_in(ii, jj, kk)
+
+                !if ( dabs(levelset_node) < 5e-5 ) then
+                !    write(*,*) ii, jj, kk, "pt=", (/ii, jj, kk/)*dx(:)/n_refine, "levelset=", levelset_node
+                !end if
+
+                !write(*,*) ii, jj, kk, levelset_node, sqrt(   &
+                !    dot_product ( (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/) , &
+                !                  (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/)  ) &
+                !) + levelset_node
+
+                if ( levelset_node .lt. phi(ii, jj, kk) ) then
+                    phi(ii, jj, kk) = levelset_node
+                    if ( levelset_node .le. 0 ) then
+                        valid(ii, jj, kk) = 1
+                    end if
+                end if
+
+            end do
+        end do
+    end do
+
+    do k = lo(3), hi(3)
+        do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+                valid_cell = neighbour_is_valid(phi, phlo, phhi, i, j, k, n_refine)
+                if ( valid_cell ) then
+                    valid(i, j, k) = 1
+                end if
+            end do
+        end do
+    end do
+
+contains
 
     pure function neighbour_is_valid(phi, phlo, phhi, i, j, k, n_refine)
         implicit none
@@ -257,7 +347,7 @@ subroutine fill_levelset(lo,    hi,   n_refine, &
 
     end function neighbour_is_valid
 
-end subroutine fill_levelset
+end subroutine update_levelset
 
 subroutine count_eb_facets(lo, hi, flag, flo, fhi, n_facets) &
            bind(C, name="count_eb_facets")
@@ -282,12 +372,12 @@ subroutine count_eb_facets(lo, hi, flag, flo, fhi, n_facets) &
 
 end subroutine count_eb_facets
 
-subroutine eb_as_list(lo,       hi,   n_refine, &
-                      flag,     flo,  fhi,      &
-                      norm,     nlo,  nhi,      &
-                      bcent,    blo,  bhi,      &
-                      list_out, llo,  lhi, dx,  &
-                      c_facets)&
+subroutine eb_as_list(lo,       hi,   c_facets,  &
+                      flag,     flo,  fhi,       &
+                      norm,     nlo,  nhi,       &
+                      bcent,    blo,  bhi,       &
+                      list_out, llo,  lhi,       &
+                      dx,       n_refine       ) &
            bind(C, name="eb_as_list")
 
     implicit none
@@ -308,7 +398,7 @@ subroutine eb_as_list(lo,       hi,   n_refine, &
         do j = lo(2), hi(2)
             do i = lo(1), hi(1)
                 if ( is_single_valued_cell( flag(i, j, k) ) ) then
-                    
+
                     eb_cent(:) = ( bcent(i, j, k, :)                           &
                                    + (/ dble(i), dble(j), dble(k) /)           &
                                    + (/ 0.5d0, 0.5d0, 0.5d0 /) ) * dx(:)/n_refine
@@ -448,8 +538,8 @@ subroutine normal_levelset(pos, plo,   n_refine, &
                 + phi(i+1, j+1, k+1)*inv_dx(3) * wx_hi * wy_hi
 
     ! this might not be necessary if the phi grid is dense enough...
-    !inv_norm = 1.0d0 / sqrt(normal(1)**2 + normal(2)**2 + normal(3)**2)
-    !normal(:) = normal(:) * inv_norm
+    inv_norm = 1.0d0 / sqrt(normal(1)**2 + normal(2)**2 + normal(3)**2)
+    normal(:) = normal(:) * inv_norm
 
 end subroutine normal_levelset
 

@@ -18,10 +18,18 @@ LSFactory::LSFactory(int lev, int ref, const MFIXParticleContainer * pc, const R
                          mfix_pc->Geom(amr_lev).CellSize()[1]/ref,
                          mfix_pc->Geom(amr_lev).CellSize()[2]/ref))
 {
-
+    // initialize MultiFab pointers storing level-set data
+    //    -> ls_phi:   nodal MultiFab storing signed distance function to the nearest wall
+    //    -> ls_valid: cell-centered iMultiFab storing integer flags assuming the following values: 
+    //         -1 : not all nodes around cell have been initialized
+    //          0 : none of the cell's neighbours contain negative vlaues of ls_phi on its nodes
+    //          1 : the cell is in the neighbourhood of phi < 0
+    //
     ls_phi   = std::unique_ptr<MultiFab>(new MultiFab);
     ls_valid = std::unique_ptr<iMultiFab>(new iMultiFab);
 
+
+    // Keep refined versions of both the cell-centered (particle) and nodal (phi) BoxArrays
     const BoxArray & particle_ba   = mfix_pc -> ParticleBoxArray(lev);
     const BoxArray & phi_ba        = amrex::convert(particle_ba, IntVect{1,1,1});
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(lev);
@@ -31,20 +39,23 @@ LSFactory::LSFactory(int lev, int ref, const MFIXParticleContainer * pc, const R
     particle_ba_refined = particle_ba;
     particle_ba_refined.refine(ref);
 
-    ls_phi -> define(phi_ba_refined, dm, 1, ref);
+    // Define ls_phi and ls_valid, growing them by twice the refinement ratio
+    ls_phi -> define(phi_ba_refined, dm, 1, ref); // grow by 1 x ref, as it is nodal
     ls_valid -> define(particle_ba_refined, dm, 1, 2 * ref);
-    //ls_valid -> setVal(0);
 
+    // Initialize by setting all ls_valid = -1, and ls_phi = huge(c_real)
     for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++mfi){
-        Box tile_box = mfi.tilebox();
-        const int * lo = tile_box.loVect();
-        const int * hi = tile_box.hiVect();
+        Box tile_box   = mfi.tilebox();
+        auto & v_tile  = (* ls_valid)[mfi];
+        auto & ls_tile = (* ls_phi)[mfi];
 
-        init_levelset(lo, hi, & ls_grid_refinement,
-                      (* ls_valid)[mfi].dataPtr(), (* ls_valid)[mfi].loVect(), (* ls_valid)[mfi].hiVect(),
-                      (* ls_phi)[mfi].dataPtr(), (* ls_phi)[mfi].loVect(), (* ls_phi)[mfi].hiVect());
+        // Initialize in fortran land
+        init_levelset(tile_box.loVect(), tile_box.hiVect(), & ls_grid_refinement,
+                      v_tile.dataPtr(),  v_tile.loVect(),   v_tile.hiVect(),
+                      ls_tile.dataPtr(), ls_tile.loVect(),  ls_tile.hiVect());
     }
 
+    // temporary dummy variable used for storing eb-factory flag bits
     dummy = std::unique_ptr<MultiFab>(new MultiFab);
 }
 
@@ -71,35 +82,38 @@ std::unique_ptr<FArrayBox> LSFactory::eb_facets(const EBFArrayBoxFactory * eb_fa
 
         // We pre-compute the normals
         normal->define(particle_ba_refined, mfix_pc->ParticleDistributionMap(amr_lev), 3, 2);
-        
+
         for(MFIter mfi(* normal, true); mfi.isValid(); ++mfi) {
             Box tile_box = mfi.tilebox();
-            const int* lo = tile_box.loVect();
-            const int* hi = tile_box.hiVect();
-            
-            const auto& sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
-            const auto& flag = sfab.getEBCellFlagFab();
+            const int * lo = tile_box.loVect();
+            const int * hi = tile_box.hiVect();
 
+            const auto & sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
+            const auto & flag = sfab.getEBCellFlagFab();
+
+            // Need to count number of eb-facets (in order to allocate FArrayBox)
             count_eb_facets(lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(), & n_facets);
-            
+
+            // Target for compute_normals(...)
+            auto & norm_tile = (* normal)[mfi];
+            // Area fractions in x, y, and z directions
+            const auto & af_x_tile = (* areafrac[0])[mfi];
+            const auto & af_y_tile = (* areafrac[1])[mfi];
+            const auto & af_z_tile = (* areafrac[2])[mfi];
+
             if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued) {
                BL_PROFILE_VAR("compute_normals()", compute_normals);
-               compute_normals(lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                               (*normal)[mfi].dataPtr(),
-                               (*normal)[mfi].loVect(), (*normal)[mfi].hiVect(),
-                               (*areafrac[0])[mfi].dataPtr(),
-                               (*areafrac[0])[mfi].loVect(), (*areafrac[0])[mfi].hiVect(),
-                               (*areafrac[1])[mfi].dataPtr(),
-                               (*areafrac[1])[mfi].loVect(), (*areafrac[1])[mfi].hiVect(),
-                               (*areafrac[2])[mfi].dataPtr(),
-                               (*areafrac[2])[mfi].loVect(), (*areafrac[2])[mfi].hiVect());
+               compute_normals(lo,                  hi, 
+                               flag.dataPtr(),      flag.loVect(),      flag.hiVect(),
+                               norm_tile.dataPtr(), norm_tile.loVect(), norm_tile.hiVect(),
+                               af_x_tile.dataPtr(), af_x_tile.loVect(), af_x_tile.hiVect(),
+                               af_y_tile.dataPtr(), af_y_tile.loVect(), af_y_tile.hiVect(),
+                               af_z_tile.dataPtr(), af_z_tile.loVect(), af_z_tile.hiVect());
                BL_PROFILE_VAR_STOP(compute_normals);
             }
 
         }
         normal->FillBoundary(mfix_pc->Geom(0).periodicity());
-
-        amrex::Print() << "n_facets=" << n_facets << std::endl;
 
         Box dom_list(IntVect{0,0,0}, IntVect{n_facets,0,0});
         facet_list = std::unique_ptr<FArrayBox>(new FArrayBox(dom_list, 6));
@@ -107,78 +121,126 @@ std::unique_ptr<FArrayBox> LSFactory::eb_facets(const EBFArrayBoxFactory * eb_fa
         int c_facets = 0;
         for(MFIter mfi( * normal, true); mfi.isValid(); ++mfi) {
             Box tile_box = mfi.tilebox();
-            const int* lo = tile_box.loVect();
-            const int* hi = tile_box.hiVect();
 
-            const auto& sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
-            const auto& flag = sfab.getEBCellFlagFab();
+            const auto & sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
+            const auto & flag = sfab.getEBCellFlagFab();
 
+            const auto & norm_tile = (* normal)[mfi];
+            const auto & bcent_tile = (* bndrycent)[mfi];
 
-            eb_as_list(lo, hi, & ls_grid_refinement,
-                       flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                       (*normal)[mfi].dataPtr(),
-                       (*normal)[mfi].loVect(), (*normal)[mfi].hiVect(),
-                       (* bndrycent)[mfi].dataPtr(), 
-                       (* bndrycent)[mfi].loVect(), (* bndrycent)[mfi].hiVect(),
-                       facet_list->dataPtr(),
-                       facet_list->loVect(), facet_list->hiVect(),
-                       mfix_pc->Geom(amr_lev).CellSize(), & c_facets);
+            // Target: facet_list
+            eb_as_list(tile_box.loVect(),     tile_box.hiVect(),    & c_facets,
+                       flag.dataPtr(),        flag.loVect(),        flag.hiVect(),
+                       norm_tile.dataPtr(),   norm_tile.loVect(),   norm_tile.hiVect(),
+                       bcent_tile.dataPtr(),  bcent_tile.loVect(),  bcent_tile.hiVect(),
+                       facet_list->dataPtr(), facet_list->loVect(), facet_list->hiVect(),
+                       mfix_pc->Geom(amr_lev).CellSize(), & ls_grid_refinement);
         }
-        amrex::Print() << "c_facets=" << c_facets << std::endl;
-
     }
     return facet_list;
 }
 
 
+std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace * eb_is) {
+    std::unique_ptr<MultiFab> mf_impfunc = std::unique_ptr<MultiFab>(new MultiFab);
+    const DistributionMapping & dm = mfix_pc->ParticleDistributionMap(amr_lev);
+    mf_impfunc->define(phi_ba_refined, dm, 1, ls_grid_refinement);
 
-void LSFactory::update_ebf(const EBFArrayBoxFactory * eb_factory) {
-    if(eb_factory == NULL)
-        return;
-    
-    //dummy->define(mfix_pc -> ParticleBoxArray(amr_lev), mfix_pc -> ParticleDistributionMap(amr_lev),
-    //              1, 0, MFInfo(), * eb_factory);
-    //std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = eb_factory->getAreaFrac();
+    for(MFIter mfi(* mf_impfunc, true); mfi.isValid(); ++ mfi)
+        eb_is->fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi], dx_vect);
 
-    std::unique_ptr<FArrayBox> facets = eb_facets(eb_factory);
+    mf_impfunc->FillBoundary(mfix_pc -> Geom(0).periodicity());
+    return mf_impfunc;
+}
 
-    for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++ mfi){
+
+void LSFactory::update(const MultiFab * ls_in) {
+    for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++mfi){
         Box tile_box = mfi.tilebox();
-        const int * lo = tile_box.loVect();
-        const int * hi = tile_box.hiVect();
-    
-        //const auto & sfab = dynamic_cast<EBFArrayBox const &>((* dummy)[mfi]);
-        //const auto & flag = sfab.getEBCellFlagFab();
-    
-        //if(flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued){
-            //const MultiCutFab * bndrycent = &(eb_factory->getBndryCent());
 
-            fill_levelset(lo, hi, & ls_grid_refinement,
-                          facets->dataPtr(), facets->loVect(), facets->hiVect(),
-                          (* ls_valid)[mfi].dataPtr(), (* ls_valid)[mfi].loVect(), (* ls_valid)[mfi].hiVect(),
-                          (* ls_phi)[mfi].dataPtr(), (* ls_phi)[mfi].loVect(), (* ls_phi)[mfi].hiVect(),
-                          mfix_pc->Geom(amr_lev).CellSize());
-        //}
+        const auto & ls_in_tile = (* ls_in)[mfi];
+        auto & v_tile = (* ls_valid)[mfi];
+        auto & ls_tile = (* ls_phi)[mfi];
+
+        update_levelset(tile_box.loVect(),    tile_box.hiVect(),
+                        ls_in_tile.dataPtr(), ls_in_tile.loVect(), ls_in_tile.hiVect(),
+                        v_tile.dataPtr(),     v_tile.loVect(),     v_tile.hiVect(),
+                        ls_tile.dataPtr(),    ls_tile.loVect(),    ls_tile.hiVect(),
+                        mfix_pc->Geom(amr_lev).CellSize(),         & ls_grid_refinement);
     }
-    
+
     ls_phi -> FillBoundary(mfix_pc -> Geom(0).periodicity());
     ls_valid -> FillBoundary(mfix_pc -> Geom(0).periodicity());
 }
 
 
-void LSFactory::update_ebis(const EBIndexSpace * eb_is){
-    for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++ mfi){
-        eb_is->fillNodeFarrayBoxFromImplicitFunction(( * ls_phi)[mfi], dx_vect);
+void LSFactory::update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexSpace * eb_is) {
+    if(eb_factory == NULL) return;
+
+    // Generate facets (TODO: in future these can also be provided by user)
+    std::unique_ptr<FArrayBox> facets = eb_facets(eb_factory);
+    // Generate implicit function (used to determine the interior of EB)
+    std::unique_ptr<MultiFab> impfunct = ebis_impfunc(eb_is);
+    impfunct->FillBoundary(mfix_pc->Geom(0).periodicity());
+
+    // Local MultiFab storing level-set data for this eb_factory
+    MultiFab eb_ls;
+    iMultiFab eb_valid;
+
+    const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
+    eb_ls.define(phi_ba_refined, dm, 1, ls_grid_refinement);
+    eb_valid.define(phi_ba_refined, dm, 1, ls_grid_refinement);
+    eb_valid.setVal(0);
+
+    // Fill local MultiFab with eb_factory's level-set data. Note the role of eb_valid:
+    //  -> eb_valid = 1 if the corresponding eb_ls location could be projected onto the eb-facets
+    //  -> eb_valid = 0 if eb_ls is the fall-back (euclidian) distance to the nearest eb-facet
+    for(MFIter mfi(eb_ls, true); mfi.isValid(); ++mfi){
+        Box tile_box = mfi.tilebox();
+        const int * lo = tile_box.loVect();
+        const int * hi = tile_box.hiVect();
+
+        const auto & sfab = dynamic_cast<EBFArrayBox const &>((* dummy)[mfi]);
+        const auto & flag = sfab.getEBCellFlagFab();
+
+        if(flag.getType(amrex::grow(tile_box, 1)) == FabType::singlevalued){
+            auto & v_tile = eb_valid[mfi];
+            auto & ls_tile = eb_ls[mfi];
+            const auto & if_tile = (* impfunct)[mfi];
+
+            fill_levelset_eb(lo,                hi,
+                             facets->dataPtr(), facets->loVect(), facets->hiVect(),
+                             v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
+                             ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect(),
+                             mfix_pc->Geom(amr_lev).CellSize(),   & ls_grid_refinement);
+
+            validate_levelset(lo,                hi,               & ls_grid_refinement,
+                              if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
+                              v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
+                              ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
+
+        }
     }
 
-    for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++ mfi){
-        FArrayBox & a_fab = (* ls_phi)[mfi];
+    // Update LSFactory using local eb level-set
+    update(& eb_ls);
+}
+
+
+void LSFactory::update_ebis(const EBIndexSpace * eb_is) {
+    std::unique_ptr<MultiFab> mf_impfunc = ebis_impfunc(eb_is);
+
+    // GeometryService convetion:
+    //      -- implicit_function(r) < 0 : r in fluid (outside of EB)
+    //      -- implicit_function(r) > 0 : r not in fluid (inside EB)
+    //   => If implicit_function is a signed-distance function, we need to invert sign
+    for(MFIter mfi( * mf_impfunc, true); mfi.isValid(); ++ mfi){
+        FArrayBox & a_fab = (* mf_impfunc)[mfi];
         for(BoxIterator bit(a_fab.box()); bit.ok(); ++bit)
                 a_fab(bit(), 0) = - a_fab(bit(), 0);
     }
 
-    ls_phi -> FillBoundary(mfix_pc -> Geom(0).periodicity());
-    ls_valid -> FillBoundary(mfix_pc -> Geom(0).periodicity());
+    update(mf_impfunc.get());
 }
 
 

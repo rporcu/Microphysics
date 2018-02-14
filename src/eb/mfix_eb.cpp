@@ -37,6 +37,8 @@ mfix_level::make_eb_geometry(int lev)
     planes.resize(0);
 
     std::unique_ptr<BaseIF> impfunc;
+    std::unique_ptr<BaseIF> impfunc_poly2;
+    std::unique_ptr<BaseIF> impfunc_walls;
 
     ParmParse pp("mfix");
 
@@ -98,34 +100,7 @@ mfix_level::make_eb_geometry(int lev)
       TransformIF poly2(mirror);
       poly2.translate(translation);
 
-
-
-      // Level-Set: define container for level set
-      // level-set multifab is defined here, and set to (fortran) huge(amrex_real)
-      //            -> use min to intersect new eb boundaries
-      level_set     = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(), geom[lev].CellSize()));
-
-      // refine geom_ls' Domain
-      Box dom_ls = geom[lev].Domain();
-      dom_ls.refine(level_set->get_refinement());
-      Geometry geom_ls(dom_ls);
-      amrex::Print() << "Refined geom_ls: " << geom_ls << std::endl;
-
-      EBIndexSpace * ebis_instance = AMReX_EBIS::instance();
-
-      // Level-Set Hack: generate temporary eb_facotry (containing only single components)
-      amrex::Print() << "Building temporary EB-Geometry for Level-Set" << std::endl;
-      std::unique_ptr<BaseIF> poly2_impfunc = std::unique_ptr<BaseIF>(poly2.newImplicitFunction());
-      GeometryShop gshop_poly2(* poly2_impfunc, true);
-      ebis_instance->define(dom_ls, RealVect::Zero, geom_ls.CellSize()[0], gshop_poly2, 16, 0);
-
-      // Construct EB-Factory, and use it to set the level-set     
-      EBTower::Build();
-      EBFArrayBoxFactory eb_factory(geom_ls, * level_set->get_cc_ba(), dmap[lev], {2, 2, 2}, EBSupport::full);
-      level_set->update_ebf( & eb_factory);
-      EBTower::Destroy();
-
-
+      impfunc_poly2 = std::unique_ptr<BaseIF>(poly2.newImplicitFunction());
 
       if(use_walls){ // Combine poly2 with walls
         for (int i = 1; i <= 500; i++) {
@@ -139,6 +114,8 @@ mfix_level::make_eb_geometry(int lev)
           }
         }
         IntersectionIF all_planes(planes);
+
+        impfunc_walls = std::unique_ptr<BaseIF>(all_planes.newImplicitFunction());
 
         Vector<BaseIF*> funcs(2);
         funcs[0] = &poly2;
@@ -172,6 +149,36 @@ mfix_level::make_eb_geometry(int lev)
 
     ///////////////////////////////////////////////////
 
+
+    // Level-Set: define container for level set
+    // level-set multifab is defined here, and set to (fortran) huge(amrex_real)
+    //            -> use min to intersect new eb boundaries
+    level_set     = std::unique_ptr<LSFactory>(new LSFactory(lev, 1, pc.get(), geom[lev].CellSize()));
+
+
+    // refine geom_ls' Domain
+    Box dom_ls = geom[lev].Domain();
+    dom_ls.refine(level_set->get_refinement());
+    Geometry geom_ls(dom_ls);
+    amrex::Print() << "Refined geom_ls: " << geom_ls << std::endl;
+
+    GeometryShop gshop_poly2(* impfunc_poly2, true);
+    GeometryShop gshop_walls(* impfunc_walls, true);
+
+    AMReX_EBIS::instance()->define(dom_ls, RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, 16, 0);
+
+    EBTower::Build();
+    level_set->update_ebis(AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+    AMReX_EBIS::instance()->define(dom_ls, RealVect::Zero, geom_ls.CellSize()[0], gshop_poly2, 16, 0);
+
+    EBTower::Build();
+    EBFArrayBoxFactory eb_factory_poly2(geom_ls, * level_set->get_cc_ba(), dmap[lev], {2, 2, 2}, EBSupport::full);
+    level_set->update_ebf(& eb_factory_poly2, AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+
     int max_level = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
@@ -197,12 +204,6 @@ mfix_level::make_eb_geometry(int lev)
                          m_eb_support_level));
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
-
-    //evel_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(),
-    //                                     AMReX_EBIS::instance(), geom[lev].CellSize()
-    //                                     //particle_ebfactory.get()
-    //                                     ));
-    // level_set -> update(dummy.get());
 }
 
 void

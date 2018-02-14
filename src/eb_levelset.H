@@ -20,23 +20,26 @@ class LSFactory {
         std::unique_ptr<MultiFab> ls_phi;
         std::unique_ptr<iMultiFab> ls_valid;
         std::unique_ptr<MultiFab> dummy;
-        
+
         BoxArray phi_ba_refined, particle_ba_refined;
 
         int amr_lev;
-        
+
         const MFIXParticleContainer * mfix_pc;
-        
+
         const RealVect dx_vect;
         int ls_grid_refinement;
 
         std::unique_ptr<FArrayBox> eb_facets(const EBFArrayBoxFactory * eb_factory);
+        std::unique_ptr<MultiFab> ebis_impfunc(const EBIndexSpace * eb_is);
+
+        void update(const MultiFab * ls_in);
 
     public:
         LSFactory(int lev, int ref, const MFIXParticleContainer * pc, const Real * dx);
         ~LSFactory();
 
-        void update_ebf(const EBFArrayBoxFactory * eb_factory);
+        void update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexSpace * eb_is);
         void update_ebis(const EBIndexSpace * eb_is);
 
         const MultiFab * get_data(){return ls_phi.get();};
