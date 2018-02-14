@@ -44,8 +44,10 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	Real wmax  = w_g[lev] -> norm0 ();
 	Real romin = rop_g[lev] -> min (0);
 	Real mumax = mu_g[lev] -> max (0);
-	compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-			 geom[lev].CellSize(), &cfl, &time, &stop_time, &dt );
+
+	if (!fixed_dt) 
+	    compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
+			     geom[lev].CellSize(), &cfl, &time, &stop_time, &dt );
 
 	if (steady_state)
 	{

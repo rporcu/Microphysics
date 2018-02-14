@@ -15,9 +15,10 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         // Whether to use projection method
         pp.query("use_proj_method", use_proj_method );
       
-        // CFL coefficient
+        // Options to control time stepping
         pp.query("cfl", cfl );
-      
+        pp.query("fixed_dt", fixed_dt );
+	
         // Option to control MGML behavior
         pp.query( "mg_verbose", mg_verbose );
         pp.query( "mg_cg_verbose", mg_cg_verbose );

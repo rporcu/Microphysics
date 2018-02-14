@@ -378,7 +378,9 @@ private:
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
 
+    // Options to control time stepping
     Real cfl = 0.5;
+    int  fixed_dt=0;
 
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;
