@@ -54,7 +54,7 @@ public:
 
     void RegridOnRestart(int lev);
 
-    void Evolve(int lev, int nstep, int set_normg, int steady_state, Real dt, Real & prev_dt,
+    void Evolve(int lev, int nstep, int set_normg, int steady_state, Real& dt, Real & prev_dt,
                 Real time, Real stop_time, Real normg);
 
     void usr3(int lev);
@@ -161,7 +161,7 @@ private:
     static void GotoNextLine(std::istream& is);
 
     void EvolveFluidSimple(int lev, int nstep, int set_normg,Real dt, Real& prev_dt, Real time, Real normg);
-    void EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real stop_time, Real time);
+    void EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real stop_time, Real time);
 
     // Projection-related methods
     void solve_poisson_equation(int lev,

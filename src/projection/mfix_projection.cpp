@@ -12,7 +12,7 @@
 
 
 void
-mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time, Real stop_time )
+mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real time, Real stop_time )
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluidProjection");
 
@@ -46,7 +46,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	Real mumax = mu_g[lev] -> max (0);
 	compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
 			 geom[lev].CellSize(), &cfl, &time, &stop_time, &dt );
-	prev_dt = dt ;
 
 	if (steady_state)
 	{
@@ -75,7 +74,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	//
 	// Time integration step
 	//
-	
 	// Calculate drag coefficient
 	if (solve_dem)
 	    mfix_calc_drag_fluid(lev);

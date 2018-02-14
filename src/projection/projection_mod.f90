@@ -70,6 +70,7 @@ contains
       c_cfl  = zero
       v_cfl  = zero
       f_cfl  = zero
+
       old_dt = dt
       
       ! Convection
@@ -82,7 +83,7 @@ contains
       ! Gravity
       f_cfl = f_cfl + gravity(1) * odx + gravity(2) * ody &
            &        + gravity(3) * odz
-      
+
       ! Put all together
       tmp = (c_cfl + v_cfl)  + sqrt ( (c_cfl + v_cfl)**2 + four * f_cfl )
       dt  = cfl * two / tmp
@@ -92,10 +93,12 @@ contains
       ! is zero for an inviscid flow with no external forcing  
       if ( tmp <= eps ) then
          dt = .5 * old_dt
-      else 
-         dt = min ( dt, 1.1*old_dt )
       end if
 
+      ! Don't let the timestep grow by more than 1% per step.
+      dt = min ( dt, 1.01*old_dt )
+
+      ! Don't overshoot the final time.
       if (time+dt .gt. stop_time) &
         dt = stop_time - time
       
