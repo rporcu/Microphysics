@@ -156,7 +156,7 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory * eb
 std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace * eb_is) {
     std::unique_ptr<MultiFab> mf_impfunc = std::unique_ptr<MultiFab>(new MultiFab);
     const DistributionMapping & dm = mfix_pc->ParticleDistributionMap(amr_lev);
-    mf_impfunc->define(phi_ba_refined, dm, 1, ls_grid_refinement);
+    mf_impfunc->define(phi_ba_refined, dm, 1, ls_grid_pad);
 
     for(MFIter mfi(* mf_impfunc, true); mfi.isValid(); ++ mfi)
         eb_is->fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi], dx_vect);

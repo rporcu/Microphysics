@@ -92,9 +92,9 @@ contains
         real(c_real), dimension(l_eb), intent(in)  :: eb_data
 
         integer                    :: i
-        integer,      dimension(3) :: vindex_pt, vindex_loop, vindex_pt_tmp, vindex_loop_tmp, vi_asdf
+        integer,      dimension(3) :: vindex_pt, vindex_loop, vi_pt_closest, vi_loop_closest
         real(c_real)               :: dist_proj, dist2, min_dist2, edge_dist2, min_edge_dist2
-        real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, pt_tmp, loop_tmp
+        real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, eb_cent_closest, eb_norm_closest
 
         inv_dx(:)      = n_refine / dx(:)
         closest_dist   = huge(closest_dist)
@@ -102,69 +102,81 @@ contains
         min_edge_dist2 = huge(min_edge_dist2)
 
         proj_valid = .false.
-
+        
         do i = 1, l_eb, 6
             eb_cent(:) = eb_data(i     : i + 2)
             eb_norm(:) = eb_data(i + 3 : i + 5)
-            
-            dist_proj    = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
-            eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
-            vindex_pt    = floor( eb_min_pt(:) * inv_dx(:) )
-            vindex_loop  = floor( eb_cent(:) * inv_dx(:) )
 
-            !write(*,*) i, vindex_loop(:), eb_cent(:), sqrt( &
-            !    dot_product ( ( eb_cent(1:2) - (/0.0016, 0.0016/) ), &
-            !                  ( eb_cent(1:2) - (/0.0016, 0.0016/) ) )&
-            !)
-
-            if ( any( vindex_loop /= vindex_pt ) ) then
             dist2      = dot_product( pos(:) - eb_cent(:), pos(:) - eb_cent(:) )
-
-                if ( dist2 < min_dist2 ) then
-                    min_dist2  = dist2
-                    vi_asdf(:) = vindex_loop(:)
-                end if
-            else
-                if ( dist_proj < closest_dist ) then
-                    closest_dist = dist_proj
-                    proj_valid   = .true.
-                end if
-            end if
-
-            if ( any( vindex_loop /= vindex_pt )  ) then !.and.                 &
-               !  (                                                     &
-               !    ( abs( vindex_loop(1) - vindex_pt(1) ) <= 1 ) .and. &
-               !    ( abs( vindex_loop(2) - vindex_pt(2) ) <= 1 ) .and. &
-               !    ( abs( vindex_loop(3) - vindex_pt(3) ) <= 1 )       &
-               !  )                                                     &
-               !) then
-                    c_vec      = facets_nearest_pt(vindex_pt, vindex_loop, pos, eb_norm, eb_cent)
-                    edge_dist2 = dot_product( pos(:) - c_vec(:), pos(:) - c_vec(:) )
-                    if ( edge_dist2 < min_edge_dist2 ) then
-                        min_edge_dist2     = edge_dist2
-                        vindex_pt_tmp(:)   = vindex_pt(:)
-                        vindex_loop_tmp(:) = vindex_loop(:)
-                        pt_tmp(:)          = eb_min_pt(:)
-                        loop_tmp(:)        = eb_cent(:)
-                    end if
+            dist_proj  = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
+            
+            eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
+            
+            if ( dist2 < min_dist2 ) then
+                min_dist2    = dist2
+                closest_dist = dist_proj
+                vi_loop_closest(:) = floor( eb_cent(:) * inv_dx(:) / n_refine)
+                vi_pt_closest(:)   = floor( eb_min_pt(:) * inv_dx(:) / n_refine)
+                eb_cent_closest(:) = eb_cent(:)
+                eb_norm_closest(:) = eb_norm(:)
             end if
         end do
 
-        if ( .not. proj_valid ) then
-            !if ( min_dist2 < min_edge_dist2 ) then
-            !    write(*,*) "FB:     ", floor(pos(:) * inv_dx(:)), "min_dist2:", sqrt(min_dist2), "min_edge_dist2:", sqrt(min_edge_dist2), sqrt( min(min_dist2, min_edge_dist2) )
-            !    write(*,*) "eb_cent:", eb_cent, "eb_norm:", eb_norm
-            !    write(*,*) "c_vec:  ", c_vec
-            !    write(*,*) "pos:    ", pos
-            !    write(*,*) ""
-            !    write(*,*) "pt:     ", vindex_pt_tmp, pt_tmp
-            !    write(*,*) "loop:   ", vindex_loop_tmp, loop_tmp
-            !    write(*,*) "loop2:  ", vi_asdf
-            !    write(*,*) ""
-            !    write(*,*) ""
+        if ( all( vi_pt_closest /= vi_loop_closest ) ) then
+            proj_valid = .true.
+        end if
+        
 
-            !end if
+        !do i = 1, l_eb, 6
+        !    eb_cent(:) = eb_data(i     : i + 2)
+        !    eb_norm(:) = eb_data(i + 3 : i + 5)
+        !    
+        !    dist_proj    = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
+        !    eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
+        !    vindex_pt    = floor( eb_min_pt(:) * inv_dx(:) / n_refine)
+        !    vindex_loop  = floor( eb_cent(:) * inv_dx(:) / n_refine)
+
+        !    !if ( all(floor( pos(:) * inv_dx(:) ) == (/16,32,2/)) ) then
+        !    !    write(*,*) "Error!", dist_proj, vindex_loop == vindex_pt, eb_cent(1:2) - (/0.0016, 0.0016/)
+        !    !    write(*,*) "eb_cent", eb_cent(:) * inv_dx(:) / n_refine, eb_cent(:)
+        !    !    write(*,*) "eb_pt  ", eb_min_pt(:) * inv_dx(:) / n_refine, eb_min_pt(:)
+        !    !    write(*,*) "pos    ", pos(:), eb_norm
+        !    !    write(*,*) "rel_pos", pos(:) - eb_cent(:), pos(1:2) - (/0.0016, 0.0016/)
+        !    !end if
+
+        !    !write(*,*) i, vindex_loop(:), eb_cent(:), sqrt( &
+        !    !    dot_product ( ( eb_cent(1:2) - (/0.0016, 0.0016/) ), &
+        !    !                  ( eb_cent(1:2) - (/0.0016, 0.0016/) ) )&
+        !    !)
+
+        !    if ( any( vindex_loop /= vindex_pt ) ) then
+        !    dist2      = dot_product( pos(:) - eb_cent(:), pos(:) - eb_cent(:) )
+        !        if ( dist2 < min_dist2 ) then
+        !            min_dist2  = dist2
+        !            vi_loop_closest(:) = floor( eb_cent(:) * inv_dx(:) / n_refine)
+        !            vi_pt_closest(:) = floor( eb_min_pt(:) * inv_dx(:) / n_refine)
+        !            eb_cent_closest(:) = eb_cent(:)
+        !            eb_norm_closest(:) = eb_norm(:)
+        !        end if
+        !    else
+        !        if ( dist_proj < closest_dist ) then
+        !            closest_dist = dist_proj
+        !            proj_valid   = .true.
+        !        end if
+        !    end if
+
+        !end do
+
+        if ( .not. proj_valid ) then
+            c_vec = facets_nearest_pt(vi_pt_closest, vi_loop_closest, pos, eb_norm_closest, eb_cent_closest)
+            min_edge_dist2 = dot_product( c_vec(:) - pos(:), c_vec(:) - pos(:))
+
+            write(*,*) "min_dist = ", sqrt(min_dist2), "min_edge_dist = ", sqrt(min_edge_dist2)
+            write(*,*) c_vec
+            write(*,*) eb_cent_closest
+            write(*,*) floor(pos(:) * inv_dx(:) / n_refine)
             closest_dist = -sqrt( min(min_dist2, min_edge_dist2) )
+            !closest_dist = -sqrt( min_edge_dist2 )
         end if
 
     end function closest_dist
@@ -238,8 +250,8 @@ contains
         integer                    :: i
 
         ! Determine box boundaries
-        box_min(:) = id(:) * dx(:) / n_refine
-        box_max(:) = (id(:) + 1.) * dx(:) / n_refine
+        box_min(:) = id(:) * dx(:)
+        box_max(:) = (id(:) + 1.) * dx(:)
 
         pt_in_box = .true.
 
@@ -379,8 +391,8 @@ contains
         ! EB edges), then skip -> the min/max functions at the end will skip them
         ! due to the huge(c...) defaults (above).
         if ( abs(v(1)) .gt. 1.d-8 ) then
-            cx_lo = -( p0(1) - dble(id_cell(1)) * dx(1) / n_refine ) / v(1)
-            cx_hi = -( p0(1) - ( dble(id_cell(1)) + 1. ) * dx(1) / n_refine ) / v(1)
+            cx_lo = -( p0(1) - dble(id_cell(1)) * dx(1) ) / v(1)
+            cx_hi = -( p0(1) - ( dble(id_cell(1)) + 1. ) * dx(1) ) / v(1)
 
             if ( v(1) .lt. 0. ) then
                 call swap_reals(cx_lo, cx_hi)
@@ -388,8 +400,8 @@ contains
         end if
 
         if ( abs(v(2)) .gt. 1.d-8 ) then
-            cy_lo = -( p0(2) - dble(id_cell(2)) * dx(2) / n_refine ) / v(2)
-            cy_hi = -( p0(2) - ( dble(id_cell(2)) + 1. ) * dx(2) / n_refine ) / v(2)
+            cy_lo = -( p0(2) - dble(id_cell(2)) * dx(2) ) / v(2)
+            cy_hi = -( p0(2) - ( dble(id_cell(2)) + 1. ) * dx(2) ) / v(2)
 
             if ( v(2) .lt. 0. ) then
                 call swap_reals(cy_lo, cy_hi)
@@ -397,8 +409,8 @@ contains
         end if
 
         if ( abs(v(3)) .gt. 1.d-8 )  then
-            cz_lo = -( p0(3) - dble(id_cell(3)) * dx(3) / n_refine ) / v(3)
-            cz_hi = -( p0(3) - ( dble(id_cell(3)) + 1. ) * dx(3) / n_refine ) / v(3)
+            cz_lo = -( p0(3) - dble(id_cell(3)) * dx(3) ) / v(3)
+            cz_hi = -( p0(3) - ( dble(id_cell(3)) + 1. ) * dx(3) ) / v(3)
 
             if ( v(3) .lt. 0. ) then
                 call swap_reals(cz_lo, cz_hi)
@@ -479,15 +491,15 @@ contains
 
             ! determine position of the cell's facet
             if (ind_cell .lt. ind_nb) then
-                f_c = ( dble(ind_cell) + 1.0 ) * dx(tmp_facet) / n_refine
+                f_c = ( dble(ind_cell) + 1.0 ) * dx(tmp_facet)
             else ! if (ind_cell .gt. ind_nb) then
-                f_c = dble(ind_cell) * dx(tmp_facet) / n_refine
+                f_c = dble(ind_cell) * dx(tmp_facet)
             end if
 
-            facet_p0 = (/                                       &
-                ( dble(ind_loop(1)) + 0.5 ) * dx(1) / n_refine, &
-                ( dble(ind_loop(2)) + 0.5 ) * dx(2) / n_refine, &
-                ( dble(ind_loop(3)) + 0.5 ) * dx(3) / n_refine  &
+            facet_p0 = (/                             &
+                ( dble(ind_loop(1)) + 0.5 ) * dx(1) , &
+                ( dble(ind_loop(2)) + 0.5 ) * dx(2) , &
+                ( dble(ind_loop(3)) + 0.5 ) * dx(3)   &
             /)
             facet_p0(tmp_facet) = f_c
 
@@ -614,7 +626,7 @@ subroutine update_levelset(lo,    hi,           &
                 !    write(*,*) ii, jj, kk, "pt=", (/ii, jj, kk/)*dx(:)/n_refine, "levelset=", levelset_node
                 !end if
 
-                write(*,*) ii, jj, kk, levelset_node, sqrt(   &
+                write(*,*) ii, jj, kk, phi(ii, jj, kk), levelset_node, sqrt(   &
                     dot_product ( (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/) , &
                                   (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/)  ) &
                 ) + levelset_node
