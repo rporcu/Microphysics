@@ -92,8 +92,8 @@ contains
         real(c_real), dimension(l_eb), intent(in)  :: eb_data
 
         integer                    :: i
-        integer,      dimension(3) :: vindex_pt, vindex_loop, vi_pt_closest, vi_loop_closest
-        real(c_real)               :: dist_proj, dist2, min_dist2, edge_dist2, min_edge_dist2
+        integer,      dimension(3) :: vi_pt_closest, vi_loop_closest
+        real(c_real)               :: dist_proj, dist2, min_dist2, min_edge_dist2
         real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, eb_cent_closest, eb_norm_closest
 
         inv_dx(:)      = n_refine / dx(:)
@@ -104,17 +104,17 @@ contains
         proj_valid = .false.
         
         do i = 1, l_eb, 6
-            eb_cent(:) = eb_data(i     : i + 2)
-            eb_norm(:) = eb_data(i + 3 : i + 5)
+            eb_cent(:)   = eb_data(i     : i + 2)
+            eb_norm(:)   = eb_data(i + 3 : i + 5)
 
-            dist2      = dot_product( pos(:) - eb_cent(:), pos(:) - eb_cent(:) )
-            dist_proj  = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
+            dist2        = dot_product( pos(:) - eb_cent(:), pos(:) - eb_cent(:) )
+            dist_proj    = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
             
             eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
             
             if ( dist2 < min_dist2 ) then
-                min_dist2    = dist2
-                closest_dist = dist_proj
+                min_dist2          = dist2
+                closest_dist       = dist_proj
                 vi_loop_closest(:) = floor( eb_cent(:) * inv_dx(:) / n_refine)
                 vi_pt_closest(:)   = floor( eb_min_pt(:) * inv_dx(:) / n_refine)
                 eb_cent_closest(:) = eb_cent(:)
@@ -126,57 +126,15 @@ contains
             proj_valid = .true.
         end if
         
-
-        !do i = 1, l_eb, 6
-        !    eb_cent(:) = eb_data(i     : i + 2)
-        !    eb_norm(:) = eb_data(i + 3 : i + 5)
-        !    
-        !    dist_proj    = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
-        !    eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
-        !    vindex_pt    = floor( eb_min_pt(:) * inv_dx(:) / n_refine)
-        !    vindex_loop  = floor( eb_cent(:) * inv_dx(:) / n_refine)
-
-        !    !if ( all(floor( pos(:) * inv_dx(:) ) == (/16,32,2/)) ) then
-        !    !    write(*,*) "Error!", dist_proj, vindex_loop == vindex_pt, eb_cent(1:2) - (/0.0016, 0.0016/)
-        !    !    write(*,*) "eb_cent", eb_cent(:) * inv_dx(:) / n_refine, eb_cent(:)
-        !    !    write(*,*) "eb_pt  ", eb_min_pt(:) * inv_dx(:) / n_refine, eb_min_pt(:)
-        !    !    write(*,*) "pos    ", pos(:), eb_norm
-        !    !    write(*,*) "rel_pos", pos(:) - eb_cent(:), pos(1:2) - (/0.0016, 0.0016/)
-        !    !end if
-
-        !    !write(*,*) i, vindex_loop(:), eb_cent(:), sqrt( &
-        !    !    dot_product ( ( eb_cent(1:2) - (/0.0016, 0.0016/) ), &
-        !    !                  ( eb_cent(1:2) - (/0.0016, 0.0016/) ) )&
-        !    !)
-
-        !    if ( any( vindex_loop /= vindex_pt ) ) then
-        !    dist2      = dot_product( pos(:) - eb_cent(:), pos(:) - eb_cent(:) )
-        !        if ( dist2 < min_dist2 ) then
-        !            min_dist2  = dist2
-        !            vi_loop_closest(:) = floor( eb_cent(:) * inv_dx(:) / n_refine)
-        !            vi_pt_closest(:) = floor( eb_min_pt(:) * inv_dx(:) / n_refine)
-        !            eb_cent_closest(:) = eb_cent(:)
-        !            eb_norm_closest(:) = eb_norm(:)
-        !        end if
-        !    else
-        !        if ( dist_proj < closest_dist ) then
-        !            closest_dist = dist_proj
-        !            proj_valid   = .true.
-        !        end if
-        !    end if
-
-        !end do
-
         if ( .not. proj_valid ) then
             c_vec = facets_nearest_pt(vi_pt_closest, vi_loop_closest, pos, eb_norm_closest, eb_cent_closest)
             min_edge_dist2 = dot_product( c_vec(:) - pos(:), c_vec(:) - pos(:))
 
-            write(*,*) "min_dist = ", sqrt(min_dist2), "min_edge_dist = ", sqrt(min_edge_dist2)
-            write(*,*) c_vec
-            write(*,*) eb_cent_closest
-            write(*,*) floor(pos(:) * inv_dx(:) / n_refine)
+            !write(*,*) "min_dist = ", sqrt(min_dist2), "min_edge_dist = ", sqrt(min_edge_dist2)
+            !write(*,*) c_vec
+            !write(*,*) eb_cent_closest
+            !write(*,*) floor(pos(:) * inv_dx(:) / n_refine)
             closest_dist = -sqrt( min(min_dist2, min_edge_dist2) )
-            !closest_dist = -sqrt( min_edge_dist2 )
         end if
 
     end function closest_dist
@@ -626,10 +584,10 @@ subroutine update_levelset(lo,    hi,           &
                 !    write(*,*) ii, jj, kk, "pt=", (/ii, jj, kk/)*dx(:)/n_refine, "levelset=", levelset_node
                 !end if
 
-                write(*,*) ii, jj, kk, phi(ii, jj, kk), levelset_node, sqrt(   &
-                    dot_product ( (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/) , &
-                                  (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/)  ) &
-                ) + levelset_node
+                !write(*,*) ii, jj, kk, phi(ii, jj, kk), levelset_node, sqrt(   &
+                !    dot_product ( (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/) , &
+                !                  (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/)  ) &
+                !) + levelset_node
 
                 if ( levelset_node .lt. phi(ii, jj, kk) ) then
                     phi(ii, jj, kk) = levelset_node
