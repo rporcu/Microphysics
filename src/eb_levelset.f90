@@ -94,7 +94,7 @@ contains
         integer                    :: i
         integer,      dimension(3) :: vi_pt_closest, vi_loop_closest
         real(c_real)               :: dist_proj, dist2, min_dist2, min_edge_dist2
-        real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, eb_cent_closest, eb_norm_closest
+        real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, eb_cent_closest, eb_norm_closest, eb_pt_closest
 
         inv_dx(:)      = n_refine / dx(:)
         closest_dist   = huge(closest_dist)
@@ -119,21 +119,29 @@ contains
                 vi_pt_closest(:)   = floor( eb_min_pt(:) * inv_dx(:) / n_refine)
                 eb_cent_closest(:) = eb_cent(:)
                 eb_norm_closest(:) = eb_norm(:)
+                eb_pt_closest(:)   = eb_min_pt(:)
             end if
         end do
 
-        if ( all( vi_pt_closest /= vi_loop_closest ) ) then
+        if ( all( vi_pt_closest == vi_loop_closest ) ) then
             proj_valid = .true.
         end if
         
         if ( .not. proj_valid ) then
             c_vec = facets_nearest_pt(vi_pt_closest, vi_loop_closest, pos, eb_norm_closest, eb_cent_closest)
             min_edge_dist2 = dot_product( c_vec(:) - pos(:), c_vec(:) - pos(:))
-
-            !write(*,*) "min_dist = ", sqrt(min_dist2), "min_edge_dist = ", sqrt(min_edge_dist2)
-            !write(*,*) c_vec
-            !write(*,*) eb_cent_closest
-            !write(*,*) floor(pos(:) * inv_dx(:) / n_refine)
+            if (min_dist2 < min_edge_dist2) then
+                write(*,*) "min_dist      = ", sqrt(min_dist2)
+                write(*,*) "min_edge_dist = ", sqrt(min_edge_dist2)
+                write(*,*) ""
+                write(*,*) "pos:     ", pos * inv_dx(:) / n_refine
+                write(*,*) "c_vec:   ", c_vec(:) * inv_dx(:) / n_refine
+                write(*,*) "eb_pt:   ", eb_pt_closest(:) * inv_dx(:) / n_refine
+                write(*,*) "eb_cent: ", eb_cent_closest(:) * inv_dx(:) / n_refine
+                write(*,*) "eb_norm: ", eb_norm_closest
+                write(*,*) ""
+                write(*,*) ""
+            end if
             closest_dist = -sqrt( min(min_dist2, min_edge_dist2) )
         end if
 
