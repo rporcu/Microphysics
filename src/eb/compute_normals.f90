@@ -16,7 +16,7 @@
     integer,      intent(in   ) :: lo(3),hi(3),nlo(3),nhi(3),fglo(3),fghi(3)
     integer,      intent(in   ) :: axlo(3),axhi(3),aylo(3),ayhi(3),azlo(3),azhi(3)
     integer,      intent(in   ) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
-    real(c_real), intent(inout) :: normal(nlo(1):nhi(1),nlo(2):nhi(2),nlo(3):nhi(3),3)
+    real(c_real), intent(  out) :: normal(nlo(1):nhi(1),nlo(2):nhi(2),nlo(3):nhi(3),3)
     real(c_real), intent(in   ) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
     real(c_real), intent(in   ) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
     real(c_real), intent(in   ) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))

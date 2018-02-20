@@ -17,26 +17,41 @@ using namespace amrex;
 
 class LSFactory {
     private:
-        std::unique_ptr<MultiFab> ls_phi;
+        // Data structures holding level set information
+        std::unique_ptr<MultiFab>  ls_phi;
         std::unique_ptr<iMultiFab> ls_valid;
+
+        // Dummy structures encloding (padded) EB index space
         std::unique_ptr<MultiFab> dummy;
+        std::unique_ptr<MultiFab> eb_grid;
+        BoxArray eb_ba_refined;
+        const int eb_grid_refinement;
+        const int eb_grid_pad;
 
+        // Refined box array (over which the level-set MultiFab is constructed)
         BoxArray phi_ba_refined, particle_ba_refined;
+        const RealVect dx_vect;
+        const int ls_grid_refinement;
+        const int ls_grid_pad;
 
-        int amr_lev;
-
+        // AMR information
+        const int amr_lev;
         const MFIXParticleContainer * mfix_pc;
 
-        const RealVect dx_vect;
-        int ls_grid_refinement;
 
-        std::unique_ptr<FArrayBox> eb_facets(const EBFArrayBoxFactory * eb_factory);
+        // Construct eb_facets list from eb_factory
+        //  -> eb_facets are currently stored in a 1-D FArrayBox
+        //     (this is a bit of a hack, but we need a fortran-compatible list structure)
+        std::unique_ptr<Vector<Real>> eb_facets(const EBFArrayBoxFactory * eb_factory);
+
+        // Construct nodal MultiFab containing EBIS Implicit function velues
         std::unique_ptr<MultiFab> ebis_impfunc(const EBIndexSpace * eb_is);
 
+        // Unpdate internal `ls_phi` and `ls_valid` based on the min of `ls_phi` and `ls_in`
         void update(const MultiFab * ls_in);
 
     public:
-        LSFactory(int lev, int ref, const MFIXParticleContainer * pc, const Real * dx);
+        LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, const MFIXParticleContainer * pc);
         ~LSFactory();
 
         void update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexSpace * eb_is);
@@ -44,10 +59,13 @@ class LSFactory {
 
         const MultiFab * get_data(){return ls_phi.get();};
         const iMultiFab * get_valid(){return ls_valid.get();};
-        const int get_refinement(){return ls_grid_refinement;};
+        const int get_ls_ref(){return ls_grid_refinement;};
+        const int get_eb_ref(){return eb_grid_refinement;};
 
         const BoxArray * get_cc_ba(){return & particle_ba_refined;};
         const BoxArray * get_nd_ba(){return & phi_ba_refined;};
+        
+        const BoxArray * get_eb_ba(){return & eb_ba_refined;}
 };
 
 

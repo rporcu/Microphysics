@@ -408,7 +408,7 @@ extern "C"
     void compute_normals (
              const int* lo , const int* hi,
              const void* flag, const int* fglo, const int* fghi,
-             const amrex_real* normal, const int* nlo, const int* nhi,
+             amrex_real* normal, const int* nlo, const int* nhi,
              const amrex_real* ax, const int* axlo, const int* axhi,
              const amrex_real* ay, const int* aylo, const int* ayhi,
              const amrex_real* az, const int* azlo, const int* azhi);
@@ -643,12 +643,12 @@ extern "C"
     void mfix_write_eb_vtp ( int* myID);
     void mfix_write_pvtp ( int* nProcs);
 
-    void init_levelset(const int * lo,   const int * hi,   const int * n_pad,
+    void init_levelset(const int * lo,   const int * hi,
                        int * valid,      const int * vlo,  const int * vhi,
                        amrex_real * phi, const int * phlo, const int * phhi);
 
     void fill_levelset_eb(const int * lo,             const int * hi,
-                          const amrex_real * eb_list, const int * eblo,    const int * ebhi,
+                          const amrex_real * eb_list, const int * l_eb,
                           int * valid,                const int * vlo,     const int * vhi,
                           amrex_real * phi,           const int * phlo,    const int * phhi, 
                           const amrex_real * dx,      const int * n_refine);
@@ -673,7 +673,7 @@ extern "C"
                     const void * flag,        const int * flo, const int * fhi,
                     const amrex_real * norm,  const int * nlo, const int * nhi,
                     const amrex_real * bcent, const int * blo, const int * bhi,
-                    amrex_real * list_out,    const int * llo, const int * lhi,
+                    amrex_real * list_out,    const int * lsize,
                     const amrex_real * dx,    const int * n_refine);
 
     void validate_levelset(const int * lo,          const int * hi,   const int * n_pad,

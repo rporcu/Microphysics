@@ -149,32 +149,43 @@ mfix_level::make_eb_geometry(int lev)
 
     ///////////////////////////////////////////////////
 
-
     // Level-Set: define container for level set
     // level-set multifab is defined here, and set to (fortran) huge(amrex_real)
     //            -> use min to intersect new eb boundaries
-    level_set     = std::unique_ptr<LSFactory>(new LSFactory(lev, 1, pc.get(), geom[lev].CellSize()));
+    level_set     = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, 1, 2, 2, pc.get()));
 
 
     // refine geom_ls' Domain
     Box dom_ls = geom[lev].Domain();
-    dom_ls.refine(level_set->get_refinement());
+    dom_ls.refine(level_set->get_eb_ref());
     Geometry geom_ls(dom_ls);
     amrex::Print() << "Refined geom_ls: " << geom_ls << std::endl;
 
+    Geometry geom_ls_g = geom_ls;
+    Box dom_ls_g = geom_ls.Domain();
+    dom_ls_g.grow(4);
+    geom_ls_g.Domain(dom_ls_g);
+    amrex::Print() << "Grown geom_ls_g: " << geom_ls_g << std::endl;
+    BoxArray ba_g = * level_set->get_eb_ba();
+    ba_g.grow(4);
+    
     GeometryShop gshop_poly2(* impfunc_poly2, true);
     GeometryShop gshop_walls(* impfunc_walls, true);
 
     AMReX_EBIS::instance()->define(dom_ls, RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, 16, 0);
 
-    EBTower::Build();
-    level_set->update_ebis(AMReX_EBIS::instance());
-    EBTower::Destroy();
+    //EBTower::Build();
+    //level_set->update_ebis(AMReX_EBIS::instance());
+    //EBTower::Destroy();
 
-    AMReX_EBIS::instance()->define(dom_ls, RealVect::Zero, geom_ls.CellSize()[0], gshop_poly2, 16, 0);
+    //RealVect geom_ls_g_orig(AMREX_D_DECL(-2 * geom_ls_g.CellSize()[0],
+    //                                     -2 * geom_ls_g.CellSize()[1],
+    //                                     -2 * geom_ls_g.CellSize()[2]));
+
+    AMReX_EBIS::instance()->define(dom_ls_g, RealVect::Zero, geom_ls_g.CellSize()[0], gshop_poly2, 16, 0);
 
     EBTower::Build();
-    EBFArrayBoxFactory eb_factory_poly2(geom_ls, * level_set->get_cc_ba(), dmap[lev], {2, 2, 2}, EBSupport::full);
+    EBFArrayBoxFactory eb_factory_poly2(geom_ls_g, ba_g, dmap[lev], {2, 2, 2}, EBSupport::full);
     level_set->update_ebf(& eb_factory_poly2, AMReX_EBIS::instance());
     EBTower::Destroy();
 

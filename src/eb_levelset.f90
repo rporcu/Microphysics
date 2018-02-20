@@ -11,7 +11,7 @@ module eb_levelset
 
 contains
 
-subroutine init_levelset(lo,    hi,   n_pad, &
+subroutine init_levelset(lo,    hi,          &
                          valid, vlo,  vhi,   &
                          phi,   phlo, phhi ) &
            bind(C, name="init_levelset")
@@ -19,24 +19,15 @@ subroutine init_levelset(lo,    hi,   n_pad, &
     implicit none
 
     integer,      dimension(3), intent(in   ) :: lo, hi, vlo, vhi, phlo, phhi
-    integer,                    intent(in   ) :: n_pad
     integer,                    intent(  out) :: valid ( vlo(1):vhi(1),  vlo(2):vhi(2),  vlo(3):vhi(3) )
     real(c_real),               intent(  out) :: phi   (phlo(1):phhi(1),phlo(2):phhi(2),phlo(3):phhi(3))
 
 
-    integer :: i, j, k, ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
+    integer :: i, j, k, ii, jj, kk
 
-
-    klo = lo(3) - n_pad 
-    khi = hi(3) + n_pad 
-    jlo = lo(2) - n_pad 
-    jhi = hi(2) + n_pad 
-    ilo = lo(1) - n_pad 
-    ihi = hi(1) + n_pad 
-
-    do kk = klo, khi
-        do jj = jlo, jhi
-            do ii = ilo, ihi
+    do kk = lo(3), hi(3)
+        do jj = lo(2), hi(2)
+            do ii = lo(1), hi(1)
                 phi(ii, jj, kk)   = huge(phi)
                 valid(ii, jj, kk) = -1
             end do
@@ -46,7 +37,7 @@ subroutine init_levelset(lo,    hi,   n_pad, &
 end subroutine init_levelset
 
 subroutine fill_levelset_eb(lo,      hi,          &
-                            eb_list, eblo, ebhi,  &
+                            eb_list, l_eb,        &
                             valid,   vlo,  vhi,   &
                             phi,     phlo, phhi,  &
                             dx,      n_refine   ) &
@@ -54,31 +45,25 @@ subroutine fill_levelset_eb(lo,      hi,          &
 
     implicit none
 
-    integer,      dimension(3), intent(in   ) :: lo, hi, eblo, ebhi, vlo, vhi, phlo, phhi
-    real(c_real),               intent(in   ) :: eb_list (eblo(1):ebhi(1), eblo(2):ebhi(2), eblo(3):ebhi(3))
-    real(c_real),               intent(  out) :: phi     (phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3))
-    integer,                    intent(  out) :: valid   ( vlo(1):vhi(1),   vlo(2):vhi(2),   vlo(3):vhi(3) )
-    real(c_real), dimension(3), intent(in   ) :: dx
-    integer,                    intent(in   ) :: n_refine
+    integer,                       intent(in   ) :: l_eb
+    integer,      dimension(3),    intent(in   ) :: lo, hi, vlo, vhi, phlo, phhi
+    real(c_real), dimension(l_eb), intent(in   ) :: eb_list
+    real(c_real),                  intent(  out) :: phi     (phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3))
+    integer,                       intent(  out) :: valid   ( vlo(1):vhi(1),   vlo(2):vhi(2),   vlo(3):vhi(3) )
+    real(c_real), dimension(3),    intent(in   ) :: dx
+    integer,                       intent(in   ) :: n_refine
 
-    real(c_real), dimension(3) :: pos_node
+    real(c_real), dimension(3) :: pos_node, c_vec
     real(c_real)               :: levelset_node
 
-    integer :: ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
+    integer :: ii, jj, kk
     logical :: valid_cell
 
-    klo = lo(3) - n_refine
-    khi = hi(3) + n_refine
-    jlo = lo(2) - n_refine
-    jhi = hi(2) + n_refine
-    ilo = lo(1) - n_refine
-    ihi = hi(1) + n_refine
-
-    do kk = klo, khi
-        do jj = jlo, jhi
-            do ii = ilo, ihi
+    do kk = lo(3), hi(3)
+        do jj = lo(2), hi(2)
+            do ii = lo(1), hi(1)
                 pos_node      = (/ ii*dx(1)/n_refine, jj*dx(2)/n_refine, kk*dx(3)/n_refine /)
-                levelset_node = closest_dist(eb_list, eblo, ebhi, pos_node, valid_cell, dx, n_refine)
+                levelset_node = closest_dist(eb_list, l_eb, pos_node, valid_cell, dx, n_refine)
                 !if ( dabs(levelset_node) < 5e-5 ) then
                 !    write(*,*) ii, jj, kk, "pt=", pos_node, "valid=", valid_cell, "levelset=", levelset_node
                 !end if 
@@ -94,68 +79,457 @@ subroutine fill_levelset_eb(lo,      hi,          &
 
 contains
 
-    function closest_dist(eb_data, nlo,  nhi,  &
+    function closest_dist(eb_data, l_eb,       &
                           pos,     proj_valid, &
                           dx,      n_refine   )
         implicit none
 
         real(c_real) :: closest_dist
 
-        integer,                    intent(in)  :: n_refine
-        logical,                    intent(out) :: proj_valid
-        integer,      dimension(3), intent(in)  :: nlo, nhi
-        real(c_real), dimension(3), intent(in)  :: pos, dx
-        real(c_real),               intent(in)  :: eb_data ( nlo(1):nhi(1), nlo(2):nhi(2), nlo(3):nhi(3), 6)
+        integer,                       intent(in)  :: n_refine, l_eb
+        logical,                       intent(out) :: proj_valid
+        real(c_real), dimension(3),    intent(in)  :: pos, dx
+        real(c_real), dimension(l_eb), intent(in)  :: eb_data
 
-        integer                    :: ii, jj, kk
-        integer,      dimension(3) :: vindex_pt, vindex_loop
-        real(c_real)               :: dist_proj, dist2, min_dist2
-        real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt
+        integer                    :: i
+        integer,      dimension(3) :: vindex_pt, vindex_loop, vindex_pt_tmp, vindex_loop_tmp, vi_asdf
+        real(c_real)               :: dist_proj, dist2, min_dist2, edge_dist2, min_edge_dist2
+        real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, pt_tmp, loop_tmp
 
-        inv_dx(:)    = n_refine / dx(:)
-        closest_dist = huge(closest_dist)
-        min_dist2    = huge(min_dist2)
+        inv_dx(:)      = n_refine / dx(:)
+        closest_dist   = huge(closest_dist)
+        min_dist2      = huge(min_dist2)
+        min_edge_dist2 = huge(min_edge_dist2)
 
         proj_valid = .false.
 
-        do kk = nlo(3), nhi(3)
-            do jj = nlo(2), nhi(2)
-                do ii = nlo(1), nhi(1)
+        do i = 1, l_eb, 6
+            eb_cent(:) = eb_data(i     : i + 2)
+            eb_norm(:) = eb_data(i + 3 : i + 5)
+            
+            dist_proj    = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
+            eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
+            vindex_pt    = floor( eb_min_pt(:) * inv_dx(:) )
+            vindex_loop  = floor( eb_cent(:) * inv_dx(:) )
 
-                        eb_cent(:) = eb_data(ii, jj, kk, 1:3)
-                        eb_norm(:) = eb_data(ii, jj, kk, 4:6)
+            !write(*,*) i, vindex_loop(:), eb_cent(:), sqrt( &
+            !    dot_product ( ( eb_cent(1:2) - (/0.0016, 0.0016/) ), &
+            !                  ( eb_cent(1:2) - (/0.0016, 0.0016/) ) )&
+            !)
 
-                        dist_proj    = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
-                        eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
-                        vindex_pt    = floor( eb_min_pt(:) * inv_dx(:) )
-                        vindex_loop  = floor( eb_cent(:) * inv_dx(:) )
+            if ( any( vindex_loop /= vindex_pt ) ) then
+            dist2      = dot_product( pos(:) - eb_cent(:), pos(:) - eb_cent(:) )
 
-                        !write(*,*) vindex_loop(:), eb_cent(:), sqrt( &
-                        !    dot_product ( ( eb_cent(1:2) - (/0.0016, 0.0016/) ), &
-                        !                  ( eb_cent(1:2) - (/0.0016, 0.0016/) ) )&
-                        !)
+                if ( dist2 < min_dist2 ) then
+                    min_dist2  = dist2
+                    vi_asdf(:) = vindex_loop(:)
+                end if
+            else
+                if ( dist_proj < closest_dist ) then
+                    closest_dist = dist_proj
+                    proj_valid   = .true.
+                end if
+            end if
 
-                        if ( any( vindex_loop /= vindex_pt ) ) then
-                            dist2 = dot_product( pos(:) - eb_cent(:), pos(:) - eb_cent(:) )
-                            if ( dist2 < min_dist2) then
-                                min_dist2 = dist2
-                            end if
-                        else
-                            if ( dist_proj < closest_dist ) then
-                                closest_dist = dist_proj
-                                proj_valid   = .true.
-                            end if
-                        end if
-                end do
-            end do
+            if ( any( vindex_loop /= vindex_pt )  ) then !.and.                 &
+               !  (                                                     &
+               !    ( abs( vindex_loop(1) - vindex_pt(1) ) <= 1 ) .and. &
+               !    ( abs( vindex_loop(2) - vindex_pt(2) ) <= 1 ) .and. &
+               !    ( abs( vindex_loop(3) - vindex_pt(3) ) <= 1 )       &
+               !  )                                                     &
+               !) then
+                    c_vec      = facets_nearest_pt(vindex_pt, vindex_loop, pos, eb_norm, eb_cent)
+                    edge_dist2 = dot_product( pos(:) - c_vec(:), pos(:) - c_vec(:) )
+                    if ( edge_dist2 < min_edge_dist2 ) then
+                        min_edge_dist2     = edge_dist2
+                        vindex_pt_tmp(:)   = vindex_pt(:)
+                        vindex_loop_tmp(:) = vindex_loop(:)
+                        pt_tmp(:)          = eb_min_pt(:)
+                        loop_tmp(:)        = eb_cent(:)
+                    end if
+            end if
         end do
 
         if ( .not. proj_valid ) then
-            ! write(*,*) "Level-set fallback for:", floor(pos(:) * inv_dx(:))
-            closest_dist = -sqrt( min_dist2 )
+            !if ( min_dist2 < min_edge_dist2 ) then
+            !    write(*,*) "FB:     ", floor(pos(:) * inv_dx(:)), "min_dist2:", sqrt(min_dist2), "min_edge_dist2:", sqrt(min_edge_dist2), sqrt( min(min_dist2, min_edge_dist2) )
+            !    write(*,*) "eb_cent:", eb_cent, "eb_norm:", eb_norm
+            !    write(*,*) "c_vec:  ", c_vec
+            !    write(*,*) "pos:    ", pos
+            !    write(*,*) ""
+            !    write(*,*) "pt:     ", vindex_pt_tmp, pt_tmp
+            !    write(*,*) "loop:   ", vindex_loop_tmp, loop_tmp
+            !    write(*,*) "loop2:  ", vi_asdf
+            !    write(*,*) ""
+            !    write(*,*) ""
+
+            !end if
+            closest_dist = -sqrt( min(min_dist2, min_edge_dist2) )
         end if
 
     end function closest_dist
+
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Function: DOT_3D_REAL                                          !
+   !                                                                      !
+   !  Purpose: Returns the cartesian dot product for two vectors in three !
+   !  dimensions.                                                         !
+   !                                                                      !
+   !  Comments: Vectors are represented as one-dimensional arrays of type !
+   !  real(c_real) and of dimension(3) (i.e. indices range from 1..3).    !
+   !----------------------------------------------------------------------!
+    pure function dot_3d_real (v1, v2)
+        implicit none
+
+        real(c_real)                           :: dot_3d_real
+        real(c_real), dimension(3), intent(in) :: v1, v2
+
+        ! really naive implementation
+        dot_3d_real = v1(1)*v2(1) + v1(2)*v2(2) + v1(3)*v2(3)
+
+    end function dot_3d_real
+
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Function: CROSS_3D_REAL                                        !
+   !                                                                      !
+   !  Purpose: Returns the cartesian cross product for two vectors in     !
+   !  three dimensions.                                                   !
+   !                                                                      !
+   !  Comments: Vectors are represented as one-dimensional arrays of type !
+   !  real(c_real) and of dimension(3) (i.e. indices range from 1..3).    !
+   !----------------------------------------------------------------------!
+    pure function cross_3d_real (v1, v2)
+        implicit none
+
+        real(c_real), dimension(3)             :: cross_3d_real
+        real(c_real), dimension(3), intent(in) :: v1, v2
+
+        cross_3d_real(1) = v1(2)*v2(3) - v1(3)*v2(2)
+        cross_3d_real(2) = v1(3)*v2(1) - v1(1)*v2(3)
+        cross_3d_real(3) = v1(1)*v2(2) - v1(2)*v2(1)
+
+    end function cross_3d_real
+
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Function: PT_IN_BOX                                            !
+   !                                                                      !
+   !  Purpose: Returns true if the coordinate vector represents a point   !
+   !  inside a three-dimensional cube of size dx and origin specified by  !
+   !  integer vector. As a final input, the user specifies a dimension    !
+   !  (axis) to ignore. This allows IN-BOX checking on a box face.        !
+   !                                                                      !
+   !  Comments: Position vectors are represented as one-dimensional arrays!
+   !  of type real(c_real) and of dimension(3) (i.e. indices range        !
+   !  from 1..3). Cells are enumerated using arrays of type integer and   !
+   !  dimension(3).
+   !----------------------------------------------------------------------!
+    pure function pt_in_box (pt, id, id_ignore)
+        implicit none
+
+        logical                                :: pt_in_box
+        real(c_real), dimension(3), intent(in) :: pt
+        integer,      dimension(3), intent(in) :: id
+        integer,                    intent(in) :: id_ignore
+
+        real(c_real), dimension(3) :: box_max, box_min
+        integer                    :: i
+
+        ! Determine box boundaries
+        box_min(:) = id(:) * dx(:) / n_refine
+        box_max(:) = (id(:) + 1.) * dx(:) / n_refine
+
+        pt_in_box = .true.
+
+        ! Check each coordinate. Skip ignored coordinate.
+        do i = 1, 3
+            if (.not. (i .eq. id_ignore) ) then
+                if ( pt(i) .lt. box_min(i) ) then
+                    pt_in_box = .false.
+                    exit
+                end if
+
+                if ( pt(i) .gt. box_max(i) ) then
+                    pt_in_box = .false.
+                    exit
+                end if
+            end if
+        end do
+
+    end function pt_in_box
+
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Subroutine: CALC_FACET_EDGE                                    !
+   !                                                                      !
+   !  Purpose: Calculates the line (represented by a position and a       !
+   !  direction vector) given by the intersection of two planes (defined  !
+   !  by two normal (n1, n2) and two positions (h1 = n1.p1, h2 = n2.p2).  !
+   !                                                                      !
+   !  When one plane is the EB surface, and the other is a face of the    !
+   !  cell. Then this line represents the edge of the EB facet.           !
+   !                                                                      !
+   !  Comments: Vectors are represented as one-dimensional arrays of type !
+   !  real(c_real) and of dimension(3) (i.e. indices range from 1..3).    !
+   !----------------------------------------------------------------------!
+    pure subroutine calc_facet_edge (p0, v, h1, h2, n1, n2)
+        implicit none
+
+        real(c_real), dimension(3), intent(  out) :: p0, v
+        real(c_real), dimension(3), intent(in   ) :: n1, n2
+        real(c_real),               intent(in   ) :: h1, h2
+
+        real(c_real) :: c1, c2, c_dp, c_norm
+
+        c_dp = dot_3d_real(n1, n2)
+        c_norm = 1 - c_dp * c_dp
+
+        c1 = ( h1 - h2 * c_dp ) / c_norm
+        c2 = ( h2 - h1 * c_dp ) / c_norm
+
+        p0(:) = c1 * n1(:) + c2 * n2(:)
+        v = cross_3d_real(n1, n2)
+
+    end subroutine calc_facet_edge
+
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Subroutine: LINES_NEAREST_PT                                   !
+   !                                                                      !
+   !  Purpose: Given an a line an a point, this subroutine finds the point!
+   !  one the line which minimizes the cartesian distance. It also finds  !
+   !  the corresponing distance along the line corresponding to this point!
+   !                                                                      !
+   !  Comments: Vectors are represented as one-dimensional arrays of type !
+   !  real(c_real) and of dimension(3) (i.e. indices range from 1..3).    !
+   !----------------------------------------------------------------------!
+    pure subroutine lines_nearest_pt (lambda_min, nearest_pt, p0, v, pt)
+        implicit none
+
+        real(c_real),               intent(  out) :: lambda_min
+        real(c_real), dimension(3), intent(  out) :: nearest_pt
+        real(c_real), dimension(3), intent(in   ) :: p0, v, pt
+
+        real(c_real), dimension(3) :: c
+
+        c(:) = p0(:) - pt(:)
+        lambda_min = - dot_3d_real(v, c) / dot_3d_real(v, v)
+
+        nearest_pt(:) = p0(:) + lambda_min*v(:)
+
+    end subroutine lines_nearest_pt
+
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Subroutine: SWAP_REALS                                         !
+   !                                                                      !
+   !  Purpose: Stupid little subroutine which swaps the values of its     !
+   !  inputs.                                                             !
+   !                                                                      !
+   !  Comments: Inputs are of type real(c_real)                           !
+   !                                                                      !
+   !----------------------------------------------------------------------!
+    pure subroutine swap_reals(a, b)
+        implicit none
+
+        real(c_real), intent(inout) :: a, b
+        real(c_real)                :: bucket
+
+        bucket = a
+        a      = b
+        b      = bucket
+
+    end subroutine swap_reals
+
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Subroutine: LAMBDA_BOUNDS                                      !
+   !                                                                      !
+   !  Purpose: Given a line which passes through a box in three dimensions!
+   !  (it can pass through the edges). Let lambda be a real value         !
+   !  representing the coordinate along the line. This subroutine finds   !
+   !  teh min/max values of lambda, in order for the point described by   !
+   !  lambda to be contained within the box.                              !
+   !                                                                      !
+   !  Comments: Vectors are represented as one-dimensional arrays of type !
+   !  real(c_real) and of dimension(3) (i.e. indices range from 1..3).    !
+   !----------------------------------------------------------------------!
+    pure subroutine lambda_bounds(lambda_min, lambda_max, id_cell, p0, v)
+        implicit none
+
+        real(c_real),               intent(  out) :: lambda_min, lambda_max
+        integer,      dimension(3), intent(in   ) :: id_cell
+        real(c_real), dimension(3), intent(in   ) :: p0, v
+
+        ! c... are the preliminary boundaries
+        real(c_real) :: cx_lo, cy_lo, cz_lo, cx_hi, cy_hi, cz_hi
+
+        ! defaults such that if skipped, min/max will not choose these values anyway
+        cx_lo = -huge(cx_lo)
+        cy_lo = -huge(cy_lo)
+        cz_lo = -huge(cz_lo)
+
+        cx_hi = huge(cx_hi)
+        cy_hi = huge(cy_hi)
+        cz_hi = huge(cz_hi)
+
+        ! if the line runs parrallel to any of these dimensions (which is true for
+        ! EB edges), then skip -> the min/max functions at the end will skip them
+        ! due to the huge(c...) defaults (above).
+        if ( abs(v(1)) .gt. 1.d-8 ) then
+            cx_lo = -( p0(1) - dble(id_cell(1)) * dx(1) / n_refine ) / v(1)
+            cx_hi = -( p0(1) - ( dble(id_cell(1)) + 1. ) * dx(1) / n_refine ) / v(1)
+
+            if ( v(1) .lt. 0. ) then
+                call swap_reals(cx_lo, cx_hi)
+            end if
+        end if
+
+        if ( abs(v(2)) .gt. 1.d-8 ) then
+            cy_lo = -( p0(2) - dble(id_cell(2)) * dx(2) / n_refine ) / v(2)
+            cy_hi = -( p0(2) - ( dble(id_cell(2)) + 1. ) * dx(2) / n_refine ) / v(2)
+
+            if ( v(2) .lt. 0. ) then
+                call swap_reals(cy_lo, cy_hi)
+            end if
+        end if
+
+        if ( abs(v(3)) .gt. 1.d-8 )  then
+            cz_lo = -( p0(3) - dble(id_cell(3)) * dx(3) / n_refine ) / v(3)
+            cz_hi = -( p0(3) - ( dble(id_cell(3)) + 1. ) * dx(3) / n_refine ) / v(3)
+
+            if ( v(3) .lt. 0. ) then
+                call swap_reals(cz_lo, cz_hi)
+            end if
+        endif
+
+        lambda_min = max(cx_lo, cy_lo, cz_lo)
+        lambda_max = min(cx_hi, cy_hi, cz_hi)
+
+    end subroutine lambda_bounds
+
+   !----------------------------------------------------------------------!
+   !                                                                      !
+   !  Pure Function: FACETS_NEAREST_PT                                    !
+   !                                                                      !
+   !  Purpose: Given a collision between particle and EB surface, and     !
+   !  given that a neighbour cell owns the EB surface, a collision between!
+   !  the particle and the EDGE of the EB facet might occur. This         !
+   !  function returns the coordinates of the closest point on the edge of!
+   !  an EB facet. This function does not check of collisions.            !
+   !                                                                      !
+   !  Comments: Position and normal vectors are represented as            !
+   !  one-dimensional arrays of type real(c_real) and of dimension(3)     !
+   !  (i.e. indices range from 1..3). Cells are enumerated using arrays of!
+   !  type integer and of dimension(3).                                   !
+   !----------------------------------------------------------------------!
+    pure function facets_nearest_pt ( ind_pt, ind_loop, r_vec, eb_normal, eb_p0)
+        implicit none
+
+        real(c_real), dimension(3)             :: facets_nearest_pt
+        integer,      dimension(3), intent(in) :: ind_pt, ind_loop
+        real(c_real), dimension(3), intent(in) :: r_vec, eb_normal, eb_p0
+
+        integer,      dimension(3) :: ind_facets
+        integer                    :: n_facets, i_facet, tmp_facet, ind_cell, ind_nb
+        real(c_real), dimension(3) :: c_vec, c_vec_tmp, rc_vec
+        real(c_real), dimension(3) :: facet_normal, facet_p0, edge_p0, edge_v
+        real(c_real)               :: min_dist, min_dist_tmp, eb_h, facet_h
+
+        ! variables keeping track of coordinates on EB edges
+        ! lambda_tmp: current lambda-value being used in testing for edge collions
+        ! lambda: minimum (closets to bcentre) lambda value satisfying potential collision
+        real(c_real) :: f_c, lambda_tmp, lambda_max, lambda_min
+
+
+        ! Enumerate the possible EB facet edges invovlved.
+        n_facets = 0
+
+        if ( .not. (ind_pt(1) .eq. ind_loop(1)) ) then
+            n_facets = n_facets + 1
+            ind_facets(n_facets) = 1
+        end if
+
+        if ( .not. (ind_pt(2) .eq. ind_loop(2)) ) then
+            n_facets = n_facets + 1
+            ind_facets(n_facets) = 2
+        end if
+
+        if ( .not. (ind_pt(3) .eq. ind_loop(3)) ) then
+            n_facets = n_facets + 1
+            ind_facets(n_facets) = 3
+        end if
+
+        ! scalar characterizing EB facet position
+        eb_h = dot_3d_real(eb_normal, eb_p0)
+
+        ! itterate over EB facet edges and find whichever has the closest nearest point
+        min_dist = huge(min_dist)
+        do i_facet = 1, n_facets
+            tmp_facet = ind_facets(i_facet)
+
+            ! determine the normal of the cell's facet (cube faces)
+            facet_normal = (/ 0., 0., 0. /)
+            facet_normal(tmp_facet) = 1.  ! wheter facing inwards or outwards is not important here
+
+            ind_cell = ind_loop(tmp_facet)
+            ind_nb = ind_pt(tmp_facet)
+
+            ! determine position of the cell's facet
+            if (ind_cell .lt. ind_nb) then
+                f_c = ( dble(ind_cell) + 1.0 ) * dx(tmp_facet) / n_refine
+            else ! if (ind_cell .gt. ind_nb) then
+                f_c = dble(ind_cell) * dx(tmp_facet) / n_refine
+            end if
+
+            facet_p0 = (/                                       &
+                ( dble(ind_loop(1)) + 0.5 ) * dx(1) / n_refine, &
+                ( dble(ind_loop(2)) + 0.5 ) * dx(2) / n_refine, &
+                ( dble(ind_loop(3)) + 0.5 ) * dx(3) / n_refine  &
+            /)
+            facet_p0(tmp_facet) = f_c
+
+            ! scalar characterizing cell facet position
+            facet_h = dot_3d_real(facet_normal, facet_p0)
+
+            ! compute EB facet edge by finding the intercept between EB surface (first plane)
+            ! and the cell's facet (second plane)
+            call calc_facet_edge (edge_p0, edge_v, eb_h, facet_h, eb_normal, facet_normal)
+            ! this solution is a line representing the closest EB edge, now compute the point
+            ! on the line which minimizes the distance to the particle
+            call lines_nearest_pt (lambda_tmp, c_vec_tmp, edge_p0, edge_v, r_vec)
+
+            ! IMPORTANT: this point might be outside the cell
+            !  -> in that case, it will be one of the cell's corners
+            if (.not. pt_in_box(c_vec_tmp, ind_loop, tmp_facet)) then
+                ! if closest point is outside cell, determine the furthest we can go along the
+                ! EB edge line whilst staying within the cell.
+                call lambda_bounds(lambda_min, lambda_max, ind_loop, edge_p0, edge_v)
+                if (lambda_tmp .lt. lambda_min) then
+                    lambda_tmp = lambda_min
+                else
+                    lambda_tmp = lambda_max
+                end if
+
+                c_vec_tmp(:) = edge_p0(:) + lambda_tmp*edge_v(:)
+            end if
+
+            ! determine new distance to particle
+            rc_vec(:) = c_vec_tmp(:) - r_vec(:)
+            min_dist_tmp = dot_3d_real(rc_vec, rc_vec)
+
+            ! minimize distance
+            if (min_dist_tmp .lt. min_dist) then
+                min_dist = min_dist_tmp
+                c_vec(:) = c_vec_tmp(:)
+            end if
+        end do
+
+        facets_nearest_pt(:) = c_vec(:)
+
+    end function facets_nearest_pt
 
 end subroutine fill_levelset_eb
 
@@ -176,12 +550,12 @@ subroutine validate_levelset(lo,    hi,   n_pad, &
     integer      :: ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
     real(c_real) :: levelset_node
 
-    klo = lo(3) - n_pad
-    khi = hi(3) + n_pad
-    jlo = lo(2) - n_pad
-    jhi = hi(2) + n_pad
-    ilo = lo(1) - n_pad
-    ihi = hi(1) + n_pad
+    klo = lo(3)! - n_pad
+    khi = hi(3)! + n_pad
+    jlo = lo(2)! - n_pad
+    jhi = hi(2)! + n_pad
+    ilo = lo(1)! - n_pad
+    ihi = hi(1)! + n_pad
 
     do kk = klo, khi
         do jj = jlo, jhi
@@ -224,12 +598,12 @@ subroutine update_levelset(lo,    hi,           &
     integer :: i, j, k, ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
     logical :: valid_cell
 
-    klo = lo(3) - n_refine
-    khi = hi(3) + n_refine
-    jlo = lo(2) - n_refine
-    jhi = hi(2) + n_refine
-    ilo = lo(1) - n_refine
-    ihi = hi(1) + n_refine
+    klo = lo(3)! - n_refine
+    khi = hi(3)! + n_refine
+    jlo = lo(2)! - n_refine
+    jhi = hi(2)! + n_refine
+    ilo = lo(1)! - n_refine
+    ihi = hi(1)! + n_refine
 
     do kk = klo, khi
         do jj = jlo, jhi
@@ -240,10 +614,10 @@ subroutine update_levelset(lo,    hi,           &
                 !    write(*,*) ii, jj, kk, "pt=", (/ii, jj, kk/)*dx(:)/n_refine, "levelset=", levelset_node
                 !end if
 
-                !write(*,*) ii, jj, kk, levelset_node, sqrt(   &
-                !    dot_product ( (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/) , &
-                !                  (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/)  ) &
-                !) + levelset_node
+                write(*,*) ii, jj, kk, levelset_node, sqrt(   &
+                    dot_product ( (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/) , &
+                                  (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/)  ) &
+                ) + levelset_node
 
                 if ( levelset_node .lt. phi(ii, jj, kk) ) then
                     phi(ii, jj, kk) = levelset_node
@@ -376,37 +750,48 @@ subroutine eb_as_list(lo,       hi,   c_facets,  &
                       flag,     flo,  fhi,       &
                       norm,     nlo,  nhi,       &
                       bcent,    blo,  bhi,       &
-                      list_out, llo,  lhi,       &
+                      list_out, lsize,           &
                       dx,       n_refine       ) &
            bind(C, name="eb_as_list")
 
     implicit none
 
-    integer,               intent(in   ) :: n_refine
-    integer, dimension(3), intent(in   ) :: lo, hi, flo, fhi, nlo, nhi, blo, bhi, llo, lhi
-    real(c_real),          intent(in   ) :: dx(3)
-    integer,               intent(in   ) :: flag  ( flo(1):fhi(1), flo(2):fhi(2), flo(3):fhi(3) )
-    real(c_real),          intent(in   ) :: norm  ( nlo(1):nhi(1), nlo(2):nhi(2), nlo(3):nhi(3), 3)
-    real(c_real),          intent(in   ) :: bcent ( blo(1):bhi(1), blo(2):bhi(2), blo(3):bhi(3), 3)
-    real(c_real),          intent(  out) :: list_out ( llo(1):lhi(1), llo(2):lhi(2), llo(3):lhi(3), 6)
-    integer,               intent(inout) :: c_facets
+    integer,                        intent(in   ) :: n_refine, lsize
+    integer, dimension(3),          intent(in   ) :: lo, hi, flo, fhi, nlo, nhi, blo, bhi
+    real(c_real),                   intent(in   ) :: dx(3)
+    integer,                        intent(in   ) :: flag  ( flo(1):fhi(1), flo(2):fhi(2), flo(3):fhi(3) )
+    real(c_real),                   intent(in   ) :: norm  ( nlo(1):nhi(1), nlo(2):nhi(2), nlo(3):nhi(3), 3)
+    real(c_real),                   intent(in   ) :: bcent ( blo(1):bhi(1), blo(2):bhi(2), blo(3):bhi(3), 3)
+    real(c_real), dimension(lsize), intent(  out) :: list_out
+    integer,                        intent(inout) :: c_facets
 
-    integer                    :: i, j, k
+    integer                    :: i, j, k, i_facet
     real(c_real), dimension(3) :: eb_cent
+
+    i_facet = 6 * c_facets + 1
 
     do k = lo(3), hi(3)
         do j = lo(2), hi(2)
             do i = lo(1), hi(1)
                 if ( is_single_valued_cell( flag(i, j, k) ) ) then
 
+                    c_facets = c_facets + 1
+
                     eb_cent(:) = ( bcent(i, j, k, :)                           &
                                    + (/ dble(i), dble(j), dble(k) /)           &
                                    + (/ 0.5d0, 0.5d0, 0.5d0 /) ) * dx(:)/n_refine
 
-                    c_facets = c_facets + 1
+                    !write(*,*) "generating eb_cent at: ", eb_cent(:), sqrt( &
+                    !                dot_product ( ( eb_cent(1:2) - (/0.0016, 0.0016/) ), &
+                    !                              ( eb_cent(1:2) - (/0.0016, 0.0016/) ) )&
+                    !               )
 
-                    list_out(c_facets, llo(2), llo(3), 1:3) = eb_cent(:)
-                    list_out(c_facets, llo(2), llo(3), 4:6) = norm(i, j, k, :)
+                     
+                    list_out( i_facet     : i_facet + 2) = eb_cent(:)
+                    list_out( i_facet + 3 : i_facet + 5) = norm(i, j, k, :)
+
+                    i_facet = i_facet + 6
+
                 end if
             end do
         end do
@@ -538,8 +923,8 @@ subroutine normal_levelset(pos, plo,   n_refine, &
                 + phi(i+1, j+1, k+1)*inv_dx(3) * wx_hi * wy_hi
 
     ! this might not be necessary if the phi grid is dense enough...
-    inv_norm = 1.0d0 / sqrt(normal(1)**2 + normal(2)**2 + normal(3)**2)
-    normal(:) = normal(:) * inv_norm
+    !inv_norm = 1.0d0 / sqrt(normal(1)**2 + normal(2)**2 + normal(3)**2)
+    !normal(:) = normal(:) * inv_norm
 
 end subroutine normal_levelset
 
