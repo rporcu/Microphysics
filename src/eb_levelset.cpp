@@ -44,7 +44,8 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
 
     // Define ls_phi and ls_valid, growing them by twice the refinement ratio
     ls_phi->define(phi_ba_refined, dm, 1, ls_pad);
-    ls_valid->define(particle_ba_refined, dm, 1, ls_pad+1);
+    ls_valid->define(particle_ba_refined, dm, 1, ls_pad);
+    ls_valid->setVal(-1);
 
     // Initialize by setting all ls_valid = -1, and ls_phi = huge(c_real)
     for(MFIter mfi( * ls_phi, true); mfi.isValid(); ++mfi){
@@ -54,7 +55,6 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
 
         // Initialize in fortran land
         init_levelset(tile_box.loVect(), tile_box.hiVect(),
-                      v_tile.dataPtr(),  v_tile.loVect(),   v_tile.hiVect(),
                       ls_tile.dataPtr(), ls_tile.loVect(),  ls_tile.hiVect());
     }
 

@@ -4,37 +4,34 @@ module eb_levelset
 
 
     use param,                   only: small_number, zero, one
-    use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell, is_single_valued_cell, &
-                                        get_neighbor_cells
+    use amrex_ebcellflag_module, only: is_regular_cell, is_covered_cell, is_single_valued_cell, &
+                                       get_neighbor_cells
 
     implicit none
 
 contains
 
-subroutine init_levelset(lo,    hi,          &
-                         valid, vlo,  vhi,   &
-                         phi,   phlo, phhi ) &
+subroutine init_levelset(lo,  hi,          &
+                         phi, phlo, phhi ) &
            bind(C, name="init_levelset")
 
     implicit none
 
-    integer,      dimension(3), intent(in   ) :: lo, hi, vlo, vhi, phlo, phhi
-    integer,                    intent(  out) :: valid ( vlo(1):vhi(1),  vlo(2):vhi(2),  vlo(3):vhi(3) )
-    real(c_real),               intent(  out) :: phi   (phlo(1):phhi(1),phlo(2):phhi(2),phlo(3):phhi(3))
+    integer,      dimension(3), intent(in   ) :: lo, hi, phlo, phhi
+    real(c_real),               intent(  out) :: phi ( phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
 
+    integer :: i, j, k
 
-    integer :: i, j, k, ii, jj, kk
-
-    do kk = lo(3), hi(3)
-        do jj = lo(2), hi(2)
-            do ii = lo(1), hi(1)
-                phi(ii, jj, kk)   = huge(phi)
-                valid(ii, jj, kk) = -1
+    do k = lo(3), hi(3)
+        do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+                phi(i, j, k) = huge(phi)
             end do
         end do
     end do
 
 end subroutine init_levelset
+
 
 subroutine fill_levelset_eb(lo,      hi,          &
                             eb_list, l_eb,        &

@@ -644,7 +644,6 @@ extern "C"
     void mfix_write_pvtp ( int* nProcs);
 
     void init_levelset(const int * lo,   const int * hi,
-                       int * valid,      const int * vlo,  const int * vhi,
                        amrex_real * phi, const int * phlo, const int * phhi);
 
     void fill_levelset_eb(const int * lo,             const int * hi,
