@@ -17,7 +17,10 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
     : amr_lev(lev), ls_grid_refinement(ls_ref), eb_grid_refinement(eb_ref), ls_grid_pad(ls_pad), eb_grid_pad(eb_pad), mfix_pc(pc),
     dx_vect(AMREX_D_DECL(pc->Geom(lev).CellSize()[0]/ls_ref,
                          pc->Geom(lev).CellSize()[1]/ls_ref,
-                         pc->Geom(lev).CellSize()[2]/ls_ref))
+                         pc->Geom(lev).CellSize()[2]/ls_ref)),
+    dx_eb_vect(AMREX_D_DECL(pc->Geom(lev).CellSize()[0]/eb_ref,
+                            pc->Geom(lev).CellSize()[1]/eb_ref,
+                            pc->Geom(lev).CellSize()[2]/eb_ref))
 {
     // Initialize MultiFab pointers storing level-set data
     //    -> ls_phi:   nodal MultiFab storing signed distance function to the nearest wall
@@ -236,7 +239,7 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexS
                              facets->dataPtr(), & len_facets,
                              v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
                              ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect(),
-                             mfix_pc->Geom(amr_lev).CellSize(),   & ls_grid_refinement);
+                             & dx_vect, & dx_eb_vect);
             
             amrex::Print() << "validate" << std::endl;
             validate_levelset(lo,                hi,               & ls_grid_refinement,

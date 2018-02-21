@@ -49,11 +49,11 @@ contains
 
 
     pure subroutine fill_levelset_eb(lo,      hi,          &
-                                eb_list, l_eb,        &
-                                valid,   vlo,  vhi,   &
-                                phi,     phlo, phhi,  &
-                                dx,      n_refine   ) &
-                bind(C, name="fill_levelset_eb")
+                                     eb_list, l_eb,        &
+                                     valid,   vlo,  vhi,   &
+                                     phi,     phlo, phhi,  &
+                                     dx,      dx_eb      ) &
+                     bind(C, name="fill_levelset_eb")
 
         implicit none
 
@@ -62,8 +62,7 @@ contains
         real(c_real), dimension(l_eb), intent(in   ) :: eb_list
         real(c_real),                  intent(  out) :: phi     (phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3))
         integer,                       intent(  out) :: valid   ( vlo(1):vhi(1),   vlo(2):vhi(2),   vlo(3):vhi(3) )
-        real(c_real), dimension(3),    intent(in   ) :: dx
-        integer,                       intent(in   ) :: n_refine
+        real(c_real), dimension(3),    intent(in   ) :: dx, dx_eb
 
         real(c_real), dimension(3) :: pos_node, c_vec
         real(c_real)               :: levelset_node
@@ -74,12 +73,11 @@ contains
         do kk = lo(3), hi(3)
             do jj = lo(2), hi(2)
                 do ii = lo(1), hi(1)
-                    pos_node      = (/ ii*dx(1)/n_refine, jj*dx(2)/n_refine, kk*dx(3)/n_refine /)
-                    levelset_node = closest_dist(eb_list, l_eb, pos_node, valid_cell, dx)
-                    !if ( dabs(levelset_node) < 5e-5 ) then
-                    !    write(*,*) ii, jj, kk, "pt=", pos_node, "valid=", valid_cell, "levelset=", levelset_node
-                    !end if 
+                    pos_node      = (/ ii*dx(1), jj*dx(2), kk*dx(3) /)
+                    levelset_node = closest_dist(eb_list, l_eb, pos_node, valid_cell, dx_eb)
+                    
                     phi(ii, jj, kk) = levelset_node;
+                    
                     if ( valid_cell ) then
                         valid(ii, jj, kk) = 1
                     else

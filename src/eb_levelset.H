@@ -30,7 +30,7 @@ class LSFactory {
 
         // Refined box array (over which the level-set MultiFab is constructed)
         BoxArray phi_ba_refined, particle_ba_refined;
-        const RealVect dx_vect;
+        const RealVect dx_vect, dx_eb_vect;
         const int ls_grid_refinement;
         const int ls_grid_pad;
 
