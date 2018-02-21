@@ -75,7 +75,7 @@ subroutine fill_levelset_eb(lo,      hi,          &
         do jj = lo(2), hi(2)
             do ii = lo(1), hi(1)
                 pos_node      = (/ ii*dx(1)/n_refine, jj*dx(2)/n_refine, kk*dx(3)/n_refine /)
-                levelset_node = closest_dist(eb_list, l_eb, pos_node, valid_cell, dx, n_refine)
+                levelset_node = closest_dist(eb_list, l_eb, pos_node, valid_cell, dx)
                 !if ( dabs(levelset_node) < 5e-5 ) then
                 !    write(*,*) ii, jj, kk, "pt=", pos_node, "valid=", valid_cell, "levelset=", levelset_node
                 !end if 
@@ -93,12 +93,12 @@ contains
 
     function closest_dist(eb_data, l_eb,       &
                           pos,     proj_valid, &
-                          dx,      n_refine   )
+                          dx                  )
         implicit none
 
         real(c_real) :: closest_dist
 
-        integer,                       intent(in)  :: n_refine, l_eb
+        integer,                       intent(in)  :: l_eb
         logical,                       intent(out) :: proj_valid
         real(c_real), dimension(3),    intent(in)  :: pos, dx
         real(c_real), dimension(l_eb), intent(in)  :: eb_data
@@ -106,9 +106,9 @@ contains
         integer                    :: i
         integer,      dimension(3) :: vi_pt_closest, vi_loop_closest
         real(c_real)               :: dist_proj, dist2, min_dist2, min_edge_dist2
-        real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, eb_cent_closest, eb_norm_closest, eb_pt_closest
+        real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, eb_cent_closest, eb_norm_closest
 
-        inv_dx(:)      = n_refine / dx(:)
+        inv_dx(:)      = dx(:)
         closest_dist   = huge(closest_dist)
         min_dist2      = huge(min_dist2)
         min_edge_dist2 = huge(min_edge_dist2)
@@ -127,11 +127,10 @@ contains
             if ( dist2 < min_dist2 ) then
                 min_dist2          = dist2
                 closest_dist       = dist_proj
-                vi_loop_closest(:) = floor( eb_cent(:) * inv_dx(:) / n_refine)
-                vi_pt_closest(:)   = floor( eb_min_pt(:) * inv_dx(:) / n_refine)
+                vi_loop_closest(:) = floor( eb_cent(:) * inv_dx(:))
+                vi_pt_closest(:)   = floor( eb_min_pt(:) * inv_dx(:))
                 eb_cent_closest(:) = eb_cent(:)
                 eb_norm_closest(:) = eb_norm(:)
-                eb_pt_closest(:)   = eb_min_pt(:)
             end if
         end do
 

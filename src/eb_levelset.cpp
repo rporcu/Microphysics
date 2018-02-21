@@ -44,7 +44,7 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
 
     // Define ls_phi and ls_valid, growing them by twice the refinement ratio
     ls_phi->define(phi_ba_refined, dm, 1, ls_pad);
-    ls_valid->define(particle_ba_refined, dm, 1, ls_pad);
+    ls_valid->define(particle_ba_refined, dm, 1, ls_pad + 1);
     ls_valid->setVal(-1);
 
     // Initialize by setting all ls_valid = -1, and ls_phi = huge(c_real)
@@ -73,6 +73,7 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
 LSFactory::~LSFactory() {
     ls_phi.reset();
     ls_valid.reset();
+    eb_grid.reset();
 }
 
 
