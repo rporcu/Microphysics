@@ -130,18 +130,9 @@ contains
         if ( .not. proj_valid ) then
             c_vec = facets_nearest_pt(vi_pt_closest, vi_loop_closest, pos, eb_norm_closest, eb_cent_closest)
             min_edge_dist2 = dot_product( c_vec(:) - pos(:), c_vec(:) - pos(:))
-            if (min_dist2 < min_edge_dist2) then
-                write(*,*) "min_dist      = ", sqrt(min_dist2)
-                write(*,*) "min_edge_dist = ", sqrt(min_edge_dist2)
-                write(*,*) ""
-                write(*,*) "pos:     ", pos * inv_dx(:) / n_refine
-                write(*,*) "c_vec:   ", c_vec(:) * inv_dx(:) / n_refine
-                write(*,*) "eb_pt:   ", eb_pt_closest(:) * inv_dx(:) / n_refine
-                write(*,*) "eb_cent: ", eb_cent_closest(:) * inv_dx(:) / n_refine
-                write(*,*) "eb_norm: ", eb_norm_closest
-                write(*,*) ""
-                write(*,*) ""
-            end if
+            !if ( min_dist2 < min_edge_dist2 ) then
+            !    write(*,*) "ha!"
+            !end if
             closest_dist = -sqrt( min(min_dist2, min_edge_dist2) )
         end if
 
@@ -204,39 +195,39 @@ contains
    !  from 1..3). Cells are enumerated using arrays of type integer and   !
    !  dimension(3).
    !----------------------------------------------------------------------!
-    pure function pt_in_box (pt, id, id_ignore)
-        implicit none
+   ! pure function pt_in_box (pt, id, id_ignore)
+   !     implicit none
 
-        logical                                :: pt_in_box
-        real(c_real), dimension(3), intent(in) :: pt
-        integer,      dimension(3), intent(in) :: id
-        integer,                    intent(in) :: id_ignore
+   !     logical                                :: pt_in_box
+   !     real(c_real), dimension(3), intent(in) :: pt
+   !     integer,      dimension(3), intent(in) :: id
+   !     integer,                    intent(in) :: id_ignore
 
-        real(c_real), dimension(3) :: box_max, box_min
-        integer                    :: i
+   !     real(c_real), dimension(3) :: box_max, box_min
+   !     integer                    :: i
 
-        ! Determine box boundaries
-        box_min(:) = id(:) * dx(:)
-        box_max(:) = (id(:) + 1.) * dx(:)
+   !     ! Determine box boundaries
+   !     box_min(:) = id(:) * dx(:)
+   !     box_max(:) = (id(:) + 1.) * dx(:)
 
-        pt_in_box = .true.
+   !     pt_in_box = .true.
 
-        ! Check each coordinate. Skip ignored coordinate.
-        do i = 1, 3
-            if (.not. (i .eq. id_ignore) ) then
-                if ( pt(i) .lt. box_min(i) ) then
-                    pt_in_box = .false.
-                    exit
-                end if
+   !     ! Check each coordinate. Skip ignored coordinate.
+   !     do i = 1, 3
+   !         if (.not. (i .eq. id_ignore) ) then
+   !             if ( pt(i) .le. box_min(i) ) then
+   !                 pt_in_box = .false.
+   !                 exit
+   !             end if
 
-                if ( pt(i) .gt. box_max(i) ) then
-                    pt_in_box = .false.
-                    exit
-                end if
-            end if
-        end do
+   !             if ( pt(i) .ge. box_max(i) ) then
+   !                 pt_in_box = .false.
+   !                 exit
+   !             end if
+   !         end if
+   !     end do
 
-    end function pt_in_box
+   ! end function pt_in_box
 
    !----------------------------------------------------------------------!
    !                                                                      !
@@ -355,8 +346,9 @@ contains
 
         ! if the line runs parrallel to any of these dimensions (which is true for
         ! EB edges), then skip -> the min/max functions at the end will skip them
-        ! due to the huge(c...) defaults (above).
-        if ( abs(v(1)) .gt. 1.d-8 ) then
+        ! due to the +/-huge(c...) defaults (above).
+
+        if ( abs(v(1)) .gt. epsilon(v) ) then
             cx_lo = -( p0(1) - dble(id_cell(1)) * dx(1) ) / v(1)
             cx_hi = -( p0(1) - ( dble(id_cell(1)) + 1. ) * dx(1) ) / v(1)
 
@@ -365,7 +357,7 @@ contains
             end if
         end if
 
-        if ( abs(v(2)) .gt. 1.d-8 ) then
+        if ( abs(v(2)) .gt. epsilon(v) ) then
             cy_lo = -( p0(2) - dble(id_cell(2)) * dx(2) ) / v(2)
             cy_hi = -( p0(2) - ( dble(id_cell(2)) + 1. ) * dx(2) ) / v(2)
 
@@ -374,7 +366,7 @@ contains
             end if
         end if
 
-        if ( abs(v(3)) .gt. 1.d-8 )  then
+        if ( abs(v(3)) .gt. epsilon(v) )  then
             cz_lo = -( p0(3) - dble(id_cell(3)) * dx(3) ) / v(3)
             cz_hi = -( p0(3) - ( dble(id_cell(3)) + 1. ) * dx(3) ) / v(3)
 
@@ -450,7 +442,7 @@ contains
 
             ! determine the normal of the cell's facet (cube faces)
             facet_normal = (/ 0., 0., 0. /)
-            facet_normal(tmp_facet) = 1.  ! wheter facing inwards or outwards is not important here
+            facet_normal(tmp_facet) = 1.  ! whether facing inwards or outwards is not important here
 
             ind_cell = ind_loop(tmp_facet)
             ind_nb = ind_pt(tmp_facet)
@@ -481,18 +473,24 @@ contains
 
             ! IMPORTANT: this point might be outside the cell
             !  -> in that case, it will be one of the cell's corners
-            if (.not. pt_in_box(c_vec_tmp, ind_loop, tmp_facet)) then
-                ! if closest point is outside cell, determine the furthest we can go along the
-                ! EB edge line whilst staying within the cell.
-                call lambda_bounds(lambda_min, lambda_max, ind_loop, edge_p0, edge_v)
-                if (lambda_tmp .lt. lambda_min) then
-                    lambda_tmp = lambda_min
-                else
-                    lambda_tmp = lambda_max
-                end if
-
-                c_vec_tmp(:) = edge_p0(:) + lambda_tmp*edge_v(:)
+            
+            ! but don't use the PT_IN_BOX function, as it can yield false positives / negatives
+            !  -> but if you do want to use it, include test [1] below to avoid rounding errors
+            !if (.not. pt_in_box(c_vec_tmp, ind_loop, tmp_facet)) then
+            
+            ! if closest point is outside cell, determine the furthest we can go along the
+            ! EB edge line whilst staying within the cell.
+            call lambda_bounds(lambda_min, lambda_max, ind_loop, edge_p0, edge_v)
+            
+            ! [1]: why this test? What if (due to rounding 
+            if (lambda_tmp .lt. lambda_min) then
+                lambda_tmp = lambda_min
+            elseif ( lambda_tmp .gt. lambda_max) then  ! [1] (see above)
+                lambda_tmp = lambda_max
             end if
+            c_vec_tmp(:) = edge_p0(:) + lambda_tmp*edge_v(:)
+            
+            !end if
 
             ! determine new distance to particle
             rc_vec(:) = c_vec_tmp(:) - r_vec(:)
