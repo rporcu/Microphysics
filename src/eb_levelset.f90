@@ -10,16 +10,31 @@ module eb_levelset
     implicit none
 
 contains
+    
+    !-----------------------------------------------------------------------------------------------------------------!
+    !                                                                                                                 !
+    !   pure subroutine INIT_LEVELSET                                                                                 !
+    !                                                                                                                 !
+    !   Purpose: Initializes level-set array to the fortran huge(real(c_real)) value. This way these values of the    !
+    !   leve-set function will be overwritten by the min() function (used in these levelset_update function).         !
+    !                                                                                                                 !
+    !   Comments: If you want to "clear" the whole level-set array (phi), make sure that lo and hi match the grown    !
+    !   tile box (i.e. mfi.growntilebox()).                                                                           !
+    !                                                                                                                 !
+    !-----------------------------------------------------------------------------------------------------------------!
 
     pure subroutine init_levelset(lo,  hi,          &
                                   phi, phlo, phhi ) &
-               bind(C, name="init_levelset")
+                    bind(C, name="init_levelset")
 
         implicit none
-
+        
+        ! ** define I/O dummy variables
         integer,      dimension(3), intent(in   ) :: lo, hi, phlo, phhi
         real(c_real),               intent(  out) :: phi ( phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
 
+        ! ** define internal variables
+        !    i, j, k: loop index variables
         integer :: i, j, k
 
         do k = lo(3), hi(3)
