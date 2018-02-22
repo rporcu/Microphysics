@@ -210,7 +210,7 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexS
     eb_ls.define(phi_ba_refined, dm, 1, ls_grid_pad);
     eb_valid.define(phi_ba_refined, dm, 1, ls_grid_pad);
     eb_valid.setVal(0);
-    
+
     amrex::Print() << "filling eb-ls" << std::endl;
     // Fill local MultiFab with eb_factory's level-set data. Note the role of eb_valid:
     //  -> eb_valid = 1 if the corresponding eb_ls location could be projected onto the eb-facets
@@ -219,12 +219,12 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexS
         Box tile_box = mfi.growntilebox();
         const int * lo = tile_box.loVect();
         const int * hi = tile_box.hiVect();
-        
+
         amrex::Print() << "flag" << std::endl;
         const auto & sfab = dynamic_cast<EBFArrayBox const &>((* dummy)[mfi]);
         const auto & flag = sfab.getEBCellFlagFab();
         amrex::Print() << "done flag" << std::endl;
-        
+
         // TODO: figure out why this test returns false ...
         //if(flag.getType(tile_box) == FabType::singlevalued){
             amrex::Print() << "v_tile" << std::endl;
@@ -239,14 +239,14 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexS
                              facets->dataPtr(), & len_facets,
                              v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
                              ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect(),
-                             & dx_vect, & dx_eb_vect);
-            
+                             dx_vect.dataPtr(), dx_eb_vect.dataPtr());
+
             amrex::Print() << "validate" << std::endl;
             validate_levelset(lo,                hi,               & ls_grid_refinement,
                               if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
                               v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
                               ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
-            
+
             amrex::Print() << "mfi iter" << std::endl;
         //}
         amrex::Print() << "done" << std::endl;

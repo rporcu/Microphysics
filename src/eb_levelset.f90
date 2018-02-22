@@ -10,7 +10,7 @@ module eb_levelset
     implicit none
 
 contains
-    
+
     !-----------------------------------------------------------------------------------------------------------------!
     !                                                                                                                 !
     !   pure subroutine INIT_LEVELSET                                                                                 !
@@ -28,7 +28,7 @@ contains
                     bind(C, name="init_levelset")
 
         implicit none
-        
+
         ! ** define I/O dummy variables
         integer,      dimension(3), intent(in   ) :: lo, hi, phlo, phhi
         real(c_real),               intent(  out) :: phi ( phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
@@ -48,7 +48,7 @@ contains
     end subroutine init_levelset
 
 
-    pure subroutine fill_levelset_eb(lo,      hi,          &
+    subroutine fill_levelset_eb(lo,      hi,          &
                                      eb_list, l_eb,        &
                                      valid,   vlo,  vhi,   &
                                      phi,     phlo, phhi,  &
@@ -75,9 +75,9 @@ contains
                 do ii = lo(1), hi(1)
                     pos_node      = (/ ii*dx(1), jj*dx(2), kk*dx(3) /)
                     levelset_node = closest_dist(eb_list, l_eb, pos_node, valid_cell, dx_eb)
-                    
+
                     phi(ii, jj, kk) = levelset_node;
-                    
+
                     if ( valid_cell ) then
                         valid(ii, jj, kk) = 1
                     else
