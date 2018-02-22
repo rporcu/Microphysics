@@ -40,13 +40,12 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
     // Temporary dummy variable used for storing eb-factory flag bits
     dummy = std::unique_ptr<MultiFab>(new MultiFab);
 
-    
     // Define ls_grid and ls_valid, growing them by twice the refinement ratio
     ls_grid->define(ls_ba, dm, 1, ls_pad);
     ls_valid->define(ls_ba, dm, 1, ls_pad + 1);
     ls_valid->setVal(-1);
 
-    eb_grid->define(eb_ba, dm, 1, eb_grid_pad);
+    eb_grid->define(eb_ba, dm, 1, eb_pad);
 
     // Initialize by setting all ls_valid = -1, and ls_phi = huge(c_real)
     for(MFIter mfi( * ls_grid, true); mfi.isValid(); ++mfi){
@@ -93,72 +92,73 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory * eb
     std::unique_ptr<Vector<Real>> facet_list;
 
     // Only call the routine for wall collisions if the box has a wall
-    if (eb_factory != NULL) {
-        dummy->define(eb_ba, mfix_pc->ParticleDistributionMap(amr_lev), 1, eb_grid_pad, MFInfo(), * eb_factory);
+    if(eb_factory == NULL)
+        return facet_list;
+    
+    dummy->define(eb_ba, mfix_pc->ParticleDistributionMap(amr_lev), 1, eb_grid_pad, MFInfo(), * eb_factory);
 
-        std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = eb_factory->getAreaFrac();
-        const MultiCutFab * bndrycent = &(eb_factory->getBndryCent());
+    std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = eb_factory->getAreaFrac();
+    const MultiCutFab * bndrycent = &(eb_factory->getBndryCent());
 
-        int n_facets = 0;
+    int n_facets = 0;
 
-        // We pre-compute the normals
-        normal->define(eb_ba, mfix_pc->ParticleDistributionMap(amr_lev), 3, eb_grid_pad);
+    // We pre-compute the normals
+    normal->define(eb_ba, mfix_pc->ParticleDistributionMap(amr_lev), 3, eb_grid_pad);
 
-        for(MFIter mfi(* normal, true); mfi.isValid(); ++mfi) {
-            Box tile_box = mfi.growntilebox();
-            const int * lo = tile_box.loVect();
-            const int * hi = tile_box.hiVect();
+    for(MFIter mfi(* normal, true); mfi.isValid(); ++mfi) {
+        Box tile_box = mfi.growntilebox();
+        const int * lo = tile_box.loVect();
+        const int * hi = tile_box.hiVect();
 
-            const auto & sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
-            const auto & flag = sfab.getEBCellFlagFab();
+        const auto & sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
+        const auto & flag = sfab.getEBCellFlagFab();
 
-            // Need to count number of eb-facets (in order to allocate FArrayBox)
-            count_eb_facets(lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(), & n_facets);
+        // Need to count number of eb-facets (in order to allocate FArrayBox)
+        count_eb_facets(lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(), & n_facets);
 
-            // Target for compute_normals(...)
-            auto & norm_tile = (* normal)[mfi];
-            // Area fractions in x, y, and z directions
-            const auto & af_x_tile = (* areafrac[0])[mfi];
-            const auto & af_y_tile = (* areafrac[1])[mfi];
-            const auto & af_z_tile = (* areafrac[2])[mfi];
+        // Target for compute_normals(...)
+        auto & norm_tile = (* normal)[mfi];
+        // Area fractions in x, y, and z directions
+        const auto & af_x_tile = (* areafrac[0])[mfi];
+        const auto & af_y_tile = (* areafrac[1])[mfi];
+        const auto & af_z_tile = (* areafrac[2])[mfi];
 
-            //if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued) {
-            if (flag.getType(tile_box) == FabType::singlevalued) {
-               BL_PROFILE_VAR("compute_normals()", compute_normals);
-               compute_normals(lo,                  hi,
-                               flag.dataPtr(),      flag.loVect(),      flag.hiVect(),
-                               norm_tile.dataPtr(), norm_tile.loVect(), norm_tile.hiVect(),
-                               af_x_tile.dataPtr(), af_x_tile.loVect(), af_x_tile.hiVect(),
-                               af_y_tile.dataPtr(), af_y_tile.loVect(), af_y_tile.hiVect(),
-                               af_z_tile.dataPtr(), af_z_tile.loVect(), af_z_tile.hiVect());
-               BL_PROFILE_VAR_STOP(compute_normals);
-            }
-
+        //if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued) {
+        if (flag.getType(tile_box) == FabType::singlevalued) {
+           BL_PROFILE_VAR("compute_normals()", compute_normals);
+           compute_normals(lo,                  hi,
+                           flag.dataPtr(),      flag.loVect(),      flag.hiVect(),
+                           norm_tile.dataPtr(), norm_tile.loVect(), norm_tile.hiVect(),
+                           af_x_tile.dataPtr(), af_x_tile.loVect(), af_x_tile.hiVect(),
+                           af_y_tile.dataPtr(), af_y_tile.loVect(), af_y_tile.hiVect(),
+                           af_z_tile.dataPtr(), af_z_tile.loVect(), af_z_tile.hiVect());
+           BL_PROFILE_VAR_STOP(compute_normals);
         }
-        normal->FillBoundary(mfix_pc->Geom(0).periodicity());
 
-        facet_list = std::unique_ptr<Vector<Real>>(new Vector<Real>(6 * n_facets));
+    }
+    normal->FillBoundary(mfix_pc->Geom(0).periodicity());
 
-        int c_facets = 0;
-        for(MFIter mfi( * normal, true); mfi.isValid(); ++mfi) {
-            Box tile_box = mfi.growntilebox();
+    facet_list = std::unique_ptr<Vector<Real>>(new Vector<Real>(6 * n_facets));
 
-            const auto & sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
-            const auto & flag = sfab.getEBCellFlagFab();
+    int c_facets = 0;
+    for(MFIter mfi( * normal, true); mfi.isValid(); ++mfi) {
+        Box tile_box = mfi.growntilebox();
 
-            const auto & norm_tile = (* normal)[mfi];
-            const auto & bcent_tile = (* bndrycent)[mfi];
+        const auto & sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
+        const auto & flag = sfab.getEBCellFlagFab();
 
-            // Target: facet_list
-            int facet_list_size = facet_list->size();
+        const auto & norm_tile = (* normal)[mfi];
+        const auto & bcent_tile = (* bndrycent)[mfi];
 
-            eb_as_list(tile_box.loVect(),     tile_box.hiVect(),    & c_facets,
-                       flag.dataPtr(),        flag.loVect(),        flag.hiVect(),
-                       norm_tile.dataPtr(),   norm_tile.loVect(),   norm_tile.hiVect(),
-                       bcent_tile.dataPtr(),  bcent_tile.loVect(),  bcent_tile.hiVect(),
-                       facet_list->dataPtr(), & facet_list_size,
-                       dx_eb_vect.dataPtr());
-        }
+        // Target: facet_list
+        int facet_list_size = facet_list->size();
+
+        eb_as_list(tile_box.loVect(),     tile_box.hiVect(),    & c_facets,
+                   flag.dataPtr(),        flag.loVect(),        flag.hiVect(),
+                   norm_tile.dataPtr(),   norm_tile.loVect(),   norm_tile.hiVect(),
+                   bcent_tile.dataPtr(),  bcent_tile.loVect(),  bcent_tile.hiVect(),
+                   facet_list->dataPtr(), & facet_list_size,
+                   dx_eb_vect.dataPtr());
     }
     return facet_list;
 }
