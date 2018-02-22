@@ -656,7 +656,7 @@ extern "C"
                          const amrex_real * ls_in, const int * lslo,    const int * lshi,
                          int * valid,              const int * vlo,     const int * vhi,
                          amrex_real * phi,         const int * phlo,    const int * phhi,
-                         const amrex_real * dx,    const int * n_refine);
+                         const amrex_real * dx,    const int * n_pad);
 
     void calc_wall_collisions_ls(void * rparticles, const int * ntot, const int * nrp,
                                  amrex_real * tow, amrex_real * fc, amrex_real * subdt,
@@ -673,7 +673,7 @@ extern "C"
                     const amrex_real * norm,  const int * nlo, const int * nhi,
                     const amrex_real * bcent, const int * blo, const int * bhi,
                     amrex_real * list_out,    const int * lsize,
-                    const amrex_real * dx,    const int * n_refine);
+                    const amrex_real * dx);
 
     void validate_levelset(const int * lo,          const int * hi,   const int * n_pad,
                            const amrex_real * impf, const int * imlo, const int * imhi,

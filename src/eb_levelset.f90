@@ -565,43 +565,36 @@ subroutine update_levelset(lo,    hi,           &
                            ls_in, lslo, lshi,   &
                            valid, vlo,  vhi,    &
                            phi,   phlo, phhi,   &
-                           dx,    n_refine    ) &
+                           dx,    n_pad       ) &
            bind(C, name="update_levelset")
 
     implicit none
 
     integer,      dimension(3), intent(in   ) :: lo, hi, lslo, lshi, vlo, vhi, phlo, phhi
-    integer,                    intent(in   ) :: n_refine
     real(c_real),               intent(in   ) :: ls_in (lslo(1):lshi(1),lslo(2):lshi(2),lslo(3):lshi(3))
     integer,                    intent(  out) :: valid ( vlo(1):vhi(1),  vlo(2):vhi(2),  vlo(3):vhi(3) )
     real(c_real),               intent(  out) :: phi   (phlo(1):phhi(1),phlo(2):phhi(2),phlo(3):phhi(3))
     real(c_real), dimension(3), intent(in   ) :: dx
+    integer,                    intent(in   ) :: n_pad
 
     real(c_real), dimension(3) :: pos_node
     real(c_real)               :: levelset_node
 
-    integer :: i, j, k, ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
+    integer :: i, j, k, ii, jj, kk
     logical :: valid_cell
 
-    klo = lo(3)! - n_refine
-    khi = hi(3)! + n_refine
-    jlo = lo(2)! - n_refine
-    jhi = hi(2)! + n_refine
-    ilo = lo(1)! - n_refine
-    ihi = hi(1)! + n_refine
-
-    do kk = klo, khi
-        do jj = jlo, jhi
-            do ii = ilo, ihi
+    do kk = lo(3), hi(3)
+        do jj = lo(2), hi(2)
+            do ii = lo(1), hi(1)
                 levelset_node = ls_in(ii, jj, kk)
 
                 !if ( dabs(levelset_node) < 5e-5 ) then
-                !    write(*,*) ii, jj, kk, "pt=", (/ii, jj, kk/)*dx(:)/n_refine, "levelset=", levelset_node
+                !    write(*,*) ii, jj, kk, "pt=", (/ii, jj, kk/)*dx(:), "levelset=", levelset_node
                 !end if
 
                 !write(*,*) ii, jj, kk, phi(ii, jj, kk), levelset_node, sqrt(   &
-                !    dot_product ( (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/) , &
-                !                  (/ii, jj/)*dx(1:2)/n_refine - (/0.0016, 0.0016/)  ) &
+                !    dot_product ( (/ii, jj/)*dx(1:2) - (/0.0016, 0.0016/) , &
+                !                  (/ii, jj/)*dx(1:2) - (/0.0016, 0.0016/)  ) &
                 !) + levelset_node
 
                 if ( levelset_node .lt. phi(ii, jj, kk) ) then
@@ -618,7 +611,7 @@ subroutine update_levelset(lo,    hi,           &
     do k = lo(3), hi(3)
         do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-                valid_cell = neighbour_is_valid(phi, phlo, phhi, i, j, k, n_refine)
+                valid_cell = neighbour_is_valid(phi, phlo, phhi, i, j, k, n_pad)
                 if ( valid_cell ) then
                     valid(i, j, k) = 1
                 end if
@@ -628,7 +621,7 @@ subroutine update_levelset(lo,    hi,           &
 
 contains
 
-    pure function neighbour_is_valid(phi, phlo, phhi, i, j, k, n_refine)
+    pure function neighbour_is_valid(phi, phlo, phhi, i, j, k, n_pad)
         implicit none
 
         ! ** output type
@@ -637,7 +630,7 @@ contains
         ! ** input types
         integer,      dimension(3), intent(in) :: phlo, phhi
         real(c_real),               intent(in) :: phi( phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
-        integer,                    intent(in) :: i, j, k, n_refine
+        integer,                    intent(in) :: i, j, k, n_pad
 
 
         ! ** declare local variables
@@ -648,40 +641,40 @@ contains
 
 
         !----------------------------------------------------------------------------------------------------!
-        ! build neighbour stencil of size 2 * n_refine                                                       !
+        ! build neighbour stencil of size 2 * n_pad                                                          !
         !                                ^^^                                                                 !
         !                  *** fudge factor: finite-sized particle can overlap with neighbouring cells       !
         ! note: stencil could be out-of-bounds (due to fudge factor) => bounds-checking                      !
         !----------------------------------------------------------------------------------------------------!
 
-        klo = k - 2 * n_refine
+        klo = k - 2 * n_pad
         if ( klo .lt. phlo(3) ) then
-            klo = klo + n_refine
+            klo = klo + n_pad
         end if
 
-        khi = k + 2 * n_refine
+        khi = k + 2 * n_pad
         if ( khi .gt. phhi(3) ) then
-            khi = khi - n_refine
+            khi = khi - n_pad
         end if
 
-        jlo = j - 2 * n_refine
+        jlo = j - 2 * n_pad
         if ( jlo .lt. phlo(2) ) then
-            jlo = jlo + n_refine
+            jlo = jlo + n_pad
         end if
 
-        jhi = j + 2 * n_refine
+        jhi = j + 2 * n_pad
         if ( jhi .gt. phhi(2) ) then
-            jhi = jhi - n_refine
+            jhi = jhi - n_pad
         end if
 
-        ilo = i - 2 * n_refine
+        ilo = i - 2 * n_pad
         if ( ilo .lt. phlo(1) ) then
-            ilo = ilo + n_refine
+            ilo = ilo + n_pad
         end if
 
-        ihi = i + 2 * n_refine
+        ihi = i + 2 * n_pad
         if ( ihi .gt. phhi(1) ) then
-            ihi = ihi - n_refine
+            ihi = ihi - n_pad
         end if
 
 
@@ -736,12 +729,12 @@ subroutine eb_as_list(lo,       hi,   c_facets,  &
                       norm,     nlo,  nhi,       &
                       bcent,    blo,  bhi,       &
                       list_out, lsize,           &
-                      dx,       n_refine       ) &
+                      dx                       ) &
            bind(C, name="eb_as_list")
 
     implicit none
 
-    integer,                        intent(in   ) :: n_refine, lsize
+    integer,                        intent(in   ) :: lsize
     integer, dimension(3),          intent(in   ) :: lo, hi, flo, fhi, nlo, nhi, blo, bhi
     real(c_real),                   intent(in   ) :: dx(3)
     integer,                        intent(in   ) :: flag  ( flo(1):fhi(1), flo(2):fhi(2), flo(3):fhi(3) )
@@ -764,7 +757,7 @@ subroutine eb_as_list(lo,       hi,   c_facets,  &
 
                     eb_cent(:) = ( bcent(i, j, k, :)                           &
                                    + (/ dble(i), dble(j), dble(k) /)           &
-                                   + (/ 0.5d0, 0.5d0, 0.5d0 /) ) * dx(:)/n_refine
+                                   + (/ 0.5d0, 0.5d0, 0.5d0 /) ) * dx(:)
 
                     !write(*,*) "generating eb_cent at: ", eb_cent(:), sqrt( &
                     !                dot_product ( ( eb_cent(1:2) - (/0.0016, 0.0016/) ), &

@@ -25,14 +25,12 @@ class LSFactory {
         std::unique_ptr<MultiFab> dummy;
         std::unique_ptr<MultiFab> eb_grid;
         BoxArray eb_ba_refined;
-        const int eb_grid_refinement;
-        const int eb_grid_pad;
+        const int eb_grid_ref, eb_grid_pad;
 
         // Refined box array (over which the level-set MultiFab is constructed)
         BoxArray phi_ba_refined, particle_ba_refined;
         const RealVect dx_vect, dx_eb_vect;
-        const int ls_grid_refinement;
-        const int ls_grid_pad;
+        const int ls_grid_ref, ls_grid_pad;
 
         // AMR information
         const int amr_lev;
@@ -50,6 +48,8 @@ class LSFactory {
         // Unpdate internal `ls_phi` and `ls_valid` based on the min of `ls_phi` and `ls_in`
         void update(const MultiFab * ls_in);
 
+        void init_box();
+
     public:
         LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, const MFIXParticleContainer * pc);
         ~LSFactory();
@@ -59,8 +59,8 @@ class LSFactory {
 
         const MultiFab * get_data(){return ls_phi.get();};
         const iMultiFab * get_valid(){return ls_valid.get();};
-        const int get_ls_ref(){return ls_grid_refinement;};
-        const int get_eb_ref(){return eb_grid_refinement;};
+        const int get_ls_ref(){return ls_grid_ref;};
+        const int get_eb_ref(){return eb_grid_ref;};
 
         const BoxArray * get_cc_ba(){return & particle_ba_refined;};
         const BoxArray * get_nd_ba(){return & phi_ba_refined;};

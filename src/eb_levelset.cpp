@@ -14,7 +14,7 @@
 
 
 LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, const MFIXParticleContainer * pc)
-    : amr_lev(lev), ls_grid_refinement(ls_ref), eb_grid_refinement(eb_ref), ls_grid_pad(ls_pad), eb_grid_pad(eb_pad), mfix_pc(pc),
+    : amr_lev(lev), ls_grid_ref(ls_ref), eb_grid_ref(eb_ref), ls_grid_pad(ls_pad), eb_grid_pad(eb_pad), mfix_pc(pc),
     dx_vect(AMREX_D_DECL(pc->Geom(lev).CellSize()[0]/ls_ref,
                          pc->Geom(lev).CellSize()[1]/ls_ref,
                          pc->Geom(lev).CellSize()[2]/ls_ref)),
@@ -66,7 +66,7 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
     // Temporary MultiFab used for generating EB factories.
     eb_grid = std::unique_ptr<MultiFab>(new MultiFab);
     eb_ba_refined = particle_ba;
-    eb_ba_refined.refine(eb_grid_refinement);
+    eb_ba_refined.refine(eb_grid_ref);
     //eb_ba_refined.grow(eb_pad);
 
     eb_grid->define(eb_ba_refined, mfix_pc->ParticleDistributionMap(amr_lev), 1, eb_grid_pad + 1);
@@ -77,6 +77,11 @@ LSFactory::~LSFactory() {
     ls_phi.reset();
     ls_valid.reset();
     eb_grid.reset();
+}
+
+
+void LSFactory::init_box(){
+
 }
 
 
@@ -150,7 +155,7 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory * eb
                        norm_tile.dataPtr(),   norm_tile.loVect(),   norm_tile.hiVect(),
                        bcent_tile.dataPtr(),  bcent_tile.loVect(),  bcent_tile.hiVect(),
                        facet_list->dataPtr(), & facet_list_size,
-                       mfix_pc->Geom(amr_lev).CellSize(), & eb_grid_refinement);
+                       dx_eb_vect.dataPtr());
         }
     }
     return facet_list;
@@ -182,7 +187,7 @@ void LSFactory::update(const MultiFab * ls_in) {
                         ls_in_tile.dataPtr(), ls_in_tile.loVect(), ls_in_tile.hiVect(),
                         v_tile.dataPtr(),     v_tile.loVect(),     v_tile.hiVect(),
                         ls_tile.dataPtr(),    ls_tile.loVect(),    ls_tile.hiVect(),
-                        mfix_pc->Geom(amr_lev).CellSize(),         & ls_grid_refinement);
+                        dx_vect.dataPtr(),    & ls_grid_pad);
     }
 
     ls_phi -> FillBoundary(mfix_pc -> Geom(0).periodicity());
@@ -242,7 +247,7 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexS
                              dx_vect.dataPtr(), dx_eb_vect.dataPtr());
 
             amrex::Print() << "validate" << std::endl;
-            validate_levelset(lo,                hi,               & ls_grid_refinement,
+            validate_levelset(lo,                hi,               & ls_grid_ref,
                               if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
                               v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
                               ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
