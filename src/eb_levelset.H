@@ -22,13 +22,12 @@ class LSFactory {
         std::unique_ptr<iMultiFab> ls_valid;
 
         // Dummy structures encloding (padded) EB index space
-        std::unique_ptr<MultiFab> dummy;
-        std::unique_ptr<MultiFab> eb_grid;
-        BoxArray eb_ba_refined;
+        std::unique_ptr<MultiFab> dummy, eb_grid;
+        BoxArray eb_ba;
         const int eb_grid_ref, eb_grid_pad;
 
         // Refined box array (over which the level-set MultiFab is constructed)
-        BoxArray phi_ba_refined, particle_ba_refined;
+        BoxArray ls_ba, cc_ba;
         const RealVect dx_vect, dx_eb_vect;
         const int ls_grid_ref, ls_grid_pad;
 
@@ -62,10 +61,9 @@ class LSFactory {
         const int get_ls_ref(){return ls_grid_ref;};
         const int get_eb_ref(){return eb_grid_ref;};
 
-        const BoxArray * get_cc_ba(){return & particle_ba_refined;};
-        const BoxArray * get_nd_ba(){return & phi_ba_refined;};
-        
-        const BoxArray * get_eb_ba(){return & eb_ba_refined;}
+        const BoxArray * get_ls_ba(){return & ls_ba;};
+        const BoxArray * get_cc_ba(){return & cc_ba;};
+        const BoxArray * get_eb_ba(){return & eb_ba;}
 };
 
 

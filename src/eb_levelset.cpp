@@ -38,16 +38,17 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
     const BoxArray & phi_ba        = amrex::convert(particle_ba, IntVect{1,1,1});
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(lev);
 
-    phi_ba_refined = phi_ba;
-    phi_ba_refined.refine(ls_ref);
-    //phi_ba_refined.grow(ls_pad);
-    particle_ba_refined = particle_ba;
-    particle_ba_refined.refine(ls_ref);
-    //particle_ba_refined.grow(ls_pad);
+    ls_ba = phi_ba;
+    ls_ba.refine(ls_ref);
+    //ls_ba.grow(ls_pad);
+    
+    cc_ba = particle_ba;
+    cc_ba.refine(ls_ref);
+    //cc_ba.grow(ls_pad);
 
     // Define ls_phi and ls_valid, growing them by twice the refinement ratio
-    ls_phi->define(phi_ba_refined, dm, 1, ls_pad);
-    ls_valid->define(particle_ba_refined, dm, 1, ls_pad + 1);
+    ls_phi->define(ls_ba, dm, 1, ls_pad);
+    ls_valid->define(ls_ba, dm, 1, ls_pad + 1);
     ls_valid->setVal(-1);
 
     // Initialize by setting all ls_valid = -1, and ls_phi = huge(c_real)
@@ -63,13 +64,14 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
 
     // Temporary dummy variable used for storing eb-factory flag bits
     dummy = std::unique_ptr<MultiFab>(new MultiFab);
+    
     // Temporary MultiFab used for generating EB factories.
     eb_grid = std::unique_ptr<MultiFab>(new MultiFab);
-    eb_ba_refined = particle_ba;
-    eb_ba_refined.refine(eb_grid_ref);
-    //eb_ba_refined.grow(eb_pad);
+    eb_ba = particle_ba;
+    eb_ba.refine(eb_grid_ref);
+    //eb_ba.grow(eb_pad);
 
-    eb_grid->define(eb_ba_refined, mfix_pc->ParticleDistributionMap(amr_lev), 1, eb_grid_pad + 1);
+    eb_grid->define(eb_ba, mfix_pc->ParticleDistributionMap(amr_lev), 1, eb_grid_pad + 1);
 }
 
 
