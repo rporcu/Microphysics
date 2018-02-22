@@ -18,7 +18,7 @@ using namespace amrex;
 class LSFactory {
     private:
         // Data structures holding level set information
-        std::unique_ptr<MultiFab>  ls_phi;
+        std::unique_ptr<MultiFab>  ls_grid;
         std::unique_ptr<iMultiFab> ls_valid;
 
         // Dummy structures encloding (padded) EB index space
@@ -56,7 +56,7 @@ class LSFactory {
         void update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexSpace * eb_is);
         void update_ebis(const EBIndexSpace * eb_is);
 
-        const MultiFab * get_data(){return ls_phi.get();};
+        const MultiFab * get_data(){return ls_grid.get();};
         const iMultiFab * get_valid(){return ls_valid.get();};
         const int get_ls_ref(){return ls_grid_ref;};
         const int get_eb_ref(){return eb_grid_ref;};
