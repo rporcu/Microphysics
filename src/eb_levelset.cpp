@@ -93,8 +93,10 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory * eb
     // Only call the routine for wall collisions if the box has a wall
     if(eb_factory == NULL)
         return facet_list;
-    
-    dummy->define(eb_ba, mfix_pc->ParticleDistributionMap(amr_lev), 1, eb_grid_pad, MFInfo(), * eb_factory);
+
+    const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
+
+    dummy->define(eb_ba, dm, 1, eb_grid_pad, MFInfo(), * eb_factory);
 
     std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = eb_factory->getAreaFrac();
     const MultiCutFab * bndrycent = &(eb_factory->getBndryCent());
@@ -102,7 +104,7 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory * eb
     int n_facets = 0;
 
     // We pre-compute the normals
-    normal->define(eb_ba, mfix_pc->ParticleDistributionMap(amr_lev), 3, eb_grid_pad);
+    normal->define(eb_ba, dm, 3, eb_grid_pad);
 
     for(MFIter mfi(* normal, true); mfi.isValid(); ++mfi) {
         Box tile_box = mfi.growntilebox();
@@ -225,9 +227,8 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexS
         const auto & sfab = dynamic_cast<EBFArrayBox const &>((* dummy)[mfi]);
         const auto & flag = sfab.getEBCellFlagFab();
 
-        LSUtility::PrintFlagType(tile_box, flag);
+        LSUtility::PrintFlagType(mfi.tilebox(), flag);
         
-        // TODO: figure out why this test returns false ...
         //if(flag.getType(tile_box) == FabType::singlevalued){
             auto & v_tile = eb_valid[mfi];
             auto & ls_tile = eb_ls[mfi];
