@@ -11,9 +11,12 @@
 #include <AMReX_EBIndexSpace.H>
 #include <AMReX_PolynomialIF.H>
 #include <AMReX_EBFabFactory.H>
+#include <AMReX_EBCellFlag.H>
 
 
 using namespace amrex;
+
+
 
 class LSFactory {
     private:
@@ -65,6 +68,27 @@ class LSFactory {
         const BoxArray * get_cc_ba(){return & cc_ba;};
         const BoxArray * get_eb_ba(){return & eb_ba;}
 };
+
+
+
+class LSUtility {
+    public:
+        static void PrintFlagType(const Box & tile_box, const EBCellFlagFab & flag){
+            if(flag.getType(tile_box) == FabType::covered)
+                amrex::Print() << "flag covered" << std::endl;
+            else if(flag.getType(tile_box) == FabType::regular)
+                amrex::Print() << "flag regular" << std::endl;
+            else if(flag.getType(tile_box) == FabType::singlevalued)
+                amrex::Print() << "flag singlevalued" << std::endl;
+            else if(flag.getType(tile_box) == FabType::multivalued)
+                amrex::Print() << "flag multivalued" << std::endl;
+            else if(flag.getType(tile_box) == FabType::undefined)
+                amrex::Print() << "flag undefined" << std::endl;
+            else
+                amrex::Print() << "flag ill-formed" << std::endl;
+        }
+};
+
 
 
 class PolynomialDF : public PolynomialIF {

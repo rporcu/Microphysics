@@ -7,9 +7,8 @@
 #include <AMReX_EBFabFactory.H>
 #include <AMReX_EBIndexSpace.H>
 #include <AMReX_MultiCutFab.H>
-
 #include "AMReX_BoxIterator.H"
-
+#include <AMReX_EBCellFlag.H>
 #include <mfix_F.H>
 
 
@@ -134,7 +133,6 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory * eb
                            af_z_tile.dataPtr(), af_z_tile.loVect(), af_z_tile.hiVect());
            BL_PROFILE_VAR_STOP(compute_normals);
         }
-
     }
     normal->FillBoundary(mfix_pc->Geom(0).periodicity());
 
@@ -201,9 +199,7 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexS
     if(eb_factory == NULL) return;
 
     // Generate facets (TODO: in future these can also be provided by user)
-    amrex::Print() << "generating facets" << std::endl;
     std::unique_ptr<Vector<Real>> facets = eb_facets(eb_factory);
-    amrex::Print() << "done generating facets" << std::endl;
     int len_facets = facets->size();
     // Generate implicit function (used to determine the interior of EB)
     std::unique_ptr<MultiFab> impfunct = ebis_impfunc(eb_is);
@@ -218,7 +214,6 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexS
     eb_valid.define(ls_ba, dm, 1, ls_grid_pad);
     eb_valid.setVal(0);
 
-    amrex::Print() << "filling eb-ls" << std::endl;
     // Fill local MultiFab with eb_factory's level-set data. Note the role of eb_valid:
     //  -> eb_valid = 1 if the corresponding eb_ls location could be projected onto the eb-facets
     //  -> eb_valid = 0 if eb_ls is the fall-back (euclidian) distance to the nearest eb-facet
@@ -227,36 +222,29 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory * eb_factory, const EBIndexS
         const int * lo = tile_box.loVect();
         const int * hi = tile_box.hiVect();
 
-        amrex::Print() << "flag" << std::endl;
         const auto & sfab = dynamic_cast<EBFArrayBox const &>((* dummy)[mfi]);
         const auto & flag = sfab.getEBCellFlagFab();
-        amrex::Print() << "done flag" << std::endl;
 
+        LSUtility::PrintFlagType(tile_box, flag);
+        
         // TODO: figure out why this test returns false ...
         //if(flag.getType(tile_box) == FabType::singlevalued){
-            amrex::Print() << "v_tile" << std::endl;
             auto & v_tile = eb_valid[mfi];
-            amrex::Print() << "ls_tile" << std::endl;
             auto & ls_tile = eb_ls[mfi];
-            amrex::Print() << "if_tile" << std::endl;
             const auto & if_tile = (* impfunct)[mfi];
 
-            amrex::Print() << "fill" << std::endl;
             fill_levelset_eb(lo,                hi,
                              facets->dataPtr(), & len_facets,
                              v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
                              ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect(),
                              dx_vect.dataPtr(), dx_eb_vect.dataPtr());
 
-            amrex::Print() << "validate" << std::endl;
             validate_levelset(lo,                hi,               & ls_grid_ref,
                               if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
                               v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
                               ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
 
-            amrex::Print() << "mfi iter" << std::endl;
         //}
-        amrex::Print() << "done" << std::endl;
     }
 
     // Update LSFactory using local eb level-set
