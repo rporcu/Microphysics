@@ -20,11 +20,18 @@ using namespace amrex;
 
 class LSFactory {
     private:
-        // Data structures holding level set information
+
+        // MultiFab pointers storing level-set data
+        //    -> ls_phi:   nodal MultiFab storing signed distance function to the nearest wall
+        //    -> ls_valid: cell-centered iMultiFab storing integer flags assuming the following values:
+        //         -1 : not all nodes around cell have been initialized
+        //          0 : none of the cell's neighbours contain negative vlaues of ls_phi on its nodes
+        //          1 : the cell is in the neighbourhood of phi < 0
+
         std::unique_ptr<MultiFab>  ls_grid;
         std::unique_ptr<iMultiFab> ls_valid;
 
-        // Dummy structures encloding (padded) EB index space
+        // Data structures encloding (padded) EB index space
         std::unique_ptr<MultiFab> dummy, eb_grid;
         BoxArray eb_ba;
         const int eb_grid_ref, eb_grid_pad;
@@ -40,8 +47,6 @@ class LSFactory {
 
 
         // Construct eb_facets list from eb_factory
-        //  -> eb_facets are currently stored in a 1-D FArrayBox
-        //     (this is a bit of a hack, but we need a fortran-compatible list structure)
         std::unique_ptr<Vector<Real>> eb_facets(const EBFArrayBoxFactory & eb_factory);
 
         // Construct nodal MultiFab containing EBIS Implicit function velues
@@ -67,9 +72,9 @@ class LSFactory {
         const int get_eb_pad() const {return eb_grid_pad;};
         const int get_amr_level() const {return amr_lev;};
 
-        const BoxArray * get_ls_ba() const {return & ls_ba;};
-        const BoxArray * get_cc_ba() const {return & cc_ba;};
-        const BoxArray * get_eb_ba() const {return & eb_ba;};
+        const BoxArray & get_ls_ba() const {return ls_ba;};
+        const BoxArray & get_cc_ba() const {return cc_ba;};
+        const BoxArray & get_eb_ba() const {return eb_ba;};
 
         const MFIXParticleContainer & get_pc() const {return * mfix_pc;};
 };
@@ -82,45 +87,40 @@ class LSUtility {
             const MFIXParticleContainer & pc = level_set.get_pc();
             const int amr_lev = level_set.get_amr_level();
 
-            Box dom_ls = pc.Geom(amr_lev).Domain();// geom[lev].Domain();
+            // Set up refined geometry
+            Box dom_ls = pc.Geom(amr_lev).Domain();
             dom_ls.refine(level_set.get_ls_ref());
             Geometry geom_ls(dom_ls);
+
+            // This is a bit of a hack: we want to grow the geometry's domain box, without influencing the cell size.
+            // I.e. we want Box::Domain() to extend beyond probLo and probHi.
             Box dom_ls_g = geom_ls.Domain();
             dom_ls_g.grow(level_set.get_ls_pad());
             geom_ls.Domain(dom_ls_g);
-            amrex::Print() << "Refined geom_ls: " << geom_ls << std::endl;
+            //amrex::Print() << "Refined geom_ls: " << geom_ls << std::endl;
 
             return geom_ls;
-        };
+        }
 
 
         static Geometry make_eb_geometry(const LSFactory & level_set){
             const MFIXParticleContainer & pc = level_set.get_pc();
             const int amr_lev = level_set.get_amr_level();
 
-            Box dom_eb = pc.Geom(amr_lev).Domain();// geom[lev].Domain();
+            // Set up refined geometry
+            Box dom_eb = pc.Geom(amr_lev).Domain();
             dom_eb.refine(level_set.get_eb_ref());
             Geometry geom_eb(dom_eb);
+
+            // This is a bit of a hack: we want to grow the geometry's domain box, without influencing the cell size.
+            // I.e. we want Box::Domain() to extend beyond probLo and probHi.
             Box dom_eb_g = geom_eb.Domain();
             dom_eb_g.grow(level_set.get_eb_pad());
             geom_eb.Domain(dom_eb_g);
-            amrex::Print() << "EB geom_eb: " << geom_eb << std::endl;
+            //amrex::Print() << "EB geom_eb: " << geom_eb << std::endl;
 
             return geom_eb;
-        };
-
-
-        //static EBFArrayBoxFactory make_eb_factory(const LSFactory & level_set){
-        //    Geometry geom_eb_g = LSUtility::make_eb_geometry(level_set);
-        //    //Box dom_eb_g = geom_eb_g.Domain();
-        //    //dom_eb_g.grow(4);
-        //    //geom_eb_g.Domain(dom_eb_g);
-        //    //amrex::Print() << "Grown geom_ls_g: " << geom_eb_g << std::endl;
-        //    //BoxArray ba_g = * level_set.get_eb_ba();
-        //    //ba_g.grow(4);
-        //
-        //
-        //}
+        }
 
 
         static void PrintFlagType(const Box & tile_box, const EBCellFlagFab & flag){

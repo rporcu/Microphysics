@@ -168,7 +168,7 @@ mfix_level::make_eb_geometry(int lev)
     AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, 16, 0);
 
     EBTower::Build();
-    EBFArrayBoxFactory eb_factory_poly2(geom_eb, * level_set->get_eb_ba(), dmap[lev], {2, 2, 2}, EBSupport::full);
+    EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {2, 2, 2}, EBSupport::full);
     level_set->update_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
     EBTower::Destroy();
 
