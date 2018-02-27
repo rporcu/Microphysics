@@ -32,7 +32,7 @@ class LSFactory {
         std::unique_ptr<iMultiFab> ls_valid;
 
         // Data structures encloding (padded) EB index space
-        std::unique_ptr<MultiFab> dummy, eb_grid;
+        std::unique_ptr<MultiFab> eb_grid;
         BoxArray eb_ba;
         const int eb_grid_ref, eb_grid_pad;
 

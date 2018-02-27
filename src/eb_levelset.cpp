@@ -38,8 +38,6 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
     ls_valid = std::unique_ptr<iMultiFab>(new iMultiFab);
     // Temporary MultiFab used for generating EB factories.
     eb_grid = std::unique_ptr<MultiFab>(new MultiFab);
-    // Temporary dummy variable used for storing eb-factory flag bits
-    dummy = std::unique_ptr<MultiFab>(new MultiFab);
 
     // Define ls_grid and ls_valid, growing them by ls_pad 
     // Note: box arrays (such as ls_ba) are initialized in init_box() 
@@ -104,7 +102,7 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
      * Access EB Cut-Cell data:                                                *
      *                                                                         */
     
-    dummy->define(eb_ba, dm, 1, eb_grid_pad, MFInfo(), eb_factory);
+    MultiFab dummy(eb_ba, dm, 1, eb_grid_pad, MFInfo(), eb_factory);
     // Area fraction data
     std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = eb_factory.getAreaFrac();
     // EB boundary-centre data
@@ -125,7 +123,7 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
         const int * lo = tile_box.loVect();
         const int * hi = tile_box.hiVect();
 
-        const auto & sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
+        const auto & sfab = dynamic_cast <EBFArrayBox const&>(dummy[mfi]);
         const auto & flag = sfab.getEBCellFlagFab();
 
         // Need to count number of eb-facets (in order to allocate FArrayBox)
@@ -165,7 +163,7 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
     for(MFIter mfi(normal, true); mfi.isValid(); ++mfi) {
         Box tile_box = mfi.growntilebox();
 
-        const auto & sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
+        const auto & sfab = dynamic_cast <EBFArrayBox const&>(dummy[mfi]);
         const auto & flag = sfab.getEBCellFlagFab();
 
         const auto & norm_tile =normal[mfi];
@@ -243,28 +241,21 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexS
         const int * lo = tile_box.loVect();
         const int * hi = tile_box.hiVect();
 
-        const auto & sfab = dynamic_cast<EBFArrayBox const &>((* dummy)[mfi]);
-        const auto & flag = sfab.getEBCellFlagFab();
+        auto & v_tile = eb_valid[mfi];
+        auto & ls_tile = eb_ls[mfi];
+        const auto & if_tile = (* impfunct)[mfi];
 
-        LSUtility::PrintFlagType(mfi.tilebox(), flag);
+        fill_levelset_eb(lo,                hi,
+                         facets->dataPtr(), & len_facets,
+                         v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
+                         ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect(),
+                         dx_vect.dataPtr(), dx_eb_vect.dataPtr());
 
-        //if(flag.getType(tile_box) == FabType::singlevalued){
-            auto & v_tile = eb_valid[mfi];
-            auto & ls_tile = eb_ls[mfi];
-            const auto & if_tile = (* impfunct)[mfi];
+        validate_levelset(lo,                hi,               & ls_grid_ref,
+                          if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
+                          v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
+                          ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
 
-            fill_levelset_eb(lo,                hi,
-                             facets->dataPtr(), & len_facets,
-                             v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
-                             ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect(),
-                             dx_vect.dataPtr(), dx_eb_vect.dataPtr());
-
-            validate_levelset(lo,                hi,               & ls_grid_ref,
-                              if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
-                              v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
-                              ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
-
-        //}
     }
 
     // Update LSFactory using local eb level-set

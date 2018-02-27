@@ -48,11 +48,26 @@ contains
     end subroutine init_levelset
 
 
+
+    !----------------------------------------------------------------------------------------------------------------!
+    !                                                                                                                !
+    !        subroutine FILL_LEVELSET                                                                                !
+    !                                                                                                                !
+    !   Purpose: given a list of EB-facets, fill the level-set multifab between `lo` and `hi` with the closests      !
+    !   distance to the EB-facests. Also fill a iMultiFab with 0's and 1's. 0 Indicating that the closest distance   !
+    !   was not the result of a projection onto a facet's plane, but instead onto an edge/corner.                    !
+    !                                                                                                                !
+    !   Comments: Distances are **signed** ( < 0 => inside an EB). Note that at this point the algorithm assumes an  !
+    !   edge case lies inside an EB (i.e. its distance is negative). These points are marked using valid = 0. We     !
+    !   recommend that the EB's implicit function is used to check these cases (i.e. validate the level-set).        !
+    !                                                                                                                !
+    !----------------------------------------------------------------------------------------------------------------!
+
     subroutine fill_levelset_eb(lo,      hi,          &
-                                     eb_list, l_eb,        &
-                                     valid,   vlo,  vhi,   &
-                                     phi,     phlo, phhi,  &
-                                     dx,      dx_eb      ) &
+                                eb_list, l_eb,        &
+                                valid,   vlo,  vhi,   &
+                                phi,     phlo, phhi,  &
+                                dx,      dx_eb      ) &
                      bind(C, name="fill_levelset_eb")
 
         implicit none
@@ -89,68 +104,84 @@ contains
 
     contains
 
-    function closest_dist(eb_data, l_eb,       &
-                          pos,     proj_valid, &
-                          dx                  )
-       
-        use eb_geometry, only: facets_nearest_pt
-                      
-        implicit none
 
-        real(c_real) :: closest_dist
+        !------------------------------------------------------------------------------------------------------------!
+        !                                                                                                            !
+        !        function CLOSEST_DIST                                                                               !
+        !                                                                                                            !
+        !   Purpose: Find the distance to the closets point on the surface defined by the EB-facet list (from the    !
+        !   point `pos`). Note that this distance is **signed** => if the vector `eb_center - pos` points            !
+        !   **towards** the surface.                                                                                 !
+        !                                                                                                            !
+        !   Comments: sometimes the closes point is on an EB-facet edge. In this case, the surface normal is not     !
+        !   trivial, and this algorithm defaults to a negative distance. Howerever this point is given an `valid`    !
+        !   flag of false. It is recommended that the EB's implicit function is used to determine the wether the     !
+        !   lies in the EB interior.                                                                                 !
+        !                                                                                                            !
+        !----------------------------------------------------------------------------------------------------------- !
 
-        integer,                       intent(in)  :: l_eb
-        logical,                       intent(out) :: proj_valid
-        real(c_real), dimension(3),    intent(in)  :: pos, dx
-        real(c_real), dimension(l_eb), intent(in)  :: eb_data
+        function closest_dist(eb_data, l_eb,       &
+                              pos,     proj_valid, &
+                              dx                  )
+           
+            use eb_geometry, only: facets_nearest_pt
+                          
+            implicit none
 
-        integer                    :: i
-        integer,      dimension(3) :: vi_pt_closest, vi_loop_closest
-        real(c_real)               :: dist_proj, dist2, min_dist2, min_edge_dist2
-        real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, eb_cent_closest, eb_norm_closest
+            real(c_real) :: closest_dist
 
-        inv_dx(:)      = dx(:)
-        closest_dist   = huge(closest_dist)
-        min_dist2      = huge(min_dist2)
-        min_edge_dist2 = huge(min_edge_dist2)
+            integer,                       intent(in)  :: l_eb
+            logical,                       intent(out) :: proj_valid
+            real(c_real), dimension(3),    intent(in)  :: pos, dx
+            real(c_real), dimension(l_eb), intent(in)  :: eb_data
 
-        proj_valid = .false.
-        
-        do i = 1, l_eb, 6
-            eb_cent(:)   = eb_data(i     : i + 2)
-            eb_norm(:)   = eb_data(i + 3 : i + 5)
+            integer                    :: i
+            integer,      dimension(3) :: vi_pt_closest, vi_loop_closest
+            real(c_real)               :: dist_proj, dist2, min_dist2, min_edge_dist2
+            real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, eb_cent_closest, eb_norm_closest
 
-            dist2        = dot_product( pos(:) - eb_cent(:), pos(:) - eb_cent(:) )
-            dist_proj    = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
+            inv_dx(:)      = dx(:)
+            closest_dist   = huge(closest_dist)
+            min_dist2      = huge(min_dist2)
+            min_edge_dist2 = huge(min_edge_dist2)
+
+            proj_valid = .false.
             
-            eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
-            
-            if ( dist2 < min_dist2 ) then
-                min_dist2          = dist2
-                closest_dist       = dist_proj
-                vi_loop_closest(:) = floor( eb_cent(:) * inv_dx(:))
-                vi_pt_closest(:)   = floor( eb_min_pt(:) * inv_dx(:))
-                eb_cent_closest(:) = eb_cent(:)
-                eb_norm_closest(:) = eb_norm(:)
+            do i = 1, l_eb, 6
+                eb_cent(:)   = eb_data(i     : i + 2)
+                eb_norm(:)   = eb_data(i + 3 : i + 5)
+
+                dist2        = dot_product( pos(:) - eb_cent(:), pos(:) - eb_cent(:) )
+                dist_proj    = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
+                
+                eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
+                
+                if ( dist2 < min_dist2 ) then
+                    min_dist2          = dist2
+                    closest_dist       = dist_proj
+                    vi_loop_closest(:) = floor( eb_cent(:) * inv_dx(:))
+                    vi_pt_closest(:)   = floor( eb_min_pt(:) * inv_dx(:))
+                    eb_cent_closest(:) = eb_cent(:)
+                    eb_norm_closest(:) = eb_norm(:)
+                end if
+            end do
+
+            if ( all( vi_pt_closest == vi_loop_closest ) ) then
+                proj_valid = .true.
             end if
-        end do
+            
+            if ( .not. proj_valid ) then
+                c_vec = facets_nearest_pt(vi_pt_closest, vi_loop_closest, pos, eb_norm_closest, eb_cent_closest, dx)
+                min_edge_dist2 = dot_product( c_vec(:) - pos(:), c_vec(:) - pos(:))
+                !if ( min_dist2 < min_edge_dist2 ) then
+                !    write(*,*) "ha!"
+                !end if
+                closest_dist = -sqrt( min(min_dist2, min_edge_dist2) )
+            end if
 
-        if ( all( vi_pt_closest == vi_loop_closest ) ) then
-            proj_valid = .true.
-        end if
-        
-        if ( .not. proj_valid ) then
-            c_vec = facets_nearest_pt(vi_pt_closest, vi_loop_closest, pos, eb_norm_closest, eb_cent_closest, dx)
-            min_edge_dist2 = dot_product( c_vec(:) - pos(:), c_vec(:) - pos(:))
-            !if ( min_dist2 < min_edge_dist2 ) then
-            !    write(*,*) "ha!"
-            !end if
-            closest_dist = -sqrt( min(min_dist2, min_edge_dist2) )
-        end if
+        end function closest_dist
 
-    end function closest_dist
-
-end subroutine fill_levelset_eb
+    end subroutine fill_levelset_eb
 
 subroutine validate_levelset(lo,    hi,   n_pad, &
                              impf,  imlo, imhi,  &
@@ -166,19 +197,12 @@ subroutine validate_levelset(lo,    hi,   n_pad, &
     integer,                    intent(in   ) :: valid (  vlo(1):vhi(1),   vlo(2):vhi(2),   vlo(3):vhi(3)  )
     real(c_real),               intent(inout) :: phi   ( phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
 
-    integer      :: ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
+    integer      :: ii, jj, kk
     real(c_real) :: levelset_node
 
-    klo = lo(3)! - n_pad
-    khi = hi(3)! + n_pad
-    jlo = lo(2)! - n_pad
-    jhi = hi(2)! + n_pad
-    ilo = lo(1)! - n_pad
-    ihi = hi(1)! + n_pad
-
-    do kk = klo, khi
-        do jj = jlo, jhi
-            do ii = ilo, ihi
+    do kk = lo(3), hi(3)
+        do jj = lo(2), hi(2)
+            do ii = lo(1), hi(1)
                 !write(*,*) "validating: ", ii, jj, kk, "v:", valid(ii, jj, kk), "if:", impf(ii, jj, kk)
                 if ( valid(ii, jj, kk)  == 0 ) then
                     levelset_node = dabs( phi(ii, jj, kk) )
