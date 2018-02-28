@@ -183,40 +183,55 @@ contains
 
     end subroutine fill_levelset_eb
 
-subroutine validate_levelset(lo,    hi,   n_pad, &
-                             impf,  imlo, imhi,  &
-                             valid, vlo,  vhi,   &
-                             phi,   phlo, phhi)  &
-           bind(C, name="validate_levelset")
 
-    implicit none
 
-    integer,      dimension(3), intent(in   ) :: lo, hi, imlo, imhi, vlo, vhi, phlo, phhi
-    integer,                    intent(in   ) :: n_pad
-    real(c_real),               intent(in   ) :: impf  ( imlo(1):imhi(1), imlo(2):imhi(2), imlo(3):imhi(3) )
-    integer,                    intent(in   ) :: valid (  vlo(1):vhi(1),   vlo(2):vhi(2),   vlo(3):vhi(3)  )
-    real(c_real),               intent(inout) :: phi   ( phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
+    !----------------------------------------------------------------------------------------------------------------!
+    !                                                                                                                !
+    !   pure subroutine VALIDATE_LEVELSET                                                                            !
+    !                                                                                                                !
+    !   Purpose: ensure that the sign of the level-set (`phi`) function is the same as the sign of the implicit      !
+    !   function (`impf`), if `valid == 0`.                                                                          !
+    !                                                                                                                !
+    !   Comments: Note the role of `valid` above, `valid` is 0 for points where the closest distance to the surface  !
+    !   is on an edge. In that case, fill_levelset_eb defaults to negative distances. Hence this function can be     !
+    !   used for checking this asusmption, and flipping the level-set value's sign if necessary.                     !
+    !                                                                                                                !
+    !----------------------------------------------------------------------------------------------------------------!
 
-    integer      :: ii, jj, kk
-    real(c_real) :: levelset_node
+    pure subroutine validate_levelset(lo,    hi,   n_pad, &
+                                      impf,  imlo, imhi,  &
+                                      valid, vlo,  vhi,   &
+                                      phi,   phlo, phhi)  &
+                    bind(C, name="validate_levelset")
 
-    do kk = lo(3), hi(3)
-        do jj = lo(2), hi(2)
-            do ii = lo(1), hi(1)
-                !write(*,*) "validating: ", ii, jj, kk, "v:", valid(ii, jj, kk), "if:", impf(ii, jj, kk)
-                if ( valid(ii, jj, kk)  == 0 ) then
-                    levelset_node = dabs( phi(ii, jj, kk) )
-                    if ( impf(ii, jj, kk) <= 0 ) then
-                        phi(ii, jj, kk) = levelset_node
-                    else
-                        phi(ii, jj, kk) = -levelset_node
+        implicit none
+
+        integer,      dimension(3), intent(in   ) :: lo, hi, imlo, imhi, vlo, vhi, phlo, phhi
+        integer,                    intent(in   ) :: n_pad
+        real(c_real),               intent(in   ) :: impf  ( imlo(1):imhi(1), imlo(2):imhi(2), imlo(3):imhi(3) )
+        integer,                    intent(in   ) :: valid (  vlo(1):vhi(1),   vlo(2):vhi(2),   vlo(3):vhi(3)  )
+        real(c_real),               intent(inout) :: phi   ( phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
+
+        integer      :: ii, jj, kk
+        real(c_real) :: levelset_node
+
+        do kk = lo(3), hi(3)
+            do jj = lo(2), hi(2)
+                do ii = lo(1), hi(1)
+                    !write(*,*) "validating: ", ii, jj, kk, "v:", valid(ii, jj, kk), "if:", impf(ii, jj, kk)
+                    if ( valid(ii, jj, kk)  == 0 ) then
+                        levelset_node = dabs( phi(ii, jj, kk) )
+                        if ( impf(ii, jj, kk) <= 0 ) then
+                            phi(ii, jj, kk) = levelset_node
+                        else
+                            phi(ii, jj, kk) = -levelset_node
+                        end if
                     end if
-                end if
+                end do
             end do
         end do
-    end do
- 
-end subroutine validate_levelset
+     
+    end subroutine validate_levelset
 
 
 subroutine update_levelset(lo,    hi,           &
