@@ -322,32 +322,32 @@ contains
 
             klo = k - 2 * n_pad
             if ( klo .lt. phlo(3) ) then
-                klo = klo + n_pad
+                klo = phlo(3)
             end if
 
             khi = k + 2 * n_pad
             if ( khi .gt. phhi(3) ) then
-                khi = khi - n_pad
+                khi = phhi(3)
             end if
 
             jlo = j - 2 * n_pad
             if ( jlo .lt. phlo(2) ) then
-                jlo = jlo + n_pad
+                jlo = phlo(2)
             end if
 
             jhi = j + 2 * n_pad
             if ( jhi .gt. phhi(2) ) then
-                jhi = jhi - n_pad
+                jhi = phhi(2)
             end if
 
             ilo = i - 2 * n_pad
             if ( ilo .lt. phlo(1) ) then
-                ilo = ilo + n_pad
+                ilo = phlo(1)
             end if
 
             ihi = i + 2 * n_pad
             if ( ihi .gt. phhi(1) ) then
-                ihi = ihi - n_pad
+                ihi = phhi(1)
             end if
 
 
