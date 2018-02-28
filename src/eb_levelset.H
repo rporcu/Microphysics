@@ -61,6 +61,8 @@ class LSFactory {
         LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, const MFIXParticleContainer * pc);
         ~LSFactory();
 
+        void regrid();
+
         void update_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is);
         void update_ebis(const EBIndexSpace & eb_is);
 

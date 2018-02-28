@@ -47,6 +47,8 @@ mfix_level::Regrid (int lev, int nstep)
            eb_normals   = pc -> EBNormals(lev, ebfactory.get(), dummy.get());
 
            // level_set -> update(dummy.get());
+           
+           level_set->regrid();
       
        }
        
@@ -59,6 +61,8 @@ mfix_level::Regrid (int lev, int nstep)
            eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
            // level_set -> update(dummy.get());
+           
+           level_set->regrid();
        }
     }
     else if (load_balance_type == "KnapSack") {
@@ -111,6 +115,8 @@ mfix_level::Regrid (int lev, int nstep)
                     eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
                     // level_set -> update(dummy.get());
+                    
+                    level_set->regrid();
                 }
             }
         } else {
@@ -150,6 +156,8 @@ mfix_level::Regrid (int lev, int nstep)
                 eb_normals   = pc -> EBNormals(lev, ebfactory.get(), dummy.get());
 
                 // level_set -> update(dummy.get());
+                
+                level_set->regrid();
             }
             
             if (particle_ebfactory) {
@@ -161,6 +169,8 @@ mfix_level::Regrid (int lev, int nstep)
                 eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
                 // level_set -> update(dummy.get());
+                
+                level_set->regrid();
             }
         }
 
