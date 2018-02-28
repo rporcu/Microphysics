@@ -144,38 +144,69 @@ mfix_level::make_eb_geometry(int lev)
       }
       IntersectionIF all_planes(planes);
 
+      impfunc_walls = std::unique_ptr<BaseIF>(all_planes.newImplicitFunction());
+      
       impfunc.reset(all_planes.newImplicitFunction());
     }
-
-    ///////////////////////////////////////////////////
-
-    // Level-Set: define container for level set
-    // level-set multifab is defined here, and set to (fortran) huge(amrex_real)
-    //            -> use min to intersect new eb boundaries
-    level_set     = std::unique_ptr<LSFactory>(new LSFactory(lev, 1, 1, 2, 2, pc.get()));
-
-    GeometryShop gshop_poly2(* impfunc_poly2, true);
-    GeometryShop gshop_walls(* impfunc_walls, true);
-
-    Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
-    AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, 16, 0);
-
-    EBTower::Build();
-    level_set->update_ebis(* AMReX_EBIS::instance());
-    EBTower::Destroy();
-
-    Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
-    AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, 16, 0);
-
-    EBTower::Build();
-    EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {2, 2, 2}, EBSupport::full);
-    level_set->update_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
-    EBTower::Destroy();
 
 
     int max_level = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
+
+    /******************************************************************************************************************
+     *                                                                                                                *
+     * Fill Level-set using:                                                                                          *
+     *      -> Planes (where the GeometryShop's implicit function is a signed distance): implicit function's value    *
+     *      -> Poly2 (where GeometryShop's implicit function is singed but not a distance): min distance to EB facets *
+     * Note: this requires building and destroying the EBTower (twice), so any EBTower data built before this will be *
+     * lost...                                                                                                        *
+     *                                                                                                                *
+     ******************************************************************************************************************/
+
+    // Level-Set: initialize container for level set
+    // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)
+    //            -> use min to intersect new eb boundaries (in update)
+    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 1, 1, 2, 2, pc.get()));
+
+    // Define both components of the the GeometryShop seperately:
+    GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
+    GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
+
+
+    // Define the EBIS first using only the walls...
+    Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
+    AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
+
+    EBTower::Build();
+    // GeometryShop's Planes' implicit function is actually a signed distance function
+    //      => it's just easier to fill the level-set this way
+    level_set->update_ebis(* AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+    if(use_poly2){
+        // Define the EBIS using only the poly2 (after deleting the walls-only EBTower)...
+        Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+        AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, grid_size, max_level);
+
+        EBTower::Build();
+        // GeometryShop's PolynomialIF is not a signed distance function... 
+        //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
+        //          => define the level set as the (signed) distance to the closest point on the EB-facets
+        EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {2, 2, 2}, EBSupport::full);
+        level_set->update_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
+        EBTower::Destroy();
+    }
+
+
+
+    /******************************************************************************************************************
+     *                                                                                                                *
+     * Build standard EB Factories                                                                                    *
+     *                                                                                                                *
+     ******************************************************************************************************************/
+
+
     GeometryShop gshop(*impfunc, eb_verbosity);
     AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
 
@@ -215,6 +246,8 @@ mfix_level::make_eb_hourglass(int lev)
     planes.resize(0);
 
     std::unique_ptr<BaseIF> impfunc;
+    std::unique_ptr<BaseIF> impfunc_unpolys;
+    std::unique_ptr<BaseIF> impfunc_walls;
 
     ParmParse pp("mfix");
 
@@ -323,10 +356,15 @@ mfix_level::make_eb_hourglass(int lev)
     }
     IntersectionIF all_planes(planes);
 
+    impfunc_walls = std::unique_ptr<BaseIF>(all_planes.newImplicitFunction());
+
     Vector<BaseIF*> bulbs(2);
     bulbs[0] = &poly1t;
     bulbs[1] = &poly2t;
     UnionIF unpolys(bulbs);
+
+    impfunc_unpolys = std::unique_ptr<BaseIF>(unpolys.newImplicitFunction());
+
 
     Vector<BaseIF*> funcs(2);
     funcs[0] = &unpolys;
@@ -334,11 +372,63 @@ mfix_level::make_eb_hourglass(int lev)
     IntersectionIF implicit(funcs);
     impfunc.reset(implicit.newImplicitFunction());
 
-    ///////////////////////////////////////////////////
 
     int max_level = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
+
+
+
+    /******************************************************************************************************************
+     *                                                                                                                *
+     * Fill Level-set using:                                                                                          *
+     *      -> Planes (where the GeometryShop's implicit function is a signed distance): implicit function's value    *
+     *      -> Poly2 (where GeometryShop's implicit function is singed but not a distance): min distance to EB facets *
+     * Note: this requires building and destroying the EBTower (twice), so any EBTower data built before this will be *
+     * lost...                                                                                                        *
+     *                                                                                                                *
+     ******************************************************************************************************************/
+
+    // Level-Set: initialize container for level set
+    // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)
+    //            -> use min to intersect new eb boundaries (in update)
+    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 1, 1, 2, 2, pc.get()));
+
+    // Define both components of the the GeometryShop seperately:
+    GeometryShop gshop_upoly(* impfunc_unpolys, eb_verbosity);
+    GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
+
+
+    // Define the EBIS first using only the walls...
+    Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
+    AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
+
+    EBTower::Build();
+    // GeometryShop's Planes' implicit function is actually a signed distance function
+    //      => it's just easier to fill the level-set this way
+    level_set->update_ebis(* AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+    // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
+    Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+    AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_upoly, grid_size, max_level);
+
+    EBTower::Build();
+    // GeometryShop's PolynomialIF is not a signed distance function... 
+    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
+    //          => define the level set as the (signed) distance to the closest point on the EB-facets
+    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {2, 2, 2}, EBSupport::full);
+    level_set->update_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+
+
+    /******************************************************************************************************************
+     *                                                                                                                *
+     * Build standard EB Factories                                                                                    *
+     *                                                                                                                *
+     ******************************************************************************************************************/
+
     GeometryShop gshop(*impfunc, eb_verbosity);
     AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
 
@@ -361,10 +451,4 @@ mfix_level::make_eb_hourglass(int lev)
                          m_eb_support_level));
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
-
-    //level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 2, pc.get(),
-    //                                      AMReX_EBIS::instance(), geom[lev].CellSize()
-    //                                      //particle_ebfactory.get()
-    //                                      ));
-    //level_set -> update(dummy.get());
 }

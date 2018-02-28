@@ -98,9 +98,11 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
     const DistributionMapping & dm = mfix_pc->ParticleDistributionMap(amr_lev);
    
 
-    /*                                                                         *
+    /***************************************************************************
+     *                                                                         *
      * Access EB Cut-Cell data:                                                *
-     *                                                                         */
+     *                                                                         *
+     ***************************************************************************/
     
     MultiFab dummy(eb_ba, dm, 1, eb_grid_pad, MFInfo(), eb_factory);
     // Area fraction data
@@ -109,9 +111,11 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
     const MultiCutFab * bndrycent = &(eb_factory.getBndryCent());
 
 
-    /*                                                                         *
+    /***************************************************************************
+     *                                                                         *
      * Compute normals data (which are stored on MultiFab over the eb_ba Grid) *
-     *                                                                         */
+     *                                                                         *
+     ***************************************************************************/
 
     MultiFab normal(eb_ba, dm, 3, eb_grid_pad);
 
@@ -152,9 +156,11 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
     normal.FillBoundary(mfix_pc->Geom(0).periodicity());
 
 
-    /*                                                                         *
+    /***************************************************************************
+     *                                                                         *
      * Compute EB-facet centres data (which are stored in a 1-D array)         *
-     *                                                                         */
+     *                                                                         *
+     ***************************************************************************/
 
 
     facet_list = std::unique_ptr<Vector<Real>>(new Vector<Real>(6 * n_facets));
