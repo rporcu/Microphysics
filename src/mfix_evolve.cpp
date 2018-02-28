@@ -7,8 +7,8 @@
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
-mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real dt, Real & prev_dt,
-                   Real time, Real normg)
+mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& dt, Real & prev_dt,
+                   Real time, Real stop_time, Real normg)
 {
  BL_PROFILE_REGION_START("mfix::Evolve");
 
@@ -29,7 +29,8 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real dt
   
   if (solve_fluid)  {
       if ( use_proj_method )	{
-	  EvolveFluidProjection(lev,nstep,steady_state,dt,prev_dt,time);
+	  EvolveFluidProjection(lev,nstep,steady_state,dt,time,stop_time);
+          prev_dt = dt;
       }	else {
           EvolveFluidSimple(lev,nstep,set_normg,dt,prev_dt,time,normg);
       }

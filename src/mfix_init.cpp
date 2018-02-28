@@ -15,9 +15,10 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         // Whether to use projection method
         pp.query("use_proj_method", use_proj_method );
       
-        // CFL coefficient
+        // Options to control time stepping
         pp.query("cfl", cfl );
-      
+        pp.query("fixed_dt", fixed_dt );
+	
         // Option to control MGML behavior
         pp.query( "mg_verbose", mg_verbose );
         pp.query( "mg_cg_verbose", mg_cg_verbose );
@@ -561,7 +562,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   }
 }
 
-void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag)
+void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time)
 {
   if (solve_dem) {
 
@@ -577,17 +578,14 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
   if (solve_fluid)
-     mfix_init_fluid(lev,restart_flag);
+     mfix_init_fluid(lev,restart_flag,stop_time);
 
   // Call user-defined subroutine to set constants, check data, etc.
   if (call_udf) mfix_usr0();
 
-  // Calculate all the coefficients once before entering the time loop
+  // Calculate the initial volume fraction
   if (solve_fluid)
   {
-     int calc_flag = 2;
-     mfix_calc_coeffs(lev,calc_flag);
-
      mfix_calc_volume_fraction(lev,sum_vol_orig);
      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
   }
@@ -627,7 +625,7 @@ mfix_level::MakeBCArrays ()
 }
 
 void
-mfix_level::mfix_init_fluid(int lev, int is_restarting)
+mfix_level::mfix_init_fluid(int lev, int is_restarting, Real stop_time)
 {
   Box domain(geom[lev].Domain());
 
@@ -642,6 +640,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
   // Here we set bc values for p and u,v,w before the IC's are set
   mfix_set_bc0(lev);
 
+  int delp_dir;
+
   // We deliberately don't tile this loop since we will be looping
   //    over bc's on faces and it makes more sense to do this one grid at a time
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
@@ -650,6 +650,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
     const Box& sbx = (*ep_g[lev])[mfi].box();
 
     if ( is_restarting ) {
+
       init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
            (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr());
 
@@ -663,7 +664,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
            vbx.loVect(), vbx.hiVect(),
            wbx.loVect(), wbx.hiVect(),
            bx.loVect(),  bx.hiVect(),
-                       domain.loVect(), domain.hiVect(),
+           domain.loVect(), domain.hiVect(),
            (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
            (*rop_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(), (*p0_g[lev])[mfi].dataPtr(),
            (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
@@ -671,7 +672,19 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
            (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
            &dx, &dy, &dz, &xlen, &ylen, &zlen); 
     }
+
+      set_p0(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
+             domain.loVect(), domain.hiVect(),
+             (*p0_g[lev])[mfi].dataPtr(), 
+             &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir);
   }
+
+ // Here we set a separate periodicity flag for p0_g because when we use
+ // pressure drop (delp) boundary conditions we fill all variables *except* p0
+ // periodically
+  IntVect press_per = IntVect(geom[lev].isPeriodic(0),geom[lev].isPeriodic(1),geom[lev].isPeriodic(2));
+  if (delp_dir > -1) press_per[delp_dir] = 0;
+  p0_periodicity = Periodicity(press_per);
 
   // Here we re-set the bc values for p and u,v,w just in case init_fluid
   //      over-wrote some of the bc values with ic values
@@ -715,8 +728,10 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting)
 
   if ( use_proj_method ) 
   {
+     // We need to initialize the volume fraction ep_g before the first projection
+     mfix_calc_volume_fraction(lev,sum_vol_orig);
      mfix_project_velocity(lev);
-     mfix_initial_iterations(lev);
+     mfix_initial_iterations(lev,stop_time);
   }
 }
 

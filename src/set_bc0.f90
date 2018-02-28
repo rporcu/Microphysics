@@ -10,9 +10,9 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine set_bc0(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-                      u_g, v_g, w_g, p0_g, ep_g, ro_g, rop_g, mu_g, lambda_g, &
-                      bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-                      bc_klo_type, bc_khi_type, domlo, domhi) &
+                       u_g, v_g, w_g, p0_g, ep_g, ro_g, rop_g, mu_g, lambda_g, &
+                       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+                       bc_klo_type, bc_khi_type, domlo, domhi) &
       bind(C, name="set_bc0")
 
       use amrex_fort_module, only : c_real => amrex_real
@@ -94,11 +94,7 @@
                    bc_ilo_type(j,k,1) == POUT_ .or. &
                    bc_ilo_type(j,k,1) == MINF_) then
 
-                  if (is_undefined(ro_g0)) then
-                     bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                  else
-                     bc_ro_g = ro_g0
-                  endif
+                  bc_ro_g = ro_g0
 
                   if (is_undefined(mu_g0)) then
                      bc_mu_g     = sutherland(bc_t_g(bcv))
@@ -108,7 +104,6 @@
                      bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                   endif
 
-                      p0_g(slo(1):domlo(1)-1,j,k) = scale_pressure(bc_p_g(bcv))
                       ep_g(slo(1):domlo(1)-1,j,k) = bc_ep_g(bcv)
                       ro_g(slo(1):domlo(1)-1,j,k) = bc_ro_g
                      rop_g(slo(1):domlo(1)-1,j,k) = bc_ro_g*bc_ep_g(bcv)
@@ -117,12 +112,20 @@
 
                end if
 
-               if (bc_ilo_type(j,k,1) == MINF_) then
+               if (bc_ilo_type(j,k,1) == PINF_ .or. &
+                   bc_ilo_type(j,k,1) == POUT_) then
+
+                   p0_g(slo(1):domlo(1)-1,j,k) = scale_pressure(bc_p_g(bcv))
+
+               else if (bc_ilo_type(j,k,1) == MINF_) then
 
                    ! Note we index u_g differently to catch the inflow face
                    u_g(ulo(1):domlo(1)  ,j,k) = bc_u_g(bcv)
                    v_g(vlo(1):domlo(1)-1,j,k) = 0.0d0
                    w_g(wlo(1):domlo(1)-1,j,k) = 0.0d0
+
+                   p0_g(slo(1):domlo(1)-1,j,k) = &
+                       2.d0 * p0_g(domlo(1),j,k) - p0_g(domlo(1)+1,j,k)
 
                end if
 
@@ -140,11 +143,7 @@
                    bc_ihi_type(j,k,1) == POUT_ .or. &
                    bc_ihi_type(j,k,1) == MINF_) then
 
-                   if (is_undefined(ro_g0)) then
-                      bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                   else
-                      bc_ro_g = ro_g0
-                   endif
+                   bc_ro_g = ro_g0
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
@@ -154,7 +153,6 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                        p0_g(domhi(1)+1:shi(1),j,k) = scale_pressure(bc_p_g(bcv))
                         ep_g(domhi(1)+1:shi(1),j,k) = bc_ep_g(bcv)
                         ro_g(domhi(1)+1:shi(1),j,k) = bc_ro_g
                        rop_g(domhi(1)+1:shi(1),j,k) = bc_ro_g*bc_ep_g(bcv)
@@ -163,12 +161,20 @@
 
                end if
 
-               if (bc_ihi_type(j,k,1) == MINF_) then
+               if (bc_ihi_type(j,k,1) == PINF_ .or. &
+                   bc_ihi_type(j,k,1) == POUT_) then
+
+                   p0_g(domhi(1)+1:shi(1),j,k) = scale_pressure(bc_p_g(bcv))
+
+               else if (bc_ihi_type(j,k,1) == MINF_) then
 
                    ! Note we index the same on the high side
                    u_g(domhi(1)+1:uhi(1),j,k) = bc_u_g(bcv)
                    v_g(domhi(1)+1:vhi(1),j,k) = 0.0d0
                    w_g(domhi(1)+1:whi(1),j,k) = 0.0d0
+
+                   p0_g(domhi(1)+1:shi(1),j,k) = &
+                       2.d0 * p0_g(domhi(1),j,k) - p0_g(domhi(1)-1,j,k)
                end if
 
             end do
@@ -185,11 +191,7 @@
                    bc_jlo_type(i,k,1) == POUT_ .or. &
                    bc_jlo_type(i,k,1) == MINF_) then
 
-                   if (is_undefined(ro_g0)) then
-                      bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                   else
-                      bc_ro_g = ro_g0
-                   endif
+                   bc_ro_g = ro_g0
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
@@ -199,7 +201,6 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                      p0_g(i,slo(2):domlo(2)-1,k) = scale_pressure(bc_p_g(bcv))
                       ep_g(i,slo(2):domlo(2)-1,k) = bc_ep_g(bcv)
                       ro_g(i,slo(2):domlo(2)-1,k) = bc_ro_g
                      rop_g(i,slo(2):domlo(2)-1,k) = bc_ro_g*bc_ep_g(bcv)
@@ -208,12 +209,20 @@
 
                end if
 
-               if (bc_jlo_type(i,k,1) == MINF_) then
+               if (bc_jlo_type(i,k,1) == PINF_ .or. &
+                   bc_jlo_type(i,k,1) == POUT_) then
+
+                   p0_g(i,slo(2):domlo(2)-1,k) = scale_pressure(bc_p_g(bcv))
+
+               else if (bc_jlo_type(i,k,1) == MINF_) then
 
                    ! Note we index v_g differently to catch the inflow face
                    u_g(i,ulo(2):domlo(2)-1,k) = 0.0d0
                    v_g(i,vlo(2):domlo(2)  ,k) = bc_v_g(bcv)
                    w_g(i,wlo(2):domlo(2)-1,k) = 0.0d0
+
+                   p0_g(i,slo(2):domlo(2)-1,k) = &
+                       2.d0 * p0_g(i,domlo(2),k) - p0_g(i,domlo(2)+1,k)
 
                end if
 
@@ -231,11 +240,7 @@
                    bc_jhi_type(i,k,1) == POUT_ .or. &
                    bc_jhi_type(i,k,1) == MINF_) then
 
-                   if (is_undefined(ro_g0)) then
-                      bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                   else
-                      bc_ro_g = ro_g0
-                   endif
+                   bc_ro_g = ro_g0
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
@@ -245,7 +250,6 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                      p0_g(i,domhi(2)+1:shi(2),k) = scale_pressure(bc_p_g(bcv))
                       ep_g(i,domhi(2)+1:shi(2),k) = bc_ep_g(bcv)
                       ro_g(i,domhi(2)+1:shi(2),k) = bc_ro_g
                      rop_g(i,domhi(2)+1:shi(2),k) = bc_ro_g*bc_ep_g(bcv)
@@ -254,12 +258,20 @@
 
                end if
 
-               if (bc_jhi_type(i,k,1) == MINF_) then
+               if (bc_jhi_type(i,k,1) == PINF_ .or. &
+                   bc_jhi_type(i,k,1) == POUT_) then
+
+                   p0_g(i,domhi(2)+1:shi(2),k) = scale_pressure(bc_p_g(bcv))
+
+               else if (bc_jhi_type(i,k,1) == MINF_) then
 
                    ! Note we index the same on the high side
                    u_g(i,domhi(2)+1:uhi(2),k) = 0.0d0
                    v_g(i,domhi(2)+1:vhi(2),k) = bc_v_g(bcv)
                    w_g(i,domhi(2)+1:whi(2),k) = 0.0d0
+
+                   p0_g(i,domhi(2)+1:shi(2),k) = &
+                       2.d0 * p0_g(i,domhi(2),k) - p0_g(i,domhi(2)-1,k)
 
                end if
 
@@ -277,11 +289,7 @@
                    bc_klo_type(i,j,1) == POUT_ .or. &
                    bc_klo_type(i,j,1) == MINF_) then
 
-                   if (is_undefined(ro_g0)) then
-                      bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                   else
-                      bc_ro_g = ro_g0
-                   endif
+                   bc_ro_g = ro_g0
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
@@ -291,7 +299,6 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                       p0_g(i,j,slo(3):domlo(3)-1) = scale_pressure(bc_p_g(bcv))
                        ep_g(i,j,slo(3):domlo(3)-1) = bc_ep_g(bcv)
                        ro_g(i,j,slo(3):domlo(3)-1) = bc_ro_g
                       rop_g(i,j,slo(3):domlo(3)-1) = bc_ro_g*bc_ep_g(bcv)
@@ -300,12 +307,20 @@
 
                end if
 
-               if (bc_klo_type(i,j,1) == MINF_) then
+               if (bc_klo_type(i,j,1) == PINF_ .or. &
+                   bc_klo_type(i,j,1) == POUT_) then
+
+                   p0_g(i,j,slo(3):domlo(3)-1) = scale_pressure(bc_p_g(bcv))
+
+               else if (bc_klo_type(i,j,1) == MINF_) then
 
                    ! Note we index w_g differently to catch the inflow face
                    u_g(i,j,ulo(3):domlo(3)-1) = 0.0d0
                    v_g(i,j,vlo(3):domlo(3)-1) = 0.0d0
                    w_g(i,j,wlo(3):domlo(3)  ) = bc_w_g(bcv)
+
+                   p0_g(i,j,slo(3):domlo(3)-1) = &
+                       2.d0 * p0_g(i,j,domlo(3)) - p0_g(i,j,domlo(3)+1)
 
                end if
 
@@ -323,11 +338,7 @@
                    bc_khi_type(i,j,1) == POUT_ .or. &
                    bc_khi_type(i,j,1) == MINF_) then
 
-                   if (is_undefined(ro_g0)) then
-                      bc_ro_g = eosg(mw_avg,bc_p_g(bcv),bc_t_g(bcv))
-                   else
-                      bc_ro_g = ro_g0
-                   endif
+                   bc_ro_g = ro_g0
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
@@ -337,7 +348,6 @@
                       bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
-                       p0_g(i,j,domhi(3)+1:shi(3)) = scale_pressure(bc_p_g(bcv))
                        ep_g(i,j,domhi(3)+1:shi(3)) = bc_ep_g(bcv)
                        ro_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g
                       rop_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g*bc_ep_g(bcv)
@@ -346,12 +356,20 @@
 
                end if
 
-               if (bc_khi_type(i,j,1) == MINF_) then
+               if (bc_khi_type(i,j,1) == PINF_ .or. &
+                   bc_khi_type(i,j,1) == POUT_) then
+
+                   p0_g(i,j,domhi(3)+1:shi(3)) = scale_pressure(bc_p_g(bcv))
+
+               else if (bc_khi_type(i,j,1) == MINF_) then
 
                    ! Note we index the same on the high side
                    u_g(i,j,domhi(3)+1:uhi(3)) = 0.0d0
                    v_g(i,j,domhi(3)+1:vhi(3)) = 0.0d0
                    w_g(i,j,domhi(3)+1:whi(3)) = bc_w_g(bcv)
+
+                   p0_g(i,j,domhi(3)+1:shi(3)) = &
+                       2.d0 * p0_g(i,j,domhi(3)) - p0_g(i,j,domhi(3)-1)
 
                end if
 

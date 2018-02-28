@@ -88,15 +88,13 @@ contains
     real(amrex_real) wx_lo, wy_lo, wz_lo, wx_hi, wy_hi, wz_hi
     real(amrex_real) wu_lo, wv_lo, ww_lo, wu_hi, wv_hi, ww_hi
     real(amrex_real) lx, ly, lz, pbeta, pvel(3)
-    real(amrex_real) inv_dx(3), oovol
+    real(amrex_real) inv_dx(3)
 
 
     ! Do not deposit drag forces if one-way coupled
     if (des_oneway_coupled)return
 
-
     inv_dx = 1.0d0/dx
-    oovol = 1.0d0/(dx(1)*dx(2)*dx(3))
 
     do n = 1, np
 

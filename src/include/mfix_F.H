@@ -96,12 +96,19 @@ extern "C"
 		    amrex::Real* u_g,     amrex::Real* v_g,      amrex::Real* w_g,
 		    amrex::Real* mu_g,    amrex::Real* lambda_g,
 		    amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
-		    amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength);
-
+		    amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength); 
     
     void init_fluid_restart(const int* slo, const int* shi,
           const int*  lo, const int*  hi,
           amrex::Real* mu_g,    amrex::Real* lambda_g);
+
+    void set_p0(const int* slo, const int* shi,
+                const int*  lo, const int*  hi,
+	        const int* domlo , const int* domhi,
+                amrex::Real* p0_g,    
+	        amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
+	        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
+	        int* delp_dir);
 
     void flip_particle_vol(const int* slo, const int* shi,
          amrex::Real* ep_g,
@@ -237,17 +244,11 @@ extern "C"
        amrex::Real* fluxX,        amrex::Real* fluxY,        amrex::Real* fluxZ,
        amrex::Real* dx,             amrex::Real* dy,             amrex::Real* dz);
 
-    void physical_prop(const int* slo, const int* shi,
-           const int* lo, const int* hi,
-           int* level, amrex::Real* ro_g, amrex::Real* p_g,
-           amrex::Real* ep_g, amrex::Real* rop_g);
-
     void fill_bc0(amrex::Real* s, const int* slo, const int* shi,
       int* bc_ilo, int* bc_ihi,
       int* bc_jlo, int* bc_jhi,
       int* bc_klo, int* bc_khi,
       const int* domlo , const int* domhi);
-
 
     void solve_u_g_star(
 	const int* slo, const int* shi,
@@ -517,6 +518,8 @@ extern "C"
 			  const amrex::Real* mumax,
 			  const amrex::Real* dx,
 			  const amrex::Real* cfl,
+			  amrex::Real*  time,
+			  amrex::Real*  stop_time,
 			  amrex::Real*  dt ); 
 
     void init_periodic_vortices (

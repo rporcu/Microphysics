@@ -41,11 +41,11 @@ contains
    ! 
    ! WARNING: We use a slightly modified version of C in the implementation below
    ! 
-   subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, dx, cfl, dt ) &
+   subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, dx, cfl, time, stop_time, dt ) &
         & bind(C)
       
       ! subroutine compute_new_dt ( umax, vmax, wmax, fgdsumax, fgdsvmax fgdswmax, &
-      !      dragumax, dragvmax, dragwmax, mumax, romin, dx, dt ) &
+      !      dragumax, dragvmax, dragwmax, mumax, romin, dx, time, stop_time, dt ) &
       
 
       use constant, only: gravity 
@@ -55,6 +55,7 @@ contains
       ! real(ar),       intent(in   ) :: dragumax, dragvmax, dragwmax
       real(ar),       intent(in   ) :: mumax, romin
       real(ar),       intent(in   ) :: dx(3), cfl
+      real(ar),       intent(in   ) :: time, stop_time
       real(ar),       intent(inout) :: dt
       real(ar)                      :: old_dt
       real(ar)                      :: c_cfl, v_cfl, f_cfl
@@ -69,6 +70,7 @@ contains
       c_cfl  = zero
       v_cfl  = zero
       f_cfl  = zero
+
       old_dt = dt
       
       ! Convection
@@ -81,7 +83,7 @@ contains
       ! Gravity
       f_cfl = f_cfl + gravity(1) * odx + gravity(2) * ody &
            &        + gravity(3) * odz
-      
+
       ! Put all together
       tmp = (c_cfl + v_cfl)  + sqrt ( (c_cfl + v_cfl)**2 + four * f_cfl )
       dt  = cfl * two / tmp
@@ -90,10 +92,15 @@ contains
       ! This may happen, for example, when the initial velocity field
       ! is zero for an inviscid flow with no external forcing  
       if ( tmp <= eps ) then
-         dt = old_dt
-      else 
-         dt = min ( dt, old_dt )
+         dt = .5 * old_dt
       end if
+
+      ! Don't let the timestep grow by more than 1% per step.
+      dt = min ( dt, 1.01*old_dt )
+
+      ! Don't overshoot the final time.
+      if (time+dt .gt. stop_time) &
+        dt = stop_time - time
       
    end subroutine compute_new_dt
 
@@ -522,7 +529,7 @@ contains
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
                bcoeff(i,j,k) = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) ) * &
-                    & half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
+                             & half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
             end do
          end do
       end do

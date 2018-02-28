@@ -12,7 +12,7 @@
 
 
 void
-mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time )
+mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real time, Real stop_time )
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluidProjection");
 
@@ -37,9 +37,27 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     
     do
     {
-	amrex::Print() << "\n   Iteration " << iter <<" at time " \
-		       << time << " with dt = " << dt << "\n" << std::endl;
-	
+	// Here we should check the CFL condition
+	// Compute dt for this time step
+	Real umax  = u_g[lev] -> norm0 ();
+	Real vmax  = v_g[lev] -> norm0 ();
+	Real wmax  = w_g[lev] -> norm0 ();
+	Real romin = rop_g[lev] -> min (0);
+	Real mumax = mu_g[lev] -> max (0);
+
+	if (!fixed_dt) 
+	    compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
+			     geom[lev].CellSize(), &cfl, &time, &stop_time, &dt );
+
+	if (steady_state)
+	{
+	   amrex::Print() << "\n   Iteration " << iter << " with dt = " << dt << "\n" << std::endl;
+	} else {
+	   amrex::Print() << "\n   Step " << nstep+1 <<": from old_time " \
+	   	          << time << " to new_time " << time+dt 
+                          << " with dt = " << dt << "\n" << std::endl;
+	}
+
 	// Back up field
 	// Backup field variable to old
 	int nghost = ep_go[lev] -> nGrow();
@@ -55,30 +73,13 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
 	    mfix_usr2();
 
-	// Calculate drag coefficient
-	if (solve_dem)
-	    mfix_calc_drag_fluid(lev);
-  
-	// Here we should check the CFL condition
-	// Compute dt for this time step
-	Real umax  = u_g[lev] -> norm0 ();
-	Real vmax  = v_g[lev] -> norm0 ();
-	Real wmax  = w_g[lev] -> norm0 ();
-	Real romin = rop_g[lev] -> min (0);
-	Real mumax = mu_g[lev] -> max (0);
-    
-	compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-			 geom[lev].CellSize(), &cfl, &dt );
-	prev_dt = dt ;
-
 	//
 	// Time integration step
 	//
-	
 	// Calculate drag coefficient
 	if (solve_dem)
 	    mfix_calc_drag_fluid(lev);
-	
+
         // Predictor step 
         mfix_apply_predictor ( lev, dt );
 
@@ -91,11 +92,10 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	
 	amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
 
-
 	// Calculate drag coefficient
 	if (solve_dem)
 	    mfix_calc_drag_fluid(lev);
-	
+
 	// Corrector step 
 	mfix_apply_corrector ( lev, dt );
 
@@ -138,7 +138,7 @@ mfix_level::mfix_project_velocity (int lev)
 }
 
 void
-mfix_level::mfix_initial_iterations (int lev)
+mfix_level::mfix_initial_iterations (int lev, Real stop_time)
 {
     // Copy u_g into u_go
     MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, u_go[lev]->nGrow());
@@ -153,9 +153,10 @@ mfix_level::mfix_initial_iterations (int lev)
     Real romin = rop_g[lev] -> min (0);
     Real mumax = mu_g[lev] -> max (0);
     
-    Real dt = 1.e20;
+    Real time = 0.0;
+    Real dt   = 1.e20;
     compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-		     geom[lev].CellSize(), &cfl, &dt );
+		     geom[lev].CellSize(), &cfl, &time, &stop_time, &dt );
 
     // Calculate drag coefficient
     if (solve_dem)
@@ -605,7 +606,6 @@ mfix_level::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
 	Box vbx = mfi.tilebox (e_y);
 	Box wbx = mfi.tilebox (e_z);
 	
-
 	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(ubx),  
 					BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*f_gds_u[lev])[mfi]),
@@ -728,10 +728,13 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
     // Correct the velocity field
     mfix_add_grad_phi ( lev, -scaling_factor );
     
+#if 0
+    // We shouldn't need to subtract off the mean
     if (singular) {
 	Real phi_mean = ( phi[lev] -> sum () ) / domain.numPts () ;
-	phi[lev] -> plus ( -phi_mean, 0 ); // pg_mean is 0 for non-singular case
+	phi[lev] -> plus ( -phi_mean, 1 ); // pg_mean is 0 for non-singular case
     }
+#endif
 }
 
 //

@@ -45,9 +45,8 @@ mfix_level::mfix_level ()
 #if 0
     istep.resize(nlevs_max, 0);
     nsubsteps.resize(nlevs_max, 1);
-    for (int lev = 1; lev <= maxLevel(); ++lev) {
-  nsubsteps[lev] = MaxRefRatio(lev-1);
-    }
+    for (int lev = 1; lev <= maxLevel(); ++lev) 
+        nsubsteps[lev] = MaxRefRatio(lev-1);
 #endif
 }
 
@@ -149,46 +148,6 @@ mfix_level::ResizeArrays ()
        fluid_cost.resize(nlevs_max);
 }
 
-void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
-{
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
-    {
-        const Box& bx = mfi.tilebox();
-        const Box& sbx = (*ep_g[lev])[mfi].box();
-
-        calc_coeff(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(), &calc_flag,
-                   (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(), 
-                   (*p0_g[lev])[mfi].dataPtr(),
-                   (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
-    }
-
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-}
-
-void
-mfix_level::mfix_physical_prop(int lev, int calc_flag)
-{
-  BL_PROFILE("mfix_level::mfix_physical_prop()");
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
-    {
-       const Box& bx = mfi.tilebox();
-       const Box& sbx = (*p_g[lev])[mfi].box();
-
-       physical_prop(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),&calc_flag,
-               (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
-               (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
-    }
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-}
-
 void
 mfix_level::usr3(int lev)
 {
@@ -242,7 +201,11 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
     if (!mf.boxArray().ixType().cellCentered())
 	amrex::Error("fill_mf_bc only used for cell-centered arrays!");
 
-    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
+    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior 
+    // It is essential that we do this before the call to fill_bc0 below since
+    // fill_bc0 can extrapolate out to fill ghost cells outside the domain after we
+    // have filled ghost cells inside the domain, but doing this call after fill_bc0
+    // can't fill ghost cells from ghost cells.
     mf.FillBoundary(geom[lev].periodicity());
 
     // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
@@ -256,6 +219,10 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 		 bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
 		 bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
     }
+
+    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
+    // It's not 100% clear whether we need this call or not.  Worth testing.
+    mf.FillBoundary(geom[lev].periodicity());
 }
 
 void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
@@ -444,6 +411,19 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
 
     } // if not OnSameGrids
 
+    // The projection method uses drag to update u, not (cell_vol * u), so we must divide by vol here
+    //     and we will divide by density in the update.
+    if (use_proj_method)
+    {
+        Real ovol = 1./(dx*dy*dz);
+         drag_u[lev]->mult(ovol);
+         drag_v[lev]->mult(ovol);
+         drag_w[lev]->mult(ovol);
+        f_gds_u[lev]->mult(ovol);
+        f_gds_v[lev]->mult(ovol);
+        f_gds_w[lev]->mult(ovol);
+    }
+
     // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
     f_gds_u[lev]->FillBoundary(geom[lev].periodicity());
     f_gds_v[lev]->FillBoundary(geom[lev].periodicity());
@@ -511,7 +491,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
        ng = p0_g[lev]->nGrow();
        std::unique_ptr<MultiFab> p0_g_pba(new MultiFab(pba,pdm,p0_g[lev]->nComp(),ng));
        p0_g_pba->copy(*p0_g[lev],0,0,1,ng,ng);
-       p0_g_pba->FillBoundary(geom[lev].periodicity());
+       p0_g_pba->FillBoundary(p0_periodicity);
 
        BoxArray x_face_ba = pba;
        x_face_ba.surroundingNodes(0);
@@ -564,6 +544,8 @@ mfix_level::mfix_set_bc1(int lev)
 {
   BL_PROFILE("mfix_level::mfix_set_bc1()");
 
+    p_g[lev]->FillBoundary(geom[lev].periodicity());
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -578,7 +560,7 @@ mfix_level::mfix_set_bc1(int lev)
       set_bc1(sbx.loVect(), sbx.hiVect(),
               ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
               (*u_g[lev])[mfi].dataPtr(), (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
-              (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+              (*p_g[lev])[mfi].dataPtr(),  (*ep_g[lev])[mfi].dataPtr(),
               (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
               (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),

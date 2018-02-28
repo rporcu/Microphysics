@@ -83,8 +83,8 @@ contains
                epga = 0.5d0*(ep_g(i-1,j,k) + ep_g(i,j,k))
 
                ! Pressure gradient term
-               sdp = -p_scale*epga*( p_g(i,j,k) -  p_g(i-1,j,k))*ayz &
-                     -p_scale*epga*(p0_g(i,j,k) - p0_g(i-1,j,k))*ayz
+               sdp = -p_scale*epga*( (p_g(i  ,j,k)+p0_g(i  ,j,k))- &
+                                     (p_g(i-1,j,k)+p0_g(i-1,j,k)) )*ayz
 
                ! Previous time step
                v0 = half * (rop_go(i-1,j,k) + rop_go(i,j,k))*odt

@@ -36,7 +36,7 @@ public:
 
     void InitLevelData(int lev, Real dt, Real time);
 
-    void PostInit(int lev, Real dt, Real time, int nstep, int restart_flag);
+    void PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time);
     
     void ResizeArrays();
 
@@ -55,8 +55,8 @@ public:
 
     void RegridOnRestart(int lev);
 
-    void Evolve(int lev, int nstep, int set_normg, int steady_state, Real dt, Real & prev_dt,
-            Real time, Real normg);
+    void Evolve(int lev, int nstep, int set_normg, int steady_state, Real& dt, Real & prev_dt,
+                Real time, Real stop_time, Real normg);
 
     void usr3(int lev);
 
@@ -107,11 +107,9 @@ protected:
         amrex::Abort("ClearLevel: To be implemented");
     }
 
-    void mfix_calc_coeffs(int lev, int calc_flag);
-
     void mfix_calc_trd_and_tau(int lev);
 
-    void mfix_init_fluid(int lev, int is_restarting = 0);
+    void mfix_init_fluid(int lev, int is_restarting = 0, Real stop_time = 0.0);
     void mfix_set_bc0(int lev);
 
     void mfix_conv_rop(int lev);
@@ -124,7 +122,7 @@ protected:
 
     // Projection
     void mfix_project_velocity   (int lev);
-    void mfix_initial_iterations (int lev);
+    void mfix_initial_iterations (int lev, Real stop_time);
     void mfix_apply_projection (int lev, amrex::Real scaling_factor);
     void mfix_set_projection_bcs (int lev);
        
@@ -133,8 +131,6 @@ protected:
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
     void mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p);
-
-    void mfix_physical_prop(int lev, int calc_flag);
 
     void mfix_correct_0(int lev);
 
@@ -169,7 +165,7 @@ private:
     static void GotoNextLine(std::istream& is);
 
     void EvolveFluidSimple(int lev, int nstep, int set_normg,Real dt, Real& prev_dt, Real time, Real normg);
-    void EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& prev_dt, Real time);
+    void EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real stop_time, Real time);
 
     // Projection-related methods
     void solve_poisson_equation(int lev,
@@ -386,8 +382,9 @@ private:
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
 
-
+    // Options to control time stepping
     Real cfl = 0.5;
+    int  fixed_dt=0;
 
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;
@@ -398,6 +395,7 @@ private:
     static int m_eb_full_grow_cells;
     static EBSupport m_eb_support_level;
 
+    Periodicity p0_periodicity;
 
     Real sum_vol_orig;
 
