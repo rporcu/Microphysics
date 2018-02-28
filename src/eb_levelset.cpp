@@ -222,20 +222,20 @@ void LSFactory::update(const MultiFab & ls_in) {
 
 
 void LSFactory::regrid(){
-
+    // Regrids the level-set data whenever the MFIXParticleContainer's DistributionMapping has changed:
+    //      -> Loads the updated DistributionMapping from MFIXParticleContainer
+    //      -> Rebuilds the nodal levelset (ls_ba), cell-centered valid (cc_ba), and eb (eb_ba) BoxArrays 
+    //          -> ls_ba, cc_ba, and eb_ba are all inherited from MFIXParticleContainer::ParticleBoxArray
+    //  =>  make sure that the AMReX level of the MFIXParticleContainer has been regridded before calling this method
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
     init_box();
 
 
-    int ng = ls_grid_pad; //ep_g[lev]->nGrow();
-    //std::unique_ptr<MultiFab> ep_g_new(new MultiFab(new_grids,new_dmap,1,ng));
+    int ng = ls_grid_pad;
     std::unique_ptr<MultiFab> ls_grid_new(new MultiFab(ls_ba, dm, 1, ng));
 
-    //ep_g_new->copy(*ep_g[lev],0,0,1,ng,ng);
     ls_grid_new->copy(* ls_grid, 0, 0, 1, ng, ng);
-    //ep_g_new->FillBoundary(geom[lev].periodicity());
     ls_grid_new->FillBoundary(mfix_pc->Geom(amr_lev).periodicity());
-    //ep_g[lev] = std::move(ep_g_new); 
     ls_grid = std::move(ls_grid_new);
     
     std::unique_ptr<iMultiFab> ls_valid_new(new iMultiFab(ls_ba, dm, 1, ng));

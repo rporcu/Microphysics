@@ -43,7 +43,8 @@ mfix_level::Regrid (int lev, int nstep)
                                                   {m_eb_basic_grow_cells,
                                                           m_eb_volume_grow_cells,
                                                           m_eb_full_grow_cells}, m_eb_support_level));
-            
+           
+           // eb_normals is a legacy of the old collision algorithm -> depricated
            eb_normals   = pc -> EBNormals(lev, ebfactory.get(), dummy.get());
 
            // level_set -> update(dummy.get());
@@ -57,7 +58,8 @@ mfix_level::Regrid (int lev, int nstep)
                                                            pc->ParticleDistributionMap(lev),
                                                            {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                                    m_eb_full_grow_cells}, m_eb_support_level));
-           
+
+           // eb_normals is a legacy of the old collision algorithm -> depricated
            eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
            // level_set -> update(dummy.get());
@@ -93,9 +95,12 @@ mfix_level::Regrid (int lev, int nstep)
                                                                    m_eb_volume_grow_cells,
                                                                    m_eb_full_grow_cells}, m_eb_support_level));
                     
+                    // eb_normals is a legacy of the old collision algorithm -> depricated
                     eb_normals   = pc -> EBNormals(lev, ebfactory.get(), dummy.get());
                     
                     //level_set -> update(dummy.get());
+                    
+                    level_set->regrid();
                 }
 
                 mfix_set_bc0(lev);
@@ -112,6 +117,7 @@ mfix_level::Regrid (int lev, int nstep)
                                                                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                                             m_eb_full_grow_cells}, m_eb_support_level));
 
+                    // eb_normals is a legacy of the old collision algorithm -> depricated
                     eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
                     // level_set -> update(dummy.get());
@@ -153,6 +159,7 @@ mfix_level::Regrid (int lev, int nstep)
                                                                m_eb_volume_grow_cells,
                                                                m_eb_full_grow_cells}, m_eb_support_level));
 
+                // eb_normals is a legacy of the old collision algorithm -> depricated
                 eb_normals   = pc -> EBNormals(lev, ebfactory.get(), dummy.get());
 
                 // level_set -> update(dummy.get());
@@ -166,6 +173,7 @@ mfix_level::Regrid (int lev, int nstep)
                                                                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                                         m_eb_full_grow_cells}, m_eb_support_level));
 
+                // eb_normals is a legacy of the old collision algorithm -> depricated
                 eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
                 // level_set -> update(dummy.get());
