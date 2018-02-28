@@ -169,22 +169,24 @@ mfix_level::make_eb_geometry(int lev)
     //            -> use min to intersect new eb boundaries (in update)
     level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 1, 1, 2, 2, pc.get()));
 
-    // Define both components of the the GeometryShop seperately:
-    GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
-    GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
+    if(use_walls){
+        // Define both components of the the GeometryShop seperately:
+        GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
 
+        // Define the EBIS first using only the walls...
+        Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
+        AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
 
-    // Define the EBIS first using only the walls...
-    Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
-    AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
-
-    EBTower::Build();
-    // GeometryShop's Planes' implicit function is actually a signed distance function
-    //      => it's just easier to fill the level-set this way
-    level_set->update_ebis(* AMReX_EBIS::instance());
-    EBTower::Destroy();
-
+        EBTower::Build();
+        // GeometryShop's Planes' implicit function is actually a signed distance function
+        //      => it's just easier to fill the level-set this way
+        level_set->update_ebis(* AMReX_EBIS::instance());
+        EBTower::Destroy();
+    }
     if(use_poly2){
+        // Define both components of the the GeometryShop seperately:
+        GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
+
         // Define the EBIS using only the poly2 (after deleting the walls-only EBTower)...
         Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
         AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, grid_size, max_level);
