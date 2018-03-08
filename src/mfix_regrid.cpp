@@ -50,9 +50,9 @@ mfix_level::Regrid (int lev, int nstep)
                                                            pc->ParticleDistributionMap(lev),
                                                            {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                                    m_eb_full_grow_cells}, m_eb_support_level));           
+
+           eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
        }
-       
-       eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
     }
     else if (load_balance_type == "KnapSack") {
         
@@ -96,10 +96,9 @@ mfix_level::Regrid (int lev, int nstep)
                                                                     pc->ParticleDistributionMap(lev),
                                                                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                                             m_eb_full_grow_cells}, m_eb_support_level));
-                }
 
-                eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
-                
+                    eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+                }
             }
         } else {
             MultiFab costs(grids[lev], dmap[lev], 1, 0);
@@ -141,9 +140,9 @@ mfix_level::Regrid (int lev, int nstep)
                                                                 pc->ParticleDistributionMap(lev),
                                                                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                                         m_eb_full_grow_cells}, m_eb_support_level));
-            }
 
-            eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+                eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+            }
         }
 
         // amrex::Print() << grids[0] << std::endl;	
