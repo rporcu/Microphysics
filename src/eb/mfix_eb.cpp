@@ -164,11 +164,6 @@ mfix_level::make_eb_geometry(int lev)
      *                                                                                                                *
      ******************************************************************************************************************/
 
-    // Level-Set: initialize container for level set
-    // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)
-    //            -> use min to intersect new eb boundaries (in update)
-    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 1, 1, 2, 2, pc.get()));
-
     if(use_walls){
         // Define both components of the the GeometryShop seperately:
         GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
@@ -385,16 +380,11 @@ mfix_level::make_eb_hourglass(int lev)
      *                                                                                                                *
      * Fill Level-set using:                                                                                          *
      *      -> Planes (where the GeometryShop's implicit function is a signed distance): implicit function's value    *
-     *      -> Poly2 (where GeometryShop's implicit function is singed but not a distance): min distance to EB facets *
+     *      -> Poly (where GeometryShop's implicit function is singed but not a distance): min distance to EB facets  *
      * Note: this requires building and destroying the EBTower (twice), so any EBTower data built before this will be *
      * lost...                                                                                                        *
      *                                                                                                                *
      ******************************************************************************************************************/
-
-    // Level-Set: initialize container for level set
-    // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)
-    //            -> use min to intersect new eb boundaries (in update)
-    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 1, 1, 2, 2, pc.get()));
 
     // Define both components of the the GeometryShop seperately:
     GeometryShop gshop_upoly(* impfunc_unpolys, eb_verbosity);

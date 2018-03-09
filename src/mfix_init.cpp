@@ -147,6 +147,12 @@ void mfix_level::Init(int lev, Real dt, Real time)
     // Allocate container for eb-normals
     eb_normals = unique_ptr<MultiFab>(new MultiFab);
     dummy = unique_ptr<MultiFab>(new MultiFab);
+
+    // Level-Set: initialize container for level set
+    // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)
+    //            -> use min to intersect new eb boundaries (in update)
+    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 1, 1, 2, 2, pc.get()));
+
 }
 
 BoxArray
