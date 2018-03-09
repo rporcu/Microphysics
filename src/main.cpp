@@ -138,7 +138,7 @@ int main (int argc, char* argv[])
     my_mfix.InitParams(solve_fluid,solve_dem,max_nit,call_udf);
 
     my_mfix.ResizeArrays();
-    
+
     my_mfix.Init(lev,dt,time);
 
     // Either init from scratch or from the checkpoint file
@@ -160,7 +160,7 @@ int main (int argc, char* argv[])
        my_mfix.RegridOnRestart(lev);
     }
 
-    // We move this to after restart and/or regrid so we make the EB data structures with the correct 
+    // We move this to after restart and/or regrid so we make the EB data structures with the correct
     //    BoxArray and DistributionMapping
     if (hourglass)
        my_mfix.make_eb_hourglass(lev);
@@ -263,10 +263,10 @@ int main (int argc, char* argv[])
        }
     }
 
-    if (steady_state) 
+    if (steady_state)
         nstep = 1;
 
-    // Dump plotfile at the final time 
+    // Dump plotfile at the final time
     if ( check_int > 0 && nstep != last_chk)
        my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
     if ( plot_int > 0  && nstep != last_plt)
