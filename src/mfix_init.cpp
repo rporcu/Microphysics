@@ -53,7 +53,19 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         subdt_io = false; // default to false (if not present in inputs file)
         pp.query("subdt_io", subdt_io);
 
-        pp.query("use_ls", use_ls);
+        // If true, then compute particle/EB collisions directly using neighbouring eb-facets
+        // WARNING: this mode can be slow, and EB-facets can sometimes not be "water-tight"
+        pp.query("legacy__eb_collisions", legacy__eb_collisions);
+        
+        // Parameters used be the level-set algorithm. Refer to LSFactory (or mfix_level.H) for more details:
+        //   -> refinement: how well resolved (fine) the (level-set/EB-facet) grid needs to be
+        //                  (note: a fine level-set grid means that distances and normals are computed accurately)
+        //   -> pad:        how many (refined) grid points _outside_ the problem domain the grid extends
+        //                  (avoids edge cases in physical domain)
+        pp.query("levelset__refinement", levelset__refinement);
+        pp.query("levelset__eb_refinement", levelset__eb_refinement);
+        pp.query("levelset__pad", levelset__pad);
+        pp.query("levelset__eb_pad", levelset__eb_pad);
     }
 
     solve_fluid  = solve_fluid_in;
@@ -151,7 +163,8 @@ void mfix_level::Init(int lev, Real dt, Real time)
     // Level-Set: initialize container for level set
     // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)
     //            -> use min to intersect new eb boundaries (in update)
-    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, 1, 1, 2, 2, pc.get()));
+    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
+                                                              levelset__pad, levelset__eb_pad, pc.get()));
 
 }
 

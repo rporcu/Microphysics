@@ -132,13 +132,21 @@ int main (int argc, char* argv[])
 
     int lev = 0;
 
-    // Note that the constructor constructs the Geometry object now.
+    // Default constructor. Note inheritance: mfix_level : AmrCore : AmrMesh
+    //                                                               ^^^^^^^
+    //                                                        (constructs Geometry)
+    //
+    //  => Geometry is constructed here
     mfix_level my_mfix;
 
+    // Initialize internals from ParamParse database
     my_mfix.InitParams(solve_fluid,solve_dem,max_nit,call_udf);
 
+    // Initialize memory for data-array internals
+    // Note: MFIXParticleContainer is created here
     my_mfix.ResizeArrays();
 
+    // Initialize derived internals
     my_mfix.Init(lev,dt,time);
 
     // Either init from scratch or from the checkpoint file

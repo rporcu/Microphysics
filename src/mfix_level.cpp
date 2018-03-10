@@ -55,12 +55,13 @@ mfix_level::ResizeArrays ()
 {
     int nlevs_max = maxLevel() + 1;
 
-    // Particle Container
+    // Particle Container is delcated here
+    // TODO: this is a HACK 
     pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
 
-    // HACK: temporary flag used to turn on level-set mode
+    // HACK: temporary flag used to turn on legacy mode
     //   (used in evlove particles)
-    pc -> use_ls = use_ls;
+    pc -> legacy__eb_collisions = legacy__eb_collisions;
 
     A_m.resize(nlevs_max);
     b_m.resize(nlevs_max);

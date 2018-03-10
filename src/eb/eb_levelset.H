@@ -66,14 +66,23 @@ class LSFactory {
         void update_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is);
         void update_ebis(const EBIndexSpace & eb_is);
 
-        const MultiFab * get_data() const {return ls_grid.get();};
+        // Return level-set data
+        const MultiFab *  get_data() const {return ls_grid.get();};
         const iMultiFab * get_valid() const {return ls_valid.get();};
+
+        // Return grid parameters
         const int get_ls_ref() const {return ls_grid_ref;};
         const int get_ls_pad() const {return ls_grid_pad;};
         const int get_eb_ref() const {return eb_grid_ref;};
         const int get_eb_pad() const {return eb_grid_pad;};
+
+        // Return AMR level (wrt the MFIXParticleContainer pointer (pc)_
         const int get_amr_level() const {return amr_lev;};
 
+        // Return BoxArrays:
+        //    -> ls: levelset (nodal)
+        //    -> cc: cell-centered (dual to ls) used by valid
+        //    -> eb: BoxArray used by EBIS (cell-centered)
         const BoxArray & get_ls_ba() const {return ls_ba;};
         const BoxArray & get_cc_ba() const {return cc_ba;};
         const BoxArray & get_eb_ba() const {return eb_ba;};

@@ -211,12 +211,12 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, EBFArrayBoxFactory * ebfac
 
           const Box& bx = pti.tilebox();
 
-          // Remove particles outside of or touching the walls 
+          // Remove particles outside of or touching the walls
           if (flag.getType(bx) == FabType::covered)
           {
              for (auto& p: pti.GetArrayOfStructs())
                p.id() = -1;
-          } 
+          }
           else if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
           {
              rm_wall_collisions (particles, &nrp, flag.dataPtr(), flag.loVect(), flag.hiVect(),
@@ -393,12 +393,12 @@ MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiF
 
         // We pre-compute the normals
         normal -> define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 2);
-        
+
         for(MFIter mfi(* normal, true); mfi.isValid(); ++mfi){
             Box tile_box = mfi.tilebox();
             const int* lo = tile_box.loVect();
             const int* hi = tile_box.hiVect();
-            
+
             const auto& sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
             const auto& flag = sfab.getEBCellFlagFab();
 
@@ -419,13 +419,13 @@ MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiF
         }
         normal->FillBoundary(Geom(0).periodicity());
     }
-    
+
     return normal;
 }
 
 
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
-        EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals, 
+        EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals,
         const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
         MultiFab * dummy, MultiFab * cost, std::string & knapsack_weight_type, int subdt_io)
 {
@@ -513,24 +513,24 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                // Calculate forces from particle-wall collisions
                BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-               //if(not use_ls){
-               //    calc_wall_collisions(particles, &ntot, &nrp, 
-               //                     tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-               //                     flag.dataPtr(), flag.loVect(), flag.hiVect(),
-               //                     (*eb_normals)[pti].dataPtr(),
-               //                     (*eb_normals)[pti].loVect(), (*eb_normals)[pti].hiVect(),
-               //                     (*bndrycent)[pti].dataPtr(),
-               //                     (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
-               //                     dx);
-               //} else {
-                   calc_wall_collisions_ls(particles, & ntot, & nrp, 
+               if(legacy__eb_collisions){
+                   calc_wall_collisions(particles, &ntot, &nrp,
+                                    tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
+                                    flag.dataPtr(), flag.loVect(), flag.hiVect(),
+                                    (*eb_normals)[pti].dataPtr(),
+                                    (*eb_normals)[pti].loVect(), (*eb_normals)[pti].hiVect(),
+                                    (*bndrycent)[pti].dataPtr(),
+                                    (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
+                                    dx);
+               } else {
+                   calc_wall_collisions_ls(particles, & ntot, & nrp,
                                        tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                       (* ls_valid)[pti].dataPtr(), 
+                                       (* ls_valid)[pti].dataPtr(),
                                        (* ls_valid)[pti].loVect(), (* ls_valid)[pti].hiVect(),
                                        (* ls_phi)[pti].dataPtr(),
                                        (* ls_phi)[pti].loVect(), (* ls_phi)[pti].hiVect(),
                                        dx, & ls_refinement);
-               //}
+               }
                BL_PROFILE_VAR_STOP(calc_wall_collisions);
             }
          }
@@ -570,7 +570,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                             &xlen, &ylen, &zlen, &stime, &n);
 #endif
         BL_PROFILE_VAR_STOP(des_time_loop);
- 
+
         if (cost) {
              const Box& tbx = pti.tilebox();
              if (knapsack_weight_type == "RunTimeCosts")
@@ -652,8 +652,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
        }
     }
     BL_PROFILE_REGION_STOP("mfix_dem::EvolveParticles()");
-} 
- 
+}
+
 void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled,
                                                IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                                IArrayBox& bc_jlo, IArrayBox& bc_jhi,

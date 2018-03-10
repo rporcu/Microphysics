@@ -149,9 +149,9 @@ public:
                             int fortran_beta_comp, int fortran_vel_comp);
 
     ///
-    /// Flag switching from calc_wall_collisions and calc_wall_collisions_ls if true
+    /// Flag switching from calc_wall_collisions to calc_wall_collisions_ls if true
     ///
-    bool use_ls = false;
+    bool legacy__eb_collisions = false;
 
 private:
 
