@@ -234,7 +234,7 @@ contains
     end subroutine validate_levelset
 
 
-    pure subroutine update_levelset(lo,    hi,           &
+    pure subroutine update_levelset(lo,    hi,      &
                                ls_in, lslo, lshi,   &
                                valid, vlo,  vhi,    &
                                phi,   phlo, phhi,   &

@@ -303,8 +303,8 @@ void LSFactory::update_ebis(const EBIndexSpace & eb_is) {
     //   => If implicit_function is a signed-distance function, we need to invert sign
     for(MFIter mfi( * mf_impfunc, true); mfi.isValid(); ++ mfi){
         FArrayBox & a_fab = (* mf_impfunc)[mfi];
-        for(BoxIterator bit(a_fab.box()); bit.ok(); ++bit)
-                a_fab(bit(), 0) = - a_fab(bit(), 0);
+        for(BoxIterator bit(mfi.growntilebox()); bit.ok(); ++bit)
+            a_fab(bit(), 0) = - a_fab(bit(), 0);
     }
 
     update(* mf_impfunc);
