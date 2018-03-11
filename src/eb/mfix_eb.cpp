@@ -190,7 +190,8 @@ mfix_level::make_eb_geometry(int lev)
         // GeometryShop's PolynomialIF is not a signed distance function... 
         //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
         //          => define the level set as the (signed) distance to the closest point on the EB-facets
-        EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {2, 2, 2}, EBSupport::full);
+        int eb_pad = level_set->get_eb_pad();
+        EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
         level_set->update_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
         EBTower::Destroy();
     }
@@ -409,7 +410,8 @@ mfix_level::make_eb_hourglass(int lev)
     // GeometryShop's PolynomialIF is not a signed distance function... 
     //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
     //          => define the level set as the (signed) distance to the closest point on the EB-facets
-    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {2, 2, 2}, EBSupport::full);
+    int eb_pad = level_set->get_eb_pad();
+    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
     level_set->update_ebf(eb_factory_poly, * AMReX_EBIS::instance());
     EBTower::Destroy();
 
