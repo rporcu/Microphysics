@@ -14,16 +14,16 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
 
         // Whether to use projection method
         pp.query("use_proj_method", use_proj_method );
-      
+
         // Options to control time stepping
         pp.query("cfl", cfl );
         pp.query("fixed_dt", fixed_dt );
-	
+
         // Option to control MGML behavior
         pp.query( "mg_verbose", mg_verbose );
         pp.query( "mg_cg_verbose", mg_cg_verbose );
         pp.query( "mg_max_iter", mg_max_iter );
-	pp.query( "mg_cg_maxiter", mg_cg_maxiter );
+  pp.query( "mg_cg_maxiter", mg_cg_maxiter );
         pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
         pp.query( "mg_rtol", mg_rtol );
         pp.query( "mg_atol", mg_atol );
@@ -668,12 +668,12 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real stop_time)
            (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
            (*w_g[lev])[mfi].dataPtr(),
            (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
-           &dx, &dy, &dz, &xlen, &ylen, &zlen); 
+           &dx, &dy, &dz, &xlen, &ylen, &zlen);
     }
 
       set_p0(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
              domain.loVect(), domain.hiVect(),
-             (*p0_g[lev])[mfi].dataPtr(), 
+             (*p0_g[lev])[mfi].dataPtr(),
              &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir);
   }
 
@@ -683,6 +683,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real stop_time)
   IntVect press_per = IntVect(geom[lev].isPeriodic(0),geom[lev].isPeriodic(1),geom[lev].isPeriodic(2));
   if (delp_dir > -1) press_per[delp_dir] = 0;
   p0_periodicity = Periodicity(press_per);
+
+  p0_g[lev]->FillBoundary(p0_periodicity);
 
   // Here we re-set the bc values for p and u,v,w just in case init_fluid
   //      over-wrote some of the bc values with ic values
@@ -724,7 +726,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real stop_time)
   fill_mf_bc(lev,*mu_g[lev]);
   fill_mf_bc(lev,*lambda_g[lev]);
 
-  if ( use_proj_method ) 
+  if ( use_proj_method )
   {
      // We need to initialize the volume fraction ep_g before the first projection
      mfix_calc_volume_fraction(lev,sum_vol_orig);
