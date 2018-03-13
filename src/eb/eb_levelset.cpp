@@ -23,9 +23,10 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
 {
     // DistributionMapping inherited from MFIXParticleContainer
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    // Init BoxArrays over which the level set and EB is defined, note that these BoxArrays are inherited from the 
-    // particle container => the DistributionMapping above still applies.
-    init_box();
+    // Init geometry over which the level set and EB are defined, note that BoxArrays and DistributionMapping are
+    // inherited from the MFIXParticleContainer => the DistributionMapping above applies to refined BoxArrays. Also
+    // note that the Geometry objects are updated (for periodic fill operations)
+    init_geom();
 
     // Initialize MultiFab pointers storing level-set data
     //    -> ls_phi:   nodal MultiFab storing signed distance function to the nearest wall
@@ -39,12 +40,12 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
     // Temporary MultiFab used for generating EB factories.
     eb_grid = std::unique_ptr<MultiFab>(new MultiFab);
 
-    // Define ls_grid and ls_valid, growing them by ls_pad 
-    // Note: box arrays (such as ls_ba) are initialized in init_box() 
+    // Define ls_grid and ls_valid, growing them by ls_pad
+    // Note: box arrays (such as ls_ba) are initialized in init_box()
     ls_grid->define(ls_ba, dm, 1, ls_pad);
     ls_valid->define(ls_ba, dm, 1, ls_pad);
     ls_valid->setVal(-1);
-    
+
     // Define eb_grid, growing it by eb_pad
     eb_grid->define(eb_ba, dm, 1, eb_pad);
 
@@ -67,7 +68,7 @@ LSFactory::~LSFactory() {
 }
 
 
-void LSFactory::init_box() {
+void LSFactory::update_ba() {
     // Refined versions of both the cell-centered (particle) and nodal (phi) BoxArrays
     // Note: BoxArrays are inherited from MFIXParticleContainer => the DistributionMapping inherited from
     // MFIXParticleContainer still applies to the refined BoxArrays
@@ -85,25 +86,36 @@ void LSFactory::init_box() {
 }
 
 
+
+void LSFactory::init_geom() {
+    // Initialize Geometry objects for the level set and the EB, note that the Geometry objects reflect the refined (and
+    // padded) box arrays, preventing periodic fill operations from "spilling over" from refined/padded indices.
+    update_ba();
+
+    geom_ls = LSUtility::make_ls_geometry(*this);
+    geom_eb = LSUtility::make_eb_geometry(*this);
+}
+
+
+
 std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb_factory) {
     // 1-D list of eb-facet data. Format:
     // { px_1, py_1, pz_1, nx_1, ny_1, nz_1, px_2, py_2, ... , nz_N }
     //   ^                 ^
-    //   |                 |
     //   |                 +---- {nx, ny, nz} is the normal vector pointing _towards_ the facet
     //   +-----------------------{px, py, pz} is the position vector of the facet centre
     std::unique_ptr<Vector<Real>> facet_list;
 
 
     const DistributionMapping & dm = mfix_pc->ParticleDistributionMap(amr_lev);
-   
+
 
     /***************************************************************************
      *                                                                         *
      * Access EB Cut-Cell data:                                                *
      *                                                                         *
      ***************************************************************************/
-    
+
     MultiFab dummy(eb_ba, dm, 1, eb_grid_pad, MFInfo(), eb_factory);
     // Area fraction data
     std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = eb_factory.getAreaFrac();
@@ -119,7 +131,7 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
 
     MultiFab normal(eb_ba, dm, 3, eb_grid_pad);
 
-    // while computing normals, count EB-facets 
+    // while computing normals, count EB-facets
     int n_facets = 0;
 
     for(MFIter mfi(normal, true); mfi.isValid(); ++mfi) {
@@ -153,7 +165,7 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
         }
     }
 
-    normal.FillBoundary(mfix_pc->Geom(0).periodicity());
+    normal.FillBoundary(geom_eb.periodicity());
 
 
     /***************************************************************************
@@ -196,7 +208,7 @@ std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace & eb_is) {
     for(MFIter mfi(* mf_impfunc, true); mfi.isValid(); ++ mfi)
         eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi], dx_vect);
 
-    mf_impfunc->FillBoundary(mfix_pc -> Geom(0).periodicity());
+    mf_impfunc->FillBoundary(geom_ls.periodicity());
     return mf_impfunc;
 }
 
@@ -216,32 +228,31 @@ void LSFactory::update(const MultiFab & ls_in) {
                         dx_vect.dataPtr(),    & ls_grid_pad);
     }
 
-    ls_grid->FillBoundary(mfix_pc->Geom(0).periodicity());
-    ls_valid->FillBoundary(mfix_pc->Geom(0).periodicity());
+    ls_grid->FillBoundary(geom_ls.periodicity());
+    ls_valid->FillBoundary(geom_ls.periodicity());
 }
 
 
 void LSFactory::regrid(){
     // Regrids the level-set data whenever the MFIXParticleContainer's DistributionMapping has changed:
     //      -> Loads the updated DistributionMapping from MFIXParticleContainer
-    //      -> Rebuilds the nodal levelset (ls_ba), cell-centered valid (cc_ba), and eb (eb_ba) BoxArrays 
+    //      -> Rebuilds the nodal levelset (ls_ba), cell-centered valid (cc_ba), and eb (eb_ba) BoxArrays
     //          -> ls_ba, cc_ba, and eb_ba are all inherited from MFIXParticleContainer::ParticleBoxArray
     //  =>  make sure that the AMReX level of the MFIXParticleContainer has been regridded before calling this method
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    init_box();
-
+    update_ba();
 
     int ng = ls_grid_pad;
     std::unique_ptr<MultiFab> ls_grid_new(new MultiFab(ls_ba, dm, 1, ng));
 
     ls_grid_new->copy(* ls_grid, 0, 0, 1, ng, ng);
-    ls_grid_new->FillBoundary(mfix_pc->Geom(amr_lev).periodicity());
+    ls_grid_new->FillBoundary(geom_ls.periodicity());
     ls_grid = std::move(ls_grid_new);
-    
+
     std::unique_ptr<iMultiFab> ls_valid_new(new iMultiFab(ls_ba, dm, 1, ng));
 
     ls_valid_new->copy(* ls_valid, 0, 0, 1, ng, ng);
-    ls_valid_new->FillBoundary(mfix_pc->Geom(amr_lev).periodicity());
+    ls_valid_new->FillBoundary(geom_ls.periodicity());
     ls_valid = std::move(ls_valid_new);
 }
 
@@ -253,7 +264,7 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexS
     int len_facets = facets->size();
     // Generate implicit function (used to determine the interior of EB)
     std::unique_ptr<MultiFab> impfunct = ebis_impfunc(eb_is);
-    impfunct->FillBoundary(mfix_pc->Geom(0).periodicity());
+    impfunct->FillBoundary(geom_ls.periodicity());
 
     // Local MultiFab storing level-set data for this eb_factory
     MultiFab eb_ls;

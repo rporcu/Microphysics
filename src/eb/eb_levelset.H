@@ -41,6 +41,10 @@ class LSFactory {
         const RealVect dx_vect, dx_eb_vect;
         const int ls_grid_ref, ls_grid_pad;
 
+        // Geometry objects reflecting refined (and padded) BoxArrays. This is required to prevent PeriodicFill
+        // operations from "spilling" refined indices over periodic boundaries
+        Geometry geom_ls, geom_eb;
+
         // AMR information
         const int amr_lev;
         const MFIXParticleContainer * mfix_pc;
@@ -55,7 +59,8 @@ class LSFactory {
         // Unpdate internal `ls_phi` and `ls_valid` based on the min of `ls_phi` and `ls_in`
         void update(const MultiFab & ls_in);
 
-        void init_box();
+        void update_ba();
+        void init_geom();
 
     public:
         LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, const MFIXParticleContainer * pc);
@@ -104,7 +109,7 @@ class LSUtility {
             Geometry geom_ls(dom_ls);
 
             // This is a bit of a hack: we want to grow the geometry's domain box, without influencing the cell size.
-            // I.e. we want Box::Domain() to extend beyond probLo and probHi.
+            // I.e. we want Geometry::Domain() to extend beyond probLo and probHi.
             Box dom_ls_g = geom_ls.Domain();
             dom_ls_g.grow(level_set.get_ls_pad());
             geom_ls.Domain(dom_ls_g);
@@ -124,7 +129,7 @@ class LSUtility {
             Geometry geom_eb(dom_eb);
 
             // This is a bit of a hack: we want to grow the geometry's domain box, without influencing the cell size.
-            // I.e. we want Box::Domain() to extend beyond probLo and probHi.
+            // I.e. we want Geometry::Domain() to extend beyond probLo and probHi.
             Box dom_eb_g = geom_eb.Domain();
             dom_eb_g.grow(level_set.get_eb_pad());
             geom_eb.Domain(dom_eb_g);

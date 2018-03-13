@@ -1,15 +1,16 @@
 
-  subroutine compute_normals ( lo, hi, &
+  subroutine compute_normals ( lo, hi,           &
                                flag, fglo, fghi, &
                                normal, nlo, nhi, &
-                               apx, axlo, axhi, apy, aylo, ayhi, &
-                               apz, azlo, azhi) &
-      bind(C, name="compute_normals")
+                               apx, axlo, axhi,  &
+                               apy, aylo, ayhi,  &
+                               apz, azlo, azhi ) &
+             bind(C, name="compute_normals")
 
-    use amrex_fort_module, only : c_real => amrex_real
-    use iso_c_binding    , only: c_int
+    use amrex_fort_module, only: c_real => amrex_real
+    use iso_c_binding,     only: c_int
 
-    use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell
+    use amrex_ebcellflag_module, only : is_single_valued_cell
 
     implicit none
 
@@ -30,21 +31,21 @@
        do j = lo(2), hi(2)
           do i = lo(1), hi(1)
 
-             if (.not. is_regular_cell(flag(i,j,k)) ) then
+             if ( is_single_valued_cell(flag(i,j,k)) ) then
                 axm = apx(i,  j  , k  )
                 axp = apx(i+1,j  , k  )
                 aym = apy(i,  j  , k  )
                 ayp = apy(i,  j+1, k  )
                 azm = apz(i,  j  , k  )
                 azp = apz(i,  j  , k+1)
- 
+
                 apnorm = sqrt((axm-axp)**2 + (aym-ayp)**2 + (azm-azp)**2)
- 
+
                 apnorminv = 1.d0 / apnorm
                 anrmx = (axp-axm) * apnorminv   ! pointing to the wall
                 anrmy = (ayp-aym) * apnorminv
                 anrmz = (azp-azm) * apnorminv
- 
+
                 ! To fit the convention of previous mfix
                 normal(i,j,k,1) = -anrmx
                 normal(i,j,k,2) = -anrmy

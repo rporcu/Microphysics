@@ -2,10 +2,7 @@ module eb_levelset
     use amrex_fort_module, only: c_real => amrex_real
     use iso_c_binding,     only: c_int
 
-
-    use param,                   only: small_number, zero, one
-    use amrex_ebcellflag_module, only: is_regular_cell, is_covered_cell, is_single_valued_cell, &
-                                       get_neighbor_cells
+    use amrex_ebcellflag_module, only: is_single_valued_cell
 
     implicit none
 
@@ -51,7 +48,7 @@ contains
 
     !----------------------------------------------------------------------------------------------------------------!
     !                                                                                                                !
-    !        subroutine FILL_LEVELSET                                                                                !
+    !   pure subroutine FILL_LEVELSET                                                                                !
     !                                                                                                                !
     !   Purpose: given a list of EB-facets, fill the level-set multifab between `lo` and `hi` with the closests      !
     !   distance to the EB-facests. Also fill a iMultiFab with 0's and 1's. 0 Indicating that the closest distance   !
@@ -63,15 +60,16 @@ contains
     !                                                                                                                !
     !----------------------------------------------------------------------------------------------------------------!
 
-    subroutine fill_levelset_eb(lo,      hi,          &
-                                eb_list, l_eb,        &
-                                valid,   vlo,  vhi,   &
-                                phi,     phlo, phhi,  &
-                                dx,      dx_eb      ) &
+    pure subroutine fill_levelset_eb(lo,      hi,          &
+                                     eb_list, l_eb,        &
+                                     valid,   vlo,  vhi,   &
+                                     phi,     phlo, phhi,  &
+                                     dx,      dx_eb      ) &
                      bind(C, name="fill_levelset_eb")
 
         implicit none
 
+        ! ** define I/O dummy variables
         integer,                       intent(in   ) :: l_eb
         integer,      dimension(3),    intent(in   ) :: lo, hi, vlo, vhi, phlo, phhi
         real(c_real), dimension(l_eb), intent(in   ) :: eb_list
@@ -79,9 +77,14 @@ contains
         integer,                       intent(  out) :: valid   ( vlo(1):vhi(1),   vlo(2):vhi(2),   vlo(3):vhi(3) )
         real(c_real), dimension(3),    intent(in   ) :: dx, dx_eb
 
-        real(c_real), dimension(3) :: pos_node, c_vec
-        real(c_real)               :: levelset_node
 
+        ! ** define internal variables
+        !    pos_node:      position of the level-set MultiFab node (where level-set is evaluated)
+        !    levelset_node: value of the signed-distance function at pos_node
+        real(c_real), dimension(3) :: pos_node
+        real(c_real)               :: levelset_node
+        !    ii, jj, kk: loop index variables
+        !    valid_cell: .true. iff levelset_node is signed (if .false., levelset_node needs to be validated by IF)
         integer :: ii, jj, kk
         logical :: valid_cell
 
@@ -89,7 +92,7 @@ contains
             do jj = lo(2), hi(2)
                 do ii = lo(1), hi(1)
                     pos_node      = (/ ii*dx(1), jj*dx(2), kk*dx(3) /)
-                    levelset_node = closest_dist(eb_list, l_eb, pos_node, valid_cell, dx_eb)
+                    call closest_dist ( levelset_node, valid_cell, eb_list, l_eb, dx_eb, pos_node)
 
                     phi(ii, jj, kk) = levelset_node;
 
@@ -107,7 +110,7 @@ contains
 
         !------------------------------------------------------------------------------------------------------------!
         !                                                                                                            !
-        !        function CLOSEST_DIST                                                                               !
+        !   pure subroutine CLOSEST_DIST                                                                             !
         !                                                                                                            !
         !   Purpose: Find the distance to the closets point on the surface defined by the EB-facet list (from the    !
         !   point `pos`). Note that this distance is **signed** => if the vector `eb_center - pos` points            !
@@ -120,66 +123,82 @@ contains
         !                                                                                                            !
         !----------------------------------------------------------------------------------------------------------- !
 
-        function closest_dist(eb_data, l_eb,       &
-                              pos,     proj_valid, &
-                              dx                  )
+        pure subroutine closest_dist(min_dist, proj_valid,  &
+                                     eb_data,  l_eb, dx_eb, &
+                                     pos                   )
 
             use eb_geometry, only: facets_nearest_pt
 
             implicit none
 
-            real(c_real) :: closest_dist
+            ! ** define I/O dummy variables
+            integer,                       intent(in   ) :: l_eb
+            logical,                       intent(  out) :: proj_valid
+            real(c_real),                  intent(  out) :: min_dist
+            real(c_real), dimension(3),    intent(in   ) :: pos, dx_eb
+            real(c_real), dimension(l_eb), intent(in   ) :: eb_data
 
-            integer,                       intent(in)  :: l_eb
-            logical,                       intent(out) :: proj_valid
-            real(c_real), dimension(3),    intent(in)  :: pos, dx
-            real(c_real), dimension(l_eb), intent(in)  :: eb_data
 
-            integer                    :: i
-            integer,      dimension(3) :: vi_pt_closest, vi_loop_closest
+            ! ** define internal variables
+            !    i:         loop index variable
+            !    i_nearest: index of facet nearest to ps
+            integer                    :: i, i_nearest
+            !    vi_pt, vi_cent: vector indices (in MultiFab index-space) of:
+            !       +------|---> the projection point on the nearest EB facet
+            !              +---> the center of the nearest EB facet
+            integer,      dimension(3) :: vi_pt, vi_cent
+            !    dist_proj:        projected (minimal) distance to the nearest EB facet
+            !    dist2, min_dist2: squred distance to the EB facet centre, and square distance to the nearest EB facet
             real(c_real)               :: dist_proj, dist2, min_dist2, min_edge_dist2
-            real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, eb_cent_closest, eb_norm_closest
+            !    ind_dx:           inverse of dx_eb (used to allocate MultiFab indices to position vector)
+            !    eb_norm, eb_cent: EB normal and center (LATER: of the nearest EB facet)
+            !    eb_min_pt, c_vec: projected point on EB facet (c_vec: onto facet edge)
+            real(c_real), dimension(3) :: inv_dx, eb_norm, eb_cent, eb_min_pt, c_vec
 
-            inv_dx(:)      = dx(:)
-            closest_dist   = huge(closest_dist)
-            min_dist2      = huge(min_dist2)
-            min_edge_dist2 = huge(min_edge_dist2)
+            inv_dx(:)  = 1.d0 / dx_eb(:)
 
+            min_dist   = huge(min_dist)
+            min_dist2  = huge(min_dist2)
             proj_valid = .false.
 
+            ! Find nearest EB facet
             do i = 1, l_eb, 6
                 eb_cent(:)   = eb_data(i     : i + 2)
                 eb_norm(:)   = eb_data(i + 3 : i + 5)
 
                 dist2        = dot_product( pos(:) - eb_cent(:), pos(:) - eb_cent(:) )
-                dist_proj    = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
-
-                eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
 
                 if ( dist2 < min_dist2 ) then
-                    min_dist2          = dist2
-                    closest_dist       = dist_proj
-                    vi_loop_closest(:) = floor( eb_cent(:) * inv_dx(:))
-                    vi_pt_closest(:)   = floor( eb_min_pt(:) * inv_dx(:))
-                    eb_cent_closest(:) = eb_cent(:)
-                    eb_norm_closest(:) = eb_norm(:)
+                    min_dist2 = dist2
+                    i_nearest = i
                 end if
             end do
 
-            if ( all( vi_pt_closest == vi_loop_closest ) ) then
+
+            ! Test if pos "projects onto" the nearest EB facet's interior
+            eb_cent(:)   = eb_data(i_nearest     : i_nearest + 2)
+            eb_norm(:)   = eb_data(i_nearest + 3 : i_nearest + 5)
+
+            dist_proj = dot_product( pos(:) - eb_cent(:), -eb_norm(:) )
+            eb_min_pt(:) = pos(:) + eb_norm(:) * dist_proj
+
+            vi_cent(:) = floor( eb_cent(:) * inv_dx)
+            vi_pt(:)   = floor( eb_min_pt(:) * inv_dx);
+
+            ! If projects onto nearest EB facet, then return projected distance
+            ! Alternatively: find the nearest point on the EB edge
+            if ( all( vi_pt == vi_cent ) ) then
+                ! this is a signed distance function
+                min_dist   = dist_proj
                 proj_valid = .true.
-            end if
-
-            if ( .not. proj_valid ) then
-                c_vec = facets_nearest_pt(vi_pt_closest, vi_loop_closest, pos, eb_norm_closest, eb_cent_closest, dx)
+            else
+                ! fallback: find the nearest point on the EB edge
+                c_vec = facets_nearest_pt(vi_pt, vi_cent, pos, eb_norm, eb_cent, dx_eb)
                 min_edge_dist2 = dot_product( c_vec(:) - pos(:), c_vec(:) - pos(:))
-                !if ( min_dist2 < min_edge_dist2 ) then
-                !    write(*,*) "ha!"
-                !end if
-                closest_dist = -sqrt( min(min_dist2, min_edge_dist2) )
+                min_dist       = -sqrt( min(min_dist2, min_edge_dist2) )
             end if
 
-        end function closest_dist
+        end subroutine closest_dist
 
     end subroutine fill_levelset_eb
 
@@ -201,7 +220,7 @@ contains
     pure subroutine validate_levelset(lo,    hi,   n_pad, &
                                       impf,  imlo, imhi,  &
                                       valid, vlo,  vhi,   &
-                                      phi,   phlo, phhi)  &
+                                      phi,   phlo, phhi  )&
                     bind(C, name="validate_levelset")
 
         implicit none
@@ -234,12 +253,12 @@ contains
     end subroutine validate_levelset
 
 
-    pure subroutine update_levelset(lo,    hi,      &
-                               ls_in, lslo, lshi,   &
-                               valid, vlo,  vhi,    &
-                               phi,   phlo, phhi,   &
-                               dx,    n_pad       ) &
-               bind(C, name="update_levelset")
+    pure subroutine update_levelset(lo,    hi,           &
+                                    ls_in, lslo, lshi,   &
+                                    valid, vlo,  vhi,    &
+                                    phi,   phlo, phhi,   &
+                                    dx,    n_pad       ) &
+                    bind(C, name="update_levelset")
 
         implicit none
 
@@ -434,10 +453,12 @@ contains
                                        + (/ dble(i), dble(j), dble(k) /)     &
                                        + (/ 0.5d0, 0.5d0, 0.5d0 /) ) * dx(:)
 
-                        !write(*,*) "generating eb_cent at: ", eb_cent(:), sqrt( &
+                        !write(*,*) i, j, k, "generating eb_cent at: ", eb_cent(:), sqrt( &
                         !                dot_product ( ( eb_cent(1:2) - (/0.0016, 0.0016/) ), &
                         !                              ( eb_cent(1:2) - (/0.0016, 0.0016/) ) )&
                         !               )
+                        !write(*,*) "with normal:", norm(i, j, k, :)
+                        !write(*,*) ""
 
 
                         list_out( i_facet     : i_facet + 2) = eb_cent(:)
