@@ -97,9 +97,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   p_g(slo(1):domlo(1)-1,j,k) = &
                        2*p_g(domlo(1),j,k) - p_g(domlo(1)+1,j,k)
 
-                  u_g(ulo(1):domlo(1)  ,j,k) = bc_u_g(bcv)
-                  v_g(vlo(1):domlo(1)-1,j,k) = 0.0d0
-                  w_g(wlo(1):domlo(1)-1,j,k) = 0.0d0
+                       u_g(ulo(1):domlo(1)  ,j,k) = bc_u_g(bcv)
+                       v_g(vlo(1):domlo(1)-1,j,k) = 0.0d0
+                       w_g(wlo(1):domlo(1)-1,j,k) = 0.0d0
+
+                      ep_g(slo(1):domlo(1)-1,j,k) =     ep_g(domlo(1),j,k)
+                      ro_g(slo(1):domlo(1)-1,j,k) =     ro_g(domlo(1),j,k)
+                     rop_g(slo(1):domlo(1)-1,j,k) =    rop_g(domlo(1),j,k)
+                      mu_g(slo(1):domlo(1)-1,j,k) =     mu_g(domlo(1),j,k)
+                  lambda_g(slo(1):domlo(1)-1,j,k) = lambda_g(domlo(1),j,k)
 
                else if (bc_ilo_type(j,k,1) == NSW_) then
 
@@ -140,9 +146,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   p_g(domhi(1)+1:shi(1),j,k) = &
                        2*p_g(domhi(1),j,k) - p_g(domhi(1)-1,j,k)
 
-                  u_g(domhi(1)+1:uhi(1),j,k) = bc_u_g(bcv)
-                  v_g(domhi(1)+1:vhi(1),j,k) = 0.0d0
-                  w_g(domhi(1)+1:whi(1),j,k) = 0.0d0
+                       u_g(domhi(1)+1:uhi(1),j,k) = bc_u_g(bcv)
+                       v_g(domhi(1)+1:vhi(1),j,k) = 0.0d0
+                       w_g(domhi(1)+1:whi(1),j,k) = 0.0d0
+
+                      ep_g(domhi(1)+1:shi(1),j,k) =     ep_g(domhi(1)  ,j,k)
+                      ro_g(domhi(1)+1:shi(1),j,k) =     ro_g(domhi(1)  ,j,k)
+                     rop_g(domhi(1)+1:shi(1),j,k) =    rop_g(domhi(1)  ,j,k)
+                      mu_g(domhi(1)+1:shi(1),j,k) =     mu_g(domhi(1)  ,j,k)
+                  lambda_g(domhi(1)+1:shi(1),j,k) = lambda_g(domhi(1)  ,j,k)
 
                else if (bc_ihi_type(j,k,1) == NSW_) then
 
@@ -184,9 +196,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   p_g(i,slo(2):domlo(2)-1,k) = &
                        2*p_g(i,domlo(2),k) - p_g(i,domlo(2)+1,k)
 
-                  u_g(i,ulo(2):domlo(2)-1,k) = 0.0d0
-                  v_g(i,vlo(2):domlo(2)  ,k) = bc_v_g(bcv)
-                  w_g(i,wlo(2):domlo(2)-1,k) = 0.0d0
+                       u_g(i,ulo(2):domlo(2)-1,k) = 0.0d0
+                       v_g(i,vlo(2):domlo(2)  ,k) = bc_v_g(bcv)
+                       w_g(i,wlo(2):domlo(2)-1,k) = 0.0d0
+
+                      ep_g(i,slo(1):domlo(2)-1,k) =     ep_g(i,domlo(2),k)
+                      ro_g(i,slo(1):domlo(2)-1,k) =     ro_g(i,domlo(2),k)
+                     rop_g(i,slo(1):domlo(2)-1,k) =    rop_g(i,domlo(2),k)
+                      mu_g(i,slo(1):domlo(2)-1,k) =     mu_g(i,domlo(2),k)
+                  lambda_g(i,slo(1):domlo(2)-1,k) = lambda_g(i,domlo(2),k)
 
                else if (bc_jlo_type(i,k,1) == NSW_)then
 
@@ -228,9 +246,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   p_g(i,domhi(2)+1:shi(2),k) = &
                        2*p_g(i,domhi(2),k) - p_g(i,domhi(2)-1,k)
 
-                  u_g(i,domhi(2)+1:uhi(2),k) = 0.0d0
-                  v_g(i,domhi(2)+1:vhi(2),k) = bc_v_g(bcv)
-                  w_g(i,domhi(2)+1:whi(2),k) = 0.0d0
+                       u_g(i,domhi(2)+1:uhi(2),k) = 0.0d0
+                       v_g(i,domhi(2)+1:vhi(2),k) = bc_v_g(bcv)
+                       w_g(i,domhi(2)+1:whi(2),k) = 0.0d0
+
+                      ep_g(i,domhi(2)+1:shi(2),k) =     ep_g(i,domhi(2)  ,k)
+                      ro_g(i,domhi(2)+1:shi(2),k) =     ro_g(i,domhi(2)  ,k)
+                     rop_g(i,domhi(2)+1:shi(2),k) =    rop_g(i,domhi(2)  ,k)
+                      mu_g(i,domhi(2)+1:shi(2),k) =     mu_g(i,domhi(2)  ,k)
+                  lambda_g(i,domhi(2)+1:shi(2),k) = lambda_g(i,domhi(2)  ,k)
 
                else if (bc_jhi_type(i,k,1) == NSW_) then
 
@@ -271,9 +295,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   p_g(i,j,slo(3):domlo(3)-1) = &
                        2*p_g(i,j,domlo(3)) - p_g(i,j,domlo(3)+1)
 
-                  u_g(i,j,ulo(3):domlo(3)-1) = 0.0d0
-                  v_g(i,j,vlo(3):domlo(3)-1) = 0.0d0
-                  w_g(i,j,wlo(3):domlo(3)  ) = bc_w_g(bcv)
+                       u_g(i,j,ulo(3):domlo(3)-1) = 0.0d0
+                       v_g(i,j,vlo(3):domlo(3)-1) = 0.0d0
+                       w_g(i,j,wlo(3):domlo(3)  ) = bc_w_g(bcv)
+
+                      ep_g(i,j,slo(3):domlo(3)-1) =     ep_g(i,j,domlo(3))
+                      ro_g(i,j,slo(3):domlo(3)-1) =     ro_g(i,j,domlo(3))
+                     rop_g(i,j,slo(3):domlo(3)-1) =    rop_g(i,j,domlo(3))
+                      mu_g(i,j,slo(3):domlo(3)-1) =     mu_g(i,j,domlo(3))
+                  lambda_g(i,j,slo(3):domlo(3)-1) = lambda_g(i,j,domlo(3))
 
                else if (bc_klo_type(i,j,1) == NSW_) then
 
@@ -313,9 +343,15 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   p_g(i,j,domhi(3)+1:shi(3)) = &
                        2*p_g(i,j,domhi(2)) - p_g(i,j,domhi(3)-1)
 
-                  u_g(i,j,domhi(3)+1:uhi(3)) = 0.0d0
-                  v_g(i,j,domhi(3)+1:vhi(3)) = 0.0d0
-                  w_g(i,j,domhi(3)+1:whi(3)) = bc_w_g(bcv)
+                       u_g(i,j,domhi(3)+1:uhi(3)) = 0.0d0
+                       v_g(i,j,domhi(3)+1:vhi(3)) = 0.0d0
+                       w_g(i,j,domhi(3)+1:whi(3)) = bc_w_g(bcv)
+
+                      ep_g(i,j,domhi(3)+1:shi(3)) =     ep_g(i,j,domhi(3)  )
+                      ro_g(i,j,domhi(3)+1:shi(3)) =     ro_g(i,j,domhi(3)  )
+                     rop_g(i,j,domhi(3)+1:shi(3)) =    rop_g(i,j,domhi(3)  )
+                      mu_g(i,j,domhi(3)+1:shi(3)) =     mu_g(i,j,domhi(3)  )
+                  lambda_g(i,j,domhi(3)+1:shi(3)) = lambda_g(i,j,domhi(3)  )
 
                else if (bc_khi_type(i,j,1) == NSW_) then
 
