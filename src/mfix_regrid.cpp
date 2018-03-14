@@ -41,28 +41,18 @@ mfix_level::Regrid (int lev, int nstep)
        if (ebfactory) {
            ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
                                                   {m_eb_basic_grow_cells,
-                                                          m_eb_volume_grow_cells,
-                                                          m_eb_full_grow_cells}, m_eb_support_level));
-           
-           // eb_normals is a legacy of the old collision algorithm -> depricated
-           eb_normals   = pc -> EBNormals(lev, ebfactory.get(), dummy.get());
-
-           // level_set -> update(dummy.get());
-           
-           level_set->regrid();
-      
+                                                   m_eb_volume_grow_cells,
+                                                   m_eb_full_grow_cells}, m_eb_support_level));
        }
        
        if (particle_ebfactory) {
            particle_ebfactory.reset(new EBFArrayBoxFactory(geom[lev], pc->ParticleBoxArray(lev),
                                                            pc->ParticleDistributionMap(lev),
                                                            {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                                                   m_eb_full_grow_cells}, m_eb_support_level));
+                                                            m_eb_full_grow_cells}, m_eb_support_level));
 
            // eb_normals is a legacy of the old collision algorithm -> depricated
            eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
-
-           // level_set -> update(dummy.get());
            
            level_set->regrid();
        }
@@ -92,15 +82,8 @@ mfix_level::Regrid (int lev, int nstep)
                 if (ebfactory) {
                     ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
                                                            {m_eb_basic_grow_cells,
-                                                                   m_eb_volume_grow_cells,
-                                                                   m_eb_full_grow_cells}, m_eb_support_level));
-                    
-                    // eb_normals is a legacy of the old collision algorithm -> depricated
-                    eb_normals   = pc -> EBNormals(lev, ebfactory.get(), dummy.get());
-                    
-                    //level_set -> update(dummy.get());
-                    
-                    level_set->regrid();
+                                                            m_eb_volume_grow_cells,
+                                                            m_eb_full_grow_cells}, m_eb_support_level));                    
                 }
 
                 mfix_set_bc0(lev);
@@ -120,8 +103,6 @@ mfix_level::Regrid (int lev, int nstep)
                     // eb_normals is a legacy of the old collision algorithm -> depricated
                     eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
-                    // level_set -> update(dummy.get());
-                    
                     level_set->regrid();
                 }
             }
@@ -158,13 +139,6 @@ mfix_level::Regrid (int lev, int nstep)
                                                        {m_eb_basic_grow_cells,
                                                                m_eb_volume_grow_cells,
                                                                m_eb_full_grow_cells}, m_eb_support_level));
-
-                // eb_normals is a legacy of the old collision algorithm -> depricated
-                eb_normals   = pc -> EBNormals(lev, ebfactory.get(), dummy.get());
-
-                // level_set -> update(dummy.get());
-                
-                level_set->regrid();
             }
             
             if (particle_ebfactory) {
@@ -176,8 +150,6 @@ mfix_level::Regrid (int lev, int nstep)
                 // eb_normals is a legacy of the old collision algorithm -> depricated
                 eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
-                // level_set -> update(dummy.get());
-                
                 level_set->regrid();
             }
         }
@@ -332,6 +304,13 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     vort_new->copy(*vort[lev],0,0,1,ng,ng);
     vort_new->FillBoundary(geom[lev].periodicity());
     vort[lev] = std::move(vort_new);
+
+    // Diveu
+    ng = diveu[lev]->nGrow();
+    std::unique_ptr<MultiFab> diveu_new(new MultiFab(new_grids,new_dmap,1,diveu[lev]->nGrow()));
+    diveu_new->copy(*diveu[lev],0,0,1,ng,ng);
+    diveu_new->FillBoundary(geom[lev].periodicity());
+    diveu[lev] = std::move(diveu_new);
 
     // ********************************************************************************
     // X-face-based arrays

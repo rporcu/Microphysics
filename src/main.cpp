@@ -221,57 +221,64 @@ int main (int argc, char* argv[])
        last_par_ascii = nstep;
     }
 
-    if (time <  tstop)
-    {
-       while (finish == 0)
-       {
-          mfix_usr1();
 
-          Real strt_step = ParallelDescriptor::second();
+    { // Start profiling solve here
 
-          if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
-             my_mfix.Regrid(lev,nstep);
+	BL_PROFILE("mfix_solve");
+	BL_PROFILE_REGION("mfix_solve");
 
-          my_mfix.Evolve(lev,nstep,set_normg,steady_state,dt,prev_dt,time,stop_time,normg);
+	if (time <  tstop)
+	{
+	    while (finish == 0)
+	    {
+		mfix_usr1();
 
-          Real end_step = ParallelDescriptor::second() - strt_step;
-          ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
-          if (ParallelDescriptor::IOProcessor())
-             std::cout << "Time per step        " << end_step << std::endl;
+		Real strt_step = ParallelDescriptor::second();
 
-          if (!steady_state)
-          {
-             time += prev_dt;
-             nstep++;
+		if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
+		    my_mfix.Regrid(lev,nstep);
 
-             if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
-             {
-                my_mfix.WritePlotFile( plot_file, nstep, dt, time );
-                last_plt = nstep;
-             }
+		my_mfix.Evolve(lev,nstep,set_normg,steady_state,dt,prev_dt,time,stop_time,normg);
 
-             if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
-             {
-                my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
-                last_chk = nstep;
-             }
+		Real end_step = ParallelDescriptor::second() - strt_step;
+		ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
+		if (ParallelDescriptor::IOProcessor())
+		    std::cout << "Time per step        " << end_step << std::endl;
 
-             if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
-             {
-                my_mfix.WriteParticleAscii( par_ascii_file, nstep );
-                last_par_ascii = nstep;
-             }
-          }
+		if (!steady_state)
+		{
+		    time += prev_dt;
+		    nstep++;
 
-          if (ParallelDescriptor::IOProcessor() && solve_dem )
-             my_mfix.output(lev,estatus,finish,nstep,dt,time);
+		    if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
+		    {
+			my_mfix.WritePlotFile( plot_file, nstep, dt, time );
+			last_plt = nstep;
+		    }
 
-          // Mechanism to terminate MFIX normally.
-          if (steady_state || (time + 0.1*dt >= tstop)) finish = 1;
-       }
+		    if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
+		    {
+			my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+			last_chk = nstep;
+		    }
+
+		    if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
+		    {
+			my_mfix.WriteParticleAscii( par_ascii_file, nstep );
+			last_par_ascii = nstep;
+		    }
+		}
+
+		if (ParallelDescriptor::IOProcessor() && solve_dem )
+		    my_mfix.output(lev,estatus,finish,nstep,dt,time);
+
+		// Mechanism to terminate MFIX normally.
+		if (steady_state || (time + 0.1*dt >= tstop)) finish = 1;
+	    }
+	}
     }
-
-    if (steady_state)
+    
+    if (steady_state) 
         nstep = 1;
 
     // Dump plotfile at the final time
