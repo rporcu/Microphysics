@@ -467,7 +467,7 @@ contains
       ELSEIF(phis >= 0.4D0) THEN
          F_0 = 10.0D0*phis/(1.0D0-phis)**3
       ELSE
-         F_0 = 0.0d0d
+         F_0 = 0.0d0
       ENDIF
 
       IF(phis > 0.01D0 .AND. phis <= 0.1D0) THEN
