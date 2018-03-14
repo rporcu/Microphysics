@@ -556,9 +556,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          BL_PROFILE_VAR_STOP(calc_particle_collisions);
 #endif
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
 #if 1
         des_time_loop ( &nrp     , particles,
