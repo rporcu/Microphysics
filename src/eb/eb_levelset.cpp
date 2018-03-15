@@ -50,6 +50,9 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
     eb_grid->define(eb_ba, dm, 1, eb_pad);
 
     // Initialize by setting all ls_phi = huge(c_real)
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
     for(MFIter mfi( * ls_grid, true); mfi.isValid(); ++mfi){
         Box tile_box   = mfi.growntilebox();
         auto & ls_tile = (* ls_grid)[mfi];
@@ -134,7 +137,10 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
     // while computing normals, count EB-facets
     int n_facets = 0;
 
-    for(MFIter mfi(normal, true); mfi.isValid(); ++mfi) {
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for(MFIter mfi(dummy, true); mfi.isValid(); ++mfi) {
         Box tile_box = mfi.growntilebox();
         const int * lo = tile_box.loVect();
         const int * hi = tile_box.hiVect();
@@ -143,7 +149,7 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
         const auto & flag = sfab.getEBCellFlagFab();
 
         // Need to count number of eb-facets (in order to allocate FArrayBox)
-        count_eb_facets(lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(), & n_facets);
+        //count_eb_facets(lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(), & n_facets);
 
         // Target for compute_normals(...)
         auto & norm_tile = normal[mfi];
@@ -171,20 +177,34 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
     /***************************************************************************
      *                                                                         *
      * Compute EB-facet centres data (which are stored in a 1-D array)         *
+     * IMPORTANT: DO NOT use pragma omp here due to race conditions:           *
+     *            -> n_facets is incremented sequentially                      *
+     *            -> facet_list is incremented sequentially                    *
      *                                                                         *
      ***************************************************************************/
 
+    for(MFIter mfi(dummy, true); mfi.isValid(); ++mfi) {
+        Box tile_box = mfi.growntilebox();
+        const int * lo = tile_box.loVect();
+        const int * hi = tile_box.hiVect();
+
+        const auto & sfab = dynamic_cast <EBFArrayBox const&>(dummy[mfi]);
+        const auto & flag = sfab.getEBCellFlagFab();
+
+        // Need to count number of eb-facets (in order to allocate facet_list)
+        count_eb_facets(lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(), & n_facets);
+    }
 
     facet_list = std::unique_ptr<Vector<Real>>(new Vector<Real>(6 * n_facets));
 
     int c_facets = 0;
-    for(MFIter mfi(normal, true); mfi.isValid(); ++mfi) {
+    for(MFIter mfi(dummy, true); mfi.isValid(); ++mfi) {
         Box tile_box = mfi.growntilebox();
 
         const auto & sfab = dynamic_cast <EBFArrayBox const&>(dummy[mfi]);
         const auto & flag = sfab.getEBCellFlagFab();
 
-        const auto & norm_tile =normal[mfi];
+        const auto & norm_tile = normal[mfi];
         const auto & bcent_tile = (* bndrycent)[mfi];
 
         int facet_list_size = facet_list->size();
@@ -205,6 +225,9 @@ std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace & eb_is) {
     const DistributionMapping & dm = mfix_pc->ParticleDistributionMap(amr_lev);
     mf_impfunc->define(ls_ba, dm, 1, ls_grid_pad);
 
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
     for(MFIter mfi(* mf_impfunc, true); mfi.isValid(); ++ mfi)
         eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi], dx_vect);
 
@@ -214,6 +237,10 @@ std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace & eb_is) {
 
 
 void LSFactory::update(const MultiFab & ls_in) {
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
     for(MFIter mfi( * ls_grid, true); mfi.isValid(); ++mfi){
         Box tile_box = mfi.growntilebox();
 
@@ -278,6 +305,9 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexS
     // Fill local MultiFab with eb_factory's level-set data. Note the role of eb_valid:
     //  -> eb_valid = 1 if the corresponding eb_ls location could be projected onto the eb-facets
     //  -> eb_valid = 0 if eb_ls is the fall-back (euclidian) distance to the nearest eb-facet
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
     for(MFIter mfi(eb_ls, true); mfi.isValid(); ++mfi){
         Box tile_box = mfi.growntilebox();
         const int * lo = tile_box.loVect();
@@ -312,6 +342,9 @@ void LSFactory::update_ebis(const EBIndexSpace & eb_is) {
     //      -- implicit_function(r) < 0 : r in fluid (outside of EB)
     //      -- implicit_function(r) > 0 : r not in fluid (inside EB)
     //   => If implicit_function is a signed-distance function, we need to invert sign
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
     for(MFIter mfi( * mf_impfunc, true); mfi.isValid(); ++ mfi){
         FArrayBox & a_fab = (* mf_impfunc)[mfi];
         for(BoxIterator bit(mfi.growntilebox()); bit.ok(); ++bit)
