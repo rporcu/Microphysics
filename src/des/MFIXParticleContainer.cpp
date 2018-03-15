@@ -119,6 +119,9 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
       // Add everything to the data structure
       particle_tile.push_back(p);
+      
+      if (!ifs.good())
+          amrex::Abort("Error initializing particles from Ascii file. \n");
     }
   }
   Redistribute();
