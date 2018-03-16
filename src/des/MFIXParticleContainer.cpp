@@ -431,6 +431,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
+    amrex::Print() << "Evolving particles... ";
+
     bool debug = false;
 
     Box domain(Geom(lev).Domain());
@@ -640,6 +642,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                << " dx= " << dx[0] << endl;
        }
     }
+
+    amrex::Print() << "done. \n";
+
     BL_PROFILE_REGION_STOP("mfix_dem::EvolveParticles()");
 } 
  
