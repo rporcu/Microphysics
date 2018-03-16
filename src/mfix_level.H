@@ -20,6 +20,7 @@
 #include <AMReX_EBTower.H>
 #include <AMReX_EBFArrayBox.H>
 
+#include <eb_levelset.H>
 
 class mfix_level
     : public AmrCore
@@ -72,6 +73,20 @@ public:
     void WriteEBSurface(int lev);
 
     void InitIOData();
+    
+    // flag switching from calc_wall_collisions_ls to calc_wall_collisions if true
+    bool legacy__eb_collisions = false;
+
+
+    ///
+    /// Parameters describing the level-set grid:
+    ///
+    int levelset__refinement = 1;     // refinement (wrt particle grid) of the level-set's grid
+    int levelset__eb_refinement = 1;  // refinement (wrt particle grid) of the EB facets used to generate the level-set
+    int levelset__pad = 2;            // padding of the level-set grid
+    int levelset__eb_pad = 2;         // padding of the EBIS used to generate the level-set (particularly useful for
+                                      // ensuring that edge-cased occur well outside the physical domain)
+
 
 protected:
 
@@ -413,6 +428,9 @@ private:
     // stores eb_normals (commond index-space with cells)
     std::unique_ptr<MultiFab> eb_normals;
     std::unique_ptr<MultiFab> dummy;
+
+    // stores level-set (nodal index space corresponding to cells, but n_refinement times finer)
+    std::unique_ptr<LSFactory> level_set;
 };
 
 #endif

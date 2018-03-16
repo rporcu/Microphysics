@@ -47,8 +47,14 @@ set(F90_sources
 #
 # EB stuff
 # 
-list ( APPEND CXX_sources eb/mfix_eb.cpp )
-list ( APPEND F90_sources eb/get_eb_walls.f90 eb/compute_normals.f90 )
+list ( APPEND CXX_sources  eb/mfix_eb.cpp )
+list ( APPEND F90_sources  eb/get_eb_walls.f90 eb/compute_normals.f90 )
+# general EB geometry tools (projections onto edges, etc...)
+list ( APPEND F90_sources  eb/eb_geometry.f90)
+# level-set sources
+list ( APPEND CXX_sources  eb/eb_levelset.cpp )
+list ( APPEND CXX_includes eb/eb_levelset.H )
+list ( APPEND F90_sources  eb/eb_levelset.f90)
 
 #
 # Particles
@@ -120,7 +126,6 @@ list ( APPEND F90_sources projection/projection_mod.f90 projection/projection_te
 list ( APPEND F90_sources projection/slopes_mod.f90 )
 list ( APPEND F90_sources projection/set_pressure_bcs.f90 projection/set_projection_bcs.f90 )
 list ( APPEND CXX_sources projection/mfix_projection.cpp )
-
 
 
 

@@ -28,8 +28,8 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& d
   }
   
   if (solve_fluid)  {
-      if ( use_proj_method )	{
-	  EvolveFluidProjection(lev,nstep,steady_state,dt,time,stop_time);
+      if ( use_proj_method ) {
+	      EvolveFluidProjection(lev,nstep,steady_state,dt,time,stop_time);
           prev_dt = dt;
       }	else {
           EvolveFluidSimple(lev,nstep,set_normg,dt,prev_dt,time,normg);
@@ -42,6 +42,7 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& d
   
   if (solve_dem)
       pc -> EvolveParticles(lev, nstep, dt, time, particle_ebfactory.get(), eb_normals.get(), 
+              level_set->get_data(), level_set->get_valid(), level_set->get_ls_ref(),
               dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io);
 
  BL_PROFILE_REGION_STOP("mfix::Evolve");
