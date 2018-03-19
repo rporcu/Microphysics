@@ -61,11 +61,11 @@
 # INITIAL CONDITIONS SECTION
 
   IC_X_w(1) =   0.000   ! (m)
-  IC_X_e(1) =   0.008   ! (m)
+  IC_X_e(1) =   0.0128  ! (m)
   IC_Y_s(1) =   0.000   ! (m)
-  IC_Y_n(1) =   0.008   ! (m)
+  IC_Y_n(1) =   0.0128  ! (m)
   IC_Z_b(1) =   0.000   ! (m)
-  IC_Z_t(1) =   0.008   ! (m)
+  IC_Z_t(1) =   0.0128  ! (m)
 
   IC_EP_g(1) =  1.000   ! (m)
 
