@@ -1059,10 +1059,7 @@ mfix_level::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
 
     Box domain(geom[lev].Domain());
 
-    #ifdef _OPENMP
-    #pragma omp parallel
-    #endif
-    for (MFIter mfi(*p, true); mfi.isValid(); ++mfi) {
+    for (MFIter mfi(*p); mfi.isValid(); ++mfi) {
 
 	const Box& sbx = (*p)[mfi].box();
 
