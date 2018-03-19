@@ -182,6 +182,8 @@ ExternalProject_Add ( mfix
    -DMFIX_FFLAGS_OVERRIDES=${MFIX_FFLAGS_OVERRIDES}
    -DMFIX_CXXFLAGS_OVERRIDES=${MFIX_CXXFLAGS_OVERRIDES}
    -DENABLE_FPE=${ENABLE_FPE}
+   -DENABLE_PTESTS=${ENABLE_PTESTS}
+   -DENABLE_STESTS=${ENABLE_STESTS}
    -DAMREX_INSTALL_DIR=${AMREX_SUPERBUILD_INSTALLDIR}
    -DCMAKE_EXPORT_COMPILE_COMMANDS=${CMAKE_EXPORT_COMPILE_COMMANDS}
    SOURCE_DIR ${PROJECT_SOURCE_DIR}
@@ -191,7 +193,7 @@ ExternalProject_Add ( mfix
    INSTALL_COMMAND ""
    )
 
-# When using superbuidl, the compile commands databases do not exist before compile-time. Hence create a new build target (compile_dB)
+# When using superbuild, the compile commands databases do not exist before compile-time. Hence create a new build target (compile_dB)
 # which collects both mfix's and amrex's compile_commands.json, concattenates them in the project's root directory
 add_custom_target( compile_db
     # First take mfix's compile database (compile_commands.json) and:
