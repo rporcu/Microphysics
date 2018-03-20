@@ -1,5 +1,5 @@
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell = 4 8 8
+amr.n_cell = 1 8 8
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
@@ -18,6 +18,9 @@ amr.plot_file=FLD03
 
 amr.check_int = -1
 amr.par_ascii_int = -1
+
+mfix.use_proj_method=1
+mfix.steady_state_tol=1.0e-12
 
 # Geometry
 geometry.coord_sys   = 0                  # 0: Cartesian   

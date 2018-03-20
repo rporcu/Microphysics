@@ -22,7 +22,6 @@ amr.par_ascii_int = -1
 mfix.use_proj_method=1
 mfix.steady_state_tol=1.0e-13
 
-
 # Geometry
 geometry.coord_sys   = 0                  # 0: Cartesian   
 geometry.is_periodic = 1     1     1      # Is periodic in each direction?
