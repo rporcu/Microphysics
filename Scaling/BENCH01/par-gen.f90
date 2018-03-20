@@ -11,8 +11,8 @@ module data
   logical :: enable_vtp = .false.
 
   ! base domain length and particle count
-  double precision, parameter :: length = 0.004
-  integer,          parameter :: pcount = 1222
+  double precision, parameter :: length = 0.0064
+  integer,          parameter :: pcount = 5005
 
   ! Particle diameter, radius density
   double precision, parameter :: dp = 100.0d-6 ! (m)
@@ -300,11 +300,11 @@ program main
   implicit none
 
   integer :: lc
-  integer, parameter :: sizes(6) = (/1,2,3,4,6,10/)
+  integer, parameter :: sizes(5) = (/1,2,4,8,16/)
 
   call read_inputs()
 
-  do lc=1,6
+  do lc=1,5
      call set_case(sizes(lc))
   enddo
 

@@ -119,6 +119,9 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
       // Add everything to the data structure
       particle_tile.push_back(p);
+      
+      if (!ifs.good())
+          amrex::Abort("Error initializing particles from Ascii file. \n");
     }
   }
   Redistribute();
@@ -432,6 +435,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
+    amrex::Print() << "Evolving particles... ";
+
     bool debug = false;
 
     Box domain(Geom(lev).Domain());
@@ -556,9 +561,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          BL_PROFILE_VAR_STOP(calc_particle_collisions);
 #endif
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
 #if 1
         des_time_loop ( &nrp     , particles,
@@ -651,6 +653,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                << " dx= " << dx[0] << endl;
        }
     }
+
+    amrex::Print() << "done. \n";
+
     BL_PROFILE_REGION_STOP("mfix_dem::EvolveParticles()");
 }
 

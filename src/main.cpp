@@ -89,9 +89,6 @@ int main (int argc, char* argv[])
     amrex::Initialize(argc,argv);
     BL_PROFILE_VAR("main()", pmain)
     BL_PROFILE_REGION_START("mfix::main()");
-//    BL_PROFILE_CHANGE_FORT_INT_NAME("mfix::calc_wall_collisions::EB",1);
-//    BL_PROFILE_CHANGE_FORT_INT_NAME("mfix::calc_wall_collisions::collisions",2);
-
 
     // Copy arguments into MFIX -- note that the first argument is now the name of the
     //      inputs file to be read by AMReX, so we only pass the arguments after that
@@ -100,7 +97,8 @@ int main (int argc, char* argv[])
 
        // If-statement avoids passing the name of the mfix input file if it is
        // specified on the command line or any AMReX command.
-       if ( strstr(argv[i], "input_file") == NULL && strstr(argv[i], "amr") == NULL)
+       if ( (strstr(argv[i], "input_file") == NULL) && (strstr(argv[i], "amr") == NULL)
+                                                    && (strstr(argv[i], "mfix") == NULL) )
          mfix_add_argument(argv[i], &nlen);
     }
 

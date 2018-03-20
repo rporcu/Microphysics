@@ -111,13 +111,13 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
        ph.setVal(0.0);
        sh.setVal(0.0);
 
-    const Real eps_abs=1.0E-12;
+       Real eps_abs=(1.0E-12 < eps_rel/10.) ? 1.0E-12 : eps_rel/10.0;
 
     // Unit scaling
     //-------------------------------------------------------------------
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(rhs, true); mfi.isValid(); ++mfi)
     {
         Real wt = ParallelDescriptor::second();
@@ -126,25 +126,26 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         const Box& rbx = rhs[mfi].box();
         const Box& abx = A_m[mfi].box();
 
-        leq_scale(bx.loVect(), bx.hiVect(), 
+        leq_scale(bx.loVect(), bx.hiVect(),
                   rhs[mfi].dataPtr(), rbx.loVect(), rbx.hiVect(),
                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect());
 
        if (fluid_cost[lev]) {
-	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
-	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
+         const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+         wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+         (*fluid_cost[lev])[mfi].plus(wt, tbx);
        }
     }
 
-    // Enforce periodicity on sol in case it hasn't been done yet
-    sol.FillBoundary(geom[lev].periodicity());
+    // We don't need this FillBoundary call because we call FillBoundary right 
+    //    before the call to solve_bicgstab
+    // sol.FillBoundary(geom[lev].periodicity());
 
     // Compute initial residual r = rhs - A*sol
     //-------------------------------------------------------------------
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
     for (MFIter mfi(rhs, true); mfi.isValid(); ++mfi)
     {
 
@@ -157,20 +158,21 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       const Box& sbx = sol[mfi].box();
 
       // Compute r = rhs - A_m*sol
-      leq_residual( bx.loVect(), bx.hiVect(), 
+      leq_residual( bx.loVect(), bx.hiVect(),
                    rhs[mfi].dataPtr(), hbx.loVect(), hbx.hiVect(),
                    sol[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
                    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                      r[mfi].dataPtr(), rbx.loVect(), rbx.hiVect());
 
        if (fluid_cost[lev]) {
-	 const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
-	 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	 (*fluid_cost[lev])[mfi].plus(wt, tbx);
+          const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+          wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+          (*fluid_cost[lev])[mfi].plus(wt, tbx);
        }
     }
 
-    r.FillBoundary(geom[lev].periodicity());
+    // We don't need this call because the rhs is only needed on the interior cells
+    // r.FillBoundary(geom[lev].periodicity());
 
     MultiFab::Copy(sorig,sol,0,0,1,nghost);
     MultiFab::Copy(rh,   r,  0,0,1,nghost);
@@ -218,8 +220,8 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         sxay(p, r,   beta, p);
       }
 
-      // Enforce periodicity on sol in case it hasn't been done yet
-      p.FillBoundary(geom[lev].periodicity());
+      // We don't need this one because sxay includes one ghost cell
+      // p.FillBoundary(geom[lev].periodicity());
 
       //  A*ph = p
       //  v = A*Ph
@@ -233,11 +235,11 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       {
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
         for (MFIter mfi(p, true); mfi.isValid(); ++mfi)
         {
 
-	  Real wt = ParallelDescriptor::second();
+          Real wt = ParallelDescriptor::second();
 
           const Box&  bx = mfi.tilebox();
           const Box& pbx =   p[mfi].box();
@@ -249,11 +251,11 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                       A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                        ph[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
 
-	  if (fluid_cost[lev]) {
-	    const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
-	    wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	    (*fluid_cost[lev])[mfi].plus(wt, tbx);
-	  }
+          if (fluid_cost[lev]) {
+            const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+            wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+            (*fluid_cost[lev])[mfi].plus(wt, tbx);
+          }
         }
       }
       else // pc_type ==None
@@ -261,11 +263,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         MultiFab::Copy(ph,p,0,0,1,nghost);
       }
 
+      // We need to keep this call
       ph.FillBoundary(geom[lev].periodicity());
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
       for (MFIter mfi(ph, true); mfi.isValid(); ++mfi)
       {
 
@@ -275,21 +278,21 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         const Box& pbx =  ph[mfi].box();
         const Box& abx = A_m[mfi].box();
         const Box& vbx =   v[mfi].box();
-        leq_matvec( bx.loVect(), bx.hiVect(), 
-		    ph[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
-		    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
-                    v[mfi].dataPtr(), vbx.loVect(), vbx.hiVect());
+        leq_matvec( bx.loVect(), bx.hiVect(),
+                    ph[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
+                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+                     v[mfi].dataPtr(), vbx.loVect(), vbx.hiVect());
 
-	if (fluid_cost[lev]) {
-	  const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
-	  wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	  (*fluid_cost[lev])[mfi].plus(wt, tbx);
-	}
+        if (fluid_cost[lev]) {
+          const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+          wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+          (*fluid_cost[lev])[mfi].plus(wt, tbx);
+        }
       }
 
-      // Enforce periodicity on sol in case it hasn't been done yet
-      rh.FillBoundary(geom[lev].periodicity());
-       v.FillBoundary(geom[lev].periodicity());
+      // We don't need these calls
+      // rh.FillBoundary(geom[lev].periodicity());
+      //  v.FillBoundary(geom[lev].periodicity());
 
       Real rhTv = dotxy(rh,v,geom[lev].periodicity(),true);
 
@@ -308,7 +311,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       //----------------------------------------------------------------
       sxay(s,     r, -alpha,  v);
 
-      // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+      // We need this FillBoundary call
       s.FillBoundary(geom[lev].periodicity());
 
       // A*sh = s
@@ -322,11 +325,11 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       {
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
         for (MFIter mfi(A_m, true); mfi.isValid(); ++mfi)
         {
 
-	  Real wt = ParallelDescriptor::second();
+          Real wt = ParallelDescriptor::second();
 
           const Box&  bx = mfi.tilebox();
           const Box& sbx =   s[mfi].box();
@@ -334,16 +337,18 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
           const Box& hbx =  sh[mfi].box();
 
           leq_msolve1( bx.loVect(), bx.hiVect() ,
-		       s[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-		       A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
-		       sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
+           s[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+           A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+           sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
 
-	  if (fluid_cost[lev]) {
-	    const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
-	    wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	    (*fluid_cost[lev])[mfi].plus(wt, tbx);
-	  }
+          if (fluid_cost[lev]) {
+            const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+            wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+            (*fluid_cost[lev])[mfi].plus(wt, tbx);
+          }
+
         }
+        // We need this one
         sh.FillBoundary(geom[lev].periodicity());
       }
       else // pc_type ==None
@@ -353,7 +358,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
 #ifdef _OPENMP
 #pragma omp parallel
-#endif 
+#endif
       for (MFIter mfi(A_m, true); mfi.isValid(); ++mfi)
       {
 
@@ -364,20 +369,20 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         const Box& abx = A_m[mfi].box();
         const Box& tbx =   t[mfi].box();
 
-        leq_matvec( bx.loVect(), bx.hiVect(), 
-		    sh[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-		    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+        leq_matvec( bx.loVect(), bx.hiVect(),
+        sh[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+        A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                     t[mfi].dataPtr(), tbx.loVect(), tbx.hiVect());
 
-	if (fluid_cost[lev]) {
-	  const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
-	  wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-	  (*fluid_cost[lev])[mfi].plus(wt, tbx);
-	}
+        if (fluid_cost[lev]) {
+          const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
+          wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+          (*fluid_cost[lev])[mfi].plus(wt, tbx);
+        }
       }
 
-      // Enforce periodicity on sol in case it hasn't been done yet
-      sh.FillBoundary(geom[lev].periodicity());
+      // We don't appear to need this one
+      // sh.FillBoundary(geom[lev].periodicity());
 
       // This is a little funky.  I want to elide one of the reductions
       // in the following two dotxy()s.  We do that by calculating the "local"
@@ -399,7 +404,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       sxay(sol, sol,  alpha, ph);
       sxay(sol, sol,  omega, sh);
 
-      sol.FillBoundary(geom[lev].periodicity());
+      // We don't need this FillBoundary call because we call FillBoundary right 
+      //     after the call to solve_bicgstab
+      // sol.FillBoundary(geom[lev].periodicity());
 
       sxay(r,     s, -omega,  t);
 

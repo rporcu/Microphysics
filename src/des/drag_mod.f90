@@ -466,12 +466,16 @@ contains
             8.16D0*phis**3) + w*10.0D0*phis/(1.0D0-phis)**3
       ELSEIF(phis >= 0.4D0) THEN
          F_0 = 10.0D0*phis/(1.0D0-phis)**3
+      ELSE
+         F_0 = 0.0d0
       ENDIF
 
       IF(phis > 0.01D0 .AND. phis <= 0.1D0) THEN
         F_1 = dsqrt(2.0D0/phis) / 40.0D0
       ELSE IF(phis > 0.1D0) THEN
-        F_1 = 0.11D0 + 5.1D-04 * exp(11.6D0*phis)
+         F_1 = 0.11D0 + 5.1D-04 * exp(11.6D0*phis)
+      ELSE
+         F_1 = 0.0d0
       ENDIF
 
       IF(phis < 0.4D0) THEN
