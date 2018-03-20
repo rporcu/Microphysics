@@ -20,7 +20,7 @@ amr.check_int = -1
 amr.par_ascii_int = -1
 
 mfix.use_proj_method = 1
-mfix.steady_state_tol=1.0e-8
+mfix.steady_state_tol=1.0e-2
 
 
 
