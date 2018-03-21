@@ -754,7 +754,6 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real stop_time, int stea
      mfix_calc_volume_fraction(lev,sum_vol_orig);
      mfix_project_velocity(lev);
      mfix_initial_iterations(lev,stop_time,steady_state);
-     exit(0);
   }
 }
 
