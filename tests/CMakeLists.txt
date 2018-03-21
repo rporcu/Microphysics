@@ -373,6 +373,7 @@ set( SGS_PTESTS
    FLD02-x_P FLD02-y_P FLD02-z_P
    FLD03-x_P FLD03-y_P FLD03-z_P
    FLD04-x_P FLD04-y_P FLD04-z_P 
+   DEM06-x_P DEM06-y_P DEM06-z_P
    )
 
 # set (BUILD_TEST build_tests)
@@ -449,7 +450,7 @@ set( MGS_PTESTS
    FLD02-x_P FLD02-y_P FLD02-z_P
    FLD03-x_P FLD03-y_P FLD03-z_P
    FLD04-x_P FLD04-y_P FLD04-z_P
-   #  DEM06-x_P DEM06-y DEM06-z
+   DEM06-x_P DEM06-y_P DEM06-z_P
    )
 
 foreach( THIS_TEST ${MGS_PTESTS})
@@ -504,6 +505,7 @@ set( TGS_PTESTS
    FLD02-x_P FLD02-y_P FLD02-z_P
    FLD03-x_P FLD03-y_P FLD03-z_P
    FLD04-x_P FLD04-y_P FLD04-z_P
+   DEM06-x_P DEM06-y_P DEM06-z_P
    )
 
 
@@ -558,6 +560,7 @@ set( TGM_PTESTS
    FLD02-x_P FLD02-y_P FLD02-z_P
    FLD03-x_P FLD03-y_P FLD03-z_P
    FLD04-x_P FLD04-y_P FLD04-z_P
+   DEM06-x_P DEM06-y_P DEM06-z_P
    )
 
 if (ENABLE_OMP AND ENABLE_MPI)
@@ -613,6 +616,7 @@ set( MGP_PTESTS
    FLD02-x_P FLD02-y_P FLD02-z_P
    FLD03-x_P FLD03-y_P FLD03-z_P
    FLD04-x_P FLD04-y_P FLD04-z_P
+   DEM06-x_P DEM06-y_P DEM06-z_P
    )
 
 
