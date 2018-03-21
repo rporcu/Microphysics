@@ -41,7 +41,8 @@ contains
    ! 
    ! WARNING: We use a slightly modified version of C in the implementation below
    ! 
-   subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, dx, cfl, time, stop_time, dt ) &
+   subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, dx, cfl, steady_state, &
+                               time, stop_time, dt ) &
         & bind(C)
       
       ! subroutine compute_new_dt ( umax, vmax, wmax, fgdsumax, fgdsvmax fgdswmax, &
@@ -50,6 +51,7 @@ contains
 
       use constant, only: gravity 
 
+      integer(c_int), intent(in   ) :: steady_state
       real(ar),       intent(in   ) :: umax, vmax, wmax
       ! real(ar),       intent(in   ) :: fgdsumax, fgdsvmax fgdswmax
       ! real(ar),       intent(in   ) :: dragumax, dragvmax, dragwmax
@@ -98,8 +100,8 @@ contains
       ! Don't let the timestep grow by more than 1% per step.
       dt = min ( dt, 1.01*old_dt )
 
-      ! Don't overshoot the final time.
-      if (time+dt .gt. stop_time) &
+      ! Don't overshoot the final time if not running in steady state mode
+      if ( (steady_state .eq. 0) .and. (time+dt .gt. stop_time) )&
         dt = stop_time - time
       
    end subroutine compute_new_dt

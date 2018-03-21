@@ -36,7 +36,8 @@ public:
 
     void InitLevelData(int lev, Real dt, Real time);
 
-    void PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time);
+    void PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
+                  int steady_state );
     
     void ResizeArrays();
 
@@ -120,7 +121,8 @@ protected:
 
     void mfix_calc_trd_and_tau(int lev);
 
-    void mfix_init_fluid(int lev, int is_restarting = 0, Real stop_time = 0.0);
+    void mfix_init_fluid(int lev, int is_restarting = 0, Real stop_time = 0.0,
+                         int steady_state = 0);
     void mfix_set_bc0(int lev);
 
     void mfix_conv_rop(int lev);
@@ -133,7 +135,7 @@ protected:
 
     // Projection
     void mfix_project_velocity   (int lev);
-    void mfix_initial_iterations (int lev, Real stop_time);
+    void mfix_initial_iterations (int lev, Real stop_time, int steady_state);
     void mfix_apply_projection (int lev, amrex::Real scaling_factor);
     void mfix_set_projection_bcs (int lev);
        
@@ -188,9 +190,6 @@ private:
     void mfix_compute_bcoeff(int lev);
 
     void check_for_nans(int lev);
-    
-    amrex::Real compute_dt(int lev);
-
 
     void mfix_compute_fluid_acceleration(int lev,
 			Vector< std::unique_ptr<MultiFab> >& u,

@@ -178,7 +178,7 @@ int main (int argc, char* argv[])
     // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);
 
-    my_mfix.PostInit( lev, dt, time, nstep, restart_flag, stop_time );
+    my_mfix.PostInit( lev, dt, time, nstep, restart_flag, stop_time, steady_state );
 
     // Write out EB sruface
     my_mfix.WriteEBSurface(lev);
