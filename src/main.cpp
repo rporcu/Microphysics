@@ -42,7 +42,6 @@ void ReadParameters ()
   {
   ParmParse pp;
   pp.query("max_step", max_step);
-  pp.query("stop_time", stop_time);
   }
 
   // Traditionally, these have prefix "amr", but we will
@@ -50,6 +49,8 @@ void ReadParameters ()
   // behavior of the solver and not amr (even thought they are read
   // via BoxLib
   ParmParse pp("amr");
+
+  pp.query("stop_time", stop_time);
 
   pp.add("blocking_factor",1);
 
@@ -84,6 +85,9 @@ int main (int argc, char* argv[])
     if ( argc < 2 )
        amrex::Abort("AMReX input file missing");
 
+    // Setting format to NATIVE rather than default of NATIVE_32
+    FArrayBox::setFormat(FABio::FAB_NATIVE);
+
     // AMReX will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
     amrex::Initialize(argc,argv);
@@ -111,7 +115,7 @@ int main (int argc, char* argv[])
     int solve_dem;
     int steady_state;
     int call_udf;
-    Real dt, dt_min, dt_max, tstop;
+    Real dt, dt_min, dt_max;
     Real time=0.0L;
     int nstep = 0;  // Which time step are we on
     Real normg;
@@ -120,10 +124,8 @@ int main (int argc, char* argv[])
     mfix_get_data( &solve_fluid,
        &solve_dem,
        &steady_state,
-       &dt, &dt_min, &dt_max, &tstop, &max_nit,
+       &dt, &dt_min, &dt_max, &stop_time, &max_nit,
        &normg, &set_normg, &call_udf);
-
-    stop_time = tstop;
 
     if ( ParallelDescriptor::IOProcessor() )
        check_inputs(&dt);
@@ -225,7 +227,7 @@ int main (int argc, char* argv[])
 	BL_PROFILE("mfix_solve");
 	BL_PROFILE_REGION("mfix_solve");
 
-	if (time <  tstop)
+	if ( steady_state || (time <  stop_time) )
 	{
 	    while (finish == 0)
 	    {
@@ -271,7 +273,7 @@ int main (int argc, char* argv[])
 		    my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
 		// Mechanism to terminate MFIX normally.
-		if (steady_state || (time + 0.1*dt >= tstop)) finish = 1;
+		if (steady_state || (time + 0.1*dt >= stop_time)) finish = 1;
 	    }
 	}
     }

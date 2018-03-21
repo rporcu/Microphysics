@@ -24,7 +24,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine check_run_control(dt)
 
-    use run,    only: tstop, nlog, discretize
+    use run,    only: nlog, discretize
     use param, only: dim_eqs
 
 
@@ -41,14 +41,6 @@ contains
           call flush_err_msg(abort=.true.)
        endif
 
-       if (is_undefined(tstop)) then
-          write(err_msg,1000) 'TSTOP'
-          call flush_err_msg(abort=.true.)
-
-       elseif (tstop < zero) then
-          write(err_msg,1002) 'tstop', tstop
-          call flush_err_msg(abort=.true.)
-       endif
     endif
 
     do lc = 1,dim_eqs

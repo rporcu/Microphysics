@@ -27,10 +27,11 @@ contains
 
     implicit none
 
+    real(c_real),   intent(in ) :: tstopC
     integer(c_int), intent(out) :: fluid
     integer(c_int), intent(out) :: dem, call_udf
     integer(c_int), intent(out) :: steady_state
-    real(c_real),   intent(out) :: dt_minC, dt_maxC, tstopC
+    real(c_real),   intent(out) :: dt_minC, dt_maxC
     real(c_real),   intent(out) :: dt
     integer(c_int), intent(out) :: max_nitC
     real(c_real),   intent(out) :: normg
@@ -48,8 +49,10 @@ contains
 
     dt_minC  = dt_min
     dt_maxC  = dt_max
-    tstopC   = tstop
     max_nitC = max_nit
+
+    ! We now set tstop in the Fortran from the C++
+    tstop    = tstopC
 
     normg = norm_g
     set_normg = merge(1,0, abs(norm_g - 1.0d0) > tiny(0.0d0))
