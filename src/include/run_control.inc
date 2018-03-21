@@ -18,5 +18,5 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       NAMELIST / RUN_CONTROL_UNLOCKED /&
 
-      DESCRIPTION, TSTOP, DT, DT_MAX, DT_MIN, DT_FAC,  &
+      DESCRIPTION, DT, DT_MAX, DT_MIN, DT_FAC,  &
       DRAG_TYPE, DRAG_C1, DRAG_D1, NLOG, FULL_LOG

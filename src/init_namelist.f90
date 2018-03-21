@@ -44,7 +44,7 @@ MODULE INIT_NAMELIST_MODULE
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
-      use run, only: call_usr, description, tstop
+      use run, only: call_usr, description
       use run, only: dt_fac, dt_max, dt_min, run_name
       use drag, only: drag_type
       use scales, only: p_ref, p_scale
@@ -83,19 +83,9 @@ MODULE INIT_NAMELIST_MODULE
       DESCRIPTION = UNDEFINED_C
 !</keyword>
 
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!    Simulation stop time.
-!  </description>
-!  <range min="0.0" max="+Inf" />
-      tstop = UNDEFINED
-!</keyword>
-
 !<keyword category="Run Control" required="false">
 !  <description>Maximum time step size.</description>
 !  <dependent keyword="TIME" value="DEFINED"/>
-!  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="+Inf" />
       dt_max = ONE
 !</keyword>
@@ -103,7 +93,6 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Run Control" required="false">
 !  <description>Minimum time step size.</description>
 !  <dependent keyword="TIME" value="DEFINED"/>
-!  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="+Inf" />
       dt_min = 1.0D-6
 !</keyword>
@@ -116,7 +105,6 @@ MODULE INIT_NAMELIST_MODULE
 !      initial non-convergence.
 !  </description>
 !  <dependent keyword="TIME" value="DEFINED"/>
-!  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="1" />
       dt_fac = 0.9D0
 !</keyword>

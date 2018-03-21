@@ -47,7 +47,8 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
 	if (!fixed_dt) 
 	    compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-			     geom[lev].CellSize(), &cfl, &time, &stop_time, &dt );
+			     geom[lev].CellSize(), &cfl, &steady_state,
+                             &time, &stop_time, &dt );
 
 	if (steady_state)
 	{
@@ -138,7 +139,7 @@ mfix_level::mfix_project_velocity (int lev)
 }
 
 void
-mfix_level::mfix_initial_iterations (int lev, Real stop_time)
+mfix_level::mfix_initial_iterations (int lev, Real stop_time, int steady_state)
 {
     // Copy u_g into u_go
     MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, u_go[lev]->nGrow());
@@ -152,11 +153,13 @@ mfix_level::mfix_initial_iterations (int lev, Real stop_time)
     Real wmax  = w_g[lev] -> norm0 ();
     Real romin = rop_g[lev] -> min (0);
     Real mumax = mu_g[lev] -> max (0);
-    
+
     Real time = 0.0;
     Real dt   = 1.e20;
-    compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-		     geom[lev].CellSize(), &cfl, &time, &stop_time, &dt );
+    if (!fixed_dt) 
+        compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
+    		         geom[lev].CellSize(), &cfl, &steady_state,
+                         &time, &stop_time, &dt );
 
     // Calculate drag coefficient
     if (solve_dem)
@@ -175,6 +178,7 @@ mfix_level::mfix_initial_iterations (int lev, Real stop_time)
 
        // Add the forcing terms
        mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
+
        mfix_add_pressure_gradient ( lev, -dt);
 
        // Compute intermediate velocity
@@ -193,6 +197,7 @@ mfix_level::mfix_initial_iterations (int lev, Real stop_time)
        mfix_set_projection_bcs (lev);
 
        mfix_print_max_vel (lev);
+
        mfix_compute_diveu (lev);
        amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
 
@@ -799,7 +804,7 @@ mfix_level::solve_poisson_equation (  int lev,
     solver.setCGMaxIter (mg_cg_maxiter);
 
     // This ensures that ghost cells of phi are correctly filled when returned from the solver
-    // solver.setFinalFillBC(true);
+    solver.setFinalFillBC(true);
 
     // 
     // Finally, solve the system
@@ -809,8 +814,6 @@ mfix_level::solve_poisson_equation (  int lev,
     phi[lev] -> FillBoundary (geom[lev].periodicity());
 
 }
-
-
 
 //
 // Compute div(ep_g * {u,v,w})

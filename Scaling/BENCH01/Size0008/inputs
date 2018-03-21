@@ -1,3 +1,5 @@
+amr.stop_time = 0.0025
+
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 64 64 64
 
@@ -20,7 +22,6 @@ amr.check_int  = -25
 
 mfix.use_proj_method=1
 mfix.fixed_dt=1
-mfix.mg_verbose=2
 
 # Geometry
 geometry.coord_sys   = 0                      # 0: Cartesian

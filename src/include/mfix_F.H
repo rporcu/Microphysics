@@ -518,6 +518,7 @@ extern "C"
 			  const amrex::Real* mumax,
 			  const amrex::Real* dx,
 			  const amrex::Real* cfl,
+                          int* steady_state, 
 			  amrex::Real*  time,
 			  amrex::Real*  stop_time,
 			  amrex::Real*  dt ); 

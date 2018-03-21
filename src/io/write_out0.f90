@@ -34,106 +34,95 @@
       integer(c_int), intent(in   ) :: domlo(3), domhi(3)
       real(c_real)  , intent(in   ) :: time, dt, dx, dy, dz
       real(c_real)  , intent(in   ) :: xlength, ylength, zlength
-!-----------------------------------------------
-!   G l o b a l   P a r a m e t e r s
-!-----------------------------------------------
-!-----------------------------------------------
-!   L o c a l   P a r a m e t e r s
-!-----------------------------------------------
-!-----------------------------------------------
-!   L o c a l   V a r i a b l e s
-!-----------------------------------------------
+
       integer :: L, M, N
+      integer :: mmax_tot
 
-      integer :: MMAX_TOT
+      character(LEN= 3), DIMENSION(  3) :: legend
+      character(LEN=12), DIMENSION(0:2) :: DISCR_NAME
 
-! Coefficient of restitution (old symbol)
-      CHARACTER(LEN=3), DIMENSION(3) :: LEGEND
-      CHARACTER(LEN=12), DIMENSION(0:2) :: DISCR_NAME
-! RUN_NAME.OUT file unit number
-      integer, PARAMETER :: UNIT_OUT = 52
+      integer, PARAMETER :: unit_out = 52
       integer :: ier
 !-----------------------------------------------
-
 !
-      MMAX_TOT = MMAX
+      mmax_tot = mmax
 
       open(unit=unit_out, file=trim(run_name)//'.out', status='unknown', &
          access='sequential', form='formatted', position='append', iostat=ier)
 
 !  Write Headers for .OUT file
 !
-      WRITE(UNIT_OUT,1000)
+      write(unit_out,1000)
 !
 !  Echo input data
 !
 !  Run control section
 !
-      WRITE (UNIT_OUT, 1100)
-      WRITE (UNIT_OUT, 1110) RUN_NAME
-      WRITE (UNIT_OUT, 1120) DESCRIPTION
+      write (unit_out, 1100)
+      write (unit_out, 1110) RUN_NAME
+      write (unit_out, 1120) DESCRIPTION
       IF (IS_DEFINED(DT)) THEN
-         WRITE (UNIT_OUT, 1135) TIME, TSTOP, DT, DT_MAX, DT_MIN, DT_FAC
+         write (unit_out, 1135) time, tstop, dt, dt_max, dt_min, dt_fac
       ELSE
-         WRITE (UNIT_OUT, 1136)
+         write (unit_out, 1136)
       ENDIF
 
-      WRITE (UNIT_OUT, 1140) 'X', ' '
-      WRITE (UNIT_OUT, 1140) 'Y', ' '
-      WRITE (UNIT_OUT, 1140) 'Z', ' '
+      write (unit_out, 1140) 'X', ' '
+      write (unit_out, 1140) 'Y', ' '
+      write (unit_out, 1140) 'Z', ' '
 
       IF (CALL_USR) THEN
-         WRITE (UNIT_OUT, 1149) ' '
+         write (unit_out, 1149) ' '
       ELSE
-         WRITE (UNIT_OUT, 1149) ' NOT '
+         write (unit_out, 1149) ' NOT '
       ENDIF
 !
 !  Physical and numerical parameters
 !
-      WRITE (UNIT_OUT, 1150)
-      WRITE (UNIT_OUT, 1157) P_REF, P_SCALE, GRAVITY(2)
-      WRITE (UNIT_OUT, 1158)
-      WRITE (UNIT_OUT, 1159) (UR_FAC(L),leq_it(L),'BiCGSTAB',&
+      write (unit_out, 1150)
+      write (unit_out, 1157) P_REF, P_SCALE, GRAVITY(2)
+      write (unit_out, 1158)
+      write (unit_out, 1159) (UR_FAC(L),leq_it(L),'BiCGSTAB',&
                           leq_sweep(L), leq_tol(L), leq_pc(L),&
                           DISCR_NAME(DISCRETIZE(L)),L=1,4)
 
 ! Geometry and Discretization.
-         WRITE (UNIT_OUT, 1200)
+         write (unit_out, 1200)
 
-         WRITE (UNIT_OUT, 1210)
-         LEGEND(1) = '  I'
-         LEGEND(2) = ' DX'
-         LEGEND(3) = 'X_E'
-         CALL WRITE_TABLE (LEGEND, DX, 0.0d0, 1, domhi(1)+1)
-         WRITE (UNIT_OUT, 1212) (domhi(1)-domlo(1)+1)
-         WRITE (UNIT_OUT, 1213) xlength
-         WRITE (UNIT_OUT, 1220)
-         LEGEND(1) = '  J'
-         LEGEND(2) = ' DY'
-         LEGEND(3) = 'Y_N'
-         CALL WRITE_TABLE (LEGEND, DY, ZERO, 1, domhi(2)+1)
-         WRITE (UNIT_OUT, 1221) (domhi(2)-domlo(2)+1)
-         WRITE (UNIT_OUT, 1222) ylength
-         WRITE (UNIT_OUT, 1230)
-         LEGEND(1) = '  K'
-         LEGEND(2) = ' DZ'
-         LEGEND(3) = 'Z_T'
-         CALL WRITE_TABLE (LEGEND, DZ, ZERO, 1, domhi(3)+1)
-         WRITE (UNIT_OUT, 1231) (domhi(3)-domlo(3)+1)
-         WRITE (UNIT_OUT, 1232) zlength
+         write (unit_out, 1210)
+         legend(1) = '  I'
+         legend(2) = ' DX'
+         legend(3) = 'X_E'
+         CALL write_table (legend, DX, 0.0d0, 1, domhi(1)+1)
+         write (unit_out, 1212) (domhi(1)-domlo(1)+1)
+         write (unit_out, 1213) xlength
+         write (unit_out, 1220)
+         legend(1) = '  J'
+         legend(2) = ' DY'
+         legend(3) = 'Y_N'
+         CALL write_table (legend, DY, ZERO, 1, domhi(2)+1)
+         write (unit_out, 1221) (domhi(2)-domlo(2)+1)
+         write (unit_out, 1222) ylength
+         write (unit_out, 1230)
+         legend(1) = '  K'
+         legend(2) = ' DZ'
+         legend(3) = 'Z_T'
+         CALL write_table (legend, DZ, ZERO, 1, domhi(3)+1)
+         write (unit_out, 1231) (domhi(3)-domlo(3)+1)
+         write (unit_out, 1232) zlength
 
 !
 !  Gas Section
 !
-      WRITE (UNIT_OUT, 1300)
-      IF (IS_DEFINED(RO_G0)) WRITE (UNIT_OUT, 1305) RO_G0
-      IF (IS_DEFINED(MU_G0)) WRITE (UNIT_OUT, 1310) MU_G0
-      IF (IS_DEFINED(MW_AVG)) WRITE (UNIT_OUT, 1320) MW_AVG
+      write (unit_out, 1300)
+      IF (IS_DEFINED(RO_G0)) write (unit_out, 1305) RO_G0
+      IF (IS_DEFINED(MU_G0)) write (unit_out, 1310) MU_G0
+      IF (IS_DEFINED(MW_AVG)) write (unit_out, 1320) MW_AVG
 !
 !  Particle Section
 
-      WRITE (UNIT_OUT, 1400)
-      WRITE (UNIT_OUT, 1401) MMAX_TOT
+      write (unit_out, 1400)
+      write (unit_out, 1401) MMAX_TOT
 
 
  1400 FORMAT(//,3X,'5. SOLIDS PHASE',/)
@@ -143,10 +132,10 @@
 
          IF(DEM_SOLIDS) THEN
             IF(.NOT.DES_CONTINUUM_COUPLED) THEN
-               WRITE(UNIT_OUT,"(/7X,'Gas/Solids NOT coupled.')")
+               write(unit_out,"(/7X,'Gas/Solids NOT coupled.')")
             ELSE
-               WRITE(UNIT_OUT,"(/7X,'Gas/Solids Coupling Information:')")
-               WRITE(UNIT_OUT,1440) 'cell averaging'
+               write(unit_out,"(/7X,'Gas/Solids Coupling Information:')")
+               write(unit_out,1440) 'cell averaging'
             ENDIF
 
  1440 FORMAT(10X,'Use ',A,' to calculate gas/particle drag.')
@@ -159,38 +148,38 @@
          'Spring Coefficients:',T37,'Normal',7x,'Tangential')
 
             IF(DES_COLL_MODEL_ENUM .EQ. LSD) THEN
-               WRITE(UNIT_OUT,1450) 'Linear spring-dashpot'
-               WRITE(UNIT_OUT,1455) 'Particle-particle', KN, KT
-               WRITE(UNIT_OUT,1455) 'Particle-wall', KN_W, KT_W
+               write(unit_out,1450) 'Linear spring-dashpot'
+               write(unit_out,1455) 'Particle-particle', KN, KT
+               write(unit_out,1455) 'Particle-wall', KN_W, KT_W
 
             ELSEIF(DES_COLL_MODEL_ENUM .EQ. HERTZIAN) THEN
-               WRITE(UNIT_OUT,1450) 'Hertzian spring-dashpot'
+               write(unit_out,1450) 'Hertzian spring-dashpot'
 
-               DO M = 1, MMAX
-                  DO N = M, MMAX
+               do M = 1, MMAX
+                  do N = M, MMAX
                      IF(M==N) THEN
-                       WRITE(UNIT_OUT,1456)M,N,HERT_KN(M,N),HERT_KT(M,N)
+                       write(unit_out,1456)M,N,HERT_KN(M,N),HERT_KT(M,N)
                      ELSE
-                       WRITE(UNIT_OUT,1457)N,HERT_KN(M,N),HERT_KT(M,N)
+                       write(unit_out,1457)N,HERT_KN(M,N),HERT_KT(M,N)
                      ENDIF
-                  ENDDO
-                  WRITE(UNIT_OUT,1458) HERT_KWN(M),HERT_KWT(M)
-               ENDDO
+                  ENDdo
+                  write(unit_out,1458) HERT_KWN(M),HERT_KWT(M)
+               ENDdo
             ENDIF
 
-            WRITE(UNIT_OUT,1451)
+            write(unit_out,1451)
  1451 FORMAT(/10X,'Damping Coefficients:',T37,'Normal',7x,'Tangential')
 
-            DO M = 1, MMAX
-               DO N = M, MMAX
+            do M = 1, MMAX
+               do N = M, MMAX
                   IF(M==N) THEN
-                     WRITE(UNIT_OUT,1456)M,N,DES_ETAN(M,N),DES_ETAT(M,N)
+                     write(unit_out,1456)M,N,DES_ETAN(M,N),DES_ETAT(M,N)
                   ELSE
-                     WRITE(UNIT_OUT,1457)N,DES_ETAN(M,N),DES_ETAT(M,N)
+                     write(unit_out,1457)N,DES_ETAN(M,N),DES_ETAT(M,N)
                   ENDIF
-               ENDDO
-               WRITE(UNIT_OUT,1458) DES_ETAN_WALL(M),DES_ETAT_WALL(M)
-            ENDDO
+               ENDdo
+               write(unit_out,1458) DES_ETAN_WALL(M),DES_ETAT_WALL(M)
+            ENDdo
 
  1455 FORMAT(12X,A,T35,g12.5,3x,g12.5)
  1456 FORMAT(12X,'Phase',I2,'-Phase',I2,' = ',T35,g12.5,3x,g12.5)
@@ -274,16 +263,16 @@
  1320 FORMAT(7X,'Average molecular weight (MW_avg) = ',G12.5,&
          '  (A constant value is used everywhere)')
 
-    CONTAINS
+    contains
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: WRITE_TABLE (LEGEND, ARRAY, DIST_MIN, LSTART, LEND)    C
+!  Module name: write_table (legend, ARRAY, DIST_MIN, LSTART, LEND)    C
 !  Purpose: To write a table of DX, DY, DZ, and cell wall locations    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_TABLE(LEGEND, SCALAR, DIST_MIN, LSTART, LEND)
+      subroutine write_table(legend, SCALAR, DIST_MIN, LSTART, LEND)
 
 !-----------------------------------------------
 !   M o d u l e s
@@ -294,7 +283,7 @@
 !-----------------------------------------------
 
 !                      Legend
-      CHARACTER(LEN=*)    LEGEND(3)
+      CHARACTER(LEN=*)    legend(3)
 
 !                      DX, DY, or DZ Array to be written
 
@@ -345,32 +334,34 @@
 !  Fill arrays 1 and 3
 !
       DIST = DIST_MIN
-      DO L = LSTART, LEND
+      do L = LSTART, LEND
          ARRAY1(L) = L
          ARRAY3(L) = DIST
          IF (L < LEND) DIST = DIST + SCALAR
-      END DO
+      end do
       NROW = (LEND - LSTART + 1)/NCOL
 !
       L2 = LSTART - 1
-      DO L = 1, NROW
+      do L = 1, NROW
          L1 = L2 + 1
          L2 = L1 + NCOL - 1
-         WRITE (UNIT_OUT, 1010) LEGEND(1), (ARRAY1(L3),L3=L1,L2)
-         WRITE (UNIT_OUT, 1020) LEGEND(2), (SCALAR,L3=L1,L2)
-         WRITE (UNIT_OUT, 1030) LEGEND(3), (ARRAY3(L3),L3=L1,L2)
-      END DO
-      IF (NROW*NCOL < LEND - LSTART + 1) THEN
+         write (unit_out, 1010) legend(1), (ARRAY1(L3),L3=L1,L2)
+         write (unit_out, 1020) legend(2), (SCALAR,L3=L1,L2)
+         write (unit_out, 1030) legend(3), (ARRAY3(L3),L3=L1,L2)
+      end do
+      if (NROW*NCOL < LEND - LSTART + 1) THEN
          L1 = L2 + 1
          L2 = LEND
-         WRITE (UNIT_OUT, 1010) LEGEND(1), (ARRAY1(L3),L3=L1,L2)
-         WRITE (UNIT_OUT, 1020) LEGEND(2), (SCALAR,L3=L1,L2)
-         WRITE (UNIT_OUT, 1030) LEGEND(3), (ARRAY3(L3),L3=L1,L2)
-      ENDIF
-      RETURN
+         write (unit_out, 1010) legend(1), (ARRAY1(L3),L3=L1,L2)
+         write (unit_out, 1020) legend(2), (SCALAR,L3=L1,L2)
+         write (unit_out, 1030) legend(3), (ARRAY3(L3),L3=L1,L2)
+      end if
+
+      return
 !
  1010 FORMAT(7X,A3,2X,5(4X,I3,5X,1X))
  1020 FORMAT(7X,A3,2X,5(G12.5,1X))
  1030 FORMAT(7X,A3,2X,5(G12.5,1X),/)
-      END SUBROUTINE WRITE_TABLE
+      end subroutine write_table
+
       end subroutine write_out0
