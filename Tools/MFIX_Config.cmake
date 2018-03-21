@@ -151,3 +151,28 @@ message( STATUS "   C++ flags             = ${CMAKE_CXX_FLAGS_${MFIX_BUILD_TYPE}
 message( STATUS "   Fortran flags         = ${CMAKE_Fortran_FLAGS_${MFIX_BUILD_TYPE}}")
 message( STATUS "   MFIX extra link line  = ${MFIX_EXTRA_LINK_LINE}")
 message( STATUS "   MFIX extra includes   = ${MFIX_EXTRA_INCLUDE_PATH}")
+
+
+# 
+# Here we check if we can enable testing (i.e. check if compiler supports
+# OpenMP > = 4.0 which is used to built plt_compare_diff_grid when ENABLE_OMP=on )
+#
+set ( MFIX_ENABLE_CTEST 1 )
+
+
+# Just checking GNU and Intel: I doubt that ctest will be run on Cray machines
+# And who uses PGI anyway :-D
+if ( ENABLE_OMP )
+   if ( ( "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU" ) AND
+	( CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 5.0 ) )
+     set ( MFIX_ENABLE_CTEST 0 )
+     message ("I AM HERE")
+  elseif ( ( "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel" ) AND
+	( CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 16.0 ) )
+     set ( MFIX_ENABLE_CTEST 0 )
+  endif ()
+endif ()
+
+if (NOT MFIX_ENABLE_CTEST)
+   message (WARNING "The compiler does not support OpenMP >= 4.0: disabling testing suite")
+endif ()

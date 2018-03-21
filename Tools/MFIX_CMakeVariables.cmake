@@ -72,3 +72,6 @@ set (MFIX_EXTRA_LIBRARIES_PATH)
 # MFIX git variables
 set (MFIX_GIT_COMMIT)
 
+# Enable/Disable test suite if tools (AKA plt_compare_diff_grids)
+# cannot be compiled with proper OpenMP support
+set (MFIX_ENABLE_CTEST)

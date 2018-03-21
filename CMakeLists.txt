@@ -137,10 +137,10 @@ set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90)
 add_subdirectory (Tools/F90)
 
 # Tests
-enable_testing ()
-add_subdirectory ( tests )
-#add_subdirectory( benchmarks )
-
+if ( MFIX_ENABLE_CTEST )
+   enable_testing ()
+   add_subdirectory ( tests )
+endif ()
 
 # Add debug runs
 add_subdirectory ( debug )

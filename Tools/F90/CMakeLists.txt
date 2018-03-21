@@ -12,10 +12,14 @@ target_link_libraries( ${FEXTRACT_EXE} ${MFIX_EXTRA_LINK_LINE} )
 set_target_properties(${FEXTRACT_EXE} PROPERTIES LINKER_LANGUAGE CXX)
 
 
-add_executable( ${PLT_COMPARE_EXE} EXCLUDE_FROM_ALL plt_compare_diff_grids.f90 )
-target_link_libraries( ${PLT_COMPARE_EXE} ${MFIX_EXTRA_LINK_LINE} )
-set_target_properties(${PLT_COMPARE_EXE} PROPERTIES LINKER_LANGUAGE CXX)
-
+if ( NOT MFIX_ENABLE_CTEST )
+   message (WARNING "plt_compare_diff_grids requires OpenMP >= 4.0: skipping target")
+   set ( PLT_COMPARE_EXE "" )
+else ()
+   add_executable( ${PLT_COMPARE_EXE} EXCLUDE_FROM_ALL plt_compare_diff_grids.f90 )
+   target_link_libraries( ${PLT_COMPARE_EXE} ${MFIX_EXTRA_LINK_LINE} )
+   set_target_properties(${PLT_COMPARE_EXE} PROPERTIES LINKER_LANGUAGE CXX)
+endif ()
 
 # Communicate to main Cmakelists file
 set( MFIX_F90_TOOLS ${FEXTRACT_EXE} ${PLT_COMPARE_EXE} ${FEXTRACT_EXE} ${FJOIN_PAR_EXE} PARENT_SCOPE  )
