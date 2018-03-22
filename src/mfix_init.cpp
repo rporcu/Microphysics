@@ -636,14 +636,12 @@ mfix_level::MakeBCArrays ()
     Box box_khi = amrex::adjCellHi(domainz,2,1);
 
     // Note that each of these is a single IArrayBox so every process has a copy of them
-    // No matter how thick the layer of BC nodes is, always resize with a factor of 2
-    // 2 is the number on component (cfr the Fortran subroutines which handle BCs)
-    bc_ilo.resize(box_ilo,2);
-    bc_ihi.resize(box_ihi,2);
-    bc_jlo.resize(box_jlo,2);
-    bc_jhi.resize(box_jhi,2);
-    bc_klo.resize(box_klo,2);
-    bc_khi.resize(box_khi,2);
+    bc_ilo.resize(box_ilo,nghost_bc);
+    bc_ihi.resize(box_ihi,nghost_bc);
+    bc_jlo.resize(box_jlo,nghost_bc);
+    bc_jhi.resize(box_jhi,nghost_bc);
+    bc_klo.resize(box_klo,nghost_bc);
+    bc_khi.resize(box_khi,nghost_bc);
 }
 
 void
