@@ -166,7 +166,6 @@ if ( ENABLE_OMP )
    if ( ( "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU" ) AND
 	( CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 5.0 ) )
      set ( MFIX_ENABLE_CTEST 0 )
-     message ("I AM HERE")
   elseif ( ( "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel" ) AND
 	( CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 16.0 ) )
      set ( MFIX_ENABLE_CTEST 0 )
