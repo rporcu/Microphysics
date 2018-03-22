@@ -85,15 +85,15 @@ int main (int argc, char* argv[])
     if ( argc < 2 )
        amrex::Abort("AMReX input file missing");
 
-    // Setting format to NATIVE rather than default of NATIVE_32
-    FArrayBox::setFormat(FABio::FAB_NATIVE);
-
     // AMReX will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
     amrex::Initialize(argc,argv);
     BL_PROFILE_VAR("main()", pmain)
     BL_PROFILE_REGION_START("mfix::main()");
 
+    // Setting format to NATIVE rather than default of NATIVE_32
+    FArrayBox::setFormat(FABio::FAB_NATIVE);
+    
     // Copy arguments into MFIX -- note that the first argument is now the name of the
     //      inputs file to be read by AMReX, so we only pass the arguments after that
     for(int i=2; i < argc; i++) {
