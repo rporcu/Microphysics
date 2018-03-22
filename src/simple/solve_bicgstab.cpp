@@ -12,7 +12,7 @@ dotxy (const MultiFab& r,
        bool            local = false)
 {
     const int ncomp = 1;
-    const int nghost = 0;
+    const int ng = 0;
     BL_ASSERT(r.boxArray().ixType() == z.boxArray().ixType());
 
     Real val;
@@ -20,7 +20,7 @@ dotxy (const MultiFab& r,
     // If the MultiFab is cell-centered we can use the standard dot product routine
     if (r.boxArray().ixType().cellCentered())
     {
-      val = MultiFab::Dot(r,0,z,0,ncomp,nghost,local);
+      val = MultiFab::Dot(r,0,z,0,ncomp,ng,local);
       ParallelDescriptor::ReduceRealSum(val);
     }
 
@@ -28,13 +28,13 @@ dotxy (const MultiFab& r,
     //    don't double (or more) count the faces, edges or corners
     else
     {
-       MultiFab tmpmf(r.boxArray(), r.DistributionMap(), ncomp, nghost);
-       MultiFab::Copy(tmpmf, r, 0, 0, ncomp, nghost);
+       MultiFab tmpmf(r.boxArray(), r.DistributionMap(), ncomp, ng);
+       MultiFab::Copy(tmpmf, r, 0, 0, ncomp, ng);
 
        auto mask = r.OverlapMask(period);
-       MultiFab::Divide(tmpmf, *mask, 0, 0, ncomp, nghost);
+       MultiFab::Divide(tmpmf, *mask, 0, 0, ncomp, ng);
 
-       val = MultiFab::Dot(z, 0, tmpmf, 0, ncomp, nghost);
+       val = MultiFab::Dot(z, 0, tmpmf, 0, ncomp, ng);
     }
 
     // Note that the MultiFab::Dot has already done the ParallelDescriptor::ReduceRealSum()
