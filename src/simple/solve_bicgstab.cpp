@@ -83,21 +83,19 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     int ret = 0, nit = 1;
 
     const int ncomp  = 1;
-    const int nghost = sol.nGrow();
-
     const BoxArray& ba = sol.boxArray();
     const DistributionMapping& dm = sol.DistributionMap();
 
-    MultiFab ph(ba, dm, ncomp, nghost);
-    MultiFab sh(ba, dm, ncomp, nghost);
+    MultiFab ph(ba, dm, ncomp, sol.nGrow());
+    MultiFab sh(ba, dm, ncomp, sol.nGrow());
 
-    MultiFab sorig(ba, dm, ncomp, nghost);
-    MultiFab rh   (ba, dm, ncomp, nghost);
-    MultiFab p    (ba, dm, ncomp, nghost);
-    MultiFab r    (ba, dm, ncomp, nghost);
-    MultiFab s    (ba, dm, ncomp, nghost);
-    MultiFab v    (ba, dm, ncomp, nghost);
-    MultiFab t    (ba, dm, ncomp, nghost);
+    MultiFab sorig(ba, dm, ncomp, sol.nGrow());
+    MultiFab rh   (ba, dm, ncomp, sol.nGrow());
+    MultiFab p    (ba, dm, ncomp, sol.nGrow());
+    MultiFab r    (ba, dm, ncomp, sol.nGrow());
+    MultiFab s    (ba, dm, ncomp, sol.nGrow());
+    MultiFab v    (ba, dm, ncomp, sol.nGrow());
+    MultiFab t    (ba, dm, ncomp, sol.nGrow());
 
     // Initialize these to zero so valgrind doesn't complain -- in future we should look
     // at whether some of these can get away without ghost cells
@@ -174,8 +172,8 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     // We don't need this call because the rhs is only needed on the interior cells
     // r.FillBoundary(geom[lev].periodicity());
 
-    MultiFab::Copy(sorig,sol,0,0,1,nghost);
-    MultiFab::Copy(rh,   r,  0,0,1,nghost);
+    MultiFab::Copy(sorig,sol,0,0,1, sol.nGrow());
+    MultiFab::Copy(rh,   r,  0,0,1, r.nGrow());
 
     Real rnorm = dotxy(r,r,geom[lev].periodicity(),true);
     const Real rnorm0   = sqrt(rnorm);
@@ -211,7 +209,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       if ( nit == 1 )
       {
-        MultiFab::Copy(p,r,0,0,1,nghost);
+	  MultiFab::Copy(p,r,0,0,1,r.nGrow());
       }
       else
       {
@@ -260,7 +258,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       }
       else // pc_type ==None
       {
-        MultiFab::Copy(ph,p,0,0,1,nghost);
+	  MultiFab::Copy(ph,p,0,0,1,p.nGrow());
       }
 
       // We need to keep this call
@@ -353,7 +351,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       }
       else // pc_type ==None
       {
-        MultiFab::Copy(sh,s,0,0,1,nghost);
+	  MultiFab::Copy(sh,s,0,0,1, s.nGrow());
       }
 
 #ifdef _OPENMP

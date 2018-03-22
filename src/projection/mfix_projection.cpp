@@ -61,15 +61,14 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
 	// Back up field
 	// Backup field variable to old
-	int nghost = ep_go[lev] -> nGrow();
-	MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0, 1, nghost);
-	MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0, 1, nghost);
-	MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0, 1, nghost);
-	MultiFab::Copy (*rop_go[lev], *rop_g[lev], 0, 0, 1, nghost);
-	MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, nghost);
-	MultiFab::Copy (*v_go[lev],   *v_g[lev],   0, 0, 1, nghost);
-	MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, nghost);
-  
+	MultiFab::Copy(*ep_go[lev],  *ep_g[lev],  0, 0, 1,  ep_go[lev]->nGrow() );
+	MultiFab::Copy( *p_go[lev],   *p_g[lev],  0, 0, 1,   p_go[lev]->nGrow() );
+	MultiFab::Copy(*ro_go[lev],  *ro_g[lev],  0, 0, 1,  ro_go[lev]->nGrow() );
+	MultiFab::Copy(*rop_go[lev], *rop_g[lev], 0, 0, 1, rop_go[lev]->nGrow() );
+	MultiFab::Copy(*u_go[lev],   *u_g[lev],   0, 0, 1,   u_go[lev]->nGrow() );
+	MultiFab::Copy(*v_go[lev],   *v_g[lev],   0, 0, 1,   v_go[lev]->nGrow() );
+	MultiFab::Copy(*w_go[lev],   *w_g[lev],   0, 0, 1,   w_go[lev]->nGrow() );
+
 	// User hooks
 	for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
 	    mfix_usr2();
