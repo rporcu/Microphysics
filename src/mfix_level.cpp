@@ -191,7 +191,7 @@ mfix_level::mfix_set_bc_type(int lev)
                 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                 bc_klo.dataPtr(), bc_khi.dataPtr(),
                 domain.loVect(),domain.hiVect(),
-                &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost_bc);
+                &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost);
 }
 
 void

@@ -56,7 +56,7 @@ extern "C"
         const int* domlo , const int* domhi,
         amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
         amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen,
-        const int* nghost_bc);
+        const int* nghost);
 
     void set_bc0(const int* slo, const int* shi,
      const int* ulo, const int* uhi,

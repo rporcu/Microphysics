@@ -417,11 +417,6 @@ private:
     // DO NOT USE  A LOCAL VARIABLE WITH THE SAME NAME
     // 
     const int nghost = 2; 
-    
-    // The name is misleading: this is the number of components of
-    // the BC arrays (bc_ilo, bc_jlo, ... ) and should always be two
-    // to math the mfix way of specifying bcs.
-    const int nghost_bc = 2;
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
