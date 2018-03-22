@@ -409,6 +409,9 @@ private:
 
     Real sum_vol_orig;
 
+    // The name is misleading: this is the number of components of
+    // the BC arrays (bc_ilo, bc_jlo, ... ) and should always be two
+    // to math the mfix way of specifying bcs.
     int nghost_bc = 2;
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
