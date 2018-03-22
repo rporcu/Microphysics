@@ -71,7 +71,7 @@ foreach( THIS_TEST ${SGS_TESTS})
    # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
    # Setup for running the whole suite of tests via ctest
-   if (ENABLE_STESTS)
+   if (ENABLE_STESTS AND MFIX_ENABLE_CTEST )
       add_test(NAME ${TEST_NAME}_SGS
 	 COMMAND make  ${TEST_RUN}
 	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
@@ -128,7 +128,7 @@ foreach( THIS_TEST ${MGS_TESTS})
    # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
    # Setup for running the whole suite of tests via ctest
-   if (ENABLE_STESTS)
+   if (ENABLE_STESTS AND MFIX_ENABLE_CTEST )
       add_test(NAME ${TEST_NAME}_MGS
 	 COMMAND make  ${TEST_RUN}
 	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
@@ -187,7 +187,7 @@ foreach( THIS_TEST ${TGS_TESTS})
    # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
    # Setup for running the whole suite of tests via ctest
-   if (ENABLE_STESTS)
+   if (ENABLE_STESTS  AND MFIX_ENABLE_CTEST )
       add_test(NAME ${TEST_NAME}_TGS
 	 COMMAND make  ${TEST_RUN}
 	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
@@ -235,7 +235,7 @@ if ( ENABLE_OMP )
       # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
       # Setup for running the whole suite of tests via ctest
-      if (ENABLE_STESTS)
+      if (ENABLE_STESTS  AND MFIX_ENABLE_CTEST )
 	 add_test(NAME ${TEST_NAME}_TGSO
 	    COMMAND make  ${TEST_RUN}
 	    WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
@@ -294,7 +294,7 @@ if (ENABLE_OMP AND ENABLE_MPI)
       # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
       # Setup for running the whole suite of tests via ctest
-      if (ENABLE_STESTS) 
+      if (ENABLE_STESTS  AND MFIX_ENABLE_CTEST )
 	 add_test(NAME ${TEST_NAME}_TGPO
 	    COMMAND make  ${TEST_RUN}
 	    WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
@@ -353,7 +353,7 @@ if ( ENABLE_MPI )
       # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
       # Setup for running the whole suite of tests via ctest
-      if (ENABLE_STESTS) 
+      if (ENABLE_STESTS  AND MFIX_ENABLE_CTEST )
 	 add_test(NAME ${TEST_NAME}_MGP
 	    COMMAND make  ${TEST_RUN}
 	    WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
@@ -434,7 +434,7 @@ foreach( THIS_TEST ${SGS_PTESTS})
    # Make sure that fcompare and fextract are always built before a test is run
    add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
 
-   if (ENABLE_PTESTS)
+   if (ENABLE_PTESTS  AND MFIX_ENABLE_CTEST )
       # Setup for running the whole suite of tests via ctest
       add_test(NAME ${TEST_NAME}_SGS
 	 COMMAND make  ${TEST_RUN}
@@ -493,7 +493,7 @@ foreach( THIS_TEST ${MGS_PTESTS})
    # Make sure that fcompare and fextract are always built before a test is run
    add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
 
-   if (ENABLE_PTESTS) 
+   if (ENABLE_PTESTS  AND MFIX_ENABLE_CTEST )
       # Setup for running the whole suite of tests via ctest
       add_test(NAME ${TEST_NAME}_MGS
          COMMAND make  ${TEST_RUN}
@@ -553,7 +553,7 @@ foreach( THIS_TEST ${TGS_PTESTS})
    # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
    # Setup for running the whole suite of tests via ctest
-   if (ENABLE_PTESTS)
+   if (ENABLE_PTESTS  AND MFIX_ENABLE_CTEST )
       add_test(NAME ${TEST_NAME}_TGS
 	 COMMAND make  ${TEST_RUN}
 	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
@@ -609,7 +609,7 @@ if (ENABLE_OMP AND ENABLE_MPI)
       # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
       # Setup for running the whole suite of tests via ctest
-      if (ENABLE_PTESTS) 
+      if (ENABLE_PTESTS  AND MFIX_ENABLE_CTEST )
 	 add_test(NAME ${TEST_NAME}_TGPO
 	    COMMAND make  ${TEST_RUN}
 	    WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
@@ -668,7 +668,7 @@ if ( ENABLE_MPI )
       # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
       # Setup for running the whole suite of tests via ctest
-      if (ENABLE_PTESTS) 
+      if (ENABLE_PTESTS  AND MFIX_ENABLE_CTEST )
 	 add_test(NAME ${TEST_NAME}_MGP
 	    COMMAND make  ${TEST_RUN}
 	    WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
