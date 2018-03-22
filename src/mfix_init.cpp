@@ -306,8 +306,6 @@ mfix_level::check_data (int lev)
 void
 mfix_level::AllocateArrays (int lev)
 {
-    int nghost = 2;
-
     // ********************************************************************************
     // Cell-based arrays
     // ********************************************************************************
@@ -614,8 +612,6 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
 void
 mfix_level::MakeBCArrays ()
 {
-    int nghost = 2;
-
     // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
     Box domainx(geom[0].Domain());
     domainx.grow(1,nghost);
