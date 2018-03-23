@@ -416,7 +416,7 @@ private:
     //
     // DO NOT USE  A LOCAL VARIABLE WITH THE SAME NAME
     // 
-    const int nghost = 2; 
+    const int nghost = 1; 
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
