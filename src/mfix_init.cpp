@@ -720,14 +720,17 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real stop_time, int stea
       const Box& wbx = (*w_g[lev])[mfi].box();
 
       zero_wall_norm_vel(sbx.loVect(), sbx.hiVect(),
-              ubx.loVect(), ubx.hiVect(),
-              vbx.loVect(), vbx.hiVect(),
-              wbx.loVect(), wbx.hiVect(),
-              (*u_g[lev])[mfi].dataPtr(),
-              (*v_g[lev])[mfi].dataPtr(),
-              (*w_g[lev])[mfi].dataPtr(),
-              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+			 ubx.loVect(), ubx.hiVect(),
+			 vbx.loVect(), vbx.hiVect(),
+			 wbx.loVect(), wbx.hiVect(),
+			 (*u_g[lev])[mfi].dataPtr(),
+			 (*v_g[lev])[mfi].dataPtr(),
+			 (*w_g[lev])[mfi].dataPtr(),
+			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+			 bc_klo.dataPtr(), bc_khi.dataPtr(),
+			 domain.loVect(), domain.hiVect(),
+			 &nghost);
     }
   }
 

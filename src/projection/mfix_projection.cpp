@@ -662,18 +662,21 @@ mfix_level::mfix_compute_velocity_slopes (int lev,
 			   BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
 			   (*slopes_u[lev])[mfi].dataPtr (),
 			   domain.loVect (), domain.hiVect (),
+			   &nghost,
 			   bc_ilo.dataPtr(), bc_ihi.dataPtr() );
 
 	compute_v_slopes ( BL_TO_FORTRAN_BOX(vbx),
 			   BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
 			   (*slopes_v[lev])[mfi].dataPtr (),
 			   domain.loVect (), domain.hiVect (),
+			   &nghost,
 			   bc_jlo.dataPtr(), bc_jhi.dataPtr() );
 
 	compute_w_slopes ( BL_TO_FORTRAN_BOX(wbx),
 			   BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
 			   (*slopes_w[lev])[mfi].dataPtr (),
 			   domain.loVect (), domain.hiVect (),
+			   &nghost,
 			   bc_klo.dataPtr(), bc_khi.dataPtr() );
     }
 
@@ -718,6 +721,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
     
     set_ppe_bc (bc_lo, bc_hi,
 		domain.loVect(), domain.hiVect(),
+		&nghost,
 		bc_ilo.dataPtr(), bc_ihi.dataPtr(),
 		bc_jlo.dataPtr(), bc_jhi.dataPtr(),
 		bc_klo.dataPtr(), bc_khi.dataPtr(),
@@ -1046,7 +1050,8 @@ mfix_level::mfix_set_projection_bcs (int lev)
 			   bc_ilo.dataPtr(), bc_ihi.dataPtr(),
 			   bc_jlo.dataPtr(), bc_jhi.dataPtr(),
 			   bc_klo.dataPtr(), bc_khi.dataPtr(),
-			   domain.loVect(), domain.hiVect());
+			   domain.loVect(), domain.hiVect(),
+			   &nghost );
     }			   
 
 }
@@ -1070,7 +1075,8 @@ mfix_level::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
 	    bc_ilo.dataPtr(), bc_ihi.dataPtr(),
 	    bc_jlo.dataPtr(), bc_jhi.dataPtr(),
 	    bc_klo.dataPtr(), bc_khi.dataPtr(),
-	    domain.loVect(), domain.hiVect());
+	    domain.loVect(), domain.hiVect(),
+	    &nghost );
     }
 }
 
