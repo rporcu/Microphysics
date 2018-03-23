@@ -117,7 +117,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine source_v_g_bc(lo, hi, slo, shi, alo, ahi, A_m, b_m, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-         bc_klo_type, bc_khi_type, domlo, domhi, dx, dz)
+         bc_klo_type, bc_khi_type, domlo, domhi, ng, dx, dz)
 
       use bc, only: NSW_, FSW_, PSW_
       use bc, only: PINF_, POUT_, MINF_
@@ -127,7 +127,7 @@ contains
       use matrix, only: e, w, n, s, t, b
       use param, only: is_defined
 
-      integer     , intent(in   ) ::  lo(3), hi(3)
+      integer     , intent(in   ) ::  lo(3), hi(3), ng
       integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dx, dz
@@ -138,18 +138,13 @@ contains
       real(c_real), intent(inout) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-      integer(c_int), intent(in   ) :: bc_ilo_type&
-         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_ihi_type&
-         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_jlo_type&
-         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_jhi_type&
-         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_klo_type&
-         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
-      integer(c_int), intent(in   ) :: bc_khi_type&
-         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+      integer(c_int), intent(in   ) :: &
+           bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+           bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
 !-----------------------------------------------
       ! Local Variables

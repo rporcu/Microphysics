@@ -69,7 +69,7 @@ extern "C"
      int* bc_ilo, int* bc_ihi,
      int* bc_jlo, int* bc_jhi,
      int* bc_klo, int* bc_khi,
-     const int* domlo , const int* domhi);
+		 const int* domlo , const int* domhi, const int* ng );
 
     void set_bc1(const int* slo, const int* shi,
      const int* ulo, const int* uhi,
@@ -82,7 +82,7 @@ extern "C"
      int* bc_ilo, int* bc_ihi,
      int* bc_jlo, int* bc_jhi,
      int* bc_klo, int* bc_khi,
-     const int* domlo , const int* domhi);
+		 const int* domlo , const int* domhi, const int* ng);
 
 
     void init_fluid(const int* slo, const int* shi,
@@ -248,7 +248,7 @@ extern "C"
       int* bc_ilo, int* bc_ihi,
       int* bc_jlo, int* bc_jhi,
       int* bc_klo, int* bc_khi,
-      const int* domlo , const int* domhi);
+		  const int* domlo , const int* domhi, const int* ng );
 
     void solve_u_g_star(
 	const int* slo, const int* shi,
@@ -268,7 +268,7 @@ extern "C"
 	int* bc_ilo,    int* bc_ihi,
 	int* bc_jlo,    int* bc_jhi,
 	int* bc_klo,    int* bc_khi,
-	const int* domlo , const int* domhi,
+	const int* domlo , const int* domhi, const int* ng,
 	amrex::Real* dt,
 	amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
 	amrex::Real *num_u, amrex::Real *denom_u);
@@ -293,7 +293,7 @@ extern "C"
 	int* bc_ilo,    int* bc_ihi,
 	int* bc_jlo,    int* bc_jhi,
 	int* bc_klo,    int* bc_khi,
-	const int* domlo , const int* domhi,
+	const int* domlo , const int* domhi, const int* ng,
 	amrex::Real* dt,
 	amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
 	amrex::Real *num_v, amrex::Real *denom_v);
@@ -317,7 +317,7 @@ extern "C"
 	int* bc_ilo,    int* bc_ihi,
 	int* bc_jlo,    int* bc_jhi,
 	int* bc_klo,    int* bc_khi,
-	const int* domlo , const int* domhi,
+	const int* domlo , const int* domhi, const int* ng, 
 	amrex::Real* dt,
 	amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
 	amrex::Real *num_w, amrex::Real *denom_w);
@@ -341,7 +341,7 @@ extern "C"
        int* bc_jlo, int* bc_jhi,
        int* bc_klo, int* bc_khi,
        amrex::Real* dt,       amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-       const int* domlo , const int* domhi,
+       const int* domlo , const int* domhi, const int* ng,
        amrex::Real *num_p, amrex::Real *denom_p);
 
     void correct_p_0(
