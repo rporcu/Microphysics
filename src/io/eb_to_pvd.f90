@@ -464,4 +464,129 @@ end subroutine write_pvtp
 
   end subroutine reorder_polygon
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!.......................................................................!
+!                                                                       !
+!                                                                       !
+!.......................................................................!
+  subroutine eb_grid_coverage (myID, dx, lo, hi, flag, fglo, fghi)&
+       bind(C, name="mfix_eb_grid_coverage")
+
+  use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell
+
+  implicit none
+
+  integer, intent(in   ) :: myID
+  integer, intent(in   ) :: lo(3),   hi(3)
+  integer, intent(in   ) :: fglo(3), fghi(3)
+
+  integer,          intent(in   ) :: &
+       flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
+
+  real(amrex_real), intent(in   ) :: dx(3)
+
+  integer :: i, j, k, lc1, lc2, count
+
+  logical :: notFullyCovered
+
+  integer, save :: grid = 0
+
+  character(len=4) :: cgrid, cID
+
+  integer :: nodes(3)
+
+  lc1 = 0
+  do k=lo(3),hi(3)
+     do j=lo(2),hi(2)
+        do i=lo(1),hi(1)
+
+          if(is_regular_cell(flag(i,j,k)) .or. &
+               .not.is_covered_cell(flag(i,j,k))) lc1 = lc1 + 1
+
+        end do
+     end do
+  end do
+
+  grid = grid + 1
+
+  if(lc1 == 0) return
+
+  write(cID,  "(i4.4)") myID
+  write(cgrid,"(i4.4)") grid
+
+  nodes = hi-lo + 1
+
+  open(unit=100, file='eb_gird_'//cID//'_'//cgrid//'.vtr', status='unknown')
+
+  write(100,'(A)') '<?xml version="1.0"?>'
+  write(100,'(A)') '<VTKFile type="RectilinearGrid" &
+       &version="0.1" byte_order="LittleEndian">'
+
+  write(100,'(A,6I6,A)') '<RectilinearGrid &
+       &WholeExtent="',0,nodes(1),0,nodes(2),0,nodes(3),'">'
+
+  write(100,'(A,6I6,A)') '<Piece Extent="',0,&
+     nodes(1),0,nodes(2),0,nodes(3),'">'
+  write(100,'(A)') '<Coordinates>'
+
+  call data_array(lo(1), nodes(1), dx(1))
+  call data_array(lo(2), nodes(2), dx(2))
+  call data_array(lo(3), nodes(3), dx(3))
+
+  write(100,'("</Coordinates>")')
+  write(100,'("</Piece>")')
+  write(100,'("</RectilinearGrid>")')
+  write(100,'("</VTKFile>")')
+
+  close(100)
+
+contains
+
+  subroutine data_array(lo, lnodes, ldx)
+
+    implicit none
+
+    integer,          intent(in) :: lo, lnodes
+    real(amrex_real), intent(in) :: ldx
+
+    integer :: llc
+    real(amrex_real), allocatable :: lines(:)
+
+    if(allocated(lines)) deallocate(lines)
+    allocate(lines(0:lnodes))
+
+    do llc=0, lnodes
+       lines(llc) = real(lo + llc)*ldx
+    enddo
+
+    write(100,'(A,F14.8,A,F14.8,A)') '<DataArray &
+         &type="Float32" format="ascii" &
+         &RangeMin="',lines(0),'" RangeMax="',lines(lnodes),'">'
+    write(100,'(10F14.8)') lines
+    write(100,'(A)') '</DataArray>'
+
+    deallocate(lines)
+
+  end subroutine data_array
+
+end subroutine eb_grid_coverage
+
 end module eb_to_vtk

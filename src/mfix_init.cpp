@@ -56,7 +56,7 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         // If true, then compute particle/EB collisions directly using neighbouring eb-facets
         // WARNING: this mode can be slow, and EB-facets can sometimes not be "water-tight"
         pp.query("legacy__eb_collisions", legacy__eb_collisions);
-        
+
         // Parameters used be the level-set algorithm. Refer to LSFactory (or mfix_level.H) for more details:
         //   -> refinement: how well resolved (fine) the (level-set/EB-facet) grid needs to be
         //                  (note: a fine level-set grid means that distances and normals are computed accurately)
@@ -586,6 +586,8 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
 {
   if (solve_dem) {
 
+    amrex::Print() << "Clean up auto-generated particles.\n";
+
     // Auto generated particles may be out of the domain. This call will remove them.
     // Note that this has to occur after the EB geometry is created.
     if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory)
@@ -832,10 +834,31 @@ void mfix_level::WriteEBSurface(int lev) {
   }
 
   int cpu = ParallelDescriptor::MyProc();
+  int nProcs = ParallelDescriptor::NProcs();
+
   mfix_write_eb_vtp(&cpu);
 
-  int nProcs = ParallelDescriptor::NProcs();
   if(ParallelDescriptor::IOProcessor())
     mfix_write_pvtp(&nProcs);
+
+
+  // // // Deliberately didn't time this loop.
+  for (MFIter mfi(dummy); mfi.isValid(); ++mfi) {
+
+    const auto& sfab = dynamic_cast<EBFArrayBox const&>((dummy)[mfi]);
+    const auto& flag = sfab.getEBCellFlagFab();
+
+    const Box& bx = mfi.validbox();
+
+    if (flag.getType(bx) == FabType::covered or flag.getType(bx) == FabType::regular) continue;
+
+    mfix_eb_grid_coverage(&cpu, dx, bx.loVect(), bx.hiVect(),
+         flag.dataPtr(), flag.loVect(), flag.hiVect());
+  }
+
+
+
+
+
 
 }

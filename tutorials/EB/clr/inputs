@@ -5,9 +5,9 @@ amr.n_cell = 100 330 20
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
-#amr.max_grid_size_x = 100
-#amr.max_grid_size_y = 220
-#amr.max_grid_size_z =  20
+amr.max_grid_size_x = 32
+amr.max_grid_size_y = 32
+amr.max_grid_size_z = 32
 
 maxboxsize = 1024
 STL_file = "clr.stl"
