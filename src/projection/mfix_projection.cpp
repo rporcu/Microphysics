@@ -155,10 +155,9 @@ mfix_level::mfix_initial_iterations (int lev, Real stop_time, int steady_state)
 
     Real time = 0.0;
     Real dt   = 1.e20;
-    if (!fixed_dt) 
-        compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-    		         geom[lev].CellSize(), &cfl, &steady_state,
-                         &time, &stop_time, &dt );
+    compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
+		     geom[lev].CellSize(), &cfl, &steady_state,
+		     &time, &stop_time, &dt );
 
     // Calculate drag coefficient
     if (solve_dem)
