@@ -189,7 +189,7 @@ mfix_level::mfix_initial_iterations (int lev, Real stop_time, int steady_state)
        mfix_apply_projection ( lev, dt );
 
        // Recover pressure
-       MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, 1);
+       MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev] -> nGrow() );
 
        // Exchange halo nodes and apply BCs
        mfix_set_projection_bcs (lev);
@@ -268,7 +268,7 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
     mfix_apply_projection ( lev, dt );
 
     // Recover pressure
-    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, 1);
+    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev] -> nGrow() );
     
     // Exchange halo nodes and apply BCs
     mfix_set_projection_bcs (lev); 
@@ -349,7 +349,7 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     mfix_apply_projection ( lev, dt );
 
     // Recover pressure
-    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, 1);
+    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1,  phi[lev] -> nGrow() );
     
     // Exchange halo nodes and apply BCs
     mfix_set_projection_bcs (lev);
