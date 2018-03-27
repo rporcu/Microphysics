@@ -191,7 +191,7 @@ mfix_level::mfix_set_bc_type(int lev)
                 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                 bc_klo.dataPtr(), bc_khi.dataPtr(),
                 domain.loVect(),domain.hiVect(),
-                &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost_bc);
+                &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost);
 }
 
 void
@@ -218,7 +218,7 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 	const Box& sbx = mf[mfi].box();
 	fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
 		 bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-		 bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+		 bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(), &nghost);
     }
 
     // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
@@ -565,6 +565,6 @@ mfix_level::mfix_set_bc1(int lev)
               (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
               (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(), &nghost);
     }
 }

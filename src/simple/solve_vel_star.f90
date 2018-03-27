@@ -26,7 +26,7 @@ module solve_vel_star_module
          rop_go, ep_g, tau_u_g, d_e, fluxX, fluxY, fluxZ, &
          mu_g, f_gds_u, drag_u, A_m, b_m, mask, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-         bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, num_u, denom_u) &
+         bc_klo_type, bc_khi_type, domlo, domhi, ng, dt, dx, dy, dz, num_u, denom_u) &
          bind(C, name="solve_u_g_star")
 
       use u_g_conv_dif, only: conv_dif_u_g
@@ -43,7 +43,7 @@ module solve_vel_star_module
       ! Global data arrays for residuals
       use residual, only: resid_u
 
-      integer(c_int)     , intent(in   ) :: slo(3),shi(3)
+      integer(c_int)     , intent(in   ) :: slo(3),shi(3), ng
       integer(c_int)     , intent(in   ) :: ulo(3),uhi(3)
       integer(c_int)     , intent(in   ) :: vlo(3),vhi(3)
       integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
@@ -82,12 +82,12 @@ module solve_vel_star_module
       real(c_real), intent(  out) :: num_u, denom_u
 
       integer(c_int), intent(in   ) :: &
-           bc_ilo_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_ihi_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_jlo_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_jhi_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_klo_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2), &
-           bc_khi_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+           bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+           bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
       real(c_real) :: vol
       vol = dx*dy*dz
@@ -112,7 +112,7 @@ module solve_vel_star_module
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
                           bc_klo_type, bc_khi_type, &
-                          domlo, domhi, dy, dz)
+                          domlo, domhi, ng, dy, dz)
 
       ! Add in point sources
       if(point_source) call point_source_u_g (lo, hi, alo, ahi, b_m, vol)
@@ -121,8 +121,8 @@ module solve_vel_star_module
       call adjust_a_u (slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dy, dz)
 
       ! Calculate coefficients for the pressure correction equation
-      call calc_d_e(lo, hi, slo, shi, ulo, uhi, alo, ahi, d_e, A_m, ep_g, &
-                    dy, dz, domlo, domhi, bc_ilo_type, bc_ihi_type)
+      call calc_d_e(lo, hi, slo, shi, ulo, uhi, alo, ahi, d_e, A_m, ep_g, & 
+                    dy, dz, domlo, domhi, bc_ilo_type, bc_ihi_type, ng)
 
       call calc_resid_vel (1, lo, hi, alo, ahi, ulo, uhi, vlo, vhi, wlo, whi, &
          u_g, v_g, w_g, A_m, b_m, mask, num_u, denom_u)
@@ -145,7 +145,7 @@ module solve_vel_star_module
       rop_go, ep_g, tau_v_g, d_n, fluxX, fluxY, fluxZ, &
       mu_g, f_gds_v, drag_v, A_m, b_m, mask, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, num_v, denom_v) &
+      bc_klo_type, bc_khi_type, domlo, domhi, ng, dt, dx, dy, dz, num_v, denom_v) &
       bind(C, name="solve_v_g_star")
 
 
@@ -169,7 +169,7 @@ module solve_vel_star_module
       integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
       integer(c_int)     , intent(in   ) :: alo(3),ahi(3)
       integer(c_int)     , intent(in   ) :: dlo(3),dhi(3)
-      integer(c_int)     , intent(in   ) :: domlo(3),domhi(3)
+      integer(c_int)     , intent(in   ) :: domlo(3),domhi(3), ng
       integer(c_int)     , intent(in   ) ::  lo(3), hi(3)
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
@@ -202,12 +202,12 @@ module solve_vel_star_module
       real(c_real), intent(  out) :: num_v, denom_v
 
       integer(c_int), intent(in   ) :: &
-           bc_ilo_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_ihi_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_jlo_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_jhi_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_klo_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2), &
-           bc_khi_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+           bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+           bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
 !.....................................................................//
       real(c_real) :: vol
@@ -226,14 +226,14 @@ module solve_vel_star_module
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_v_g(lo, hi, slo, shi, vlo, vhi, alo, ahi, dlo, dhi, &
            A_m, b_m, p_g, p0_g, ep_g, ro_g, rop_go, v_go, tau_v_g, f_gds_v, drag_v,&
-           dt, dx, dy, dz, domlo, domhi)
+           dt, dx, dy, dz, domlo, domhi )
 
 ! modifications for bc
       call source_v_g_bc(lo, hi, slo, shi, alo, ahi, A_m, b_m, &
                          bc_ilo_type, bc_ihi_type, &
                          bc_jlo_type, bc_jhi_type, &
                          bc_klo_type, bc_khi_type, &
-                         domlo, domhi, dx, dz)
+                         domlo, domhi, ng, dx, dz)
 
       ! Add in point sources
       if(point_source) call point_source_v_g (lo, hi, alo, ahi, b_m, vol)
@@ -243,7 +243,7 @@ module solve_vel_star_module
 
       ! Calculate coefficients for the pressure correction equation
       call calc_d_n(lo, hi, slo, shi, vlo, vhi, alo, ahi, d_n, A_m, ep_g, &
-                    dx, dz, domlo, domhi, bc_jlo_type, bc_jhi_type)
+                    dx, dz, domlo, domhi, bc_jlo_type, bc_jhi_type, ng)
 
       call calc_resid_vel (2, lo, hi, alo, ahi, vlo, vhi, wlo, whi, ulo, uhi, &
          v_g, w_g, u_g, A_m, b_m, mask, num_v, denom_v)
@@ -267,7 +267,7 @@ module solve_vel_star_module
       rop_go, ep_g, tau_w_g, d_t, fluxX, fluxY, fluxZ, &
       mu_g,  f_gds_w, drag_w, A_m, b_m, mask, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, num_w, denom_w) &
+      bc_klo_type, bc_khi_type, domlo, domhi, ng, dt, dx, dy, dz, num_w, denom_w) &
       bind(C, name="solve_w_g_star")
 
 ! Module procedures ..................................................//
@@ -290,7 +290,7 @@ module solve_vel_star_module
       integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
       integer(c_int)     , intent(in   ) :: alo(3),ahi(3)
       integer(c_int)     , intent(in   ) :: dlo(3),dhi(3)
-      integer(c_int)     , intent(in   ) :: domlo(3),domhi(3)
+      integer(c_int)     , intent(in   ) :: domlo(3),domhi(3), ng
       integer(c_int)     , intent(in   ) ::  lo(3), hi(3)
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
@@ -316,12 +316,12 @@ module solve_vel_star_module
            mask   (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       integer(c_int), intent(in   ) :: &
-           bc_ilo_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_ihi_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_jlo_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_jhi_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-           bc_klo_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2), &
-           bc_khi_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+           bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+           bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
       real(c_real), intent(  out) :: num_w, denom_w
 
@@ -354,7 +354,7 @@ module solve_vel_star_module
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
                           bc_klo_type, bc_khi_type, &
-                          domlo, domhi, dx, dy)
+                          domlo, domhi, ng, dx, dy)
 
       ! Add in point sources
       if(point_source) call point_source_w_g (lo, hi, alo, ahi, b_m, vol)
@@ -364,7 +364,7 @@ module solve_vel_star_module
 
       ! calculate coefficients for the pressure correction equation
       call calc_d_t(lo, hi, slo, shi, wlo, whi, alo, ahi, d_t, A_m, ep_g, &
-                    dx, dy, domlo, domhi, bc_klo_type, bc_khi_type)
+                    dx, dy, domlo, domhi, bc_klo_type, bc_khi_type, ng)
 
       call calc_resid_vel (3, lo, hi, alo, ahi, wlo, whi, ulo, uhi, vlo, vhi, &
                            w_g, u_g, v_g, A_m, b_m, mask, num_w, denom_w)

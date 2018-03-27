@@ -56,7 +56,7 @@ extern "C"
         const int* domlo , const int* domhi,
         amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
         amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen,
-        const int* nghost_bc);
+        const int* nghost);
 
     void set_bc0(const int* slo, const int* shi,
      const int* ulo, const int* uhi,
@@ -69,7 +69,7 @@ extern "C"
      int* bc_ilo, int* bc_ihi,
      int* bc_jlo, int* bc_jhi,
      int* bc_klo, int* bc_khi,
-     const int* domlo , const int* domhi);
+		 const int* domlo , const int* domhi, const int* ng );
 
     void set_bc1(const int* slo, const int* shi,
      const int* ulo, const int* uhi,
@@ -82,7 +82,7 @@ extern "C"
      int* bc_ilo, int* bc_ihi,
      int* bc_jlo, int* bc_jhi,
      int* bc_klo, int* bc_khi,
-     const int* domlo , const int* domhi);
+		 const int* domlo , const int* domhi, const int* ng);
 
 
     void init_fluid(const int* slo, const int* shi,
@@ -128,14 +128,15 @@ extern "C"
          const int* domlo , const int* domhi);
 
     void zero_wall_norm_vel(const int* slo, const int* shi,
-          const int* ulo, const int* uhi,
-          const int* vlo, const int* vhi,
-          const int* wlo, const int* whi,
-          amrex::Real* u_g,     amrex::Real* v_g,      amrex::Real* w_g,
-          int* bc_ilo, int* bc_ihi,
-          int* bc_jlo, int* bc_jhi,
-          int* bc_klo, int* bc_khi,
-          const int* domlo , const int* domhi);
+			    const int* ulo, const int* uhi,
+			    const int* vlo, const int* vhi,
+			    const int* wlo, const int* whi,
+			    amrex::Real* u_g,     amrex::Real* v_g,      amrex::Real* w_g,
+			    int* bc_ilo, int* bc_ihi,
+			    int* bc_jlo, int* bc_jhi,
+			    int* bc_klo, int* bc_khi,
+			    const int* domlo , const int* domhi,
+			    const int* ng );
 
     void set_particle_properties(const int* pstate, amrex::Real* pradius, amrex::Real* pdensity,
          amrex::Real* pvol, amrex::Real* pmass, amrex::Real* omoi, amrex::Real* omega);
@@ -248,7 +249,7 @@ extern "C"
       int* bc_ilo, int* bc_ihi,
       int* bc_jlo, int* bc_jhi,
       int* bc_klo, int* bc_khi,
-      const int* domlo , const int* domhi);
+		  const int* domlo , const int* domhi, const int* ng );
 
     void solve_u_g_star(
 	const int* slo, const int* shi,
@@ -268,7 +269,7 @@ extern "C"
 	int* bc_ilo,    int* bc_ihi,
 	int* bc_jlo,    int* bc_jhi,
 	int* bc_klo,    int* bc_khi,
-	const int* domlo , const int* domhi,
+	const int* domlo , const int* domhi, const int* ng,
 	amrex::Real* dt,
 	amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
 	amrex::Real *num_u, amrex::Real *denom_u);
@@ -293,7 +294,7 @@ extern "C"
 	int* bc_ilo,    int* bc_ihi,
 	int* bc_jlo,    int* bc_jhi,
 	int* bc_klo,    int* bc_khi,
-	const int* domlo , const int* domhi,
+	const int* domlo , const int* domhi, const int* ng,
 	amrex::Real* dt,
 	amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
 	amrex::Real *num_v, amrex::Real *denom_v);
@@ -317,7 +318,7 @@ extern "C"
 	int* bc_ilo,    int* bc_ihi,
 	int* bc_jlo,    int* bc_jhi,
 	int* bc_klo,    int* bc_khi,
-	const int* domlo , const int* domhi,
+	const int* domlo , const int* domhi, const int* ng, 
 	amrex::Real* dt,
 	amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
 	amrex::Real *num_w, amrex::Real *denom_w);
@@ -341,7 +342,7 @@ extern "C"
        int* bc_jlo, int* bc_jhi,
        int* bc_klo, int* bc_khi,
        amrex::Real* dt,       amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-       const int* domlo , const int* domhi,
+       const int* domlo , const int* domhi, const int* ng,
        amrex::Real *num_p, amrex::Real *denom_p);
 
     void correct_p_0(
@@ -564,26 +565,27 @@ extern "C"
 	const int* lo, const int* hi,
 	const amrex::Real* u,   const int* ulo, const int* uhi, 
 	amrex::Real* slopes,
-	const int* domlo, const int* domhi,
+	const int* domlo, const int* domhi, const int* ng,
 	const int* bc_ilo_type, const int* bc_ihi_type );
 
     void compute_v_slopes (
 	const int* lo, const int* hi,
 	const amrex::Real* v,   const int* vlo, const int* vhi, 
 	amrex::Real* slopes,
-	const int* domlo, const int* domhi,
+	const int* domlo, const int* domhi, const int* ng,
 	const int* bc_jlo_type, const int* bc_jhi_type );
     
     void compute_w_slopes (
 	const int* lo, const int* hi,
 	const amrex::Real* w, const int* wlo, const int* whi, 
 	amrex::Real* slopes,
-	const int* domlo, const int* domhi,
+	const int* domlo, const int* domhi, const int* ng,
 	const int* bc_klo_type, const int* bc_khi_type );
 
     void set_ppe_bc (
 	int* bc_lo, int* bc_hi,
 	const int* domlo, const int* domhi,
+	const int* ng,
 	const int* bct_ilo, const int* bct_ihi, 
 	const int* bct_jlo, const int* bct_jhi,
 	const int* bct_klo, const int* bct_khi,
@@ -622,7 +624,8 @@ extern "C"
 	const int* bc_ilo, const int* bc_ihi,
 	const int* bc_jlo, const int* bc_jhi,
 	const int* bc_klo, const int* bc_khi,
-	const int* domlo , const int* domhi);
+	const int* domlo , const int* domhi,
+	const int* ng );
 
     void set_projection_bcs (
 	amrex::Real* u_g, const int* ulo, const int* uhi,
@@ -634,7 +637,8 @@ extern "C"
 	const int* bc_ilo, const int* bc_ihi,
 	const int* bc_jlo, const int* bc_jhi,
 	const int* bc_klo, const int* bc_khi,
-	const int* domlo , const int* domhi);
+	const int* domlo , const int* domhi,
+	const int* ng );
     
     void mfix_eb_to_polygon ( const amrex::Real* dx,
 			      const int* slo, const int* shi,

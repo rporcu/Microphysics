@@ -409,10 +409,14 @@ private:
 
     Real sum_vol_orig;
 
-    // The name is misleading: this is the number of components of
-    // the BC arrays (bc_ilo, bc_jlo, ... ) and should always be two
-    // to math the mfix way of specifying bcs.
-    int nghost_bc = 2;
+    //
+    // Here we set the number of ghost nodes of the field arrays.
+    // Since this is  a class attribute, it will be propagated to
+    // all the member functions.
+    //
+    // DO NOT USE  A LOCAL VARIABLE WITH THE SAME NAME
+    // 
+    const int nghost = 1; 
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;

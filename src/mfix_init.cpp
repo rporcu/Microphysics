@@ -306,8 +306,6 @@ mfix_level::check_data (int lev)
 void
 mfix_level::AllocateArrays (int lev)
 {
-    int nghost = 2;
-
     // ********************************************************************************
     // Cell-based arrays
     // ********************************************************************************
@@ -614,8 +612,6 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
 void
 mfix_level::MakeBCArrays ()
 {
-    int nghost = 2;
-
     // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
     Box domainx(geom[0].Domain());
     domainx.grow(1,nghost);
@@ -636,12 +632,12 @@ mfix_level::MakeBCArrays ()
     Box box_khi = amrex::adjCellHi(domainz,2,1);
 
     // Note that each of these is a single IArrayBox so every process has a copy of them
-    bc_ilo.resize(box_ilo,nghost_bc);
-    bc_ihi.resize(box_ihi,nghost_bc);
-    bc_jlo.resize(box_jlo,nghost_bc);
-    bc_jhi.resize(box_jhi,nghost_bc);
-    bc_klo.resize(box_klo,nghost_bc);
-    bc_khi.resize(box_khi,nghost_bc);
+    bc_ilo.resize(box_ilo,2);
+    bc_ihi.resize(box_ihi,2);
+    bc_jlo.resize(box_jlo,2);
+    bc_jhi.resize(box_jhi,2);
+    bc_klo.resize(box_klo,2);
+    bc_khi.resize(box_khi,2);
 }
 
 void
@@ -724,14 +720,17 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real stop_time, int stea
       const Box& wbx = (*w_g[lev])[mfi].box();
 
       zero_wall_norm_vel(sbx.loVect(), sbx.hiVect(),
-              ubx.loVect(), ubx.hiVect(),
-              vbx.loVect(), vbx.hiVect(),
-              wbx.loVect(), wbx.hiVect(),
-              (*u_g[lev])[mfi].dataPtr(),
-              (*v_g[lev])[mfi].dataPtr(),
-              (*w_g[lev])[mfi].dataPtr(),
-              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+			 ubx.loVect(), ubx.hiVect(),
+			 vbx.loVect(), vbx.hiVect(),
+			 wbx.loVect(), wbx.hiVect(),
+			 (*u_g[lev])[mfi].dataPtr(),
+			 (*v_g[lev])[mfi].dataPtr(),
+			 (*w_g[lev])[mfi].dataPtr(),
+			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+			 bc_klo.dataPtr(), bc_khi.dataPtr(),
+			 domain.loVect(), domain.hiVect(),
+			 &nghost);
     }
   }
 
@@ -778,7 +777,7 @@ mfix_level::mfix_set_bc0(int lev)
               (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
               (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(), &nghost);
     }
 
   fill_mf_bc(lev,*p_g[lev]);
