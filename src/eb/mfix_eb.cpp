@@ -231,16 +231,6 @@ mfix_level::make_eb_geometry(int lev)
 
 
 
-
-
-
-
-
-
-
-
-
-
 void
 mfix_level::make_eb_hourglass(int lev)
 {
@@ -461,33 +451,6 @@ mfix_level::make_eb_hourglass(int lev)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void
 mfix_level::make_eb_clr(int lev)
 {
@@ -532,8 +495,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("riser_lower_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> riser_lower_init;
-    make_cylinder(cylinder_dir, lradius, lheight, &riser_lower_init);
+    std::unique_ptr<BaseIF> riser_lower_init = make_cylinder(cylinder_dir, lradius, lheight);
 
     TransformIF riser_lower(*riser_lower_init);
     riser_lower.translate(translation);
@@ -543,8 +505,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("riser_upper_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> riser_upper_init;
-    make_cylinder(cylinder_dir, lradius, lheight, &riser_upper_init);
+    std::unique_ptr<BaseIF> riser_upper_init = make_cylinder(cylinder_dir, lradius, lheight);
 
     TransformIF riser_upper(*riser_upper_init);
     riser_upper.translate(translation);
@@ -559,8 +520,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("jleg_horz_height", lheight);
 
     cylinder_dir=0;
-    std::unique_ptr<BaseIF> jleg_horz_init;
-    make_cylinder(cylinder_dir, lradius, lheight, &jleg_horz_init);
+    std::unique_ptr<BaseIF> jleg_horz_init = make_cylinder(cylinder_dir, lradius, lheight);
 
     TransformIF jleg_horz(*jleg_horz_init);
     jleg_horz.translate(translation);
@@ -575,8 +535,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("jleg_vert_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> jleg_vert_init;
-    make_cylinder(cylinder_dir, lradius, lheight, &jleg_vert_init);
+    std::unique_ptr<BaseIF> jleg_vert_init = make_cylinder(cylinder_dir, lradius, lheight);
 
     TransformIF jleg_vert(*jleg_vert_init);
     jleg_vert.translate(translation);
@@ -591,8 +550,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("reactor_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> reactor_init;
-    make_cylinder(cylinder_dir, lradius, lheight, &reactor_init);
+    std::unique_ptr<BaseIF> reactor_init = make_cylinder(cylinder_dir, lradius, lheight);
 
     TransformIF reactor(*reactor_init);
     reactor.translate(translation);
@@ -607,8 +565,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("ls2fbr_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> ls2fbr_init;
-    make_cylinder(cylinder_dir, lradius, lheight, &ls2fbr_init);
+    std::unique_ptr<BaseIF> ls2fbr_init = make_cylinder(cylinder_dir, lradius, lheight);
 
     TransformIF ls2fbr(*ls2fbr_init);
     ls2fbr.translate(translation);
@@ -624,8 +581,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("loopseal_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> loopseal_init;
-    make_cylinder(cylinder_dir, lradius, lheight, &loopseal_init);
+    std::unique_ptr<BaseIF> loopseal_init = make_cylinder(cylinder_dir, lradius, lheight);
 
     TransformIF loopseal(*loopseal_init);
     loopseal.translate(translation);
@@ -642,8 +598,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("cy2ls_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> cy2ls_init;
-    make_cylinder(cylinder_dir, lradius, lheight, &cy2ls_init);
+    std::unique_ptr<BaseIF> cy2ls_init = make_cylinder(cylinder_dir, lradius, lheight);
 
     TransformIF cy2ls(*cy2ls_init);
     cy2ls.translate(translation);
@@ -659,8 +614,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("cyclone_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> cyclone_init;
-    make_cylinder(cylinder_dir, lradius, lheight, &cyclone_init);
+    std::unique_ptr<BaseIF> cyclone_init = make_cylinder(cylinder_dir, lradius, lheight);
 
     TransformIF cyclone(*cyclone_init);
     cyclone.translate(translation);
@@ -676,8 +630,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("crossover_height", lheight);
 
     cylinder_dir=0;
-    std::unique_ptr<BaseIF> crossover_init;
-    make_cylinder(cylinder_dir, lradius, lheight, &crossover_init);
+    std::unique_ptr<BaseIF> crossover_init = make_cylinder(cylinder_dir, lradius, lheight);
 
     TransformIF crossover(*crossover_init);
     crossover.translate(translation);
@@ -701,13 +654,6 @@ mfix_level::make_eb_clr(int lev)
 
     impfunc_poly2 = std::unique_ptr<BaseIF>(clr.newImplicitFunction());
     impfunc.reset(clr.newImplicitFunction());
-
-
-
-
-
-
-
 
 
     int max_level = 0;
@@ -776,19 +722,10 @@ mfix_level::make_eb_clr(int lev)
 
 
 
-
-
-
-
-
-
-
-
-
-void
-mfix_level::make_cylinder(int dir, Real radius, Real length, std::unique_ptr<BaseIF>* input)
+std::unique_ptr<BaseIF>
+mfix_level::make_cylinder(int dir, Real radius, Real length)
 {
-
+  std::unique_ptr<BaseIF> cylinder_IF;
   Vector<PolyTerm> poly;
 
   PolyTerm mono;
@@ -867,8 +804,7 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, std::unique_ptr<Bas
 
   IntersectionIF cylinder(funcs);
 
-  // input->reset(cylinder0.newImplicitFunction());
-  input->reset(cylinder.newImplicitFunction());
-
-
+  cylinder_IF.reset(cylinder.newImplicitFunction());
+  
+  return cylinder_IF;
 }

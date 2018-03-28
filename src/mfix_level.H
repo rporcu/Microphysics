@@ -92,7 +92,7 @@ public:
     void make_eb_clr(int lev);
     // void make_cylinder_y(Real radius, Real length, IntersectionIF* cylinder);
 
-    void make_cylinder(int dir, Real radius, Real length, std::unique_ptr<BaseIF>* input);
+    std::unique_ptr<BaseIF> make_cylinder(int dir, Real radius, Real length);
 
     void WriteEBSurface(int lev);
 
