@@ -2,7 +2,7 @@
 
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
-#include "AMReX_RealVect.H"
+
 
 #ifdef BL_SINGLE_PRECISION_PARTICLES
 typedef float amrex_particle_real;
@@ -436,7 +436,7 @@ extern "C"
     void mfix_particle_generator_prop( const int* nrp,  void* particles);
 
     void mfix_get_walls(int* bcv, int* exists,
-			amrex::RealVect* normal, amrex::RealVect* center);
+			void* normal, void* center);
 
     void mfix_usr0();
 

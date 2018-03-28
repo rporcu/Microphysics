@@ -70,7 +70,7 @@ endforeach ()
 # Filter out %_f.H and %_F.H from list of includes
 # Note that this can be achieved natively in CMake >= 3.6
 # by using " list (FILTER ...) "
-foreach ( item ${CXXINCLUDES}} )
+foreach ( item ${CXXINCLUDES} )
    string ( REGEX MATCH "_f.H" TMP1 ${item})
    string ( REGEX MATCH "_F.H" TMP2 ${item})
    if ( (NOT TMP1) AND (NOT TMP2) )
