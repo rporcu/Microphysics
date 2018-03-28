@@ -236,7 +236,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
        // but does not change the values outside the domain
 
        // This call simply deposits the particle volume onto the grid in a PIC-like manner
-       pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
+	pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi, nghost );
     }
     else
     {
@@ -307,7 +307,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
 
        pc -> CalcDragOnFluid(*f_gds_u[lev],*f_gds_v[lev],*f_gds_w[lev],
                              *drag_u[lev],*drag_v[lev],*drag_w[lev],
-                              bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
+			     bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi, nghost);
     }
     else 
     {
@@ -399,7 +399,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
 
        pc -> CalcDragOnFluid(*f_gds_u_pba,*f_gds_v_pba,*f_gds_w_pba,
                              *drag_u_pba,*drag_v_pba,*drag_w_pba,
-                              bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi);
+			     bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi, nghost);
 
        // Copy back from the dual grids.
        f_gds_u[lev] ->copy(*f_gds_u_pba);
