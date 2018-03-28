@@ -725,86 +725,84 @@ mfix_level::make_eb_clr(int lev)
 std::unique_ptr<BaseIF>
 mfix_level::make_cylinder(int dir, Real radius, Real length)
 {
-  std::unique_ptr<BaseIF> cylinder_IF;
-  Vector<PolyTerm> poly;
+    std::unique_ptr<BaseIF> cylinder_IF;
+    Vector<PolyTerm> poly;
 
-  PolyTerm mono;
-  Real coef;
-  IntVect powers;
+    PolyTerm mono;
+    Real coef;
+    IntVect powers;
 
-  Vector<Real> coefvec(3);
-  Vector<int>  powersvec(3);
+    Vector<Real> coefvec(3);
+    Vector<int>  powersvec(3);
 
-  for(int idir = 0; idir < 3; idir++) {
+    for(int idir = 0; idir < 3; idir++) {
 
-    if( idir == dir) {
-      coefvec[0] = -radius*radius;
-      coefvec[1] = 0.0;
-      coefvec[2] = 0.0;
-    } else {
-      coefvec[0] = 0.0;
-      coefvec[1] = 0.0;
-      coefvec[2] = 1.0;
+        if( idir == dir) {
+            coefvec[0] = -radius*radius;
+            coefvec[1] = 0.0;
+            coefvec[2] = 0.0;
+        } else {
+            coefvec[0] = 0.0;
+            coefvec[1] = 0.0;
+            coefvec[2] = 1.0;
+        }
+
+        for(int lc = 0; lc < 3; lc++) {
+            // x^(lc) term
+            coef = coefvec[lc];
+            powers = IntVect::Zero;
+            powers[idir] = lc;
+
+            mono.coef   = coef;
+            mono.powers = powers;
+
+            poly.push_back(mono);
+        }
     }
 
-    for(int lc = 0; lc < 3; lc++) {
+    // Internal flow cylinder
+    PolynomialIF cylinder0(poly, true);
 
-      // x^(lc) term
-      coef = coefvec[lc];
-      powers = IntVect::Zero;
-      powers[idir] = lc;
+    // box to clip to correct length
+    RealVect normal, center;
+    PlaneIF* plane;
+    Vector<BaseIF*> planes;
+    planes.resize(0);
 
-      mono.coef   = coef;
-      mono.powers = powers;
-
-      poly.push_back(mono);
-
+    for(int i=0; i<3; i++) {
+        center[i] = 0.0;
+        normal[i] = 0.0;
     }
-  }
 
-  // Internal flow cylinder
-  PolynomialIF cylinder0(poly, true);
+    center[dir] = 0.0;
+    normal[dir] = 1.0;
 
-  // box to clip to correct length
-  RealVect normal, center;
-  PlaneIF* plane;
-  Vector<BaseIF*> planes;
-  planes.resize(0);
+    // amrex::Print() << "Plane 1\n";
+    // amrex::Print() << "Center " << center  << "\n";
+    // amrex::Print() << "Normal " << normal  << "\n";
 
-  for(int i=0; i<3; i++) {
-    center[i] = 0.0;
-    normal[i] = 0.0;
-  }
+    plane = new PlaneIF(normal,center,true);
+    planes.push_back(plane);
 
-  center[dir] = 0.0;
-  normal[dir] = 1.0;
+    center[dir] = length;
+    normal[dir] =-1.0;
 
-  // amrex::Print() << "Plane 1\n";
-  // amrex::Print() << "Center " << center  << "\n";
-  // amrex::Print() << "Normal " << normal  << "\n";
+    // amrex::Print() << "Plane 2\n";
+    // amrex::Print() << "Center " << center  << "\n";
+    // amrex::Print() << "Normal " << normal  << "\n";
 
-  plane = new PlaneIF(normal,center,true);
-  planes.push_back(plane);
+    plane = new PlaneIF(normal,center,true);
+    planes.push_back(plane);
 
-  center[dir] = length;
-  normal[dir] =-1.0;
+    IntersectionIF bounding_box(planes);
 
-  // amrex::Print() << "Plane 2\n";
-  // amrex::Print() << "Center " << center  << "\n";
-  // amrex::Print() << "Normal " << normal  << "\n";
+    Vector<BaseIF*> funcs(2);
+    funcs[0] = &cylinder0;
+    funcs[1] = &bounding_box;
 
-  plane = new PlaneIF(normal,center,true);
-  planes.push_back(plane);
+    IntersectionIF cylinder(funcs);
 
-  IntersectionIF bounding_box(planes);
+    cylinder_IF.reset(cylinder.newImplicitFunction());
 
-  Vector<BaseIF*> funcs(2);
-  funcs[0] = &cylinder0;
-  funcs[1] = &bounding_box;
-
-  IntersectionIF cylinder(funcs);
-
-  cylinder_IF.reset(cylinder.newImplicitFunction());
-  
-  return cylinder_IF;
+    return cylinder_IF;
 }
