@@ -72,7 +72,6 @@ mfix_level::make_eb_geometry(int lev)
         }
 
         for(int lc = 0; lc < 3; lc++) {
-
           // x^(lc) term
           coef = coefvec[lc];
           powers = IntVect::Zero;
@@ -165,7 +164,7 @@ mfix_level::make_eb_geometry(int lev)
      ******************************************************************************************************************/
 
     if(use_walls){
-        // Define both components of the the GeometryShop seperately:
+        // Define both components of the GeometryShop separately:
         GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
 
         // Define the EBIS first using only the walls...
@@ -179,7 +178,7 @@ mfix_level::make_eb_geometry(int lev)
         EBTower::Destroy();
     }
     if(use_poly2){
-        // Define both components of the the GeometryShop seperately:
+        // Define both components of the GeometryShop separately:
         GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
 
         // Define the EBIS using only the poly2 (after deleting the walls-only EBTower)...
@@ -389,7 +388,7 @@ mfix_level::make_eb_hourglass(int lev)
      *                                                                                                                *
      ******************************************************************************************************************/
 
-    // Define both components of the the GeometryShop seperately:
+    // Define both components of the GeometryShop separately:
     GeometryShop gshop_upoly(* impfunc_unpolys, eb_verbosity);
     GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
 
