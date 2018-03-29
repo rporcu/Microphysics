@@ -10,7 +10,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 subroutine zero_wall_norm_vel(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
      u_g, v_g, w_g, bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-     bc_klo_type, bc_khi_type, domlo, domhi) &
+     bc_klo_type, bc_khi_type, domlo, domhi, ng) &
      bind(C, name="zero_wall_norm_vel")
 
   use amrex_fort_module, only : c_real => amrex_real
@@ -22,7 +22,7 @@ subroutine zero_wall_norm_vel(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 
   integer(c_int), intent(in   ) :: slo(3),shi(3)
   integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
-  integer(c_int), intent(in   ) :: domlo(3),domhi(3)
+  integer(c_int), intent(in   ) :: domlo(3),domhi(3), ng
 
   real(c_real), intent(inout) :: &
        u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
@@ -30,12 +30,12 @@ subroutine zero_wall_norm_vel(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
        w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
   integer(c_int), intent(in   ) :: &
-       bc_ilo_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-       bc_ihi_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-       bc_jlo_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-       bc_jhi_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-       bc_klo_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2), &
-       bc_khi_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+       bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+       bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+       bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+       bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+       bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+       bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
 ! Local variables
 !--------------------------------------------------------------------//

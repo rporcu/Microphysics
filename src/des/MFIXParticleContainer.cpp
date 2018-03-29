@@ -662,11 +662,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled,
                                                IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                                IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                                               IArrayBox& bc_klo, IArrayBox& bc_khi)
+                                               IArrayBox& bc_klo, IArrayBox& bc_khi,
+					       int nghost )
 {
     int fortran_volume_comp = 5;
     PICDeposition(mf_to_be_filled, bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
-                  fortran_volume_comp);
+                  fortran_volume_comp,nghost);
 
     // Now define this mf = (1 - particle_vol)
     mf_to_be_filled.mult(-1.0,mf_to_be_filled.nGrow());
@@ -681,14 +682,15 @@ void MFIXParticleContainer::CalcDragOnFluid(amrex::MultiFab& beta_x_mf,
                                             amrex::MultiFab& beta_w_mf,
                                             IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                             IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                                            IArrayBox& bc_klo, IArrayBox& bc_khi)
+                                            IArrayBox& bc_klo, IArrayBox& bc_khi,
+					    int nghost )
 {
     int fortran_beta_comp = 15;
     int fortran_vel_comp  =  9;
     PICMultiDeposition(beta_x_mf, beta_y_mf, beta_z_mf,
                        beta_u_mf, beta_v_mf, beta_w_mf,
                        bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
-                       fortran_beta_comp, fortran_vel_comp);
+                       fortran_beta_comp, fortran_vel_comp, nghost);
     if (beta_x_mf.contains_nan())
     {
         std::cout << "BETA_X HAS NANS AFTER SOLVE" << std::endl;
@@ -725,7 +727,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
                                           IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                           IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                                           IArrayBox& bc_klo, IArrayBox& bc_khi,
-                                          int fortran_particle_comp)
+                                          int fortran_particle_comp, int nghost )
 {
     BL_PROFILE("MFIXParticleContainer::PICDeposition()");
 
@@ -820,7 +822,8 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
                         bc_ilo.dataPtr(), bc_ihi.dataPtr(),
                         bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                         bc_klo.dataPtr(), bc_khi.dataPtr(),
-                        domain.loVect(), domain.hiVect());
+                        domain.loVect(), domain.hiVect(), 
+			&nghost );
     }
 
     mf_pointer->SumBoundary(gm.periodicity());
@@ -851,7 +854,7 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
                                                IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                                IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                                                IArrayBox& bc_klo, IArrayBox& bc_khi,
-                                               int fortran_beta_comp, int fortran_vel_comp)
+                                               int fortran_beta_comp, int fortran_vel_comp, int nghost )
 {
     BL_PROFILE("MFIXParticleContainer::PICMultiDeposition()");
 
@@ -1040,7 +1043,8 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_x_mf,
                    bc_ilo.dataPtr(), bc_ihi.dataPtr(),
                    bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                    bc_klo.dataPtr(), bc_khi.dataPtr(),
-                   domain.loVect(), domain.hiVect());
+                   domain.loVect(), domain.hiVect(),
+		   &nghost );
     }
 
     if (m_verbose > 1) {

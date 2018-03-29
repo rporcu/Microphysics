@@ -13,7 +13,7 @@ subroutine set_drag_bcs( &
                         drag_u, drag_v, drag_w, &
                         bc_ilo_type, bc_ihi_type, &
                         bc_jlo_type, bc_jhi_type, &
-                        bc_klo_type, bc_khi_type, domlo, domhi) &
+                        bc_klo_type, bc_khi_type, domlo, domhi, ng ) &
      bind(C, name="set_drag_bcs")
 
      use amrex_fort_module, only : c_real => amrex_real
@@ -26,7 +26,7 @@ subroutine set_drag_bcs( &
      integer(c_int), intent(in   ) :: ulo(3),uhi(3)
      integer(c_int), intent(in   ) :: vlo(3),vhi(3)
      integer(c_int), intent(in   ) :: wlo(3),whi(3)
-     integer(c_int), intent(in   ) :: domlo(3),domhi(3)
+     integer(c_int), intent(in   ) :: domlo(3),domhi(3), ng
 
      real(c_real), intent(inout) ::  drag_u&
         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -36,12 +36,12 @@ subroutine set_drag_bcs( &
         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
      integer(c_int), intent(in   ) :: &
-       bc_ilo_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-       bc_ihi_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-       bc_jlo_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-       bc_jhi_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-       bc_klo_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2), &
-       bc_khi_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+       bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+       bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+       bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+       bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+       bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+       bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
 ! Local variables
 !--------------------------------------------------------------------//

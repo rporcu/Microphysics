@@ -408,11 +408,11 @@ program fcompare
 
               if (has_nan_a(n_a) .or. has_nan_b(n_a)) cycle
 
-!              !$omp parallel do collapse(2) default(none) &
-!              !$omp   shared(lo_a, hi_a, ng, p_a, p_b, norm, n_a, zone_info_var_a, i, j) &
-!              !$omp   private(pa, pb, pd) &
-!              !$omp   reduction(err_reduce:aerror, rerror, rerror_denom) &
-!              !$omp   reduction(err_zone_reduce:err_zone)
+              !$omp parallel do collapse(2) default(none) &
+              !$omp   shared(lo_i, hi_i, p_a, p_b, norm, n_a, zone_info_var_a, i, ja) &
+              !$omp   private(pa, pb, pd) &
+              !$omp   reduction(err_reduce:aerror, rerror, rerror_denom) &
+              !$omp   reduction(err_zone_reduce:err_zone)
               do kk = lo_i(3), hi_i(3)
                  do jj = lo_i(2), hi_i(2)
                     do ii = lo_i(1), hi_i(1)

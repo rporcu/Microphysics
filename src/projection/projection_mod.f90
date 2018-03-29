@@ -547,7 +547,7 @@ contains
    ! the user-provided BCs are uniform, and then return a single BC type for
    ! each domain wall. 
    ! 
-   subroutine set_ppe_bc ( bc_lo, bc_hi, domlo, domhi, bct_ilo, bct_ihi, &
+   subroutine set_ppe_bc ( bc_lo, bc_hi, domlo, domhi, ng, bct_ilo, bct_ihi, &
         & bct_jlo, bct_jhi, bct_klo, bct_khi, singular )  bind(C)
       
       use amrex_lo_bctypes_module
@@ -561,15 +561,18 @@ contains
 
       ! Whether the system is singular or not
       integer(c_int), intent(  out) :: singular
+
+      ! Number of ghost nodes
+      integer(c_int), intent(in   ) :: ng
       
       ! Arrays of point-by-point BC types 
-      integer(c_int), intent(in   ), target  ::  &
-           & bct_ilo(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-           & bct_ihi(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-           & bct_jlo(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-           & bct_jhi(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-           & bct_klo(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2), &
-           & bct_khi(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+      integer(c_int), intent(in   )  ::                                 &
+           & bct_ilo(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           & bct_ihi(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           & bct_jlo(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           & bct_jhi(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           & bct_klo(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+           & bct_khi(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
       ! Local variables
       integer(c_int)                :: bc_face

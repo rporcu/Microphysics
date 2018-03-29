@@ -30,7 +30,7 @@
 !
 ! 
 subroutine extrap_pressure_to_ghost_cells (  phi, slo, shi, bct_ilo, bct_ihi, &
-     bct_jlo, bct_jhi, bct_klo, bct_khi,  domlo, domhi ) bind(C) 
+     bct_jlo, bct_jhi, bct_klo, bct_khi, domlo, domhi, ng ) bind(C) 
 
    use amrex_fort_module,  only: ar => amrex_real
    use iso_c_binding ,     only: c_int
@@ -43,15 +43,18 @@ subroutine extrap_pressure_to_ghost_cells (  phi, slo, shi, bct_ilo, bct_ihi, &
 
    ! Grid bounds
    integer(c_int), intent(in   ) :: domlo(3), domhi(3)
+
+   ! Number of ghost nodes
+   integer(c_int), intent(in   ) :: ng
    
    ! BCs type
    integer(c_int), intent(in   ) :: &
-        bct_ilo(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-        bct_ihi(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-        bct_jlo(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-        bct_jhi(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-        bct_klo(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2), &
-        bct_khi(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+        bct_ilo(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+        bct_ihi(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+        bct_jlo(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+        bct_jhi(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+        bct_klo(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+        bct_khi(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
    ! Arrays
    real(ar),      intent(inout) ::  &
