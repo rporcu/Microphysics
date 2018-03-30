@@ -1,6 +1,6 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: calc_particle_beta                                         !
+!  Subroutine: calc_particle_beta                                      !
 !                                                                      !
 !  Purpose: This routine is called before the FLUID solve.             !
 !  It calculates the source terms for the center coefficients and RHS  !
