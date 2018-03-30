@@ -13,7 +13,7 @@ contains
     !   pure subroutine INIT_LEVELSET                                                                                 !
     !                                                                                                                 !
     !   Purpose: Initializes level-set array to the fortran huge(real(c_real)) value. This way these values of the    !
-    !   leve-set function will be overwritten by the min() function (used in these levelset_update function).         !
+    !   level-set function will be overwritten by the min() function (used in these levelset_update function).        !
     !                                                                                                                 !
     !   Comments: If you want to "clear" the whole level-set array (phi), make sure that lo and hi match the grown    !
     !   tile box (i.e. mfi.growntilebox()).                                                                           !
@@ -50,7 +50,7 @@ contains
     !                                                                                                                !
     !   pure subroutine FILL_LEVELSET                                                                                !
     !                                                                                                                !
-    !   Purpose: given a list of EB-facets, fill the level-set multifab between `lo` and `hi` with the closests      !
+    !   Purpose: given a list of EB-facets, fill the level-set MultiFab between `lo` and `hi` with the closets       !
     !   distance to the EB-facests. Also fill a iMultiFab with 0's and 1's. 0 Indicating that the closest distance   !
     !   was not the result of a projection onto a facet's plane, but instead onto an edge/corner.                    !
     !                                                                                                                !
@@ -117,8 +117,8 @@ contains
         !   **towards** the surface.                                                                                 !
         !                                                                                                            !
         !   Comments: sometimes the closes point is on an EB-facet edge. In this case, the surface normal is not     !
-        !   trivial, and this algorithm defaults to a negative distance. Howerever this point is given an `valid`    !
-        !   flag of false. It is recommended that the EB's implicit function is used to determine the wether the     !
+        !   trivial, and this algorithm defaults to a negative distance. However this point is given an `valid`      !
+        !   flag of false. It is recommended that the EB's implicit function is used to determine the weather the    !
         !   lies in the EB interior.                                                                                 !
         !                                                                                                            !
         !----------------------------------------------------------------------------------------------------------- !
@@ -213,7 +213,7 @@ contains
     !                                                                                                                !
     !   Comments: Note the role of `valid` above, `valid` is 0 for points where the closest distance to the surface  !
     !   is on an edge. In that case, fill_levelset_eb defaults to negative distances. Hence this function can be     !
-    !   used for checking this asusmption, and flipping the level-set value's sign if necessary.                     !
+    !   used for checking this assumption, and flipping the level-set value's sign if necessary.                     !
     !                                                                                                                !
     !----------------------------------------------------------------------------------------------------------------!
 
@@ -254,12 +254,23 @@ contains
 
 
 
-    pure subroutine update_levelset(lo,    hi,           &
-                                    ls_in, lslo, lshi,   &
-                                    valid, vlo,  vhi,    &
-                                    phi,   phlo, phhi,   &
-                                    dx,    n_pad       ) &
-                    bind(C, name="update_levelset")
+    !----------------------------------------------------------------------------------------------------------------!
+    !                                                                                                                !
+    !   pure subroutine UPDATE_LEVELSET_INTERSECTION                                                                 !
+    !                                                                                                                !
+    !   Purpose: Update level set using the "intersection" selection rule: the minimum value between `phi` and       !
+    !   `ls_in` is stored in `phi`. This is the level-set equivalent of the `GeometryShop::IntersectionIF`.          !
+    !                                                                                                                !
+    !   Comments: The role of `valid` here is to flag cells near (or in) regions of negative level-set.              !
+    !                                                                                                                !
+    !----------------------------------------------------------------------------------------------------------------!
+
+    pure subroutine update_levelset_intersection(lo,    hi,           &
+                                                 ls_in, lslo, lshi,   &
+                                                 valid, vlo,  vhi,    &
+                                                 phi,   phlo, phhi,   &
+                                                 dx,    n_pad       ) &
+                    bind(C, name="update_levelset_intersection")
 
         implicit none
 
@@ -282,7 +293,7 @@ contains
 
                     if ( in_node .lt. ls_node ) then
                         phi(ii, jj, kk) = in_node
-                        if ( in_node .le. 0 ) then
+                        if ( ls_node .le. 0 ) then
                             valid(ii, jj, kk) = 1
                         end if
                     end if
@@ -302,87 +313,150 @@ contains
             end do
         end do
 
-    contains
-
-        pure function neighbour_is_valid(phi, phlo, phhi, i, j, k, n_pad)
-            implicit none
-
-            ! ** output type
-            logical :: neighbour_is_valid
-
-            ! ** input types
-            integer,      dimension(3), intent(in) :: phlo, phhi
-            real(c_real),               intent(in) :: phi( phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
-            integer,                    intent(in) :: i, j, k, n_pad
+    end subroutine update_levelset_intersection
 
 
-            ! ** declare local variables
-            ! ii, jj, kk : loop variables itterating over neighbour stencil
-            ! klo ... ihi: boundaries of stencil which will be checked for valid cells
-            !              a cell is valid if phi <= 0
-            integer :: ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
 
+    !----------------------------------------------------------------------------------------------------------------!
+    !                                                                                                                !
+    !   pure subroutine UPDATE_LEVELSET_UNION                                                                        !
+    !                                                                                                                !
+    !   Purpose: Update level set using the "union" selection rule: the maximum value between `phi` and `ls_in` is   !
+    !   stored in `phi`. This is the level-set equivalent of the `GeometryShop::IntersectionIF`.                     !
+    !                                                                                                                !
+    !   Comments: The role of `valid` here is to flag cells near (or in) regions of negative level-set.              !
+    !                                                                                                                !
+    !----------------------------------------------------------------------------------------------------------------!
 
-            !----------------------------------------------------------------------------------------------------!
-            ! build neighbour stencil of size 2 * n_pad                                                          !
-            !                                ^^^                                                                 !
-            !                  *** fudge factor: finite-sized particle can overlap with neighbouring cells       !
-            ! note: stencil could be out-of-bounds (due to fudge factor) => bounds-checking                      !
-            !----------------------------------------------------------------------------------------------------!
+    pure subroutine update_levelset_union(lo,    hi,           &
+                                          ls_in, lslo, lshi,   &
+                                          valid, vlo,  vhi,    &
+                                          phi,   phlo, phhi,   &
+                                          dx,    n_pad       ) &
+                    bind(C, name="update_levelset_union")
 
-            klo = k - 2 * n_pad
-            if ( klo .lt. phlo(3) ) then
-                klo = phlo(3)
-            end if
+        implicit none
 
-            khi = k + 2 * n_pad
-            if ( khi .gt. phhi(3) ) then
-                khi = phhi(3)
-            end if
+        integer,      dimension(3), intent(in   ) :: lo, hi, lslo, lshi, vlo, vhi, phlo, phhi
+        real(c_real),               intent(in   ) :: ls_in (lslo(1):lshi(1),lslo(2):lshi(2),lslo(3):lshi(3))
+        integer,                    intent(  out) :: valid ( vlo(1):vhi(1),  vlo(2):vhi(2),  vlo(3):vhi(3) )
+        real(c_real),               intent(  out) :: phi   (phlo(1):phhi(1),phlo(2):phhi(2),phlo(3):phhi(3))
+        real(c_real), dimension(3), intent(in   ) :: dx
+        integer,                    intent(in   ) :: n_pad
 
-            jlo = j - 2 * n_pad
-            if ( jlo .lt. phlo(2) ) then
-                jlo = phlo(2)
-            end if
+        real(c_real) :: ls_node, in_node
+        integer      :: i, j, k, ii, jj, kk
+        logical      :: valid_cell
 
-            jhi = j + 2 * n_pad
-            if ( jhi .gt. phhi(2) ) then
-                jhi = phhi(2)
-            end if
+        do kk = lo(3), hi(3)
+            do jj = lo(2), hi(2)
+                do ii = lo(1), hi(1)
+                    in_node = ls_in(ii, jj, kk)
+                    ls_node = phi(ii, jj, kk)
 
-            ilo = i - 2 * n_pad
-            if ( ilo .lt. phlo(1) ) then
-                ilo = phlo(1)
-            end if
-
-            ihi = i + 2 * n_pad
-            if ( ihi .gt. phhi(1) ) then
-                ihi = phhi(1)
-            end if
-
-
-            !---------------------------------------------------------------------------------------------------!
-            ! check members of neighbour stencil:                                                               !
-            !       cell is "valid" whenever at least one cell in the neighbour stencil has a level-set phi     !
-            !       less than, or equal to, 0                                                                   !
-            !---------------------------------------------------------------------------------------------------!
-
-            neighbour_is_valid = .false.
-
-            do kk = klo, khi
-                do jj = jlo, jhi
-                    do ii = ilo, ihi
-                        if ( phi(ii, jj, kk) .le. 0 ) then
-                            neighbour_is_valid = .true.
-                            return
+                    if ( in_node .gt. ls_node ) then
+                        phi(ii, jj, kk) = in_node
+                        if ( ls_node .le. 0 ) then
+                            valid(ii, jj, kk) = 1
                         end if
-                    end do
+                    end if
+
                 end do
             end do
+        end do
 
-        end function neighbour_is_valid
+        do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+                do i = lo(1), hi(1)
+                    valid_cell = neighbour_is_valid(phi, phlo, phhi, i, j, k, n_pad)
+                    if ( valid_cell ) then
+                        valid(i, j, k) = 1
+                    end if
+                end do
+            end do
+        end do
 
-    end subroutine update_levelset
+    end subroutine update_levelset_union
+
+
+
+    pure function neighbour_is_valid(phi, phlo, phhi, i, j, k, n_pad)
+        implicit none
+
+        ! ** output type
+        logical :: neighbour_is_valid
+
+        ! ** input types
+        integer,      dimension(3), intent(in) :: phlo, phhi
+        real(c_real),               intent(in) :: phi( phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
+        integer,                    intent(in) :: i, j, k, n_pad
+
+
+        ! ** declare local variables
+        ! ii, jj, kk : loop variables itterating over neighbour stencil
+        ! klo ... ihi: boundaries of stencil which will be checked for valid cells
+        !              a cell is valid if phi <= 0
+        integer :: ii, jj, kk, klo, khi, jlo, jhi, ilo, ihi
+
+
+        !----------------------------------------------------------------------------------------------------!
+        ! build neighbour stencil of size 2 * n_pad                                                          !
+        !                                ^^^                                                                 !
+        !                  *** fudge factor: finite-sized particle can overlap with neighbouring cells       !
+        ! note: stencil could be out-of-bounds (due to fudge factor) => bounds-checking                      !
+        !----------------------------------------------------------------------------------------------------!
+
+        klo = k - 2 * n_pad
+        if ( klo .lt. phlo(3) ) then
+            klo = phlo(3)
+        end if
+
+        khi = k + 2 * n_pad
+        if ( khi .gt. phhi(3) ) then
+            khi = phhi(3)
+        end if
+
+        jlo = j - 2 * n_pad
+        if ( jlo .lt. phlo(2) ) then
+            jlo = phlo(2)
+        end if
+
+        jhi = j + 2 * n_pad
+        if ( jhi .gt. phhi(2) ) then
+            jhi = phhi(2)
+        end if
+
+        ilo = i - 2 * n_pad
+        if ( ilo .lt. phlo(1) ) then
+            ilo = phlo(1)
+        end if
+
+        ihi = i + 2 * n_pad
+        if ( ihi .gt. phhi(1) ) then
+            ihi = phhi(1)
+        end if
+
+
+        !---------------------------------------------------------------------------------------------------!
+        ! check members of neighbour stencil:                                                               !
+        !       cell is "valid" whenever at least one cell in the neighbour stencil has a level-set phi     !
+        !       less than, or equal to, 0                                                                   !
+        !---------------------------------------------------------------------------------------------------!
+
+        neighbour_is_valid = .false.
+
+        do kk = klo, khi
+            do jj = jlo, jhi
+                do ii = ilo, ihi
+                    if ( phi(ii, jj, kk) .le. 0 ) then
+                        neighbour_is_valid = .true.
+                        return
+                    end if
+                end do
+            end do
+        end do
+
+    end function neighbour_is_valid
 
 
 

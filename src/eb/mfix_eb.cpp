@@ -174,7 +174,7 @@ mfix_level::make_eb_geometry(int lev)
         EBTower::Build();
         // GeometryShop's Planes' implicit function is actually a signed distance function
         //      => it's just easier to fill the level-set this way
-        level_set->update_ebis(* AMReX_EBIS::instance());
+        level_set->intersection_ebis(* AMReX_EBIS::instance());
         EBTower::Destroy();
     }
     if(use_poly2){
@@ -191,7 +191,7 @@ mfix_level::make_eb_geometry(int lev)
         //          => define the level set as the (signed) distance to the closest point on the EB-facets
         int eb_pad = level_set->get_eb_pad();
         EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
-        level_set->update_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
+        level_set->intersection_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
         EBTower::Destroy();
     }
 
@@ -400,7 +400,7 @@ mfix_level::make_eb_hourglass(int lev)
     EBTower::Build();
     // GeometryShop's Planes' implicit function is actually a signed distance function
     //      => it's just easier to fill the level-set this way
-    level_set->update_ebis(* AMReX_EBIS::instance());
+    level_set->intersection_ebis(* AMReX_EBIS::instance());
     EBTower::Destroy();
 
     // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
@@ -413,7 +413,7 @@ mfix_level::make_eb_hourglass(int lev)
     //          => define the level set as the (signed) distance to the closest point on the EB-facets
     int eb_pad = level_set->get_eb_pad();
     EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
-    level_set->update_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    level_set->intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
     EBTower::Destroy();
 
 
@@ -494,20 +494,14 @@ mfix_level::make_eb_clr(int lev)
     pp.query("riser_lower_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> riser_lower_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF riser_lower(*riser_lower_init);
-    riser_lower.translate(translation);
+    std::unique_ptr<BaseIF> riser_lower = make_cylinder(cylinder_dir, lradius, lheight, translation);
 
 
     pp.query("riser_upper_radius", lradius);
     pp.query("riser_upper_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> riser_upper_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF riser_upper(*riser_upper_init);
-    riser_upper.translate(translation);
+    std::unique_ptr<BaseIF> riser_upper = make_cylinder(cylinder_dir, lradius, lheight, translation);
 
     //------------------------------------------------------------- J-leg
     pp.getarr("jleg_htranslate", transvec,  0, 3);
@@ -519,10 +513,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("jleg_horz_height", lheight);
 
     cylinder_dir=0;
-    std::unique_ptr<BaseIF> jleg_horz_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF jleg_horz(*jleg_horz_init);
-    jleg_horz.translate(translation);
+    std::unique_ptr<BaseIF> jleg_horz = make_cylinder(cylinder_dir, lradius, lheight, translation);
 
 
     pp.getarr("jleg_vtranslate", transvec,  0, 3);
@@ -534,10 +525,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("jleg_vert_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> jleg_vert_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF jleg_vert(*jleg_vert_init);
-    jleg_vert.translate(translation);
+    std::unique_ptr<BaseIF> jleg_vert = make_cylinder(cylinder_dir, lradius, lheight, translation);
 
     //------------------------------------------------------------- reactor
     pp.getarr("reactor_translate", transvec,  0, 3);
@@ -549,10 +537,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("reactor_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> reactor_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF reactor(*reactor_init);
-    reactor.translate(translation);
+    std::unique_ptr<BaseIF> reactor = make_cylinder(cylinder_dir, lradius, lheight, translation);
 
     //------------------------------------------------------------- loop-seal to reactor
     pp.getarr("ls2fbr_translate", transvec,  0, 3);
@@ -564,10 +549,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("ls2fbr_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> ls2fbr_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF ls2fbr(*ls2fbr_init);
-    ls2fbr.translate(translation);
+    std::unique_ptr<BaseIF> ls2fbr = make_cylinder(cylinder_dir, lradius, lheight, translation);
 
 
     //------------------------------------------------------------- loop-seal to reactor
@@ -580,10 +562,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("loopseal_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> loopseal_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF loopseal(*loopseal_init);
-    loopseal.translate(translation);
+    std::unique_ptr<BaseIF> loopseal = make_cylinder(cylinder_dir, lradius, lheight, translation);
 
 
 
@@ -597,10 +576,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("cy2ls_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> cy2ls_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF cy2ls(*cy2ls_init);
-    cy2ls.translate(translation);
+    std::unique_ptr<BaseIF> cy2ls = make_cylinder(cylinder_dir, lradius, lheight, translation);
 
 
     //------------------------------------------------------------- cyclone
@@ -613,10 +589,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("cyclone_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> cyclone_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF cyclone(*cyclone_init);
-    cyclone.translate(translation);
+    std::unique_ptr<BaseIF> cyclone = make_cylinder(cylinder_dir, lradius, lheight, translation);
 
 
     //------------------------------------------------------------- crossover
@@ -629,24 +602,21 @@ mfix_level::make_eb_clr(int lev)
     pp.query("crossover_height", lheight);
 
     cylinder_dir=0;
-    std::unique_ptr<BaseIF> crossover_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF crossover(*crossover_init);
-    crossover.translate(translation);
+    std::unique_ptr<BaseIF> crossover = make_cylinder(cylinder_dir, lradius, lheight, translation);
 
     //--------------------------------------------------------------------
 
     Vector<BaseIF*> clr_parts(10);
-    clr_parts[0] = &riser_lower;
-    clr_parts[1] = &riser_upper;
-    clr_parts[2] = &jleg_horz;
-    clr_parts[3] = &jleg_vert;
-    clr_parts[4] = &reactor;
-    clr_parts[5] = &ls2fbr;
-    clr_parts[6] = &loopseal;
-    clr_parts[7] = &cy2ls;
-    clr_parts[8] = &cyclone;
-    clr_parts[9] = &crossover;
+    clr_parts[0] = riser_lower.get();
+    clr_parts[1] = riser_upper.get();
+    clr_parts[2] = jleg_horz.get();
+    clr_parts[3] = jleg_vert.get();
+    clr_parts[4] = reactor.get();
+    clr_parts[5] = ls2fbr.get();
+    clr_parts[6] = loopseal.get();
+    clr_parts[7] = cy2ls.get();
+    clr_parts[8] = cyclone.get();
+    clr_parts[9] = crossover.get();
 
     UnionIF clr(clr_parts);
 
@@ -722,7 +692,7 @@ mfix_level::make_eb_clr(int lev)
 
 
 std::unique_ptr<BaseIF>
-mfix_level::make_cylinder(int dir, Real radius, Real length)
+mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & translation)
 {
     std::unique_ptr<BaseIF> cylinder_IF;
     Vector<PolyTerm> poly;
@@ -800,8 +770,10 @@ mfix_level::make_cylinder(int dir, Real radius, Real length)
     funcs[1] = &bounding_box;
 
     IntersectionIF cylinder(funcs);
+    TransformIF cylinder_trans(cylinder);
+    cylinder_trans.translate(translation);
 
-    cylinder_IF.reset(cylinder.newImplicitFunction());
+    cylinder_IF.reset(cylinder_trans.newImplicitFunction());
 
     return cylinder_IF;
 }

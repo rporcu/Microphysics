@@ -57,7 +57,8 @@ class LSFactory {
         std::unique_ptr<MultiFab> ebis_impfunc(const EBIndexSpace & eb_is);
 
         // Unpdate internal `ls_phi` and `ls_valid` based on the min of `ls_phi` and `ls_in`
-        void update(const MultiFab & ls_in);
+        void update_intersection(const MultiFab & ls_in);
+        void update_union(const MultiFab & ls_in);
 
         void update_ba();
         void init_geom();
@@ -68,8 +69,10 @@ class LSFactory {
 
         void regrid();
 
-        void update_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is);
-        void update_ebis(const EBIndexSpace & eb_is);
+        void intersection_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is);
+        void union_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is);
+        void intersection_ebis(const EBIndexSpace & eb_is);
+        void union_ebis(const EBIndexSpace & eb_is);
 
         // Return level-set data
         const MultiFab *  get_data() const {return ls_grid.get();};

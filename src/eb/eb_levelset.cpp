@@ -236,7 +236,7 @@ std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace & eb_is) {
 }
 
 
-void LSFactory::update(const MultiFab & ls_in) {
+void LSFactory::update_intersection(const MultiFab & ls_in) {
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -248,11 +248,35 @@ void LSFactory::update(const MultiFab & ls_in) {
         auto & v_tile = (* ls_valid)[mfi];
         auto & ls_tile = (* ls_grid)[mfi];
 
-        update_levelset(tile_box.loVect(),    tile_box.hiVect(),
-                        ls_in_tile.dataPtr(), ls_in_tile.loVect(), ls_in_tile.hiVect(),
-                        v_tile.dataPtr(),     v_tile.loVect(),     v_tile.hiVect(),
-                        ls_tile.dataPtr(),    ls_tile.loVect(),    ls_tile.hiVect(),
-                        dx_vect.dataPtr(),    & ls_grid_pad);
+        update_levelset_intersection(tile_box.loVect(),    tile_box.hiVect(),
+                                     ls_in_tile.dataPtr(), ls_in_tile.loVect(), ls_in_tile.hiVect(),
+                                     v_tile.dataPtr(),     v_tile.loVect(),     v_tile.hiVect(),
+                                     ls_tile.dataPtr(),    ls_tile.loVect(),    ls_tile.hiVect(),
+                                     dx_vect.dataPtr(),    & ls_grid_pad);
+    }
+
+    ls_grid->FillBoundary(geom_ls.periodicity());
+    ls_valid->FillBoundary(geom_ls.periodicity());
+}
+
+
+void LSFactory::update_union(const MultiFab & ls_in) {
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for(MFIter mfi( * ls_grid, true); mfi.isValid(); ++mfi){
+        Box tile_box = mfi.growntilebox();
+
+        const auto & ls_in_tile = ls_in[mfi];
+        auto & v_tile = (* ls_valid)[mfi];
+        auto & ls_tile = (* ls_grid)[mfi];
+
+        update_levelset_union(tile_box.loVect(),    tile_box.hiVect(),
+                              ls_in_tile.dataPtr(), ls_in_tile.loVect(), ls_in_tile.hiVect(),
+                              v_tile.dataPtr(),     v_tile.loVect(),     v_tile.hiVect(),
+                              ls_tile.dataPtr(),    ls_tile.loVect(),    ls_tile.hiVect(),
+                              dx_vect.dataPtr(),    & ls_grid_pad);
     }
 
     ls_grid->FillBoundary(geom_ls.periodicity());
@@ -284,7 +308,7 @@ void LSFactory::regrid(){
 }
 
 
-void LSFactory::update_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is) {
+void LSFactory::intersection_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is) {
 
     // Generate facets (TODO: in future these can also be provided by user)
     std::unique_ptr<Vector<Real>> facets = eb_facets(eb_factory);
@@ -331,11 +355,62 @@ void LSFactory::update_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexS
     }
 
     // Update LSFactory using local eb level-set
-    update(eb_ls);
+    update_intersection(eb_ls);
 }
 
 
-void LSFactory::update_ebis(const EBIndexSpace & eb_is) {
+void LSFactory::union_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is) {
+
+    // Generate facets (TODO: in future these can also be provided by user)
+    std::unique_ptr<Vector<Real>> facets = eb_facets(eb_factory);
+    int len_facets = facets->size();
+    // Generate implicit function (used to determine the interior of EB)
+    std::unique_ptr<MultiFab> impfunct = ebis_impfunc(eb_is);
+    impfunct->FillBoundary(geom_ls.periodicity());
+
+    // Local MultiFab storing level-set data for this eb_factory
+    MultiFab eb_ls;
+    iMultiFab eb_valid;
+
+    const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
+    eb_ls.define(ls_ba, dm, 1, ls_grid_pad);
+    eb_valid.define(ls_ba, dm, 1, ls_grid_pad);
+    eb_valid.setVal(0);
+
+    // Fill local MultiFab with eb_factory's level-set data. Note the role of eb_valid:
+    //  -> eb_valid = 1 if the corresponding eb_ls location could be projected onto the eb-facets
+    //  -> eb_valid = 0 if eb_ls is the fall-back (euclidian) distance to the nearest eb-facet
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for(MFIter mfi(eb_ls, true); mfi.isValid(); ++mfi){
+        Box tile_box = mfi.growntilebox();
+        const int * lo = tile_box.loVect();
+        const int * hi = tile_box.hiVect();
+
+        auto & v_tile = eb_valid[mfi];
+        auto & ls_tile = eb_ls[mfi];
+        const auto & if_tile = (* impfunct)[mfi];
+
+        fill_levelset_eb(lo,                hi,
+                         facets->dataPtr(), & len_facets,
+                         v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
+                         ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect(),
+                         dx_vect.dataPtr(), dx_eb_vect.dataPtr());
+
+        validate_levelset(lo,                hi,               & ls_grid_ref,
+                          if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
+                          v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
+                          ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
+
+    }
+
+    // Update LSFactory using local eb level-set
+    update_union(eb_ls);
+}
+
+
+void LSFactory::intersection_ebis(const EBIndexSpace & eb_is) {
     std::unique_ptr<MultiFab> mf_impfunc = ebis_impfunc(eb_is);
 
     // GeometryService convetion:
@@ -351,7 +426,27 @@ void LSFactory::update_ebis(const EBIndexSpace & eb_is) {
             a_fab(bit(), 0) = - a_fab(bit(), 0);
     }
 
-    update(* mf_impfunc);
+    update_intersection(* mf_impfunc);
+}
+
+
+void LSFactory::union_ebis(const EBIndexSpace & eb_is) {
+    std::unique_ptr<MultiFab> mf_impfunc = ebis_impfunc(eb_is);
+
+    // GeometryService convetion:
+    //      -- implicit_function(r) < 0 : r in fluid (outside of EB)
+    //      -- implicit_function(r) > 0 : r not in fluid (inside EB)
+    //   => If implicit_function is a signed-distance function, we need to invert sign
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for(MFIter mfi( * mf_impfunc, true); mfi.isValid(); ++ mfi){
+        FArrayBox & a_fab = (* mf_impfunc)[mfi];
+        for(BoxIterator bit(mfi.growntilebox()); bit.ok(); ++bit)
+            a_fab(bit(), 0) = - a_fab(bit(), 0);
+    }
+
+    update_union(* mf_impfunc);
 }
 
 

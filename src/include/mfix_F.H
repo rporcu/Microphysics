@@ -771,7 +771,15 @@ extern "C"
             const amrex_real * dx,      const amrex_real * dx_eb
         );
 
-    void update_levelset(
+    void update_levelset_intersection(
+            const int * lo,           const int * hi,
+            const amrex_real * ls_in, const int * lslo, const int * lshi,
+            int * valid,              const int * vlo,  const int * vhi,
+            amrex_real * phi,         const int * phlo, const int * phhi,
+            const amrex_real * dx,    const int * n_pad
+        );
+
+    void update_levelset_union(
             const int * lo,           const int * hi,
             const amrex_real * ls_in, const int * lslo, const int * lshi,
             int * valid,              const int * vlo,  const int * vhi,
