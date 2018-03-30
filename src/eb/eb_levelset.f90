@@ -253,6 +253,7 @@ contains
     end subroutine validate_levelset
 
 
+
     pure subroutine update_levelset(lo,    hi,           &
                                     ls_in, lslo, lshi,   &
                                     valid, vlo,  vhi,    &
@@ -269,29 +270,19 @@ contains
         real(c_real), dimension(3), intent(in   ) :: dx
         integer,                    intent(in   ) :: n_pad
 
-        real(c_real), dimension(3) :: pos_node
-        real(c_real)               :: levelset_node
-
-        integer :: i, j, k, ii, jj, kk
-        logical :: valid_cell
+        real(c_real) :: ls_node, in_node
+        integer      :: i, j, k, ii, jj, kk
+        logical      :: valid_cell
 
         do kk = lo(3), hi(3)
             do jj = lo(2), hi(2)
                 do ii = lo(1), hi(1)
-                    levelset_node = ls_in(ii, jj, kk)
+                    in_node = ls_in(ii, jj, kk)
+                    ls_node = phi(ii, jj, kk)
 
-                    !if ( dabs(levelset_node) < 5e-5 ) then
-                    !    write(*,*) ii, jj, kk, "pt=", (/ii, jj, kk/)*dx(:), "levelset=", levelset_node
-                    !end if
-
-                    !write(*,*) ii, jj, kk, phi(ii, jj, kk), levelset_node, sqrt(   &
-                    !    dot_product ( (/ii, jj/)*dx(1:2) - (/0.0016, 0.0016/) , &
-                    !                  (/ii, jj/)*dx(1:2) - (/0.0016, 0.0016/)  ) &
-                    !) + levelset_node
-
-                    if ( levelset_node .lt. phi(ii, jj, kk) ) then
-                        phi(ii, jj, kk) = levelset_node
-                        if ( levelset_node .le. 0 ) then
+                    if ( in_node .lt. ls_node ) then
+                        phi(ii, jj, kk) = in_node
+                        if ( in_node .le. 0 ) then
                             valid(ii, jj, kk) = 1
                         end if
                     end if
@@ -394,6 +385,7 @@ contains
     end subroutine update_levelset
 
 
+
     pure subroutine count_eb_facets(lo, hi, flag, flo, fhi, n_facets) &
                     bind(C, name="count_eb_facets")
 
@@ -416,6 +408,7 @@ contains
         end do
 
     end subroutine count_eb_facets
+
 
 
     pure subroutine eb_as_list(lo,       hi,   c_facets,  &
@@ -452,14 +445,6 @@ contains
                         eb_cent(:) = ( bcent(i, j, k, :)                     &
                                        + (/ dble(i), dble(j), dble(k) /)     &
                                        + (/ 0.5d0, 0.5d0, 0.5d0 /) ) * dx(:)
-
-                        !write(*,*) i, j, k, "generating eb_cent at: ", eb_cent(:), sqrt( &
-                        !                dot_product ( ( eb_cent(1:2) - (/0.0016, 0.0016/) ), &
-                        !                              ( eb_cent(1:2) - (/0.0016, 0.0016/) ) )&
-                        !               )
-                        !write(*,*) "with normal:", norm(i, j, k, :)
-                        !write(*,*) ""
-
 
                         list_out( i_facet     : i_facet + 2) = eb_cent(:)
                         list_out( i_facet + 3 : i_facet + 5) = norm(i, j, k, :)

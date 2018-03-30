@@ -72,7 +72,6 @@ mfix_level::make_eb_geometry(int lev)
         }
 
         for(int lc = 0; lc < 3; lc++) {
-
           // x^(lc) term
           coef = coefvec[lc];
           powers = IntVect::Zero;
@@ -94,7 +93,7 @@ mfix_level::make_eb_geometry(int lev)
 
       pp.getarr("poly2_translate", transvec,  0, SpaceDim);
 
-      for(int idir = 0; idir < 3; idir++) 
+      for(int idir = 0; idir < 3; idir++)
         translation[idir] = transvec[idir];
 
       TransformIF poly2(mirror);
@@ -130,7 +129,7 @@ mfix_level::make_eb_geometry(int lev)
     } else if(use_walls){ // Just walls
 
       RealVect dxVec;
-      for(int idir = 0; idir < 3; idir++) 
+      for(int idir = 0; idir < 3; idir++)
         dxVec[idir] = geom[lev].CellSize()[idir];
 
       for (int i = 1; i <= 500; i++) {
@@ -145,7 +144,7 @@ mfix_level::make_eb_geometry(int lev)
       IntersectionIF all_planes(planes);
 
       impfunc_walls = std::unique_ptr<BaseIF>(all_planes.newImplicitFunction());
-      
+
       impfunc.reset(all_planes.newImplicitFunction());
     }
 
@@ -165,7 +164,7 @@ mfix_level::make_eb_geometry(int lev)
      ******************************************************************************************************************/
 
     if(use_walls){
-        // Define both components of the the GeometryShop seperately:
+        // Define both components of the GeometryShop separately:
         GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
 
         // Define the EBIS first using only the walls...
@@ -179,7 +178,7 @@ mfix_level::make_eb_geometry(int lev)
         EBTower::Destroy();
     }
     if(use_poly2){
-        // Define both components of the the GeometryShop seperately:
+        // Define both components of the GeometryShop separately:
         GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
 
         // Define the EBIS using only the poly2 (after deleting the walls-only EBTower)...
@@ -187,7 +186,7 @@ mfix_level::make_eb_geometry(int lev)
         AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, grid_size, max_level);
 
         EBTower::Build();
-        // GeometryShop's PolynomialIF is not a signed distance function... 
+        // GeometryShop's PolynomialIF is not a signed distance function...
         //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
         //          => define the level set as the (signed) distance to the closest point on the EB-facets
         int eb_pad = level_set->get_eb_pad();
@@ -228,6 +227,8 @@ mfix_level::make_eb_geometry(int lev)
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
+
+
 
 void
 mfix_level::make_eb_hourglass(int lev)
@@ -387,7 +388,7 @@ mfix_level::make_eb_hourglass(int lev)
      *                                                                                                                *
      ******************************************************************************************************************/
 
-    // Define both components of the the GeometryShop seperately:
+    // Define both components of the GeometryShop separately:
     GeometryShop gshop_upoly(* impfunc_unpolys, eb_verbosity);
     GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
 
@@ -407,7 +408,7 @@ mfix_level::make_eb_hourglass(int lev)
     AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_upoly, grid_size, max_level);
 
     EBTower::Build();
-    // GeometryShop's PolynomialIF is not a signed distance function... 
+    // GeometryShop's PolynomialIF is not a signed distance function...
     //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
     //          => define the level set as the (signed) distance to the closest point on the EB-facets
     int eb_pad = level_set->get_eb_pad();
@@ -445,4 +446,362 @@ mfix_level::make_eb_hourglass(int lev)
                          m_eb_support_level));
 
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+}
+
+
+
+void
+mfix_level::make_eb_clr(int lev)
+{
+    Box domain(geom[lev].Domain());
+    Real dx = geom[lev].CellSize()[0];
+
+    int exists;
+    RealVect normal, center;
+    PlaneIF* plane;
+    Vector<BaseIF*> planes;
+    planes.resize(0);
+
+    std::unique_ptr<BaseIF> impfunc;
+    std::unique_ptr<BaseIF> impfunc_poly2;
+
+    ParmParse pp("mfix");
+
+    amrex::Print() << "Creating CLR geometry\n";
+
+    Vector<PolyTerm> poly;
+
+    PolyTerm mono;
+    Real coef;
+    IntVect powers;
+
+    Vector<Real> coefvec(3);
+    Vector<int>  powersvec(3);
+    Vector<Real> transvec(3);
+    RealVect translation;
+
+    Real lradius, lheight;
+
+    int cylinder_dir;
+
+    //------------------------------------------------------------- Riser
+    pp.getarr("riser_translate", transvec,  0, 3);
+
+    for(int idir = 0; idir < 3; idir++)
+      translation[idir] = transvec[idir];
+
+    pp.query("riser_lower_radius", lradius);
+    pp.query("riser_lower_height", lheight);
+
+    cylinder_dir=1;
+    std::unique_ptr<BaseIF> riser_lower_init = make_cylinder(cylinder_dir, lradius, lheight);
+
+    TransformIF riser_lower(*riser_lower_init);
+    riser_lower.translate(translation);
+
+
+    pp.query("riser_upper_radius", lradius);
+    pp.query("riser_upper_height", lheight);
+
+    cylinder_dir=1;
+    std::unique_ptr<BaseIF> riser_upper_init = make_cylinder(cylinder_dir, lradius, lheight);
+
+    TransformIF riser_upper(*riser_upper_init);
+    riser_upper.translate(translation);
+
+    //------------------------------------------------------------- J-leg
+    pp.getarr("jleg_htranslate", transvec,  0, 3);
+
+    for(int idir = 0; idir < 3; idir++)
+      translation[idir] = transvec[idir];
+
+    pp.query("jleg_horz_radius", lradius);
+    pp.query("jleg_horz_height", lheight);
+
+    cylinder_dir=0;
+    std::unique_ptr<BaseIF> jleg_horz_init = make_cylinder(cylinder_dir, lradius, lheight);
+
+    TransformIF jleg_horz(*jleg_horz_init);
+    jleg_horz.translate(translation);
+
+
+    pp.getarr("jleg_vtranslate", transvec,  0, 3);
+
+    for(int idir = 0; idir < 3; idir++)
+      translation[idir] = transvec[idir];
+
+    pp.query("jleg_vert_radius", lradius);
+    pp.query("jleg_vert_height", lheight);
+
+    cylinder_dir=1;
+    std::unique_ptr<BaseIF> jleg_vert_init = make_cylinder(cylinder_dir, lradius, lheight);
+
+    TransformIF jleg_vert(*jleg_vert_init);
+    jleg_vert.translate(translation);
+
+    //------------------------------------------------------------- reactor
+    pp.getarr("reactor_translate", transvec,  0, 3);
+
+    for(int idir = 0; idir < 3; idir++)
+      translation[idir] = transvec[idir];
+
+    pp.query("reactor_radius", lradius);
+    pp.query("reactor_height", lheight);
+
+    cylinder_dir=1;
+    std::unique_ptr<BaseIF> reactor_init = make_cylinder(cylinder_dir, lradius, lheight);
+
+    TransformIF reactor(*reactor_init);
+    reactor.translate(translation);
+
+    //------------------------------------------------------------- loop-seal to reactor
+    pp.getarr("ls2fbr_translate", transvec,  0, 3);
+
+    for(int idir = 0; idir < 3; idir++)
+      translation[idir] = transvec[idir];
+
+    pp.query("ls2fbr_radius", lradius);
+    pp.query("ls2fbr_height", lheight);
+
+    cylinder_dir=1;
+    std::unique_ptr<BaseIF> ls2fbr_init = make_cylinder(cylinder_dir, lradius, lheight);
+
+    TransformIF ls2fbr(*ls2fbr_init);
+    ls2fbr.translate(translation);
+
+
+    //------------------------------------------------------------- loop-seal to reactor
+    pp.getarr("loopseal_translate", transvec,  0, 3);
+
+    for(int idir = 0; idir < 3; idir++)
+      translation[idir] = transvec[idir];
+
+    pp.query("loopseal_radius", lradius);
+    pp.query("loopseal_height", lheight);
+
+    cylinder_dir=1;
+    std::unique_ptr<BaseIF> loopseal_init = make_cylinder(cylinder_dir, lradius, lheight);
+
+    TransformIF loopseal(*loopseal_init);
+    loopseal.translate(translation);
+
+
+
+    //------------------------------------------------------------- loop-seal to reactor
+    pp.getarr("cy2ls_translate", transvec,  0, 3);
+
+    for(int idir = 0; idir < 3; idir++)
+      translation[idir] = transvec[idir];
+
+    pp.query("cy2ls_radius", lradius);
+    pp.query("cy2ls_height", lheight);
+
+    cylinder_dir=1;
+    std::unique_ptr<BaseIF> cy2ls_init = make_cylinder(cylinder_dir, lradius, lheight);
+
+    TransformIF cy2ls(*cy2ls_init);
+    cy2ls.translate(translation);
+
+
+    //------------------------------------------------------------- cyclone
+    pp.getarr("cyclone_translate", transvec,  0, 3);
+
+    for(int idir = 0; idir < 3; idir++)
+      translation[idir] = transvec[idir];
+
+    pp.query("cyclone_radius", lradius);
+    pp.query("cyclone_height", lheight);
+
+    cylinder_dir=1;
+    std::unique_ptr<BaseIF> cyclone_init = make_cylinder(cylinder_dir, lradius, lheight);
+
+    TransformIF cyclone(*cyclone_init);
+    cyclone.translate(translation);
+
+
+    //------------------------------------------------------------- crossover
+    pp.getarr("crossover_translate", transvec,  0, 3);
+
+    for(int idir = 0; idir < 3; idir++)
+      translation[idir] = transvec[idir];
+
+    pp.query("crossover_radius", lradius);
+    pp.query("crossover_height", lheight);
+
+    cylinder_dir=0;
+    std::unique_ptr<BaseIF> crossover_init = make_cylinder(cylinder_dir, lradius, lheight);
+
+    TransformIF crossover(*crossover_init);
+    crossover.translate(translation);
+
+    //--------------------------------------------------------------------
+
+    Vector<BaseIF*> clr_parts(10);
+    clr_parts[0] = &riser_lower;
+    clr_parts[1] = &riser_upper;
+    clr_parts[2] = &jleg_horz;
+    clr_parts[3] = &jleg_vert;
+    clr_parts[4] = &reactor;
+    clr_parts[5] = &ls2fbr;
+    clr_parts[6] = &loopseal;
+    clr_parts[7] = &cy2ls;
+    clr_parts[8] = &cyclone;
+    clr_parts[9] = &crossover;
+
+    UnionIF clr(clr_parts);
+
+
+    impfunc_poly2 = std::unique_ptr<BaseIF>(clr.newImplicitFunction());
+    impfunc.reset(clr.newImplicitFunction());
+
+
+    int max_level = 0;
+    int grid_size = 16;
+    bool eb_verbosity = true;
+
+    /**************************************************************************************
+     *                                                                                    *
+     * Fill Level-set using:                                                              *
+     *      -> Poly2 (where GeometryShop's implicit function is singed but not a          *
+     *         distance): min distance to EB facets.                                      *
+     *                                                                                    *
+     * Note: this requires building and destroying the EBTower (twice), so any EBTower    *
+     *       data built before this will be lost....                                      *
+     *                                                                                    *
+     **************************************************************************************/
+
+    // Define both components of the the GeometryShop seperately:
+    GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
+
+    // Define the EBIS using only the poly2 (after deleting the walls-only EBTower)...
+    Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+    AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, grid_size, max_level);
+
+    EBTower::Build();
+    // GeometryShop's PolynomialIF is not a signed distance function...
+    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
+    //          => define the level set as the (signed) distance to the closest point on the EB-facets
+    int eb_pad = level_set->get_eb_pad();
+    EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
+    // level_set->update_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+
+
+    /*****************************************************************************
+     *                                                                           *
+     * Build standard EB Factories                                               *
+     *                                                                           *
+     *****************************************************************************/
+
+
+    GeometryShop gshop(*impfunc, eb_verbosity);
+    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
+
+    // set up ebfactory
+    int m_eb_basic_grow_cells = 2;
+    int m_eb_volume_grow_cells = 2;
+    int m_eb_full_grow_cells = 2;
+    EBSupport m_eb_support_level = EBSupport::full;
+
+    EBTower::Build();
+
+    ebfactory          = std::unique_ptr<EBFArrayBoxFactory>(
+                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                         m_eb_support_level));
+
+    particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
+                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                         m_eb_support_level));
+
+    eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+}
+
+
+
+std::unique_ptr<BaseIF>
+mfix_level::make_cylinder(int dir, Real radius, Real length)
+{
+    std::unique_ptr<BaseIF> cylinder_IF;
+    Vector<PolyTerm> poly;
+
+    PolyTerm mono;
+    Real coef;
+    IntVect powers;
+
+    Vector<Real> coefvec(3);
+    Vector<int>  powersvec(3);
+
+    for(int idir = 0; idir < 3; idir++) {
+
+        if( idir == dir) {
+            coefvec[0] = -radius*radius;
+            coefvec[1] = 0.0;
+            coefvec[2] = 0.0;
+        } else {
+            coefvec[0] = 0.0;
+            coefvec[1] = 0.0;
+            coefvec[2] = 1.0;
+        }
+
+        for(int lc = 0; lc < 3; lc++) {
+            // x^(lc) term
+            coef = coefvec[lc];
+            powers = IntVect::Zero;
+            powers[idir] = lc;
+
+            mono.coef   = coef;
+            mono.powers = powers;
+
+            poly.push_back(mono);
+        }
+    }
+
+    // Internal flow cylinder
+    PolynomialIF cylinder0(poly, true);
+
+    // box to clip to correct length
+    RealVect normal, center;
+    PlaneIF* plane;
+    Vector<BaseIF*> planes;
+    planes.resize(0);
+
+    for(int i=0; i<3; i++) {
+        center[i] = 0.0;
+        normal[i] = 0.0;
+    }
+
+    center[dir] = 0.0;
+    normal[dir] = 1.0;
+
+    // amrex::Print() << "Plane 1\n";
+    // amrex::Print() << "Center " << center  << "\n";
+    // amrex::Print() << "Normal " << normal  << "\n";
+
+    plane = new PlaneIF(normal,center,true);
+    planes.push_back(plane);
+
+    center[dir] = length;
+    normal[dir] =-1.0;
+
+    // amrex::Print() << "Plane 2\n";
+    // amrex::Print() << "Center " << center  << "\n";
+    // amrex::Print() << "Normal " << normal  << "\n";
+
+    plane = new PlaneIF(normal,center,true);
+    planes.push_back(plane);
+
+    IntersectionIF bounding_box(planes);
+
+    Vector<BaseIF*> funcs(2);
+    funcs[0] = &cylinder0;
+    funcs[1] = &bounding_box;
+
+    IntersectionIF cylinder(funcs);
+
+    cylinder_IF.reset(cylinder.newImplicitFunction());
+
+    return cylinder_IF;
 }

@@ -15,6 +15,7 @@ int   regrid_int  = -1;
 Real stop_time    = -1.0;
 
 bool hourglass    = false;
+bool clr          = false;
 
 std::string restart_file {""};
 
@@ -76,6 +77,7 @@ void ReadParameters ()
   {
      ParmParse pp("mfix");
      pp.query("hourglass", hourglass);
+     pp.query("clr", clr);
   }
 }
 
@@ -93,7 +95,7 @@ int main (int argc, char* argv[])
 
     // Setting format to NATIVE rather than default of NATIVE_32
     FArrayBox::setFormat(FABio::FAB_NATIVE);
-    
+
     // Copy arguments into MFIX -- note that the first argument is now the name of the
     //      inputs file to be read by AMReX, so we only pass the arguments after that
     for(int i=2; i < argc; i++) {
@@ -170,10 +172,13 @@ int main (int argc, char* argv[])
 
     // We move this to after restart and/or regrid so we make the EB data structures with the correct
     //    BoxArray and DistributionMapping
-    if (hourglass)
-       my_mfix.make_eb_hourglass(lev);
-    else
-       my_mfix.make_eb_geometry(lev);
+    if (hourglass){
+      my_mfix.make_eb_hourglass(lev);
+    } else if(clr) {
+      my_mfix.make_eb_clr(lev);
+    } else {
+      my_mfix.make_eb_geometry(lev);
+    }
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);
@@ -224,61 +229,61 @@ int main (int argc, char* argv[])
 
     { // Start profiling solve here
 
-	BL_PROFILE("mfix_solve");
-	BL_PROFILE_REGION("mfix_solve");
+  BL_PROFILE("mfix_solve");
+  BL_PROFILE_REGION("mfix_solve");
 
-	if ( steady_state || (time <  stop_time) )
-	{
-	    while (finish == 0)
-	    {
-		mfix_usr1();
+  if ( steady_state || (time <  stop_time) )
+  {
+      while (finish == 0)
+      {
+    mfix_usr1();
 
-		Real strt_step = ParallelDescriptor::second();
+    Real strt_step = ParallelDescriptor::second();
 
-		if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
-		    my_mfix.Regrid(lev,nstep);
+    if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
+        my_mfix.Regrid(lev,nstep);
 
-		my_mfix.Evolve(lev,nstep,set_normg,steady_state,dt,prev_dt,time,stop_time,normg);
+    my_mfix.Evolve(lev,nstep,set_normg,steady_state,dt,prev_dt,time,stop_time,normg);
 
-		Real end_step = ParallelDescriptor::second() - strt_step;
-		ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
-		if (ParallelDescriptor::IOProcessor())
-		    std::cout << "Time per step        " << end_step << std::endl;
+    Real end_step = ParallelDescriptor::second() - strt_step;
+    ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
+    if (ParallelDescriptor::IOProcessor())
+        std::cout << "Time per step        " << end_step << std::endl;
 
-		if (!steady_state)
-		{
-		    time += prev_dt;
-		    nstep++;
+    if (!steady_state)
+    {
+        time += prev_dt;
+        nstep++;
 
-		    if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
-		    {
-			my_mfix.WritePlotFile( plot_file, nstep, dt, time );
-			last_plt = nstep;
-		    }
+        if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
+        {
+      my_mfix.WritePlotFile( plot_file, nstep, dt, time );
+      last_plt = nstep;
+        }
 
-		    if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
-		    {
-			my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
-			last_chk = nstep;
-		    }
+        if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
+        {
+      my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+      last_chk = nstep;
+        }
 
-		    if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
-		    {
-			my_mfix.WriteParticleAscii( par_ascii_file, nstep );
-			last_par_ascii = nstep;
-		    }
-		}
-
-		if (ParallelDescriptor::IOProcessor() && solve_dem )
-		    my_mfix.output(lev,estatus,finish,nstep,dt,time);
-
-		// Mechanism to terminate MFIX normally.
-		if (steady_state || (time + 0.1*dt >= stop_time)) finish = 1;
-	    }
-	}
+        if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
+        {
+      my_mfix.WriteParticleAscii( par_ascii_file, nstep );
+      last_par_ascii = nstep;
+        }
     }
-    
-    if (steady_state) 
+
+    if (ParallelDescriptor::IOProcessor() && solve_dem )
+        my_mfix.output(lev,estatus,finish,nstep,dt,time);
+
+    // Mechanism to terminate MFIX normally.
+    if (steady_state || (time + 0.1*dt >= stop_time)) finish = 1;
+      }
+  }
+    }
+
+    if (steady_state)
         nstep = 1;
 
     // Dump plotfile at the final time

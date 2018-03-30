@@ -71,7 +71,7 @@ contains
    ! Compute u-velocity slopes
    ! 
    subroutine compute_u_slopes ( lo, hi, u, ulo, uhi, slopes, &
-        & domlo, domhi, bc_ilo_type, bc_ihi_type ) bind(C)
+        & domlo, domhi, ng, bc_ilo_type, bc_ihi_type ) bind(C)
 
       ! Loop bounds
       integer(c_int), intent(in   ) :: lo(3), hi(3)
@@ -82,10 +82,13 @@ contains
       ! Grid bounds
       integer(c_int), intent(in   ) :: domlo(3), domhi(3)
 
+      ! Number of ghost nodes
+      integer(c_int), intent(in   ) :: ng
+      
       ! BC types 
       integer(c_int), intent(in   ) ::  &
-           & bc_ilo_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2), &
-           & bc_ihi_type(domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
+           & bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           & bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2)
 
       ! Arrays
       real(ar),       intent(in   ) ::                      &
@@ -186,7 +189,7 @@ contains
    ! Compute v-velocity slopes
    ! 
    subroutine compute_v_slopes ( lo, hi, v, vlo, vhi, slopes, &
-        & domlo, domhi, bc_jlo_type, bc_jhi_type ) bind(C)
+        & domlo, domhi, ng, bc_jlo_type, bc_jhi_type ) bind(C)
 
       ! Loop bounds
       integer(c_int), intent(in   ) :: lo(3), hi(3)
@@ -197,10 +200,13 @@ contains
       ! Grid bounds
       integer(c_int), intent(in   ) :: domlo(3), domhi(3)
 
+       ! Number of ghost nodes
+      integer(c_int), intent(in   ) :: ng
+
       ! BC types 
       integer(c_int), intent(in   ) ::  &
-           & bc_jlo_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2), &
-           & bc_jhi_type(domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
+           & bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           & bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2)
 
       ! Arrays
       real(ar),       intent(in   ) ::                      &
@@ -301,7 +307,7 @@ contains
    ! Compute w-velocity slopes
    ! 
    subroutine compute_w_slopes ( lo, hi, w, wlo, whi, slopes, &
-        & domlo, domhi, bc_klo_type, bc_khi_type ) bind(C)
+        & domlo, domhi, ng, bc_klo_type, bc_khi_type ) bind(C)
 
       ! Loop bounds
       integer(c_int), intent(in   ) :: lo(3), hi(3)
@@ -312,10 +318,13 @@ contains
       ! Grid bounds
       integer(c_int), intent(in   ) :: domlo(3), domhi(3)
 
+      ! Number of ghost nodes
+      integer(c_int), intent(in   ) :: ng
+
       ! BC types 
       integer(c_int), intent(in   ) ::  &
-           & bc_klo_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2), &
-           & bc_khi_type(domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+           & bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+           & bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
       ! Arrays
       real(ar),       intent(in   ) ::                      &

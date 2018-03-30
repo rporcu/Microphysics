@@ -41,12 +41,13 @@ contains
       use run,             only: glob_subdt_io => subdt_io, des_tstart, des_dt
 
       real(c_real),   intent(in   ) :: tstart, dt
-      logical,        intent(in   ) :: subdt_io
+      integer(c_int), intent(in   ) :: subdt_io
       integer(c_int), intent(  out) :: nsubsteps
       real(c_real),   intent(  out) :: subdt
 
       ! set the global subdt_io (in run module) to toggle sub-dt I/O
-      glob_subdt_io = subdt_io
+      glob_subdt_io = .true.
+      if ( subdt_io == 0 )  glob_subdt_io = .false.
 
       ! update the global des_tstart, and des_dt (in run module) corresponding to this 
       ! des run: this enables usr[2,3]_des to know the time

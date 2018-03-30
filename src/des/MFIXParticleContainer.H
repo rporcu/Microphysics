@@ -114,7 +114,8 @@ public:
     void CalcVolumeFraction(amrex::MultiFab& mf,
                             IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                             IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                            IArrayBox& bc_klo, IArrayBox& bc_khi);
+                            IArrayBox& bc_klo, IArrayBox& bc_khi,
+			    int nghost);
 
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction
@@ -123,7 +124,8 @@ public:
                        IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                        IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                        IArrayBox& bc_klo, IArrayBox& bc_khi,
-                       int fortran_particle_comp);
+                       int fortran_particle_comp,
+		       int nghost );
 
     ///
     /// Calculate particle-induced drag on the fluid
@@ -136,7 +138,8 @@ public:
                          amrex::MultiFab& beta_w_mf,
                          IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                          IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                         IArrayBox& bc_klo, IArrayBox& bc_khi);
+                         IArrayBox& bc_klo, IArrayBox& bc_khi,
+			 int nghost );
 
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
@@ -146,7 +149,7 @@ public:
                             IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                             IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                             IArrayBox& bc_klo, IArrayBox& bc_khi,
-                            int fortran_beta_comp, int fortran_vel_comp);
+                            int fortran_beta_comp, int fortran_vel_comp, int nghost);
 
     ///
     /// Flag switching from calc_wall_collisions to calc_wall_collisions_ls if true

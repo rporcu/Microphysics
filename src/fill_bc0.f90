@@ -18,7 +18,7 @@
 ! ::: -----------------------------------------------------------
 subroutine fill_bc0(s, slo, shi, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, domlo, domhi) &
+      bc_klo_type, bc_khi_type, domlo, domhi, ng) &
    bind(C, name="fill_bc0")
 
 
@@ -34,23 +34,18 @@ subroutine fill_bc0(s, slo, shi, &
 ! Dummy arguments
 !``````````````````````````````````````````````````````````````````````
       integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3),ng
 
       real(c_real), intent(inout) ::  s&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      integer(c_int), intent(in   ) :: bc_ilo_type&
-         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_ihi_type&
-         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_jlo_type&
-         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_jhi_type&
-         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_klo_type&
-         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
-      integer(c_int), intent(in   ) :: bc_khi_type&
-         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+      integer(c_int), intent(in   ) :: &
+           bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+           bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
 
 ! Local variables

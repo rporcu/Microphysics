@@ -20,6 +20,25 @@
 #include <AMReX_EBTower.H>
 #include <AMReX_EBFArrayBox.H>
 
+
+#include <AMReX_GeometryShop.H>
+#include <AMReX_PlaneIF.H>
+#include <AMReX_AllRegularService.H>
+#include <AMReX_FlatPlateGeom.H>
+#include <AMReX_EBISLayout.H>
+#include <AMReX_EBGraph.H>
+#include <AMReX_EBDebugOut.H>
+#include <AMReX_EBCellFAB.H>
+#include <AMReX_EBCellFactory.H>
+#include <AMReX_EBIndexSpace.H>
+#include <AMReX_UnionIF.H>
+#include <AMReX_TransformIF.H>
+#include <AMReX_ComplementIF.H>
+#include <AMReX_IntersectionIF.H>
+#include <AMReX_LatheIF.H>
+#include <AMReX_PolynomialIF.H>
+
+
 #include <eb_levelset.H>
 
 class mfix_level
@@ -38,7 +57,7 @@ public:
 
     void PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                   int steady_state );
-    
+
     void ResizeArrays();
 
     void WriteCheckPointFile(std::string& check_file_name,
@@ -70,11 +89,15 @@ public:
 
     void make_eb_geometry(int lev);
     void make_eb_hourglass(int lev);
+    void make_eb_clr(int lev);
+    // void make_cylinder_y(Real radius, Real length, IntersectionIF* cylinder);
+
+    std::unique_ptr<BaseIF> make_cylinder(int dir, Real radius, Real length);
 
     void WriteEBSurface(int lev);
 
     void InitIOData();
-    
+
     // flag switching from calc_wall_collisions_ls to calc_wall_collisions if true
     bool legacy__eb_collisions = false;
 
@@ -138,9 +161,9 @@ protected:
     void mfix_initial_iterations (int lev, Real stop_time, int steady_state);
     void mfix_apply_projection (int lev, amrex::Real scaling_factor);
     void mfix_set_projection_bcs (int lev);
-       
+
     // End projection
-    
+
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
     void mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p);
@@ -183,19 +206,19 @@ private:
     // Projection-related methods
     void solve_poisson_equation(int lev,
             Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-			Vector< std::unique_ptr<MultiFab> >& phi,
-			Vector< std::unique_ptr<MultiFab> >& rhs,
-			int bc_lo[], int bc_hi[] );
+      Vector< std::unique_ptr<MultiFab> >& phi,
+      Vector< std::unique_ptr<MultiFab> >& rhs,
+      int bc_lo[], int bc_hi[] );
 
     void mfix_compute_bcoeff(int lev);
 
     void check_for_nans(int lev);
 
     void mfix_compute_fluid_acceleration(int lev,
-			Vector< std::unique_ptr<MultiFab> >& u,
+      Vector< std::unique_ptr<MultiFab> >& u,
             Vector< std::unique_ptr<MultiFab> >& v,
-			Vector< std::unique_ptr<MultiFab> >& w );
-    
+      Vector< std::unique_ptr<MultiFab> >& w );
+
     int  steady_state_reached(int lev, Real dt);
 
     void mfix_apply_predictor (int lev, amrex::Real dt);
@@ -205,24 +228,24 @@ private:
 
     void mfix_apply_forcing_terms(int lev, amrex::Real dt,
             Vector< std::unique_ptr<MultiFab> >& u,
-			Vector< std::unique_ptr<MultiFab> >& v,
-			Vector< std::unique_ptr<MultiFab> >& w );
+      Vector< std::unique_ptr<MultiFab> >& v,
+      Vector< std::unique_ptr<MultiFab> >& w );
 
     void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
-    
+
     void mfix_add_pressure_gradient(int lev, amrex::Real coeff);
 
     void mfix_add_grad_phi (int lev, amrex::Real coeff);
-    
+
     void mfix_compute_velocity_slopes(int lev,
-			Vector< std::unique_ptr<MultiFab> >& u,
-			Vector< std::unique_ptr<MultiFab> >& v,
-			Vector< std::unique_ptr<MultiFab> >& w );
+      Vector< std::unique_ptr<MultiFab> >& u,
+      Vector< std::unique_ptr<MultiFab> >& v,
+      Vector< std::unique_ptr<MultiFab> >& w );
 
     void mfix_compute_diveu (int lev);
 
     void mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p);
-    
+
     void mfix_print_max_vel(int lev);
 // End of projection-related methods
 
@@ -251,7 +274,7 @@ private:
     static amrex::IntVect e_x;
     static amrex::IntVect e_y;
     static amrex::IntVect e_z;
-    
+
 //  Array< std::unique_ptr<iMultiFab> > bc_type;
 //  Array< std::unique_ptr<iMultiFab> > bc_ptr;
     IArrayBox bc_ilo;
@@ -300,8 +323,8 @@ private:
 
     // Base state pressure
     Vector< std::unique_ptr<MultiFab> > p0_g;
-    
-    // Pressure correction 
+
+    // Pressure correction
     Vector< std::unique_ptr<MultiFab> > pp_g;
     Vector< std::unique_ptr<MultiFab> > d_e ;
     Vector< std::unique_ptr<MultiFab> > d_n ;
@@ -336,10 +359,10 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag_v;
     Vector< std::unique_ptr<MultiFab> > drag_w;
 
-    // 
+    //
     // Projection
     //
-    
+
     // Fluid acceleration (convection + diffusion)
     Vector< std::unique_ptr<MultiFab> > uacc;
     Vector< std::unique_ptr<MultiFab> > vacc;
@@ -353,11 +376,11 @@ private:
     // div (ep_g * u)
     Vector< std::unique_ptr<MultiFab> > diveu;
 
-    // 
+    //
     Vector< std::unique_ptr<MultiFab> > fp_x;
     Vector< std::unique_ptr<MultiFab> > fp_y;
     Vector< std::unique_ptr<MultiFab> > fp_z;
-    
+
     Vector< Vector< std::unique_ptr<MultiFab> > > bcoeff; // Coefficients b of div(b*grad(p))
 
     Vector< std::unique_ptr<MultiFab> > phi; // Pressure increment
@@ -377,10 +400,10 @@ private:
     int  mg_max_fmg_iter = 0;
     Real mg_rtol = 1.0e-11;
     Real mg_atol = 1.0e-14;
-    
+
     // Tolerance to check for steady state (projection only)
     Real steady_state_tol = 1.0e-5  ;
-    
+
     int max_nit;
     int call_udf;
     int dual_grid = 0;
@@ -409,10 +432,14 @@ private:
 
     Real sum_vol_orig;
 
-    // The name is misleading: this is the number of components of
-    // the BC arrays (bc_ilo, bc_jlo, ... ) and should always be two
-    // to math the mfix way of specifying bcs.
-    int nghost_bc = 2;
+    //
+    // Here we set the number of ghost nodes of the field arrays.
+    // Since this is  a class attribute, it will be propagated to
+    // all the member functions.
+    //
+    // DO NOT USE  A LOCAL VARIABLE WITH THE SAME NAME
+    // 
+    const int nghost = 1; 
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
