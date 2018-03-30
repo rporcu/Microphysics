@@ -488,7 +488,7 @@ mfix_level::make_eb_clr(int lev)
     pp.getarr("riser_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("riser_lower_radius", lradius);
     pp.query("riser_lower_height", lheight);
@@ -513,7 +513,7 @@ mfix_level::make_eb_clr(int lev)
     pp.getarr("jleg_htranslate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("jleg_horz_radius", lradius);
     pp.query("jleg_horz_height", lheight);
@@ -528,7 +528,7 @@ mfix_level::make_eb_clr(int lev)
     pp.getarr("jleg_vtranslate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("jleg_vert_radius", lradius);
     pp.query("jleg_vert_height", lheight);
@@ -543,7 +543,7 @@ mfix_level::make_eb_clr(int lev)
     pp.getarr("reactor_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("reactor_radius", lradius);
     pp.query("reactor_height", lheight);
@@ -558,7 +558,7 @@ mfix_level::make_eb_clr(int lev)
     pp.getarr("ls2fbr_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("ls2fbr_radius", lradius);
     pp.query("ls2fbr_height", lheight);
@@ -574,7 +574,7 @@ mfix_level::make_eb_clr(int lev)
     pp.getarr("loopseal_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("loopseal_radius", lradius);
     pp.query("loopseal_height", lheight);
@@ -591,7 +591,7 @@ mfix_level::make_eb_clr(int lev)
     pp.getarr("cy2ls_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("cy2ls_radius", lradius);
     pp.query("cy2ls_height", lheight);
@@ -607,7 +607,7 @@ mfix_level::make_eb_clr(int lev)
     pp.getarr("cyclone_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("cyclone_radius", lradius);
     pp.query("cyclone_height", lheight);
@@ -623,7 +623,7 @@ mfix_level::make_eb_clr(int lev)
     pp.getarr("crossover_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("crossover_radius", lradius);
     pp.query("crossover_height", lheight);

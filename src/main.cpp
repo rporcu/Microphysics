@@ -161,7 +161,7 @@ int main (int argc, char* argv[])
     {
        restart_flag = 1;
        IntVect Nrep(repl_x,repl_y,repl_z);
-       my_mfix.Restart( restart_file, &nstep, &dt, &time, Nrep);
+       my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
 
        // This call checks if we want to regrid using the
        //   max_grid_size just read in from the inputs file used to restart
@@ -172,12 +172,12 @@ int main (int argc, char* argv[])
 
     // We move this to after restart and/or regrid so we make the EB data structures with the correct
     //    BoxArray and DistributionMapping
-    if (hourglass){
-      my_mfix.make_eb_hourglass(lev);
+    if (hourglass) {
+        my_mfix.make_eb_hourglass(lev);
     } else if(clr) {
-      my_mfix.make_eb_clr(lev);
+        my_mfix.make_eb_clr(lev);
     } else {
-      my_mfix.make_eb_geometry(lev);
+        my_mfix.make_eb_geometry(lev);
     }
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
