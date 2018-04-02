@@ -2,12 +2,12 @@
 # Both amrex and mfix are treated as external project
 # This allows to build amrex and only after to handle
 # mfix ( and read the amrex config file )
-# 
+#
 project ( MFIX-Exa_Superbuild )
 
 #
 # Load Utilities
-# 
+#
 include ( MFIX_Utils )
 
 #
@@ -21,19 +21,19 @@ enable_language (Fortran)
 # Require C++11 standard
 #
 set (CMAKE_CXX_STANDARD 11)
-set (CMAKE_CXX_STANDARD_REQUIRED ON) 
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_EXTENSIONS OFF)
 
 
 #
 # Amrex-related variables
-# 
+#
 
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
-set (AMREX_GIT_COMMIT_DEVELOP  059bd9ed003d3d71513e9813d9f6eaa )
-set (AMREX_GIT_TAG)  # The commit id or branch to download 
+set (AMREX_GIT_COMMIT_DEVELOP 3372c293eaf1bb181e862f2bf0783ee0b7474f44 )
+set (AMREX_GIT_TAG)  # The commit id or branch to download
 
 #
 # MFIX-related options
@@ -42,7 +42,7 @@ include ( MFIX_CMakeVariables )
 include ( MFIX_Options )
 
 #
-#  Setup core compiler flags 
+#  Setup core compiler flags
 #
 include ( MFIX_Compilers )
 
@@ -63,7 +63,7 @@ endif ()
 
 #
 # AMReX-related config options
-# 
+#
 option ( AMREX_ENABLE_EB "Build EB code" ON)
 
 option ( AMREX_ENABLE_PIC "Build position-independent code" OFF)
@@ -96,7 +96,7 @@ set ( AMREX_GIT_COMMIT "" CACHE STRING "AMReX git commit to use in superbuild")
 
 #
 # Set the git commit to use for amrex
-# 
+#
 if (AMREX_GIT_COMMIT)
    set (AMREX_GIT_TAG ${AMREX_GIT_COMMIT})
 else ()
@@ -132,7 +132,7 @@ ExternalProject_Add ( amrex
    -DENABLE_MPI=${AMREX_ENABLE_MPI}
    -DENABLE_DP=${AMREX_ENABLE_DP}
    -DENABLE_PARTICLES=ON
-   -DENABLE_DP_PARTICLES=${AMREX_ENABLE_DP_PARTICLES}      
+   -DENABLE_DP_PARTICLES=${AMREX_ENABLE_DP_PARTICLES}
    -DDIM=3
    -DDEBUG=${DEBUG}
    -DENABLE_LINEAR_SOLVERS=ON
@@ -141,9 +141,9 @@ ExternalProject_Add ( amrex
    -DENABLE_FORTRAN_INTERFACES=OFF
    -DENABLE_BASE_PROFILE=${AMREX_ENABLE_BASE_PROFILE}
    -DENABLE_TINY_PROFILE=${AMREX_ENABLE_TINY_PROFILE}
-   -DENABLE_COMM_PROFILE=${AMREX_ENABLE_COMM_PROFILE}      
+   -DENABLE_COMM_PROFILE=${AMREX_ENABLE_COMM_PROFILE}
    -DENABLE_TRACE_PROFILE=${AMREX_ENABLE_TRACE_PROFILE}
-   -DENABLE_MEM_PROFILE=${AMREX_ENABLE_MEM_PROFILE}      
+   -DENABLE_MEM_PROFILE=${AMREX_ENABLE_MEM_PROFILE}
    -DENABLE_BACKTRACE=${AMREX_ENABLE_BACKTRACE}
    -DENABLE_FPE=${ENABLE_FPE}
    -DENABLE_ASSERTIONS=${AMREX_ENABLE_ASSERTION}
@@ -173,7 +173,7 @@ set (MFIX_SUPERBUILD_BUILDDIR   ${CMAKE_BINARY_DIR}/mfix)
 
 ExternalProject_Add ( mfix
    PREFIX          ${MFIX_SUPERBUILD_BUILDDIR}
-   DEPENDS amrex 
+   DEPENDS amrex
    CMAKE_ARGS
    -DDEBUG=${DEBUG}
    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}

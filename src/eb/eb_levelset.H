@@ -56,23 +56,29 @@ class LSFactory {
         // Construct nodal MultiFab containing EBIS Implicit function velues
         std::unique_ptr<MultiFab> ebis_impfunc(const EBIndexSpace & eb_is);
 
-        // Unpdate internal `ls_phi` and `ls_valid` based on the min of `ls_phi` and `ls_in`
-        void update_intersection(const MultiFab & ls_in);
-        void update_union(const MultiFab & ls_in);
-
         void update_ba();
         void init_geom();
 
     public:
         LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, const MFIXParticleContainer * pc);
+        LSFactory(const LSFactory & other) : LSFactory(other.get_amr_level(),
+                                                       other.get_ls_ref(), other.get_eb_ref(),
+                                                       other.get_ls_pad(), other.get_eb_pad(),
+                                                     & other.get_pc()                          ) {};
         ~LSFactory();
 
         void regrid();
+
+        void invert();
 
         void intersection_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is);
         void union_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is);
         void intersection_ebis(const EBIndexSpace & eb_is);
         void union_ebis(const EBIndexSpace & eb_is);
+
+        // Unpdate internal `ls_phi` and `ls_valid` based on the min of `ls_phi` and `ls_in`
+        void update_intersection(const MultiFab & ls_in);
+        void update_union(const MultiFab & ls_in);
 
         // Return level-set data
         const MultiFab *  get_data() const {return ls_grid.get();};

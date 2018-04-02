@@ -484,6 +484,10 @@ mfix_level::make_eb_clr(int lev)
 
     int cylinder_dir;
 
+    // mfix_level::make_cylinder uses a union
+    //  => ensure that mfix_level::level_set is initialized to min
+    level_set->invert();
+
     //------------------------------------------------------------- Riser
     pp.getarr("riser_translate", transvec,  0, 3);
 
@@ -494,14 +498,14 @@ mfix_level::make_eb_clr(int lev)
     pp.query("riser_lower_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> riser_lower = make_cylinder(cylinder_dir, lradius, lheight, translation);
+    std::unique_ptr<BaseIF> riser_lower = make_cylinder(cylinder_dir, lradius, lheight, translation, lev);
 
 
     pp.query("riser_upper_radius", lradius);
     pp.query("riser_upper_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> riser_upper = make_cylinder(cylinder_dir, lradius, lheight, translation);
+    std::unique_ptr<BaseIF> riser_upper = make_cylinder(cylinder_dir, lradius, lheight, translation, lev);
 
     //------------------------------------------------------------- J-leg
     pp.getarr("jleg_htranslate", transvec,  0, 3);
@@ -513,7 +517,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("jleg_horz_height", lheight);
 
     cylinder_dir=0;
-    std::unique_ptr<BaseIF> jleg_horz = make_cylinder(cylinder_dir, lradius, lheight, translation);
+    std::unique_ptr<BaseIF> jleg_horz = make_cylinder(cylinder_dir, lradius, lheight, translation, lev);
 
 
     pp.getarr("jleg_vtranslate", transvec,  0, 3);
@@ -525,7 +529,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("jleg_vert_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> jleg_vert = make_cylinder(cylinder_dir, lradius, lheight, translation);
+    std::unique_ptr<BaseIF> jleg_vert = make_cylinder(cylinder_dir, lradius, lheight, translation, lev);
 
     //------------------------------------------------------------- reactor
     pp.getarr("reactor_translate", transvec,  0, 3);
@@ -537,7 +541,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("reactor_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> reactor = make_cylinder(cylinder_dir, lradius, lheight, translation);
+    std::unique_ptr<BaseIF> reactor = make_cylinder(cylinder_dir, lradius, lheight, translation, lev);
 
     //------------------------------------------------------------- loop-seal to reactor
     pp.getarr("ls2fbr_translate", transvec,  0, 3);
@@ -549,7 +553,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("ls2fbr_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> ls2fbr = make_cylinder(cylinder_dir, lradius, lheight, translation);
+    std::unique_ptr<BaseIF> ls2fbr = make_cylinder(cylinder_dir, lradius, lheight, translation, lev);
 
 
     //------------------------------------------------------------- loop-seal to reactor
@@ -562,7 +566,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("loopseal_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> loopseal = make_cylinder(cylinder_dir, lradius, lheight, translation);
+    std::unique_ptr<BaseIF> loopseal = make_cylinder(cylinder_dir, lradius, lheight, translation, lev);
 
 
 
@@ -576,7 +580,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("cy2ls_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> cy2ls = make_cylinder(cylinder_dir, lradius, lheight, translation);
+    std::unique_ptr<BaseIF> cy2ls = make_cylinder(cylinder_dir, lradius, lheight, translation, lev);
 
 
     //------------------------------------------------------------- cyclone
@@ -589,7 +593,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("cyclone_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> cyclone = make_cylinder(cylinder_dir, lradius, lheight, translation);
+    std::unique_ptr<BaseIF> cyclone = make_cylinder(cylinder_dir, lradius, lheight, translation, lev);
 
 
     //------------------------------------------------------------- crossover
@@ -602,7 +606,7 @@ mfix_level::make_eb_clr(int lev)
     pp.query("crossover_height", lheight);
 
     cylinder_dir=0;
-    std::unique_ptr<BaseIF> crossover = make_cylinder(cylinder_dir, lradius, lheight, translation);
+    std::unique_ptr<BaseIF> crossover = make_cylinder(cylinder_dir, lradius, lheight, translation, lev);
 
     //--------------------------------------------------------------------
 
@@ -641,20 +645,20 @@ mfix_level::make_eb_clr(int lev)
      **************************************************************************************/
 
     // Define both components of the the GeometryShop seperately:
-    GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
+    //GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
 
     // Define the EBIS using only the poly2 (after deleting the walls-only EBTower)...
-    Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
-    AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, grid_size, max_level);
+    //Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+    //AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, grid_size, max_level);
 
-    EBTower::Build();
+    //EBTower::Build();
     // GeometryShop's PolynomialIF is not a signed distance function...
     //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
     //          => define the level set as the (signed) distance to the closest point on the EB-facets
-    int eb_pad = level_set->get_eb_pad();
-    EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
+    //int eb_pad = level_set->get_eb_pad();
+    //EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
     // level_set->update_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
-    EBTower::Destroy();
+    //EBTower::Destroy();
 
 
 
@@ -692,7 +696,7 @@ mfix_level::make_eb_clr(int lev)
 
 
 std::unique_ptr<BaseIF>
-mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & translation)
+mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & translation, int lev)
 {
     std::unique_ptr<BaseIF> cylinder_IF;
     Vector<PolyTerm> poly;
@@ -770,10 +774,59 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     funcs[1] = &bounding_box;
 
     IntersectionIF cylinder(funcs);
+
     TransformIF cylinder_trans(cylinder);
     cylinder_trans.translate(translation);
 
     cylinder_IF.reset(cylinder_trans.newImplicitFunction());
+
+
+    int max_level = 0;
+    int grid_size = 16;
+    bool eb_verbosity = true;
+
+
+    /******************************************************************************************************************
+     *                                                                                                                *
+     * Fill Level-set using:                                                                                          *
+     *      -> Planes (where the GeometryShop's implicit function is a signed distance): implicit function's value    *
+     *      -> Poly (where GeometryShop's implicit function is singed but not a distance): min distance to EB facets  *
+     * Note: this requires building and destroying the EBTower (twice), so any EBTower data built before this will be *
+     * lost...                                                                                                        *
+     *                                                                                                                *
+     ******************************************************************************************************************/
+
+    // Define both components of the GeometryShop separately:
+    GeometryShop gshop_upoly(cylinder0, eb_verbosity);
+    GeometryShop gshop_walls(bounding_box, eb_verbosity);
+
+    // Define a temporary level-set used for constructing the cylinder:
+    LSFactory ls_cylinder(* level_set);
+
+    // Define the EBIS first using only the walls...
+    Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
+    AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
+
+    EBTower::Build();
+    // GeometryShop's Planes' implicit function is actually a signed distance function
+    //      => it's just easier to fill the level-set this way
+    ls_cylinder.intersection_ebis(* AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+    // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
+    Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+    AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_upoly, grid_size, max_level);
+
+    EBTower::Build();
+    // GeometryShop's PolynomialIF is not a signed distance function...
+    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
+    //          => define the level set as the (signed) distance to the closest point on the EB-facets
+    int eb_pad = level_set->get_eb_pad();
+    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
+    ls_cylinder.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+    level_set->update_union(* ls_cylinder.get_data());
 
     return cylinder_IF;
 }

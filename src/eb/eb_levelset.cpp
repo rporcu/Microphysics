@@ -308,6 +308,18 @@ void LSFactory::regrid(){
 }
 
 
+void LSFactory::invert() {
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for(MFIter mfi( * ls_grid, true); mfi.isValid(); ++ mfi){
+        FArrayBox & a_fab = (* ls_grid)[mfi];
+        for(BoxIterator bit(mfi.growntilebox()); bit.ok(); ++bit)
+            a_fab(bit(), 0) = - a_fab(bit(), 0);
+    }
+}
+
+
 void LSFactory::intersection_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is) {
 
     // Generate facets (TODO: in future these can also be provided by user)

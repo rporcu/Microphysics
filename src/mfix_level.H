@@ -90,9 +90,7 @@ public:
     void make_eb_geometry(int lev);
     void make_eb_hourglass(int lev);
     void make_eb_clr(int lev);
-    // void make_cylinder_y(Real radius, Real length, IntersectionIF* cylinder);
-
-    std::unique_ptr<BaseIF> make_cylinder(int dir, Real radius, Real length, const RealVect & translation);
+    std::unique_ptr<BaseIF> make_cylinder(int dir, Real radius, Real length, const RealVect & translation, int lev);
 
     void WriteEBSurface(int lev);
 
