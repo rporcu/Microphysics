@@ -229,7 +229,7 @@ std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace & eb_is) {
 #pragma omp parallel
 #endif
     for(MFIter mfi(* mf_impfunc, true); mfi.isValid(); ++ mfi)
-        eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi], dx_vect);
+        eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi]);
 
     mf_impfunc->FillBoundary(geom_ls.periodicity());
     return mf_impfunc;
@@ -347,6 +347,7 @@ void LSFactory::update_ebis(const EBIndexSpace & eb_is) {
 #endif
     for(MFIter mfi( * mf_impfunc, true); mfi.isValid(); ++ mfi){
         FArrayBox & a_fab = (* mf_impfunc)[mfi];
+
         for(BoxIterator bit(mfi.growntilebox()); bit.ok(); ++bit)
             a_fab(bit(), 0) = - a_fab(bit(), 0);
     }

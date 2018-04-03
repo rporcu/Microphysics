@@ -105,7 +105,7 @@ mfix_level::make_eb_geometry(int lev)
         for (int i = 1; i <= 500; i++) {
           mfix_get_walls(&i, &exists, &normal, &center);
           if(exists){
-            center[0] = 1.e-3;
+            //center[0] = 1.e-3;
             amrex::Print() << "Normal " << normal << std::endl;
             amrex::Print() << "Center " << center << std::endl;
             plane = new PlaneIF(normal,center,true);
@@ -168,6 +168,8 @@ mfix_level::make_eb_geometry(int lev)
         GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
 
         // Define the EBIS first using only the walls...
+        // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+        //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
         Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
         AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
 
@@ -182,6 +184,8 @@ mfix_level::make_eb_geometry(int lev)
         GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
 
         // Define the EBIS using only the poly2 (after deleting the walls-only EBTower)...
+        // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+        //                                                      * rescale y, z- components wrt to dx[0] (dx(1)
         Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
         AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, grid_size, max_level);
 
