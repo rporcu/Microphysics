@@ -18,6 +18,11 @@ subroutine set_projection_bcs ( u_g, ulo, uhi, v_g, vlo, vhi,          &
    use iso_c_binding ,     only: c_int
    use bc
    use scales,             only: scale_pressure
+   use eos      ,          only: eosg, sutherland
+   use fld_const,          only: ro_g0, mw_avg, mu_g0
+   use param    ,          only: is_undefined
+
+
    
    implicit none
 
@@ -54,9 +59,9 @@ subroutine set_projection_bcs ( u_g, ulo, uhi, v_g, vlo, vhi,          &
         w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
    ! Local variables
-   integer :: bcv, i, j, k
-   integer :: nlft, nrgt, nbot, ntop, nup, ndwn
- 
+   integer  :: bcv, i, j, k
+   integer  :: nlft, nrgt, nbot, ntop, nup, ndwn
+   real(ar) :: bc_ro_g, bc_mu_g, bc_lambda_g
 
    nlft = max(0,domlo(1)-slo(1))
    nbot = max(0,domlo(2)-slo(2))
@@ -66,6 +71,8 @@ subroutine set_projection_bcs ( u_g, ulo, uhi, v_g, vlo, vhi,          &
    ntop = max(0,shi(2)-domhi(2))
    nup  = max(0,shi(3)-domhi(3))
 
+   bc_ro_g = ro_g0
+   
    if (nlft .gt. 0) then
       do k = slo(3), shi(3)
          do j = slo(2), shi(2)
@@ -92,6 +99,28 @@ subroutine set_projection_bcs ( u_g, ulo, uhi, v_g, vlo, vhi,          &
                u_g(ulo(1):domlo(1)  ,j,k) = bc_u_g(bcv)
                v_g(vlo(1):domlo(1)-1,j,k) = 0.0d0
                w_g(wlo(1):domlo(1)-1,j,k) = 0.0d0
+
+               if (is_undefined(mu_g0)) then
+                  bc_mu_g     = sutherland(bc_t_g(bcv))
+                  bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
+               else
+                  bc_mu_g     = mu_g0
+                  bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
+               endif
+
+               ! ep_g and rop_g BCs are inconsistent. This is because
+               ! projection implementation requires bc_ep_g(bcv) to be defined
+               ! at the inlet face. Therefore, ep_g at the first ghost cell will
+               ! have a fictitious value. Therefore we cannot set rop_g to be
+               ! ro_g * ep_g at the ghost node, otherwise even ro_g would have a
+               ! fictitious value. However, this create an inconsistency
+               ep_g(domlo(1)-1,j,k)  = 2.0_ar * bc_ep_g(bcv) - ep_g(domlo(1),j,k)
+               
+               ro_g(slo(1):domlo(1)-1,j,k)     = bc_ro_g
+               rop_g(slo(1):domlo(1)-1,j,k)    = bc_ro_g * bc_ep_g(bcv)
+               mu_g(slo(1):domlo(1)-1,j,k)     = bc_mu_g
+               lambda_g(slo(1):domlo(1)-1,j,k) = bc_lambda_g
+
 
             case ( nsw_) 
 
@@ -139,6 +168,20 @@ subroutine set_projection_bcs ( u_g, ulo, uhi, v_g, vlo, vhi,          &
                v_g(domhi(1)+1:vhi(1),j,k) = 0.0d0
                w_g(domhi(1)+1:whi(1),j,k) = 0.0d0
 
+               if (is_undefined(mu_g0)) then
+                  bc_mu_g     = sutherland(bc_t_g(bcv))
+                  bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
+               else
+                  bc_mu_g     = mu_g0
+                  bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
+               endif
+               
+               ep_g(domhi(1)+1,j,k) = 2.0_ar*bc_ep_g(bcv) - ep_g(domhi(1),j,k)   
+               ro_g(domhi(1)+1:shi(1),j,k) = bc_ro_g
+               rop_g(domhi(1)+1:shi(1),j,k) = bc_ro_g * bc_ep_g(bcv)   
+               mu_g(domhi(1)+1:shi(1),j,k) = bc_mu_g
+               lambda_g(domhi(1)+1:shi(1),j,k) = bc_lambda_g
+
             case ( nsw_ ) 
 
                u_g(domhi(1)+1:uhi(1),j,k) =  0.0d0
@@ -184,6 +227,21 @@ subroutine set_projection_bcs ( u_g, ulo, uhi, v_g, vlo, vhi,          &
                v_g(i,vlo(2):domlo(2)  ,k) = bc_v_g(bcv)
                w_g(i,wlo(2):domlo(2)-1,k) = 0.0d0
 
+               if (is_undefined(mu_g0)) then
+                  bc_mu_g     = sutherland(bc_t_g(bcv))
+                  bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
+               else
+                  bc_mu_g     = mu_g0
+                  bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
+               endif
+
+               ep_g(i,domlo(2)-1,k) = 2.0_ar*bc_ep_g(bcv) - ep_g(i,domlo(2),k)   
+               ro_g(i,slo(1):domlo(2)-1,k) = bc_ro_g
+               rop_g(i,slo(1):domlo(2)-1,k) = bc_ro_g * bc_ep_g(bcv)   
+               mu_g(i,slo(1):domlo(2)-1,k) = bc_mu_g
+               lambda_g(i,slo(1):domlo(2)-1,k) = bc_lambda_g
+
+               
             case ( nsw_ )
 
                u_g(i,ulo(2):domlo(2)-1,k) = -u_g(i,domlo(2),k)
@@ -230,6 +288,21 @@ subroutine set_projection_bcs ( u_g, ulo, uhi, v_g, vlo, vhi,          &
                v_g(i,domhi(2)+1:vhi(2),k) = bc_v_g(bcv)
                w_g(i,domhi(2)+1:whi(2),k) = 0.0d0
 
+               if (is_undefined(mu_g0)) then
+                  bc_mu_g     = sutherland(bc_t_g(bcv))
+                  bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
+               else
+                  bc_mu_g     = mu_g0
+                  bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
+               endif
+
+               ep_g(i,domhi(2)+1,k) = 2.0_ar*bc_ep_g(bcv) - ep_g(i,domhi(2),k)   
+               ro_g(i,domhi(2)+1:shi(2),k) = bc_ro_g
+               rop_g(i,domhi(2)+1:shi(2),k) = bc_ro_g * bc_ep_g(bcv)   
+               mu_g(i,domhi(2)+1:shi(2),k) = bc_mu_g
+               lambda_g(i,domhi(2)+1:shi(2),k) = bc_lambda_g
+                  
+               
             case ( nsw_) 
 
                u_g(i,domhi(2)+1:uhi(2),k) = -u_g(i,domhi(2),k)
@@ -274,6 +347,21 @@ subroutine set_projection_bcs ( u_g, ulo, uhi, v_g, vlo, vhi,          &
                v_g(i,j,vlo(3):domlo(3)-1) = 0.0d0
                w_g(i,j,wlo(3):domlo(3)  ) = bc_w_g(bcv)
 
+               if (is_undefined(mu_g0)) then
+                  bc_mu_g     = sutherland(bc_t_g(bcv))
+                  bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
+               else
+                  bc_mu_g     = mu_g0
+                  bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
+               endif
+               
+               ep_g(i,j,domlo(3)-1) = 2.0_ar*bc_ep_g(bcv) - ep_g(i,j,domlo(3))   
+               ro_g(i,j,slo(3):domlo(3)-1) = bc_ro_g
+               rop_g(i,j,slo(3):domlo(3)-1) = bc_ro_g * bc_ep_g(bcv)   
+               mu_g(i,j,slo(3):domlo(3)-1) = bc_mu_g
+               lambda_g(i,j,slo(3):domlo(3)-1) = bc_lambda_g
+
+               
             case ( nsw_ )
 
                u_g(i,j,ulo(3):domlo(3)-1) = -u_g(i,j,domlo(3))
@@ -317,6 +405,20 @@ subroutine set_projection_bcs ( u_g, ulo, uhi, v_g, vlo, vhi,          &
                u_g(i,j,domhi(3)+1:uhi(3)) = 0.0d0
                v_g(i,j,domhi(3)+1:vhi(3)) = 0.0d0
                w_g(i,j,domhi(3)+1:whi(3)) = bc_w_g(bcv)
+
+               if (is_undefined(mu_g0)) then
+                  bc_mu_g     = sutherland(bc_t_g(bcv))
+                  bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
+               else
+                  bc_mu_g     = mu_g0
+                  bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
+               endif
+               
+               ep_g(i,j,domhi(3)+1) = 2.0_ar*bc_ep_g(bcv) - ep_g(i,j,domhi(3)+1)   
+               ro_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g
+               rop_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g * bc_ep_g(bcv)   
+               mu_g(i,j,domhi(3)+1:shi(3)) = bc_mu_g
+               lambda_g(i,j,domhi(3)+1:shi(3)) = bc_lambda_g
 
             case ( nsw_ ) 
 
