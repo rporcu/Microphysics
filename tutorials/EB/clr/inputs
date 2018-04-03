@@ -27,7 +27,7 @@ amr.par_ascii_int  = 1
 
 mfix.particle_init_type = "Auto"
 
-mfix.legacy__eb_collisions = true
+#mfix.legacy__eb_collisions = true
 
 mfix.clr  = true    # use the mfix_eb_clr
 

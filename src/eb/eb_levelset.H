@@ -31,24 +31,27 @@ class LSFactory {
         std::unique_ptr<MultiFab>  ls_grid;
         std::unique_ptr<iMultiFab> ls_valid;
 
-        // Data structures encloding (padded) EB index space
-        std::unique_ptr<MultiFab> eb_grid;
-        BoxArray eb_ba;
-        const int eb_grid_ref, eb_grid_pad;
+        // AMR information
+        const int amr_lev;
 
         // Refined box array (over which the level-set MultiFab is constructed)
-        BoxArray ls_ba, cc_ba;
-        const RealVect dx_vect, dx_eb_vect;
-        const int ls_grid_ref, ls_grid_pad;
+        BoxArray ls_ba, cc_ba, eb_ba;
+        const int ls_grid_ref, eb_grid_ref;
+        // Data structures encloding (padded) EB index space
+        std::unique_ptr<MultiFab> eb_grid;
 
         // Geometry objects reflecting refined (and padded) BoxArrays. This is required to prevent PeriodicFill
         // operations from "spilling" refined indices over periodic boundaries
         Geometry geom_ls, geom_eb;
 
-        // AMR information
-        const int amr_lev;
+        // Padding of the leve-set and EB grids:
+        const int ls_grid_pad, eb_grid_pad;
+
+        // Particle container (used to syncronize DistributionMapping)
         const MFIXParticleContainer * mfix_pc;
 
+        // Cell size of the refined grids
+        const RealVect dx_vect, dx_eb_vect;
 
         // Construct eb_facets list from eb_factory
         std::unique_ptr<Vector<Real>> eb_facets(const EBFArrayBoxFactory & eb_factory);

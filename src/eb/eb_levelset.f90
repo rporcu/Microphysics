@@ -159,6 +159,7 @@ contains
 
             min_dist   = huge(min_dist)
             min_dist2  = huge(min_dist2)
+            i_nearest  = 0
             proj_valid = .false.
 
             ! Find nearest EB facet
@@ -550,10 +551,8 @@ contains
         real(c_real),               intent(  out) :: phi_interp
 
         integer                    :: i, j, k
-        real(c_real)               :: x, y, z, xp, yp, zp, lx, ly, lz, wx_lo, wx_hi, wy_lo, wy_hi, wz_lo, wz_hi
+        real(c_real)               :: xp, yp, zp, lx, ly, lz, wx_lo, wx_hi, wy_lo, wy_hi, wz_lo, wz_hi
         real(c_real), dimension(3) :: inv_dx
-
-        real(c_real) :: inv_norm
 
         inv_dx(:) = n_refine / dx(:)
 
@@ -605,10 +604,10 @@ contains
         real(c_real), dimension(3), intent(  out) :: normal
 
         integer                    :: i, j, k
-        real(c_real)               :: x, y, z, xp, yp, zp, lx, ly, lz, wx_lo, wx_hi, wy_lo, wy_hi, wz_lo, wz_hi
+        real(c_real)               :: xp, yp, zp, lx, ly, lz, wx_lo, wx_hi, wy_lo, wy_hi, wz_lo, wz_hi
         real(c_real), dimension(3) :: inv_dx
 
-        real(c_real) :: inv_norm
+        ! real(c_real) :: inv_norm
 
         inv_dx = n_refine / dx
 

@@ -148,26 +148,23 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
         const auto & sfab = dynamic_cast <EBFArrayBox const&>(dummy[mfi]);
         const auto & flag = sfab.getEBCellFlagFab();
 
-        // Need to count number of eb-facets (in order to allocate FArrayBox)
-        //count_eb_facets(lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(), & n_facets);
-
-        // Target for compute_normals(...)
-        auto & norm_tile = normal[mfi];
-        // Area fractions in x, y, and z directions
-        const auto & af_x_tile = (* areafrac[0])[mfi];
-        const auto & af_y_tile = (* areafrac[1])[mfi];
-        const auto & af_z_tile = (* areafrac[2])[mfi];
-
         //if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued) {
         if (flag.getType(tile_box) == FabType::singlevalued) {
-           BL_PROFILE_VAR("compute_normals()", compute_normals);
-           compute_normals(lo,                  hi,
-                           flag.dataPtr(),      flag.loVect(),      flag.hiVect(),
-                           norm_tile.dataPtr(), norm_tile.loVect(), norm_tile.hiVect(),
-                           af_x_tile.dataPtr(), af_x_tile.loVect(), af_x_tile.hiVect(),
-                           af_y_tile.dataPtr(), af_y_tile.loVect(), af_y_tile.hiVect(),
-                           af_z_tile.dataPtr(), af_z_tile.loVect(), af_z_tile.hiVect());
-           BL_PROFILE_VAR_STOP(compute_normals);
+            // Target for compute_normals(...)
+            auto & norm_tile = normal[mfi];
+            // Area fractions in x, y, and z directions
+            const auto & af_x_tile = (* areafrac[0])[mfi];
+            const auto & af_y_tile = (* areafrac[1])[mfi];
+            const auto & af_z_tile = (* areafrac[2])[mfi];
+
+            BL_PROFILE_VAR("compute_normals()", compute_normals);
+            compute_normals(lo,                  hi,
+                            flag.dataPtr(),      flag.loVect(),      flag.hiVect(),
+                            norm_tile.dataPtr(), norm_tile.loVect(), norm_tile.hiVect(),
+                            af_x_tile.dataPtr(), af_x_tile.loVect(), af_x_tile.hiVect(),
+                            af_y_tile.dataPtr(), af_y_tile.loVect(), af_y_tile.hiVect(),
+                            af_z_tile.dataPtr(), af_z_tile.loVect(), af_z_tile.hiVect());
+            BL_PROFILE_VAR_STOP(compute_normals);
         }
     }
 
@@ -204,17 +201,20 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
         const auto & sfab = dynamic_cast <EBFArrayBox const&>(dummy[mfi]);
         const auto & flag = sfab.getEBCellFlagFab();
 
-        const auto & norm_tile = normal[mfi];
-        const auto & bcent_tile = (* bndrycent)[mfi];
+        //if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued) {
+        if (flag.getType(tile_box) == FabType::singlevalued) {
+            const auto & norm_tile = normal[mfi];
+            const auto & bcent_tile = (* bndrycent)[mfi];
 
-        int facet_list_size = facet_list->size();
+            int facet_list_size = facet_list->size();
 
-        eb_as_list(tile_box.loVect(),     tile_box.hiVect(),    & c_facets,
-                   flag.dataPtr(),        flag.loVect(),        flag.hiVect(),
-                   norm_tile.dataPtr(),   norm_tile.loVect(),   norm_tile.hiVect(),
-                   bcent_tile.dataPtr(),  bcent_tile.loVect(),  bcent_tile.hiVect(),
-                   facet_list->dataPtr(), & facet_list_size,
-                   dx_eb_vect.dataPtr());
+            eb_as_list(tile_box.loVect(),     tile_box.hiVect(),    & c_facets,
+                       flag.dataPtr(),        flag.loVect(),        flag.hiVect(),
+                       norm_tile.dataPtr(),   norm_tile.loVect(),   norm_tile.hiVect(),
+                       bcent_tile.dataPtr(),  bcent_tile.loVect(),  bcent_tile.hiVect(),
+                       facet_list->dataPtr(), & facet_list_size,
+                       dx_eb_vect.dataPtr());
+            }
     }
     return facet_list;
 }
@@ -329,6 +329,10 @@ void LSFactory::intersection_ebf(const EBFArrayBoxFactory & eb_factory, const EB
     std::unique_ptr<MultiFab> impfunct = ebis_impfunc(eb_is);
     impfunct->FillBoundary(geom_ls.periodicity());
 
+    // What if there are no facets in this core domain? => do nothing
+    //if(len_facets < 1)
+    //    return;
+
     // Local MultiFab storing level-set data for this eb_factory
     MultiFab eb_ls;
     iMultiFab eb_valid;
@@ -352,18 +356,19 @@ void LSFactory::intersection_ebf(const EBFArrayBoxFactory & eb_factory, const EB
         auto & v_tile = eb_valid[mfi];
         auto & ls_tile = eb_ls[mfi];
         const auto & if_tile = (* impfunct)[mfi];
+        if(len_facets > 0) {
+            fill_levelset_eb(lo,                hi,
+                             facets->dataPtr(), & len_facets,
+                             v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
+                             ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect(),
+                             dx_vect.dataPtr(), dx_eb_vect.dataPtr());
 
-        fill_levelset_eb(lo,                hi,
-                         facets->dataPtr(), & len_facets,
-                         v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
-                         ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect(),
-                         dx_vect.dataPtr(), dx_eb_vect.dataPtr());
+            validate_levelset(lo,                hi,               & ls_grid_ref,
+                              if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
+                              v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
+                              ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
 
-        validate_levelset(lo,                hi,               & ls_grid_ref,
-                          if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
-                          v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
-                          ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
-
+        }
     }
 
     // Update LSFactory using local eb level-set
@@ -380,6 +385,10 @@ void LSFactory::union_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSp
     std::unique_ptr<MultiFab> impfunct = ebis_impfunc(eb_is);
     impfunct->FillBoundary(geom_ls.periodicity());
 
+    // What if there are no facets in this core domain? => do nothing
+    //if(len_facets < 1)
+    //    return;
+
     // Local MultiFab storing level-set data for this eb_factory
     MultiFab eb_ls;
     iMultiFab eb_valid;
@@ -404,16 +413,18 @@ void LSFactory::union_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSp
         auto & ls_tile = eb_ls[mfi];
         const auto & if_tile = (* impfunct)[mfi];
 
-        fill_levelset_eb(lo,                hi,
-                         facets->dataPtr(), & len_facets,
-                         v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
-                         ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect(),
-                         dx_vect.dataPtr(), dx_eb_vect.dataPtr());
+        if(len_facets > 0) {
+            fill_levelset_eb(lo,                hi,
+                             facets->dataPtr(), & len_facets,
+                             v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
+                             ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect(),
+                             dx_vect.dataPtr(), dx_eb_vect.dataPtr());
 
-        validate_levelset(lo,                hi,               & ls_grid_ref,
-                          if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
-                          v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
-                          ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
+            validate_levelset(lo,                hi,               & ls_grid_ref,
+                              if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
+                              v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
+                              ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
+        }
 
     }
 
