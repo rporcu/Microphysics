@@ -199,7 +199,8 @@ mfix_level::make_eb_geometry(int lev)
         EBTower::Destroy();
     }
 
-
+    // store copy of level set (for later use).
+    ls[lev] = level_set->copy_data();
 
     /******************************************************************************************************************
      *                                                                                                                *
@@ -420,7 +421,8 @@ mfix_level::make_eb_hourglass(int lev)
     level_set->intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
     EBTower::Destroy();
 
-
+    // store copy of level set (for later use).
+    ls[lev] = level_set->copy_data();
 
     /******************************************************************************************************************
      *                                                                                                                *
@@ -628,6 +630,9 @@ mfix_level::make_eb_clr(int lev)
 
     UnionIF clr(clr_parts);
 
+    // store copy of level set (for later use).
+    ls[lev] = level_set->copy_data();
+
 
     impfunc_poly2 = std::unique_ptr<BaseIF>(clr.newImplicitFunction());
     impfunc.reset(clr.newImplicitFunction());
@@ -739,6 +744,8 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
 
     // Internal flow cylinder
     PolynomialIF cylinder0(poly, true);
+    TransformIF cylinder1(cylinder0);
+    cylinder1.translate(translation);
 
     // box to clip to correct length
     RealVect normal, center;
@@ -772,6 +779,8 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     planes.push_back(plane);
 
     IntersectionIF bounding_box(planes);
+    TransformIF walls(bounding_box);
+    walls.translate(translation);
 
     Vector<BaseIF*> funcs(2);
     funcs[0] = &cylinder0;
@@ -801,14 +810,14 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
      ******************************************************************************************************************/
 
     // Define both components of the GeometryShop separately:
-    GeometryShop gshop_upoly(cylinder0, eb_verbosity);
-    GeometryShop gshop_walls(bounding_box, eb_verbosity);
+    GeometryShop gshop_upoly(cylinder1, eb_verbosity);
+    GeometryShop gshop_walls(walls, eb_verbosity);
 
     // Define a temporary level-set used for constructing the cylinder:
     LSFactory ls_cylinder(* level_set);
 
     // Define the EBIS first using only the walls...
-    Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
+    Geometry geom_ls = LSUtility::make_ls_geometry(ls_cylinder);
     AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
 
     EBTower::Build();
@@ -818,7 +827,7 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     EBTower::Destroy();
 
     // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
-    Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+    Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder);
     AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_upoly, grid_size, max_level);
 
     EBTower::Build();

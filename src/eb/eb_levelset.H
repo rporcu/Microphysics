@@ -64,10 +64,7 @@ class LSFactory {
 
     public:
         LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, const MFIXParticleContainer * pc);
-        LSFactory(const LSFactory & other) : LSFactory(other.get_amr_level(),
-                                                       other.get_ls_ref(), other.get_eb_ref(),
-                                                       other.get_ls_pad(), other.get_eb_pad(),
-                                                     & other.get_pc()                          ) {};
+        LSFactory(const LSFactory & other);
         ~LSFactory();
 
         void regrid();
@@ -86,6 +83,10 @@ class LSFactory {
         // Return level-set data
         const MultiFab *  get_data() const {return ls_grid.get();};
         const iMultiFab * get_valid() const {return ls_valid.get();};
+
+        // Copy level-set data
+        std::unique_ptr<MultiFab> copy_data() const;
+        std::unique_ptr<iMultiFab> copy_valid() const;
 
         // Return grid parameters
         const int get_ls_ref() const {return ls_grid_ref;};

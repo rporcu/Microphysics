@@ -28,11 +28,11 @@ mfix_level::InitIOData ()
     // Define the list of scalar variables at cell centers that need to be written
     // to plotfile/checkfile.
     // "volfrac" MUST always be last without any mf associated to it!!!
-    pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "vort", "diveu", "volfrac"};
-    pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &vort,  &diveu};
+    pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "vort", "diveu", "ls", "volfrac"};
+    pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &vort,  &diveu, &ls};
 
-    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "volfrac"};
-    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g};
+    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "ls", "volfrac"};
+    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &ls};
 }
 
 void

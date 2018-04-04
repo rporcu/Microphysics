@@ -283,7 +283,14 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     mu_g_new->copy(*mu_g[lev],0,0,1,ng,ng);
     mu_g_new->FillBoundary(geom[lev].periodicity());
     mu_g[lev] = std::move(mu_g_new);
-
+    
+    // Level-set
+    ng = mu_g[lev]->nGrow();
+    std::unique_ptr<MultiFab> ls_new(new MultiFab(new_grids,new_dmap,1,ls[lev]->nGrow()));
+    ls_new->copy(*ls[lev],0,0,1,ng,ng);
+    ls_new->FillBoundary(geom[lev].periodicity());
+    ls[lev] = std::move(ls_new);
+    
     // Lambda
     ng = lambda_g[lev]->nGrow();
     std::unique_ptr<MultiFab> lambda_g_new(new MultiFab(new_grids,new_dmap,1,lambda_g[lev]->nGrow()));

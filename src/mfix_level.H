@@ -331,6 +331,9 @@ private:
     // Molecular viscosity
     Vector< std::unique_ptr<MultiFab> > mu_g ;
 
+    // Level-Set Data:
+    Vector< std::unique_ptr<MultiFab> > ls;
+
     // Cell-based
     Vector< std::unique_ptr<MultiFab> > lambda_g;
     Vector< std::unique_ptr<MultiFab> > trD_g;

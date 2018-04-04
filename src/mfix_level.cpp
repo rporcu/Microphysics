@@ -114,6 +114,8 @@ mfix_level::ResizeArrays ()
     trD_g.resize(nlevs_max);
     vort.resize(nlevs_max);
 
+    ls.resize(nlevs_max);
+
     fluxX.resize(nlevs_max);
     fluxY.resize(nlevs_max);
     fluxZ.resize(nlevs_max);

@@ -64,6 +64,14 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
 }
 
 
+LSFactory::LSFactory(const LSFactory & other) : LSFactory(other.get_amr_level(),
+                                                       other.get_ls_ref(), other.get_eb_ref(),
+                                                       other.get_ls_pad(), other.get_eb_pad(),
+                                                     & other.get_pc()                          ) {
+    //ls_grid  = other.copy_data();
+    //ls_valid = other.copy_valid();
+}
+
 LSFactory::~LSFactory() {
     ls_grid.reset();
     ls_valid.reset();
@@ -281,6 +289,22 @@ void LSFactory::update_union(const MultiFab & ls_in) {
 
     ls_grid->FillBoundary(geom_ls.periodicity());
     ls_valid->FillBoundary(geom_ls.periodicity());
+}
+
+
+std::unique_ptr<MultiFab> LSFactory::copy_data() const {
+    const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
+    std::unique_ptr<MultiFab> cpy(new MultiFab(ls_ba, dm, 1, ls_grid_pad));
+    cpy->copy(* ls_grid, 0, 0, 1, ls_grid_pad, ls_grid_pad);
+    return cpy;
+}
+
+
+std::unique_ptr<iMultiFab> LSFactory::copy_valid() const {
+    const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
+    std::unique_ptr<iMultiFab> cpy(new iMultiFab(ls_ba, dm, 1, ls_grid_pad));
+    cpy->copy(* ls_valid, 0, 0, 1, ls_grid_pad, ls_grid_pad);
+    return cpy;
 }
 
 
