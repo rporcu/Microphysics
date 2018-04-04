@@ -492,7 +492,7 @@ mfix_level::make_eb_clr(int lev)
 
     // mfix_level::make_cylinder uses a union
     //  => ensure that mfix_level::level_set is initialized to min
-    level_set->invert();
+    //level_set->invert();
 
     //------------------------------------------------------------- Riser
     pp.getarr("riser_translate", transvec,  0, 3);
@@ -699,6 +699,11 @@ mfix_level::make_eb_clr(int lev)
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
 
+    level_set->intersection_ebf(* ebfactory, * AMReX_EBIS::instance());
+
+    // store copy of level set (for later use).
+    ls[lev] = level_set->copy_data();
+
     eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
 
@@ -809,37 +814,37 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
      *                                                                                                                *
      ******************************************************************************************************************/
 
-    // Define both components of the GeometryShop separately:
-    GeometryShop gshop_upoly(cylinder1, eb_verbosity);
-    GeometryShop gshop_walls(walls, eb_verbosity);
+    //// Define both components of the GeometryShop separately:
+    //GeometryShop gshop_upoly(cylinder1, eb_verbosity);
+    //GeometryShop gshop_walls(walls, eb_verbosity);
 
-    // Define a temporary level-set used for constructing the cylinder:
-    LSFactory ls_cylinder(* level_set);
+    //// Define a temporary level-set used for constructing the cylinder:
+    //LSFactory ls_cylinder(* level_set);
 
-    // Define the EBIS first using only the walls...
-    Geometry geom_ls = LSUtility::make_ls_geometry(ls_cylinder);
-    AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
+    //// Define the EBIS first using only the walls...
+    //Geometry geom_ls = LSUtility::make_eb_geometry(ls_cylinder);
+    //AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
 
-    EBTower::Build();
-    // GeometryShop's Planes' implicit function is actually a signed distance function
-    //      => it's just easier to fill the level-set this way
-    ls_cylinder.intersection_ebis(* AMReX_EBIS::instance());
-    EBTower::Destroy();
+    //EBTower::Build();
+    //// GeometryShop's Planes' implicit function is actually a signed distance function
+    ////      => it's just easier to fill the level-set this way
+    //ls_cylinder.intersection_ebis(* AMReX_EBIS::instance());
+    //EBTower::Destroy();
 
-    // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
-    Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder);
-    AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_upoly, grid_size, max_level);
+    //// Define the EBIS using only the poly (after deleting the walls-only EBTower)...
+    //Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder);
+    //AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_upoly, grid_size, max_level);
 
-    EBTower::Build();
-    // GeometryShop's PolynomialIF is not a signed distance function...
-    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
-    //          => define the level set as the (signed) distance to the closest point on the EB-facets
-    int eb_pad = level_set->get_eb_pad();
-    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
-    ls_cylinder.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
-    EBTower::Destroy();
+    //EBTower::Build();
+    //// GeometryShop's PolynomialIF is not a signed distance function...
+    ////      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
+    ////          => define the level set as the (signed) distance to the closest point on the EB-facets
+    //int eb_pad = level_set->get_eb_pad();
+    //EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
+    //ls_cylinder.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    //EBTower::Destroy();
 
-    level_set->update_union(* ls_cylinder.get_data());
+    //level_set->update_union(* ls_cylinder.get_data());
 
     return cylinder_IF;
 }

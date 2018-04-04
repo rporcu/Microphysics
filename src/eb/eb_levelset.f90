@@ -91,7 +91,7 @@ contains
         do kk = lo(3), hi(3)
             do jj = lo(2), hi(2)
                 do ii = lo(1), hi(1)
-                    pos_node      = (/ ii*dx(1), jj*dx(2), kk*dx(3) /)
+                    pos_node      = (/ ii*dx(1), jj*dx(2), kk*dx(3) /) - dx(:)/2d0
                     call closest_dist ( levelset_node, valid_cell, eb_list, l_eb, dx_eb, pos_node)
 
                     phi(ii, jj, kk) = levelset_node;
@@ -238,7 +238,6 @@ contains
         do kk = lo(3), hi(3)
             do jj = lo(2), hi(2)
                 do ii = lo(1), hi(1)
-                    !write(*,*) "validating: ", ii, jj, kk, "v:", valid(ii, jj, kk), "if:", impf(ii, jj, kk)
                     if ( valid(ii, jj, kk)  == 0 ) then
                         levelset_node = dabs( phi(ii, jj, kk) )
                         if ( impf(ii, jj, kk) <= 0 ) then

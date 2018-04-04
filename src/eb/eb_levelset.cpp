@@ -42,12 +42,12 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
 
     // Define ls_grid and ls_valid, growing them by ls_pad
     // Note: box arrays (such as ls_ba) are initialized in init_box()
-    ls_grid->define(ls_ba, dm, 1, ls_pad);
-    ls_valid->define(ls_ba, dm, 1, ls_pad);
+    ls_grid->define(ls_ba, dm, 1, 0 /*ls_pad*/);
+    ls_valid->define(ls_ba, dm, 1, 0 /*ls_pad*/);
     ls_valid->setVal(-1);
 
     // Define eb_grid, growing it by eb_pad
-    eb_grid->define(eb_ba, dm, 1, eb_pad);
+    eb_grid->define(eb_ba, dm, 1, 0 /*eb_pad*/);
 
     // Initialize by setting all ls_phi = huge(c_real)
 #ifdef _OPENMP
@@ -231,13 +231,13 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
 std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace & eb_is) {
     std::unique_ptr<MultiFab> mf_impfunc = std::unique_ptr<MultiFab>(new MultiFab);
     const DistributionMapping & dm = mfix_pc->ParticleDistributionMap(amr_lev);
-    mf_impfunc->define(ls_ba, dm, 1, ls_grid_pad);
+    mf_impfunc->define(ls_ba, dm, 1, 0 /*ls_grid_pad*/);
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
     for(MFIter mfi(* mf_impfunc, true); mfi.isValid(); ++ mfi)
-        eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi]);
+        eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi], RealVect(-dx_vect[0]/2., -dx_vect[1]/2., -dx_vect[2]/2.));
 
     mf_impfunc->FillBoundary(geom_ls.periodicity());
     return mf_impfunc;
@@ -294,16 +294,16 @@ void LSFactory::update_union(const MultiFab & ls_in) {
 
 std::unique_ptr<MultiFab> LSFactory::copy_data() const {
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    std::unique_ptr<MultiFab> cpy(new MultiFab(ls_ba, dm, 1, ls_grid_pad));
-    cpy->copy(* ls_grid, 0, 0, 1, ls_grid_pad, ls_grid_pad);
+    std::unique_ptr<MultiFab> cpy(new MultiFab(ls_ba, dm, 1, 0 /*ls_grid_pad*/));
+    cpy->copy(* ls_grid, 0, 0, 1, 0 /*ls_grid_pad*/, 0 /*ls_grid_pad*/);
     return cpy;
 }
 
 
 std::unique_ptr<iMultiFab> LSFactory::copy_valid() const {
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    std::unique_ptr<iMultiFab> cpy(new iMultiFab(ls_ba, dm, 1, ls_grid_pad));
-    cpy->copy(* ls_valid, 0, 0, 1, ls_grid_pad, ls_grid_pad);
+    std::unique_ptr<iMultiFab> cpy(new iMultiFab(ls_ba, dm, 1, 0 /*ls_grid_pad*/));
+    cpy->copy(* ls_valid, 0, 0, 1, 0 /*ls_grid_pad*/, 0 /*ls_grid_pad*/);
     return cpy;
 }
 
@@ -317,7 +317,7 @@ void LSFactory::regrid(){
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
     update_ba();
 
-    int ng = ls_grid_pad;
+    int ng = 0; //ls_grid_pad;
     std::unique_ptr<MultiFab> ls_grid_new(new MultiFab(ls_ba, dm, 1, ng));
 
     ls_grid_new->copy(* ls_grid, 0, 0, 1, ng, ng);
@@ -362,8 +362,8 @@ void LSFactory::intersection_ebf(const EBFArrayBoxFactory & eb_factory, const EB
     iMultiFab eb_valid;
 
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    eb_ls.define(ls_ba, dm, 1, ls_grid_pad);
-    eb_valid.define(ls_ba, dm, 1, ls_grid_pad);
+    eb_ls.define(ls_ba, dm, 1, 0 /*ls_grid_pad*/);
+    eb_valid.define(ls_ba, dm, 1, 0 /*ls_grid_pad*/);
     eb_valid.setVal(0);
 
     // Fill local MultiFab with eb_factory's level-set data. Note the role of eb_valid:
@@ -391,8 +391,8 @@ void LSFactory::intersection_ebf(const EBFArrayBoxFactory & eb_factory, const EB
                               if_tile.dataPtr(), if_tile.loVect(), if_tile.hiVect(),
                               v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
                               ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
-
         }
+
     }
 
     // Update LSFactory using local eb level-set
@@ -418,8 +418,8 @@ void LSFactory::union_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSp
     iMultiFab eb_valid;
 
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    eb_ls.define(ls_ba, dm, 1, ls_grid_pad);
-    eb_valid.define(ls_ba, dm, 1, ls_grid_pad);
+    eb_ls.define(ls_ba, dm, 1, 0 /*ls_grid_pad*/);
+    eb_valid.define(ls_ba, dm, 1, 0 /*ls_grid_pad*/);
     eb_valid.setVal(0);
 
     // Fill local MultiFab with eb_factory's level-set data. Note the role of eb_valid:
@@ -449,7 +449,6 @@ void LSFactory::union_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSp
                               v_tile.dataPtr(),  v_tile.loVect(),  v_tile.hiVect(),
                               ls_tile.dataPtr(), ls_tile.loVect(), ls_tile.hiVect());
         }
-
     }
 
     // Update LSFactory using local eb level-set
@@ -469,6 +468,7 @@ void LSFactory::intersection_ebis(const EBIndexSpace & eb_is) {
 #endif
     for(MFIter mfi( * mf_impfunc, true); mfi.isValid(); ++ mfi){
         FArrayBox & a_fab = (* mf_impfunc)[mfi];
+
         for(BoxIterator bit(mfi.growntilebox()); bit.ok(); ++bit)
             a_fab(bit(), 0) = - a_fab(bit(), 0);
     }
