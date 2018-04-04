@@ -382,7 +382,7 @@ contains
 
                   oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i-1,j,k)/rop_g(i-1,j,k) )
                   
-                  acc = - oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
+                  acc = oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -400,7 +400,7 @@ contains
 
                   oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i,j-1,k)/rop_g(i,j-1,k) )
                   
-                  acc = - oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
+                  acc = oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -418,7 +418,7 @@ contains
                   
                   oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i,j,k-1)/rop_g(i,j,k-1) )
                   
-                  acc = -oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
+                  acc = oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
