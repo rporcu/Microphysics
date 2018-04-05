@@ -237,7 +237,7 @@ std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace & eb_is) {
 #pragma omp parallel
 #endif
     for(MFIter mfi(* mf_impfunc, true); mfi.isValid(); ++ mfi)
-        eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi], RealVect(-dx_vect[0]/2., -dx_vect[1]/2., -dx_vect[2]/2.));
+        eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi]);
 
     mf_impfunc->FillBoundary(geom_ls.periodicity());
     return mf_impfunc;
@@ -408,10 +408,6 @@ void LSFactory::union_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSp
     // Generate implicit function (used to determine the interior of EB)
     std::unique_ptr<MultiFab> impfunct = ebis_impfunc(eb_is);
     impfunct->FillBoundary(geom_ls.periodicity());
-
-    // What if there are no facets in this core domain? => do nothing
-    //if(len_facets < 1)
-    //    return;
 
     // Local MultiFab storing level-set data for this eb_factory
     MultiFab eb_ls;
