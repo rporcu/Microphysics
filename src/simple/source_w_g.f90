@@ -92,7 +92,7 @@ contains
 
                ! Body force
                vbf = half*(ep_g(i,j,k-1) * ro_g(i,j,k-1) + &
-                    &      ro_g(i,j,k)   * ro_g(i,j,k)  ) *gravity(3)
+                    &      ep_g(i,j,k)   * ro_g(i,j,k)  ) *gravity(3)
 
                ! Collect the terms
                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
