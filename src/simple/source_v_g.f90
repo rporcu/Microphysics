@@ -87,7 +87,8 @@ contains
                v0 = half*(rop_go(i,j-1,k)+rop_go(i,j,k))*odt
 
                ! Body force
-               vbf = half*(ro_g(i,j-1,k)+ro_g(i,j,k))*gravity(2)
+               vbf = half*(ep_g(i,j-1,k) * ro_g(i,j-1,k) + &
+                    &      ep_g(i,j,k)   * ro_g(i,j,k)   )*gravity(2)
 
                ! Collect the terms
                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
