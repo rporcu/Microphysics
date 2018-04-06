@@ -369,7 +369,7 @@ contains
       
       ! Local variables
       integer(c_int)                :: i, j, k 
-      real(ar)                      :: orop_g, acc, oep_g 
+      real(ar)                      :: orop_g, acc 
 
       select case (dir)
       case(1)                   !X direction
@@ -379,10 +379,8 @@ contains
                do i = lo(1), hi(1)
 
                   orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i-1,j,k) )
-
-                  oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i-1,j,k)/rop_g(i-1,j,k) )
                   
-                  acc = oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
+                  acc = gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -398,9 +396,7 @@ contains
 
                   orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i,j-1,k) )
 
-                  oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i,j-1,k)/rop_g(i,j-1,k) )
-                  
-                  acc = oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
+                  acc = gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
@@ -415,10 +411,8 @@ contains
                do i = lo(1),hi(1)
 
                   orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i,j,k-1) )
-                  
-                  oep_g  = half * ( ro_g(i,j,k)/rop_g(i,j,k) + ro_g(i,j,k-1)/rop_g(i,j,k-1) )
-                  
-                  acc = oep_g * gravity(dir) + drag_i(i,j,k) * orop_g 
+                 
+                  acc = gravity(dir) + drag_i(i,j,k) * orop_g 
 
                   u_i(i,j,k) = u_i(i,j,k) + dt * acc
 
