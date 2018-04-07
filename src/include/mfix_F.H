@@ -234,15 +234,32 @@ extern "C"
 
     void calc_drag_particle(
             const int* slo, const int* shi,
+            const int* xlo, const int* xhi,
+            const int* ylo, const int* yhi,
+            const int* zlo, const int* zhi,
             const int* ulo, const int* uhi,
             const int* vlo, const int* vhi,
             const int* wlo, const int* whi,
             const int* np,
-            amrex::Real* p_g, amrex::Real* p0_g,
+            amrex::Real* gpx, amrex::Real* gpy,  amrex::Real* gpz,
             amrex::Real* u_g, amrex::Real* v_g,  amrex::Real* w_g,
             void* particles,
             amrex::Real* dx,   amrex::Real* dy,   amrex::Real* dz,
             amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen
+        );
+
+    void construct_gradp(
+            const int* slo, const int* shi,
+            const int* xlo, const int* xhi,
+            const int* ylo, const int* yhi,
+            const int* zlo, const int* zhi,
+            amrex::Real* p_g, amrex::Real* p0_g,
+            amrex::Real* gpx, amrex::Real* gpy,  amrex::Real* gpz,
+            amrex::Real* dx,   amrex::Real* dy,   amrex::Real* dz,
+            int* bc_ilo, int* bc_ihi,
+            int* bc_jlo, int* bc_jhi,
+            int* bc_klo, int* bc_khi,
+            const int* domlo , const int* domhi, const int* ng
         );
 
     void calc_coeff(

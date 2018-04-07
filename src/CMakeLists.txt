@@ -71,6 +71,7 @@ list ( APPEND F90_sources des/particle_generator.f90 des/set_particle_properties
 list ( APPEND F90_sources des/stl_functions_des_mod.f90 )
 list ( APPEND F90_sources des/particle_pic.f90 des/particle_mod.f90 des/set_drag_bcs.f90 )
 list ( APPEND F90_sources des/drag_mod.f90 des/flip_particle_vol.f90 )
+list ( APPEND F90_sources des/construct_gradp.f90)
    
 #
 # SIMPLE routines

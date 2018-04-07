@@ -189,8 +189,8 @@ subroutine set_drag_bcs( &
 
   if (ulo(1).le.domlo(1)) then
      ilo = domlo(1)
-     do k=domlo(3)-1, domhi(3)+1
-        do j=domlo(2)-1, domhi(2)+1
+     do k=ulo(3),uhi(3)
+        do j=ulo(2),uhi(2)
            if (bc_ilo_type(j,k,1) == NSW_ .or. &
                bc_ilo_type(j,k,1) == PSW_ .or. &
                bc_ilo_type(j,k,1) == FSW_ .or. &
@@ -207,8 +207,8 @@ subroutine set_drag_bcs( &
 
   if (uhi(1).ge.domhi(1)+1) then
      ihi = domhi(1)+1
-     do k=domlo(3)-1, domhi(3)+1
-        do j=domlo(2)-1, domhi(2)+1
+     do k=ulo(3),uhi(3)
+        do j=ulo(2),uhi(2)
            if (bc_ihi_type(j,k,1) == NSW_ .or. &
                bc_ihi_type(j,k,1) == PSW_ .or. &
                bc_ihi_type(j,k,1) == FSW_ .or. &
@@ -225,8 +225,8 @@ subroutine set_drag_bcs( &
 
   if (vlo(2).le.domlo(2)) then
      jlo = domlo(2)
-     do k=domlo(3)-1, domhi(3)+1
-        do i=domlo(1)-1, domhi(1)+1
+     do k=vlo(3),vhi(3)
+        do i=vlo(1),vhi(1)
            if (bc_jlo_type(i,k,1) == NSW_ .or. &
                bc_jlo_type(i,k,1) == PSW_ .or. &
                bc_jlo_type(i,k,1) == FSW_ .or. &
@@ -243,8 +243,8 @@ subroutine set_drag_bcs( &
 
   if (vhi(2).ge.domhi(2)+1) then
      jhi = domhi(2)+1
-     do k=domlo(3)-1, domhi(3)+1
-        do i=domlo(1)-1, domhi(1)+1
+     do k=vlo(3),vhi(3)
+        do i=vlo(1),vhi(1)
            if (bc_jhi_type(i,k,1) == NSW_ .or. &
                bc_jhi_type(i,k,1) == PSW_ .or. &
                bc_jhi_type(i,k,1) == FSW_ .or. &
@@ -261,8 +261,8 @@ subroutine set_drag_bcs( &
 
   if (wlo(3).le.domlo(3)) then
      klo = domlo(3)
-     do j=domlo(2)-1, domhi(2)+1
-        do i=domlo(1)-1, domhi(1)+1
+     do j=wlo(2),whi(2)
+        do i=wlo(1),whi(1)
            if (bc_klo_type(i,j,1) == NSW_ .or. &
                bc_klo_type(i,j,1) == PSW_ .or. &
                bc_klo_type(i,j,1) == FSW_ .or. &
@@ -279,8 +279,8 @@ subroutine set_drag_bcs( &
 
   if (whi(3).ge.domhi(3)+1) then
      khi = domhi(3)+1
-     do j=domlo(2)-1, domhi(2)+1
-        do i=domlo(1)-1, domhi(1)+1
+     do j=wlo(2),whi(2)
+        do i=wlo(1),whi(1)
            if (bc_khi_type(i,j,1) == NSW_ .or. &
                bc_khi_type(i,j,1) == PSW_ .or. &
                bc_khi_type(i,j,1) == FSW_ .or. &

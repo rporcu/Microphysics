@@ -828,11 +828,10 @@ mfix_level::mfix_compute_diveu (int lev)
     u_g[lev] -> FillBoundary (geom[lev].periodicity());
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
     w_g[lev] -> FillBoundary (geom[lev].periodicity());
+
     mfix_set_projection_bcs (lev);
 
     fill_mf_bc (lev,*ep_g[lev]);
-
-
     
 #ifdef _OPENMP
 #pragma omp parallel
@@ -1025,7 +1024,6 @@ mfix_level::mfix_set_projection_bcs (int lev)
   u_g[lev] -> FillBoundary (geom[lev].periodicity());
   v_g[lev] -> FillBoundary (geom[lev].periodicity());
   w_g[lev] -> FillBoundary (geom[lev].periodicity());
-
   
 #ifdef _OPENMP
 #pragma omp parallel
@@ -1033,11 +1031,6 @@ mfix_level::mfix_set_projection_bcs (int lev)
   for (MFIter mfi(*p_g[lev], true); mfi.isValid(); ++mfi)
     {
       Box domain(geom[lev].Domain());
-      const Box& sbx = (*p_g[lev])[mfi].box();
-      Box ubx((*u_g[lev])[mfi].box());
-      Box vbx((*v_g[lev])[mfi].box());
-      Box wbx((*w_g[lev])[mfi].box());
-
 
       set_projection_bcs ( BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
 			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
@@ -1053,7 +1046,6 @@ mfix_level::mfix_set_projection_bcs (int lev)
 			   domain.loVect(), domain.hiVect(),
 			   &nghost );
     }			   
-
 }
 
 //
@@ -1067,8 +1059,6 @@ mfix_level::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
     Box domain(geom[lev].Domain());
 
     for (MFIter mfi(*p); mfi.isValid(); ++mfi) {
-
-	const Box& sbx = (*p)[mfi].box();
 
 	extrap_pressure_to_ghost_cells (
 	    BL_TO_FORTRAN_ANYD((*p)[mfi]),
