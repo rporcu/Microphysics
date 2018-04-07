@@ -41,14 +41,13 @@ void ReadParameters ()
 {
   // Traditionally, max_step and stop_time do not have prefix.
   {
-  ParmParse pp;
-  pp.query("max_step", max_step);
+    ParmParse pp;
+    pp.query("max_step", max_step);
   }
 
-  // Traditionally, these have prefix "amr", but we will
-  // give them prefix mfix to make it clear that they affect the
-  // behavior of the solver and not amr (even thought they are read
-  // via BoxLib
+  // Traditionally, these have prefix "amr", but we will give them prefix mfix
+  // to make it clear that they affect the behavior of the solver and not amr
+  // (even thought they are read via BoxLib
   ParmParse pp("amr");
 
   pp.query("stop_time", stop_time);
@@ -135,10 +134,8 @@ int main (int argc, char* argv[])
     int lev = 0;
 
     // Default constructor. Note inheritance: mfix_level : AmrCore : AmrMesh
-    //                                                               ^^^^^^^
-    //                                                        (constructs Geometry)
-    //
-    //  => Geometry is constructed here
+    //                                                                  |
+    //  => Geometry is constructed here:  (constructs Geometry) --------+
     mfix_level my_mfix;
 
     // Initialize internals from ParamParse database
