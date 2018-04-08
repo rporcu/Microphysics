@@ -124,8 +124,7 @@ public:
                        IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                        IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                        IArrayBox& bc_klo, IArrayBox& bc_khi,
-                       int fortran_particle_comp,
-		       int nghost );
+                       int fortran_particle_comp, int nghost );
 
     ///
     /// Calculate particle-induced drag on the fluid

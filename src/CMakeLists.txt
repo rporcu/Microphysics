@@ -7,7 +7,8 @@ set(CXX_sources
 
 set(CXX_includes
    mfix_level.H
-   include/mfix_F.H)
+   include/mfix_F.H 
+   include/mfix_eb_F.H)
 
 set(F90_sources
    bc_mod.f90
@@ -127,6 +128,7 @@ list ( APPEND F90_sources projection/projection_mod.f90 projection/projection_te
 list ( APPEND F90_sources projection/slopes_mod.f90 )
 list ( APPEND F90_sources projection/set_pressure_bcs.f90 projection/set_projection_bcs.f90 )
 list ( APPEND CXX_sources projection/mfix_projection.cpp )
+list ( APPEND CXX_sources projection/compute_dt.cpp )
 
 
 

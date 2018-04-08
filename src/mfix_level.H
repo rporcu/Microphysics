@@ -20,7 +20,6 @@
 #include <AMReX_EBTower.H>
 #include <AMReX_EBFArrayBox.H>
 
-
 #include <AMReX_GeometryShop.H>
 #include <AMReX_PlaneIF.H>
 #include <AMReX_AllRegularService.H>
@@ -37,7 +36,6 @@
 #include <AMReX_IntersectionIF.H>
 #include <AMReX_LatheIF.H>
 #include <AMReX_PolynomialIF.H>
-
 
 #include <eb_levelset.H>
 
@@ -90,7 +88,6 @@ public:
     void make_eb_geometry(int lev);
     void make_eb_hourglass(int lev);
     void make_eb_clr(int lev);
-    // void make_cylinder_y(Real radius, Real length, IntersectionIF* cylinder);
 
     std::unique_ptr<BaseIF> make_cylinder(int dir, Real radius, Real length);
 
@@ -100,7 +97,6 @@ public:
 
     // flag switching from calc_wall_collisions_ls to calc_wall_collisions if true
     bool legacy__eb_collisions = false;
-
 
     ///
     /// Parameters describing the level-set grid:
@@ -144,8 +140,7 @@ protected:
 
     void mfix_calc_trd_and_tau(int lev);
 
-    void mfix_init_fluid(int lev, int is_restarting = 0, Real stop_time = 0.0,
-                         int steady_state = 0);
+    void mfix_init_fluid(int lev, int is_restarting, Real stop_time, int steady_state);
     void mfix_set_bc0(int lev);
 
     void mfix_conv_rop(int lev);
@@ -200,7 +195,7 @@ private:
 
     static void GotoNextLine(std::istream& is);
 
-    void EvolveFluidSimple(int lev, int nstep, int set_normg,Real dt, Real& prev_dt, Real time, Real normg);
+    void EvolveFluidSimple    (int lev, int nstep, int set_normg, Real dt, Real& prev_dt, Real time, Real normg);
     void EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real stop_time, Real time);
 
     // Projection-related methods
@@ -214,10 +209,12 @@ private:
 
     void check_for_nans(int lev);
 
+    void mfix_compute_dt(int lev, amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt);
+
     void mfix_compute_fluid_acceleration(int lev,
-      Vector< std::unique_ptr<MultiFab> >& u,
+            Vector< std::unique_ptr<MultiFab> >& u,
             Vector< std::unique_ptr<MultiFab> >& v,
-      Vector< std::unique_ptr<MultiFab> >& w );
+            Vector< std::unique_ptr<MultiFab> >& w );
 
     int  steady_state_reached(int lev, Real dt);
 

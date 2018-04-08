@@ -29,7 +29,7 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& d
   
   if (solve_fluid)  {
       if ( use_proj_method ) {
-	      EvolveFluidProjection(lev,nstep,steady_state,dt,time,stop_time);
+          EvolveFluidProjection(lev,nstep,steady_state,dt,time,stop_time);
           prev_dt = dt;
       }	else {
           EvolveFluidSimple(lev,nstep,set_normg,dt,prev_dt,time,normg);

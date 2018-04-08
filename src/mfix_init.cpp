@@ -1,6 +1,7 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix_F.H>
+#include <mfix_eb_F.H>
 #include <mfix_level.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
@@ -361,7 +362,7 @@ mfix_level::AllocateArrays (int lev)
     phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     phi[lev]->setVal(0.);
 
-    // diveu
+    // div(e u)
     diveu[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     diveu[lev]->setVal(0.);
 

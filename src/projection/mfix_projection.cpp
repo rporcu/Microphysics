@@ -38,18 +38,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     
     do
     {
-	// Here we should check the CFL condition
-	// Compute dt for this time step
-	Real umax  = u_g[lev] -> norm0 ();
-	Real vmax  = v_g[lev] -> norm0 ();
-	Real wmax  = w_g[lev] -> norm0 ();
-	Real romin = rop_g[lev] -> min (0);
-	Real mumax = mu_g[lev] -> max (0);
-
-	if (!fixed_dt) 
-	    compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-			     geom[lev].CellSize(), &cfl, &steady_state,
-                             &time, &stop_time, &dt );
+        mfix_compute_dt(lev,time,stop_time,steady_state,dt);
 
 	if (steady_state)
 	{
@@ -145,20 +134,11 @@ mfix_level::mfix_initial_iterations (int lev, Real stop_time, int steady_state)
     MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, u_go[lev]->nGrow());
     MultiFab::Copy (*v_go[lev],   *v_g[lev],   0, 0, 1, v_go[lev]->nGrow());
     MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, w_go[lev]->nGrow());
-  
-    //  Here we should check the CFL condition
-    // Compute dt for this time step
-    Real umax  = u_g[lev] -> norm0 ();
-    Real vmax  = v_g[lev] -> norm0 ();
-    Real wmax  = w_g[lev] -> norm0 ();
-    Real romin = rop_g[lev] -> min (0);
-    Real mumax = mu_g[lev] -> max (0);
 
     Real time = 0.0;
     Real dt   = 1.e20;
-    compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax,
-		     geom[lev].CellSize(), &cfl, &steady_state,
-		     &time, &stop_time, &dt );
+
+    mfix_compute_dt(lev,time,stop_time,steady_state,dt);
 
     // Calculate drag coefficient
     if (solve_dem)

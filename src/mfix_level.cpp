@@ -1,11 +1,10 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix_F.H>
+#include <mfix_eb_F.H>
 #include <mfix_level.H>
-#include <eb_levelset.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
-
 
 // For multigrid
 #include <AMReX_FMultiGrid.H>
@@ -167,7 +166,8 @@ mfix_level::usr3(int lev)
           Box vbx((*v_g[lev])[mfi].box());
           Box wbx((*w_g[lev])[mfi].box());
    
-          mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
+          mfix_usr3(
+              (*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
               (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
               (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
               (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),

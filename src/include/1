@@ -1,0 +1,8 @@
+    void compute_normals(
+            const int* lo , const int* hi,
+            const void* flag,   const int* fglo, const int* fghi,
+            amrex_real* normal, const int* nlo,  const int* nhi,
+            const amrex_real* ax, const int* axlo, const int* axhi,
+            const amrex_real* ay, const int* aylo, const int* ayhi,
+            const amrex_real* az, const int* azlo, const int* azhi
+        );
