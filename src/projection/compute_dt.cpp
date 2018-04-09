@@ -26,11 +26,6 @@ mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state
                gradp0max, geom[lev].CellSize());
        }
 
-       // This is just a hack to make sure we get the same answer again
-       gradp0max[0] = 0;
-       gradp0max[1] = 0;
-       gradp0max[2] = 0;
-
        compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax, 
    		        gradp0max, geom[lev].CellSize(), &cfl, 
                         &steady_state, &time, &stop_time, &dt );
