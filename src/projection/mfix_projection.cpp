@@ -140,6 +140,7 @@ mfix_level::mfix_initial_iterations (int lev, Real stop_time, int steady_state)
     Real dt   = 1.e20;
 
     mfix_compute_dt(lev,time,stop_time,steady_state,dt);
+    amrex::Print() << "Using dt = " << dt << " in the initial iterations " << std::endl;
 
     // Calculate drag coefficient
     if (solve_dem)

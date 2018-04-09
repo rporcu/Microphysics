@@ -74,9 +74,12 @@ contains
       v_cfl = two * ( mumax / romin ) * ( odx**2 + ody**2 + odz**2 )
               
       ! Gravity and/or gradient of p0
-      f_cfl = abs(gravity(1)-gradp0max(1)) * odx + &
-              abs(gravity(2)-gradp0max(2)) * ody + &
-              abs(gravity(3)-gradp0max(3)) * odz
+      ! f_cfl = abs(gravity(1)-gradp0max(1)) * odx + &
+      !         abs(gravity(2)-gradp0max(2)) * ody + &
+      !         abs(gravity(3)-gradp0max(3)) * odz
+      f_cfl = gravity(1) * odx + &
+              gravity(2) * ody + &
+              gravity(3) * odz
 
       ! Put all together
       tmp = (c_cfl + v_cfl)  + sqrt ( (c_cfl + v_cfl)**2 + four * f_cfl )
