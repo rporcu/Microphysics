@@ -111,6 +111,7 @@ int main (int argc, char* argv[])
 
     ReadParameters();
 
+
     int max_nit;
     int solve_fluid;
     int solve_dem;
@@ -118,19 +119,24 @@ int main (int argc, char* argv[])
     int call_udf;
     Real dt, dt_min, dt_max;
     Real time=0.0L;
-    int nstep = 0;  // Which time step are we on
+    int nstep = 0;  // Current time step
     Real normg;
     int set_normg;
 
-    mfix_get_data( &solve_fluid,
-       &solve_dem,
-       &steady_state,
-       &dt, &dt_min, &dt_max, &stop_time, &max_nit,
-       &normg, &set_normg, &call_udf);
+    // Loads parameters (data) from fortran backend. Most notably this
+    // subroutine loads the parameters from the `mfix.dat` file: 
+    //     mfix_get_data -> get_data -> read_namelist
+    //                                        |
+    //  (loads `mfix.dat`) -------------------+
+    mfix_get_data( &solve_fluid, &solve_dem, &steady_state,
+                   &dt, &dt_min, &dt_max, &stop_time, &max_nit,
+                   &normg, &set_normg, &call_udf
+                  );
 
     if ( ParallelDescriptor::IOProcessor() )
        check_inputs(&dt);
 
+    // Default AMR level = 0
     int lev = 0;
 
     // Default constructor. Note inheritance: mfix_level : AmrCore : AmrMesh
