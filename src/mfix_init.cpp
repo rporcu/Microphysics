@@ -53,15 +53,19 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         subdt_io = false; // default to false (if not present in inputs file)
         pp.query("subdt_io", subdt_io);
 
-        // If true, then compute particle/EB collisions directly using neighbouring eb-facets
-        // WARNING: this mode can be slow, and EB-facets can sometimes not be "water-tight"
+        // If true, then compute particle/EB collisions directly using
+        // neighbouring eb-facets WARNING: this mode can be slow, and EB-facets
+        // can sometimes not be "water-tight"
         pp.query("legacy__eb_collisions", legacy__eb_collisions);
 
-        // Parameters used be the level-set algorithm. Refer to LSFactory (or mfix_level.H) for more details:
-        //   -> refinement: how well resolved (fine) the (level-set/EB-facet) grid needs to be
-        //                  (note: a fine level-set grid means that distances and normals are computed accurately)
-        //   -> pad:        how many (refined) grid points _outside_ the problem domain the grid extends
-        //                  (avoids edge cases in physical domain)
+        // Parameters used be the level-set algorithm. Refer to LSFactory (or
+        // mfix_level.H) for more details:
+        //   -> refinement: how well resolved (fine) the (level-set/EB-facet)
+        //                  grid needs to be (note: a fine level-set grid means
+        //                  that distances and normals are computed accurately)
+        //   -> pad:        how many (refined) grid points _outside_ the
+        //                  problem domain the grid extends (avoids edge cases
+        //                  in physical domain)
         pp.query("levelset__refinement", levelset__refinement);
         pp.query("levelset__eb_refinement", levelset__eb_refinement);
         pp.query("levelset__pad", levelset__pad);
@@ -100,10 +104,10 @@ void mfix_level::Init(int lev, Real dt, Real time)
 
     MakeNewLevelFromScratch(0, time, ba, dm);
 
-    if (dual_grid                    &&
-        particle_max_grid_size_x > 0 &&
-        particle_max_grid_size_y > 0 &&
-        particle_max_grid_size_z > 0) {
+    if(dual_grid && particle_max_grid_size_x > 0
+                 && particle_max_grid_size_y > 0
+                 && particle_max_grid_size_z > 0)
+    {
         BoxArray particle_ba(geom[lev].Domain());
         IntVect particle_max_grid_size(particle_max_grid_size_x,
                                        particle_max_grid_size_y,
@@ -163,9 +167,10 @@ void mfix_level::Init(int lev, Real dt, Real time)
     // Level-Set: initialize container for level set
     // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)
     //            -> use min to intersect new eb boundaries (in update)
-    level_set = std::unique_ptr<LSFactory>(new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
-                                                              levelset__pad, levelset__eb_pad, pc.get()));
-
+    level_set = std::unique_ptr<LSFactory>(
+                    new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
+                                  levelset__pad, levelset__eb_pad, pc.get())
+                );
 }
 
 BoxArray
@@ -722,17 +727,17 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real stop_time, int stea
       const Box& wbx = (*w_g[lev])[mfi].box();
 
       zero_wall_norm_vel(sbx.loVect(), sbx.hiVect(),
-			 ubx.loVect(), ubx.hiVect(),
-			 vbx.loVect(), vbx.hiVect(),
-			 wbx.loVect(), wbx.hiVect(),
-			 (*u_g[lev])[mfi].dataPtr(),
-			 (*v_g[lev])[mfi].dataPtr(),
-			 (*w_g[lev])[mfi].dataPtr(),
-			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-			 bc_klo.dataPtr(), bc_khi.dataPtr(),
-			 domain.loVect(), domain.hiVect(),
-			 &nghost);
+                         ubx.loVect(), ubx.hiVect(),
+                         vbx.loVect(), vbx.hiVect(),
+                         wbx.loVect(), wbx.hiVect(),
+                         (*u_g[lev])[mfi].dataPtr(),
+                         (*v_g[lev])[mfi].dataPtr(),
+                         (*w_g[lev])[mfi].dataPtr(),
+                         bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                         bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                         bc_klo.dataPtr(), bc_khi.dataPtr(),
+                         domain.loVect(), domain.hiVect(),
+                         &nghost);
     }
   }
 
@@ -854,10 +859,4 @@ void mfix_level::WriteEBSurface(int lev) {
     mfix_eb_grid_coverage(&cpu, dx, bx.loVect(), bx.hiVect(),
          flag.dataPtr(), flag.loVect(), flag.hiVect());
   }
-
-
-
-
-
-
 }

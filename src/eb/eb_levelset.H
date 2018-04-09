@@ -40,8 +40,9 @@ class LSFactory {
         // Data structures encloding (padded) EB index space
         std::unique_ptr<MultiFab> eb_grid;
 
-        // Geometry objects reflecting refined (and padded) BoxArrays. This is required to prevent PeriodicFill
-        // operations from "spilling" refined indices over periodic boundaries
+        // Geometry objects reflecting refined (and padded) BoxArrays. This is
+        // required to prevent PeriodicFill operations from "spilling" refined
+        // indices over periodic boundaries
         Geometry geom_ls, geom_eb;
 
         // Padding of the leve-set and EB grids:
@@ -76,7 +77,8 @@ class LSFactory {
         void intersection_ebis(const EBIndexSpace & eb_is);
         void union_ebis(const EBIndexSpace & eb_is);
 
-        // Unpdate internal `ls_phi` and `ls_valid` based on the min of `ls_phi` and `ls_in`
+        // Unpdate internal `ls_phi` and `ls_valid` based on the min of
+        // `ls_phi` and `ls_in`
         void update_intersection(const MultiFab & ls_in);
         void update_union(const MultiFab & ls_in);
 
@@ -94,7 +96,7 @@ class LSFactory {
         const int get_eb_ref() const {return eb_grid_ref;};
         const int get_eb_pad() const {return eb_grid_pad;};
 
-        // Return AMR level (wrt the MFIXParticleContainer pointer (pc)_
+        // Return AMR level (wrt the MFIXParticleContainer pointer (pc)
         const int get_amr_level() const {return amr_lev;};
 
         // Return BoxArrays:
@@ -121,8 +123,9 @@ class LSUtility {
             dom_ls.refine(level_set.get_ls_ref());
             Geometry geom_ls(dom_ls);
 
-            // This is a bit of a hack: we want to grow the geometry's domain box, without influencing the cell size.
-            // I.e. we want Geometry::Domain() to extend beyond probLo and probHi.
+            // This is a bit of a hack: we want to grow the geometry's domain
+            // box, without influencing the cell size.  I.e. we want
+            // Geometry::Domain() to extend beyond probLo and probHi.
             Box dom_ls_g = geom_ls.Domain();
             dom_ls_g.grow(level_set.get_ls_pad());
             geom_ls.Domain(dom_ls_g);
@@ -141,8 +144,9 @@ class LSUtility {
             dom_eb.refine(level_set.get_eb_ref());
             Geometry geom_eb(dom_eb);
 
-            // This is a bit of a hack: we want to grow the geometry's domain box, without influencing the cell size.
-            // I.e. we want Geometry::Domain() to extend beyond probLo and probHi.
+            // This is a bit of a hack: we want to grow the geometry's domain
+            // box, without influencing the cell size.  I.e. we want
+            // Geometry::Domain() to extend beyond probLo and probHi.
             Box dom_eb_g = geom_eb.Domain();
             dom_eb_g.grow(level_set.get_eb_pad());
             geom_eb.Domain(dom_eb_g);

@@ -331,7 +331,7 @@ private:
     // Molecular viscosity
     Vector< std::unique_ptr<MultiFab> > mu_g ;
 
-    // Level-Set Data:
+    // Level-Set Data
     Vector< std::unique_ptr<MultiFab> > ls;
 
     // Cell-based
@@ -439,8 +439,8 @@ private:
     // all the member functions.
     //
     // DO NOT USE  A LOCAL VARIABLE WITH THE SAME NAME
-    // 
-    const int nghost = 1; 
+    //
+    const int nghost = 1;
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
