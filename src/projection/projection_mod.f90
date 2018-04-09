@@ -64,9 +64,6 @@ contains
       odx    = one / dx(1)
       ody    = one / dx(2)
       odz    = one / dx(3)
-      c_cfl  = zero
-      v_cfl  = zero
-      f_cfl  = zero
 
       old_dt = dt
       

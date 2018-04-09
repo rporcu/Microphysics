@@ -4,7 +4,7 @@
 void
 mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state, Real& dt)
 {
-    if (!fixed_dt)
+//  if (!fixed_dt)
     {
        // Compute dt for this time step
        Real umax  =   u_g[lev] -> norm0 ();
@@ -25,6 +25,11 @@ mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state
                BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
                gradp0max, geom[lev].CellSize());
        }
+
+       // This is just a hack to make sure we get the same answer again
+       gradp0max[0] = 0;
+       gradp0max[1] = 0;
+       gradp0max[2] = 0;
 
        compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax, 
    		        gradp0max, geom[lev].CellSize(), &cfl, 
