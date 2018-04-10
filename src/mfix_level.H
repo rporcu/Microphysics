@@ -156,6 +156,7 @@ protected:
     void mfix_initial_iterations (int lev, Real dt, Real stop_time, int steady_state);
     void mfix_apply_projection (int lev, amrex::Real scaling_factor);
     void mfix_set_projection_bcs (int lev);
+    void mfix_set_velocity_bcs (int lev);
 
     // End projection
 

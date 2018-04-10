@@ -741,12 +741,20 @@ extern "C"
         );
 
     void set_projection_bcs(
-            amrex::Real* u_g,  const int* ulo, const int* uhi,
-            amrex::Real* v_g,  const int* vlo, const int* vhi,
-            amrex::Real* w_g,  const int* wlo, const int* whi,
             amrex::Real* ep_g, const int* slo, const int* shi,
             amrex::Real* ro_g, amrex::Real* rop_g,
             amrex::Real* mu_g, amrex::Real* lambda_g,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
+            const int* domlo , const int* domhi,
+            const int* ng
+        );
+
+    void set_velocity_bcs(     const int* slo, const int* shi,
+            amrex::Real* u_g,  const int* ulo, const int* uhi,
+            amrex::Real* v_g,  const int* vlo, const int* vhi,
+            amrex::Real* w_g,  const int* wlo, const int* whi,
             const int* bc_ilo, const int* bc_ihi,
             const int* bc_jlo, const int* bc_jhi,
             const int* bc_klo, const int* bc_khi,

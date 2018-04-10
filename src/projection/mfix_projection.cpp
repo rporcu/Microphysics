@@ -28,10 +28,11 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     
     // Fill ghost nodes and reimpose boundary conditions
     mfix_set_projection_bcs (lev);
+    mfix_set_velocity_bcs (lev);
 
     //
     // Start loop: if we are not seeking a steady state solution,
-    // the loop will execute only one time
+    // the loop will execute only once
     //
     int keep_looping = 1;
     int iter = 1;
@@ -45,8 +46,8 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	{
 	   amrex::Print() << "\n   Iteration " << iter << " with dt = " << dt << "\n" << std::endl;
 	} else {
-	   amrex::Print() << "\n   Step " << nstep+1 <<": from old_time " \
-	   	          << time << " to new_time " << time+dt 
+	   amrex::Print() << "\n   Step " << nstep+1 <<": from old time " \
+	   	          << time << " to new time " << time+dt 
                           << " with dt = " << dt << "\n" << std::endl;
 	}
 
@@ -138,7 +139,8 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 
     Real time = 0.0;
     mfix_compute_dt(lev,time,stop_time,steady_state,dt);
-    amrex::Print() << "Using dt = " << dt << " in the initial iterations " << std::endl;
+
+    amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
 
     // Calculate drag coefficient
     if (solve_dem)
@@ -164,7 +166,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
        mfix_compute_intermediate_velocity ( lev, dt );
 
        // Exchange halo nodes and apply BCs to velocity
-       mfix_set_projection_bcs (lev);
+       mfix_set_velocity_bcs (lev);
 
        // Project velocity field
        mfix_apply_projection ( lev, dt );
@@ -173,7 +175,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
        MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev] -> nGrow() );
 
        // Exchange halo nodes and apply BCs
-       mfix_set_projection_bcs (lev);
+       mfix_set_velocity_bcs (lev);
 
        mfix_print_max_vel (lev);
 
@@ -243,7 +245,7 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
     mfix_compute_intermediate_velocity ( lev, dt );
     
     // Exchange halo nodes and apply BCs to velocity
-    mfix_set_projection_bcs (lev);
+    mfix_set_velocity_bcs (lev);
  
     // Project velocity field
     mfix_apply_projection ( lev, dt );
@@ -252,7 +254,7 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
     MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev] -> nGrow() );
     
     // Exchange halo nodes and apply BCs
-    mfix_set_projection_bcs (lev); 
+    mfix_set_velocity_bcs (lev); 
 }
 
 
@@ -324,7 +326,7 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     mfix_compute_intermediate_velocity ( lev, dt );
     
     // Fill ghost cells and reimpose boundary conditions
-    mfix_set_projection_bcs (lev);
+    mfix_set_velocity_bcs (lev);
 
     // Apply projection
     mfix_apply_projection ( lev, dt );
@@ -333,7 +335,7 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1,  phi[lev] -> nGrow() );
     
     // Exchange halo nodes and apply BCs
-    mfix_set_projection_bcs (lev);
+    mfix_set_velocity_bcs (lev);
 }
 
 
@@ -809,7 +811,7 @@ mfix_level::mfix_compute_diveu (int lev)
     v_g[lev] -> FillBoundary (geom[lev].periodicity());
     w_g[lev] -> FillBoundary (geom[lev].periodicity());
 
-    mfix_set_projection_bcs (lev);
+    mfix_set_velocity_bcs (lev);
 
     fill_mf_bc (lev,*ep_g[lev]);
     
@@ -906,7 +908,7 @@ mfix_level::steady_state_reached (int lev, Real dt)
     //
     // Make sure all ghost nodes are up to date
     // 
-    mfix_set_projection_bcs (lev);
+    mfix_set_velocity_bcs (lev);
     
     // 
     // Use temporaries to store the difference
@@ -992,30 +994,21 @@ mfix_level::steady_state_reached (int lev, Real dt)
 }
 
 //
-// Set the BCs for all the variables EXCEPT pressure
-// Call set_pressure_bcs to impose BCs on pressure
-// field
+// Set the BCs for all the variables EXCEPT pressure or velocity.
 // 
 void
 mfix_level::mfix_set_projection_bcs (int lev)
 {
   BL_PROFILE("mfix_level::mfix_set_projection_bcs()");
-
-  u_g[lev] -> FillBoundary (geom[lev].periodicity());
-  v_g[lev] -> FillBoundary (geom[lev].periodicity());
-  w_g[lev] -> FillBoundary (geom[lev].periodicity());
   
+  Box domain(geom[lev].Domain());
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
   for (MFIter mfi(*p_g[lev], true); mfi.isValid(); ++mfi)
     {
-      Box domain(geom[lev].Domain());
-
-      set_projection_bcs ( BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-			   BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
+      set_projection_bcs ( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
 			   (*ro_g[lev])[mfi].dataPtr (),
 			   (*rop_g[lev])[mfi].dataPtr (),
 			   (*mu_g[lev])[mfi].dataPtr (),
@@ -1025,6 +1018,38 @@ mfix_level::mfix_set_projection_bcs (int lev)
 			   bc_klo.dataPtr(), bc_khi.dataPtr(),
 			   domain.loVect(), domain.hiVect(),
 			   &nghost );
+    }			   
+}
+
+//
+// Set the BCs for velocity only
+// 
+void
+mfix_level::mfix_set_velocity_bcs (int lev)
+{
+  BL_PROFILE("mfix_level::mfix_set_velocity_bcs()");
+
+  u_g[lev] -> FillBoundary (geom[lev].periodicity());
+  v_g[lev] -> FillBoundary (geom[lev].periodicity());
+  w_g[lev] -> FillBoundary (geom[lev].periodicity());
+  
+  Box domain(geom[lev].Domain());
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+  for (MFIter mfi(*p_g[lev], true); mfi.isValid(); ++mfi)
+    {
+      const Box& bx = (*p_g[lev])[mfi].box();
+      set_velocity_bcs ( bx.loVect(), bx.hiVect(),
+                         BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+		         BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+			 BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+			 bc_klo.dataPtr(), bc_khi.dataPtr(),
+			 domain.loVect(), domain.hiVect(),
+			 &nghost );
     }			   
 }
 
