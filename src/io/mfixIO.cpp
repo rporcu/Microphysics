@@ -12,7 +12,7 @@ namespace
     const std::string level_prefix {"Level_"};
 }
 
-// This function initializes the attributes vectorVars, vecVarsName, 
+// This function initializes the attributes vectorVars, vecVarsName,
 //                                          pltscalarVars, pltscaVarsName,
 //                                          chkscalarVars, chkscaVarsName.
 // If new variables need to be added to the output/checkpoint, simply
@@ -75,7 +75,7 @@ mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time, 
       const int nlevels = finestLevel()+1;
       HeaderFile << nlevels << "\n";
 
-  // Time stepping controls
+      // Time stepping controls
       HeaderFile << nstep << "\n";
       HeaderFile << dt << "\n";
       HeaderFile << time << "\n";
@@ -116,7 +116,7 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
 
     WriteJobInfo(checkpointname);
 
-    if (solve_fluid) 
+    if (solve_fluid)
     {
        for (int lev = 0; lev < nlevels; ++lev) {
 
@@ -407,19 +407,19 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        w_go[lev]->FillBoundary(geom[lev].periodicity());
     }
 
-    // used in load balancing  
+    // used in load balancing
     if (load_balance_type == "KnapSack") {
         if (solve_dem)
         {
-           particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev), 
-                                                 pc->ParticleDistributionMap(lev), 1, 0));  
-           particle_cost[lev]->setVal(0.0); 
+           particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
+                                                 pc->ParticleDistributionMap(lev), 1, 0));
+           particle_cost[lev]->setVal(0.0);
         }
-            
+
         if (solve_fluid)
         {
-           fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));  
-           fluid_cost[lev]->setVal(0.0); 
+           fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+           fluid_cost[lev]->setVal(0.0);
         }
     }
     amrex::Print() << "  Done with mfix::Restart " << std::endl;
@@ -551,7 +551,7 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
        for (int lev = 0; lev <= finest_level; ++lev) {
 
-          // the "+1" here is for volfrac 
+          // the "+1" here is for volfrac
           const int ncomp = vectorVars.size() + pltscalarVars.size() + 1;
           mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
 
@@ -579,18 +579,18 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
           } else {
               mf[lev]->setVal(1.0,dcomp,1,0);
           }
- 
+
           Vector<const MultiFab*> mf2(finest_level+1);
- 
+
           for (int lev = 0; lev <= finest_level; ++lev) {
               mf2[lev] = mf[lev].get();
           }
-    
+
           // Concatenate scalar and vector var names
           Vector<std::string>  names;
           names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
           names.insert( names.end(), pltscaVarsName.begin(), pltscaVarsName.end());
-     
+
           amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
                        Geom(), time, istep, refRatio());
        }
@@ -600,9 +600,9 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
         Vector<const MultiFab*> mf;
         Vector<std::string>  names;
-        
+
         amrex::WriteMultiLevelPlotfile(plotfilename, 0, mf, names,
-                                       Geom(), time, istep, refRatio());        
+                                       Geom(), time, istep, refRatio());
 
     }
 
