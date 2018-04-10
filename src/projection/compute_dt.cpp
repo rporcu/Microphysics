@@ -4,7 +4,7 @@
 void
 mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state, Real& dt)
 {
-//  if (!fixed_dt)
+    if (!fixed_dt)
     {
        // Compute dt for this time step
        Real umax  =   u_g[lev] -> norm0 ();

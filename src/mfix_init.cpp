@@ -599,7 +599,7 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
   if (solve_fluid)
-     mfix_init_fluid(lev,restart_flag,stop_time,steady_state);
+     mfix_init_fluid(lev,restart_flag,dt,stop_time,steady_state);
 
   // Call user-defined subroutine to set constants, check data, etc.
   if (call_udf) mfix_usr0();
@@ -644,7 +644,7 @@ mfix_level::MakeBCArrays ()
 }
 
 void
-mfix_level::mfix_init_fluid(int lev, int is_restarting, Real stop_time, int steady_state)
+mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time, int steady_state)
 {
   Box domain(geom[lev].Domain());
 
@@ -755,7 +755,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real stop_time, int stea
      // We need to initialize the volume fraction ep_g before the first projection
      mfix_calc_volume_fraction(lev,sum_vol_orig);
      mfix_project_velocity(lev);
-     mfix_initial_iterations(lev,stop_time,steady_state);
+     mfix_initial_iterations(lev,dt,stop_time,steady_state);
   }
 }
 

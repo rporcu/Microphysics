@@ -140,7 +140,7 @@ protected:
 
     void mfix_calc_trd_and_tau(int lev);
 
-    void mfix_init_fluid(int lev, int is_restarting, Real stop_time, int steady_state);
+    void mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time, int steady_state);
     void mfix_set_bc0(int lev);
 
     void mfix_conv_rop(int lev);
@@ -153,7 +153,7 @@ protected:
 
     // Projection
     void mfix_project_velocity   (int lev);
-    void mfix_initial_iterations (int lev, Real stop_time, int steady_state);
+    void mfix_initial_iterations (int lev, Real dt, Real stop_time, int steady_state);
     void mfix_apply_projection (int lev, amrex::Real scaling_factor);
     void mfix_set_projection_bcs (int lev);
 

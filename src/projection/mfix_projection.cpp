@@ -129,7 +129,7 @@ mfix_level::mfix_project_velocity (int lev)
 }
 
 void
-mfix_level::mfix_initial_iterations (int lev, Real stop_time, int steady_state)
+mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int steady_state)
 {
     // Copy u_g into u_go
     MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, u_go[lev]->nGrow());
@@ -137,8 +137,6 @@ mfix_level::mfix_initial_iterations (int lev, Real stop_time, int steady_state)
     MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, w_go[lev]->nGrow());
 
     Real time = 0.0;
-    Real dt   = 1.e20;
-
     mfix_compute_dt(lev,time,stop_time,steady_state,dt);
     amrex::Print() << "Using dt = " << dt << " in the initial iterations " << std::endl;
 
