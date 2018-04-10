@@ -291,11 +291,11 @@ int main (int argc, char* argv[])
 
     // Dump plotfile at the final time
     if ( check_int > 0 && nstep != last_chk)
-       my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
+        my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
     if ( plot_int > 0  && nstep != last_plt)
-       my_mfix.WritePlotFile      ( plot_file     , nstep, dt, time );
+        my_mfix.WritePlotFile      ( plot_file     , nstep, dt, time );
     if ( par_ascii_int > 0  && nstep != last_par_ascii)
-       my_mfix.WriteParticleAscii ( par_ascii_file, nstep );
+        my_mfix.WriteParticleAscii ( par_ascii_file, nstep );
 
     my_mfix.usr3(0);
 
@@ -304,8 +304,8 @@ int main (int argc, char* argv[])
 
     if (ParallelDescriptor::IOProcessor())
     {
-       std::cout << "Time spent in main      " << end_time << std::endl;
-       std::cout << "Time spent in main-init " << end_time-end_init << std::endl;
+        std::cout << "Time spent in main      " << end_time << std::endl;
+        std::cout << "Time spent in main-init " << end_time-end_init << std::endl;
     }
 
     BL_PROFILE_REGION_STOP("mfix::main()");

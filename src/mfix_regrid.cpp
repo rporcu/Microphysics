@@ -27,15 +27,15 @@ mfix_level::Regrid (int lev, int nstep)
        {
            SetBoxArray(lev, pc->ParticleBoxArray(lev));
            SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
-           
+
            // Since we have already allocated the fluid data we need to re-define those arrays
            //   and copy from the old BoxArray to the new one.  Note that the SetBoxArray and
            //   SetDistributionMap calls above have re-defined grids and dmap to be the new ones.
-           if (solve_fluid) 
+           if (solve_fluid)
                RegridArrays(lev,grids[lev],dmap[lev]);
        }
-       
-       if (solve_fluid) 
+
+       if (solve_fluid)
            mfix_set_bc0(lev);
        
        if (ebfactory) {
@@ -44,7 +44,7 @@ mfix_level::Regrid (int lev, int nstep)
                                                    m_eb_volume_grow_cells,
                                                    m_eb_full_grow_cells}, m_eb_support_level));
        }
-       
+
        if (particle_ebfactory) {
            particle_ebfactory.reset(new EBFArrayBoxFactory(geom[lev], pc->ParticleBoxArray(lev),
                                                            pc->ParticleDistributionMap(lev),
@@ -53,19 +53,19 @@ mfix_level::Regrid (int lev, int nstep)
 
            // eb_normals is a legacy of the old collision algorithm -> depricated
            eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
-           
-           level_set->regrid();
+
+           //level_set->regrid();
        }
     }
     else if (load_balance_type == "KnapSack") {
-        
+
         amrex::Print() << "Load balancing using KnapSack " << std::endl;
-        
+
         if (solve_dem)
            AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
         if (solve_fluid)
            AMREX_ALWAYS_ASSERT(fluid_cost[0]    != nullptr);
-        
+
         if (ParallelDescriptor::NProcs() == 1) return;
 
         if (dual_grid) {
@@ -83,7 +83,7 @@ mfix_level::Regrid (int lev, int nstep)
                     ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
                                                            {m_eb_basic_grow_cells,
                                                             m_eb_volume_grow_cells,
-                                                            m_eb_full_grow_cells}, m_eb_support_level));                    
+                                                            m_eb_full_grow_cells}, m_eb_support_level));
                 }
 
                 mfix_set_bc0(lev);
@@ -98,12 +98,12 @@ mfix_level::Regrid (int lev, int nstep)
                     particle_ebfactory.reset(new EBFArrayBoxFactory(geom[lev], pc->ParticleBoxArray(lev),
                                                                     pc->ParticleDistributionMap(lev),
                                                                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                                                            m_eb_full_grow_cells}, m_eb_support_level));
+                                                                     m_eb_full_grow_cells}, m_eb_support_level));
 
                     // eb_normals is a legacy of the old collision algorithm -> depricated
                     eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
-                    level_set->regrid();
+                    //level_set->regrid();
                 }
             }
         } else {
@@ -115,7 +115,7 @@ mfix_level::Regrid (int lev, int nstep)
                 costs.plus(*fluid_cost[lev], 0, 1, 0);
 
             DistributionMapping newdm = DistributionMapping::makeKnapSack(costs);
-            if (solve_fluid) 
+            if (solve_fluid)
                 RegridArrays(lev, grids[lev], newdm);
             SetDistributionMap(lev, newdm);
 
@@ -130,37 +130,40 @@ mfix_level::Regrid (int lev, int nstep)
                particle_cost[lev].reset(new MultiFab(grids[lev], newdm, 1, 0));
                particle_cost[lev]->setVal(0.0);
             }
-            
+
             if (solve_dem)   pc->Regrid(dmap[lev], grids[lev]);
             if (solve_fluid) mfix_set_bc0(lev);
-            
-            if (ebfactory) {    
+
+            if (ebfactory) {
                 ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
                                                        {m_eb_basic_grow_cells,
-                                                               m_eb_volume_grow_cells,
-                                                               m_eb_full_grow_cells}, m_eb_support_level));
+                                                        m_eb_volume_grow_cells,
+                                                        m_eb_full_grow_cells}, m_eb_support_level));
             }
-            
+
             if (particle_ebfactory) {
                 particle_ebfactory.reset(new EBFArrayBoxFactory(geom[lev], pc->ParticleBoxArray(lev),
                                                                 pc->ParticleDistributionMap(lev),
                                                                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                                                        m_eb_full_grow_cells}, m_eb_support_level));
+                                                                 m_eb_full_grow_cells}, m_eb_support_level));
 
                 // eb_normals is a legacy of the old collision algorithm -> depricated
-                eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
-
-                level_set->regrid();
+                eb_normals  = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
             }
         }
 
-        // amrex::Print() << grids[0] << std::endl;	
-	// amrex::Print() << dmap[0] << std::endl;
-	// long np = pc->TotalNumberOfParticles(true, true);
-	// int pid = ParallelDescriptor::MyProc();
-	// amrex::AllPrint() << "Process " << pid << " got " << np << " particles \n";
-	//	pc->PrintParticleCounts();
+        //mrex::Print() << grids[0] << std::endl;
+	    //mrex::Print() << dmap[0] << std::endl;
+	    //ong np = pc->TotalNumberOfParticles(true, true);
+	    //nt pid = ParallelDescriptor::MyProc();
+	    //mrex::AllPrint() << "Process " << pid << " got " << np << " particles \n";
+	    //pc->PrintParticleCounts();
     }
+
+    // Note: this might not be necessary anymore if the level-set data is
+    // managed by mfix_level
+    level_set->regrid();
+
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }
 

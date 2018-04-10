@@ -171,6 +171,11 @@ void mfix_level::Init(int lev, Real dt, Real time)
                     new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
                                   levelset__pad, levelset__eb_pad, pc.get())
                 );
+
+    // Make sure that at (at least) an initial MultiFab ist stored in ls[lev].
+    // (otherwise, if there are no walls/boundaries in the simulation, saving a
+    // plot file or checkpoint will segfault).
+    ls[lev] = level_set->copy_data();
 }
 
 BoxArray

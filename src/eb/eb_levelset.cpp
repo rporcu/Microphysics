@@ -23,9 +23,11 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
 {
     // DistributionMapping inherited from MFIXParticleContainer
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    // Init geometry over which the level set and EB are defined, note that BoxArrays and DistributionMapping are
-    // inherited from the MFIXParticleContainer => the DistributionMapping above applies to refined BoxArrays. Also
-    // note that the Geometry objects are updated (for periodic fill operations)
+    // Init geometry over which the level set and EB are defined, note that
+    // BoxArrays and DistributionMapping are inherited from the
+    // MFIXParticleContainer => the DistributionMapping above applies to
+    // refined BoxArrays. Also note that the Geometry objects are updated (for
+    // periodic fill operations)
     init_geom();
 
     // Initialize MultiFab pointers storing level-set data
@@ -42,19 +44,19 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
 
     // Define ls_grid and ls_valid, growing them by ls_pad
     // Note: box arrays (such as ls_ba) are initialized in init_box()
-    ls_grid->define(ls_ba, dm, 1, 0 /*ls_pad*/);
-    ls_valid->define(ls_ba, dm, 1, 0 /*ls_pad*/);
+    ls_grid->define(ls_ba, dm, 1, ls_pad);
+    ls_valid->define(ls_ba, dm, 1, ls_pad);
     ls_valid->setVal(-1);
 
     // Define eb_grid, growing it by eb_pad
-    eb_grid->define(eb_ba, dm, 1, 0 /*eb_pad*/);
+    eb_grid->define(eb_ba, dm, 1, eb_pad);
 
     // Initialize by setting all ls_phi = huge(c_real)
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
     for(MFIter mfi( * ls_grid, true); mfi.isValid(); ++mfi){
-        Box tile_box   = mfi.growntilebox();
+        Box tile_box   = mfi.tilebox();
         auto & ls_tile = (* ls_grid)[mfi];
 
         // Initialize in fortran land
@@ -80,9 +82,10 @@ LSFactory::~LSFactory() {
 
 
 void LSFactory::update_ba() {
-    // Refined versions of both the cell-centered (particle) and nodal (phi) BoxArrays
-    // Note: BoxArrays are inherited from MFIXParticleContainer => the DistributionMapping inherited from
-    // MFIXParticleContainer still applies to the refined BoxArrays
+    // Refined versions of both the cell-centered (particle) and nodal (phi)
+    // BoxArrays Note: BoxArrays are inherited from MFIXParticleContainer =>
+    // the DistributionMapping inherited from MFIXParticleContainer still
+    // applies to the refined BoxArrays
     const BoxArray & particle_ba = mfix_pc->ParticleBoxArray(amr_lev);
     const BoxArray & phi_ba      = amrex::convert(particle_ba, IntVect{1,1,1});
 
@@ -99,8 +102,10 @@ void LSFactory::update_ba() {
 
 
 void LSFactory::init_geom() {
-    // Initialize Geometry objects for the level set and the EB, note that the Geometry objects reflect the refined (and
-    // padded) box arrays, preventing periodic fill operations from "spilling over" from refined/padded indices.
+    // Initialize Geometry objects for the level set and the EB, note that the
+    // Geometry objects reflect the refined (and padded) box arrays, preventing
+    // periodic fill operations from "spilling over" from refined/padded
+    // indices.
     update_ba();
 
     geom_ls = LSUtility::make_ls_geometry(*this);
@@ -231,7 +236,7 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
 std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace & eb_is) {
     std::unique_ptr<MultiFab> mf_impfunc = std::unique_ptr<MultiFab>(new MultiFab);
     const DistributionMapping & dm = mfix_pc->ParticleDistributionMap(amr_lev);
-    mf_impfunc->define(ls_ba, dm, 1, 0 /*ls_grid_pad*/);
+    mf_impfunc->define(ls_ba, dm, 1, ls_grid_pad);
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -250,7 +255,7 @@ void LSFactory::update_intersection(const MultiFab & ls_in) {
 #pragma omp parallel
 #endif
     for(MFIter mfi( * ls_grid, true); mfi.isValid(); ++mfi){
-        Box tile_box = mfi.growntilebox();
+        Box tile_box = mfi.tilebox();
 
         const auto & ls_in_tile = ls_in[mfi];
         auto & v_tile = (* ls_valid)[mfi];
@@ -274,7 +279,7 @@ void LSFactory::update_union(const MultiFab & ls_in) {
 #pragma omp parallel
 #endif
     for(MFIter mfi( * ls_grid, true); mfi.isValid(); ++mfi){
-        Box tile_box = mfi.growntilebox();
+        Box tile_box = mfi.tilebox();
 
         const auto & ls_in_tile = ls_in[mfi];
         auto & v_tile = (* ls_valid)[mfi];
@@ -294,30 +299,34 @@ void LSFactory::update_union(const MultiFab & ls_in) {
 
 std::unique_ptr<MultiFab> LSFactory::copy_data() const {
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    std::unique_ptr<MultiFab> cpy(new MultiFab(ls_ba, dm, 1, 0 /*ls_grid_pad*/));
-    cpy->copy(* ls_grid, 0, 0, 1, 0 /*ls_grid_pad*/, 0 /*ls_grid_pad*/);
+    std::unique_ptr<MultiFab> cpy(new MultiFab(ls_ba, dm, 1, ls_grid_pad));
+    cpy->copy(* ls_grid, 0, 0, 1, ls_grid_pad, ls_grid_pad);
     return cpy;
 }
 
 
 std::unique_ptr<iMultiFab> LSFactory::copy_valid() const {
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    std::unique_ptr<iMultiFab> cpy(new iMultiFab(ls_ba, dm, 1, 0 /*ls_grid_pad*/));
-    cpy->copy(* ls_valid, 0, 0, 1, 0 /*ls_grid_pad*/, 0 /*ls_grid_pad*/);
+    std::unique_ptr<iMultiFab> cpy(new iMultiFab(ls_ba, dm, 1, ls_grid_pad));
+    cpy->copy(* ls_valid, 0, 0, 1, ls_grid_pad, ls_grid_pad);
     return cpy;
 }
 
 
 void LSFactory::regrid(){
-    // Regrids the level-set data whenever the MFIXParticleContainer's DistributionMapping has changed:
+    // Regrids the level-set data whenever the MFIXParticleContainer's
+    // DistributionMapping has changed:
     //      -> Loads the updated DistributionMapping from MFIXParticleContainer
-    //      -> Rebuilds the nodal levelset (ls_ba), cell-centered valid (cc_ba), and eb (eb_ba) BoxArrays
-    //          -> ls_ba, cc_ba, and eb_ba are all inherited from MFIXParticleContainer::ParticleBoxArray
-    //  =>  make sure that the AMReX level of the MFIXParticleContainer has been regridded before calling this method
+    //      -> Rebuilds the nodal levelset (ls_ba), cell-centered valid
+    //         (cc_ba), and eb (eb_ba) BoxArrays
+    //          -> ls_ba, cc_ba, and eb_ba are all inherited from
+    //             MFIXParticleContainer::ParticleBoxArray
+    //  =>  make sure that the AMReX level of the MFIXParticleContainer has
+    //      been regridded before calling this method
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
     update_ba();
 
-    int ng = 0; //ls_grid_pad;
+    int ng = ls_grid_pad;
     std::unique_ptr<MultiFab> ls_grid_new(new MultiFab(ls_ba, dm, 1, ng));
 
     ls_grid_new->copy(* ls_grid, 0, 0, 1, ng, ng);
@@ -338,9 +347,11 @@ void LSFactory::invert() {
 #endif
     for(MFIter mfi( * ls_grid, true); mfi.isValid(); ++ mfi){
         FArrayBox & a_fab = (* ls_grid)[mfi];
-        for(BoxIterator bit(mfi.growntilebox()); bit.ok(); ++bit)
+        for(BoxIterator bit(mfi.tilebox()); bit.ok(); ++bit)
             a_fab(bit(), 0) = - a_fab(bit(), 0);
     }
+
+    ls_grid->FillBoundary(geom_ls.periodicity());
 }
 
 
@@ -366,14 +377,17 @@ void LSFactory::intersection_ebf(const EBFArrayBoxFactory & eb_factory, const EB
     eb_valid.define(ls_ba, dm, 1, 0 /*ls_grid_pad*/);
     eb_valid.setVal(0);
 
-    // Fill local MultiFab with eb_factory's level-set data. Note the role of eb_valid:
-    //  -> eb_valid = 1 if the corresponding eb_ls location could be projected onto the eb-facets
-    //  -> eb_valid = 0 if eb_ls is the fall-back (euclidian) distance to the nearest eb-facet
+    // Fill local MultiFab with eb_factory's level-set data. Note the role of
+    // eb_valid:
+    //  -> eb_valid = 1 if the corresponding eb_ls location could be projected
+    //                  onto the eb-facets
+    //  -> eb_valid = 0 if eb_ls is the fall-back (euclidian) distance to the
+    //                  nearest eb-facet
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
     for(MFIter mfi(eb_ls, true); mfi.isValid(); ++mfi){
-        Box tile_box = mfi.growntilebox();
+        Box tile_box = mfi.tilebox();
         const int * lo = tile_box.loVect();
         const int * hi = tile_box.hiVect();
 
@@ -425,7 +439,7 @@ void LSFactory::union_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSp
 #pragma omp parallel
 #endif
     for(MFIter mfi(eb_ls, true); mfi.isValid(); ++mfi){
-        Box tile_box = mfi.growntilebox();
+        Box tile_box = mfi.tilebox();
         const int * lo = tile_box.loVect();
         const int * hi = tile_box.hiVect();
 
@@ -465,7 +479,7 @@ void LSFactory::intersection_ebis(const EBIndexSpace & eb_is) {
     for(MFIter mfi( * mf_impfunc, true); mfi.isValid(); ++ mfi){
         FArrayBox & a_fab = (* mf_impfunc)[mfi];
 
-        for(BoxIterator bit(mfi.growntilebox()); bit.ok(); ++bit)
+        for(BoxIterator bit(mfi.tilebox()); bit.ok(); ++bit)
             a_fab(bit(), 0) = - a_fab(bit(), 0);
     }
 
@@ -486,7 +500,7 @@ void LSFactory::union_ebis(const EBIndexSpace & eb_is) {
     for(MFIter mfi( * mf_impfunc, true); mfi.isValid(); ++ mfi){
         FArrayBox & a_fab = (* mf_impfunc)[mfi];
 
-        for(BoxIterator bit(mfi.growntilebox()); bit.ok(); ++bit)
+        for(BoxIterator bit(mfi.tilebox()); bit.ok(); ++bit)
             a_fab(bit(), 0) = - a_fab(bit(), 0);
     }
 
