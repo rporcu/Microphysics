@@ -22,7 +22,7 @@ subroutine zero_wall_norm_vel(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 
   integer(c_int), intent(in   ) :: slo(3),shi(3)
   integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
-  integer(c_int), intent(in   ) :: domlo(3),domhi(3), ng
+  integer(c_int), intent(in   ) :: domlo(3),domhi(3),ng
 
   real(c_real), intent(inout) :: &
        u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &

@@ -9,7 +9,7 @@
 #include <AMReX_MultiCutFab.H>
 #include "AMReX_BoxIterator.H"
 #include <AMReX_EBCellFlag.H>
-#include <mfix_F.H>
+#include <mfix_eb_F.H>
 
 
 LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, const MFIXParticleContainer * pc)

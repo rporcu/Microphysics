@@ -10,6 +10,7 @@
 #include <math.h>
 
 #include "mfix_F.H"
+#include "mfix_eb_F.H"
 
 using namespace amrex;
 using namespace std;
@@ -691,36 +692,6 @@ void MFIXParticleContainer::CalcDragOnFluid(amrex::MultiFab& beta_x_mf,
                        beta_u_mf, beta_v_mf, beta_w_mf,
                        bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
                        fortran_beta_comp, fortran_vel_comp, nghost);
-    if (beta_x_mf.contains_nan())
-    {
-        std::cout << "BETA_X HAS NANS AFTER SOLVE" << std::endl;
-        exit(0);
-    }
-    if (beta_y_mf.contains_nan())
-    {
-        std::cout << "BETA_Y HAS NANS AFTER SOLVE" << std::endl;
-        exit(0);
-    }
-    if (beta_z_mf.contains_nan())
-    {
-        std::cout << "BETA_Z HAS NANS AFTER SOLVE" << std::endl;
-        exit(0);
-    }
-    if (beta_u_mf.contains_nan())
-    {
-        std::cout << "BETA_U HAS NANS AFTER SOLVE" << std::endl;
-        exit(0);
-    }
-    if (beta_v_mf.contains_nan())
-    {
-        std::cout << "BETA_V HAS NANS AFTER SOLVE" << std::endl;
-        exit(0);
-    }
-    if (beta_w_mf.contains_nan())
-    {
-        std::cout << "BETA_W HAS NANS AFTER SOLVE" << std::endl;
-        exit(0);
-    }
 }
 
 void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,

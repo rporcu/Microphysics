@@ -462,9 +462,7 @@ mfix_level::make_eb_clr(int lev)
     Box domain(geom[lev].Domain());
     Real dx = geom[lev].CellSize()[0];
 
-    int exists;
     RealVect normal, center;
-    PlaneIF* plane;
     Vector<BaseIF*> planes;
     planes.resize(0);
 
@@ -478,7 +476,6 @@ mfix_level::make_eb_clr(int lev)
     Vector<PolyTerm> poly;
 
     PolyTerm mono;
-    Real coef;
     IntVect powers;
 
     Vector<Real> coefvec(3);

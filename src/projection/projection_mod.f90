@@ -41,50 +41,42 @@ contains
    ! 
    ! WARNING: We use a slightly modified version of C in the implementation below
    ! 
-   subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, dx, cfl, steady_state, &
-                               time, stop_time, dt ) &
+   subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, gradp0max, &
+                               dx, cfl, steady_state, time, stop_time, dt ) &
         & bind(C)
       
-      ! subroutine compute_new_dt ( umax, vmax, wmax, fgdsumax, fgdsvmax fgdswmax, &
-      !      dragumax, dragvmax, dragwmax, mumax, romin, dx, time, stop_time, dt ) &
-      
-
       use constant, only: gravity 
 
       integer(c_int), intent(in   ) :: steady_state
       real(ar),       intent(in   ) :: umax, vmax, wmax
-      ! real(ar),       intent(in   ) :: fgdsumax, fgdsvmax fgdswmax
-      ! real(ar),       intent(in   ) :: dragumax, dragvmax, dragwmax
       real(ar),       intent(in   ) :: mumax, romin
       real(ar),       intent(in   ) :: dx(3), cfl
+      real(ar),       intent(in   ) :: gradp0max(3)
       real(ar),       intent(in   ) :: time, stop_time
       real(ar),       intent(inout) :: dt
       real(ar)                      :: old_dt
       real(ar)                      :: c_cfl, v_cfl, f_cfl
       real(ar)                      :: odx, ody, odz
-      real(ar)                      :: fp_x, fp_y, fp_z, tmp
+      real(ar)                      :: tmp
       real(ar),       parameter     :: two = 2.0_ar, four = two*two
       real(ar),       parameter     :: eps = epsilon (zero)
       
       odx    = one / dx(1)
       ody    = one / dx(2)
       odz    = one / dx(3)
-      c_cfl  = zero
-      v_cfl  = zero
-      f_cfl  = zero
 
       old_dt = dt
       
       ! Convection
-      ! c_cfl = umax*odx + vmax*ody + wmax*odz  <-- Too restricting
       c_cfl = max ( umax*odx, vmax*ody, wmax*odz )
       
       ! Viscous 
       v_cfl = two * ( mumax / romin ) * ( odx**2 + ody**2 + odz**2 )
               
-      ! Gravity
-      f_cfl = f_cfl + gravity(1) * odx + gravity(2) * ody &
-           &        + gravity(3) * odz
+      ! Gravity and/or gradient of p0
+      f_cfl = abs(gravity(1)-gradp0max(1)) * odx + &
+              abs(gravity(2)-gradp0max(2)) * ody + &
+              abs(gravity(3)-gradp0max(3)) * odz
 
       ! Put all together
       tmp = (c_cfl + v_cfl)  + sqrt ( (c_cfl + v_cfl)**2 + four * f_cfl )
@@ -741,5 +733,59 @@ contains
       
    end subroutine compute_diveu
 
+   subroutine compute_gradp0_max ( lo, hi, p0, slo, shi, gp0_max, dx) &
+      bind (C)
+
+      ! Loop bounds
+      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
+
+      ! Array bounds
+      integer(c_int),  intent(in   ) :: slo(3), shi(3)
+
+      ! Grid and time spacing
+      real(ar),        intent(in   ) :: dx(3)
+      real(ar),        intent(  out) :: gp0_max(3)
+
+      ! Arrays
+      real(ar),        intent(in   ) ::                       &
+              p0(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! Local variables
+      integer(c_int) :: i, j, k
+      real(ar)       :: odx, ody, odz
+
+      odx = one / dx(1) 
+      ody = one / dx(2) 
+      odz = one / dx(3) 
+
+      gp0_max(:) = 0.d0
+      
+      do k = lo(3), hi(3)+1
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+               gp0_max(3) = max( gp0_max(3), abs(p0(i,j,k) - p0(i,j,k-1)))
+            end do
+         end do
+      end do
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)+1
+            do i = lo(1), hi(1)
+               gp0_max(2) = max( gp0_max(2), abs(p0(i,j,k) - p0(i,j-1,k)))
+            end do
+         end do
+      end do
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)+1
+               gp0_max(1) = max( gp0_max(1), abs(p0(i,j,k) - p0(i-1,j,k)))
+            end do
+         end do
+      end do
+
+      gp0_max(1) = gp0_max(1) * odx
+      gp0_max(2) = gp0_max(2) * ody
+      gp0_max(3) = gp0_max(3) * odz
+
+   end subroutine compute_gradp0_max
    
 end module projection_mod

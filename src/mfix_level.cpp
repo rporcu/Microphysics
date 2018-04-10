@@ -1,11 +1,10 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix_F.H>
+#include <mfix_eb_F.H>
 #include <mfix_level.H>
-#include <eb_levelset.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
-
 
 // For multigrid
 #include <AMReX_FMultiGrid.H>
@@ -41,8 +40,8 @@ mfix_level::mfix_level ()
     // No valid BoxArray and DistributionMapping have been defined.
     // But the arrays for them have been resized.
 
-    int nlevs_max = maxLevel() + 1;
 #if 0
+    int nlevs_max = maxLevel() + 1;
     istep.resize(nlevs_max, 0);
     nsubsteps.resize(nlevs_max, 1);
     for (int lev = 1; lev <= maxLevel(); ++lev)
@@ -168,11 +167,12 @@ mfix_level::usr3(int lev)
           Box vbx((*v_g[lev])[mfi].box());
           Box wbx((*w_g[lev])[mfi].box());
 
-          mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
-              (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
-              (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
-              (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-              &dx, &dy, &dz);
+          mfix_usr3( (*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
+                     (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
+                     (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
+                     (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+                     & dx, & dy, & dz
+                   );
        }
     }
 }
@@ -283,15 +283,15 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
            Box vbx((*v_g[lev])[pti].box());
            Box wbx((*w_g[lev])[pti].box());
 
-           calc_particle_beta(
-               sbx.loVect(), sbx.hiVect(),
-               ubx.loVect(), ubx.hiVect(),
-               vbx.loVect(), vbx.hiVect(),
-               wbx.loVect(), wbx.hiVect(), &np,
-               (*ep_g[lev])[pti].dataPtr(), (*ro_g[lev])[pti].dataPtr(),
-               (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(),
-               (*w_g[lev])[pti].dataPtr(),  (*mu_g[lev])[pti].dataPtr(),
-               particles.data(), &dx, &dy, &dz);
+           calc_particle_beta( sbx.loVect(), sbx.hiVect(),
+                               ubx.loVect(), ubx.hiVect(),
+                               vbx.loVect(), vbx.hiVect(),
+                               wbx.loVect(), wbx.hiVect(), &np,
+                               (*ep_g[lev])[pti].dataPtr(), (*ro_g[lev])[pti].dataPtr(),
+                               (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(),
+                               (*w_g[lev])[pti].dataPtr(),  (*mu_g[lev])[pti].dataPtr(),
+                               particles.data(), &dx, &dy, &dz
+                             );
        }
 
        // ******************************************************************************
@@ -450,31 +450,75 @@ mfix_level::mfix_calc_drag_particle(int lev)
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-    if(OnSameGrids)  {
+    Box domain(geom[lev].Domain());
+    if (OnSameGrids)
+    {
+       // Temporary arrays
+       std::unique_ptr<MultiFab> gpx(new MultiFab(u_g[lev]->boxArray(),dmap[lev],1,1));
+       std::unique_ptr<MultiFab> gpy(new MultiFab(v_g[lev]->boxArray(),dmap[lev],1,1));
+       std::unique_ptr<MultiFab> gpz(new MultiFab(w_g[lev]->boxArray(),dmap[lev],1,1));
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-       for(MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
-           const Box& sbx = (*p_g[lev])[pti].box();
+       for (MFIter mfi(*p_g[lev], true); mfi.isValid(); ++mfi)
+       {
+           const Box& sbx = (*p_g[lev])[mfi].box();
+
+           Box gpxbx((*gpx)[mfi].box());
+           Box gpybx((*gpy)[mfi].box());
+           Box gpzbx((*gpz)[mfi].box());
+
+           construct_gradp( sbx.loVect(),   sbx.hiVect(),
+                            gpxbx.loVect(), gpxbx.hiVect(),
+                            gpybx.loVect(), gpybx.hiVect(),
+                            gpzbx.loVect(), gpzbx.hiVect(),
+                            (*p_g[lev])[mfi].dataPtr(), (*p0_g[lev])[mfi].dataPtr(),
+                            (*gpx)[mfi].dataPtr(), (*gpy)[mfi].dataPtr(), (*gpz)[mfi].dataPtr(),
+                            &dx, &dy, &dz,
+                            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
+                            &nghost
+                          );
+       }
+
+       gpx->FillBoundary(geom[lev].periodicity());
+       gpy->FillBoundary(geom[lev].periodicity());
+       gpz->FillBoundary(geom[lev].periodicity());
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
+       {
            auto& particles = pti.GetArrayOfStructs();
            const int np = particles.size();
+
+           const Box& sbx = (*p_g[lev])[pti].box();
+
+           Box gpxbx((*gpx)[pti].box());
+           Box gpybx((*gpy)[pti].box());
+           Box gpzbx((*gpz)[pti].box());
 
            Box ubx((*u_g[lev])[pti].box());
            Box vbx((*v_g[lev])[pti].box());
            Box wbx((*w_g[lev])[pti].box());
 
-           calc_drag_particle(
-               sbx.loVect(), sbx.hiVect(),
-               ubx.loVect(), ubx.hiVect(),
-               vbx.loVect(), vbx.hiVect(),
-               wbx.loVect(), wbx.hiVect(), &np,
-               (*p_g[lev])[pti].dataPtr(), (*p0_g[lev])[pti].dataPtr(),
-               (*u_g[lev])[pti].dataPtr(), (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
-               particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
+           calc_drag_particle( sbx.loVect(), sbx.hiVect(),
+                               gpxbx.loVect(), gpxbx.hiVect(),
+                               gpybx.loVect(), gpybx.hiVect(),
+                               gpzbx.loVect(), gpzbx.hiVect(),
+                               ubx.loVect(), ubx.hiVect(),
+                               vbx.loVect(), vbx.hiVect(),
+                               wbx.loVect(), wbx.hiVect(), &np,
+                               (*gpx)[pti].dataPtr(), (*gpy)[pti].dataPtr(), (*gpz)[pti].dataPtr(),
+                               (*u_g[lev])[pti].dataPtr(), (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
+                               particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen
+                             );
        }
-    } else {
-
+    }
+    else
+    {
        BoxArray            pba = pc->ParticleBoxArray(lev);
        DistributionMapping pdm = pc->ParticleDistributionMap(lev);
 
@@ -493,6 +537,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
        x_face_ba.surroundingNodes(0);
        ng = u_g[lev]->nGrow();
        std::unique_ptr<MultiFab> u_g_pba(new MultiFab(x_face_ba,pdm,u_g[lev]->nComp(),ng));
+       std::unique_ptr<MultiFab> gpx    (new MultiFab(x_face_ba,pdm,1,1));
        u_g_pba->copy(*u_g[lev],0,0,1,ng,ng);
        u_g_pba->FillBoundary(geom[lev].periodicity());
 
@@ -500,6 +545,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
        y_face_ba.surroundingNodes(1);
        ng = v_g[lev]->nGrow();
        std::unique_ptr<MultiFab> v_g_pba(new MultiFab(y_face_ba,pdm,v_g[lev]->nComp(),ng));
+       std::unique_ptr<MultiFab> gpy    (new MultiFab(y_face_ba,pdm,1,1));
        v_g_pba->copy(*v_g[lev],0,0,1,ng,ng);
        v_g_pba->FillBoundary(geom[lev].periodicity());
 
@@ -507,29 +553,65 @@ mfix_level::mfix_calc_drag_particle(int lev)
        z_face_ba.surroundingNodes(2);
        ng = w_g[lev]->nGrow();
        std::unique_ptr<MultiFab> w_g_pba(new MultiFab(z_face_ba,pdm,w_g[lev]->nComp(),ng));
+       std::unique_ptr<MultiFab> gpz    (new MultiFab(z_face_ba,pdm,1,1));
        w_g_pba->copy(*w_g[lev],0,0,1,ng,ng);
        w_g_pba->FillBoundary(geom[lev].periodicity());
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-       for(MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
+       for (MFIter mfi(*p_g_pba, true); mfi.isValid(); ++mfi)
+       {
+           const Box& sbx = (*p_g_pba)[mfi].box();
+
+           Box gpxbx((*gpx)[mfi].box());
+           Box gpybx((*gpy)[mfi].box());
+           Box gpzbx((*gpz)[mfi].box());
+
+           construct_gradp( sbx.loVect(),   sbx.hiVect(),
+                            gpxbx.loVect(), gpxbx.hiVect(),
+                            gpybx.loVect(), gpybx.hiVect(),
+                            gpzbx.loVect(), gpzbx.hiVect(),
+                            (*p_g_pba)[mfi].dataPtr(), (*p0_g_pba)[mfi].dataPtr(),
+                            (*gpx)[mfi].dataPtr(), (*gpy)[mfi].dataPtr(), (*gpz)[mfi].dataPtr(),
+                            &dx, &dy, &dz,
+                            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
+                            &nghost
+                          );
+       }
+
+       gpx->FillBoundary(geom[lev].periodicity());
+       gpy->FillBoundary(geom[lev].periodicity());
+       gpz->FillBoundary(geom[lev].periodicity());
+
+       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
+       {
            const Box& sbx = (*p_g_pba)[pti].box();
            auto& particles = pti.GetArrayOfStructs();
            const int np = particles.size();
+
+           Box   pbx((*p_g_pba)[pti].box());
+
+           Box gpxbx((*gpx)[pti].box());
+           Box gpybx((*gpy)[pti].box());
+           Box gpzbx((*gpz)[pti].box());
 
            Box ubx((*u_g_pba)[pti].box());
            Box vbx((*v_g_pba)[pti].box());
            Box wbx((*w_g_pba)[pti].box());
 
-           calc_drag_particle(
-               sbx.loVect(), sbx.hiVect(),
-               ubx.loVect(), ubx.hiVect(),
-               vbx.loVect(), vbx.hiVect(),
-               wbx.loVect(), wbx.hiVect(), &np,
-               (*p_g_pba)[pti].dataPtr(), (*p0_g_pba)[pti].dataPtr(),
-               (*u_g_pba)[pti].dataPtr(), (*v_g_pba)[pti].dataPtr(), (*w_g_pba)[pti].dataPtr(),
-               particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
+           calc_drag_particle( sbx.loVect(), sbx.hiVect(),
+                               gpxbx.loVect(), gpxbx.hiVect(),
+                               gpybx.loVect(), gpybx.hiVect(),
+                               gpzbx.loVect(), gpzbx.hiVect(),
+                               ubx.loVect(), ubx.hiVect(),
+                               vbx.loVect(), vbx.hiVect(),
+                               wbx.loVect(), wbx.hiVect(), &np,
+                               (*gpx)[pti].dataPtr(), (*gpy)[pti].dataPtr(), (*gpz)[pti].dataPtr(),
+                               (*u_g_pba)[pti].dataPtr(), (*v_g_pba)[pti].dataPtr(), (*w_g_pba)[pti].dataPtr(),
+                               particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen
+                             );
        }
     }
 }

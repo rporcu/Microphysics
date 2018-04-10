@@ -67,7 +67,7 @@ extern "C"
             const int* domlo , const int* domhi,
             amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
             amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen,
-            const int* nghosto
+            const int* nghost
         );
 
     void set_bc0(
@@ -140,7 +140,7 @@ extern "C"
             int* bc_jlo, int* bc_jhi,
             int* bc_klo, int* bc_khi,
             const int* domlo, const int* domhi,
-            const int* ng
+            const int* nghost
         );
 
     void set_drag_bcs(
@@ -152,7 +152,7 @@ extern "C"
             int* bc_jlo, int* bc_jhi,
             int* bc_klo, int* bc_khi,
             const int* domlo, const int* domhi,
-            const int* ng
+            const int* nghost
         );
 
     void zero_wall_norm_vel(
@@ -165,7 +165,7 @@ extern "C"
             int* bc_jlo, int* bc_jhi,
             int* bc_klo, int* bc_khi,
             const int* domlo , const int* domhi,
-            const int* ng
+            const int* nghost
         );
 
     void set_particle_properties(
@@ -234,15 +234,32 @@ extern "C"
 
     void calc_drag_particle(
             const int* slo, const int* shi,
+            const int* xlo, const int* xhi,
+            const int* ylo, const int* yhi,
+            const int* zlo, const int* zhi,
             const int* ulo, const int* uhi,
             const int* vlo, const int* vhi,
             const int* wlo, const int* whi,
             const int* np,
-            amrex::Real* p_g, amrex::Real* p0_g,
+            amrex::Real* gpx, amrex::Real* gpy,  amrex::Real* gpz,
             amrex::Real* u_g, amrex::Real* v_g,  amrex::Real* w_g,
             void* particles,
             amrex::Real* dx,   amrex::Real* dy,   amrex::Real* dz,
             amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen
+        );
+
+    void construct_gradp(
+            const int* slo, const int* shi,
+            const int* xlo, const int* xhi,
+            const int* ylo, const int* yhi,
+            const int* zlo, const int* zhi,
+            amrex::Real* p_g, amrex::Real* p0_g,
+            amrex::Real* gpx, amrex::Real* gpy,  amrex::Real* gpz,
+            amrex::Real* dx,   amrex::Real* dy,   amrex::Real* dz,
+            int* bc_ilo, int* bc_ihi,
+            int* bc_jlo, int* bc_jhi,
+            int* bc_klo, int* bc_khi,
+            const int* domlo , const int* domhi, const int* ng
         );
 
     void calc_coeff(
@@ -478,15 +495,6 @@ extern "C"
             const amrex::Real* dx
         );
 
-    void compute_normals(
-            const int* lo , const int* hi,
-            const void* flag,   const int* fglo, const int* fghi,
-            amrex_real* normal, const int* nlo,  const int* nhi,
-            const amrex_real* ax, const int* axlo, const int* axhi,
-            const amrex_real* ay, const int* aylo, const int* ayhi,
-            const amrex_real* az, const int* azlo, const int* azhi
-        );
-
     int des_continuum_coupled();
 
     void mfix_particle_write(const int* nrp, void* particles);
@@ -603,11 +611,12 @@ extern "C"
             const amrex::Real* wmax,
             const amrex::Real* romin,
             const amrex::Real* mumax,
+            const amrex::Real* gradp0max,
             const amrex::Real* dx,
             const amrex::Real* cfl,
-            int* steady_state,
-            amrex::Real* time,
-            amrex::Real* stop_time,
+            const         int* steady_state,
+            const amrex::Real* time,
+            const amrex::Real* stop_time,
             amrex::Real* dt
         );
 
@@ -620,6 +629,12 @@ extern "C"
             amrex::Real* w,  const int* wlo, const int* whi,
             const amrex::Real* dx,
             const int* domlo, const int* plane
+        );
+
+    void compute_gradp0_max (
+            const int* lo, const int* hi,
+            amrex::Real* p0_g, const int* slo, const int* shi,
+            const amrex::Real* gradp0max, const amrex::Real* dx
         );
 
     void add_grad_p(
@@ -738,85 +753,6 @@ extern "C"
             const int* domlo , const int* domhi,
             const int* ng
         );
-
-    void mfix_eb_to_polygon(
-            const amrex::Real* dx,
-            const int* slo, const int* shi,
-            const void* flag,        const int* fglo, const int* fghi,
-            const amrex_real* bcent, const int* blo,  const int* bhi,
-            const amrex_real* ax,    const int* axlo, const int* axhi,
-            const amrex_real* ay,    const int* aylo, const int* ayhi,
-            const amrex_real* az,    const int* azlo, const int* azhi
-        );
-
-    void mfix_write_eb_vtp(int* myID);
-    void mfix_write_pvtp(int* nProcs);
-
-    void mfix_eb_grid_coverage(
-            int* myID, const amrex::Real* dx,
-            const int* slo, const int* shi,
-            const void* flag, const int* fglo, const int* fghi
-        );
-
-    void init_levelset(
-            const int * lo,   const int * hi,
-            amrex_real * phi, const int * phlo, const int * phhi
-        );
-
-    void fill_levelset_eb(
-            const int * lo,             const int * hi,
-            const amrex_real * eb_list, const int * l_eb,
-            int * valid,                const int * vlo,  const int * vhi,
-            amrex_real * phi,           const int * phlo, const int * phhi,
-            const amrex_real * dx,      const amrex_real * dx_eb
-        );
-
-    void update_levelset_intersection(
-            const int * lo,           const int * hi,
-            const amrex_real * ls_in, const int * lslo, const int * lshi,
-            int * valid,              const int * vlo,  const int * vhi,
-            amrex_real * phi,         const int * phlo, const int * phhi,
-            const amrex_real * dx,    const int * n_pad
-        );
-
-    void update_levelset_union(
-            const int * lo,           const int * hi,
-            const amrex_real * ls_in, const int * lslo, const int * lshi,
-            int * valid,              const int * vlo,  const int * vhi,
-            amrex_real * phi,         const int * phlo, const int * phhi,
-            const amrex_real * dx,    const int * n_pad
-        );
-
-    void calc_wall_collisions_ls(
-            void * rparticles, const int * ntot, const int * nrp,
-            amrex_real * tow, amrex_real * fc, amrex_real * subdt,
-            const int * valid,      const int * vlo,  const int * vhi,
-            const amrex_real * phi, const int * phlo, const int * phhi,
-            const amrex_real * dx, const int * n_refine
-        );
-
-    void count_eb_facets(
-            const int * lo,    const int * hi,
-            const void * flag, const int * flo, const int * fhi,
-            int * n_facets
-        );
-
-    void eb_as_list(
-            const int * lo,           const int * hi,  int * c_facets,
-            const void * flag,        const int * flo, const int * fhi,
-            const amrex_real * norm,  const int * nlo, const int * nhi,
-            const amrex_real * bcent, const int * blo, const int * bhi,
-            amrex_real * list_out,    const int * lsize,
-            const amrex_real * dx
-        );
-
-    void validate_levelset(
-            const int * lo,          const int * hi,   const int * n_pad,
-            const amrex_real * impf, const int * imlo, const int * imhi,
-            const int * valid,       const int * vlo,  const int * vhi,
-            amrex_real * phi,        const int * phlo, const int * phhi
-        );
-
 
 #ifdef __cplusplus
 }

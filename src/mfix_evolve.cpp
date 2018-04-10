@@ -47,5 +47,5 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& d
                             dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io
                            );
 
- BL_PROFILE_REGION_STOP("mfix::Evolve");
+    BL_PROFILE_REGION_STOP("mfix::Evolve");
 }

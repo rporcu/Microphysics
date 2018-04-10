@@ -41,12 +41,12 @@ set(F90_sources
 
 #
 # Initialization routines
-# 
+#
 #list ( APPEND F90_sources init/
 
 #
 # EB stuff
-# 
+#
 list ( APPEND CXX_sources  eb/mfix_eb.cpp )
 list ( APPEND F90_sources  eb/get_eb_walls.f90 eb/compute_normals.f90 )
 # general EB geometry tools (projections onto edges, etc...)
@@ -54,12 +54,13 @@ list ( APPEND F90_sources  eb/eb_geometry.f90)
 # level-set sources
 list ( APPEND CXX_sources  eb/eb_levelset.cpp )
 list ( APPEND CXX_includes eb/eb_levelset.H )
+list ( APPEND CXX_includes eb/mfix_eb_F.H )
 list ( APPEND F90_sources  eb/eb_levelset.f90)
 
 #
 # Particles
 #
-list ( APPEND CXX_sources des/MFIXParticleContainer.cpp ) 
+list ( APPEND CXX_sources des/MFIXParticleContainer.cpp )
 list ( APPEND CXX_includes des/MFIXParticleContainer.H )
 list ( APPEND F90_sources des/calc_drag.f90 des/calc_particle_collisions.f90)
 list ( APPEND F90_sources des/calc_wall_collisions.f90 des/cffctowall.f90 )
@@ -71,10 +72,11 @@ list ( APPEND F90_sources des/particle_generator.f90 des/set_particle_properties
 list ( APPEND F90_sources des/stl_functions_des_mod.f90 )
 list ( APPEND F90_sources des/particle_pic.f90 des/particle_mod.f90 des/set_drag_bcs.f90 )
 list ( APPEND F90_sources des/drag_mod.f90 des/flip_particle_vol.f90 )
-   
+list ( APPEND F90_sources des/construct_gradp.f90)
+
 #
 # SIMPLE routines
-# 
+#
 list ( APPEND CXX_sources simple/mfix_simple.cpp )
 list ( APPEND CXX_sources simple/mfix_linear_solve.cpp )
 list ( APPEND CXX_sources simple/solve_bicgstab.cpp )
@@ -89,10 +91,10 @@ list ( APPEND F90_sources simple/matrix_mod.f90 simple/adjust_dt_mod.f90 simple/
 list ( APPEND F90_sources simple/calc_mflux.f90 simple/calc_d.f90 simple/check_convergence.f90 )
 list ( APPEND F90_sources simple/residual_mod.f90 simple/correct_0.f90 simple/ur_facs_mod.f90 )
 list ( APPEND F90_sources simple/functions_mod.f90 )
-   
+
 #
 # Data checks
-# 
+#
 list ( APPEND F90_sources check_data/check_bc_flow.f90  check_data/check_bc_geometry.f90 )
 list ( APPEND F90_sources check_data/check_bc_inflow.f90 check_data/check_bc_outflow.f90 )
 list ( APPEND F90_sources check_data/check_bc_walls.f90 check_data/check_boundary_conditions.f90 )
@@ -112,20 +114,21 @@ list ( APPEND F90_sources io/parse_line.f90 io/deprecated.f90 io/error_manager_m
 
 #
 # Users hooks
-# 
+#
 list ( APPEND F90_sources usr/usr0.f90 usr/usr0_des.f90 usr/usr1.f90 )
 list ( APPEND F90_sources usr/usr1_des.f90 usr/usr2.f90 usr/usr2_des.f90 )
 list ( APPEND F90_sources usr/usr3.f90 usr/usr3_des.f90 usr/usr_drag.f90 )
-list ( APPEND F90_sources usr/usr_mod.f90 usr/write_usr0.f90 usr/write_usr1.f90 ) 
+list ( APPEND F90_sources usr/usr_mod.f90 usr/write_usr0.f90 usr/write_usr1.f90 )
 
 #
 # Projection
-# 
+#
 list ( APPEND F90_sources projection/convection_mod.f90 projection/diffusion_mod.f90 )
 list ( APPEND F90_sources projection/projection_mod.f90 projection/projection_tests_mod.f90 )
 list ( APPEND F90_sources projection/slopes_mod.f90 )
 list ( APPEND F90_sources projection/set_pressure_bcs.f90 projection/set_projection_bcs.f90 )
 list ( APPEND CXX_sources projection/mfix_projection.cpp )
+list ( APPEND CXX_sources projection/compute_dt.cpp )
 
 
 

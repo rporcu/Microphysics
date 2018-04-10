@@ -1,6 +1,7 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix_F.H>
+#include <mfix_eb_F.H>
 #include <mfix_level.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
