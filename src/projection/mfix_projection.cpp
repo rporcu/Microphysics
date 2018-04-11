@@ -121,14 +121,38 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     BL_PROFILE_REGION_STOP("mfix::EvolveFluidProjection");
 }
 
+//
+// Project velocity field to make sure initial velocity is divergence-free
+// 
 void
 mfix_level::mfix_project_velocity (int lev)
 {
-    // Project velocity field to make sure initial velocity is divergence-free
     Real dummy_dt = 1.0;
     mfix_apply_projection ( lev, dummy_dt );
 }
 
+
+//
+// Perform 3 iterations to compute an initial guess for p at time t=1/2
+// Each iteration is an Euler time integration step, except that velocity
+// is never updated. Basically, what we are doing is:
+//
+//  1)
+//    u0, p0, rop0, R0 (RHS in momentum eq.) are initialized with
+//    initial conditions and never modified for the whole iteration process,
+//
+//  2)
+//     perform  the following iteration (only pressure get updated):
+// 
+//     do iter = 1, 3
+//        u* = u0 + dt * R0 - grad(p^{k-1})/rop0
+//        solve grad(eps_g/ro_g* grad(phi)) = div(u*)/dt
+//        p^{k} = p^{k-1} + phi
+//     end do
+//
+//  3) p at time t=1/2 is set to p^3 
+//         
+// 
 void
 mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int steady_state)
 {
@@ -190,15 +214,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 }
 
 //
-// Compute predictor.
-//
-// This routine solves:
-//
-//      du/dt  + grad(p)/rho  = RHS
-//
-// by using a second order discretization in space and
-// a first order discretization in time + 
-// non-incremental projection
+// Compute predictor:
 //
 //  1. Compute
 // 
@@ -206,25 +222,35 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 //     v_g = v_go + dt * R_v 
 //     w_g = w_go + dt * R_w  
 //
-//  2. Solve
 //
-//     div( grad(phi) / rho ) = du_g/dx + dv_g/dy + dw_g/dz
-//
-//  3. Compute
-//
-//     u_g = u_g -  (dphi/dx) / rho 
-//     v_g = v_g -  (dphi/dy) / rho 
-//     w_g = w_g -  (dphi/dz) / rho
-//
-//  4. Compute
-//
-//     p_g = phi / dt
-//
-//
-//  This is the predictor step of the Heun's integration
-//  scheme, AKA Predictor-Corrector Method (PCM).
-//  This step is first order in time and second order in space
+//  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
+//     and explicit part of particles momentum exchange )
 // 
+//     u_g = u_g + dt * ( g_x + d(p_g+p0)/dx/rop_g + drag_u/rop_g ) 
+//     v_g = v_g + dt * ( g_y + d(p_g+p0)/dy/rop_g + drag_v/rop_g ) 
+//     w_g = w_g + dt * ( g_z + d(p_g+p0)/dz/rop_g + drag_w/rop_g ) 
+//
+//  3. Add implicit forcing term ( AKA implicit part of particles
+//     momentum exchange )
+// 
+//     u_g = u_g / ( 1 + dt * f_gds_u/rop_g )
+//     v_g = v_g / ( 1 + dt * f_gds_v/rop_g )
+//     w_g = w_g / ( 1 + dt * f_gds_w/rop_g )
+//  
+//  4. Solve
+//
+//     div( ep_g * grad(phi) / ro_g ) = div( ep_g * {u_g,v_g,w_g} ) 
+//
+//  5. Compute
+//
+//     u_g = u_g -  dt * (dphi/dx) / ro_g 
+//     v_g = v_g -  dt * (dphi/dy) / ro_g 
+//     w_g = w_g -  dt * (dphi/dz) / ro_g
+//
+//  6. Compute
+//
+//     p_g = p_g + phi
+//
 void
 mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 {
@@ -262,32 +288,41 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 // Compute corrector:
 //
 //  1. Compute
-//
-//     u_g = u_go + dt * (R_u^* + R_u^n - (dp*/dx)*(1/rho)) / 2
-//     v_g = v_go + dt * (R_v^* + R_v^n - (dp*/dy)*(1/rho)) / 2
-//     w_g = w_go + dt * (R_w^* + R_w^n - (dp*/dz)*(1/rho)) / 2
-//
-//     where the starred variables are the "predictor-step" variables. 
-//     
-//  2. Solve
-//
-//     div( grad(phi) / rho ) = du_g/dx + dv_g/dy + dw_g/dz
-//
-//  3. Compute
-//
-//     u_g = u_g - (dphi/dx) / rho 
-//     v_g = v_g - (dphi/dy) / rho 
-//     w_g = w_g - (dphi/dz) / rho
-//
-//  4. Compute
-//
-//     p_g = 2 * phi / dt
-//
-//
-//  This is the correction step of the Heun's integration
-//  scheme, AKA Predictor-Corrector Method (PCM).
-//  This step is second order in time and space.
 // 
+//     u_g = u_go + dt * ( R_u^n + R_u^* ) / 2
+//     v_g = v_go + dt * ( R_v^n + R_v^* ) / 2
+//     w_g = w_go + dt * ( R_w^n + R_w^* ) / 2
+//
+//     where the starred variables are computed using "predictor-step" variables. 
+//
+//  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
+//     and explicit part of particles momentum exchange )
+// 
+//     u_g = u_g + dt * ( g_x + d(p_g+p0)/dx/rop_g + drag_u/rop_g ) 
+//     v_g = v_g + dt * ( g_y + d(p_g+p0)/dy/rop_g + drag_v/rop_g ) 
+//     w_g = w_g + dt * ( g_z + d(p_g+p0)/dz/rop_g + drag_w/rop_g ) 
+//
+//  3. Add implicit forcing term ( AKA implicit part of particles
+//     momentum exchange )
+// 
+//     u_g = u_g / ( 1 + dt * f_gds_u/rop_g )
+//     v_g = v_g / ( 1 + dt * f_gds_v/rop_g )
+//     w_g = w_g / ( 1 + dt * f_gds_w/rop_g )
+//  
+//  4. Solve
+//
+//     div( ep_g * grad(phi) / ro_g ) = div( ep_g * {u_g,v_g,w_g} ) 
+//
+//  5. Compute
+//
+//     u_g = u_g -  dt * (dphi/dx) / ro_g 
+//     v_g = v_g -  dt * (dphi/dy) / ro_g 
+//     w_g = w_g -  dt * (dphi/dz) / ro_g
+//
+//  6. Compute
+//
+//     p_g = p_g + phi
+//
 void
 mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
 {
@@ -342,9 +377,9 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
 //
 // Perform the following operations:
 //
-//       u_g = u_g + coeff * ( dp_g/dx ) * (1/ro_g)
-//       v_g = v_g + coeff * ( dp_g/dy ) * (1/ro_g)
-//       w_g = w_g + coeff * ( dp_g/dz ) * (1/ro_g)
+//       u_g = u_g + coeff * ( dp_g/dx + dp0/dx ) * (1/ro_g)
+//       v_g = v_g + coeff * ( dp_g/dy + dp0/dy ) * (1/ro_g)
+//       w_g = w_g + coeff * ( dp_g/dz + dp0/dz ) * (1/ro_g)
 //
 void
 mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
@@ -672,7 +707,7 @@ mfix_level::mfix_compute_velocity_slopes (int lev,
 //
 // Computes the following decomposition:
 // 
-//    u + grad(phi)/rho = u*,     where div(eps*u) = 0
+//    u + grad(phi)/ro_g = u*,     where div(eps*u) = 0
 //
 // where u* is a non-div-free velocity field, stored
 // by components in u_g, v_g, and w_g. The resulting div-free
@@ -680,10 +715,7 @@ mfix_level::mfix_compute_velocity_slopes (int lev,
 //
 // phi is an auxiliary function related to the pressure p_g by the relation:
 // 
-//     phi = scaling_factor * p_g
-//
-// p_g is not required to have any value set, except at the Dirichlet's boundary.
-// 
+//     new p_g  = old p_g + phi 
 void 
 mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
 {
