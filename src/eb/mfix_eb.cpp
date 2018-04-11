@@ -852,7 +852,7 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     //          => define the level set as the (signed) distance to the closest point on the EB-facets
     int eb_pad = level_set->get_eb_pad();
     EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
-    ls_cylinder.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    std::unique_ptr<iMultiFab> region_valid = ls_cylinder.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
     ls_walls.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
     EBTower::Destroy();
 
@@ -866,7 +866,7 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     std::unique_ptr<MultiFab> ls_mf = ls_cylinder.copy_data();
     amrex::VisMF::Write(* ls_mf, ss.str());
 
-    level_set->update_union(* ls_cylinder.get_data());
+    level_set->update_union(* ls_cylinder.get_data(), * region_valid);
 
     return cylinder_IF;
 }

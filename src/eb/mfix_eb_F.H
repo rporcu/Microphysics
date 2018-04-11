@@ -57,6 +57,7 @@ extern "C"
 
     void update_levelset_intersection(
             const int * lo,           const int * hi,
+            const int * valid_in,     const int * vilo, const int * vihi,
             const amrex_real * ls_in, const int * lslo, const int * lshi,
             int * valid,              const int * vlo,  const int * vhi,
             amrex_real * phi,         const int * phlo, const int * phhi,
@@ -65,6 +66,7 @@ extern "C"
 
     void update_levelset_union(
             const int * lo,           const int * hi,
+            const int * valid_in,     const int * vilo, const int * vihi,
             const amrex_real * ls_in, const int * lslo, const int * lshi,
             int * valid,              const int * vlo,  const int * vhi,
             amrex_real * phi,         const int * phlo, const int * phhi,

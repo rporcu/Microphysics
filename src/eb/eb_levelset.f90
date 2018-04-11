@@ -266,6 +266,7 @@ contains
     !----------------------------------------------------------------------------------------------------------------!
 
     pure subroutine update_levelset_intersection(lo,    hi,           &
+                                                 v_in,  vilo, vihi,   &
                                                  ls_in, lslo, lshi,   &
                                                  valid, vlo,  vhi,    &
                                                  phi,   phlo, phhi,   &
@@ -274,7 +275,8 @@ contains
 
         implicit none
 
-        integer,      dimension(3), intent(in   ) :: lo, hi, lslo, lshi, vlo, vhi, phlo, phhi
+        integer,      dimension(3), intent(in   ) :: lo, hi, vilo, vihi, lslo, lshi, vlo, vhi, phlo, phhi
+        integer,                    intent(in   ) :: v_in  (vilo(1):vihi(1),vilo(2):vihi(2),vilo(3):vihi(3))
         real(c_real),               intent(in   ) :: ls_in (lslo(1):lshi(1),lslo(2):lshi(2),lslo(3):lshi(3))
         integer,                    intent(  out) :: valid ( vlo(1):vhi(1),  vlo(2):vhi(2),  vlo(3):vhi(3) )
         real(c_real),               intent(  out) :: phi   (phlo(1):phhi(1),phlo(2):phhi(2),phlo(3):phhi(3))
@@ -288,13 +290,16 @@ contains
         do kk = lo(3), hi(3)
             do jj = lo(2), hi(2)
                 do ii = lo(1), hi(1)
-                    in_node = ls_in(ii, jj, kk)
-                    ls_node = phi(ii, jj, kk)
 
-                    if ( in_node .lt. ls_node ) then
-                        phi(ii, jj, kk) = in_node
-                        if ( ls_node .le. 0 ) then
-                            valid(ii, jj, kk) = 1
+                    if (v_in(ii, jj, kk) .eq. 1 ) then
+                        in_node = ls_in(ii, jj, kk)
+                        ls_node = phi(ii, jj, kk)
+
+                        if ( in_node .lt. ls_node ) then
+                            phi(ii, jj, kk) = in_node
+                            if ( ls_node .le. 0 ) then
+                                valid(ii, jj, kk) = 1
+                            end if
                         end if
                     end if
 
@@ -329,6 +334,7 @@ contains
     !----------------------------------------------------------------------------------------------------------------!
 
     pure subroutine update_levelset_union(lo,    hi,           &
+                                          v_in,  vilo, vihi,   &
                                           ls_in, lslo, lshi,   &
                                           valid, vlo,  vhi,    &
                                           phi,   phlo, phhi,   &
@@ -337,7 +343,8 @@ contains
 
         implicit none
 
-        integer,      dimension(3), intent(in   ) :: lo, hi, lslo, lshi, vlo, vhi, phlo, phhi
+        integer,      dimension(3), intent(in   ) :: lo, hi, vilo, vihi, lslo, lshi, vlo, vhi, phlo, phhi
+        integer,                    intent(in   ) :: v_in  (vilo(1):vihi(1),vilo(2):vihi(2),vilo(3):vihi(3))
         real(c_real),               intent(in   ) :: ls_in (lslo(1):lshi(1),lslo(2):lshi(2),lslo(3):lshi(3))
         integer,                    intent(  out) :: valid ( vlo(1):vhi(1),  vlo(2):vhi(2),  vlo(3):vhi(3) )
         real(c_real),               intent(  out) :: phi   (phlo(1):phhi(1),phlo(2):phhi(2),phlo(3):phhi(3))
@@ -351,13 +358,16 @@ contains
         do kk = lo(3), hi(3)
             do jj = lo(2), hi(2)
                 do ii = lo(1), hi(1)
-                    in_node = ls_in(ii, jj, kk)
-                    ls_node = phi(ii, jj, kk)
 
-                    if ( in_node .gt. ls_node ) then
-                        phi(ii, jj, kk) = in_node
-                        if ( ls_node .le. 0 ) then
-                            valid(ii, jj, kk) = 1
+                    if (v_in(ii, jj, kk) .eq. 1 ) then
+                        in_node = ls_in(ii, jj, kk)
+                        ls_node = phi(ii, jj, kk)
+
+                        if ( in_node .gt. ls_node ) then
+                            phi(ii, jj, kk) = in_node
+                            if ( ls_node .le. 0 ) then
+                                valid(ii, jj, kk) = 1
+                            end if
                         end if
                     end if
 
