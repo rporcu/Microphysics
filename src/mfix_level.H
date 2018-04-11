@@ -272,6 +272,10 @@ private:
     static amrex::IntVect e_y;
     static amrex::IntVect e_z;
 
+    // Debug counter used for tracking number of leve-lset MultiFabs used in
+    // intersection/union
+    int ct_ls_mf;
+
 //  Array< std::unique_ptr<iMultiFab> > bc_type;
 //  Array< std::unique_ptr<iMultiFab> > bc_ptr;
     IArrayBox bc_ilo;

@@ -18,6 +18,9 @@
 #include <AMReX_AnisotropicDxPlaneIF.H>
 #include <AMReX_AnisotropicIF.H>
 
+#include <AMReX_VisMF.H>
+#include <sstream>
+
 #include <eb_levelset.H>
 #include <mfix_level.H>
 #include <mfix_F.H>
@@ -489,7 +492,11 @@ mfix_level::make_eb_clr(int lev)
 
     // mfix_level::make_cylinder uses a union
     //  => ensure that mfix_level::level_set is initialized to min
-    //level_set->invert();
+    level_set->invert();
+
+    ct_ls_mf = 0;
+    std::unique_ptr<MultiFab> ls_mf = level_set->copy_data();
+    amrex::VisMF::Write(* ls_mf, "ls_empty");
 
     //------------------------------------------------------------- Riser
     pp.getarr("riser_translate", transvec,  0, 3);
@@ -679,9 +686,9 @@ mfix_level::make_eb_clr(int lev)
     AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
 
     // set up ebfactory
-    int m_eb_basic_grow_cells = 2;
-    int m_eb_volume_grow_cells = 2;
-    int m_eb_full_grow_cells = 2;
+    int m_eb_basic_grow_cells = 16;
+    int m_eb_volume_grow_cells = 16;
+    int m_eb_full_grow_cells = 16;
     EBSupport m_eb_support_level = EBSupport::full;
 
     EBTower::Build();
@@ -696,7 +703,7 @@ mfix_level::make_eb_clr(int lev)
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
 
-    level_set->intersection_ebf(* ebfactory, * AMReX_EBIS::instance());
+    //level_set->intersection_ebf(* ebfactory, * AMReX_EBIS::instance());
 
     // store copy of level set (for later use).
     ls[lev] = level_set->copy_data();
@@ -811,37 +818,55 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
      *                                                                                                                *
      ******************************************************************************************************************/
 
-    //// Define both components of the GeometryShop separately:
-    //GeometryShop gshop_upoly(cylinder1, eb_verbosity);
-    //GeometryShop gshop_walls(walls, eb_verbosity);
+    // Define both components of the GeometryShop separately:
+    GeometryShop gshop_upoly(cylinder1, eb_verbosity);
+    GeometryShop gshop_walls(walls, eb_verbosity);
 
-    //// Define a temporary level-set used for constructing the cylinder:
-    //LSFactory ls_cylinder(* level_set);
+    // Define a temporary level-set used for constructing the cylinder:
+    LSFactory ls_cylinder(* level_set);
+    LSFactory ls_walls(ls_cylinder);
 
-    //// Define the EBIS first using only the walls...
-    //Geometry geom_ls = LSUtility::make_eb_geometry(ls_cylinder);
-    //AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
+    // Define the EBIS first using only the walls...
+    Geometry geom_ls = LSUtility::make_eb_geometry(ls_cylinder);
+    AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
 
-    //EBTower::Build();
-    //// GeometryShop's Planes' implicit function is actually a signed distance function
-    ////      => it's just easier to fill the level-set this way
-    //ls_cylinder.intersection_ebis(* AMReX_EBIS::instance());
-    //EBTower::Destroy();
+    EBTower::Build();
+    // GeometryShop's Planes' implicit function is actually a signed distance function
+    //      => it's just easier to fill the level-set this way
+    ls_cylinder.intersection_ebis(* AMReX_EBIS::instance());
+    EBTower::Destroy();
 
-    //// Define the EBIS using only the poly (after deleting the walls-only EBTower)...
-    //Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder);
-    //AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_upoly, grid_size, max_level);
+    ct_ls_mf ++;
+    std::stringstream ss1;
+    ss1 << "ls_" << ct_ls_mf << "_a";
+    std::unique_ptr<MultiFab> ls_mf_a = ls_cylinder.copy_data();
+    amrex::VisMF::Write(* ls_mf_a, ss1.str());
 
-    //EBTower::Build();
-    //// GeometryShop's PolynomialIF is not a signed distance function...
-    ////      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
-    ////          => define the level set as the (signed) distance to the closest point on the EB-facets
-    //int eb_pad = level_set->get_eb_pad();
-    //EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
-    //ls_cylinder.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
-    //EBTower::Destroy();
+    // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
+    Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder);
+    AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_upoly, grid_size, max_level);
 
-    //level_set->update_union(* ls_cylinder.get_data());
+    EBTower::Build();
+    // GeometryShop's PolynomialIF is not a signed distance function...
+    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
+    //          => define the level set as the (signed) distance to the closest point on the EB-facets
+    int eb_pad = level_set->get_eb_pad();
+    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
+    ls_cylinder.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    ls_walls.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+    std::stringstream ss2;
+    ss2 << "ls_" << ct_ls_mf << "_b";
+    std::unique_ptr<MultiFab> ls_mf_b = ls_walls.copy_data();
+    amrex::VisMF::Write(* ls_mf_b, ss2.str());
+
+    std::stringstream ss;
+    ss << "ls_" << ct_ls_mf;
+    std::unique_ptr<MultiFab> ls_mf = ls_cylinder.copy_data();
+    amrex::VisMF::Write(* ls_mf, ss.str());
+
+    level_set->update_union(* ls_cylinder.get_data());
 
     return cylinder_IF;
 }
