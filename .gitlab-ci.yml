@@ -14,7 +14,7 @@ variables:
   ENABLE_OMP: "0"
   FC: "gfortran"
   MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
-  MODULES: "cmake gnu/6.1.0"
+  MODULES: "git/2.16.2 cmake gnu/6.1.0"
 
 .test: &test_template
   script:
