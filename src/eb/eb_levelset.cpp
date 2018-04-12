@@ -66,13 +66,16 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
 }
 
 
-LSFactory::LSFactory(const LSFactory & other) : LSFactory(other.get_amr_level(),
-                                                       other.get_ls_ref(), other.get_eb_ref(),
-                                                       other.get_ls_pad(), other.get_eb_pad(),
-                                                     & other.get_pc()                          ) {
+LSFactory::LSFactory(const LSFactory & other) :
+    LSFactory(other.get_amr_level(),
+              other.get_ls_ref(), other.get_eb_ref(),
+              other.get_ls_pad(), other.get_eb_pad(),
+            & other.get_pc()                          )
+{
     //ls_grid  = other.copy_data();
     //ls_valid = other.copy_valid();
 }
+
 
 LSFactory::~LSFactory() {
     ls_grid.reset();
@@ -136,7 +139,7 @@ std::unique_ptr<Vector<Real>> LSFactory::eb_facets(const EBFArrayBoxFactory & eb
     // Area fraction data
     std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = eb_factory.getAreaFrac();
     // EB boundary-centre data
-    const MultiCutFab * bndrycent = &(eb_factory.getBndryCent());
+    const MultiCutFab * bndrycent = & eb_factory.getBndryCent();
 
 
     /***************************************************************************
@@ -377,12 +380,12 @@ std::unique_ptr<iMultiFab> LSFactory::intersection_ebf(const EBFArrayBoxFactory 
     iMultiFab eb_valid;
 
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    eb_ls.define(ls_ba, dm, 1, 0 /*ls_grid_pad*/);
-    eb_valid.define(ls_ba, dm, 1, 0 /*ls_grid_pad*/);
+    eb_ls.define(ls_ba, dm, 1, ls_grid_pad);
+    eb_valid.define(ls_ba, dm, 1, ls_grid_pad);
     eb_valid.setVal(0);
 
     std::unique_ptr<iMultiFab> region_valid = std::unique_ptr<iMultiFab>(new iMultiFab);
-    region_valid->define(ls_ba, dm, 1, 0);
+    region_valid->define(ls_ba, dm, 1, ls_grid_pad);
     region_valid->setVal(0);
 
     // Fill local MultiFab with eb_factory's level-set data. Note the role of
@@ -491,7 +494,7 @@ std::unique_ptr<iMultiFab> LSFactory::intersection_ebis(const EBIndexSpace & eb_
     std::unique_ptr<iMultiFab> region_valid = std::unique_ptr<iMultiFab>(new iMultiFab);
 
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    region_valid->define(ls_ba, dm, 1, 0);
+    region_valid->define(ls_ba, dm, 1, ls_grid_pad);
     region_valid->setVal(1);
 
     // GeometryService convetion:
@@ -518,7 +521,7 @@ std::unique_ptr<iMultiFab> LSFactory::union_ebis(const EBIndexSpace & eb_is) {
     std::unique_ptr<iMultiFab> region_valid = std::unique_ptr<iMultiFab>(new iMultiFab);
 
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
-    region_valid->define(ls_ba, dm, 1, 0);
+    region_valid->define(ls_ba, dm, 1, ls_grid_pad);
     region_valid->setVal(1);
 
     // GeometryService convetion:
