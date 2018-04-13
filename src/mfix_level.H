@@ -89,7 +89,9 @@ public:
     void make_eb_hourglass(int lev);
     void make_eb_clr(int lev);
 
-    std::unique_ptr<BaseIF> make_cylinder(int dir, Real radius, Real length, const RealVect & translation, int lev);
+    std::unique_ptr<BaseIF> make_cylinder(int dir,
+            Real radius, Real length, const RealVect & translation,
+            int lev, bool water_tight);
 
     void WriteEBSurface(int lev);
 
@@ -225,8 +227,8 @@ private:
 
     void mfix_apply_forcing_terms(int lev, amrex::Real dt,
             Vector< std::unique_ptr<MultiFab> >& u,
-      Vector< std::unique_ptr<MultiFab> >& v,
-      Vector< std::unique_ptr<MultiFab> >& w );
+            Vector< std::unique_ptr<MultiFab> >& v,
+            Vector< std::unique_ptr<MultiFab> >& w );
 
     void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
 
@@ -235,9 +237,9 @@ private:
     void mfix_add_grad_phi (int lev, amrex::Real coeff);
 
     void mfix_compute_velocity_slopes(int lev,
-      Vector< std::unique_ptr<MultiFab> >& u,
-      Vector< std::unique_ptr<MultiFab> >& v,
-      Vector< std::unique_ptr<MultiFab> >& w );
+            Vector< std::unique_ptr<MultiFab> >& u,
+            Vector< std::unique_ptr<MultiFab> >& v,
+            Vector< std::unique_ptr<MultiFab> >& w );
 
     void mfix_compute_diveu (int lev);
 

@@ -145,7 +145,7 @@ int main (int argc, char* argv[])
     mfix_level my_mfix;
 
     // Initialize internals from ParamParse database
-    my_mfix.InitParams(solve_fluid,solve_dem,max_nit,call_udf);
+    my_mfix.InitParams(solve_fluid, solve_dem, max_nit, call_udf);
 
     // Initialize memory for data-array internals
     // Note: MFIXParticleContainer is created here
