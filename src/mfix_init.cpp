@@ -754,6 +754,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
   {
      // We need to initialize the volume fraction ep_g before the first projection
      mfix_calc_volume_fraction(lev,sum_vol_orig);
+     mfix_set_projection_bcs(lev);
      mfix_project_velocity(lev);
      mfix_initial_iterations(lev,dt,stop_time,steady_state);
   }
