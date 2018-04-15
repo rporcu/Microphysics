@@ -39,7 +39,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     
     do
     {
-        if (!fixed_dt)
         mfix_compute_dt(lev,time,stop_time,steady_state,dt);
 
 	if (steady_state)
