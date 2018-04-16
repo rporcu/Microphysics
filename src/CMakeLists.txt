@@ -30,7 +30,6 @@ set(F90_sources
    run_mod.f90
    scales_mod.f90
    set_bc0.f90
-   set_bc1.f90
    set_bc_flow.f90
    set_bc_type.f90
    set_p0.f90
@@ -91,6 +90,7 @@ list ( APPEND F90_sources simple/matrix_mod.f90 simple/adjust_dt_mod.f90 simple/
 list ( APPEND F90_sources simple/calc_mflux.f90 simple/calc_d.f90 simple/check_convergence.f90 )
 list ( APPEND F90_sources simple/residual_mod.f90 simple/correct_0.f90 simple/ur_facs_mod.f90 )
 list ( APPEND F90_sources simple/functions_mod.f90 )
+list ( APPEND F90_sources simple/set_bc1.f90 )
    
 #
 # Data checks
