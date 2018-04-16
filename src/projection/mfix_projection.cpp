@@ -225,9 +225,9 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 //  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
 //     and explicit part of particles momentum exchange )
 // 
-//     u_g = u_g + dt * ( g_x + d(p_g+p0)/dx/rop_g + drag_u/rop_g ) 
-//     v_g = v_g + dt * ( g_y + d(p_g+p0)/dy/rop_g + drag_v/rop_g ) 
-//     w_g = w_g + dt * ( g_z + d(p_g+p0)/dz/rop_g + drag_w/rop_g ) 
+//     u_g = u_g + dt * ( g_x + d(p_g+p0)/dx/ro_g + drag_u/rop_g ) 
+//     v_g = v_g + dt * ( g_y + d(p_g+p0)/dy/ro_g + drag_v/rop_g ) 
+//     w_g = w_g + dt * ( g_z + d(p_g+p0)/dz/ro_g + drag_w/rop_g ) 
 //
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
