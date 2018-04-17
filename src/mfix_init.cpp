@@ -585,12 +585,14 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
 {
   if (solve_dem) {
 
-    amrex::Print() << "Clean up auto-generated particles.\n";
 
     // Auto generated particles may be out of the domain. This call will remove them.
     // Note that this has to occur after the EB geometry is created.
     if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory)
+    {
+      amrex::Print() << "Clean up auto-generated particles.\n";
       pc -> RemoveOutOfRange(lev, particle_ebfactory.get());
+    }
 
     Real avg_dp[10], avg_ro[10];
     pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
