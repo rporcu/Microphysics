@@ -241,11 +241,17 @@ std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace & eb_is) {
     const DistributionMapping & dm = mfix_pc->ParticleDistributionMap(amr_lev);
     mf_impfunc->define(ls_ba, dm, 1, ls_grid_pad);
 
+    // Sometimes the dx used by EBIS does not match the dx of the levelset
+    // grid. This'll fix it.
+    const EBISLevel & ebis_lev = eb_is.getEBISLevel(amr_lev);
+    Real dx_ebis = ebis_lev.getDx();
+    Real effective_ref = dx_ebis / dx_vect[0];
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
     for(MFIter mfi(* mf_impfunc, true); mfi.isValid(); ++ mfi)
-        eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi], ls_grid_ref);
+        eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi], effective_ref);
 
     mf_impfunc->FillBoundary(geom_ls.periodicity());
     return mf_impfunc;

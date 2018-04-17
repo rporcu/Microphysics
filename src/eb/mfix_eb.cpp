@@ -157,25 +157,34 @@ mfix_level::make_eb_geometry(int lev)
     int grid_size = 16;
     bool eb_verbosity = true;
 
-    /******************************************************************************************************************
-     *                                                                                                                *
-     * Fill Level-set using:                                                                                          *
-     *      -> Planes (where the GeometryShop's implicit function is a signed distance): implicit function's value    *
-     *      -> Poly2 (where GeometryShop's implicit function is singed but not a distance): min distance to EB facets *
-     * Note: this requires building and destroying the EBTower (twice), so any EBTower data built before this will be *
-     * lost...                                                                                                        *
-     *                                                                                                                *
-     ******************************************************************************************************************/
+    /***************************************************************************
+     *                                                                         *
+     * Fill Level-set using:                                                   *
+     *      -> Planes (where the GeometryShop's implicit function is a signed  *
+     *         distance): implicit function's value                            *
+     *      -> Poly2 (where GeometryShop's implicit function is singed but not *
+     *         a distance): min distance to EB facets                          *
+     * Note: this requires building and destroying the EBTower (twice), so any *
+     * EBTower data built before this will be lost...                          *
+     *                                                                         *
+     ***************************************************************************/
 
     if(use_walls){
-        // Define both components of the GeometryShop separately:
+        // Define components of the GeometryShop separately:
         GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
 
         // Define the EBIS first using only the walls...
         // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
         //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
         Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
-        AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
+        AMReX_EBIS::instance()->define(geom_ls.Domain(),
+                                       RealVect::Zero,  // ......... origin of EBIndexSpace
+                                       geom_ls.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
+                                       gshop_walls,  // ............ GeometryShop object
+                                       grid_size, max_level);
+        // [1]: EBIndexSpace internally assumes an isotropic grid. Any
+        // anisotropic implicit function (e.g AnisotrpicPlaneIF) uses dx as a
+        // reference, and rescales dy and dz wrt dx. => dx goes here.
 
         EBTower::Build();
         // GeometryShop's Planes' implicit function is actually a signed distance function
@@ -184,21 +193,28 @@ mfix_level::make_eb_geometry(int lev)
         EBTower::Destroy();
     }
     if(use_poly2){
-        // Define both components of the GeometryShop separately:
+        // Define components of the GeometryShop separately:
         GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
 
         // Define the EBIS using only the poly2 (after deleting the walls-only EBTower)...
         // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
-        //                                                      * rescale y, z- components wrt to dx[0] (dx(1)
+        //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
         Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
-        AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, grid_size, max_level);
+        AMReX_EBIS::instance()->define(geom_eb.Domain(),
+                                       RealVect::Zero,  // ......... origin of EBIndexSpace
+                                       geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1, above]
+                                       gshop_poly2,  // ............ GeometryShop object
+                                       grid_size, max_level);
 
         EBTower::Build();
         // GeometryShop's PolynomialIF is not a signed distance function...
-        //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
-        //          => define the level set as the (signed) distance to the closest point on the EB-facets
+        //      => it's easier to use PolynomialIF to build an
+        //         EBFArrayBoxFactory which defines our EB surface now
+        //          => define the level set as the (signed) distance to the
+        //             closest point on the EB-facets
         int eb_pad = level_set->get_eb_pad();
-        EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
+        EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev],
+                                            {eb_pad, eb_pad, eb_pad}, EBSupport::full);
         level_set->intersection_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
         EBTower::Destroy();
     }
@@ -211,11 +227,11 @@ mfix_level::make_eb_geometry(int lev)
     //         all MFs on the same level                                           => TODO: fix
     amrex::VisMF::Write(* ls[lev], "ls_final");
 
-    /******************************************************************************************************************
-     *                                                                                                                *
-     * Build standard EB Factories                                                                                    *
-     *                                                                                                                *
-     ******************************************************************************************************************/
+    /***************************************************************************
+     *                                                                         *
+     * Build standard EB Factories                                             *
+     *                                                                         *
+     ***************************************************************************/
 
 
     GeometryShop gshop(*impfunc, eb_verbosity);
@@ -239,7 +255,7 @@ mfix_level::make_eb_geometry(int lev)
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
 
-    eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+    eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
 
 
@@ -392,15 +408,17 @@ mfix_level::make_eb_hourglass(int lev)
 
 
 
-    /******************************************************************************************************************
-     *                                                                                                                *
-     * Fill Level-set using:                                                                                          *
-     *      -> Planes (where the GeometryShop's implicit function is a signed distance): implicit function's value    *
-     *      -> Poly (where GeometryShop's implicit function is singed but not a distance): min distance to EB facets  *
-     * Note: this requires building and destroying the EBTower (twice), so any EBTower data built before this will be *
-     * lost...                                                                                                        *
-     *                                                                                                                *
-     ******************************************************************************************************************/
+    /***************************************************************************
+     *                                                                         *
+     * Fill Level-set using:                                                   *
+     *      -> Planes (where the GeometryShop's implicit function is a signed  *
+     *         distance): implicit function's value                            *
+     *      -> Poly (where GeometryShop's implicit function is singed but not  *
+     *         a distance): min distance to EB facets                          *
+     * Note: this requires building and destroying the EBTower (twice), so any *
+     * EBTower data built before this will be lost...                          *
+     *                                                                         *
+     ***************************************************************************/
 
     // Define both components of the GeometryShop separately:
     GeometryShop gshop_upoly(* impfunc_unpolys, eb_verbosity);
@@ -408,8 +426,18 @@ mfix_level::make_eb_hourglass(int lev)
 
 
     // Define the EBIS first using only the walls...
+    // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+    //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
     Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
-    AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
+    AMReX_EBIS::instance()->define(geom_ls.Domain(),
+                                   RealVect::Zero,  // ......... origin of EBIndexSpace
+                                   geom_ls.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
+                                   gshop_walls,  // ............ GeometryShop object
+                                   grid_size, max_level);
+    // [1]: EBIndexSpace internally assumes an isotropic grid. Any anisotropic
+    // implicit function (e.g AnisotrpicPlaneIF) uses dx as a reference, and
+    // rescales dy and dz wrt dx. => dx goes here.
+
 
     EBTower::Build();
     // GeometryShop's Planes' implicit function is actually a signed distance function
@@ -418,15 +446,24 @@ mfix_level::make_eb_hourglass(int lev)
     EBTower::Destroy();
 
     // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
+    // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+    //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
     Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
-    AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_upoly, grid_size, max_level);
+    AMReX_EBIS::instance()->define(geom_eb.Domain(),
+                                   RealVect::Zero,  // ......... origin of EBIndexSpace
+                                   geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1, above]
+                                   gshop_upoly,  // ............ GeometryShop object
+                                   grid_size, max_level);
 
     EBTower::Build();
     // GeometryShop's PolynomialIF is not a signed distance function...
-    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
-    //          => define the level set as the (signed) distance to the closest point on the EB-facets
+    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory
+    //         which defines our EB surface now
+    //          => define the level set as the (signed) distance to the closest
+    //             point on the EB-facets
     int eb_pad = level_set->get_eb_pad();
-    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
+    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev],
+                                       {eb_pad, eb_pad, eb_pad}, EBSupport::full);
     level_set->intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
     EBTower::Destroy();
 
@@ -438,11 +475,11 @@ mfix_level::make_eb_hourglass(int lev)
     //         all MFs on the same level                                           => TODO: fix
     amrex::VisMF::Write(* ls[lev], "ls_final");
 
-    /******************************************************************************************************************
-     *                                                                                                                *
-     * Build standard EB Factories                                                                                    *
-     *                                                                                                                *
-     ******************************************************************************************************************/
+    /***************************************************************************
+     *                                                                         *
+     * Build standard EB Factories                                             *
+     *                                                                         *
+     ***************************************************************************/
 
     GeometryShop gshop(*impfunc, eb_verbosity);
     AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
@@ -465,7 +502,7 @@ mfix_level::make_eb_hourglass(int lev)
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
 
-    eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+    eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
 
 
@@ -863,11 +900,13 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     GeometryShop gshop_upoly(cylinder1, eb_verbosity);
     GeometryShop gshop_walls(walls, eb_verbosity);
 
-    // Define a temporary level-set used for constructing the cylinder:
+    // Define temporary level-sets used for constructing the cylinder:
     LSFactory ls_cylinder(* level_set);
     LSFactory ls_walls(ls_cylinder);
 
     // Define the EBIS first using only the walls...
+    // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+    //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
     Geometry geom_ls = LSUtility::make_eb_geometry(ls_cylinder);
     AMReX_EBIS::instance()->define(geom_ls.Domain(),
                                    RealVect::Zero,  // ......... origin of EBIndexSpace
@@ -891,6 +930,8 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     //amrex::VisMF::Write(* ls_mf_a, ss1.str());
 
     // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
+    // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+    //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
     Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder);
     AMReX_EBIS::instance()->define(geom_eb.Domain(),
                                    RealVect::Zero,  // ......... origin of EBIndexSpace

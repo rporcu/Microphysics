@@ -80,8 +80,10 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
             int gs_c = 0;
             ParmParse pp("amr");
 
-            pp.query("max_grid_size", gs_c);
-            gs_m = std::max(gs_m, gs_c);
+            // max_grid_size is frequently set to a large value
+            // => don't use here...
+            //pp.query("max_grid_size", gs_c);
+            //gs_m = std::max(gs_m, gs_c);
             pp.query("max_grid_size_x", gs_c);
             gs_m = std::max(gs_m, gs_c);
             pp.query("max_grid_size_y", gs_c);
@@ -779,10 +781,11 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
   fill_mf_bc(lev,*mu_g[lev]);
   fill_mf_bc(lev,*lambda_g[lev]);
 
-  if ( use_proj_method )
+  if ( use_proj_method && (is_restarting == 0) )
   {
      // We need to initialize the volume fraction ep_g before the first projection
      mfix_calc_volume_fraction(lev,sum_vol_orig);
+     mfix_set_projection_bcs(lev);
      mfix_project_velocity(lev);
      mfix_initial_iterations(lev,dt,stop_time,steady_state);
   }

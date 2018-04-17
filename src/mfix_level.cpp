@@ -7,8 +7,8 @@
 #include <AMReX_Box.H>
 
 // For multigrid
-#include <AMReX_FMultiGrid.H>
-#include <AMReX_stencil_types.H>
+//#include <AMReX_FMultiGrid.H>
+//#include <AMReX_stencil_types.H>
 
 std::string mfix_level::particle_init_type   = "AsciiFile";
 std::string mfix_level::load_balance_type    = "FixedSize";
@@ -613,34 +613,5 @@ mfix_level::mfix_calc_drag_particle(int lev)
                                particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen
                              );
        }
-    }
-}
-
-void
-mfix_level::mfix_set_bc1(int lev)
-{
-  BL_PROFILE("mfix_level::mfix_set_bc1()");
-
-    p_g[lev]->FillBoundary(geom[lev].periodicity());
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
-    {
-      Box domain(geom[lev].Domain());
-      const Box& sbx = (*ep_g[lev])[mfi].box();
-      Box ubx((*u_g[lev])[mfi].box());
-      Box vbx((*v_g[lev])[mfi].box());
-      Box wbx((*w_g[lev])[mfi].box());
-
-      set_bc1(sbx.loVect(), sbx.hiVect(),
-              ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-              (*u_g[lev])[mfi].dataPtr(), (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
-              (*p_g[lev])[mfi].dataPtr(),  (*ep_g[lev])[mfi].dataPtr(),
-              (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
-              (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
-              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(), &nghost);
     }
 }

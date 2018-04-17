@@ -689,3 +689,32 @@ mfix_level::mfix_correct_0(int lev)
     v_g[lev]->FillBoundary(geom[lev].periodicity());
     w_g[lev]->FillBoundary(geom[lev].periodicity());
 }
+
+void
+mfix_level::mfix_set_bc1(int lev)
+{
+  BL_PROFILE("mfix_level::mfix_set_bc1()");
+
+    p_g[lev]->FillBoundary(geom[lev].periodicity());
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+  for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+    {
+      Box domain(geom[lev].Domain());
+      const Box& sbx = (*ep_g[lev])[mfi].box();
+      Box ubx((*u_g[lev])[mfi].box());
+      Box vbx((*v_g[lev])[mfi].box());
+      Box wbx((*w_g[lev])[mfi].box());
+
+      set_bc1(sbx.loVect(), sbx.hiVect(),
+              ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+              (*u_g[lev])[mfi].dataPtr(), (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
+              (*p_g[lev])[mfi].dataPtr(),  (*ep_g[lev])[mfi].dataPtr(),
+              (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+              (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
+              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(), &nghost);
+    }
+}
