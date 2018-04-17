@@ -34,7 +34,9 @@ mfix.levelset__refinement = 1
 mfix.levelset__pad        = 2
 # EBIS refinement and padding
 mfix.levelset__eb_refinement = 1
-mfix.levelset__eb_pad        = 16
+mfix.levelset__eb_pad        = 2
+
+#mfix.levelset__water-tight = true
 
 #mfix.legacy__eb_collisions = true
 

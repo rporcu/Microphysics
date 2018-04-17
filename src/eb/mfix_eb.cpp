@@ -18,7 +18,7 @@
 #include <AMReX_AnisotropicDxPlaneIF.H>
 #include <AMReX_AnisotropicIF.H>
 
-//#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
+#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
 //#include <sstream>
 
 #include <algorithm>
@@ -205,6 +205,11 @@ mfix_level::make_eb_geometry(int lev)
 
     // store copy of level set (for later use).
     ls[lev] = level_set->copy_data();
+
+    // The level set BA might have a higher refinement than the the mfix level.
+    //      => Current mechanism for saving plt files requires the same BA for
+    //         all MFs on the same level                                           => TODO: fix
+    amrex::VisMF::Write(* ls[lev], "ls_final");
 
     /******************************************************************************************************************
      *                                                                                                                *
@@ -427,6 +432,11 @@ mfix_level::make_eb_hourglass(int lev)
 
     // store copy of level set (for later use).
     ls[lev] = level_set->copy_data();
+
+    // The level set BA might have a higher refinement than the the mfix level.
+    //      => Current mechanism for saving plt files requires the same BA for
+    //         all MFs on the same level                                           => TODO: fix
+    amrex::VisMF::Write(* ls[lev], "ls_final");
 
     /******************************************************************************************************************
      *                                                                                                                *
@@ -726,6 +736,11 @@ mfix_level::make_eb_clr(int lev)
 
     // Promote completed copy of level set into the mfix_level.
     ls[lev] = level_set->copy_data();
+
+    // The level set BA might have a higher refinement than the the mfix level.
+    //      => Current mechanism for saving plt files requires the same BA for
+    //         all MFs on the same level                                           => TODO: fix
+    amrex::VisMF::Write(* ls[lev], "ls_final");
 }
 
 

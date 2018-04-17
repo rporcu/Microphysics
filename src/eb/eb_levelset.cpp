@@ -245,7 +245,7 @@ std::unique_ptr<MultiFab> LSFactory::ebis_impfunc(const EBIndexSpace & eb_is) {
 #pragma omp parallel
 #endif
     for(MFIter mfi(* mf_impfunc, true); mfi.isValid(); ++ mfi)
-        eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi]);
+        eb_is.fillNodeFarrayBoxFromImplicitFunction((* mf_impfunc)[mfi], ls_grid_ref);
 
     mf_impfunc->FillBoundary(geom_ls.periodicity());
     return mf_impfunc;
