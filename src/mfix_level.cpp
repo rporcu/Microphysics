@@ -7,8 +7,8 @@
 #include <AMReX_Box.H>
 
 // For multigrid
-#include <AMReX_FMultiGrid.H>
-#include <AMReX_stencil_types.H>
+//#include <AMReX_FMultiGrid.H>
+//#include <AMReX_stencil_types.H>
 
 std::string mfix_level::particle_init_type   = "AsciiFile";
 std::string mfix_level::load_balance_type    = "FixedSize";
