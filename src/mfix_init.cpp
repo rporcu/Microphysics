@@ -616,12 +616,14 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
 {
   if (solve_dem) {
 
-    amrex::Print() << "Clean up auto-generated particles.\n";
 
     // Auto generated particles may be out of the domain. This call will remove them.
     // Note that this has to occur after the EB geometry is created.
     if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory)
+    {
+      amrex::Print() << "Clean up auto-generated particles.\n";
       pc -> RemoveOutOfRange(lev, particle_ebfactory.get());
+    }
 
     Real avg_dp[10], avg_ro[10];
     pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
@@ -768,8 +770,6 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
     }
   }
 
-  if ( use_proj_method ) mfix_extrap_pressure(lev,p0_g[lev]);
-
   fill_mf_bc(lev,*ep_g[lev]);
   fill_mf_bc(lev,*ro_g[lev]);
   fill_mf_bc(lev,*rop_g[lev]);
@@ -781,13 +781,22 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
   fill_mf_bc(lev,*mu_g[lev]);
   fill_mf_bc(lev,*lambda_g[lev]);
 
-  if ( use_proj_method && (is_restarting == 0) )
+  if ( use_proj_method )
   {
-     // We need to initialize the volume fraction ep_g before the first projection
-     mfix_calc_volume_fraction(lev,sum_vol_orig);
-     mfix_set_projection_bcs(lev);
-     mfix_project_velocity(lev);
-     mfix_initial_iterations(lev,dt,stop_time,steady_state);
+     mfix_extrap_pressure(lev,p0_g[lev]);
+
+     if (is_restarting == 1)
+     {
+        mfix_extrap_pressure(lev, p_g[lev]);
+     } 
+     else 
+     {
+        // We need to initialize the volume fraction ep_g before the first projection
+        mfix_calc_volume_fraction(lev,sum_vol_orig);
+        mfix_set_projection_bcs(lev);
+        mfix_project_velocity(lev);
+        mfix_initial_iterations(lev,dt,stop_time,steady_state);
+     }
   }
 }
 

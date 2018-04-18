@@ -91,11 +91,6 @@ subroutine extrap_pressure_to_ghost_cells (  phi, slo, shi, bct_ilo, bct_ihi, &
                ! first ghost cell
                phi(domlo(1)-1,j,k) =  2.d0*phi(domlo(1)-1,j,k) - phi(domlo(1),j,k)
 
-            case ( minf_)
-
-               phi(slo(1):domlo(1)-1,j,k) = &
-                    two * phi(domlo(1),j,k) - phi(domlo(1)+1,j,k)
-
             case default
 
                phi(slo(1):domlo(1)-1,j,k) = phi(domlo(1),j,k)
@@ -121,11 +116,6 @@ subroutine extrap_pressure_to_ghost_cells (  phi, slo, shi, bct_ilo, bct_ihi, &
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
                phi(domhi(1)+1,j,k) = 2.d0*phi(domhi(1)+1,j,k) - phi(domhi(1),j,k)
-
-            case ( minf_ )
-               
-               phi(domhi(1)+1:shi(1),j,k) = &
-                    two * phi(domhi(1),j,k) - phi(domhi(1)-1,j,k)
 
             case default
                
@@ -153,11 +143,6 @@ subroutine extrap_pressure_to_ghost_cells (  phi, slo, shi, bct_ilo, bct_ihi, &
                ! first ghost cell
                phi(i,domlo(2)-1,k) =  2.d0*phi(i,domlo(2)-1,k) - phi(i,domlo(2),k)
 
-            case ( minf_ )
-
-               phi(i,slo(2):domlo(2)-1,k) = &
-                    2*phi(i,domlo(2),k) - phi(i,domlo(2)+1,k)
-
             case default 
 
                phi(i,slo(2):domlo(2)-1,k) = phi(i,domlo(2),k)
@@ -183,11 +168,6 @@ subroutine extrap_pressure_to_ghost_cells (  phi, slo, shi, bct_ilo, bct_ihi, &
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
                phi(i,domhi(2)+1,k) =  2.d0*phi(i,domhi(2)+1,k) - phi(i,domhi(2),k)
-
-            case ( minf_) 
-
-               phi(i,domhi(2)+1:shi(2),k) = &
-                    two*phi(i,domhi(2),k) - phi(i,domhi(2)-1,k)
 
             case default 
 
@@ -215,11 +195,6 @@ subroutine extrap_pressure_to_ghost_cells (  phi, slo, shi, bct_ilo, bct_ihi, &
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
                phi(i,j,domlo(3)-1) =  2.d0*phi(i,j,domlo(3)-1) - phi(i,j,domlo(3))
- 
-            case ( minf_ )
-
-               phi(i,j,slo(3):domlo(3)-1) = &
-                    two*phi(i,j,domlo(3)) - phi(i,j,domlo(3)+1)
 
             case default
 
@@ -247,11 +222,6 @@ subroutine extrap_pressure_to_ghost_cells (  phi, slo, shi, bct_ilo, bct_ihi, &
                ! Dirichlet value is set to face: extrapolate value at
                ! first ghost cell
                phi(i,j,domhi(3)+1) =  2.d0*phi(i,j,domhi(3)+1) - phi(i,j,domhi(3))
-
-            case ( minf_ ) 
-
-               phi(i,j,domhi(3)+1:shi(3)) = &
-                    two*phi(i,j,domhi(2)) - phi(i,j,domhi(3)-1)
 
             case default 
 
