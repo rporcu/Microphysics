@@ -10,7 +10,6 @@
 #include <AMReX_MLMG.H>
 #include <AMReX_MLABecLaplacian.H>
 
-
 void
 mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real time, Real stop_time )
 {
@@ -884,7 +883,7 @@ mfix_level::mfix_compute_bcoeff (int lev)
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
-    for (MFIter mfi(*p_g[lev],true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*ro_g[lev],true); mfi.isValid(); ++mfi)
     {
 	// Boxes for staggered components
 	Box ubx = mfi.tilebox (e_x);
