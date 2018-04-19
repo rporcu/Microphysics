@@ -18,7 +18,7 @@
 #include <AMReX_AnisotropicDxPlaneIF.H>
 #include <AMReX_AnisotropicIF.H>
 
-#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
+//#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
 //#include <sstream>
 
 #include <algorithm>
@@ -219,13 +219,8 @@ mfix_level::make_eb_geometry(int lev)
         EBTower::Destroy();
     }
 
-    // store copy of level set (for later use).
-    ls[lev] = level_set->copy_data();
-
-    // The level set BA might have a higher refinement than the the mfix level.
-    //      => Current mechanism for saving plt files requires the same BA for
-    //         all MFs on the same level                                           => TODO: fix
-    amrex::VisMF::Write(* ls[lev], "ls_final");
+    // store copy of level set (for plotting).
+    ls[lev] = level_set->coarsen_data();
 
     /***************************************************************************
      *                                                                         *
@@ -467,13 +462,8 @@ mfix_level::make_eb_hourglass(int lev)
     level_set->intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
     EBTower::Destroy();
 
-    // store copy of level set (for later use).
-    ls[lev] = level_set->copy_data();
-
-    // The level set BA might have a higher refinement than the the mfix level.
-    //      => Current mechanism for saving plt files requires the same BA for
-    //         all MFs on the same level                                           => TODO: fix
-    amrex::VisMF::Write(* ls[lev], "ls_final");
+    // store copy of level set (for plotting).
+    ls[lev] = level_set->coarsen_data();
 
     /***************************************************************************
      *                                                                         *
@@ -772,12 +762,7 @@ mfix_level::make_eb_clr(int lev)
     eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
     // Promote completed copy of level set into the mfix_level.
-    ls[lev] = level_set->copy_data();
-
-    // The level set BA might have a higher refinement than the the mfix level.
-    //      => Current mechanism for saving plt files requires the same BA for
-    //         all MFs on the same level                                           => TODO: fix
-    amrex::VisMF::Write(* ls[lev], "ls_final");
+    ls[lev] = level_set->coarsen_data();
 }
 
 

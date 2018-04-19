@@ -326,6 +326,28 @@ std::unique_ptr<iMultiFab> LSFactory::copy_valid() const {
 }
 
 
+std::unique_ptr<MultiFab> LSFactory::coarsen_data() const {
+    // No refinement => do nothing
+    if(ls_grid_ref == 1)
+        return copy_data();
+    
+    // Target for coarse nodal version of the level-set MultiFab
+    std::unique_ptr<MultiFab> ls_crse = std::unique_ptr<MultiFab>(new MultiFab);
+    const MultiFab * ls_fine = ls_grid.get(); // Pointer to fine level-set MultiFab
+
+    const BoxArray & ls_ba = ls_fine->boxArray();
+    BoxArray crse_ba = ls_ba; // Coarse nodal level-set BoxArray (amrex::average_down requires coarse BA)
+    crse_ba.coarsen(ls_grid_ref);
+    ls_crse->define(crse_ba, ls_fine->DistributionMap(), ls_fine->nComp(), ls_fine->nGrow());
+    amrex::average_down(* ls_fine, * ls_crse, 0, 1, ls_grid_ref);
+
+    // Do this in the write plot file function
+    // Now map the nodal MultiFab to the cell-centered MultiFab:
+    //amrex::average_node_to_cellcenter(* ls_crse, 0, * ls_crse, 0, 1);
+    return ls_crse;
+}
+
+
 void LSFactory::regrid(){
     // Regrids the level-set data whenever the MFIXParticleContainer's
     // DistributionMapping has changed:
