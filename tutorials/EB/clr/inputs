@@ -5,6 +5,7 @@ amr.n_cell = 100 330 20
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
+#amr.max_grid_size = 1024
 amr.max_grid_size_x = 32
 amr.max_grid_size_y = 32
 amr.max_grid_size_z = 32
@@ -27,7 +28,17 @@ amr.par_ascii_int  = 1
 
 mfix.particle_init_type = "Auto"
 
-mfix.legacy__eb_collisions = true
+# Collision algorithm details:
+# Level-set refinement and padding
+mfix.levelset__refinement = 1
+mfix.levelset__pad        = 2
+# EBIS refinement and padding
+mfix.levelset__eb_refinement = 1
+mfix.levelset__eb_pad        = 2
+
+#mfix.levelset__water-tight = true
+
+#mfix.legacy__eb_collisions = true
 
 mfix.clr  = true    # use the mfix_eb_clr
 

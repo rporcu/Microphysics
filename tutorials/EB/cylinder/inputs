@@ -6,7 +6,9 @@ amr.n_cell = 32 32 48
 #amr.max_grid_size = 1024
 amr.max_grid_size_x = 32
 amr.max_grid_size_y = 32
-amr.max_grid_size_z = 24
+amr.max_grid_size_z = 32
+
+maxboxsize = 1024
 
 # Maximum tile size within each grid
 fabarray.mfiter_tile_size = 1024 1024 1024
@@ -20,7 +22,7 @@ amr.max_level = 0
 # Run time pf simulation
 amr.stop_time = 0.20
 
-amr.plot_int  =    -1
+amr.plot_int  =    -1000
 amr.check_int  =   -1
 
 amr.par_ascii_int  =  1

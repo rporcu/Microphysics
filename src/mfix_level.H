@@ -89,7 +89,9 @@ public:
     void make_eb_hourglass(int lev);
     void make_eb_clr(int lev);
 
-    std::unique_ptr<BaseIF> make_cylinder(int dir, Real radius, Real length);
+    std::unique_ptr<BaseIF> make_cylinder(int dir,
+            Real radius, Real length, const RealVect & translation,
+            int lev, bool water_tight);
 
     void WriteEBSurface(int lev);
 
@@ -226,8 +228,8 @@ private:
 
     void mfix_apply_forcing_terms(int lev, amrex::Real dt,
             Vector< std::unique_ptr<MultiFab> >& u,
-      Vector< std::unique_ptr<MultiFab> >& v,
-      Vector< std::unique_ptr<MultiFab> >& w );
+            Vector< std::unique_ptr<MultiFab> >& v,
+            Vector< std::unique_ptr<MultiFab> >& w );
 
     void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
 
@@ -236,9 +238,9 @@ private:
     void mfix_add_grad_phi (int lev, amrex::Real coeff);
 
     void mfix_compute_velocity_slopes(int lev,
-      Vector< std::unique_ptr<MultiFab> >& u,
-      Vector< std::unique_ptr<MultiFab> >& v,
-      Vector< std::unique_ptr<MultiFab> >& w );
+            Vector< std::unique_ptr<MultiFab> >& u,
+            Vector< std::unique_ptr<MultiFab> >& v,
+            Vector< std::unique_ptr<MultiFab> >& w );
 
     void mfix_compute_diveu (int lev);
 
@@ -272,6 +274,10 @@ private:
     static amrex::IntVect e_x;
     static amrex::IntVect e_y;
     static amrex::IntVect e_z;
+
+    // Debug counter used for tracking number of leve-lset MultiFabs used in
+    // intersection/union
+    int ct_ls_mf;
 
 //  Array< std::unique_ptr<iMultiFab> > bc_type;
 //  Array< std::unique_ptr<iMultiFab> > bc_ptr;
@@ -330,6 +336,9 @@ private:
 
     // Molecular viscosity
     Vector< std::unique_ptr<MultiFab> > mu_g ;
+
+    // Level-Set Data
+    Vector< std::unique_ptr<MultiFab> > ls;
 
     // Cell-based
     Vector< std::unique_ptr<MultiFab> > lambda_g;
@@ -436,8 +445,8 @@ private:
     // all the member functions.
     //
     // DO NOT USE  A LOCAL VARIABLE WITH THE SAME NAME
-    // 
-    const int nghost = 1; 
+    //
+    const int nghost = 1;
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;

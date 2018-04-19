@@ -18,6 +18,10 @@
 #include <AMReX_AnisotropicDxPlaneIF.H>
 #include <AMReX_AnisotropicIF.H>
 
+#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
+//#include <sstream>
+
+#include <algorithm>
 #include <eb_levelset.H>
 #include <mfix_level.H>
 #include <mfix_F.H>
@@ -153,59 +157,81 @@ mfix_level::make_eb_geometry(int lev)
     int grid_size = 16;
     bool eb_verbosity = true;
 
-    /******************************************************************************************************************
-     *                                                                                                                *
-     * Fill Level-set using:                                                                                          *
-     *      -> Planes (where the GeometryShop's implicit function is a signed distance): implicit function's value    *
-     *      -> Poly2 (where GeometryShop's implicit function is singed but not a distance): min distance to EB facets *
-     * Note: this requires building and destroying the EBTower (twice), so any EBTower data built before this will be *
-     * lost...                                                                                                        *
-     *                                                                                                                *
-     ******************************************************************************************************************/
+    /***************************************************************************
+     *                                                                         *
+     * Fill Level-set using:                                                   *
+     *      -> Planes (where the GeometryShop's implicit function is a signed  *
+     *         distance): implicit function's value                            *
+     *      -> Poly2 (where GeometryShop's implicit function is singed but not *
+     *         a distance): min distance to EB facets                          *
+     * Note: this requires building and destroying the EBTower (twice), so any *
+     * EBTower data built before this will be lost...                          *
+     *                                                                         *
+     ***************************************************************************/
 
     if(use_walls){
-        // Define both components of the GeometryShop separately:
+        // Define components of the GeometryShop separately:
         GeometryShop gshop_walls(* impfunc_walls, eb_verbosity);
 
         // Define the EBIS first using only the walls...
         // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
         //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
         Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
-        AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
+        AMReX_EBIS::instance()->define(geom_ls.Domain(),
+                                       RealVect::Zero,  // ......... origin of EBIndexSpace
+                                       geom_ls.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
+                                       gshop_walls,  // ............ GeometryShop object
+                                       grid_size, max_level);
+        // [1]: EBIndexSpace internally assumes an isotropic grid. Any
+        // anisotropic implicit function (e.g AnisotrpicPlaneIF) uses dx as a
+        // reference, and rescales dy and dz wrt dx. => dx goes here.
 
         EBTower::Build();
         // GeometryShop's Planes' implicit function is actually a signed distance function
         //      => it's just easier to fill the level-set this way
-        level_set->update_ebis(* AMReX_EBIS::instance());
+        level_set->intersection_ebis(* AMReX_EBIS::instance());
         EBTower::Destroy();
     }
     if(use_poly2){
-        // Define both components of the GeometryShop separately:
+        // Define components of the GeometryShop separately:
         GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
 
         // Define the EBIS using only the poly2 (after deleting the walls-only EBTower)...
         // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
-        //                                                      * rescale y, z- components wrt to dx[0] (dx(1)
+        //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
         Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
-        AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, grid_size, max_level);
+        AMReX_EBIS::instance()->define(geom_eb.Domain(),
+                                       RealVect::Zero,  // ......... origin of EBIndexSpace
+                                       geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1, above]
+                                       gshop_poly2,  // ............ GeometryShop object
+                                       grid_size, max_level);
 
         EBTower::Build();
         // GeometryShop's PolynomialIF is not a signed distance function...
-        //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
-        //          => define the level set as the (signed) distance to the closest point on the EB-facets
+        //      => it's easier to use PolynomialIF to build an
+        //         EBFArrayBoxFactory which defines our EB surface now
+        //          => define the level set as the (signed) distance to the
+        //             closest point on the EB-facets
         int eb_pad = level_set->get_eb_pad();
-        EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
-        level_set->update_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
+        EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev],
+                                            {eb_pad, eb_pad, eb_pad}, EBSupport::full);
+        level_set->intersection_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
         EBTower::Destroy();
     }
 
+    // store copy of level set (for later use).
+    ls[lev] = level_set->copy_data();
 
+    // The level set BA might have a higher refinement than the the mfix level.
+    //      => Current mechanism for saving plt files requires the same BA for
+    //         all MFs on the same level                                           => TODO: fix
+    amrex::VisMF::Write(* ls[lev], "ls_final");
 
-    /******************************************************************************************************************
-     *                                                                                                                *
-     * Build standard EB Factories                                                                                    *
-     *                                                                                                                *
-     ******************************************************************************************************************/
+    /***************************************************************************
+     *                                                                         *
+     * Build standard EB Factories                                             *
+     *                                                                         *
+     ***************************************************************************/
 
 
     GeometryShop gshop(*impfunc, eb_verbosity);
@@ -229,7 +255,7 @@ mfix_level::make_eb_geometry(int lev)
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
 
-    eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+    eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
 
 
@@ -382,15 +408,17 @@ mfix_level::make_eb_hourglass(int lev)
 
 
 
-    /******************************************************************************************************************
-     *                                                                                                                *
-     * Fill Level-set using:                                                                                          *
-     *      -> Planes (where the GeometryShop's implicit function is a signed distance): implicit function's value    *
-     *      -> Poly (where GeometryShop's implicit function is singed but not a distance): min distance to EB facets  *
-     * Note: this requires building and destroying the EBTower (twice), so any EBTower data built before this will be *
-     * lost...                                                                                                        *
-     *                                                                                                                *
-     ******************************************************************************************************************/
+    /***************************************************************************
+     *                                                                         *
+     * Fill Level-set using:                                                   *
+     *      -> Planes (where the GeometryShop's implicit function is a signed  *
+     *         distance): implicit function's value                            *
+     *      -> Poly (where GeometryShop's implicit function is singed but not  *
+     *         a distance): min distance to EB facets                          *
+     * Note: this requires building and destroying the EBTower (twice), so any *
+     * EBTower data built before this will be lost...                          *
+     *                                                                         *
+     ***************************************************************************/
 
     // Define both components of the GeometryShop separately:
     GeometryShop gshop_upoly(* impfunc_unpolys, eb_verbosity);
@@ -398,35 +426,60 @@ mfix_level::make_eb_hourglass(int lev)
 
 
     // Define the EBIS first using only the walls...
+    // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+    //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
     Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
-    AMReX_EBIS::instance()->define(geom_ls.Domain(), RealVect::Zero, geom_ls.CellSize()[0], gshop_walls, grid_size, max_level);
+    AMReX_EBIS::instance()->define(geom_ls.Domain(),
+                                   RealVect::Zero,  // ......... origin of EBIndexSpace
+                                   geom_ls.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
+                                   gshop_walls,  // ............ GeometryShop object
+                                   grid_size, max_level);
+    // [1]: EBIndexSpace internally assumes an isotropic grid. Any anisotropic
+    // implicit function (e.g AnisotrpicPlaneIF) uses dx as a reference, and
+    // rescales dy and dz wrt dx. => dx goes here.
+
 
     EBTower::Build();
     // GeometryShop's Planes' implicit function is actually a signed distance function
     //      => it's just easier to fill the level-set this way
-    level_set->update_ebis(* AMReX_EBIS::instance());
+    level_set->intersection_ebis(* AMReX_EBIS::instance());
     EBTower::Destroy();
 
     // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
+    // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+    //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
     Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
-    AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_upoly, grid_size, max_level);
+    AMReX_EBIS::instance()->define(geom_eb.Domain(),
+                                   RealVect::Zero,  // ......... origin of EBIndexSpace
+                                   geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1, above]
+                                   gshop_upoly,  // ............ GeometryShop object
+                                   grid_size, max_level);
 
     EBTower::Build();
     // GeometryShop's PolynomialIF is not a signed distance function...
-    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
-    //          => define the level set as the (signed) distance to the closest point on the EB-facets
+    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory
+    //         which defines our EB surface now
+    //          => define the level set as the (signed) distance to the closest
+    //             point on the EB-facets
     int eb_pad = level_set->get_eb_pad();
-    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
-    level_set->update_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev],
+                                       {eb_pad, eb_pad, eb_pad}, EBSupport::full);
+    level_set->intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
     EBTower::Destroy();
 
+    // store copy of level set (for later use).
+    ls[lev] = level_set->copy_data();
 
+    // The level set BA might have a higher refinement than the the mfix level.
+    //      => Current mechanism for saving plt files requires the same BA for
+    //         all MFs on the same level                                           => TODO: fix
+    amrex::VisMF::Write(* ls[lev], "ls_final");
 
-    /******************************************************************************************************************
-     *                                                                                                                *
-     * Build standard EB Factories                                                                                    *
-     *                                                                                                                *
-     ******************************************************************************************************************/
+    /***************************************************************************
+     *                                                                         *
+     * Build standard EB Factories                                             *
+     *                                                                         *
+     ***************************************************************************/
 
     GeometryShop gshop(*impfunc, eb_verbosity);
     AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
@@ -449,7 +502,7 @@ mfix_level::make_eb_hourglass(int lev)
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
 
-    eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+    eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
 
 
@@ -465,7 +518,6 @@ mfix_level::make_eb_clr(int lev)
     planes.resize(0);
 
     std::unique_ptr<BaseIF> impfunc;
-    std::unique_ptr<BaseIF> impfunc_poly2;
 
     ParmParse pp("mfix");
 
@@ -485,106 +537,108 @@ mfix_level::make_eb_clr(int lev)
 
     int cylinder_dir;
 
+    // CLR can be constructed in either "water-tight" mode (each component is
+    // assembled as a level-set intersection/union), or the much faster EB mode
+    // (where the level-set is filled using the already assembled eb-factory).
+    // Note that the EB mode can't have leaks, but it can have irregular edges.
+
+    bool water_tight = false;
+    pp.query("levelset__water-tight", water_tight);
+
+    // If the mfix_level::make_cylinder uses a union
+    //  => ensure that mfix_level::level_set is initialized to min
+    if(water_tight) level_set->invert();
+
+    //ct_ls_mf = 0;
+    //std::unique_ptr<MultiFab> ls_mf = level_set->copy_data();
+    //amrex::VisMF::Write(* ls_mf, "ls_empty");
+
     //------------------------------------------------------------- Riser
     pp.getarr("riser_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("riser_lower_radius", lradius);
     pp.query("riser_lower_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> riser_lower_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF riser_lower(*riser_lower_init);
-    riser_lower.translate(translation);
+    std::unique_ptr<BaseIF> riser_lower = make_cylinder(cylinder_dir, lradius, lheight, translation,
+                                                        lev, water_tight);
 
 
     pp.query("riser_upper_radius", lradius);
     pp.query("riser_upper_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> riser_upper_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF riser_upper(*riser_upper_init);
-    riser_upper.translate(translation);
+    std::unique_ptr<BaseIF> riser_upper = make_cylinder(cylinder_dir, lradius, lheight, translation,
+                                                        lev, water_tight);
 
     //------------------------------------------------------------- J-leg
     pp.getarr("jleg_htranslate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("jleg_horz_radius", lradius);
     pp.query("jleg_horz_height", lheight);
 
     cylinder_dir=0;
-    std::unique_ptr<BaseIF> jleg_horz_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF jleg_horz(*jleg_horz_init);
-    jleg_horz.translate(translation);
+    std::unique_ptr<BaseIF> jleg_horz = make_cylinder(cylinder_dir, lradius, lheight, translation,
+                                                      lev, water_tight);
 
 
     pp.getarr("jleg_vtranslate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("jleg_vert_radius", lradius);
     pp.query("jleg_vert_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> jleg_vert_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF jleg_vert(*jleg_vert_init);
-    jleg_vert.translate(translation);
+    std::unique_ptr<BaseIF> jleg_vert = make_cylinder(cylinder_dir, lradius, lheight, translation,
+                                                      lev, water_tight);
 
     //------------------------------------------------------------- reactor
     pp.getarr("reactor_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("reactor_radius", lradius);
     pp.query("reactor_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> reactor_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF reactor(*reactor_init);
-    reactor.translate(translation);
+    std::unique_ptr<BaseIF> reactor = make_cylinder(cylinder_dir, lradius, lheight, translation,
+                                                    lev, water_tight);
 
     //------------------------------------------------------------- loop-seal to reactor
     pp.getarr("ls2fbr_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("ls2fbr_radius", lradius);
     pp.query("ls2fbr_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> ls2fbr_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF ls2fbr(*ls2fbr_init);
-    ls2fbr.translate(translation);
+    std::unique_ptr<BaseIF> ls2fbr = make_cylinder(cylinder_dir, lradius, lheight, translation,
+                                                   lev, water_tight);
 
 
     //------------------------------------------------------------- loop-seal to reactor
     pp.getarr("loopseal_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("loopseal_radius", lradius);
     pp.query("loopseal_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> loopseal_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF loopseal(*loopseal_init);
-    loopseal.translate(translation);
+    std::unique_ptr<BaseIF> loopseal = make_cylinder(cylinder_dir, lradius, lheight, translation,
+                                                     lev, water_tight);
 
 
 
@@ -592,111 +646,109 @@ mfix_level::make_eb_clr(int lev)
     pp.getarr("cy2ls_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("cy2ls_radius", lradius);
     pp.query("cy2ls_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> cy2ls_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF cy2ls(*cy2ls_init);
-    cy2ls.translate(translation);
+    std::unique_ptr<BaseIF> cy2ls = make_cylinder(cylinder_dir, lradius, lheight, translation,
+                                                  lev, water_tight);
 
 
     //------------------------------------------------------------- cyclone
     pp.getarr("cyclone_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("cyclone_radius", lradius);
     pp.query("cyclone_height", lheight);
 
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> cyclone_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF cyclone(*cyclone_init);
-    cyclone.translate(translation);
+    std::unique_ptr<BaseIF> cyclone = make_cylinder(cylinder_dir, lradius, lheight, translation,
+                                                    lev, water_tight);
 
 
     //------------------------------------------------------------- crossover
     pp.getarr("crossover_translate", transvec,  0, 3);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     pp.query("crossover_radius", lradius);
     pp.query("crossover_height", lheight);
 
     cylinder_dir=0;
-    std::unique_ptr<BaseIF> crossover_init = make_cylinder(cylinder_dir, lradius, lheight);
-
-    TransformIF crossover(*crossover_init);
-    crossover.translate(translation);
+    std::unique_ptr<BaseIF> crossover = make_cylinder(cylinder_dir, lradius, lheight, translation,
+                                                      lev, water_tight);
 
     //--------------------------------------------------------------------
 
     Vector<BaseIF*> clr_parts(10);
-    clr_parts[0] = &riser_lower;
-    clr_parts[1] = &riser_upper;
-    clr_parts[2] = &jleg_horz;
-    clr_parts[3] = &jleg_vert;
-    clr_parts[4] = &reactor;
-    clr_parts[5] = &ls2fbr;
-    clr_parts[6] = &loopseal;
-    clr_parts[7] = &cy2ls;
-    clr_parts[8] = &cyclone;
-    clr_parts[9] = &crossover;
+    clr_parts[0] = riser_lower.get();
+    clr_parts[1] = riser_upper.get();
+    clr_parts[2] = jleg_horz.get();
+    clr_parts[3] = jleg_vert.get();
+    clr_parts[4] = reactor.get();
+    clr_parts[5] = ls2fbr.get();
+    clr_parts[6] = loopseal.get();
+    clr_parts[7] = cy2ls.get();
+    clr_parts[8] = cyclone.get();
+    clr_parts[9] = crossover.get();
 
     UnionIF clr(clr_parts);
-
-
-    impfunc_poly2 = std::unique_ptr<BaseIF>(clr.newImplicitFunction());
     impfunc.reset(clr.newImplicitFunction());
 
 
     int max_level = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
+    GeometryShop gshop(* impfunc, eb_verbosity);
 
-    /**************************************************************************************
-     *                                                                                    *
-     * Fill Level-set using:                                                              *
-     *      -> Poly2 (where GeometryShop's implicit function is singed but not a          *
-     *         distance): min distance to EB facets.                                      *
-     *                                                                                    *
-     * Note: this requires building and destroying the EBTower (twice), so any EBTower    *
-     *       data built before this will be lost....                                      *
-     *                                                                                    *
-     **************************************************************************************/
+    /**************************************************************************
+     *                                                                        *
+     * IF not using water-tight mode (i.e. level-set was not already filled   *
+     * using the `make_cylinder` function):                                   *
+     *      -> Construct an EBIndexSpace and using the refinement specified   *
+     *         in `levelset__eb_refinement`.                                  *
+     *      -> Fill level-set using an eb-factory defined on this EBIS.       *
+     *      Note: This is much faster than "water-tight" mode, but does not   *
+     *      resolve edges a well => *might have leaks*                        *
+     *                                                                        *
+     **************************************************************************/
 
-    // Define both components of the the GeometryShop seperately:
-    GeometryShop gshop_poly2(* impfunc_poly2, eb_verbosity);
+    if(! water_tight){
 
-    // Define the EBIS using only the poly2 (after deleting the walls-only EBTower)...
-    Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
-    AMReX_EBIS::instance()->define(geom_eb.Domain(), RealVect::Zero, geom_eb.CellSize()[0], gshop_poly2, grid_size, max_level);
+        // Construct EBIS geometry
+        Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+        AMReX_EBIS::instance()->define(geom_eb.Domain(),
+                                       RealVect::Zero,  // ......... origin of EBIndexSpace
+                                       geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
+                                       gshop,  // .................. GeometryShop object
+                                       grid_size, max_level);
 
-    EBTower::Build();
-    // GeometryShop's PolynomialIF is not a signed distance function...
-    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory which defines our EB surface now
-    //          => define the level set as the (signed) distance to the closest point on the EB-facets
-    int eb_pad = level_set->get_eb_pad();
-    EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev], {eb_pad, eb_pad, eb_pad}, EBSupport::full);
-    // level_set->update_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
-    EBTower::Destroy();
+        // Temporary EB tower
+        EBTower::Build();
+
+        // Fill level_set.
+        int eb_grow = level_set->get_eb_pad();
+        EBFArrayBoxFactory eb_factory(geom_eb, level_set->get_eb_ba(), dmap[lev],
+                                      {eb_grow, eb_grow, eb_grow}, EBSupport::full);
+        level_set->intersection_ebf(eb_factory, * AMReX_EBIS::instance());
+
+        // Destroy temporary EB tower (rebuilt below)
+        EBTower::Destroy();
+    }
 
 
 
-    /*****************************************************************************
-     *                                                                           *
-     * Build standard EB Factories                                               *
-     *                                                                           *
-     *****************************************************************************/
+    /***************************************************************************
+     *                                                                         *
+     * Build standard EB Factories                                             *
+     *                                                                         *
+     ***************************************************************************/
 
-
-    GeometryShop gshop(*impfunc, eb_verbosity);
     AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
 
     // set up ebfactory
@@ -717,13 +769,20 @@ mfix_level::make_eb_clr(int lev)
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
 
-    eb_normals         = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+    eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
+
+    // Promote completed copy of level set into the mfix_level.
+    ls[lev] = level_set->copy_data();
+
+    // The level set BA might have a higher refinement than the the mfix level.
+    //      => Current mechanism for saving plt files requires the same BA for
+    //         all MFs on the same level                                           => TODO: fix
+    amrex::VisMF::Write(* ls[lev], "ls_final");
 }
 
 
-
 std::unique_ptr<BaseIF>
-mfix_level::make_cylinder(int dir, Real radius, Real length)
+mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & translation, int lev, bool water_tight)
 {
     std::unique_ptr<BaseIF> cylinder_IF;
     Vector<PolyTerm> poly;
@@ -762,6 +821,8 @@ mfix_level::make_cylinder(int dir, Real radius, Real length)
 
     // Internal flow cylinder
     PolynomialIF cylinder0(poly, true);
+    TransformIF cylinder1(cylinder0);
+    cylinder1.translate(translation);
 
     // box to clip to correct length
     RealVect normal, center;
@@ -795,6 +856,8 @@ mfix_level::make_cylinder(int dir, Real radius, Real length)
     planes.push_back(plane);
 
     IntersectionIF bounding_box(planes);
+    TransformIF walls(bounding_box);
+    walls.translate(translation);
 
     Vector<BaseIF*> funcs(2);
     funcs[0] = &cylinder0;
@@ -802,7 +865,110 @@ mfix_level::make_cylinder(int dir, Real radius, Real length)
 
     IntersectionIF cylinder(funcs);
 
-    cylinder_IF.reset(cylinder.newImplicitFunction());
+    TransformIF cylinder_trans(cylinder);
+    cylinder_trans.translate(translation);
+
+    cylinder_IF.reset(cylinder_trans.newImplicitFunction());
+
+    // IF we are not using the water-tight mode, return now:
+
+    if(! water_tight)
+        return cylinder_IF;
+
+    // ELSE construct the level-set by unioning each cylinder (intersected
+    // component) of the CLR using the level-set
+    //   => corners are much more cleanly resolved, but is much slower.
+
+    int max_level = 0;
+    int grid_size = 16;
+    bool eb_verbosity = true;
+
+
+    /**************************************************************************
+     *                                                                        *
+     * Fill Level-set using:                                                  *
+     *      -> Walls (where the GeometryShop's implicit function is a signed  *
+     *         distance): implicit function's value                           *
+     *      -> Cylinder (where GeometryShop's implicit function is singed but *
+     *         not a distance): min distance to EB facets                     *
+     *      Note: this requires building and destroying the EBTower (twice),  *
+     *      so any EBTower data built before this will be lost...             *
+     *                                                                        *
+     **************************************************************************/
+
+    // Define both components of the GeometryShop separately:
+    GeometryShop gshop_upoly(cylinder1, eb_verbosity);
+    GeometryShop gshop_walls(walls, eb_verbosity);
+
+    // Define temporary level-sets used for constructing the cylinder:
+    LSFactory ls_cylinder(* level_set);
+    LSFactory ls_walls(ls_cylinder);
+
+    // Define the EBIS first using only the walls...
+    // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+    //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
+    Geometry geom_ls = LSUtility::make_eb_geometry(ls_cylinder);
+    AMReX_EBIS::instance()->define(geom_ls.Domain(),
+                                   RealVect::Zero,  // ......... origin of EBIndexSpace
+                                   geom_ls.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
+                                   gshop_walls,  // ............ GeometryShop object
+                                   grid_size, max_level);
+    // [1]: EBIndexSpace internally assumes an isotropic grid. Any anisotropic
+    // implicit function (e.g AnisotrpicPlaneIF) uses dx as a reference, and
+    // rescales dy and dz wrt dx. => dx goes here.
+
+    EBTower::Build();
+    // GeometryShop's Planes' implicit function is actually a signed distance function
+    //      => it's just easier to fill the level-set this way
+    ls_cylinder.intersection_ebis(* AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+    //ct_ls_mf ++;
+    //std::stringstream ss1;
+    //ss1 << "ls_" << ct_ls_mf << "_a";
+    //std::unique_ptr<MultiFab> ls_mf_a = ls_cylinder.copy_data();
+    //amrex::VisMF::Write(* ls_mf_a, ss1.str());
+
+    // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
+    // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+    //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
+    Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder);
+    AMReX_EBIS::instance()->define(geom_eb.Domain(),
+                                   RealVect::Zero,  // ......... origin of EBIndexSpace
+                                   geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1, above]
+                                   gshop_upoly,  // ............ GeometryShop object
+                                   grid_size, max_level);
+
+    EBTower::Build();
+    // GeometryShop's PolynomialIF is not a signed distance function...
+    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory
+    //         which defines our EB surface
+    //          => define the level set as the (signed) distance to the closest
+    //             point on the EB-facets
+    int eb_grow = level_set->get_eb_pad();
+    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev],
+                                       {eb_grow, eb_grow, eb_grow}, EBSupport::full);
+
+    // Only EB facets that are "in range" (within `n_pad` of the local
+    // BoxArray) are considered for filling the EB level-set. flag_valid = {1,0}
+    // indicates if a cell's BoxArray contained any EB facets (1), or if the
+    // cell's value is invalid (0) because all EB facets where too far away in
+    // order to be considered.
+    std::unique_ptr<iMultiFab> flag_valid = ls_cylinder.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    ls_walls.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+    //std::stringstream ss2;
+    //ss2 << "ls_" << ct_ls_mf << "_b";
+    //std::unique_ptr<MultiFab> ls_mf_b = ls_walls.copy_data();
+    //amrex::VisMF::Write(* ls_mf_b, ss2.str());
+
+    //std::stringstream ss;
+    //ss << "ls_" << ct_ls_mf;
+    //std::unique_ptr<MultiFab> ls_mf = ls_cylinder.copy_data();
+    //amrex::VisMF::Write(* ls_mf, ss.str());
+
+    level_set->update_union(* ls_cylinder.get_data(), * flag_valid);
 
     return cylinder_IF;
 }

@@ -28,7 +28,7 @@ EBSupport mfix_level::m_eb_support_level = EBSupport::full;
 
 mfix_level::~mfix_level ()
 {
-   if (ebfactory != NULL) 
+   if(ebfactory != NULL)
       EBTower::Destroy();
 };
 
@@ -44,7 +44,7 @@ mfix_level::mfix_level ()
     int nlevs_max = maxLevel() + 1;
     istep.resize(nlevs_max, 0);
     nsubsteps.resize(nlevs_max, 1);
-    for (int lev = 1; lev <= maxLevel(); ++lev) 
+    for (int lev = 1; lev <= maxLevel(); ++lev)
         nsubsteps[lev] = MaxRefRatio(lev-1);
 #endif
 }
@@ -55,7 +55,7 @@ mfix_level::ResizeArrays ()
     int nlevs_max = maxLevel() + 1;
 
     // Particle Container is delcated here
-    // TODO: this is a HACK 
+    // TODO: this is a HACK
     pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
 
     // HACK: temporary flag used to turn on legacy mode
@@ -82,7 +82,7 @@ mfix_level::ResizeArrays ()
 
     phi.resize(nlevs_max);
     diveu.resize(nlevs_max);
-    
+
     u_g.resize(nlevs_max);
     u_go.resize(nlevs_max);
     u_gt.resize(nlevs_max);
@@ -98,12 +98,11 @@ mfix_level::ResizeArrays ()
     fp_x.resize(nlevs_max);
     fp_y.resize(nlevs_max);
     fp_z.resize(nlevs_max);
-    
+
     bcoeff.resize(nlevs_max);
-    for (int i = 0; i < nlevs_max; ++i ) {
-	bcoeff[i].resize(3);
-    }
-    
+    for(int i = 0; i < nlevs_max; ++i)
+        bcoeff[i].resize(3);
+
     d_e.resize(nlevs_max);
     d_n.resize(nlevs_max);
     d_t.resize(nlevs_max);
@@ -112,6 +111,9 @@ mfix_level::ResizeArrays ()
     lambda_g.resize(nlevs_max);
     trD_g.resize(nlevs_max);
     vort.resize(nlevs_max);
+
+    // MultiFab storing level-set data
+    ls.resize(nlevs_max);
 
     fluxX.resize(nlevs_max);
     fluxY.resize(nlevs_max);
@@ -133,7 +135,6 @@ mfix_level::ResizeArrays ()
     drag_v.resize(nlevs_max);
     drag_w.resize(nlevs_max);
 
-
     slopes_u.resize(nlevs_max);
     slopes_v.resize(nlevs_max);
     slopes_w.resize(nlevs_max);
@@ -141,17 +142,17 @@ mfix_level::ResizeArrays ()
     uacc.resize(nlevs_max);
     vacc.resize(nlevs_max);
     wacc.resize(nlevs_max);
-    
-    if (solve_dem) 
+
+    if(solve_dem)
        particle_cost.resize(nlevs_max);
-    if (solve_fluid) 
+    if(solve_fluid)
        fluid_cost.resize(nlevs_max);
 }
 
 void
 mfix_level::usr3(int lev)
 {
-    if (solve_fluid) 
+    if(solve_fluid)
     {
        Real dx = geom[lev].CellSize(0);
        Real dy = geom[lev].CellSize(1);
@@ -165,13 +166,13 @@ mfix_level::usr3(int lev)
           Box ubx((*u_g[lev])[mfi].box());
           Box vbx((*v_g[lev])[mfi].box());
           Box wbx((*w_g[lev])[mfi].box());
-   
-          mfix_usr3(
-              (*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
-              (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
-              (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
-              (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-              &dx, &dy, &dz);
+
+          mfix_usr3( (*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
+                     (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
+                     (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
+                     (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+                     & dx, & dy, & dz
+                   );
        }
     }
 }
@@ -194,52 +195,53 @@ mfix_level::mfix_set_bc_type(int lev)
                 &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost);
 }
 
-void
-mfix_level::fill_mf_bc(int lev, MultiFab& mf)
-{
+void mfix_level::fill_mf_bc(int lev, MultiFab & mf) {
     Box domain(geom[lev].Domain());
 
-    if (!mf.boxArray().ixType().cellCentered())
-	amrex::Error("fill_mf_bc only used for cell-centered arrays!");
+    if(!mf.boxArray().ixType().cellCentered())
+        amrex::Error("fill_mf_bc only used for cell-centered arrays!");
 
-    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior 
-    // It is essential that we do this before the call to fill_bc0 below since
-    // fill_bc0 can extrapolate out to fill ghost cells outside the domain after we
-    // have filled ghost cells inside the domain, but doing this call after fill_bc0
-    // can't fill ghost cells from ghost cells.
+    // Impose periodic bc's at domain boundaries and fine-fine copies in the
+    // interior It is essential that we do this before the call to fill_bc0
+    // below since fill_bc0 can extrapolate out to fill ghost cells outside the
+    // domain after we have filled ghost cells inside the domain, but doing
+    // this call after fill_bc0 can't fill ghost cells from ghost cells.
     mf.FillBoundary(geom[lev].periodicity());
 
-    // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
+    // Fill all cell-centered arrays with first-order extrapolation at domain
+    // boundaries
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-    for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
-    {
-	const Box& sbx = mf[mfi].box();
-	fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
-		 bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-		 bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(), &nghost);
+    for(MFIter mfi(mf,true); mfi.isValid(); ++mfi) {
+        const Box& sbx = mf[mfi].box();
+        fill_bc0(mf[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+                 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                 bc_klo.dataPtr(), bc_khi.dataPtr(),
+                 domain.loVect(),  domain.hiVect(),
+                 &nghost                                        );
     }
 
-    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
-    // It's not 100% clear whether we need this call or not.  Worth testing.
+    // Impose periodic bc's at domain boundaries and fine-fine copies in the
+    // interior It's not 100% clear whether we need this call or not.  Worth
+    // testing.
     mf.FillBoundary(geom[lev].periodicity());
 }
 
-void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
-{
+void mfix_level::mfix_calc_volume_fraction(int lev, Real & sum_vol) {
     BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
 
-    if (solve_dem)
-    {
+    if(solve_dem) {
        // This re-calculates the volume fraction within the domain
        // but does not change the values outside the domain
 
-       // This call simply deposits the particle volume onto the grid in a PIC-like manner
-	pc->CalcVolumeFraction(*ep_g[lev],bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi, nghost );
-    }
-    else
-    {
+       // This call simply deposits the particle volume onto the grid in a
+       // PIC-like manner
+       pc->CalcVolumeFraction( * ep_g[lev],
+                              bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi,
+                              nghost                                         );
+    } else {
        ep_g[lev]->setVal(1.);
     }
 
@@ -265,16 +267,14 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-    if (OnSameGrids) 
-    {
+    if(OnSameGrids) {
        // ************************************************************
-       // First create the beta of individual particles 
+       // First create the beta of individual particles
        // ************************************************************
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
-       {
+       for(MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
            const Box& sbx = (*ep_g[lev])[pti].box();
            auto& particles = pti.GetArrayOfStructs();
            const int np = particles.size();
@@ -283,19 +283,19 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
            Box vbx((*v_g[lev])[pti].box());
            Box wbx((*w_g[lev])[pti].box());
 
-           calc_particle_beta(
-               sbx.loVect(), sbx.hiVect(),
-               ubx.loVect(), ubx.hiVect(),
-               vbx.loVect(), vbx.hiVect(),
-               wbx.loVect(), wbx.hiVect(), &np,
-               (*ep_g[lev])[pti].dataPtr(), (*ro_g[lev])[pti].dataPtr(),
-               (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(),
-               (*w_g[lev])[pti].dataPtr(),  (*mu_g[lev])[pti].dataPtr(),
-               particles.data(), &dx, &dy, &dz);
+           calc_particle_beta( sbx.loVect(), sbx.hiVect(),
+                               ubx.loVect(), ubx.hiVect(),
+                               vbx.loVect(), vbx.hiVect(),
+                               wbx.loVect(), wbx.hiVect(), &np,
+                               (*ep_g[lev])[pti].dataPtr(), (*ro_g[lev])[pti].dataPtr(),
+                               (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(),
+                               (*w_g[lev])[pti].dataPtr(),  (*mu_g[lev])[pti].dataPtr(),
+                               particles.data(), &dx, &dy, &dz
+                             );
        }
 
        // ******************************************************************************
-       // Now use the beta of individual particles to create the drag terms on the fluid 
+       // Now use the beta of individual particles to create the drag terms on the fluid
        // ******************************************************************************
 
        f_gds_u[lev]->setVal(0.0L);
@@ -305,12 +305,11 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
        drag_v[lev]->setVal(0.0L);
        drag_w[lev]->setVal(0.0L);
 
-       pc -> CalcDragOnFluid(*f_gds_u[lev],*f_gds_v[lev],*f_gds_w[lev],
-                             *drag_u[lev],*drag_v[lev],*drag_w[lev],
-			     bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi, nghost);
-    }
-    else 
-    {
+       pc -> CalcDragOnFluid(* f_gds_u[lev], * f_gds_v[lev], * f_gds_w[lev],
+                             * drag_u[lev],  * drag_v[lev],  * drag_w[lev],
+                             bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
+                             nghost                                         );
+    } else {
 
        BoxArray            pba = pc->ParticleBoxArray(lev);
        DistributionMapping pdm = pc->ParticleDistributionMap(lev);
@@ -350,14 +349,13 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
        w_g_pba->FillBoundary(geom[lev].periodicity());
 
        // ************************************************************
-       // First create the beta of individual particles 
+       // First create the beta of individual particles
        // ************************************************************
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
-       {
+       for(MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
            const Box& sbx = (*ep_g_pba)[pti].box();
            auto& particles = pti.GetArrayOfStructs();
            const int np = particles.size();
@@ -378,7 +376,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
        }
 
        // ******************************************************************************
-       // Now use the beta of individual particles to create the drag terms on the fluid 
+       // Now use the beta of individual particles to create the drag terms on the fluid
        // ******************************************************************************
 
        std::unique_ptr<MultiFab> f_gds_v_pba(new MultiFab(y_face_ba,pdm,f_gds_v[lev]->nComp(),f_gds_v[lev]->nGrow()));
@@ -397,9 +395,10 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
        drag_v_pba->setVal(0.0L);
        drag_w_pba->setVal(0.0L);
 
-       pc -> CalcDragOnFluid(*f_gds_u_pba,*f_gds_v_pba,*f_gds_w_pba,
-                             *drag_u_pba,*drag_v_pba,*drag_w_pba,
-			     bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi, nghost);
+       pc -> CalcDragOnFluid(* f_gds_u_pba, * f_gds_v_pba, * f_gds_w_pba,
+                             * drag_u_pba,  * drag_v_pba,  * drag_w_pba,
+                             bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi,
+                             nghost                                         );
 
        // Copy back from the dual grids.
        f_gds_u[lev] ->copy(*f_gds_u_pba);
@@ -452,7 +451,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
     Box domain(geom[lev].Domain());
-    if (OnSameGrids) 
+    if (OnSameGrids)
     {
        // Temporary arrays
        std::unique_ptr<MultiFab> gpx(new MultiFab(u_g[lev]->boxArray(),dmap[lev],1,1));
@@ -469,17 +468,18 @@ mfix_level::mfix_calc_drag_particle(int lev)
            Box gpxbx((*gpx)[mfi].box());
            Box gpybx((*gpy)[mfi].box());
            Box gpzbx((*gpz)[mfi].box());
-   
-           construct_gradp(
-                 sbx.loVect(),   sbx.hiVect(),
-               gpxbx.loVect(), gpxbx.hiVect(),
-               gpybx.loVect(), gpybx.hiVect(),
-               gpzbx.loVect(), gpzbx.hiVect(),
-               (*p_g[lev])[mfi].dataPtr(), (*p0_g[lev])[mfi].dataPtr(),
-               (*gpx)[mfi].dataPtr(), (*gpy)[mfi].dataPtr(), (*gpz)[mfi].dataPtr(),
-               &dx, &dy, &dz, 
-               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-               bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(), &nghost);
+
+           construct_gradp( sbx.loVect(),   sbx.hiVect(),
+                            gpxbx.loVect(), gpxbx.hiVect(),
+                            gpybx.loVect(), gpybx.hiVect(),
+                            gpzbx.loVect(), gpzbx.hiVect(),
+                            (*p_g[lev])[mfi].dataPtr(), (*p0_g[lev])[mfi].dataPtr(),
+                            (*gpx)[mfi].dataPtr(), (*gpy)[mfi].dataPtr(), (*gpz)[mfi].dataPtr(),
+                            &dx, &dy, &dz,
+                            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
+                            &nghost
+                          );
        }
 
        gpx->FillBoundary(geom[lev].periodicity());
@@ -503,21 +503,21 @@ mfix_level::mfix_calc_drag_particle(int lev)
            Box ubx((*u_g[lev])[pti].box());
            Box vbx((*v_g[lev])[pti].box());
            Box wbx((*w_g[lev])[pti].box());
-   
-           calc_drag_particle(
-               sbx.loVect(), sbx.hiVect(),
-               gpxbx.loVect(), gpxbx.hiVect(),
-               gpybx.loVect(), gpybx.hiVect(),
-               gpzbx.loVect(), gpzbx.hiVect(), 
-               ubx.loVect(), ubx.hiVect(),
-               vbx.loVect(), vbx.hiVect(),
-               wbx.loVect(), wbx.hiVect(), &np,
-               (*gpx)[pti].dataPtr(), (*gpy)[pti].dataPtr(), (*gpz)[pti].dataPtr(),
-               (*u_g[lev])[pti].dataPtr(), (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
-               particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
+
+           calc_drag_particle( sbx.loVect(), sbx.hiVect(),
+                               gpxbx.loVect(), gpxbx.hiVect(),
+                               gpybx.loVect(), gpybx.hiVect(),
+                               gpzbx.loVect(), gpzbx.hiVect(),
+                               ubx.loVect(), ubx.hiVect(),
+                               vbx.loVect(), vbx.hiVect(),
+                               wbx.loVect(), wbx.hiVect(), &np,
+                               (*gpx)[pti].dataPtr(), (*gpy)[pti].dataPtr(), (*gpz)[pti].dataPtr(),
+                               (*u_g[lev])[pti].dataPtr(), (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
+                               particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen
+                             );
        }
     }
-    else 
+    else
     {
        BoxArray            pba = pc->ParticleBoxArray(lev);
        DistributionMapping pdm = pc->ParticleDistributionMap(lev);
@@ -567,17 +567,18 @@ mfix_level::mfix_calc_drag_particle(int lev)
            Box gpxbx((*gpx)[mfi].box());
            Box gpybx((*gpy)[mfi].box());
            Box gpzbx((*gpz)[mfi].box());
-   
-           construct_gradp(
-                 sbx.loVect(),   sbx.hiVect(),
-               gpxbx.loVect(), gpxbx.hiVect(),
-               gpybx.loVect(), gpybx.hiVect(),
-               gpzbx.loVect(), gpzbx.hiVect(),
-               (*p_g_pba)[mfi].dataPtr(), (*p0_g_pba)[mfi].dataPtr(),
-               (*gpx)[mfi].dataPtr(), (*gpy)[mfi].dataPtr(), (*gpz)[mfi].dataPtr(),
-               &dx, &dy, &dz, 
-               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-               bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(), &nghost);
+
+           construct_gradp( sbx.loVect(),   sbx.hiVect(),
+                            gpxbx.loVect(), gpxbx.hiVect(),
+                            gpybx.loVect(), gpybx.hiVect(),
+                            gpzbx.loVect(), gpzbx.hiVect(),
+                            (*p_g_pba)[mfi].dataPtr(), (*p0_g_pba)[mfi].dataPtr(),
+                            (*gpx)[mfi].dataPtr(), (*gpy)[mfi].dataPtr(), (*gpz)[mfi].dataPtr(),
+                            &dx, &dy, &dz,
+                            bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                            bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
+                            &nghost
+                          );
        }
 
        gpx->FillBoundary(geom[lev].periodicity());
@@ -599,18 +600,18 @@ mfix_level::mfix_calc_drag_particle(int lev)
            Box ubx((*u_g_pba)[pti].box());
            Box vbx((*v_g_pba)[pti].box());
            Box wbx((*w_g_pba)[pti].box());
-   
-           calc_drag_particle(
-               sbx.loVect(), sbx.hiVect(),
-               gpxbx.loVect(), gpxbx.hiVect(),
-               gpybx.loVect(), gpybx.hiVect(),
-               gpzbx.loVect(), gpzbx.hiVect(), 
-               ubx.loVect(), ubx.hiVect(),
-               vbx.loVect(), vbx.hiVect(),
-               wbx.loVect(), wbx.hiVect(), &np,
-               (*gpx)[pti].dataPtr(), (*gpy)[pti].dataPtr(), (*gpz)[pti].dataPtr(),
-               (*u_g_pba)[pti].dataPtr(), (*v_g_pba)[pti].dataPtr(), (*w_g_pba)[pti].dataPtr(),
-               particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
+
+           calc_drag_particle( sbx.loVect(), sbx.hiVect(),
+                               gpxbx.loVect(), gpxbx.hiVect(),
+                               gpybx.loVect(), gpybx.hiVect(),
+                               gpzbx.loVect(), gpzbx.hiVect(),
+                               ubx.loVect(), ubx.hiVect(),
+                               vbx.loVect(), vbx.hiVect(),
+                               wbx.loVect(), wbx.hiVect(), &np,
+                               (*gpx)[pti].dataPtr(), (*gpy)[pti].dataPtr(), (*gpz)[pti].dataPtr(),
+                               (*u_g_pba)[pti].dataPtr(), (*v_g_pba)[pti].dataPtr(), (*w_g_pba)[pti].dataPtr(),
+                               particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen
+                             );
        }
     }
 }

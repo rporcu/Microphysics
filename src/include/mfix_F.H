@@ -605,19 +605,19 @@ extern "C"
             const int* dir
         );
 
-    void compute_new_dt ( 
+    void compute_new_dt(
             const amrex::Real* umax,
             const amrex::Real* vmax,
             const amrex::Real* wmax,
-	    const amrex::Real* romin,
- 	    const amrex::Real* mumax,
-	    const amrex::Real* gradp0max,
-	    const amrex::Real* dx,
-	    const amrex::Real* cfl,
-	    const         int* steady_state,
-  	    const amrex::Real* time,
-	    const amrex::Real* stop_time,
-	          amrex::Real* dt 
+            const amrex::Real* romin,
+            const amrex::Real* mumax,
+            const amrex::Real* gradp0max,
+            const amrex::Real* dx,
+            const amrex::Real* cfl,
+            const         int* steady_state,
+            const amrex::Real* time,
+            const amrex::Real* stop_time,
+            amrex::Real* dt
         );
 
     void init_periodic_vortices(
@@ -634,7 +634,7 @@ extern "C"
     void compute_gradp0_max (
             const int* lo, const int* hi,
             amrex::Real* p0_g, const int* slo, const int* shi,
-    	    const amrex::Real* gradp0max, const amrex::Real* dx
+            const amrex::Real* gradp0max, const amrex::Real* dx
         );
 
     void add_grad_p(

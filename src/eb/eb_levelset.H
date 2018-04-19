@@ -31,24 +31,28 @@ class LSFactory {
         std::unique_ptr<MultiFab>  ls_grid;
         std::unique_ptr<iMultiFab> ls_valid;
 
-        // Data structures encloding (padded) EB index space
-        std::unique_ptr<MultiFab> eb_grid;
-        BoxArray eb_ba;
-        const int eb_grid_ref, eb_grid_pad;
-
-        // Refined box array (over which the level-set MultiFab is constructed)
-        BoxArray ls_ba, cc_ba;
-        const RealVect dx_vect, dx_eb_vect;
-        const int ls_grid_ref, ls_grid_pad;
-
-        // Geometry objects reflecting refined (and padded) BoxArrays. This is required to prevent PeriodicFill
-        // operations from "spilling" refined indices over periodic boundaries
-        Geometry geom_ls, geom_eb;
-
         // AMR information
         const int amr_lev;
+
+        // Refined box array (over which the level-set MultiFab is constructed)
+        BoxArray ls_ba, cc_ba, eb_ba;
+        const int ls_grid_ref, eb_grid_ref;
+        // Data structures encloding (padded) EB index space
+        std::unique_ptr<MultiFab> eb_grid;
+
+        // Geometry objects reflecting refined (and padded) BoxArrays. This is
+        // required to prevent PeriodicFill operations from "spilling" refined
+        // indices over periodic boundaries
+        Geometry geom_ls, geom_eb;
+
+        // Padding of the leve-set and EB grids:
+        const int ls_grid_pad, eb_grid_pad;
+
+        // Particle container (used to syncronize DistributionMapping)
         const MFIXParticleContainer * mfix_pc;
 
+        // Cell size of the refined grids
+        const RealVect dx_vect, dx_eb_vect;
 
         // Construct eb_facets list from eb_factory
         std::unique_ptr<Vector<Real>> eb_facets(const EBFArrayBoxFactory & eb_factory);
@@ -56,24 +60,35 @@ class LSFactory {
         // Construct nodal MultiFab containing EBIS Implicit function velues
         std::unique_ptr<MultiFab> ebis_impfunc(const EBIndexSpace & eb_is);
 
-        // Unpdate internal `ls_phi` and `ls_valid` based on the min of `ls_phi` and `ls_in`
-        void update(const MultiFab & ls_in);
-
         void update_ba();
         void init_geom();
 
     public:
         LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, const MFIXParticleContainer * pc);
+        LSFactory(const LSFactory & other);
         ~LSFactory();
 
         void regrid();
 
-        void update_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is);
-        void update_ebis(const EBIndexSpace & eb_is);
+        void invert();
+
+        std::unique_ptr<iMultiFab> intersection_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is);
+        std::unique_ptr<iMultiFab> union_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is);
+        std::unique_ptr<iMultiFab> intersection_ebis(const EBIndexSpace & eb_is);
+        std::unique_ptr<iMultiFab> union_ebis(const EBIndexSpace & eb_is);
+
+        // Unpdate internal `ls_phi` and `ls_valid` based on the min of
+        // `ls_phi` and `ls_in`
+        void update_intersection(const MultiFab & ls_in, const iMultiFab & valid_in);
+        void update_union(const MultiFab & ls_in, const iMultiFab & valid_in);
 
         // Return level-set data
         const MultiFab *  get_data() const {return ls_grid.get();};
         const iMultiFab * get_valid() const {return ls_valid.get();};
+
+        // Copy level-set data
+        std::unique_ptr<MultiFab> copy_data() const;
+        std::unique_ptr<iMultiFab> copy_valid() const;
 
         // Return grid parameters
         const int get_ls_ref() const {return ls_grid_ref;};
@@ -81,7 +96,7 @@ class LSFactory {
         const int get_eb_ref() const {return eb_grid_ref;};
         const int get_eb_pad() const {return eb_grid_pad;};
 
-        // Return AMR level (wrt the MFIXParticleContainer pointer (pc)_
+        // Return AMR level (wrt the MFIXParticleContainer pointer (pc)
         const int get_amr_level() const {return amr_lev;};
 
         // Return BoxArrays:
@@ -108,8 +123,9 @@ class LSUtility {
             dom_ls.refine(level_set.get_ls_ref());
             Geometry geom_ls(dom_ls);
 
-            // This is a bit of a hack: we want to grow the geometry's domain box, without influencing the cell size.
-            // I.e. we want Geometry::Domain() to extend beyond probLo and probHi.
+            // This is a bit of a hack: we want to grow the geometry's domain
+            // box, without influencing the cell size.  I.e. we want
+            // Geometry::Domain() to extend beyond probLo and probHi.
             Box dom_ls_g = geom_ls.Domain();
             dom_ls_g.grow(level_set.get_ls_pad());
             geom_ls.Domain(dom_ls_g);
@@ -128,8 +144,9 @@ class LSUtility {
             dom_eb.refine(level_set.get_eb_ref());
             Geometry geom_eb(dom_eb);
 
-            // This is a bit of a hack: we want to grow the geometry's domain box, without influencing the cell size.
-            // I.e. we want Geometry::Domain() to extend beyond probLo and probHi.
+            // This is a bit of a hack: we want to grow the geometry's domain
+            // box, without influencing the cell size.  I.e. we want
+            // Geometry::Domain() to extend beyond probLo and probHi.
             Box dom_eb_g = geom_eb.Domain();
             dom_eb_g.grow(level_set.get_eb_pad());
             geom_eb.Domain(dom_eb_g);
