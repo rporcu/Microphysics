@@ -568,9 +568,18 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
           // Scalar variables
           for( int i = 0; i < pltscalarVars.size(); i++ ) {
-              MultiFab::Copy(*mf[lev], *((*pltscalarVars[i])[lev].get()), 0, dcomp, 1, 0);
-              if (pltscaVarsName[i] == "p_g")
-                 MultiFab::Add(*mf[lev], (*p0_g[lev]), 0, dcomp, 1, 0);
+              if (( pltscaVarsName[i] == "level_set" ) and ( level_set->get_ls_ref() > 1 )){
+                  const MultiFab * ls_fine = ( * pltscalarVars[i] )[lev].get(); // Pointer to fine level-set MultiFab
+                  MultiFab ls_crse; // Coarse nodal version of the level-set MultiFab
+                  ls_crse.define(ls_fine->boxArray(), ls_fine->DistributionMap(), ls_fine->nComp(), ls_fine->nGrow());
+                  amrex::average_down(* ls_fine, ls_crse, 0, 1, level_set->get_ls_ref());
+                  // Now map the nodal MultiFab to the cell-centered MultiFab:
+                  amrex::average_node_to_cellcenter(*mf[lev], dcomp, ls_crse, 0, 1);
+              } else {
+                  MultiFab::Copy(*mf[lev], *((*pltscalarVars[i])[lev].get()), 0, dcomp, 1, 0);
+                  if (pltscaVarsName[i] == "p_g")
+                      MultiFab::Add(*mf[lev], (*p0_g[lev]), 0, dcomp, 1, 0);
+              }
               dcomp++;
           }
 
