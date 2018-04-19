@@ -577,8 +577,8 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
           };
 
           // Scalar variables
-          for( int i = 0; i < pltscalarVars.size(); i++ ) {
-              if(( pltscaVarsName[i] == "level-set" ) and ( level_set->get_ls_ref() > 1 )){
+          for(int i = 0; i < pltscalarVars.size(); i++) {
+              if(pltscaVarsName[i] == "level-set"){
                   // Level set lives on nodes, AMRVis doesn't =>  map the nodal
                   // MultiFab to the cell-centered MultiFab:
                   amrex::average_node_to_cellcenter(*mf[lev], dcomp, * ( * pltscalarVars[i] )[lev].get(), 0, 1);
