@@ -583,6 +583,7 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
                   // MultiFab to the cell-centered MultiFab:
                   amrex::average_node_to_cellcenter(*mf[lev], dcomp, * ( * pltscalarVars[i] )[lev].get(), 0, 1);
               } else if(pltscaVarsName[i] == "p_g") {
+                  MultiFab::Copy(*mf[lev], *((*pltscalarVars[i])[lev].get()), 0, dcomp, 1, 0);
                   MultiFab::Add(*mf[lev], (*p0_g[lev]), 0, dcomp, 1, 0);
               } else {
                   MultiFab::Copy(*mf[lev], *((*pltscalarVars[i])[lev].get()), 0, dcomp, 1, 0);
