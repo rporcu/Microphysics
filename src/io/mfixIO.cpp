@@ -1,6 +1,7 @@
 #include <AMReX_MultiFab.H>
 #include <AMReX_PlotFileUtil.H>
 
+#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
 #include <AMReX_AmrCore.H>
 
 #include "AMReX_buildInfo.H"
@@ -160,6 +161,15 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
        bool is_checkpoint = true;
        pc -> Checkpoint(checkpointname, "particles", is_checkpoint, real_comp_names, int_comp_names);
     }
+    // The level set BoxArray might have a higher refinement than the the mfix
+    // level.
+    //      => Current mechanism for saving checkpoint files requires the same
+    //         BoxArray for all MultiFabss on the same level
+    // Save raw level-set data separately for now, and incorporate into levels,
+    // once MFiX does that.
+    std::stringstream raw_ls_name;
+    raw_ls_name << checkpointname << "/ls_raw";
+    amrex::VisMF::Write( * level_set->get_data(), raw_ls_name.str() );
 }
 
 void
@@ -568,17 +578,14 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
           // Scalar variables
           for( int i = 0; i < pltscalarVars.size(); i++ ) {
-              if (( pltscaVarsName[i] == "level_set" ) and ( level_set->get_ls_ref() > 1 )){
-                  const MultiFab * ls_fine = ( * pltscalarVars[i] )[lev].get(); // Pointer to fine level-set MultiFab
-                  MultiFab ls_crse; // Coarse nodal version of the level-set MultiFab
-                  ls_crse.define(ls_fine->boxArray(), ls_fine->DistributionMap(), ls_fine->nComp(), ls_fine->nGrow());
-                  amrex::average_down(* ls_fine, ls_crse, 0, 1, level_set->get_ls_ref());
-                  // Now map the nodal MultiFab to the cell-centered MultiFab:
-                  amrex::average_node_to_cellcenter(*mf[lev], dcomp, ls_crse, 0, 1);
+              if(( pltscaVarsName[i] == "level-set" ) and ( level_set->get_ls_ref() > 1 )){
+                  // Level set lives on nodes, AMRVis doesn't =>  map the nodal
+                  // MultiFab to the cell-centered MultiFab:
+                  amrex::average_node_to_cellcenter(*mf[lev], dcomp, * ( * pltscalarVars[i] )[lev].get(), 0, 1);
+              } else if(pltscaVarsName[i] == "p_g") {
+                  MultiFab::Add(*mf[lev], (*p0_g[lev]), 0, dcomp, 1, 0);
               } else {
                   MultiFab::Copy(*mf[lev], *((*pltscalarVars[i])[lev].get()), 0, dcomp, 1, 0);
-                  if (pltscaVarsName[i] == "p_g")
-                      MultiFab::Add(*mf[lev], (*p0_g[lev]), 0, dcomp, 1, 0);
               }
               dcomp++;
           }

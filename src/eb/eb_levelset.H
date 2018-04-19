@@ -89,6 +89,7 @@ class LSFactory {
         // Copy level-set data
         std::unique_ptr<MultiFab> copy_data() const;
         std::unique_ptr<iMultiFab> copy_valid() const;
+        std::unique_ptr<MultiFab> coarsen_data() const;
 
         // Return grid parameters
         const int get_ls_ref() const {return ls_grid_ref;};
