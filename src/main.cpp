@@ -47,7 +47,7 @@ void ReadParameters ()
 
   // Traditionally, these have prefix "amr", but we will give them prefix mfix
   // to make it clear that they affect the behavior of the solver and not amr
-  // (even thought they are read via BoxLib
+  // (even thought they are read via AMReX)
   ParmParse pp("amr");
 
   pp.query("stop_time", stop_time);
