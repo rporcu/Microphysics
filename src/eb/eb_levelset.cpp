@@ -43,7 +43,7 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
     eb_grid = std::unique_ptr<MultiFab>(new MultiFab);
 
     // Define ls_grid and ls_valid, growing them by ls_pad
-    // Note: box arrays (such as ls_ba) are initialized in init_box()
+    // Note: box arrays (such as ls_ba) are initialized in init_geom() -> update_ba()
     ls_grid->define(ls_ba, dm, 1, ls_pad);
     ls_valid->define(ls_ba, dm, 1, ls_pad);
     ls_valid->setVal(-1);
@@ -330,7 +330,7 @@ std::unique_ptr<MultiFab> LSFactory::coarsen_data() const {
     // No refinement => do nothing
     if(ls_grid_ref == 1)
         return copy_data();
-    
+
     // Target for coarse nodal version of the level-set MultiFab
     std::unique_ptr<MultiFab> ls_crse = std::unique_ptr<MultiFab>(new MultiFab);
     const MultiFab * ls_fine = ls_grid.get(); // Pointer to fine level-set MultiFab
