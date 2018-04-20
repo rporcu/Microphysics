@@ -71,27 +71,6 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         pp.query("levelset__eb_refinement", levelset__eb_refinement);
         pp.query("levelset__pad", levelset__pad);
         pp.query("levelset__eb_pad", levelset__eb_pad);
-
-
-        // Note that the EBFArrayBoxFactory needs to be grown _at least_ by the
-        // grid size in order to capture enough neighbouring EB facets.
-        int gs_m = levelset__eb_pad;
-        {
-            int gs_c = 0;
-            ParmParse pp("amr");
-
-            // max_grid_size is frequently set to a large value
-            // => don't use here...
-            //pp.query("max_grid_size", gs_c);
-            //gs_m = std::max(gs_m, gs_c);
-            pp.query("max_grid_size_x", gs_c);
-            gs_m = std::max(gs_m, gs_c);
-            pp.query("max_grid_size_y", gs_c);
-            gs_m = std::max(gs_m, gs_c);
-            pp.query("max_grid_size_z", gs_c);
-            gs_m = std::max(gs_m, gs_c);
-        }
-        levelset__eb_pad = gs_m;
     }
 
     solve_fluid  = solve_fluid_in;
