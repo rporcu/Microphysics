@@ -523,7 +523,7 @@ extern "C"
 
     void mfix_usr0();
 
-    void mfix_usr1();
+    void mfix_usr1(amrex::Real* time);
 
     void mfix_usr2();
 

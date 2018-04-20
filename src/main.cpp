@@ -239,7 +239,7 @@ int main (int argc, char* argv[])
         {
             while (finish == 0)
             {
-                mfix_usr1();
+                mfix_usr1(&time);
 
                 Real strt_step = ParallelDescriptor::second();
 

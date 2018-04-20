@@ -1,45 +1,22 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: USR1                                                   C
-!  Purpose: This routine is called from the time loop and is           C
-!           user-definable.  The user may insert code in this routine  C
-!           or call appropriate user defined subroutines.  This        C
-!           can be used for setting or checking errors in quantities   C
-!           that vary with time.  This routine is not called from an   C
-!           IJK loop, hence all indices are undefined.                 C               C
-!                                                                      C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Revision Number:                                                    C
-!  Purpose:                                                            C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!                                                                      C
-!  Local variables:                                                    C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
-      SUBROUTINE USR1
-      ! Use usr
-      IMPLICIT NONE
-!-----------------------------------------------
-!
-!  Include files defining common blocks here
-!
-!
-!  Define local variables here
-!
-!
-!  Include files defining statement functions here
-!
-!
-!  Insert user-defined code here
-!
-      RETURN
-      END SUBROUTINE USR1
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Purpose: This routine is called from the time loop and is           !
+!           user-definable.  The user may insert code in this routine  !
+!           or call appropriate user defined subroutines.  This        !
+!           can be used for setting or checking errors in quantities   !
+!           that vary with time.  This routine is not called from an   !
+!           IJK loop, hence all indices are undefined.                 !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+subroutine usr1(time)
+
+  use amrex_fort_module, only : c_real => amrex_real
+  use iso_c_binding , only: c_int, c_char
+
+  implicit none
+
+  real(c_real),   intent(in ) :: time
+
+
+return
+end subroutine usr1

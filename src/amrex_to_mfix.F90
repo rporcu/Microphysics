@@ -74,10 +74,11 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr1() &
-       bind(C, name="mfix_usr1")
+  subroutine mfix_usr1(ltime) bind(C, name="mfix_usr1")
 
-    call usr1
+    real(c_real),   intent(in ) :: ltime
+
+    call usr1(ltime)
 
   end subroutine mfix_usr1
 
