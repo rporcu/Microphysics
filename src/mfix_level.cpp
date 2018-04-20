@@ -6,10 +6,6 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
-// For multigrid
-//#include <AMReX_FMultiGrid.H>
-//#include <AMReX_stencil_types.H>
-
 std::string mfix_level::particle_init_type   = "AsciiFile";
 std::string mfix_level::load_balance_type    = "FixedSize";
 std::string mfix_level::knapsack_weight_type = "RunTimeCosts";
@@ -18,7 +14,6 @@ std::string mfix_level::knapsack_weight_type = "RunTimeCosts";
 amrex::IntVect mfix_level::e_x(1,0,0);
 amrex::IntVect mfix_level::e_y(0,1,0);
 amrex::IntVect mfix_level::e_z(0,0,1);
-
 
 int mfix_level::m_eb_basic_grow_cells = 2;
 int mfix_level::m_eb_volume_grow_cells = 2;
@@ -54,8 +49,7 @@ mfix_level::ResizeArrays ()
 {
     int nlevs_max = maxLevel() + 1;
 
-    // Particle Container is delcated here
-    // TODO: this is a HACK
+    // Particle Container
     pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
 
     // HACK: temporary flag used to turn on legacy mode
