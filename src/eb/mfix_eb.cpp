@@ -176,10 +176,10 @@ mfix_level::make_eb_geometry(int lev)
         // Define the EBIS first using only the walls...
         // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
         //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
-        Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
-        AMReX_EBIS::instance()->define(geom_ls.Domain(),
+        Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+        AMReX_EBIS::instance()->define(geom_eb.Domain(),
                                        RealVect::Zero,  // ......... origin of EBIndexSpace
-                                       geom_ls.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
+                                       geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
                                        gshop_walls,  // ............ GeometryShop object
                                        grid_size, max_level);
         // [1]: EBIndexSpace internally assumes an isotropic grid. Any
@@ -423,10 +423,10 @@ mfix_level::make_eb_hourglass(int lev)
     // Define the EBIS first using only the walls...
     // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
     //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
-    Geometry geom_ls = LSUtility::make_ls_geometry(* level_set);
-    AMReX_EBIS::instance()->define(geom_ls.Domain(),
+    Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+    AMReX_EBIS::instance()->define(geom_eb.Domain(),
                                    RealVect::Zero,  // ......... origin of EBIndexSpace
-                                   geom_ls.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
+                                   geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
                                    gshop_walls,  // ............ GeometryShop object
                                    grid_size, max_level);
     // [1]: EBIndexSpace internally assumes an isotropic grid. Any anisotropic
@@ -443,7 +443,7 @@ mfix_level::make_eb_hourglass(int lev)
     // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
     // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
     //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
-    Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+    //Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
     AMReX_EBIS::instance()->define(geom_eb.Domain(),
                                    RealVect::Zero,  // ......... origin of EBIndexSpace
                                    geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1, above]
@@ -892,10 +892,10 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     // Define the EBIS first using only the walls...
     // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
     //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
-    Geometry geom_ls = LSUtility::make_eb_geometry(ls_cylinder);
-    AMReX_EBIS::instance()->define(geom_ls.Domain(),
+    Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder);
+    AMReX_EBIS::instance()->define(geom_eb.Domain(),
                                    RealVect::Zero,  // ......... origin of EBIndexSpace
-                                   geom_ls.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
+                                   geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
                                    gshop_walls,  // ............ GeometryShop object
                                    grid_size, max_level);
     // [1]: EBIndexSpace internally assumes an isotropic grid. Any anisotropic
@@ -917,7 +917,7 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
     // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
     //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
-    Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder);
+    //Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder);
     AMReX_EBIS::instance()->define(geom_eb.Domain(),
                                    RealVect::Zero,  // ......... origin of EBIndexSpace
                                    geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1, above]
