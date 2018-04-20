@@ -7,6 +7,7 @@
 #include "AMReX_buildInfo.H"
 
 #include "mfix_level.H"
+#include <mfix_F.H>
 
 namespace
 {
@@ -662,4 +663,44 @@ mfix_level::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
     const std::string& par_filename = amrex::Concatenate(par_ascii_file,nstep);
 
     pc -> WriteAsciiFile(par_filename);
+}
+
+
+void
+mfix_level::WriteUSER(int lev, Real dt, Real time) const
+{
+
+  Box domain(geom[lev].Domain());
+
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
+
+
+  Real accumulator[256];
+  for (int i=0; i<10; ++i)
+    accumulator[i] = 0.0L;
+
+  // No tiling.
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+    {
+      const Box& sbx = (*ep_g[lev])[mfi].box();
+      const Box& bx  = mfi.validbox();
+
+      mfix_collect_fluid(sbx.loVect(), sbx.hiVect(),
+                         bx.loVect(), bx.hiVect(),
+                         domain.loVect(), domain.hiVect(),
+                         (*p_g[lev])[mfi].dataPtr(),
+                         (*ep_g[lev])[mfi].dataPtr(),
+                         &dx, &dy, &dz, accumulator);
+    }
+
+  ParallelDescriptor::ReduceRealSum(accumulator,256);
+
+  if(ParallelDescriptor::IOProcessor()){
+    mfix_write_fluid(domain.loVect(), domain.hiVect(),
+                     &dx, &dy, &dz, &time, &dt, accumulator);
+
+  }
+
 }

@@ -17,7 +17,7 @@ module param
   ! Maximum number of solids species per phase.
   integer, parameter :: dim_n_s = 100
   ! Maximum number of user-defined output files
-  integer, parameter :: dim_usr = 5
+  integer, parameter :: dim_usr = 128
 
   ! Number of Equation types:
   !  1) Gas pressure

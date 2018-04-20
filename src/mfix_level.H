@@ -69,6 +69,8 @@ public:
 
     void WriteParticleAscii(std::string& par_ascii_file_name, int nstep = 0) const;
 
+    void WriteUSER(int lev, Real dt, Real time) const;
+
     void Regrid(int lev, int nstep);
 
     void RegridOnRestart(int lev);

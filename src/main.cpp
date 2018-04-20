@@ -17,6 +17,9 @@ Real stop_time    = -1.0;
 bool hourglass    = false;
 bool clr          = false;
 
+bool write_user   = false;
+bool write_eb_surface = false;
+
 std::string restart_file {""};
 
 int repl_x = 1;
@@ -77,6 +80,9 @@ void ReadParameters ()
      ParmParse pp("mfix");
      pp.query("hourglass", hourglass);
      pp.query("clr", clr);
+
+     pp.query("write_user", write_user);
+     pp.query("write_eb_surface", write_eb_surface);
   }
 }
 
@@ -285,6 +291,8 @@ int main (int argc, char* argv[])
             }
         }
     }
+
+    if (write_user) my_mfix.WriteUSER(lev, dt, time);
 
     if (steady_state)
         nstep = 1;
