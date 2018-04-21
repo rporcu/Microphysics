@@ -14,7 +14,7 @@
 
 # RUN CONTROL SECTION
 
-  TSTOP = 10.0
+  #TSTOP = 10.0
 
   DT =     1.0d-04
   DT_FAC = 1.0

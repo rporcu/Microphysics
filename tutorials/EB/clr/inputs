@@ -31,7 +31,7 @@ mfix.particle_init_type = "Auto"
 # Collision algorithm details:
 # Level-set refinement and padding
 mfix.levelset__refinement = 2
-mfix.levelset__pad        = 2
+mfix.levelset__pad        = 4
 # EBIS refinement and padding
 mfix.levelset__eb_refinement = 1
 mfix.levelset__eb_pad        = 2

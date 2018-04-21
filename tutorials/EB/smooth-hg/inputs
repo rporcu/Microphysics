@@ -1,3 +1,5 @@
+amr.stop_time = 10
+
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 72 32 32
 
@@ -33,6 +35,14 @@ mfix.knapsack_weight_type = "NumParticles"
 mfix.knapsack_weight_type = "RunTimeCosts"
 
 mfix.particle_init_type = "Auto"
+
+# Collision algorithm details:
+# Level-set refinement and padding
+mfix.levelset__refinement = 2
+mfix.levelset__pad        = 4
+# EBIS refinement and padding
+mfix.levelset__eb_refinement = 1
+mfix.levelset__eb_pad        = 8
 
 mfix.hourglass    = true    # use the mfix_eb_hourglass routine
 mfix.poly1_mirror = true    # Use outside
