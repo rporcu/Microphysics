@@ -7,7 +7,7 @@ number of MPI processes: 1
 ===============================================================================
  Build Information
 ===============================================================================
-build date:    2018-03-30 06:15:21.920838
+build date:    2018-04-20 18:41:01.339022
 build machine: Linux manda 4.4.0-96-generic #119~14.04.1-Ubuntu SMP Wed Sep 13 08:40:48 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
 build dir:     /home/almgren/GitCode/MFIX_EXA/mfix/build/mfix/src
 AMReX dir:     /home/almgren/GitCode/MFIX_EXA/mfix/build/amrex/installdir
@@ -17,7 +17,7 @@ COMP version:  4.8.4
 FCOMP:         GNU
 FCOMP version: 4.8.4
 
-MFIX git hash: 17.07-823-g0b71734-dirty
+MFIX git hash: 17.07-926-gc506a9f-dirty
 
 
 ===============================================================================
@@ -33,7 +33,6 @@ MFIX git hash: 17.07-823-g0b71734-dirty
  Inputs File Parameters
 ===============================================================================
 amr.stop_time = 0.0025
-amr.stop_time = 0.00
 amr.n_cell = 32 32 32
 amr.max_grid_size_x = 32
 amr.max_grid_size_y = 32
@@ -41,7 +40,7 @@ amr.max_grid_size_z = 32
 fabarray.mfiter_tile_size = 32 32 32
 particles.tile_size = 32 32 32
 amr.max_level = 0
-amr.plot_int = 25
+amr.plot_int = -1
 amr.check_int = 25
 mfix.use_proj_method = 1
 mfix.fixed_dt = 1
