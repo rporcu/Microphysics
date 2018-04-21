@@ -38,8 +38,8 @@ MODULE INIT_NAMELIST_MODULE
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: leq_it, leq_pc, leq_sweep, leq_tol, max_nit, ival
       use run, only: full_log, nlog
-      use output, only: dim_usr
       use output, only: usr_dt
+      use output, only: usr_x_w, usr_x_e, usr_y_n, usr_y_s, usr_z_b, usr_z_t
       use ps, only: dim_ps
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
@@ -57,6 +57,7 @@ MODULE INIT_NAMELIST_MODULE
 
       use param, only: zero, one
       use param, only: undefined, undefined_c
+      use param, only: dim_usr
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -904,16 +905,51 @@ MODULE INIT_NAMELIST_MODULE
       CALL_USR = .FALSE.
 !</keyword>
 
-      do LC=1, DIM_USR
 !<keyword category="UDF Control" required="false">
 !  <description>
 !    Intervals at which subroutine write_usr1 is called.
 !  </description>
 !  <arg index="1" id="USR" max="DIM_USR" min="1"/>
-         usr_dt(:) = UNDEFINED
+      usr_dt(1:DIM_USR) = UNDEFINED
 !</keyword>
 
-      end do
+!<keyword category="UDF Control" required="false">
+!  <description>X coordinate of the west face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_X_W(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+!<keyword category="UDF Control" required="false">
+!  <description>X coordinate of the east face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_X_E(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+!<keyword category="UDF Control" required="false">
+!  <description>Y coordinate of the south face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_Y_S(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+!<keyword category="UDF Control" required="false">
+!  <description>Y coordinate of the north face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_Y_N(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+!<keyword category="UDF Control" required="false">
+!  <description>Z coordinate of the bottom face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_Z_B(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+!<keyword category="UDF Control" required="false">
+!  <description>Z coordinate of the top face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_Z_T(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+
 
       call des_init_namelist
 

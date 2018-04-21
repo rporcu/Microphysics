@@ -111,6 +111,7 @@ list ( APPEND F90_sources io/eb_to_pvd.f90 io/output_manager.f90 )
 list ( APPEND F90_sources io/write_error.f90 io/write_out0.f90 )
 list ( APPEND F90_sources io/read_namelist.f90 io/display_resid.f90 io/remove_comment.f90 )
 list ( APPEND F90_sources io/parse_line.f90 io/deprecated.f90 io/error_manager_mod.f90 )
+list ( APPEND F90_sources io/write_user.f90 )
 
 #
 # Users hooks

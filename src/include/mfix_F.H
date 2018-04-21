@@ -523,7 +523,7 @@ extern "C"
 
     void mfix_usr0();
 
-    void mfix_usr1();
+    void mfix_usr1(amrex::Real* time);
 
     void mfix_usr2();
 
@@ -761,6 +761,21 @@ extern "C"
             const int* domlo , const int* domhi,
             const int* ng
         );
+
+    void mfix_collect_fluid(
+            const int* slo, const int* shi,
+            const int*  lo, const int*  hi,
+            const int* domlo , const int* domhi,
+            amrex::Real* ep_g, amrex::Real* p_g,
+            amrex::Real* dx,   amrex::Real* dy,  amrex::Real* dz,
+            amrex::Real (&accumulator)[256]
+            );
+
+    void mfix_write_fluid(const int* domlo , const int* domhi,
+            amrex::Real* dx,   amrex::Real* dy,  amrex::Real* dz,
+            amrex::Real* time, amrex::Real* dt,
+            amrex::Real (&accumulator)[256]
+            );
 
 #ifdef __cplusplus
 }
