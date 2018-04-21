@@ -127,9 +127,9 @@ class LSUtility {
             // This is a bit of a hack: we want to grow the geometry's domain
             // box, without influencing the cell size.  I.e. we want
             // Geometry::Domain() to extend beyond probLo and probHi.
-            Box dom_ls_g = geom_ls.Domain();
-            dom_ls_g.grow(level_set.get_ls_pad());
-            geom_ls.Domain(dom_ls_g);
+            //Box dom_ls_g = geom_ls.Domain();
+            //dom_ls_g.grow(level_set.get_ls_pad());
+            //geom_ls.Domain(dom_ls_g);
             //amrex::Print() << "Refined geom_ls: " << geom_ls << std::endl;
 
             return geom_ls;
@@ -148,9 +148,9 @@ class LSUtility {
             // This is a bit of a hack: we want to grow the geometry's domain
             // box, without influencing the cell size.  I.e. we want
             // Geometry::Domain() to extend beyond probLo and probHi.
-            Box dom_eb_g = geom_eb.Domain();
-            dom_eb_g.grow(level_set.get_eb_pad());
-            geom_eb.Domain(dom_eb_g);
+            //Box dom_eb_g = geom_eb.Domain();
+            //dom_eb_g.grow(level_set.get_eb_pad());
+            //geom_eb.Domain(dom_eb_g);
             //amrex::Print() << "EB geom_eb: " << geom_eb << std::endl;
 
             return geom_eb;
