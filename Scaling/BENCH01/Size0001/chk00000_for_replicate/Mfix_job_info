@@ -1,0 +1,51 @@
+===============================================================================
+ MFIx Job Information
+===============================================================================
+number of MPI processes: 1
+
+
+===============================================================================
+ Build Information
+===============================================================================
+build date:    2018-04-20 18:41:01.339022
+build machine: Linux manda 4.4.0-96-generic #119~14.04.1-Ubuntu SMP Wed Sep 13 08:40:48 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
+build dir:     /home/almgren/GitCode/MFIX_EXA/mfix/build/mfix/src
+AMReX dir:     /home/almgren/GitCode/MFIX_EXA/mfix/build/amrex/installdir
+
+COMP:          GNU
+COMP version:  4.8.4
+FCOMP:         GNU
+FCOMP version: 4.8.4
+
+MFIX git hash: 17.07-926-gc506a9f-dirty
+
+
+===============================================================================
+ Grid Information
+===============================================================================
+ level: 0
+   number of boxes = 1
+   maximum zones   = 32 32 32 
+
+
+
+===============================================================================
+ Inputs File Parameters
+===============================================================================
+amr.stop_time = 0.0025
+amr.n_cell = 32 32 32
+amr.max_grid_size_x = 32
+amr.max_grid_size_y = 32
+amr.max_grid_size_z = 32
+fabarray.mfiter_tile_size = 32 32 32
+particles.tile_size = 32 32 32
+amr.max_level = 0
+amr.plot_int = -1
+amr.check_int = 25
+mfix.use_proj_method = 1
+mfix.fixed_dt = 1
+geometry.coord_sys = 0
+geometry.is_periodic = 1 1 1
+geometry.prob_lo = 0. 0. 0.
+geometry.prob_hi = 0.0064 0.0064 0.0064
+amr.blocking_factor = 1
