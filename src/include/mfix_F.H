@@ -61,9 +61,9 @@ extern "C"
     void check_bc_flow();
 
     void set_bc_type(
-            int* bc_ilo, int* bc_ihi,
-            int* bc_jlo, int* bc_jhi,
-            int* bc_klo, int* bc_khi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
             const int* domlo , const int* domhi,
             amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
             amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen,
@@ -79,9 +79,9 @@ extern "C"
             amrex::Real* p_g,     amrex::Real* ep_g,
             amrex::Real* ro_g,    amrex::Real* rop_g,
             amrex::Real* mu_g,    amrex::Real* lambda_g,
-            int* bc_ilo, int* bc_ihi,
-            int* bc_jlo, int* bc_jhi,
-            int* bc_klo, int* bc_khi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
             const int* domlo , const int* domhi,
             const int* ng
         );
@@ -95,9 +95,9 @@ extern "C"
             amrex::Real* p_g,     amrex::Real* ep_g,
             amrex::Real* ro_g,    amrex::Real* rop_g,
             amrex::Real* mu_g,    amrex::Real* lambda_g,
-            int* bc_ilo, int* bc_ihi,
-            int* bc_jlo, int* bc_jhi,
-            int* bc_klo, int* bc_khi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
             const int* domlo , const int* domhi, const int* ng
         );
 
@@ -136,9 +136,9 @@ extern "C"
     void flip_particle_vol(
             const int* slo, const int* shi,
             amrex::Real* ep_g,
-            int* bc_ilo, int* bc_ihi,
-            int* bc_jlo, int* bc_jhi,
-            int* bc_klo, int* bc_khi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
             const int* domlo, const int* domhi,
             const int* nghost
         );
@@ -148,9 +148,9 @@ extern "C"
             const int* vlo, const int* vhi,
             const int* wlo, const int* whi,
             amrex::Real* drag_u, amrex::Real* drag_v, amrex::Real* drag_w,
-            int* bc_ilo, int* bc_ihi,
-            int* bc_jlo, int* bc_jhi,
-            int* bc_klo, int* bc_khi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
             const int* domlo, const int* domhi,
             const int* nghost
         );
@@ -161,9 +161,9 @@ extern "C"
             const int* vlo, const int* vhi,
             const int* wlo, const int* whi,
             amrex::Real* u_g,     amrex::Real* v_g,      amrex::Real* w_g,
-            int* bc_ilo, int* bc_ihi,
-            int* bc_jlo, int* bc_jhi,
-            int* bc_klo, int* bc_khi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
             const int* domlo , const int* domhi,
             const int* nghost
         );
@@ -233,33 +233,38 @@ extern "C"
         );
 
     void calc_drag_particle(
-            const int* slo, const int* shi,
-            const int* xlo, const int* xhi,
-            const int* ylo, const int* yhi,
-            const int* zlo, const int* zhi,
-            const int* ulo, const int* uhi,
-            const int* vlo, const int* vhi,
-            const int* wlo, const int* whi,
-            const int* np,
-            amrex::Real* gpx, amrex::Real* gpy,  amrex::Real* gpz,
-            amrex::Real* u_g, amrex::Real* v_g,  amrex::Real* w_g,
-            void* particles,
-            amrex::Real* dx,   amrex::Real* dy,   amrex::Real* dz,
-            amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen
+            amrex::Real* gpx,  const int* gpxlo, const int* gpxhi,
+            amrex::Real* gpy,  const int* gpylo, const int* gpyhi,
+            amrex::Real* gpz,  const int* gpzlo, const int* gpzhi,
+            amrex::Real* u_g,  const int* ulo, const int* uhi,
+            amrex::Real* v_g,  const int* vlo, const int* vhi,
+            amrex::Real* w_g,  const int* wlo, const int* whi,
+            const int* np, void* particles,
+            amrex::Real* dx,   amrex::Real* dy,   amrex::Real* dz
         );
 
     void construct_gradp(
             const int* slo, const int* shi,
-            const int* xlo, const int* xhi,
-            const int* ylo, const int* yhi,
-            const int* zlo, const int* zhi,
             amrex::Real* p_g, amrex::Real* p0_g,
-            amrex::Real* gpx, amrex::Real* gpy,  amrex::Real* gpz,
+            amrex::Real* gpx,  const int* ulo, const int* uhi,
+            amrex::Real* gpy,  const int* vlo, const int* vhi,
+            amrex::Real* gpz,  const int* wlo, const int* whi,
             amrex::Real* dx,   amrex::Real* dy,   amrex::Real* dz,
-            int* bc_ilo, int* bc_ihi,
-            int* bc_jlo, int* bc_jhi,
-            int* bc_klo, int* bc_khi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
             const int* domlo , const int* domhi, const int* ng
+        );
+
+    void set_gradp_bcs(     const int* slo, const int* shi,
+            amrex::Real* gpx,  const int* ulo, const int* uhi,
+            amrex::Real* gpy,  const int* vlo, const int* vhi,
+            amrex::Real* gpz,  const int* wlo, const int* whi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
+            const int* domlo , const int* domhi,
+            const int* ng
         );
 
     void calc_coeff(
@@ -315,9 +320,9 @@ extern "C"
     void fill_bc0(
             amrex::Real* s,
             const int* slo, const int* shi,
-            int* bc_ilo, int* bc_ihi,
-            int* bc_jlo, int* bc_jhi,
-            int* bc_klo, int* bc_khi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
             const int* domlo , const int* domhi,
             const int* ng
         );
@@ -361,9 +366,9 @@ extern "C"
             amrex::Real* fluxX,   amrex::Real* fluxY,   amrex::Real* fluxZ,
             amrex::Real* mu_g,    amrex::Real* f_gds_v, amrex::Real* drag_v,
             amrex::Real* A_m,     amrex::Real* b_m,     amrex::Real* mask,
-            int* bc_ilo, int* bc_ihi,
-            int* bc_jlo, int* bc_jhi,
-            int* bc_klo, int* bc_khi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
             const int* domlo, const int* domhi, const int* ng,
             amrex::Real* dt,
             amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
@@ -385,9 +390,9 @@ extern "C"
             amrex::Real* fluxX,   amrex::Real* fluxY,   amrex::Real* fluxZ,
             amrex::Real* mu_g,    amrex::Real* f_gds_w, amrex::Real* drag_w,
             amrex::Real* A_m,     amrex::Real* b_m,     amrex::Real* mask,
-            int* bc_ilo, int* bc_ihi,
-            int* bc_jlo, int* bc_jhi,
-            int* bc_klo, int* bc_khi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
             const int* domlo, const int* domhi, const int* ng,
             amrex::Real* dt,
             amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
@@ -408,9 +413,9 @@ extern "C"
             amrex::Real* ropX, amrex::Real* ropY, amrex::Real* ropZ,
             amrex::Real* d_e,  amrex::Real* d_n,  amrex::Real* d_t,
             amrex::Real* A_m,  amrex::Real* b_m,  amrex::Real* b_mmax,
-            int* bc_ilo, int* bc_ihi,
-            int* bc_jlo, int* bc_jhi,
-            int* bc_klo, int* bc_khi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
             amrex::Real* dt, amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
             const int* domlo, const int* domhi, const int* ng,
             amrex::Real* num_p, amrex::Real* denom_p
@@ -755,17 +760,6 @@ extern "C"
             amrex::Real* u_g,  const int* ulo, const int* uhi,
             amrex::Real* v_g,  const int* vlo, const int* vhi,
             amrex::Real* w_g,  const int* wlo, const int* whi,
-            const int* bc_ilo, const int* bc_ihi,
-            const int* bc_jlo, const int* bc_jhi,
-            const int* bc_klo, const int* bc_khi,
-            const int* domlo , const int* domhi,
-            const int* ng
-        );
-
-    void set_gradp_bcs(     const int* slo, const int* shi,
-            amrex::Real* gpx,  const int* ulo, const int* uhi,
-            amrex::Real* gpy,  const int* vlo, const int* vhi,
-            amrex::Real* gpz,  const int* wlo, const int* whi,
             const int* bc_ilo, const int* bc_ihi,
             const int* bc_jlo, const int* bc_jhi,
             const int* bc_klo, const int* bc_khi,

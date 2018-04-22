@@ -1,5 +1,6 @@
-subroutine construct_gradp(slo, shi, xlo, xhi, ylo, yhi, zlo, zhi, &
-                           p_g, p0_g, gpx, gpy, gpz, dx, dy, dz, &
+subroutine construct_gradp(slo, shi, p_g, p0_g, &
+                           gpx, xlo, xhi, gpy, ylo, yhi, gpz, zlo, zhi, &
+                           dx, dy, dz, &
                            bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
                            bc_klo_type, bc_khi_type, domlo, domhi, ng) &
                            bind(C, name="construct_gradp")
@@ -15,14 +16,6 @@ subroutine construct_gradp(slo, shi, xlo, xhi, ylo, yhi, zlo, zhi, &
         xlo(3), xhi(3), ylo(3), yhi(3), zlo(3), zhi(3), &
         domlo(3), domhi(3), ng
 
-   integer(c_int), intent(in   ) :: &
-           bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
-           bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
-           bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
-           bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
-           bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
-           bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
-
    real(c_real), intent(inout) :: &
         p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
        p0_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -33,6 +26,14 @@ subroutine construct_gradp(slo, shi, xlo, xhi, ylo, yhi, zlo, zhi, &
         gpz(zlo(1):zhi(1),zlo(2):zhi(2),zlo(3):zhi(3))
 
    real(c_real),     intent(in   ) :: dx, dy, dz
+
+   integer(c_int), intent(in   ) :: &
+           bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+           bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
    ! Local variables
    !---------------------------------------------------------------------//

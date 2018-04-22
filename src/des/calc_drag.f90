@@ -137,10 +137,13 @@ end subroutine calc_particle_beta
 !  particle.                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine calc_drag_particle( slo, shi, xlo, xhi, ylo, yhi, zlo, zhi, &
-                               ulo, uhi, vlo, vhi, wlo, whi, &
-                               np, gpx, gpy, gpz, u_g, v_g, w_g, particles, &
-                               dx, dy, dz)&
+subroutine calc_drag_particle( gpx, xlo, xhi, &
+                               gpy, ylo, yhi, &
+                               gpz, zlo, zhi, &
+                               u_g, ulo, uhi, &
+                               v_g, vlo, vhi, &
+                               w_g, wlo, whi, &
+                               np, particles, dx, dy, dz)&
                                bind(C, name="calc_drag_particle")
 
    use amrex_fort_module, only : c_real => amrex_real
@@ -151,9 +154,12 @@ subroutine calc_drag_particle( slo, shi, xlo, xhi, ylo, yhi, zlo, zhi, &
 
    implicit none
 
-   integer(c_int), intent(in   ) :: slo(3),shi(3), &
-        xlo(3),xhi(3), ylo(3),yhi(3), zlo(3),zhi(3), &
-        ulo(3),uhi(3), vlo(3),vhi(3), wlo(3),whi(3), np
+   integer(c_int), intent(in   ) :: xlo(3), xhi(3)
+   integer(c_int), intent(in   ) :: ylo(3), yhi(3)
+   integer(c_int), intent(in   ) :: zlo(3), zhi(3)
+   integer(c_int), intent(in   ) :: ulo(3), uhi(3)
+   integer(c_int), intent(in   ) :: vlo(3), vhi(3)
+   integer(c_int), intent(in   ) :: wlo(3), whi(3), np
 
    real(c_real), intent(in   ) :: &
         gpx(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)), &

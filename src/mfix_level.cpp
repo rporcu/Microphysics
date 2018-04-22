@@ -496,16 +496,11 @@ mfix_level::mfix_calc_drag_particle(int lev)
        {
            const Box& sbx = (*p_g[lev])[mfi].box();
 
-           Box gpxbx((*gpx)[mfi].box());
-           Box gpybx((*gpy)[mfi].box());
-           Box gpzbx((*gpz)[mfi].box());
-
            construct_gradp( sbx.loVect(),   sbx.hiVect(),
-                            gpxbx.loVect(), gpxbx.hiVect(),
-                            gpybx.loVect(), gpybx.hiVect(),
-                            gpzbx.loVect(), gpzbx.hiVect(),
                             (*p_g[lev])[mfi].dataPtr(), (*p0_g[lev])[mfi].dataPtr(),
-                            (*gpx)[mfi].dataPtr(), (*gpy)[mfi].dataPtr(), (*gpz)[mfi].dataPtr(),
+                            BL_TO_FORTRAN_ANYD((*gpx)[mfi]),
+   		            BL_TO_FORTRAN_ANYD((*gpy)[mfi]),
+   			    BL_TO_FORTRAN_ANYD((*gpz)[mfi]),
                             &dx, &dy, &dz,
                             bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                             bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
@@ -542,26 +537,13 @@ mfix_level::mfix_calc_drag_particle(int lev)
            auto& particles = pti.GetArrayOfStructs();
            const int np = particles.size();
 
-           const Box& sbx = (*p_g[lev])[pti].box();
-
-           Box gpxbx((*gpx)[pti].box());
-           Box gpybx((*gpy)[pti].box());
-           Box gpzbx((*gpz)[pti].box());
-
-           Box ubx((*u_g[lev])[pti].box());
-           Box vbx((*v_g[lev])[pti].box());
-           Box wbx((*w_g[lev])[pti].box());
-
-           calc_drag_particle( sbx.loVect(), sbx.hiVect(),
-                               gpxbx.loVect(), gpxbx.hiVect(),
-                               gpybx.loVect(), gpybx.hiVect(),
-                               gpzbx.loVect(), gpzbx.hiVect(),
-                               ubx.loVect(), ubx.hiVect(),
-                               vbx.loVect(), vbx.hiVect(),
-                               wbx.loVect(), wbx.hiVect(), &np,
-                               (*gpx)[pti].dataPtr(), (*gpy)[pti].dataPtr(), (*gpz)[pti].dataPtr(),
-                               (*u_g[lev])[pti].dataPtr(), (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
-                               particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen
+           calc_drag_particle( BL_TO_FORTRAN_ANYD((*gpx)[pti]),
+      		               BL_TO_FORTRAN_ANYD((*gpy)[pti]),
+      			       BL_TO_FORTRAN_ANYD((*gpz)[pti]),
+                               BL_TO_FORTRAN_ANYD((*u_g[lev])[pti]),
+      		               BL_TO_FORTRAN_ANYD((*v_g[lev])[pti]),
+      			       BL_TO_FORTRAN_ANYD((*w_g[lev])[pti]),
+                               &np, particles.data(), &dx, &dy, &dz
                              );
        }
     }
@@ -612,16 +594,11 @@ mfix_level::mfix_calc_drag_particle(int lev)
        {
            const Box& sbx = (*p_g_pba)[mfi].box();
 
-           Box gpxbx((*gpx)[mfi].box());
-           Box gpybx((*gpy)[mfi].box());
-           Box gpzbx((*gpz)[mfi].box());
-
            construct_gradp( sbx.loVect(),   sbx.hiVect(),
-                            gpxbx.loVect(), gpxbx.hiVect(),
-                            gpybx.loVect(), gpybx.hiVect(),
-                            gpzbx.loVect(), gpzbx.hiVect(),
                             (*p_g_pba)[mfi].dataPtr(), (*p0_g_pba)[mfi].dataPtr(),
-                            (*gpx)[mfi].dataPtr(), (*gpy)[mfi].dataPtr(), (*gpz)[mfi].dataPtr(),
+                            BL_TO_FORTRAN_ANYD((*gpx)[mfi]),
+   		            BL_TO_FORTRAN_ANYD((*gpy)[mfi]),
+   			    BL_TO_FORTRAN_ANYD((*gpz)[mfi]),
                             &dx, &dy, &dz,
                             bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                             bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
@@ -652,30 +629,16 @@ mfix_level::mfix_calc_drag_particle(int lev)
 
        for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
        {
-           const Box& sbx = (*p_g_pba)[pti].box();
            auto& particles = pti.GetArrayOfStructs();
            const int np = particles.size();
 
-           Box   pbx((*p_g_pba)[pti].box());
-
-           Box gpxbx((*gpx)[pti].box());
-           Box gpybx((*gpy)[pti].box());
-           Box gpzbx((*gpz)[pti].box());
-
-           Box ubx((*u_g_pba)[pti].box());
-           Box vbx((*v_g_pba)[pti].box());
-           Box wbx((*w_g_pba)[pti].box());
-
-           calc_drag_particle( sbx.loVect(), sbx.hiVect(),
-                               gpxbx.loVect(), gpxbx.hiVect(),
-                               gpybx.loVect(), gpybx.hiVect(),
-                               gpzbx.loVect(), gpzbx.hiVect(),
-                               ubx.loVect(), ubx.hiVect(),
-                               vbx.loVect(), vbx.hiVect(),
-                               wbx.loVect(), wbx.hiVect(), &np,
-                               (*gpx)[pti].dataPtr(), (*gpy)[pti].dataPtr(), (*gpz)[pti].dataPtr(),
-                               (*u_g_pba)[pti].dataPtr(), (*v_g_pba)[pti].dataPtr(), (*w_g_pba)[pti].dataPtr(),
-                               particles.data(), &dx, &dy, &dz, &xlen, &ylen, &zlen
+           calc_drag_particle( BL_TO_FORTRAN_ANYD((*gpx)[pti]),
+      		               BL_TO_FORTRAN_ANYD((*gpy)[pti]),
+      			       BL_TO_FORTRAN_ANYD((*gpz)[pti]),
+                               BL_TO_FORTRAN_ANYD((*u_g_pba)[pti]),
+      		               BL_TO_FORTRAN_ANYD((*v_g_pba)[pti]),
+      			       BL_TO_FORTRAN_ANYD((*w_g_pba)[pti]),
+                               &np, particles.data(), &dx, &dy, &dz
                              );
        }
     }

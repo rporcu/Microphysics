@@ -579,7 +579,8 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 
           // Scalar variables
           for(int i = 0; i < pltscalarVars.size(); i++) {
-              if(pltscaVarsName[i] == "level-set"){
+              if (pltscaVarsName[i] == "level-set")
+              {
                   // Level set lives on nodes, AMRVis doesn't =>  map the nodal
                   // MultiFab to the cell-centered MultiFab:
                   if (ebfactory) {
