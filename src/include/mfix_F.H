@@ -762,6 +762,17 @@ extern "C"
             const int* ng
         );
 
+    void set_gradp_bcs(     const int* slo, const int* shi,
+            amrex::Real* gpx,  const int* ulo, const int* uhi,
+            amrex::Real* gpy,  const int* vlo, const int* vhi,
+            amrex::Real* gpz,  const int* wlo, const int* whi,
+            const int* bc_ilo, const int* bc_ihi,
+            const int* bc_jlo, const int* bc_jhi,
+            const int* bc_klo, const int* bc_khi,
+            const int* domlo , const int* domhi,
+            const int* ng
+        );
+
     void mfix_collect_fluid(
             const int* slo, const int* shi,
             const int*  lo, const int*  hi,

@@ -33,6 +33,7 @@ set(F90_sources
    set_bc_type.f90
    set_p0.f90
    set_ps.f90
+   set_velocity_bcs.f90
    ps_mod.f90
    utilities_mod.f90
    zero_wall_norm_vel.f90
@@ -128,7 +129,6 @@ list ( APPEND F90_sources projection/convection_mod.f90 projection/diffusion_mod
 list ( APPEND F90_sources projection/projection_mod.f90 projection/projection_tests_mod.f90 )
 list ( APPEND F90_sources projection/slopes_mod.f90 )
 list ( APPEND F90_sources projection/set_pressure_bcs.f90 projection/set_projection_bcs.f90 )
-list ( APPEND F90_sources projection/set_velocity_bcs.f90 )
 list ( APPEND CXX_sources projection/mfix_projection.cpp )
 list ( APPEND CXX_sources projection/compute_dt.cpp )
 

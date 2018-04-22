@@ -1052,38 +1052,6 @@ mfix_level::mfix_set_projection_bcs (int lev)
 }
 
 //
-// Set the BCs for velocity only
-// 
-void
-mfix_level::mfix_set_velocity_bcs (int lev)
-{
-  BL_PROFILE("mfix_level::mfix_set_velocity_bcs()");
-
-  u_g[lev] -> FillBoundary (geom[lev].periodicity());
-  v_g[lev] -> FillBoundary (geom[lev].periodicity());
-  w_g[lev] -> FillBoundary (geom[lev].periodicity());
-  
-  Box domain(geom[lev].Domain());
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(*p_g[lev], true); mfi.isValid(); ++mfi)
-    {
-      const Box& bx = (*p_g[lev])[mfi].box();
-      set_velocity_bcs ( bx.loVect(), bx.hiVect(),
-                         BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-		         BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-			 BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-			 bc_klo.dataPtr(), bc_khi.dataPtr(),
-			 domain.loVect(), domain.hiVect(),
-			 &nghost );
-    }			   
-}
-
-//
 // Fills ghost cell values of pressure appropriately for the BC type
 //
 void

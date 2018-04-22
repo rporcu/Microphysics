@@ -223,6 +223,38 @@ void mfix_level::fill_mf_bc(int lev, MultiFab & mf) {
     mf.FillBoundary(geom[lev].periodicity());
 }
 
+//
+// Set the BCs for velocity only
+// 
+void
+mfix_level::mfix_set_velocity_bcs (int lev)
+{
+  BL_PROFILE("mfix_level::mfix_set_velocity_bcs()");
+
+  u_g[lev] -> FillBoundary (geom[lev].periodicity());
+  v_g[lev] -> FillBoundary (geom[lev].periodicity());
+  w_g[lev] -> FillBoundary (geom[lev].periodicity());
+  
+  Box domain(geom[lev].Domain());
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+  for (MFIter mfi(*p_g[lev], true); mfi.isValid(); ++mfi)
+    {
+      const Box& bx = (*p_g[lev])[mfi].box();
+      set_velocity_bcs ( bx.loVect(), bx.hiVect(),
+                         BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+		         BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+			 BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+			 bc_klo.dataPtr(), bc_khi.dataPtr(),
+			 domain.loVect(), domain.hiVect(),
+			 &nghost );
+    }			   
+}
+
 void mfix_level::mfix_calc_volume_fraction(int lev, Real & sum_vol) {
     BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
 
@@ -258,10 +290,15 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
+    // Make sure to fill tangential velocities outside the domain for use in
+    // interpolation onto particle positions in the calc_particle_beta calculation
+    mfix_set_velocity_bcs(lev);
+
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-    if(OnSameGrids) {
+    if (OnSameGrids) {
+
        // ************************************************************
        // First create the beta of individual particles
        // ************************************************************
@@ -476,6 +513,23 @@ mfix_level::mfix_calc_drag_particle(int lev)
                           );
        }
 
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+       for (MFIter mfi(*p_g[lev], true); mfi.isValid(); ++mfi)
+       {
+           const Box& sbx = (*p_g[lev])[mfi].box();
+           set_gradp_bcs ( sbx.loVect(), sbx.hiVect(),
+                         BL_TO_FORTRAN_ANYD((*gpx)[mfi]),
+		         BL_TO_FORTRAN_ANYD((*gpy)[mfi]),
+			 BL_TO_FORTRAN_ANYD((*gpz)[mfi]),
+			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+			 bc_klo.dataPtr(), bc_khi.dataPtr(),
+			 domain.loVect(), domain.hiVect(),
+			 &nghost );
+       }			   
+
        gpx->FillBoundary(geom[lev].periodicity());
        gpy->FillBoundary(geom[lev].periodicity());
        gpz->FillBoundary(geom[lev].periodicity());
@@ -574,6 +628,23 @@ mfix_level::mfix_calc_drag_particle(int lev)
                             &nghost
                           );
        }
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+       for (MFIter mfi(*p_g_pba, true); mfi.isValid(); ++mfi)
+       {
+           const Box& sbx = (*p_g_pba)[mfi].box();
+           set_gradp_bcs ( sbx.loVect(), sbx.hiVect(),
+                         BL_TO_FORTRAN_ANYD((*gpx)[mfi]),
+		         BL_TO_FORTRAN_ANYD((*gpy)[mfi]),
+			 BL_TO_FORTRAN_ANYD((*gpz)[mfi]),
+			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+			 bc_klo.dataPtr(), bc_khi.dataPtr(),
+			 domain.loVect(), domain.hiVect(),
+			 &nghost );
+       }			   
 
        gpx->FillBoundary(geom[lev].periodicity());
        gpy->FillBoundary(geom[lev].periodicity());
