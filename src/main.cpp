@@ -282,6 +282,8 @@ int main (int argc, char* argv[])
                         my_mfix.WriteParticleAscii( par_ascii_file, nstep );
                         last_par_ascii = nstep;
                     }
+
+                    if (write_user) my_mfix.WriteUSER(lev, dt, time);
                 }
 
                 if (ParallelDescriptor::IOProcessor() && solve_dem )
@@ -292,8 +294,6 @@ int main (int argc, char* argv[])
             }
         }
     }
-
-    if (write_user) my_mfix.WriteUSER(lev, dt, time);
 
     if (steady_state)
         nstep = 1;
