@@ -48,11 +48,8 @@ contains
       ! Flag that the header (time) has not be written.
       logical :: HDR_MSG
       ! SPX file extensions.
-      CHARACTER(LEN=35) ::  EXT_END
+      CHARACTER(LEN=3) ::  EXT_END
       !......................................................................!
-
-      ! Initialize the file extension array.
-      EXT_END = '123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
       ! Initial the header flag.
       HDR_MSG = .true.
@@ -61,11 +58,14 @@ contains
       IDX = 0
       do LC = 1, DIM_USR
          if ( CHECK_TIME( USR_TIME( LC ) ) ) then
+
             USR_TIME(LC) = NEXT_TIME(USR_DT(LC))
-            call write_usr1( LC, size(particles), time, dt, particles, xlength, ylength, zlength )
-            !call write_usr1 (LC, time, dt, np, des_pos_new,&
-             !    des_vel_new, omega_new, xlength, ylength, zlength)
-            call notify_user('.USR:',EXT_END(LC:LC))
+
+            call write_usr1( LC, size(particles), time, dt, &
+                 particles, xlength, ylength, zlength )
+
+            write(ext_end,"(i3.3)") lc
+            call notify_user('.USR:',EXT_END)
             IDX = IDX + 1
          end if
       end do

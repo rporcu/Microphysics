@@ -84,7 +84,7 @@ subroutine write_fluid(domlo, domhi, dx, dy, dz, time, dt, sums) &
   real(c_real) :: cells, avgPg, avgEPg
 
   integer :: lc, is, ie, js, je, ks, ke, lunit
-  character :: clc
+  character(len=3) :: clc
 
   do lc=1, dim_usr
 
@@ -114,7 +114,7 @@ subroutine write_fluid(domlo, domhi, dx, dy, dz, time, dt, sums) &
            endif
 
            lunit = newUnit()
-           write(clc,"(i1)") lc
+           write(clc,"(i3.3)") lc
            open(unit=lunit, file='usr_'//clc//'.csv', &
                 status='unknown', position='append')
            write(lunit,"(es15.8,2(',',2x,es15.8))") time, avgPg, avgEPg
