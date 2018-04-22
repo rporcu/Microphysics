@@ -195,7 +195,8 @@ int main (int argc, char* argv[])
     my_mfix.PostInit( lev, dt, time, nstep, restart_flag, stop_time, steady_state );
 
     // Write out EB sruface
-    my_mfix.WriteEBSurface(lev);
+    if(write_eb_surface)
+      my_mfix.WriteEBSurface(lev);
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());

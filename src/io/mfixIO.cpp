@@ -679,7 +679,7 @@ mfix_level::WriteUSER(int lev, Real dt, Real time) const
 
 
   Real accumulator[256];
-  for (int i=0; i<10; ++i)
+  for (int i=0; i<256; ++i)
     accumulator[i] = 0.0L;
 
   // No tiling.
