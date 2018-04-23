@@ -1,0 +1,60 @@
+amr.stop_time = 0.00001
+
+# Geometry
+geometry.coord_sys   = 0                  # 0: Cartesian
+geometry.is_periodic = 0      0     0     # Is periodic in each direction?
+geometry.prob_lo     = 0.00   0.00  0.00  # lo corner of physical domain
+geometry.prob_hi     = 0.04   0.92  0.04  # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell =  16 368 16
+
+
+# Maximum allowable size of each subdomain in the problem domain;
+#    this is used to decompose the domain for parallel calculations.
+#amr.max_grid_size = 1024
+amr.max_grid_size_x =  8
+amr.max_grid_size_y = 16
+amr.max_grid_size_z =  8
+
+
+# Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Maximum particle title size
+particles.tile_size = 1024 1024 1024
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+amr.plot_int       = 1
+amr.check_int      = 1
+amr.par_ascii_int  = 1
+
+mfix.particle_init_type = "Auto"
+
+# Collision algorithm details:
+# Level-set refinement and padding
+mfix.levelset__refinement = 2
+mfix.levelset__pad        = 4
+
+# EBIS refinement and padding
+mfix.levelset__eb_refinement = 1
+mfix.levelset__eb_pad        = 2
+
+mfix.clr_riser  = true
+
+mfix.write_eb_surface = true
+
+
+# Riser -------------------------------------------------
+
+mfix.riser_translate      =   0.02  0.00  0.02
+
+mfix.riser_lower_radius   =   0.01905
+mfix.riser_lower_height   =   0.19288
+
+mfix.riser_c2c_height     =   0.01905
+
+mfix.riser_upper_radius   =   0.00794
+mfix.riser_upper_height   =   0.92710
