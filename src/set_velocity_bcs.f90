@@ -437,8 +437,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
             case ( minf_)
 
-
-               gpx(ulo(1):domlo(1)  ,j,k) = 0.d0
+               gpx(       domlo(1)  ,j,k) = gpx(domlo(1)+1,j,k)
                gpy(vlo(1):domlo(1)-1,j,k) = 0.0d0
                gpz(wlo(1):domlo(1)-1,j,k) = 0.0d0
 
@@ -474,9 +473,8 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
                gpz(domhi(1)+1:whi(1),j,k) =      gpz(domhi(1)  ,j,k)
 
             case ( minf_ )
-               
 
-               gpx(domhi(1)+1:uhi(1),j,k) = 0.d0
+               gpx(domhi(1)+1       ,j,k) = gpx(domhi(1),j,k)
                gpy(domhi(1)+1:vhi(1),j,k) = 0.0d0
                gpz(domhi(1)+1:whi(1),j,k) = 0.0d0
 
@@ -513,8 +511,8 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
             case ( minf_ )
 
-               gpx(i,ulo(2):domlo(2)-1,k) = 0.0d0
-               gpy(i,vlo(2):domlo(2)  ,k) = 0.0d0
+               gpx(i,vlo(2):domlo(2)-1,k) = 0.0d0
+               gpy(i,       domlo(2)  ,k) = gpy(i, domlo(2)+1,k)
                gpz(i,wlo(2):domlo(2)-1,k) = 0.0d0
 
             case ( nsw_ )
@@ -550,9 +548,8 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
             case ( minf_) 
 
-
                gpx(i,domhi(2)+1:uhi(2),k) = 0.0d0
-               gpy(i,domhi(2)+1:vhi(2),k) = 0.0d0
+               gpy(i,domhi(2)+1       ,k) = gpy(i,domhi(2),k)
                gpz(i,domhi(2)+1:whi(2),k) = 0.0d0
 
             case ( nsw_) 
@@ -589,7 +586,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
                gpx(i,j,ulo(3):domlo(3)-1) = 0.0d0
                gpy(i,j,vlo(3):domlo(3)-1) = 0.0d0
-               gpz(i,j,wlo(3):domlo(3)  ) = 0.0d0
+               gpz(i,j,       domlo(3)  ) = gpz(i,j,domlo(3)+1)
 
             case ( nsw_ )
 
@@ -625,7 +622,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
                gpx(i,j,domhi(3)+1:uhi(3)) = 0.0d0
                gpy(i,j,domhi(3)+1:vhi(3)) = 0.0d0
-               gpz(i,j,domhi(3)+1:whi(3)) = 0.0d0
+               gpz(i,j,domhi(3)+1       ) = gpz(i,j,domhi(3))
 
             case ( nsw_ ) 
 
