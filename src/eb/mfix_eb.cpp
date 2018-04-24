@@ -931,25 +931,6 @@ mfix_level::make_eb_clr_riser(int lev)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 std::unique_ptr<BaseIF>
 mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & translation, int lev, bool water_tight)
 {
@@ -1141,10 +1122,6 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
 
     return cylinder_IF;
 }
-
-
-
-
 
 
 std::unique_ptr<BaseIF>

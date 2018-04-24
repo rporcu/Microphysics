@@ -176,7 +176,7 @@ void mfix_level::Init(int lev, Real dt, Real time)
     // Make sure that at (at least) an initial MultiFab ist stored in ls[lev].
     // (otherwise, if there are no walls/boundaries in the simulation, saving a
     // plot file or checkpoint will segfault).
-    ls[lev] = level_set->copy_data();
+    ls[lev] = level_set->coarsen_data();
 }
 
 BoxArray
