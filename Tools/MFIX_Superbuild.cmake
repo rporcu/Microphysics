@@ -32,7 +32,7 @@ set (CMAKE_CXX_EXTENSIONS OFF)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
-set (AMREX_GIT_COMMIT_DEVELOP 891e590eb85ef939af6e081dca33b014cd48602b )
+set (AMREX_GIT_COMMIT_DEVELOP 111be5f60825f5f5f98315da59724a3735f41556 )
 set (AMREX_GIT_TAG)  # The commit id or branch to download
 
 #
@@ -41,24 +41,24 @@ set (AMREX_GIT_TAG)  # The commit id or branch to download
 include ( MFIX_CMakeVariables )
 include ( MFIX_Options )
 
-#
-#  Setup core compiler flags
-#
-include ( MFIX_Compilers )
+# #
+# #  Setup core compiler flags
+# #
+# include ( MFIX_Compilers )
 
-if ( MFIX_FFLAGS_OVERRIDES )
-   set ( MFIX_Fortran_FLAGS ${MFIX_FFLAGS_OVERRIDES} )
-else ()
-   append ( MFIX_FFLAGS_${MFIX_BUILD_TYPE}
-      MFIX_Fortran_FLAGS )
-endif ()
+# if ( MFIX_FFLAGS_OVERRIDES )
+#    set ( MFIX_Fortran_FLAGS ${MFIX_FFLAGS_OVERRIDES} )
+# else ()
+#    append ( MFIX_FFLAGS_${MFIX_BUILD_TYPE}
+#       MFIX_Fortran_FLAGS )
+# endif ()
 
-if ( MFIX_CXXFLAGS_OVERRIDES )
-   set ( MFIX_CXX_FLAGS ${MFIX_CXXFLAGS_OVERRIDES} )
-else ()
-   append ( MFIX_CXXFLAGS_${MFIX_BUILD_TYPE}
-      MFIX_CXX_FLAGS )
-endif ()
+# if ( MFIX_CXXFLAGS_OVERRIDES )
+#    set ( MFIX_CXX_FLAGS ${MFIX_CXXFLAGS_OVERRIDES} )
+# else ()
+#    append ( MFIX_CXXFLAGS_${MFIX_BUILD_TYPE}
+#       MFIX_CXX_FLAGS )
+# endif ()
 
 
 #
@@ -151,8 +151,8 @@ ExternalProject_Add ( amrex
    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
    -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
-   -DAMREX_FFLAGS_OVERRIDES=${MFIX_Fortran_FLAGS}
-   -DAMREX_CXXFLAGS_OVERRIDES=${MFIX_CXX_FLAGS}
+   -DCMAKE_Fortran_FLAGS=${AMREX_Fortran_FLAGS}
+   -DCMAKE_CXX_FLAGS=${AMREX_CXX_FLAGS}
    -DCMAKE_EXPORT_COMPILE_COMMANDS=${CMAKE_EXPORT_COMPILE_COMMANDS}
    UPDATE_COMMAND ""
    BUILD_ALWAYS 1
@@ -179,8 +179,8 @@ ExternalProject_Add ( mfix
    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
    -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
-   -DMFIX_FFLAGS_OVERRIDES=${MFIX_FFLAGS_OVERRIDES}
-   -DMFIX_CXXFLAGS_OVERRIDES=${MFIX_CXXFLAGS_OVERRIDES}
+   -DCMAKE_Fortran_FLAGS=${CMAKE_Fortran_FLAGS}
+   -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
    -DENABLE_FPE=${ENABLE_FPE}
    -DENABLE_PTESTS=${ENABLE_PTESTS}
    -DENABLE_STESTS=${ENABLE_STESTS}
@@ -193,8 +193,11 @@ ExternalProject_Add ( mfix
    INSTALL_COMMAND ""
    )
 
-# When using superbuild, the compile commands databases do not exist before compile-time. Hence create a new build target (compile_dB)
-# which collects both mfix's and amrex's compile_commands.json, concattenates them in the project's root directory
+# When using superbuild, the compile commands databases do not exist
+# before compile-time.
+# Hence create a new build target (compile_dB) which collects both
+# mfix's and amrex's compile_commands.json, concattenates them in the
+# project's root directory
 add_custom_target( compile_db
     # First take mfix's compile database (compile_commands.json) and:
     # 1.  $d     => deletes (d) last line ($) of a file (in this case the trailing ])

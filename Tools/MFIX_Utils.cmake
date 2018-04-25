@@ -145,4 +145,22 @@ endfunction ()
 
 
 
+#
+# Function to prepend path to list items
+#
+function (prepend list prefix)
+
+   set ( tmp "" )
+   foreach (item ${${list}})
+      set ( name   ${prefix}/${item} )
+      string ( REPLACE "//" "/" name ${name})
+      list ( APPEND tmp ${name} )
+   endforeach ()
+
+   set ( ${list} ${tmp}  PARENT_SCOPE )
+
+endfunction ()
+
+
+
 
