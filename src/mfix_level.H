@@ -91,6 +91,8 @@ public:
     void make_eb_hourglass(int lev);
     void make_eb_clr(int lev);
 
+    std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
+
     std::unique_ptr<BaseIF> make_cylinder(int dir,
             Real radius, Real length, const RealVect & translation,
             int lev, bool water_tight);
