@@ -52,8 +52,8 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 | DEBUG                        | Build in debug mode                                |   ON/OFF                     |   OFF               |
 | CMAKE_Fortran_FLAGS          | User-defined Fortran flags  for MFIX build         | valid F90 compiler flags     |   None              |
 | CMAKE_CXX_FLAGS              | User-defined C++ flags for MFIX build              | valid C++ compiler flags     |   None              |
-| AMReX_Fortran_FLAGS          | User-defined Fortran flags  for AMReX build        | valid F90 compiler flags     |   None              |
-| AMReX_CXX_FLAGS              | User-defined C++ flags for AMReX build             | valid C++ compiler flags     |   None              |
+| AMREX_Fortran_FLAGS          | User-defined Fortran flags  for AMReX build        | valid F90 compiler flags     |   None              |
+| AMREX_CXX_FLAGS              | User-defined C++ flags for AMReX build             | valid C++ compiler flags     |   None              |
 | ENABLE_FPE                   | Build with Floating-Point Exceptions checks        |   0/1                        |   0                 |
 | ENABLE_PTESTS                | Include tests for projection method in Ctest suite |   0/1                        |   0                 |
 | ENABLE_STESTS                | Include tests for SIMPLE method in Ctest suite     |   0/1                        |   1                 |
