@@ -58,17 +58,12 @@ mfix_level::make_eb_geometry(int lev)
 
 
 
-   /***************************************************************************
-    * Generate PolynomialIF representing the non-planar EB walls              *
-    ***************************************************************************/
+   /****************************************************************************
+    * Generate PolynomialIF representing the non-planar EB walls               *
+    ****************************************************************************/
 
     if(use_poly2) {
       amrex::Print() << "Using poly2 geometry" << std::endl;
-
-      //Vector<PolyTerm> poly;
-      //PolyTerm mono;
-      //Real coef;
-      //IntVect powers;
 
       // Vectors containing polynomial data:
       //    * coefvec   -> i'th element is the coefficient of the i'th power
@@ -116,34 +111,21 @@ mfix_level::make_eb_geometry(int lev)
       // Store polynomal implicit function seperately (used by level-set)
       impfunc_poly2 = std::unique_ptr<BaseIF>(poly2.newImplicitFunction());
 
+
+
+
+      /*************************************************************************
+       * Generate BaseIF representing the planar EB walls                      *
+       *************************************************************************/
+
       if(use_walls){ // Combine poly2 with walls
-        //for (int i = 1; i <= 500; i++) {
-        //  mfix_get_walls(&i, &exists, &normal, &center);
-        //  if(exists){
-        //    amrex::Print() << "Normal " << normal << std::endl;
-        //    amrex::Print() << "Center " << center << std::endl;
-        //    plane = std::unique_ptr<PlaneIF>(new PlaneIF(normal, center, true));
-        //    planes.push_back(std::move(plane));
-        //  }
-        //}
-
-        //// The IntersectionIF constructor requires a vector or pointers to the
-        //// individual PlaneIFs => Construct a pointer-vector. Note that these
-        //// pointers become invalid once the `planes` vector goes out of scope.
-        //Vector<BaseIF *> plane_ptrs;
-        //for(std::unique_ptr<BaseIF> & pl : planes)
-        //    plane_ptrs.push_back(pl.get());
-        //IntersectionIF all_planes(plane_ptrs);
-
         bool has_walls;
         // Store wall implicit function separately (used by level-set)
-        //impfunc_walls = std::unique_ptr<BaseIF>(all_planes.newImplicitFunction());
         impfunc_walls = get_walls(lev, false, has_walls);
 
         Vector<BaseIF*> funcs(2);
-        funcs[0] = &poly2;
-        //funcs[1] = &all_planes;
-        funcs[1] = & * impfunc_walls;
+        funcs[0] = impfunc_poly2.get();
+        funcs[1] = impfunc_walls.get();
         IntersectionIF implicit(funcs);
         impfunc.reset(implicit.newImplicitFunction());
 
@@ -152,29 +134,9 @@ mfix_level::make_eb_geometry(int lev)
       }
 
     } else if(use_walls){ // Just walls
-
-      //RealVect dxVec;
-      //for(int idir = 0; idir < 3; idir++)
-      //  dxVec[idir] = geom[lev].CellSize()[idir];
-
-      //for (int i = 1; i <= 500; i++) {
-      //  mfix_get_walls(&i, &exists, &normal, &center);
-      //  if(exists){
-      //    amrex::Print() << "Normal " << normal << std::endl;
-      //    amrex::Print() << "Center " << center << std::endl;
-      //    plane = std::unique_ptr<PlaneIF>(new AnisotropicDxPlaneIF(normal, center, true, dxVec));
-      //    planes.push_back(std::move(plane));
-      //  }
-      //}
-      //IntersectionIF all_planes(planes);
-
       bool has_walls;
-      //impfunc_walls = std::unique_ptr<BaseIF>(all_planes.newImplicitFunction());
       impfunc_walls = get_walls(lev, true, has_walls);
-
-      //impfunc.reset(all_planes.newImplicitFunction());
       impfunc.reset(impfunc_walls->newImplicitFunction());
-
     }
 
 
