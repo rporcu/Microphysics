@@ -15,7 +15,7 @@
       use bc, only: dim_bc, bc_type, bc_p_g, bc_defined
       use constant , only: gravity
       use eos, ONLY: EOSG
-      use fld_const, only: mw_avg, ro_g0
+      use fld_const, only: ro_g0
       use ic       , only: ic_p_g, ic_defined
       use scales   , only: scale_pressure
 

@@ -120,7 +120,7 @@ contains
 
     use bc,        only: bc_p_g, bc_t_g
     use eos,       only: eosg
-    use fld_const, only: mw_avg, ro_g0
+    use fld_const, only: ro_g0
     use scales   , only: p_ref
 
     integer, intent(in) :: bcv

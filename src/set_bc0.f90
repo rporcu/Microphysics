@@ -23,7 +23,7 @@
       use bc, only: pinf_, pout_, minf_
 
       use eos      , only: eosg, sutherland
-      use fld_const, only: ro_g0, mw_avg, mu_g0
+      use fld_const, only: ro_g0, mu_g0
 
       use scales, only: scale_pressure
       use param , only: is_undefined

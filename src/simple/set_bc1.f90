@@ -20,7 +20,7 @@ subroutine set_bc1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       use bc, only: bc_uw_g, bc_vw_g, bc_ww_g
 
       use eos      , only: eosg, sutherland
-      use fld_const, only: ro_g0, mw_avg, mu_g0
+      use fld_const, only: ro_g0, mu_g0
       use param    , only: is_undefined
 
       implicit none
