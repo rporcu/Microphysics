@@ -90,9 +90,14 @@ public:
     void make_eb_geometry(int lev);
     void make_eb_hourglass(int lev);
     void make_eb_clr(int lev);
+    void make_eb_clr_riser(int lev);
 
     std::unique_ptr<BaseIF> make_cylinder(int dir,
             Real radius, Real length, const RealVect & translation,
+            int lev, bool water_tight);
+
+    std::unique_ptr<BaseIF> make_cone(int dir,
+            Real radius1, Real radius2, Real length, const RealVect & translation,
             int lev, bool water_tight);
 
     void WriteEBSurface(int lev);

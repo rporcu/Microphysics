@@ -38,7 +38,7 @@ mfix_level::Regrid (int lev, int nstep)
 
        if (solve_fluid)
            mfix_set_bc0(lev);
-       
+
        if (ebfactory) {
            ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
                                                   {m_eb_basic_grow_cells,
@@ -154,11 +154,11 @@ mfix_level::Regrid (int lev, int nstep)
         }
 
         //mrex::Print() << grids[0] << std::endl;
-	    //mrex::Print() << dmap[0] << std::endl;
-	    //ong np = pc->TotalNumberOfParticles(true, true);
-	    //nt pid = ParallelDescriptor::MyProc();
-	    //mrex::AllPrint() << "Process " << pid << " got " << np << " particles \n";
-	    //pc->PrintParticleCounts();
+        //mrex::Print() << dmap[0] << std::endl;
+        //ong np = pc->TotalNumberOfParticles(true, true);
+        //nt pid = ParallelDescriptor::MyProc();
+        //mrex::AllPrint() << "Process " << pid << " got " << np << " particles \n";
+        //pc->PrintParticleCounts();
     }
 
     // Note: this might not be necessary anymore if the level-set data is
@@ -185,7 +185,7 @@ mfix_level::RegridOnRestart (int lev)
        // This creates the associated Distribution Mapping
        DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
-       // This sets grids[lev] = ba 
+       // This sets grids[lev] = ba
        SetBoxArray(lev, ba);
 
        bool ba_changed = (old_ba != grids[lev]);
@@ -213,9 +213,11 @@ mfix_level::RegridOnRestart (int lev)
 void
 mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)
 {
-    // ********************************************************************************
-    // Cell-based arrays
-    // ********************************************************************************
+    amrex::Print() << "Regridding arrays" << std::endl;
+
+   /****************************************************************************
+    * Cell-based arrays                                                        *
+    ****************************************************************************/
 
     // Void fraction
     int ng = ep_g[lev]->nGrow();
@@ -280,7 +282,7 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     p0_g_new->FillBoundary(p0_periodicity);
     p0_g[lev] = std::move(p0_g_new);
 
-    // Pressure correction 
+    // Pressure correction
     ng = pp_g[lev]->nGrow();
     std::unique_ptr<MultiFab> pp_g_new(new MultiFab(new_grids,new_dmap,1,pp_g[lev]->nGrow()));
     pp_g_new->copy(*pp_g[lev],0,0,1,ng,ng);
@@ -293,14 +295,7 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     mu_g_new->copy(*mu_g[lev],0,0,1,ng,ng);
     mu_g_new->FillBoundary(geom[lev].periodicity());
     mu_g[lev] = std::move(mu_g_new);
-    
-    // Level-set
-    ng = mu_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> ls_new(new MultiFab(new_grids,new_dmap,1,ls[lev]->nGrow()));
-    ls_new->copy(*ls[lev],0,0,1,ng,ng);
-    ls_new->FillBoundary(geom[lev].periodicity());
-    ls[lev] = std::move(ls_new);
-    
+
     // Lambda
     ng = lambda_g[lev]->nGrow();
     std::unique_ptr<MultiFab> lambda_g_new(new MultiFab(new_grids,new_dmap,1,lambda_g[lev]->nGrow()));
@@ -329,9 +324,9 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     diveu_new->FillBoundary(geom[lev].periodicity());
     diveu[lev] = std::move(diveu_new);
 
-    // ********************************************************************************
-    // X-face-based arrays
-    // ********************************************************************************
+   /****************************************************************************
+    * X-face-based arrays                                                      *
+    ****************************************************************************/
 
     // Create a BoxArray on x-faces.
     BoxArray x_edge_ba = new_grids;
@@ -392,9 +387,9 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     drag_u_new->FillBoundary(geom[lev].periodicity());
     drag_u[lev] = std::move(drag_u_new);
 
-    // ********************************************************************************
-    // Y-face-based arrays
-    // ********************************************************************************
+   /****************************************************************************
+    * Y-face-based arrays                                                      *
+    ****************************************************************************/
 
     // Create a BoxArray on y-faces.
     BoxArray y_edge_ba = new_grids;
@@ -455,9 +450,9 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     drag_v_new->FillBoundary(geom[lev].periodicity());
     drag_v[lev] = std::move(drag_v_new);
 
-    // ********************************************************************************
-    // Z-face-based arrays
-    // ********************************************************************************
+   /****************************************************************************
+    * Z-face-based arrays                                                      *
+    ****************************************************************************/
 
     // Create a BoxArray on z-faces.
     BoxArray z_edge_ba = new_grids;
@@ -518,9 +513,26 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     drag_w_new->FillBoundary(geom[lev].periodicity());
     drag_w[lev] = std::move(drag_w_new);
 
-    // ********************************************************************************
-    // Make sure we fill the ghost cells as appropriate -- this is copied from init_fluid
-    // ********************************************************************************
+   /****************************************************************************
+    * Nodal Arrays                                                             *
+    ****************************************************************************/
+
+    // Create a nodal BoxArray
+    const BoxArray & new_nodal_grids = amrex::convert(new_grids, IntVect{1,1,1});
+
+    // Level-set
+    ng = ls[lev]->nGrow();
+    std::unique_ptr<MultiFab> ls_new(new MultiFab(new_nodal_grids, new_dmap, 1, ls[lev]->nGrow()));
+    ls_new->copy(*ls[lev],0,0,1,ng,ng);
+    ls_new->FillBoundary(geom[lev].periodicity());
+    ls[lev] = std::move(ls_new);
+
+
+
+   /****************************************************************************
+    * Make sure we fill the ghost cells as appropriate -- this is copied from  *
+    * init_fluid                                                               *
+    ****************************************************************************/
 
     fill_mf_bc(lev,*ep_g[lev]);
     fill_mf_bc(lev,*ep_go[lev]);
