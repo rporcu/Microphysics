@@ -188,13 +188,19 @@ mfix_level::RegridOnRestart (int lev)
        // This sets grids[lev] = ba 
        SetBoxArray(lev, ba);
 
+       bool ba_changed = (old_ba != grids[lev]);
+       bool dm_changed = (dm     !=  dmap[lev]);
+
        // This sets dmap[lev] = dm
        SetDistributionMap(lev, dm);
 
        // If the grids have changed, we need to re-define those arrays 
        // and copy from the old BoxArray to the new one since we have already read in the old fluid data
-       if ( (grids[0] != old_ba) && solve_fluid) 
-          RegridArrays(lev,grids[lev],dmap[lev]);
+       if ( solve_fluid )
+       {
+         if ( ba_changed || dm_changed )
+            RegridArrays(lev,grids[lev],dmap[lev]);
+       }
 
        if (solve_fluid)
           mfix_set_bc0(lev);
