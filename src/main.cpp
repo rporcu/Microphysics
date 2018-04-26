@@ -174,10 +174,10 @@ int main (int argc, char* argv[])
         IntVect Nrep(repl_x,repl_y,repl_z);
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
 
-        // This call checks if we want to regrid using the
-        //   max_grid_size just read in from the inputs file used to restart
-        //   (only relevant if load_balance_type = "FixedSize" or "KnapSack")
-        // Note that this call does not depend on regrid_int
+        // This call checks if we want to regrid using the max_grid_size just
+        // read in from the inputs file used to restart (only relevant if
+        // load_balance_type = "FixedSize" or "KnapSack") Note that this call
+        // does not depend on regrid_int
         my_mfix.RegridOnRestart(lev);
     }
 
