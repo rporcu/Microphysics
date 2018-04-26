@@ -220,7 +220,8 @@ mfix_level::make_eb_geometry(int lev)
     }
 
     // store copy of level set (for plotting).
-    ls[lev] = level_set->coarsen_data();
+    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls_data->nGrow());
 
     /***************************************************************************
      *                                                                         *
@@ -463,7 +464,8 @@ mfix_level::make_eb_hourglass(int lev)
     EBTower::Destroy();
 
     // store copy of level set (for plotting).
-    ls[lev] = level_set->coarsen_data();
+    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls_data->nGrow());
 
     /***************************************************************************
      *                                                                         *
@@ -762,7 +764,8 @@ mfix_level::make_eb_clr(int lev)
     eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
     // Promote completed copy of level set into the mfix_level.
-    ls[lev] = level_set->coarsen_data();
+    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls_data->nGrow());
 }
 
 
@@ -927,7 +930,8 @@ mfix_level::make_eb_clr_riser(int lev)
     eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
     // Promote completed copy of level set into the mfix_level.
-    ls[lev] = level_set->coarsen_data();
+    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls_data->nGrow());
 }
 
 

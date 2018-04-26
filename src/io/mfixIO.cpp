@@ -360,7 +360,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
               // Simply copy mf into chkscalarVars
               amrex::Print() << "  - loading scalar data: " << chkscaVarsName[i] << std::endl;
               if(chkscaVarsName[i] == "level-set") {
-
+                  // will be filled by level-set factory
               } else {
                   (*chkscalarVars[i])[lev]->copy(mf, 0, 0, 1, 0, 0);
               }

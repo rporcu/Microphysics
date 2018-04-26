@@ -208,6 +208,8 @@ mfix_level::RegridOnRestart (int lev)
 void
 mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)
 {
+    amrex::Print() << "Regridding arrays" << std::endl;
+
    /****************************************************************************
     * Cell-based arrays                                                        *
     ****************************************************************************/
