@@ -40,7 +40,7 @@
 ! Local variables
 !-----------------------------------------------
 ! indices
-      integer :: i, j, k, ng
+      integer :: i, j, k
 ! Local loop counter
       integer :: L
 ! Gas pressure at the axial location j
