@@ -668,8 +668,8 @@ contains
                     + phi(i+1, j+1, k+1)*inv_dx(3) * wx_hi * wy_hi
 
         ! this might not be necessary if the phi grid is dense enough...
-        !inv_norm = 1.0d0 / sqrt(normal(1)**2 + normal(2)**2 + normal(3)**2)
-        !normal(:) = normal(:) * inv_norm
+        inv_norm = 1.0d0 / sqrt(normal(1)**2 + normal(2)**2 + normal(3)**2)
+        normal(:) = normal(:) * inv_norm
 
     end subroutine normal_levelset
 
