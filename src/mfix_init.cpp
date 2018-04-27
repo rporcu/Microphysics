@@ -176,7 +176,11 @@ void mfix_level::Init(int lev, Real dt, Real time)
     // Make sure that at (at least) an initial MultiFab ist stored in ls[lev].
     // (otherwise, if there are no walls/boundaries in the simulation, saving a
     // plot file or checkpoint will segfault).
-    ls[lev] = level_set->coarsen_data();
+    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+    ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
+    ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls[lev]->nGrow());
+    ls[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 BoxArray
