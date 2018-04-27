@@ -22,13 +22,13 @@ amr.max_level = 0
 # Run time pf simulation
 amr.stop_time = 0.20
 
-amr.par_ascii_int  = -1
+amr.par_ascii_int  = 1
 amr.par_ascii_file = vis
 
-amr.plot_int  = 1
+amr.plot_int  = -1
 amr.plot_file = "plt"
 
-amr.check_int = 1
+amr.check_int = -1
 amr.check_file = "chk"
 
 #amr.restart="chk00003"
@@ -57,6 +57,8 @@ mfix.levelset__pad        = 4
 mfix.levelset__eb_refinement = 1
 mfix.levelset__eb_pad        = 8
 
+mfix.write_eb_surface = true
+
 amr.dual_grid = 0
 amr.regrid_int = 25
 
@@ -64,11 +66,8 @@ mfix.load_balance_type = "KnapSack"
 #default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
 #this option is only relevant if load_balance_type = KnapSack
 mfix.knapsack_weight_type = "NumParticles"
-mmfix.load_balance_type = "KnapSack"
-#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
-#this option is only relevant if load_balance_type = KnapSack
-mfix.knapsack_weight_type = "NumParticles"
-mfix.knapsack_weight_type = "RunTimeCosts"fix.knapsack_weight_type = "RunTimeCosts"
+mfix.knapsack_weight_type = "RunTimeCosts"
+
 # Geometry
 geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 1       1       0       # Is periodic in each direction?

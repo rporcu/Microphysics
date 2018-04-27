@@ -337,8 +337,6 @@ std::unique_ptr<MultiFab> LSFactory::coarsen_data() const {
     std::unique_ptr<MultiFab> ls_crse = std::unique_ptr<MultiFab>(new MultiFab);
     const MultiFab * ls_fine = ls_grid.get(); // Pointer to fine level-set MultiFab
 
-    amrex::VisMF::Write(* ls_fine, "ls_fine");
-
     const BoxArray & ls_ba = ls_fine->boxArray();
     BoxArray crse_ba = ls_ba; // Coarse nodal level-set BoxArray (amrex::average_down requires coarse BA)
     crse_ba.coarsen(ls_grid_ref);

@@ -18,7 +18,7 @@
 #include <AMReX_AnisotropicDxPlaneIF.H>
 #include <AMReX_AnisotropicIF.H>
 
-#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
+//#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
 //#include <sstream>
 
 #include <algorithm>
@@ -220,11 +220,9 @@ mfix_level::make_eb_geometry(int lev)
     }
 
     // store copy of level set (for plotting).
-    amrex::Print() << ls[lev]->nGrow() << std::endl;
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
     ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
     ls[lev]->FillBoundary(geom[lev].periodicity());
-    amrex::VisMF::Write(* ls[lev], "ls_asdf");
 
     /***************************************************************************
      *                                                                         *
