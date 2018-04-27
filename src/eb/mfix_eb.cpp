@@ -798,7 +798,7 @@ mfix_level::make_eb_clr_riser(int lev)
     Vector<Real> transvec(3);
     RealVect translation;
 
-    Real lradius, lheight;
+    Real lheight;
 
     int cylinder_dir;
 
