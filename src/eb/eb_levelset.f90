@@ -616,7 +616,7 @@ contains
         real(c_real)               :: xp, yp, zp, lx, ly, lz, wx_lo, wx_hi, wy_lo, wy_hi, wz_lo, wz_hi
         real(c_real), dimension(3) :: inv_dx
 
-        ! real(c_real) :: inv_norm
+        real(c_real) :: inv_norm
 
         inv_dx = n_refine / dx
 
