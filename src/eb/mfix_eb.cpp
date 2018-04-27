@@ -222,6 +222,7 @@ mfix_level::make_eb_geometry(int lev)
     // store copy of level set (for plotting).
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
     ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls_data->nGrow());
+    ls[lev]->FillBoundary(geom[lev].periodicity());
 
     /***************************************************************************
      *                                                                         *
@@ -466,6 +467,7 @@ mfix_level::make_eb_hourglass(int lev)
     // store copy of level set (for plotting).
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
     ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls_data->nGrow());
+    ls[lev]->FillBoundary(geom[lev].periodicity());
 
     /***************************************************************************
      *                                                                         *
@@ -766,6 +768,7 @@ mfix_level::make_eb_clr(int lev)
     // Promote completed copy of level set into the mfix_level.
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
     ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls_data->nGrow());
+    ls[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 
@@ -932,6 +935,7 @@ mfix_level::make_eb_clr_riser(int lev)
     // Promote completed copy of level set into the mfix_level.
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
     ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls_data->nGrow());
+    ls[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 

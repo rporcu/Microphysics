@@ -22,10 +22,7 @@ amr.max_level = 0
 # Run time pf simulation
 amr.stop_time = 0.20
 
-amr.plot_int  =    -1000
-amr.check_int  =   -1
-
-amr.par_ascii_int  =  1
+amr.par_ascii_int  = -1
 amr.par_ascii_file = vis
 
 amr.plot_int  = 1
@@ -34,7 +31,7 @@ amr.plot_file = "plt"
 amr.check_int = 1
 amr.check_file = "chk"
 
-amr.restart="chk00003"
+#amr.restart="chk00003"
 
 mfix.particle_init_type = "Auto"
 
