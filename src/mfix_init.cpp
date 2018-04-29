@@ -179,7 +179,7 @@ void mfix_level::Init(int lev, Real dt, Real time)
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
     const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
     ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
-    ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls[lev]->nGrow());
+    ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
     ls[lev]->FillBoundary(geom[lev].periodicity());
 }
 

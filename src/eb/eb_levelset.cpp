@@ -364,13 +364,13 @@ void LSFactory::regrid(){
     update_ba();
 
     int ng = 0; //ls_grid_pad;
-    std::unique_ptr<MultiFab> ls_grid_new(new MultiFab(ls_ba, dm, 1, ls_grid_pad /*ng*/));
+    std::unique_ptr<MultiFab> ls_grid_new = std::unique_ptr<MultiFab>(new MultiFab(ls_ba, dm, 1, ls_grid_pad /*ng*/));
 
     ls_grid_new->copy(* ls_grid, 0, 0, 1, ng, ng);
     ls_grid_new->FillBoundary(geom_ls.periodicity());
     ls_grid = std::move(ls_grid_new);
 
-    std::unique_ptr<iMultiFab> ls_valid_new(new iMultiFab(ls_ba, dm, 1, ls_grid_pad /*ng*/));
+    std::unique_ptr<iMultiFab> ls_valid_new = std::unique_ptr<iMultiFab>(new iMultiFab(ls_ba, dm, 1, ls_grid_pad /*ng*/));
 
     ls_valid_new->copy(* ls_valid, 0, 0, 1, ng, ng);
     ls_valid_new->FillBoundary(geom_ls.periodicity());

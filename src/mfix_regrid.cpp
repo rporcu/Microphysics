@@ -13,8 +13,7 @@ mfix_level::Regrid (int lev, int nstep)
 
     amrex::Print() << "In Regrid at step " << nstep << std::endl;
 
-    if (load_balance_type == "KDTree")
-    {
+    if (load_balance_type == "KDTree") {
         if (solve_dem)
            AMREX_ALWAYS_ASSERT(particle_cost[0] == nullptr);
         if (solve_fluid)

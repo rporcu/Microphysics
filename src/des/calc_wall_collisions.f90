@@ -425,14 +425,16 @@ contains
         ! lx, ly, lz: position in units of of cell length
         ! ls_value:   value of the level-set function
         ! overlap:    particle-wall overlap
-        real(c_real)               :: xp, yp, zp, rp, lx, ly, lz, ls_value, overlap_n
+        real(c_real)               :: rp, ls_value, overlap_n
+        !real(c_real)               :: xp, yp, zp
+        !real(c_real)               :: lx, ly, lz
 
         ! ll:      do-loop counter itterating over particles
         ! i, j, k: indices of cell containing current particle
         integer                    :: ll, i, j, k
 
         ! ls_valid: indicates if particle is near wall (and level-set needs to be tested)
-        logical                    :: ls_valid
+        !logical                    :: ls_valid
 
         real(c_real) :: v_rel_trans_norm, sqrt_overlap, kn_des_w, kt_des_w, etan_des_w, etat_des_w
         real(c_real) :: mag_overlap_t, fnmd
@@ -447,17 +449,18 @@ contains
             p => particles(ll)
 
             ! particle position
-            xp = p%pos(1)
-            yp = p%pos(2)
-            zp = p%pos(3)
-            ! in units of cell length
-            lx = xp * inv_dx(1)
-            ly = yp * inv_dx(2)
-            lz = zp * inv_dx(3)
-            ! get particle cell index
-            i = floor(lx)
-            j = floor(ly)
-            k = floor(lz)
+            !xp = p%pos(1)
+            !yp = p%pos(2)
+            !zp = p%pos(3)
+            ! we don't need these, as valid is not checked, at the moment
+            !  ! in units of cell length
+            !  lx = xp * inv_dx(1)
+            !  ly = yp * inv_dx(2)
+            !  lz = zp * inv_dx(3)
+            !  ! get particle cell index
+            !  i = floor(lx)
+            !  j = floor(ly)
+            !  k = floor(lz)
 
             ! checking valid seems to take more time than just using the level-set
             !if (valid(i*n_refine, j*n_refine, k*n_refine) .eq. 1) then
@@ -465,7 +468,8 @@ contains
                 rp  = p%radius
 
                 ! compute particle/wall overlap
-                pos = (/ xp, yp, zp /)
+                !pos = (/ xp, yp, zp /)
+                pos = p%pos
 
                 ! interpolates levelset from nodal phi to position pos
                 call interp_levelset(pos, plo, n_refine, phi, phlo, phhi, dx, ls_value);
