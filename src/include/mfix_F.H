@@ -668,7 +668,8 @@ extern "C"
             const amrex::Real* v,   const int* vlo, const int* vhi,
             const amrex::Real* w,   const int* wlo, const int* whi,
             const amrex::Real* mu,  const int* slo, const int* shi,
-            const amrex::Real* rop, const amrex::Real* dx,
+            const amrex::Real* ro,  const amrex::Real* ep,
+	    const amrex::Real* dx,
             const int* dir
         );
 
@@ -722,7 +723,7 @@ extern "C"
             amrex::Real* u_i,  const int* ulo, const int* uhi,
             const amrex::Real* drag_i, const int* dlo, const int* dhi,
             const amrex::Real* ro_g,   const int* slo, const int* shi,
-            const amrex::Real* rop_g,
+            const amrex::Real* ep_g,
             const int* domlo, const int* domhi,
             const amrex::Real* dx, const amrex::Real* dt,
             const int* dir
@@ -732,8 +733,8 @@ extern "C"
             const int* lo, const int* hi,
             amrex::Real* u_i,  const int* ulo, const int* uhi,
             const amrex::Real* f_gds_i, const int* flo, const int* fhi,
-            const amrex::Real* rop,     const int* slo, const int* shi,
-            const int* dir, const amrex::Real* dt
+            const amrex::Real* ro,      const int* slo, const int* shi,
+            const amrex::Real* ep, const int* dir, const amrex::Real* dt
         );
 
     void extrap_pressure_to_ghost_cells(

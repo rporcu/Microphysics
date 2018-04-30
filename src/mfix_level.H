@@ -222,9 +222,11 @@ private:
     void mfix_compute_dt(int lev, amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt);
 
     void mfix_compute_fluid_acceleration(int lev,
-            Vector< std::unique_ptr<MultiFab> >& u,
-            Vector< std::unique_ptr<MultiFab> >& v,
-            Vector< std::unique_ptr<MultiFab> >& w );
+					 Vector< std::unique_ptr<MultiFab> >& u,
+					 Vector< std::unique_ptr<MultiFab> >& v,
+					 Vector< std::unique_ptr<MultiFab> >& w,
+					 Vector< std::unique_ptr<MultiFab> >& ro,
+					 Vector< std::unique_ptr<MultiFab> >& ep );
 
     int  steady_state_reached(int lev, Real dt);
 
@@ -234,11 +236,15 @@ private:
 
 
     void mfix_apply_forcing_terms(int lev, amrex::Real dt,
-            Vector< std::unique_ptr<MultiFab> >& u,
-            Vector< std::unique_ptr<MultiFab> >& v,
-            Vector< std::unique_ptr<MultiFab> >& w );
+				  Vector< std::unique_ptr<MultiFab> >& u,
+				  Vector< std::unique_ptr<MultiFab> >& v,
+				  Vector< std::unique_ptr<MultiFab> >& w,
+				  Vector< std::unique_ptr<MultiFab> >& ro,
+				  Vector< std::unique_ptr<MultiFab> >& ep );
 
-    void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
+    void mfix_compute_intermediate_velocity (int lev, amrex::Real dt, 
+					     Vector< std::unique_ptr<MultiFab> >& ro,
+					     Vector< std::unique_ptr<MultiFab> >& ep );
 
     void mfix_add_pressure_gradient(int lev, amrex::Real coeff);
 

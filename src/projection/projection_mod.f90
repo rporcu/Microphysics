@@ -20,7 +20,8 @@ module projection_mod
    ! Define here the unit vectors
    ! This is used to shift index  based on how the variable is staggered
    ! Check e_x, e_y and e_z in mfix_level.H
-   integer(c_int), parameter :: e_i(3,3) = reshape ( [1,0,0,0,1,0,0,0,1], [3,3] )  
+   integer(c_int), parameter :: e_i(3,3) = reshape ( [1,0,0,0,1,0,0,0,1], [3,3] )
+   real(ar),       parameter :: two = 2.0_ar 
 
 contains
 
@@ -104,8 +105,8 @@ contains
    !
    ! dir = 1, 2, 3 ( 1=x, 2=y, 3=z ) 
    !
-   subroutine compute_fluid_acceleration ( lo, hi, rhs, rlo, rhi, sl, &
-        & u, ulo, uhi, v, vlo, vhi, w, wlo, whi, mu, slo, shi, rop,   &
+   subroutine compute_fluid_acceleration ( lo, hi, rhs, rlo, rhi, sl,  &
+        & u, ulo, uhi, v, vlo, vhi, w, wlo, whi, mu, slo, shi, ro, ep, &
         & dx, dir ) bind(C)
 
       use convection_mod
@@ -133,7 +134,8 @@ contains
            &   v(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
            &   w(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
            &  mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           & rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           &  ro(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           &  ep(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            &  sl(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
 
       real(ar),       intent(inout) ::                       &
@@ -147,7 +149,7 @@ contains
       ! Local variables
       integer                       :: i, j, k
       integer                       :: i0, j0, k0
-      real(ar)                      :: orop
+      real(ar)                      :: ro_f, ep_f
       
       ! Compute convection term
       select case ( dir )
@@ -175,13 +177,15 @@ contains
       j0 = e_i(dir,2)
       k0 = e_i(dir,3)
 
-      orop = zero
-
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               orop       = half * ( one/rop(i,j,k) + one/rop(i-i0,j-j0,k-k0) )
-               rhs(i,j,k) = -conv(i,j,k) + diff(i,j,k) * orop
+
+               ! Define face-values for ep and ro_g and then invert them
+               ro_f       = half * ( ro(i,j,k) + ro(i-i0,j-j0,k-k0) )
+               ep_f       = half * ( ep(i,j,k) + ep(i-i0,j-j0,k-k0) )
+               rhs(i,j,k) = - conv(i,j,k) + diff(i,j,k) / ( ro_f * ep_f )
+               
             end do
          end do
       end do
@@ -307,7 +311,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               oro_g   = half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
+               oro_g   = two / ( ro_g(i,j,k) + ro_g(i-i0,j-j0,k-k0) )
 
                dp      =  p(i,j,k) -  p(i-i0,j-j0,k-k0)
                dp0     = p0(i,j,k) - p0(i-i0,j-j0,k-k0)
@@ -326,7 +330,7 @@ contains
    ! particle/fluid momentum exchange
    ! 
    subroutine add_forcing ( lo, hi, u_i, ulo, uhi, drag_i, dlo, dhi, &
-        & ro_g, slo, shi, rop_g, domlo, domhi, dx, dt, dir )  bind(C)
+        & ro_g, slo, shi, ep_g, domlo, domhi, dx, dt, dir )  bind(C)
       
       use constant, only: gravity
       
@@ -352,70 +356,41 @@ contains
       
       ! Arrays
       real(ar),       intent(in   ) :: &
-           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+             ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+             ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            drag_i(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
       real(ar),       intent(inout) :: &
            u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       
       ! Local variables
-      integer(c_int)                :: i, j, k 
-      real(ar)                      :: orop_g, acc 
-
-      select case (dir)
-      case(1)                   !X direction
-
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
-
-                  orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i-1,j,k) )
-                  
-                  acc = gravity(dir) + drag_i(i,j,k) * orop_g 
-
-                  u_i(i,j,k) = u_i(i,j,k) + dt * acc
-
-               end do
-            end do
-         end do
-
-      case(2)                   !y direction
-
-         do k = lo(3),hi(3)
-            do j = lo(2),hi(2)
-               do i = lo(1),hi(1)
-
-                  orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i,j-1,k) )
-
-                  acc = gravity(dir) + drag_i(i,j,k) * orop_g 
-
-                  u_i(i,j,k) = u_i(i,j,k) + dt * acc
-
-               end do
-            end do
-         end do
-
-      case(3)                   !Z direction
-
-         do k = lo(3),hi(3)
-            do j = lo(2),hi(2)
-               do i = lo(1),hi(1)
-
-                  orop_g = half * ( one/rop_g(i,j,k) + one/rop_g(i,j,k-1) )
-                 
-                  acc = gravity(dir) + drag_i(i,j,k) * orop_g 
-
-                  u_i(i,j,k) = u_i(i,j,k) + dt * acc
-
-               end do
-            end do
-         end do
+      integer(c_int)                :: i, j, k, i0, j0, k0 
+      real(ar)                      :: ro_f, ep_f, acc 
 
 
-      case default
+
+      if ( ( dir < 1 ) .or. ( dir > 3 ) ) then 
          stop "projection_mod: add_forcing: argument dir must be either 1,2, or 3"
-      end select
+      end if
+      
+      i0 = e_i(dir,1)
+      j0 = e_i(dir,2)
+      k0 = e_i(dir,3)
+
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+               
+               ro_f = ( ro_g(i,j,k) + ro_g(i-i0,j-j0,k-k0) ) * half
+               ep_f = ( ep_g(i,j,k) + ep_g(i-10,j-j0,k-k0) ) * half
+               
+               acc  = gravity(dir) + drag_i(i,j,k) / ( ro_f * ep_f )
+               
+               u_i(i,j,k) = u_i(i,j,k) + dt * acc
+               
+            end do
+         end do
+      end do
 
    end subroutine add_forcing
 
@@ -435,7 +410,7 @@ contains
    !    u_i = u_i / (A)_diagonal
    !
    subroutine compute_intermediate_velocity ( lo, hi, u_i, ulo, uhi, &
-        & f_gds_i, flo, fhi, rop, slo, shi, dir, dt ) bind(C)
+        & f_gds_i, flo, fhi, ro, slo, shi, ep, dir, dt ) bind(C)
 
      
       ! Loop bounds
@@ -454,7 +429,8 @@ contains
 
             ! Arrays
       real(ar),       intent(in   ) :: &
-           rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ro(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),     &
+           ep(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),     &
            f_gds_i(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
 
       real(ar),       intent(inout) :: &
@@ -462,7 +438,7 @@ contains
       
       ! Local variables
       integer(c_int)                :: i, j, k, i0, j0, k0
-      real(ar)                      :: orop, diag_coeff
+      real(ar)                      :: ro_f, ep_f, diag_coeff
       
       i0 = e_i(dir,1)
       j0 = e_i(dir,2)
@@ -471,9 +447,14 @@ contains
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               orop       = half * ( one / rop(i,j,k) + one / rop(i-i0,j-j0,k-k0) )
-               diag_coeff = one + dt * f_gds_i(i,j,k) * orop
+
+               ro_f       = half * ( ro(i,j,k) + ro(i-i0,j-j0,k-k0) )
+               ep_f       = half * ( ep(i,j,k) + ep(i-i0,j-j0,k-k0) )
+               
+               diag_coeff = one + dt * f_gds_i(i,j,k) / ( ro_f * ep_f )
+               
                u_i(i,j,k) = u_i(i,j,k) / diag_coeff
+               
             end do
          end do
       end do
@@ -508,6 +489,7 @@ contains
            bcoeff(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       integer      :: i, j, k, i0, j0, k0
+      real(ar)     :: ro_f, ep_f
 
       i0 = e_i(dir,1)
       j0 = e_i(dir,2)
@@ -516,8 +498,13 @@ contains
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
-               bcoeff(i,j,k) = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) ) * &
-                             & half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
+
+               ro_f = half * ( ro_g(i,j,k) + ro_g(i-i0,j-j0,k-k0) )
+
+               ep_f = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) )
+               
+               bcoeff(i,j,k) = ep_f / ro_f 
+               
             end do
          end do
       end do
