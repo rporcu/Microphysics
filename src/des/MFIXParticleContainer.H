@@ -58,7 +58,8 @@ public:
     using MyConstParIter = ParConstIter<realData::count, intData::count, 0, 0>;
     // Data type returned by MFIXParIter::ArrayOfStructs::data (accesses
     // particle data represented by realData)
-    using RealType       = typename ParticleType::RealType;
+    //using RealType       = typename ParticleType::RealType;
+    //using AoS            = ArrayOfStructs<realData::count, intData::count>;
 
     // Get number of particles
     int NumberOfParticles(MFIXParIter& pti){
@@ -93,8 +94,8 @@ public:
 
     //Real GetMaxRadius(int lev);
 
-    // void SubstepMaxVelocity(int lev, const RealType & particle);
-    // RealVect GetMaxVelocity(int lev);
+    void UpdateMaxVelocity(int lev);
+    RealVect GetMaxVelocity(int lev);
 
     void BalanceParticleLoad_KDTree();
     ///
@@ -178,9 +179,11 @@ private:
     static bool use_neighbor_list;
     static bool sort_neighbor_list;
 
-    // Temporary container for the the maximum velocity in each direction
-    std::vector<Real> substep_maxvel_x;
-    std::vector<Real> substep_maxvel_y;
-    std::vector<Real> substep_maxvel_z;
+    // Local containers for: the maximum (absolute) velocity 
+    //                       the max (abs) particle-particle force
+    //                       the max (abs) particle-wall force
+    RealVect loc_maxvel;
+    RealVect loc_maxpfor;
+    RealVect loc_maxwfor;
 };
 #endif

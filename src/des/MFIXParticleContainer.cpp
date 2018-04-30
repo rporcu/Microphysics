@@ -440,11 +440,16 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
    /****************************************************************************
     * DEBUG flag toggles:                                                      *
+    *   -> Print number of collisisions                                        *
     *   -> Print max (over substeps) particle velocity at each time step       *
-    *   -> Print max (over substeps) particle-wall forces                      *
+    *   -> Print max particle-wall and particle-particle forces                *
     ****************************************************************************/
 
-    bool debug = false;
+    // Debug level controls the detail of debug outut:
+    //   -> debug_level = 0 : no debug output
+    //   -> debug_level = 1 : debug output for every fluid step
+    //   -> debug_level = 2 : debug output for every substep
+    const int debug_level = 2;
 
 
 
@@ -493,6 +498,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     ****************************************************************************/
 
     int ncoll_total = 0;  // Counts total number of collisions
+    loc_maxvel  = RealVect(0., 0., 0.);  // Tracks max (absolute) velocity
     int n = 0; // Counts sub-steps
 
     while (n < nsubsteps) {
@@ -609,13 +615,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          BL_PROFILE_VAR_STOP(calc_particle_collisions);
 #endif
 
-         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-
 
         /***********************************************************************
          * Move particles based on collision forces and torques                *
          ***********************************************************************/
 
+         BL_PROFILE_VAR("des_time_loop()", des_time_loop);
 #if 1
          des_time_loop(& nrp, particles,
                        & ntot, tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
@@ -653,13 +658,31 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
      /**************************************************************************
       * DEBUG: output the number of collisions current substep                 *
+      *        update max velocities                                           *
       **************************************************************************/
 
-      if (debug) {
+      if (debug_level > 1) {
          ncoll_total += ncoll;
          ParallelDescriptor::ReduceIntSum(ncoll, ParallelDescriptor::IOProcessorNumber());
          Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
       }
+
+      if (debug_level > 0) UpdateMaxVelocity(lev);
+
+      if (debug_level > 1) {
+          GetMaxVelocity(lev);
+
+          const Real* dx = Geom(0).CellSize();
+          amrex::Print() << "Maximum possible distance traveled:" << std::endl
+                         <<  "x= " << loc_maxvel[0] * dt
+                         << " y= " << loc_maxvel[1] * dt
+                         << " z= " << loc_maxvel[2] * dt
+                         << " and note that "
+                         << " dx= " << dx[0] << std::endl;
+
+    }
+
+
     } // end of loop over substeps
 
 
@@ -672,7 +695,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
    /****************************************************************************
     * DEBUG: output the total number of collisions over all substeps           *
     ****************************************************************************/
-    if (debug) {
+    if (debug_level > 0) {
        ParallelDescriptor::ReduceIntSum(ncoll_total, ParallelDescriptor::IOProcessorNumber());
        Print() << "Number of collisions: " << ncoll_total << " in " << nsubsteps << " substeps " << std::endl;
     }
@@ -688,42 +711,17 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
       call_usr3_des( &nrp, particles );
     }
 
-    if (debug) {
-       // Check maxmium particle velocties at each fluid time step with the
-       // goal of veriftying a particle cannot travel more than a single cell
-       // per fluid time step.
-       Real max_vel_x = 0.0;
-       Real max_vel_y = 0.0;
-       Real max_vel_z = 0.0;
+    if (debug_level > 0) {
+        GetMaxVelocity(lev);
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z)
-#endif
-       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+        const Real* dx = Geom(0).CellSize();
+        amrex::Print() << "Maximum possible distance traveled:" << std::endl
+                       <<  "x= " << loc_maxvel[0] * dt
+                       << " y= " << loc_maxvel[1] * dt
+                       << " z= " << loc_maxvel[2] * dt
+                       << " and note that "
+                       << " dx= " << dx[0] << std::endl;
 
-         auto & particles = pti.GetArrayOfStructs();
-
-         for (const auto & p: particles)
-         {
-             max_vel_x = std::max(Real(p.rdata(realData::velx)), max_vel_x);
-             max_vel_y = std::max(Real(p.rdata(realData::vely)), max_vel_y);
-             max_vel_z = std::max(Real(p.rdata(realData::velz)), max_vel_z);
-         }
-       }
-
-       ParallelDescriptor::ReduceRealMax(max_vel_x,ParallelDescriptor::IOProcessorNumber());
-       ParallelDescriptor::ReduceRealMax(max_vel_y,ParallelDescriptor::IOProcessorNumber());
-       ParallelDescriptor::ReduceRealMax(max_vel_z,ParallelDescriptor::IOProcessorNumber());
-
-       if (ParallelDescriptor::IOProcessor())
-       {
-          const Real* dx = Geom(0).CellSize();
-          cout << "Maximum possible distance traveled:" << endl;
-          cout <<  "x=  " << max_vel_x * dt
-               << " y=  " << max_vel_y * dt
-               << " z=  " << max_vel_z * dt  << " and note that "
-               << " dx= " << dx[0] << endl;
-       }
     }
 
     amrex::Print() << "done. \n";
@@ -1300,6 +1298,34 @@ void MFIXParticleContainer::GetParticleAvgProp(int lev,
    }
  }
 }
+
+void MFIXParticleContainer::UpdateMaxVelocity(int lev) {
+    Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z)
+#endif
+    for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti) {
+        auto & particles = pti.GetArrayOfStructs();
+        for(const auto & particle : particles) {
+            max_vel_x = std::max(Real(std::fabs(particle.rdata(realData::velx))), max_vel_x);
+            max_vel_y = std::max(Real(std::fabs(particle.rdata(realData::vely))), max_vel_y);
+            max_vel_z = std::max(Real(std::fabs(particle.rdata(realData::velz))), max_vel_z);
+        }
+    }
+    loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
+}
+
+RealVect MFIXParticleContainer::GetMaxVelocity(int lev) {
+    Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
+
+    ParallelDescriptor::ReduceRealMax({max_vel_x, max_vel_y, max_vel_z}, 
+                                      ParallelDescriptor::IOProcessorNumber());
+    
+    RealVect max_vel(max_vel_x, max_vel_y, max_vel_z);
+
+    return max_vel;
+};
 
 void
 MFIXParticleContainer::BalanceParticleLoad_KDTree()
