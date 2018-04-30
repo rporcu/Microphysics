@@ -45,18 +45,20 @@ struct intData
 
 
 class MFIXParIter
-    : public amrex::ParIter<realData::count,intData::count,0,0>
+    : public amrex::ParIter<realData::count, intData::count, 0, 0>
 {
 public:
-    using amrex::ParIter<realData::count,intData::count,0,0>::ParIter;
+    using amrex::ParIter<realData::count, intData::count, 0, 0>::ParIter;
 };
 
 class MFIXParticleContainer final
-    : public amrex::NeighborParticleContainer<realData::count,intData::count>
+    : public amrex::NeighborParticleContainer<realData::count, intData::count>
 {
 public:
-
-    using MyConstParIter = ParConstIter<realData::count,intData::count,0,0>;
+    using MyConstParIter = ParConstIter<realData::count, intData::count, 0, 0>;
+    // Data type returned by MFIXParIter::ArrayOfStructs::data (accesses
+    // particle data represented by realData)
+    using RealType       = typename ParticleType::RealType;
 
     // Get number of particles
     int NumberOfParticles(MFIXParIter& pti){
@@ -88,6 +90,11 @@ public:
             MultiFab * dummy, MultiFab * cost, std::string & knapsack_weight_type, int subdt_io);
 
     void GetParticleAvgProp(int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);
+
+    //Real GetMaxRadius(int lev);
+
+    // void SubstepMaxVelocity(int lev, const RealType & particle);
+    // RealVect GetMaxVelocity(int lev);
 
     void BalanceParticleLoad_KDTree();
     ///
@@ -171,5 +178,9 @@ private:
     static bool use_neighbor_list;
     static bool sort_neighbor_list;
 
+    // Temporary container for the the maximum velocity in each direction
+    std::vector<Real> substep_maxvel_x;
+    std::vector<Real> substep_maxvel_y;
+    std::vector<Real> substep_maxvel_z;
 };
 #endif
