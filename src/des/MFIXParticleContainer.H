@@ -95,7 +95,10 @@ public:
     //Real GetMaxRadius(int lev);
 
     void UpdateMaxVelocity(int lev);
+    void UpdateMaxForces(int lev, std::map<PairIndex, Vector<Real>> pfor,
+                                  std::map<PairIndex, Vector<Real>> wfor);
     RealVect GetMaxVelocity(int lev);
+    Vector<RealVect> GetMaxForces(int lev);
 
     void BalanceParticleLoad_KDTree();
     ///
@@ -179,9 +182,9 @@ private:
     static bool use_neighbor_list;
     static bool sort_neighbor_list;
 
-    // Local containers for: the maximum (absolute) velocity 
-    //                       the max (abs) particle-particle force
-    //                       the max (abs) particle-wall force
+    // Local containers for: maxvel - the maximum (absolute) velocity
+    //                       maxpfor - the max (abs) particle-particle force
+    //                       maxwfor - the max (abs) particle-wall force
     RealVect loc_maxvel;
     RealVect loc_maxpfor;
     RealVect loc_maxwfor;

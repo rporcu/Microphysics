@@ -449,7 +449,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     //   -> debug_level = 0 : no debug output
     //   -> debug_level = 1 : debug output for every fluid step
     //   -> debug_level = 2 : debug output for every substep
-    const int debug_level = 2;
+    const int debug_level = 0;
 
 
 
@@ -484,11 +484,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     ****************************************************************************/
 
     std::map<PairIndex, Vector<Real>> tow;
-    std::map<PairIndex, Vector<Real>> fc;
+    std::map<PairIndex, Vector<Real>> fc, pfor, wfor;
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
         PairIndex index(pti.index(), pti.LocalTileIndex());
-        tow[index] = Vector<Real>();
-        fc[index]  = Vector<Real>();
+        tow[index]  = Vector<Real>();
+        fc[index]   = Vector<Real>();
+        pfor[index] = Vector<Real>();
+        wfor[index] = Vector<Real>();
     }
 
 
@@ -499,6 +501,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     int ncoll_total = 0;  // Counts total number of collisions
     loc_maxvel  = RealVect(0., 0., 0.);  // Tracks max (absolute) velocity
+    loc_maxpfor = RealVect(0., 0., 0.);  // Tracks max particle-particle force
+    loc_maxwfor = RealVect(0., 0., 0.);  // Tracks max particle-wall force
     int n = 0; // Counts sub-steps
 
     while (n < nsubsteps) {
@@ -551,6 +555,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          tow[index].resize(ntot*3,0.0);
           fc[index].resize(ntot*3,0.0);
 
+         // For debugging: keep track of particle-particle (pfor) and
+         // particle-wall (wfor) forces
+         pfor[index].clear();
+         wfor[index].clear();
+         pfor[index].resize(3 * ntot, 0.0);
+         wfor[index].resize(3 * ntot, 0.0);
+
 
         /***********************************************************************
          * Particle-Wall collision forces (and torques)                        *
@@ -584,6 +595,15 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                                        (* ls_phi)[pti].loVect(),   (* ls_phi)[pti].hiVect(),
                                        dx, & ls_refinement);
                }
+
+               // Debugging: copy data from the fc (all forces) vector to the
+               // wfor (wall forces) vector.
+               if (debug_level > 0) {
+                   for (int i = 0; i < wfor[index].size(); i++ ) {
+                       wfor[index][i] = fc[index][i];
+                   }
+               }
+
                BL_PROFILE_VAR_STOP(calc_wall_collisions);
             }
          }
@@ -595,11 +615,22 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
 #if 1
          BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
+
          calc_particle_collisions(particles                     , & nrp,
                                   neighbors[index].dataPtr()    , & size_ng,
                                   neighbor_list[index].dataPtr(), & size_nl,
                                   tow[index].dataPtr(), fc[index].dataPtr(),
                                   & subdt, & ncoll);
+
+         // Debugging: copy data from the fc (all forces) vector to the wfor
+         // (wall forces) vector. Note that since fc already contains the wall
+         // forces, these need to be subtracted here.
+         if (debug_level > 0) {
+             for (int i = 0; i < pfor[index].size(); i++ ) {
+                 pfor[index][i] = fc[index][i] - wfor[index][i];
+             }
+         }
+
          BL_PROFILE_VAR_STOP(calc_particle_collisions);
 #else
          Vector<Real> x(nrp);
@@ -657,8 +688,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
 
      /**************************************************************************
-      * DEBUG: output the number of collisions current substep                 *
-      *        update max velocities                                           *
+      * DEBUG: output the number of collisions in current substep              *
+      *        output the max velocity (and forces) in current substep         *
+      *        update max velocities and forces                                *
       **************************************************************************/
 
       if (debug_level > 1) {
@@ -667,19 +699,30 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
       }
 
-      if (debug_level > 0) UpdateMaxVelocity(lev);
+      if (debug_level > 0){
+          UpdateMaxVelocity(lev);
+          UpdateMaxForces(lev, pfor, wfor);
+      }
 
       if (debug_level > 1) {
-          GetMaxVelocity(lev);
+          RealVect max_vel = GetMaxVelocity(lev);
+          Vector<RealVect> max_forces = GetMaxForces(lev);
 
-          const Real* dx = Geom(0).CellSize();
-          amrex::Print() << "Maximum possible distance traveled:" << std::endl
-                         <<  "x= " << loc_maxvel[0] * dt
-                         << " y= " << loc_maxvel[1] * dt
-                         << " z= " << loc_maxvel[2] * dt
+          const Real * dx = Geom(0).CellSize();
+          amrex::Print() << "Maximum distance traveled:" << std::endl
+                         <<  "x= " << max_vel[0] * dt
+                         << " y= " << max_vel[1] * dt
+                         << " z= " << max_vel[2] * dt
                          << " and note that "
                          << " dx= " << dx[0] << std::endl;
 
+          amrex::Print() << "Maximum particle-particle (pp) and particle-wall (pw) forces:" << std::endl
+                         <<  "ppx= " << max_forces[0][0]
+                         << " ppy= " << max_forces[0][1]
+                         << " ppz= " << max_forces[0][2] << std::endl
+                         <<  "pwx= " << max_forces[1][0]
+                         << " pwy= " << max_forces[1][1]
+                         << " pwz= " << max_forces[1][2] << std::endl;
     }
 
 
@@ -694,6 +737,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
    /****************************************************************************
     * DEBUG: output the total number of collisions over all substeps           *
+    *        output the maximum velocity and forces over all substeps          *
     ****************************************************************************/
     if (debug_level > 0) {
        ParallelDescriptor::ReduceIntSum(ncoll_total, ParallelDescriptor::IOProcessorNumber());
@@ -712,16 +756,24 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     }
 
     if (debug_level > 0) {
-        GetMaxVelocity(lev);
+        RealVect max_vel = GetMaxVelocity(lev);
+        Vector<RealVect> max_forces = GetMaxForces(lev);
 
-        const Real* dx = Geom(0).CellSize();
+        const Real * dx = Geom(0).CellSize();
         amrex::Print() << "Maximum possible distance traveled:" << std::endl
-                       <<  "x= " << loc_maxvel[0] * dt
-                       << " y= " << loc_maxvel[1] * dt
-                       << " z= " << loc_maxvel[2] * dt
+                       <<  "x= " << max_vel[0] * dt
+                       << " y= " << max_vel[1] * dt
+                       << " z= " << max_vel[2] * dt
                        << " and note that "
                        << " dx= " << dx[0] << std::endl;
 
+        amrex::Print() << "Maximum particle-particle (pp) and particle-wall (pw) forces:" << std::endl
+                       <<  "ppx= " << max_forces[0][0]
+                       << " ppy= " << max_forces[0][1]
+                       << " ppz= " << max_forces[0][2] << std::endl
+                       <<  "pwx= " << max_forces[1][0]
+                       << " pwy= " << max_forces[1][1]
+                       << " pwz= " << max_forces[1][2] << std::endl;
     }
 
     amrex::Print() << "done. \n";
@@ -1316,6 +1368,46 @@ void MFIXParticleContainer::UpdateMaxVelocity(int lev) {
     loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
 }
 
+void MFIXParticleContainer::UpdateMaxForces(int lev, std::map<PairIndex, Vector<Real>> pfor,
+                                                     std::map<PairIndex, Vector<Real>> wfor) {
+    Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
+    Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z)
+#endif
+    for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti) {
+        PairIndex index(pti.index(), pti.LocalTileIndex());
+
+        // Note the particle force data layout: 
+        //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
+        // Where n is the total number of particle and neighbor particles.
+        const int nrp     = NumberOfParticles(pti);
+        const int size_ng = neighbors[index].size() / pdata_size;
+        // Number of particles including neighbor particles
+        const int ntot = nrp + size_ng;
+
+        // Find max (abs) of particle-particle forces:
+        for(int i = 0; i < ntot; i++ )
+            max_pfor_x = std::max(Real(std::fabs(pfor[index][i])), max_pfor_x);
+        for(int i = ntot; i < 2 * ntot; i++ )
+            max_pfor_y = std::max(Real(std::fabs(pfor[index][i])), max_pfor_y);
+        for(int i = 2 * ntot; i < 3 * ntot; i++ )
+            max_pfor_z = std::max(Real(std::fabs(pfor[index][i])), max_pfor_z);
+
+        // Find max (abs) of particle-wall forces:
+        for(int i = 0; i < ntot; i++ )
+            max_wfor_x = std::max(Real(std::fabs(wfor[index][i])), max_wfor_x);
+        for(int i = ntot; i < 2 * ntot; i++ )
+            max_wfor_y = std::max(Real(std::fabs(wfor[index][i])), max_wfor_y);
+        for(int i = 2 * ntot; i < 3 * ntot; i++ )
+            max_wfor_z = std::max(Real(std::fabs(wfor[index][i])), max_wfor_z);
+    }
+
+    loc_maxpfor = RealVect(max_pfor_x, max_pfor_y, max_pfor_z);
+    loc_maxwfor = RealVect(max_wfor_x, max_wfor_y, max_wfor_z);
+}
+
 RealVect MFIXParticleContainer::GetMaxVelocity(int lev) {
     Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
 
@@ -1326,6 +1418,22 @@ RealVect MFIXParticleContainer::GetMaxVelocity(int lev) {
 
     return max_vel;
 };
+
+Vector<RealVect> MFIXParticleContainer::GetMaxForces(int lev) {
+    Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
+    Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
+
+
+    ParallelDescriptor::ReduceRealMax({ max_pfor_x, max_pfor_y, max_pfor_z, 
+                                        max_wfor_x, max_wfor_y, max_wfor_z      }, 
+                                      ParallelDescriptor::IOProcessorNumber());
+
+    Vector<RealVect> max_forces(2);
+    max_forces[0] = RealVect(max_pfor_x, max_pfor_y, max_pfor_z);
+    max_forces[1] = RealVect(max_wfor_x, max_wfor_y, max_wfor_z);
+
+    return max_forces;
+}
 
 void
 MFIXParticleContainer::BalanceParticleLoad_KDTree()
