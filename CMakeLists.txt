@@ -110,7 +110,7 @@ if(CTAGS_EXU)
         COMMAND ctags-exuberant -R -e --fortran-kinds=+i  --exclude="build/amrex/installdir/*" . 
         COMMENT "Generating tags files"
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    # some file systems are case-insensitive so the above will fail:
+    # Some file systems are case-insensitive so the above will fail:
     #  the first command would overwrite the second!
     add_custom_target ( ctags
         COMMAND ctags-exuberant -R    --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
@@ -120,13 +120,18 @@ if(CTAGS_EXU)
         COMMAND ctags-exuberant -R -e --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
         COMMENT "Generating only etags file"
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
+    # Avoid "collisions" with AMReX => focus entirely on MFiX sources:
+    add_custom_target ( mfix_ctags
+        COMMAND ctags-exuberant -R    --fortran-kinds=+i --exclude="build/*" .
+        COMMENT "Generating only ctags file for MFiX sources exclusively"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
 elseif(CTAGS_CMD)
     add_custom_target ( tags
         COMMAND ctags -R    --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
         COMMAND ctags -R -e --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
         COMMENT "Generating tags files"
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    # some file systems are case-insensitive so the above will fail:
+    # Some file systems are case-insensitive so the above will fail:
     #  the first command would overwrite the second!
     add_custom_target ( ctags
         COMMAND ctags -R    --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
@@ -135,6 +140,11 @@ elseif(CTAGS_CMD)
     add_custom_target( etags
         COMMAND ctags -R -e --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
         COMMENT "Generating only etags file"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
+    # Avoid "collisions" with AMReX => focus entirely on MFiX sources:
+    add_custom_target ( mfix_ctags
+        COMMAND ctags -R    --fortran-kinds=+i --exclude="build/*" .
+        COMMENT "Generating only ctags file for MFiX sources exclusively"
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
 endif()
 
