@@ -40,14 +40,13 @@
 ! Local variables
 !-----------------------------------------------
 ! indices
-      integer :: i, j, k
-! Local loop counter
-      integer :: L
+      integer :: i, j, k, icv
 ! Gas pressure at the axial location j
       real(c_real) :: pj
 ! Average pressure drop per unit length
       real(c_real) :: dpodx, dpody, dpodz
-!-----------------------------------------------
+
+! ---------------------------------------------------------------->>>
 
       ! First pass out the direction in which we drop by delp (if any)
       ! so that we can set the correct periodicity flag in the C++
@@ -61,22 +60,31 @@
          delp_dir = -1
       end if
 
-!-----------------------------------------------
-
-! If any initial pressures are unspecified skip next section
-! calculations.
-      do l = 1, dim_ic
-         if (ic_defined(l)) then
-            if (is_undefined(ic_p_g(l))) goto 60
-            pj = ic_p_g(l)
-         endif
-      enddo
-
-! Here the pressure in each cell is determined from a specified pressure
-! drop across the domain length. This section requires that the pressure
-! is already defined in all initial condition regions (otherwise this
-! section would be skipped)
 ! ---------------------------------------------------------------->>>
+
+      !  Make sure that ic_p_g is set if using delp pressure conditions
+      do icv = 1, dim_ic
+         if (ic_defined(icv)) then
+            if ( delp_dir .ge. 0 ) then
+               if (.not. is_defined(ic_p_g(icv))) then
+                  print *,'MUST DEFINE ic_p_g if using the DELP pressure condition'
+                  stop
+               end if
+               pj = ic_p_g(icv)
+            else
+               if (is_undefined(ic_p_g(icv))) goto 60
+               p0_g(:,:,:) = ic_p_g(icv)
+            end if
+         end if
+      end do
+
+! ---------------------------------------------------------------->>>
+
+      ! Here the pressure in each cell is determined from a specified pressure
+      ! drop across the domain length. This section requires that the pressure
+      ! is already defined in all initial condition regions (otherwise this
+      ! section would be skipped)
+
       if (abs(delp_x) > epsilon(zero)) then
          dpodx = delp_x/xlength
          pj = pj - dpodx*dx*(hi(1)-domhi(1)+2)
@@ -104,18 +112,20 @@
          end do
       endif
 
+      GOTO 100   ! pressure in all intial condition region cells was defined
+
 ! ----------------------------------------------------------------<<<
 
-      GOTO 100   ! pressure in all intial condition region cells was defined
    60 CONTINUE   ! pressure in an initial condition region cell was undefined
 
 ! ---------------------------------------------------------------->>>
-! Search for an outflow boundary condition where pressure is specified
+
+      ! Search for an outflow boundary condition where pressure is specified
       pj = undefined
-      do l = 1, dim_bc
-         if (bc_defined(l)) then
-            if(bc_type(l)=='P_OUTFLOW' .or. bc_type(l)=='PO') &
-               pj = bc_p_g(l)
+      do icv = 1, dim_bc
+         if (bc_defined(icv)) then
+            if(bc_type(icv)=='P_OUTFLOW' .or. bc_type(icv)=='PO') &
+               pj = bc_p_g(icv)
          endif
       enddo
 
@@ -126,9 +136,11 @@
          goto 100
       endif
 
-! Set an approximate pressure field assuming that the pressure drop
-! balances the weight of the bed, if the initial pressure-field is not
-! specified
+! ----------------------------------------------------------------<<<
+
+      ! Set an approximate pressure field assuming that the pressure drop
+      ! balances the weight of the bed, if the initial pressure-field is not
+      ! specified
 
       if (abs(gravity(1)) > epsilon(0.0d0)) then
 
@@ -186,13 +198,12 @@
          endif
       endif
 
+! ----------------------------------------------------------------<<<
+
   100 continue
 
-      return
+! ---------------------------------------------------------------->>>
 
- 1000 FORMAT(/1X,70('*')//' From: SET_FLUIDBED_P'/' Message: Outflow ',&
-         'pressure boundary condition (P_OUTFLOW) not found.',/&
-         'All the initial pressures (IC_P_g) or at least one P_OUTFLOW',/&
-         'condition need to be specified',/1X,70('*')/)
+      return
 
    end subroutine set_p0

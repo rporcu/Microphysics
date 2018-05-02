@@ -110,7 +110,7 @@ extern "C"
             const int*    lo, const int*  hi,
             const int* domlo, const int* domhi,
             amrex::Real* ep_g,    amrex::Real* ro_g,
-            amrex::Real* rop_g,   amrex::Real* p_g,      amrex::Real* p0_g,
+            amrex::Real* rop_g,   amrex::Real* p_g,
             amrex::Real* u_g,     amrex::Real* v_g,      amrex::Real* w_g,
             amrex::Real* mu_g,    amrex::Real* lambda_g,
             amrex::Real* dx,      amrex::Real* dy,       amrex::Real* dz,

@@ -475,8 +475,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     Real subdt, stime = time;
     des_init_time_loop(& time, & dt, & nsubsteps, & subdt, & subdt_io);
 
-
-
    /****************************************************************************
     * Init temporary storage:                                                  *
     *   -> particle-particle, and particle-wall forces                         *
@@ -493,10 +491,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         wfor[index] = Vector<Real>();
     }
 
-
-
    /****************************************************************************
-    * Itterate over sub-steps                                                  *
+    * Iterate over sub-steps                                                  *
     ****************************************************************************/
 
     int ncoll_total = 0;  // Counts total number of collisions
