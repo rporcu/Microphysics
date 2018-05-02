@@ -6,7 +6,7 @@ module init_fluid_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine init_fluid(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                         domlo, domhi, ep_g, ro_g, rop_g, p_g, p0_g, u_g, v_g, w_g, &
+                         domlo, domhi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
                          mu_g, lambda_g, dx, dy, dz, xlength, ylength, zlength) &
       bind(C, name="init_fluid")
 
@@ -32,8 +32,6 @@ module init_fluid_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: p0_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(inout) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -54,7 +52,7 @@ module init_fluid_module
 
       ! Set user specified initial conditions (IC)
       call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-                  domlo, domhi, dx, dy, dz, p0_g, u_g, v_g, w_g)
+                  domlo, domhi, dx, dy, dz, u_g, v_g, w_g)
 
       ro_g  = ro_g0
       rop_g = ro_g0 * ep_g
@@ -99,7 +97,7 @@ module init_fluid_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-                     domlo, domhi, dx, dy, dz, p0_g, u_g, v_g, w_g)
+                     domlo, domhi, dx, dy, dz, u_g, v_g, w_g)
 
       use ic, only: dim_ic, ic_defined
       use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
@@ -121,8 +119,6 @@ module init_fluid_module
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      real(c_real), intent(inout) ::  p0_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) ::  v_g&
