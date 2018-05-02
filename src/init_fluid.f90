@@ -146,20 +146,6 @@ module init_fluid_module
       integer :: i_w, j_s, k_b
       integer :: i_e, j_n, k_t
 
-      !  Make sure that ic_p_g is set if using delp pressure conditions
-      do icv = 1, dim_ic
-         if (ic_defined(icv)) then
-            if ( (abs(delp_x) > epsilon(zero)) .or. &
-                 (abs(delp_y) > epsilon(zero)) .or. &
-                 (abs(delp_z) > epsilon(zero)) ) then
-               if (.not. is_defined(ic_p_g(icv))) then
-                  print *,'MUST DEFINE ic_p_g if using the DELP pressure condition'
-                  stop
-               end if
-            end if
-         end if
-      end do
-
       !  Set the initial conditions.
       do icv = 1, dim_ic
          if (ic_defined(icv)) then
@@ -216,15 +202,6 @@ module init_fluid_module
                if (whi(3).gt.domhi(3) .and. domhi(3) == kend  ) &
                   w_g(istart:iend,jstart:jend,kend+1:whi(3)  ) = wgx
             end if
-
-            istart = max(slo(1), i_w)
-            jstart = max(slo(2), j_s)
-            kstart = max(slo(3), k_b)
-            iend   = min(shi(1), i_e)
-            jend   = min(shi(2), j_n)
-            kend   = min(shi(3), k_t)
-            pval = merge(scale_pressure(pgx),undefined,is_defined(pgx))
-            p0_g(istart:iend,jstart:jend,kstart:kend) = pval
 
          endif
       enddo

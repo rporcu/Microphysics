@@ -276,7 +276,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
         gpz(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
    ! Local variables
-   integer  :: bcv, i, j, k
+   integer  :: i, j, k
    integer  :: nlft, nrgt, nbot, ntop, nup, ndwn
 
    nlft = max(0,domlo(1)-slo(1))
