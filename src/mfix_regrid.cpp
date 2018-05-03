@@ -13,8 +13,7 @@ mfix_level::Regrid (int lev, int nstep)
 
     amrex::Print() << "In Regrid at step " << nstep << std::endl;
 
-    if (load_balance_type == "KDTree")
-    {
+    if (load_balance_type == "KDTree") {
         if (solve_dem)
            AMREX_ALWAYS_ASSERT(particle_cost[0] == nullptr);
         if (solve_fluid)
@@ -26,19 +25,23 @@ mfix_level::Regrid (int lev, int nstep)
 
        if (dual_grid == 0)
        {
-           SetBoxArray(lev, pc->ParticleBoxArray(lev));
+           bool ba_changed = (pc->ParticleBoxArray(lev)        != grids[lev]);
+           bool dm_changed = (pc->ParticleDistributionMap(lev) !=  dmap[lev]);
+
+           SetBoxArray       (lev, pc->ParticleBoxArray(lev));
            SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
 
            // Since we have already allocated the fluid data we need to re-define those arrays
-           //   and copy from the old BoxArray to the new one.  Note that the SetBoxArray and
-           //   SetDistributionMap calls above have re-defined grids and dmap to be the new ones.
-           if (solve_fluid)
+           //   and copy from the old BoxArray to the new one if the grids and/or dmap have changed.
+           // Note that the SetBoxArray and SetDistributionMap calls above have re-defined 
+           //   grids and dmap to be the new ones.
+           if (solve_fluid && (ba_changed || dm_changed) )
                RegridArrays(lev,grids[lev],dmap[lev]);
        }
 
        if (solve_fluid)
            mfix_set_bc0(lev);
-       
+
        if (ebfactory) {
            ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
                                                   {m_eb_basic_grow_cells,
@@ -54,11 +57,9 @@ mfix_level::Regrid (int lev, int nstep)
 
            // eb_normals is a legacy of the old collision algorithm -> depricated
            eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
-
-           //level_set->regrid();
        }
-    }
-    else if (load_balance_type == "KnapSack") {
+
+    } else if (load_balance_type == "KnapSack") {
 
         amrex::Print() << "Load balancing using KnapSack " << std::endl;
 
@@ -75,8 +76,14 @@ mfix_level::Regrid (int lev, int nstep)
             for (int lev = 0; lev <= finestLevel(); ++lev)
             {
                 DistributionMapping new_fluid_dm = DistributionMapping::makeKnapSack(*fluid_cost[lev]);
-                RegridArrays(lev, grids[lev], new_fluid_dm);
+
+                bool dm_changed = (new_fluid_dm !=  dmap[lev]);
+
                 SetDistributionMap(lev, new_fluid_dm);
+
+                if (dm_changed)
+                    RegridArrays(lev, grids[lev], new_fluid_dm);
+
                 fluid_cost[lev].reset(new MultiFab(grids[lev], new_fluid_dm, 1, 0));
                 fluid_cost[lev]->setVal(0.0);
 
@@ -90,7 +97,9 @@ mfix_level::Regrid (int lev, int nstep)
                 mfix_set_bc0(lev);
 
                 DistributionMapping new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev]);
+
                 pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev));
+
                 particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
                                                       new_particle_dm, 1, 0));
                 particle_cost[lev]->setVal(0.0);
@@ -104,10 +113,11 @@ mfix_level::Regrid (int lev, int nstep)
                     // eb_normals is a legacy of the old collision algorithm -> depricated
                     eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
-                    //level_set->regrid();
                 }
             }
+
         } else {
+
             MultiFab costs(grids[lev], dmap[lev], 1, 0);
             costs.setVal(0.0);
             if (solve_dem)
@@ -116,9 +126,13 @@ mfix_level::Regrid (int lev, int nstep)
                 costs.plus(*fluid_cost[lev], 0, 1, 0);
 
             DistributionMapping newdm = DistributionMapping::makeKnapSack(costs);
-            if (solve_fluid)
-                RegridArrays(lev, grids[lev], newdm);
+
+            bool dm_changed = (newdm !=  dmap[lev]);
+
             SetDistributionMap(lev, newdm);
+
+            if (solve_fluid && dm_changed)
+                RegridArrays(lev, grids[lev], newdm);
 
             if (solve_fluid)
             {
@@ -148,17 +162,10 @@ mfix_level::Regrid (int lev, int nstep)
                                                                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                                  m_eb_full_grow_cells}, m_eb_support_level));
 
-                // eb_normals is a legacy of the old collision algorithm -> depricated
+                // eb_normals is a legacy of the old collision algorithm -> deprecated
                 eb_normals  = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
             }
         }
-
-        //mrex::Print() << grids[0] << std::endl;
-	    //mrex::Print() << dmap[0] << std::endl;
-	    //ong np = pc->TotalNumberOfParticles(true, true);
-	    //nt pid = ParallelDescriptor::MyProc();
-	    //mrex::AllPrint() << "Process " << pid << " got " << np << " particles \n";
-	    //pc->PrintParticleCounts();
     }
 
     // Note: this might not be necessary anymore if the level-set data is
@@ -171,45 +178,16 @@ mfix_level::Regrid (int lev, int nstep)
 void
 mfix_level::RegridOnRestart (int lev)
 {
-    amrex::Print() << "In RegridOnRestart " << std::endl;
-
     if (load_balance_type == "FixedSize" || load_balance_type == "KnapSack")
-    {
-       // We hold on to the old_ba so that we can test the new BoxArray against it
-       //   to see if the grids have changed
-       BoxArray old_ba(grids[lev]);
-
-       // This creates a new BoxArray (based on the new max_grid_size)
-       const BoxArray& ba = MakeBaseGrids();
-
-       // This creates the associated Distribution Mapping
-       DistributionMapping dm(ba, ParallelDescriptor::NProcs());
-
-       // This sets grids[lev] = ba 
-       SetBoxArray(lev, ba);
-
-       // This sets dmap[lev] = dm
-       SetDistributionMap(lev, dm);
-
-       // If the grids have changed, we need to re-define those arrays 
-       // and copy from the old BoxArray to the new one since we have already read in the old fluid data
-       if ( (grids[0] != old_ba) && solve_fluid) 
-          RegridArrays(lev,grids[lev],dmap[lev]);
-
-       if (solve_fluid)
-          mfix_set_bc0(lev);
-
-       pc->Redistribute();
-
-    }
+       Regrid(lev,0);
 }
 
 void
 mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)
 {
-    // ********************************************************************************
-    // Cell-based arrays
-    // ********************************************************************************
+   /****************************************************************************
+    * Cell-based arrays                                                        *
+    ****************************************************************************/
 
     // Void fraction
     int ng = ep_g[lev]->nGrow();
@@ -274,7 +252,7 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     p0_g_new->FillBoundary(p0_periodicity);
     p0_g[lev] = std::move(p0_g_new);
 
-    // Pressure correction 
+    // Pressure correction
     ng = pp_g[lev]->nGrow();
     std::unique_ptr<MultiFab> pp_g_new(new MultiFab(new_grids,new_dmap,1,pp_g[lev]->nGrow()));
     pp_g_new->copy(*pp_g[lev],0,0,1,ng,ng);
@@ -287,14 +265,7 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     mu_g_new->copy(*mu_g[lev],0,0,1,ng,ng);
     mu_g_new->FillBoundary(geom[lev].periodicity());
     mu_g[lev] = std::move(mu_g_new);
-    
-    // Level-set
-    ng = mu_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> ls_new(new MultiFab(new_grids,new_dmap,1,ls[lev]->nGrow()));
-    ls_new->copy(*ls[lev],0,0,1,ng,ng);
-    ls_new->FillBoundary(geom[lev].periodicity());
-    ls[lev] = std::move(ls_new);
-    
+
     // Lambda
     ng = lambda_g[lev]->nGrow();
     std::unique_ptr<MultiFab> lambda_g_new(new MultiFab(new_grids,new_dmap,1,lambda_g[lev]->nGrow()));
@@ -323,9 +294,9 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     diveu_new->FillBoundary(geom[lev].periodicity());
     diveu[lev] = std::move(diveu_new);
 
-    // ********************************************************************************
-    // X-face-based arrays
-    // ********************************************************************************
+   /****************************************************************************
+    * X-face-based arrays                                                      *
+    ****************************************************************************/
 
     // Create a BoxArray on x-faces.
     BoxArray x_edge_ba = new_grids;
@@ -386,9 +357,9 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     drag_u_new->FillBoundary(geom[lev].periodicity());
     drag_u[lev] = std::move(drag_u_new);
 
-    // ********************************************************************************
-    // Y-face-based arrays
-    // ********************************************************************************
+   /****************************************************************************
+    * Y-face-based arrays                                                      *
+    ****************************************************************************/
 
     // Create a BoxArray on y-faces.
     BoxArray y_edge_ba = new_grids;
@@ -449,9 +420,9 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     drag_v_new->FillBoundary(geom[lev].periodicity());
     drag_v[lev] = std::move(drag_v_new);
 
-    // ********************************************************************************
-    // Z-face-based arrays
-    // ********************************************************************************
+   /****************************************************************************
+    * Z-face-based arrays                                                      *
+    ****************************************************************************/
 
     // Create a BoxArray on z-faces.
     BoxArray z_edge_ba = new_grids;
@@ -512,9 +483,26 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     drag_w_new->FillBoundary(geom[lev].periodicity());
     drag_w[lev] = std::move(drag_w_new);
 
-    // ********************************************************************************
-    // Make sure we fill the ghost cells as appropriate -- this is copied from init_fluid
-    // ********************************************************************************
+   /****************************************************************************
+    * Nodal Arrays                                                             *
+    ****************************************************************************/
+
+    // Create a nodal BoxArray
+    const BoxArray & new_nodal_grids = amrex::convert(new_grids, IntVect{1,1,1});
+
+    // Level-set
+    ng = ls[lev]->nGrow();
+    std::unique_ptr<MultiFab> ls_new(new MultiFab(new_nodal_grids, new_dmap, 1, ls[lev]->nGrow()));
+    ls_new->copy(*ls[lev],0,0,1,ng,ng);
+    ls_new->FillBoundary(geom[lev].periodicity());
+    ls[lev] = std::move(ls_new);
+
+
+
+   /****************************************************************************
+    * Make sure we fill the ghost cells as appropriate -- this is copied from  *
+    * init_fluid                                                               *
+    ****************************************************************************/
 
     fill_mf_bc(lev,*ep_g[lev]);
     fill_mf_bc(lev,*ep_go[lev]);

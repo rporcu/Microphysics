@@ -207,7 +207,9 @@ mfix_level::make_eb_geometry(int lev)
     }
 
     // store copy of level set (for plotting).
-    ls[lev] = level_set->coarsen_data();
+    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
+    ls[lev]->FillBoundary(geom[lev].periodicity());
 
     /***************************************************************************
      *                                                                         *
@@ -453,7 +455,9 @@ mfix_level::make_eb_hourglass(int lev)
     EBTower::Destroy();
 
     // store copy of level set (for plotting).
-    ls[lev] = level_set->coarsen_data();
+    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
+    ls[lev]->FillBoundary(geom[lev].periodicity());
 
     /***************************************************************************
      *                                                                         *
@@ -752,7 +756,176 @@ mfix_level::make_eb_clr(int lev)
     eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
     // Promote completed copy of level set into the mfix_level.
-    ls[lev] = level_set->coarsen_data();
+    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
+    ls[lev]->FillBoundary(geom[lev].periodicity());
+}
+
+
+void
+mfix_level::make_eb_clr_riser(int lev)
+{
+    Box domain(geom[lev].Domain());
+    Real dx = geom[lev].CellSize()[0];
+
+    RealVect normal, center;
+    Vector<BaseIF*> planes;
+    planes.resize(0);
+
+    std::unique_ptr<BaseIF> impfunc;
+
+    ParmParse pp("mfix");
+
+    amrex::Print() << "Creating CLR riser geometry\n";
+
+    Vector<PolyTerm> poly;
+
+    PolyTerm mono;
+    IntVect powers;
+
+    Vector<Real> coefvec(3);
+    Vector<int>  powersvec(3);
+    Vector<Real> transvec(3);
+    RealVect translation;
+
+    Real lheight;
+
+    int cylinder_dir;
+
+
+    // CLR can be constructed in either "water-tight" mode (each component is
+    // assembled as a level-set intersection/union), or the much faster EB mode
+    // (where the level-set is filled using the already assembled eb-factory).
+    // Note that the EB mode can't have leaks, but it can have irregular edges.
+
+    bool water_tight = false;
+    pp.query("levelset__water-tight", water_tight);
+
+    // If the mfix_level::make_cylinder uses a union
+    //  => ensure that mfix_level::level_set is initialized to min
+    if(water_tight) level_set->invert();
+
+    //ct_ls_mf = 0;
+    //std::unique_ptr<MultiFab> ls_mf = level_set->copy_data();
+    //amrex::VisMF::Write(* ls_mf, "ls_empty");
+
+    //------------------------------------------------------------- Riser
+    pp.getarr("riser_translate", transvec,  0, 3);
+
+    for(int idir = 0; idir < 3; idir++)
+        translation[idir] = transvec[idir];
+
+
+    Real radius1;
+    pp.query("riser_upper_radius", radius1);
+    pp.query("riser_upper_height", lheight);
+
+    cylinder_dir=1;
+    std::unique_ptr<BaseIF> riser_upper =
+      make_cylinder(cylinder_dir, radius1, lheight, translation, lev, water_tight);
+
+
+    Real radius2;
+    pp.query("riser_lower_radius", radius2);
+    pp.query("riser_lower_height", lheight);
+
+    cylinder_dir=1;
+    std::unique_ptr<BaseIF> riser_lower =
+      make_cylinder(cylinder_dir, radius2, lheight, translation, lev, water_tight);
+
+    cylinder_dir=1;
+    translation[cylinder_dir] = lheight;
+
+    pp.query("riser_c2c_height", lheight);
+
+    std::unique_ptr<BaseIF> riser_c2c =
+      make_cone(cylinder_dir, radius1, radius2, lheight, translation, lev, water_tight);
+
+
+
+    Vector<BaseIF*> clr_parts(3);
+    clr_parts[0] = riser_lower.get();
+    clr_parts[1] = riser_c2c.get();
+    clr_parts[2] = riser_upper.get();
+
+    UnionIF clr(clr_parts);
+    impfunc.reset(clr.newImplicitFunction());
+
+
+    int max_level = 0;
+    int grid_size = 16;
+    bool eb_verbosity = true;
+    GeometryShop gshop(* impfunc, eb_verbosity);
+
+    /**************************************************************************
+     *                                                                        *
+     * IF not using water-tight mode (i.e. level-set was not already filled   *
+     * using the `make_cylinder` function):                                   *
+     *      -> Construct an EBIndexSpace and using the refinement specified   *
+     *         in `levelset__eb_refinement`.                                  *
+     *      -> Fill level-set using an eb-factory defined on this EBIS.       *
+     *      Note: This is much faster than "water-tight" mode, but does not   *
+     *      resolve edges a well => *might have leaks*                        *
+     *                                                                        *
+     **************************************************************************/
+
+    if(! water_tight){
+
+        // Construct EBIS geometry
+        Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+        AMReX_EBIS::instance()->define(geom_eb.Domain(),
+                                       RealVect::Zero,  // ......... origin of EBIndexSpace
+                                       geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
+                                       gshop,  // .................. GeometryShop object
+                                       grid_size, max_level);
+
+        // Temporary EB tower
+        EBTower::Build();
+
+        // Fill level_set.
+        int eb_grow = level_set->get_eb_pad();
+        EBFArrayBoxFactory eb_factory(geom_eb, level_set->get_eb_ba(), dmap[lev],
+                                      {eb_grow, eb_grow, eb_grow}, EBSupport::full);
+        level_set->intersection_ebf(eb_factory, * AMReX_EBIS::instance());
+
+        // Destroy temporary EB tower (rebuilt below)
+        EBTower::Destroy();
+    }
+
+
+
+    /***************************************************************************
+     *                                                                         *
+     * Build standard EB Factories                                             *
+     *                                                                         *
+     ***************************************************************************/
+
+    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
+
+    // set up ebfactory
+    int m_eb_basic_grow_cells = 2;
+    int m_eb_volume_grow_cells = 2;
+    int m_eb_full_grow_cells = 2;
+    EBSupport m_eb_support_level = EBSupport::full;
+
+    EBTower::Build();
+
+    ebfactory          = std::unique_ptr<EBFArrayBoxFactory>(
+                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                         m_eb_support_level));
+
+    particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
+                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                         m_eb_support_level));
+
+    eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
+
+    // Promote completed copy of level set into the mfix_level.
+    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
+    ls[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 
@@ -985,4 +1158,231 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     level_set->update_union(* ls_cylinder.get_data(), * flag_valid);
 
     return cylinder_IF;
+}
+
+
+std::unique_ptr<BaseIF>
+mfix_level::make_cone(int dir, Real radius1, Real radius2, Real height,
+                      const RealVect & translation, int lev, bool water_tight)
+{
+    std::unique_ptr<BaseIF> cone_IF;
+    Vector<PolyTerm> poly;
+
+    PolyTerm mono;
+    Real coef;
+    IntVect powers;
+
+    Vector<Real> coefvec(3);
+    Vector<int>  powersvec(3);
+
+
+    Real rad1, rad2;
+
+    if(radius2 > radius1) {
+      rad2 = radius2;
+      rad1 = radius1;
+    }else{
+      rad2 = radius1;
+      rad1 = radius2;
+    }
+
+    Real H = height*rad2 / (rad2 - rad1);
+    Real k = rad2 / H;
+
+    // Cone polynomial
+    for(int idir = 0; idir < 3; idir++) {
+
+        if( idir == dir) {
+            coefvec[0] = 0.0;
+            coefvec[1] = 0.0;
+            coefvec[2] = -k*k;
+        } else {
+            coefvec[0] = 0.0;
+            coefvec[1] = 0.0;
+            coefvec[2] = 1.0;
+        }
+
+        for(int lc = 0; lc < 3; lc++) {
+            // x^(lc) term
+            coef = coefvec[lc];
+            powers = IntVect::Zero;
+            powers[idir] = lc;
+
+            mono.coef   = coef;
+            mono.powers = powers;
+
+            poly.push_back(mono);
+        }
+    }
+
+    // Internal flow cone
+    PolynomialIF cone0(poly, true);
+    TransformIF cone1(cone0);
+    cone1.translate(translation);
+
+    Real cmin, cmax;
+
+    if(radius2 > radius1) {
+      cmin = -H;
+      cmax = -H + height;
+    }else{
+      cmin =  H - height;
+      cmax =  H;
+    }
+
+
+    // box to clip to correct length
+    RealVect normal, center;
+    PlaneIF* plane;
+    Vector<BaseIF*> planes;
+    planes.resize(0);
+
+    for(int i=0; i<3; i++) {
+        center[i] = 0.0;
+        normal[i] = 0.0;
+    }
+
+    center[dir] = cmin;
+    normal[dir] = 1.0;
+
+    // amrex::Print() << "Plane 1\n";
+    // amrex::Print() << "Center " << center  << "\n";
+    // amrex::Print() << "Normal " << normal  << "\n";
+
+    plane = new PlaneIF(normal,center,true);
+    planes.push_back(plane);
+
+    center[dir] = cmax;
+    normal[dir] =-1.0;
+
+    // amrex::Print() << "Plane 2\n";
+    // amrex::Print() << "Center " << center  << "\n";
+    // amrex::Print() << "Normal " << normal  << "\n";
+
+    plane = new PlaneIF(normal,center,true);
+    planes.push_back(plane);
+
+    IntersectionIF bounding_box(planes);
+    TransformIF walls(bounding_box);
+    walls.translate(translation);
+
+    Vector<BaseIF*> funcs(2);
+    funcs[0] = &cone0;
+    funcs[1] = &bounding_box;
+
+    IntersectionIF cone(funcs);
+
+    // The shift needs to take into account offset from the origin
+    RealVect shift;
+    for(int i=0; i<3; i++) {
+      shift[i] = translation[i];
+    }
+    shift[dir] = shift[dir]-cmin;
+
+    TransformIF cone_trans(cone);
+    cone_trans.translate(shift);
+
+    cone_IF.reset(cone_trans.newImplicitFunction());
+
+    // IF we are not using the water-tight mode, return now:
+
+    if(! water_tight)
+        return cone_IF;
+
+    // ELSE construct the level-set by unioning each cone (intersected
+    // component) of the CLR using the level-set
+    //   => corners are much more cleanly resolved, but is much slower.
+
+    int max_level = 0;
+    int grid_size = 16;
+    bool eb_verbosity = true;
+
+
+    /**************************************************************************
+     *                                                                        *
+     * Fill Level-set using:                                                  *
+     *      -> Walls (where the GeometryShop's implicit function is a signed  *
+     *         distance): implicit function's value                           *
+     *      -> Cone (where GeometryShop's implicit function is singed but *
+     *         not a distance): min distance to EB facets                     *
+     *      Note: this requires building and destroying the EBTower (twice),  *
+     *      so any EBTower data built before this will be lost...             *
+     *                                                                        *
+     **************************************************************************/
+
+    // Define both components of the GeometryShop separately:
+    GeometryShop gshop_upoly(cone1, eb_verbosity);
+    GeometryShop gshop_walls(walls, eb_verbosity);
+
+    // Define temporary level-sets used for constructing the cone:
+    LSFactory ls_cone(* level_set);
+    LSFactory ls_walls(ls_cone);
+
+    // Define the EBIS first using only the walls...
+    // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+    //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
+    Geometry geom_eb = LSUtility::make_eb_geometry(ls_cone);
+    AMReX_EBIS::instance()->define(geom_eb.Domain(),
+                                   RealVect::Zero,  // ......... origin of EBIndexSpace
+                                   geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
+                                   gshop_walls,  // ............ GeometryShop object
+                                   grid_size, max_level);
+    // [1]: EBIndexSpace internally assumes an isotropic grid. Any anisotropic
+    // implicit function (e.g AnisotrpicPlaneIF) uses dx as a reference, and
+    // rescales dy and dz wrt dx. => dx goes here.
+
+    EBTower::Build();
+    // GeometryShop's Planes' implicit function is actually a signed distance function
+    //      => it's just easier to fill the level-set this way
+    ls_cone.intersection_ebis(* AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+    //ct_ls_mf ++;
+    //std::stringstream ss1;
+    //ss1 << "ls_" << ct_ls_mf << "_a";
+    //std::unique_ptr<MultiFab> ls_mf_a = ls_cone.copy_data();
+    //amrex::VisMF::Write(* ls_mf_a, ss1.str());
+
+    // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
+    // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
+    //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
+    //Geometry geom_eb = LSUtility::make_eb_geometry(ls_cone);
+    AMReX_EBIS::instance()->define(geom_eb.Domain(),
+                                   RealVect::Zero,  // ......... origin of EBIndexSpace
+                                   geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1, above]
+                                   gshop_upoly,  // ............ GeometryShop object
+                                   grid_size, max_level);
+
+    EBTower::Build();
+    // GeometryShop's PolynomialIF is not a signed distance function...
+    //      => it's easier to use PolynomialIF to build an EBFArrayBoxFactory
+    //         which defines our EB surface
+    //          => define the level set as the (signed) distance to the closest
+    //             point on the EB-facets
+    int eb_grow = level_set->get_eb_pad();
+    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev],
+                                       {eb_grow, eb_grow, eb_grow}, EBSupport::full);
+
+    // Only EB facets that are "in range" (within `n_pad` of the local
+    // BoxArray) are considered for filling the EB level-set. flag_valid = {1,0}
+    // indicates if a cell's BoxArray contained any EB facets (1), or if the
+    // cell's value is invalid (0) because all EB facets where too far away in
+    // order to be considered.
+    std::unique_ptr<iMultiFab> flag_valid = ls_cone.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    ls_walls.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
+    EBTower::Destroy();
+
+    //std::stringstream ss2;
+    //ss2 << "ls_" << ct_ls_mf << "_b";
+    //std::unique_ptr<MultiFab> ls_mf_b = ls_walls.copy_data();
+    //amrex::VisMF::Write(* ls_mf_b, ss2.str());
+
+    //std::stringstream ss;
+    //ss << "ls_" << ct_ls_mf;
+    //std::unique_ptr<MultiFab> ls_mf = ls_cone.copy_data();
+    //amrex::VisMF::Write(* ls_mf, ss.str());
+
+    level_set->update_union(* ls_cone.get_data(), * flag_valid);
+
+    return cone_IF;
 }

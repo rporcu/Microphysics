@@ -50,8 +50,10 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 | Option name                  |  Description                                       | Possible values              | Default value       |
 | -----------------------------|----------------------------------------------------|------------------------------|---------------------|
 | DEBUG                        | Build in debug mode                                |   ON/OFF                     |   OFF               |
-| MFIX_FFLAGS_OVERRIDES        | User-defined Fortran flags                         | valid F90 compiler flags     |   None              |
-| MFIX_CXXFLAGS_OVERRIDES      | User-defined C++ flags                             | valid C++ compiler flags     |   None              |
+| CMAKE_Fortran_FLAGS          | User-defined Fortran flags  for MFIX build         | valid F90 compiler flags     |   None              |
+| CMAKE_CXX_FLAGS              | User-defined C++ flags for MFIX build              | valid C++ compiler flags     |   None              |
+| AMREX_Fortran_FLAGS          | User-defined Fortran flags  for AMReX build        | valid F90 compiler flags     |   None              |
+| AMREX_CXX_FLAGS              | User-defined C++ flags for AMReX build             | valid C++ compiler flags     |   None              |
 | ENABLE_FPE                   | Build with Floating-Point Exceptions checks        |   0/1                        |   0                 |
 | ENABLE_PTESTS                | Include tests for projection method in Ctest suite |   0/1                        |   0                 |
 | ENABLE_STESTS                | Include tests for SIMPLE method in Ctest suite     |   0/1                        |   1                 |
@@ -120,6 +122,10 @@ path to the compilers) or the following:
 ```shell
 > cmake -DCMAKE_CXX_COMPILER=CC -DCMAKE_Fortran_COMPILER=ftn CONFIG_OPTIONS  ..
 ```
+
+MFIX-Exa uses the same compiler flags used to build AMReX, unless `CMAKE_Fortran_FLAGS`/`CMAKE_CXX_FLAGS` is explicitly
+provided, or the environmental variables `FFLAGS`/`CXXFLAGS` are set.
+
 
 # Running MFIX Test Suite
 MFIX-Exa comes  with several tests aimed at evaluating software functionalities.

@@ -25,7 +25,7 @@ mfix_level::InitIOData ()
     // Define the list of vector variables on faces that need to be written
     // to plotfile/checkfile.
     vecVarsName = {"u_g", "v_g", "w_g"};
-    vectorVars  = { &u_g, &v_g, &w_g };
+    vectorVars  = {&u_g,  &v_g,  &w_g };
 
     // Define the list of scalar variables at cell centers that need to be written
     // to plotfile/checkfile.
@@ -187,7 +187,14 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     Real prob_lo[BL_SPACEDIM];
     Real prob_hi[BL_SPACEDIM];
 
-    // Header
+
+
+    /***************************************************************************
+     * Load header: set up problem domain (including BoxArray)                 *
+     *              load particle data                                         *
+     *              allocate mfix_level memory (mfix_level::AllocateArrays)    *
+     ***************************************************************************/
+
     {
       std::string File(restart_file + "/Header");
 
@@ -269,6 +276,8 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
                amrex::Print() << " OLD Domain" << orig_domain      << std::endl;
             }
 
+            // Particle data is loaded into the MFIXParticleContainer's base
+            // class using amrex::NeighborParticleContainer::Restart
             if (lev == 0)
               pc->Restart(restart_file, "particles");
 
@@ -312,74 +321,82 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 
     amrex::Print() << "  Finished reading header" << std::endl;
 
-    if (solve_fluid)
-    {
-       // Initialize the field data
-       for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
-       {
-          // Read vector variables
-          for (int i = 0; i < vectorVars.size(); i++ ) {
-           MultiFab mf;
-           VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,vecVarsName[i]));
 
-            if (Nrep == IntVect::TheUnitVector())
-            {
 
-               // Simply copy mf into vectorVars
-               (*vectorVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
+    /***************************************************************************
+     * Load fluid data                                                         *
+     ***************************************************************************/
 
-            } else {
+    if (solve_fluid) {
 
-               if (mf.boxArray().size() > 1)
-                   amrex::Abort("Replication only works if one initial grid");
+        // Load the field data
+        for (int lev = 0, nlevs = finestLevel() + 1; lev < nlevs; ++lev) {
 
-               mf.FillBoundary(geom[lev].periodicity());
+            // Read vector variables
+            for (int i = 0; i < vectorVars.size(); i++ ) {
+                MultiFab mf;
+                VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix, vecVarsName[i]));
 
-               Box edge_bx = mf.boxArray()[0];
-               edge_bx.surroundingNodes(i);
+                if (Nrep == IntVect::TheUnitVector()) {
+                    amrex::Print() << "  - loading vector data: " << vecVarsName[i] << std::endl;
+                    
+                    // Copy mf into vectorVars
+                    (* vectorVars[i])[lev]->copy(mf, 0, 0, 1, 0, 0);
+                } else {
 
-               FArrayBox single_fab(edge_bx,1);
-              mf.copyTo(single_fab);
+                    if (mf.boxArray().size() > 1)
+                        amrex::Abort("Replication only works if one initial grid");
 
-              // Copy and replicate mf into vectorVars
-               for (MFIter mfi( *(*vectorVars[i])[lev] ); mfi.isValid(); ++mfi)
-               {
-                  int ib = mfi.index();
-                  (*(*vectorVars[i])[lev])[ib].copy(single_fab,single_fab.box(),0,mfi.validbox(),0,1);
-               }
+                    mf.FillBoundary(geom[lev].periodicity());
+
+                    Box edge_bx = mf.boxArray()[0];
+                    edge_bx.surroundingNodes(i);
+
+                    FArrayBox single_fab(edge_bx,1);
+                    mf.copyTo(single_fab);
+
+                    // Copy and replicate mf into vectorVars
+                    for (MFIter mfi( *(*vectorVars[i])[lev] ); mfi.isValid(); ++mfi) {
+                        int ib = mfi.index();
+                        (*(*vectorVars[i])[lev])[ib].copy(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                    }
+                }
             }
-       }
 
-       // Read scalar variables
-       for (int i = 0; i < chkscalarVars.size(); i++ ) {
-          MultiFab mf;
-          VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,chkscaVarsName[i]));
+            // Read scalar variables
+            for (int i = 0; i < chkscalarVars.size(); i++ ) {
+                MultiFab mf;
+                VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix,chkscaVarsName[i]));
 
-          if (Nrep == IntVect::TheUnitVector())
-          {
-              // Simply copy mf into chkscalarVars
-              (*chkscalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
+                if (Nrep == IntVect::TheUnitVector()) {
+                    amrex::Print() << "  - loading scalar data: " << chkscaVarsName[i] << std::endl;
 
-          } else {
+                    // Copy mf into chkscalarVars
+                    if(chkscaVarsName[i] == "level-set") {
+                        // will be filled by level-set factory
+                    } else {
+                        ( * chkscalarVars[i])[lev]->copy(mf, 0, 0, 1, 0, 0);
+                    }
 
-             if (mf.boxArray().size() > 1)
-                 amrex::Abort("Replication only works if one initial grid");
+                } else {
 
-             mf.FillBoundary(geom[lev].periodicity());
+                    if (mf.boxArray().size() > 1)
+                        amrex::Abort("Replication only works if one initial grid");
 
-             FArrayBox single_fab(mf.boxArray()[0],1);
-             mf.copyTo(single_fab);
+                    mf.FillBoundary(geom[lev].periodicity());
 
-             // Copy and replicate mf into chkscalarVars
-             for (MFIter mfi( *(*chkscalarVars[i])[lev] ); mfi.isValid(); ++mfi)
-             {
-                int ib = mfi.index();
-                (*(*chkscalarVars[i])[lev])[ib].copy(single_fab,single_fab.box(),0,mfi.validbox(),0,1);
-             }
-         }
+                    FArrayBox single_fab(mf.boxArray()[0],1);
+                    mf.copyTo(single_fab);
+
+                    // Copy and replicate mf into chkscalarVars
+                    for (MFIter mfi( *(*chkscalarVars[i])[lev] ); mfi.isValid(); ++mfi) {
+                        int ib = mfi.index();
+                        (*(*chkscalarVars[i])[lev])[ib].copy(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                    }
+                }
+            }
         }
-       }
-       amrex::Print() << "  Finished reading fluid data" << std::endl;
+        amrex::Print() << "  Finished reading fluid data" << std::endl;
     }
 
     int lev = 0;

@@ -45,18 +45,21 @@ struct intData
 
 
 class MFIXParIter
-    : public amrex::ParIter<realData::count,intData::count,0,0>
+    : public amrex::ParIter<realData::count, intData::count, 0, 0>
 {
 public:
-    using amrex::ParIter<realData::count,intData::count,0,0>::ParIter;
+    using amrex::ParIter<realData::count, intData::count, 0, 0>::ParIter;
 };
 
 class MFIXParticleContainer final
-    : public amrex::NeighborParticleContainer<realData::count,intData::count>
+    : public amrex::NeighborParticleContainer<realData::count, intData::count>
 {
 public:
-
-    using MyConstParIter = ParConstIter<realData::count,intData::count,0,0>;
+    using MyConstParIter = ParConstIter<realData::count, intData::count, 0, 0>;
+    // Data type returned by MFIXParIter::ArrayOfStructs::data (accesses
+    // particle data represented by realData)
+    //using RealType       = typename ParticleType::RealType;
+    //using AoS            = ArrayOfStructs<realData::count, intData::count>;
 
     // Get number of particles
     int NumberOfParticles(MFIXParIter& pti){
@@ -88,6 +91,14 @@ public:
             MultiFab * dummy, MultiFab * cost, std::string & knapsack_weight_type, int subdt_io);
 
     void GetParticleAvgProp(int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);
+
+    //Real GetMaxRadius(int lev);
+
+    void UpdateMaxVelocity(int lev);
+    void UpdateMaxForces(int lev, std::map<PairIndex, Vector<Real>> pfor,
+                                  std::map<PairIndex, Vector<Real>> wfor);
+    RealVect GetMaxVelocity(int lev);
+    Vector<RealVect> GetMaxForces(int lev);
 
     void BalanceParticleLoad_KDTree();
     ///
@@ -171,5 +182,11 @@ private:
     static bool use_neighbor_list;
     static bool sort_neighbor_list;
 
+    // Local containers for: maxvel - the maximum (absolute) velocity
+    //                       maxpfor - the max (abs) particle-particle force
+    //                       maxwfor - the max (abs) particle-wall force
+    RealVect loc_maxvel;
+    RealVect loc_maxpfor;
+    RealVect loc_maxwfor;
 };
 #endif

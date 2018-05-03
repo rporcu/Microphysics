@@ -6,7 +6,7 @@ module init_fluid_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine init_fluid(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                         domlo, domhi, ep_g, ro_g, rop_g, p_g, p0_g, u_g, v_g, w_g, &
+                         domlo, domhi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
                          mu_g, lambda_g, dx, dy, dz, xlength, ylength, zlength) &
       bind(C, name="init_fluid")
 
@@ -32,8 +32,6 @@ module init_fluid_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: p0_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(inout) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -54,7 +52,7 @@ module init_fluid_module
 
       ! Set user specified initial conditions (IC)
       call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-                  domlo, domhi, dx, dy, dz, p0_g, u_g, v_g, w_g)
+                  domlo, domhi, dx, dy, dz, u_g, v_g, w_g)
 
       ro_g  = ro_g0
       rop_g = ro_g0 * ep_g
@@ -99,7 +97,7 @@ module init_fluid_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-                     domlo, domhi, dx, dy, dz, p0_g, u_g, v_g, w_g)
+                     domlo, domhi, dx, dy, dz, u_g, v_g, w_g)
 
       use ic, only: dim_ic, ic_defined
       use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
@@ -121,8 +119,6 @@ module init_fluid_module
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      real(c_real), intent(inout) ::  p0_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) ::  v_g&
@@ -145,20 +141,6 @@ module init_fluid_module
 
       integer :: i_w, j_s, k_b
       integer :: i_e, j_n, k_t
-
-      !  Make sure that ic_p_g is set if using delp pressure conditions
-      do icv = 1, dim_ic
-         if (ic_defined(icv)) then
-            if ( (abs(delp_x) > epsilon(zero)) .or. &
-                 (abs(delp_y) > epsilon(zero)) .or. &
-                 (abs(delp_z) > epsilon(zero)) ) then
-               if (.not. is_defined(ic_p_g(icv))) then
-                  print *,'MUST DEFINE ic_p_g if using the DELP pressure condition'
-                  stop
-               end if
-            end if
-         end if
-      end do
 
       !  Set the initial conditions.
       do icv = 1, dim_ic
@@ -216,15 +198,6 @@ module init_fluid_module
                if (whi(3).gt.domhi(3) .and. domhi(3) == kend  ) &
                   w_g(istart:iend,jstart:jend,kend+1:whi(3)  ) = wgx
             end if
-
-            istart = max(slo(1), i_w)
-            jstart = max(slo(2), j_s)
-            kstart = max(slo(3), k_b)
-            iend   = min(shi(1), i_e)
-            jend   = min(shi(2), j_n)
-            kend   = min(shi(3), k_t)
-            pval = merge(scale_pressure(pgx),undefined,is_defined(pgx))
-            p0_g(istart:iend,jstart:jend,kstart:kend) = pval
 
          endif
       enddo

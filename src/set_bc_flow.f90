@@ -118,14 +118,11 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine gas_massflow_to_volflow(bcv)
 
-    use bc,        only: bc_p_g, bc_t_g
     use eos,       only: eosg
-    use fld_const, only: mw_avg, ro_g0
-    use scales   , only: p_ref
+    use fld_const, only: ro_g0
 
     integer, intent(in) :: bcv
     real(c_real)        :: volflow
-    real(c_real)        :: mw
 
     ! No need to convert if the mass flow is zero.
     if (equal(bc_massflow_g(bcv),zero)) then

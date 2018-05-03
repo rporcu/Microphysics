@@ -30,7 +30,7 @@ subroutine collect_fluid(slo, shi, lo, hi, domlo, domhi, p_g, ep_g, &
   real(c_real),   intent(inout) :: sums(dim_usr,2)
 
 ! Local variables .....................................................//
-  integer :: i,j,k, lc, is, ie, js, je, ks, ke
+  integer :: lc, is, ie, js, je, ks, ke
 
   do lc=1, dim_usr
 

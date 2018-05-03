@@ -313,7 +313,8 @@ void LSFactory::update_union(const MultiFab & ls_in, const iMultiFab & valid_in)
 std::unique_ptr<MultiFab> LSFactory::copy_data() const {
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
     std::unique_ptr<MultiFab> cpy(new MultiFab(ls_ba, dm, 1, ls_grid_pad));
-    cpy->copy(* ls_grid, 0, 0, 1, ls_grid_pad, ls_grid_pad);
+    cpy->copy(* ls_grid, 0, 0, 1, 0, 0 /*ls_grid_pad, ls_grid_pad*/);
+    cpy->FillBoundary(geom_ls.periodicity());
     return cpy;
 }
 
@@ -321,7 +322,8 @@ std::unique_ptr<MultiFab> LSFactory::copy_data() const {
 std::unique_ptr<iMultiFab> LSFactory::copy_valid() const {
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
     std::unique_ptr<iMultiFab> cpy(new iMultiFab(ls_ba, dm, 1, ls_grid_pad));
-    cpy->copy(* ls_valid, 0, 0, 1, ls_grid_pad, ls_grid_pad);
+    cpy->copy(* ls_valid, 0, 0, 1, 0, 0 /*ls_grid_pad, ls_grid_pad*/);
+    cpy->FillBoundary(geom_ls.periodicity());
     return cpy;
 }
 
@@ -361,14 +363,14 @@ void LSFactory::regrid(){
     const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
     update_ba();
 
-    int ng = ls_grid_pad;
-    std::unique_ptr<MultiFab> ls_grid_new(new MultiFab(ls_ba, dm, 1, ng));
+    int ng = 0; //ls_grid_pad;
+    std::unique_ptr<MultiFab> ls_grid_new = std::unique_ptr<MultiFab>(new MultiFab(ls_ba, dm, 1, ls_grid_pad /*ng*/));
 
     ls_grid_new->copy(* ls_grid, 0, 0, 1, ng, ng);
     ls_grid_new->FillBoundary(geom_ls.periodicity());
     ls_grid = std::move(ls_grid_new);
 
-    std::unique_ptr<iMultiFab> ls_valid_new(new iMultiFab(ls_ba, dm, 1, ng));
+    std::unique_ptr<iMultiFab> ls_valid_new = std::unique_ptr<iMultiFab>(new iMultiFab(ls_ba, dm, 1, ls_grid_pad /*ng*/));
 
     ls_valid_new->copy(* ls_valid, 0, 0, 1, ng, ng);
     ls_valid_new->FillBoundary(geom_ls.periodicity());

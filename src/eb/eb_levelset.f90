@@ -616,7 +616,7 @@ contains
         real(c_real)               :: xp, yp, zp, lx, ly, lz, wx_lo, wx_hi, wy_lo, wy_hi, wz_lo, wz_hi
         real(c_real), dimension(3) :: inv_dx
 
-        ! real(c_real) :: inv_norm
+        real(c_real) :: inv_norm
 
         inv_dx = n_refine / dx
 
@@ -668,8 +668,8 @@ contains
                     + phi(i+1, j+1, k+1)*inv_dx(3) * wx_hi * wy_hi
 
         ! this might not be necessary if the phi grid is dense enough...
-        !inv_norm = 1.0d0 / sqrt(normal(1)**2 + normal(2)**2 + normal(3)**2)
-        !normal(:) = normal(:) * inv_norm
+        inv_norm = 1.0d0 / sqrt(normal(1)**2 + normal(2)**2 + normal(3)**2)
+        normal(:) = normal(:) * inv_norm
 
     end subroutine normal_levelset
 

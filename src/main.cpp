@@ -16,6 +16,7 @@ Real stop_time    = -1.0;
 
 bool hourglass    = false;
 bool clr          = false;
+bool clr_riser    = false;
 
 bool write_user   = false;
 bool write_eb_surface = false;
@@ -80,6 +81,7 @@ void ReadParameters ()
      ParmParse pp("mfix");
      pp.query("hourglass", hourglass);
      pp.query("clr", clr);
+     pp.query("clr_riser", clr_riser);
 
      pp.query("write_user", write_user);
      pp.query("write_eb_surface", write_eb_surface);
@@ -169,13 +171,13 @@ int main (int argc, char* argv[])
     else
     {
         restart_flag = 1;
-        IntVect Nrep(repl_x,repl_y,repl_z);
-        my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
+        IntVect Nrep(repl_x, repl_y, repl_z);
+        my_mfix.Restart(restart_file, & nstep, & dt, & time, Nrep);
 
-        // This call checks if we want to regrid using the
-        //   max_grid_size just read in from the inputs file used to restart
-        //   (only relevant if load_balance_type = "FixedSize" or "KnapSack")
-        // Note that this call does not depend on regrid_int
+        // This call checks if we want to regrid using the max_grid_size just
+        // read in from the inputs file used to restart (only relevant if
+        // load_balance_type = "FixedSize" or "KnapSack") Note that this call
+        // does not depend on regrid_int
         my_mfix.RegridOnRestart(lev);
     }
 
@@ -185,6 +187,8 @@ int main (int argc, char* argv[])
         my_mfix.make_eb_hourglass(lev);
     } else if(clr) {
         my_mfix.make_eb_clr(lev);
+    } else if(clr_riser) {
+        my_mfix.make_eb_clr_riser(lev);
     } else {
         my_mfix.make_eb_geometry(lev);
     }

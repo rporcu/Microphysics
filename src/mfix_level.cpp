@@ -474,10 +474,6 @@ mfix_level::mfix_calc_drag_particle(int lev)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
-    Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-    Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
-
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 

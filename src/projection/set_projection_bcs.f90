@@ -19,7 +19,7 @@ subroutine set_projection_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g, lambda_g,&
    use bc
    use scales,             only: scale_pressure
    use eos      ,          only: eosg, sutherland
-   use fld_const,          only: ro_g0, mw_avg, mu_g0
+   use fld_const,          only: ro_g0, mu_g0
    use param    ,          only: is_undefined
    
    implicit none
