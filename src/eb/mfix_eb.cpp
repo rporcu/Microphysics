@@ -31,14 +31,6 @@ mfix_level::make_eb_geometry(int lev)
 {
     if (geom[lev].isAllPeriodic()) return;
 
-    // If walls are defined in the mfix.dat => mfix_get_walls sets exists to 0
-    //int exists;
-
-    //RealVect normal, center;
-
-    //std::unique_ptr<PlaneIF> plane;
-    //Vector<std::unique_ptr<BaseIF>> planes;
-
     // Implicit functions for:
     //    * impfunc       -> all EBs in the domain
     //    * impfunc_poly2 -> EBs belonging to the (polynomial) walls
@@ -56,69 +48,21 @@ mfix_level::make_eb_geometry(int lev)
     pp.query("use_poly2", use_poly2);
 
 
-
-
    /****************************************************************************
     * Generate PolynomialIF representing the non-planar EB walls               *
     ****************************************************************************/
 
     if(use_poly2) {
       amrex::Print() << "Using poly2 geometry" << std::endl;
-
-      // Vectors containing polynomial data:
-      //    * coefvec   -> i'th element is the coefficient of the i'th power
-      //    * powersvec -> power of the i'th element
-      Vector<Real> coefvec(SpaceDim);
-      Vector<int>  powersvec(SpaceDim);
-
-      // Generate vector representing polynomial
-      Vector<PolyTerm> poly;
-      for(int idir = 0; idir < 3; idir++) {
-        if(idir == 0)      pp.getarr("poly2_x_coeffs", coefvec, 0, SpaceDim);
-        else if(idir == 1) pp.getarr("poly2_y_coeffs", coefvec, 0, SpaceDim);
-        else if(idir == 2) pp.getarr("poly2_z_coeffs", coefvec, 0, SpaceDim);
-
-        for(int lc = 0; lc < 3; lc++) {
-          // x^(lc) term
-          Real coef = coefvec[lc];
-          IntVect powers = IntVect::Zero;
-          powers[idir] = lc;
-
-          PolyTerm mono;
-          mono.coef   = coef;
-          mono.powers = powers;
-
-          poly.push_back(mono);
-        }
-      }
-
-      // Apply mirror and translation operations
-      bool flip = false;
-      pp.query("poly2_mirror", flip);
-
-      PolynomialIF mirror(poly, flip);
-      RealVect translation;
-
-      Vector<Real> transvec(SpaceDim);
-      pp.getarr("poly2_translate", transvec,  0, SpaceDim);
-
-      for(int idir = 0; idir < 3; idir++)
-        translation[idir] = transvec[idir];
-
-      TransformIF poly2(mirror);
-      poly2.translate(translation);
-
-      // Store polynomal implicit function seperately (used by level-set)
-      impfunc_poly2 = std::unique_ptr<BaseIF>(poly2.newImplicitFunction());
+      impfunc_poly2 = get_poly(lev, SpaceDim, "poly2");
 
 
+     /**************************************************************************
+      * Generate BaseIF representing the planar EB walls                       *
+      *          and intersect with with PolynomialIF
+      **************************************************************************/
 
-
-      /*************************************************************************
-       * Generate BaseIF representing the planar EB walls                      *
-       *************************************************************************/
-
-      if(use_walls){ // Combine poly2 with walls
+      if(use_walls){
         bool has_walls;
         // Store wall implicit function separately (used by level-set)
         impfunc_walls = get_walls(lev, false, has_walls);
@@ -130,31 +74,36 @@ mfix_level::make_eb_geometry(int lev)
         impfunc.reset(implicit.newImplicitFunction());
 
       } else {
-        impfunc.reset(poly2.newImplicitFunction());
+        impfunc.reset(impfunc_poly2->newImplicitFunction());
       }
 
-    } else if(use_walls){ // Just walls
+
+     /**************************************************************************
+      * Generate BaseIF representing ONLY the planar EB walls                  *
+      **************************************************************************/
+    } else if(use_walls){
       bool has_walls;
       impfunc_walls = get_walls(lev, true, has_walls);
       impfunc.reset(impfunc_walls->newImplicitFunction());
     }
 
 
+
     int max_level = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
 
-    /***************************************************************************
-     *                                                                         *
-     * Fill Level-set using:                                                   *
-     *      -> Planes (where the GeometryShop's implicit function is a signed  *
-     *         distance): implicit function's value                            *
-     *      -> Poly2 (where GeometryShop's implicit function is singed but not *
-     *         a distance): min distance to EB facets                          *
-     * Note: this requires building and destroying the EBTower (twice), so any *
-     * EBTower data built before this will be lost...                          *
-     *                                                                         *
-     ***************************************************************************/
+   /****************************************************************************
+    *                                                                          *
+    * Fill Level-set using:                                                    *
+    *      -> Planes (where the GeometryShop's implicit function is a signed   *
+    *         distance): implicit function's value                             *
+    *      -> Poly2 (where GeometryShop's implicit function is singed but not  *
+    *         a distance): min distance to EB facets                           *
+    * Note: this requires building and destroying the EBTower (twice), so any  *
+    * EBTower data built before this will be lost...                           *
+    *                                                                          *
+    ****************************************************************************/
 
     if(use_walls){
         // Define components of the GeometryShop separately:
@@ -261,13 +210,17 @@ mfix_level::make_eb_hourglass(int lev)
     Vector<BaseIF*> planes;
     planes.resize(0);
 
+    // Implicit functions for:
+    //    * impfunc       -> all EBs in the domain
+    //    * impfunc_poly2 -> EBs belonging to the (polynomial) walls
+    //    * impfunc_walls -> EBs belonging to the (mfix.dat) flat walls
     std::unique_ptr<BaseIF> impfunc;
     std::unique_ptr<BaseIF> impfunc_unpolys;
     std::unique_ptr<BaseIF> impfunc_walls;
 
-    ParmParse pp("mfix");
+    //ParmParse pp("mfix");
 
-    amrex::Print() << "Using poly geometry\n";
+    amrex::Print() << "Using poly geometry" << std::endl;
 
     Vector<PolyTerm> poly1;
 
@@ -965,6 +918,84 @@ std::unique_ptr<BaseIF> mfix_level::get_walls(int lev, bool anisotropic, bool & 
     IntersectionIF all_planes(plane_ptrs);
 
     return std::unique_ptr<BaseIF>(all_planes.newImplicitFunction());
+}
+
+
+std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string field_prefix) {
+    // Construct the ParamParse database field names based on the
+    // `field_prefix` string:
+    ParmParse pp("mfix");
+    // Coefficients vector is stored in the inputs database with the field name:
+    //      <field_prefix>_[x,y,z]_coeffs
+    const std::array<const string, 3> var_names{"x", "y", "z"};
+    std::array<string, 3> field_names;
+    for(int i = 0; i < 3; i++) {
+        std::stringstream field_name;
+        field_name << field_prefix;
+        field_name << "_" << var_names[i] << "_coeffs";
+        field_names[i] = field_name.str();
+
+        amrex::Print() << field_names[i] << std::endl;
+    }
+
+    // There are two more fields assoicated with the PolynomialIF:
+    //      <field_prefix>_mirror    (true if fluid is inside the PolynomialIF)
+    //      <field_prefix>_translate (vector representing center-axis position)
+    std::stringstream mirror_field, translate_field;
+    mirror_field << field_prefix << "_mirror";
+    translate_field << field_prefix << "_translate";
+
+    amrex::Print() << mirror_field.str() << std::endl << translate_field.str() << std::endl;
+
+
+    // Vectors containing polynomial data:
+    //    * coefvec   -> i'th element is the coefficient of the i'th power
+    //    * powersvec -> power of the i'th element
+    Vector<Real> coefvec(SpaceDim);
+    Vector<int>  powersvec(SpaceDim);
+
+    // Generate vector representing polynomial
+    Vector<PolyTerm> poly;
+    for(int idir = 0; idir < 3; idir++) {
+        if(idir == 0)      pp.getarr(field_names[idir].c_str(), coefvec, 0, max_order);
+        else if(idir == 1) pp.getarr(field_names[idir].c_str(), coefvec, 0, max_order);
+        else if(idir == 2) pp.getarr(field_names[idir].c_str(), coefvec, 0, max_order);
+
+        for(int lc = 0; lc < max_order; lc++) {
+            // x^(lc) term
+            Real coef = coefvec[lc];
+            IntVect powers = IntVect::Zero;
+            powers[idir] = lc;
+
+            PolyTerm mono;
+            mono.coef   = coef;
+            mono.powers = powers;
+
+            poly.push_back(mono);
+        }
+    }
+
+
+    /***************************************************************************
+     * Construct PolynomialIF (and apply translation)                          *
+     ***************************************************************************/
+
+    bool flip = false;
+    pp.query(mirror_field.str().c_str(), flip);
+
+    PolynomialIF mirror(poly, flip);
+    RealVect translation;
+
+    Vector<Real> transvec(SpaceDim);
+    pp.getarr(translate_field.str().c_str(), transvec, 0, SpaceDim);
+
+    for(int idir = 0; idir < 3; idir++)
+      translation[idir] = transvec[idir];
+
+    TransformIF poly2(mirror);
+    poly2.translate(translation);
+
+    return std::unique_ptr<BaseIF>(poly2.newImplicitFunction());
 }
 
 

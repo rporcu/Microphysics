@@ -93,6 +93,7 @@ public:
     void make_eb_clr_riser(int lev);
 
     std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
+    std::unique_ptr<BaseIF> get_poly(int lev, int max_order, std::string field_prefix);
 
     std::unique_ptr<BaseIF> make_cylinder(int dir,
             Real radius, Real length, const RealVect & translation,
