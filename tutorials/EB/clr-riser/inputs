@@ -1,22 +1,20 @@
-amr.stop_time = 0.00001
+amr.stop_time = 30.0
 
 # Geometry
 geometry.coord_sys   = 0                  # 0: Cartesian
 geometry.is_periodic = 0      0     0     # Is periodic in each direction?
 geometry.prob_lo     = 0.00   0.00  0.00  # lo corner of physical domain
-geometry.prob_hi     = 0.04   0.92  0.04  # hi corner of physical domain
+geometry.prob_hi     = 0.04   0.96  0.04  # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell =  16 368 16
-
+amr.n_cell =  16 384 16
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
 #amr.max_grid_size = 1024
-amr.max_grid_size_x =  8
-amr.max_grid_size_y = 16
-amr.max_grid_size_z =  8
-
+amr.max_grid_size_x =  4
+amr.max_grid_size_y =  6
+amr.max_grid_size_z =  4
 
 # Maximum tile size within each grid
 fabarray.mfiter_tile_size = 1024 1024 1024
@@ -27,9 +25,13 @@ particles.tile_size = 1024 1024 1024
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
 
-amr.plot_int       = 1
-amr.check_int      = 1
-amr.par_ascii_int  = 1
+amr.plot_int  = 100
+amr.plot_file = "plt"
+
+amr.check_int = 2500
+amr.check_file = "chk"
+
+amr.restart="chk02500"
 
 mfix.particle_init_type = "Auto"
 
@@ -42,14 +44,23 @@ mfix.levelset__pad        = 4
 mfix.levelset__eb_refinement = 1
 mfix.levelset__eb_pad        = 2
 
-mfix.clr_riser  = true
+amr.dual_grid = 0
+amr.regrid_int = 25
 
-mfix.write_eb_surface = true
+mfix.load_balance_type = "KnapSack"
+#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+#this option is only relevant if load_balance_type = KnapSack
+mfix.knapsack_weight_type = "NumParticles"
+mfix.knapsack_weight_type = "RunTimeCosts"
 
 
 # Riser -------------------------------------------------
+#
+mfix.use_walls = true
+mfix.clr_riser = true
+mfix.write_eb_surface = true
 
-mfix.riser_translate      =   0.02  0.00  0.02
+mfix.riser_translate      =   0.02  0.001  0.02
 
 mfix.riser_lower_radius   =   0.01905
 mfix.riser_lower_height   =   0.19288
@@ -57,4 +68,4 @@ mfix.riser_lower_height   =   0.19288
 mfix.riser_c2c_height     =   0.01905
 
 mfix.riser_upper_radius   =   0.00794
-mfix.riser_upper_height   =   0.92710
+mfix.riser_upper_height   =   1.00000
