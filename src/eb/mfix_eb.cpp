@@ -218,7 +218,7 @@ mfix_level::make_eb_hourglass(int lev)
     std::unique_ptr<BaseIF> impfunc_unpolys;
     std::unique_ptr<BaseIF> impfunc_walls;
 
-    //ParmParse pp("mfix");
+    ParmParse pp("mfix");
 
     amrex::Print() << "Using poly geometry" << std::endl;
 
@@ -925,6 +925,7 @@ std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string
     // Construct the ParamParse database field names based on the
     // `field_prefix` string:
     ParmParse pp("mfix");
+
     // Coefficients vector is stored in the inputs database with the field name:
     //      <field_prefix>_[x,y,z]_coeffs
     const std::array<const string, 3> var_names{"x", "y", "z"};
@@ -1096,11 +1097,12 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     // ELSE construct the level-set by unioning each cylinder (intersected
     // component) of the CLR using the level-set
     //   => corners are much more cleanly resolved, but is much slower.
+    
+
 
     int max_level = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
-
 
     /**************************************************************************
      *                                                                        *
@@ -1141,12 +1143,6 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     ls_cylinder.intersection_ebis(* AMReX_EBIS::instance());
     EBTower::Destroy();
 
-    //ct_ls_mf ++;
-    //std::stringstream ss1;
-    //ss1 << "ls_" << ct_ls_mf << "_a";
-    //std::unique_ptr<MultiFab> ls_mf_a = ls_cylinder.copy_data();
-    //amrex::VisMF::Write(* ls_mf_a, ss1.str());
-
     // Define the EBIS using only the poly (after deleting the walls-only EBTower)...
     // Note GeometryShop's behaviour wrt anisotropic cells: * use x-component of dx as reference length-scale
     //                                                      * rescale y, z- components wrt to dx[0] (dx(1))
@@ -1175,16 +1171,6 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     std::unique_ptr<iMultiFab> flag_valid = ls_cylinder.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
     ls_walls.intersection_ebf(eb_factory_poly, * AMReX_EBIS::instance());
     EBTower::Destroy();
-
-    //std::stringstream ss2;
-    //ss2 << "ls_" << ct_ls_mf << "_b";
-    //std::unique_ptr<MultiFab> ls_mf_b = ls_walls.copy_data();
-    //amrex::VisMF::Write(* ls_mf_b, ss2.str());
-
-    //std::stringstream ss;
-    //ss << "ls_" << ct_ls_mf;
-    //std::unique_ptr<MultiFab> ls_mf = ls_cylinder.copy_data();
-    //amrex::VisMF::Write(* ls_mf, ss.str());
 
     level_set->update_union(* ls_cylinder.get_data(), * flag_valid);
 
