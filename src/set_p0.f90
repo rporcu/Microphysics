@@ -1,6 +1,6 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: set_p0                                                 !
+!  Subroutine: set_p0                                                  !
 !  Author: M. Syamlal                                 Date: 21-JAN-92  !
 !                                                                      !
 !  Purpose: Set the pressure field inside the bed assuming gravity     !
@@ -56,7 +56,7 @@
          delp_dir = 1
       else if (abs(delp_z) > epsilon(zero)) then
          delp_dir = 2
-      else 
+      else
          delp_dir = -1
       end if
 
