@@ -650,10 +650,7 @@ mfix_level::make_eb_clr_riser(int lev)
     Vector<Real> transvec(3);
     RealVect translation;
 
-    Real lheight;
-
     int cylinder_dir;
-
 
     // CLR can be constructed in either "water-tight" mode (each component is
     // assembled as a level-set intersection/union), or the much faster EB mode
@@ -677,33 +674,34 @@ mfix_level::make_eb_clr_riser(int lev)
     for(int idir = 0; idir < 3; idir++)
         translation[idir] = transvec[idir];
 
-
-    Real radius1;
-    pp.query("riser_upper_radius", radius1);
-    pp.query("riser_upper_height", lheight);
-
+    // cylinder direction (y-axis)
     cylinder_dir=1;
-    std::unique_ptr<BaseIF> riser_upper =
-      make_cylinder(cylinder_dir, radius1, lheight, translation, lev, water_tight);
 
-
-    Real radius2;
-    pp.query("riser_lower_radius", radius2);
+    Real lradius, uradius;
+    Real lheight, uheight, cheight;
+    pp.query("riser_lower_radius", lradius);
     pp.query("riser_lower_height", lheight);
+    pp.query("riser_upper_radius", uradius);
+    pp.query("riser_upper_height", uheight);
+    pp.query("riser_c2c_height",   cheight);
 
-    cylinder_dir=1;
+    // Build lower cylinder
     std::unique_ptr<BaseIF> riser_lower =
-      make_cylinder(cylinder_dir, radius2, lheight, translation, lev, water_tight);
+      make_cylinder(cylinder_dir, lradius, lheight, translation, lev, water_tight);
 
-    cylinder_dir=1;
-    translation[cylinder_dir] = lheight;
+    // Offset for lower cylinder height.
+    translation[cylinder_dir] += lheight;
 
-    pp.query("riser_c2c_height", lheight);
-
+    // Build cylinder-to-cylinder connector.
     std::unique_ptr<BaseIF> riser_c2c =
-      make_cone(cylinder_dir, radius1, radius2, lheight, translation, lev, water_tight);
+      make_cone(cylinder_dir, uradius, lradius, cheight, translation, lev, water_tight);
 
+    // Offset for connector height.
+    translation[cylinder_dir] += cheight;
 
+    // Build upper cylinder, offset for lower cylinder height
+    std::unique_ptr<BaseIF> riser_upper =
+      make_cylinder(cylinder_dir, uradius, uheight, translation, lev, water_tight);
 
     Vector<BaseIF*> clr_parts(3);
     clr_parts[0] = riser_lower.get();
