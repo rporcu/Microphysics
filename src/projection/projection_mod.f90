@@ -183,7 +183,17 @@ contains
 
                ! Define face-values for ep and ro_g and then invert them
                ro_f       = half * ( ro(i,j,k) + ro(i-i0,j-j0,k-k0) )
-               ep_f       = half * ( ep(i,j,k) + ep(i-i0,j-j0,k-k0) )
+
+               select case (dir) 
+               case(1)
+                  ep_f = merge (ep(i-1,j,k), ep(i,j,k),  u(i,j,k) >= zero )
+               case(2)
+                  ep_f = merge (ep(i,j-1,k), ep(i,j,k),  v(i,j,k) >= zero )
+               case(3)
+                  ep_f = merge (ep(i,j,k-1), ep(i,j,k),  w(i,j,k) >= zero )
+               end select
+               
+               !ep_f       = half * ( ep(i,j,k) + ep(i-i0,j-j0,k-k0) )
                rhs(i,j,k) = - conv(i,j,k) + diff(i,j,k) / ( ro_f * ep_f )
                
             end do
@@ -382,7 +392,9 @@ contains
             do i = lo(1), hi(1)
                
                ro_f = ( ro_g(i,j,k) + ro_g(i-i0,j-j0,k-k0) ) * half
-               ep_f = ( ep_g(i,j,k) + ep_g(i-10,j-j0,k-k0) ) * half
+
+               !ep_f = ( ep_g(i,j,k) + ep_g(i-10,j-j0,k-k0) ) * half
+               ep_f = merge (ep_g(i-i0,j-j0,k-k0), ep_g(i,j,k),  u_i(i,j,k) >= zero )
                
                acc  = gravity(dir) + drag_i(i,j,k) / ( ro_f * ep_f )
                
@@ -449,7 +461,8 @@ contains
             do i = lo(1), hi(1)
 
                ro_f       = half * ( ro(i,j,k) + ro(i-i0,j-j0,k-k0) )
-               ep_f       = half * ( ep(i,j,k) + ep(i-i0,j-j0,k-k0) )
+               !ep_f       = half * ( ep(i,j,k) + ep(i-i0,j-j0,k-k0) )
+               ep_f = merge (ep(i-i0,j-j0,k-k0), ep(i,j,k),  u_i(i,j,k) >= zero )
                
                diag_coeff = one + dt * f_gds_i(i,j,k) / ( ro_f * ep_f )
                
@@ -468,7 +481,7 @@ contains
    ! at the faces of the pressure cells along the "dir"-axis.
    ! 
    subroutine compute_bcoeff ( lo, hi, bcoeff, alo, ahi, &
-        ro_g, slo, shi, ep_g, dir )  bind(C)
+        u_i, ulo, uhi, ro_g, slo, shi, ep_g, dir )  bind(C)
 
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
@@ -476,12 +489,14 @@ contains
       ! Array bounds
       integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
-
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3)
+      
       ! Direction
       integer(c_int), intent(in   ) :: dir
 
       ! Arrays
       real(ar),       intent(in   ) :: &
+           u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
            ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
@@ -501,7 +516,8 @@ contains
 
                ro_f = half * ( ro_g(i,j,k) + ro_g(i-i0,j-j0,k-k0) )
 
-               ep_f = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) )
+               ep_f = merge ( ep_g(i-i0,j-j0,k-k0), ep_g(i,j,k), u_i(i,j,k) >= zero )
+              ! ep_f = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) )
                
                bcoeff(i,j,k) = ep_f / ro_f 
                
@@ -701,14 +717,32 @@ contains
             do i = lo(1), hi(1)
 
                ! Face values
-               eu_e = u_g(i+1,j,k) * half * ( ep_g(i+1,j,k) + ep_g(i  ,j,k) )
-               eu_w = u_g(i  ,j,k) * half * ( ep_g(i  ,j,k) + ep_g(i-1,j,k) )               
+               eu_e = min ( u_g(i+1,j,k), zero ) * ep_g(i+1,j,k) + &
+                    & max ( u_g(i+1,j,k), zero ) * ep_g(i  ,j,k) 
+               
+               eu_w = min ( u_g(i,j,k), zero ) * ep_g(i,  j,k) + &
+                    & max ( u_g(i,j,k), zero ) * ep_g(i-1,j,k) 
 
-               eu_n = v_g(i,j+1,k) * half * ( ep_g(i,j+1,k) + ep_g(i,j  ,k) )
-               eu_s = v_g(i,j  ,k) * half * ( ep_g(i,j  ,k) + ep_g(i,j-1,k) )
+               eu_n = min ( v_g(i,j+1,k), zero ) * ep_g(i,j+1,k) + &
+                    & max ( v_g(i,j+1,k), zero ) * ep_g(i,j  ,k) 
 
-               eu_t = w_g(i,j,k+1) * half * ( ep_g(i,j,k+1) + ep_g(i,j,k  ) )
-               eu_b = w_g(i,j,k  ) * half * ( ep_g(i,j,k  ) + ep_g(i,j,k-1) )
+               eu_s = min ( v_g(i,j,k), zero ) * ep_g(i,j  ,k) + &
+                    & max ( v_g(i,j,k), zero ) * ep_g(i,j-1,k) 
+
+               eu_t = min ( w_g(i,j,k+1), zero ) * ep_g(i,j,k+1) + &
+                    & max ( w_g(i,j,k+1), zero ) * ep_g(i,j,k  ) 
+
+               eu_b = min ( w_g(i,j,k), zero ) * ep_g(i,j,k  ) + &
+                    & max ( w_g(i,j,k), zero ) * ep_g(i,j,k-1) 
+
+               ! eu_e = u_g(i+1,j,k) * half * ( ep_g(i+1,j,k) + ep_g(i  ,j,k) )
+               ! eu_w = u_g(i  ,j,k) * half * ( ep_g(i  ,j,k) + ep_g(i-1,j,k) )               
+
+               ! eu_n = v_g(i,j+1,k) * half * ( ep_g(i,j+1,k) + ep_g(i,j  ,k) )
+               ! eu_s = v_g(i,j  ,k) * half * ( ep_g(i,j  ,k) + ep_g(i,j-1,k) )
+
+               ! eu_t = w_g(i,j,k+1) * half * ( ep_g(i,j,k+1) + ep_g(i,j,k  ) )
+               ! eu_b = w_g(i,j,k  ) * half * ( ep_g(i,j,k  ) + ep_g(i,j,k-1) )
 
                ! Divergence
                diveu(i,j,k) = (eu_e - eu_w) * odx + (eu_n - eu_s) * ody + &

@@ -909,18 +909,21 @@ mfix_level::mfix_compute_bcoeff (int lev)
 	// X direction
 	compute_bcoeff (BL_TO_FORTRAN_BOX(ubx),
 		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][0]))[mfi]),
+		       BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
 		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
 		       (*ep_g[lev])[mfi].dataPtr(), &xdir );
 
 	// Y direction
 	compute_bcoeff (BL_TO_FORTRAN_BOX(vbx),
 		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][1]))[mfi]),
+			BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
 		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
 		       (*ep_g[lev])[mfi].dataPtr(), &ydir );
 
 	// Z direction
 	compute_bcoeff (BL_TO_FORTRAN_BOX(wbx),
 		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][2]))[mfi]),
+			BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
 		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
 		       (*ep_g[lev])[mfi].dataPtr(), &zdir );
 	

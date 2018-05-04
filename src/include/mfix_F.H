@@ -605,7 +605,8 @@ extern "C"
     void compute_bcoeff(
             const int* lo, const int* hi,
             amrex::Real* bcoeff, const int* alo, const int* ahi,
-            const amrex::Real* rop_g, const int* slo, const int* shi,
+	    const amrex::Real* u,     const int* ulo, const int* uhi,
+            const amrex::Real* ro_g, const int* slo, const int* shi,
             const amrex::Real* ep_g,
             const int* dir
         );
