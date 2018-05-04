@@ -201,144 +201,53 @@ mfix_level::make_eb_hourglass(int lev)
 {
     if (geom[lev].isAllPeriodic()) return;
 
-    Box domain(geom[lev].Domain());
-    Real dx = geom[lev].CellSize()[0];
-
-    int exists;
-    RealVect normal, center;
-    PlaneIF* plane;
-    Vector<BaseIF*> planes;
-    planes.resize(0);
-
     // Implicit functions for:
     //    * impfunc       -> all EBs in the domain
-    //    * impfunc_poly2 -> EBs belonging to the (polynomial) walls
+    //    * impfunc_poly2 -> EBs belonging to the (curved/bulb) walls
     //    * impfunc_walls -> EBs belonging to the (mfix.dat) flat walls
     std::unique_ptr<BaseIF> impfunc;
     std::unique_ptr<BaseIF> impfunc_unpolys;
     std::unique_ptr<BaseIF> impfunc_walls;
 
-    ParmParse pp("mfix");
-
     amrex::Print() << "Using poly geometry" << std::endl;
 
-    Vector<PolyTerm> poly1;
 
-    PolyTerm mono;
-    Real coef;
-    IntVect powers;
+   /****************************************************************************
+    * Define components: poly1 and poly2 => Hourglass "bulbs"                  *
+    *                    walls => Flat base intersecting with bottom bulb      *
+    ****************************************************************************/
 
-    Vector<Real> coefvec(5);
-    Vector<int>  powersvec(5);
-    Vector<Real> transvec(SpaceDim);
+    // Construct the implicit function for the "top" bulb. Note the the curved
+    // walls the defined using a PolynomialIF of order 5.
+    std::unique_ptr<BaseIF> poly1t = get_poly(lev, 5, "poly1");
+    // Construct the implicit function for the "bottom" bulb.
+    std::unique_ptr<BaseIF> poly2t = get_poly(lev, 5, "poly2");
 
-    for(int idir = 0; idir < 3; idir++) {
+    // Construct any additional walls. The smooth hourglass has a flat base
+    // which defined via the planar walls (in the mfix.dat).
+    bool has_walls;
+    impfunc_walls = get_walls(lev, false, has_walls);
 
-      if( idir == 0) {
-        pp.getarr("poly1_x_coeffs", coefvec, 0, 5);
-      } else if( idir == 1) {
-        pp.getarr("poly1_y_coeffs", coefvec, 0, 5);
-      } else if( idir == 2) {
-        pp.getarr("poly1_z_coeffs", coefvec, 0, 5);
-      }
+    if (! has_walls)
+        amrex::Print() << "WARNING: You have made an hourglass without end walls!"
+            << std::endl
+            << "If you're not careful, all the particles might fall out the bottom..."
+            << std::endl;
 
-      for(int lc = 0; lc < 5; lc++) {
 
-        // x^(lc) term
-        coef = coefvec[lc];
-        powers = IntVect::Zero;
-        powers[idir] = lc;
+   /****************************************************************************
+    * Combine components: unbulbs => union of top and bottom PolynomialIF      *
+    *                       +--- intersects  walls                             *
+    ****************************************************************************/
 
-        mono.coef   = coef;
-        mono.powers = powers;
-
-        poly1.push_back(mono);
-
-      }
-    }
-
-    bool flip1 = false;
-    pp.query("poly1_mirror", flip1);
-
-    PolynomialIF mirror1(poly1,flip1);
-    RealVect translation1;
-
-    pp.getarr("poly1_translate", transvec,  0, SpaceDim);
-
-    for(int idir = 0; idir < 3; idir++) {
-      translation1[idir] = transvec[idir];
-    }
-
-    TransformIF poly1t(mirror1);
-    poly1t.translate(translation1);
-
-    Vector<PolyTerm> poly2;
-
-    for(int idir = 0; idir < 3; idir++) {
-
-      if( idir == 0) {
-        pp.getarr("poly2_x_coeffs", coefvec, 0, 5);
-      } else if( idir == 1) {
-        pp.getarr("poly2_y_coeffs", coefvec, 0, 5);
-      } else if( idir == 2) {
-        pp.getarr("poly2_z_coeffs", coefvec, 0, 5);
-      }
-
-      for(int lc = 0; lc < 5; lc++) {
-
-        // x^(lc) term
-        coef = coefvec[lc];
-        powers = IntVect::Zero;
-        powers[idir] = lc;
-
-        mono.coef   = coef;
-        mono.powers = powers;
-
-        poly2.push_back(mono);
-
-      }
-    }
-
-    bool flip2 = false;
-    pp.query("poly2_mirror", flip2);
-
-    PolynomialIF mirror2(poly2,flip2);
-    RealVect translation2;
-
-    pp.getarr("poly2_translate", transvec,  0, SpaceDim);
-
-    for(int idir = 0; idir < 3; idir++) {
-      translation2[idir] = transvec[idir];
-    }
-
-    TransformIF poly2t(mirror2);
-    poly2t.translate(translation2);
-
-    for (int i = 1; i <= 500; i++) {
-      mfix_get_walls(&i, &exists, &normal, &center);
-      if(exists){
-        amrex::Print() << "Normal " << normal << std::endl;
-        amrex::Print() << "Center " << center << std::endl;
-        plane = new PlaneIF(normal,center,true);
-        planes.push_back(plane);
-      }
-    }
-    IntersectionIF all_planes(planes);
-
-    impfunc_walls = std::unique_ptr<BaseIF>(all_planes.newImplicitFunction());
-
-    Vector<BaseIF*> bulbs(2);
-    bulbs[0] = &poly1t;
-    bulbs[1] = &poly2t;
+    Vector<BaseIF *> bulbs{poly1t.get(),poly2t.get()};
     UnionIF unpolys(bulbs);
 
     impfunc_unpolys = std::unique_ptr<BaseIF>(unpolys.newImplicitFunction());
 
-
-    Vector<BaseIF*> funcs(2);
-    funcs[0] = &unpolys;
-    funcs[1] = &all_planes;
+    Vector<BaseIF*> funcs{impfunc_unpolys.get(), impfunc_walls.get()};
     IntersectionIF implicit(funcs);
+
     impfunc.reset(implicit.newImplicitFunction());
 
 
@@ -412,11 +321,16 @@ mfix_level::make_eb_hourglass(int lev)
     ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
     ls[lev]->FillBoundary(geom[lev].periodicity());
 
+
+
     /***************************************************************************
      *                                                                         *
      * Build standard EB Factories                                             *
      *                                                                         *
      ***************************************************************************/
+
+    Box domain(geom[lev].Domain());
+    Real dx = geom[lev].CellSize()[0];
 
     GeometryShop gshop(*impfunc, eb_verbosity);
     AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
@@ -883,14 +797,19 @@ mfix_level::make_eb_clr_riser(int lev)
 
 
 std::unique_ptr<BaseIF> mfix_level::get_walls(int lev, bool anisotropic, bool & has_walls) {
-    // If walls are defined in the mfix.dat => mfix_get_walls sets exists to 0
-    int exists;
+    // Extracts all walls from the mfix.dat
 
+    has_walls = false;  // will be set to true if there are any walls
+
+    // Walls can be defined per phase => Itterarte over all phases and check
+    // each for walls in the mfix.dat
     Vector<std::unique_ptr<BaseIF>> planes;
     for (int i = 1; i <= 500; i++) {
+        int exists;
         RealVect normal, center;
-        mfix_get_walls(&i, &exists, &normal, &center);
-        if(exists){
+        mfix_get_walls(& i, & exists, & normal, & center);
+        if(exists) {
+            has_walls = true;
             amrex::Print() << "Normal " << normal << std::endl;
             amrex::Print() << "Center " << center << std::endl;
             std::unique_ptr<PlaneIF> plane;
@@ -905,9 +824,6 @@ std::unique_ptr<BaseIF> mfix_level::get_walls(int lev, bool anisotropic, bool & 
             planes.push_back(std::move(plane));
         }
     }
-
-    if(exists == 1) has_walls = true;
-    else            has_walls = false;
 
     // The IntersectionIF constructor requires a vector or pointers to the
     // individual PlaneIFs => Construct a pointer-vector. Note that these
@@ -935,8 +851,6 @@ std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string
         field_name << field_prefix;
         field_name << "_" << var_names[i] << "_coeffs";
         field_names[i] = field_name.str();
-
-        amrex::Print() << field_names[i] << std::endl;
     }
 
     // There are two more fields assoicated with the PolynomialIF:
@@ -945,8 +859,6 @@ std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string
     std::stringstream mirror_field, translate_field;
     mirror_field << field_prefix << "_mirror";
     translate_field << field_prefix << "_translate";
-
-    amrex::Print() << mirror_field.str() << std::endl << translate_field.str() << std::endl;
 
 
     // Vectors containing polynomial data:
@@ -991,7 +903,7 @@ std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string
     pp.getarr(translate_field.str().c_str(), transvec, 0, SpaceDim);
 
     for(int idir = 0; idir < 3; idir++)
-      translation[idir] = transvec[idir];
+        translation[idir] = transvec[idir];
 
     TransformIF poly2(mirror);
     poly2.translate(translation);
@@ -1097,7 +1009,7 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     // ELSE construct the level-set by unioning each cylinder (intersected
     // component) of the CLR using the level-set
     //   => corners are much more cleanly resolved, but is much slower.
-    
+
 
 
     int max_level = 0;
