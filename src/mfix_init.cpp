@@ -771,8 +771,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
      if (is_restarting == 1)
      {
         mfix_extrap_pressure(lev, p_g[lev]);
-     } 
-     else 
+     }
+     else
      {
         // We need to initialize the volume fraction ep_g before the first projection
         mfix_calc_volume_fraction(lev,sum_vol_orig);
