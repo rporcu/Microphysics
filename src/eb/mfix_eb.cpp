@@ -825,7 +825,7 @@ std::unique_ptr<BaseIF> mfix_level::get_walls(int lev, bool anisotropic, bool & 
         }
     }
 
-    // The IntersectionIF constructor requires a vector or pointers to the
+    // The IntersectionIF constructor requires a vector of pointers to the
     // individual PlaneIFs => Construct a pointer-vector. Note that these
     // pointers become invalid once the `planes` vector goes out of scope.
     Vector<BaseIF *> plane_ptrs;
@@ -861,15 +861,11 @@ std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string
     translate_field << field_prefix << "_translate";
 
 
-    // Vectors containing polynomial data:
-    //    * coefvec   -> i'th element is the coefficient of the i'th power
-    //    * powersvec -> power of the i'th element
-    Vector<Real> coefvec(SpaceDim);
-    Vector<int>  powersvec(SpaceDim);
-
     // Generate vector representing polynomial
     Vector<PolyTerm> poly;
     for(int idir = 0; idir < 3; idir++) {
+        Vector<Real> coefvec(SpaceDim);
+
         if(idir == 0)      pp.getarr(field_names[idir].c_str(), coefvec, 0, max_order);
         else if(idir == 1) pp.getarr(field_names[idir].c_str(), coefvec, 0, max_order);
         else if(idir == 2) pp.getarr(field_names[idir].c_str(), coefvec, 0, max_order);
@@ -880,10 +876,7 @@ std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string
             IntVect powers = IntVect::Zero;
             powers[idir] = lc;
 
-            PolyTerm mono;
-            mono.coef   = coef;
-            mono.powers = powers;
-
+            PolyTerm mono = {.coef = coef, .powers = powers};
             poly.push_back(mono);
         }
     }
@@ -912,87 +905,65 @@ std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string
 }
 
 
-std::unique_ptr<BaseIF>
-mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & translation, int lev, bool water_tight)
-{
+std::unique_ptr<BaseIF> mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & translation,
+                                                  int lev, bool water_tight) {
+    // Construct a cylinder implicit function with finite radius and axis
+    // offset (translation). The cylinder can be oriented along any cartesian
+    // axis (dir).
     std::unique_ptr<BaseIF> cylinder_IF;
+
+
+    // Polynomial defining (curved) cylinder walls parallel to a given axis:
+    //     IF = a^2 + b^2 - R^2
+    // where a, b \in {a, x, z} - {axis} for example, if the cylinder lies on
+    // the y-axis => IF = x^2 + z^2 - R^2
     Vector<PolyTerm> poly;
-
-    PolyTerm mono;
-    Real coef;
-    IntVect powers;
-
-    Vector<Real> coefvec(3);
-    Vector<int>  powersvec(3);
-
     for(int idir = 0; idir < 3; idir++) {
-
-        if( idir == dir) {
-            coefvec[0] = -radius*radius;
-            coefvec[1] = 0.0;
-            coefvec[2] = 0.0;
-        } else {
-            coefvec[0] = 0.0;
-            coefvec[1] = 0.0;
-            coefvec[2] = 1.0;
-        }
+        // Constucts the coefficient vector describing a cylinder with
+        // orientation given by axis `dir`:
+        //    *  coefvec[0] = R^2 term
+        //    *  coefvec[2] = {x,y,z}^2 term
+        Vector<Real> coefvec(3);
+        if( idir == dir) coefvec = { - std::pow(radius, 2), 0. ,0.};
+        else             coefvec = {0., 0., 1};
 
         for(int lc = 0; lc < 3; lc++) {
             // x^(lc) term
-            coef = coefvec[lc];
-            powers = IntVect::Zero;
+            IntVect powers = IntVect::Zero;
             powers[idir] = lc;
-
-            mono.coef   = coef;
-            mono.powers = powers;
-
+            PolyTerm mono = {.coef = coefvec[lc], .powers = powers};
             poly.push_back(mono);
         }
     }
+
 
     // Internal flow cylinder
     PolynomialIF cylinder0(poly, true);
     TransformIF cylinder1(cylinder0);
     cylinder1.translate(translation);
 
-    // box to clip to correct length
-    RealVect normal, center;
-    PlaneIF* plane;
-    Vector<BaseIF*> planes;
-    planes.resize(0);
 
-    for(int i=0; i<3; i++) {
-        center[i] = 0.0;
-        normal[i] = 0.0;
-    }
+    // box to clip to correct length
+    RealVect normal = RealVect::Zero , center = RealVect::Zero;
+    Vector<std::unique_ptr<BaseIF>> planes;
 
     center[dir] = 0.0;
     normal[dir] = 1.0;
-
-    // amrex::Print() << "Plane 1\n";
-    // amrex::Print() << "Center " << center  << "\n";
-    // amrex::Print() << "Normal " << normal  << "\n";
-
-    plane = new PlaneIF(normal,center,true);
-    planes.push_back(plane);
+    planes.push_back(std::unique_ptr<BaseIF>(new PlaneIF(normal, center, true)));
 
     center[dir] = length;
     normal[dir] =-1.0;
+    planes.push_back(std::unique_ptr<BaseIF>(new PlaneIF(normal, center, true)));
 
-    // amrex::Print() << "Plane 2\n";
-    // amrex::Print() << "Center " << center  << "\n";
-    // amrex::Print() << "Normal " << normal  << "\n";
-
-    plane = new PlaneIF(normal,center,true);
-    planes.push_back(plane);
-
-    IntersectionIF bounding_box(planes);
+    // The IntersectionIF constructor requires a vector of pointers to the
+    Vector<BaseIF *> plane_ptrs = {planes[0].get(), planes[1].get()};
+    IntersectionIF bounding_box(plane_ptrs);
     TransformIF walls(bounding_box);
     walls.translate(translation);
 
-    Vector<BaseIF*> funcs(2);
-    funcs[0] = &cylinder0;
-    funcs[1] = &bounding_box;
+    Vector<BaseIF * > funcs(2);
+    funcs[0] = & cylinder0;
+    funcs[1] = & bounding_box;
 
     IntersectionIF cylinder(funcs);
 
@@ -1000,6 +971,7 @@ mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & tr
     cylinder_trans.translate(translation);
 
     cylinder_IF.reset(cylinder_trans.newImplicitFunction());
+
 
     // IF we are not using the water-tight mode, return now:
 

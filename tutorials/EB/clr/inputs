@@ -40,6 +40,8 @@ mfix.levelset__eb_pad        = 2
 
 #mfix.legacy__eb_collisions = true
 
+mfix.write_eb_surface = true  # Needed to output eb-surfaces
+
 mfix.clr  = true    # use the mfix_eb_clr
 
 # Riser -------------------------------------------------
