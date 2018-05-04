@@ -195,12 +195,12 @@ mfix_level::make_eb_geometry(int lev)
 
 
 
-std::unique_ptr<BaseIF>
-make_eb_wall(int dir, Real position, Real height, Real width, int lev, int water_tight) {
-    Vector<BaseIF *> planes;
-    planes.resize(0); // Make sure `planes` is empty (will use `push_back`)
-
-}
+//std::unique_ptr<BaseIF>
+//make_eb_wall(int dir, Real position, Real height, Real width, int lev, int water_tight) {
+//    Vector<BaseIF *> planes;
+//    planes.resize(0); // Make sure `planes` is empty (will use `push_back`)
+//
+//}
 
 
 
