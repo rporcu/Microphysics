@@ -523,11 +523,11 @@ std::unique_ptr<iMultiFab> LSFactory::intersection_ebis(const EBIndexSpace & eb_
     std::unique_ptr<MultiFab> mf_impfunc = ebis_impfunc(eb_is);
     std::unique_ptr<iMultiFab> region_valid = std::unique_ptr<iMultiFab>(new iMultiFab);
 
-    const DistributionMapping & dm = mfix_pc -> ParticleDistributionMap(amr_lev);
+    const DistributionMapping & dm = mfix_pc->ParticleDistributionMap(amr_lev);
     region_valid->define(ls_ba, dm, 1, ls_grid_pad);
     region_valid->setVal(1);
 
-    // GeometryService convetion:
+    // GeometryService convention:
     //      -- implicit_function(r) < 0 : r in fluid (outside of EB)
     //      -- implicit_function(r) > 0 : r not in fluid (inside EB)
     //   => If implicit_function is a signed-distance function, we need to invert sign
