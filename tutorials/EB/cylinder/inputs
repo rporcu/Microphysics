@@ -16,11 +16,36 @@ fabarray.mfiter_tile_size = 1024 1024 1024
 # Maximum particle title size
 particles.tile_size = 1024 1024 1024
 
+
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
 
-# Run time pf simulation
+
+###  Run time of simulation
 amr.stop_time = 0.20
+#amr.restart="chk00003"
+
+
+### Projection Method
+#mfix.use_proj_method = 1
+
+
+### Regrinding and Load Balancing
+amr.dual_grid = 0
+amr.regrid_int = 25
+
+mfix.load_balance_type = "KnapSack"
+# default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+# this option is only relevant if load_balance_type = KnapSack
+mfix.knapsack_weight_type = "NumParticles"
+mfix.knapsack_weight_type = "RunTimeCosts"
+
+
+### Particle Initialization
+mfix.particle_init_type = "Auto"
+
+
+### Plotting and Checkpoints
 
 amr.par_ascii_int  = 1
 amr.par_ascii_file = vis
@@ -31,44 +56,32 @@ amr.plot_file = "plt"
 amr.check_int = -1
 amr.check_file = "chk"
 
-#amr.restart="chk00003"
 
-mfix.particle_init_type = "Auto"
+### Embedded Boundaries
 
-mfix.use_walls  = true
-
+mfix.use_walls    = true
 mfix.use_poly2    = true
-mfix.poly2_mirror = true    # Use inside
+mfix.poly2_mirror = true      # Use inside
+mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
 # Cylinder ::  x^2 + y^2 = R^2
-
 mfix.poly2_x_coeffs =    0.00     0.00     1.00
 mfix.poly2_y_coeffs =    0.00     0.00     1.00
 mfix.poly2_z_coeffs =   -2.56e-6  0.00     0.00
 
 mfix.poly2_translate =   1.6e-3   1.6e-3   0.00
 
-
-# Collision algorithm details:
+# Wall-Collision algorithm details:
 # Level-set refinement and padding
-mfix.levelset__refinement = 2
-mfix.levelset__pad        = 4
+mfix.levelset__refinement = 1
+mfix.levelset__pad        = 2
 # EBIS refinement and padding
 mfix.levelset__eb_refinement = 1
 mfix.levelset__eb_pad        = 8
 
-mfix.write_eb_surface = true
 
-amr.dual_grid = 0
-amr.regrid_int = 25
+### Geometry
 
-mfix.load_balance_type = "KnapSack"
-#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
-#this option is only relevant if load_balance_type = KnapSack
-mfix.knapsack_weight_type = "NumParticles"
-mfix.knapsack_weight_type = "RunTimeCosts"
-
-# Geometry
 geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 1       1       0       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain

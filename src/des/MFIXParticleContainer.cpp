@@ -492,7 +492,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     }
 
    /****************************************************************************
-    * Iterate over sub-steps                                                  *
+    * Iterate over sub-steps                                                   *
     ****************************************************************************/
 
     int ncoll_total = 0;  // Counts total number of collisions

@@ -31,10 +31,11 @@ mfix_level::Regrid (int lev, int nstep)
            SetBoxArray       (lev, pc->ParticleBoxArray(lev));
            SetDistributionMap(lev, pc->ParticleDistributionMap(lev));
 
-           // Since we have already allocated the fluid data we need to re-define those arrays
-           //   and copy from the old BoxArray to the new one if the grids and/or dmap have changed.
-           // Note that the SetBoxArray and SetDistributionMap calls above have re-defined 
-           //   grids and dmap to be the new ones.
+           // Since we have already allocated the fluid data we need to
+           // re-define those arrays and copy from the old BoxArray to the new
+           // one if the grids and/or dmap have changed.  Note that the
+           // SetBoxArray and SetDistributionMap calls above have re-defined
+           // grids and dmap to be the new ones.
            if (solve_fluid && (ba_changed || dm_changed) )
                RegridArrays(lev,grids[lev],dmap[lev]);
        }
@@ -55,8 +56,8 @@ mfix_level::Regrid (int lev, int nstep)
                                                            {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                             m_eb_full_grow_cells}, m_eb_support_level));
 
-           // eb_normals is a legacy of the old collision algorithm -> depricated
-           eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
+           // eb_normals is a legacy of the old collision algorithm -> deprecated
+           eb_normals   = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
        }
 
     } else if (load_balance_type == "KnapSack") {
@@ -110,9 +111,8 @@ mfix_level::Regrid (int lev, int nstep)
                                                                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                                      m_eb_full_grow_cells}, m_eb_support_level));
 
-                    // eb_normals is a legacy of the old collision algorithm -> depricated
-                    eb_normals   = pc -> EBNormals(lev, particle_ebfactory.get(), dummy.get());
-
+                    // eb_normals is a legacy of the old collision algorithm -> deprecated
+                    eb_normals   = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
                 }
             }
 
@@ -168,8 +168,10 @@ mfix_level::Regrid (int lev, int nstep)
         }
     }
 
-    // Note: this might not be necessary anymore if the level-set data is
-    // managed by mfix_level
+    // Note that this is still being done here (instead of
+    // mfix_level::RegridArrays, which only acts on the fluid grid) because of
+    // a dual grid: the level-set factory object regrids using the
+    // ParticleDistributionMap.
     level_set->regrid();
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
