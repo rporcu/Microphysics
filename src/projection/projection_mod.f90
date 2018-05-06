@@ -105,7 +105,7 @@ contains
    ! dir = 1, 2, 3 ( 1=x, 2=y, 3=z ) 
    !
    subroutine compute_fluid_acceleration ( lo, hi, rhs, rlo, rhi, sl, &
-        & u, ulo, uhi, v, vlo, vhi, w, wlo, whi, mu, slo, shi, rop,   &
+        & u, ulo, uhi, v, vlo, vhi, w, wlo, whi, trD, mu, lambda, rop, slo, shi, &
         & dx, dir ) bind(C)
 
       use convection_mod
@@ -132,9 +132,13 @@ contains
            &   u(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
            &   v(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
            &   w(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
-           &  mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           & rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            &  sl(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
+
+      real(ar),       intent(in   ) ::                       &
+           &    trD(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           &     mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           & lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           &    rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(ar),       intent(inout) ::                       &
            & rhs(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
@@ -156,19 +160,19 @@ contains
               & w, wlo, whi, sl, conv, dx )  
 
          call compute_divtau_x ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-              & w, wlo, whi, mu, slo, shi, diff, dx )
+              & w, wlo, whi, trD, mu, lambda, slo, shi, diff, dx )
       case(2)
          call compute_ugradu_y ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
               & w, wlo, whi, sl, conv, dx )
 
          call compute_divtau_y ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-              & w, wlo, whi, mu, slo, shi, diff, dx )
+              & w, wlo, whi, trD, mu, lambda, slo, shi, diff, dx )
       case(3)         
          call compute_ugradu_z ( lo, hi, u, ulo, uhi, v, vlo, vhi,  &
               & w, wlo, whi, sl, conv, dx )
 
          call compute_divtau_z ( lo, hi, u, ulo, uhi, v, vlo, vhi, &
-              & w, wlo, whi, mu, slo, shi, diff, dx )
+              & w, wlo, whi, trD, mu, lambda, slo, shi, diff, dx )
       end select
 
       i0 = e_i(dir,1)

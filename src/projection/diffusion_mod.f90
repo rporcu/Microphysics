@@ -35,7 +35,7 @@ contains
    !  txz =  mu * ( du/dz + dw/dx )
    ! 
    subroutine compute_divtau_x ( lo, hi, ug, ulo, uhi, vg, vlo, vhi, &
-        & wg, wlo, whi, mu, slo, shi, divtau_x, dx )  bind(C)
+        & wg, wlo, whi, trD, mu, lambda, slo, shi, divtau_x, dx )  bind(C)
 
       ! Loops bounds
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)
@@ -53,8 +53,12 @@ contains
       real(ar),        intent(in   ) ::                            &
            &  ug(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),       &
            &  vg(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)),       &
-           &  wg(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)),       &
-           &  mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           &  wg(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
+      real(ar),        intent(in   ) ::                            &
+           &     trD(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),       &
+           &      mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),       &
+           &  lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       
       real(ar),        intent(inout) ::                            &
            & divtau_x(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -71,6 +75,7 @@ contains
       idx = one / dx(1)
       idy = one / dx(2)
       idz = one / dx(3)
+
       
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
@@ -119,6 +124,10 @@ contains
                     &            ( txy_n - txy_s ) * idy + &
                     &            ( txz_t - txz_b ) * idz 
 
+               divtau_x(i,j,k) = divtau_x(i,j,k) +  & 
+                     (lambda(i  ,j,k)*trd(i  ,j,k)- &
+                      lambda(i-1,j,k)*trd(i-1,j,k)) * idx
+
             end do
          end do
       end do
@@ -135,7 +144,7 @@ contains
    !  txz =  mu * ( dv/dz + dw/dy )
    ! 
    subroutine compute_divtau_y ( lo, hi, ug, ulo, uhi, vg, vlo, vhi, &
-        & wg, wlo, whi, mu, slo, shi, divtau_y, dx ) bind(C)
+        & wg, wlo, whi, trD, mu, lambda, slo, shi, divtau_y, dx ) bind(C)
 
       ! Loop bounds
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)
@@ -153,8 +162,12 @@ contains
       real(ar),        intent(in   ) ::                           &
            & ug(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),       &
            & vg(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)),       &
-           & wg(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)),       &
-           & mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           & wg(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
+      real(ar),        intent(in   ) ::                            &
+           &     trD(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),       &
+           &      mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),       &
+           &  lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       
       real(ar),        intent(inout) ::                           &
            & divtau_y(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
@@ -221,6 +234,10 @@ contains
                     &            ( tyy_n - tyy_s ) * idy + &
                     &            ( tyz_t - tyz_b ) * idz
 
+               divtau_y(i,j,k) = divtau_y(i,j,k)   + & 
+                     (lambda(i,j  ,k)*trd(i,j  ,k) - &
+                      lambda(i,j-1,k)*trd(i,j-1,k)) * idy
+
             end do
          end do
       end do
@@ -236,7 +253,7 @@ contains
    !  tzz =  2 * mu * dw/dy
    ! 
    subroutine compute_divtau_z ( lo, hi, ug, ulo, uhi, vg, vlo, vhi, &
-        & wg, wlo, whi, mu, slo, shi, divtau_z, dx )  bind(C)
+        & wg, wlo, whi, trD, mu, lambda, slo, shi, divtau_z, dx )  bind(C)
 
       ! Loop bound
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)
@@ -254,8 +271,12 @@ contains
       real(ar),        intent(in   ) ::                           &
            & ug(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)),       &
            & vg(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)),       &
-           & wg(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)),       &
-           & mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           & wg(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
+      real(ar),        intent(in   ) ::                            &
+           &     trD(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),       &
+           &      mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),       &
+           &  lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(ar),        intent(inout) ::                           &
            & divtau_z(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)) 
@@ -321,6 +342,10 @@ contains
                divtau_z(i,j,k) = ( tzx_e - tzx_w ) * idx + &
                     &            ( tzy_n - tzy_s ) * idy + &
                     &            ( tzz_t - tzz_b ) * idz
+
+               divtau_z(i,j,k) = divtau_z(i,j,k)   + & 
+                     (lambda(i,j,k  )*trd(i,j,k  ) - &
+                      lambda(i,j,k-1)*trd(i,j,k-1)) * idz
 
             end do
          end do

@@ -667,8 +667,10 @@ extern "C"
             const amrex::Real* u,   const int* ulo, const int* uhi,
             const amrex::Real* v,   const int* vlo, const int* vhi,
             const amrex::Real* w,   const int* wlo, const int* whi,
-            const amrex::Real* mu,  const int* slo, const int* shi,
-            const amrex::Real* rop, const amrex::Real* dx,
+            const amrex::Real* trD,
+            const amrex::Real* mu,  const amrex::Real* lambda,  
+            const amrex::Real* rop, const int* slo, const int* shi,
+            const amrex::Real* dx,
             const int* dir
         );
 

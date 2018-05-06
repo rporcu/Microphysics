@@ -486,6 +486,36 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
     int xdir = 1;
     int ydir = 2;
     int zdir = 3;
+
+    Real dx = geom[lev].CellSize(0);
+    Real dy = geom[lev].CellSize(1);
+    Real dz = geom[lev].CellSize(2);
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (MFIter mfi(*ep_g[lev],true); mfi.isValid(); ++mfi)
+    {
+	const Box& bx = mfi.tilebox();
+	const Box& sbx = (*ep_g[lev])[mfi].box();
+
+	Box ubx((*u_g[lev])[mfi].box());
+	Box vbx((*v_g[lev])[mfi].box());
+	Box wbx((*w_g[lev])[mfi].box());
+
+	calc_trd_g(sbx.loVect(), sbx.hiVect(),
+		   ubx.loVect(), ubx.hiVect(),
+		   vbx.loVect(), vbx.hiVect(),
+		   wbx.loVect(), wbx.hiVect(),
+		   bx.loVect(),  bx.hiVect(),
+		   (*trD_g[lev])[mfi].dataPtr(),
+		   (*u_g[lev])[mfi].dataPtr(),
+		   (*v_g[lev])[mfi].dataPtr(),
+		   (*w_g[lev])[mfi].dataPtr(),
+		   &dx, &dy, &dz);
+    }
+    fill_mf_bc(lev,*trD_g[lev]);
+    trD_g[lev] -> FillBoundary(geom[lev].periodicity());
     
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -505,8 +535,10 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 	    BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
-            BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
-            (*rop_g[lev])[mfi].dataPtr (),
+            (*trD_g[lev])[mfi].dataPtr(),
+            ((*mu_g[lev])[mfi]).dataPtr(),
+            ((*lambda_g[lev])[mfi]).dataPtr(),
+            BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 	    geom[lev].CellSize (), &xdir );
 
 	// y direction
@@ -517,8 +549,10 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 	    BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
-            BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
-            (*rop_g[lev])[mfi].dataPtr (),
+            (*trD_g[lev])[mfi].dataPtr(),
+            ((*mu_g[lev])[mfi]).dataPtr(),
+            ((*lambda_g[lev])[mfi]).dataPtr(),
+            BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 	    geom[lev].CellSize (), &ydir );
 
 	// z direction
@@ -529,8 +563,10 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 	    BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
-            BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
-            (*rop_g[lev])[mfi].dataPtr (),
+            (*trD_g[lev])[mfi].dataPtr(),
+            ((*mu_g[lev])[mfi]).dataPtr(),
+            ((*lambda_g[lev])[mfi]).dataPtr(),
+            BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
 	    geom[lev].CellSize (), &zdir );
     }
 }
