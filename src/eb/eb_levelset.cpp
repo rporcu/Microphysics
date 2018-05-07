@@ -392,7 +392,35 @@ void LSFactory::invert() {
 }
 
 
-std::unique_ptr<iMultiFab> LSFactory::intersection_ebf(const EBFArrayBoxFactory & eb_factory, const EBIndexSpace & eb_is) {
+void LSFactory::set_data(const MultiFab & mf_ls){
+
+    ls_grid->copy(mf_ls, 0, 0, 1, ls_grid_pad, ls_grid_pad);
+    ls_grid->FillBoundary(geom_ls.periodicity());
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for(MFIter mfi( * ls_grid, true); mfi.isValid(); ++ mfi) {
+        Box tile_box = mfi.tilebox();
+        const int * lo = tile_box.loVect();
+        const int * hi = tile_box.hiVect();
+
+        const auto & ls_tile = (* ls_grid)[mfi];
+        auto & valid_tile    = (* ls_valid)[mfi];
+
+        fill_valid(lo, hi,
+                   valid_tile.dataPtr(), valid_tile.loVect(), valid_tile.hiVect(),
+                   ls_tile.dataPtr(),    ls_tile.loVect(),    ls_tile.hiVect(),
+                   & ls_grid_pad);
+
+    }
+
+    ls_valid->FillBoundary(geom_ls.periodicity());
+}
+
+
+std::unique_ptr<iMultiFab> LSFactory::intersection_ebf(const EBFArrayBoxFactory & eb_factory,
+                                                       const EBIndexSpace & eb_is) {
 
     // Generate facets (TODO: in future these can also be provided by user)
     std::unique_ptr<Vector<Real>> facets = eb_facets(eb_factory);

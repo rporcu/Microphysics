@@ -111,9 +111,17 @@ public:
             Real radius1, Real radius2, Real length, const RealVect & translation,
             int lev, bool water_tight);
 
+    void fill_levelset(int lev, bool use_walls, bool use_poly,
+                       const BaseIF & impfunc_walls, const BaseIF & impfunc_poly,
+                       int max_level, int grid_size, bool eb_verbosity);
+
     void WriteEBSurface(int lev);
 
     void InitIOData();
+
+    // flag enabling level-set restart (i.e. prevent make_eb_* from rebuilding
+    // the level-set data).
+    bool levelset__restart = false;
 
     // flag switching from calc_wall_collisions_ls to calc_wall_collisions if true
     bool legacy__eb_collisions = false;
