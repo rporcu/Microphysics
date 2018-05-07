@@ -359,6 +359,12 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     drag_u_new->FillBoundary(geom[lev].periodicity());
     drag_u[lev] = std::move(drag_u_new);
 
+    ng = bcoeff[lev][0]->nGrow();
+    std::unique_ptr<MultiFab> bcoeffx(new MultiFab(x_edge_ba,new_dmap,1,ng));
+    bcoeffx->copy(*bcoeff[lev][0],0,0,1,ng,ng);
+    bcoeffx->FillBoundary(geom[lev].periodicity());
+    bcoeff[lev][0] = std::move(bcoeffx);
+
    /****************************************************************************
     * Y-face-based arrays                                                      *
     ****************************************************************************/
@@ -422,6 +428,12 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     drag_v_new->FillBoundary(geom[lev].periodicity());
     drag_v[lev] = std::move(drag_v_new);
 
+    ng = bcoeff[lev][1]->nGrow();
+    std::unique_ptr<MultiFab> bcoeffy(new MultiFab(y_edge_ba,new_dmap,1,ng));
+    bcoeffy->copy(*bcoeff[lev][1],0,0,1,ng,ng);
+    bcoeffy->FillBoundary(geom[lev].periodicity());
+    bcoeff[lev][1] = std::move(bcoeffy);
+
    /****************************************************************************
     * Z-face-based arrays                                                      *
     ****************************************************************************/
@@ -484,6 +496,12 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     drag_w_new->copy(*drag_w[lev],0,0,1,ng,ng);
     drag_w_new->FillBoundary(geom[lev].periodicity());
     drag_w[lev] = std::move(drag_w_new);
+
+    ng = bcoeff[lev][2]->nGrow();
+    std::unique_ptr<MultiFab> bcoeffz(new MultiFab(z_edge_ba,new_dmap,1,ng));
+    bcoeffz->copy(*bcoeff[lev][2],0,0,1,ng,ng);
+    bcoeffz->FillBoundary(geom[lev].periodicity());
+    bcoeff[lev][2] = std::move(bcoeffz);
 
    /****************************************************************************
     * Nodal Arrays                                                             *
