@@ -163,6 +163,8 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
        bool is_checkpoint = true;
        pc -> Checkpoint(checkpointname, "particles", is_checkpoint, real_comp_names, int_comp_names);
     }
+
+
     // The level set might have a higher refinement than the mfix level.
     //      => Current mechanism for saving checkpoint files requires the same
     //         BoxArray for all MultiFabss on the same level
@@ -171,6 +173,8 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
     std::stringstream raw_ls_name;
     raw_ls_name << checkpointname << "/ls_raw";
     amrex::VisMF::Write( * level_set->get_data(), raw_ls_name.str() );
+
+    // Also save the paramters necessary to re-buid the LSFactory
     int levelset_params[] = { level_set->get_ls_ref(),
                               level_set->get_ls_pad(),
                               level_set->get_eb_ref(),
@@ -388,59 +392,9 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 
                     // Copy mf into chkscalarVars
                     if(chkscaVarsName[i] == "level-set") {
-                        std::stringstream ls_data_path;
-                        ls_data_path << restart_file << "/ls_raw";
-
-                        MultiFab ls_mf;
-                        VisMF::Read(ls_mf, ls_data_path.str());
-
-                        int levelset_params[4] = { levelset__refinement,
-                                                   levelset__pad,
-                                                   levelset__eb_refinement,
-                                                   levelset__eb_pad         };
-
-                        std::ifstream param_file;
-                        std::stringstream param_file_name;
-                        param_file_name << restart_file << "/LSFactory_params";
-                        param_file.open(param_file_name.str());
-
-                        amrex::readIntData(levelset_params, 4, param_file, FPC::NativeIntDescriptor());
-                        int ls_ref = levelset_params[0], ls_pad = levelset_params[1],
-                            eb_ref = levelset_params[2], eb_pad = levelset_params[3];
-
-                        amrex::Print() << "     + Loaded level-set parameters:" << std::endl
-                                       << "       ref = " << ls_ref << " pad = " << ls_pad
-                                       << " eb_ref = " << eb_ref << " eb_pad = " << eb_pad
-                                       << std::endl;
-
-                        if(ls_ref != levelset__refinement)
-                            amrex::Print() << "     * Overwrote levelset__refinement = " << levelset__refinement
-                                           << " -> " << ls_ref << std::endl;
-                        if(ls_pad != levelset__pad)
-                            amrex::Print() << "     * Overwrote levelset__pad = " << levelset__pad
-                                           << " -> " << ls_pad << std::endl;
-                        if(eb_ref != levelset__eb_refinement)
-                            amrex::Print() << "     * Overwrote levelset__eb_refinement = " << levelset__eb_refinement
-                                           << " -> " << eb_ref << std::endl;
-                        if(eb_pad != levelset__eb_pad)
-                            amrex::Print() << "     * Overwrote levelset__eb_pad = " << levelset__eb_pad
-                                           << " -> " << eb_pad << std::endl;
-
-                        // Level-Set: initialize container class for level set
-                        level_set = std::unique_ptr<LSFactory>(
-                                        new LSFactory(lev, ls_ref, eb_ref, ls_pad, eb_pad, pc.get())
-                                    );
-
-                        level_set->set_data(ls_mf);
-
-                        // Make sure that at (at least) an initial MultiFab ist stored in ls[lev].
-                        // (otherwise, if there are no walls/boundaries in the simulation, saving a
-                        // plot file or checkpoint will segfault).
-                        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-                        const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
-                        ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
-                        ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
-                        ls[lev]->FillBoundary(geom[lev].periodicity());
+                        // The level-set data is special, and because we want
+                        // to access it even without a fluid present, it is
+                        // loaded below.
                     } else {
                         ( * chkscalarVars[i])[lev]->copy(mf, 0, 0, 1, 0, 0);
                     }
@@ -477,6 +431,75 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        // This call to Replicate adds the new particles, then calls Redistribute()
        pc->Replicate(Nrep,geom[lev],dmap[lev],grids[lev]);
     }
+
+
+
+   /****************************************************************************
+    * Load level set data from checkpoint file                                 *
+    *                                                                          *
+    * Since the level-set data could be defined on a different BoxArray        *
+    * (compared to the rest of the checkpoint data) => the level-set data is   *
+    * stored in seperate ls_raw MultiFab.                                      *
+    ****************************************************************************/
+
+    // Load level-set Multifab
+    std::stringstream ls_data_path;
+    ls_data_path << restart_file << "/ls_raw";
+
+    MultiFab ls_mf;
+    VisMF::Read(ls_mf, ls_data_path.str());
+
+    // Load LSFactory parameters: => in case the user has changed the inputs
+    int levelset_params[4] = { levelset__refinement,
+                               levelset__pad,
+                               levelset__eb_refinement,
+                               levelset__eb_pad         };
+
+    std::ifstream param_file;
+    std::stringstream param_file_name;
+    param_file_name << restart_file << "/LSFactory_params";
+    param_file.open(param_file_name.str());
+
+    amrex::readIntData(levelset_params, 4, param_file, FPC::NativeIntDescriptor());
+    int ls_ref = levelset_params[0], ls_pad = levelset_params[1],
+        eb_ref = levelset_params[2], eb_pad = levelset_params[3];
+
+    amrex::Print() << "     + Loaded level-set parameters:" << std::endl
+                   << "       ref = " << ls_ref << " pad = " << ls_pad
+                   << " eb_ref = " << eb_ref << " eb_pad = " << eb_pad
+                   << std::endl;
+
+    // Inform the user if the checkpoint parameters do not match those in the
+    // inputs file. The checkpoint inputs overwrite the inputs file.
+    if(ls_ref != levelset__refinement)
+        amrex::Print() << "     * Overwrote levelset__refinement = " << levelset__refinement
+                       << " -> " << ls_ref << std::endl;
+    if(ls_pad != levelset__pad)
+        amrex::Print() << "     * Overwrote levelset__pad = " << levelset__pad
+                       << " -> " << ls_pad << std::endl;
+    if(eb_ref != levelset__eb_refinement)
+        amrex::Print() << "     * Overwrote levelset__eb_refinement = " << levelset__eb_refinement
+                       << " -> " << eb_ref << std::endl;
+    if(eb_pad != levelset__eb_pad)
+        amrex::Print() << "     * Overwrote levelset__eb_pad = " << levelset__eb_pad
+                       << " -> " << eb_pad << std::endl;
+
+    // Level-Set: initialize container class for level set
+    level_set = std::unique_ptr<LSFactory>(
+                    new LSFactory(lev, ls_ref, eb_ref, ls_pad, eb_pad, pc.get())
+                );
+    // Overwrite initial level-set data using the loaded MultiFab
+    level_set->set_data(ls_mf);
+
+    // Make sure that at (at least) an initial MultiFab ist stored in ls[lev].
+    // (otherwise, if there are no walls/boundaries in the simulation, saving a
+    // plot file or checkpoint will segfault).
+    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+    ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
+    ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
+    ls[lev]->FillBoundary(geom[lev].periodicity());
+
 
     if (solve_fluid)
     {
