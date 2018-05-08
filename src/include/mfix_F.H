@@ -29,6 +29,8 @@ extern "C"
 
     void set_ps(amrex::Real* dx, amrex::Real* dy, amrex::Real* dz, int* err, int* is_ioproc);
 
+    void set_delp_dir(int* delp_dir);
+
     void mfix_get_data(
             int* fluid, int* dem,
             int* steady_state, amrex::Real* dt, amrex::Real* dt_min, amrex::Real* dt_max,

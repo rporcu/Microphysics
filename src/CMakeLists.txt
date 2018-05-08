@@ -16,7 +16,7 @@ list ( APPEND F90SRC calc_tau.f90 compute_divu.f90 compute_vort.f90 )
 list ( APPEND F90SRC constant_mod.f90 eos_mod.f90 fill_bc0.f90 fld_constants_mod.f90 )
 list ( APPEND F90SRC get_data.f90 ic_mod.f90 init_fluid.f90 init_namelist.f90 )
 list ( APPEND F90SRC output_mod.f90 param_mod.f90 run_mod.f90 scales_mod.f90 )
-list ( APPEND F90SRC set_bc0.f90 set_bc_flow.f90 set_bc_type.f90 set_p0.f90 )
+list ( APPEND F90SRC set_bc0.f90 set_bc_flow.f90 set_bc_type.f90 set_p0.f90 set_delp_dir.f90 )
 list ( APPEND F90SRC set_ps.f90 set_velocity_bcs.f90 ps_mod.f90 utilities_mod.f90 )
 list ( APPEND F90SRC zero_wall_norm_vel.f90 amrex_to_mfix.F90 )
 

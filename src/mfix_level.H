@@ -431,7 +431,7 @@ private:
 
     int max_nit;
     int call_udf;
-    int dual_grid = 0;
+    bool dual_grid = false;
 
     // enable output_manager during des_time_loop
     bool subdt_io;

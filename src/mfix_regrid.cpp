@@ -23,7 +23,7 @@ mfix_level::Regrid (int lev, int nstep)
        //      and calls Redistribute.  This doesn't touch the fluid grids.
        pc -> BalanceParticleLoad_KDTree ();
 
-       if (dual_grid == 0)
+       if (!dual_grid)
        {
            bool ba_changed = (pc->ParticleBoxArray(lev)        != grids[lev]);
            bool dm_changed = (pc->ParticleDistributionMap(lev) !=  dmap[lev]);
