@@ -146,13 +146,6 @@ mfix_level::make_eb_geometry(int lev)
 
 
 
-//std::unique_ptr<BaseIF>
-//make_eb_wall(int dir, Real position, Real height, Real width, int lev, int water_tight) {
-//    Vector<BaseIF *> planes;
-//    planes.resize(0); // Make sure `planes` is empty (will use `push_back`)
-//
-//}
-
 
 
 void
@@ -727,6 +720,27 @@ std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string
 
     return std::unique_ptr<BaseIF>(poly2.newImplicitFunction());
 }
+
+
+//std::unique_ptr<BaseIF> mfix_level::make_wall(int dir, Real position, Real height, Real width, int lev,
+//                                              bool anisotropic, bool water_tight) {
+//    Vector<std::unique_ptr<BaseIF>> planes;
+//    RealVect normal = RealVect::Zero, center = RealVect::Zero;
+//
+//    // Upward-facing plane:
+//    normal[2] = 1;
+//    center[2] = height;
+//    std::unique_ptr<BaseIF> plane;
+//    if(anisotropic) {
+//        RealVect dxVec;
+//        for(int idir = 0; idir < 3; idir++)
+//            dxVec[idir] = geom[lev].CellSize()[idir];
+//        plane = std::unique_ptr<BaseIF>(new AnisotropicDxPlaneIF(normal, center, true, dxVec));
+//    } else {
+//        palne = std::unique_ptr<BaseIF>(new PlaneIF(normal, center, true));
+//    }
+//
+//}
 
 
 std::unique_ptr<BaseIF> mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & translation,

@@ -95,10 +95,10 @@ public:
     std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
     std::unique_ptr<BaseIF> get_poly(int lev, int max_order, std::string field_prefix);
 
-    std::unique_ptr<BaseIF> make_eb_wall(
+    std::unique_ptr<BaseIF> make_wall(
             int dir, // direction (long edge) of wall
             Real position, Real height, Real width,
-            int lev, int water_tight
+            int lev, bool anisotropic, bool water_tight
         );
 
     std::unique_ptr<BaseIF> make_cylinder(
