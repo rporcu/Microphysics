@@ -57,6 +57,10 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   integer(c_int), intent(in   ) :: lo(3),hi(3)
   real(c_real),   intent(in   ) :: dx, dy, dz
 
+
+  real(c_real), parameter :: sqrt3 = sqrt(3.0)
+  real(c_real), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+
   ! local index for initial condition
   integer :: icv
 
@@ -68,143 +72,154 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   integer :: np, type, i,j,k, init_pc
   real(c_real) :: ic_vol, type_vol, acc_vol, pvol
   real(c_real) :: ic_dlo(3), ic_dhi(3)
-  real(c_real) :: max_dp, max_rp
+  real(c_real) :: mean_dp, max_dp, max_rp
   real(c_real) :: pos(3)
 
   real(c_real), allocatable :: dp(:), ro_s(:)
 
+  integer :: seed, max_seed(3), seed_lo(3), seed_hi(3)
+
   init_pc = pc
 
-  !  Set the initial conditions.
+  ! Get the IC index
   do icv = 1, dim_ic
-     if (ic_defined(icv) .and. abs(ic_ep_g(icv)-1.0d0)>epsilon(0.0d0)) then
-
-        call calc_cell_ic(dx, dy, dz, &
-             ic_x_w(icv), ic_y_s(icv), ic_z_b(icv), &
-             ic_x_e(icv), ic_y_n(icv), ic_z_t(icv), &
-             i_w, i_e, j_s, j_n, k_b, k_t)
-
-        ! Start/end of IC domain bounds
-        ic_dlo(1) = (max(lo(1), i_w)    ) * dx
-        ic_dlo(2) = (max(lo(2), j_s)    ) * dy
-        ic_dlo(3) = (max(lo(3), k_b)    ) * dz
-        ic_dhi(1) = (min(hi(1), i_e) + 1) * dx
-        ic_dhi(2) = (min(hi(2), j_n) + 1) * dy
-        ic_dhi(3) = (min(hi(3), k_t) + 1) * dz
-
-        ! physical volume of local piece of IC region
-        ic_vol = (ic_dhi(1) - ic_dlo(1)) * &
-             (ic_dhi(2) - ic_dlo(2)) * &
-             (ic_dhi(3) - ic_dlo(3))
-
-        do type=1, particle_types
-
-           type_vol = ic_ep_s(icv,type) * ic_vol
-           if(type_vol > 0.0d0 .and. &
-              ic_dhi(1) > ic_dlo(1) .and. &
-              ic_dhi(2) > ic_dlo(2) .and. &
-              ic_dhi(3) > ic_dlo(3)) then
-
-              if(is_defined(ic_dp_max(icv,type))) then
-                 max_dp = ic_dp_max(icv,type)
-              else
-                 max_dp = ic_dp_mean(icv,type)
-              endif
-              max_rp = 0.5d0 * max_dp
-
-              pos = -1.0d20
-              np = 0
-              k  = 0
-              klp: do
-                 pos(3) = ic_dlo(3) + max_rp*(1.0d0 + &
-                      k*2.0d0*sqrt(6.0d0)/3.0d0)
-                 if(pos(3) + max_rp > ic_dhi(3)) exit klp
-                 j=0
-                 jlp: do
-                    pos(2) = ic_dlo(2) + max_rp*(1.0d0 + &
-                         sqrt(3.0d0)*(j+(1.0d0/3.0d0)*mod(k,2)))
-                    if(pos(2) + max_rp > ic_dhi(2)) exit jlp
-                    i=0
-                    ilp: do
-                       pos(1) = ic_dlo(1) + max_rp*(1.0d0 + &
-                            2.0d0*i + (mod(j+k,2)))
-                       if(pos(1) + max_rp > ic_dhi(1)) exit ilp
-                       i=i+1
-
-                       np = np + 1 ! local to type
-                       pc = pc + 1 ! local to routine
-
-                       call grow_pdata(pc)
-
-                       rdata(pc,1:3) = pos
-
-                    enddo ilp
-                    j=j+1; i=0
-                 enddo jlp
-                 k=k+1; j=0
-              enddo klp
-
-              allocate(dp(np))
-              allocate(ro_s(np))
-
-              ! Setup particle diameters
-              if(ic_dp_dist(icv,type) == 'NORMAL') then
-                 call nor_rno(dp, ic_dp_mean(icv,type), ic_dp_std(icv,type), &
-                      ic_dp_min(icv,type), ic_dp_max(icv,type))
-
-              else if(ic_dp_dist(icv,type) == 'UNIFORM') then
-                 call uni_rno(dp, ic_dp_min(icv,type), ic_dp_max(icv,type))
-              else
-                 dp = ic_dp_mean(icv,type)
-              endif
-
-              if(ic_ro_s_dist(icv,type) == 'NORMAL') then
-                 call nor_rno(ro_s, ic_ro_s_mean(icv,type), ic_ro_s_std(icv,type), &
-                      ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
-
-              else if(ic_ro_s_dist(icv,type) == 'UNIFORM') then
-                 call uni_rno(ro_s, ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
-              else
-                 ro_s = ic_ro_s_mean(icv,type)
-              endif
-
-              pc = init_pc
-              acc_vol = 0.0d0
-              nplp: do i=1,np
-
-                 pvol = (pi/6.0d0)*dp(i)**3
-                 if(acc_vol <= type_vol) then
-
-                    pc = pc + 1
-
-                    !< Radius................. 4
-                    rdata(pc,4) = 0.5d0*dp(i)
-
-                    !< Density................ 5
-                    rdata(pc,5) = ro_s(i)
-
-                    !< Linear velocity........ 6,7,8
-                    rdata(pc,6) = ic_u_s(icv,type)
-                    rdata(pc,7) = ic_v_s(icv,type)
-                    rdata(pc,8) = ic_w_s(icv,type)
-
-                    !< Type................... 1
-                    idata(pc,1) = type
-
-                    acc_vol = acc_vol + pvol
-                 else
-                    exit nplp
-                 endif
-              enddo nplp
-
-              if(allocated(ro_s)) deallocate(ro_s)
-              if(allocated(dp  )) deallocate(dp)
-
-           endif
-        enddo
-
-     endif
+     if (ic_defined(icv) .and. abs(ic_ep_g(icv)-1.0d0)>epsilon(0.0d0)) exit
   enddo
+
+  ! Get the solids type index
+  do type=1, particle_types
+     if(ic_ep_s(icv,type) > epsilon(0.d0)) exit
+  enddo
+
+
+  call calc_cell_ic(dx, dy, dz, &
+       ic_x_w(icv), ic_y_s(icv), ic_z_b(icv), &
+       ic_x_e(icv), ic_y_n(icv), ic_z_t(icv), &
+       i_w, i_e, j_s, j_n, k_b, k_t)
+
+  ! Start/end of IC domain bounds
+  ic_dlo(1) = (max(lo(1), i_w)    ) * dx
+  ic_dlo(2) = (max(lo(2), j_s)    ) * dy
+  ic_dlo(3) = (max(lo(3), k_b)    ) * dz
+  ic_dhi(1) = (min(hi(1), i_e) + 1) * dx
+  ic_dhi(2) = (min(hi(2), j_n) + 1) * dy
+  ic_dhi(3) = (min(hi(3), k_t) + 1) * dz
+
+! physical volume of IC region
+  ic_vol = (ic_x_e(icv) - ic_x_w(icv)) * &
+           (ic_y_n(icv) - ic_y_s(icv)) * &
+           (ic_z_t(icv) - ic_z_b(icv))
+
+  ! Spacing is based on maximum particle size
+  if(is_defined(ic_dp_max(icv,type))) then
+     max_dp = ic_dp_max(icv,type)
+  else
+     max_dp = ic_dp_mean(icv,type)
+  endif
+  max_rp = 0.5d0 * max_dp
+
+  ! Particle count is based on mean particle size
+  seed = ic_vol * ic_ep_s(icv,type) / &
+       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+
+  ! Total to seed over the whole IC region
+  max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
+  max_seed(3) = int((ic_z_t(icv) - ic_z_b(icv) - max_dp)/(sqrt3*max_rp))
+  max_seed(2) = int(seed / (max_seed(1)*max_seed(3)))
+
+  ! local grid seed loop hi/lo
+  seed_lo(1) = nint((ic_dlo(1) - i_w*dx) / max_dp)
+  seed_lo(3) = nint((ic_dlo(3) - k_b*dz) / (sqrt3 * max_rp))
+  seed_lo(2) = nint((ic_dlo(2) - j_s*dy) / ((sqrt6o3x2) * max_rp))
+
+  seed_hi(1) = nint((ic_dhi(1) - i_w*dx) /  max_dp - seed_lo(1)*max_dp)
+  seed_hi(3) = nint((ic_dhi(3) - k_b*dz) / (sqrt3 * max_rp) - seed_lo(1)*max_dp)
+  seed_hi(2) = nint((ic_dhi(2) - j_s*dy) / ((sqrt6o3x2) * max_rp) - seed_lo(1)*max_dp)
+
+  seed_hi(1) = min(max_seed(1), seed_hi(1)-1)
+  seed_hi(3) = min(max_seed(3), seed_hi(3)-1)
+  seed_hi(2) = min(max_seed(2), seed_hi(2)-1)
+
+  pos = -1.0d20
+  np = 0
+
+  do j=seed_lo(2), seed_hi(2)
+
+     pos(2) = j_s*dy + max_rp*(1.0d0 + j*sqrt6o3x2)
+
+     do k=seed_lo(3), seed_hi(3)
+
+        pos(3) = k_b*dz + max_rp*(1.0d0 + sqrt3*(k+(mod(j,2)/3.0d0)))
+
+        do i=seed_lo(1), seed_hi(1)
+
+           pos(1) = i_w*dx + max_rp* (1.0d0 + 2.0d0*i + mod(j+k,2))
+
+           np = np + 1 ! local to type
+           pc = pc + 1 ! local to routine
+
+           call grow_pdata(pc)
+
+           rdata(pc,1:3) = pos
+
+        enddo
+     enddo
+  enddo
+
+  ! No more work.
+  if(np == 0) return
+
+  allocate(dp(np))
+  allocate(ro_s(np))
+
+  ! Setup particle diameters
+  if(ic_dp_dist(icv,type) == 'NORMAL') then
+     call nor_rno(dp, ic_dp_mean(icv,type), ic_dp_std(icv,type), &
+          ic_dp_min(icv,type), ic_dp_max(icv,type))
+
+  else if(ic_dp_dist(icv,type) == 'UNIFORM') then
+     call uni_rno(dp, ic_dp_min(icv,type), ic_dp_max(icv,type))
+  else
+     dp = ic_dp_mean(icv,type)
+  endif
+
+  if(ic_ro_s_dist(icv,type) == 'NORMAL') then
+     call nor_rno(ro_s, ic_ro_s_mean(icv,type), ic_ro_s_std(icv,type), &
+          ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
+
+  else if(ic_ro_s_dist(icv,type) == 'UNIFORM') then
+     call uni_rno(ro_s, ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
+  else
+     ro_s = ic_ro_s_mean(icv,type)
+  endif
+
+  pc = init_pc
+  acc_vol = 0.0d0
+  nplp: do i=1,np
+
+     pvol = (pi/6.0d0)*dp(i)**3
+
+     pc = pc + 1
+
+     !< Radius................. 4
+     rdata(pc,4) = 0.5d0*dp(i)
+
+     !< Density................ 5
+     rdata(pc,5) = ro_s(i)
+
+     !< Linear velocity........ 6,7,8
+     rdata(pc,6) = ic_u_s(icv,type)
+     rdata(pc,7) = ic_v_s(icv,type)
+     rdata(pc,8) = ic_w_s(icv,type)
+
+     !< Type................... 1
+     idata(pc,1) = type
+
+  enddo nplp
+
+  if(allocated(ro_s)) deallocate(ro_s)
+  if(allocated(dp  )) deallocate(dp)
+
 
   return
 end subroutine particle_generator
