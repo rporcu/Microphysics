@@ -33,9 +33,9 @@
       real(c_real), intent(inout) :: p0_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: dx, dy, dz
-      real(c_real), intent(in   ) :: xlength, ylength, zlength
-      integer     , intent(  out) :: delp_dir
+      real(c_real), intent(in) :: dx, dy, dz
+      real(c_real), intent(in) :: xlength, ylength, zlength
+      integer     , intent(in) :: delp_dir
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -45,20 +45,6 @@
       real(c_real) :: pj
 ! Average pressure drop per unit length
       real(c_real) :: dpodx, dpody, dpodz
-
-! ---------------------------------------------------------------->>>
-
-      ! First pass out the direction in which we drop by delp (if any)
-      ! so that we can set the correct periodicity flag in the C++
-      if (abs(delp_x) > epsilon(zero)) then
-         delp_dir = 0
-      else if (abs(delp_y) > epsilon(zero)) then
-         delp_dir = 1
-      else if (abs(delp_z) > epsilon(zero)) then
-         delp_dir = 2
-      else
-         delp_dir = -1
-      end if
 
 ! ---------------------------------------------------------------->>>
 
