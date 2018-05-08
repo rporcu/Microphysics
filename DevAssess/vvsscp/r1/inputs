@@ -29,7 +29,7 @@ amr.check_int = -1
 amr.plot_int  = 40
 amr.plot_file = R_AMR_
 
-amr.par_ascii_int  = -1
+amr.par_ascii_int  = 40
 amr.par_ascii_file = R_DES_DATA_
 
 
