@@ -22,7 +22,7 @@ amr.max_level = 0
 
 #  Run time of simulation
 amr.stop_time = 0.20
-amr.restart   ="chk00100"
+#amr.restart   ="chk00100"
 # Projection Method
 #mfix.use_proj_method   = 1
 # Regrinding and Load Balancing
@@ -56,12 +56,19 @@ mfix.use_walls        = true
 mfix.use_poly2        = true
 mfix.poly2_mirror     = true  # Fluid is on the inside of cylinder
 mfix.write_eb_surface = true  # Needed to output eb-surfaces
+mfix.use_divider      = true
 
 # Cylinder ::  x^2 + y^2 = R^2
 mfix.poly2_x_coeffs  =   0.00     0.00     1.00
 mfix.poly2_y_coeffs  =   0.00     0.00     1.00
 mfix.poly2_z_coeffs  =  -2.56e-6  0.00     0.00
 mfix.poly2_translate =   1.6e-3   1.6e-3   0.00
+
+# Divider (dividing wall)
+mfix.divider_position = 0.8e-3
+mfix.divider_height   = 0.0012
+mfix.divider_width    = 0.0002
+mfix.divider_dir      = 0
 
 # Wall-Collision algorithm details:
 # Level-set refinement and padding

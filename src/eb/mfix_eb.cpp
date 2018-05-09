@@ -41,11 +41,28 @@ mfix_level::make_eb_geometry(int lev)
 
     ParmParse pp("mfix");
 
-    bool use_walls = true;
-    bool use_poly2 = false;
+    bool use_walls   = true;
+    bool use_poly2   = false;
+    bool use_divider = false;
 
-    pp.query("use_walls", use_walls);
-    pp.query("use_poly2", use_poly2);
+    pp.query("use_walls",   use_walls);
+    pp.query("use_poly2",   use_poly2);
+    pp.query("use_divider", use_divider);
+
+
+   /****************************************************************************
+    * IF using divider => Extract parameters                                   *
+    ****************************************************************************/
+
+    int div_dir = 0;
+    Real div_pos, div_height, div_width;
+
+    if(use_divider) {
+        pp.query("divider_position", div_pos);
+        pp.query("divider_height",   div_height);
+        pp.query("divider_width",    div_width);
+        pp.query("div_dir",          div_dir);
+    }
 
 
    /****************************************************************************
@@ -66,10 +83,16 @@ mfix_level::make_eb_geometry(int lev)
         bool has_walls;
         // Store wall implicit function separately (used by level-set)
         impfunc_walls = get_walls(lev, false, has_walls);
+        if(use_divider) {
+            std::unique_ptr<BaseIF> divider = make_wall(
+                    div_dir, div_pos, div_height, div_width, lev, false
+                );
+            Vector<BaseIF *> funcs{impfunc_walls.get(), divider.get()};
+            IntersectionIF imp_func(funcs);
+            impfunc_walls.reset(imp_func.newImplicitFunction());
+        }
 
-        Vector<BaseIF*> funcs(2);
-        funcs[0] = impfunc_poly2.get();
-        funcs[1] = impfunc_walls.get();
+        Vector<BaseIF *> funcs{impfunc_poly2.get(), impfunc_walls.get()};
         IntersectionIF implicit(funcs);
         impfunc.reset(implicit.newImplicitFunction());
 
@@ -85,6 +108,16 @@ mfix_level::make_eb_geometry(int lev)
       bool has_walls;
       impfunc_walls = get_walls(lev, true, has_walls);
       impfunc.reset(impfunc_walls->newImplicitFunction());
+
+      impfunc_walls = get_walls(lev, false, has_walls);
+      if(use_divider) {
+          std::unique_ptr<BaseIF> divider = make_wall(
+                  div_dir, div_pos, div_height, div_width, lev, false
+              );
+          Vector<BaseIF *> funcs{impfunc_walls.get(), divider.get()};
+          IntersectionIF imp_func(funcs);
+          impfunc_walls.reset(imp_func.newImplicitFunction());
+      }
     }
 
 
@@ -145,9 +178,6 @@ mfix_level::make_eb_geometry(int lev)
 }
 
 
-
-
-
 void
 mfix_level::make_eb_hourglass(int lev)
 {
@@ -192,7 +222,7 @@ mfix_level::make_eb_hourglass(int lev)
     *                       +--- intersects  walls                             *
     ****************************************************************************/
 
-    Vector<BaseIF *> bulbs{poly1t.get(),poly2t.get()};
+    Vector<BaseIF *> bulbs{poly1t.get(), poly2t.get()};
     UnionIF unpolys(bulbs);
 
     impfunc_unpolys = std::unique_ptr<BaseIF>(unpolys.newImplicitFunction());
@@ -707,13 +737,10 @@ std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string
     pp.query(mirror_field.str().c_str(), flip);
 
     PolynomialIF mirror(poly, flip);
-    RealVect translation;
 
     Vector<Real> transvec(SpaceDim);
     pp.getarr(translate_field.str().c_str(), transvec, 0, SpaceDim);
-
-    for(int idir = 0; idir < 3; idir++)
-        translation[idir] = transvec[idir];
+    RealVect translation = RealVect(transvec);
 
     TransformIF poly2(mirror);
     poly2.translate(translation);
@@ -722,25 +749,69 @@ std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string
 }
 
 
-//std::unique_ptr<BaseIF> mfix_level::make_wall(int dir, Real position, Real height, Real width, int lev,
-//                                              bool anisotropic, bool water_tight) {
-//    Vector<std::unique_ptr<BaseIF>> planes;
-//    RealVect normal = RealVect::Zero, center = RealVect::Zero;
-//
-//    // Upward-facing plane:
-//    normal[2] = 1;
-//    center[2] = height;
-//    std::unique_ptr<BaseIF> plane;
-//    if(anisotropic) {
-//        RealVect dxVec;
-//        for(int idir = 0; idir < 3; idir++)
-//            dxVec[idir] = geom[lev].CellSize()[idir];
-//        plane = std::unique_ptr<BaseIF>(new AnisotropicDxPlaneIF(normal, center, true, dxVec));
-//    } else {
-//        palne = std::unique_ptr<BaseIF>(new PlaneIF(normal, center, true));
-//    }
-//
-//}
+std::unique_ptr<BaseIF> mfix_level::make_wall(int dir, Real position, Real height, Real width,
+                                              int lev, bool anisotropic) {
+    Vector<std::unique_ptr<BaseIF>> planes;
+    RealVect normal = RealVect::Zero, center = RealVect::Zero;
+
+    // Upward-facing plane:
+    normal = {0.,   0.,   1.};
+    center = {0.,   0., height};
+    std::unique_ptr<BaseIF> plane;
+
+    if(anisotropic) {
+        RealVect dxVec;
+        for(int idir = 0; idir < 3; idir++)
+            dxVec[idir] = geom[lev].CellSize()[idir];
+        plane = std::unique_ptr<BaseIF>(new AnisotropicDxPlaneIF(normal, center, true, dxVec));
+    } else {
+        plane = std::unique_ptr<BaseIF>(new PlaneIF(normal, center, true));
+    }
+
+    planes.push_back(std::move(plane));
+
+    // First side-facing plane
+    normal = RealVect::Zero;
+    center = RealVect::Zero;
+    normal[dir] = 1.;
+    center[dir] = position + width;
+
+    if(anisotropic) {
+        RealVect dxVec;
+        for(int idir = 0; idir < 3; idir++)
+            dxVec[idir] = geom[lev].CellSize()[idir];
+        plane = std::unique_ptr<BaseIF>(new AnisotropicDxPlaneIF(normal, center, true, dxVec));
+    } else {
+        plane = std::unique_ptr<BaseIF>(new PlaneIF(normal, center, true));
+    }
+
+    planes.push_back(std::move(plane));
+
+    // Second side-facing plane
+    normal = RealVect::Zero;
+    center = RealVect::Zero;
+    normal[dir] = -1.;
+    center[dir] = position - width;
+
+    if(anisotropic) {
+        RealVect dxVec;
+        for(int idir = 0; idir < 3; idir++)
+            dxVec[idir] = geom[lev].CellSize()[idir];
+        plane = std::unique_ptr<BaseIF>(new AnisotropicDxPlaneIF(normal, center, true, dxVec));
+    } else {
+        plane = std::unique_ptr<BaseIF>(new PlaneIF(normal, center, true));
+    }
+
+    planes.push_back(std::move(plane));
+
+    // Union components together
+    Vector<BaseIF *> plane_ptrs;
+    for(auto & pl : planes)
+        plane_ptrs.push_back(pl.get());
+    UnionIF wall_uf(plane_ptrs);
+
+    return std::unique_ptr<BaseIF>(wall_uf.newImplicitFunction());
+}
 
 
 std::unique_ptr<BaseIF> mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & translation,
