@@ -107,17 +107,17 @@ mfix_level::make_eb_geometry(int lev)
     } else if(use_walls){
       bool has_walls;
       impfunc_walls = get_walls(lev, true, has_walls);
-      impfunc.reset(impfunc_walls->newImplicitFunction());
 
-      impfunc_walls = get_walls(lev, false, has_walls);
       if(use_divider) {
           std::unique_ptr<BaseIF> divider = make_wall(
-                  div_dir, div_pos, div_height, div_width, lev, false
+                  div_dir, div_pos, div_height, div_width, lev, true
               );
           Vector<BaseIF *> funcs{impfunc_walls.get(), divider.get()};
           IntersectionIF imp_func(funcs);
           impfunc_walls.reset(imp_func.newImplicitFunction());
       }
+
+      impfunc.reset(impfunc_walls->newImplicitFunction());
     }
 
 
