@@ -44,7 +44,7 @@ mfix.particle_init_type = "Auto"
 
 amr.par_ascii_int  =-1
 amr.par_ascii_file ="vis"
-amr.plot_int       = 100
+amr.plot_int       = 20
 amr.plot_file      ="plt"
 amr.check_int      = 100
 amr.check_file     ="chk"
