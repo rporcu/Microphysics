@@ -390,6 +390,46 @@ contains
 
 
 
+    !----------------------------------------------------------------------------------------------------------------!
+    !                                                                                                                !
+    !   pure subroutine FILL_VALID                                                                                   !
+    !                                                                                                                !
+    !   Purpose: Fills elements of valid with 1 whenever it corresponds to a position with n_pad of the level set    !
+    !   value being negative (i.e. phi < 0), and 0 otherwise.                                                        !
+    !                                                                                                                !
+    !----------------------------------------------------------------------------------------------------------------!
+
+    pure subroutine fill_valid(       lo,     hi, &
+                               valid, vlo,   vhi, &
+                               phi,   phlo, phhi, &
+                               n_pad            ) &
+                    bind(C, name="fill_valid")
+
+        implicit none
+
+        integer, dimension(3), intent(in   ) :: lo, hi, vlo, vhi, phlo, phhi
+        integer,               intent(in   ) :: n_pad
+        integer,               intent(  out) :: valid( vlo(1):vhi(1),   vlo(2):vhi(2),   vlo(3):vhi(3))
+        real(c_real),          intent(in   ) :: phi  (phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3))
+
+        integer :: i, j, k
+        logical :: valid_cell
+
+
+        do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+                do i = lo(1), hi(1)
+                    valid_cell = neighbour_is_valid(phi, phlo, phhi, i, j, k, n_pad)
+                    if ( valid_cell ) then
+                        valid(i, j, k) = 1
+                    end if
+                end do
+            end do
+        end do
+
+    end subroutine fill_valid
+
+
     pure function neighbour_is_valid(phi, phlo, phhi, i, j, k, n_pad)
         implicit none
 

@@ -171,6 +171,8 @@ int main (int argc, char* argv[])
     else
     {
         restart_flag = 1;
+        my_mfix.levelset__restart = true;
+
         IntVect Nrep(repl_x, repl_y, repl_z);
         my_mfix.Restart(restart_file, & nstep, & dt, & time, Nrep);
 

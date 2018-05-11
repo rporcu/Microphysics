@@ -55,6 +55,13 @@ extern "C"
             const amrex_real * dx,      const amrex_real * dx_eb
         );
 
+    void fill_valid(
+            const int * lo,         const int * hi,
+            int * valid,            const int * vlo,  const int * vhi,
+            const amrex_real * phi, const int * phlo, const int * phhi,
+            const int * n_pad
+        );
+
     void update_levelset_intersection(
             const int * lo,           const int * hi,
             const int * valid_in,     const int * vilo, const int * vihi,

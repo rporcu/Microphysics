@@ -41,14 +41,20 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         pp.query("load_balance_type", load_balance_type);
         pp.query("knapsack_weight_type" , knapsack_weight_type);
 
-        pp.query("dual_grid", dual_grid);
-
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
                             load_balance_type == "KDTree"    ||
                             load_balance_type == "KnapSack");
 
         AMREX_ALWAYS_ASSERT(knapsack_weight_type == "RunTimeCosts" ||
                             knapsack_weight_type == "NumParticles"  );
+
+        // We ensure that we always use the dual grid formulation when using KDTree, and 
+        //           that we  never use the dual grid formulation otherwise
+        if (load_balance_type == "KDTree") {
+           dual_grid = true;
+        } else {
+           dual_grid = false;
+        }
 
         // If subdt_io is true, des_time_loop calls output_manager
         subdt_io = false; // default to false (if not present in inputs file)
@@ -77,11 +83,6 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
     solve_dem    = solve_dem_in;
     max_nit      = max_nit_in;
     call_udf     = call_udf_in;
-
-    {
-        ParmParse pp("amr");
-        pp.query("dual_grid", dual_grid);
-    }
 
     {
         ParmParse pp("particles");
@@ -676,6 +677,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
   mfix_set_bc0(lev);
 
   int delp_dir;
+  set_delp_dir(&delp_dir);
 
   // We deliberately don't tile this loop since we will be looping
   //    over bc's on faces and it makes more sense to do this one grid at a time

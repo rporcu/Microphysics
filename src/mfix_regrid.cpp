@@ -23,7 +23,7 @@ mfix_level::Regrid (int lev, int nstep)
        //      and calls Redistribute.  This doesn't touch the fluid grids.
        pc -> BalanceParticleLoad_KDTree ();
 
-       if (dual_grid == 0)
+       if (!dual_grid)
        {
            bool ba_changed = (pc->ParticleBoxArray(lev)        != grids[lev]);
            bool dm_changed = (pc->ParticleDistributionMap(lev) !=  dmap[lev]);
@@ -289,6 +289,13 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     vort_new->FillBoundary(geom[lev].periodicity());
     vort[lev] = std::move(vort_new);
 
+    // Pressure increment (phi)
+    ng = phi[lev]->nGrow();
+    std::unique_ptr<MultiFab> phi_new(new MultiFab(new_grids,new_dmap,1,diveu[lev]->nGrow()));
+    phi_new->copy(*phi[lev],0,0,1,ng,ng);
+    phi_new->FillBoundary(geom[lev].periodicity());
+    phi[lev] = std::move(phi_new);
+
     // Diveu
     ng = diveu[lev]->nGrow();
     std::unique_ptr<MultiFab> diveu_new(new MultiFab(new_grids,new_dmap,1,diveu[lev]->nGrow()));
@@ -323,41 +330,52 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     u_gt_new->FillBoundary(geom[lev].periodicity());
     u_gt[lev] = std::move(u_gt_new);
 
-    ng = d_e[lev]->nGrow();
-    std::unique_ptr<MultiFab> d_e_new(new MultiFab(x_edge_ba,new_dmap,1,ng));
-    d_e_new->copy(*d_e[lev],0,0,1,ng,ng);
-    d_e_new->FillBoundary(geom[lev].periodicity());
-    d_e[lev] = std::move(d_e_new);
-
-    ng = tau_u_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> tau_u_g_new(new MultiFab(x_edge_ba,new_dmap,1,ng));
-    tau_u_g_new->copy(*tau_u_g[lev],0,0,1,ng,ng);
-    tau_u_g_new->FillBoundary(geom[lev].periodicity());
-    tau_u_g[lev] = std::move(tau_u_g_new);
-
-    ng = fluxX[lev]->nGrow();
-    std::unique_ptr<MultiFab> fluxX_new(new MultiFab(x_edge_ba,new_dmap,1,ng));
-    fluxX_new->copy(*fluxX[lev],0,0,1,ng,ng);
-    fluxX_new->FillBoundary(geom[lev].periodicity());
-    fluxX[lev] = std::move(fluxX_new);
-
     ng = ropX[lev]->nGrow();
     std::unique_ptr<MultiFab> ropX_new(new MultiFab(x_edge_ba,new_dmap,1,ng));
     ropX_new->copy(*ropX[lev],0,0,1,ng,ng);
     ropX_new->FillBoundary(geom[lev].periodicity());
     ropX[lev] = std::move(ropX_new);
 
-    ng = f_gds_u[lev]->nGrow();
-    std::unique_ptr<MultiFab> f_gds_u_new(new MultiFab(x_edge_ba,new_dmap,1,ng));
-    f_gds_u_new->copy(*f_gds_u[lev],0,0,1,ng,ng);
-    f_gds_u_new->FillBoundary(geom[lev].periodicity());
-    f_gds_u[lev] = std::move(f_gds_u_new);
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> d_e_new(new MultiFab(x_edge_ba,new_dmap,1,d_e[lev]->nGrow()));
+    d_e[lev] = std::move(d_e_new);
+    d_e[lev]->setVal(0.);
 
-    ng = drag_u[lev]->nGrow();
-    std::unique_ptr<MultiFab> drag_u_new(new MultiFab(x_edge_ba,new_dmap,1,ng));
-    drag_u_new->copy(*drag_u[lev],0,0,1,ng,ng);
-    drag_u_new->FillBoundary(geom[lev].periodicity());
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> tau_u_g_new(new MultiFab(x_edge_ba,new_dmap,1,tau_u_g[lev]->nGrow()));
+    tau_u_g[lev] = std::move(tau_u_g_new);
+    tau_u_g[lev]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> fluxX_new(new MultiFab(x_edge_ba,new_dmap,1,fluxX[lev]->nGrow()));
+    fluxX[lev] = std::move(fluxX_new);
+    fluxX[lev]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> f_gds_u_new(new MultiFab(x_edge_ba,new_dmap,1,f_gds_u[lev]->nGrow()));
+    f_gds_u[lev] = std::move(f_gds_u_new);
+    f_gds_u[lev]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> drag_u_new(new MultiFab(x_edge_ba,new_dmap,1,drag_u[lev]->nGrow()));
     drag_u[lev] = std::move(drag_u_new);
+    drag_u[lev]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> bcoeffx(new MultiFab(x_edge_ba,new_dmap,1,bcoeff[lev][0]->nGrow()));
+    bcoeff[lev][0] = std::move(bcoeffx);
+    bcoeff[lev][0]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> slopes_u_new(new MultiFab(x_edge_ba,new_dmap,3,slopes_u[lev]->nGrow()));
+    slopes_u[lev] = std::move(slopes_u_new);
+    slopes_u[lev]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> uacc_new(new MultiFab(x_edge_ba,new_dmap,1,uacc[lev]->nGrow()));
+    uacc[lev] = std::move(uacc_new);
+    uacc[lev]->setVal(0.);
+
 
    /****************************************************************************
     * Y-face-based arrays                                                      *
@@ -386,41 +404,52 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     v_gt_new->FillBoundary(geom[lev].periodicity());
     v_gt[lev] = std::move(v_gt_new);
 
-    ng = d_n[lev]->nGrow();
-    std::unique_ptr<MultiFab> d_n_new(new MultiFab(y_edge_ba,new_dmap,1,ng));
-    d_n_new->copy(*d_n[lev],0,0,1,ng,ng);
-    d_n_new->FillBoundary(geom[lev].periodicity());
-    d_n[lev] = std::move(d_n_new);
-
-    ng = tau_v_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> tau_v_g_new(new MultiFab(y_edge_ba,new_dmap,1,ng));
-    tau_v_g_new->copy(*tau_v_g[lev],0,0,1,ng,ng);
-    tau_v_g_new->FillBoundary(geom[lev].periodicity());
-    tau_v_g[lev] = std::move(tau_v_g_new);
-
-    ng = fluxY[lev]->nGrow();
-    std::unique_ptr<MultiFab> fluxY_new(new MultiFab(y_edge_ba,new_dmap,1,ng));
-    fluxY_new->copy(*fluxY[lev],0,0,1,ng,ng);
-    fluxY_new->FillBoundary(geom[lev].periodicity());
-    fluxY[lev] = std::move(fluxY_new);
-
     ng = ropY[lev]->nGrow();
     std::unique_ptr<MultiFab> ropY_new(new MultiFab(y_edge_ba,new_dmap,1,ng));
     ropY_new->copy(*ropY[lev],0,0,1,ng,ng);
     ropY_new->FillBoundary(geom[lev].periodicity());
     ropY[lev] = std::move(ropY_new);
 
-    ng = f_gds_v[lev]->nGrow();
-    std::unique_ptr<MultiFab> f_gds_v_new(new MultiFab(y_edge_ba,new_dmap,1,ng));
-    f_gds_v_new->copy(*f_gds_v[lev],0,0,1,ng,ng);
-    f_gds_v_new->FillBoundary(geom[lev].periodicity());
-    f_gds_v[lev] = std::move(f_gds_v_new);
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> d_n_new(new MultiFab(y_edge_ba,new_dmap,1,d_n[lev]->nGrow()));
+    d_n[lev] = std::move(d_n_new);
+    d_n[lev]->setVal(0.);
 
-    ng = drag_v[lev]->nGrow();
-    std::unique_ptr<MultiFab> drag_v_new(new MultiFab(y_edge_ba,new_dmap,1,ng));
-    drag_v_new->copy(*drag_v[lev],0,0,1,ng,ng);
-    drag_v_new->FillBoundary(geom[lev].periodicity());
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> tau_v_g_new(new MultiFab(y_edge_ba,new_dmap,1,tau_v_g[lev]->nGrow()));
+    tau_v_g[lev] = std::move(tau_v_g_new);
+    tau_v_g[lev]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> fluxY_new(new MultiFab(y_edge_ba,new_dmap,1,fluxY[lev]->nGrow()));
+    fluxY[lev] = std::move(fluxY_new);
+    fluxY[lev]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> f_gds_v_new(new MultiFab(y_edge_ba,new_dmap,1,f_gds_v[lev]->nGrow()));
+    f_gds_v[lev] = std::move(f_gds_v_new);
+    f_gds_v[lev]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> drag_v_new(new MultiFab(y_edge_ba,new_dmap,1,drag_v[lev]->nGrow()));
     drag_v[lev] = std::move(drag_v_new);
+    drag_v[lev]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> bcoeffy(new MultiFab(y_edge_ba,new_dmap,1,bcoeff[lev][1]->nGrow()));
+    bcoeff[lev][1] = std::move(bcoeffy);
+    bcoeff[lev][1]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    ng = slopes_v[lev]->nGrow();
+    std::unique_ptr<MultiFab> slopes_v_new(new MultiFab(y_edge_ba,new_dmap,1,ng));
+    slopes_v[lev] = std::move(slopes_v_new);
+    slopes_v[lev]->setVal(0.);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> vacc_new(new MultiFab(y_edge_ba,new_dmap,1,vacc[lev]->nGrow()));
+    vacc[lev] = std::move(vacc_new);
+    vacc[lev]->setVal(0.);
 
    /****************************************************************************
     * Z-face-based arrays                                                      *
@@ -449,41 +478,52 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     w_gt_new->FillBoundary(geom[lev].periodicity());
     w_gt[lev] = std::move(w_gt_new);
 
-    ng = d_t[lev]->nGrow();
-    std::unique_ptr<MultiFab> d_t_new(new MultiFab(z_edge_ba,new_dmap,1,ng));
-    d_t_new->copy(*d_t[lev],0,0,1,ng,ng);
-    d_t_new->FillBoundary(geom[lev].periodicity());
-    d_t[lev] = std::move(d_t_new);
-
-    ng = tau_w_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> tau_w_g_new(new MultiFab(z_edge_ba,new_dmap,1,ng));
-    tau_w_g_new->copy(*tau_w_g[lev],0,0,1,ng,ng);
-    tau_w_g_new->FillBoundary(geom[lev].periodicity());
-    tau_w_g[lev] = std::move(tau_w_g_new);
-
-    ng = fluxZ[lev]->nGrow();
-    std::unique_ptr<MultiFab> fluxZ_new(new MultiFab(z_edge_ba,new_dmap,1,ng));
-    fluxZ_new->copy(*fluxZ[lev],0,0,1,ng,ng);
-    fluxZ_new->FillBoundary(geom[lev].periodicity());
-    fluxZ[lev] = std::move(fluxZ_new);
-
     ng = ropZ[lev]->nGrow();
     std::unique_ptr<MultiFab> ropZ_new(new MultiFab(z_edge_ba,new_dmap,1,ng));
     ropZ_new->copy(*ropZ[lev],0,0,1,ng,ng);
     ropZ_new->FillBoundary(geom[lev].periodicity());
     ropZ[lev] = std::move(ropZ_new);
 
-    ng = f_gds_w[lev]->nGrow();
-    std::unique_ptr<MultiFab> f_gds_w_new(new MultiFab(z_edge_ba,new_dmap,1,ng));
-    f_gds_w_new->copy(*f_gds_w[lev],0,0,1,ng,ng);
-    f_gds_w_new->FillBoundary(geom[lev].periodicity());
-    f_gds_w[lev] = std::move(f_gds_w_new);
+    // These are temporaries so we don't need to copy in old data
+    ng = d_t[lev]->nGrow();
+    std::unique_ptr<MultiFab> d_t_new(new MultiFab(z_edge_ba,new_dmap,1,ng));
+    d_t[lev] = std::move(d_t_new);
+    d_t[lev]->setVal(0.0);
 
-    ng = drag_w[lev]->nGrow();
-    std::unique_ptr<MultiFab> drag_w_new(new MultiFab(z_edge_ba,new_dmap,1,ng));
-    drag_w_new->copy(*drag_w[lev],0,0,1,ng,ng);
-    drag_w_new->FillBoundary(geom[lev].periodicity());
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> tau_w_g_new(new MultiFab(z_edge_ba,new_dmap,1,tau_w_g[lev]->nGrow()));
+    tau_w_g[lev] = std::move(tau_w_g_new);
+    tau_w_g[lev]->setVal(0.0);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> fluxZ_new(new MultiFab(z_edge_ba,new_dmap,1,fluxZ[lev]->nGrow()));
+    fluxZ[lev] = std::move(fluxZ_new);
+    fluxZ[lev]->setVal(0.0);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> f_gds_w_new(new MultiFab(z_edge_ba,new_dmap,1,f_gds_w[lev]->nGrow()));
+    f_gds_w[lev] = std::move(f_gds_w_new);
+    f_gds_w[lev]->setVal(0.0);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> drag_w_new(new MultiFab(z_edge_ba,new_dmap,1,drag_w[lev]->nGrow()));
     drag_w[lev] = std::move(drag_w_new);
+    drag_w[lev]->setVal(0.0);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> bcoeffz(new MultiFab(z_edge_ba,new_dmap,1,bcoeff[lev][2]->nGrow()));
+    bcoeff[lev][2] = std::move(bcoeffz);
+    bcoeff[lev][2]->setVal(0.0);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> slopes_w_new(new MultiFab(z_edge_ba,new_dmap,1,slopes_w[lev]->nGrow()));
+    slopes_w[lev] = std::move(slopes_w_new);
+    slopes_w[lev]->setVal(0.0);
+
+    // These are temporaries so we don't need to copy in old data
+    std::unique_ptr<MultiFab> wacc_new(new MultiFab(z_edge_ba,new_dmap,1,wacc[lev]->nGrow()));
+    wacc[lev] = std::move(wacc_new);
+    wacc[lev]->setVal(0.);
 
    /****************************************************************************
     * Nodal Arrays                                                             *
