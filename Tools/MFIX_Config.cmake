@@ -35,16 +35,16 @@ set (AMREX_INSTALL_PATH ${AMREX_INSTALL_DIR} )
 find_package (AMReX CONFIG REQUIRED HINTS ${AMREX_INSTALL_DIR}/cmake )   
 
 # Check and print (if not superbuild) amrex options
-if (NOT ENABLE_PARTICLES)
+if (NOT AMREX_ENABLE_PARTICLES)
    message ( FATAL_ERROR "AMReX must be configured with -DENABLE_PARTICLES=1" )
 endif ()
 
-if (NOT ENABLE_EB)
+if (NOT AMREX_ENABLE_EB)
    message ( FATAL_ERROR "AMReX must be configured with -DENABLE_EB=1" )
 endif ()
 
 # Check and print (if not superbuild) amrex options
-if (NOT ENABLE_FBASELIB)
+if (NOT AMREX_ENABLE_FBASELIB)
    message ( FATAL_ERROR "AMReX must be configured with -DENABLE_FBASELIB=1" )
 endif ()
 
