@@ -98,7 +98,7 @@ public:
     std::unique_ptr<BaseIF> make_wall(
             int dir, // direction (long edge) of wall
             Real position, Real height, Real width,
-            int lev, bool anisotropic, bool water_tight
+            int lev, bool anisotropic
         );
 
     std::unique_ptr<BaseIF> make_cylinder(
