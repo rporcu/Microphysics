@@ -166,8 +166,21 @@ public:
     ///
     bool legacy__eb_collisions = false;
 
-private:
 
+    //
+    // Posprocessing utilities to compute spatially-averaged particle velocities
+    // 
+    void ComputeAverageVelocities ( int lev,
+				    const vector<Real>& avg_region_x_w,
+				    const vector<Real>& avg_region_x_e,
+				    const vector<Real>& avg_region_y_s,
+				    const vector<Real>& avg_region_y_n,
+				    const vector<Real>& avg_region_z_b,
+				    const vector<Real>& avg_region_z_t );
+
+    
+private:
+    
     ///
     /// We add a particle to the neighbor list if it's center is within 3 particle radii
     ///

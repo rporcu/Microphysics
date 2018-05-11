@@ -440,7 +440,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
    /****************************************************************************
     * DEBUG flag toggles:                                                      *
-    *   -> Print number of collisisions                                        *
+    *   -> Print number of collisions                                        *
     *   -> Print max (over substeps) particle velocity at each time step       *
     *   -> Print max particle-wall and particle-particle forces                *
     ****************************************************************************/
@@ -1486,4 +1486,112 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
      amrex::Print() << "After  KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<
                         min_number << " " << max_number << std::endl;
   }
+}
+
+
+
+void MFIXParticleContainer::ComputeAverageVelocities ( int lev,
+						       const vector<Real>& avg_region_x_w,
+						       const vector<Real>& avg_region_x_e,
+						       const vector<Real>& avg_region_y_s,
+						       const vector<Real>& avg_region_y_n,
+						       const vector<Real>& avg_region_z_b,
+						       const vector<Real>& avg_region_z_t )
+{
+
+    int  nregions = avg_region_x_w.size();
+
+    // 
+    // Check the regions are defined correctly
+    //
+    if (  ( avg_region_x_e.size() != nregions ) ||
+	  ( avg_region_y_s.size() != nregions ) ||
+	  ( avg_region_y_n.size() != nregions ) ||
+	  ( avg_region_z_b.size() != nregions ) ||
+	  ( avg_region_z_t.size() != nregions )  )
+    {
+	amrex::Print () << "ComputeAverageVelocities: some regions are not properly defined: skipping.";
+	return; 
+    }
+    
+    vector<long> region_np (nregions, 0);
+    vector<Real> region_velx (nregions, 0.0);
+    vector<Real> region_vely (nregions, 0.0);
+    vector<Real> region_velz (nregions, 0.0);
+  
+    for ( int nr = 0; nr < nregions; ++nr )
+    {
+	// Create Real box for this region
+	RealBox avg_region ( {AMREX_D_DECL(avg_region_x_w[nr],avg_region_y_s[nr],avg_region_z_b[nr])},
+			     {AMREX_D_DECL(avg_region_x_e[nr],avg_region_y_n[nr],avg_region_z_t[nr])} );
+
+	// Jump to next iteration if this averaging region is not valid
+	if ( !avg_region.ok () )
+	{
+	    amrex::Print() << "ComputeAverageVelocities: region "<< nr <<" is invalid: skipping\n";
+	    continue;
+	}
+    
+	long sum_np     = 0; 	  // Number of particle in avg region
+	Real sum_velx   = 0.;    
+	Real sum_vely   = 0.;
+	Real sum_velz   = 0.;
+	
+#ifdef _OPENMP
+#pragma omp parallel reduction(sum:sum_np,sum_velx,sum_vely,sum_velz)
+#endif
+	for ( MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
+	{
+	    Box bx       = pti.tilebox ();
+	    RealBox tile_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
+
+	    if ( tile_region.intersects ( avg_region ) )
+	    {
+		const int np         = NumberOfParticles(pti);
+		const AoS &particles = pti.GetArrayOfStructs();
+		    
+		for (int p = 0; p < np; ++p )
+		{
+		    if ( avg_region.contains ( &(particles[p].m_rdata.pos[0]) ) )
+		    {
+			sum_np++;
+			sum_velx += particles[p].rdata(realData::velx); 
+			sum_vely += particles[p].rdata(realData::vely);
+			sum_velz += particles[p].rdata(realData::velz); 
+		    }
+
+		}
+
+	    }
+
+	}
+
+	region_np[nr]    = sum_np;
+	region_velx[nr]  = sum_velx;
+	region_vely[nr]  = sum_vely;
+	region_velz[nr]  = sum_velz;
+    }
+
+    // Compute parallel reductions
+    ParallelDescriptor::ReduceLongSum ( region_np.data(),   nregions ); 
+    ParallelDescriptor::ReduceRealSum ( region_velx.data(), nregions ); 
+    ParallelDescriptor::ReduceRealSum ( region_vely.data(), nregions );
+    ParallelDescriptor::ReduceRealSum ( region_velz.data(), nregions ); 
+
+    amrex::Print () << "\n#REGION-ID NP VELX VELY VELZ " << std::endl;
+    for (int nr = 0; nr < nregions; ++nr )
+    {
+	region_velx[nr] /= region_np[nr]; 
+	region_vely[nr] /= region_np[nr];
+	region_velz[nr] /= region_np[nr];
+		
+	amrex::Print () << nr << " "
+			<< region_np[nr] << " "
+			<< region_velx[nr] << " " 
+			<< region_vely[nr] << " " 
+			<< region_velz[nr] << std::endl;
+	
+    }
+    amrex::Print () << "\n\n ";   
+
 }

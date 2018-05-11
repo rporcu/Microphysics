@@ -45,7 +45,16 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& d
                             particle_ebfactory.get(), eb_normals.get(),
                             level_set->get_data(), level_set->get_valid(), level_set->get_ls_ref(),
                             dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io
-                           );
+	    );
 
+    //  Compute Eulerian velocities in selected regions
+    if ( ( avg_vel_int > 0) && ( nstep % avg_vel_int == 0 ) )
+	pc -> ComputeAverageVelocities ( lev,
+					 avg_region_x_w, avg_region_x_e,
+					 avg_region_y_s, avg_region_y_n,
+					 avg_region_z_b, avg_region_z_t );
+
+    
     BL_PROFILE_REGION_STOP("mfix::Evolve");
 }
+ 
