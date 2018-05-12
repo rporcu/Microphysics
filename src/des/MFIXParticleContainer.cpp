@@ -139,19 +139,22 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
 
   int total_np = 0;
 
-  // Deliberately didn't tile this loop
-  for (MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
+  // This uses the particle tile size. Note that the default is to tile so if we
+  //      remove the true and don't explicitly add false it will still tile
+  for (MFIter mfi = MakeMFIter(lev,true); mfi.isValid(); ++mfi) {
 
       // This is particles per grid so we reset to 0
       int pcount = 0;
 
       // Define the real particle data for one grid-at-a-time's worth of particles
       // We don't know pcount (number of particles per grid) before this call
-      const Box& bx = mfi.validbox();
-      mfix_particle_generator(&pcount, bx.loVect(),  bx.hiVect(), &dx, &dy, &dz);
+
+      const Box& tilebx = mfi.tilebox();
+
+      mfix_particle_generator(&pcount, tilebx.loVect(), tilebx.hiVect(), &dx, &dy, &dz);
 
       const int grid_id = mfi.index();
-      const int tile_id = 0;
+      const int tile_id = mfi.LocalTileIndex();
 
       // Now that we know pcount, go ahead and create a particle container for this
       // grid and add the particles to it
@@ -172,6 +175,7 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
 
       // Now define the rest of the particle data and store it directly in the particles
       // std::cout << pcount << " particles " << " in grid " << grid_id << std::endl;
+
       if (pcount > 0)
          mfix_particle_generator_prop(&np, particles.GetArrayOfStructs().data());
   }
