@@ -461,6 +461,7 @@ private:
     // Options to control the computing of particle eulerian velocities
     //
     int avg_vel_int = -1;
+    std::string avg_vel_file {"avg_region"};
     vector<Real> avg_region_x_e;
     vector<Real> avg_region_x_w;
     vector<Real> avg_region_y_s;

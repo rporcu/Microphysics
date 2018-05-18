@@ -50,6 +50,8 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& d
     //  Compute Eulerian velocities in selected regions
     if ( ( avg_vel_int > 0) && ( nstep % avg_vel_int == 0 ) )
 	pc -> ComputeAverageVelocities ( lev,
+					 time,
+					 avg_vel_file,
 					 avg_region_x_w, avg_region_x_e,
 					 avg_region_y_s, avg_region_y_n,
 					 avg_region_z_b, avg_region_z_t );

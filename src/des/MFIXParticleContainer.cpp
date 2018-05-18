@@ -1490,7 +1490,9 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
 
 
 
-void MFIXParticleContainer::ComputeAverageVelocities ( int lev,
+void MFIXParticleContainer::ComputeAverageVelocities ( const int lev,
+						       const amrex::Real time,
+						       const string&  basename,
 						       const vector<Real>& avg_region_x_w,
 						       const vector<Real>& avg_region_x_e,
 						       const vector<Real>& avg_region_y_s,
@@ -1499,6 +1501,10 @@ void MFIXParticleContainer::ComputeAverageVelocities ( int lev,
 						       const vector<Real>& avg_region_z_t )
 {
 
+    // Count number of calls -- Used to determin when to create file from scratch
+    static int ncalls = 0;
+    ++ncalls;
+    
     int  nregions = avg_region_x_w.size();
 
     // 
@@ -1578,20 +1584,58 @@ void MFIXParticleContainer::ComputeAverageVelocities ( int lev,
     ParallelDescriptor::ReduceRealSum ( region_vely.data(), nregions );
     ParallelDescriptor::ReduceRealSum ( region_velz.data(), nregions ); 
 
-    amrex::Print () << "\n#REGION-ID NP VELX VELY VELZ " << std::endl;
-    for (int nr = 0; nr < nregions; ++nr )
+    // Only the IO processor takes care of the output
+    if (ParallelDescriptor::IOProcessor())  
     {
-	region_velx[nr] /= region_np[nr]; 
-	region_vely[nr] /= region_np[nr];
-	region_velz[nr] /= region_np[nr];
-		
-	amrex::Print () << nr << " "
-			<< region_np[nr] << " "
-			<< region_velx[nr] << " " 
-			<< region_vely[nr] << " " 
-			<< region_velz[nr] << std::endl;
-	
-    }
-    amrex::Print () << "\n\n ";   
 
+	for ( int nr = 0; nr < nregions; ++nr )
+	{
+
+	    // 
+	    // Compute averages (NaN if NP=0 )
+	    //
+	    region_velx[nr] /= region_np[nr]; 
+	    region_vely[nr] /= region_np[nr];
+	    region_velz[nr] /= region_np[nr];
+
+	    //
+	    // Print to file
+	    // 
+	    std::ofstream  ofs;
+	    std::string    fname;
+
+	    fname = basename + std::to_string(nr) + ".dat";
+
+	    // Open file
+	    if ( ncalls == 1 )
+	    {
+		// Create output files only the first time this function is called
+		// Use ios:trunc to delete previous contect
+		ofs.open ( fname.c_str(), ios::out | ios::trunc );
+	    }
+	    else
+	    {
+		// If this is not the first time we write to this file
+		// we append to it
+		ofs.open ( fname.c_str(), ios::out | ios::app );		
+	    }
+
+	    // Check if file is good
+	    if ( !ofs.good() )
+		amrex::FileOpenFailed ( fname );
+   
+	    // Print header if first access
+	    if ( ncalls == 1 )
+		ofs << "#  Time   NP  U  V  W" << std::endl;
+   
+	    ofs << time << " " 
+		<< region_np[nr] << " "
+		<< region_velx[nr] << " " 
+		<< region_vely[nr] << " " 
+		<< region_velz[nr] << std::endl;
+
+	    ofs.close();
+	}
+    }
 }
+

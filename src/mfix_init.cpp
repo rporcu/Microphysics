@@ -93,6 +93,9 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
 	// given regions
 	pp.query("avg_vel_int", avg_vel_int );
 
+	// Base name for output
+	pp.query("avg_vel_file", avg_vel_file);
+	
 	// Regions geometry
 	pp.queryarr("avg_region_x_e", avg_region_x_e );
 	pp.queryarr("avg_region_x_w", avg_region_x_w );
