@@ -58,6 +58,7 @@
                end if
                pj = ic_p_g(icv)
             else
+               if (gravity(1).ne.0.d0 .or. gravity(2).ne.0.d0 .or. gravity(3).ne.0.d0) goto 60
                if (is_undefined(ic_p_g(icv))) goto 60
                p0_g(:,:,:) = ic_p_g(icv)
             end if

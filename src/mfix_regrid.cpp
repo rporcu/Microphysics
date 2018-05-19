@@ -442,7 +442,7 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
 
     // These are temporaries so we don't need to copy in old data
     ng = slopes_v[lev]->nGrow();
-    std::unique_ptr<MultiFab> slopes_v_new(new MultiFab(y_edge_ba,new_dmap,1,ng));
+    std::unique_ptr<MultiFab> slopes_v_new(new MultiFab(y_edge_ba,new_dmap,3,ng));
     slopes_v[lev] = std::move(slopes_v_new);
     slopes_v[lev]->setVal(0.);
 
@@ -516,7 +516,7 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     bcoeff[lev][2]->setVal(0.0);
 
     // These are temporaries so we don't need to copy in old data
-    std::unique_ptr<MultiFab> slopes_w_new(new MultiFab(z_edge_ba,new_dmap,1,slopes_w[lev]->nGrow()));
+    std::unique_ptr<MultiFab> slopes_w_new(new MultiFab(z_edge_ba,new_dmap,3,slopes_w[lev]->nGrow()));
     slopes_w[lev] = std::move(slopes_w_new);
     slopes_w[lev]->setVal(0.0);
 
