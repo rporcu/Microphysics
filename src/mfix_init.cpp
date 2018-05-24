@@ -16,6 +16,9 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         // Whether to use projection method
         pp.query("use_proj_method", use_proj_method );
 
+	// Whether to upwind ep_g
+	pp.query( "upwind_ep", upwind_ep );
+	
         // Options to control time stepping
         pp.query("cfl", cfl );
         pp.query("fixed_dt", fixed_dt );

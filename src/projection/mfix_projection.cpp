@@ -20,8 +20,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
     
     // Extrapolate boundary values for density and volume fraction
     // The subsequent call to mfix_set_projection_bcs will only overwrite
-    // rop_g and ep_g ghost values for PINF and POUT
-    fill_mf_bc ( lev, *rop_g[lev] );
+    // ep_g ghost values for PINF and POUT
     fill_mf_bc ( lev, *ep_g[lev] );
     fill_mf_bc ( lev, *mu_g[lev] );
     
@@ -54,7 +53,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	MultiFab::Copy(*ep_go[lev],  *ep_g[lev],  0, 0, 1,  ep_go[lev]->nGrow() );
 	MultiFab::Copy( *p_go[lev],   *p_g[lev],  0, 0, 1,   p_go[lev]->nGrow() );
 	MultiFab::Copy(*ro_go[lev],  *ro_g[lev],  0, 0, 1,  ro_go[lev]->nGrow() );
-	MultiFab::Copy(*rop_go[lev], *rop_g[lev], 0, 0, 1, rop_go[lev]->nGrow() );
 	MultiFab::Copy(*u_go[lev],   *u_g[lev],   0, 0, 1,   u_go[lev]->nGrow() );
 	MultiFab::Copy(*v_go[lev],   *v_g[lev],   0, 0, 1,   v_go[lev]->nGrow() );
 	MultiFab::Copy(*w_go[lev],   *w_g[lev],   0, 0, 1,   w_go[lev]->nGrow() );
@@ -127,6 +125,10 @@ mfix_level::mfix_project_velocity (int lev)
 {
     Real dummy_dt = 1.0;
     mfix_apply_projection ( lev, dummy_dt );
+    amrex::Print() << "After initial projection:\n";
+
+    mfix_print_max_vel (lev);
+	   
 }
 
 
@@ -158,6 +160,8 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
     MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, u_go[lev]->nGrow());
     MultiFab::Copy (*v_go[lev],   *v_g[lev],   0, 0, 1, v_go[lev]->nGrow());
     MultiFab::Copy (*w_go[lev],   *w_g[lev],   0, 0, 1, w_go[lev]->nGrow());
+    MultiFab::Copy (*ro_go[lev],  *ro_g[lev],   0, 0, 1, ro_go[lev]->nGrow());
+    MultiFab::Copy (*ep_go[lev],  *ep_g[lev],   0, 0, 1, ep_go[lev]->nGrow());
 
     Real time = 0.0;
     mfix_compute_dt(lev,time,stop_time,steady_state,dt);
@@ -170,7 +174,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 
     // Compute fluid acceleration (convection + diffusion)
     mfix_compute_velocity_slopes ( lev, u_go, v_go, w_go );
-    mfix_compute_fluid_acceleration ( lev, u_go, v_go, w_go );
+    mfix_compute_fluid_acceleration ( lev, u_go, v_go, w_go, ro_go, ep_go );
 
     for (int iter = 0; iter < 3; ++iter)
     {
@@ -180,12 +184,12 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
        MultiFab::Saxpy (*w_g[lev], dt, *wacc[lev], 0, 0, 1, 0);
 
        // Add the forcing terms
-       mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
+       mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g, ro_go, ep_go );
 
        mfix_add_pressure_gradient ( lev, -dt);
 
        // Compute intermediate velocity
-       mfix_compute_intermediate_velocity ( lev, dt );
+       mfix_compute_intermediate_velocity ( lev, dt, ro_go, ep_go );
 
        // Exchange halo nodes and apply BCs to velocity
        mfix_set_velocity_bcs (lev);
@@ -224,16 +228,16 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 //  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
 //     and explicit part of particles momentum exchange )
 // 
-//     u_g = u_g + dt * ( g_x + d(p_g+p0)/dx/ro_g + drag_u/rop_g ) 
-//     v_g = v_g + dt * ( g_y + d(p_g+p0)/dy/ro_g + drag_v/rop_g ) 
-//     w_g = w_g + dt * ( g_z + d(p_g+p0)/dz/ro_g + drag_w/rop_g ) 
+//     u_g = u_g + dt * ( g_x + d(p_g+p0)/dx/ro_g + drag_u/( ro_go + ep_go ) ) 
+//     v_g = v_g + dt * ( g_y + d(p_g+p0)/dy/ro_g + drag_v/( ro_go + ep_go ) ) 
+//     w_g = w_g + dt * ( g_z + d(p_g+p0)/dz/ro_g + drag_w/( ro_go + ep_go ) ) 
 //
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
 // 
-//     u_g = u_g / ( 1 + dt * f_gds_u/rop_g )
-//     v_g = v_g / ( 1 + dt * f_gds_v/rop_g )
-//     w_g = w_g / ( 1 + dt * f_gds_w/rop_g )
+//     u_g = u_g / ( 1 + dt * f_gds_u/(ro_go + ep_go) )
+//     v_g = v_g / ( 1 + dt * f_gds_v/(ro_go + ep_go) )
+//     w_g = w_g / ( 1 + dt * f_gds_w/(ro_go + ep_go) )
 //  
 //  4. Solve
 //
@@ -254,7 +258,7 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 {
     // Compute fluid acceleration (convection + diffusion) 
     mfix_compute_velocity_slopes ( lev, u_go, v_go, w_go );
-    mfix_compute_fluid_acceleration ( lev, u_go, v_go, w_go );
+    mfix_compute_fluid_acceleration ( lev, u_go, v_go, w_go, ro_go, ep_go );
     
     // First add the fluid acceleration
     MultiFab::Saxpy (*u_g[lev], dt, *uacc[lev], 0, 0, 1, 0);
@@ -262,11 +266,11 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
     MultiFab::Saxpy (*w_g[lev], dt, *wacc[lev], 0, 0, 1, 0);
 
     // Add the forcing terms
-    mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
+    mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g, ro_go, ep_go );
     mfix_add_pressure_gradient ( lev, -dt);
     
     // Compute intermediate velocity
-    mfix_compute_intermediate_velocity ( lev, dt );
+    mfix_compute_intermediate_velocity ( lev, dt, ro_go, ep_go );
     
     // Exchange halo nodes and apply BCs to velocity
     mfix_set_velocity_bcs (lev);
@@ -296,16 +300,16 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 //  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
 //     and explicit part of particles momentum exchange )
 // 
-//     u_g = u_g + dt * ( g_x + d(p_g+p0)/dx/ro_g + drag_u/rop_g ) 
-//     v_g = v_g + dt * ( g_y + d(p_g+p0)/dy/ro_g + drag_v/rop_g ) 
-//     w_g = w_g + dt * ( g_z + d(p_g+p0)/dz/ro_g + drag_w/rop_g ) 
+//     u_g = u_g + dt * ( g_x + d(p_g+p0)/dx/ro_g + drag_u/(ro_g + ep_g) ) 
+//     v_g = v_g + dt * ( g_y + d(p_g+p0)/dy/ro_g + drag_v/(ro_g + ep_g) ) 
+//     w_g = w_g + dt * ( g_z + d(p_g+p0)/dz/ro_g + drag_w/(ro_g + ep_g) ) 
 //
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
 // 
-//     u_g = u_g / ( 1 + dt * f_gds_u/rop_g )
-//     v_g = v_g / ( 1 + dt * f_gds_v/rop_g )
-//     w_g = w_g / ( 1 + dt * f_gds_w/rop_g )
+//     u_g = u_g / ( 1 + dt * f_gds_u/(ro_g + ep_g) )
+//     v_g = v_g / ( 1 + dt * f_gds_v/(ro_g + ep_g) )
+//     w_g = w_g / ( 1 + dt * f_gds_w/(ro_g + ep_g) )
 //  
 //  4. Solve
 //
@@ -329,7 +333,7 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     // Compute fluid acceleration (convection + diffusion)
     // using first predictor
     mfix_compute_velocity_slopes ( lev, u_g, v_g, w_g );
-    mfix_compute_fluid_acceleration ( lev, u_g, v_g, w_g );
+    mfix_compute_fluid_acceleration ( lev, u_g, v_g, w_g, ro_g, ep_g );
         
     // Store u_go + dt * R_u^* / 2
     MultiFab::LinComb ( *u_g[lev], 1.0, *u_go[lev], 0, dt/2.0, *uacc[lev], 0, 0, 1, 0 ); 
@@ -342,7 +346,7 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     vacc[lev]->setVal(0.0);
     wacc[lev]->setVal(0.0);
     mfix_compute_velocity_slopes ( lev, u_go, v_go, w_go );
-    mfix_compute_fluid_acceleration ( lev, u_go, v_go, w_go );
+    mfix_compute_fluid_acceleration ( lev, u_go, v_go, w_go, ro_go, ep_go );
     
     // Add dt/2 * R_u^n 
     MultiFab::Saxpy (*u_g[lev], dt/2.0, *uacc[lev], 0, 0, 1, 0);
@@ -350,13 +354,13 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     MultiFab::Saxpy (*w_g[lev], dt/2.0, *wacc[lev], 0, 0, 1, 0);
 
     // Add forcing terms
-    mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g );
+    mfix_apply_forcing_terms ( lev, dt, u_g, v_g, w_g, ro_g, ep_g );
     
     // Add pressure gradient
     mfix_add_pressure_gradient ( lev, -dt );
 
     // Compute intermediate velocity
-    mfix_compute_intermediate_velocity ( lev, dt );
+    mfix_compute_intermediate_velocity ( lev, dt, ro_go, ep_go );
     
     // Fill ghost cells and reimpose boundary conditions
     mfix_set_velocity_bcs (lev);
@@ -479,7 +483,9 @@ void
 mfix_level::mfix_compute_fluid_acceleration ( int lev,
 					      Vector< std::unique_ptr<MultiFab> >& u, 
 					      Vector< std::unique_ptr<MultiFab> >& v,
-					      Vector< std::unique_ptr<MultiFab> >& w )
+					      Vector< std::unique_ptr<MultiFab> >& w,
+					      Vector< std::unique_ptr<MultiFab> >& ro,
+					      Vector< std::unique_ptr<MultiFab> >& ep )
 {
     BL_PROFILE("mfix_level::mfix_compute_fluid_acceleration");
 
@@ -535,11 +541,13 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 	    BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
-            (*trD_g[lev])[mfi].dataPtr(),
-            ((*mu_g[lev])[mfi]).dataPtr(),
-            ((*lambda_g[lev])[mfi]).dataPtr(),
-            BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-	    geom[lev].CellSize (), &xdir );
+            BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
+            (*ro[lev])[mfi].dataPtr (),
+	    (*ep[lev])[mfi].dataPtr (),
+	    (*trD_g[lev])[mfi].dataPtr(),
+	    ((*lambda_g[lev])[mfi]).dataPtr(),
+	    geom[lev].CellSize (), &xdir, &upwind_ep );
+
 
 	// y direction
 	compute_fluid_acceleration (
@@ -549,11 +557,12 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 	    BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
-            (*trD_g[lev])[mfi].dataPtr(),
-            ((*mu_g[lev])[mfi]).dataPtr(),
-            ((*lambda_g[lev])[mfi]).dataPtr(),
-            BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-	    geom[lev].CellSize (), &ydir );
+            BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
+            (*ro[lev])[mfi].dataPtr (),
+	    (*ep[lev])[mfi].dataPtr (),
+	    (*trD_g[lev])[mfi].dataPtr(),
+	    ((*lambda_g[lev])[mfi]).dataPtr(),
+	    geom[lev].CellSize (), &ydir, &upwind_ep );
 
 	// z direction
 	compute_fluid_acceleration (
@@ -563,11 +572,12 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 	    BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
 	    BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
-            (*trD_g[lev])[mfi].dataPtr(),
-            ((*mu_g[lev])[mfi]).dataPtr(),
-            ((*lambda_g[lev])[mfi]).dataPtr(),
-            BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-	    geom[lev].CellSize (), &zdir );
+            BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
+	    (*ro[lev])[mfi].dataPtr (),
+	    (*ep[lev])[mfi].dataPtr (),
+	    (*trD_g[lev])[mfi].dataPtr(),
+	    ((*lambda_g[lev])[mfi]).dataPtr(),
+	    geom[lev].CellSize (), &zdir, &upwind_ep );
     }
 }
 
@@ -580,7 +590,9 @@ void
 mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 				      Vector< std::unique_ptr<MultiFab> >& u, 
 				      Vector< std::unique_ptr<MultiFab> >& v,
-				      Vector< std::unique_ptr<MultiFab> >& w )
+				      Vector< std::unique_ptr<MultiFab> >& w,
+				      Vector< std::unique_ptr<MultiFab> >& ro,
+				      Vector< std::unique_ptr<MultiFab> >& ep)
 
 {
     BL_PROFILE("mfix_level::mfix_apply_forcing_terms");
@@ -608,26 +620,29 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 	add_forcing ( BL_TO_FORTRAN_BOX(ubx),  
 		      BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
 		      BL_TO_FORTRAN_ANYD((*drag_u[lev])[mfi]),
-		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-		      (*rop_g[lev])[mfi].dataPtr(),
+		      BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
+		      (*ep_g[lev])[mfi].dataPtr(),
 		      domain.loVect (), domain.hiVect (),
-		      geom[lev].CellSize (), &dt, &xdir );
+		      geom[lev].CellSize (), &dt, &xdir,
+		      &upwind_ep );
 
 	add_forcing ( BL_TO_FORTRAN_BOX(vbx),  
 		      BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
 		      BL_TO_FORTRAN_ANYD((*drag_v[lev])[mfi]),
-		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-		      (*rop_g[lev])[mfi].dataPtr(),
+		      BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
+		      (*ep_g[lev])[mfi].dataPtr(),
 		      domain.loVect (), domain.hiVect (),
-		      geom[lev].CellSize (), &dt, &ydir );
+		      geom[lev].CellSize (), &dt, &ydir,
+		      &upwind_ep );
 
 	add_forcing ( BL_TO_FORTRAN_BOX(wbx),  
 		      BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
 		      BL_TO_FORTRAN_ANYD((*drag_w[lev])[mfi]),
-		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-		      (*rop_g[lev])[mfi].dataPtr(),
+		      BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
+		      (*ep[lev])[mfi].dataPtr(),
 		      domain.loVect (), domain.hiVect (),
-		      geom[lev].CellSize (), &dt, &zdir );
+		      geom[lev].CellSize (), &dt, &zdir,
+		      &upwind_ep );
     }
 
 }
@@ -638,8 +653,10 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 // momentum exchange
 // 
 void
-mfix_level::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
-
+mfix_level::mfix_compute_intermediate_velocity ( int lev,
+						 amrex::Real dt, 
+						 Vector< std::unique_ptr<MultiFab> >& ro,
+						 Vector< std::unique_ptr<MultiFab> >& ep )
 {
     BL_PROFILE("mfix_level::mfix_compute_intermediate_velocity");
     
@@ -664,20 +681,23 @@ mfix_level::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
 	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(ubx),  
 					BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*f_gds_u[lev])[mfi]),
-					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-					&xdir, &dt );
+					BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
+					(*ep[lev])[mfi].dataPtr (),
+					&xdir, &dt, &upwind_ep );
 
 	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(vbx),  
 					BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*f_gds_v[lev])[mfi]),
-					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-					&ydir, &dt );
+					BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
+					(*ep[lev])[mfi].dataPtr (),
+					&ydir, &dt, &upwind_ep );
 	
 	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(wbx),  
 					BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*f_gds_w[lev])[mfi]),
-					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-					&zdir, &dt );
+					BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
+					(*ep[lev])[mfi].dataPtr (),
+					&zdir, &dt, &upwind_ep );
     }
 
 }
@@ -929,18 +949,21 @@ mfix_level::mfix_compute_bcoeff (int lev)
 	// X direction
 	compute_bcoeff (BL_TO_FORTRAN_BOX(ubx),
 		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][0]))[mfi]),
+		       BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
 		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
 		       (*ep_g[lev])[mfi].dataPtr(), &xdir );
 
 	// Y direction
 	compute_bcoeff (BL_TO_FORTRAN_BOX(vbx),
 		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][1]))[mfi]),
+			BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
 		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
 		       (*ep_g[lev])[mfi].dataPtr(), &ydir );
 
 	// Z direction
 	compute_bcoeff (BL_TO_FORTRAN_BOX(wbx),
 		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][2]))[mfi]),
+			BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
 		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
 		       (*ep_g[lev])[mfi].dataPtr(), &zdir );
 	
@@ -1117,7 +1140,6 @@ mfix_level::check_for_nans (int lev)
     bool vg_has_nans = v_g[lev] -> contains_nan ();
     bool wg_has_nans = w_g[lev] -> contains_nan ();
     bool pg_has_nans = p_g[lev] -> contains_nan ();
-    bool ropg_has_nans = rop_g[lev] -> contains_nan ();
 
     if (ug_has_nans)
 	std::cout << "WARNING: u_g contains NaNs!!!";
@@ -1130,9 +1152,6 @@ mfix_level::check_for_nans (int lev)
 
     if (pg_has_nans)
 	std::cout << "WARNING: p_g contains NaNs!!!";
-
-    if (ropg_has_nans)
-	std::cout << "WARNING: rop_g contains NaNs!!!";
 
 }
 
