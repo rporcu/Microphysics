@@ -671,7 +671,7 @@ extern "C"
             const amrex::Real* mu,  const int* slo, const int* shi,
             const amrex::Real* ro,  const amrex::Real* ep,
 	    const amrex::Real* dx,
-            const int* dir
+            const int* dir, const int* upw_ep
         );
 
     void compute_u_slopes(
@@ -727,7 +727,7 @@ extern "C"
             const amrex::Real* ep_g,
             const int* domlo, const int* domhi,
             const amrex::Real* dx, const amrex::Real* dt,
-            const int* dir
+            const int* dir, const int* avg_ep
         );
 
     void compute_intermediate_velocity(
@@ -735,7 +735,8 @@ extern "C"
             amrex::Real* u_i,  const int* ulo, const int* uhi,
             const amrex::Real* f_gds_i, const int* flo, const int* fhi,
             const amrex::Real* ro,      const int* slo, const int* shi,
-            const amrex::Real* ep, const int* dir, const amrex::Real* dt
+            const amrex::Real* ep, const int* dir, const amrex::Real* dt,
+	    const int* upw_ep
         );
 
     void extrap_pressure_to_ghost_cells(

@@ -452,6 +452,10 @@ private:
 
     Real sum_vol_orig;
 
+    // Whether to use upwinding/central differencing for ep_g
+    int upwind_ep = 1;
+
+    
     //
     // Here we set the number of ghost nodes of the field arrays.
     // Since this is  a class attribute, it will be propagated to

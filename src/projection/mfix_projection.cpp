@@ -514,7 +514,7 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
             (*ro[lev])[mfi].dataPtr (),
 	    (*ep[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &xdir );
+	    geom[lev].CellSize (), &xdir, &upwind_ep );
 
 	// y direction
 	compute_fluid_acceleration (
@@ -527,7 +527,7 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
             (*ro[lev])[mfi].dataPtr (),
 	    (*ep[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &ydir );
+	    geom[lev].CellSize (), &ydir, &upwind_ep );
 
 	// z direction
 	compute_fluid_acceleration (
@@ -540,7 +540,7 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
             BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]),
 	    (*ro[lev])[mfi].dataPtr (),
 	    (*ep[lev])[mfi].dataPtr (),
-	    geom[lev].CellSize (), &zdir );
+	    geom[lev].CellSize (), &zdir, &upwind_ep );
     }
 }
 
@@ -586,7 +586,8 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 		      BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
 		      (*ep_g[lev])[mfi].dataPtr(),
 		      domain.loVect (), domain.hiVect (),
-		      geom[lev].CellSize (), &dt, &xdir );
+		      geom[lev].CellSize (), &dt, &xdir,
+		      &upwind_ep );
 
 	add_forcing ( BL_TO_FORTRAN_BOX(vbx),  
 		      BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
@@ -594,7 +595,8 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 		      BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
 		      (*ep_g[lev])[mfi].dataPtr(),
 		      domain.loVect (), domain.hiVect (),
-		      geom[lev].CellSize (), &dt, &ydir );
+		      geom[lev].CellSize (), &dt, &ydir,
+		      &upwind_ep );
 
 	add_forcing ( BL_TO_FORTRAN_BOX(wbx),  
 		      BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
@@ -602,7 +604,8 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 		      BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
 		      (*ep[lev])[mfi].dataPtr(),
 		      domain.loVect (), domain.hiVect (),
-		      geom[lev].CellSize (), &dt, &zdir );
+		      geom[lev].CellSize (), &dt, &zdir,
+		      &upwind_ep );
     }
 
 }
@@ -643,21 +646,21 @@ mfix_level::mfix_compute_intermediate_velocity ( int lev,
 					BL_TO_FORTRAN_ANYD((*f_gds_u[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
 					(*ep[lev])[mfi].dataPtr (),
-					&xdir, &dt );
+					&xdir, &dt, &upwind_ep );
 
 	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(vbx),  
 					BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*f_gds_v[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
 					(*ep[lev])[mfi].dataPtr (),
-					&ydir, &dt );
+					&ydir, &dt, &upwind_ep );
 	
 	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(wbx),  
 					BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*f_gds_w[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
 					(*ep[lev])[mfi].dataPtr (),
-					&zdir, &dt );
+					&zdir, &dt, &upwind_ep );
     }
 
 }

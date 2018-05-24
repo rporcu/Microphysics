@@ -107,7 +107,7 @@ contains
    !
    subroutine compute_fluid_acceleration ( lo, hi, rhs, rlo, rhi, sl,  &
         & u, ulo, uhi, v, vlo, vhi, w, wlo, whi, mu, slo, shi, ro, ep, &
-        & dx, dir ) bind(C)
+        & dx, dir, upw_ep ) bind(C)
 
       use convection_mod
       use diffusion_mod
@@ -150,6 +150,11 @@ contains
       integer                       :: i, j, k
       integer                       :: i0, j0, k0
       real(ar)                      :: ro_f, ep_f
+
+      ! Whether to upwind ep_g
+      integer,        intent(in   ) :: upw_ep
+
+
       
       ! Compute convection term
       select case ( dir )
@@ -184,16 +189,19 @@ contains
                ! Define face-values for ep and ro_g and then invert them
                ro_f       = half * ( ro(i,j,k) + ro(i-i0,j-j0,k-k0) )
 
-               select case (dir) 
-               case(1)
-                  ep_f = merge (ep(i-1,j,k), ep(i,j,k),  u(i,j,k) >= zero )
-               case(2)
-                  ep_f = merge (ep(i,j-1,k), ep(i,j,k),  v(i,j,k) >= zero )
-               case(3)
-                  ep_f = merge (ep(i,j,k-1), ep(i,j,k),  w(i,j,k) >= zero )
-               end select
+               if ( upw_ep /= 0 ) then 
+                  select case (dir) 
+                  case(1)
+                     ep_f = merge (ep(i-1,j,k), ep(i,j,k),  u(i,j,k) >= zero )
+                  case(2)
+                     ep_f = merge (ep(i,j-1,k), ep(i,j,k),  v(i,j,k) >= zero )
+                  case(3)
+                     ep_f = merge (ep(i,j,k-1), ep(i,j,k),  w(i,j,k) >= zero )
+                  end select
+               else 
+                  ep_f       = half * ( ep(i,j,k) + ep(i-i0,j-j0,k-k0) )
+               endif
                
-               !ep_f       = half * ( ep(i,j,k) + ep(i-i0,j-j0,k-k0) )
                rhs(i,j,k) = - conv(i,j,k) + diff(i,j,k) / ( ro_f * ep_f )
                
             end do
@@ -340,7 +348,7 @@ contains
    ! particle/fluid momentum exchange
    ! 
    subroutine add_forcing ( lo, hi, u_i, ulo, uhi, drag_i, dlo, dhi, &
-        & ro_g, slo, shi, ep_g, domlo, domhi, dx, dt, dir )  bind(C)
+        & ro_g, slo, shi, ep_g, domlo, domhi, dx, dt, dir, upw_ep )  bind(C)
       
       use constant, only: gravity
       
@@ -372,6 +380,9 @@ contains
 
       real(ar),       intent(inout) :: &
            u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
+      ! Whether to upwind ep_g
+      integer,        intent(in   ) :: upw_ep
       
       ! Local variables
       integer(c_int)                :: i, j, k, i0, j0, k0 
@@ -393,8 +404,11 @@ contains
                
                ro_f = ( ro_g(i,j,k) + ro_g(i-i0,j-j0,k-k0) ) * half
 
-               !ep_f = ( ep_g(i,j,k) + ep_g(i-10,j-j0,k-k0) ) * half
-               ep_f = merge (ep_g(i-i0,j-j0,k-k0), ep_g(i,j,k),  u_i(i,j,k) >= zero )
+               if ( upw_ep == 0 ) then 
+                  ep_f = ( ep_g(i,j,k) + ep_g(i-10,j-j0,k-k0) ) * half
+               else
+                  ep_f = merge (ep_g(i-i0,j-j0,k-k0), ep_g(i,j,k),  u_i(i,j,k) >= zero )
+               end if
                
                acc  = gravity(dir) + drag_i(i,j,k) / ( ro_f * ep_f )
                
@@ -422,7 +436,7 @@ contains
    !    u_i = u_i / (A)_diagonal
    !
    subroutine compute_intermediate_velocity ( lo, hi, u_i, ulo, uhi, &
-        & f_gds_i, flo, fhi, ro, slo, shi, ep, dir, dt ) bind(C)
+        & f_gds_i, flo, fhi, ro, slo, shi, ep, dir, dt, upw_ep ) bind(C)
 
      
       ! Loop bounds
@@ -447,6 +461,10 @@ contains
 
       real(ar),       intent(inout) :: &
            u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
+      ! Whether to upwind ep_g
+      integer,        intent(in   ) :: upw_ep
+
       
       ! Local variables
       integer(c_int)                :: i, j, k, i0, j0, k0
@@ -461,8 +479,12 @@ contains
             do i = lo(1), hi(1)
 
                ro_f       = half * ( ro(i,j,k) + ro(i-i0,j-j0,k-k0) )
-               !ep_f       = half * ( ep(i,j,k) + ep(i-i0,j-j0,k-k0) )
-               ep_f = merge (ep(i-i0,j-j0,k-k0), ep(i,j,k),  u_i(i,j,k) >= zero )
+
+               if ( upw_ep == 0 ) then 
+                  ep_f       = half * ( ep(i,j,k) + ep(i-i0,j-j0,k-k0) )
+               else 
+                  ep_f = merge (ep(i-i0,j-j0,k-k0), ep(i,j,k),  u_i(i,j,k) >= zero )
+               end if
                
                diag_coeff = one + dt * f_gds_i(i,j,k) / ( ro_f * ep_f )
                
