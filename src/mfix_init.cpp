@@ -89,6 +89,21 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         pp.query("max_grid_size_x", particle_max_grid_size_x);
         pp.query("max_grid_size_y", particle_max_grid_size_y);
         pp.query("max_grid_size_z", particle_max_grid_size_z);
+
+	// Interval to compute the eulerian velocities in
+	// given regions
+	pp.query("avg_vel_int", avg_vel_int );
+
+	// Base name for output
+	pp.query("avg_vel_file", avg_vel_file);
+	
+	// Regions geometry
+	pp.queryarr("avg_region_x_e", avg_region_x_e );
+	pp.queryarr("avg_region_x_w", avg_region_x_w );
+	pp.queryarr("avg_region_y_n", avg_region_y_n );
+	pp.queryarr("avg_region_y_s", avg_region_y_s );
+	pp.queryarr("avg_region_z_t", avg_region_z_t );
+	pp.queryarr("avg_region_z_b", avg_region_z_b );
     }
 }
 

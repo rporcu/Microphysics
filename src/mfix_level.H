@@ -465,6 +465,17 @@ private:
 
     Real sum_vol_orig;
 
+    // 
+    // Options to control the computing of particle eulerian velocities
+    //
+    int avg_vel_int = -1;
+    std::string avg_vel_file {"avg_region"};
+    vector<Real> avg_region_x_e;
+    vector<Real> avg_region_x_w;
+    vector<Real> avg_region_y_s;
+    vector<Real> avg_region_y_n;
+    vector<Real> avg_region_z_b;
+    vector<Real> avg_region_z_t;
     //
     // Here we set the number of ghost nodes of the field arrays.
     // Since this is  a class attribute, it will be propagated to

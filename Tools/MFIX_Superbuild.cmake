@@ -24,7 +24,6 @@ set (CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_EXTENSIONS OFF)
 
-
 #
 # Amrex-related variables
 #
@@ -40,26 +39,6 @@ set (AMREX_GIT_TAG)  # The commit id or branch to download
 #
 include ( MFIX_CMakeVariables )
 include ( MFIX_Options )
-
-# #
-# #  Setup core compiler flags
-# #
-# include ( MFIX_Compilers )
-
-# if ( MFIX_FFLAGS_OVERRIDES )
-#    set ( MFIX_Fortran_FLAGS ${MFIX_FFLAGS_OVERRIDES} )
-# else ()
-#    append ( MFIX_FFLAGS_${MFIX_BUILD_TYPE}
-#       MFIX_Fortran_FLAGS )
-# endif ()
-
-# if ( MFIX_CXXFLAGS_OVERRIDES )
-#    set ( MFIX_CXX_FLAGS ${MFIX_CXXFLAGS_OVERRIDES} )
-# else ()
-#    append ( MFIX_CXXFLAGS_${MFIX_BUILD_TYPE}
-#       MFIX_CXX_FLAGS )
-# endif ()
-
 
 #
 # AMReX-related config options
