@@ -407,7 +407,7 @@ contains
                ro_f = ( ro_g(i,j,k) + ro_g(i-i0,j-j0,k-k0) ) * half
 
                if ( upw_ep == 0 ) then 
-                  ep_f = ( ep_g(i,j,k) + ep_g(i-10,j-j0,k-k0) ) * half
+                  ep_f = ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) ) * half
                else
                   ep_f = merge (ep_g(i-i0,j-j0,k-k0), ep_g(i,j,k),  u_i(i,j,k) >= zero )
                end if
@@ -540,8 +540,7 @@ contains
 
                ro_f = half * ( ro_g(i,j,k) + ro_g(i-i0,j-j0,k-k0) )
 
-!               ep_f = merge ( ep_g(i-i0,j-j0,k-k0), ep_g(i,j,k), u_i(i,j,k) >= zero )
-              ep_f = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) )
+               ep_f = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) )
                
                bcoeff(i,j,k) = ep_f / ro_f 
                
