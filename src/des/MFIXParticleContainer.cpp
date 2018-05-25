@@ -1548,7 +1548,7 @@ void MFIXParticleContainer::ComputeAverageVelocities ( const int lev,
 	Real sum_velz   = 0.;
 	
 #ifdef _OPENMP
-#pragma omp parallel reduction(sum:sum_np,sum_velx,sum_vely,sum_velz)
+#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz)
 #endif
 	for ( MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
 	{
