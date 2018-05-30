@@ -149,8 +149,8 @@ elseif(CTAGS_CMD)
 endif()
 
 # Tools
-set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 
-add_subdirectory (Tools/F90)
+set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/) 
+add_subdirectory (Tools)
 
 # Tests
 enable_testing ()
