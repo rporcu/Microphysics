@@ -114,6 +114,7 @@ ExternalProject_Add ( amrex
    -DENABLE_DP_PARTICLES=${AMREX_ENABLE_DP_PARTICLES}
    -DDIM=3
    -DDEBUG=${DEBUG}
+   -DENABLE_AMRDATA=ON # Needed to compile postprocessing tools
    -DENABLE_LINEAR_SOLVERS=ON
    -DENABLE_EB=${AMREX_ENABLE_EB}
    -DENABLE_FBASELIB=ON # Needed for test utilities
