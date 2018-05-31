@@ -457,7 +457,9 @@ private:
     // Options to control time stepping
     Real cfl = 0.5;
     int  fixed_dt=0;
-
+    Real dt_min=0.0;  		// Min dt allowed
+    Real dt_max=1.e14;          // Max dt allowed
+    
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;
     int particle_max_grid_size_z = -1;

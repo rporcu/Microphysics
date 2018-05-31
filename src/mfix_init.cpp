@@ -22,7 +22,9 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         // Options to control time stepping
         pp.query("cfl", cfl );
         pp.query("fixed_dt", fixed_dt );
-
+        pp.query("dt_min", dt_min );
+	pp.query("dt_max", dt_max );
+		
         // Option to control MGML behavior
         pp.query( "mg_verbose", mg_verbose );
         pp.query( "mg_cg_verbose", mg_cg_verbose );
