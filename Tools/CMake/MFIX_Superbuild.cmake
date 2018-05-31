@@ -117,7 +117,7 @@ ExternalProject_Add ( amrex
    -DENABLE_AMRDATA=ON # Needed to compile postprocessing tools
    -DENABLE_LINEAR_SOLVERS=ON
    -DENABLE_EB=${AMREX_ENABLE_EB}
-   -DENABLE_FBASELIB=ON # Needed for test utilities
+   -DENABLE_FBASELIB=OFF # Needed for test utilities
    -DENABLE_FORTRAN_INTERFACES=OFF
    -DENABLE_BASE_PROFILE=${AMREX_ENABLE_BASE_PROFILE}
    -DENABLE_TINY_PROFILE=${AMREX_ENABLE_TINY_PROFILE}

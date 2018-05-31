@@ -44,8 +44,8 @@ if (NOT AMREX_ENABLE_EB)
 endif ()
 
 # Check and print (if not superbuild) amrex options
-if (NOT AMREX_ENABLE_FBASELIB)
-   message ( FATAL_ERROR "AMReX must be configured with -DENABLE_FBASELIB=1" )
+if (NOT AMREX_ENABLE_AMRDATA)
+   message ( FATAL_ERROR "AMReX must be configured with -DENABLE_AMRDATA=1" )
 endif ()
 
 # Check and print (if not superbuild) amrex options

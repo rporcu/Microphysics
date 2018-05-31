@@ -12,22 +12,12 @@ target_link_libraries( ${FEXTRACT_EXE} ${MFIX_EXTRA_LINK_LINE} )
 
 # fextract relies on some AMReX Fortran internals which can be linked against
 # only if Fortran compiler libraries (like libgfortran.a) are included
-# during the link phase. The following like takes care of that (not sure
+# during the link phase. The following line takes care of that (not sure
 # it's the cleanest way of doing it )
 set_target_properties(${FEXTRACT_EXE} PROPERTIES LINKER_LANGUAGE Fortran )
 
-
-if ( NOT MFIX_ENABLE_CTEST )
-   message (WARNING "plt_compare_diff_grids requires OpenMP >= 4.0: skipping target")
-   set ( PLT_COMPARE_EXE "" )
-else ()
-   add_executable( ${PLT_COMPARE_EXE} EXCLUDE_FROM_ALL F90/plt_compare_diff_grids.f90 )
-   target_link_libraries( ${PLT_COMPARE_EXE} ${MFIX_EXTRA_LINK_LINE} )
-   set_target_properties(${PLT_COMPARE_EXE} PROPERTIES LINKER_LANGUAGE CXX)
-endif ()
-
 # Communicate to main Cmakelists file
-set( MFIX_F90_TOOLS ${FEXTRACT_EXE} ${PLT_COMPARE_EXE} ${FEXTRACT_EXE} ${FJOIN_PAR_EXE} PARENT_SCOPE  )
+set( MFIX_F90_TOOLS ${FEXTRACT_EXE} ${FEXTRACT_EXE} ${FJOIN_PAR_EXE} PARENT_SCOPE  )
 set( PLT_COMPARE_EXE ${PLT_COMPARE_EXE} PARENT_SCOPE )
 set( FEXTRACT_EXE ${FEXTRACT_EXE} PARENT_SCOPE )
 set( FCOMPARE_PAR_EXE ${FCOMPARE_PAR_EXE} PARENT_SCOPE )
