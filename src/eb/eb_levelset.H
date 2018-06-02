@@ -96,13 +96,13 @@ class LSFactory {
         std::unique_ptr<MultiFab> coarsen_data() const;
 
         // Return grid parameters
-        const int get_ls_ref() const {return ls_grid_ref;};
-        const int get_ls_pad() const {return ls_grid_pad;};
-        const int get_eb_ref() const {return eb_grid_ref;};
-        const int get_eb_pad() const {return eb_grid_pad;};
+        int get_ls_ref() const {return ls_grid_ref;};
+        int get_ls_pad() const {return ls_grid_pad;};
+        int get_eb_ref() const {return eb_grid_ref;};
+        int get_eb_pad() const {return eb_grid_pad;};
 
         // Return AMR level (wrt the MFIXParticleContainer pointer (pc)
-        const int get_amr_level() const {return amr_lev;};
+        int get_amr_level() const {return amr_lev;};
 
         // Return BoxArrays:
         //    -> ls: levelset (nodal)
@@ -111,6 +111,7 @@ class LSFactory {
         const BoxArray & get_ls_ba() const {return ls_ba;};
         const BoxArray & get_cc_ba() const {return cc_ba;};
         const BoxArray & get_eb_ba() const {return eb_ba;};
+        const DistributionMapping & get_eb_dm() const {return mfix_pc->ParticleDistributionMap(amr_lev);};
 
         const MFIXParticleContainer & get_pc() const {return * mfix_pc;};
 };

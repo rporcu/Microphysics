@@ -170,7 +170,7 @@ mfix_level::make_eb_geometry(int lev)
                          m_eb_support_level));
 
     particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
-                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+			 new EBFArrayBoxFactory(geom[lev], level_set->get_eb_ba(), level_set->get_eb_dm(),
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
 
@@ -281,7 +281,7 @@ mfix_level::make_eb_hourglass(int lev)
                          m_eb_support_level));
 
     particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
-                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+			 new EBFArrayBoxFactory(geom[lev], level_set->get_eb_ba(), level_set->get_eb_dm(),
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
 
@@ -505,7 +505,7 @@ mfix_level::make_eb_clr(int lev)
                          m_eb_support_level));
 
     particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
-                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+			 new EBFArrayBoxFactory(geom[lev], level_set->get_eb_ba(), level_set->get_eb_dm(),
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
 
@@ -635,7 +635,7 @@ mfix_level::make_eb_clr_riser(int lev)
                          m_eb_support_level));
 
     particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
-                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+			 new EBFArrayBoxFactory(geom[lev], level_set->get_eb_ba(), level_set->get_eb_dm(),
                          {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                          m_eb_support_level));
 
@@ -1192,10 +1192,10 @@ void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
         //          => define the level set as the (signed) distance to the
         //             closest point on the EB-facets
         int eb_pad = level_set->get_eb_pad();
-        EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(), dmap[lev],
+        EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(),
+					    level_set->get_eb_dm(),
                                             {eb_pad, eb_pad, eb_pad}, EBSupport::full);
         level_set->intersection_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
         EBTower::Destroy();
     }
-
 }

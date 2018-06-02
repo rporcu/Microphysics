@@ -58,7 +58,8 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
         if (load_balance_type == "KDTree") {
            dual_grid = true;
         } else {
-           dual_grid = false;
+	  ParmParse amr_pp("amr");	  
+	  amr_pp.query("dual_grid", dual_grid);
         }
 
         // If subdt_io is true, des_time_loop calls output_manager
