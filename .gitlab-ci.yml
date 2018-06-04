@@ -27,6 +27,7 @@ variables:
     - ctest -R $TEST_REGEX
   tags:
     - joule
+  retry: 2
 
 
 single-grid-serial:
