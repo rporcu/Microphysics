@@ -548,6 +548,7 @@ mfix_level::make_eb_clr_riser(int lev)
 
     Real lradius, uradius;
     Real lheight, uheight, cheight;
+    pp.query("riser_direction",    cylinder_dir);
     pp.query("riser_lower_radius", lradius);
     pp.query("riser_lower_height", lheight);
     pp.query("riser_upper_radius", uradius);
