@@ -1,0 +1,36 @@
+
+f90EXE_sources += adjust_a_g.f90
+f90EXE_sources += adjust_dt_mod.f90
+f90EXE_sources += calc_d.f90 
+f90EXE_sources += calc_trd_g.f90
+f90EXE_sources += calc_mflux.f90
+f90EXE_sources += conv_pp_g.f90
+f90EXE_sources += conv_rop.f90
+f90EXE_sources += residual_mod.f90 
+f90EXE_sources += check_convergence.f90
+f90EXE_sources += functions_mod.f90
+f90EXE_sources += conv_dif_u_g.f90
+f90EXE_sources += conv_dif_v_g.f90
+f90EXE_sources += conv_dif_w_g.f90
+f90EXE_sources += matrix_mod.f90
+f90EXE_sources += set_bc1.f90
+f90EXE_sources += solve_pp_g.f90
+f90EXE_sources += solve_vel_star.f90
+f90EXE_sources += solver_params.f90
+f90EXE_sources += source_pp_g.f90
+f90EXE_sources += source_u_g.f90
+f90EXE_sources += source_v_g.f90
+f90EXE_sources += source_w_g.f90
+f90EXE_sources += tau_u_g.f90
+f90EXE_sources += tau_v_g.f90
+f90EXE_sources += tau_w_g.f90
+
+f90EXE_sources += correct_0.f90
+f90EXE_sources += leqsol_mod.f90     
+f90EXE_sources += matvec.f90             
+f90EXE_sources += ur_facs_mod.f90
+
+CEXE_sources += mfix_linear_solve.cpp  
+CEXE_sources += mfix_simple.cpp  
+CEXE_sources += solve_bicgstab.cpp     
+

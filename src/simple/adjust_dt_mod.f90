@@ -9,7 +9,7 @@ module adjust_dt
 
   private
 
-  public adjust
+  public adjustdt
 
 contains
 
