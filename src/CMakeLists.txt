@@ -31,7 +31,7 @@ list ( APPEND F90SRC  eb/eb_geometry.f90)
 list ( APPEND CXXSRC  eb/eb_levelset.cpp )
 list ( APPEND CXX_includes eb/eb_levelset.H )
 list ( APPEND CXX_includes eb/mfix_eb_F.H )
-list ( APPEND F90SRC  eb/eb_levelset.f90)
+list ( APPEND F90SRC  eb/eb_levelset_F.f90)
 
 #
 # Particles
