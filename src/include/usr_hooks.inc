@@ -1,18 +1,2 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!  Namelist: USER_HOOKS_LOCKED                                         !
-!  Author: J.Musser                                   Date: 03-APR-15  !
-!                                                                      !
-!  Purpose: List MFIX keywords that CANNOT be edited during a run.     !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-!     NAMELIST / USER_HOOKS_LOCKED /&
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!  Namelist: USER_HOOKS_UNLOCKED                                       !
-!  Author: J.Musser                                   Date: 03-APR-15  !
-!                                                                      !
-!  Purpose: List MFIX keywords that may be edited during a run by      !
-!  invoking a REFRESH.                                                 !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-    NAMELIST / USER_HOOKS_UNLOCKED / call_usr, usr_dt, &
+    NAMELIST / USER_HOOKS / call_usr, usr_dt, &
     usr_x_w, usr_x_e, usr_y_n, usr_y_s, usr_z_b, usr_z_t
