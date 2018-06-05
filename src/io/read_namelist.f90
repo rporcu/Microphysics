@@ -73,8 +73,6 @@ MODULE read_namelist_module
       integer :: LINE_LEN
 ! Line number
       integer :: LINE_NO
-! Coefficient of restitution (old symbol)
-      real(c_real) :: e
 ! Indicate whether to do a namelist read on the line
       logical :: READ_FLAG
 ! Logical to check if file exits.
@@ -86,14 +84,9 @@ MODULE read_namelist_module
       integer :: IOS, II
 
 ! Flags restricting what data from the mfix.dat to process
-      logical :: READ_LOCKED, READ_FULL
 
-      E = UNDEFINED
       READ_FLAG = .TRUE.
       LINE_NO = 0
-
-      READ_LOCKED = .TRUE.
-      READ_FULL = .TRUE.
 
       dt = undefined
 
@@ -208,112 +201,80 @@ MODULE read_namelist_module
 ! and read the scratch file in NAMELIST format
       IF(.NOT.READ_FLAG) RETURN
 
-
 ! Run control keywords
-      IF(READ_LOCKED) THEN
-         STRING=''; STRING = '&RUN_CONTROL_LOCKED '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=RUN_CONTROL_LOCKED,  IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-      ENDIF
-
-      STRING=''; STRING = '&RUN_CONTROL_UNLOCKED '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=RUN_CONTROL_UNLOCKED, IOSTAT=IOS)
+      STRING=''; STRING = '&RUN_CONTROL '//&
+           trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
+      READ(STRING, NML=RUN_CONTROL,  IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
-
 ! Physical parameter keywords
-      IF(READ_LOCKED) THEN
-         STRING=''; STRING = '&PHYSICAL_PARAM_LOCKED '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=PHYSICAL_PARAM_LOCKED, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-      ENDIF
-
-      STRING=''; STRING = '&PHYSICAL_PARAM_UNLOCKED '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=PHYSICAL_PARAM_UNLOCKED, IOSTAT=IOS)
+      STRING=''; STRING = '&PHYSICAL_PARAM '//&
+           trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
+      READ(STRING, NML=PHYSICAL_PARAM, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 
 ! Numerical parameter keywords
-      STRING=''; STRING = '&NUMERICAL_PARAM_UNLOCKED '//&
+      STRING=''; STRING = '&NUMERICAL_PARAM '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=NUMERICAL_PARAM_UNLOCKED, IOSTAT=IOS)
+      READ(STRING, NML=NUMERICAL_PARAM, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 
 ! Geometry and discretization keywords
-      STRING=''; STRING = '&GEOMETRY_UNLOCKED '//&
+      STRING=''; STRING = '&GEOMETRY '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=GEOMETRY_UNLOCKED, IOSTAT=IOS)
+      READ(STRING, NML=GEOMETRY, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 
 ! Gas phase keywords
-      STRING=''; STRING = '&GAS_PHASE_UNLOCKED '//&
+      STRING=''; STRING = '&GAS_PHASE '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=GAS_PHASE_UNLOCKED, IOSTAT=IOS)
+      READ(STRING, NML=GAS_PHASE, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 
 ! Initial condtion keywords
-      STRING=''; STRING = '&INITIAL_CONDITIONS_UNLOCKED '//&
+      STRING=''; STRING = '&INITIAL_CONDITIONS '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=INITIAL_CONDITIONS_UNLOCKED, IOSTAT=IOS)
+      READ(STRING, NML=INITIAL_CONDITIONS, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 
 ! Boundary condition keywords
-      IF(READ_LOCKED) THEN
-         STRING=''; STRING = '&BOUNDARY_CONDITIONS_LOCKED '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=BOUNDARY_CONDITIONS_LOCKED, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-      ENDIF
-
-      STRING=''; STRING = '&BOUNDARY_CONDITIONS_UNLOCKED '//&
+      STRING=''; STRING = '&BOUNDARY_CONDITIONS '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=BOUNDARY_CONDITIONS_UNLOCKED, IOSTAT=IOS)
+      READ(STRING, NML=BOUNDARY_CONDITIONS, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 
 ! Point source keywords
-      STRING=''; STRING = '&POINT_SOURCES_UNLOCKED '//&
+      STRING=''; STRING = '&POINT_SOURCES '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=POINT_SOURCES_UNLOCKED, IOSTAT=IOS)
+      READ(STRING, NML=POINT_SOURCES, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 
 ! User hook keywords
-      STRING=''; STRING = '&useR_HOOKS_UNLOCKED '//&
+      STRING=''; STRING = '&USER_HOOKS '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=useR_HOOKS_UNLOCKED, IOSTAT=IOS)
+      READ(STRING, NML=USER_HOOKS, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
-! Stop processing keyword inputs if runing POST_MFIX
-       IF(.NOT.READ_FULL) RETURN
-
-      IF(READ_LOCKED) THEN
-
 ! Discrete Element model input parameters.
-         STRING=''; STRING = '&DES_INPUT_DATA '//&
+       STRING=''; STRING = '&DES_INPUT_DATA '//&
             trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=DES_INPUT_DATA, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-
+       READ(STRING, NML=DES_INPUT_DATA, IOSTAT=IOS)
+       IF(IOS == 0)  RETURN
 
 ! User defined input parameters.
-         STRING=''; STRING = '&USR_INPUT_DATA '//&
+       STRING=''; STRING = '&USR_INPUT_DATA '//&
             trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=USR_INPUT_DATA, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
+       READ(STRING, NML=USR_INPUT_DATA, IOSTAT=IOS)
+       IF(IOS == 0)  RETURN
 
-
-      ENDIF
-
-      IF(READ_LOCKED) ERROR = .TRUE.
+       ERROR = .TRUE.
 
       RETURN
       END SUBROUTINE SET_KEYWORD
