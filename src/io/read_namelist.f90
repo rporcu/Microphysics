@@ -14,7 +14,7 @@ MODULE read_namelist_module
 !     Purpose: Read in the NAMELIST variables                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_NAMELIST(dt)
+      SUBROUTINE READ_NAMELIST(dt_inout)
 
       use bc
       use drag, only: drag_c1, drag_d1
@@ -52,15 +52,14 @@ MODULE read_namelist_module
       use utilities, only: make_upper_case, replace_tab
       use param, only: undefined
 
-
       use remove_comment_module, only: remove_comment
       use remove_comment_module, only: remove_par_blanks
 
-      IMPLICIT NONE
+      implicit none
 
 ! Dummy Arguments:
 !------------------------------------------------------------------------//
-      real(c_real), intent(  out) :: dt
+      real(c_real), intent(  out) :: dt_inout
 
 ! Local Variables:
 !------------------------------------------------------------------------//
@@ -82,6 +81,8 @@ MODULE read_namelist_module
 
       CHARACTER(len=256) :: STRING
       integer :: IOS, II
+
+      real(c_real) :: dt
 
 ! Flags restricting what data from the mfix.dat to process
 
@@ -155,6 +156,8 @@ MODULE read_namelist_module
       ENDDO
 
       CLOSE(UNIT=UNIT_DAT)
+
+      dt_inout = dt
 
       RETURN
 
