@@ -395,7 +395,7 @@ contains
         use discretelement, only: des_crossprdct
         use discretelement, only: kn_w, kt_w, mew_w
 
-        use eb_levelset, only: interp_levelset, normal_levelset
+        use eb_levelset_module, only: interp_levelset, normal_levelset
 
         implicit none
 

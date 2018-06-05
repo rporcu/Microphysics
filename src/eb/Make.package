@@ -1,8 +1,7 @@
-
-F90EXE_sources += compute_normals.f90
-F90EXE_sources += eb_geometry.f90
-F90EXE_sources += eb_levelset.f90
-F90EXE_sources += get_eb_walls.f90
+f90EXE_sources += compute_normals.f90
+f90EXE_sources += eb_geometry.f90
+f90EXE_sources += eb_levelset_F.f90
+f90EXE_sources += get_eb_walls.f90
 
 CEXE_sources += eb_levelset.cpp
 CEXE_sources += mfix_eb.cpp
