@@ -38,6 +38,7 @@ list ( APPEND F90SRC  eb/eb_levelset_F.f90)
 #
 list ( APPEND CXXSRC des/MFIXParticleContainer.cpp )
 list ( APPEND CXX_includes des/MFIXParticleContainer.H )
+list ( APPEND CXX_includes des/mfix_des_F.H )
 list ( APPEND F90SRC des/calc_drag.f90 des/calc_particle_collisions.f90)
 list ( APPEND F90SRC des/calc_wall_collisions.f90 des/cffctowall.f90 )
 list ( APPEND F90SRC des/cfrelvel.f90 des/cfslide.f90 )
