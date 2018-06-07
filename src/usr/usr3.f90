@@ -29,7 +29,8 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      ! use usr
+      ! NOTE -- this routine may be called with staggered or cell-centered
+      !         velocities so be sure to use the components appropriately
 
       implicit none 
 

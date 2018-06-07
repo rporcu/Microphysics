@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <eb_levelset.H>
 #include <mfix_level.H>
-#include <mfix_F.H>
+#include <mfix_eb_F.H>
 
 void
 mfix_level::make_eb_geometry(int lev)

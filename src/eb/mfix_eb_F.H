@@ -14,6 +14,11 @@ extern "C"
 {
 #endif
 
+    void mfix_get_walls(
+            int* bcv, int* exists,
+            void* normal, void* center
+        );
+
     void compute_normals(
             const int* lo , const int* hi,
             const void* flag,   const int* fglo, const int* fghi,

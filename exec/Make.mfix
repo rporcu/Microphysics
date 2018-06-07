@@ -12,8 +12,8 @@ Bdirs 	:= src
 Bdirs 	+= src/check_data
 Bdirs 	+= src/des
 Bdirs 	+= src/eb
-Bdirs 	+= src/include
 Bdirs 	+= src/io
+Bdirs 	+= src/mods
 Bdirs 	+= src/projection
 Bdirs 	+= src/simple
 Bdirs 	+= src/usr
@@ -24,6 +24,9 @@ Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))
 include $(Bpack)
 INCLUDE_LOCATIONS += $(Blocs)
 VPATH_LOCATIONS   += $(Blocs)
+
+INCLUDE_LOCATIONS += $(TOP)/src/include
+VPATH_LOCATIONS   += $(TOP)/src/include
 
 #These are the directories in AMReX
 
