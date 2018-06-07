@@ -63,7 +63,7 @@ set (MFIX_EXTRA_LINK_LINE)
 set (MFIX_INCLUDE_PATH 
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/include 
-    ${PROJECT_SOURCE_DIR}/src/des 
+    ${PROJECT_SOURCE_DIR}/src/des_fluid 
     ${PROJECT_SOURCE_DIR}/src/eb 
     )
 set (MFIX_EXTRA_INCLUDE_PATH)

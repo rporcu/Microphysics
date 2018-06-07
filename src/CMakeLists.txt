@@ -36,22 +36,22 @@ list ( APPEND F90SRC  eb/get_eb_walls.f90 eb/compute_normals.f90 )
 list ( APPEND F90SRC  eb/eb_geometry.f90)
 # level-set sources
 list ( APPEND CXXSRC  eb/eb_levelset.cpp )
-list ( APPEND CXX_includes eb/eb_levelset.H )
-list ( APPEND CXX_includes eb/mfix_eb_F.H )
+list ( APPEND ALLHEADERS eb/eb_levelset.H )
+list ( APPEND ALLHEADERS eb/mfix_eb_F.H )
 list ( APPEND F90SRC  eb/eb_levelset_F.f90)
 
 #
 # Particles
 #
-list ( APPEND CXX_includes des_fluid/MFIXParticleContainer.H )
-list ( APPEND CXX_includes des_fluid/mfix_des_F.H )
+list ( APPEND ALLHEADERS des_fluid/MFIXParticleContainer.H )
+list ( APPEND ALLHEADERS des_fluid/mfix_des_F.H )
+
 list ( APPEND CXXSRC des_fluid/MFIXParticleContainer.cpp )
+
 list ( APPEND F90SRC des_fluid/calc_drag.f90 )
 list ( APPEND F90SRC des_fluid/construct_gradp.f90 )
 list ( APPEND F90SRC des_fluid/particle_pic.f90 )
 list ( APPEND F90SRC des_fluid/set_drag_bcs.f90 )
-
-list ( APPEND CXX_includes des/mfix_des_F.H )
 list ( APPEND F90SRC des/calc_particle_collisions.f90)
 list ( APPEND F90SRC des/calc_wall_collisions.f90 )
 list ( APPEND F90SRC des/cffctowall.f90 )
