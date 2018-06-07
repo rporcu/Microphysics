@@ -1,6 +1,6 @@
 module ur_facs
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    use param, only: dim_eqs
@@ -9,7 +9,7 @@ module ur_facs
 !  [0]  every time step (explicit)
 !  [1]  every iteration (implicit)
 ! (0,1) under-relaxed
-   real(c_real) :: ur_fac(dim_eqs)
+   real(rt) :: ur_fac(dim_eqs)
 
 contains
 
@@ -30,19 +30,19 @@ contains
    integer(c_int), intent(in   ) ::    lo(3),   hi(3)
    integer(c_int), intent(in   ) :: varlo(3),varhi(3)
    integer(c_int), intent(in   ) ::   alo(3),  ahi(3)
-   real(c_real)  , intent(in   ) :: var(varlo(1):varhi(1),varlo(2):varhi(2),varlo(3):varhi(3))
-   real(c_real)  , intent(inout) :: A_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
-   real(c_real)  , intent(inout) :: b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+   real(rt)  , intent(in   ) :: var(varlo(1):varhi(1),varlo(2):varhi(2),varlo(3):varhi(3))
+   real(rt)  , intent(inout) :: A_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
+   real(rt)  , intent(inout) :: b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
    integer(c_int), intent(in   ) :: eq
 
    ! Loop index
    integer :: i, j, k
 
    ! Functions of under-relaxation factor
-   real(c_real) :: f1, f2
+   real(rt) :: f1, f2
 
    ! Center coefficient
-   real(c_real) :: Ap
+   real(rt) :: Ap
 
    F1 = ONE/UR_FAC(eq)
    F2 = F1 - ONE

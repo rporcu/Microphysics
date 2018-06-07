@@ -161,6 +161,19 @@ public:
     ///
     bool legacy__eb_collisions = false;
 
+    //
+    // Postprocessing utilities to compute spatially-averaged particle velocities
+    // 
+    void ComputeAverageVelocities ( const int lev,
+				    const amrex::Real time,
+				    const string& basename,
+				    const vector<Real>& avg_region_x_w,
+				    const vector<Real>& avg_region_x_e,
+				    const vector<Real>& avg_region_y_s,
+				    const vector<Real>& avg_region_y_n,
+				    const vector<Real>& avg_region_z_b,
+				    const vector<Real>& avg_region_z_t );
+
 private:
 
     ///

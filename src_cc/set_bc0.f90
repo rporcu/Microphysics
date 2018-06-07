@@ -15,7 +15,7 @@
                       bc_klo_type, bc_khi_type, domlo, domhi, ng, nodal_pressure) &
       bind(C, name="set_bc0")
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use bc, only: bc_ep_g, bc_t_g
@@ -34,17 +34,17 @@
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
       integer(c_int), intent(in   ) :: ng, nodal_pressure
 
-      real(c_real), intent(inout) ::  vel_g&
+      real(rt), intent(inout) ::  vel_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
-      real(c_real), intent(inout) :: ep_g&
+      real(rt), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ro_g&
+      real(rt), intent(inout) :: ro_g&
            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
+      real(rt), intent(inout) :: rop_g&
            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: mu_g&
+      real(rt), intent(inout) :: mu_g&
            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: lambda_g&
+      real(rt), intent(inout) :: lambda_g&
            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int), intent(in   ) :: &
@@ -62,7 +62,7 @@
 
       integer    nlft, nrgt, nbot, ntop, nup, ndwn
 
-      real(c_real) :: bc_ro_g, bc_mu_g, bc_lambda_g
+      real(rt) :: bc_ro_g, bc_mu_g, bc_lambda_g
 !--------------------------------------------------------------------//
 
       nlft = max(0,domlo(1)-slo(1))

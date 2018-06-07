@@ -1,6 +1,6 @@
 module adjust_dt
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
 ! Current dt (1/dt) and direction of last change (+/-)
@@ -50,7 +50,7 @@ contains
 ! number of iterations for current time step
       integer(c_int), intent(in   ) :: nit
 ! fluid solver time-step size
-      real(c_real), intent(inout) :: dt
+      real(rt), intent(inout) :: dt
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -61,9 +61,9 @@ contains
 ! number of iterations since last dt adjustment
       integer, SAVE :: NIT_TOT=0
 ! Iterations per second for last dt
-      real(c_real), SAVE :: NIToS=0.0
+      real(rt), SAVE :: NIToS=0.0
 ! Current number of iterations per second
-      real(c_real) :: NITOS_NEW
+      real(rt) :: NITOS_NEW
 !......................................................................!
 
 

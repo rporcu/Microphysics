@@ -1,6 +1,6 @@
 MODULE CHECK_CONVERGENCE_MODULE
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
 contains
@@ -25,13 +25,13 @@ contains
       ! Iteration number
       integer(c_int), intent(in) :: nit
 
-      real(c_real), intent(inout) :: resid(8,2)
+      real(rt), intent(inout) :: resid(8,2)
 
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! sum of residuals
-      real(c_real) :: SUM_RESID
+      real(rt) :: SUM_RESID
 ! index
       integer :: lc
 !-----------------------------------------------

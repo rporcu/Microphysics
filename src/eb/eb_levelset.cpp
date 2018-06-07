@@ -51,7 +51,7 @@ LSFactory::LSFactory(int lev, int ls_ref, int eb_ref, int ls_pad, int eb_pad, co
     // Define eb_grid, growing it by eb_pad
     eb_grid->define(eb_ba, dm, 1, eb_pad);
 
-    // Initialize by setting all ls_phi = huge(c_real)
+    // Initialize by setting all ls_phi = huge(amrex_real)
 #ifdef _OPENMP
 #pragma omp parallel
 #endif

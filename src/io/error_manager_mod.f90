@@ -6,7 +6,7 @@
 !----------------------------------------------------------------------!
       MODULE ERROR_MANAGER
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
 
@@ -509,7 +509,7 @@
 !......................................................................!
       CHARACTER(len=32) FUNCTION iVal_dbl(VAL)
 
-      real(c_real), intent(in) :: VAL
+      real(rt), intent(in) :: VAL
 
       CHARACTER(len=32) :: dASc
 

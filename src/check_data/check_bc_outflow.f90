@@ -1,6 +1,6 @@
 module check_bc_outflow_module
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
   use param,         only: one, undefined, zero, is_undefined, is_defined, equal
   use error_manager,  only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
@@ -29,7 +29,7 @@ contains
 
     integer, intent(in) :: BCV, M_TOT
     integer             :: M
-    real(c_real)        :: SUM_EP
+    real(rt)        :: SUM_EP
     logical             :: FLAG_WARNING
 
     FLAG_WARNING = .true.

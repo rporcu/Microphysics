@@ -1,6 +1,6 @@
       MODULE usr
 
-        use amrex_fort_module, only : c_real => amrex_real
+        use amrex_fort_module, only : rt => amrex_real
 
 !
 !       Declare the user-defined namelist variables (usrnlst.inc) in this module.
@@ -11,6 +11,6 @@
 !       mfix.dat.
 !
 !                       a dummy variable listed in usrnlst.inc
-        real(c_real) DUMMY_DP
+        real(rt) DUMMY_DP
 
       END MODULE usr

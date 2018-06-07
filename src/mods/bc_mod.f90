@@ -6,7 +6,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 module bc
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
   use param, only: dim_bc, dim_m, dim_n_g, dim_n_s
@@ -20,54 +20,54 @@ module bc
   logical :: cyclic_z = .false.
 
   ! Boundary condition coordinates
-  real(c_real) :: BC_X_w(dim_bc), BC_X_e(dim_bc)
-  real(c_real) :: BC_Y_s(dim_bc), BC_Y_n(dim_bc)
-  real(c_real) :: BC_Z_b(dim_bc), BC_Z_t(dim_bc)
+  real(rt) :: BC_X_w(dim_bc), BC_X_e(dim_bc)
+  real(rt) :: BC_Y_s(dim_bc), BC_Y_n(dim_bc)
+  real(rt) :: BC_Z_b(dim_bc), BC_Z_t(dim_bc)
 
-  real(c_real) :: BC_Normal(dim_bc,3)
-  real(c_real) :: BC_Center(dim_bc,3)
+  real(rt) :: BC_Normal(dim_bc,3)
+  real(rt) :: BC_Center(dim_bc,3)
 
   ! Void fraction in a specified boundary
-  real(c_real) :: BC_EP_g(dim_bc), BC_EP_s(dim_bc, dim_m)
+  real(rt) :: BC_EP_g(dim_bc), BC_EP_s(dim_bc, dim_m)
 
   ! Gas phase BC pressure
-  real(c_real) :: BC_P_g(dim_bc)
+  real(rt) :: BC_P_g(dim_bc)
 
   ! Velocities at a specified boundary
-  real(c_real) :: BC_U_g(dim_bc), BC_U_s(dim_bc, dim_m)
-  real(c_real) :: BC_V_g(dim_bc), BC_V_s(dim_bc, dim_m)
-  real(c_real) :: BC_W_g(dim_bc), BC_W_s(dim_bc, dim_m)
+  real(rt) :: BC_U_g(dim_bc), BC_U_s(dim_bc, dim_m)
+  real(rt) :: BC_V_g(dim_bc), BC_V_s(dim_bc, dim_m)
+  real(rt) :: BC_W_g(dim_bc), BC_W_s(dim_bc, dim_m)
 
   ! Volumetric flow rate through a mass inflow boundary
-  real(c_real) :: BC_VolFlow_g(dim_bc), BC_VolFlow_s(dim_bc, dim_m)
+  real(rt) :: BC_VolFlow_g(dim_bc), BC_VolFlow_s(dim_bc, dim_m)
 
   ! Mass flow rate through a mass inflow boundary
-  real(c_real) :: BC_MassFlow_g(dim_bc), BC_MassFlow_s(dim_bc, dim_m)
+  real(rt) :: BC_MassFlow_g(dim_bc), BC_MassFlow_s(dim_bc, dim_m)
 
   ! Specified pressure drop cyclic boundary
-  real(c_real) :: delp_x, delp_y, delp_z
+  real(rt) :: delp_x, delp_y, delp_z
 
   ! Partial slip wall boundary condition (gas only)
-  real(c_real) :: BC_hw_g(dim_bc)
-  real(c_real) :: BC_Uw_g(dim_bc)
-  real(c_real) :: BC_Vw_g(dim_bc)
-  real(c_real) :: BC_Ww_g(dim_bc)
+  real(rt) :: BC_hw_g(dim_bc)
+  real(rt) :: BC_Uw_g(dim_bc)
+  real(rt) :: BC_Vw_g(dim_bc)
+  real(rt) :: BC_Ww_g(dim_bc)
 
   ! Heat transfer boundary condition
-  real(c_real) :: BC_T_g   (dim_bc), BC_T_s   (dim_bc, dim_m)
-  real(c_real) :: BC_hw_T_g(dim_bc), BC_hw_T_s(dim_bc, dim_m)
-  real(c_real) :: BC_Tw_g  (dim_bc), BC_Tw_s  (dim_bc, dim_m)
-  real(c_real) :: BC_C_T_g (dim_bc), BC_C_T_s (dim_bc, dim_m)
+  real(rt) :: BC_T_g   (dim_bc), BC_T_s   (dim_bc, dim_m)
+  real(rt) :: BC_hw_T_g(dim_bc), BC_hw_T_s(dim_bc, dim_m)
+  real(rt) :: BC_Tw_g  (dim_bc), BC_Tw_s  (dim_bc, dim_m)
+  real(rt) :: BC_C_T_g (dim_bc), BC_C_T_s (dim_bc, dim_m)
 
   ! Species transfer boundary condition
-  real(c_real) :: BC_X_g(dim_bc, dim_n_g), BC_X_s(dim_bc, dim_m, dim_n_s)
-  real(c_real) :: BC_hw_X_g(dim_bc, dim_n_g)
-  real(c_real) :: BC_Xw_g  (dim_bc, dim_n_g)
-  real(c_real) :: BC_C_X_g (dim_bc, dim_n_g)
+  real(rt) :: BC_X_g(dim_bc, dim_n_g), BC_X_s(dim_bc, dim_m, dim_n_s)
+  real(rt) :: BC_hw_X_g(dim_bc, dim_n_g)
+  real(rt) :: BC_Xw_g  (dim_bc, dim_n_g)
+  real(rt) :: BC_C_X_g (dim_bc, dim_n_g)
 
   ! External shaking (shaking amplitude vector sets direction of shaking)
-  real(c_real), dimension(3) :: BC_shaker_A ! shaking amplitude
-  real(c_real)               :: BC_shaker_F ! shaking frequency
+  real(rt), dimension(3) :: BC_shaker_A ! shaking amplitude
+  real(rt)               :: BC_shaker_F ! shaking frequency
 
   ! Character variable to determine the flow plane of a flow cell
   character :: BC_Plane(dim_bc)
@@ -146,8 +146,8 @@ contains
     implicit none
 
     integer,        intent(in) :: unit_out
-    real(c_real)  , intent(in) :: dx, dy, dz
-    real(c_real)  , intent(in) :: xlength, ylength, zlength
+    real(rt)  , intent(in) :: dx, dy, dz
+    real(rt)  , intent(in) :: xlength, ylength, zlength
     integer(c_int), intent(in) :: domlo(3), domhi(3)
 
     integer :: bcv, m

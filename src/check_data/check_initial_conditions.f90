@@ -1,6 +1,6 @@
 module check_initial_conditions_module
 
-  use amrex_fort_module, only: c_real => amrex_real
+  use amrex_fort_module, only: rt => amrex_real
   use iso_c_binding ,    only: c_int
 
   use param,  only: zero, one, undefined, undefined_i
@@ -32,7 +32,7 @@ contains
     use param,                 only: dim_ic
 
     integer(c_int), intent(in) :: domlo(3),domhi(3)
-    real(c_real)  , intent(in) :: dx, dy, dz
+    real(rt)  , intent(in) :: dx, dy, dz
     integer(c_int)             :: icv
 
     ! Determine which ICs are DEFINED
@@ -76,7 +76,7 @@ contains
       use calc_cell_module, only: calc_cell_ic
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)
-      real(c_real)  , intent(in) :: dx,dy,dz
+      real(rt)  , intent(in) :: dx,dy,dz
 
       integer :: icv, i_w, i_e, j_s, j_n, k_b, k_t
 
@@ -252,7 +252,7 @@ contains
 
       integer, intent(in) :: icv
       integer             :: m
-      real(c_real)        :: sum_ep
+      real(rt)        :: sum_ep
       integer :: types
 
       ! Initialize the error manager.
@@ -491,7 +491,7 @@ contains
       use error_manager,  only: err_msg, flush_err_msg
 
       integer      :: icv1, icv2
-      real(c_real) :: vol
+      real(rt) :: vol
 
       ! Initialize the error manager.
       call init_err_msg("CHECK_IC_COMMON_DISCRETE")

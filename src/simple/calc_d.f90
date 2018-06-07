@@ -1,6 +1,6 @@
 module calc_d_mod
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    use param, only: zero, small_number
@@ -32,10 +32,10 @@ module calc_d_mod
       integer, intent(in   ) :: domlo(3),domhi(3)
 
       ! Pressure correction
-      real(c_real), intent(  out) :: &
+      real(rt), intent(  out) :: &
            d_e (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
-      real(c_real), intent(in   ) :: &
+      real(rt), intent(in   ) :: &
            A_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3), &
            ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
@@ -43,10 +43,10 @@ module calc_d_mod
            bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
            bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2)
 
-      real(c_real), intent(in   ) :: dy, dz
+      real(rt), intent(in   ) :: dy, dz
 
       integer      :: i,j,k
-      real(c_real) :: const
+      real(rt) :: const
 
       const = -p_scale*0.5d0*dy*dz
 
@@ -105,10 +105,10 @@ module calc_d_mod
       integer, intent(in   ) :: domlo(3),domhi(3)
 
       ! Pressure correction
-      real(c_real), intent(  out) :: &
+      real(rt), intent(  out) :: &
            d_n (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
-      real(c_real), intent(in   ):: &
+      real(rt), intent(in   ):: &
            A_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3), &
            ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
@@ -116,10 +116,10 @@ module calc_d_mod
            bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
            bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2)
 
-      real(c_real), intent(in   ) :: dx, dz
+      real(rt), intent(in   ) :: dx, dz
 
       integer      :: i,j,k
-      real(c_real) :: const
+      real(rt) :: const
 
       const = -p_scale*0.5d0*dx*dz
 
@@ -175,10 +175,10 @@ module calc_d_mod
       integer, intent(in   ) :: domlo(3),domhi(3), ng
 
       ! Pressure correction
-      real(c_real), intent(  out) :: &
+      real(rt), intent(  out) :: &
            d_t (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(in   ):: &
+      real(rt), intent(in   ):: &
            A_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3), &
            ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
@@ -186,10 +186,10 @@ module calc_d_mod
            bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
            bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
-      real(c_real), intent(in   ) :: dx, dy
+      real(rt), intent(in   ) :: dx, dy
 
       integer      :: i,j,k
-      real(c_real) :: const
+      real(rt) :: const
 
       const = -p_scale*0.5d0*dx*dy
 

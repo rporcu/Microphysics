@@ -19,7 +19,7 @@
       use ic       , only: ic_p_g, ic_defined
       use scales   , only: scale_pressure
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
       use param   , only: zero, undefined
       use param   , only: is_defined, is_undefined
@@ -30,11 +30,11 @@
       integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
       integer, intent(in) :: domlo(3), domhi(3)
 
-      real(c_real), intent(inout) :: p0_g&
+      real(rt), intent(inout) :: p0_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in) :: dx, dy, dz
-      real(c_real), intent(in) :: xlength, ylength, zlength
+      real(rt), intent(in) :: dx, dy, dz
+      real(rt), intent(in) :: xlength, ylength, zlength
       integer     , intent(in) :: delp_dir
 !-----------------------------------------------
 ! Local variables
@@ -42,9 +42,9 @@
 ! indices
       integer :: i, j, k, icv
 ! Gas pressure at the axial location j
-      real(c_real) :: pj
+      real(rt) :: pj
 ! Average pressure drop per unit length
-      real(c_real) :: dpodx, dpody, dpodz
+      real(rt) :: dpodx, dpody, dpodz
 
 ! ---------------------------------------------------------------->>>
 

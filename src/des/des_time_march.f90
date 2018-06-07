@@ -1,6 +1,6 @@
 module des_time_march_module
 
-   use amrex_fort_module, only: c_real => amrex_real
+   use amrex_fort_module, only: rt => amrex_real
    use iso_c_binding ,    only: c_int
 
    implicit none
@@ -40,10 +40,10 @@ contains
       use discretelement,  only: dtsolid
       use run,             only: glob_subdt_io => subdt_io, des_tstart, des_dt
 
-      real(c_real),   intent(in   ) :: tstart, dt
+      real(rt),   intent(in   ) :: tstart, dt
       integer(c_int), intent(in   ) :: subdt_io
       integer(c_int), intent(  out) :: nsubsteps
-      real(c_real),   intent(  out) :: subdt
+      real(rt),   intent(  out) :: subdt
 
       ! set the global subdt_io (in run module) to toggle sub-dt I/O
       glob_subdt_io = .true.
@@ -90,11 +90,11 @@ contains
       use bc                             , only: BC_shaker_A, BC_shaker_F
  
       integer(c_int),   intent(in   )     :: nf, np
-      real(c_real),     intent(in   )     :: subdt, xlength, ylength, zlength
+      real(rt),     intent(in   )     :: subdt, xlength, ylength, zlength
       type(particle_t), intent(inout)     :: particles(np)
-      real(c_real),     intent(inout)     :: tow(nf,3)
-      real(c_real),     intent(inout)     :: fc(nf,3)
-      real(c_real),     intent(inout)     :: stime
+      real(rt),     intent(inout)     :: tow(nf,3)
+      real(rt),     intent(inout)     :: fc(nf,3)
+      real(rt),     intent(inout)     :: stime
       integer(c_int),   intent(in   )     :: nstep
 
       integer :: p

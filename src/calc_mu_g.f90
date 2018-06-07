@@ -1,6 +1,6 @@
 module calc_mu_g_module
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
 contains
@@ -23,13 +23,13 @@ contains
 ! Dummy arguments ....................................................//
     integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
 
-    real(c_real), intent(  out) ::  &
+    real(rt), intent(  out) ::  &
              mu_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
          lambda_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables .....................................................//
       integer :: i,j,k
-      real(c_real) :: mu_val, lambda_val
+      real(rt) :: mu_val, lambda_val
 
       ! Set the initial viscosity
       if (is_undefined(mu_g0)) then

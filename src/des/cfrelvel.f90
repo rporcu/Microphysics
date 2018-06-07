@@ -1,6 +1,6 @@
 module CFRELVEL_MODULE
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    implicit none
@@ -44,14 +44,14 @@ contains
       !Colliding particle pair
       type(particle_t),     intent(in   ) :: particle_1, particle_2
       !distance from particle center to particle center 
-      real(c_real),         intent(in   ) :: dist_cc
+      real(rt),         intent(in   ) :: dist_cc
       ! unit normal vector along the line of contact pointing from
       ! particle L to particle II
-      real(c_real), INTENT(IN) :: NORM(3)
+      real(rt), INTENT(IN) :: NORM(3)
       ! slip velocity at point of contact
-      real(c_real), INTENT(OUT) :: VSLIP(3)
+      real(rt), INTENT(OUT) :: VSLIP(3)
       ! normal component of relative contact velocity (scalar)
-      real(c_real), INTENT(OUT) :: VRN
+      real(rt), INTENT(OUT) :: VRN
          
 
 
@@ -59,11 +59,11 @@ contains
       ! Local variables
       !-----------------------------------------------
       ! translational relative velocity
-      real(c_real) :: VRELTRANS(3)
+      real(rt) :: VRELTRANS(3)
       ! rotational velocity at point of contact
-      real(c_real) :: V_ROT(3), OMEGA_SUM(3)
+      real(rt) :: V_ROT(3), OMEGA_SUM(3)
       ! distance from the contact point to the particle centers
-      real(c_real) :: DIST_CL, DIST_CI
+      real(rt) :: DIST_CL, DIST_CI
       !-----------------------------------------------
 
       ! translational relative velocity

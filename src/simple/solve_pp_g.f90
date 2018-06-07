@@ -1,6 +1,6 @@
 module solve_pp_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    implicit none
@@ -37,47 +37,47 @@ module solve_pp_module
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
       integer(c_int), intent(in   ) :: domlo(3),domhi(3), ng
-      real(c_real)  , intent(in   ) :: dt, dx, dy, dz
+      real(rt)  , intent(in   ) :: dt, dx, dy, dz
 
-      real(c_real), intent(in   ) :: u_g&
+      real(rt), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: v_g&
+      real(rt), intent(in   ) :: v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: w_g&
+      real(rt), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(in   ) :: p_g&
+      real(rt), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: ep_g&
+      real(rt), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: rop_g&
+      real(rt), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: rop_go&
+      real(rt), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: ro_g&
+      real(rt), intent(in   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: ropX&
+      real(rt), intent(in   ) :: ropX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: ropY&
+      real(rt), intent(in   ) :: ropY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: ropZ&
+      real(rt), intent(in   ) :: ropZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(in   ) :: d_e&
+      real(rt), intent(in   ) :: d_e&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: d_n&
+      real(rt), intent(in   ) :: d_n&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: d_t&
+      real(rt), intent(in   ) :: d_t&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(  out) :: A_m&
+      real(rt), intent(  out) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
-      real(c_real), intent(  out) :: b_m&
+      real(rt), intent(  out) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
-      real(c_real), intent(  out) :: b_mmax&
+      real(rt), intent(  out) :: b_mmax&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
-      real(c_real), intent(  out) :: num_p, denom_p
+      real(rt), intent(  out) :: num_p, denom_p
     
       integer(c_int), intent(in   ) :: &
            bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
@@ -132,14 +132,14 @@ module solve_pp_module
 
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
-      real(c_real)  , intent(in   ) :: dx,dy,dz
+      real(rt)  , intent(in   ) :: dx,dy,dz
 
       ! Vector b_m
-      real(c_real), intent(inout) :: b_m&
+      real(rt), intent(inout) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       ! maximum term in b_m expression
-      real(c_real), intent(inout) :: b_mmax&
+      real(rt), intent(inout) :: b_mmax&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
 !-----------------------------------------------
@@ -151,8 +151,8 @@ module solve_pp_module
 !       integer :: PSV
 
 ! ! terms of bm expression
-!       real(c_real) pSource
-!       real(c_real) vol
+!       real(rt) pSource
+!       real(rt) vol
 
 !       vol = dx*dy*dz
 

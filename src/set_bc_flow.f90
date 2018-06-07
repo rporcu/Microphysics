@@ -1,6 +1,6 @@
 module set_bc_flow_module
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
   use bc, only: bc_type, bc_plane
@@ -39,8 +39,8 @@ contains
 
     implicit none
 
-    real(c_real)  , intent(in) :: xlength, ylength, zlength
-    real(c_real)  , intent(in) :: dx, dy, dz
+    real(rt)  , intent(in) :: xlength, ylength, zlength
+    real(rt)  , intent(in) :: dx, dy, dz
 
     integer :: bcv, i
     logical :: check(dim_m)  ! Flag to skip checks on indexed solid phase.
@@ -82,8 +82,8 @@ contains
 
       integer, intent(in) :: bcv
       logical, intent(in) :: check(dim_m)
-      real(c_real)  , intent(in) :: xlength, ylength, zlength
-      real(c_real)  , intent(in) :: dx, dy, dz
+      real(rt)  , intent(in) :: xlength, ylength, zlength
+      real(rt)  , intent(in) :: dx, dy, dz
 
       integer :: m
 
@@ -122,7 +122,7 @@ contains
     use fld_const, only: ro_g0
 
     integer, intent(in) :: bcv
-    real(c_real)        :: volflow
+    real(rt)        :: volflow
 
     ! No need to convert if the mass flow is zero.
     if (equal(bc_massflow_g(bcv),zero)) then
@@ -178,10 +178,10 @@ contains
      implicit none
 
      integer,        intent(in) :: bcv
-     real(c_real)  , intent(in) :: xlength, ylength, zlength
-     real(c_real)  , intent(in) :: dx, dy, dz
+     real(rt)  , intent(in) :: xlength, ylength, zlength
+     real(rt)  , intent(in) :: dx, dy, dz
 
-     real(c_real) :: sgn, off, vel, area
+     real(rt) :: sgn, off, vel, area
      integer      :: i_w, i_e, j_s, j_n, k_b, k_t
 
     select case (trim(bc_type(bcv)))
@@ -247,10 +247,10 @@ contains
      implicit none
 
      integer,        intent(in) :: bcv, m
-     real(c_real)  , intent(in) :: xlength, ylength, zlength
-     real(c_real)  , intent(in) :: dx, dy, dz
+     real(rt)  , intent(in) :: xlength, ylength, zlength
+     real(rt)  , intent(in) :: dx, dy, dz
 
-     real(c_real) :: vel, sgn, off, area
+     real(rt) :: vel, sgn, off, area
      integer      :: i_w, i_e, j_s, j_n, k_b, k_t
 
      select case (trim(bc_type(bcv)))

@@ -1,6 +1,6 @@
 module param
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
 
 ! Parameters limiting user-specifed input.
 !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -30,18 +30,18 @@ module param
 !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 ! Parameters for testing if user input was specifed.
-      real(c_real), parameter :: undefined = 9.87654321d31
+      real(rt), parameter :: undefined = 9.87654321d31
       integer,      parameter :: undefined_i = 987654321
       character,    parameter :: undefined_c = ' '
 
 ! Cutoffs for large and small numbers
-      real(c_real), parameter :: large_number = 1.0d32
-      real(c_real), parameter :: small_number = 1.0d-15
+      real(rt), parameter :: large_number = 1.0d32
+      real(rt), parameter :: small_number = 1.0d-15
 
 ! Common parameter constants
-      real(c_real), parameter :: zero = 0.0d0
-      real(c_real), parameter :: half = 0.5d0
-      real(c_real), parameter :: one  = 1.0d0
+      real(rt), parameter :: zero = 0.0d0
+      real(rt), parameter :: half = 0.5d0
+      real(rt), parameter :: one  = 1.0d0
 
       interface is_defined
          module procedure is_defined_db
@@ -56,7 +56,7 @@ module param
    contains
 
       pure logical function is_defined_db(x)
-         real(c_real), intent(in) :: x
+         real(rt), intent(in) :: x
          is_defined_db = .not.equal(x, undefined)
       end function is_defined_db
 
@@ -66,7 +66,7 @@ module param
       end function is_defined_i
 
       pure logical function is_undefined_db(x)
-         real(c_real), intent(in) :: x
+         real(rt), intent(in) :: x
          is_undefined_db = equal(x, undefined)
       end function is_undefined_db
 
@@ -76,7 +76,7 @@ module param
       end function is_undefined_i
 
       pure logical function equal(x, y)
-         real(c_real), intent(in) :: x, y
+         real(rt), intent(in) :: x, y
          equal = (abs(x-y) < epsilon(x))
       end function equal
 

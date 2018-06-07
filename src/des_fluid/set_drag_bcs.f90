@@ -16,7 +16,7 @@ subroutine set_drag_bcs( &
                         bc_klo_type, bc_khi_type, domlo, domhi, ng ) &
      bind(C, name="set_drag_bcs")
 
-     use amrex_fort_module, only : c_real => amrex_real
+     use amrex_fort_module, only : rt => amrex_real
      use iso_c_binding , only: c_int
 
      use bc, only: nsw_, fsw_, psw_, pinf_, pout_, minf_
@@ -28,11 +28,11 @@ subroutine set_drag_bcs( &
      integer(c_int), intent(in   ) :: wlo(3),whi(3)
      integer(c_int), intent(in   ) :: domlo(3),domhi(3), ng
 
-     real(c_real), intent(inout) ::  drag_u&
+     real(rt), intent(inout) ::  drag_u&
         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-     real(c_real), intent(inout) ::  drag_v&
+     real(rt), intent(inout) ::  drag_v&
         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-     real(c_real), intent(inout) ::  drag_w&
+     real(rt), intent(inout) ::  drag_w&
         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
      integer(c_int), intent(in   ) :: &

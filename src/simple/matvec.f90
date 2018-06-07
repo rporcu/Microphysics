@@ -1,6 +1,6 @@
 module matvec_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    implicit none
@@ -15,13 +15,13 @@ contains
    integer(c_int), intent(in   ) :: rlo(3),rhi(3)
    integer(c_int), intent(in   ) :: alo(3),ahi(3)
 
-   real(c_real)  , intent(inout) :: rhs&
+   real(rt)  , intent(inout) :: rhs&
       (rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
-   real(c_real)  , intent(inout) :: A_m&
+   real(rt)  , intent(inout) :: A_m&
       (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
    integer :: i,j,k
-   real(c_real) :: aijmax, oam
+   real(rt) :: aijmax, oam
 
    do k = lo(3), hi(3)
       do j = lo(2), hi(2)
@@ -47,13 +47,13 @@ contains
     integer(c_int), intent(in   ) :: alo(3),ahi(3)
     integer(c_int), intent(in   ) :: rlo(3),rhi(3)
 
-    real(c_real)  , intent(in   ) :: var&
+    real(rt)  , intent(in   ) :: var&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
-    real(c_real)  , intent(in   ) :: A_m&
+    real(rt)  , intent(in   ) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
-    real(c_real)  , intent(  out) :: res&
+    real(rt)  , intent(  out) :: res&
          (rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
 !-----------------------------------------------
 ! Local variables
@@ -87,16 +87,16 @@ contains
     integer(c_int), intent(in   ) :: hlo(3),hhi(3),vlo(3),vhi(3)
     integer(c_int), intent(in   ) :: alo(3),ahi(3),rlo(3),rhi(3)
 
-    real(c_real)  , intent(in   ) :: rhs&
+    real(rt)  , intent(in   ) :: rhs&
          (hlo(1):hhi(1),hlo(2):hhi(2),hlo(3):hhi(3))
 
-    real(c_real)  , intent(in   ) :: var&
+    real(rt)  , intent(in   ) :: var&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
-    real(c_real)  , intent(in   ) :: A_m&
+    real(rt)  , intent(in   ) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
-    real(c_real)  , intent(  out) :: res&
+    real(rt)  , intent(  out) :: res&
          (rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
 
     integer :: I, J, K
@@ -128,7 +128,7 @@ contains
 
     integer(c_int), intent(in   ) :: lo(3),hi(3)
 
-    real(c_real)  , intent(in   ) :: array&
+    real(rt)  , intent(in   ) :: array&
          (lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))
 
     integer :: i, j, k
@@ -149,7 +149,7 @@ contains
 
     integer(c_int), intent(in   ) :: lo(3),hi(3)
 
-    real(c_real)  , intent(in   ) :: matrix&
+    real(rt)  , intent(in   ) :: matrix&
          (lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),-3:3)
 
     integer :: i, j, k

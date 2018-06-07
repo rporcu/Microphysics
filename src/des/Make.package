@@ -1,10 +1,8 @@
-f90EXE_sources += calc_drag.f90
-f90EXE_sources += calc_wall_collisions.f90
 f90EXE_sources += calc_particle_collisions.f90
+f90EXE_sources += calc_wall_collisions.f90
 f90EXE_sources += cffctowall.f90
 f90EXE_sources += cfrelvel.f90
 f90EXE_sources += cfslide.f90
-f90EXE_sources += construct_gradp.f90
 f90EXE_sources += des_bc_mod.f90
 f90EXE_sources += des_init_namelist.f90
 f90EXE_sources += des_time_march.f90
@@ -15,12 +13,5 @@ f90EXE_sources += flip_particle_vol.f90
 f90EXE_sources += init_collision.f90
 f90EXE_sources += particle_generator.f90
 f90EXE_sources += particle_mod.f90
-f90EXE_sources += particle_pic.f90
-f90EXE_sources += set_drag_bcs.f90
 f90EXE_sources += set_particle_properties.f90
-
-F90EXE_headers += mfix_des_F.H
-
-CEXE_sources += MFIXParticleContainer.cpp 
-CEXE_headers += MFIXParticleContainer.H
 

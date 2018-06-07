@@ -8,7 +8,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 module eos
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
 contains
@@ -19,7 +19,7 @@ contains
 !  Purpose: Equation of state for gas                                  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-  real(c_real) function eosg (mw, pg, tg)
+  real(rt) function eosg (mw, pg, tg)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -30,7 +30,7 @@ contains
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
-    real(c_real), intent(in) :: mw, pg, tg
+    real(rt), intent(in) :: mw, pg, tg
 
     eosg = unscale_pressure(pg)*mw/(gas_const*tg)
     return
@@ -45,7 +45,7 @@ contains
 !  Author: M. Syamlal                                 Date: 14-AUG-96  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-  real(c_real) function droodp_g (rog, pg)
+  real(rt) function droodp_g (rog, pg)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -55,7 +55,7 @@ contains
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! gas density and pressure
-    real(c_real), intent(in) :: rog, pg
+    real(rt), intent(in) :: rog, pg
 
     droodp_g = rog/(pg + p_ref)
     return
@@ -77,14 +77,14 @@ contains
 !        Phil. Mag. 5:507-531, 1893.                                   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  real(c_real) function sutherland(tg)
+  real(rt) function sutherland(tg)
 
    implicit none
 
    ! Dummy arguments
    !---------------------------------------------------------------------//
    ! gas temperature
-   real(c_real), intent(in) :: tg
+   real(rt), intent(in) :: tg
 
    ! Gas viscosity   (in Poise or Pa.s)
    ! Calculating gas viscosity using Sutherland's formula with

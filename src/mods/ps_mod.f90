@@ -21,7 +21,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       MODULE ps
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use param, only: dim_ps, dim_n_g, dim_m, dim_n_s
@@ -30,30 +30,30 @@
       logical :: POINT_SOURCE
 
 ! Physical location of point sources.
-      real(c_real) :: PS_X_w(DIM_PS)  ! West
-      real(c_real) :: PS_X_e(DIM_PS)  ! East
-      real(c_real) :: PS_Y_s(DIM_PS)  ! South
-      real(c_real) :: PS_Y_n(DIM_PS)  ! North
-      real(c_real) :: PS_Z_b(DIM_PS)  ! Bottom
-      real(c_real) :: PS_Z_t(DIM_PS)  ! Top
+      real(rt) :: PS_X_w(DIM_PS)  ! West
+      real(rt) :: PS_X_e(DIM_PS)  ! East
+      real(rt) :: PS_Y_s(DIM_PS)  ! South
+      real(rt) :: PS_Y_n(DIM_PS)  ! North
+      real(rt) :: PS_Z_b(DIM_PS)  ! Bottom
+      real(rt) :: PS_Z_t(DIM_PS)  ! Top
 
 ! Gas mass flow rate through the point source:
-      real(c_real) :: PS_MASSFLOW_g (DIM_PS)
+      real(rt) :: PS_MASSFLOW_g (DIM_PS)
 
 ! Velocity vector for gas point source: (normalized)
-      real(c_real) :: PS_U_g(DIM_PS) ! X-axis
-      real(c_real) :: PS_V_g(DIM_PS) ! Y-axis
-      real(c_real) :: PS_W_g(DIM_PS) ! Z-axis
+      real(rt) :: PS_U_g(DIM_PS) ! X-axis
+      real(rt) :: PS_V_g(DIM_PS) ! Y-axis
+      real(rt) :: PS_W_g(DIM_PS) ! Z-axis
 
 ! Gas phase velocity magnitude: (calculated)
-      real(c_real) :: PS_VEL_MAG_G(DIM_PS)
+      real(rt) :: PS_VEL_MAG_G(DIM_PS)
 
 ! Gas phase species mass fractions
-      real(c_real) :: PS_X_g(DIM_PS, DIM_N_g)
+      real(rt) :: PS_X_g(DIM_PS, DIM_N_g)
 
 ! Gas phase temperature.
-      real(c_real) :: PS_T_g(DIM_PS)
-      real(c_real) :: PS_CpxMFLOW_g(DIM_PS)
+      real(rt) :: PS_T_g(DIM_PS)
+      real(rt) :: PS_CpxMFLOW_g(DIM_PS)
 
    contains
 

@@ -10,13 +10,13 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine usr1(time)
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int, c_char
 
   implicit none
 
-  real(c_real),   intent(in ) :: time
+  real(rt),   intent(in ) :: time
 
+  return
 
-return
 end subroutine usr1

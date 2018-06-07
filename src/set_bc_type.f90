@@ -1,6 +1,6 @@
 module set_bc_type_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    contains
@@ -41,8 +41,8 @@ module set_bc_type_module
       integer(c_int), intent(in   ) :: ng
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
-      real(c_real), intent(in) :: dx, dy, dz
-      real(c_real)  , intent(in) :: xlength, ylength, zlength
+      real(rt), intent(in) :: dx, dy, dz
+      real(rt)  , intent(in) :: xlength, ylength, zlength
 
       integer(c_int), intent(inout) :: bc_ilo_type&
          (domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2)

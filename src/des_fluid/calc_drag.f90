@@ -12,7 +12,7 @@ subroutine calc_particle_beta ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
      np, ep_g, ro_g, u_g, v_g, w_g, mu_g, particles, dx, dy, dz) &
      bind(C, name="calc_particle_beta")
 
-   use amrex_fort_module,  only : c_real => amrex_real
+   use amrex_fort_module,  only : rt => amrex_real
    use iso_c_binding ,     only: c_int
    use des_drag_gp_module, only: des_drag_gp
    use particle_mod,      only: particle_t
@@ -25,7 +25,7 @@ subroutine calc_particle_beta ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
    integer(c_int), intent(in   ) :: wlo(3),whi(3)
    integer(c_int), intent(in   ) :: np
 
-   real(c_real), intent(in   ) :: &
+   real(rt), intent(in   ) :: &
         ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
         ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
         mu_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -33,7 +33,7 @@ subroutine calc_particle_beta ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
         v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
         w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-   real(c_real), intent(in   ) :: dx, dy, dz
+   real(rt), intent(in   ) :: dx, dy, dz
 
    type(particle_t), intent(inout) :: particles(np)
 
@@ -41,14 +41,14 @@ subroutine calc_particle_beta ( slo, shi, ulo, uhi, vlo, vhi, wlo, whi,     &
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer :: p, i, j, k, ii, jj, kk
-   real(c_real) :: velfp(3), velp(3), beta
-   real(c_real) :: odx, ody, odz
-   real(c_real) :: lx, ly, lz
-   real(c_real) :: sx_lo, sy_lo, sz_lo
-   real(c_real) :: sx_hi, sy_hi, sz_hi
-   real(c_real) :: ux_lo, vy_lo, wz_lo
-   real(c_real) :: ux_hi, vy_hi, wz_hi
-   real(c_real) :: plo(3)
+   real(rt) :: velfp(3), velp(3), beta
+   real(rt) :: odx, ody, odz
+   real(rt) :: lx, ly, lz
+   real(rt) :: sx_lo, sy_lo, sz_lo
+   real(rt) :: sx_hi, sy_hi, sz_hi
+   real(rt) :: ux_lo, vy_lo, wz_lo
+   real(rt) :: ux_hi, vy_hi, wz_hi
+   real(rt) :: plo(3)
    !......................................................................!
 
    odx = 1.0d0/dx
@@ -146,7 +146,7 @@ subroutine calc_drag_particle( gpx, xlo, xhi, &
                                np, particles, dx, dy, dz)&
                                bind(C, name="calc_drag_particle")
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
    use des_drag_gp_module, only: des_drag_gp
    ! Specified pressure drop
@@ -161,7 +161,7 @@ subroutine calc_drag_particle( gpx, xlo, xhi, &
    integer(c_int), intent(in   ) :: vlo(3), vhi(3)
    integer(c_int), intent(in   ) :: wlo(3), whi(3), np
 
-   real(c_real), intent(in   ) :: &
+   real(rt), intent(in   ) :: &
         gpx(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)), &
         gpy(ylo(1):yhi(1),ylo(2):yhi(2),ylo(3):yhi(3)), &
         gpz(zlo(1):zhi(1),zlo(2):zhi(2),zlo(3):zhi(3)), &
@@ -169,22 +169,22 @@ subroutine calc_drag_particle( gpx, xlo, xhi, &
         v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
         w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-   real(c_real),     intent(in   ) :: dx, dy, dz
+   real(rt),     intent(in   ) :: dx, dy, dz
    type(particle_t), intent(inout) :: particles(np)
 
    ! Local variables
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer :: p, i, j, k, ii, jj, kk
-   real(c_real) :: velfp(3), gradpg(3)
-   real(c_real) :: beta(np)
-   real(c_real) :: odx, ody, odz
-   real(c_real) :: lx, ly, lz, lx2, ly2, lz2
-   real(c_real) :: sx_lo, sy_lo, sz_lo
-   real(c_real) :: sx_hi, sy_hi, sz_hi
-   real(c_real) :: ux_lo, vy_lo, wz_lo
-   real(c_real) :: ux_hi, vy_hi, wz_hi
-   real(c_real) :: plo(3)
+   real(rt) :: velfp(3), gradpg(3)
+   real(rt) :: beta(np)
+   real(rt) :: odx, ody, odz
+   real(rt) :: lx, ly, lz, lx2, ly2, lz2
+   real(rt) :: sx_lo, sy_lo, sz_lo
+   real(rt) :: sx_hi, sy_hi, sz_hi
+   real(rt) :: ux_lo, vy_lo, wz_lo
+   real(rt) :: ux_hi, vy_hi, wz_hi
+   real(rt) :: plo(3)
    !......................................................................!
    plo = 0.0d0 ! HACK -- This should get passed into routine
 

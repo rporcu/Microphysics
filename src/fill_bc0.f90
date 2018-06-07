@@ -25,7 +25,7 @@ subroutine fill_bc0(s, slo, shi, &
 ! Global modules
 !--------------------------------------------------------------------//
       use iso_c_binding , only: c_int
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use bc, only: NSW_, FSW_, PSW_
 
       implicit none
@@ -36,7 +36,7 @@ subroutine fill_bc0(s, slo, shi, &
       integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: domlo(3),domhi(3),ng
 
-      real(c_real), intent(inout) ::  s&
+      real(rt), intent(inout) ::  s&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int), intent(in   ) :: &

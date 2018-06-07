@@ -1,11 +1,11 @@
 module par_gen_module
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
   implicit none
 
-  real(c_real), allocatable :: rdata(:,:)
+  real(rt), allocatable :: rdata(:,:)
   integer,      allocatable :: idata(:,:)
 
   !< Position............... 1,2,3
@@ -55,11 +55,11 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
 
   integer(c_int), intent(inout) :: pc
   integer(c_int), intent(in   ) :: lo(3),hi(3)
-  real(c_real),   intent(in   ) :: dx, dy, dz
+  real(rt),   intent(in   ) :: dx, dy, dz
 
 
-  real(c_real), parameter :: sqrt3 = sqrt(3.0)
-  real(c_real), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+  real(rt), parameter :: sqrt3 = sqrt(3.0)
+  real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
 
   ! local index for initial condition
   integer :: icv
@@ -70,12 +70,12 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   integer :: k_b, k_t
 
   integer :: np, type, i,j,k, init_pc
-  real(c_real) :: ic_vol, type_vol, acc_vol, pvol
-  real(c_real) :: ic_dlo(3), ic_dhi(3)
-  real(c_real) :: mean_dp, max_dp, max_rp
-  real(c_real) :: pos(3)
+  real(rt) :: ic_vol, type_vol, acc_vol, pvol
+  real(rt) :: ic_dlo(3), ic_dhi(3)
+  real(rt) :: mean_dp, max_dp, max_rp
+  real(rt) :: pos(3)
 
-  real(c_real), allocatable :: dp(:), ro_s(:)
+  real(rt), allocatable :: dp(:), ro_s(:)
 
   integer :: seed, max_seed(3), seed_lo(3), seed_hi(3)
 
@@ -245,8 +245,8 @@ subroutine mfix_particle_generator_prop(nrp, particles) &
 
   integer :: p
 
-  real(c_real)   :: rad, rho
-  real(c_real)   :: vol, mass, omoi
+  real(rt)   :: rad, rho
+  real(rt)   :: vol, mass, omoi
 
   do p = 1, nrp
 
@@ -290,13 +290,13 @@ subroutine nor_rno(dp, mean, sigma, dp_min, dp_max)
 
   implicit none
 
-  real(c_real), intent(inout) :: dp(:)
-  real(c_real), intent(in   ) :: mean, sigma, dp_min, dp_max
+  real(rt), intent(inout) :: dp(:)
+  real(rt), intent(in   ) :: mean, sigma, dp_min, dp_max
 
   ! Local variables
   !-----------------------------------------------
-  real(c_real) :: lmean, lvariance, lsigma
-  real(c_real) :: x(2), w, dp1, dp2
+  real(rt) :: lmean, lvariance, lsigma
+  real(rt) :: x(2), w, dp1, dp2
   integer i, nsize
   logical :: debug = .false.
   !-----------------------------------------------
@@ -367,11 +367,11 @@ subroutine uni_rno(dp, dp_min, dp_max)
 
   implicit none
 
-  real(c_real), intent(inout) :: dp(:)
-  real(c_real), intent(in   ) :: dp_min, dp_max
+  real(rt), intent(inout) :: dp(:)
+  real(rt), intent(in   ) :: dp_min, dp_max
 
   integer :: nsize, lc
-  real(c_real) :: lscale
+  real(rt) :: lscale
 
   ! call init_random_seed
   call random_number(dp)
@@ -429,7 +429,7 @@ subroutine grow_pdata(gsize)
 
   integer :: csize, nsize
 
-  real(c_real),   allocatable :: rtmp(:,:)
+  real(rt),   allocatable :: rtmp(:,:)
   integer(c_int), allocatable :: itmp(:,:)
 
   ! Increase real data
@@ -543,7 +543,7 @@ subroutine rm_wall_collisions ( particles, nrp, flag, fglo, fghi, &
      bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, apz, azlo, azhi, dx) &
      bind(C, name="rm_wall_collisions")
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding    , only: c_int
 
 
@@ -563,27 +563,27 @@ subroutine rm_wall_collisions ( particles, nrp, flag, fglo, fghi, &
   integer, dimension(3), intent(in) :: axhi, ayhi, azhi, fghi, bhi
 
   integer,      intent(in) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
-  real(c_real), intent(in) :: bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
-  real(c_real), intent(in) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
-  real(c_real), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
-  real(c_real), intent(in) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
-  real(c_real), intent(in) :: dx(3)
+  real(rt), intent(in) :: bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
+  real(rt), intent(in) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
+  real(rt), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
+  real(rt), intent(in) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
+  real(rt), intent(in) :: dx(3)
 
   type(particle_t), pointer :: p
 
   ! facet barycenter (bcent) in global coordinates
-  real(c_real) :: eb_cent(3)
+  real(rt) :: eb_cent(3)
 
   integer :: ll, ii, jj, kk, i, j, k
 
-  real(c_real), parameter :: fudge = 1.0d0 - 1.0d-8
-  real(c_real) :: inv_dx(3)
+  real(rt), parameter :: fudge = 1.0d0 - 1.0d-8
+  real(rt) :: inv_dx(3)
 
-  real(c_real) :: adx, ady, adz, apnorminv
+  real(rt) :: adx, ady, adz, apnorminv
 
   integer :: nbr(-1:1,-1:1,-1:1)
 
-  real(c_real) :: dist, normal(3)
+  real(rt) :: dist, normal(3)
 
   ! inverse cell size: used to convert positions to cell indices
   !   -> dx is a vector, fortran is amazing!

@@ -1,6 +1,6 @@
 module calc_tau_v_g_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
 contains
@@ -45,25 +45,25 @@ contains
       integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
-      real(c_real)  , intent(in   ) :: dx,dy,dz
+      real(rt)  , intent(in   ) :: dx,dy,dz
 
       ! TAU_V_g
-      real(c_real), intent(  out) :: ltau_v_g&
+      real(rt), intent(  out) :: ltau_v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
-      real(c_real), intent(in   ) :: trd_g&
+      real(rt), intent(in   ) :: trd_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: u_g&
+      real(rt), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: v_g&
+      real(rt), intent(in   ) :: v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: w_g&
+      real(rt), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(in   ) :: lambda_g&
+      real(rt), intent(in   ) :: lambda_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: mu_g&
+      real(rt), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables
@@ -71,8 +71,8 @@ contains
 ! indices
       integer :: i, j, k
 ! Source terms (Surface)
-      real(c_real) :: Sbv, Ssx, Ssy, Ssz
-      real(c_real) :: ody, axy, axz, ayz
+      real(rt) :: Sbv, Ssx, Ssy, Ssz
+      real(rt) :: ody, axy, axz, ayz
 
       ody = 1.d0/dy
       axy = dx*dy

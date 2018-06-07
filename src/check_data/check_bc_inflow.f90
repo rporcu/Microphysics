@@ -1,6 +1,6 @@
 module check_bc_inflow_module
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
   use param,         only: undefined, one, zero, is_undefined, is_defined
   use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg,    &
@@ -35,7 +35,7 @@ contains
     integer, intent(in) :: BCV, M_TOT
     logical, intent(in) :: SKIP(DIM_M)
     integer             :: M
-    real(c_real)        :: SUM_EP
+    real(rt)        :: SUM_EP
 
     call init_err_msg("CHECK_BC_MASS_INFLOW")
 

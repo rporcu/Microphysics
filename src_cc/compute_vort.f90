@@ -1,6 +1,6 @@
 module compute_vort_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    implicit none
@@ -17,18 +17,18 @@ contains
       integer(c_int), intent(in   ) :: vlo(3),vhi(3)
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
 
-      real(c_real),   intent(in   ) :: dx(3)
-      real(c_real),   intent(  out) :: &
+      real(rt),   intent(in   ) :: dx(3)
+      real(rt),   intent(  out) :: &
            vort(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       
-      real(c_real), intent(in   ) :: &
+      real(rt), intent(in   ) :: &
            vel_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3)
 
       ! Local variables
       !-----------------------------------------------
       integer      :: i, j, k
-      real(c_real) :: odx, ody, odz
-      real(c_real) :: uy,uz,vx,vz,wx,wy
+      real(rt) :: odx, ody, odz
+      real(rt) :: uy,uz,vx,vz,wx,wy
 
       odx = 1.d0 / dx(1)
       ody = 1.d0 / dx(2)

@@ -1386,3 +1386,152 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
                         min_number << " " << max_number << std::endl;
   }
 }
+
+void MFIXParticleContainer::ComputeAverageVelocities ( const int lev,
+						       const amrex::Real time,
+						       const string&  basename,
+						       const vector<Real>& avg_region_x_w,
+						       const vector<Real>& avg_region_x_e,
+						       const vector<Real>& avg_region_y_s,
+						       const vector<Real>& avg_region_y_n,
+						       const vector<Real>& avg_region_z_b,
+						       const vector<Real>& avg_region_z_t )
+{
+
+    // Count number of calls -- Used to determin when to create file from scratch
+    static int ncalls = 0;
+    ++ncalls;
+    
+    int  nregions = avg_region_x_w.size();
+
+    // 
+    // Check the regions are defined correctly
+    //
+    if (  ( avg_region_x_e.size() != nregions ) ||
+	  ( avg_region_y_s.size() != nregions ) ||
+	  ( avg_region_y_n.size() != nregions ) ||
+	  ( avg_region_z_b.size() != nregions ) ||
+	  ( avg_region_z_t.size() != nregions )  )
+    {
+	amrex::Print () << "ComputeAverageVelocities: some regions are not properly defined: skipping.";
+	return; 
+    }
+    
+    vector<long> region_np (nregions, 0);
+    vector<Real> region_velx (nregions, 0.0);
+    vector<Real> region_vely (nregions, 0.0);
+    vector<Real> region_velz (nregions, 0.0);
+  
+    for ( int nr = 0; nr < nregions; ++nr )
+    {
+	// Create Real box for this region
+	RealBox avg_region ( {AMREX_D_DECL(avg_region_x_w[nr],avg_region_y_s[nr],avg_region_z_b[nr])},
+			     {AMREX_D_DECL(avg_region_x_e[nr],avg_region_y_n[nr],avg_region_z_t[nr])} );
+
+	// Jump to next iteration if this averaging region is not valid
+	if ( !avg_region.ok () )
+	{
+	    amrex::Print() << "ComputeAverageVelocities: region "<< nr <<" is invalid: skipping\n";
+	    continue;
+	}
+    
+	long sum_np     = 0; 	  // Number of particle in avg region
+	Real sum_velx   = 0.;    
+	Real sum_vely   = 0.;
+	Real sum_velz   = 0.;
+	
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz)
+#endif
+	for ( MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
+	{
+	    Box bx       = pti.tilebox ();
+	    RealBox tile_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
+
+	    if ( tile_region.intersects ( avg_region ) )
+	    {
+		const int np         = NumberOfParticles(pti);
+		const AoS &particles = pti.GetArrayOfStructs();
+		    
+		for (int p = 0; p < np; ++p )
+		{
+		    if ( avg_region.contains ( &(particles[p].m_rdata.pos[0]) ) )
+		    {
+			sum_np++;
+			sum_velx += particles[p].rdata(realData::velx); 
+			sum_vely += particles[p].rdata(realData::vely);
+			sum_velz += particles[p].rdata(realData::velz); 
+		    }
+
+		}
+
+	    }
+
+	}
+
+	region_np[nr]    = sum_np;
+	region_velx[nr]  = sum_velx;
+	region_vely[nr]  = sum_vely;
+	region_velz[nr]  = sum_velz;
+    }
+
+    // Compute parallel reductions
+    ParallelDescriptor::ReduceLongSum ( region_np.data(),   nregions ); 
+    ParallelDescriptor::ReduceRealSum ( region_velx.data(), nregions ); 
+    ParallelDescriptor::ReduceRealSum ( region_vely.data(), nregions );
+    ParallelDescriptor::ReduceRealSum ( region_velz.data(), nregions ); 
+
+    // Only the IO processor takes care of the output
+    if (ParallelDescriptor::IOProcessor())  
+    {
+
+	for ( int nr = 0; nr < nregions; ++nr )
+	{
+
+	    // 
+	    // Compute averages (NaN if NP=0 )
+	    //
+	    region_velx[nr] /= region_np[nr]; 
+	    region_vely[nr] /= region_np[nr];
+	    region_velz[nr] /= region_np[nr];
+
+	    //
+	    // Print to file
+	    // 
+	    std::ofstream  ofs;
+	    std::string    fname;
+
+	    fname = basename + std::to_string(nr) + ".dat";
+
+	    // Open file
+	    if ( ncalls == 1 )
+	    {
+		// Create output files only the first time this function is called
+		// Use ios:trunc to delete previous contect
+		ofs.open ( fname.c_str(), ios::out | ios::trunc );
+	    }
+	    else
+	    {
+		// If this is not the first time we write to this file
+		// we append to it
+		ofs.open ( fname.c_str(), ios::out | ios::app );		
+	    }
+
+	    // Check if file is good
+	    if ( !ofs.good() )
+		amrex::FileOpenFailed ( fname );
+   
+	    // Print header if first access
+	    if ( ncalls == 1 )
+		ofs << "#  Time   NP  U  V  W" << std::endl;
+   
+	    ofs << time << " " 
+		<< region_np[nr] << " "
+		<< region_velx[nr] << " " 
+		<< region_vely[nr] << " " 
+		<< region_velz[nr] << std::endl;
+
+	    ofs.close();
+	}
+    }
+}

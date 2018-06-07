@@ -9,7 +9,7 @@
       subroutine write_out0(time, dt, dx, dy, dz, xlength, ylength, zlength, domlo, domhi) &
          bind(C, name="write_out0")
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use constant, only: gravity
@@ -30,8 +30,8 @@
       implicit none
 
       integer(c_int), intent(in   ) :: domlo(3), domhi(3)
-      real(c_real)  , intent(in   ) :: time, dt, dx, dy, dz
-      real(c_real)  , intent(in   ) :: xlength, ylength, zlength
+      real(rt)  , intent(in   ) :: time, dt, dx, dy, dz
+      real(rt)  , intent(in   ) :: xlength, ylength, zlength
 
       integer :: L, M, N
       integer :: mmax_tot
@@ -284,10 +284,10 @@
 !                      Ending array index
       integer          LEND
 
-      real(c_real) SCALAR
+      real(rt) SCALAR
 
 !                      Starting value of distance
-      real(c_real) DIST_MIN
+      real(rt) DIST_MIN
 
 !-----------------------------------------------
 !   L o c a l   P a r a m e t e r s
@@ -308,13 +308,13 @@
       integer          ARRAY1(DIMENSION_1)
 !
 !                      Array3 to be written
-      real(c_real) ARRAY3(DIMENSION_1)
+      real(rt) ARRAY3(DIMENSION_1)
 !
 !                      Number of rows
       integer          NROW
 !
 !                      Temporary storage for distance calculation
-      real(c_real) DIST
+      real(rt) DIST
 !
 !                      Local array indices
       integer          L, L1, L2, L3

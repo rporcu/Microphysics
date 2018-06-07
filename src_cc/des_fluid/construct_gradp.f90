@@ -5,7 +5,7 @@ subroutine construct_gradp(lo, hi, p_g, p0_g, rlo, rhi, &
                            bct_klo, bct_khi, domlo, domhi, ng, nodal_pressure) &
                            bind(C, name="construct_gradp")
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    use bc, only: PINF_,POUT_,MINF_,FSW_,NSW_
@@ -16,16 +16,16 @@ subroutine construct_gradp(lo, hi, p_g, p0_g, rlo, rhi, &
         xlo(3), xhi(3), ylo(3), yhi(3), zlo(3), zhi(3), &
         domlo(3), domhi(3), ng, nodal_pressure
 
-   real(c_real), intent(inout) :: &
+   real(rt), intent(inout) :: &
         p_g(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3)), &
        p0_g(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
 
-   real(c_real), intent(inout) :: &
+   real(rt), intent(inout) :: &
         gpx(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)), &
         gpy(ylo(1):yhi(1),ylo(2):yhi(2),ylo(3):yhi(3)), &
         gpz(zlo(1):zhi(1),zlo(2):zhi(2),zlo(3):zhi(3))
 
-   real(c_real),     intent(in   ) :: dx, dy, dz
+   real(rt),     intent(in   ) :: dx, dy, dz
 
    integer(c_int), intent(in   ) :: &
            bct_ilo(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
@@ -39,7 +39,7 @@ subroutine construct_gradp(lo, hi, p_g, p0_g, rlo, rhi, &
    !---------------------------------------------------------------------//
    integer ::  i, j, k
    integer ::  imin, imax, jmin, jmax, kmin, kmax
-   real(c_real) :: odx, ody, odz
+   real(rt) :: odx, ody, odz
    !......................................................................!
 
    odx = 1.0d0/dx

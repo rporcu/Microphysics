@@ -1,14 +1,14 @@
       module residual
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       ! Tolerance in residuals allowed for convergence
-      real(c_real) :: tol_resid
+      real(rt) :: tol_resid
       ! Minimum residual for declaring divergence
-      real(c_real) :: tol_diverge
+      real(rt) :: tol_diverge
       ! Factor for normalizing the residual of gas cont. eq.
-      real(c_real) :: norm_g
+      real(rt) :: norm_g
 
       integer, parameter :: nresid = 8
 
@@ -18,7 +18,7 @@
       integer, parameter :: resid_w  =  4 ! W-velocity
 
 ! sum of residuals every 5 iterations
-      real(c_real) :: SUM5_resid
+      real(rt) :: SUM5_resid
 
    contains
 
@@ -49,40 +49,40 @@
       integer     , intent(in   ) :: v2lo(3),v2hi(3)
 
       ! primary velocity component
-      real(c_real), intent(IN) :: vel&
+      real(rt), intent(IN) :: vel&
          (v0lo(1):v0hi(1),v0lo(2):v0hi(2),v0lo(3):v0hi(3))
 
       ! other components used here only for scaling
-      real(c_real), intent(IN) :: vels1&
+      real(rt), intent(IN) :: vels1&
          (v1lo(1):v1hi(1),v1lo(2):v1hi(2),v1lo(3):v1hi(3))
-      real(c_real), intent(IN) :: vels2&
+      real(rt), intent(IN) :: vels2&
          (v2lo(1):v2hi(1),v2lo(2):v2hi(2),v2lo(3):v2hi(3))
 
       ! Septadiagonal matrix A_m
-      real(c_real) :: A_m&
+      real(rt) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       ! Vector b_m
-      real(c_real) :: b_m&
+      real(rt) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-      real(c_real) :: mask&
+      real(rt) :: mask&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       ! Residual ID, numerator and denominator
-      real(c_real), intent(  out) :: num, den
+      real(rt), intent(  out) :: num, den
 
 !-----------------------------------------------
 !     Local variables
 !-----------------------------------------------
       ! Velocity magnitude
-      real(c_real) :: magvel
+      real(rt) :: magvel
 
       ! Tangential velocity averaged onto normal face
-      real(c_real) :: uavg, vavg, wavg
+      real(rt) :: uavg, vavg, wavg
 
       ! Numerators and denominators
-      real(c_real)   :: num1, den1
+      real(rt)   :: num1, den1
 
       ! Indices
       integer(c_int) :: i, j, k
@@ -163,13 +163,13 @@
       implicit none
 
       integer, intent(in   ) :: alo(3),ahi(3),lo(3),hi(3)
-      real(c_real), intent(inout) :: num, den
+      real(rt), intent(inout) :: num, den
 
 !   Vector b_m
-      real(c_real) :: b_m&
+      real(rt) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-      real(c_real) :: b_mmax&
+      real(rt) :: b_mmax&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       integer :: i, j, k

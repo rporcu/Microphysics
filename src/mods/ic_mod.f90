@@ -6,47 +6,47 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 module ic
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
   use param, only: dim_ic, dim_m, dim_n_g, dim_n_s
 
 
   ! Boundary condition coordinates
-  real(c_real) :: IC_X_w(dim_ic), IC_X_e(dim_ic)
-  real(c_real) :: IC_Y_s(dim_ic), IC_Y_n(dim_ic)
-  real(c_real) :: IC_Z_b(dim_ic), IC_Z_t(dim_ic)
+  real(rt) :: IC_X_w(dim_ic), IC_X_e(dim_ic)
+  real(rt) :: IC_Y_s(dim_ic), IC_Y_n(dim_ic)
+  real(rt) :: IC_Z_b(dim_ic), IC_Z_t(dim_ic)
 
   ! Void fraction in a specified boundary
-  real(c_real) :: IC_EP_g(dim_ic), IC_EP_s(dim_ic, dim_m)
+  real(rt) :: IC_EP_g(dim_ic), IC_EP_s(dim_ic, dim_m)
 
   ! Initial gas pressure
-  real(c_real) :: IC_P_g(dim_ic)
+  real(rt) :: IC_P_g(dim_ic)
 
   ! Initial velocities in specified region
-  real(c_real) :: IC_U_g(dim_ic), IC_U_s(dim_ic, dim_m)
-  real(c_real) :: IC_V_g(dim_ic), IC_V_s(dim_ic, dim_m)
-  real(c_real) :: IC_W_g(dim_ic), IC_W_s(dim_ic, dim_m)
+  real(rt) :: IC_U_g(dim_ic), IC_U_s(dim_ic, dim_m)
+  real(rt) :: IC_V_g(dim_ic), IC_V_s(dim_ic, dim_m)
+  real(rt) :: IC_W_g(dim_ic), IC_W_s(dim_ic, dim_m)
 
   ! Heat transfer boundary condition
-  real(c_real) :: IC_T_g(dim_ic), IC_T_s(dim_ic, dim_m)
+  real(rt) :: IC_T_g(dim_ic), IC_T_s(dim_ic, dim_m)
 
   ! Species transfer boundary condition
-  real(c_real) :: IC_X_g(dim_ic, dim_n_g), IC_X_s(dim_ic, dim_m, dim_n_s)
+  real(rt) :: IC_X_g(dim_ic, dim_n_g), IC_X_s(dim_ic, dim_m, dim_n_s)
 
   ! Particle Size properties
   character(len=16) :: ic_dp_dist(dim_ic, dim_m)
-  real(c_real) :: ic_dp_mean(dim_ic, dim_m)
-  real(c_real) :: ic_dp_std(dim_ic, dim_m)
-  real(c_real) :: ic_dp_min(dim_ic, dim_m)
-  real(c_real) :: ic_dp_max(dim_ic, dim_m)
+  real(rt) :: ic_dp_mean(dim_ic, dim_m)
+  real(rt) :: ic_dp_std(dim_ic, dim_m)
+  real(rt) :: ic_dp_min(dim_ic, dim_m)
+  real(rt) :: ic_dp_max(dim_ic, dim_m)
 
   ! Particle density properties
   character(len=16) :: ic_ro_s_dist(dim_ic, dim_m)
-  real(c_real) :: ic_ro_s_mean(dim_ic, dim_m)
-  real(c_real) :: ic_ro_s_std(dim_ic, dim_m)
-  real(c_real) :: ic_ro_s_min(dim_ic, dim_m)
-  real(c_real) :: ic_ro_s_max(dim_ic, dim_m)
+  real(rt) :: ic_ro_s_mean(dim_ic, dim_m)
+  real(rt) :: ic_ro_s_std(dim_ic, dim_m)
+  real(rt) :: ic_ro_s_min(dim_ic, dim_m)
+  real(rt) :: ic_ro_s_max(dim_ic, dim_m)
 
 contains
 
@@ -83,7 +83,7 @@ contains
      use fld_const, only: ro_g0
 
      integer,        intent(in) :: unit_out
-     real(c_real)  , intent(in) :: dx, dy, dz
+     real(rt)  , intent(in) :: dx, dy, dz
 
      integer :: icv, m
      integer :: i_w, j_s, k_b

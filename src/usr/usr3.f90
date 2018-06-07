@@ -26,7 +26,7 @@
       subroutine usr3(u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
                       p_g, slo, shi, dx, dy, dz)
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       ! NOTE -- this routine may be called with staggered or cell-centered
@@ -39,14 +39,14 @@
       integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: slo(3),shi(3)
 
-      real(c_real), intent(in) :: u_g&
+      real(rt), intent(in) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in) :: v_g&
+      real(rt), intent(in) :: v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in) :: w_g&
+      real(rt), intent(in) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      real(c_real), intent(in) :: p_g&
+      real(rt), intent(in) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in) :: dx, dy, dz
+      real(rt), intent(in) :: dx, dy, dz
 
       end subroutine usr3

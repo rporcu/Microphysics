@@ -14,7 +14,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
                              bc_klo_type, bc_khi_type, domlo, domhi, ng) &
      bind(C, name="flip_particle_vol")
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
   use bc, only: nsw_, fsw_, psw_, pinf_, pout_, minf_
@@ -24,7 +24,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
   integer(c_int), intent(in   ) :: slo(3),shi(3)
   integer(c_int), intent(in   ) :: domlo(3),domhi(3),ng
 
-  real(c_real), intent(inout) :: &
+  real(rt), intent(inout) :: &
        vol(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
   integer(c_int), intent(in   ) :: &

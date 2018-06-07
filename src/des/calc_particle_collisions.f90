@@ -1,7 +1,7 @@
    subroutine calc_particle_collisions( rparticles, nrp, gparticles, ngp, nbor_list, size_nl, tow, fc, dtsolid, ncoll ) &
       bind(C, name="calc_particle_collisions")
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding  , only: c_int
       use particle_mod   , only: particle_t
       use cfrelvel_module, only: cfrelvel
@@ -15,59 +15,59 @@
       integer,          intent(in   ) :: nrp, ngp, size_nl
       type(particle_t), intent(in   ) :: rparticles(nrp), gparticles(ngp)
       integer,          intent(in   ) :: nbor_list(size_nl)
-      real(c_real),     intent(inout) :: tow(nrp+ngp,3), fc(nrp+ngp,3)
-      real(c_real),     intent(in   ) :: dtsolid
+      real(rt),     intent(inout) :: tow(nrp+ngp,3), fc(nrp+ngp,3)
+      real(rt),     intent(in   ) :: dtsolid
       integer(c_int),   intent(inout) :: ncoll
 
       logical,      parameter     :: report_excess_overlap = .false.
-      real(c_real), parameter     :: flag_overlap = 0.20d0 ! % of particle radius when excess overlap will be flagged
-      real(c_real), parameter     :: q2           = 0.5_c_real
+      real(rt), parameter     :: flag_overlap = 0.20d0 ! % of particle radius when excess overlap will be flagged
+      real(rt), parameter     :: q2           = 0.5_rt
 
       ! particle no. indices
       integer :: ii, ll, jj
 
       ! the overlap occuring between particle-particle or particle-wall
       ! collision in the normal direction
-      real(c_real) :: overlap_n, overlap_t(3)
+      real(rt) :: overlap_n, overlap_t(3)
 
       ! square root of the overlap
-      real(c_real) :: sqrt_overlap
+      real(rt) :: sqrt_overlap
 
       ! distance vector between two particle centers or between a particle
       ! center and wall when the two surfaces are just at contact (i.e. no
       ! overlap)
-      real(c_real) :: r_lm,dist_ci,dist_cl
+      real(rt) :: r_lm,dist_ci,dist_cl
 
       ! the normal and tangential components of the translational relative
       ! velocity
-      real(c_real) :: v_rel_trans_norm, rad
+      real(rt) :: v_rel_trans_norm, rad
 
       ! distance vector between two particle centers or between a particle
       ! center and wall at current and previous time steps
-      real(c_real) :: dist(3), normal(3), dist_mag, pos_tmp(3)
+      real(rt) :: dist(3), normal(3), dist_mag, pos_tmp(3)
 
       ! tangent to the plane of contact at current time step
-      real(c_real) :: vrel_t(3)
+      real(rt) :: vrel_t(3)
 
       ! normal and tangential forces
-      real(c_real) :: fn(3), ft(3)
+      real(rt) :: fn(3), ft(3)
 
       ! temporary storage of force
-      real(c_real) :: fc_tmp(3)
+      real(rt) :: fc_tmp(3)
 
       ! temporary storage of force for torque
-      real(c_real) :: tow_force(3)
+      real(rt) :: tow_force(3)
 
       ! temporary storage of torque
-      real(c_real) :: tow_tmp(3,2)
+      real(rt) :: tow_tmp(3,2)
 
       ! store solids phase index of particle (i.e. phase(np))
       integer :: phaseii, phasell
       ! local values used spring constants and damping coefficients
-      real(c_real) :: etan_des, etat_des, kn_des, kt_des
-      real(c_real) :: fnmd, mag_overlap_t, tangent(3)
+      real(rt) :: etan_des, etat_des, kn_des, kt_des
+      real(rt) :: fnmd, mag_overlap_t, tangent(3)
       integer      ::  np, index, nneighbors
-      real(c_real) :: radiusii, radiusll
+      real(rt) :: radiusii, radiusll
 
       type(particle_t), pointer :: pll
       type(particle_t), allocatable, target  :: particles(:)

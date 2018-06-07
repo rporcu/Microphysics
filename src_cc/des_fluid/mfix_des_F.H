@@ -82,10 +82,8 @@ extern "C"
         );
 
     void set_drag_bcs(
-            const int* ulo, const int* uhi,
-            const int* vlo, const int* vhi,
-            const int* wlo, const int* whi,
-            amrex::Real* drag_u, amrex::Real* drag_v, amrex::Real* drag_w,
+            amrex::Real* drag_u, 
+            const int* dlo, const int* dhi,
             const int* bc_ilo, const int* bc_ihi,
             const int* bc_jlo, const int* bc_jhi,
             const int* bc_klo, const int* bc_khi,

@@ -13,7 +13,7 @@ subroutine zero_wall_norm_vel(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
      bc_klo_type, bc_khi_type, domlo, domhi, ng) &
      bind(C, name="zero_wall_norm_vel")
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
   use bc, only: NSW_, FSW_, PSW_
@@ -24,7 +24,7 @@ subroutine zero_wall_norm_vel(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
   integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
   integer(c_int), intent(in   ) :: domlo(3),domhi(3),ng
 
-  real(c_real), intent(inout) :: &
+  real(rt), intent(inout) :: &
        u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
        v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
        w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))

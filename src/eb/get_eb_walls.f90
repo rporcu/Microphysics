@@ -8,7 +8,7 @@
 subroutine mfix_get_walls(bcv, exists, normal, center) &
      bind(c,name='mfix_get_walls')
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
   use bc, only: bc_defined, bc_type, bc_plane
@@ -24,11 +24,11 @@ subroutine mfix_get_walls(bcv, exists, normal, center) &
   integer(c_int), intent(in   ) :: bcv
   integer(c_int), intent(  out) :: exists
 
-  real(c_real),   intent(  out) :: normal(3), center(3)
+  real(rt),   intent(  out) :: normal(3), center(3)
 
-  real(c_real) :: x, y, z
+  real(rt) :: x, y, z
 
-  real(c_real), parameter :: offset = 1.0d-15
+  real(rt), parameter :: offset = 1.0d-15
 
   exists = 0;
 

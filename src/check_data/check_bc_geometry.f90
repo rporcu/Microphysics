@@ -1,6 +1,6 @@
 module check_bc_geometry_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    use error_manager, only: init_err_msg, finl_err_msg, flush_err_msg
@@ -149,8 +149,8 @@ module check_bc_geometry_module
       implicit none
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)
-      real(c_real)  , intent(in) :: dx, dy, dz
-      real(c_real)  , intent(in) :: xlength, ylength, zlength
+      real(rt)  , intent(in) :: dx, dy, dz
+      real(rt)  , intent(in) :: xlength, ylength, zlength
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -225,8 +225,8 @@ module check_bc_geometry_module
       IMPLICIT NONE
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)
-      real(c_real)  , intent(in) :: dx, dy, dz
-      real(c_real)  , intent(in) :: xlength, ylength, zlength
+      real(rt)  , intent(in) :: dx, dy, dz
+      real(rt)  , intent(in) :: xlength, ylength, zlength
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//

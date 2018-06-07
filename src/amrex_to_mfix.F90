@@ -1,7 +1,7 @@
 module amrex_to_mfix_module
 ! _________________________________________________________________
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int, c_char
 
   implicit none
@@ -27,14 +27,14 @@ contains
 
     implicit none
 
-    real(c_real),   intent(in ) :: tstopC
+    real(rt),   intent(in ) :: tstopC
     integer(c_int), intent(out) :: fluid
     integer(c_int), intent(out) :: dem, call_udf
     integer(c_int), intent(out) :: steady_state
-    real(c_real),   intent(out) :: dt_minC, dt_maxC
-    real(c_real),   intent(out) :: dt
+    real(rt),   intent(out) :: dt_minC, dt_maxC
+    real(rt),   intent(out) :: dt
     integer(c_int), intent(out) :: max_nitC
-    real(c_real),   intent(out) :: normg
+    real(rt),   intent(out) :: normg
     integer(c_int), intent(out) :: set_normg
 
     call get_data(dt)
@@ -76,7 +76,7 @@ contains
 !**************************************************************************!
   subroutine mfix_usr1(ltime) bind(C, name="mfix_usr1")
 
-    real(c_real),   intent(in ) :: ltime
+    real(rt),   intent(in ) :: ltime
 
     call usr1(ltime)
 
@@ -119,15 +119,15 @@ contains
     integer(c_int), intent(in   ) :: wlo(3),whi(3)
     integer(c_int), intent(in   ) :: slo(3),shi(3)
 
-    real(c_real), intent(inout) :: u_g&
+    real(rt), intent(inout) :: u_g&
         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-    real(c_real), intent(inout) :: v_g&
+    real(rt), intent(inout) :: v_g&
         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-    real(c_real), intent(inout) :: w_g&
+    real(rt), intent(inout) :: w_g&
         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-    real(c_real), intent(inout) :: p_g&
+    real(rt), intent(inout) :: p_g&
         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-    real(c_real), intent(in   ) :: dx, dy, dz
+    real(rt), intent(in   ) :: dx, dy, dz
 
     call usr3(u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, p_g, slo, shi,&
               dx, dy, dz)

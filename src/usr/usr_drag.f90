@@ -25,7 +25,7 @@
       SUBROUTINE DRAG_USR(I,J,K, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
          ROs, lUg, lVg, lWg)
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
@@ -39,24 +39,24 @@
       integer, INTENT(IN) :: M_NP
 
 ! drag coefficient
-      real(c_real), INTENT(OUT) :: lDgA
+      real(rt), INTENT(OUT) :: lDgA
 ! gas volume fraction
-      real(c_real), INTENT(IN) :: EPg
+      real(rt), INTENT(IN) :: EPg
 ! gas laminar viscosity
-      real(c_real), INTENT(IN) :: Mug
+      real(rt), INTENT(IN) :: Mug
 ! gas density
-      real(c_real), INTENT(IN) :: ROg
+      real(rt), INTENT(IN) :: ROg
 ! Magnitude of gas-solids relative velocity
-      real(c_real), INTENT(IN) :: VREL
+      real(rt), INTENT(IN) :: VREL
 ! particle diameter of solids phase M or
 ! average particle diameter if PCF
-      real(c_real), INTENT(IN) :: DPM
+      real(rt), INTENT(IN) :: DPM
 ! particle density of solids phase M
-      real(c_real), INTENT(IN) :: ROs
+      real(rt), INTENT(IN) :: ROs
 ! fluid velocity components:
 ! o TFM: Averaged from faces to cell center
 ! o DES: Interpolated to the particle's position
-      real(c_real), INTENT(IN) :: lUg, lVg, lWg
+      real(rt), INTENT(IN) :: lUg, lVg, lWg
 
 
 ! The following error message is used to make sure that if a user

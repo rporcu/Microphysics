@@ -83,7 +83,7 @@ module parse_line_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine PARSE_ARITH(LINE, LMAX)
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use utilities, ONLY: seek_end
@@ -107,10 +107,10 @@ module parse_line_module
 !-----------------------------------------------
 !
 !                      Value of pi
-      real(c_real) PI
+      real(rt) PI
 !
 !     Cumulative value and sub value
-      real(c_real) VALUE, SUB_VALUE
+      real(rt) VALUE, SUB_VALUE
 !
 !                      Start and end locations for the arithmetic operation
       integer          LSTART, LEND

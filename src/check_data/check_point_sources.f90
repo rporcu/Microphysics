@@ -1,6 +1,6 @@
 module check_point_sources_module
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
   use param,         only: undefined, undefined_i, is_defined, is_undefined, zero
   use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
@@ -28,7 +28,7 @@ contains
     use param, only: dim_ps
 
     integer                  :: PSV
-    real(c_real), intent(in) :: dx,dy,dz
+    real(rt), intent(in) :: dx,dy,dz
 
     ! Initialize the error manager.
     call init_err_msg("CHECK_POINT_SOURCES")
@@ -73,7 +73,7 @@ contains
 
     use calc_cell_module, only: calc_cell_ps
 
-    real(c_real), intent(in) :: dx,dy,dz
+    real(rt), intent(in) :: dx,dy,dz
 
     integer :: psv, ier
     integer :: i_w , i_e , j_s , j_n , k_b , k_t

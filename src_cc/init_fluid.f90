@@ -10,7 +10,7 @@ module init_fluid_module
                          mu_g, lambda_g, dx, dy, dz, xlength, ylength, zlength) &
       bind(C, name="init_fluid")
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use fld_const       , only: ro_g0
@@ -23,25 +23,25 @@ module init_fluid_module
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
-      real(c_real), intent(inout) :: ep_g&
+      real(rt), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ro_g&
+      real(rt), intent(inout) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
+      real(rt), intent(inout) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: p_g&
+      real(rt), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(inout) :: vel_g&
+      real(rt), intent(inout) :: vel_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
-      real(c_real), intent(inout) :: mu_g&
+      real(rt), intent(inout) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: lambda_g&
+      real(rt), intent(inout) :: lambda_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: dx, dy, dz
-      real(c_real), intent(in   ) :: xlength, ylength, zlength
+      real(rt), intent(in   ) :: dx, dy, dz
+      real(rt), intent(in   ) :: xlength, ylength, zlength
 
       ! Set user specified initial conditions (IC)
       call set_ic(slo, shi, domlo, domhi, dx, dy, dz, vel_g)
@@ -144,7 +144,7 @@ module init_fluid_module
    subroutine init_fluid_restart(slo, shi, lo, hi, mu_g, lambda_g) &
       bind(C, name="init_fluid_restart")
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use calc_mu_g_module, only: calc_mu_g
@@ -155,9 +155,9 @@ module init_fluid_module
       integer(c_int), intent(in   ) ::  lo(3),  hi(3)
       integer(c_int), intent(in   ) :: slo(3), shi(3)
 
-      real(c_real), intent(inout) :: mu_g&
+      real(rt), intent(inout) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: lambda_g&
+      real(rt), intent(inout) :: lambda_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       call calc_mu_g(slo, shi, lo, hi, mu_g, lambda_g)
@@ -181,7 +181,7 @@ module init_fluid_module
       use scales, only: scale_pressure
       use param, only: undefined, is_defined
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use calc_cell_module, only: calc_cell_ic
@@ -190,9 +190,9 @@ module init_fluid_module
 
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
-      real(c_real), intent(in   ) :: dx, dy, dz
+      real(rt), intent(in   ) :: dx, dy, dz
 
-      real(c_real), intent(inout) ::  vel_g&
+      real(rt), intent(inout) ::  vel_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
 !-----------------------------------------------
@@ -206,7 +206,7 @@ module init_fluid_module
       integer :: icv
 
       ! Temporary variables for storing IC values
-      real(c_real) :: pgx, ugx, vgx, wgx, pval
+      real(rt) :: pgx, ugx, vgx, wgx, pval
 
       integer :: i_w, j_s, k_b
       integer :: i_e, j_n, k_t

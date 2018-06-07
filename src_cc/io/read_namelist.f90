@@ -55,7 +55,7 @@ MODULE read_namelist_module
 
 ! Dummy Arguments:
 !------------------------------------------------------------------------//
-      real(c_real), intent(  out) :: dt_inout
+      real(rt), intent(  out) :: dt_inout
 
 ! Local Variables:
 !------------------------------------------------------------------------//
@@ -78,7 +78,7 @@ MODULE read_namelist_module
       CHARACTER(len=256) :: STRING
       integer :: IOS, II
 
-      real(c_real) :: dt
+      real(rt) :: dt
 
 ! Flags restricting what data from the mfix.dat to process
 

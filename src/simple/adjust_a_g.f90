@@ -1,6 +1,6 @@
    module adjust_a
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -23,18 +23,18 @@ contains
     integer(c_int), intent(in   ) :: alo(3),ahi(3)
     integer(c_int), intent(in   ) :: slo(3),shi(3)
 
-    real(c_real), intent(inout) :: &
+    real(rt), intent(inout) :: &
          A_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3), &
          b_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-    real(c_real), intent(in   ) :: &
+    real(rt), intent(in   ) :: &
          rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-    real(c_real), intent(in   ) :: dy, dz
+    real(rt), intent(in   ) :: dy, dz
 !---------------------------------------------------------------------//
 
     integer      :: i, j, k
-    real(c_real) :: half_ayz
+    real(rt) :: half_ayz
 
     half_ayz = 0.5d0*dy*dz
 
@@ -75,18 +75,18 @@ contains
     integer(c_int), intent(in   ) :: alo(3),ahi(3)
     integer(c_int), intent(in   ) :: slo(3),shi(3)
 
-    real(c_real), intent(inout) :: &
+    real(rt), intent(inout) :: &
          A_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3), &
          b_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-    real(c_real), intent(in   ) :: &
+    real(rt), intent(in   ) :: &
          rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-    real(c_real), intent(in   ) :: dx, dz
+    real(rt), intent(in   ) :: dx, dz
 !---------------------------------------------------------------------//
 
     integer      :: i, j, k
-    real(c_real) :: half_axz
+    real(rt) :: half_axz
 
     half_axz = 0.5d0*dx*dz
 
@@ -127,18 +127,18 @@ contains
     integer(c_int), intent(in   ) :: alo(3),ahi(3)
     integer(c_int), intent(in   ) :: slo(3),shi(3)
 
-    real(c_real), intent(inout) :: &
+    real(rt), intent(inout) :: &
          A_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3), &
          b_m (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-    real(c_real), intent(in   ) :: &
+    real(rt), intent(in   ) :: &
          rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-    real(c_real), intent(in   ) :: dx, dy
+    real(rt), intent(in   ) :: dx, dy
 !---------------------------------------------------------------------//
 
     integer      :: i, j, k
-    real(c_real) :: half_axy
+    real(rt) :: half_axy
 
     half_axy = 0.5d0*dx*dy
 

@@ -14,7 +14,7 @@
 ! Modules
 !---------------------------------------------------------------------//
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use param, only: dim_M, dim_eqs
@@ -31,11 +31,11 @@
       CHARACTER(LEN=60) :: DESCRIPTION
 
 ! Stop-time of the run.
-      real(c_real) :: tstop
+      real(rt) :: tstop
 
 ! Start-time of des-loop
 ! (updated by des_init_time_loop)
-      real(c_real) :: des_tstart
+      real(rt) :: des_tstart
 
 ! Discretization scheme for different equations
       integer :: DISCRETIZE(DIM_EQS)
@@ -44,17 +44,17 @@
       logical :: CALL_USR
 
 ! Maximum Time step.
-      real(c_real) :: dt_max
+      real(rt) :: dt_max
 
 ! Minimum Time step.
-      real(c_real) :: dt_min
+      real(rt) :: dt_min
 
 ! Time step adjustment factor (<1.0)
-      real(c_real) :: dt_fac
+      real(rt) :: dt_fac
 
 ! Current time step (super-step)
 ! (updated by des_init_time_loop)
-      real(c_real) :: des_dt
+      real(rt) :: des_dt
 
   integer :: nlog
   ! Flag to display messages and residuals on the screen

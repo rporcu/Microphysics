@@ -8,12 +8,13 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
 #These are the directories in mfix/src_cc
 Bdirs 	:= src_cc
-Bdirs 	+= src_cc/des
+Bdirs 	+= src_cc/des_fluid
 Bdirs 	+= src_cc/io
 Bdirs 	+= src_cc/projection
 
 #NOTE: these are in src not src_cc
 Bdirs 	+= src/check_data
+Bdirs 	+= src/des
 Bdirs 	+= src/eb
 Bdirs 	+= src/mods
 Bdirs 	+= src/usr

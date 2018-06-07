@@ -1,6 +1,6 @@
 module source_w_g_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
    use param        , only: zero, half, one, undefined, is_undefined
 
@@ -37,11 +37,11 @@ contains
       integer     , intent(in   ) :: domlo(3), domhi(3)
 
       ! Septadiagonal matrix A_m
-      real(c_real), intent(inout) :: &
+      real(rt), intent(inout) :: &
            A_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3), &
            b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-      real(c_real), intent(in   ) :: &
+      real(rt), intent(in   ) :: &
            p_g    (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            p0_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            ep_g   (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -54,23 +54,23 @@ contains
            f_gds_w(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3)), &
            drag_w (dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
+      real(rt), intent(in   ) :: dt, dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
       integer :: i,j,k
 ! Pressure at top cell
-      real(c_real) :: PgB
+      real(rt) :: PgB
 ! Average volume fraction
-      real(c_real) :: epga
+      real(rt) :: epga
 ! Source terms (Surface)
-      real(c_real) Sdp
+      real(rt) Sdp
 ! Source terms (Volumetric)
-      real(c_real) V0, Vbf
+      real(rt) V0, Vbf
 ! jackson terms: local stress tensor quantity
-      real(c_real) :: odt
-      real(c_real) :: axy, vol
+      real(rt) :: odt
+      real(rt) :: axy, vol
 !---------------------------------------------------------------------//
 
       odt = 1.0d0/dt
@@ -137,11 +137,11 @@ contains
       integer     , intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3), ng
-      real(c_real), intent(in   ) :: dx, dy
+      real(rt), intent(in   ) :: dx, dy
 
-      real(c_real), intent(inout) :: A_m&
+      real(rt), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
-      real(c_real), intent(inout) :: b_m&
+      real(rt), intent(inout) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       integer(c_int), intent(in   ) :: &
@@ -154,7 +154,7 @@ contains
 
 ! Local variables
 !-----------------------------------------------
-      real(c_real) :: odx,ody
+      real(rt) :: odx,ody
       integer      :: bcv,kbc,i,j,k
 !---------------------------------------------------------------------//
 
@@ -452,13 +452,13 @@ contains
 
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
-      real(c_real)  , intent(inout) :: b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
-      real(c_real)  , intent(in   ) :: vol
+      real(rt)  , intent(inout) :: b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(rt)  , intent(in   ) :: vol
 
       ! integer(c_int) :: I, J, K
       ! integer(c_int) :: psv
       ! integer(c_int) :: lKT, lKB
-      ! real(c_real)  :: pSource
+      ! real(rt)  :: pSource
 
       ! ! Calculate the mass going into each (i,j,k) cell. This is done for each
       ! ! call in case the point source is time dependent.

@@ -1,6 +1,6 @@
 module check_run_control_module
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
   use error_manager,  only: init_err_msg, flush_err_msg, finl_err_msg, &
@@ -28,7 +28,7 @@ contains
     use param, only: dim_eqs
 
 
-    real(c_real), intent(in) :: dt
+    real(rt), intent(in) :: dt
 
     integer  :: lc
 

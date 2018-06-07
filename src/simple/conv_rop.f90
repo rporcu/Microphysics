@@ -1,6 +1,6 @@
 module conv_rop_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    implicit none
@@ -29,23 +29,23 @@ module conv_rop_module
       integer(c_int), intent(in   ) :: rylo(3), ryhi(3)
       integer(c_int), intent(in   ) :: rzlo(3), rzhi(3)
 
-      real(c_real), intent(in   ) :: u&
+      real(rt), intent(in   ) :: u&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: v&
+      real(rt), intent(in   ) :: v&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: w&
+      real(rt), intent(in   ) :: w&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       ! macroscopic density (rho_prime)
-      real(c_real), intent(in   ) :: rop&
+      real(rt), intent(in   ) :: rop&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Face value of density (for calculating convective fluxes)
-      real(c_real), intent(  out) :: ropX&
+      real(rt), intent(  out) :: ropX&
          (rxlo(1):rxhi(1),rxlo(2):rxhi(2),rxlo(3):rxhi(3))
-      real(c_real), intent(  out) :: ropY&
+      real(rt), intent(  out) :: ropY&
          (rylo(1):ryhi(1),rylo(2):ryhi(2),rylo(3):ryhi(3))
-      real(c_real), intent(  out) :: ropZ&
+      real(rt), intent(  out) :: ropZ&
          (rzlo(1):rzhi(1),rzlo(2):rzhi(2),rzlo(3):rzhi(3))
 
       integer :: i,j,k

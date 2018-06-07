@@ -6,26 +6,26 @@
 
       module scales
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       ! reference pressure
-      real(c_real) :: P_ref
+      real(rt) :: P_ref
 
       ! pressure scale
-      real(c_real) :: P_scale
+      real(rt) :: P_scale
 
       contains
 
-      real(c_real) function scale_pressure(XXX)
+      real(rt) function scale_pressure(XXX)
       IMPLICIT NONE
-      real(c_real), intent(IN) :: XXX
+      real(rt), intent(IN) :: XXX
       scale_pressure   = (XXX - P_ref) / P_scale
       END function scale_pressure
 
-      real(c_real) function UNscale_pressure(XXX)
+      real(rt) function UNscale_pressure(XXX)
       IMPLICIT NONE
-      real(c_real), intent(IN) :: XXX
+      real(rt), intent(IN) :: XXX
       UNscale_pressure = (XXX * P_scale + P_ref)
       end function UNscale_pressure
 

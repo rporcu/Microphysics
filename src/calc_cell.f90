@@ -1,6 +1,6 @@
 MODULE CALC_CELL_MODULE
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    private
@@ -26,10 +26,10 @@ contains
       implicit none
 
       ! the x, y or z location
-      real(c_real), intent(in) :: location
+      real(rt), intent(in) :: location
 
       ! the cell lengths along the corresponding axis (dx, dy or dz)
-      real(c_real), intent(in) :: dx
+      real(rt), intent(in) :: dx
 
       calc_cell = floor(location/dx + half) - 1
 
@@ -49,8 +49,8 @@ contains
 
      implicit none
 
-     real(c_real), intent(in   ) :: dx, dy, dz
-     real(c_real), intent(in   ) :: x_w, y_s, z_b, x_e, y_n, z_t
+     real(rt), intent(in   ) :: dx, dy, dz
+     real(rt), intent(in   ) :: x_w, y_s, z_b, x_e, y_n, z_t
 
      integer,      intent(  out) :: i_w, j_s, k_b, i_e, j_n, k_t
 
@@ -80,9 +80,9 @@ contains
       implicit none
 
       integer,      intent(in   ) :: domlo(3), domhi(3)
-      real(c_real), intent(in   ) :: dx, dy, dz
-      real(c_real), intent(in   ) :: xlength, ylength, zlength
-      real(c_real), intent(in   ) :: x_w, y_s, z_b, x_e, y_n, z_t
+      real(rt), intent(in   ) :: dx, dy, dz
+      real(rt), intent(in   ) :: xlength, ylength, zlength
+      real(rt), intent(in   ) :: x_w, y_s, z_b, x_e, y_n, z_t
 
       integer,      intent(  out) :: i_w, j_s, k_b, i_e, j_n, k_t
 
@@ -138,9 +138,9 @@ contains
 
       implicit none
 
-      real(c_real), intent(in   ) :: dx, dy, dz
-      real(c_real), intent(in   ) :: xlength, ylength, zlength
-      real(c_real), intent(in   ) :: x_w, y_s, z_b, x_e, y_n, z_t
+      real(rt), intent(in   ) :: dx, dy, dz
+      real(rt), intent(in   ) :: xlength, ylength, zlength
+      real(rt), intent(in   ) :: x_w, y_s, z_b, x_e, y_n, z_t
 
       integer,      intent(  out) :: i_w, j_s, k_b, i_e, j_n, k_t
 
@@ -190,7 +190,7 @@ contains
       implicit none
 
       integer,      intent(in   ) :: psv
-      real(c_real), intent(in   ) :: dx, dy, dz
+      real(rt), intent(in   ) :: dx, dy, dz
 
       integer,      intent(  out) :: i_w, j_s, k_b, i_e, j_n, k_t
 

@@ -1,6 +1,6 @@
 module get_data_module
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
 contains
@@ -35,7 +35,7 @@ contains
 
     implicit none
 
-    real(c_real), intent(  out) :: dt
+    real(rt), intent(  out) :: dt
 
     ! This module call routines to initialize the namelist variables.
     call init_namelist

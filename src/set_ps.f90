@@ -13,7 +13,7 @@
    subroutine set_ps(dx,dy,dz,err,is_ioproc) &
       bind(C, name="set_ps")
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use ps, only: dim_ps, point_source
@@ -23,7 +23,7 @@
 
       implicit none
 
-      real(c_real)  , intent(in   ) :: dx,dy,dz
+      real(rt)  , intent(in   ) :: dx,dy,dz
 
       ! 1 if on the I/O processor, 0 otherwise
       integer(c_int), intent(in   ) :: is_ioproc
@@ -32,7 +32,7 @@
       integer(c_int), intent(  out) :: err
 
       ! integer(c_int) :: psv, ps_size
-      real(c_real)   :: vol
+      real(rt)   :: vol
 
       CHARACTER(LEN=64) :: eMsg
 
@@ -115,8 +115,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine calc_ps_vel_mag(VEL_MAG, lU, lV, lW)
 
-      real(c_real), intent(inout) :: VEL_MAG
-      real(c_real), intent(inout) :: lU, lV, lW
+      real(rt), intent(inout) :: VEL_MAG
+      real(rt), intent(inout) :: lU, lV, lW
 
 ! Normalize velocities:
       VEL_MAG = lU**2 + lV**2 + lW**2

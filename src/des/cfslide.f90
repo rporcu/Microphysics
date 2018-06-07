@@ -1,6 +1,6 @@
 MODULE CFSLIDE_MODULE
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
    use param, only: zero, equal
 
@@ -26,20 +26,20 @@ MODULE CFSLIDE_MODULE
 ! Dummy arguments
 !-----------------------------------------------
 ! tangent to the plane of contact
-      real(c_real), INTENT(IN) :: V_TANG(3)
+      real(rt), INTENT(IN) :: V_TANG(3)
 ! logic set to T when a sliding contact occurs
       logical, INTENT(OUT) :: PARTICLE_SLIDE
 ! Coefficient of friction
-      real(c_real), INTENT(IN) :: MU
+      real(rt), INTENT(IN) :: MU
 ! normal force
-      real(c_real), DIMENSION(3), INTENT(IN) :: FN_tmp
+      real(rt), DIMENSION(3), INTENT(IN) :: FN_tmp
 ! tangential force
-      real(c_real), DIMENSION(3), INTENT(INOUT) :: FT_tmp
+      real(rt), DIMENSION(3), INTENT(INOUT) :: FT_tmp
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! squared magnitude of tangential and normal forces
-      real(c_real) FTMD, FNMD
+      real(rt) FTMD, FNMD
 !-----------------------------------------------
 
       FTMD = dot_product(FT_tmp(:),FT_tmp(:))

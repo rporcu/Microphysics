@@ -1,6 +1,6 @@
 module calc_mflux_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    CONTAINS
@@ -22,27 +22,27 @@ module calc_mflux_module
       integer(c_int), intent(in   ) :: ulo(3),uhi(3)
       integer(c_int), intent(in   ) :: vlo(3),vhi(3)
       integer(c_int), intent(in   ) :: wlo(3),whi(3)
-      real(c_real),   intent(in   ) :: dx, dy, dz
+      real(rt),   intent(in   ) :: dx, dy, dz
 
-      real(c_real), intent(in   ) :: u_g&
+      real(rt), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: v_g&
+      real(rt), intent(in   ) :: v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: w_g&
+      real(rt), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(in   ) :: ropX&
+      real(rt), intent(in   ) :: ropX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: ropY&
+      real(rt), intent(in   ) :: ropY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: ropZ&
+      real(rt), intent(in   ) :: ropZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(  out) :: fluxX&
+      real(rt), intent(  out) :: fluxX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(  out) :: fluxY&
+      real(rt), intent(  out) :: fluxY&
         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(  out) :: fluxZ&
+      real(rt), intent(  out) :: fluxZ&
         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 
@@ -50,7 +50,7 @@ module calc_mflux_module
 !---------------------------------------------------------------------//
 ! Indices
       integer      :: i,j,k
-      real(c_real) :: ayz, axz, axy
+      real(rt) :: ayz, axz, axy
 !---------------------------------------------------------------------//
 
       axy = dx*dy

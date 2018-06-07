@@ -43,20 +43,26 @@ list ( APPEND F90SRC  eb/eb_levelset_F.f90)
 #
 # Particles
 #
-list ( APPEND CXXSRC des/MFIXParticleContainer.cpp )
-list ( APPEND CXX_includes des/MFIXParticleContainer.H )
+list ( APPEND CXX_includes des_fluid/MFIXParticleContainer.H )
+list ( APPEND CXX_includes des_fluid/mfix_des_F.H )
+list ( APPEND CXXSRC des_fluid/MFIXParticleContainer.cpp )
+list ( APPEND F90SRC des_fluid/calc_drag.f90 )
+list ( APPEND F90SRC des_fluid/construct_gradp.f90 )
+list ( APPEND F90SRC des_fluid/particle_pic.f90 )
+list ( APPEND F90SRC des_fluid/set_drag_bcs.f90 )
+
 list ( APPEND CXX_includes des/mfix_des_F.H )
-list ( APPEND F90SRC des/calc_drag.f90 des/calc_particle_collisions.f90)
-list ( APPEND F90SRC des/calc_wall_collisions.f90 des/cffctowall.f90 )
+list ( APPEND F90SRC des/calc_particle_collisions.f90)
+list ( APPEND F90SRC des/calc_wall_collisions.f90 )
+list ( APPEND F90SRC des/cffctowall.f90 )
 list ( APPEND F90SRC des/cfrelvel.f90 des/cfslide.f90 )
 list ( APPEND F90SRC des/des_bc_mod.f90 des/des_init_namelist.f90 )
 list ( APPEND F90SRC des/des_time_march.f90 des/discretelement_mod.f90 )
 list ( APPEND F90SRC des/drag_gp_des.f90 des/init_collision.f90 )
 list ( APPEND F90SRC des/particle_generator.f90 des/set_particle_properties.f90 )
 list ( APPEND F90SRC des/stl_functions_des_mod.f90 )
-list ( APPEND F90SRC des/particle_pic.f90 des/particle_mod.f90 des/set_drag_bcs.f90 )
+list ( APPEND F90SRC des/particle_mod.f90 )
 list ( APPEND F90SRC des/drag_mod.f90 des/flip_particle_vol.f90 )
-list ( APPEND F90SRC des/construct_gradp.f90)
 
 #
 # SIMPLE routines

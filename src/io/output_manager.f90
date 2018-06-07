@@ -1,6 +1,6 @@
 module output_manager_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    use param, only: IS_DEFINED, IS_UNDEFINED
@@ -32,7 +32,7 @@ contains
 
 
       integer(c_int),   intent(in   ) :: np
-      real(c_real)  ,   intent(in   ) :: time, dt, xlength, ylength, zlength
+      real(rt)  ,   intent(in   ) :: time, dt, xlength, ylength, zlength
       integer(c_int),   intent(in   ) :: nstep
       type(particle_t), intent(in   ) :: particles(np)
 
@@ -81,7 +81,7 @@ contains
       !----------------------------------------------------------------------!
       logical FUNCTION CHECK_TIME(lTIME)
 
-         real(c_real), INTENT(IN) :: lTIME
+         real(rt), INTENT(IN) :: lTIME
 
          IF(IS_UNDEFINED(DT)) THEN
             CHECK_TIME = (FINISHED == 1)
@@ -98,7 +98,7 @@ contains
       !----------------------------------------------------------------------!
       DOUBLE PRECISION FUNCTION NEXT_TIME(lWRITE_DT)
 
-         real(c_real), INTENT(IN) :: lWRITE_DT
+         real(rt), INTENT(IN) :: lWRITE_DT
 
          IF (IS_DEFINED(DT)) THEN
             NEXT_TIME = (INT((TIME + 0.1d0*DT)/lWRITE_DT)+1)*lWRITE_DT

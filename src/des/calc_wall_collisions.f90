@@ -1,5 +1,5 @@
 module wall_collisions
-    use amrex_fort_module, only : c_real => amrex_real
+    use amrex_fort_module, only : rt => amrex_real
     use iso_c_binding    , only: c_int
 
     implicit none
@@ -13,7 +13,7 @@ contains
                                       dx                 ) &
                bind(C, name="calc_wall_collisions")
 
-        use amrex_fort_module, only : c_real => amrex_real
+        use amrex_fort_module, only : rt => amrex_real
         use iso_c_binding    , only: c_int
 
         use discretelement, only: des_coll_model_enum
@@ -33,66 +33,66 @@ contains
         integer, intent(in) :: np, nrp
 
         type(particle_t), intent(in   ), target :: particles(np)
-        real(c_real)  ,   intent(inout)         :: tow(np,3), fc(np,3)
-        real(c_real)  ,   intent(in   )         :: dtsolid
+        real(rt)  ,   intent(inout)         :: tow(np,3), fc(np,3)
+        real(rt)  ,   intent(in   )         :: dtsolid
 
         integer, dimension(3), intent(in) :: fglo,fghi
         integer, dimension(3), intent(in) :: blo,bhi
         integer, dimension(3), intent(in) :: nlo,nhi
 
         integer,      intent(in) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
-        real(c_real), intent(in) :: bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
-        real(c_real), intent(in) :: normal(nlo(1):nhi(1),nlo(2):nhi(2),nlo(3):nhi(3),3)
-        real(c_real), intent(in) :: dx(3)
+        real(rt), intent(in) :: bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
+        real(rt), intent(in) :: normal(nlo(1):nhi(1),nlo(2):nhi(2),nlo(3):nhi(3),3)
+        real(rt), intent(in) :: dx(3)
 
         type(particle_t), pointer :: p
 
-        real(c_real) :: lx, ly, lz
-        real(c_real) :: sqrt_overlap
+        real(rt) :: lx, ly, lz
+        real(rt) :: sqrt_overlap
 
-        real(c_real) :: normul(3)
-        !real(c_real) :: wca_overlap_factor, wca_strength, wca_radius, wca_inv_r, wca_offset, f_wca
-        !real(c_real) :: v_normal, wca_dist
+        real(rt) :: normul(3)
+        !real(rt) :: wca_overlap_factor, wca_strength, wca_radius, wca_inv_r, wca_offset, f_wca
+        !real(rt) :: v_normal, wca_dist
 
         ! facet barycenter (bcent) in global coordinates
-        real(c_real), dimension(3) :: eb_cent
+        real(rt), dimension(3) :: eb_cent
         ! position on facet plane, closest to particle
-        real(c_real), dimension(3) :: eb_min_pt
+        real(rt), dimension(3) :: eb_min_pt
         ! vector-indices of loop (over neighbour cells) and collision pt
         integer, dimension(3)      :: vindex_loop, vindex_pt
         logical                    :: nb_normal_valid;
 
         integer :: ll, ii, jj, kk, i, j, k, i_pt, j_pt, k_pt
 
-        real(c_real) :: fudge
-        real(c_real) :: overlap_n
-        real(c_real) :: inv_dx(3)
+        real(rt) :: fudge
+        real(rt) :: overlap_n
+        real(rt) :: inv_dx(3)
         integer      :: ilo,ihi,jlo,jhi,klo,khi
 
-        real(c_real) :: v_rel_trans_norm
+        real(rt) :: v_rel_trans_norm
 
         ! local normal and tangential forces
-        real(c_real) :: vrel_t(3), cur_distmod, cur_plane_distmod
-        real(c_real) :: ft(3), fn(3), overlap_t(3)
+        real(rt) :: vrel_t(3), cur_distmod, cur_plane_distmod
+        real(rt) :: ft(3), fn(3), overlap_t(3)
 
         ! worst-case: overlap with 27 neighbours
         integer                        :: n_collisions, i_collision
-        real(c_real), dimension(27)    :: distmod, plane_distmod
-        real(c_real), dimension(3, 27) :: collision_norms
-        real(c_real), dimension(3)     :: c_vec, delta_c_vec
-        real(c_real)                   :: len2_collision_norm
+        real(rt), dimension(27)    :: distmod, plane_distmod
+        real(rt), dimension(3, 27) :: collision_norms
+        real(rt), dimension(3)     :: c_vec, delta_c_vec
+        real(rt)                   :: len2_collision_norm
 
         integer :: PHASELL
 
-        real(c_real) :: tangent(3)
+        real(rt) :: tangent(3)
 
-        real(c_real) :: xp, yp, zp, rp
+        real(rt) :: xp, yp, zp, rp
 
         ! local values used spring constants and damping coefficients
-        real(c_real) :: etan_des_W, etat_des_W, kn_des_W, kt_des_W
-        real(c_real) :: fnmd
-        real(c_real) :: mag_overlap_t
-        real(c_real) :: distmod_temp, distmod_edge
+        real(rt) :: etan_des_W, etat_des_W, kn_des_W, kt_des_W
+        real(rt) :: fnmd
+        real(rt) :: mag_overlap_t
+        real(rt) :: distmod_temp, distmod_edge
 
         ! inverse cell size: used to convert positions to cell indices
         !   -> dx is a vector, fortran is amazing!
@@ -218,7 +218,7 @@ contains
 
                                 if (nb_normal_valid) then
                                     if ( all( abs( normal(ii, jj, kk, :) - normal(i_pt, j_pt, k_pt, :) ) &
-                                                  < epsilon( real(c_real) )                              &
+                                                  < epsilon( real(rt) )                              &
                                             )                                                            &
                                        ) then
                                         ! EB-facet has same normal => skip
@@ -404,10 +404,10 @@ contains
         type(particle_t), intent(in   ), target :: particles(np)
         integer,          intent(in   )         :: np, nrp, vlo(3), vhi(3), phlo(3), phhi(3), n_refine
 
-        real(c_real),     intent(inout)         :: tow(np,3), fc(np,3)
-        real(c_real),     intent(in   )         :: dtsolid, dx(3)
+        real(rt),     intent(inout)         :: tow(np,3), fc(np,3)
+        real(rt),     intent(in   )         :: dtsolid, dx(3)
         integer,          intent(in   )         :: valid( vlo(1): vhi(1),  vlo(2): vhi(2),  vlo(3): vhi(3) )
-        real(c_real),     intent(in   )         :: phi(  phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
+        real(rt),     intent(in   )         :: phi(  phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
 
         ! ** declare local varaibles:
         integer :: phasell
@@ -418,16 +418,16 @@ contains
         ! inv_dx: inverse cell size
         ! pos   : current particle's position
         ! plo   : origin of paritcle coordinates
-        real(c_real), dimension(3) :: inv_dx, pos, plo, ft, fn, overlap_t, vrel_t, normal, tangent
+        real(rt), dimension(3) :: inv_dx, pos, plo, ft, fn, overlap_t, vrel_t, normal, tangent
 
         ! xp, yp, zp: current particle's x, y, z position
         ! rp:         current particle's radius
         ! lx, ly, lz: position in units of of cell length
         ! ls_value:   value of the level-set function
         ! overlap:    particle-wall overlap
-        real(c_real)               :: rp, ls_value, overlap_n
-        !real(c_real)               :: xp, yp, zp
-        !real(c_real)               :: lx, ly, lz
+        real(rt)               :: rp, ls_value, overlap_n
+        !real(rt)               :: xp, yp, zp
+        !real(rt)               :: lx, ly, lz
 
         ! ll:      do-loop counter itterating over particles
         ! i, j, k: indices of cell containing current particle
@@ -436,8 +436,8 @@ contains
         ! ls_valid: indicates if particle is near wall (and level-set needs to be tested)
         !logical                    :: ls_valid
 
-        real(c_real) :: v_rel_trans_norm, sqrt_overlap, kn_des_w, kt_des_w, etan_des_w, etat_des_w
-        real(c_real) :: mag_overlap_t, fnmd
+        real(rt) :: v_rel_trans_norm, sqrt_overlap, kn_des_w, kt_des_w, etan_des_w, etat_des_w
+        real(rt) :: mag_overlap_t, fnmd
 
         ! inverse cell size: used to convert positions to cell indices
         inv_dx(:) = 1.0d0 / dx(:)
@@ -567,7 +567,7 @@ contains
     !----------------------------------------------------------------------!
     subroutine cfrelvel_wall (ll, vrn, vrt, norm, dist, particles )
 
-        use amrex_fort_module, only : c_real => amrex_real
+        use amrex_fort_module, only : rt => amrex_real
         use iso_c_binding , only: c_int
 
         ! function for calculating the cross prodcut
@@ -581,20 +581,20 @@ contains
         ! particle index.
         integer, intent(in) :: ll
         ! magnitude of the total relative translational velocity.
-        real(c_real), intent(out):: vrn
+        real(rt), intent(out):: vrn
         ! total relative translational velocity (vector).
-        real(c_real), intent(out):: vrt(3)
+        real(rt), intent(out):: vrt(3)
         ! unit normal from particle center to closest point on wall
-        real(c_real), intent(in) :: norm(3)
+        real(rt), intent(in) :: norm(3)
         ! distance between particle center and wall.
-        real(c_real), intent(in) :: dist
+        real(rt), intent(in) :: dist
 
         ! local variables
         !---------------------------------------------------------------------//
         ! additional relative translational motion due to rotation
-        real(c_real) :: v_rot(3)
+        real(rt) :: v_rot(3)
         ! total relative velocity at contact point
-        real(c_real) :: vreltrans(3)
+        real(rt) :: vreltrans(3)
 
         ! total relative velocity + rotational contribution
         v_rot = dist * particles(ll) % omega

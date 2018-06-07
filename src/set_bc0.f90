@@ -15,7 +15,7 @@
                        bc_klo_type, bc_khi_type, domlo, domhi, ng) &
       bind(C, name="set_bc0")
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use bc, only: bc_p_g, bc_ep_g, bc_t_g
@@ -34,23 +34,23 @@
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) :: domlo(3),domhi(3), ng
 
-      real(c_real), intent(inout) ::  u_g&
+      real(rt), intent(inout) ::  u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(inout) ::  v_g&
+      real(rt), intent(inout) ::  v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(inout) ::  w_g&
+      real(rt), intent(inout) ::  w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      real(c_real), intent(inout) ::  p0_g&
+      real(rt), intent(inout) ::  p0_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ep_g&
+      real(rt), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ro_g&
+      real(rt), intent(inout) :: ro_g&
            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
+      real(rt), intent(inout) :: rop_g&
            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: mu_g&
+      real(rt), intent(inout) :: mu_g&
            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: lambda_g&
+      real(rt), intent(inout) :: lambda_g&
            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int), intent(in   ) :: &
@@ -68,7 +68,7 @@
 
       integer    nlft, nrgt, nbot, ntop, nup, ndwn
 
-      real(c_real) :: bc_ro_g, bc_mu_g, bc_lambda_g
+      real(rt) :: bc_ro_g, bc_mu_g, bc_lambda_g
 !--------------------------------------------------------------------//
 
       nlft = max(0,domlo(1)-slo(1))

@@ -1,6 +1,6 @@
 module drag
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    use param, only: one, half, zero, small_number, large_number
@@ -22,7 +22,7 @@ module drag
    integer :: drag_type_enum = invalid_drag
 
 ! Coefficients for calibrating Syamlal-O'Brien drag correlation
-   real(c_real) :: drag_c1, drag_d1
+   real(rt) :: drag_c1, drag_d1
 
 contains
 
@@ -38,10 +38,10 @@ contains
 
 ! Dalla Valle (1948)
 !----------------------------------------------------------------->>>
-  real(c_real) FUNCTION C_DSXRE_DV(RE)
+  real(rt) FUNCTION C_DSXRE_DV(RE)
 
     IMPLICIT NONE
-    real(c_real), intent(IN) :: RE ! Reynolds number
+    real(rt), intent(IN) :: RE ! Reynolds number
 
     C_DSXRE_DV = (0.63D0*SQRT(RE) + 4.8D0)**2
     RETURN
@@ -49,10 +49,10 @@ contains
 
 ! Schiller and Naumann (1933)
 !----------------------------------------------------------------->>>
-  real(c_real) FUNCTION C_DS_SN(RE)
+  real(rt) FUNCTION C_DS_SN(RE)
 
     IMPLICIT NONE
-    real(c_real), intent(IN) :: RE ! Reynolds number
+    real(rt), intent(IN) :: RE ! Reynolds number
 
     C_DS_SN = 24.D0*(1.D0 + 0.15D0*RE**0.687D0)/(RE+SMALL_NUMBER)
     RETURN
@@ -64,9 +64,9 @@ contains
 
 ! Turton and Levenspiel (1986)
 !----------------------------------------------------------------->>>
-      real(c_real) FUNCTION C_DSXRE_TL(RE)
+      real(rt) FUNCTION C_DSXRE_TL(RE)
       IMPLICIT NONE
-      real(c_real), intent(IN) :: RE ! Reynolds number
+      real(rt), intent(IN) :: RE ! Reynolds number
 
       C_DSXRE_TL = 24.D0*(1.D0 + 0.173D0*RE**0.657D0) + &
          0.413D0*RE**2.09D0/(RE**1.09D0 + 16300.D0)
@@ -96,17 +96,17 @@ contains
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      real(c_real), intent(OUT) :: ldGA
+      real(rt), intent(OUT) :: ldGA
 ! gas volume fraction
-      real(c_real), intent(IN) :: EPg
+      real(rt), intent(IN) :: EPg
 ! gas laminar viscosity
-      real(c_real), intent(IN) :: Mug
+      real(rt), intent(IN) :: Mug
 ! gas density
-      real(c_real), intent(IN) :: ROg
+      real(rt), intent(IN) :: ROg
 ! Magnitude of gas-solids relative velocity
-      real(c_real), intent(IN) :: VREL
+      real(rt), intent(IN) :: VREL
 ! particle diameter of solids phase M
-      real(c_real), intent(IN) :: DPM
+      real(rt), intent(IN) :: DPM
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------
@@ -115,20 +115,20 @@ contains
 !     PARAMETER (a1 = 1500.)  !for G_s = 147 kg/m^2.s
 !     a1 depends upon solids flux.  It has been represented by C(1)
 !     defined in the data file.
-!     real(c_real), PARAMETER :: A2 = 0.005D0
-!     real(c_real), PARAMETER :: A3 = 90.0D0
-!     real(c_real), PARAMETER :: RE_C = 5.D0
-!     real(c_real), PARAMETER :: EP_C = 0.92D0
+!     real(rt), PARAMETER :: A2 = 0.005D0
+!     real(rt), PARAMETER :: A3 = 90.0D0
+!     real(rt), PARAMETER :: RE_C = 5.D0
+!     real(rt), PARAMETER :: EP_C = 0.92D0
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Variables which are function of EP_g
-      real(c_real) :: A, B
+      real(rt) :: A, B
 ! Ratio of settling velocity of a multiparticle system to
 ! that of a single particle
-      real(c_real) :: V_rm
+      real(rt) :: V_rm
 ! Reynolds number
-      real(c_real) :: RE
+      real(rt) :: RE
 !-----------------------------------------------
 
       IF(Mug > ZERO) THEN
@@ -183,28 +183,28 @@ contains
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      real(c_real), intent(OUT) :: lDgA
+      real(rt), intent(OUT) :: lDgA
 ! gas volume fraction
-      real(c_real), intent(IN) :: EPg
+      real(rt), intent(IN) :: EPg
 ! gas laminar viscosity
-      real(c_real), intent(IN) :: Mug
+      real(rt), intent(IN) :: Mug
 ! gas density
-      real(c_real), intent(IN) :: ROg
+      real(rt), intent(IN) :: ROg
 ! gas density*EP_g
-      real(c_real), intent(IN) :: ROPg
+      real(rt), intent(IN) :: ROPg
 ! Magnitude of gas-solids relative velocity
-      real(c_real), intent(IN) :: VREL
+      real(rt), intent(IN) :: VREL
 ! particle diameter of solids phase M or
 ! average particle diameter if PCF
-      real(c_real), intent(IN) :: DPM
+      real(rt), intent(IN) :: DPM
 
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Reynolds number
-      real(c_real) :: RE
+      real(rt) :: RE
 ! Single sphere drag coefficient
-      real(c_real) :: C_d
+      real(rt) :: C_d
 !-----------------------------------------------
 
 ! Note the presence of gas volume fraction in ROPG
@@ -259,31 +259,31 @@ contains
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      real(c_real), intent(OUT) :: lDgA
+      real(rt), intent(OUT) :: lDgA
 ! gas volume fraction
-      real(c_real), intent(IN) :: EPg
+      real(rt), intent(IN) :: EPg
 ! gas laminar viscosity
-      real(c_real), intent(IN) :: Mug
+      real(rt), intent(IN) :: Mug
 ! gas density
-      real(c_real), intent(IN) :: ROg
+      real(rt), intent(IN) :: ROg
 ! gas density*EP_g
-      real(c_real), intent(IN) :: ROPg
+      real(rt), intent(IN) :: ROPg
 ! Magnitude of gas-solids relative velocity
-      real(c_real), intent(IN) :: VREL
+      real(rt), intent(IN) :: VREL
 ! particle diameter of solids phase M or
 ! average particle diameter if PCF
-      real(c_real), intent(IN) :: DPM
+      real(rt), intent(IN) :: DPM
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Reynolds number
-      real(c_real) :: RE
+      real(rt) :: RE
 ! Single sphere drag coefficient
-      real(c_real) :: C_d
+      real(rt) :: C_d
 ! Gidaspow switch function variables
-      real(c_real) :: Ergun
-      real(c_real) :: WenYu
-      real(c_real) :: PHI_gs
+      real(rt) :: Ergun
+      real(rt) :: WenYu
+      real(rt) :: PHI_gs
 !-----------------------------------------------
 
       IF(Mug > ZERO) THEN
@@ -338,25 +338,25 @@ contains
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      real(c_real), intent(OUT) :: lDgA
+      real(rt), intent(OUT) :: lDgA
 ! gas volume fraction
-      real(c_real), intent(IN) :: EPg
+      real(rt), intent(IN) :: EPg
 ! gas laminar viscosity
-      real(c_real), intent(IN) :: Mug
+      real(rt), intent(IN) :: Mug
 ! gas density*EP_g
-      real(c_real), intent(IN) :: ROPg
+      real(rt), intent(IN) :: ROPg
 ! Magnitude of gas-solids relative velocity
-      real(c_real), intent(IN) :: VREL
+      real(rt), intent(IN) :: VREL
 ! particle diameter of solids phase M or
 ! average particle diameter if PCF
-      real(c_real), intent(IN) :: DPM
+      real(rt), intent(IN) :: DPM
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Reynolds number
-      real(c_real) :: RE
+      real(rt) :: RE
 ! Single sphere drag coefficient
-      real(c_real) :: C_d
+      real(rt) :: C_d
 !-----------------------------------------------
 
       IF(Mug > ZERO) THEN
@@ -410,42 +410,42 @@ contains
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      real(c_real), intent(OUT) :: lDgA
+      real(rt), intent(OUT) :: lDgA
 ! gas volume fraction
-      real(c_real), intent(IN) :: EPg
+      real(rt), intent(IN) :: EPg
 ! gas laminar viscosity
-      real(c_real), intent(IN) :: Mug
+      real(rt), intent(IN) :: Mug
 ! gas density*EP_g
-      real(c_real), intent(IN) :: ROPg
+      real(rt), intent(IN) :: ROPg
 ! Magnitude of gas-solids relative velocity
-      real(c_real), intent(IN) :: VREL
+      real(rt), intent(IN) :: VREL
 ! particle diameter of solids phase M
-      real(c_real), intent(IN) :: DPM
+      real(rt), intent(IN) :: DPM
 ! average particle diameter if pcf otherwise DPM again
-      real(c_real), intent(IN) :: DPA
+      real(rt), intent(IN) :: DPA
 ! total solids volume fraction of solids phases
-      real(c_real), intent(IN) :: PHIS
+      real(rt), intent(IN) :: PHIS
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Reynolds number
-      real(c_real) :: RE
+      real(rt) :: RE
 ! transition Reynolds numbers
-      real(c_real) :: Re_Trans_1, Re_Trans_2
+      real(rt) :: Re_Trans_1, Re_Trans_2
 ! Stokes Drag Force
-      real(c_real) :: F_STOKES
+      real(rt) :: F_STOKES
 ! zero Re function for low Reynolds number
-      real(c_real) :: F_0
+      real(rt) :: F_0
 ! inertial function for low Reynolds number
-      real(c_real) :: F_1
+      real(rt) :: F_1
 ! zero Re function for high Reynolds number
-      real(c_real) :: F_2
+      real(rt) :: F_2
 ! inertial function for high Reynolds number
-      real(c_real) :: F_3
+      real(rt) :: F_3
 ! dimensionless drag force F
-      real(c_real) :: F
+      real(rt) :: F
 ! weighting factor to compute F_0 and F_2
-      real(c_real) :: w
+      real(rt) :: w
 !-----------------------------------------------
 
 
@@ -538,30 +538,30 @@ contains
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      real(c_real), intent(OUT) :: lDgA
+      real(rt), intent(OUT) :: lDgA
 ! gas volume fraction
-      real(c_real), intent(IN) :: EPg
+      real(rt), intent(IN) :: EPg
 ! gas laminar viscosity
-      real(c_real), intent(IN) :: Mug
+      real(rt), intent(IN) :: Mug
 ! gas density*EP_g
-      real(c_real), intent(IN) :: ROPg
+      real(rt), intent(IN) :: ROPg
 ! magnitude of gas-solids relative velocity
-      real(c_real), intent(IN) :: VREL
+      real(rt), intent(IN) :: VREL
 ! particle diameter of solids phase M or
-      real(c_real), intent(IN) :: DPM
+      real(rt), intent(IN) :: DPM
 ! average particle diameter
-      real(c_real), intent(IN) :: DPA
+      real(rt), intent(IN) :: DPA
 ! total solids volume fraction of solids phases
-      real(c_real), intent(IN) :: PHIS
+      real(rt), intent(IN) :: PHIS
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Reynolds number
-      real(c_real) :: RE
+      real(rt) :: RE
 ! Stokes Drag Force
-      real(c_real) :: F_STOKES
+      real(rt) :: F_STOKES
 ! dimensionless drag force F
-      real(c_real) :: F
+      real(rt) :: F
 !-----------------------------------------------
 
       IF(Mug > ZERO) THEN

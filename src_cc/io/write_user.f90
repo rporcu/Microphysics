@@ -7,7 +7,7 @@
 subroutine collect_fluid(slo, shi, lo, hi, domlo, domhi, p_g, ep_g, &
      dx, dy, dz, sums) bind(C, name="mfix_collect_fluid")
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
   use param, only: is_defined, dim_usr
@@ -23,11 +23,11 @@ subroutine collect_fluid(slo, shi, lo, hi, domlo, domhi, p_g, ep_g, &
   integer(c_int), intent(in   ) ::    lo(3),    hi(3)
   integer(c_int), intent(in   ) :: domlo(3), domhi(3)
 
-  real(c_real),   intent(in   ) ::  dx, dy, dz, &
+  real(rt),   intent(in   ) ::  dx, dy, dz, &
         p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
        ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-  real(c_real),   intent(inout) :: sums(dim_usr,2)
+  real(rt),   intent(inout) :: sums(dim_usr,2)
 
 ! Local variables .....................................................//
   integer :: lc, is, ie, js, je, ks, ke
@@ -62,7 +62,7 @@ end subroutine collect_fluid
 subroutine write_fluid(domlo, domhi, dx, dy, dz, time, dt, sums) &
      bind(C, name="mfix_write_fluid")
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
   use param, only: is_defined, dim_usr
@@ -76,12 +76,12 @@ subroutine write_fluid(domlo, domhi, dx, dy, dz, time, dt, sums) &
 
 ! Dummy arguments ....................................................//
   integer(c_int), intent(in   ) :: domlo(3), domhi(3)
-  real(c_real),   intent(in   ) :: dx, dy, dz, time, dt, sums(dim_usr,2)
+  real(rt),   intent(in   ) :: dx, dy, dz, time, dt, sums(dim_usr,2)
 
 
 ! Local variables .....................................................//
-  real(c_real), save :: next_time(dim_usr) = 0.0d0;
-  real(c_real) :: cells, avgPg, avgEPg
+  real(rt), save :: next_time(dim_usr) = 0.0d0;
+  real(rt) :: cells, avgPg, avgEPg
 
   integer :: lc, is, ie, js, je, ks, ke, lunit
   character(len=3) :: clc

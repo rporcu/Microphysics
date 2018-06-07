@@ -1,6 +1,6 @@
 module conv_pp_g_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    contains
@@ -35,24 +35,24 @@ module conv_pp_g_module
 
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3),lo(3),hi(3)
-      real(c_real)  , intent(in   ) :: dx,dy,dz
+      real(rt)  , intent(in   ) :: dx,dy,dz
 
       ! Septadiagonal matrix A_m
-      real(c_real), intent(inout) :: A_m&
+      real(rt), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
-      real(c_real), intent(in   ) :: ropX&
+      real(rt), intent(in   ) :: ropX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: ropY&
+      real(rt), intent(in   ) :: ropY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: ropZ&
+      real(rt), intent(in   ) :: ropZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 ! Local variables
 !-----------------------------------------------
 ! Indices
       integer ::  i,j,k
-      real(c_real) :: axy, axz, ayz
+      real(rt) :: axy, axz, ayz
 !-----------------------------------------------
 
       axy = dx*dy

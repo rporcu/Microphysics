@@ -5,7 +5,7 @@ module leqsol
    use param, only: DIM_EQS
    use param, only: zero
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
 ! Maximum number of outer iterations
@@ -25,7 +25,7 @@ module leqsol
   CHARACTER(LEN=4) :: leq_sweep(DIM_EQS)
 
 ! Linear equation solver tolerance
-  real(c_real) :: leq_tol(DIM_EQS)
+  real(rt) :: leq_tol(DIM_EQS)
 
 ! Preconditioner option
   CHARACTER(LEN=4) :: leq_pc(DIM_EQS)
@@ -51,14 +51,14 @@ contains
     integer(c_int), intent(in) :: vlo(3),vhi(3)
 
     ! Vector b_m
-    real(c_real), intent(in) :: b_m&
+    real(rt), intent(in) :: b_m&
          (blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3))
 
     ! Septadiagonal matrix A_m
-    real(c_real), intent(in) :: A_m&
+    real(rt), intent(in) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
-    real(c_real), intent(out) :: var&
+    real(rt), intent(out) :: var&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
     integer :: i,j,k
