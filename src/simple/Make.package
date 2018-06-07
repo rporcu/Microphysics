@@ -12,6 +12,7 @@ f90EXE_sources += functions_mod.f90
 f90EXE_sources += conv_dif_u_g.f90
 f90EXE_sources += conv_dif_v_g.f90
 f90EXE_sources += conv_dif_w_g.f90
+f90EXE_sources += get_solver_params.f90
 f90EXE_sources += matrix_mod.f90
 f90EXE_sources += set_bc1.f90
 f90EXE_sources += solve_pp_g.f90

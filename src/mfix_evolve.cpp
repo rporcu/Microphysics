@@ -23,7 +23,6 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& d
         {
             amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
             amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
-            // amrex::Abort("Volume fraction in domain has changed!");
         }
     }
 
@@ -41,22 +40,22 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& d
         mfix_calc_drag_particle(lev);
 
     if (solve_dem)
+    {
         pc->EvolveParticles(lev, nstep, dt, time,
                             particle_ebfactory.get(), eb_normals.get(),
                             level_set->get_data(), level_set->get_valid(), level_set->get_ls_ref(),
                             dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io
 	    );
 
-    //  Compute Eulerian velocities in selected regions
-    if ( ( avg_vel_int > 0) && ( nstep % avg_vel_int == 0 ) )
-	pc -> ComputeAverageVelocities ( lev,
-					 time,
-					 avg_vel_file,
-					 avg_region_x_w, avg_region_x_e,
-					 avg_region_y_s, avg_region_y_n,
-					 avg_region_z_b, avg_region_z_t );
-
-    
+        //  Compute Eulerian velocities in selected regions
+        if ( ( avg_vel_int > 0) && ( nstep % avg_vel_int == 0 ) )
+   	    pc -> ComputeAverageVelocities ( lev,
+	 				     time,
+					     avg_vel_file,
+					     avg_region_x_w, avg_region_x_e,
+					     avg_region_y_s, avg_region_y_n,
+					     avg_region_z_b, avg_region_z_t );
+    }
     BL_PROFILE_REGION_STOP("mfix::Evolve");
 }
  

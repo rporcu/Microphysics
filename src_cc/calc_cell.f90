@@ -6,7 +6,8 @@ MODULE CALC_CELL_MODULE
    private
 
    public :: calc_cell_ic
-   public :: calc_cell_bc_wall, calc_cell_bc_flow, calc_cell_ps
+   public :: calc_cell_bc_wall, calc_cell_bc_flow
+   public :: calc_cell_ps
 
 contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -206,5 +207,6 @@ contains
       if(.not.equal(ps_z_b(psv), ps_z_t(psv))) k_b = k_b + 1
 
    end subroutine calc_cell_ps
+
 
 END MODULE CALC_CELL_MODULE

@@ -75,7 +75,7 @@ list ( APPEND F90SRC simple/matrix_mod.f90 simple/adjust_dt_mod.f90 simple/calc_
 list ( APPEND F90SRC simple/calc_mflux.f90 simple/calc_d.f90 simple/check_convergence.f90 )
 list ( APPEND F90SRC simple/residual_mod.f90 simple/correct_0.f90 simple/ur_facs_mod.f90 )
 list ( APPEND F90SRC simple/functions_mod.f90 )
-list ( APPEND F90SRC simple/set_bc1.f90 )
+list ( APPEND F90SRC simple/set_bc1.f90 simple/get_solver_params.f90 )
 
 #
 # Data checks

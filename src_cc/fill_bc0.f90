@@ -294,7 +294,7 @@ subroutine fill_bc0(s, slo, shi, &
                else if (bc_jhi_type(i,k,1) == NSW_ .or. &
                         bc_jhi_type(i,k,1) == FSW_ .or. &
                         bc_jhi_type(i,k,1) == PSW_) then
-                  s(domhi(1)+i,domhi(2)+j,k) = s(domhi(1)+i,domlo(2),k)
+                  s(domhi(1)+i,domhi(2)+j,k) = s(domhi(1)+i,domhi(2),k)
                end if
             end do
          end do
