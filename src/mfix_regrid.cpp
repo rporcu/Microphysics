@@ -41,7 +41,11 @@ mfix_level::Regrid (int lev, int nstep)
        }
 
        if (solve_fluid)
+       {
+           mfix_set_p0(lev);
            mfix_set_bc0(lev);
+           mfix_extrap_pressure(lev,p0_g[lev]);
+       }
 
        if (ebfactory) {
            ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
@@ -95,7 +99,11 @@ mfix_level::Regrid (int lev, int nstep)
                                                             m_eb_full_grow_cells}, m_eb_support_level));
                 }
 
-                mfix_set_bc0(lev);
+                {
+                    mfix_set_p0(lev);
+                    mfix_set_bc0(lev);
+                    mfix_extrap_pressure(lev,p0_g[lev]);
+                }
 
                 DistributionMapping new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev]);
 
@@ -538,7 +546,6 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     ls_new->copy(*ls[lev],0,0,1,ng,ng);
     ls_new->FillBoundary(geom[lev].periodicity());
     ls[lev] = std::move(ls_new);
-
 
 
    /****************************************************************************
