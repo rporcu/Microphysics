@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.5)
 #
 # Set the search path for cmake modules
 #
-set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/ )
+set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/CMake )
 
 #
 # Here we set the only options that decide if superbuild
@@ -149,8 +149,8 @@ elseif(CTAGS_CMD)
 endif()
 
 # Tools
-set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 
-add_subdirectory (Tools/F90)
+set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/) 
+add_subdirectory (Tools)
 
 # Tests
 enable_testing ()
