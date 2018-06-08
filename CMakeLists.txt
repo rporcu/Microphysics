@@ -100,6 +100,14 @@ add_executable (mfix ${MAIN} ${USR_OVERRIDES} )
 target_link_libraries ( mfix mfixcore ${MFIX_EXTRA_LINK_LINE} ) 
 
 
+# Configure type-checking target
+include ( MFIX_Typecheck )
+
+
+
+
+
+
 # Add rule to generate TAGS
 # on macOS ctags-exuberant is just ctags
 find_program(CTAGS_EXU "ctags-exuberant")
