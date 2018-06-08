@@ -4,9 +4,6 @@
 # compiler id is not GNU.
 # This file will check for Fortran/C++ headers in the dir of inclusion,
 # and in all dirs below.
-# F90SRC is the list of Fortran 90 sources
-# CXXINCLUDES is the list of CXX headers
-# Both must be defined before calling this file. 
 # 
 if (NOT (CMAKE_Fortran_COMPILER_ID MATCHES GNU))
    return ()
@@ -28,19 +25,43 @@ message ("Typecheck in ${CMAKE_CURRENT_SOURCE_DIR}")
 
 
 #
-# The following variables needs to be defined before including
-# this file
-#
-if ( (NOT F90SRC) OR (NOT CXXINCLUDES) )
-   message (FATAL_ERROR "F90SRC and CXXINCLUDES must be defined before \
-including MFIX_Typecheck.cmake ")
-endif ()
-
-#
 # Directory for typecheck 
 #
 set ( TYPECHECK_DIR  ${CMAKE_BINARY_DIR}/TypeCheckTemp )
 
+#
+# Get the fortran sources and the fortran headers for MFIXCORE
+#
+get_target_property ( ALLSRC ${MFIXCORE} SOURCES )
+
+set ( F90SRC )
+set ( F90HEADERS )
+set ( HEXT ".H" )
+set ( FEXT ".f90;.F90;.f;.F")
+
+foreach ( item ${ALLSRC} )
+  
+  # Get the file extension
+  get_filename_component ( FILETYPE ${item} EXT )
+
+  # Add to F90 sources
+  if ( FILETYPE IN_LIST FEXT )
+    list ( APPEND F90SRC ${item} )
+  endif()
+
+  # Add to F90 Headers
+  if ( FILETYPE IN_LIST HEXT)
+    string ( REGEX MATCH "_f.H" COND1 ${item})
+    string ( REGEX MATCH "_F.H" COND2 ${item})
+
+    if ( COND1 OR COND2 )
+      print(item)
+      list ( APPEND F90HEADERS ${item})	
+    endif ()
+
+  endif ()
+  
+endforeach ()
 
 #
 # Object library to generate before typecheck
@@ -49,7 +70,6 @@ add_library ( typecheckobjs OBJECT EXCLUDE_FROM_ALL ${F90SRC} )
 set_target_properties ( typecheckobjs
    PROPERTIES
    Fortran_MODULE_DIRECTORY ${TYPECHECK_DIR} ) 
-
 
 #
 # Find includes needed for typecheck
@@ -62,39 +82,23 @@ foreach (item ${TMP})
    list ( APPEND INCLUDES -I${item} )
 endforeach ()
 
-
-#
-# Find C headers needed for type check
-#
-
-# Filter out %_f.H and %_F.H from list of includes
-# Note that this can be achieved natively in CMake >= 3.6
-# by using " list (FILTER ...) "
-foreach ( item ${CXXINCLUDES} )
-   string ( REGEX MATCH "_f.H" TMP1 ${item})
-   string ( REGEX MATCH "_F.H" TMP2 ${item})
-   if ( (NOT TMP1) AND (NOT TMP2) )
-      list (REMOVE_ITEM CXXINCLUDES ${item})	
-   endif ()
-endforeach ()
-
 #
 # Generate cppd files
 #
-if (ENABLE_DP)
+if (AMREX_ENABLE_DP)
    set (AMREX_REAL double)
 else ()
    set (AMREX_REAL  float)
 endif ()
 
-if (ENABLE_DP_PARTICLES)
+if (AMREX_ENABLE_DP_PARTICLES)
    set (AMREX_PARTICLE_REAL double)
 else ()
    set (AMREX_PARTICLE_REAL  float)
 endif ()
 
-set (CXXHEADERS)
-foreach ( file ${CXXINCLUDES} )
+set (CPPDHEADERS)
+foreach ( file ${F90HEADERS} )
    get_filename_component ( fname ${file} NAME ) # This strips away the path
    set ( CPPD_FILE ${fname}-cppd.h )
    get_filename_component ( fullname ${file} ABSOLUTE ) # This add the absolute path to fname
@@ -113,9 +117,8 @@ foreach ( file ${CXXINCLUDES} )
       DEPENDS ${file} typecheckobjs # Leave dependency to typecheck so typecheckdir is created
       WORKING_DIRECTORY ${TYPECHECK_DIR}  
       COMMENT "Generating ${CPPD_FILE} " )
-   list (APPEND CXXHEADERS ${CPPD_FILE})
+   list (APPEND CPPDHEADERS ${CPPD_FILE})
 endforeach ()
-
 
 #
 # Generate Origin Files
@@ -139,7 +142,7 @@ endforeach ()
 add_custom_target ( typecheck
    COMMAND python3  ${AMREX_TYPECHECKER}
    --workdir ${TYPECHECK_DIR} --output ${TYPECHECK_DIR}/amrex_typecheck.ou
-   DEPENDS ${F90ORIG} ${CXXHEADERS}
+   DEPENDS ${F90ORIG} ${CPPDHEADERS}
    WORKING_DIRECTORY ${TYPECHECK_DIR}
    COMMENT "Type-checking") 
 
@@ -148,4 +151,4 @@ add_custom_target ( typecheck
 # ( this must be tested )
 #
 set (F90SRC "")
-set (CXXINCLUDES "")
+
