@@ -731,11 +731,9 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
            &dx, &dy, &dz, &xlen, &ylen, &zlen);
     }
 
-      set_p0(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
-             domain.loVect(), domain.hiVect(),
-             (*p0_g[lev])[mfi].dataPtr(),
-             &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir);
   }
+  
+  mfix_set_p0(lev);
 
  // Here we set a separate periodicity flag for p0_g because when we use
  // pressure drop (delp) boundary conditions we fill all variables *except* p0
@@ -838,6 +836,34 @@ mfix_level::mfix_set_bc0(int lev)
   u_g[lev]->FillBoundary(geom[lev].periodicity());
   v_g[lev]->FillBoundary(geom[lev].periodicity());
   w_g[lev]->FillBoundary(geom[lev].periodicity());
+}
+
+void
+mfix_level::mfix_set_p0(int lev)
+{
+    Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+    Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+    Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+
+    Real dx = geom[lev].CellSize(0);
+    Real dy = geom[lev].CellSize(1);
+    Real dz = geom[lev].CellSize(2);
+
+    Box domain(geom[lev].Domain());
+
+    int delp_dir;
+    set_delp_dir(&delp_dir);
+
+    for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi) 
+    {
+        const Box& bx = mfi.validbox();
+        const Box& sbx = (*p_g[lev])[mfi].box();
+
+        set_p0(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
+               domain.loVect(), domain.hiVect(),
+               (*p0_g[lev])[mfi].dataPtr(),
+                &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir);
+    }
 }
 
 void mfix_level::WriteEBSurface(int lev) {
