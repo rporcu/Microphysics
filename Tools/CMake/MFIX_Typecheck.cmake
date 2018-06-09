@@ -19,12 +19,6 @@ endif ()
 
 
 #
-# Set the name of the directory from where the file is called
-#
-message ("Typecheck in ${CMAKE_CURRENT_SOURCE_DIR}")
-
-
-#
 # Directory for typecheck 
 #
 set ( TYPECHECK_DIR  ${CMAKE_BINARY_DIR}/TypeCheckTemp )
@@ -32,7 +26,7 @@ set ( TYPECHECK_DIR  ${CMAKE_BINARY_DIR}/TypeCheckTemp )
 #
 # Get the fortran sources and the fortran headers for MFIXCORE
 #
-get_target_property ( ALLSRC ${MFIXCORE} SOURCES )
+get_target_property ( ALLSRC ${MFIX_LIBNAME} SOURCES )
 
 set ( F90SRC )
 set ( F90HEADERS )
@@ -55,7 +49,6 @@ foreach ( item ${ALLSRC} )
     string ( REGEX MATCH "_F.H" COND2 ${item})
 
     if ( COND1 OR COND2 )
-      print(item)
       list ( APPEND F90HEADERS ${item})	
     endif ()
 
@@ -64,23 +57,26 @@ foreach ( item ${ALLSRC} )
 endforeach ()
 
 #
-# Object library to generate before typecheck
-# 
-add_library ( typecheckobjs OBJECT EXCLUDE_FROM_ALL ${F90SRC} )
-set_target_properties ( typecheckobjs
-   PROPERTIES
-   Fortran_MODULE_DIRECTORY ${TYPECHECK_DIR} ) 
-
-#
 # Find includes needed for typecheck
 #
 set (INCLUDES)
-get_target_property ( TMP typecheckobjs INCLUDE_DIRECTORIES )
-list (APPEND TMP ${TYPECHECK_DIR})
+get_target_property ( INCLUDE_PATHS ${MFIX_LIBNAME} INCLUDE_DIRECTORIES )
+list (APPEND INCLUDE_PATHS ${TYPECHECK_DIR})
 
-foreach (item ${TMP})
+foreach (item ${INCLUDE_PATHS})
    list ( APPEND INCLUDES -I${item} )
 endforeach ()
+
+#
+# Object library to generate before typecheck
+# 
+add_library ( typecheckobjs OBJECT EXCLUDE_FROM_ALL ${F90SRC} )
+
+target_include_directories ( typecheckobjs PUBLIC ${INCLUDE_PATHS} )
+
+set_target_properties ( typecheckobjs
+  PROPERTIES
+  Fortran_MODULE_DIRECTORY ${TYPECHECK_DIR} )
 
 #
 # Generate cppd files

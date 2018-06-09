@@ -34,6 +34,9 @@ set ( AMREX_INSTALL_PATH )
 # Flags to accumulate preprocessor directives
 set ( MFIX_DEFINES ) 
 
+# The name of the core mfix library target
+set ( MFIX_LIBNAME mfixcore )
+
 # Compiler flags
 set ( MFIX_Fortran_FLAGS )
 set ( MFIX_C_FLAGS )
@@ -60,12 +63,6 @@ set (MFIX_EXTRA_C_LINK_LINE)
 set (MFIX_EXTRA_CXX_LINK_LINE)
 set (MFIX_EXTRA_Fortran_LINK_LINE)
 set (MFIX_EXTRA_LINK_LINE)
-set (MFIX_INCLUDE_PATH 
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/src/include 
-    ${PROJECT_SOURCE_DIR}/src/des_fluid 
-    ${PROJECT_SOURCE_DIR}/src/eb 
-    )
 set (MFIX_EXTRA_INCLUDE_PATH)
 set (MFIX_EXTRA_LIBRARIES_PATH)
 

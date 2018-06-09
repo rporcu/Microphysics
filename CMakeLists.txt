@@ -84,12 +84,8 @@ include ( MFIX_Config )
 # This is the main file
 set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
-include_directories (${MFIX_INCLUDE_PATH} ${MFIX_EXTRA_INCLUDE_PATH})
-
+# Add the external include paths and link directories
 link_directories (${MFIX_EXTRA_LIBRARIES_PATH})
-
-# # Define the name of MFIX core library
-# add_library ( mfixcore STATIC "")
 
 # Main
 add_subdirectory (src)
@@ -102,11 +98,6 @@ target_link_libraries ( mfix mfixcore ${MFIX_EXTRA_LINK_LINE} )
 
 # Configure type-checking target
 include ( MFIX_Typecheck )
-
-
-
-
-
 
 # Add rule to generate TAGS
 # on macOS ctags-exuberant is just ctags
