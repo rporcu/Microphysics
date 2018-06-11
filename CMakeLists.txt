@@ -93,7 +93,7 @@ add_subdirectory (src)
 # We should check what this line does
 file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
 add_executable (mfix ${MAIN} ${USR_OVERRIDES} )
-target_link_libraries ( mfix mfixcore ${MFIX_EXTRA_LINK_LINE} ) 
+target_link_libraries ( mfix ${MFIX_LIBNAME} ${MFIX_EXTRA_LINK_LINE} ) 
 
 
 # Configure type-checking target
