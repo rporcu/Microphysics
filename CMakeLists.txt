@@ -80,15 +80,32 @@ include ( MFIX_Options )
 # 
 include ( MFIX_Config )
 
-
+#
 # This is the main file
-set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
+#
+if ( ENABLE_PROJCC )
+  set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src_cc/main.cpp )
+else ()
+  set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
+endif ()
 
 # Add the external include paths and link directories
 link_directories (${MFIX_EXTRA_LIBRARIES_PATH})
 
-# Main
-add_subdirectory (src)
+# 
+# Core MFIX library
+# For the time being, we keep to versions: one with sources in src/
+# ( SIMPLE + Exact Projection ), one with sources in both src_cc/ and src/
+# ( Approximate Projection only ).
+# 
+if (ENABLE_PROJCC)
+  message ( WARNING "Building MFIX in experimental APPROXIMATE PROJECTION mode (ENABLE_PROJCC=on)" )
+  add_subdirectory (src_cc)
+  set (ENABLE_PTESTS ON)
+  set (ENABLE_STESTS OFF)
+else ()
+  add_subdirectory (src)
+endif ()
 
 # We should check what this line does
 file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)

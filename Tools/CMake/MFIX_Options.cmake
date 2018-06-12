@@ -44,6 +44,9 @@ set (AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX 
 option ( ENABLE_FPE "Enable Floating Point Exceptions checks" OFF )
 
 
+
+option ( ENABLE_PROJCC "Enable Approximate Projection" OFF)
+
 option ( ENABLE_PTESTS "Include tests for projection method in Ctest suite " OFF )
 
 option ( ENABLE_STESTS "Include tests for SIMPLE method in Ctest suite " ON )
