@@ -53,59 +53,6 @@ subroutine construct_gradp(slo, shi, p_g, p0_g, &
       do i = imin,imax
          gpx(i,j,k) = (p_g(i,j,k) + p0_g(i,j,k) - p_g(i-1,j,k) - p0_g(i-1,j,k)) * odx
       end do
-      if (xlo(1).le.domlo(1)) then
-         if(bc_ilo_type(j,k,1) == PINF_ .or. &
-            bc_ilo_type(j,k,1) == POUT_) then
-
-            gpy(domlo(1)-1,j,k) = 0.d0
-            gpz(domlo(1)-1,j,k) = 0.d0
-
-         else if (bc_ilo_type(j,k,1) == MINF_) then
-
-            gpx(domlo(1)  ,j,k) = gpx(domlo(1)+1,j,k)
-            gpy(domlo(1)-1,j,k) = 0.0d0
-            gpz(domlo(1)-1,j,k) = 0.0d0
-
-         else if (bc_ilo_type(j,k,1) == NSW_) then
-
-            gpx(domlo(1)  ,j,k) =  0.0d0
-            gpy(domlo(1)-1,j,k) = -gpy(domlo(1),j,k)
-            gpz(domlo(1)-1,j,k) = -gpz(domlo(1),j,k)
-
-         else if (bc_ilo_type(j,k,1) == FSW_) then
-
-            gpx(domlo(1)  ,j,k) = 0.0d0
-            gpy(domlo(1)-1,j,k) = gpy(domlo(1),j,k)
-            gpz(domlo(1)-1,j,k) = gpz(domlo(1),j,k)
-
-         end if
-      end if
-      if (xhi(1).ge.domhi(1)+1) then
-         if(bc_ihi_type(j,k,1) == PINF_ .or. &
-            bc_ihi_type(j,k,1) == POUT_) then
-
-            gpy(domhi(1)+1,j,k) = 0.d0
-            gpz(domhi(1)+1,j,k) = 0.d0
-
-         else if (bc_ihi_type(j,k,1) == MINF_) then
-
-            gpx(domhi(1)+1,j,k) = gpx(domhi(1),j,k)
-            gpy(domhi(1)+1,j,k) = 0.0d0
-            gpz(domhi(1)+1,j,k) = 0.0d0
-
-         else if (bc_ihi_type(j,k,1) == NSW_) then
-
-            gpx(domhi(1)+1,j,k) =  0.0d0
-            gpy(domhi(1)+1,j,k) = -gpy(domhi(1),j,k)
-            gpz(domhi(1)+1,j,k) = -gpz(domhi(1),j,k)
-
-         else if (bc_ihi_type(j,k,1) == FSW_) then
-
-            gpx(domhi(1)+1,j,k) = 0.0d0 
-            gpy(domhi(1)+1,j,k) = gpy(domhi(1),j,k) 
-            gpz(domhi(1)+1,j,k) = gpz(domhi(1),j,k) 
-         end if
-      end if
    end do
    end do
 
@@ -116,59 +63,6 @@ subroutine construct_gradp(slo, shi, p_g, p0_g, &
       do j = jmin, jmax
          gpy(i,j,k) = (p_g(i,j,k) + p0_g(i,j,k) - p_g(i,j-1,k) - p0_g(i,j-1,k)) * ody
       end do
-      if (ylo(2).le.domlo(2)) then
-         if(bc_jlo_type(i,k,1) == PINF_ .or. &
-            bc_jlo_type(i,k,1) == POUT_) then
-
-            gpx(i,domlo(2)-1,k) = 0.d0
-            gpz(i,domlo(2)-1,k) = 0.d0
-
-         else if (bc_jlo_type(i,k,1) == MINF_) then
-
-            gpx(i,domlo(2)-1,k) = 0.0d0
-            gpy(i,domlo(2)  ,k) = gpy(i,domlo(2)+1,k)
-            gpz(i,domlo(2)-1,k) = 0.0d0
-
-         else if (bc_jlo_type(i,k,1) == NSW_) then
-
-            gpx(i,domlo(2)-1,k) = -gpx(i,domlo(2),k)
-            gpy(i,domlo(2)  ,k) =  0.0d0
-            gpz(i,domlo(2)-1,k) = -gpz(i,domlo(2),k)
-
-         else if (bc_jlo_type(i,k,1) == FSW_) then
-
-            gpx(i,domlo(2)-1,k) = gpx(i,domlo(2),k)
-            gpy(i,domlo(2)  ,k) = 0.0d0
-            gpz(i,domlo(2)-1,k) = gpz(i,domlo(2),k)
-
-         end if
-      end if
-      if (yhi(2).ge.domhi(2)+1) then
-         if(bc_jhi_type(i,k,1) == PINF_ .or. &
-            bc_jhi_type(i,k,1) == POUT_) then
-
-            gpx(i,domhi(2)+1,k) = 0.d0
-            gpz(i,domhi(2)+1,k) = 0.d0
-
-         else if (bc_jhi_type(i,k,1) == MINF_) then
-
-            gpx(i,domhi(2)+1,k) = 0.0d0
-            gpy(i,domhi(2)+1,k) = gpy(i,domhi(2),k)
-            gpz(i,domhi(2)+1,k) = 0.0d0
-
-         else if (bc_jhi_type(i,k,1) == NSW_) then
-
-            gpx(i,domhi(2)+1,k) = -gpx(i,domhi(2),k)
-            gpy(i,domhi(2)+1,k) =  0.0d0
-            gpz(i,domhi(2)+1,k) = -gpz(i,domhi(2),k)
-
-         else if (bc_jhi_type(i,k,1) == FSW_) then
-
-            gpx(i,domhi(2)+1,k) = gpx(i,domhi(2),k) 
-            gpy(i,domhi(2)+1,k) = 0.0d0 
-            gpz(i,domhi(2)+1,k) = gpz(i,domhi(2),k) 
-         end if
-      end if
    end do
    end do
 
@@ -179,60 +73,6 @@ subroutine construct_gradp(slo, shi, p_g, p0_g, &
       do k = kmin,kmax
          gpz(i,j,k) = (p_g(i,j,k) + p0_g(i,j,k) - p_g(i,j,k-1) - p0_g(i,j,k-1)) * odz
       end do
-      if (zlo(3).le.domlo(3)) then
-         if(bc_klo_type(i,j,1) == PINF_ .or. &
-            bc_klo_type(i,j,1) == POUT_) then
-
-            gpx(i,j,domlo(3)-1) = 0.d0
-            gpy(i,j,domlo(3)-1) = 0.d0
-
-         else if (bc_klo_type(i,j,1) == MINF_) then
-
-            gpx(i,j,domlo(3)-1) = 0.0d0
-            gpy(i,j,domlo(3)-1) = 0.0d0
-            gpz(i,j,domlo(3)  ) = gpz(i,j,domlo(3)+1)
-
-         else if (bc_klo_type(i,j,1) == NSW_) then
-
-            gpx(i,j,domlo(3)-1) = -gpx(i,j,domlo(3))
-            gpy(i,j,domlo(3)-1) = -gpy(i,j,domlo(3))
-            gpz(i,j,domlo(3)  ) =  0.0d0
-
-         else if (bc_klo_type(i,j,1) == FSW_) then
-
-            gpx(i,j,domlo(3)-1) = gpx(i,j,domlo(3))
-            gpy(i,j,domlo(3)-1) = gpy(i,j,domlo(3))
-            gpz(i,j,domlo(3)  ) = 0.0d0
-
-         end if
-      end if
-      if (zhi(3).ge.domhi(3)+1) then
-         if(bc_khi_type(i,j,1) == PINF_ .or. &
-            bc_khi_type(i,j,1) == POUT_) then
-
-            gpx(i,j,domhi(3)+1) = 0.d0
-            gpy(i,j,domhi(3)+1) = 0.d0
-
-         else if (bc_khi_type(i,j,1) == MINF_) then
-
-            gpx(i,j,domhi(3)+1) = 0.0d0
-            gpy(i,j,domhi(3)+1) = 0.0d0
-            gpz(i,j,domhi(3)+1) = gpz(i,j,domhi(3))
-
-         else if (bc_khi_type(i,j,1) == NSW_) then
-
-            gpx(i,j,domhi(3)+1) = -gpx(i,j,domhi(3))
-            gpy(i,j,domhi(3)+1) = -gpy(i,j,domhi(3))
-            gpz(i,j,domhi(3)+1) =  0.0d0
-
-         else if (bc_khi_type(i,j,1) == FSW_) then
-
-            gpx(i,j,domhi(3)+1) = gpx(i,j,domhi(3))
-            gpy(i,j,domhi(3)+1) = gpy(i,j,domhi(3))
-            gpz(i,j,domhi(3)+1) = 0.0d0
-
-         end if
-      end if
    end do
    end do
 
@@ -245,6 +85,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
    use amrex_fort_module,  only: ar => amrex_real
    use iso_c_binding ,     only: c_int
    use bc
+   use param,              only: zero
 
    implicit none
 
@@ -295,25 +136,25 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
                
             case ( pinf_, pout_) 
                
-               gpx(ulo(1):domlo(1)-1,j,k) =      gpx(domlo(1),j,k)
-               gpy(vlo(1):domlo(1)-1,j,k) =      gpy(domlo(1),j,k)
-               gpz(wlo(1):domlo(1)-1,j,k) =      gpz(domlo(1),j,k)
+               gpx(ulo(1):domlo(1)-1,j,k) = 1.e200 ! Make sure we never use this
+               gpy(vlo(1):domlo(1)-1,j,k) = zero
+               gpz(wlo(1):domlo(1)-1,j,k) = zero
 
             case ( minf_)
 
                gpx(       domlo(1)  ,j,k) = gpx(domlo(1)+1,j,k)
-               gpy(vlo(1):domlo(1)-1,j,k) = 0.0d0
-               gpz(wlo(1):domlo(1)-1,j,k) = 0.0d0
+               gpy(vlo(1):domlo(1)-1,j,k) = zero
+               gpz(wlo(1):domlo(1)-1,j,k) = zero
 
             case ( nsw_) 
 
-               gpx(ulo(1):domlo(1)  ,j,k) =  0.0d0
+               gpx(ulo(1):domlo(1)  ,j,k) =  zero
                gpy(vlo(1):domlo(1)-1,j,k) = -gpy(domlo(1),j,k)
                gpz(wlo(1):domlo(1)-1,j,k) = -gpz(domlo(1),j,k)
 
             case ( fsw_)
                
-               gpx(ulo(1):domlo(1)  ,j,k) = 0.0d0
+               gpx(ulo(1):domlo(1)  ,j,k) = zero
                gpy(vlo(1):domlo(1)-1,j,k) = gpy(domlo(1),j,k)
                gpz(wlo(1):domlo(1)-1,j,k) = gpz(domlo(1),j,k)
 
@@ -332,25 +173,25 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
             case ( pinf_, pout_ )
                
-               gpx(domhi(1)+2:uhi(1),j,k) =      gpx(domhi(1)+1,j,k)
-               gpy(domhi(1)+1:vhi(1),j,k) =      gpy(domhi(1)  ,j,k)
-               gpz(domhi(1)+1:whi(1),j,k) =      gpz(domhi(1)  ,j,k)
+               gpx(domhi(1)+2:uhi(1),j,k) =  1.e200 ! Make sure we never use this
+               gpy(domhi(1)+1:vhi(1),j,k) =  gpy(domhi(1)  ,j,k)
+               gpz(domhi(1)+1:whi(1),j,k) =  gpz(domhi(1)  ,j,k)
 
             case ( minf_ )
 
                gpx(domhi(1)+1       ,j,k) = gpx(domhi(1),j,k)
-               gpy(domhi(1)+1:vhi(1),j,k) = 0.0d0
-               gpz(domhi(1)+1:whi(1),j,k) = 0.0d0
+               gpy(domhi(1)+1:vhi(1),j,k) = zero
+               gpz(domhi(1)+1:whi(1),j,k) = zero
 
             case ( nsw_ ) 
 
-               gpx(domhi(1)+1:uhi(1),j,k) =  0.0d0
+               gpx(domhi(1)+1:uhi(1),j,k) =  zero
                gpy(domhi(1)+1:vhi(1),j,k) = -gpy(domhi(1),j,k)
                gpz(domhi(1)+1:whi(1),j,k) = -gpz(domhi(1),j,k)
 
             case ( fsw_ ) 
 
-               gpx(domhi(1)+1:uhi(1),j,k) = 0.0d0
+               gpx(domhi(1)+1:uhi(1),j,k) = zero
                gpy(domhi(1)+1:vhi(1),j,k) = gpy(domhi(1),j,k)
                gpz(domhi(1)+1:whi(1),j,k) = gpz(domhi(1),j,k)
 
@@ -369,20 +210,20 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
             case ( pinf_, pout_) 
 
-               gpx(i,ulo(2):domlo(2)-1,k) =      gpx(i,domlo(2),k)
-               gpy(i,vlo(2):domlo(2)-1,k) =      gpy(i,domlo(2),k)
-               gpz(i,wlo(2):domlo(2)-1,k) =      gpz(i,domlo(2),k)
+               gpx(i,ulo(2):domlo(2)-1,k) = zero
+               gpy(i,vlo(2):domlo(2)-1,k) =1.e200 ! Make sure we never use this  
+               gpz(i,wlo(2):domlo(2)-1,k) = zero
 
             case ( minf_ )
 
-               gpx(i,vlo(2):domlo(2)-1,k) = 0.0d0
+               gpx(i,vlo(2):domlo(2)-1,k) = zero
                gpy(i,       domlo(2)  ,k) = gpy(i, domlo(2)+1,k)
-               gpz(i,wlo(2):domlo(2)-1,k) = 0.0d0
+               gpz(i,wlo(2):domlo(2)-1,k) = zero
 
             case ( nsw_ )
 
                gpx(i,ulo(2):domlo(2)-1,k) = -gpx(i,domlo(2),k)
-               gpy(i,vlo(2):domlo(2)  ,k) =  0.0d0
+               gpy(i,vlo(2):domlo(2)  ,k) =  zero
                gpz(i,wlo(2):domlo(2)-1,k) = -gpz(i,domlo(2),k)
 
             case ( fsw_)
@@ -406,26 +247,26 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
             case ( pinf_, pout_ )
                
-               gpx(i,domhi(2)+1:uhi(2),k) =      gpx(i,domhi(2)  ,k)
-               gpy(i,domhi(2)+2:vhi(2),k) =      gpy(i,domhi(2)+1,k)
-               gpz(i,domhi(2)+1:whi(2),k) =      gpz(i,domhi(2)  ,k)
+               gpx(i,domhi(2)+1:uhi(2),k) = zero
+               gpy(i,domhi(2)+2:vhi(2),k) = 1.e200 ! Make sure we never use this
+               gpz(i,domhi(2)+1:whi(2),k) = zero
 
             case ( minf_) 
 
-               gpx(i,domhi(2)+1:uhi(2),k) = 0.0d0
+               gpx(i,domhi(2)+1:uhi(2),k) = zero
                gpy(i,domhi(2)+1       ,k) = gpy(i,domhi(2),k)
-               gpz(i,domhi(2)+1:whi(2),k) = 0.0d0
+               gpz(i,domhi(2)+1:whi(2),k) = zero
 
             case ( nsw_) 
 
                gpx(i,domhi(2)+1:uhi(2),k) = -gpx(i,domhi(2),k)
-               gpy(i,domhi(2)+1:vhi(2),k) =  0.0d0
+               gpy(i,domhi(2)+1:vhi(2),k) =  zero
                gpz(i,domhi(2)+1:whi(2),k) = -gpz(i,domhi(2),k)
 
             case ( fsw_)
 
                gpx(i,domhi(2)+1:uhi(2),k) = gpx(i,domhi(2),k)
-               gpy(i,domhi(2)+1:vhi(2),k) = 0.0d0
+               gpy(i,domhi(2)+1:vhi(2),k) = zero
                gpz(i,domhi(2)+1:whi(2),k) = gpz(i,domhi(2),k)
 
             end select
@@ -442,27 +283,27 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
             case ( pinf_, pout_ ) 
 
-               gpx(i,j,ulo(3):domlo(3)-1) =      gpx(i,j,domlo(3))
-               gpy(i,j,vlo(3):domlo(3)-1) =      gpy(i,j,domlo(3))
-               gpz(i,j,wlo(3):domlo(3)-1) =      gpz(i,j,domlo(3))
+               gpx(i,j,ulo(3):domlo(3)-1) = zero
+               gpy(i,j,vlo(3):domlo(3)-1) = zero
+               gpz(i,j,wlo(3):domlo(3)-1) = 1.e200 ! Make sure we never use this
 
             case ( minf_ )
 
-               gpx(i,j,ulo(3):domlo(3)-1) = 0.0d0
-               gpy(i,j,vlo(3):domlo(3)-1) = 0.0d0
+               gpx(i,j,ulo(3):domlo(3)-1) = zero
+               gpy(i,j,vlo(3):domlo(3)-1) = zero
                gpz(i,j,       domlo(3)  ) = gpz(i,j,domlo(3)+1)
 
             case ( nsw_ )
 
                gpx(i,j,ulo(3):domlo(3)-1) = -gpx(i,j,domlo(3))
                gpy(i,j,vlo(3):domlo(3)-1) = -gpy(i,j,domlo(3))
-               gpz(i,j,wlo(3):domlo(3)  ) =  0.0d0
+               gpz(i,j,wlo(3):domlo(3)  ) =  zero
 
             case ( fsw_ ) 
 
                gpx(i,j,ulo(3):domlo(3)-1) = gpx(i,j,domlo(3))
                gpy(i,j,vlo(3):domlo(3)-1) = gpy(i,j,domlo(3))
-               gpz(i,j,wlo(3):domlo(3)  ) = 0.0d0
+               gpz(i,j,wlo(3):domlo(3)  ) = zero
                
             end select
          end do
@@ -478,27 +319,27 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
             case ( pinf_, pout_ )
                
-               gpx(i,j,domhi(3)+1:uhi(3)) =      gpx(i,j,domhi(3)  )
-               gpy(i,j,domhi(3)+1:vhi(3)) =      gpy(i,j,domhi(3)  )
-               gpz(i,j,domhi(3)+2:whi(3)) =      gpz(i,j,domhi(3)+1)
+               gpx(i,j,domhi(3)+1:uhi(3)) = zero
+               gpy(i,j,domhi(3)+1:vhi(3)) = zero
+               gpz(i,j,domhi(3)+2:whi(3)) = 1.e200 ! Make sure we never use this
              
             case ( minf_ ) 
 
-               gpx(i,j,domhi(3)+1:uhi(3)) = 0.0d0
-               gpy(i,j,domhi(3)+1:vhi(3)) = 0.0d0
+               gpx(i,j,domhi(3)+1:uhi(3)) = zero
+               gpy(i,j,domhi(3)+1:vhi(3)) = zero
                gpz(i,j,domhi(3)+1       ) = gpz(i,j,domhi(3))
 
             case ( nsw_ ) 
 
                gpx(i,j,domhi(3)+1:uhi(3)) = -gpx(i,j,domhi(3))
                gpy(i,j,domhi(3)+1:vhi(3)) = -gpy(i,j,domhi(3))
-               gpz(i,j,domhi(3)+1:whi(3)) =  0.d0
+               gpz(i,j,domhi(3)+1:whi(3)) =  zero
 
             case ( fsw_ ) 
 
                gpx(i,j,domhi(3)+1:uhi(3)) = gpx(i,j,domhi(3))
                gpy(i,j,domhi(3)+1:vhi(3)) = gpy(i,j,domhi(3))
-               gpz(i,j,domhi(3)+1:whi(3)) = 0.0d0
+               gpz(i,j,domhi(3)+1:whi(3)) = zero
 
             end select
          end do
