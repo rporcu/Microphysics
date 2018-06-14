@@ -441,7 +441,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
    /****************************************************************************
     * DEBUG flag toggles:                                                      *
-    *   -> Print number of collisisions                                        *
+    *   -> Print number of collisions                                        *
     *   -> Print max (over substeps) particle velocity at each time step       *
     *   -> Print max particle-wall and particle-particle forces                *
     ****************************************************************************/
@@ -510,7 +510,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
           clearNeighbors(lev);
           Redistribute();
           fillNeighbors(lev);
-          buildNeighborList(lev,sort_neighbor_list);
+          buildNeighborList(lev, MFIXCheckPair, sort_neighbor_list);
       } else {
           updateNeighbors(lev);
       }
@@ -612,12 +612,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
 #if 1
          BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
+
          calc_particle_collisions ( particles                     , &nrp,
                                     neighbors[index].dataPtr()    , &size_ng,
                                     neighbor_list[index].dataPtr(), &size_nl,
                                     tow[index].dataPtr(), fc[index].dataPtr(),
                                     &subdt, &ncoll);
-
 
          // Debugging: copy data from the fc (all forces) vector to the wfor
          // (wall forces) vector. Note that since fc already contains the wall
