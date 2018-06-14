@@ -36,7 +36,7 @@ add_library ( ${MFIX_LIBNAME} "" )
 #
 # Uncategorized
 # 
-add_sources ( mfix_evolve.cpp mfix_init.cpp )
+add_sources ( mfix_evolve.cpp mfix_init.cpp mfix_arrays.cpp )
 add_sources ( mfix_level.cpp mfix_regrid.cpp )
 add_sources ( mfix_level.H mfix_F.H )
 add_sources ( calc_cell.f90 calc_mu_g.f90 )

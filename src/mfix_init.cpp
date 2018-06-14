@@ -195,7 +195,7 @@ void mfix_level::Init(int lev, Real dt, Real time)
                                   levelset__pad, levelset__eb_pad, pc.get())
                 );
 
-    // Make sure that at (at least) an initial MultiFab ist stored in ls[lev].
+    // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
     // (otherwise, if there are no walls/boundaries in the simulation, saving a
     // plot file or checkpoint will segfault).
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
@@ -341,211 +341,6 @@ mfix_level::check_data (int lev)
 }
 
 void
-mfix_level::AllocateArrays (int lev)
-{
-    // ********************************************************************************
-    // Cell-based arrays
-    // ********************************************************************************
-
-    // Void fraction
-    ep_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    ep_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    ep_g[lev]->setVal(1.0);
-    ep_go[lev]->setVal(1.0);
-
-    // Gas pressure fraction
-    p_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    p_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    p_g[lev]->setVal(0.);
-    p_go[lev]->setVal(0.);
-
-    // Gas density
-    ro_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    ro_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    ro_g[lev]->setVal(0.);
-    ro_go[lev]->setVal(0.);
-
-    // Gas bulk density
-    rop_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    rop_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    rop_g[lev]->setVal(0.);
-    rop_go[lev]->setVal(0.);
-
-    // Base pressure that captures delp and/or p_in and p_out
-    p0_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    p0_g[lev]->setVal(0.);
-
-    // Pressure correction equation
-    pp_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    pp_g[lev]->setVal(0.);
-
-    // Molecular viscosity
-    mu_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    mu_g[lev]->setVal(0.);
-
-    //
-    lambda_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    lambda_g[lev]->setVal(0.);
-    //
-    trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    trD_g[lev]->setVal(0.);
-
-    // Vorticity
-    vort[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    vort[lev]->setVal(0.);
-
-    // Pressure increment
-    phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    phi[lev]->setVal(0.);
-
-    // div(e u)
-    diveu[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    diveu[lev]->setVal(0.);
-
-    // ********************************************************************************
-    // X-face-based arrays
-    // ********************************************************************************
-
-    // Create a BoxArray on x-faces.
-    BoxArray x_edge_ba = grids[lev];
-    x_edge_ba.surroundingNodes(0);
-
-    // X-axis gas velocity
-    u_g[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    u_go[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    u_gt[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    fp_x[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    bcoeff[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    u_g[lev]->setVal(0.);
-    u_go[lev]->setVal(0.);
-    u_gt[lev]->setVal(0.);
-    fp_x[lev]->setVal(0.);
-    bcoeff[lev][0]->setVal(0.);
-
-    d_e[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    d_e[lev]->setVal(0.);
-
-    tau_u_g[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    tau_u_g[lev]->setVal(0.);
-
-    fluxX[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    fluxX[lev]->setVal(0.);
-
-    ropX[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    ropX[lev]->setVal(0.);
-
-    f_gds_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,1));
-    f_gds_u[lev]->setVal(0.);
-
-    drag_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,1));
-    drag_u[lev]->setVal(0.);
-
-    // u-velocity slopes. Note that the number of components is not 1, but 3!
-    slopes_u[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],3,nghost));
-    slopes_u[lev] -> setVal(0.);
-
-    // u acceleration terms
-    uacc[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    uacc[lev] -> setVal(0.);
-
-    // ********************************************************************************
-    // Y-face-based arrays
-    // ********************************************************************************
-
-    // Create a BoxArray on y-faces.
-    BoxArray y_edge_ba = grids[lev];
-    y_edge_ba.surroundingNodes(1);
-
-    // Y-axis gas velocity
-    v_g[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    v_go[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    v_gt[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    fp_y[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    bcoeff[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    v_g[lev]->setVal(0.);
-    v_go[lev]->setVal(0.);
-    v_gt[lev]->setVal(0.);
-    fp_y[lev]->setVal(0.);
-    bcoeff[lev][1]->setVal(0.);
-
-    d_n[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    d_n[lev]->setVal(0.);
-
-    tau_v_g[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    tau_v_g[lev]->setVal(0.);
-
-    fluxY[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    fluxY[lev]->setVal(0.);
-
-    ropY[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    ropY[lev]->setVal(0.);
-
-    f_gds_v[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,1));
-    f_gds_v[lev]->setVal(0.);
-
-    drag_v[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,1));
-    drag_v[lev]->setVal(0.);
-
-    // v-velocity slopes. Note that the number of components is not 1, but 3!
-    slopes_v[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],3,nghost));
-    slopes_v[lev] -> setVal(0.);
-
-    // v acceleration terms
-    vacc[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    vacc[lev] -> setVal(0.);
-
-
-
-    // ********************************************************************************
-    // Z-face-based arrays
-    // ********************************************************************************
-
-    // Create a BoxArray on y-faces.
-    BoxArray z_edge_ba = grids[lev];
-    z_edge_ba.surroundingNodes(2);
-
-    // Z-axis gas velocity
-    w_g[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    w_go[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    w_gt[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    fp_z[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    bcoeff[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    w_g[lev]->setVal(0.);
-    w_go[lev]->setVal(0.);
-    w_gt[lev]->setVal(0.);
-    fp_z[lev]->setVal(0.);
-    bcoeff[lev][2]->setVal(0.);
-
-    d_t[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    d_t[lev]->setVal(0.);
-
-    tau_w_g[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    tau_w_g[lev]->setVal(0.);
-
-    fluxZ[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    fluxZ[lev]->setVal(0.);
-
-    ropZ[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    ropZ[lev]->setVal(0.);
-
-    f_gds_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
-    f_gds_w[lev]->setVal(0.);
-
-    drag_w[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,1));
-    drag_w[lev]->setVal(0.);
-
-    // w-velocity slopes. Note that the number of components is not 1, but 3!
-    slopes_w[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],3,nghost));
-    slopes_w[lev] -> setVal(0.);
-
-    // w acceleration terms
-    wacc[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    wacc[lev] -> setVal(0.);
-
-}
-
-
-void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
 
@@ -620,7 +415,6 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
                           int steady_state)
 {
   if (solve_dem) {
-
 
     // Auto generated particles may be out of the domain. This call will remove them.
     // Note that this has to occur after the EB geometry is created.
@@ -697,12 +491,9 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
   // Here we set bc values for p and u,v,w before the IC's are set
   mfix_set_bc0(lev);
 
-  int delp_dir;
-  set_delp_dir(&delp_dir);
-
   // We deliberately don't tile this loop since we will be looping
   //    over bc's on faces and it makes more sense to do this one grid at a time
-  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
+  for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) {
 
     const Box& bx = mfi.validbox();
     const Box& sbx = (*ep_g[lev])[mfi].box();
@@ -734,15 +525,6 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
   }
   
   mfix_set_p0(lev);
-
- // Here we set a separate periodicity flag for p0_g because when we use
- // pressure drop (delp) boundary conditions we fill all variables *except* p0
- // periodically
-  IntVect press_per = IntVect(geom[lev].isPeriodic(0),geom[lev].isPeriodic(1),geom[lev].isPeriodic(2));
-  if (delp_dir > -1) press_per[delp_dir] = 0;
-  p0_periodicity = Periodicity(press_per);
-
-  p0_g[lev]->FillBoundary(p0_periodicity);
 
   // Here we re-set the bc values for p and u,v,w just in case init_fluid
   //      over-wrote some of the bc values with ic values
@@ -864,68 +646,15 @@ mfix_level::mfix_set_p0(int lev)
                (*p0_g[lev])[mfi].dataPtr(),
                 &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir);
     }
-}
 
-void mfix_level::WriteEBSurface(int lev) {
-  if (Geom(0).isAllPeriodic()) return;
+ // Here we set a separate periodicity flag for p0 because when we use
+ // pressure drop (delp) boundary conditions we fill all variables *except* p0
+ // periodically
 
-  const Real* dx = Geom(lev).CellSize();
+  IntVect press_per = IntVect(geom[lev].isPeriodic(0),geom[lev].isPeriodic(1),geom[lev].isPeriodic(2));
 
-  BoxArray ba = grids[lev];
+  if (delp_dir > -1) press_per[delp_dir] = 0;
+  p0_periodicity = Periodicity(press_per);
 
-  // This creates the associated Distribution Mapping
-  // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
-
-  MultiFab dummy(ba, dmap[lev], 1, 0, MFInfo(), *ebfactory);
-
-  // // // Deliberately didn't time this loop.
-  for (MFIter mfi(dummy); mfi.isValid(); ++mfi) {
-
-    const auto& sfab = dynamic_cast<EBFArrayBox const&>((dummy)[mfi]);
-    const auto& flag = sfab.getEBCellFlagFab();
-
-    const Box& bx = mfi.validbox();
-
-    if (flag.getType(bx) == FabType::covered or flag.getType(bx) == FabType::regular) continue;
-
-    std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
-    const MultiCutFab* bndrycent;
-
-    areafrac  =  ebfactory->getAreaFrac();
-    bndrycent = &(ebfactory->getBndryCent());
-
-    mfix_eb_to_polygon(dx, bx.loVect(), bx.hiVect(),
-         flag.dataPtr(), flag.loVect(), flag.hiVect(),
-         (*bndrycent)[mfi].dataPtr(),
-         (*bndrycent)[mfi].loVect(), (*bndrycent)[mfi].hiVect(),
-         (*areafrac[0])[mfi].dataPtr(),
-         (*areafrac[0])[mfi].loVect(), (*areafrac[0])[mfi].hiVect(),
-         (*areafrac[1])[mfi].dataPtr(),
-         (*areafrac[1])[mfi].loVect(), (*areafrac[1])[mfi].hiVect(),
-         (*areafrac[2])[mfi].dataPtr(),
-         (*areafrac[2])[mfi].loVect(), (*areafrac[2])[mfi].hiVect());
-  }
-
-  int cpu = ParallelDescriptor::MyProc();
-  int nProcs = ParallelDescriptor::NProcs();
-
-  mfix_write_eb_vtp(&cpu);
-
-  if(ParallelDescriptor::IOProcessor())
-    mfix_write_pvtp(&nProcs);
-
-
-  // // // Deliberately didn't time this loop.
-  for (MFIter mfi(dummy); mfi.isValid(); ++mfi) {
-
-    const auto& sfab = dynamic_cast<EBFArrayBox const&>((dummy)[mfi]);
-    const auto& flag = sfab.getEBCellFlagFab();
-
-    const Box& bx = mfi.validbox();
-
-    if (flag.getType(bx) == FabType::covered or flag.getType(bx) == FabType::regular) continue;
-
-    mfix_eb_grid_coverage(&cpu, dx, bx.loVect(), bx.hiVect(),
-         flag.dataPtr(), flag.loVect(), flag.hiVect());
-  }
+  p0_g[lev]->FillBoundary(p0_periodicity);
 }

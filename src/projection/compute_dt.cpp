@@ -29,10 +29,13 @@ mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state
                gradp0max, geom[lev].CellSize());
     }
 
+    ParallelDescriptor::ReduceRealMax(gradp0max[0]);
+    ParallelDescriptor::ReduceRealMax(gradp0max[1]);
+    ParallelDescriptor::ReduceRealMax(gradp0max[2]);
+
     compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax, 
 		     gradp0max, geom[lev].CellSize(), &cfl, 
 		     &steady_state, &time, &stop_time, &dt_new );
-
 
     if ( fixed_dt )
     {
@@ -50,6 +53,4 @@ mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state
 	    amrex::Abort ("Current dt is smaller than dt_min");
 	
     }
-    
-    
 }

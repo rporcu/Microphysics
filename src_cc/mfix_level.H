@@ -362,7 +362,7 @@ private:
     Real steady_state_tol = 1.0e-5  ;
     
     int call_udf;
-    int dual_grid = 0;
+    bool dual_grid = false;
 
     // enable output_manager during des_time_loop
     bool subdt_io;
@@ -374,6 +374,8 @@ private:
     // Options to control time stepping 
     Real cfl = 0.5;
     int fixed_dt = 0;
+    Real dt_min=0.0;            // Min dt allowed
+    Real dt_max=1.e14;          // Max dt allowed
 
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;

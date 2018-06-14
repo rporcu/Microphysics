@@ -1200,3 +1200,67 @@ void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
         EBTower::Destroy();
     }
 }
+
+void mfix_level::WriteEBSurface(int lev) {
+  if (Geom(0).isAllPeriodic()) return;
+
+  const Real* dx = Geom(lev).CellSize();
+
+  BoxArray ba = grids[lev];
+
+  // This creates the associated Distribution Mapping
+  // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+
+  MultiFab dummy(ba, dmap[lev], 1, 0, MFInfo(), *ebfactory);
+
+  // // // Deliberately didn't time this loop.
+  for (MFIter mfi(dummy); mfi.isValid(); ++mfi) {
+
+    const auto& sfab = dynamic_cast<EBFArrayBox const&>((dummy)[mfi]);
+    const auto& flag = sfab.getEBCellFlagFab();
+
+    const Box& bx = mfi.validbox();
+
+    if (flag.getType(bx) == FabType::covered or flag.getType(bx) == FabType::regular) continue;
+
+    std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
+    const MultiCutFab* bndrycent;
+
+    areafrac  =  ebfactory->getAreaFrac();
+    bndrycent = &(ebfactory->getBndryCent());
+
+    mfix_eb_to_polygon(dx, bx.loVect(), bx.hiVect(),
+         flag.dataPtr(), flag.loVect(), flag.hiVect(),
+         (*bndrycent)[mfi].dataPtr(),
+         (*bndrycent)[mfi].loVect(), (*bndrycent)[mfi].hiVect(),
+         (*areafrac[0])[mfi].dataPtr(),
+         (*areafrac[0])[mfi].loVect(), (*areafrac[0])[mfi].hiVect(),
+         (*areafrac[1])[mfi].dataPtr(),
+         (*areafrac[1])[mfi].loVect(), (*areafrac[1])[mfi].hiVect(),
+         (*areafrac[2])[mfi].dataPtr(),
+         (*areafrac[2])[mfi].loVect(), (*areafrac[2])[mfi].hiVect());
+  }
+
+  int cpu = ParallelDescriptor::MyProc();
+  int nProcs = ParallelDescriptor::NProcs();
+
+  mfix_write_eb_vtp(&cpu);
+
+  if(ParallelDescriptor::IOProcessor())
+    mfix_write_pvtp(&nProcs);
+
+
+  // // // Deliberately didn't time this loop.
+  for (MFIter mfi(dummy); mfi.isValid(); ++mfi) {
+
+    const auto& sfab = dynamic_cast<EBFArrayBox const&>((dummy)[mfi]);
+    const auto& flag = sfab.getEBCellFlagFab();
+
+    const Box& bx = mfi.validbox();
+
+    if (flag.getType(bx) == FabType::covered or flag.getType(bx) == FabType::regular) continue;
+
+    mfix_eb_grid_coverage(&cpu, dx, bx.loVect(), bx.hiVect(),
+         flag.dataPtr(), flag.loVect(), flag.hiVect());
+  }
+}

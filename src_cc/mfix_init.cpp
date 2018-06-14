@@ -15,6 +15,8 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Options to control time stepping
         pp.query("cfl", cfl );
         pp.query("fixed_dt", fixed_dt );
+        pp.query("dt_min", dt_min );
+        pp.query("dt_max", dt_max );
 
         // Option to control MGML behavior
         pp.query( "mg_verbose", mg_verbose );
@@ -49,7 +51,8 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         if (load_balance_type == "KDTree") {
            dual_grid = true;
         } else {
-           dual_grid = false;
+          ParmParse amr_pp("amr");
+          amr_pp.query("dual_grid", dual_grid);
         }
 
         // If subdt_io is true, des_time_loop calls output_manager
@@ -330,144 +333,6 @@ mfix_level::check_data (int lev)
 }
 
 void
-mfix_level::AllocateArrays (int lev)
-{
-    // ********************************************************************************
-    // Cell- or node-based arrays
-    // ********************************************************************************
-
-    // Void fraction
-    ep_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    ep_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    ep_g[lev]->setVal(1.0);
-    ep_go[lev]->setVal(1.0);
-
-    // Gas density
-    ro_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    ro_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    ro_g[lev]->setVal(0.);
-    ro_go[lev]->setVal(0.);
-
-    // Gas bulk density
-    rop_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    rop_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    rop_g[lev]->setVal(0.);
-    rop_go[lev]->setVal(0.);
-
-    if (nodal_pressure)
-    {
-       const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
-
-       p0_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
-        p_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
-       p_go[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
-       pp_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
-        phi[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
-      diveu[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
-
-    } else {
-
-       p0_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-        p_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-       p_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-       pp_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-        phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-      diveu[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-
-    }
-
-     p0_g[lev]->setVal(0.);
-      p_g[lev]->setVal(0.);
-     p_go[lev]->setVal(0.);
-     pp_g[lev]->setVal(0.);
-      phi[lev]->setVal(0.);
-    diveu[lev]->setVal(0.);
-
-    // Molecular viscosity
-    mu_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    mu_g[lev]->setVal(0.);
-
-    // Coefficient of grad(div(u)) in viscous terms
-    lambda_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    lambda_g[lev]->setVal(0.);
-
-    // Div(u)
-    trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    trD_g[lev]->setVal(0.);
-
-    // Vorticity
-    vort[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    vort[lev]->setVal(0.);
-
-    // Current velocity
-    vel_g[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost));
-    vel_g[lev]->setVal(0.);
- 
-    // Old velocity
-    vel_go[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
-    vel_go[lev]->setVal(0.);
- 
-    // acceleration terms
-    acc[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
-    acc[lev] -> setVal(0.);
- 
-    // Slopes in x-direction
-    xslopes[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
-    xslopes[lev] -> setVal(0.);
- 
-    // Slopes in y-direction
-    yslopes[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
-    yslopes[lev] -> setVal(0.);
- 
-    // Slopes in z-direction
-    zslopes[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
-    zslopes[lev] -> setVal(0.);
- 
-    // This is the deposition onto the grid of the beta coefficient
-    // for fluid vel in the expression beta*(fluid_vel _ particle_vel)
-    // Note this only needs one component since all velocity components are co-located
-    f_gds[lev].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost));
-    f_gds[lev]->setVal(0.);
- 
-    // This is the deposition onto the grid of the drag term experienced by the particle
-    drag[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
-    drag[lev]->setVal(0.);
-
-    // ********************************************************************************
-    // X-face-based arrays
-    // ********************************************************************************
-
-    if (nodal_pressure)
-    {
-
-       bcoeff[lev][0].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost));
-       bcoeff[lev][1].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost));
-       bcoeff[lev][2].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost));
-
-    } else {
-
-       // Create a BoxArray on x-faces.
-       BoxArray x_edge_ba = grids[lev];
-       x_edge_ba.surroundingNodes(0);
-       bcoeff[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-
-       // Create a BoxArray on y-faces.
-       BoxArray y_edge_ba = grids[lev];
-       y_edge_ba.surroundingNodes(1);
-       bcoeff[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-
-       // Create a BoxArray on y-faces.
-       BoxArray z_edge_ba = grids[lev];
-       z_edge_ba.surroundingNodes(2);
-       bcoeff[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    }
-
-    bcoeff[lev][0]->setVal(0.);
-    bcoeff[lev][1]->setVal(0.);
-    bcoeff[lev][2]->setVal(0.);
-}
-
-void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
 
@@ -618,16 +483,11 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
   // Here we set bc values for p and u,v,w before the IC's are set
   mfix_set_bc0(lev);
 
-  int delp_dir;
-  set_delp_dir(&delp_dir);
-
   // We deliberately don't tile this loop since we will be looping
   //    over bc's on faces and it makes more sense to do this one grid at a time
-  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
+  for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) {
 
-    // Cell-centered tilebox
     const Box& bx = mfi.validbox();
-
     const Box& sbx = (*ep_g[lev])[mfi].box();
 
     if ( is_restarting ) {
@@ -646,25 +506,9 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
            (*mu_g[lev])[mfi].dataPtr(),  (*lambda_g[lev])[mfi].dataPtr(),
            &dx, &dy, &dz, &xlen, &ylen, &zlen);
     }
-
-      set_p0(bx.loVect(),  bx.hiVect(),
-             domain.loVect(), domain.hiVect(),
-             BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
-             &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
-             bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-	     bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-	     bc_klo.dataPtr(), bc_khi.dataPtr(),
-	     &nghost, &nodal_pressure );
   }
 
- // Here we set a separate periodicity flag for p0_g because when we use
- // pressure drop (delp) boundary conditions we fill all variables *except* p0
- // periodically
-  IntVect press_per = IntVect(geom[lev].isPeriodic(0),geom[lev].isPeriodic(1),geom[lev].isPeriodic(2));
-  if (delp_dir > -1) press_per[delp_dir] = 0;
-  p0_periodicity = Periodicity(press_per);
-
-  p0_g[lev]->FillBoundary(p0_periodicity);
+  mfix_set_p0(lev);
 
   // Here we re-set the bc values for p and u,v,w just in case init_fluid
   //      over-wrote some of the bc values with ic values
@@ -744,66 +588,48 @@ mfix_level::mfix_set_bc0(int lev)
   vel_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
-void mfix_level::WriteEBSurface(int lev) {
-  if (Geom(0).isAllPeriodic()) return;
+void
+mfix_level::mfix_set_p0(int lev)
+{
+  Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+  Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+  Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
 
-  const Real* dx = Geom(lev).CellSize();
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
 
-  BoxArray ba = grids[lev];
+  Box domain(geom[lev].Domain());
 
-  // This creates the associated Distribution Mapping
-  // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+  int delp_dir;
+  set_delp_dir(&delp_dir);
 
-  MultiFab dummy(ba, dmap[lev], 1, 0, MFInfo(), *ebfactory);
-
-  // // // Deliberately didn't time this loop.
-  for (MFIter mfi(dummy); mfi.isValid(); ++mfi) {
-
-    const auto& sfab = dynamic_cast<EBFArrayBox const&>((dummy)[mfi]);
-    const auto& flag = sfab.getEBCellFlagFab();
-
-    const Box& bx = mfi.validbox();
-
-    if (flag.getType(bx) == FabType::covered or flag.getType(bx) == FabType::regular) continue;
-
-    std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
-    const MultiCutFab* bndrycent;
-
-    areafrac  =  ebfactory->getAreaFrac();
-    bndrycent = &(ebfactory->getBndryCent());
-
-    mfix_eb_to_polygon(dx, bx.loVect(), bx.hiVect(),
-         flag.dataPtr(), flag.loVect(), flag.hiVect(),
-         (*bndrycent)[mfi].dataPtr(),
-         (*bndrycent)[mfi].loVect(), (*bndrycent)[mfi].hiVect(),
-         (*areafrac[0])[mfi].dataPtr(),
-         (*areafrac[0])[mfi].loVect(), (*areafrac[0])[mfi].hiVect(),
-         (*areafrac[1])[mfi].dataPtr(),
-         (*areafrac[1])[mfi].loVect(), (*areafrac[1])[mfi].hiVect(),
-         (*areafrac[2])[mfi].dataPtr(),
-         (*areafrac[2])[mfi].loVect(), (*areafrac[2])[mfi].hiVect());
-  }
-
-  int cpu = ParallelDescriptor::MyProc();
-  int nProcs = ParallelDescriptor::NProcs();
-
-  mfix_write_eb_vtp(&cpu);
-
-  if(ParallelDescriptor::IOProcessor())
-    mfix_write_pvtp(&nProcs);
-
-
-  // // // Deliberately didn't time this loop.
-  for (MFIter mfi(dummy); mfi.isValid(); ++mfi) {
-
-    const auto& sfab = dynamic_cast<EBFArrayBox const&>((dummy)[mfi]);
-    const auto& flag = sfab.getEBCellFlagFab();
+  // We deliberately don't tile this loop since we will be looping
+  //    over bc's on faces and it makes more sense to do this one grid at a time
+  for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) 
+  {
 
     const Box& bx = mfi.validbox();
+    const Box& sbx = (*ep_g[lev])[mfi].box();
 
-    if (flag.getType(bx) == FabType::covered or flag.getType(bx) == FabType::regular) continue;
-
-    mfix_eb_grid_coverage(&cpu, dx, bx.loVect(), bx.hiVect(),
-         flag.dataPtr(), flag.loVect(), flag.hiVect());
+    set_p0(bx.loVect(),  bx.hiVect(),
+           domain.loVect(), domain.hiVect(),
+           BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
+           &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
+           bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+           bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+           bc_klo.dataPtr(), bc_khi.dataPtr(),
+           &nghost, &nodal_pressure );
   }
+
+ // Here we set a separate periodicity flag for p0_g because when we use
+ // pressure drop (delp) boundary conditions we fill all variables *except* p0
+ // periodically
+
+  IntVect press_per = IntVect(geom[lev].isPeriodic(0),geom[lev].isPeriodic(1),geom[lev].isPeriodic(2));
+
+  if (delp_dir > -1) press_per[delp_dir] = 0;
+  p0_periodicity = Periodicity(press_per);
+
+  p0_g[lev]->FillBoundary(p0_periodicity);
 }
