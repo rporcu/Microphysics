@@ -272,7 +272,7 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 //
 //  1. Compute
 //
-//     vel_g = vel_go + dt * (R_u^* + R_u^n - gradp*(1/rho)) / 2
+//     vel_g = vel_go + dt * ((R_u^* + R_u^n) / 2 - gradp*(1/rho))
 //
 //     where the starred variables are computed using "predictor-step" variables.
 //
