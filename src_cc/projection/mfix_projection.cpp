@@ -662,7 +662,7 @@ mfix_level::solve_poisson_equation (  int lev,
 	
        solver.setMaxIter (mg_max_iter);
        solver.setMaxFmgIter (mg_max_fmg_iter);
-       solver.setVerbose (2);
+       solver.setVerbose (mg_verbose);
        solver.setCGVerbose (mg_cg_verbose);
        solver.setCGMaxIter (mg_cg_maxiter);
 

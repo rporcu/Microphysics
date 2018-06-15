@@ -43,39 +43,32 @@ std::string par_ascii_file {"par"};
 
 void ReadParameters ()
 {
-  // Traditionally, max_step and stop_time do not have prefix.
   {
-    ParmParse pp;
-    pp.query("max_step", max_step);
+     ParmParse pp("amr");
+
+     pp.query("stop_time", stop_time);
+     pp.query("max_step", max_step);
+
+     pp.add("blocking_factor",1);
+
+     pp.query("check_file", check_file);
+     pp.query("check_int", check_int);
+
+     pp.query("plot_file", plot_file);
+     pp.query("plot_int", plot_int);
+
+     pp.query("plotfile_on_restart", plotfile_on_restart);
+
+     pp.query("par_ascii_file", par_ascii_file);
+     pp.query("par_ascii_int", par_ascii_int);
+
+     pp.query("restart", restart_file);
+     pp.query("repl_x", repl_x);
+     pp.query("repl_y", repl_y);
+     pp.query("repl_z", repl_z);
+     pp.query("verbose", verbose);
+     pp.query("regrid_int",regrid_int);
   }
-
-  // Traditionally, these have prefix "amr", but we will give them prefix mfix
-  // to make it clear that they affect the behavior of the solver and not amr
-  // (even thought they are read via AMReX)
-  ParmParse pp("amr");
-
-  pp.query("stop_time", stop_time);
-
-  pp.add("blocking_factor",1);
-
-  pp.query("check_file", check_file);
-  pp.query("check_int", check_int);
-
-  pp.query("plot_file", plot_file);
-  pp.query("plot_int", plot_int);
-
-  pp.query("plotfile_on_restart", plotfile_on_restart);
-
-  pp.query("par_ascii_file", par_ascii_file);
-  pp.query("par_ascii_int", par_ascii_int);
-
-  pp.query("restart", restart_file);
-  pp.query("repl_x", repl_x);
-  pp.query("repl_y", repl_y);
-  pp.query("repl_z", repl_z);
-  pp.query("verbose", verbose);
-
-  pp.query("regrid_int",regrid_int);
 
   {
      ParmParse pp("mfix");
@@ -178,8 +171,8 @@ int main (int argc, char* argv[])
 
         // This call checks if we want to regrid using the max_grid_size just
         // read in from the inputs file used to restart (only relevant if
-        // load_balance_type = "FixedSize" or "KnapSack") Note that this call
-        // does not depend on regrid_int
+        // load_balance_type = "FixedSize" or "KnapSack"). Note that this call
+        // does not depend on regrid_int.
         my_mfix.RegridOnRestart(lev);
     }
 
@@ -242,13 +235,16 @@ int main (int argc, char* argv[])
        last_par_ascii = nstep;
     }
 
+    bool do_not_evolve =  !steady_state && (
+                     ( (stop_time >= 0.) && (time >  stop_time) ) ||
+                     ( (stop_time <= 0.) && (max_step <= 0) ) );
 
     { // Start profiling solve here
 
         BL_PROFILE("mfix_solve");
         BL_PROFILE_REGION("mfix_solve");
 
-        if ( steady_state || (time <  stop_time) )
+        if ( !do_not_evolve)
         {
             while (finish == 0)
             {
@@ -296,7 +292,10 @@ int main (int argc, char* argv[])
                     my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
                 // Mechanism to terminate MFIX normally.
-                if (steady_state || (time + 0.1*dt >= stop_time)) finish = 1;
+                do_not_evolve =  steady_state || (
+                     ( (stop_time >= 0.) && (time+0.1*dt >= stop_time) ) ||
+                     ( max_step >= 0 && nstep >= max_step ) );
+                if ( do_not_evolve ) finish = 1;
             }
         }
     }

@@ -91,8 +91,10 @@ contains
       dt = min ( dt, 1.01*old_dt )
 
       ! Don't overshoot the final time if not running to steady state
-      if ( (steady_state .eq. 0) .and. (time+dt .gt. stop_time) )&
-        dt = stop_time - time
+      if (steady_state .eq. 0 .and. stop_time .ge. 0.) then
+        if (time+dt .gt. stop_time) &
+           dt = stop_time - time
+      end if
 
    end subroutine compute_new_dt
 
