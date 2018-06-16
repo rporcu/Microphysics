@@ -865,14 +865,13 @@ contains
                diveu(i,j,k) = (eu_e - eu_w) * odx + (ev_n - ev_s) * ody + &
                     &         (ew_t - ew_b) * odz
 
-
             end do
          end do
       end do
 
    end subroutine compute_diveucc
 
-   subroutine compute_diveund ( lo, hi, diveu, slo, shi, ep_g, vel, ulo, uhi, dx) &
+   subroutine compute_diveund ( lo, hi, diveu, slo, shi, vec, ulo, uhi, dx) &
       bind(C)
 
       ! Loop bounds
@@ -890,8 +889,7 @@ contains
            diveu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(ar),       intent(in   ) :: &
-           vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3), &
-          ep_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+           vec(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
 
       ! Local variables
       integer  :: i, j, k
@@ -908,34 +906,24 @@ contains
             do i = lo(1), hi(1)
 
                ! Divergence
-               eu_x = ( ep_g(i  ,j  ,k  ) * vel(i  ,j  ,k  ,1) &
-                       +ep_g(i  ,j-1,k  ) * vel(i  ,j-1,k  ,1) &
-                       +ep_g(i  ,j  ,k-1) * vel(i  ,j  ,k-1,1) &
-                       +ep_g(i  ,j-1,k-1) * vel(i  ,j-1,k-1,1) &
-                       -ep_g(i-1,j  ,k  ) * vel(i-1,j  ,k  ,1) &
-                       -ep_g(i-1,j-1,k  ) * vel(i-1,j-1,k  ,1) &
-                       -ep_g(i-1,j  ,k-1) * vel(i-1,j  ,k-1,1) &
-                       -ep_g(i-1,j-1,k-1) * vel(i-1,j-1,k-1,1) )
+               eu_x = ( vec(i  ,j  ,k  ,1) + vec(i  ,j-1,k  ,1) &
+                       +vec(i  ,j  ,k-1,1) + vec(i  ,j-1,k-1,1) &
+                       -vec(i-1,j  ,k  ,1) - vec(i-1,j-1,k  ,1) &
+                       -vec(i-1,j  ,k-1,1) - vec(i-1,j-1,k-1,1) )
 
-               eu_y = ( ep_g(i  ,j  ,k  ) * vel(i  ,j  ,k  ,2) &
-                       +ep_g(i-1,j  ,k  ) * vel(i-1,j  ,k  ,2) &
-                       +ep_g(i  ,j  ,k-1) * vel(i  ,j  ,k-1,2) &
-                       +ep_g(i-1,j  ,k-1) * vel(i-1,j  ,k-1,2) &
-                       -ep_g(i  ,j-1,k  ) * vel(i  ,j-1,k  ,2) &
-                       -ep_g(i-1,j-1,k  ) * vel(i-1,j-1,k  ,2) &
-                       -ep_g(i  ,j-1,k-1) * vel(i  ,j-1,k-1,2) &
-                       -ep_g(i-1,j-1,k-1) * vel(i-1,j-1,k-1,2) )
+               eu_y = ( vec(i  ,j  ,k  ,2) + vec(i-1,j  ,k  ,2) &
+                       +vec(i  ,j  ,k-1,2) + vec(i-1,j  ,k-1,2) &
+                       -vec(i  ,j-1,k  ,2) - vec(i-1,j-1,k  ,2) &
+                       -vec(i  ,j-1,k-1,2) - vec(i-1,j-1,k-1,2) )
 
-               eu_z = ( ep_g(i  ,j  ,k  ) * vel(i  ,j  ,k  ,3) &
-                       +ep_g(i-1,j  ,k  ) * vel(i-1,j  ,k  ,3) &
-                       +ep_g(i  ,j-1,k  ) * vel(i  ,j-1,k  ,3) &
-                       +ep_g(i-1,j-1,k  ) * vel(i-1,j-1,k  ,3) &
-                       -ep_g(i  ,j  ,k-1) * vel(i  ,j  ,k-1,3) &
-                       -ep_g(i-1,j  ,k-1) * vel(i-1,j  ,k-1,3) &
-                       -ep_g(i  ,j-1,k-1) * vel(i  ,j-1,k-1,3) &
-                       -ep_g(i-1,j-1,k-1) * vel(i-1,j-1,k-1,3) )
+               eu_z = ( vec(i  ,j  ,k  ,3) + vec(i-1,j  ,k  ,3) &
+                       +vec(i  ,j-1,k  ,3) + vec(i-1,j-1,k  ,3) &
+                       -vec(i  ,j  ,k-1,3) - vec(i-1,j  ,k-1,3) &
+                       -vec(i  ,j-1,k-1,3) - vec(i-1,j-1,k-1,3) )
 
                 diveu(i,j,k) = 0.25d0 * (eu_x*odx + eu_y*ody + eu_z*odz)
+
+!               if (i.eq.0) print *,'DIVEU ',j,k,diveu(i,j,k), eu_x, eu_y, eu_z
 
             end do
          end do

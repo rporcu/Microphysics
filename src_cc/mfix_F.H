@@ -63,7 +63,7 @@ extern "C"
 
     void set_bc0(
         const int* slo, const int* shi,
-        amrex::Real* vel_g, amrex::Real* ep_g,
+        amrex::Real* ep_g,
         amrex::Real* ro_g,  amrex::Real* rop_g,
         amrex::Real* mu_g,  amrex::Real* lambda_g,
 	const int* bc_ilo, const int* bc_ihi,
@@ -109,6 +109,15 @@ extern "C"
 	const int* bc_klo, const int* bc_khi,
 	const int* domlo , const int* domhi,
         const int* ng, const int* extrap_dir_bcs
+       );
+
+    void set_vec_bcs (
+        amrex::Real* vec, const int* ulo, const int* uhi,
+	const int* bc_ilo, const int* bc_ihi,
+	const int* bc_jlo, const int* bc_jhi,
+	const int* bc_klo, const int* bc_khi,
+	const int* domlo , const int* domhi,
+        const int* ng
        );
 
     void flip_particle_vol(const int* slo, const int* shi,

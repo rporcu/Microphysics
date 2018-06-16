@@ -10,7 +10,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine set_bc0(slo, shi, &
-                      vel_g, ep_g, ro_g, rop_g, mu_g, lambda_g, &
+                      ep_g, ro_g, rop_g, mu_g, lambda_g, &
                       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
                       bc_klo_type, bc_khi_type, domlo, domhi, ng, nodal_pressure) &
       bind(C, name="set_bc0")
@@ -34,8 +34,6 @@
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
       integer(c_int), intent(in   ) :: ng, nodal_pressure
 
-      real(rt), intent(inout) ::  vel_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
       real(rt), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(rt), intent(inout) :: ro_g&
@@ -99,12 +97,6 @@
                       mu_g(slo(1):domlo(1)-1,j,k) = bc_mu_g
                   lambda_g(slo(1):domlo(1)-1,j,k) = bc_lambda_g
 
-               else if (bc_ilo_type(j,k,1) == MINF_) then
-
-                   vel_g(slo(1):domlo(1)-1,j,k,1) = bc_u_g(bcv)
-                   vel_g(slo(1):domlo(1)-1,j,k,2) = 0.0d0
-                   vel_g(slo(1):domlo(1)-1,j,k,3) = 0.0d0
-
                end if
 
             end do
@@ -136,12 +128,6 @@
                        rop_g(domhi(1)+1:shi(1),j,k) = bc_ro_g*bc_ep_g(bcv)
                         mu_g(domhi(1)+1:shi(1),j,k) = bc_mu_g
                     lambda_g(domhi(1)+1:shi(1),j,k) = bc_lambda_g
-
-               else if (bc_ihi_type(j,k,1) == MINF_) then
-
-                   vel_g(domhi(1)+1:shi(1),j,k,1) = bc_u_g(bcv)
-                   vel_g(domhi(1)+1:shi(1),j,k,2) = 0.0d0
-                   vel_g(domhi(1)+1:shi(1),j,k,3) = 0.0d0
 
                end if
 
@@ -175,12 +161,6 @@
                       mu_g(i,slo(2):domlo(2)-1,k) = bc_mu_g
                   lambda_g(i,slo(2):domlo(2)-1,k) = bc_lambda_g
 
-               else if (bc_jlo_type(i,k,1) == MINF_) then
-
-                   vel_g(i,slo(2):domlo(2)-1,k,1) = 0.0d0
-                   vel_g(i,slo(2):domlo(2)-1,k,2) = bc_v_g(bcv)
-                   vel_g(i,slo(2):domlo(2)-1,k,3) = 0.0d0
-
                end if
 
             end do
@@ -212,12 +192,6 @@
                      rop_g(i,domhi(2)+1:shi(2),k) = bc_ro_g*bc_ep_g(bcv)
                       mu_g(i,domhi(2)+1:shi(2),k) = bc_mu_g
                   lambda_g(i,domhi(2)+1:shi(2),k) = bc_lambda_g
-
-               else if (bc_jhi_type(i,k,1) == MINF_) then
-
-                   vel_g(i,domhi(2)+1:shi(2),k,1) = 0.0d0
-                   vel_g(i,domhi(2)+1:shi(2),k,2) = bc_v_g(bcv)
-                   vel_g(i,domhi(2)+1:shi(2),k,3) = 0.0d0
 
                end if
 
@@ -251,12 +225,6 @@
                        mu_g(i,j,slo(3):domlo(3)-1) = bc_mu_g
                    lambda_g(i,j,slo(3):domlo(3)-1) = bc_lambda_g
 
-               else if (bc_klo_type(i,j,1) == MINF_) then
-
-                   vel_g(i,j,slo(3):domlo(3)-1,1) = 0.0d0
-                   vel_g(i,j,slo(3):domlo(3)-1,2) = 0.0d0
-                   vel_g(i,j,slo(3):domlo(3)-1,3) = bc_w_g(bcv)
-
                end if
 
             end do
@@ -288,12 +256,6 @@
                       rop_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g*bc_ep_g(bcv)
                        mu_g(i,j,domhi(3)+1:shi(3)) = bc_mu_g
                    lambda_g(i,j,domhi(3)+1:shi(3)) = bc_lambda_g
-
-               else if (bc_khi_type(i,j,1) == MINF_) then
-
-                   vel_g(i,j,domhi(3)+1:shi(3),1) = 0.0d0
-                   vel_g(i,j,domhi(3)+1:shi(3),2) = 0.0d0
-                   vel_g(i,j,domhi(3)+1:shi(3),3) = bc_w_g(bcv)
 
                end if
 

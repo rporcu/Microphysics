@@ -570,7 +570,7 @@ mfix_level::mfix_set_bc0(int lev)
       const Box& sbx = (*ep_g[lev])[mfi].box();
 
       set_bc0(sbx.loVect(), sbx.hiVect(),
-              (*vel_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+              (*ep_g[lev])[mfi].dataPtr(),
                (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
                (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
@@ -584,6 +584,10 @@ mfix_level::mfix_set_bc0(int lev)
   fill_mf_bc(lev,*ep_g[lev]);
   fill_mf_bc(lev,*ro_g[lev]);
   fill_mf_bc(lev,*rop_g[lev]);
+
+  // Put velocity Dirichlet bc's on faces
+  int extrap_dir_bcs = 0;
+  mfix_set_velocity_bcs(lev, extrap_dir_bcs);
 
   vel_g[lev]->FillBoundary(geom[lev].periodicity());
 }

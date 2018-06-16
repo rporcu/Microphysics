@@ -80,6 +80,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
 	mfix_compute_diveu (lev);
 	
+	amrex::Print() << "At start of evolve \n";
 	amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
 
 	// Calculate drag coefficient
@@ -90,13 +91,12 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	mfix_apply_corrector ( lev, dt );
 
 	// Print info about correction step
-	amrex::Print() << "\nAfter corrector step:\n";
-	
-	mfix_print_max_vel (lev);
-
-	mfix_compute_diveu (lev);
-	
-	amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+        {
+	    amrex::Print() << "\nAfter corrector step:\n";
+    	    mfix_print_max_vel (lev);
+    	    mfix_compute_diveu (lev);
+	    amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+        }
 	    
 	// 
         // Check whether to exit the loop or not
@@ -120,7 +120,9 @@ mfix_level::mfix_project_velocity (int lev)
 {
     // Project velocity field to make sure initial velocity is divergence-free
     Real dummy_dt = 1.0;
+    std::cout << "CALLING INITIAL PROJECTION " << std::endl;
     mfix_apply_projection ( lev, dummy_dt );
+    std::cout << "DONE WITH INITIAL PROJECTION " << std::endl;
 }
 
 void
@@ -172,9 +174,12 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
        // Exchange halo nodes and apply BCs
        mfix_set_velocity_bcs (lev,0);
 
-       mfix_print_max_vel (lev);
-       mfix_compute_diveu (lev);
-       amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+       {
+           amrex::Print() << "After projection in initial_iterations \n";
+           mfix_print_max_vel (lev);
+           mfix_compute_diveu (lev);
+           amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+       }
 
        // Replace vel_g by the original values 
        MultiFab::Copy (*vel_g[lev], *vel_go[lev],   0, 0, 3, vel_g[lev]->nGrow());
@@ -741,16 +746,34 @@ mfix_level::mfix_compute_diveu (int lev)
 {
     Box domain(geom[lev].Domain());
 
-    vel_g[lev] -> FillBoundary (geom[lev].periodicity());
-
-    // Extrapolate Dirichlet values to ghost cells
-    int extrap_dir_bcs = 1;
-    mfix_set_velocity_bcs (lev,extrap_dir_bcs);
-
-    fill_mf_bc (lev,*ep_g[lev]);
-    
     if (nodal_pressure == 1)
     {
+
+       // Create a temporary multifab to hold (ep_g * vel_g)
+       MultiFab vec(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(), vel_g[lev]->nComp(), vel_g[lev]->nGrow());
+
+       // Fill it with (ep_g * vel_g)
+       vec.copy(*vel_g[lev],0,0,vel_g[lev]->nComp(),vel_g[lev]->nGrow(),vel_g[lev]->nGrow());
+       MultiFab::Multiply(vec,(*ep_g[lev]),0,0,1,1);
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+      // Extrapolate Dirichlet values to ghost cells -- but do it differently in that 
+      //  no-slip walls are treated exactly like slip walls -- this is only relevant
+      //  when going into the projection
+      for (MFIter mfi(vec, true); mfi.isValid(); ++mfi)
+        {
+          set_vec_bcs ( BL_TO_FORTRAN_ANYD(vec[mfi]),
+                        bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                        bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                        bc_klo.dataPtr(), bc_khi.dataPtr(),
+                        domain.loVect(), domain.hiVect(),
+                        &nghost);
+        }
+
+        vec.FillBoundary (geom[lev].periodicity());
+    
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -761,11 +784,16 @@ mfix_level::mfix_compute_diveu (int lev)
 	
 	   compute_diveund ( BL_TO_FORTRAN_BOX(bx),
 			     BL_TO_FORTRAN_ANYD((*diveu[lev])[mfi]),
-			     (*ep_g[lev])[mfi].dataPtr (),
-			     BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+			     BL_TO_FORTRAN_ANYD(vec[mfi]),
 	                     geom[lev].CellSize());
        }
+
     } else {
+
+    int extrap_dir_bcs = 1;
+    mfix_set_velocity_bcs (lev,extrap_dir_bcs);
+    vel_g[lev]->FillBoundary (geom[lev].periodicity());
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -782,7 +810,7 @@ mfix_level::mfix_compute_diveu (int lev)
     }
 
     // Restore velocities to carry Dirichlet values on faces
-    extrap_dir_bcs = 0;
+    int extrap_dir_bcs = 0;
     mfix_set_velocity_bcs (lev,extrap_dir_bcs);
 }
 

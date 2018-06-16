@@ -109,8 +109,7 @@ extern "C"
     void compute_diveund (
         const int* lo,  const int*  hi,
               amrex::Real* diveu,  const int* slo, const int* shi,
-        const amrex::Real* ep_g,
-        const amrex::Real* vel,    const int* ulo, const int* uhi,
+        const amrex::Real* vec,    const int* ulo, const int* uhi,
 	const amrex::Real* dx);
     
     void set_poisson_solver_bcs (

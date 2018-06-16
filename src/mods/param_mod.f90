@@ -42,6 +42,7 @@ module param
       real(rt), parameter :: zero = 0.0d0
       real(rt), parameter :: half = 0.5d0
       real(rt), parameter :: one  = 1.0d0
+      real(rt), parameter :: two  = 2.0d0
 
       interface is_defined
          module procedure is_defined_db
