@@ -74,14 +74,12 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
         mfix_apply_predictor ( lev, dt );
 
 	// Print info about predictor step
-	amrex::Print() << "\nAfter predictor step:\n";
-	
-	mfix_print_max_vel (lev);
-
-	mfix_compute_diveu (lev);
-	
-	amrex::Print() << "At start of evolve \n";
-	amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+        {
+	    amrex::Print() << "\nAfter predictor step:\n";
+    	    mfix_print_max_vel (lev);
+    	    mfix_compute_diveu (lev);
+	    amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+        }
 
 	// Calculate drag coefficient
 	if (solve_dem)
@@ -90,7 +88,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	// Corrector step 
 	mfix_apply_corrector ( lev, dt );
 
-	// Print info about correction step
+	// Print info about corrector step
         {
 	    amrex::Print() << "\nAfter corrector step:\n";
     	    mfix_print_max_vel (lev);
