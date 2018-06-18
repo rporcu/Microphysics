@@ -451,7 +451,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
 
        if (nodal_pressure)
        {
-          const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+          const BoxArray & nd_grids = amrex::convert(pba, IntVect{1,1,1});
 
            p_g_pba.reset(new MultiFab(nd_grids,pdm, p_g[lev]->nComp(), p_g[lev]->nGrow()));
           p0_g_pba.reset(new MultiFab(nd_grids,pdm,p0_g[lev]->nComp(),p0_g[lev]->nGrow()));
