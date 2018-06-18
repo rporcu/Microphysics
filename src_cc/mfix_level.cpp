@@ -445,13 +445,29 @@ mfix_level::mfix_calc_drag_particle(int lev)
        }
 
        // Temporary arrays
+
+       std::unique_ptr<MultiFab>  p_g_pba;
+       std::unique_ptr<MultiFab> p0_g_pba;
+
+       if (nodal_pressure)
+       {
+          const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+
+           p_g_pba.reset(new MultiFab(nd_grids,pdm, p_g[lev]->nComp(), p_g[lev]->nGrow()));
+          p0_g_pba.reset(new MultiFab(nd_grids,pdm,p0_g[lev]->nComp(),p0_g[lev]->nGrow()));
+
+       } else {
+
+           p_g_pba.reset(new MultiFab(pba,pdm, p_g[lev]->nComp(), p_g[lev]->nGrow()));
+          p0_g_pba.reset(new MultiFab(pba,pdm,p0_g[lev]->nComp(),p0_g[lev]->nGrow()));
+
+       } 
+
        int ng = p_g[lev]->nGrow();
-       std::unique_ptr<MultiFab> p_g_pba(new MultiFab(pba,pdm,p_g[lev]->nComp(),ng));
        p_g_pba->copy(*p_g[lev],0,0,1,ng,ng);
        p_g_pba->FillBoundary(geom[lev].periodicity());
 
        ng = p0_g[lev]->nGrow();
-       std::unique_ptr<MultiFab> p0_g_pba(new MultiFab(pba,pdm,p0_g[lev]->nComp(),ng));
        p0_g_pba->copy(*p0_g[lev],0,0,1,ng,ng);
        p0_g_pba->FillBoundary(p0_periodicity);
 
