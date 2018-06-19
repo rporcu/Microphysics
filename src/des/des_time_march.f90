@@ -56,7 +56,7 @@ contains
 
       ! Initialize time stepping variables 
       if ( dt >= dtsolid ) then
-          nsubsteps = idnint ( dt / dtsolid )
+          nsubsteps = ceiling ( real ( dt / dtsolid ) )
           subdt     =  dt / nsubsteps
       else
           nsubsteps = 1
