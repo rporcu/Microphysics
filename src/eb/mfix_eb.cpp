@@ -22,7 +22,6 @@
 //#include <sstream>
 
 #include <algorithm>
-//#include <eb_levelset.H>
 #include <AMReX_EB_levelset.H>
 #include <mfix_level.H>
 #include <mfix_eb_F.H>
