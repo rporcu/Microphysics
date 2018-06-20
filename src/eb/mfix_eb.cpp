@@ -22,7 +22,8 @@
 //#include <sstream>
 
 #include <algorithm>
-#include <eb_levelset.H>
+//#include <eb_levelset.H>
+#include <AMReX_EB_levelset.H>
 #include <mfix_level.H>
 #include <mfix_eb_F.H>
 
@@ -164,17 +165,22 @@ mfix_level::make_eb_geometry(int lev)
 
     EBTower::Build();
 
-    ebfactory          = std::unique_ptr<EBFArrayBoxFactory>(
-                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
-                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                         m_eb_support_level));
+    ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
+            new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                m_eb_support_level
+            )
+        );
 
     particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
-			 new EBFArrayBoxFactory(geom[lev], level_set->get_eb_ba(), level_set->get_eb_dm(),
-                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                         m_eb_support_level));
+            new EBFArrayBoxFactory(
+                pc->Geom(lev), pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
+                {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                m_eb_support_level
+            )
+        );
 
-    eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
+    eb_normals = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
 
 
@@ -275,17 +281,22 @@ mfix_level::make_eb_hourglass(int lev)
 
     EBTower::Build();
 
-    ebfactory          = std::unique_ptr<EBFArrayBoxFactory>(
-                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
-                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                         m_eb_support_level));
+    ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
+            new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                m_eb_support_level
+            )
+        );
 
     particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
-			 new EBFArrayBoxFactory(geom[lev], level_set->get_eb_ba(), level_set->get_eb_dm(),
-                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                         m_eb_support_level));
+            new EBFArrayBoxFactory(
+                pc->Geom(lev), pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
+                {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                m_eb_support_level
+            )
+        );
 
-    eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
+    eb_normals = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
 
 
@@ -499,17 +510,22 @@ mfix_level::make_eb_clr(int lev)
 
     EBTower::Build();
 
-    ebfactory          = std::unique_ptr<EBFArrayBoxFactory>(
-                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
-                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                         m_eb_support_level));
+    ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
+            new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                m_eb_support_level
+            )
+        );
 
     particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
-			 new EBFArrayBoxFactory(geom[lev], level_set->get_eb_ba(), level_set->get_eb_dm(),
-                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                         m_eb_support_level));
+            new EBFArrayBoxFactory(
+                pc->Geom(lev), pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
+                {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                m_eb_support_level
+            )
+        );
 
-    eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
+    eb_normals = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
 
 
@@ -630,17 +646,22 @@ mfix_level::make_eb_clr_riser(int lev)
 
     EBTower::Build();
 
-    ebfactory          = std::unique_ptr<EBFArrayBoxFactory>(
-                         new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
-                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                         m_eb_support_level));
+    ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
+            new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                m_eb_support_level
+            )
+        );
 
     particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
-			 new EBFArrayBoxFactory(geom[lev], level_set->get_eb_ba(), level_set->get_eb_dm(),
-                         {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                         m_eb_support_level));
+            new EBFArrayBoxFactory(
+                pc->Geom(lev), pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
+                {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                m_eb_support_level
+            )
+        );
 
-    eb_normals         = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
+    eb_normals = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
 
 
@@ -917,7 +938,7 @@ std::unique_ptr<BaseIF> mfix_level::make_cylinder(int dir, Real radius, Real len
     // Define temporary level-sets used for constructing the cylinder:
     LSFactory ls_cylinder(* level_set);
 
-    Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder);
+    Geometry geom_eb = LSUtility::make_eb_geometry(ls_cylinder, geom[lev]);
 
     // Define the EBIS first using only the walls...
     AMReX_EBIS::instance()->define(geom_eb.Domain(),
@@ -949,7 +970,8 @@ std::unique_ptr<BaseIF> mfix_level::make_cylinder(int dir, Real radius, Real len
     //          => define the level set as the (signed) distance to the closest
     //             point on the EB-facets
     int eb_grow = level_set->get_eb_pad();
-    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev],
+    EBFArrayBoxFactory eb_factory_poly(geom_eb, pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
+                                        /* level_set->get_eb_ba(), dmap[lev], */
                                        {eb_grow, eb_grow, eb_grow}, EBSupport::full);
 
     // Only EB facets that are "in range" (within `n_pad` of the local
@@ -1086,7 +1108,7 @@ mfix_level::make_cone(int dir, Real radius1, Real radius2, Real height,
     LSFactory ls_cone(* level_set);
 
     // Define the EBIS first using only the walls...
-    Geometry geom_eb = LSUtility::make_eb_geometry(ls_cone);
+    Geometry geom_eb = LSUtility::make_eb_geometry(ls_cone, geom[lev]);
     AMReX_EBIS::instance()->define(geom_eb.Domain(),
                                    RealVect::Zero,  // ......... origin of EBIndexSpace
                                    geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
@@ -1116,7 +1138,8 @@ mfix_level::make_cone(int dir, Real radius1, Real radius2, Real height,
     //          => define the level set as the (signed) distance to the closest
     //             point on the EB-facets
     int eb_grow = level_set->get_eb_pad();
-    EBFArrayBoxFactory eb_factory_poly(geom_eb, level_set->get_eb_ba(), dmap[lev],
+    EBFArrayBoxFactory eb_factory_poly(geom_eb, pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
+                                        /* level_set->get_eb_ba(), dmap[lev], */
                                        {eb_grow, eb_grow, eb_grow}, EBSupport::full);
 
     // Only EB facets that are "in range" (within `n_pad` of the local
@@ -1154,7 +1177,7 @@ void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
     *                                                                          *
     ****************************************************************************/
 
-    Geometry geom_eb = LSUtility::make_eb_geometry(* level_set);
+    Geometry geom_eb = LSUtility::make_eb_geometry(* level_set, geom[lev]);
     if(use_walls){
         // Define components of the GeometryShop separately:
         GeometryShop gshop_walls(impfunc_walls, eb_verbosity);
@@ -1193,8 +1216,8 @@ void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
         //          => define the level set as the (signed) distance to the
         //             closest point on the EB-facets
         int eb_pad = level_set->get_eb_pad();
-        EBFArrayBoxFactory eb_factory_poly2(geom_eb, level_set->get_eb_ba(),
-					    level_set->get_eb_dm(),
+        EBFArrayBoxFactory eb_factory_poly2(geom_eb, pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
+                                            /* level_set->get_eb_ba(), level_set->get_eb_dm(), */
                                             {eb_pad, eb_pad, eb_pad}, EBSupport::full);
         level_set->intersection_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
         EBTower::Destroy();

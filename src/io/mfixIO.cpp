@@ -486,7 +486,8 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 
     // Level-Set: initialize container class for level set
     level_set = std::unique_ptr<LSFactory>(
-                    new LSFactory(lev, ls_ref, eb_ref, ls_pad, eb_pad, pc.get())
+                    new LSFactory(lev, ls_ref, eb_ref, ls_pad, eb_pad,
+                                  pc->ParticleBoxArray(lev), pc->Geom(lev), pc->ParticleDistributionMap(lev))
                 );
     // Overwrite initial level-set data using the loaded MultiFab
     level_set->set_data(ls_mf);

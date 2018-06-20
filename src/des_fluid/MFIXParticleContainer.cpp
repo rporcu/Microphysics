@@ -6,6 +6,7 @@
 #include <AMReX_LoadBalanceKD.H>
 #include <AMReX_EBFArrayBox.H>
 #include <AMReX_MultiCutFab.H>
+#include <AMReX_EB_F.H>
 
 #include <math.h>
 
@@ -410,15 +411,12 @@ MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiF
             if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued)
             {
                BL_PROFILE_VAR("compute_normals()", compute_normals);
-               compute_normals( lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                                (*normal)[mfi].dataPtr(),
-                                (*normal)[mfi].loVect(), (*normal)[mfi].hiVect(),
-                                (*areafrac[0])[mfi].dataPtr(),
-                                (*areafrac[0])[mfi].loVect(), (*areafrac[0])[mfi].hiVect(),
-                                (*areafrac[1])[mfi].dataPtr(),
-                                (*areafrac[1])[mfi].loVect(), (*areafrac[1])[mfi].hiVect(),
-                                (*areafrac[2])[mfi].dataPtr(),
-                                (*areafrac[2])[mfi].loVect(), (*areafrac[2])[mfi].hiVect());
+               amrex_eb_compute_normals(lo, hi, 
+                                        BL_TO_FORTRAN_3D(flag),
+                                        BL_TO_FORTRAN_3D((* normal)[mfi]),
+                                        BL_TO_FORTRAN_3D((* areafrac[0])[mfi]),
+                                        BL_TO_FORTRAN_3D((* areafrac[1])[mfi]),
+                                        BL_TO_FORTRAN_3D((* areafrac[2])[mfi])   );
                BL_PROFILE_VAR_STOP(compute_normals);
             }
         }
@@ -480,7 +478,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     std::map<PairIndex, Vector<Real>> tow;
     std::map<PairIndex, Vector<Real>> fc, pfor, wfor;
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
         PairIndex index(pti.index(), pti.LocalTileIndex());
         tow[index]  = Vector<Real>();
@@ -499,7 +497,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     loc_maxwfor = RealVect(0., 0., 0.);  // Tracks max particle-wall force
     int n = 0; // Counts sub-steps
 
-    while (n < nsubsteps) 
+    while (n < nsubsteps)
     {
       int ncoll = 0;  // Counts number of collisions (over sub-steps)
 
@@ -518,7 +516,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:ncoll)
 #endif
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
 
         /***********************************************************************
@@ -564,12 +562,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          ***********************************************************************/
 
          // Only call the routine for wall collisions if we actually have walls
-         if (ebfactory != NULL) 
+         if (ebfactory != NULL)
          {
             const auto& sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[pti]);
             const auto& flag = sfab.getEBCellFlagFab();
 
-            if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)  
+            if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
             {
                const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
 
@@ -669,11 +667,11 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              //   * time spent
              //   * number of particles
              const Box & tbx = pti.tilebox();
-             if (knapsack_weight_type == "RunTimeCosts") 
+             if (knapsack_weight_type == "RunTimeCosts")
              {
                 wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-             } 
-             else if (knapsack_weight_type == "NumParticles") 
+             }
+             else if (knapsack_weight_type == "NumParticles")
              {
                 wt = nrp / tbx.d_numPts();
              }

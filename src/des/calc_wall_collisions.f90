@@ -26,7 +26,7 @@ contains
         use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell, is_single_valued_cell, &
                                             get_neighbor_cells
 
-        use eb_geometry, only: dot_3d_real, facets_nearest_pt
+        use amrex_eb_geometry_module, only: dot_3d_real, facets_nearest_pt
 
         implicit none
 
@@ -395,7 +395,7 @@ contains
         use discretelement, only: des_crossprdct
         use discretelement, only: kn_w, kt_w, mew_w
 
-        use eb_levelset_module, only: interp_levelset, normal_levelset
+        use amrex_eb_levelset_module, only: amrex_eb_interp_levelset, amrex_eb_normal_levelset
 
         implicit none
 
@@ -472,12 +472,12 @@ contains
                 pos = p%pos
 
                 ! interpolates levelset from nodal phi to position pos
-                call interp_levelset(pos, plo, n_refine, phi, phlo, phhi, dx, ls_value);
+                call amrex_eb_interp_levelset(pos, plo, n_refine, phi, phlo, phhi, dx, ls_value);
                 overlap_n = rp - ls_value
 
                 if (ls_value .lt. rp) then
 
-                    call normal_levelset(pos, plo, n_refine, phi, phlo, phhi, dx, normal)
+                    call amrex_eb_normal_levelset(pos, plo, n_refine, phi, phlo, phhi, dx, normal)
                     normal(:) = -normal(:)
 
                     ! *****************************************************************************

@@ -180,7 +180,7 @@ mfix_level::Regrid (int lev, int nstep)
     // mfix_level::RegridArrays, which only acts on the fluid grid) because of
     // a dual grid: the level-set factory object regrids using the
     // ParticleDistributionMap.
-    level_set->regrid();
+    level_set->regrid(pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev));
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }

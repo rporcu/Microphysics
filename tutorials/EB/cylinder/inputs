@@ -22,7 +22,7 @@ amr.max_level = 0
 
 #  Run time of simulation
 amr.stop_time = 0.20
-amr.restart   ="chk00100"
+#amr.restart   ="chk00100"
 # Projection Method
 #mfix.use_proj_method   = 1
 # Regrinding and Load Balancing
@@ -42,7 +42,7 @@ mfix.particle_init_type = "Auto"
 
 ### Plotting and Checkpoints
 
-amr.par_ascii_int  = 1
+amr.par_ascii_int  = -1
 amr.par_ascii_file ="vis"
 amr.plot_int       = 100
 amr.plot_file      ="plt"
