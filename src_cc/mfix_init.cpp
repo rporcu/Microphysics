@@ -183,9 +183,10 @@ void mfix_level::Init(int lev, Real dt, Real time)
     // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)
     //            -> use min to intersect new eb boundaries (in update)
     level_set = std::unique_ptr<LSFactory>(
-                    new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
-                                  levelset__pad, levelset__eb_pad, pc.get())
-                );
+            new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
+                levelset__pad, levelset__eb_pad,
+                pc->ParticleBoxArray(lev), pc->Geom(lev), pc->ParticleDistributionMap(lev))
+            );
 
     // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
     // (otherwise, if there are no walls/boundaries in the simulation, saving a

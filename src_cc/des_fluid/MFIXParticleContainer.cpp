@@ -6,6 +6,7 @@
 #include <AMReX_LoadBalanceKD.H>
 #include <AMReX_EBFArrayBox.H>
 #include <AMReX_MultiCutFab.H>
+#include <AMReX_EB_F.H>
 
 #include <math.h>
 
@@ -410,15 +411,12 @@ MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiF
             if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued)
             {
                BL_PROFILE_VAR("compute_normals()", compute_normals);
-               compute_normals( lo, hi, flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                                (*normal)[mfi].dataPtr(),
-                                (*normal)[mfi].loVect(), (*normal)[mfi].hiVect(),
-                                (*areafrac[0])[mfi].dataPtr(),
-                                (*areafrac[0])[mfi].loVect(), (*areafrac[0])[mfi].hiVect(),
-                                (*areafrac[1])[mfi].dataPtr(),
-                                (*areafrac[1])[mfi].loVect(), (*areafrac[1])[mfi].hiVect(),
-                                (*areafrac[2])[mfi].dataPtr(),
-                                (*areafrac[2])[mfi].loVect(), (*areafrac[2])[mfi].hiVect());
+                amrex_eb_compute_normals(lo, hi,
+                                         BL_TO_FORTRAN_3D(flag),
+                                         BL_TO_FORTRAN_3D((* normal)[mfi]),
+                                         BL_TO_FORTRAN_3D((* areafrac[0])[mfi]),
+                                         BL_TO_FORTRAN_3D((* areafrac[1])[mfi]),
+                                         BL_TO_FORTRAN_3D((* areafrac[2])[mfi])   );
                BL_PROFILE_VAR_STOP(compute_normals);
             }
         }

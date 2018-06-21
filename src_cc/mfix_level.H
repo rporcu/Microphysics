@@ -37,7 +37,7 @@
 #include <AMReX_LatheIF.H>
 #include <AMReX_PolynomialIF.H>
 
-#include <eb_levelset.H>
+#include <AMReX_EB_levelset.H>
 class mfix_level
     : public AmrCore
 {

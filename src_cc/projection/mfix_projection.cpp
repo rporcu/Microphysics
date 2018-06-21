@@ -118,9 +118,7 @@ mfix_level::mfix_project_velocity (int lev)
 {
     // Project velocity field to make sure initial velocity is divergence-free
     Real dummy_dt = 1.0;
-    std::cout << "CALLING INITIAL PROJECTION " << std::endl;
     mfix_apply_projection ( lev, dummy_dt );
-    std::cout << "DONE WITH INITIAL PROJECTION " << std::endl;
 }
 
 void
@@ -249,32 +247,6 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 //
 //  1. Compute
 //
-//     vel_g = vel_go + dt * (R_u^* + R_u^n - gradp*(1/rho) ) / 2
-//
-//     where the starred variables are the "predictor-step" variables.
-//
-//  2. Solve
-//
-//     div( grad(phi) / rho ) = div(u)
-//
-//  3. Compute
-//
-//     vel_g = vel_g - gradphi / rho
-//
-//  4. Compute
-//
-//     p_g = 2 * phi / dt
-//
-//
-//  This is the correction step of the Heun's integration
-//  scheme, AKA Predictor-Corrector Method (PCM).
-//  This step is second order in time and space.
-//
-//
-// Compute corrector:
-//
-//  1. Compute
-//
 //     vel_g = vel_go + dt * ((R_u^* + R_u^n) / 2 - gradp*(1/rho))
 //
 //     where the starred variables are computed using "predictor-step" variables.
@@ -287,19 +259,15 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
 //
-//     u_g = u_g / ( 1 + dt * f_gds_u/rop_g )
-//     v_g = v_g / ( 1 + dt * f_gds_v/rop_g )
-//     w_g = w_g / ( 1 + dt * f_gds_w/rop_g )
+//     vel_g = vel_g / ( 1 + dt * f_gds/rop_g )
 //
 //  4. Solve
 //
-//     div( ep_g * grad(phi) / ro_g ) = div( ep_g * {u_g,v_g,w_g} )
+//     div( ep_g * grad(phi) / ro_g ) = div( ep_g * vel_g )
 //
 //  5. Compute
 //
-//     u_g = u_g -  dt * (dphi/dx) / ro_g
-//     v_g = v_g -  dt * (dphi/dy) / ro_g
-//     w_g = w_g -  dt * (dphi/dz) / ro_g
+//     vel_g = vel_g -  dt * grad(phi) / ro_g
 //
 //  6. Compute
 //
