@@ -20,6 +20,7 @@ module DEPRECATED_OR_UNKNOWN_MODULE
 
 
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
+      use amrex_paralleldescriptor_module, only : amrex_pd_ioprocessor
 
       IMPLICIT NONE
 
@@ -37,16 +38,18 @@ module DEPRECATED_OR_UNKNOWN_MODULE
          ie = scan( adjustl( input ), "=" )
 
          do i = 1, size(obsolete)
-            print *, trim( adjustl( input(1:ie) ) )
-            print *, trim( adjustl( obsolete(i) ) )
+            ! print *, trim( adjustl( input(1:ie) ) )
+            ! print *, trim( adjustl( obsolete(i) ) )
             if ( trim( adjustl( input(1:ie) ) ) == trim( adjustl( obsolete(i) ) ) ) then
-            print *,""
-            print *, "Keyword " // trim(adjustl(input(1:ie))) // " is OBSOLETE (relevant for SIMPLE only)"
-            print *, "MFIX should stop this hack will prevent it to do so"
-            print *, "This is to facilitate the transition from SIMPLE to Approximate Projection"
-            print *, "Remove this hack when SIMPLE get axed"
-            print *,""
-            return           
+               if (amrex_pd_ioprocessor()) then
+                  print *,""
+                  print *, "Keyword " // trim(adjustl(input(1:ie))) // " is OBSOLETE (relevant for SIMPLE only)"
+                  print *, "MFIX should stop this hack will prevent it to do so"
+                  print *, "This is to facilitate the transition from SIMPLE to Approximate Projection"
+                  print *, "Remove this hack when SIMPLE get axed"
+                  print *,""
+               end if
+               return           
             endif                  
          end do
          

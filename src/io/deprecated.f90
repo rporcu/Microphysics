@@ -1,4 +1,10 @@
-MODULE DEPRECATED_OR_UNKNOWN_MODULE
+module DEPRECATED_OR_UNKNOWN_MODULE
+
+   ! To initialize array of strings as follows, make sure that
+   ! every element has the same lenght. If not, pad with white spaces.
+   character(50), parameter :: obsolete(4) = ["MAX_NIT  ", "TOL_RESID", "NORM_G   ", &
+        "LEQ_PC   " ]
+   
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -10,16 +16,45 @@ MODULE DEPRECATED_OR_UNKNOWN_MODULE
 !     reports if the keyword was deprecated or incorrect.              !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DEPRECATED_OR_UNKNOWN(LINE_NO, INPUT)
+      subroutine DEPRECATED_OR_UNKNOWN(LINE_NO, INPUT)
 
 
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
+      use amrex_paralleldescriptor_module, only : amrex_pd_ioprocessor
 
       IMPLICIT NONE
 
       integer, INTENT(IN) :: LINE_NO
       CHARACTER(len=*), INTENT(IN) :: INPUT
 
+      ! 
+      ! Hack to easy the transition from simple to projection
+      !
+      block
+         
+         integer           :: i, key
+         integer           :: ie
+
+         ie = scan( adjustl( input ), "=" )
+
+         do i = 1, size(obsolete)
+            ! print *, trim( adjustl( input(1:ie) ) )
+            ! print *, trim( adjustl( obsolete(i) ) )
+            if ( trim( adjustl( input(1:ie) ) ) == trim( adjustl( obsolete(i) ) ) ) then
+               if (amrex_pd_ioprocessor()) then
+                  print *,""
+                  print *, "Keyword " // trim(adjustl(input(1:ie))) // " is OBSOLETE (relevant for SIMPLE only)"
+                  print *, "MFIX should stop this hack will prevent it to do so"
+                  print *, "This is to facilitate the transition from SIMPLE to Approximate Projection"
+                  print *, "Remove this hack when SIMPLE get axed"
+                  print *,""
+               end if
+               return           
+            endif                  
+         end do
+         
+      end block
+      
 ! 2015-2 Deprecated list:
 !-----------------------------------------------------------------------
 !     NAMELIST / DEP_2015_2 / SOME_KEYWORD
