@@ -374,7 +374,15 @@ mfix_level::mfix_calc_drag_particle(int lev)
                &nodal_pressure);
        }
 
-#if 0
+       gpx.FillBoundary(geom[lev].periodicity());
+       gpy.FillBoundary(geom[lev].periodicity());
+       gpz.FillBoundary(geom[lev].periodicity());
+
+       //
+       // NOTE -- it is essential that we call set_gradp_bcs after calling FillBoundary
+       //         because the set_gradp_bcs call hopefully sets the ghost cells exterior 
+       //         to the domain from ghost cells interior to the domain
+       //
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -391,11 +399,6 @@ mfix_level::mfix_calc_drag_particle(int lev)
                            domain.loVect(), domain.hiVect(),
                            &nghost, &nodal_pressure );
        }
-#endif
-
-       gpx.FillBoundary(geom[lev].periodicity());
-       gpy.FillBoundary(geom[lev].periodicity());
-       gpz.FillBoundary(geom[lev].periodicity());
 
        // Extrapolate velocity Dirichlet bc's to ghost cells
        int extrap_dir_bcs = 1; 
