@@ -318,7 +318,8 @@ extern "C"
 	const int* lo,  const int*  hi,
 	amrex::Real* vel,  const int* ulo, const int* uhi,
 	const amrex::Real* dx,
-	const int*  domlo, const int* plane );
+	const int*  domlo, const int* plane
+       );
 
     void mfix_collect_fluid(
             const int* slo, const int* shi,
@@ -334,6 +335,12 @@ extern "C"
             amrex::Real* time, amrex::Real* dt,
             amrex::Real (&accumulator)[256]
             );
+
+    void set_epg (
+	amrex::Real* ep, const int* slo, const int* shi,
+	const int* domlo, const int* domhi
+            );
+
 #ifdef __cplusplus
 }
 #endif
