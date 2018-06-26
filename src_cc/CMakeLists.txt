@@ -40,7 +40,7 @@ add_sources ( amrex_to_mfix.F90 fill_bc0.f90 init_namelist.f90 mfix_init.cpp  mf
 add_sources ( set_bc_flow.f90   set_p0.f90   zero_wall_norm_vel.f90 calc_cell.f90 )
 add_sources ( compute_vort.f90  get_data.f90   mfix_evolve.cpp  mfix_level.cpp  set_bc_type.f90 )
 add_sources ( set_ps.f90 calc_mu_g.f90  init_fluid.f90  main.cpp  mfix_F.H mfix_level.H )
-add_sources ( set_bc0.f90   set_delp_dir.f90  set_velocity_bcs.f90 )
+add_sources ( set_epg.f90 set_bc0.f90   set_delp_dir.f90  set_velocity_bcs.f90 )
 
 #
 # I/0
