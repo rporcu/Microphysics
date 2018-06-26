@@ -283,7 +283,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 
             // Particle data is loaded into the MFIXParticleContainer's base
             // class using amrex::NeighborParticleContainer::Restart
-            if (lev == 0)
+            if ( solve_dem && lev == 0)
               pc->Restart(restart_file, "particles");
 
             amrex::Print() << "  Finished reading particle data" << std::endl;
