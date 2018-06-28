@@ -5,9 +5,9 @@
 #include <AMReX_VectorIO.H> // amrex::[read,write]IntData(array_of_ints)
 #include <AMReX_AmrCore.H>
 
-#include "AMReX_buildInfo.H"
+#include <AMReX_buildInfo.H>
 
-#include "mfix_level.H"
+#include <mfix_level.H>
 #include <mfix_F.H>
 
 namespace
