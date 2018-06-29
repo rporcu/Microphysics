@@ -720,7 +720,9 @@ mfix_level::mfix_compute_diveu (int lev)
 
        // Fill it with (ep_g * vel_g)
        vec.copy(*vel_g[lev],0,0,vel_g[lev]->nComp(),vel_g[lev]->nGrow(),vel_g[lev]->nGrow());
-       MultiFab::Multiply(vec,(*ep_g[lev]),0,0,1,1);
+       for (int n = 0; n < 3; n++)
+          MultiFab::Multiply(vec,(*ep_g[lev]),0,n,1,1);
+
 
 #ifdef _OPENMP
 #pragma omp parallel
