@@ -136,7 +136,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
                
             case ( pinf_, pout_) 
                
-               gpx(ulo(1):domlo(1)-1,j,k) = 1.e200 ! Make sure we never use this
+               gpx(ulo(1):domlo(1)-1,j,k) = huge(1.0_rt) ! Make sure we never use this
                gpy(vlo(1):domlo(1)-1,j,k) = zero
                gpz(wlo(1):domlo(1)-1,j,k) = zero
 
@@ -173,7 +173,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
             case ( pinf_, pout_ )
                
-               gpx(domhi(1)+2:uhi(1),j,k) =  1.e200 ! Make sure we never use this
+               gpx(domhi(1)+2:uhi(1),j,k) =  huge(1.0_rt) ! Make sure we never use this
                gpy(domhi(1)+1:vhi(1),j,k) =  gpy(domhi(1)  ,j,k)
                gpz(domhi(1)+1:whi(1),j,k) =  gpz(domhi(1)  ,j,k)
 
@@ -211,7 +211,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
             case ( pinf_, pout_) 
 
                gpx(i,ulo(2):domlo(2)-1,k) = zero
-               gpy(i,vlo(2):domlo(2)-1,k) =1.e200 ! Make sure we never use this  
+               gpy(i,vlo(2):domlo(2)-1,k) =huge(1.0_rt) ! Make sure we never use this  
                gpz(i,wlo(2):domlo(2)-1,k) = zero
 
             case ( minf_ )
@@ -248,7 +248,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
             case ( pinf_, pout_ )
                
                gpx(i,domhi(2)+1:uhi(2),k) = zero
-               gpy(i,domhi(2)+2:vhi(2),k) = 1.e200 ! Make sure we never use this
+               gpy(i,domhi(2)+2:vhi(2),k) = huge(1.0_rt) ! Make sure we never use this
                gpz(i,domhi(2)+1:whi(2),k) = zero
 
             case ( minf_) 
@@ -285,7 +285,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
                gpx(i,j,ulo(3):domlo(3)-1) = zero
                gpy(i,j,vlo(3):domlo(3)-1) = zero
-               gpz(i,j,wlo(3):domlo(3)-1) = 1.e200 ! Make sure we never use this
+               gpz(i,j,wlo(3):domlo(3)-1) = huge(1.0_rt) ! Make sure we never use this
 
             case ( minf_ )
 
@@ -321,7 +321,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
                
                gpx(i,j,domhi(3)+1:uhi(3)) = zero
                gpy(i,j,domhi(3)+1:vhi(3)) = zero
-               gpz(i,j,domhi(3)+2:whi(3)) = 1.e200 ! Make sure we never use this
+               gpz(i,j,domhi(3)+2:whi(3)) = huge(1.0_rt) ! Make sure we never use this
              
             case ( minf_ ) 
 
