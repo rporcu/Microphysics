@@ -5,6 +5,8 @@
 #
 project ( MFIX-Exa_Superbuild )
 
+message (STATUS "SUPERBUILD mode: AMReX will be built as part of MFIX")
+
 #
 # Load Utilities
 #
@@ -18,31 +20,27 @@ enable_language (CXX)
 enable_language (Fortran)
 
 #
-# Require C++11 standard
-#
-set (CMAKE_CXX_STANDARD 11)
-set (CMAKE_CXX_STANDARD_REQUIRED ON)
-set (CMAKE_CXX_EXTENSIONS OFF)
-
-#
 # Amrex-related variables
 #
 
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER  3506f5aea50d27237dda43df3ba4611fd4eda638 )
-set (AMREX_GIT_COMMIT_DEVELOP e89c0e501b9e25168c0bc5595379ec6a4f06efb8 )
+set (AMREX_GIT_COMMIT_DEVELOP 8516211a54365bb57aef52f599c24fdb27c62e1f )
 set (AMREX_GIT_TAG)  # The commit id or branch to download
 
 #
 # MFIX-related options
 #
-include ( MFIX_CMakeVariables )
 include ( MFIX_Options )
 
 #
 # AMReX-related config options
 #
+set (AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags for AMReX (Superbuild only)" )
+
+set (AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
+
 option ( AMREX_ENABLE_EB "Build EB code" ON)
 
 option ( AMREX_ENABLE_PIC "Build position-independent code" OFF)
@@ -76,17 +74,18 @@ set ( AMREX_GIT_COMMIT "" CACHE STRING "AMReX git commit to use in superbuild")
 #
 # Set the git commit to use for amrex
 #
+get_git_info ( MFIX_GIT_BRANCH MFIX_GIT_COMMIT )
+
 if (AMREX_GIT_COMMIT)
    set (AMREX_GIT_TAG ${AMREX_GIT_COMMIT})
 else ()
-   if (MFIX_GIT_COMMIT MATCHES "master")
+   if (MFIX_GIT_BRANCH MATCHES "master")
       set (AMREX_GIT_TAG ${AMREX_GIT_COMMIT_MASTER})
    else ()
       set (AMREX_GIT_TAG ${AMREX_GIT_COMMIT_DEVELOP})
    endif()
 endif ()
 
-message (STATUS "SUPERBUILD mode: AMReX will be built as part of MFIX")
 message (STATUS "AMReX commit: ${AMREX_GIT_TAG}")
 
 # Include cmake config files to build external projects
@@ -117,7 +116,6 @@ ExternalProject_Add ( amrex
    -DENABLE_AMRDATA=ON # Needed to compile postprocessing tools
    -DENABLE_LINEAR_SOLVERS=ON
    -DENABLE_EB=${AMREX_ENABLE_EB}
-   -DENABLE_FBASELIB=OFF # Needed for test utilities
    -DENABLE_FORTRAN_INTERFACES=OFF
    -DENABLE_BASE_PROFILE=${AMREX_ENABLE_BASE_PROFILE}
    -DENABLE_TINY_PROFILE=${AMREX_ENABLE_TINY_PROFILE}
