@@ -63,7 +63,6 @@ if ( NOT ( "${MFIX_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
    message (WARNING "MFIX build type (${MFIX_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
 endif ()
 
-
 #
 # This is the main file
 #
@@ -101,54 +100,6 @@ target_link_libraries ( ${MFIX_EXENAME} ${MFIX_LIBNAME} )
 include ( MFIX_Typecheck )
 add_typecheck_target()
 
-# Add rule to generate TAGS
-# on macOS ctags-exuberant is just ctags
-find_program(CTAGS_EXU "ctags-exuberant")
-find_program(CTAGS_CMD "ctags")
-if(CTAGS_EXU)
-    add_custom_target ( tags
-        COMMAND ctags-exuberant -R    --fortran-kinds=+i  --exclude="build/amrex/installdir/*" . 
-        COMMAND ctags-exuberant -R -e --fortran-kinds=+i  --exclude="build/amrex/installdir/*" . 
-        COMMENT "Generating tags files"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    # Some file systems are case-insensitive so the above will fail:
-    #  the first command would overwrite the second!
-    add_custom_target ( ctags
-        COMMAND ctags-exuberant -R    --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMENT "Generating only ctags file"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    add_custom_target( etags
-        COMMAND ctags-exuberant -R -e --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMENT "Generating only etags file"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    # Avoid "collisions" with AMReX => focus entirely on MFiX sources:
-    add_custom_target ( mfix_ctags
-        COMMAND ctags-exuberant -R    --fortran-kinds=+i --exclude="build/*" .
-        COMMENT "Generating only ctags file for MFiX sources exclusively"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-elseif(CTAGS_CMD)
-    add_custom_target ( tags
-        COMMAND ctags -R    --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMAND ctags -R -e --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMENT "Generating tags files"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    # Some file systems are case-insensitive so the above will fail:
-    #  the first command would overwrite the second!
-    add_custom_target ( ctags
-        COMMAND ctags -R    --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMENT "Generating only ctags file"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    add_custom_target( etags
-        COMMAND ctags -R -e --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMENT "Generating only etags file"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    # Avoid "collisions" with AMReX => focus entirely on MFiX sources:
-    add_custom_target ( mfix_ctags
-        COMMAND ctags -R    --fortran-kinds=+i --exclude="build/*" .
-        COMMENT "Generating only ctags file for MFiX sources exclusively"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-endif()
-
 # Tools
 set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/) 
 add_subdirectory (Tools)
@@ -160,6 +111,9 @@ add_subdirectory ( tests )
 # Add debug runs
 add_subdirectory ( debug )
 
+# Tags
+include (MFIX_Tags)
+add_tags_targets ()
 
 # Add a target to generate API documentation with Doxygen
 find_package(Doxygen)

@@ -175,7 +175,7 @@ ExternalProject_Add ( mfix
 # When using superbuild, the compile commands databases do not exist
 # before compile-time.
 # Hence create a new build target (compile_dB) which collects both
-# mfix's and amrex's compile_commands.json, concattenates them in the
+# mfix's and amrex's compile_commands.json, concatenates them in the
 # project's root directory
 add_custom_target( compile_db
     # First take mfix's compile database (compile_commands.json) and:
