@@ -3,14 +3,15 @@
 # Author:                                               Date: xx-xxxx  #
 # Modified: J. Musser                                   Date: 09-2016  #
 #                                                                      #
-# Description: A plane of particles collide with a sphere.             #
+# Description: Particles fall under gravity in an hourglass            #
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'sphere'
-  DESCRIPTION = 'Plane of particles collide with a sphere'
+  RUN_NAME = 'hourglass'
+  DESCRIPTION = 'Particles fall under gravity in an hourglass'
 
 #_______________________________________________________________________
+
 # RUN CONTROL SECTION
 
   DT =     1.0d-04
@@ -78,7 +79,7 @@
 !---------------------------------------------
 
   IC_X_w(2) =   0.6600  ! (m)
-  IC_X_e(2) =   0.7000  ! (m)
+  IC_X_e(2) =   0.8400  ! (m)
   IC_Z_b(2) =   0.1100  ! (m)
   IC_Z_t(2) =   0.2900  ! (m)
 
@@ -94,7 +95,7 @@
 
   IC_EP_s(2,1) =  0.75
 
-  ic_dp_dist(2,1) =   'CONSTANT'
+  ic_dp_dist(2,1) =   'NORMAL'
   ic_dp_mean(2,1) =   2500.0d-6
   ic_dp_std(2,1)  =    250.0d-6
   ic_dp_min(2,1)  =   2000.0d-6

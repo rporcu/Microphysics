@@ -100,8 +100,8 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
         // Check whether to exit the loop or not
 	// 
 	if (steady_state) {
-	    keep_looping = !steady_state_reached ( lev, dt );
-	} else {
+	    keep_looping = !steady_state_reached ( lev, dt ); 
+        } else {
 	    keep_looping = 0;
 	}
 
@@ -118,7 +118,21 @@ mfix_level::mfix_project_velocity (int lev)
 {
     // Project velocity field to make sure initial velocity is divergence-free
     Real dummy_dt = 1.0;
+    // Print info before initial projection
+    {
+        amrex::Print() << "\nBefore initial projection:\n";
+        mfix_print_max_vel (lev);
+        mfix_compute_diveu (lev);
+        amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+    }
     mfix_apply_projection ( lev, dummy_dt );
+    // Print info after initial projection
+    {
+        amrex::Print() << "\nAfter  initial projection:\n";
+        mfix_print_max_vel (lev);
+        mfix_compute_diveu (lev);
+        amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+    }
 }
 
 void
@@ -160,6 +174,15 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 
        // Exchange halo nodes and apply BCs to velocity
        mfix_set_velocity_bcs (lev,0);
+
+	// Print info about predictor step
+        {
+            amrex::Print() << "Before projection in initial iterations: iter " << iter << "\n";
+    	    mfix_print_max_vel (lev);
+    	    mfix_compute_diveu (lev);
+	    amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+        }
+
 
        // Project velocity field
        mfix_apply_projection ( lev, dt );
@@ -720,7 +743,8 @@ mfix_level::mfix_compute_diveu (int lev)
 
        // Fill it with (ep_g * vel_g)
        vec.copy(*vel_g[lev],0,0,vel_g[lev]->nComp(),vel_g[lev]->nGrow(),vel_g[lev]->nGrow());
-       MultiFab::Multiply(vec,(*ep_g[lev]),0,0,1,1);
+       for (int n = 0; n < 3; n++)
+          MultiFab::Multiply(vec,(*ep_g[lev]),0,n,1,1);
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -739,7 +763,7 @@ mfix_level::mfix_compute_diveu (int lev)
         }
 
         vec.FillBoundary (geom[lev].periodicity());
-    
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -1069,19 +1093,19 @@ mfix_level::check_for_nans (int lev)
     bool ropg_has_nans = rop_g[lev] -> contains_nan (0);
 
     if (ug_has_nans)
-	std::cout << "WARNING: u_g contains NaNs!!!";
+	amrex::Print() << "WARNING: u_g contains NaNs!!!";
 
     if (vg_has_nans)
-	std::cout << "WARNING: v_g contains NaNs!!!";
+	amrex::Print() << "WARNING: v_g contains NaNs!!!";
 
     if (wg_has_nans)
-	std::cout << "WARNING: w_g contains NaNs!!!";
+	amrex::Print() << "WARNING: w_g contains NaNs!!!";
 
     if (pg_has_nans)
-	std::cout << "WARNING: p_g contains NaNs!!!";
+	amrex::Print() << "WARNING: p_g contains NaNs!!!";
 
     if (ropg_has_nans)
-	std::cout << "WARNING: rop_g contains NaNs!!!";
+	amrex::Print() << "WARNING: rop_g contains NaNs!!!";
 
 }
 
