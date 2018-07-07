@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.5)
 set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/CMake )
 
 #
-# Here we set the only options that decide if superbuild
+# Here we set the only option that decide if superbuild
 # is enabled or not
 # 
 set ( AMREX_INSTALL_DIR "" CACHE PATH
@@ -27,58 +27,41 @@ if ( SUPERBUILD )
    return ()
 endif ()
 
-
 #
 # This is where the MFIX-standalone config starts
 # 
 project (MFIX-Exa)
 
-#
 # Define the languages used by the project
-#
 enable_language (C)
 enable_language (CXX)
 enable_language (Fortran)
 
-#
-# Require C++11 standard
-#
-set (CMAKE_CXX_STANDARD 11)
-set (CMAKE_CXX_STANDARD_REQUIRED ON) 
-set (CMAKE_CXX_EXTENSIONS OFF)
-
-#
-# Always verbose output during make
-# 
-# set ( CMAKE_VERBOSE_MAKEFILE on )
-
-
-#
-# Include module with custom macros and functions
-#
+# Load required modules 
+include ( MFIX_Options )
 include ( MFIX_Utils )
 
-get_git_info ( var1 var2 )
-
-#
-# Stop if building in source
-# 
+get_git_info ( )
 check_build_tree_path ()
+set_default_config_flags ()
 
-#
-# Initialize all the global variables
-#
-include ( MFIX_CMakeVariables )
+# Set some cache variable for the whole project
+set ( MFIX_LIBNAME "mfixcore" CACHE INTERNAL "Name of MFIX core library")
+set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
 
-# 
-# Load MFIX options
-# 
-include ( MFIX_Options )
 
-#
-# Config MFIX build
-# 
-include ( MFIX_Config )
+# Import AMReX. Do it here so it is visibile to all targets
+find_package (AMReX 18 REQUIRED HINTS ${AMREX_INSTALL_DIR})   
+echo_amrex_config_options ()
+
+if ( NOT ( AMREX_ENABLE_PARTICLES AND AMREX_ENABLE_AMRDATA
+	 AND AMREX_ENABLE_EB) )
+   message ( FATAL_ERROR "AMReX installation missing required components!")
+endif ()
+
+if ( NOT ( "${MFIX_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
+   message (WARNING "MFIX build type (${MFIX_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
+endif ()
 
 #
 # This is the main file
@@ -88,9 +71,6 @@ if ( ENABLE_PROJCC )
 else ()
   set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 endif ()
-
-# Add the external include paths and link directories
-link_directories (${MFIX_EXTRA_LIBRARIES_PATH})
 
 # 
 # Core MFIX library
@@ -107,62 +87,18 @@ else ()
   add_subdirectory (src)
 endif ()
 
+# Print out config summary
+print_mfix_configuration_summary (${MFIX_LIBNAME})
+
+
 # We should check what this line does
 file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
-add_executable (mfix ${MAIN} ${USR_OVERRIDES} )
-target_link_libraries ( mfix ${MFIX_LIBNAME} ${MFIX_EXTRA_LINK_LINE} ) 
-
+add_executable (${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} )
+target_link_libraries ( ${MFIX_EXENAME} ${MFIX_LIBNAME} ) 
 
 # Configure type-checking target
 include ( MFIX_Typecheck )
-
-# Add rule to generate TAGS
-# on macOS ctags-exuberant is just ctags
-find_program(CTAGS_EXU "ctags-exuberant")
-find_program(CTAGS_CMD "ctags")
-if(CTAGS_EXU)
-    add_custom_target ( tags
-        COMMAND ctags-exuberant -R    --fortran-kinds=+i  --exclude="build/amrex/installdir/*" . 
-        COMMAND ctags-exuberant -R -e --fortran-kinds=+i  --exclude="build/amrex/installdir/*" . 
-        COMMENT "Generating tags files"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    # Some file systems are case-insensitive so the above will fail:
-    #  the first command would overwrite the second!
-    add_custom_target ( ctags
-        COMMAND ctags-exuberant -R    --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMENT "Generating only ctags file"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    add_custom_target( etags
-        COMMAND ctags-exuberant -R -e --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMENT "Generating only etags file"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    # Avoid "collisions" with AMReX => focus entirely on MFiX sources:
-    add_custom_target ( mfix_ctags
-        COMMAND ctags-exuberant -R    --fortran-kinds=+i --exclude="build/*" .
-        COMMENT "Generating only ctags file for MFiX sources exclusively"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-elseif(CTAGS_CMD)
-    add_custom_target ( tags
-        COMMAND ctags -R    --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMAND ctags -R -e --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMENT "Generating tags files"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    # Some file systems are case-insensitive so the above will fail:
-    #  the first command would overwrite the second!
-    add_custom_target ( ctags
-        COMMAND ctags -R    --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMENT "Generating only ctags file"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    add_custom_target( etags
-        COMMAND ctags -R -e --fortran-kinds=+i --exclude="build/amrex/installdir/*" .
-        COMMENT "Generating only etags file"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-    # Avoid "collisions" with AMReX => focus entirely on MFiX sources:
-    add_custom_target ( mfix_ctags
-        COMMAND ctags -R    --fortran-kinds=+i --exclude="build/*" .
-        COMMENT "Generating only ctags file for MFiX sources exclusively"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/ )
-endif()
+add_typecheck_target()
 
 # Tools
 set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/) 
@@ -172,9 +108,12 @@ add_subdirectory (Tools)
 enable_testing ()
 add_subdirectory ( tests )
 
-
 # Add debug runs
 add_subdirectory ( debug )
+
+# Tags
+include (MFIX_Tags)
+add_tags_targets ()
 
 # Add a target to generate API documentation with Doxygen
 find_package(Doxygen)

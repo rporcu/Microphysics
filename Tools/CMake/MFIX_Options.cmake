@@ -34,16 +34,9 @@ else ()
    set ( CMAKE_BUILD_TYPE "Release" )
 endif ()
 
-string ( TOUPPER ${CMAKE_BUILD_TYPE} MFIX_BUILD_TYPE) 
-
-
-set (AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags for AMReX (Superbuild only)" )
-
-set (AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
+string ( TOUPPER ${CMAKE_BUILD_TYPE} MFIX_BUILD_TYPE )  
 
 option ( ENABLE_FPE "Enable Floating Point Exceptions checks" OFF )
-
-
 
 option ( ENABLE_PROJCC "Enable Approximate Projection" OFF)
 
