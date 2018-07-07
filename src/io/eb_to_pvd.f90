@@ -9,7 +9,7 @@ module eb_to_vtk
   integer :: nc = 0
 
   real(amrex_real), allocatable :: points(:,:)
-  integer,      allocatable :: connectivity(:,:)
+  integer,          allocatable :: connectivity(:,:)
 
   ! parameter to exclude small cells
   real(amrex_real), parameter :: stol = 1.0d-12
@@ -45,10 +45,11 @@ contains
 
   real(amrex_real) :: centroid(3), normal(3)
   real(amrex_real) :: distance, sign
-  real(amrex_real) :: n0(3), p
-  real(amrex_real) :: vertex(8,3), alpha(12), apoints(12,3)
+  real(amrex_real) :: n0(3), p, n0_d(3), p_d, tol
+  real(amrex_real) :: vertex(8,3), alpha(12), alpha_d(12), apoints(12,3)
+  logical          :: alpha_intersect(12), alpha_d_intersect(12)
 
-  integer :: i, j, k, lc1, lc2, count
+  integer :: i, j, k, lc1, lc2, count, count_d
 
   real(amrex_real), parameter :: ihat(3) = (/1.0d0, 0.0d0, 0.0d0/)
   real(amrex_real), parameter :: jhat(3) = (/0.0d0, 1.0d0, 0.0d0/)
@@ -58,8 +59,13 @@ contains
      do j=lo(2),hi(2)
         do i=lo(1),hi(1)
 
-           if(.not.is_regular_cell(flag(i,j,k)) .and. &
-              .not.is_covered_cell(flag(i,j,k))) then
+           ! NOTE: do not skip fully enclosed cells (is_covered_cell), as this seems
+           ! to skip thin walls in the domain:
+           !if(.not.is_regular_cell(flag(i,j,k)) .and. &
+           !   .not.is_covered_cell(flag(i,j,k))) then
+
+           ! Instead only look for EBs
+           if( .not.is_regular_cell(flag(i,j,k))) then
 
               ! Calculate unit normal
               axm = apx(i,  j  , k  )
@@ -91,56 +97,49 @@ contains
               vertex(7,:) = (/dble(i  )*dx(1), dble(j+1)*dx(2), dble(k+1)*dx(3)/)
               vertex(8,:) = (/dble(i+1)*dx(1), dble(j+1)*dx(2), dble(k+1)*dx(3)/)
 
+
+              ! NOTE: this seems to be unncessary:
               ! skip cells that have a tiny intersection and cells that have
               ! the centroid on a face/edge/corner
-              if(apnorm > stol   .and. &
-                 vertex(1,1) < centroid(1) .and. centroid(1) < vertex(8,1) .and. &
-                 vertex(1,2) < centroid(2) .and. centroid(2) < vertex(8,2) .and. &
-                 vertex(1,3) < centroid(3) .and. centroid(3) < vertex(8,3)) then
+              !if(apnorm > stol    .and. &
+              !   vertex(1,1) < centroid(1) .and. centroid(1) < vertex(8,1) .and. &
+              !   vertex(1,2) < centroid(2) .and. centroid(2) < vertex(8,2) .and. &
+              !   vertex(1,3) < centroid(3) .and. centroid(3) < vertex(8,3)) then
 
-                 ! General equation of a plane: Ax + By + Cz + D = 0
-                 ! here D := distance
-                 distance = -dot_product(normal,centroid)
+                 ! Compute EB facets for current cell.
+                 call calc_hesse(distance, n0, p, normal, centroid)
+                 call calc_alpha(alpha, distance, n0, p, vertex, dx)
+                 call calc_intercects(count, alpha_intersect, alpha)
 
-                 ! Get the sign of the distance
-                 sign = -distance/dabs(distance)
+                 ! If the number of facet "contained" in does not describe a facet:
+                 ! ... I.e. there's less than 3 (not even a triangle) or more than 6
+                 ! ... (I have no idea what that is):
+                 !   => Move the centroid a little back and forth along the normal
+                 !      to see if that makes a difference:
+                 if((count < 3) .or. (count > 6)) then
+                    tol = min(dx(1), dx(2), dx(3)) / 100  ! bit of a fudge factor
 
-                 ! Get Hessian form
-                 n0 = sign*normal/dot_product(normal,normal)
-                 p  = sign*(-distance)
+                    call calc_hesse(distance, n0_d, p_d, normal, centroid + tol*normal)
+                    call calc_alpha(alpha_d, distance, n0_d, p_d, vertex, dx)
+                    call calc_intercects(count_d, alpha_d_intersect, alpha_d)
+                    if(count_d >= 3 .and. count_d <= 6) then
+                        count = count_d
+                        alpha_intersect = alpha_d_intersect
+                    endif
 
-                 alpha = 10.0
-
-                 ! Ray-xAxis intersection
-                 if(abs(n0(1)) > epsilon(0.0d0)) then
-                    alpha( 1) = (p - dot_product(n0,vertex(1,:)))/(n0(1)*dx(1))
-                    alpha( 3) = (p - dot_product(n0,vertex(3,:)))/(n0(1)*dx(1))
-                    alpha( 9) = (p - dot_product(n0,vertex(5,:)))/(n0(1)*dx(1))
-                    alpha(11) = (p - dot_product(n0,vertex(7,:)))/(n0(1)*dx(1))
+                    call calc_hesse(distance, n0_d, p_d, normal, centroid - tol*normal)
+                    call calc_alpha(alpha_d, distance, n0_d, p_d, vertex, dx)
+                    call calc_intercects(count_d, alpha_d_intersect, alpha_d)
+                    if((count_d >= 3) .and. (count_d <= 6)) then
+                        count = count_d
+                        alpha_intersect = alpha_d_intersect
+                    endif
                  endif
 
-                 ! Ray-yAxis intersection
-                 if(abs(n0(2)) > epsilon(0.0d0)) then
-                    alpha( 2) = (p - dot_product(n0,vertex(2,:)))/(n0(2)*dx(2))
-                    alpha( 4) = (p - dot_product(n0,vertex(1,:)))/(n0(2)*dx(2))
-                    alpha(10) = (p - dot_product(n0,vertex(6,:)))/(n0(2)*dx(2))
-                    alpha(12) = (p - dot_product(n0,vertex(5,:)))/(n0(2)*dx(2))
-                 endif
+                 ! I know this was a bit of a hack, but it's the only way I prevent
+                 ! missing facets...
 
-                 ! Ray-zAxis intersection
-                 if(abs(n0(3)) > epsilon(0.0d0)) then
-                    alpha( 5) = (p - dot_product(n0,vertex(1,:)))/(n0(3)*dx(3))
-                    alpha( 6) = (p - dot_product(n0,vertex(2,:)))/(n0(3)*dx(3))
-                    alpha( 7) = (p - dot_product(n0,vertex(4,:)))/(n0(3)*dx(3))
-                    alpha( 8) = (p - dot_product(n0,vertex(3,:)))/(n0(3)*dx(3))
-                 endif
-
-                 count = 0
-                 do lc1=1,12
-                    if(intersects(alpha(lc1))) count = count + 1
-                 enddo
-
-                 if(count >= 3 .and. count <= 6) then
+                 if((count >= 3) .and. (count <= 6)) then
 
                     call grow_connectivity(nc, connectivity)
                     connectivity(nc,0) = 0
@@ -161,7 +160,7 @@ contains
 
                     ! store intersections with grid cell alpha in [0,1]
                     do lc1=1,12
-                       if(intersects(alpha(lc1))) then
+                       if(alpha_intersect(lc1)) then
                           call grow_points(np, points)
                           points(np,:) = apoints(lc1,:)
                           lc2 = connectivity(nc,0) + 1
@@ -175,7 +174,7 @@ contains
 
                  endif
 
-              endif
+              !endif
 
            end if ! if .not. regular
         end do
@@ -303,14 +302,98 @@ subroutine write_pvtp(nProcs) bind(C, name="mfix_write_pvtp")
 end subroutine write_pvtp
 
 
+!.......................................................................!
+! SUBROUTINE CALC_HESSE(distance, n0, p, normal, centroid)              !
+!   Computes the Hesse Normal Form corresponding to normal and centroid !
+!.......................................................................!
+  subroutine calc_hesse(distance, n0, p, normal, centroid)
+    real(amrex_real), intent(  out) :: distance, n0(3), p
+    real(amrex_real), intent(in   ) :: normal(3), centroid(3)
+
+    real(amrex_real) :: sign
+
+    ! General equation of a plane: Ax + By + Cz + D = 0
+    ! here D := distance
+    distance = -dot_product(normal, centroid)
+
+    ! Get the sign of the distance
+    sign = -distance/dabs(distance)
+
+    ! Get Hessian form
+    n0 = sign*normal/dot_product(normal, normal)
+    p  = sign*(-distance)
+  end subroutine calc_hesse
+
 
 !.......................................................................!
-!                                                                       !
-!                                                                       !
+! SOUBROUTINE CALC_ALPHA(alpha, distance, n0, p, vertex, dx)            !
+!   Fills the alpha array                                               !
+!.......................................................................!
+  subroutine calc_alpha(alpha, distance, n0, p, vertex, dx)
+    real(amrex_real), intent(  out) :: alpha(12)
+    real(amrex_real), intent(in   ) :: distance, n0(3), p, vertex(8,3), dx(3)
+
+
+    ! default (large) value
+    alpha = 10.0
+
+    ! Ray-xAxis intersection
+    if(abs(n0(1)) > epsilon(0.0d0)) then
+       alpha( 1) = (p - dot_product(n0,vertex(1,:)))/(n0(1)*dx(1))
+       alpha( 3) = (p - dot_product(n0,vertex(3,:)))/(n0(1)*dx(1))
+       alpha( 9) = (p - dot_product(n0,vertex(5,:)))/(n0(1)*dx(1))
+       alpha(11) = (p - dot_product(n0,vertex(7,:)))/(n0(1)*dx(1))
+    endif
+
+    ! Ray-yAxis intersection
+    if(abs(n0(2)) > epsilon(0.0d0)) then
+       alpha( 2) = (p - dot_product(n0,vertex(2,:)))/(n0(2)*dx(2))
+       alpha( 4) = (p - dot_product(n0,vertex(1,:)))/(n0(2)*dx(2))
+       alpha(10) = (p - dot_product(n0,vertex(6,:)))/(n0(2)*dx(2))
+       alpha(12) = (p - dot_product(n0,vertex(5,:)))/(n0(2)*dx(2))
+    endif
+
+    ! Ray-zAxis intersection
+    if(abs(n0(3)) > epsilon(0.0d0)) then
+       alpha( 5) = (p - dot_product(n0,vertex(1,:)))/(n0(3)*dx(3))
+       alpha( 6) = (p - dot_product(n0,vertex(2,:)))/(n0(3)*dx(3))
+       alpha( 7) = (p - dot_product(n0,vertex(4,:)))/(n0(3)*dx(3))
+       alpha( 8) = (p - dot_product(n0,vertex(3,:)))/(n0(3)*dx(3))
+    endif
+
+  end subroutine calc_alpha
+
+
+!.......................................................................!
+! SUBROUTINE CALC_INTERSECTS(int_count, intersect_flags, alpha)         !
+!   Fills count and flags selecting the alphas which are in (0,1)       !
+!.......................................................................!
+  subroutine calc_intercects(int_count, intersect_flags, alpha)
+    logical,          intent(  out) :: intersect_flags(12)
+    integer,          intent(  out) :: int_count
+    real(amrex_real), intent(in   ) :: alpha(12)
+
+    integer :: lc1
+
+    intersect_flags(:) = .false.
+    int_count          = 0
+
+    do lc1=1,12
+       if(intersects(alpha(lc1))) then
+          int_count = int_count + 1
+          intersect_flags(lc1) = .true.
+       endif
+    enddo
+  end subroutine
+
+
+!.......................................................................!
+! FUNCTION INTERSECTS(val)                                              !
+!   Returns .true. iff val in [0,1]                                     !
 !.......................................................................!
   logical function intersects(val)
     real(amrex_real), intent(in) :: val
-    intersects = (val >= 0.0d0 .and. val <= 1.0d0)
+    intersects = ((val > 0.0d0) .and. (val < 1.0d0))
   end function intersects
 
 
@@ -385,7 +468,7 @@ end subroutine write_pvtp
     implicit none
 
     real(amrex_real), intent(in   ) :: lpoints(:,:)
-    integer,      intent(inout) :: lconnect(0:6)
+    integer,          intent(inout) :: lconnect(0:6)
     real(amrex_real), intent(in   ) :: lnormal(3)
     real(amrex_real), intent(in   ) :: lcentroid(3)
 
@@ -518,8 +601,9 @@ end subroutine write_pvtp
      do j=lo(2),hi(2)
         do i=lo(1),hi(1)
 
-          if(is_regular_cell(flag(i,j,k)) .or. &
-               .not.is_covered_cell(flag(i,j,k))) lc1 = lc1 + 1
+          !if(is_regular_cell(flag(i,j,k)) .or. &
+          !     .not.is_covered_cell(flag(i,j,k))) lc1 = lc1 + 1
+          if(is_regular_cell(flag(i,j,k))) lc1 = lc1 + 1
 
         end do
      end do
