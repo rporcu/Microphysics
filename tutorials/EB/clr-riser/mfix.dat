@@ -46,8 +46,8 @@
   MEW_W = 0.15                 ! particle-wall
 
 ! Normal collision spring constant (N/m)
-  KN =    10.0                 ! inter-particle
-  KN_W =  10.0                 ! particle-wall
+  KN =    100.0                 ! inter-particle
+  KN_W =  100.0                 ! particle-wall
 
 ! Restitution coefficient. (1)
   DES_EN_INPUT =      0.85     ! particle-particle
