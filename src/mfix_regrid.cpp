@@ -186,9 +186,17 @@ mfix_level::Regrid (int lev, int nstep)
 }
 
 void
-mfix_level::RegridOnRestart (int lev)
+mfix_level::RegridOnStart (int lev)
 {
-    if (load_balance_type == "FixedSize" || load_balance_type == "KnapSack")
-       Regrid(lev,0);
-}
 
+  if (load_balance_type == "FixedSize" || load_balance_type == "KnapSack") {
+
+    ParmParse pp("particles");
+    pp.query("max_grid_size_x", particle_max_grid_size_x);
+    pp.query("max_grid_size_y", particle_max_grid_size_y);
+    pp.query("max_grid_size_z", particle_max_grid_size_z);
+
+    Regrid(lev,0);
+
+  }
+}

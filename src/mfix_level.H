@@ -73,7 +73,7 @@ public:
 
     void Regrid(int lev, int nstep);
 
-    void RegridOnRestart(int lev);
+    void RegridOnStart(int lev);
 
     void Evolve(int lev, int nstep, int set_normg, int steady_state, Real& dt, Real & prev_dt,
                 Real time, Real stop_time, Real normg);

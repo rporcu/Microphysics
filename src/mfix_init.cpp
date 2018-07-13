@@ -93,9 +93,6 @@ void mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
 
     {
         ParmParse pp("particles");
-        pp.query("max_grid_size_x", particle_max_grid_size_x);
-        pp.query("max_grid_size_y", particle_max_grid_size_y);
-        pp.query("max_grid_size_z", particle_max_grid_size_z);
 
         // Interval to compute the eulerian velocities in
         // given regions
