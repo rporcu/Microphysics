@@ -119,19 +119,6 @@ void mfix_level::Init(int lev, Real dt, Real time)
 
     MakeNewLevelFromScratch(0, time, ba, dm);
 
-    if (dual_grid && particle_max_grid_size_x > 0
-                  && particle_max_grid_size_y > 0
-                  && particle_max_grid_size_z > 0) 
-    {
-        BoxArray particle_ba(geom[lev].Domain());
-        IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                       particle_max_grid_size_y,
-                                       particle_max_grid_size_z);
-        particle_ba.maxSize(particle_max_grid_size);
-        DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
-        pc->Regrid(particle_dm, particle_ba);
-    }
-
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -415,6 +402,22 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
     {
       amrex::Print() << "Clean up auto-generated particles.\n";
       pc -> RemoveOutOfRange(lev, particle_ebfactory.get());
+    }
+
+    // We need to do this *after* restart (hence putting this here not in Init) because
+    //    we may want to move from KDTree to Knapsack, or change the particle_max_grid_size on restart.
+    if (load_balance_type == "KnapSack" &&
+        dual_grid && particle_max_grid_size_x > 0
+                  && particle_max_grid_size_y > 0
+                  && particle_max_grid_size_z > 0) 
+    {
+        BoxArray particle_ba(geom[lev].Domain());
+        IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                       particle_max_grid_size_y,
+                                       particle_max_grid_size_z);
+        particle_ba.maxSize(particle_max_grid_size);
+        DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+        pc->Regrid(particle_dm, particle_ba);
     }
 
     Real avg_dp[10], avg_ro[10];
