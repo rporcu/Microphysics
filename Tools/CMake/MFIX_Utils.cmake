@@ -331,7 +331,9 @@ macro (replace_genex input_list output_list )
       
    endforeach ()
 
-   list (REMOVE_DUPLICATES ${output_list} )
+   if (${output_list})
+     list (REMOVE_DUPLICATES ${output_list} )
+   endif ()
    
 endmacro ()
 
