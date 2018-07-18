@@ -71,7 +71,8 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	    mfix_calc_drag_fluid(lev);
 	
         // Predictor step 
-        mfix_apply_predictor ( lev, dt );
+        bool proj_2 = true;
+        mfix_apply_predictor ( lev, dt, proj_2 );
 
 	// Print info about predictor step
         {
@@ -118,24 +119,11 @@ mfix_level::mfix_project_velocity (int lev)
 {
     // Project velocity field to make sure initial velocity is divergence-free
     Real dummy_dt = 1.0;
-    // Print info before initial projection
-    {
-        amrex::Print() << "\nBefore initial projection:\n";
-        mfix_print_max_vel (lev);
-        mfix_compute_diveu (lev);
-        amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
-    }
+
+    amrex::Print() << "Initial projection:\n";
 
     bool proj_2 = true;
     mfix_apply_projection ( lev, dummy_dt, proj_2 );
-
-    // Print info after initial projection
-    {
-        amrex::Print() << "\nAfter  initial projection:\n";
-        mfix_print_max_vel (lev);
-        mfix_compute_diveu (lev);
-        amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
-    }
 
    // We initialize p_g back to zero (p0_g may still be still non-zero)
    p_g[lev]->setVal(0.0);
@@ -161,48 +149,14 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
         mfix_calc_drag_fluid(lev);
 
     // Compute fluid acceleration (convection + diffusion)
-    mfix_compute_velocity_slopes ( lev, vel_go );
     mfix_compute_fluid_acceleration ( lev, vel_go );
 
     for (int iter = 0; iter < 3; ++iter)
     {
-       // First add the fluid acceleration
-       MultiFab::Saxpy (*vel_g[lev], dt, *acc[lev], 0, 0, vel_g[lev]->nComp(), 0);
+       amrex::Print() << "In initial_iterations: iter = " << iter <<  "\n";
 
-       // Add the forcing terms
-       mfix_apply_forcing_terms ( lev, dt, vel_g );
-
-       mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
-       mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
-
-       // Compute intermediate velocity
-       if (solve_dem)
-          mfix_compute_intermediate_velocity ( lev, dt );
-
-       // Exchange halo nodes and apply BCs to velocity
-       mfix_set_velocity_bcs (lev,0);
-
-	// Print info about predictor step
-        {
-            amrex::Print() << "Before projection in initial iterations: iter " << iter << "\n";
-    	    mfix_print_max_vel (lev);
-    	    mfix_compute_diveu (lev);
-	    amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
-        }
-
-       // Project velocity field
        bool proj_2 = false;
-       mfix_apply_projection ( lev, dt, proj_2 );
-
-       // Exchange halo nodes and apply BCs
-       mfix_set_velocity_bcs (lev,0);
-
-       {
-           amrex::Print() << "After projection in initial_iterations \n";
-           mfix_print_max_vel (lev);
-           mfix_compute_diveu (lev);
-           amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
-       }
+       mfix_apply_predictor (lev, dt, proj_2);
 
        // Replace vel_g by the original values 
        MultiFab::Copy (*vel_g[lev], *vel_go[lev], 0, 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow());
@@ -226,23 +180,22 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 //
 //     vel_g = vel_g / ( 1 + dt * f_gds/rop_g )
 //
-//  4. Solve
+//  4. Solve for phi
 //
-//     div( ep_g * grad(phi) / ro_g ) = div( ep_g * vel_g )
+//     div( ep_g * grad(phi) / ro_g ) = div( ep_g * vel_g / dt + grad(p_g)/ro_g )
 //
 //  5. Compute
 //
 //     vel_g = vel_g -  dt * grad(phi) / ro_g
 //
-//  6. Compute
+//  6. Define
 //
-//     p_g = p_g + phi
+//     p_g = phi
 //
 void
-mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
+mfix_level::mfix_apply_predictor (int lev, amrex::Real dt, bool proj_2)
 {
     // Compute fluid acceleration (convection + diffusion) 
-    mfix_compute_velocity_slopes    ( lev, vel_go);
     mfix_compute_fluid_acceleration ( lev, vel_go);
     
     // First add the fluid acceleration
@@ -253,19 +206,12 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
     mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
     mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
 
-    // Compute intermediate velocity if drag terms present
+    // Add the drag term implicitly
     if (solve_dem)
        mfix_compute_intermediate_velocity ( lev, dt );
  
-    // Exchange halo nodes and apply BCs to velocity
-    mfix_set_velocity_bcs (lev,0);
- 
     // Project velocity field
-    bool proj_2 = true;
     mfix_apply_projection ( lev, dt, proj_2 );
- 
-    // Exchange halo nodes and apply BCs
-    mfix_set_velocity_bcs (lev,0);
 }
 
 //
@@ -287,17 +233,17 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 //
 //     vel_g = vel_g / ( 1 + dt * f_gds/rop_g )
 //
-//  4. Solve
+//  4. Solve for phi
 //
-//     div( ep_g * grad(phi) / ro_g ) = div( ep_g * vel_g )
+//     div( ep_g * grad(phi) / ro_g ) = div( ep_g * vel_g / dt + grad(p_g)/ro_g )
 //
 //  5. Compute
 //
 //     vel_g = vel_g -  dt * grad(phi) / ro_g
 //
-//  6. Compute
+//  6. Define
 //
-//     p_g = p_g + phi
+//     p_g = phi
 //
 void
 mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
@@ -306,7 +252,6 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
 
     // Compute fluid acceleration (convection + diffusion)
     // using first predictor
-    mfix_compute_velocity_slopes    (lev, vel_g);
     mfix_compute_fluid_acceleration (lev, vel_g);
         
     // Store u_go + dt * R_u^* / 2
@@ -315,7 +260,6 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     // Compute fluid acceleration (convection + diffusion) 
     // using velocity at the beginning of time step
     acc[lev]->setVal(0);
-    mfix_compute_velocity_slopes    (lev, vel_go);
     mfix_compute_fluid_acceleration (lev, vel_go);
     
     // Add dt/2 * R_u^n 
@@ -332,15 +276,9 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     if (solve_dem)
        mfix_compute_intermediate_velocity ( lev, dt );
  
-    // Fill ghost cells and reimpose boundary conditions
-    mfix_set_velocity_bcs (lev,0);
- 
     // Apply projection
     bool proj_2 = true;
     mfix_apply_projection ( lev, dt, proj_2 );
- 
-    // Exchange halo nodes and apply BCs
-    mfix_set_velocity_bcs (lev,0);
 }
 
 void
@@ -394,6 +332,9 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 {
     BL_PROFILE("mfix_level::mfix_compute_fluid_acceleration");
     Box domain(geom[lev].Domain());
+
+    // First compute the slopes
+    mfix_compute_velocity_slopes ( lev, vel );
     
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -536,6 +477,17 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
 {
     BL_PROFILE("mfix_level::mfix_apply_projection");
 
+    // Swap ghost cells and apply BCs to velocity
+    mfix_set_velocity_bcs (lev,0);
+
+    // Print info about predictor step
+    {
+        amrex::Print() << "Before projection \n";
+        mfix_print_max_vel (lev);
+        mfix_compute_diveu (lev);
+         amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+    }
+
     // Here we add the (1/rho gradp) back to ustar (note the +dt)
     // We leave the (-1/rho gradp0) term in vel_g
     if (proj_2)
@@ -582,6 +534,17 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
     {
        // p := p + phi
        MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+    }
+
+    // Swap ghost cells and apply BCs to velocity
+    mfix_set_velocity_bcs (lev,0);
+
+    // Print info about predictor step
+    {
+        amrex::Print() << "After  projection \n";
+        mfix_print_max_vel (lev);
+        mfix_compute_diveu (lev);
+         amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
     }
 }
 
