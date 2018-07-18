@@ -17,10 +17,8 @@ mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state
     
     Real gradp0max[3];
 
-    if (!fixed_dt)
+    for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi) 
     {
-       for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi) 
-       {
    	   // Cell-centered tilebox
 	   Box bx = mfi.tilebox();
 
@@ -28,17 +26,15 @@ mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state
                bx.loVect(), bx.hiVect(),
                BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
                gradp0max, geom[lev].CellSize(), &nodal_pressure);
-       }
-
-       ParallelDescriptor::ReduceRealMax(gradp0max[0]);
-       ParallelDescriptor::ReduceRealMax(gradp0max[1]);
-       ParallelDescriptor::ReduceRealMax(gradp0max[2]);
-
-       compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax, 
-   		        gradp0max, geom[lev].CellSize(), &cfl, 
-                        &steady_state, &time, &stop_time, &dt);
-
     }
+
+    ParallelDescriptor::ReduceRealMax(gradp0max[0]);
+    ParallelDescriptor::ReduceRealMax(gradp0max[1]);
+    ParallelDescriptor::ReduceRealMax(gradp0max[2]);
+
+    compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax, 
+                     gradp0max, geom[lev].CellSize(), &cfl, 
+                     &steady_state, &time, &stop_time, &dt_new);
 
     if ( fixed_dt )
     {

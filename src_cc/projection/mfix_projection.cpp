@@ -125,7 +125,10 @@ mfix_level::mfix_project_velocity (int lev)
         mfix_compute_diveu (lev);
         amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
     }
-    mfix_apply_projection ( lev, dummy_dt );
+
+    bool proj_2 = true;
+    mfix_apply_projection ( lev, dummy_dt, proj_2 );
+
     // Print info after initial projection
     {
         amrex::Print() << "\nAfter  initial projection:\n";
@@ -133,6 +136,9 @@ mfix_level::mfix_project_velocity (int lev)
         mfix_compute_diveu (lev);
         amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
     }
+
+   // We initialize p_g back to zero (p0_g may still be still non-zero)
+   p_g[lev]->setVal(0.0);
 }
 
 void
@@ -143,7 +149,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
     mfix_set_velocity_bcs (lev,0);
 
     // Copy vel_g into vel_go
-    MultiFab::Copy (*vel_go[lev], *vel_g[lev],   0, 0, 3, vel_go[lev]->nGrow());
+    MultiFab::Copy (*vel_go[lev], *vel_g[lev],   0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
     Real time = 0.0;
     mfix_compute_dt(lev,time,stop_time,steady_state,dt,nodal_pressure);
@@ -166,7 +172,8 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
        // Add the forcing terms
        mfix_apply_forcing_terms ( lev, dt, vel_g );
 
-       mfix_add_pressure_gradient ( lev, -dt);
+       mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
+       mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
 
        // Compute intermediate velocity
        if (solve_dem)
@@ -183,12 +190,9 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 	    amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
         }
 
-
        // Project velocity field
-       mfix_apply_projection ( lev, dt );
-
-       // Recover pressure
-       MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+       bool proj_2 = false;
+       mfix_apply_projection ( lev, dt, proj_2 );
 
        // Exchange halo nodes and apply BCs
        mfix_set_velocity_bcs (lev,0);
@@ -201,7 +205,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
        }
 
        // Replace vel_g by the original values 
-       MultiFab::Copy (*vel_g[lev], *vel_go[lev],   0, 0, 3, vel_g[lev]->nGrow());
+       MultiFab::Copy (*vel_g[lev], *vel_go[lev], 0, 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow());
     }
 }
 
@@ -246,7 +250,8 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 
     // Add the forcing terms
     mfix_apply_forcing_terms ( lev, dt, vel_g);
-    mfix_add_pressure_gradient ( lev, -dt);
+    mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
+    mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
 
     // Compute intermediate velocity if drag terms present
     if (solve_dem)
@@ -256,10 +261,8 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
     mfix_set_velocity_bcs (lev,0);
  
     // Project velocity field
-    mfix_apply_projection ( lev, dt );
- 
-    // Recover pressure
-    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+    bool proj_2 = true;
+    mfix_apply_projection ( lev, dt, proj_2 );
  
     // Exchange halo nodes and apply BCs
     mfix_set_velocity_bcs (lev,0);
@@ -322,7 +325,8 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     mfix_apply_forcing_terms ( lev, dt, vel_g);
  
     // Add pressure gradient
-    mfix_add_pressure_gradient ( lev, -dt );
+    mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
+    mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
  
     // Compute intermediate velocity if drag terms present
     if (solve_dem)
@@ -332,65 +336,15 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     mfix_set_velocity_bcs (lev,0);
  
     // Apply projection
-    mfix_apply_projection ( lev, dt );
- 
-    // Recover pressure
-    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+    bool proj_2 = true;
+    mfix_apply_projection ( lev, dt, proj_2 );
  
     // Exchange halo nodes and apply BCs
     mfix_set_velocity_bcs (lev,0);
 }
 
-//
-// Perform the following operations:
-//
-//       vel_g = vel_g + coeff * ( grad(p_g) ) * (1/ro_g)
-//
 void
-mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
-{
-    BL_PROFILE("mfix_level::mfix_add_pressure_gradient");
-    
-    if (nodal_pressure == 1)
-    {
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-       for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-       {
-   	   // Cell-centered tilebox
-	   Box bx = mfi.tilebox();
-
-	   add_grad_pnd (
-	       BL_TO_FORTRAN_BOX(bx),  
-	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-               (*p_g[lev])[mfi].dataPtr(),
-	       BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
-	       geom[lev].CellSize(), &coeff);
-       }
-    } else {
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-       for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-       {
-   	   // Tilebox
-	   Box bx = mfi.tilebox();
-
-	   add_grad_pcc (
-	       BL_TO_FORTRAN_BOX(bx),  
-	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-               (*p_g[lev])[mfi].dataPtr(),
-               (*p0_g[lev])[mfi].dataPtr(),
-	       geom[lev].CellSize(), &coeff);
-       }
-    }
-}
-
-void
-mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff)
+mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& phi)
 {
     BL_PROFILE("mfix_level::mfix_add_grad_phi");
     
@@ -408,7 +362,7 @@ mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff)
 	       BL_TO_FORTRAN_BOX(bx),  
 	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
 	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
+	       BL_TO_FORTRAN_ANYD(phi[mfi]),
 	       geom[lev].CellSize(), &coeff);
        }
     } else {
@@ -424,7 +378,7 @@ mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff)
 	       BL_TO_FORTRAN_BOX(bx),  
 	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
 	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-	       (*phi[lev])[mfi].dataPtr(),
+	       phi[mfi].dataPtr(),
 	       geom[lev].CellSize(), &coeff);
        }
     }
@@ -578,9 +532,17 @@ mfix_level::mfix_compute_velocity_slopes (int lev,
 //
 //     new p_g  = old p_g + phi
 void 
-mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
+mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool proj_2 )
 {
     BL_PROFILE("mfix_level::mfix_apply_projection");
+
+    // Here we add the (1/rho gradp) back to ustar (note the +dt)
+    // We leave the (-1/rho gradp0) term in vel_g
+    if (proj_2)
+    {
+       mfix_add_grad_phi ( lev,  scaling_factor, (*p_g[lev]));
+       mfix_set_velocity_bcs (lev,0);
+    }
 
     // Compute right hand side, AKA div(ep_g* u)
     mfix_compute_diveu (lev);
@@ -609,7 +571,18 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
     solve_poisson_equation ( lev, bcoeff, phi, diveu, bc_lo, bc_hi );
  
     // Correct the velocity field
-    mfix_add_grad_phi ( lev, -scaling_factor );
+    mfix_add_grad_phi ( lev, -scaling_factor, (*phi[lev]) );
+
+    if (proj_2)
+    {
+       // p := phi
+       MultiFab::Copy (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+    }
+    else
+    {
+       // p := p + phi
+       MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+    }
 }
 
 //

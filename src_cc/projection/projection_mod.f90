@@ -186,169 +186,12 @@ contains
    end subroutine compute_fluid_acceleration
 
    !
-   ! Computes  vel = vel + C * half * (1/rho) ( grad(p) + grad(p0) )
+   ! Computes  vel = vel + c * (1/rho) grad(phi)
    !
-   ! vel  = velocity defined at cell centers
-   !
-   ! p    = scalar field defined at cell centers
-   !
-   ! C    = real constant
-   !
-   subroutine add_grad_pcc ( lo, hi, vel, ulo, uhi, ro_g, slo, shi, &
-        & p, p0, dx, c ) bind (C)
-
-      ! Loop bounds
-      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
-
-      ! Array bounds
-      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
-      integer(c_int),  intent(in   ) :: slo(3), shi(3)
-
-      ! Grid and time spacing
-      real(ar),        intent(in   ) :: c, dx(3)
-
-      ! Arrays
-      real(ar),        intent(in   ) ::                       &
-            ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-               p(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-              p0(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(ar),        intent(inout) ::                       &
-           & vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
-
-      ! Local variables
-      integer(c_int)                 :: i, j, k
-      real(ar)                       :: odx, ody, odz
-      real(ar)                       :: oro_x_lo, dp_x_lo, dp0_x_lo
-      real(ar)                       :: oro_x_hi, dp_x_hi, dp0_x_hi
-      real(ar)                       :: oro_y_lo, dp_y_lo, dp0_y_lo
-      real(ar)                       :: oro_y_hi, dp_y_hi, dp0_y_hi
-      real(ar)                       :: oro_z_lo, dp_z_lo, dp0_z_lo
-      real(ar)                       :: oro_z_hi, dp_z_hi, dp0_z_hi
-
-      odx = one / dx(1)
-      ody = one / dx(2)
-      odz = one / dx(3)
-
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-
-               oro_x_lo  = half * ( one/ro_g(i,j,k) + one/ro_g(i-1,j,k) )
-                dp_x_lo  =  p(i,j,k) -  p(i-1,j,k)
-               dp0_x_lo  = p0(i,j,k) - p0(i-1,j,k)
-
-               oro_x_hi  = half * ( one/ro_g(i+1,j,k) + one/ro_g(i,j,k) )
-                dp_x_hi  =  p(i+1,j,k) -  p(i,j,k)
-               dp0_x_hi  = p0(i+1,j,k) - p0(i,j,k)
-
-               vel(i,j,k,1) = vel(i,j,k,1) + half * c * odx * (     &
-                   oro_x_hi * (dp_x_hi + dp0_x_hi) +  &
-                   oro_x_lo * (dp_x_lo + dp0_x_lo) )
-
-               oro_y_lo  = half * ( one/ro_g(i,j,k) + one/ro_g(i,j-1,k) )
-                dp_y_lo  =  p(i,j,k) -  p(i,j-1,k)
-               dp0_y_lo  = p0(i,j,k) - p0(i,j-1,k)
-
-               oro_y_hi  = half * ( one/ro_g(i,j+1,k) + one/ro_g(i,j,k) )
-                dp_y_hi  =  p(i,j+1,k) -  p(i,j,k)
-               dp0_y_hi  = p0(i,j+1,k) - p0(i,j,k)
-
-               vel(i,j,k,2) = vel(i,j,k,2) + half * c * ody * (     &
-                   oro_y_hi * (dp_y_hi + dp0_y_hi) +  &
-                   oro_y_lo * (dp_y_lo + dp0_y_lo) )
-
-               oro_z_lo  = half * ( one/ro_g(i,j,k) + one/ro_g(i,j,k-1) )
-                dp_z_lo  =  p(i,j,k) -  p(i,j,k-1)
-               dp0_z_lo  = p0(i,j,k) - p0(i,j,k-1)
-
-               oro_z_hi  = half * ( one/ro_g(i,j,k+1) + one/ro_g(i,j,k) )
-                dp_z_hi  =  p(i,j,k+1) -  p(i,j,k)
-               dp0_z_hi  = p0(i,j,k+1) - p0(i,j,k)
-
-               vel(i,j,k,3) = vel(i,j,k,3) + half * c * odz * (     &
-                   oro_z_hi * (dp_z_hi + dp0_z_hi) +  &
-                   oro_z_lo * (dp_z_lo + dp0_z_lo) )
-
-            end do
-         end do
-      end do
-
-   end subroutine add_grad_pcc
-
-   subroutine add_grad_pnd ( lo, hi, vel, ulo, uhi, ro_g, slo, shi, &
-        & p, p0, rlo, rhi, dx, c ) bind (C)
-
-      ! Loop bounds
-      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
-
-      ! Array bounds
-      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
-      integer(c_int),  intent(in   ) :: slo(3), shi(3)
-      integer(c_int),  intent(in   ) :: rlo(3), rhi(3)
-
-      ! Grid and time spacing
-      real(ar),        intent(in   ) :: c, dx(3)
-
-      ! Arrays
-      real(ar),        intent(in   ) ::                       &
-            ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-               p(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3)),  &
-              p0(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
-
-      real(ar),        intent(inout) ::                       &
-           & vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
-
-      ! Local variables
-      integer(c_int)                 :: i, j, k
-      real(ar)                       :: odx, ody, odz, oro
-      real(ar)                       ::  px,  py,  pz
-
-      odx = one / dx(1)
-      ody = one / dx(2)
-      odz = one / dx(3)
-
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-
-               px = 0.25d0 * ( &
-                  p(i+1,j,k) +  p(i+1,j+1,k) +  p(i+1,j,k+1) +  p(i+1,j+1,k+1) &
-               -  p(i  ,j,k) -  p(i  ,j+1,k) -  p(i  ,j,k+1) -  p(i  ,j+1,k+1) &
-               + p0(i+1,j,k) + p0(i+1,j+1,k) + p0(i+1,j,k+1) + p0(i+1,j+1,k+1) &
-               - p0(i  ,j,k) - p0(i  ,j+1,k) - p0(i  ,j,k+1) - p0(i  ,j+1,k+1) )
-
-               py = 0.25d0 * ( &
-                  p(i,j+1,k) +  p(i+1,j+1,k) +  p(i,j+1,k+1) +  p(i+1,j+1,k+1) &
-               -  p(i,j  ,k) -  p(i+1,j  ,k) -  p(i,j  ,k+1) -  p(i+1,j  ,k+1) &
-               + p0(i,j+1,k) + p0(i+1,j+1,k) + p0(i,j+1,k+1) + p0(i+1,j+1,k+1) &
-               - p0(i,j  ,k) - p0(i+1,j  ,k) - p0(i,j  ,k+1) - p0(i+1,j  ,k+1) )
-
-               pz = 0.25d0 * ( &
-                  p(i,j,k+1) +  p(i+1,j,k+1) +  p(i,j+1,k+1) +  p(i+1,j+1,k+1) &
-               -  p(i,j,k  ) -  p(i+1,j,k  ) -  p(i,j+1,k  ) -  p(i+1,j+1,k  ) &
-               + p0(i,j,k+1) + p0(i+1,j,k+1) + p0(i,j+1,k+1) + p0(i+1,j+1,k+1) &
-               - p0(i,j,k  ) - p0(i+1,j,k  ) - p0(i,j+1,k  ) - p0(i+1,j+1,k  ) )
-
-               oro = 1.d0/ro_g(i,j,k)
-
-               vel(i,j,k,1) = vel(i,j,k,1) + c * odx * oro * px
-               vel(i,j,k,2) = vel(i,j,k,2) + c * ody * oro * py
-               vel(i,j,k,3) = vel(i,j,k,3) + c * odz * oro * pz
-
-            end do
-         end do
-      end do
-
-   end subroutine add_grad_pnd
-
-   !
-   ! Computes  vel = vel + C * (1/rho) grad(phi)
-   !
-   ! vel  = velocity defined at cell centers
+   ! vel  = velocity            defined at cell centers
+   ! ro_g = density field       defined at cell centers
    ! phi  = pressure correction defined at cell centers
-   ! rho  = density field defined at cell centers
-   ! C    = real constant
+   ! c    = real constant
    !
    subroutine add_grad_phicc ( lo, hi, vel, ulo, uhi, ro_g, slo, shi, &
         & phi, dx, c ) bind (C)
@@ -366,7 +209,7 @@ contains
       ! Arrays
       real(ar),        intent(in   ) ::                       &
             ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-              phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+             phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(ar),        intent(inout) ::                       &
              vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
@@ -422,6 +265,14 @@ contains
 
    end subroutine add_grad_phicc
 
+   !
+   ! Computes  vel = vel + c * (1/rho) grad(phi)
+   !
+   ! vel  = velocity            defined at cell centers
+   ! ro_g = density field       defined at cell centers
+   ! phi  = pressure correction defined at nodes
+   ! c    = real constant
+   !
    subroutine add_grad_phind ( lo, hi, vel, ulo, uhi, ro_g, slo, shi, &
                                phi, rlo, rhi, dx, c ) bind (C)
 

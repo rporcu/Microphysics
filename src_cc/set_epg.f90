@@ -20,11 +20,13 @@
       ih = ( domhi(1) - domlo(1) ) / 2
 
       do i = slo(1), shi(1)
-         if( i<ih ) then
+
+         if( i < ih ) then
             ep(i,:,:) = half
          else
             ep(i,:,:) = one
          endif
+
       end do
 
    end subroutine set_epg
