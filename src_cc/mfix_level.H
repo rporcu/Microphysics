@@ -228,7 +228,7 @@ private:
     
     int  steady_state_reached(int lev, Real dt);
 
-    void mfix_apply_predictor(int lev, amrex::Real dt);
+    void mfix_apply_predictor(int lev, amrex::Real dt, bool proj_2);
     void mfix_apply_corrector(int lev, amrex::Real dt);
 
     void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
