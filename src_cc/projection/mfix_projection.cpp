@@ -335,6 +335,9 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 
     // First compute the slopes
     mfix_compute_velocity_slopes ( lev, vel );
+
+    // Initialize to zero
+    acc[lev]->setVal(0.);
     
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -344,12 +347,22 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 	// Tilebox
 	Box bx = mfi.tilebox ();
 
+	compute_ugradu (
+	    BL_TO_FORTRAN_BOX(bx),  
+	    BL_TO_FORTRAN_ANYD((*acc[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
+	    (*xslopes[lev])[mfi].dataPtr(),
+	    (*yslopes[lev])[mfi].dataPtr(),
+	    BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
+            domain.loVect (), domain.hiVect (),
+	    bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+	    bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+	    bc_klo.dataPtr(), bc_khi.dataPtr(),
+	    geom[lev].CellSize(), &nghost);
+
 	compute_fluid_acceleration (
 	    BL_TO_FORTRAN_BOX(bx),  
 	    BL_TO_FORTRAN_ANYD((*acc[lev])[mfi]),
-	    (*xslopes[lev])[mfi].dataPtr(),
-	    (*yslopes[lev])[mfi].dataPtr(),
-	    (*zslopes[lev])[mfi].dataPtr(),
 	    BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
             (*mu_g[lev])[mfi].dataPtr(),
             (*lambda_g[lev])[mfi].dataPtr(),

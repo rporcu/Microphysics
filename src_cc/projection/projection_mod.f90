@@ -105,10 +105,10 @@ contains
    ! dir = 1, 2, 3 ( 1=x, 2=y, 3=z )
    !
    subroutine compute_fluid_acceleration ( lo, hi, rhs, rlo, rhi, &
-                                           xslopes, yslopes, zslopes, &
                                            vel, vlo, vhi, &
                                            mu, lambda, rop, slo, shi, &
-                                           domlo, domhi, bc_ilo_type, bc_ihi_type, &
+                                           domlo, domhi, &
+                                           bc_ilo_type, bc_ihi_type, &
                                            bc_jlo_type, bc_jhi_type, bc_klo_type, bc_khi_type, &
                                            dx, ng ) bind(C)
 
@@ -133,10 +133,7 @@ contains
            &     vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3), &
            &      mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)  ), &
            &  lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)  ), &
-           &     rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)  ), &
-           & xslopes(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3),3), &
-           & yslopes(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3),3), &
-           & zslopes(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3),3)
+           &     rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)  )
 
       real(ar),       intent(inout) ::                       &
            & rhs(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3),3)
@@ -158,14 +155,6 @@ contains
       ! Local variables
       integer                       :: i, j, k
 
-      ! Compute convection term
-      call compute_ugradu ( lo, hi, vel, vlo, vhi, xslopes, yslopes, zslopes, slo, shi, &
-                            conv, rlo, rhi, domlo, domhi, &
-                            bc_ilo_type, bc_ihi_type, &
-                            bc_jlo_type, bc_jhi_type, &
-                            bc_klo_type, bc_khi_type, ng, dx )
-
-
       ! Compute diffusion term
       call compute_divtau ( lo, hi, vel, vlo, vhi, mu, lambda, slo, shi, &
                             diff, rlo, rhi, domlo, domhi, &
@@ -176,9 +165,9 @@ contains
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               rhs(i,j,k,1) = -conv(i,j,k,1) + diff(i,j,k,1) / rop(i,j,k)
-               rhs(i,j,k,2) = -conv(i,j,k,2) + diff(i,j,k,2) / rop(i,j,k)
-               rhs(i,j,k,3) = -conv(i,j,k,3) + diff(i,j,k,3) / rop(i,j,k)
+               rhs(i,j,k,1) = rhs(i,j,k,1) + diff(i,j,k,1) / rop(i,j,k)
+               rhs(i,j,k,2) = rhs(i,j,k,2) + diff(i,j,k,2) / rop(i,j,k)
+               rhs(i,j,k,3) = rhs(i,j,k,3) + diff(i,j,k,3) / rop(i,j,k)
             end do
          end do
       end do

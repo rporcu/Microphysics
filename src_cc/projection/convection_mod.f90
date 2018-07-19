@@ -22,11 +22,14 @@ contains
    !
    ! Compute all components of u dot grad u at cell centers
    ! 
-   subroutine compute_ugradu ( lo, hi, vel, vlo, vhi, xslopes, yslopes, zslopes, slo, shi, &
-                               ugradu, ulo, uhi, domlo, domhi, &
+   subroutine compute_ugradu ( lo, hi, &
+                               ugradu, ulo, uhi, &
+                               vel, vlo, vhi, &
+                               xslopes, yslopes, zslopes, slo, shi, &
+                               domlo, domhi, &
                                bc_ilo_type, bc_ihi_type, &
                                bc_jlo_type, bc_jhi_type, &
-                               bc_klo_type, bc_khi_type, ng, dx ) bind(C)
+                               bc_klo_type, bc_khi_type, dx, ng ) bind(C)
 
 
       ! Tile bounds
@@ -296,9 +299,9 @@ contains
                ! ****************************************************
                ! Assemble terms
                ! ****************************************************
-               ugradu(i,j,k,1) = udu*idx + vdu*idy + wdu*idz
-               ugradu(i,j,k,2) = udv*idx + vdv*idy + wdv*idz
-               ugradu(i,j,k,3) = udw*idx + vdw*idy + wdw*idz
+               ugradu(i,j,k,1) = -(udu*idx + vdu*idy + wdu*idz)
+               ugradu(i,j,k,2) = -(udv*idx + vdv*idy + wdv*idz)
+               ugradu(i,j,k,3) = -(udw*idx + vdw*idy + wdw*idz)
 
             end do
          end do
