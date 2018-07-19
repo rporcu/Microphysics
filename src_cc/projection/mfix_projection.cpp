@@ -161,12 +161,12 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 //
 //  1. Compute
 //
-//     vel_g = vel_go + dt * R
+//     vel_g = vel_go + dt * R_u^n + dt * divtau*(1/rop_g)
 //
 //  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
 //     and explicit part of particles momentum exchange )
 //
-//     vel_g = vel_g + dt * ( g + grad(p_g+p0)/ro_g + drag_u/rop_g )
+//     vel_g = vel_g + dt * ( g - grad(p_g+p0)/ro_g + drag_u/rop_g )
 //
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
@@ -216,14 +216,14 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt, bool proj_2)
 //
 //  1. Compute
 //
-//     vel_g = vel_go + dt * ((R_u^* + R_u^n) / 2 - gradp*(1/rho))
+//     vel_g = vel_go + dt * (R_u^* + R_u^n) / 2 + dt * divtau*(1/rop_g)
 //
 //     where the starred variables are computed using "predictor-step" variables.
 //
 //  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
 //     and explicit part of particles momentum exchange )
 //
-//     vel_g = vel_g + dt * ( g + grad(p_g+p0)/rp_g + drag_u/rop_g )
+//     vel_g = vel_g + dt * ( g - grad(p_g+p0)/ro_g + drag_u/rop_g )
 //
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
