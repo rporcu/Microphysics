@@ -232,6 +232,8 @@ private:
     void mfix_apply_predictor(int lev, amrex::Real dt, bool proj_2);
     void mfix_apply_corrector(int lev, amrex::Real dt);
 
+    void mfix_diffuse_velocity(int lev, MultiFab& vel, amrex::Real dt);
+
     void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
 
     void mfix_apply_forcing_terms    (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel);
@@ -408,6 +410,7 @@ private:
     const int nghost = 1; 
   
     int nodal_pressure = 1;
+    bool explicit_diffusion = true;
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;

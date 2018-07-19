@@ -6,5 +6,6 @@ f90EXE_sources += set_pressure_bcs.f90
 f90EXE_sources += set_scalar_bcs.f90
 f90EXE_sources += slopes_mod.f90
 
+CEXE_sources += mfix_advance.cpp     mfix_diffusion.cpp
 CEXE_sources += mfix_projection.cpp  compute_dt.cpp
 F90EXE_headers += mfix_proj_F.H
