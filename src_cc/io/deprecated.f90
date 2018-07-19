@@ -2,8 +2,8 @@ module DEPRECATED_OR_UNKNOWN_MODULE
 
    ! To initialize array of strings as follows, make sure that
    ! every element has the same lenght. If not, pad with white spaces.
-   character(50), parameter :: obsolete(4) = ["MAX_NIT  ", "TOL_RESID", "NORM_G   ", &
-        "LEQ_PC   " ]
+   character(50), parameter :: obsolete(5) = ["MAX_NIT  ", "TOL_RESID", "NORM_G   ", &
+        "LEQ_PC   ", "UR_FAC   " ]
    
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -33,13 +33,23 @@ module DEPRECATED_OR_UNKNOWN_MODULE
       block
          
          integer           :: i, key
-         integer           :: ie
+         integer           :: ie, ie1, ie2
 
-         ie = scan( adjustl( input ), "=" )
+         ! If the input is an array, gotta take ie before the first
+         ! parentheses
+         ie1 = scan( input, "=" ) - 1
+         ie2 = scan( input, "(" ) - 1
+
+         if ( ie2 > 0 ) then
+            ie = min(ie1,ie2)
+         else
+            ie = ie1
+         end if      
 
          do i = 1, size(obsolete)
-            ! print *, trim( adjustl( input(1:ie) ) )
-            ! print *, trim( adjustl( obsolete(i) ) )
+            ! print *, "ie, ie1, ie2", ie, ie1, ie2
+            ! print *, trim( adjustl( input(1:ie) ) ),"|"
+            ! print *, trim( adjustl( obsolete(i) ) ),"|"
             if ( trim( adjustl( input(1:ie) ) ) == trim( adjustl( obsolete(i) ) ) ) then
                if (amrex_pd_ioprocessor()) then
                   print *,""
