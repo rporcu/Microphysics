@@ -381,37 +381,6 @@ mfix_level::mfix_compute_ugradu ( int lev,
 }
 
 void
-mfix_level::mfix_compute_divtau ( int lev,
-			          MultiFab& divtau, 
-			          Vector< std::unique_ptr<MultiFab> >& vel) 
-{
-    BL_PROFILE("mfix_level::mfix_compute_divtau");
-    Box domain(geom[lev].Domain());
-
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-    for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
-    {
-	// Tilebox
-	Box bx = mfi.tilebox ();
-
-	compute_divtau (
-	    BL_TO_FORTRAN_BOX(bx),  
-	    BL_TO_FORTRAN_ANYD(divtau[mfi]),
-	    BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-            (*mu_g[lev])[mfi].dataPtr(),
-            (*lambda_g[lev])[mfi].dataPtr(),
-            BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-            domain.loVect (), domain.hiVect (),
-	    bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-	    bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-	    bc_klo.dataPtr(), bc_khi.dataPtr(),
-	    geom[lev].CellSize(), &nghost);
-    }
-}
-
-void
 mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 				      Vector< std::unique_ptr<MultiFab> >& vel) 
 
