@@ -224,7 +224,8 @@ private:
     void mfix_compute_dt(int lev, amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt,
                          int nodal_pressure);
 
-    void mfix_compute_fluid_acceleration(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_compute_ugradu(int lev, amrex::MultiFab& conv, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_compute_divtau(int lev, amrex::MultiFab& divtau, Vector< std::unique_ptr<MultiFab> >& vel);
     
     int  steady_state_reached(int lev, Real dt);
 
@@ -319,9 +320,6 @@ private:
 
     // Level-Set Data
     Vector< std::unique_ptr<MultiFab> > ls;
-
-    // Fluid acceleration (convection + diffusion)
-    Vector< std::unique_ptr<MultiFab> > acc;
 
     // These are multi-component multifabs
     Vector< std::unique_ptr<MultiFab> > xslopes;

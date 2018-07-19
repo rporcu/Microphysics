@@ -143,13 +143,6 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
     mfix_compute_dt(lev,time,stop_time,steady_state,dt,nodal_pressure);
 
     amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
-    
-    // Calculate drag coefficient
-    if (solve_dem)
-        mfix_calc_drag_fluid(lev);
-
-    // Compute fluid acceleration (convection + diffusion)
-    mfix_compute_fluid_acceleration ( lev, vel_go );
 
     for (int iter = 0; iter < 3; ++iter)
     {
@@ -195,11 +188,15 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 void
 mfix_level::mfix_apply_predictor (int lev, amrex::Real dt, bool proj_2)
 {
-    // Compute fluid acceleration (convection + diffusion) 
-    mfix_compute_fluid_acceleration ( lev, vel_go);
+    MultiFab   conv(grids[lev], dmap[lev], 3, 0 );
+    MultiFab divtau(grids[lev], dmap[lev], 3, 0 );
+
+    mfix_compute_ugradu ( lev, conv, vel_go );
+    mfix_compute_divtau ( lev, divtau, vel_go );
     
-    // First add the fluid acceleration
-    MultiFab::Saxpy (*vel_g[lev], dt, *acc[lev], 0, 0, 3, 0);
+    // First add the convective and diffusive terms
+    MultiFab::Saxpy (*vel_g[lev], dt,   conv, 0, 0, 3, 0);
+    MultiFab::Saxpy (*vel_g[lev], dt, divtau, 0, 0, 3, 0);
 
     // Add the forcing terms
     mfix_apply_forcing_terms ( lev, dt, vel_g);
@@ -250,20 +247,22 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
 {
     BL_PROFILE("mfix_level::mfix_apply_corrector");
 
-    // Compute fluid acceleration (convection + diffusion)
-    // using first predictor
-    mfix_compute_fluid_acceleration (lev, vel_g);
+    MultiFab   conv(grids[lev], dmap[lev], 3, 0 );
+    MultiFab divtau(grids[lev], dmap[lev], 3, 0 );
+
+    mfix_compute_ugradu ( lev,   conv, vel_g );
+    mfix_compute_divtau ( lev, divtau, vel_g );
         
-    // Store u_go + dt * R_u^* / 2
-    MultiFab::LinComb ( *vel_g[lev], 1.0, *vel_go[lev], 0, dt/2.0, *acc[lev], 0, 0, 3, 0 ); 
-	
-    // Compute fluid acceleration (convection + diffusion) 
-    // using velocity at the beginning of time step
-    acc[lev]->setVal(0);
-    mfix_compute_fluid_acceleration (lev, vel_go);
+    // Store u_go + dt/2 R_u^* 
+    MultiFab::LinComb ( *vel_g[lev], 1.0, *vel_go[lev], 0, dt/2.0,   conv, 0, 0, 3, 0 ); 
+    MultiFab::Saxpy    (*vel_g[lev],                       dt/2.0, divtau, 0, 0, 3, 0);
+
+    mfix_compute_ugradu ( lev,   conv, vel_go );
+    mfix_compute_divtau ( lev, divtau, vel_go );
     
     // Add dt/2 * R_u^n 
-    MultiFab::Saxpy (*vel_g[lev], dt/2.0, *acc[lev], 0, 0, 3, 0);
+    MultiFab::Saxpy (*vel_g[lev], dt/2.0,   conv, 0, 0, 3, 0);
+    MultiFab::Saxpy (*vel_g[lev], dt/2.0, divtau, 0, 0, 3, 0);
 
     // Add forcing terms
     mfix_apply_forcing_terms ( lev, dt, vel_g);
@@ -324,20 +323,18 @@ mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& phi)
 }
 
 //
-// Compute acc using vel_g
+// Compute acc using the vel passed in
 //
 void
-mfix_level::mfix_compute_fluid_acceleration ( int lev,
-					      Vector< std::unique_ptr<MultiFab> >& vel) 
+mfix_level::mfix_compute_ugradu ( int lev,
+			          MultiFab& conv, 
+			          Vector< std::unique_ptr<MultiFab> >& vel) 
 {
-    BL_PROFILE("mfix_level::mfix_compute_fluid_acceleration");
+    BL_PROFILE("mfix_level::mfix_compute_ugradu");
     Box domain(geom[lev].Domain());
 
     // First compute the slopes
     mfix_compute_velocity_slopes ( lev, vel );
-
-    // Initialize to zero
-    acc[lev]->setVal(0.);
     
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -349,7 +346,7 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 
 	compute_ugradu (
 	    BL_TO_FORTRAN_BOX(bx),  
-	    BL_TO_FORTRAN_ANYD((*acc[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD(conv[mfi]),
 	    BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
 	    (*xslopes[lev])[mfi].dataPtr(),
 	    (*yslopes[lev])[mfi].dataPtr(),
@@ -359,10 +356,28 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 	    bc_jlo.dataPtr(), bc_jhi.dataPtr(),
 	    bc_klo.dataPtr(), bc_khi.dataPtr(),
 	    geom[lev].CellSize(), &nghost);
+    }
+}
 
-	compute_fluid_acceleration (
+void
+mfix_level::mfix_compute_divtau ( int lev,
+			          MultiFab& divtau, 
+			          Vector< std::unique_ptr<MultiFab> >& vel) 
+{
+    BL_PROFILE("mfix_level::mfix_compute_divtau");
+    Box domain(geom[lev].Domain());
+
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+    for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
+    {
+	// Tilebox
+	Box bx = mfi.tilebox ();
+
+	compute_divtau (
 	    BL_TO_FORTRAN_BOX(bx),  
-	    BL_TO_FORTRAN_ANYD((*acc[lev])[mfi]),
+	    BL_TO_FORTRAN_ANYD(divtau[mfi]),
 	    BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
             (*mu_g[lev])[mfi].dataPtr(),
             (*lambda_g[lev])[mfi].dataPtr(),

@@ -30,12 +30,13 @@ contains
    !  txy =  mu * ( du/dy + dv/dx ) 
    !  txz =  mu * ( du/dz + dw/dx )
    ! 
-   subroutine compute_divtau ( lo, hi, vel_in, vlo, vhi, &
-        &                      mu, lambda, slo, shi, divtau, dlo, dhi, &
+   subroutine compute_divtau ( lo, hi, divtau, dlo, dhi, & 
+                               vel_in, vlo, vhi, &
+                               mu, lambda, rop, slo, shi, &
                                domlo, domhi, &
                                bc_ilo_type, bc_ihi_type, &
                                bc_jlo_type, bc_jhi_type, &
-                               bc_klo_type, bc_khi_type, ng, dx ) bind(C)
+                               bc_klo_type, bc_khi_type, dx, ng ) bind(C)
 
 
       ! Loops bounds
@@ -56,6 +57,7 @@ contains
       ! Arrays
       real(ar),        intent(in   ) ::                        &
            & vel_in(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3), &
+           &    rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            &     mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            &  lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       
@@ -73,7 +75,7 @@ contains
 
       ! Temporary array just to handle bc's
       real(ar) &
-           & vel(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3)
+           & vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3)
 
       integer(c_int)                 :: i, j, k, n
       real(ar)                       :: idx, idy, idz
@@ -241,7 +243,7 @@ contains
                       -mu_b * ( vel(i,j,k  ,n) - vel(i,j,k-1,n) ) ) * idz * idz
 
                ! Assemble divtau
-               divtau(i,j,k,n) = txx + tyy + tzz
+               divtau(i,j,k,n) = (txx + tyy + tzz) / rop(i,j,k)
 
             end do
          end do

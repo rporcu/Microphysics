@@ -77,12 +77,12 @@ extern "C"
 	const int* bc_klo_type, const int* bc_khi_type,
 	const amrex::Real* dx, const int* ng); 
 
-    void compute_fluid_acceleration (
+    void compute_divtau (
 	const int* lo, const int* hi,
-              amrex::Real* rhs, const int* rlo, const int* rhi, 
-	const amrex::Real* vel, const int* vlo, const int* vhi, 
-	const amrex::Real* mu,  amrex::Real* lambda, 
-	const amrex::Real* rop, const int* slo, const int* shi, 
+              amrex::Real* divtau, const int* dlo, const int* dhi, 
+	const amrex::Real* vel   , const int* vlo, const int* vhi, 
+	const amrex::Real* mu   ,  amrex::Real* lambda, 
+	const amrex::Real* rop   , const int* slo, const int* shi, 
 	const int* domlo, const int* domhi,
 	const int* bc_ilo_type, const int* bc_ihi_type, 
 	const int* bc_jlo_type, const int* bc_jhi_type,

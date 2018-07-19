@@ -96,8 +96,6 @@ mfix_level::ResizeArrays ()
     for (int i = 0; i < nlevs_max; ++i ) {
         bcoeff[i].resize(3);
     }
-
-    acc.resize(nlevs_max);
     
     if (solve_dem) 
        particle_cost.resize(nlevs_max);

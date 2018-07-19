@@ -78,10 +78,6 @@ mfix_level::AllocateArrays (int lev)
     vel_go[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
     vel_go[lev]->setVal(0.);
  
-    // acceleration terms
-    acc[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
-    acc[lev] -> setVal(0.);
- 
     // Slopes in x-direction
     xslopes[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
     xslopes[lev] -> setVal(0.);
