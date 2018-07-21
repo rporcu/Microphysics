@@ -556,7 +556,7 @@ contains
             integer                       :: bc_face
             integer                       :: is, ie, js, je
 
-            ! Do not considere the edges: they may cause problems
+            ! Do not consider the edges: they may cause problems
             is = 3
             ie = size (bct_array,1) - 2
             js = 3
