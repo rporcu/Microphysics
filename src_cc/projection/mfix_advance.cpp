@@ -186,15 +186,17 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt, bool proj_2)
     MultiFab   conv(grids[lev], dmap[lev], 3, 0 );
     MultiFab divtau(grids[lev], dmap[lev], 3, 0 );
 
+    // Compute the explicit advective term R_u^n
     mfix_compute_ugradu ( lev, conv, vel_go );
 
+    // Compute the explicit diffusive term if doing explicit diffusion
     if (explicit_diffusion)
        mfix_compute_divtau ( lev, divtau, vel_go );
     
     // First add the convective term
     MultiFab::Saxpy (*vel_g[lev], dt,   conv, 0, 0, 3, 0);
 
-    // Then add the explicit diffusion term if appropriate
+    // Then add the diffusion term if doing explicit diffusion
     if (explicit_diffusion)
        MultiFab::Saxpy (*vel_g[lev], dt, divtau, 0, 0, 3, 0);
 
@@ -205,7 +207,7 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt, bool proj_2)
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
-       mfix_diffuse_velocity(lev,*vel_g[lev],dt);
+       mfix_diffuse_velocity(lev,dt);
 
     // Add the drag term implicitly
     if (solve_dem)
@@ -254,9 +256,10 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
     MultiFab   conv(grids[lev], dmap[lev], 3, 0 );
     MultiFab divtau(grids[lev], dmap[lev], 3, 0 );
 
-    // First compute R_u^*
+    // Compute the explicit advective term R_u^*
     mfix_compute_ugradu ( lev,   conv, vel_g );
 
+    // Compute divtau^* if doing explicit diffusion
     if (explicit_diffusion)
        mfix_compute_divtau ( lev, divtau, vel_g );
         
@@ -290,7 +293,7 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
-       mfix_diffuse_velocity(lev,*vel_g[lev],dt);
+       mfix_diffuse_velocity(lev,dt);
  
     // Compute intermediate velocity if drag terms present
     if (solve_dem)
