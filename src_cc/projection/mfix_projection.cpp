@@ -57,7 +57,6 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
 
     // Set BCs for Poisson's solver
     int bc_lo[3], bc_hi[3];
-    int singular;
     Box domain(geom[lev].Domain());
     
     set_ppe_bc (bc_lo, bc_hi,
@@ -65,8 +64,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
 		&nghost, 
 		bc_ilo.dataPtr(), bc_ihi.dataPtr(),
 		bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-		bc_klo.dataPtr(), bc_khi.dataPtr(),
-		&singular );
+		bc_klo.dataPtr(), bc_khi.dataPtr());
 
     // Initialize phi to zero (any non-zero bc's are stored in p0)
     phi[lev] -> setVal(0.);

@@ -77,18 +77,6 @@ extern "C"
 	const int* bc_klo_type, const int* bc_khi_type,
 	const amrex::Real* dx, const int* ng); 
 
-    void compute_divtau (
-	const int* lo, const int* hi,
-              amrex::Real* divtau, const int* dlo, const int* dhi, 
-	const amrex::Real* vel   , const int* vlo, const int* vhi, 
-	const amrex::Real* mu   ,  amrex::Real* lambda, 
-	const amrex::Real* rop   , const int* slo, const int* shi, 
-	const int* domlo, const int* domhi,
-	const int* bc_ilo_type, const int* bc_ihi_type, 
-	const int* bc_jlo_type, const int* bc_jhi_type,
-	const int* bc_klo_type, const int* bc_khi_type,
-	const amrex::Real* dx, const int* ng); 
-
     void compute_slopes (
 	const int* lo, const int* hi,
 	const amrex::Real* u, const int* ulo, const int* uhi, 
@@ -100,22 +88,13 @@ extern "C"
 	const int* bc_klo_type, const int* bc_khi_type,
         const int* nghost );
 
-    void set_diff_bc (
-	int* bc_lo, int* bc_hi,
-	const int* domlo, const int* domhi,
-	const int* ng, 
-	const int* bct_ilo, const int* bct_ihi, 
-	const int* bct_jlo, const int* bct_jhi,
-	const int* bct_klo, const int* bct_khi);
-
     void set_ppe_bc (
 	int* bc_lo, int* bc_hi,
 	const int* domlo, const int* domhi,
 	const int* ng, 
 	const int* bct_ilo, const int* bct_ihi, 
 	const int* bct_jlo, const int* bct_jhi,
-	const int* bct_klo, const int* bct_khi,
-	int* singular );
+	const int* bct_klo, const int* bct_khi);
 
     void compute_diveucc (
         const int* lo,  const int*  hi,
@@ -167,12 +146,6 @@ extern "C"
               amrex::Real* bcoeff, const int* blo, const int* bhi,
         const amrex::Real* rop_g, const int* slo, const int* shi,
         const amrex::Real* ep_g, const int* dir );
-
-    void compute_bcoeff_diff (
-        const int* lo,  const int*  hi,
-              amrex::Real* bcoeff, const int* blo, const int* bhi,
-        const amrex::Real* mu_g, const int* slo, const int* shi,
-        const int* dir );
 
     void set_phi (
 	const int* lo, const int* hi,

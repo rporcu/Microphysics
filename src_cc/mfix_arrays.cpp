@@ -137,27 +137,33 @@ mfix_level::AllocateArrays (int lev)
     bcoeff[lev][1]->setVal(0.);
     bcoeff[lev][2]->setVal(0.);
 
-
     // ****************************************************************
 
     // Create a BoxArray on x-faces.
     BoxArray x_edge_ba = grids[lev];
     x_edge_ba.surroundingNodes(0);
     bcoeff_diff[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    m_u_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost));
 
     // Create a BoxArray on y-faces.
     BoxArray y_edge_ba = grids[lev];
     y_edge_ba.surroundingNodes(1);
     bcoeff_diff[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    m_v_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost));
 
     // Create a BoxArray on y-faces.
     BoxArray z_edge_ba = grids[lev];
     z_edge_ba.surroundingNodes(2);
     bcoeff_diff[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    m_w_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost));
 
     bcoeff_diff[lev][0]->setVal(0.);
     bcoeff_diff[lev][1]->setVal(0.);
     bcoeff_diff[lev][2]->setVal(0.);
+
+    m_u_mac[lev]->setVal(0.);
+    m_v_mac[lev]->setVal(0.);
+    m_w_mac[lev]->setVal(0.);
 }
 
 void
@@ -326,6 +332,29 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     std::unique_ptr<MultiFab> drag_new(new MultiFab(new_grids,new_dmap,drag[lev]->nComp(),ng));
     drag[lev] = std::move(drag_new);
     drag[lev]->setVal(0.);
+
+   /****************************************************************************
+    * Face-based Arrays                                                        *
+    ****************************************************************************/
+
+    // MAC velocity
+    BoxArray x_ba = new_grids;
+    x_ba = x_ba.surroundingNodes(0);
+    std::unique_ptr<MultiFab> u_mac_new(new MultiFab(x_ba,new_dmap,1,nghost));
+    m_u_mac[lev] = std::move(u_mac_new);
+    m_u_mac[lev] -> setVal(0.0);
+
+    BoxArray y_ba = new_grids;
+    y_ba = y_ba.surroundingNodes(1);
+    std::unique_ptr<MultiFab> v_mac_new(new MultiFab(y_ba,new_dmap,1,nghost));
+    m_v_mac[lev] = std::move(v_mac_new);
+    m_v_mac[lev] -> setVal(0.0);
+
+    BoxArray z_ba = new_grids;
+    z_ba = z_ba.surroundingNodes(2);
+    std::unique_ptr<MultiFab> w_mac_new(new MultiFab(z_ba,new_dmap,1,nghost));
+    m_w_mac[lev] = std::move(w_mac_new);
+    m_w_mac[lev] -> setVal(0.0);
 
    /****************************************************************************
     * Nodal Arrays                                                             *

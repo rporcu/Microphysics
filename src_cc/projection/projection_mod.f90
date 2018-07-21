@@ -439,7 +439,7 @@ contains
    ! each domain wall.
    !
    subroutine set_ppe_bc ( bc_lo, bc_hi, domlo, domhi, ng, bct_ilo, bct_ihi, &
-        & bct_jlo, bct_jhi, bct_klo, bct_khi, singular )  bind(C)
+        & bct_jlo, bct_jhi, bct_klo, bct_khi)  bind(C)
 
       use amrex_lo_bctypes_module
       use bc
@@ -449,9 +449,6 @@ contains
 
       ! Domain bounds
       integer(c_int), intent(in   ) :: domlo(3), domhi(3), ng
-
-      ! Whether the system is singular or not
-      integer(c_int), intent(  out) :: singular
 
       ! Arrays of point-by-point BC types
       integer(c_int), intent(in   )  ::                                 &
@@ -468,7 +465,6 @@ contains
       !
       ! By default, all the BCs are Neumann
       !
-      singular = 1
       bc_lo    = amrex_lo_neumann
       bc_hi    = amrex_lo_neumann
 
@@ -538,12 +534,6 @@ contains
          end if
 
       end if
-
-      !
-      ! Check whether the system is non-singular
-      !
-      if ( any ( bc_hi == amrex_lo_dirichlet ) .or. &
-           any ( bc_lo == amrex_lo_dirichlet ) )   singular = 0
 
       contains
 

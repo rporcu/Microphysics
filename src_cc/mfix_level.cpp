@@ -74,9 +74,11 @@ mfix_level::ResizeArrays ()
     phi.resize(nlevs_max);
     diveu.resize(nlevs_max);
 
-    phi_diff.resize(nlevs_max);
+    // RHS and solution arrays for diffusive solve
     rhs_diff.resize(nlevs_max);
+    phi_diff.resize(nlevs_max);
     
+    // Current (vel_g) and old (vel_go) velocities
     vel_g.resize(nlevs_max);
     vel_go.resize(nlevs_max);
 
@@ -86,7 +88,14 @@ mfix_level::ResizeArrays ()
     mu_g.resize(nlevs_max);
     lambda_g.resize(nlevs_max);
     trD_g.resize(nlevs_max);
+
+    // Vorticity
     vort.resize(nlevs_max);
+
+    // MAC velocities used for defining convective term
+    m_u_mac.resize(nlevs_max);
+    m_v_mac.resize(nlevs_max);
+    m_w_mac.resize(nlevs_max);
 
     // MultiFab storing level-set data
     ls.resize(nlevs_max);

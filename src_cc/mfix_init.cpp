@@ -183,6 +183,14 @@ void mfix_level::Init(int lev, Real dt, Real time)
     ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
     ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
     ls[lev]->FillBoundary(geom[lev].periodicity());
+
+
+    // Create MAC projection object
+    mac_projection.reset( new MacProjection(this,nghost) );
+    mac_projection -> set_bcs( &bc_ilo, &bc_ihi,
+			       &bc_jlo, &bc_jhi,
+			       &bc_klo, &bc_khi );
+    
 }
 
 BoxArray

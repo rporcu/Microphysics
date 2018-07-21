@@ -1,5 +1,7 @@
 add_sources ( convection_mod.f90 diffusion_mod.f90 )
-add_sources ( mfix_advance.cpp mfix_diffusion.cpp mfix_projection.cpp compute_dt.cpp mfix_proj_F.H )
-add_sources ( projection_mod.f90 slopes_mod.f90 )
+add_sources ( mfix_advance.cpp mfix_diffusion.cpp mfix_projection.cpp compute_dt.cpp )
+add_sources ( mfix_diff_F.H mfix_mac_F.H mfix_proj_F.H )
+add_sources ( macproj_mod.f90 projection_mod.f90 slopes_mod.f90 )
 add_sources ( set_pressure_bcs.f90 set_scalar_bcs.f90 )
-
+add_sources ( set_mac_velocity_bcs.f90 )
+add_sources ( MacProjection.H MacProjection.cpp )

@@ -38,6 +38,9 @@
 #include <AMReX_PolynomialIF.H>
 
 #include <AMReX_EB_levelset.H>
+
+#include <MacProjection.H>
+
 class mfix_level
     : public AmrCore
 {
@@ -358,6 +361,17 @@ private:
     // Pressure increment
     Vector< std::unique_ptr<MultiFab> > phi;
 
+    // MAC velocity
+    Vector< std::unique_ptr<MultiFab> > m_u_mac;
+    Vector< std::unique_ptr<MultiFab> > m_v_mac;
+    Vector< std::unique_ptr<MultiFab> > m_w_mac;
+    // Vector< std::unique_ptr<MultiFab> > m_uo_mac;
+    // Vector< std::unique_ptr<MultiFab> > m_vo_mac;
+    // Vector< std::unique_ptr<MultiFab> > m_wo_mac;
+
+    // MAC projection object
+    std::unique_ptr<MacProjection> mac_projection;
+
     // used if load_balance_type == "KnapSack"
     Vector<std::unique_ptr<MultiFab> > particle_cost;
     Vector<std::unique_ptr<MultiFab> > fluid_cost;
@@ -428,7 +442,7 @@ private:
     const int nghost = 1; 
   
     int nodal_pressure = 1;
-    bool explicit_diffusion = true;
+    bool explicit_diffusion = false;
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
