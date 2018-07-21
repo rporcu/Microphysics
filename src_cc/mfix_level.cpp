@@ -73,6 +73,9 @@ mfix_level::ResizeArrays ()
 
     phi.resize(nlevs_max);
     diveu.resize(nlevs_max);
+
+    phi_diff.resize(nlevs_max);
+    rhs_diff.resize(nlevs_max);
     
     vel_g.resize(nlevs_max);
     vel_go.resize(nlevs_max);
@@ -95,6 +98,11 @@ mfix_level::ResizeArrays ()
     bcoeff.resize(nlevs_max);
     for (int i = 0; i < nlevs_max; ++i ) {
         bcoeff[i].resize(3);
+    }
+
+    bcoeff_diff.resize(nlevs_max);
+    for (int i = 0; i < nlevs_max; ++i ) {
+        bcoeff_diff[i].resize(3);
     }
     
     if (solve_dem) 

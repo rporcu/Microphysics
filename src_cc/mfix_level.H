@@ -217,7 +217,16 @@ private:
 			Vector< std::unique_ptr<MultiFab> >& rhs,
 			int bc_lo[], int bc_hi[] );
 
-    void mfix_compute_bcoeff(int lev);
+    // Solve implicit diffusion
+    void solve_diffusion_equation(int lev,
+                        Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+			Vector< std::unique_ptr<MultiFab> >& phi,
+			Vector< std::unique_ptr<MultiFab> >& rhs,
+			int bc_lo[], int bc_hi[],
+			amrex::Real dt);
+
+    void mfix_compute_bcoeff_ppe(int lev);
+    void mfix_compute_bcoeff_diff(int lev);
 
     void check_for_nans(int lev);
     
@@ -232,7 +241,7 @@ private:
     void mfix_apply_predictor(int lev, amrex::Real dt, bool proj_2);
     void mfix_apply_corrector(int lev, amrex::Real dt);
 
-    void mfix_diffuse_velocity(int lev, MultiFab& vel, amrex::Real dt);
+    void mfix_diffuse_velocity(int lev, amrex::Real dt);
 
     void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
 
@@ -331,11 +340,20 @@ private:
     // div (ep_g * u)
     Vector< std::unique_ptr<MultiFab> > diveu;
 
+    // RHS for implicit diffusion solve
+    Vector< std::unique_ptr<MultiFab> > rhs_diff;
+
+    // Solution for implicit diffusion solve
+    Vector< std::unique_ptr<MultiFab> > phi_diff;
+
     //
     Vector< std::unique_ptr<MultiFab> > fp;
  
     // Coefficients b of div(b*grad(p))
     Vector< Vector< std::unique_ptr<MultiFab> > > bcoeff;
+
+    // Coefficients b in implicit diffusion solve
+    Vector< Vector< std::unique_ptr<MultiFab> > > bcoeff_diff;
 
     // Pressure increment
     Vector< std::unique_ptr<MultiFab> > phi;

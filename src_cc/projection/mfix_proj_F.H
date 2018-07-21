@@ -100,6 +100,14 @@ extern "C"
 	const int* bc_klo_type, const int* bc_khi_type,
         const int* nghost );
 
+    void set_diff_bc (
+	int* bc_lo, int* bc_hi,
+	const int* domlo, const int* domhi,
+	const int* ng, 
+	const int* bct_ilo, const int* bct_ihi, 
+	const int* bct_jlo, const int* bct_jhi,
+	const int* bct_klo, const int* bct_khi);
+
     void set_ppe_bc (
 	int* bc_lo, int* bc_hi,
 	const int* domlo, const int* domhi,
@@ -159,6 +167,12 @@ extern "C"
               amrex::Real* bcoeff, const int* blo, const int* bhi,
         const amrex::Real* rop_g, const int* slo, const int* shi,
         const amrex::Real* ep_g, const int* dir );
+
+    void compute_bcoeff_diff (
+        const int* lo,  const int*  hi,
+              amrex::Real* bcoeff, const int* blo, const int* bhi,
+        const amrex::Real* mu_g, const int* slo, const int* shi,
+        const int* dir );
 
     void set_phi (
 	const int* lo, const int* hi,

@@ -47,6 +47,10 @@ mfix_level::AllocateArrays (int lev)
 
     }
 
+    // Arrays to store the solution and rhs for the diffusion solve
+    phi_diff[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    rhs_diff[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+
      p0_g[lev]->setVal(0.);
       p_g[lev]->setVal(0.);
      p_go[lev]->setVal(0.);
@@ -132,6 +136,28 @@ mfix_level::AllocateArrays (int lev)
     bcoeff[lev][0]->setVal(0.);
     bcoeff[lev][1]->setVal(0.);
     bcoeff[lev][2]->setVal(0.);
+
+
+    // ****************************************************************
+
+    // Create a BoxArray on x-faces.
+    BoxArray x_edge_ba = grids[lev];
+    x_edge_ba.surroundingNodes(0);
+    bcoeff_diff[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+
+    // Create a BoxArray on y-faces.
+    BoxArray y_edge_ba = grids[lev];
+    y_edge_ba.surroundingNodes(1);
+    bcoeff_diff[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+
+    // Create a BoxArray on y-faces.
+    BoxArray z_edge_ba = grids[lev];
+    z_edge_ba.surroundingNodes(2);
+    bcoeff_diff[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+
+    bcoeff_diff[lev][0]->setVal(0.);
+    bcoeff_diff[lev][1]->setVal(0.);
+    bcoeff_diff[lev][2]->setVal(0.);
 }
 
 void

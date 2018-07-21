@@ -53,7 +53,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
     diveu[lev] -> mult ( 1.0/scaling_factor, diveu[lev]->nGrow() );
 
     // Compute the PPE coefficients
-    mfix_compute_bcoeff ( lev );
+    mfix_compute_bcoeff_ppe ( lev );
 
     // Set BCs for Poisson's solver
     int bc_lo[3], bc_hi[3];
@@ -219,9 +219,9 @@ mfix_level::solve_poisson_equation (  int lev,
 // Computes bcoeff = ep_g/ro_g at the faces of the scalar cells
 // 
 void
-mfix_level::mfix_compute_bcoeff (int lev)
+mfix_level::mfix_compute_bcoeff_ppe (int lev)
 {
-    BL_PROFILE("mfix_level::mfix_compute_bcoeff");
+    BL_PROFILE("mfix_level::mfix_compute_bcoeff_ppe");
 
     // Directions
     int xdir = 1;
