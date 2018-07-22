@@ -457,6 +457,7 @@ contains
    subroutine compute_ugradu_mac ( lo, hi, &
         ugradu, glo, ghi, &
         vel, vello, velhi, &
+        ep_g, elo, ehi, &
         u, ulo, uhi, &
         v, vlo, vhi, &
         w, wlo, whi, &
@@ -464,7 +465,7 @@ contains
         domlo, domhi, &
         bc_ilo_type, bc_ihi_type, &
         bc_jlo_type, bc_jhi_type, &
-        bc_klo_type, bc_khi_type, dx, ng ) bind(C)
+        bc_klo_type, bc_khi_type, dx, ng, ugradu_type ) bind(C)
 
 
       ! Tile bounds
@@ -474,10 +475,11 @@ contains
       integer(c_int),  intent(in   ) :: slo(3), shi(3)
       integer(c_int),  intent(in   ) :: glo(3), ghi(3)
       integer(c_int),  intent(in   ) :: vello(3), velhi(3)
+      integer(c_int),  intent(in   ) :: elo(3), ehi(3)
       integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
       integer(c_int),  intent(in   ) :: vlo(3), vhi(3)
       integer(c_int),  intent(in   ) :: wlo(3), whi(3)
-      integer(c_int),  intent(in   ) :: domlo(3), domhi(3), ng
+      integer(c_int),  intent(in   ) :: domlo(3), domhi(3), ng, ugradu_type
 
       ! Grid
       real(ar),        intent(in   ) :: dx(3)
@@ -485,12 +487,13 @@ contains
       ! Velocity Array
       real(ar),        intent(in   ) ::                            &
            & vel(vello(1):velhi(1),vello(2):velhi(2),vello(3):velhi(3),3)    , &
+           & ep_g(elo(1):ehi(1),elo(2):ehi(2),elo(3):ehi(3))     , &
            & xslopes(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3), &
            & yslopes(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3), &
            & zslopes(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3), &
            & u(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
            & v(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
-           & w(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))  
+           & w(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(ar),        intent(  out) ::                           &
            & ugradu(glo(1):ghi(1),glo(2):ghi(2),glo(3):ghi(3),3)
@@ -515,10 +518,19 @@ contains
       real(ar)                       :: u_e, u_w, u_s, u_n, u_b, u_t
       real(ar)                       :: v_e, v_w, v_s, v_n, v_b, v_t
       real(ar)                       :: w_e, w_w, w_s, w_n, w_b, w_t
+      real(ar)                       :: epu_hi_x, epu_lo_x
+      real(ar)                       :: epv_hi_y, epv_lo_y
+      real(ar)                       :: epw_hi_z, epw_lo_z
+      real(ar)                       :: divumac
 
       idx = one / dx(1)
       idy = one / dx(2)
       idz = one / dx(3)
+
+      if (ugradu_type .ne. 1 .and. ugradu_type .ne. 2 .and. ugradu_type .ne. 3) then
+         print *,'DONT KNOW THIS UGRADU_TYPE ', ugradu_type
+         stop
+      end if
 
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
@@ -724,37 +736,104 @@ contains
                endif
 
                ! ****************************************************
-               ! Define convective terms
+               ! Define convective terms -- convectively 
+               !   ugradu = u^MAC dot grad u^cc
                ! ****************************************************
-               u_cc = half * ( u(i,j,k) + u(i+1,j,k) )
-               v_cc = half * ( v(i,j,k) + v(i,j+1,k) )
-               w_cc = half * ( w(i,j,k) + w(i,j,k+1) )
+               if (ugradu_type .eq. 1) then
+                  u_cc = half * ( u(i,j,k) + u(i+1,j,k) )
+                  v_cc = half * ( v(i,j,k) + v(i,j+1,k) )
+                  w_cc = half * ( w(i,j,k) + w(i,j,k+1) )
 
-               udu   = u_cc * (u_e - u_w)
-               udv   = u_cc * (v_e - v_w)
-               udw   = u_cc * (w_e - w_w)
-
-               vdu   = v_cc * (u_n - u_s)
-               vdv   = v_cc * (v_n - v_s)
-               vdw   = v_cc * (w_n - w_s)
-
-               wdu   = w_cc * (u_t - u_b)
-               wdv   = w_cc * (v_t - v_b)
-               wdw   = w_cc * (w_t - w_b)
+                  udu   = u_cc * (u_e - u_w)
+                  udv   = u_cc * (v_e - v_w)
+                  udw   = u_cc * (w_e - w_w)
+   
+                  vdu   = v_cc * (u_n - u_s)
+                  vdv   = v_cc * (v_n - v_s)
+                  vdw   = v_cc * (w_n - w_s)
+   
+                  wdu   = w_cc * (u_t - u_b)
+                  wdv   = w_cc * (v_t - v_b)
+                  wdw   = w_cc * (w_t - w_b)
+   
+                  ugradu(i,j,k,1) = (udu*idx + vdu*idy + wdu*idz)
+                  ugradu(i,j,k,2) = (udv*idx + vdv*idy + wdv*idz)
+                  ugradu(i,j,k,3) = (udw*idx + vdw*idy + wdw*idz)
 
                ! ****************************************************
-               ! Assemble terms
+               ! Define convective terms -- conservatively
+               !   ugradu = ( div(u^MAC u^cc) - u^cc div(u^MAC) )
                ! ****************************************************
-               ugradu(i,j,k,1) = -(udu*idx + vdu*idy + wdu*idz)
-               ugradu(i,j,k,2) = -(udv*idx + vdv*idy + wdv*idz)
-               ugradu(i,j,k,3) = -(udw*idx + vdw*idy + wdw*idz)
+
+               else if (ugradu_type .eq. 2) then
+
+                  divumac = (u(i+1,j,k) - u(i,j,k)) * idx + & 
+                            (v(i,j+1,k) - v(i,j,k)) * idy + & 
+                            (w(i,j,k+1) - w(i,j,k)) * idz
+
+                  ugradu(i,j,k,1) = (u(i+1,j,k) * u_e - u(i,j,k) * u_w) * idx + &
+                                    (v(i,j+1,k) * u_n - v(i,j,k) * u_s) * idy + &
+                                    (w(i,j,k+1) * u_t - w(i,j,k) * u_b) * idz - &
+                                    vel(i,j,k,1) * divumac
+                  ugradu(i,j,k,2) = (u(i+1,j,k) * v_e - u(i,j,k) * v_w) * idx + &
+                                    (v(i,j+1,k) * v_n - v(i,j,k) * v_s) * idy + &
+                                    (w(i,j,k+1) * v_t - w(i,j,k) * v_b) * idz - &
+                                    vel(i,j,k,2) * divumac
+                  ugradu(i,j,k,3) = (u(i+1,j,k) * w_e - u(i,j,k) * w_w) * idx + &
+                                    (v(i,j+1,k) * w_n - v(i,j,k) * w_s) * idy + &
+                                    (w(i,j,k+1) * w_t - w(i,j,k) * w_b) * idz - &
+                                    vel(i,j,k,3) * divumac
+
+               ! ****************************************************
+               ! Define convective terms -- conservatively 
+               !   ugradu = ( div(ep_g u^MAC u^cc) - u^cc div(ep_g u^MAC) ) / ep_g
+               ! ****************************************************
+
+               else if (ugradu_type .eq. 3) then
+
+                  epu_hi_x = half * (ep_g(i+1,j,k) + ep_g(i,j,k)) * u(i+1,j,k)
+                  epu_lo_x = half * (ep_g(i-1,j,k) + ep_g(i,j,k)) * u(i  ,j,k)
+                  epv_hi_y = half * (ep_g(i,j+1,k) + ep_g(i,j,k)) * v(i,j+1,k)
+                  epv_lo_y = half * (ep_g(i,j-1,k) + ep_g(i,j,k)) * v(i,j  ,k)
+                  epw_hi_z = half * (ep_g(i,j,k+1) + ep_g(i,j,k)) * w(i,j,k+1)
+                  epw_lo_z = half * (ep_g(i,j,k-1) + ep_g(i,j,k)) * w(i,j,k  )
+   
+                  divumac = (epu_hi_x - epu_lo_x) * idx + & 
+                            (epv_hi_y - epv_lo_y) * idy + & 
+                            (epw_hi_z - epw_lo_z) * idz
+   
+                  ugradu(i,j,k,1) = (epu_hi_x * u_e - epu_lo_x * u_w) * idx + &
+                                    (epv_hi_y * u_n - epv_lo_y * u_s) * idy + &
+                                    (epw_hi_z * u_t - epw_lo_z * u_b) * idz - &
+                                    vel(i,j,k,1) * divumac
+                  ugradu(i,j,k,2) = (epu_hi_x * v_e - epu_lo_x * v_w) * idx + &
+                                    (epv_hi_y * v_n - epv_lo_y * v_s) * idy + &
+                                    (epw_hi_z * v_t - epw_lo_z * v_b) * idz - &
+                                    vel(i,j,k,2) * divumac
+                  ugradu(i,j,k,3) = (epu_hi_x * w_e - epu_lo_x * w_w) * idx + &
+                                    (epv_hi_y * w_n - epv_lo_y * w_s) * idy + &
+                                    (epw_hi_z * w_t - epw_lo_z * w_b) * idz - &
+                                    vel(i,j,k,3) * divumac
+
+                  ugradu(i,j,k,1) = ugradu(i,j,k,1) / ep_g(i,j,k)
+                  ugradu(i,j,k,2) = ugradu(i,j,k,2) / ep_g(i,j,k)
+                  ugradu(i,j,k,3) = ugradu(i,j,k,3) / ep_g(i,j,k)
+
+               end if
+
+               ! ****************************************************
+               ! Return the negative 
+               ! ****************************************************
+
+               ugradu(i,j,k,1) = -ugradu(i,j,k,1)
+               ugradu(i,j,k,2) = -ugradu(i,j,k,2)
+               ugradu(i,j,k,3) = -ugradu(i,j,k,3)
 
             end do
          end do
       end do
 
    end subroutine compute_ugradu_mac
-
    
 
    ! Upwind along direction normal to velocity component

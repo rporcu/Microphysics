@@ -447,6 +447,8 @@ private:
 
     bool use_mac_proj = false;
 
+    int ugradu_type = 1;
+
     bool use_epg_hack = false;
 
     // Variables to simplify IO -- the vectors are the same for plt/chk

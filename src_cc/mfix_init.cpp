@@ -36,6 +36,10 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Should we use the MAC-projection version of the algorithm
         pp.query( "use_mac_proj", use_mac_proj );
 
+        // If we are using the MAC-projected velocities, how should we discretize the
+        //  ugradu term.  Note this is only used if use_mac_proj = true.
+        pp.query( "ugradu_type", ugradu_type );
+
         // Should we call set_epg to hard-wire the volume fraction
         pp.query( "use_epg_hack", use_epg_hack );
 

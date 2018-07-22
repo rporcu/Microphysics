@@ -402,6 +402,7 @@ mfix_level::mfix_compute_ugradu ( int lev,
 	       BL_TO_FORTRAN_BOX(bx),  
 	       BL_TO_FORTRAN_ANYD(conv[mfi]),
 	       BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
+	       BL_TO_FORTRAN_ANYD((   *ep_g[lev])[mfi]),
 	       BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
 	       BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
 	       BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
@@ -412,7 +413,7 @@ mfix_level::mfix_compute_ugradu ( int lev,
 	       bc_ilo.dataPtr(), bc_ihi.dataPtr(),
 	       bc_jlo.dataPtr(), bc_jhi.dataPtr(),
 	       bc_klo.dataPtr(), bc_khi.dataPtr(),
-	       geom[lev].CellSize(), &nghost);
+	       geom[lev].CellSize(), &nghost, &ugradu_type);
        }
 
     } else {

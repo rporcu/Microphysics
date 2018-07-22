@@ -14,6 +14,7 @@ extern "C"
 	const int* lo, const int* hi,
 	amrex::Real* rhs, const int* rlo, const int* rhi, 
 	const amrex::Real* vel   ,  const int* vello, const int* velhi,
+	const amrex::Real* ep_g   ,  const int* elo, const int* ehi,
 	amrex::Real* u, const int* ulo, const int* uhi,
 	amrex::Real* v, const int* vlo, const int* vhi,	
 	amrex::Real* w, const int* wlo, const int* whi,
@@ -24,7 +25,7 @@ extern "C"
 	const int* bc_ilo_type, const int* bc_ihi_type, 
 	const int* bc_jlo_type, const int* bc_jhi_type,
 	const int* bc_klo_type, const int* bc_khi_type,
-	const amrex::Real* dx, const int* ng
+	const amrex::Real* dx, const int* ng, const int* ugradu_type
         );
 
     void compute_mac_diveu (
