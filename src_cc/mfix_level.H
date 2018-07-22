@@ -442,7 +442,12 @@ private:
     const int nghost = 1; 
   
     int nodal_pressure = 1;
-    bool explicit_diffusion = false;
+
+    bool explicit_diffusion = true;
+
+    bool use_mac_proj = false;
+
+    bool use_epg_hack = false;
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;

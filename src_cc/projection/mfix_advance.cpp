@@ -1,5 +1,6 @@
 #include <AMReX_ParmParse.H>
 
+#include <mfix_mac_F.H>
 #include <mfix_proj_F.H>
 #include <mfix_F.H>
 #include <mfix_level.H>
@@ -359,27 +360,84 @@ mfix_level::mfix_compute_ugradu ( int lev,
 
     // First compute the slopes
     mfix_compute_velocity_slopes ( lev, vel );
+
+    if (use_mac_proj)
+    {
+       int order = 1;
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+       for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
+       {
+	   // Tilebox
+   	   Box bx = mfi.tilebox ();
+
+	   compute_velocity_at_faces (
+	       BL_TO_FORTRAN_BOX(bx),  
+	       BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
+	       BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
+	       BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
+	       BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
+	       BL_TO_FORTRAN_ANYD((*xslopes[lev])[mfi]),
+	       (*yslopes[lev])[mfi].dataPtr(),
+	       (*zslopes[lev])[mfi].dataPtr(),
+	       bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+	       bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+	       bc_klo.dataPtr(), bc_khi.dataPtr(),
+               &nghost, domain.loVect (), domain.hiVect (), &order);
+       }
+
+       Real dummy_dt = 1.0;
+       mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, dummy_dt );
+
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+       for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
+       {
+	   // Tilebox
+   	   Box bx = mfi.tilebox ();
+
+	   compute_ugradu_mac (
+	       BL_TO_FORTRAN_BOX(bx),  
+	       BL_TO_FORTRAN_ANYD(conv[mfi]),
+	       BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
+	       BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
+	       BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
+	       BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
+	       (*xslopes[lev])[mfi].dataPtr(),
+	       (*yslopes[lev])[mfi].dataPtr(),
+	       BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
+               domain.loVect (), domain.hiVect (),
+	       bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+	       bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+	       bc_klo.dataPtr(), bc_khi.dataPtr(),
+	       geom[lev].CellSize(), &nghost);
+       }
+
+    } else {
     
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
-    for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
-    {
-	// Tilebox
-	Box bx = mfi.tilebox ();
+       for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
+       {
+	   // Tilebox
+   	   Box bx = mfi.tilebox ();
 
-	compute_ugradu (
-	    BL_TO_FORTRAN_BOX(bx),  
-	    BL_TO_FORTRAN_ANYD(conv[mfi]),
-	    BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-	    (*xslopes[lev])[mfi].dataPtr(),
-	    (*yslopes[lev])[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-            domain.loVect (), domain.hiVect (),
-	    bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-	    bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-	    bc_klo.dataPtr(), bc_khi.dataPtr(),
-	    geom[lev].CellSize(), &nghost);
+	   compute_ugradu (
+	       BL_TO_FORTRAN_BOX(bx),  
+	       BL_TO_FORTRAN_ANYD(conv[mfi]),
+	       BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
+	       (*xslopes[lev])[mfi].dataPtr(),
+	       (*yslopes[lev])[mfi].dataPtr(),
+	       BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
+               domain.loVect (), domain.hiVect (),
+	       bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+	       bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+	       bc_klo.dataPtr(), bc_khi.dataPtr(),
+	       geom[lev].CellSize(), &nghost);
+       }
     }
 }
 

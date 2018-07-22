@@ -30,6 +30,15 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Tolerance to check for steady state (projection only)
         pp.query( "steady_state_tol", steady_state_tol );
 
+        // Should we use explicit vs implicit diffusion
+        pp.query( "explicit_diffusion", explicit_diffusion );
+
+        // Should we use the MAC-projection version of the algorithm
+        pp.query( "use_mac_proj", use_mac_proj );
+
+        // Should we call set_epg to hard-wire the volume fraction
+        pp.query( "use_epg_hack", use_epg_hack );
+
         // The default type is "AsciiFile" but we can over-write that in the inputs file
         //  with "Random"
         pp.query("particle_init_type", particle_init_type);
@@ -395,6 +404,18 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
            fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
            fluid_cost[lev]->setVal(0.0);
         }
+    }
+  }
+
+  if (use_epg_hack) 
+  {
+    amrex::Print() << "EP_G initialized in mfix_level::Init() with a HACK!!!" << std::endl;
+
+    Box domain(geom[lev].Domain());
+    for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
+    {
+        set_epg( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
+                 domain.loVect (), domain.hiVect () );
     }
   }
 }

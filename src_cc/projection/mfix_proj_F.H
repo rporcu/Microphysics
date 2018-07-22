@@ -77,6 +77,21 @@ extern "C"
 	const int* bc_klo_type, const int* bc_khi_type,
 	const amrex::Real* dx, const int* ng); 
 
+    void compute_velocity_at_faces (
+	const int* lo, const int* hi,
+	const amrex::Real* m_u_mac, const int* ulo, const int* uhi, 
+	const amrex::Real* m_v_mac, const int* vlo, const int* vhi, 
+	const amrex::Real* m_w_mac, const int* wlo, const int* whi, 
+	const amrex::Real* vel   ,  const int* vello, const int* velhi, 
+	const amrex::Real* xslopes, const int* slo, const int* shi, 
+	const amrex::Real* yslopes, 
+	const amrex::Real* zslopes, 
+	const int* bc_ilo_type, const int* bc_ihi_type, 
+	const int* bc_jlo_type, const int* bc_jhi_type,
+	const int* bc_klo_type, const int* bc_khi_type,
+	const int* ng, 
+	const int* domlo, const int* domhi, const int* order);
+
     void compute_slopes (
 	const int* lo, const int* hi,
 	const amrex::Real* u, const int* ulo, const int* uhi, 
