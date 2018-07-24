@@ -43,9 +43,9 @@ contains
    ! WARNING: We use a slightly modified version of C in the implementation below
    ! 
    subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, gradp0max, &
-                               dx, cfl, steady_state, time, stop_time, dt ) &
+        dx, cfl, steady_state, time, stop_time, dt ) &
         & bind(C)
-      
+
       use constant, only: gravity 
 
       integer(c_int), intent(in   ) :: steady_state
@@ -61,23 +61,23 @@ contains
       real(ar)                      :: tmp
       real(ar),       parameter     :: two = 2.0_ar, four = two*two
       real(ar),       parameter     :: eps = epsilon (zero)
-      
+
       odx    = one / dx(1)
       ody    = one / dx(2)
       odz    = one / dx(3)
 
       old_dt = dt
-      
+
       ! Convection
       c_cfl = max ( umax*odx, vmax*ody, wmax*odz )
-      
+
       ! Viscous 
       v_cfl = two * ( mumax / romin ) * ( odx**2 + ody**2 + odz**2 )
-              
+
       ! Gravity and/or gradient of p0
       f_cfl = abs(gravity(1)-gradp0max(1)) * odx + &
-              abs(gravity(2)-gradp0max(2)) * ody + &
-              abs(gravity(3)-gradp0max(3)) * odz
+           abs(gravity(2)-gradp0max(2)) * ody + &
+           abs(gravity(3)-gradp0max(3)) * odz
 
       ! Put all together
       tmp = (c_cfl + v_cfl)  + sqrt ( (c_cfl + v_cfl)**2 + four * f_cfl )
@@ -95,10 +95,10 @@ contains
 
       ! Don't overshoot the final time if not running to steady state
       if (steady_state .eq. 0 .and. stop_time .ge. 0.) then
-        if (time+dt .gt. stop_time) &
-           dt = stop_time - time
+         if (time+dt .gt. stop_time) &
+              dt = stop_time - time
       end if
-      
+
    end subroutine compute_new_dt
 
    !
@@ -159,7 +159,7 @@ contains
       integer,        intent(in   ) :: upw_ep
 
 
-      
+
       ! Compute convection term
       select case ( dir )
       case (1)
@@ -205,9 +205,9 @@ contains
                else 
                   ep_f       = half * ( ep(i,j,k) + ep(i-i0,j-j0,k-k0) )
                endif
-               
+
                rhs(i,j,k) = - conv(i,j,k) + diff(i,j,k) / ( ro_f * ep_f )
-               
+
             end do
          end do
       end do
@@ -260,13 +260,13 @@ contains
       k0 = e_i(dir,3)
 
       codx = c / dx(dir) 
-      
+
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
                oro_g    = half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
-               
+
                u_i(i,j,k) = u_i(i,j,k) + codx * oro_g * &
                     &      ( phi(i,j,k) - phi(i-i0,j-j0,k-k0) )
 
@@ -276,6 +276,64 @@ contains
       end do
 
    end subroutine add_grad_phi
+
+
+   !
+   ! Computes  u_i = u_i + C * (1/ro) * (dphi/dx_i)
+   !
+   ! u_i      = i-th component of a staggered vector field u.
+   !
+   ! ro       = cell centered density field
+   !
+   ! dphidxi  =  i-th component of staggered gradphi 
+   ! 
+   ! C        = real constant
+   !
+   ! dir      = 1,2,3 indicates x, y, z direction respectively.
+   !  
+   subroutine project_mac_velocity ( lo, hi, u_i, ulo, uhi, &
+        & dphidxi, glo, ghi, ro, slo, shi, c, dir ) bind (C)
+
+      ! Loop bounds
+      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
+
+      ! Array bounds
+      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int),  intent(in   ) :: glo(3), ghi(3)
+      integer(c_int),  intent(in   ) :: slo(3), shi(3)
+
+      ! Grid and time spacing
+      real(ar),        intent(in   ) :: c
+
+      ! Direction
+      integer(c_int),  intent(in   ) :: dir
+
+      ! Arrays
+      real(ar),        intent(in   ) ::                          &
+           &      ro(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           & dphidxi(glo(1):ghi(1),glo(2):ghi(2),glo(3):ghi(3))
+
+      real(ar),        intent(inout) ::                           &
+           & u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
+      ! Local variables
+      integer(c_int)                 :: i, j, k, i0, j0, k0
+      real(ar)                       :: oro
+
+      i0 = e_i(dir,1)
+      j0 = e_i(dir,2)
+      k0 = e_i(dir,3)
+
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+               oro  = half * ( one/ro(i,j,k) + one/ro(i-i0,j-j0,k-k0) )
+               u_i(i,j,k) = u_i(i,j,k) + c * oro * dphidxi(i,j,k)
+            end do
+         end do
+      end do
+
+   end subroutine project_mac_velocity
 
 
 
@@ -315,7 +373,7 @@ contains
            & ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
            &    p(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
            &   p0(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-           
+
       real(ar),        intent(inout) ::                           &
            & u_i(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
@@ -328,7 +386,7 @@ contains
       k0 = e_i(dir,3)
 
       codx = c / dx(dir) 
-      
+
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
@@ -339,7 +397,7 @@ contains
                dp0     = p0(i,j,k) - p0(i-i0,j-j0,k-k0)
 
                u_i(i,j,k) = u_i(i,j,k) + codx * oro_g * ( dp + dp0 )
-         
+
             end do
          end do
       end do
@@ -353,9 +411,9 @@ contains
    ! 
    subroutine add_forcing ( lo, hi, u_i, ulo, uhi, drag_i, dlo, dhi, &
         & ro_g, slo, shi, ep_g, domlo, domhi, dx, dt, dir, upw_ep )  bind(C)
-      
+
       use constant, only: gravity
-      
+
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
 
@@ -363,7 +421,7 @@ contains
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3)
       integer(c_int), intent(in   ) :: dlo(3), dhi(3)
-      
+
       ! Direction
       integer(c_int), intent(in   ) :: dir
 
@@ -375,11 +433,11 @@ contains
 
       ! Grid
       real(ar),       intent(in   ) :: dx(3)
-      
+
       ! Arrays
       real(ar),       intent(in   ) :: &
-             ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-             ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            drag_i(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
 
       real(ar),       intent(inout) :: &
@@ -387,7 +445,7 @@ contains
 
       ! Whether to upwind ep_g
       integer,        intent(in   ) :: upw_ep
-      
+
       ! Local variables
       integer(c_int)                :: i, j, k, i0, j0, k0 
       real(ar)                      :: ro_f, ep_f, acc 
@@ -397,7 +455,7 @@ contains
       if ( ( dir < 1 ) .or. ( dir > 3 ) ) then 
          stop "projection_mod: add_forcing: argument dir must be either 1,2, or 3"
       end if
-      
+
       i0 = e_i(dir,1)
       j0 = e_i(dir,2)
       k0 = e_i(dir,3)
@@ -405,7 +463,7 @@ contains
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-               
+
                ro_f = ( ro_g(i,j,k) + ro_g(i-i0,j-j0,k-k0) ) * half
 
                if ( upw_ep == 0 ) then 
@@ -413,11 +471,11 @@ contains
                else
                   ep_f = merge (ep_g(i-i0,j-j0,k-k0), ep_g(i,j,k),  u_i(i,j,k) >= zero )
                end if
-               
+
                acc  = gravity(dir) + drag_i(i,j,k) / ( ro_f * ep_f )
-               
+
                u_i(i,j,k) = u_i(i,j,k) + dt * acc
-               
+
             end do
          end do
       end do
@@ -442,7 +500,7 @@ contains
    subroutine compute_intermediate_velocity ( lo, hi, u_i, ulo, uhi, &
         & f_gds_i, flo, fhi, ro, slo, shi, ep, dir, dt, upw_ep ) bind(C)
 
-     
+
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
 
@@ -450,14 +508,14 @@ contains
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3)
       integer(c_int), intent(in   ) :: flo(3), fhi(3)
-      
+
       ! Direction
       integer(c_int), intent(in   ) :: dir
 
       ! Time step width
       real(ar),       intent(in   ) :: dt
 
-            ! Arrays
+      ! Arrays
       real(ar),       intent(in   ) :: &
            ro(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),     &
            ep(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),     &
@@ -469,15 +527,15 @@ contains
       ! Whether to upwind ep_g
       integer,        intent(in   ) :: upw_ep
 
-      
+
       ! Local variables
       integer(c_int)                :: i, j, k, i0, j0, k0
       real(ar)                      :: ro_f, ep_f, diag_coeff
-      
+
       i0 = e_i(dir,1)
       j0 = e_i(dir,2)
       k0 = e_i(dir,3)
-      
+
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
@@ -489,19 +547,19 @@ contains
                else 
                   ep_f = merge (ep(i-i0,j-j0,k-k0), ep(i,j,k),  u_i(i,j,k) >= zero )
                end if
-               
+
                diag_coeff = one + dt * f_gds_i(i,j,k) / ( ro_f * ep_f )
-               
+
                u_i(i,j,k) = u_i(i,j,k) / diag_coeff
-               
+
             end do
          end do
       end do
-      
+
    end subroutine compute_intermediate_velocity
 
 
-      
+
    !
    ! Compute the coefficients of the PPE, i.e. ep_g / ro_g,
    ! at the faces of the pressure cells along the "dir"-axis.
@@ -516,7 +574,7 @@ contains
       integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3)
-      
+
       ! Direction
       integer(c_int), intent(in   ) :: dir
 
@@ -543,9 +601,9 @@ contains
                ro_f = half * ( ro_g(i,j,k) + ro_g(i-i0,j-j0,k-k0) )
 
                ep_f = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) )
-               
+
                bcoeff(i,j,k) = ep_f / ro_f 
-               
+
             end do
          end do
       end do
@@ -562,23 +620,20 @@ contains
    ! each domain wall. 
    ! 
    subroutine set_ppe_bc ( bc_lo, bc_hi, domlo, domhi, ng, bct_ilo, bct_ihi, &
-        & bct_jlo, bct_jhi, bct_klo, bct_khi, singular )  bind(C)
-      
+        & bct_jlo, bct_jhi, bct_klo, bct_khi )  bind(C)
+
       use amrex_lo_bctypes_module
       use bc
-      
+
       ! Array of global BC types
       integer(c_int), intent(  out) :: bc_lo(3), bc_hi(3)
 
       ! Domain bounds
       integer(c_int), intent(in   ) :: domlo(3), domhi(3)
 
-      ! Whether the system is singular or not
-      integer(c_int), intent(  out) :: singular
-
       ! Number of ghost nodes
       integer(c_int), intent(in   ) :: ng
-      
+
       ! Arrays of point-by-point BC types 
       integer(c_int), intent(in   )  ::                                 &
            & bct_ilo(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
@@ -594,10 +649,9 @@ contains
       !
       ! By default, all the BCs are Neumann
       !
-      singular = 1
       bc_lo    = amrex_lo_neumann
       bc_hi    = amrex_lo_neumann
-      
+
       !
       ! BC -- X direction 
       ! 
@@ -617,9 +671,9 @@ contains
          if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
             bc_hi(1) = amrex_lo_dirichlet
          end if
-         
+
       end if
-         
+
 
       !
       ! BC -- Y direction 
@@ -640,7 +694,7 @@ contains
          if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
             bc_hi(2) = amrex_lo_dirichlet
          end if
-         
+
       end if
 
       !
@@ -662,40 +716,35 @@ contains
          if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
             bc_hi(3) = amrex_lo_dirichlet
          end if
-         
+
       end if
-      
+
+
+   contains
+
       !
-      ! Check whether the system is non-singular
-      !
-      if ( any ( bc_hi == amrex_lo_dirichlet ) .or. &
-           any ( bc_lo == amrex_lo_dirichlet ) )   singular = 0
-      
-      contains
+      ! Test whether the BC type is the same everywhere on
+      ! the face. If BC is uniform on face, it returns its value
+      ! 
+      function get_bc_face (bct_array) result (bc_face)
+         integer(c_int), intent(in   ) :: bct_array(:,:,:)
+         integer                       :: bc_face
+         integer                       :: is, ie, js, je
 
-         !
-         ! Test whether the BC type is the same everywhere on
-         ! the face. If BC is uniform on face, it returns its value
-         ! 
-         function get_bc_face (bct_array) result (bc_face)
-            integer(c_int), intent(in   ) :: bct_array(:,:,:)
-            integer                       :: bc_face
-            integer                       :: is, ie, js, je
+         ! Do not considere the edges: they may cause problems
+         is = 3
+         ie = size (bct_array,1) - 2
+         js = 3
+         je = size (bct_array,2) - 2
 
-            ! Do not considere the edges: they may cause problems
-            is = 3
-            ie = size (bct_array,1) - 2
-            js = 3
-            je = size (bct_array,2) - 2
+         bc_face = bct_array(is,js,1)
 
-            bc_face = bct_array(is,js,1)
+         if ( .not. all (bct_array(is:ie,js:je,1) == bc_face) ) then
+            stop "BC type must be uniform on each face of the domain"
+         end if
 
-            if ( .not. all (bct_array(is:ie,js:je,1) == bc_face) ) then
-               stop "BC type must be uniform on each face of the domain"
-            end if            
+      end function get_bc_face
 
-         end function get_bc_face
-               
 
    end subroutine set_ppe_bc
 
@@ -704,7 +753,7 @@ contains
    ! Compute the cell-centered divergence of ep_g * {u_g,v_g,w_g}
    ! 
    subroutine compute_diveu ( lo, hi, diveu, slo, shi, ep_g, u_g, ulo, uhi, &
-      & v_g, vlo, vhi, w_g, wlo, whi, dx )  bind(C)
+        & v_g, vlo, vhi, w_g, wlo, whi, dx )  bind(C)
 
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
@@ -721,13 +770,13 @@ contains
       ! Array
       real(ar),       intent(  out) :: &
            diveu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      
+
       real(ar),       intent(in   ) :: &
            u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
            v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
            w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
-          ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      
+           ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       ! Local variables
       integer  :: i, j, k
       real(ar) :: odx, ody, odz
@@ -744,7 +793,7 @@ contains
                ! Face values
                ! eu_e = min ( u_g(i+1,j,k), zero ) * ep_g(i+1,j,k) + &
                !      & max ( u_g(i+1,j,k), zero ) * ep_g(i  ,j,k) 
-               
+
                ! eu_w = min ( u_g(i,j,k), zero ) * ep_g(i,  j,k) + &
                !      & max ( u_g(i,j,k), zero ) * ep_g(i-1,j,k) 
 
@@ -776,11 +825,11 @@ contains
             end do
          end do
       end do
-      
+
    end subroutine compute_diveu
 
    subroutine compute_gradp0_max ( lo, hi, p0, slo, shi, gp0_max, dx) &
-      bind (C)
+        bind (C)
 
       ! Loop bounds
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)
@@ -794,7 +843,7 @@ contains
 
       ! Arrays
       real(ar),        intent(in   ) ::                       &
-              p0(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           p0(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Local variables
       integer(c_int) :: i, j, k
@@ -805,7 +854,7 @@ contains
       odz = one / dx(3) 
 
       gp0_max(:) = 0.d0
-      
+
       do k = lo(3), hi(3)+1
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
@@ -833,5 +882,5 @@ contains
       gp0_max(3) = gp0_max(3) * odz
 
    end subroutine compute_gradp0_max
-   
+
 end module projection_mod

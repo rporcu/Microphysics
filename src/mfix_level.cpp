@@ -243,15 +243,15 @@ mfix_level::mfix_set_velocity_bcs (int lev)
   for (MFIter mfi(*p_g[lev], true); mfi.isValid(); ++mfi)
     {
       const Box& bx = (*p_g[lev])[mfi].box();
-      set_velocity_bcs ( bx.loVect(), bx.hiVect(),
-                         BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-		         BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-			 BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-			 bc_klo.dataPtr(), bc_khi.dataPtr(),
-			 domain.loVect(), domain.hiVect(),
-			 &nghost );
+      set_mac_velocity_bcs ( bx.loVect(), bx.hiVect(),
+			     BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
+			     BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
+			     BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
+			     bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+			     bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+			     bc_klo.dataPtr(), bc_khi.dataPtr(),
+			     domain.loVect(), domain.hiVect(),
+			     &nghost );
     }			   
 }
 

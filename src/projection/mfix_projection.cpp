@@ -76,9 +76,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	
 	mfix_print_max_vel (lev);
 
-	mfix_compute_diveu (lev);
-	
-	amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
 
 	// Calculate drag coefficient
 	if (solve_dem)
@@ -92,9 +89,6 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	
 	mfix_print_max_vel (lev);
 
-	mfix_compute_diveu (lev);
-	
-	amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
 	    
 	// 
         // Check whether to exit the loop or not
@@ -124,7 +118,9 @@ void
 mfix_level::mfix_project_velocity (int lev)
 {
     Real dummy_dt = 1.0;
-    mfix_apply_projection ( lev, dummy_dt );
+
+    mac_projection -> apply_projection (u_g, v_g, w_g, ep_g, ro_g, dummy_dt );
+
     amrex::Print() << "After initial projection:\n";
 
     mfix_print_max_vel (lev);
@@ -191,28 +187,21 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
        // Compute intermediate velocity
        mfix_compute_intermediate_velocity ( lev, dt, ro_go, ep_go );
 
-       // Exchange halo nodes and apply BCs to velocity
-       mfix_set_velocity_bcs (lev);
-
-       // Project velocity field
-       mfix_apply_projection ( lev, dt );
+       // Projection
+       mac_projection -> apply_projection (u_g, v_g, w_g, ep_g, ro_g, dt );
 
        // Recover pressure
-       MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev] -> nGrow() );
-
-       // Exchange halo nodes and apply BCs
-       mfix_set_velocity_bcs (lev);
+       const MultiFab& phi_mac = mac_projection -> get_phi(lev);
+       MultiFab::Add (*p_g[lev], phi_mac, 0, 0, 1, p_g[lev] -> nGrow() );
 
        mfix_print_max_vel (lev);
-
-       mfix_compute_diveu (lev);
-       amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
 
        // Replace u_g by the original values 
        MultiFab::Copy (*u_g[lev],   *u_go[lev],   0, 0, 1, u_g[lev]->nGrow());
        MultiFab::Copy (*v_g[lev],   *v_go[lev],   0, 0, 1, v_g[lev]->nGrow());
        MultiFab::Copy (*w_g[lev],   *w_go[lev],   0, 0, 1, w_g[lev]->nGrow());
     }
+
 }
 
 //
@@ -271,18 +260,13 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
     
     // Compute intermediate velocity
     mfix_compute_intermediate_velocity ( lev, dt, ro_go, ep_go );
-    
-    // Exchange halo nodes and apply BCs to velocity
-    mfix_set_velocity_bcs (lev);
- 
-    // Project velocity field
-    mfix_apply_projection ( lev, dt );
+
+    // Projection
+    mac_projection -> apply_projection (u_g, v_g, w_g, ep_g, ro_g, dt );
 
     // Recover pressure
-    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev] -> nGrow() );
-    
-    // Exchange halo nodes and apply BCs
-    mfix_set_velocity_bcs (lev); 
+    const MultiFab& phi_mac = mac_projection -> get_phi(lev);
+    MultiFab::Add (*p_g[lev], phi_mac, 0, 0, 1, p_g[lev] -> nGrow() );
 }
 
 
@@ -361,18 +345,14 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
 
     // Compute intermediate velocity
     mfix_compute_intermediate_velocity ( lev, dt, ro_go, ep_go );
-    
-    // Fill ghost cells and reimpose boundary conditions
-    mfix_set_velocity_bcs (lev);
 
-    // Apply projection
-    mfix_apply_projection ( lev, dt );
+    // Projection
+    mac_projection -> apply_projection (u_g, v_g, w_g, ep_g, ro_g, dt );
 
     // Recover pressure
-    MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1,  phi[lev] -> nGrow() );
-    
-    // Exchange halo nodes and apply BCs
-    mfix_set_velocity_bcs (lev);
+    const MultiFab& phi_mac = mac_projection -> get_phi(lev);
+    MultiFab::Add (*p_g[lev], phi_mac, 0, 0, 1, p_g[lev] -> nGrow() );
+ 
 }
 
 
@@ -429,51 +409,6 @@ mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
     }
 }
 
-//
-// Add gradient of phi to velocity field
-//
-void
-mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff)
-{
-    BL_PROFILE("mfix_level::mfix_add_grad_phi");
-
-    int xdir = 1;
-    int ydir = 2;
-    int zdir = 3;
-
-    #ifdef _OPENMP
-    #pragma omp parallel
-    #endif
-    for (MFIter mfi(*phi[lev],true); mfi.isValid(); ++mfi)
-    {
-	// Boxes for staggered components
-	Box ubx = mfi.tilebox (e_x);
-	Box vbx = mfi.tilebox (e_y);
-	Box wbx = mfi.tilebox (e_z);
-	
-	add_grad_phi (
-	    BL_TO_FORTRAN_BOX(ubx),
-	    BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-	    (*ro_g[lev])[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
-	    geom[lev].CellSize(), &coeff, &xdir );
-
-	add_grad_phi (
-	    BL_TO_FORTRAN_BOX(vbx),
-	    BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-	    (*ro_g[lev])[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
-	    geom[lev].CellSize(), &coeff, &ydir );
-
-	add_grad_phi (
-	    BL_TO_FORTRAN_BOX(wbx),
-	    BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-	    (*ro_g[lev])[mfi].dataPtr(),
-	    BL_TO_FORTRAN_ANYD((*phi[lev])[mfi]),
-	    geom[lev].CellSize(), &coeff, &zdir );
-    }
-    
-}
 
 
 //
@@ -757,224 +692,6 @@ mfix_level::mfix_compute_velocity_slopes (int lev,
     slopes_w[lev] -> FillBoundary(geom[lev].periodicity());
 }
 
-
-//
-// Computes the following decomposition:
-// 
-//    u + grad(phi)/ro_g = u*,     where div(eps*u) = 0
-//
-// where u* is a non-div-free velocity field, stored
-// by components in u_g, v_g, and w_g. The resulting div-free
-// velocity field, u, overwrites the value of u* in u_g, v_g, and w_g.
-//
-// phi is an auxiliary function related to the pressure p_g by the relation:
-// 
-//     new p_g  = old p_g + phi 
-void 
-mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor )
-{
-    BL_PROFILE("mfix_level::mfix_apply_projection");
-
-    // Compute right hand side, AKA div(ep_g* u)
-    mfix_compute_diveu (lev);
-    diveu[lev] -> mult ( 1.0/scaling_factor, 1 );
-    
-    // Compute the PPE coefficients
-    mfix_compute_bcoeff ( lev );
-
-    // Set BCs for Poisson's solver
-    int bc_lo[3], bc_hi[3];
-    int singular;
-    Box domain(geom[lev].Domain());
-    
-    set_ppe_bc (bc_lo, bc_hi,
-		domain.loVect(), domain.hiVect(),
-		&nghost,
-		bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-		bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-		bc_klo.dataPtr(), bc_khi.dataPtr(),
-		&singular );
-
-    // Initialize phi to zero (any non-zero bc's are stored in p0)
-    phi[lev] -> setVal(0.);
-    
-    // Solve PPE
-    solve_poisson_equation ( lev, bcoeff, phi, diveu, bc_lo, bc_hi );
-
-    // Correct the velocity field
-    mfix_add_grad_phi ( lev, -scaling_factor );
-    
-#if 0
-    // We shouldn't need to subtract off the mean
-    if (singular) {
-	Real phi_mean = ( phi[lev] -> sum () ) / domain.numPts () ;
-	phi[lev] -> plus ( -phi_mean, 1 ); // pg_mean is 0 for non-singular case
-    }
-#endif
-}
-
-//
-// Solve PPE:
-//
-//                  div( b * grad(phi) ) = div(u) 
-// 
-void
-mfix_level::solve_poisson_equation (  int lev,
-				      Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-				      Vector< std::unique_ptr<MultiFab> >& phi,
-				      Vector< std::unique_ptr<MultiFab> >& rhs,
-				      int bc_lo[], int bc_hi[] )
-{
-    BL_PROFILE("mfix_level::solve_poisson_equation");
-    
-    // 
-    // First define the matrix (operator).
-    // Class MLABecLaplacian describes the following operator:
-    //
-    //       (alpha * a - beta * (del dot b grad)) phi
-    //
-    LPInfo                       info;
-    MLABecLaplacian              matrix(geom, grids, dmap, info);
-    Vector<const MultiFab*>      tmp;
-    array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
-
-    // Copy the PPE coefficient into the proper data strutcure
-    tmp = amrex::GetVecOfConstPtrs ( b[lev] ) ;
-    b_tmp[0] = tmp[0];
-    b_tmp[1] = tmp[1];
-    b_tmp[2] = tmp[2];
-
-
-    // It is essential that we set MaxOrder of the solver to 2
-    // if we want to use the standard phi(i)-phi(i-1) approximation
-    // for the gradient at Dirichlet boundaries.
-    // The solver's default order is 3 and this uses three points for the
-    // gradient at a Dirichlet boundary.
-    matrix.setMaxOrder(2);
-    
-    // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
-    matrix.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
-			 {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]});
-
-    matrix.setScalars ( 0.0, -1.0 );
-    matrix.setBCoeffs ( lev, b_tmp );
-
-    // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
-    phi[lev]->setVal(0.);
-    matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi)[lev] );
-    
-    // 
-    // Then setup the solver ----------------------
-    //
-    MLMG  solver(matrix);
-	
-    solver.setMaxIter (mg_max_iter);
-    solver.setMaxFmgIter (mg_max_fmg_iter);
-    solver.setVerbose (mg_verbose);
-    solver.setCGVerbose (mg_cg_verbose);
-    solver.setCGMaxIter (mg_cg_maxiter);
-
-    // This ensures that ghost cells of phi are correctly filled when returned from the solver
-    solver.setFinalFillBC(true);
-
-    // 
-    // Finally, solve the system
-    //
-    solver.solve ( GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
-
-    phi[lev] -> FillBoundary (geom[lev].periodicity());
-
-}
-
-//
-// Compute div(ep_g * {u,v,w})
-// 
-void
-mfix_level::mfix_compute_diveu (int lev)
-{
-
-    u_g[lev] -> FillBoundary (geom[lev].periodicity());
-    v_g[lev] -> FillBoundary (geom[lev].periodicity());
-    w_g[lev] -> FillBoundary (geom[lev].periodicity());
-
-    mfix_set_velocity_bcs (lev);
-
-    fill_mf_bc (lev,*ep_g[lev]);
-    
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*diveu[lev],true); mfi.isValid(); ++mfi)
-    {
-	const Box& bx = mfi.tilebox();
-	
-	compute_diveu ( BL_TO_FORTRAN_BOX(bx),
-			BL_TO_FORTRAN_ANYD((*diveu[lev])[mfi]),
-			(*ep_g[lev])[mfi].dataPtr (),
-			BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-			BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-			BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-			geom[lev].CellSize() );		     
-	
-    }
-
-    // BCs 
-    fill_mf_bc (lev,*diveu[lev]);
-
-}
-
-//
-// Computes bcoeff = ep_g/ro_g at the faces of the scalar cells
-// 
-void
-mfix_level::mfix_compute_bcoeff (int lev)
-{
-    BL_PROFILE("mfix_level::mfix_compute_bcoeff");
-
-    // Directions
-    int xdir = 1;
-    int ydir = 2;
-    int zdir = 3;
-    
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-    for (MFIter mfi(*ro_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	// Boxes for staggered components
-	Box ubx = mfi.tilebox (e_x);
-	Box vbx = mfi.tilebox (e_y);
-	Box wbx = mfi.tilebox (e_z);
-
-	// X direction
-	compute_bcoeff (BL_TO_FORTRAN_BOX(ubx),
-		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][0]))[mfi]),
-		       BL_TO_FORTRAN_ANYD((*u_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-		       (*ep_g[lev])[mfi].dataPtr(), &xdir );
-
-	// Y direction
-	compute_bcoeff (BL_TO_FORTRAN_BOX(vbx),
-		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][1]))[mfi]),
-			BL_TO_FORTRAN_ANYD((*v_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-		       (*ep_g[lev])[mfi].dataPtr(), &ydir );
-
-	// Z direction
-	compute_bcoeff (BL_TO_FORTRAN_BOX(wbx),
-		       BL_TO_FORTRAN_ANYD((*(bcoeff[lev][2]))[mfi]),
-			BL_TO_FORTRAN_ANYD((*w_g[lev])[mfi]),
-		       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-		       (*ep_g[lev])[mfi].dataPtr(), &zdir );
-	
-	
-    }
-
-    bcoeff[lev][0] -> FillBoundary(geom[lev].periodicity());
-    bcoeff[lev][1] -> FillBoundary(geom[lev].periodicity());
-    bcoeff[lev][2] -> FillBoundary(geom[lev].periodicity());
-
-}
 
 
 //

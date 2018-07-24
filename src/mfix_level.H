@@ -39,6 +39,8 @@
 
 #include <AMReX_EB_levelset.H>
 
+#include <MacProjection.H>
+
 class mfix_level
     : public AmrCore
 {
@@ -183,7 +185,6 @@ protected:
     // Projection
     void mfix_project_velocity   (int lev);
     void mfix_initial_iterations (int lev, Real dt, Real stop_time, int steady_state);
-    void mfix_apply_projection (int lev, amrex::Real scaling_factor);
     void mfix_set_projection_bcs (int lev);
     void mfix_set_velocity_bcs (int lev);
 
@@ -229,14 +230,6 @@ private:
     void EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real stop_time, Real time);
 
     // Projection-related methods
-    void solve_poisson_equation(int lev,
-            Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-      Vector< std::unique_ptr<MultiFab> >& phi,
-      Vector< std::unique_ptr<MultiFab> >& rhs,
-      int bc_lo[], int bc_hi[] );
-
-    void mfix_compute_bcoeff(int lev);
-
     void check_for_nans(int lev);
 
     void mfix_compute_dt(int lev, amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt);
@@ -268,14 +261,11 @@ private:
 
     void mfix_add_pressure_gradient(int lev, amrex::Real coeff);
 
-    void mfix_add_grad_phi (int lev, amrex::Real coeff);
 
     void mfix_compute_velocity_slopes(int lev,
             Vector< std::unique_ptr<MultiFab> >& u,
             Vector< std::unique_ptr<MultiFab> >& v,
             Vector< std::unique_ptr<MultiFab> >& w );
-
-    void mfix_compute_diveu (int lev);
 
     void mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p);
 
@@ -308,7 +298,7 @@ private:
     static amrex::IntVect e_y;
     static amrex::IntVect e_z;
 
-    // Debug counter used for tracking number of leve-lset MultiFabs used in
+    // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
     int ct_ls_mf;
 
@@ -429,6 +419,10 @@ private:
     Vector<std::unique_ptr<MultiFab> > particle_cost;
     Vector<std::unique_ptr<MultiFab> > fluid_cost;
 
+    // MAC projection object
+    std::unique_ptr<MacProjection> mac_projection;
+
+    
     int solve_fluid;
     int solve_dem;
     int use_proj_method = 0; // Whether to use projection to solve NS eqs.
@@ -442,7 +436,7 @@ private:
     Real mg_atol = 1.0e-14;
 
     // Tolerance to check for steady state (projection only)
-    Real steady_state_tol = 1.0e-5  ;
+    Real steady_state_tol = 1.0e-5;
 
     int max_nit;
     int call_udf;
