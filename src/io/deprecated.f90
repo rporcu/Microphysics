@@ -2,8 +2,8 @@ module DEPRECATED_OR_UNKNOWN_MODULE
 
    ! To initialize array of strings as follows, make sure that
    ! every element has the same lenght. If not, pad with white spaces.
-   character(50), parameter :: obsolete(4) = ["MAX_NIT  ", "TOL_RESID", "NORM_G   ", &
-        "LEQ_PC   " ]
+   character(50), parameter :: obsolete(7) = ["MAX_NIT  ", "TOL_RESID", "NORM_G   ", &
+        "LEQ_PC   ", "UR_FAC   ", "LEQ_IT   ", "LEQ_TOL  "  ]
    
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
