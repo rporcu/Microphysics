@@ -360,8 +360,12 @@ MacProjection::compute_diveu (  Vector< std::unique_ptr<MultiFab> >& u,
 				const Real c = 1.0 )
 {
   
+
     for ( int lev=0; lev <= m_amrcore->finestLevel() ; ++lev )
     {
+        // Initialize to 0 since we are multiplying by (1/c) before we set bc's
+        m_diveu[lev]->setVal(0.);
+
 	set_velocity_bcs( lev, u, v, w );
 	set_ccmf_bcs( lev, *ep[lev] );
     
@@ -382,9 +386,6 @@ MacProjection::compute_diveu (  Vector< std::unique_ptr<MultiFab> >& u,
 	}
 
 	m_diveu[lev] -> mult ( 1.0/c, 1 );
-
-	// Not sure if this step is required
-	set_ccmf_bcs( lev, *m_diveu[lev] );
     }
 }
 
