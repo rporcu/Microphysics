@@ -43,7 +43,8 @@ contains
         domlo, domhi, &
         bc_ilo_type, bc_ihi_type, &
         bc_jlo_type, bc_jhi_type, &
-        bc_klo_type, bc_khi_type, dx, ng ) bind(C)
+        bc_klo_type, bc_khi_type, dx, ng, &
+        do_explicit_diffusion) bind(C)
 
 
       ! Loops bounds
@@ -51,6 +52,11 @@ contains
 
       ! Number of ghost cells 
       integer(c_int),  intent(in   ) :: ng
+
+      ! If true  then we include all the diffusive terms in this explicit result 
+      ! If false then we include all only the off-diagonal terms here -- we do this
+      !     by computing the full tensor then subtracting the diagonal terms
+      integer(c_int),  intent(in   ) :: do_explicit_diffusion
 
       ! Array bounds
       integer(c_int),  intent(in   ) :: vlo(3), vhi(3)
@@ -533,16 +539,17 @@ contains
                        &            ( tzz_t - tzz_b ) * idz  + &
                        &            ( divu_t - divu_b ) * idz   
 
-
-                  ! do n = 1, 3
-                  !    txx = ( mu_e * ( vel(i+1,j,k,n) - vel(i  ,j,k,n) ) &
-                  !           -mu_w * ( vel(i  ,j,k,n) - vel(i-1,j,k,n) ) ) * idx * idx
-                  !    tyy = ( mu_n * ( vel(i,j+1,k,n) - vel(i,j  ,k,n) ) &
-                  !           -mu_s * ( vel(i,j  ,k,n) - vel(i,j-1,k,n) ) ) * idy * idy
-                  !    tzz = ( mu_t * ( vel(i,j,k+1,n) - vel(i,j,k  ,n) ) &
-                  !           -mu_b * ( vel(i,j,k  ,n) - vel(i,j,k-1,n) ) ) * idz * idz
-                  !    divtau(i,j,k,n) = (txx + tyy + tzz)
-                  ! end do
+                  if (do_explicit_diffusion .eq. 0) then
+                     do n = 1, 3
+                        txx = ( mu_e * ( vel(i+1,j,k,n) - vel(i  ,j,k,n) ) &
+                               -mu_w * ( vel(i  ,j,k,n) - vel(i-1,j,k,n) ) ) * idx * idx
+                        tyy = ( mu_n * ( vel(i,j+1,k,n) - vel(i,j  ,k,n) ) &
+                               -mu_s * ( vel(i,j  ,k,n) - vel(i,j-1,k,n) ) ) * idy * idy
+                        tzz = ( mu_t * ( vel(i,j,k+1,n) - vel(i,j,k  ,n) ) &
+                               -mu_b * ( vel(i,j,k  ,n) - vel(i,j,k-1,n) ) ) * idz * idz
+                        divtau(i,j,k,n) = divtau(i,j,k,n) - (txx + tyy + tzz)
+                     end do
+                  end if
 
                   !************************************* 
                   !         div(tau)/rop

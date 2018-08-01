@@ -40,7 +40,7 @@ mfix_level::mfix_compute_divtau ( int lev,
 	    bc_ilo.dataPtr(), bc_ihi.dataPtr(),
 	    bc_jlo.dataPtr(), bc_jhi.dataPtr(),
 	    bc_klo.dataPtr(), bc_khi.dataPtr(),
-	    geom[lev].CellSize(), &nghost);
+	    geom[lev].CellSize(), &nghost, &explicit_diffusion);
     }
 }
 

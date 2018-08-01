@@ -445,11 +445,11 @@ private:
   
     int nodal_pressure = 1;
 
-    bool explicit_diffusion = true;
+    int explicit_diffusion = 0;
 
-    bool use_mac_proj = false;
+    bool use_mac_proj = true;
 
-    int ugradu_type = 1;
+    int ugradu_type = 3;
 
     bool use_epg_hack = false;
 

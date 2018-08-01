@@ -198,16 +198,16 @@ mfix_level::mfix_apply_predictor (int lev, MultiFab& conv_old, MultiFab& divtau_
     // Compute the explicit advective term R_u^n
     mfix_compute_ugradu ( lev, conv_old, vel_go );
 
-    // Compute the explicit diffusive term if doing explicit diffusion
-    if (explicit_diffusion)
-       mfix_compute_divtau ( lev, divtau_old, vel_go );
+    // If explicit_diffusion == true  then we compute the full diffusive terms here
+    // If explicit_diffusion == false then we compute only the off-diagonal terms here
+    mfix_compute_divtau ( lev, divtau_old, vel_go);
     
     // First add the convective term
     MultiFab::Saxpy (*vel_g[lev], dt,   conv_old, 0, 0, 3, 0);
 
-    // Then add the diffusion term if doing explicit diffusion
-    if (explicit_diffusion)
-       MultiFab::Saxpy (*vel_g[lev], dt, divtau_old, 0, 0, 3, 0);
+    // Add the diffusion terms (either all if explicit_diffusion == true or just the
+    //    off-diagonal terms if explicit_diffusion == false)
+    MultiFab::Saxpy (*vel_g[lev], dt, divtau_old, 0, 0, 3, 0);
 
     // Add the forcing terms
     mfix_apply_forcing_terms ( lev, dt, vel_g);
@@ -269,20 +269,18 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
     // Compute the explicit advective term R_u^*
     mfix_compute_ugradu ( lev,   conv, vel_g );
 
-    // Compute divtau^* if doing explicit diffusion
-    if (explicit_diffusion)
-       mfix_compute_divtau ( lev, divtau, vel_g );
+    // If explicit_diffusion == true  then we compute the full diffusive terms here
+    // If explicit_diffusion == false then we compute only the off-diagonal terms here
+    mfix_compute_divtau ( lev, divtau, vel_g);
         
     // Define u_g = u_go + dt/2 (R_u^* + R_u^n) 
     MultiFab::LinComb (*vel_g[lev], 1.0, *vel_go[lev], 0, dt/2.0, conv    , 0, 0, 3, 0); 
     MultiFab::Saxpy   (*vel_g[lev],                       dt/2.0, conv_old, 0, 0, 3, 0);
 
-    // Then add (dt/2)*divtau^* + (dt/2)*divtau^n if doing explicit diffusion
-    if (explicit_diffusion)
-    {
-       MultiFab::Saxpy (*vel_g[lev], dt/2.0, divtau    , 0, 0, 3, 0);
-       MultiFab::Saxpy (*vel_g[lev], dt/2.0, divtau_old, 0, 0, 3, 0);
-    }
+    // Add the diffusion terms (either all if explicit_diffusion == true or just the
+    //    off-diagonal terms if explicit_diffusion == false)
+    MultiFab::Saxpy (*vel_g[lev], dt/2.0, divtau    , 0, 0, 3, 0);
+    MultiFab::Saxpy (*vel_g[lev], dt/2.0, divtau_old, 0, 0, 3, 0);
 
     // Add forcing terms
     mfix_apply_forcing_terms ( lev, dt, vel_g);
