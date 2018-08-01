@@ -556,8 +556,9 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
             case ( minf_ )
 
                vec(i,ulo(2):domlo(2)-1,k,1) = vec(i,domlo(2),k,1)
-               vec(i,ulo(2):domlo(2)-1,k,2) = two * bc_ep_g(bcv) * bc_v_g(bcv) - vec(i,domlo(2),k,1)
+               vec(i,ulo(2):domlo(2)-1,k,2) = two * bc_ep_g(bcv) * bc_v_g(bcv) - vec(i,domlo(2),k,2)
                vec(i,ulo(2):domlo(2)-1,k,3) = vec(i,domlo(2),k,3)
+
 
             end select
 
