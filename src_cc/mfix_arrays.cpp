@@ -377,8 +377,6 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
 
     fill_mf_bc(lev,*ep_g[lev]);
     fill_mf_bc(lev,*ep_go[lev]);
-    fill_mf_bc(lev,*p_g[lev]);
-    fill_mf_bc(lev,*p_go[lev]);
     fill_mf_bc(lev,*ro_g[lev]);
     fill_mf_bc(lev,*ro_go[lev]);
     fill_mf_bc(lev,*rop_g[lev]);
@@ -386,4 +384,9 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
 
     fill_mf_bc(lev,*mu_g[lev]);
     fill_mf_bc(lev,*lambda_g[lev]);
+
+    if (!nodal_pressure){
+       fill_mf_bc(lev,*p_g[lev]);
+       fill_mf_bc(lev,*p_go[lev]);
+    }
 }
