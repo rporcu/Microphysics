@@ -11,14 +11,16 @@
 !
 ! 
 module diffusion_mod
-   
+
    use amrex_fort_module, only: ar => amrex_real
    use iso_c_binding ,    only: c_int
-   use param,             only: zero, half, one
+   use param,             only: zero, half, one, two
    use bc,                only: minf_, nsw_, fsw_, psw_
-   
+
    implicit none
    private
+
+   real(ar), parameter :: q4 = one / ( two * two )
 
    public compute_divtau
 
@@ -26,7 +28,7 @@ module diffusion_mod
    ! This is used to shift index  based on how the variable is staggered
    ! Check e_x, e_y and e_z in mfix_level.H
    integer(c_int), parameter :: e_i(3,3) = reshape ( [1,0,0,0,1,0,0,0,1], [3,3] )
-   
+
 contains
    !
    ! Computes  d(txx)/dx + d(txy)/dy + d(txz)/dz 
@@ -36,12 +38,12 @@ contains
    !  txz =  mu * ( du/dz + dw/dx )
    ! 
    subroutine compute_divtau ( lo, hi, divtau, dlo, dhi, & 
-                               vel_in, vlo, vhi, &
-                               mu, lambda, rop, slo, shi, &
-                               domlo, domhi, &
-                               bc_ilo_type, bc_ihi_type, &
-                               bc_jlo_type, bc_jhi_type, &
-                               bc_klo_type, bc_khi_type, dx, ng ) bind(C)
+        vel_in, vlo, vhi, &
+        mu, lambda, rop, slo, shi, &
+        domlo, domhi, &
+        bc_ilo_type, bc_ihi_type, &
+        bc_jlo_type, bc_jhi_type, &
+        bc_klo_type, bc_khi_type, dx, ng ) bind(C)
 
 
       ! Loops bounds
@@ -65,7 +67,7 @@ contains
            &    rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            &     mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            &  lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      
+
       real(ar),        intent(inout) ::                        &
            & divtau(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3)
 
@@ -79,17 +81,16 @@ contains
            & bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
       ! Temporary array just to handle bc's
-      real(ar) &
-           & vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3)
+      real(ar)   ::  vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3)
+
+      ! Temporaty array to handle div(u) at the nodes 
+      real(ar)   ::  divu(vlo(1):vhi(1)+1,vlo(2):vhi(2)+1,vlo(3)+1:vhi(3)) 
 
       integer(c_int)                 :: i, j, k, n
       real(ar)                       :: idx, idy, idz
-      real(ar)                       :: txx, tyy, tzz
-      
-      real(ar)                       :: mu_e, mu_w
-      real(ar)                       :: mu_n, mu_s
-      real(ar)                       :: mu_t, mu_b
-      
+      real(ar)                       :: du, dv, dw
+
+
       idx = one / dx(1)
       idy = one / dx(2)
       idz = one / dx(3)
@@ -97,7 +98,7 @@ contains
       do k = lo(3)-1, hi(3)+1
          do j = lo(2)-1, hi(2)+1
             do i = lo(1)-1, hi(1)+1
-                vel(i,j,k,:) = vel_in(i,j,k,:)
+               vel(i,j,k,:) = vel_in(i,j,k,:)
             end do
          end do
       end do
@@ -108,19 +109,19 @@ contains
       if ( lo(1) == domlo(1) ) then
          i = lo(1)
          do n = 1, 3
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
+            do k = lo(3), hi(3)
+               do j = lo(2), hi(2)
 
-               if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
-                    ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
-                    ( bc_ilo_type(j,k,1) == FSW_ )  .or. &
-                    ( bc_ilo_type(j,k,1) == PSW_ )  ) then
+                  if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
+                       ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
+                       ( bc_ilo_type(j,k,1) == FSW_ )  .or. &
+                       ( bc_ilo_type(j,k,1) == PSW_ )  ) then
 
-                  vel(lo(1)-1,j,k,n) = 2.d0*vel_in(lo(1)-1,j,k,n) - vel_in(lo(1),j,k,n)
+                     vel(lo(1)-1,j,k,n) = 2.d0*vel_in(lo(1)-1,j,k,n) - vel_in(lo(1),j,k,n)
 
-               end if
+                  end if
+               end do
             end do
-         end do
          end do
       end if
 
@@ -129,132 +130,431 @@ contains
          i = hi(1) 
 
          do n = 1, 3
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
+            do k = lo(3), hi(3)
+               do j = lo(2), hi(2)
 
+                  if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
+                       ( bc_ihi_type(j,k,1) == NSW_ )  .or. &
+                       ( bc_ihi_type(j,k,1) == FSW_ )  .or. &
+                       ( bc_ihi_type(j,k,1) == PSW_ )  ) then
 
-               if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
-                    ( bc_ihi_type(j,k,1) == NSW_ )  .or. &
-                    ( bc_ihi_type(j,k,1) == FSW_ )  .or. &
-                    ( bc_ihi_type(j,k,1) == PSW_ )  ) then
+                     vel(hi(1)+1,j,k,n) = 2.d0*vel_in(hi(1)+1,j,k,n) - vel_in(hi(1),j,k,n)
 
-                  vel(hi(1)+1,j,k,n) = 2.d0*vel_in(hi(1)+1,j,k,n) - vel_in(hi(1),j,k,n)
-
-               end if
+                  end if
+               end do
             end do
-         end do
          end do
       end if
 
       if ( lo(2) == domlo(2) ) then
+
          j = lo(2)
-         do k = lo(3), hi(3)
-            do i = lo(1), hi(1)
 
-               if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
-                    ( bc_jlo_type(i,k,1) == FSW_ )  .or. &
-                    ( bc_jlo_type(i,k,1) == PSW_ )  ) then
+         do n = 1, 3
+            do k = lo(3), hi(3)
+               do i = lo(1)-1, hi(1)+1
 
-                  vel(i,lo(2)-1,k,:) = 2.d0*vel_in(i,lo(2)-1,k,:) - vel_in(i,lo(2),k,:)
-
-               end if
+                  if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
+                       ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
+                       ( bc_jlo_type(i,k,1) == FSW_ )  .or. &
+                       ( bc_jlo_type(i,k,1) == PSW_ )  ) then
+   
+                     vel(i,lo(2)-1,k,n) = 2.d0*vel_in(i,lo(2)-1,k,n) - vel_in(i,lo(2),k,n)
+   
+                  end if
+               end do
             end do
          end do
       end if
 
       if ( hi(2) == domhi(2) ) then
-
+         
          j = hi(2) 
 
          do n = 1, 3
-         do k = lo(3), hi(3)
-            do i = lo(1), hi(1)
+            do k = lo(3), hi(3)
+               do i = lo(1)-1, hi(1)+1
+                 
+                  if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
+                       ( bc_jhi_type(i,k,1) == NSW_ )  .or. &
+                       ( bc_jhi_type(i,k,1) == FSW_ )  .or. &
+                       ( bc_jhi_type(i,k,1) == PSW_ )  ) then
 
+                     vel(i,hi(2)+1,k,n) = 2.d0*vel_in(i,hi(2)+1,k,n) - vel_in(i,hi(2),k,n)
 
-               if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jhi_type(i,k,1) == NSW_ )  .or. &
-                    ( bc_jhi_type(i,k,1) == FSW_ )  .or. &
-                    ( bc_jhi_type(i,k,1) == PSW_ )  ) then
-
-                  vel(i,hi(2)+1,k,n) = 2.d0*vel_in(i,hi(2)+1,k,n) - vel_in(i,hi(2),k,n)
-
-               end if
+                  end if
+               end do
             end do
-         end do
          end do
       end if
 
+      
       if ( lo(3) == domlo(3) ) then
 
          k = lo(3)
 
          do n = 1, 3
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
+            do j = lo(2)-1, hi(2)+1
+               do i = lo(1)-1, hi(1)+1
 
-               if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_klo_type(i,j,1) == NSW_ )  .or. &
-                    ( bc_klo_type(i,j,1) == FSW_ )  .or. &
-                    ( bc_klo_type(i,j,1) == PSW_ )  ) then
+                  if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
+                       ( bc_klo_type(i,j,1) == NSW_ )  .or. &
+                       ( bc_klo_type(i,j,1) == FSW_ )  .or. &
+                       ( bc_klo_type(i,j,1) == PSW_ )  ) then
 
-                  vel(i,j,lo(3)-1,n) = 2.d0*vel_in(i,j,lo(3)-1,n) - vel_in(i,j,lo(3),n)
+                     vel(i,j,lo(3)-1,n) = 2.d0*vel_in(i,j,lo(3)-1,n) - vel_in(i,j,lo(3),n)
 
-               end if
+                  end if
+               end do
             end do
-         end do
          end do
       end if
 
       if ( hi(3) == domhi(3) ) then
 
-         i = hi(1) 
+         k = hi(3) 
 
          do n = 1, 3
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
+            do j = lo(2)-1, hi(2)+1
+               do i = lo(1)-1, hi(1)+1
 
-               if ( ( bc_khi_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_khi_type(i,j,1) == NSW_ )  .or. &
-                    ( bc_khi_type(i,j,1) == FSW_ )  .or. &
-                    ( bc_khi_type(i,j,1) == PSW_ )  ) then
+                  if ( ( bc_khi_type(i,j,1) == MINF_ ) .or. &
+                       ( bc_khi_type(i,j,1) == NSW_ )  .or. &
+                       ( bc_khi_type(i,j,1) == FSW_ )  .or. &
+                       ( bc_khi_type(i,j,1) == PSW_ )  ) then
 
-                  vel(i,j,hi(3)+1,n) = 2.d0*vel_in(i,j,hi(3)+1,n) - vel_in(i,j,hi(3),n)
+                     vel(i,j,hi(3)+1,n) = 2.d0*vel_in(i,j,hi(3)+1,n) - vel_in(i,j,hi(3),n)
 
-               end if
+                  end if
+               end do
             end do
-         end do
          end do
       end if
 
-      do n = 1, 3
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
+      ! Revisit these
+      if ( lo(1) == domlo(1) ) then
+         i = lo(1)
+         do n = 1, 3
+            do k = lo(3)-1, hi(3)+1
+               do j = lo(2)-1, hi(2)+1
 
-               mu_w = half * (mu(i,j,k) + mu(i-1,j,k))
-               mu_e = half * (mu(i,j,k) + mu(i+1,j,k))
-               mu_s = half * (mu(i,j,k) + mu(i,j-1,k))
-               mu_n = half * (mu(i,j,k) + mu(i,j+1,k))
-               mu_b = half * (mu(i,j,k) + mu(i,j,k-1))
-               mu_t = half * (mu(i,j,k) + mu(i,j,k+1))
+                  if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
+                       ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
+                       ( bc_ilo_type(j,k,1) == FSW_ )  .or. &
+                       ( bc_ilo_type(j,k,1) == PSW_ )  ) then
 
-               ! txx
-               txx = ( mu_e * ( vel(i+1,j,k,n) - vel(i  ,j,k,n) ) &
-                      -mu_w * ( vel(i  ,j,k,n) - vel(i-1,j,k,n) ) ) * idx * idx
-               tyy = ( mu_n * ( vel(i,j+1,k,n) - vel(i,j  ,k,n) ) &
-                      -mu_s * ( vel(i,j  ,k,n) - vel(i,j-1,k,n) ) ) * idy * idy
-               tzz = ( mu_t * ( vel(i,j,k+1,n) - vel(i,j,k  ,n) ) &
-                      -mu_b * ( vel(i,j,k  ,n) - vel(i,j,k-1,n) ) ) * idz * idz
+                     vel(lo(1)-1,j,k,n) = 2.d0*vel_in(lo(1)-1,j,k,n) - vel_in(lo(1),j,k,n)
 
-               ! Assemble divtau
-               divtau(i,j,k,n) = (txx + tyy + tzz) / rop(i,j,k)
+                  end if
+               end do
+            end do
+         end do
+      end if
+
+      ! Revisit these
+      if ( hi(1) == domhi(1) ) then
+
+         i = hi(1) 
+
+         do n = 1, 3
+            do k = lo(3)-1, hi(3)+1
+               do j = lo(2)-1, hi(2)+1
+
+
+                  if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
+                       ( bc_ihi_type(j,k,1) == NSW_ )  .or. &
+                       ( bc_ihi_type(j,k,1) == FSW_ )  .or. &
+                       ( bc_ihi_type(j,k,1) == PSW_ )  ) then
+
+                     vel(hi(1)+1,j,k,n) = 2.d0*vel_in(hi(1)+1,j,k,n) - vel_in(hi(1),j,k,n)
+
+                  end if
+               end do
+            end do
+         end do
+      end if
+
+      ! Revisit these
+      if ( lo(2) == domlo(2) ) then
+
+         j = lo(2)
+
+         do n = 1, 3
+            do k = lo(3)-1, hi(3)+1
+               do i = lo(1)-1, hi(1)+1
+
+                  if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
+                       ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
+                       ( bc_jlo_type(i,k,1) == FSW_ )  .or. &
+                       ( bc_jlo_type(i,k,1) == PSW_ )  ) then
+
+                     vel(i,lo(2)-1,k,n) = 2.d0*vel_in(i,lo(2)-1,k,n) - vel_in(i,lo(2),k,n)
+
+                  end if
+               end do
+            end do
+         end do
+      end if
+
+      ! Revisit these
+      if ( hi(2) == domhi(2) ) then
+         
+         j = hi(2) 
+
+         do n = 1, 3
+            do k = lo(3)-1, hi(3)+1
+               do i = lo(1)-1, hi(1)+1
+                 
+                  if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
+                       ( bc_jhi_type(i,k,1) == NSW_ )  .or. &
+                       ( bc_jhi_type(i,k,1) == FSW_ )  .or. &
+                       ( bc_jhi_type(i,k,1) == PSW_ )  ) then
+
+                     vel(i,hi(2)+1,k,n) = 2.d0*vel_in(i,hi(2)+1,k,n) - vel_in(i,hi(2),k,n)
+
+                  end if
+               end do
+            end do
+         end do
+      end if
+
+      ! 
+      ! Compute div(u) at the nodes
+      !     
+      do k = lo(3), hi(3)+1
+         do j = lo(2), hi(2)+1
+            do i = lo(1), hi(1)+1
+
+               ! Divergence
+               du = (   vel(i  ,j  ,k  ,1) + vel(i  ,j-1,k  ,1) &
+                    &  +vel(i  ,j  ,k-1,1) + vel(i  ,j-1,k-1,1) &
+                    &  -vel(i-1,j  ,k  ,1) - vel(i-1,j-1,k  ,1) &
+                    &  -vel(i-1,j  ,k-1,1) - vel(i-1,j-1,k-1,1) )
+
+               dv = (   vel(i  ,j  ,k  ,2) + vel(i-1,j  ,k  ,2) &
+                    &  +vel(i  ,j  ,k-1,2) + vel(i-1,j  ,k-1,2) &
+                    &  -vel(i  ,j-1,k  ,2) - vel(i-1,j-1,k  ,2) &
+                    &  -vel(i  ,j-1,k-1,2) - vel(i-1,j-1,k-1,2) )
+
+               dw = (   vel(i  ,j  ,k  ,3) + vel(i-1,j  ,k  ,3) &
+                    &  +vel(i  ,j-1,k  ,3) + vel(i-1,j-1,k  ,3) &
+                    &  -vel(i  ,j  ,k-1,3) - vel(i-1,j  ,k-1,3) &
+                    &  -vel(i  ,j-1,k-1,3) - vel(i-1,j-1,k-1,3) )
+
+               divu(i,j,k) = ( du*idx + dv*idy + dw*idz ) * q4
 
             end do
          end do
       end do
-      end do
 
+
+
+      block
+
+         real(ar)  :: txx, tyy, tzz
+         real(ar)  :: mu_e, mu_w, mu_n, mu_s, mu_t, mu_b
+         real(ar)  :: lambda_e, lambda_w, lambda_n, lambda_s, lambda_t, lambda_b
+         real(ar)  :: divu_e, divu_w, divu_n, divu_s, divu_t, divu_b
+         real(ar)  :: txx_e, txx_w, txy_n, txy_s, txz_t, txz_b
+         real(ar)  :: txy_e, txy_w, tyy_n, tyy_s, tyz_t, tyz_b
+         real(ar)  :: txz_e, txz_w, tyz_n, tyz_s, tzz_t, tzz_b 
+         
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
+
+                  mu_w = half * (mu(i,j,k) + mu(i-1,j,k))
+                  mu_e = half * (mu(i,j,k) + mu(i+1,j,k))
+                  mu_s = half * (mu(i,j,k) + mu(i,j-1,k))
+                  mu_n = half * (mu(i,j,k) + mu(i,j+1,k))
+                  mu_b = half * (mu(i,j,k) + mu(i,j,k-1))
+                  mu_t = half * (mu(i,j,k) + mu(i,j,k+1))
+
+                  lambda_w = half * (lambda(i,j,k) + lambda(i-1,j,k))
+                  lambda_e = half * (lambda(i,j,k) + lambda(i+1,j,k))
+                  lambda_s = half * (lambda(i,j,k) + lambda(i,j-1,k))
+                  lambda_n = half * (lambda(i,j,k) + lambda(i,j+1,k))
+                  lambda_b = half * (lambda(i,j,k) + lambda(i,j,k-1))
+                  lambda_t = half * (lambda(i,j,k) + lambda(i,j,k+1))  
+
+                  !************************************* 
+                  !         div(tau)_x
+                  !*************************************
+
+                  ! X
+                  txx_e = two * mu_e * ( vel(i+1,j,k,1) - vel(i  ,j,k,1) ) * idx
+                  txx_w = two * mu_w * ( vel(i  ,j,k,1) - vel(i-1,j,k,1) ) * idx
+
+	          ! Y north
+                  du = vel(i,j+1,k,1) - vel(i,j,k,1) 
+
+                  dv = (  vel(i+1,j,k,2) + vel(i+1,j+1,k,2) + vel(i  ,j,k,2) + vel(i  ,j+1,k,2) &
+                       &- vel(i  ,j,k,2) - vel(i  ,j+1,k,2) - vel(i-1,j,k,2) - vel(i-1,j+1,k,2) ) * q4           
+
+                  txy_n = mu_n * ( du*idy + dv*idx )
+
+                  ! Y south
+                  du = vel(i,j,k,1) - vel(i,j-1,k,1) 
+
+                  dv = (  vel(i+1,j-1,k,2) + vel(i+1,j,k,2) + vel(i  ,j-1,k,2) + vel(i  ,j,k,2) &
+                       &- vel(i  ,j-1,k,2) - vel(i  ,j,k,2) - vel(i-1,j-1,k,2) - vel(i-1,j,k,2) ) * q4            
+
+                  txy_s = mu_s * ( du*idy + dv*idx )
+
+                  ! Z top
+                  du = vel(i,j,k+1,1) - vel(i,j,k,1)
+
+                  dw = (  vel(i+1,j,k,3) + vel(i+1,j,k+1,3) + vel(i  ,j,k,3) + vel(i  ,j,k+1,3) &
+                       &- vel(i  ,j,k,3) - vel(i  ,j,k+1,3) - vel(i-1,j,k,3) - vel(i-1,j,k+1,3) ) * q4
+
+                  txz_t = mu_t * ( du*idz + dw*idx )
+
+                  ! Z bottom
+                  du = vel(i,j,k,1) - vel(i,j,k-1,1) 
+
+                  dw = (  vel(i+1,j,k-1,3) + vel(i+1,j,k,3) + vel(i  ,j,k-1,3) + vel(i  ,j,k,3) &
+                       &- vel(i  ,j,k-1,3) - vel(i  ,j,k,3) - vel(i-1,j,k-1,3) - vel(i-1,j,k,3) ) * q4
+
+                  txz_b = mu_b * ( du*idz + dw*idx )
+
+
+                  ! Div term
+                  divu_e = lambda_e * ( divu(i+1,j,k) + divu(i+1,j+1,k) + divu(i+1,j,k+1) + divu(i+1,j+1,k+1)) * q4
+                  divu_w = lambda_w * ( divu(i  ,j,k) + divu(i  ,j+1,k) + divu(i  ,j,k+1) + divu(i  ,j+1,k+1)) * q4
+
+
+                  ! Assemble
+                  divtau(i,j,k,1) = ( txx_e - txx_w ) * idx  + &
+                       &            ( txy_n - txy_s ) * idy  + &
+                       &            ( txz_t - txz_b ) * idz  + &
+                       &            ( divu_e - divu_w ) * idx
+
+                  !************************************* 
+                  !         div(tau)_y
+                  !*************************************
+                  ! IN FLD01-x, if I set du=zero, it works -> pronlem with mixed derivative
+
+                  ! X east
+                  du = (   vel(i+1,j  ,k,1) + vel(i+1,j+1,k,1) + vel(i,j  ,k,1) + vel(i,j+1,k,1) &
+                       & - vel(i+1,j-1,k,1) - vel(i+1,j  ,k,1) - vel(i,j-1,k,1) - vel(i,j  ,k,1) ) * q4
+                 
+                  dv = vel(i+1,j,k,2) - vel(i,j,k,2)
+
+                  txy_e = mu_e * ( du*idy + dv*idx )
+
+                  ! X west
+                  du = (   vel(i,j  ,k,1) + vel(i,j+1,k,1) + vel(i-1,j  ,k,1) + vel(i-1,j+1,k,1) &
+                       & - vel(i,j-1,k,1) - vel(i,j  ,k,1) - vel(i-1,j-1,k,1) - vel(i-1,j  ,k,1) ) * q4
+
+                  dv = vel(i,j,k,2) - vel(i-1,j,k,2)
+
+                  txy_w = mu_w * ( du*idy + dv*idx )
+
+                  ! Y
+                  tyy_n = two * mu_n * ( vel(i,j+1,k,2) - vel(i,j  ,k,2) ) * idy
+                  tyy_s = two * mu_s * ( vel(i,j  ,k,2) - vel(i,j-1,k,2) ) * idy
+
+                  ! Z top
+                  dv = vel(i,j,k+1,2) - vel(i,j,k,2)
+
+                  dw = (   vel(i,j  ,k+1,3) + vel(i,j+1,k+1,3) + vel(i,j  ,k,3) + vel(i,j+1,k,3) &
+                       & - vel(i,j-1,k+1,3) - vel(i,j  ,k+1,3) - vel(i,j-1,k,3) - vel(i,j  ,k,3) ) * q4
+
+                  tyz_t = mu_t * ( dv*idz + dw*idy )
+
+                  ! Z bottom
+                  dv = vel(i,j,k,2) - vel(i,j,k-1,2)
+
+                  dw = (   vel(i,j  ,k,3) + vel(i,j+1,k,3) + vel(i,j  ,k-1,3) + vel(i,j+1,k-1,3) &
+                       & - vel(i,j-1,k,3) - vel(i,j  ,k,3) - vel(i,j-1,k-1,3) - vel(i,j  ,k-1,3) ) * q4
+
+                  tyz_b = mu_b * ( dv*idz + dw*idy )
+
+
+                  ! Div term
+                  divu_n = lambda_n * ( divu(i,j+1,k) + divu(i,j+1,k+1) + divu(i+1,j+1,k+1) + divu(i+1,j+1,k) ) * q4
+                  divu_s = lambda_s * ( divu(i,j  ,k) + divu(i,j  ,k+1) + divu(i+1,j  ,k+1) + divu(i+1,j  ,k) ) * q4
+
+                  ! Assemble
+                  divtau(i,j,k,2) = ( txy_e - txy_w ) * idx  + &
+                       &            ( tyy_n - tyy_s ) * idy  + &
+                       &            ( tyz_t - tyz_b ) * idz  + &
+                       &            ( divu_n - divu_s ) * idy   
+
+
+                  !************************************* 
+                  !         div(tau)_z
+                  !*************************************
+
+                  ! X east
+                  dw = vel(i+1,j,k,3) - vel(i,j,k,3)
+
+                  du = (   vel(i+1,j,k  ,1) + vel(i+1,j,k+1,1) + vel(i,j,k  ,1) + vel(i,j,k+1,1) &
+                       & - vel(i+1,j,k-1,1) - vel(i+1,j,k  ,1) - vel(i,j,k-1,1) - vel(i,j,k  ,1) ) * q4
+
+                  txz_e = mu_e * ( du*idz + dw*idx )
+
+                  ! X west
+                  dw = vel(i,j,k,3) - vel(i-1,j,k,3)
+
+                  du = (   vel(i,j,k  ,1) + vel(i,j,k+1,1) + vel(i-1,j,k  ,1) + vel(i-1,j,k+1,1) &
+                       & - vel(i,j,k-1,1) - vel(i,j,k  ,1) - vel(i-1,j,k-1,1) - vel(i-1,j,k  ,1) ) * q4
+
+                  txz_w = mu_w * ( du*idz + dw*idx )
+
+                  ! Y north
+                  dw = vel(i,j+1,k,3) - vel(i,j,k,3)
+
+                  dv = (   vel(i,j,k+1,2) + vel(i,j+1,k+1,2) + vel(i,j,k  ,2) + vel(i,j+1,k-1,2) &
+                       & - vel(i,j,k  ,2) - vel(i,j+1,k  ,2) - vel(i,j,k-1,2) - vel(i,j+1,k-1,2) ) * q4
+
+                  tyz_n = mu_n * ( dv*idz + dw*idy )
+
+                  ! Y south
+                  dw = vel(i,j,k,3) - vel(i,j-1,k,3)
+
+                  dv = (   vel(i,j-1,k+1,2) + vel(i,j,k+1,2) + vel(i,j-1,k  ,2) + vel(i,j,k-1,2) &
+                       & - vel(i,j-1,k  ,2) - vel(i,j,k  ,2) - vel(i,j-1,k-1,2) - vel(i,j,k-1,2) ) * q4
+
+                  tyz_s = mu_s * ( dv*idz + dw*idy )
+
+                  ! Z
+                  tzz_t = two * mu_t * ( vel(i,j,k+1,3) - vel(i,j,k  ,3) ) * idz 
+                  tzz_b = two * mu_b * ( vel(i,j,k  ,3) - vel(i,j,k-1,3) ) * idz 
+
+                  ! Div term
+                  divu_t = lambda_t * ( divu(i,j,k+1) + divu(i+1,j,k+1) + divu(i+1,j+1,k+1) + divu(i,j+1,k+1) ) * q4 
+                  divu_b = lambda_b * ( divu(i,j,k  ) + divu(i+1,j,k  ) + divu(i+1,j+1,k  ) + divu(i,j+1,k  ) ) * q4
+                  
+
+                  ! Assemble
+                  divtau(i,j,k,3) = ( txz_e - txz_w ) * idx  + &
+                       &            ( tyz_n - tyz_s ) * idy  + &
+                       &            ( tzz_t - tzz_b ) * idz  + &
+                       &            ( divu_t - divu_b ) * idz   
+
+
+                  ! do n = 1, 3
+                  !    txx = ( mu_e * ( vel(i+1,j,k,n) - vel(i  ,j,k,n) ) &
+                  !           -mu_w * ( vel(i  ,j,k,n) - vel(i-1,j,k,n) ) ) * idx * idx
+                  !    tyy = ( mu_n * ( vel(i,j+1,k,n) - vel(i,j  ,k,n) ) &
+                  !           -mu_s * ( vel(i,j  ,k,n) - vel(i,j-1,k,n) ) ) * idy * idy
+                  !    tzz = ( mu_t * ( vel(i,j,k+1,n) - vel(i,j,k  ,n) ) &
+                  !           -mu_b * ( vel(i,j,k  ,n) - vel(i,j,k-1,n) ) ) * idz * idz
+                  !    divtau(i,j,k,n) = (txx + tyy + tzz)
+                  ! end do
+
+                  !************************************* 
+                  !         div(tau)/rop
+                  !*************************************
+                  divtau(i,j,k,:) = divtau(i,j,k,:) / rop(i,j,k)
+
+               end do
+            end do
+         end do
+         
+      end block
+      
    end subroutine compute_divtau
 
    !
@@ -402,31 +702,31 @@ contains
 
       end if
 
-      contains
+   contains
 
-         !
-         ! Test whether the BC type is the same everywhere on
-         ! the face. If BC is uniform on face, it returns its value
-         !
-         function get_bc_face (bct_array) result (bc_face)
-            integer(c_int), intent(in   ) :: bct_array(:,:,:)
-            integer                       :: bc_face
-            integer                       :: is, ie, js, je
+      !
+      ! Test whether the BC type is the same everywhere on
+      ! the face. If BC is uniform on face, it returns its value
+      !
+      function get_bc_face (bct_array) result (bc_face)
+         integer(c_int), intent(in   ) :: bct_array(:,:,:)
+         integer                       :: bc_face
+         integer                       :: is, ie, js, je
 
-            ! Do not consider the edges: they may cause problems
-            is = 3
-            ie = size (bct_array,1) - 2
-            js = 3
-            je = size (bct_array,2) - 2
+         ! Do not consider the edges: they may cause problems
+         is = 3
+         ie = size (bct_array,1) - 2
+         js = 3
+         je = size (bct_array,2) - 2
 
-            bc_face = bct_array(is,js,1)
+         bc_face = bct_array(is,js,1)
 
-            if ( .not. all (bct_array(is:ie,js:je,1) == bc_face) ) then
-               stop "BC type must be uniform on each face of the domain"
-            end if
+         if ( .not. all (bct_array(is:ie,js:je,1) == bc_face) ) then
+            stop "BC type must be uniform on each face of the domain"
+         end if
 
-         end function get_bc_face
+      end function get_bc_face
 
    end subroutine set_diff_bc
-   
+
 end module diffusion_mod
