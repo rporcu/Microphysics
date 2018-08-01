@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.5)
 #
 # Set the search path for cmake modules
 #
-set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/CMake )
+set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake )
 
 #
 # Here we set the only option that decide if superbuild
@@ -101,15 +101,12 @@ include ( MFIX_Typecheck )
 add_typecheck_target()
 
 # Tools
-set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/) 
-add_subdirectory (Tools)
+set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/tools/) 
+add_subdirectory (tools)
 
 # Tests
 enable_testing ()
 add_subdirectory ( tests )
-
-# Add debug runs
-add_subdirectory ( debug )
 
 # Tags
 include (MFIX_Tags)
