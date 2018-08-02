@@ -1,80 +1,116 @@
 cmake_minimum_required (VERSION 3.5)
 
-project (MFIX-Exa)
+#
+# Set the search path for cmake modules
+#
+set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake )
 
 #
-# Define the languages used by the project
+# Here we set the only option that decide if superbuild
+# is enabled or not
+# 
+set ( AMREX_INSTALL_DIR "" CACHE PATH
+   "Path to installation directory (leave empty for superbuild)")
+
+set ( SUPERBUILD  ON )
+
+if ( AMREX_INSTALL_DIR )
+   set ( SUPERBUILD OFF )
+endif ()
+
 #
+# Now decide if invoking superbuild. If so, this listfile will be
+# re-read by the MFIX_Superbuild.cmake 
+# 
+if ( SUPERBUILD )
+   include ( MFIX_Superbuild )
+   return ()
+endif ()
+
+#
+# This is where the MFIX-standalone config starts
+# 
+project (MFIX-Exa)
+
+# Define the languages used by the project
 enable_language (C)
 enable_language (CXX)
 enable_language (Fortran)
 
-#
-# Require C++11 standard
-#
-set (CMAKE_CXX_STANDARD 11)
-set (CMAKE_CXX_STANDARD_REQUIRED ON) 
-set (CMAKE_CXX_EXTENSIONS OFF)
-
-#
-# Always verbose output during make
-# 
-# set ( CMAKE_VERBOSE_MAKEFILE on )
-
-#
-# Set the search path for cmake modules
-#
-set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/ )
-
-
-#
-# Include module with custom macros and functions
-#
+# Load required modules 
+include ( MFIX_Options )
 include ( MFIX_Utils )
 
-get_git_info ( var1 var2 )
-#
-# Stop if building in source
-# 
+get_git_info ( )
 check_build_tree_path ()
+set_default_config_flags ()
+
+# Set some cache variable for the whole project
+set ( MFIX_LIBNAME "mfixcore" CACHE INTERNAL "Name of MFIX core library")
+set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
+
+
+# Import AMReX. Do it here so it is visibile to all targets
+find_package (AMReX 18 REQUIRED HINTS ${AMREX_INSTALL_DIR})   
+echo_amrex_config_options ()
+
+if ( NOT ( AMREX_ENABLE_PARTICLES AND AMREX_ENABLE_AMRDATA
+	 AND AMREX_ENABLE_EB) )
+   message ( FATAL_ERROR "AMReX installation missing required components!")
+endif ()
+
+if ( NOT ( "${MFIX_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
+   message (WARNING "MFIX build type (${MFIX_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
+endif ()
 
 #
-# Initialize all the global variables
-#
-include ( MFIX_CMakeVariables )
-
-# 
-# Load MFIX options
-# 
-include ( MFIX_Options )
-
-#
-# Config MFIX build
-# 
-include ( MFIX_Config )
-
-
 # This is the main file
-set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
+#
+if ( ENABLE_PROJCC )
+  set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src_cc/main.cpp )
+else ()
+  set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
+endif ()
 
-include_directories (${MFIX_INCLUDE_PATH} ${MFIX_EXTRA_INCLUDE_PATH})
-link_directories (${MFIX_EXTRA_LIBRARIES_PATH})
+# 
+# Core MFIX library
+# For the time being, we keep to versions: one with sources in src/
+# ( SIMPLE + Exact Projection ), one with sources in both src_cc/ and src/
+# ( Approximate Projection only ).
+# 
+if (ENABLE_PROJCC)
+  message ( WARNING "Building MFIX in experimental APPROXIMATE PROJECTION mode (ENABLE_PROJCC=on)" )
+  add_subdirectory (src_cc)
+  set (ENABLE_PTESTS ON)
+  set (ENABLE_STESTS OFF)
+else ()
+  add_subdirectory (src)
+endif ()
 
-# Main
-add_subdirectory (src)
+# Print out config summary
+print_mfix_configuration_summary (${MFIX_LIBNAME})
 
+
+# We should check what this line does
 file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
-add_executable (mfix ${MAIN} ${USR_OVERRIDES} )
-target_link_libraries ( mfix mfixcore ${MFIX_EXTRA_LINK_LINE} ) 
+add_executable (${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} )
+target_link_libraries ( ${MFIX_EXENAME} ${MFIX_LIBNAME} ) 
+
+# Configure type-checking target
+include ( MFIX_Typecheck )
+add_typecheck_target()
 
 # Tools
-set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/Tools/F90) 
-add_subdirectory (Tools/F90)
+set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/tools/) 
+add_subdirectory (tools)
 
 # Tests
 enable_testing ()
 add_subdirectory ( tests )
-#add_subdirectory( benchmarks )
+
+# Tags
+include (MFIX_Tags)
+add_tags_targets ()
 
 # Add a target to generate API documentation with Doxygen
 find_package(Doxygen)
@@ -86,3 +122,11 @@ if (DOXYGEN_FOUND)
       COMMENT "Generating API documentation with Doxygen" VERBATIM
       )
 endif (DOXYGEN_FOUND)
+
+# Copy compile_commands.json from the build directory to the project root directory
+if ( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
+    execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json
+        ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json
+  )
+endif ()

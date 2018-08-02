@@ -1,6 +1,6 @@
 MODULE CFFCTOWALL_MODULE
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    CONTAINS
@@ -26,22 +26,22 @@ MODULE CFFCTOWALL_MODULE
 ! particle index
       integer, INTENT(IN) :: L
 ! distance between particle center and wall
-      real(c_real), INTENT(IN) :: DIST_LI
+      real(rt), INTENT(IN) :: DIST_LI
 ! unit normal vector along the line of contact pointing from
 ! particle L to wall
-      real(c_real), INTENT(IN) :: NORM(3)
+      real(rt), INTENT(IN) :: NORM(3)
 ! normal and tangential force
-      real(c_real), INTENT(IN) :: FN(3), FT(3)
+      real(rt), INTENT(IN) :: FN(3), FT(3)
 
-      real(c_real), DIMENSION(:), INTENT(IN) :: DES_RADIUS
-      real(c_real), DIMENSION(:,:), INTENT(INOUT) :: FC, TOW
+      real(rt), DIMENSION(:), INTENT(IN) :: DES_RADIUS
+      real(rt), DIMENSION(:,:), INTENT(INOUT) :: FC, TOW
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! local variable for calculating torque on particle
-      real(c_real) :: CROSSP(3)
+      real(rt) :: CROSSP(3)
 ! distance from the contact point to the particle center
-      real(c_real) DIST_CL
+      real(rt) DIST_CL
 !------------------------------------------------
 
 ! total contact force

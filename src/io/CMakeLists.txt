@@ -1,0 +1,6 @@
+add_sources ( mfixIO.cpp )
+add_sources ( eb_to_pvd.f90 output_manager.f90 )
+add_sources ( write_error.f90 write_out0.f90 )
+add_sources ( read_namelist.f90 display_resid.f90 remove_comment.f90 )
+add_sources ( parse_line.f90 deprecated.f90 error_manager_mod.f90 )
+add_sources ( write_user.f90 )

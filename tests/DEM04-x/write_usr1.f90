@@ -84,7 +84,7 @@ SUBROUTINE WRITE_DES_Out(lTime, np, particles)
       Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
       ! Write the results to a file.
-      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND, Err
+      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND
       CLOSE(lUNIT)
 
       ! Open the files.
@@ -98,7 +98,7 @@ SUBROUTINE WRITE_DES_Out(lTime, np, particles)
       Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
       ! Write the results to a file.
-      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND, Err
+      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND
       CLOSE(lUNIT)
 
       ! Open the files.
@@ -112,13 +112,13 @@ SUBROUTINE WRITE_DES_Out(lTime, np, particles)
       Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
       ! Write the results to a file.
-      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND, Err
+      WRITE(lUNIT,1000) MEW_W, ANL_ND, DEM_ND
       CLOSE(lUNIT)
 
    ENDIF
 
    RETURN
 
-1000 FORMAT(3x,F15.8,5X,F15.8,2(3x,F15.8))
+1000 FORMAT(3x,F15.8,5X,F15.8,3x,F15.8)
 
 END SUBROUTINE WRITE_DES_Out

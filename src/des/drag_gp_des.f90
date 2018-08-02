@@ -1,6 +1,6 @@
 module des_drag_gp_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
    contains
@@ -41,20 +41,20 @@ module des_drag_gp_module
          subroutine drag_usr(I,J,K, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
             ROs, lUg, lVg, lWg)
 
-            use amrex_fort_module, only : c_real => amrex_real
+            use amrex_fort_module, only : rt => amrex_real
             use iso_c_binding , only: c_int
             ! Index of fluid cell:
             integer, intent(in) :: I,J,K, M_NP
-            real(c_real), intent(OUT) :: lDgA
-            real(c_real), intent(in) :: EPg, Mug, ROg, VREL, DPM, ROs, lUg, lVg, lWg
+            real(rt), intent(OUT) :: lDgA
+            real(rt), intent(in) :: EPg, Mug, ROg, VREL, DPM, ROs, lUg, lVg, lWg
          end subroutine drag_usr
       end interface
 
       ! indices, associated with current particle
       integer, intent(in   ) :: I, J, K
 
-      real(c_real), intent(in) :: des_radius
-      real(c_real), intent(in) :: pvol, ros
+      real(rt), intent(in) :: des_radius
+      real(rt), intent(in) :: pvol, ros
 
 !-----------------------------------------------
 ! Dummy arguments
@@ -65,19 +65,19 @@ module des_drag_gp_module
       integer , intent(in) :: NP
 
       ! particle velocity
-      real(c_real), intent(in) :: particle_vel(3)
+      real(rt), intent(in) :: particle_vel(3)
 
       ! fluid velocity interpolated to particle position
-      real(c_real), intent(in) :: fluid_vel(3)
+      real(rt), intent(in) :: fluid_vel(3)
 
       ! Gas phase volume fraction.
-      real(c_real), intent(in) :: EPg
+      real(rt), intent(in) :: EPg
 
-      real(c_real), intent(in) :: ro_g&
+      real(rt), intent(in) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in) :: mu_g&
+      real(rt), intent(in) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(out) :: F_gp
+      real(rt), intent(out) :: F_gp
 
       integer, intent(in) :: particle_phase
 
@@ -87,19 +87,19 @@ module des_drag_gp_module
 ! solids phase index, associated with current particle
       ! integer :: M
 ! Slip velocity and its magnitude
-      real(c_real) :: VSLP(3), VREL
+      real(rt) :: VSLP(3), VREL
 ! gas laminar viscosity redefined here to set viscosity at pressure
 ! boundaries
-      real(c_real) :: Mu
+      real(rt) :: Mu
 ! drag coefficient
-      real(c_real) :: DgA
+      real(rt) :: DgA
 
 ! total solids volume fraction
-      real(c_real) :: PHIS
+      real(rt) :: PHIS
  
 ! aliases for void fraction, gas density, gas bulk density,
 ! solids volume fraction, particle diameter, particle density
-      real(c_real) :: ROg, ROPg, DPM
+      real(rt) :: ROg, ROPg, DPM
 !-----------------------------------------------
 
 ! solids phase index of current particle

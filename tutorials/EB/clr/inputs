@@ -1,0 +1,125 @@
+amr.stop_time = 0.00001
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell = 100 330 20
+
+# Maximum allowable size of each subdomain in the problem domain;
+#    this is used to decompose the domain for parallel calculations.
+#amr.max_grid_size = 1024
+amr.max_grid_size_x = 32
+amr.max_grid_size_y = 32
+amr.max_grid_size_z = 32
+
+maxboxsize = 1024
+STL_file = "clr.stl"
+
+# Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Maximum particle title size
+particles.tile_size = 1024 1024 1024
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+amr.plot_int       = 1
+amr.check_int      = 1
+amr.par_ascii_int  = 1
+
+mfix.particle_init_type = "Auto"
+
+# Collision algorithm details:
+# Level-set refinement and padding
+mfix.levelset__refinement = 2
+mfix.levelset__pad        = 4
+# EBIS refinement and padding
+mfix.levelset__eb_refinement = 1
+mfix.levelset__eb_pad        = 2
+
+#mfix.levelset__water-tight = true
+
+#mfix.legacy__eb_collisions = true
+
+mfix.write_eb_surface = true  # Needed to output eb-surfaces
+
+mfix.clr  = true    # use the mfix_eb_clr
+
+# Riser -------------------------------------------------
+
+mfix.riser_translate      =   0.264 0.000 0.028
+
+mfix.riser_lower_height   =   0.250
+mfix.riser_lower_radius   =   0.018
+
+mfix.riser_upper_height   =   0.980
+mfix.riser_upper_radius   =   0.008
+
+
+# J-Leg --------------------------------------------------
+
+mfix.jleg_htranslate    =   0.060 0.028 0.028
+
+mfix.jleg_horz_height   =   0.200
+mfix.jleg_horz_radius   =   0.006
+
+mfix.jleg_vtranslate    =   0.060 0.0224 0.028
+
+mfix.jleg_vert_height   =   0.160
+mfix.jleg_vert_radius   =   0.006
+
+
+# Fluid bed reactor --------------------------------------
+
+mfix.reactor_translate    =   0.045 0.145 0.028
+
+mfix.reactor_height   =   0.390
+mfix.reactor_radius   =   0.024
+
+
+# Loop-seal to Fluid bed reactor -------------------------
+
+mfix.ls2fbr_translate    =   0.030 0.500 0.028
+
+mfix.ls2fbr_height   =   0.100
+mfix.ls2fbr_radius   =   0.006
+
+
+# Loop-seal ----------------------------------------------
+
+mfix.loopseal_translate    =   0.045 0.560 0.028
+
+mfix.loopseal_height   =   0.120
+mfix.loopseal_radius   =   0.024
+
+
+
+# cy2ls --------------------------------------------------
+
+mfix.cy2ls_translate    =   0.045 0.60 0.028
+
+mfix.cy2ls_height   =   0.400
+mfix.cy2ls_radius   =   0.006
+
+
+# cyclone ------------------------------------------------
+
+mfix.cyclone_translate    =   0.045 0.88 0.028
+
+mfix.cyclone_height   =   0.080
+mfix.cyclone_radius   =   0.015
+
+
+# crossover ----------------------------------------------
+
+mfix.crossover_translate    =   0.060 0.945 0.028
+
+mfix.crossover_height   =   0.220
+mfix.crossover_radius   =   0.006
+
+
+
+# Geometry
+geometry.coord_sys   = 0                  # 0: Cartesian
+geometry.is_periodic = 0      0     0     # Is periodic in each direction?
+geometry.prob_lo     = 0.00   0.00  0.00  # lo corner of physical domain
+geometry.prob_hi     = 0.30   0.99  0.06  # hi corner of physical domain

@@ -1,0 +1,3 @@
+f90EXE_sources += get_eb_walls.f90
+CEXE_sources += mfix_eb.cpp
+FEXE_headers += mfix_eb_F.H

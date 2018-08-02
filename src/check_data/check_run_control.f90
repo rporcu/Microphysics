@@ -1,6 +1,6 @@
 module check_run_control_module
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
   use error_manager,  only: init_err_msg, flush_err_msg, finl_err_msg, &
@@ -24,11 +24,11 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine check_run_control(dt)
 
-    use run,    only: tstop, nlog, discretize
+    use run,    only: nlog, discretize
     use param, only: dim_eqs
 
 
-    real(c_real), intent(in) :: dt
+    real(rt), intent(in) :: dt
 
     integer  :: lc
 
@@ -41,14 +41,6 @@ contains
           call flush_err_msg(abort=.true.)
        endif
 
-       if (is_undefined(tstop)) then
-          write(err_msg,1000) 'TSTOP'
-          call flush_err_msg(abort=.true.)
-
-       elseif (tstop < zero) then
-          write(err_msg,1002) 'tstop', tstop
-          call flush_err_msg(abort=.true.)
-       endif
     endif
 
     do lc = 1,dim_eqs

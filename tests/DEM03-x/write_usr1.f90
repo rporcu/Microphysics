@@ -7,13 +7,13 @@ subroutine write_usr1(l, np, time, dt, particles, xlength, ylength, zlength )
 
    use amrex_fort_module, only: c_real => amrex_real
    use particle_mod,      only: particle_t
-   
+
    implicit none
 
       integer,          intent(in   ) :: l, np
       real(c_real),     intent(in   ) :: time, dt, xlength, ylength, zlength
       type(particle_t), intent(in   ) :: particles(np)
-      
+
       SELECT CASE(L)
       CASE(1); call write_des_out(TIME, np, particles, xlength)
       end SELECT
@@ -47,7 +47,7 @@ subroutine write_usr1(l, np, time, dt, particles, xlength, ylength, zlength )
       real(c_real),     intent(in   ) :: ltime, length
       type(particle_t), intent(in   ) :: particles(np)
 
-      
+
 ! Local variables
 !---------------------------------------------------------------------//
 ! file unit for heat transfer data
@@ -69,7 +69,7 @@ subroutine write_usr1(l, np, time, dt, particles, xlength, ylength, zlength )
 
 ! Calculate the value for the rk4 solutions.
       TIME_INTERVAL = lTime - rk4_TIME
-      IF(TIME_INTERVAL .LE. rk4_DT) THEN
+      IF(TIME_INTERVAL .LE. rk4_DT_default) THEN
          rk4_STEPS = 1
          rk4_DT = TIME_INTERVAL
          rk4_DT_LAST = UNDEFINED
@@ -90,11 +90,11 @@ subroutine write_usr1(l, np, time, dt, particles, xlength, ylength, zlength )
       endif
 
       ! Write the results to a file.
-      write(uPos1,"(3x,F15.8,5X,F15.8,2(3x,F15.8))") lTime, gx1,   &
-         particles(1) % pos(1), (ABS(gx1 - particles(1) % pos(1))/ABS(gx1))*100
+      write(uPos1,"(3x,F15.8,5X,F15.8,3x,F15.8)") lTime, gx1,   &
+         particles(1) % pos(1)
 
-      write(uPos2,"(3x,F15.8,5X,F15.8,2(3x,F15.8))") lTime, gx2,   &
-         particles(2) % pos(1), (ABS(gx2 - particles(2) % pos(1))/ABS(gx1))*100
+      write(uPos2,"(3x,F15.8,5X,F15.8,3x,F15.8)") lTime, gx2,   &
+         particles(2) % pos(1)
 
       CLOSE(uPos1)
       CLOSE(uPos2)

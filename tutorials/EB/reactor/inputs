@@ -1,0 +1,93 @@
+#_______________________________________________________________________
+# Geometry / grids / tiles
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+geometry.coord_sys   = 0                  # 0: Cartesian
+geometry.is_periodic = 0      0     0     # Is periodic in each direction?
+geometry.prob_lo     = 0.00   0.00  0.00  # lo corner of physical domain
+geometry.prob_hi     = 0.08   0.32  0.08  # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell =  32 128 32
+
+# Maximum allowable size of each subdomain in the problem domain;
+#    this is used to decompose the domain for parallel calculations.
+
+amr.max_grid_size_x =  8
+amr.max_grid_size_y = 32
+amr.max_grid_size_z =  8
+
+fabarray.mfiter_tile_size =  32 32 32
+particles.tile_size =        32 32 32
+
+
+#_______________________________________________________________________
+# IO / Checkpoing
+
+amr.plot_int  = 100
+amr.plot_file = "plt"
+
+amr.check_int = 2500
+amr.check_file = "chk"
+
+#amr.restart="chk02500"
+
+#_______________________________________________________________________
+# Solver settings
+
+#! Fluid solver
+#!-----------------------------------------------------------//
+mfix.use_proj_method = 1
+mfix.fixed_dt = 1
+
+amr.stop_time = 0.001
+
+amr.dual_grid = 0
+amr.regrid_int = 25
+
+mfix.particle_init_type = "Auto"
+
+#_______________________________________________________________________
+# Particle load balancing
+
+#mfix.load_balance_type = "KnapSack"
+
+#! KnapSack settings
+#!-----------------------------------------------------------//
+#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+#this option is only relevant if load_balance_type = KnapSack
+
+##mfix.knapsack_weight_type = "NumParticles"
+##mfix.knapsack_weight_type = "RunTimeCosts"
+
+
+#_______________________________________________________________________
+# EB Settings
+
+# Collision algorithm details:
+# Level-set refinement and padding
+mfix.levelset__refinement = 2
+mfix.levelset__pad        = 4
+
+# EBIS refinement and padding
+mfix.levelset__eb_refinement = 1
+mfix.levelset__eb_pad        = 2
+
+mfix.clr_riser = true
+mfix.write_eb_surface = true
+
+
+#! EB geometry
+#!-----------------------------------------------------------//
+
+mfix.riser_translate      =   0.04  0.001  0.04
+
+mfix.riser_lower_radius   =   0.02
+mfix.riser_lower_height   =   0.15
+
+mfix.riser_c2c_height     =   0.05
+
+mfix.riser_upper_radius   =   0.04
+mfix.riser_upper_height   =   0.20

@@ -38,13 +38,13 @@ MODULE INIT_NAMELIST_MODULE
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: leq_it, leq_pc, leq_sweep, leq_tol, max_nit, ival
       use run, only: full_log, nlog
-      use output, only: dim_usr
       use output, only: usr_dt
+      use output, only: usr_x_w, usr_x_e, usr_y_n, usr_y_s, usr_z_b, usr_z_t
       use ps, only: dim_ps
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
-      use run, only: call_usr, description, tstop
+      use run, only: call_usr, description
       use run, only: dt_fac, dt_max, dt_min, run_name
       use drag, only: drag_type
       use scales, only: p_ref, p_scale
@@ -57,6 +57,7 @@ MODULE INIT_NAMELIST_MODULE
 
       use param, only: zero, one
       use param, only: undefined, undefined_c
+      use param, only: dim_usr
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -83,19 +84,9 @@ MODULE INIT_NAMELIST_MODULE
       DESCRIPTION = UNDEFINED_C
 !</keyword>
 
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!    Simulation stop time.
-!  </description>
-!  <range min="0.0" max="+Inf" />
-      tstop = UNDEFINED
-!</keyword>
-
 !<keyword category="Run Control" required="false">
 !  <description>Maximum time step size.</description>
 !  <dependent keyword="TIME" value="DEFINED"/>
-!  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="+Inf" />
       dt_max = ONE
 !</keyword>
@@ -103,7 +94,6 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Run Control" required="false">
 !  <description>Minimum time step size.</description>
 !  <dependent keyword="TIME" value="DEFINED"/>
-!  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="+Inf" />
       dt_min = 1.0D-6
 !</keyword>
@@ -116,7 +106,6 @@ MODULE INIT_NAMELIST_MODULE
 !      initial non-convergence.
 !  </description>
 !  <dependent keyword="TIME" value="DEFINED"/>
-!  <dependent keyword="TSTOP" value="DEFINED"/>
 !  <range min="0.0" max="1" />
       dt_fac = 0.9D0
 !</keyword>
@@ -382,48 +371,46 @@ MODULE INIT_NAMELIST_MODULE
 !#####################################################################!
 
 
-      DO LC = 1, DIM_IC
-
 !<keyword category="Initial Condition" required="false">
 !  <description>X coordinate of the west face.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_X_W(LC) = UNDEFINED
+      IC_X_W(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>X coordinate of the east face.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_X_E(LC) = UNDEFINED
+      IC_X_E(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Y coordinate of the south face.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_Y_S(LC) = UNDEFINED
+      IC_Y_S(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Y coordinate of the north face.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_Y_N(LC) = UNDEFINED
+      IC_Y_N(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Z coordinate of the bottom face.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_Z_B(LC) = UNDEFINED
+      IC_Z_B(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Z coordinate of the top face.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_Z_T(LC) = UNDEFINED
+      IC_Z_T(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial void fraction in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_EP_G(LC) = ONE
+      IC_EP_G(:) = ONE
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
@@ -433,7 +420,7 @@ MODULE INIT_NAMELIST_MODULE
 !    which varies only in the y-direction.
 !  </description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_P_G(LC) = UNDEFINED
+      IC_P_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
@@ -443,107 +430,125 @@ MODULE INIT_NAMELIST_MODULE
 !  </description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         IC_EP_S(LC,:DIM_M) = ZERO
+      IC_EP_S(:,:) = ZERO
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial gas phase temperature in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_T_G(LC) = 293.15d0
+      IC_T_G(:) = 293.15d0
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial solids phase-m temperature in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         IC_T_S(LC,:DIM_M) = UNDEFINED
+      IC_T_S(:,:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial x-component of gas velocity in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_U_G(LC) = UNDEFINED
+      IC_U_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial x-component of solids-phase velocity in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         IC_U_S(LC,:DIM_M) = UNDEFINED
+      IC_U_S(:,:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial y-component of gas velocity in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_V_G(LC) = UNDEFINED
+      IC_V_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial y-component of solids-phase velocity in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         IC_V_S(LC,:DIM_M) = UNDEFINED
+      IC_V_S(:,:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial z-component of gas velocity in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_W_G(LC) = UNDEFINED
+      IC_W_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial z-component of solids-phase velocity in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         IC_W_S(LC,:DIM_M) = UNDEFINED
+      IC_W_S(:,:) = UNDEFINED
 !</keyword>
 
+      ic_dp_dist(:,:) = 'CONSTANT'
+      ic_dp_mean(:,:) = undefined
+      ic_dp_std(:,:) = undefined
+      ic_dp_min(:,:) = undefined
+      ic_dp_max(:,:) = undefined
 
-      ENDDO
-
-
+      ! Particle density properties
+      ic_ro_s_dist(:,:) = 'CONSTANT'
+      ic_ro_s_mean(:,:) = undefined
+      ic_ro_s_std(:,:) = undefined
+      ic_ro_s_min(:,:) = undefined
+      ic_ro_s_max(:,:) = undefined
 
 
 !#####################################################################!
 !                        Boundary Conditions                          !
 !#####################################################################!
-      DO LC = 1, DIM_BC
-
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>X coordinate of the west face or edge.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_X_W(LC) = UNDEFINED
+      BC_X_W(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>X coordinate of the east face or edge.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_X_E(LC) = UNDEFINED
+      BC_X_E(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Y coordinate of the south face or edge.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_Y_S(LC) = UNDEFINED
+      BC_Y_S(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Y coordinate of the north face or edge.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_Y_N(LC) = UNDEFINED
+      BC_Y_N(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Z coordinate of the bottom face or edge.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_Z_B(LC) = UNDEFINED
+      BC_Z_B(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Z coordinate of the top face or edge.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_Z_T(LC) = UNDEFINED
+      BC_Z_T(:) = UNDEFINED
+!</keyword>
+
+!<keyword category="Boundary Condition" required="false">
+!  <description>Z coordinate of the top face or edge.</description>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
+      BC_NORMAL(:,:) = UNDEFINED
+!</keyword>
+
+!<keyword category="Boundary Condition" required="false">
+!  <description>Z coordinate of the top face or edge.</description>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
+      BC_CENTER(:,:) = UNDEFINED
 !</keyword>
 
 
@@ -589,31 +594,31 @@ MODULE INIT_NAMELIST_MODULE
 !      specified. For free slip set hw = 0. For no slip leave hw
 !      undefined (hw=+inf) and set vw = 0. To set hw = +inf, leave it
 !      unspecified. />
-         BC_TYPE(LC) = UNDEFINED_C
+      BC_TYPE(:) = UNDEFINED_C
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase hw for partial slip boundary.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_HW_G(LC) = UNDEFINED
+      BC_HW_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase Uw for partial slip boundary.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_UW_G(LC) = UNDEFINED
+      BC_UW_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase Vw for partial slip boundary.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_VW_G(LC) = UNDEFINED
+      BC_VW_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase Ww for partial slip boundary.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_WW_G(LC) = UNDEFINED
+      BC_WW_G(:) = UNDEFINED
 !</keyword>
 
 
@@ -623,7 +628,7 @@ MODULE INIT_NAMELIST_MODULE
 !    d(T_g)/dn + Hw (T_g - Tw_g) = C, where n is the fluid-to-wall normal.
 !  </description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_HW_T_G(LC) = UNDEFINED
+      BC_HW_T_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -632,7 +637,7 @@ MODULE INIT_NAMELIST_MODULE
 !    d(T_g)/dn + Hw (T_g - Tw_g) = C, where n is the fluid-to-wall normal.
 !  </description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_TW_G(LC) = UNDEFINED
+      BC_TW_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -641,7 +646,7 @@ MODULE INIT_NAMELIST_MODULE
 !    d(T_g)/dn + Hw (T_g - Tw_g) = C, where n is the fluid-to-wall normal.
 !  </description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_C_T_G(LC) = UNDEFINED
+      BC_C_T_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -651,7 +656,7 @@ MODULE INIT_NAMELIST_MODULE
 !  </description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
-         BC_HW_X_G(LC,:DIM_N_G) = UNDEFINED
+      BC_HW_X_G(:,:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -662,7 +667,7 @@ MODULE INIT_NAMELIST_MODULE
 !  <description>Gas phase Xw for mass transfer.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
-         BC_XW_G(LC,:DIM_N_G) = UNDEFINED
+      BC_XW_G(:,:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -672,19 +677,19 @@ MODULE INIT_NAMELIST_MODULE
 !  </description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
-         BC_C_X_G(LC,:DIM_N_G) = UNDEFINED
+      BC_C_X_G(:,:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Void fraction at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_EP_G(LC) = ONE
+      BC_EP_G(:) = ONE
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas pressure at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_P_G(LC) = UNDEFINED
+      BC_P_G(:) = UNDEFINED
 !</keyword>
 
 
@@ -692,27 +697,27 @@ MODULE INIT_NAMELIST_MODULE
 !  <description>Solids volume fraction at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_EP_S(LC,:DIM_M) = ZERO
+      BC_EP_S(:,:) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase temperature at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_T_G(LC) = 293.15d0
+      BC_T_G(:) = 293.15d0
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Solids phase-m temperature at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_T_S(LC,:DIM_M) = 293.15d0
+      BC_T_S(:,:) = 293.15d0
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Mass fraction of gas species at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
-         BC_X_G(LC,:DIM_N_G) = UNDEFINED
+      BC_X_G(:,:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -720,158 +725,153 @@ MODULE INIT_NAMELIST_MODULE
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
 !  <arg index="3" id="Species" min="1" max="DIM_N_S"/>
-         BC_X_S(LC,:DIM_M,:DIM_N_S) = UNDEFINED
+      BC_X_S(:,:,:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>X-component of gas velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_U_G(LC) = ZERO
+      BC_U_G(:) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>X-component of solids-phase velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_U_S(LC,:DIM_M) = ZERO
+      BC_U_S(:,:) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Y-component of gas velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_V_G(LC) = ZERO
+      BC_V_G(:) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Y-component of solids-phase velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_V_S(LC,:DIM_M) = ZERO
+      BC_V_S(:,:) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Z-component of gas velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_W_G(LC) = ZERO
+      BC_W_G(:) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Z-component of solids-phase velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_W_S(LC,:DIM_M) = ZERO
+      BC_W_S(:,:) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas volumetric flow rate through the boundary.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_VOLFLOW_G(LC) = UNDEFINED
+      BC_VOLFLOW_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Solids volumetric flow rate through the boundary.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_VOLFLOW_S(LC,:DIM_M) = UNDEFINED
+      BC_VOLFLOW_S(:,:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas mass flow rate through the boundary.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-         BC_MASSFLOW_G(LC) = UNDEFINED
+      BC_MASSFLOW_G(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Solids mass flow rate through the boundary.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_MASSFLOW_S(LC,:DIM_M) = UNDEFINED
+      BC_MASSFLOW_S(:,:) = UNDEFINED
 !</keyword>
-
-      ENDDO
-
 
 
 
 !#####################################################################!
 !                     Point Source Mass Inlets                        !
 !#####################################################################!
-      DO LC = 1, DIM_PS
 
 !<keyword category="Point Source" required="false">
 !  <description>X coordinate of the west face or edge.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_X_W(LC) = UNDEFINED
+      PS_X_W(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>X coordinate of the east face or edge.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_X_E(LC) = UNDEFINED
+      PS_X_E(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Y coordinate of the south face or edge.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_Y_S(LC) = UNDEFINED
+      PS_Y_S(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Y coordinate of the north face or edge.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_Y_N(LC) = UNDEFINED
+      PS_Y_N(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Z coordinate of the bottom face or edge.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_Z_B(LC) = UNDEFINED
+      PS_Z_B(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Z coordinate of the top face or edge.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_Z_T(LC) = UNDEFINED
+      PS_Z_T(:) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>X-component of incoming gas velocity.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_U_G(LC) = ZERO
+      PS_U_G(:) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Y-component of incoming gas velocity.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_V_G(LC) = ZERO
+      PS_V_G(:) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Z-component of incoming gas velocity.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_W_G(LC) = ZERO
+      PS_W_G(:) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Gas mass flow rate through the point source.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_MASSFLOW_G(LC) = ZERO
+      PS_MASSFLOW_G(:) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Temperature of incoming gas.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-         PS_T_G(LC) = 293.15d0
+      PS_T_G(:) = 293.15d0
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Gas phase incoming species n mass fraction.</description>
 !  <arg index="1" id="PS" min="1" max="DIM_PS"/>
 !  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
-         PS_X_G(LC,:DIM_N_g) = UNDEFINED
+      PS_X_G(:,:) = UNDEFINED
 !</keyword>
 
-      ENDDO
 
 
 !#####################################################################!
@@ -905,16 +905,51 @@ MODULE INIT_NAMELIST_MODULE
       CALL_USR = .FALSE.
 !</keyword>
 
-      do LC=1, DIM_USR
 !<keyword category="UDF Control" required="false">
 !  <description>
 !    Intervals at which subroutine write_usr1 is called.
 !  </description>
 !  <arg index="1" id="USR" max="DIM_USR" min="1"/>
-         usr_dt(LC) = UNDEFINED
+      usr_dt(1:DIM_USR) = UNDEFINED
 !</keyword>
 
-      end do
+!<keyword category="UDF Control" required="false">
+!  <description>X coordinate of the west face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_X_W(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+!<keyword category="UDF Control" required="false">
+!  <description>X coordinate of the east face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_X_E(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+!<keyword category="UDF Control" required="false">
+!  <description>Y coordinate of the south face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_Y_S(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+!<keyword category="UDF Control" required="false">
+!  <description>Y coordinate of the north face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_Y_N(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+!<keyword category="UDF Control" required="false">
+!  <description>Z coordinate of the bottom face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_Z_B(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+!<keyword category="UDF Control" required="false">
+!  <description>Z coordinate of the top face or edge.</description>
+!  <arg index="1" id="USR" min="1" max="DIM_USR"/>
+      USR_Z_T(1:DIM_USR) = UNDEFINED
+!</keyword>
+
+
 
       call des_init_namelist
 

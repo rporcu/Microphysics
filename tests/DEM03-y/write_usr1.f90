@@ -39,7 +39,7 @@ subroutine write_des_out(lTime, np, particles, length)
    Use usr,               only: gx1, gx2, gy1, gy2, rk4_v4
    use param,             only: undefined, is_defined
    use particle_mod,      only: particle_t
-   
+
    implicit none
 
    ! Passed variables
@@ -47,7 +47,7 @@ subroutine write_des_out(lTime, np, particles, length)
    integer,          intent(in   ) ::  np
    real(c_real),     intent(in   ) :: ltime, length
    type(particle_t), intent(inout) :: particles(np)
-   
+
    ! Local variables
    !---------------------------------------------------------------------//
    ! file unit for heat transfer data
@@ -70,7 +70,7 @@ subroutine write_des_out(lTime, np, particles, length)
 
    ! Calculate the value for the RK4 solutions.
    TIME_INTERVAL = lTime - RK4_TIME
-   IF(TIME_INTERVAL .LE. RK4_DT) THEN
+   IF(TIME_INTERVAL .LE. RK4_DT_DEFAULT) THEN
       RK4_STEPS = 1
       RK4_DT = TIME_INTERVAL
       RK4_DT_LAST = UNDEFINED
@@ -91,11 +91,11 @@ subroutine write_des_out(lTime, np, particles, length)
    ENDIF
 
    ! Write the results to a file.
-   WRITE(uPos1,"(3x,F15.8,5X,F15.8,2(3x,F15.8))") lTime, gY1,   &
-        particles(1) % pos(2), (ABS(gY1 - particles(1) % pos(2))/ABS(gY1))*100
+   WRITE(uPos1,"(3x,F15.8,5X,F15.8,3x,F15.8)") lTime, gY1,   &
+        particles(1) % pos(2)
 
-   WRITE(uPos2,"(3x,F15.8,5X,F15.8,2(3x,F15.8))") lTime, gY2,   &
-        particles(2) % pos(2), (ABS(gY2 - particles(2) % pos(2))/ABS(gY1))*100
+   WRITE(uPos2,"(3x,F15.8,5X,F15.8,3x,F15.8)") lTime, gY2,   &
+        particles(2) % pos(2)
 
    CLOSE(uPos1)
    CLOSE(uPos2)

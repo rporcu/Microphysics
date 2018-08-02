@@ -9,7 +9,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       MODULE stl_functions_des
 
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       implicit none
@@ -32,13 +32,13 @@
 
 ! points are the three nodes of the triangle
 ! point p is the sphere center
-      real(c_real), intent(in), dimension(3,3) :: points
-      real(c_real), intent(in), dimension(3) :: pointp
-      real(c_real), intent(out), dimension(3) ::  closest_point
+      real(rt), intent(in), dimension(3,3) :: points
+      real(rt), intent(in), dimension(3) :: pointp
+      real(rt), intent(out), dimension(3) ::  closest_point
 ! Local variables
-      real(c_real), dimension(3) :: pointa, pointb, pointc
-      real(c_real), dimension(3) :: ab, ac, ap, bp,cp
-      real(c_real) :: d1, d2, d3, d4, vc, v, d5, d6, vb, w, va, denom
+      real(rt), dimension(3) :: pointa, pointb, pointc
+      real(rt), dimension(3) :: ab, ac, ap, bp,cp
+      real(rt) :: d1, d2, d3, d4, vc, v, d5, d6, vb, w, va, denom
 
       pointa = points(1,:)
       pointb = points(2,:)
@@ -125,15 +125,15 @@
       implicit none
 
 ! Reference point and direction of the line
-      real(c_real), INTENT(IN) :: REF_LINE(3),  DIR_LINE(3)
+      real(rt), INTENT(IN) :: REF_LINE(3),  DIR_LINE(3)
 ! reference point and normal of the plane
-      real(c_real), INTENT(IN) :: REF_PLANE(3), NORM_PLANE(3)
+      real(rt), INTENT(IN) :: REF_PLANE(3), NORM_PLANE(3)
 
 ! line is parameterized as p = p_ref + t * dir_line, t is line_param
-      real(c_real), intent(out) :: line_param
+      real(rt), intent(out) :: line_param
 
       !local vars
-      real(c_real) :: denom
+      real(rt) :: denom
 
       denom = DOT_PRODUCT(dir_line, norm_plane)
 
@@ -162,13 +162,13 @@
 
       implicit none
 
-      real(c_real), INTENT(IN) :: pCENTER(3), pHALFSIZE(3)
-      real(c_real), INTENT(IN) :: pVERTS(3,3)
+      real(rt), INTENT(IN) :: pCENTER(3), pHALFSIZE(3)
+      real(rt), INTENT(IN) :: pVERTS(3,3)
       logical, INTENT(OUT) :: pOVERLAP
 
-      real(c_real) :: v0(3), v1(3), v2(3)
-      real(c_real) :: fex, fey, fez
-      real(c_real) :: normal(3), e0(3), e1(3), e2(3)
+      real(rt) :: v0(3), v1(3), v2(3)
+      real(rt) :: fex, fey, fez
+      real(rt) :: normal(3), e0(3), e1(3), e2(3)
 
       pOVERLAP = .FALSE.
 
@@ -232,10 +232,10 @@
 !``````````````````````````````````````````````````````````````````````!
       logical FUNCTION planeBoxOverlap(norm, vert, maxbox)
 
-      real(c_real) :: norm(3), vert(3), maxbox(3)
+      real(rt) :: norm(3), vert(3), maxbox(3)
 
       integer :: lc
-      real(c_real) :: vmin(3), vmax(3), v
+      real(rt) :: vmin(3), vmax(3), v
 
       do lc=1,3
          v=vert(lc)
@@ -268,7 +268,7 @@
 !``````````````````````````````````````````````````````````````````````!
       DOUBLE PRECISION FUNCTION findMin(x0,x1,x2)
 
-      real(c_real) :: x0,x1,x2
+      real(rt) :: x0,x1,x2
 
       findMin = x0
 
@@ -284,7 +284,7 @@
 !``````````````````````````````````````````````````````````````````````!
       DOUBLE PRECISION FUNCTION findMax(x0,x1,x2)
 
-      real(c_real) :: x0,x1,x2
+      real(rt) :: x0,x1,x2
 
       findMax = x0
 
@@ -300,8 +300,8 @@
 !``````````````````````````````````````````````````````````````````````!
       logical FUNCTION ATEST_X01(a,b,fa,fb)
 
-      real(c_real) :: a, b, fa, fb
-      real(c_real) :: lMin, lMax, p0, p2, rad
+      real(rt) :: a, b, fa, fb
+      real(rt) :: lMin, lMax, p0, p2, rad
 
       p0 = a*v0(2) - b*v0(3)
       p2 = a*v2(2) - b*v2(3)
@@ -320,8 +320,8 @@
 !``````````````````````````````````````````````````````````````````````!
       logical FUNCTION ATEST_X2(a,b,fa,fb)
 
-      real(c_real) :: a, b, fa, fb
-      real(c_real) :: lMin, lMax, p0, p1, rad
+      real(rt) :: a, b, fa, fb
+      real(rt) :: lMin, lMax, p0, p1, rad
 
       p0 = a*v0(2) - b*v0(3)
       p1 = a*v1(2) - b*v1(3)
@@ -340,8 +340,8 @@
 !``````````````````````````````````````````````````````````````````````!
       logical FUNCTION ATEST_Y02(a,b,fa,fb)
 
-      real(c_real) :: a, b, fa, fb
-      real(c_real) :: lMin, lMax, p0, p2, rad
+      real(rt) :: a, b, fa, fb
+      real(rt) :: lMin, lMax, p0, p2, rad
 
       p0 = -a*v0(1) + b*v0(3)
       p2 = -a*v2(1) + b*v2(3)
@@ -360,8 +360,8 @@
 !``````````````````````````````````````````````````````````````````````!
       logical FUNCTION ATEST_Y1(a,b,fa,fb)
 
-      real(c_real) :: a, b, fa, fb
-      real(c_real) :: lMin, lMax, p0, p1, rad
+      real(rt) :: a, b, fa, fb
+      real(rt) :: lMin, lMax, p0, p1, rad
 
       p0 = -a*v0(1) + b*v0(3)
       p1 = -a*v1(1) + b*v1(3)
@@ -380,8 +380,8 @@
 !``````````````````````````````````````````````````````````````````````!
       logical FUNCTION ATEST_Z12(a,b,fa,fb)
 
-      real(c_real) :: a, b, fa, fb
-      real(c_real) :: lMin, lMax, p1, p2, rad
+      real(rt) :: a, b, fa, fb
+      real(rt) :: lMin, lMax, p1, p2, rad
 
       p1 = a*v1(1) - b*v1(2)
       p2 = a*v2(1) - b*v2(2)
@@ -400,8 +400,8 @@
 !``````````````````````````````````````````````````````````````````````!
       logical FUNCTION ATEST_Z0(a,b,fa,fb)
 
-      real(c_real) :: a, b, fa, fb
-      real(c_real) :: lMin, lMax, p0, p1, rad
+      real(rt) :: a, b, fa, fb
+      real(rt) :: lMin, lMax, p0, p1, rad
 
       p0 = a*v0(1) - b*v0(2)
       p1 = a*v1(1) - b*v1(2)

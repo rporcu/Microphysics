@@ -1,7 +1,7 @@
 module amrex_to_mfix_module
 ! _________________________________________________________________
 
-  use amrex_fort_module, only : c_real => amrex_real
+  use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int, c_char
 
   implicit none
@@ -27,13 +27,14 @@ contains
 
     implicit none
 
+    real(rt),   intent(in ) :: tstopC
     integer(c_int), intent(out) :: fluid
     integer(c_int), intent(out) :: dem, call_udf
     integer(c_int), intent(out) :: steady_state
-    real(c_real), intent(out) :: dt_minC, dt_maxC, tstopC
-    real(c_real), intent(out) :: dt
-    integer(c_int)         , intent(out) :: max_nitC
-    real(c_real), intent(out) :: normg
+    real(rt),   intent(out) :: dt_minC, dt_maxC
+    real(rt),   intent(out) :: dt
+    integer(c_int), intent(out) :: max_nitC
+    real(rt),   intent(out) :: normg
     integer(c_int), intent(out) :: set_normg
 
     call get_data(dt)
@@ -48,8 +49,10 @@ contains
 
     dt_minC  = dt_min
     dt_maxC  = dt_max
-    tstopC   = tstop
     max_nitC = max_nit
+
+    ! We now set tstop in the Fortran from the C++
+    tstop    = tstopC
 
     normg = norm_g
     set_normg = merge(1,0, abs(norm_g - 1.0d0) > tiny(0.0d0))
@@ -71,10 +74,11 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr1() &
-       bind(C, name="mfix_usr1")
+  subroutine mfix_usr1(ltime) bind(C, name="mfix_usr1")
 
-    call usr1
+    real(rt),   intent(in ) :: ltime
+
+    call usr1(ltime)
 
   end subroutine mfix_usr1
 
@@ -115,15 +119,15 @@ contains
     integer(c_int), intent(in   ) :: wlo(3),whi(3)
     integer(c_int), intent(in   ) :: slo(3),shi(3)
 
-    real(c_real), intent(inout) :: u_g&
+    real(rt), intent(inout) :: u_g&
         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-    real(c_real), intent(inout) :: v_g&
+    real(rt), intent(inout) :: v_g&
         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-    real(c_real), intent(inout) :: w_g&
+    real(rt), intent(inout) :: w_g&
         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-    real(c_real), intent(inout) :: p_g&
+    real(rt), intent(inout) :: p_g&
         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-    real(c_real), intent(in   ) :: dx, dy, dz
+    real(rt), intent(in   ) :: dx, dy, dz
 
     call usr3(u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, p_g, slo, shi,&
               dx, dy, dz)
@@ -134,50 +138,5 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine get_solver_params(eq_id, sweep_type, pc_type, max_it, tol) &
-       bind(C, name="get_solver_params")
-
-    use leqsol       , only: leq_sweep, leq_pc, leq_it, leq_tol
-    use solver_params, only: sweep_rsrs, sweep_isis, sweep_asas
-    use solver_params, only: pc_line, pc_diag, pc_none
-
-    integer(c_int), intent(in   ) :: eq_id
-    integer(c_int), intent(  out) :: sweep_type, pc_type, max_it
-    real(c_real)  , intent(  out) :: tol
-
-    ! Default
-    if (leq_sweep(eq_id) .eq. 'RSRS') then
-       sweep_type = sweep_rsrs;
-
-    elseif (leq_sweep(eq_id) .eq. 'ISIS') then
-       sweep_type = sweep_isis;
-
-    elseif (leq_sweep(eq_id) .eq. 'ASAS') then
-       sweep_type = sweep_asas;
-
-    else
-       print *,'Dont know this leq_sweep flag'
-       stop
-    end if
-
-    ! Default
-    if (leq_pc(eq_id) .eq. 'LINE') then
-       pc_type = pc_line;
-
-    elseif (leq_pc(eq_id) .eq. 'DIAG') then
-       pc_type = pc_diag;
-
-    elseif (leq_pc(eq_id) .eq. 'NONE') then
-       pc_type = pc_none;
-
-    else
-       print *,'Dont know this leq_sweep flag'
-       stop
-    end if
-
-    max_it = leq_it(eq_id);
-    tol    = leq_tol(eq_id);
-
-  end subroutine get_solver_params
 
 end module amrex_to_mfix_module

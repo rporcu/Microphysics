@@ -26,7 +26,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      SUBROUTINE USR2
+      subroutine usr2
       ! Use usr
       IMPLICIT NONE
 !-----------------------------------------------
@@ -42,5 +42,6 @@
 !
 !  Insert user-defined code here
 !
-      RETURN
-      END SUBROUTINE USR2
+      return
+
+      end subroutine usr2

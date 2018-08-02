@@ -1,154 +1,203 @@
-set(CXX_sources
-   main.cpp
-   mfix_evolve.cpp
-   mfix_init.cpp
-   mfix_level.cpp
-   mfix_linear_solve.cpp
-   mfix_regrid.cpp
-   solve_bicgstab.cpp
-   MFIXParticleContainer.cpp
-   io/mfixIO.cpp)
+#
+# Define a macro to add sources.
+# This will also accumulate include directories if
+# a header file is spotted
+# WARNING: this automagically prepends the correct
+# path (relative to the file invoking the macro)
+# to the source file.
+#
+set ( MFIX_Fortran_MOD_PATH ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mod )
+set ( MFIX_INCLUDE_PATHS  ${CMAKE_CURRENT_LIST_DIR}/include ${MFIX_Fortran_MOD_PATH})
 
-set(CXX_includes
-   mfix_level.H
-   MFIXParticleContainer.H
-   include/mfix_F.H)
+macro ( add_sources )
+   foreach ( item IN ITEMS ${ARGN} )
+      set ( source_name  ${CMAKE_CURRENT_LIST_DIR}/${item} )
+      string ( REPLACE "//" "/" source_name ${source_name})
+      target_sources ( ${MFIX_LIBNAME} PRIVATE ${source_name} )
 
-set(F90_sources
-   adjust_a_g.f90
-   adjust_dt_mod.f90
-   bc_mod.f90
-   calc_cell.f90
-   calc_coeff.f90
-   calc_d.f90
-   calc_mflux.f90
-   calc_mu_g.f90
-   calc_ro_g.f90
-   calc_trd_g.f90
-   check_convergence.f90
-   check_data/check_bc_flow.f90
-   check_data/check_bc_geometry.f90
-   check_data/check_bc_inflow.f90
-   check_data/check_bc_outflow.f90
-   check_data/check_bc_walls.f90
-   check_data/check_boundary_conditions.f90
-   check_data/check_collision_model.f90
-   check_data/check_gas_properties.f90
-   check_data/check_initial_conditions.f90
-   check_data/check_inputs.f90
-   check_data/check_particle_properties.f90
-   check_data/check_point_sources.f90
-   check_data/check_run_control.f90
-   constant_mod.f90
-   conv_dif_u_g.f90
-   conv_dif_v_g.f90
-   conv_dif_w_g.f90
-   conv_pp_g.f90
-   conv_rop.f90
-   correct_0.f90
-   deprecated.f90
-   des/calc_collision_wall_mod.f90
-   des/calc_drag.f90
-   des/calc_force_dem.f90
-   des/cffctowall.f90
-   des/cfrelvel.f90
-   des/cfslide.f90
-   des/des_bc_mod.f90
-   des/des_init_namelist.f90
-   des/des_time_march.f90
-   des/discretelement_mod.f90
-   des/drag_gp_des.f90
-   des/init_collision.f90
-   des/set_particle_properties.f90
-   des/stl_functions_des_mod.f90
-   display_resid.f90
-   drag_mod.f90
-   eos_mod.f90
-   error_manager_mod.f90
-   fill_bc0.f90
-   fld_constants_mod.f90
-   flip_particle_vol.f90
-   functions_mod.f90
-   get_data.f90
-   get_tunit.f90
-   ic_mod.f90
-   init_fluid.f90
-   init_namelist.f90
-   io/output_manager.f90
-   io/write_error.f90
-   io/write_out0.f90
-   location_check.f90
-   matrix_mod.f90
-   output_mod.f90
-   particle_mod.f90
-   particle_pic.f90
-   param_mod.f90
-   parse_line.f90
-   physical_prop.f90
-   ps_mod.f90
-   read_namelist.f90
-   remove_comment.f90
-   residual_mod.f90
-   run_mod.f90
-   scales_mod.f90
-   set_bc0.f90
-   set_bc1.f90
-   set_bc_flow.f90
-   set_bc_type.f90
-   set_drag_bcs.f90
-   set_ps.f90
-   solve_pp_g.f90
-   solve_vel_star.f90
-   solver_params.f90
-   solvers/leqsol_mod.f90
-   solvers/matvec.f90
-   source_pp_g.f90
-   source_u_g.f90
-   source_v_g.f90
-   source_w_g.f90
-   tau_u_g.f90
-   tau_v_g.f90
-   tau_w_g.f90
-   ur_facs_mod.f90
-   usr/usr0.f90
-   usr/usr0_des.f90
-   usr/usr1.f90
-   usr/usr1_des.f90
-   usr/usr2.f90
-   usr/usr2_des.f90
-   usr/usr3.f90
-   usr/usr3_des.f90
-   usr/usr_drag.f90
-   usr/usr_mod.f90
-   usr/write_usr0.f90
-   usr/write_usr1.f90
-   utilities_mod.f90
-   zero_wall_norm_vel.f90
-   amrex_to_mfix.F90)
+      # Add folder to list of includes if necessary
+      get_filename_component ( filetype ${source_name} EXT )
+      if ( (${filetype} MATCHES ".h") OR (${filetype} MATCHES ".H" ) )
+	 list (APPEND MFIX_INCLUDE_PATHS ${CMAKE_CURRENT_LIST_DIR})
+      endif()
+   endforeach()
+endmacro()
 
-# Generate AMReX_buildInfo.cpp
-add_custom_command(
-   COMMAND  ${AMREX_INSTALL_PATH}/Tools/C_scripts/makebuildinfo_C.py
-   --amrex_home "${AMREX_INSTALL_PATH}"
-   --COMP ${CMAKE_C_COMPILER_ID} --COMP_VERSION ${CMAKE_C_COMPILER_VERSION}
-   --FCOMP ${CMAKE_Fortran_COMPILER_ID} --FCOMP_VERSION ${CMAKE_C_COMPILER_VERSION}
-   --GIT ". ${AMREX_GIT}"
-   OUTPUT AMReX_buildInfo.cpp
-   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-   COMMENT "Generating AMReX_buildInfo.cpp" )
 
-add_library(mfixcore STATIC ${CXX_sources} ${F90_sources} ${CXX_includes} AMReX_buildInfo.cpp )
+#
+# Fist, define the library we want to add
+#
+add_library ( ${MFIX_LIBNAME} "" )
 
-if ( ENABLE_SUPERBUILD )
-   add_dependencies( mfixcore amrex )
-endif ( ENABLE_SUPERBUILD )
+set_target_properties ( ${MFIX_LIBNAME}
+   PROPERTIES
+   Fortran_MODULE_DIRECTORY
+   ${MFIX_Fortran_MOD_PATH}
+   )
 
-# Remove AMReX_buildInfo.cpp
-add_custom_command(TARGET mfixcore POST_BUILD COMMAND rm AMReX_buildInfo.cpp
-   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-   COMMENT "Removing AMReX_buildInfo.cpp" )
+#
+# Now, one by one, we add all the sources from all the subdirs
+# to the library defined above
+# 
 
-# Define sources for type checking
-set (F90SRC ${F90_sources})
-set (CXXINCLUDES ${CXX_includes})
-include (MFIX_Typecheck)
+#
+# Uncategorized
+# 
+add_sources ( mfix_evolve.cpp mfix_init.cpp mfix_arrays.cpp )
+add_sources ( mfix_level.cpp mfix_regrid.cpp )
+add_sources ( mfix_level.H mfix_F.H )
+add_sources ( calc_cell.f90 calc_mu_g.f90 )
+add_sources ( calc_tau.f90 compute_divu.f90 compute_vort.f90 )
+add_sources ( fill_bc0.f90 )
+add_sources ( get_data.f90 init_fluid.f90 init_namelist.f90 )
+add_sources ( set_bc0.f90 set_bc_flow.f90 set_bc_type.f90 set_p0.f90 set_delp_dir.f90 )
+add_sources ( set_ps.f90 set_mac_velocity_bcs.f90 )
+add_sources ( zero_wall_norm_vel.f90 amrex_to_mfix.F90 )
+
+#
+# Fortran Modules
+#
+include ( mods/CMakeLists.txt )
+
+#
+# EB stuff
+#
+include ( eb/CMakeLists.txt )
+
+#
+# Particles
+#
+include ( des/CMakeLists.txt )
+include ( des_fluid/CMakeLists.txt )
+
+#
+# SIMPLE routines
+#
+include ( simple/CMakeLists.txt )
+
+#
+# Data checks
+#
+include ( check_data/CMakeLists.txt )
+
+#
+# I/O routines
+#
+include ( io/CMakeLists.txt )
+
+#
+# Users hooks
+#
+include ( usr/CMakeLists.txt )
+
+#
+# Projection
+#
+include ( projection/CMakeLists.txt )
+
+# 
+# Add the include paths
+# By adding the include paths as a property of mfixcore, we make sure
+# that these same paths will be used whenever another target target
+# lists mficore as a dependency
+#
+list ( REMOVE_DUPLICATES MFIX_INCLUDE_PATHS )
+target_include_directories ( ${MFIX_LIBNAME} PUBLIC ${MFIX_INCLUDE_PATHS} )
+
+#
+# Link to imported AMReX
+#
+target_link_libraries ( ${MFIX_LIBNAME} AMReX::amrex )
+
+
+#
+# Set the default flags 
+# 
+if ( NOT CMAKE_Fortran_FLAGS )
+   target_compile_options ( ${MFIX_LIBNAME}
+      PUBLIC
+      # GNU Debug
+      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+      -O0 -ggdb -fbounds-check -fbacktrace -Wuninitialized -Wunused -finit-real=snan -finit-integer=2147483647>>>>
+      # GNU Release
+      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+      >>>>
+      # Intel Debug
+      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:Fortran>:
+      -O0 -traceback -check bounds,uninit,pointers>>>>
+      # Intel Release
+      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:Fortran>:
+      -ip -qopt-report=5 -qopt-report-phase=vec>>>>
+      # Cray Debug
+      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:Fortran>:
+      -O0 -e i>>>>
+      # Cray Release 
+      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:Fortran>:
+      >>>>
+      # PGI Debug
+      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:PGI>:$<$<COMPILE_LANGUAGE:Fortran>:
+      -O0 -Mbounds -Mchkptr>>>>
+      # PGI Release
+      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:PGI>:$<$<COMPILE_LANGUAGE:Fortran>:
+      -gopt -fast>>>>
+      )	  
+endif ()
+
+if ( NOT CMAKE_CXX_FLAGS )
+   target_compile_options ( ${MFIX_LIBNAME}
+      PUBLIC
+      # GNU Debug
+      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+      -O0 -fno-inline -ggdb -Wall -Wno-sign-compare>>>>
+      # GNU Release
+      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+      >>>>
+      # Intel Debug
+      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:CXX>:
+      -O0 -traceback -Wcheck>>>>
+      # Intel Release
+      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:CXX>:
+      -ip -qopt-report=5 -qopt-report-phase=vec>>>>
+      # Cray Debug
+      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:CXX>:
+      -O0>>>>
+      # Cray Release 
+      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:CXX>:
+      >>>>
+      # PGI Debug
+      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:PGI>:$<$<COMPILE_LANGUAGE:CXX>:
+      -O0 -Mbounds>>>>
+      # PGI Release
+      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:PGI>:$<$<COMPILE_LANGUAGE:CXX>:
+      -gopt -fast>>>>
+      )	  
+endif ()
+
+if (DEFINED ENABLE_FPE)
+   if (ENABLE_FPE)
+      target_compile_options ( ${MFIX_LIBNAME}
+   	 PUBLIC
+	 # GNU
+	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+	 -ffpe-trap=invalid,zero -ftrapv>>
+	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+	 -ftrapv>>
+	 # Intel
+	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+	 -fpe3>>
+	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+	 -fpe3>>
+	 # Cray
+	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+	 -K trap=fp>>
+	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+	 -K trap=fp>>
+	 #  PGI
+	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+	 -Ktrap=divz,inv>>
+	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+	 >> )
+   endif ()
+else ()
+   message (AUTHOR_WARNING "Variable ENABLE_FPE is not defined")
+endif ()

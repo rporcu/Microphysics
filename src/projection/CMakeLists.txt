@@ -1,0 +1,7 @@
+add_sources ( convection_mod.f90 diffusion_mod.f90 )
+add_sources ( projection_mod.f90 projection_tests_mod.f90 )
+add_sources ( slopes_mod.f90 )
+add_sources ( set_pressure_bcs.f90 set_projection_bcs.f90 )
+add_sources ( mfix_projection.cpp )
+add_sources ( compute_dt.cpp )
+add_sources ( MacProjection.H MacProjection.cpp ) #cpp )

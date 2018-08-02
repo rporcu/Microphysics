@@ -65,7 +65,7 @@
          10x,'DES_EN_INPUT = ',T30,G12.4,/&
          10x,'DES_EN_WALL_INPUT = ',T30,G12.4)
 
- 1200 FORMAT(/2X,'Bounce',9X,A,10X,A,'_MFIX',7X,'%REL DIFF')
+ 1200 FORMAT(/2X,'Bounce',9X,A,10X,A,'_MFIX')
 
 
       CLOSE(fUNIT)

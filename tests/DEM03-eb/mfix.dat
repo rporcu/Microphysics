@@ -1,0 +1,110 @@
+########################################################################
+#                                                                      #
+# Author:  Sreekanth Pannala                            Date: 01-2010  #
+# Modified: J. Musser                                   Date: 05-2014  #
+#                                                                      #
+#  Description:                                                        #
+#  Two stacked particles compressed between two boundaries.            #
+#                                                                      #
+#  References:                                                         #
+#  R. Garg, J. Galvin, T. Li, and S. Pannala, Documentation of open-   #
+#     source MFIX-DEM software for gas-solids flows, from URL:         #
+#     https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,      #
+#                                                                      #
+########################################################################
+
+  RUN_NAME = 'DEM03'
+  DESCRIPTION = 'DEM03: Two stacked, compressed particles'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+  DT =     1.0d-4
+  DT_MAX = 2.0d-4
+
+  CALL_USR = .T.
+
+  FULL_LOG = .F.  ! display residuals on screen
+  NLOG = 250      ! time steps between updates to (.LOG) file
+
+  GRAVITY(1) =  0.d0
+  GRAVITY(2) = -9.80665d0
+  GRAVITY(3) =  0.d0
+
+#_______________________________________________________________________
+# MATERIAL SECTION
+
+! Gas Section
+!---------------------------------------------------------------------//
+  RO_g0 = 0.0
+
+
+! PARTICLE SECTION
+!---------------------------------------------------------------------//
+
+  PARTICLE_TYPES = 2
+
+! Friction coefficients. (1)
+  MEW =   0.0                  ! particle-particle
+  MEW_W = 0.0                  ! particle-wall
+
+! Normal collision spring constant (N/m)
+  KN =    1.0d3                ! inter-particle
+  KN_W =  1.0d3                ! particle-wall
+
+! Tangential spring factor: KT/KN (1)
+  KT_FAC   = 1.0d0             ! inter-particle
+  KT_W_FAC = 1.0d0             ! particle-wall
+
+! Tangential damping coefficient factor: ETAT/ETAN (1)
+  DES_ETAT_FAC = 1.0           ! inter-particle
+  DES_ETAT_W_FAC = 1.0         ! particle-wall
+
+! Restitution coefficient. (1)
+  DES_EN_INPUT(1:2) = 1.0   1.0    ! particle-particle
+  DES_EN_INPUT(3)   =       1.0
+  DES_EN_WALL_INPUT = 1.0   1.0    ! particle-wall
+
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+  IC_X_w(1) =     0.0000  ! (m)
+  IC_X_e(1) =     0.0045  ! (m)
+  IC_Z_b(1) =     0.0000  ! (m)
+  IC_Z_t(1) =     0.0045  ! (m)
+  IC_Y_s(1) =     0.0000  ! (m)
+  IC_Y_n(1) =     0.0045  ! (m)
+
+  IC_EP_g(1) =    1.0     ! (1)
+
+  IC_P_g(1) =     0.0     ! (Pa)
+
+  IC_U_g(1) =     0.0     ! (m/sec)
+  IC_V_g(1) =     0.0     ! (m/sec)
+  IC_W_g(1) =     0.0     ! (m/sec)
+
+#_______________________________________________________________________
+# BOUNDARY CONDITIONS SECTION
+
+  BC_X_w(1:2) =  0.0000  0.0000  ! (m)
+  BC_X_e(1:2) =  0.0045  0.0045  ! (m)
+  BC_Z_b(1:2) =  0.0000  0.0000  ! (m)
+  BC_Z_t(1:2) =  0.0045  0.0045  ! (m)
+
+  BC_Y_s(1:2) =  0.0000  0.0045  ! (m)
+  BC_Y_n(1:2) =  0.0000  0.0045  ! (m)
+
+  BC_Type(1:2) = 2*'NSW'
+
+  BC_NORMAL(1,1:3) = 0.00000  1.000000  0.00000
+  BC_CENTER(1,1:3) = 0.00225  0.000225  0.00225
+
+  BC_NORMAL(2,1:3) = 0.00000 -1.000000  0.00000
+  BC_CENTER(2,1:3) = 0.00225  0.002025  0.00225
+
+
+#_______________________________________________________________________
+# USER OUTPUT CONTROL
+
+  USR_DT(1) = 1.0d-5

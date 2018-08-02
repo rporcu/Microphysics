@@ -18,14 +18,15 @@
 ! ::: -----------------------------------------------------------
 subroutine fill_bc0(s, slo, shi, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, domlo, domhi) &
+      bc_klo_type, bc_khi_type, domlo, domhi, ng) &
    bind(C, name="fill_bc0")
 
 
 ! Global modules
 !--------------------------------------------------------------------//
       use iso_c_binding , only: c_int
-      use amrex_fort_module, only : c_real => amrex_real
+      use amrex_fort_module, only : rt => amrex_real
+      use bc, only: NSW_, FSW_, PSW_
 
       implicit none
 
@@ -33,23 +34,18 @@ subroutine fill_bc0(s, slo, shi, &
 ! Dummy arguments
 !``````````````````````````````````````````````````````````````````````
       integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3),ng
 
-      real(c_real), intent(inout) ::  s&
+      real(rt), intent(inout) ::  s&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      integer(c_int), intent(in   ) :: bc_ilo_type&
-         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_ihi_type&
-         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_jlo_type&
-         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_jhi_type&
-         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
-      integer(c_int), intent(in   ) :: bc_klo_type&
-         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
-      integer(c_int), intent(in   ) :: bc_khi_type&
-         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
+      integer(c_int), intent(in   ) :: &
+           bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_ihi_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jlo_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_jhi_type(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+           bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+           bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
 
 ! Local variables
@@ -72,7 +68,9 @@ subroutine fill_bc0(s, slo, shi, &
          do i = 1, nlft
             do k=slo(3),shi(3)
                do j=slo(2),shi(2)
-                  if(bc_ilo_type(j,k,1) >= 100) then
+               if(bc_ilo_type(j,k,1) == NSW_ .or. &
+                  bc_ilo_type(j,k,1) == FSW_ .or. &
+                  bc_ilo_type(j,k,1) == PSW_) then
                      s(ilo-i,j,k) = s(ilo,j,k)
                   endif
                end do
@@ -85,7 +83,9 @@ subroutine fill_bc0(s, slo, shi, &
          do i = 1, nrgt
             do k=slo(3),shi(3)
                do j=slo(2),shi(2)
-                  if(bc_ihi_type(j,k,1) >= 100) then
+                  if(bc_ihi_type(j,k,1) == NSW_ .or. &
+                     bc_ihi_type(j,k,1) == FSW_ .or. &
+                     bc_ihi_type(j,k,1) == PSW_) then
                      s(ihi+i,j,k) = s(ihi,j,k)
                   endif
                end do
@@ -98,7 +98,9 @@ subroutine fill_bc0(s, slo, shi, &
          do j = 1, nbot
             do k=slo(3),shi(3)
                do i=slo(1),shi(1)
-                  if(bc_jlo_type(i,k,1) >= 100) then
+               if(bc_jlo_type(i,k,1) == NSW_ .or. &
+                  bc_jlo_type(i,k,1) == FSW_ .or. &
+                  bc_jlo_type(i,k,1) == PSW_) then
                      s(i,jlo-j,k) = s(i,jlo,k)
                   endif
                end do
@@ -111,7 +113,9 @@ subroutine fill_bc0(s, slo, shi, &
          do j = 1, ntop
             do k=slo(3),shi(3)
                do i=slo(1),shi(1)
-                  if(bc_jhi_type(i,k,1) >= 100) then
+               if(bc_jhi_type(i,k,1) == NSW_ .or. &
+                  bc_jhi_type(i,k,1) == FSW_ .or. &
+                  bc_jhi_type(i,k,1) == PSW_) then
                      s(i,jhi+j,k) = s(i,jhi,k)
                   endif
                end do
@@ -124,7 +128,9 @@ subroutine fill_bc0(s, slo, shi, &
          do k = 1, ndwn
             do j=slo(2),shi(2)
                do i=slo(1),shi(1)
-                  if(bc_klo_type(i,j,1) >= 100) then
+               if(bc_klo_type(i,j,1) == NSW_ .or. &
+                  bc_klo_type(i,j,1) == FSW_ .or. &
+                  bc_klo_type(i,j,1) == PSW_) then
                      s(i,j,klo-k) = s(i,j,klo)
                   endif
                end do
@@ -137,7 +143,9 @@ subroutine fill_bc0(s, slo, shi, &
          do k = 1, nup
             do j=slo(2),shi(2)
                do i=slo(1),shi(1)
-                  if(bc_khi_type(i,j,1) >= 100) then
+               if(bc_khi_type(i,j,1) == NSW_ .or. &
+                  bc_khi_type(i,j,1) == FSW_ .or. &
+                  bc_khi_type(i,j,1) == PSW_) then
                      s(i,j,khi+k) = s(i,j,khi)
                   endif
                end do
@@ -145,12 +153,29 @@ subroutine fill_bc0(s, slo, shi, &
          end do
       endif
 
-! fill edges --------------------------------------------
+! ------------------------------------------------------
+! fill edges -------------------------------------------
+! ------------------------------------------------------
 
       do i = 1, nlft
          do j = 1, nbot
             do k=slo(3)+ndwn,shi(3)-nup
-               s(domlo(1)-i,domlo(2)-j,k) = s(domlo(1),domlo(2),k)
+               if ( (bc_ilo_type(j,k,1) == NSW_ .or. &
+                     bc_ilo_type(j,k,1) == FSW_ .or. &
+                     bc_ilo_type(j,k,1) == PSW_) .and. &
+                    (bc_jlo_type(i,k,1) == NSW_ .or. &
+                     bc_jlo_type(i,k,1) == FSW_ .or. &
+                     bc_jlo_type(i,k,1) == PSW_) ) then
+                  s(domlo(1)-i,domlo(2)-j,k) = s(domlo(1),domlo(2),k)
+               else if (bc_ilo_type(j,k,1) == NSW_ .or. &
+                        bc_ilo_type(j,k,1) == FSW_ .or. &
+                        bc_ilo_type(j,k,1) == PSW_) then
+                  s(domlo(1)-i,domlo(2)-j,k) = s(domlo(1),domlo(2)-j,k)
+               else if (bc_jlo_type(i,k,1) == NSW_ .or. &
+                        bc_jlo_type(i,k,1) == FSW_ .or. &
+                        bc_jlo_type(i,k,1) == PSW_) then
+                  s(domlo(1)-i,domlo(2)-j,k) = s(domlo(1)-i,domlo(2),k)
+               end if
             end do
          end do
       end do
@@ -158,7 +183,22 @@ subroutine fill_bc0(s, slo, shi, &
       do i = 1, nlft
          do j = 1, ntop
             do k=slo(3)+ndwn,shi(3)-nup
-               s(domlo(1)-i,domhi(2)+j,k) = s(domlo(1),domhi(2),k)
+               if ( (bc_ilo_type(j,k,1) == NSW_ .or. &
+                     bc_ilo_type(j,k,1) == FSW_ .or. &
+                     bc_ilo_type(j,k,1) == PSW_) .and. &
+                    (bc_jhi_type(i,k,1) == NSW_ .or. &
+                     bc_jhi_type(i,k,1) == FSW_ .or. &
+                     bc_jhi_type(i,k,1) == PSW_) ) then
+                  s(domlo(1)-i,domhi(2)+j,k) = s(domlo(1),domhi(2),k)
+               else if (bc_ilo_type(j,k,1) == NSW_ .or. &
+                        bc_ilo_type(j,k,1) == FSW_ .or. &
+                        bc_ilo_type(j,k,1) == PSW_) then
+                  s(domlo(1)-i,domhi(2)+j,k) = s(domlo(1),domhi(2)+j,k)
+               else if (bc_jhi_type(i,k,1) == NSW_ .or. &
+                        bc_jhi_type(i,k,1) == FSW_ .or. &
+                        bc_jhi_type(i,k,1) == PSW_) then
+                  s(domlo(1)-i,domhi(2)+j,k) = s(domlo(1)-i,domhi(2),k)
+               end if
             end do
          end do
       end do
@@ -166,7 +206,22 @@ subroutine fill_bc0(s, slo, shi, &
       do i = 1, nlft
          do k = 1, ndwn
             do j=slo(2)+nbot,shi(2)-ntop
-               s(domlo(1)-i,j,domlo(3)-k) = s(domlo(1),j,domlo(3))
+               if ( (bc_ilo_type(j,k,1) == NSW_ .or. &
+                     bc_ilo_type(j,k,1) == FSW_ .or. &
+                     bc_ilo_type(j,k,1) == PSW_) .and. &
+                    (bc_klo_type(i,j,1) == NSW_ .or. &
+                     bc_klo_type(i,j,1) == FSW_ .or. &
+                     bc_klo_type(i,j,1) == PSW_) ) then
+                  s(domlo(1)-i,j,domlo(3)-k) = s(domlo(1),j,domlo(3))
+               else if (bc_ilo_type(j,k,1) == NSW_ .or. &
+                        bc_ilo_type(j,k,1) == FSW_ .or. &
+                        bc_ilo_type(j,k,1) == PSW_) then
+                  s(domlo(1)-i,j,domlo(3)-k) = s(domlo(1),j,domlo(3)-k)
+               else if (bc_klo_type(i,j,1) == NSW_ .or. &
+                        bc_klo_type(i,j,1) == FSW_ .or. &
+                        bc_klo_type(i,j,1) == PSW_) then
+                  s(domlo(1)-i,j,domlo(3)-k) = s(domlo(1)-i,j,domlo(3))
+               end if
             end do
          end do
       end do
@@ -174,7 +229,22 @@ subroutine fill_bc0(s, slo, shi, &
       do i = 1, nlft
          do k = 1, nup
             do j=slo(2)+nbot,shi(2)-ntop
-               s(domlo(1)-i,j,domhi(3)+k) = s(domlo(1),j,domhi(3))
+               if ( (bc_ilo_type(j,k,1) == NSW_ .or. &
+                     bc_ilo_type(j,k,1) == FSW_ .or. &
+                     bc_ilo_type(j,k,1) == PSW_) .and. &
+                    (bc_khi_type(i,k,1) == NSW_ .or. &
+                     bc_khi_type(i,k,1) == FSW_ .or. &
+                     bc_khi_type(i,k,1) == PSW_) ) then
+                  s(domlo(1)-i,j,domhi(3)+k) = s(domlo(1),j,domhi(3))
+               else if (bc_ilo_type(j,k,1) == NSW_ .or. &
+                        bc_ilo_type(j,k,1) == FSW_ .or. &
+                        bc_ilo_type(j,k,1) == PSW_) then
+                  s(domlo(1)-i,j,domhi(3)+k) = s(domlo(1),j,domhi(3)+k)
+               else if (bc_khi_type(i,k,1) == NSW_ .or. &
+                        bc_khi_type(i,k,1) == FSW_ .or. &
+                        bc_khi_type(i,k,1) == PSW_) then
+                  s(domlo(1)-i,j,domhi(3)+k) = s(domlo(1)-i,j,domhi(3))
+               end if
             end do
          end do
       end do
@@ -182,7 +252,22 @@ subroutine fill_bc0(s, slo, shi, &
       do i = 1, nrgt
          do j = 1, nbot
             do k=slo(3)+ndwn,shi(3)-nup
-               s(domhi(1)+i,domlo(2)-j,k) = s(domhi(1),domlo(2),k)
+               if ( (bc_ihi_type(j,k,1) == NSW_ .or. &
+                     bc_ihi_type(j,k,1) == FSW_ .or. &
+                     bc_ihi_type(j,k,1) == PSW_) .and. &
+                    (bc_jlo_type(i,k,1) == NSW_ .or. &
+                     bc_jlo_type(i,k,1) == FSW_ .or. &
+                     bc_jlo_type(i,k,1) == PSW_) ) then
+                  s(domhi(1)+i,domlo(2)-j,k) = s(domhi(1),domlo(2),k)
+               else if (bc_ihi_type(j,k,1) == NSW_ .or. &
+                        bc_ihi_type(j,k,1) == FSW_ .or. &
+                        bc_ihi_type(j,k,1) == PSW_) then
+                  s(domhi(1)+i,domlo(2)-j,k) = s(domhi(1),domlo(2)-j,k)
+               else if (bc_jlo_type(i,k,1) == NSW_ .or. &
+                        bc_jlo_type(i,k,1) == FSW_ .or. &
+                        bc_jlo_type(i,k,1) == PSW_) then
+                  s(domhi(1)+i,domlo(2)-j,k) = s(domhi(1)+i,domlo(2),k)
+               end if
             end do
          end do
       end do
@@ -190,7 +275,22 @@ subroutine fill_bc0(s, slo, shi, &
       do i = 1, nrgt
          do j = 1, ntop
             do k=slo(3)+ndwn,shi(3)-nup
-               s(domhi(1)+i,domhi(2)+j,k) = s(domhi(1),domhi(2),k)
+               if ( (bc_ihi_type(j,k,1) == NSW_ .or. &
+                     bc_ihi_type(j,k,1) == FSW_ .or. &
+                     bc_ihi_type(j,k,1) == PSW_) .and. &
+                    (bc_jhi_type(i,k,1) == NSW_ .or. &
+                     bc_jhi_type(i,k,1) == FSW_ .or. &
+                     bc_jhi_type(i,k,1) == PSW_) ) then
+                  s(domhi(1)+i,domhi(2)+j,k) = s(domhi(1),domhi(2),k)
+               else if (bc_ihi_type(j,k,1) == NSW_ .or. &
+                        bc_ihi_type(j,k,1) == FSW_ .or. &
+                        bc_ihi_type(j,k,1) == PSW_) then
+                  s(domhi(1)+i,domhi(2)+j,k) = s(domhi(1),domhi(2)+j,k)
+               else if (bc_jhi_type(i,k,1) == NSW_ .or. &
+                        bc_jhi_type(i,k,1) == FSW_ .or. &
+                        bc_jhi_type(i,k,1) == PSW_) then
+                  s(domhi(1)+i,domhi(2)+j,k) = s(domhi(1)+i,domhi(2),k)
+               end if
             end do
          end do
       end do
@@ -198,7 +298,22 @@ subroutine fill_bc0(s, slo, shi, &
       do i = 1, nrgt
          do k = 1, ndwn
             do j=slo(2)+nbot,shi(2)-ntop
-               s(domhi(1)+i,j,domlo(3)-k) = s(domhi(1),j,domlo(3))
+               if ( (bc_ihi_type(j,k,1) == NSW_ .or. &
+                     bc_ihi_type(j,k,1) == FSW_ .or. &
+                     bc_ihi_type(j,k,1) == PSW_) .and. &
+                    (bc_klo_type(i,j,1) == NSW_ .or. &
+                     bc_klo_type(i,j,1) == FSW_ .or. &
+                     bc_klo_type(i,j,1) == PSW_) ) then
+                  s(domhi(1)+i,j,domlo(3)-k) = s(domhi(1),j,domlo(3))
+               else if (bc_ihi_type(j,k,1) == NSW_ .or. &
+                        bc_ihi_type(j,k,1) == FSW_ .or. &
+                        bc_ihi_type(j,k,1) == PSW_) then
+                  s(domhi(1)+i,j,domlo(3)-k) = s(domhi(1),j,domlo(3)-k)
+               else if (bc_klo_type(i,j,1) == NSW_ .or. &
+                        bc_klo_type(i,j,1) == FSW_ .or. &
+                        bc_klo_type(i,j,1) == PSW_) then
+                  s(domhi(1)+i,j,domlo(3)-k) = s(domhi(1)+i,j,domlo(3))
+               end if
             end do
          end do
       end do
@@ -206,7 +321,22 @@ subroutine fill_bc0(s, slo, shi, &
       do i = 1, nrgt
          do k = 1, nup
             do j=slo(2)+nbot,shi(2)-ntop
-               s(domhi(1)+i,j,domhi(3)+k) = s(domhi(1),j,domhi(3))
+               if ( (bc_ihi_type(j,k,1) == NSW_ .or. &
+                     bc_ihi_type(j,k,1) == FSW_ .or. &
+                     bc_ihi_type(j,k,1) == PSW_) .and. &
+                    (bc_khi_type(i,j,1) == NSW_ .or. &
+                     bc_khi_type(i,j,1) == FSW_ .or. &
+                     bc_khi_type(i,j,1) == PSW_) ) then
+                  s(domhi(1)+i,j,domhi(3)+k) = s(domhi(1),j,domhi(3))
+               else if (bc_ihi_type(j,k,1) == NSW_ .or. &
+                        bc_ihi_type(j,k,1) == FSW_ .or. &
+                        bc_ihi_type(j,k,1) == PSW_) then
+                  s(domhi(1)+i,j,domhi(3)+k) = s(domhi(1),j,domhi(3)+k)
+               else if (bc_khi_type(i,j,1) == NSW_ .or. &
+                        bc_khi_type(i,j,1) == FSW_ .or. &
+                        bc_khi_type(i,j,1) == PSW_) then
+                  s(domhi(1)+i,j,domhi(3)+k) = s(domhi(1)+i,j,domhi(3))
+               end if
             end do
          end do
       end do
@@ -214,7 +344,22 @@ subroutine fill_bc0(s, slo, shi, &
       do j = 1, nbot
          do k = 1, ndwn
             do i=slo(1)+nlft,shi(1)-nrgt
-               s(i,domlo(2)-j,domlo(3)-k) = s(i,domlo(2),domlo(3))
+               if ( (bc_klo_type(i,j,1) == NSW_ .or. &
+                     bc_klo_type(i,j,1) == FSW_ .or. &
+                     bc_klo_type(i,j,1) == PSW_) .and. &
+                    (bc_jlo_type(i,k,1) == NSW_ .or. &
+                     bc_jlo_type(i,k,1) == FSW_ .or. &
+                     bc_jlo_type(i,k,1) == PSW_) ) then
+                  s(i,domlo(2)-j,domlo(3)-k) = s(i,domlo(2),domlo(3))
+               else if (bc_klo_type(i,j,1) == NSW_ .or. &
+                        bc_klo_type(i,j,1) == FSW_ .or. &
+                        bc_klo_type(i,j,1) == PSW_) then
+                  s(i,domlo(2)-j,domlo(3)-k) = s(i,domlo(2)-j,domlo(3))
+               else if (bc_jlo_type(i,k,1) == NSW_ .or. &
+                        bc_jlo_type(i,k,1) == FSW_ .or. &
+                        bc_jlo_type(i,k,1) == PSW_) then
+                  s(i,domlo(2)-j,domlo(3)-k) = s(i,domlo(2),domlo(3)-k)
+               end if
             end do
          end do
       end do
@@ -222,7 +367,22 @@ subroutine fill_bc0(s, slo, shi, &
       do j = 1, ntop
          do k = 1, ndwn
             do i=slo(1)+nlft,shi(1)-nrgt
-               s(i,domhi(2)+j,domlo(3)-k) = s(i,domhi(2),domlo(3))
+               if ( (bc_klo_type(i,j,1) == NSW_ .or. &
+                     bc_klo_type(i,j,1) == FSW_ .or. &
+                     bc_klo_type(i,j,1) == PSW_) .and. &
+                    (bc_jhi_type(i,k,1) == NSW_ .or. &
+                     bc_jhi_type(i,k,1) == FSW_ .or. &
+                     bc_jhi_type(i,k,1) == PSW_) ) then
+                  s(i,domhi(2)+j,domlo(3)-k) = s(i,domhi(2),domlo(3))
+               else if (bc_klo_type(i,j,1) == NSW_ .or. &
+                        bc_klo_type(i,j,1) == FSW_ .or. &
+                        bc_klo_type(i,j,1) == PSW_) then
+                  s(i,domhi(2)+j,domlo(3)-k) = s(i,domhi(2)+j,domlo(3))
+               else if (bc_jhi_type(i,k,1) == NSW_ .or. &
+                        bc_jhi_type(i,k,1) == FSW_ .or. &
+                        bc_jhi_type(i,k,1) == PSW_) then
+                  s(i,domhi(2)+j,domlo(3)-k) = s(i,domhi(2),domlo(3)-k)
+               end if
             end do
          end do
       end do
@@ -230,7 +390,22 @@ subroutine fill_bc0(s, slo, shi, &
       do j = 1, nbot
          do k = 1, nup
             do i=slo(1)+nlft,shi(1)-nrgt
-               s(i,domlo(2)-j,domhi(3)+k) = s(i,domlo(2),domhi(3))
+               if ( (bc_khi_type(i,j,1) == NSW_ .or. &
+                     bc_khi_type(i,j,1) == FSW_ .or. &
+                     bc_khi_type(i,j,1) == PSW_) .and. &
+                    (bc_jlo_type(i,k,1) == NSW_ .or. &
+                     bc_jlo_type(i,k,1) == FSW_ .or. &
+                     bc_jlo_type(i,k,1) == PSW_) ) then
+                  s(i,domlo(2)-j,domhi(3)+k) = s(i,domlo(2),domhi(3))
+               else if (bc_khi_type(i,j,1) == NSW_ .or. &
+                        bc_khi_type(i,j,1) == FSW_ .or. &
+                        bc_khi_type(i,j,1) == PSW_) then
+                  s(i,domlo(2)-j,domhi(3)+k) = s(i,domlo(2)-j,domhi(3))
+               else if (bc_jlo_type(i,k,1) == NSW_ .or. &
+                        bc_jlo_type(i,k,1) == FSW_ .or. &
+                        bc_jlo_type(i,k,1) == PSW_) then
+                  s(i,domlo(2)-j,domhi(3)+k) = s(i,domlo(2),domhi(3)+k)
+               end if
             end do
          end do
       end do
@@ -238,7 +413,22 @@ subroutine fill_bc0(s, slo, shi, &
       do j = 1, ntop
          do k = 1, nup
             do i=slo(1)+nlft,shi(1)-nrgt
-               s(i,domhi(2)+j,domhi(3)+k) = s(i,domhi(2),domhi(3))
+               if ( (bc_khi_type(i,j,1) == NSW_ .or. &
+                     bc_khi_type(i,j,1) == FSW_ .or. &
+                     bc_khi_type(i,j,1) == PSW_) .and. &
+                    (bc_jhi_type(i,k,1) == NSW_ .or. &
+                     bc_jhi_type(i,k,1) == FSW_ .or. &
+                     bc_jhi_type(i,k,1) == PSW_) ) then
+                  s(i,domhi(2)+j,domhi(3)+k) = s(i,domhi(2),domhi(3))
+               else if (bc_khi_type(i,j,1) == NSW_ .or. &
+                        bc_khi_type(i,j,1) == FSW_ .or. &
+                        bc_khi_type(i,j,1) == PSW_) then
+                  s(i,domhi(2)+j,domhi(3)+k) = s(i,domhi(2)+j,domhi(3))
+               else if (bc_jhi_type(i,k,1) == NSW_ .or. &
+                        bc_jhi_type(i,k,1) == FSW_ .or. &
+                        bc_jhi_type(i,k,1) == PSW_) then
+                  s(i,domhi(2)+j,domhi(3)+k) = s(i,domhi(2),domhi(3)+k)
+               end if
             end do
          end do
       end do

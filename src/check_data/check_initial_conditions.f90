@@ -1,6 +1,6 @@
 module check_initial_conditions_module
 
-  use amrex_fort_module, only: c_real => amrex_real
+  use amrex_fort_module, only: rt => amrex_real
   use iso_c_binding ,    only: c_int
 
   use param,  only: zero, one, undefined, undefined_i
@@ -32,7 +32,7 @@ contains
     use param,                 only: dim_ic
 
     integer(c_int), intent(in) :: domlo(3),domhi(3)
-    real(c_real)  , intent(in) :: dx, dy, dz
+    real(rt)  , intent(in) :: dx, dy, dz
     integer(c_int)             :: icv
 
     ! Determine which ICs are DEFINED
@@ -76,7 +76,7 @@ contains
       use calc_cell_module, only: calc_cell_ic
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)
-      real(c_real)  , intent(in) :: dx,dy,dz
+      real(rt)  , intent(in) :: dx,dy,dz
 
       integer :: icv, i_w, i_e, j_s, j_n, k_b, k_t
 
@@ -208,35 +208,21 @@ contains
 
       ! Check that gas phase velocity components are initialized.
       if(is_undefined(ic_u_g(icv))) then
-         write(err_msg, 1000) trim(ivar('IC_U_g',icv))
+         write(err_msg, 1000) trim(ivar('ic_u_g',icv))
          call flush_err_msg(abort=.true.)
       endif
 
       if(is_undefined(ic_v_g(icv))) then
-         write(err_msg, 1000) trim(ivar('IC_V_g',icv))
+         write(err_msg, 1000) trim(ivar('ic_v_g',icv))
          call flush_err_msg(abort=.true.)
       endif
 
       if(is_undefined(ic_w_g(icv))) then
-         write(err_msg, 1000) trim(ivar('IC_W_g',icv))
+         write(err_msg, 1000) trim(ivar('ic_w_g',icv))
          call flush_err_msg(abort=.true.)
       endif
 
 1000  format('Error 1000: Required input not specified: ',A,/&
-         'Please correct the input deck.')
-
-      ! Check that if the gas phase pressure is initialized and the gas is
-      ! compressible that the gas phase pressure is not zero or negative
-      if(is_defined(ic_p_g(icv))) then
-         if(is_undefined(ro_g0).and. ic_p_g(icv)<=zero) then
-            write(err_msg, 1100) trim(iVar('IC_P_g',icv)),             &
-                 ival(ic_p_g(icv))
-            call flush_err_msg(abort=.true.)
-         endif
-      endif
-
-1100  format('Error 1100: Pressure must be greater than 0.0 for ',     &
-         'compressible flow',/'Illegal value: ',A,' = ',A,/&
          'Please correct the input deck.')
 
       call finl_err_msg
@@ -258,9 +244,16 @@ contains
       use ic,       only: ic_ep_s, ic_u_s, ic_v_s, ic_w_s
       use ic,       only: ic_ep_g
 
+      use ic, only: ic_dp_dist, ic_ro_s_dist
+      use ic, only: ic_dp_mean, ic_ro_s_mean
+      use ic, only: ic_dp_std,  ic_ro_s_std
+      use ic, only: ic_dp_min,  ic_ro_s_min
+      use ic, only: ic_dp_max,  ic_ro_s_max
+
       integer, intent(in) :: icv
       integer             :: m
-      real(c_real)        :: sum_ep
+      real(rt)        :: sum_ep
+      integer :: types
 
       ! Initialize the error manager.
       CALL init_err_msg("CHECK_IC_SOLIDS_PHASES")
@@ -269,22 +262,118 @@ contains
       sum_ep = ic_ep_g(icv)
 
       ! check that solids phase-m components are initialized
+      types = 0
       do m=1, mmax
 
          if(ic_ep_s(icv,m) > epsilon(0.d0)) then
 
+            types = types + 1
+
             if(is_undefined(ic_u_s(icv,m))) then
-               write(err_msg, 1000)trim(ivar('IC_U_s',icv,m))
+               write(err_msg, 1000)m,icv,trim(ivar('IC_U_s',icv,m))
                call flush_err_msg(abort=.true.)
             endif
 
             if(is_undefined(ic_v_s(icv,m))) then
-               write(err_msg, 1000)trim(ivar('IC_V_s',icv,m))
+               write(err_msg, 1000)m,icv,trim(ivar('IC_V_s',icv,m))
                call flush_err_msg(abort=.true.)
             endif
 
             if(is_undefined(ic_w_s(icv,m))) then
-               write(err_msg, 1000)trim(ivar('IC_W_s',icv,m))
+               write(err_msg, 1000)m,icv,trim(ivar('IC_W_s',icv,m))
+               call flush_err_msg(abort=.true.)
+            endif
+
+            if(trim(ic_dp_dist(icv,m)) == 'CONSTANT') then
+
+               if(is_undefined(ic_dp_mean(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_dp_mean',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+            elseif(trim(ic_dp_dist(icv,m)) == 'UNIFORM') then
+
+               if(is_undefined(ic_dp_min(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_dp_min',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+               if(is_undefined(ic_dp_max(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_dp_max',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+            elseif(trim(ic_dp_dist(icv,m)) == 'NORMAL') then
+
+               if(is_undefined(ic_dp_mean(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_dp_mean',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+               if(is_undefined(ic_dp_std(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_dp_std',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+               if(is_undefined(ic_dp_min(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_dp_min',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+               if(is_undefined(ic_dp_max(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_dp_max',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+            else
+               write(err_msg, 1460) trim(ivar('ic_dp_dist',icv,m)), &
+                    ic_dp_dist(icv,m)
+               call flush_err_msg(abort=.true.)
+            endif
+
+            if(trim(ic_ro_s_dist(icv,m)) == 'CONSTANT') then
+
+               if(is_undefined(ic_ro_s_mean(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_ro_s_mean',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+            else if(trim(ic_ro_s_dist(icv,m)) == 'UNIFORM') then
+
+               if(is_undefined(ic_ro_s_min(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_ro_s_min',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+               if(is_undefined(ic_ro_s_max(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_ro_s_max',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+            else if(trim(ic_ro_s_dist(icv,m)) == 'NORMAL') then
+
+               if(is_undefined(ic_ro_s_mean(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_ro_s_mean',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+               if(is_undefined(ic_ro_s_std(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_ro_s_std',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+               if(is_undefined(ic_ro_s_min(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_ro_s_min',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+               if(is_undefined(ic_ro_s_max(icv,m))) then
+                  write(err_msg, 1000)m,icv,trim(ivar('ic_ro_s_max',icv,m))
+                  call flush_err_msg(abort=.true.)
+               endif
+
+            else
+               write(err_msg, 1460) trim(ivar('ic_ro_s_dist',icv,m)), &
+                    ic_ro_s_dist(icv,m)
                call flush_err_msg(abort=.true.)
             endif
 
@@ -306,6 +395,18 @@ contains
 1410  format('Error 1410: Illegal initial condition region : ',I3,/    &
            'Sum of volume fractions does NOT equal ONE. Please correct',/&
            'the input deck.')
+
+      if(types > 1)then
+         write(err_msg,1450) icv
+         call flush_err_msg(abort=.true.)
+      endif
+
+1450  format('Error 1450: Illegal initial condition region : ',I3,/    &
+           'Only one solid type can be defined per IC region.',/&
+           'Please correct the input deck.')
+
+1460  format('Error 1460: Unknown distribution in initial condition.',/&
+           3x,A,' = ',A,/'Please correct the input deck.')
 
       call finl_err_msg
 
@@ -390,6 +491,7 @@ contains
       use error_manager,  only: err_msg, flush_err_msg
 
       integer      :: icv1, icv2
+      real(rt) :: vol
 
       ! Initialize the error manager.
       call init_err_msg("CHECK_IC_COMMON_DISCRETE")
@@ -399,9 +501,12 @@ contains
          if(ic_defined(icv1) .and. sum(ic_ep_s(icv1,:)) > zero) then
             do icv2 = icv1+1, dim_ic
                if(ic_defined(icv2) .and. sum(ic_ep_s(icv1,:)) > zero) then
-                  if((ic_x_w(icv1) < ic_x_e(icv2) .and. ic_x_e(icv1) > ic_x_w(icv2)) .or. &
-                     (ic_y_s(icv1) < ic_y_n(icv2) .and. ic_y_n(icv1) > ic_y_s(icv2)) .or. &
-                     (ic_z_b(icv1) < ic_z_t(icv2) .and. ic_z_t(icv1) > ic_z_b(icv2))) then
+
+                  vol= max(min(ic_x_e(icv1),ic_x_e(icv2))-max(ic_x_w(icv1),ic_x_w(icv2)),0.0d0) * &
+                       max(min(ic_y_n(icv1),ic_y_n(icv2))-max(ic_y_s(icv1),ic_y_s(icv2)),0.0d0) * &
+                       max(min(ic_z_t(icv1),ic_z_t(icv2))-max(ic_z_b(icv1),ic_z_b(icv2)),0.0d0)
+
+                  if( abs(vol) > epsilon(0.0d0)) then
                      write(err_msg, 1004) icv1, icv2
                      call flush_err_msg(abort=.true.)
                   endif

@@ -59,9 +59,8 @@
 #_______________________________________________________________________
 # BOUNDARY CONDITIONS SECTION
 
-
-
-! Top and bottom walls are no-slip
+!---------------------------------------------------------------------//
+! East and west walls are no-slip
 !---------------------------------------------------------------------//
   BC_X_w(1:2) =   0.00     0.01  ! (m)
   BC_X_e(1:2) =   0.00     0.01  ! (m)
@@ -72,8 +71,8 @@
 
   BC_Type(1:2) = 'NSW'    'NSW'
 
-
-! Front and back walls are free-slip
+!---------------------------------------------------------------------//
+! North and south walls are free-slip
 !---------------------------------------------------------------------//
   BC_X_w(3:4) =   0.00    0.00  ! (m)
   BC_X_e(3:4) =   0.01    0.01  ! (m)
@@ -84,9 +83,8 @@
 
   BC_Type(3:4) = 'FSW'    'FSW'
 
-
-! The east and west boundaries are set at cyclic with a specified
-! pressure drop (delP_X).
+!---------------------------------------------------------------------//
+! Top and bottom boundaries have pressure inflow/outflow conditions
 !---------------------------------------------------------------------//
   BC_X_w(5:6) =   0.00    0.00  ! (m)
   BC_X_e(5:6) =   0.01    0.01  ! (m)

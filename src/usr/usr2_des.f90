@@ -15,8 +15,8 @@
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE USR2_DES
+      subroutine usr2_des
 
+      return
 
-      RETURN
-      END SUBROUTINE USR2_DES
+      end subroutine usr2_des

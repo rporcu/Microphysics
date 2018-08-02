@@ -1,0 +1,18 @@
+f90EXE_sources += bc_mod.f90 calc_cell.f90 calc_mu_g.f90
+f90EXE_sources += calc_tau.f90 compute_divu.f90 compute_vort.f90
+f90EXE_sources += constant_mod.f90 eos_mod.f90 fill_bc0.f90 fld_constants_mod.f90
+f90EXE_sources += get_data.f90 ic_mod.f90 init_fluid.f90 init_namelist.f90
+f90EXE_sources += output_mod.f90 param_mod.f90 run_mod.f90 scales_mod.f90
+f90EXE_sources += set_bc0.f90 set_bc_flow.f90 set_bc_type.f90 set_p0.f90 set_delp_dir.f90
+f90EXE_sources += set_ps.f90 ps_mod.f90 utilities_mod.f90
+f90EXE_sources += set_mac_velocity_bcs.f90 set_velocity_bcs.f90 
+f90EXE_sources += zero_wall_norm_vel.f90 
+
+F90EXE_sources += amrex_to_mfix.F90
+
+CEXE_sources += main.cpp
+CEXE_sources += mfix_evolve.cpp mfix_init.cpp mfix_arrays.cpp
+CEXE_sources += mfix_level.cpp mfix_regrid.cpp
+CEXE_headers += mfix_level.H 
+
+FEXE_headers += mfix_F.H 

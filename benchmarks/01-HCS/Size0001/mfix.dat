@@ -1,0 +1,72 @@
+########################################################################
+#                                                                      #
+# Author:                                               Date: xx-xxxx  #
+# Modified: J. Musser                                   Date: 09-2016  #
+#                                                                      #
+# Description: Homogeneous Cooling System.                             #
+#                                                                      #
+########################################################################
+
+  RUN_NAME = 'BENCH01'
+  DESCRIPTION = 'Homogeneous Cooling System'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+  DT =     1.0d-04
+  DT_FAC = 1.0
+
+  GRAVITY(1:3) = 3*0.0
+
+  DRAG_TYPE = 'BVK'
+  CALL_USR = .F.
+
+#_______________________________________________________________________
+# NUMERICAL SECTION
+
+  TOL_RESID = 1.0E-3
+
+  MAX_NIT = 50
+
+#_______________________________________________________________________
+# MATERIAL SECTION
+
+! Gas Section
+!---------------------------------------------------------------------//
+  RO_g0 = 1.0      ! (kg/m3)
+  MU_g0 = 2.0d-5   ! (Pa.sec)
+
+
+! Particle Section
+!---------------------------------------------------------------------//
+
+  PARTICLE_TYPES = 1
+
+! Friction coefficient. (1)
+  MEW =   0.0                ! particle-particle
+  MEW_W = 0.0                ! particle-wall
+
+! Normal collision spring constant. (N/m)
+  KN =   10.0                ! particle-particle
+  KN_W = 10.0                ! particle-wall
+
+! Restitution coefficient. (1)
+  DES_EN_INPUT = 0.8         ! particle-particle
+  DES_EN_WALL_INPUT = 1.0    ! particle-wall
+
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+  IC_X_w(1) =   0.000   ! (m)
+  IC_X_e(1) =   0.0064  ! (m)
+  IC_Y_s(1) =   0.000   ! (m)
+  IC_Y_n(1) =   0.0064  ! (m)
+  IC_Z_b(1) =   0.000   ! (m)
+  IC_Z_t(1) =   0.0064  ! (m)
+
+  IC_EP_g(1) =  1.000   ! (m)
+
+  IC_U_g(1) =   0.000   ! (m)
+  IC_V_g(1) =   0.000   ! (m)
+  IC_W_g(1) =   0.000   ! (m)

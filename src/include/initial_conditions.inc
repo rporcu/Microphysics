@@ -1,25 +1,9 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!  Namelist: INITIAL_CONDITIONS_LOCKED                                 !
-!  Author: J.Musser                                   Date: 03-APR-15  !
-!                                                                      !
-!  Purpose: List MFIX keywords that CANNOT be edited during a run.     !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-!      NAMELIST / INITIAL_CONDITIONS_LOCKED /
+    NAMELIST / INITIAL_CONDITIONS /&
 
+    IC_X_w, IC_X_e, IC_Y_s, IC_Y_n, IC_Z_b, IC_Z_t,&
+    IC_EP_g, IC_U_g, IC_V_g, IC_W_g, IC_P_g, &
+    IC_EP_s, IC_U_s, IC_V_s, IC_W_s, &
 
+    ic_dp_dist, ic_dp_mean, ic_dp_std, ic_dp_min, ic_dp_max, &
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!  Namelist: INITIAL_CONDITIONS_UNLOCKED                               !
-!  Author: J.Musser                                   Date: 03-APR-15  !
-!                                                                      !
-!  Purpose: List MFIX keywords that may be edited during a run by      !
-!  invoking a REFRESH.                                                 !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      NAMELIST / INITIAL_CONDITIONS_UNLOCKED /&
-
-      IC_X_w, IC_X_e, IC_Y_s, IC_Y_n, IC_Z_b, IC_Z_t,&
-      IC_EP_g, IC_U_g, IC_V_g, IC_W_g, IC_P_g, &
-      IC_EP_s, IC_U_s, IC_V_s, IC_W_s
-
-! Currently unused:
-! IC_T_g, IC_T_s, IC_X_g, IC_X_s,
+    ic_ro_s_dist, ic_ro_s_mean, ic_ro_s_std, ic_ro_s_min, ic_ro_s_max

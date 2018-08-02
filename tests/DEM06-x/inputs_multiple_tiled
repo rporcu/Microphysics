@@ -1,3 +1,5 @@
+amr.stop_time = 0.35
+
 # Numb er of grid cells in each direction at the coarsest level
 amr.n_cell = 20 5 5
 

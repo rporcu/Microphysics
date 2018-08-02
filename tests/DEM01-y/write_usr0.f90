@@ -47,8 +47,6 @@
          OPEN(UNIT=fUNIT,FILE=FNAME,POSITION="APPEND",STATUS='OLD')
       ENDIF
 
-
-
       WRITE(fUNIT, 1110) KN, KN_W
       WRITE(fUNIT, 1120) DES_EN_WALL_INPUT(1), DES_EN_WALL_INPUT(1)
 
@@ -66,8 +64,7 @@
          10x,'DES_EN_INPUT = ',T30,G12.4,/&
          10x,'DES_EN_WALL_INPUT = ',T30,G12.4)
 
- 1200 FORMAT(/7X,'Time',7x,'Stage',11X,A,13X,A,'_MFIX',&
-         9X,'%REL DIFF',9x,'ABS DIFF')
+ 1200 FORMAT(/7X,'Time',7x,'Stage',11X,A,13X,A,'_MFIX')
 
       CLOSE(fUNIT)
       RETURN

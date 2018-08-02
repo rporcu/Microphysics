@@ -1,0 +1,123 @@
+########################################################################
+#  Author: J.Musser                                  Date: 2014-11-17  #
+#                                                                      #
+#  Purpose: Test DEM Hertz collision model.                            #
+#                                                                      #
+#  REF: Di Renzo, A. and Di Maio F.P. "Comparison of contact-force     #
+#       models for the simulation of collisions in DEM-based granular  #
+#       flow codes," Chemical Engineering Science, 59(3), pg 525-541.  #
+#                                                                      #
+#  REF: Kharaz, A.H., Gorham, D.A., and Salman, A.D. "An experimental  #
+#       study of the elastic rebound of spheres," Powder Technology,   #
+#       120(3), pg 281-291.                                            #
+#                                                                      #
+########################################################################
+
+  RUN_NAME = 'DEM05'
+  DESCRIPTION = 'DEM05: Oblique particle collision'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+  DT = 1.0d-4
+
+  CALL_USR = .T.
+
+  NLOG = 5000     ! time steps between updates to (.LOG) file
+  FULL_LOG = .T.  ! display residuals on screen
+
+  GRAVITY(1:3) = 3*0.0
+
+#_______________________________________________________________________
+# MATERIAL SECTION
+
+! GAS SECTION
+!---------------------------------------------------------------------//
+  RO_g0 = 0.0
+
+
+! SOLIDS SECTION
+!---------------------------------------------------------------------//
+
+  PARTICLE_TYPES = 2
+
+! Friction coefficients (1)
+  MEW      = 0.092           ! particle-particle
+  MEW_W    = 0.092           ! Particle-wall
+
+!......................................................................!
+! The following keywords are required inputs for the simulation. They  !
+! are not specified here because they are passed as run time arguments.!
+!                                                                      !
+!                                                                      !
+! --- Linear spring-dashpot collision parameters --------------------- !
+!                                                                      !
+! Normal collision spring constant. (N/m)                              !
+! KN =   1.72d7                   ! particle-particle                  !
+! KN_W = 1.72d7                   ! particle-wall                      !
+!                                                                      !
+! Tangential collision spring constant ratio [KT/KN]. (1)              !
+! KT_FAC =   @(1.48/1.72)         ! particle-particle                  !
+! KT_W_FAC = @(1.48:1.72)         ! particle-wall                      !
+!                                                                      !
+! Restitution coefficient. (1)                                         !
+! DES_EN_INPUT(1:3) =      3*1.0  ! particle-particle: 1-1, 1-2, 2-2   !
+! DES_EN_WALL_INPUT(1:2) = 2*1.0  ! particle-wall: 1-W, 2-W            !
+!                                                                      !
+!                                                                      !
+! --- Hertzian collision parameters ---------------------------------- !
+!                                                                      !
+! Youngs Modulus (Pa)                                                  !
+! E_YOUNG(1) = 380.0d9            ! Phase 1 particles                  !
+! E_YOUNG(2) =  70.0d9            ! Phase 2 particles (fake wall)      !
+! Ew_YOUNG =    70.0d9            ! Wall                               !
+!                                                                      !
+! Poisson ratio (1)                                                    !
+! V_POISSON(1) = 0.23             ! Phase 1 particles                  !
+! V_POISSON(2) = 0.25             ! Phase 2 particles (fake wall)      !
+! Vw_POISSON   = 0.25             ! Wall                               !
+!                                                                      !
+! Normal damping coefficient (1)                                       !
+! DES_EN_INPUT(1:3) =      3*1.0  ! particle-particle: 1-1, 1-2, 2-2   !
+! DES_EN_WALL_INPUT(1:2) = 2*1.0  ! particle-wall: 1-W, 2-W            !
+!                                                                      !
+! Tangential damping coefficient (1)                                   !
+! DES_EN_INPUT(1:3) =      3*1.0  ! particle-particle: 1-1, 1-2, 2-2   !
+! DES_EN_WALL_INPUT(1:2) = 2*1.0  ! particle-wall: 1-W, 2-W            !
+!                                                                      !
+!......................................................................!
+
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+  IC_X_w(1) =    0.0  ! (m)
+  IC_X_e(1) =    0.5  ! (m)
+  IC_Z_b(1) =    0.0  ! (m)
+  IC_Z_t(1) =    0.5  ! (m)
+  IC_Y_s(1) =    0.0  ! (m)
+  IC_Y_n(1) =    0.2  ! (m)
+
+  IC_EP_g(1) =   1.0  ! (-)
+
+  IC_U_g(1) =    0.0  ! (m/sec)
+  IC_V_g(1) =    0.0  ! (m/sec)
+  IC_W_g(1) =    0.0  ! (m/sec)
+
+  IC_P_g(1) =    0.0  ! (Pa)
+
+
+#_______________________________________________________________________
+# BOUNDARY CONDITIONS SECTION
+
+  BC_X_w(1:2) =  0.00  0.00  ! (m)
+  BC_X_e(1:2) =  0.50  0.50  ! (m)
+  BC_Z_b(1:2) =  0.00  0.00  ! (m)
+  BC_Z_t(1:2) =  0.50  0.50  ! (m)
+  BC_Y_s(1:2) =  0.00  0.20  ! (m)
+  BC_Y_n(1:2) =  0.00  0.20  ! (m)
+
+  BC_TYPE(1:2) = 2*'NSW'
+
+  BC_CENTER(1,1:3) =  0.25  0.01  0.25
+  BC_NORMAL(1,1:3) =  0.00  1.00  0.00

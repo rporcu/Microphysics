@@ -1,6 +1,6 @@
 module check_boundary_conditions_module
 
-   use amrex_fort_module, only : c_real => amrex_real
+   use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
 
 ! Parameter constants
@@ -59,8 +59,8 @@ module check_boundary_conditions_module
       implicit none
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)
-      real(c_real)  , intent(in) :: dx,dy,dz
-      real(c_real)  , intent(in) :: xlength,ylength,zlength
+      real(rt)  , intent(in) :: dx,dy,dz
+      real(rt)  , intent(in) :: xlength,ylength,zlength
 
 ! Local Variables:
 !---------------------------------------------------------------------//

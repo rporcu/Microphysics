@@ -4,12 +4,63 @@
 *.mod
 *.o
 *~
-.dirstamp
-Makefile
+
 tmp.*
-.build
+
 *.OUT
 *.RES
 *.LOG
-build
+
 Size*
+
+# Code Info
+compile_commands.json
+tags
+TAGS
+.ctags
+
+# OS Lint
+.DS_Store
+.dirstamp
+
+Makefile
+
+# IDE Lint
+build/
+.build/
+.vscode/
+
+# Error/Debug output
+tutorials/**/pout.*
+tutorials/**/Backtrace.*
+
+# EB/Paraview files
+tutorials/**/*.vtr
+tutorials/**/eb*.pvtp
+tutorials/**/*.vtp
+tutorials/**/*.pvd
+
+# Raw particle data
+tutorials/**/vis*
+tutorials/**/par*
+
+# Amrvis plotfiles and checkpoint files
+tutorials/**/plt*
+tutorials/**/chk*
+tutorials/**/R_*
+
+# Misc output
+tutorials/**/*.out
+
+# Documentation Lint
+doc/Doxyfile
+
+# Tex Lint
+doc/UsersGuide/*.aux
+doc/UsersGuide/*.dvi
+doc/UsersGuide/*.idx
+doc/UsersGuide/*.log
+doc/UsersGuide/*.out
+doc/UsersGuide/*.pdf
+doc/UsersGuide/*.ps
+doc/UsersGuide/*.toc
