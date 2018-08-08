@@ -1259,9 +1259,10 @@ void MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
             //
             // Each CPU opens the file for appending and adds its particles.
             //
-            std::ofstream File;
 
             VisMF::IO_Buffer io_buffer(VisMF::IO_Buffer_Size);
+
+            std::ofstream File;
 
             File.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
 

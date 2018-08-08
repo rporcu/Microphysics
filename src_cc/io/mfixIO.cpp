@@ -57,17 +57,19 @@ mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time, 
     if (ParallelDescriptor::IOProcessor())
     {
       std::string HeaderFileName(name + "/Header");
-      std::ofstream HeaderFile(HeaderFileName.c_str(), std::ofstream::out   |
-         std::ofstream::trunc |
-         std::ofstream::binary);
+      VisMF::IO_Buffer io_buffer(VisMF::IO_Buffer_Size);
+      std::ofstream HeaderFile;
 
+      HeaderFile.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
+      
+      HeadFile.open(HeaderFileName.c_str(), std::ofstream::out   |
+                    std::ofstream::trunc |
+                    std::ofstream::binary);
+      
       if ( ! HeaderFile.good() )
           amrex::FileOpenFailed(HeaderFileName);
 
       HeaderFile.precision(17);
-
-      VisMF::IO_Buffer io_buffer(VisMF::IO_Buffer_Size);
-      HeaderFile.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
 
       if (is_checkpoint)
          HeaderFile << "Checkpoint version: 1\n";
