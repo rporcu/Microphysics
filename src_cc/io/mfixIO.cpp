@@ -62,9 +62,9 @@ mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time, 
 
       HeaderFile.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
       
-      HeadFile.open(HeaderFileName.c_str(), std::ofstream::out   |
-                    std::ofstream::trunc |
-                    std::ofstream::binary);
+      HeaderFile.open(HeaderFileName.c_str(), std::ofstream::out   |
+                      std::ofstream::trunc |
+                      std::ofstream::binary);
       
       if ( ! HeaderFile.good() )
           amrex::FileOpenFailed(HeaderFileName);
