@@ -32,7 +32,7 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   bind(C, name="mfix_particle_generator")
 
   use ic, only: dim_ic, ic_defined
-  use ic, only: ic_ep_s, ic_ep_g
+  use ic, only: ic_ep_s, ic_ep_g, ic_pack
 
   use ic, only: ic_x_e, ic_y_n, ic_z_t
   use ic, only: ic_x_w, ic_y_s, ic_z_b
@@ -45,9 +45,8 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   use ic, only: ic_dp_min,  ic_ro_s_min
   use ic, only: ic_dp_max,  ic_ro_s_max
 
-  use param, only: undefined, is_defined
+  use param, only: is_defined
 
-  use calc_cell_module, only: calc_cell_ic
   use discretelement, only: particle_types
   use constant, only: pi
 
@@ -65,19 +64,15 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   integer :: icv
 
   ! indices
-  integer :: i_w, i_e
-  integer :: j_s, j_n
-  integer :: k_b, k_t
+  integer  :: p, i_w, i_e, j_s, j_n, k_b, k_t
+  integer  :: np, type, init_pc
 
-  integer :: np, type, i,j,k, init_pc
   real(rt) :: ic_vol, type_vol, acc_vol, pvol
   real(rt) :: ic_dlo(3), ic_dhi(3)
   real(rt) :: mean_dp, max_dp, max_rp
   real(rt) :: pos(3)
 
   real(rt), allocatable :: dp(:), ro_s(:)
-
-  integer :: seed, max_seed(3), seed_lo(3), seed_hi(3)
 
   init_pc = pc
 
@@ -90,6 +85,124 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   do type=1, particle_types
      if(ic_ep_s(icv,type) > epsilon(0.d0)) exit
   enddo
+
+  select case(trim(ic_pack(icv)))
+  case('HCP'   ); call hex_close_pack(icv, type, lo, hi, np, pc, dx, dy, dz)
+  case('RANDOM'); call random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
+  case DEFAULT
+     write(*,*) "Unknown particle generator fill type"
+     stop 1000
+  end select
+
+  ! No more work.
+  if(np == 0) return
+
+  allocate(dp(np))
+  allocate(ro_s(np))
+
+  ! Setup particle diameters
+  if(ic_dp_dist(icv,type) == 'NORMAL') then
+     call nor_rno(dp, ic_dp_mean(icv,type), ic_dp_std(icv,type), &
+          ic_dp_min(icv,type), ic_dp_max(icv,type))
+
+  else if(ic_dp_dist(icv,type) == 'UNIFORM') then
+     call uni_rno(dp, ic_dp_min(icv,type), ic_dp_max(icv,type))
+  else
+     dp = ic_dp_mean(icv,type)
+  endif
+
+  if(ic_ro_s_dist(icv,type) == 'NORMAL') then
+     call nor_rno(ro_s, ic_ro_s_mean(icv,type), ic_ro_s_std(icv,type), &
+          ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
+
+  else if(ic_ro_s_dist(icv,type) == 'UNIFORM') then
+     call uni_rno(ro_s, ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
+  else
+     ro_s = ic_ro_s_mean(icv,type)
+  endif
+
+  pc = init_pc
+  acc_vol = 0.0d0
+  nplp: do p=1,np
+
+     pvol = (pi/6.0d0)*dp(p)**3
+
+     pc = pc + 1
+
+     !< Radius................. 4
+     rdata(pc,4) = 0.5d0*dp(p)
+
+     !< Density................ 5
+     rdata(pc,5) = ro_s(p)
+
+     !< Linear velocity........ 6,7,8
+     rdata(pc,6) = ic_u_s(icv,type)
+     rdata(pc,7) = ic_v_s(icv,type)
+     rdata(pc,8) = ic_w_s(icv,type)
+
+     !< Type................... 1
+     idata(pc,1) = type
+
+  enddo nplp
+
+  if(allocated(ro_s)) deallocate(ro_s)
+  if(allocated(dp  )) deallocate(dp)
+
+
+  return
+end subroutine particle_generator
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: hex_close_pack                                          !
+!                                                                      !
+!  Purpose: Generate initial solids packing based on hexagonal close   !
+!           packing of mono-sized spheres.                             !
+!                                                                      !
+!  TODO: * generalize fill direction to follow gravity.                !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+subroutine hex_close_pack(icv, type, lo, hi, np, pc, dx, dy, dz)
+
+  use ic, only: dim_ic, ic_defined
+  use ic, only: ic_ep_s, ic_ep_g
+
+  use ic, only: ic_x_e, ic_y_n, ic_z_t
+  use ic, only: ic_x_w, ic_y_s, ic_z_b
+
+  use ic, only: ic_dp_dist, ic_ro_s_dist
+  use ic, only: ic_dp_mean, ic_ro_s_mean
+  use ic, only: ic_dp_std,  ic_ro_s_std
+  use ic, only: ic_dp_min,  ic_ro_s_min
+  use ic, only: ic_dp_max,  ic_ro_s_max
+
+  use param, only: is_defined
+
+  use calc_cell_module, only: calc_cell_ic
+  use discretelement, only: particle_types
+  use constant, only: pi
+
+  implicit none
+
+  integer(c_int), intent(in   ) :: icv, type, lo(3), hi(3)
+  integer(c_int), intent(inout) :: np, pc
+  real(rt),       intent(in   ) :: dx, dy, dz
+
+  real(rt), parameter :: sqrt3 = sqrt(3.0)
+  real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+
+  ! indices
+  integer :: i_w, i_e
+  integer :: j_s, j_n
+  integer :: k_b, k_t
+
+  integer  :: i,j,k, init_pc
+  real(rt) :: ic_vol, type_vol, acc_vol, pvol
+  real(rt) :: ic_dlo(3), ic_dhi(3)
+  real(rt) :: mean_dp, max_dp, max_rp
+  real(rt) :: pos(3)
+
+  integer :: seed, max_seed(3), seed_lo(3), seed_hi(3)
 
 
   call calc_cell_ic(dx, dy, dz, &
@@ -166,64 +279,180 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
      enddo
   enddo
 
-  ! No more work.
-  if(np == 0) return
+  return
+end subroutine hex_close_pack
 
-  allocate(dp(np))
-  allocate(ro_s(np))
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: random fill                                             !
+!                                                                      !
+!  Purpose: Generate initial solids packing based on randomly placing  !
+!           particles in the ic region.                                !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+subroutine random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
 
-  ! Setup particle diameters
-  if(ic_dp_dist(icv,type) == 'NORMAL') then
-     call nor_rno(dp, ic_dp_mean(icv,type), ic_dp_std(icv,type), &
-          ic_dp_min(icv,type), ic_dp_max(icv,type))
+  use ic, only: dim_ic, ic_defined
+  use ic, only: ic_ep_s, ic_ep_g
 
-  else if(ic_dp_dist(icv,type) == 'UNIFORM') then
-     call uni_rno(dp, ic_dp_min(icv,type), ic_dp_max(icv,type))
+  use ic, only: ic_x_e, ic_y_n, ic_z_t
+  use ic, only: ic_x_w, ic_y_s, ic_z_b
+
+  use ic, only: ic_dp_dist, ic_ro_s_dist
+  use ic, only: ic_dp_mean, ic_ro_s_mean
+  use ic, only: ic_dp_std,  ic_ro_s_std
+  use ic, only: ic_dp_min,  ic_ro_s_min
+  use ic, only: ic_dp_max,  ic_ro_s_max
+
+  use param, only: is_defined
+
+  use calc_cell_module, only: calc_cell_ic
+  use discretelement, only: particle_types
+  use constant, only: pi
+
+  implicit none
+
+  integer(c_int), intent(in   ) :: icv, type, lo(3), hi(3)
+  integer(c_int), intent(inout) :: np, pc
+  real(rt),       intent(in   ) :: dx, dy, dz
+
+  real(rt), parameter :: sqrt3 = sqrt(3.0)
+  real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+
+  ! indices
+  integer :: i_w, i_e
+  integer :: j_s, j_n
+  integer :: k_b, k_t
+
+  integer  :: i,j,k,l,ll,ii,jj,kk
+  real(rt) :: ic_vol, type_vol, acc_vol, pvol
+  real(rt) :: ic_dlo(3), ic_dhi(3), ic_len(3)
+  real(rt) :: mean_dp, max_dp, max_rp
+  real(rt) :: pos(3), Oodx(3), rand3(3), mindist, dist
+
+  integer, allocatable :: pinc(:,:,:), pbin(:,:,:,:), tbin(:,:,:,:)
+
+  integer :: seed, overlaps, fails, nb, ob
+
+  integer, parameter :: maxfails = 1000
+
+  call calc_cell_ic(dx, dy, dz, &
+       ic_x_w(icv), ic_y_s(icv), ic_z_b(icv), &
+       ic_x_e(icv), ic_y_n(icv), ic_z_t(icv), &
+       i_w, i_e, j_s, j_n, k_b, k_t)
+
+  ! Start/end of IC domain bounds
+  ic_dlo(1) = (max(lo(1), i_w)    ) * dx
+  ic_dlo(2) = (max(lo(2), j_s)    ) * dy
+  ic_dlo(3) = (max(lo(3), k_b)    ) * dz
+  ic_dhi(1) = (min(hi(1), i_e) + 1) * dx
+  ic_dhi(2) = (min(hi(2), j_n) + 1) * dy
+  ic_dhi(3) = (min(hi(3), k_t) + 1) * dz
+
+! physical volume of IC region intersecting this grid
+  ic_vol = (ic_dhi(1) - ic_dlo(1)) * &
+           (ic_dhi(2) - ic_dlo(2)) * &
+           (ic_dhi(3) - ic_dlo(3))
+
+  ! Spacing is based on maximum particle size
+  if(is_defined(ic_dp_max(icv,type))) then
+     max_dp = ic_dp_max(icv,type)
   else
-     dp = ic_dp_mean(icv,type)
+     max_dp = ic_dp_mean(icv,type)
   endif
+  max_rp = 0.5d0 * max_dp
 
-  if(ic_ro_s_dist(icv,type) == 'NORMAL') then
-     call nor_rno(ro_s, ic_ro_s_mean(icv,type), ic_ro_s_std(icv,type), &
-          ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
+  ! Particle count is based on mean particle size
+  seed = ic_vol * ic_ep_s(icv,type) / &
+       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
 
-  else if(ic_ro_s_dist(icv,type) == 'UNIFORM') then
-     call uni_rno(ro_s, ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
-  else
-     ro_s = ic_ro_s_mean(icv,type)
-  endif
+  ic_len = ic_dhi - ic_dlo - max_dp
+  ic_dlo = ic_dlo + max_rp
 
-  pc = init_pc
-  acc_vol = 0.0d0
-  nplp: do i=1,np
+  pos = -1.0d20
+  np = 0
 
-     pvol = (pi/6.0d0)*dp(i)**3
+  Oodx(1) = 1.0_rt/dx
+  Oodx(2) = 1.0_rt/dy
+  Oodx(3) = 1.0_rt/dz
 
-     pc = pc + 1
+  mindist = (1.05d0*max_dp)**2
 
-     !< Radius................. 4
-     rdata(pc,4) = 0.5d0*dp(i)
+  allocate(pinc(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)))
+  allocate(pbin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),8))
 
-     !< Density................ 5
-     rdata(pc,5) = ro_s(i)
+  np = 0
+  fails = 0
+  pinc = 0
 
-     !< Linear velocity........ 6,7,8
-     rdata(pc,6) = ic_u_s(icv,type)
-     rdata(pc,7) = ic_v_s(icv,type)
-     rdata(pc,8) = ic_w_s(icv,type)
+  do while (np < seed .and. fails < maxfails)
 
-     !< Type................... 1
-     idata(pc,1) = type
+     do
 
-  enddo nplp
+        call random_number(rand3)
+        pos = ic_dlo + ic_len*rand3(:)
 
-  if(allocated(ro_s)) deallocate(ro_s)
-  if(allocated(dp  )) deallocate(dp)
+        ! Grid containing the new particle
+        i = floor(pos(1)*Oodx(1) + 0.5_rt)
+        j = floor(pos(2)*Oodx(2) + 0.5_rt)
+        k = floor(pos(3)*Oodx(3) + 0.5_rt)
+
+        ! Local grid search for collisions.
+        overlaps=0
+        do kk=max(lo(3),k-1), min(k+1,hi(3))
+           do jj=max(lo(2),j-1), min(j+1,hi(2))
+              do ii=max(lo(1),i-1), min(i+1,hi(1))
+
+                 do l=1, pinc(ii,jj,kk)
+
+                    ll = pbin(ii,jj,kk,l)
+
+                    dist=(rdata(ll,1) - pos(1))**2 + &
+                         (rdata(ll,2) - pos(2))**2 + &
+                         (rdata(ll,3) - pos(3))**2
+
+                    if(dist < mindist) overlaps = overlaps+1
+
+                 enddo
+              enddo
+           enddo
+        enddo
+
+        if(overlaps == 0) then
+
+           np = np + 1 ! local to call
+           pc = pc + 1 ! local to grid
+
+           call grow_pdata(pc)
+
+           rdata(pc,1:3) = pos
+
+           pinc(i,j,k) = pinc(i,j,k) + 1
+           pbin(i,j,k,pinc(i,j,k)) = np
+
+           ob = ubound(pbin,4)
+
+           if(pinc(i,j,k) + 1 >= ob) then
+              nb = ob + 2
+              allocate(tbin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),nb))
+              tbin(:,:,:,1:ob) = pbin(:,:,:,1:ob)
+              call move_alloc(tbin, pbin)
+           endif
+
+           exit
+        else
+           fails = fails + 1
+        endif
+     enddo
+
+     if((mod(np, seed/10) == 0 .and. np < seed*0.95) .or. np==seed) &
+          write(*,"(2x,'Seeded: ',I9,3x,'(',f5.0,'%)')") np,100*dble(np)/seed
+
+  enddo
 
 
   return
-end subroutine particle_generator
-
+end subroutine random_fill
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

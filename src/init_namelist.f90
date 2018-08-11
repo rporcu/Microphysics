@@ -33,7 +33,7 @@ MODULE INIT_NAMELIST_MODULE
       use fld_const, only: mu_g0, mw_avg
       use fld_const, only: ro_g0
       use fld_const, only: ro_g0, mu_g0, mw_avg
-      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w
+      use ic, only: ic_ep_g, ic_ep_s, ic_pack, ic_p_g, ic_t_g, ic_t_s, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: leq_it, leq_pc, leq_sweep, leq_tol, max_nit, ival
@@ -498,6 +498,13 @@ MODULE INIT_NAMELIST_MODULE
       ic_ro_s_min(:,:) = undefined
       ic_ro_s_max(:,:) = undefined
 
+!<keyword category="Initial Condition" required="false">
+!  <description>Initial z-component of solids-phase velocity in the IC region.</description>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
+!  <valid value='HCP'    note='Hexagonal Close Pack'/>
+!  <valid value='RANDOM' note='Random Fill -- requires EPs < 30%'/>
+      ic_pack = 'HCP'
+!</keyword>
 
 !#####################################################################!
 !                        Boundary Conditions                          !
