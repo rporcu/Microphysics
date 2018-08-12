@@ -376,7 +376,7 @@ subroutine random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
   Oodx(2) = 1.0_rt/dy
   Oodx(3) = 1.0_rt/dz
 
-  mindist = (1.05d0*max_dp)**2
+  mindist = (1.01d0*max_dp)**2
 
   allocate(pinc(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)))
   allocate(pbin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),8))
@@ -393,9 +393,9 @@ subroutine random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
         pos = ic_dlo + ic_len*rand3(:)
 
         ! Grid containing the new particle
-        i = floor(pos(1)*Oodx(1) + 0.5_rt)
-        j = floor(pos(2)*Oodx(2) + 0.5_rt)
-        k = floor(pos(3)*Oodx(3) + 0.5_rt)
+        i = floor(pos(1)*Oodx(1))
+        j = floor(pos(2)*Oodx(2))
+        k = floor(pos(3)*Oodx(3))
 
         ! Local grid search for collisions.
         overlaps=0
@@ -436,6 +436,7 @@ subroutine random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
               nb = ob + 2
               allocate(tbin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),nb))
               tbin(:,:,:,1:ob) = pbin(:,:,:,1:ob)
+              tbin(:,:,:,ob+1:nb) = 0
               call move_alloc(tbin, pbin)
            endif
 
@@ -445,8 +446,8 @@ subroutine random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
         endif
      enddo
 
-     if((mod(np, seed/10) == 0 .and. np < seed*0.95) .or. np==seed) &
-          write(*,"(2x,'Seeded: ',I9,3x,'(',f5.0,'%)')") np,100*dble(np)/seed
+!     if((mod(np, seed/10) == 0 .and. np < seed*0.95) .or. np==seed) &
+!          write(*,"(2x,'Seeded: ',I9,3x,'(',f5.0,'%)')") np,100*dble(np)/seed
 
   enddo
 
