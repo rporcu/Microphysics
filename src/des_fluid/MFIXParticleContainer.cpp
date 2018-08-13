@@ -193,7 +193,8 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
 }
 
 
-void MFIXParticleContainer::RemoveOutOfRange(int lev, EBFArrayBoxFactory * ebfactory)
+void MFIXParticleContainer::RemoveOutOfRange(int lev, EBFArrayBoxFactory * ebfactory,
+        const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement)
 {
     // Only call the routine for wall collisions if we actually have walls
     if (ebfactory != NULL)
@@ -216,9 +217,6 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, EBFArrayBoxFactory * ebfac
             const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
             const auto& flag = sfab.getEBCellFlagFab();
 
-            areafrac  =  ebfactory->getAreaFrac();
-            bndrycent = &(ebfactory->getBndryCent());
-
             const Box& bx = pti.tilebox();
 
             // Remove particles outside of or touching the walls
@@ -229,16 +227,11 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, EBFArrayBoxFactory * ebfac
             }
             else if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
             {
-                rm_wall_collisions (particles, &nrp, flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                        (*bndrycent)[pti].dataPtr(),
-                        (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
-                        (*areafrac[0])[pti].dataPtr(),
-                        (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-                        (*areafrac[1])[pti].dataPtr(),
-                        (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-                        (*areafrac[2])[pti].dataPtr(),
-                        (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect(),
-                        dx);
+
+                rm_wall_collisions(particles, &nrp,
+                        BL_TO_FORTRAN_3D((* ls_valid)[pti]),
+                        BL_TO_FORTRAN_3D((* ls_phi)[pti]),
+                        dx, & ls_refinement);
             }
         }
         Redistribute();

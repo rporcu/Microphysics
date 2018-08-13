@@ -48,7 +48,7 @@ module ic
   real(rt) :: ic_ro_s_min(dim_ic, dim_m)
   real(rt) :: ic_ro_s_max(dim_ic, dim_m)
 
-  character(len=16) :: ic_pack(dim_ic)
+  character(len=16) :: ic_pack_type(dim_ic)
 
 contains
 

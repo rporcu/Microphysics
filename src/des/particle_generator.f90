@@ -32,7 +32,7 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   bind(C, name="mfix_particle_generator")
 
   use ic, only: dim_ic, ic_defined
-  use ic, only: ic_ep_s, ic_ep_g, ic_pack
+  use ic, only: ic_ep_s, ic_ep_g, ic_pack_type
 
   use ic, only: ic_x_e, ic_y_n, ic_z_t
   use ic, only: ic_x_w, ic_y_s, ic_z_b
@@ -86,7 +86,7 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
      if(ic_ep_s(icv,type) > epsilon(0.d0)) exit
   enddo
 
-  select case(trim(ic_pack(icv)))
+  select case(trim(ic_pack_type(icv)))
   case('HCP'   ); call hex_close_pack(icv, type, lo, hi, np, pc, dx, dy, dz)
   case('RANDOM'); call random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
   case DEFAULT
@@ -769,107 +769,58 @@ end subroutine particle_write
 !                                                                     !
 !                                                                     !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-subroutine rm_wall_collisions ( particles, nrp, flag, fglo, fghi, &
-     bcent, blo, bhi, apx, axlo, axhi, apy, aylo, ayhi, apz, azlo, azhi, dx) &
-     bind(C, name="rm_wall_collisions")
+subroutine rm_wall_collisions ( particles, nrp,           &
+                                valid,     vlo,  vhi,     &
+                                phi,       phlo, phhi,    &
+                                dx,        n_refine     ) &
+           bind(C, name="rm_wall_collisions")
 
-  use amrex_fort_module, only : rt => amrex_real
-  use iso_c_binding    , only: c_int
+  use particle_mod, only: particle_t
 
+  use param       , only: small_number, zero, one
 
-  use param        , only: small_number, zero, one
-  use particle_mod,  only: particle_t
-
-  use amrex_ebcellflag_module, only : is_regular_cell, is_covered_cell, is_single_valued_cell
-  use amrex_ebcellflag_module, only : get_neighbor_cells
+  use amrex_eb_levelset_module, only: amrex_eb_interp_levelset
+  use amrex_eb_levelset_module, only: amrex_eb_normal_levelset
 
   implicit none
 
-  integer, intent(in) ::  nrp
+  ! ** input varaibles
 
   type(particle_t), intent(inout), target :: particles(nrp)
+  integer,          intent(in   )         :: nrp
+  integer,          intent(in   )         :: n_refine
+  integer,          intent(in   )         :: vlo(3),  vhi(3)
+  integer,          intent(in   )         :: phlo(3), phhi(3)
 
-  integer, dimension(3), intent(in) :: axlo, aylo, azlo, fglo, blo
-  integer, dimension(3), intent(in) :: axhi, ayhi, azhi, fghi, bhi
+  integer,          intent(in   )         :: valid( vlo(1): vhi(1),  vlo(2): vhi(2),  vlo(3): vhi(3) )
+  real(rt),         intent(in   )         :: phi(  phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
+  real(rt),         intent(in   )         :: dx (3)
 
-  integer,      intent(in) :: flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
-  real(rt), intent(in) :: bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
-  real(rt), intent(in) :: apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3))
-  real(rt), intent(in) :: apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3))
-  real(rt), intent(in) :: apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
-  real(rt), intent(in) :: dx(3)
+  ! pos: current particle's position
+  !  rp: current particle's radius
+  real(rt) :: pos(3), rp
 
-  type(particle_t), pointer :: p
+  !    plo: domain lo -- HACK this should get passed down
+  real(rt) :: plo(3), inv_dx(3), ls_value
 
-  ! facet barycenter (bcent) in global coordinates
-  real(rt) :: eb_cent(3)
+  integer :: p
 
-  integer :: ll, ii, jj, kk, i, j, k
-
-  real(rt), parameter :: fudge = 1.0d0 - 1.0d-8
-  real(rt) :: inv_dx(3)
-
-  real(rt) :: adx, ady, adz, apnorminv
-
-  integer :: nbr(-1:1,-1:1,-1:1)
-
-  real(rt) :: dist, normal(3)
-
-  ! inverse cell size: used to convert positions to cell indices
-  !   -> dx is a vector, fortran is amazing!
-    inv_dx = 1.0d0 / dx
+    inv_dx = 1.0_rt / dx
+    plo    = (/ 0.0_rt, 0.0_rt, 0.0_rt /)
 
     ! itterate over particles
-    do ll = 1, nrp
-       ! get current particle
-       p => particles(ll)
+    do p = 1, nrp
 
-       ! cell indices for position corresponding to (lx, ly, lz)
-       i = floor(p%pos(1)*inv_dx(1))
-       j = floor(p%pos(2)*inv_dx(2))
-       k = floor(p%pos(3)*inv_dx(3))
+       rp  = particles(p)%radius
+       pos = particles(p)%pos
 
-       if(is_covered_cell(flag(i,j,k))) then
-          p%id = -1
-       else
+       ! interpolates levelset from nodal phi to position pos
+       call amrex_eb_interp_levelset(pos, plo, n_refine, &
+          phi, phlo, phhi, dx, ls_value);
 
-          ! ignore disconnected cells
-          ! -> one reason for this is the get accurate wall normals...
-          call get_neighbor_cells(flag(i,j,k),nbr)
-
-          do kk = k-1, k+1
-             do jj = j-1, j+1
-                do ii = i-1, i+1
-                   ! only consider cells that contain EB's
-                   if ( (nbr(ii-i, jj-j, kk-k) == 1) .and. &
-                        (.not. is_regular_cell(flag(ii, jj, kk))) ) then
-
-                      adx = apx(ii,jj,kk) - apx(ii+1,jj  , kk  )
-                      ady = apy(ii,jj,kk) - apy(ii,  jj+1, kk  )
-                      adz = apz(ii,jj,kk) - apz(ii,  jj  , kk+1)
-
-                      apnorminv = 1.d0 / sqrt(adx**2 + ady**2 + adz**2)
-
-                      normal(1) = adx * apnorminv   ! pointing to the wall
-                      normal(2) = ady * apnorminv
-                      normal(3) = adz * apnorminv
-
-                      ! convert bcent to global coordinate system centered at plo
-                      eb_cent(:) = ( bcent(ii, jj, kk, :) + &
-                           (/dble(ii), dble(jj), dble(kk)/) + &
-                           (/0.5d0, 0.5d0, 0.5d0/) )*dx(:)
-
-                      ! Distance to closest point on EB
-                      dist = dot_product( p%pos(:) - eb_cent(:), -normal(:))
-
-                      if (dist .lt. p%radius) p%id = -1
-                   end if
-                end do
-             end do
-          end do
-
-       endif
+       if (ls_value < rp) particles(p)%id = -1
 
     end do ! loop over particles
+
   end subroutine rm_wall_collisions
 end module par_gen_module

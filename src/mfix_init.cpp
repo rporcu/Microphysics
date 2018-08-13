@@ -425,7 +425,10 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
         if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory)
         {
             amrex::Print() << "Clean up auto-generated particles.\n";
-            pc -> RemoveOutOfRange(lev, particle_ebfactory.get());
+            pc -> RemoveOutOfRange(lev, particle_ebfactory.get(),
+                                        level_set->get_data(),
+                                        level_set->get_valid(),
+                                        level_set->get_ls_ref());
         }
 
         Real avg_dp[10], avg_ro[10];
