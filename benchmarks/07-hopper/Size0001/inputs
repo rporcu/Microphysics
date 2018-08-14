@@ -6,7 +6,7 @@
 #mfix.use_proj_method = 1
 #mfix.fixed_dt        = 1
 
-amr.stop_time = 0.20
+amr.stop_time = 0.10
 ## mfix.upwind_ep = 0
 
 mfix.explicit_diffusion = 0
@@ -24,7 +24,7 @@ mfix.particle_init_type = "Auto"
 amr.max_level = 0
 
 geometry.coord_sys   = 0                       # 0: Cartesian
-geometry.is_periodic = 1       0       0       # Is periodic in each direction?
+geometry.is_periodic = 0       0       0       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
 geometry.prob_hi     = 0.004   0.001   0.001   # hi corner of physical domain
 
@@ -60,42 +60,28 @@ particles.tile_size = 1024 1024 1024
 #!-----------------------------------------------------------//
 
 # Level-set refinement and padding
-mfix.levelset__refinement    = 2 # levelset resolution
-mfix.levelset__pad           = 4 # levelset influence in refined units
+mfix.levelset__refinement    = 1 # levelset resolution
+mfix.levelset__pad           = 1 # levelset influence in refined units
 
 # EB refinement and padding
 mfix.levelset__eb_refinement = 1 # EB resolution used to generated levelset
-mfix.levelset__eb_pad        = 8 # EB extends from the problem domain
+mfix.levelset__eb_pad        = 1 # EB extends from the problem domain
 
-mfix.use_walls = false
+mfix.use_walls = true
 mfix.clr_riser = true
 
 mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
 #! EB geometry
 #!-----------------------------------------------------------//
-# Cylinder ::  y^2 + z^2 - R^2 = 0
 
-mfix.quadric_groups = 1
-
-mfix.poly2_y_coeffs  =   0.00     0.00     1.00
-mfix.poly2_z_coeffs  =   0.00     0.00     1.00
-mfix.poly2_x_coeffs  =  -2.50e-7  0.00     0.00
-
-mfix.poly2_translate =   0.00     5.0e-4   5.0e-4
-mfix.write_eb_surface = true
-
-
-#! EB geometry
-#!-----------------------------------------------------------//
-
-mfix.riser_translate      =  -0.001  0.0005  0.0005
+mfix.riser_translate      =  -0.0011  0.0005  0.0005
 mfix.riser_direction      =   0
 
 mfix.riser_lower_radius   =   0.00025
 mfix.riser_lower_height   =   0.001
 
-mfix.riser_c2c_height     =   0.001
+mfix.riser_c2c_height     =   0.00105
 
 mfix.riser_upper_radius   =   0.00050
 mfix.riser_upper_height   =   0.004

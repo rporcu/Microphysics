@@ -1,14 +1,14 @@
 ########################################################################
 #                                                                      #
 # Author:                                               Date: xx-xxxx  #
-# Modified: J. Musser                                   Date: 07-2017  #
+# Modified: J. Musser                                   Date: 08-2018  #
 #                                                                      #
-# Description: Fluidized bed.                                          #
+# Description: Cylindrical Riser                                       #
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'B05'
-  DESCRIPTION = 'Fluidized bed'
+  RUN_NAME = 'B06'
+  DESCRIPTION = 'Cylindrical riser'
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
