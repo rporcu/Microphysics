@@ -97,12 +97,12 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
     {
         ParmParse pp("particles");
+
         pp.query("max_grid_size_x", particle_max_grid_size_x);
         pp.query("max_grid_size_y", particle_max_grid_size_y);
         pp.query("max_grid_size_z", particle_max_grid_size_z);
 
-        // Interval to compute the eulerian velocities in
-        // given regions
+        // Interval to compute the Eulerian velocities in given regions
         pp.query("avg_vel_int", avg_vel_int );
 
         // Base name for output
@@ -118,7 +118,8 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 }
 
-void mfix_level::Init(int lev, Real dt, Real time)
+void 
+mfix_level::Init(int lev, Real dt, Real time)
 {
     BL_ASSERT(max_level == 0);
 
@@ -197,13 +198,11 @@ void mfix_level::Init(int lev, Real dt, Real time)
     ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
     ls[lev]->FillBoundary(geom[lev].periodicity());
 
-
     // Create MAC projection object
     mac_projection.reset( new MacProjection(this,nghost) );
     mac_projection -> set_bcs( &bc_ilo, &bc_ihi,
 			       &bc_jlo, &bc_jhi,
 			       &bc_klo, &bc_khi );
-    
 }
 
 BoxArray
@@ -280,8 +279,7 @@ mfix_level::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 
 void
 mfix_level::MakeNewLevelFromScratch (int lev, Real time,
-             const BoxArray& new_grids, const DistributionMapping& new_dmap)
-
+                                     const BoxArray& new_grids, const DistributionMapping& new_dmap)
 {
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
@@ -302,7 +300,8 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
 }
 
 void
-mfix_level::ReMakeNewLevelFromScratch (int lev, const BoxArray& new_grids, const DistributionMapping& new_dmap)
+mfix_level::ReMakeNewLevelFromScratch (int lev, 
+                                       const BoxArray& new_grids, const DistributionMapping& new_dmap)
 {
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
@@ -344,7 +343,6 @@ mfix_level::check_data (int lev)
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
-
   // Allocate the fluid data
   if (solve_fluid)
      AllocateArrays(lev);
@@ -352,10 +350,12 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   // Allocate the particle data
   if (solve_dem)
   {
-    //int lev = 0;
-    pc -> AllocData();
+      Real strt_init_part = ParallelDescriptor::second();
 
-    if (particle_init_type == "AsciiFile")
+      //int lev = 0;
+      pc -> AllocData();
+
+      if (particle_init_type == "AsciiFile")
       {
         amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
         pc -> InitParticlesAscii("particle_input.dat");
@@ -395,20 +395,25 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       } else {
 
       amrex::Abort("Bad particle_init_type");
-    }
+      }
 
-    // used in load balancing
-    if (load_balance_type == "KnapSack") {
-        particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                              pc->ParticleDistributionMap(lev), 1, 0));
-        particle_cost[lev]->setVal(0.0);
-
-        if (solve_fluid)
-        {
-           fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
-           fluid_cost[lev]->setVal(0.0);
-        }
-    }
+      // used in load balancing
+      if (load_balance_type == "KnapSack") 
+      {
+          particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
+                                                pc->ParticleDistributionMap(lev), 1, 0));
+          particle_cost[lev]->setVal(0.0);
+  
+          if (solve_fluid)
+          {
+             fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+             fluid_cost[lev]->setVal(0.0);
+          }
+       }
+       Real end_init_part = ParallelDescriptor::second() - strt_init_part;
+       ParallelDescriptor::ReduceRealMax(end_init_part, ParallelDescriptor::IOProcessorNumber());
+       if (ParallelDescriptor::IOProcessor())
+          std::cout << "Time spent in initializing particles " << end_init_part << std::endl;
   }
 
   if (use_epg_hack) 
@@ -424,38 +429,39 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   }
 }
 
-void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
-                          int steady_state)
+void 
+mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
+                     int steady_state)
 {
   if (solve_dem) {
 
-    // Auto generated particles may be out of the domain. This call will remove them.
-    // Note that this has to occur after the EB geometry is created.
-    if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory)
-    {
-      amrex::Print() << "Clean up auto-generated particles.\n";
-      pc -> RemoveOutOfRange(lev, particle_ebfactory.get());
-    }
-
-    // We need to do this *after* restart (hence putting this here not in Init) because
-    //    we may want to move from KDTree to Knapsack, or change the particle_max_grid_size on restart.
-    if (load_balance_type == "KnapSack" &&
-        dual_grid && particle_max_grid_size_x > 0
-                  && particle_max_grid_size_y > 0
-                  && particle_max_grid_size_z > 0) 
-    {
-        BoxArray particle_ba(geom[lev].Domain());
-        IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                       particle_max_grid_size_y,
-                                       particle_max_grid_size_z);
-        particle_ba.maxSize(particle_max_grid_size);
-        DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
-        pc->Regrid(particle_dm, particle_ba);
-    }
-
-    Real avg_dp[10], avg_ro[10];
-    pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
-    init_collision(avg_dp, avg_ro);
+     // Auto generated particles may be out of the domain. This call will remove them.
+     // Note that this has to occur after the EB geometry is created.
+     if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory)
+     {
+       amrex::Print() << "Clean up auto-generated particles.\n";
+       pc -> RemoveOutOfRange(lev, particle_ebfactory.get());
+     }
+ 
+     // We need to do this *after* restart (hence putting this here not in Init) because
+     //    we may want to move from KDTree to Knapsack, or change the particle_max_grid_size on restart.
+     if (load_balance_type == "KnapSack" &&
+         dual_grid && particle_max_grid_size_x > 0
+                   && particle_max_grid_size_y > 0
+                   && particle_max_grid_size_z > 0) 
+     {
+         BoxArray particle_ba(geom[lev].Domain());
+         IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                        particle_max_grid_size_y,
+                                        particle_max_grid_size_z);
+         particle_ba.maxSize(particle_max_grid_size);
+         DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+         pc->Regrid(particle_dm, particle_ba);
+     }
+ 
+     Real avg_dp[10], avg_ro[10];
+     pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
+     init_collision(avg_dp, avg_ro);
   }
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
