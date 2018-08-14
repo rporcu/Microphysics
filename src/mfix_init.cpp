@@ -8,8 +8,9 @@
 
 
 
-void mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
-                            int max_nit_in, int call_udf_in)
+void 
+mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
+                       int max_nit_in, int call_udf_in)
 {
     {
         ParmParse pp("mfix");
@@ -94,8 +95,11 @@ void mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
     {
         ParmParse pp("particles");
 
-        // Interval to compute the eulerian velocities in
-        // given regions
+        pp.query("max_grid_size_x", particle_max_grid_size_x);
+        pp.query("max_grid_size_y", particle_max_grid_size_y);
+        pp.query("max_grid_size_z", particle_max_grid_size_z);
+
+        // Interval to compute the Eulerian velocities in given regions
         pp.query("avg_vel_int", avg_vel_int );
 
         // Base name for output
@@ -111,8 +115,8 @@ void mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
     }
 }
 
-
-void mfix_level::Init(int lev, Real dt, Real time)
+void 
+mfix_level::Init(int lev, Real dt, Real time)
 {
     BL_ASSERT(max_level == 0);
 
@@ -125,19 +129,6 @@ void mfix_level::Init(int lev, Real dt, Real time)
     DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
     MakeNewLevelFromScratch(0, time, ba, dm);
-
-    if(dual_grid && particle_max_grid_size_x > 0
-            && particle_max_grid_size_y > 0
-            && particle_max_grid_size_z > 0)
-    {
-        BoxArray particle_ba(geom[lev].Domain());
-        IntVect particle_max_grid_size(particle_max_grid_size_x,
-                particle_max_grid_size_y,
-                particle_max_grid_size_z);
-        particle_ba.maxSize(particle_max_grid_size);
-        DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
-        pc->Regrid(particle_dm, particle_ba);
-    }
 
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
@@ -204,14 +195,15 @@ void mfix_level::Init(int lev, Real dt, Real time)
     ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
     ls[lev]->FillBoundary(geom[lev].periodicity());
 
-    // MAC projection object
+    // Create MAC projection object
     mac_projection.reset( new MacProjection(this,nghost) );
     mac_projection -> set_bcs( &bc_ilo, &bc_ihi,
 			       &bc_jlo, &bc_jhi,
 			       &bc_klo, &bc_khi );
 }
 
-BoxArray mfix_level::MakeBaseGrids() const
+BoxArray 
+mfix_level::MakeBaseGrids() const
 {
     BoxArray ba(geom[0].Domain());
 
@@ -234,8 +226,8 @@ BoxArray mfix_level::MakeBaseGrids() const
     return ba;
 }
 
-
-void mfix_level::ChopGrids(const Box & domain, BoxArray & ba, int target_size) const
+void 
+mfix_level::ChopGrids(const Box & domain, BoxArray & ba, int target_size) const
 {
     if ( ParallelDescriptor::IOProcessor() )
         amrex::Warning("Using max_grid_size only did not make enough grids for the number of processors");
@@ -282,8 +274,9 @@ void mfix_level::ChopGrids(const Box & domain, BoxArray & ba, int target_size) c
     }
 }
 
-void mfix_level::MakeNewLevelFromScratch(int lev, Real time,
-                                         const BoxArray & new_grids, const DistributionMapping & new_dmap)
+void 
+mfix_level::MakeNewLevelFromScratch(int lev, Real time,
+                                    const BoxArray & new_grids, const DistributionMapping & new_dmap)
 {
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
@@ -303,9 +296,9 @@ void mfix_level::MakeNewLevelFromScratch(int lev, Real time,
         check_initial_conditions(&dx,&dy,&dz,domain.loVect(),domain.hiVect());
 }
 
-
-void mfix_level::ReMakeNewLevelFromScratch(int lev,
-                                           const BoxArray & new_grids, const DistributionMapping & new_dmap)
+void 
+mfix_level::ReMakeNewLevelFromScratch(int lev,
+                                      const BoxArray & new_grids, const DistributionMapping & new_dmap)
 {
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
@@ -318,8 +311,8 @@ void mfix_level::ReMakeNewLevelFromScratch(int lev,
     mfix_set_bc_type(lev);
 }
 
-
-void mfix_level::check_data(int lev)
+void 
+mfix_level::check_data(int lev)
 {
 
     Real dx = geom[lev].CellSize(0);
@@ -344,8 +337,8 @@ void mfix_level::check_data(int lev)
     }
 }
 
-
-void mfix_level::InitLevelData(int lev, Real dt, Real time)
+void 
+mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
     // Allocate the fluid data
     if (solve_fluid)
@@ -354,6 +347,8 @@ void mfix_level::InitLevelData(int lev, Real dt, Real time)
     // Allocate the particle data
     if (solve_dem)
     {
+        Real strt_init_part = ParallelDescriptor::second();
+
         //int lev = 0;
         pc -> AllocData();
 
@@ -400,7 +395,8 @@ void mfix_level::InitLevelData(int lev, Real dt, Real time)
         }
 
         // used in load balancing
-        if (load_balance_type == "KnapSack") {
+        if (load_balance_type == "KnapSack") 
+        {
             particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
                         pc->ParticleDistributionMap(lev), 1, 0));
             particle_cost[lev]->setVal(0.0);
@@ -411,12 +407,16 @@ void mfix_level::InitLevelData(int lev, Real dt, Real time)
                 fluid_cost[lev]->setVal(0.0);
             }
         }
+        Real end_init_part = ParallelDescriptor::second() - strt_init_part;
+        ParallelDescriptor::ReduceRealMax(end_init_part, ParallelDescriptor::IOProcessorNumber());
+        if (ParallelDescriptor::IOProcessor())
+           std::cout << "Time spent in initializing particles " << end_init_part << std::endl;
     }
 }
 
-
-void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
-                          int steady_state)
+void 
+mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
+                     int steady_state)
 {
     if (solve_dem) {
 
@@ -431,9 +431,25 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
                                         level_set->get_ls_ref());
         }
 
-        Real avg_dp[10], avg_ro[10];
-        pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
-        init_collision(avg_dp, avg_ro);
+       // We need to do this *after* restart (hence putting this here not in Init) because
+       //    we may want to move from KDTree to Knapsack, or change the particle_max_grid_size on restart.
+       if (load_balance_type == "KnapSack" &&
+           dual_grid && particle_max_grid_size_x > 0
+                     && particle_max_grid_size_y > 0
+                     && particle_max_grid_size_z > 0)
+       {
+           BoxArray particle_ba(geom[lev].Domain());
+           IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                          particle_max_grid_size_y,
+                                          particle_max_grid_size_z);
+           particle_ba.maxSize(particle_max_grid_size);
+           DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+           pc->Regrid(particle_dm, particle_ba);
+       }
+
+       Real avg_dp[10], avg_ro[10];
+       pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
+       init_collision(avg_dp, avg_ro);
     }
 
     // Initial fluid arrays: pressure, velocity, density, viscosity
@@ -451,7 +467,8 @@ void mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_fl
     }
 }
 
-void mfix_level::MakeBCArrays()
+void 
+mfix_level::MakeBCArrays()
 {
     // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
     Box domainx(geom[0].Domain());
@@ -482,7 +499,8 @@ void mfix_level::MakeBCArrays()
 }
 
 
-void mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time, int steady_state)
+void 
+mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time, int steady_state)
 {
     Box domain(geom[lev].Domain());
 
@@ -592,7 +610,8 @@ void mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_
 }
 
 
-void mfix_level::mfix_set_bc0(int lev)
+void 
+mfix_level::mfix_set_bc0(int lev)
 {
     Box domain(geom[lev].Domain());
 
@@ -626,7 +645,8 @@ void mfix_level::mfix_set_bc0(int lev)
 }
 
 
-void mfix_level::mfix_set_p0(int lev)
+void 
+mfix_level::mfix_set_p0(int lev)
 {
     Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
     Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
