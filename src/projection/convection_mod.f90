@@ -61,7 +61,6 @@ contains
       real(ar)                       :: idx, idy, idz
       real(ar)                       :: udu, vdu, wdu
       real(ar)                       :: dpls, dmns  
-      real(ar)                       :: u, v, w
       real(ar),        parameter     :: over4 = half * half
       real(ar),        parameter     :: w1 = 1.5_ar
       real(ar),        parameter     :: w2 = 2.0_ar
@@ -169,7 +168,6 @@ contains
       ! Local variables
       integer(c_int)                 :: i, j, k
       real(ar)                       :: idx, idy, idz
-      real(ar)                       :: u, v, w
       real(ar)                       :: dpls, dmns
       real(ar)                       :: udv, vdv, wdv
       real(ar),        parameter     :: over4 = half * half
@@ -284,7 +282,6 @@ contains
       real(ar)                       :: idx, idy, idz
       real(ar)                       :: udw, vdw, wdw
       real(ar)                       :: dpls, dmns 
-      real(ar)                       :: u, v, w
       real(ar),        parameter     :: over4 = half * half
       real(ar),        parameter     :: w1 = 1.5_ar
       real(ar),        parameter     :: w2 = 2.0_ar

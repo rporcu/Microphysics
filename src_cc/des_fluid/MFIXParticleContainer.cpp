@@ -697,13 +697,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
           RealVect max_vel = GetMaxVelocity(lev);
           Vector<RealVect> max_forces = GetMaxForces(lev);
 
-          const Real * dx = Geom(0).CellSize();
+          const Real * dx_crse = Geom(0).CellSize();
           amrex::Print() << "Maximum distance traveled:" << std::endl
                          <<  "x= " << max_vel[0] * dt
                          << " y= " << max_vel[1] * dt
                          << " z= " << max_vel[2] * dt
                          << " and note that "
-                         << " dx= " << dx[0] << std::endl;
+                         << " dx= " << dx_crse[0] << std::endl;
 
           amrex::Print() << "Maximum particle-particle (pp) and particle-wall (pw) forces:" << std::endl
                          <<  "ppx= " << max_forces[0][0]
@@ -746,13 +746,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         RealVect max_vel = GetMaxVelocity(lev);
         Vector<RealVect> max_forces = GetMaxForces(lev);
 
-        const Real * dx = Geom(0).CellSize();
+        const Real * dx_crse = Geom(0).CellSize();
         amrex::Print() << "Maximum possible distance traveled:" << std::endl
                        <<  "x= " << max_vel[0] * dt
                        << " y= " << max_vel[1] * dt
                        << " z= " << max_vel[2] * dt
                        << " and note that "
-                       << " dx= " << dx[0] << std::endl;
+                       << " dx= " << dx_crse[0] << std::endl;
 
         amrex::Print() << "Maximum particle-particle (pp) and particle-wall (pw) forces:" << std::endl
                        <<  "ppx= " << max_forces[0][0]

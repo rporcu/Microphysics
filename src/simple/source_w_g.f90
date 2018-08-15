@@ -60,8 +60,6 @@ contains
 !---------------------------------------------------------------------//
 ! Indices
       integer :: i,j,k
-! Pressure at top cell
-      real(rt) :: PgB
 ! Average volume fraction
       real(rt) :: epga
 ! Source terms (Surface)

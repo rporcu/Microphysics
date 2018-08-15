@@ -41,7 +41,7 @@ MODULE read_namelist_module
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_w
-      use run, only: call_usr, description, tstop
+      use run, only: call_usr, description
       use run, only: dt_fac, dt_max, dt_min, run_name
       use drag, only: drag_type
       use scales, only: p_ref, p_scale

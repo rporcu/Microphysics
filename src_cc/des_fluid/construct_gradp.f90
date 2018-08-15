@@ -150,7 +150,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, xlo, xhi, gpy, ylo, yhi, gpz, zlo, zhi
         gpz(zlo(1):zhi(1),zlo(2):zhi(2),zlo(3):zhi(3))
 
    ! Local variables
-   integer  :: bcv, i, j, k
+   integer  :: i, j, k
 
    if (xlo(1).le.domlo(1)) then
       do k = xlo(3),xhi(3)

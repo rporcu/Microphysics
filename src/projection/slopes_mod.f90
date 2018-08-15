@@ -99,7 +99,7 @@ contains
 
       ! Local variables
       integer                       :: i, j, k
-      real(ar)                      :: du_l, du_c, du_r, ds
+      real(ar)                      :: du_l, du_c, du_r
       real(ar),    parameter        :: two = 2.0_ar, three2nds = 1.5_ar  
 
 
@@ -217,7 +217,7 @@ contains
 
       ! Local variables
       integer                       :: i, j, k
-      real(ar)                      :: du_l, du_c, du_r, ds
+      real(ar)                      :: du_l, du_c, du_r
       real(ar),    parameter        :: two = 2.0_ar, three2nds = 1.5_ar  
 
 
@@ -335,7 +335,7 @@ contains
 
       ! Local variables
       integer                       :: i, j, k
-      real(ar)                      :: du_l, du_c, du_r, ds
+      real(ar)                      :: du_l, du_c, du_r
       real(ar),    parameter        :: two = 2.0_ar, three2nds = 1.5_ar  
 
 

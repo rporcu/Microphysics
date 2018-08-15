@@ -59,12 +59,7 @@ MODULE INIT_NAMELIST_MODULE
       use param, only: undefined, undefined_c
       use param, only: dim_usr
 
-      IMPLICIT NONE
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! loop counters
-      integer :: LC
+      implicit none
 
 !#####################################################################!
 !                             Run Control                             !

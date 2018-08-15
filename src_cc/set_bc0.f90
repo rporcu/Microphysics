@@ -19,7 +19,6 @@
       use iso_c_binding , only: c_int
 
       use bc, only: bc_ep_g, bc_t_g
-      use bc, only: bc_u_g, bc_v_g, bc_w_g
       use bc, only: pinf_, pout_, minf_
 
       use eos      , only: eosg, sutherland

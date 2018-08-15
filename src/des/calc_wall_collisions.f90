@@ -431,7 +431,7 @@ contains
 
         ! ll:      do-loop counter itterating over particles
         ! i, j, k: indices of cell containing current particle
-        integer                    :: ll, i, j, k
+        integer                    :: ll
 
         ! ls_valid: indicates if particle is near wall (and level-set needs to be tested)
         !logical                    :: ls_valid

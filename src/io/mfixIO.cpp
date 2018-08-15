@@ -711,21 +711,21 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
           } else {
               mf[lev]->setVal(1.0,dcomp,1,0);
           }
-
-          Vector<const MultiFab*> mf2(finest_level+1);
-
-          for (int lev = 0; lev <= finest_level; ++lev) {
-              mf2[lev] = mf[lev].get();
-          }
-
-          // Concatenate scalar and vector var names
-          Vector<std::string>  names;
-          names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
-          names.insert( names.end(), pltscaVarsName.begin(), pltscaVarsName.end());
-
-          amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
-                       Geom(), time, istep, refRatio());
        }
+
+       Vector<const MultiFab*> mf2(finest_level+1);
+
+       for (int lev = 0; lev <= finest_level; ++lev) {
+           mf2[lev] = mf[lev].get();
+       }
+
+       // Concatenate scalar and vector var names
+       Vector<std::string>  names;
+       names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
+       names.insert( names.end(), pltscaVarsName.begin(), pltscaVarsName.end());
+
+       amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
+                                      Geom(), time, istep, refRatio());
     }
     else // no fluid
     {

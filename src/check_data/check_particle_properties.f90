@@ -85,8 +85,6 @@ contains
 1001 format('Error 1001: Illegal or unphysical input: ',A,' = ',A,/   &
          'Please correct the input deck.')
 
-1002 format('Error 1002: Illegal input: ',A,' specified out of range.', &
-         'Please correct the input deck.')
-
     end subroutine check_particle_properties
+
   end module check_particle_prop_module

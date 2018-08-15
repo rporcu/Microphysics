@@ -34,9 +34,6 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   use ic, only: dim_ic, ic_defined
   use ic, only: ic_ep_s, ic_ep_g, ic_pack_type
 
-  use ic, only: ic_x_e, ic_y_n, ic_z_t
-  use ic, only: ic_x_w, ic_y_s, ic_z_b
-
   use ic, only: ic_u_s, ic_v_s, ic_w_s
 
   use ic, only: ic_dp_dist, ic_ro_s_dist
@@ -64,13 +61,10 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   integer :: icv
 
   ! indices
-  integer  :: p, i_w, i_e, j_s, j_n, k_b, k_t
+  integer  :: p
   integer  :: np, type, init_pc
 
-  real(rt) :: ic_vol, type_vol, acc_vol, pvol
-  real(rt) :: ic_dlo(3), ic_dhi(3)
-  real(rt) :: mean_dp, max_dp, max_rp
-  real(rt) :: pos(3)
+  real(rt) :: pvol
 
   real(rt), allocatable :: dp(:), ro_s(:)
 
@@ -122,7 +116,6 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   endif
 
   pc = init_pc
-  acc_vol = 0.0d0
   nplp: do p=1,np
 
      pvol = (pi/6.0d0)*dp(p)**3
@@ -165,21 +158,17 @@ end subroutine particle_generator
 subroutine hex_close_pack(icv, type, lo, hi, np, pc, dx, dy, dz)
 
   use ic, only: dim_ic, ic_defined
-  use ic, only: ic_ep_s, ic_ep_g
+  use ic, only: ic_ep_s
 
   use ic, only: ic_x_e, ic_y_n, ic_z_t
   use ic, only: ic_x_w, ic_y_s, ic_z_b
 
-  use ic, only: ic_dp_dist, ic_ro_s_dist
-  use ic, only: ic_dp_mean, ic_ro_s_mean
-  use ic, only: ic_dp_std,  ic_ro_s_std
-  use ic, only: ic_dp_min,  ic_ro_s_min
-  use ic, only: ic_dp_max,  ic_ro_s_max
+  use ic, only: ic_dp_mean
+  use ic, only: ic_dp_max
 
   use param, only: is_defined
 
   use calc_cell_module, only: calc_cell_ic
-  use discretelement, only: particle_types
   use constant, only: pi
 
   implicit none
@@ -196,14 +185,13 @@ subroutine hex_close_pack(icv, type, lo, hi, np, pc, dx, dy, dz)
   integer :: j_s, j_n
   integer :: k_b, k_t
 
-  integer  :: i,j,k, init_pc
-  real(rt) :: ic_vol, type_vol, acc_vol, pvol
+  integer  :: i,j,k
+  real(rt) :: ic_vol
   real(rt) :: ic_dlo(3), ic_dhi(3)
-  real(rt) :: mean_dp, max_dp, max_rp
+  real(rt) :: max_dp, max_rp
   real(rt) :: pos(3)
 
   integer :: seed, max_seed(3), seed_lo(3), seed_hi(3)
-
 
   call calc_cell_ic(dx, dy, dz, &
        ic_x_w(icv), ic_y_s(icv), ic_z_b(icv), &
@@ -293,21 +281,17 @@ end subroutine hex_close_pack
 subroutine random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
 
   use ic, only: dim_ic, ic_defined
-  use ic, only: ic_ep_s, ic_ep_g
+  use ic, only: ic_ep_s
 
   use ic, only: ic_x_e, ic_y_n, ic_z_t
   use ic, only: ic_x_w, ic_y_s, ic_z_b
 
-  use ic, only: ic_dp_dist, ic_ro_s_dist
-  use ic, only: ic_dp_mean, ic_ro_s_mean
-  use ic, only: ic_dp_std,  ic_ro_s_std
-  use ic, only: ic_dp_min,  ic_ro_s_min
-  use ic, only: ic_dp_max,  ic_ro_s_max
+  use ic, only: ic_dp_mean
+  use ic, only: ic_dp_max
 
   use param, only: is_defined
 
   use calc_cell_module, only: calc_cell_ic
-  use discretelement, only: particle_types
   use constant, only: pi
 
   implicit none
@@ -325,9 +309,9 @@ subroutine random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
   integer :: k_b, k_t
 
   integer  :: i,j,k,l,ll,ii,jj,kk
-  real(rt) :: ic_vol, type_vol, acc_vol, pvol
+  real(rt) :: ic_vol
   real(rt) :: ic_dlo(3), ic_dhi(3), ic_len(3)
-  real(rt) :: mean_dp, max_dp, max_rp
+  real(rt) :: max_dp, max_rp
   real(rt) :: pos(3), Oodx(3), rand3(3), mindist, dist
 
   integer, allocatable :: pinc(:,:,:), pbin(:,:,:,:), tbin(:,:,:,:)

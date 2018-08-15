@@ -48,8 +48,6 @@ module init_fluid_module
       real(rt), intent(in   ) :: dx, dy, dz
       real(rt), intent(in   ) :: xlength, ylength, zlength
 
-      integer i
-
       ! Set user specified initial conditions (IC)
       call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                   domlo, domhi, dx, dy, dz, u_g, v_g, w_g)
@@ -103,7 +101,6 @@ module init_fluid_module
       use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
       use ic, only: ic_x_e, ic_y_n, ic_z_t
       use ic, only: ic_x_w, ic_y_s, ic_z_b
-      use bc, only: delp_x, delp_y, delp_z
       use scales, only: scale_pressure
       use param, only: undefined, is_defined, zero
 
@@ -137,7 +134,7 @@ module init_fluid_module
       integer :: icv
 
       ! Temporary variables for storing IC values
-      real(rt) :: pgx, ugx, vgx, wgx, pval
+      real(rt) :: pgx, ugx, vgx, wgx
 
       integer :: i_w, j_s, k_b
       integer :: i_e, j_n, k_t

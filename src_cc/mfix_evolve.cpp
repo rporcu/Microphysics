@@ -77,7 +77,6 @@ mfix_level::Evolve(int lev, int nstep, int steady_state,  Real& dt, Real & prev_
        Box domain(geom[lev].Domain());
        for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
        {
-         const Box& box = mfi.tilebox();
          set_epg( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
 	          domain.loVect (), domain.hiVect () );
 		

@@ -58,8 +58,6 @@ contains
 !---------------------------------------------------------------------//
 ! Indices
       integer :: i,j,k
-! Pressure at east cell
-      real(rt) :: PgW
 ! Average volume fraction
       real(rt) :: epga
 ! Source terms (Surface)

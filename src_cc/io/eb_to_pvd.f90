@@ -44,7 +44,7 @@ contains
   real(amrex_real) :: apnorm, apnorminv
 
   real(amrex_real) :: centroid(3), normal(3)
-  real(amrex_real) :: distance, sign
+  real(amrex_real) :: distance
   real(amrex_real) :: n0(3), p, n0_d(3), p_d, tol
   real(amrex_real) :: vertex(8,3), alpha(12), alpha_d(12), apoints(12,3)
   logical          :: alpha_intersect(12), alpha_d_intersect(12)
@@ -301,7 +301,6 @@ subroutine write_pvtp(nProcs) bind(C, name="mfix_write_pvtp")
 
 end subroutine write_pvtp
 
-
 !.......................................................................!
 ! SUBROUTINE CALC_HESSE(distance, n0, p, normal, centroid)              !
 !   Computes the Hesse Normal Form corresponding to normal and centroid !
@@ -310,20 +309,20 @@ end subroutine write_pvtp
     real(amrex_real), intent(  out) :: distance, n0(3), p
     real(amrex_real), intent(in   ) :: normal(3), centroid(3)
 
-    real(amrex_real) :: sign
+    real(amrex_real) :: sign_of_dist
 
     ! General equation of a plane: Ax + By + Cz + D = 0
     ! here D := distance
     distance = -dot_product(normal, centroid)
 
     ! Get the sign of the distance
-    sign = -distance/dabs(distance)
+    sign_of_dist = -distance/dabs(distance)
 
     ! Get Hessian form
-    n0 = sign*normal/dot_product(normal, normal)
-    p  = sign*(-distance)
-  end subroutine calc_hesse
+    n0 = sign_of_dist*normal/dot_product(normal, normal)
+    p  = sign_of_dist*(-distance)
 
+  end subroutine calc_hesse
 
 !.......................................................................!
 ! SOUBROUTINE CALC_ALPHA(alpha, distance, n0, p, vertex, dx)            !
@@ -547,25 +546,6 @@ end subroutine write_pvtp
 
   end subroutine reorder_polygon
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 !.......................................................................!
 !                                                                       !
 !                                                                       !
@@ -586,9 +566,7 @@ end subroutine write_pvtp
 
   real(amrex_real), intent(in   ) :: dx(3)
 
-  integer :: i, j, k, lc1, lc2, count
-
-  logical :: notFullyCovered
+  integer :: i, j, k, lc1
 
   integer, save :: grid = 0
 

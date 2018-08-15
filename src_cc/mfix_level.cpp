@@ -456,7 +456,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
        BoxArray            pba = pc->ParticleBoxArray(lev);
        DistributionMapping pdm = pc->ParticleDistributionMap(lev);
 
-       MultiFab dummy(pba,pdm,1,0);
+       MultiFab mf_pba(pba,pdm,1,0);
 
        // Temporary arrays
        if (nodal_pressure) {
@@ -507,7 +507,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-       for (MFIter mfi(dummy, true); mfi.isValid(); ++mfi)
+       for (MFIter mfi(mf_pba, true); mfi.isValid(); ++mfi)
        {
            const Box& bx = mfi.tilebox();
    
@@ -534,7 +534,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-       for (MFIter mfi(dummy, true); mfi.isValid(); ++mfi)
+       for (MFIter mfi(mf_pba, true); mfi.isValid(); ++mfi)
        {
            const Box& sbx = (*p_g_pba)[mfi].box();
            set_gradp_bcs ( sbx.loVect(), sbx.hiVect(),

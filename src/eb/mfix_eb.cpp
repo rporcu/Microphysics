@@ -120,9 +120,7 @@ mfix_level::make_eb_geometry(int lev)
       impfunc.reset(impfunc_walls->newImplicitFunction());
     }
 
-
-
-    int max_level = 0;
+    int max_level_here = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
 
@@ -134,7 +132,7 @@ mfix_level::make_eb_geometry(int lev)
 
     fill_levelset( lev, use_walls, use_poly2,
                    * impfunc_walls.get(), * impfunc_poly2.get(),
-                   max_level, grid_size, eb_verbosity            );
+                   max_level_here, grid_size, eb_verbosity            );
 
     // store copy of level set (for plotting).
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
@@ -154,7 +152,7 @@ mfix_level::make_eb_geometry(int lev)
     Real dx = geom[lev].CellSize()[0];
 
     GeometryShop gshop(*impfunc, eb_verbosity);
-    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
+    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level_here);
 
     // set up ebfactory
     int m_eb_basic_grow_cells = 2;
@@ -237,9 +235,7 @@ mfix_level::make_eb_hourglass(int lev)
 
     impfunc.reset(implicit.newImplicitFunction());
 
-
-
-    int max_level = 0;
+    int max_level_here = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
 
@@ -251,7 +247,7 @@ mfix_level::make_eb_hourglass(int lev)
 
     fill_levelset( lev, true, true,
                    * impfunc_walls.get(), * impfunc_unpolys.get(),
-                   max_level, grid_size, eb_verbosity              );
+                   max_level_here, grid_size, eb_verbosity              );
 
     // store copy of level set (for plotting).
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
@@ -270,7 +266,7 @@ mfix_level::make_eb_hourglass(int lev)
     Real dx = geom[lev].CellSize()[0];
 
     GeometryShop gshop(*impfunc, eb_verbosity);
-    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
+    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level_here);
 
     // set up ebfactory
     int m_eb_basic_grow_cells = 2;
@@ -459,9 +455,7 @@ mfix_level::make_eb_clr(int lev)
     UnionIF clr(clr_parts);
     impfunc.reset(clr.newImplicitFunction());
 
-
-
-    int max_level = 0;
+    int max_level_here = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
 
@@ -480,7 +474,7 @@ mfix_level::make_eb_clr(int lev)
     if(! water_tight) {
         fill_levelset( lev, false, true,
                        * impfunc.get(), * impfunc.get(),
-                       max_level, grid_size, eb_verbosity );
+                       max_level_here, grid_size, eb_verbosity );
     }
 
     // Promote completed copy of level set into the mfix_level.
@@ -499,7 +493,7 @@ mfix_level::make_eb_clr(int lev)
     Real dx = geom[lev].CellSize()[0];
 
     GeometryShop gshop(* impfunc, eb_verbosity);
-    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
+    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level_here);
 
     // set up ebfactory
     int m_eb_basic_grow_cells = 2;
@@ -596,11 +590,9 @@ mfix_level::make_eb_clr_riser(int lev)
     UnionIF clr(clr_parts);
     impfunc.reset(clr.newImplicitFunction());
 
-
-    int max_level = 0;
+    int max_level_here = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
-
 
    /****************************************************************************
     *                                                                          *
@@ -617,7 +609,7 @@ mfix_level::make_eb_clr_riser(int lev)
     if(! water_tight) {
         fill_levelset( lev, false, true,
                        * impfunc.get(), * impfunc.get(),
-                       max_level, grid_size, eb_verbosity );
+                       max_level_here, grid_size, eb_verbosity );
     }
 
     // Promote completed copy of level set into the mfix_level.
@@ -635,7 +627,7 @@ mfix_level::make_eb_clr_riser(int lev)
     Real dx = geom[lev].CellSize()[0];
 
     GeometryShop gshop(* impfunc, eb_verbosity);
-    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level);
+    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level_here);
 
     // set up ebfactory
     int m_eb_basic_grow_cells = 2;
@@ -912,9 +904,7 @@ std::unique_ptr<BaseIF> mfix_level::make_cylinder(int dir, Real radius, Real len
     // component) of the CLR using the level-set
     //   => corners are much more cleanly resolved, but is much slower.
 
-
-
-    int max_level = 0;
+    int max_level_here = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
 
@@ -944,7 +934,7 @@ std::unique_ptr<BaseIF> mfix_level::make_cylinder(int dir, Real radius, Real len
                                    RealVect::Zero,  // ......... origin of EBIndexSpace
                                    geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
                                    gshop_walls,  // ............ GeometryShop object
-                                   grid_size, max_level);
+                                   grid_size, max_level_here);
     // [1]: EBIndexSpace internally assumes an isotropic grid. Any anisotropic
     // implicit function (e.g AnisotrpicPlaneIF) uses dx as a reference, and
     // rescales dy and dz wrt dx. => dx goes here.
@@ -960,7 +950,7 @@ std::unique_ptr<BaseIF> mfix_level::make_cylinder(int dir, Real radius, Real len
                                    RealVect::Zero,  // ......... origin of EBIndexSpace
                                    geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1, above]
                                    gshop_upoly,  // ............ GeometryShop object
-                                   grid_size, max_level);
+                                   grid_size, max_level_here);
 
     EBTower::Build();
     // GeometryShop's PolynomialIF is not a signed distance function...
@@ -1080,12 +1070,9 @@ mfix_level::make_cone(int dir, Real radius1, Real radius2, Real height,
     // component) of the CLR using the level-set
     //   => corners are much more cleanly resolved, but is much slower.
 
-
-
-    int max_level = 0;
+    int max_level_here = 0;
     int grid_size = 16;
     bool eb_verbosity = true;
-
 
    /****************************************************************************
     *                                                                          *
@@ -1112,7 +1099,7 @@ mfix_level::make_cone(int dir, Real radius1, Real radius2, Real height,
                                    RealVect::Zero,  // ......... origin of EBIndexSpace
                                    geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
                                    gshop_walls,  // ............ GeometryShop object
-                                   grid_size, max_level);
+                                   grid_size, max_level_here);
     // [1]: EBIndexSpace internally assumes an isotropic grid. Any anisotropic
     // implicit function (e.g AnisotrpicPlaneIF) uses dx as a reference, and
     // rescales dy and dz wrt dx. => dx goes here.
@@ -1128,7 +1115,7 @@ mfix_level::make_cone(int dir, Real radius1, Real radius2, Real height,
                                    RealVect::Zero,  // ......... origin of EBIndexSpace
                                    geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1, above]
                                    gshop_upoly,  // ............ GeometryShop object
-                                   grid_size, max_level);
+                                   grid_size, max_level_here);
 
     EBTower::Build();
     // GeometryShop's PolynomialIF is not a signed distance function...
@@ -1158,7 +1145,7 @@ mfix_level::make_cone(int dir, Real radius1, Real radius2, Real height,
 
 void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
                                const BaseIF & impfunc_walls, const BaseIF & impfunc_poly,
-                               int max_level, int grid_size, bool eb_verbosity) {
+                               int max_level_here, int grid_size, bool eb_verbosity) {
 
     // Do nothing if loading level-set from restart file:
     if(levelset__restart) return;
@@ -1186,7 +1173,7 @@ void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
                                        RealVect::Zero,  // ......... origin of EBIndexSpace
                                        geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
                                        gshop_walls,  // ............ GeometryShop object
-                                       grid_size, max_level);
+                                       grid_size, max_level_here);
         // [1]: EBIndexSpace internally assumes an isotropic grid. Any
         // anisotropic implicit function (e.g AnisotrpicPlaneIF) uses dx as a
         // reference, and rescales dy and dz wrt dx. => dx goes here.
@@ -1206,7 +1193,7 @@ void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
                                        RealVect::Zero,  // ......... origin of EBIndexSpace
                                        geom_eb.CellSize()[0],  // .. reference cell size of EBIndexSpace [1]
                                        gshop_poly,  // ............ GeometryShop object
-                                       grid_size, max_level);
+                                       grid_size, max_level_here);
 
         EBTower::Build();
         // GeometryShop's PolynomialIF is not a signed distance function...
@@ -1233,17 +1220,17 @@ void mfix_level::WriteEBSurface(int lev) {
   // This creates the associated Distribution Mapping
   // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
-  MultiFab dummy(ba, dmap[lev], 1, 0, MFInfo(), *ebfactory);
+  MultiFab mf_ba(ba, dmap[lev], 1, 0, MFInfo(), *ebfactory);
 
   // // // Deliberately didn't time this loop.
-  for (MFIter mfi(dummy); mfi.isValid(); ++mfi) {
+  for (MFIter mfi(mf_ba); mfi.isValid(); ++mfi) {
 
-    const auto& sfab = dynamic_cast<EBFArrayBox const&>((dummy)[mfi]);
-    const auto& flag = sfab.getEBCellFlagFab();
+    const auto& sfab = dynamic_cast<EBFArrayBox const&>((mf_ba)[mfi]);
+    const auto& my_flag = sfab.getEBCellFlagFab();
 
     const Box& bx = mfi.validbox();
 
-    if (flag.getType(bx) == FabType::covered or flag.getType(bx) == FabType::regular) continue;
+    if (my_flag.getType(bx) == FabType::covered or my_flag.getType(bx) == FabType::regular) continue;
 
     std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
     const MultiCutFab* bndrycent;
@@ -1252,7 +1239,7 @@ void mfix_level::WriteEBSurface(int lev) {
     bndrycent = &(ebfactory->getBndryCent());
 
     mfix_eb_to_polygon(dx, bx.loVect(), bx.hiVect(),
-         flag.dataPtr(), flag.loVect(), flag.hiVect(),
+         my_flag.dataPtr(), my_flag.loVect(), my_flag.hiVect(),
          (*bndrycent)[mfi].dataPtr(),
          (*bndrycent)[mfi].loVect(), (*bndrycent)[mfi].hiVect(),
          (*areafrac[0])[mfi].dataPtr(),
@@ -1273,16 +1260,16 @@ void mfix_level::WriteEBSurface(int lev) {
 
 
   // // // Deliberately didn't time this loop.
-  for (MFIter mfi(dummy); mfi.isValid(); ++mfi) {
+  for (MFIter mfi(mf_ba); mfi.isValid(); ++mfi) {
 
-    const auto& sfab = dynamic_cast<EBFArrayBox const&>((dummy)[mfi]);
-    const auto& flag = sfab.getEBCellFlagFab();
+    const auto& sfab = dynamic_cast<EBFArrayBox const&>((mf_ba)[mfi]);
+    const auto& my_flag = sfab.getEBCellFlagFab();
 
     const Box& bx = mfi.validbox();
 
-    if (flag.getType(bx) == FabType::covered or flag.getType(bx) == FabType::regular) continue;
+    if (my_flag.getType(bx) == FabType::covered or my_flag.getType(bx) == FabType::regular) continue;
 
     mfix_eb_grid_coverage(&cpu, dx, bx.loVect(), bx.hiVect(),
-         flag.dataPtr(), flag.loVect(), flag.hiVect());
+         my_flag.dataPtr(), my_flag.loVect(), my_flag.hiVect());
   }
 }

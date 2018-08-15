@@ -32,7 +32,7 @@ module DEPRECATED_OR_UNKNOWN_MODULE
       !
       block
          
-         integer           :: i, key
+         integer           :: i
          integer           :: ie
 
          ie = scan( adjustl( input ), "=" )

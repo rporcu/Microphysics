@@ -57,8 +57,6 @@ contains
 !---------------------------------------------------------------------//
 ! Indices
       integer :: i,j,k
-! Pressure at north cell
-      real(rt) :: PgS
 ! Average volume fraction
       real(rt) :: epga
 ! Source terms (Surface)
