@@ -3,8 +3,8 @@
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-#mfix.use_proj_method = 1
-#mfix.fixed_dt        = 1
+mfix.use_proj_method = 1
+mfix.fixed_dt        = 1
 
 amr.stop_time = 0.20
 ## mfix.upwind_ep = 0
@@ -24,7 +24,7 @@ mfix.particle_init_type = "Auto"
 amr.max_level = 0
 
 geometry.coord_sys   = 0                       # 0: Cartesian
-geometry.is_periodic = 0       1       1       # Is periodic in each direction?
+geometry.is_periodic = 0       0       0       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
 geometry.prob_hi     = 0.008   0.002   0.002   # hi corner of physical domain
 
