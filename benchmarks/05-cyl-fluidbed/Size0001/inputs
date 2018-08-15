@@ -9,7 +9,7 @@
 amr.stop_time = 0.20
 ## mfix.upwind_ep = 0
 
-mfix.explicit_diffusion = false
+mfix.explicit_diffusion = 0
 
 mfix.use_mac_proj       = true
 
