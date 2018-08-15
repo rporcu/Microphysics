@@ -29,6 +29,32 @@
 void
 mfix_level::make_eb_geometry(int lev)
 {
+    if (lev == 0)
+    {
+       bool hourglass    = false;
+       bool clr          = false;
+       bool clr_riser    = false;
+
+       ParmParse pp("mfix");
+       pp.query("hourglass", hourglass);
+       pp.query("clr", clr);
+       pp.query("clr_riser", clr_riser);
+
+       if (hourglass) {
+           make_eb_hourglass(lev);
+       } else if(clr) {
+           make_eb_clr(lev);
+       } else if(clr_riser) {
+           make_eb_clr_riser(lev);
+       } else {
+           make_eb_general(lev);
+       }
+    }
+}
+
+void
+mfix_level::make_eb_general(int lev)
+{
     if (geom[lev].isAllPeriodic()) return;
 
     // Implicit functions for:
@@ -37,7 +63,10 @@ mfix_level::make_eb_geometry(int lev)
     //    * impfunc_walls -> EBs belonging to the (mfix.dat) flat walls
     std::unique_ptr<BaseIF> impfunc;
     std::unique_ptr<BaseIF> impfunc_poly2;
-    std::unique_ptr<BaseIF> impfunc_walls;
+    std::unique_ptr<BaseIF> impfunc_part;
+    std::unique_ptr<BaseIF> impfunc_fluid;
+    std::unique_ptr<BaseIF> impfunc_walls_part;
+    std::unique_ptr<BaseIF> impfunc_walls_fluid;
 
     ParmParse pp("mfix");
 
@@ -64,65 +93,83 @@ mfix_level::make_eb_geometry(int lev)
         pp.query("div_dir",          div_dir);
     }
 
+   /****************************************************************************/
+   /****************************************************************************/
+   /****************************************************************************
+    *                                                                          *
+    * THIS FILLS PARTICLE EBFACTORY
+    *                                                                          *
+    ****************************************************************************/
+   /****************************************************************************/
+   /****************************************************************************/
 
    /****************************************************************************
     * Generate PolynomialIF representing the non-planar EB walls               *
     ****************************************************************************/
 
-    if(use_poly2) {
+    if (use_poly2) 
+    {
       amrex::Print() << "Using poly2 geometry" << std::endl;
       impfunc_poly2 = get_poly(lev, SpaceDim, "poly2");
-
 
      /**************************************************************************
       * Generate BaseIF representing the planar EB walls                       *
       *          and intersect with with PolynomialIF                          *
       **************************************************************************/
 
-      if(use_walls){
+      if (use_walls) 
+      {
         bool has_walls;
+        bool has_real_walls;
         // Store wall implicit function separately (used by level-set)
-        impfunc_walls = get_walls(lev, false, has_walls);
+        impfunc_walls_part  = get_walls(lev, false, has_walls);
+        impfunc_walls_fluid = get_real_walls(lev, false, has_real_walls);
+
         if(use_divider) {
             std::unique_ptr<BaseIF> divider = make_wall(
                     div_dir, div_pos, div_height, div_width, lev, false
                 );
-            Vector<BaseIF *> funcs{impfunc_walls.get(), divider.get()};
+            Vector<BaseIF *> funcs{impfunc_walls_part.get(), divider.get()};
             IntersectionIF imp_func(funcs);
-            impfunc_walls.reset(imp_func.newImplicitFunction());
+            impfunc_walls_part.reset(imp_func.newImplicitFunction());
         }
 
-        Vector<BaseIF *> funcs{impfunc_poly2.get(), impfunc_walls.get()};
-        IntersectionIF implicit(funcs);
-        impfunc.reset(implicit.newImplicitFunction());
+        Vector<BaseIF *> funcs_part {impfunc_poly2.get(), impfunc_walls_part.get()};
+        IntersectionIF implicit_walls_part(funcs_part);
+        impfunc_part.reset(implicit_walls_part.newImplicitFunction());
+
+        Vector<BaseIF *> funcs_fluid{impfunc_poly2.get(), impfunc_walls_fluid.get()};
+        IntersectionIF implicit_walls_fluid(funcs_fluid);
+        impfunc_fluid.reset(implicit_walls_fluid.newImplicitFunction());
 
       } else {
-        impfunc.reset(impfunc_poly2->newImplicitFunction());
+        impfunc_part.reset(impfunc_poly2->newImplicitFunction());
+        impfunc_fluid.reset(impfunc_poly2->newImplicitFunction());
       }
 
 
      /**************************************************************************
       * Generate BaseIF representing ONLY the planar EB walls                  *
       **************************************************************************/
-    } else if(use_walls){
+    } else if(use_walls) {
+
       bool has_walls;
-      impfunc_walls = get_walls(lev, true, has_walls);
+      bool has_real_walls;
+      impfunc_walls_part  = get_walls(lev, true, has_walls);
+      impfunc_walls_fluid = get_real_walls(lev, true, has_real_walls);
 
       if(use_divider) {
           std::unique_ptr<BaseIF> divider = make_wall(
                   div_dir, div_pos, div_height, div_width, lev, true
               );
-          Vector<BaseIF *> funcs{impfunc_walls.get(), divider.get()};
+          Vector<BaseIF *> funcs{impfunc_walls_part.get(), divider.get()};
           IntersectionIF imp_func(funcs);
-          impfunc_walls.reset(imp_func.newImplicitFunction());
+          impfunc_walls_part.reset(imp_func.newImplicitFunction());
       }
 
-      impfunc.reset(impfunc_walls->newImplicitFunction());
+      impfunc_part.reset(impfunc_walls_part->newImplicitFunction());
+      impfunc_fluid.reset(impfunc_walls_fluid->newImplicitFunction());
     }
-
-    int max_level_here = 0;
-    int grid_size = 16;
-    bool eb_verbosity = true;
 
    /****************************************************************************
     *                                                                          *
@@ -130,8 +177,14 @@ mfix_level::make_eb_geometry(int lev)
     *                                                                          *
     ****************************************************************************/
 
+    int max_level_here = 0;
+    int grid_size = 16;
+    bool eb_verbosity = true;
+
+    amrex::Print() << "Creating the levelset ..." << std::endl;
+
     fill_levelset( lev, use_walls, use_poly2,
-                   * impfunc_walls.get(), * impfunc_poly2.get(),
+                   * impfunc_walls_part.get(), * impfunc_poly2.get(),
                    max_level_here, grid_size, eb_verbosity            );
 
     // store copy of level set (for plotting).
@@ -139,7 +192,7 @@ mfix_level::make_eb_geometry(int lev)
     ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
     ls[lev]->FillBoundary(geom[lev].periodicity());
 
-
+    amrex::Print() << "Done making the levelset ..." << std::endl;
 
     /***************************************************************************
      *                                                                         *
@@ -151,14 +204,29 @@ mfix_level::make_eb_geometry(int lev)
     Box domain(geom[lev].Domain());
     Real dx = geom[lev].CellSize()[0];
 
-    GeometryShop gshop(*impfunc, eb_verbosity);
-    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level_here);
-
     // set up ebfactory
     int m_eb_basic_grow_cells = 2;
     int m_eb_volume_grow_cells = 2;
     int m_eb_full_grow_cells = 2;
     EBSupport m_eb_support_level = EBSupport::full;
+
+    GeometryShop gshop_part(*impfunc_part, eb_verbosity);
+    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop_part, grid_size, max_level_here);
+
+    EBTower::Build();
+
+    particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
+            new EBFArrayBoxFactory(
+                pc->Geom(lev), pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
+                {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                m_eb_support_level
+            )
+        );
+
+    EBTower::Destroy();
+
+    GeometryShop gshop_fluid(*impfunc_fluid, eb_verbosity);
+    AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop_fluid, grid_size, max_level_here);
 
     EBTower::Build();
 
@@ -169,17 +237,24 @@ mfix_level::make_eb_geometry(int lev)
             )
         );
 
-    particle_ebfactory = std::unique_ptr<EBFArrayBoxFactory>(
-            new EBFArrayBoxFactory(
-                pc->Geom(lev), pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
-                {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                m_eb_support_level
-            )
-        );
+    EBTower::Destroy();
+
+   /****************************************************************************
+    *                                                                          *
+    * We need to fix up the geometry after creating the EB factories but       *
+    *  before creating the level set                                           *
+    *                                                                          *
+    ****************************************************************************/
+
+    fix_up_geometry(ebfactory.get(),lev);
+    fix_up_geometry(particle_ebfactory.get(),lev);
+
+   /****************************************************************************
+    *                                                                          *
+    ****************************************************************************/
 
     eb_normals = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
-
 
 void
 mfix_level::make_eb_hourglass(int lev)
@@ -210,6 +285,11 @@ mfix_level::make_eb_hourglass(int lev)
 
     // Construct any additional walls. The smooth hourglass has a flat base
     // which defined via the planar walls (in the mfix.dat).
+
+    // 
+    // NOTE -- we assume that the hourglass has no mass inflow through its walls
+    // 
+
     bool has_walls;
     impfunc_walls = get_walls(lev, false, has_walls);
 
@@ -293,8 +373,6 @@ mfix_level::make_eb_hourglass(int lev)
 
     eb_normals = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
-
-
 
 void
 mfix_level::make_eb_clr(int lev)
@@ -655,8 +733,8 @@ mfix_level::make_eb_clr_riser(int lev)
     eb_normals = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 }
 
-
-std::unique_ptr<BaseIF> mfix_level::get_walls(int lev, bool anisotropic, bool & has_walls) {
+std::unique_ptr<BaseIF> mfix_level::get_walls(int lev, bool anisotropic, bool & has_walls) 
+{
     // Extracts all walls from the mfix.dat
 
     has_walls = false;  // will be set to true if there are any walls
@@ -696,8 +774,50 @@ std::unique_ptr<BaseIF> mfix_level::get_walls(int lev, bool anisotropic, bool & 
     return std::unique_ptr<BaseIF>(all_planes.newImplicitFunction());
 }
 
+std::unique_ptr<BaseIF> mfix_level::get_real_walls(int lev, bool anisotropic, bool & has_real_walls) 
+{
+    // Extracts all walls from the mfix.dat
 
-std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string field_prefix) {
+    has_real_walls = false;  // will be set to true if there are any walls
+
+    // Walls can be defined per phase => Itterarte over all phases and check
+    // each for walls in the mfix.dat
+    Vector<std::unique_ptr<BaseIF>> planes;
+    for (int i = 1; i <= 500; i++) {
+        int exists;
+        RealVect normal, center;
+        mfix_get_real_walls(& i, & exists, & normal, & center);
+        if(exists) {
+            has_real_walls = true;
+            amrex::Print() << "Normal " << normal << std::endl;
+            amrex::Print() << "Center " << center << std::endl;
+            std::unique_ptr<PlaneIF> plane;
+            if(anisotropic) {
+                RealVect dxVec;
+                for(int idir = 0; idir < 3; idir++)
+                    dxVec[idir] = geom[lev].CellSize()[idir];
+                plane = std::unique_ptr<PlaneIF>(new AnisotropicDxPlaneIF(normal, center, true, dxVec));
+            } else {
+                plane = std::unique_ptr<PlaneIF>(new PlaneIF(normal, center, true));
+            }
+            planes.push_back(std::move(plane));
+        }
+    }
+
+    // The IntersectionIF constructor requires a vector of pointers to the
+    // individual PlaneIFs => Construct a pointer-vector. Note that these
+    // pointers become invalid once the `planes` vector goes out of scope.
+    Vector<BaseIF *> plane_ptrs;
+    for(std::unique_ptr<BaseIF> & pl : planes)
+        plane_ptrs.push_back(pl.get());
+    IntersectionIF all_planes(plane_ptrs);
+
+    return std::unique_ptr<BaseIF>(all_planes.newImplicitFunction());
+}
+
+
+std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string field_prefix) 
+{
     // Construct the ParamParse database field names based on the
     // `field_prefix` string:
     ParmParse pp("mfix");
@@ -761,9 +881,9 @@ std::unique_ptr<BaseIF> mfix_level::get_poly(int lev, int max_order, std::string
     return std::unique_ptr<BaseIF>(poly2.newImplicitFunction());
 }
 
-
 std::unique_ptr<BaseIF> mfix_level::make_wall(int dir, Real position, Real height, Real width,
-                                              int lev, bool anisotropic) {
+                                              int lev, bool anisotropic) 
+{
     Vector<std::unique_ptr<BaseIF>> planes;
     RealVect normal = RealVect::Zero, center = RealVect::Zero;
 
@@ -826,9 +946,9 @@ std::unique_ptr<BaseIF> mfix_level::make_wall(int dir, Real position, Real heigh
     return std::unique_ptr<BaseIF>(wall_uf.newImplicitFunction());
 }
 
-
 std::unique_ptr<BaseIF> mfix_level::make_cylinder(int dir, Real radius, Real length, const RealVect & translation,
-                                                  int lev, bool water_tight) {
+                                                  int lev, bool water_tight) 
+{
     // Construct a cylinder implicit function with finite radius and axis
     // offset (translation). The cylinder can be oriented along any cartesian
     // axis (dir).
@@ -977,7 +1097,6 @@ std::unique_ptr<BaseIF> mfix_level::make_cylinder(int dir, Real radius, Real len
 
     return cylinder_IF;
 }
-
 
 std::unique_ptr<BaseIF>
 mfix_level::make_cone(int dir, Real radius1, Real radius2, Real height,
@@ -1142,10 +1261,10 @@ mfix_level::make_cone(int dir, Real radius1, Real radius2, Real height,
     return cone_IF;
 }
 
-
 void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
                                const BaseIF & impfunc_walls, const BaseIF & impfunc_poly,
-                               int max_level_here, int grid_size, bool eb_verbosity) {
+                               int max_level_here, int grid_size, bool eb_verbosity) 
+{
 
     // Do nothing if loading level-set from restart file:
     if(levelset__restart) return;
@@ -1181,8 +1300,7 @@ void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
         EBTower::Build();
         // GeometryShop's Planes' implicit function is actually a signed distance function
         //      => it's just easier to fill the level-set this way
-        level_set->intersection_ebis(* AMReX_EBIS::instance());
-        EBTower::Destroy();
+        level_set->intersection_ebis(* AMReX_EBIS::instance()); EBTower::Destroy();
     }
     if(use_poly){
         // Define components of the GeometryShop separately:
@@ -1205,12 +1323,14 @@ void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
         EBFArrayBoxFactory eb_factory_poly2(geom_eb, pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
                                             /* level_set->get_eb_ba(), level_set->get_eb_dm(), */
                                             {eb_pad, eb_pad, eb_pad}, EBSupport::full);
+        fix_up_geometry(&eb_factory_poly2,lev);
         level_set->intersection_ebf(eb_factory_poly2, * AMReX_EBIS::instance());
         EBTower::Destroy();
     }
 }
 
-void mfix_level::WriteEBSurface(int lev) {
+void mfix_level::WriteEBSurface(int lev) 
+{
   if (Geom(0).isAllPeriodic()) return;
 
   const Real* dx = Geom(lev).CellSize();
@@ -1272,4 +1392,35 @@ void mfix_level::WriteEBSurface(int lev) {
     mfix_eb_grid_coverage(&cpu, dx, bx.loVect(), bx.hiVect(),
          my_flag.dataPtr(), my_flag.loVect(), my_flag.hiVect());
   }
+}
+
+void
+mfix_level::fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev)
+{
+    BL_PROFILE("mfix_level::fix_up_geometry()");
+
+    const auto& domain = geom[lev].Domain();
+
+    const amrex::MultiFab* volfrac   = &(my_eb_factory->getVolFrac());
+    auto& cell_flag =  const_cast<FabArray<EBCellFlagFab>&> (my_eb_factory->getMultiEBCellFlagFab());
+
+    int ng = volfrac->nGrow();
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (MFIter mfi(*volfrac); mfi.isValid(); ++mfi) 
+    {
+      const Box& bx = mfi.growntilebox(ng);
+
+      auto& flag_fab = cell_flag[mfi];
+
+      if (flag_fab.getType(bx) == FabType::singlevalued)
+      {
+          mfix_fixup_eb_geom(BL_TO_FORTRAN_BOX(bx),
+                             BL_TO_FORTRAN_ANYD(flag_fab),
+                             BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+                             BL_TO_FORTRAN_BOX(domain));
+      }
+    }
 }

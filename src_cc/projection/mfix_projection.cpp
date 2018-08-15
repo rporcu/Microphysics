@@ -106,7 +106,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
 void
 mfix_level::solve_poisson_equation (  int lev,
 				      Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-				      Vector< std::unique_ptr<MultiFab> >& phi,
+				      Vector< std::unique_ptr<MultiFab> >& my_phi,
 				      Vector< std::unique_ptr<MultiFab> >& rhs,
 				      int bc_lo[], int bc_hi[] )
 {
@@ -132,8 +132,8 @@ mfix_level::solve_poisson_equation (  int lev,
        matrix.setCoarseningStrategy(MLNodeLaplacian::CoarseningStrategy::Sigma);
 
        // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
-       phi[lev]->setVal(0.);
-       matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi)[lev] );
+       my_phi[lev]->setVal(0.);
+       matrix.setLevelBC ( lev, GetVecOfConstPtrs(my_phi)[lev] );
 
        // 
        // Then setup the solver ----------------------
@@ -149,9 +149,9 @@ mfix_level::solve_poisson_equation (  int lev,
        // 
        // Finally, solve the system
        //
-       solver.solve ( GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
+       solver.solve ( GetVecOfPtrs(my_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
 
-       phi[lev] -> FillBoundary (geom[lev].periodicity());
+       my_phi[lev] -> FillBoundary (geom[lev].periodicity());
 
     } else {
 
@@ -159,8 +159,7 @@ mfix_level::solve_poisson_equation (  int lev,
        // First define the matrix (operator).
        // Class MLABecLaplacian describes the following operator:
        //
-       //       (alpha * a - beta * (del dot b grad)) phi
-       //
+       //       (alpha * a - beta * (del dot b grad)) phi //
        LPInfo                       info;
        MLABecLaplacian              matrix(geom, grids, dmap, info);
        Vector<const MultiFab*>      tmp;
@@ -187,8 +186,8 @@ mfix_level::solve_poisson_equation (  int lev,
        matrix.setBCoeffs ( lev, b_tmp );
 
        // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
-       phi[lev]->setVal(0.);
-       matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi)[lev] );
+       my_phi[lev]->setVal(0.);
+       matrix.setLevelBC ( lev, GetVecOfConstPtrs(my_phi)[lev] );
 
        // 
        // Then setup the solver ----------------------
@@ -207,9 +206,9 @@ mfix_level::solve_poisson_equation (  int lev,
        // 
        // Finally, solve the system
        //
-       solver.solve ( GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
+       solver.solve ( GetVecOfPtrs(my_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
 
-       phi[lev] -> FillBoundary (geom[lev].periodicity());
+       my_phi[lev] -> FillBoundary (geom[lev].periodicity());
     }
 }
 

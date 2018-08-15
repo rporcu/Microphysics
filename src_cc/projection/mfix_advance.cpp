@@ -302,7 +302,7 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
 }
 
 void
-mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& phi)
+mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& my_phi)
 {
     BL_PROFILE("mfix_level::mfix_add_grad_phi");
     
@@ -320,7 +320,7 @@ mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& phi)
 	       BL_TO_FORTRAN_BOX(bx),  
 	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
 	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD(phi[mfi]),
+	       BL_TO_FORTRAN_ANYD(my_phi[mfi]),
 	       geom[lev].CellSize(), &coeff);
        }
     } else {
@@ -336,7 +336,7 @@ mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& phi)
 	       BL_TO_FORTRAN_BOX(bx),  
 	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
 	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-	       phi[mfi].dataPtr(),
+	       my_phi[mfi].dataPtr(),
 	       geom[lev].CellSize(), &coeff);
        }
     }

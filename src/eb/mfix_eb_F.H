@@ -19,6 +19,11 @@ extern "C"
             void* normal, void* center
         );
 
+    void mfix_get_real_walls(
+            int* bcv, int* exists,
+            void* normal, void* center
+        );
+
     void mfix_eb_to_polygon(
             const amrex::Real* dx,
             const int* slo, const int* shi,
@@ -53,6 +58,11 @@ extern "C"
             const amrex_real * dx,  const int * n_refine
         );
 
+    void mfix_fixup_eb_geom (const int* lo, const int* hi,
+                             const void* flag, const int* fglo, const int* fghi,
+                             const amrex_real* volfrac, const int* vlo, const int* vhi,
+                             const int* domlo, const int* domhi
+        );
 
 #ifdef __cplusplus
 }

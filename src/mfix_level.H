@@ -75,8 +75,6 @@ public:
 
     void Regrid(int lev, int nstep);
 
-    void RegridOnStart(int lev);
-
     void Evolve(int lev, int nstep, int set_normg, int steady_state, Real& dt, Real & prev_dt,
                 Real time, Real stop_time, Real normg);
 
@@ -90,11 +88,15 @@ public:
     void make_mg_bc(int mg_bc[]);
 
     void make_eb_geometry(int lev);
+    void make_eb_general(int lev);
     void make_eb_hourglass(int lev);
     void make_eb_clr(int lev);
     void make_eb_clr_riser(int lev);
 
+    void fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev);
+
     std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
+    std::unique_ptr<BaseIF> get_real_walls(int lev, bool anisotropic, bool & has_real_walls);
     std::unique_ptr<BaseIF> get_poly(int lev, int max_order, std::string field_prefix);
 
     std::unique_ptr<BaseIF> make_wall(
@@ -120,6 +122,8 @@ public:
     void WriteEBSurface(int lev);
 
     void InitIOData();
+
+    static std::string get_load_balance_type();
 
     // flag enabling level-set restart (i.e. prevent make_eb_* from rebuilding
     // the level-set data).
@@ -512,5 +516,12 @@ private:
     // stores level-set (nodal index space corresponding to cells, but n_refinement times finer)
     std::unique_ptr<LSFactory> level_set;
 };
+
+inline
+std::string 
+mfix_level::get_load_balance_type()
+{
+    return load_balance_type;
+}
 
 #endif
