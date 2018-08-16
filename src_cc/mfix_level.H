@@ -88,11 +88,6 @@ public:
     void make_mg_bc(int mg_bc[]);
 
     void make_eb_geometry (int lev);
-    void make_eb_general  (int lev);
-    void make_eb_hourglass(int lev);
-    void make_eb_clr      (int lev);
-    void make_eb_clr_riser(int lev);
-    void fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev);
 
     std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
     std::unique_ptr<BaseIF> get_real_walls(int lev, bool anisotropic, bool & has_real_walls);
@@ -197,6 +192,13 @@ protected:
     void MakeBCArrays();
 
 private:
+
+    void make_eb_general  (int lev);
+    void make_eb_hourglass(int lev);
+    void make_eb_clr      (int lev);
+    void make_eb_clr_riser(int lev);
+
+    void fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev);
 
     void check_data(int lev);
 
