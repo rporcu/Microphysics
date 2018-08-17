@@ -33,11 +33,8 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Should we use explicit vs implicit diffusion
         pp.query( "explicit_diffusion", explicit_diffusion );
 
-        // Should we use the MAC-projection version of the algorithm
-        pp.query( "use_mac_proj", use_mac_proj );
-
         // If we are using the MAC-projected velocities, how should we discretize the
-        //  ugradu term.  Note this is only used if use_mac_proj = true.
+        //  ugradu term.  
         pp.query( "ugradu_type", ugradu_type );
 
         // Should we call set_epg to hard-wire the volume fraction
@@ -199,7 +196,7 @@ mfix_level::Init(int lev, Real dt, Real time)
     ls[lev]->FillBoundary(geom[lev].periodicity());
 
     // Create MAC projection object
-    mac_projection.reset( new MacProjection(this,nghost) );
+    mac_projection.reset( new MacProjection(this,nghost, &ebfactory ) );
     mac_projection -> set_bcs( &bc_ilo, &bc_ihi,
 			       &bc_jlo, &bc_jhi,
 			       &bc_klo, &bc_khi );
@@ -433,6 +430,11 @@ void
 mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                      int steady_state)
 {
+
+  // Allocate the temporaries for the fluid evolution
+  if (solve_fluid)
+     AllocateTempArrays(lev);
+
   if (solve_dem) {
 
      // Auto generated particles may be out of the domain. This call will remove them.

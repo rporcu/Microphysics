@@ -209,6 +209,7 @@ protected:
 private:
 
     void make_eb_general(int lev);
+    void make_eb_cylinder(int lev);
     void make_eb_hourglass(int lev);
     void make_eb_clr(int lev);
     void make_eb_clr_riser(int lev);
@@ -507,7 +508,7 @@ private:
     Vector< const Vector< std::unique_ptr<MultiFab> >* > pltscalarVars;
     Vector< std::string > chkscaVarsName;
 
-    std::unique_ptr<amrex::EBFArrayBoxFactory> ebfactory;
+    Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
     std::unique_ptr<amrex::EBFArrayBoxFactory> particle_ebfactory;
 
     // stores eb_normals (commond index-space with cells)

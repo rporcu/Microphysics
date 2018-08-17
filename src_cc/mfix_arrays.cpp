@@ -33,8 +33,6 @@ mfix_level::AllocateArrays (int lev)
         p_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
        p_go[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
        pp_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
-        phi[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
-      diveu[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
 
     } else {
 
@@ -42,21 +40,13 @@ mfix_level::AllocateArrays (int lev)
         p_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
        p_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
        pp_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-        phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-      diveu[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
 
     }
-
-    // Arrays to store the solution and rhs for the diffusion solve
-    phi_diff[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    rhs_diff[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
 
      p0_g[lev]->setVal(0.);
       p_g[lev]->setVal(0.);
      p_go[lev]->setVal(0.);
      pp_g[lev]->setVal(0.);
-      phi[lev]->setVal(0.);
-    diveu[lev]->setVal(0.);
 
     // Molecular viscosity
     mu_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
@@ -66,6 +56,18 @@ mfix_level::AllocateArrays (int lev)
     lambda_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     lambda_g[lev]->setVal(0.);
 
+    // Current velocity
+    vel_g[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
+    vel_g[lev]->setVal(0.);
+ 
+    // Old velocity
+    vel_go[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
+    vel_go[lev]->setVal(0.);
+}
+
+void
+mfix_level::AllocateTempArrays (int lev)
+{
     // Div(u)
     trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     trD_g[lev]->setVal(0.);
@@ -73,14 +75,37 @@ mfix_level::AllocateArrays (int lev)
     // Vorticity
     vort[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     vort[lev]->setVal(0.);
-
-    // Current velocity
-    vel_g[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost));
-    vel_g[lev]->setVal(0.);
  
-    // Old velocity
-    vel_go[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
-    vel_go[lev]->setVal(0.);
+    // This is the deposition onto the grid of the beta coefficient
+    // for fluid vel in the expression beta*(fluid_vel _ particle_vel)
+    // Note this only needs one component since all velocity components are co-located
+    f_gds[lev].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost));
+    f_gds[lev]->setVal(0.);
+ 
+    // This is the deposition onto the grid of the drag term experienced by the particle
+    drag[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
+    drag[lev]->setVal(0.);
+
+    if (nodal_pressure)
+    {
+       const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+
+        phi[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
+      diveu[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
+
+    } else {
+
+        phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+      diveu[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+
+    }
+
+      phi[lev]->setVal(0.);
+    diveu[lev]->setVal(0.);
+
+    // Arrays to store the solution and rhs for the diffusion solve
+    phi_diff[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    rhs_diff[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
  
     // Slopes in x-direction
     xslopes[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
@@ -93,16 +118,6 @@ mfix_level::AllocateArrays (int lev)
     // Slopes in z-direction
     zslopes[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
     zslopes[lev] -> setVal(0.);
- 
-    // This is the deposition onto the grid of the beta coefficient
-    // for fluid vel in the expression beta*(fluid_vel _ particle_vel)
-    // Note this only needs one component since all velocity components are co-located
-    f_gds[lev].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost));
-    f_gds[lev]->setVal(0.);
- 
-    // This is the deposition onto the grid of the drag term experienced by the particle
-    drag[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
-    drag[lev]->setVal(0.);
 
     // ********************************************************************************
     // X-face-based arrays
@@ -120,17 +135,17 @@ mfix_level::AllocateArrays (int lev)
        // Create a BoxArray on x-faces.
        BoxArray x_edge_ba = grids[lev];
        x_edge_ba.surroundingNodes(0);
-       bcoeff[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+       bcoeff[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
 
        // Create a BoxArray on y-faces.
        BoxArray y_edge_ba = grids[lev];
        y_edge_ba.surroundingNodes(1);
-       bcoeff[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+       bcoeff[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
 
        // Create a BoxArray on y-faces.
        BoxArray z_edge_ba = grids[lev];
        z_edge_ba.surroundingNodes(2);
-       bcoeff[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+       bcoeff[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
     }
 
     bcoeff[lev][0]->setVal(0.);
@@ -149,13 +164,13 @@ mfix_level::AllocateArrays (int lev)
     BoxArray y_edge_ba = grids[lev];
     y_edge_ba.surroundingNodes(1);
     bcoeff_diff[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    m_v_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    m_v_mac[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
 
     // Create a BoxArray on y-faces.
     BoxArray z_edge_ba = grids[lev];
     z_edge_ba.surroundingNodes(2);
     bcoeff_diff[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    m_w_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    m_w_mac[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost));
 
     bcoeff_diff[lev][0]->setVal(0.);
     bcoeff_diff[lev][1]->setVal(0.);

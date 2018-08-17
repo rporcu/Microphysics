@@ -2,7 +2,7 @@
 #include <mfix_level.H>
 
 void
-mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state, Real& dt, int nodal_pressure)
+mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state, Real& dt)
 {
     // DT is always computed even for fixed dt, so we can
     // issue a warning if fixed dt does not satisfy CFL condition.

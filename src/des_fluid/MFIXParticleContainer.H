@@ -89,6 +89,7 @@ public:
             const MultiFab * ls_phi, const iMultiFab * ls_valid,
             const int ls_refinement);
 
+
     void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 
     void printParticles();

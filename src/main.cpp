@@ -148,6 +148,9 @@ int main (int argc, char* argv[])
     // Initialize derived internals
     my_mfix.Init(lev,dt,time);
 
+    int lev0 = 0;
+    my_mfix.make_eb_geometry(lev0);
+
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
@@ -166,11 +169,6 @@ int main (int argc, char* argv[])
 
     if (mfix_level::get_load_balance_type() == "FixedSize" || mfix_level::get_load_balance_type()== "KnapSack")
        my_mfix.Regrid(lev,0);
-
-    // We move this to after restart and/or regrid so we make the EB data structures with the correct
-    //    BoxArray and DistributionMapping
-    int lev0 = 0;
-    my_mfix.make_eb_geometry(lev0);
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);

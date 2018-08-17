@@ -426,9 +426,9 @@ mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, R
         {
             amrex::Print() << "Clean up auto-generated particles.\n";
             pc -> RemoveOutOfRange(lev, particle_ebfactory.get(),
-                                        level_set->get_data(),
-                                        level_set->get_valid(),
-                                        level_set->get_ls_ref());
+                                   level_set->get_data(),
+                                   level_set->get_valid(),
+                                   level_set->get_ls_ref());
         }
 
        // We need to do this *after* restart (hence putting this here not in Init) because

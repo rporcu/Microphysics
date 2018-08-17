@@ -9,7 +9,8 @@
 
 // For multigrid
 #include <AMReX_MLMG.H>
-#include <AMReX_MLABecLaplacian.H>
+// #include <AMReX_MLABecLaplacian.H>
+#include <AMReX_MLEBABecLap.H>
 #include <AMReX_MLNodeLaplacian.H>
 
 //
@@ -94,7 +95,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
         amrex::Print() << "After  projection \n";
         mfix_print_max_vel (lev);
         mfix_compute_diveu (lev);
-         amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+        amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
     }
 }
 
@@ -106,7 +107,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
 void
 mfix_level::solve_poisson_equation (  int lev,
 				      Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-				      Vector< std::unique_ptr<MultiFab> >& my_phi,
+				      Vector< std::unique_ptr<MultiFab> >& this_phi,
 				      Vector< std::unique_ptr<MultiFab> >& rhs,
 				      int bc_lo[], int bc_hi[] )
 {
@@ -132,8 +133,8 @@ mfix_level::solve_poisson_equation (  int lev,
        matrix.setCoarseningStrategy(MLNodeLaplacian::CoarseningStrategy::Sigma);
 
        // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
-       my_phi[lev]->setVal(0.);
-       matrix.setLevelBC ( lev, GetVecOfConstPtrs(my_phi)[lev] );
+       this_phi[lev]->setVal(0.);
+       matrix.setLevelBC ( lev, GetVecOfConstPtrs(this_phi)[lev] );
 
        // 
        // Then setup the solver ----------------------
@@ -149,9 +150,9 @@ mfix_level::solve_poisson_equation (  int lev,
        // 
        // Finally, solve the system
        //
-       solver.solve ( GetVecOfPtrs(my_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
+       solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
 
-       my_phi[lev] -> FillBoundary (geom[lev].periodicity());
+       this_phi[lev] -> FillBoundary (geom[lev].periodicity());
 
     } else {
 
@@ -159,9 +160,10 @@ mfix_level::solve_poisson_equation (  int lev,
        // First define the matrix (operator).
        // Class MLABecLaplacian describes the following operator:
        //
-       //       (alpha * a - beta * (del dot b grad)) phi //
+       //       (alpha * a - beta * (del dot b grad)) phi
+       //
        LPInfo                       info;
-       MLABecLaplacian              matrix(geom, grids, dmap, info);
+       MLEBABecLap                  matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
        Vector<const MultiFab*>      tmp;
        array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
 
@@ -186,8 +188,8 @@ mfix_level::solve_poisson_equation (  int lev,
        matrix.setBCoeffs ( lev, b_tmp );
 
        // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
-       my_phi[lev]->setVal(0.);
-       matrix.setLevelBC ( lev, GetVecOfConstPtrs(my_phi)[lev] );
+       this_phi[lev]->setVal(0.);
+       matrix.setLevelBC ( lev, GetVecOfConstPtrs(this_phi)[lev] );
 
        // 
        // Then setup the solver ----------------------
@@ -206,9 +208,9 @@ mfix_level::solve_poisson_equation (  int lev,
        // 
        // Finally, solve the system
        //
-       solver.solve ( GetVecOfPtrs(my_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
+       solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
 
-       my_phi[lev] -> FillBoundary (geom[lev].periodicity());
+       this_phi[lev] -> FillBoundary (geom[lev].periodicity());
     }
 }
 

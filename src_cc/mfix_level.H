@@ -187,6 +187,7 @@ protected:
     void mfix_calc_drag_particle(int lev);
 
     void AllocateArrays(int lev);
+    void AllocateTempArrays(int lev);
     void RegridArrays(int lev, BoxArray& new_grids, DistributionMapping& new_dmap);
 
     void MakeBCArrays();
@@ -194,6 +195,7 @@ protected:
 private:
 
     void make_eb_general  (int lev);
+    void make_eb_cylinder (int lev);
     void make_eb_hourglass(int lev);
     void make_eb_clr      (int lev);
     void make_eb_clr_riser(int lev);
@@ -238,10 +240,10 @@ private:
 
     void check_for_nans(int lev);
     
-    void mfix_compute_dt(int lev, amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt,
-                         int nodal_pressure);
+    void mfix_compute_dt(int lev, amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt);
 
-    void mfix_compute_ugradu(int lev, amrex::MultiFab& conv, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_compute_ugradu_predictor(int lev, amrex::MultiFab& conv, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_compute_ugradu_corrector(int lev, amrex::MultiFab& conv, Vector< std::unique_ptr<MultiFab> >& vel);
     void mfix_compute_divtau(int lev, amrex::MultiFab& divtau, Vector< std::unique_ptr<MultiFab> >& vel);
     
     int  steady_state_reached(int lev, Real dt);
@@ -258,6 +260,7 @@ private:
     void mfix_apply_forcing_terms    (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel);
     void mfix_add_grad_phi           (int lev, amrex::Real coeff, amrex::MultiFab& phi);
     void mfix_compute_velocity_slopes(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_compute_velocity_at_faces (int lev, Vector< std::unique_ptr<MultiFab> >& vel);
 
     void mfix_compute_diveu (int lev);
  
@@ -446,13 +449,11 @@ private:
     //
     // DO NOT USE  A LOCAL VARIABLE WITH THE SAME NAME
     // 
-    const int nghost = 1; 
-  
-    int nodal_pressure = 1;
 
-    int explicit_diffusion = 0;
-
-    bool use_mac_proj = true;
+    // These values are required when fluid sees EB -- for now
+    const int nghost = 4; 
+    int nodal_pressure = 0;
+    int explicit_diffusion = 1;
 
     int ugradu_type = 3;
 
@@ -468,7 +469,7 @@ private:
     Vector< const Vector< std::unique_ptr<MultiFab> >* > pltscalarVars;
     Vector< std::string > chkscaVarsName;
 
-    std::unique_ptr<amrex::EBFArrayBoxFactory> ebfactory;
+    Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
     std::unique_ptr<amrex::EBFArrayBoxFactory> particle_ebfactory;
 
     // stores eb_normals (commond index-space with cells)

@@ -23,8 +23,14 @@ EBSupport mfix_level::m_eb_support_level = EBSupport::full;
 
 mfix_level::~mfix_level ()
 {
-   if(ebfactory != NULL)
-      EBTower::Destroy();
+   for ( int lev = 0; lev <= finestLevel(); ++lev )
+   {
+      if (ebfactory[lev] != NULL)
+      {
+         EBTower::Destroy();
+         break;
+      }
+   }
 };
 
 
@@ -141,6 +147,9 @@ mfix_level::ResizeArrays ()
        particle_cost.resize(nlevs_max);
     if(solve_fluid)
        fluid_cost.resize(nlevs_max);
+
+    // EB factory
+    ebfactory.resize(nlevs_max);
 }
 
 void

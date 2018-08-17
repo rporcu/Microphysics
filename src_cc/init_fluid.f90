@@ -206,7 +206,7 @@ module init_fluid_module
       integer :: icv
 
       ! Temporary variables for storing IC values
-      real(rt) :: pgx, ugx, vgx, wgx, pval
+      real(rt) :: pgx, ugx, vgx, wgx
 
       integer :: i_w, j_s, k_b
       integer :: i_e, j_n, k_t

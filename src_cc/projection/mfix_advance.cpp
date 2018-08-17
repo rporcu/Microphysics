@@ -35,7 +35,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
     do
     {
-        mfix_compute_dt(lev, time, stop_time, steady_state, dt, nodal_pressure);
+        mfix_compute_dt(lev, time, stop_time, steady_state, dt);
 
         if (steady_state)
         {
@@ -142,7 +142,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
     MultiFab::Copy (*vel_go[lev], *vel_g[lev],   0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
     Real time = 0.0;
-    mfix_compute_dt(lev,time,stop_time,steady_state,dt,nodal_pressure);
+    mfix_compute_dt(lev,time,stop_time,steady_state,dt);
 
     amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
 
@@ -196,7 +196,7 @@ mfix_level::mfix_apply_predictor (int lev, MultiFab& conv_old, MultiFab& divtau_
                                   amrex::Real dt, bool proj_2)
 {
     // Compute the explicit advective term R_u^n
-    mfix_compute_ugradu ( lev, conv_old, vel_go );
+    mfix_compute_ugradu_predictor( lev, conv_old, vel_go );
 
     // If explicit_diffusion == true  then we compute the full diffusive terms here
     // If explicit_diffusion == false then we compute only the off-diagonal terms here
@@ -267,7 +267,7 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
     MultiFab divtau(grids[lev], dmap[lev], 3, 0 );
 
     // Compute the explicit advective term R_u^*
-    mfix_compute_ugradu ( lev,   conv, vel_g );
+    mfix_compute_ugradu_corrector( lev,   conv, vel_g );
 
     // If explicit_diffusion == true  then we compute the full diffusive terms here
     // If explicit_diffusion == false then we compute only the off-diagonal terms here
@@ -302,7 +302,7 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
 }
 
 void
-mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& my_phi)
+mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& this_phi)
 {
     BL_PROFILE("mfix_level::mfix_add_grad_phi");
     
@@ -320,7 +320,7 @@ mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& my_phi)
 	       BL_TO_FORTRAN_BOX(bx),  
 	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
 	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD(my_phi[mfi]),
+	       BL_TO_FORTRAN_ANYD(this_phi[mfi]),
 	       geom[lev].CellSize(), &coeff);
        }
     } else {
@@ -336,107 +336,13 @@ mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& my_phi)
 	       BL_TO_FORTRAN_BOX(bx),  
 	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
 	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-	       my_phi[mfi].dataPtr(),
+	       this_phi[mfi].dataPtr(),
 	       geom[lev].CellSize(), &coeff);
        }
     }
     
 }
 
-//
-// Compute acc using the vel passed in
-//
-void
-mfix_level::mfix_compute_ugradu ( int lev,
-			          MultiFab& conv, 
-			          Vector< std::unique_ptr<MultiFab> >& vel) 
-{
-    BL_PROFILE("mfix_level::mfix_compute_ugradu");
-    Box domain(geom[lev].Domain());
-
-    // First compute the slopes
-    mfix_compute_velocity_slopes ( lev, vel );
-
-    if (use_mac_proj)
-    {
-       int order = 1;
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-       for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
-       {
-	   // Tilebox
-   	   Box bx = mfi.tilebox ();
-
-	   compute_velocity_at_faces (
-	       BL_TO_FORTRAN_BOX(bx),  
-	       BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*xslopes[lev])[mfi]),
-	       (*yslopes[lev])[mfi].dataPtr(),
-	       (*zslopes[lev])[mfi].dataPtr(),
-	       bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-	       bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-	       bc_klo.dataPtr(), bc_khi.dataPtr(),
-               &nghost, domain.loVect (), domain.hiVect (), &order);
-       }
-
-       Real dummy_dt = 1.0;
-       mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, dummy_dt );
-
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-       for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
-       {
-	   // Tilebox
-   	   Box bx = mfi.tilebox ();
-
-	   compute_ugradu_mac (
-	       BL_TO_FORTRAN_BOX(bx),  
-	       BL_TO_FORTRAN_ANYD(conv[mfi]),
-	       BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((   *ep_g[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
-	       (*xslopes[lev])[mfi].dataPtr(),
-	       (*yslopes[lev])[mfi].dataPtr(),
-	       BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-               domain.loVect (), domain.hiVect (),
-	       bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-	       bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-	       bc_klo.dataPtr(), bc_khi.dataPtr(),
-	       geom[lev].CellSize(), &nghost, &ugradu_type);
-       }
-
-    } else {
-    
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-       for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
-       {
-	   // Tilebox
-   	   Box bx = mfi.tilebox ();
-
-	   compute_ugradu (
-	       BL_TO_FORTRAN_BOX(bx),  
-	       BL_TO_FORTRAN_ANYD(conv[mfi]),
-	       BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-	       (*xslopes[lev])[mfi].dataPtr(),
-	       (*yslopes[lev])[mfi].dataPtr(),
-	       BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-               domain.loVect (), domain.hiVect (),
-	       bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-	       bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-	       bc_klo.dataPtr(), bc_khi.dataPtr(),
-	       geom[lev].CellSize(), &nghost);
-       }
-    }
-}
 
 void
 mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
@@ -495,46 +401,6 @@ mfix_level::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
     }
 }
 
-//
-// Compute the slopes of each velocity component in the
-// three directions.
-// 
-void
-mfix_level::mfix_compute_velocity_slopes (int lev,
-                                          Vector< std::unique_ptr<MultiFab> >& vel)
-
-{
-    BL_PROFILE("mfix_level::mfix_compute_velocity_slopes");
-
-    Box domain(geom[lev].Domain());
-
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	// Tilebox
-	Box bx = mfi.tilebox ();
-
-	compute_slopes ( BL_TO_FORTRAN_BOX(bx),
-		         BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-			 (*xslopes[lev])[mfi].dataPtr (),
-			 (*yslopes[lev])[mfi].dataPtr (),
-		         BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-			 domain.loVect (), domain.hiVect (),
-			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-			 bc_klo.dataPtr(), bc_khi.dataPtr(),
-			 &nghost);
-
-    }
-
-    // Fill halo cells
-    xslopes[lev] -> FillBoundary(geom[lev].periodicity());
-    yslopes[lev] -> FillBoundary(geom[lev].periodicity());
-    zslopes[lev] -> FillBoundary(geom[lev].periodicity());
-
-}
 
 //
 // Compute div(ep_g * u)

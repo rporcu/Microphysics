@@ -47,11 +47,12 @@ mfix_level::Regrid (int base_lev, int nstep)
            mfix_extrap_pressure(base_lev,p0_g[base_lev]);
        }
 
-       if (ebfactory) {
-           ebfactory.reset(new EBFArrayBoxFactory(geom[base_lev], grids[base_lev], dmap[base_lev],
-                                                  {m_eb_basic_grow_cells,
-                                                   m_eb_volume_grow_cells,
-                                                   m_eb_full_grow_cells}, m_eb_support_level));
+       if (ebfactory[base_lev])
+       {
+          ebfactory[base_lev].reset(new EBFArrayBoxFactory(geom[base_lev], grids[base_lev], dmap[base_lev],
+                                                           {m_eb_basic_grow_cells,
+                                                            m_eb_volume_grow_cells,
+                                                            m_eb_full_grow_cells}, m_eb_support_level));
        }
 
        if (particle_ebfactory) {
@@ -92,8 +93,8 @@ mfix_level::Regrid (int base_lev, int nstep)
                 fluid_cost[lev].reset(new MultiFab(grids[lev], new_fluid_dm, 1, 0));
                 fluid_cost[lev]->setVal(0.0);
 
-                if (ebfactory) {
-                    ebfactory.reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
+                if (ebfactory[lev]) {
+                    ebfactory[lev].reset(new EBFArrayBoxFactory(geom[lev], grids[lev], dmap[lev],
                                                            {m_eb_basic_grow_cells,
                                                             m_eb_volume_grow_cells,
                                                             m_eb_full_grow_cells}, m_eb_support_level));
@@ -157,11 +158,12 @@ mfix_level::Regrid (int base_lev, int nstep)
             if (solve_dem)   pc->Regrid(dmap[base_lev], grids[base_lev]);
             if (solve_fluid) mfix_set_bc0(base_lev);
 
-            if (ebfactory) {
-                ebfactory.reset(new EBFArrayBoxFactory(geom[base_lev], grids[base_lev], dmap[base_lev],
-                                                       {m_eb_basic_grow_cells,
-                                                        m_eb_volume_grow_cells,
-                                                        m_eb_full_grow_cells}, m_eb_support_level));
+            if (ebfactory[base_lev])
+            {
+               ebfactory[base_lev].reset(new EBFArrayBoxFactory(geom[base_lev], grids[base_lev], dmap[base_lev],
+                                                                {m_eb_basic_grow_cells,
+                                                                 m_eb_volume_grow_cells,
+                                                                 m_eb_full_grow_cells}, m_eb_support_level));
             }
 
             if (particle_ebfactory) {

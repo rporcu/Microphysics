@@ -141,11 +141,16 @@ int main (int argc, char* argv[])
     my_mfix.InitParams(solve_fluid, solve_dem, call_udf);
 
     // Initialize memory for data-array internals
-    // Note: MFIXParticleContainer is created here
+    // Note: MFIXParticleContainer is created here 
     my_mfix.ResizeArrays();
 
     // Initialize derived internals
     my_mfix.Init(lev,dt,time);
+
+    int lev0 = 0;
+
+    // Create the geometry before reading/creating the arrays
+    my_mfix.make_eb_geometry(lev0);
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
@@ -162,13 +167,9 @@ int main (int argc, char* argv[])
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
 
-    if (mfix_level::get_load_balance_type() == "FixedSize" || mfix_level::get_load_balance_type()== "KnapSack")
+    if (mfix_level::get_load_balance_type() == "FixedSize" || 
+        mfix_level::get_load_balance_type() == "KnapSack")
        my_mfix.Regrid(lev,0);
-
-    // We move this to after restart and/or regrid so we make the EB data structures with the correct
-    //    BoxArray and DistributionMapping
-    int lev0 = 0;
-    my_mfix.make_eb_geometry(lev0);
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);

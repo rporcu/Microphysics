@@ -79,7 +79,7 @@ mfix_level::mfix_diffuse_velocity ( int lev,
        rhs_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
        phi_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
  
-       // amrex::Print() << "Diffusing velocity component " << i << std::endl;
+       amrex::Print() << "Diffusing velocity component " << i << std::endl;
   
        // Solve (1 - div beta grad) u_new = RHS
        // Here RHS = "vel" which is the current approximation to the new-time velocity (without diffusion terms)

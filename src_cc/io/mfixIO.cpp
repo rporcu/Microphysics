@@ -680,7 +680,7 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
               {
                   // Level set lives on nodes, AMRVis doesn't =>  map the nodal
                   // MultiFab to the cell-centered MultiFab:
-                  if (ebfactory) {
+                  if (ebfactory[lev]) {
                      amrex::average_node_to_cellcenter(*mf[lev], dcomp, *(*pltscalarVars[i] )[lev].get(), 0, 1);
                   } else {
                      mf[lev]->setVal(0.0,dcomp,1,0);
@@ -704,8 +704,8 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
               dcomp++;
           }
 
-          if (ebfactory) {
-              MultiFab::Copy(*mf[lev], ebfactory->getVolFrac(), 0, dcomp, 1, 0);
+          if (ebfactory[lev]) {
+              MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, dcomp, 1, 0);
           } else {
               mf[lev]->setVal(1.0,dcomp,1,0);
           }
