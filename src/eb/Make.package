@@ -6,5 +6,7 @@ CEXE_sources += fill_levelset.cpp
 CEXE_sources += fix_up_geometry.cpp
 CEXE_sources += mfix_eb.cpp
 CEXE_sources += writeEBsurface.cpp
+CEXE_sources += get_walls.cpp
+CEXE_sources += mfix_eb_cylinder.cpp
 
 FEXE_headers += mfix_eb_F.H
