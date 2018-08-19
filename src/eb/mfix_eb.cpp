@@ -45,6 +45,10 @@ mfix_level::make_eb_geometry (int lev)
     make_eb_cylinder(lev);
 
   }
+  else if (geom_type == "hopper") {
+    amrex::Print() << "\n Building hopper geometry." << std::endl;
+    make_eb_hopper(lev);
+  }
   else {
     amrex::Print() << "\n Building default box geometry." << std::endl;
     // TODO :: All of this!   :)

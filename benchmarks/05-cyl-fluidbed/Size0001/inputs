@@ -15,7 +15,7 @@ mfix.use_mac_proj       = true
 
 mfix.ugradu_type        = 3
 
-mfix.particle_init_type = "Auto"
+#mfix.particle_init_type = "Auto"
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -75,13 +75,14 @@ mfix.write_eb_surface = true  # Needed to output eb-surfaces
 mfix.geometry = "cylinder"
 
 cylinder.internal_flow = true
-cylinder.closed_bottom = false
+cylinder.closed_bottom = true
+cylinder.bottom_offset = 1.0e-8
 
 cylinder.radius = 0.0005
-cylinder.height = 0.0040
+cylinder.height = 0.0050
 
 cylinder.direction = 0
-cylinder.center    =  0.0021  0.0005   0.0005
+cylinder.center    =  0.0020  0.0005   0.0005
 
 
 #_______________________________________________________________________

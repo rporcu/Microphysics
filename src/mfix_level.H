@@ -210,6 +210,7 @@ private:
 
     void make_eb_general(int lev);
     void make_eb_cylinder(int lev);
+    void make_eb_hopper(int lev);
     void make_eb_hourglass(int lev);
     void make_eb_clr(int lev);
     void make_eb_clr_riser(int lev);
@@ -241,11 +242,11 @@ private:
     void mfix_compute_dt(int lev, amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt);
 
     void mfix_compute_fluid_acceleration(int lev,
-					 Vector< std::unique_ptr<MultiFab> >& u,
-					 Vector< std::unique_ptr<MultiFab> >& v,
-					 Vector< std::unique_ptr<MultiFab> >& w,
-					 Vector< std::unique_ptr<MultiFab> >& ro,
-					 Vector< std::unique_ptr<MultiFab> >& ep );
+           Vector< std::unique_ptr<MultiFab> >& u,
+           Vector< std::unique_ptr<MultiFab> >& v,
+           Vector< std::unique_ptr<MultiFab> >& w,
+           Vector< std::unique_ptr<MultiFab> >& ro,
+           Vector< std::unique_ptr<MultiFab> >& ep );
 
     int  steady_state_reached(int lev, Real dt);
 
@@ -255,15 +256,15 @@ private:
 
 
     void mfix_apply_forcing_terms(int lev, amrex::Real dt,
-				  Vector< std::unique_ptr<MultiFab> >& u,
-				  Vector< std::unique_ptr<MultiFab> >& v,
-				  Vector< std::unique_ptr<MultiFab> >& w,
-				  Vector< std::unique_ptr<MultiFab> >& ro,
-				  Vector< std::unique_ptr<MultiFab> >& ep );
+          Vector< std::unique_ptr<MultiFab> >& u,
+          Vector< std::unique_ptr<MultiFab> >& v,
+          Vector< std::unique_ptr<MultiFab> >& w,
+          Vector< std::unique_ptr<MultiFab> >& ro,
+          Vector< std::unique_ptr<MultiFab> >& ep );
 
-    void mfix_compute_intermediate_velocity (int lev, amrex::Real dt, 
-					     Vector< std::unique_ptr<MultiFab> >& ro,
-					     Vector< std::unique_ptr<MultiFab> >& ep );
+    void mfix_compute_intermediate_velocity (int lev, amrex::Real dt,
+               Vector< std::unique_ptr<MultiFab> >& ro,
+               Vector< std::unique_ptr<MultiFab> >& ep );
 
     void mfix_add_pressure_gradient(int lev, amrex::Real coeff);
 
@@ -428,7 +429,7 @@ private:
     // MAC projection object
     std::unique_ptr<MacProjection> mac_projection;
 
-    
+
     int solve_fluid;
     int solve_dem;
     int use_proj_method = 0; // Whether to use projection to solve NS eqs.
@@ -458,9 +459,9 @@ private:
     // Options to control time stepping
     Real cfl = 0.5;
     int  fixed_dt=0;
-    Real dt_min=0.0;  		// Min dt allowed
+    Real dt_min=0.0;      // Min dt allowed
     Real dt_max=1.e14;          // Max dt allowed
-    
+
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;
     int particle_max_grid_size_z = -1;
@@ -474,7 +475,7 @@ private:
 
     Real sum_vol_orig;
 
-    // 
+    //
     // Options to control the computing of particle eulerian velocities
     //
     int avg_vel_int = -1;
@@ -520,7 +521,7 @@ private:
 };
 
 inline
-std::string 
+std::string
 mfix_level::get_load_balance_type()
 {
     return load_balance_type;

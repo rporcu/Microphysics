@@ -15,7 +15,7 @@ mfix.use_mac_proj       = true
 
 mfix.ugradu_type        = 3
 
-mfix.particle_init_type = "Auto"
+#mfix.particle_init_type = "Auto"
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -75,12 +75,13 @@ mfix.geometry = "cylinder"
 
 cylinder.internal_flow = true
 cylinder.closed_bottom = true
+cylinder.bottom_offset = 1.0e-8
 
 cylinder.radius = 0.001
 cylinder.height = 0.010
 
 cylinder.direction = 0
-cylinder.translate =  0.005   0.001   0.001
+cylinder.center    =  0.004   0.001   0.001
 
 
 #_______________________________________________________________________

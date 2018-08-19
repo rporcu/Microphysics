@@ -1,0 +1,9 @@
+This case should now be setting up the correct geometry for
+the fluid and particles. However, the level set is not being
+generated for particles which causes the code to crash at the
+first call to "Evolving Particle...". Therefore, the case is
+setup to have no particles.
+
+
+To enable particles, uncomment the "mfix.particle_init_type"
+line in the inputs file.

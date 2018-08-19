@@ -3,6 +3,9 @@
 #include <AMReX_EB2_IF_Plane.H>
 #include <AMReX_EB2_IF_Union.H>
 #include <AMReX_EB2_IF_Intersection.H>
+#include <AMReX_EB2_IF_Lathe.H>
+#include <AMReX_EB2_IF_Translation.H>
+#include <AMReX_EB2_IF_Rotation.H>
 
 #include <AMReX_GeometryShop.H>
 #include <AMReX_SphereIF.H>
@@ -47,31 +50,27 @@
  *                                                                          *
  ****************************************************************************/
 void
-mfix_level::make_eb_cylinder(int lev)
+mfix_level::make_eb_hopper(int lev)
 {
-    ParmParse pp("cylinder");
+    ParmParse pp("hopper");
 
     int max_level_here = 0;
 
     /****************************************************************************
      * Get cylinder information from inputs file.                               *
      ****************************************************************************/
-    bool inside       = true;
-    bool close_bottom = true;
-    Real offset    = 1.0e-8;
 
-    Real radius    = 0.0002;
-    Real height    = 0.0080;
+    Real orifice_radius  = 0.00025;
+    Real funnel_radius   = 0.00050;
+    Real funnel_height   = 0.00105;
 
     int direction  = 0;
     Vector<Real> centervec(3);
 
-    pp.query("internal_flow", inside);
-    pp.query("closed_bottom", close_bottom);
-    pp.query("bottom_offset", offset);
+    pp.query("orifice_radius", orifice_radius);
+    pp.query("funnel_radius",  funnel_radius);
+    pp.query("funnel_height",  funnel_height);
 
-    pp.query("radius",     radius);
-    pp.query("height",     height);
     pp.query("direction", direction);
     pp.getarr("center",   centervec,  0, 3);
     Array<Real,3> center={centervec[0],centervec[1],centervec[2]};
@@ -94,18 +93,64 @@ mfix_level::make_eb_cylinder(int lev)
     EB2::useEB2(true);
 
     amrex::Print() << " " << std::endl;
-    amrex::Print() << " Internal Flow: " << inside << std::endl;
-    amrex::Print() << " Radius:    " << radius    << std::endl;
-    amrex::Print() << " Height:    " << height    << std::endl;
-    amrex::Print() << " Offset:    " << offset    << std::endl;
+    amrex::Print() << " Orifice Radius: " << orifice_radius << std::endl;
+    amrex::Print() << " Funnel Radius:  " << funnel_radius  << std::endl;
+    amrex::Print() << " Funnel Height:  " << funnel_height  << std::endl;
     amrex::Print() << " Direction: " << direction << std::endl;
     amrex::Print() << " Center:    " << center[0] << ", "
                                      << center[1] << ", "
                                      << center[2] << std::endl;
 
-    // Create the cylinder -- used for both fluid and particles
-    EB2::CylinderIF my_cyl(radius, height, direction, center, inside);
 
+    // Construct the funnel
+    Array<Real,3> point{0.0, 0.0, 0.0};
+    point[0] = orifice_radius;
+
+    Array<Real,3> normal{0.0, 0.0, 0.0};
+    normal[0] = funnel_height;
+    normal[1] = -orifice_radius;
+
+    amrex::Print() << " " << std::endl;
+    amrex::Print() << " Funnel plane: " << std::endl;
+    amrex::Print() << "   Point:  " << point[0]  << ", "
+                                    << point[1]  << ", "
+                                    << point[2]  << std::endl;
+
+    amrex::Print() << "   Normal: " << normal[0] << ", "
+                                    << normal[1] << ", "
+                                    << normal[2] << std::endl;
+
+    EB2::PlaneIF funnel(point, normal);
+
+
+    // Construct the hopper body
+    point = {funnel_radius, 0., 0.};
+    normal = {1.0, 0.0, 0.0};
+
+    amrex::Print() << " " << std::endl;
+    amrex::Print() << "Hopper body plane: " << std::endl;
+    amrex::Print() << "   Point:  " << point[0]  << ", "
+                                    << point[1]  << ", "
+                                    << point[2]  << std::endl;
+
+    amrex::Print() << "   Normal: " << normal[0] << ", "
+                                    << normal[1] << ", "
+                                    << normal[2] << std::endl;
+
+    EB2::PlaneIF hbody(point, normal);
+
+
+    // auto my_hopper = EB2::lathe(funnel);
+    // auto my_hopper = EB2::lathe(EB2::makeUnion(hbody, funnel));
+
+    // Basic hopper shap
+    auto hopper0 = EB2::lathe(EB2::makeUnion(hbody, funnel));
+
+    // Align to correct axis
+    auto hopper1 = EB2::rotate(hopper0, 2.*std::atan(1.0), 1);
+
+    // Translate to correct location
+    auto my_hopper = EB2::translate(hopper1, center);
 
    /****************************************************************************
     *                                                                          *
@@ -117,36 +162,10 @@ mfix_level::make_eb_cylinder(int lev)
        amrex::Print() << " " << std::endl;
        amrex::Print() << "Now  making the particle ebfactory ..." << std::endl;
 
-       if(close_bottom) {
-
-         Array<Real,3> point{0.0, 0.0, 0.0};
-         Array<Real,3> normal{0.0, 0.0, 0.0};
-
-         point[direction] = geom[lev].ProbLo(direction) + offset;
-         normal[direction] = -1.0;
-
-         amrex::Print() << "Capping bottom: " << std::endl;
-         amrex::Print() << "   Point:  " << point[0]  << ", "
-                                         << point[1]  << ", "
-                                         << point[2]  << std::endl;
-
-         amrex::Print() << "   Normal: " << normal[0] << ", "
-                                         << normal[1] << ", "
-                                         << normal[2] << std::endl;
-
-         EB2::PlaneIF my_plane(point,normal);
-
-         auto gshop = EB2::makeShop(EB2::makeUnion(my_cyl,my_plane));
-         int max_coarsening_level = 100;
-         EB2::Build(gshop, geom.back(), max_level_here,
-                    max_level_here+max_coarsening_level);
-       }
-       else {
-         auto gshop = EB2::makeShop(my_cyl);
-         int max_coarsening_level = 100;
-         EB2::Build(gshop, geom.back(), max_level_here,
-                    max_level_here+max_coarsening_level);
-       }
+       auto gshop = EB2::makeShop(my_hopper);
+       int max_coarsening_level = 100;
+       EB2::Build(gshop, geom.back(), max_level_here,
+                  max_level_here+max_coarsening_level);
 
        const EB2::IndexSpace& eb_is = EB2::IndexSpace::top();
        const EB2::Level& eb_level = eb_is.getLevel(geom[lev]);
@@ -173,7 +192,7 @@ mfix_level::make_eb_cylinder(int lev)
     {
        amrex::Print() << "Now  making the fluid ebfactory ..." << std::endl;
 
-       auto gshop = EB2::makeShop(my_cyl);
+       auto gshop = EB2::makeShop(my_hopper);
        int max_coarsening_level = 100;
        EB2::Build(gshop, geom.back(), max_level_here,
                   max_level_here+max_coarsening_level);
