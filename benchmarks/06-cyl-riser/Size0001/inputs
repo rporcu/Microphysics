@@ -15,7 +15,7 @@ mfix.use_mac_proj       = true
 
 mfix.ugradu_type        = 3
 
-mfix.particle_init_type = "Auto"
+#mfix.particle_init_type = "Auto"
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -67,20 +67,22 @@ mfix.levelset__pad           = 4 # levelset influence in refined units
 mfix.levelset__eb_refinement = 1 # EB resolution used to generated levelset
 mfix.levelset__eb_pad        = 8 # EB extends from the problem domain
 
-mfix.use_walls        = false
-mfix.use_poly2        = true
-mfix.poly2_mirror     = true  # Fluid is on the inside of cylinder
 mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
 #! EB geometry
 #!-----------------------------------------------------------//
-# Cylinder ::  y^2 + z^2 - R^2 = 0
 
-mfix.poly2_y_coeffs  =   0.00     0.00     1.00
-mfix.poly2_z_coeffs  =   0.00     0.00     1.00
-mfix.poly2_x_coeffs  =  -2.50e-7  0.00     0.00
+mfix.geometry = "cylinder"
 
-mfix.poly2_translate =   0.00     5.0e-4   5.0e-4
+cylinder.internal_flow = true
+cylinder.closed_bottom = false
+
+
+cylinder.radius = 0.0005
+cylinder.height = 0.0050
+
+cylinder.direction = 0
+cylinder.center    =  0.0020  0.0005   0.0005
 
 
 #_______________________________________________________________________
