@@ -44,7 +44,7 @@ set (AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX 
 
 option ( AMREX_ENABLE_EB "Build EB code" ON)
 
-option ( AMREX_ENABLE_GEOMETRY_SHOP "Use the old GeometryShop instead of EB2" ON )
+option ( AMREX_ENABLE_GEOMETRYSHOP "Use the old GeometryShop instead of EB2" ON )
 
 option ( AMREX_ENABLE_PIC "Build position-independent code" OFF)
 
@@ -119,7 +119,7 @@ ExternalProject_Add ( amrex
    -DENABLE_AMRDATA=ON # Needed to compile postprocessing tools
    -DENABLE_LINEAR_SOLVERS=ON
    -DENABLE_EB=${AMREX_ENABLE_EB}
-   -DENABLE_GEOMETRY_SHOP=${AMREX_ENABLE_GEOMETRY_SHOP}
+   -DENABLE_GEOMETRYSHOP=${AMREX_ENABLE_GEOMETRYSHOP}
    -DENABLE_FORTRAN_INTERFACES=OFF
    -DENABLE_BASE_PROFILE=${AMREX_ENABLE_BASE_PROFILE}
    -DENABLE_TINY_PROFILE=${AMREX_ENABLE_TINY_PROFILE}
