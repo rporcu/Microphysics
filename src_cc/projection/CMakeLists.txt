@@ -1,4 +1,4 @@
-add_sources ( convection_mod.f90 diffusion_mod.f90 )
+add_sources ( convection_mod.f90 diffusion_mod.f90 diffusion_eb_mod.f90)
 add_sources ( mfix_advance.cpp mfix_diffusion.cpp mfix_projection.cpp compute_dt.cpp )
 add_sources ( mfix_diff_F.H mfix_mac_F.H mfix_proj_F.H )
 add_sources ( macproj_mod.f90 projection_mod.f90 slopes_mod.f90 )

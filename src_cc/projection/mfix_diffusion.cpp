@@ -12,43 +12,71 @@
 
 //
 // Explicit diffusion
-// 
+//
 void
 mfix_level::mfix_compute_divtau ( int lev,
-			          MultiFab& divtau, 
-			          Vector< std::unique_ptr<MultiFab> >& vel) 
+                MultiFab& divtau,
+                Vector< std::unique_ptr<MultiFab> >& vel)
 {
     BL_PROFILE("mfix_level::mfix_compute_divtau");
     Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
-#pragma omp parallel 
+#pragma omp parallel
 #endif
-    for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
-    {
-	// Tilebox
-	Box bx = mfi.tilebox ();
+    for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi) {
 
-	compute_divtau (
-	    BL_TO_FORTRAN_BOX(bx),  
-	    BL_TO_FORTRAN_ANYD(divtau[mfi]),
-	    BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-            (*mu_g[lev])[mfi].dataPtr(),
-            (*lambda_g[lev])[mfi].dataPtr(),
-            BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-            domain.loVect (), domain.hiVect (),
-	    bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-	    bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-	    bc_klo.dataPtr(), bc_khi.dataPtr(),
-	    geom[lev].CellSize(), &nghost, &explicit_diffusion);
+      // Tilebox
+      Box bx = mfi.tilebox ();
+
+      const auto& sfab = dynamic_cast<EBFArrayBox const&>(divtau[mfi]);
+      const auto& flag = sfab.getEBCellFlagFab();
+
+      if (flag.getType(bx) == FabType::covered) {
+        divtau[mfi].setVal(0.0, bx, 0, 0);
+        divtau[mfi].setVal(0.0, bx, 0, 1);
+        divtau[mfi].setVal(0.0, bx, 0, 2);
+      } else {
+
+        if (flag.getType(amrex::grow(bx,1)) == FabType::regular) {
+
+          compute_divtau (
+                      BL_TO_FORTRAN_BOX(bx),
+                      BL_TO_FORTRAN_ANYD(divtau[mfi]),
+                      BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
+                      (*mu_g[lev])[mfi].dataPtr(),
+                      (*lambda_g[lev])[mfi].dataPtr(),
+                      BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+                      domain.loVect (), domain.hiVect (),
+                      bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                      bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                      bc_klo.dataPtr(), bc_khi.dataPtr(),
+                      geom[lev].CellSize(), &nghost, &explicit_diffusion);
+        } else {
+
+          compute_divtau_eb (
+                          BL_TO_FORTRAN_BOX(bx),
+                          BL_TO_FORTRAN_ANYD(divtau[mfi]),
+                          BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
+                          (*mu_g[lev])[mfi].dataPtr(),
+                          (*lambda_g[lev])[mfi].dataPtr(),
+                          BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+                          BL_TO_FORTRAN_ANYD(flag),
+                          domain.loVect (), domain.hiVect (),
+                          bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                          bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                          bc_klo.dataPtr(), bc_khi.dataPtr(),
+                          geom[lev].CellSize(), &nghost, &explicit_diffusion);
+
+        }
+      }
     }
 }
-
 //
 // Implicit diffusion
-// 
+//
 void
-mfix_level::mfix_diffuse_velocity ( int lev, 
+mfix_level::mfix_diffuse_velocity ( int lev,
                                     amrex::Real dt)
 
 {
@@ -64,23 +92,23 @@ mfix_level::mfix_diffuse_velocity ( int lev,
     mfix_compute_bcoeff_diff ( lev );
 
     int bc_lo[3], bc_hi[3];
-    
+
     // Set BCs for Poisson's solver
     set_diff_bc (bc_lo, bc_hi,
                  domain.loVect(), domain.hiVect(),
-   	         &nghost, 
+             &nghost,
                  bc_ilo.dataPtr(), bc_ihi.dataPtr(),
                  bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                  bc_klo.dataPtr(), bc_khi.dataPtr());
 
     // Loop over the velocity components
-    for (int i = 0; i < 3; i++) 
+    for (int i = 0; i < 3; i++)
     {
        rhs_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
        phi_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
- 
+
        amrex::Print() << "Diffusing velocity component " << i << std::endl;
-  
+
        // Solve (1 - div beta grad) u_new = RHS
        // Here RHS = "vel" which is the current approximation to the new-time velocity (without diffusion terms)
        solve_diffusion_equation ( lev, bcoeff_diff, phi_diff, rhs_diff, bc_lo, bc_hi, dt );
@@ -109,18 +137,18 @@ mfix_level::mfix_diffuse_velocity ( int lev,
 // Solve :
 //
 //                  (alpha + div dot beta grad) u = RHS
-// 
+//
 void
 mfix_level::solve_diffusion_equation ( int lev,
-				      Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-				      Vector< std::unique_ptr<MultiFab> >& sol,
-				      Vector< std::unique_ptr<MultiFab> >& rhs,
-				      int bc_lo[], int bc_hi[],
+              Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+              Vector< std::unique_ptr<MultiFab> >& sol,
+              Vector< std::unique_ptr<MultiFab> >& rhs,
+              int bc_lo[], int bc_hi[],
                                       amrex::Real dt)
 {
     BL_PROFILE("mfix_level::solve_diffusion_equation");
-    
-    // 
+
+    //
     // First define the matrix (operator).
     // Class MLABecLaplacian describes the following operator:
     //
@@ -146,10 +174,10 @@ mfix_level::solve_diffusion_equation ( int lev,
 
     // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
     matrix.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
-		         {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
-   
+             {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
+
     // This sets alpha = 1 and beta = dt
-    matrix.setScalars ( 1.0, dt );    
+    matrix.setScalars ( 1.0, dt );
 
     // Define RHS = (rop) * (vel_g)
     MultiFab::Multiply((*rhs_diff[lev]), (*rop_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
@@ -163,7 +191,7 @@ mfix_level::solve_diffusion_equation ( int lev,
     // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
     matrix.setLevelBC ( lev, GetVecOfConstPtrs(sol)[lev] );
 
-    // 
+    //
     // Then setup the solver ----------------------
     //
     MLMG  solver(matrix);
@@ -177,7 +205,7 @@ mfix_level::solve_diffusion_equation ( int lev,
     // This ensures that ghost cells of sol are correctly filled when returned from the solver
     solver.setFinalFillBC(true);
 
-    // 
+    //
     // Finally, solve the system
     //
     solver.solve ( GetVecOfPtrs(sol), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
@@ -187,7 +215,7 @@ mfix_level::solve_diffusion_equation ( int lev,
 
 //
 // Computes bcoeff = mu_g at the faces of the scalar cells
-// 
+//
 void
 mfix_level::mfix_compute_bcoeff_diff (int lev)
 {
@@ -197,32 +225,32 @@ mfix_level::mfix_compute_bcoeff_diff (int lev)
     int xdir = 1;
     int ydir = 2;
     int zdir = 3;
-    
+
 #ifdef _OPENMP
-#pragma omp parallel 
+#pragma omp parallel
 #endif
     for (MFIter mfi(*mu_g[lev],true); mfi.isValid(); ++mfi)
     {
-	   // Tileboxes for staggered components
-	   Box ubx = mfi.tilebox (e_x);
-	   Box vbx = mfi.tilebox (e_y);
-	   Box wbx = mfi.tilebox (e_z);
+     // Tileboxes for staggered components
+     Box ubx = mfi.tilebox (e_x);
+     Box vbx = mfi.tilebox (e_y);
+     Box wbx = mfi.tilebox (e_z);
 
-	   // X direction
-	   compute_bcoeff_diff (BL_TO_FORTRAN_BOX(ubx),
-		                BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][0]))[mfi]),
-  		                BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &xdir );
+     // X direction
+     compute_bcoeff_diff (BL_TO_FORTRAN_BOX(ubx),
+                    BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][0]))[mfi]),
+                      BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &xdir );
 
-	   // Y direction
-	   compute_bcoeff_diff (BL_TO_FORTRAN_BOX(vbx),
-		                BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][1]))[mfi]),
-		                BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &ydir );
+     // Y direction
+     compute_bcoeff_diff (BL_TO_FORTRAN_BOX(vbx),
+                    BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][1]))[mfi]),
+                    BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &ydir );
 
-	   // Z direction
-	   compute_bcoeff_diff (BL_TO_FORTRAN_BOX(wbx),
-		                BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][2]))[mfi]),
-		                BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &zdir );
-	
+     // Z direction
+     compute_bcoeff_diff (BL_TO_FORTRAN_BOX(wbx),
+                    BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][2]))[mfi]),
+                    BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &zdir );
+
     }
 
     bcoeff_diff[lev][0] -> FillBoundary(geom[lev].periodicity());

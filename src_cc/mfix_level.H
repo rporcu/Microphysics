@@ -57,7 +57,7 @@ public:
 
     void PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                   int steady_state);
-    
+
     void ResizeArrays();
 
     void WriteCheckPointFile(std::string& check_file_name,
@@ -75,7 +75,7 @@ public:
 
     void Regrid(int lev, int nstep);
 
-    void Evolve(int lev, int nstep, int steady_state, Real& dt, Real & prev_dt, 
+    void Evolve(int lev, int nstep, int steady_state, Real& dt, Real & prev_dt,
                 Real time, Real stop_time);
 
     void usr3(int lev);
@@ -196,6 +196,7 @@ private:
 
     void make_eb_general  (int lev);
     void make_eb_cylinder (int lev);
+    void make_eb_hopper(int lev);
     void make_eb_hourglass(int lev);
     void make_eb_clr      (int lev);
     void make_eb_clr_riser(int lev);
@@ -223,29 +224,29 @@ private:
     // Projection-related methods
     void solve_poisson_equation(int lev,
             Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-			Vector< std::unique_ptr<MultiFab> >& phi,
-			Vector< std::unique_ptr<MultiFab> >& rhs,
-			int bc_lo[], int bc_hi[] );
+      Vector< std::unique_ptr<MultiFab> >& phi,
+      Vector< std::unique_ptr<MultiFab> >& rhs,
+      int bc_lo[], int bc_hi[] );
 
     // Solve implicit diffusion
     void solve_diffusion_equation(int lev,
                         Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-			Vector< std::unique_ptr<MultiFab> >& phi,
-			Vector< std::unique_ptr<MultiFab> >& rhs,
-			int bc_lo[], int bc_hi[],
-			amrex::Real dt);
+      Vector< std::unique_ptr<MultiFab> >& phi,
+      Vector< std::unique_ptr<MultiFab> >& rhs,
+      int bc_lo[], int bc_hi[],
+      amrex::Real dt);
 
     void mfix_compute_bcoeff_ppe(int lev);
     void mfix_compute_bcoeff_diff(int lev);
 
     void check_for_nans(int lev);
-    
+
     void mfix_compute_dt(int lev, amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt);
 
     void mfix_compute_ugradu_predictor(int lev, amrex::MultiFab& conv, Vector< std::unique_ptr<MultiFab> >& vel);
     void mfix_compute_ugradu_corrector(int lev, amrex::MultiFab& conv, Vector< std::unique_ptr<MultiFab> >& vel);
     void mfix_compute_divtau(int lev, amrex::MultiFab& divtau, Vector< std::unique_ptr<MultiFab> >& vel);
-    
+
     int  steady_state_reached(int lev, Real dt);
 
     void mfix_apply_predictor(int lev, amrex::MultiFab& conv_old, amrex::MultiFab& divtau_old,
@@ -263,9 +264,9 @@ private:
     void mfix_compute_velocity_at_faces (int lev, Vector< std::unique_ptr<MultiFab> >& vel);
 
     void mfix_compute_diveu (int lev);
- 
+
     void mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p);
- 
+
     void mfix_print_max_vel(int lev);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
@@ -295,7 +296,7 @@ private:
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
     int ct_ls_mf;
-    
+
     IArrayBox bc_ilo;
     IArrayBox bc_ihi;
     IArrayBox bc_jlo;
@@ -328,7 +329,7 @@ private:
     // Base state pressure
     Vector< std::unique_ptr<MultiFab> > p0_g;
 
-    // Pressure correction 
+    // Pressure correction
     Vector< std::unique_ptr<MultiFab> > pp_g;
 
     // Molecular viscosity
@@ -361,7 +362,7 @@ private:
 
     //
     Vector< std::unique_ptr<MultiFab> > fp;
- 
+
     // Coefficients b of div(b*grad(p))
     Vector< Vector< std::unique_ptr<MultiFab> > > bcoeff;
 
@@ -397,10 +398,10 @@ private:
     int  mg_max_fmg_iter = 0;
     Real mg_rtol = 1.0e-11;
     Real mg_atol = 1.0e-14;
-    
+
     // Tolerance to check for steady state
     Real steady_state_tol = 1.0e-5  ;
-    
+
     int call_udf;
     bool dual_grid = false;
 
@@ -411,7 +412,7 @@ private:
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
 
-    // Options to control time stepping 
+    // Options to control time stepping
     Real cfl = 0.5;
     int fixed_dt = 0;
     Real dt_min=0.0;            // Min dt allowed
@@ -448,10 +449,10 @@ private:
     // all the member functions.
     //
     // DO NOT USE  A LOCAL VARIABLE WITH THE SAME NAME
-    // 
+    //
 
     // These values are required when fluid sees EB -- for now
-    const int nghost = 4; 
+    const int nghost = 4;
     int nodal_pressure = 0;
     int explicit_diffusion = 1;
 
@@ -481,10 +482,10 @@ private:
 };
 
 inline
-std::string 
+std::string
 mfix_level::get_load_balance_type()
-{   
+{
     return load_balance_type;
-}   
+}
 
 #endif
