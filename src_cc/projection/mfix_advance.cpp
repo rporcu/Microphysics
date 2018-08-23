@@ -68,7 +68,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
 	// Create temporary multifabs to hold the old-time conv and divtau
 	//    so we don't have to re-compute them in the corrector
-        MultiFab   conv_old(grids[lev], dmap[lev], 3, 0 );
+        MultiFab   conv_old(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
         MultiFab divtau_old(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 	
         // Predictor step 
@@ -147,7 +147,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
     amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
 
     //  Create temporary multifabs to hold conv and divtau
-    MultiFab   conv(grids[lev], dmap[lev], 3, 0 );
+    MultiFab   conv(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     MultiFab divtau(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 
     for (int iter = 0; iter < 3; ++iter)
