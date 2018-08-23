@@ -107,7 +107,7 @@ mfix_level::make_eb_general(int lev)
     * Generate PolynomialIF representing the non-planar EB walls               *
     ****************************************************************************/
 
-    if (use_poly2) 
+    if (use_poly2)
     {
       amrex::Print() << "Using poly2 geometry" << std::endl;
       impfunc_poly2 = get_poly(lev, SpaceDim, "poly2");
@@ -117,7 +117,7 @@ mfix_level::make_eb_general(int lev)
       *          and intersect with with PolynomialIF                          *
       **************************************************************************/
 
-      if (use_walls) 
+      if (use_walls)
       {
         bool has_walls;
         bool has_real_walls;
@@ -237,7 +237,8 @@ mfix_level::make_eb_general(int lev)
             )
         );
 
-    EBTower::Destroy();
+    // Don't destroy the EBTower here, it is needed at the a later time...
+    //EBTower::Destroy();
 
    /****************************************************************************
     *                                                                          *
