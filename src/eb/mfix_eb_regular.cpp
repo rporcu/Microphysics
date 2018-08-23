@@ -1,15 +1,5 @@
 #include <AMReX_EB2.H>
 
-#include <AMReX_GeometryShop.H>
-#include <AMReX_AllRegularService.H>
-#include <AMReX_EBISLayout.H>
-#include <AMReX_EBGraph.H>
-#include <AMReX_EBDebugOut.H>
-#include <AMReX_EBCellFAB.H>
-#include <AMReX_EBCellFactory.H>
-#include <AMReX_EBIndexSpace.H>
-
-#include <algorithm>
 #include <mfix_level.H>
 #include <mfix_eb_F.H>
 
@@ -38,7 +28,6 @@ mfix_level::make_eb_regular(int lev)
     EB2::useEB2(true);
 
     int max_coarsening_level = 100;
-    Real offset    = 1.0e-8;
 
     amrex::Print() << " " << std::endl;
     amrex::Print() << "Now making the ebfactory's ..." << std::endl;

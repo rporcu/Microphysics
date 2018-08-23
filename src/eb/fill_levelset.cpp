@@ -6,11 +6,11 @@
 #include <mfix_level.H>
 #include <mfix_eb_F.H>
 
+#if 0
 void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
                                const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
                                int max_level_here, int grid_size, bool eb_verbosity)
 {
-
     // Do nothing if loading level-set from restart file:
     if(levelset__restart) return;
 
@@ -67,3 +67,4 @@ void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
         level_set->intersection_ebf(eb_factory_poly, * mf_impfunc_poly);
     }
 }
+#endif

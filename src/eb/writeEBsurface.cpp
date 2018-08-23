@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <AMReX_GeometryShop.H>
 #include <mfix_level.H>
 #include <mfix_eb_F.H>
 
