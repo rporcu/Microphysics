@@ -23,7 +23,7 @@ contains
       use eos, only: droodp_g
       use fld_const, only: ro_g0
       use matrix, only: e, w, n, s, t, b
-      use param, only: is_defined, is_undefined
+      use param, only: is_undefined
       use ur_facs, only: ur_fac
 
       implicit none

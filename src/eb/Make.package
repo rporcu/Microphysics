@@ -7,7 +7,9 @@ CEXE_sources += fix_up_geometry.cpp
 CEXE_sources += mfix_eb.cpp
 CEXE_sources += writeEBsurface.cpp
 CEXE_sources += get_walls.cpp
+CEXE_sources += mfix_eb_box.cpp
 CEXE_sources += mfix_eb_cylinder.cpp
 CEXE_sources += mfix_eb_hopper.cpp
+CEXE_sources += mfix_eb_regular.cpp
 
 FEXE_headers += mfix_eb_F.H

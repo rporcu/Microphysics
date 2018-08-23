@@ -40,7 +40,11 @@ mfix_level::make_eb_geometry (int lev)
   std::string geom_type;
   pp.query("geometry", geom_type);
 
-  if (geom_type == "cylinder") {
+  if (geom_type == "box") {
+    amrex::Print() << "\n Building box geometry." << std::endl;
+    make_eb_box(lev);
+  }
+  else if (geom_type == "cylinder") {
     amrex::Print() << "\n Building cylinder geometry." << std::endl;
     make_eb_cylinder(lev);
 
@@ -50,9 +54,7 @@ mfix_level::make_eb_geometry (int lev)
     make_eb_hopper(lev);
   }
   else {
-    amrex::Print() << "\n Building default box geometry." << std::endl;
-    // TODO :: All of this!   :)
+    amrex::Print() << "\n No EB geometry in this problem." << std::endl;
+    make_eb_regular(lev);
   }
-
-
 }

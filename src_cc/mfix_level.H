@@ -195,11 +195,13 @@ protected:
 private:
 
     void make_eb_general  (int lev);
+    void make_eb_box      (int lev);
     void make_eb_cylinder (int lev);
-    void make_eb_hopper(int lev);
+    void make_eb_hopper   (int lev);
     void make_eb_hourglass(int lev);
     void make_eb_clr      (int lev);
     void make_eb_clr_riser(int lev);
+    void make_eb_regular  (int lev);
 
     void fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev);
 

@@ -42,8 +42,6 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
   use ic, only: ic_dp_min,  ic_ro_s_min
   use ic, only: ic_dp_max,  ic_ro_s_max
 
-  use param, only: is_defined
-
   use discretelement, only: particle_types
   use constant, only: pi
 

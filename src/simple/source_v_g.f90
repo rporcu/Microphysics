@@ -124,7 +124,6 @@ contains
       use bc, only: bc_hw_g, bc_vw_g, bc_v_g
 
       use matrix, only: e, w, n, s, t, b
-      use param, only: is_defined
 
       integer     , intent(in   ) ::  lo(3), hi(3), ng
       integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)

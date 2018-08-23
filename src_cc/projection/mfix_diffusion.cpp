@@ -30,15 +30,15 @@ mfix_level::mfix_compute_divtau ( int lev,
       Box bx = mfi.tilebox ();
 
       const auto& sfab = dynamic_cast<EBFArrayBox const&>(divtau[mfi]);
-      const auto& flag = sfab.getEBCellFlagFab();
+      const auto& my_flag = sfab.getEBCellFlagFab();
 
-      if (flag.getType(bx) == FabType::covered) {
+      if (my_flag.getType(bx) == FabType::covered) {
         divtau[mfi].setVal(0.0, bx, 0, 0);
         divtau[mfi].setVal(0.0, bx, 0, 1);
         divtau[mfi].setVal(0.0, bx, 0, 2);
       } else {
 
-        if (flag.getType(amrex::grow(bx,1)) == FabType::regular) {
+        if (my_flag.getType(amrex::grow(bx,1)) == FabType::regular) {
 
           compute_divtau (
                       BL_TO_FORTRAN_BOX(bx),
@@ -61,7 +61,7 @@ mfix_level::mfix_compute_divtau ( int lev,
                           (*mu_g[lev])[mfi].dataPtr(),
                           (*lambda_g[lev])[mfi].dataPtr(),
                           BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-                          BL_TO_FORTRAN_ANYD(flag),
+                          BL_TO_FORTRAN_ANYD(my_flag),
                           domain.loVect (), domain.hiVect (),
                           bc_ilo.dataPtr(), bc_ihi.dataPtr(),
                           bc_jlo.dataPtr(), bc_jhi.dataPtr(),
