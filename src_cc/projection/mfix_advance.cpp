@@ -69,7 +69,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	// Create temporary multifabs to hold the old-time conv and divtau
 	//    so we don't have to re-compute them in the corrector
         MultiFab   conv_old(grids[lev], dmap[lev], 3, 0 );
-        MultiFab divtau_old(grids[lev], dmap[lev], 3, 0 );
+        MultiFab divtau_old(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 	
         // Predictor step 
         bool proj_2 = true;
@@ -148,7 +148,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 
     //  Create temporary multifabs to hold conv and divtau
     MultiFab   conv(grids[lev], dmap[lev], 3, 0 );
-    MultiFab divtau(grids[lev], dmap[lev], 3, 0 );
+    MultiFab divtau(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 
     for (int iter = 0; iter < 3; ++iter)
     {
@@ -264,7 +264,7 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
     BL_PROFILE("mfix_level::mfix_apply_corrector");
 
     MultiFab   conv(grids[lev], dmap[lev], 3, 0 );
-    MultiFab divtau(grids[lev], dmap[lev], 3, 0 );
+    MultiFab divtau(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 
     // Compute the explicit advective term R_u^*
     mfix_compute_ugradu_corrector( lev,   conv, vel_g );
