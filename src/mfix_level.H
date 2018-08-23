@@ -14,32 +14,36 @@
 
 #include <MFIXParticleContainer.H>
 
-#include <AMReX_GeometryShop.H>
-#include <AMReX_EBIndexSpace.H>
 #include <AMReX_EBFabFactory.H>
 #include <AMReX_EBTower.H>
 #include <AMReX_EBFArrayBox.H>
 
-#include <AMReX_GeometryShop.H>
-#include <AMReX_PlaneIF.H>
-#include <AMReX_AllRegularService.H>
-#include <AMReX_FlatPlateGeom.H>
-#include <AMReX_EBISLayout.H>
-#include <AMReX_EBGraph.H>
-#include <AMReX_EBDebugOut.H>
-#include <AMReX_EBCellFAB.H>
-#include <AMReX_EBCellFactory.H>
-#include <AMReX_EBIndexSpace.H>
-#include <AMReX_UnionIF.H>
-#include <AMReX_TransformIF.H>
-#include <AMReX_ComplementIF.H>
-#include <AMReX_IntersectionIF.H>
-#include <AMReX_LatheIF.H>
-#include <AMReX_PolynomialIF.H>
+#include <AMReX_EB2.H>
+#include <AMReX_EB2_IF_Plane.H>
+#include <AMReX_EB2_IF_Union.H>
+#include <AMReX_EB2_IF_Polynomial.H>
+#include <AMReX_EB2_IF_Translation.H>
 
 #include <AMReX_EB_levelset.H>
 
 #include <MacProjection.H>
+
+
+
+using WallsIF = typename
+    EB2::TranslationIF<
+    EB2::UnionIF<
+        EB2::PlaneIF,
+        EB2::PlaneIF
+        >
+    >;
+
+using PolynomialIF = typename
+    EB2::TranslationIF<
+        EB2::PolynomialIF
+    >;
+
+
 
 class mfix_level
     : public AmrCore
@@ -89,28 +93,28 @@ public:
 
     void make_eb_geometry(int lev);
 
-    std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
-    std::unique_ptr<BaseIF> get_real_walls(int lev, bool anisotropic, bool & has_real_walls);
-    std::unique_ptr<BaseIF> get_poly(int lev, int max_order, std::string field_prefix);
+    //std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
+    //std::unique_ptr<BaseIF> get_real_walls(int lev, bool anisotropic, bool & has_real_walls);
+    //std::unique_ptr<BaseIF> get_poly(int lev, int max_order, std::string field_prefix);
 
-    std::unique_ptr<BaseIF> make_wall(
-            int dir, // direction (long edge) of wall
-            Real position, Real height, Real width,
-            int lev, bool anisotropic
-        );
+    //std::unique_ptr<BaseIF> make_wall(
+    //        int dir, // direction (long edge) of wall
+    //        Real position, Real height, Real width,
+    //        int lev, bool anisotropic
+    //    );
 
-    std::unique_ptr<BaseIF> make_cylinder(
-            int dir, // direction (orientation) of cylinder axis
-            Real radius, Real length, const RealVect & translation,
-            int lev, bool water_tight
-        );
+    //std::unique_ptr<BaseIF> make_cylinder(
+    //        int dir, // direction (orientation) of cylinder axis
+    //        Real radius, Real length, const RealVect & translation,
+    //        int lev, bool water_tight
+    //    );
 
-    std::unique_ptr<BaseIF> make_cone(int dir,
-            Real radius1, Real radius2, Real length, const RealVect & translation,
-            int lev, bool water_tight);
+    //std::unique_ptr<BaseIF> make_cone(int dir,
+    //        Real radius1, Real radius2, Real length, const RealVect & translation,
+    //        int lev, bool water_tight);
 
     void fill_levelset(int lev, bool use_walls, bool use_poly,
-                       const BaseIF & impfunc_walls, const BaseIF & impfunc_poly,
+                       const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
                        int max_level, int grid_size, bool eb_verbosity);
 
     void WriteEBSurface(int lev);
@@ -209,11 +213,13 @@ protected:
 private:
 
     void make_eb_general(int lev);
+    void make_eb_box      (int lev);
     void make_eb_cylinder(int lev);
     void make_eb_hopper(int lev);
     void make_eb_hourglass(int lev);
     void make_eb_clr(int lev);
     void make_eb_clr_riser(int lev);
+    void make_eb_regular  (int lev);
 
     void fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev);
 

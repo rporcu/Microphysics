@@ -34,7 +34,7 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "explicit_diffusion", explicit_diffusion );
 
         // If we are using the MAC-projected velocities, how should we discretize the
-        //  ugradu term.  
+        //  ugradu term.
         pp.query( "ugradu_type", ugradu_type );
 
         // Should we call set_epg to hard-wire the volume fraction
@@ -115,7 +115,7 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 }
 
-void 
+void
 mfix_level::Init(int lev, Real dt, Real time)
 {
     BL_ASSERT(max_level == 0);

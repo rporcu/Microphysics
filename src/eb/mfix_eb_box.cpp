@@ -4,26 +4,6 @@
 #include <AMReX_EB2_IF_Union.H>
 #include <AMReX_EB2_IF_Intersection.H>
 
-#include <AMReX_GeometryShop.H>
-#include <AMReX_SphereIF.H>
-#include <AMReX_PlaneIF.H>
-#include <AMReX_AllRegularService.H>
-#include <AMReX_FlatPlateGeom.H>
-#include <AMReX_EBISLayout.H>
-#include <AMReX_EBGraph.H>
-#include <AMReX_EBDebugOut.H>
-#include <AMReX_EBCellFAB.H>
-#include <AMReX_EBCellFactory.H>
-#include <AMReX_EBIndexSpace.H>
-#include <AMReX_UnionIF.H>
-#include <AMReX_TransformIF.H>
-#include <AMReX_ComplementIF.H>
-#include <AMReX_IntersectionIF.H>
-#include <AMReX_LatheIF.H>
-#include <AMReX_PolynomialIF.H>
-#include <AMReX_AnisotropicDxPlaneIF.H>
-#include <AMReX_AnisotropicIF.H>
-
 //#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
 //#include <sstream>
 
@@ -67,8 +47,8 @@ mfix_level::make_eb_box(int lev)
     if (geom[lev].isAllPeriodic() )
     {
         make_eb_regular(lev);
-    } 
-    else 
+    }
+    else
     {
         Real xlo = geom[lev].ProbLo(0) + offset;
         Real xhi = geom[lev].ProbHi(0) - offset;

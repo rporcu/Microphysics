@@ -7,26 +7,6 @@
 #include <AMReX_EB2_IF_Translation.H>
 #include <AMReX_EB2_IF_Rotation.H>
 
-#include <AMReX_GeometryShop.H>
-#include <AMReX_SphereIF.H>
-#include <AMReX_PlaneIF.H>
-#include <AMReX_AllRegularService.H>
-#include <AMReX_FlatPlateGeom.H>
-#include <AMReX_EBISLayout.H>
-#include <AMReX_EBGraph.H>
-#include <AMReX_EBDebugOut.H>
-#include <AMReX_EBCellFAB.H>
-#include <AMReX_EBCellFactory.H>
-#include <AMReX_EBIndexSpace.H>
-#include <AMReX_UnionIF.H>
-#include <AMReX_TransformIF.H>
-#include <AMReX_ComplementIF.H>
-#include <AMReX_IntersectionIF.H>
-#include <AMReX_LatheIF.H>
-#include <AMReX_PolynomialIF.H>
-#include <AMReX_AnisotropicDxPlaneIF.H>
-#include <AMReX_AnisotropicIF.H>
-
 //#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
 //#include <sstream>
 
