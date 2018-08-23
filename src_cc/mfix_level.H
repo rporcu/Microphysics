@@ -14,29 +14,9 @@
 
 #include <MFIXParticleContainer.H>
 
-#include <AMReX_GeometryShop.H>
-#include <AMReX_EBIndexSpace.H>
 #include <AMReX_EBFabFactory.H>
 #include <AMReX_EBTower.H>
 #include <AMReX_EBFArrayBox.H>
-
-#include <AMReX_GeometryShop.H>
-#include <AMReX_PlaneIF.H>
-#include <AMReX_AllRegularService.H>
-#include <AMReX_FlatPlateGeom.H>
-#include <AMReX_EBISLayout.H>
-#include <AMReX_EBGraph.H>
-#include <AMReX_EBDebugOut.H>
-#include <AMReX_EBCellFAB.H>
-#include <AMReX_EBCellFactory.H>
-#include <AMReX_EBIndexSpace.H>
-#include <AMReX_UnionIF.H>
-#include <AMReX_TransformIF.H>
-#include <AMReX_ComplementIF.H>
-#include <AMReX_IntersectionIF.H>
-#include <AMReX_LatheIF.H>
-#include <AMReX_PolynomialIF.H>
-
 #include <AMReX_EB_levelset.H>
 
 #include <MacProjection.H>
@@ -88,30 +68,6 @@ public:
     void make_mg_bc(int mg_bc[]);
 
     void make_eb_geometry (int lev);
-
-    std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
-    std::unique_ptr<BaseIF> get_real_walls(int lev, bool anisotropic, bool & has_real_walls);
-    std::unique_ptr<BaseIF> get_poly(int lev, int max_order, std::string field_prefix);
-
-    std::unique_ptr<BaseIF> make_wall(
-            int dir, // direction (long edge) of wall
-            Real position, Real height, Real width,
-            int lev, bool anisotropic
-        );
-
-    std::unique_ptr<BaseIF> make_cylinder(
-            int dir, // direction (orientation) of cylinder axis
-            Real radius, Real length, const RealVect & translation,
-            int lev, bool water_tight
-        );
-
-    std::unique_ptr<BaseIF> make_cone(int dir,
-            Real radius1, Real radius2, Real length, const RealVect & translation,
-            int lev, bool water_tight);
-
-    void fill_levelset(int lev, bool use_walls, bool use_poly,
-                       const BaseIF & impfunc_walls, const BaseIF & impfunc_poly,
-                       int max_level, int grid_size, bool eb_verbosity);
 
     void WriteEBSurface(int lev);
 

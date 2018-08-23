@@ -1,36 +1,14 @@
-#include <AMReX_GeometryShop.H>
-#include <AMReX_SphereIF.H>
-#include <AMReX_PlaneIF.H>
-#include <AMReX_AllRegularService.H>
-#include <AMReX_FlatPlateGeom.H>
-#include <AMReX_EBISLayout.H>
-#include <AMReX_EBGraph.H>
-#include <AMReX_EBDebugOut.H>
-#include <AMReX_EBCellFAB.H>
-#include <AMReX_EBCellFactory.H>
-#include <AMReX_EBIndexSpace.H>
-#include <AMReX_UnionIF.H>
-#include <AMReX_TransformIF.H>
-#include <AMReX_ComplementIF.H>
-#include <AMReX_IntersectionIF.H>
-#include <AMReX_LatheIF.H>
-#include <AMReX_PolynomialIF.H>
-#include <AMReX_AnisotropicDxPlaneIF.H>
-#include <AMReX_AnisotropicIF.H>
-
-//#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
-//#include <sstream>
 
 #include <algorithm>
 #include <AMReX_EB_levelset.H>
 #include <mfix_level.H>
 #include <mfix_eb_F.H>
 
+#if 0
 void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
                                const BaseIF & impfunc_walls, const BaseIF & impfunc_poly,
                                int max_level_here, int grid_size, bool eb_verbosity) 
 {
-
     // Do nothing if loading level-set from restart file:
     if(levelset__restart) return;
 
@@ -93,3 +71,4 @@ void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
         EBTower::Destroy();
     }
 }
+#endif
