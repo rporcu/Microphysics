@@ -38,17 +38,17 @@ mfix_level::Evolve(int lev, int nstep, int steady_state,  Real& dt, Real & prev_
          amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
       }
     }
-  
-    if (solve_fluid)  
+
+    if (solve_fluid)
     {
        EvolveFluidProjection(lev,nstep,steady_state,dt,time,stop_time);
        prev_dt = dt;
     }
-  
+
     // This returns the drag force on the particle
     if (solve_dem && solve_fluid)
         mfix_calc_drag_particle(lev);
-  
+
     if (solve_dem)
     {
         pc->EvolveParticles(lev, nstep, dt, time,

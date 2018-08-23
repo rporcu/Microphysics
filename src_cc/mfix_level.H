@@ -17,6 +17,13 @@
 #include <AMReX_EBFabFactory.H>
 #include <AMReX_EBTower.H>
 #include <AMReX_EBFArrayBox.H>
+
+#include <AMReX_EB2.H>
+#include <AMReX_EB2_IF_Plane.H>
+#include <AMReX_EB2_IF_Union.H>
+#include <AMReX_EB2_IF_Polynomial.H>
+#include <AMReX_EB2_IF_Translation.H>
+
 #include <AMReX_EB_levelset.H>
 
 #include <MacProjection.H>
