@@ -3,6 +3,10 @@
 #include <AMReX_EB2_IF_Plane.H>
 #include <AMReX_EB2_IF_Union.H>
 
+//#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
+//#include <sstream>
+
+#include <algorithm>
 #include <AMReX_EB_levelset.H>
 #include <mfix_level.H>
 #include <mfix_eb_F.H>

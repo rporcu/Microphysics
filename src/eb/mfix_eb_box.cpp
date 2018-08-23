@@ -4,6 +4,10 @@
 #include <AMReX_EB2_IF_Union.H>
 #include <AMReX_EB2_IF_Intersection.H>
 
+//#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
+//#include <sstream>
+
+#include <algorithm>
 #include <AMReX_EB_levelset.H>
 #include <mfix_level.H>
 #include <mfix_eb_F.H>
@@ -43,8 +47,8 @@ mfix_level::make_eb_box(int lev)
     if (geom[lev].isAllPeriodic() )
     {
         make_eb_regular(lev);
-    } 
-    else 
+    }
+    else
     {
         Real xlo = geom[lev].ProbLo(0) + offset;
         Real xhi = geom[lev].ProbHi(0) - offset;

@@ -21,6 +21,25 @@
 
 #include <MacProjection.H>
 
+
+using WallsIF = typename
+    EB2::TranslationIF<
+    EB2::UnionIF<
+        EB2::PlaneIF,
+        EB2::PlaneIF
+        >
+    >;
+
+using PolynomialIF = typename
+    EB2::TranslationIF<
+    EB2::PolynomialIF
+    >;
+
+
+
+
+
+
 class mfix_level
     : public AmrCore
 {
@@ -68,6 +87,30 @@ public:
     void make_mg_bc(int mg_bc[]);
 
     void make_eb_geometry (int lev);
+
+    //std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
+    //std::unique_ptr<BaseIF> get_real_walls(int lev, bool anisotropic, bool & has_real_walls);
+    //std::unique_ptr<BaseIF> get_poly(int lev, int max_order, std::string field_prefix);
+
+    //std::unique_ptr<BaseIF> make_wall(
+    //        int dir, // direction (long edge) of wall
+    //        Real position, Real height, Real width,
+    //        int lev, bool anisotropic
+    //    );
+
+    //std::unique_ptr<BaseIF> make_cylinder(
+    //        int dir, // direction (orientation) of cylinder axis
+    //        Real radius, Real length, const RealVect & translation,
+    //        int lev, bool water_tight
+    //    );
+
+    //std::unique_ptr<BaseIF> make_cone(int dir,
+    //        Real radius1, Real radius2, Real length, const RealVect & translation,
+    //        int lev, bool water_tight);
+
+    void fill_levelset(int lev, bool use_walls, bool use_poly,
+                       const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
+                       int max_level, int grid_size, bool eb_verbosity);
 
     void WriteEBSurface(int lev);
 

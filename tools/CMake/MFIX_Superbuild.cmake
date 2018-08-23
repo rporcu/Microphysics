@@ -44,7 +44,7 @@ set (AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX 
 
 option ( AMREX_ENABLE_EB "Build EB code" ON)
 
-option ( AMREX_ENABLE_GEOMETRYSHOP "Use the old GeometryShop instead of EB2" ON )
+option ( AMREX_ENABLE_GEOMETRYSHOP "Use the old GeometryShop instead of EB2" OFF )
 
 option ( AMREX_ENABLE_PIC "Build position-independent code" OFF)
 
