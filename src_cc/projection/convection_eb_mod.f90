@@ -493,7 +493,7 @@ contains
       end if
 
       ! First we compute the fluxes
-      call compute_convective_fluxes_y( lo, hi, fx, ulo, uhi, vel, vello, velhi, &
+      call compute_convective_fluxes_x( lo, hi, fx, ulo, uhi, vel, vello, velhi, &
            ep, elo, ehi, u, ulo, uhi, v, vlo, vhi, w, wlo, whi,                  &
            xslopes, slo, shi, afrac_x, axlo, axhi, cent_x, cxlo, cxhi,               &
            flags, flo, fhi, domlo, domhi, bc_ilo, bc_ihi, ng )
