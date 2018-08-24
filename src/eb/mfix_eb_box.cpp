@@ -39,7 +39,6 @@ mfix_level::make_eb_box(int lev)
     EB2::useEB2(true);
 
     int max_coarsening_level = 100;
-    Real offset    = 1.0e-8;
 
     amrex::Print() << " " << std::endl;
     amrex::Print() << "Now making the ebfactory's ..." << std::endl;
@@ -50,8 +49,19 @@ mfix_level::make_eb_box(int lev)
     }
     else
     {
-        Real xlo = geom[lev].ProbLo(0) + offset;
-        Real xhi = geom[lev].ProbHi(0) - offset;
+
+        ParmParse pp("box");
+
+        Vector<Real> boxLo(3), boxHi(3);
+        Real offset    = 1.0e-8;
+
+        pp.getarr("Lo",  boxLo,  0, 3);
+        pp.getarr("Hi",  boxHi,  0, 3);
+
+        pp.query("offset", offset);
+
+        Real xlo = boxLo[0] + offset;
+        Real xhi = boxHi[0] - offset;
 
         if (geom[lev].isPeriodic(0))
         {
@@ -59,17 +69,17 @@ mfix_level::make_eb_box(int lev)
             xhi = 2.0*geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
         }
 
-        Real ylo = geom[lev].ProbLo(1) + offset;
-        Real yhi = geom[lev].ProbHi(1) - offset;
+        Real ylo = boxLo[1] + offset;
+        Real yhi = boxHi[1] - offset;
 
         if (geom[lev].isPeriodic(1))
-        {
+          {
             ylo = 2.0*geom[lev].ProbLo(1) - geom[lev].ProbHi(1);
             yhi = 2.0*geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-        }
+          }
 
-        Real zlo = geom[lev].ProbLo(2) + offset;
-        Real zhi = geom[lev].ProbHi(2) - offset;
+        Real zlo = boxLo[2] + offset;
+        Real zhi = boxHi[2] - offset;
 
         if (geom[lev].isPeriodic(2))
         {
@@ -104,7 +114,7 @@ mfix_level::make_eb_box(int lev)
         auto gshop = EB2::makeShop(EB2::makeUnion(plane_lox,plane_hix,
                                                   plane_loy,plane_hiy,
                                                   plane_loz,plane_hiz ));
- 
+
         EB2::Build(gshop, geom.back(), max_level_here,
                    max_level_here+max_coarsening_level);
 
@@ -125,7 +135,7 @@ mfix_level::make_eb_box(int lev)
 
        amrex::Print() << "Done making the ebfactory's ..." << std::endl;
        amrex::Print() << " " << std::endl;
-    } 
+    }
 
     /****************************************************************************
      *                                                                          *
