@@ -1,3 +1,12 @@
+/********************************************************************************
+ *                                                                              *
+ * NOTE: after no longer using GeometryShop, this file will be deprecated       *
+ *       -> delete after it is no longer needed as reference                    *
+ *                                                                              *
+ ********************************************************************************/
+
+
+
 #include <algorithm>
 #include <AMReX_GeometryShop.H>
 #include <mfix_level.H>

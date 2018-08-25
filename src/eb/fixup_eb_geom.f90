@@ -1,3 +1,15 @@
+!*******************************************************************************!
+!                                                                               !
+! NOTE: after no longer using GeometryShop, this file will be deprecated        !
+!       -> delete after it is no longer needed as reference                     !
+!                                                                               !
+!*******************************************************************************!
+
+
+
+
+
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: mfix_fixup_eb_geom                                      !

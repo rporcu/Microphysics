@@ -58,11 +58,12 @@ extern "C"
             const amrex_real * dx,  const int * n_refine
         );
 
-    void mfix_fixup_eb_geom (const int* lo, const int* hi,
-                             const void* flag, const int* fglo, const int* fghi,
-                             const amrex_real* volfrac, const int* vlo, const int* vhi,
-                             const int* domlo, const int* domhi
-        );
+    // According to Weiqun `fix_up_geometry` is deprecated.
+    //void mfix_fixup_eb_geom (const int* lo, const int* hi,
+    //                         const void* flag, const int* fglo, const int* fghi,
+    //                         const amrex_real* volfrac, const int* vlo, const int* vhi,
+    //                         const int* domlo, const int* domhi
+    //    );
 
 #ifdef __cplusplus
 }

@@ -6,7 +6,8 @@
 #include <mfix_level.H>
 #include <mfix_eb_F.H>
 
-#if 0
+
+
 void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
                                const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
                                int max_level_here, int grid_size, bool eb_verbosity)
@@ -63,8 +64,10 @@ void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
                                            /* level_set->get_eb_ba(), level_set->get_eb_dm(), */
                                            {eb_pad, eb_pad, eb_pad}, EBSupport::full);
 
-        fix_up_geometry(& eb_factory_poly, lev);
+        // According to Weiqun `fix_up_geometry` is deprecated.
+        //fix_up_geometry(& eb_factory_poly, lev);
+
         level_set->intersection_ebf(eb_factory_poly, * mf_impfunc_poly);
     }
 }
-#endif
+

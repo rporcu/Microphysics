@@ -1,3 +1,13 @@
+/********************************************************************************
+ *                                                                              *
+ * NOTE: after no longer using GeometryShop, this file will be defunct          *
+ *       -> delete after it is no longer needed as reference                    *
+ *                                                                              *
+ ********************************************************************************/
+
+
+
+
 #include <AMReX_GeometryShop.H>
 #include <AMReX_SphereIF.H>
 #include <AMReX_PlaneIF.H>

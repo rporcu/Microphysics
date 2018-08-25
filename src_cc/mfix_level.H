@@ -95,6 +95,8 @@ public:
 
     void make_eb_geometry (int lev);
 
+    //NOTE: these are deprecated and replaced by make_eb_* (private member functions below)
+
     //std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
     //std::unique_ptr<BaseIF> get_real_walls(int lev, bool anisotropic, bool & has_real_walls);
     //std::unique_ptr<BaseIF> get_poly(int lev, int max_order, std::string field_prefix);
@@ -209,7 +211,8 @@ private:
     void make_eb_clr_riser(int lev);
     void make_eb_regular  (int lev);
 
-    void fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev);
+    // According to Weiqun `fix_up_geometry` is deprecated.
+    //void fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev);
 
     void check_data(int lev);
 

@@ -24,16 +24,16 @@ mfix_level::make_eb_box(int lev)
 
     int max_level_here = 0;
 
-    /***************************************************************************
-     *                                                                         *
-     * Build standard EB Factories                                             *
-     *                                                                         *
-     ***************************************************************************/
+    /****************************************************************************
+     *                                                                          *
+     * Build standard EB Factories                                              *
+     *                                                                          *
+     ****************************************************************************/
 
     // set up ebfactory
-    int m_eb_basic_grow_cells = nghost;
-    int m_eb_volume_grow_cells = nghost;
-    int m_eb_full_grow_cells = nghost;
+    int m_eb_basic_grow_cells    = nghost;
+    int m_eb_volume_grow_cells   = nghost;
+    int m_eb_full_grow_cells     = nghost;
     EBSupport m_eb_support_level = EBSupport::full;
 
     EB2::useEB2(true);
@@ -43,26 +43,36 @@ mfix_level::make_eb_box(int lev)
     amrex::Print() << " " << std::endl;
     amrex::Print() << "Now making the ebfactory's ..." << std::endl;
 
-    if (geom[lev].isAllPeriodic() )
+    if ( geom[lev].isAllPeriodic() )
     {
         make_eb_regular(lev);
     }
     else
     {
+        /************************************************************************
+         *                                                                      *
+         * Define Box geometry:                                                 *
+         *        -> box.{Lo,Hi} vector storing box lo/hi                       *
+         *        -> box.offset  vector storing box offset                      *
+         * NOTE: walls are placed _outside_ domain for periodic directions.     *
+         *                                                                      *
+         ************************************************************************/
 
         ParmParse pp("box");
 
         Vector<Real> boxLo(3), boxHi(3);
         Real offset    = 1.0e-8;
 
-        pp.getarr("Lo",  boxLo,  0, 3);
-        pp.getarr("Hi",  boxHi,  0, 3);
+        pp.getarr("Lo", boxLo,  0, 3);
+        pp.getarr("Hi", boxHi,  0, 3);
 
         pp.query("offset", offset);
 
         Real xlo = boxLo[0] + offset;
         Real xhi = boxHi[0] - offset;
 
+        // This ensures that the walls won't even touch the ghost cells. By
+        // putting them one domain width away
         if (geom[lev].isPeriodic(0))
         {
             xlo = 2.0*geom[lev].ProbLo(0) - geom[lev].ProbHi(0);
@@ -72,15 +82,19 @@ mfix_level::make_eb_box(int lev)
         Real ylo = boxLo[1] + offset;
         Real yhi = boxHi[1] - offset;
 
+        // This ensures that the walls won't even touch the ghost cells. By
+        // putting them one domain width away
         if (geom[lev].isPeriodic(1))
-          {
+        {
             ylo = 2.0*geom[lev].ProbLo(1) - geom[lev].ProbHi(1);
             yhi = 2.0*geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-          }
+        }
 
         Real zlo = boxLo[2] + offset;
         Real zhi = boxHi[2] - offset;
 
+        // This ensures that the walls won't even touch the ghost cells. By
+        // putting them one domain width away
         if (geom[lev].isPeriodic(2))
         {
             zlo = 2.0*geom[lev].ProbLo(2) - geom[lev].ProbHi(2);
@@ -111,27 +125,60 @@ mfix_level::make_eb_box(int lev)
         EB2::PlaneIF plane_loz(point_loz,normal_loz);
         EB2::PlaneIF plane_hiz(point_hiz,normal_hiz);
 
-        auto gshop = EB2::makeShop(EB2::makeUnion(plane_lox,plane_hix,
-                                                  plane_loy,plane_hiy,
-                                                  plane_loz,plane_hiz ));
+        auto gshop = EB2::makeShop(EB2::makeUnion(plane_lox, plane_hix,
+                                                  plane_loy, plane_hiy,
+                                                  plane_loz, plane_hiz ));
 
         EB2::Build(gshop, geom.back(), max_level_here,
                    max_level_here+max_coarsening_level);
 
         const EB2::IndexSpace& eb_is = EB2::IndexSpace::top();
-        const EB2::Level& eb_level = eb_is.getLevel(geom[lev]);
+        const EB2::Level& eb_level   = eb_is.getLevel(geom[lev]);
 
         if (solve_fluid)
-           ebfactory[lev].reset(new EBFArrayBoxFactory(eb_level,
+           ebfactory[lev].reset(new EBFArrayBoxFactory(
+                    eb_level,
                     geom[lev], grids[lev], dmap[lev],
                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                     m_eb_full_grow_cells}, m_eb_support_level));
+                     m_eb_full_grow_cells}, m_eb_support_level)
+            );
 
         if (solve_dem)
-           particle_ebfactory.reset(new EBFArrayBoxFactory(eb_level,
+        {
+           particle_ebfactory.reset(new EBFArrayBoxFactory(
+                    eb_level,
                     geom[lev], grids[lev], dmap[lev],
                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                     m_eb_full_grow_cells}, m_eb_support_level));
+                     m_eb_full_grow_cells}, m_eb_support_level)
+            );
+
+           /*********************************************************************
+            *                                                                   *
+            * Fill level-set:                                                   *
+            *                                                                   *
+            *********************************************************************/
+
+           amrex::Print() << "Creating the levelset ..." << std::endl;
+
+           GShopLSFactory<
+               EB2::UnionIF<
+                   EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF
+                   >> gshop_lsfactory(gshop, * level_set);
+
+           // Implicit function used by LSFactory => returned MF has the same DM as LSFactory
+           std::unique_ptr<MultiFab> mf_impfunc_box = gshop_lsfactory.fill_impfunc();
+           // Plane implicit function is already a signed distance function => it's
+           // just easier to fill the level-set this way
+           level_set->intersection_impfunc(* mf_impfunc_box);
+
+           // store copy of level set (for plotting).
+           std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+           ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
+           ls[lev]->FillBoundary(geom[lev].periodicity());
+
+           amrex::Print() << "Done making the levelset ..." << std::endl;
+
+        }
 
        amrex::Print() << "Done making the ebfactory's ..." << std::endl;
        amrex::Print() << " " << std::endl;
