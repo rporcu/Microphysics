@@ -130,7 +130,7 @@ mfix_level::make_eb_box(int lev)
                                                   plane_loz, plane_hiz ));
 
         EB2::Build(gshop, geom.back(), max_level_here,
-                   max_level_here+max_coarsening_level);
+                   max_level_here + max_coarsening_level);
 
         const EB2::IndexSpace& eb_is = EB2::IndexSpace::top();
         const EB2::Level& eb_level   = eb_is.getLevel(geom[lev]);
@@ -183,32 +183,4 @@ mfix_level::make_eb_box(int lev)
        amrex::Print() << "Done making the ebfactory's ..." << std::endl;
        amrex::Print() << " " << std::endl;
     }
-
-    /****************************************************************************
-     *                                                                          *
-     * Fill level-set:                                                          *
-     *                                                                          *
-     ****************************************************************************/
-
-#if 0
-    if (solve_dem)
-      {
-
-        amrex::Print() << "Creating the levelset ..." << std::endl;
-
-        bool eb_verbosity = true;
-        int grid_size = 16;
-
-        fill_levelset( lev, use_walls, use_poly2,
-                       * impfunc_walls_part.get(), * impfunc_poly2.get(),
-                       max_level_here, grid_size, eb_verbosity            );
-
-        // store copy of level set (for plotting).
-        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-        ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
-        ls[lev]->FillBoundary(geom[lev].periodicity());
-
-        amrex::Print() << "Done making the levelset ..." << std::endl;
-      }
-#endif
 }

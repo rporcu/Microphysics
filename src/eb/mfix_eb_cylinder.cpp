@@ -38,7 +38,7 @@ mfix_level::make_eb_cylinder(int lev)
      ****************************************************************************/
     bool inside       = true;
     bool close_bottom = true;
-    Real offset    = 1.0e-8;
+    Real offset       = 1.0e-8;
 
     Real radius    = 0.0002;
     Real height    = 0.0080;
@@ -52,15 +52,15 @@ mfix_level::make_eb_cylinder(int lev)
 
     pp.query("radius",     radius);
     pp.query("height",     height);
-    pp.query("direction", direction);
-    pp.getarr("center",   centervec,  0, 3);
-    Array<Real,3> center={centervec[0],centervec[1],centervec[2]};
+    pp.query("direction",  direction);
+    pp.getarr("center",    centervec,  0, 3);
+    Array<Real,3> center={centervec[0], centervec[1], centervec[2]};
 
-    /***************************************************************************
-     *                                                                         *
-     * Build standard EB Factories                                             *
-     *                                                                         *
-     ***************************************************************************/
+    /****************************************************************************
+     *                                                                          *
+     * Build standard EB Factories                                              *
+     *                                                                          *
+     ****************************************************************************/
 
     // dx : cell size used by EBIndexSpace
     Box domain(geom[lev].Domain());
@@ -83,22 +83,39 @@ mfix_level::make_eb_cylinder(int lev)
                                      << center[1] << ", "
                                      << center[2] << std::endl;
 
+
     // Create the cylinder -- used for both fluid and particles
+    amrex::Print() << "Building the cylinder (side wall) geometry ..." << std::endl;
+
     EB2::CylinderIF my_cyl(radius, height, direction, center, inside);
 
+    auto gshop_cyl = EB2::makeShop(my_cyl);
+    int max_coarsening_level = 100;
+    EB2::Build(gshop_cyl, geom.back(), max_level_here,
+               max_level_here + max_coarsening_level);
 
-   /****************************************************************************
-    *                                                                          *
-    * THIS FILLS PARTICLE EBFACTORY
-    *                                                                          *
-    ****************************************************************************/
+    const EB2::IndexSpace & ebis_cyl = EB2::IndexSpace::top();
+    const EB2::Level & ebis_lev_cyl  = ebis_cyl.getLevel(geom[lev]);
+
+    amrex::Print() << "Done building the cylinder geometry" << std::endl;
+
+    /****************************************************************************
+    *                                                                           *
+    * THIS FILLS PARTICLE EBFACTORY                                             *
+    * NOTE: the "bottom" plane is only applied to particles => fluid EBFactory  *
+    *       only needs the cylinder walls.                                      *
+    *                                                                           *
+    *****************************************************************************/
+
     if (solve_dem)
     {
        amrex::Print() << " " << std::endl;
-       amrex::Print() << "Now  making the particle ebfactory ..." << std::endl;
+       amrex::Print() << "Now making the particle ebfactory ..." << std::endl;
+
+       // Plane IF generator for bottom plane (defined iff close_bottom==true)
+       std::unique_ptr<GShopLSFactory<EB2::PlaneIF>> wall_lsfactory;
 
        if(close_bottom) {
-
          Array<Real,3> point{0.0, 0.0, 0.0};
          Array<Real,3> normal{0.0, 0.0, 0.0};
 
@@ -114,22 +131,22 @@ mfix_level::make_eb_cylinder(int lev)
                                          << normal[1] << ", "
                                          << normal[2] << std::endl;
 
-         EB2::PlaneIF my_plane(point,normal);
+         EB2::PlaneIF my_plane(point, normal);
 
-         auto gshop = EB2::makeShop(EB2::makeUnion(my_cyl,my_plane));
+         auto gshop = EB2::makeShop(EB2::makeUnion(my_cyl, my_plane));
          int max_coarsening_level = 100;
          EB2::Build(gshop, geom.back(), max_level_here,
-                    max_level_here+max_coarsening_level);
-       }
-       else {
-         auto gshop = EB2::makeShop(my_cyl);
-         int max_coarsening_level = 100;
-         EB2::Build(gshop, geom.back(), max_level_here,
-                    max_level_here+max_coarsening_level);
+                    max_level_here + max_coarsening_level);
+
+         EB2::GeometryShop<EB2::PlaneIF> gshop_wall = EB2::makeShop(my_plane);
+         wall_lsfactory.reset(
+                    new GShopLSFactory<EB2::PlaneIF>(gshop_wall, * level_set)
+            );
        }
 
-       const EB2::IndexSpace& eb_is = EB2::IndexSpace::top();
-       const EB2::Level& eb_level = eb_is.getLevel(geom[lev]);
+       // intercept the cylinder + plane level (if it is built)
+       const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+       const EB2::Level & eb_level   = eb_is.getLevel(geom[lev]);
 
        particle_ebfactory.reset(new EBFArrayBoxFactory(eb_level,
                    geom[lev], grids[lev], dmap[lev],
@@ -137,31 +154,56 @@ mfix_level::make_eb_cylinder(int lev)
                     m_eb_full_grow_cells}, m_eb_support_level)
             );
 
-//     eb_normals = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
+       //eb_normals = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
 
+       /*************************************************************************
+        *                                                                       *
+        * Fill level-set:                                                       *
+        *                                                                       *
+        *************************************************************************/
+
+       amrex::Print() << "Creating the levelset ..." << std::endl;
+
+       // If there is a bottom plane, fill level set with plane IF first
+       if(close_bottom) {
+           std::unique_ptr<MultiFab> mf_impfunc_wall
+               = wall_lsfactory->fill_impfunc();
+
+           level_set->intersection_impfunc(* mf_impfunc_wall);
+       }
+
+       GShopLSFactory<EB2::CylinderIF> cyl_lsfactory(gshop_cyl, * level_set);
+       std::unique_ptr<MultiFab> mf_impfunc_cyl = cyl_lsfactory.fill_impfunc();
+
+       int eb_grow = level_set->get_eb_pad();
+       EBFArrayBoxFactory eb_factory_cylinder(
+                    ebis_lev_cyl, geom[lev], level_set->get_eb_ba(), level_set->get_dm(),
+                    {eb_grow, eb_grow, eb_grow}, EBSupport::full
+            );
+
+       level_set->intersection_ebf(eb_factory_cylinder, * mf_impfunc_cyl );
+
+       // store copy of level set (for plotting).
+       std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+       ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
+       ls[lev]->FillBoundary(geom[lev].periodicity());
+
+       amrex::Print() << "Done making the levelset ..." << std::endl;
        amrex::Print() << "Done making the particle ebfactory ..." << std::endl;
        amrex::Print() << " " << std::endl;
     }
 
-   /****************************************************************************
-    *                                                                          *
-    * THIS FILLS FLUID EBFACTORY
-    *                                                                          *
-    ****************************************************************************/
+    /****************************************************************************
+    *                                                                           *
+    * THIS FILLS FLUID EBFACTORY                                                *
+    *                                                                           *
+    *****************************************************************************/
 
     if (solve_fluid)
     {
        amrex::Print() << "Now  making the fluid ebfactory ..." << std::endl;
 
-       auto gshop = EB2::makeShop(my_cyl);
-       int max_coarsening_level = 100;
-       EB2::Build(gshop, geom.back(), max_level_here,
-                  max_level_here+max_coarsening_level);
-
-       const EB2::IndexSpace& eb_is = EB2::IndexSpace::top();
-       const EB2::Level& eb_level = eb_is.getLevel(geom[lev]);
-
-       ebfactory[lev].reset(new EBFArrayBoxFactory(eb_level,
+       ebfactory[lev].reset(new EBFArrayBoxFactory(ebis_lev_cyl,
                    geom[lev], grids[lev], dmap[lev],
                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                     m_eb_full_grow_cells}, m_eb_support_level)
@@ -169,34 +211,4 @@ mfix_level::make_eb_cylinder(int lev)
 
        amrex::Print() << "Done making the fluid ebfactory ..." << std::endl;
     }
-
-
-
-    /****************************************************************************
-     *                                                                          *
-     * Fill level-set:                                                          *
-     *                                                                          *
-     ****************************************************************************/
-
-#if 0
-    if (solve_dem)
-      {
-
-        amrex::Print() << "Creating the levelset ..." << std::endl;
-
-        bool eb_verbosity = true;
-        int grid_size = 16;
-
-        fill_levelset( lev, use_walls, use_poly2,
-                       * impfunc_walls_part.get(), * impfunc_poly2.get(),
-                       max_level_here, grid_size, eb_verbosity            );
-
-        // store copy of level set (for plotting).
-        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-        ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
-        ls[lev]->FillBoundary(geom[lev].periodicity());
-
-        amrex::Print() << "Done making the levelset ..." << std::endl;
-      }
-#endif
 }
