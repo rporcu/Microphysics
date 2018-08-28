@@ -14,6 +14,7 @@
 
 
 /********************************************************************************
+ *                                                                              *
  * Function to create a simple cylinder EB.                                     *
  *                                                                              *
  * Comments: The cylinder can either be closed or open at the bottom. At this   *

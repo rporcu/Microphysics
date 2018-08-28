@@ -4,20 +4,21 @@
 #include <mfix_eb_F.H>
 
 
-/****************************************************************************
- * Function to create a simple rectangular box with EB walls.               *
- *                                                                          *
- ****************************************************************************/
+/********************************************************************************
+ *                                                                              *
+ * Placeholder: create a simulation box _without_ EB walls.                     *
+ *                                                                              *
+ ********************************************************************************/
 void
 mfix_level::make_eb_regular(int lev)
 {
     int max_level_here = 0;
 
-    /***************************************************************************
-     *                                                                         *
-     * Build standard EB Factories                                             *
-     *                                                                         *
-     ***************************************************************************/
+    /****************************************************************************
+     *                                                                          *
+     * Build standard EB Factories                                              *
+     *                                                                          *
+     ****************************************************************************/
 
     // set up ebfactory
     int m_eb_basic_grow_cells = nghost;
@@ -35,10 +36,10 @@ mfix_level::make_eb_regular(int lev)
     EB2::AllRegularIF my_regular;
     auto gshop = EB2::makeShop(my_regular);
     EB2::Build(gshop, geom.back(), max_level_here,
-               max_level_here+max_coarsening_level);
+               max_level_here + max_coarsening_level);
 
-    const EB2::IndexSpace& eb_is = EB2::IndexSpace::top();
-    const EB2::Level& eb_level = eb_is.getLevel(geom[lev]);
+    const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+    const EB2::Level & eb_level = eb_is.getLevel(geom[lev]);
 
     if (solve_fluid)
        ebfactory[lev].reset(new EBFArrayBoxFactory(eb_level,
@@ -46,9 +47,30 @@ mfix_level::make_eb_regular(int lev)
                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                  m_eb_full_grow_cells}, m_eb_support_level));
 
-    if (solve_dem)
+    if (solve_dem) {
        particle_ebfactory.reset(new EBFArrayBoxFactory(eb_level,
                 geom[lev], grids[lev], dmap[lev],
                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                  m_eb_full_grow_cells}, m_eb_support_level));
+
+
+       /*************************************************************************
+        *                                                                       *
+        * Fill level-set:                                                       *
+        * NOTE: this is necessary so that the ls_data MultiFab (as well as the  *
+        *       level_set LSFactory is not full of junk. This will break if     *
+        *       particle radius > 1                                             *
+        *                                                                       *
+        *************************************************************************/
+
+       GShopLSFactory<EB2::AllRegularIF> reg_lsfactory(gshop, * level_set);
+       std::unique_ptr<MultiFab> mf_impfunc = reg_lsfactory.fill_impfunc();
+
+       level_set->intersection_impfunc( * mf_impfunc);
+
+       // store copy of level set (for plotting).
+       std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+       ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
+       ls[lev]->FillBoundary(geom[lev].periodicity());
+    }
 }

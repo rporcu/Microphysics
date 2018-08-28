@@ -159,6 +159,9 @@ mfix_level::make_eb_hopper(int lev)
 
        amrex::Print() << "Creating the levelset ..." << std::endl;
 
+       // neat trick: `decltype(my_hopper)` returns the IF data type of the
+       // hopper (which otherwise would be a long template string of compounded
+       // IFs ...). Together with `auto`, this lets use be more suspect.
        GShopLSFactory<decltype(my_hopper)> gshop_lsfactory(gshop, * level_set);
        std::unique_ptr<MultiFab> mf_impfunc = gshop_lsfactory.fill_impfunc();
 
