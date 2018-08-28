@@ -198,7 +198,7 @@ mfix_level::make_eb_general(int lev)
 
     if (solve_dem)
     {
-   
+
        amrex::Print() << "Creating the levelset ..." << std::endl;
 
        fill_levelset( lev, use_walls, use_poly2,

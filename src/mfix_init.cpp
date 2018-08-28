@@ -115,7 +115,7 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in,
     }
 }
 
-void 
+void
 mfix_level::Init(int lev, Real dt, Real time)
 {
     BL_ASSERT(max_level == 0);
@@ -202,7 +202,7 @@ mfix_level::Init(int lev, Real dt, Real time)
 			       &bc_klo, &bc_khi );
 }
 
-BoxArray 
+BoxArray
 mfix_level::MakeBaseGrids() const
 {
     BoxArray ba(geom[0].Domain());
