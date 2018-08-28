@@ -43,7 +43,7 @@ mfix_level::make_eb_geometry (int lev)
   // Avoid multiple (ambiguous) inputs
   if (hourglass || clr || clr_riser) {
       if (! geom_type.empty()) {
-          amrex::Abort("The input file cannot specify both: \n"
+          amrex::Abort("The input file cannot specify both:\n"
                        "mfix.<geom_type>=true and mfix.geometry=<geom_type>\n"
                        "at the same time."                                     );
       }

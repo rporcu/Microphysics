@@ -13,19 +13,19 @@
 #include <mfix_eb_F.H>
 
 
-/****************************************************************************
- * Function to create a simple cylinder EB.                                 *
- *                                                                          *
- * Comments: The cylinder can either be closed or open at the bottom. At    *
- * this time, there is no option to put a "lid" on the top of the cylinder. *
- *                                                                          *
- * The bottom of the cylinder is only applied to particles. This allows for *
- * the fluid to not have an EB surface generated that would block gas flow  *
- * from a mass inflow boundary. A more general implementation would check   *
- * the mfix.dat file for inflows and outflows and correctly cap the top and *
- * bottom of the cylinder.                                                  *
- *                                                                          *
- ****************************************************************************/
+/********************************************************************************
+ * Function to create a simple cylinder EB.                                     *
+ *                                                                              *
+ * Comments: The cylinder can either be closed or open at the bottom. At this   *
+ * time, there is no option to put a "lid" on the top of the cylinder.          *
+ *                                                                              *
+ * The bottom of the cylinder is only applied to particles. This allows for the *
+ * fluid to not have an EB surface generated that would block gas flow from a   *
+ * mass inflow boundary. A more general implementation would check the mfix.dat *
+ * file for inflows and outflows and correctly cap the top and bottom of the    *
+ * cylinder.                                                                    *
+ *                                                                              *
+ ********************************************************************************/
 void
 mfix_level::make_eb_cylinder(int lev)
 {
@@ -61,9 +61,6 @@ mfix_level::make_eb_cylinder(int lev)
      * Build standard EB Factories                                              *
      *                                                                          *
      ****************************************************************************/
-
-    // dx : cell size used by EBIndexSpace
-    Box domain(geom[lev].Domain());
 
     // set up ebfactory
     int m_eb_basic_grow_cells = nghost;
