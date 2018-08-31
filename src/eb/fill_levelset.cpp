@@ -1,3 +1,14 @@
+/********************************************************************************
+ *                                                                              *
+ * NOTE: after no longer using GeometryShop, this file will be defunct          *
+ *       -> delete after it is no longer needed as reference                    *
+ *                                                                              *
+ ********************************************************************************/
+
+
+
+
+
 //#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
 //#include <sstream>
 

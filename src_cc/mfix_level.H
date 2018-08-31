@@ -20,29 +20,13 @@
 
 #include <AMReX_EB2.H>
 #include <AMReX_EB2_IF_Plane.H>
-#include <AMReX_EB2_IF_Union.H>
 #include <AMReX_EB2_IF_Polynomial.H>
 #include <AMReX_EB2_IF_Translation.H>
+#include <mfix_eb_if.H>
 
 #include <AMReX_EB_levelset.H>
 
 #include <MacProjection.H>
-
-
-using WallsIF = typename
-    EB2::TranslationIF<
-    EB2::UnionIF<
-        EB2::PlaneIF,
-        EB2::PlaneIF
-        >
-    >;
-
-using PolynomialIF = typename
-    EB2::TranslationIF<
-    EB2::PolynomialIF
-    >;
-
-
 
 
 
@@ -97,9 +81,13 @@ public:
 
     //NOTE: these are deprecated and replaced by make_eb_* (private member functions below)
 
-    //std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
-    //std::unique_ptr<BaseIF> get_real_walls(int lev, bool anisotropic, bool & has_real_walls);
-    //std::unique_ptr<BaseIF> get_poly(int lev, int max_order, std::string field_prefix);
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(int lev, bool & has_walls);
+
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls(int lev, bool & has_real_walls);
+
+    std::unique_ptr<
+        EB2::TranslationIF<EB2::PolynomialIF>
+    > get_poly(int lev, int max_order, std::string field_prefix);
 
     //std::unique_ptr<BaseIF> make_wall(
     //        int dir, // direction (long edge) of wall
@@ -117,9 +105,9 @@ public:
     //        Real radius1, Real radius2, Real length, const RealVect & translation,
     //        int lev, bool water_tight);
 
-    void fill_levelset(int lev, bool use_walls, bool use_poly,
-                       const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
-                       int max_level, int grid_size, bool eb_verbosity);
+    //void fill_levelset(int lev, bool use_walls, bool use_poly,
+    //                   const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
+    //                   int max_level, int grid_size, bool eb_verbosity);
 
     void WriteEBSurface(int lev);
 
@@ -137,11 +125,11 @@ public:
     ///
     /// Parameters describing the level-set grid:
     ///
-    int levelset__refinement = 1;     // refinement (wrt particle grid) of the level-set's grid
-    int levelset__eb_refinement = 1;  // refinement (wrt particle grid) of the EB facets used to generate the level-set
-    int levelset__pad = 2;            // padding of the level-set grid
-    int levelset__eb_pad = 2;         // padding of the EBIS used to generate the level-set (particularly useful for
-                                      // ensuring that edge-cased occur well outside the physical domain)
+    int levelset__refinement = 1;    // refinement (wrt particle grid) of the level-set's grid
+    int levelset__eb_refinement = 1; // refinement (wrt particle grid) of the EB facets used to generate the level-set
+    int levelset__pad = 2;           // padding of the level-set grid
+    int levelset__eb_pad = 2;        // padding of the EBIS used to generate the level-set (particularly useful for
+                                     // ensuring that edge-cased occur well outside the physical domain)
 
 protected:
 

@@ -1,7 +1,7 @@
-#include <AMReX_EB2.H>
-#include <AMReX_EB2_IF_Cylinder.H>
-#include <AMReX_EB2_IF_Plane.H>
-#include <AMReX_EB2_IF_Union.H>
+//#include <AMReX_EB2.H>
+//#include <AMReX_EB2_IF_Cylinder.H>
+//#include <AMReX_EB2_IF_Plane.H>
+//#include <AMReX_EB2_IF_Union.H>
 
 //#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
 //#include <sstream>
@@ -17,7 +17,7 @@ mfix_level::make_eb_geometry (int lev)
 
   /******************************************************************************
    * mfix.geometry=<string> specifies the EB geometry. <string> can be on of    *
-   * box, cylinder, hopper, clr, clr_riser (or nothing)                         *
+   * box, cylinder, hopper, clr, clr_riser, general (or blank)                  *
    ******************************************************************************/
 
   ParmParse pp("mfix");
@@ -75,17 +75,16 @@ mfix_level::make_eb_geometry (int lev)
   if (geom_type == "box") {
     amrex::Print() << "\n Building box geometry." << std::endl;
     make_eb_box(lev);
-  }
-  else if (geom_type == "cylinder") {
+  } else if (geom_type == "cylinder") {
     amrex::Print() << "\n Building cylinder geometry." << std::endl;
     make_eb_cylinder(lev);
-
-  }
-  else if (geom_type == "hopper") {
+  } else if (geom_type == "hopper") {
     amrex::Print() << "\n Building hopper geometry." << std::endl;
     make_eb_hopper(lev);
-  }
-  else {
+  } else if(geom_type == "general") {
+    amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
+    make_eb_general(lev);
+  } else {
     amrex::Print() << "\n No EB geometry in this problem." << std::endl;
     make_eb_regular(lev);
   }

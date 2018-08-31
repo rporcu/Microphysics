@@ -1,12 +1,14 @@
+CEXE_sources += mfix_eb_if.H
+CEXE_sources += get_walls.cpp
 f90EXE_sources += get_eb_walls.f90
 f90EXE_sources += eb_interpolation_mod.f90
 
-CEXE_sources += fill_levelset.cpp
 CEXE_sources += mfix_eb.cpp
 CEXE_sources += writeEBsurface.cpp
 CEXE_sources += mfix_eb_box.cpp
 CEXE_sources += mfix_eb_cylinder.cpp
 CEXE_sources += mfix_eb_hopper.cpp
 CEXE_sources += mfix_eb_regular.cpp
+CEXE_sources += mfix_eb_general.cpp
 
 FEXE_headers += mfix_eb_F.H
