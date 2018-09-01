@@ -68,8 +68,6 @@ mfix_level::make_eb_cylinder(int lev)
     int m_eb_full_grow_cells = nghost;
     EBSupport m_eb_support_level = EBSupport::full;
 
-    EB2::useEB2(true);
-
     amrex::Print() << " " << std::endl;
     amrex::Print() << " Internal Flow: " << inside << std::endl;
     amrex::Print() << " Radius:    " << radius    << std::endl;

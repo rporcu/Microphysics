@@ -26,7 +26,7 @@ enable_language (Fortran)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER   777a7c4241cb82437e06aabd7dfe0a32d4 )
-set (AMREX_GIT_COMMIT_DEVELOP  bbbd62fe30625e5da44b1ad02468fc294cec4e5d )
+set (AMREX_GIT_COMMIT_DEVELOP  090beb27d1248a961930c9105ad9ccb242e4fe0f )
 
 set (AMREX_GIT_TAG)  # The commit id or branch to download
 
@@ -43,8 +43,6 @@ set (AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags fo
 set (AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
 
 option ( AMREX_ENABLE_EB "Build EB code" ON)
-
-option ( AMREX_ENABLE_GEOMETRYSHOP "Use the old GeometryShop instead of EB2" OFF )
 
 option ( AMREX_ENABLE_PIC "Build position-independent code" OFF)
 
@@ -119,7 +117,6 @@ ExternalProject_Add ( amrex
    -DENABLE_AMRDATA=ON # Needed to compile postprocessing tools
    -DENABLE_LINEAR_SOLVERS=ON
    -DENABLE_EB=${AMREX_ENABLE_EB}
-   -DENABLE_GEOMETRYSHOP=${AMREX_ENABLE_GEOMETRYSHOP}
    -DENABLE_FORTRAN_INTERFACES=OFF
    -DENABLE_BASE_PROFILE=${AMREX_ENABLE_BASE_PROFILE}
    -DENABLE_TINY_PROFILE=${AMREX_ENABLE_TINY_PROFILE}

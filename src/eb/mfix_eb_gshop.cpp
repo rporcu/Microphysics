@@ -229,8 +229,6 @@ mfix_level::make_eb_general(int lev)
     int m_eb_full_grow_cells = nghost;
     EBSupport m_eb_support_level = EBSupport::full;
 
-    EB2::useEB2(true);
-
     if (solve_dem)
     {
        amrex::Print() << " " << std::endl;

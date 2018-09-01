@@ -15,7 +15,7 @@
 #include <MFIXParticleContainer.H>
 
 #include <AMReX_EBFabFactory.H>
-#include <AMReX_EBTower.H>
+
 #include <AMReX_EBFArrayBox.H>
 
 #include <AMReX_EB2.H>

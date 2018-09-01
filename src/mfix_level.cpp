@@ -23,14 +23,6 @@ EBSupport mfix_level::m_eb_support_level = EBSupport::full;
 
 mfix_level::~mfix_level ()
 {
-   for ( int lev = 0; lev <= finestLevel(); ++lev )
-   {
-      if (ebfactory[lev] != NULL)
-      {
-         EBTower::Destroy();
-         break;
-      }
-   }
 };
 
 

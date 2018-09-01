@@ -51,7 +51,7 @@ set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
 
 
 # Import AMReX. Do it here so it is visibile to all targets
-find_package (AMReX 18 REQUIRED HINTS ${AMREX_INSTALL_DIR})
+find_package (AMReX REQUIRED HINTS ${AMREX_INSTALL_DIR})
 echo_amrex_config_options ()
 
 if ( NOT ( AMREX_ENABLE_PARTICLES AND AMREX_ENABLE_AMRDATA
