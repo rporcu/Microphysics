@@ -46,7 +46,7 @@ mfix_level::make_eb_regular(int lev)
                  m_eb_full_grow_cells}, m_eb_support_level));
 
     if (solve_dem) {
-       particle_ebfactory.reset(new EBFArrayBoxFactory(eb_level,
+       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(eb_level,
                 geom[lev], grids[lev], dmap[lev],
                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                  m_eb_full_grow_cells}, m_eb_support_level));

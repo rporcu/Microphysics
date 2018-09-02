@@ -470,7 +470,7 @@ private:
     Vector< std::string > chkscaVarsName;
 
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
-    std::unique_ptr<amrex::EBFArrayBoxFactory> particle_ebfactory;
+    Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 
     // stores eb_normals (commond index-space with cells)
     std::unique_ptr<MultiFab> eb_normals;

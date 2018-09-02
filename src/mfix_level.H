@@ -135,7 +135,7 @@ protected:
 
     //! Tagging cells for refinement
     virtual void ErrorEst(int lev, amrex::TagBoxArray& tags, amrex::Real time, int /*ngrow*/) override
-        { amrex::Abort("ErrorEst: To be implemented"); }
+    { amrex::Abort("ErrorEst: To be implemented"); }
 
     //! Make a new level using provided BoxArray and
     //! DistributionMapping and fill with interpolated coarse level
@@ -507,8 +507,15 @@ private:
     Vector< const Vector< std::unique_ptr<MultiFab> >* > pltscalarVars;
     Vector< std::string > chkscaVarsName;
 
+
+    /****************************************************************************
+     *                                                                          *
+     * EB Data (including level-set data)                                       *
+     *                                                                          *
+     ****************************************************************************/
+
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
-    std::unique_ptr<amrex::EBFArrayBoxFactory> particle_ebfactory;
+    Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 
     // stores eb_normals (commond index-space with cells)
     std::unique_ptr<MultiFab> eb_normals;

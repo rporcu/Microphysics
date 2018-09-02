@@ -140,13 +140,13 @@ mfix_level::make_eb_hopper(int lev)
        amrex::Print() << " " << std::endl;
        amrex::Print() << "Now  making the particle ebfactory ..." << std::endl;
 
-       particle_ebfactory.reset(new EBFArrayBoxFactory(eb_level,
+       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(eb_level,
                    geom[lev], grids[lev], dmap[lev],
                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                     m_eb_full_grow_cells}, m_eb_support_level)
             );
 
-       //eb_normals = pc->EBNormals(lev, particle_ebfactory.get(), dummy.get());
+       //eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
 
        /*************************************************************************
         *                                                                       *
