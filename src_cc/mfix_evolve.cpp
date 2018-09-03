@@ -7,7 +7,7 @@
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
-mfix_level::Evolve(int lev, int nstep, int steady_state,  Real& dt, Real & prev_dt, 
+mfix_level::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_dt,
                    Real time, Real stop_time)
 {
     BL_PROFILE_REGION_START("mfix::Evolve");
@@ -52,7 +52,7 @@ mfix_level::Evolve(int lev, int nstep, int steady_state,  Real& dt, Real & prev_
     if (solve_dem)
     {
         pc->EvolveParticles(lev, nstep, dt, time,
-                            particle_ebfactory.get(), eb_normals.get(),
+                            particle_ebfactory[lev].get(), eb_normals.get(),
                             level_set->get_data(), level_set->get_valid(), level_set->get_ls_ref(),
                             dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io
 	    );

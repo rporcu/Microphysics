@@ -437,25 +437,26 @@ mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, R
 
   if (solve_dem) {
 
-     // Auto generated particles may be out of the domain. This call will remove them.
-     // Note that this has to occur after the EB geometry is created.
-     if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory)
+     // Auto generated particles may be out of the domain. This call will remove
+     // them. Note that this has to occur after the EB geometry is created.
+     if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory[lev])
      {
        amrex::Print() << "Clean up auto-generated particles.\n";
-       pc -> RemoveOutOfRange(lev, particle_ebfactory.get(),
-                                 level_set->get_data(),
-                                 level_set->get_valid(),
-                                 level_set->get_ls_ref());
+       pc -> RemoveOutOfRange(lev, particle_ebfactory[lev].get(),
+                              level_set->get_data(),
+                              level_set->get_valid(),
+                              level_set->get_ls_ref());
 
 
      }
- 
-     // We need to do this *after* restart (hence putting this here not in Init) because
-     //    we may want to move from KDTree to Knapsack, or change the particle_max_grid_size on restart.
+
+     // We need to do this *after* restart (hence putting this here not in Init)
+     // because we may want to move from KDTree to Knapsack, or change the
+     // particle_max_grid_size on restart.
      if (load_balance_type == "KnapSack" &&
          dual_grid && particle_max_grid_size_x > 0
                    && particle_max_grid_size_y > 0
-                   && particle_max_grid_size_z > 0) 
+                   && particle_max_grid_size_z > 0)
      {
          BoxArray particle_ba(geom[lev].Domain());
          IntVect particle_max_grid_size(particle_max_grid_size_x,
@@ -465,7 +466,7 @@ mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, R
          DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
          pc->Regrid(particle_dm, particle_ba);
      }
- 
+
      Real avg_dp[10], avg_ro[10];
      pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
      init_collision(avg_dp, avg_ro);
@@ -474,7 +475,7 @@ mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, R
   // Define the MultiFab dummy which we pass into some MFIXParticleContainer routines.
   if (solve_dem)
      dummy->define(pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev), 1, 0,
-                   MFInfo(), *particle_ebfactory);
+                   MFInfo(), * particle_ebfactory[lev]);
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
   if (solve_fluid)

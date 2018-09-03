@@ -431,8 +431,9 @@ mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, R
                                    level_set->get_ls_ref());
         }
 
-       // We need to do this *after* restart (hence putting this here not in Init) because
-       //    we may want to move from KDTree to Knapsack, or change the particle_max_grid_size on restart.
+       // We need to do this *after* restart (hence putting this here not in
+       // Init) because we may want to move from KDTree to Knapsack, or change
+       // the particle_max_grid_size on restart.
        if (load_balance_type == "KnapSack" &&
            dual_grid && particle_max_grid_size_x > 0
                      && particle_max_grid_size_y > 0
@@ -454,8 +455,8 @@ mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, R
 
     // Define the MultiFab dummy which we pass into some MFIXParticleContainer routines.
     if (solve_dem)
-       dummy->define(pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev), 1, 0, 
-                     MFInfo(), *particle_ebfactory);
+       dummy->define(pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev), 1, 0,
+                     MFInfo(), * particle_ebfactory[lev]);
 
     // Initial fluid arrays: pressure, velocity, density, viscosity
     if (solve_fluid)
@@ -472,7 +473,7 @@ mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, R
     }
 }
 
-void 
+void
 mfix_level::MakeBCArrays()
 {
     // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
