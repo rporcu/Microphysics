@@ -117,6 +117,10 @@ ExternalProject_Add ( amrex
    -DENABLE_AMRDATA=ON # Needed to compile postprocessing tools
    -DENABLE_LINEAR_SOLVERS=ON
    -DENABLE_EB=${AMREX_ENABLE_EB}
+<<<<<<< HEAD
+=======
+   -DENABLE_GEOMETRYSHOP=${AMREX_ENABLE_GEOMETRYSHOP}
+>>>>>>> develop
    -DENABLE_FORTRAN_INTERFACES=OFF
    -DENABLE_BASE_PROFILE=${AMREX_ENABLE_BASE_PROFILE}
    -DENABLE_TINY_PROFILE=${AMREX_ENABLE_TINY_PROFILE}
@@ -173,10 +177,9 @@ ExternalProject_Add ( mfix
    INSTALL_COMMAND ""
    )
 
-# When using superbuild, the compile commands databases do not exist
-# before compile-time.
-# Hence create a new build target (compile_dB) which collects both
-# mfix's and amrex's compile_commands.json, concatenates them in the
+# When using superbuild, the compile commands databases do not exist before
+# compile-time.  Hence create a new build target (compile_db) which collects
+# both mfix's and amrex's compile_commands.json, concatenates them in the
 # project's root directory
 add_custom_target( compile_db
     # First take mfix's compile database (compile_commands.json) and:

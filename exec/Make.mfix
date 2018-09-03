@@ -6,7 +6,6 @@ USE_EB        = TRUE
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
-
 #These are the directories in mfix
 
 Bdirs 	:= src
