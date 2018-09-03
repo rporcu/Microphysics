@@ -514,6 +514,9 @@ private:
      *                                                                          *
      ****************************************************************************/
 
+    const EB2::Level * eb_level_fluid;
+    const EB2::Level * eb_level_particles;
+
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 

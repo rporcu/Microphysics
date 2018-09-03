@@ -141,15 +141,16 @@ mfix_level::make_eb_cylinder(int lev)
 
        // intercept the cylinder + plane level (if it is built)
        const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
-       const EB2::Level & eb_level   = eb_is.getLevel(geom[lev]);
+       eb_level_particles = & eb_is.getLevel(geom[lev]);
 
-       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(eb_level,
+       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(
+                   * eb_level_particles,
                    geom[lev], grids[lev], dmap[lev],
                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                     m_eb_full_grow_cells}, m_eb_support_level)
             );
 
-       //eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
+       eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
 
        /*************************************************************************
         *                                                                       *
@@ -198,7 +199,10 @@ mfix_level::make_eb_cylinder(int lev)
     {
        amrex::Print() << "Now  making the fluid ebfactory ..." << std::endl;
 
-       ebfactory[lev].reset(new EBFArrayBoxFactory(ebis_lev_cyl,
+       eb_level_fluid = & ebis_lev_cyl;
+
+       ebfactory[lev].reset(new EBFArrayBoxFactory(
+                   * eb_level_fluid,
                    geom[lev], grids[lev], dmap[lev],
                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                     m_eb_full_grow_cells}, m_eb_support_level)
