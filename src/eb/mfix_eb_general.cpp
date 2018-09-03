@@ -85,6 +85,68 @@ mfix_level::make_eb_general(int lev) {
 
         divider = make_wall(div_dir, div_pos, div_height, div_width);
     }
+
+
+    /***************************************************************************
+     *                                                                         *
+     * Build EB Factories                                                      *
+     *                                                                         *
+     ***************************************************************************/
+    if (solve_dem) {
+        amrex::Print() << "Making the particle ebfactory ..." << std::endl;
+
+        if (use_poly2) {
+            if (has_walls && use_divider) { // ... poly2 + walls + divider
+                auto gshop = EB2::makeShop(EB2::makeUnion(* impfunc_poly2,
+                                                          * impfunc_walls_part,
+                                                          * divider )
+                                           );
+            } else if (has_walls) { // ........... poly2 + walls + ! divider
+
+            } else if (use_divider) { // ......... poly2 + ! walls + divider
+
+            } else { // .......................... poly2 + ! walls + ! divider
+
+            }
+        } else {
+            if (has_walls && use_divider) { // ... ! poly2 + walls + divider
+
+            } else if (has_walls) { // ........... ! poly2 + walls + ! divider
+
+            } else if (use_divider) { // ......... ! poly2 + ! walls + divider
+
+            } else { // .......................... ! poly2 + ! walls + ! divider
+
+            }
+
+        }
+
+
+        amrex::Print() << "Done making the particle ebfactory ..." << std::endl;
+    }
+
+    if (solve_fluid) {
+
+
+    }
+
+    /****************************************************************************
+     *                                                                          *
+     * Fill level-set:                                                          *
+     *                                                                          *
+     ****************************************************************************/
+    if (solve_dem) {
+        amrex::Print() << "Creating the levelset ..." << std::endl;
+
+
+        // store copy of level set (for plotting).
+        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+        ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
+        ls[lev]->FillBoundary(geom[lev].periodicity());
+
+        amrex::Print() << "Done making the levelset ..." << std::endl;
+    }
+
 }
 
 

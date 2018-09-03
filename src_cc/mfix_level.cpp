@@ -75,7 +75,7 @@ mfix_level::ResizeArrays ()
     // RHS and solution arrays for diffusive solve
     rhs_diff.resize(nlevs_max);
     phi_diff.resize(nlevs_max);
-    
+
     // Current (vel_g) and old (vel_go) velocities
     vel_g.resize(nlevs_max);
     vel_go.resize(nlevs_max);
@@ -111,14 +111,15 @@ mfix_level::ResizeArrays ()
     for (int i = 0; i < nlevs_max; ++i ) {
         bcoeff_diff[i].resize(3);
     }
-    
-    if (solve_dem) 
+
+    if (solve_dem)
        particle_cost.resize(nlevs_max);
-    if (solve_fluid) 
+    if (solve_fluid)
        fluid_cost.resize(nlevs_max);
 
     // EB factory
     ebfactory.resize(nlevs_max);
+    particle_ebfactory.resize(nlevs_max);
 }
 
 void
