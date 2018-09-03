@@ -452,7 +452,7 @@ mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, R
        init_collision(avg_dp, avg_ro);
     }
 
-    // Be sure to define this in PostInit not init
+    // Define the MultiFab dummy which we pass into some MFIXParticleContainer routines.
     if (solve_dem)
        dummy->define(pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev), 1, 0, 
                      MFInfo(), *particle_ebfactory);
