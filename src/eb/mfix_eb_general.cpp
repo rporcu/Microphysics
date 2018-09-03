@@ -4,6 +4,8 @@
 #include <AMReX_EB2_IF_Polynomial.H>
 #include <AMReX_EB2_IF_Translation.H>
 
+#include <mfix_eb_if.H>
+
 //#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
 //#include <sstream>
 
@@ -41,29 +43,57 @@ mfix_level::make_eb_general(int lev) {
         pp.query("div_dir",          div_dir);
     }
 
+    // Non-planar side wall
     std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>> impfunc_poly2;
+
+    // Planar side walls (particles can see additional walls)
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>>        impfunc_walls_part;
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>>        impfunc_walls_fluid;
+
+    // Planar dividing wall
+    std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>> divider;
 
     /****************************************************************************
      * Generate PolynomialIF representing the non-planar EB walls               *
      ****************************************************************************/
     if (use_poly2) {
         amrex::Print() << "Using poly2 geometry" << std::endl;
+
         impfunc_poly2 = get_poly(lev, SpaceDim, "poly2");
     }
 
+    /****************************************************************************
+     * Generate UnionListIF representing the planar EB walls                    *
+     *          this IF represents the union of a list of planes (walls)        *
+     ****************************************************************************/
+    // Flags checking if mfix.dat even has walls
+    bool has_walls = false, has_real_walls = false;
     if (use_walls) {
+        amrex::Print() << "Using wall geometry from mfix.dat" << std::endl;
 
-
+        impfunc_walls_part  = get_walls(lev, has_walls);
+        impfunc_walls_fluid = get_real_walls(lev, has_real_walls);
     }
 
+    /****************************************************************************
+     * Generate IntersectionIF representing a planar (partial) partition        *
+     *          this partition has finite thickness and penetrates the "bottom" *
+     *          wall => it is constructed using 3 PlaneIFs                      *
+     ****************************************************************************/
+    if (use_divider) {
+        amrex::Print() << "Using divider-wall geometry" << std::endl;
+
+        divider = make_wall(div_dir, div_pos, div_height, div_width);
+    }
 }
+
 
 std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>>
 mfix_level::get_poly(int lev, int max_order, std::string field_prefix) {
 
     /****************************************************************************
      * Read polynomial data from inputs database                                *
-     *      => Generate Vector<EB2::PolyTerm> used
+     *      => Generate Vector<EB2::PolyTerm> used                              *
      ****************************************************************************/
 
     // Construct the ParamParse database field names based on the
@@ -128,3 +158,37 @@ mfix_level::get_poly(int lev, int max_order, std::string field_prefix) {
 
     return ret;
 }
+
+
+std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
+mfix_level::make_wall( int dir, // direction (long edge) of wall
+                       Real position, Real height, Real width )
+{
+    RealArray normal, center;
+
+    // Upward-facing plane:
+    normal = {0.,   0.,   1.};
+    center = {0.,   0., height};
+    EB2::PlaneIF plane_up(center, normal, false);
+
+    // First side-facing plane
+    normal = {0., 0., 0.};
+    center = {0., 0., 0.};
+    normal[dir] = 1.;
+    center[dir] = position + width;
+    EB2::PlaneIF plane_1(center, normal, false);
+
+    // Second side-facing plane
+    normal = {0., 0., 0.};
+    center = {0., 0., 0.};
+    normal[dir] = -1.;
+    center[dir] = position - width;
+    EB2::PlaneIF plane_2(center, normal, false);
+
+    std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>> ret =
+        std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
+        (new EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>(plane_up, plane_1, plane_2));
+
+    return ret;
+}
+

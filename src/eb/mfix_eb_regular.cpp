@@ -37,20 +37,28 @@ mfix_level::make_eb_regular(int lev)
                max_level_here + max_coarsening_level);
 
     const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
-    const EB2::Level & eb_level = eb_is.getLevel(geom[lev]);
+    eb_level_fluid     = & eb_is.getLevel(geom[lev]);
+    eb_level_particles =   eb_level_fluid;
 
     if (solve_fluid)
-       ebfactory[lev].reset(new EBFArrayBoxFactory(eb_level,
-                geom[lev], grids[lev], dmap[lev],
-                {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                 m_eb_full_grow_cells}, m_eb_support_level));
+       ebfactory[lev].reset(new EBFArrayBoxFactory(
+                                    * eb_level_fluid,
+                                    geom[lev], grids[lev], dmap[lev],
+                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                     m_eb_full_grow_cells}, m_eb_support_level
+                                )
+                            );
 
     if (solve_dem) {
-       particle_ebfactory.reset(new EBFArrayBoxFactory(eb_level,
-                geom[lev], grids[lev], dmap[lev],
-                {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                 m_eb_full_grow_cells}, m_eb_support_level));
+       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(
+                                            * eb_level_particles,
+                                            geom[lev], grids[lev], dmap[lev],
+                                            {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                             m_eb_full_grow_cells}, m_eb_support_level
+                                        )
+                                     );
 
+       eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
 
        /*************************************************************************
         *                                                                       *

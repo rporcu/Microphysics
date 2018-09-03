@@ -167,8 +167,11 @@ int main (int argc, char* argv[])
 
     }
 
-    if (mfix_level::get_load_balance_type() == "FixedSize" || mfix_level::get_load_balance_type()== "KnapSack")
-       my_mfix.Regrid(lev,0);
+    if ( mfix_level::get_load_balance_type() == "FixedSize" ||
+         mfix_level::get_load_balance_type()== "KnapSack" )
+    {
+        my_mfix.Regrid(lev,0);
+    }
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);

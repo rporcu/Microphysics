@@ -22,6 +22,7 @@
 #include <AMReX_EB2_IF_Plane.H>
 #include <AMReX_EB2_IF_Polynomial.H>
 #include <AMReX_EB2_IF_Translation.H>
+#include <AMReX_EB2_IF_Intersection.H>
 #include <mfix_eb_if.H>
 
 #include <AMReX_EB_levelset.H>
@@ -78,8 +79,6 @@ public:
 
     void make_eb_geometry(int lev);
 
-    //NOTE: these are deprecated and replaced by make_eb_* (private member functions below)
-
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(int lev, bool & has_walls);
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls(int lev, bool & has_real_walls);
@@ -88,11 +87,12 @@ public:
         EB2::TranslationIF<EB2::PolynomialIF>
     > get_poly(int lev, int max_order, std::string field_prefix);
 
-    //std::unique_ptr<BaseIF> make_wall(
-    //        int dir, // direction (long edge) of wall
-    //        Real position, Real height, Real width,
-    //        int lev, bool anisotropic
-    //    );
+    std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>> make_wall(
+            int dir, // direction (long edge) of wall
+            Real position, Real height, Real width
+        );
+
+    //NOTE: these are deprecated and replaced by make_eb_* (private member functions below)
 
     //std::unique_ptr<BaseIF> make_cylinder(
     //        int dir, // direction (orientation) of cylinder axis
@@ -135,7 +135,7 @@ protected:
 
     //! Tagging cells for refinement
     virtual void ErrorEst(int lev, amrex::TagBoxArray& tags, amrex::Real time, int /*ngrow*/) override
-        { amrex::Abort("ErrorEst: To be implemented"); }
+    { amrex::Abort("ErrorEst: To be implemented"); }
 
     //! Make a new level using provided BoxArray and
     //! DistributionMapping and fill with interpolated coarse level
@@ -507,8 +507,18 @@ private:
     Vector< const Vector< std::unique_ptr<MultiFab> >* > pltscalarVars;
     Vector< std::string > chkscaVarsName;
 
+
+    /****************************************************************************
+     *                                                                          *
+     * EB Data (including level-set data)                                       *
+     *                                                                          *
+     ****************************************************************************/
+
+    const EB2::Level * eb_level_fluid;
+    const EB2::Level * eb_level_particles;
+
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
-    std::unique_ptr<amrex::EBFArrayBoxFactory> particle_ebfactory;
+    Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 
     // stores eb_normals (commond index-space with cells)
     std::unique_ptr<MultiFab> eb_normals;
