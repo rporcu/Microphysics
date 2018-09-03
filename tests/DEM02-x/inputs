@@ -16,3 +16,9 @@ geometry.is_periodic = 0     0     0      # Is periodic in each direction?
 geometry.prob_lo     = 0.    0.    0.       # lo corner of physical domain
 geometry.prob_hi     = 1.0   1.0   1.0      # hi corner of physical domain
 
+mfix.geometry = box
+
+box.Lo = 0.0  0.0  0.0
+box.Hi = 1.0  1.0  1.0
+
+box.offset = 1.0e-9
