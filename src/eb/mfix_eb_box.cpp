@@ -59,10 +59,16 @@ mfix_level::make_eb_box(int lev)
         ParmParse pp("box");
 
         Vector<Real> boxLo(3), boxHi(3);
-        Real offset    = 1.0e-8;
+        Real offset    = 1.0e-15;
 
-        pp.getarr("Lo", boxLo,  0, 3);
-        pp.getarr("Hi", boxHi,  0, 3);
+        for (int i = 0; i < 3; i++)
+        {
+           boxLo[i] = geom[lev].ProbLo(i);
+           boxHi[i] = geom[lev].ProbHi(i);
+        }
+
+        pp.queryarr("Lo", boxLo,  0, 3);
+        pp.queryarr("Hi", boxHi,  0, 3);
 
         pp.query("offset", offset);
 

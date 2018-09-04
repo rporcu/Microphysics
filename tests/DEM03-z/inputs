@@ -17,8 +17,3 @@ geometry.prob_lo     = 0.       0.       0.      # lo corner of physical domain
 geometry.prob_hi     = 0.0045   0.0045   0.0018  # hi corner of physical domain
 
 mfix.geometry = box
-
-box.Lo = 0.0  0.0  0.0
-box.Hi = 0.0045 0.0045 0.0018
-
-box.offset = 1.0e-15
