@@ -37,11 +37,24 @@ public:
     bool is_empty () const {return empty;}
 
     Real operator() (const RealArray & p) const {
-        F & f_max = std::max( m_ifs,
-                              [&](const F & f1, const F & f2) {
-                                  return f1(p) < f2(p);
-                              });
-        return f_max(p);
+
+        // NOTE: this assumes that m_ifs is not empty
+        Real vmax=m_ifs[0](p);
+        for (int i=1; i< m_ifs.size(); i++) {
+            Real vcur = m_ifs[i](p);
+            if ( vmax < vcur ) vmax = vcur;
+        }
+
+        return vmax;
+
+        // NOTE: this would have been nice, but for some reason it does not work :(
+        // even though according to https://en.cppreference.com/w/cpp/algorithm/max
+        // it should ... ?
+        //F & f_max = std::max( m_ifs,
+        //                      [&](const F & f1, const F & f2) {
+        //                          return f1(p) < f2(p);
+        //                      });
+        //return f_max(p);
     }
 
 private:

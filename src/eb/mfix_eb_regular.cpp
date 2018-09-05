@@ -1,4 +1,11 @@
 #include <AMReX_EB2.H>
+#include <AMReX_EB2_IF_Plane.H>
+#include <AMReX_EB2_IF_Union.H>
+
+#include <mfix_eb_if.H>
+
+#include <AMReX_EB_levelset.H>
+
 
 #include <mfix_level.H>
 #include <mfix_eb_F.H>
@@ -21,9 +28,9 @@ mfix_level::make_eb_regular(int lev)
      ****************************************************************************/
 
     // set up ebfactory
-    int m_eb_basic_grow_cells = nghost;
+    int m_eb_basic_grow_cells  = nghost;
     int m_eb_volume_grow_cells = nghost;
-    int m_eb_full_grow_cells = nghost;
+    int m_eb_full_grow_cells   = nghost;
     EBSupport m_eb_support_level = EBSupport::full;
 
     int max_coarsening_level = 100;
@@ -31,14 +38,51 @@ mfix_level::make_eb_regular(int lev)
     amrex::Print() << " " << std::endl;
     amrex::Print() << "Now making the ebfactory's ..." << std::endl;
 
-    EB2::AllRegularIF my_regular;
-    auto gshop = EB2::makeShop(my_regular);
-    EB2::Build(gshop, geom.back(), max_level_here,
-               max_level_here + max_coarsening_level);
+    // If filling level-set: this is used to store the implicit function (due to
+    // any walls defined in mfix.dat). It is filled while after EB2::Build.
+    // NOTE: this pointer is undefined if !solve_dem
+    std::unique_ptr<MultiFab> mf_impfunc;
 
-    const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
-    eb_level_fluid     = & eb_is.getLevel(geom[lev]);
-    eb_level_particles =   eb_level_fluid;
+    if (solve_fluid) {
+        bool has_walls = false;
+        std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_real_walls(lev, has_walls);
+
+        if (has_walls){
+            auto gshop = EB2::makeShop(* impfunc_walls);
+            EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+        } else {
+            EB2::AllRegularIF my_regular;
+            auto gshop = EB2::makeShop(my_regular);
+            EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+        }
+
+        const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+        eb_level_fluid = & eb_is.getLevel(geom[lev]);
+    }
+
+    if (solve_dem) {
+        bool has_walls = false;
+        std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_walls(lev, has_walls);
+
+        if (has_walls){
+            auto gshop = EB2::makeShop(* impfunc_walls);
+            EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+
+            GShopLSFactory<UnionListIF<EB2::PlaneIF>> reg_lsfactory(gshop, * level_set);
+            std::unique_ptr<MultiFab> mf_impfunc = reg_lsfactory.fill_impfunc();
+        } else {
+            EB2::AllRegularIF my_regular;
+            auto gshop = EB2::makeShop(my_regular);
+            EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+
+            GShopLSFactory<EB2::AllRegularIF> reg_lsfactory(gshop, * level_set);
+            std::unique_ptr<MultiFab> mf_impfunc = reg_lsfactory.fill_impfunc();
+        }
+
+        const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+        eb_level_particles = & eb_is.getLevel(geom[lev]);
+    }
+
 
     if (solve_fluid)
        ebfactory[lev].reset(new EBFArrayBoxFactory(
@@ -68,9 +112,6 @@ mfix_level::make_eb_regular(int lev)
         *       particle radius > 1                                             *
         *                                                                       *
         *************************************************************************/
-
-       GShopLSFactory<EB2::AllRegularIF> reg_lsfactory(gshop, * level_set);
-       std::unique_ptr<MultiFab> mf_impfunc = reg_lsfactory.fill_impfunc();
 
        level_set->intersection_impfunc( * mf_impfunc);
 
