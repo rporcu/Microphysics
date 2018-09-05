@@ -5,6 +5,7 @@
 #include <mfix_level.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
+#include <AMReX_EBMultiFabUtil.H>
 
 std::string mfix_level::particle_init_type   = "AsciiFile";
 std::string mfix_level::load_balance_type    = "FixedSize";
@@ -570,4 +571,48 @@ mfix_level::mfix_calc_drag_particle(int lev)
                            &nodal_pressure);
        }
     }
+}
+
+
+//
+// Subroutine to compute norm0 of EB multifab
+//
+Real
+mfix_level::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
+{
+   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
+                    0,  MFInfo(), *ebfactory[lev]);
+  
+   MultiFab::Copy( mf_tmp, *mf[lev], comp, comp, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+   
+   return mf_tmp.norm0( comp );
+}
+
+Real
+mfix_level::mfix_norm0 ( MultiFab& mf, int lev, int comp )
+{
+   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), mf.nComp(),
+                    0,  MFInfo(), *ebfactory[lev]);
+  
+   MultiFab::Copy( mf_tmp, mf, comp, comp, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+   
+   return mf_tmp.norm0( comp );
+}
+
+
+//
+// Subroutine to compute norm1 of EB multifab
+//
+Real
+mfix_level::mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
+{
+   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
+                    0,  MFInfo(), *ebfactory[lev]);
+  
+   MultiFab::Copy( mf_tmp, *mf[lev], comp, comp, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+   
+   return mf_tmp.norm1( comp, geom[lev].periodicity() );
 }

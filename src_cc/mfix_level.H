@@ -282,6 +282,11 @@ private:
     Vector<int> nsubsteps;  // how many substeps on each level?
 #endif
 
+   Real mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
+   Real mfix_norm1 ( MultiFab& mf, int lev, int comp );
+   Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
+   Real mfix_norm0 ( MultiFab& mf, int lev, int comp );
+   
     Vector<int> istep = {1} ;
 
     // Particle container
