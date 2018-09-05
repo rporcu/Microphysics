@@ -69,14 +69,14 @@ mfix_level::make_eb_regular(int lev)
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
 
             GShopLSFactory<UnionListIF<EB2::PlaneIF>> reg_lsfactory(gshop, * level_set);
-            std::unique_ptr<MultiFab> mf_impfunc = reg_lsfactory.fill_impfunc();
+            mf_impfunc = reg_lsfactory.fill_impfunc();
         } else {
             EB2::AllRegularIF my_regular;
             auto gshop = EB2::makeShop(my_regular);
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
 
             GShopLSFactory<EB2::AllRegularIF> reg_lsfactory(gshop, * level_set);
-            std::unique_ptr<MultiFab> mf_impfunc = reg_lsfactory.fill_impfunc();
+            mf_impfunc = reg_lsfactory.fill_impfunc();
         }
 
         const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
