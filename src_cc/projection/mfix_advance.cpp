@@ -7,6 +7,7 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
+#include <AMReX_MultiFab.H>
 
 void
 mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt,  Real& time, Real stop_time )
@@ -80,7 +81,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	    amrex::Print() << "\nAfter predictor step:\n";
     	    mfix_print_max_vel (lev);
     	    mfix_compute_diveu (lev);
-	    amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
         }
 
 	// Calculate drag coefficient
@@ -96,7 +97,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	    amrex::Print() << "\nAfter corrector step:\n";
     	    mfix_print_max_vel (lev);
     	    mfix_compute_diveu (lev);
-	    amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
         }
 	    
 	// 
@@ -200,7 +201,7 @@ mfix_level::mfix_apply_predictor (int lev, MultiFab& conv_old, MultiFab& divtau_
 
     // If explicit_diffusion == true  then we compute the full diffusive terms here
     // If explicit_diffusion == false then we compute only the off-diagonal terms here
-    mfix_compute_divtau ( lev, divtau_old, vel_go);
+    mfix_compute_divtau( lev, divtau_old, vel_go );
     
     // First add the convective term
     MultiFab::Saxpy (*vel_g[lev], dt,   conv_old, 0, 0, 3, 0);
@@ -521,10 +522,10 @@ mfix_level::steady_state_reached (int lev, Real dt)
 
     MultiFab::LinComb (tmp, 1.0, *p_g[lev], 0, -1.0, *p_go[lev], 0, 0, 1, 0);
     
-    Real delta_u = temp_vel.norm0 (0);
-    Real delta_v = temp_vel.norm0 (1);
-    Real delta_w = temp_vel.norm0 (2);
-    Real delta_p = tmp.norm0 ();
+    Real delta_u = mfix_norm0(temp_vel,lev,0);
+    Real delta_v = mfix_norm0(temp_vel,lev,1);
+    Real delta_w = mfix_norm0(temp_vel,lev,2);
+    Real delta_p = mfix_norm0(tmp,lev,0);
     
     Real tol = steady_state_tol; 
     
@@ -533,14 +534,15 @@ mfix_level::steady_state_reached (int lev, Real dt)
     //
     // Second stop condition
     //
-    Real du_n1 = temp_vel.norm1 (0, geom[lev].periodicity());
-    Real dv_n1 = temp_vel.norm1 (1, geom[lev].periodicity());
-    Real dw_n1 = temp_vel.norm1 (2, geom[lev].periodicity());
-    Real dp_n1 = tmp.norm1 (0, geom[lev].periodicity());
-    Real uo_n1 = vel_go[lev] -> norm1 (0, geom[lev].periodicity());
-    Real vo_n1 = vel_go[lev] -> norm1 (1, geom[lev].periodicity());
-    Real wo_n1 = vel_go[lev] -> norm1 (2, geom[lev].periodicity());
-    Real po_n1 = p_go[lev] -> norm1 (0, geom[lev].periodicity());
+    Real du_n1 = mfix_norm1(temp_vel, lev, 0); 
+    Real dv_n1 = mfix_norm1(temp_vel, lev, 1); 
+    Real dw_n1 = mfix_norm1(temp_vel, lev, 2); 
+    Real dp_n1 = mfix_norm1(tmp, lev, 0); 
+    Real uo_n1 = mfix_norm1(vel_go, lev, 0);
+    Real vo_n1 = mfix_norm1(vel_go, lev, 1);
+    Real wo_n1 = mfix_norm1(vel_go, lev, 2);
+    Real po_n1 = mfix_norm1(p_go, lev, 0);
+    
     Real tmp1, tmp2, tmp3, tmp4;
 
     Real local_tol = 1.0e-8;
@@ -712,8 +714,10 @@ void
 mfix_level::mfix_print_max_vel(int lev)
 {
     amrex::Print() << "max(abs(u/v/w/p))  = " << 
-        vel_g[lev] -> norm0 (0) << "  " <<
-        vel_g[lev] -> norm0 (1) << "  " <<
-        vel_g[lev] -> norm0 (2) << "  " <<
-          p_g[lev] -> norm0 () << "  " << std::endl;
+       mfix_norm0(vel_g, lev, 0) << "  " <<
+       mfix_norm0(vel_g, lev, 1) << "  " <<
+       mfix_norm0(vel_g, lev, 2) << "  " <<
+       mfix_norm0(p_g,   lev, 0) << "  " << std::endl;
 }
+
+

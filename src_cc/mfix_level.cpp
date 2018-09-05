@@ -616,3 +616,15 @@ mfix_level::mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, 
    
    return mf_tmp.norm1( comp, geom[lev].periodicity() );
 }
+
+Real
+mfix_level::mfix_norm1 ( MultiFab& mf, int lev, int comp )
+{
+   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), mf.nComp(),
+                    0,  MFInfo(), *ebfactory[lev]);
+  
+   MultiFab::Copy( mf_tmp, mf, comp, comp, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+   
+   return mf_tmp.norm1( comp, geom[lev].periodicity() );
+}

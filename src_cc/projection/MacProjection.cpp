@@ -7,6 +7,7 @@
 #include <AMReX_MLABecLaplacian.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_EBFArrayBox.H>
+#include <AMReX_EBMultiFabUtil.H>
 
 // For multigrid
 using namespace amrex;
@@ -318,7 +319,7 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       {
          // Multiply by c because diveu contains div(eu)/c
          Print() << "  * On level "<< lev
-                 << " max(abs(diveu)) = " << (m_diveu[lev] -> norm0())*c << "\n";
+                 << " max(abs(diveu)) = " << norm0(m_diveu,lev)*c << "\n";
       }
    }
     
@@ -341,7 +342,7 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       Print() << " >> After projection\n";  
       for (int lev=0; lev <= m_amrcore -> finestLevel(); ++lev )
          Print() << "  * On level "<< lev
-                 << " max(abs(diveu)) = " << m_diveu[lev] -> norm0() << "\n";
+                 << " max(abs(diveu)) = " << norm0(m_diveu,lev) << "\n";
        
    }
 }
@@ -721,4 +722,18 @@ MacProjection::project_velocity ( Vector< std::unique_ptr<MultiFab> >& u,
    }
 }
 
+//
+// Norm 0 for EB Multifab
+//
+Real
+MacProjection::norm0 (const Vector<std::unique_ptr<MultiFab>>& mf, int lev)
+{
+   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
+                    0,  MFInfo(), *(*m_ebfactory)[lev]);
+  
+   MultiFab::Copy( mf_tmp, *mf[lev], 0, 0, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+  
+   return mf_tmp.norm0(0);
+}
 

@@ -121,6 +121,12 @@ private:
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
                            const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro,
                            const amrex::Real c );
+
+   //
+   // Stuff to compute norms of EB-MultiFabs
+   //
+   amrex::Real norm0 (const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& mf, int lev);
+   
 };
 
 
