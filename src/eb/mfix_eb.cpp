@@ -85,7 +85,9 @@ mfix_level::make_eb_geometry (int lev)
     amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
     make_eb_general(lev);
   } else {
-    amrex::Print() << "\n No EB geometry in this problem." << std::endl;
+    amrex::Print() << "\n No EB geometry declared in inputs => "
+                   << " Will read walls from mfix.dat only."
+                   << std::endl;
     make_eb_regular(lev);
   }
 }
