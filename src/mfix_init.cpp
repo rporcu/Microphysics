@@ -337,7 +337,7 @@ mfix_level::check_data(int lev)
     }
 }
 
-void 
+void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
     // Allocate the fluid data
@@ -350,12 +350,12 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
         Real strt_init_part = ParallelDescriptor::second();
 
         //int lev = 0;
-        pc -> AllocData();
+        pc->AllocData();
 
         if (particle_init_type == "AsciiFile")
         {
             amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
-            pc -> InitParticlesAscii("particle_input.dat");
+            pc->InitParticlesAscii("particle_input.dat");
 
         } else if (particle_init_type == "Random")
         {
@@ -375,8 +375,8 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
             Real  omegax = 0.0;
             Real  omegay = 0.0;
             Real  omegaz = 0.0;
-            int phase = 1;
-            int state = 0;
+            int    phase = 1;
+            int    state = 0;
             MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
                 velx,vely,velz,omegax,omegay,omegaz,dragx,dragy,dragz,phase,state};
             pc->InitNRandomPerCell(n_per_cell, pdata);
@@ -387,7 +387,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
             amrex::Print() << "Auto generating particles ..." << std::endl;
 
-            pc -> InitParticlesAuto(lev);
+            pc->InitParticlesAuto(lev);
 
         } else {
 
@@ -395,10 +395,10 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
         }
 
         // used in load balancing
-        if (load_balance_type == "KnapSack") 
+        if (load_balance_type == "KnapSack")
         {
             particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                        pc->ParticleDistributionMap(lev), 1, 0));
+                                                  pc->ParticleDistributionMap(lev), 1, 0));
             particle_cost[lev]->setVal(0.0);
 
             if (solve_fluid)
@@ -414,7 +414,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
     }
 }
 
-void 
+void
 mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                      int steady_state)
 {
@@ -455,8 +455,8 @@ mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, R
 
     // Define the MultiFab dummy which we pass into some MFIXParticleContainer routines.
     if (solve_dem)
-       dummy->define(pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev), 1, 0,
-                     MFInfo(), * particle_ebfactory[lev]);
+        dummy->define(pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev), 1, 0,
+                      MFInfo(), * particle_ebfactory[lev]);
 
     // Initial fluid arrays: pressure, velocity, density, viscosity
     if (solve_fluid)
