@@ -157,6 +157,10 @@ int main (int argc, char* argv[])
     else
     {
         restart_flag = 1;
+        // NOTE: mfix::levelset__restart == true loading level-set from a
+        // checkpoint file. However, if this is a replicating restart,
+        // mfix::levelset__restart is set to false again (so that the level-sets
+        // are recomputed for the replicated system).
         my_mfix.levelset__restart = true;
 
         // This can change the grids (during replication)

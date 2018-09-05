@@ -121,8 +121,7 @@ mfix_level::make_eb_hopper(int lev)
 
     auto gshop = EB2::makeShop(my_hopper);
     int max_coarsening_level = 100;
-    EB2::Build(gshop, geom.back(), max_level_here,
-               max_level_here + max_coarsening_level);
+    EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
 
     const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
     eb_level_fluid     = & eb_is.getLevel(geom[lev]);
@@ -157,19 +156,20 @@ mfix_level::make_eb_hopper(int lev)
         *                                                                       *
         *************************************************************************/
 
-       amrex::Print() << "Creating the levelset ..." << std::endl;
+       if (!levelset__restart) {
+           amrex::Print() << "Creating the levelset ..." << std::endl;
 
-       // neat trick: `decltype(my_hopper)` returns the IF data type of the
-       // hopper (which otherwise would be a long template string of compounded
-       // IFs ...). Together with `auto`, this lets use be more suspect.
-       GShopLSFactory<decltype(my_hopper)> gshop_lsfactory(gshop, * level_set);
-       std::unique_ptr<MultiFab> mf_impfunc = gshop_lsfactory.fill_impfunc();
+           // neat trick: `decltype(my_hopper)` returns the IF data type of the
+           // hopper (which otherwise would be a long template string of compounded
+           // IFs ...). Together with `auto`, this lets use be more suspect.
+           GShopLSFactory<decltype(my_hopper)> gshop_lsfactory(gshop, * level_set);
+           std::unique_ptr<MultiFab> mf_impfunc = gshop_lsfactory.fill_impfunc();
 
-       int eb_grow = level_set->get_eb_pad();
-       EBFArrayBoxFactory eb_factory(
-            * eb_level_particles, geom[lev], level_set->get_eb_ba(), level_set->get_dm(),
-            {eb_grow, eb_grow, eb_grow}, EBSupport::full
-       );
+           int eb_grow = level_set->get_eb_pad();
+           EBFArrayBoxFactory eb_factory(
+                        * eb_level_particles, geom[lev], level_set->get_eb_ba(), level_set->get_dm(),
+                        {eb_grow, eb_grow, eb_grow}, EBSupport::full
+                );
 
        level_set->intersection_ebf(eb_factory, * mf_impfunc);
        // store copy of level set (for plotting).
@@ -178,6 +178,7 @@ mfix_level::make_eb_hopper(int lev)
        ls[lev]->FillBoundary(geom[lev].periodicity());
 
        amrex::Print() << "Done making the levelset ..." << std::endl;
+       }
        amrex::Print() << "Done making the particle ebfactory ..." << std::endl;
        amrex::Print() << " " << std::endl;
     }

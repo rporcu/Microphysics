@@ -158,34 +158,40 @@ mfix_level::make_eb_cylinder(int lev)
         *                                                                       *
         *************************************************************************/
 
-       amrex::Print() << "Creating the levelset ..." << std::endl;
+       if (!levelset__restart) {
+           amrex::Print() << "Creating the levelset ..." << std::endl;
 
-       // If there is a bottom plane, fill level set with plane IF first
-       if(close_bottom) {
-           std::unique_ptr<MultiFab> mf_impfunc_wall
-               = wall_lsfactory->fill_impfunc();
+           // If there is a bottom plane, fill level set with plane IF first
+           if(close_bottom) {
+               std::unique_ptr<MultiFab> mf_impfunc_wall
+                   = wall_lsfactory->fill_impfunc();
 
-           level_set->intersection_impfunc(* mf_impfunc_wall);
+               level_set->intersection_impfunc(* mf_impfunc_wall);
+           }
+
+           GShopLSFactory<EB2::CylinderIF> cyl_lsfactory(gshop_cyl, * level_set);
+           std::unique_ptr<MultiFab> mf_impfunc_cyl = cyl_lsfactory.fill_impfunc();
+
+           int eb_grow = level_set->get_eb_pad();
+           EBFArrayBoxFactory eb_factory_cylinder(
+                                    ebis_lev_cyl, geom[lev], level_set->get_eb_ba(), level_set->get_dm(),
+                                    {eb_grow, eb_grow, eb_grow}, EBSupport::full
+                    );
+
+           level_set->intersection_ebf(eb_factory_cylinder, * mf_impfunc_cyl );
+
+           // store copy of level set (for plotting).
+           std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+           ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
+           ls[lev]->FillBoundary(geom[lev].periodicity());
+
+           amrex::Print() << "Done making the levelset ..." << std::endl;
+       } else {
+           amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
+                          << std::endl;
        }
 
-       GShopLSFactory<EB2::CylinderIF> cyl_lsfactory(gshop_cyl, * level_set);
-       std::unique_ptr<MultiFab> mf_impfunc_cyl = cyl_lsfactory.fill_impfunc();
-
-       int eb_grow = level_set->get_eb_pad();
-       EBFArrayBoxFactory eb_factory_cylinder(
-                    ebis_lev_cyl, geom[lev], level_set->get_eb_ba(), level_set->get_dm(),
-                    {eb_grow, eb_grow, eb_grow}, EBSupport::full
-            );
-
-       level_set->intersection_ebf(eb_factory_cylinder, * mf_impfunc_cyl );
-
-       // store copy of level set (for plotting).
-       std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-       ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
-       ls[lev]->FillBoundary(geom[lev].periodicity());
-
-       amrex::Print() << "Done making the levelset ..." << std::endl;
-       amrex::Print() << "Done making the particle ebfactory ..." << std::endl;
+       amrex::Print() << "Done making the particle ebfactories ..." << std::endl;
        amrex::Print() << " " << std::endl;
     }
 

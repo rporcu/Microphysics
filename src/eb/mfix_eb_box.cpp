@@ -165,29 +165,35 @@ mfix_level::make_eb_box(int lev)
             *                                                                   *
             *********************************************************************/
 
-           amrex::Print() << "Creating the levelset ..." << std::endl;
+           if (!levelset__restart) {
+               amrex::Print() << "Creating the levelset ..." << std::endl;
 
-           GShopLSFactory<
-               EB2::UnionIF<
-                   EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF
-                   >> gshop_lsfactory(gshop, * level_set);
+               GShopLSFactory<
+                   EB2::UnionIF<
+                       EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF,
+                       EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF
+                       >
+                   > gshop_lsfactory(gshop, * level_set);
 
-           // Implicit function used by LSFactory => returned MF has the same DM as LSFactory
-           std::unique_ptr<MultiFab> mf_impfunc_box = gshop_lsfactory.fill_impfunc();
-           // Plane implicit function is already a signed distance function => it's
-           // just easier to fill the level-set this way
-           level_set->intersection_impfunc(* mf_impfunc_box);
+               // Implicit function used by LSFactory => returned MF has the same DM as LSFactory
+               std::unique_ptr<MultiFab> mf_impfunc_box = gshop_lsfactory.fill_impfunc();
+               // Plane implicit function is already a signed distance function => it's
+               // just easier to fill the level-set this way
 
-           // store copy of level set (for plotting).
-           std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-           ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
-           ls[lev]->FillBoundary(geom[lev].periodicity());
+               level_set->intersection_impfunc(* mf_impfunc_box);
+               // store copy of level set (for plotting).
+               std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+               ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
+               ls[lev]->FillBoundary(geom[lev].periodicity());
 
-           amrex::Print() << "Done making the levelset ..." << std::endl;
-
+               amrex::Print() << "Done making the levelset ..." << std::endl;
+           } else {
+               amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
+                              << std::endl;
+           }
         }
 
-       amrex::Print() << "Done making the ebfactory's ..." << std::endl;
+       amrex::Print() << "Done making the ebfactories ..." << std::endl;
        amrex::Print() << " " << std::endl;
     }
 }
