@@ -18,19 +18,19 @@ namespace
 // This function initializes the attributes vectorVars, vecVarsName,
 //                                          pltscalarVars, pltscaVarsName,
 //                                          chkscalarVars, chkscaVarsName.
-// If new variables need to be added to the output/checkpoint, simply
-// add them here and the IO routines will automatically take care of them.
+// If new variables need to be added to the output/checkpoint, simply add them
+// here and the IO routines will automatically take care of them.
 void
 mfix_level::InitIOData ()
 {
-    // Define the list of vector variables on faces that need to be written
-    // to plotfile/checkfile.
+    // Define the list of vector variables on faces that need to be written to
+    // plotfile/checkfile.
     vecVarsName = {"u_g", "v_g", "w_g"};
     vectorVars  = {&u_g,  &v_g,  &w_g };
 
-    // Define the list of scalar variables at cell centers that need to be written
-    // to plotfile/checkfile.
-    // "volfrac" MUST always be last without any mf associated to it!!!
+    // Define the list of scalar variables at cell centers that need to be
+    // written to plotfile/checkfile. "volfrac" MUST always be last without any
+    // mf associated to it!!!
     pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "vort", "diveu", "level-set", "volfrac"};
     pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &vort,  &diveu,  &ls};
 
@@ -62,7 +62,7 @@ mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time, 
       std::ofstream HeaderFile;
 
       HeaderFile.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
-      
+
       HeaderFile.open(HeaderFileName.c_str(), std::ofstream::out   |
                       std::ofstream::trunc |
                       std::ofstream::binary);
@@ -393,9 +393,9 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 
                     // Copy mf into chkscalarVars
                     if(chkscaVarsName[i] == "level-set") {
-                        // The level-set data is special, and because we want
-                        // to access it even without a fluid present, it is
-                        // loaded below.
+                        // The level-set data is special, and because we want to
+                        // access it even without a fluid present, it is loaded
+                        // below.
                     } else {
                         ( * chkscalarVars[i])[lev]->copy(mf, 0, 0, 1, 0, 0);
                     }
@@ -424,13 +424,18 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     int lev = 0;
     if (Nrep == IntVect::TheUnitVector())
     {
-       // We need to do this on restart regardless of whether we replicate
-        pc -> Redistribute();
-
+        // We need to do this on restart regardless of whether we replicate
+        pc->Redistribute();
     } else {
+        // This call to Replicate adds the new particles, then calls Redistribute()
+        pc->Replicate(Nrep, geom[lev], dmap[lev], grids[lev]);
 
-       // This call to Replicate adds the new particles, then calls Redistribute()
-       pc->Replicate(Nrep,geom[lev],dmap[lev],grids[lev]);
+        // Since a replication has taken place, the level-set function needs to
+        // be re-computed:
+        levelset__restart = false;
+
+        amrex::Print() << "ATTN: Due to replication, level-set will be re-calculated."
+                       << std::endl;
     }
 
 
@@ -440,7 +445,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     *                                                                          *
     * Since the level-set data could be defined on a different BoxArray        *
     * (compared to the rest of the checkpoint data) => the level-set data is   *
-    * stored in seperate ls_raw MultiFab.                                      *
+    * stored in desperate ls_raw MultiFab.                                     *
     ****************************************************************************/
 
     // Load level-set Multifab

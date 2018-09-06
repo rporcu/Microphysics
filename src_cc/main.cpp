@@ -79,7 +79,7 @@ int main (int argc, char* argv[])
     // Issue an error if AMR input file is not given
     if ( argc < 2 )
        amrex::Abort("AMReX input file missing");
-    
+
     // AMReX will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
     amrex::Initialize(argc,argv);
@@ -88,7 +88,7 @@ int main (int argc, char* argv[])
 
     // Warn that this is the xp branch
     amrex::Print() << "\n\nWARNING:\nMFIX was configured in Approximate Projection Mode\n\n";
-    
+
     // Setting format to NATIVE rather than default of NATIVE_32
     FArrayBox::setFormat(FABio::FAB_NATIVE);
 
@@ -122,7 +122,7 @@ int main (int argc, char* argv[])
     //                                        |
     //      (loads `mfix.dat`) ---------------+
     mfix_get_data( &solve_fluid, &solve_dem, &steady_state,
-                   &dt, &dt_min, &dt_max, 
+                   &dt, &dt_min, &dt_max,
                    &stop_time, &call_udf
                   );
 
@@ -141,16 +141,11 @@ int main (int argc, char* argv[])
     my_mfix.InitParams(solve_fluid, solve_dem, call_udf);
 
     // Initialize memory for data-array internals
-    // Note: MFIXParticleContainer is created here 
+    // Note: MFIXParticleContainer is created here
     my_mfix.ResizeArrays();
 
     // Initialize derived internals
     my_mfix.Init(lev,dt,time);
-
-    int lev0 = 0;
-
-    // Create the geometry before reading/creating the arrays
-    my_mfix.make_eb_geometry(lev0);
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
@@ -163,13 +158,18 @@ int main (int argc, char* argv[])
         restart_flag = 1;
         my_mfix.levelset__restart = true;
 
+        // This can change the grids (during replication)
         IntVect Nrep(repl_x,repl_y,repl_z);
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
 
-    if (mfix_level::get_load_balance_type() == "FixedSize" || 
+    // Build EB _after_ the grids have been built, but _before_ regrid
+    int lev0 = 0;
+    my_mfix.make_eb_geometry(lev0);
+
+    if (mfix_level::get_load_balance_type() == "FixedSize" ||
         mfix_level::get_load_balance_type() == "KnapSack")
-       my_mfix.Regrid(lev,0);
+        my_mfix.Regrid(lev,0);
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);

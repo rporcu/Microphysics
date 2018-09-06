@@ -40,7 +40,11 @@ mfix_level::make_eb_regular(int lev)
 
     // If filling level-set: this is used to store the implicit function (due to
     // any walls defined in mfix.dat). It is filled while after EB2::Build.
-    // NOTE: this pointer is undefined if !solve_dem
+    // NOTE: this pointer is undefined if and of:
+    //     * ! solve_dem
+    //     * levelset__restart
+    //     * ! has_walls
+    // are true
     std::unique_ptr<MultiFab> mf_impfunc;
 
     if (solve_fluid) {
@@ -60,23 +64,26 @@ mfix_level::make_eb_regular(int lev)
         eb_level_fluid = & eb_is.getLevel(geom[lev]);
     }
 
+    // Do _not_ fill level-set with AllRegularIF => if there are no walls, then
+    // the level-set function is just huge(amrex_real) => this flag is set to
+    // true iff there are walls.
+    bool has_walls = false;
+
     if (solve_dem) {
-        bool has_walls = false;
         std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_walls(lev, has_walls);
 
         if (has_walls){
             auto gshop = EB2::makeShop(* impfunc_walls);
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
 
-            GShopLSFactory<UnionListIF<EB2::PlaneIF>> reg_lsfactory(gshop, * level_set);
-            mf_impfunc = reg_lsfactory.fill_impfunc();
+            if (! levelset__restart) {
+                GShopLSFactory<UnionListIF<EB2::PlaneIF>> reg_lsfactory(gshop, * level_set);
+                mf_impfunc = reg_lsfactory.fill_impfunc();
+            }
         } else {
             EB2::AllRegularIF my_regular;
             auto gshop = EB2::makeShop(my_regular);
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
-
-            GShopLSFactory<EB2::AllRegularIF> reg_lsfactory(gshop, * level_set);
-            mf_impfunc = reg_lsfactory.fill_impfunc();
         }
 
         const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
@@ -113,7 +120,12 @@ mfix_level::make_eb_regular(int lev)
         *                                                                       *
         *************************************************************************/
 
-       level_set->intersection_impfunc( * mf_impfunc);
+       if (has_walls) {
+           if (!levelset__restart) level_set->intersection_impfunc( * mf_impfunc);
+           else
+               amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
+                              << std::endl;
+       }
 
        // store copy of level set (for plotting).
        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();

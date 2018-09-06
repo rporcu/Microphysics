@@ -148,9 +148,6 @@ int main (int argc, char* argv[])
     // Initialize derived internals
     my_mfix.Init(lev,dt,time);
 
-    int lev0 = 0;
-    my_mfix.make_eb_geometry(lev0);
-
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
@@ -160,18 +157,27 @@ int main (int argc, char* argv[])
     else
     {
         restart_flag = 1;
+        // NOTE: mfix::levelset__restart == true loading level-set from a
+        // checkpoint file. However, if this is a replicating restart,
+        // mfix::levelset__restart is set to false again (so that the level-sets
+        // are recomputed for the replicated system).
         my_mfix.levelset__restart = true;
 
+        // This can change the grids (during replication)
         IntVect Nrep(repl_x, repl_y, repl_z);
         my_mfix.Restart(restart_file, & nstep, & dt, & time, Nrep);
-
     }
 
-    if ( mfix_level::get_load_balance_type() == "FixedSize" ||
-         mfix_level::get_load_balance_type()== "KnapSack" )
-    {
+    // Build EB _after_ the grids have been built, but _before_ regrid
+    int lev0 = 0;
+    my_mfix.make_eb_geometry(lev0);
+
+    if (mfix_level::get_load_balance_type() == "FixedSize" ||
+        mfix_level::get_load_balance_type()== "KnapSack" )
         my_mfix.Regrid(lev,0);
-    }
+
+    //int lev0 = 0;
+    //my_mfix.make_eb_geometry(lev0);
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);
