@@ -35,19 +35,8 @@ public:
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& v,
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ep,
-                           const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro,
-                           const amrex::Real c );
-
-   void apply_projection ( amrex::Vector< std::unique_ptr<amrex::MultiFab> >& u, 
-                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& v,
-                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
-                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ep,
-                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& epo,
-                           const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro,
-                           const amrex::Real c, const amrex::Real dt );
-
-   const amrex::MultiFab& get_phi ( int lev );
-    
+                           const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro );
+   
 private:
 
    // Unit vectors in Cartesian space
@@ -71,8 +60,7 @@ private:
    amrex::Vector< std::unique_ptr<amrex::MultiFab> > m_diveu;
    amrex::Vector< std::unique_ptr<amrex::MultiFab> > m_phi;
    amrex::Vector< amrex::Vector< std::unique_ptr<amrex::MultiFab> > > m_b;
-   amrex::Vector<std::array<std::unique_ptr<amrex::MultiFab>,AMREX_SPACEDIM> > m_gradphi;
-
+   amrex::Vector< amrex::Vector< std::unique_ptr<amrex::MultiFab> > > m_ep;
 
    // 
    // Stuff for linear solver
@@ -84,22 +72,11 @@ private:
    bool verbose = true;
     
    int  m_mg_verbose = 0;
-   int  m_mg_cg_verbose = 0;
-   int  m_mg_max_iter = 100;
-   int  m_mg_cg_maxiter = 100;
-   int  m_mg_max_fmg_iter = 0;
    amrex::Real m_mg_rtol = 1.0e-11;
-   amrex::Real m_mg_atol = 1.0e-14;
 
    void read_inputs ();
     
    void update_internals ();
-
-   void compute_diveu ( amrex::Vector< std::unique_ptr<amrex::MultiFab> >& u,
-                        amrex::Vector< std::unique_ptr<amrex::MultiFab> >& v,
-                        amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
-                        amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ep,
-                        const amrex::Real c);
 
    void set_velocity_bcs ( int lev,
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& u,
@@ -112,15 +89,8 @@ private:
                           const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& v,
                           const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
                           const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ep,
-                          const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro );
-
-   void solve_for_phi ();
-
-   void project_velocity ( amrex::Vector< std::unique_ptr<amrex::MultiFab> >& u,
-                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& v,
-                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
-                           const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro,
-                           const amrex::Real c );
+                          const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro,
+                          int lev );
 
    //
    // Stuff to compute norms of EB-MultiFabs
