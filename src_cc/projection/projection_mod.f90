@@ -38,7 +38,7 @@ contains
    ! WARNING: We use a slightly modified version of C in the implementation below
    !
    subroutine compute_new_dt ( umax, vmax, wmax, romin, mumax, gradp0max, &
-                               dx, cfl, steady_state, time, stop_time, dt ) &
+        dx, cfl, steady_state, time, stop_time, dt ) &
         & bind(C)
 
       use constant, only: gravity
@@ -73,8 +73,8 @@ contains
 
       ! Gravity and/or gradient of p0
       f_cfl = abs(gravity(1)-gradp0max(1)) * odx + &
-              abs(gravity(2)-gradp0max(2)) * ody + &
-              abs(gravity(3)-gradp0max(3)) * odz
+           abs(gravity(2)-gradp0max(2)) * ody + &
+           abs(gravity(3)-gradp0max(3)) * odz
 
       ! Put all together
       tmp = (c_cfl + v_cfl)  + sqrt ( (c_cfl + v_cfl)**2 + four * f_cfl )
@@ -92,8 +92,8 @@ contains
 
       ! Don't overshoot the final time if not running to steady state
       if (steady_state .eq. 0 .and. stop_time .ge. 0.) then
-        if (time+dt .gt. stop_time) &
-           dt = stop_time - time
+         if (time+dt .gt. stop_time) &
+              dt = stop_time - time
       end if
 
    end subroutine compute_new_dt
@@ -121,11 +121,11 @@ contains
 
       ! Arrays
       real(ar),        intent(in   ) ::                       &
-            ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-             phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
+           phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(ar),        intent(inout) ::                       &
-             vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
+           vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
 
       ! Local variables
       integer(c_int)                 :: i, j, k
@@ -146,31 +146,31 @@ contains
             do i = lo(1), hi(1)
 
                oro_x_lo  = half * ( one/ro_g(i,j,k) + one/ro_g(i-1,j,k) )
-                dp_x_lo  =  phi(i,j,k) -  phi(i-1,j,k)
+               dp_x_lo  =  phi(i,j,k) -  phi(i-1,j,k)
 
                oro_x_hi  = half * ( one/ro_g(i+1,j,k) + one/ro_g(i,j,k) )
-                dp_x_hi  =  phi(i+1,j,k) -  phi(i,j,k)
+               dp_x_hi  =  phi(i+1,j,k) -  phi(i,j,k)
 
                vel(i,j,k,1) = vel(i,j,k,1) + half * c * odx * (     &
-                   oro_x_hi * dp_x_hi + oro_x_lo * dp_x_lo )
+                    oro_x_hi * dp_x_hi + oro_x_lo * dp_x_lo )
 
                oro_y_lo  = half * ( one/ro_g(i,j,k) + one/ro_g(i,j-1,k) )
-                dp_y_lo  =  phi(i,j,k) -  phi(i,j-1,k)
+               dp_y_lo  =  phi(i,j,k) -  phi(i,j-1,k)
 
                oro_y_hi  = half * ( one/ro_g(i,j+1,k) + one/ro_g(i,j,k) )
-                dp_y_hi  =  phi(i,j+1,k) -  phi(i,j,k)
+               dp_y_hi  =  phi(i,j+1,k) -  phi(i,j,k)
 
                vel(i,j,k,2) = vel(i,j,k,2) + half * c * ody * (     &
-                   oro_y_hi * dp_y_hi + oro_y_lo * dp_y_lo )
+                    oro_y_hi * dp_y_hi + oro_y_lo * dp_y_lo )
 
                oro_z_lo  = half * ( one/ro_g(i,j,k) + one/ro_g(i,j,k-1) )
-                dp_z_lo  =  phi(i,j,k) -  phi(i,j,k-1)
+               dp_z_lo  =  phi(i,j,k) -  phi(i,j,k-1)
 
                oro_z_hi  = half * ( one/ro_g(i,j,k+1) + one/ro_g(i,j,k) )
-                dp_z_hi  =  phi(i,j,k+1) -  phi(i,j,k)
+               dp_z_hi  =  phi(i,j,k+1) -  phi(i,j,k)
 
                vel(i,j,k,3) = vel(i,j,k,3) + half * c * odz * (     &
-                   oro_z_hi * dp_z_hi + oro_z_lo * dp_z_lo )
+                    oro_z_hi * dp_z_hi + oro_z_lo * dp_z_lo )
 
             end do
          end do
@@ -187,7 +187,7 @@ contains
    ! c    = real constant
    !
    subroutine add_grad_phind ( lo, hi, vel, ulo, uhi, ro_g, slo, shi, &
-                               phi, rlo, rhi, dx, c ) bind (C)
+        phi, rlo, rhi, dx, c ) bind (C)
 
       ! Loop bounds
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)
@@ -202,11 +202,11 @@ contains
 
       ! Arrays
       real(ar),        intent(in   ) ::                       &
-            ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-              phi(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
+           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
+           phi(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
 
       real(ar),        intent(inout) ::                       &
-             vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
+           vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
 
       ! Local variables
       integer(c_int)                 :: i, j, k
@@ -222,16 +222,16 @@ contains
             do i = lo(1), hi(1)
 
                phix = 0.25d0 * ( &
-                  phi(i+1,j,k) +  phi(i+1,j+1,k) +  phi(i+1,j,k+1) +  phi(i+1,j+1,k+1) &
-               -  phi(i  ,j,k) -  phi(i  ,j+1,k) -  phi(i  ,j,k+1) -  phi(i  ,j+1,k+1) )
+                    phi(i+1,j,k) +  phi(i+1,j+1,k) +  phi(i+1,j,k+1) +  phi(i+1,j+1,k+1) &
+                    -  phi(i  ,j,k) -  phi(i  ,j+1,k) -  phi(i  ,j,k+1) -  phi(i  ,j+1,k+1) )
 
                phiy = 0.25d0 * ( &
-                  phi(i,j+1,k) +  phi(i+1,j+1,k) +  phi(i,j+1,k+1) +  phi(i+1,j+1,k+1) &
-               -  phi(i,j  ,k) -  phi(i+1,j  ,k) -  phi(i,j  ,k+1) -  phi(i+1,j  ,k+1) )
+                    phi(i,j+1,k) +  phi(i+1,j+1,k) +  phi(i,j+1,k+1) +  phi(i+1,j+1,k+1) &
+                    -  phi(i,j  ,k) -  phi(i+1,j  ,k) -  phi(i,j  ,k+1) -  phi(i+1,j  ,k+1) )
 
                phiz = 0.25d0 * ( &
-                  phi(i,j,k+1) +  phi(i+1,j,k+1) +  phi(i,j+1,k+1) +  phi(i+1,j+1,k+1) &
-               -  phi(i,j,k  ) -  phi(i+1,j,k  ) -  phi(i,j+1,k  ) -  phi(i+1,j+1,k  ) )
+                    phi(i,j,k+1) +  phi(i+1,j,k+1) +  phi(i,j+1,k+1) +  phi(i+1,j+1,k+1) &
+                    -  phi(i,j,k  ) -  phi(i+1,j,k  ) -  phi(i,j+1,k  ) -  phi(i+1,j+1,k  ) )
 
                oro = 1.d0/ro_g(i,j,k)
 
@@ -285,15 +285,15 @@ contains
       integer(c_int)                :: i, j, k , n
 
       do n = 1, 3
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
 
-               vel(i,j,k,n) = vel(i,j,k,n) + dt * ( gravity(n) + drag(i,j,k,n) / rop_g(i,j,k) )
+                  vel(i,j,k,n) = vel(i,j,k,n) + dt * ( gravity(n) + drag(i,j,k,n) / rop_g(i,j,k) )
 
+               end do
             end do
          end do
-      end do
       end do
 
    end subroutine add_forcing
@@ -327,9 +327,9 @@ contains
       ! Time step width
       real(ar),       intent(in   ) :: dt
 
-            ! Arrays
+      ! Arrays
       real(ar),       intent(in   ) :: &
-             rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
            f_gds(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
 
       real(ar),       intent(inout) :: &
@@ -390,7 +390,7 @@ contains
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
                bcoeff(i,j,k) = half * (     ep_g(i,j,k) +     ep_g(i-i0,j-j0,k-k0) ) * &
-                             & half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
+                    & half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
             end do
          end do
       end do
@@ -535,31 +535,31 @@ contains
 
       end if
 
-      contains
+   contains
 
-         !
-         ! Test whether the BC type is the same everywhere on
-         ! the face. If BC is uniform on face, it returns its value
-         !
-         function get_bc_face (bct_array,nghost) result (bc_face)
-            integer(c_int), intent(in   ) :: bct_array(:,:,:)
-            integer(c_int), intent(in   ) :: nghost
-            integer                       :: bc_face
-            integer                       :: is, ie, js, je
+      !
+      ! Test whether the BC type is the same everywhere on
+      ! the face. If BC is uniform on face, it returns its value
+      !
+      function get_bc_face (bct_array,nghost) result (bc_face)
+         integer(c_int), intent(in   ) :: bct_array(:,:,:)
+         integer(c_int), intent(in   ) :: nghost
+         integer                       :: bc_face
+         integer                       :: is, ie, js, je
 
-            ! Do not consider the edges: they may cause problems
-            is = nghost+1
-            ie = size(bct_array,1) - nghost
-            js = nghost+1
-            je = size(bct_array,2) - nghost
+         ! Do not consider the edges: they may cause problems
+         is = nghost+1
+         ie = size(bct_array,1) - nghost
+         js = nghost+1
+         je = size(bct_array,2) - nghost
 
-            bc_face = bct_array(is,js,1)
+         bc_face = bct_array(is,js,1)
 
-            if ( .not. all (bct_array(is:ie,js:je,1) == bc_face) ) then
-               stop "BC type must be uniform on each face of the domain"
-            end if
+         if ( .not. all (bct_array(is:ie,js:je,1) == bc_face) ) then
+            stop "BC type must be uniform on each face of the domain"
+         end if
 
-         end function get_bc_face
+      end function get_bc_face
 
    end subroutine set_ppe_bc
 
@@ -567,7 +567,7 @@ contains
    ! Compute the cell-centered divergence of ep_g * u_g
    !
    subroutine compute_diveucc ( lo, hi, diveu, slo, shi, ep_g, vel, ulo, uhi, dx) &
-      bind(C)
+        bind(C)
 
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
@@ -585,7 +585,7 @@ contains
 
       real(ar),       intent(in   ) :: &
            vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3), &
-          ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Local variables
       integer  :: i, j, k
@@ -602,19 +602,19 @@ contains
 
                ! Face values
                eu_e = half * ( ep_g(i+1,j,k  ) + ep_g(i,j,k  ) ) * &
-                      half * (  vel(i+1,j,k,1) +  vel(i,j,k,1) )
+                    half * (  vel(i+1,j,k,1) +  vel(i,j,k,1) )
                eu_w = half * ( ep_g(i-1,j,k  ) + ep_g(i,j,k  ) ) * &
-                      half * (  vel(i-1,j,k,1) +  vel(i,j,k,1) )
+                    half * (  vel(i-1,j,k,1) +  vel(i,j,k,1) )
 
                ev_n = half * ( ep_g(i,j+1,k  ) + ep_g(i,j,k  ) ) * &
-                      half * (  vel(i,j+1,k,2) +  vel(i,j,k,2) )
+                    half * (  vel(i,j+1,k,2) +  vel(i,j,k,2) )
                ev_s = half * ( ep_g(i,j-1,k  ) + ep_g(i,j,k  ) ) * &
-                      half * (  vel(i,j-1,k,2) +  vel(i,j,k,2) )
+                    half * (  vel(i,j-1,k,2) +  vel(i,j,k,2) )
 
                ew_t = half * ( ep_g(i,j,k+1  ) + ep_g(i,j,k  ) ) * &
-                      half * (  vel(i,j,k+1,3) +  vel(i,j,k,3) )
+                    half * (  vel(i,j,k+1,3) +  vel(i,j,k,3) )
                ew_b = half * ( ep_g(i,j,k-1  ) + ep_g(i,j,k  ) ) * &
-                      half * (  vel(i,j,k-1,3) +  vel(i,j,k,3) )
+                    half * (  vel(i,j,k-1,3) +  vel(i,j,k,3) )
 
                ! Divergence
                diveu(i,j,k) = (eu_e - eu_w) * odx + (ev_n - ev_s) * ody + &
@@ -627,7 +627,7 @@ contains
    end subroutine compute_diveucc
 
    subroutine compute_diveund ( lo, hi, diveu, slo, shi, vec, ulo, uhi, dx) &
-      bind(C)
+        bind(C)
 
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
@@ -662,23 +662,23 @@ contains
 
                ! Divergence
                eu_x = ( vec(i  ,j  ,k  ,1) + vec(i  ,j-1,k  ,1) &
-                       +vec(i  ,j  ,k-1,1) + vec(i  ,j-1,k-1,1) &
-                       -vec(i-1,j  ,k  ,1) - vec(i-1,j-1,k  ,1) &
-                       -vec(i-1,j  ,k-1,1) - vec(i-1,j-1,k-1,1) )
+                    +vec(i  ,j  ,k-1,1) + vec(i  ,j-1,k-1,1) &
+                    -vec(i-1,j  ,k  ,1) - vec(i-1,j-1,k  ,1) &
+                    -vec(i-1,j  ,k-1,1) - vec(i-1,j-1,k-1,1) )
 
                eu_y = ( vec(i  ,j  ,k  ,2) + vec(i-1,j  ,k  ,2) &
-                       +vec(i  ,j  ,k-1,2) + vec(i-1,j  ,k-1,2) &
-                       -vec(i  ,j-1,k  ,2) - vec(i-1,j-1,k  ,2) &
-                       -vec(i  ,j-1,k-1,2) - vec(i-1,j-1,k-1,2) )
+                    +vec(i  ,j  ,k-1,2) + vec(i-1,j  ,k-1,2) &
+                    -vec(i  ,j-1,k  ,2) - vec(i-1,j-1,k  ,2) &
+                    -vec(i  ,j-1,k-1,2) - vec(i-1,j-1,k-1,2) )
 
                eu_z = ( vec(i  ,j  ,k  ,3) + vec(i-1,j  ,k  ,3) &
-                       +vec(i  ,j-1,k  ,3) + vec(i-1,j-1,k  ,3) &
-                       -vec(i  ,j  ,k-1,3) - vec(i-1,j  ,k-1,3) &
-                       -vec(i  ,j-1,k-1,3) - vec(i-1,j-1,k-1,3) )
+                    +vec(i  ,j-1,k  ,3) + vec(i-1,j-1,k  ,3) &
+                    -vec(i  ,j  ,k-1,3) - vec(i-1,j  ,k-1,3) &
+                    -vec(i  ,j-1,k-1,3) - vec(i-1,j-1,k-1,3) )
 
-                diveu(i,j,k) = 0.25d0 * (eu_x*odx + eu_y*ody + eu_z*odz)
+               diveu(i,j,k) = 0.25d0 * (eu_x*odx + eu_y*ody + eu_z*odz)
 
-!               if (i.eq.0) print *,'DIVEU ',j,k,diveu(i,j,k), eu_x, eu_y, eu_z
+               !               if (i.eq.0) print *,'DIVEU ',j,k,diveu(i,j,k), eu_x, eu_y, eu_z
 
             end do
          end do
@@ -687,7 +687,7 @@ contains
    end subroutine compute_diveund
 
    subroutine compute_gradp0_max ( lo, hi, p0, slo, shi, gp0_max, dx, nodal_pressure) &
-      bind (C)
+        bind (C)
 
       ! Loop bounds
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)
@@ -701,7 +701,7 @@ contains
 
       ! Arrays
       real(ar),        intent(in   ) ::                       &
-              p0(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           p0(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int),  intent(in   ) :: nodal_pressure
 
@@ -724,20 +724,20 @@ contains
                   gp0_max(1) = max( gp0_max(1), abs( &
                        p0(i+1,j,k) + p0(i+1,j+1,k) + p0(i+1,j,k+1) + p0(i+1,j+1,k+1) &
                        - p0(i  ,j,k) - p0(i  ,j+1,k) - p0(i  ,j,k+1) - p0(i  ,j+1,k+1) ) )
-                  
+
                   gp0_max(2) = max( gp0_max(2), abs( &
                        p0(i,j+1,k) + p0(i+1,j+1,k) + p0(i,j+1,k+1) + p0(i+1,j+1,k+1) &
                        - p0(i,j  ,k) - p0(i+1,j  ,k) - p0(i,j  ,k+1) - p0(i+1,j  ,k+1) ) )
-                  
+
                   gp0_max(3) = max( gp0_max(3), abs( &
                        p0(i,j,k+1) + p0(i+1,j,k+1) + p0(i,j+1,k+1) + p0(i+1,j+1,k+1) &
                        - p0(i,j,k  ) - p0(i+1,j,k  ) - p0(i,j+1,k  ) - p0(i+1,j+1,k  ) ) )
-                  
+
 
                end do
             end do
          end do
-         
+
          gp0_max(1) = gp0_max(1) * odx * 0.25d0
          gp0_max(2) = gp0_max(2) * ody * 0.25d0
          gp0_max(3) = gp0_max(3) * odz * 0.25d0
@@ -748,21 +748,67 @@ contains
          do k = lo(3), hi(3)+1
             do j = lo(2), hi(2)+1
                do i = lo(1), hi(1)+1
-                  
+
                   gp0_max(1) = max( gp0_max(1), abs(p0(i,j,k) - p0(i-1,j,k)))
                   gp0_max(2) = max( gp0_max(2), abs(p0(i,j,k) - p0(i,j-1,k)))
                   gp0_max(3) = max( gp0_max(3), abs(p0(i,j,k) - p0(i,j,k-1)))
-                  
+
                end do
             end do
          end do
-         
+
          gp0_max(1) = gp0_max(1) * odx
          gp0_max(2) = gp0_max(2) * ody
          gp0_max(3) = gp0_max(3) * odz
-         
+
       end if
 
    end subroutine compute_gradp0_max
+
+
+
+   !
+   ! Average to faces in chosen direction 
+   ! 
+   subroutine average_cc_to_fc ( lo, hi, fc, flo, fhi, cc, slo, shi, idir, ncomp ) bind(C) 
+
+      ! Loop bounds (assumed face centered!)
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+
+      ! Arrays bounds
+      integer(c_int), intent(in   ) :: flo(3),fhi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+
+      ! Array
+      real(ar),       intent(inout) :: &
+           fc(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3),ncomp)
+
+      real(ar),       intent(in   ) :: &
+           cc(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),ncomp)
+
+      ! Direction
+      integer(c_int), intent(in   ), value :: idir
+
+      ! Number of components
+      integer(c_int), intent(in   ), value :: ncomp
+      
+      ! Local variables
+      integer  :: i, j, k, i0, j0, k0, n 
+
+      i0 = e_i(idir,1)
+      j0 = e_i(idir,2)
+      k0 = e_i(idir,3)      
+
+      do n = 1, ncomp
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
+                  fc(i,j,k,n) = half * ( cc(i-i0,j-j0,k-k0,n) + cc(i,j,k,n) )  
+               end do
+            end do
+         end do
+      end do
+
+   end subroutine average_cc_to_fc
 
 end module projection_mod

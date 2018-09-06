@@ -71,10 +71,25 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
     phi[lev] -> setVal(0.);
  
     // Solve PPE
-    solve_poisson_equation ( lev, bcoeff, phi, diveu, bc_lo, bc_hi );
+    MultiFab fluxes(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),
+                    vel_g[lev]->nComp(), vel_g[lev]->nGrow(), MFInfo(),
+                    *ebfactory[lev]);
+
+    solve_poisson_equation( lev, bcoeff, phi, diveu, bc_lo, bc_hi, fluxes );
  
     // Correct the velocity field
-    mfix_add_grad_phi ( lev, -scaling_factor, (*phi[lev]) );
+    MultiFab::Divide( fluxes, *ep_g[lev], 0, 0, 1, 0 );
+    MultiFab::Divide( fluxes, *ep_g[lev], 0, 1, 1, 0 );
+    MultiFab::Divide( fluxes, *ep_g[lev], 0, 2, 1, 0 );
+
+    //
+    // ======================== HACK ===========================
+    // Check sign and factor of dt 
+    //  
+    // 
+    MultiFab::Add( *vel_g[lev], fluxes, 0, 0, 1, 0);
+    
+    // mfix_add_grad_phi ( lev, -scaling_factor, (*phi[lev]) );
 
     if (proj_2)
     {
@@ -109,7 +124,8 @@ mfix_level::solve_poisson_equation (  int lev,
 				      Vector< Vector< std::unique_ptr<MultiFab> > >& b,
 				      Vector< std::unique_ptr<MultiFab> >& this_phi,
 				      Vector< std::unique_ptr<MultiFab> >& rhs,
-				      int bc_lo[], int bc_hi[] )
+				      int bc_lo[], int bc_hi[],
+                                      MultiFab& fluxes )
 {
     BL_PROFILE("mfix_level::solve_poisson_equation");
     
@@ -209,6 +225,7 @@ mfix_level::solve_poisson_equation (  int lev,
        // Finally, solve the system
        //
        solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
+       solver.getFluxes( {&fluxes} );
 
        this_phi[lev] -> FillBoundary (geom[lev].periodicity());
     }
