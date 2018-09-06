@@ -39,7 +39,7 @@ mfix_level::make_eb_box(int lev)
     int max_coarsening_level = 100;
 
     amrex::Print() << " " << std::endl;
-    amrex::Print() << "Now making the ebfactory's ..." << std::endl;
+    amrex::Print() << "Now making the ebfactories ..." << std::endl;
 
     if ( geom[lev].isAllPeriodic() )
     {

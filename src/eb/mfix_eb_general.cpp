@@ -140,10 +140,10 @@ mfix_level::make_eb_general(int lev) {
                 int max_coarsening_level = 100;
                 EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
 
-                //GShopLSFactory<std::remove_pointer<
-                //    decltype(impfunc_poly2.get())
-                //                   >> gshop_lsfactory(* impfunc_poly2, * level_set);
-                //mf_impfunc = gshop_lsfactory.fill_impfunc();
+                GShopLSFactory<
+                    EB2::TranslationIF<EB2::PolynomialIF>
+                    > gshop_lsfactory(gshop, * level_set);
+                mf_impfunc = gshop_lsfactory.fill_impfunc();
             }
         } else {
             if (has_walls && use_divider) { // ... ! poly2 + walls + divider

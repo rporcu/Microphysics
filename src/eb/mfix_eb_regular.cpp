@@ -36,7 +36,7 @@ mfix_level::make_eb_regular(int lev)
     int max_coarsening_level = 100;
 
     amrex::Print() << " " << std::endl;
-    amrex::Print() << "Now making the ebfactory's ..." << std::endl;
+    amrex::Print() << "Now making the ebfactories ..." << std::endl;
 
     // If filling level-set: this is used to store the implicit function (due to
     // any walls defined in mfix.dat). It is filled while after EB2::Build.
