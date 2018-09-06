@@ -148,6 +148,8 @@ int main (int argc, char* argv[])
     // Initialize derived internals
     my_mfix.Init(lev,dt,time);
 
+    // This needs is needed before initializing level data: ebfactories should
+    // not change after the eb-dependent MultiFabs are allocated.
     int lev0 = 0;
     my_mfix.make_eb_geometry(lev0);
 
@@ -171,16 +173,9 @@ int main (int argc, char* argv[])
         my_mfix.Restart(restart_file, & nstep, & dt, & time, Nrep);
     }
 
-    // Build EB _after_ the grids have been built, but _before_ regrid
-    //int lev0 = 0;
-    //my_mfix.make_eb_geometry(lev0);
-
     if (mfix_level::get_load_balance_type() == "FixedSize" ||
         mfix_level::get_load_balance_type()== "KnapSack" )
         my_mfix.Regrid(lev,0);
-
-    //int lev0 = 0;
-    //my_mfix.make_eb_geometry(lev0);
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);

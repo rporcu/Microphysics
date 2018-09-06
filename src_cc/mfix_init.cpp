@@ -472,11 +472,6 @@ mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, R
      init_collision(avg_dp, avg_ro);
   }
 
-  // Define the MultiFab dummy which we pass into some MFIXParticleContainer routines.
-  //if (solve_dem)
-  //    dummy->define(pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev), 1, 0,
-  //                  MFInfo(), * particle_ebfactory[lev]);
-
   // Initial fluid arrays: pressure, velocity, density, viscosity
   if (solve_fluid)
      mfix_init_fluid(lev,restart_flag,dt,stop_time,steady_state);
