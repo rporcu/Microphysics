@@ -226,7 +226,7 @@ mfix_level::MakeBaseGrids() const
     return ba;
 }
 
-void 
+void
 mfix_level::ChopGrids(const Box & domain, BoxArray & ba, int target_size) const
 {
     if ( ParallelDescriptor::IOProcessor() )
@@ -274,7 +274,7 @@ mfix_level::ChopGrids(const Box & domain, BoxArray & ba, int target_size) const
     }
 }
 
-void 
+void
 mfix_level::MakeNewLevelFromScratch(int lev, Real time,
                                     const BoxArray & new_grids, const DistributionMapping & new_dmap)
 {
@@ -296,7 +296,7 @@ mfix_level::MakeNewLevelFromScratch(int lev, Real time,
         check_initial_conditions(&dx,&dy,&dz,domain.loVect(),domain.hiVect());
 }
 
-void 
+void
 mfix_level::ReMakeNewLevelFromScratch(int lev,
                                       const BoxArray & new_grids, const DistributionMapping & new_dmap)
 {
@@ -309,6 +309,21 @@ mfix_level::ReMakeNewLevelFromScratch(int lev,
 
     // We need to re-fill these arrays for the larger domain (after replication).
     mfix_set_bc_type(lev);
+
+    // After replicate, new BAs needs to be passed to the level-set factory.
+    // Also: mfix_level::ls needs to be replaced to reflect the new BA.
+    level_set = std::unique_ptr<LSFactory>(
+                                           new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
+                                                         levelset__pad, levelset__eb_pad,
+                                                         pc->ParticleBoxArray(lev), pc->Geom(lev),
+                                                         pc->ParticleDistributionMap(lev))
+                                           );
+
+    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+    ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
+    ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 );
+    ls[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
