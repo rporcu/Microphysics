@@ -222,10 +222,11 @@ private:
 
     // Projection-related methods
     void solve_poisson_equation(int lev,
-            Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-      Vector< std::unique_ptr<MultiFab> >& phi,
-      Vector< std::unique_ptr<MultiFab> >& rhs,
-      int bc_lo[], int bc_hi[] );
+                                Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+                                Vector< std::unique_ptr<MultiFab> >& phi,
+                                Vector< std::unique_ptr<MultiFab> >& rhs,
+                                int bc_lo[], int bc_hi[],
+                                MultiFab& fluxes );
 
     // Solve implicit diffusion
     void solve_diffusion_equation(int lev,

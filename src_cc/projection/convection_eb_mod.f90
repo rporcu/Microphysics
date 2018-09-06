@@ -85,16 +85,15 @@ contains
            & flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
 
       ! Temporary arrays: CC velocity at faces
-      real(ar) :: vel_xface(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
+      real(ar) :: fx_tmp(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
 
       ! Local variables
       integer(c_int)                 :: i, j, k, n, lo_grow(3), hi_grow(3)
-      real(ar)                       :: upls, umns
-      real(ar)                       :: epu
+      real(ar)                       :: upls, umns, u_face
       integer, parameter             :: bc_list(6) = [MINF_, NSW_, FSW_, PSW_, PINF_, POUT_]
 
       ! 
-      ! First compute the CC velocity at the x-face
+      ! First compute the fluxes at the x-face center
       ! Do this on ALL x-faces on the tile, i.e. INCLUDE as many ghost faces as
       ! possible      
       !
@@ -104,18 +103,19 @@ contains
                do i = lo(1)-ng+1, hi(1)+ng
                   if ( areafrac(i,j,k) > zero ) then
                      if ( i >= domlo(1) .and. any(bc_ilo(j,k,1) == bc_list) ) then
-                        vel_xface(i,j,k,n) =  vel(domlo(1)-1,j,k,n)
+                        u_face =  vel(domlo(1)-1,j,k,n)
                      else if ( i >= domhi(1)+1 .and. any(bc_ihi(j,k,1) == bc_list ) ) then
-                        vel_xface(i,j,k,n) =  vel(domhi(1)+1,j,k,n)
+                        u_face =  vel(domhi(1)+1,j,k,n)
                      else
                         upls  = vel(i  ,j,k,n) - half * xslopes(i  ,j,k,n)
                         umns  = vel(i-1,j,k,n) + half * xslopes(i-1,j,k,n)
 
-                        vel_xface(i,j,k,n) = upwind( umns, upls, u(i,j,k) )
-                     end if
+                        u_face = upwind( umns, upls, u(i,j,k) )
+                     end if                     
                   else
-                     vel_xface(i,j,k,n) = huge(one)
+                     u_face = huge(one)
                   end if
+                  fx_tmp(i,j,k,n) = half * (ep(i-1,j,k) + ep(i,j,k)) * u(i,j,k) * u_face
                end do
             end do
          end do
@@ -128,23 +128,8 @@ contains
       lo_grow = lo + [-ng+1, -ng+1, -ng+1 ]
       hi_grow = hi + [ ng  ,  ng-1,  ng-1 ]
       
-      call interpolate_to_face_centroid( lo_grow, hi_grow, fx, vel_xface, ulo, uhi, 3, &
+      call interpolate_to_face_centroid( lo_grow, hi_grow, fx, fx_tmp, ulo, uhi, 3, &
            areafrac, alo, ahi, cent, clo, chi, flags, flo, fhi, 1 )
-      
-      !
-      ! Compute fluxes at x face in all the cells including ghost cells
-      ! Is it ok to do a simple average for ep????
-      !
-      do n = 1, 3
-         do k = lo_grow(3), hi_grow(3)
-            do j = lo_grow(2), hi_grow(2)
-               do i = lo_grow(1), hi_grow(1)
-                  epu         = half * (ep(i-1,j,k) + ep(i,j,k)) * u(i,j,k)
-                  fx(i,j,k,n) = epu * fx(i,j,k,n)
-               end do
-            end do
-         end do
-      end do
       
    end subroutine compute_convective_fluxes_x
 
@@ -202,16 +187,15 @@ contains
            & flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
 
       ! Temporary arrays: CC velocity at faces
-      real(ar) :: vel_yface(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3)
+      real(ar) :: fy_tmp(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3)
 
       ! Local variables
       integer(c_int)                 :: i, j, k, n, lo_grow(3), hi_grow(3)
-      real(ar)                       :: vpls, vmns
-      real(ar)                       :: epv
+      real(ar)                       :: vpls, vmns, v_face
       integer, parameter             :: bc_list(6) = [MINF_, NSW_, FSW_, PSW_, PINF_, POUT_]
 
       ! 
-      ! First compute the CC velocity at the y-faces
+      ! First compute the fluxes at the y-face center
       ! Do this on ALL y-faces on the tile, i.e. INCLUDE as many ghost faces as
       ! possible      
       !
@@ -221,18 +205,19 @@ contains
                do i = lo(1)-ng,    hi(1)+ng
                   if ( areafrac(i,j,k) > zero ) then
                      if ( j <= domlo(2) .and. any(bc_jlo(i,k,1) == bc_list) ) then
-                        vel_yface(i,j,k,n) =  vel(i,domlo(2)-1,k,n)
+                        v_face =  vel(i,domlo(2)-1,k,n)
                      else if ( j >= domhi(2)+1 .and. any(bc_jhi(i,k,1) == bc_list ) ) then
-                        vel_yface(i,j,k,n) =  vel(i,domhi(2)+1,k,n)
+                        v_face =  vel(i,domhi(2)+1,k,n)
                      else
                         vpls  = vel(i,j  ,k,n) - half * yslopes(i,j  ,k,n)
                         vmns  = vel(i,j-1,k,n) + half * yslopes(i,j-1,k,n)
 
-                        vel_yface(i,j,k,n) = upwind( vmns, vpls, v(i,j,k) )
+                        v_face = upwind( vmns, vpls, v(i,j,k) )
                      end if
                   else
-                     vel_yface(i,j,k,n) = huge(one)
+                     v_face = huge(one)
                   end if
+                  fy_tmp(i,j,k,n) = half * (ep(i,j-1,k) + ep(i,j,k)) * v(i,j,k) * v_face
                end do
             end do
          end do
@@ -245,23 +230,8 @@ contains
       lo_grow = lo + [-ng+1, -ng+1, -ng+1 ]
       hi_grow = hi + [ ng-1,  ng  ,  ng-1 ]
        
-      call interpolate_to_face_centroid( lo_grow, hi_grow, fy, vel_yface, vlo, vhi, 3, &
+      call interpolate_to_face_centroid( lo_grow, hi_grow, fy, fy_tmp, vlo, vhi, 3, &
            areafrac, alo, ahi, cent, clo, chi, flags, flo, fhi, 2 )
-
-      !
-      ! Compute fluxes at y face
-      ! Is it ok to do a simple average for ep????
-      !
-      do n = 1, 3
-         do k = lo_grow(3), hi_grow(3)
-            do j = lo_grow(2), hi_grow(2)
-               do i = lo_grow(1), hi_grow(1)
-                  epv         = half * (ep(i,j-1,k) + ep(i,j,k)) * v(i,j,k)
-                  fy(i,j,k,n) = epv * fy(i,j,k,n)
-               end do
-            end do
-         end do
-      end do
       
    end subroutine compute_convective_fluxes_y
 
@@ -320,16 +290,15 @@ contains
            & flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
 
       ! Temporary arrays: CC velocity at faces
-      real(ar) :: vel_zface(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),3)
+      real(ar) :: fz_tmp(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),3)
 
       ! Local variables
       integer(c_int)                 :: i, j, k, n, lo_grow(3), hi_grow(3)
-      real(ar)                       :: wpls, wmns
-      real(ar)                       :: epw
+      real(ar)                       :: wpls, wmns, w_face
       integer, parameter             :: bc_list(6) = [MINF_, NSW_, FSW_, PSW_, PINF_, POUT_]
 
       ! 
-      ! First compute the CC velocity at the z-face
+      ! First compute the fluxes at the z-face center
       ! Do this on ALL z-faces on the tile, i.e. INCLUDE as many ghost faces as
       ! possible      
       !
@@ -339,18 +308,19 @@ contains
                do i = lo(1)-ng, hi(1)+ng
                   if ( areafrac(i,j,k) > zero ) then
                      if ( k <= domlo(3) .and. any(bc_klo(i,j,1) == bc_list) ) then
-                        vel_zface(i,j,k,n) =  vel(i,j,domlo(3)-1,n)
+                        w_face =  vel(i,j,domlo(3)-1,n)
                      else if ( k >= domhi(3)+1 .and. any(bc_khi(i,j,1) == bc_list ) ) then
-                        vel_zface(i,j,k,n) =  vel(i,j,domhi(3)+1,n)
+                        w_face =  vel(i,j,domhi(3)+1,n)
                      else
                         wpls  = vel(i,j,k  ,n) - half * zslopes(i,j,k  ,n)
                         wmns  = vel(i,j,k-1,n) + half * zslopes(i,j,k-1,n)
 
-                        vel_zface(i,j,k,n) = upwind( wmns, wpls, w(i,j,k) )
+                        w_face = upwind( wmns, wpls, w(i,j,k) )
                      end if
                   else
-                     vel_zface(i,j,k,n) = huge(one)
+                     w_face = huge(one)
                   end if
+                  fz_tmp(i,j,k,n) = half * (ep(i,j,k-1) + ep(i,j,k)) * w(i,j,k) * w_face
                end do
             end do
          end do
@@ -364,27 +334,10 @@ contains
       lo_grow = lo + [-ng+1, -ng+1, -ng+1 ]
       hi_grow = hi + [ ng-1,  ng-1,  ng   ]
       
-      call interpolate_to_face_centroid( lo_grow, hi_grow, fz, vel_zface, wlo, whi, 3, &
+      call interpolate_to_face_centroid( lo_grow, hi_grow, fz, fz_tmp, wlo, whi, 3, &
            areafrac, alo, ahi, cent, clo, chi, flags, flo, fhi, 3 )
-
-      !
-      ! Compute fluxes at z face
-      ! Is it ok to do a simple average for ep????
-      !
-      do n = 1, 3
-         do k = lo_grow(3), hi_grow(3)
-            do j = lo_grow(2), hi_grow(2)
-               do i = lo_grow(1), hi_grow(1)
-                  epw         = half * (ep(i,j,k-1) + ep(i,j,k)) * w(i,j,k)
-                  fz(i,j,k,n) = epw * fz(i,j,k,n)
-               end do
-            end do
-         end do
-      end do
-      
+     
    end subroutine compute_convective_fluxes_z
-
-
    
    
    
