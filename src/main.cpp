@@ -148,6 +148,9 @@ int main (int argc, char* argv[])
     // Initialize derived internals
     my_mfix.Init(lev,dt,time);
 
+    int lev0 = 0;
+    my_mfix.make_eb_geometry(lev0);
+
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
@@ -169,8 +172,8 @@ int main (int argc, char* argv[])
     }
 
     // Build EB _after_ the grids have been built, but _before_ regrid
-    int lev0 = 0;
-    my_mfix.make_eb_geometry(lev0);
+    //int lev0 = 0;
+    //my_mfix.make_eb_geometry(lev0);
 
     if (mfix_level::get_load_balance_type() == "FixedSize" ||
         mfix_level::get_load_balance_type()== "KnapSack" )

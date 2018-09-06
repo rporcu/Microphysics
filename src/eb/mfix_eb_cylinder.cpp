@@ -163,8 +163,7 @@ mfix_level::make_eb_cylinder(int lev)
 
            // If there is a bottom plane, fill level set with plane IF first
            if(close_bottom) {
-               std::unique_ptr<MultiFab> mf_impfunc_wall
-                   = wall_lsfactory->fill_impfunc();
+               std::unique_ptr<MultiFab> mf_impfunc_wall = wall_lsfactory->fill_impfunc();
 
                level_set->intersection_impfunc(* mf_impfunc_wall);
            }

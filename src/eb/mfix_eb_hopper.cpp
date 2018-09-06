@@ -171,14 +171,18 @@ mfix_level::make_eb_hopper(int lev)
                         {eb_grow, eb_grow, eb_grow}, EBSupport::full
                 );
 
-       level_set->intersection_ebf(eb_factory, * mf_impfunc);
-       // store copy of level set (for plotting).
-       std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-       ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
-       ls[lev]->FillBoundary(geom[lev].periodicity());
+           level_set->intersection_ebf(eb_factory, * mf_impfunc);
+           // store copy of level set (for plotting).
+           std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+           ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
+           ls[lev]->FillBoundary(geom[lev].periodicity());
 
-       amrex::Print() << "Done making the levelset ..." << std::endl;
+           amrex::Print() << "Done making the levelset ..." << std::endl;
+       } else {
+           amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
+                          << std::endl;
        }
+
        amrex::Print() << "Done making the particle ebfactory ..." << std::endl;
        amrex::Print() << " " << std::endl;
     }
