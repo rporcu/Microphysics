@@ -187,15 +187,14 @@ contains
                      u_tmp(i,j,k) = upwind_normal( umns, upls )
                   end if
                else
-                  u_tmp(i,j,k) = huge(one)
-               
+                  u_tmp(i,j,k) = huge(one)               
                end if
             end do
          end do
       end do
       
-      call interpolate_to_face_centroid( lo, hi, u, u_tmp, ulo, uhi, 1, &
-           areafrac, alo, ahi, cent, clo, chi, flags, flo, fhi, 1 )
+      ! call interpolate_to_face_centroid( lo, hi, u, u_tmp, ulo, uhi, 1, &
+      !      areafrac, alo, ahi, cent, clo, chi, flags, flo, fhi, 1 )
    
    end subroutine compute_velocity_at_x_faces_eb
 
@@ -271,8 +270,9 @@ contains
 
       ! Next, we interpolate at the face centroid only when EB geometry cut the face.
       ! REMEMBER: centroid is NONdimensional and zero at face center
-      call interpolate_to_face_centroid( lo, hi, v, v_tmp, vlo, vhi, 1, &
-           areafrac, alo, ahi, cent, clo, chi, flags, flo, fhi, 2 )     
+      ! call interpolate_to_face_centroid( lo, hi, v, v_tmp, vlo, vhi, 1, &
+      !      areafrac, alo, ahi, cent, clo, chi, flags, flo, fhi, 2 )   
+      
 
    end subroutine compute_velocity_at_y_faces_eb
 
@@ -354,8 +354,8 @@ contains
 
       ! Next, we interpolate at the face centroid only when EB geometry cut the face.
       ! REMEMBER: centroid is NONdimensional and zero at face center
-      call interpolate_to_face_centroid( lo, hi, w, w_tmp, wlo, whi, 1, &
-           areafrac, alo, ahi, cent, clo, chi, flags, flo, fhi, 3 )   
+      ! call interpolate_to_face_centroid( lo, hi, w, w_tmp, wlo, whi, 1, &
+      !      areafrac, alo, ahi, cent, clo, chi, flags, flo, fhi, 3 )   
 
    end subroutine compute_velocity_at_z_faces_eb
 
