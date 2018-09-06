@@ -493,6 +493,10 @@ private:
 
     // stores level-set (nodal index space corresponding to cells, but n_refinement times finer)
     std::unique_ptr<LSFactory> level_set;
+
+   // Utilities
+   void mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
+                                Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc );
 };
 
 inline

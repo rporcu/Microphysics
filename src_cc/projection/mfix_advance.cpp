@@ -1,5 +1,4 @@
 #include <AMReX_ParmParse.H>
-
 #include <mfix_mac_F.H>
 #include <mfix_proj_F.H>
 #include <mfix_F.H>
@@ -8,6 +7,9 @@
 #include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
 #include <AMReX_MultiFab.H>
+#include <AMReX_EBMultiFabUtil.H>
+#include <AMReX_Array.H>
+#include <AMReX_BLassert.H>
 
 void
 mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt,  Real& time, Real stop_time )
@@ -160,6 +162,8 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 
        // Replace vel_g by the original values 
        MultiFab::Copy (*vel_g[lev], *vel_go[lev], 0, 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow());
+
+       //exit(0);
     }
 }
 
@@ -454,25 +458,27 @@ mfix_level::mfix_compute_diveu (int lev)
 	                     geom[lev].CellSize());
        }
 
-    } else {
+    }
+    else
+    {
 
-    int extrap_dir_bcs = 1;
-    mfix_set_velocity_bcs (lev,extrap_dir_bcs);
-    vel_g[lev]->FillBoundary (geom[lev].periodicity());
+       int extrap_dir_bcs = 1;
+       mfix_set_velocity_bcs (lev,extrap_dir_bcs);
+       vel_g[lev]->FillBoundary (geom[lev].periodicity());      
+          
+       // Create face centered multifabs for ep_g and vel_g
+       MultiFab epu( vel_g[lev]->boxArray(),  vel_g[lev]-> DistributionMap(),
+                     vel_g[lev]->nComp(), nghost, MFInfo(), *ebfactory[lev]);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-       for (MFIter mfi(*diveu[lev],true); mfi.isValid(); ++mfi)
-       {
-	   const Box& bx = mfi.tilebox();
-	
-	   compute_diveucc ( BL_TO_FORTRAN_BOX(bx),
-			     BL_TO_FORTRAN_ANYD((*diveu[lev])[mfi]),
-  			     (*ep_g[lev])[mfi].dataPtr (),
-  			     BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-	                     geom[lev].CellSize());
-       }
+        
+       MultiFab::Copy( epu, *vel_g[lev], 0, 0, 3, vel_g[lev]->nGrow() );
+       MultiFab::Multiply( epu, *vel_g[lev], 0, 0, 3, vel_g[lev]->nGrow() );
+
+       Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM> epu_fc;
+       mfix_average_cc_to_fc ( lev, epu, epu_fc );
+       
+       EB_computeDivergence( *diveu[lev], GetArrOfConstPtrs(epu_fc), geom[lev] );             
+       
     }
 
     // Restore velocities to carry Dirichlet values on faces
@@ -719,5 +725,71 @@ mfix_level::mfix_print_max_vel(int lev)
        mfix_norm0(vel_g, lev, 2) << "  " <<
        mfix_norm0(p_g,   lev, 0) << "  " << std::endl;
 }
+
+
+
+//
+// This subroutines averages component by component
+// The assumption is that cc is multicomponent
+// 
+void
+mfix_level::mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
+                                    Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc )
+{
+   AMREX_ASSERT(cc.nComp()==AMREX_SPACEDIM);
+   AMREX_ASSERT(AMREX_SPACEDIM==3);
+   
+   // 
+   // First allocate fc
+   //
+   BoxArray x_ba = cc.boxArray();
+   x_ba.surroundingNodes(0);
+   fc[0].reset(new MultiFab(x_ba,cc.DistributionMap(),1,nghost));
+
+   BoxArray y_ba = cc.boxArray();
+   y_ba.surroundingNodes(1);
+   fc[1].reset(new MultiFab(y_ba,cc.DistributionMap(),1,nghost));
+
+   BoxArray z_ba = cc.boxArray();
+   z_ba.surroundingNodes(0);
+   fc[2].reset(new MultiFab(z_ba,cc.DistributionMap(),1,nghost));
+
+   //
+   // Average
+   // We do not care about EB because faces in covered regions
+   // should never get used so we can set them to whatever values
+   // we like
+   //
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+   for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
+   {
+      // Boxes for staggered components
+      Box ubx = mfi.tilebox(e_x);
+      Box vbx = mfi.tilebox(e_y);
+      Box wbx = mfi.tilebox(e_z);
+
+      average_cc_to_fc( BL_TO_FORTRAN_BOX(ubx),
+                        BL_TO_FORTRAN_ANYD((*fc[0])[mfi]),
+                        BL_TO_FORTRAN_ANYD(cc[mfi]),
+                        1, 1 );
+
+      average_cc_to_fc( BL_TO_FORTRAN_BOX(vbx),
+                        BL_TO_FORTRAN_ANYD((*fc[1])[mfi]),
+                        BL_TO_FORTRAN_ANYD(cc[mfi]),
+                        2, 1 );
+
+      average_cc_to_fc( BL_TO_FORTRAN_BOX(wbx),
+                        BL_TO_FORTRAN_ANYD((*fc[2])[mfi]),
+                        BL_TO_FORTRAN_ANYD(cc[mfi]),
+                        3, 1 );
+
+   }
+
+   // We do not fill BCs and halo regions in this routine    
+} 
+
+
 
 
