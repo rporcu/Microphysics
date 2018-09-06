@@ -16,8 +16,7 @@ mfix_level::mfix_compute_ugradu_predictor ( int lev,
 
     mfix_compute_velocity_at_faces( lev, vel );
 
-    Real dummy_dt = 1.0;
-    mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, dummy_dt );
+    mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g );
 
     // Get EB geometric info
     Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
@@ -119,8 +118,7 @@ mfix_level::mfix_compute_ugradu_corrector ( int lev,
     mfix_compute_velocity_slopes ( lev, vel );
     mfix_compute_velocity_at_faces( lev, vel );
 
-    Real dummy_dt = 1.0;
-    mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, dummy_dt );
+    mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g );
     // Get EB geometric info
     Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
     Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
