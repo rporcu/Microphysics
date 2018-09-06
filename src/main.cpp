@@ -148,13 +148,16 @@ int main (int argc, char* argv[])
     // Initialize derived internals
     my_mfix.Init(lev,dt,time);
 
-    int lev0 = 0;
-    my_mfix.make_eb_geometry(lev0);
+    // This needs is needed before initializing level data: ebfactories should
+    // not change after the eb-dependent MultiFabs are allocated.
+    //int lev0 = 0;
+    //my_mfix.make_eb_geometry(lev0);
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
     {
+        // NOTE: this also builds ebfactories and level-set
         my_mfix.InitLevelData(lev,dt,time);
     }
     else
@@ -166,21 +169,15 @@ int main (int argc, char* argv[])
         // are recomputed for the replicated system).
         my_mfix.levelset__restart = true;
 
-        // This can change the grids (during replication)
+        // NOTE: 1) this also builds ebfactories and level-set 2) this can
+        // change the grids (during replication)
         IntVect Nrep(repl_x, repl_y, repl_z);
         my_mfix.Restart(restart_file, & nstep, & dt, & time, Nrep);
     }
 
-    // Build EB _after_ the grids have been built, but _before_ regrid
-    //int lev0 = 0;
-    //my_mfix.make_eb_geometry(lev0);
-
     if (mfix_level::get_load_balance_type() == "FixedSize" ||
         mfix_level::get_load_balance_type()== "KnapSack" )
         my_mfix.Regrid(lev,0);
-
-    //int lev0 = 0;
-    //my_mfix.make_eb_geometry(lev0);
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);

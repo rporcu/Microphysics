@@ -59,7 +59,7 @@ mfix_level::AllocateArrays (int lev)
     // Current velocity
     vel_g[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
     vel_g[lev]->setVal(0.);
- 
+
     // Old velocity
     vel_go[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
     vel_go[lev]->setVal(0.);
@@ -75,13 +75,13 @@ mfix_level::AllocateTempArrays (int lev)
     // Vorticity
     vort[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     vort[lev]->setVal(0.);
- 
+
     // This is the deposition onto the grid of the beta coefficient
     // for fluid vel in the expression beta*(fluid_vel _ particle_vel)
     // Note this only needs one component since all velocity components are co-located
     f_gds[lev].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost));
     f_gds[lev]->setVal(0.);
- 
+
     // This is the deposition onto the grid of the drag term experienced by the particle
     drag[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
     drag[lev]->setVal(0.);
