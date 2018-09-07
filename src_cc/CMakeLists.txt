@@ -160,19 +160,19 @@ if (DEFINED ENABLE_FPE)
 	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
 	 -ftrapv>>
 	 # Intel
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+	 $<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:Fortran>:
 	 -fpe3>>
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+	 $<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:CXX>:
 	 -fpe3>>
 	 # Cray
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:Fortran>:
 	 -K trap=fp>>
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:CXX>:
 	 -K trap=fp>>
 	 #  PGI
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:Fortran>:
 	 -Ktrap=divz,inv>>
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:CXX>:
 	 >> )
    endif ()
 else ()
