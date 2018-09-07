@@ -140,7 +140,8 @@ mfix_level::make_eb_general(int lev) {
                                                );
 
                     EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
-
+                    const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+                    eb_level_particles = & eb_is.getLevel(geom.back());
                 } else {
                     auto gshop = EB2::makeShop(EB2::makeUnion(* impfunc_poly2, * impfunc_divider));
                     EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
