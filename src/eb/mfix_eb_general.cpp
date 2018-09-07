@@ -54,9 +54,9 @@ mfix_level::make_eb_general(int lev) {
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls_fluid;
 
     // Planar dividing wall
-    std::unique_ptr<EB2::IntersectionIF<
-        EB2::PlaneIF, EB2::PlaneIF, EB2::PlaneIF
-                        >> impfunc_divider;
+    std::unique_ptr<
+        EB2::IntersectionIF<EB2::PlaneIF, EB2::PlaneIF, EB2::PlaneIF
+                            >> impfunc_divider;
 
     /****************************************************************************
      * Generate PolynomialIF representing the non-planar EB walls               *
@@ -98,81 +98,117 @@ mfix_level::make_eb_general(int lev) {
      *                                                                         *
      ***************************************************************************/
 
+    // Stores implicit function for the combined particle IF
     std::unique_ptr<MultiFab> mf_impfunc;
+    // Stores implicit function for the particle walls IF only
+    std::unique_ptr<MultiFab> mf_impfunc_walls;
 
-    if (solve_dem) {
-        amrex::Print() << "Making the particle ebfactory ..." << std::endl;
 
-        if (use_poly2) {
-            if (has_walls && use_divider) { // ... poly2 + walls + divider
-                auto eb_if = EB2::makeUnion(* impfunc_poly2,* impfunc_walls_part,* impfunc_divider );
+    if (use_poly2) {
+        if (has_walls && use_divider) { // ................................ poly2 + walls + divider
+
+            int max_coarsening_level = 100;
+            if (solve_dem){
+                amrex::Print() << "Making the particle ebfactory ..." << std::endl;
+
+                auto eb_if = EB2::makeUnion(* impfunc_poly2,* impfunc_walls_part,* impfunc_divider);
                 auto gshop = EB2::makeShop(eb_if);
 
-                int max_coarsening_level = 100;
                 EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+                const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+                eb_level_particles = & eb_is.getLevel(geom.back());
 
                 GShopLSFactory<decltype(eb_if)> gshop_lsfactory(gshop, * level_set);
                 mf_impfunc = gshop_lsfactory.fill_impfunc();
-            } else if (has_walls) { // ........... poly2 + walls + ! divider
-                auto eb_if = EB2::makeUnion(* impfunc_poly2,* impfunc_walls_part );
-                auto gshop = EB2::makeShop(eb_if);
 
-                int max_coarsening_level = 100;
-                EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+                auto eb_if_walls = EB2::makeUnion(* impfunc_walls_part,* impfunc_divider);
+                auto gshop_walls = EB2::makeShop(eb_if_walls);
 
-                GShopLSFactory<decltype(eb_if)> gshop_lsfactory(gshop, * level_set);
-                mf_impfunc = gshop_lsfactory.fill_impfunc();
-            } else if (use_divider) { // ......... poly2 + ! walls + divider
-                auto eb_if = EB2::makeUnion(* impfunc_poly2,* impfunc_divider );
-                auto gshop = EB2::makeShop(eb_if);
+                GShopLSFactory<decltype(eb_if_walls)> walls_lsfactory(gshop_walls, * level_set);
+                mf_impfunc_walls = walls_lsfactory.fill_impfunc();
 
-                int max_coarsening_level = 100;
-                EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
-
-                GShopLSFactory<decltype(eb_if)> gshop_lsfactory(gshop, * level_set);
-                mf_impfunc = gshop_lsfactory.fill_impfunc();
-            } else { // .......................... poly2 + ! walls + ! divider
-                auto gshop = EB2::makeShop(* impfunc_poly2);
-                int max_coarsening_level = 100;
-                EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
-
-                GShopLSFactory<std::decay<decltype(* impfunc_poly2)>::type
-                               > gshop_lsfactory(gshop, * level_set);
-                mf_impfunc = gshop_lsfactory.fill_impfunc();
-            }
-        } else {
-            if (has_walls && use_divider) { // ... ! poly2 + walls + divider
-                auto eb_if = EB2::makeUnion(* impfunc_walls_part,* impfunc_divider );
-                auto gshop = EB2::makeShop(eb_if);
-                int max_coarsening_level = 100;
-                EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
-
-                GShopLSFactory<decltype(eb_if)> gshop_lsfactory(gshop, * level_set);
-                mf_impfunc = gshop_lsfactory.fill_impfunc();
-            } else if (has_walls) { // ........... ! poly2 + walls + ! divider
-                auto gshop = EB2::makeShop(* impfunc_walls_part);
-                int max_coarsening_level = 100;
-                EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
-
-                GShopLSFactory<std::decay<decltype(* impfunc_walls_part)>::type
-                               > gshop_lsfactory(gshop, * level_set);
-                mf_impfunc = gshop_lsfactory.fill_impfunc();
-            } else if (use_divider) { // ......... ! poly2 + ! walls + divider
-                auto gshop = EB2::makeShop(* impfunc_divider);
-                int max_coarsening_level = 100;
-                EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
-
-                GShopLSFactory<std::decay<decltype(* impfunc_divider)>::type
-                               > gshop_lsfactory(gshop, * level_set);
-                mf_impfunc = gshop_lsfactory.fill_impfunc();
-            } else { // .......................... ! poly2 + ! walls + ! divider
-                // Do nothing... (this will never happen)
+                amrex::Print() << "Done making the particle ebfactory." << std::endl;
             }
 
+            if (solve_fluid) {
+                amrex::Print() << "Making the fluid ebfactory ..." << std::endl;
+
+                if(has_real_walls) {
+                    auto gshop = EB2::makeShop(EB2::makeUnion(* impfunc_poly2,
+                                                              * impfunc_walls_fluid,
+                                                              * impfunc_divider)
+                                               );
+
+                    EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+
+                } else {
+                    auto gshop = EB2::makeShop(EB2::makeUnion(* impfunc_poly2, * impfunc_divider));
+                    EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+                }
+                const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+                eb_level_fluid = & eb_is.getLevel(geom.back());
+
+                amrex::Print() << "Done making the fluid ebfactory." << std::endl;
+            }
+
+        } else if (has_walls) { // ........... poly2 + walls + ! divider
+            auto eb_if = EB2::makeUnion(* impfunc_poly2,* impfunc_walls_part );
+            auto gshop = EB2::makeShop(eb_if);
+
+            int max_coarsening_level = 100;
+            EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+
+            GShopLSFactory<decltype(eb_if)> gshop_lsfactory(gshop, * level_set);
+            mf_impfunc = gshop_lsfactory.fill_impfunc();
+        } else if (use_divider) { // ......... poly2 + ! walls + divider
+            auto eb_if = EB2::makeUnion(* impfunc_poly2,* impfunc_divider );
+            auto gshop = EB2::makeShop(eb_if);
+
+            int max_coarsening_level = 100;
+            EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+
+            GShopLSFactory<decltype(eb_if)> gshop_lsfactory(gshop, * level_set);
+            mf_impfunc = gshop_lsfactory.fill_impfunc();
+        } else { // .......................... poly2 + ! walls + ! divider
+            auto gshop = EB2::makeShop(* impfunc_poly2);
+            int max_coarsening_level = 100;
+            EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+
+            GShopLSFactory<std::decay<decltype(* impfunc_poly2)>::type
+                           > gshop_lsfactory(gshop, * level_set);
+            mf_impfunc = gshop_lsfactory.fill_impfunc();
+        }
+    } else {
+        if (has_walls && use_divider) { // ... ! poly2 + walls + divider
+            auto eb_if = EB2::makeUnion(* impfunc_walls_part,* impfunc_divider );
+            auto gshop = EB2::makeShop(eb_if);
+            int max_coarsening_level = 100;
+            EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+
+            GShopLSFactory<decltype(eb_if)> gshop_lsfactory(gshop, * level_set);
+            mf_impfunc = gshop_lsfactory.fill_impfunc();
+        } else if (has_walls) { // ........... ! poly2 + walls + ! divider
+            auto gshop = EB2::makeShop(* impfunc_walls_part);
+            int max_coarsening_level = 100;
+            EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+
+            GShopLSFactory<std::decay<decltype(* impfunc_walls_part)>::type
+                           > gshop_lsfactory(gshop, * level_set);
+            mf_impfunc = gshop_lsfactory.fill_impfunc();
+        } else if (use_divider) { // ......... ! poly2 + ! walls + divider
+            auto gshop = EB2::makeShop(* impfunc_divider);
+            int max_coarsening_level = 100;
+            EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+
+            GShopLSFactory<std::decay<decltype(* impfunc_divider)>::type
+                           > gshop_lsfactory(gshop, * level_set);
+            mf_impfunc = gshop_lsfactory.fill_impfunc();
+        } else { // .......................... ! poly2 + ! walls + ! divider
+            // Do nothing... (this will never happen)
         }
 
-        amrex::Print() << "Done making the particle ebfactory ..." << std::endl;
     }
+
 
     if (solve_fluid) {
 
