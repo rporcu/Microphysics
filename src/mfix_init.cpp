@@ -315,8 +315,7 @@ mfix_level::ReMakeNewLevelFromScratch(int lev,
     level_set = std::unique_ptr<LSFactory>(
                                            new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
                                                          levelset__pad, levelset__eb_pad,
-                                                         pc->ParticleBoxArray(lev), pc->Geom(lev),
-                                                         pc->ParticleDistributionMap(lev))
+                                                         new_grids, geom[lev], new_dmap)
                                            );
 
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
