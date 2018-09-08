@@ -751,7 +751,7 @@ mfix_level::mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
    fc[1].reset(new MultiFab(y_ba,cc.DistributionMap(),1,nghost));
 
    BoxArray z_ba = cc.boxArray();
-   z_ba.surroundingNodes(0);
+   z_ba.surroundingNodes(2);
    fc[2].reset(new MultiFab(z_ba,cc.DistributionMap(),1,nghost));
 
    //
