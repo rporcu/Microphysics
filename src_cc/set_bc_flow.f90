@@ -214,7 +214,7 @@ contains
        bc_v_g(bcv) = vel
        bc_u_g(bcv) = off * bc_u_g(bcv)
        bc_w_g(bcv) = off * bc_w_g(bcv)
-    case('B','Y')
+    case('B','T')
        area = dx*dble(i_e-i_w+1)*dy*dble(j_n-j_s+1)
        vel = sgn*bc_volflow_g(bcv)/(area*bc_ep_g(bcv))
        bc_w_g(bcv) = vel
