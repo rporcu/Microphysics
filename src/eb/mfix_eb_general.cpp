@@ -109,6 +109,11 @@ mfix_level::make_eb_general(int lev) {
     // intersection with walls).
     const EB2::Level * poly_lev;
 
+    int m_eb_basic_grow_cells  = nghost;
+    int m_eb_volume_grow_cells = nghost;
+    int m_eb_full_grow_cells   = nghost;
+    EBSupport m_eb_support_level = EBSupport::full;
+
     int max_coarsening_level = 100;
 
     if (use_poly2) {
@@ -363,37 +368,62 @@ mfix_level::make_eb_general(int lev) {
 
     }
 
-    /****************************************************************************
-     *                                                                          *
-     * Fill level-set:                                                          *
-     *                                                                          *
-     ****************************************************************************/
+    if (solve_fluid)
+        ebfactory[lev].reset(new EBFArrayBoxFactory(
+                                                    * eb_level_fluid,
+                                                    geom[lev], grids[lev], dmap[lev],
+                                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                                     m_eb_full_grow_cells}, m_eb_support_level
+                                                    )
+                             );
+
     if (solve_dem) {
-        amrex::Print() << "Creating the levelset ..." << std::endl;
+        particle_ebfactory[lev].reset(new EBFArrayBoxFactory(
+                                                             * eb_level_particles,
+                                                             geom[lev], grids[lev], dmap[lev],
+                                                             {m_eb_basic_grow_cells,
+                                                              m_eb_volume_grow_cells,
+                                                              m_eb_full_grow_cells},
+                                                             m_eb_support_level
+                                                             )
+                                      );
 
-        if (use_walls){
-            level_set->intersection_impfunc(* mf_impfunc_walls);
+        eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
+
+        /************************************************************************
+         *                                                                      *
+         * Fill level-set:                                                      *
+         *                                                                      *
+         ************************************************************************/
+        if (!levelset__restart) {
+            amrex::Print() << "Creating the levelset ..." << std::endl;
+
+            if (use_walls){
+                level_set->intersection_impfunc(* mf_impfunc_walls);
+            }
+
+            if (use_poly2) {
+                int eb_pad = level_set->get_eb_pad();
+                Geometry geom_eb = LSUtility::make_eb_geometry(* level_set, geom[lev]);
+                EBFArrayBoxFactory eb_factory_poly(* poly_lev, geom_eb,
+                                                   level_set->get_eb_ba(),
+                                                   level_set->get_dm(),
+                                                   {eb_pad, eb_pad, eb_pad},
+                                                   EBSupport::full);
+                level_set->intersection_ebf(eb_factory_poly, * mf_impfunc_poly2);
+            }
+
+            // store copy of level set (for plotting).
+            std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+            ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
+            ls[lev]->FillBoundary(geom[lev].periodicity());
+
+            amrex::Print() << "Done making the levelset ..." << std::endl;
         }
-
-        if (use_poly2) {
-            int eb_pad = level_set->get_eb_pad();
-            Geometry geom_eb = LSUtility::make_eb_geometry(* level_set, geom[lev]);
-            EBFArrayBoxFactory eb_factory_poly(* poly_lev, geom_eb,
-                                               level_set->get_eb_ba(),
-                                               level_set->get_dm(),
-                                               {eb_pad, eb_pad, eb_pad},
-                                               EBSupport::full);
-            level_set->intersection_ebf(eb_factory_poly, * mf_impfunc_poly2);
-        }
-
-        // store copy of level set (for plotting).
-        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-        ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
-        ls[lev]->FillBoundary(geom[lev].periodicity());
-
-        amrex::Print() << "Done making the levelset ..." << std::endl;
+    } else {
+        amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
+                       << std::endl;
     }
-
 }
 
 
