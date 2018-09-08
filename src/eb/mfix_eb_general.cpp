@@ -103,17 +103,35 @@ mfix_level::make_eb_general(int lev) {
     std::unique_ptr<MultiFab> mf_impfunc;
     // Stores implicit function for the particle walls IF only
     std::unique_ptr<MultiFab> mf_impfunc_walls;
+    // Stores implicit function representing the polynomial "walls"
+    std::unique_ptr<MultiFab> mf_impfunc_poly2;
+    // For DEM: save the polynomial level separately (to allow "water-tight"
+    // intersection with walls).
+    const EB2::Level * poly_lev;
 
+    int max_coarsening_level = 100;
 
     if (use_poly2) {
-        if (has_walls && use_divider) { // ............................... poly2 + walls + divider
 
-            int max_coarsening_level = 100;
+        // For DEM: generate polynomial IF separately (to allow "water-tight"
+        // intersection with walls).
+        if(solve_dem){
+            auto gshop = EB2::makeShop(* impfunc_poly2);
+            EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
+            const EB2::IndexSpace & poly_ebis = EB2::IndexSpace::top();
+            poly_lev = & poly_ebis.getLevel(geom[lev]);
+
+            GShopLSFactory<std::decay<decltype(* impfunc_poly2)>::type
+                           > ls_gshop_poly(gshop, * level_set);
+            mf_impfunc_poly2 = ls_gshop_poly.fill_impfunc();
+        }
+
+        if (has_walls && use_divider) { // ............................... poly2 + walls + divider
 
             if (solve_dem) {
                 amrex::Print() << "Making the particle ebfactory ..." << std::endl;
 
-                auto eb_if = EB2::makeUnion(* impfunc_poly2,* impfunc_walls_part, * impfunc_divider);
+                auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_walls_part, * impfunc_divider);
                 auto gshop = EB2::makeShop(eb_if);
 
                 EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
@@ -154,8 +172,6 @@ mfix_level::make_eb_general(int lev) {
             }
 
         } else if (has_walls) { // ....................................... poly2 + walls + ! divider
-
-            int max_coarsening_level = 100;
 
             if (solve_dem) {
                 amrex::Print() << "Making the particle ebfactory ..." << std::endl;
@@ -208,7 +224,6 @@ mfix_level::make_eb_general(int lev) {
             auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_divider);
             auto gshop = EB2::makeShop(eb_if);
 
-            int max_coarsening_level = 100;
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
             const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
             eb_level_particles = & eb_is.getLevel(geom.back());
@@ -233,7 +248,6 @@ mfix_level::make_eb_general(int lev) {
 
             auto gshop = EB2::makeShop(* impfunc_poly2);
 
-            int max_coarsening_level = 100;
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
             const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
             eb_level_particles = & eb_is.getLevel(geom.back());
@@ -250,8 +264,6 @@ mfix_level::make_eb_general(int lev) {
 
     } else {
         if (has_walls && use_divider) { // ............................... ! poly2 + walls + divider
-
-            int max_coarsening_level = 100;
 
             if (solve_dem) {
                 amrex::Print() << "Making the particle ebfactory ..." << std::endl;
@@ -292,8 +304,6 @@ mfix_level::make_eb_general(int lev) {
 
         } else if (has_walls) { // ....................................... ! poly2 + walls + ! divider
 
-            int max_coarsening_level = 100;
-
             if (solve_dem) {
                 auto gshop = EB2::makeShop(* impfunc_walls_part);
 
@@ -333,7 +343,6 @@ mfix_level::make_eb_general(int lev) {
 
             auto gshop = EB2::makeShop(* impfunc_divider);
 
-            int max_coarsening_level = 100;
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
             const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
             eb_level_particles = & eb_is.getLevel(geom.back());
@@ -362,6 +371,20 @@ mfix_level::make_eb_general(int lev) {
     if (solve_dem) {
         amrex::Print() << "Creating the levelset ..." << std::endl;
 
+        if (use_walls){
+            level_set->intersection_impfunc(* mf_impfunc_walls);
+        }
+
+        if (use_poly2) {
+            int eb_pad = level_set->get_eb_pad();
+            Geometry geom_eb = LSUtility::make_eb_geometry(* level_set, geom[lev]);
+            EBFArrayBoxFactory eb_factory_poly(* poly_lev, geom_eb,
+                                               level_set->get_eb_ba(),
+                                               level_set->get_dm(),
+                                               {eb_pad, eb_pad, eb_pad},
+                                               EBSupport::full);
+            level_set->intersection_ebf(eb_factory_poly, * mf_impfunc_poly2);
+        }
 
         // store copy of level set (for plotting).
         std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
