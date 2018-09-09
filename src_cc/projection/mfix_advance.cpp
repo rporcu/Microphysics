@@ -472,7 +472,8 @@ mfix_level::mfix_compute_diveu (int lev)
 
         
        MultiFab::Copy( epu, *vel_g[lev], 0, 0, 3, vel_g[lev]->nGrow() );
-       MultiFab::Multiply( epu, *vel_g[lev], 0, 0, 3, vel_g[lev]->nGrow() );
+       for (int n = 0; n < 3; n++)
+          MultiFab::Multiply(epu,(*ep_g[lev]),0,n,1,vel_g[lev]->nGrow());
 
        Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM> epu_fc;
        mfix_average_cc_to_fc ( lev, epu, epu_fc );
@@ -765,29 +766,15 @@ mfix_level::mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
 #endif
    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
    {
-      // Boxes for staggered components
-      Box ubx = mfi.tilebox(e_x);
-      Box vbx = mfi.tilebox(e_y);
-      Box wbx = mfi.tilebox(e_z);
+      // Cell-centered tile box
+      Box bx = mfi.tilebox();
 
-      average_cc_to_fc( BL_TO_FORTRAN_BOX(ubx),
+      average_cc_to_fc( BL_TO_FORTRAN_BOX(bx),
                         BL_TO_FORTRAN_ANYD((*fc[0])[mfi]),
-                        BL_TO_FORTRAN_ANYD(cc[mfi]),
-                        1, 1 );
-
-      average_cc_to_fc( BL_TO_FORTRAN_BOX(vbx),
                         BL_TO_FORTRAN_ANYD((*fc[1])[mfi]),
-                        BL_TO_FORTRAN_ANYD(cc[mfi]),
-                        2, 1 );
-
-      average_cc_to_fc( BL_TO_FORTRAN_BOX(wbx),
                         BL_TO_FORTRAN_ANYD((*fc[2])[mfi]),
-                        BL_TO_FORTRAN_ANYD(cc[mfi]),
-                        3, 1 );
-
+                        BL_TO_FORTRAN_ANYD(cc[mfi]));
    }
-
-   // We do not fill BCs and halo regions in this routine    
 } 
 
 

@@ -91,7 +91,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
     //
     amrex::Print() << "Multiplying fluxes by dt " << scaling_factor << std::endl;
     fluxes.mult ( scaling_factor, fluxes.nGrow() );
-    MultiFab::Add( *vel_g[lev], fluxes, 0, 0, 1, 0);
+    MultiFab::Add( *vel_g[lev], fluxes, 0, 0, 3, 0);
 
     if (proj_2)
     {

@@ -225,7 +225,7 @@ int main (int argc, char* argv[])
        last_par_ascii = nstep;
     }
 
-    bool do_not_evolve =  !steady_state && (
+    bool do_not_evolve =  !steady_state && ( (max_step == 0) ||
                      ( (stop_time >= 0.) && (time >  stop_time) ) || 
                      ( (stop_time <= 0.) && (max_step <= 0) ) );
 
