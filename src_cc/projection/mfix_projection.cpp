@@ -93,15 +93,23 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
     fluxes.mult ( scaling_factor, fluxes.nGrow() );
     MultiFab::Add( *vel_g[lev], fluxes, 0, 0, 3, 0);
 
+    // After using the fluxes, which currently hold MINUS dt * (1/rho) * grad(phi),
+    //    to modify the velocity field,  convert them to hold grad(phi)
+    fluxes.mult ( -1/scaling_factor, fluxes.nGrow() );
+    for (int n = 0; n < 3; n++)
+       MultiFab::Multiply(fluxes,(*ro_g[lev]),0,n,1,fluxes.nGrow());
+
     if (proj_2)
     {
        // p := phi
        MultiFab::Copy (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+       MultiFab::Copy ( *gp[lev],    fluxes, 0, 0, 3,    fluxes.nGrow());
     }
     else
     {
        // p := p + phi
        MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+       MultiFab::Add ( *gp[lev],    fluxes, 0, 0, 3,    fluxes.nGrow());
     }
 
     // Swap ghost cells and apply BCs to velocity

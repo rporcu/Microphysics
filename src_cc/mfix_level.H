@@ -337,6 +337,10 @@ private:
     // Pressure correction
     Vector< std::unique_ptr<MultiFab> > pp_g;
 
+    // Pressure gradients
+    Vector< std::unique_ptr<MultiFab> > gp ;
+    Vector< std::unique_ptr<MultiFab> > gp0;
+
     // Molecular viscosity
     Vector< std::unique_ptr<MultiFab> > mu_g ;
 

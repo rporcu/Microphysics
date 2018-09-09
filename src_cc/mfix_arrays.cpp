@@ -48,6 +48,12 @@ mfix_level::AllocateArrays (int lev)
      p_go[lev]->setVal(0.);
      pp_g[lev]->setVal(0.);
 
+    // Presssure gradients
+    gp[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost));
+    gp0[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost));
+    gp[lev]->setVal(0.);
+    gp0[lev]->setVal(0.);
+
     // Molecular viscosity
     mu_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     mu_g[lev]->setVal(0.);
@@ -360,6 +366,20 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     vel_go_new->copy(*vel_go[lev],0,0,vel_go[lev]->nComp(),ng,ng);
     vel_go_new->FillBoundary(geom[lev].periodicity());
     vel_go[lev] = std::move(vel_go_new);
+
+    // Pressure gradients
+    ng = gp[lev]->nGrow();
+    std::unique_ptr<MultiFab> gp_new(new MultiFab(new_grids,new_dmap,1,gp[lev]->nGrow()));
+    gp_new->copy(*gp[lev],0,0,1,ng,ng);
+    gp_new->FillBoundary(geom[lev].periodicity());
+    gp[lev] = std::move(gp_new);
+
+    // Pressure gradients
+    ng = gp0[lev]->nGrow();
+    std::unique_ptr<MultiFab> gp0_new(new MultiFab(new_grids,new_dmap,1,gp0[lev]->nGrow()));
+    gp0_new->copy(*gp0[lev],0,0,1,ng,ng);
+    gp0_new->FillBoundary(geom[lev].periodicity());
+    gp0[lev] = std::move(gp0_new);
 
     // Trace(D)
     ng = trD_g[lev]->nGrow();

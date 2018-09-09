@@ -216,8 +216,14 @@ mfix_level::mfix_apply_predictor (int lev, MultiFab& conv_old, MultiFab& divtau_
 
     // Add the forcing terms
     mfix_apply_forcing_terms ( lev, dt, vel_g);
-    mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
-    mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
+
+    // HACK HACK -- NO DIVIDE BY RHO HERE YET
+    // Add (-dt/rho grad p to velocity)
+    MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, 0);
+    MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, 0);
+
+    // mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
+    // mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
@@ -289,10 +295,15 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
 
     // Add forcing terms
     mfix_apply_forcing_terms ( lev, dt, vel_g);
+
+    // HACK HACK -- NO DIVIDE BY RHO HERE YET
+    // Add (-dt/rho grad p to velocity)
+    MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, 0);
+    MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, 0);
  
     // Add pressure gradient
-    mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
-    mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
+    // mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
+    // mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)

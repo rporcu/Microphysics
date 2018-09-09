@@ -81,6 +81,10 @@ mfix_level::ResizeArrays ()
     vel_g.resize(nlevs_max);
     vel_go.resize(nlevs_max);
 
+    // Pressure gradients
+    gp.resize(nlevs_max);
+    gp0.resize(nlevs_max);
+
     f_gds.resize(nlevs_max);
     drag.resize(nlevs_max);
 

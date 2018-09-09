@@ -25,7 +25,7 @@ mfix_level::InitIOData ()
 {
     // Define the list of vector variables on faces that need to be written
     // to plotfile/checkfile.
-    vecVarsName = {"u_g", "v_g", "w_g"};
+    vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
     // Define the list of scalar variables at cell centers that need to be
     // written to plotfile/checkfile. "volfrac" MUST always be last without any
@@ -126,6 +126,11 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
 
           // This writes all three velocity components
           VisMF::Write( (*vel_g[lev]),
+            amrex::MultiFabFileFullPrefix(lev, checkpointname,
+                  level_prefix, vecVarsName[0]));
+
+          // This writes all three pressure gradient components
+          VisMF::Write( (*gp[lev]),
             amrex::MultiFabFileFullPrefix(lev, checkpointname,
                   level_prefix, vecVarsName[0]));
 
@@ -356,14 +361,18 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        // Load the field data
        for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
        {
-          // Read velocity
+          // Read velocity and pressure gradients
           MultiFab mf_vel;
           VisMF::Read(mf_vel, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix, "u_g"));
 
+          MultiFab mf_gp;
+          VisMF::Read(mf_gp, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix, "gpx"));
+
           if (Nrep == IntVect::TheUnitVector())
           {
-              // Simply copy mf into vel_g
+              // Simply copy mf_vel into vel_g, mf_gp into gp
               vel_g[lev] -> copy(mf_vel, 0, 0, 3, 0, 0);
+                 gp[lev] -> copy(mf_gp , 0, 0, 3, 0, 0);
 
            } else {
 
@@ -371,14 +380,17 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
                    amrex::Abort("Replication only works if one initial grid");
 
                mf_vel.FillBoundary(geom[lev].periodicity());
+                mf_gp.FillBoundary(geom[lev].periodicity());
 
                FArrayBox single_fab_vel(mf_vel.boxArray()[0],3);
+               FArrayBox single_fab_gp ( mf_gp.boxArray()[0],3);
 
               // Copy and replicate mf into velocity
               for (MFIter mfi(*vel_g[lev]); mfi.isValid(); ++mfi)
               {
                 int ib = mfi.index();
                 (*vel_g[lev])[ib].copy(single_fab_vel,single_fab_vel.box(),0,mfi.validbox(),0,3);
+                (   *gp[lev])[ib].copy(single_fab_gp , single_fab_gp.box(),0,mfi.validbox(),0,3);
               }
            }
 
@@ -685,8 +697,13 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
           MultiFab::Copy(*mf[lev], (*vel_g[lev]), 1, 1, 1, 0);
           MultiFab::Copy(*mf[lev], (*vel_g[lev]), 2, 2, 1, 0);
 
+          // Pressure gradient components
+          MultiFab::Copy(*mf[lev], (*gp[lev]), 0, 3, 1, 0);
+          MultiFab::Copy(*mf[lev], (*gp[lev]), 1, 4, 1, 0);
+          MultiFab::Copy(*mf[lev], (*gp[lev]), 2, 5, 1, 0);
+
           // Scalar variables
-          int dcomp = 3;
+          int dcomp = vecVarsName.size();
           for( int i = 0; i < pltscalarVars.size(); i++ ) {
               if (pltscaVarsName[i] == "level-set")
               {
