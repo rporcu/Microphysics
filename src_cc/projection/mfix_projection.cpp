@@ -24,6 +24,10 @@
 //
 // phi is an auxiliary function related to the pressure p_g by the relation:
 //
+//     new p_g  = phi
+//
+//     except in the initial iterations when
+//
 //     new p_g  = old p_g + phi
 void 
 mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool proj_2 )
@@ -51,11 +55,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
 
     // Compute right hand side, AKA div(ep_g* u) / dt
     mfix_compute_diveu (lev);
-
-    //
-    // NOTE: WE MULTIPLY BY NEGATIVE 1/DT to account for negative in solver
-    //
-    diveu[lev] -> mult (-1.0/scaling_factor, diveu[lev]->nGrow() );
+    diveu[lev] -> mult (1.0/scaling_factor, diveu[lev]->nGrow() );
 
     // Compute the PPE coefficients
     mfix_compute_bcoeff_ppe ( lev );
@@ -90,7 +90,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
     // NOTE: THE SIGN OF DT (scaling_factor) IS CORRECT HERE
     //
     amrex::Print() << "Multiplying fluxes by dt " << scaling_factor << std::endl;
-    fluxes.mult ( -scaling_factor, fluxes.nGrow() );
+    fluxes.mult ( scaling_factor, fluxes.nGrow() );
     MultiFab::Add( *vel_g[lev], fluxes, 0, 0, 1, 0);
 
     if (proj_2)
@@ -227,7 +227,7 @@ mfix_level::solve_poisson_equation (  int lev,
        // Finally, solve the system
        //
        solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
-       solver.getFluxes( {&fluxes} );
+       solver.getFluxes( {&fluxes}, MLMG::Location::CellCenter );
 
        this_phi[lev] -> FillBoundary (geom[lev].periodicity());
     }
