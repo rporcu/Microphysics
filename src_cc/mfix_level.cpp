@@ -632,3 +632,34 @@ mfix_level::mfix_norm1 ( MultiFab& mf, int lev, int comp )
    
    return mf_tmp.norm1( comp, geom[lev].periodicity() );
 }
+
+vid
+mfix_level::mfix_compute_vort (int lev ) 
+{
+    BL_PROFILE("mfix_level::mfix_compute_vort");
+    Box domain(geom[lev].Domain());
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi) 
+    {
+       // Tilebox
+       Box bx = mfi.tilebox ();
+
+       // This is to check efficiently if this tile contains any eb stuff
+       const EBFArrayBox&  vel_fab = dynamic_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
+       const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
+ 
+       if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
+       {
+         compute_vort (
+                     BL_TO_FORTRAN_BOX(bx),
+                     BL_TO_FORTRAN_ANYD((* vort[lev])[mfi]),
+                     BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                     geom[lev].CellSize());
+       } else {
+          vort[lev]->setVal( 0.0, bx, 0, 1);
+       }
+    }
+}
