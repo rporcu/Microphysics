@@ -331,11 +331,14 @@ extern "C"
 	const int* domlo, const int* domhi
             );
 
-   void average_cc_to_fc ( const int* lo, const int* hi,
-                                amrex::Real* fxc, const int* fxlo, const int* fxhi,
-                                amrex::Real* fyc, const int* fylo, const int* fyhi,
-                                amrex::Real* fzc, const int* fzlo, const int* fzhi,
-                           const amrex::Real* cc, const int* slo, const int* shi);
+    void average_cc_to_fc ( const int* lo, const int* hi,
+                            amrex::Real* fcx, const int* fcxlo, const int* fcxhi,
+                            amrex::Real* fcy, const int* fcylo, const int* fcyhi,
+                            amrex::Real* fcz, const int* fczlo, const int* fczhi,
+                            const amrex::Real* cc, const int* slo, const int* shi
+      );
+
+
    
 #ifdef __cplusplus
 }
