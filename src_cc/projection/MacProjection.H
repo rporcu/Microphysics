@@ -59,8 +59,8 @@ private:
     
    amrex::Vector< std::unique_ptr<amrex::MultiFab> > m_diveu;
    amrex::Vector< std::unique_ptr<amrex::MultiFab> > m_phi;
-   amrex::Vector< amrex::Vector< std::unique_ptr<amrex::MultiFab> > > m_b;
-   amrex::Vector< amrex::Vector< std::unique_ptr<amrex::MultiFab> > > m_ep;
+   amrex::Vector< amrex::Array<std::unique_ptr<amrex::MultiFab>,AMREX_SPACEDIM> > m_b;
+   amrex::Vector< amrex::Array<std::unique_ptr<amrex::MultiFab>,AMREX_SPACEDIM> > m_ep;
 
    // 
    // Stuff for linear solver

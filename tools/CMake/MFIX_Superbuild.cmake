@@ -26,7 +26,7 @@ enable_language (Fortran)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER   777a7c4241cb82437e06aabd7dfe0a32d4 )
-set (AMREX_GIT_COMMIT_DEVELOP  c15ee3cbc578294d7839105f6327f92d15c5c152 )
+set (AMREX_GIT_COMMIT_DEVELOP  abc809d3828aaf2258cfdad4b51c4b164823d7e8 )
 
 set (AMREX_GIT_TAG)  # The commit id or branch to download
 
@@ -38,9 +38,9 @@ include ( MFIX_Options )
 #
 # AMReX-related config options
 #
-set (AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags for AMReX (Superbuild only)" )
+set ( AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags for AMReX (Superbuild only)" )
 
-set (AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
+set ( AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
 
 option ( AMREX_ENABLE_EB "Build EB code" ON)
 

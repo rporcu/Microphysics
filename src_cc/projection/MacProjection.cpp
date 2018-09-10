@@ -118,30 +118,27 @@ MacProjection::update_internals ()
          //
          // Staggered quantities
          // NOTE: no ghost node for grad(phi)
-         //
-         m_b[lev].resize(3);
-         m_ep[lev].resize(3);
-         
+         //        
          BoxArray x_ba = m_amrcore -> boxArray(lev);
          x_ba = x_ba.surroundingNodes(0);
          m_b[lev][0].reset( new  MultiFab( x_ba, m_amrcore -> DistributionMap(lev),
                                            1, m_nghost) );
          m_ep[lev][0].reset( new  MultiFab( x_ba, m_amrcore -> DistributionMap(lev),
-                                            1, m_nghost) );
+                                            1, 0) );
 
          BoxArray y_ba = m_amrcore -> boxArray(lev);
          y_ba = y_ba.surroundingNodes(1);
          m_b[lev][1].reset( new  MultiFab( y_ba, m_amrcore -> DistributionMap(lev),
                                            1, m_nghost) );
          m_ep[lev][1].reset( new  MultiFab( y_ba, m_amrcore -> DistributionMap(lev),
-                                            1, m_nghost) );
+                                            1, 0) );
 
          BoxArray z_ba = m_amrcore -> boxArray(lev);
          z_ba = z_ba.surroundingNodes(2);
          m_b[lev][2].reset( new  MultiFab( z_ba, m_amrcore -> DistributionMap(lev),
                                            1, m_nghost) );
          m_ep[lev][2].reset( new  MultiFab( z_ba, m_amrcore -> DistributionMap(lev),
-                                            1, m_nghost) );  
+                                            1, 0) );  
 	   
       };
    }
@@ -191,10 +188,8 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
 
    // Setup for solve
    Vector<Array<MultiFab*,AMREX_SPACEDIM> > vel;
-   Vector<Array<MultiFab const*,AMREX_SPACEDIM> > beta;
-   
+
    vel.resize(m_amrcore -> finestLevel()+1);
-   beta.resize(m_amrcore -> finestLevel()+1);
 
    if (verbose)
       Print() << " >> Before projection\n" ; 
@@ -206,23 +201,21 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       
       // Compute ep at faces
       set_ccmf_bcs( lev, *ep[lev] );
-      average_cellcenter_to_face( GetVecOfPtrs(m_ep[lev]), *ep[lev], m_amrcore -> Geom(lev) );
+     
+      average_cellcenter_to_face( GetArrOfPtrs(m_ep[lev]), *ep[lev], m_amrcore -> Geom(lev) );
 
       // Set velocity bcs
       set_velocity_bcs( lev, u, v, w );
 
       // Compute ep*u at faces and store it in u, v, w
-      MultiFab::Multiply( *u[lev], *(m_ep[lev][0]), 0, 0, 1, m_nghost );
-      MultiFab::Multiply( *v[lev], *(m_ep[lev][1]), 0, 0, 1, m_nghost );
-      MultiFab::Multiply( *w[lev], *(m_ep[lev][2]), 0, 0, 1, m_nghost );
+      MultiFab::Multiply( *u[lev], *(m_ep[lev][0]), 0, 0, 1, 0 );
+      MultiFab::Multiply( *v[lev], *(m_ep[lev][1]), 0, 0, 1, 0 );
+      MultiFab::Multiply( *w[lev], *(m_ep[lev][2]), 0, 0, 1, 0 );
 
       // Store in temporaries
       (vel[lev])[0]  = u[lev].get();
       (vel[lev])[1]  = v[lev].get();
       (vel[lev])[2]  = w[lev].get();
-      (beta[lev])[0] = m_b[lev][0].get();
-      (beta[lev])[1] = m_b[lev][1].get();
-      (beta[lev])[2] = m_b[lev][2].get();
 
       if (verbose)
       {
@@ -238,11 +231,12 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    //
    // Perform MAC projection
    //
-   MacProjector macproj( vel, beta, m_amrcore -> Geom());
+   MacProjector macproj( vel, GetVecOfArrOfPtrsConst(m_b), m_amrcore -> Geom());
 
    macproj.setDomainBC( m_lobc, m_hibc );
    macproj.setVerbose(m_mg_verbose);
 
+   // Solve
    macproj.project(m_mg_rtol);
 
    // Get MAC velocities at face CENTER by dividing solution by ep at faces
@@ -250,11 +244,11 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       Print() << " >> After projection\n" ; 
    
    for ( int lev=0; lev <= m_amrcore -> finestLevel() ; ++lev )
-   {
+   {   
       // Compute ep*u at faces and store it in u, v, w
-      MultiFab::Divide( *u[lev], *(m_ep[lev][0]), 0, 0, 1, m_nghost );
-      MultiFab::Divide( *v[lev], *(m_ep[lev][1]), 0, 0, 1, m_nghost );
-      MultiFab::Divide( *w[lev], *(m_ep[lev][2]), 0, 0, 1, m_nghost );
+      MultiFab::Divide( *u[lev], *(m_ep[lev][0]), 0, 0, 1, 0 );
+      MultiFab::Divide( *v[lev], *(m_ep[lev][1]), 0, 0, 1, 0 );
+      MultiFab::Divide( *w[lev], *(m_ep[lev][2]), 0, 0, 1, 0 ); 
 
       // Set velocity bcs
       set_velocity_bcs( lev, u, v, w );
