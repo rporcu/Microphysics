@@ -36,6 +36,13 @@ public:
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ep,
                            const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro );
+    
+   void update_internals ();
+
+   void set_velocity_bcs ( int lev,
+                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& u,
+                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& v,
+                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w );
    
 private:
 
@@ -75,13 +82,6 @@ private:
    amrex::Real m_mg_rtol = 1.0e-11;
 
    void read_inputs ();
-    
-   void update_internals ();
-
-   void set_velocity_bcs ( int lev,
-                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& u,
-                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& v,
-                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w );
     
    void set_ccmf_bcs ( int lev, amrex::MultiFab& mf );
 

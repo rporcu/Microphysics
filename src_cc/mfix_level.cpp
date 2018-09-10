@@ -633,7 +633,7 @@ mfix_level::mfix_norm1 ( MultiFab& mf, int lev, int comp )
    return mf_tmp.norm1( comp, geom[lev].periodicity() );
 }
 
-vid
+void
 mfix_level::mfix_compute_vort (int lev ) 
 {
     BL_PROFILE("mfix_level::mfix_compute_vort");

@@ -164,19 +164,19 @@ mfix_level::AllocateTempArrays (int lev)
     BoxArray x_edge_ba = grids[lev];
     x_edge_ba.surroundingNodes(0);
     bcoeff_diff[lev][0].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    m_u_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    m_u_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
 
     // Create a BoxArray on y-faces.
     BoxArray y_edge_ba = grids[lev];
     y_edge_ba.surroundingNodes(1);
     bcoeff_diff[lev][1].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    m_v_mac[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    m_v_mac[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
 
     // Create a BoxArray on y-faces.
     BoxArray z_edge_ba = grids[lev];
     z_edge_ba.surroundingNodes(2);
     bcoeff_diff[lev][2].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    m_w_mac[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    m_w_mac[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
 
     bcoeff_diff[lev][0]->setVal(0.);
     bcoeff_diff[lev][1]->setVal(0.);
