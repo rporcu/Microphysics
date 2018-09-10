@@ -127,6 +127,11 @@ mfix_level::mfix_project_velocity (int lev)
 
     amrex::Print() << "Initial projection:\n";
 
+    // Need to add this call here so that the MACProjection internal arrays
+    //  are allocated so that the cell-centered projection can use the MAC
+    //  data structures and set_velocity_bcs routine
+    mac_projection->update_internals();
+
     bool proj_2 = true;
     mfix_apply_projection ( lev, dummy_dt, proj_2 );
 
@@ -216,8 +221,18 @@ mfix_level::mfix_apply_predictor (int lev, MultiFab& conv_old, MultiFab& divtau_
 
     // Add the forcing terms
     mfix_apply_forcing_terms ( lev, dt, vel_g);
-    mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
-    mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
+
+    // Convert velocities to momenta
+    for (int n = 0; n < 3; n++)
+       MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+
+    // Add (-dt grad p to momenta)
+    MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, 0);
+    MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, 0);
+
+    // Convert momenta back to velocities
+    for (int n = 0; n < 3; n++)
+       MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
@@ -289,10 +304,18 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
 
     // Add forcing terms
     mfix_apply_forcing_terms ( lev, dt, vel_g);
- 
-    // Add pressure gradient
-    mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
-    mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
+
+    // Convert velocities to momenta
+    for (int n = 0; n < 3; n++)
+       MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+
+    // Add (-dt grad p to momenta)
+    MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, 0);
+    MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, 0);
+
+    // Convert momenta back to velocities
+    for (int n = 0; n < 3; n++)
+       MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
@@ -465,20 +488,47 @@ mfix_level::mfix_compute_diveu (int lev)
        int extrap_dir_bcs = 1;
        mfix_set_velocity_bcs (lev,extrap_dir_bcs);
        vel_g[lev]->FillBoundary (geom[lev].periodicity());      
-          
+
+
        // Create face centered multifabs for ep_g and vel_g
        MultiFab epu( vel_g[lev]->boxArray(),  vel_g[lev]-> DistributionMap(),
                      vel_g[lev]->nComp(), nghost, MFInfo(), *ebfactory[lev]);
 
-        
        MultiFab::Copy( epu, *vel_g[lev], 0, 0, 3, vel_g[lev]->nGrow() );
-       MultiFab::Multiply( epu, *vel_g[lev], 0, 0, 3, vel_g[lev]->nGrow() );
+       for (int n = 0; n < 3; n++)
+          MultiFab::Multiply(epu,(*ep_g[lev]),0,n,1,vel_g[lev]->nGrow());
 
-       Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM> epu_fc;
-       mfix_average_cc_to_fc ( lev, epu, epu_fc );
-       
-       EB_computeDivergence( *diveu[lev], GetArrOfConstPtrs(epu_fc), geom[lev] );             
-       
+       //
+       // Average from cell centers to faces -- we can re-use the MAC velocity data structures here
+       //
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+       for (MFIter mfi(epu,true); mfi.isValid(); ++mfi)
+       {
+          // Cell-centered tile box
+          Box bx = mfi.tilebox();
+
+          average_cc_to_fc( BL_TO_FORTRAN_BOX(bx),
+                            BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
+                            BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
+                            BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
+                            BL_TO_FORTRAN_ANYD(epu[mfi]));
+       }
+
+       mac_projection->set_velocity_bcs( lev, m_u_mac, m_v_mac, m_w_mac );
+
+       // Store in temporaries for call to computeDivergence
+       Vector<Array<MultiFab*,AMREX_SPACEDIM> > epu_fc;
+       epu_fc.resize(1);
+       (epu_fc[lev])[0]  = m_u_mac[lev].get();
+       (epu_fc[lev])[1]  = m_v_mac[lev].get();
+       (epu_fc[lev])[2]  = m_w_mac[lev].get();
+
+       EB_computeDivergence(*diveu[lev],
+                            GetArrOfConstPtrs(epu_fc[lev]),
+                            geom[lev]);
+
     }
 
     // Restore velocities to carry Dirichlet values on faces
@@ -725,71 +775,6 @@ mfix_level::mfix_print_max_vel(int lev)
        mfix_norm0(vel_g, lev, 2) << "  " <<
        mfix_norm0(p_g,   lev, 0) << "  " << std::endl;
 }
-
-
-
-//
-// This subroutines averages component by component
-// The assumption is that cc is multicomponent
-// 
-void
-mfix_level::mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
-                                    Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc )
-{
-   AMREX_ASSERT(cc.nComp()==AMREX_SPACEDIM);
-   AMREX_ASSERT(AMREX_SPACEDIM==3);
-   
-   // 
-   // First allocate fc
-   //
-   BoxArray x_ba = cc.boxArray();
-   x_ba.surroundingNodes(0);
-   fc[0].reset(new MultiFab(x_ba,cc.DistributionMap(),1,nghost));
-
-   BoxArray y_ba = cc.boxArray();
-   y_ba.surroundingNodes(1);
-   fc[1].reset(new MultiFab(y_ba,cc.DistributionMap(),1,nghost));
-
-   BoxArray z_ba = cc.boxArray();
-   z_ba.surroundingNodes(0);
-   fc[2].reset(new MultiFab(z_ba,cc.DistributionMap(),1,nghost));
-
-   //
-   // Average
-   // We do not care about EB because faces in covered regions
-   // should never get used so we can set them to whatever values
-   // we like
-   //
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-   for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-   {
-      // Boxes for staggered components
-      Box ubx = mfi.tilebox(e_x);
-      Box vbx = mfi.tilebox(e_y);
-      Box wbx = mfi.tilebox(e_z);
-
-      average_cc_to_fc( BL_TO_FORTRAN_BOX(ubx),
-                        BL_TO_FORTRAN_ANYD((*fc[0])[mfi]),
-                        BL_TO_FORTRAN_ANYD(cc[mfi]),
-                        1, 1 );
-
-      average_cc_to_fc( BL_TO_FORTRAN_BOX(vbx),
-                        BL_TO_FORTRAN_ANYD((*fc[1])[mfi]),
-                        BL_TO_FORTRAN_ANYD(cc[mfi]),
-                        2, 1 );
-
-      average_cc_to_fc( BL_TO_FORTRAN_BOX(wbx),
-                        BL_TO_FORTRAN_ANYD((*fc[2])[mfi]),
-                        BL_TO_FORTRAN_ANYD(cc[mfi]),
-                        3, 1 );
-
-   }
-
-   // We do not fill BCs and halo regions in this routine    
-} 
-
 
 
 

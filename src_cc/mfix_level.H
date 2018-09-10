@@ -122,6 +122,8 @@ public:
     // flag switching from calc_wall_collisions_ls to calc_wall_collisions if true
     bool legacy__eb_collisions = false;
 
+    void mfix_compute_vort(int lev);
+
     ///
     /// Parameters describing the level-set grid:
     ///
@@ -337,6 +339,10 @@ private:
     // Pressure correction
     Vector< std::unique_ptr<MultiFab> > pp_g;
 
+    // Pressure gradients
+    Vector< std::unique_ptr<MultiFab> > gp ;
+    Vector< std::unique_ptr<MultiFab> > gp0;
+
     // Molecular viscosity
     Vector< std::unique_ptr<MultiFab> > mu_g ;
 
@@ -494,10 +500,6 @@ private:
 
     // stores level-set (nodal index space corresponding to cells, but n_refinement times finer)
     std::unique_ptr<LSFactory> level_set;
-
-   // Utilities
-   void mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
-                                Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc );
 };
 
 inline

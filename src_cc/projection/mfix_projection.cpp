@@ -24,6 +24,10 @@
 //
 // phi is an auxiliary function related to the pressure p_g by the relation:
 //
+//     new p_g  = phi
+//
+//     except in the initial iterations when
+//
 //     new p_g  = old p_g + phi
 void 
 mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool proj_2 )
@@ -49,9 +53,9 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
        mfix_set_velocity_bcs (lev,0);
     }
 
-    // Compute right hand side, AKA div(ep_g* u)
+    // Compute right hand side, AKA div(ep_g* u) / dt
     mfix_compute_diveu (lev);
-    diveu[lev] -> mult ( 1.0/scaling_factor, diveu[lev]->nGrow() );
+    diveu[lev] -> mult (1.0/scaling_factor, diveu[lev]->nGrow() );
 
     // Compute the PPE coefficients
     mfix_compute_bcoeff_ppe ( lev );
@@ -83,23 +87,29 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
     MultiFab::Divide( fluxes, *ep_g[lev], 0, 2, 1, 0 );
 
     //
-    // ======================== HACK ===========================
-    // Check sign and factor of dt 
-    //  
-    // 
-    MultiFab::Add( *vel_g[lev], fluxes, 0, 0, 1, 0);
-    
-    // mfix_add_grad_phi ( lev, -scaling_factor, (*phi[lev]) );
+    // NOTE: THE SIGN OF DT (scaling_factor) IS CORRECT HERE
+    //
+    amrex::Print() << "Multiplying fluxes by dt " << scaling_factor << std::endl;
+    fluxes.mult ( scaling_factor, fluxes.nGrow() );
+    MultiFab::Add( *vel_g[lev], fluxes, 0, 0, 3, 0);
+
+    // After using the fluxes, which currently hold MINUS dt * (1/rho) * grad(phi),
+    //    to modify the velocity field,  convert them to hold grad(phi)
+    fluxes.mult ( -1/scaling_factor, fluxes.nGrow() );
+    for (int n = 0; n < 3; n++)
+       MultiFab::Multiply(fluxes,(*ro_g[lev]),0,n,1,fluxes.nGrow());
 
     if (proj_2)
     {
        // p := phi
        MultiFab::Copy (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+       MultiFab::Copy ( *gp[lev],    fluxes, 0, 0, 3,    fluxes.nGrow());
     }
     else
     {
        // p := p + phi
        MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+       MultiFab::Add ( *gp[lev],    fluxes, 0, 0, 3,    fluxes.nGrow());
     }
 
     // Swap ghost cells and apply BCs to velocity
@@ -225,7 +235,7 @@ mfix_level::solve_poisson_equation (  int lev,
        // Finally, solve the system
        //
        solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
-       solver.getFluxes( {&fluxes} );
+       solver.getFluxes( {&fluxes}, MLMG::Location::CellCenter );
 
        this_phi[lev] -> FillBoundary (geom[lev].periodicity());
     }

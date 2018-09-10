@@ -117,28 +117,27 @@ MacProjection::update_internals ()
 
          //
          // Staggered quantities
-         // NOTE: no ghost node for grad(phi)
          //        
          BoxArray x_ba = m_amrcore -> boxArray(lev);
          x_ba = x_ba.surroundingNodes(0);
          m_b[lev][0].reset( new  MultiFab( x_ba, m_amrcore -> DistributionMap(lev),
-                                           1, m_nghost) );
+                                           1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
          m_ep[lev][0].reset( new  MultiFab( x_ba, m_amrcore -> DistributionMap(lev),
-                                            1, 0) );
+                                            1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
 
          BoxArray y_ba = m_amrcore -> boxArray(lev);
          y_ba = y_ba.surroundingNodes(1);
          m_b[lev][1].reset( new  MultiFab( y_ba, m_amrcore -> DistributionMap(lev),
-                                           1, m_nghost) );
+                                           1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
          m_ep[lev][1].reset( new  MultiFab( y_ba, m_amrcore -> DistributionMap(lev),
-                                            1, 0) );
+                                            1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
 
          BoxArray z_ba = m_amrcore -> boxArray(lev);
          z_ba = z_ba.surroundingNodes(2);
          m_b[lev][2].reset( new  MultiFab( z_ba, m_amrcore -> DistributionMap(lev),
-                                           1, m_nghost) );
+                                           1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
          m_ep[lev][2].reset( new  MultiFab( z_ba, m_amrcore -> DistributionMap(lev),
-                                            1, 0) );  
+                                            1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
 	   
       };
    }

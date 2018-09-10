@@ -207,7 +207,10 @@ int main (int argc, char* argv[])
     // We automatically write checkpoint and plotfiles with the initial data
     //    if plot_int > 0
     if ( (restart_file.empty() || plotfile_on_restart) && plot_int > 0 )
+    {
+       my_mfix.mfix_compute_vort(lev);
        my_mfix.WritePlotFile( plot_file, nstep, dt, time );
+    }
 
     // We automatically write checkpoint files with the initial data
     //    if check_int > 0
@@ -225,7 +228,7 @@ int main (int argc, char* argv[])
        last_par_ascii = nstep;
     }
 
-    bool do_not_evolve =  !steady_state && (
+    bool do_not_evolve =  !steady_state && ( (max_step == 0) ||
                      ( (stop_time >= 0.) && (time >  stop_time) ) || 
                      ( (stop_time <= 0.) && (max_step <= 0) ) );
 
@@ -259,6 +262,7 @@ int main (int argc, char* argv[])
 
                     if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
                     {
+                        my_mfix.mfix_compute_vort(lev);
                         my_mfix.WritePlotFile( plot_file, nstep, dt, time );
                         last_plt = nstep;
                     }

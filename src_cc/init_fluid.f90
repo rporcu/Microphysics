@@ -83,7 +83,7 @@ module init_fluid_module
       real(ar)                        :: x, y, z
       real(ar)                        :: twopi = 8.0_ar * atan(one) 
 
-      plane = 2
+      plane = 1
 
       select case ( plane )
 
