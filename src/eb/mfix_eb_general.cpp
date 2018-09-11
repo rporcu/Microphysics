@@ -419,10 +419,10 @@ mfix_level::make_eb_general(int lev) {
             ls[lev]->FillBoundary(geom[lev].periodicity());
 
             amrex::Print() << "Done making the levelset ..." << std::endl;
+        } else {
+            amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
+                           << std::endl;
         }
-    } else {
-        amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
-                       << std::endl;
     }
 }
 
