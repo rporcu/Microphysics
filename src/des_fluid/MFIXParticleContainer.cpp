@@ -192,61 +192,52 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
 
 }
 
-void MFIXParticleContainer::RemoveOutOfRange(int lev, EBFArrayBoxFactory * ebfactory,
-        const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement)
-{
-  // Only call the routine for wall collisions if we actually have walls
-  if (ebfactory != NULL)
-  {
-      Box domain(Geom(lev).Domain());
-      const Real* dx = Geom(lev).CellSize();
-      MultiFab dummy;
-      dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
+void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
+        const MultiFab * ls_phi, const iMultiFab * ls_valid, int ls_refinement) {
+    // Only call the routine for wall collisions if we actually have walls
+    if (ebfactory != NULL) {
 
-      std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
-      const MultiCutFab* bndrycent;
+        Box domain(Geom(lev).Domain());
+        const Real * dx = Geom(lev).CellSize();
+        MultiFab dummy;
+        dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                     1, 0, MFInfo(), * ebfactory);
 
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-      {
-          // Real particles
-          const int nrp = NumberOfParticles(pti);
+        for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti) {
+            // Real particles
+            const int nrp = NumberOfParticles(pti);
 
-          void* particles  = pti.GetArrayOfStructs().data();
+            void * particles  = pti.GetArrayOfStructs().data();
 
-          const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
-          const auto& flag = sfab.getEBCellFlagFab();
+            const auto & sfab = static_cast <EBFArrayBox const &> (dummy[pti]);
+            const auto & flag = sfab.getEBCellFlagFab();
 
-          areafrac  =  ebfactory->getAreaFrac();
-          bndrycent = &(ebfactory->getBndryCent());
+            const Box & bx = pti.tilebox();
 
-          const Box& bx = pti.tilebox();
+            // Remove particles outside of or touching the walls
+            if (flag.getType(bx) == FabType::covered) {
 
-          // Remove particles outside of or touching the walls
-          if (flag.getType(bx) == FabType::covered)
-          {
-             for (auto& p: pti.GetArrayOfStructs())
-               p.id() = -1;
-          }
-          else if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
-          {
-                rm_wall_collisions(particles, &nrp,
-                        BL_TO_FORTRAN_3D((* ls_valid)[pti]),
-                        BL_TO_FORTRAN_3D((* ls_phi)[pti]),
-                        dx, & ls_refinement);
-          }
-      }
-      Redistribute();
+                for (auto& p: pti.GetArrayOfStructs())
+                    p.id() = -1;
 
-      long fin_np = 0;
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-        long np = pti.numParticles();
-        fin_np += np;
-      }
+            } else if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued) {
+                rm_wall_collisions(particles, & nrp,
+                                   BL_TO_FORTRAN_3D((* ls_valid)[pti]),
+                                   BL_TO_FORTRAN_3D((* ls_phi)[pti]),
+                                   dx, & ls_refinement);
+            }
+        }
+        Redistribute();
 
-      ParallelDescriptor::ReduceLongSum(fin_np,ParallelDescriptor::IOProcessorNumber());
-      amrex::Print() << "Final number of particles: " << fin_np << std::endl;
+        long fin_np = 0;
+        for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti) {
+            long np = pti.numParticles();
+            fin_np += np;
+        }
 
-  }
+        ParallelDescriptor::ReduceLongSum(fin_np,ParallelDescriptor::IOProcessorNumber());
+        amrex::Print() << "Final number of particles: " << fin_np << std::endl;
+    }
 }
 
 void MFIXParticleContainer::PrintParticleCounts() {
