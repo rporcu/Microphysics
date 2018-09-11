@@ -194,6 +194,7 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
 
 void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
         const MultiFab * ls_phi, const iMultiFab * ls_valid, int ls_refinement) {
+
     // Only call the routine for wall collisions if we actually have walls
     if (ebfactory != NULL) {
 
@@ -217,7 +218,7 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
             // Remove particles outside of or touching the walls
             if (flag.getType(bx) == FabType::covered) {
 
-                for (auto& p: pti.GetArrayOfStructs())
+                for (auto & p: pti.GetArrayOfStructs())
                     p.id() = -1;
 
             } else if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued) {
@@ -227,6 +228,7 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
                                    dx, & ls_refinement);
             }
         }
+
         Redistribute();
 
         long fin_np = 0;
