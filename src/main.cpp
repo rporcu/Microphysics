@@ -148,11 +148,6 @@ int main (int argc, char* argv[])
     // Initialize derived internals
     my_mfix.Init(lev,dt,time);
 
-    // This needs is needed before initializing level data: ebfactories should
-    // not change after the eb-dependent MultiFabs are allocated.
-    //int lev0 = 0;
-    //my_mfix.make_eb_geometry(lev0);
-
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
