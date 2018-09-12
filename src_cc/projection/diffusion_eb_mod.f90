@@ -97,13 +97,12 @@ contains
       ! Temporary array just to handle bc's
       real(rt) ::  vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3)
 
-      ! Temporary array to handle viscous fluxes at the cell faces
-      ! real(rt) :: fx(vlo(1):vhi(1)+1,vlo(2):vhi(2)+1,vlo(3)+1:vhi(3),3)
-      ! real(rt) :: fy(vlo(1):vhi(1)+1,vlo(2):vhi(2)+1,vlo(3)+1:vhi(3),3)
-      ! real(rt) :: fz(vlo(1):vhi(1)+1,vlo(2):vhi(2)+1,vlo(3)+1:vhi(3),3)
-      real(rt) :: fx(vlo(1):vhi(1)+1,vlo(2):vhi(2)  ,vlo(3):vhi(3)  ,3)
-      real(rt) :: fy(vlo(1):vhi(1)  ,vlo(2):vhi(2)+1,vlo(3):vhi(3)  ,3)
-      real(rt) :: fz(vlo(1):vhi(1)  ,vlo(2):vhi(2)  ,vlo(3):vhi(3)+1,3)
+      ! Temporary array to handle viscous fluxes at the cell faces (staggered)
+      ! Just reserve space for the tile + 3 ghost layers
+      integer, parameter :: nh = 3 ! Number of Halo layers      
+      real(rt) :: fx(lo(1)-nh:hi(1)+nh+1,lo(2)-nh:hi(2)+nh  ,lo(3)-nh:hi(3)+nh  ,3)
+      real(rt) :: fy(lo(1)-nh:hi(1)+nh  ,lo(2)-nh:hi(2)+nh+1,lo(3)-nh:hi(3)+nh  ,3)
+      real(rt) :: fz(lo(1)-nh:hi(1)+nh  ,lo(2)-nh:hi(2)+nh  ,lo(3)-nh:hi(3)+nh+1,3)
 
       integer(c_int) :: i, j, k, n
       real(rt)       :: idx, idy, idz
@@ -122,35 +121,29 @@ contains
       call fill_vel_diff_bc( vel_in, vel, vlo, vhi, lo, hi, domlo, domhi, ng, &
            bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi )
       
-      stresses: block
-         ! We compute the stresses on the tile + 3 ghost layers (see divop and
-         ! EB interpolation routines )
-         integer, parameter :: ng_stresses = 3 
+      ! tau_xx, tau_xy, tau_xz on west faces
+      call compute_tau_x(vel, vlo, vhi, mu, slo, shi, lambda, &
+           flags, flo, fhi, lo, hi, dx, fx, nh ) 
       
-         ! tau_xx, tau_xy, tau_xz on west faces
-         call compute_tau_x(vel, vlo, vhi, mu, slo, shi, lambda, &
-              flags, flo, fhi, lo, hi, dx, fx, ng_stresses ) 
-
-         ! tau_yx, tau_yy, tau_yz on south faces
-         call compute_tau_y(vel, vlo, vhi, mu, slo, shi, lambda, &
-              flags, flo, fhi, lo, hi, dx, fy, ng_stresses )
-
-         ! tau_zx, tau_zy, tau_zz on bottom faces
-         call compute_tau_z(vel, vlo, vhi, mu, slo, shi, lambda, &
-              flags, flo, fhi, lo, hi, dx, fz, ng_stresses )
-      end block stresses
+      ! tau_yx, tau_yy, tau_yz on south faces
+      call compute_tau_y(vel, vlo, vhi, mu, slo, shi, lambda, &
+           flags, flo, fhi, lo, hi, dx, fy, nh )
+      
+      ! tau_zx, tau_zy, tau_zz on bottom faces
+      call compute_tau_z(vel, vlo, vhi, mu, slo, shi, lambda, &
+           flags, flo, fhi, lo, hi, dx, fz, nh )
 
       divop: block
          ! Compute div(tau) with EB algorithm
          integer(c_int)  :: fxlo(3), fxhi(3), fylo(3), fyhi(3), fzlo(3), fzhi(3)
 
-         fxlo = vlo
-         fylo = vlo
-         fzlo = vlo
+         fxlo = lo-nh
+         fylo = lo-nh
+         fzlo = lo-nh
 
-         fxhi = vhi + [1,0,0]
-         fyhi = vhi + [0,1,0]
-         fzhi = vhi + [0,0,1]
+         fxhi = hi + nh + [1,0,0]
+         fyhi = hi + nh + [0,1,0]
+         fzhi = hi + nh + [0,0,1]
          
          call compute_divop( lo, hi, divtau, dlo, dhi,                         &
               & fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi, ep, slo, shi,  &
@@ -158,7 +151,7 @@ contains
               & cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi,    &
               & flags, flo, fhi, vfrac, vflo, vfhi, dx, ng )
       end block divop
-      
+            
       ! Divide by ro*ep
       do n = 1, 3
          do k = lo(3), hi(3)
@@ -199,7 +192,7 @@ contains
            flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
 
       real(rt), intent(  out) :: &
-           tau_x(vlo(1):vhi(1)+1,vlo(2):vhi(2),vlo(3):vhi(3),3)
+           tau_x(lo(1)-ng:, lo(2)-ng:, lo(3)-ng:,1: )
 
       integer,  intent(in   ) :: ng ! Number of ghost layer to fill
 
@@ -296,7 +289,7 @@ contains
            flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
 
       real(rt), intent(  out) :: &
-           tau_y(vlo(1):vhi(1),vlo(2):vhi(2)+1,vlo(3):vhi(3),3)
+           tau_y(lo(1)-ng:, lo(2)-ng:, lo(3)-ng:,1: )
 
       integer,  intent(in   ) :: ng ! Number of ghost layer to fill  
 
@@ -395,7 +388,7 @@ contains
            flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
 
       real(rt), intent(  out) :: &
-           tau_z(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)+1,3)
+           tau_z(lo(1)-ng:, lo(2)-ng:, lo(3)-ng:,1: )
       
       integer,  intent(in   ) :: ng ! Number of ghost layer to fill
 

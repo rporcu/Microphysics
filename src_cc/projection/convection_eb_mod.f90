@@ -109,17 +109,15 @@ contains
            & bc_khi(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
            & flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
       
-      ! Temporary arrays
-      ! Fluxes (this array can probably be shrinked to tile size)
-      real(ar)  ::    &
-           & fx(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3), &
-           & fy(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3), &
-           & fz(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),3)
-
-      
+      ! Temporary array to handle convective fluxes at the cell faces (staggered)
+      ! Just reserve space for the tile + 3 ghost layers
+      integer, parameter :: nh = 3 ! Number of Halo layers      
+      real(ar) :: fx(lo(1)-nh:hi(1)+nh+1,lo(2)-nh:hi(2)+nh  ,lo(3)-nh:hi(3)+nh  ,3)
+      real(ar) :: fy(lo(1)-nh:hi(1)+nh  ,lo(2)-nh:hi(2)+nh+1,lo(3)-nh:hi(3)+nh  ,3)
+      real(ar) :: fz(lo(1)-nh:hi(1)+nh  ,lo(2)-nh:hi(2)+nh  ,lo(3)-nh:hi(3)+nh+1,3)     
 
       ! Check number of ghost cells
-      if (ng < 3) then
+      if (ng < 4) then
          write(*,*) "ERROR: EB convection term requires at least 3 ghost cells"
          stop
       end if
@@ -141,10 +139,10 @@ contains
             ! 
             ! ===================   X   ===================
             !
-            do k = lo(3)-ng, hi(3)+ng
-               do j = lo(2)-ng, hi(2)+ng
-                  do i = lo(1)-ng+1, hi(1)+ng
-                     if ( afrac_x(i,j,k) > zero ) then
+            do k = lo(3)-nh, hi(3)+nh
+               do j = lo(2)-nh, hi(2)+nh
+                  do i = lo(1)-nh, hi(1)+nh+1
+                      if ( afrac_x(i,j,k) > zero ) then
                         if ( i >= domlo(1) .and. any(bc_ilo(j,k,1) == bc_list) ) then
                            u_face =  vel(domlo(1)-1,j,k,n)
                         else if ( i >= domhi(1)+1 .and. any(bc_ihi(j,k,1) == bc_list ) ) then
@@ -166,9 +164,9 @@ contains
             ! 
             ! ===================   Y   ===================
             !
-            do k = lo(3)-ng,     hi(3)+ng
-               do j = lo(2)-ng+1,   hi(2)+ng
-                  do i = lo(1)-ng,    hi(1)+ng
+            do k = lo(3)-nh, hi(3)+nh
+               do j = lo(2)-nh, hi(2)+nh+1
+                  do i = lo(1)-nh, hi(1)+nh
                      if ( afrac_y(i,j,k) > zero ) then
                         if ( j <= domlo(2) .and. any(bc_jlo(i,k,1) == bc_list) ) then
                            v_face =  vel(i,domlo(2)-1,k,n)
@@ -191,9 +189,9 @@ contains
             ! 
             ! ===================   Z   ===================
             !
-            do k = lo(3)-ng+1, hi(3)+ng
-               do j = lo(2)-ng, hi(2)+ng
-                  do i = lo(1)-ng, hi(1)+ng
+            do k = lo(3)-nh, hi(3)+nh+1
+               do j = lo(2)-nh, hi(2)+nh
+                  do i = lo(1)-nh, hi(1)+nh
                      if ( afrac_z(i,j,k) > zero ) then
                         if ( k <= domlo(3) .and. any(bc_klo(i,j,1) == bc_list) ) then
                            w_face =  vel(i,j,domlo(3)-1,n)
@@ -217,14 +215,24 @@ contains
 
       end block
 
-      !
-      ! Compute div(ep_g * u_mac * u_cc )
-      ! 
-      call compute_divop(lo, hi, ugradu, glo, ghi, fx, ulo, uhi, fy, vlo, vhi, fz, wlo, whi, &
-           ep, elo, ehi, afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi,      &
-           cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi, flags, flo, fhi,      &
-           vfrac, vflo, vfhi, dx, ng )
+       divop: block
+         ! Compute div(tau) with EB algorithm
+         integer(c_int)  :: fxlo(3), fxhi(3), fylo(3), fyhi(3), fzlo(3), fzhi(3)
 
+         fxlo = lo-nh
+         fylo = lo-nh
+         fzlo = lo-nh
+
+         fxhi = hi + nh + [1,0,0]
+         fyhi = hi + nh + [0,1,0]
+         fzhi = hi + nh + [0,0,1]
+         
+         call compute_divop(lo, hi, ugradu, glo, ghi, fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi, &
+              ep, elo, ehi, afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi,      &
+              cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi, flags, flo, fhi,      &
+              vfrac, vflo, vfhi, dx, ng )
+      end block divop
+      
       ! Divide by ep and return the negative
       block
          integer :: i,j,k,n

@@ -24,7 +24,7 @@ contains
    !   fz       the fluxes at the z-face CENTER (not centroid!)
    !   ep       cell-centered volume fraction
    !
-   ! WARNING: fx, fy, fz HAS to be filled with at least 2 GHOST nodes
+   ! WARNING: fx, fy, fz HAS to be filled with at least 3 GHOST nodes
    !          
    ! 
    ! 
@@ -51,7 +51,7 @@ contains
 
       ! Array Bounds
       integer(c_int),  intent(in   ) :: dlo(3), dhi(3)
-      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int),  intent(in   ) :: ulo(3), uhi(3) 
       integer(c_int),  intent(in   ) :: vlo(3), vhi(3)
       integer(c_int),  intent(in   ) :: wlo(3), whi(3)
       integer(c_int),  intent(in   ) :: elo(3), ehi(3)
@@ -112,7 +112,7 @@ contains
       idz = one / dx(3)
 
       ! Check number of ghost cells
-      if (ng < 3) then
+      if (ng < 4) then
          write(*,*) "ERROR: EB divop requires at least 3 ghost cells"
          stop
       end if
