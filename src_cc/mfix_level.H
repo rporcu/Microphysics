@@ -196,6 +196,7 @@ private:
     void make_eb_box      (int lev);
     void make_eb_cylinder (int lev);
     void make_eb_hopper   (int lev);
+    void make_eb_cyclone  (int lev);
     void make_eb_hourglass(int lev);
     void make_eb_clr      (int lev);
     void make_eb_clr_riser(int lev);
