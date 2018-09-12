@@ -37,17 +37,20 @@ contains
    !  txy =  mu * ( du/dy + dv/dx )
    !  txz =  mu * ( du/dz + dw/dx )
    !
-  subroutine compute_divtau ( lo, hi, divtau, dlo, dhi, &
+   subroutine compute_divtau ( lo, hi,   &
+        divtau, dlo, dhi, &
         vel_in, vlo, vhi, &
-        mu, lambda, rop, slo, shi, &
-        domlo, domhi, &
+        mu, lambda, ro,    &
+        ep,    slo, shi, &
+        domlo, domhi,     &
         bc_ilo_type, bc_ihi_type, &
         bc_jlo_type, bc_jhi_type, &
-        bc_klo_type, bc_khi_type, dx, ng, &
+        bc_klo_type, bc_khi_type, &
+        dx, ng, &
         do_explicit_diffusion) bind(C)
 
 
-    ! Loops bounds
+    ! Loops bounds (cell-centered)
     integer(c_int),  intent(in   ) :: lo(3),  hi(3)
 
     ! Number of ghost cells
@@ -68,10 +71,11 @@ contains
     real(rt),        intent(in   ) :: dx(3)
 
     ! Arrays
-    real(rt),        intent(in   ) ::                        &
+    real(rt),        intent(in   ) ::                           &
          & vel_in(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3), &
-         &    rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-         &     mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+         &      ro(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
+         &      ep(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
+         &      mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
          &  lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
     real(rt),        intent(inout) ::                        &
@@ -218,8 +222,6 @@ contains
              !*************************************
              !         div(tau)_y
              !*************************************
-             ! IN FLD01-x, if I set du=zero, it works -> pronlem with mixed derivative
-
              ! X east
              du = (   vel(i+1,j  ,k,1) + vel(i+1,j+1,k,1) + vel(i,j  ,k,1) + vel(i,j+1,k,1) &
                   & - vel(i+1,j-1,k,1) - vel(i+1,j  ,k,1) - vel(i,j-1,k,1) - vel(i,j  ,k,1) ) * q4
@@ -334,13 +336,13 @@ contains
              !*************************************
              !         div(tau)/rop
              !*************************************
-             divtau(i,j,k,:) = divtau(i,j,k,:) / rop(i,j,k)
+             divtau(i,j,k,:) = divtau(i,j,k,:) / ( ep(i,j,k) * ro(i,j,k) )
 
           end do
        end do
     end do
 
-   end subroutine compute_divtau
+ end subroutine compute_divtau
 
    !
    ! Compute the coefficients for the diffusion solve
