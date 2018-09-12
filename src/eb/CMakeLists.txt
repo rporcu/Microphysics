@@ -1,6 +1,7 @@
 add_sources ( mfix_eb.cpp )
 add_sources ( mfix_eb_box.cpp )
 add_sources ( mfix_eb_cylinder.cpp )
+add_sources ( mfix_eb_cyclone.cpp )
 add_sources ( mfix_eb_hopper.cpp )
 add_sources ( mfix_eb_regular.cpp )
 add_sources ( mfix_eb_general.cpp )
