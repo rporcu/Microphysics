@@ -81,6 +81,9 @@ mfix_level::make_eb_geometry (int lev)
   } else if (geom_type == "hopper") {
     amrex::Print() << "\n Building hopper geometry." << std::endl;
     make_eb_hopper(lev);
+  } else if (geom_type == "cyclone") {
+    amrex::Print() << "\n Building cyclone geometry." << std::endl;
+    make_eb_cyclone(lev);
   } else if(geom_type == "general") {
     amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
     make_eb_general(lev);
