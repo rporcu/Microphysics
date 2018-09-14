@@ -677,9 +677,7 @@ contains
                     -vec(i  ,j-1,k-1,3) - vec(i-1,j-1,k-1,3) )
 
                diveu(i,j,k) = 0.25d0 * (eu_x*odx + eu_y*ody + eu_z*odz)
-
-               !               if (i.eq.0) print *,'DIVEU ',j,k,diveu(i,j,k), eu_x, eu_y, eu_z
-
+ 
             end do
          end do
       end do
