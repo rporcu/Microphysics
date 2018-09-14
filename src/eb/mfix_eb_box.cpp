@@ -56,8 +56,6 @@ mfix_level::make_eb_box(int lev)
          *                                                                      *
          ************************************************************************/
 
-        ParmParse pp("box");
-
         Vector<Real> boxLo(3), boxHi(3);
         Real offset    = 1.0e-15;
 

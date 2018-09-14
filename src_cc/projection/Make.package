@@ -2,6 +2,7 @@ f90EXE_sources += convection_mod.f90
 f90EXE_sources += convection_eb_mod.f90
 f90EXE_sources += diffusion_mod.f90
 f90EXE_sources += diffusion_eb_mod.f90
+f90EXE_sources += eb_wallflux_mod.f90
 f90EXE_sources += macproj_mod.f90
 f90EXE_sources += projection_mod.f90
 f90EXE_sources += set_pressure_bcs.f90

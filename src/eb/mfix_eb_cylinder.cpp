@@ -138,7 +138,6 @@ mfix_level::make_eb_cylinder(int lev)
          EB2::PlaneIF my_plane(point, normal);
 
          auto gshop = EB2::makeShop(EB2::makeUnion(* my_cyl, my_plane));
-         int max_coarsening_level = 100;
          EB2::Build(gshop, geom.back(), max_level_here,
                     max_level_here + max_coarsening_level);
 
