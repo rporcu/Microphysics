@@ -8,7 +8,7 @@ module macproj_mod
 
    use amrex_fort_module, only: ar => amrex_real
    use iso_c_binding ,    only: c_int
-   use param,             only: zero, half, one
+   use param,             only: zero, half, one, my_huge
 
    implicit none
    private
@@ -183,7 +183,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
                if ( is_covered_cell(flags(i,j,k)) ) then
-                  diveu(i,j,k) = huge(one)
+                  diveu(i,j,k) = my_huge
                else                  
                   eu_e = u_g(i+1,j,k) * half * ( ep_g(i+1,j,k) + ep_g(i  ,j,k) )
                   eu_w = u_g(i  ,j,k) * half * ( ep_g(i  ,j,k) + ep_g(i-1,j,k) )               

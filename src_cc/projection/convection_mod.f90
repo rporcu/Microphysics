@@ -8,7 +8,7 @@ module convection_mod
 
    use amrex_fort_module, only: ar => amrex_real
    use iso_c_binding ,    only: c_int
-   use param,             only: zero, half, one
+   use param,             only: zero, half, one, my_huge
    use bc,                only: minf_, nsw_, fsw_, psw_, pinf_, pout_
 
    implicit none
@@ -187,7 +187,7 @@ contains
                      u_tmp(i,j,k) = upwind_normal( umns, upls )
                   end if
                else
-                  u_tmp(i,j,k) = huge(one)               
+                  u_tmp(i,j,k) = my_huge               
                end if
             end do
          end do
@@ -255,14 +255,18 @@ contains
       do k = lo(3)-1, hi(3)+1
          do j = lo(2), hi(2)
             do i = lo(1)-1, hi(1)+1
-               if ( ( j == domlo(2) ) .and. any(bc_jlo(i,k,1) == bc_list) ) then
-                  v_tmp(i,j,k) = vel(i,j-1,k,2)
-               else if ( ( j == domhi(2)+1 ) .and. any(bc_jhi(i,k,1) == bc_list) ) then
-                  v_tmp(i,j,k) = vel(i,j,k,2)
+               if ( areafrac(i,j,k) > zero ) then
+                  if ( ( j == domlo(2) ) .and. any(bc_jlo(i,k,1) == bc_list) ) then
+                     v_tmp(i,j,k) = vel(i,j-1,k,2)
+                  else if ( ( j == domhi(2)+1 ) .and. any(bc_jhi(i,k,1) == bc_list) ) then
+                     v_tmp(i,j,k) = vel(i,j,k,2)
+                  else
+                     vpls     = vel(i,j  ,k,2) - half * slopes(i,j,  k,2)
+                     vmns     = vel(i,j-1,k,2) + half * slopes(i,j-1,k,2)
+                     v_tmp(i,j,k) = upwind_normal( vmns, vpls )
+                  end if
                else
-                  vpls     = vel(i,j  ,k,2) - half * slopes(i,j,  k,2)
-                  vmns     = vel(i,j-1,k,2) + half * slopes(i,j-1,k,2)
-                  v_tmp(i,j,k) = upwind_normal( vmns, vpls )
+                  v_tmp(i,j,k) = my_huge               
                end if
             end do
          end do
@@ -346,7 +350,7 @@ contains
                      w_tmp(i,j,k) = upwind_normal( wmns, wpls )
                   end if
                else
-                  w_tmp(i,j,k) = huge(one)               
+                  w_tmp(i,j,k) = my_huge               
                end if
             end do
          end do

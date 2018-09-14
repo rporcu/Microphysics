@@ -2,7 +2,7 @@ module convection_eb_mod
    
    use amrex_fort_module,       only: ar => amrex_real
    use iso_c_binding ,          only: c_int
-   use param,                   only: zero, half, one
+   use param,                   only: zero, half, one, my_huge
    use bc,                      only: minf_, nsw_, fsw_, psw_, pinf_, pout_
    use amrex_error_module,      only: amrex_abort
    use amrex_ebcellflag_module, only: is_covered_cell, is_single_valued_cell, &
@@ -154,7 +154,7 @@ contains
                            u_face = upwind( umns, upls, u(i,j,k) )
                         end if
                      else
-                        u_face = huge(one)
+                        u_face = my_huge
                      end if
                      fx(i,j,k,n) = half * (ep(i-1,j,k) + ep(i,j,k)) * u(i,j,k) * u_face 
                   end do
@@ -179,7 +179,7 @@ contains
                            v_face = upwind( vmns, vpls, v(i,j,k) )
                         end if
                      else
-                        v_face = huge(one)
+                        v_face = my_huge
                      end if
                      fy(i,j,k,n) = half * (ep(i,j-1,k) + ep(i,j,k)) * v(i,j,k) * v_face
                   end do
@@ -204,7 +204,7 @@ contains
                            w_face = upwind( wmns, wpls, w(i,j,k) )
                         end if
                      else
-                        w_face = huge(one)
+                        w_face = my_huge
                      end if
                      fz(i,j,k,n) = half * (ep(i,j,k-1) + ep(i,j,k)) * w(i,j,k) * w_face
                   end do
