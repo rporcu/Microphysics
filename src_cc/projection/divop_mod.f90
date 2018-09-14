@@ -31,6 +31,7 @@ contains
    ! 
    subroutine compute_divop ( lo, hi, &
         div, dlo, dhi, &
+        vel,vllo,vlhi, & 
         fx,  ulo, uhi, &
         fy,  vlo, vhi, &
         fz,  wlo, whi, &
@@ -43,17 +44,18 @@ contains
         cent_z,  czlo, czhi, &
         flags,    flo,  fhi, &
         vfrac,   vflo, vfhi, &
-        dx, ng ) bind(C)
-        ! dx, ng, is_viscous ) bind(C)
+        bcent,    blo,  bhi, &
+        dx, ng, mu, lambda ) bind(C)
 
       use eb_interpolation_mod, only: interp_to_face_centroid
-      use 
-
+      use eb_wallflux_mod,      only: compute_diff_wallflux
+      
       ! Tile bounds (cell centered)
       integer(c_int),  intent(in   ) :: lo(3),  hi(3)
 
       ! Array Bounds
       integer(c_int),  intent(in   ) :: dlo(3), dhi(3)
+      integer(c_int),  intent(in   ) :: vllo(3), vlhi(3)
       integer(c_int),  intent(in   ) :: ulo(3), uhi(3) 
       integer(c_int),  intent(in   ) :: vlo(3), vhi(3)
       integer(c_int),  intent(in   ) :: wlo(3), whi(3)
@@ -66,13 +68,11 @@ contains
       integer(c_int),  intent(in   ) :: czlo(3), czhi(3)
       integer(c_int),  intent(in   ) ::  flo(3),  fhi(3)
       integer(c_int),  intent(in   ) :: vflo(3), vfhi(3)
+      integer(c_int),  intent(in   ) ::  blo(3),  bhi(3)
 
       ! Number of ghost cells
       integer(c_int),  intent(in   ) :: ng
 
-      ! Whether we are computing the viscous div operator
-      ! logical,         intent(in   ) :: is_viscous 
-      
       ! Grid
       real(ar),        intent(in   ) :: dx(3)
 
@@ -88,7 +88,14 @@ contains
            & cent_x(cxlo(1):cxhi(1),cxlo(2):cxhi(2),cxlo(3):cxhi(3),2),&
            & cent_y(cylo(1):cyhi(1),cylo(2):cyhi(2),cylo(3):cyhi(3),2),&
            & cent_z(czlo(1):czhi(1),czlo(2):czhi(2),czlo(3):czhi(3),2),&
-           & vfrac(vflo(1):vfhi(1),vflo(2):vfhi(2),vflo(3):vfhi(3))           
+           & vfrac(vflo(1):vfhi(1),vflo(2):vfhi(2),vflo(3):vfhi(3)),   &
+           &   vel(vllo(1):vlhi(1),vllo(2):vlhi(2),vllo(3):vlhi(3),3), &
+           & bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
+
+      ! Optional arrays (only for viscous calculations)
+      real(ar),        intent(in   ), optional  ::                &
+           &     mu(elo(1):ehi(1),elo(2):ehi(2),elo(3):ehi(3)),   &
+           & lambda(elo(1):ehi(1),elo(2):ehi(2),elo(3):ehi(3))
 
       real(ar),        intent(inout) ::                           &
            & div(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3)
@@ -103,10 +110,13 @@ contains
            &  divc(lo(1)-2:hi(1)+2,lo(2)-2:hi(2)+2,lo(3)-2:hi(3)+2), &
            & optmp(lo(1)-2:hi(1)+2,lo(2)-2:hi(2)+2,lo(3)-2:hi(3)+2), &
            &  delm(lo(1)-2:hi(1)+2,lo(2)-2:hi(2)+2,lo(3)-2:hi(3)+2)
+
+      real(ar), allocatable          :: divdiff_w(:,:)
            
       integer(c_int)                 :: i, j, k, n, nbr(-1:1,-1:1,-1:1)
+      integer(c_int)                 :: nwalls
       real(ar)                       :: idx, idy, idz
-
+      logical                        :: is_viscous
       
       idx = one / dx(1)
       idy = one / dx(2)
@@ -114,17 +124,48 @@ contains
 
       ! Check number of ghost cells
       if (ng < 4) call amrex_abort( "compute_divop(): ng must be >= 4")
+
+      ! Check if we are computing divergence for viscous term by checking if
+      ! both mu and lambda are passed in
+      if ( present(mu) .and. present(lambda) ) then
+         is_viscous = .true.
+      else if ( .not. present(mu) .and. .not. present(lambda) ) then
+         is_viscous = .false.
+      else
+          call amrex_abort("compute_divop(): either mu or lambda is not passed in")
+      end if
+
+      !
+      ! Allocate arrays to host viscous wall fluxes
+      !
+      nwalls = 0 
+      if (is_viscous) then
+         do k = lo(3)-2, hi(3)+2
+            do j = lo(2)-2, hi(2)+2                             
+               do i = lo(1)-2, hi(1)+2
+                  if (is_single_valued_cell(flags(i,j,k))) nwalls = nwalls + 1
+               end do
+            end do
+         end do
+         allocate( divdiff_w(3,nwalls) )
+      end if   
+      
  
       !
       ! The we use the EB algorithmm to compute the divergence at cell centers
       ! 
       ncomp_loop: do n = 1, 3
 
+
+
          !
          ! Step 1: compute conservative divergence on stencil (lo-2,hi+2)
          !
          compute_divc: block
             real(ar) :: fxp, fxm, fyp, fym, fzp, fzm
+            integer  :: iwall
+
+            iwall = 0
             
             do k = lo(3)-2, hi(3)+2
                do j = lo(2)-2, hi(2)+2                             
@@ -158,10 +199,24 @@ contains
                         fzm = interp_to_face_centroid( i, j, k, 3, fz, wlo, n,  &
                              & afrac_z, azlo, cent_z, czlo, nbr )
 
+                        
                         divc(i,j,k) = ( ( fxp - fxm ) * idx + &
                              &          ( fyp - fym ) * idy + &
                              &          ( fzp - fzm ) * idz ) &
                              &        / ( vfrac(i,j,k) * ep(i,j,k) )
+                        
+                        ! Add viscous wall fluxes (compute three components only
+                        ! during the first pass, i.e. for n=1
+                        iwall = iwall + 1
+                        if (is_viscous) then
+                           if (n==1) then 
+                              call compute_diff_wallflux( divdiff_w(:,iwall), dx, i, j, k, &
+                                   vel, vlo, vhi, lambda, mu, elo, ehi, bcent, blo, bhi,     &
+                                   afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi)        
+                           end if
+                           divc(i,j,k) = divc(i,j,k) + divdiff_w(n,iwall) / &
+                                &         ( dx(n) * vfrac(i,j,k) * ep(i,j,k) )
+                        end if
 
                      else
 
@@ -275,6 +330,8 @@ contains
          end do
 
       end do ncomp_loop
+
+      if (is_viscous) deallocate(divdiff_w)
 
    end subroutine compute_divop
 

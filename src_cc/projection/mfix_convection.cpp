@@ -22,11 +22,13 @@ mfix_level::mfix_compute_ugradu_predictor ( int lev,
     Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
     Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
     const amrex::MultiFab*                    volfrac;
+    const amrex::MultiCutFab*                 bndrycent;
 
     areafrac  =   ebfactory[lev] -> getAreaFrac();
     facecent  =   ebfactory[lev] -> getFaceCent();
     volfrac   = &(ebfactory[lev] -> getVolFrac());
-
+    bndrycent = &(ebfactory[lev] -> getBndryCent());
+       
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
@@ -87,6 +89,7 @@ mfix_level::mfix_compute_ugradu_predictor ( int lev,
                 BL_TO_FORTRAN_ANYD((*facecent[2])[mfi]),
                 BL_TO_FORTRAN_ANYD(flags),
                 BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+                BL_TO_FORTRAN_ANYD((*bndrycent)[mfi]),
                 (*xslopes[lev])[mfi].dataPtr(),
                 (*yslopes[lev])[mfi].dataPtr(),
                 BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
@@ -123,10 +126,12 @@ mfix_level::mfix_compute_ugradu_corrector ( int lev,
     Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
     Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
     const amrex::MultiFab*                    volfrac;
+    const amrex::MultiCutFab*                 bndrycent;
 
     areafrac  =   ebfactory[lev] -> getAreaFrac();
     facecent  =   ebfactory[lev] -> getFaceCent();
     volfrac   = &(ebfactory[lev] -> getVolFrac());
+    bndrycent = &(ebfactory[lev] -> getBndryCent());
 
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -188,6 +193,7 @@ mfix_level::mfix_compute_ugradu_corrector ( int lev,
                 BL_TO_FORTRAN_ANYD((*facecent[2])[mfi]),
                 BL_TO_FORTRAN_ANYD(flags),
                 BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+                BL_TO_FORTRAN_ANYD((*bndrycent)[mfi]),
                 (*xslopes[lev])[mfi].dataPtr(),
                 (*yslopes[lev])[mfi].dataPtr(),
                 BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
