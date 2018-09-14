@@ -4,18 +4,33 @@
 !  Purpose: DES - allocating DES arrays                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine init_collision(d_p0, ro_s0)&
+subroutine init_collision(d_p_in, ro_s_in)&
      bind(C, name="init_collision")
 
-  use discretelement, only: des_coll_model_enum, lsd, hertzian
+  use discretelement,    only: des_coll_model_enum, lsd, hertzian
 
   use amrex_fort_module, only : rt => amrex_real
-  use iso_c_binding , only: c_int
-  use param,         only: zero, dim_m
+  use iso_c_binding,     only: c_int
+  use param,             only: zero, dim_m
+  use constant,          only: mmax
 
   implicit none
 
-  real(rt), intent(in) :: d_p0(dim_m), ro_s0(dim_m)
+  real(rt), intent(in) :: d_p_in(dim_m), ro_s_in(dim_m)
+  real(rt)             :: d_p0(dim_m),   ro_s0(dim_m)
+
+  integer :: ptype
+
+   d_p0 =  d_p_in
+  ro_s0 = ro_s_in
+
+  ! Work around for cases that have no particles.
+  do ptype =1, mmax
+
+     if( d_p_in(ptype) == zero)  d_p0(ptype) =  100.0d-6
+     if(ro_s_in(ptype) == zero) ro_s0(ptype) = 1000.0d0
+
+  enddo
 
   select case (des_coll_model_enum)
      case(lsd)     ; call init_collision_lsd
@@ -41,7 +56,7 @@ contains
   use discretelement, only: kn, kn_w, kt, kt_w, kt_fac, kt_w_fac, &
       & des_etan, des_etan_wall, des_etat, des_etat_wall,        &
       & des_en_input, des_en_wall_input, &
-      & des_etat_fac, des_etat_w_fac, dtsolid 
+      & des_etat_fac, des_etat_w_fac, dtsolid
 !     & des_et_input, des_et_wall_input
 
   integer      :: m, l, lc
