@@ -79,7 +79,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
                     vel_g[lev]->nComp(), vel_g[lev]->nGrow(), MFInfo(),
                     *ebfactory[lev]);
 
-    fluxes[lev].setVal(1.e200);
+    fluxes.setVal(1.e200);
 
     solve_poisson_equation( lev, bcoeff, phi, diveu, bc_lo, bc_hi, fluxes );
  
