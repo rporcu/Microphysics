@@ -143,7 +143,7 @@ contains
                do j = lo(2)-nh, hi(2)+nh
                   do i = lo(1)-nh, hi(1)+nh+1
                       if ( afrac_x(i,j,k) > zero ) then
-                        if ( i >= domlo(1) .and. any(bc_ilo(j,k,1) == bc_list) ) then
+                        if ( i <= domlo(1) .and. any(bc_ilo(j,k,1) == bc_list) ) then
                            u_face =  vel(domlo(1)-1,j,k,n)
                         else if ( i >= domhi(1)+1 .and. any(bc_ihi(j,k,1) == bc_list ) ) then
                            u_face =  vel(domhi(1)+1,j,k,n)
