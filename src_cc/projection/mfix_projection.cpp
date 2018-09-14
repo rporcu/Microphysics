@@ -122,7 +122,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
         amrex::Print() << "After  projection \n";
         mfix_print_max_vel (lev);
         mfix_compute_diveu (lev);
-        amrex::Print() << "max(abs(diveu)) = " <<  mfix_norm0(vel_g, lev, 0) << "\n";
+        amrex::Print() << "max(abs(diveu)) = " <<  mfix_norm0(diveu, lev, 0) << "\n";
     }
 }
 
