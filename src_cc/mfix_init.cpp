@@ -361,9 +361,9 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
     if (solve_fluid) AllocateArrays(lev);
 
-  // Allocate the particle data
-  if (solve_dem)
-  {
+    // Allocate the particle data
+    if (solve_dem)
+    {
       Real strt_init_part = ParallelDescriptor::second();
 
       //int lev = 0;
@@ -417,30 +417,33 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
           particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
                                                 pc->ParticleDistributionMap(lev), 1, 0));
           particle_cost[lev]->setVal(0.0);
-
-          if (solve_fluid)
-          {
-             fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
-             fluid_cost[lev]->setVal(0.0);
-          }
        }
        Real end_init_part = ParallelDescriptor::second() - strt_init_part;
        ParallelDescriptor::ReduceRealMax(end_init_part, ParallelDescriptor::IOProcessorNumber());
        if (ParallelDescriptor::IOProcessor())
           std::cout << "Time spent in initializing particles " << end_init_part << std::endl;
-  }
-
-  if (use_epg_hack)
-  {
-    amrex::Print() << "EP_G initialized in mfix_level::Init() with a HACK!!!" << std::endl;
-
-    Box domain(geom[lev].Domain());
-    for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
-    {
-        set_epg( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-                 domain.loVect (), domain.hiVect () );
     }
-  }
+    
+    if (solve_fluid)
+    {
+       if (load_balance_type == "KnapSack")
+       {
+          fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+          fluid_cost[lev]->setVal(0.0);
+       }
+
+       if (use_epg_hack)
+       {
+         amrex::Print() << "EP_G initialized in mfix_level::Init() with a HACK!!!" << std::endl;
+
+         Box domain(geom[lev].Domain());
+         for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
+         {
+             set_epg( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
+                      domain.loVect (), domain.hiVect () );
+         }
+       }
+    }
 }
 
 void
