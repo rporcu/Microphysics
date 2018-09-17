@@ -689,6 +689,7 @@ mfix_level::mfix_set_p0(int lev)
     set_p0(bx.loVect(),  bx.hiVect(),
            domain.loVect(), domain.hiVect(),
            BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
+           BL_TO_FORTRAN_ANYD((*gp0[lev])[mfi]),
            &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
            bc_ilo.dataPtr(), bc_ihi.dataPtr(),
            bc_jlo.dataPtr(), bc_jhi.dataPtr(),
