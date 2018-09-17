@@ -32,9 +32,9 @@ contains
    subroutine compute_divop ( lo, hi, &
         div, dlo, dhi, &
         vel,vllo,vlhi, & 
-        fx,  fxlo, uhi, &
-        fy,  fylo, vhi, &
-        fz,  fzlo, whi, &
+        fx,  fxlo, fxhi, &
+        fy,  fylo, fyhi, &
+        fz,  fzlo, fzhi, &
         ep,  elo, ehi, &
         afrac_x, axlo, axhi, &
         afrac_y, aylo, ayhi, &
@@ -56,9 +56,9 @@ contains
       ! Array Bounds
       integer(c_int),  intent(in   ) :: dlo(3), dhi(3)
       integer(c_int),  intent(in   ) :: vllo(3), vlhi(3)
-      integer(c_int),  intent(in   ) :: fxlo(3), uhi(3) 
-      integer(c_int),  intent(in   ) :: fylo(3), vhi(3)
-      integer(c_int),  intent(in   ) :: fzlo(3), whi(3)
+      integer(c_int),  intent(in   ) :: fxlo(3), fxhi(3) 
+      integer(c_int),  intent(in   ) :: fylo(3), fyhi(3)
+      integer(c_int),  intent(in   ) :: fzlo(3), fzhi(3)
       integer(c_int),  intent(in   ) :: elo(3), ehi(3)
       integer(c_int),  intent(in   ) :: axlo(3), axhi(3)
       integer(c_int),  intent(in   ) :: aylo(3), ayhi(3)
@@ -78,9 +78,9 @@ contains
 
       ! Arrays
       real(ar),        intent(in   ) ::                       &
-           & fx(fxlo(1):uhi(1),fxlo(2):uhi(2),fxlo(3):uhi(3),3), &
-           & fy(fylo(1):vhi(1),fylo(2):vhi(2),fylo(3):vhi(3),3), &
-           & fz(fzlo(1):whi(1),fzlo(2):whi(2),fzlo(3):whi(3),3), &
+           & fx(fxlo(1):fxhi(1),fxlo(2):fxhi(2),fxlo(3):fxhi(3),3), &
+           & fy(fylo(1):fyhi(1),fylo(2):fyhi(2),fylo(3):fyhi(3),3), &
+           & fz(fzlo(1):fzhi(1),fzlo(2):fzhi(2),fzlo(3):fzhi(3),3), &
            & ep(elo(1):ehi(1),elo(2):ehi(2),elo(3):ehi(3)),   &
            & afrac_x(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3)), &
            & afrac_y(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3)), &
