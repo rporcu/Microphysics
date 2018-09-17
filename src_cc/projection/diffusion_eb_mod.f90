@@ -151,7 +151,7 @@ contains
               & afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, &
               & cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi,    &
               & flags, flo, fhi, vfrac, vflo, vfhi, bcent, blo, bhi,           &
-              & dx, ng, mu, lambda )
+              & domlo, domhi, dx, ng, mu, lambda )
       end block divop
             
       ! Divide by ro*ep

@@ -45,8 +45,10 @@ contains
         flags,    flo,  fhi, &
         vfrac,   vflo, vfhi, &
         bcent,    blo,  bhi, &
+        domlo, domhi,        &
         dx, ng, mu, lambda ) bind(C)
 
+      use bc
       use eb_interpolation_mod, only: interp_to_face_centroid
       use eb_wallflux_mod,      only: compute_diff_wallflux
       
@@ -69,6 +71,8 @@ contains
       integer(c_int),  intent(in   ) ::  flo(3),  fhi(3)
       integer(c_int),  intent(in   ) :: vflo(3), vfhi(3)
       integer(c_int),  intent(in   ) ::  blo(3),  bhi(3)
+
+      integer(c_int),  intent(in   ) :: domlo(3), domhi(3)
 
       ! Number of ghost cells
       integer(c_int),  intent(in   ) :: ng
@@ -112,6 +116,7 @@ contains
            &  delm(lo(1)-2:hi(1)+2,lo(2)-2:hi(2)+2,lo(3)-2:hi(3)+2)
 
       real(ar), allocatable          :: divdiff_w(:,:)
+      real(ar), allocatable          ::      mask(:,:,:)
            
       integer(c_int)                 :: i, j, k, n, nbr(-1:1,-1:1,-1:1)
       integer(c_int)                 :: nwalls
@@ -149,14 +154,13 @@ contains
          end do
          allocate( divdiff_w(3,nwalls) )
       end if   
-      
+
+      allocate( mask(lo(1)-2:hi(1)+2,lo(2)-2:hi(2)+2,lo(3)-2:hi(3)+2) )
  
       !
       ! The we use the EB algorithmm to compute the divergence at cell centers
       ! 
       ncomp_loop: do n = 1, 3
-
-
 
          !
          ! Step 1: compute conservative divergence on stencil (lo-2,hi+2)
@@ -231,6 +235,20 @@ contains
             end do
          end block compute_divc
 
+         mask(lo(1)-2:hi(1)+2,lo(2)-2:hi(2)+2,lo(3)-2:hi(3)+2) = 1.d0 
+         if (lo(1).eq.domlo(1) .and. .not. cyclic_x) &
+            mask(lo(1)-2:lo(1)-1,lo(2)-2:hi(2)+2,lo(3)-2:hi(3)+2) = 0.d0 
+         if (hi(1).eq.domhi(1) .and. .not. cyclic_x) &
+            mask(hi(1)+1:hi(1)+2,lo(2)-2:hi(2)+2,lo(3)-2:hi(3)+2) = 0.d0 
+         if (lo(2).eq.domlo(2) .and. .not. cyclic_y) &
+            mask(lo(1)-2:hi(1)+2,lo(2)-2:lo(2)-1,lo(3)-2:hi(3)+2) = 0.d0 
+         if (hi(2).eq.domhi(2) .and. .not. cyclic_y) &
+            mask(lo(1)-2:hi(1)+2,hi(2)+1:hi(2)+2,lo(3)-2:hi(3)+2) = 0.d0 
+         if (lo(3).eq.domlo(3) .and. .not. cyclic_z) &
+            mask(lo(1)-2:hi(1)+2,lo(2)-2:hi(2)+2,lo(3)-2:lo(3)-1) = 0.d0 
+         if (hi(3).eq.domhi(3) .and. .not. cyclic_z) &
+            mask(lo(1)-2:hi(1)+2,lo(2)-1:hi(2)+2,hi(3)+1:hi(3)+2) = 0.d0 
+
          !
          ! Step 2: compute delta M ( mass gain or loss ) on (lo-1,hi+1)
          !
@@ -253,8 +271,8 @@ contains
                                  ! Check if we have to include also cell (i,j,k) itself
                                  if ( ( ii /= 0 .or. jj /= 0 .or. kk /= 0) &
                                       .and. (nbr(ii,jj,kk)==1) ) then
-                                    epvfrac = vfrac(i+ii,j+jj,k+kk) * ep(i+ii,j+jj,k+kk)
-                                    vtot    = vtot  + epvfrac
+                                    epvfrac = vfrac(i+ii,j+jj,k+kk) * ep(i+ii,j+jj,k+kk) * mask(i+ii,j+jj,k+kk)
+                                    vtot    = vtot  + epvfrac 
                                     divnc   = divnc + epvfrac*divc(i+ii,j+jj,k+kk)
                                  end if
                               end do
@@ -330,6 +348,8 @@ contains
          end do
 
       end do ncomp_loop
+
+      deallocate(mask)
 
       if (is_viscous) deallocate(divdiff_w)
 

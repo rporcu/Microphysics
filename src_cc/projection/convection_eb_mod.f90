@@ -227,10 +227,11 @@ contains
          fyhi = hi + nh + [0,1,0]
          fzhi = hi + nh + [0,0,1]
          
-         call compute_divop(lo, hi, ugradu, glo, ghi, vel, vlo, vhi, fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi, &
+         call compute_divop(lo, hi, ugradu, glo, ghi, vel, vlo, vhi, &
+              fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi, &
               ep, elo, ehi, afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi,      &
               cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi, flags, flo, fhi,      &
-              vfrac, vflo, vfhi, bcent, blo, bhi, dx, ng )
+              vfrac, vflo, vfhi, bcent, blo, bhi, domlo, domhi, dx, ng )
       end block divop
       
       ! Divide by ep and return the negative
