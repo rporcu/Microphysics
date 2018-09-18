@@ -2,7 +2,7 @@ module divop_mod
 
    use amrex_fort_module,       only: ar => amrex_real
    use iso_c_binding ,          only: c_int
-   use param,                   only: zero, half, one
+   use param,                   only: zero, half, one, my_huge
    use amrex_error_module,      only: amrex_abort
    use amrex_ebcellflag_module, only: is_covered_cell, is_single_valued_cell, &
         &                             get_neighbor_cells
@@ -186,7 +186,7 @@ contains
 
                      if (is_covered_cell(flags(i,j,k))) then
 
-                        divc(i,j,k) = huge(one)
+                        divc(i,j,k) = my_huge
 
                      else if (is_single_valued_cell(flags(i,j,k))) then
 
