@@ -233,7 +233,7 @@ contains
 
                         divc(i,j,k) = - ( ( fx(i+1,j  ,k  ,n) - fx(i,j,k,n) ) * idx  &
                              &          + ( fy(i  ,j+1,k  ,n) - fy(i,j,k,n) ) * idy  &
-                             &          + ( fz(i  ,j  ,k+1,n) - fz(i,j,k,n) ) * idz
+                             &          + ( fz(i  ,j  ,k+1,n) - fz(i,j,k,n) ) * idz  )
 
                      end if
 
