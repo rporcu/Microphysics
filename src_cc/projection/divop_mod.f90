@@ -145,8 +145,7 @@ contains
            abs(dx(3) - dx(2)) > epsilon(0.0_ar) ) then
          call amrex_abort("compute_divop(): grid spacing must be uniform")
       end if
-
-
+      
       !
       ! Allocate arrays to host viscous wall fluxes
       !
@@ -167,9 +166,6 @@ contains
 
       !
       ! The we use the EB algorithmm to compute the divergence at cell centers
-      !
-      !
-      ! WARNING: divc = - div(Fluxes)!!! There is a minus sign!!!
       !
       ncomp_loop: do n = 1, 3
 
@@ -215,9 +211,9 @@ contains
                              & afrac_z, azlo, cent_z, czlo, nbr )
 
 
-                        divc(i,j,k) = - ( ( fxp - fxm ) * idx + &
-                             &            ( fyp - fym ) * idy + &
-                             &            ( fzp - fzm ) * idz ) / vfrac(i,j,k)
+                        divc(i,j,k) = ( ( fxp - fxm ) * idx + &
+                             &          ( fyp - fym ) * idy + &
+                             &          ( fzp - fzm ) * idz ) / vfrac(i,j,k)
 
                         ! Add viscous wall fluxes (compute three components only
                         ! during the first pass, i.e. for n=1
@@ -228,12 +224,12 @@ contains
                                    vel, vllo, vlhi, lambda, mu, elo, ehi, bcent, blo, bhi,     &
                                    afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi)
                            end if
-                           divc(i,j,k) = divc(i,j,k) + divdiff_w(n,iwall) / ( dx(n) * vfrac(i,j,k) )
+                           divc(i,j,k) = divc(i,j,k) - divdiff_w(n,iwall) / ( dx(n) * vfrac(i,j,k) )
                         end if
 
                      else
 
-                        divc(i,j,k) = - ( ( fx(i+1,j  ,k  ,n) - fx(i,j,k,n) ) * idx  &
+                        divc(i,j,k) =   ( ( fx(i+1,j  ,k  ,n) - fx(i,j,k,n) ) * idx  &
                              &          + ( fy(i  ,j+1,k  ,n) - fy(i,j,k,n) ) * idy  &
                              &          + ( fz(i  ,j  ,k+1,n) - fz(i,j,k,n) ) * idz  )
 
@@ -287,10 +283,10 @@ contains
                               end do
                            end do
                         end do
-                        divnc   = divnc / vtot
-                        epvfrac = vfrac(i,j,k) * ep(i,j,k)
-                        optmp(i,j,k) = (one - epvfrac) * ( divnc-divc(i,j,k) )
-                        delm(i,j,k) = -epvfrac * optmp(i,j,k)
+                        divnc        = divnc / vtot
+                        epvfrac      = vfrac(i,j,k) * ep(i,j,k)
+                        optmp(i,j,k) = (one - vfrac(i,j,k)) * ( divnc - divc(i,j,k) )
+                        delm(i,j,k)  = - epvfrac * optmp(i,j,k)
                      else
                         delm(i,j,k) = zero
                      end if
@@ -351,7 +347,7 @@ contains
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
                do i = lo(1), hi(1)
-                  div(i,j,k,n) = -( divc(i,j,k) + optmp(i,j,k) )
+                  div(i,j,k,n) = divc(i,j,k) + optmp(i,j,k)
                end do
             end do
          end do
