@@ -707,4 +707,5 @@ mfix_level::mfix_set_p0(int lev)
   p0_periodicity = Periodicity(press_per);
 
   p0_g[lev]->FillBoundary(p0_periodicity);
+   gp0[lev]->FillBoundary(p0_periodicity);
 }

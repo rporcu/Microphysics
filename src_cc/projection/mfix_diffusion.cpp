@@ -97,11 +97,6 @@ mfix_level::mfix_compute_divtau ( int lev,
 }
 
 
-
-
-
-
-
 //
 // Implicit diffusion
 //

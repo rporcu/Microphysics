@@ -34,6 +34,8 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
 {
     BL_PROFILE("mfix_level::mfix_apply_projection");
 
+    vel_g[lev] -> FillBoundary (geom[lev].periodicity());
+
     // Swap ghost cells and apply BCs to velocity
     mfix_set_velocity_bcs (lev,0);
 

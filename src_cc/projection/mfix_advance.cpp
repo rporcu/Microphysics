@@ -227,8 +227,8 @@ mfix_level::mfix_apply_predictor (int lev, MultiFab& conv_old, MultiFab& divtau_
        MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
 
     // Add (-dt grad p to momenta)
-    MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, 0);
-    MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, 0);
+    MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
+    MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
 
     // Convert momenta back to velocities
     for (int n = 0; n < 3; n++)
@@ -310,8 +310,8 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
        MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
 
     // Add (-dt grad p to momenta)
-    MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, 0);
-    MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, 0);
+    MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
+    MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
 
     // Convert momenta back to velocities
     for (int n = 0; n < 3; n++)
