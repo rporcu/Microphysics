@@ -132,7 +132,7 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
           // This writes all three pressure gradient components
           VisMF::Write( (*gp[lev]),
             amrex::MultiFabFileFullPrefix(lev, checkpointname,
-                  level_prefix, vecVarsName[0]));
+                  level_prefix, vecVarsName[3]));
 
           // Write scalar variables
           for (int i = 0; i < chkscalarVars.size(); i++ ) {
