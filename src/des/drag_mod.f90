@@ -571,17 +571,25 @@ contains
          RE = LARGE_NUMBER
       ENDIF
 
+      if(RE > epsilon(0.0_rt)) then
+
 ! eq(9) BVK J. fluid. Mech. 528, 2005
 ! (this F_Stokes is /= of Koch_Hill by a factor of ep_g)
-      F_STOKES = 18D0*Mug*EPg/DPM**2   ! use DPM
+         F_STOKES = 18D0*Mug*EPg/DPM**2   ! use DPM
 
-      F = 10d0*phis/EPg**2 + EPg**2*(ONE+1.5d0*DSQRT(phis))
-      F = F + 0.413d0*RE/(24.d0*EPg**2) * &
-             (ONE/EPg + 3d0*EPg*phis + 8.4d0/RE**0.343) / &
-             (ONE+10.d0**(3d0*phis)/RE**(0.5+2.d0*phis))
+         F = 10d0*phis/EPg**2 + EPg**2*(ONE+1.5d0*DSQRT(phis))
 
-      lDgA = F*F_STOKES
-      IF (RE < EPSILON(RE)) lDgA = ZERO
+         F = F + 0.413d0*RE/(24.d0*EPg**2) * &
+              (ONE/EPg + 3d0*EPg*phis + 8.4d0/RE**0.343) / &
+              (ONE+10.d0**(3d0*phis)/RE**(0.5+2.d0*phis))
+
+         lDgA = F*F_STOKES
+
+      else
+
+         lDga = ZERO
+      endif
+
 
       RETURN
       END SUBROUTINE DRAG_BVK
