@@ -11,7 +11,7 @@ amrex.fpe_trap_invalid = 1
 amr.stop_time = 0.10
 ## mfix.upwind_ep = 0
 
-mfix.explicit_diffusion = 0
+mfix.explicit_diffusion = 1
 
 mfix.use_mac_proj       = true
 
