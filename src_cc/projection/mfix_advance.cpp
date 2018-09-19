@@ -135,8 +135,9 @@ mfix_level::mfix_project_velocity (int lev)
     bool proj_2 = true;
     mfix_apply_projection ( lev, dummy_dt, proj_2 );
 
-   // We initialize p_g back to zero (p0_g may still be still non-zero)
+   // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
    p_g[lev]->setVal(0.0);
+    gp[lev]->setVal(0.0);
 }
 
 void
