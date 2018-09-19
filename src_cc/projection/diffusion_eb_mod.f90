@@ -4,6 +4,7 @@ module eb_diffusion_mod
    use iso_c_binding ,      only: c_int
    use param,               only: zero, half, one, two
    use amrex_error_module,  only: amrex_abort
+   use amrex_mempool_module, only: amrex_allocate, amrex_deallocate
 
    implicit none
    private
@@ -16,7 +17,7 @@ contains
 
    subroutine compute_divtau_eb ( lo, hi,  &
         divtau, dlo, dhi,    &
-        vel_in, vlo, vhi,    &
+        vel_in, vinlo, vinhi,&
         mu, lambda, ro,      &
         ep, slo, shi,        &
         flags,    flo,  fhi, &
@@ -46,7 +47,7 @@ contains
 
       ! Array bounds
       integer(c_int),  intent(in   ) ::  dlo(3),  dhi(3)
-      integer(c_int),  intent(in   ) ::  vlo(3),  vhi(3)
+      integer(c_int),  intent(in   ) ::vinlo(3),vinhi(3)
       integer(c_int),  intent(in   ) ::  slo(3),  shi(3)
       integer(c_int),  intent(in   ) ::  flo(3),  fhi(3)
       integer(c_int),  intent(in   ) :: axlo(3), axhi(3)
@@ -64,7 +65,7 @@ contains
 
       ! Arrays
       real(rt), intent(in   ) ::                                  &
-           & vel_in(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3), &
+           & vel_in(vinlo(1):vinhi(1),vinlo(2):vinhi(2),vinlo(3):vinhi(3),3), &
            &     ro(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),   &
            &     ep(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),   &
            &     mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),   &
@@ -99,7 +100,8 @@ contains
       integer(c_int),  intent(in   ) :: do_explicit_diffusion
 
       ! Temporary array just to handle bc's
-      real(rt) ::  vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3)
+      integer(c_int) :: vlo(3), vhi(3)
+      real(rt), dimension(:,:,:,:), pointer, contiguous :: vel
 
       ! Temporary array to handle viscous fluxes at the cell faces (staggered)
       ! Just reserve space for the tile + 3 ghost layers
@@ -118,8 +120,12 @@ contains
       idy = one / dx(2)
       idz = one / dx(3)
 
+      vlo = lo - ng
+      vhi = hi + ng
+      call amrex_allocate( vel, vlo(1), vhi(1)  , vlo(2), vhi(2)  , vlo(3), vhi(3)  , 1, 3)
+
       ! Put values into ghost cells so we can easy take derivatives
-      call fill_vel_diff_bc( vel_in, vel, vlo, vhi, lo, hi, domlo, domhi, ng, &
+      call fill_vel_diff_bc( vel_in, vinlo, vinhi, vel, lo, hi, domlo, domhi, ng, &
            bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi )
       
       ! tau_xx, tau_xy, tau_xz on west faces
@@ -164,6 +170,8 @@ contains
             end do
          end do
       end do
+
+      call amrex_deallocate(vel)
       
    end subroutine compute_divtau_eb
 
