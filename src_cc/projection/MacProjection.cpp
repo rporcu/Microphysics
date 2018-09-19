@@ -45,7 +45,7 @@ MacProjection::read_inputs ()
 {
    ParmParse pp("mac");
     
-   // Option to control MGML behavior
+   // Option to control MLMG behavior
    pp.query( "verbose", verbose );
    pp.query( "mg_verbose", m_mg_verbose );
    pp.query( "mg_rtol",  m_mg_rtol );
@@ -244,14 +244,6 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    
    for ( int lev=0; lev <= m_amrcore -> finestLevel() ; ++lev )
    {   
-      // Compute ep*u at faces and store it in u, v, w
-      MultiFab::Divide( *u[lev], *(m_ep[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Divide( *v[lev], *(m_ep[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Divide( *w[lev], *(m_ep[lev][2]), 0, 0, 1, 0 ); 
-
-      // Set velocity bcs
-      set_velocity_bcs( lev, u, v, w );
-
       if (verbose)
       {
          EB_computeDivergence(*m_diveu[lev],
@@ -261,6 +253,15 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
          Print() << "  * On level "<< lev
                  << " max(abs(diveu)) = " << norm0(m_diveu,lev) << "\n";
       } 
+
+      // Now convert (eps u, eps v, eps w) back to u,v,w
+      MultiFab::Divide( *u[lev], *(m_ep[lev][0]), 0, 0, 1, 0 );
+      MultiFab::Divide( *v[lev], *(m_ep[lev][1]), 0, 0, 1, 0 );
+      MultiFab::Divide( *w[lev], *(m_ep[lev][2]), 0, 0, 1, 0 ); 
+
+      // Set velocity bcs
+      set_velocity_bcs( lev, u, v, w );
+
    }
 
 }
