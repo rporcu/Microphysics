@@ -49,6 +49,10 @@ MacProjection::read_inputs ()
    pp.query( "verbose", verbose );
    pp.query( "mg_verbose", m_mg_verbose );
    pp.query( "mg_rtol",  m_mg_rtol );
+
+   // Default bottom solver is bicgstab, but alternatives are "smoother" or "hypre"
+   bottom_solver_type = "bicgstab";
+   pp.query( "bottom_solver_type",  bottom_solver_type );
 }
 
 //
@@ -234,6 +238,20 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
 
    macproj.setDomainBC( m_lobc, m_hibc );
    macproj.setVerbose(m_mg_verbose);
+
+   // The default bottom solver is BiCG
+   // Other options include:
+   ///   Hypre IJ AMG solver
+   //    macproj.getMLMG().setBottomSolver(MLMG::BottomSolver::hypre);
+   ///   regular smoothing
+   //    macproj.getMLMG().setBottomSolver(MLMG::BottomSolver::smoother);
+
+   if (bottom_solver_type == "smoother")
+   {
+      macproj.setBottomSolver(MLMG::BottomSolver::smoother);
+   } else if (bottom_solver_type == "hypre") {
+      macproj.setBottomSolver(MLMG::BottomSolver::hypre);
+   }
 
    // Solve
    macproj.project(m_mg_rtol);

@@ -67,7 +67,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
     mfix_compute_diveu (lev);
     diveu[lev] -> mult (1.0/scaling_factor, diveu[lev]->nGrow() );
 
-    // Compute the PPE coefficients
+    // Compute the PPE coefficients = (ep_g / rho) 
     mfix_compute_bcoeff_ppe ( lev );
 
     // Set BCs for Poisson's solver
@@ -178,7 +178,7 @@ mfix_level::solve_poisson_equation (  int lev,
        // Then setup the solver ----------------------
        //
        MLMG  solver(matrix);
-	
+
        solver.setMaxIter (mg_max_iter);
        solver.setMaxFmgIter (mg_max_fmg_iter);
        solver.setVerbose (mg_verbose);
@@ -233,6 +233,20 @@ mfix_level::solve_poisson_equation (  int lev,
        // Then setup the solver ----------------------
        //
        MLMG  solver(matrix);
+
+       // The default bottom solver is BiCG
+       // Other options include: 
+       ///   Hypre IJ AMG solver 
+       //    solver.setBottomSolver(MLMG::BottomSolver::hypre);
+       ///   regular smoothing
+       //    solver.setBottomSolver(MLMG::BottomSolver::smoother);
+
+       if (bottom_solver_type == "smoother")
+       { 
+          solver.setBottomSolver(MLMG::BottomSolver::smoother);
+       } else if (bottom_solver_type == "hypre") { 
+          solver.setBottomSolver(MLMG::BottomSolver::hypre);
+       }
 	
        solver.setMaxIter (mg_max_iter);
        solver.setMaxFmgIter (mg_max_fmg_iter);

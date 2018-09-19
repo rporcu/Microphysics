@@ -398,6 +398,9 @@ private:
     // MAC projection object
     std::unique_ptr<MacProjection> mac_projection;
 
+    // What solver to use as the bottom solver in the MLMG solves.
+    std::string bottom_solver_type;
+
     // used if load_balance_type == "KnapSack"
     Vector<std::unique_ptr<MultiFab> > particle_cost;
     Vector<std::unique_ptr<MultiFab> > fluid_cost;
