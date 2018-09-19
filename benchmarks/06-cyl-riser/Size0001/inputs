@@ -3,19 +3,19 @@
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-#mfix.use_proj_method = 1
-#mfix.fixed_dt        = 1
+mfix.fixed_dt         = 0
+
+mfix.cfl = 0.5
 
 amr.stop_time = 0.20
-## mfix.upwind_ep = 0
 
-mfix.explicit_diffusion = 0
+mfix.explicit_diffusion = 1
 
 mfix.use_mac_proj       = true
 
 mfix.ugradu_type        = 3
 
-#mfix.particle_init_type = "Auto"
+mfix.particle_init_type = "Auto"
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -77,13 +77,11 @@ mfix.geometry = "cylinder"
 cylinder.internal_flow = true
 cylinder.closed_bottom = false
 
-
-cylinder.radius = 0.0005
+cylinder.radius = 0.00049
 cylinder.height = 0.0050
 
 cylinder.direction = 0
 cylinder.center    =  0.0020  0.0005   0.0005
-
 
 #_______________________________________________________________________
 # Particle load balancing
@@ -112,7 +110,7 @@ amr.par_ascii_file ="vis"
 amr.plot_int       =  50
 amr.plot_file      ="plt"
 
-amr.check_int      = -1
+amr.check_int      = 100
 amr.check_file     ="chk"
 
 #! Restart from checkpoint
