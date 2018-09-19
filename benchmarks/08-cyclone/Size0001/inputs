@@ -1,21 +1,23 @@
 #_______________________________________________________________________
 # Solver settings
 
+amrex.fpe_trap_invalid = 1
+
 #! Fluid solver
 #!-----------------------------------------------------------//
-#mfix.use_proj_method = 1
-#mfix.fixed_dt        = 1
+mfix.fixed_dt        = 0
 
-amr.stop_time = 0.10
-## mfix.upwind_ep = 0
+mfix.cfl = 0.5
 
-mfix.explicit_diffusion = 0
+amr.stop_time = 0.20
+
+mfix.explicit_diffusion = 1
 
 mfix.use_mac_proj       = true
 
 mfix.ugradu_type        = 3
 
-#mfix.particle_init_type = "Auto"
+mfix.particle_init_type = "Auto"
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -30,7 +32,6 @@ geometry.prob_hi     = 0.004   0.004   0.004   # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 20  20  20
-
 
 #! Grids
 #!-----------------------------------------------------------//

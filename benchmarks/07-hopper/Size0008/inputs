@@ -5,11 +5,11 @@ amrex.fpe_trap_invalid = 1
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-#mfix.use_proj_method = 1
-#mfix.fixed_dt        = 1
+mfix.fixed_dt = 0
 
-amr.stop_time = 0.10
-## mfix.upwind_ep = 0
+mfix.cfl = 0.5
+
+amr.stop_time = 0.20
 
 mfix.explicit_diffusion = 1
 

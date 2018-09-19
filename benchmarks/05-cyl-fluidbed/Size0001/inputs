@@ -5,15 +5,12 @@ amrex.fpe_trap_invalid = 1
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.use_proj_method = 1
-#mfix.fixed_dt        = 1
+mfix.fixed_dt        = 0
 
 mfix.cfl = 0.5
 
 amr.max_step = 10000000
-amr.stop_time = 0.10
-
-## mfix.upwind_ep = 0
+amr.stop_time = 0.20
 
 mfix.explicit_diffusion = 1
 
@@ -22,6 +19,9 @@ mfix.use_mac_proj       = true
 mfix.ugradu_type        = 3
 
 mfix.particle_init_type = "Auto"
+
+mfix.mg_verbose =  0
+mac.mg_verbose =  0
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
