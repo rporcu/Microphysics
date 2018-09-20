@@ -366,24 +366,18 @@ mfix_level::make_eb_general(int lev) {
     }
 
     if (solve_fluid)
-        ebfactory[lev].reset(new EBFArrayBoxFactory(
-                                                    * eb_level_fluid,
+        ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_fluid,
                                                     geom[lev], grids[lev], dmap[lev],
                                                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                                     m_eb_full_grow_cells}, m_eb_support_level
-                                                    )
-                             );
+                                                     m_eb_full_grow_cells}, m_eb_support_level));
 
     if (solve_dem) {
-        particle_ebfactory[lev].reset(new EBFArrayBoxFactory(
-                                                             * eb_level_particles,
+        particle_ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
                                                              geom[lev], grids[lev], dmap[lev],
                                                              {m_eb_basic_grow_cells,
                                                               m_eb_volume_grow_cells,
                                                               m_eb_full_grow_cells},
-                                                             m_eb_support_level
-                                                             )
-                                      );
+                                                             m_eb_support_level));
 
         eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
 
