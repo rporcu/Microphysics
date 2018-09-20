@@ -73,6 +73,8 @@ subroutine particle_generator(pc, lo, hi, dx, dy, dz) &
      if (ic_defined(icv) .and. abs(ic_ep_g(icv)-1.0d0)>epsilon(0.0d0)) exit
   enddo
 
+  if(icv > dim_ic) return
+
   ! Get the solids type index
   do type=1, particle_types
      if(ic_ep_s(icv,type) > epsilon(0.d0)) exit
