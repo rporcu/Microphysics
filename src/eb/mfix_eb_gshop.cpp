@@ -224,9 +224,6 @@ mfix_level::make_eb_general(int lev)
     Real dx = geom[lev].CellSize()[0];
 
     // set up ebfactory
-    int m_eb_basic_grow_cells = nghost;
-    int m_eb_volume_grow_cells = nghost;
-    int m_eb_full_grow_cells = nghost;
     EBSupport m_eb_support_level = EBSupport::full;
 
     if (solve_dem)
@@ -368,9 +365,6 @@ mfix_level::make_eb_hourglass(int lev)
     AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level_here);
 
     // set up ebfactory
-    int m_eb_basic_grow_cells = 2;
-    int m_eb_volume_grow_cells = 2;
-    int m_eb_full_grow_cells = 2;
     EBSupport m_eb_support_level = EBSupport::full;
 
     EBTower::Build();
@@ -593,9 +587,6 @@ mfix_level::make_eb_clr(int lev)
     AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level_here);
 
     // set up ebfactory
-    int m_eb_basic_grow_cells = 2;
-    int m_eb_volume_grow_cells = 2;
-    int m_eb_full_grow_cells = 2;
     EBSupport m_eb_support_level = EBSupport::full;
 
     EBTower::Build();
@@ -727,9 +718,6 @@ mfix_level::make_eb_clr_riser(int lev)
     AMReX_EBIS::instance()->define(domain, RealVect::Zero, dx, gshop, grid_size, max_level_here);
 
     // set up ebfactory
-    int m_eb_basic_grow_cells = 2;
-    int m_eb_volume_grow_cells = 2;
-    int m_eb_full_grow_cells = 2;
     EBSupport m_eb_support_level = EBSupport::full;
 
     EBTower::Build();

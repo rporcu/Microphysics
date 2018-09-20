@@ -33,9 +33,6 @@ mfix_level::make_eb_cyclone(int lev)
     int max_level_here = 0;
 
     // set up ebfactory
-    int m_eb_basic_grow_cells    = nghost;
-    int m_eb_volume_grow_cells   = nghost;
-    int m_eb_full_grow_cells     = nghost;
 
     EBSupport m_eb_support_level = EBSupport::full;
 
