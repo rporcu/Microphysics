@@ -41,7 +41,7 @@ mfix_level::make_eb_cylinder(int lev)
     Real offset       = 1.0e-8;
 
     Real radius    = 0.0002;
-    Real height    = 0.0080;
+    Real height    = -1.;
 
     int direction  = 0;
     Vector<Real> centervec(3);
@@ -82,18 +82,12 @@ mfix_level::make_eb_cylinder(int lev)
     // Create the cylinder -- used for both fluid and particles
     amrex::Print() << "Building the cylinder (side wall) geometry ..." << std::endl;
 
-    std::unique_ptr<EB2::CylinderIF> my_cyl;
-    if ( height < 0) {
-        my_cyl = std::unique_ptr<
-            EB2::CylinderIF
-            >(new EB2::CylinderIF(radius, direction, center, inside));
-    } else {
-        my_cyl = std::unique_ptr<
-            EB2::CylinderIF
-            >(new EB2::CylinderIF(radius, height, direction, center, inside));
-    }
 
-    auto gshop_cyl = EB2::makeShop(* my_cyl);
+    // Build the Cylinder geometry first representing the curved walls (this is
+    // always present regardless of user input).
+    EB2::CylinderIF my_cyl(radius, height, direction, center, inside);
+
+    auto gshop_cyl = EB2::makeShop(my_cyl);
     int max_coarsening_level = 100;
     EB2::Build(gshop_cyl, geom.back(), max_level_here,
                max_level_here + max_coarsening_level);
@@ -137,26 +131,24 @@ mfix_level::make_eb_cylinder(int lev)
 
          EB2::PlaneIF my_plane(point, normal);
 
-         auto gshop = EB2::makeShop(EB2::makeUnion(* my_cyl, my_plane));
+         auto gshop = EB2::makeShop(EB2::makeUnion(my_cyl, my_plane));
          EB2::Build(gshop, geom.back(), max_level_here,
                     max_level_here + max_coarsening_level);
 
          EB2::GeometryShop<EB2::PlaneIF> gshop_wall = EB2::makeShop(my_plane);
-         wall_lsfactory.reset(
-                    new GShopLSFactory<EB2::PlaneIF>(gshop_wall, * level_set)
-            );
+         wall_lsfactory.reset(new GShopLSFactory<EB2::PlaneIF>(gshop_wall, * level_set));
        }
 
        // intercept the cylinder + plane level (if it is built)
        const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
        eb_level_particles = & eb_is.getLevel(geom[lev]);
 
-       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(
-                   * eb_level_particles,
-                   geom[lev], grids[lev], dmap[lev],
-                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                    m_eb_full_grow_cells}, m_eb_support_level)
-            );
+       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
+                                                            geom[lev], grids[lev], dmap[lev],
+                                                            {m_eb_basic_grow_cells,
+                                                             m_eb_volume_grow_cells,
+                                                             m_eb_full_grow_cells},
+                                                            m_eb_support_level));
 
        eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
 
@@ -172,18 +164,34 @@ mfix_level::make_eb_cylinder(int lev)
            // If there is a bottom plane, fill level set with plane IF first
            if(close_bottom) {
                std::unique_ptr<MultiFab> mf_impfunc_wall = wall_lsfactory->fill_impfunc();
-
                level_set->intersection_impfunc(* mf_impfunc_wall);
            }
+
+
+           // Construct EB2 Index space based on the refined geometry
+           // (level_set->get_eb_geom()). The IndexSpace's geometry needs to
+           // match the one used by the eb_factory later.
+
+           auto gshop_cyl = EB2::makeShop(my_cyl);
+           int max_coarsening_level = 100;
+           EB2::Build(gshop_cyl, level_set->get_eb_geom(), max_level_here,
+                      max_level_here + max_coarsening_level);
+
+           const EB2::IndexSpace & ebis_cyl    = EB2::IndexSpace::top();
+           const EB2::Level & ebis_lev_cyl_ref = ebis_cyl.getLevel(level_set->get_eb_geom());
+
 
            GShopLSFactory<EB2::CylinderIF> cyl_lsfactory(gshop_cyl, * level_set);
            std::unique_ptr<MultiFab> mf_impfunc_cyl = cyl_lsfactory.fill_impfunc();
 
+           // Construct EBFABFactory based on the refined EB geometry (built above).
            int eb_grow = level_set->get_eb_pad();
-           EBFArrayBoxFactory eb_factory_cylinder(
-                                    ebis_lev_cyl, geom[lev], level_set->get_eb_ba(), level_set->get_dm(),
-                                    {eb_grow, eb_grow, eb_grow}, EBSupport::full
-                    );
+           EBFArrayBoxFactory eb_factory_cylinder(ebis_lev_cyl_ref,
+                                                  level_set->get_eb_geom(),
+                                                  level_set->get_eb_ba(),
+                                                  level_set->get_dm(),
+                                                  {eb_grow, eb_grow, eb_grow}, EBSupport::full
+                                                  );
 
            level_set->intersection_ebf(eb_factory_cylinder, * mf_impfunc_cyl );
 
