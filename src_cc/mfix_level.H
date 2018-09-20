@@ -440,9 +440,6 @@ private:
     int particle_max_grid_size_y = -1;
     int particle_max_grid_size_z = -1;
 
-    static int m_eb_basic_grow_cells;
-    static int m_eb_volume_grow_cells;
-    static int m_eb_full_grow_cells;
     static EBSupport m_eb_support_level;
 
     Periodicity p0_periodicity;
@@ -471,6 +468,12 @@ private:
 
     // These values are required when fluid sees EB -- for now
     const int nghost = 5;
+
+    const int m_eb_basic_grow_cells = nghost;
+    const int m_eb_volume_grow_cells = nghost;
+    const int m_eb_full_grow_cells = nghost;
+ 
+
     int nodal_pressure = 0;
     int explicit_diffusion = 1;
 
