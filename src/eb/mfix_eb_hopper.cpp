@@ -137,13 +137,12 @@ mfix_level::make_eb_hopper(int lev)
        amrex::Print() << " " << std::endl;
        amrex::Print() << "Now  making the particle ebfactory ..." << std::endl;
 
-       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(
-                                                * eb_level_particles,
-                                                geom[lev], grids[lev], dmap[lev],
-                                                {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                                m_eb_full_grow_cells}, m_eb_support_level
-                                            )
-                                     );
+       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
+                                                            geom[lev], grids[lev], dmap[lev],
+                                                            {m_eb_basic_grow_cells,
+                                                             m_eb_volume_grow_cells,
+                                                             m_eb_full_grow_cells},
+                                                            m_eb_support_level));
 
        eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
 
@@ -162,13 +161,28 @@ mfix_level::make_eb_hopper(int lev)
            GShopLSFactory<decltype(my_hopper)> gshop_lsfactory(gshop, * level_set);
            std::unique_ptr<MultiFab> mf_impfunc = gshop_lsfactory.fill_impfunc();
 
+           // Construct EB2 Index space based on the refined geometry
+           // (level_set->get_eb_geom()). The IndexSpace's geometry needs to
+           // match the one used by the eb_factory later.
+
+           auto gshop = EB2::makeShop(my_hopper);
+           int max_coarsening_level = 100;
+           EB2::Build(gshop, level_set->get_eb_geom(), max_level_here,
+                      max_level_here + max_coarsening_level);
+
+           const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+           const EB2::Level & eb_is_ref  = eb_is.getLevel(level_set->get_eb_geom());
+
+           // Construct EBFABFactory based on the refined EB geometry (built above).
            int eb_grow = level_set->get_eb_pad();
-           EBFArrayBoxFactory eb_factory(
-                        * eb_level_particles, geom[lev], level_set->get_eb_ba(), level_set->get_dm(),
-                        {eb_grow, eb_grow, eb_grow}, EBSupport::full
-                );
+           EBFArrayBoxFactory eb_factory(eb_is_ref,
+                                         level_set->get_eb_geom(),
+                                         level_set->get_eb_ba(),
+                                         level_set->get_dm(),
+                                         {eb_grow, eb_grow, eb_grow}, EBSupport::full);
 
            level_set->intersection_ebf(eb_factory, * mf_impfunc);
+
            // store copy of level set (for plotting).
            std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
            ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);

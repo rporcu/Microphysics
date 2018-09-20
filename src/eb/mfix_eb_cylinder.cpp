@@ -136,7 +136,7 @@ mfix_level::make_eb_cylinder(int lev)
          wall_lsfactory.reset(new GShopLSFactory<EB2::PlaneIF>(gshop_wall, * level_set));
        }
 
-       // intercept the cylinder + plane level (if it is built)
+       // Intercept the cylinder + plane level (if it is built)
        const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
        eb_level_particles = & eb_is.getLevel(geom[lev]);
 
@@ -164,7 +164,6 @@ mfix_level::make_eb_cylinder(int lev)
                level_set->intersection_impfunc(* mf_impfunc_wall);
            }
 
-
            // Construct EB2 Index space based on the refined geometry
            // (level_set->get_eb_geom()). The IndexSpace's geometry needs to
            // match the one used by the eb_factory later.
@@ -187,8 +186,7 @@ mfix_level::make_eb_cylinder(int lev)
                                                   level_set->get_eb_geom(),
                                                   level_set->get_eb_ba(),
                                                   level_set->get_dm(),
-                                                  {eb_grow, eb_grow, eb_grow}, EBSupport::full
-                                                  );
+                                                  {eb_grow, eb_grow, eb_grow}, EBSupport::full);
 
            level_set->intersection_ebf(eb_factory_cylinder, * mf_impfunc_cyl );
 
