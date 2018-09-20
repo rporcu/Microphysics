@@ -124,11 +124,10 @@ mfix_level::make_eb_cyclone(int lev)
     amrex::Print() << "Building the cyclone geometry ..." << std::endl;
 
 
-    auto gshop_cyc = EB2::makeShop(EB2::makeUnion(my_cyclone,false_bottom));
+    auto gshop_cyc = EB2::makeShop(EB2::makeUnion(my_cyclone, false_bottom));
 
     int max_coarsening_level = 100;
-    EB2::Build(gshop_cyc, geom.back(), max_level_here,
-               max_level_here + max_coarsening_level);
+    EB2::Build(gshop_cyc, geom.back(), max_level_here, max_level_here + max_coarsening_level);
 
     const EB2::IndexSpace & ebis_cyc = EB2::IndexSpace::top();
     const EB2::Level & ebis_lev_cyc  = ebis_cyc.getLevel(geom[lev]);
@@ -158,12 +157,12 @@ mfix_level::make_eb_cyclone(int lev)
        const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
        eb_level_particles = & eb_is.getLevel(geom[lev]);
 
-       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(
-                   * eb_level_particles,
-                   geom[lev], grids[lev], dmap[lev],
-                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                    m_eb_full_grow_cells}, m_eb_support_level)
-            );
+       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
+                                                            geom[lev], grids[lev], dmap[lev],
+                                                            {m_eb_basic_grow_cells,
+                                                             m_eb_volume_grow_cells,
+                                                             m_eb_full_grow_cells},
+                                                            m_eb_support_level));
 
        eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
 
@@ -179,11 +178,24 @@ mfix_level::make_eb_cyclone(int lev)
            GShopLSFactory<decltype(my_cyclone)> cyc_lsfactory(gshop, * level_set);
            std::unique_ptr<MultiFab> mf_impfunc_cyc = cyc_lsfactory.fill_impfunc();
 
+           // Construct EB2 Index space based on the refined geometry
+           // (level_set->get_eb_geom()). The IndexSpace's geometry needs to
+           // match the one used by the eb_factory later.
+
+           int max_coarsening_level = 100;
+           EB2::Build(gshop_cyc, level_set->get_eb_geom(), max_level_here,
+                      max_level_here + max_coarsening_level);
+
+           const EB2::IndexSpace & ebis_cyc    = EB2::IndexSpace::top();
+           const EB2::Level & ebis_lev_cyc_ref = ebis_cyc.getLevel(level_set->get_eb_geom());
+
+           // Construct EBFABFactory based on the refined EB geometry (built above).
            int eb_grow = level_set->get_eb_pad();
-           EBFArrayBoxFactory eb_factory_cyclone(
-                                    ebis_lev_cyc, geom[lev], level_set->get_eb_ba(), level_set->get_dm(),
-                                    {eb_grow, eb_grow, eb_grow}, EBSupport::full
-                    );
+           EBFArrayBoxFactory eb_factory_cyclone(ebis_lev_cyc_ref,
+                                                 level_set->get_eb_geom(),
+                                                 level_set->get_eb_ba(),
+                                                 level_set->get_dm(),
+                                                 {eb_grow, eb_grow, eb_grow}, EBSupport::full);
 
            level_set->intersection_ebf(eb_factory_cyclone, * mf_impfunc_cyc );
 
