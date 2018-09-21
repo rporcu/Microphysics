@@ -805,6 +805,18 @@ mfix_level::WriteUSER(int lev, Real dt, Real time) const
   for (int i=0; i<256; ++i)
     accumulator[i] = 0.0L;
 
+  // Create a temporary multifab to hold (p_g + p0_g)
+  std::unique_ptr<MultiFab> pg_sum(new MultiFab(
+                  p_g[lev]->boxArray(), p_g[lev]->DistributionMap(),
+                  p_g[lev]->nComp(),    p_g[lev]->nGrow()));
+
+  // // Fill it with (p_g)
+  int ng = p_g[lev]->nGrow();
+  pg_sum->copy(*p_g[lev],0,0,1,ng,ng);
+
+  // Add in p0_g
+  MultiFab::Add(*pg_sum, *p0_g[lev], 0, 0, 1, ng);
+
   // No tiling.
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
@@ -814,7 +826,7 @@ mfix_level::WriteUSER(int lev, Real dt, Real time) const
       mfix_collect_fluid(sbx.loVect(), sbx.hiVect(),
                          bx.loVect(), bx.hiVect(),
                          domain.loVect(), domain.hiVect(),
-                         (*p_g[lev])[mfi].dataPtr(),
+                         (*pg_sum)[mfi].dataPtr(),
                          (*ep_g[lev])[mfi].dataPtr(),
                          &dx, &dy, &dz, accumulator);
     }

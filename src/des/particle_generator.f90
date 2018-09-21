@@ -423,6 +423,7 @@ subroutine random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
               tbin(:,:,:,ob+1:nb) = 0
               call move_alloc(tbin, pbin)
            endif
+           fails = 0
 
            exit
         else
