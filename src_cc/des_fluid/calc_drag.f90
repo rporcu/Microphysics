@@ -38,12 +38,11 @@ subroutine calc_drag_particle( gp   , gplo, gphi, &
    ! Local variables
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
-   integer      :: p, i, j, k, ii, jj, kk
+   integer      :: p, i, j, k
    real(rt) :: velfp(3), gradpg(3)
    real(rt) :: beta(np)
    real(rt) :: odx, ody, odz
    real(rt) :: lx, ly, lz
-   real(rt) :: lx2, ly2, lz2
    real(rt) :: sx_lo, sy_lo, sz_lo
    real(rt) :: sx_hi, sy_hi, sz_hi
    real(rt) :: ux_lo, vy_lo, wz_lo
