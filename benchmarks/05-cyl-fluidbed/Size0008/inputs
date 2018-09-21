@@ -19,12 +19,12 @@ mfix.ugradu_type        = 3
 mfix.particle_init_type = "Auto"
 
 mac.mg_verbose          = 1
-mac.mg_rtol             = 1.e-6
-mac.bottom_solver_type  = "smoother"
+mac.mg_rtol             = 1.e-10
+mac.bottom_solver_type  = "bicg"
 
 mfix.mg_verbose         = 1
-mfix.mg_rtol            = 2.5e-6
-mfix.bottom_solver_type = "bicgstab"
+mfix.mg_rtol            = 1.e-10
+mfix.bottom_solver_type = "bicg"
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
