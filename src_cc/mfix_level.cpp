@@ -367,7 +367,8 @@ mfix_level::mfix_calc_drag_particle(int lev)
        MultiFab gp_tmp, gp0_tmp;
 
        gp_tmp.define(grids[lev],dmap[lev],3,1);
-       gp_tmp.copy(*gp[lev],0,0,3,1,1);
+
+       MultiFab::Copy(gp_tmp, *gp[lev], 0, 0, 3, 1);
        gp_tmp.FillBoundary(geom[lev].periodicity());
 
        //
