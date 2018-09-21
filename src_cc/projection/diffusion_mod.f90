@@ -538,7 +538,7 @@ contains
                        bc_klo_type, bc_khi_type)
 
 
-   use bc, only: minf_, nsw_, fsw_, psw_
+   use bc, only: minf_, nsw_, fsw_, psw_, pout_, ignore_
 
    integer,  intent(in   ) :: vinlo(3), vinhi(3)
    integer,  intent(in   ) ::    lo(3),    hi(3)
@@ -556,7 +556,6 @@ contains
           & bc_klo_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
           & bc_khi_type(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
-
      integer :: i,j,k,n
 
       do k = lo(3)-ng, hi(3)+ng
@@ -573,12 +572,17 @@ contains
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
 
-                  if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
+                  if ( ( bc_ilo_type(j,k,1) == MINF_ )  .or. &
                        ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
                        ( bc_ilo_type(j,k,1) == FSW_ )  .or. &
                        ( bc_ilo_type(j,k,1) == PSW_ )  ) then
 
                      vel(:lo(1)-1,j,k,n) = 2.d0*vel_in(lo(1)-1,j,k,n) - vel_in(lo(1),j,k,n)
+
+                  else if ( bc_ilo_type(j,k,1) == POUT_  .or. &
+                            bc_ilo_type(j,k,1) == IGNORE_ )  then
+
+                     vel(:lo(1)-1,j,k,n) = vel_in(lo(1),j,k,n)
 
                   end if
                end do
@@ -601,6 +605,11 @@ contains
 
                      vel(hi(1)+1:,j,k,n) = 2.d0*vel_in(hi(1)+1,j,k,n) - vel_in(hi(1),j,k,n)
 
+                  else if ( bc_ihi_type(j,k,1) == POUT_  .or. &
+                            bc_ihi_type(j,k,1) == IGNORE_ )  then
+
+                     vel(hi(1)+1:,j,k,n) = vel_in(hi(1),j,k,n)
+
                   end if
                end do
             end do
@@ -619,9 +628,13 @@ contains
                        ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
                        ( bc_jlo_type(i,k,1) == FSW_ )  .or. &
                        ( bc_jlo_type(i,k,1) == PSW_ )  ) then
-
                      
                      vel(i,:lo(2)-1,k,n) = 2.d0*vel_in(i,lo(2)-1,k,n) - vel_in(i,lo(2),k,n)
+
+                  else if ( bc_jlo_type(i,k,1) == POUT_  .or. &
+                            bc_jlo_type(i,k,1) == IGNORE_ )  then
+                     
+                     vel(i,:lo(2)-1,k,n) = vel_in(i,lo(2),k,n)
 
                   end if
                end do
@@ -643,6 +656,11 @@ contains
                        ( bc_jhi_type(i,k,1) == PSW_ )  ) then
 
                      vel(i,hi(2)+1:,k,n) = 2.d0*vel_in(i,hi(2)+1,k,n) - vel_in(i,hi(2),k,n)
+
+                  else if ( bc_jhi_type(i,k,1) == POUT_  .or. &
+                            bc_jhi_type(i,k,1) == IGNORE_ )  then
+
+                     vel(i,hi(2)+1:,k,n) = vel_in(i,hi(2),k,n)
 
                   end if
                end do
@@ -666,6 +684,11 @@ contains
 
                      vel(i,j,:lo(3)-1,n) = 2.d0*vel_in(i,j,lo(3)-1,n) - vel_in(i,j,lo(3),n)
 
+                  else if ( bc_klo_type(i,k,1) == POUT_  .or. &
+                            bc_klo_type(i,k,1) == IGNORE_ )  then
+
+                     vel(i,j,:lo(3)-1,n) = vel_in(i,j,lo(3),n)
+
                   end if
                end do
             end do
@@ -687,13 +710,16 @@ contains
 
                      vel(i,j,hi(3)+1:,n) = 2.d0*vel_in(i,j,hi(3)+1,n) - vel_in(i,j,hi(3),n)
 
+                  else if ( bc_khi_type(i,k,1) == POUT_  .or. &
+                            bc_khi_type(i,k,1) == IGNORE_ )  then
+
+                     vel(i,j,hi(3)+1:,n) = vel_in(i,j,hi(3),n)
+
                   end if
                end do
             end do
          end do
       end if
-
-
 
       !
       ! WHAT'S THE POINT OF THE CODE BELOW??????

@@ -56,7 +56,7 @@ subroutine set_velocity_bcs ( vel, ulo, uhi, &
 
             select case (bct_ilo(j,k,1))
                
-            case ( pinf_, pout_) 
+            case ( pinf_, pout_, ignore_) 
                
                vel(ulo(1):domlo(1)-1,j,k,1) =  vel(domlo(1),j,k,1)
                vel(ulo(1):domlo(1)-1,j,k,2) =  vel(domlo(1),j,k,2)
@@ -102,7 +102,7 @@ subroutine set_velocity_bcs ( vel, ulo, uhi, &
             
             select case ( bct_ihi(j,k,1) )
 
-            case ( pinf_, pout_ )
+            case ( pinf_, pout_, ignore_) 
                
                vel(domhi(1)+1:uhi(1),j,k,1) =    vel(domhi(1),j,k,1)
                vel(domhi(1)+1:uhi(1),j,k,2) =    vel(domhi(1),j,k,2)
@@ -149,7 +149,7 @@ subroutine set_velocity_bcs ( vel, ulo, uhi, &
 
             select case ( bct_jlo(i,k,1) )
 
-            case ( pinf_, pout_) 
+            case ( pinf_, pout_, ignore_) 
 
                vel(i,ulo(2):domlo(2)-1,k,1) =      vel(i,domlo(2),k,1)
                vel(i,ulo(2):domlo(2)-1,k,2) =      vel(i,domlo(2),k,2)
@@ -195,7 +195,7 @@ subroutine set_velocity_bcs ( vel, ulo, uhi, &
 
             select case ( bct_jhi(i,k,1) )
 
-            case ( pinf_, pout_ )
+            case ( pinf_, pout_, ignore_) 
                
                vel(i,domhi(2)+1:uhi(2),k,1) =      vel(i,domhi(2),k,1)
                vel(i,domhi(2)+1:uhi(2),k,2) =      vel(i,domhi(2),k,2)
@@ -242,7 +242,7 @@ subroutine set_velocity_bcs ( vel, ulo, uhi, &
 
             select case (bct_klo(i,j,1))
 
-            case ( pinf_, pout_ ) 
+            case ( pinf_, pout_, ignore_) 
 
                vel(i,j,ulo(3):domlo(3)-1,1) = vel(i,j,domlo(3),1)
                vel(i,j,ulo(3):domlo(3)-1,2) = vel(i,j,domlo(3),2)
@@ -288,7 +288,7 @@ subroutine set_velocity_bcs ( vel, ulo, uhi, &
 
             select case ( bct_khi(i,j,1) )
 
-            case ( pinf_, pout_ )
+            case ( pinf_, pout_, ignore_) 
                
                vel(i,j,domhi(3)+1:uhi(3),1) = vel(i,j,domhi(3),1)
                vel(i,j,domhi(3)+1:uhi(3),2) = vel(i,j,domhi(3),2)
@@ -471,7 +471,7 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
                
             ! Note that the pinf_ and pout_ cases are irrelevant here because 
             !   we will use a Dirichlet condition on pressure there
-            case ( pinf_, pout_) 
+            case ( pinf_, pout_, ignore_) 
                
                vec(ulo(1):domlo(1)-1,j,k,1) =  vec(domlo(1),j,k,1)
                vec(ulo(1):domlo(1)-1,j,k,2) =  vec(domlo(1),j,k,2)
@@ -506,7 +506,7 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
 
             ! Note that the pinf_ and pout_ cases are irrelevant here because 
             !   we will use a Dirichlet condition on pressure there
-            case ( pinf_, pout_ )
+            case ( pinf_, pout_, ignore_ )
                
                vec(domhi(1)+1:uhi(1),j,k,1) = vec(domhi(1),j,k,1)
                vec(domhi(1)+1:uhi(1),j,k,2) = vec(domhi(1),j,k,2)
@@ -541,7 +541,7 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
 
             ! Note that the pinf_ and pout_ cases are irrelevant here because 
             !   we will use a Dirichlet condition on pressure there
-            case ( pinf_, pout_) 
+            case ( pinf_, pout_, ignore_) 
 
                vec(i,ulo(2):domlo(2)-1,k,1) = vec(i,domlo(2),k,1)
                vec(i,ulo(2):domlo(2)-1,k,2) = vec(i,domlo(2),k,2)
@@ -575,7 +575,7 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
 
             select case ( bct_jhi(i,k,1) )
 
-            case ( pinf_, pout_ )
+            case ( pinf_, pout_, ignore_ )
                
                vec(i,domhi(2)+1:uhi(2),k,1) = vec(i,domhi(2),k,1)
                vec(i,domhi(2)+1:uhi(2),k,2) = vec(i,domhi(2),k,2)
@@ -611,7 +611,7 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
 
             ! Note that the pinf_ and pout_ cases are irrelevant here because 
             !   we will use a Dirichlet condition on pressure there
-            case ( pinf_, pout_ ) 
+            case ( pinf_, pout_, ignore_ ) 
 
                vec(i,j,ulo(3):domlo(3)-1,1) =  vec(i,j,domlo(3),1)
                vec(i,j,ulo(3):domlo(3)-1,2) =  vec(i,j,domlo(3),2)
@@ -646,7 +646,7 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
 
             ! Note that the pinf_ and pout_ cases are irrelevant here because 
             !   we will use a Dirichlet condition on pressure there
-            case ( pinf_, pout_ )
+            case ( pinf_, pout_, ignore_ )
                
                vec(i,j,domhi(3)+1:uhi(3),1) = vec(i,j,domhi(3),1)
                vec(i,j,domhi(3)+1:uhi(3),2) = vec(i,j,domhi(3),2)

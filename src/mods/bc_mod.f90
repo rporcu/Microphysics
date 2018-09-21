@@ -74,6 +74,7 @@ module bc
 
   ! Cell flag definitions
   integer, parameter :: undef_cell =   0 ! undefined
+  integer, parameter :: ignore_    =   9 ! ignore this wall because it is outside an EB boundary
   integer, parameter :: pinf_      =  10 ! pressure inflow cell
   integer, parameter :: pout_      =  11 ! pressure outflow cell
   integer, parameter :: minf_      =  20 ! mass flux inflow cell

@@ -61,8 +61,8 @@ particles.tile_size = 1024 1024 1024
 #!-----------------------------------------------------------//
 
 # Level-set refinement and padding
-mfix.levelset__refinement    = 2 # levelset resolution
-mfix.levelset__pad           = 4 # levelset influence in refined units
+mfix.levelset__refinement    = 4 # levelset resolution
+mfix.levelset__pad           = 8 # levelset influence in refined units
 
 # EB refinement and padding
 mfix.levelset__eb_refinement = 1 # EB resolution used to generated levelset
@@ -79,7 +79,7 @@ cylinder.internal_flow = true
 cylinder.closed_bottom = false
 
 cylinder.radius = 0.00099
-cylinder.height = 0.0090
+cylinder.height = -1.0
 
 cylinder.direction = 0
 cylinder.center    =  0.0040  0.001   0.001

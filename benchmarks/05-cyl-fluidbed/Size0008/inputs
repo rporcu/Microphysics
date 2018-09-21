@@ -8,7 +8,6 @@ mfix.fixed_dt        = 0
 
 mfix.cfl = 0.5
 
-amr.max_step = 10000000
 amr.stop_time = 0.20
 
 mfix.explicit_diffusion = 1
@@ -18,6 +17,14 @@ mfix.use_mac_proj       = true
 mfix.ugradu_type        = 3
 
 mfix.particle_init_type = "Auto"
+
+mac.mg_verbose          = 1
+mac.mg_rtol             = 1.e-6
+mac.bottom_solver_type  = "smoother"
+
+mfix.mg_verbose         = 1
+mfix.mg_rtol            = 2.5e-6
+mfix.bottom_solver_type = "bicgstab"
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -61,14 +68,14 @@ particles.tile_size = 1024 1024 1024
 #!-----------------------------------------------------------//
 
 # Level-set refinement and padding
-mfix.levelset__refinement    = 2 # levelset resolution
-mfix.levelset__pad           = 4 # levelset influence in refined units
+mfix.levelset__refinement    = 4 # levelset resolution
+mfix.levelset__pad           = 8 # levelset influence in refined units
 
 # EB refinement and padding
 mfix.levelset__eb_refinement = 1 # EB resolution used to generated levelset
 mfix.levelset__eb_pad        = 8 # EB extends from the problem domain
 
-mfix.write_eb_surface = true  # Needed to output eb-surfaces
+#mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
 #! EB geometry
 #!-----------------------------------------------------------//
@@ -78,8 +85,8 @@ cylinder.internal_flow = true
 cylinder.closed_bottom = true
 cylinder.bottom_offset = 1.0e-8
 
-cylinder.radius = 0.0009
-#cylinder.height = 0.010
+cylinder.radius  = 0.0009
+cylinder.height  = -1.
 
 cylinder.direction = 0
 cylinder.center    =  0.004   0.001   0.001

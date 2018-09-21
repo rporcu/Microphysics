@@ -161,6 +161,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 
     for (int iter = 0; iter < 3; ++iter)
     {
+       amrex::Print() << " " << std::endl;
        amrex::Print() << "In initial_iterations: iter = " << iter <<  "\n";
 
        bool proj_2 = false;
