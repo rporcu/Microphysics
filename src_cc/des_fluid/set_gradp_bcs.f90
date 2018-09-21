@@ -1,6 +1,6 @@
 subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
      & bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,               &
-     & domlo, domhi, ng) bind(C) 
+     & domlo, domhi, ng) bind(C)
 
    use amrex_fort_module,  only: ar => amrex_real
    use param            ,  only: zero
@@ -18,7 +18,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
    ! Number of ghost nodes
    integer(c_int), intent(in   ) :: ng
-   
+
    ! BCs type
    integer(c_int), intent(in   ) :: &
         bct_ilo(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
@@ -41,7 +41,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_ilo(j,k,1))
 
-            case ( pinf_, pout_)
+            case ( pinf_, pout_, ignore_)
 
                gp(domlo(1)-1,j,k,:) = gp(domlo(1),j,k,:)
 
@@ -60,7 +60,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
                gp(domlo(1)-1,j,k,1) = -gp(domlo(1),j,k,1)
                gp(domlo(1)-1,j,k,2) =  gp(domlo(1),j,k,2)
                gp(domlo(1)-1,j,k,3) =  gp(domlo(1),j,k,3)
-   
+
             end select
       end do
       end do
@@ -72,7 +72,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_ihi(j,k,1))
 
-            case ( pinf_, pout_)
+            case ( pinf_, pout_, ignore_)
 
                gp(domhi(1)+1,j,k,:) = gp(domhi(1),j,k,:)
 
@@ -103,10 +103,10 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_jlo(i,k,1))
 
-            case ( pinf_, pout_)
+            case ( pinf_, pout_, ignore_)
 
                gp(i,domlo(2)-1,k,:) = gp(i,domlo(2),k,:)
-   
+
             case ( minf_)
 
                gp(i,domlo(2)-1,k,2) = gp(i,domlo(2),k,1  )
@@ -135,7 +135,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_jhi(i,k,1))
 
-            case ( pinf_, pout_)
+            case ( pinf_, pout_, ignore_)
 
                gp(i,domhi(2)+1,k,:) = gp(i,domhi(2),k,:)
 
@@ -167,7 +167,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_klo(i,j,1))
 
-            case ( pinf_, pout_)
+            case ( pinf_, pout_, ignore_)
 
                gp(i,j,domlo(3)-1,:) = gp(i,j,domlo(3),:)
 
@@ -199,26 +199,26 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_khi(i,j,1))
 
-            case ( pinf_, pout_)
+            case ( pinf_, pout_, ignore_)
 
                gp(i,j,domhi(3)+1,:) = gp(i,j,domhi(3),:)
-   
+
             case ( minf_)
 
                gp(i,j,domhi(3)+1,3) = gp(i,j,domhi(3),3)
                gp(i,j,domhi(3)+1,1) = zero
                gp(i,j,domhi(3)+1,2) = zero
-   
+
             case ( nsw_)
 
                gp(i,j,domhi(3)+1,:) = -gp(i,j,domhi(3),:)
-   
+
             case ( fsw_)
 
                gp(i,j,domhi(3)+1,3) = -gp(i,j,domhi(3),3)
                gp(i,j,domhi(3)+1,1) =  gp(i,j,domhi(3),1)
                gp(i,j,domhi(3)+1,2) =  gp(i,j,domhi(3),2)
-   
+
             end select
       end do
       end do

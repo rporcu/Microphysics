@@ -49,12 +49,12 @@ contains
       glob_subdt_io = .true.
       if ( subdt_io == 0 )  glob_subdt_io = .false.
 
-      ! update the global des_tstart, and des_dt (in run module) corresponding to this 
+      ! update the global des_tstart, and des_dt (in run module) corresponding to this
       ! des run: this enables usr[2,3]_des to know the time
       des_tstart = tstart
       des_dt     = dt
 
-      ! Initialize time stepping variables 
+      ! Initialize time stepping variables
       if ( dt >= dtsolid ) then
           nsubsteps = ceiling ( real ( dt / dtsolid ) )
           subdt     =  dt / nsubsteps
@@ -80,7 +80,7 @@ contains
 
    subroutine des_time_loop ( np, particles, &
                               nf , tow, fc, subdt, &
-                              xlength, ylength, zlength, stime, nstep) & 
+                              xlength, ylength, zlength, stime, nstep) &
           bind(C, name="des_time_loop")
 
       use particle_mod
@@ -88,17 +88,17 @@ contains
       use output_manager_module          , only: output_manager
       use run                            , only: call_usr, subdt_io
       use bc                             , only: BC_shaker_A, BC_shaker_F
- 
+
       integer(c_int),   intent(in   )     :: nf, np
-      real(rt),     intent(in   )     :: subdt, xlength, ylength, zlength
+      real(rt),         intent(in   )     :: subdt, xlength, ylength, zlength
       type(particle_t), intent(inout)     :: particles(np)
-      real(rt),     intent(inout)     :: tow(nf,3)
-      real(rt),     intent(inout)     :: fc(nf,3)
-      real(rt),     intent(inout)     :: stime
+      real(rt),         intent(inout)     :: tow(nf,3)
+      real(rt),         intent(inout)     :: fc(nf,3)
+      real(rt),         intent(inout)     :: stime
       integer(c_int),   intent(in   )     :: nstep
 
       integer :: p
-      
+
       ! call user functions.
       if ( call_usr ) call usr1_des
 
@@ -117,7 +117,8 @@ contains
             particles(p) % vel     = particles(p) % vel   + subdt * &
                         ( ( fc(p,:) +  particles(p) % drag ) / particles(p) % mass + gravity )
 
-            ! in case of shaking, the simulation is in the co-shaken frame => non-interial frame => fictious forces
+            ! in case of shaking, the simulation is in the co-shaken frame
+            !       => non-interial frame => fictious forces
             ! fictitions force due to frame tranlation = - m * x_frame'' (without rotation)
             if ( ( BC_shaker_F .gt. 0.d0) .and. any( BC_shaker_A .gt. 0.d0 ) ) then
                 particles(p) % vel = particles(p) % vel    - subdt * &
@@ -127,7 +128,7 @@ contains
             ! tranlate particle (Euler-step using updated velocity)
             particles(p) % pos     = particles(p) % pos   + subdt * particles(p) % vel
 
-            ! update particle rotational velocity 
+            ! update particle rotational velocity
             particles(p) % omega   = particles(p) % omega + subdt * tow(p,:) * particles(p) % omoi
 
             ! note: particle omega should also couple to particle vel

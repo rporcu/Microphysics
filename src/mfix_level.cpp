@@ -227,7 +227,7 @@ void mfix_level::fill_mf_bc(int lev, MultiFab & mf) {
 
 //
 // Set the BCs for velocity only
-// 
+//
 void
 mfix_level::mfix_set_velocity_bcs (int lev)
 {
@@ -236,7 +236,7 @@ mfix_level::mfix_set_velocity_bcs (int lev)
   u_g[lev] -> FillBoundary (geom[lev].periodicity());
   v_g[lev] -> FillBoundary (geom[lev].periodicity());
   w_g[lev] -> FillBoundary (geom[lev].periodicity());
-  
+
   Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
@@ -254,7 +254,7 @@ mfix_level::mfix_set_velocity_bcs (int lev)
 			     bc_klo.dataPtr(), bc_khi.dataPtr(),
 			     domain.loVect(), domain.hiVect(),
 			     &nghost );
-    }			   
+    }
 }
 
 void mfix_level::mfix_calc_volume_fraction(int lev, Real & sum_vol) {
@@ -497,8 +497,8 @@ mfix_level::mfix_calc_drag_particle(int lev)
            construct_gradp( sbx.loVect(),   sbx.hiVect(),
                             (*p_g[lev])[mfi].dataPtr(), (*p0_g[lev])[mfi].dataPtr(),
                             BL_TO_FORTRAN_ANYD((*gpx)[mfi]),
-   		            BL_TO_FORTRAN_ANYD((*gpy)[mfi]),
-   			    BL_TO_FORTRAN_ANYD((*gpz)[mfi]),
+                            BL_TO_FORTRAN_ANYD((*gpy)[mfi]),
+                            BL_TO_FORTRAN_ANYD((*gpz)[mfi]),
                             &dx, &dy, &dz,
                             bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                             bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
@@ -513,15 +513,15 @@ mfix_level::mfix_calc_drag_particle(int lev)
        {
            const Box& sbx = (*p_g[lev])[mfi].box();
            set_gradp_bcs ( sbx.loVect(), sbx.hiVect(),
-                         BL_TO_FORTRAN_ANYD((*gpx)[mfi]),
-		         BL_TO_FORTRAN_ANYD((*gpy)[mfi]),
-			 BL_TO_FORTRAN_ANYD((*gpz)[mfi]),
-			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-			 bc_klo.dataPtr(), bc_khi.dataPtr(),
-			 domain.loVect(), domain.hiVect(),
-			 &nghost );
-       }			   
+                           BL_TO_FORTRAN_ANYD((*gpx)[mfi]),
+                           BL_TO_FORTRAN_ANYD((*gpy)[mfi]),
+                           BL_TO_FORTRAN_ANYD((*gpz)[mfi]),
+                           bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                           bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                           bc_klo.dataPtr(), bc_khi.dataPtr(),
+                           domain.loVect(), domain.hiVect(),
+                           &nghost );
+       }
 
        gpx->FillBoundary(geom[lev].periodicity());
        gpy->FillBoundary(geom[lev].periodicity());
@@ -536,11 +536,11 @@ mfix_level::mfix_calc_drag_particle(int lev)
            const int np = particles.size();
 
            calc_drag_particle( BL_TO_FORTRAN_ANYD((*gpx)[pti]),
-      		               BL_TO_FORTRAN_ANYD((*gpy)[pti]),
-      			       BL_TO_FORTRAN_ANYD((*gpz)[pti]),
+                               BL_TO_FORTRAN_ANYD((*gpy)[pti]),
+                               BL_TO_FORTRAN_ANYD((*gpz)[pti]),
                                BL_TO_FORTRAN_ANYD((*u_g[lev])[pti]),
-      		               BL_TO_FORTRAN_ANYD((*v_g[lev])[pti]),
-      			       BL_TO_FORTRAN_ANYD((*w_g[lev])[pti]),
+                               BL_TO_FORTRAN_ANYD((*v_g[lev])[pti]),
+                               BL_TO_FORTRAN_ANYD((*w_g[lev])[pti]),
                                &np, particles.data(), &dx, &dy, &dz
                              );
        }
@@ -619,7 +619,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
 			 bc_klo.dataPtr(), bc_khi.dataPtr(),
 			 domain.loVect(), domain.hiVect(),
 			 &nghost );
-       }			   
+       }
 
        gpx->FillBoundary(geom[lev].periodicity());
        gpy->FillBoundary(geom[lev].periodicity());

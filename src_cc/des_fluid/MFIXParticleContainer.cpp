@@ -425,12 +425,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     amrex::Print() << "Evolving particles... " << std::endl;
 
-   /****************************************************************************
-    * DEBUG flag toggles:                                                      *
-    *   -> Print number of collisions                                        *
-    *   -> Print max (over substeps) particle velocity at each time step       *
-    *   -> Print max particle-wall and particle-particle forces                *
-    ****************************************************************************/
+    /****************************************************************************
+     * DEBUG flag toggles:                                                      *
+     *   -> Print number of collisions                                          *
+     *   -> Print max (over substeps) particle velocity at each time step       *
+     *   -> Print max particle-wall and particle-particle forces                *
+     ****************************************************************************/
 
     // Debug level controls the detail of debug outut:
     //   -> debug_level = 0 : no debug output
@@ -438,9 +438,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     //   -> debug_level = 2 : debug output for every substep
     const int debug_level = 0;
 
-   /****************************************************************************
-    * Geometry                                                                 *
-    ****************************************************************************/
+    /****************************************************************************
+     * Geometry                                                                 *
+     ****************************************************************************/
 
     Box domain(Geom(lev).Domain());
 
@@ -450,19 +450,19 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
-   /****************************************************************************
-    * Init substeps                                                            *
-    ****************************************************************************/
+    /****************************************************************************
+     * Init substeps                                                            *
+     ***************************************************************************/
 
     int   nsubsteps;
     Real  subdt, stime = time;
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt, &subdt_io );
 
-   /****************************************************************************
-    * Init temporary storage:                                                  *
-    *   -> particle-particle, and particle-wall forces                         *
-    *   -> particle-particle, and particle-wall torques                        *
-    ****************************************************************************/
+    /****************************************************************************
+     * Init temporary storage:                                                  *
+     *   -> particle-particle, and particle-wall forces                         *
+     *   -> particle-particle, and particle-wall torques                        *
+     ***************************************************************************/
 
     std::map<PairIndex, Vector<Real>> tow;
     std::map<PairIndex, Vector<Real>> fc, pfor, wfor;
@@ -475,9 +475,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         wfor[index] = Vector<Real>();
     }
 
-   /****************************************************************************
-    * Iterate over sub-steps                                                  *
-    ****************************************************************************/
+    /****************************************************************************
+     * Iterate over sub-steps                                                   *
+     ***************************************************************************/
 
     int ncoll_total = 0;  // Counts total number of collisions
     loc_maxvel  = RealVect(0., 0., 0.);  // Tracks max (absolute) velocity
@@ -561,23 +561,19 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                // Calculate forces and torques from particle-wall collisions
                BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-               if(legacy__eb_collisions){
-                   calc_wall_collisions(particles, &ntot, &nrp,
-                                    tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-                                    flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                                    (*eb_normals)[pti].dataPtr(),
-                                    (*eb_normals)[pti].loVect(), (*eb_normals)[pti].hiVect(),
-                                    (*bndrycent)[pti].dataPtr(),
-                                    (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
-                                    dx);
+               if(legacy__eb_collisions) {
+                   calc_wall_collisions(particles, & ntot, & nrp,
+                                        tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                        BL_TO_FORTRAN_3D(flag),
+                                        BL_TO_FORTRAN_3D((* eb_normals)[pti]),
+                                        BL_TO_FORTRAN_3D((* bndrycent)[pti]),
+                                        dx);
                } else {
                    calc_wall_collisions_ls(particles, & ntot, & nrp,
-                                       tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                       (* ls_valid)[pti].dataPtr(),
-                                       (* ls_valid)[pti].loVect(), (* ls_valid)[pti].hiVect(),
-                                       (* ls_phi)[pti].dataPtr(),
-                                       (* ls_phi)[pti].loVect(), (* ls_phi)[pti].hiVect(),
-                                       dx, & ls_refinement);
+                                           tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                           BL_TO_FORTRAN_3D((* ls_valid)[pti]),
+                                           BL_TO_FORTRAN_3D((* ls_phi)[pti]),
+                                           dx, & ls_refinement);
                }
 
                // Debugging: copy data from the fc (all forces) vector to the
@@ -691,14 +687,16 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
           Vector<RealVect> max_forces = GetMaxForces(lev);
 
           const Real * dx_crse = Geom(0).CellSize();
-          amrex::Print() << "Maximum distance traveled:" << std::endl
+          amrex::Print() << "Maximum distance traveled:"
+                         << std::endl
                          <<  "x= " << max_vel[0] * dt
                          << " y= " << max_vel[1] * dt
                          << " z= " << max_vel[2] * dt
                          << " and note that "
                          << " dx= " << dx_crse[0] << std::endl;
 
-          amrex::Print() << "Maximum particle-particle (pp) and particle-wall (pw) forces:" << std::endl
+          amrex::Print() << "Maximum particle-particle (pp) and particle-wall (pw) forces:"
+                         << std::endl
                          <<  "ppx= " << max_forces[0][0]
                          << " ppy= " << max_forces[0][1]
                          << " ppz= " << max_forces[0][2] << std::endl

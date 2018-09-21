@@ -36,7 +36,7 @@ mfix_level::mfix_level ()
     int nlevs_max = maxLevel() + 1;
     istep.resize(nlevs_max, 0);
     nsubsteps.resize(nlevs_max, 1);
-    for (int lev = 1; lev <= maxLevel(); ++lev) 
+    for (int lev = 1; lev <= maxLevel(); ++lev)
         nsubsteps[lev] = MaxRefRatio(lev-1);
 #endif
 }
@@ -128,18 +128,18 @@ mfix_level::ResizeArrays ()
 void
 mfix_level::usr3(int lev)
 {
-    if (solve_fluid) 
+    if (solve_fluid)
     {
        Real dx = geom[lev].CellSize(0);
        Real dy = geom[lev].CellSize(1);
        Real dz = geom[lev].CellSize(2);
 
-       // We deliberately don't tile this loop 
+       // We deliberately don't tile this loop
        for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
        {
           const Box& sbx = (*p_g[lev])[mfi].box();
           const Box& ubx = (*vel_g[lev])[mfi].box();
-   
+
           mfix_usr3((*vel_g[lev])[mfi].dataPtr(0), ubx.loVect(), ubx.hiVect(),
                     (*vel_g[lev])[mfi].dataPtr(1), ubx.loVect(), ubx.hiVect(),
                     (*vel_g[lev])[mfi].dataPtr(2), ubx.loVect(), ubx.hiVect(),
@@ -240,10 +240,10 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-    if (OnSameGrids) 
+    if (OnSameGrids)
     {
        // ************************************************************
-       // First create the beta of individual particles 
+       // First create the beta of individual particles
        // ************************************************************
 #ifdef _OPENMP
 #pragma omp parallel
@@ -262,7 +262,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
        }
 
        // ******************************************************************************
-       // Now use the beta of individual particles to create the drag terms on the fluid 
+       // Now use the beta of individual particles to create the drag terms on the fluid
        // ******************************************************************************
 
        drag[lev]->setVal(0.0L);
@@ -271,7 +271,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
        pc -> CalcDragOnFluid(*f_gds[lev], *drag[lev],
                              bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi,nghost);
     }
-    else 
+    else
     {
 
        BoxArray            pba = pc->ParticleBoxArray(lev);
@@ -299,7 +299,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
        vel_g_pba->FillBoundary(geom[lev].periodicity());
 
        // ************************************************************
-       // First create the beta of individual particles 
+       // First create the beta of individual particles
        // ************************************************************
 
 #ifdef _OPENMP
@@ -319,7 +319,7 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
        }
 
        // ******************************************************************************
-       // Now use the beta of individual particles to create the drag terms on the fluid 
+       // Now use the beta of individual particles to create the drag terms on the fluid
        // ******************************************************************************
 
        std::unique_ptr<MultiFab>  drag_pba(new MultiFab(pba,pdm,drag[lev]->nComp(),drag[lev]->nGrow()));
@@ -362,7 +362,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
 
     Box domain(geom[lev].Domain());
 
-    if (OnSameGrids) 
+    if (OnSameGrids)
     {
        MultiFab gp_tmp, gp0_tmp;
 
@@ -372,7 +372,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
 
        //
        // NOTE -- it is essential that we call set_gradp_bcs after calling FillBoundary
-       //         because the set_gradp_bcs call hopefully sets the ghost cells exterior 
+       //         because the set_gradp_bcs call hopefully sets the ghost cells exterior
        //         to the domain from ghost cells interior to the domain
        //
 #ifdef _OPENMP
@@ -391,8 +391,10 @@ mfix_level::mfix_calc_drag_particle(int lev)
        }
 
        // Extrapolate velocity Dirichlet bc's to ghost cells
-       int extrap_dir_bcs = 1; 
+       int extrap_dir_bcs = 1;
        mfix_set_velocity_bcs(lev, extrap_dir_bcs);
+
+       gp_tmp.FillBoundary(geom[lev].periodicity());
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -401,20 +403,19 @@ mfix_level::mfix_calc_drag_particle(int lev)
        {
            auto& particles = pti.GetArrayOfStructs();
            const int np = particles.size();
-   
-           calc_drag_particle(
-                           BL_TO_FORTRAN_ANYD(       gp_tmp[pti]),
-                           BL_TO_FORTRAN_ANYD((  *gp0[lev])[pti]),
-                           BL_TO_FORTRAN_ANYD((*vel_g[lev])[pti]),
-                           &np, particles.data(), &dx, &dy, &dz);
+
+           calc_drag_particle( BL_TO_FORTRAN_ANYD(       gp_tmp[pti]),
+                               BL_TO_FORTRAN_ANYD((  *gp0[lev])[pti]),
+                               BL_TO_FORTRAN_ANYD((*vel_g[lev])[pti]),
+                               &np, particles.data(), &dx, &dy, &dz);
        }
 
        // Reset velocity Dirichlet bc's to face values
-       extrap_dir_bcs = 0; 
+       extrap_dir_bcs = 0;
        mfix_set_velocity_bcs(lev, extrap_dir_bcs);
     }
 #if 0
-    else 
+    else
     {
 
        BoxArray            pba = pc->ParticleBoxArray(lev);
@@ -437,7 +438,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
 
        //
        // NOTE -- it is essential that we call set_gradp_bcs after calling FillBoundary
-       //         because the set_gradp_bcs call hopefully sets the ghost cells exterior 
+       //         because the set_gradp_bcs call hopefully sets the ghost cells exterior
        //         to the domain from ghost cells interior to the domain
        //
 #ifdef _OPENMP
@@ -454,7 +455,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
                            &nghost);
        }
 
-       int extrap_dir_bcs = 1; 
+       int extrap_dir_bcs = 1;
        mfix_set_velocity_bcs(lev, extrap_dir_bcs);
 
 #ifdef _OPENMP
@@ -464,12 +465,11 @@ mfix_level::mfix_calc_drag_particle(int lev)
        {
            auto& particles = pti.GetArrayOfStructs();
            const int np = particles.size();
-   
-           calc_drag_particle(
-                           BL_TO_FORTRAN_ANYD(      gp_tmp[pti]),
-                           BL_TO_FORTRAN_ANYD((   *gp0_tmp[pti]),
-                           BL_TO_FORTRAN_ANYD((*vel_g_tmp)[pti]),
-                           &np, particles.data(), &dx, &dy, &dz);
+
+           calc_drag_particle( BL_TO_FORTRAN_ANYD(     gp_tmp[pti]),
+                               BL_TO_FORTRAN_ANYD((  *gp0_tmp[pti])),
+                               BL_TO_FORTRAN_ANYD((*vel_g_tmp)[pti]),
+                               &np, particles.data(), &dx, &dy, &dz);
        }
     }
 #endif
@@ -484,10 +484,10 @@ mfix_level::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, 
 {
    MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
                     0,  MFInfo(), *ebfactory[lev]);
-  
+
    MultiFab::Copy( mf_tmp, *mf[lev], comp, comp, 1, 0 );
    EB_set_covered( mf_tmp, 0.0 );
-   
+
    return mf_tmp.norm0( comp );
 }
 
@@ -496,10 +496,10 @@ mfix_level::mfix_norm0 ( MultiFab& mf, int lev, int comp )
 {
    MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), mf.nComp(),
                     0,  MFInfo(), *ebfactory[lev]);
-  
+
    MultiFab::Copy( mf_tmp, mf, comp, comp, 1, 0 );
    EB_set_covered( mf_tmp, 0.0 );
-   
+
    return mf_tmp.norm0( comp );
 }
 
@@ -512,10 +512,10 @@ mfix_level::mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, 
 {
    MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
                     0,  MFInfo(), *ebfactory[lev]);
-  
+
    MultiFab::Copy( mf_tmp, *mf[lev], comp, comp, 1, 0 );
    EB_set_covered( mf_tmp, 0.0 );
-   
+
    return mf_tmp.norm1( comp, geom[lev].periodicity() );
 }
 
@@ -524,15 +524,15 @@ mfix_level::mfix_norm1 ( MultiFab& mf, int lev, int comp )
 {
    MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), mf.nComp(),
                     0,  MFInfo(), *ebfactory[lev]);
-  
+
    MultiFab::Copy( mf_tmp, mf, comp, comp, 1, 0 );
    EB_set_covered( mf_tmp, 0.0 );
-   
+
    return mf_tmp.norm1( comp, geom[lev].periodicity() );
 }
 
 void
-mfix_level::mfix_compute_vort (int lev ) 
+mfix_level::mfix_compute_vort (int lev )
 {
     BL_PROFILE("mfix_level::mfix_compute_vort");
     Box domain(geom[lev].Domain());
@@ -540,7 +540,7 @@ mfix_level::mfix_compute_vort (int lev )
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi) 
+    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
     {
        // Tilebox
        Box bx = mfi.tilebox ();
@@ -548,7 +548,7 @@ mfix_level::mfix_compute_vort (int lev )
        // This is to check efficiently if this tile contains any eb stuff
        const EBFArrayBox&  vel_fab = dynamic_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
        const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
- 
+
        if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
        {
          compute_vort (

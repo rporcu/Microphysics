@@ -565,19 +565,19 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                     // Calculate forces and torques from particle-wall collisions
                     BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-                    if(legacy__eb_collisions){
+                    if(legacy__eb_collisions) {
                         calc_wall_collisions(particles, & ntot, & nrp,
-                                tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                BL_TO_FORTRAN_3D(flag),
-                                BL_TO_FORTRAN_3D((* eb_normals)[pti]),
-                                BL_TO_FORTRAN_3D((* bndrycent)[pti]),
-                                dx);
+                                             tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                             BL_TO_FORTRAN_3D(flag),
+                                             BL_TO_FORTRAN_3D((* eb_normals)[pti]),
+                                             BL_TO_FORTRAN_3D((* bndrycent)[pti]),
+                                             dx);
                     } else {
                         calc_wall_collisions_ls(particles, & ntot, & nrp,
-                                tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                BL_TO_FORTRAN_3D((* ls_valid)[pti]),
-                                BL_TO_FORTRAN_3D((* ls_phi)[pti]),
-                                dx, & ls_refinement);
+                                                tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                                BL_TO_FORTRAN_3D((* ls_valid)[pti]),
+                                                BL_TO_FORTRAN_3D((* ls_phi)[pti]),
+                                                dx, & ls_refinement);
                     }
 
                     // Debugging: copy data from the fc (all forces) vector to the
