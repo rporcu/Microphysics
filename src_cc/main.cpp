@@ -203,7 +203,8 @@ int main (int argc, char* argv[])
     //    if plot_int > 0
     if ( (restart_file.empty() || plotfile_on_restart) && plot_int > 0 )
     {
-       my_mfix.mfix_compute_vort(lev);
+       if (solve_fluid)
+          my_mfix.mfix_compute_vort(lev);
        my_mfix.WritePlotFile( plot_file, nstep, dt, time );
     }
 
@@ -257,7 +258,8 @@ int main (int argc, char* argv[])
 
                     if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
                     {
-                        my_mfix.mfix_compute_vort(lev);
+                        if (solve_fluid)
+                           my_mfix.mfix_compute_vort(lev);
                         my_mfix.WritePlotFile( plot_file, nstep, dt, time );
                         last_plt = nstep;
                     }
