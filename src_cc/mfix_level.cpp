@@ -397,6 +397,9 @@ mfix_level::mfix_calc_drag_particle(int lev)
 
        gp_tmp.FillBoundary(geom[lev].periodicity());
 
+       int use_slopes = 0;
+       if (use_slopes)
+          mfix_compute_velocity_slopes( lev, vel_g );
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -408,7 +411,10 @@ mfix_level::mfix_calc_drag_particle(int lev)
            calc_drag_particle( BL_TO_FORTRAN_ANYD(       gp_tmp[pti]),
                                BL_TO_FORTRAN_ANYD((  *gp0[lev])[pti]),
                                BL_TO_FORTRAN_ANYD((*vel_g[lev])[pti]),
-                               &np, particles.data(), &dx, &dy, &dz);
+                               (*xslopes[lev])[pti].dataPtr(),
+                               (*yslopes[lev])[pti].dataPtr(),
+                               BL_TO_FORTRAN_ANYD((*zslopes[lev])[pti]),
+                               &np, particles.data(), &dx, &dy, &dz, use_slopes);
        }
 
        // Reset velocity Dirichlet bc's to face values
