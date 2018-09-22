@@ -14,9 +14,9 @@ module eb_interpolation_mod
 contains
 
 
-   ! Interpolate x-face variable from face center to face centroid  
+   ! Interpolate x-face variable from face center to face centroid
    subroutine interpolate_to_face_centroid ( lo, hi, ivar, var, vlo, vhi, ncomp, &
-        areafrac, alo, ahi, cent, clo, chi, flags, flo, fhi, face_type  ) 
+        areafrac, alo, ahi, cent, clo, chi, flags, flo, fhi, face_type  )
 
       use amrex_ebcellflag_module, only: is_covered_cell, get_neighbor_cells
 
@@ -62,7 +62,7 @@ contains
                         call get_neighbor_cells( flags(i,j,k), nbr )
 
                         if ( cent(i,j,k,1) < zero ) then
-                           fracy = - cent(i,j,k,1) * nbr(0,-1,0)                      
+                           fracy = - cent(i,j,k,1) * nbr(0,-1,0)
                            if ( cent(i,j,k,2) <= zero ) then
                               fracz = - cent(i,j,k,2) * nbr(0,0,-1)
                               ivar(i,j,k,n) = (one-fracz) * (     fracy * var(i,j-1,k  ,n)  + &
@@ -89,10 +89,10 @@ contains
                               ivar(i,j,k,n) = (one-fracz) * (     fracy * var(i,j+1,k  ,n)  + &
                                    &                        (one-fracy) * var(i,j  ,k  ,n)) + &
                                    &                fracz * (     fracy * var(i,j+1,k+1,n)  + &
-                                   &                        (one-fracy) * var(i,j  ,k+1,n)) 
+                                   &                        (one-fracy) * var(i,j  ,k+1,n))
                            endif
                         end if
-                     else                  
+                     else
                         ivar(i,j,k,n) = var(i,j,k,n)
                      end if
                   end do
@@ -111,7 +111,7 @@ contains
                         call get_neighbor_cells( flags(i,j,k), nbr )
 
                         if ( cent(i,j,k,1) < zero ) then
-                           fracx = - cent(i,j,k,1) * nbr(-1,0,0)                      
+                           fracx = - cent(i,j,k,1) * nbr(-1,0,0)
                            if ( cent(i,j,k,2) <= zero ) then
                               fracz = - cent(i,j,k,2) * nbr(0,0,-1)
                               ivar(i,j,k,n) = (one-fracz) * (     fracx * var(i-1,j,k  ,n)  + &
@@ -138,10 +138,10 @@ contains
                               ivar(i,j,k,n) = (one-fracz) * (     fracx * var(i+1,j,k  ,n)  + &
                                    &                        (one-fracx) * var(i  ,j,k  ,n)) + &
                                    &                fracz * (     fracx * var(i+1,j,k+1,n)  + &
-                                   &                        (one-fracx) * var(i  ,j,k+1,n)) 
+                                   &                        (one-fracx) * var(i  ,j,k+1,n))
                            endif
                         end if
-                     else                  
+                     else
                         ivar(i,j,k,n) = var(i,j,k,n)
                      end if
                   end do
@@ -150,7 +150,7 @@ contains
          end do
 
       case(3) ! >>>>>>>>>>>>>>>>>>>>>>  Z-face <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< !
-         
+
          do n = 1, ncomp
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
@@ -160,7 +160,7 @@ contains
                         call get_neighbor_cells( flags(i,j,k), nbr )
 
                         if ( cent(i,j,k,1) < zero ) then
-                           fracx = - cent(i,j,k,1) * nbr(-1,0,0)                      
+                           fracx = - cent(i,j,k,1) * nbr(-1,0,0)
                            if ( cent(i,j,k,2) <= zero ) then
                               fracy = - cent(i,j,k,2) * nbr(0,-1,0)
                               ivar(i,j,k,n) = (one-fracy) * (     fracx * var(i-1,j  ,k,n)  + &
@@ -187,22 +187,22 @@ contains
                               ivar(i,j,k,n) = (one-fracy) * (     fracx * var(i+1,j  ,k,n)  + &
                                    &                        (one-fracx) * var(i  ,j  ,k,n)) + &
                                    &                fracy * (     fracx * var(i+1,j+1,k,n)  + &
-                                   &                        (one-fracx) * var(i  ,j+1,k,n)) 
+                                   &                        (one-fracx) * var(i  ,j+1,k,n))
                            endif
                         end if
-                     else                  
+                     else
                         ivar(i,j,k,n) = var(i,j,k,n)
                      end if
                   end do
                end do
             end do
          end do
-         
+
       case default
-         
+
          write(*,*) "interpolate_to_face_centroid(): face_type = ", face_type, " but valid values are 1,2,3"
          stop
-         
+
       end select
 
    end subroutine interpolate_to_face_centroid
@@ -210,7 +210,7 @@ contains
 
    !
    ! Returns the flux at the face centroid ALREADY multiplied by the face area
-   ! 
+   !
    function interp_to_face_centroid ( i, j, k, dir, var, vlo,  n,  &
         afrac, alo, cent, clo, nbr )  result(ivar)
 
@@ -222,17 +222,17 @@ contains
       integer(c_int),  intent(in   ) :: i, j, k
 
       ! Direction of staggering (1=x, 2=y, 3=z): this specify how (i,j,k) must
-      ! be interpreted, i.e. which staggered numbering the indexing refer to 
+      ! be interpreted, i.e. which staggered numbering the indexing refer to
       integer(c_int),  intent(in   ) :: dir
 
       ! The component to interpolate
       integer(c_int),  intent(in   ) :: n
 
       ! Array Bounds ( only start index )
-      integer(c_int),  intent(in   ) :: vlo(3), alo(3), clo(3) 
+      integer(c_int),  intent(in   ) :: vlo(3), alo(3), clo(3)
 
       ! Arrays
-      real(ar),        intent(in   ) ::           &                         
+      real(ar),        intent(in   ) ::           &
            &   var(vlo(1):, vlo(2):, vlo(3):,1:), &
            & afrac(alo(1):, alo(2):, alo(3):),    &
            &  cent(clo(1):, clo(2):, clo(3):,1:)
@@ -249,14 +249,14 @@ contains
 
       select case ( dir )
       case(1) ! >>>>>>>>>>>>>>>>>>>>>>  X-face <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< !
-         
+
          if ( afrac(i,j,k) == zero ) then
             ivar = zero
          else if ( afrac(i,j,k) == one ) then
-            ivar = var(i,j,k,n) 
-         else 
+            ivar = var(i,j,k,n)
+         else
             if ( cent(i,j,k,1) < zero ) then
-               fracy = - cent(i,j,k,1) * nbr(0,-1,0)                      
+               fracy = - cent(i,j,k,1) * nbr(0,-1,0)
                if ( cent(i,j,k,2) <= zero ) then
                   fracz = - cent(i,j,k,2) * nbr(0,0,-1)
                   ivar = (one-fracz) * (     fracy * var(i,j-1,k  ,n)  + &
@@ -283,7 +283,7 @@ contains
                   ivar= (one-fracz) * (     fracy * var(i,j+1,k  ,n)  + &
                        &              (one-fracy) * var(i,j  ,k  ,n)) + &
                        &      fracz * (     fracy * var(i,j+1,k+1,n)  + &
-                       &(one-fracy) * var(i,j  ,k+1,n)) 
+                       &(one-fracy) * var(i,j  ,k+1,n))
                endif
             end if
          end if
@@ -295,9 +295,9 @@ contains
             ivar = zero
          else if ( afrac(i,j,k) == one ) then
             ivar = var(i,j,k,n)
-         else 
+         else
             if ( cent(i,j,k,1) < zero ) then
-               fracx = - cent(i,j,k,1) * nbr(-1,0,0)                      
+               fracx = - cent(i,j,k,1) * nbr(-1,0,0)
                if ( cent(i,j,k,2) <= zero ) then
                   fracz = - cent(i,j,k,2) * nbr(0,0,-1)
                   ivar = (one-fracz) * (     fracx * var(i-1,j,k  ,n)  + &
@@ -324,21 +324,21 @@ contains
                   ivar = (one-fracz) * (     fracx * var(i+1,j,k  ,n)  + &
                        &               (one-fracx) * var(i  ,j,k  ,n)) + &
                        &       fracz * (     fracx * var(i+1,j,k+1,n)  + &
-                       &               (one-fracx) * var(i  ,j,k+1,n)) 
+                       &               (one-fracx) * var(i  ,j,k+1,n))
                endif
             end if
          end if
 
 
       case(3) ! >>>>>>>>>>>>>>>>>>>>>>  Z-face <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< !
-         
+
          if ( afrac(i,j,k) == zero ) then
             ivar = zero
          else if ( afrac(i,j,k) == one ) then
             ivar = var(i,j,k,n)
-         else      
+         else
             if ( cent(i,j,k,1) < zero ) then
-               fracx = - cent(i,j,k,1) * nbr(-1,0,0)                      
+               fracx = - cent(i,j,k,1) * nbr(-1,0,0)
                if ( cent(i,j,k,2) <= zero ) then
                   fracy = - cent(i,j,k,2) * nbr(0,-1,0)
                   ivar = (one-fracy) * (     fracx * var(i-1,j  ,k,n)  + &
@@ -365,26 +365,26 @@ contains
                   ivar = (one-fracy) * (     fracx * var(i+1,j  ,k,n)  + &
                        &               (one-fracx) * var(i  ,j  ,k,n)) + &
                        &       fracy * (     fracx * var(i+1,j+1,k,n)  + &
-                       &               (one-fracx) * var(i  ,j+1,k,n)) 
+                       &               (one-fracx) * var(i  ,j+1,k,n))
                endif
             end if
-         end if 
-         
+         end if
+
       case default
 
          call amrex_abort( "interpolate_to_face_centroid(): value of 'dir'"&
               //" is invalid. Must be either 1,2, or 3")
-         
+
       end select
 
       !
       ! Return the flux multiplied by the face area
       !
       ivar = ivar * afrac(i,j,k)
-      
+
 
    end function interp_to_face_centroid
-   
+
 
 
 end module eb_interpolation_mod

@@ -65,8 +65,8 @@ mfix.levelset__refinement    = 1 # levelset resolution
 mfix.levelset__pad           = 1 # levelset influence in refined units
 
 # EB refinement and padding
-mfix.levelset__eb_refinement = 1 # EB resolution used to generated levelset
-mfix.levelset__eb_pad        = 1 # EB extends from the problem domain
+# => only needed when using multiple grids
+#mfix.levelset__eb_pad        = 8 # EB extends into neighboring grids
 
 mfix.write_eb_surface = true  # Needed to output eb-surfaces
 

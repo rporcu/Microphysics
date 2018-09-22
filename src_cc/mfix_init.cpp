@@ -301,7 +301,7 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
 }
 
 void
-mfix_level::ReMakeNewLevelFromScratch (int lev, 
+mfix_level::ReMakeNewLevelFromScratch (int lev,
                                        const BoxArray & new_grids, const DistributionMapping & new_dmap)
 {
     SetBoxArray(lev, new_grids);
@@ -427,7 +427,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
        if (ParallelDescriptor::IOProcessor())
           std::cout << "Time spent in initializing particles " << end_init_part << std::endl;
     }
-    
+
     if (solve_fluid)
     {
        if (load_balance_type == "KnapSack")
@@ -576,8 +576,8 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
            bx.loVect(),  bx.hiVect(),
            domain.loVect(), domain.hiVect(),
            (*ep_g[lev])[mfi].dataPtr(),  (*ro_g[lev])[mfi].dataPtr(),
-           (*rop_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(), 
-           (*vel_g[lev])[mfi].dataPtr(), 
+           (*rop_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+           (*vel_g[lev])[mfi].dataPtr(),
            (*mu_g[lev])[mfi].dataPtr(),  (*lambda_g[lev])[mfi].dataPtr(),
            &dx, &dy, &dz, &xlen, &ylen, &zlen);
     }
@@ -649,7 +649,7 @@ mfix_level::mfix_set_bc0(int lev)
                (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
                (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(), 
+              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
               &nghost, &nodal_pressure);
     }
 
@@ -685,7 +685,7 @@ mfix_level::mfix_set_p0(int lev)
 
   // We deliberately don't tile this loop since we will be looping
   //    over bc's on faces and it makes more sense to do this one grid at a time
-  for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) 
+  for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
   {
 
     const Box& bx = mfi.validbox();

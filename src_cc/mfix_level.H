@@ -128,10 +128,10 @@ public:
     /// Parameters describing the level-set grid:
     ///
     int levelset__refinement = 1;    // refinement (wrt particle grid) of the level-set's grid
-    int levelset__eb_refinement = 1; // refinement (wrt particle grid) of the EB facets used to generate the level-set
+    int levelset__eb_refinement = 1; // refinement of the EB facets used to generate the level-set
     int levelset__pad = 2;           // padding of the level-set grid
-    int levelset__eb_pad = 2;        // padding of the EBIS used to generate the level-set (particularly useful for
-                                     // ensuring that edge-cased occur well outside the physical domain)
+    int levelset__eb_pad = 2;        // padding of the EBIS used to generate the level-set (useful for
+                                     // ensuring that neighbor grids are considered when filling LS)
 
 protected:
 
