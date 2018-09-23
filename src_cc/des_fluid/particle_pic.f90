@@ -2,6 +2,7 @@ module mfix_particle_pic_module
 
   use iso_c_binding
   use amrex_fort_module, only : amrex_real, amrex_particle_real
+  use amrex_paralleldescriptor_module, only : amrex_pd_ioprocessor
 
   implicit none
 
@@ -82,11 +83,41 @@ contains
     real(amrex_real) lx, ly, lz, pbeta, pvel(3)
     real(amrex_real) inv_dx(3)
 
-    ! Do not deposit drag forces if one-way coupled
+    logical, parameter :: no_interpolation = .true.
+
+
+    if(no_interpolation .and. amrex_pd_ioprocessor()) &
+         write(*,*) 'WARNING: No interpolation of drag force grid deposition'
+
 
     inv_dx = 1.0d0/dx
 
+
+    if(no_interpolation) then
+
+       do n = 1, np
+
+          lx = (particles(1, n) - plo(1))*inv_dx(1)
+          ly = (particles(2, n) - plo(2))*inv_dx(2)
+          lz = (particles(3, n) - plo(3))*inv_dx(3)
+
+          i = floor(lx)
+          j = floor(ly)
+          k = floor(lz)
+
+          pbeta   = particles(beta_comp,n)
+
+          mf_x(i,j,k)   = mf_x(i,j,k)   + pbeta
+          mf_u(i,j,k,1) = mf_u(i,j,k,1) + pbeta * particles(vel_comp  ,1)
+          mf_u(i,j,k,2) = mf_u(i,j,k,2) + pbeta * particles(vel_comp+1,2)
+          mf_u(i,j,k,3) = mf_u(i,j,k,3) + pbeta * particles(vel_comp+2,3)
+
+       end do
+
+    else
+
     do n = 1, np
+
 
        lx = (particles(1, n) - plo(1))*inv_dx(1) + 0.5d0
        ly = (particles(2, n) - plo(2))*inv_dx(2) + 0.5d0
@@ -118,7 +149,7 @@ contains
        mf_x(i  , j,   k-1) = mf_x(i  , j,   k-1) + wx_hi*wy_hi*wz_lo*pbeta
        mf_x(i  , j,   k  ) = mf_x(i  , j,   k  ) + wx_hi*wy_hi*wz_hi*pbeta
 
-       do idir = 1, 3 
+       do idir = 1, 3
           mf_u(i-1, j-1, k-1,idir) = mf_u(i-1, j-1, k-1,idir) + wx_lo*wy_lo*wz_lo*pvel(idir)
           mf_u(i-1, j-1, k  ,idir) = mf_u(i-1, j-1, k  ,idir) + wx_lo*wy_lo*wz_hi*pvel(idir)
           mf_u(i-1, j,   k-1,idir) = mf_u(i-1, j,   k-1,idir) + wx_lo*wy_hi*wz_lo*pvel(idir)
@@ -130,6 +161,8 @@ contains
        end do
 
     end do
+    endif
+
 
   end subroutine mfix_multi_deposit_cic
 

@@ -130,6 +130,9 @@ extern "C"
         const int* ng
         );
 
+  void mfix_cap_eps(const int* slo, const int* shi, amrex::Real* ep_g);
+
+
     void set_drag_bcs(
         amrex::Real* drag, const int* slo, const int* shi,
 	const int* bc_ilo, const int* bc_ihi,

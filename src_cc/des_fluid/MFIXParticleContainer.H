@@ -141,6 +141,8 @@ public:
                             IArrayBox& bc_klo, IArrayBox& bc_khi,
                             int nghost);
 
+    void CapSolidsVolFrac(amrex::MultiFab& eps);
+
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction
     ///

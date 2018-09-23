@@ -16,6 +16,7 @@ subroutine calc_drag_particle( gp   , gplo, gphi, &
                                np, particles, dx, dy, dz, use_slopes) &
      bind(C, name="calc_drag_particle")
 
+   use amrex_paralleldescriptor_module, only : amrex_pd_ioprocessor
    use amrex_fort_module, only : rt => amrex_real
    use iso_c_binding , only: c_int
    use des_drag_gp_module, only: des_drag_gp
@@ -29,7 +30,7 @@ subroutine calc_drag_particle( gp   , gplo, gphi, &
    integer(c_int), intent(in   ) ::  gp0lo(3), gp0hi(3)
    integer(c_int), intent(in   ) ::    slo(3), shi(3)
    integer(c_int), intent(in   ) ::  np
-   integer(c_int), intent(in   ), value :: use_slopes   
+   integer(c_int), intent(in   ), value :: use_slopes
 
    real(rt)  , intent(in   ) :: &
         vel_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3), &
@@ -56,6 +57,12 @@ subroutine calc_drag_particle( gp   , gplo, gphi, &
    real(rt) :: ux_lo, vy_lo, wz_lo
    real(rt) :: ux_hi, vy_hi, wz_hi
    real(rt) :: plo(3)
+   real(rt) :: max_v1, max_v2
+
+   logical, parameter :: no_interpolation = .true.
+
+   if(no_interpolation .and. amrex_pd_ioprocessor()) &
+        write(*,*) 'WARNING: No interpolation of particle drag force'
 
    plo = zero ! HACK -- This should get passed into routine
 
@@ -84,7 +91,7 @@ subroutine calc_drag_particle( gp   , gplo, gphi, &
       sz_hi = lz - k;  sz_lo = one - sz_hi
 
       ! Fluid velocity at the particle's position.
-      if (use_slopes == 0 ) then 
+      if (use_slopes == 0 ) then
          velfp(1:3) = sx_lo*sy_lo*sz_lo*vel_g(i-1, j-1, k-1,1:3) + &
              &        sx_lo*sy_lo*sz_hi*vel_g(i-1, j-1, k  ,1:3) + &
              &        sx_lo*sy_hi*sz_lo*vel_g(i-1, j  , k-1,1:3) + &
@@ -99,11 +106,11 @@ subroutine calc_drag_particle( gp   , gplo, gphi, &
          block
             integer  :: ic, jc, kc  ! Indeces of the cell containing the particle
             real(rt) :: xc(3)       ! Coordinates of cell center
-            real(rt) :: wx, wy, wz  ! Interpolation weights     
-            
+            real(rt) :: wx, wy, wz  ! Interpolation weights
+
             ic = floor((particles(p) % pos(1) - plo(1))*odx)
             jc = floor((particles(p) % pos(2) - plo(2))*ody)
-            kc = floor((particles(p) % pos(3) - plo(3))*odz)       
+            kc = floor((particles(p) % pos(3) - plo(3))*odz)
 
             xc = plo + [ic,jc,kc]*dx + half*dx ! Assuming that plo is the origin
 
@@ -115,7 +122,7 @@ subroutine calc_drag_particle( gp   , gplo, gphi, &
                  &     + xslopes(i,j,k,1:3)*wx   &
                  &     + yslopes(i,j,k,1:3)*wy   &
                  &     + zslopes(i,j,k,1:3)*wz
-            
+
          end block
 
       end if
@@ -128,6 +135,20 @@ subroutine calc_drag_particle( gp   , gplo, gphi, &
                     sx_hi*sy_lo*sz_hi*(gp(i  , j-1, k  ,1:3) + gp0(i  , j-1, k  ,1:3)) + &
                     sx_hi*sy_hi*sz_lo*(gp(i  , j  , k-1,1:3) + gp0(i  , j  , k-1,1:3)) + &
                     sx_hi*sy_hi*sz_hi*(gp(i  , j  , k  ,1:3) + gp0(i  , j  , k  ,1:3))
+
+
+      ! Use cell center values
+      if(no_interpolation) then
+
+         i = floor((particles(p) % pos(1) - plo(1))*odx)
+         j = floor((particles(p) % pos(2) - plo(2))*ody)
+         k = floor((particles(p) % pos(3) - plo(3))*odz)
+
+         velfp(:) = vel_g(i,j,k,:)
+
+         gradpg(1:3) = gp(i,j,k,:) + gp0(i,j,k,:)
+      endif
+
 
       particles(p) % drag = beta(p)*(velfp - particles(p) % vel) - &
                             gradpg(:) * particles(p) % volume

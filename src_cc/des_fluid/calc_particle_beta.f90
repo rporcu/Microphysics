@@ -17,6 +17,8 @@ subroutine calc_particle_beta ( slo, shi, ep_g, ro_g, vel_g, mu_g, &
    use des_drag_gp_module, only: des_drag_gp
    use particle_mod,      only: particle_t
 
+   use amrex_paralleldescriptor_module, only : amrex_pd_ioprocessor
+
    implicit none
 
    integer(c_int), intent(in   ) :: slo(3),shi(3)
@@ -42,7 +44,13 @@ subroutine calc_particle_beta ( slo, shi, ep_g, ro_g, vel_g, mu_g, &
    real(rt) :: sx_lo, sy_lo, sz_lo
    real(rt) :: sx_hi, sy_hi, sz_hi
    real(rt) :: plo(3)
+   logical, parameter :: no_interpolation = .true.
    !......................................................................!
+
+
+   if(no_interpolation .and. amrex_pd_ioprocessor()) &
+        write(*,*) 'WARNING: No interpolation of gas velocity &
+        &for calculating particle beta'
 
    odx = 1.0d0/dx
    ody = 1.0d0/dy
@@ -78,6 +86,21 @@ subroutine calc_particle_beta ( slo, shi, ep_g, ro_g, vel_g, mu_g, &
                    sx_hi*sy_hi*sz_lo*vel_g(i  , j  , k-1,1:3) + &
                    sx_hi*sy_hi*sz_hi*vel_g(i  , j  , k  ,1:3)
 
+      ! Fluid velocity at the particle's position.
+      velfp(1:3) = vel_g(i,j,k,:)
+
+      ! Use cell center values
+      if(no_interpolation) then
+
+         i = floor((particles(p) % pos(1) - plo(1))*odx)
+         j = floor((particles(p) % pos(2) - plo(2))*ody)
+         k = floor((particles(p) % pos(3) - plo(3))*odz)
+
+         velfp(:) = vel_g(i,j,k,:)
+
+      endif
+
+
       velp(:) = particles(p) % vel
 
       ! Calculate drag coefficient, beta
@@ -91,4 +114,3 @@ subroutine calc_particle_beta ( slo, shi, ep_g, ro_g, vel_g, mu_g, &
    end do
 
 end subroutine calc_particle_beta
-

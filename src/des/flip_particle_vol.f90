@@ -52,7 +52,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
                bc_ilo_type(j,k,1) == PINF_ .or. &
                bc_ilo_type(j,k,1) == MINF_ .or. &
                bc_ilo_type(j,k,1) == POUT_) then
- 
+
                vol(ilo,j,k) = vol(ilo,j,k) + vol(ilo-1,j,k)
                vol(ilo-1,j,k) = 0.d0
 
@@ -157,3 +157,44 @@ subroutine flip_particle_vol(slo, shi, vol, &
   endif
 
 end subroutine flip_particle_vol
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
+!                                                                      C
+!  Subroutine: cap_eps                                                 C
+!                                                                      C
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+subroutine cap_eps(slo, shi, ep_g)  bind(C, name="mfix_cap_eps")
+
+  use amrex_fort_module, only : rt => amrex_real
+  use iso_c_binding , only: c_int
+
+  use amrex_paralleldescriptor_module, only : amrex_pd_ioprocessor
+
+  implicit none
+
+  integer(c_int), intent(in   ) :: slo(3),shi(3)
+
+  real(rt), intent(inout) :: &
+       ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+
+! Local variables
+!--------------------------------------------------------------------//
+  integer(c_int) :: i,j,k
+
+  real(rt), parameter :: max_pack = 0.42_rt
+
+!--------------------------------------------------------------------//
+
+  if(amrex_pd_ioprocessor()) write(*,*) 'WARNING: Applying maximum &
+       &packing volume fraction: ', max_pack
+
+  do k=slo(3),shi(3)
+     do j=slo(2),shi(2)
+        do i=slo(1),shi(1)
+           ep_g(i,j,k) = max(max_pack, ep_g(i,j,k))
+        end do
+     end do
+  enddo
+
+end subroutine cap_eps
