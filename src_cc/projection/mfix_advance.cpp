@@ -807,6 +807,9 @@ mfix_level::mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
 
    }
 
+   fc[0] -> FillBoundary(geom[lev].periodicity());
+   fc[1] -> FillBoundary(geom[lev].periodicity());
+   fc[2] -> FillBoundary(geom[lev].periodicity());
    // We do not fill BCs and halo regions in this routine    
 } 
 
