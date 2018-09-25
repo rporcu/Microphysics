@@ -74,6 +74,7 @@ mfix_level::AllocateArrays (int lev)
 void
 mfix_level::AllocateTempArrays (int lev)
 {
+
     // Div(u)
     trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     trD_g[lev]->setVal(0.);
@@ -112,15 +113,15 @@ mfix_level::AllocateTempArrays (int lev)
     // Arrays to store the solution and rhs for the diffusion solve
     phi_diff[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     rhs_diff[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
- 
+
     // Slopes in x-direction
     xslopes[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
     xslopes[lev] -> setVal(0.);
- 
+
     // Slopes in y-direction
     yslopes[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
     yslopes[lev] -> setVal(0.);
- 
+
     // Slopes in z-direction
     zslopes[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost));
     zslopes[lev] -> setVal(0.);
@@ -190,6 +191,16 @@ mfix_level::AllocateTempArrays (int lev)
 void
 mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)
 {
+
+    const EB2::IndexSpace & ebis = EB2::IndexSpace::top();
+    const EB2::Level & ebis_level  = ebis.getLevel(geom[lev]);
+
+    ebfactory[lev].reset(new EBFArrayBoxFactory( ebis_level,
+                             geom[lev], new_grids, new_dmap,
+                            {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                             m_eb_full_grow_cells}, m_eb_support_level)
+                  );
+
     // ********************************************************************************
     // Cell-based arrays
     // ********************************************************************************
@@ -272,15 +283,18 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
        phi[lev] = std::move(phi_new);
        phi[lev]->setVal(0.);
 
-       std::unique_ptr<MultiFab> bc0_new(new MultiFab(new_grids,new_dmap,1,bcoeff[lev][0]->nGrow()));
+       std::unique_ptr<MultiFab> bc0_new(new MultiFab(new_grids,new_dmap,1,bcoeff[lev][0]->nGrow(),
+                                                     MFInfo(), *ebfactory[lev] ));
        bcoeff[lev][0] = std::move(bc0_new);
        bcoeff[lev][0]->setVal(0.);
 
-       std::unique_ptr<MultiFab> bc1_new(new MultiFab(new_grids,new_dmap,1,bcoeff[lev][1]->nGrow()));
+       std::unique_ptr<MultiFab> bc1_new(new MultiFab(new_grids,new_dmap,1,bcoeff[lev][1]->nGrow(),
+                                                     MFInfo(), *ebfactory[lev] ));
        bcoeff[lev][1] = std::move(bc1_new);
        bcoeff[lev][1]->setVal(0.);
 
-       std::unique_ptr<MultiFab> bc2_new(new MultiFab(new_grids,new_dmap,1,bcoeff[lev][2]->nGrow()));
+       std::unique_ptr<MultiFab> bc2_new(new MultiFab(new_grids,new_dmap,1,bcoeff[lev][2]->nGrow(),
+                                                     MFInfo(), *ebfactory[lev] ));
        bcoeff[lev][2] = std::move(bc2_new);
        bcoeff[lev][2]->setVal(0.);
 
@@ -310,14 +324,15 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
        pp_g_new->FillBoundary(geom[lev].periodicity());
        pp_g[lev] = std::move(pp_g_new);
 
-       std::unique_ptr<MultiFab> phi_new(new MultiFab(new_grids,new_dmap,1,phi[lev]->nGrow()));
+       std::unique_ptr<MultiFab> phi_new(new MultiFab(new_grids,new_dmap,1,phi[lev]->nGrow(),
+                                                      MFInfo(), *ebfactory[lev]));
        phi[lev] = std::move(phi_new);
        phi[lev]->setVal(0.);
 
-       std::unique_ptr<MultiFab> diveu_new(new MultiFab(new_grids,new_dmap,1,diveu[lev]->nGrow()));
+       std::unique_ptr<MultiFab> diveu_new(new MultiFab(new_grids,new_dmap,1,diveu[lev]->nGrow(),
+                                                      MFInfo(), *ebfactory[lev]));
        diveu[lev] = std::move(diveu_new);
        diveu[lev]->setVal(0.);
-
 
        // Cell-centered pressure uses face-based coefficients
        BoxArray x_ba = new_grids;
@@ -369,14 +384,14 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
 
     // Pressure gradients
     ng = gp[lev]->nGrow();
-    std::unique_ptr<MultiFab> gp_new(new MultiFab(new_grids,new_dmap,1,gp[lev]->nGrow()));
+    std::unique_ptr<MultiFab> gp_new(new MultiFab(new_grids,new_dmap,3,gp[lev]->nGrow()));
     gp_new->copy(*gp[lev],0,0,1,ng,ng);
     gp_new->FillBoundary(geom[lev].periodicity());
     gp[lev] = std::move(gp_new);
 
     // Pressure gradients
     ng = gp0[lev]->nGrow();
-    std::unique_ptr<MultiFab> gp0_new(new MultiFab(new_grids,new_dmap,1,gp0[lev]->nGrow()));
+    std::unique_ptr<MultiFab> gp0_new(new MultiFab(new_grids,new_dmap,3,gp0[lev]->nGrow()));
     gp0_new->copy(*gp0[lev],0,0,1,ng,ng);
     gp0_new->FillBoundary(geom[lev].periodicity());
     gp0[lev] = std::move(gp0_new);
