@@ -16,11 +16,15 @@ macro (add_tags_targets )
    endif ()
 
    set (AMREX_SRC_DIR ${AMREX_INSTALL_DIR}/../sourcedir/Src/)
-   set (MFIX_SRC_DIR  ${PROJECT_SOURCE_DIR}/src/)
 
+   if (ENABLE_PROJCC)
+     set (MFIX_SRC_DIR  ${PROJECT_SOURCE_DIR}/src_cc/)
+   else ()
+     set (MFIX_SRC_DIR  ${PROJECT_SOURCE_DIR}/src/)
+   endif ()
+   
    # Add rule to generate TAGS
    # on macOS ctags-exuberant is just ctags
-
    find_program(CTAGS_EXU "ctags-exuberant")
    find_program(CTAGS_CMD "ctags")
 
