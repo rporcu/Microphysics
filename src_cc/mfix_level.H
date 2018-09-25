@@ -64,7 +64,7 @@ public:
 
     void WriteUSER(int lev, Real dt, Real time) const;
 
-    void Regrid(int lev, int nstep);
+    void Regrid (int lev);
 
     void Evolve(int lev, int nstep, int steady_state, Real& dt, Real & prev_dt,
                 Real time, Real stop_time);

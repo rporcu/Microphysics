@@ -7,13 +7,12 @@
 #include <AMReX_Box.H>
 
 void
-mfix_level::Regrid (int base_lev, int nstep)
+mfix_level::Regrid (int base_lev)
 {
     BL_PROFILE_REGION_START("mfix::Regrid()");
 
-    amrex::Print() << "In Regrid at step " << nstep << std::endl;
-
-    if (load_balance_type == "KDTree") {
+    if (load_balance_type == "KDTree")
+    {
         if (solve_dem)
            AMREX_ALWAYS_ASSERT(particle_cost[0] == nullptr);
         if (solve_fluid)
