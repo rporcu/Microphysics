@@ -512,6 +512,8 @@ private:
     std::unique_ptr<LSFactory> level_set;
 
 
+   inline void mfix_update_ebfactory (int a_lev);
+
    
 };
 
