@@ -472,6 +472,25 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     bcoeff[lev][2] = std::move(bc2_new);
     bcoeff[lev][2] -> setVal(0.0);
 
+    // Slopes in x-direction
+    ng = xslopes[lev] -> nGrow();
+    std::unique_ptr<MultiFab> xslopes_new(new  MultiFab(new_grids, new_dmap,xslopes[lev]->nComp(),nghost));
+    xslopes[lev] = std::move(xslopes_new);
+    xslopes[lev] -> setVal(0.);
+
+    // Slopes in y-direction
+    ng = yslopes[lev] -> nGrow();
+    std::unique_ptr<MultiFab> yslopes_new(new  MultiFab(new_grids, new_dmap,yslopes[lev]->nComp(),nghost));
+    yslopes[lev] = std::move(yslopes_new);
+    yslopes[lev] -> setVal(0.);
+
+    // Slopes in z-direction
+    ng = zslopes[lev] -> nGrow();
+    std::unique_ptr<MultiFab> zslopes_new(new  MultiFab(new_grids, new_dmap,zslopes[lev]->nComp(),nghost));
+    zslopes[lev] = std::move(zslopes_new);
+    zslopes[lev] -> setVal(0.);
+    
+
    /****************************************************************************
     * Nodal Arrays                                                             *
     ****************************************************************************/
