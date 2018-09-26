@@ -383,9 +383,8 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     // Old gas velocity
     ng = vel_go[lev]->nGrow();
     std::unique_ptr<MultiFab> vel_go_new(new MultiFab(new_grids,new_dmap,vel_go[lev]->nComp(),ng));
-    vel_g_new->setVal(0.0);
+    vel_go_new->setVal(0.0);
     vel_go_new->copy(*vel_go[lev],0,0,vel_go[lev]->nComp(),0,ng);
-    vel_go_new->FillBoundary(geom[lev].periodicity());
     vel_go[lev] = std::move(vel_go_new);
 
     // Pressure gradients
