@@ -340,19 +340,19 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
        // Cell-centered pressure uses face-based coefficients
        BoxArray x_ba = new_grids;
        x_ba = x_ba.surroundingNodes(0);
-       std::unique_ptr<MultiFab> bc0_new(new MultiFab(x_ba,new_dmap,1,nghost));
+       std::unique_ptr<MultiFab> bc0_new(new MultiFab(x_ba,new_dmap,1,nghost,MFInfo(), *ebfactory[lev]));
        bcoeff[lev][0] = std::move(bc0_new);
        bcoeff[lev][0] -> setVal(0.0);
 
        BoxArray y_ba = new_grids;
        y_ba = y_ba.surroundingNodes(1);
-       std::unique_ptr<MultiFab> bc1_new(new MultiFab(y_ba,new_dmap,1,nghost));
+       std::unique_ptr<MultiFab> bc1_new(new MultiFab(y_ba,new_dmap,1,nghost,MFInfo(), *ebfactory[lev]));
        bcoeff[lev][1] = std::move(bc1_new);
        bcoeff[lev][1] -> setVal(0.0);
 
        BoxArray z_ba = new_grids;
        z_ba = z_ba.surroundingNodes(2);
-       std::unique_ptr<MultiFab> bc2_new(new MultiFab(z_ba,new_dmap,1,nghost));
+       std::unique_ptr<MultiFab> bc2_new(new MultiFab(z_ba,new_dmap,1,nghost,MFInfo(), *ebfactory[lev]));
        bcoeff[lev][2] = std::move(bc2_new);
        bcoeff[lev][2] -> setVal(0.0);
     }
@@ -373,14 +373,16 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
 
     // Gas velocity
     ng = vel_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> vel_g_new(new MultiFab(new_grids,new_dmap,vel_g[lev]->nComp(),ng));
+    std::unique_ptr<MultiFab> vel_g_new(new MultiFab(new_grids,new_dmap,vel_g[lev]->nComp(),ng,
+                                                     MFInfo(), *ebfactory[lev]));
     vel_g_new->setVal(0.0);
     vel_g_new->copy(*vel_g[lev],0,0,vel_g[lev]->nComp(),0,ng);
     vel_g[lev] = std::move(vel_g_new);
 
     // Old gas velocity
     ng = vel_go[lev]->nGrow();
-    std::unique_ptr<MultiFab> vel_go_new(new MultiFab(new_grids,new_dmap,vel_go[lev]->nComp(),ng));
+    std::unique_ptr<MultiFab> vel_go_new(new MultiFab(new_grids,new_dmap,vel_go[lev]->nComp(),ng,
+                                                      MFInfo(), *ebfactory[lev]));
     vel_go_new->setVal(0.0);
     vel_go_new->copy(*vel_go[lev],0,0,vel_go[lev]->nComp(),0,ng);
     vel_go[lev] = std::move(vel_go_new);
@@ -431,12 +433,12 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     x_ba = x_ba.surroundingNodes(0);
 
     // MAC velocity
-    std::unique_ptr<MultiFab> u_mac_new(new MultiFab(x_ba,new_dmap,1,nghost));
+    std::unique_ptr<MultiFab> u_mac_new(new MultiFab(x_ba,new_dmap,1,nghost,MFInfo(), *ebfactory[lev]));
     m_u_mac[lev] = std::move(u_mac_new);
     m_u_mac[lev] -> setVal(0.0);
 
     // Diffusion coefficient on x-faces
-    std::unique_ptr<MultiFab> bc0_new(new MultiFab(x_ba,new_dmap,1,nghost));
+    std::unique_ptr<MultiFab> bc0_new(new MultiFab(x_ba,new_dmap,1,nghost,MFInfo(), *ebfactory[lev]));
     bcoeff_diff[lev][0] = std::move(bc0_new);
     bcoeff_diff[lev][0] -> setVal(0.0);
 
@@ -446,12 +448,12 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     y_ba = y_ba.surroundingNodes(1);
 
     // MAC velocity
-    std::unique_ptr<MultiFab> v_mac_new(new MultiFab(y_ba,new_dmap,1,nghost));
+    std::unique_ptr<MultiFab> v_mac_new(new MultiFab(y_ba,new_dmap,1,nghost,MFInfo(), *ebfactory[lev]));
     m_v_mac[lev] = std::move(v_mac_new);
     m_v_mac[lev] -> setVal(0.0);
 
     // Diffusion coefficient on y-faces
-    std::unique_ptr<MultiFab> bc1_new(new MultiFab(y_ba,new_dmap,1,nghost));
+    std::unique_ptr<MultiFab> bc1_new(new MultiFab(y_ba,new_dmap,1,nghost,MFInfo(), *ebfactory[lev]));
     bcoeff_diff[lev][1] = std::move(bc1_new);
     bcoeff_diff[lev][1] -> setVal(0.0);
 
@@ -461,12 +463,12 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     z_ba = z_ba.surroundingNodes(2);
 
     // MAC velocity
-    std::unique_ptr<MultiFab> w_mac_new(new MultiFab(z_ba,new_dmap,1,nghost));
+    std::unique_ptr<MultiFab> w_mac_new(new MultiFab(z_ba,new_dmap,1,nghost,MFInfo(), *ebfactory[lev]));
     m_w_mac[lev] = std::move(w_mac_new);
     m_w_mac[lev] -> setVal(0.0);
 
     // Diffusion coefficient on z-faces
-    std::unique_ptr<MultiFab> bc2_new(new MultiFab(z_ba,new_dmap,1,nghost));
+    std::unique_ptr<MultiFab> bc2_new(new MultiFab(z_ba,new_dmap,1,nghost,MFInfo(), *ebfactory[lev]));
     bcoeff[lev][2] = std::move(bc2_new);
     bcoeff[lev][2] -> setVal(0.0);
 
