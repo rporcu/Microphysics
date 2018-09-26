@@ -69,11 +69,6 @@ mfix_level::AllocateArrays (int lev)
     // Old velocity
     vel_go[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
     vel_go[lev]->setVal(0.);
-}
-
-void
-mfix_level::AllocateTempArrays (int lev)
-{
 
     // Div(u)
     trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
@@ -185,8 +180,11 @@ mfix_level::AllocateTempArrays (int lev)
 
     m_u_mac[lev]->setVal(0.);
     m_v_mac[lev]->setVal(0.);
-    m_w_mac[lev]->setVal(0.);
+    m_w_mac[lev]->setVal(0.);    
+
+    
 }
+
 
 void
 mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)

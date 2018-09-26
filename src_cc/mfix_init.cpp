@@ -363,11 +363,8 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
     make_eb_geometry(lev);
 
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
-    if (solve_fluid) {
-      AllocateArrays(lev);
-      AllocateTempArrays(lev);
-    }
-
+    if (solve_fluid) 
+       AllocateArrays(lev);
 
     // Allocate the particle data
     if (solve_dem)

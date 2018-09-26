@@ -185,7 +185,7 @@ protected:
     void mfix_calc_drag_particle(int lev);
 
     void AllocateArrays(int lev);
-    void AllocateTempArrays(int lev);
+
     void RegridArrays(int lev, BoxArray& new_grids, DistributionMapping& new_dmap);
 
     void MakeBCArrays();
