@@ -19,13 +19,13 @@ mfix_level::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_
     // //
     if (use_epg_hack)
     {
-    	amrex::Print() << "EP_G initialized with a HACK!!!" << std::endl;
- 	Box domain(geom[lev].Domain());
- 	for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
- 	{
-       	    set_epg( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-       	             domain.loVect (), domain.hiVect () );
-       	}
+      amrex::Print() << "EP_G initialized with a HACK!!!" << std::endl;
+  Box domain(geom[lev].Domain());
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+  {
+            set_epg( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
+                     domain.loVect (), domain.hiVect () );
+        }
     }
 
     Real sum_vol;
@@ -39,15 +39,26 @@ mfix_level::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_
       }
     }
 
+    Real start_fluid = ParallelDescriptor::second();
+
     if (solve_fluid)
     {
+
+
        EvolveFluidProjection(lev,nstep,steady_state,dt,time,stop_time);
        prev_dt = dt;
+
     }
 
     // This returns the drag force on the particle
     if (solve_dem && solve_fluid)
         mfix_calc_drag_particle(lev);
+
+
+    Real end_fluid = ParallelDescriptor::second() - start_fluid;
+    ParallelDescriptor::ReduceRealMax(end_fluid, ParallelDescriptor::IOProcessorNumber());
+
+    Real start_particles = ParallelDescriptor::second();
 
     if (solve_dem)
     {
@@ -55,17 +66,27 @@ mfix_level::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_
                             particle_ebfactory[lev].get(), eb_normals.get(),
                             level_set->get_data(), level_set->get_valid(), level_set->get_ls_ref(),
                             dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io
-	    );
+      );
 
         //  Compute Eulerian velocities in selected regions
         if ( ( avg_vel_int > 0) && ( nstep % avg_vel_int == 0 ) )
-    	    pc -> ComputeAverageVelocities ( lev,
-					     time,
-					     avg_vel_file,
-					     avg_region_x_w, avg_region_x_e,
-					     avg_region_y_s, avg_region_y_n,
-					     avg_region_z_b, avg_region_z_t );
+          pc -> ComputeAverageVelocities ( lev,
+               time,
+               avg_vel_file,
+               avg_region_x_w, avg_region_x_e,
+               avg_region_y_s, avg_region_y_n,
+               avg_region_z_b, avg_region_z_t );
     }
+
+
+    Real end_particles = ParallelDescriptor::second() - start_particles;
+    ParallelDescriptor::ReduceRealMax(end_particles, ParallelDescriptor::IOProcessorNumber());
+
+    if (ParallelDescriptor::IOProcessor()) {
+        std::cout << "   Time per fluid step   " << end_fluid << std::endl;
+        std::cout << "Time per particle step   " << end_particles << std::endl;
+    }
+
     BL_PROFILE_REGION_STOP("mfix::Evolve");
 
     //
@@ -78,9 +99,8 @@ mfix_level::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_
        for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
        {
          set_epg( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-	          domain.loVect (), domain.hiVect () );
-		
+            domain.loVect (), domain.hiVect () );
+
        }
     }
 }
- 
