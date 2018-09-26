@@ -204,47 +204,52 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     // ********************************************************************************
     // Cell-based arrays
     // ********************************************************************************
-
+    //
+    // After calling copy() with dst_ngrow set to ng, we do not need to call
+    // FillBoundary().
+    // 
+    //
+    
     // Void fraction
     int ng = ep_g[lev]->nGrow();
     std::unique_ptr<MultiFab> ep_g_new(new MultiFab(new_grids,new_dmap,1,ng));
-    ep_g_new->copy(*ep_g[lev],0,0,1,ng,ng);
-    ep_g_new->FillBoundary(geom[lev].periodicity());
+    ep_g_new->setVal(1.0);
+    ep_g_new->copy(*ep_g[lev],0,0,1,0,ng);
     ep_g[lev] = std::move(ep_g_new);
 
     // Old void fraction
     ng = ep_go[lev]->nGrow();
     std::unique_ptr<MultiFab> ep_go_new(new MultiFab(new_grids,new_dmap,1,ep_go[lev]->nGrow()));
-    ep_go_new->copy(*ep_go[lev],0,0,1,ng,ng);
-    ep_go_new->FillBoundary(geom[lev].periodicity());
+    ep_go_new->setVal(1.0);
+    ep_go_new->copy(*ep_go[lev],0,0,1,0,ng);
     ep_go[lev] = std::move(ep_go_new);
 
     // Gas density
     ng = ro_g[lev]->nGrow();
     std::unique_ptr<MultiFab> ro_g_new(new MultiFab(new_grids,new_dmap,1,ro_g[lev]->nGrow()));
-    ro_g_new->copy(*ro_g[lev],0,0,1,ng,ng);
-    ro_g_new->FillBoundary(geom[lev].periodicity());
+    ro_g_new->setVal(0.0);
+    ro_g_new->copy(*ro_g[lev],0,0,1,0,ng);
     ro_g[lev] = std::move(ro_g_new);
 
     // Old gas density
     ng = ro_go[lev]->nGrow();
     std::unique_ptr<MultiFab> ro_go_new(new MultiFab(new_grids,new_dmap,1,ro_go[lev]->nGrow()));
+    ro_go_new->setVal(0.0);
     ro_go_new->copy(*ro_go[lev],0,0,1,ng,ng);
-    ro_go_new->FillBoundary(geom[lev].periodicity());
     ro_go[lev] = std::move(ro_go_new);
 
     // Gas bulk density
     ng = rop_g[lev]->nGrow();
     std::unique_ptr<MultiFab> rop_g_new(new MultiFab(new_grids,new_dmap,1,rop_g[lev]->nGrow()));
-    rop_g_new->copy(*rop_g[lev],0,0,1,ng,ng);
-    rop_g_new->FillBoundary(geom[lev].periodicity());
+    rop_g_new->setVal(0.0);
+    rop_g_new->copy(*rop_g[lev],0,0,1,0,ng);
     rop_g[lev] = std::move(rop_g_new);
 
     // Old gas bulk density
     ng = rop_go[lev]->nGrow();
     std::unique_ptr<MultiFab> rop_go_new(new MultiFab(new_grids,new_dmap,1,rop_go[lev]->nGrow()));
-    rop_go_new->copy(*rop_go[lev],0,0,1,ng,ng);
-    rop_go_new->FillBoundary(geom[lev].periodicity());
+    rop_go_new->setVal(0.0);
+    rop_go_new->copy(*rop_go[lev],0,0,1,0,ng);
     rop_go[lev] = std::move(rop_go_new);
 
     if (nodal_pressure)
@@ -252,27 +257,27 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
        const BoxArray & nd_grids = amrex::convert(new_grids, IntVect{1,1,1});
 
        ng = p_g[lev]->nGrow();
-       std::unique_ptr<MultiFab> p_g_new(new MultiFab(nd_grids,new_dmap,1,p_g[lev]->nGrow()));
-       p_g_new->copy(*p_g[lev],0,0,1,ng,ng);
-       p_g_new->FillBoundary(geom[lev].periodicity());
+       std::unique_ptr<MultiFab> p_g_new(new MultiFab(nd_grids,new_dmap,1,ng));
+       p_g_new->setVal(0.0);
+       p_g_new->copy(*p_g[lev],0,0,1,0,ng);
        p_g[lev] = std::move(p_g_new);
 
        ng = p_go[lev]->nGrow();
-       std::unique_ptr<MultiFab> p_go_new(new MultiFab(nd_grids,new_dmap,1,p_go[lev]->nGrow()));
-       p_go_new->copy(*p_go[lev],0,0,1,ng,ng);
-       p_go_new->FillBoundary(geom[lev].periodicity());
+       std::unique_ptr<MultiFab> p_go_new(new MultiFab(nd_grids,new_dmap,1,ng));
+       p_go_new->setVal(0.0);
+       p_go_new->copy(*p_go[lev],0,0,1,0,ng);
        p_go[lev] = std::move(p_go_new);
 
        ng = p0_g[lev]->nGrow();
        std::unique_ptr<MultiFab> p0_g_new(new MultiFab(nd_grids,new_dmap,1,ng));
-       p0_g_new->copy(*p0_g[lev],0,0,1,ng,ng);
-       p0_g_new->FillBoundary(p0_periodicity);
+       p0_g_new->setVal(0.0);
+       p0_g_new->copy(*p0_g[lev],0,0,1,0,ng);
        p0_g[lev] = std::move(p0_g_new);
 
        ng = pp_g[lev]->nGrow();
-       std::unique_ptr<MultiFab> pp_g_new(new MultiFab(nd_grids,new_dmap,1,pp_g[lev]->nGrow()));
-       pp_g_new->copy(*pp_g[lev],0,0,1,ng,ng);
-       pp_g_new->FillBoundary(geom[lev].periodicity());
+       std::unique_ptr<MultiFab> pp_g_new(new MultiFab(nd_grids,new_dmap,1,ng));
+       pp_g_new->FillBoundary(p0_periodicity);
+       pp_g_new->copy(*pp_g[lev],0,0,1,0,ng);
        pp_g[lev] = std::move(pp_g_new);
 
        std::unique_ptr<MultiFab> diveu_new(new MultiFab(nd_grids,new_dmap,1,diveu[lev]->nGrow()));
@@ -301,27 +306,27 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     } else {
 
        ng = p_g[lev]->nGrow();
-       std::unique_ptr<MultiFab> p_g_new(new MultiFab(new_grids,new_dmap,1,p_g[lev]->nGrow()));
-       p_g_new->copy(*p_g[lev],0,0,1,ng,ng);
-       p_g_new->FillBoundary(geom[lev].periodicity());
+       std::unique_ptr<MultiFab> p_g_new(new MultiFab(new_grids,new_dmap,1,ng));
+       p_g_new->setVal(0.0);
+       p_g_new->copy(*p_g[lev],0,0,1,0,ng);
        p_g[lev] = std::move(p_g_new);
 
        ng = p_go[lev]->nGrow();
-       std::unique_ptr<MultiFab> p_go_new(new MultiFab(new_grids,new_dmap,1,p_go[lev]->nGrow()));
-       p_go_new->copy(*p_go[lev],0,0,1,ng,ng);
-       p_go_new->FillBoundary(geom[lev].periodicity());
+       std::unique_ptr<MultiFab> p_go_new(new MultiFab(new_grids,new_dmap,1,ng));
+       p_go_new->setVal(0.0);
+       p_go_new->copy(*p_go[lev],0,0,1,0,ng);
        p_go[lev] = std::move(p_go_new);
 
        ng = p0_g[lev]->nGrow();
-       std::unique_ptr<MultiFab> p0_g_new(new MultiFab(new_grids,new_dmap,1,p0_g[lev]->nGrow()));
-       p0_g_new->copy(*p0_g[lev],0,0,1,ng,ng);
-       p0_g_new->FillBoundary(p0_periodicity);
+       std::unique_ptr<MultiFab> p0_g_new(new MultiFab(new_grids,new_dmap,1,ng));
+       p0_g_new->setVal(0.0);
+       p0_g_new->copy(*p0_g[lev],0,0,1,0,ng);
        p0_g[lev] = std::move(p0_g_new);
 
        ng = pp_g[lev]->nGrow();
-       std::unique_ptr<MultiFab> pp_g_new(new MultiFab(new_grids,new_dmap,1,pp_g[lev]->nGrow()));
-       pp_g_new->copy(*pp_g[lev],0,0,1,ng,ng);
-       pp_g_new->FillBoundary(geom[lev].periodicity());
+       std::unique_ptr<MultiFab> pp_g_new(new MultiFab(new_grids,new_dmap,1,ng));
+       pp_g[lev]->setVal(0.0);
+       pp_g_new->copy(*pp_g[lev],0,0,1,0,ng);
        pp_g[lev] = std::move(pp_g_new);
 
        std::unique_ptr<MultiFab> phi_new(new MultiFab(new_grids,new_dmap,1,phi[lev]->nGrow(),
@@ -356,55 +361,56 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
 
     // Molecular viscosity
     ng = mu_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> mu_g_new(new MultiFab(new_grids,new_dmap,1,mu_g[lev]->nGrow()));
-    mu_g_new->copy(*mu_g[lev],0,0,1,ng,ng);
-    mu_g_new->FillBoundary(geom[lev].periodicity());
+    std::unique_ptr<MultiFab> mu_g_new(new MultiFab(new_grids,new_dmap,1,ng));
+    mu_g_new->setVal(0.0);
+    mu_g_new->copy(*mu_g[lev],0,0,1,0,ng);
     mu_g[lev] = std::move(mu_g_new);
 
     // Lambda
     ng = lambda_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> lambda_g_new(new MultiFab(new_grids,new_dmap,1,lambda_g[lev]->nGrow()));
-    lambda_g_new->copy(*lambda_g[lev],0,0,1,ng,ng);
-    lambda_g_new->FillBoundary(geom[lev].periodicity());
+    std::unique_ptr<MultiFab> lambda_g_new(new MultiFab(new_grids,new_dmap,1,ng));
+    lambda_g_new->setVal(0.0);
+    lambda_g_new->copy(*lambda_g[lev],0,0,1,0,ng);
     lambda_g[lev] = std::move(lambda_g_new);
 
     // Gas velocity
     ng = vel_g[lev]->nGrow();
     std::unique_ptr<MultiFab> vel_g_new(new MultiFab(new_grids,new_dmap,vel_g[lev]->nComp(),ng));
-    vel_g_new->copy(*vel_g[lev],0,0,vel_g[lev]->nComp(),ng,ng);
-    vel_g_new->FillBoundary(geom[lev].periodicity());
+    vel_g_new->setVal(0.0);
+    vel_g_new->copy(*vel_g[lev],0,0,vel_g[lev]->nComp(),0,ng);
     vel_g[lev] = std::move(vel_g_new);
 
     // Old gas velocity
     ng = vel_go[lev]->nGrow();
     std::unique_ptr<MultiFab> vel_go_new(new MultiFab(new_grids,new_dmap,vel_go[lev]->nComp(),ng));
-    vel_go_new->copy(*vel_go[lev],0,0,vel_go[lev]->nComp(),ng,ng);
+    vel_g_new->setVal(0.0);
+    vel_go_new->copy(*vel_go[lev],0,0,vel_go[lev]->nComp(),0,ng);
     vel_go_new->FillBoundary(geom[lev].periodicity());
     vel_go[lev] = std::move(vel_go_new);
 
     // Pressure gradients
     ng = gp[lev]->nGrow();
-    std::unique_ptr<MultiFab> gp_new(new MultiFab(new_grids,new_dmap,3,gp[lev]->nGrow()));
-    gp_new->copy(*gp[lev],0,0,1,ng,ng);
-    gp_new->FillBoundary(geom[lev].periodicity());
+    std::unique_ptr<MultiFab> gp_new(new MultiFab(new_grids,new_dmap,3,ng));
+    gp_new->setVal(0.0);
+    gp_new->copy(*gp[lev],0,0,1,0,ng);
     gp[lev] = std::move(gp_new);
 
     // Pressure gradients
     ng = gp0[lev]->nGrow();
-    std::unique_ptr<MultiFab> gp0_new(new MultiFab(new_grids,new_dmap,3,gp0[lev]->nGrow()));
-    gp0_new->copy(*gp0[lev],0,0,1,ng,ng);
-    gp0_new->FillBoundary(geom[lev].periodicity());
+    std::unique_ptr<MultiFab> gp0_new(new MultiFab(new_grids,new_dmap,3,ng));
+    gp0_new->setVal(0.0);
+    gp0_new->copy(*gp0[lev],0,0,1,0,ng);
     gp0[lev] = std::move(gp0_new);
 
     // Trace(D)
     ng = trD_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> trD_g_new(new MultiFab(new_grids,new_dmap,1,trD_g[lev]->nGrow()));
+    std::unique_ptr<MultiFab> trD_g_new(new MultiFab(new_grids,new_dmap,1,ng));
     trD_g[lev] = std::move(trD_g_new);
     trD_g[lev]->setVal(0.);
 
     // Vorticity
     ng = vort[lev]->nGrow();
-    std::unique_ptr<MultiFab> vort_new(new MultiFab(new_grids,new_dmap,1,vort[lev]->nGrow()));
+    std::unique_ptr<MultiFab> vort_new(new MultiFab(new_grids,new_dmap,1,ng));
     vort[lev] = std::move(vort_new);
     vort[lev]->setVal(0.);
 
@@ -475,10 +481,11 @@ mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new
     const BoxArray & new_nodal_grids = amrex::convert(new_grids, IntVect{1,1,1});
 
     // Level-set
+    // For the level set we set src_nghost to ng as well, even if it's potentially
+    // not totally safe. This way we have the domain ghost cells filled properly.
     ng = ls[lev]->nGrow();
-    std::unique_ptr<MultiFab> ls_new(new MultiFab(new_nodal_grids, new_dmap, 1, ls[lev]->nGrow()));
+    std::unique_ptr<MultiFab> ls_new(new MultiFab(new_nodal_grids, new_dmap, 1, ng ));
     ls_new->copy(*ls[lev],0,0,1,ng,ng);
-    ls_new->FillBoundary(geom[lev].periodicity());
     ls[lev] = std::move(ls_new);
 
 
