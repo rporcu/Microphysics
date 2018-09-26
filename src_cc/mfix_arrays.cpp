@@ -1,8 +1,10 @@
 #include <mfix_level.H>
 
 void
-mfix_level::AllocateArrays (int lev)
+mfix_level::AllocateArrays (int lev)  
 {
+    mfix_update_ebfactory(lev);
+   
     // ********************************************************************************
     // Cell- or node-based arrays
     // ********************************************************************************
@@ -190,14 +192,7 @@ void
 mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)
 {
 
-    const EB2::IndexSpace & ebis = EB2::IndexSpace::top();
-    const EB2::Level & ebis_level  = ebis.getLevel(geom[lev]);
-
-    ebfactory[lev].reset(new EBFArrayBoxFactory( ebis_level,
-                             geom[lev], new_grids, new_dmap,
-                            {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                             m_eb_full_grow_cells}, m_eb_support_level)
-                  );
+    mfix_update_ebfactory(lev);
 
     // ********************************************************************************
     // Cell-based arrays
