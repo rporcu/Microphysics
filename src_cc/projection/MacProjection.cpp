@@ -220,6 +220,10 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       (vel[lev])[1]  = v[lev].get();
       (vel[lev])[2]  = w[lev].get();
 
+      for (int i=0; i<3; ++i)
+         (vel[lev])[i]->FillBoundary( m_amrcore -> Geom(lev).periodicity() );
+      
+
       if (verbose)
       {
          EB_computeDivergence(*m_diveu[lev],
@@ -264,6 +268,9 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    {   
       if (verbose)
       {
+         for (int i=0; i<3; ++i)
+            (vel[lev])[i]->FillBoundary( m_amrcore -> Geom(lev).periodicity() );
+         
          EB_computeDivergence(*m_diveu[lev],
                               GetArrOfConstPtrs(vel[lev]),
                               m_amrcore -> Geom(lev));
