@@ -36,7 +36,7 @@ mfix_level::Regrid (int base_lev)
            // SetBoxArray and SetDistributionMap calls above have re-defined
            // grids and dmap to be the new ones.
            if (solve_fluid && (ba_changed || dm_changed) )
-               RegridArrays(base_lev,grids[base_lev],dmap[base_lev]);
+               RegridArrays(base_lev);
        }
 
        if (solve_fluid)
@@ -88,7 +88,7 @@ mfix_level::Regrid (int base_lev)
                 SetDistributionMap(lev, new_fluid_dm);
 
                 if (dm_changed)
-                    RegridArrays(lev, grids[lev], new_fluid_dm);
+                    RegridArrays(lev);
 
                 fluid_cost[lev].reset(new MultiFab(grids[lev], new_fluid_dm, 1, 0));
                 fluid_cost[lev]->setVal(0.0);
@@ -142,7 +142,7 @@ mfix_level::Regrid (int base_lev)
             SetDistributionMap(base_lev, newdm);
 
             if (solve_fluid && dm_changed)
-                RegridArrays(base_lev, grids[base_lev], newdm);
+                RegridArrays(base_lev);
 
             if (solve_fluid)
             {
