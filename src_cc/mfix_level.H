@@ -64,7 +64,7 @@ public:
 
     void WriteUSER(int lev, Real dt, Real time) const;
 
-    void Regrid(int lev, int nstep);
+    void Regrid (int lev);
 
     void Evolve(int lev, int nstep, int steady_state, Real& dt, Real & prev_dt,
                 Real time, Real stop_time);
@@ -184,9 +184,9 @@ protected:
     void mfix_calc_drag_fluid(int lev);
     void mfix_calc_drag_particle(int lev);
 
-    void AllocateArrays(int lev);
-    void AllocateTempArrays(int lev);
-    void RegridArrays(int lev, BoxArray& new_grids, DistributionMapping& new_dmap);
+    void AllocateArrays (int lev);
+
+    void RegridArrays (int lev);
 
     void MakeBCArrays();
 
@@ -512,6 +512,7 @@ private:
     std::unique_ptr<LSFactory> level_set;
 
 
+    void mfix_update_ebfactory (int a_lev);
    
 };
 
