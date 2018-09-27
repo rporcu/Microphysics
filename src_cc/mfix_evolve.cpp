@@ -41,15 +41,15 @@ mfix_level::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_
 
     Real start_fluid = ParallelDescriptor::second();
 
+    BL_PROFILE_VAR("FLUID SOLVE",fluidSolve);
     if (solve_fluid)
     {
-
-
        EvolveFluidProjection(lev,nstep,steady_state,dt,time,stop_time);
        prev_dt = dt;
-
     }
+    BL_PROFILE_VAR_STOP(fluidSolve);
 
+    
     // This returns the drag force on the particle
     if (solve_dem && solve_fluid)
         mfix_calc_drag_particle(lev);
@@ -60,6 +60,7 @@ mfix_level::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_
 
     Real start_particles = ParallelDescriptor::second();
 
+    BL_PROFILE_VAR("PARTICLES SOLVE",particlesSolve);
     if (solve_dem)
     {
         pc->EvolveParticles(lev, nstep, dt, time,
@@ -77,7 +78,7 @@ mfix_level::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_
                avg_region_y_s, avg_region_y_n,
                avg_region_z_b, avg_region_z_t );
     }
-
+    BL_PROFILE_VAR_STOP(particlesSolve);
 
     Real end_particles = ParallelDescriptor::second() - start_particles;
     ParallelDescriptor::ReduceRealMax(end_particles, ParallelDescriptor::IOProcessorNumber());
