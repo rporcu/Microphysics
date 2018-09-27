@@ -9,7 +9,7 @@ mfix.fixed_dt        = 0
 
 mfix.cfl = 0.5
 
-amr.max_step = 10
+amr.max_step = 100
 #amr.stop_time = 0.20
 
 mfix.explicit_diffusion = 1

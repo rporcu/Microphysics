@@ -35,10 +35,10 @@ amr.max_level = 0
 geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 0       0       0       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
-geometry.prob_hi     = 0.016   0.004   0.004   # hi corner of physical domain
+geometry.prob_hi     = 0.032   0.008   0.008   # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell =  80  20  20
+amr.n_cell = 160  40  40
 
 #! Grids
 #!-----------------------------------------------------------//
@@ -85,11 +85,11 @@ cylinder.internal_flow = true
 cylinder.closed_bottom = true
 cylinder.bottom_offset = 1.0e-8
 
-cylinder.radius  = 0.0018
+cylinder.radius  = 0.0036
 cylinder.height  = -1.
 
 cylinder.direction = 0
-cylinder.center    =  0.008   0.002   0.002
+cylinder.center    =  0.016   0.004   0.004
 
 #_______________________________________________________________________
 # Particle load balancing
