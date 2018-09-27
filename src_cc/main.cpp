@@ -169,12 +169,11 @@ int main (int argc, char* argv[])
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
 
-    if (mfix_level::get_load_balance_type() == "FixedSize" ||
-        mfix_level::get_load_balance_type() == "KnapSack")
-        my_mfix.Regrid(lev,0);
+
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
-    my_mfix.Regrid(lev,nstep);
+    amrex::Print() << "Regridding at step " << nstep << std::endl;
+    my_mfix.Regrid(lev);
 
     my_mfix.PostInit( lev, dt, time, nstep, restart_flag, stop_time, steady_state );
 
@@ -242,7 +241,10 @@ int main (int argc, char* argv[])
                 Real strt_step = ParallelDescriptor::second();
 
                 if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
-                    my_mfix.Regrid(lev,nstep);
+                {
+                   amrex::Print() << "Regridding at step " << nstep << std::endl;
+                   my_mfix.Regrid(lev);
+                }
 
                 my_mfix.Evolve(lev,nstep,steady_state,dt,prev_dt,time,stop_time);
 
