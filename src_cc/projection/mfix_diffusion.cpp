@@ -8,7 +8,7 @@
 
 // For multigrid
 #include <AMReX_MLMG.H>
-#include <AMReX_MLABecLaplacian.H>
+#include <AMReX_MLEBABecLap.H>
 
 //
 // Explicit diffusion
@@ -146,22 +146,9 @@ mfix_level::mfix_diffuse_velocity ( int lev,
 }
 
 //
-// Computes the following decomposition:
-//
-//    u + grad(phi)/ro_g = u*,     where div(eps*u) = 0
-//
-// where u* is a non-div-free velocity field, stored
-// by components in u_g, v_g, and w_g. The resulting div-free
-// velocity field, u, overwrites the value of u* in u_g, v_g, and w_g.
-//
-// phi is an auxiliary function related to the pressure p_g by the relation:
-//
-//     new p_g  = old p_g + phi
-
-//
 // Solve :
 //
-//                  (alpha + div dot beta grad) u = RHS
+//                  (1 - div dot mu grad) u = RHS
 //
 void
 mfix_level::solve_diffusion_equation ( int lev,
@@ -180,7 +167,7 @@ mfix_level::solve_diffusion_equation ( int lev,
    //       (alpha * a - beta * (del dot b grad)) sol
    //
    LPInfo                       info;
-   MLABecLaplacian              matrix(geom, grids, dmap, info);
+   MLEBABecLap matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
    Vector<const MultiFab*>      tmp;
    array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
 
