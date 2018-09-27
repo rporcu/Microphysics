@@ -50,9 +50,16 @@ subroutine set_drag_bcs(drag, dlo, dhi, &
             drag(domlo(1),j,k,2) = drag(domlo(1),j,k,2) + drag(domlo(1)-1,j,k,2)
             drag(domlo(1),j,k,3) = drag(domlo(1),j,k,3) + drag(domlo(1)-1,j,k,3)
         end if
-        drag(domlo(1)-1,j,k,2) = 1.d200
-        drag(domlo(1)-1,j,k,3) = 1.d200
      end do
+     end do
+  endif
+
+  if (dlo(1).lt.domlo(1)) then
+     do k = dlo(3), dhi(3)
+        do j = dlo(2), dhi(2)
+           drag(domlo(1)-1,j,k,2) = 1.d200
+           drag(domlo(1)-1,j,k,3) = 1.d200
+        end do
      end do
   endif
 
@@ -63,9 +70,16 @@ subroutine set_drag_bcs(drag, dlo, dhi, &
             drag(domhi(1),j,k,2) = drag(domhi(1),j,k,2) + drag(domhi(1)+1,j,k,2)
             drag(domhi(1),j,k,3) = drag(domhi(1),j,k,3) + drag(domhi(1)+1,j,k,3)
         end if
-        drag(domhi(1)+1,j,k,2) = 1.d200
-        drag(domhi(1)+1,j,k,3) = 1.d200
      end do
+     end do
+  endif
+
+  if (dhi(1).gt.domhi(1)+1) then
+     do k = dlo(3), dhi(3)
+        do j = dlo(2), dhi(2)
+           drag(domhi(1)+1,j,k,2) = 1.d200
+           drag(domhi(1)+1,j,k,3) = 1.d200
+        end do
      end do
   endif
 
@@ -76,9 +90,16 @@ subroutine set_drag_bcs(drag, dlo, dhi, &
             drag(i,domlo(2),k,1) = drag(i,domlo(2),k,1) + drag(i,domlo(2)-1,k,1)
             drag(i,domlo(2),k,3) = drag(i,domlo(2),k,3) + drag(i,domlo(2)-1,k,3)
         end if
-        drag(i,domlo(2)-1,k,1) = 1.d200
-        drag(i,domlo(2)-1,k,3) = 1.d200
      end do
+     end do
+  endif
+
+  if (dlo(2).lt.domlo(2)) then
+     do k = dlo(3), dhi(3)
+        do i = dlo(1), dhi(1)
+           drag(i,domlo(2)-1,k,1) = 1.d200
+           drag(i,domlo(2)-1,k,3) = 1.d200
+        end do
      end do
   endif
 
@@ -89,9 +110,16 @@ subroutine set_drag_bcs(drag, dlo, dhi, &
             drag(i,domhi(2),k,1) = drag(i,domhi(2),k,1) + drag(i,domhi(2)+1,k,1)
             drag(i,domhi(2),k,3) = drag(i,domhi(2),k,3) + drag(i,domhi(2)+1,k,3)
         end if
-        drag(i,domhi(2)+1,k,1) = 1.d200
-        drag(i,domhi(2)+1,k,3) = 1.d200
      end do
+     end do
+  endif
+
+  if (dhi(2).gt.domhi(2)+1) then
+     do k = dlo(3), dhi(3)
+        do i = dlo(1), dhi(1)
+           drag(i,domhi(2)+1,k,1) = 1.d200
+           drag(i,domhi(2)+1,k,3) = 1.d200
+        end do
      end do
   endif
 
@@ -102,12 +130,18 @@ subroutine set_drag_bcs(drag, dlo, dhi, &
             drag(i,j,domlo(3),1) = drag(i,j,domlo(3),1) + drag(i,j,domlo(3)-1,1)
             drag(i,j,domlo(3),2) = drag(i,j,domlo(3),2) + drag(i,j,domlo(3)-1,2)
         end if
-        drag(i,j,domlo(3)-1,1) = 1.d200
-        drag(i,j,domlo(3)-1,2) = 1.d200
      end do
      end do
   endif
 
+  if (dlo(3).lt.domlo(3)) then
+     do j = dlo(2), dhi(2)
+        do i = dlo(1), dhi(1)
+           drag(i,j,domlo(3)-1,1) = 1.d200
+           drag(i,j,domlo(3)-1,2) = 1.d200
+        end do
+     end do
+  endif
 
   if (dhi(3).ge.domhi(3)+1) then
      do j = dlo(2), dhi(2)
@@ -116,10 +150,16 @@ subroutine set_drag_bcs(drag, dlo, dhi, &
             drag(i,j,domhi(3),1) = drag(i,j,domhi(3),1) + drag(i,j,domhi(3)+1,1)
             drag(i,j,domhi(3),2) = drag(i,j,domhi(3),2) + drag(i,j,domhi(3)+1,2)
         end if
-        drag(i,j,domhi(3)+1,1) = 1.d200
-        drag(i,j,domhi(3)+1,2) = 1.d200
      end do
      end do
-  endif 
+  endif
 
+  if (dhi(3).gt.domhi(3)+1) then
+     do j = dlo(2), dhi(2)
+        do i = dlo(1), dhi(1)
+           drag(i,j,domhi(3)+1,1) = 1.d200
+           drag(i,j,domhi(3)+1,2) = 1.d200
+        end do
+     end do
+  endif
 end subroutine set_drag_bcs
