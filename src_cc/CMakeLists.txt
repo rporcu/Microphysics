@@ -7,7 +7,7 @@
 # to the source file.
 #
 set ( MFIX_Fortran_MOD_PATH ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mod )
-set ( MFIX_INCLUDE_PATHS  ${PROJECT_SOURCE_DIR}/src/include ${MFIX_Fortran_MOD_PATH})
+set ( MFIX_INCLUDE_PATHS  ${PROJECT_SOURCE_DIR}/src_staggered/include ${MFIX_Fortran_MOD_PATH})
 
 macro ( add_sources )
   foreach ( item IN ITEMS ${ARGN} )
@@ -79,15 +79,14 @@ include ( projection/CMakeLists.txt )
 include ( setup/CMakeLists.txt )
 
 #
-# Add folders from src ( this is the part of code base in commons between
-# src and src_cc )
+# Add folders from src_staggered ( this is the part of code base in commons between
+# src_staggered and src_cc )
 #
-set ( SRCDIR ${PROJECT_SOURCE_DIR}/src )
+set ( SRCDIR ${PROJECT_SOURCE_DIR}/src_staggered )
 
-include ( ${SRCDIR}/check_data/CMakeLists.txt )
-include ( ${SRCDIR}/mods/CMakeLists.txt )
-include ( ${SRCDIR}/usr/CMakeLists.txt )
-
+include ( ${PROJECT_SOURCE_DIR}/check_data/CMakeLists.txt )
+include ( ${PROJECT_SOURCE_DIR}/mods/CMakeLists.txt )
+include ( ${PROJECT_SOURCE_DIR}/usr/CMakeLists.txt )
 include ( ${PROJECT_SOURCE_DIR}/src_des/CMakeLists.txt )
 include ( ${PROJECT_SOURCE_DIR}/src_eb/CMakeLists.txt )
 

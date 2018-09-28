@@ -15,13 +15,11 @@ Bdirs 	+= src_cc/diffusion
 Bdirs 	+= src_cc/projection
 Bdirs 	+= src_cc/setup
 
+Bdirs 	+= check_data
+Bdirs 	+= mods
 Bdirs 	+= src_des
 Bdirs 	+= src_eb
-
-#NOTE: these are in src not src_cc
-Bdirs 	+= src/check_data
-Bdirs 	+= src/mods
-Bdirs 	+= src/usr
+Bdirs 	+= usr
 
 Bpack	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))

@@ -55,7 +55,7 @@ add_sources ( zero_wall_norm_vel.f90 )
 #
 # Fortran Modules
 #
-include ( mods/CMakeLists.txt )
+include ( ../mods/CMakeLists.txt )
 
 #
 # Particle/fluid
@@ -65,7 +65,7 @@ include ( des_fluid/CMakeLists.txt )
 #
 # Data checks
 #
-include ( check_data/CMakeLists.txt )
+include ( ../check_data/CMakeLists.txt )
 
 #
 # I/O routines
@@ -90,7 +90,7 @@ include ( simple/CMakeLists.txt )
 #
 # Users hooks
 #
-include ( usr/CMakeLists.txt )
+include ( ../usr/CMakeLists.txt )
 
 #
 # EB routines

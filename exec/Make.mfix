@@ -8,17 +8,18 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
 #These are the directories in mfix
 
-Bdirs 	:= src
-Bdirs 	+= src/check_data
-Bdirs 	+= src/des_fluid
-Bdirs 	+= src/io
-Bdirs 	+= src/mods
-Bdirs 	+= src/projection
-Bdirs 	+= src/setup
-Bdirs 	+= src/simple
-Bdirs 	+= src/usr
+Bdirs 	:= src_staggered
+Bdirs 	+= src_staggered/des_fluid
+Bdirs 	+= src_staggered/io
+Bdirs 	+= src_staggered/projection
+Bdirs 	+= src_staggered/setup
+Bdirs 	+= src_staggered/simple
+
 Bdirs 	+= src_des
 Bdirs 	+= src_eb
+Bdirs 	+= check_data
+Bdirs 	+= mods
+Bdirs 	+= usr
 
 Bpack	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))
@@ -27,8 +28,8 @@ include $(Bpack)
 INCLUDE_LOCATIONS += $(Blocs)
 VPATH_LOCATIONS   += $(Blocs)
 
-INCLUDE_LOCATIONS += $(TOP)/src/include
-VPATH_LOCATIONS   += $(TOP)/src/include
+INCLUDE_LOCATIONS += $(TOP)/src_staggered/include
+VPATH_LOCATIONS   += $(TOP)/src_staggered/include
 
 #These are the directories in AMReX
 
