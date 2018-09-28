@@ -244,7 +244,7 @@ contains
                if ( i == domlo(1) ) then
                   jlop = jhip
                   jlom = jhim
-               else if ( i == domlo(1)+1 ) then
+               else if ( i == domhi(1)+1 ) then
                   jhip = jlop
                   jhim = jlom 
                end if
@@ -268,7 +268,7 @@ contains
                if ( i == domlo(1) ) then
                   klop = khip
                   klom = khim
-               else if ( i == domlo(1)+1 ) then
+               else if ( i == domhi(1)+1 ) then
                   khip = klop
                   khim = klom 
                end if
@@ -372,7 +372,7 @@ contains
                if ( j == domlo(2) ) then
                   ilop = ihip
                   ilom = ihim
-               else if ( j == domlo(2)+1 ) then
+               else if ( j == domhi(2)+1 ) then
                   ihip = ilop
                   ihim = ilom 
                end if
@@ -396,7 +396,7 @@ contains
                if ( j == domlo(2) ) then
                   klop = khip
                   klom = khim
-               else if ( j == domlo(2)+1 ) then
+               else if ( j == domhi(2)+1 ) then
                   khip = klop
                   khim = klom 
                end if
@@ -503,7 +503,7 @@ contains
                if ( k == domlo(3) ) then
                   ilop = ihip
                   ilom = ihim
-               else if ( k == domlo(3)+1 ) then
+               else if ( k == domhi(3)+1 ) then
                   ihip = ilop
                   ihim = ilom 
                end if
@@ -527,7 +527,7 @@ contains
                if ( k == domlo(3) ) then
                   jlop = jhip
                   jlom = jhim
-               else if ( k == domlo(3)+1 ) then
+               else if ( k == domhi(3)+1 ) then
                   jhip = jlop
                   jhim = jlom 
                end if
