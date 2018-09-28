@@ -44,6 +44,8 @@ module param
       real(rt), parameter :: one  = 1.0d0
       real(rt), parameter :: two  = 2.0d0
 
+      real(rt), parameter :: my_huge  = 1.d200
+
       interface is_defined
          module procedure is_defined_db
          module procedure is_defined_i

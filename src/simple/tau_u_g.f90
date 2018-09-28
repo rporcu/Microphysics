@@ -43,7 +43,7 @@ contains
 
 ! Modules
 !---------------------------------------------------------------------//
-      use functions, only: avg, avg_h
+      use avg_functions, only: avg, avg_h
 
       implicit none
 

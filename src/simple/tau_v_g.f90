@@ -39,7 +39,7 @@ contains
    subroutine calc_tau_v_g(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
          lTAU_v_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
 
-      use functions, only: avg, avg_h
+      use avg_functions, only: avg, avg_h
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)

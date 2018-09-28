@@ -43,17 +43,21 @@ module check_bc_geometry_module
 !---------------------------------------------------------------------//
 ! loop/variable indices
       integer :: BCV, I
-! Error flag
+
+      ! Error flag
       logical :: RECOGNIZED_BC_TYPE
-! Total number of valid BC types
-      integer, PARAMETER :: DIM_BCTYPE = 12
-! Valid boundary condition types
+
+      ! Total number of valid BC types
+      integer, PARAMETER :: DIM_BCTYPE = 14
+
+      ! Valid boundary condition types
       CHARACTER(LEN=16), DIMENSION(1:DIM_BCTYPE) ::VALID_BC_TYPE = (/&
            'MASS_INFLOW     ', 'MI              ',&
            'P_INFLOW        ', 'PI              ',&
            'P_OUTFLOW       ', 'PO              ',&
            'FREE_SLIP_WALL  ', 'FSW             ',&
            'NO_SLIP_WALL    ', 'NSW             ',&
+           'IGNORE          ', 'IG              ',&
            'PAR_SLIP_WALL   ', 'PSW             '/)
 !......................................................................!
 

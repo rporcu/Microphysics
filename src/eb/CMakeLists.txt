@@ -1,3 +1,15 @@
 add_sources ( mfix_eb.cpp )
-add_sources ( get_eb_walls.f90 )
+add_sources ( mfix_eb_box.cpp )
+add_sources ( mfix_eb_cylinder.cpp )
+add_sources ( mfix_eb_cyclone.cpp )
+add_sources ( mfix_eb_hopper.cpp )
+add_sources ( mfix_eb_regular.cpp )
+add_sources ( mfix_eb_general.cpp )
 add_sources ( mfix_eb_F.H )
+
+add_sources ( mfix_eb_if.H )
+add_sources ( get_walls.cpp )
+add_sources ( get_eb_walls.f90 )
+
+add_sources ( eb_interpolation_mod.f90 )
+add_sources ( writeEBsurface.cpp )

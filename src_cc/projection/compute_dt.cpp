@@ -2,18 +2,18 @@
 #include <mfix_level.H>
 
 void
-mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state, Real& dt, int nodal_pressure)
+mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state, Real& dt)
 {
     // DT is always computed even for fixed dt, so we can
     // issue a warning if fixed dt does not satisfy CFL condition.
     Real dt_new = dt;
 
     // Compute dt for this time step
-    Real umax  = vel_g[lev] -> norm0 (0);
-    Real vmax  = vel_g[lev] -> norm0 (1);
-    Real wmax  = vel_g[lev] -> norm0 (2);
-    Real romin = rop_g[lev] -> min   (0);
-    Real mumax =  mu_g[lev] -> max   (0);
+    Real umax  = mfix_norm0( vel_g, lev, 0 );
+    Real vmax  = mfix_norm0( vel_g, lev, 1 );
+    Real wmax  = mfix_norm0( vel_g, lev, 2 );
+    Real romin = mfix_norm0( rop_g, lev, 0 );
+    Real mumax = mfix_norm0( mu_g,  lev, 0 );
     
     Real gradp0max[3];
 
@@ -38,11 +38,14 @@ mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state
 
     if ( fixed_dt )
     {
-        if ( dt_new < dt )
-            amrex::Print() << "WARNING: current dt does not satisfy CFL condition: "
-                           << "min dt required = " << dt_new
-                           << " <  current dt = "  << dt
+        if ( dt_new < dt && cfl > 0)
+        {
+            amrex::Print() << "WARNING: fixed dt does not satisfy CFL condition: "
+                           << " fixed dt = "  << dt
+                           << " > dt based on cfl = " << dt_new
                            << endl;
+            amrex::Abort ("Fixed dt is too large for fluid solve");
+        }
     }
     else
     {

@@ -28,7 +28,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine check_bc_mass_inflow(m_tot, skip, bcv)
 
-    use bc,        only: bc_ep_g, bc_p_g, bc_ep_s, bc_massflow_g
+    use bc,        only: bc_ep_g, bc_ep_s
     use param    , only: dim_m
     use param,    only: equal
 

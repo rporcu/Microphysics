@@ -80,7 +80,7 @@ end subroutine construct_gradp
 
 subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi, &
      & bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,               &
-     & domlo, domhi, ng ) bind(C) 
+     & domlo, domhi, ng ) bind(C)
 
    use amrex_fort_module,  only: ar => amrex_real
    use iso_c_binding ,     only: c_int
@@ -100,7 +100,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
    ! Number of ghost nodes
    integer(c_int), intent(in   ) :: ng
-   
+
    ! BCs type
    integer(c_int), intent(in   ) :: &
         bct_ilo(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
@@ -127,15 +127,15 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
    nrgt = max(0,shi(1)-domhi(1))
    ntop = max(0,shi(2)-domhi(2))
    nup  = max(0,shi(3)-domhi(3))
-   
+
    if (nlft .gt. 0) then
       do k = slo(3), shi(3)
          do j = slo(2), shi(2)
 
             select case (bct_ilo(j,k,1))
-               
-            case ( pinf_, pout_) 
-               
+
+            case ( pinf_, pout_)
+
                gpx(ulo(1):domlo(1)-1,j,k) = huge(1.0_rt) ! Make sure we never use this
                gpy(vlo(1):domlo(1)-1,j,k) = zero
                gpz(wlo(1):domlo(1)-1,j,k) = zero
@@ -146,33 +146,33 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
                gpy(vlo(1):domlo(1)-1,j,k) = zero
                gpz(wlo(1):domlo(1)-1,j,k) = zero
 
-            case ( nsw_) 
+            case ( nsw_)
 
                gpx(ulo(1):domlo(1)  ,j,k) =  zero
                gpy(vlo(1):domlo(1)-1,j,k) = -gpy(domlo(1),j,k)
                gpz(wlo(1):domlo(1)-1,j,k) = -gpz(domlo(1),j,k)
 
             case ( fsw_)
-               
+
                gpx(ulo(1):domlo(1)  ,j,k) = zero
                gpy(vlo(1):domlo(1)-1,j,k) = gpy(domlo(1),j,k)
                gpz(wlo(1):domlo(1)-1,j,k) = gpz(domlo(1),j,k)
 
             end select
-            
+
          end do
       end do
    endif
 
    if (nrgt .gt. 0) then
-      
+
       do k = slo(3),shi(3)
          do j = slo(2),shi(2)
-            
+
             select case ( bct_ihi(j,k,1) )
 
             case ( pinf_, pout_ )
-               
+
                gpx(domhi(1)+2:uhi(1),j,k) =  huge(1.0_rt) ! Make sure we never use this
                gpy(domhi(1)+1:vhi(1),j,k) =  gpy(domhi(1)  ,j,k)
                gpz(domhi(1)+1:whi(1),j,k) =  gpz(domhi(1)  ,j,k)
@@ -183,13 +183,13 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
                gpy(domhi(1)+1:vhi(1),j,k) = zero
                gpz(domhi(1)+1:whi(1),j,k) = zero
 
-            case ( nsw_ ) 
+            case ( nsw_ )
 
                gpx(domhi(1)+1:uhi(1),j,k) =  zero
                gpy(domhi(1)+1:vhi(1),j,k) = -gpy(domhi(1),j,k)
                gpz(domhi(1)+1:whi(1),j,k) = -gpz(domhi(1),j,k)
 
-            case ( fsw_ ) 
+            case ( fsw_ )
 
                gpx(domhi(1)+1:uhi(1),j,k) = zero
                gpy(domhi(1)+1:vhi(1),j,k) = gpy(domhi(1),j,k)
@@ -202,16 +202,16 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
    endif
 
    if (nbot .gt. 0) then
-      
+
       do k = slo(3), shi(3)
          do i = slo(1), shi(1)
 
             select case ( bct_jlo(i,k,1) )
 
-            case ( pinf_, pout_) 
+            case ( pinf_, pout_)
 
                gpx(i,ulo(2):domlo(2)-1,k) = zero
-               gpy(i,vlo(2):domlo(2)-1,k) =huge(1.0_rt) ! Make sure we never use this  
+               gpy(i,vlo(2):domlo(2)-1,k) =huge(1.0_rt) ! Make sure we never use this
                gpz(i,wlo(2):domlo(2)-1,k) = zero
 
             case ( minf_ )
@@ -246,18 +246,18 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
             select case ( bct_jhi(i,k,1) )
 
             case ( pinf_, pout_ )
-               
+
                gpx(i,domhi(2)+1:uhi(2),k) = zero
                gpy(i,domhi(2)+2:vhi(2),k) = huge(1.0_rt) ! Make sure we never use this
                gpz(i,domhi(2)+1:whi(2),k) = zero
 
-            case ( minf_) 
+            case ( minf_)
 
                gpx(i,domhi(2)+1:uhi(2),k) = zero
                gpy(i,domhi(2)+1       ,k) = gpy(i,domhi(2),k)
                gpz(i,domhi(2)+1:whi(2),k) = zero
 
-            case ( nsw_) 
+            case ( nsw_)
 
                gpx(i,domhi(2)+1:uhi(2),k) = -gpx(i,domhi(2),k)
                gpy(i,domhi(2)+1:vhi(2),k) =  zero
@@ -281,7 +281,7 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
 
             select case (bct_klo(i,j,1))
 
-            case ( pinf_, pout_ ) 
+            case ( pinf_, pout_ )
 
                gpx(i,j,ulo(3):domlo(3)-1) = zero
                gpy(i,j,vlo(3):domlo(3)-1) = zero
@@ -299,12 +299,12 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
                gpy(i,j,vlo(3):domlo(3)-1) = -gpy(i,j,domlo(3))
                gpz(i,j,wlo(3):domlo(3)  ) =  zero
 
-            case ( fsw_ ) 
+            case ( fsw_ )
 
                gpx(i,j,ulo(3):domlo(3)-1) = gpx(i,j,domlo(3))
                gpy(i,j,vlo(3):domlo(3)-1) = gpy(i,j,domlo(3))
                gpz(i,j,wlo(3):domlo(3)  ) = zero
-               
+
             end select
          end do
       end do
@@ -318,24 +318,24 @@ subroutine set_gradp_bcs ( slo, shi, gpx, ulo, uhi, gpy, vlo, vhi, gpz, wlo, whi
             select case ( bct_khi(i,j,1) )
 
             case ( pinf_, pout_ )
-               
+
                gpx(i,j,domhi(3)+1:uhi(3)) = zero
                gpy(i,j,domhi(3)+1:vhi(3)) = zero
                gpz(i,j,domhi(3)+2:whi(3)) = huge(1.0_rt) ! Make sure we never use this
-             
-            case ( minf_ ) 
+
+            case ( minf_ )
 
                gpx(i,j,domhi(3)+1:uhi(3)) = zero
                gpy(i,j,domhi(3)+1:vhi(3)) = zero
                gpz(i,j,domhi(3)+1       ) = gpz(i,j,domhi(3))
 
-            case ( nsw_ ) 
+            case ( nsw_ )
 
                gpx(i,j,domhi(3)+1:uhi(3)) = -gpx(i,j,domhi(3))
                gpy(i,j,domhi(3)+1:vhi(3)) = -gpy(i,j,domhi(3))
                gpz(i,j,domhi(3)+1:whi(3)) =  zero
 
-            case ( fsw_ ) 
+            case ( fsw_ )
 
                gpx(i,j,domhi(3)+1:uhi(3)) = gpx(i,j,domhi(3))
                gpy(i,j,domhi(3)+1:vhi(3)) = gpy(i,j,domhi(3))

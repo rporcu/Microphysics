@@ -62,9 +62,6 @@ contains
     ! Clear the error manager
     call finl_err_msg
 
-1000 format('Error 1000: Required input not specified: ',A,/'Please ',&
-          'correct the input deck.')
-
 1001 format('Error 1001: Illegal or unknown input: ',A,' = ',A,/      &
           'Please correct the input deck.')
 

@@ -56,12 +56,7 @@ MODULE INIT_NAMELIST_MODULE
       use param, only: undefined, undefined_c
       use param, only: dim_usr
 
-      IMPLICIT NONE
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! loop counters
-      integer :: LC
+      implicit none
 
 !#####################################################################!
 !                             Run Control                             !
@@ -384,6 +379,13 @@ MODULE INIT_NAMELIST_MODULE
       ic_ro_s_min(:,:) = undefined
       ic_ro_s_max(:,:) = undefined
 
+!<keyword category="Initial Condition" required="false">
+!  <description>Initial z-component of solids-phase velocity in the IC region.</description>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
+!  <valid value='HCP'    note='Hexagonal Close Pack'/>
+!  <valid value='RANDOM' note='Random Fill -- requires EPs < 30%'/>
+      ic_pack_type = 'HCP'
+!</keyword>
 
 !#####################################################################!
 !                        Boundary Conditions                          !

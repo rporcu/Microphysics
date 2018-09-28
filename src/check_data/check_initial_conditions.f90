@@ -199,8 +199,7 @@ contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
    subroutine check_ic_gas_phase(ICV)
 
-      use fld_const, only: ro_g0
-      use ic,        only: IC_P_g, IC_U_g, IC_V_g, IC_W_g
+      use ic,        only: ic_u_g, ic_v_g, ic_w_g
 
       integer, intent(in) :: ICV
 

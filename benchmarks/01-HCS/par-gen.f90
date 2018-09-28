@@ -361,6 +361,7 @@ contains
   pinc = 0
   np = 0
   fails = 0
+  meanVel = 0.
   do while(np < pc)
 
      call new_pos(lo, hi, pc, problo, probhi, dx, np, pos, pinc, pbin, fails)

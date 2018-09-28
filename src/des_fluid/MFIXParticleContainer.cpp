@@ -192,69 +192,55 @@ void MFIXParticleContainer::InitParticlesAuto(int lev)
 
 }
 
+void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
+        const MultiFab * ls_phi, const iMultiFab * ls_valid, int ls_refinement) {
 
-void MFIXParticleContainer::RemoveOutOfRange(int lev, EBFArrayBoxFactory * ebfactory)
-{
     // Only call the routine for wall collisions if we actually have walls
-    if (ebfactory != NULL)
-    {
+    if (ebfactory != NULL) {
+
         Box domain(Geom(lev).Domain());
-        const Real* dx = Geom(lev).CellSize();
+        const Real * dx = Geom(lev).CellSize();
         MultiFab dummy;
-        dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), *ebfactory);
+        dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                     1, 0, MFInfo(), * ebfactory);
 
-        std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
-        const MultiCutFab* bndrycent;
-
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-        {
+        for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti) {
             // Real particles
             const int nrp = NumberOfParticles(pti);
 
-            void* particles  = pti.GetArrayOfStructs().data();
+            void * particles  = pti.GetArrayOfStructs().data();
 
-            const auto& sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
-            const auto& flag = sfab.getEBCellFlagFab();
+            const auto & sfab = static_cast <EBFArrayBox const &> (dummy[pti]);
+            const auto & flag = sfab.getEBCellFlagFab();
 
-            areafrac  =  ebfactory->getAreaFrac();
-            bndrycent = &(ebfactory->getBndryCent());
-
-            const Box& bx = pti.tilebox();
+            const Box & bx = pti.tilebox();
 
             // Remove particles outside of or touching the walls
-            if (flag.getType(bx) == FabType::covered)
-            {
-                for (auto& p: pti.GetArrayOfStructs())
+            if (flag.getType(bx) == FabType::covered) {
+
+                for (auto & p: pti.GetArrayOfStructs())
                     p.id() = -1;
-            }
-            else if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
-            {
-                rm_wall_collisions (particles, &nrp, flag.dataPtr(), flag.loVect(), flag.hiVect(),
-                        (*bndrycent)[pti].dataPtr(),
-                        (*bndrycent)[pti].loVect(), (*bndrycent)[pti].hiVect(),
-                        (*areafrac[0])[pti].dataPtr(),
-                        (*areafrac[0])[pti].loVect(), (*areafrac[0])[pti].hiVect(),
-                        (*areafrac[1])[pti].dataPtr(),
-                        (*areafrac[1])[pti].loVect(), (*areafrac[1])[pti].hiVect(),
-                        (*areafrac[2])[pti].dataPtr(),
-                        (*areafrac[2])[pti].loVect(), (*areafrac[2])[pti].hiVect(),
-                        dx);
+
+            } else if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued) {
+                rm_wall_collisions(particles, & nrp,
+                                   BL_TO_FORTRAN_3D((* ls_valid)[pti]),
+                                   BL_TO_FORTRAN_3D((* ls_phi)[pti]),
+                                   dx, & ls_refinement);
             }
         }
+
         Redistribute();
 
         long fin_np = 0;
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+        for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti) {
             long np = pti.numParticles();
             fin_np += np;
         }
 
         ParallelDescriptor::ReduceLongSum(fin_np,ParallelDescriptor::IOProcessorNumber());
         amrex::Print() << "Final number of particles: " << fin_np << std::endl;
-
     }
 }
-
 
 void MFIXParticleContainer::PrintParticleCounts() {
     const int lev = 0;
@@ -579,19 +565,19 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                     // Calculate forces and torques from particle-wall collisions
                     BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-                    if(legacy__eb_collisions){
+                    if(legacy__eb_collisions) {
                         calc_wall_collisions(particles, & ntot, & nrp,
-                                tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                BL_TO_FORTRAN_3D(flag),
-                                BL_TO_FORTRAN_3D((* eb_normals)[pti]),
-                                BL_TO_FORTRAN_3D((* bndrycent)[pti]),
-                                dx);
+                                             tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                             BL_TO_FORTRAN_3D(flag),
+                                             BL_TO_FORTRAN_3D((* eb_normals)[pti]),
+                                             BL_TO_FORTRAN_3D((* bndrycent)[pti]),
+                                             dx);
                     } else {
                         calc_wall_collisions_ls(particles, & ntot, & nrp,
-                                tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                BL_TO_FORTRAN_3D((* ls_valid)[pti]),
-                                BL_TO_FORTRAN_3D((* ls_phi)[pti]),
-                                dx, & ls_refinement);
+                                                tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                                BL_TO_FORTRAN_3D((* ls_valid)[pti]),
+                                                BL_TO_FORTRAN_3D((* ls_phi)[pti]),
+                                                dx, & ls_refinement);
                     }
 
                     // Debugging: copy data from the fc (all forces) vector to the
@@ -705,13 +691,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             RealVect max_vel = GetMaxVelocity(lev);
             Vector<RealVect> max_forces = GetMaxForces(lev);
 
-            const Real * dx = Geom(0).CellSize();
+            const Real * dx_crse = Geom(0).CellSize();
             amrex::Print() << "Maximum distance traveled:" << std::endl
                 <<  "x= " << max_vel[0] * dt
                 << " y= " << max_vel[1] * dt
                 << " z= " << max_vel[2] * dt
                 << " and note that "
-                << " dx= " << dx[0] << std::endl;
+                << " dx= " << dx_crse[0] << std::endl;
 
             amrex::Print() << "Maximum particle-particle (pp) and particle-wall (pw) forces:" << std::endl
                 <<  "ppx= " << max_forces[0][0]
@@ -756,13 +742,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         RealVect max_vel = GetMaxVelocity(lev);
         Vector<RealVect> max_forces = GetMaxForces(lev);
 
-        const Real * dx = Geom(0).CellSize();
+        const Real * dx_crse = Geom(0).CellSize();
         amrex::Print() << "Maximum possible distance traveled:" << std::endl
             <<  "x= " << max_vel[0] * dt
             << " y= " << max_vel[1] * dt
             << " z= " << max_vel[2] * dt
             << " and note that "
-            << " dx= " << dx[0] << std::endl;
+            << " dx= " << dx_crse[0] << std::endl;
 
         amrex::Print() << "Maximum particle-particle (pp) and particle-wall (pw) forces:" << std::endl
             <<  "ppx= " << max_forces[0][0]
@@ -1259,9 +1245,10 @@ void MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
             //
             // Each CPU opens the file for appending and adds its particles.
             //
-            std::ofstream File;
 
             VisMF::IO_Buffer io_buffer(VisMF::IO_Buffer_Size);
+
+            std::ofstream File;
 
             File.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
 

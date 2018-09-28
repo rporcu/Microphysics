@@ -2,14 +2,13 @@ module check_point_sources_module
 
   use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
-  use param,         only: undefined, undefined_i, is_defined, is_undefined, zero
+  use param,          only: is_undefined, zero, equal, dim_ps
   use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
   implicit none
   private
 
   public check_point_sources
-
 
 contains
 
@@ -25,7 +24,6 @@ contains
       bind(C, name="check_point_sources")
 
     use ps,    only: ps_defined
-    use param, only: dim_ps
 
     integer                  :: PSV
     real(rt), intent(in) :: dx,dy,dz
@@ -66,7 +64,6 @@ contains
   subroutine check_ps_geometry(dx, dy, dz)
 
 
-    use param, only: dim_ps
     use ps, only: ps_defined
     use ps, only: ps_x_e, ps_y_n, ps_z_t
     use ps, only: ps_x_w, ps_y_s, ps_z_b
@@ -151,7 +148,6 @@ contains
    subroutine check_ps_gas_phase(PSV)
 
       use ps, only: ps_massflow_g, ps_u_g, ps_v_g, ps_w_g
-      use param, only: zero, equal
 
       integer, intent(in) :: PSV
 

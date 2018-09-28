@@ -197,8 +197,6 @@
 
    contains
 
-      include 'functions.inc'
-
       !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
       !                                                                      !
       !  subroutine: print_excess_overlap                                    !

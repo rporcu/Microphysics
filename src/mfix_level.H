@@ -14,32 +14,22 @@
 
 #include <MFIXParticleContainer.H>
 
-#include <AMReX_GeometryShop.H>
-#include <AMReX_EBIndexSpace.H>
 #include <AMReX_EBFabFactory.H>
-#include <AMReX_EBTower.H>
+
 #include <AMReX_EBFArrayBox.H>
 
-#include <AMReX_GeometryShop.H>
-#include <AMReX_PlaneIF.H>
-#include <AMReX_AllRegularService.H>
-#include <AMReX_FlatPlateGeom.H>
-#include <AMReX_EBISLayout.H>
-#include <AMReX_EBGraph.H>
-#include <AMReX_EBDebugOut.H>
-#include <AMReX_EBCellFAB.H>
-#include <AMReX_EBCellFactory.H>
-#include <AMReX_EBIndexSpace.H>
-#include <AMReX_UnionIF.H>
-#include <AMReX_TransformIF.H>
-#include <AMReX_ComplementIF.H>
-#include <AMReX_IntersectionIF.H>
-#include <AMReX_LatheIF.H>
-#include <AMReX_PolynomialIF.H>
+#include <AMReX_EB2.H>
+#include <AMReX_EB2_IF_Plane.H>
+#include <AMReX_EB2_IF_Polynomial.H>
+#include <AMReX_EB2_IF_Translation.H>
+#include <AMReX_EB2_IF_Intersection.H>
+#include <mfix_eb_if.H>
 
 #include <AMReX_EB_levelset.H>
 
 #include <MacProjection.H>
+
+
 
 class mfix_level
     : public AmrCore
@@ -75,8 +65,6 @@ public:
 
     void Regrid(int lev, int nstep);
 
-    void RegridOnStart(int lev);
-
     void Evolve(int lev, int nstep, int set_normg, int steady_state, Real& dt, Real & prev_dt,
                 Real time, Real stop_time, Real normg);
 
@@ -90,36 +78,41 @@ public:
     void make_mg_bc(int mg_bc[]);
 
     void make_eb_geometry(int lev);
-    void make_eb_hourglass(int lev);
-    void make_eb_clr(int lev);
-    void make_eb_clr_riser(int lev);
 
-    std::unique_ptr<BaseIF> get_walls(int lev, bool anisotropic, bool & has_walls);
-    std::unique_ptr<BaseIF> get_poly(int lev, int max_order, std::string field_prefix);
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(int lev, bool & has_walls);
 
-    std::unique_ptr<BaseIF> make_wall(
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls(int lev, bool & has_real_walls);
+
+    std::unique_ptr<
+        EB2::TranslationIF<EB2::PolynomialIF>
+    > get_poly(int lev, int max_order, std::string field_prefix);
+
+    std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>> make_wall(
             int dir, // direction (long edge) of wall
-            Real position, Real height, Real width,
-            int lev, bool anisotropic
+            Real position, Real height, Real width
         );
 
-    std::unique_ptr<BaseIF> make_cylinder(
-            int dir, // direction (orientation) of cylinder axis
-            Real radius, Real length, const RealVect & translation,
-            int lev, bool water_tight
-        );
+    //NOTE: these are deprecated and replaced by make_eb_* (private member functions below)
 
-    std::unique_ptr<BaseIF> make_cone(int dir,
-            Real radius1, Real radius2, Real length, const RealVect & translation,
-            int lev, bool water_tight);
+    //std::unique_ptr<BaseIF> make_cylinder(
+    //        int dir, // direction (orientation) of cylinder axis
+    //        Real radius, Real length, const RealVect & translation,
+    //        int lev, bool water_tight
+    //    );
 
-    void fill_levelset(int lev, bool use_walls, bool use_poly,
-                       const BaseIF & impfunc_walls, const BaseIF & impfunc_poly,
-                       int max_level, int grid_size, bool eb_verbosity);
+    //std::unique_ptr<BaseIF> make_cone(int dir,
+    //        Real radius1, Real radius2, Real length, const RealVect & translation,
+    //        int lev, bool water_tight);
+
+    //void fill_levelset(int lev, bool use_walls, bool use_poly,
+    //                   const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
+    //                   int max_level, int grid_size, bool eb_verbosity);
 
     void WriteEBSurface(int lev);
 
     void InitIOData();
+
+    static std::string get_load_balance_type();
 
     // flag enabling level-set restart (i.e. prevent make_eb_* from rebuilding
     // the level-set data).
@@ -131,18 +124,18 @@ public:
     ///
     /// Parameters describing the level-set grid:
     ///
-    int levelset__refinement = 1;     // refinement (wrt particle grid) of the level-set's grid
-    int levelset__eb_refinement = 1;  // refinement (wrt particle grid) of the EB facets used to generate the level-set
-    int levelset__pad = 2;            // padding of the level-set grid
-    int levelset__eb_pad = 2;         // padding of the EBIS used to generate the level-set (particularly useful for
-                                      // ensuring that edge-cased occur well outside the physical domain)
+    int levelset__refinement = 1;    // refinement (wrt particle grid) of the level-set's grid
+    int levelset__eb_refinement = 1; // refinement of the EB facets used to generate the level-set
+    int levelset__pad = 2;           // padding of the level-set grid
+    int levelset__eb_pad = 2;        // padding of the EBIS used to generate the level-set (useful for
+                                     // ensuring that neighbor grids are considered when filling LS)
 
 
 protected:
 
     //! Tagging cells for refinement
     virtual void ErrorEst(int lev, amrex::TagBoxArray& tags, amrex::Real time, int /*ngrow*/) override
-        { amrex::Abort("ErrorEst: To be implemented"); }
+    { amrex::Abort("ErrorEst: To be implemented"); }
 
     //! Make a new level using provided BoxArray and
     //! DistributionMapping and fill with interpolated coarse level
@@ -210,6 +203,19 @@ protected:
 
 private:
 
+    void make_eb_general(int lev);
+    void make_eb_box(int lev);
+    void make_eb_cylinder(int lev);
+    void make_eb_hopper(int lev);
+    void make_eb_cyclone(int lev);
+    void make_eb_hourglass(int lev);
+    void make_eb_clr(int lev);
+    void make_eb_clr_riser(int lev);
+    void make_eb_regular(int lev);
+
+    // According to Weiqun `fix_up_geometry` is deprecated.
+    //void fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev);
+
     void check_data(int lev);
 
     void MakeNewLevelFromScratch(int lev, Real time,
@@ -235,11 +241,11 @@ private:
     void mfix_compute_dt(int lev, amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt);
 
     void mfix_compute_fluid_acceleration(int lev,
-					 Vector< std::unique_ptr<MultiFab> >& u,
-					 Vector< std::unique_ptr<MultiFab> >& v,
-					 Vector< std::unique_ptr<MultiFab> >& w,
-					 Vector< std::unique_ptr<MultiFab> >& ro,
-					 Vector< std::unique_ptr<MultiFab> >& ep );
+           Vector< std::unique_ptr<MultiFab> >& u,
+           Vector< std::unique_ptr<MultiFab> >& v,
+           Vector< std::unique_ptr<MultiFab> >& w,
+           Vector< std::unique_ptr<MultiFab> >& ro,
+           Vector< std::unique_ptr<MultiFab> >& ep );
 
     int  steady_state_reached(int lev, Real dt);
 
@@ -249,15 +255,15 @@ private:
 
 
     void mfix_apply_forcing_terms(int lev, amrex::Real dt,
-				  Vector< std::unique_ptr<MultiFab> >& u,
-				  Vector< std::unique_ptr<MultiFab> >& v,
-				  Vector< std::unique_ptr<MultiFab> >& w,
-				  Vector< std::unique_ptr<MultiFab> >& ro,
-				  Vector< std::unique_ptr<MultiFab> >& ep );
+          Vector< std::unique_ptr<MultiFab> >& u,
+          Vector< std::unique_ptr<MultiFab> >& v,
+          Vector< std::unique_ptr<MultiFab> >& w,
+          Vector< std::unique_ptr<MultiFab> >& ro,
+          Vector< std::unique_ptr<MultiFab> >& ep );
 
-    void mfix_compute_intermediate_velocity (int lev, amrex::Real dt, 
-					     Vector< std::unique_ptr<MultiFab> >& ro,
-					     Vector< std::unique_ptr<MultiFab> >& ep );
+    void mfix_compute_intermediate_velocity (int lev, amrex::Real dt,
+               Vector< std::unique_ptr<MultiFab> >& ro,
+               Vector< std::unique_ptr<MultiFab> >& ep );
 
     void mfix_add_pressure_gradient(int lev, amrex::Real coeff);
 
@@ -422,7 +428,7 @@ private:
     // MAC projection object
     std::unique_ptr<MacProjection> mac_projection;
 
-    
+
     int solve_fluid;
     int solve_dem;
     int use_proj_method = 0; // Whether to use projection to solve NS eqs.
@@ -452,9 +458,9 @@ private:
     // Options to control time stepping
     Real cfl = 0.5;
     int  fixed_dt=0;
-    Real dt_min=0.0;  		// Min dt allowed
+    Real dt_min=0.0;      // Min dt allowed
     Real dt_max=1.e14;          // Max dt allowed
-    
+
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;
     int particle_max_grid_size_z = -1;
@@ -468,7 +474,7 @@ private:
 
     Real sum_vol_orig;
 
-    // 
+    //
     // Options to control the computing of particle eulerian velocities
     //
     int avg_vel_int = -1;
@@ -502,8 +508,18 @@ private:
     Vector< const Vector< std::unique_ptr<MultiFab> >* > pltscalarVars;
     Vector< std::string > chkscaVarsName;
 
-    std::unique_ptr<amrex::EBFArrayBoxFactory> ebfactory;
-    std::unique_ptr<amrex::EBFArrayBoxFactory> particle_ebfactory;
+
+    /****************************************************************************
+     *                                                                          *
+     * EB Data (including level-set data)                                       *
+     *                                                                          *
+     ****************************************************************************/
+
+    const EB2::Level * eb_level_fluid;
+    const EB2::Level * eb_level_particles;
+
+    Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
+    Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 
     // stores eb_normals (commond index-space with cells)
     std::unique_ptr<MultiFab> eb_normals;
@@ -512,5 +528,12 @@ private:
     // stores level-set (nodal index space corresponding to cells, but n_refinement times finer)
     std::unique_ptr<LSFactory> level_set;
 };
+
+inline
+std::string
+mfix_level::get_load_balance_type()
+{
+    return load_balance_type;
+}
 
 #endif

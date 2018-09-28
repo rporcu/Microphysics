@@ -1,0 +1,2 @@
+To enable particles, uncomment the "mfix.particle_init_type"
+line in the inputs file.

@@ -86,7 +86,8 @@ public:
 
     void InitParticlesAscii(const std::string& file);
     void InitParticlesAuto(int lev);
-    void RemoveOutOfRange(int lev, EBFArrayBoxFactory * ebfactory);
+    void RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
+                          const MultiFab * ls_phi, const iMultiFab * ls_valid, int ls_refinement);
 
     void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 
@@ -139,6 +140,8 @@ public:
                             IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                             IArrayBox& bc_klo, IArrayBox& bc_khi,
                             int nghost);
+
+    void CapSolidsVolFrac(amrex::MultiFab& eps);
 
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction

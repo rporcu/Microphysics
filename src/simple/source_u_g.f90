@@ -58,8 +58,6 @@ contains
 !---------------------------------------------------------------------//
 ! Indices
       integer :: i,j,k
-! Pressure at east cell
-      real(rt) :: PgW
 ! Average volume fraction
       real(rt) :: epga
 ! Source terms (Surface)
@@ -130,7 +128,6 @@ contains
       use bc, only: bc_hw_g, bc_uw_g, bc_u_g
 
       use matrix, only: e, w, s, n, t, b
-      use param, only: is_defined
 
       integer     , intent(in   ) ::  lo(3), hi(3)
       integer     , intent(in   ) :: slo(3),shi(3)

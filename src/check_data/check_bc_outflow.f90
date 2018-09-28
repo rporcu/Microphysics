@@ -110,10 +110,6 @@ contains
 1000 format('Error 1000: Required input not specified: ',A,/&
         'Please correct the input deck.')
 
-1100 format('Error 1100: Pressure must be greater than zero for ',    &
-        'compressible flow',/3x,'BC_P_g(',I3,') = ',A,/&
-        'Please correct the input deck.')
-
     ! Clean up and return.
     call finl_err_msg
 

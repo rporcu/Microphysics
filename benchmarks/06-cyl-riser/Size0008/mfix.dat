@@ -1,0 +1,139 @@
+########################################################################
+#                                                                      #
+# Author:                                               Date: xx-xxxx  #
+# Modified: J. Musser                                   Date: 08-2018  #
+#                                                                      #
+# Description: Cylindrical Riser                                       #
+#                                                                      #
+########################################################################
+
+  RUN_NAME = 'B06'
+  DESCRIPTION = 'Cylindrical riser'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+  DT =     1.0d-04
+  DT_FAC = 1.0
+
+  DRAG_TYPE = 'BVK'
+
+  CALL_USR = .T.
+  FULL_LOG = .T.
+
+  GRAVITY(1) = -9.81
+  GRAVITY(2) =  0.00
+  GRAVITY(3) =  0.00
+
+#_______________________________________________________________________
+# NUMERICAL SECTION
+
+  TOL_RESID = 1.0E-3
+
+  MAX_NIT = 500
+
+#_______________________________________________________________________
+# MATERIAL SECTION
+
+! Gas Section
+!---------------------------------------------------------------------//
+  RO_g0 = 1.0      ! (kg/m3)
+  MU_g0 = 2.0d-5   ! (Pa.sec)
+
+
+! Particle Section
+!---------------------------------------------------------------------//
+
+  PARTICLE_TYPES=1
+
+! Friction coefficient. (1)
+  MEW =   0.0                ! particle-particle
+  MEW_W = 0.0                ! particle-wall
+
+! Normal collision spring constant. (N/m)
+  KN =   10.0                ! particle-particle
+  KN_W = 10.0                ! particle-wall
+
+! Restitution coefficient. (1)
+  DES_EN_INPUT = 0.8         ! particle-particle
+  DES_EN_WALL_INPUT = 1.0    ! particle-wall
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+! Full domain coverage
+  IC_Y_s(1) =   0.000  ! (m)
+  IC_Y_n(1) =   0.002  ! (m)
+  IC_Z_b(1) =   0.000  ! (m)
+  IC_Z_t(1) =   0.002  ! (m)
+  IC_X_w(1) =   0.000  ! (m)
+  IC_X_e(1) =   0.008  ! (m)
+
+  IC_EP_g(1) =  0.983  ! (m)
+
+  IC_P_g(1)  =  0.000  ! (Pa)
+
+  IC_U_g(1) =   0.000  ! (m)
+  IC_V_g(1) =   0.000  ! (m)
+  IC_W_g(1) =   0.000  ! (m)
+
+  IC_EP_s(1,1) =0.017  ! (m)
+
+  IC_U_s(1,1) = 0.000  ! (m)
+  IC_V_s(1,1) = 0.000  ! (m)
+  IC_W_s(1,1) = 0.000  ! (m)
+
+  ic_dp_dist(1,1) =   'CONSTANT'
+  ic_dp_mean(1,1) =    100.0d-6    ! (m)
+
+  ic_ro_s_dist(1,1) = 'CONSTANT'
+  ic_ro_s_mean(1,1) =  1000.0d0    ! (kg/m^3)
+
+  ic_pack_type(1) =  "RANDOM"
+
+#_______________________________________________________________________
+# BOUNDARY CONDITIONS SECTION
+
+  DELP_X = 2.0         ! (Pa)
+
+!---------------------------------------------------------------------//
+! SIDE WALLS -- IGNORE BECAUSE THE CYLINDER IS THE OUTER BOUNDARY
+!---------------------------------------------------------------------//
+
+  BC_Y_s(1) =  0.000
+  BC_Y_n(1) =  0.000
+  BC_Z_b(1) =  0.000
+  BC_Z_t(1) =  0.002
+  BC_X_w(1) =  0.000
+  BC_X_e(1) =  0.008
+
+  BC_TYPE(1) = 'IG'
+
+  BC_Y_s(2) =  0.002
+  BC_Y_n(2) =  0.002
+  BC_Z_b(2) =  0.000
+  BC_Z_t(2) =  0.002
+  BC_X_w(2) =  0.000
+  BC_X_e(2) =  0.008
+
+  BC_TYPE(2) = 'IG'
+
+  BC_Y_s(3) =  0.000
+  BC_Y_n(3) =  0.002
+  BC_Z_b(3) =  0.000
+  BC_Z_t(3) =  0.000
+  BC_X_w(3) =  0.000
+  BC_X_e(3) =  0.008
+
+  BC_TYPE(3) = 'IG'
+
+  BC_Y_s(4) =  0.000
+  BC_Y_n(4) =  0.002
+  BC_Z_b(4) =  0.002
+  BC_Z_t(4) =  0.002
+  BC_X_w(4) =  0.000
+  BC_X_e(4) =  0.008
+
+  BC_TYPE(4) = 'IG'
+
+

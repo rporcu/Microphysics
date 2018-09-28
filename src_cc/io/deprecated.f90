@@ -33,7 +33,7 @@ module DEPRECATED_OR_UNKNOWN_MODULE
       !
       block
          
-         integer           :: i, key
+         integer           :: i
          integer           :: ie, ie1, ie2
 
          ! If the input is an array, gotta take ie before the first

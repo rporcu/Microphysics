@@ -8,7 +8,7 @@ set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake )
 #
 # Here we set the only option that decide if superbuild
 # is enabled or not
-# 
+#
 set ( AMREX_INSTALL_DIR "" CACHE PATH
    "Path to installation directory (leave empty for superbuild)")
 
@@ -20,8 +20,8 @@ endif ()
 
 #
 # Now decide if invoking superbuild. If so, this listfile will be
-# re-read by the MFIX_Superbuild.cmake 
-# 
+# re-read by the MFIX_Superbuild.cmake
+#
 if ( SUPERBUILD )
    include ( MFIX_Superbuild )
    return ()
@@ -29,7 +29,7 @@ endif ()
 
 #
 # This is where the MFIX-standalone config starts
-# 
+#
 project (MFIX-Exa)
 
 # Define the languages used by the project
@@ -37,7 +37,7 @@ enable_language (C)
 enable_language (CXX)
 enable_language (Fortran)
 
-# Load required modules 
+# Load required modules
 include ( MFIX_Options )
 include ( MFIX_Utils )
 
@@ -51,7 +51,7 @@ set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
 
 
 # Import AMReX. Do it here so it is visibile to all targets
-find_package (AMReX 18 REQUIRED HINTS ${AMREX_INSTALL_DIR})   
+find_package (AMReX REQUIRED HINTS ${AMREX_INSTALL_DIR})
 echo_amrex_config_options ()
 
 if ( NOT ( AMREX_ENABLE_PARTICLES AND AMREX_ENABLE_AMRDATA
@@ -72,12 +72,12 @@ else ()
   set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 endif ()
 
-# 
+#
 # Core MFIX library
 # For the time being, we keep to versions: one with sources in src/
 # ( SIMPLE + Exact Projection ), one with sources in both src_cc/ and src/
 # ( Approximate Projection only ).
-# 
+#
 if (ENABLE_PROJCC)
   message ( WARNING "Building MFIX in experimental APPROXIMATE PROJECTION mode (ENABLE_PROJCC=on)" )
   add_subdirectory (src_cc)
@@ -94,14 +94,14 @@ print_mfix_configuration_summary (${MFIX_LIBNAME})
 # We should check what this line does
 file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
 add_executable (${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} )
-target_link_libraries ( ${MFIX_EXENAME} ${MFIX_LIBNAME} ) 
+target_link_libraries ( ${MFIX_EXENAME} ${MFIX_LIBNAME} )
 
 # Configure type-checking target
 include ( MFIX_Typecheck )
 add_typecheck_target()
 
 # Tools
-set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/tools/) 
+set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/tools/)
 add_subdirectory (tools)
 
 # Tests

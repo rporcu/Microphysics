@@ -1,5 +1,4 @@
 #include <AMReX_ParmParse.H>
-
 #include <mfix_mac_F.H>
 #include <mfix_proj_F.H>
 #include <mfix_F.H>
@@ -7,6 +6,10 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
+#include <AMReX_MultiFab.H>
+#include <AMReX_EBMultiFabUtil.H>
+#include <AMReX_Array.H>
+#include <AMReX_BLassert.H>
 
 void
 mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt,  Real& time, Real stop_time )
@@ -35,7 +38,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
     do
     {
-        mfix_compute_dt(lev, time, stop_time, steady_state, dt, nodal_pressure);
+        mfix_compute_dt(lev, time, stop_time, steady_state, dt);
 
         if (steady_state)
         {
@@ -68,8 +71,8 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 
 	// Create temporary multifabs to hold the old-time conv and divtau
 	//    so we don't have to re-compute them in the corrector
-        MultiFab   conv_old(grids[lev], dmap[lev], 3, 0 );
-        MultiFab divtau_old(grids[lev], dmap[lev], 3, 0 );
+        MultiFab   conv_old(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+        MultiFab divtau_old(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 	
         // Predictor step 
         bool proj_2 = true;
@@ -80,7 +83,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	    amrex::Print() << "\nAfter predictor step:\n";
     	    mfix_print_max_vel (lev);
     	    mfix_compute_diveu (lev);
-	    amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
         }
 
 	// Calculate drag coefficient
@@ -96,7 +99,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 	    amrex::Print() << "\nAfter corrector step:\n";
     	    mfix_print_max_vel (lev);
     	    mfix_compute_diveu (lev);
-	    amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
         }
 	    
 	// 
@@ -124,11 +127,17 @@ mfix_level::mfix_project_velocity (int lev)
 
     amrex::Print() << "Initial projection:\n";
 
+    // Need to add this call here so that the MACProjection internal arrays
+    //  are allocated so that the cell-centered projection can use the MAC
+    //  data structures and set_velocity_bcs routine
+    mac_projection->update_internals();
+
     bool proj_2 = true;
     mfix_apply_projection ( lev, dummy_dt, proj_2 );
 
-   // We initialize p_g back to zero (p0_g may still be still non-zero)
+   // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
    p_g[lev]->setVal(0.0);
+    gp[lev]->setVal(0.0);
 }
 
 void
@@ -142,16 +151,17 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
     MultiFab::Copy (*vel_go[lev], *vel_g[lev],   0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
     Real time = 0.0;
-    mfix_compute_dt(lev,time,stop_time,steady_state,dt,nodal_pressure);
+    mfix_compute_dt(lev,time,stop_time,steady_state,dt);
 
     amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
 
     //  Create temporary multifabs to hold conv and divtau
-    MultiFab   conv(grids[lev], dmap[lev], 3, 0 );
-    MultiFab divtau(grids[lev], dmap[lev], 3, 0 );
+    MultiFab   conv(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+    MultiFab divtau(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 
     for (int iter = 0; iter < 3; ++iter)
     {
+       amrex::Print() << " " << std::endl;
        amrex::Print() << "In initial_iterations: iter = " << iter <<  "\n";
 
        bool proj_2 = false;
@@ -159,6 +169,8 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 
        // Replace vel_g by the original values 
        MultiFab::Copy (*vel_g[lev], *vel_go[lev], 0, 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow());
+
+       //exit(0);
     }
 }
 
@@ -196,11 +208,11 @@ mfix_level::mfix_apply_predictor (int lev, MultiFab& conv_old, MultiFab& divtau_
                                   amrex::Real dt, bool proj_2)
 {
     // Compute the explicit advective term R_u^n
-    mfix_compute_ugradu ( lev, conv_old, vel_go );
+    mfix_compute_ugradu_predictor( lev, conv_old, vel_go );
 
     // If explicit_diffusion == true  then we compute the full diffusive terms here
     // If explicit_diffusion == false then we compute only the off-diagonal terms here
-    mfix_compute_divtau ( lev, divtau_old, vel_go);
+    mfix_compute_divtau( lev, divtau_old, vel_go );
     
     // First add the convective term
     MultiFab::Saxpy (*vel_g[lev], dt,   conv_old, 0, 0, 3, 0);
@@ -211,8 +223,18 @@ mfix_level::mfix_apply_predictor (int lev, MultiFab& conv_old, MultiFab& divtau_
 
     // Add the forcing terms
     mfix_apply_forcing_terms ( lev, dt, vel_g);
-    mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
-    mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
+
+    // Convert velocities to momenta
+    for (int n = 0; n < 3; n++)
+       MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+
+    // Add (-dt grad p to momenta)
+    MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
+    MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
+
+    // Convert momenta back to velocities
+    for (int n = 0; n < 3; n++)
+       MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
@@ -264,10 +286,10 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
     BL_PROFILE("mfix_level::mfix_apply_corrector");
 
     MultiFab   conv(grids[lev], dmap[lev], 3, 0 );
-    MultiFab divtau(grids[lev], dmap[lev], 3, 0 );
+    MultiFab divtau(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 
     // Compute the explicit advective term R_u^*
-    mfix_compute_ugradu ( lev,   conv, vel_g );
+    mfix_compute_ugradu_corrector( lev,   conv, vel_g );
 
     // If explicit_diffusion == true  then we compute the full diffusive terms here
     // If explicit_diffusion == false then we compute only the off-diagonal terms here
@@ -284,10 +306,18 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
 
     // Add forcing terms
     mfix_apply_forcing_terms ( lev, dt, vel_g);
- 
-    // Add pressure gradient
-    mfix_add_grad_phi ( lev, -dt, (*p_g[lev]) );
-    mfix_add_grad_phi ( lev, -dt, (*p0_g[lev]) );
+
+    // Convert velocities to momenta
+    for (int n = 0; n < 3; n++)
+       MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+
+    // Add (-dt grad p to momenta)
+    MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
+    MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
+
+    // Convert momenta back to velocities
+    for (int n = 0; n < 3; n++)
+       MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
@@ -302,7 +332,7 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
 }
 
 void
-mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& phi)
+mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& this_phi)
 {
     BL_PROFILE("mfix_level::mfix_add_grad_phi");
     
@@ -320,7 +350,7 @@ mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& phi)
 	       BL_TO_FORTRAN_BOX(bx),  
 	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
 	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD(phi[mfi]),
+	       BL_TO_FORTRAN_ANYD(this_phi[mfi]),
 	       geom[lev].CellSize(), &coeff);
        }
     } else {
@@ -336,107 +366,13 @@ mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& phi)
 	       BL_TO_FORTRAN_BOX(bx),  
 	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
 	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-	       phi[mfi].dataPtr(),
+	       this_phi[mfi].dataPtr(),
 	       geom[lev].CellSize(), &coeff);
        }
     }
     
 }
 
-//
-// Compute acc using the vel passed in
-//
-void
-mfix_level::mfix_compute_ugradu ( int lev,
-			          MultiFab& conv, 
-			          Vector< std::unique_ptr<MultiFab> >& vel) 
-{
-    BL_PROFILE("mfix_level::mfix_compute_ugradu");
-    Box domain(geom[lev].Domain());
-
-    // First compute the slopes
-    mfix_compute_velocity_slopes ( lev, vel );
-
-    if (use_mac_proj)
-    {
-       int order = 1;
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-       for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
-       {
-	   // Tilebox
-   	   Box bx = mfi.tilebox ();
-
-	   compute_velocity_at_faces (
-	       BL_TO_FORTRAN_BOX(bx),  
-	       BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*xslopes[lev])[mfi]),
-	       (*yslopes[lev])[mfi].dataPtr(),
-	       (*zslopes[lev])[mfi].dataPtr(),
-	       bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-	       bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-	       bc_klo.dataPtr(), bc_khi.dataPtr(),
-               &nghost, domain.loVect (), domain.hiVect (), &order);
-       }
-
-       Real dummy_dt = 1.0;
-       mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, dummy_dt );
-
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-       for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
-       {
-	   // Tilebox
-   	   Box bx = mfi.tilebox ();
-
-	   compute_ugradu_mac (
-	       BL_TO_FORTRAN_BOX(bx),  
-	       BL_TO_FORTRAN_ANYD(conv[mfi]),
-	       BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((   *ep_g[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
-	       (*xslopes[lev])[mfi].dataPtr(),
-	       (*yslopes[lev])[mfi].dataPtr(),
-	       BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-               domain.loVect (), domain.hiVect (),
-	       bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-	       bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-	       bc_klo.dataPtr(), bc_khi.dataPtr(),
-	       geom[lev].CellSize(), &nghost, &ugradu_type);
-       }
-
-    } else {
-    
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-       for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
-       {
-	   // Tilebox
-   	   Box bx = mfi.tilebox ();
-
-	   compute_ugradu (
-	       BL_TO_FORTRAN_BOX(bx),  
-	       BL_TO_FORTRAN_ANYD(conv[mfi]),
-	       BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-	       (*xslopes[lev])[mfi].dataPtr(),
-	       (*yslopes[lev])[mfi].dataPtr(),
-	       BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-               domain.loVect (), domain.hiVect (),
-	       bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-	       bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-	       bc_klo.dataPtr(), bc_khi.dataPtr(),
-	       geom[lev].CellSize(), &nghost);
-       }
-    }
-}
 
 void
 mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
@@ -495,46 +431,6 @@ mfix_level::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
     }
 }
 
-//
-// Compute the slopes of each velocity component in the
-// three directions.
-// 
-void
-mfix_level::mfix_compute_velocity_slopes (int lev,
-                                          Vector< std::unique_ptr<MultiFab> >& vel)
-
-{
-    BL_PROFILE("mfix_level::mfix_compute_velocity_slopes");
-
-    Box domain(geom[lev].Domain());
-
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-    {
-	// Tilebox
-	Box bx = mfi.tilebox ();
-
-	compute_slopes ( BL_TO_FORTRAN_BOX(bx),
-		         BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-			 (*xslopes[lev])[mfi].dataPtr (),
-			 (*yslopes[lev])[mfi].dataPtr (),
-		         BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-			 domain.loVect (), domain.hiVect (),
-			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-			 bc_klo.dataPtr(), bc_khi.dataPtr(),
-			 &nghost);
-
-    }
-
-    // Fill halo cells
-    xslopes[lev] -> FillBoundary(geom[lev].periodicity());
-    yslopes[lev] -> FillBoundary(geom[lev].periodicity());
-    zslopes[lev] -> FillBoundary(geom[lev].periodicity());
-
-}
 
 //
 // Compute div(ep_g * u)
@@ -587,25 +483,29 @@ mfix_level::mfix_compute_diveu (int lev)
 	                     geom[lev].CellSize());
        }
 
-    } else {
+    }
+    else
+    {
 
-    int extrap_dir_bcs = 1;
-    mfix_set_velocity_bcs (lev,extrap_dir_bcs);
-    vel_g[lev]->FillBoundary (geom[lev].periodicity());
+       int extrap_dir_bcs = 1;
+       mfix_set_velocity_bcs (lev,extrap_dir_bcs);
+       vel_g[lev]->FillBoundary (geom[lev].periodicity());     
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-       for (MFIter mfi(*diveu[lev],true); mfi.isValid(); ++mfi)
-       {
-	   const Box& bx = mfi.tilebox();
-	
-	   compute_diveucc ( BL_TO_FORTRAN_BOX(bx),
-			     BL_TO_FORTRAN_ANYD((*diveu[lev])[mfi]),
-  			     (*ep_g[lev])[mfi].dataPtr (),
-  			     BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-	                     geom[lev].CellSize());
-       }
+       // Create face centered multifabs for ep_g and vel_g
+       MultiFab epu( vel_g[lev]->boxArray(),  vel_g[lev]-> DistributionMap(),
+                     vel_g[lev]->nComp(), nghost, MFInfo(), *ebfactory[lev]);
+
+       MultiFab::Copy( epu, *vel_g[lev], 0, 0, 3, vel_g[lev]->nGrow() );
+
+       for (int n = 0; n < 3; n++)
+          MultiFab::Multiply( epu, *ep_g[lev], 0, n, 1, vel_g[lev]->nGrow() );
+
+       Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM> epu_fc;
+       mfix_average_cc_to_fc( lev, epu, epu_fc );
+
+       // This does not need to have correct ghost values in place
+       EB_computeDivergence( *diveu[lev], GetArrOfConstPtrs(epu_fc), geom[lev] );
+
     }
 
     // Restore velocities to carry Dirichlet values on faces
@@ -655,10 +555,10 @@ mfix_level::steady_state_reached (int lev, Real dt)
 
     MultiFab::LinComb (tmp, 1.0, *p_g[lev], 0, -1.0, *p_go[lev], 0, 0, 1, 0);
     
-    Real delta_u = temp_vel.norm0 (0);
-    Real delta_v = temp_vel.norm0 (1);
-    Real delta_w = temp_vel.norm0 (2);
-    Real delta_p = tmp.norm0 ();
+    Real delta_u = mfix_norm0(temp_vel,lev,0);
+    Real delta_v = mfix_norm0(temp_vel,lev,1);
+    Real delta_w = mfix_norm0(temp_vel,lev,2);
+    Real delta_p = mfix_norm0(tmp,lev,0);
     
     Real tol = steady_state_tol; 
     
@@ -667,14 +567,15 @@ mfix_level::steady_state_reached (int lev, Real dt)
     //
     // Second stop condition
     //
-    Real du_n1 = temp_vel.norm1 (0, geom[lev].periodicity());
-    Real dv_n1 = temp_vel.norm1 (1, geom[lev].periodicity());
-    Real dw_n1 = temp_vel.norm1 (2, geom[lev].periodicity());
-    Real dp_n1 = tmp.norm1 (0, geom[lev].periodicity());
-    Real uo_n1 = vel_go[lev] -> norm1 (0, geom[lev].periodicity());
-    Real vo_n1 = vel_go[lev] -> norm1 (1, geom[lev].periodicity());
-    Real wo_n1 = vel_go[lev] -> norm1 (2, geom[lev].periodicity());
-    Real po_n1 = p_go[lev] -> norm1 (0, geom[lev].periodicity());
+    Real du_n1 = mfix_norm1(temp_vel, lev, 0); 
+    Real dv_n1 = mfix_norm1(temp_vel, lev, 1); 
+    Real dw_n1 = mfix_norm1(temp_vel, lev, 2); 
+    Real dp_n1 = mfix_norm1(tmp, lev, 0); 
+    Real uo_n1 = mfix_norm1(vel_go, lev, 0);
+    Real vo_n1 = mfix_norm1(vel_go, lev, 1);
+    Real wo_n1 = mfix_norm1(vel_go, lev, 2);
+    Real po_n1 = mfix_norm1(p_go, lev, 0);
+    
     Real tmp1, tmp2, tmp3, tmp4;
 
     Real local_tol = 1.0e-8;
@@ -846,8 +747,73 @@ void
 mfix_level::mfix_print_max_vel(int lev)
 {
     amrex::Print() << "max(abs(u/v/w/p))  = " << 
-        vel_g[lev] -> norm0 (0) << "  " <<
-        vel_g[lev] -> norm0 (1) << "  " <<
-        vel_g[lev] -> norm0 (2) << "  " <<
-          p_g[lev] -> norm0 () << "  " << std::endl;
+       mfix_norm0(vel_g, lev, 0) << "  " <<
+       mfix_norm0(vel_g, lev, 1) << "  " <<
+       mfix_norm0(vel_g, lev, 2) << "  " <<
+       mfix_norm0(p_g,   lev, 0) << "  " << std::endl;
 }
+
+
+
+//
+// This subroutines averages component by component
+// The assumption is that cc is multicomponent
+// 
+void
+mfix_level::mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
+                                    Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc )
+{
+   AMREX_ASSERT(cc.nComp()==AMREX_SPACEDIM);
+   AMREX_ASSERT(AMREX_SPACEDIM==3);
+   
+   // 
+   // First allocate fc
+   //
+   BoxArray x_ba = cc.boxArray();
+   x_ba.surroundingNodes(0);
+   fc[0].reset(new MultiFab(x_ba,cc.DistributionMap(),1,nghost, MFInfo(), *ebfactory[lev]));
+   fc[0]->setVal(1.e200);
+
+   BoxArray y_ba = cc.boxArray();
+   y_ba.surroundingNodes(1);
+   fc[1].reset(new MultiFab(y_ba,cc.DistributionMap(),1,nghost, MFInfo(), *ebfactory[lev]));
+   fc[1]->setVal(1.e200);
+
+   BoxArray z_ba = cc.boxArray();
+   z_ba.surroundingNodes(2);
+   fc[2].reset(new MultiFab(z_ba,cc.DistributionMap(),1,nghost, MFInfo(), *ebfactory[lev]));
+   fc[2]->setVal(1.e200);
+
+   //
+   // Average
+   // We do not care about EB because faces in covered regions
+   // should never get used so we can set them to whatever values
+   // we like
+   //
+#ifdef _OPENMP
+#pragma omp parallel 
+#endif
+   for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
+   {
+      // Boxes for staggered components
+      Box bx = mfi.tilebox();
+
+      
+      average_cc_to_fc( BL_TO_FORTRAN_BOX(bx),
+                        BL_TO_FORTRAN_ANYD((*fc[0])[mfi]),
+                        BL_TO_FORTRAN_ANYD((*fc[1])[mfi]),
+                        BL_TO_FORTRAN_ANYD((*fc[2])[mfi]),
+                        BL_TO_FORTRAN_ANYD(cc[mfi]));
+
+   }
+
+   fc[0] -> FillBoundary(geom[lev].periodicity());
+   fc[1] -> FillBoundary(geom[lev].periodicity());
+   fc[2] -> FillBoundary(geom[lev].periodicity());
+   // We do not fill BCs and halo regions in this routine    
+} 
+
+
+
+
+

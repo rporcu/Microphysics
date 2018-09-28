@@ -1,5 +1,5 @@
 # AMREX_HOME defines the directory in which we will find all the AMReX code
-AMREX_HOME = ../../../amrex
+AMREX_HOME ?= ../../amrex
 
 # TOP defines the directory in which we will find Source, Exec, etc
 TOP = ..
@@ -9,9 +9,11 @@ COMP    = gnu
 USE_MPI = TRUE
 USE_OMP = FALSE
 
+USE_HYPRE = FALSE
+
 DEBUG     = FALSE
 
-PROFILE       = TRUE
+PROFILE       = FALSE
 TRACE_PROFILE = FALSE
 COMM_PROFILE  = FALSE
 TINY_PROFILE  = FALSE

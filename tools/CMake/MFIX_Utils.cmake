@@ -11,7 +11,7 @@ endfunction ()
 
 #
 # This function turns a list into a string
-# 
+#
 function ( list_to_string list )
   string (REPLACE ";" " " tmp "${${list}}")
   set ( ${list} "${tmp}" PARENT_SCOPE)
@@ -20,7 +20,7 @@ endfunction ()
 
 #
 # Append new_var to all_var
-# 
+#
 function ( append new_var all_var )
   if ( ${new_var} )
     set ( tmp  "${${all_var}} ${${new_var}}" )
@@ -35,10 +35,10 @@ endfunction ()
 # Function to append to link line
 #
 function ( append_to_link_line libs link_line )
-  
+
   string ( STRIP "${${libs}}" libs )
-  
-  if ( ${ARGC} EQUAL 3 )  # Third one is optional flags                                                                                         
+
+  if ( ${ARGC} EQUAL 3 )  # Third one is optional flags
     set ( flags  ${${ARGV2}} )
     string ( STRIP "${flags}" flags )
     set (tmp "${flags} ${libs}")
@@ -46,32 +46,32 @@ function ( append_to_link_line libs link_line )
     set ( flags "")
     set (tmp "${libs}")
   endif ()
-  
+
   if (tmp)
     list (APPEND ${link_line} ${tmp})
     set ( ${link_line} ${${link_line}} PARENT_SCOPE )
   endif ()
-  
+
 endfunction ()
 
 #
 # Function to accumulate preprocessor directives
 #
 function ( add_define new_define all_defines )
-  
+
   set ( condition  1 )
-  
+
   if ( ${ARGC} EQUAL 3 ) #
     set ( condition ${${ARGV2}} )
   elseif ( ${ARGC} GREATER 3 )
     message ( AUTHOR_WARNING "Function add_define accept AT MOST 3 args" )
   endif ()
-  
+
   if ( ${condition} )
     set ( ${all_defines} "${${all_defines}} -D${new_define}" PARENT_SCOPE )
     #set ( ${all_defines} ${${all_defines}} -D${new_define} PARENT_SCOPE )
   endif ()
-  
+
 endfunction ()
 
 #
@@ -86,7 +86,7 @@ endmacro( check_build_tree_path )
 
 
 #
-# Print variable (useful for debug) 
+# Print variable (useful for debug)
 #
 function (print var)
   message (STATUS "   ${var} = ${${var}}")
@@ -94,7 +94,7 @@ endfunction ()
 
 
 #
-# Print option 
+# Print option
 #
 function (print_option name value)
   message (STATUS "   ${name} = ${value}")
@@ -103,13 +103,13 @@ endfunction ()
 #
 # Find git info
 #
-macro ( get_git_info ) # EXTRA ARGS: branch commit 
+macro ( get_git_info ) # EXTRA ARGS: branch commit
 
   # Find branch
   execute_process (
     COMMAND git branch
     COMMAND grep \*
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} 
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE out
     ERROR_VARIABLE  err
     )
@@ -124,11 +124,11 @@ macro ( get_git_info ) # EXTRA ARGS: branch commit
       set ( ${ARGV0} ${out} )
     endif ()
   endif ()
-  
+
   # Find commit
   execute_process (
     COMMAND git rev-parse HEAD
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} 
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE out
     ERROR_VARIABLE  err
     )
@@ -144,7 +144,7 @@ macro ( get_git_info ) # EXTRA ARGS: branch commit
   endif ()
 
   unset (out)
-  
+
 endmacro ()
 
 
@@ -170,7 +170,7 @@ endfunction ()
 # if the variable is empty
 #
 macro ( set_default_config_flags )
-  
+
   if ( NOT CMAKE_Fortran_FLAGS_DEBUG )
     set (CMAKE_Fortran_FLAGS_DEBUG "-g")
   endif ()
@@ -182,17 +182,17 @@ macro ( set_default_config_flags )
   if ( NOT CMAKE_CXX_FLAGS_DEBUG )
     set (CMAKE_CXX_FLAGS_DEBUG "-g")
   endif ()
-  
+
   if ( NOT CMAKE_CXX_FLAGS_RELEASE )
     set (CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
   endif ()
-  
+
 endmacro ()
 
 
 #
 # Print Configuration Summary
-# 
+#
 function (print_mfix_configuration_summary mfix_libname )
 
   if (NOT TARGET ${mfix_libname})
@@ -204,19 +204,19 @@ function (print_mfix_configuration_summary mfix_libname )
     message (AUTHOR_WARNING "Target ${mfix_libname} is not defined.")
     return ()
   endif ()
-  
+
   string (TOUPPER "${CMAKE_BUILD_TYPE}" MFIX_BUILD_TYPE)
 
   #
   # Get preprocessor flags
-  # 
+  #
   get_target_property ( MFIX_DEFINES AMReX::amrex INTERFACE_COMPILE_DEFINITIONS )
   replace_genex ( MFIX_DEFINES MFIX_Fortran_DEFINES LANGUAGE Fortran )
   replace_genex ( MFIX_DEFINES MFIX_CXX_DEFINES LANGUAGE CXX )
   string (REPLACE " " ";-D" MFIX_Fortran_DEFINES "-D${MFIX_Fortran_DEFINES}")
   string (REPLACE " " ";-D" MFIX_CXX_DEFINES "-D${MFIX_CXX_DEFINES}")
-  
-  # 
+
+  #
   # Get compiler flags flags
   #
   get_target_property ( MFIX_FLAGS ${mfix_libname} INTERFACE_COMPILE_OPTIONS )
@@ -236,15 +236,15 @@ function (print_mfix_configuration_summary mfix_libname )
   #
   get_target_property( MFIX_INCLUDES AMReX::amrex INTERFACE_INCLUDE_DIRECTORIES )
   list ( REMOVE_DUPLICATES MFIX_INCLUDES )
-  
+
   #
-  # Get extra libraries 
-  # 
+  # Get extra libraries
+  #
   get_target_property ( TMP AMReX::amrex INTERFACE_LINK_LIBRARIES )
   replace_genex ( TMP MFIX_LINK_LINE )
   string (REPLACE ";" " " MFIX_LINK_LINE "${MFIX_LINK_LINE}")
-  
-  # 
+
+  #
   # Config summary
   #
   message( STATUS "MFIX configuration summary: ")
@@ -256,23 +256,23 @@ function (print_mfix_configuration_summary mfix_libname )
   message( STATUS "   Fortran flags         = ${CMAKE_Fortran_FLAGS_${MFIX_BUILD_TYPE}} ${MFIX_Fortran_FLAGS}")
   message( STATUS "   MFIX includes         = ${MFIX_INCLUDES}")
   message( STATUS "   MFIX extra link line  = ${MFIX_LINK_LINE}")
-  
+
 endfunction()
 
 #
 # Replace regex
-# 
+#
 macro (replace_genex input_list output_list )
 
   cmake_parse_arguments ( ARG "" "LANGUAGE" "" ${ARGN} )
 
   set (${output_list} "")
-  
+
   # If input variables is NOT FOUND or empty, just return
   if (${input_list})
-    
-    set (tmp_list ${${input_list}})
-    
+
+   set (tmp_list ${${input_list}})
+
     # Replace all ; with a place holder (*)
     string ( REPLACE ";" "*" tmp_list "${tmp_list}" )
 
@@ -281,18 +281,18 @@ macro (replace_genex input_list output_list )
     string ( REPLACE "*$" ";$" tmp_list "${tmp_list}" )
     string ( REPLACE "*/" ";/" tmp_list "${tmp_list}" )
     string ( REPLACE "*" " "   tmp_list "${tmp_list}" )
-    
+
     #
     # First remove entries related to:
     # 1) a compiler other than the one currently in use
     # 2) a build type other than the current one
-    # 
+    #
     foreach ( item IN ITEMS ${tmp_list} )
       string (REPLACE "$<" "" item ${item} )
       string (REPLACE ">" "" item ${item} )
       string (REPLACE ":" "" item ${item} )
 
-      # Accept build interface generator expressions 
+      # Accept build interface generator expressions
       string (REPLACE "BUILD_INTERFACE" "" item ${item})
 
       # Skip genex for compilers other than the one in use
@@ -313,7 +313,7 @@ macro (replace_genex input_list output_list )
    	  string (REPLACE "CONFIG${CMAKE_BUILD_TYPE}" "" item ${item} )
    	else ()
    	  continue ()
-   	endif () 
+   	endif ()
       endif ()
 
       # Extract by Language part
@@ -335,19 +335,19 @@ macro (replace_genex input_list output_list )
 	      continue ()
 	    endif ()
 	  endif ()
-	endif ()	    
+	endif ()
       endif ()
-      
+
       # Now item should be ok to be added to final list
       list ( APPEND ${output_list} ${item})
-      
+
     endforeach ()
   endif ()
-  
+
   if (${output_list})
     list (REMOVE_DUPLICATES ${output_list} )
   endif ()
-  
+
 endmacro ()
 
 
@@ -355,7 +355,7 @@ endmacro ()
 # Print list
 #
 function ( print_list list )
-  
+
   list ( LENGTH ${list} len )
 
   if ( ${len} GREATER 0 )
@@ -366,7 +366,7 @@ function ( print_list list )
     endforeach ()
     message ("")
   endif ()
-  
+
 endfunction ()
 
 

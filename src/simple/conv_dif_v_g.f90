@@ -69,7 +69,7 @@ module v_g_conv_dif
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, mu_g, fluxX, fluxY, fluxZ, dx, dy, dz)
 
-      use functions, only: avg_h
+      use avg_functions, only: avg_h
       use matrix, only: e, w, n, s, t, b
 
       implicit none

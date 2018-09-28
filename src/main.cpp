@@ -14,10 +14,6 @@ int   verbose     = -1;
 int   regrid_int  = -1;
 Real stop_time    = -1.0;
 
-bool hourglass    = false;
-bool clr          = false;
-bool clr_riser    = false;
-
 bool write_user   = false;
 bool write_eb_surface = false;
 
@@ -72,9 +68,6 @@ void ReadParameters ()
 
   {
      ParmParse pp("mfix");
-     pp.query("hourglass", hourglass);
-     pp.query("clr", clr);
-     pp.query("clr_riser", clr_riser);
 
      pp.query("write_user", write_user);
      pp.query("write_eb_surface", write_eb_surface);
@@ -159,35 +152,27 @@ int main (int argc, char* argv[])
     int restart_flag = 0;
     if (restart_file.empty())
     {
+        // NOTE: this also builds ebfactories and level-set
         my_mfix.InitLevelData(lev,dt,time);
     }
     else
     {
         restart_flag = 1;
+        // NOTE: mfix::levelset__restart == true loading level-set from a
+        // checkpoint file. However, if this is a replicating restart,
+        // mfix::levelset__restart is set to false again (so that the level-sets
+        // are recomputed for the replicated system).
         my_mfix.levelset__restart = true;
 
+        // NOTE: 1) this also builds ebfactories and level-set 2) this can
+        // change the grids (during replication)
         IntVect Nrep(repl_x, repl_y, repl_z);
         my_mfix.Restart(restart_file, & nstep, & dt, & time, Nrep);
-
     }
 
-    // This call checks if we want to regrid using the max_grid_size just
-    // read in from the inputs file (only relevant if load_balance_type =
-    // "FixedSize" or "KnapSack"). Note that this call does not depend on
-    // regrid_int.  This call needs to occur after the restart is read.
-    my_mfix.RegridOnStart(lev);
-
-    // We move this to after restart and/or regrid so we make the EB data structures with the correct
-    //    BoxArray and DistributionMapping
-    if (hourglass) {
-        my_mfix.make_eb_hourglass(lev);
-    } else if(clr) {
-        my_mfix.make_eb_clr(lev);
-    } else if(clr_riser) {
-        my_mfix.make_eb_clr_riser(lev);
-    } else {
-        my_mfix.make_eb_geometry(lev);
-    }
+    if (mfix_level::get_load_balance_type() == "FixedSize" ||
+        mfix_level::get_load_balance_type()== "KnapSack" )
+        my_mfix.Regrid(lev,0);
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
     my_mfix.Regrid(lev,nstep);

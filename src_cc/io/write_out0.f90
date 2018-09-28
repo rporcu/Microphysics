@@ -21,7 +21,6 @@
       use param, only: half, undefined, zero, is_defined
       use constant, only: mmax
       use run, only: description, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, tstop
-      use run, only: discretize
       use scales, only: p_scale, p_ref
 
       use ic, only: write_out_ic
@@ -33,11 +32,10 @@
       real(rt)  , intent(in   ) :: time, dt, dx, dy, dz
       real(rt)  , intent(in   ) :: xlength, ylength, zlength
 
-      integer :: L, M, N
+      integer :: M, N
       integer :: mmax_tot
 
       character(LEN= 3), DIMENSION(  3) :: legend
-      character(LEN=12), DIMENSION(0:2) :: DISCR_NAME
 
       integer, PARAMETER :: unit_out = 52
       integer :: ier
@@ -224,13 +222,6 @@
  1157 FORMAT(7X,'Reference pressure (P_ref) = ',G12.5,/7X,&
          'Pressure scale-factor (P_scale) = ',G12.5,/7X,&
          'Gravitational acceleration (GRAVITY) = ',G12.5)
- 1159 FORMAT(9X,&
-         'Fluid cont.  and P_g  = ',F6.3,2X,I4,6X,A8,5x,A4,4X,G11.4,3X,A4,3X,A12/9X,&
-         'Solids cont. and P_s  = ',F6.3,2X,I4,6X,A8,5x,A4,4X,G11.4,3X,A4,3X,A12/9X,&
-         'U velocity            = ',F6.3,2X,I4,6X,A8,5x,A4,4X,G11.4,3X,A4,3X,A12/9X,&
-         'V velocity            = ',F6.3,2X,I4,6X,A8,5x,A4,4X,G11.4,3X,A4,3X,A12/9X,&
-         'W velocity            = ',F6.3,2X,I4,6X,A8,5x,A4,4X,G11.4,3X,A4,3X,A12/9X,&
-         'User scalar           = ',F6.3,2X,I4,6X,A8,5x,A4,4X,G11.4,3X,A4,3X,A12/)
 !
  1200 FORMAT(//,3X,'3. GEOMETRY AND DISCRETIZATION',/)
 

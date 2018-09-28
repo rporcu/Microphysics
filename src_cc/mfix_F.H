@@ -92,7 +92,8 @@ extern "C"
 
     void set_p0(const int*  lo   , const int*  hi,
 	        const int* domlo , const int* domhi,
-                amrex::Real* p0_g, const int* rlo, const int* rhi,
+                amrex::Real* p0_g , const int* rlo, const int* rhi,
+                amrex::Real* gp0_g, const int* glo, const int* ghi,
 	        amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
 	        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
 	        int* delp_dir,
@@ -128,6 +129,9 @@ extern "C"
         const int* domlo , const int* domhi,
         const int* ng
         );
+
+  void mfix_cap_eps(const int* slo, const int* shi, amrex::Real* ep_g);
+
 
     void set_drag_bcs(
         amrex::Real* drag, const int* slo, const int* shi,
@@ -195,14 +199,15 @@ extern "C"
        amrex::Real* dx, amrex::Real* dy, amrex::Real* dz
         );
 
-    void calc_drag_particle(
-            amrex::Real* gpx, const int* xlo, const int* xhi,
-            amrex::Real* gpy, const int* ylo, const int* yhi,
-            amrex::Real* gpz, const int* zlo, const int* zhi,
-            amrex::Real* vel, const int* ulo, const int* uhi,
+    void calc_drag_particle(  
+            const amrex::Real* gp , const int* gplo , const int* gphi,
+            const amrex::Real* gp0, const int* gp0lo, const int* gp0hi,
+            const amrex::Real* vel, const int* ulo, const int* uhi,
+            const amrex::Real* xslopes, const amrex::Real* yslopes, 
+            const amrex::Real* zslopes, const int* slo, const int* shi,
             const int* np, void* particles,
             amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-            const int* nodal_pressure
+            int use_slopes
         );
 
     void physical_prop(const int* slo, const int* shi,
@@ -254,16 +259,6 @@ extern "C"
                                  amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
 
 
-    void rm_wall_collisions ( void* rparticles, const int* nrp,
-                              const void* flag, const int* fglo, const int* fghi,
-                              const amrex_real* bcent, const int* blo, const int* bhi,
-                              const amrex_real* ax, const int* axlo, const int* axhi,
-                              const amrex_real* ay, const int* aylo, const int* ayhi,
-                              const amrex_real* az, const int* azlo, const int* azhi,
-                              const amrex::Real* dx);
-
-
-
     void mfix_particle_generator_prop( const int* nrp,  void* particles);
 
     void mfix_usr0();
@@ -304,14 +299,12 @@ extern "C"
 
     void set_gradp_bcs (
              const int* slo, const int* shi,
-             amrex::Real* gpx, const int* xlo, const int* xhi,
-             amrex::Real* gpy, const int* ylo, const int* yhi,
-             amrex::Real* gpz, const int* zlo, const int* zhi,
+             amrex::Real* gp, const int* glo, const int* ghi,
 	     const int* bc_ilo, const int* bc_ihi,
 	     const int* bc_jlo, const int* bc_jhi,
 	     const int* bc_klo, const int* bc_khi,
 	     const int* domlo , const int* domhi,
-             const int* ng, const int* nodal_pressure
+             const int* ng
        );
 
     void init_periodic_vortices (
@@ -341,6 +334,15 @@ extern "C"
 	const int* domlo, const int* domhi
             );
 
+    void average_cc_to_fc ( const int* lo, const int* hi,
+                            amrex::Real* fcx, const int* fcxlo, const int* fcxhi,
+                            amrex::Real* fcy, const int* fcylo, const int* fcyhi,
+                            amrex::Real* fcz, const int* fczlo, const int* fczhi,
+                            const amrex::Real* cc, const int* slo, const int* shi
+      );
+
+
+   
 #ifdef __cplusplus
 }
 #endif

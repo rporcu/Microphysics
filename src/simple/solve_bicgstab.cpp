@@ -70,7 +70,7 @@ sxay (MultiFab&       ss,
 int
 mfix_level::solve_bicgstab (MultiFab&       sol,
                             const MultiFab& rhs,
-                            const MultiFab& A_m,
+                            const MultiFab& A_matrix,
                             int             sweep_type,
                             int             precond_type,
                             int             maxiter,
@@ -122,11 +122,11 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
         const Box&  bx = mfi.tilebox();
         const Box& rbx = rhs[mfi].box();
-        const Box& abx = A_m[mfi].box();
+        const Box& abx = A_matrix[mfi].box();
 
         leq_scale(bx.loVect(), bx.hiVect(),
                   rhs[mfi].dataPtr(), rbx.loVect(), rbx.hiVect(),
-                  A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect());
+                  A_matrix[mfi].dataPtr(), abx.loVect(), abx.hiVect());
 
        if (fluid_cost[lev]) {
          const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
@@ -152,14 +152,14 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       const Box&  bx = mfi.tilebox();
       const Box& hbx = rhs[mfi].box();
       const Box& rbx =   r[mfi].box();
-      const Box& abx = A_m[mfi].box();
+      const Box& abx = A_matrix[mfi].box();
       const Box& sbx = sol[mfi].box();
 
       // Compute r = rhs - A_m*sol
       leq_residual( bx.loVect(), bx.hiVect(),
                    rhs[mfi].dataPtr(), hbx.loVect(), hbx.hiVect(),
                    sol[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+                   A_matrix[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                      r[mfi].dataPtr(), rbx.loVect(), rbx.hiVect());
 
        if (fluid_cost[lev]) {
@@ -241,12 +241,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
           const Box&  bx = mfi.tilebox();
           const Box& pbx =   p[mfi].box();
-          const Box& abx = A_m[mfi].box();
+          const Box& abx = A_matrix[mfi].box();
           const Box& hbx =  ph[mfi].box();
 
           leq_msolve1( bx.loVect(), bx.hiVect() ,
                         p[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
-                      A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+                      A_matrix[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                        ph[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
 
           if (fluid_cost[lev]) {
@@ -274,11 +274,11 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
         const Box&  bx = mfi.tilebox();
         const Box& pbx =  ph[mfi].box();
-        const Box& abx = A_m[mfi].box();
+        const Box& abx = A_matrix[mfi].box();
         const Box& vbx =   v[mfi].box();
         leq_matvec( bx.loVect(), bx.hiVect(),
                     ph[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
-                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+                   A_matrix[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                      v[mfi].dataPtr(), vbx.loVect(), vbx.hiVect());
 
         if (fluid_cost[lev]) {
@@ -324,19 +324,19 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-        for (MFIter mfi(A_m, true); mfi.isValid(); ++mfi)
+        for (MFIter mfi(A_matrix, true); mfi.isValid(); ++mfi)
         {
 
           Real wt = ParallelDescriptor::second();
 
           const Box&  bx = mfi.tilebox();
           const Box& sbx =   s[mfi].box();
-          const Box& abx = A_m[mfi].box();
+          const Box& abx = A_matrix[mfi].box();
           const Box& hbx =  sh[mfi].box();
 
           leq_msolve1( bx.loVect(), bx.hiVect() ,
            s[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-           A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+           A_matrix[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
            sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
 
           if (fluid_cost[lev]) {
@@ -357,25 +357,25 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-      for (MFIter mfi(A_m, true); mfi.isValid(); ++mfi)
+      for (MFIter mfi(A_matrix, true); mfi.isValid(); ++mfi)
       {
 
         Real wt = ParallelDescriptor::second();
 
         const Box&  bx = mfi.tilebox();
-        const Box& sbx =  sh[mfi].box();
-        const Box& abx = A_m[mfi].box();
-        const Box& tbx =   t[mfi].box();
+        const Box& sbx =       sh[mfi].box();
+        const Box& abx = A_matrix[mfi].box();
+        const Box& tbx =        t[mfi].box();
 
         leq_matvec( bx.loVect(), bx.hiVect(),
         sh[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-        A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+        A_matrix[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                     t[mfi].dataPtr(), tbx.loVect(), tbx.hiVect());
 
         if (fluid_cost[lev]) {
-          const Box& tbx = mfi.tilebox(IntVect::TheZeroVector());
-          wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-          (*fluid_cost[lev])[mfi].plus(wt, tbx);
+          const Box& cell_tbx = mfi.tilebox(IntVect::TheZeroVector());
+          wt = (ParallelDescriptor::second() - wt) / cell_tbx.d_numPts();
+          (*fluid_cost[lev])[mfi].plus(wt, cell_tbx);
         }
       }
 

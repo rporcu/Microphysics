@@ -1,16 +1,22 @@
-module functions
+module avg_functions
 
-! iminus, iplus, jminus, jplus, kminus, kplus:
-! Functions for calculating indicated directional shift in given IJK
-! index. This will generally return the ijk index of the computational
-! cell corresponding to the indicated shift regardless of the wall
-! status of that computational cell. It may not return corner cells
-! unless the ijk cell itself is a corner cell.
-!---------------------------------------------------------------------//
-! Additional functions
-!---------------------------------------------------------------------//
-contains
+   use amrex_fort_module, only : rt => amrex_real
 
-  include 'functions.inc'
+   contains
 
-end module functions
+  ! Arithmetic average
+   real(rt) function avg(Xm, Xp)
+      implicit none
+      double precision, intent(in) :: Xp, Xm
+      avg = 0.5d0 *(Xm + Xp)
+   end function avg
+
+  ! Harmonic average
+   real(rt) function avg_h(Xm, Xp)
+      use param, only: small_number
+      implicit none
+      double precision, intent(in) :: Xp, Xm
+      avg_h = Xm * Xp / max(small_number, 0.5d0*(Xm + Xp) )
+   end function avg_h
+
+end module avg_functions

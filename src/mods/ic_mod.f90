@@ -48,6 +48,8 @@ module ic
   real(rt) :: ic_ro_s_min(dim_ic, dim_m)
   real(rt) :: ic_ro_s_max(dim_ic, dim_m)
 
+  character(len=16) :: ic_pack_type(dim_ic)
+
 contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -63,9 +65,10 @@ contains
 
     integer, intent(in) :: icv
 
-    ic_defined = is_defined(ic_x_w(icv)) .or. is_defined(ic_x_e(icv)) .or. &
-      is_defined(ic_y_s(icv)) .or. is_defined(ic_y_n(icv)) .or. &
-      is_defined(ic_z_b(icv)) .or. is_defined(ic_z_t(icv))
+    ic_defined = &
+         is_defined(ic_x_w(icv)) .or. is_defined(ic_x_e(icv)) .or. &
+         is_defined(ic_y_s(icv)) .or. is_defined(ic_y_n(icv)) .or. &
+         is_defined(ic_z_b(icv)) .or. is_defined(ic_z_t(icv))
 
    end function ic_defined
 
@@ -104,9 +107,9 @@ contains
              i_w, i_e, j_s, j_n, k_b, k_t)
 
             write (unit_out, 1520) &
-               ic_x_w(icv), dx*dble(i_w-1), ic_x_e(icv), dx*dble(i_e), &
-               ic_y_s(icv), dy*dble(j_s-1), ic_y_n(icv), dy*dble(j_n), &
-               ic_z_b(icv), dz*dble(k_b-1), ic_z_t(icv), dz*dble(k_t)
+               ic_x_w(icv), dx*dble(i_w), ic_x_e(icv), dx*dble(i_e+1), &
+               ic_y_s(icv), dy*dble(j_s), ic_y_n(icv), dy*dble(j_n+1), &
+               ic_z_b(icv), dz*dble(k_b), ic_z_t(icv), dz*dble(k_t+1)
 
 1520 format(9x,45X,' Specified  ',5X,' Simulated  ',/&
          9X,'X coordinate of west face   (IC_X_w) ...... ',g12.5, 5x, g12.5/,&

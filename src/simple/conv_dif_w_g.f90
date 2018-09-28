@@ -72,7 +72,7 @@ module w_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      use functions, only: avg_h
+      use avg_functions, only: avg_h
       use matrix   , only: e, w, n, s, t, b
 
       integer     , intent(in   ) ::  lo(3), hi(3)

@@ -18,18 +18,18 @@ namespace
 // This function initializes the attributes vecVarsName,
 //                                          pltscalarVars, pltscaVarsName,
 //                                          chkscalarVars, chkscaVarsName.
-// If new variables need to be added to the output/checkpoint, simply
-// add them here and the IO routines will automatically take care of them.
+// If new variables need to be added to the output/checkpoint, simply add them
+// here and the IO routines will automatically take care of them.
 void
 mfix_level::InitIOData ()
 {
     // Define the list of vector variables on faces that need to be written
     // to plotfile/checkfile.
-    vecVarsName = {"u_g", "v_g", "w_g"};
+    vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
-    // Define the list of scalar variables at cell centers that need to be written
-    // to plotfile/checkfile.
-    // "volfrac" MUST always be last without any mf associated to it!!!
+    // Define the list of scalar variables at cell centers that need to be
+    // written to plotfile/checkfile. "volfrac" MUST always be last without any
+    // mf associated to it!!!
     pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "vort", "diveu", "level-set", "volfrac"};
     pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &vort,  &diveu,  &ls};
 
@@ -57,17 +57,19 @@ mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time, 
     if (ParallelDescriptor::IOProcessor())
     {
       std::string HeaderFileName(name + "/Header");
-      std::ofstream HeaderFile(HeaderFileName.c_str(), std::ofstream::out   |
-         std::ofstream::trunc |
-         std::ofstream::binary);
+      VisMF::IO_Buffer io_buffer(VisMF::IO_Buffer_Size);
+      std::ofstream HeaderFile;
+
+      HeaderFile.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
+
+      HeaderFile.open(HeaderFileName.c_str(), std::ofstream::out   |
+                      std::ofstream::trunc |
+                      std::ofstream::binary);
 
       if ( ! HeaderFile.good() )
           amrex::FileOpenFailed(HeaderFileName);
 
       HeaderFile.precision(17);
-
-      VisMF::IO_Buffer io_buffer(VisMF::IO_Buffer_Size);
-      HeaderFile.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
 
       if (is_checkpoint)
          HeaderFile << "Checkpoint version: 1\n";
@@ -126,6 +128,11 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
           VisMF::Write( (*vel_g[lev]),
             amrex::MultiFabFileFullPrefix(lev, checkpointname,
                   level_prefix, vecVarsName[0]));
+
+          // This writes all three pressure gradient components
+          VisMF::Write( (*gp[lev]),
+            amrex::MultiFabFileFullPrefix(lev, checkpointname,
+                  level_prefix, vecVarsName[3]));
 
           // Write scalar variables
           for (int i = 0; i < chkscalarVars.size(); i++ ) {
@@ -192,8 +199,16 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 
     amrex::Print() << "  Restarting from checkpoint " << restart_file << std::endl;
 
-    if (Nrep != IntVect::TheUnitVector())
-       amrex::Print() << "  Replication " << Nrep << std::endl;
+    if (Nrep != IntVect::TheUnitVector()) {
+        amrex::Print() << "  Replication " << Nrep << std::endl;
+
+        // Since a replication has taken place, the level-set function needs to
+        // be re-computed:
+        levelset__restart = false;
+
+        amrex::Print() << "ATTN: Due to replication, level-set will be re-calculated."
+                       << std::endl;
+    }
 
     Real prob_lo[BL_SPACEDIM];
     Real prob_hi[BL_SPACEDIM];
@@ -324,8 +339,12 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
                ReMakeNewLevelFromScratch(lev,ba,dm);
             }
 
-            if (solve_fluid)
-               AllocateArrays(lev);
+            // This needs is needed before initializing level MultiFabs: ebfactories should
+            // not change after the eb-dependent MultiFabs are allocated.
+            make_eb_geometry(lev);
+
+            // Allocate the fluid data, NOTE: this depends on the ebfactories.
+            if (solve_fluid) AllocateArrays(lev);
         }
     }
 
@@ -342,14 +361,18 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
        // Load the field data
        for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
        {
-          // Read velocity
+          // Read velocity and pressure gradients
           MultiFab mf_vel;
           VisMF::Read(mf_vel, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix, "u_g"));
 
+          MultiFab mf_gp;
+          VisMF::Read(mf_gp, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix, "gpx"));
+
           if (Nrep == IntVect::TheUnitVector())
           {
-              // Simply copy mf into vel_g
+              // Simply copy mf_vel into vel_g, mf_gp into gp
               vel_g[lev] -> copy(mf_vel, 0, 0, 3, 0, 0);
+                 gp[lev] -> copy(mf_gp , 0, 0, 3, 0, 0);
 
            } else {
 
@@ -357,14 +380,17 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
                    amrex::Abort("Replication only works if one initial grid");
 
                mf_vel.FillBoundary(geom[lev].periodicity());
+                mf_gp.FillBoundary(geom[lev].periodicity());
 
                FArrayBox single_fab_vel(mf_vel.boxArray()[0],3);
+               FArrayBox single_fab_gp ( mf_gp.boxArray()[0],3);
 
               // Copy and replicate mf into velocity
               for (MFIter mfi(*vel_g[lev]); mfi.isValid(); ++mfi)
               {
                 int ib = mfi.index();
                 (*vel_g[lev])[ib].copy(single_fab_vel,single_fab_vel.box(),0,mfi.validbox(),0,3);
+                (   *gp[lev])[ib].copy(single_fab_gp , single_fab_gp.box(),0,mfi.validbox(),0,3);
               }
            }
 
@@ -416,13 +442,11 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     int lev = 0;
     if (Nrep == IntVect::TheUnitVector())
     {
-       // We need to do this on restart regardless of whether we replicate
-        pc -> Redistribute();
-
+        // We need to do this on restart regardless of whether we replicate
+        pc->Redistribute();
     } else {
-
        // This call to Replicate adds the new particles, then calls Redistribute()
-       pc->Replicate(Nrep,geom[lev],dmap[lev],grids[lev]);
+       pc->Replicate(Nrep, geom[lev], dmap[lev], grids[lev]);
     }
 
 
@@ -434,65 +458,67 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     * (compared to the rest of the checkpoint data) => the level-set data is   *
     * stored in seperate ls_raw MultiFab.                                      *
     ****************************************************************************/
+    if (levelset__restart) {
+        // Load level-set Multifab
+        std::stringstream ls_data_path;
+        ls_data_path << restart_file << "/ls_raw";
 
-    // Load level-set Multifab
-    std::stringstream ls_data_path;
-    ls_data_path << restart_file << "/ls_raw";
+        MultiFab ls_mf;
+        VisMF::Read(ls_mf, ls_data_path.str());
 
-    MultiFab ls_mf;
-    VisMF::Read(ls_mf, ls_data_path.str());
+        // Load LSFactory parameters: => in case the user has changed the inputs
+        int levelset_params[4] = { levelset__refinement,
+                                   levelset__pad,
+                                   levelset__eb_refinement,
+                                   levelset__eb_pad         };
 
-    // Load LSFactory parameters: => in case the user has changed the inputs
-    int levelset_params[4] = { levelset__refinement,
-                               levelset__pad,
-                               levelset__eb_refinement,
-                               levelset__eb_pad         };
+        std::ifstream param_file;
+        std::stringstream param_file_name;
+        param_file_name << restart_file << "/LSFactory_params";
+        param_file.open(param_file_name.str());
 
-    std::ifstream param_file;
-    std::stringstream param_file_name;
-    param_file_name << restart_file << "/LSFactory_params";
-    param_file.open(param_file_name.str());
+        amrex::readIntData(levelset_params, 4, param_file, FPC::NativeIntDescriptor());
+        int ls_ref = levelset_params[0], ls_pad = levelset_params[1],
+            eb_ref = levelset_params[2], eb_pad = levelset_params[3];
 
-    amrex::readIntData(levelset_params, 4, param_file, FPC::NativeIntDescriptor());
-    int ls_ref = levelset_params[0], ls_pad = levelset_params[1],
-        eb_ref = levelset_params[2], eb_pad = levelset_params[3];
+        amrex::Print() << "     + Loaded level-set parameters:" << std::endl
+                       << "       ref = " << ls_ref << " pad = " << ls_pad
+                       << " eb_ref = " << eb_ref << " eb_pad = " << eb_pad
+                       << std::endl;
 
-    amrex::Print() << "     + Loaded level-set parameters:" << std::endl
-                   << "       ref = " << ls_ref << " pad = " << ls_pad
-                   << " eb_ref = " << eb_ref << " eb_pad = " << eb_pad
-                   << std::endl;
+        // Inform the user if the checkpoint parameters do not match those in the
+        // inputs file. The checkpoint inputs overwrite the inputs file.
+        if(ls_ref != levelset__refinement)
+            amrex::Print() << "     * Overwrote levelset__refinement = " << levelset__refinement
+                           << " -> " << ls_ref << std::endl;
+        if(ls_pad != levelset__pad)
+            amrex::Print() << "     * Overwrote levelset__pad = " << levelset__pad
+                           << " -> " << ls_pad << std::endl;
+        if(eb_ref != levelset__eb_refinement)
+            amrex::Print() << "     * Overwrote levelset__eb_refinement = " << levelset__eb_refinement
+                           << " -> " << eb_ref << std::endl;
+        if(eb_pad != levelset__eb_pad)
+            amrex::Print() << "     * Overwrote levelset__eb_pad = " << levelset__eb_pad
+                           << " -> " << eb_pad << std::endl;
 
-    // Inform the user if the checkpoint parameters do not match those in the
-    // inputs file. The checkpoint inputs overwrite the inputs file.
-    if(ls_ref != levelset__refinement)
-        amrex::Print() << "     * Overwrote levelset__refinement = " << levelset__refinement
-                       << " -> " << ls_ref << std::endl;
-    if(ls_pad != levelset__pad)
-        amrex::Print() << "     * Overwrote levelset__pad = " << levelset__pad
-                       << " -> " << ls_pad << std::endl;
-    if(eb_ref != levelset__eb_refinement)
-        amrex::Print() << "     * Overwrote levelset__eb_refinement = " << levelset__eb_refinement
-                       << " -> " << eb_ref << std::endl;
-    if(eb_pad != levelset__eb_pad)
-        amrex::Print() << "     * Overwrote levelset__eb_pad = " << levelset__eb_pad
-                       << " -> " << eb_pad << std::endl;
+        // Level-Set: initialize container class for level set
+        level_set = std::unique_ptr<LSFactory>(
+                                               new LSFactory(lev, ls_ref, eb_ref, ls_pad, eb_pad,
+                                                             pc->ParticleBoxArray(lev), pc->Geom(lev),
+                                                             pc->ParticleDistributionMap(lev))
+                                               );
+        // Overwrite initial level-set data using the loaded MultiFab
+        level_set->set_data(ls_mf);
 
-    // Level-Set: initialize container class for level set
-    level_set = std::unique_ptr<LSFactory>(
-                    new LSFactory(lev, ls_ref, eb_ref, ls_pad, eb_pad,
-                                  pc->ParticleBoxArray(lev), pc->Geom(lev), pc->ParticleDistributionMap(lev))
-                );
-    // Overwrite initial level-set data using the loaded MultiFab
-    level_set->set_data(ls_mf);
-
-    // Make sure that at (at least) an initial MultiFab ist stored in ls[lev].
-    // (otherwise, if there are no walls/boundaries in the simulation, saving a
-    // plot file or checkpoint will segfault).
-    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-    const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
-    ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
-    ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls[lev]->nGrow());
-    ls[lev]->FillBoundary(geom[lev].periodicity());
+        // Make sure that at (at least) an initial MultiFab ist stored in ls[lev].
+        // (otherwise, if there are no walls/boundaries in the simulation, saving a
+        // plot file or checkpoint will segfault).
+        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+        const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+        ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
+        ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls[lev]->nGrow());
+        ls[lev]->FillBoundary(geom[lev].periodicity());
+    }
 
     if (solve_fluid)
     {
@@ -501,8 +527,8 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 
        if (!nodal_pressure )
        {
-	   fill_mf_bc(lev,*p_g[lev]);
-	   fill_mf_bc(lev,*p_go[lev]);
+           fill_mf_bc(lev,*p_g[lev]);
+           fill_mf_bc(lev,*p_go[lev]);
        }
 
        fill_mf_bc(lev,*ro_g[lev]);
@@ -671,14 +697,20 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
           MultiFab::Copy(*mf[lev], (*vel_g[lev]), 1, 1, 1, 0);
           MultiFab::Copy(*mf[lev], (*vel_g[lev]), 2, 2, 1, 0);
 
+          // Pressure gradient components
+          MultiFab::Copy(*mf[lev], (*gp[lev]), 0, 3, 1, 0);
+          MultiFab::Copy(*mf[lev], (*gp[lev]), 1, 4, 1, 0);
+          MultiFab::Copy(*mf[lev], (*gp[lev]), 2, 5, 1, 0);
+
           // Scalar variables
-          int dcomp = 3;
+          int dcomp = vecVarsName.size();
           for( int i = 0; i < pltscalarVars.size(); i++ ) {
               if (pltscaVarsName[i] == "level-set")
               {
                   // Level set lives on nodes, AMRVis doesn't =>  map the nodal
                   // MultiFab to the cell-centered MultiFab:
-                  if (ebfactory) {
+                  // if (ebfactory[lev]) {
+                  if (solve_dem) {
                      amrex::average_node_to_cellcenter(*mf[lev], dcomp, *(*pltscalarVars[i] )[lev].get(), 0, 1);
                   } else {
                      mf[lev]->setVal(0.0,dcomp,1,0);
@@ -702,26 +734,26 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
               dcomp++;
           }
 
-          if (ebfactory) {
-              MultiFab::Copy(*mf[lev], ebfactory->getVolFrac(), 0, dcomp, 1, 0);
+          if (ebfactory[lev]) {
+              MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, dcomp, 1, 0);
           } else {
               mf[lev]->setVal(1.0,dcomp,1,0);
           }
-
-          Vector<const MultiFab*> mf2(finest_level+1);
-
-          for (int lev = 0; lev <= finest_level; ++lev) {
-              mf2[lev] = mf[lev].get();
-          }
-
-          // Concatenate scalar and vector var names
-          Vector<std::string>  names;
-          names.insert( names.end(),    vecVarsName.begin(),    vecVarsName.end());
-          names.insert( names.end(), pltscaVarsName.begin(), pltscaVarsName.end());
-
-          amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
-                       Geom(), time, istep, refRatio());
        }
+
+       Vector<const MultiFab*> mf2(finest_level+1);
+
+       for (int lev = 0; lev <= finest_level; ++lev) {
+           mf2[lev] = mf[lev].get();
+       }
+
+       // Concatenate scalar and vector var names
+       Vector<std::string>  names;
+       names.insert( names.end(),    vecVarsName.begin(),    vecVarsName.end());
+       names.insert( names.end(), pltscaVarsName.begin(), pltscaVarsName.end());
+
+       amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
+                                      Geom(), time, istep, refRatio());
     }
     else // no fluid
     {
@@ -788,6 +820,18 @@ mfix_level::WriteUSER(int lev, Real dt, Real time) const
   for (int i=0; i<256; ++i)
     accumulator[i] = 0.0L;
 
+  // Create a temporary multifab to hold (p_g + p0_g)
+  std::unique_ptr<MultiFab> pg_sum(new MultiFab(
+          p_g[lev]->boxArray(), p_g[lev]->DistributionMap(),
+          p_g[lev]->nComp(),    p_g[lev]->nGrow()));
+
+  // // Fill it with (p_g)
+  int ng = p_g[lev]->nGrow();
+  pg_sum->copy(*p_g[lev],0,0,1,ng,ng);
+
+  // Add in p0_g
+  MultiFab::Add(*pg_sum, *p0_g[lev], 0, 0, 1, ng);
+
   // No tiling.
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
@@ -797,7 +841,7 @@ mfix_level::WriteUSER(int lev, Real dt, Real time) const
       mfix_collect_fluid(sbx.loVect(), sbx.hiVect(),
                          bx.loVect(), bx.hiVect(),
                          domain.loVect(), domain.hiVect(),
-                         (*p_g[lev])[mfi].dataPtr(),
+                         (*pg_sum)[mfi].dataPtr(),
                          (*ep_g[lev])[mfi].dataPtr(),
                          &dx, &dy, &dz, accumulator);
     }

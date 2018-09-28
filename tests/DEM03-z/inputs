@@ -15,3 +15,5 @@ geometry.coord_sys   = 0                         # 0: Cartesian
 geometry.is_periodic = 1        1        0       # Is periodic in each direction?
 geometry.prob_lo     = 0.       0.       0.      # lo corner of physical domain
 geometry.prob_hi     = 0.0045   0.0045   0.0018  # hi corner of physical domain
+
+mfix.geometry = box

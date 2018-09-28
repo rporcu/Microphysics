@@ -6,4 +6,5 @@
 
     ic_dp_dist, ic_dp_mean, ic_dp_std, ic_dp_min, ic_dp_max, &
 
-    ic_ro_s_dist, ic_ro_s_mean, ic_ro_s_std, ic_ro_s_min, ic_ro_s_max
+    ic_ro_s_dist, ic_ro_s_mean, ic_ro_s_std, ic_ro_s_min, ic_ro_s_max, &
+    ic_pack_type

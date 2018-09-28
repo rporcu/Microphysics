@@ -25,8 +25,8 @@ enable_language (Fortran)
 
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
-set (AMREX_GIT_COMMIT_MASTER   777a7c4241cb82437e06aabd7dfe0a32d4 )
-set (AMREX_GIT_COMMIT_DEVELOP  0828c263b8169c59e4cd9b53a163f25639 )
+set (AMREX_GIT_COMMIT_MASTER   121d9c0bd059567a508de0d891e4e1ba98c4e8d3 )
+set (AMREX_GIT_COMMIT_DEVELOP  121d9c0bd059567a508de0d891e4e1ba98c4e8d3 )
 
 set (AMREX_GIT_TAG)  # The commit id or branch to download
 
@@ -38,9 +38,9 @@ include ( MFIX_Options )
 #
 # AMReX-related config options
 #
-set (AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags for AMReX (Superbuild only)" )
+set ( AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags for AMReX (Superbuild only)" )
 
-set (AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
+set ( AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
 
 option ( AMREX_ENABLE_EB "Build EB code" ON)
 
@@ -173,10 +173,9 @@ ExternalProject_Add ( mfix
    INSTALL_COMMAND ""
    )
 
-# When using superbuild, the compile commands databases do not exist
-# before compile-time.
-# Hence create a new build target (compile_dB) which collects both
-# mfix's and amrex's compile_commands.json, concatenates them in the
+# When using superbuild, the compile commands databases do not exist before
+# compile-time.  Hence create a new build target (compile_db) which collects
+# both mfix's and amrex's compile_commands.json, concatenates them in the
 # project's root directory
 add_custom_target( compile_db
     # First take mfix's compile database (compile_commands.json) and:

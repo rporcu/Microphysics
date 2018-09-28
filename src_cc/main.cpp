@@ -14,10 +14,6 @@ int   verbose     = -1;
 int   regrid_int  = -1;
 Real stop_time    = -1.0;
 
-bool hourglass    = false;
-bool clr          = false;
-bool clr_riser    = false;
-
 bool write_user   = false;
 bool write_eb_surface = false;
 
@@ -72,9 +68,6 @@ void ReadParameters ()
 
   {
      ParmParse pp("mfix");
-     pp.query("hourglass", hourglass);
-     pp.query("clr", clr);
-     pp.query("clr_riser", clr_riser);
 
      pp.query("write_user", write_user);
      pp.query("write_eb_surface", write_eb_surface);
@@ -86,7 +79,7 @@ int main (int argc, char* argv[])
     // Issue an error if AMR input file is not given
     if ( argc < 2 )
        amrex::Abort("AMReX input file missing");
-    
+
     // AMReX will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
     amrex::Initialize(argc,argv);
@@ -95,7 +88,7 @@ int main (int argc, char* argv[])
 
     // Warn that this is the xp branch
     amrex::Print() << "\n\nWARNING:\nMFIX was configured in Approximate Projection Mode\n\n";
-    
+
     // Setting format to NATIVE rather than default of NATIVE_32
     FArrayBox::setFormat(FABio::FAB_NATIVE);
 
@@ -129,7 +122,7 @@ int main (int argc, char* argv[])
     //                                        |
     //      (loads `mfix.dat`) ---------------+
     mfix_get_data( &solve_fluid, &solve_dem, &steady_state,
-                   &dt, &dt_min, &dt_max, 
+                   &dt, &dt_min, &dt_max,
                    &stop_time, &call_udf
                   );
 
@@ -158,37 +151,29 @@ int main (int argc, char* argv[])
     int restart_flag = 0;
     if (restart_file.empty())
     {
+        // NOTE: this also builds ebfactories and level-set
         my_mfix.InitLevelData(lev,dt,time);
     }
     else
     {
         restart_flag = 1;
+        // NOTE: mfix::levelset__restart == true loading level-set from a
+        // checkpoint file. However, if this is a replicating restart,
+        // mfix::levelset__restart is set to false again (so that the level-sets
+        // are recomputed for the replicated system).
         my_mfix.levelset__restart = true;
 
+        // NOTE: 1) this also builds ebfactories and level-set 2) this can
+        // change the grids (during replication)
         IntVect Nrep(repl_x,repl_y,repl_z);
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
-
-        // This call checks if we want to regrid using the max_grid_size just
-        //   read in from the inputs file used to restart (only relevant if 
-        //   load_balance_type = "FixedSize" or "KnapSack").  Note that this call
-        //   does not depend on regrid_int.
-        my_mfix.RegridOnRestart(lev);
     }
 
-    // We move this to after restart and/or regrid so we make the EB data structures with the correct
-    //    BoxArray and DistributionMapping
-    if (hourglass) {
-        my_mfix.make_eb_hourglass(lev);
-    } else if(clr) {
-        my_mfix.make_eb_clr(lev);
-    } else if(clr_riser) {
-        my_mfix.make_eb_clr_riser(lev);
-    } else {
-        my_mfix.make_eb_geometry(lev);
-    }
+
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
-    my_mfix.Regrid(lev,nstep);
+    amrex::Print() << "Regridding at step " << nstep << std::endl;
+    my_mfix.Regrid(lev);
 
     my_mfix.PostInit( lev, dt, time, nstep, restart_flag, stop_time, steady_state );
 
@@ -216,7 +201,11 @@ int main (int argc, char* argv[])
     // We automatically write checkpoint and plotfiles with the initial data
     //    if plot_int > 0
     if ( (restart_file.empty() || plotfile_on_restart) && plot_int > 0 )
+    {
+       if (solve_fluid)
+          my_mfix.mfix_compute_vort(lev);
        my_mfix.WritePlotFile( plot_file, nstep, dt, time );
+    }
 
     // We automatically write checkpoint files with the initial data
     //    if check_int > 0
@@ -234,7 +223,7 @@ int main (int argc, char* argv[])
        last_par_ascii = nstep;
     }
 
-    bool do_not_evolve =  !steady_state && (
+    bool do_not_evolve =  !steady_state && ( (max_step == 0) ||
                      ( (stop_time >= 0.) && (time >  stop_time) ) || 
                      ( (stop_time <= 0.) && (max_step <= 0) ) );
 
@@ -252,7 +241,10 @@ int main (int argc, char* argv[])
                 Real strt_step = ParallelDescriptor::second();
 
                 if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
-                    my_mfix.Regrid(lev,nstep);
+                {
+                   amrex::Print() << "Regridding at step " << nstep << std::endl;
+                   my_mfix.Regrid(lev);
+                }
 
                 my_mfix.Evolve(lev,nstep,steady_state,dt,prev_dt,time,stop_time);
 
@@ -268,6 +260,8 @@ int main (int argc, char* argv[])
 
                     if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
                     {
+                        if (solve_fluid)
+                           my_mfix.mfix_compute_vort(lev);
                         my_mfix.WritePlotFile( plot_file, nstep, dt, time );
                         last_plt = nstep;
                     }

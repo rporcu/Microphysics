@@ -9,7 +9,8 @@
 
 // For multigrid
 #include <AMReX_MLMG.H>
-#include <AMReX_MLABecLaplacian.H>
+// #include <AMReX_MLABecLaplacian.H>
+#include <AMReX_MLEBABecLap.H>
 #include <AMReX_MLNodeLaplacian.H>
 
 //
@@ -23,11 +24,17 @@
 //
 // phi is an auxiliary function related to the pressure p_g by the relation:
 //
+//     new p_g  = phi
+//
+//     except in the initial iterations when
+//
 //     new p_g  = old p_g + phi
 void 
 mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool proj_2 )
 {
     BL_PROFILE("mfix_level::mfix_apply_projection");
+
+    vel_g[lev] -> FillBoundary (geom[lev].periodicity());
 
     // Swap ghost cells and apply BCs to velocity
     mfix_set_velocity_bcs (lev,0);
@@ -37,22 +44,30 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
         amrex::Print() << "Before projection \n";
         mfix_print_max_vel (lev);
         mfix_compute_diveu (lev);
-         amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+        amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
     }
 
     // Here we add the (1/rho gradp) back to ustar (note the +dt)
-    // We leave the (-1/rho gradp0) term in vel_g
     if (proj_2)
     {
-       mfix_add_grad_phi ( lev,  scaling_factor, (*p_g[lev]));
+       // Convert velocities to momenta
+       for (int n = 0; n < 3; n++)
+          MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+
+       MultiFab::Saxpy (*vel_g[lev], scaling_factor, *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
+
+       // Convert momenta back to velocities
+       for (int n = 0; n < 3; n++)
+          MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+
        mfix_set_velocity_bcs (lev,0);
     }
 
-    // Compute right hand side, AKA div(ep_g* u)
+    // Compute right hand side, AKA div(ep_g* u) / dt
     mfix_compute_diveu (lev);
-    diveu[lev] -> mult ( 1.0/scaling_factor, diveu[lev]->nGrow() );
+    diveu[lev] -> mult (1.0/scaling_factor, diveu[lev]->nGrow() );
 
-    // Compute the PPE coefficients
+    // Compute the PPE coefficients = (ep_g / rho) 
     mfix_compute_bcoeff_ppe ( lev );
 
     // Set BCs for Poisson's solver
@@ -70,20 +85,43 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
     phi[lev] -> setVal(0.);
  
     // Solve PPE
-    solve_poisson_equation ( lev, bcoeff, phi, diveu, bc_lo, bc_hi );
+    MultiFab fluxes(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),
+                    vel_g[lev]->nComp(), vel_g[lev]->nGrow(), MFInfo(),
+                    *ebfactory[lev]);
+
+    fluxes.setVal(1.e200);
+
+    solve_poisson_equation( lev, bcoeff, phi, diveu, bc_lo, bc_hi, fluxes );
  
     // Correct the velocity field
-    mfix_add_grad_phi ( lev, -scaling_factor, (*phi[lev]) );
+    MultiFab::Divide( fluxes, *ep_g[lev], 0, 0, 1, 0 );
+    MultiFab::Divide( fluxes, *ep_g[lev], 0, 1, 1, 0 );
+    MultiFab::Divide( fluxes, *ep_g[lev], 0, 2, 1, 0 );
+
+    //
+    // NOTE: THE SIGN OF DT (scaling_factor) IS CORRECT HERE
+    //
+    amrex::Print() << "Multiplying fluxes by dt " << scaling_factor << std::endl;
+    fluxes.mult ( scaling_factor, fluxes.nGrow() );
+    MultiFab::Add( *vel_g[lev], fluxes, 0, 0, 3, 0);
+
+    // After using the fluxes, which currently hold MINUS dt * (1/rho) * grad(phi),
+    //    to modify the velocity field,  convert them to hold grad(phi)
+    fluxes.mult ( -1/scaling_factor, fluxes.nGrow() );
+    for (int n = 0; n < 3; n++)
+       MultiFab::Multiply(fluxes,(*ro_g[lev]),0,n,1,fluxes.nGrow());
 
     if (proj_2)
     {
        // p := phi
        MultiFab::Copy (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+       MultiFab::Copy ( *gp[lev],    fluxes, 0, 0, 3,    fluxes.nGrow());
     }
     else
     {
        // p := p + phi
        MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+       MultiFab::Add ( *gp[lev],    fluxes, 0, 0, 3,    fluxes.nGrow());
     }
 
     // Swap ghost cells and apply BCs to velocity
@@ -94,7 +132,7 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
         amrex::Print() << "After  projection \n";
         mfix_print_max_vel (lev);
         mfix_compute_diveu (lev);
-         amrex::Print() << "max(abs(diveu)) = " << diveu[lev] -> norm0 () << "\n";
+        amrex::Print() << "max(abs(diveu)) = " <<  mfix_norm0(diveu, lev, 0) << "\n";
     }
 }
 
@@ -106,9 +144,10 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
 void
 mfix_level::solve_poisson_equation (  int lev,
 				      Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-				      Vector< std::unique_ptr<MultiFab> >& phi,
+				      Vector< std::unique_ptr<MultiFab> >& this_phi,
 				      Vector< std::unique_ptr<MultiFab> >& rhs,
-				      int bc_lo[], int bc_hi[] )
+				      int bc_lo[], int bc_hi[],
+                                      MultiFab& fluxes )
 {
     BL_PROFILE("mfix_level::solve_poisson_equation");
     
@@ -132,14 +171,14 @@ mfix_level::solve_poisson_equation (  int lev,
        matrix.setCoarseningStrategy(MLNodeLaplacian::CoarseningStrategy::Sigma);
 
        // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
-       phi[lev]->setVal(0.);
-       matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi)[lev] );
+       this_phi[lev]->setVal(0.);
+       matrix.setLevelBC ( lev, GetVecOfConstPtrs(this_phi)[lev] );
 
        // 
        // Then setup the solver ----------------------
        //
        MLMG  solver(matrix);
-	
+
        solver.setMaxIter (mg_max_iter);
        solver.setMaxFmgIter (mg_max_fmg_iter);
        solver.setVerbose (mg_verbose);
@@ -149,9 +188,9 @@ mfix_level::solve_poisson_equation (  int lev,
        // 
        // Finally, solve the system
        //
-       solver.solve ( GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
+       solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
 
-       phi[lev] -> FillBoundary (geom[lev].periodicity());
+       this_phi[lev] -> FillBoundary (geom[lev].periodicity());
 
     } else {
 
@@ -162,7 +201,7 @@ mfix_level::solve_poisson_equation (  int lev,
        //       (alpha * a - beta * (del dot b grad)) phi
        //
        LPInfo                       info;
-       MLABecLaplacian              matrix(geom, grids, dmap, info);
+       MLEBABecLap                  matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
        Vector<const MultiFab*>      tmp;
        array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
 
@@ -187,13 +226,27 @@ mfix_level::solve_poisson_equation (  int lev,
        matrix.setBCoeffs ( lev, b_tmp );
 
        // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
-       phi[lev]->setVal(0.);
-       matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi)[lev] );
+       this_phi[lev]->setVal(0.);
+       matrix.setLevelBC ( lev, GetVecOfConstPtrs(this_phi)[lev] );
 
        // 
        // Then setup the solver ----------------------
        //
        MLMG  solver(matrix);
+
+       // The default bottom solver is BiCG
+       // Other options include: 
+       ///   Hypre IJ AMG solver 
+       //    solver.setBottomSolver(MLMG::BottomSolver::hypre);
+       ///   regular smoothing
+       //    solver.setBottomSolver(MLMG::BottomSolver::smoother);
+
+       if (bottom_solver_type == "smoother")
+       { 
+          solver.setBottomSolver(MLMG::BottomSolver::smoother);
+       } else if (bottom_solver_type == "hypre") { 
+          solver.setBottomSolver(MLMG::BottomSolver::hypre);
+       }
 	
        solver.setMaxIter (mg_max_iter);
        solver.setMaxFmgIter (mg_max_fmg_iter);
@@ -207,9 +260,10 @@ mfix_level::solve_poisson_equation (  int lev,
        // 
        // Finally, solve the system
        //
-       solver.solve ( GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
+       solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
+       solver.getFluxes( {&fluxes}, MLMG::Location::CellCenter );
 
-       phi[lev] -> FillBoundary (geom[lev].periodicity());
+       this_phi[lev] -> FillBoundary (geom[lev].periodicity());
     }
 }
 
