@@ -129,17 +129,20 @@ contains
            bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi )
       
       ! tau_xx, tau_xy, tau_xz on west faces
-      call compute_tau_x(vel, vlo, vhi, mu, slo, shi, lambda, &
-          flags, flo, fhi, lo, hi, dx, fx, nh, do_explicit_diffusion ) 
+      call compute_tau_x(vel, vlo, vhi, mu, slo, shi, lambda,  &
+           flags, flo, fhi, lo, hi, dx, fx, nh, domlo, domhi,  &
+           do_explicit_diffusion ) 
       
       ! tau_yx, tau_yy, tau_yz on south faces
       call compute_tau_y(vel, vlo, vhi, mu, slo, shi, lambda, &
-           flags, flo, fhi, lo, hi, dx, fy, nh, do_explicit_diffusion )
+           flags, flo, fhi, lo, hi, dx, fy, nh, domlo, domhi,  &
+           do_explicit_diffusion ) 
       
       ! tau_zx, tau_zy, tau_zz on bottom faces
       call compute_tau_z(vel, vlo, vhi, mu, slo, shi, lambda, &
-           flags, flo, fhi, lo, hi, dx, fz, nh, do_explicit_diffusion )
-
+           flags, flo, fhi, lo, hi, dx, fz, nh,  domlo, domhi,  &
+           do_explicit_diffusion )
+      
       divop: block
          ! Compute div(tau) with EB algorithm
          integer(c_int)  :: fxlo(3), fxhi(3), fylo(3), fyhi(3), fzlo(3), fzhi(3)
@@ -181,7 +184,8 @@ contains
    !-----------------------------------------------------------------------!
    !-----------------------------------------------------------------------!
    subroutine compute_tau_x(vel, vlo, vhi, mu, slo, shi, lambda, &
-        flag, fglo, fghi, lo, hi, dx, tau_x, ng, do_explicit_diffusion)
+        flag, fglo, fghi, lo, hi, dx, tau_x, ng, domlo, domhi,   &
+        & do_explicit_diffusion)
 
       use amrex_ebcellflag_module, only : get_neighbor_cells_int_single
 
@@ -189,6 +193,7 @@ contains
       integer,  intent(in   ) ::  slo(3),  shi(3)
       integer,  intent(in   ) :: fglo(3), fghi(3)
       integer,  intent(in   ) ::   lo(3),   hi(3)
+      integer,  intent(in   ) ::domlo(3),domhi(3)
 
       real(rt), intent(in   ) :: dx(3), &
            vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3), &
@@ -221,9 +226,11 @@ contains
       idy = one / dx(2)
       idz = one / dx(3)
 
-      do k = lo(3)-ng, hi(3)+ng
-         do j = lo(2)-ng, hi(2)+ng
-            do i = lo(1)-ng, hi(1)+ng+1
+      tau_x = zero
+
+      do k = max(lo(3)-ng, domlo(3)), min(hi(3)+ng, domhi(3))
+         do j = max(lo(2)-ng, domlo(2)), min(hi(2)+ng, domhi(2))
+            do i = max(lo(1)-ng, domlo(1)), min(hi(1)+ng+1, domhi(1)+1)
 
                dudx = (vel(i,j,k,1) - vel(i-1,j,k,1))*idx
                dvdx = (vel(i,j,k,2) - vel(i-1,j,k,2))*idx
@@ -234,6 +241,14 @@ contains
                jlop = j + get_neighbor_cells_int_single(flag(i-1,j,k),0, 1,0)
                jlom = j - get_neighbor_cells_int_single(flag(i-1,j,k),0,-1,0)
 
+               if ( i == domlo(1) ) then
+                  jlop = jhip
+                  jlom = jhim
+               else if ( i == domlo(1)+1 ) then
+                  jhip = jlop
+                  jhim = jlom 
+               end if
+               
                whi = weights(jhip-jhim)
                wlo = weights(jlop-jlom)
 
@@ -250,6 +265,14 @@ contains
                klop = k + get_neighbor_cells_int_single(flag(i-1,j,k),0,0, 1)
                klom = k - get_neighbor_cells_int_single(flag(i-1,j,k),0,0,-1)
 
+               if ( i == domlo(1) ) then
+                  klop = khip
+                  klom = khim
+               else if ( i == domlo(1)+1 ) then
+                  khip = klop
+                  khim = klom 
+               end if
+               
                whi = weights(khip-khim)
                wlo = weights(klop-klom)
 
@@ -289,7 +312,8 @@ contains
    !-----------------------------------------------------------------------!
 
    subroutine compute_tau_y(vel, vlo, vhi, mu, slo, shi, lambda, &
-        flag, fglo, fghi, lo, hi, dx, tau_y, ng, do_explicit_diffusion)
+        flag, fglo, fghi, lo, hi, dx, tau_y, ng, domlo,domhi,    &
+        do_explicit_diffusion)
 
       use amrex_ebcellflag_module, only : get_neighbor_cells_int_single
 
@@ -297,7 +321,8 @@ contains
       integer,  intent(in   ) ::  slo(3),  shi(3)
       integer,  intent(in   ) :: fglo(3), fghi(3)
       integer,  intent(in   ) ::   lo(3),   hi(3)
-
+      integer,  intent(in   ) ::domlo(3),domhi(3)
+      
       real(rt), intent(in   ) :: dx(3), &
            vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3), &
            mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -329,10 +354,11 @@ contains
       idy = one / dx(2)
       idz = one / dx(3)
 
-
-      do k = lo(3)-ng, hi(3)+ng
-         do j = lo(2)-ng, hi(2)+ng+1
-            do i = lo(1)-ng, hi(1)+ng
+      tau_y = zero
+      
+      do k = max(lo(3)-ng, domlo(3)), min(hi(3)+ng, domhi(3))
+         do j = max(lo(2)-ng, domlo(2)), min(hi(2)+ng, domhi(2)+1)
+            do i = max(lo(1)-ng, domlo(1)), min(hi(1)+ng+1, domhi(1))
 
                dudy = (vel(i,j,k,1) - vel(i,j-1,k,1))*idy
                dvdy = (vel(i,j,k,2) - vel(i,j-1,k,2))*idy
@@ -342,6 +368,14 @@ contains
                ihim = i - get_neighbor_cells_int_single(flag(i,j  ,k),-1,0,0)
                ilop = i + get_neighbor_cells_int_single(flag(i,j-1,k), 1,0,0)
                ilom = i - get_neighbor_cells_int_single(flag(i,j-1,k),-1,0,0)
+
+               if ( j == domlo(2) ) then
+                  ilop = ihip
+                  ilom = ihim
+               else if ( j == domlo(2)+1 ) then
+                  ihip = ilop
+                  ihim = ilom 
+               end if
 
                whi = weights(ihip-ihim)
                wlo = weights(ilop-ilom)
@@ -358,6 +392,14 @@ contains
                khim = k - get_neighbor_cells_int_single(flag(i,j  ,k),0,0,-1)
                klop = k + get_neighbor_cells_int_single(flag(i,j-1,k),0,0, 1)
                klom = k - get_neighbor_cells_int_single(flag(i,j-1,k),0,0,-1)
+
+               if ( j == domlo(2) ) then
+                  klop = khip
+                  klom = khim
+               else if ( j == domlo(2)+1 ) then
+                  khip = klop
+                  khim = klom 
+               end if
 
                whi = weights(khip-khim)
                wlo = weights(klop-klom)
@@ -400,7 +442,8 @@ contains
    !-----------------------------------------------------------------------!
 
    subroutine compute_tau_z(vel, vlo, vhi, mu, slo, shi, lambda, &
-        flag, fglo, fghi, lo, hi, dx, tau_z, ng, do_explicit_diffusion)
+        flag, fglo, fghi, lo, hi, dx, tau_z, ng, domlo,domhi,    &
+        do_explicit_diffusion)
 
       use amrex_ebcellflag_module, only : get_neighbor_cells_int_single
 
@@ -408,7 +451,8 @@ contains
       integer,  intent(in   ) ::  slo(3),  shi(3)
       integer,  intent(in   ) :: fglo(3), fghi(3)
       integer,  intent(in   ) ::   lo(3),   hi(3)
-
+      integer,  intent(in   ) ::domlo(3),domhi(3)
+      
       real(rt), intent(in   ) :: dx(3), &
            vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3), &
            mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
@@ -441,10 +485,12 @@ contains
       idz = one / dx(3)
 
 
-      do k = lo(3)-ng, hi(3)+ng+1
-         do j = lo(2)-ng, hi(2)+ng
-            do i = lo(1)-ng, hi(1)+ng
-
+      tau_z = zero
+      
+      do k = max(lo(3)-ng, domlo(3)), min(hi(3)+ng, domhi(3)+1)
+         do j = max(lo(2)-ng, domlo(2)), min(hi(2)+ng, domhi(2))
+            do i = max(lo(1)-ng, domlo(1)), min(hi(1)+ng+1, domhi(1))
+               
                dudz = (vel(i,j,k,1) - vel(i,j,k-1,1))*idz
                dvdz = (vel(i,j,k,2) - vel(i,j,k-1,2))*idz
                dwdz = (vel(i,j,k,3) - vel(i,j,k-1,3))*idz
@@ -454,6 +500,14 @@ contains
                ilop = i + get_neighbor_cells_int_single(flag(i,j,k-1), 1,0,0)
                ilom = i - get_neighbor_cells_int_single(flag(i,j,k-1),-1,0,0)
 
+               if ( k == domlo(3) ) then
+                  ilop = ihip
+                  ilom = ihim
+               else if ( k == domlo(3)+1 ) then
+                  ihip = ilop
+                  ihim = ilom 
+               end if
+               
                whi = weights(ihip-ihim)
                wlo = weights(ilop-ilom)
 
@@ -469,6 +523,14 @@ contains
                jhim = j - get_neighbor_cells_int_single(flag(i,j,k  ),0,-1,0)
                jlop = j + get_neighbor_cells_int_single(flag(i,j,k-1),0 ,1,0)
                jlom = j - get_neighbor_cells_int_single(flag(i,j,k-1),0,-1,0)
+               
+               if ( k == domlo(3) ) then
+                  jlop = jhip
+                  jlom = jhim
+               else if ( k == domlo(3)+1 ) then
+                  jhip = jlop
+                  jhim = jlom 
+               end if
 
                whi = weights(jhip-jhim)
                wlo = weights(jlop-jlom)
