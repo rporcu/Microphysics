@@ -42,11 +42,11 @@ set_target_properties ( ${MFIX_LIBNAME}
 #
 # Uncategorized
 # 
-add_sources ( amrex_to_mfix.F90 fill_bc0.f90 init_namelist.f90 mfix_init.cpp  mfix_regrid.cpp mfix_arrays.cpp)
-add_sources ( set_bc_flow.f90   set_p0.f90   zero_wall_norm_vel.f90 calc_cell.f90 )
-add_sources ( compute_vort.f90  get_data.f90   mfix_evolve.cpp  mfix_level.cpp  set_bc_type.f90 )
-add_sources ( set_ps.f90 calc_mu_g.f90  init_fluid.f90  main.cpp  mfix_F.H mfix_level.H )
-add_sources ( set_epg.f90 set_bc0.f90   set_delp_dir.f90  set_velocity_bcs.f90 )
+add_sources ( fill_bc0.f90 mfix_regrid.cpp )
+add_sources ( divop_mod.f90 zero_wall_norm_vel.f90 )
+add_sources ( compute_vort.f90  mfix_evolve.cpp  mfix_level.cpp  )
+add_sources ( main.cpp  mfix_F.H mfix_level.H )
+add_sources ( set_velocity_bcs.f90 )
 
 #
 # I/0
@@ -54,15 +54,29 @@ add_sources ( set_epg.f90 set_bc0.f90   set_delp_dir.f90  set_velocity_bcs.f90 )
 include ( io/CMakeLists.txt )
 
 #
+# Convection
+#
+include ( convection/CMakeLists.txt )
+
+#
 # DES
 #
 include ( des_fluid/CMakeLists.txt )
+
+#
+# Diffusion
+#
+include ( diffusion/CMakeLists.txt )
 
 #
 # Projection
 #
 include ( projection/CMakeLists.txt )
 
+#
+# Setup
+# 
+include ( setup/CMakeLists.txt )
 
 #
 # Add folders from src ( this is the part of code base in commons between
@@ -71,11 +85,11 @@ include ( projection/CMakeLists.txt )
 set ( SRCDIR ${PROJECT_SOURCE_DIR}/src )
 
 include ( ${SRCDIR}/check_data/CMakeLists.txt )
-include ( ${SRCDIR}/des/CMakeLists.txt )
-include ( ${SRCDIR}/eb/CMakeLists.txt )
 include ( ${SRCDIR}/mods/CMakeLists.txt )
 include ( ${SRCDIR}/usr/CMakeLists.txt )
 
+include ( ${PROJECT_SOURCE_DIR}/src_des/CMakeLists.txt )
+include ( ${PROJECT_SOURCE_DIR}/src_eb/CMakeLists.txt )
 
 # Remove duplicates from include lists
 list ( REMOVE_DUPLICATES MFIX_INCLUDE_PATHS )
@@ -85,7 +99,6 @@ target_include_directories ( ${MFIX_LIBNAME} PUBLIC ${MFIX_INCLUDE_PATHS} )
 # Link to imported AMReX
 #
 target_link_libraries ( ${MFIX_LIBNAME} AMReX::amrex )
-
 
 #
 # Set the default flags 

@@ -43,16 +43,14 @@ set_target_properties ( ${MFIX_LIBNAME}
 #
 # Uncategorized
 # 
-add_sources ( mfix_evolve.cpp mfix_init.cpp mfix_arrays.cpp )
-add_sources ( mfix_level.cpp mfix_regrid.cpp )
-add_sources ( mfix_level.H mfix_F.H )
-add_sources ( calc_cell.f90 calc_mu_g.f90 )
-add_sources ( calc_tau.f90 compute_divu.f90 compute_vort.f90 )
 add_sources ( fill_bc0.f90 )
-add_sources ( get_data.f90 init_fluid.f90 init_namelist.f90 )
-add_sources ( set_bc0.f90 set_bc_flow.f90 set_bc_type.f90 set_p0.f90 set_delp_dir.f90 )
-add_sources ( set_ps.f90 set_mac_velocity_bcs.f90 )
-add_sources ( zero_wall_norm_vel.f90 amrex_to_mfix.F90 )
+add_sources ( mfix_evolve.cpp )
+add_sources ( mfix_level.cpp )
+add_sources ( mfix_regrid.cpp )
+add_sources ( mfix_level.H mfix_F.H )
+add_sources ( calc_tau.f90 compute_divu.f90 compute_vort.f90 )
+add_sources ( set_mac_velocity_bcs.f90 )
+add_sources ( zero_wall_norm_vel.f90 )
 
 #
 # Fortran Modules
@@ -60,20 +58,9 @@ add_sources ( zero_wall_norm_vel.f90 amrex_to_mfix.F90 )
 include ( mods/CMakeLists.txt )
 
 #
-# EB stuff
+# Particle/fluid
 #
-include ( eb/CMakeLists.txt )
-
-#
-# Particles
-#
-include ( des/CMakeLists.txt )
 include ( des_fluid/CMakeLists.txt )
-
-#
-# SIMPLE routines
-#
-include ( simple/CMakeLists.txt )
 
 #
 # Data checks
@@ -86,14 +73,34 @@ include ( check_data/CMakeLists.txt )
 include ( io/CMakeLists.txt )
 
 #
+# Projection
+#
+include ( projection/CMakeLists.txt )
+
+#
+# Setup routines
+#
+include ( setup/CMakeLists.txt )
+
+#
+# SIMPLE routines
+#
+include ( simple/CMakeLists.txt )
+
+#
 # Users hooks
 #
 include ( usr/CMakeLists.txt )
 
 #
-# Projection
+# EB routines
 #
-include ( projection/CMakeLists.txt )
+include ( ../src_eb/CMakeLists.txt )
+
+#
+# Particle routines
+#
+include ( ../src_des/CMakeLists.txt )
 
 # 
 # Add the include paths

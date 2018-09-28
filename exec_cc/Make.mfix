@@ -10,12 +10,16 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 Bdirs 	:= src_cc
 Bdirs 	+= src_cc/des_fluid
 Bdirs 	+= src_cc/io
+Bdirs 	+= src_cc/convection
+Bdirs 	+= src_cc/diffusion
 Bdirs 	+= src_cc/projection
+Bdirs 	+= src_cc/setup
+
+Bdirs 	+= src_des
+Bdirs 	+= src_eb
 
 #NOTE: these are in src not src_cc
 Bdirs 	+= src/check_data
-Bdirs 	+= src/des
-Bdirs 	+= src/eb
 Bdirs 	+= src/mods
 Bdirs 	+= src/usr
 

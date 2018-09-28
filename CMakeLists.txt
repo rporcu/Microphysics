@@ -90,7 +90,6 @@ endif ()
 # Print out config summary
 print_mfix_configuration_summary (${MFIX_LIBNAME})
 
-
 # We should check what this line does
 file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
 add_executable (${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} )
