@@ -262,7 +262,6 @@ private:
     void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
 
     void mfix_apply_forcing_terms    (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel);
-    void mfix_add_grad_phi           (int lev, amrex::Real coeff, amrex::MultiFab& phi);
     void mfix_compute_velocity_slopes(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
     void mfix_compute_velocity_at_faces (int lev, Vector< std::unique_ptr<MultiFab> >& vel);
 

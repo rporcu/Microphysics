@@ -50,20 +50,6 @@ extern "C"
       const amrex::Real* p0, const int* rlo, const int* rhi,
       const amrex::Real* dx, const amrex::Real* c);
 
-   void add_grad_phicc (
-      const int* lo, const int* hi,
-      amrex::Real* vel, const int* ulo, const int* uhi,
-      const amrex::Real* ro_g, const int* slo, const int* shi,
-      const amrex::Real* phi, 
-      const amrex::Real* dx, const amrex::Real* c);
-
-   void add_grad_phind (
-      const int* lo, const int* hi,
-      amrex::Real* vel, const int* ulo, const int* uhi,
-      const amrex::Real* ro_g, const int* slo, const int* shi,
-      const amrex::Real* phi, const int* rlo, const int* rhi,
-      const amrex::Real* dx, const amrex::Real* c);
-
    void compute_velocity_at_faces (
       const int* lo, const int* hi,
       const amrex::Real* u_mac, const int* ulo, const int* uhi, 

@@ -332,49 +332,6 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
 }
 
 void
-mfix_level::mfix_add_grad_phi (int lev, amrex::Real coeff, MultiFab& this_phi)
-{
-    BL_PROFILE("mfix_level::mfix_add_grad_phi");
-    
-    if (nodal_pressure == 1)
-    {
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-       for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-       {
-   	   // Tilebox
-   	   Box bx = mfi.tilebox();
-
-	   add_grad_phind (
-	       BL_TO_FORTRAN_BOX(bx),  
-	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD(this_phi[mfi]),
-	       geom[lev].CellSize(), &coeff);
-       }
-    } else {
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-       for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-       {
-   	   // Tilebox
-   	   Box bx = mfi.tilebox();
-
-	   add_grad_phicc (
-	       BL_TO_FORTRAN_BOX(bx),  
-	       BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-	       BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-	       this_phi[mfi].dataPtr(),
-	       geom[lev].CellSize(), &coeff);
-       }
-    }
-    
-}
-
-
-void
 mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 				      Vector< std::unique_ptr<MultiFab> >& vel) 
 

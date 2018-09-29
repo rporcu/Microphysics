@@ -28,8 +28,8 @@ include $(Bpack)
 INCLUDE_LOCATIONS += $(Blocs)
 VPATH_LOCATIONS   += $(Blocs)
 
-INCLUDE_LOCATIONS += $(TOP)/src/include
-VPATH_LOCATIONS   += $(TOP)/src/include
+INCLUDE_LOCATIONS += $(TOP)/src_staggered/include
+VPATH_LOCATIONS   += $(TOP)/src_staggered/include
 
 #These are the directories in AMReX
 
