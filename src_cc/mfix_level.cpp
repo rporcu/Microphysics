@@ -205,17 +205,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
     }
     else
     {
-       if (use_epg_hack)
-       {
-          Box domain(geom[lev].Domain());
-          for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
-          {
-              set_epg( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-                       domain.loVect (), domain.hiVect () );
-          }
-       } else {
-          ep_g[lev]->setVal(1.);
-       }
+       ep_g[lev]->setVal(1.);
     }
 
     // Now define rop_g = ro_g * ep_g

@@ -322,11 +322,6 @@ extern "C"
             amrex::Real* time, amrex::Real* dt,
             amrex::Real (&accumulator)[256]
             );
-
-    void set_epg (
-	amrex::Real* ep, const int* slo, const int* shi,
-	const int* domlo, const int* domhi
-            );
    
 #ifdef __cplusplus
 }

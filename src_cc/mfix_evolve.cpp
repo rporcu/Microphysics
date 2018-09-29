@@ -14,20 +14,6 @@ mfix_level::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_
 
     AMREX_ALWAYS_ASSERT(lev == 0);
 
-    // //
-    // // HACK to initialize volume fraction as we like
-    // //
-    if (use_epg_hack)
-    {
-      amrex::Print() << "EP_G initialized with a HACK!!!" << std::endl;
-  Box domain(geom[lev].Domain());
-  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-  {
-            set_epg( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-                     domain.loVect (), domain.hiVect () );
-        }
-    }
-
     Real sum_vol;
     if (solve_dem && solve_fluid)
     {
@@ -89,19 +75,4 @@ mfix_level::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_
     }
 
     BL_PROFILE_REGION_STOP("mfix::Evolve");
-
-    //
-    // HACK to initialize volume fraction as we like
-    //
-    if (use_epg_hack)
-    {
-       amrex::Print() << "EP_G reset with a HACK!!!" << std::endl;
-       Box domain(geom[lev].Domain());
-       for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-       {
-         set_epg( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-            domain.loVect (), domain.hiVect () );
-
-       }
-    }
 }

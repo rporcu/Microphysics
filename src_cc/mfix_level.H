@@ -478,8 +478,6 @@ private:
 
     int ugradu_type = 3;
 
-    bool use_epg_hack = false;
-
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
     Vector< std::string > vecVarsName;
