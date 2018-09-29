@@ -14,12 +14,12 @@
 
 #include <algorithm>
 #include <AMReX_EB_levelset.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <mfix_eb_F.H>
 
 
 
-void mfix_level::fill_levelset(int lev, bool use_walls, bool use_poly,
+void mfix::fill_levelset(int lev, bool use_walls, bool use_poly,
                                const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
                                int max_level_here, int grid_size, bool eb_verbosity)
 {

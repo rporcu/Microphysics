@@ -1,4 +1,4 @@
-#include <mfix_level.H>
+#include <mfix.H>
 #include <mfix_F.H>
 #include <mfix_proj_F.H>
 #include <mfix_mac_F.H>
@@ -7,11 +7,11 @@
 // Compute acc using the vel passed in
 //
 void
-mfix_level::mfix_compute_ugradu_predictor ( int lev,
+mfix::mfix_compute_ugradu_predictor ( int lev,
 					    MultiFab& conv, 
 					    Vector< std::unique_ptr<MultiFab> >& vel) 
 {
-    BL_PROFILE("mfix_level::mfix_compute_ugradu");
+    BL_PROFILE("mfix::mfix_compute_ugradu");
     Box domain(geom[lev].Domain());
 
     mfix_compute_velocity_at_faces( lev, vel );
@@ -109,11 +109,11 @@ mfix_level::mfix_compute_ugradu_predictor ( int lev,
 // Compute acc using the vel passed in
 //
 void
-mfix_level::mfix_compute_ugradu_corrector ( int lev,
-					    MultiFab& conv, 
-					    Vector< std::unique_ptr<MultiFab> >& vel) 
+mfix::mfix_compute_ugradu_corrector ( int lev,
+		                      MultiFab& conv, 
+				      Vector< std::unique_ptr<MultiFab> >& vel) 
 {
-    BL_PROFILE("mfix_level::mfix_compute_ugradu");
+    BL_PROFILE("mfix::mfix_compute_ugradu");
     Box domain(geom[lev].Domain());
 
     // First compute the slopes
@@ -214,10 +214,10 @@ mfix_level::mfix_compute_ugradu_corrector ( int lev,
 // three directions.
 // 
 void
-mfix_level::mfix_compute_velocity_slopes (int lev,
-                                          Vector< std::unique_ptr<MultiFab> >& vel)
+mfix::mfix_compute_velocity_slopes (int lev,
+                                    Vector< std::unique_ptr<MultiFab> >& vel)
 {
-    BL_PROFILE("mfix_level::mfix_compute_velocity_slopes");
+    BL_PROFILE("mfix::mfix_compute_velocity_slopes");
 
     Box domain(geom[lev].Domain());
     
@@ -282,10 +282,10 @@ mfix_level::mfix_compute_velocity_slopes (int lev,
 
 
 void
-mfix_level::mfix_compute_velocity_at_faces ( int lev,
-                                             Vector< std::unique_ptr<MultiFab> >& vel)
+mfix::mfix_compute_velocity_at_faces ( int lev,
+                                       Vector< std::unique_ptr<MultiFab> >& vel)
 {
-    BL_PROFILE("mfix_level::mfix_compute_velocity_at_faces");
+    BL_PROFILE("mfix::mfix_compute_velocity_at_faces");
     Box domain(geom[lev].Domain());   
     
     // First compute the slopes

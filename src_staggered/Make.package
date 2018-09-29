@@ -8,8 +8,8 @@ f90EXE_sources += zero_wall_norm_vel.f90
 
 CEXE_sources += main.cpp
 CEXE_sources += mfix_evolve.cpp
-CEXE_sources += mfix_level.cpp
+CEXE_sources += mfix.cpp
 CEXE_sources += mfix_regrid.cpp
-CEXE_headers += mfix_level.H 
+CEXE_headers += mfix.H 
 
 FEXE_headers += mfix_F.H 

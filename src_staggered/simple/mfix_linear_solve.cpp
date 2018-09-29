@@ -1,13 +1,13 @@
-#include <mfix_level.H>
+#include <mfix.H>
 #include <mfix_F.H>
 
 void
-mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs)
+mfix::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs)
 {
     int sweep_type, precond_type, max_it;
     Real tol;
 
-    BL_PROFILE("mfix_level::mfix_solve_linear_equation()");
+    BL_PROFILE("mfix::mfix_solve_linear_equation()");
     get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
 
     bool debug_solve = false;

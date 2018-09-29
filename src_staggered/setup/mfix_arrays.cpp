@@ -1,7 +1,7 @@
-#include <mfix_level.H>
+#include <mfix.H>
 
 void
-mfix_level::AllocateArrays (int lev)
+mfix::AllocateArrays (int lev)
 {
     // ********************************************************************************
     // Cell-based arrays
@@ -205,7 +205,7 @@ mfix_level::AllocateArrays (int lev)
 }
 
 void
-mfix_level::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)
+mfix::RegridArrays (int lev, BoxArray& new_grids, DistributionMapping& new_dmap)
 {
    /****************************************************************************
     * Cell-based arrays                                                        *

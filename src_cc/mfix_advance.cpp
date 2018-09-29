@@ -2,7 +2,7 @@
 #include <mfix_mac_F.H>
 #include <mfix_proj_F.H>
 #include <mfix_F.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
@@ -12,7 +12,7 @@
 #include <AMReX_BLassert.H>
 
 void
-mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt,  Real& time, Real stop_time )
+mfix::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt,  Real& time, Real stop_time )
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluidProjection");
     BL_PROFILE("mfix::EvolveFluidProjection");
@@ -120,7 +120,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 }
 
 void
-mfix_level::mfix_project_velocity (int lev)
+mfix::mfix_project_velocity (int lev)
 {
     // Project velocity field to make sure initial velocity is divergence-free
     Real dummy_dt = 1.0;
@@ -141,7 +141,7 @@ mfix_level::mfix_project_velocity (int lev)
 }
 
 void
-mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int steady_state)
+mfix::mfix_initial_iterations (int lev, Real dt, Real stop_time, int steady_state)
 {
     // Fill ghost cells
     mfix_set_scalar_bcs (lev);
@@ -204,7 +204,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 //     p_g = phi
 //
 void
-mfix_level::mfix_apply_predictor (int lev, MultiFab& conv_old, MultiFab& divtau_old,
+mfix::mfix_apply_predictor (int lev, MultiFab& conv_old, MultiFab& divtau_old,
                                   amrex::Real dt, bool proj_2)
 {
     // Compute the explicit advective term R_u^n
@@ -280,10 +280,10 @@ mfix_level::mfix_apply_predictor (int lev, MultiFab& conv_old, MultiFab& divtau_
 //     p_g = phi
 //
 void
-mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_old,
+mfix::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_old,
                                   amrex::Real dt, bool proj_2)
 {
-    BL_PROFILE("mfix_level::mfix_apply_corrector");
+    BL_PROFILE("mfix::mfix_apply_corrector");
 
     MultiFab   conv(grids[lev], dmap[lev], 3, 0 );
     MultiFab divtau(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
@@ -332,11 +332,11 @@ mfix_level::mfix_apply_corrector (int lev, MultiFab& conv_old, MultiFab& divtau_
 }
 
 void
-mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
+mfix::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 				      Vector< std::unique_ptr<MultiFab> >& vel) 
 
 {
-    BL_PROFILE("mfix_level::mfix_apply_forcing_terms");
+    BL_PROFILE("mfix::mfix_apply_forcing_terms");
 
     Box domain(geom[lev].Domain());
 
@@ -364,10 +364,10 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 // momentum exchange
 // 
 void
-mfix_level::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
+mfix::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
 
 {
-    BL_PROFILE("mfix_level::mfix_compute_intermediate_velocity");
+    BL_PROFILE("mfix::mfix_compute_intermediate_velocity");
 
     // Whole domain
     Box domain(geom[lev].Domain());
@@ -393,7 +393,7 @@ mfix_level::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
 // Compute div(ep_g * u)
 // 
 void
-mfix_level::mfix_compute_diveu (int lev)
+mfix::mfix_compute_diveu (int lev)
 {
     Box domain(geom[lev].Domain());
 
@@ -479,7 +479,7 @@ mfix_level::mfix_compute_diveu (int lev)
 // 
 
 int
-mfix_level::steady_state_reached (int lev, Real dt)
+mfix::steady_state_reached (int lev, Real dt)
 {
     //
     // Count number of access 

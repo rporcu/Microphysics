@@ -1,4 +1,4 @@
-#include <mfix_level.H>
+#include <mfix.H>
 #include <mfix_util_F.H>
 #include <AMReX_EBMultiFabUtil.H>
 
@@ -6,9 +6,9 @@
 // Set the BCs for all the variables EXCEPT pressure or velocity.
 //
 void
-mfix_level::mfix_set_scalar_bcs (int lev)
+mfix::mfix_set_scalar_bcs (int lev)
 {
-  BL_PROFILE("mfix_level::mfix_set_scalar_bcs()");
+  BL_PROFILE("mfix::mfix_set_scalar_bcs()");
 
   Box domain(geom[lev].Domain());
 
@@ -39,9 +39,9 @@ mfix_level::mfix_set_scalar_bcs (int lev)
 // Set the BCs for velocity only
 //
 void
-mfix_level::mfix_set_velocity_bcs (int lev, int extrap_dir_bcs)
+mfix::mfix_set_velocity_bcs (int lev, int extrap_dir_bcs)
 {
-  BL_PROFILE("mfix_level::mfix_set_velocity_bcs()");
+  BL_PROFILE("mfix::mfix_set_velocity_bcs()");
 
   vel_g[lev] -> FillBoundary (geom[lev].periodicity());
 
@@ -65,9 +65,9 @@ mfix_level::mfix_set_velocity_bcs (int lev, int extrap_dir_bcs)
 // Fills ghost cell values of pressure appropriately for the BC type
 //
 void
-mfix_level::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
+mfix::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
 {
-    BL_PROFILE("mfix_level::mfix_extrap_pressure()");
+    BL_PROFILE("mfix::mfix_extrap_pressure()");
     if (nodal_pressure == 1) return;
  
     Box domain(geom[lev].Domain());
@@ -88,7 +88,7 @@ mfix_level::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
 }
 
 void
-mfix_level::check_for_nans (int lev)
+mfix::check_for_nans (int lev)
 {
     bool ug_has_nans = vel_g[lev] -> contains_nan (0);
     bool vg_has_nans = vel_g[lev] -> contains_nan (1);
@@ -117,7 +117,7 @@ mfix_level::check_for_nans (int lev)
 // Print the maximum values of the velocity components
 //
 void
-mfix_level::mfix_print_max_vel(int lev)
+mfix::mfix_print_max_vel(int lev)
 {
     amrex::Print() << "max(abs(u/v/w/p))  = " << 
        mfix_norm0(vel_g, lev, 0) << "  " <<
@@ -133,7 +133,7 @@ mfix_level::mfix_print_max_vel(int lev)
 // The assumption is that cc is multicomponent
 // 
 void
-mfix_level::mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
+mfix::mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
                                     Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc )
 {
    AMREX_ASSERT(cc.nComp()==AMREX_SPACEDIM);
@@ -187,9 +187,9 @@ mfix_level::mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
 } 
 
 void
-mfix_level::mfix_compute_vort (int lev )
+mfix::mfix_compute_vort (int lev )
 {
-    BL_PROFILE("mfix_level::mfix_compute_vort");
+    BL_PROFILE("mfix::mfix_compute_vort");
     Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
@@ -221,7 +221,7 @@ mfix_level::mfix_compute_vort (int lev )
 // Subroutine to compute norm1 of EB multifab
 //
 Real
-mfix_level::mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
+mfix::mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
 {
    MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
                     0,  MFInfo(), *ebfactory[lev]);
@@ -233,7 +233,7 @@ mfix_level::mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, 
 }
 
 Real
-mfix_level::mfix_norm1 ( MultiFab& mf, int lev, int comp )
+mfix::mfix_norm1 ( MultiFab& mf, int lev, int comp )
 {
    MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), mf.nComp(),
                     0,  MFInfo(), *ebfactory[lev]);

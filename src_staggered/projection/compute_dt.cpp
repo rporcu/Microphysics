@@ -1,8 +1,8 @@
 #include <mfix_F.H>
-#include <mfix_level.H>
+#include <mfix.H>
 
 void
-mfix_level::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state, Real& dt)
+mfix::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state, Real& dt)
 {
 
     // DT is always computed even for fixed dt, so we can

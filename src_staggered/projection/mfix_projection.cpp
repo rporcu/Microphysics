@@ -1,7 +1,7 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix_F.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
@@ -11,7 +11,7 @@
 #include <AMReX_MLABecLaplacian.H>
 
 void
-mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real time, Real stop_time )
+mfix::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real time, Real stop_time )
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluidProjection");
     BL_PROFILE("mfix::EvolveFluidProjection");
@@ -115,7 +115,7 @@ mfix_level::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt
 // Project velocity field to make sure initial velocity is divergence-free
 // 
 void
-mfix_level::mfix_project_velocity (int lev)
+mfix::mfix_project_velocity (int lev)
 {
     Real dummy_dt = 1.0;
 
@@ -150,7 +150,7 @@ mfix_level::mfix_project_velocity (int lev)
 //         
 // 
 void
-mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int steady_state)
+mfix::mfix_initial_iterations (int lev, Real dt, Real stop_time, int steady_state)
 {
     // Copy u_g into u_go
     MultiFab::Copy (*u_go[lev],   *u_g[lev],   0, 0, 1, u_go[lev]->nGrow());
@@ -243,7 +243,7 @@ mfix_level::mfix_initial_iterations (int lev, Real dt, Real stop_time, int stead
 //     p_g = p_g + phi
 //
 void
-mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
+mfix::mfix_apply_predictor (int lev, amrex::Real dt)
 {
     // Compute fluid acceleration (convection + diffusion) 
     mfix_compute_velocity_slopes ( lev, u_go, v_go, w_go );
@@ -310,9 +310,9 @@ mfix_level::mfix_apply_predictor (int lev, amrex::Real dt)
 //     p_g = p_g + phi
 //
 void
-mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
+mfix::mfix_apply_corrector (int lev, amrex::Real dt)
 {
-    BL_PROFILE("mfix_level::mfix_compute_second_predictor");
+    BL_PROFILE("mfix::mfix_compute_second_predictor");
 
     // Compute fluid acceleration (convection + diffusion)
     // using first predictor
@@ -364,9 +364,9 @@ mfix_level::mfix_apply_corrector (int lev, amrex::Real dt)
 //       w_g = w_g + coeff * ( dp_g/dz + dp0/dz ) * (1/ro_g)
 //
 void
-mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
+mfix::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
 {
-    BL_PROFILE("mfix_level::mfix_add_pressure_gradient");
+    BL_PROFILE("mfix::mfix_add_pressure_gradient");
 
     int xdir = 1;
     int ydir = 2;
@@ -415,14 +415,14 @@ mfix_level::mfix_add_pressure_gradient (int lev, amrex::Real coeff)
 // Compute uacc, vacc, and wacc by using u_g, v_g, and w_g
 //
 void
-mfix_level::mfix_compute_fluid_acceleration ( int lev,
+mfix::mfix_compute_fluid_acceleration ( int lev,
 					      Vector< std::unique_ptr<MultiFab> >& u, 
 					      Vector< std::unique_ptr<MultiFab> >& v,
 					      Vector< std::unique_ptr<MultiFab> >& w,
 					      Vector< std::unique_ptr<MultiFab> >& ro,
 					      Vector< std::unique_ptr<MultiFab> >& ep )
 {
-    BL_PROFILE("mfix_level::mfix_compute_fluid_acceleration");
+    BL_PROFILE("mfix::mfix_compute_fluid_acceleration");
 
     int xdir = 1;
     int ydir = 2;
@@ -522,7 +522,7 @@ mfix_level::mfix_compute_fluid_acceleration ( int lev,
 // the explicit part of the particle/fluid momentum exchange 
 // 
 void
-mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
+mfix::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 				      Vector< std::unique_ptr<MultiFab> >& u, 
 				      Vector< std::unique_ptr<MultiFab> >& v,
 				      Vector< std::unique_ptr<MultiFab> >& w,
@@ -530,7 +530,7 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 				      Vector< std::unique_ptr<MultiFab> >& ep)
 
 {
-    BL_PROFILE("mfix_level::mfix_apply_forcing_terms");
+    BL_PROFILE("mfix::mfix_apply_forcing_terms");
 
     
 #ifdef _OPENMP
@@ -588,12 +588,12 @@ mfix_level::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 // momentum exchange
 // 
 void
-mfix_level::mfix_compute_intermediate_velocity ( int lev,
+mfix::mfix_compute_intermediate_velocity ( int lev,
 						 amrex::Real dt, 
 						 Vector< std::unique_ptr<MultiFab> >& ro,
 						 Vector< std::unique_ptr<MultiFab> >& ep )
 {
-    BL_PROFILE("mfix_level::mfix_compute_intermediate_velocity");
+    BL_PROFILE("mfix::mfix_compute_intermediate_velocity");
     
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -645,13 +645,13 @@ mfix_level::mfix_compute_intermediate_velocity ( int lev,
 // three directions.
 // 
 void
-mfix_level::mfix_compute_velocity_slopes (int lev,
+mfix::mfix_compute_velocity_slopes (int lev,
                                           Vector< std::unique_ptr<MultiFab> >& u,
                                           Vector< std::unique_ptr<MultiFab> >& v,
                                           Vector< std::unique_ptr<MultiFab> >& w )
 
 {
-    BL_PROFILE("mfix_level::mfix_compute_velocity_slopes");
+    BL_PROFILE("mfix::mfix_compute_velocity_slopes");
 
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -703,7 +703,7 @@ mfix_level::mfix_compute_velocity_slopes (int lev,
 // 
 
 int
-mfix_level::steady_state_reached (int lev, Real dt)
+mfix::steady_state_reached (int lev, Real dt)
 {
 
     //
@@ -803,9 +803,9 @@ mfix_level::steady_state_reached (int lev, Real dt)
 // Set the BCs for all the variables EXCEPT pressure or velocity.
 // 
 void
-mfix_level::mfix_set_projection_bcs (int lev)
+mfix::mfix_set_projection_bcs (int lev)
 {
-  BL_PROFILE("mfix_level::mfix_set_projection_bcs()");
+  BL_PROFILE("mfix::mfix_set_projection_bcs()");
   
   Box domain(geom[lev].Domain());
 
@@ -831,9 +831,9 @@ mfix_level::mfix_set_projection_bcs (int lev)
 // Fills ghost cell values of pressure appropriately for the BC type
 //
 void
-mfix_level::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
+mfix::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
 {
-    BL_PROFILE("mfix_level::mfix_extrap_pressure()");
+    BL_PROFILE("mfix::mfix_extrap_pressure()");
 
     Box domain(geom[lev].Domain());
 
@@ -851,7 +851,7 @@ mfix_level::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
 
 
 void
-mfix_level::check_for_nans (int lev)
+mfix::check_for_nans (int lev)
 {
     bool ug_has_nans = u_g[lev] -> contains_nan ();
     bool vg_has_nans = v_g[lev] -> contains_nan ();
@@ -877,7 +877,7 @@ mfix_level::check_for_nans (int lev)
 // Print the maximum values of the velocity components
 //
 void
-mfix_level::mfix_print_max_vel(int lev)
+mfix::mfix_print_max_vel(int lev)
 {
     amrex::Print() << "max(abs(u/v/w/p))  = " << u_g[lev] -> norm0 () << "  " <<
 	v_g[lev] -> norm0 () << "  " <<

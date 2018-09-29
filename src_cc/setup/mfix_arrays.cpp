@@ -1,7 +1,7 @@
-#include <mfix_level.H>
+#include <mfix.H>
 
 void
-mfix_level::AllocateArrays (int lev)  
+mfix::AllocateArrays (int lev)  
 {
     mfix_update_ebfactory(lev);
    
@@ -189,7 +189,7 @@ mfix_level::AllocateArrays (int lev)
 
 
 void
-mfix_level::RegridArrays (int lev)
+mfix::RegridArrays (int lev)
 {
 
     mfix_update_ebfactory(lev);
@@ -526,7 +526,7 @@ mfix_level::RegridArrays (int lev)
 // the proper dm and ba
 
 void
-mfix_level::mfix_update_ebfactory (int a_lev)
+mfix::mfix_update_ebfactory (int a_lev)
 {
    // This assert is to verify that some kind of EB geometry
    // has already been defined

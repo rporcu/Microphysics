@@ -1,13 +1,13 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix_F.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
-mfix_level::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& dt, Real & prev_dt,
+mfix::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& dt, Real & prev_dt,
                    Real time, Real stop_time, Real normg)
 {
     BL_PROFILE_REGION_START("mfix::Evolve");

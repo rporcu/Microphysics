@@ -2,13 +2,13 @@
 
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_EBFabFactory.H>
 
 void
-mfix_level::Regrid (int base_lev, int nstep)
+mfix::Regrid (int base_lev, int nstep)
 {
     BL_PROFILE_REGION_START("mfix::Regrid()");
 
@@ -215,7 +215,7 @@ mfix_level::Regrid (int base_lev, int nstep)
     }
 
     // Note that this is still being done here (instead of
-    // mfix_level::RegridArrays, which only acts on the fluid grid) because of a
+    // mfix::RegridArrays, which only acts on the fluid grid) because of a
     // dual grid: the level-set factory object regrids using the
     // ParticleDistributionMap.
     level_set->regrid(pc->ParticleBoxArray(base_lev), pc->ParticleDistributionMap(base_lev));

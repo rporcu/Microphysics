@@ -6,7 +6,7 @@
 #include <AMReX_VisMF.H>
 #include <AMReX_iMultiFab.H>
 
-#include <mfix_level.H>
+#include <mfix.H>
 #include <mfix_F.H>
 
 int   max_step    = -1;
@@ -132,10 +132,10 @@ int main (int argc, char* argv[])
     // Default AMR level = 0
     int lev = 0;
 
-    // Default constructor. Note inheritance: mfix_level : AmrCore : AmrMesh
+    // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
     //                                                                  |
     //  => Geometry is constructed here:  (constructs Geometry) --------+
-    mfix_level my_mfix;
+    mfix my_mfix;
 
     // Initialize internals from ParamParse database
     my_mfix.InitParams(solve_fluid, solve_dem, call_udf);

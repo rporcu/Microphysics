@@ -1,12 +1,12 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix_F.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
 void
-mfix_level::EvolveFluidSimple(int lev, int nstep, int set_normg,
+mfix::EvolveFluidSimple(int lev, int nstep, int set_normg,
                               Real dt, Real& prev_dt, Real time, Real normg)
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluidSimple");
@@ -138,9 +138,9 @@ mfix_level::EvolveFluidSimple(int lev, int nstep, int set_normg,
 }
 
 void
-mfix_level::mfix_calc_trd_and_tau(int lev)
+mfix::mfix_calc_trd_and_tau(int lev)
 {
-    BL_PROFILE("mfix_level::mfix_calc_trd_and_tau()");
+    BL_PROFILE("mfix::mfix_calc_trd_and_tau()");
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -204,9 +204,9 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
 }
 
 void
-mfix_level::mfix_calc_mflux(int lev)
+mfix::mfix_calc_mflux(int lev)
 {
-    BL_PROFILE("mfix_level::mfix_calc_mflux()");
+    BL_PROFILE("mfix::mfix_calc_mflux()");
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -235,9 +235,9 @@ mfix_level::mfix_calc_mflux(int lev)
 }
 
 void
-mfix_level::mfix_conv_rop(int lev)
+mfix::mfix_conv_rop(int lev)
 {
-    BL_PROFILE("mfix_level::mfix_conv_rop()");
+    BL_PROFILE("mfix::mfix_conv_rop()");
     Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
@@ -271,9 +271,9 @@ mfix_level::mfix_conv_rop(int lev)
 }
 
 void
-mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
+mfix::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
 {
-    BL_PROFILE("mfix_level::solve_for_u()");
+    BL_PROFILE("mfix::solve_for_u()");
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -355,9 +355,9 @@ mfix_level::mfix_solve_for_u(int lev, Real dt, Real& num_u, Real& denom_u)
 }
 
 void
-mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
+mfix::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
 {
-    BL_PROFILE("mfix_level::solve_for_v()");
+    BL_PROFILE("mfix::solve_for_v()");
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -439,9 +439,9 @@ mfix_level::mfix_solve_for_v(int lev, Real dt, Real& num_v, Real& denom_v)
 }
 
 void
-mfix_level::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
+mfix::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
 {
-    BL_PROFILE("mfix_level::solve_for_w()");
+    BL_PROFILE("mfix::solve_for_w()");
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -522,9 +522,9 @@ mfix_level::mfix_solve_for_w(int lev, Real dt, Real& num_w, Real& denom_w)
 }
 
 void
-mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p)
+mfix::mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p)
 {
-    BL_PROFILE("mfix_level::solve_for_pp()");
+    BL_PROFILE("mfix::solve_for_pp()");
     Box domain(geom[lev].Domain());
 
     Real dx = geom[lev].CellSize(0);
@@ -600,9 +600,9 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& num_p, Real& denom_p)
 }
 
 void
-mfix_level::mfix_correct_0(int lev)
+mfix::mfix_correct_0(int lev)
 {
-    BL_PROFILE("mfix_level::correct0()");
+    BL_PROFILE("mfix::correct0()");
     Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
@@ -691,9 +691,9 @@ mfix_level::mfix_correct_0(int lev)
 }
 
 void
-mfix_level::mfix_set_bc1(int lev)
+mfix::mfix_set_bc1(int lev)
 {
-  BL_PROFILE("mfix_level::mfix_set_bc1()");
+  BL_PROFILE("mfix::mfix_set_bc1()");
 
     p_g[lev]->FillBoundary(geom[lev].periodicity());
 

@@ -9,13 +9,13 @@
 
 #include <algorithm>
 #include <AMReX_GeometryShop.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <mfix_eb_F.H>
 
 void
-mfix_level::fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev)
+mfix::fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev)
 {
-    BL_PROFILE("mfix_level::fix_up_geometry()");
+    BL_PROFILE("mfix::fix_up_geometry()");
 
     const auto& domain = geom[lev].Domain();
 

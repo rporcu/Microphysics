@@ -46,10 +46,10 @@ add_sources ( compute_dt.cpp )
 add_sources ( mfix_regrid.cpp )
 add_sources ( mfix_advance.cpp )
 add_sources ( mfix_evolve.cpp  )
-add_sources ( mfix_level.cpp  )
+add_sources ( mfix.cpp  )
 add_sources ( main.cpp )
 add_sources ( mfix_F.H )
-add_sources ( mfix_level.H )
+add_sources ( mfix.H )
 
 #
 # I/0

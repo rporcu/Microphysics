@@ -1,7 +1,7 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix_diff_F.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
@@ -14,11 +14,11 @@
 // Explicit diffusion
 //
 void
-mfix_level::mfix_compute_divtau ( int lev,
-                                  MultiFab& divtau,
-                                  Vector< std::unique_ptr<MultiFab> >& vel)
+mfix::mfix_compute_divtau ( int lev,
+                            MultiFab& divtau,
+                            Vector< std::unique_ptr<MultiFab> >& vel)
 {
-   BL_PROFILE("mfix_level::mfix_compute_divtau");
+   BL_PROFILE("mfix::mfix_compute_divtau");
    Box domain(geom[lev].Domain());
 
    // Get EB geometric info
@@ -101,11 +101,11 @@ mfix_level::mfix_compute_divtau ( int lev,
 // Implicit diffusion
 //
 void
-mfix_level::mfix_diffuse_velocity ( int lev,
-                                    amrex::Real dt)
+mfix::mfix_diffuse_velocity ( int lev,
+                              amrex::Real dt)
 
 {
-   BL_PROFILE("mfix_level::mfix_diffuse_velocity");
+   BL_PROFILE("mfix::mfix_diffuse_velocity");
 
    // Whole domain
    Box domain(geom[lev].Domain());
@@ -151,14 +151,14 @@ mfix_level::mfix_diffuse_velocity ( int lev,
 //                  (1 - div dot mu grad) u = RHS
 //
 void
-mfix_level::solve_diffusion_equation ( int lev,
-                                       Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-                                       Vector< std::unique_ptr<MultiFab> >& sol,
-                                       Vector< std::unique_ptr<MultiFab> >& rhs,
-                                       int bc_lo[], int bc_hi[],
-                                       amrex::Real dt)
+mfix::solve_diffusion_equation ( int lev,
+                                 Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+                                 Vector< std::unique_ptr<MultiFab> >& sol,
+                                 Vector< std::unique_ptr<MultiFab> >& rhs,
+                                 int bc_lo[], int bc_hi[],
+                                 amrex::Real dt)
 {
-   BL_PROFILE("mfix_level::solve_diffusion_equation");
+   BL_PROFILE("mfix::solve_diffusion_equation");
 
    //
    // First define the matrix (operator).
@@ -229,9 +229,9 @@ mfix_level::solve_diffusion_equation ( int lev,
 // Computes bcoeff = mu_g at the faces of the scalar cells
 //
 void
-mfix_level::mfix_compute_bcoeff_diff (int lev)
+mfix::mfix_compute_bcoeff_diff (int lev)
 {
-   BL_PROFILE("mfix_level::mfix_compute_bcoeff_diff");
+   BL_PROFILE("mfix::mfix_compute_bcoeff_diff");
 
    // Directions
    int xdir = 1;

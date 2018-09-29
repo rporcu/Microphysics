@@ -14,7 +14,7 @@
 
 #include <algorithm>
 #include <AMReX_EB_levelset.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <mfix_eb_F.H>
 
 
@@ -26,7 +26,7 @@
  *                                                                              *
  ********************************************************************************/
 void
-mfix_level::make_eb_cyclone(int lev)
+mfix::make_eb_cyclone(int lev)
 {
     ParmParse pp("hopper");
 

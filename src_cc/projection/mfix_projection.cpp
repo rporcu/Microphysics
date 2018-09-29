@@ -2,7 +2,7 @@
 
 #include <mfix_proj_F.H>
 #include <mfix_F.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
@@ -30,9 +30,9 @@
 //
 //     new p_g  = old p_g + phi
 void 
-mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool proj_2 )
+mfix::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool proj_2 )
 {
-    BL_PROFILE("mfix_level::mfix_apply_projection");
+    BL_PROFILE("mfix::mfix_apply_projection");
 
     vel_g[lev] -> FillBoundary (geom[lev].periodicity());
 
@@ -142,14 +142,14 @@ mfix_level::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool pr
 //                  div( eps_g/rho * grad(phi) ) = div(eps_g*u) 
 // 
 void
-mfix_level::solve_poisson_equation (  int lev,
-				      Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-				      Vector< std::unique_ptr<MultiFab> >& this_phi,
-				      Vector< std::unique_ptr<MultiFab> >& rhs,
-				      int bc_lo[], int bc_hi[],
-                                      MultiFab& fluxes )
+mfix::solve_poisson_equation (  int lev,
+		                Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+				Vector< std::unique_ptr<MultiFab> >& this_phi,
+				Vector< std::unique_ptr<MultiFab> >& rhs,
+				int bc_lo[], int bc_hi[],
+                                MultiFab& fluxes )
 {
-    BL_PROFILE("mfix_level::solve_poisson_equation");
+    BL_PROFILE("mfix::solve_poisson_equation");
     
     if (nodal_pressure == 1)
     {
@@ -271,9 +271,9 @@ mfix_level::solve_poisson_equation (  int lev,
 // Computes bcoeff = ep_g/ro_g at the faces of the scalar cells
 // 
 void
-mfix_level::mfix_compute_bcoeff_ppe (int lev)
+mfix::mfix_compute_bcoeff_ppe (int lev)
 {
-    BL_PROFILE("mfix_level::mfix_compute_bcoeff_ppe");
+    BL_PROFILE("mfix::mfix_compute_bcoeff_ppe");
 
     // Directions
     int xdir = 1;

@@ -2,12 +2,12 @@
 
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
 void
-mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
+mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 {
     {
         ParmParse pp("mfix");
@@ -76,7 +76,7 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("legacy__eb_collisions", legacy__eb_collisions);
 
         // Parameters used be the level-set algorithm. Refer to LSFactory (or
-        // mfix_level.H) for more details:
+        // mfix.H) for more details:
         //   -> refinement: how well resolved (fine) the (level-set/EB-facet)
         //                  grid needs to be (note: a fine level-set grid means
         //                  that distances and normals are computed accurately)
@@ -117,7 +117,7 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 }
 
 void
-mfix_level::Init(int lev, Real dt, Real time)
+mfix::Init(int lev, Real dt, Real time)
 {
     BL_ASSERT(max_level == 0);
 
@@ -204,7 +204,7 @@ mfix_level::Init(int lev, Real dt, Real time)
 }
 
 BoxArray
-mfix_level::MakeBaseGrids () const
+mfix::MakeBaseGrids () const
 {
     BoxArray ba(geom[0].Domain());
 
@@ -228,7 +228,7 @@ mfix_level::MakeBaseGrids () const
 }
 
 void
-mfix_level::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
+mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 {
     if ( ParallelDescriptor::IOProcessor() )
        amrex::Warning("Using max_grid_size only did not make enough grids for the number of processors");
@@ -276,7 +276,7 @@ mfix_level::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 }
 
 void
-mfix_level::MakeNewLevelFromScratch (int lev, Real time,
+mfix::MakeNewLevelFromScratch (int lev, Real time,
                                      const BoxArray& new_grids, const DistributionMapping& new_dmap)
 {
     SetBoxArray(lev, new_grids);
@@ -298,7 +298,7 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
 }
 
 void
-mfix_level::ReMakeNewLevelFromScratch (int lev,
+mfix::ReMakeNewLevelFromScratch (int lev,
                                        const BoxArray & new_grids, const DistributionMapping & new_dmap)
 {
     SetBoxArray(lev, new_grids);
@@ -312,7 +312,7 @@ mfix_level::ReMakeNewLevelFromScratch (int lev,
     mfix_set_bc_type(lev);
 
     // After replicate, new BAs needs to be passed to the level-set factory.
-    // Also: mfix_level::ls needs to be replaced to reflect the new BA.
+    // Also: mfix::ls needs to be replaced to reflect the new BA.
     level_set = std::unique_ptr<LSFactory>(
                                            new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
                                                          levelset__pad, levelset__eb_pad,
@@ -327,7 +327,7 @@ mfix_level::ReMakeNewLevelFromScratch (int lev,
 }
 
 void
-mfix_level::check_data (int lev)
+mfix::check_data (int lev)
 {
 
     Real dx = geom[lev].CellSize(0);
@@ -353,7 +353,7 @@ mfix_level::check_data (int lev)
 }
 
 void
-mfix_level::InitLevelData(int lev, Real dt, Real time)
+mfix::InitLevelData(int lev, Real dt, Real time)
 {
     // This needs is needed before initializing level MultiFabs: ebfactories should
     // not change after the eb-dependent MultiFabs are allocated.
@@ -437,7 +437,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 }
 
 void
-mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
+mfix::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                      int steady_state)
 {
 
@@ -495,7 +495,7 @@ mfix_level::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, R
 }
 
 void
-mfix_level::MakeBCArrays ()
+mfix::MakeBCArrays ()
 {
     // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
     Box domainx(geom[0].Domain());
@@ -526,7 +526,7 @@ mfix_level::MakeBCArrays ()
 }
 
 void
-mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time, int steady_state)
+mfix::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time, int steady_state)
 {
   Box domain(geom[lev].Domain());
 
@@ -618,7 +618,7 @@ mfix_level::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time,
 }
 
 void
-mfix_level::mfix_set_bc0(int lev)
+mfix::mfix_set_bc0(int lev)
 {
   Box domain(geom[lev].Domain());
 
@@ -651,7 +651,7 @@ mfix_level::mfix_set_bc0(int lev)
 }
 
 void
-mfix_level::mfix_set_p0(int lev)
+mfix::mfix_set_p0(int lev)
 {
   Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
   Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);

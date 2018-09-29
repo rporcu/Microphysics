@@ -12,12 +12,12 @@
 #include <algorithm>
 #include <type_traits>
 #include <AMReX_EB_levelset.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <mfix_eb_F.H>
 
 
 void
-mfix_level::make_eb_general(int lev) {
+mfix::make_eb_general(int lev) {
 
     ParmParse pp("mfix");
 
@@ -419,7 +419,7 @@ mfix_level::make_eb_general(int lev) {
 
 
 std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>>
-mfix_level::get_poly(int lev, int max_order, std::string field_prefix) {
+mfix::get_poly(int lev, int max_order, std::string field_prefix) {
 
     /****************************************************************************
      * Read polynomial data from inputs database                                *
@@ -491,7 +491,7 @@ mfix_level::get_poly(int lev, int max_order, std::string field_prefix) {
 
 
 std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
-mfix_level::make_wall( int dir, // direction (long edge) of wall
+mfix::make_wall( int dir, // direction (long edge) of wall
                        Real position, Real height, Real width )
 {
     RealArray normal, center;

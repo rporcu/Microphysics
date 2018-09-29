@@ -1,8 +1,8 @@
 #include <algorithm>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <mfix_eb_F.H>
 
-void mfix_level::WriteEBSurface(int lev) 
+void mfix::WriteEBSurface(int lev) 
 {
   if (Geom(0).isAllPeriodic()) return;
 

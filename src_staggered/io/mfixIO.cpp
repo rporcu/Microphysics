@@ -7,7 +7,7 @@
 
 #include <AMReX_buildInfo.H>
 
-#include <mfix_level.H>
+#include <mfix.H>
 #include <mfix_F.H>
 
 namespace
@@ -21,7 +21,7 @@ namespace
 // If new variables need to be added to the output/checkpoint, simply add them
 // here and the IO routines will automatically take care of them.
 void
-mfix_level::InitIOData ()
+mfix::InitIOData ()
 {
     // Define the list of vector variables on faces that need to be written to
     // plotfile/checkfile.
@@ -39,21 +39,21 @@ mfix_level::InitIOData ()
 }
 
 void
-mfix_level::WritePlotHeader(const std::string& name, int nstep, Real dt, Real time) const
+mfix::WritePlotHeader(const std::string& name, int nstep, Real dt, Real time) const
 {
    bool is_checkpoint = 0;
    WriteHeader(name, nstep, dt, time, is_checkpoint);
 }
 
 void
-mfix_level::WriteCheckHeader(const std::string& name, int nstep, Real dt, Real time) const
+mfix::WriteCheckHeader(const std::string& name, int nstep, Real dt, Real time) const
 {
    bool is_checkpoint = 1;
    WriteHeader(name, nstep, dt, time, is_checkpoint);
 }
 
 void
-mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time, bool is_checkpoint) const
+mfix::WriteHeader(const std::string& name, int nstep, Real dt, Real time, bool is_checkpoint) const
 {
     if (ParallelDescriptor::IOProcessor())
     {
@@ -104,9 +104,9 @@ mfix_level::WriteHeader(const std::string& name, int nstep, Real dt, Real time, 
 }
 
 void
-mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time ) const
+mfix::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time ) const
 {
-    BL_PROFILE("mfix_level::WriteCheckPointFile()");
+    BL_PROFILE("mfix::WriteCheckPointFile()");
 
     const std::string& checkpointname = amrex::Concatenate( check_file, nstep );
 
@@ -190,10 +190,10 @@ mfix_level::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Rea
 }
 
 void
-mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
+mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                      IntVect& Nrep)
 {
-    BL_PROFILE("mfix_level::Restart()");
+    BL_PROFILE("mfix::Restart()");
 
     amrex::Print() << "  Restarting from checkpoint " << restart_file << std::endl;
 
@@ -215,7 +215,7 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
     /***************************************************************************
      * Load header: set up problem domain (including BoxArray)                 *
      *              load particle data                                         *
-     *              allocate mfix_level memory (mfix_level::AllocateArrays)    *
+     *              allocate mfix memory (mfix::AllocateArrays)    *
      ***************************************************************************/
 
     {
@@ -559,13 +559,13 @@ mfix_level::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time
 }
 
 void
-mfix_level::GotoNextLine (std::istream& is)
+mfix::GotoNextLine (std::istream& is)
 {
     constexpr std::streamsize bl_ignore_max { 100000 };
     is.ignore(bl_ignore_max, '\n');
 }
 
-void mfix_level::WriteJobInfo (const std::string& dir) const
+void mfix::WriteJobInfo (const std::string& dir) const
 {
     if (ParallelDescriptor::IOProcessor())
     {
@@ -668,9 +668,9 @@ void mfix_level::WriteJobInfo (const std::string& dir) const
 }
 
 
-void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time ) const
+void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time ) const
 {
-    BL_PROFILE("mfix_level::WritePlotFile()");
+    BL_PROFILE("mfix::WritePlotFile()");
 
     const std::string& plotfilename = amrex::Concatenate(plot_file,nstep);
 
@@ -780,9 +780,9 @@ void mfix_level::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real
 }
 
 void
-mfix_level::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
+mfix::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
 {
-    BL_PROFILE("mfix_level::WriteParticleASCII()");
+    BL_PROFILE("mfix::WriteParticleASCII()");
 
     const std::string& par_filename = amrex::Concatenate(par_ascii_file,nstep);
 
@@ -791,7 +791,7 @@ mfix_level::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
 
 
 void
-mfix_level::WriteUSER(int lev, Real dt, Real time) const
+mfix::WriteUSER(int lev, Real dt, Real time) const
 {
 
   Box domain(geom[lev].Domain());

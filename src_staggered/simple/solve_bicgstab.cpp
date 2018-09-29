@@ -1,5 +1,5 @@
 #include <mfix_F.H>
-#include <mfix_level.H>
+#include <mfix.H>
 
 //
 // Do a one-component dot product of r & z using supplied components.
@@ -68,7 +68,7 @@ sxay (MultiFab&       ss,
 }
 
 int
-mfix_level::solve_bicgstab (MultiFab&       sol,
+mfix::solve_bicgstab (MultiFab&       sol,
                             const MultiFab& rhs,
                             const MultiFab& A_matrix,
                             int             sweep_type,

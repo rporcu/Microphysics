@@ -2,30 +2,30 @@
 
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
-#include <mfix_level.H>
+#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_EBMultiFabUtil.H>
 
-std::string mfix_level::particle_init_type   = "AsciiFile";
-std::string mfix_level::load_balance_type    = "FixedSize";
-std::string mfix_level::knapsack_weight_type = "RunTimeCosts";
+std::string mfix::particle_init_type   = "AsciiFile";
+std::string mfix::load_balance_type    = "FixedSize";
+std::string mfix::knapsack_weight_type = "RunTimeCosts";
 
 // Define unit vectors for easily convert indeces
-amrex::IntVect mfix_level::e_x(1,0,0);
-amrex::IntVect mfix_level::e_y(0,1,0);
-amrex::IntVect mfix_level::e_z(0,0,1);
+amrex::IntVect mfix::e_x(1,0,0);
+amrex::IntVect mfix::e_y(0,1,0);
+amrex::IntVect mfix::e_z(0,0,1);
 
 
-EBSupport mfix_level::m_eb_support_level = EBSupport::full;
+EBSupport mfix::m_eb_support_level = EBSupport::full;
 
 
-mfix_level::~mfix_level ()
+mfix::~mfix ()
 {
 };
 
 
-mfix_level::mfix_level ()
+mfix::mfix ()
 {
     // Geometry on all levels has just been defined in the AmrCore constructor
 
@@ -42,7 +42,7 @@ mfix_level::mfix_level ()
 }
 
 void
-mfix_level::ResizeArrays ()
+mfix::ResizeArrays ()
 {
     int nlevs_max = maxLevel() + 1;
 
@@ -126,7 +126,7 @@ mfix_level::ResizeArrays ()
 }
 
 void
-mfix_level::usr3(int lev)
+mfix::usr3(int lev)
 {
     if (solve_fluid)
     {
@@ -150,7 +150,7 @@ mfix_level::usr3(int lev)
 }
 
 void
-mfix_level::mfix_set_bc_type(int lev)
+mfix::mfix_set_bc_type(int lev)
 {
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
@@ -168,7 +168,7 @@ mfix_level::mfix_set_bc_type(int lev)
 }
 
 void
-mfix_level::fill_mf_bc(int lev, MultiFab& mf)
+mfix::fill_mf_bc(int lev, MultiFab& mf)
 {
     Box domain(geom[lev].Domain());
 
@@ -191,9 +191,9 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
     }
 }
 
-void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
+void mfix::mfix_calc_volume_fraction(int lev, Real& sum_vol)
 {
-    BL_PROFILE("mfix_level::mfix_calc_volume_fraction()");
+    BL_PROFILE("mfix::mfix_calc_volume_fraction()");
 
     if (solve_dem)
     {
@@ -220,9 +220,9 @@ void mfix_level::mfix_calc_volume_fraction(int lev, Real& sum_vol)
     sum_vol = ep_g[lev]->sum();
 }
 
-void mfix_level::mfix_calc_drag_fluid(int lev)
+void mfix::mfix_calc_drag_fluid(int lev)
 {
-  BL_PROFILE("mfix_level::mfix_calc_drag_fluid()");
+  BL_PROFILE("mfix::mfix_calc_drag_fluid()");
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -339,9 +339,9 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
 }
 
 void
-mfix_level::mfix_calc_drag_particle(int lev)
+mfix::mfix_calc_drag_particle(int lev)
 {
-    BL_PROFILE("mfix_level::mfix_calc_drag_particle()");
+    BL_PROFILE("mfix::mfix_calc_drag_particle()");
 
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
@@ -477,7 +477,7 @@ mfix_level::mfix_calc_drag_particle(int lev)
 // Subroutine to compute norm0 of EB multifab
 //
 Real
-mfix_level::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
+mfix::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
 {
    MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
                     0,  MFInfo(), *ebfactory[lev]);
@@ -489,7 +489,7 @@ mfix_level::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, 
 }
 
 Real
-mfix_level::mfix_norm0 ( MultiFab& mf, int lev, int comp )
+mfix::mfix_norm0 ( MultiFab& mf, int lev, int comp )
 {
    MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), mf.nComp(),
                     0,  MFInfo(), *ebfactory[lev]);

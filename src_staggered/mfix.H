@@ -31,13 +31,13 @@
 
 
 
-class mfix_level
+class mfix
     : public AmrCore
 {
 public:
 
-    mfix_level ();
-    ~mfix_level ();
+    mfix ();
+    ~mfix ();
 
     void InitParams(int solve_fluid, int solve_dem, int max_nit, int call_udf );
 
@@ -531,7 +531,7 @@ private:
 
 inline
 std::string
-mfix_level::get_load_balance_type()
+mfix::get_load_balance_type()
 {
     return load_balance_type;
 }

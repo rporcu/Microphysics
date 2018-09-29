@@ -45,9 +45,9 @@ set_target_properties ( ${MFIX_LIBNAME}
 # 
 add_sources ( fill_bc0.f90 )
 add_sources ( mfix_evolve.cpp )
-add_sources ( mfix_level.cpp )
+add_sources ( mfix.cpp )
 add_sources ( mfix_regrid.cpp )
-add_sources ( mfix_level.H mfix_F.H )
+add_sources ( mfix.H mfix_F.H )
 add_sources ( calc_tau.f90 compute_divu.f90 compute_vort.f90 )
 add_sources ( set_mac_velocity_bcs.f90 )
 add_sources ( zero_wall_norm_vel.f90 )
