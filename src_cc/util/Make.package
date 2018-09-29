@@ -1,0 +1,10 @@
+f90EXE_sources += compute_vort.f90
+f90EXE_sources += divop_mod.f90 
+f90EXE_sources += fill_bc0.f90 
+f90EXE_sources += mfix_util_f.f90
+f90EXE_sources += set_pressure_bcs.f90
+f90EXE_sources += set_scalar_bcs.f90
+f90EXE_sources += set_velocity_bcs.f90
+
+CEXE_sources += mfix_util.cpp
+FEXE_headers += mfix_util_F.H 

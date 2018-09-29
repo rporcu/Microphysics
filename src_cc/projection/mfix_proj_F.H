@@ -35,21 +35,6 @@ extern "C"
       const amrex::Real* gradp0max, const amrex::Real* dx,
       const int* nodal_pressure);
 
-   void add_grad_pcc (
-      const int* lo, const int* hi,
-      amrex::Real* vel, const int* ulo, const int* uhi,
-      const amrex::Real* ro_g, const int* slo, const int* shi,
-      const amrex::Real* p, const amrex::Real* p0,
-      const amrex::Real* dx, const amrex::Real* c);
-
-   void add_grad_pnd (
-      const int* lo, const int* hi,
-      amrex::Real* vel, const int* ulo, const int* uhi,
-      const amrex::Real* ro_g, const int* slo, const int* shi,
-      const amrex::Real* p, 
-      const amrex::Real* p0, const int* rlo, const int* rhi,
-      const amrex::Real* dx, const amrex::Real* c);
-
    void compute_velocity_at_faces (
       const int* lo, const int* hi,
       const amrex::Real* u_mac, const int* ulo, const int* uhi, 
@@ -190,32 +175,6 @@ extern "C"
       const amrex::Real* scale, const int* singular,
       const int*  domlo, const int *domhi );
 
-   void extrap_pressure_to_ghost_cells (
-      amrex::Real* p_g, const int* slo, const int* shi,
-      const int* bc_ilo, const int* bc_ihi,
-      const int* bc_jlo, const int* bc_jhi,
-      const int* bc_klo, const int* bc_khi,
-      const int* domlo , const int* domhi,
-      const int* nghost
-      );
-
-   void set_scalar_bcs (
-      amrex::Real* ep_g, const int* slo, const int* shi,
-      amrex::Real* ro_g,    amrex::Real* rop_g,
-      amrex::Real* mu_g,    amrex::Real* lambda_g,
-      const int* bc_ilo, const int* bc_ihi,
-      const int* bc_jlo, const int* bc_jhi,
-      const int* bc_klo, const int* bc_khi,
-      const int* domlo , const int* domhi,
-      const int* nghost
-      );
-
-   void set_pressure_bcs (
-      amrex::Real* p_g, const int* slo, const int* shi,
-      const int* bc_ilo, const int* bc_ihi,
-      const int* bc_jlo, const int* bc_jhi,
-      const int* bc_klo, const int* bc_khi,
-      const int* domlo , const int* domhi);
 #ifdef __cplusplus
 }
 #endif

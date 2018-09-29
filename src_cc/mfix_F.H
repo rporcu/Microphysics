@@ -276,12 +276,6 @@ extern "C"
 
     void mfix_finl_err_msg();
 
-    void compute_vort (
-	const int* lo,  const int*  hi,
-	amrex::Real* vort , const int* slo, const int* shi,
-	amrex::Real* vel_g, const int* ulo, const int* uhi,
-	const amrex::Real* dx );
-
     void construct_gradp( 
 	    const int*  lo,  const int*  hi,
             amrex::Real* p_g, 
@@ -333,15 +327,6 @@ extern "C"
 	amrex::Real* ep, const int* slo, const int* shi,
 	const int* domlo, const int* domhi
             );
-
-    void average_cc_to_fc ( const int* lo, const int* hi,
-                            amrex::Real* fcx, const int* fcxlo, const int* fcxhi,
-                            amrex::Real* fcy, const int* fcylo, const int* fcyhi,
-                            amrex::Real* fcz, const int* fczlo, const int* fczhi,
-                            const amrex::Real* cc, const int* slo, const int* shi
-      );
-
-
    
 #ifdef __cplusplus
 }

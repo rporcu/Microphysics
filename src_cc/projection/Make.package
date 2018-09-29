@@ -1,9 +1,4 @@
 f90EXE_sources += projection_mod.f90
-f90EXE_sources += set_pressure_bcs.f90
-f90EXE_sources += set_scalar_bcs.f90
-
-CEXE_sources += mfix_advance.cpp
-CEXE_sources += mfix_projection.cpp
-CEXE_sources += compute_dt.cpp
-
+CEXE_sources   += mfix_projection.cpp
+CEXE_sources   += compute_dt.cpp
 F90EXE_headers += mfix_proj_F.H

@@ -42,11 +42,13 @@ set_target_properties ( ${MFIX_LIBNAME}
 #
 # Uncategorized
 # 
-add_sources ( fill_bc0.f90 mfix_regrid.cpp )
-add_sources ( divop_mod.f90 zero_wall_norm_vel.f90 )
-add_sources ( compute_vort.f90  mfix_evolve.cpp  mfix_level.cpp  )
-add_sources ( main.cpp  mfix_F.H mfix_level.H )
-add_sources ( set_velocity_bcs.f90 )
+add_sources ( mfix_regrid.cpp )
+add_sources ( mfix_advance.cpp )
+add_sources ( mfix_evolve.cpp  )
+add_sources ( mfix_level.cpp  )
+add_sources ( main.cpp )
+add_sources ( mfix_F.H )
+add_sources ( mfix_level.H )
 
 #
 # I/0
@@ -77,6 +79,11 @@ include ( projection/CMakeLists.txt )
 # Setup
 # 
 include ( setup/CMakeLists.txt )
+
+#
+# Utility functions
+# 
+include ( util/CMakeLists.txt )
 
 #
 # Add folders from src_staggered ( this is the part of code base in commons between

@@ -14,6 +14,7 @@ Bdirs 	+= src_cc/convection
 Bdirs 	+= src_cc/diffusion
 Bdirs 	+= src_cc/projection
 Bdirs 	+= src_cc/setup
+Bdirs 	+= src_cc/util
 
 Bdirs 	+= check_data
 Bdirs 	+= mods
