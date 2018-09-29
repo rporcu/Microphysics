@@ -85,7 +85,7 @@ public:
     void InitData();
 
     void InitParticlesAscii(const std::string& file);
-    void InitParticlesAuto(int lev);
+    void InitParticlesAuto();
     void RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
                           const MultiFab * ls_phi, const iMultiFab * ls_valid, int ls_refinement);
 
@@ -103,15 +103,15 @@ public:
             MultiFab * eb_normals, const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
             MultiFab * dummy, MultiFab * cost, std::string & knapsack_weight_type, int subdt_io);
 
-    void GetParticleAvgProp(int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);
+    void GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro)[10]);
 
     //Real GetMaxRadius(int lev);
 
-    void UpdateMaxVelocity(int lev);
-    void UpdateMaxForces(int lev, std::map<PairIndex, Vector<Real>> pfor,
-                                  std::map<PairIndex, Vector<Real>> wfor);
-    RealVect GetMaxVelocity(int lev);
-    Vector<RealVect> GetMaxForces(int lev);
+    void UpdateMaxVelocity();
+    void UpdateMaxForces(std::map<PairIndex, Vector<Real>> pfor,
+                         std::map<PairIndex, Vector<Real>> wfor);
+    RealVect GetMaxVelocity();
+    Vector<RealVect> GetMaxForces();
 
     void BalanceParticleLoad_KDTree();
     ///
@@ -125,7 +125,7 @@ public:
     ///
     void WriteAsciiFileForInit(const std::string& filename);
 
-    void output(int lev, int estatus, int finish, int nstep, Real dt, Real time);
+    void output(int estatus, int finish, int nstep, Real dt, Real time);
 
     ///
     /// Write out all particles at a level
@@ -188,6 +188,8 @@ public:
 				    const vector<Real>& avg_region_z_t );
 
 private:
+
+    int nlev;
 
     ///
     /// We add a particle to the neighbor list if it's center is within 3 particle radii

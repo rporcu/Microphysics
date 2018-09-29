@@ -7,9 +7,11 @@
 #include <AMReX_Box.H>
 
 void
-mfix::Regrid (int base_lev)
+mfix::Regrid ()
 {
     BL_PROFILE_REGION_START("mfix::Regrid()");
+
+    int base_lev = 0; 
 
     if (load_balance_type == "KDTree")
     {

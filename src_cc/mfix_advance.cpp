@@ -12,23 +12,26 @@
 #include <AMReX_BLassert.H>
 
 void
-mfix::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt,  Real& time, Real stop_time )
+mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop_time )
 {
-    BL_PROFILE_REGION_START("mfix::EvolveFluidProjection");
-    BL_PROFILE("mfix::EvolveFluidProjection");
+    BL_PROFILE_REGION_START("mfix::EvolveFluid");
+    BL_PROFILE("mfix::EvolveFluid");
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
     // Extrapolate boundary values for density and volume fraction
     // The subsequent call to mfix_set_scalar_bcs will only overwrite
     // rop_g and ep_g ghost values for PINF and POUT
-    fill_mf_bc ( lev, *rop_g[lev] );
-    fill_mf_bc ( lev, *ep_g[lev] );
-    fill_mf_bc ( lev, *mu_g[lev] );
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       fill_mf_bc ( lev, *rop_g[lev] );
+       fill_mf_bc ( lev, *ep_g[lev] );
+       fill_mf_bc ( lev, *mu_g[lev] );
 
-    // Fill ghost nodes and reimpose boundary conditions
-    mfix_set_scalar_bcs (lev);
-    mfix_set_velocity_bcs (lev,0);
-    
+       // Fill ghost nodes and reimpose boundary conditions
+       mfix_set_scalar_bcs (lev);
+       mfix_set_velocity_bcs (lev,0);
+    }
+
     //
     // Start loop: if we are not seeking a steady state solution,
     // the loop will execute only once
@@ -38,7 +41,7 @@ mfix::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt,  Rea
 
     do
     {
-        mfix_compute_dt(lev, time, stop_time, steady_state, dt);
+        mfix_compute_dt(time, stop_time, steady_state, dt);
 
         if (steady_state)
         {
@@ -48,18 +51,20 @@ mfix::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt,  Rea
                           << time << " to new time " << time+dt
                           << " with dt = " << dt << "\n" << std::endl;
         }
- 
-        // Back up field
-        // Backup field variable to old
-	MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
-	MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
-	MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
-	MultiFab::Copy (*rop_go[lev], *rop_g[lev], 0, 0, rop_g[lev]->nComp(), rop_go[lev]->nGrow());
-	MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
-        // User hooks
-        for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
-    	   mfix_usr2();
+        for (int lev = 0; lev < nlev; lev++)
+        {
+           // Back up field variables to old
+   	   MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
+   	   MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
+	   MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
+	   MultiFab::Copy (*rop_go[lev], *rop_g[lev], 0, 0, rop_g[lev]->nComp(), rop_go[lev]->nGrow());
+	   MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
+
+           // User hooks
+           for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+       	      mfix_usr2();
+        }
 
 	//
 	// Time integration step
@@ -67,46 +72,61 @@ mfix::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt,  Rea
 	
 	// Calculate drag coefficient
 	if (solve_dem)
-	    mfix_calc_drag_fluid(lev);
+	    mfix_calc_drag_fluid();
 
-	// Create temporary multifabs to hold the old-time conv and divtau
-	//    so we don't have to re-compute them in the corrector
-        MultiFab   conv_old(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-        MultiFab divtau_old(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-	
-        // Predictor step 
-        bool proj_2 = true;
-        mfix_apply_predictor ( lev, conv_old, divtau_old, dt, proj_2 );
+        // Create temporary multifabs to hold the old-time conv and divtau
+        //    so we don't have to re-compute them in the corrector
+        Vector<std::unique_ptr<MultiFab> > conv_old;
+        Vector<std::unique_ptr<MultiFab> > divtau_old;
 
-	// Print info about predictor step
+          conv_old.resize(nlev);
+        divtau_old.resize(nlev);
+
+        for (int lev = 0; lev < nlev; lev++)
         {
-	    amrex::Print() << "\nAfter predictor step:\n";
-    	    mfix_print_max_vel (lev);
-    	    mfix_compute_diveu (lev);
-	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
+             conv_old[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
+           divtau_old[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
+        }
+
+        // Predictor step 
+        for (int lev = 0; lev < nlev; lev++)
+        {
+           bool proj_2 = true;
+           mfix_apply_predictor ( lev, *conv_old[lev], *divtau_old[lev], dt, proj_2 );
+
+	   // Print info about predictor step
+           {
+	       amrex::Print() << "\nAfter predictor step:\n";
+    	       mfix_print_max_vel (lev);
+    	       mfix_compute_diveu (lev);
+	       amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
+           }
         }
 
 	// Calculate drag coefficient
 	if (solve_dem)
-	    mfix_calc_drag_fluid(lev);
+	    mfix_calc_drag_fluid();
 	
 	// Corrector step 
-        proj_2 = true;
-	mfix_apply_corrector ( lev, conv_old, divtau_old, dt, proj_2 );
-
-	// Print info about corrector step
+        for (int lev = 0; lev < nlev; lev++)
         {
-	    amrex::Print() << "\nAfter corrector step:\n";
-    	    mfix_print_max_vel (lev);
-    	    mfix_compute_diveu (lev);
-	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
+           bool proj_2 = true;
+	   mfix_apply_corrector ( lev, *conv_old[lev], *divtau_old[lev], dt, proj_2 );
+
+   	   // Print info about corrector step
+           {
+	       amrex::Print() << "\nAfter corrector step:\n";
+    	       mfix_print_max_vel (lev);
+    	       mfix_compute_diveu (lev);
+	       amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
+           }
         }
 	    
 	// 
         // Check whether to exit the loop or not
 	// 
 	if (steady_state) {
-	    keep_looping = !steady_state_reached ( lev, dt ); 
+	    keep_looping = !steady_state_reached ( dt ); 
         } else {
 	    keep_looping = 0;
 	}
@@ -116,7 +136,7 @@ mfix::EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt,  Rea
     }
     while ( keep_looping );
 
-    BL_PROFILE_REGION_STOP("mfix::EvolveFluidProjection");
+    BL_PROFILE_REGION_STOP("mfix::EvolveFluid");
 }
 
 void
@@ -151,7 +171,7 @@ mfix::mfix_initial_iterations (int lev, Real dt, Real stop_time, int steady_stat
     MultiFab::Copy (*vel_go[lev], *vel_g[lev],   0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
     Real time = 0.0;
-    mfix_compute_dt(lev,time,stop_time,steady_state,dt);
+    mfix_compute_dt(time,stop_time,steady_state,dt);
 
     amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
 
@@ -417,9 +437,9 @@ mfix::mfix_compute_diveu (int lev)
       for (MFIter mfi(vec, true); mfi.isValid(); ++mfi)
         {
           set_vec_bcs ( BL_TO_FORTRAN_ANYD(vec[mfi]),
-                        bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                        bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                        bc_klo.dataPtr(), bc_khi.dataPtr(),
+                        bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                        bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                        bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                         domain.loVect(), domain.hiVect(),
                         &nghost);
         }
@@ -479,98 +499,111 @@ mfix::mfix_compute_diveu (int lev)
 // 
 
 int
-mfix::steady_state_reached (int lev, Real dt)
+mfix::steady_state_reached (Real dt)
 {
     //
     // Count number of access 
     //
     static int naccess = 0;
 
+    int condition1[nlev];
+    int condition2[nlev];
+
     //
     // Make sure velocity is up to date
     // 
-    mfix_set_velocity_bcs (lev,0);
-    
-    // 
-    // Use temporaries to store the difference
-    // between current and previous solution
-    // 
-    MultiFab temp_vel(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),3,0);
-    MultiFab::LinComb (temp_vel, 1.0, *vel_g[lev], 0, -1.0, *vel_go[lev], 0, 0, 3, 0);
-
-    MultiFab tmp;
-    
-    if (nodal_pressure)
+    for (int lev = 0; lev < nlev; lev++)
     {
-       const BoxArray & nd_grid = amrex::convert(grids[lev], IntVect{1,1,1});
-       tmp.define( nd_grid, dmap[lev], 1, 0 );     
+
+       mfix_set_velocity_bcs (lev,0);
+    
+       // 
+       // Use temporaries to store the difference
+       // between current and previous solution
+       // 
+       MultiFab temp_vel(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),3,0);
+       MultiFab::LinComb (temp_vel, 1.0, *vel_g[lev], 0, -1.0, *vel_go[lev], 0, 0, 3, 0);
+
+       MultiFab tmp;
+    
+       if (nodal_pressure)
+       {
+          const BoxArray & nd_grid = amrex::convert(grids[lev], IntVect{1,1,1});
+          tmp.define( nd_grid, dmap[lev], 1, 0 );     
+       }
+       else
+       {
+   	tmp.define( grids[lev], dmap[lev], 1, 0 );
+       }
+
+       MultiFab::LinComb (tmp, 1.0, *p_g[lev], 0, -1.0, *p_go[lev], 0, 0, 1, 0);
+    
+       Real delta_u = mfix_norm0(temp_vel,lev,0);
+       Real delta_v = mfix_norm0(temp_vel,lev,1);
+       Real delta_w = mfix_norm0(temp_vel,lev,2);
+       Real delta_p = mfix_norm0(tmp,lev,0);
+    
+       Real tol = steady_state_tol; 
+    
+       condition1[lev] = (delta_u < tol*dt) && (delta_v < tol*dt ) && (delta_w < tol*dt);
+
+       //
+       // Second stop condition
+       //
+       Real du_n1 = mfix_norm1(temp_vel, lev, 0); 
+       Real dv_n1 = mfix_norm1(temp_vel, lev, 1); 
+       Real dw_n1 = mfix_norm1(temp_vel, lev, 2); 
+       Real dp_n1 = mfix_norm1(tmp, lev, 0); 
+       Real uo_n1 = mfix_norm1(vel_go, lev, 0);
+       Real vo_n1 = mfix_norm1(vel_go, lev, 1);
+       Real wo_n1 = mfix_norm1(vel_go, lev, 2);
+       Real po_n1 = mfix_norm1(p_go, lev, 0);
+       
+       Real tmp1, tmp2, tmp3, tmp4;
+
+       Real local_tol = 1.0e-8;
+    
+       if ( uo_n1 < local_tol ) {
+       	  tmp1 = 0.0;
+       } else {
+       	  tmp1 = du_n1 / uo_n1;
+       };
+
+       if ( vo_n1 < local_tol ) {
+       	  tmp2 = 0.0;
+       } else {
+       	  tmp2 = dv_n1 / vo_n1;
+       };
+    
+       if ( wo_n1 < local_tol ) {
+       	  tmp3 = 0.0;
+       } else {
+       	  tmp3 = dw_n1 / wo_n1;
+       };
+
+       if ( po_n1 < local_tol ) {
+       	  tmp4 = 0.0;
+       } else {
+       	  tmp4 = dp_n1 / po_n1;
+       };
+
+       condition2[lev] = (tmp1 < tol) && (tmp2 < tol) && (tmp3 < tol); // && (tmp4 < tol);
+
+       //
+       // Print out info on steady state checks
+       //
+       amrex::Print() << "\nSteady state check at level " << lev << ":\n";
+       amrex::Print() << "||u-uo||/||uo|| , du/dt  = " << tmp1 <<" , "<< delta_u/dt << "\n";
+       amrex::Print() << "||v-vo||/||vo|| , dv/dt  = " << tmp2 <<" , "<< delta_v/dt << "\n";
+       amrex::Print() << "||w-wo||/||wo|| , dw/dt  = " << tmp3 <<" , "<< delta_w/dt << "\n";
+       amrex::Print() << "||p-po||/||po|| , dp/dt  = " << tmp4 <<" , "<< delta_p/dt << "\n";
     }
-    else
+
+    int reached = 1;
+    for (int lev = 0; lev < nlev; lev++)
     {
-	tmp.define( grids[lev], dmap[lev], 1, 0 );
+       reached = reached && (condition1[lev] || condition2[lev]);
     }
-
-    MultiFab::LinComb (tmp, 1.0, *p_g[lev], 0, -1.0, *p_go[lev], 0, 0, 1, 0);
-    
-    Real delta_u = mfix_norm0(temp_vel,lev,0);
-    Real delta_v = mfix_norm0(temp_vel,lev,1);
-    Real delta_w = mfix_norm0(temp_vel,lev,2);
-    Real delta_p = mfix_norm0(tmp,lev,0);
-    
-    Real tol = steady_state_tol; 
-    
-    int condition1 = (delta_u < tol*dt) && (delta_v < tol*dt ) && (delta_w < tol*dt);
-
-    //
-    // Second stop condition
-    //
-    Real du_n1 = mfix_norm1(temp_vel, lev, 0); 
-    Real dv_n1 = mfix_norm1(temp_vel, lev, 1); 
-    Real dw_n1 = mfix_norm1(temp_vel, lev, 2); 
-    Real dp_n1 = mfix_norm1(tmp, lev, 0); 
-    Real uo_n1 = mfix_norm1(vel_go, lev, 0);
-    Real vo_n1 = mfix_norm1(vel_go, lev, 1);
-    Real wo_n1 = mfix_norm1(vel_go, lev, 2);
-    Real po_n1 = mfix_norm1(p_go, lev, 0);
-    
-    Real tmp1, tmp2, tmp3, tmp4;
-
-    Real local_tol = 1.0e-8;
-    
-    if ( uo_n1 < local_tol ) {
-    	tmp1 = 0.0;
-    } else {
-    	tmp1 = du_n1 / uo_n1;
-    };
-
-    if ( vo_n1 < local_tol ) {
-    	tmp2 = 0.0;
-    } else {
-    	tmp2 = dv_n1 / vo_n1;
-    };
-    
-    if ( wo_n1 < local_tol ) {
-    	tmp3 = 0.0;
-    } else {
-    	tmp3 = dw_n1 / wo_n1;
-    };
-
-    if ( po_n1 < local_tol ) {
-    	tmp4 = 0.0;
-    } else {
-    	tmp4 = dp_n1 / po_n1;
-    };
-
-    int condition2 = (tmp1 < tol) && (tmp2 < tol) && (tmp3 < tol); // && (tmp4 < tol);
-
-    //
-    // Print out info on steady state checks
-    //
-    amrex::Print() << "\nSteady state check:\n";
-    amrex::Print() << "||u-uo||/||uo|| , du/dt  = " << tmp1 <<" , "<< delta_u/dt << "\n";
-    amrex::Print() << "||v-vo||/||vo|| , dv/dt  = " << tmp2 <<" , "<< delta_v/dt << "\n";
-    amrex::Print() << "||w-wo||/||wo|| , dw/dt  = " << tmp3 <<" , "<< delta_w/dt << "\n";
-    amrex::Print() << "||p-po||/||po|| , dp/dt  = " << tmp4 <<" , "<< delta_p/dt << "\n";
 
     // Count # access
     naccess++;
@@ -580,8 +613,8 @@ mfix::steady_state_reached (int lev, Real dt)
     //  initial zero velocity field do not test for false positive
     //
     if ( naccess == 1 ) {
-	return 0;
+       return 0;
     } else {
-	return condition1 || condition2;
+       return reached;
     };
 }

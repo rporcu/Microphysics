@@ -129,9 +129,6 @@ int main (int argc, char* argv[])
     if ( ParallelDescriptor::IOProcessor() )
        check_inputs(&dt);
 
-    // Default AMR level = 0
-    int lev = 0;
-
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
     //                                                                  |
     //  => Geometry is constructed here:  (constructs Geometry) --------+
@@ -145,14 +142,14 @@ int main (int argc, char* argv[])
     my_mfix.ResizeArrays();
 
     // Initialize derived internals
-    my_mfix.Init(lev,dt,time);
+    my_mfix.Init(dt,time);
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
     {
         // NOTE: this also builds ebfactories and level-set
-        my_mfix.InitLevelData(lev,dt,time);
+        my_mfix.InitLevelData(dt,time);
     }
     else
     {
@@ -169,13 +166,14 @@ int main (int argc, char* argv[])
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
 
-
+    // amrex::Print() << "Finished INIT Level Data " << std::endl;
+    // exit(0);
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
     amrex::Print() << "Regridding at step " << nstep << std::endl;
-    my_mfix.Regrid(lev);
+    my_mfix.Regrid();
 
-    my_mfix.PostInit( lev, dt, time, nstep, restart_flag, stop_time, steady_state );
+    my_mfix.PostInit( dt, time, nstep, restart_flag, stop_time, steady_state );
 
     // Write out EB sruface
     if(write_eb_surface)
@@ -192,7 +190,7 @@ int main (int argc, char* argv[])
 
     // Call to output before entering time march loop
     if (solve_fluid && ParallelDescriptor::IOProcessor()  && solve_dem )
-       my_mfix.output(lev,estatus,finish,nstep,dt,time);
+       my_mfix.output(estatus,finish,nstep,dt,time);
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
     // only if solve_fluid = T
@@ -203,7 +201,7 @@ int main (int argc, char* argv[])
     if ( (restart_file.empty() || plotfile_on_restart) && plot_int > 0 )
     {
        if (solve_fluid)
-          my_mfix.mfix_compute_vort(lev);
+          my_mfix.mfix_compute_vort();
        my_mfix.WritePlotFile( plot_file, nstep, dt, time );
     }
 
@@ -243,10 +241,10 @@ int main (int argc, char* argv[])
                 if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
                 {
                    amrex::Print() << "Regridding at step " << nstep << std::endl;
-                   my_mfix.Regrid(lev);
+                   my_mfix.Regrid();
                 }
 
-                my_mfix.Evolve(lev,nstep,steady_state,dt,prev_dt,time,stop_time);
+                my_mfix.Evolve(nstep,steady_state,dt,prev_dt,time,stop_time);
 
                 Real end_step = ParallelDescriptor::second() - strt_step;
                 ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
@@ -261,7 +259,7 @@ int main (int argc, char* argv[])
                     if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
                     {
                         if (solve_fluid)
-                           my_mfix.mfix_compute_vort(lev);
+                           my_mfix.mfix_compute_vort();
                         my_mfix.WritePlotFile( plot_file, nstep, dt, time );
                         last_plt = nstep;
                     }
@@ -278,11 +276,11 @@ int main (int argc, char* argv[])
                         last_par_ascii = nstep;
                     }
 
-                    if (write_user) my_mfix.WriteUSER(lev, dt, time);
+                    if (write_user) my_mfix.WriteUSER(dt, time);
                 }
 
                 if (ParallelDescriptor::IOProcessor() && solve_dem )
-                    my_mfix.output(lev,estatus,finish,nstep,dt,time);
+                    my_mfix.output(estatus,finish,nstep,dt,time);
 
                 // Mechanism to terminate MFIX normally.
                 do_not_evolve =  steady_state || (
@@ -304,7 +302,7 @@ int main (int argc, char* argv[])
     if ( par_ascii_int > 0  && nstep != last_par_ascii)
         my_mfix.WriteParticleAscii ( par_ascii_file, nstep );
 
-    my_mfix.usr3(0);
+    my_mfix.usr3();
 
     Real end_time = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());

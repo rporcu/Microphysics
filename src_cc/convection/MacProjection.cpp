@@ -59,30 +59,35 @@ MacProjection::read_inputs ()
 // 
 // 
 void
-MacProjection::set_bcs ( IArrayBox* a_bc_ilo, IArrayBox* a_bc_ihi,
-			 IArrayBox* a_bc_jlo, IArrayBox* a_bc_jhi,
-			 IArrayBox* a_bc_klo, IArrayBox* a_bc_khi )
+MacProjection::set_bcs ( Vector< std::unique_ptr<IArrayBox> >& a_bc_ilo,
+                         Vector< std::unique_ptr<IArrayBox> >& a_bc_ihi,
+                         Vector< std::unique_ptr<IArrayBox> >& a_bc_jlo,
+                         Vector< std::unique_ptr<IArrayBox> >& a_bc_jhi,
+                         Vector< std::unique_ptr<IArrayBox> >& a_bc_klo,
+                         Vector< std::unique_ptr<IArrayBox> >& a_bc_khi)
 {
-   m_bc_ilo = a_bc_ilo;
-   m_bc_ihi = a_bc_ihi;
-   m_bc_jlo = a_bc_jlo;
-   m_bc_jhi = a_bc_jhi;
-   m_bc_klo = a_bc_klo;
-   m_bc_khi = a_bc_khi;
+#if 1
+   m_bc_ilo = &a_bc_ilo;
+   m_bc_ihi = &a_bc_ihi;
+   m_bc_jlo = &a_bc_jlo;
+   m_bc_jhi = &a_bc_jhi;
+   m_bc_klo = &a_bc_klo;
+   m_bc_khi = &a_bc_khi;
+#endif
 
    int bc_lo[3], bc_hi[3];
-   Box domain( m_amrcore->Geom(0).Domain() );
     
+   int lev = 0;
+   Box domain( m_amrcore->Geom(lev).Domain() );
    set_ppe_bc ( bc_lo, bc_hi,
                 domain.loVect(), domain.hiVect(),
                 &m_nghost,
-                m_bc_ilo->dataPtr(), m_bc_ihi->dataPtr(),
-                m_bc_jlo->dataPtr(), m_bc_jhi->dataPtr(),
-                m_bc_klo->dataPtr(), m_bc_khi->dataPtr() );
+                (*m_bc_ilo)[lev]->dataPtr(), (*m_bc_ihi)[lev]->dataPtr(),
+                (*m_bc_jlo)[lev]->dataPtr(), (*m_bc_jhi)[lev]->dataPtr(),
+                (*m_bc_klo)[lev]->dataPtr(), (*m_bc_khi)[lev]->dataPtr() );
 
    m_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
    m_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
-    
 }
 
 
@@ -321,9 +326,9 @@ MacProjection::set_velocity_bcs ( int lev,
                              BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
                              BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
                              BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
-                             m_bc_ilo->dataPtr(), m_bc_ihi->dataPtr(),
-                             m_bc_jlo->dataPtr(), m_bc_jhi->dataPtr(),
-                             m_bc_klo->dataPtr(), m_bc_khi->dataPtr(),
+                             (*m_bc_ilo)[lev]->dataPtr(), (*m_bc_ihi)[lev]->dataPtr(),
+                             (*m_bc_jlo)[lev]->dataPtr(), (*m_bc_jhi)[lev]->dataPtr(),
+                             (*m_bc_klo)[lev]->dataPtr(), (*m_bc_khi)[lev]->dataPtr(),
                              domain.loVect(), domain.hiVect(),
                              &m_nghost );
    }	
@@ -359,9 +364,9 @@ MacProjection::set_ccmf_bcs ( int lev, MultiFab& mf )
       const Box& sbx = mf[mfi].box();
 
       fill_bc0( mf[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-                m_bc_ilo->dataPtr(), m_bc_ihi->dataPtr(),
-                m_bc_jlo->dataPtr(), m_bc_jhi->dataPtr(),
-                m_bc_klo->dataPtr(), m_bc_khi->dataPtr(),
+                (*m_bc_ilo)[lev]->dataPtr(), (*m_bc_ihi)[lev]->dataPtr(),
+                (*m_bc_jlo)[lev]->dataPtr(), (*m_bc_jhi)[lev]->dataPtr(),
+                (*m_bc_klo)[lev]->dataPtr(), (*m_bc_khi)[lev]->dataPtr(),
                 domain.loVect(),  domain.hiVect(),
                 &m_nghost );
    }

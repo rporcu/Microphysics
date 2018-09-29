@@ -23,7 +23,7 @@
  *                                                                              *
  ********************************************************************************/
 void
-mfix::make_eb_hopper(int lev)
+mfix::make_eb_hopper()
 {
     ParmParse pp("hopper");
 
@@ -121,6 +121,10 @@ mfix::make_eb_hopper(int lev)
     EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
 
     const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+
+    for (int lev = 0; lev < nlev; lev++)
+    { 
+
     eb_level_fluid     = & eb_is.getLevel(geom[lev]);
     eb_level_particles =   eb_level_fluid;
 
@@ -218,4 +222,5 @@ mfix::make_eb_hopper(int lev)
 
        amrex::Print() << "Done making the fluid ebfactory ..." << std::endl;
     }
+    } 
 }

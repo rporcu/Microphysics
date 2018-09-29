@@ -29,9 +29,6 @@
 
 #include <MacProjection.H>
 
-
-
-
 class mfix
     : public AmrCore
 {
@@ -42,11 +39,11 @@ public:
 
     void InitParams(int solve_fluid, int solve_dem, int call_udf );
 
-    void Init(int lev, Real dt, Real time);
+    void Init(Real dt, Real time);
 
-    void InitLevelData(int lev, Real dt, Real time);
+    void InitLevelData(Real dt, Real time);
 
-    void PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
+    void PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                   int steady_state);
 
     void ResizeArrays();
@@ -62,23 +59,22 @@ public:
 
     void WriteParticleAscii(std::string& par_ascii_file_name, int nstep = 0) const;
 
-    void WriteUSER(int lev, Real dt, Real time) const;
+    void WriteUSER(Real dt, Real time) const;
 
-    void Regrid (int lev);
+    void Regrid ();
 
-    void Evolve(int lev, int nstep, int steady_state, Real& dt, Real & prev_dt,
-                Real time, Real stop_time);
+    void Evolve(int nstep, int steady_state, Real& dt, Real & prev_dt, Real time, Real stop_time);
 
-    void usr3(int lev);
+    void usr3();
 
-    void output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
+    void output(int estatus, int finish, int nstep, Real dt, Real time)
     {
-        pc -> output( lev, estatus, finish, nstep, dt, time);
+        pc -> output( estatus, finish, nstep, dt, time);
     };
 
     void make_mg_bc(int mg_bc[]);
 
-    void make_eb_geometry (int lev);
+    void make_eb_geometry ();
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(int lev, bool & has_walls);
 
@@ -86,28 +82,12 @@ public:
 
     std::unique_ptr<
         EB2::TranslationIF<EB2::PolynomialIF>
-    > get_poly(int lev, int max_order, std::string field_prefix);
+    > get_poly(int max_order, std::string field_prefix);
 
     std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>> make_wall(
             int dir, // direction (long edge) of wall
             Real position, Real height, Real width
         );
-
-    //NOTE: these are deprecated and replaced by make_eb_* (private member functions below)
-
-    //std::unique_ptr<BaseIF> make_cylinder(
-    //        int dir, // direction (orientation) of cylinder axis
-    //        Real radius, Real length, const RealVect & translation,
-    //        int lev, bool water_tight
-    //    );
-
-    //std::unique_ptr<BaseIF> make_cone(int dir,
-    //        Real radius1, Real radius2, Real length, const RealVect & translation,
-    //        int lev, bool water_tight);
-
-    //void fill_levelset(int lev, bool use_walls, bool use_poly,
-    //                   const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
-    //                   int max_level, int grid_size, bool eb_verbosity);
 
     void WriteEBSurface();
 
@@ -122,7 +102,7 @@ public:
     // flag switching from calc_wall_collisions_ls to calc_wall_collisions if true
     bool legacy__eb_collisions = false;
 
-    void mfix_compute_vort(int lev);
+    void mfix_compute_vort();
 
     ///
     /// Parameters describing the level-set grid:
@@ -165,7 +145,7 @@ protected:
 
     void mfix_calc_trd_and_tau(int lev);
 
-    void mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time, int steady_state);
+    void mfix_init_fluid(int is_restarting, Real dt, Real stop_time, int steady_state);
     void mfix_set_bc0(int lev);
     void mfix_set_p0(int lev);
 
@@ -181,31 +161,28 @@ protected:
     void mfix_set_pressure_bcs (int lev);
 
     void mfix_calc_volume_fraction(int lev, Real& sum_vol);
-    void mfix_calc_drag_fluid(int lev);
-    void mfix_calc_drag_particle(int lev);
+    void mfix_calc_drag_fluid();
+    void mfix_calc_drag_particle();
 
     void AllocateArrays (int lev);
 
     void RegridArrays (int lev);
 
-    void MakeBCArrays();
-
 private:
 
-    void make_eb_general  (int lev);
-    void make_eb_box      (int lev);
-    void make_eb_cylinder (int lev);
-    void make_eb_hopper   (int lev);
-    void make_eb_cyclone  (int lev);
-    void make_eb_hourglass(int lev);
-    void make_eb_clr      (int lev);
-    void make_eb_clr_riser(int lev);
-    void make_eb_regular  (int lev);
+    void make_eb_general  ();
+    void make_eb_box      ();
+    void make_eb_cylinder ();
+    void make_eb_hopper   ();
+    void make_eb_cyclone  ();
+    void make_eb_hourglass();
+    void make_eb_clr      ();
+    void make_eb_clr_riser();
+    void make_eb_regular  ();
 
-    // According to Weiqun `fix_up_geometry` is deprecated.
-    //void fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev);
+    void MakeBCArrays();
 
-    void check_data(int lev);
+    void check_data();
 
     void MakeNewLevelFromScratch(int lev, Real time,
             const BoxArray& new_grids, const DistributionMapping& new_dmap) override;
@@ -221,7 +198,7 @@ private:
 
     static void GotoNextLine(std::istream& is);
 
-    void EvolveFluidProjection(int lev, int nstep, int steady_state, Real& dt, Real& time, Real stop_time);
+    void EvolveFluid(int nstep, int steady_state, Real& dt, Real& time, Real stop_time);
 
     // Projection-related methods
     void solve_poisson_equation(int lev,
@@ -244,13 +221,13 @@ private:
 
     void check_for_nans(int lev);
 
-    void mfix_compute_dt(int lev, amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt);
+    void mfix_compute_dt(amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt);
 
     void mfix_compute_ugradu_predictor(int lev, amrex::MultiFab& conv, Vector< std::unique_ptr<MultiFab> >& vel);
     void mfix_compute_ugradu_corrector(int lev, amrex::MultiFab& conv, Vector< std::unique_ptr<MultiFab> >& vel);
     void mfix_compute_divtau(int lev, amrex::MultiFab& divtau, Vector< std::unique_ptr<MultiFab> >& vel);
 
-    int  steady_state_reached(int lev, Real dt);
+    int  steady_state_reached(Real dt);
 
     void mfix_apply_predictor(int lev, amrex::MultiFab& conv_old, amrex::MultiFab& divtau_old,
                               amrex::Real dt, bool proj_2);
@@ -285,13 +262,15 @@ private:
     Vector<int> nsubsteps;  // how many substeps on each level?
 #endif
 
-   Real mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
-   Real mfix_norm1 ( MultiFab& mf, int lev, int comp );
-   Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
-   Real mfix_norm0 ( MultiFab& mf, int lev, int comp );
+    Real mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
+    Real mfix_norm1 ( MultiFab& mf, int lev, int comp );
+    Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
+    Real mfix_norm0 ( MultiFab& mf, int lev, int comp );
 
-   void mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
-                                Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc );
+    void mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
+                                 Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc );
+
+    static int nlev;
    
     Vector<int> istep = {1} ;
 
@@ -307,12 +286,12 @@ private:
     // intersection/union
     int ct_ls_mf;
 
-    IArrayBox bc_ilo;
-    IArrayBox bc_ihi;
-    IArrayBox bc_jlo;
-    IArrayBox bc_jhi;
-    IArrayBox bc_klo;
-    IArrayBox bc_khi;
+    Vector< std::unique_ptr<IArrayBox> > bc_ilo ;
+    Vector< std::unique_ptr<IArrayBox> > bc_ihi ;
+    Vector< std::unique_ptr<IArrayBox> > bc_jlo ;
+    Vector< std::unique_ptr<IArrayBox> > bc_jhi ;
+    Vector< std::unique_ptr<IArrayBox> > bc_klo ;
+    Vector< std::unique_ptr<IArrayBox> > bc_khi ;
 
     Vector< std::unique_ptr<iMultiFab> > flag;
 

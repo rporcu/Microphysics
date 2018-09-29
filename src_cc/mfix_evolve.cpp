@@ -7,39 +7,40 @@
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
-mfix::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_dt,
-                   Real time, Real stop_time)
+mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, Real stop_time)
 {
     BL_PROFILE_REGION_START("mfix::Evolve");
 
-    AMREX_ALWAYS_ASSERT(lev == 0);
-
-    Real sum_vol;
-    if (solve_dem && solve_fluid)
+    for (int lev = 0; lev < nlev; lev++)
     {
-      mfix_calc_volume_fraction(lev,sum_vol);
-      if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
-      {
-         amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
-         amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
-      }
+       Real sum_vol;
+       if (solve_dem && solve_fluid)
+       {
+         mfix_calc_volume_fraction(lev,sum_vol);
+         if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
+         {
+            amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
+            amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
+         }
+       }
     }
 
     Real start_fluid = ParallelDescriptor::second();
 
     BL_PROFILE_VAR("FLUID SOLVE",fluidSolve);
-    if (solve_fluid)
+    for (int lev = 0; lev < nlev; lev++)
     {
-       EvolveFluidProjection(lev,nstep,steady_state,dt,time,stop_time);
-       prev_dt = dt;
+       if (solve_fluid)
+       {
+          EvolveFluid(nstep,steady_state,dt,time,stop_time);
+          prev_dt = dt;
+       }
     }
     BL_PROFILE_VAR_STOP(fluidSolve);
-
     
     // This returns the drag force on the particle
     if (solve_dem && solve_fluid)
-        mfix_calc_drag_particle(lev);
-
+       mfix_calc_drag_particle();
 
     Real end_fluid = ParallelDescriptor::second() - start_fluid;
     ParallelDescriptor::ReduceRealMax(end_fluid, ParallelDescriptor::IOProcessorNumber());
@@ -49,15 +50,17 @@ mfix::Evolve(int lev, int nstep, int steady_state, Real & dt, Real & prev_dt,
     BL_PROFILE_VAR("PARTICLES SOLVE",particlesSolve);
     if (solve_dem)
     {
-        pc->EvolveParticles(lev, nstep, dt, time,
+        for (int lev = 0; lev < nlev; lev++)
+           pc->EvolveParticles(lev, nstep, dt, time,
                             particle_ebfactory[lev].get(), eb_normals.get(),
                             level_set->get_data(), level_set->get_valid(), level_set->get_ls_ref(),
                             dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io
       );
 
         //  Compute Eulerian velocities in selected regions
-        if ( ( avg_vel_int > 0) && ( nstep % avg_vel_int == 0 ) )
-          pc -> ComputeAverageVelocities ( lev,
+        for (int lev = 0; lev < nlev; lev++)
+           if ( ( avg_vel_int > 0) && ( nstep % avg_vel_int == 0 ) )
+             pc -> ComputeAverageVelocities ( lev,
                time,
                avg_vel_file,
                avg_region_x_w, avg_region_x_e,

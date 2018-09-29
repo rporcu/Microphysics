@@ -77,9 +77,9 @@ mfix::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool proj_2 )
     set_ppe_bc (bc_lo, bc_hi,
 		domain.loVect(), domain.hiVect(),
 		&nghost, 
-		bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-		bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-		bc_klo.dataPtr(), bc_khi.dataPtr());
+		bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+		bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+		bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr());
 
     // Initialize phi to zero (any non-zero bc's are stored in p0)
     phi[lev] -> setVal(0.);

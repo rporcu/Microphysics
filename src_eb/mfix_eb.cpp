@@ -12,7 +12,7 @@
 #include <mfix_eb_F.H>
 
 void
-mfix::make_eb_geometry (int lev)
+mfix::make_eb_geometry ()
 {
 
   /******************************************************************************
@@ -71,26 +71,25 @@ mfix::make_eb_geometry (int lev)
    *                                                                            *
    ******************************************************************************/
 
-
   if (geom_type == "box") {
     amrex::Print() << "\n Building box geometry." << std::endl;
-    make_eb_box(lev);
+    make_eb_box();
   } else if (geom_type == "cylinder") {
     amrex::Print() << "\n Building cylinder geometry." << std::endl;
-    make_eb_cylinder(lev);
+    make_eb_cylinder();
   } else if (geom_type == "hopper") {
     amrex::Print() << "\n Building hopper geometry." << std::endl;
-    make_eb_hopper(lev);
+    make_eb_hopper();
   } else if (geom_type == "cyclone") {
     amrex::Print() << "\n Building cyclone geometry." << std::endl;
-    make_eb_cyclone(lev);
+    make_eb_cyclone();
   } else if(geom_type == "general") {
     amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
-    make_eb_general(lev);
+    make_eb_general();
   } else {
     amrex::Print() << "\n No EB geometry declared in inputs => "
                    << " Will read walls from mfix.dat only."
                    << std::endl;
-    make_eb_regular(lev);
+    make_eb_regular();
   }
 }

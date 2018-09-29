@@ -77,36 +77,19 @@ public:
 
     void make_mg_bc(int mg_bc[]);
 
-    void make_eb_geometry(int lev);
+    void make_eb_geometry();
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(int lev, bool & has_walls);
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls(int lev, bool & has_real_walls);
 
     std::unique_ptr<
-        EB2::TranslationIF<EB2::PolynomialIF>
-    > get_poly(int lev, int max_order, std::string field_prefix);
+        EB2::TranslationIF<EB2::PolynomialIF> >
+      get_poly(int max_order, std::string field_prefix);
 
     std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>> make_wall(
             int dir, // direction (long edge) of wall
-            Real position, Real height, Real width
-        );
-
-    //NOTE: these are deprecated and replaced by make_eb_* (private member functions below)
-
-    //std::unique_ptr<BaseIF> make_cylinder(
-    //        int dir, // direction (orientation) of cylinder axis
-    //        Real radius, Real length, const RealVect & translation,
-    //        int lev, bool water_tight
-    //    );
-
-    //std::unique_ptr<BaseIF> make_cone(int dir,
-    //        Real radius1, Real radius2, Real length, const RealVect & translation,
-    //        int lev, bool water_tight);
-
-    //void fill_levelset(int lev, bool use_walls, bool use_poly,
-    //                   const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
-    //                   int max_level, int grid_size, bool eb_verbosity);
+            Real position, Real height, Real width);
 
     void WriteEBSurface();
 
@@ -203,15 +186,15 @@ protected:
 
 private:
 
-    void make_eb_general(int lev);
-    void make_eb_box(int lev);
-    void make_eb_cylinder(int lev);
-    void make_eb_hopper(int lev);
-    void make_eb_cyclone(int lev);
-    void make_eb_hourglass(int lev);
-    void make_eb_clr(int lev);
-    void make_eb_clr_riser(int lev);
-    void make_eb_regular(int lev);
+    void make_eb_general();
+    void make_eb_box();
+    void make_eb_cylinder();
+    void make_eb_hopper();
+    void make_eb_cyclone();
+    void make_eb_hourglass();
+    void make_eb_clr();
+    void make_eb_clr_riser();
+    void make_eb_regular();
 
     // According to Weiqun `fix_up_geometry` is deprecated.
     //void fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev);

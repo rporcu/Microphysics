@@ -65,9 +65,9 @@ mfix::mfix_compute_ugradu_predictor ( int lev,
                 (*yslopes[lev])[mfi].dataPtr(),
                 BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
                 domain.loVect (), domain.hiVect (),
-                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                bc_klo.dataPtr(), bc_khi.dataPtr(),
+                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                 geom[lev].CellSize(), &nghost, &ugradu_type);
           }
           else
@@ -93,9 +93,9 @@ mfix::mfix_compute_ugradu_predictor ( int lev,
                 (*yslopes[lev])[mfi].dataPtr(),
                 BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
                 domain.loVect (), domain.hiVect (),
-                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                bc_klo.dataPtr(), bc_khi.dataPtr(),
+                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                 geom[lev].CellSize(), &nghost);
 
           }
@@ -169,9 +169,9 @@ mfix::mfix_compute_ugradu_corrector ( int lev,
                 (*yslopes[lev])[mfi].dataPtr(),
                 BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
                 domain.loVect (), domain.hiVect (),
-                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                bc_klo.dataPtr(), bc_khi.dataPtr(),
+                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                 geom[lev].CellSize(), &nghost, &ugradu_type);
           }
           else
@@ -197,9 +197,9 @@ mfix::mfix_compute_ugradu_corrector ( int lev,
                 (*yslopes[lev])[mfi].dataPtr(),
                 BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
                 domain.loVect (), domain.hiVect (),
-                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                bc_klo.dataPtr(), bc_khi.dataPtr(),
+                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                 geom[lev].CellSize(), &nghost);
 
           }
@@ -253,9 +253,9 @@ mfix::mfix_compute_velocity_slopes (int lev,
                              (*yslopes[lev])[mfi].dataPtr (),
                              BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
                              domain.loVect (), domain.hiVect (),
-                             bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                             bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                             bc_klo.dataPtr(), bc_khi.dataPtr(),
+                             bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                             bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                             bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                              &nghost);
           }
           else 
@@ -267,9 +267,9 @@ mfix::mfix_compute_velocity_slopes (int lev,
                                 BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
                                 BL_TO_FORTRAN_ANYD(flags),
                                 domain.loVect (), domain.hiVect (),
-                                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                                bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                                bc_klo.dataPtr(), bc_khi.dataPtr(),
+                                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                                 &nghost );
           }
        }
@@ -334,9 +334,9 @@ mfix::mfix_compute_velocity_at_faces ( int lev,
                 BL_TO_FORTRAN_ANYD((*xslopes[lev])[mfi]),
                 (*yslopes[lev])[mfi].dataPtr(),
                 (*zslopes[lev])[mfi].dataPtr(),
-                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                bc_klo.dataPtr(), bc_khi.dataPtr(),
+                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                 &nghost, domain.loVect(), domain.hiVect() );
           }
           else
@@ -349,8 +349,8 @@ mfix::mfix_compute_velocity_at_faces ( int lev,
                 BL_TO_FORTRAN_ANYD((*areafrac[0])[mfi]),
                 BL_TO_FORTRAN_ANYD((*facecent[0])[mfi]),
                 BL_TO_FORTRAN_ANYD(flags),
-                bc_ilo.dataPtr(), bc_ihi.dataPtr(), &nghost,
-                domain.loVect (), domain.hiVect () );           
+                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                &nghost, domain.loVect (), domain.hiVect () );           
 
              compute_velocity_at_y_faces_eb(
                 BL_TO_FORTRAN_BOX(vbx),
@@ -360,8 +360,8 @@ mfix::mfix_compute_velocity_at_faces ( int lev,
                 BL_TO_FORTRAN_ANYD((*areafrac[1])[mfi]),
                 BL_TO_FORTRAN_ANYD((*facecent[1])[mfi]),
                 BL_TO_FORTRAN_ANYD(flags),
-                bc_jlo.dataPtr(), bc_jhi.dataPtr(), &nghost,
-                domain.loVect (), domain.hiVect () );
+                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                &nghost, domain.loVect (), domain.hiVect () );
 
              compute_velocity_at_z_faces_eb(
                 BL_TO_FORTRAN_BOX(wbx),
@@ -371,8 +371,8 @@ mfix::mfix_compute_velocity_at_faces ( int lev,
                 BL_TO_FORTRAN_ANYD((*areafrac[2])[mfi]),
                 BL_TO_FORTRAN_ANYD((*facecent[2])[mfi]),
                 BL_TO_FORTRAN_ANYD(flags),
-                bc_klo.dataPtr(), bc_khi.dataPtr(), &nghost,
-                domain.loVect (), domain.hiVect () );
+                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+                &nghost, domain.loVect (), domain.hiVect () );
           }
        }
     }

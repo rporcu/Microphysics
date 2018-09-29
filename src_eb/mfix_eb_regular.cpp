@@ -17,7 +17,7 @@
  *                                                                              *
  ********************************************************************************/
 void
-mfix::make_eb_regular(int lev)
+mfix::make_eb_regular()
 {
     int max_level_here = 0;
 
@@ -43,6 +43,9 @@ mfix::make_eb_regular(int lev)
     //     * ! has_walls
     // are true
     std::unique_ptr<MultiFab> mf_impfunc;
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
 
     if (solve_fluid) {
         bool has_walls = false;
@@ -128,5 +131,6 @@ mfix::make_eb_regular(int lev)
        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
        ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
        ls[lev]->FillBoundary(geom[lev].periodicity());
+    }
     }
 }

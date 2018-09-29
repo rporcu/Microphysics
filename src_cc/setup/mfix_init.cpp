@@ -117,34 +117,44 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 }
 
 void
-mfix::Init(int lev, Real dt, Real time)
+mfix::Init(Real dt, Real time)
 {
-    BL_ASSERT(max_level == 0);
-
     InitIOData();
 
-    // Define coarse level BoxArray and DistributionMap
-    finest_level = 0;
+    // Note that finest_level = nlev-1
+    finest_level = nlev-1;
 
+    // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
     DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
     MakeNewLevelFromScratch(0, time, ba, dm);
 
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
+    for (int lev = 1; lev <= finest_level; lev++) 
+    {
+       BoxArray ba_ref(ba);
+       ba_ref.refine(2);
+       DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
+       MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
+    }
 
-    Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
-    Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-    Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+    // ******************************************************
+    // We only do these at level 0
+    // ******************************************************
+    Real dx = geom[0].CellSize(0);
+    Real dy = geom[0].CellSize(1);
+    Real dz = geom[0].CellSize(2);
+
+    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
+    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
+    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
     Box domain(geom[0].Domain());
 
     int cyc_x=0, cyc_y=0, cyc_z=0;
-    if(geom[lev].isPeriodic(0)) cyc_x = 1;
-    if(geom[lev].isPeriodic(1)) cyc_y = 1;
-    if(geom[lev].isPeriodic(2)) cyc_z = 1;
+    if (geom[0].isPeriodic(0)) cyc_x = 1;
+    if (geom[0].isPeriodic(1)) cyc_y = 1;
+    if (geom[0].isPeriodic(2)) cyc_z = 1;
 
     mfix_set_cyclic(&cyc_x, &cyc_y, &cyc_z);
 
@@ -172,35 +182,38 @@ mfix::Init(int lev, Real dt, Real time)
            amrex::Abort("Bad data in set_ps");
     }
 
-    mfix_set_bc_type(lev);
+    for (int lev = 0; lev < nlev; lev++) 
+    {
+       mfix_set_bc_type(lev);
 
-    // Allocate container for eb-normals
-    eb_normals = unique_ptr<MultiFab>(new MultiFab);
-    dummy = unique_ptr<MultiFab>(new MultiFab);
+       // Allocate container for eb-normals
+       eb_normals = unique_ptr<MultiFab>(new MultiFab);
+       dummy = unique_ptr<MultiFab>(new MultiFab);
 
-    // Level-Set: initialize container for level set
-    // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)
-    //            -> use min to intersect new eb boundaries (in update)
-    level_set = std::unique_ptr<LSFactory>(
-            new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
-                levelset__pad, levelset__eb_pad,
-                pc->ParticleBoxArray(lev), pc->Geom(lev), pc->ParticleDistributionMap(lev))
+       // Level-Set: initialize container for level set
+       // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)
+       //            -> use min to intersect new eb boundaries (in update)
+       level_set = std::unique_ptr<LSFactory>(
+               new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
+                   levelset__pad, levelset__eb_pad,
+                   pc->ParticleBoxArray(lev), pc->Geom(lev), pc->ParticleDistributionMap(lev))
             );
 
-    // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
-    // (otherwise, if there are no walls/boundaries in the simulation, saving a
-    // plot file or checkpoint will segfault).
-    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-    const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
-    ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
-    ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
-    ls[lev]->FillBoundary(geom[lev].periodicity());
+       // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
+       // (otherwise, if there are no walls/boundaries in the simulation, saving a
+       // plot file or checkpoint will segfault).
+       std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+       const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+       ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
+       ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
+       ls[lev]->FillBoundary(geom[lev].periodicity());
+    }
 
     // Create MAC projection object
-    mac_projection.reset( new MacProjection(this,nghost, &ebfactory ) );
-    mac_projection -> set_bcs( &bc_ilo, &bc_ihi,
-			       &bc_jlo, &bc_jhi,
-			       &bc_klo, &bc_khi );
+    mac_projection.reset( new MacProjection(this, nghost, &ebfactory ) );
+    mac_projection -> set_bcs( bc_ilo, bc_ihi,
+			       bc_jlo, bc_jhi,
+			       bc_klo, bc_khi );
 }
 
 BoxArray
@@ -277,36 +290,43 @@ mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 
 void
 mfix::MakeNewLevelFromScratch (int lev, Real time,
-                                     const BoxArray& new_grids, const DistributionMapping& new_dmap)
+                               const BoxArray& new_grids, const DistributionMapping& new_dmap)
 {
+    std::cout << "MAKING NEW LEVEL " << lev << std::endl;
+    std::cout << "WITH BOX ARRAY   " << new_grids << std::endl;
+
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
-    MakeBCArrays();
+    if (lev == 0)
+    {
+       MakeBCArrays();
+       check_data();
 
-    check_data(lev);
+       Real dx = geom[lev].CellSize(0);
+       Real dy = geom[lev].CellSize(1);
+       Real dz = geom[lev].CellSize(2);
 
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-
-    // This is separate from check_data because it is only called on initialization,
-    // not on restart
-    Box domain(geom[0].Domain());
-    if ( ParallelDescriptor::IOProcessor() )
-       check_initial_conditions(&dx,&dy,&dz,domain.loVect(),domain.hiVect());
+       // This is separate from check_data because it is only called on initialization,
+       // not on restart
+       Box domain(geom[0].Domain());
+       if ( ParallelDescriptor::IOProcessor() )
+          check_initial_conditions(&dx,&dy,&dz,domain.loVect(),domain.hiVect());
+    }
 }
 
 void
 mfix::ReMakeNewLevelFromScratch (int lev,
-                                       const BoxArray & new_grids, const DistributionMapping & new_dmap)
+                                 const BoxArray & new_grids, const DistributionMapping & new_dmap)
 {
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
-    MakeBCArrays();
-
-    check_data(lev);
+    if (lev == 0)
+    {
+       MakeBCArrays();
+       check_data();
+    }
 
     // We need to re-fill these arrays for the larger domain (after replication).
     mfix_set_bc_type(lev);
@@ -327,21 +347,20 @@ mfix::ReMakeNewLevelFromScratch (int lev,
 }
 
 void
-mfix::check_data (int lev)
+mfix::check_data ()
 {
+    Real dx = geom[0].CellSize(0);
+    Real dy = geom[0].CellSize(1);
+    Real dz = geom[0].CellSize(2);
 
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-
-    Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
-    Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-    Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
+    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
+    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
     Box domain(geom[0].Domain());
 
     // Convert (mass, volume) flows to velocities.
-    set_bc_flow(&xlen, &ylen, &zlen, &dx,&dy,&dz);
+    set_bc_flow(&xlen, &ylen, &zlen, &dx, &dy, &dz);
 
     // Only call this check on one processor since it has a bunch of print statements
     if ( ParallelDescriptor::IOProcessor() )
@@ -353,22 +372,23 @@ mfix::check_data (int lev)
 }
 
 void
-mfix::InitLevelData(int lev, Real dt, Real time)
+mfix::InitLevelData(Real dt, Real time)
 {
     // This needs is needed before initializing level MultiFabs: ebfactories should
     // not change after the eb-dependent MultiFabs are allocated.
-    make_eb_geometry(lev);
+
+    make_eb_geometry();
 
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
     if (solve_fluid) 
-       AllocateArrays(lev);
+       for (int lev = 0; lev < nlev; lev++)
+          AllocateArrays(lev);
 
     // Allocate the particle data
     if (solve_dem)
     {
       Real strt_init_part = ParallelDescriptor::second();
 
-      //int lev = 0;
       pc->AllocData();
 
       if (particle_init_type == "AsciiFile")
@@ -404,52 +424,59 @@ mfix::InitLevelData(int lev, Real dt, Real time)
 
       } else if (particle_init_type == "Auto") {
 
-        amrex::Print() << "Auto generating particles ..." << std::endl;
+         amrex::Print() << "Auto generating particles ..." << std::endl;
 
-        pc->InitParticlesAuto(lev);
+         pc->InitParticlesAuto();
 
       } else {
 
-      amrex::Abort("Bad particle_init_type");
+         amrex::Abort("Bad particle_init_type");
       }
+
+      pc->Redistribute();
 
       // used in load balancing
       if (load_balance_type == "KnapSack")
       {
-          particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                pc->ParticleDistributionMap(lev), 1, 0));
-          particle_cost[lev]->setVal(0.0);
-       }
-       Real end_init_part = ParallelDescriptor::second() - strt_init_part;
-       ParallelDescriptor::ReduceRealMax(end_init_part, ParallelDescriptor::IOProcessorNumber());
-       if (ParallelDescriptor::IOProcessor())
-          std::cout << "Time spent in initializing particles " << end_init_part << std::endl;
+          for (int lev = 0; lev < nlev; lev++)
+          {
+             particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
+                                                   pc->ParticleDistributionMap(lev), 1, 0));
+             particle_cost[lev]->setVal(0.0);
+          }
+      }
+
+      Real end_init_part = ParallelDescriptor::second() - strt_init_part;
+      ParallelDescriptor::ReduceRealMax(end_init_part, ParallelDescriptor::IOProcessorNumber());
+      if (ParallelDescriptor::IOProcessor())
+         std::cout << "Time spent in initializing particles " << end_init_part << std::endl;
     }
 
     if (solve_fluid)
     {
        if (load_balance_type == "KnapSack")
        {
-          fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
-          fluid_cost[lev]->setVal(0.0);
+          for (int lev = 0; lev < nlev; lev++)
+          {
+             fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+             fluid_cost[lev]->setVal(0.0);
+          }
        }
     }
 }
 
 void
-mfix::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real stop_time,
-                     int steady_state)
+mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
+               int steady_state)
 {
-
-
-  if (solve_dem) {
-
+  if (solve_dem) 
+  {
      // Auto generated particles may be out of the domain. This call will remove
      // them. Note that this has to occur after the EB geometry is created.
-     if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory[lev])
+     if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory[finest_level])
      {
        amrex::Print() << "Clean up auto-generated particles.\n";
-       pc->RemoveOutOfRange(lev, particle_ebfactory[lev].get(),
+       pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
                             level_set->get_data(),
                             level_set->get_valid(),
                             level_set->get_ls_ref());
@@ -457,31 +484,36 @@ mfix::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real st
 
      }
 
-     // We need to do this *after* restart (hence putting this here not in Init)
-     // because we may want to move from KDTree to Knapsack, or change the
-     // particle_max_grid_size on restart.
-     if (load_balance_type == "KnapSack" &&
-         dual_grid && particle_max_grid_size_x > 0
-                   && particle_max_grid_size_y > 0
-                   && particle_max_grid_size_z > 0)
+     for (int lev = 0; lev < nlev; lev++)
      {
-         BoxArray particle_ba(geom[lev].Domain());
-         IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                        particle_max_grid_size_y,
-                                        particle_max_grid_size_z);
-         particle_ba.maxSize(particle_max_grid_size);
-         DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
-         pc->Regrid(particle_dm, particle_ba);
+
+        // We need to do this *after* restart (hence putting this here not in Init)
+        // because we may want to move from KDTree to Knapsack, or change the
+        // particle_max_grid_size on restart.
+        if (load_balance_type == "KnapSack" &&
+            dual_grid && particle_max_grid_size_x > 0
+                      && particle_max_grid_size_y > 0
+                      && particle_max_grid_size_z > 0)
+        {
+            BoxArray particle_ba(geom[lev].Domain());
+            IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                           particle_max_grid_size_y,
+                                           particle_max_grid_size_z);
+            particle_ba.maxSize(particle_max_grid_size);
+            DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+            pc->Regrid(particle_dm, particle_ba);
+        }
      }
 
      Real avg_dp[10], avg_ro[10];
-     pc -> GetParticleAvgProp( lev, avg_dp, avg_ro );
+     pc -> GetParticleAvgProp( avg_dp, avg_ro );
      init_collision(avg_dp, avg_ro);
   }
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
+  std::cout  << "CALLING MFIX INIT FLUID " << solve_fluid << std::endl;
   if (solve_fluid)
-     mfix_init_fluid(lev,restart_flag,dt,stop_time,steady_state);
+     mfix_init_fluid(restart_flag,dt,stop_time,steady_state);
 
   // Call user-defined subroutine to set constants, check data, etc.
   if (call_udf) mfix_usr0();
@@ -489,7 +521,8 @@ mfix::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real st
   // Calculate the initial volume fraction
   if (solve_fluid)
   {
-     mfix_calc_volume_fraction(lev,sum_vol_orig);
+     for (int lev = 0; lev < nlev; lev++)
+        mfix_calc_volume_fraction(lev,sum_vol_orig);
      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
   }
 }
@@ -497,123 +530,138 @@ mfix::PostInit(int lev, Real dt, Real time, int nstep, int restart_flag, Real st
 void
 mfix::MakeBCArrays ()
 {
-    // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
-    Box domainx(geom[0].Domain());
-    domainx.grow(1,nghost);
-    domainx.grow(2,nghost);
-    Box box_ilo = amrex::adjCellLo(domainx,0,1);
-    Box box_ihi = amrex::adjCellHi(domainx,0,1);
+    bc_ilo.resize(nlev);
+    bc_ihi.resize(nlev);
+    bc_jlo.resize(nlev);
+    bc_jhi.resize(nlev);
+    bc_klo.resize(nlev);
+    bc_khi.resize(nlev);
 
-    Box domainy(geom[0].Domain());
-    domainy.grow(0,nghost);
-    domainy.grow(2,nghost);
-    Box box_jlo = amrex::adjCellLo(domainy,1,1);
-    Box box_jhi = amrex::adjCellHi(domainy,1,1);
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
+       Box domainx(geom[lev].Domain());
+       domainx.grow(1,nghost);
+       domainx.grow(2,nghost);
+       Box box_ilo = amrex::adjCellLo(domainx,0,1);
+       Box box_ihi = amrex::adjCellHi(domainx,0,1);
 
-    Box domainz(geom[0].Domain());
-    domainz.grow(0,nghost);
-    domainz.grow(1,nghost);
-    Box box_klo = amrex::adjCellLo(domainz,2,1);
-    Box box_khi = amrex::adjCellHi(domainz,2,1);
+       Box domainy(geom[lev].Domain());
+       domainy.grow(0,nghost);
+       domainy.grow(2,nghost);
+       Box box_jlo = amrex::adjCellLo(domainy,1,1);
+       Box box_jhi = amrex::adjCellHi(domainy,1,1);
 
-    // Note that each of these is a single IArrayBox so every process has a copy of them
-    bc_ilo.resize(box_ilo,2);
-    bc_ihi.resize(box_ihi,2);
-    bc_jlo.resize(box_jlo,2);
-    bc_jhi.resize(box_jhi,2);
-    bc_klo.resize(box_klo,2);
-    bc_khi.resize(box_khi,2);
+       Box domainz(geom[lev].Domain());
+       domainz.grow(0,nghost);
+       domainz.grow(1,nghost);
+       Box box_klo = amrex::adjCellLo(domainz,2,1);
+       Box box_khi = amrex::adjCellHi(domainz,2,1);
+
+       // Note that each of these is a single IArrayBox so every process has a copy of them
+       bc_ilo[lev].reset(new IArrayBox(box_ilo,2));
+       bc_ihi[lev].reset(new IArrayBox(box_ihi,2));
+       bc_jlo[lev].reset(new IArrayBox(box_jlo,2));
+       bc_jhi[lev].reset(new IArrayBox(box_jhi,2));
+       bc_klo[lev].reset(new IArrayBox(box_klo,2));
+       bc_khi[lev].reset(new IArrayBox(box_khi,2));
+   }
 }
 
 void
-mfix::mfix_init_fluid(int lev, int is_restarting, Real dt, Real stop_time, int steady_state)
+mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_state)
 {
-  Box domain(geom[lev].Domain());
+  Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
+  Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
+  Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
-  Real dx = geom[lev].CellSize(0);
-  Real dy = geom[lev].CellSize(1);
-  Real dz = geom[lev].CellSize(2);
+     std::cout  << " NLEV " << nlev << std::endl;
+  for (int lev = 0; lev < nlev; lev++)
+  {
+     Box domain(geom[lev].Domain());
+     std::cout  << " IN MFIX INIT FLUID AT LEVEL " << lev << std::endl;
 
-  Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
-  Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-  Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+     Real dx = geom[lev].CellSize(0);
+     Real dy = geom[lev].CellSize(1);
+     Real dz = geom[lev].CellSize(2);
 
-  // Here we set bc values for p and u,v,w before the IC's are set
-  mfix_set_bc0(lev);
+     // Here we set bc values for p and u,v,w before the IC's are set
+     mfix_set_bc0(lev);
 
-  // We deliberately don't tile this loop since we will be looping
-  //    over bc's on faces and it makes more sense to do this one grid at a time
-  for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) {
+     // We deliberately don't tile this loop since we will be looping
+     //    over bc's on faces and it makes more sense to do this one grid at a time
+     for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) {
 
-    const Box& bx = mfi.validbox();
-    const Box& sbx = (*ep_g[lev])[mfi].box();
+        const Box& bx = mfi.validbox();
+        const Box& sbx = (*ep_g[lev])[mfi].box();
 
-    if ( is_restarting ) {
+        if ( is_restarting ) {
 
-      init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
-           (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr());
+          init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
+               (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr());
 
-    } else {
+        } else {
 
-      init_fluid(sbx.loVect(), sbx.hiVect(),
-           bx.loVect(),  bx.hiVect(),
-           domain.loVect(), domain.hiVect(),
-           (*ep_g[lev])[mfi].dataPtr(),  (*ro_g[lev])[mfi].dataPtr(),
-           (*rop_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
-           (*vel_g[lev])[mfi].dataPtr(),
-           (*mu_g[lev])[mfi].dataPtr(),  (*lambda_g[lev])[mfi].dataPtr(),
-           &dx, &dy, &dz, &xlen, &ylen, &zlen);
-    }
-  }
+          init_fluid(sbx.loVect(), sbx.hiVect(),
+               bx.loVect(),  bx.hiVect(),
+               domain.loVect(), domain.hiVect(),
+               (*ep_g[lev])[mfi].dataPtr(),  (*ro_g[lev])[mfi].dataPtr(),
+               (*rop_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+               (*vel_g[lev])[mfi].dataPtr(),
+               (*mu_g[lev])[mfi].dataPtr(),  (*lambda_g[lev])[mfi].dataPtr(),
+               &dx, &dy, &dz, &xlen, &ylen, &zlen);
+        }
+     }
 
-  mfix_set_p0(lev);
+     mfix_set_p0(lev);
 
-  // Here we re-set the bc values for p and u,v,w just in case init_fluid
-  //      over-wrote some of the bc values with ic values
-  mfix_set_bc0(lev);
+     // Here we re-set the bc values for p and u,v,w just in case init_fluid
+     //      over-wrote some of the bc values with ic values
+     mfix_set_bc0(lev);
 
-  // We deliberately don't tile this loop since we will be looping
-  //    over bc's on faces and it makes more sense to do this one grid at a time
-  if ( !is_restarting ) {
+     // We deliberately don't tile this loop since we will be looping
+     //    over bc's on faces and it makes more sense to do this one grid at a time
+     if ( !is_restarting ) {
 
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
+       for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
 
-      const Box& sbx =  (*ep_g[lev])[mfi].box();
+         const Box& sbx =  (*ep_g[lev])[mfi].box();
 
-      zero_wall_norm_vel(sbx.loVect(), sbx.hiVect(),
-			 (*vel_g[lev])[mfi].dataPtr(),
-			 bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-			 bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-			 bc_klo.dataPtr(), bc_khi.dataPtr(),
+         zero_wall_norm_vel(sbx.loVect(), sbx.hiVect(),
+   			 (*vel_g[lev])[mfi].dataPtr(),
+   			 bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+   			 bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+   			 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
 			 domain.loVect(), domain.hiVect(),
 			 &nghost);
+       }
     }
-  }
 
-  if (!nodal_pressure)
-     mfix_extrap_pressure(lev,p0_g[lev]);
-
-  fill_mf_bc(lev,*ep_g[lev]);
-  fill_mf_bc(lev,*ro_g[lev]);
-  fill_mf_bc(lev,*rop_g[lev]);
-
-  vel_g[lev]->FillBoundary(geom[lev].periodicity());
-
-  fill_mf_bc(lev,*mu_g[lev]);
-  fill_mf_bc(lev,*lambda_g[lev]);
-
-  if (is_restarting == 1)
-  {
      if (!nodal_pressure)
-        mfix_extrap_pressure(lev, p_g[lev]);
-  }
-  else
-  {
-     // We need to initialize the volume fraction ep_g before the first projection
-     mfix_calc_volume_fraction(lev,sum_vol_orig);
-     mfix_set_scalar_bcs(lev);
-     mfix_project_velocity(lev);
-     mfix_initial_iterations(lev,dt,stop_time,steady_state);
+        mfix_extrap_pressure(lev,p0_g[lev]);
+
+     fill_mf_bc(lev,*ep_g[lev]);
+     fill_mf_bc(lev,*ro_g[lev]);
+     fill_mf_bc(lev,*rop_g[lev]);
+
+     vel_g[lev]->FillBoundary(geom[lev].periodicity());
+
+     fill_mf_bc(lev,*mu_g[lev]);
+     fill_mf_bc(lev,*lambda_g[lev]);
+
+     if (is_restarting == 1)
+     {
+        if (!nodal_pressure)
+           mfix_extrap_pressure(lev, p_g[lev]);
+     }
+     else
+     {
+        // We need to initialize the volume fraction ep_g before the first projection
+        mfix_calc_volume_fraction(lev,sum_vol_orig);
+        mfix_set_scalar_bcs(lev);
+        mfix_project_velocity(lev);
+        mfix_initial_iterations(lev,dt,stop_time,steady_state);
+     }
   }
 }
 
@@ -631,9 +679,10 @@ mfix::mfix_set_bc0(int lev)
               (*ep_g[lev])[mfi].dataPtr(),
                (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
                (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
-              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-              bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
-              &nghost, &nodal_pressure);
+              bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(), 
+              bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+              bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(), 
+              domain.loVect(), domain.hiVect(), &nghost, &nodal_pressure);
     }
 
   if (!nodal_pressure)
@@ -678,9 +727,9 @@ mfix::mfix_set_p0(int lev)
            BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
            BL_TO_FORTRAN_ANYD((*gp0[lev])[mfi]),
            &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
-           bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-           bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-           bc_klo.dataPtr(), bc_khi.dataPtr(),
+           bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+           bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+           bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
            &nghost, &nodal_pressure );
   }
 

@@ -339,7 +339,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
             // This needs is needed before initializing level MultiFabs: ebfactories should
             // not change after the eb-dependent MultiFabs are allocated.
-            make_eb_geometry(lev);
+            make_eb_geometry();
 
             // Allocate the fluid data, NOTE: this depends on the ebfactories.
             if (solve_fluid) AllocateArrays(lev);

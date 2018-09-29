@@ -22,9 +22,9 @@ mfix::mfix_set_scalar_bcs (int lev)
                       (*rop_g[lev])[mfi].dataPtr (),
                       (*mu_g[lev])[mfi].dataPtr (),
                       (*lambda_g[lev])[mfi].dataPtr (),
-                      bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                      bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                      bc_klo.dataPtr(), bc_khi.dataPtr(),
+                      bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                      bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                      bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                       domain.loVect(), domain.hiVect(),
                       &nghost );
     }
@@ -53,9 +53,9 @@ mfix::mfix_set_velocity_bcs (int lev, int extrap_dir_bcs)
   for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi)
     {
       set_velocity_bcs ( BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                         bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                         bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                         bc_klo.dataPtr(), bc_khi.dataPtr(),
+                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                         bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                          domain.loVect(), domain.hiVect(),
                          &nghost, &extrap_dir_bcs );
     }
@@ -79,9 +79,9 @@ mfix::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
  
         extrap_pressure_to_ghost_cells (
             BL_TO_FORTRAN_ANYD((*p)[mfi]),
-            bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-            bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-            bc_klo.dataPtr(), bc_khi.dataPtr(),
+            bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+            bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+            bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
             domain.loVect(), domain.hiVect(),
             &nghost);
     }
@@ -187,34 +187,65 @@ mfix::mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
 } 
 
 void
-mfix::mfix_compute_vort (int lev )
+mfix::mfix_compute_vort ()
 {
     BL_PROFILE("mfix::mfix_compute_vort");
-    Box domain(geom[lev].Domain());
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-    {
-       // Tilebox
-       Box bx = mfi.tilebox ();
-
-       // This is to check efficiently if this tile contains any eb stuff
-       const EBFArrayBox&  vel_fab = dynamic_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
-       const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
-
-       if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
+       for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
        {
-         compute_vort (
-                     BL_TO_FORTRAN_BOX(bx),
-                     BL_TO_FORTRAN_ANYD((* vort[lev])[mfi]),
-                     BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                     geom[lev].CellSize());
-       } else {
-          vort[lev]->setVal( 0.0, bx, 0, 1);
+          // Tilebox
+          Box bx = mfi.tilebox ();
+
+          // This is to check efficiently if this tile contains any eb stuff
+          const EBFArrayBox&  vel_fab = dynamic_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
+          const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
+
+          if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
+          {
+            compute_vort (
+                        BL_TO_FORTRAN_BOX(bx),
+                        BL_TO_FORTRAN_ANYD((* vort[lev])[mfi]),
+                        BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                        geom[lev].CellSize());
+          } else {
+             vort[lev]->setVal( 0.0, bx, 0, 1);
+          }
        }
     }
+}
+
+//
+// Subroutine to compute norm0 of EB multifab
+//
+Real
+mfix::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
+{
+   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
+                    0,  MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy( mf_tmp, *mf[lev], comp, comp, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+
+   return mf_tmp.norm0( comp );
+}
+
+Real
+mfix::mfix_norm0 ( MultiFab& mf, int lev, int comp )
+{
+   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), mf.nComp(),
+                    0,  MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy( mf_tmp, mf, comp, comp, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+
+   return mf_tmp.norm0( comp );
 }
 
 //

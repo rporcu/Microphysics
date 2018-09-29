@@ -26,7 +26,7 @@
  *                                                                              *
  ********************************************************************************/
 void
-mfix::make_eb_cyclone(int lev)
+mfix::make_eb_cyclone()
 {
     ParmParse pp("hopper");
 
@@ -35,7 +35,6 @@ mfix::make_eb_cyclone(int lev)
     // set up ebfactory
 
     EBSupport m_eb_support_level = EBSupport::full;
-
 
     /****************************************************************************
      * Build the cyclone's inlet tube.                                          *
@@ -109,7 +108,7 @@ mfix::make_eb_cyclone(int lev)
     Array<Real,3> point{0.0, 0.0, 0.0};
     Array<Real,3> normal{0.0, 0.0, 0.0};
 
-    point[direction] = geom[lev].ProbLo(direction) + 1.0e-8;
+    point[direction] = geom[0].ProbLo(direction) + 1.0e-8;
     normal[direction] = -1.0;
 
     EB2::PlaneIF false_bottom(point, normal);
@@ -123,56 +122,58 @@ mfix::make_eb_cyclone(int lev)
     // Construct EB2 Index Space
     amrex::Print() << "Building the cyclone geometry ..." << std::endl;
 
-
     auto gshop_cyc = EB2::makeShop(EB2::makeUnion(my_cyclone, false_bottom));
 
     int max_coarsening_level = 100;
     EB2::Build(gshop_cyc, geom.back(), max_level_here, max_level_here + max_coarsening_level);
 
     const EB2::IndexSpace & ebis_cyc = EB2::IndexSpace::top();
-    const EB2::Level & ebis_lev_cyc  = ebis_cyc.getLevel(geom[lev]);
 
-    amrex::Print() << "Done building the cyclone geometry" << std::endl;
-
-    /****************************************************************************
-    *                                                                           *
-    * THIS FILLS PARTICLE EBFACTORY                                             *
-    * NOTE: the "bottom" plane is only applied to particles => fluid EBFactory  *
-    *       only needs the cyclone walls.                                      *
-    *                                                                           *
-    *****************************************************************************/
-
-    if (solve_dem)
+    for (int lev = 0; lev < nlev; lev++)
     {
-      amrex::Print() << " " << std::endl;
-      amrex::Print() << "Now making the particle ebfactory ..." << std::endl;
 
-      auto gshop = EB2::makeShop(my_cyclone);
-      int max_coarsening_level = 100;
-      EB2::Build(gshop, geom.back(), max_level_here,
-                 max_level_here + max_coarsening_level);
+       const EB2::Level & ebis_lev_cyc  = ebis_cyc.getLevel(geom[lev]);
 
+       amrex::Print() << "Done building the cyclone geometry" << std::endl;
 
-       // intercept the cyclone + plane level (if it is built)
-       const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
-       eb_level_particles = & eb_is.getLevel(geom[lev]);
+       /****************************************************************************
+       *                                                                           *
+       * THIS FILLS PARTICLE EBFACTORY                                             *
+       * NOTE: the "bottom" plane is only applied to particles => fluid EBFactory  *
+       *       only needs the cyclone walls.                                      *
+       *                                                                           *
+       *****************************************************************************/
 
-       particle_ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
-                                                            geom[lev], grids[lev], dmap[lev],
-                                                            {m_eb_basic_grow_cells,
-                                                             m_eb_volume_grow_cells,
-                                                             m_eb_full_grow_cells},
-                                                            m_eb_support_level));
+       if (solve_dem)
+       {
+          amrex::Print() << " " << std::endl;
+          amrex::Print() << "Now making the particle ebfactory ..." << std::endl;
 
-       eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
+          auto gshop = EB2::makeShop(my_cyclone);
+          EB2::Build(gshop, geom.back(), max_level_here,
+                     max_level_here + max_coarsening_level);
 
-       /*************************************************************************
-        *                                                                       *
-        * Fill level-set:                                                       *
-        *                                                                       *
-        *************************************************************************/
+          // intercept the cyclone + plane level (if it is built)
+          const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+          eb_level_particles = & eb_is.getLevel(geom[lev]);
+   
+          particle_ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
+                                                               geom[lev], grids[lev], dmap[lev],
+                                                               {m_eb_basic_grow_cells,
+                                                                m_eb_volume_grow_cells,
+                                                                m_eb_full_grow_cells},
+                                                               m_eb_support_level));
 
-       if (!levelset__restart) {
+          eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
+
+          /*************************************************************************
+           *                                                                       *
+           * Fill level-set:                                                       *
+           *                                                                       *
+           *************************************************************************/
+ 
+          if (!levelset__restart) 
+          {
            amrex::Print() << "Creating the levelset ..." << std::endl;
 
            GShopLSFactory<decltype(my_cyclone)> cyc_lsfactory(gshop, * level_set);
@@ -182,7 +183,6 @@ mfix::make_eb_cyclone(int lev)
            // (level_set->get_eb_geom()). The IndexSpace's geometry needs to
            // match the one used by the eb_factory later.
 
-           int max_coarsening_level = 100;
            EB2::Build(gshop_cyc, level_set->get_eb_geom(), max_level_here,
                       max_level_here + max_coarsening_level);
 
@@ -205,37 +205,35 @@ mfix::make_eb_cyclone(int lev)
            ls[lev]->FillBoundary(geom[lev].periodicity());
 
            amrex::Print() << "Done making the levelset ..." << std::endl;
-       } else {
-           amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
-                          << std::endl;
+
+          } else {
+             amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
+                            << std::endl;
+          }
+
+          amrex::Print() << "Done making the particle ebfactories ..." << std::endl;
+          amrex::Print() << " " << std::endl;
        }
 
-       amrex::Print() << "Done making the particle ebfactories ..." << std::endl;
-       amrex::Print() << " " << std::endl;
-    }
+       /****************************************************************************
+       *                                                                           *
+       * THIS FILLS FLUID EBFACTORY                                                *
+       *                                                                           *
+       *****************************************************************************/
 
-    /****************************************************************************
-    *                                                                           *
-    * THIS FILLS FLUID EBFACTORY                                                *
-    *                                                                           *
-    *****************************************************************************/
+       if (solve_fluid)
+       {
+          amrex::Print() << "Now making the fluid ebfactory ..." << std::endl;
+   
+          eb_level_fluid = & ebis_lev_cyc;
 
-    if (solve_fluid)
-    {
-       amrex::Print() << "Now making the fluid ebfactory ..." << std::endl;
+          ebfactory[lev].reset(new EBFArrayBoxFactory(
+                      * eb_level_fluid,
+                      geom[lev], grids[lev], dmap[lev],
+                      {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                       m_eb_full_grow_cells}, m_eb_support_level));
 
-       eb_level_fluid = & ebis_lev_cyc;
-
-       ebfactory[lev].reset(new EBFArrayBoxFactory(
-                   * eb_level_fluid,
-                   geom[lev], grids[lev], dmap[lev],
-                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                    m_eb_full_grow_cells}, m_eb_support_level)
-            );
-
-       amrex::Print() << "Done making the fluid ebfactory ..." << std::endl;
-    }
-
-
-
+          amrex::Print() << "Done making the fluid ebfactory ..." << std::endl;
+       }
+    } // lev
 }

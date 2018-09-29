@@ -40,6 +40,7 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     setIntCommComp(1, false);
     setIntCommComp(3, false);
 
+    nlev = amr_core->maxLevel() + 1;
 }
 
 void MFIXParticleContainer::AllocData ()
@@ -129,8 +130,10 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
   Redistribute();
 }
 
-void MFIXParticleContainer::InitParticlesAuto(int lev)
+void MFIXParticleContainer::InitParticlesAuto()
 {
+  int lev = 0;
+
   Box domain(Geom(lev).Domain());
 
   Real dx = Geom(lev).CellSize(0);
@@ -678,13 +681,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
       }
 
       if (debug_level > 0){
-          UpdateMaxVelocity(lev);
-          UpdateMaxForces(lev, pfor, wfor);
+          UpdateMaxVelocity();
+          UpdateMaxForces(pfor, wfor);
       }
 
       if (debug_level > 1) {
-          RealVect max_vel = GetMaxVelocity(lev);
-          Vector<RealVect> max_forces = GetMaxForces(lev);
+          RealVect max_vel = GetMaxVelocity();
+          Vector<RealVect> max_forces = GetMaxForces();
 
           const Real * dx_crse = Geom(0).CellSize();
           amrex::Print() << "Maximum distance traveled:"
@@ -734,8 +737,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     }
 
     if (debug_level > 0) {
-        RealVect max_vel = GetMaxVelocity(lev);
-        Vector<RealVect> max_forces = GetMaxForces(lev);
+        RealVect max_vel = GetMaxVelocity();
+        Vector<RealVect> max_forces = GetMaxForces();
 
         const Real * dx_crse = Geom(0).CellSize();
         amrex::Print() << "Maximum possible distance traveled:" << std::endl
@@ -1031,25 +1034,26 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
     }
 }
 
-void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
+void MFIXParticleContainer::output(int estatus, int finish, int nstep, Real dt, Real time)
 {
-
-    Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
-    Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
-    Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
-
-    // Not threaded because its writing output
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    for (int lev = 0; lev < nlev; lev++)
     {
+       Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
+       Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
+       Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
-      //number of particles
-      const int     np = NumberOfParticles(pti);
-      void* particles  = pti.GetArrayOfStructs().data();
+       // Not threaded because its writing output
+       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+       {
 
-      output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
-                           particles, &finish);
+         //number of particles
+         const int     np = NumberOfParticles(pti);
+         void* particles  = pti.GetArrayOfStructs().data();
+
+         output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
+                              particles, &finish);
+       }
     }
-
 }
 
 void MFIXParticleContainer::writeAllAtLevel(int lev)
@@ -1190,77 +1194,88 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
     }
 }
 
-void MFIXParticleContainer::GetParticleAvgProp(int lev,
-         Real (&avg_dp)[10], Real (&avg_ro)[10])
+void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro)[10])
 {
-
    // The number of phases was previously hard set at 10, however lowering
    //  this number would make this code faster.
    int num_of_phases_in_use = 10; //Number of different phases being simulated
 
    // Cycle through the different phases, starting from 1
-   for (int phse=1; phse<=num_of_phases_in_use; ++phse){
-
+   for (int phse = 1; phse <= num_of_phases_in_use; ++phse)
+   {
      Real p_num  = 0.0; //number of particle
      Real p_diam = 0.0; //particle diameters
      Real p_dens = 0.0; //particle density
 
-   #ifdef _OPENMP
-   #pragma omp parallel reduction(+:p_num, p_diam, p_dens)
-   #endif
-     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-
-       auto& particles = pti.GetArrayOfStructs();
-
-       for (const auto& p: particles){
-         if ( phse==p.idata(intData::phase) ){
-           p_num  += 1.0;
-           p_diam += p.rdata(realData::radius) * 2.0;
-           p_dens += p.rdata(realData::density);
-         }
-       }
+     for (int lev = 0; lev < nlev; lev++) 
+     {
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:p_num, p_diam, p_dens)
+#endif
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
+        {
+          auto& particles = pti.GetArrayOfStructs();
+   
+          for (const auto& p: particles){
+            if ( phse==p.idata(intData::phase) ){
+              p_num  += 1.0;
+              p_diam += p.rdata(realData::radius) * 2.0;
+              p_dens += p.rdata(realData::density);
+            }
+          }
+        }
      }
 
-    // A single MPI call passes all three variables
-    ParallelDescriptor::ReduceRealSum({p_num,p_diam,p_dens});
+     // A single MPI call passes all three variables
+     ParallelDescriptor::ReduceRealSum({p_num,p_diam,p_dens});
 
-   //calculate averages or set = zero if no particles of that phase
-   if (p_num==0){
-     avg_dp[phse-1] = 0.0;
-     avg_ro[phse-1] = 0.0;
-   } else {
-     avg_dp[phse-1] = p_diam/p_num;
-     avg_ro[phse-1] = p_dens/p_num;
+     //calculate averages or set = zero if no particles of that phase
+     if (p_num==0){
+       avg_dp[phse-1] = 0.0;
+       avg_ro[phse-1] = 0.0;
+     } else {
+       avg_dp[phse-1] = p_diam/p_num;
+       avg_ro[phse-1] = p_dens/p_num;
+     }
    }
- }
 }
 
-void MFIXParticleContainer::UpdateMaxVelocity(int lev) {
+void MFIXParticleContainer::UpdateMaxVelocity() 
+{
     Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
 
 #ifdef _OPENMP
 #pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z)
 #endif
-    for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti) {
-        auto & particles = pti.GetArrayOfStructs();
-        for(const auto & particle : particles) {
-            max_vel_x = std::max(Real(std::fabs(particle.rdata(realData::velx))), max_vel_x);
-            max_vel_y = std::max(Real(std::fabs(particle.rdata(realData::vely))), max_vel_y);
-            max_vel_z = std::max(Real(std::fabs(particle.rdata(realData::velz))), max_vel_z);
-        }
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti) 
+       {
+           auto & particles = pti.GetArrayOfStructs();
+           for(const auto & particle : particles) 
+           {
+              max_vel_x = std::max(Real(std::fabs(particle.rdata(realData::velx))), max_vel_x);
+              max_vel_y = std::max(Real(std::fabs(particle.rdata(realData::vely))), max_vel_y);
+              max_vel_z = std::max(Real(std::fabs(particle.rdata(realData::velz))), max_vel_z);
+           }
+       }
     }
     loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
 }
 
-void MFIXParticleContainer::UpdateMaxForces(int lev, std::map<PairIndex, Vector<Real>> pfor,
-                                                     std::map<PairIndex, Vector<Real>> wfor) {
+void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Vector<Real>> pfor,
+                                             std::map<PairIndex, Vector<Real>> wfor) 
+{
     Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
     Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
 
+    for (int lev = 0; lev < nlev; lev++)
+    {
 #ifdef _OPENMP
 #pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z)
 #endif
-    for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti) {
+       for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti) 
+       {
         PairIndex index(pti.index(), pti.LocalTileIndex());
 
         // Note the particle force data layout:
@@ -1286,13 +1301,15 @@ void MFIXParticleContainer::UpdateMaxForces(int lev, std::map<PairIndex, Vector<
             max_wfor_y = std::max(Real(std::fabs(wfor[index][i])), max_wfor_y);
         for(int i = 2 * ntot; i < 3 * ntot; i++ )
             max_wfor_z = std::max(Real(std::fabs(wfor[index][i])), max_wfor_z);
+       }
     }
 
     loc_maxpfor = RealVect(max_pfor_x, max_pfor_y, max_pfor_z);
     loc_maxwfor = RealVect(max_wfor_x, max_wfor_y, max_wfor_z);
 }
 
-RealVect MFIXParticleContainer::GetMaxVelocity(int lev) {
+RealVect MFIXParticleContainer::GetMaxVelocity() 
+{
     Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
 
     ParallelDescriptor::ReduceRealMax({max_vel_x, max_vel_y, max_vel_z},
@@ -1303,7 +1320,8 @@ RealVect MFIXParticleContainer::GetMaxVelocity(int lev) {
     return max_vel;
 };
 
-Vector<RealVect> MFIXParticleContainer::GetMaxForces(int lev) {
+Vector<RealVect> MFIXParticleContainer::GetMaxForces() 
+{
     Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
     Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
 
@@ -1527,10 +1545,7 @@ void MFIXParticleContainer::ComputeAverageVelocities ( const int lev,
 
 void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)
 {
-
     int   lev = 0;
-    int ncomp = 1;
-
 
     MultiFab* eps = &mf_to_be_filled;
 

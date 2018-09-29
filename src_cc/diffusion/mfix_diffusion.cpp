@@ -61,9 +61,9 @@ mfix::mfix_compute_divtau ( int lev,
                (*ro_g[lev])[mfi].dataPtr(),
                BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
                domain.loVect (), domain.hiVect (),
-               bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-               bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-               bc_klo.dataPtr(), bc_khi.dataPtr(),
+               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                geom[lev].CellSize(), &nghost, &explicit_diffusion);
          }
          else
@@ -86,9 +86,9 @@ mfix::mfix_compute_divtau ( int lev,
                BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
                BL_TO_FORTRAN_ANYD((*bndrycent)[mfi]),
                domain.loVect (), domain.hiVect (),
-               bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-               bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-               bc_klo.dataPtr(), bc_khi.dataPtr(),
+               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                geom[lev].CellSize(), &nghost, &explicit_diffusion );
 
          }
@@ -122,9 +122,9 @@ mfix::mfix_diffuse_velocity ( int lev,
    set_diff_bc (bc_lo, bc_hi,
                 domain.loVect(), domain.hiVect(),
                 &nghost,
-                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                bc_klo.dataPtr(), bc_khi.dataPtr());
+                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr());
 
    // Loop over the velocity components
    for (int i = 0; i < 3; i++)

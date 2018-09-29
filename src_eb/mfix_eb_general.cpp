@@ -17,7 +17,7 @@
 
 
 void
-mfix::make_eb_general(int lev) {
+mfix::make_eb_general() {
 
     ParmParse pp("mfix");
 
@@ -64,8 +64,11 @@ mfix::make_eb_general(int lev) {
     if (use_poly2) {
         amrex::Print() << "Using poly2 geometry" << std::endl;
 
-        impfunc_poly2 = get_poly(lev, SpaceDim, "poly2");
+        impfunc_poly2 = get_poly(SpaceDim, "poly2");
     }
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
 
     /****************************************************************************
      * Generate UnionListIF representing the planar EB walls                    *
@@ -415,11 +418,12 @@ mfix::make_eb_general(int lev) {
                            << std::endl;
         }
     }
+    }
 }
 
 
 std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>>
-mfix::get_poly(int lev, int max_order, std::string field_prefix) {
+mfix::get_poly(int max_order, std::string field_prefix) {
 
     /****************************************************************************
      * Read polynomial data from inputs database                                *

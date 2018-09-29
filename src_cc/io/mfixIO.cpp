@@ -341,7 +341,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
             // This needs is needed before initializing level MultiFabs: ebfactories should
             // not change after the eb-dependent MultiFabs are allocated.
-            make_eb_geometry(lev);
+            make_eb_geometry();
 
             // Allocate the fluid data, NOTE: this depends on the ebfactories.
             if (solve_fluid) AllocateArrays(lev);
@@ -807,8 +807,9 @@ mfix::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
 
 
 void
-mfix::WriteUSER(int lev, Real dt, Real time) const
+mfix::WriteUSER( Real dt, Real time) const
 {
+  int lev = nlev-1;
 
   Box domain(geom[lev].Domain());
 
