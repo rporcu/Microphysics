@@ -521,3 +521,48 @@ mfix_level::RegridArrays (int lev)
        fill_mf_bc(lev,*p_go[lev]);
     }
 }
+
+// This function checks if ebfactory is allocated with 
+// the proper dm and ba
+
+void
+mfix_level::mfix_update_ebfactory (int a_lev)
+{
+   // This assert is to verify that some kind of EB geometry
+   // has already been defined
+   AMREX_ASSERT(not EB2::IndexSpace::empty());
+
+   const DistributionMapping&      dm = DistributionMap(a_lev);
+   const BoxArray&                 ba = boxArray(a_lev);
+   const EB2::IndexSpace&        ebis = EB2::IndexSpace::top();
+   const EB2::Level&      ebis_level  = ebis.getLevel(geom[a_lev]);
+      
+   if ( ebfactory[a_lev].get() == nullptr )
+   {
+      amrex::Print() << "Updating ebfactory" << std::endl;
+
+      ebfactory[a_lev].reset(new EBFArrayBoxFactory( ebis_level, geom[a_lev], ba, dm,
+                                                     {m_eb_basic_grow_cells,
+                                                           m_eb_volume_grow_cells,
+                                                           m_eb_full_grow_cells},
+                                                     m_eb_support_level));
+   }
+   else                         
+   {
+      amrex::Print() << "Updating ebfactory" << std::endl;
+      
+      const DistributionMapping&  eb_dm = ebfactory[a_lev]->DistributionMap();
+      const BoxArray&             eb_ba = ebfactory[a_lev]->boxArray();
+
+      if ( (dm != eb_dm) || (ba != eb_ba) )
+      {
+
+         ebfactory[a_lev].reset(new EBFArrayBoxFactory( ebis_level, geom[a_lev], ba, dm,
+                                                        {m_eb_basic_grow_cells,
+                                                              m_eb_volume_grow_cells,
+                                                              m_eb_full_grow_cells},
+                                                        m_eb_support_level));         
+      }
+   }
+}
+   
