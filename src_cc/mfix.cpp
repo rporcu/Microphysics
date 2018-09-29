@@ -16,9 +16,9 @@ amrex::IntVect mfix::e_x(1,0,0);
 amrex::IntVect mfix::e_y(0,1,0);
 amrex::IntVect mfix::e_z(0,0,1);
 
+int mfix::nlev = 1;
 
 EBSupport mfix::m_eb_support_level = EBSupport::full;
-
 
 mfix::~mfix ()
 {
@@ -31,6 +31,8 @@ mfix::mfix ()
 
     // No valid BoxArray and DistributionMapping have been defined.
     // But the arrays for them have been resized.
+
+    nlev = maxLevel() + 1;
 
 #if 0
     int nlevs_max = maxLevel() + 1;

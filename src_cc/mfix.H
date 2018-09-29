@@ -109,7 +109,7 @@ public:
     //                   const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
     //                   int max_level, int grid_size, bool eb_verbosity);
 
-    void WriteEBSurface(int lev);
+    void WriteEBSurface();
 
     void InitIOData();
 

@@ -108,7 +108,7 @@ public:
     //                   const WallsIF & impfunc_walls, const PolynomialIF & impfunc_poly,
     //                   int max_level, int grid_size, bool eb_verbosity);
 
-    void WriteEBSurface(int lev);
+    void WriteEBSurface();
 
     void InitIOData();
 
@@ -293,6 +293,8 @@ private:
       // which step?
     Vector<int> nsubsteps;  // how many substeps on each level?
 #endif
+
+    static int nlev;
 
     Vector<int> istep = {1} ;
 

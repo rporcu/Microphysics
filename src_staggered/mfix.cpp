@@ -20,6 +20,7 @@ int mfix::m_eb_volume_grow_cells = 2;
 int mfix::m_eb_full_grow_cells = 2;
 EBSupport mfix::m_eb_support_level = EBSupport::full;
 
+int mfix::nlev = 1;
 
 mfix::~mfix ()
 {
@@ -32,14 +33,6 @@ mfix::mfix ()
 
     // No valid BoxArray and DistributionMapping have been defined.
     // But the arrays for them have been resized.
-
-#if 0
-    int nlevs_max = maxLevel() + 1;
-    istep.resize(nlevs_max, 0);
-    nsubsteps.resize(nlevs_max, 1);
-    for (int lev = 1; lev <= maxLevel(); ++lev)
-        nsubsteps[lev] = MaxRefRatio(lev-1);
-#endif
 }
 
 void

@@ -2,9 +2,12 @@
 #include <mfix.H>
 #include <mfix_eb_F.H>
 
-void mfix::WriteEBSurface(int lev) 
+void mfix::WriteEBSurface() 
 {
   if (Geom(0).isAllPeriodic()) return;
+
+  // Only write at the finest level!
+  int lev = nlev-1;
 
   const Real* dx = Geom(lev).CellSize();
 
