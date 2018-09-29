@@ -1,4 +1,3 @@
 f90EXE_sources += projection_mod.f90
 CEXE_sources   += mfix_projection.cpp
-CEXE_sources   += compute_dt.cpp
 F90EXE_headers += mfix_proj_F.H

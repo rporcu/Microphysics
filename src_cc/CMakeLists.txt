@@ -42,6 +42,7 @@ set_target_properties ( ${MFIX_LIBNAME}
 #
 # Uncategorized
 # 
+add_sources ( compute_dt.cpp )
 add_sources ( mfix_regrid.cpp )
 add_sources ( mfix_advance.cpp )
 add_sources ( mfix_evolve.cpp  )
