@@ -54,10 +54,7 @@ subroutine calc_drag_particle( gp   , gplo, gphi, &
    real(rt) :: lx, ly, lz
    real(rt) :: sx_lo, sy_lo, sz_lo
    real(rt) :: sx_hi, sy_hi, sz_hi
-   real(rt) :: ux_lo, vy_lo, wz_lo
-   real(rt) :: ux_hi, vy_hi, wz_hi
    real(rt) :: plo(3)
-   real(rt) :: max_v1, max_v2
 
    logical, parameter :: no_interpolation = .true.
 
