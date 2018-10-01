@@ -318,7 +318,7 @@ MacProjection::set_velocity_bcs ( int lev,
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-   for (MFIter mfi(*m_diveu[lev], true); mfi.isValid(); ++mfi)
+   for (MFIter mfi(*m_diveu[lev], false); mfi.isValid(); ++mfi)
    {
       const Box& bx = (*m_diveu[lev])[mfi].box();
 	
@@ -359,7 +359,7 @@ MacProjection::set_ccmf_bcs ( int lev, MultiFab& mf )
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-   for(MFIter mfi(mf,true); mfi.isValid(); ++mfi)
+   for(MFIter mfi(mf,false); mfi.isValid(); ++mfi)
    {
       const Box& sbx = mf[mfi].box();
 
