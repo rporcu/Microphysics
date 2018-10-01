@@ -575,6 +575,9 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
   Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
   Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
+  // Here we set bc values for p and u,v,w before the IC's are set
+  mfix_set_bc0();
+
   std::cout  << " NLEV " << nlev << std::endl;
   for (int lev = 0; lev < nlev; lev++)
   {
@@ -584,9 +587,6 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
      Real dx = geom[lev].CellSize(0);
      Real dy = geom[lev].CellSize(1);
      Real dz = geom[lev].CellSize(2);
-
-     // Here we set bc values for p and u,v,w before the IC's are set
-     mfix_set_bc0(lev);
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time
@@ -612,12 +612,17 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
                &dx, &dy, &dz, &xlen, &ylen, &zlen);
         }
      }
+  }
 
-     mfix_set_p0(lev);
+  mfix_set_p0();
 
-     // Here we re-set the bc values for p and u,v,w just in case init_fluid
-     //      over-wrote some of the bc values with ic values
-     mfix_set_bc0(lev);
+  // Here we re-set the bc values for p and u,v,w just in case init_fluid
+  //      over-wrote some of the bc values with ic values
+  mfix_set_bc0();
+
+  for (int lev = 0; lev < nlev; lev++)
+  {
+     Box domain(geom[lev].Domain());
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time
@@ -671,82 +676,90 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
 }
 
 void
-mfix::mfix_set_bc0(int lev)
+mfix::mfix_set_bc0()
 {
-  Box domain(geom[lev].Domain());
+  for (int lev = 0; lev < nlev; lev++)
+  {
 
-  // Don't tile this -- at least for now
-  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-    {
-      const Box& sbx = (*ep_g[lev])[mfi].box();
+     Box domain(geom[lev].Domain());
 
-      set_bc0(sbx.loVect(), sbx.hiVect(),
-              (*ep_g[lev])[mfi].dataPtr(),
-               (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
-               (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
-              bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(), 
-              bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-              bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(), 
-              domain.loVect(), domain.hiVect(), &nghost, &nodal_pressure);
-    }
+     // Don't tile this -- at least for now
+     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+       {
+         const Box& sbx = (*ep_g[lev])[mfi].box();
+   
+         set_bc0(sbx.loVect(), sbx.hiVect(),
+                 (*ep_g[lev])[mfi].dataPtr(),
+                  (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
+                  (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
+                 bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(), 
+                 bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(), 
+                 domain.loVect(), domain.hiVect(), &nghost, &nodal_pressure);
+       }
 
-  if (!nodal_pressure)
-     fill_mf_bc(lev,*p_g[lev]);
+     if (!nodal_pressure)
+        fill_mf_bc(lev,*p_g[lev]);
 
-  fill_mf_bc(lev,*ep_g[lev]);
-  fill_mf_bc(lev,*ro_g[lev]);
-  fill_mf_bc(lev,*rop_g[lev]);
+     fill_mf_bc(lev,*ep_g[lev]);
+     fill_mf_bc(lev,*ro_g[lev]);
+     fill_mf_bc(lev,*rop_g[lev]);
 
-  // Put velocity Dirichlet bc's on faces
-  int extrap_dir_bcs = 0;
-  mfix_set_velocity_bcs(lev, extrap_dir_bcs);
+     // Put velocity Dirichlet bc's on faces
+     int extrap_dir_bcs = 0;
+     mfix_set_velocity_bcs(lev, extrap_dir_bcs);
 
-  vel_g[lev]->FillBoundary(geom[lev].periodicity());
+     vel_g[lev]->FillBoundary(geom[lev].periodicity());
+   }
 }
 
 void
-mfix::mfix_set_p0(int lev)
+mfix::mfix_set_p0()
 {
-  Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
-  Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-  Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
 
-  Real dx = geom[lev].CellSize(0);
-  Real dy = geom[lev].CellSize(1);
-  Real dz = geom[lev].CellSize(2);
-
-  Box domain(geom[lev].Domain());
+  Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
+  Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
+  Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
   int delp_dir;
   set_delp_dir(&delp_dir);
 
-  // We deliberately don't tile this loop since we will be looping
-  //    over bc's on faces and it makes more sense to do this one grid at a time
-  for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
-  {
-
-    const Box& bx = mfi.validbox();
-
-    set_p0(bx.loVect(),  bx.hiVect(),
-           domain.loVect(), domain.hiVect(),
-           BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
-           BL_TO_FORTRAN_ANYD((*gp0[lev])[mfi]),
-           &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
-           bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-           bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-           bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-           &nghost, &nodal_pressure );
-  }
+  IntVect press_per = IntVect(geom[0].isPeriodic(0),geom[0].isPeriodic(1),geom[0].isPeriodic(2));
 
  // Here we set a separate periodicity flag for p0_g because when we use
  // pressure drop (delp) boundary conditions we fill all variables *except* p0
  // periodically
-
-  IntVect press_per = IntVect(geom[lev].isPeriodic(0),geom[lev].isPeriodic(1),geom[lev].isPeriodic(2));
-
   if (delp_dir > -1) press_per[delp_dir] = 0;
   p0_periodicity = Periodicity(press_per);
 
-  p0_g[lev]->FillBoundary(p0_periodicity);
-   gp0[lev]->FillBoundary(p0_periodicity);
+  for (int lev = 0; lev < nlev; lev++)
+  {
+
+     Real dx = geom[lev].CellSize(0);
+     Real dy = geom[lev].CellSize(1);
+     Real dz = geom[lev].CellSize(2);
+
+     Box domain(geom[lev].Domain());
+
+     // We deliberately don't tile this loop since we will be looping
+     //    over bc's on faces and it makes more sense to do this one grid at a time
+     for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
+     {
+
+        const Box& bx = mfi.validbox();
+
+        set_p0(bx.loVect(),  bx.hiVect(),
+               domain.loVect(), domain.hiVect(),
+               BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
+               BL_TO_FORTRAN_ANYD((*gp0[lev])[mfi]),
+               &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
+               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+               &nghost, &nodal_pressure );
+      }
+
+     p0_g[lev]->FillBoundary(p0_periodicity);
+      gp0[lev]->FillBoundary(p0_periodicity);
+   }
 }

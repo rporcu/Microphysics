@@ -43,8 +43,8 @@ mfix::Regrid ()
 
        if (solve_fluid)
        {
-           mfix_set_p0(base_lev);
-           mfix_set_bc0(base_lev);
+           mfix_set_p0();
+           mfix_set_bc0();
            mfix_extrap_pressure(base_lev,p0_g[base_lev]);
        }
 
@@ -94,13 +94,16 @@ mfix::Regrid ()
 
                 fluid_cost[lev].reset(new MultiFab(grids[lev], new_fluid_dm, 1, 0));
                 fluid_cost[lev]->setVal(0.0);
-
+            }
  
-                {
-                    mfix_set_p0(lev);
-                    mfix_set_bc0(lev);
-                    mfix_extrap_pressure(lev,p0_g[lev]);
-                }
+            mfix_set_p0();
+            mfix_set_bc0();
+
+            for (int lev = base_lev; lev <= finestLevel(); ++lev)
+              mfix_extrap_pressure(lev,p0_g[lev]);
+
+            for (int lev = base_lev; lev <= finestLevel(); ++lev)
+            {
 
                 DistributionMapping new_particle_dm =
                     DistributionMapping::makeKnapSack(*particle_cost[lev]);
@@ -159,8 +162,7 @@ mfix::Regrid ()
             }
 
             if (solve_dem)   pc->Regrid(dmap[base_lev], grids[base_lev]);
-            if (solve_fluid) mfix_set_bc0(base_lev);
-
+            if (solve_fluid) mfix_set_bc0();
 
             if (particle_ebfactory[base_lev]) {
                 particle_ebfactory[base_lev].reset(new EBFArrayBoxFactory(
