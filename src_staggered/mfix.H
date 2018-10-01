@@ -79,9 +79,9 @@ public:
 
     void make_eb_geometry();
 
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(int lev, bool & has_walls);
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(bool & has_walls);
 
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls(int lev, bool & has_real_walls);
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls(bool & has_real_walls);
 
     std::unique_ptr<
         EB2::TranslationIF<EB2::PolynomialIF> >

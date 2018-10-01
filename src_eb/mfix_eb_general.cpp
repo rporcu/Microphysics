@@ -67,9 +67,6 @@ mfix::make_eb_general() {
         impfunc_poly2 = get_poly(SpaceDim, "poly2");
     }
 
-    for (int lev = 0; lev < nlev; lev++)
-    {
-
     /****************************************************************************
      * Generate UnionListIF representing the planar EB walls                    *
      *          this IF represents the union of a list of planes (walls)        *
@@ -80,8 +77,8 @@ mfix::make_eb_general() {
     if (use_walls) {
         amrex::Print() << "Using wall geometry from mfix.dat" << std::endl;
 
-        impfunc_walls_part  = get_walls(lev, has_walls);
-        impfunc_walls_fluid = get_real_walls(lev, has_real_walls);
+        impfunc_walls_part  = get_walls(has_walls);
+        impfunc_walls_fluid = get_real_walls(has_real_walls);
     }
 
     /****************************************************************************
@@ -115,6 +112,9 @@ mfix::make_eb_general() {
     EBSupport m_eb_support_level = EBSupport::full;
 
     int max_coarsening_level = 100;
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
 
     if (use_poly2) {
 

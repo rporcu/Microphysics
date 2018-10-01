@@ -44,12 +44,9 @@ mfix::make_eb_regular()
     // are true
     std::unique_ptr<MultiFab> mf_impfunc;
 
-    for (int lev = 0; lev < nlev; lev++)
-    {
-
     if (solve_fluid) {
         bool has_walls = false;
-        std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_real_walls(lev, has_walls);
+        std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_real_walls(has_walls);
 
         if (has_walls){
             auto gshop = EB2::makeShop(* impfunc_walls);
@@ -59,9 +56,13 @@ mfix::make_eb_regular()
             auto gshop = EB2::makeShop(my_regular);
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
         }
+    }
 
-        const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
-        eb_level_fluid = & eb_is.getLevel(geom[lev]);
+    for (int lev = 0; lev < nlev; lev++)
+    {
+   
+    if (solve_fluid)
+    {
     }
 
     // Do _not_ fill level-set with AllRegularIF => if there are no walls, then
@@ -70,7 +71,7 @@ mfix::make_eb_regular()
     bool has_walls = false;
 
     if (solve_dem) {
-        std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_walls(lev, has_walls);
+        std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_walls(has_walls);
 
         if (has_walls){
             auto gshop = EB2::makeShop(* impfunc_walls);
@@ -85,20 +86,19 @@ mfix::make_eb_regular()
             auto gshop = EB2::makeShop(my_regular);
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
         }
-
-        const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
-        eb_level_particles = & eb_is.getLevel(geom[lev]);
     }
 
 
     if (solve_fluid)
+    {
+       const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+       eb_level_fluid = & eb_is.getLevel(geom[lev]);
        ebfactory[lev].reset(new EBFArrayBoxFactory(
                                     * eb_level_fluid,
                                     geom[lev], grids[lev], dmap[lev],
                                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                     m_eb_full_grow_cells}, m_eb_support_level
-                                )
-                            );
+                                     m_eb_full_grow_cells}, m_eb_support_level));
+    }
 
     if (solve_dem) {
        particle_ebfactory[lev].reset(new EBFArrayBoxFactory(

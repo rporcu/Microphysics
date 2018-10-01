@@ -5,18 +5,13 @@
 
 #include <mfix_eb_if.H>
 
-//#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
-//#include <sstream>
-
 #include <algorithm>
-// //#include <AMReX_EB_levelset.H>
-//#include <AMReX_EB_levelset.H>
 #include <mfix.H>
 #include <mfix_eb_F.H>
 
 
 std::unique_ptr<UnionListIF<EB2::PlaneIF>>
-mfix::get_walls(int lev, bool & has_walls) {
+mfix::get_walls(bool & has_walls) {
     // Extracts all walls from the mfix.dat
 
     has_walls = false;  // will be set to true if there are any walls
@@ -47,7 +42,7 @@ mfix::get_walls(int lev, bool & has_walls) {
 
 
 std::unique_ptr<UnionListIF<EB2::PlaneIF>>
-mfix::get_real_walls(int lev, bool & has_real_walls) {
+mfix::get_real_walls(bool & has_real_walls) {
     // Extracts all walls from the mfix.dat
 
     has_real_walls = false;  // will be set to true if there are any walls
