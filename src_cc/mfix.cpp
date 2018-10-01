@@ -36,8 +36,9 @@ mfix::mfix ()
     nlev = maxLevel() + 1;
     std::cout << " NLEVS " << nlev << std::endl;
 
+    istep.resize(nlev, 0);
+
 #if 0
-    istep.resize(nlevs_max, 0);
     nsubsteps.resize(nlevs_max, 1);
     for (int lev = 1; lev <= maxLevel(); ++lev)
         nsubsteps[lev] = MaxRefRatio(lev-1);

@@ -680,13 +680,14 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
 
     amrex::Print() << "  Writing plotfile " << plotfilename << std::endl;
 
+
     if (solve_fluid)
     {
        const int ngrow = 0;
 
-       Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
+       Vector< std::unique_ptr<MultiFab> > mf(nlev);
 
-       for (int lev = 0; lev <= finest_level; ++lev) {
+       for (int lev = 0; lev < nlev; ++lev) {
 
           // the "+1" here is for volfrac
           const int ncomp = vecVarsName.size() + pltscalarVars.size() + 1;
@@ -741,9 +742,9 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
           }
        }
 
-       Vector<const MultiFab*> mf2(finest_level+1);
+       Vector<const MultiFab*> mf2(nlev);
 
-       for (int lev = 0; lev <= finest_level; ++lev) {
+       for (int lev = 0; lev < nlev; ++lev) {
            mf2[lev] = mf[lev].get();
        }
 
@@ -752,7 +753,7 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
        names.insert( names.end(),    vecVarsName.begin(),    vecVarsName.end());
        names.insert( names.end(), pltscaVarsName.begin(), pltscaVarsName.end());
 
-       amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
+       amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf2, names,
                                       Geom(), time, istep, refRatio());
     }
     else // no fluid
