@@ -575,7 +575,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
   Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
   Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
-     std::cout  << " NLEV " << nlev << std::endl;
+  std::cout  << " NLEV " << nlev << std::endl;
   for (int lev = 0; lev < nlev; lev++)
   {
      Box domain(geom[lev].Domain());
@@ -659,10 +659,15 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
         // We need to initialize the volume fraction ep_g before the first projection
         mfix_calc_volume_fraction(lev,sum_vol_orig);
         mfix_set_scalar_bcs(lev);
-        mfix_project_velocity(lev);
-        mfix_initial_iterations(lev,dt,stop_time,steady_state);
      }
   }
+
+  if (is_restarting == 0)
+  {
+     mfix_project_velocity();
+     mfix_initial_iterations(dt,stop_time,steady_state);
+  }
+
 }
 
 void

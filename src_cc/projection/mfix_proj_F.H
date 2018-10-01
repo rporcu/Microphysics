@@ -156,12 +156,6 @@ extern "C"
       const amrex::Real* rop,   const int* slo, const int* shi,
       const amrex::Real* dt );
 
-   void compute_bcoeff_cc (
-      const int* lo,  const int*  hi,
-      amrex::Real* bcoeff, const int* blo, const int* bhi,
-      const amrex::Real* rop_g, const int* slo, const int* shi,
-      const amrex::Real* ep_g, const int* dir );
-
    void compute_bcoeff_nd (
       const int* lo,  const int*  hi,
       amrex::Real* bcoeff, const int* blo, const int* bhi,

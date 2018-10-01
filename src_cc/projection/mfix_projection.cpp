@@ -1,6 +1,7 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix_proj_F.H>
+#include <mfix_mac_F.H>
 #include <mfix_F.H>
 #include <mfix.H>
 #include <AMReX_BC_TYPES.H>
@@ -30,109 +31,121 @@
 //
 //     new p_g  = old p_g + phi
 void 
-mfix::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool proj_2 )
+mfix::mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 )
 {
     BL_PROFILE("mfix::mfix_apply_projection");
 
-    vel_g[lev] -> FillBoundary (geom[lev].periodicity());
-
-    // Swap ghost cells and apply BCs to velocity
-    mfix_set_velocity_bcs (lev,0);
-
-    // Print info about predictor step
-    {
-        amrex::Print() << "Before projection \n";
-        mfix_print_max_vel (lev);
-        mfix_compute_diveu (lev);
-        amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
-    }
-
-    // Here we add the (1/rho gradp) back to ustar (note the +dt)
-    if (proj_2)
-    {
-       // Convert velocities to momenta
-       for (int n = 0; n < 3; n++)
-          MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
-
-       MultiFab::Saxpy (*vel_g[lev], scaling_factor, *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
-
-       // Convert momenta back to velocities
-       for (int n = 0; n < 3; n++)
-          MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
-
-       mfix_set_velocity_bcs (lev,0);
-    }
-
-    // Compute right hand side, AKA div(ep_g* u) / dt
-    mfix_compute_diveu (lev);
-    diveu[lev] -> mult (1.0/scaling_factor, diveu[lev]->nGrow() );
-
-    // Compute the PPE coefficients = (ep_g / rho) 
-    mfix_compute_bcoeff_ppe ( lev );
-
-    // Set BCs for Poisson's solver
     int bc_lo[3], bc_hi[3];
-    Box domain(geom[lev].Domain());
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       vel_g[lev] -> FillBoundary (geom[lev].periodicity());
+
+       // Swap ghost cells and apply BCs to velocity
+       mfix_set_velocity_bcs (lev,0);
+
+       // Print info about predictor step
+       {
+           amrex::Print() << "Before projection \n";
+           mfix_print_max_vel (lev);
+           mfix_compute_diveu (lev);
+           amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
+       }
+
+       // Here we add the (1/rho gradp) back to ustar (note the +dt)
+       if (proj_2)
+       {
+          // Convert velocities to momenta
+          for (int n = 0; n < 3; n++)
+             MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+   
+          MultiFab::Saxpy (*vel_g[lev], scaling_factor, *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
+   
+          // Convert momenta back to velocities
+          for (int n = 0; n < 3; n++)
+             MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+
+          mfix_set_velocity_bcs (lev,0);
+       }
+
+       // Compute right hand side, AKA div(ep_g* u) / dt
+       mfix_compute_diveu (lev);
+       diveu[lev] -> mult (1.0/scaling_factor, diveu[lev]->nGrow() );
+
+       // Compute the PPE coefficients = (ep_g / rho) 
+       mfix_compute_bcoeff_ppe ( lev );
+
+       // Set BCs for Poisson's solver
+       Box domain(geom[lev].Domain());
     
-    set_ppe_bc (bc_lo, bc_hi,
-		domain.loVect(), domain.hiVect(),
-		&nghost, 
-		bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-		bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-		bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr());
+       set_ppe_bc (bc_lo, bc_hi,
+   		   domain.loVect(), domain.hiVect(),
+   		   &nghost, 
+   		   bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+		      bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+		   bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr());
 
-    // Initialize phi to zero (any non-zero bc's are stored in p0)
-    phi[lev] -> setVal(0.);
+       // Initialize phi to zero (any non-zero bc's are stored in p0)
+       phi[lev] -> setVal(0.);
+    }
  
+    Vector<std::unique_ptr<MultiFab>> fluxes;
+    fluxes.resize(nlev);
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       fluxes[lev].reset(new MultiFab(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),
+                                       vel_g[lev]->nComp(), vel_g[lev]->nGrow(), MFInfo(),
+                                       *ebfactory[lev]));
+
+       fluxes[lev]->setVal(1.e200);
+    }
+   
     // Solve PPE
-    MultiFab fluxes(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),
-                    vel_g[lev]->nComp(), vel_g[lev]->nGrow(), MFInfo(),
-                    *ebfactory[lev]);
-
-    fluxes.setVal(1.e200);
-
-    solve_poisson_equation( lev, bcoeff, phi, diveu, bc_lo, bc_hi, fluxes );
+    solve_poisson_equation( bcoeff, phi, diveu, fluxes, bc_lo, bc_hi);
  
-    // Correct the velocity field
-    MultiFab::Divide( fluxes, *ep_g[lev], 0, 0, 1, 0 );
-    MultiFab::Divide( fluxes, *ep_g[lev], 0, 1, 1, 0 );
-    MultiFab::Divide( fluxes, *ep_g[lev], 0, 2, 1, 0 );
-
-    //
-    // NOTE: THE SIGN OF DT (scaling_factor) IS CORRECT HERE
-    //
-    amrex::Print() << "Multiplying fluxes by dt " << scaling_factor << std::endl;
-    fluxes.mult ( scaling_factor, fluxes.nGrow() );
-    MultiFab::Add( *vel_g[lev], fluxes, 0, 0, 3, 0);
-
-    // After using the fluxes, which currently hold MINUS dt * (1/rho) * grad(phi),
-    //    to modify the velocity field,  convert them to hold grad(phi)
-    fluxes.mult ( -1/scaling_factor, fluxes.nGrow() );
-    for (int n = 0; n < 3; n++)
-       MultiFab::Multiply(fluxes,(*ro_g[lev]),0,n,1,fluxes.nGrow());
-
-    if (proj_2)
+    for (int lev = 0; lev < nlev; lev++)
     {
-       // p := phi
-       MultiFab::Copy (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
-       MultiFab::Copy ( *gp[lev],    fluxes, 0, 0, 3,    fluxes.nGrow());
-    }
-    else
-    {
-       // p := p + phi
-       MultiFab::Add (*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
-       MultiFab::Add ( *gp[lev],    fluxes, 0, 0, 3,    fluxes.nGrow());
-    }
+       // Correct the velocity field
+       MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 0, 1, 0 );
+       MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 1, 1, 0 );
+       MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 2, 1, 0 );
 
-    // Swap ghost cells and apply BCs to velocity
-    mfix_set_velocity_bcs (lev,0);
+       //
+       // NOTE: THE SIGN OF DT (scaling_factor) IS CORRECT HERE
+       //
+       amrex::Print() << "Multiplying fluxes by dt " << scaling_factor << std::endl;
+       fluxes[lev]->mult ( scaling_factor, fluxes[lev]->nGrow() );
+       MultiFab::Add( *vel_g[lev], *fluxes[lev], 0, 0, 3, 0);
 
-    // Print info about predictor step
-    {
-        amrex::Print() << "After  projection \n";
-        mfix_print_max_vel (lev);
-        mfix_compute_diveu (lev);
-        amrex::Print() << "max(abs(diveu)) = " <<  mfix_norm0(diveu, lev, 0) << "\n";
+       // After using the fluxes, which currently hold MINUS dt * (1/rho) * grad(phi),
+       //    to modify the velocity field,  convert them to hold grad(phi)
+       fluxes[lev]->mult ( -1/scaling_factor, fluxes[lev]->nGrow() );
+       for (int n = 0; n < 3; n++)
+          MultiFab::Multiply(*fluxes[lev],(*ro_g[lev]),0,n,1,fluxes[lev]->nGrow());
+
+       if (proj_2)
+       {
+          // p := phi
+          MultiFab::Copy (*p_g[lev],    *phi[lev], 0, 0, 1,    phi[lev]->nGrow());
+          MultiFab::Copy ( *gp[lev], *fluxes[lev], 0, 0, 3, fluxes[lev]->nGrow());
+       }
+       else
+       {
+          // p := p + phi
+          MultiFab::Add (*p_g[lev],    *phi[lev], 0, 0, 1,    phi[lev]->nGrow());
+          MultiFab::Add ( *gp[lev], *fluxes[lev], 0, 0, 3, fluxes[lev]->nGrow());
+       }
+
+       // Swap ghost cells and apply BCs to velocity
+       mfix_set_velocity_bcs (lev,0);
+
+       // Print info about predictor step
+       {
+           amrex::Print() << "After  projection \n";
+           mfix_print_max_vel (lev);
+           mfix_compute_diveu (lev);
+           amrex::Print() << "max(abs(diveu)) = " <<  mfix_norm0(diveu, lev, 0) << "\n";
+       }
     }
 }
 
@@ -142,17 +155,17 @@ mfix::mfix_apply_projection ( int lev, amrex::Real scaling_factor, bool proj_2 )
 //                  div( eps_g/rho * grad(phi) ) = div(eps_g*u) 
 // 
 void
-mfix::solve_poisson_equation (  int lev,
-		                Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-				Vector< std::unique_ptr<MultiFab> >& this_phi,
-				Vector< std::unique_ptr<MultiFab> >& rhs,
-				int bc_lo[], int bc_hi[],
-                                MultiFab& fluxes )
+mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+			       Vector< std::unique_ptr<MultiFab> >& this_phi,
+			       Vector< std::unique_ptr<MultiFab> >& rhs,
+			       Vector< std::unique_ptr<MultiFab> >& fluxes,
+			       int bc_lo[], int bc_hi[] )
 {
     BL_PROFILE("mfix::solve_poisson_equation");
     
     if (nodal_pressure == 1)
     {
+#if 0
 
        // 
        // First define the matrix (operator).
@@ -191,7 +204,7 @@ mfix::solve_poisson_equation (  int lev,
        solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
 
        this_phi[lev] -> FillBoundary (geom[lev].periodicity());
-
+#endif
     } else {
 
        // 
@@ -204,6 +217,8 @@ mfix::solve_poisson_equation (  int lev,
        MLEBABecLap                  matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
        Vector<const MultiFab*>      tmp;
        array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
+
+       int lev = 0;
 
        // Copy the PPE coefficient into the proper data strutcure
        tmp = amrex::GetVecOfConstPtrs ( b[lev] ) ;
@@ -261,7 +276,7 @@ mfix::solve_poisson_equation (  int lev,
        // Finally, solve the system
        //
        solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
-       solver.getFluxes( {&fluxes}, MLMG::Location::CellCenter );
+       solver.getFluxes( amrex::GetVecOfPtrs(fluxes), MLMG::Location::CellCenter );
 
        this_phi[lev] -> FillBoundary (geom[lev].periodicity());
     }
@@ -321,22 +336,22 @@ mfix::mfix_compute_bcoeff_ppe (int lev)
 	   Box wbx = mfi.tilebox (e_z);
 
 	   // X direction
-	   compute_bcoeff_cc (BL_TO_FORTRAN_BOX(ubx),
-		              BL_TO_FORTRAN_ANYD((*(bcoeff[lev][0]))[mfi]),
-  		              BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-		              (*ep_g[lev])[mfi].dataPtr(), &xdir );
+	   compute_bcoeff_mac (BL_TO_FORTRAN_BOX(ubx),
+		               BL_TO_FORTRAN_ANYD((*(bcoeff[lev][0]))[mfi]),
+  		               BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		               (*ep_g[lev])[mfi].dataPtr(), &xdir );
 
 	   // Y direction
-	   compute_bcoeff_cc (BL_TO_FORTRAN_BOX(vbx),
-		              BL_TO_FORTRAN_ANYD((*(bcoeff[lev][1]))[mfi]),
-		              BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-		              (*ep_g[lev])[mfi].dataPtr(), &ydir );
+	   compute_bcoeff_mac (BL_TO_FORTRAN_BOX(vbx),
+		               BL_TO_FORTRAN_ANYD((*(bcoeff[lev][1]))[mfi]),
+		               BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		               (*ep_g[lev])[mfi].dataPtr(), &ydir );
 
 	   // Z direction
-	   compute_bcoeff_cc (BL_TO_FORTRAN_BOX(wbx),
-		              BL_TO_FORTRAN_ANYD((*(bcoeff[lev][2]))[mfi]),
-		              BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-		              (*ep_g[lev])[mfi].dataPtr(), &zdir );
+	   compute_bcoeff_mac (BL_TO_FORTRAN_BOX(wbx),
+		               BL_TO_FORTRAN_ANYD((*(bcoeff[lev][2]))[mfi]),
+		               BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
+		               (*ep_g[lev])[mfi].dataPtr(), &zdir );
 	
        }
     }

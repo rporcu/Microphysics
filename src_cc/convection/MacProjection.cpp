@@ -426,21 +426,18 @@ MacProjection::compute_b_coeff ( const Vector< std::unique_ptr<MultiFab> >& u,
          // X direction
          compute_bcoeff_mac (BL_TO_FORTRAN_BOX(ubx),
                              BL_TO_FORTRAN_ANYD((*(m_b[lev][0]))[mfi]),
-                             BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
                              BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
                              (*ep[lev])[mfi].dataPtr(), &xdir );
 
          // Y direction
          compute_bcoeff_mac (BL_TO_FORTRAN_BOX(vbx),
                              BL_TO_FORTRAN_ANYD((*(m_b[lev][1]))[mfi]),
-                             BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
                              BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
                              (*ep[lev])[mfi].dataPtr(), &ydir );
 
          // Z direction
          compute_bcoeff_mac (BL_TO_FORTRAN_BOX(wbx),
                              BL_TO_FORTRAN_ANYD((*(m_b[lev][2]))[mfi]),
-                             BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
                              BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
                              (*ep[lev])[mfi].dataPtr(), &zdir );
       }

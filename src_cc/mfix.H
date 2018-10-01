@@ -153,9 +153,10 @@ protected:
 
     void mfix_calc_mflux(int lev);
 
-    void mfix_project_velocity   (int lev);
-    void mfix_initial_iterations (int lev, amrex::Real dt, amrex::Real stop_time, int steady_state );
-    void mfix_apply_projection (int lev, amrex::Real scaling_factor, bool proj_2);
+    void mfix_project_velocity   ();
+    void mfix_initial_iterations ( amrex::Real dt, amrex::Real stop_time, int steady_state );
+    void mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 );
+
     void mfix_set_scalar_bcs (int lev);
     void mfix_set_velocity_bcs (int lev, int extrap_dir_bcs);
     void mfix_set_pressure_bcs (int lev);
@@ -201,12 +202,11 @@ private:
     void EvolveFluid(int nstep, int steady_state, Real& dt, Real& time, Real stop_time);
 
     // Projection-related methods
-    void solve_poisson_equation(int lev,
-                                Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+    void solve_poisson_equation(Vector< Vector< std::unique_ptr<MultiFab> > >& b,
                                 Vector< std::unique_ptr<MultiFab> >& phi,
                                 Vector< std::unique_ptr<MultiFab> >& rhs,
-                                int bc_lo[], int bc_hi[],
-                                MultiFab& fluxes );
+                                Vector< std::unique_ptr<MultiFab> >& fluxes,
+                                int bc_lo[], int bc_hi[]);
 
     // Solve implicit diffusion
     void solve_diffusion_equation(int lev,
@@ -229,9 +229,11 @@ private:
 
     int  steady_state_reached(Real dt);
 
-    void mfix_apply_predictor(int lev, amrex::MultiFab& conv_old, amrex::MultiFab& divtau_old,
+    void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_old,
+                              Vector< std::unique_ptr<MultiFab> >& divtau_old,
                               amrex::Real dt, bool proj_2);
-    void mfix_apply_corrector(int lev, amrex::MultiFab& conv_old, amrex::MultiFab& divtau_old,
+    void mfix_apply_corrector(Vector< std::unique_ptr<MultiFab> >& conv_old,
+                              Vector< std::unique_ptr<MultiFab> >& divtau_old,
                               amrex::Real dt, bool proj_2);
 
     void mfix_diffuse_velocity(int lev, amrex::Real dt);
