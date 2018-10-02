@@ -153,6 +153,8 @@ protected:
     void mfix_set_scalar_bcs ();
     void mfix_set_velocity_bcs (int extrap_dir_bcs);
 
+    void FillPatch (int lev, MultiFab& mf, MultiFab& cmf, MultiFab& fmf, int icomp, int ncomp);
+
     void mfix_calc_volume_fraction(Real& sum_vol);
     void mfix_calc_drag_fluid();
     void mfix_calc_drag_particle();

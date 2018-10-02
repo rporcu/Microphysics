@@ -8,6 +8,7 @@
 void
 mfix::FillPatch (int lev, MultiFab& mf, MultiFab& cmf, MultiFab& fmf, int icomp, int ncomp)
 {
+#if 0
     if (lev == 0)
     {
         Vector<MultiFab*> smf;
@@ -30,6 +31,7 @@ mfix::FillPatch (int lev, MultiFab& mf, MultiFab& cmf, MultiFab& fmf, int icomp,
                                    cphysbc, fphysbc, refRatio(lev-1),
                                    mapper, bcs);
     }
+#endif
 }
 
 //
