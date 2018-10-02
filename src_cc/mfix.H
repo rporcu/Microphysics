@@ -112,7 +112,6 @@ public:
     int levelset__pad = 2;           // padding of the level-set grid
     int levelset__eb_pad = 2;        // padding of the EBIS used to generate the level-set (useful for
                                      // ensuring that neighbor grids are considered when filling LS)
-
 protected:
 
     //! Tagging cells for refinement
@@ -147,19 +146,14 @@ protected:
     void mfix_set_bc0();
     void mfix_set_p0();
 
-    void mfix_conv_rop(int lev);
-
-    void mfix_calc_mflux(int lev);
-
     void mfix_project_velocity   ();
     void mfix_initial_iterations ( amrex::Real dt, amrex::Real stop_time, int steady_state );
     void mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 );
 
-    void mfix_set_scalar_bcs (int lev);
-    void mfix_set_velocity_bcs (int lev, int extrap_dir_bcs);
-    void mfix_set_pressure_bcs (int lev);
+    void mfix_set_scalar_bcs ();
+    void mfix_set_velocity_bcs (int extrap_dir_bcs);
 
-    void mfix_calc_volume_fraction(int lev, Real& sum_vol);
+    void mfix_calc_volume_fraction(Real& sum_vol);
     void mfix_calc_drag_fluid();
     void mfix_calc_drag_particle();
 
@@ -207,15 +201,14 @@ private:
                                 int bc_lo[], int bc_hi[]);
 
     // Solve implicit diffusion
-    void solve_diffusion_equation(int lev,
-                        Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-      Vector< std::unique_ptr<MultiFab> >& phi,
-      Vector< std::unique_ptr<MultiFab> >& rhs,
-      int bc_lo[], int bc_hi[],
-      amrex::Real dt);
+    void solve_diffusion_equation(Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+                                  Vector< std::unique_ptr<MultiFab> >& phi,
+                                  Vector< std::unique_ptr<MultiFab> >& rhs,
+                                  int bc_lo[], int bc_hi[],
+                                  amrex::Real dt);
 
-    void mfix_compute_bcoeff_ppe(int lev);
-    void mfix_compute_bcoeff_diff(int lev);
+    void mfix_compute_bcoeff_ppe();
+    void mfix_compute_bcoeff_diff();
 
     void check_for_nans(int lev);
 
@@ -238,7 +231,7 @@ private:
                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
                               amrex::Real dt, bool proj_2);
 
-    void mfix_diffuse_velocity(int lev, amrex::Real dt);
+    void mfix_diffuse_velocity(amrex::Real dt);
 
     void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
 
@@ -246,7 +239,7 @@ private:
     void mfix_compute_velocity_slopes(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
     void mfix_compute_velocity_at_faces (int lev, Vector< std::unique_ptr<MultiFab> >& vel);
 
-    void mfix_compute_diveu (int lev);
+    void mfix_compute_diveu ();
 
     void mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p);
 

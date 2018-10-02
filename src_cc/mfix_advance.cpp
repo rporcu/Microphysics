@@ -26,11 +26,11 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
        fill_mf_bc ( lev, *rop_g[lev] );
        fill_mf_bc ( lev, *ep_g[lev] );
        fill_mf_bc ( lev, *mu_g[lev] );
-
-       // Fill ghost nodes and reimpose boundary conditions
-       mfix_set_scalar_bcs (lev);
-       mfix_set_velocity_bcs (lev,0);
     }
+
+    // Fill ghost nodes and reimpose boundary conditions
+    mfix_set_velocity_bcs (0);
+    mfix_set_scalar_bcs ();
 
     //
     // Start loop: if we are not seeking a steady state solution,
@@ -92,14 +92,15 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
         bool proj_2_pred = true;
         mfix_apply_predictor ( conv_old, divtau_old, dt, proj_2_pred );
 
-	   // Print info about predictor step
+        // Print info about predictor step
+        amrex::Print() << "\nAfter predictor step:\n";
         for (int lev = 0; lev < nlev; lev++)
-        {
-	    amrex::Print() << "\nAfter predictor step:\n";
     	    mfix_print_max_vel (lev);
-    	    mfix_compute_diveu (lev);
+
+        mfix_compute_diveu();
+
+        for (int lev = 0; lev < nlev; lev++)
 	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
-        }
 
 	// Calculate drag coefficient
 	if (solve_dem)
@@ -110,13 +111,14 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
 	mfix_apply_corrector ( conv_old, divtau_old, dt, proj_2_corr );
 
         // Print info about corrector step
+        amrex::Print() << "\nAfter corrector step:\n";
         for (int lev = 0; lev < nlev; lev++)
-        {
-	    amrex::Print() << "\nAfter corrector step:\n";
     	    mfix_print_max_vel (lev);
-    	    mfix_compute_diveu (lev);
+
+ 	mfix_compute_diveu ();
+
+        for (int lev = 0; lev < nlev; lev++)
 	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
-        }
 	    
 	// 
         // Check whether to exit the loop or not
@@ -169,14 +171,12 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
    amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
 
    // Fill ghost cells
-   for (int lev = 0; lev < nlev; lev++)
-   {
-      mfix_set_scalar_bcs (lev);
-      mfix_set_velocity_bcs (lev,0);
+   mfix_set_scalar_bcs ();
+   mfix_set_velocity_bcs (0);
 
-      // Copy vel_g into vel_go
+   // Copy vel_g into vel_go
+   for (int lev = 0; lev < nlev; lev++)
       MultiFab::Copy (*vel_go[lev], *vel_g[lev],   0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
-   }
 
     // Create temporary multifabs to hold the old-time conv and divtau
     //    so we don't have to re-compute them in the corrector
@@ -277,15 +277,16 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
         // Convert momenta back to velocities
         for (int n = 0; n < 3; n++)
             MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
-
-        // If doing implicit diffusion, solve here for u^*
-        if (!explicit_diffusion)
-            mfix_diffuse_velocity(lev,dt);
-
-        // Add the drag term implicitly
-        if (solve_dem)
-            mfix_compute_intermediate_velocity ( lev, dt );
     }
+
+    // If doing implicit diffusion, solve here for u^*
+    if (!explicit_diffusion)
+        mfix_diffuse_velocity(dt);
+
+    // Add the drag term implicitly
+    if (solve_dem)
+       for (int lev = 0; lev < nlev; lev++)
+            mfix_compute_intermediate_velocity ( lev, dt );
  
     // Project velocity field
     mfix_apply_projection ( dt, proj_2 );
@@ -375,18 +376,19 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
       // Convert momenta back to velocities
       for (int n = 0; n < 3; n++)
          MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
-
-      // If doing implicit diffusion, solve here for u^*
-      if (!explicit_diffusion)
-         mfix_diffuse_velocity(lev,dt);
- 
-      // Compute intermediate velocity if drag terms present
-      if (solve_dem)
-         mfix_compute_intermediate_velocity ( lev, dt );
    }
+
+   // If doing implicit diffusion, solve here for u^*
+   if (!explicit_diffusion)
+      mfix_diffuse_velocity(dt);
+ 
+   // Compute intermediate velocity if drag terms present
+   if (solve_dem)
+      for (int lev = 0; lev < nlev; lev++)
+         mfix_compute_intermediate_velocity (lev, dt);
  
    // Apply projection
-   mfix_apply_projection ( dt, proj_2 );
+   mfix_apply_projection (dt, proj_2);
 }
 
 void
@@ -451,10 +453,10 @@ mfix::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
 // Compute div(ep_g * u)
 // 
 void
-mfix::mfix_compute_diveu (int lev)
+mfix::mfix_compute_diveu ()
 {
-    Box domain(geom[lev].Domain());
 
+#if 0
     if (nodal_pressure == 1)
     {
 
@@ -465,6 +467,8 @@ mfix::mfix_compute_diveu (int lev)
        vec.copy(*vel_g[lev],0,0,vel_g[lev]->nComp(),vel_g[lev]->nGrow(),vel_g[lev]->nGrow());
        for (int n = 0; n < 3; n++)
           MultiFab::Multiply(vec,(*ep_g[lev]),0,n,1,1);
+
+       Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -500,32 +504,37 @@ mfix::mfix_compute_diveu (int lev)
 
     }
     else
+#endif
     {
-
        int extrap_dir_bcs = 1;
-       mfix_set_velocity_bcs (lev,extrap_dir_bcs);
-       vel_g[lev]->FillBoundary (geom[lev].periodicity());     
+       mfix_set_velocity_bcs (extrap_dir_bcs);
 
-       // Create face centered multifabs for ep_g and vel_g
-       MultiFab epu( vel_g[lev]->boxArray(),  vel_g[lev]-> DistributionMap(),
-                     vel_g[lev]->nComp(), nghost, MFInfo(), *ebfactory[lev]);
+       for (int lev = 0; lev < nlev; lev++)
+       {
 
-       MultiFab::Copy( epu, *vel_g[lev], 0, 0, 3, vel_g[lev]->nGrow() );
+          Box domain(geom[lev].Domain());
+          vel_g[lev]->FillBoundary (geom[lev].periodicity());     
 
-       for (int n = 0; n < 3; n++)
-          MultiFab::Multiply( epu, *ep_g[lev], 0, n, 1, vel_g[lev]->nGrow() );
+          // Create face centered multifabs for ep_g and vel_g
+          MultiFab epu( vel_g[lev]->boxArray(),  vel_g[lev]-> DistributionMap(),
+                        vel_g[lev]->nComp(), nghost, MFInfo(), *ebfactory[lev]);
 
-       Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM> epu_fc;
-       mfix_average_cc_to_fc( lev, epu, epu_fc );
+          MultiFab::Copy( epu, *vel_g[lev], 0, 0, 3, vel_g[lev]->nGrow() );
+   
+          for (int n = 0; n < 3; n++)
+             MultiFab::Multiply( epu, *ep_g[lev], 0, n, 1, vel_g[lev]->nGrow() );
 
-       // This does not need to have correct ghost values in place
-       EB_computeDivergence( *diveu[lev], GetArrOfConstPtrs(epu_fc), geom[lev] );
-
+          Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM> epu_fc;
+          mfix_average_cc_to_fc( lev, epu, epu_fc );
+   
+          // This does not need to have correct ghost values in place
+          EB_computeDivergence( *diveu[lev], GetArrOfConstPtrs(epu_fc), geom[lev] );
+       }
     }
 
     // Restore velocities to carry Dirichlet values on faces
     int extrap_dir_bcs = 0;
-    mfix_set_velocity_bcs (lev,extrap_dir_bcs);
+    mfix_set_velocity_bcs (extrap_dir_bcs);
 }
 
 //
@@ -547,13 +556,13 @@ mfix::steady_state_reached (Real dt)
     int condition1[nlev];
     int condition2[nlev];
 
+    mfix_set_velocity_bcs (0);
+
     //
     // Make sure velocity is up to date
     // 
     for (int lev = 0; lev < nlev; lev++)
     {
-
-       mfix_set_velocity_bcs (lev,0);
     
        // 
        // Use temporaries to store the difference

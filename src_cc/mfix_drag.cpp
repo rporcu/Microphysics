@@ -177,8 +177,9 @@ mfix::mfix_calc_drag_particle()
           }
 
           // Extrapolate velocity Dirichlet bc's to ghost cells
+          // HACK -- NOTE WE ARE CALLING THIS ON ALL LEVELS BUT ONLY NEED IT ON ONE LEVEL
           int extrap_dir_bcs = 1;
-          mfix_set_velocity_bcs(lev, extrap_dir_bcs);
+          mfix_set_velocity_bcs(extrap_dir_bcs);
 
           gp_tmp.FillBoundary(geom[lev].periodicity());
 
@@ -203,8 +204,9 @@ mfix::mfix_calc_drag_particle()
           }
 
           // Reset velocity Dirichlet bc's to face values
+          // HACK -- NOTE WE ARE CALLING THIS ON ALL LEVELS BUT ONLY NEED IT ON ONE LEVEL
           extrap_dir_bcs = 0;
-          mfix_set_velocity_bcs(lev, extrap_dir_bcs);
+          mfix_set_velocity_bcs(extrap_dir_bcs);
        }
 #if 0
        else

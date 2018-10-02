@@ -101,48 +101,52 @@ mfix::mfix_compute_divtau ( int lev,
 // Implicit diffusion
 //
 void
-mfix::mfix_diffuse_velocity ( int lev,
-                              amrex::Real dt)
+mfix::mfix_diffuse_velocity (amrex::Real dt)
 
 {
    BL_PROFILE("mfix::mfix_diffuse_velocity");
 
-   // Whole domain
-   Box domain(geom[lev].Domain());
-
    // Swap ghost cells and apply BCs to velocity
-   mfix_set_velocity_bcs (lev,0);
+   mfix_set_velocity_bcs (0);
 
-   // Compute the coefficients
-   mfix_compute_bcoeff_diff ( lev );
-
+   // The boundary conditions need only be set once -- we do this at level 0
    int bc_lo[3], bc_hi[3];
+
+   // Whole domain
+   Box domain(geom[0].Domain());
 
    // Set BCs for Poisson's solver
    set_diff_bc (bc_lo, bc_hi,
                 domain.loVect(), domain.hiVect(),
                 &nghost,
-                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr());
+                bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
+                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
+                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
+
+   // Compute the coefficients
+   mfix_compute_bcoeff_diff();
 
    // Loop over the velocity components
    for (int i = 0; i < 3; i++)
    {
-      rhs_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
-      phi_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
+         amrex::Print() << "Diffusing velocity component " << i << std::endl;
 
-      amrex::Print() << "Diffusing velocity component " << i << std::endl;
+      for (int lev = 0; lev < nlev; lev++)
+      {
+         rhs_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
+         phi_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
+      }
 
       // Solve (1 - div beta grad) u_new = RHS
       // Here RHS = "vel" which is the current approximation to the new-time velocity (without diffusion terms)
-      solve_diffusion_equation ( lev, bcoeff_diff, phi_diff, rhs_diff, bc_lo, bc_hi, dt );
+      solve_diffusion_equation ( bcoeff_diff, phi_diff, rhs_diff, bc_lo, bc_hi, dt );
 
-      vel_g[lev]->copy(*phi_diff[lev],0,i,1,nghost,nghost);
+      for (int lev = 0; lev < nlev; lev++)
+         vel_g[lev]->copy(*phi_diff[lev],0,i,1,nghost,nghost);
    }
 
    // Swap ghost cells and apply BCs to velocity
-   mfix_set_velocity_bcs (lev,0);
+   mfix_set_velocity_bcs (0);
 }
 
 //
@@ -151,8 +155,7 @@ mfix::mfix_diffuse_velocity ( int lev,
 //                  (1 - div dot mu grad) u = RHS
 //
 void
-mfix::solve_diffusion_equation ( int lev,
-                                 Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+mfix::solve_diffusion_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
                                  Vector< std::unique_ptr<MultiFab> >& sol,
                                  Vector< std::unique_ptr<MultiFab> >& rhs,
                                  int bc_lo[], int bc_hi[],
@@ -171,12 +174,6 @@ mfix::solve_diffusion_equation ( int lev,
    Vector<const MultiFab*>      tmp;
    array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
 
-   // Copy the PPE coefficient into the proper data strutcure
-   tmp = amrex::GetVecOfConstPtrs ( b[lev] ) ;
-   b_tmp[0] = tmp[0];
-   b_tmp[1] = tmp[1];
-   b_tmp[2] = tmp[2];
-
    // It is essential that we set MaxOrder of the solver to 2
    // if we want to use the standard sol(i)-sol(i-1) approximation
    // for the gradient at Dirichlet boundaries.
@@ -191,17 +188,26 @@ mfix::solve_diffusion_equation ( int lev,
    // This sets alpha = 1 and beta = dt
    matrix.setScalars ( 1.0, dt );
 
-   // Define RHS = (rop) * (vel_g)
-   MultiFab::Multiply((*rhs_diff[lev]), (*rop_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
+   // Copy the PPE coefficient into the proper data strutcure
+   for (int lev = 0; lev < nlev; lev++)
+   {
+      tmp = amrex::GetVecOfConstPtrs ( b[lev] ) ;
+      b_tmp[0] = tmp[0];
+      b_tmp[1] = tmp[1];
+      b_tmp[2] = tmp[2];
 
-   // This sets the spatially varying A coefficients
-   matrix.setACoeffs ( lev, (*rop_g[lev]) );
+      // Define RHS = (rop) * (vel_g)
+      MultiFab::Multiply((*rhs_diff[lev]), (*rop_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
 
-   // This sets the spatially varying b coefficients
-   matrix.setBCoeffs ( lev, b_tmp );
+      // This sets the spatially varying A coefficients
+      matrix.setACoeffs ( lev, (*rop_g[lev]) );
 
-   // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
-   matrix.setLevelBC ( lev, GetVecOfConstPtrs(sol)[lev] );
+      // This sets the spatially varying b coefficients
+      matrix.setBCoeffs ( lev, b_tmp );
+
+      // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
+      matrix.setLevelBC ( lev, GetVecOfConstPtrs(sol)[lev] );
+   }
 
    //
    // Then setup the solver ----------------------
@@ -222,14 +228,15 @@ mfix::solve_diffusion_equation ( int lev,
    //
    solver.solve ( GetVecOfPtrs(sol), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
 
-   sol[lev] -> FillBoundary (geom[lev].periodicity());
+   for (int lev = 0; lev < nlev; lev++)
+      sol[lev] -> FillBoundary (geom[lev].periodicity());
 }
 
 //
 // Computes bcoeff = mu_g at the faces of the scalar cells
 //
 void
-mfix::mfix_compute_bcoeff_diff (int lev)
+mfix::mfix_compute_bcoeff_diff ()
 {
    BL_PROFILE("mfix::mfix_compute_bcoeff_diff");
 
@@ -238,34 +245,38 @@ mfix::mfix_compute_bcoeff_diff (int lev)
    int ydir = 2;
    int zdir = 3;
 
+   for (int lev = 0; lev < nlev; lev++)
+   {
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-   for (MFIter mfi(*mu_g[lev],true); mfi.isValid(); ++mfi)
-   {
-      // Tileboxes for staggered components
-      Box ubx = mfi.tilebox (e_x);
-      Box vbx = mfi.tilebox (e_y);
-      Box wbx = mfi.tilebox (e_z);
+      for (MFIter mfi(*mu_g[lev],true); mfi.isValid(); ++mfi)
+      {
+         // Tileboxes for staggered components
+         Box ubx = mfi.tilebox (e_x);
+         Box vbx = mfi.tilebox (e_y);
+         Box wbx = mfi.tilebox (e_z);
 
-      // X direction
-      compute_bcoeff_diff (BL_TO_FORTRAN_BOX(ubx),
-                           BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][0]))[mfi]),
-                           BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &xdir );
+         // X direction
+         compute_bcoeff_diff (BL_TO_FORTRAN_BOX(ubx),
+                              BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][0]))[mfi]),
+                              BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &xdir );
 
-      // Y direction
-      compute_bcoeff_diff (BL_TO_FORTRAN_BOX(vbx),
-                           BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][1]))[mfi]),
-                           BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &ydir );
+         // Y direction
+         compute_bcoeff_diff (BL_TO_FORTRAN_BOX(vbx),
+                              BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][1]))[mfi]),
+                              BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &ydir );
 
-      // Z direction
-      compute_bcoeff_diff (BL_TO_FORTRAN_BOX(wbx),
-                           BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][2]))[mfi]),
-                           BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &zdir );
+         // Z direction
+         compute_bcoeff_diff (BL_TO_FORTRAN_BOX(wbx),
+                              BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][2]))[mfi]),
+                              BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &zdir );
+   
+      }
 
+      bcoeff_diff[lev][0] -> FillBoundary(geom[lev].periodicity());
+      bcoeff_diff[lev][1] -> FillBoundary(geom[lev].periodicity());
+      bcoeff_diff[lev][2] -> FillBoundary(geom[lev].periodicity());
    }
-
-   bcoeff_diff[lev][0] -> FillBoundary(geom[lev].periodicity());
-   bcoeff_diff[lev][1] -> FillBoundary(geom[lev].periodicity());
-   bcoeff_diff[lev][2] -> FillBoundary(geom[lev].periodicity());
 }

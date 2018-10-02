@@ -132,8 +132,20 @@ mfix::Init(Real dt, Real time)
 
     for (int lev = 1; lev <= finest_level; lev++) 
     {
-       BoxArray ba_ref(ba);
-       ba_ref.refine(2);
+       // This refines the central half of the domain
+       int ilo = ba[0].size()[0] / 2;
+       int ihi = 3*ba[0].size()[0]/2-1;
+       IntVect lo(ilo,ilo,ilo);
+       IntVect hi(ihi,ihi,ihi);
+       Box bx(lo,hi);
+       BoxArray ba_ref(bx);
+
+       // This refines the whole domain
+       // BoxArray ba_ref(ba);
+       // ba_ref.refine(2);
+
+       std::cout << "Setting refined region to " << ba_ref << std::endl;
+
        DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
        MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
     }
@@ -521,8 +533,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
   // Calculate the initial volume fraction
   if (solve_fluid)
   {
-     for (int lev = 0; lev < nlev; lev++)
-        mfix_calc_volume_fraction(lev,sum_vol_orig);
+     mfix_calc_volume_fraction(sum_vol_orig);
      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
   }
 }
@@ -659,17 +670,19 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
         if (!nodal_pressure)
            mfix_extrap_pressure(lev, p_g[lev]);
      }
-     else
-     {
-        // We need to initialize the volume fraction ep_g before the first projection
-        mfix_calc_volume_fraction(lev,sum_vol_orig);
-        mfix_set_scalar_bcs(lev);
-     }
   }
 
   if (is_restarting == 0)
   {
+     // We need to initialize the volume fraction ep_g before the first projection
+     mfix_calc_volume_fraction(sum_vol_orig);
+
+     mfix_set_scalar_bcs();
+
+     // Project the initial velocity field
      mfix_project_velocity();
+
+     // Iterate to compute the initial pressure 
      mfix_initial_iterations(dt,stop_time,steady_state);
   }
 
@@ -704,13 +717,14 @@ mfix::mfix_set_bc0()
      fill_mf_bc(lev,*ep_g[lev]);
      fill_mf_bc(lev,*ro_g[lev]);
      fill_mf_bc(lev,*rop_g[lev]);
-
-     // Put velocity Dirichlet bc's on faces
-     int extrap_dir_bcs = 0;
-     mfix_set_velocity_bcs(lev, extrap_dir_bcs);
-
-     vel_g[lev]->FillBoundary(geom[lev].periodicity());
    }
+
+   // Put velocity Dirichlet bc's on faces
+   int extrap_dir_bcs = 0;
+   mfix_set_velocity_bcs(extrap_dir_bcs);
+
+  for (int lev = 0; lev < nlev; lev++)
+     vel_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void

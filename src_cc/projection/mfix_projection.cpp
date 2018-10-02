@@ -47,20 +47,20 @@ mfix::mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 )
                bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
-    
-
 
     for (int lev = 0; lev < nlev; lev++)
-    {
         vel_g[lev] -> FillBoundary(geom[lev].periodicity());
 
-        // Swap ghost cells and apply BCs to velocity
-        mfix_set_velocity_bcs(lev,0);
+    // Swap ghost cells and apply BCs to velocity
+    mfix_set_velocity_bcs(0);
 
-        // Print info about predictor step
+    mfix_compute_diveu();
+
+    // Print info about predictor step
+    for (int lev = 0; lev < nlev; lev++)
+    {
         amrex::Print() << "AT LEVEL " << lev << " BEFORE PROJECTION: \n";
         mfix_print_max_vel(lev);
-        mfix_compute_diveu(lev);
         amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
         
         // Here we add the (1/rho gradp) back to ustar (note the +dt)
@@ -76,19 +76,24 @@ mfix::mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 )
             for (int n = 0; n < 3; n++)
                 MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
 
-            mfix_set_velocity_bcs (lev,0);
         }
+    }
 
-        // Compute right hand side, AKA div(ep_g* u) / dt
-        mfix_compute_diveu(lev);
+    mfix_set_velocity_bcs (0);
+
+    // Compute right hand side, AKA div(ep_g* u) / dt
+    mfix_compute_diveu();
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
         diveu[lev] -> mult(1.0/scaling_factor, diveu[lev]->nGrow() );
-
-        // Compute the PPE coefficients = (ep_g / rho) 
-        mfix_compute_bcoeff_ppe( lev );
        
         // Initialize phi to zero (any non-zero bc's are stored in p0)
         phi[lev] -> setVal(0.);
     }
+
+    // Compute the PPE coefficients = (ep_g / rho) 
+    mfix_compute_bcoeff_ppe( );
  
     Vector<std::unique_ptr<MultiFab> > fluxes;
     
@@ -115,7 +120,7 @@ mfix::mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 )
         //
         // NOTE: THE SIGN OF DT (scaling_factor) IS CORRECT HERE
         //
-        amrex::Print() << "Multiplying fluxes by dt " << scaling_factor << std::endl;
+        amrex::Print() << "Multiplying fluxes at level " << lev << " by dt " << scaling_factor << std::endl;
         fluxes[lev]->mult( scaling_factor, fluxes[lev]->nGrow() );
         MultiFab::Add( *vel_g[lev], *fluxes[lev], 0, 0, 3, 0);
 
@@ -137,14 +142,18 @@ mfix::mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 )
             MultiFab::Add (*p_g[lev],    *phi[lev], 0, 0, 1,    phi[lev]->nGrow());
             MultiFab::Add ( *gp[lev], *fluxes[lev], 0, 0, 3, fluxes[lev]->nGrow());
         }
+    }
 
-        // Swap ghost cells and apply BCs to velocity
-        mfix_set_velocity_bcs (lev,0);
+    // Swap ghost cells and apply BCs to velocity
+    mfix_set_velocity_bcs (0);
 
+    mfix_compute_diveu();
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
         // Print info about predictor step
         amrex::Print() << "AT LEVEL " << lev << " AFTER PROJECTION: \n";
         mfix_print_max_vel(lev);
-        mfix_compute_diveu(lev);
         amrex::Print() << "max(abs(diveu)) = " <<  mfix_norm0(diveu, lev, 0) << "\n";
     }
 }
@@ -293,7 +302,7 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
 // Computes bcoeff = ep_g/ro_g at the faces of the scalar cells
 // 
 void
-mfix::mfix_compute_bcoeff_ppe (int lev)
+mfix::mfix_compute_bcoeff_ppe ()
 {
     BL_PROFILE("mfix::mfix_compute_bcoeff_ppe");
 
@@ -301,9 +310,11 @@ mfix::mfix_compute_bcoeff_ppe (int lev)
     int xdir = 1;
     int ydir = 2;
     int zdir = 3;
-    
-    if (nodal_pressure == 1)
+
+    for (int lev = 0; lev < nlev; lev++)
     {
+       if (nodal_pressure == 1)
+       {
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
@@ -366,4 +377,5 @@ mfix::mfix_compute_bcoeff_ppe (int lev)
     bcoeff[lev][0] -> FillBoundary(geom[lev].periodicity());
     bcoeff[lev][1] -> FillBoundary(geom[lev].periodicity());
     bcoeff[lev][2] -> FillBoundary(geom[lev].periodicity());
+   }
 }

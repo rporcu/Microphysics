@@ -200,7 +200,7 @@ mfix::fill_mf_bc(int lev, MultiFab& mf)
     }
 }
 
-void mfix::mfix_calc_volume_fraction(int lev, Real& sum_vol)
+void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 {
     BL_PROFILE("mfix::mfix_calc_volume_fraction()");
 
@@ -210,22 +210,30 @@ void mfix::mfix_calc_volume_fraction(int lev, Real& sum_vol)
        // but does not change the values outside the domain
 
        // This call simply deposits the particle volume onto the grid in a PIC-like manner
-       pc->CalcVolumeFraction(*ep_g[lev],*bc_ilo[lev],*bc_ihi[lev], 
-                              *bc_jlo[lev],*bc_jhi[lev],*bc_klo[lev],*bc_khi[lev],nghost);
+       for (int lev = 0; lev < nlev; lev++)
+          pc->CalcVolumeFraction(*ep_g[lev],*bc_ilo[lev],*bc_ihi[lev], 
+                                 *bc_jlo[lev],*bc_jhi[lev],*bc_klo[lev],*bc_khi[lev],nghost);
     }
     else
     {
-       ep_g[lev]->setVal(1.);
+       for (int lev = 0; lev < nlev; lev++)
+          ep_g[lev]->setVal(1.);
     }
 
-    // Now define rop_g = ro_g * ep_g
-    MultiFab::Copy(*rop_g[lev], *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow());
-    MultiFab::Multiply((*rop_g[lev]), (*ep_g[lev]), 0, 0, 1, rop_g[lev]->nGrow());
+    for (int lev = 0; lev < nlev; lev++)
+    {
 
-    // This sets the values outside walls or periodic boundaries
-    fill_mf_bc(lev,*ep_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
+       // Now define rop_g = ro_g * ep_g
+       MultiFab::Copy(*rop_g[lev], *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow());
+       MultiFab::Multiply((*rop_g[lev]), (*ep_g[lev]), 0, 0, 1, rop_g[lev]->nGrow());
 
-    // Sum up all the values of ep_g[lev] -- this value should never change!
-    sum_vol = ep_g[lev]->sum();
+       // This sets the values outside walls or periodic boundaries
+       fill_mf_bc(lev,*ep_g[lev]);
+       fill_mf_bc(lev,*rop_g[lev]);
+   }
+
+    // Sum up all the values of ep_g[lev] 
+    // HACK  -- THIS SHOULD BE a multilevel sum
+    for (int lev = 0; lev < nlev; lev++)
+       sum_vol = ep_g[lev]->sum();
 }

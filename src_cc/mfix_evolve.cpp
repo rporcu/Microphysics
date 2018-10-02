@@ -11,18 +11,15 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
 {
     BL_PROFILE_REGION_START("mfix::Evolve");
 
-    for (int lev = 0; lev < nlev; lev++)
+    Real sum_vol;
+    if (solve_dem && solve_fluid)
     {
-       Real sum_vol;
-       if (solve_dem && solve_fluid)
-       {
-         mfix_calc_volume_fraction(lev,sum_vol);
-         if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
-         {
-            amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
-            amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
-         }
-       }
+      mfix_calc_volume_fraction(sum_vol);
+      if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
+      {
+         amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
+         amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
+      }
     }
 
     Real start_fluid = ParallelDescriptor::second();

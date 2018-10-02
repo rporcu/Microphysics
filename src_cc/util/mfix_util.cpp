@@ -6,59 +6,64 @@
 // Set the BCs for all the variables EXCEPT pressure or velocity.
 //
 void
-mfix::mfix_set_scalar_bcs (int lev)
+mfix::mfix_set_scalar_bcs ()
 {
   BL_PROFILE("mfix::mfix_set_scalar_bcs()");
 
-  Box domain(geom[lev].Domain());
+  for (int lev = 0; lev < nlev; lev++)
+  {
+     Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-  for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
-    {
-      set_scalar_bcs ( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-                      (*ro_g[lev])[mfi].dataPtr (),
-                      (*rop_g[lev])[mfi].dataPtr (),
-                      (*mu_g[lev])[mfi].dataPtr (),
-                      (*lambda_g[lev])[mfi].dataPtr (),
-                      bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                      bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                      bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                      domain.loVect(), domain.hiVect(),
-                      &nghost );
-    }
+     for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+     {
+        set_scalar_bcs ( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
+                        (*ro_g[lev])[mfi].dataPtr (),
+                        (*rop_g[lev])[mfi].dataPtr (),
+                        (*mu_g[lev])[mfi].dataPtr (),
+                        (*lambda_g[lev])[mfi].dataPtr (),
+                        bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                        bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                        bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+                        domain.loVect(), domain.hiVect(),
+                        &nghost );
+      }
         ep_g[lev] -> FillBoundary (geom[lev].periodicity());
         ro_g[lev] -> FillBoundary (geom[lev].periodicity());
        rop_g[lev] -> FillBoundary (geom[lev].periodicity());
         mu_g[lev] -> FillBoundary (geom[lev].periodicity());
     lambda_g[lev] -> FillBoundary (geom[lev].periodicity());
+  }
 }
 
 //
 // Set the BCs for velocity only
 //
 void
-mfix::mfix_set_velocity_bcs (int lev, int extrap_dir_bcs)
+mfix::mfix_set_velocity_bcs (int extrap_dir_bcs)
 {
   BL_PROFILE("mfix::mfix_set_velocity_bcs()");
 
-  vel_g[lev] -> FillBoundary (geom[lev].periodicity());
-
-  Box domain(geom[lev].Domain());
+  for (int lev = 0; lev < nlev; lev++)
+  {
+     vel_g[lev] -> FillBoundary (geom[lev].periodicity());
+     Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-  for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi)
-    {
-      set_velocity_bcs ( BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                         bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                         domain.loVect(), domain.hiVect(),
-                         &nghost, &extrap_dir_bcs );
-    }
+     for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi)
+     {
+        set_velocity_bcs ( BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                           bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                           bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                           bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+                           domain.loVect(), domain.hiVect(),
+                           &nghost, &extrap_dir_bcs );
+     }
+  }
 }
 
 //
