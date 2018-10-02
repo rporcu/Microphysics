@@ -14,8 +14,6 @@ amr.max_step = 100
 
 mfix.explicit_diffusion = 1
 
-mfix.ugradu_type        = 3
-
 mfix.particle_init_type = "Auto"
 
 mac.mg_verbose          = 0

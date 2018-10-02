@@ -15,8 +15,6 @@ mfix.explicit_diffusion = 1
 
 mfix.use_mac_proj       = true
 
-mfix.ugradu_type        = 3
-
 mfix.particle_init_type = "Auto"
 
 #_______________________________________________________________________
