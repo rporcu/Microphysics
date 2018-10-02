@@ -108,9 +108,9 @@ contains
           pbeta   = particles(beta_comp,n)
 
           mf_x(i,j,k)   = mf_x(i,j,k)   + pbeta
-          mf_u(i,j,k,1) = mf_u(i,j,k,1) + pbeta * particles(vel_comp  ,1)
-          mf_u(i,j,k,2) = mf_u(i,j,k,2) + pbeta * particles(vel_comp+1,2)
-          mf_u(i,j,k,3) = mf_u(i,j,k,3) + pbeta * particles(vel_comp+2,3)
+          mf_u(i,j,k,1) = mf_u(i,j,k,1) + pbeta * particles(vel_comp  ,n)
+          mf_u(i,j,k,2) = mf_u(i,j,k,2) + pbeta * particles(vel_comp+1,n)
+          mf_u(i,j,k,3) = mf_u(i,j,k,3) + pbeta * particles(vel_comp+2,n)
 
        end do
 
