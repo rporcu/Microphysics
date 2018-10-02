@@ -274,14 +274,6 @@ contains
       bc_lo    = amrex_lo_neumann
       bc_hi    = amrex_lo_neumann
 
-      print *,'DOMLO DOMHI ',domlo(:), domhi(:)
-      print *,'BCILO       ',get_bc_face(bct_ilo,ng)
-      print *,'BCIHI       ',get_bc_face(bct_ihi,ng)
-      print *,'BCJLO       ',get_bc_face(bct_jlo,ng)
-      print *,'BCJHI       ',get_bc_face(bct_jhi,ng)
-      print *,'BCKLO       ',get_bc_face(bct_klo,ng)
-      print *,'BCKHI       ',get_bc_face(bct_khi,ng)
-
       !
       ! BC -- X direction
       !

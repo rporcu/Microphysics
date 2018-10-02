@@ -143,11 +143,9 @@ protected:
         amrex::Abort("ClearLevel: To be implemented");
     }
 
-    void mfix_calc_trd_and_tau(int lev);
-
     void mfix_init_fluid(int is_restarting, Real dt, Real stop_time, int steady_state);
-    void mfix_set_bc0(int lev);
-    void mfix_set_p0(int lev);
+    void mfix_set_bc0();
+    void mfix_set_p0();
 
     void mfix_conv_rop(int lev);
 
