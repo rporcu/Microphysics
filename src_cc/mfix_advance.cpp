@@ -247,48 +247,48 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 	                    Vector< std::unique_ptr<MultiFab> >& divtau_old,
                             Real dt, bool proj_2)
 {
-   for (int lev = 0; lev < nlev; lev++)
-   {
-      // Compute the explicit advective term R_u^n
-      mfix_compute_ugradu_predictor( lev, *conv_old[lev], vel_go );
-
-      // If explicit_diffusion == true  then we compute the full diffusive terms here
-      // If explicit_diffusion == false then we compute only the off-diagonal terms here
-      mfix_compute_divtau( lev, *divtau_old[lev], vel_go );
+    // Compute the explicit advective term R_u^n
+    mfix_compute_ugradu_predictor( conv_old, vel_go );
     
-      // First add the convective term
-      MultiFab::Saxpy (*vel_g[lev], dt, *conv_old[lev], 0, 0, 3, 0);
+    for (int lev = 0; lev < nlev; lev++)
+    {
+        // If explicit_diffusion == true  then we compute the full diffusive terms here
+        // If explicit_diffusion == false then we compute only the off-diagonal terms here
+        mfix_compute_divtau( lev, *divtau_old[lev], vel_go );
+    
+        // First add the convective term
+        MultiFab::Saxpy (*vel_g[lev], dt, *conv_old[lev], 0, 0, 3, 0);
 
-      // Add the diffusion terms (either all if explicit_diffusion == true or just the
-      //    off-diagonal terms if explicit_diffusion == false)
-      MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
+        // Add the diffusion terms (either all if explicit_diffusion == true or just the
+        //    off-diagonal terms if explicit_diffusion == false)
+        MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
 
-      // Add the forcing terms
-      mfix_apply_forcing_terms ( lev, dt, vel_g);
+        // Add the forcing terms
+        mfix_apply_forcing_terms ( lev, dt, vel_g);
   
-      // Convert velocities to momenta
-      for (int n = 0; n < 3; n++)
-         MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+        // Convert velocities to momenta
+        for (int n = 0; n < 3; n++)
+            MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
 
-      // Add (-dt grad p to momenta)
-      MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
-      MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
+        // Add (-dt grad p to momenta)
+        MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
+        MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
 
-      // Convert momenta back to velocities
-      for (int n = 0; n < 3; n++)
-         MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+        // Convert momenta back to velocities
+        for (int n = 0; n < 3; n++)
+            MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
 
-      // If doing implicit diffusion, solve here for u^*
-      if (!explicit_diffusion)
-         mfix_diffuse_velocity(lev,dt);
+        // If doing implicit diffusion, solve here for u^*
+        if (!explicit_diffusion)
+            mfix_diffuse_velocity(lev,dt);
 
-      // Add the drag term implicitly
-      if (solve_dem)
-         mfix_compute_intermediate_velocity ( lev, dt );
-   }
+        // Add the drag term implicitly
+        if (solve_dem)
+            mfix_compute_intermediate_velocity ( lev, dt );
+    }
  
-   // Project velocity field
-   mfix_apply_projection ( dt, proj_2 );
+    // Project velocity field
+    mfix_apply_projection ( dt, proj_2 );
 }
 
 //
@@ -343,14 +343,14 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
       divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
    }
 
+   // Compute the explicit advective term R_u^*
+   mfix_compute_ugradu_corrector( conv, vel_g );
+
    for (int lev = 0; lev < nlev; lev++)
    {
-      // Compute the explicit advective term R_u^*
-      mfix_compute_ugradu_corrector( lev, *conv[lev], vel_g );
-
       // If explicit_diffusion == true  then we compute the full diffusive terms here
       // If explicit_diffusion == false then we compute only the off-diagonal terms here
-      mfix_compute_divtau ( lev, *divtau[lev], vel_g);
+      mfix_compute_divtau( lev, *divtau[lev], vel_g);
         
       // Define u_g = u_go + dt/2 (R_u^* + R_u^n) 
       MultiFab::LinComb (*vel_g[lev], 1.0, *vel_go[lev], 0, dt/2.0, *conv[lev]    , 0, 0, 3, 0); 

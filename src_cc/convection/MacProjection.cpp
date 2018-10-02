@@ -202,7 +202,7 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    if (verbose)
       Print() << " >> Before projection\n" ; 
    
-   for ( int lev=0; lev <= m_amrcore -> finestLevel() ; ++lev )
+   for ( int lev=0; lev <= m_amrcore -> finestLevel(); ++lev )
    {
       // Compute beta coefficients ( div(beta*grad(phi)) = RHS )
       compute_b_coeff( u, v, w, ep, ro, lev );
@@ -221,9 +221,9 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       MultiFab::Multiply( *w[lev], *(m_ep[lev][2]), 0, 0, 1, 0 );
 
       // Store in temporaries
-      (vel[lev])[0]  = u[lev].get();
-      (vel[lev])[1]  = v[lev].get();
-      (vel[lev])[2]  = w[lev].get();
+      (vel[lev])[0] = u[lev].get();
+      (vel[lev])[1] = v[lev].get();
+      (vel[lev])[2] = w[lev].get();
 
       for (int i=0; i<3; ++i)
          (vel[lev])[i]->FillBoundary( m_amrcore -> Geom(lev).periodicity() );
@@ -258,7 +258,9 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    if (bottom_solver_type == "smoother")
    {
       macproj.setBottomSolver(MLMG::BottomSolver::smoother);
-   } else if (bottom_solver_type == "hypre") {
+   }
+   else if (bottom_solver_type == "hypre")
+   {
       macproj.setBottomSolver(MLMG::BottomSolver::hypre);
    }
 

@@ -223,8 +223,12 @@ private:
 
     void mfix_compute_dt(amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt);
 
-    void mfix_compute_ugradu_predictor(int lev, amrex::MultiFab& conv, Vector< std::unique_ptr<MultiFab> >& vel);
-    void mfix_compute_ugradu_corrector(int lev, amrex::MultiFab& conv, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv,
+                                       Vector< std::unique_ptr<MultiFab> >& vel);
+    
+    void mfix_compute_ugradu_corrector(Vector< std::unique_ptr<MultiFab> >& conv,
+                                       Vector< std::unique_ptr<MultiFab> >& vel);
+    
     void mfix_compute_divtau(int lev, amrex::MultiFab& divtau, Vector< std::unique_ptr<MultiFab> >& vel);
 
     int  steady_state_reached(Real dt);
