@@ -573,8 +573,6 @@ contains
                          (epv_hi_y - epv_lo_y) * idy + & 
                          (epw_hi_z - epw_lo_z) * idz
 
-               print *,'DIVUMAC ',i,j,k,divumac
-
                ugradu(i,j,k,1) = (epu_hi_x * u_e - epu_lo_x * u_w) * idx + &
                     (epv_hi_y * u_n - epv_lo_y * u_s) * idy + &
                     (epw_hi_z * u_t - epw_lo_z * u_b) * idz - &
