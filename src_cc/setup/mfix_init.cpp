@@ -37,10 +37,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Should we use explicit vs implicit diffusion
         pp.query( "explicit_diffusion", explicit_diffusion );
 
-        // If we are using the MAC-projected velocities, how should we discretize the
-        //  ugradu term.
-        pp.query( "ugradu_type", ugradu_type );
-
         // The default type is "AsciiFile" but we can over-write that in the inputs file
         //  with "Random"
         pp.query("particle_init_type", particle_init_type);

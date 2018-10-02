@@ -18,9 +18,8 @@ mfix::mfix_compute_ugradu_predictor ( Vector< std::unique_ptr<MultiFab> >& conv,
         mfix_compute_velocity_slopes( lev, vel );
     }
 
-    // Do projection on all AMR-levels in one shot 
+    // Do projection on all AMR levels in one shot 
     mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g );
-
 
     for (int lev=0; lev < nlev; ++lev)
     {
@@ -76,7 +75,7 @@ mfix::mfix_compute_ugradu_predictor ( Vector< std::unique_ptr<MultiFab> >& conv,
                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                         bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                        geom[lev].CellSize(), &nghost, &ugradu_type);
+                        geom[lev].CellSize(), &nghost);
                 }
                 else
                 {
@@ -185,7 +184,7 @@ mfix::mfix_compute_ugradu_corrector ( Vector< std::unique_ptr<MultiFab> >& conv,
                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                         bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                        geom[lev].CellSize(), &nghost, &ugradu_type);
+                        geom[lev].CellSize(), &nghost);
                 }
                 else
                 {

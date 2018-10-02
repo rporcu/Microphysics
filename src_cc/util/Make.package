@@ -6,5 +6,8 @@ f90EXE_sources += set_pressure_bcs.f90
 f90EXE_sources += set_scalar_bcs.f90
 f90EXE_sources += set_velocity_bcs.f90
 
+F90EXE_sources += bc_fill_nd.F90
+
+CEXE_sources += mfix_fillpatch.cpp
 CEXE_sources += mfix_util.cpp
 FEXE_headers += mfix_util_F.H 

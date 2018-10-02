@@ -452,8 +452,6 @@ private:
     int nodal_pressure = 0;
     int explicit_diffusion = 1;
 
-    int ugradu_type = 3;
-
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
     Vector< std::string > vecVarsName;
