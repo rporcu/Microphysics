@@ -398,7 +398,8 @@ mfix::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 {
     BL_PROFILE("mfix::mfix_apply_forcing_terms");
 
-    Box domain(geom[lev].Domain());
+    // The volume fraction of each fluid cell (1 if uncovered, 0 if covered)
+    const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
 
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -411,10 +412,9 @@ mfix::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 	add_forcing ( BL_TO_FORTRAN_BOX(bx),  
 		      BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
 		      BL_TO_FORTRAN_ANYD((*drag[lev])[mfi]),
-		      BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-                      (*rop_g[lev])[mfi].dataPtr(),
-		      domain.loVect (), domain.hiVect (),
-		      geom[lev].CellSize (), &dt);
+		      BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+                      BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+		      &dt);
     }
 }
 
@@ -429,8 +429,8 @@ mfix::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
 {
     BL_PROFILE("mfix::mfix_compute_intermediate_velocity");
 
-    // Whole domain
-    Box domain(geom[lev].Domain());
+    // The volume fraction of each fluid cell (1 if uncovered, 0 if covered)
+    const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
     
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -444,6 +444,7 @@ mfix::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
 					BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*f_gds[lev])[mfi]),
 					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+                                        BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
 					&dt );
     }
 }

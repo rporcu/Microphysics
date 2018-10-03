@@ -142,18 +142,18 @@ extern "C"
 
    void add_forcing (
       const int* lo, const int* hi,
-      amrex::Real* vel,  const int* ulo, const int* uhi,
-      const amrex::Real* drag, const int* dlo, const int* dhi,
-      const amrex::Real* ro_g, const int* slo, const int* shi,
-      const amrex::Real* rop_g,
-      const int* domlo, const int* domhi,
-      const amrex::Real* dx, const amrex::Real* dt);
+            amrex::Real* vel    , const int* ulo, const int* uhi,
+      const amrex::Real* drag   , const int* dlo, const int* dhi,
+      const amrex::Real* rop_g  , const int* slo, const int* shi,
+      const amrex::Real* volfrac, const int* vlo, const int* vhi,
+      const amrex::Real* dt);
     
    void compute_intermediate_velocity (
       const int* lo, const int* hi,
-      amrex::Real* vel,   const int* ulo, const int* uhi,
-      const amrex::Real* f_gds, const int* flo, const int* fhi,
-      const amrex::Real* rop,   const int* slo, const int* shi,
+            amrex::Real* vel,     const int* ulo, const int* uhi,
+      const amrex::Real* f_gds,   const int* flo, const int* fhi,
+      const amrex::Real* rop,     const int* slo, const int* shi,
+      const amrex::Real* volfrac, const int* vlo, const int* vhi,
       const amrex::Real* dt );
 
    void compute_bcoeff_nd (
