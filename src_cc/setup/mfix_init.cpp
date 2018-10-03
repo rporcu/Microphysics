@@ -27,6 +27,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_rtol", mg_rtol );
         pp.query( "mg_atol", mg_atol );
 
+        // Option to control approximate projection
+        pp.query("nodal_pressure", nodal_pressure);
+
         // Default bottom solver is bicgstab, but alternatives are "smoother" or "hypre"
         bottom_solver_type = "bicgstab";
         pp.query( "bottom_solver_type",  bottom_solver_type );
