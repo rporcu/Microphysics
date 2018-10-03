@@ -98,8 +98,11 @@ contains
    ! These terms include the volumetric forces and the explicit part of the
    ! particle/fluid momentum exchange
    !
-   subroutine add_forcing ( lo, hi, vel, ulo, uhi, drag, dlo, dhi, &
-        & ro_g, slo, shi, rop_g, domlo, domhi, dx, dt )  bind(C)
+   subroutine add_forcing ( lo, hi, &
+                            vel    , ulo, uhi, &
+                            drag   , dlo, dhi, &
+                            rop_g  , slo, shi, &
+                            volfrac, vlo, vhi, dt )  bind(C)
 
       use constant, only: gravity
 
@@ -110,36 +113,37 @@ contains
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3)
       integer(c_int), intent(in   ) :: dlo(3), dhi(3)
+      integer(c_int), intent(in   ) :: vlo(3), vhi(3)
 
       ! Time step width
       real(ar),       intent(in   ) :: dt
 
-      ! Domain bounds
-      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
-
-      ! Grid
-      real(ar),       intent(in   ) :: dx(3)
-
       ! Arrays
       real(ar),       intent(in   ) :: &
-           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           drag(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3)
+             rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+              drag(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3), &
+           volfrac(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       real(ar),       intent(inout) :: &
            vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
 
       ! Local variables
-      integer(c_int)                :: i, j, k , n
+      integer(c_int)                :: i, j, k
+      real(ar)                      :: orop
 
-      do n = 1, 3
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
-                  vel(i,j,k,n) = vel(i,j,k,n) + dt * ( gravity(n) + drag(i,j,k,n) / rop_g(i,j,k) )
+               ! Note that 
+               !   volfrac represents the fraction of the cell that is not covered by EB 
+               !   rop_g = ro_g * ep_g where ep_g is the fraction of the cell not covered by particles
+               orop = volfrac(i,j,k) / rop_g(i,j,k)
 
-               end do
+               vel(i,j,k,1) = vel(i,j,k,1) + dt * ( gravity(1) + drag(i,j,k,1) * orop )
+               vel(i,j,k,2) = vel(i,j,k,2) + dt * ( gravity(2) + drag(i,j,k,2) * orop )
+               vel(i,j,k,3) = vel(i,j,k,3) + dt * ( gravity(3) + drag(i,j,k,3) * orop )
+
             end do
          end do
       end do
@@ -162,7 +166,9 @@ contains
    !    vel = vel / (A)_diagonal
    !
    subroutine compute_intermediate_velocity ( lo, hi, vel, ulo, uhi, &
-        & f_gds, flo, fhi, rop, slo, shi, dt ) bind(C)
+                                              f_gds  , flo, fhi, &
+                                              rop    , slo, shi, &
+                                              volfrac, vlo, vhi, dt ) bind(C)
 
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
@@ -171,14 +177,16 @@ contains
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3)
       integer(c_int), intent(in   ) :: flo(3), fhi(3)
+      integer(c_int), intent(in   ) :: vlo(3), vhi(3)
 
       ! Time step width
       real(ar),       intent(in   ) :: dt
 
       ! Arrays
       real(ar),       intent(in   ) :: &
-           rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           f_gds(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
+               rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+             f_gds(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3)), &
+           volfrac(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       real(ar),       intent(inout) :: &
            vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
@@ -191,7 +199,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               orop       = one / rop(i,j,k)
+               orop       = volfrac(i,j,k) / rop(i,j,k)
 
                vel(i,j,k,1) = vel(i,j,k,1) / (one + dt * f_gds(i,j,k) * orop)
                vel(i,j,k,2) = vel(i,j,k,2) / (one + dt * f_gds(i,j,k) * orop)
