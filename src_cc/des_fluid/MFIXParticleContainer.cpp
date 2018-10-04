@@ -210,7 +210,7 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
 
             void * particles  = pti.GetArrayOfStructs().data();
 
-            const auto & sfab = dynamic_cast <EBFArrayBox const&>((dummy)[pti]);
+            const auto & sfab = static_cast <EBFArrayBox const&>((dummy)[pti]);
             const auto & flag = sfab.getEBCellFlagFab();
 
             const Box & bx = pti.tilebox();
@@ -396,7 +396,7 @@ MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiF
             const int* lo = tile_box.loVect();
             const int* hi = tile_box.hiVect();
 
-            const auto& sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[mfi]);
+            const auto& sfab = static_cast <EBFArrayBox const&>((*dummy)[mfi]);
             const auto& flag = sfab.getEBCellFlagFab();
 
             if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued)
@@ -555,7 +555,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          // Only call the routine for wall collisions if we actually have walls
          if (ebfactory != NULL)
          {
-            const auto& sfab = dynamic_cast <EBFArrayBox const&>((*dummy)[pti]);
+            const auto& sfab = static_cast <EBFArrayBox const&>((*dummy)[pti]);
             const auto& flag = sfab.getEBCellFlagFab();
 
             if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)

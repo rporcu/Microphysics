@@ -21,7 +21,7 @@ void mfix::WriteEBSurface()
   // // // Deliberately didn't time this loop.
   for (MFIter mfi(mf_ba); mfi.isValid(); ++mfi) {
 
-    const auto& sfab = dynamic_cast<EBFArrayBox const&>((mf_ba)[mfi]);
+    const auto& sfab = static_cast<EBFArrayBox const&>((mf_ba)[mfi]);
     const auto& my_flag = sfab.getEBCellFlagFab();
 
     const Box& bx = mfi.validbox();
@@ -58,7 +58,7 @@ void mfix::WriteEBSurface()
   // // // Deliberately didn't time this loop.
   for (MFIter mfi(mf_ba); mfi.isValid(); ++mfi) {
 
-    const auto& sfab = dynamic_cast<EBFArrayBox const&>((mf_ba)[mfi]);
+    const auto& sfab = static_cast<EBFArrayBox const&>((mf_ba)[mfi]);
     const auto& my_flag = sfab.getEBCellFlagFab();
 
     const Box& bx = mfi.validbox();

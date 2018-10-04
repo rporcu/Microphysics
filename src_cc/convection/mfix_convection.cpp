@@ -45,7 +45,7 @@ mfix::mfix_compute_ugradu_predictor ( Vector< std::unique_ptr<MultiFab> >& conv,
             Box bx = mfi.tilebox ();
             
             // this is to check efficiently if this tile contains any eb stuff
-            const EBFArrayBox&  vel_fab = dynamic_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
+            const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
             const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
             if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
@@ -153,7 +153,7 @@ mfix::mfix_compute_ugradu_corrector ( Vector< std::unique_ptr<MultiFab> >& conv,
             Box bx = mfi.tilebox ();
 
             // this is to check efficiently if this tile contains any eb stuff
-            const EBFArrayBox&  vel_fab = dynamic_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
+            const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
             const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
             if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
@@ -242,7 +242,7 @@ mfix::mfix_compute_velocity_slopes (int lev,
        Box bx = mfi.tilebox ();
 
        // this is to check efficiently if this tile contains any eb stuff
-       const EBFArrayBox&  vel_fab = dynamic_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
+       const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
        const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
        if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
@@ -323,7 +323,7 @@ mfix::mfix_compute_velocity_at_faces ( int lev,
        Box wbx = mfi.tilebox(e_z);
        
        // this is to check efficiently if this tile contains any eb stuff
-       const EBFArrayBox&  vel_fab = dynamic_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
+       const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
        const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
        if (flags.getType(amrex::grow(bx,0)) == FabType::covered )

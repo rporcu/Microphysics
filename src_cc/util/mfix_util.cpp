@@ -119,7 +119,7 @@ mfix::mfix_compute_vort ()
           Box bx = mfi.tilebox ();
 
           // This is to check efficiently if this tile contains any eb stuff
-          const EBFArrayBox&  vel_fab = dynamic_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
+          const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
           const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::regular )

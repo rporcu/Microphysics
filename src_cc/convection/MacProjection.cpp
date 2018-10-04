@@ -414,7 +414,7 @@ MacProjection::compute_b_coeff ( const Vector< std::unique_ptr<MultiFab> >& u,
       Box wbx = mfi.tilebox(e_z);
 
       // this is to check efficiently if this tile contains any eb stuff
-      const EBFArrayBox&  div_fab = dynamic_cast<EBFArrayBox const&>((*m_diveu[lev])[mfi]);
+      const EBFArrayBox&  div_fab = static_cast<EBFArrayBox const&>((*m_diveu[lev])[mfi]);
       const EBCellFlagFab&  flags = div_fab.getEBCellFlagFab();
 
       if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
