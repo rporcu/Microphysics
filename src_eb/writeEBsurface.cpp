@@ -2,7 +2,7 @@
 #include <mfix.H>
 #include <mfix_eb_F.H>
 
-void mfix::WriteEBSurface() 
+void mfix::WriteEBSurface()
 {
   if (Geom(0).isAllPeriodic()) return;
 
@@ -16,7 +16,7 @@ void mfix::WriteEBSurface()
   // This creates the associated Distribution Mapping
   // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
-  MultiFab mf_ba(ba, dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+  MultiFab mf_ba(ba, dmap[lev], 1, 0, MFInfo(), * particle_ebfactory[lev]);
 
   // // // Deliberately didn't time this loop.
   for (MFIter mfi(mf_ba); mfi.isValid(); ++mfi) {
@@ -31,8 +31,8 @@ void mfix::WriteEBSurface()
     std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
     const MultiCutFab* bndrycent;
 
-    areafrac  =  ebfactory[lev]->getAreaFrac();
-    bndrycent = &(ebfactory[lev]->getBndryCent());
+    areafrac  =  particle_ebfactory[lev]->getAreaFrac();
+    bndrycent = &(particle_ebfactory[lev]->getBndryCent());
 
     mfix_eb_to_polygon(dx, bx.loVect(), bx.hiVect(),
          my_flag.dataPtr(), my_flag.loVect(), my_flag.hiVect(),
@@ -69,4 +69,3 @@ void mfix::WriteEBSurface()
          my_flag.dataPtr(), my_flag.loVect(), my_flag.hiVect());
   }
 }
-
