@@ -82,6 +82,7 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
 	//
 	// Time integration step
 	//
+        Real new_time = time+dt;
 	
 	// Calculate drag coefficient
 	if (solve_dem)
@@ -92,7 +93,7 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
         mfix_apply_predictor ( conv_old, divtau_old, time, dt, proj_2_pred );
 
         // Print info about predictor step
-        amrex::Print() << "\nAfter predictor step:\n";
+        amrex::Print() << "\nAfter predictor step at time " << new_time << std::endl;
         for (int lev = 0; lev < nlev; lev++)
     	    mfix_print_max_vel (lev);
 
@@ -110,14 +111,14 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
 	mfix_apply_corrector ( conv_old, divtau_old, time, dt, proj_2_corr );
 
         // Print info about corrector step
-        amrex::Print() << "\nAfter corrector step:\n";
+        amrex::Print() << "\nAfter corrector step at time " << new_time << std::endl;
         for (int lev = 0; lev < nlev; lev++)
     	    mfix_print_max_vel (lev);
 
- 	mfix_compute_diveu (time);
+ 	mfix_compute_diveu (new_time);
 
         for (int lev = 0; lev < nlev; lev++)
-	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
+	    amrex::Print() << "  max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
 	    
 	// 
         // Check whether to exit the loop or not
@@ -210,6 +211,9 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
        // Replace vel_g by the original values 
        for (int lev = 0; lev < nlev; lev++)
           MultiFab::Copy (*vel_g[lev], *vel_go[lev], 0, 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow());
+
+       // Reset the boundary values (necessary if they are time-dependent)
+       mfix_set_velocity_bcs (time, 0);
    }
 }
 

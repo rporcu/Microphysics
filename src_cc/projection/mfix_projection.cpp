@@ -99,8 +99,9 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     fluxes.resize(nlev);
     for (int lev = 0; lev < nlev; lev++)
     {
+        // We don't need more than 1 ghost cell in fluxes so no need to make it bigger
         fluxes[lev].reset(new MultiFab(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),
-                                       vel_g[lev]->nComp(), vel_g[lev]->nGrow(), MFInfo(),
+                                       vel_g[lev]->nComp(), 1, MFInfo(),
                                        *ebfactory[lev]));
 
         fluxes[lev]->setVal(1.e200);
