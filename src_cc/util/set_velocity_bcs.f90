@@ -1,7 +1,7 @@
 !              
 !  This subroutine sets the BCs for the velocity components only.
 ! 
-subroutine set_velocity_bcs ( vel, ulo, uhi, &
+subroutine set_velocity_bcs ( time, vel, ulo, uhi, &
      & bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi, &
      & domlo, domhi, ng, extrap_dir_bcs ) bind(C) 
 
@@ -11,6 +11,9 @@ subroutine set_velocity_bcs ( vel, ulo, uhi, &
    use bc
    
    implicit none
+
+   ! Time (necessary if we have time-dependent boundary conditions)
+   real(ar),      intent(in   ) :: time 
 
    ! Array bounds
    integer(c_int), intent(in   ) :: ulo(3), uhi(3)
@@ -47,6 +50,8 @@ subroutine set_velocity_bcs ( vel, ulo, uhi, &
    nrgt = max(0,uhi(1)-domhi(1))
    ntop = max(0,uhi(2)-domhi(2))
    nup  = max(0,uhi(3)-domhi(3))
+
+   call usr1(time)
 
    if (nlft .gt. 0) then
       do k = ulo(3), uhi(3)

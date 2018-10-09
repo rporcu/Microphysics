@@ -8,7 +8,8 @@
 //
 void
 mfix::mfix_compute_ugradu_predictor ( Vector< std::unique_ptr<MultiFab> >& conv, 
-                                      Vector< std::unique_ptr<MultiFab> >& vel) 
+                                      Vector< std::unique_ptr<MultiFab> >& vel,
+				      Real time)
 {
     BL_PROFILE("mfix::mfix_compute_ugradu");
 
@@ -19,7 +20,7 @@ mfix::mfix_compute_ugradu_predictor ( Vector< std::unique_ptr<MultiFab> >& conv,
     }
 
     // Do projection on all AMR levels in one shot 
-    mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g );
+    mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, time );
 
     for (int lev=0; lev < nlev; ++lev)
     {
@@ -117,7 +118,8 @@ mfix::mfix_compute_ugradu_predictor ( Vector< std::unique_ptr<MultiFab> >& conv,
 //
 void
 mfix::mfix_compute_ugradu_corrector ( Vector< std::unique_ptr<MultiFab> >& conv, 
-				      Vector< std::unique_ptr<MultiFab> >& vel) 
+				      Vector< std::unique_ptr<MultiFab> >& vel,
+				      Real time)
 {
     BL_PROFILE("mfix::mfix_compute_ugradu");
 
@@ -127,7 +129,7 @@ mfix::mfix_compute_ugradu_corrector ( Vector< std::unique_ptr<MultiFab> >& conv,
         mfix_compute_velocity_slopes( lev, vel );
     }
 
-    mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g );
+    mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, time );
 
     for (int lev=0; lev < nlev; ++lev)
     {

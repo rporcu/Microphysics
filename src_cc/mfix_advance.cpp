@@ -28,7 +28,7 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
     }
 
     // Fill ghost nodes and reimpose boundary conditions
-    mfix_set_velocity_bcs (0);
+    mfix_set_velocity_bcs (time, 0);
     mfix_set_scalar_bcs ();
 
     //
@@ -85,36 +85,36 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
 	
 	// Calculate drag coefficient
 	if (solve_dem)
-	    mfix_calc_drag_fluid();
+	    mfix_calc_drag_fluid(time);
 
         // Predictor step 
         bool proj_2_pred = true;
-        mfix_apply_predictor ( conv_old, divtau_old, dt, proj_2_pred );
+        mfix_apply_predictor ( conv_old, divtau_old, time, dt, proj_2_pred );
 
         // Print info about predictor step
         amrex::Print() << "\nAfter predictor step:\n";
         for (int lev = 0; lev < nlev; lev++)
     	    mfix_print_max_vel (lev);
 
-        mfix_compute_diveu();
+        mfix_compute_diveu(time);
 
         for (int lev = 0; lev < nlev; lev++)
 	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
 
 	// Calculate drag coefficient
 	if (solve_dem)
-	    mfix_calc_drag_fluid();
+	    mfix_calc_drag_fluid(time);
 	
 	// Corrector step 
         bool proj_2_corr = true;
-	mfix_apply_corrector ( conv_old, divtau_old, dt, proj_2_corr );
+	mfix_apply_corrector ( conv_old, divtau_old, time, dt, proj_2_corr );
 
         // Print info about corrector step
         amrex::Print() << "\nAfter corrector step:\n";
         for (int lev = 0; lev < nlev; lev++)
     	    mfix_print_max_vel (lev);
 
- 	mfix_compute_diveu ();
+ 	mfix_compute_diveu (time);
 
         for (int lev = 0; lev < nlev; lev++)
 	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
@@ -150,7 +150,8 @@ mfix::mfix_project_velocity ()
     mac_projection->update_internals();
 
     bool proj_2 = true;
-    mfix_apply_projection ( dummy_dt, proj_2 );
+    Real time = 0.0;
+    mfix_apply_projection ( time, dummy_dt, proj_2 );
 
    // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
    for (int lev = 0; lev < nlev; lev++)
@@ -171,7 +172,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
 
    // Fill ghost cells
    mfix_set_scalar_bcs ();
-   mfix_set_velocity_bcs (0);
+   mfix_set_velocity_bcs (time, 0);
 
    // Copy vel_g into vel_go
    for (int lev = 0; lev < nlev; lev++)
@@ -204,7 +205,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
           MultiFab divtau(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
        } 
 
-       mfix_apply_predictor (conv, divtau, dt, proj_2);
+       mfix_apply_predictor (conv, divtau, time, dt, proj_2);
 
        // Replace vel_g by the original values 
        for (int lev = 0; lev < nlev; lev++)
@@ -244,10 +245,13 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
 void
 mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 	                    Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                            Real dt, bool proj_2)
+                            Real time, Real dt, bool proj_2)
 {
+    // We use the new-time value for things computed on the "*" state
+    Real new_time = time + dt;
+
     // Compute the explicit advective term R_u^n
-    mfix_compute_ugradu_predictor( conv_old, vel_go );
+    mfix_compute_ugradu_predictor( conv_old, vel_go, time );
     
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -280,7 +284,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
-        mfix_diffuse_velocity(dt);
+        mfix_diffuse_velocity(new_time,dt);
 
     // Add the drag term implicitly
     if (solve_dem)
@@ -288,7 +292,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
             mfix_compute_intermediate_velocity ( lev, dt );
  
     // Project velocity field
-    mfix_apply_projection ( dt, proj_2 );
+    mfix_apply_projection ( new_time, dt, proj_2 );
 }
 
 //
@@ -325,29 +329,32 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 void
 mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 	                    Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                            Real dt, bool proj_2)
+                            Real time, Real dt, bool proj_2)
 {
-   BL_PROFILE("mfix::mfix_apply_corrector");
+    BL_PROFILE("mfix::mfix_apply_corrector");
 
-   // Create temporary multifabs to hold the old-time conv and divtau
-   //    so we don't have to re-compute them in the corrector
-   Vector<std::unique_ptr<MultiFab> > conv;
-   Vector<std::unique_ptr<MultiFab> > divtau;
+    // We use the new-time value for things computed on the "*" state
+    Real new_time = time + dt;
 
-     conv.resize(nlev);
-   divtau.resize(nlev);
+    // Create temporary multifabs to hold the old-time conv and divtau
+    //    so we don't have to re-compute them in the corrector
+    Vector<std::unique_ptr<MultiFab> > conv;
+    Vector<std::unique_ptr<MultiFab> > divtau;
 
-   for (int lev = 0; lev < nlev; lev++)
-   {
-        conv[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
-      divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
-   }
+      conv.resize(nlev);
+    divtau.resize(nlev);
 
-   // Compute the explicit advective term R_u^*
-   mfix_compute_ugradu_corrector( conv, vel_g );
+    for (int lev = 0; lev < nlev; lev++)
+    {
+         conv[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
+       divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
+    }
+ 
+    // Compute the explicit advective term R_u^*
+    mfix_compute_ugradu_corrector( conv, vel_g, new_time );
 
-   for (int lev = 0; lev < nlev; lev++)
-   {
+    for (int lev = 0; lev < nlev; lev++)
+    {
       // If explicit_diffusion == true  then we compute the full diffusive terms here
       // If explicit_diffusion == false then we compute only the off-diagonal terms here
       mfix_compute_divtau( lev, *divtau[lev], vel_g);
@@ -374,20 +381,20 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 
       // Convert momenta back to velocities
       for (int n = 0; n < 3; n++)
-         MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
-   }
+          MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+    }
 
-   // If doing implicit diffusion, solve here for u^*
-   if (!explicit_diffusion)
-      mfix_diffuse_velocity(dt);
- 
-   // Compute intermediate velocity if drag terms present
-   if (solve_dem)
-      for (int lev = 0; lev < nlev; lev++)
-         mfix_compute_intermediate_velocity (lev, dt);
- 
-   // Apply projection
-   mfix_apply_projection (dt, proj_2);
+    // If doing implicit diffusion, solve here for u^*
+    if (!explicit_diffusion)
+       mfix_diffuse_velocity(new_time,dt);
+  
+    // Compute intermediate velocity if drag terms present
+    if (solve_dem)
+       for (int lev = 0; lev < nlev; lev++)
+          mfix_compute_intermediate_velocity (lev, dt);
+  
+    // Apply projection
+    mfix_apply_projection (new_time, dt, proj_2);
 }
 
 void
@@ -467,7 +474,8 @@ mfix::steady_state_reached (Real dt)
     int condition1[nlev];
     int condition2[nlev];
 
-    mfix_set_velocity_bcs (0);
+    Real time = 0.;
+    mfix_set_velocity_bcs (time, 0);
 
     //
     // Make sure velocity is up to date

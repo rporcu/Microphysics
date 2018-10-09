@@ -17,7 +17,7 @@
 // Compute div(ep_g * u)
 // 
 void
-mfix::mfix_compute_diveu ()
+mfix::mfix_compute_diveu (Real time)
 {
     if (nodal_pressure == 1)
     {
@@ -88,7 +88,7 @@ mfix::mfix_compute_diveu ()
     {
 
        int extrap_dir_bcs = 1;
-       mfix_set_velocity_bcs (extrap_dir_bcs);
+       mfix_set_velocity_bcs (time, extrap_dir_bcs);
 
        for (int lev = 0; lev < nlev; lev++)
        {
@@ -115,5 +115,5 @@ mfix::mfix_compute_diveu ()
 
     // Restore velocities to carry Dirichlet values on faces
     int extrap_dir_bcs = 0;
-    mfix_set_velocity_bcs (extrap_dir_bcs);
+    mfix_set_velocity_bcs (time, extrap_dir_bcs);
 }

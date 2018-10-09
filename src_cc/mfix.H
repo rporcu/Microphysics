@@ -148,16 +148,16 @@ protected:
 
     void mfix_project_velocity   ();
     void mfix_initial_iterations ( amrex::Real dt, amrex::Real stop_time, int steady_state );
-    void mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 );
+    void mfix_apply_projection   ( amrex::Real dt, amrex::Real scaling_factor, bool proj_2 );
 
     void mfix_set_scalar_bcs ();
-    void mfix_set_velocity_bcs (int extrap_dir_bcs);
+    void mfix_set_velocity_bcs (amrex::Real time, int extrap_dir_bcs);
 
     void FillPatch (int lev, MultiFab& mf, MultiFab& cmf, MultiFab& fmf, int icomp, int ncomp);
 
     void mfix_calc_volume_fraction(Real& sum_vol);
-    void mfix_calc_drag_fluid();
-    void mfix_calc_drag_particle();
+    void mfix_calc_drag_fluid(amrex::Real time);
+    void mfix_calc_drag_particle(amrex::Real time);
 
     void AllocateArrays (int lev);
 
@@ -217,10 +217,12 @@ private:
     void mfix_compute_dt(amrex::Real time, amrex::Real stop_time, int steady_state, amrex::Real& dt);
 
     void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv,
-                                       Vector< std::unique_ptr<MultiFab> >& vel);
+                                       Vector< std::unique_ptr<MultiFab> >& vel,
+                                       amrex::Real time);
     
     void mfix_compute_ugradu_corrector(Vector< std::unique_ptr<MultiFab> >& conv,
-                                       Vector< std::unique_ptr<MultiFab> >& vel);
+                                       Vector< std::unique_ptr<MultiFab> >& vel,
+                                       amrex::Real time);
     
     void mfix_compute_divtau(int lev, amrex::MultiFab& divtau, Vector< std::unique_ptr<MultiFab> >& vel);
 
@@ -228,12 +230,12 @@ private:
 
     void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_old,
                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                              amrex::Real dt, bool proj_2);
+                              amrex::Real time, amrex::Real dt, bool proj_2);
     void mfix_apply_corrector(Vector< std::unique_ptr<MultiFab> >& conv_old,
                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                              amrex::Real dt, bool proj_2);
+                              amrex::Real time, amrex::Real dt, bool proj_2);
 
-    void mfix_diffuse_velocity(amrex::Real dt);
+    void mfix_diffuse_velocity(amrex::Real time, amrex::Real dt);
 
     void mfix_compute_intermediate_velocity (int lev, amrex::Real dt);
 
@@ -241,7 +243,7 @@ private:
     void mfix_compute_velocity_slopes(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
     void mfix_compute_velocity_at_faces (int lev, Vector< std::unique_ptr<MultiFab> >& vel);
 
-    void mfix_compute_diveu ();
+    void mfix_compute_diveu (amrex::Real time);
 
     void mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p);
 

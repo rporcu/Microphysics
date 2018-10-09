@@ -30,7 +30,7 @@
 //
 //     new p_g  = old p_g + phi
 void 
-mfix::mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 )
+mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool proj_2 )
 {
     BL_PROFILE("mfix::mfix_apply_projection");
 
@@ -51,9 +51,9 @@ mfix::mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 )
         vel_g[lev] -> FillBoundary(geom[lev].periodicity());
 
     // Swap ghost cells and apply BCs to velocity
-    mfix_set_velocity_bcs(0);
+    mfix_set_velocity_bcs(time, 0);
 
-    mfix_compute_diveu();
+    mfix_compute_diveu(time);
 
     // Print info about predictor step
     for (int lev = 0; lev < nlev; lev++)
@@ -78,10 +78,10 @@ mfix::mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 )
         }
     }
 
-    mfix_set_velocity_bcs (0);
+    mfix_set_velocity_bcs (time, 0);
 
     // Compute right hand side, AKA div(ep_g* u) / dt
-    mfix_compute_diveu();
+    mfix_compute_diveu(time);
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -148,9 +148,9 @@ mfix::mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 )
     }
 
     // Swap ghost cells and apply BCs to velocity
-    mfix_set_velocity_bcs (0);
+    mfix_set_velocity_bcs (time, 0);
 
-    mfix_compute_diveu();
+    mfix_compute_diveu(time);
 
     for (int lev = 0; lev < nlev; lev++)
     {

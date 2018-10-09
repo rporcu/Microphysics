@@ -7,7 +7,7 @@
 !  Date: December 20, 2017
 !
 ! 
-subroutine set_mac_velocity_bcs ( slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
      & bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,               &
      & domlo, domhi, ng ) bind(C) 
 
@@ -16,6 +16,9 @@ subroutine set_mac_velocity_bcs ( slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, w_g, w
    use bc
 
    implicit none
+
+   ! Time (necesary if we have time-dependent boundary conditions)
+   real(ar),      intent(in   ) ::  time
 
    ! Array bounds
    integer(c_int), intent(in   ) :: slo(3), shi(3)
@@ -55,6 +58,8 @@ subroutine set_mac_velocity_bcs ( slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, w_g, w
    nrgt = max(0,shi(1)-domhi(1))
    ntop = max(0,shi(2)-domhi(2))
    nup  = max(0,shi(3)-domhi(3))
+
+   call usr1(time)
    
    if (nlft .gt. 0) then
       do k = slo(3), shi(3)

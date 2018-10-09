@@ -37,7 +37,7 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
     
     // This returns the drag force on the particle
     if (solve_dem && solve_fluid)
-       mfix_calc_drag_particle();
+       mfix_calc_drag_particle(time);
 
     Real end_fluid = ParallelDescriptor::second() - start_fluid;
     ParallelDescriptor::ReduceRealMax(end_fluid, ParallelDescriptor::IOProcessorNumber());

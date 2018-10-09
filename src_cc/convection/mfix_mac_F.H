@@ -82,6 +82,7 @@ extern "C"
         );
    
     void set_mac_velocity_bcs( 
+        amrex::Real* time, 
         const int* slo, const int* shi,
         amrex::Real* u_g,  const int* ulo, const int* uhi,
         amrex::Real* v_g,  const int* vlo, const int* vhi,
