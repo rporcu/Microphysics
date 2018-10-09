@@ -1,4 +1,3 @@
-#include <AMReX_ParmParse.H>
 #include <mfix_mac_F.H>
 #include <mfix_proj_F.H>
 #include <mfix_F.H>
@@ -447,95 +446,6 @@ mfix::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
                                         BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
 					&dt );
     }
-}
-
-
-//
-// Compute div(ep_g * u)
-// 
-void
-mfix::mfix_compute_diveu ()
-{
-
-#if 0
-    if (nodal_pressure == 1)
-    {
-
-       // Create a temporary multifab to hold (ep_g * vel_g)
-       MultiFab vec(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(), vel_g[lev]->nComp(), vel_g[lev]->nGrow());
-
-       // Fill it with (ep_g * vel_g)
-       vec.copy(*vel_g[lev],0,0,vel_g[lev]->nComp(),vel_g[lev]->nGrow(),vel_g[lev]->nGrow());
-       for (int n = 0; n < 3; n++)
-          MultiFab::Multiply(vec,(*ep_g[lev]),0,n,1,1);
-
-       Box domain(geom[lev].Domain());
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-      // Extrapolate Dirichlet values to ghost cells -- but do it differently in that 
-      //  no-slip walls are treated exactly like slip walls -- this is only relevant
-      //  when going into the projection
-      for (MFIter mfi(vec, true); mfi.isValid(); ++mfi)
-        {
-          set_vec_bcs ( BL_TO_FORTRAN_ANYD(vec[mfi]),
-                        bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                        bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                        bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                        domain.loVect(), domain.hiVect(),
-                        &nghost);
-        }
-
-        vec.FillBoundary (geom[lev].periodicity());
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-       for (MFIter mfi(*diveu[lev],true); mfi.isValid(); ++mfi)
-       {
-           // Note: this box is nodal!
-	   const Box& bx = mfi.tilebox();
-	
-	   compute_diveund ( BL_TO_FORTRAN_BOX(bx),
-			     BL_TO_FORTRAN_ANYD((*diveu[lev])[mfi]),
-			     BL_TO_FORTRAN_ANYD(vec[mfi]),
-	                     geom[lev].CellSize());
-       }
-
-    }
-    else
-#endif
-    {
-       int extrap_dir_bcs = 1;
-       mfix_set_velocity_bcs (extrap_dir_bcs);
-
-       for (int lev = 0; lev < nlev; lev++)
-       {
-
-          Box domain(geom[lev].Domain());
-          vel_g[lev]->FillBoundary (geom[lev].periodicity());     
-
-          // Create face centered multifabs for ep_g and vel_g
-          MultiFab epu( vel_g[lev]->boxArray(),  vel_g[lev]-> DistributionMap(),
-                        vel_g[lev]->nComp(), nghost, MFInfo(), *ebfactory[lev]);
-
-          MultiFab::Copy( epu, *vel_g[lev], 0, 0, 3, vel_g[lev]->nGrow() );
-   
-          for (int n = 0; n < 3; n++)
-             MultiFab::Multiply( epu, *ep_g[lev], 0, n, 1, vel_g[lev]->nGrow() );
-
-          Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM> epu_fc;
-          mfix_average_cc_to_fc( lev, epu, epu_fc );
-   
-          // This does not need to have correct ghost values in place
-          EB_computeDivergence( *diveu[lev], GetArrOfConstPtrs(epu_fc), geom[lev] );
-       }
-    }
-
-    // Restore velocities to carry Dirichlet values on faces
-    int extrap_dir_bcs = 0;
-    mfix_set_velocity_bcs (extrap_dir_bcs);
 }
 
 //

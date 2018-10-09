@@ -10,7 +10,6 @@
 
 // For multigrid
 #include <AMReX_MLMG.H>
-// #include <AMReX_MLABecLaplacian.H>
 #include <AMReX_MLEBABecLap.H>
 #include <AMReX_MLNodeLaplacian.H>
 
@@ -112,7 +111,7 @@ mfix::mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 )
  
     for (int lev = 0; lev < nlev; lev++)
     {
-        // Correct the velocity field
+        // The fluxes currently hold MINUS (ep_g/rho) * grad(phi) so we divide by ep_g
         MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 0, 1, 0 );
         MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 1, 1, 0 );
         MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 2, 1, 0 );
@@ -121,11 +120,15 @@ mfix::mfix_apply_projection ( amrex::Real scaling_factor, bool proj_2 )
         // NOTE: THE SIGN OF DT (scaling_factor) IS CORRECT HERE
         //
         amrex::Print() << "Multiplying fluxes at level " << lev << " by dt " << scaling_factor << std::endl;
+
+        // The fluxes currently hold MINUS (1/rho) * grad(phi) so we multiply by dt
         fluxes[lev]->mult( scaling_factor, fluxes[lev]->nGrow() );
+
+        // Now we correct the velocity with MINUS dt * (1/rho) * grad(phi),
         MultiFab::Add( *vel_g[lev], *fluxes[lev], 0, 0, 3, 0);
 
-        // After using the fluxes, which currently hold MINUS dt * (1/rho) * grad(phi),
-        //    to modify the velocity field,  convert them to hold grad(phi)
+        // The fluxes currently hold MINUS dt * (1/rho) * grad(phi), 
+        // so now we multiply by rho and divide by (-dt) to get grad(phi)
         fluxes[lev]->mult ( -1/scaling_factor, fluxes[lev]->nGrow() );
         for (int n = 0; n < 3; n++)
             MultiFab::Multiply(*fluxes[lev],(*ro_g[lev]),0,n,1,fluxes[lev]->nGrow());
@@ -174,7 +177,6 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
     
     if (nodal_pressure == 1)
     {
-#if 0
 
         // 
         // First define the matrix (operator).
@@ -189,12 +191,16 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
         matrix.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
                              {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
 
-        matrix.setSigma(0, *(b[lev][0]));
         matrix.setCoarseningStrategy(MLNodeLaplacian::CoarseningStrategy::Sigma);
 
-        // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
-        this_phi[lev]->setVal(0.);
-        matrix.setLevelBC ( lev, GetVecOfConstPtrs(this_phi)[lev] );
+        for (int lev = 0; lev < nlev; lev++)
+        {
+           matrix.setSigma(0, *(b[lev][0]));
+
+           // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
+           this_phi[lev]->setVal(0.);
+           matrix.setLevelBC ( lev, GetVecOfConstPtrs(this_phi)[lev] );
+        }
 
         // 
         // Then setup the solver ----------------------
@@ -211,9 +217,8 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
         // Finally, solve the system
         //
         solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
+        solver.getFluxes( amrex::GetVecOfPtrs(fluxes) );
 
-        this_phi[lev] -> FillBoundary (geom[lev].periodicity());
-#endif
     } else {
 
         // 
@@ -292,10 +297,10 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
         //
         solver.solve( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
         solver.getFluxes( amrex::GetVecOfPtrs(fluxes), MLMG::Location::CellCenter );
-        
-        for (int lev = 0; lev < nlev; lev++)
-            this_phi[lev] -> FillBoundary(geom[lev].periodicity());
     }
+        
+    for (int lev = 0; lev < nlev; lev++)
+       this_phi[lev] -> FillBoundary(geom[lev].periodicity());
 }
 
 //
