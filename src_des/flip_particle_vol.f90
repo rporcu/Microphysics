@@ -182,9 +182,12 @@ subroutine cap_eps(slo, shi, ep_g)  bind(C, name="mfix_cap_eps")
 !--------------------------------------------------------------------//
   integer(c_int) :: i,j,k
 
-  real(rt), parameter :: max_pack = 0.42_rt
+! real(rt), parameter :: max_pack = 0.42_rt
+  real(rt), parameter :: max_pack = 0.21_rt
 
 !--------------------------------------------------------------------//
+
+  return
 
   if(amrex_pd_ioprocessor()) write(*,*) 'WARNING: Applying maximum &
        &packing volume fraction: ', max_pack

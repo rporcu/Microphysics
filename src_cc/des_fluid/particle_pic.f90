@@ -83,17 +83,14 @@ contains
     real(amrex_real) lx, ly, lz, pbeta, pvel(3)
     real(amrex_real) inv_dx(3)
 
-    logical, parameter :: no_interpolation = .true.
-
+    logical, parameter :: no_interpolation = .false.
 
     if(no_interpolation .and. amrex_pd_ioprocessor()) &
          write(*,*) 'WARNING: No interpolation of drag force grid deposition'
 
-
     inv_dx = 1.0d0/dx
 
-
-    if(no_interpolation) then
+    if (no_interpolation) then
 
        do n = 1, np
 
@@ -117,7 +114,6 @@ contains
     else
 
     do n = 1, np
-
 
        lx = (particles(1, n) - plo(1))*inv_dx(1) + 0.5d0
        ly = (particles(2, n) - plo(2))*inv_dx(2) + 0.5d0
