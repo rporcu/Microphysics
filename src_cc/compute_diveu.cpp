@@ -24,21 +24,26 @@ mfix::mfix_compute_diveu (Real time)
         Vector<std::unique_ptr<MultiFab> > epu;
         epu.resize(nlev);
 
+        int extrap_dir_bcs = 0;
+        mfix_set_velocity_bcs (time, extrap_dir_bcs);
+
         for (int lev = 0; lev < nlev; lev++)
         {
+            // We only need one ghost cell here -- so no need to make it bigger
             epu[lev].reset(new MultiFab(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),
-                                        vel_g[lev]->nComp()   , vel_g[lev]->nGrow(), MFInfo(),
+                                        vel_g[lev]->nComp()   , 1 , MFInfo(),
                                         *ebfactory[lev]));
 
             epu[lev]->setVal(1.e200);
 
             Box domain(geom[lev].Domain());
-            vel_g[lev]->FillBoundary (geom[lev].periodicity());     
 
-            MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, vel_g[lev]->nGrow() );
+            MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow() );
    
             for (int n = 0; n < 3; n++)
-                MultiFab::Multiply( *epu[lev], *ep_g[lev], 0, n, 1, vel_g[lev]->nGrow() );
+                MultiFab::Multiply( *epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow() );
+
+            epu[lev]->FillBoundary (geom[lev].periodicity());     
 
 #ifdef _OPENMP
 #pragma omp parallel

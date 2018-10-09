@@ -149,7 +149,6 @@ contains
                   &  -vel(i  ,j-1,k-1,3) - vel(i-1,j-1,k-1,3) )
 
              divu(i,j,k) = ( du*idx + dv*idy + dw*idz ) * q4
-!            if (i.le.1) print *,'DIVU ', i,j,k, divu(i,j,k)
 
           end do
        end do
@@ -245,20 +244,6 @@ contains
              dv = vel(i,j,k,2) - vel(i-1,j,k,2)
 
              txy_w = mu_w * ( du*idy + dv*idx )
-              if (i.eq.0 .and. j.eq.0 .and. k.eq.2) then
-                 print *,'BAD TXY_W  ', du
-                 print *,'VEL AT I  :  ',&
-                      vel(i  ,j,k,1) , vel(i  ,j+1,k,1) , vel(i  ,j-1,k,1) , vel(i  ,j  ,k,1)
-                 print *,'VEL AT I-1:  ',&
-                      vel(i-1,j,k,1) , vel(i-1,j+1,k,1) , vel(i-1,j-1,k,1) , vel(i-1,j  ,k,1)
-              end if
-              if (i.eq.0 .and. j.eq.1 .and. k.eq.2) then
-                 print *,'GOOD TXY_W  ', du
-                 print *,'VEL AT I  :  ',&
-                      vel(i  ,j,k,1) , vel(i  ,j+1,k,1) , vel(i  ,j-1,k,1) , vel(i  ,j  ,k,1)
-                 print *,'VEL AT I-1:  ',&
-                      vel(i-1,j,k,1) , vel(i-1,j+1,k,1) , vel(i-1,j-1,k,1) , vel(i-1,j  ,k,1)
-              end if
 
              ! Y
              tyy_n = two * mu_n * ( vel(i,j+1,k,2) - vel(i,j  ,k,2) ) * idy
@@ -290,23 +275,6 @@ contains
                   &            ( tyy_n - tyy_s ) * idy  + &
                   &            ( tyz_t - tyz_b ) * idz  + &
                   &            ( divu_n - divu_s ) * idy
-              if (i.eq.0 .and. j.eq.0 .and. k.eq.2) then
-                 print *,'BAD DIV TAU(2) ', j,k, divtau(i,j,k,2),  &
-                               ( txy_e - txy_w ) * idx  , &
-                               ( tyy_n - tyy_s ) * idy  , &
-                               ( tyz_t - tyz_b ) * idz  , &
-                               ( divu_n - divu_s ) * idy
-                 print *,'USING ', txy_e, txy_w
-              end if
-              if (i.eq.0 .and. j.eq.1 .and. k.eq.2) then
-                 print *,'GOOD DIV TAU(2) ', j,k, divtau(i,j,k,2),  &
-                               ( txy_e - txy_w ) * idx  , &
-                               ( tyy_n - tyy_s ) * idy  , &
-                               ( tyz_t - tyz_b ) * idz  , &
-                               ( divu_n - divu_s ) * idy
-                 print *,'USING ', txy_e, txy_w
-              end if
-
 
              !*************************************
              !         div(tau)_z
@@ -351,11 +319,6 @@ contains
              ! Div term
              divu_t = lambda_t * ( divu(i,j,k+1) + divu(i+1,j,k+1) + divu(i+1,j+1,k+1) + divu(i,j+1,k+1) ) * q4
              divu_b = lambda_b * ( divu(i,j,k  ) + divu(i+1,j,k  ) + divu(i+1,j+1,k  ) + divu(i,j+1,k  ) ) * q4
-!             if (i.le.3 .and. j.eq.3 .and. k.eq.3) then
-!                print *,'DIVU T ', divu(i,j,k+1) , divu(i+1,j,k+1) , divu(i+1,j+1,k+1) , divu(i,j+1,k+1)
-!                print *,'DIVU B ', divu(i,j,k  ) , divu(i+1,j,k  ) , divu(i+1,j+1,k  ) , divu(i,j+1,k  )
-!             end if
-
 
              ! Assemble
              divtau(i,j,k,3) = ( txz_e - txz_w ) * idx  + &
@@ -379,11 +342,6 @@ contains
              !         div(tau)/rop
              !*************************************
              divtau(i,j,k,:) = divtau(i,j,k,:) / ( ep(i,j,k) * ro(i,j,k) )
-
-!             if (i.le.3 .and. j.eq.3 .and. k.eq.3) then
-!                print *,'DIV TAU ', i, vel(i-1,j,k,1), divtau(i,j,k,:) 
-!             end if
-
 
           end do
        end do
