@@ -56,7 +56,7 @@ subroutine calc_drag_particle( gp   , gplo, gphi, &
    real(rt) :: sx_hi, sy_hi, sz_hi
    real(rt) :: plo(3)
 
-   logical, parameter :: no_interpolation = .true.
+   logical, parameter :: no_interpolation = .false.
 
    if(no_interpolation .and. amrex_pd_ioprocessor()) &
         write(*,*) 'WARNING: No interpolation of particle drag force'

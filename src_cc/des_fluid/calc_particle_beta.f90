@@ -44,7 +44,9 @@ subroutine calc_particle_beta ( slo, shi, ep_g, ro_g, vel_g, mu_g, &
    real(rt) :: sx_lo, sy_lo, sz_lo
    real(rt) :: sx_hi, sy_hi, sz_hi
    real(rt) :: plo(3)
-   logical, parameter :: no_interpolation = .true.
+
+   logical, parameter :: no_interpolation = .false.
+
    !......................................................................!
 
 

@@ -4,8 +4,9 @@
 !  Purpose: Write user-defined output                                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine collect_fluid(slo, shi, lo, hi, domlo, domhi, p_g, ep_g, &
-     dx, dy, dz, sums) bind(C, name="mfix_collect_fluid")
+subroutine collect_fluid(lo, hi, domlo, domhi, &
+                         p_g, p_lo, p_hi, ep_g, s_lo, s_hi, &
+                         dx, dy, dz, sums) bind(C, name="mfix_collect_fluid")
 
   use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
@@ -19,13 +20,14 @@ subroutine collect_fluid(slo, shi, lo, hi, domlo, domhi, p_g, ep_g, &
   implicit none
 
 ! Dummy arguments ....................................................//
-  integer(c_int), intent(in   ) ::   slo(3),   shi(3)
+  integer(c_int), intent(in   ) ::  p_lo(3),  p_hi(3)
+  integer(c_int), intent(in   ) ::  s_lo(3),  s_hi(3)
   integer(c_int), intent(in   ) ::    lo(3),    hi(3)
   integer(c_int), intent(in   ) :: domlo(3), domhi(3)
 
   real(rt),   intent(in   ) ::  dx, dy, dz, &
-        p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-       ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+        p_g(p_lo(1):p_hi(1),p_lo(2):p_hi(2),p_lo(3):p_hi(3)), &
+       ep_g(s_lo(1):s_hi(1),s_lo(2):s_hi(2),s_lo(3):s_hi(3))
 
   real(rt),   intent(inout) :: sums(dim_usr,2)
 

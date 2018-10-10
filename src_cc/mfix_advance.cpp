@@ -97,14 +97,14 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
         for (int lev = 0; lev < nlev; lev++)
     	    mfix_print_max_vel (lev);
 
-        mfix_compute_diveu(time);
+        mfix_compute_diveu(new_time);
 
         for (int lev = 0; lev < nlev; lev++)
 	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
 
 	// Calculate drag coefficient
 	if (solve_dem)
-	    mfix_calc_drag_fluid(time);
+	    mfix_calc_drag_fluid(new_time);
 	
 	// Corrector step 
         bool proj_2_corr = true;
@@ -297,6 +297,8 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
  
     // Project velocity field
     mfix_apply_projection ( new_time, dt, proj_2 );
+
+    mfix_set_velocity_bcs (new_time, 0);
 }
 
 //
@@ -399,6 +401,8 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
   
     // Apply projection
     mfix_apply_projection (new_time, dt, proj_2);
+
+    mfix_set_velocity_bcs (new_time, 0);
 }
 
 void
