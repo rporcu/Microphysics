@@ -276,7 +276,6 @@ contains
                   &            ( tyz_t - tyz_b ) * idz  + &
                   &            ( divu_n - divu_s ) * idy
 
-
              !*************************************
              !         div(tau)_z
              !*************************************
@@ -320,7 +319,6 @@ contains
              ! Div term
              divu_t = lambda_t * ( divu(i,j,k+1) + divu(i+1,j,k+1) + divu(i+1,j+1,k+1) + divu(i,j+1,k+1) ) * q4
              divu_b = lambda_b * ( divu(i,j,k  ) + divu(i+1,j,k  ) + divu(i+1,j+1,k  ) + divu(i,j+1,k  ) ) * q4
-
 
              ! Assemble
              divtau(i,j,k,3) = ( txz_e - txz_w ) * idx  + &
@@ -721,96 +719,94 @@ contains
          end do
       end if
 
-      !
-      ! WHAT'S THE POINT OF THE CODE BELOW??????
-      ! 
+      ! Revisit these because when we did these before we didn't have the side values filled
+      if ( lo(1) == domlo(1) ) then
 
-      ! ! Revisit these
-      ! if ( lo(1) == domlo(1) ) then
-      !    i = lo(1)
-      !    do n = 1, 3
-      !       do k = lo(3)-1, hi(3)+1
-      !          do j = lo(2)-1, hi(2)+1
+         i = lo(1)
 
-      !             if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
-      !                  ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
-      !                  ( bc_ilo_type(j,k,1) == FSW_ )  .or. &
-      !                  ( bc_ilo_type(j,k,1) == PSW_ )  ) then
+         do n = 1, 3
+            do k = lo(3)-1, hi(3)+1
+               do j = lo(2)-1, hi(2)+1
 
-      !                vel(lo(1)-1,j,k,n) = 2.d0*vel_in(lo(1)-1,j,k,n) - vel_in(lo(1),j,k,n)
+                  if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
+                       ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
+                       ( bc_ilo_type(j,k,1) == FSW_ )  .or. &
+                         ( bc_ilo_type(j,k,1) == PSW_ )  ) then
 
-      !             end if
-      !          end do
-      !       end do
-      !    end do
-      ! end if
+                       vel(lo(1)-1,j,k,n) = 2.d0*vel_in(lo(1)-1,j,k,n) - vel_in(lo(1),j,k,n)
 
-      ! ! Revisit these
-      ! if ( hi(1) == domhi(1) ) then
+                 end if
+               end do
+            end do
+         end do
+      end if
 
-      !    i = hi(1)
+      ! Revisit these because when we did these before we didn't have the side values filled
+      if ( hi(1) == domhi(1) ) then
 
-      !    do n = 1, 3
-      !       do k = lo(3)-1, hi(3)+1
-      !          do j = lo(2)-1, hi(2)+1
+         i = hi(1)
+
+         do n = 1, 3
+            do k = lo(3)-1, hi(3)+1
+               do j = lo(2)-1, hi(2)+1
 
 
-      !             if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
-      !                  ( bc_ihi_type(j,k,1) == NSW_ )  .or. &
-      !                  ( bc_ihi_type(j,k,1) == FSW_ )  .or. &
-      !                  ( bc_ihi_type(j,k,1) == PSW_ )  ) then
+                  if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
+                       ( bc_ihi_type(j,k,1) == NSW_ )  .or. &
+                       ( bc_ihi_type(j,k,1) == FSW_ )  .or. &
+                       ( bc_ihi_type(j,k,1) == PSW_ )  ) then
 
-      !                vel(hi(1)+1,j,k,n) = 2.d0*vel_in(hi(1)+1,j,k,n) - vel_in(hi(1),j,k,n)
+                   vel(hi(1)+1,j,k,n) = 2.d0*vel_in(hi(1)+1,j,k,n) - vel_in(hi(1),j,k,n)
 
-      !             end if
-      !          end do
-      !       end do
-      !    end do
-      ! end if
+                  end if
+                 end do
+              end do
+           end do
+        end if
 
-      ! ! Revisit these
-      ! if ( lo(2) == domlo(2) ) then
+      ! Revisit these because when we did these before we didn't have the side values filled
+      if ( lo(2) == domlo(2) ) then
 
-      !    j = lo(2)
+         j = lo(2)
 
-      !    do n = 1, 3
-      !       do k = lo(3)-1, hi(3)+1
-      !          do i = lo(1)-1, hi(1)+1
+         do n = 1, 3
+            do k = lo(3)-1, hi(3)+1
+               do i = lo(1)-1, hi(1)+1
 
-      !             if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
-      !                  ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
-      !                  ( bc_jlo_type(i,k,1) == FSW_ )  .or. &
-      !                  ( bc_jlo_type(i,k,1) == PSW_ )  ) then
+                  if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
+                       ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
+                       ( bc_jlo_type(i,k,1) == FSW_ )  .or. &
+                       ( bc_jlo_type(i,k,1) == PSW_ )  ) then
 
-      !                vel(i,lo(2)-1,k,n) = 2.d0*vel_in(i,lo(2)-1,k,n) - vel_in(i,lo(2),k,n)
+                     vel(i,lo(2)-1,k,n) = 2.d0*vel_in(i,lo(2)-1,k,n) - vel_in(i,lo(2),k,n)
 
-      !             end if
-      !          end do
-      !       end do
-      !    end do
-      ! end if
+                  end if
+               end do
+            end do
+         end do
+      end if
 
-      ! ! Revisit these
-      ! if ( hi(2) == domhi(2) ) then
+      ! Revisit these because when we did these before we didn't have the side values filled
+      if ( hi(2) == domhi(2) ) then
 
-      !    j = hi(2)
+         j = hi(2)
 
-      !    do n = 1, 3
-      !       do k = lo(3)-1, hi(3)+1
-      !          do i = lo(1)-1, hi(1)+1
+         do n = 1, 3
+            do k = lo(3)-1, hi(3)+1
+               do i = lo(1)-1, hi(1)+1
 
-      !             if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
-      !                  ( bc_jhi_type(i,k,1) == NSW_ )  .or. &
-      !                  ( bc_jhi_type(i,k,1) == FSW_ )  .or. &
-      !                  ( bc_jhi_type(i,k,1) == PSW_ )  ) then
+                  if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
+                       ( bc_jhi_type(i,k,1) == NSW_ )  .or. &
+                       ( bc_jhi_type(i,k,1) == FSW_ )  .or. &
+                       ( bc_jhi_type(i,k,1) == PSW_ )  ) then
 
-      !                vel(i,hi(2)+1,k,n) = 2.d0*vel_in(i,hi(2)+1,k,n) - vel_in(i,hi(2),k,n)
+                     vel(i,hi(2)+1,k,n) = 2.d0*vel_in(i,hi(2)+1,k,n) - vel_in(i,hi(2),k,n)
 
-      !             end if
-      !          end do
-      !       end do
-      !    end do
-      ! end if
+                  end if
+               end do
+            end do
+         end do
+      end if
 
     end subroutine fill_vel_diff_bc
 

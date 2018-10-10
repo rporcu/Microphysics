@@ -29,12 +29,6 @@ extern "C"
       const amrex::Real* stop_time,
       amrex::Real*  dt);
  
-   void compute_gradp0_max (
-      const int* lo, const int* hi,
-      amrex::Real* p0_g, const int* slo, const int* shi,
-      const amrex::Real* gradp0max, const amrex::Real* dx,
-      const int* nodal_pressure);
-
    void compute_velocity_at_faces (
       const int* lo, const int* hi,
       const amrex::Real* u_mac, const int* ulo, const int* uhi, 
@@ -117,19 +111,6 @@ extern "C"
       const int* bct_jlo, const int* bct_jhi,
       const int* bct_klo, const int* bct_khi);
 
-   void compute_diveucc (
-      const int* lo,  const int*  hi,
-      amrex::Real* diveu,  const int* slo, const int* shi,
-      const amrex::Real* ep_g,
-      const amrex::Real* vel,    const int* ulo, const int* uhi,
-      const amrex::Real* dx);
-
-   void compute_diveund (
-      const int* lo,  const int*  hi,
-      amrex::Real* diveu,  const int* slo, const int* shi,
-      const amrex::Real* vec,    const int* ulo, const int* uhi,
-      const amrex::Real* dx);
-    
    void set_poisson_solver_bcs (
       const int* lo, const int* hi,
       amrex::Real* rhs, const int* slo, const int* shi,

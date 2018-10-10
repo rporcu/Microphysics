@@ -81,15 +81,8 @@ extern "C"
       const amrex::Real* dx
         );
    
-    void project_mac_velocity (
-	const int* lo, const int* hi,
-	amrex::Real* u_i, const int* ulo, const int* uhi,
-	const amrex::Real* dphidxi, const int* glo, const int* ghi,
-	const amrex::Real* ro, const int* slo, const int* shi,
-	const amrex::Real* c, const int* dir
-        );
-
     void set_mac_velocity_bcs( 
+        amrex::Real* time, 
         const int* slo, const int* shi,
         amrex::Real* u_g,  const int* ulo, const int* uhi,
         amrex::Real* v_g,  const int* vlo, const int* vhi,

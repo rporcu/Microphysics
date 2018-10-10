@@ -184,7 +184,8 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
 				  Vector< std::unique_ptr<MultiFab> >& v,
 				  Vector< std::unique_ptr<MultiFab> >& w,
 				  Vector< std::unique_ptr<MultiFab> >& ep,
-				  const Vector< std::unique_ptr<MultiFab> >& ro )
+				  const Vector< std::unique_ptr<MultiFab> >& ro,
+				  amrex::Real time)
 {
    BL_PROFILE("MacProjection::apply_projection()");
 
@@ -213,7 +214,7 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       average_cellcenter_to_face( GetArrOfPtrs(m_ep[lev]), *ep[lev], m_amrcore -> Geom(lev) );
 
       // Set velocity bcs
-      set_velocity_bcs( lev, u, v, w );
+      set_velocity_bcs( lev, u, v, w, time );
 
       // Compute ep*u at faces and store it in u, v, w
       MultiFab::Multiply( *u[lev], *(m_ep[lev][0]), 0, 0, 1, 0 );
@@ -292,7 +293,7 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       MultiFab::Divide( *w[lev], *(m_ep[lev][2]), 0, 0, 1, 0 ); 
 
       // Set velocity bcs
-      set_velocity_bcs( lev, u, v, w );
+      set_velocity_bcs( lev, u, v, w, time );
 
    }
 
@@ -307,7 +308,8 @@ void
 MacProjection::set_velocity_bcs ( int lev,
                                   Vector< std::unique_ptr<MultiFab> >& u,
                                   Vector< std::unique_ptr<MultiFab> >& v,
-                                  Vector< std::unique_ptr<MultiFab> >& w )
+                                  Vector< std::unique_ptr<MultiFab> >& w,
+                                  amrex::Real time)
 {
    BL_PROFILE("MacProjection::set_velocity_bcs()");
 
@@ -324,7 +326,7 @@ MacProjection::set_velocity_bcs ( int lev,
    {
       const Box& bx = (*m_diveu[lev])[mfi].box();
 	
-      set_mac_velocity_bcs ( bx.loVect(), bx.hiVect(),
+      set_mac_velocity_bcs ( &time, bx.loVect(), bx.hiVect(),
                              BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
                              BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
                              BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),

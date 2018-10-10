@@ -101,13 +101,13 @@ mfix::mfix_compute_divtau ( int lev,
 // Implicit diffusion
 //
 void
-mfix::mfix_diffuse_velocity (amrex::Real dt)
+mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
 
 {
    BL_PROFILE("mfix::mfix_diffuse_velocity");
 
    // Swap ghost cells and apply BCs to velocity
-   mfix_set_velocity_bcs (0);
+   mfix_set_velocity_bcs (time, 0);
 
    // The boundary conditions need only be set once -- we do this at level 0
    int bc_lo[3], bc_hi[3];
@@ -146,7 +146,7 @@ mfix::mfix_diffuse_velocity (amrex::Real dt)
    }
 
    // Swap ghost cells and apply BCs to velocity
-   mfix_set_velocity_bcs (0);
+   mfix_set_velocity_bcs (time, 0);
 }
 
 //

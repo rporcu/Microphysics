@@ -852,7 +852,6 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
             int nstride = particles.dataShape().first;
             const long nrp = pti.numParticles();
             FArrayBox& fab = (*mf_pointer)[pti];
-            const Box& box = fab.box();
             Real* data_ptr;
             const int *lo, *hi;
 #ifdef _OPENMP
@@ -865,6 +864,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
             hi = tile_box.hiVect();
 #else
             data_ptr = fab.dataPtr();
+            const Box& box = fab.box();
             lo = box.loVect();
             hi = box.hiVect();
 #endif
@@ -963,14 +963,15 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
             FArrayBox& beta_fab = (*beta_ptr)[pti];
             FArrayBox& beta_vel_fab = (*beta_vel_ptr)[pti];
 
-            const Box& bx = beta_fab.box();
-
 #ifdef _OPENMP
-            Box tilebox = pti.tilebox();
+            // Note that we actually grow the tilebox rather than calling growntilebox
+            //     because we need the overlap even in the interior.
+            Box grown_tilebox = pti.tilebox();
+            grown_tilebox.grow(1);
 
             int ncomp = BL_SPACEDIM;
-            local_x_vol.resize(tilebox,1);
-            local_u_vol.resize(tilebox,ncomp);
+            local_x_vol.resize(grown_tilebox,1);
+            local_u_vol.resize(grown_tilebox,ncomp);
 
             local_x_vol = 0.0;
             local_u_vol = 0.0;
@@ -978,11 +979,13 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
             bx_dataptr = local_x_vol.dataPtr();
             bu_dataptr = local_u_vol.dataPtr();
 
-            lo = tilebox.loVect();
-            hi = tilebox.hiVect();
+            lo = grown_tilebox.loVect();
+            hi = grown_tilebox.hiVect();
 #else
             bx_dataptr = beta_fab.dataPtr();
             bu_dataptr = beta_vel_fab.dataPtr();
+
+            const Box& bx = beta_fab.box();
 
             lo = bx.loVect();
             hi = bx.hiVect();

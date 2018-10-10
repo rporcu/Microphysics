@@ -7,7 +7,7 @@
 #include <AMReX_Box.H>
 #include <AMReX_EBMultiFabUtil.H>
 
-void mfix::mfix_calc_drag_fluid()
+void mfix::mfix_calc_drag_fluid(Real time)
 {
     BL_PROFILE("mfix::mfix_calc_drag_fluid()");
     for (int lev = 0; lev < nlev; lev++)
@@ -131,7 +131,7 @@ void mfix::mfix_calc_drag_fluid()
 }
 
 void
-mfix::mfix_calc_drag_particle()
+mfix::mfix_calc_drag_particle(Real time)
 {
     BL_PROFILE("mfix::mfix_calc_drag_particle()");
 
@@ -179,7 +179,7 @@ mfix::mfix_calc_drag_particle()
           // Extrapolate velocity Dirichlet bc's to ghost cells
           // HACK -- NOTE WE ARE CALLING THIS ON ALL LEVELS BUT ONLY NEED IT ON ONE LEVEL
           int extrap_dir_bcs = 1;
-          mfix_set_velocity_bcs(extrap_dir_bcs);
+          mfix_set_velocity_bcs(time, extrap_dir_bcs);
 
           gp_tmp.FillBoundary(geom[lev].periodicity());
 
@@ -206,7 +206,7 @@ mfix::mfix_calc_drag_particle()
           // Reset velocity Dirichlet bc's to face values
           // HACK -- NOTE WE ARE CALLING THIS ON ALL LEVELS BUT ONLY NEED IT ON ONE LEVEL
           extrap_dir_bcs = 0;
-          mfix_set_velocity_bcs(extrap_dir_bcs);
+          mfix_set_velocity_bcs(time, extrap_dir_bcs);
        }
 #if 0
        else
@@ -250,7 +250,7 @@ mfix::mfix_calc_drag_particle()
        }
 
        int extrap_dir_bcs = 1;
-       mfix_set_velocity_bcs(lev, extrap_dir_bcs);
+       mfix_set_velocity_bcs(time, extrap_dir_bcs);
 
 #ifdef _OPENMP
 #pragma omp parallel

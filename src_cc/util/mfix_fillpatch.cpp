@@ -74,7 +74,7 @@ mfix::mfix_set_scalar_bcs ()
 // Set the BCs for velocity only
 //
 void
-mfix::mfix_set_velocity_bcs (int extrap_dir_bcs)
+mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
 {
   BL_PROFILE("mfix::mfix_set_velocity_bcs()");
 
@@ -88,7 +88,8 @@ mfix::mfix_set_velocity_bcs (int extrap_dir_bcs)
 #endif
      for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi)
      {
-        set_velocity_bcs ( BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+        set_velocity_bcs ( &time, 
+                           BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
                            bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                            bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                            bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),

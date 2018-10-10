@@ -56,6 +56,7 @@ extern "C"
       const int* domlo , const int* domhi);
 
     void set_velocity_bcs (
+        amrex::Real* time, 
         amrex::Real* vel_g, const int* ulo, const int* uhi,
         const int* bc_ilo, const int* bc_ihi,
         const int* bc_jlo, const int* bc_jhi,

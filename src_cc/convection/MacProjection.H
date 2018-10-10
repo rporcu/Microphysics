@@ -38,14 +38,16 @@ public:
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& v,
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ep,
-                           const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro );
+                           const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro,
+                           amrex::Real time);
     
    void update_internals ();
 
    void set_velocity_bcs ( int lev,
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& u,
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& v,
-                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w );
+                           amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
+                           amrex::Real time);
    
 private:
 

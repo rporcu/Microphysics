@@ -825,14 +825,13 @@ mfix::WriteUSER( Real dt, Real time) const
   // Create a temporary multifab to hold (p_g + p0_g)
   std::unique_ptr<MultiFab> pg_sum(new MultiFab(
           p_g[lev]->boxArray(), p_g[lev]->DistributionMap(),
-          p_g[lev]->nComp(),    p_g[lev]->nGrow()));
+          p_g[lev]->nComp(),    0));
 
   // // Fill it with (p_g)
-  int ng = p_g[lev]->nGrow();
-  pg_sum->copy(*p_g[lev],0,0,1,ng,ng);
+  pg_sum->copy(*p_g[lev],0,0,1,0,0);
 
   // Add in p0_g
-  MultiFab::Add(*pg_sum, *p0_g[lev], 0, 0, 1, ng);
+  MultiFab::Add(*pg_sum, *p0_g[lev], 0, 0, 1, 0);
 
   // No tiling.
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
@@ -840,20 +839,18 @@ mfix::WriteUSER( Real dt, Real time) const
       const Box& sbx = (*ep_g[lev])[mfi].box();
       const Box& bx  = mfi.validbox();
 
-      mfix_collect_fluid(sbx.loVect(), sbx.hiVect(),
-                         bx.loVect(), bx.hiVect(),
+      mfix_collect_fluid(bx.loVect(), bx.hiVect(),
                          domain.loVect(), domain.hiVect(),
-                         (*pg_sum)[mfi].dataPtr(),
-                         (*ep_g[lev])[mfi].dataPtr(),
+                         BL_TO_FORTRAN_ANYD((   *pg_sum)[mfi]),
+                         BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
                          &dx, &dy, &dz, accumulator);
     }
 
   ParallelDescriptor::ReduceRealSum(accumulator,256);
 
-  if(ParallelDescriptor::IOProcessor()){
+  if (ParallelDescriptor::IOProcessor()) {
     mfix_write_fluid(domain.loVect(), domain.hiVect(),
                      &dx, &dy, &dz, &time, &dt, accumulator);
 
   }
-
 }
