@@ -183,8 +183,8 @@ mfix::mfix_calc_drag_particle(Real time)
 
           gp_tmp.FillBoundary(geom[lev].periodicity());
 
-          int use_slopes = 0;
-          if (use_slopes)
+
+          if (m_drag_interp_type == 2)
              mfix_compute_velocity_slopes( lev, vel_g );
 #ifdef _OPENMP
 #pragma omp parallel
@@ -200,7 +200,9 @@ mfix::mfix_calc_drag_particle(Real time)
                                   (*xslopes[lev])[pti].dataPtr(),
                                   (*yslopes[lev])[pti].dataPtr(),
                                   BL_TO_FORTRAN_ANYD((*zslopes[lev])[pti]),
-                                  &np, particles.data(), &dx, &dy, &dz, use_slopes);
+                                  &np, particles.data(),
+                                  geom[lev].CellSize(), geom[lev].ProbLo(),
+                                  m_drag_interp_type);
           }
 
           // Reset velocity Dirichlet bc's to face values

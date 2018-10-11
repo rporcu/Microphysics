@@ -203,11 +203,10 @@ extern "C"
             const amrex::Real* gp , const int* gplo , const int* gphi,
             const amrex::Real* gp0, const int* gp0lo, const int* gp0hi,
             const amrex::Real* vel, const int* ulo, const int* uhi,
-            const amrex::Real* xslopes, const amrex::Real* yslopes, 
-            const amrex::Real* zslopes, const int* slo, const int* shi,
-            const int* np, void* particles,
-            amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-            int use_slopes
+            const amrex::Real* xsl, const amrex::Real* ysl, 
+            const amrex::Real* zsl, const int* slo, const int* shi,
+            const int* np, void* particles, const amrex::Real* dx, 
+            const amrex::Real* x0, int interp_type
         );
 
     void physical_prop(const int* slo, const int* shi,
