@@ -1,11 +1,10 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: flip_particle_vol                                      C
+!  Subroutine: flip_particle_vol                                       C
 !                                                                      C
-!  Purpose: This subroutine does the initial setting of all boundary   C
-!  conditions. The user specifications of the boundary conditions are  C
-!  checked for veracity in various check_data/ routines:               C
-!  (e.g., check_boundary_conditions).                                  C
+!  Purpose: This subroutine is used to maintain total particle volume  C
+!           in the domain by "flipping" any volume deposited outside   C
+!           the domain back into the domain.                           C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 subroutine flip_particle_vol(slo, shi, vol, &
