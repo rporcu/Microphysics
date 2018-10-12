@@ -96,6 +96,9 @@ mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
                            domain.loVect(), domain.hiVect(),
                            &nghost, &extrap_dir_bcs );
      }
+
+     // Do this after as well as before to pick up terms that got updated in the call above
+     vel_g[lev] -> FillBoundary (geom[lev].periodicity());
   }
 }
 
