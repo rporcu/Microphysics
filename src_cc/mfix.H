@@ -219,11 +219,11 @@ private:
     void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv,
                                        Vector< std::unique_ptr<MultiFab> >& vel,
                                        amrex::Real time);
-    
+
     void mfix_compute_ugradu_corrector(Vector< std::unique_ptr<MultiFab> >& conv,
                                        Vector< std::unique_ptr<MultiFab> >& vel,
                                        amrex::Real time);
-    
+
     void mfix_compute_divtau(int lev, amrex::MultiFab& divtau, Vector< std::unique_ptr<MultiFab> >& vel);
 
     int  steady_state_reached(Real dt);
@@ -272,7 +272,7 @@ private:
                                  Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc );
 
     static int nlev;
-   
+
     Vector<int> istep = {1} ;
 
     // Particle container
@@ -451,7 +451,7 @@ private:
     const int m_eb_basic_grow_cells = nghost;
     const int m_eb_volume_grow_cells = nghost;
     const int m_eb_full_grow_cells = nghost;
- 
+
 
     int nodal_pressure = 0;
     int explicit_diffusion = 1;
@@ -488,7 +488,7 @@ private:
 
 
     void mfix_update_ebfactory (int a_lev);
-   
+
 };
 
 inline
