@@ -195,8 +195,10 @@ extern "C"
        const int* slo, const int* shi,
        amrex::Real*  ep_g, amrex::Real* ro_g,
        amrex::Real* vel_g, amrex::Real* mu_g,
+       amrex::Real* xsl,   amrex::Real*  ysl, amrex::Real* zsl,
        const int* np, void* particles,
-       amrex::Real* dx, amrex::Real* dy, amrex::Real* dz
+       const amrex::Real* x0, const amrex::Real* dx,
+       const int interp_type 
         );
 
     void calc_drag_particle(  

@@ -439,6 +439,7 @@ private:
 
     // Option to control interpolation type
     int m_drag_interp_type = 1; // 0 -> no interp, 1 -> standard interp, 2 -> slope interp 
+    int m_beta_interp_type = 1; // 0 -> no interp, 1 -> standard interp, 2 -> slope interp
     
     //
     // Here we set the number of ghost nodes of the field arrays.
