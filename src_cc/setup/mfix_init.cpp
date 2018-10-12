@@ -66,6 +66,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         } else {
           ParmParse amr_pp("amr");
           amr_pp.query("dual_grid", dual_grid);
+
+          if (dual_grid)
+              amrex::Abort("Dual grid mode is currently broken.");
         }
 
         // If subdt_io is true, des_time_loop calls output_manager
