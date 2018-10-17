@@ -437,6 +437,10 @@ private:
     vector<Real> avg_region_z_b;
     vector<Real> avg_region_z_t;
 
+    // Option to control interpolation type
+    int m_drag_interp_type = 1; // 0 -> no interp, 1 -> standard interp, 2 -> slope interp 
+    int m_beta_interp_type = 1; // 0 -> no interp, 1 -> standard interp, 2 -> slope interp
+    
     //
     // Here we set the number of ghost nodes of the field arrays.
     // Since this is  a class attribute, it will be propagated to

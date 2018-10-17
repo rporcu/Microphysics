@@ -24,6 +24,10 @@ void mfix::mfix_calc_drag_fluid(Real time)
        // ************************************************************
        // First create the beta of individual particles
        // ************************************************************
+           if (m_beta_interp_type == 2)
+               mfix_compute_velocity_slopes( lev, vel_g );
+
+           
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -37,7 +41,11 @@ void mfix::mfix_calc_drag_fluid(Real time)
                sbx.loVect(), sbx.hiVect(),
                (*ep_g[lev])[pti].dataPtr() , (*ro_g[lev])[pti].dataPtr(),
                (*vel_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
-               &np, particles.data(), &dx, &dy, &dz);
+               (*xslopes[lev])[pti].dataPtr(),
+               (*yslopes[lev])[pti].dataPtr(),
+               (*zslopes[lev])[pti].dataPtr(),
+               &np, particles.data(), geom[lev].ProbLo(), geom[lev].CellSize(),
+               m_beta_interp_type );
        }
 
        // ******************************************************************************
@@ -51,6 +59,7 @@ void mfix::mfix_calc_drag_fluid(Real time)
                              *bc_ilo[lev],*bc_ihi[lev],*bc_jlo[lev],*bc_jhi[lev],
                              *bc_klo[lev],*bc_khi[lev],nghost);
        }
+#if 0
        else
        {
 
@@ -95,7 +104,7 @@ void mfix::mfix_calc_drag_fluid(Real time)
                sbx.loVect(), sbx.hiVect(),
                (*ep_g_pba)[pti].dataPtr(), (*ro_g_pba)[pti].dataPtr(),
                (*vel_g_pba)[pti].dataPtr(),  (*mu_g_pba)[pti].dataPtr(),
-               &np, particles.data(), &dx, &dy, &dz);
+               &np, particles.data(), geom[lev].ProbLo(), geom[lev].CellSize());
        }
 
        // ******************************************************************************
@@ -116,6 +125,7 @@ void mfix::mfix_calc_drag_fluid(Real time)
        f_gds[lev] ->copy(*f_gds_pba);
 
        } // if not OnSameGrids
+#endif
 
        // The projection method uses drag to update u, not (cell_vol * u), so we must divide by vol here
        //     and we will divide by density in the update.
@@ -183,8 +193,8 @@ mfix::mfix_calc_drag_particle(Real time)
 
           gp_tmp.FillBoundary(geom[lev].periodicity());
 
-          int use_slopes = 0;
-          if (use_slopes)
+
+          if (m_drag_interp_type == 2)
              mfix_compute_velocity_slopes( lev, vel_g );
 #ifdef _OPENMP
 #pragma omp parallel
@@ -200,7 +210,9 @@ mfix::mfix_calc_drag_particle(Real time)
                                   (*xslopes[lev])[pti].dataPtr(),
                                   (*yslopes[lev])[pti].dataPtr(),
                                   BL_TO_FORTRAN_ANYD((*zslopes[lev])[pti]),
-                                  &np, particles.data(), &dx, &dy, &dz, use_slopes);
+                                  &np, particles.data(),
+                                  geom[lev].CellSize(), geom[lev].ProbLo(),
+                                  m_drag_interp_type);
           }
 
           // Reset velocity Dirichlet bc's to face values

@@ -18,7 +18,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("dt_min", dt_min );
         pp.query("dt_max", dt_max );
 
-        // Option to control MGML behavior
+        // Options to control MGML behavior
         pp.query( "mg_verbose", mg_verbose );
         pp.query( "mg_cg_verbose", mg_cg_verbose );
         pp.query( "mg_max_iter", mg_max_iter );
@@ -27,6 +27,10 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_rtol", mg_rtol );
         pp.query( "mg_atol", mg_atol );
 
+        // Options to control interpolation type
+        pp.query( "drag_interp_type", m_drag_interp_type );        
+        pp.query( "beta_interp_type", m_beta_interp_type );
+        
         // Option to control approximate projection
         pp.query("nodal_pressure", nodal_pressure);
 
@@ -63,6 +67,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         } else {
           ParmParse amr_pp("amr");
           amr_pp.query("dual_grid", dual_grid);
+
+          if (dual_grid)
+              amrex::Abort("Dual grid mode is currently broken.");
         }
 
         // If subdt_io is true, des_time_loop calls output_manager
