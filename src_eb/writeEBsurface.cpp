@@ -16,7 +16,16 @@ void mfix::WriteEBSurface()
   // This creates the associated Distribution Mapping
   // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
-  MultiFab mf_ba(ba, dmap[lev], 1, 0, MFInfo(), * particle_ebfactory[lev]);
+  const EBFArrayBoxFactory * ebf;
+
+  if (particle_ebfactory[lev] != nullptr) {
+      ebf = particle_ebfactory[lev].get();
+  } else {
+      ebf = ebfactory[lev].get();
+  }
+
+  MultiFab mf_ba(ba, dmap[lev], 1, 0, MFInfo(), * ebf);
+
 
   // // // Deliberately didn't time this loop.
   for (MFIter mfi(mf_ba); mfi.isValid(); ++mfi) {
@@ -29,10 +38,10 @@ void mfix::WriteEBSurface()
     if (my_flag.getType(bx) == FabType::covered or my_flag.getType(bx) == FabType::regular) continue;
 
     std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac;
-    const MultiCutFab* bndrycent;
+    const MultiCutFab * bndrycent;
 
-    areafrac  =  particle_ebfactory[lev]->getAreaFrac();
-    bndrycent = &(particle_ebfactory[lev]->getBndryCent());
+    areafrac  =  ebf->getAreaFrac();
+    bndrycent = &(ebf->getBndryCent());
 
     mfix_eb_to_polygon(dx, bx.loVect(), bx.hiVect(),
          my_flag.dataPtr(), my_flag.loVect(), my_flag.hiVect(),
