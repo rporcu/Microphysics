@@ -5,6 +5,7 @@ amrex.fpe_trap_invalid = 0
 
 mfix.write_user = true  # Pg and EPg volume averaging in mfix.dat
 
+mfix.nodal_pressure = 1
 
 #! Fluid solver
 #!-----------------------------------------------------------//
@@ -13,7 +14,7 @@ mfix.fixed_dt         = 0
 mfix.dt_max = 5.0e-5
 mfix.cfl = 0.5
 
-amr.stop_time = 5.0
+amr.stop_time = 0.50
 
 mfix.explicit_diffusion = 1
 
@@ -68,7 +69,7 @@ particles.max_grid_size_z =    8
 fabarray.mfiter_tile_size = 64 4 4
 
 # Particles: Maximum particle title size
-particles.tile_size = 32 4 4
+particles.tile_size = 64 4 4
 
 
 #! EB settings
@@ -103,17 +104,17 @@ amr.regrid_int         = -1
 #_______________________________________________________________________
 # IO / Checkpointing
 
-amr.par_ascii_int  = -1
-amr.par_ascii_file ="vis"
+amr.par_ascii_int  =   -1
+amr.par_ascii_file = "vis"
 
-amr.plot_int       =  50
-amr.plot_file      ="plt"
+amr.plot_int       =   50
+amr.plot_file      = "plt"
 
-amr.check_int      = 500
-amr.check_file     ="chk"
+amr.check_int      = 1000
+amr.check_file     = "chk"
 
 
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
-#amr.restart   ="res2"
+#amr.restart   ="chk150000"
