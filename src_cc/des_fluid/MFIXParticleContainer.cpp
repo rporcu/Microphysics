@@ -763,13 +763,17 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 }
 
 void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled,
+                                               const EBFArrayBoxFactory& ebfactory,
                                                IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                                IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                                                IArrayBox& bc_klo, IArrayBox& bc_khi,
-                 int nghost )
+                                               int nghost )
 {
+
+    // NOTE: ebfactory HAS to be the PARTICLE EB factory!
     int fortran_volume_comp = 5;
-    PICDeposition(mf_to_be_filled, bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
+    PICDeposition(mf_to_be_filled, ebfactory,
+                  bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
                   fortran_volume_comp,nghost);
 
     // Now define this mf = (1 - particle_vol)
@@ -796,6 +800,7 @@ void MFIXParticleContainer::CalcDragOnFluid(amrex::MultiFab& beta_mf,
 }
 
 void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
+                                          const EBFArrayBoxFactory& ebfactory,
                                           IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                           IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                                           IArrayBox& bc_klo, IArrayBox& bc_khi,
