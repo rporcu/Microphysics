@@ -12,6 +12,9 @@ typedef double amrex_particle_real;
 extern "C"
 {
 #endif
+
+    int des_continuum_coupled ();
+
     void calc_volume_fraction(
             const int*  lo, const int*  hi,
             const int* slo, const int* shi,
@@ -29,11 +32,8 @@ extern "C"
 
     void mfix_multi_deposit_cic(
             const amrex_particle_real*, int ns, int np,
-            amrex_real* mf_bx, amrex_real* mf_by, amrex_real* mf_bz,
-            amrex_real* mf_bu, amrex_real* mf_bv, amrex_real* mf_bw,
-            const int* lo_x, const int* hi_x,
-            const int* lo_y, const int* hi_y,
-            const int* lo_z, const int* hi_z,
+            amrex_real* mf_bx, amrex_real* mf_bu, 
+            const int* lo, const int* hi,
             const amrex_real* plo, const amrex_real* dx,
             const int* beta_comp, const int* beta_vel_comp
         );
@@ -50,16 +50,6 @@ extern "C"
             const void* flag, const int* fglo, const int* fghi,
             const amrex_real* normal, const int* nlo, const int* nhi,
             const amrex_real* bcent,  const int* blo, const int* bhi,
-            const amrex::Real* dx
-        );
-
-    void rm_wall_collisions(
-            void* rparticles, const int* nrp,
-            const void* flag, const int* fglo, const int* fghi,
-            const amrex_real* bcent, const int* blo, const int* bhi,
-            const amrex_real* ax, const int* axlo, const int* axhi,
-            const amrex_real* ay, const int* aylo, const int* ayhi,
-            const amrex_real* az, const int* azlo, const int* azhi,
             const amrex::Real* dx
         );
 
@@ -81,9 +71,9 @@ extern "C"
             const int* nghost
         );
 
-    void set_drag_bcs(
-            amrex::Real* drag_u, 
-            const int* dlo, const int* dhi,
+    void flip_drag_terms(
+            amrex::Real* beta  , const int* blo, const int* bhi,
+            amrex::Real* beta_u, const int* dlo, const int* dhi,
             const int* bc_ilo, const int* bc_ihi,
             const int* bc_jlo, const int* bc_jhi,
             const int* bc_klo, const int* bc_khi,
@@ -104,6 +94,8 @@ extern "C"
         );
 
     void mfix_particle_generator_prop(const int* nrp, void* particles);
+
+    void particle_get_position (void* particles, const int* nrp, amrex::Real* x, amrex::Real* y, amrex::Real* z);
 
     void des_init_time_loop(
             const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt,

@@ -227,12 +227,12 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
 //  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
 //     and explicit part of particles momentum exchange )
 //
-//     vel_g = vel_g + dt * ( g - grad(p_g+p0)/ro_g + drag_u/rop_g )
+//     vel_g = vel_g + dt * ( g - grad(p_g+p0)/ro_g )
 //
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
 //
-//     vel_g = vel_g / ( 1 + dt * f_gds/rop_g )
+//     vel_g = (vel_g + drag_u/rop_g) / ( 1 + dt * f_gds/rop_g )
 //
 //  4. Solve for phi
 //
@@ -270,8 +270,8 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
         //    off-diagonal terms if explicit_diffusion == false)
         MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
 
-        // Add the forcing terms
-        mfix_apply_forcing_terms ( lev, dt, vel_g);
+        // Add the gravitational forcing
+        mfix_add_gravity ( lev, dt, vel_g);
   
         // Convert velocities to momenta
         for (int n = 0; n < 3; n++)
@@ -286,14 +286,13 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
             MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
     }
 
+    // Add the drag term implicitly
+    if (solve_dem)
+        mfix_add_drag_terms ( dt );
+
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
         mfix_diffuse_velocity(new_time,dt);
-
-    // Add the drag term implicitly
-    if (solve_dem)
-       for (int lev = 0; lev < nlev; lev++)
-            mfix_compute_intermediate_velocity ( lev, dt );
  
     // Project velocity field
     mfix_apply_projection ( new_time, dt, proj_2 );
@@ -313,12 +312,12 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 //  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
 //     and explicit part of particles momentum exchange )
 //
-//     vel_g = vel_g + dt * ( g - grad(p_g+p0)/ro_g + drag_u/rop_g )
+//     vel_g = vel_g + dt * ( g - grad(p_g+p0)/ro_g )
 //
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
 //
-//     vel_g = vel_g / ( 1 + dt * f_gds/rop_g )
+//     vel_g = (vel_g + drag_u/rop_g) / ( 1 + dt * f_gds/rop_g )
 //
 //  4. Solve for phi
 //
@@ -361,43 +360,42 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 
     for (int lev = 0; lev < nlev; lev++)
     {
-      // If explicit_diffusion == true  then we compute the full diffusive terms here
-      // If explicit_diffusion == false then we compute only the off-diagonal terms here
-      mfix_compute_divtau( lev, *divtau[lev], vel_g);
-        
-      // Define u_g = u_go + dt/2 (R_u^* + R_u^n) 
-      MultiFab::LinComb (*vel_g[lev], 1.0, *vel_go[lev], 0, dt/2.0, *conv[lev]    , 0, 0, 3, 0); 
-      MultiFab::Saxpy   (*vel_g[lev],                       dt/2.0, *conv_old[lev], 0, 0, 3, 0);
+        // If explicit_diffusion == true  then we compute the full diffusive terms here
+        // If explicit_diffusion == false then we compute only the off-diagonal terms here
+        mfix_compute_divtau( lev, *divtau[lev], vel_g);
+          
+        // Define u_g = u_go + dt/2 (R_u^* + R_u^n) 
+        MultiFab::LinComb (*vel_g[lev], 1.0, *vel_go[lev], 0, dt/2.0, *conv[lev]    , 0, 0, 3, 0); 
+        MultiFab::Saxpy   (*vel_g[lev],                       dt/2.0, *conv_old[lev], 0, 0, 3, 0);
+  
+        // Add the diffusion terms (either all if explicit_diffusion == true or just the
+        //    off-diagonal terms if explicit_diffusion == false)
+        MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau[lev]    , 0, 0, 3, 0);
+        MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
 
-      // Add the diffusion terms (either all if explicit_diffusion == true or just the
-      //    off-diagonal terms if explicit_diffusion == false)
-      MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau[lev]    , 0, 0, 3, 0);
-      MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
+        // Add the gravitational forcing
+        mfix_add_gravity ( lev, dt, vel_g);
 
-      // Add forcing terms
-      mfix_apply_forcing_terms ( lev, dt, vel_g);
-
-      // Convert velocities to momenta
-      for (int n = 0; n < 3; n++)
-         MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
-
-      // Add (-dt grad p to momenta)
-      MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
-      MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
-
-      // Convert momenta back to velocities
-      for (int n = 0; n < 3; n++)
-          MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+        // Convert velocities to momenta
+        for (int n = 0; n < 3; n++)
+           MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+  
+        // Add (-dt grad p to momenta)
+        MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
+        MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
+  
+        // Convert momenta back to velocities
+        for (int n = 0; n < 3; n++)
+            MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
     }
+  
+    // Compute intermediate velocity if drag terms present
+    if (solve_dem)
+        mfix_add_drag_terms (dt);
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
        mfix_diffuse_velocity(new_time,dt);
-  
-    // Compute intermediate velocity if drag terms present
-    if (solve_dem)
-       for (int lev = 0; lev < nlev; lev++)
-          mfix_compute_intermediate_velocity (lev, dt);
   
     // Apply projection
     mfix_apply_projection (new_time, dt, proj_2);
@@ -406,14 +404,10 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 }
 
 void
-mfix::mfix_apply_forcing_terms (int lev, amrex::Real dt,
-			        Vector< std::unique_ptr<MultiFab> >& vel) 
+mfix::mfix_add_gravity (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel) 
 
 {
-    BL_PROFILE("mfix::mfix_apply_forcing_terms");
-
-    // The volume fraction of each fluid cell (1 if uncovered, 0 if covered)
-    const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
+    BL_PROFILE("mfix::mfix_add_gravity");
 
 #ifdef _OPENMP
 #pragma omp parallel 
@@ -423,11 +417,8 @@ mfix::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 	// Tilebox
 	Box bx = mfi.tilebox ();
 
-	add_forcing ( BL_TO_FORTRAN_BOX(bx),  
+	add_gravity ( BL_TO_FORTRAN_BOX(bx),  
 		      BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-		      BL_TO_FORTRAN_ANYD((*drag[lev])[mfi]),
-		      BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-                      BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
 		      &dt);
     }
 }
@@ -438,28 +429,32 @@ mfix::mfix_apply_forcing_terms (int lev, amrex::Real dt,
 // momentum exchange
 // 
 void
-mfix::mfix_compute_intermediate_velocity ( int lev, amrex::Real dt )
+mfix::mfix_add_drag_terms ( amrex::Real dt )
 
 {
-    BL_PROFILE("mfix::mfix_compute_intermediate_velocity");
+    BL_PROFILE("mfix::mfix_add_drag");
 
-    // The volume fraction of each fluid cell (1 if uncovered, 0 if covered)
-    const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
+    for (int lev = 0; lev < nlev; lev++)
+    {
+        // The volume fraction of each fluid cell (1 if uncovered, 0 if covered)
+        const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
     
 #ifdef _OPENMP
 #pragma omp parallel 
 #endif
-    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi) {
-	
-	// Tilebox
-	Box bx = mfi.tilebox();
+        for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi) 
+        {
+    	    // Tilebox
+	    Box bx = mfi.tilebox();
 
-	compute_intermediate_velocity ( BL_TO_FORTRAN_BOX(bx),  
-					BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-					BL_TO_FORTRAN_ANYD((*f_gds[lev])[mfi]),
-					BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-                                        BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
-					&dt );
+	    add_drag_terms ( BL_TO_FORTRAN_BOX(bx),  
+			     BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+			     BL_TO_FORTRAN_ANYD((*f_gds[lev])[mfi]),
+		             BL_TO_FORTRAN_ANYD((*drag[lev])[mfi]),
+			     BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+                             BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+			     &dt );
+        }
     }
 }
 

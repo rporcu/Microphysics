@@ -121,18 +121,16 @@ extern "C"
       const int* bc_lo, const int* bc_hi,
       const amrex::Real* dx, const int* domlo, const int* domhi );
 
-   void add_forcing (
+   void add_gravity (
       const int* lo, const int* hi,
-            amrex::Real* vel    , const int* ulo, const int* uhi,
-      const amrex::Real* drag   , const int* dlo, const int* dhi,
-      const amrex::Real* rop_g  , const int* slo, const int* shi,
-      const amrex::Real* volfrac, const int* vlo, const int* vhi,
+      amrex::Real* vel    , const int* ulo, const int* uhi,
       const amrex::Real* dt);
     
-   void compute_intermediate_velocity (
+   void add_drag_terms (
       const int* lo, const int* hi,
             amrex::Real* vel,     const int* ulo, const int* uhi,
       const amrex::Real* f_gds,   const int* flo, const int* fhi,
+      const amrex::Real* drag,    const int* dlo, const int* dhi,
       const amrex::Real* rop,     const int* slo, const int* shi,
       const amrex::Real* volfrac, const int* vlo, const int* vhi,
       const amrex::Real* dt );
