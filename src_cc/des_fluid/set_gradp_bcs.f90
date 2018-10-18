@@ -78,13 +78,13 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             case ( minf_)
 
-               gp(domhi(1)+1,j,k,1) = gp(domhi(1),j,k,1  )
+               gp(domhi(1)+1,j,k,1) = gp(domhi(1),j,k,1)
                gp(domhi(1)+1,j,k,2) = zero
                gp(domhi(1)+1,j,k,3) = zero
 
             case ( nsw_)
 
-               gp(domhi(1)+1,j,k,1  ) = -gp(domhi(1),j,k,1  )
+               gp(domhi(1)+1,j,k,:) = -gp(domhi(1),j,k,:)
 
             case ( fsw_)
 
