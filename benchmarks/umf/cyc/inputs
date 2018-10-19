@@ -18,10 +18,6 @@ amr.stop_time = 0.50
 
 mfix.explicit_diffusion = 1
 
-mfix.use_mac_proj       = true
-
-mfix.ugradu_type        = 3
-
 mfix.particle_init_type = "Auto"
 
 mac.mg_verbose          = 0
