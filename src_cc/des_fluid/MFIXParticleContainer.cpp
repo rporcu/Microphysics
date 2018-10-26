@@ -11,6 +11,7 @@
 #include <math.h>
 
 #include "mfix_F.H"
+#include "mfix_des_F.H"
 #include "mfix_eb_F.H"
 
 using namespace amrex;
@@ -1022,15 +1023,19 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
 
     const Box domain(Geom(lev).Domain());
 
-    // Reflect tangential drag force around slip walls only
+    // NOTE:  In the following routine, we "flip" any part of "beta" or of "beta_vel" that
+    //        has been deposited outside the domain at a FSW or NSW.  This applies to both
+    //        "drag" and "f_gds" (as they are known in the fluid update) and to both
+    //        normal and tangential components.
     for (MFIter mfi(beta_vel_mf); mfi.isValid(); ++mfi) {
 
-      set_drag_bcs(BL_TO_FORTRAN_ANYD(beta_vel_mf[mfi]),
-                   bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                   bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                   bc_klo.dataPtr(), bc_khi.dataPtr(),
-                   domain.loVect(), domain.hiVect(),
-       &nghost );
+      flip_drag_terms(BL_TO_FORTRAN_ANYD(    beta_mf[mfi]),
+                      BL_TO_FORTRAN_ANYD(beta_vel_mf[mfi]),
+                      bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                      bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                      bc_klo.dataPtr(), bc_khi.dataPtr(),
+                      domain.loVect(), domain.hiVect(),
+                      &nghost);
     }
 
     if (m_verbose > 1) {

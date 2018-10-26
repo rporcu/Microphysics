@@ -121,26 +121,7 @@ extern "C"
         const int* ng
        );
 
-    void flip_particle_vol(const int* slo, const int* shi,
-        amrex::Real* ep_g,
-	const int* bc_ilo, const int* bc_ihi,
-	const int* bc_jlo, const int* bc_jhi,
-	const int* bc_klo, const int* bc_khi,
-        const int* domlo , const int* domhi,
-        const int* ng
-        );
-
-  void mfix_cap_eps(const int* slo, const int* shi, amrex::Real* ep_g);
-
-
-    void set_drag_bcs(
-        amrex::Real* drag, const int* slo, const int* shi,
-	const int* bc_ilo, const int* bc_ihi,
-	const int* bc_jlo, const int* bc_jhi,
-	const int* bc_klo, const int* bc_khi,
-        const int* domlo , const int* domhi,
-        const int* ng
-        );
+    void mfix_cap_eps(const int* slo, const int* shi, amrex::Real* ep_g);
 
     void zero_wall_norm_vel(
         const int* slo, const int* shi,
@@ -152,17 +133,7 @@ extern "C"
         const int* ng
         );
 
-    void set_particle_properties(
-            const int* pstate, amrex::Real* pradius, amrex::Real* pdensity,
-            amrex::Real* pvol, amrex::Real* pmass, amrex::Real* omoi, amrex::Real* omega
-        );
-
     void init_collision(amrex::Real *sum_dp, amrex::Real *sum_roi
-        );
-
-    void sum_particle_props(
-            const int* nrp, void* particles,
-            amrex::Real *sum_np, amrex::Real *sum_dp, amrex::Real *sum_ro
         );
 
     void output_manager ( const int* np,  amrex::Real* time, amrex::Real* dt,
@@ -182,13 +153,6 @@ extern "C"
                           amrex_real* mf, const int* lo, const int* hi,
                           const amrex_real* plo, const amrex_real* dx,
                           const int* fortran_comp
-        );
-
-    void mfix_multi_deposit_cic(const amrex_particle_real*, int ns, int np,
-                                amrex_real* mf_bx, amrex_real* mf_bu,
-                                const int* lo, const int* hi,
-                                const amrex_real* plo, const amrex_real* dx,
-                                const int* beta_comp, const int* beta_vel_comp
         );
 
     void calc_particle_beta(
@@ -224,43 +188,6 @@ extern "C"
         const int* domlo , const int* domhi,
         const int* ng
         );
-
-    void call_usr3_des( const int* np, void* particles );
-
-    void call_usr2_des( const int* np, void* particles );
-
-    void des_init_time_loop ( const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt, int* subdt_io );
-
-    void des_time_loop ( const int* nrp,  void* rparticles,
-                         const int* nf, amrex::Real* tow, amrex::Real* fc,
-                         amrex::Real* subdt, amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-                         amrex::Real* stime, int* nstep
-        );
-
-    void particle_get_position (void* particles, const int* nrp, amrex::Real* x, amrex::Real* y, amrex::Real* z);
-
-    void calc_particle_collisions ( void* rparticles, const int* nrp,
-                                    void* gparticles, const int* ngp,
-                                    const int* nbor_list, const int* size_nl,
-                                    amrex::Real* tow, amrex::Real* fc,
-                                    amrex::Real* subdt, int* ncoll);
-
-    void calc_wall_collisions ( void* rparticles, const int* ntot, const int* nrp,
-             amrex::Real* tow, amrex::Real* fc, amrex::Real* subdt,
-             const void* flag, const int* fglo, const int* fghi,
-             const amrex_real* normal, const int* nlo, const int* nhi,
-             const amrex_real* bcent, const int* blo, const int* bhi,
-             const amrex::Real* dx);
-
-    int des_continuum_coupled ();
-
-    void mfix_particle_write( const int* nrp,  void* particles);
-
-    void mfix_particle_generator(int* pcount, const int* domlo , const int* domhi,
-                                 amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
-
-
-    void mfix_particle_generator_prop( const int* nrp,  void* particles);
 
     void mfix_usr0();
 

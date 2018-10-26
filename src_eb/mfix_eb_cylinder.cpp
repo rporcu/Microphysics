@@ -108,11 +108,11 @@ mfix::make_eb_cylinder()
        // Plane IF generator for bottom plane (defined iff close_bottom==true)
        std::unique_ptr<GShopLSFactory<EB2::PlaneIF>> wall_lsfactory;
 
-       if (close_bottom) 
+       if (close_bottom)
        {
            Array<Real,3> point{0.0, 0.0, 0.0};
            Array<Real,3> normal{0.0, 0.0, 0.0};
-   
+
            point[direction] = geom[0].ProbLo(direction) + offset;
            normal[direction] = -1.0;
 
@@ -124,7 +124,7 @@ mfix::make_eb_cylinder()
            amrex::Print() << "   Normal: " << normal[0] << ", "
                                            << normal[1] << ", "
                                            << normal[2] << std::endl;
-   
+
            EB2::PlaneIF my_plane(point, normal);
 
            auto gshop = EB2::makeShop(EB2::makeUnion(my_cyl, my_plane));
@@ -141,14 +141,14 @@ mfix::make_eb_cylinder()
        {
           // Intercept the cylinder + plane level (if it is built)
           eb_level_particles = & eb_is.getLevel(geom[lev]);
-   
+
           particle_ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
                                                                geom[lev], grids[lev], dmap[lev],
                                                                {m_eb_basic_grow_cells,
                                                                 m_eb_volume_grow_cells,
                                                                 m_eb_full_grow_cells},
                                                                m_eb_support_level));
-   
+
           eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
        }
 
@@ -158,7 +158,7 @@ mfix::make_eb_cylinder()
         *                                                                       *
         *************************************************************************/
 
-       if (!levelset__restart) 
+       if (!levelset__restart)
        {
           for (int lev = 0; lev < nlev; lev++)
           {

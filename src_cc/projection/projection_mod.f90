@@ -94,15 +94,9 @@ contains
    end subroutine compute_new_dt
 
    !
-   ! Add forcing (acceleration) terms to velocity
-   ! These terms include the volumetric forces and the explicit part of the
-   ! particle/fluid momentum exchange
+   ! Add gravitational acceleration terms to velocity
    !
-   subroutine add_forcing ( lo, hi, &
-                            vel    , ulo, uhi, &
-                            drag   , dlo, dhi, &
-                            rop_g  , slo, shi, &
-                            volfrac, vlo, vhi, dt )  bind(C)
+   subroutine add_gravity ( lo, hi, vel, ulo, uhi, dt )  bind(C) 
 
       use constant, only: gravity
 
@@ -110,9 +104,53 @@ contains
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
 
       ! Array bounds
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3)
+
+      ! Time step width
+      real(ar),       intent(in   ) :: dt
+
+      real(ar),       intent(inout) :: &
+           vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
+
+      ! Local variables
+      integer(c_int)                :: i, j, k
+
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+
+               vel(i,j,k,1) = vel(i,j,k,1) + dt * gravity(1) 
+               vel(i,j,k,2) = vel(i,j,k,2) + dt * gravity(2)
+               vel(i,j,k,3) = vel(i,j,k,3) + dt * gravity(3)
+
+            end do
+         end do
+      end do
+
+   end subroutine add_gravity
+
+   !
+   ! This adds both components of the drag term
+   ! Here f_gds = beta
+   !      drag  = beta * particle_velocity
+   ! 
+   ! So the drag term we add is beta * (particle_velocity - fluid_velocity)
+   !                          = drag - f_gds * fluid_velocity
+   !
+   subroutine add_drag_terms ( lo, hi, vel, ulo, uhi, &
+                               f_gds  , flo, fhi, &
+                               drag   , dlo, dhi, &
+                               rop    , slo, shi, &
+                               volfrac, vlo, vhi, dt ) bind(C)
+
+      ! Loop bounds
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+
+      ! Array bounds
       integer(c_int), intent(in   ) :: ulo(3), uhi(3)
       integer(c_int), intent(in   ) :: dlo(3), dhi(3)
+      integer(c_int), intent(in   ) :: flo(3), fhi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: vlo(3), vhi(3)
 
       ! Time step width
@@ -120,7 +158,8 @@ contains
 
       ! Arrays
       real(ar),       intent(in   ) :: &
-             rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+               rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+             f_gds(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3)), &
               drag(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3), &
            volfrac(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
@@ -135,81 +174,17 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               ! Note that 
-               !   volfrac represents the fraction of the cell that is not covered by EB 
-               !   rop_g = ro_g * ep_g where ep_g is the fraction of the cell not covered by particles
-               orop = volfrac(i,j,k) / rop_g(i,j,k)
+               orop       = dt * volfrac(i,j,k) / rop(i,j,k)
 
-               vel(i,j,k,1) = vel(i,j,k,1) + dt * ( gravity(1) + drag(i,j,k,1) * orop )
-               vel(i,j,k,2) = vel(i,j,k,2) + dt * ( gravity(2) + drag(i,j,k,2) * orop )
-               vel(i,j,k,3) = vel(i,j,k,3) + dt * ( gravity(3) + drag(i,j,k,3) * orop )
+               vel(i,j,k,1) = ( vel(i,j,k,1) + drag(i,j,k,1) * orop) / (one + f_gds(i,j,k) * orop)
+               vel(i,j,k,2) = ( vel(i,j,k,2) + drag(i,j,k,2) * orop) / (one + f_gds(i,j,k) * orop)
+               vel(i,j,k,3) = ( vel(i,j,k,3) + drag(i,j,k,3) * orop) / (one + f_gds(i,j,k) * orop)
 
             end do
          end do
       end do
 
-   end subroutine add_forcing
-
-   !
-   ! This part takes care of performing an implicit solve for the
-   ! intermediate velocity.
-   ! Currently, this is equivalent to dividing by a diagonal coefficient
-   ! since the only implicit term is the fluid/particle momentum exchange.
-   !
-   ! Upon entry, vel contains the rhs of the system to be solved and on exit
-   ! the solution of the system itself. This means that we are solving;
-   !
-   !    A*vel = rhs  with rhs = vel upon entry
-   !
-   ! So far the above system reduces to:
-   !
-   !    vel = vel / (A)_diagonal
-   !
-   subroutine compute_intermediate_velocity ( lo, hi, vel, ulo, uhi, &
-                                              f_gds  , flo, fhi, &
-                                              rop    , slo, shi, &
-                                              volfrac, vlo, vhi, dt ) bind(C)
-
-      ! Loop bounds
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-
-      ! Array bounds
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3)
-      integer(c_int), intent(in   ) :: flo(3), fhi(3)
-      integer(c_int), intent(in   ) :: vlo(3), vhi(3)
-
-      ! Time step width
-      real(ar),       intent(in   ) :: dt
-
-      ! Arrays
-      real(ar),       intent(in   ) :: &
-               rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-             f_gds(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3)), &
-           volfrac(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-
-      real(ar),       intent(inout) :: &
-           vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
-
-      ! Local variables
-      integer(c_int)                :: i, j, k
-      real(ar)                      :: orop
-
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-
-               orop       = volfrac(i,j,k) / rop(i,j,k)
-
-               vel(i,j,k,1) = vel(i,j,k,1) / (one + dt * f_gds(i,j,k) * orop)
-               vel(i,j,k,2) = vel(i,j,k,2) / (one + dt * f_gds(i,j,k) * orop)
-               vel(i,j,k,3) = vel(i,j,k,3) / (one + dt * f_gds(i,j,k) * orop)
-
-            end do
-         end do
-      end do
-
-   end subroutine compute_intermediate_velocity
+   end subroutine add_drag_terms
 
    subroutine compute_bcoeff_nd ( lo, hi, bcoeff, blo, bhi, &
         ro_g, slo, shi, ep_g, dir )  bind(C)
