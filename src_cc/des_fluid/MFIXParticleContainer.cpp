@@ -889,18 +889,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
 
             const Box& bx  = pti.tilebox(); // I need a box without ghosts
 
-            if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
-            {
-                // TODO:
-                // Should I set data_ptr to some large value as a sanity check?
-                // 
-            }
-            else if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
-            {
-                mfix_deposit_cic(particles.data(), nstride, nrp, ncomp, data_ptr,
-                                 lo, hi, plo, dx, &fortran_particle_comp);
-            }
-            else
+            if (flags.getType(bx) != FabType::covered )
             {
                 mfix_deposit_cic_eb(particles.data(), nstride, nrp, ncomp, data_ptr,
                                     lo, hi,
@@ -1041,21 +1030,7 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
 
             const Box& box = pti.tilebox(); // I need a box without ghosts
             
-            if (flags.getType(amrex::grow(box,0)) == FabType::covered )
-            {
-                // TODO:
-                // Should I set fortran_beta_comp and  fortran_vel_comp
-                // to some large value as a sanity check?
-                // 
-            }
-            else if (flags.getType(amrex::grow(box,1)) == FabType::regular )
-            {
-                mfix_multi_deposit_cic(particles.data(), nstride, np,
-                                       bx_dataptr, bu_dataptr,
-                                       lo, hi, plo, dx, &fortran_beta_comp,
-                                       &fortran_vel_comp);
-            }
-            else
+            if (flags.getType(bx) != FabType::covered )
             {
                 mfix_multi_deposit_cic_eb(particles.data(), nstride, np,
                                           bx_dataptr, bu_dataptr,
