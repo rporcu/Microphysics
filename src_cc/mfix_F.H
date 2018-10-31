@@ -149,12 +149,6 @@ extern "C"
         amrex::Real* ep_g 
         );
 
-    void mfix_deposit_cic(const amrex_particle_real*, int ns, int np, int nc,
-                          amrex_real* mf, const int* lo, const int* hi,
-                          const amrex_real* plo, const amrex_real* dx,
-                          const int* fortran_comp
-        );
-
     void calc_particle_beta(
        const int* slo, const int* shi,
        amrex::Real*  ep_g, amrex::Real* ro_g,
