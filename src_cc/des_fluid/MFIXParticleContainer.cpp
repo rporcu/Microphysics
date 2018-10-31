@@ -848,6 +848,13 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
 
     using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
 
+    // Get particle EB geometric info
+    MultiFab      dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                        1, 0, MFInfo(), ebfactory);
+    
+    const amrex::MultiFab*                    volfrac;
+    volfrac = &(ebfactory.getVolFrac());
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -871,12 +878,34 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
 #else
             data_ptr = fab.dataPtr();
             const Box& box = fab.box();
+            const Box& bx  = pti.tilebox(); // I need a box without ghosts
             lo = box.loVect();
             hi = box.hiVect();
 #endif
 
-            mfix_deposit_cic(particles.data(), nstride, nrp, ncomp, data_ptr,
-                             lo, hi, plo, dx, &fortran_particle_comp);
+            // this is to check efficiently if this tile contains any eb stuff
+            const EBFArrayBox&  dummy_fab = static_cast<EBFArrayBox const&>(dummy[pti]);
+            const EBCellFlagFab&    flags = dummy_fab.getEBCellFlagFab();
+
+            if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
+            {
+                // TODO:
+                // Should I set data_ptr to some large value as a sanity check?
+                // 
+            }
+            else if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
+            {
+                mfix_deposit_cic(particles.data(), nstride, nrp, ncomp, data_ptr,
+                                 lo, hi, plo, dx, &fortran_particle_comp);
+            }
+            else
+            {
+                mfix_deposit_cic_eb(particles.data(), nstride, nrp, ncomp, data_ptr,
+                                    lo, hi,
+                                    BL_TO_FORTRAN_ANYD((*volfrac)[pti]),
+                                    plo, dx, &fortran_particle_comp);
+            }
+                
 
 #ifdef _OPENMP
             amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
@@ -887,8 +916,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
     }
 
     // Move any field deposited outside the domain back into the domain
-    // (at all domain boundaries except periodic)
-
+    // when BC is pressure inlet and mass inflow. 
     Box domain(Geom(lev).Domain());
 
     for (MFIter mfi(*mf_pointer); mfi.isValid(); ++mfi) {

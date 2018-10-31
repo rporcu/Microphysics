@@ -79,16 +79,16 @@ contains
       real(amrex_real)              :: plo(3)
       real(amrex_real)              :: dx(3)
       integer                       :: particle_comp
-
-      integer                       :: i, j, k, n
+      integer                       :: i, j, k, ii, jj, kk, n
       real(amrex_real)              :: wx_lo, wy_lo, wz_lo, wx_hi, wy_hi, wz_hi
       real(amrex_real)              :: lx, ly, lz, pvol
       real(amrex_real)              :: inv_dx(3), oovol
       real(amrex_real)              :: weights(-1:0,-1:0,-1:0) 
+      real(amrex_real)              :: regular_cell_volume, this_cell_volume
       
       inv_dx = one/dx
 
-      full_cell_volume = dx(1)*dx(2)*dx(3)
+      regular_cell_volume = dx(1)*dx(2)*dx(3)
 
       do n = 1, np
 
@@ -100,7 +100,8 @@ contains
          j = floor(ly)
          k = floor(lz)
 
-         ! Compute deposition weights
+         ! Compute deposition weights: use a combination of
+         ! trilinear weighting and volume ratio weighting.        
          wx_hi = lx - i
          wy_hi = ly - j
          wz_hi = lz - k        
@@ -112,36 +113,27 @@ contains
          weights(-1,-1,-1) = vratio(i-1, j-1, k-1) * wx_lo * wy_lo * wz_lo
          weights(-1,-1, 0) = vratio(i-1, j-1, k  ) * wx_lo * wy_lo * wz_hi
          weights(-1, 0,-1) = vratio(i-1, j,   k-1) * wx_lo * wy_hi * wz_lo
-         weights(-1, 0, 0) = vratio(i-1, j,   k, ) * wx_lo * wy_hi * wz_hi
+         weights(-1, 0, 0) = vratio(i-1, j,   k  ) * wx_lo * wy_hi * wz_hi
          weights( 0,-1,-1) = vratio(i,   j-1, k-1) * wx_hi * wy_lo * wz_lo
          weights( 0,-1, 0) = vratio(i,   j-1, k  ) * wx_hi * wy_lo * wz_hi
          weights( 0, 0,-1) = vratio(i,   j,   k-1) * wx_hi * wy_hi * wz_lo
          weights( 0, 0, 0) = vratio(i,   j,   k  ) * wx_hi * wy_hi * wz_hi
 
+         ! Normalize so that weights sums up to one
          weights = weights / sum(weights)
-       
-
          
+         pvol = particles(particle_comp,n)
 
-         pvol = particles(particle_comp,n) !* oovol
 
          do kk = -1, 0
             do jj = -1, 0
                do ii = -1, 0
-                  cell_volume = vratio(i+ii, j+ii, k+kk) * full_cell_volume
-                  vol(i+ii, j+ii, k+kk, 1) = vol(i+ii, j+ii, k+kk, 1) + &
-                       &                     weights(ii,jj,kk) * pvol / cell_volume
+                  this_cell_volume = vratio(i+ii, j+jj, k+kk) * regular_cell_volume
+                  vol(i+ii, j+jj, k+kk, 1) = vol(i+ii, j+jj, k+kk, 1) + &
+                       &                     weights(ii,jj,kk) * pvol / this_cell_volume
                end do
             end do
          end do
-         ! vol(i-1, j-1, k-1, 1) = vol(i-1, j-1, k-1, 1) + wx_lo*wy_lo*wz_lo*pvol
-         ! vol(i-1, j-1, k  , 1) = vol(i-1, j-1, k  , 1) + wx_lo*wy_lo*wz_hi*pvol
-         ! vol(i-1, j,   k-1, 1) = vol(i-1, j,   k-1, 1) + wx_lo*wy_hi*wz_lo*pvol
-         ! vol(i-1, j,   k  , 1) = vol(i-1, j,   k,   1) + wx_lo*wy_hi*wz_hi*pvol
-         ! vol(i,   j-1, k-1, 1) = vol(i,   j-1, k-1, 1) + wx_hi*wy_lo*wz_lo*pvol
-         ! vol(i,   j-1, k  , 1) = vol(i,   j-1, k  , 1) + wx_hi*wy_lo*wz_hi*pvol
-         ! vol(i,   j,   k-1, 1) = vol(i,   j,   k-1, 1) + wx_hi*wy_hi*wz_lo*pvol
-         ! vol(i,   j,   k  , 1) = vol(i,   j,   k  , 1) + wx_hi*wy_hi*wz_hi*pvol
 
       end do
 
