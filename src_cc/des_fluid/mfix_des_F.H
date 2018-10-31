@@ -46,6 +46,15 @@ extern "C"
             const int* beta_comp, const int* beta_vel_comp
         );
 
+    void mfix_multi_deposit_cic_eb(
+        const amrex_particle_real*, int ns, int np,
+        amrex_real* mf_bx, amrex_real* mf_bu, 
+        const int* lo, const int* hi,
+        const amrex_real* vratio, const int* slo, const int* shi,
+        const amrex_real* plo, const amrex_real* dx,
+        const int* beta_comp, const int* beta_vel_comp
+        );
+
     void mfix_interpolate_cic(
             const amrex_particle_real*, int ns, int np,
             const amrex::Real* acc, const int* lo, const int* hi, int ncomp,

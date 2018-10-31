@@ -55,7 +55,7 @@ void mfix::mfix_calc_drag_fluid(Real time)
        drag[lev]->setVal(0.0L);
        f_gds[lev]->setVal(0.0L);
 
-       pc -> CalcDragOnFluid(*f_gds[lev], *drag[lev],
+       pc -> CalcDragOnFluid(*f_gds[lev], *drag[lev], *particle_ebfactory[lev],
                              *bc_ilo[lev],*bc_ihi[lev],*bc_jlo[lev],*bc_jhi[lev],
                              *bc_klo[lev],*bc_khi[lev],nghost);
        }
