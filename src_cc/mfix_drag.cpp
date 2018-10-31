@@ -27,6 +27,8 @@ void mfix::mfix_calc_drag_fluid(Real time)
            if (m_beta_interp_type == 2)
                mfix_compute_velocity_slopes( lev, vel_g );
 
+           // This will overwrite user's choice
+           int beta_interp_type = 1;
            
 #ifdef _OPENMP
 #pragma omp parallel
@@ -45,7 +47,7 @@ void mfix::mfix_calc_drag_fluid(Real time)
                (*yslopes[lev])[pti].dataPtr(),
                (*zslopes[lev])[pti].dataPtr(),
                &np, particles.data(), geom[lev].ProbLo(), geom[lev].CellSize(),
-               m_beta_interp_type );
+               beta_interp_type );
        }
 
        // ******************************************************************************
@@ -196,6 +198,10 @@ mfix::mfix_calc_drag_particle(Real time)
 
           if (m_drag_interp_type == 2)
              mfix_compute_velocity_slopes( lev, vel_g );
+
+
+          // This will overwrite user selection
+          int drag_interp_type = 1;
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -212,7 +218,7 @@ mfix::mfix_calc_drag_particle(Real time)
                                   BL_TO_FORTRAN_ANYD((*zslopes[lev])[pti]),
                                   &np, particles.data(),
                                   geom[lev].CellSize(), geom[lev].ProbLo(),
-                                  m_drag_interp_type);
+                                  drag_interp_type);
           }
 
           // Reset velocity Dirichlet bc's to face values
