@@ -894,6 +894,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
                 mfix_deposit_cic_eb(particles.data(), nstride, nrp, ncomp, data_ptr,
                                     lo, hi,
                                     BL_TO_FORTRAN_ANYD((*volfrac)[pti]),
+                                    BL_TO_FORTRAN_ANYD(flags),
                                     plo, dx, &fortran_particle_comp);
             }
                 
@@ -1030,7 +1031,7 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
 
             const Box& box = pti.tilebox(); // I need a box without ghosts
             
-            if (flags.getType(bx) != FabType::covered )
+            if (flags.getType(box) != FabType::covered )
             {
                 mfix_multi_deposit_cic_eb(particles.data(), nstride, np,
                                           bx_dataptr, bu_dataptr,

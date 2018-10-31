@@ -90,8 +90,8 @@ subroutine flip_particle_vol(slo, shi, vol, &
      jhi = domhi(2)
      do k=slo(3),shi(3)
         do i=slo(1),shi(1)
-           if (bc_ihi_type(i,k,1) == PINF_ .or. &
-               bc_ihi_type(i,k,1) == MINF_ ) then
+           if (bc_jhi_type(i,k,1) == PINF_ .or. &
+               bc_jhi_type(i,k,1) == MINF_ ) then
 
                vol(i,jhi,k) = vol(i,jhi,k) + vol(i,jhi+1,k)
                vol(i,jhi+1,k) = 0.d0

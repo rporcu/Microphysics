@@ -3,7 +3,8 @@ module mfix_particle_pic_module
    use iso_c_binding
    use amrex_fort_module,               only: amrex_real, amrex_particle_real
    use param,                           only: one, zero, half
-
+   use amrex_ebcellflag_module,         only: is_covered_cell
+   
    implicit none
 
    private
@@ -13,19 +14,25 @@ module mfix_particle_pic_module
 
 contains
 
-   subroutine mfix_deposit_cic_eb ( particles, ns, np, nc, vol, lo, hi, vratio, slo, shi, &
+   subroutine mfix_deposit_cic_eb ( particles, ns, np, nc, vol, lo, hi, &
+        &                           vratio, slo, shi,                   &
+        &                           flags,  flo, fhi,                   &
         &                           plo, dx, particle_comp ) bind(C)
 
       real(amrex_particle_real), intent(in   )  :: particles(ns,np)
       integer, value,            intent(in   )  :: ns, np, nc
       integer,                   intent(in   )  ::  lo(3),  hi(3)
       integer,                   intent(in   )  :: slo(3), shi(3)
-
+      integer,                   intent(in   )  :: flo(3), fhi(3)
+      
       real(amrex_real),          intent(in   )  ::           &
            &  vratio(slo(1):shi(1), slo(2):shi(2), slo(3):shi(3))
       
       real(amrex_real),          intent(inout)  ::           &
            &  vol(lo(1):hi(1), lo(2):hi(2), lo(3):hi(3),nc)
+
+      integer(c_int),             intent(in   ) ::  &
+           & flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
       
       real(amrex_real),          intent(in   )  :: plo(3), dx(3)
       integer,                   intent(in   )  :: particle_comp
@@ -35,10 +42,10 @@ contains
       integer                       :: i, j, k, ii, jj, kk, n
       real(amrex_real)              :: wx_lo, wy_lo, wz_lo, wx_hi, wy_hi, wz_hi
       real(amrex_real)              :: lx, ly, lz, pvol
-      real(amrex_real)              :: inv_dx(3), oovol
+      real(amrex_real)              :: inv_dx(3)
       real(amrex_real)              :: weights(-1:0,-1:0,-1:0) 
       real(amrex_real)              :: regular_cell_volume, this_cell_volume
-
+      
       inv_dx = one/dx
 
       regular_cell_volume = dx(1)*dx(2)*dx(3)
@@ -81,6 +88,7 @@ contains
          do kk = -1, 0
             do jj = -1, 0
                do ii = -1, 0
+                  if (is_covered_cell(flags(i+ii, j+jj, k+kk))) cycle
                   this_cell_volume = vratio(i+ii, j+jj, k+kk) * regular_cell_volume
                   vol(i+ii, j+jj, k+kk, 1) = vol(i+ii, j+jj, k+kk, 1) + &
                        &                     weights(ii,jj,kk) * pvol / this_cell_volume
