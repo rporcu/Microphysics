@@ -31,10 +31,10 @@ mfix::AllocateArrays (int lev)
     {
        const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
 
-       p0_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
-        p_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
-       p_go[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
-       pp_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0));
+       p0_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,nghost));
+        p_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,nghost));
+       p_go[lev].reset(new MultiFab(nd_grids,dmap[lev],1,nghost));
+       pp_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,nghost));
 
     } else {
 
