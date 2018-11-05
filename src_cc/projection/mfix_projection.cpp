@@ -155,7 +155,6 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        // Print info about predictor step
         amrex::Print() << "AT LEVEL " << lev << " AFTER PROJECTION: \n";
         mfix_print_max_vel(lev);
         amrex::Print() << "max(abs(diveu)) = " <<  mfix_norm0(diveu, lev, 0) << "\n";
@@ -185,7 +184,7 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
         //        (del dot b sigma grad)) phi
         //
         LPInfo                       info;
-        MLNodeLaplacian              matrix(geom, grids, dmap, info);
+        MLNodeLaplacian              matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
 
         matrix.setGaussSeidel(true);
         matrix.setHarmonicAverage(false);
