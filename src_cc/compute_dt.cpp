@@ -23,11 +23,11 @@ mfix::mfix_compute_dt(Real time, Real stop_time, int steady_state, Real& dt)
     for (int lev = 0; lev < nlev; lev++)
     {
        // Compute dt for this time step
-       umax  = max(umax,mfix_norm0 ( vel_g, lev, 0 ));
-       vmax  = max(vmax,mfix_norm0 ( vel_g, lev, 1 ));
-       wmax  = max(wmax,mfix_norm0 ( vel_g, lev, 2 ));
-       romin = min(romin,mfix_norm0( rop_g, lev, 0 ));
-       mumax = max(mumax,mfix_norm0( mu_g,  lev, 0 ));
+       umax  = amrex::max(umax,mfix_norm0 ( vel_g, lev, 0 ));
+       vmax  = amrex::max(vmax,mfix_norm0 ( vel_g, lev, 1 ));
+       wmax  = amrex::max(wmax,mfix_norm0 ( vel_g, lev, 2 ));
+       romin = amrex::min(romin,mfix_norm0( rop_g, lev, 0 ));
+       mumax = amrex::max(mumax,mfix_norm0( mu_g,  lev, 0 ));
     }
 
     compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax, 
@@ -47,7 +47,7 @@ mfix::mfix_compute_dt(Real time, Real stop_time, int steady_state, Real& dt)
     }
     else
     {
-        dt = min( dt_new, dt_max );
+        dt = amrex::min( dt_new, dt_max );
 
         if ( dt < dt_min )
             amrex::Abort ("Current dt is smaller than dt_min");
