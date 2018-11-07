@@ -16,11 +16,11 @@ extern "C"
     int des_continuum_coupled ();
 
     void calc_volume_fraction(
-            const int*  lo, const int*  hi,
-            const int* slo, const int* shi,
-            const int*  np, void* particles,
-            amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-            amrex::Real* ep_g
+        const int*  lo, const int*  hi,
+        const int* slo, const int* shi,
+        const int*  np, void* particles,
+        amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
+        amrex::Real* ep_g
         );
 
 
@@ -44,58 +44,84 @@ extern "C"
         );
 
     void mfix_interpolate_cic(
-            const amrex_particle_real*, int ns, int np,
-            const amrex::Real* acc, const int* lo, const int* hi, int ncomp,
-            const amrex::Real* plo, const amrex::Real* dx
+        const amrex_particle_real*, int ns, int np,
+        const amrex::Real* acc, const int* lo, const int* hi, int ncomp,
+        const amrex::Real* plo, const amrex::Real* dx
+        );
+
+    void calc_particle_beta(
+        const int* slo, const int* shi,
+        amrex::Real*  ep_g, amrex::Real* ro_g,
+        amrex::Real* vel_g, amrex::Real* mu_g,
+        const int* np, void* particles,
+        const amrex::Real* x0, const amrex::Real* dx
+        );
+
+    void calc_drag_particle(  
+        const amrex::Real* gp , const int* gplo , const int* gphi,
+        const amrex::Real* gp0, const int* gp0lo, const int* gp0hi,
+        const amrex::Real* vel, const int* ulo, const int* uhi,
+        const int* np, void* particles, const amrex::Real* dx, 
+        const amrex::Real* x0
+        );
+
+
+    void calc_drag_particle_eb(  
+        const amrex::Real* gp , const int* gplo , const int* gphi,
+        const amrex::Real* gp0, const int* gp0lo, const int* gp0hi,
+        const amrex::Real* vel, const int* ulo,   const int* uhi,
+        const void*  flags    , const int* flo,   const int* fhi,
+        const int* np, void* particles, const amrex::Real* dx, 
+        const amrex::Real* x0
         );
 
     void calc_wall_collisions(
-            void* rparticles, const int* ntot, const int* nrp,
-            amrex::Real* tow, amrex::Real* fc, amrex::Real* subdt,
-            const void* flag, const int* fglo, const int* fghi,
-            const amrex_real* normal, const int* nlo, const int* nhi,
-            const amrex_real* bcent,  const int* blo, const int* bhi,
-            const amrex::Real* dx
+        void* rparticles, const int* ntot, const int* nrp,
+        amrex::Real* tow, amrex::Real* fc, amrex::Real* subdt,
+        const void* flag, const int* fglo, const int* fghi,
+        const amrex_real* normal, const int* nlo, const int* nhi,
+        const amrex_real* bcent,  const int* blo, const int* bhi,
+        const amrex::Real* dx
         );
 
     void calc_particle_collisions(
-            void* rparticles, const int* nrp,
-            void* gparticles, const int* ngp,
-            const int* nbor_list, const int* size_nl,
-            amrex::Real* tow, amrex::Real* fc,
-            amrex::Real* subdt, int* ncoll
+        void* rparticles, const int* nrp,
+        void* gparticles, const int* ngp,
+        const int* nbor_list, const int* size_nl,
+        amrex::Real* tow, amrex::Real* fc,
+        amrex::Real* subdt, int* ncoll
         );
 
     void flip_particle_vol(
-            const int* slo, const int* shi,
-            amrex::Real* ep_g,
-            const int* bc_ilo, const int* bc_ihi,
-            const int* bc_jlo, const int* bc_jhi,
-            const int* bc_klo, const int* bc_khi,
-            const int* domlo, const int* domhi,
-            const int* nghost
+        const int* slo, const int* shi,
+        amrex::Real* ep_g,
+        const int* bc_ilo, const int* bc_ihi,
+        const int* bc_jlo, const int* bc_jhi,
+        const int* bc_klo, const int* bc_khi,
+        const int* domlo, const int* domhi,
+        const int* nghost
         );
 
     void flip_drag_terms(
-            amrex::Real* beta  , const int* blo, const int* bhi,
-            amrex::Real* beta_u, const int* dlo, const int* dhi,
-            const int* bc_ilo, const int* bc_ihi,
-            const int* bc_jlo, const int* bc_jhi,
-            const int* bc_klo, const int* bc_khi,
-            const int* domlo, const int* domhi,
-            const int* nghost
+        amrex::Real* beta  , const int* blo, const int* bhi,
+        amrex::Real* beta_u, const int* dlo, const int* dhi,
+        const int* bc_ilo, const int* bc_ihi,
+        const int* bc_jlo, const int* bc_jhi,
+        const int* bc_klo, const int* bc_khi,
+        const int* domlo, const int* domhi,
+        const int* nghost
         );
 
     void set_particle_properties(
-            const int* pstate, amrex::Real* pradius, amrex::Real* pdensity,
-            amrex::Real* pvol, amrex::Real* pmass, amrex::Real* omoi, amrex::Real* omega
+        const int* pstate, amrex::Real* pradius, amrex::Real* pdensity,
+        amrex::Real* pvol, amrex::Real* pmass, amrex::Real* omoi, amrex::Real* omega
         );
 
     void mfix_particle_write(const int* nrp, void* particles);
 
     void mfix_particle_generator(
-            int* pcount, const int* domlo , const int* domhi,
-            amrex::Real* dx, amrex::Real* dy, amrex::Real* dz
+        int* pcount, const int* domlo , const int* domhi,
+        amrex::Real* dx, amrex::Real* dy, amrex::Real* dz
         );
 
     void mfix_particle_generator_prop(const int* nrp, void* particles);
@@ -103,22 +129,22 @@ extern "C"
     void particle_get_position (void* particles, const int* nrp, amrex::Real* x, amrex::Real* y, amrex::Real* z);
 
     void des_init_time_loop(
-            const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt,
-            const int* subdt_io
+        const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt,
+        const int* subdt_io
         );
 
     void des_time_loop(
-            const int* nrp,  void* rparticles,
-            const int* nf, amrex::Real* tow, amrex::Real* fc,
-            amrex::Real* subdt,
-            amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-            amrex::Real* stime, int* nstep
+        const int* nrp,  void* rparticles,
+        const int* nf, amrex::Real* tow, amrex::Real* fc,
+        amrex::Real* subdt,
+        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
+        amrex::Real* stime, int* nstep
         );
 
     void output_manager(
-            const int* np, amrex::Real* time, amrex::Real* dt,
-            amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-            int* nstep, void* particles, int* finsh
+        const int* np, amrex::Real* time, amrex::Real* dt,
+        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
+        int* nstep, void* particles, int* finsh
         );
 
     void call_usr3_des(const int* np, void* particles);
