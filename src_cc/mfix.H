@@ -457,7 +457,7 @@ private:
     const int m_eb_full_grow_cells = nghost;
 
 
-    int nodal_pressure = 0;
+    int nodal_pressure = 1;
     int explicit_diffusion = 1;
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
