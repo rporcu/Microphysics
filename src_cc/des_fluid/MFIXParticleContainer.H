@@ -136,6 +136,7 @@ public:
     /// Calculate gas volume fraction using a PIC deposition of particle volume
     ///
     void CalcVolumeFraction(amrex::MultiFab& mf,
+                            const EBFArrayBoxFactory& ebfactory,
                             IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                             IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                             IArrayBox& bc_klo, IArrayBox& bc_khi,
@@ -147,6 +148,7 @@ public:
     /// Do the actual PIC deposition for CalcVolumeFraction
     ///
     void PICDeposition(amrex::MultiFab& mf,
+                       const EBFArrayBoxFactory& ebfactory,
                        IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                        IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                        IArrayBox& bc_klo, IArrayBox& bc_khi,
@@ -155,7 +157,8 @@ public:
     ///
     /// Calculate particle-induced drag on the fluid
     ///
-    void CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf, 
+    void CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf,
+                         const EBFArrayBoxFactory& ebfactory,
                          IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                          IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                          IArrayBox& bc_klo, IArrayBox& bc_khi,
@@ -164,7 +167,8 @@ public:
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-    void PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf, 
+    void PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf,
+                            const EBFArrayBoxFactory& ebfactory,
                             IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                             IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                             IArrayBox& bc_klo, IArrayBox& bc_khi,

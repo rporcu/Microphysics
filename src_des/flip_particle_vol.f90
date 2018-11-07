@@ -45,16 +45,12 @@ subroutine flip_particle_vol(slo, shi, vol, &
      ilo = domlo(1)
      do k=slo(3),shi(3)
         do j=slo(2),shi(2)
-           if (bc_ilo_type(j,k,1) == NSW_ .or. &
-               bc_ilo_type(j,k,1) == PSW_ .or. &
-               bc_ilo_type(j,k,1) == FSW_ .or. &
-               bc_ilo_type(j,k,1) == PINF_ .or. &
-               bc_ilo_type(j,k,1) == MINF_ .or. &
-               bc_ilo_type(j,k,1) == POUT_) then
-
+           if (bc_ilo_type(j,k,1) == PINF_ .or. &
+                bc_ilo_type(j,k,1) == MINF_ ) then
+              
                vol(ilo,j,k) = vol(ilo,j,k) + vol(ilo-1,j,k)
                vol(ilo-1,j,k) = 0.d0
-
+               
            end if
         end do
      end do
@@ -64,12 +60,8 @@ subroutine flip_particle_vol(slo, shi, vol, &
      ihi = domhi(1)
      do k=slo(3),shi(3)
         do j=slo(2),shi(2)
-           if (bc_ihi_type(j,k,1) == NSW_ .or. &
-               bc_ihi_type(j,k,1) == PSW_ .or. &
-               bc_ihi_type(j,k,1) == FSW_ .or. &
-               bc_ihi_type(j,k,1) == PINF_ .or. &
-               bc_ihi_type(j,k,1) == MINF_ .or. &
-               bc_ihi_type(j,k,1) == POUT_) then
+           if (bc_ihi_type(j,k,1) == PINF_ .or. &
+               bc_ihi_type(j,k,1) == MINF_ ) then
 
                vol(ihi,j,k) = vol(ihi,j,k) + vol(ihi+1,j,k)
                vol(ihi+1,j,k) = 0.d0
@@ -83,12 +75,8 @@ subroutine flip_particle_vol(slo, shi, vol, &
      jlo = domlo(2)
      do k=slo(3),shi(3)
         do i=slo(1),shi(1)
-           if (bc_jlo_type(i,k,1) == NSW_ .or. &
-               bc_jlo_type(i,k,1) == PSW_ .or. &
-               bc_jlo_type(i,k,1) == FSW_ .or. &
-               bc_jlo_type(i,k,1) == PINF_ .or. &
-               bc_jlo_type(i,k,1) == MINF_ .or. &
-               bc_jlo_type(i,k,1) == POUT_) then
+           if (bc_jlo_type(i,k,1) == PINF_ .or. &
+               bc_jlo_type(i,k,1) == MINF_ ) then
 
                vol(i,jlo,k) = vol(i,jlo,k) + vol(i,jlo-1,k)
                vol(i,jlo-1,k) = 0.d0
@@ -102,12 +90,8 @@ subroutine flip_particle_vol(slo, shi, vol, &
      jhi = domhi(2)
      do k=slo(3),shi(3)
         do i=slo(1),shi(1)
-           if (bc_jhi_type(i,k,1) == NSW_ .or. &
-               bc_jhi_type(i,k,1) == PSW_ .or. &
-               bc_jhi_type(i,k,1) == FSW_ .or. &
-               bc_jhi_type(i,k,1) == PINF_ .or. &
-               bc_jhi_type(i,k,1) == MINF_ .or. &
-               bc_jhi_type(i,k,1) == POUT_) then
+           if (bc_jhi_type(i,k,1) == PINF_ .or. &
+               bc_jhi_type(i,k,1) == MINF_ ) then
 
                vol(i,jhi,k) = vol(i,jhi,k) + vol(i,jhi+1,k)
                vol(i,jhi+1,k) = 0.d0
@@ -121,12 +105,8 @@ subroutine flip_particle_vol(slo, shi, vol, &
      klo = domlo(3)
      do j=slo(2),shi(2)
         do i=slo(1),shi(1)
-           if (bc_klo_type(i,j,1) == NSW_ .or. &
-               bc_klo_type(i,j,1) == PSW_ .or. &
-               bc_klo_type(i,j,1) == FSW_ .or. &
-               bc_klo_type(i,j,1) == PINF_ .or. &
-               bc_klo_type(i,j,1) == MINF_ .or. &
-               bc_klo_type(i,j,1) == POUT_) then
+           if (bc_klo_type(i,j,1) == PINF_ .or. &
+               bc_klo_type(i,j,1) == MINF_ ) then           
 
                vol(i,j,klo) = vol(i,j,klo) + vol(i,j,klo-1)
                vol(i,j,klo-1) = 0.d0
@@ -140,12 +120,8 @@ subroutine flip_particle_vol(slo, shi, vol, &
      khi = domhi(3)
      do j=slo(2),shi(2)
         do i=slo(1),shi(1)
-           if (bc_khi_type(i,j,1) == NSW_ .or. &
-               bc_khi_type(i,j,1) == PSW_ .or. &
-               bc_khi_type(i,j,1) == FSW_ .or. &
-               bc_khi_type(i,j,1) == PINF_ .or. &
-               bc_khi_type(i,j,1) == MINF_ .or. &
-               bc_khi_type(i,j,1) == POUT_) then
+           if (bc_khi_type(i,j,1) == PINF_ .or. &
+               bc_khi_type(i,j,1) == MINF_ ) then 
 
                vol(i,j,khi) = vol(i,j,khi) + vol(i,j,khi+1)
                vol(i,j,khi+1) = 0.d0

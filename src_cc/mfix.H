@@ -436,10 +436,6 @@ private:
     vector<Real> avg_region_y_n;
     vector<Real> avg_region_z_b;
     vector<Real> avg_region_z_t;
-
-    // Option to control interpolation type
-    int m_drag_interp_type = 1; // 0 -> no interp, 1 -> standard interp, 2 -> slope interp 
-    int m_beta_interp_type = 1; // 0 -> no interp, 1 -> standard interp, 2 -> slope interp
     
     //
     // Here we set the number of ghost nodes of the field arrays.
@@ -457,7 +453,7 @@ private:
     const int m_eb_full_grow_cells = nghost;
 
 
-    int nodal_pressure = 0;
+    int nodal_pressure = 1;
     int explicit_diffusion = 1;
 
     // Variables to simplify IO -- the vectors are the same for plt/chk

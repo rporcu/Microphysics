@@ -1,8 +1,8 @@
 #include <AMReX_ParmParse.H>
-
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
 #include <mfix.H>
+#include <mfix_des_F.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_EBMultiFabUtil.H>
@@ -21,13 +21,7 @@ void mfix::mfix_calc_drag_fluid(Real time)
 
        if (OnSameGrids)
        {
-       // ************************************************************
-       // First create the beta of individual particles
-       // ************************************************************
-           if (m_beta_interp_type == 2)
-               mfix_compute_velocity_slopes( lev, vel_g );
 
-           
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -41,11 +35,8 @@ void mfix::mfix_calc_drag_fluid(Real time)
                sbx.loVect(), sbx.hiVect(),
                (*ep_g[lev])[pti].dataPtr() , (*ro_g[lev])[pti].dataPtr(),
                (*vel_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
-               (*xslopes[lev])[pti].dataPtr(),
-               (*yslopes[lev])[pti].dataPtr(),
-               (*zslopes[lev])[pti].dataPtr(),
-               &np, particles.data(), geom[lev].ProbLo(), geom[lev].CellSize(),
-               m_beta_interp_type );
+               &np, particles.data(),
+               geom[lev].ProbLo(), geom[lev].CellSize());
        }
 
        // ******************************************************************************
@@ -55,7 +46,7 @@ void mfix::mfix_calc_drag_fluid(Real time)
        drag[lev]->setVal(0.0L);
        f_gds[lev]->setVal(0.0L);
 
-       pc -> CalcDragOnFluid(*f_gds[lev], *drag[lev],
+       pc -> CalcDragOnFluid(*f_gds[lev], *drag[lev], *particle_ebfactory[lev],
                              *bc_ilo[lev],*bc_ihi[lev],*bc_jlo[lev],*bc_jhi[lev],
                              *bc_klo[lev],*bc_khi[lev],nghost);
        }
@@ -190,12 +181,9 @@ mfix::mfix_calc_drag_particle(Real time)
           // HACK -- NOTE WE ARE CALLING THIS ON ALL LEVELS BUT ONLY NEED IT ON ONE LEVEL
           int extrap_dir_bcs = 1;
           mfix_set_velocity_bcs(time, extrap_dir_bcs);
-
           gp_tmp.FillBoundary(geom[lev].periodicity());
 
-
-          if (m_drag_interp_type == 2)
-             mfix_compute_velocity_slopes( lev, vel_g );
+          
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -203,16 +191,38 @@ mfix::mfix_calc_drag_particle(Real time)
           {
               auto& particles = pti.GetArrayOfStructs();
               const int np = particles.size();
-   
-              calc_drag_particle( BL_TO_FORTRAN_ANYD(       gp_tmp[pti]),
-                                  BL_TO_FORTRAN_ANYD((  *gp0[lev])[pti]),
-                                  BL_TO_FORTRAN_ANYD((*vel_g[lev])[pti]),
-                                  (*xslopes[lev])[pti].dataPtr(),
-                                  (*yslopes[lev])[pti].dataPtr(),
-                                  BL_TO_FORTRAN_ANYD((*zslopes[lev])[pti]),
-                                  &np, particles.data(),
-                                  geom[lev].CellSize(), geom[lev].ProbLo(),
-                                  m_drag_interp_type);
+              Box bx = pti.tilebox ();
+
+              // this is to check efficiently if this tile contains any eb stuff
+              const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_g[lev])[pti]);
+              const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
+
+              if (flags.getType(amrex::grow(bx,0)) == FabType::covered)
+              {
+                  // Do nothing
+              }
+              else
+              {
+                  if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
+                  {
+                      calc_drag_particle( BL_TO_FORTRAN_ANYD(       gp_tmp[pti]),
+                                          BL_TO_FORTRAN_ANYD((  *gp0[lev])[pti]),
+                                          BL_TO_FORTRAN_ANYD((*vel_g[lev])[pti]),
+                                          &np, particles.data(),
+                                          geom[lev].CellSize(), geom[lev].ProbLo());
+                  }
+                  else
+                  {
+                      calc_drag_particle_eb( BL_TO_FORTRAN_ANYD(       gp_tmp[pti]),
+                                             BL_TO_FORTRAN_ANYD((  *gp0[lev])[pti]),
+                                             BL_TO_FORTRAN_ANYD((*vel_g[lev])[pti]),
+                                             BL_TO_FORTRAN_ANYD(flags),
+                                             &np, particles.data(),
+                                             geom[lev].CellSize(), geom[lev].ProbLo());
+
+                  }
+              }
+                  
           }
 
           // Reset velocity Dirichlet bc's to face values

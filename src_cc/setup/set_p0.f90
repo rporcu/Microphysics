@@ -57,7 +57,7 @@
 ! Local variables
 !-----------------------------------------------
       ! indices
-      integer :: i, j, k, icv, bcv
+      integer :: i, j, k, ibc, jbc, kbc, icv, bcv
       integer :: nlft, nbot, ndwn, nrgt, ntop, nup
 
       ! Gas pressure at the axial location j
@@ -262,11 +262,16 @@
          do k=slo(3),shi(3)
             do j=slo(2),shi(2)
 
-               select case ( bct_ilo(j,k,1) )
+               kbc = k
+               jbc = j
+               if (k .gt. domhi(3)+ng) kbc = kbc - 1
+               if (j .gt. domhi(2)+ng) jbc = jbc - 1
+               
+               select case ( bct_ilo(jbc,kbc,1) )
 
                case (pinf_, pout_)
 
-                   bcv = bct_ilo(j,k,2)
+                   bcv = bct_ilo(jbc,kbc,2)
                    if (nodal_pressure .eq. 1) then
                        p0_g(slo(1):domlo(1)  ,j,k) = scale_pressure(bc_p_g(bcv))
                    else
@@ -288,11 +293,16 @@
          do k=slo(3),shi(3)
             do j=slo(2),shi(2)
 
-               select case ( bct_ihi(j,k,1) )
+               kbc = k
+               jbc = j
+               if (k .gt. domhi(3)+ng) kbc = kbc - 1
+               if (j .gt. domhi(2)+ng) jbc = jbc - 1
+               
+               select case ( bct_ihi(jbc,kbc,1) )
 
                case (pinf_, pout_)
 
-                   bcv = bct_ihi(j,k,2)
+                   bcv = bct_ihi(jbc,kbc,2)
                    p0_g(domhi(1)+1:shi(1),j,k) = scale_pressure(bc_p_g(bcv))
 
                case (minf_)
@@ -310,12 +320,16 @@
          do k=slo(3),shi(3)
             do i=slo(1),shi(1)
 
-
-               select case ( bct_jlo(i,k,1) )
+               kbc = k
+               ibc = i
+               if (k .gt. domhi(3)+ng) kbc = kbc - 1
+               if (i .gt. domhi(1)+ng) ibc = ibc - 1
+               
+               select case ( bct_jlo(ibc,kbc,1) )
 
                case (pinf_, pout_)
 
-                   bcv = bct_jlo(i,k,2)
+                   bcv = bct_jlo(ibc,kbc,2)
                    if (nodal_pressure .eq. 1) then
                        p0_g(i,slo(2):domlo(2)  ,k) = scale_pressure(bc_p_g(bcv))
                    else
@@ -337,11 +351,16 @@
          do k = slo(3),shi(3)
             do i = slo(1),shi(1)
 
-               select case ( bct_jhi(i,k,1) )
+               kbc = k
+               ibc = i
+               if (k .gt. domhi(3)+ng) kbc = kbc - 1
+               if (i .gt. domhi(1)+ng) ibc = ibc - 1
+               
+               select case ( bct_jhi(ibc,kbc,1) )
 
                case (pinf_, pout_)
 
-                  bcv = bct_jhi(i,k,2)
+                  bcv = bct_jhi(ibc,kbc,2)
                   p0_g(i,domhi(2)+1:shi(2),k) = scale_pressure(bc_p_g(bcv))
 
                case (minf_)
@@ -359,11 +378,16 @@
          do j=slo(2),shi(2)
             do i=slo(1),shi(1)
 
-               select case ( bct_klo(i,j,1) )
+               jbc = j
+               ibc = i
+               if (j .gt. domhi(2)+ng) jbc = jbc - 1
+               if (i .gt. domhi(1)+ng) ibc = ibc - 1
+
+               select case ( bct_klo(ibc,jbc,1) )
 
                case (pinf_, pout_)
 
-                  bcv = bct_klo(i,j,2)
+                  bcv = bct_klo(ibc,jbc,2)
                   if (nodal_pressure .eq. 1) then
                       p0_g(i,j,slo(3):domlo(3)  ) = scale_pressure(bc_p_g(bcv))
                   else
@@ -385,11 +409,16 @@
          do j=slo(2),shi(2)
             do i=slo(1),shi(1)
 
-              select case ( bct_khi(i,j,1) )
+               jbc = j
+               ibc = i
+               if (j .gt. domhi(2)+ng) jbc = jbc - 1
+               if (i .gt. domhi(1)+ng) ibc = ibc - 1
+
+              select case ( bct_khi(ibc,jbc,1) )
 
                case (pinf_, pout_)
 
-                   bcv = bct_khi(i,j,2)
+                   bcv = bct_khi(ibc,jbc,2)
                    p0_g(i,j,domhi(3)+1:shi(3)) = scale_pressure(bc_p_g(bcv))
 
                case (minf_)
