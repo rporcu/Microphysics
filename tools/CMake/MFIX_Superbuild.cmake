@@ -26,7 +26,7 @@ enable_language (Fortran)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER   121d9c0bd059567a508de0d891e4e1ba98c4e8d3 )
-set (AMREX_GIT_COMMIT_DEVELOP  6da8d37c9ad93a8f81ca666da23a14dfb175b3ca )
+set (AMREX_GIT_COMMIT_DEVELOP  34512fd4bf61a6cf822125e326b45f881cb47638 )
 
 set (AMREX_GIT_TAG)  # The commit id or branch to download
 
@@ -113,7 +113,7 @@ ExternalProject_Add ( amrex
    -DENABLE_PARTICLES=ON
    -DENABLE_DP_PARTICLES=${AMREX_ENABLE_DP_PARTICLES}
    -DDIM=3
-   -DDEBUG=${DEBUG}
+   -DDEBUG=${DEBUG}  
    -DENABLE_AMRDATA=ON # Needed to compile postprocessing tools
    -DENABLE_LINEAR_SOLVERS=ON
    -DENABLE_EB=${AMREX_ENABLE_EB}
@@ -127,6 +127,7 @@ ExternalProject_Add ( amrex
    -DENABLE_FPE=${ENABLE_FPE}
    -DENABLE_ASSERTIONS=${AMREX_ENABLE_ASSERTION}
    -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+   -DENABLE_3D_NODAL_MLMG=yes
    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
    -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
