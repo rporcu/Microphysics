@@ -93,7 +93,7 @@ Clone AMReX from the official Git repository and checkout the _development_ bran
 ```
 Next, configure, build and install AMReX as follows: 
 ```shell
-> cmake AMREX_CONFIG_OPTIONS -DENABLE_PARTICLES=1 -DENABLE_AMRDATA=1 -DENABLE_EB=1 -DCMAKE_INSTALL_PREFIX:PATH=/absolute/path/to/installdir .
+> cmake AMREX_CONFIG_OPTIONS -DENABLE_PARTICLES=1 -DENABLE_AMRDATA=1 -DENABLE_EB=1 -DENABLE_3D_NODAL_MLMG=1 -DCMAKE_INSTALL_PREFIX:PATH=/absolute/path/to/installdir .
 > make install
 ```
 Here,`AMREX_CONFIG_OPTIONS` are optional configure options for AMReX. Please refer to the AMReX user guide
