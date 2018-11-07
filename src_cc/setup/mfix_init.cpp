@@ -26,10 +26,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
         pp.query( "mg_rtol", mg_rtol );
         pp.query( "mg_atol", mg_atol );
-
-        // Options to control interpolation type
-        pp.query( "drag_interp_type", m_drag_interp_type );        
-        pp.query( "beta_interp_type", m_beta_interp_type );
         
         // Option to control approximate projection
         pp.query("nodal_pressure", nodal_pressure);

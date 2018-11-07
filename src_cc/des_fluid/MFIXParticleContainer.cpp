@@ -764,13 +764,17 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 }
 
 void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled,
+                                               const EBFArrayBoxFactory& ebfactory,
                                                IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                                IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                                                IArrayBox& bc_klo, IArrayBox& bc_khi,
-                 int nghost )
+                                               int nghost )
 {
+
+    // NOTE: ebfactory HAS to be the PARTICLE EB factory!
     int fortran_volume_comp = 5;
-    PICDeposition(mf_to_be_filled, bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
+    PICDeposition(mf_to_be_filled, ebfactory,
+                  bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
                   fortran_volume_comp,nghost);
 
     // Now define this mf = (1 - particle_vol)
@@ -784,6 +788,7 @@ void MFIXParticleContainer::CalcVolumeFraction(amrex::MultiFab& mf_to_be_filled,
 
 void MFIXParticleContainer::CalcDragOnFluid(amrex::MultiFab& beta_mf,
                                             amrex::MultiFab& beta_vel_mf,
+                                            const EBFArrayBoxFactory& ebfactory,
                                             IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                             IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                                             IArrayBox& bc_klo, IArrayBox& bc_khi,
@@ -791,12 +796,13 @@ void MFIXParticleContainer::CalcDragOnFluid(amrex::MultiFab& beta_mf,
 {
     int fortran_beta_comp = 15;
     int fortran_vel_comp  =  9;
-    PICMultiDeposition(beta_mf, beta_vel_mf,
+    PICMultiDeposition(beta_mf, beta_vel_mf, ebfactory,
                        bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
                        fortran_beta_comp, fortran_vel_comp, nghost);
 }
 
 void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
+                                          const EBFArrayBoxFactory& ebfactory,
                                           IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                           IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                                           IArrayBox& bc_klo, IArrayBox& bc_khi,
@@ -843,6 +849,13 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
 
     using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
 
+    // Get particle EB geometric info
+    MultiFab      dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                        1, 0, MFInfo(), ebfactory);
+    
+    const amrex::MultiFab*                    volfrac;
+    volfrac = &(ebfactory.getVolFrac());
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -870,8 +883,21 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
             hi = box.hiVect();
 #endif
 
-            mfix_deposit_cic(particles.data(), nstride, nrp, ncomp, data_ptr,
-                             lo, hi, plo, dx, &fortran_particle_comp);
+            // this is to check efficiently if this tile contains any eb stuff
+            const EBFArrayBox&  dummy_fab = static_cast<EBFArrayBox const&>(dummy[pti]);
+            const EBCellFlagFab&    flags = dummy_fab.getEBCellFlagFab();
+
+            const Box& bx  = pti.tilebox(); // I need a box without ghosts
+
+            if (flags.getType(bx) != FabType::covered )
+            {
+                mfix_deposit_cic_eb(particles.data(), nstride, nrp, ncomp, data_ptr,
+                                    lo, hi,
+                                    BL_TO_FORTRAN_ANYD((*volfrac)[pti]),
+                                    BL_TO_FORTRAN_ANYD(flags),
+                                    plo, dx, &fortran_particle_comp);
+            }
+                
 
 #ifdef _OPENMP
             amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
@@ -882,8 +908,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
     }
 
     // Move any field deposited outside the domain back into the domain
-    // (at all domain boundaries except periodic)
-
+    // when BC is pressure inlet and mass inflow. 
     Box domain(Geom(lev).Domain());
 
     for (MFIter mfi(*mf_pointer); mfi.isValid(); ++mfi) {
@@ -920,6 +945,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
 
 void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
                                                amrex::MultiFab& beta_vel_mf,
+                                               const EBFArrayBoxFactory& ebfactory,
                                                IArrayBox& bc_ilo, IArrayBox& bc_ihi,
                                                IArrayBox& bc_jlo, IArrayBox& bc_jhi,
                                                IArrayBox& bc_klo, IArrayBox& bc_khi,
@@ -949,6 +975,13 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
     const int* hi;
     Real* bx_dataptr;
     Real* bu_dataptr;
+
+    // Get particle EB geometric info
+    MultiFab  dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                    1, 0, MFInfo(), ebfactory);
+    
+    const amrex::MultiFab*   volfrac;
+    volfrac = &(ebfactory.getVolFrac());
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -986,15 +1019,27 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
             bx_dataptr = beta_fab.dataPtr();
             bu_dataptr = beta_vel_fab.dataPtr();
 
-            const Box& bx = beta_fab.box();
+            const Box& bx  = beta_fab.box();
 
             lo = bx.loVect();
             hi = bx.hiVect();
 #endif
 
-            mfix_multi_deposit_cic(particles.data(), nstride, np,
-                                   bx_dataptr, bu_dataptr,
-                                   lo, hi, plo, dx, &fortran_beta_comp, &fortran_vel_comp);
+            // this is to check efficiently if this tile contains any eb stuff
+            const EBFArrayBox&  dummy_fab = static_cast<EBFArrayBox const&>(dummy[pti]);
+            const EBCellFlagFab&    flags = dummy_fab.getEBCellFlagFab();
+
+            const Box& box = pti.tilebox(); // I need a box without ghosts
+            
+            if (flags.getType(box) != FabType::covered )
+            {
+                mfix_multi_deposit_cic_eb(particles.data(), nstride, np,
+                                          bx_dataptr, bu_dataptr,
+                                          lo, hi,
+                                          BL_TO_FORTRAN_ANYD((*volfrac)[pti]),
+                                          plo, dx, &fortran_beta_comp,
+                                          &fortran_vel_comp);
+           }
 
 #ifdef _OPENMP
             amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_x_vol),
@@ -1022,16 +1067,16 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
     //        has been deposited outside the domain at a FSW or NSW.  This applies to both
     //        "drag" and "f_gds" (as they are known in the fluid update) and to both
     //        normal and tangential components.
-    for (MFIter mfi(beta_vel_mf); mfi.isValid(); ++mfi) {
+    // for (MFIter mfi(beta_vel_mf); mfi.isValid(); ++mfi) {
 
-      flip_drag_terms(BL_TO_FORTRAN_ANYD(    beta_mf[mfi]),
-                      BL_TO_FORTRAN_ANYD(beta_vel_mf[mfi]),
-                      bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                      bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                      bc_klo.dataPtr(), bc_khi.dataPtr(),
-                      domain.loVect(), domain.hiVect(),
-                      &nghost);
-    }
+    //   flip_drag_terms(BL_TO_FORTRAN_ANYD(    beta_mf[mfi]),
+    //                   BL_TO_FORTRAN_ANYD(beta_vel_mf[mfi]),
+    //                   bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+    //                   bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+    //                   bc_klo.dataPtr(), bc_khi.dataPtr(),
+    //                   domain.loVect(), domain.hiVect(),
+    //                   &nghost);
+    // }
 
     if (m_verbose > 1) {
       Real stoptime = ParallelDescriptor::second() - strttime;

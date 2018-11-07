@@ -86,8 +86,8 @@ contains
       dt = min ( dt, 1.01*old_dt )
 
       ! Don't overshoot the final time if not running to steady state
-      if (steady_state .eq. 0 .and. stop_time .ge. 0.) then
-         if (time+dt .gt. stop_time) &
+      if (steady_state == 0 .and. stop_time > 0.) then
+         if (time+dt > stop_time) &
               dt = stop_time - time
       end if
 
