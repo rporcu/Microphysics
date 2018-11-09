@@ -38,7 +38,7 @@ string ( TOUPPER ${CMAKE_BUILD_TYPE} MFIX_BUILD_TYPE )
 
 option ( ENABLE_FPE "Enable Floating Point Exceptions checks" OFF )
 
-option ( ENABLE_PROJCC "Enable Approximate Projection" OFF)
+option ( ENABLE_PROJCC "Enable Approximate Projection" ON )
 
 option ( ENABLE_PTESTS "Include tests for projection method in Ctest suite " OFF )
 
