@@ -524,7 +524,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
          // Neighbor particles
          PairIndex index(pti.index(), pti.LocalTileIndex());
-         int size_ng = neighbors[index].size() / pdata_size;
+         int size_ng = neighbors[index].size();
          int size_nl = neighbor_list[index].size();
 
          // Number of particles including neighbor particles
@@ -1335,7 +1335,7 @@ void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Vector<Real>> p
         //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
         // Where n is the total number of particle and neighbor particles.
         const int nrp     = NumberOfParticles(pti);
-        const int size_ng = neighbors[index].size() / pdata_size;
+        const int size_ng = neighbors[index].size();
         // Number of particles including neighbor particles
         const int ntot = nrp + size_ng;
 
