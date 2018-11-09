@@ -1,6 +1,7 @@
 add_sources ( calc_drag.f90 )
 add_sources ( calc_particle_beta.f90 )
 add_sources ( flip_drag_terms.f90 )
+add_sources ( flip_particle_vol.f90 )
 add_sources ( particle_pic.f90  )
 add_sources ( set_gradp_bcs.f90  )
 add_sources ( mfix_des_F.H )
