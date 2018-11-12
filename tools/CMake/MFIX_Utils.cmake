@@ -223,11 +223,11 @@ function (print_mfix_configuration_summary mfix_libname )
   replace_genex ( MFIX_FLAGS MFIX_Fortran_FLAGS LANGUAGE Fortran )
   replace_genex ( MFIX_FLAGS MFIX_CXX_FLAGS LANGUAGE CXX )
 
-  if (NOT "${MFIX_Fortran_FLAGS}")
+  if (NOT MFIX_Fortran_FLAGS)
     set (MFIX_Fortran_FLAGS ${CMAKE_Fortran_FLAGS})
   endif ()
 
-  if (NOT "${MFIX_CXX_FLAGS}")
+  if (NOT MFIX_CXX_FLAGS)
     set (MFIX_CXX_FLAGS ${CMAKE_CXX_FLAGS})
   endif ()
 
