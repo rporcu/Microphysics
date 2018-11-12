@@ -217,13 +217,24 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
           &            sx_hi*sy_hi*sz_lo*(gp(i  , j  , k-1,1:3) + gp0(i  , j  , k-1,1:3)) + &
           &            sx_hi*sy_hi*sz_hi*(gp(i  , j  , k  ,1:3) + gp0(i  , j  , k  ,1:3))
 
+
+         velfp(1:3) = sx_lo*sy_lo*sz_lo*vel(i-1, j-1, k-1,1:3) + &
+          &           sx_lo*sy_lo*sz_hi*vel(i-1, j-1, k  ,1:3) + &
+          &           sx_lo*sy_hi*sz_lo*vel(i-1, j  , k-1,1:3) + &
+          &           sx_lo*sy_hi*sz_hi*vel(i-1, j  , k  ,1:3) + &
+          &           sx_hi*sy_lo*sz_lo*vel(i  , j-1, k-1,1:3) + &
+          &           sx_hi*sy_lo*sz_hi*vel(i  , j-1, k  ,1:3) + &
+          &           sx_hi*sy_hi*sz_lo*vel(i  , j  , k-1,1:3) + &
+          &           sx_hi*sy_hi*sz_hi*vel(i  , j  , k  ,1:3)
+
       else
 
          ic  = floor((particles(p) % pos(1) - x0(1))*odx)
          jc  = floor((particles(p) % pos(2) - x0(2))*ody)
          kc  = floor((particles(p) % pos(3) - x0(3))*odz)
 
-         gradpg(:) = gp(i,j,k,:) + gp0(i,j,k,:)
+         gradpg(:) = gp(ic,jc,kc,:) + gp0(ic,jc,kc,:)
+         velfp(:)  = vel(ic,jc,kc,1:3)
 
       end if
 

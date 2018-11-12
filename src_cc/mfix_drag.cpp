@@ -31,12 +31,40 @@ void mfix::mfix_calc_drag_fluid(Real time)
            auto& particles = pti.GetArrayOfStructs();
            const int np = particles.size();
 
-           calc_particle_beta(
-               sbx.loVect(), sbx.hiVect(),
-               (*ep_g[lev])[pti].dataPtr() , (*ro_g[lev])[pti].dataPtr(),
-               (*vel_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
-               &np, particles.data(),
-               geom[lev].ProbLo(), geom[lev].CellSize());
+           // this is to check efficiently if this tile contains any eb stuff
+           const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_g[lev])[pti]);
+           const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
+           Box bx = pti.tilebox ();
+
+           if (flags.getType(amrex::grow(bx,0)) == FabType::covered)
+           {
+               // Do nothing
+           }
+           else
+           {
+               if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
+               {
+
+                   calc_particle_beta( sbx.loVect(), sbx.hiVect(),
+                                       (*ep_g[lev])[pti].dataPtr() , (*ro_g[lev])[pti].dataPtr(),
+                                       (*vel_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
+                                       &np, particles.data(),
+                                       geom[lev].ProbLo(), geom[lev].CellSize());
+               }
+               else
+               {
+
+                   calc_particle_beta_eb( sbx.loVect(), sbx.hiVect(),
+                                          (*ep_g[lev])[pti].dataPtr() , (*ro_g[lev])[pti].dataPtr(),
+                                          (*vel_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
+                                          BL_TO_FORTRAN_ANYD(flags),
+                                          &np, particles.data(),
+                                          geom[lev].ProbLo(), geom[lev].CellSize());
+
+
+               }
+           }
+
        }
 
        // ******************************************************************************
