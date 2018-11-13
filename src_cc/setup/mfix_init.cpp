@@ -18,6 +18,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("dt_min", dt_min );
         pp.query("dt_max", dt_max );
 
+        // Options to control verbosity level
+        pp.query("verbose", m_verbose);
+
         // Options to control MGML behavior
         pp.query( "mg_verbose", mg_verbose );
         pp.query( "mg_cg_verbose", mg_cg_verbose );
@@ -145,8 +148,8 @@ mfix::Init(Real dt, Real time)
        // This refines the whole domain
        // BoxArray ba_ref(ba);
        // ba_ref.refine(2);
-
-       std::cout << "Setting refined region to " << ba_ref << std::endl;
+       if (m_verbose > 0)
+           std::cout << "Setting refined region to " << ba_ref << std::endl;
 
        DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
        MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
@@ -306,9 +309,13 @@ void
 mfix::MakeNewLevelFromScratch (int lev, Real time,
                                const BoxArray& new_grids, const DistributionMapping& new_dmap)
 {
-    std::cout << "MAKING NEW LEVEL " << lev << std::endl;
-    std::cout << "WITH BOX ARRAY   " << new_grids << std::endl;
 
+    if (m_verbose > 0)
+    {
+        std::cout << "MAKING NEW LEVEL " << lev << std::endl;
+        std::cout << "WITH BOX ARRAY   " << new_grids << std::endl;
+    }
+    
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
@@ -462,8 +469,7 @@ mfix::InitLevelData(Real dt, Real time)
 
       Real end_init_part = ParallelDescriptor::second() - strt_init_part;
       ParallelDescriptor::ReduceRealMax(end_init_part, ParallelDescriptor::IOProcessorNumber());
-      if (ParallelDescriptor::IOProcessor())
-         std::cout << "Time spent in initializing particles " << end_init_part << std::endl;
+      amrex::Print() << "Time spent in initializing particles " << end_init_part << std::endl;
     }
 
     if (solve_fluid)
@@ -526,7 +532,8 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
   }
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
-  std::cout  << "CALLING MFIX INIT FLUID " << solve_fluid << std::endl;
+  amrex::Print() << "CALLING MFIX INIT FLUID " << solve_fluid << std::endl;
+  
   if (solve_fluid)
      mfix_init_fluid(restart_flag,dt,stop_time,steady_state);
 
@@ -592,11 +599,9 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
   // Here we set bc values for p and u,v,w before the IC's are set
   mfix_set_bc0();
 
-  std::cout  << " NLEV " << nlev << std::endl;
   for (int lev = 0; lev < nlev; lev++)
   {
      Box domain(geom[lev].Domain());
-     std::cout  << " IN MFIX INIT FLUID AT LEVEL " << lev << std::endl;
 
      Real dx = geom[lev].CellSize(0);
      Real dy = geom[lev].CellSize(1);

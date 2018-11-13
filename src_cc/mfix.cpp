@@ -34,7 +34,7 @@ mfix::mfix ()
     // But the arrays for them have been resized.
 
     nlev = maxLevel() + 1;
-    std::cout << " NLEVS " << nlev << std::endl;
+    amrex::Print() << "Number of levels: " << nlev << std::endl;
 
     istep.resize(nlev, 0);
 

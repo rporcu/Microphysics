@@ -387,6 +387,9 @@ private:
     int solve_fluid;
     int solve_dem;
 
+    // Options to control mfix verbosity level
+    int m_verbose = 0;
+
     // Options to control MLMG behavior
     int  mg_verbose = 0;
     int  mg_cg_verbose = 0;

@@ -10,7 +10,6 @@
 #include <mfix_F.H>
 
 int   max_step    = -1;
-int   verbose     = -1;
 int   regrid_int  = -1;
 Real stop_time    = -1.0;
 
@@ -62,7 +61,6 @@ void ReadParameters ()
      pp.query("repl_x", repl_x);
      pp.query("repl_y", repl_y);
      pp.query("repl_z", repl_z);
-     pp.query("verbose", verbose);
      pp.query("regrid_int",regrid_int);
   }
 
