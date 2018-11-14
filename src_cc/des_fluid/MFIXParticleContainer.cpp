@@ -217,16 +217,23 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
             const Box & bx = pti.tilebox();
 
             // Remove particles outside of or touching the walls
-            if (flag.getType(bx) == FabType::covered) {
+            if (flag.getType(bx) != FabType::regular)
+            {
+                if (flag.getType(bx) == FabType::covered)
+                {
+                    for (auto & p: pti.GetArrayOfStructs())
+                        p.id() = -1;
 
-                for (auto & p: pti.GetArrayOfStructs())
-                    p.id() = -1;
-
-            } else if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued) {
-                rm_wall_collisions(particles, &nrp,
-                                   BL_TO_FORTRAN_3D((* ls_valid)[pti]),
-                                   BL_TO_FORTRAN_3D((* ls_phi)[pti]),
-                                   dx, & ls_refinement);
+                }
+                else
+                {
+                    rm_wall_collisions_eb(particles, &nrp,
+                                          BL_TO_FORTRAN_3D((*ls_valid)[pti]),
+                                          BL_TO_FORTRAN_3D((*ls_phi)[pti]),
+                                          BL_TO_FORTRAN_3D(flag),
+                                          Geom(lev).ProbLo(),
+                                          dx, & ls_refinement);
+                }
             }
         }
 
