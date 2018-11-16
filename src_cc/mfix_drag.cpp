@@ -3,6 +3,7 @@
 #include <mfix_eb_F.H>
 #include <mfix.H>
 #include <mfix_des_F.H>
+#include <mfix_util_F.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_EBMultiFabUtil.H>
@@ -22,12 +23,15 @@ void mfix::mfix_calc_drag_fluid(Real time)
        if (OnSameGrids)
        {
 
+           // Create fab to host reconstructed velocity field
+           FArrayBox vel_r;
+           const MultiFab* phi = level_set->get_data();
+           
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
        for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
        {
-           const Box& sbx = (*ep_g[lev])[pti].box();
            auto& particles = pti.GetArrayOfStructs();
            const int np = particles.size();
 
@@ -36,32 +40,37 @@ void mfix::mfix_calc_drag_fluid(Real time)
            const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
            Box bx = pti.tilebox ();
 
-           if (flags.getType(amrex::grow(bx,0)) == FabType::covered)
-           {
-               // Do nothing
-           }
-           else
+           if (flags.getType(amrex::grow(bx,0)) != FabType::covered)
            {
                if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
                {
 
-                   calc_particle_beta( sbx.loVect(), sbx.hiVect(),
-                                       (*ep_g[lev])[pti].dataPtr() , (*ro_g[lev])[pti].dataPtr(),
-                                       (*vel_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
+                   calc_particle_beta( BL_TO_FORTRAN_ANYD((*ep_g[lev])[pti]),
+                                       (*ro_g[lev])[pti].dataPtr(),
+                                       (*mu_g[lev])[pti].dataPtr(),
+                                       BL_TO_FORTRAN_ANYD((*vel_g[lev])[pti]),
                                        &np, particles.data(),
                                        geom[lev].ProbLo(), geom[lev].CellSize());
                }
                else
                {
 
-                   calc_particle_beta_eb( sbx.loVect(), sbx.hiVect(),
-                                          (*ep_g[lev])[pti].dataPtr() , (*ro_g[lev])[pti].dataPtr(),
-                                          (*vel_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
-                                          BL_TO_FORTRAN_ANYD(flags),
-                                          &np, particles.data(),
-                                          geom[lev].ProbLo(), geom[lev].CellSize());
+                   Box gbox = amrex::grow(bx,2);
+                   vel_r.resize(gbox,3);
 
+                   reconstruct_velocity( BL_TO_FORTRAN_ANYD(vel_r),
+                                         BL_TO_FORTRAN_ANYD((*vel_g[lev])[pti]),
+                                         BL_TO_FORTRAN_ANYD((*phi)[pti]),
+                                         level_set -> get_ls_ref(),
+                                         BL_TO_FORTRAN_ANYD(flags),
+                                         geom[lev].ProbLo(), geom[lev].CellSize()) ;
 
+                   calc_particle_beta( BL_TO_FORTRAN_ANYD((*ep_g[lev])[pti]),
+                                       (*ro_g[lev])[pti].dataPtr(),
+                                       (*mu_g[lev])[pti].dataPtr(),
+                                       BL_TO_FORTRAN_ANYD(vel_r),
+                                       &np, particles.data(),
+                                       geom[lev].ProbLo(), geom[lev].CellSize());
                }
            }
 
@@ -167,11 +176,7 @@ mfix::mfix_calc_drag_particle(Real time)
     for (int lev = 0; lev < nlev; lev++)
     {
 
-       Real dx = geom[lev].CellSize(0);
-       Real dy = geom[lev].CellSize(1);
-       Real dz = geom[lev].CellSize(2);
-
-       bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
+        bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                             (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
        Box domain(geom[lev].Domain());
@@ -211,6 +216,9 @@ mfix::mfix_calc_drag_particle(Real time)
           mfix_set_velocity_bcs(time, extrap_dir_bcs);
           gp_tmp.FillBoundary(geom[lev].periodicity());
 
+          // Create fab to host reconstructed velocity field
+          FArrayBox vel_r;
+          const MultiFab* phi = level_set->get_data();
           
 #ifdef _OPENMP
 #pragma omp parallel
@@ -223,13 +231,9 @@ mfix::mfix_calc_drag_particle(Real time)
 
               // this is to check efficiently if this tile contains any eb stuff
               const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_g[lev])[pti]);
-              const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
+              const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();               
 
-              if (flags.getType(amrex::grow(bx,0)) == FabType::covered)
-              {
-                  // Do nothing
-              }
-              else
+              if (flags.getType(amrex::grow(bx,0)) != FabType::covered)
               {
                   if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
                   {
@@ -241,9 +245,19 @@ mfix::mfix_calc_drag_particle(Real time)
                   }
                   else
                   {
+                      Box gbox = amrex::grow(bx,2);
+                      vel_r.resize(gbox,3);
+
+                      reconstruct_velocity( BL_TO_FORTRAN_ANYD(vel_r),
+                                            BL_TO_FORTRAN_ANYD((*vel_g[lev])[pti]),
+                                            BL_TO_FORTRAN_ANYD((*phi)[pti]),
+                                            level_set -> get_ls_ref(),
+                                            BL_TO_FORTRAN_ANYD(flags),
+                                            geom[lev].ProbLo(), geom[lev].CellSize()) ; 
+                      
                       calc_drag_particle_eb( BL_TO_FORTRAN_ANYD(       gp_tmp[pti]),
                                              BL_TO_FORTRAN_ANYD((  *gp0[lev])[pti]),
-                                             BL_TO_FORTRAN_ANYD((*vel_g[lev])[pti]),
+                                             BL_TO_FORTRAN_ANYD(vel_r),
                                              BL_TO_FORTRAN_ANYD(flags),
                                              &np, particles.data(),
                                              geom[lev].CellSize(), geom[lev].ProbLo());
