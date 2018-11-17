@@ -50,22 +50,14 @@ extern "C"
         );
 
     void calc_particle_beta(
-        const int* slo, const int* shi,
-        amrex::Real*  ep_g, amrex::Real* ro_g,
-        amrex::Real* vel_g, amrex::Real* mu_g,
+        const amrex::Real*  ep_g, const int* slo, const int* shi,
+        const amrex::Real* ro_g,  const amrex::Real* mu_g,
+        const amrex::Real* vel_g, const int* ulo, const int* uhi,
         const int* np, void* particles,
         const amrex::Real* x0, const amrex::Real* dx
         );
 
-    void calc_particle_beta_eb(
-        const int* slo, const int* shi,
-        amrex::Real*  ep_g, amrex::Real* ro_g,
-        amrex::Real* vel_g, amrex::Real* mu_g,
-        const void* flags, const int* flo, const int* fhi,
-        const int* np, void* particles,
-        const amrex::Real* x0, const amrex::Real* dx
-        );
-
+    
     void calc_drag_particle(  
         const amrex::Real* gp , const int* gplo , const int* gphi,
         const amrex::Real* gp0, const int* gp0lo, const int* gp0hi,

@@ -18,7 +18,8 @@ subroutine calc_drag_particle( gp,  gplo,  gphi,  &
    use iso_c_binding,     only: c_int
    use particle_mod,      only: particle_t
    use param,             only: half, zero, one
-
+   use interpolation_m,   only: trilinear_interp
+   
    implicit none
 
    ! Array bounds
@@ -48,12 +49,8 @@ subroutine calc_drag_particle( gp,  gplo,  gphi,  &
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer  :: p, i, j, k
    real(rt) :: velfp(3), gradpg(3)
-   real(rt) :: beta(np)
+   real(rt) :: pbeta
    real(rt) :: odx, ody, odz
-   real(rt) :: lx, ly, lz
-   real(rt) :: sx_lo, sy_lo, sz_lo
-   real(rt) :: sx_hi, sy_hi, sz_hi
-   real(rt) :: wx, wy, wz 
 
    odx = one/dx(1)
    ody = one/dx(2)
@@ -62,44 +59,24 @@ subroutine calc_drag_particle( gp,  gplo,  gphi,  &
    ! Calculate the gas phase forces acting on each particle.
    do p = 1, np
 
-      beta(p) = particles(p) % drag(1)
+      associate( ppos => particles(p) % pos, pvel => particles(p) % vel)
 
-      ! By adding half we always pick the upper cell in the
-      ! stencil
-      lx = (particles(p) % pos(1) - x0(1))*odx + half
-      ly = (particles(p) % pos(2) - x0(2))*ody + half
-      lz = (particles(p) % pos(3) - x0(3))*odz + half
+         pbeta = particles(p) % drag(1)
 
-      i = floor(lx)
-      j = floor(ly)
-      k = floor(lz)
+         ! Pick upper cell in the stencil
+         i = floor((ppos(1) - x0(1))*odx + half)
+         j = floor((ppos(2) - x0(2))*ody + half)
+         k = floor((ppos(3) - x0(3))*odz + half)
+         
+         velfp(:)  = trilinear_interp(vel, ulo, uhi, 3, ppos, x0, dx)           
+         gradpg(:) = trilinear_interp(gp, gp0, gplo, gphi, 3, ppos, x0, dx )
+            
 
-      sx_hi = lx - i;  sx_lo = one - sx_hi
-      sy_hi = ly - j;  sy_lo = one - sy_hi
-      sz_hi = lz - k;  sz_lo = one - sz_hi
+         ! Particle drag calculation
+         particles(p) % drag = pbeta*(velfp - pvel) - &
+          &                gradpg(:) * particles(p) % volume
 
-      gradpg(1:3) = sx_lo*sy_lo*sz_lo*(gp(i-1, j-1, k-1,1:3) + gp0(i-1, j-1, k-1,1:3)) + &
-       &            sx_lo*sy_lo*sz_hi*(gp(i-1, j-1, k  ,1:3) + gp0(i-1, j-1, k  ,1:3)) + &
-       &            sx_lo*sy_hi*sz_lo*(gp(i-1, j  , k-1,1:3) + gp0(i-1, j  , k-1,1:3)) + &
-       &            sx_lo*sy_hi*sz_hi*(gp(i-1, j  , k  ,1:3) + gp0(i-1, j  , k  ,1:3)) + &
-       &            sx_hi*sy_lo*sz_lo*(gp(i  , j-1, k-1,1:3) + gp0(i  , j-1, k-1,1:3)) + &
-       &            sx_hi*sy_lo*sz_hi*(gp(i  , j-1, k  ,1:3) + gp0(i  , j-1, k  ,1:3)) + &
-       &            sx_hi*sy_hi*sz_lo*(gp(i  , j  , k-1,1:3) + gp0(i  , j  , k-1,1:3)) + &
-       &            sx_hi*sy_hi*sz_hi*(gp(i  , j  , k  ,1:3) + gp0(i  , j  , k  ,1:3))
-
-      velfp(1:3) = sx_lo*sy_lo*sz_lo*vel(i-1, j-1, k-1,1:3) + &
-       &           sx_lo*sy_lo*sz_hi*vel(i-1, j-1, k  ,1:3) + &
-       &           sx_lo*sy_hi*sz_lo*vel(i-1, j  , k-1,1:3) + &
-       &           sx_lo*sy_hi*sz_hi*vel(i-1, j  , k  ,1:3) + &
-       &           sx_hi*sy_lo*sz_lo*vel(i  , j-1, k-1,1:3) + &
-       &           sx_hi*sy_lo*sz_hi*vel(i  , j-1, k  ,1:3) + &
-       &           sx_hi*sy_hi*sz_lo*vel(i  , j  , k-1,1:3) + &
-       &           sx_hi*sy_hi*sz_hi*vel(i  , j  , k  ,1:3)          
-
-
-      ! Particle drag calculation
-      particles(p) % drag = beta(p)*(velfp - particles(p) % vel) - &
-       &                    gradpg(:) * particles(p) % volume
+      end associate
 
    end do
 
@@ -118,6 +95,7 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
    use iso_c_binding,           only: c_int
    use particle_mod,            only: particle_t
    use param,                   only: half, zero, one
+   use interpolation_m,         only: trilinear_interp
 
    implicit none
 
@@ -152,12 +130,8 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer  :: p, i, j, k, ic, jc, kc
    real(rt) :: velfp(3), gradpg(3)
-   real(rt) :: beta(np)
+   real(rt) :: pbeta
    real(rt) :: odx, ody, odz
-   real(rt) :: lx, ly, lz
-   real(rt) :: sx_lo, sy_lo, sz_lo
-   real(rt) :: sx_hi, sy_hi, sz_hi
-   real(rt) :: wx, wy, wz 
 
 
    odx = one/dx(1)
@@ -165,82 +139,46 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
    odz = one/dx(3)
 
    ! Calculate the gas phase forces acting on each particle.
+   ! The velocity field is assumed to be reconstructed in a narrow band
+   ! surrouding the walls so that we can interpolate with a standard trilinear
+   ! interpolation
    do p = 1, np
 
-      beta(p) = particles(p) % drag(1)
+      associate( ppos => particles(p) % pos, pvel => particles(p) % vel)
+         
+         pbeta = particles(p) % drag(1)
 
+         ! Pick upper cell in the stencil
+         i = floor((ppos(1) - x0(1))*odx + half)
+         j = floor((ppos(2) - x0(2))*ody + half)
+         k = floor((ppos(3) - x0(3))*odz + half)
+         
+         velfp(:) = trilinear_interp(vel, ulo, uhi, 3, ppos, x0, dx)
 
-      ! Pick upper cell in the stencil
-      lx = (particles(p) % pos(1) - x0(1))*odx + half
-      ly = (particles(p) % pos(2) - x0(2))*ody + half
-      lz = (particles(p) % pos(3) - x0(3))*odz + half
+         !
+         ! gradp is interpolated only if there are not covered cells
+         ! in the stencil. If any covered cell is present in the stencil,
+         ! we use the cell gradp
+         !
+         if ( any( is_covered_cell(flags(i-1:i,j-1:j,k-1:k) )) ) then
 
-      i = floor(lx)
-      j = floor(ly)
-      k = floor(lz)
+            ic  = floor((particles(p) % pos(1) - x0(1))*odx)
+            jc  = floor((particles(p) % pos(2) - x0(2))*ody)
+            kc  = floor((particles(p) % pos(3) - x0(3))*odz)
 
-      sx_hi = lx - i;  sx_lo = one - sx_hi
-      sy_hi = ly - j;  sy_lo = one - sy_hi
-      sz_hi = lz - k;  sz_lo = one - sz_hi      
+            gradpg(:) = gp(ic,jc,kc,:) + gp0(ic,jc,kc,:)
+            
+         else
+            
+            gradpg(:) = trilinear_interp(gp, gp0, gplo, gphi, 3, ppos, x0, dx )
+            
+         end if
 
-      ! For now velocity is always interpolated via tri-linear interpolation,
-      ! even near/at EB cells
-      velfp(1:3) = sx_lo*sy_lo*sz_lo*vel(i-1, j-1, k-1,1:3) + &
-       &           sx_lo*sy_lo*sz_hi*vel(i-1, j-1, k  ,1:3) + &
-       &           sx_lo*sy_hi*sz_lo*vel(i-1, j  , k-1,1:3) + &
-       &           sx_lo*sy_hi*sz_hi*vel(i-1, j  , k  ,1:3) + &
-       &           sx_hi*sy_lo*sz_lo*vel(i  , j-1, k-1,1:3) + &
-       &           sx_hi*sy_lo*sz_hi*vel(i  , j-1, k  ,1:3) + &
-       &           sx_hi*sy_hi*sz_lo*vel(i  , j  , k-1,1:3) + &
-       &           sx_hi*sy_hi*sz_hi*vel(i  , j  , k  ,1:3)
+         ! Particle drag calculation
+         particles(p) % drag = pbeta*(velfp - pvel) - &
+          &                gradpg(:) * particles(p) % volume
 
-      !
-      ! gradp is interpolated only if there are not covered cells
-      ! in the stencil. If any covered cell is present in the stencil,
-      ! we use the cell gradp
-      !
-      if ( ( .not. is_covered_cell(flags(i-1,j-1,k-1)) ) .and. &
-       &   ( .not. is_covered_cell(flags(i-1,j-1,k  )) ) .and. &
-       &   ( .not. is_covered_cell(flags(i-1,j  ,k-1)) ) .and. &
-       &   ( .not. is_covered_cell(flags(i-1,j  ,k  )) ) .and. &
-       &   ( .not. is_covered_cell(flags(i  ,j-1,k-1)) ) .and. &
-       &   ( .not. is_covered_cell(flags(i  ,j-1,k  )) ) .and. &
-       &   ( .not. is_covered_cell(flags(i  ,j  ,k-1)) ) .and. &
-       &   ( .not. is_covered_cell(flags(i  ,j  ,k  )) ) ) then
-
-         gradpg(1:3) = sx_lo*sy_lo*sz_lo*(gp(i-1, j-1, k-1,1:3) + gp0(i-1, j-1, k-1,1:3)) + &
-          &            sx_lo*sy_lo*sz_hi*(gp(i-1, j-1, k  ,1:3) + gp0(i-1, j-1, k  ,1:3)) + &
-          &            sx_lo*sy_hi*sz_lo*(gp(i-1, j  , k-1,1:3) + gp0(i-1, j  , k-1,1:3)) + &
-          &            sx_lo*sy_hi*sz_hi*(gp(i-1, j  , k  ,1:3) + gp0(i-1, j  , k  ,1:3)) + &
-          &            sx_hi*sy_lo*sz_lo*(gp(i  , j-1, k-1,1:3) + gp0(i  , j-1, k-1,1:3)) + &
-          &            sx_hi*sy_lo*sz_hi*(gp(i  , j-1, k  ,1:3) + gp0(i  , j-1, k  ,1:3)) + &
-          &            sx_hi*sy_hi*sz_lo*(gp(i  , j  , k-1,1:3) + gp0(i  , j  , k-1,1:3)) + &
-          &            sx_hi*sy_hi*sz_hi*(gp(i  , j  , k  ,1:3) + gp0(i  , j  , k  ,1:3))
-
-
-         velfp(1:3) = sx_lo*sy_lo*sz_lo*vel(i-1, j-1, k-1,1:3) + &
-          &           sx_lo*sy_lo*sz_hi*vel(i-1, j-1, k  ,1:3) + &
-          &           sx_lo*sy_hi*sz_lo*vel(i-1, j  , k-1,1:3) + &
-          &           sx_lo*sy_hi*sz_hi*vel(i-1, j  , k  ,1:3) + &
-          &           sx_hi*sy_lo*sz_lo*vel(i  , j-1, k-1,1:3) + &
-          &           sx_hi*sy_lo*sz_hi*vel(i  , j-1, k  ,1:3) + &
-          &           sx_hi*sy_hi*sz_lo*vel(i  , j  , k-1,1:3) + &
-          &           sx_hi*sy_hi*sz_hi*vel(i  , j  , k  ,1:3)
-
-      else
-
-         ic  = floor((particles(p) % pos(1) - x0(1))*odx)
-         jc  = floor((particles(p) % pos(2) - x0(2))*ody)
-         kc  = floor((particles(p) % pos(3) - x0(3))*odz)
-
-         gradpg(:) = gp(ic,jc,kc,:) + gp0(ic,jc,kc,:)
-         velfp(:)  = vel(ic,jc,kc,1:3)
-
-      end if
-
-      ! Particle drag calculation
-      particles(p) % drag = beta(p)*(velfp - particles(p) % vel) - &
-       &                gradpg(:) * particles(p) % volume
+      end associate
 
    end do
 
