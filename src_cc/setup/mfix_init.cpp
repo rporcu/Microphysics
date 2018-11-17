@@ -29,7 +29,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
         pp.query( "mg_rtol", mg_rtol );
         pp.query( "mg_atol", mg_atol );
-        
+
         // Option to control approximate projection
         pp.query("nodal_pressure", nodal_pressure);
 
@@ -135,7 +135,7 @@ mfix::Init(Real dt, Real time)
 
     MakeNewLevelFromScratch(0, time, ba, dm);
 
-    for (int lev = 1; lev <= finest_level; lev++) 
+    for (int lev = 1; lev <= finest_level; lev++)
     {
        // This refines the central half of the domain
        int ilo = ba[0].size()[0] / 2;
@@ -199,7 +199,7 @@ mfix::Init(Real dt, Real time)
            amrex::Abort("Bad data in set_ps");
     }
 
-    for (int lev = 0; lev < nlev; lev++) 
+    for (int lev = 0; lev < nlev; lev++)
     {
        mfix_set_bc_type(lev);
 
@@ -315,7 +315,7 @@ mfix::MakeNewLevelFromScratch (int lev, Real time,
         std::cout << "MAKING NEW LEVEL " << lev << std::endl;
         std::cout << "WITH BOX ARRAY   " << new_grids << std::endl;
     }
-    
+
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
@@ -401,7 +401,7 @@ mfix::InitLevelData(Real dt, Real time)
     make_eb_geometry();
 
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
-    if (solve_fluid) 
+    if (solve_fluid)
        for (int lev = 0; lev < nlev; lev++)
           AllocateArrays(lev);
 
@@ -489,7 +489,7 @@ void
 mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                int steady_state)
 {
-  if (solve_dem) 
+  if (solve_dem)
   {
      // Auto generated particles may be out of the domain. This call will remove
      // them. Note that this has to occur after the EB geometry is created.
@@ -533,7 +533,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
   amrex::Print() << "CALLING MFIX INIT FLUID " << solve_fluid << std::endl;
-  
+
   if (solve_fluid)
      mfix_init_fluid(restart_flag,dt,stop_time,steady_state);
 
@@ -690,7 +690,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
      // Project the initial velocity field
      mfix_project_velocity();
 
-     // Iterate to compute the initial pressure 
+     // Iterate to compute the initial pressure
      mfix_initial_iterations(dt,stop_time,steady_state);
   }
 
@@ -708,14 +708,14 @@ mfix::mfix_set_bc0()
      for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
        {
          const Box& sbx = (*ep_g[lev])[mfi].box();
-   
+
          set_bc0(sbx.loVect(), sbx.hiVect(),
                  (*ep_g[lev])[mfi].dataPtr(),
                   (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
                   (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
-                 bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(), 
+                 bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                  bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(), 
+                 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                  domain.loVect(), domain.hiVect(), &nghost, &nodal_pressure);
        }
 
