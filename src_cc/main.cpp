@@ -220,7 +220,7 @@ int main (int argc, char* argv[])
     }
 
     bool do_not_evolve =  !steady_state && ( (max_step == 0) ||
-                     ( (stop_time >= 0.) && (time >  stop_time) ) || 
+                     ( (stop_time >= 0.) && (time >  stop_time) ) ||
                      ( (stop_time <= 0.) && (max_step <= 0) ) );
 
     { // Start profiling solve here
@@ -228,7 +228,7 @@ int main (int argc, char* argv[])
         BL_PROFILE("mfix_solve");
         BL_PROFILE_REGION("mfix_solve");
 
-        if ( !do_not_evolve) 
+        if ( !do_not_evolve)
         {
             while (finish == 0)
             {
@@ -282,7 +282,7 @@ int main (int argc, char* argv[])
 
                 // Mechanism to terminate MFIX normally.
                 do_not_evolve =  steady_state || (
-                     ( (stop_time >= 0.) && (time+0.1*dt >= stop_time) ) ||  
+                     ( (stop_time >= 0.) && (time+0.1*dt >= stop_time) ) ||
                      ( max_step >= 0 && nstep >= max_step ) );
                 if ( do_not_evolve ) finish = 1;
             }

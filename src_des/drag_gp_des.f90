@@ -96,7 +96,7 @@ module des_drag_gp_module
 
 ! total solids volume fraction
       real(rt) :: PHIS
- 
+
 ! aliases for void fraction, gas density, gas bulk density,
 ! solids volume fraction, particle diameter, particle density
       real(rt) :: ROg, ROPg, DPM

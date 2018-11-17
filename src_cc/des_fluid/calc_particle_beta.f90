@@ -35,7 +35,7 @@ subroutine calc_particle_beta ( slo, shi, ep_g, ro_g, vel_g, mu_g,   &
    type(particle_t), intent(inout) :: particles(np)
 
    ! Coordinates of lower corner of domain
-   real(rt),         intent(in   ) :: x0(3)  
+   real(rt),         intent(in   ) :: x0(3)
 
    ! Grid
    real(rt),         intent(in   ) :: dx(3)
@@ -74,7 +74,7 @@ subroutine calc_particle_beta ( slo, shi, ep_g, ro_g, vel_g, mu_g,   &
 
       sx_hi = lx - i;  sx_lo = one - sx_hi
       sy_hi = ly - j;  sy_lo = one - sy_hi
-      sz_hi = lz - k;  sz_lo = one - sz_hi         
+      sz_hi = lz - k;  sz_lo = one - sz_hi
 
       velfp(1:3) = sx_lo*sy_lo*sz_lo*vel_g(i-1, j-1, k-1,1:3) + &
        &       sx_lo*sy_lo*sz_hi*vel_g(i-1, j-1, k  ,1:3) + &
@@ -83,7 +83,7 @@ subroutine calc_particle_beta ( slo, shi, ep_g, ro_g, vel_g, mu_g,   &
        &       sx_hi*sy_lo*sz_lo*vel_g(i  , j-1, k-1,1:3) + &
        &       sx_hi*sy_lo*sz_hi*vel_g(i  , j-1, k  ,1:3) + &
        &       sx_hi*sy_hi*sz_lo*vel_g(i  , j  , k-1,1:3) + &
-       &       sx_hi*sy_hi*sz_hi*vel_g(i  , j  , k  ,1:3)               
+       &       sx_hi*sy_hi*sz_hi*vel_g(i  , j  , k  ,1:3)
 
       ! Calculate drag coefficient, beta
       call des_drag_gp(slo, shi, p, particles(p) % vel, velfp, &
@@ -103,7 +103,7 @@ end subroutine calc_particle_beta
 subroutine calc_particle_beta_eb ( slo, shi, ep_g,  ro_g, vel_g, mu_g, &
  &                                 flags, flo, fhi, np, particles, x0, &
  &                                 dx ) bind(C)
-   
+
    use amrex_ebcellflag_module,  only: is_covered_cell
    use amrex_fort_module,        only: rt => amrex_real
    use iso_c_binding,            only: c_int
@@ -116,7 +116,7 @@ subroutine calc_particle_beta_eb ( slo, shi, ep_g,  ro_g, vel_g, mu_g, &
    ! Array bounds
    integer(c_int), intent(in   ) :: slo(3), shi(3)
    integer(c_int), intent(in   ) :: flo(3), fhi(3)
-   
+
    ! Array
    real(rt), intent(in   ) :: &
     &  ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
@@ -132,7 +132,7 @@ subroutine calc_particle_beta_eb ( slo, shi, ep_g,  ro_g, vel_g, mu_g, &
    type(particle_t), intent(inout) :: particles(np)
 
    ! Coordinates of lower corner of domain
-   real(rt),         intent(in   ) :: x0(3)  
+   real(rt),         intent(in   ) :: x0(3)
 
    ! Grid
    real(rt),         intent(in   ) :: dx(3)
@@ -164,8 +164,8 @@ subroutine calc_particle_beta_eb ( slo, shi, ep_g,  ro_g, vel_g, mu_g, &
       i = floor(lx)
       j = floor(ly)
       k = floor(lz)
-      
-      ! Thir-linear interpolation if stencil is valid 
+
+      ! Thir-linear interpolation if stencil is valid
       if ( ( .not. is_covered_cell(flags(i-1,j-1,k-1)) ) .and. &
        &   ( .not. is_covered_cell(flags(i-1,j-1,k  )) ) .and. &
        &   ( .not. is_covered_cell(flags(i-1,j  ,k-1)) ) .and. &
@@ -173,11 +173,11 @@ subroutine calc_particle_beta_eb ( slo, shi, ep_g,  ro_g, vel_g, mu_g, &
        &   ( .not. is_covered_cell(flags(i  ,j-1,k-1)) ) .and. &
        &   ( .not. is_covered_cell(flags(i  ,j-1,k  )) ) .and. &
        &   ( .not. is_covered_cell(flags(i  ,j  ,k-1)) ) .and. &
-       &   ( .not. is_covered_cell(flags(i  ,j  ,k  )) ) ) then         
-         
+       &   ( .not. is_covered_cell(flags(i  ,j  ,k  )) ) ) then
+
          sx_hi = lx - i;  sx_lo = one - sx_hi
          sy_hi = ly - j;  sy_lo = one - sy_hi
-         sz_hi = lz - k;  sz_lo = one - sz_hi         
+         sz_hi = lz - k;  sz_lo = one - sz_hi
 
          velfp(1:3) = sx_lo*sy_lo*sz_lo*vel_g(i-1, j-1, k-1,1:3) + &
           &       sx_lo*sy_lo*sz_hi*vel_g(i-1, j-1, k  ,1:3) + &
@@ -187,15 +187,15 @@ subroutine calc_particle_beta_eb ( slo, shi, ep_g,  ro_g, vel_g, mu_g, &
           &       sx_hi*sy_lo*sz_hi*vel_g(i  , j-1, k  ,1:3) + &
           &       sx_hi*sy_hi*sz_lo*vel_g(i  , j  , k-1,1:3) + &
           &       sx_hi*sy_hi*sz_hi*vel_g(i  , j  , k  ,1:3)
-         
+
       else
-         
+
          i = floor((particles(p) % pos(1) - x0(1))*odx)
          j = floor((particles(p) % pos(2) - x0(2))*ody)
          k = floor((particles(p) % pos(3) - x0(3))*odz)
 
          velfp(1:3) = vel_g(i,j,k,1:3)
-         
+
       endif
 
       ! Calculate drag coefficient, beta
@@ -209,4 +209,3 @@ subroutine calc_particle_beta_eb ( slo, shi, ep_g,  ro_g, vel_g, mu_g, &
    end do
 
 end subroutine calc_particle_beta_eb
-
