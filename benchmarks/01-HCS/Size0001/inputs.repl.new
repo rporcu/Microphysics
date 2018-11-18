@@ -21,9 +21,6 @@ amr.plot_int   = 25
 amr.check_int  = 25
 
 amr.restart = newchk00000_for_replicate
-amr.repl_x = 1
-amr.repl_y = 1
-amr.repl_z = 1
 
 amr.repl_x = 2
 amr.repl_y = 2
