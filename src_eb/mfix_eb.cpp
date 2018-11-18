@@ -1,18 +1,9 @@
-//#include <AMReX_EB2.H>
-//#include <AMReX_EB2_IF_Cylinder.H>
-//#include <AMReX_EB2_IF_Plane.H>
-//#include <AMReX_EB2_IF_Union.H>
-
-//#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
-//#include <sstream>
-
 #include <algorithm>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
 #include <mfix_eb_F.H>
 
-void
-mfix::make_eb_geometry ()
+void mfix::make_eb_geometry ()
 {
 
   /******************************************************************************
@@ -92,4 +83,25 @@ mfix::make_eb_geometry ()
                    << std::endl;
     make_eb_regular();
   }
+
+
+  if (use_amr_ls)
+  {
+      amrex::Print() << "Constructing AMR levelset on "
+                     << amr_ls_max_level + 1 << " levels" << std::endl;
+
+      Vector<Real> ls_tags;
+      for (Real tag = amr_ls_baseline_tag; tag > 0; tag -= amr_ls_tag_step)
+          ls_tags.push_back(tag);
+
+      amrex::Print() << "Level tags: ";
+      for (Real tag : ls_tags)
+          amrex::Print() << tag << " ";
+      amrex::Print() << std::endl;
+
+      amr_level_set->InitData(ls_tags);
+      amr_level_set->WritePlotFile();
+      amrex::Print() << "... done constructing AMR levelset" << std::endl;
+  }
+
 }
