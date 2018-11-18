@@ -682,8 +682,8 @@ contains
 
                      vel(i,j,:lo(3)-1,n) = 2.d0*vel_in(i,j,lo(3)-1,n) - vel_in(i,j,lo(3),n)
 
-                  else if ( bc_klo_type(i,k,1) == POUT_  .or. &
-                            bc_klo_type(i,k,1) == IGNORE_ )  then
+                  else if ( bc_klo_type(i,j,1) == POUT_  .or. &
+                            bc_klo_type(i,j,1) == IGNORE_ )  then
 
                      vel(i,j,:lo(3)-1,n) = vel_in(i,j,lo(3),n)
 
@@ -708,8 +708,8 @@ contains
 
                      vel(i,j,hi(3)+1:,n) = 2.d0*vel_in(i,j,hi(3)+1,n) - vel_in(i,j,hi(3),n)
 
-                  else if ( bc_khi_type(i,k,1) == POUT_  .or. &
-                            bc_khi_type(i,k,1) == IGNORE_ )  then
+                  else if ( bc_khi_type(i,j,1) == POUT_  .or. &
+                            bc_khi_type(i,j,1) == IGNORE_ )  then
 
                      vel(i,j,hi(3)+1:,n) = vel_in(i,j,hi(3),n)
 
@@ -731,7 +731,7 @@ contains
                   if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
                        ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
                        ( bc_ilo_type(j,k,1) == FSW_ )  .or. &
-                         ( bc_ilo_type(j,k,1) == PSW_ )  ) then
+                       ( bc_ilo_type(j,k,1) == PSW_ )  ) then
 
                        vel(lo(1)-1,j,k,n) = 2.d0*vel_in(lo(1)-1,j,k,n) - vel_in(lo(1),j,k,n)
 
