@@ -135,9 +135,8 @@ int main (int argc, char* argv[])
     // Initialize internals from ParamParse database
     my_mfix.InitParams(solve_fluid, solve_dem, call_udf);
 
-    // This needs is needed before initializing level MultiFabs: ebfactories
-    // should not change after the eb-dependent MultiFabs are allocated.
-    my_mfix.make_eb_geometry();
+    // This needs to be done before initializing the particle container.
+    my_mfix.make_amr_geometry();
 
     // Initialize memory for data-array internals NOTE: MFIXParticleContainer is
     // created here
@@ -151,7 +150,6 @@ int main (int argc, char* argv[])
     if (restart_file.empty())
     {
         // NOTE: this also builds ebfactories and level-set
-        // PS NOTE: not anymore ... TODO: cleanup
         my_mfix.InitLevelData(dt,time);
     }
     else
@@ -165,7 +163,6 @@ int main (int argc, char* argv[])
 
         // NOTE: 1) this also builds ebfactories and level-set 2) this can
         // change the grids (during replication)
-        // PS NOTE: not anymore ... TODO: cleanup
         IntVect Nrep(repl_x,repl_y,repl_z);
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }

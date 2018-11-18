@@ -77,6 +77,9 @@ public:
 
     void make_eb_geometry ();
 
+    void make_amr_geometry ();
+
+
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(bool & has_walls);
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls(bool & has_real_walls);
@@ -166,15 +169,24 @@ protected:
 
 private:
 
-    void make_eb_general  ();
-    void make_eb_box      ();
-    void make_eb_cylinder ();
-    void make_eb_hopper   ();
-    void make_eb_cyclone  ();
+    void make_eb_general();
+
+    void make_eb_box();
+
+    void make_eb_cylinder();
+    void make_amr_cylinder();
+
+    void make_eb_hopper();
+
+    void make_eb_cyclone();
+
     void make_eb_hourglass();
-    void make_eb_clr      ();
+
+    void make_eb_clr();
+
     void make_eb_clr_riser();
-    void make_eb_regular  ();
+
+    void make_eb_regular();
 
     void MakeBCArrays();
 
@@ -513,7 +525,7 @@ private:
     Real amr_ls_baseline_tag = 1.e-3;
     // Level-set refinement tagging step size. Also a bit fiddly: this sets the
     // steps (from the baseline tag) which are used to refine the AMR level-set
-    Real amr_ls_tag_step     = 1.e-5;
+    Real amr_ls_tag_step     = 5.e-4;
     // Max number of levels in AMR level-set
     int amr_ls_max_level = 1;
 

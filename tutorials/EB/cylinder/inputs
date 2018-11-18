@@ -115,3 +115,7 @@ mfix.geometry = "cylinder"
 cylinder.direction = 2
 cylinder.radius    = 1.6e-3
 cylinder.center    = 1.6e-3   1.6e-3   0
+
+
+eb.use_amr_ls = true
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
