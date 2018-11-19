@@ -76,7 +76,6 @@ public:
     void make_mg_bc(int mg_bc[]);
 
     void make_eb_geometry ();
-
     void make_amr_geometry ();
 
 
@@ -516,16 +515,17 @@ private:
     // How much coarser should the zeroth-level of the level-set be? This is
     // needed because the coarse level is used to describe the approximate
     // level-set far from any boundaries.
-    int amr_ls_crse   = 4;
+    int amr_ls_crse = 4;
     // The max search-radius (ghost cells) over which to look for eb-facets
-    int amr_ls_eb_pad = 4;
+    int amr_ls_eb_pad     = 4;
+    int amr_ls_max_eb_pad = 4;
     // The base-line refinement value. This is a fiddly one: it needs to be
     // small enough so that all eb facets are picked up but also not too small
     // which would make the amr_ls data structure overly refined.
-    Real amr_ls_baseline_tag = 1.e-3;
+    Real amr_ls_baseline_tag = 1.e-4;
     // Level-set refinement tagging step size. Also a bit fiddly: this sets the
     // steps (from the baseline tag) which are used to refine the AMR level-set
-    Real amr_ls_tag_step     = 5.e-4;
+    Real amr_ls_tag_step     = 1.e-5;
     // Max number of levels in AMR level-set
     int amr_ls_max_level = 1;
 
