@@ -262,6 +262,7 @@ private:
     void mfix_extrap_pressure(int lev, std::unique_ptr<amrex::MultiFab>& p);
 
     void mfix_print_max_vel(int lev);
+    void mfix_print_max_gp (int lev);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids() const;

@@ -42,6 +42,17 @@ mfix::mfix_print_max_vel(int lev)
 }
 
 
+//
+// Print the maximum values of the pressure gradient components
+//
+void
+mfix::mfix_print_max_gp (int lev)
+{
+    amrex::Print() << "max(abs(gpx/gpy/gpz))  = " << 
+       mfix_norm0(gp, lev, 0) << "  " <<
+       mfix_norm0(gp, lev, 1) << "  " <<
+       mfix_norm0(gp, lev, 2) << "  " << std::endl;
+}
 
 //
 // This subroutines averages component by component
