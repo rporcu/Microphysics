@@ -49,6 +49,7 @@ MacProjection::read_inputs ()
    pp.query( "verbose", verbose );
    pp.query( "mg_verbose", m_mg_verbose );
    pp.query( "mg_rtol",  m_mg_rtol );
+   pp.query( "mg_atol",  m_mg_atol );
 
    // Default bottom solver is bicgstab, but alternatives are "smoother" or "hypre"
    bottom_solver_type = "bicgstab";
@@ -266,7 +267,7 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    }
 
    // Solve
-   macproj.project(m_mg_rtol);
+   macproj.project(m_mg_rtol,m_mg_atol);
 
    // Get MAC velocities at face CENTER by dividing solution by ep at faces
    if (verbose)
