@@ -128,15 +128,18 @@ int main (int argc, char* argv[])
        check_inputs(&dt);
 
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
-    //                                                                  |
-    //  => Geometry is constructed here:  (constructs Geometry) --------+
+    //                                                             |
+    //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix my_mfix;
 
     // Initialize internals from ParamParse database
     my_mfix.InitParams(solve_fluid, solve_dem, call_udf);
 
-    // Initialize memory for data-array internals
-    // Note: MFIXParticleContainer is created here
+    // This needs to be done before initializing the particle container.
+    my_mfix.make_amr_geometry();
+
+    // Initialize memory for data-array internals NOTE: MFIXParticleContainer is
+    // created here
     my_mfix.ResizeArrays();
 
     // Initialize derived internals

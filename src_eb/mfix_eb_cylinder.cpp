@@ -7,6 +7,7 @@
 //#include <sstream>
 
 #include <algorithm>
+#include <AMReX_EB_LSCore.H>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
 #include <mfix_eb_F.H>
@@ -26,8 +27,7 @@
  * cylinder.                                                                    *
  *                                                                              *
  ********************************************************************************/
-void
-mfix::make_eb_cylinder()
+void mfix::make_eb_cylinder()
 {
     ParmParse pp("cylinder");
 
@@ -92,6 +92,7 @@ mfix::make_eb_cylinder()
 
     amrex::Print() << "Done building the cylinder geometry" << std::endl;
 
+
     /****************************************************************************
     *                                                                           *
     * THIS FILLS PARTICLE EBFACTORY                                             *
@@ -132,7 +133,7 @@ mfix::make_eb_cylinder()
                       max_level_here + max_coarsening_level);
 
            EB2::GeometryShop<EB2::PlaneIF> gshop_wall = EB2::makeShop(my_plane);
-            wall_lsfactory.reset(new GShopLSFactory<EB2::PlaneIF>(gshop_wall, * level_set));
+           wall_lsfactory.reset(new GShopLSFactory<EB2::PlaneIF>(gshop_wall, * level_set));
        }
 
        const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
@@ -235,5 +236,99 @@ mfix::make_eb_cylinder()
 
          amrex::Print() << "Done making the fluid ebfactory ..." << std::endl;
        }
+    }
+}
+
+
+void mfix::make_amr_cylinder()
+{
+    ParmParse pp("cylinder");
+
+    int max_level_here = 0;
+
+    /****************************************************************************
+     * Get cylinder information from inputs file.                               *
+     ****************************************************************************/
+
+    bool inside       = true;
+    bool close_bottom = true;
+    Real offset       = 1.0e-8;
+
+    Real radius    = 0.0002;
+    Real height    = -1.;
+
+    int direction  = 0;
+    Vector<Real> centervec(3);
+
+    pp.query("internal_flow", inside);
+    pp.query("closed_bottom", close_bottom);
+    pp.query("bottom_offset", offset);
+
+    pp.query("radius",     radius);
+    pp.query("height",     height);
+    pp.query("direction",  direction);
+    pp.getarr("center",    centervec,  0, 3);
+    Array<Real,3> center={centervec[0], centervec[1], centervec[2]};
+
+
+    amrex::Print() << " " << std::endl;
+    amrex::Print() << " Internal Flow: " << inside << std::endl;
+    amrex::Print() << " Radius:    " << radius    << std::endl;
+    amrex::Print() << " Height:    " << height    << std::endl;
+    amrex::Print() << " Offset:    " << offset    << std::endl;
+    amrex::Print() << " Direction: " << direction << std::endl;
+    amrex::Print() << " Center:    " << center[0] << ", "
+                                     << center[1] << ", "
+                                     << center[2] << std::endl;
+
+
+    /****************************************************************************
+     *                                                                          *
+     * Construct AMR level-set                                                  *
+     *                                                                          *
+     ***************************************************************************/
+
+    if (use_amr_ls)
+    {
+        int lev_lowest = 0;
+
+        const RealBox & rb = geom[lev_lowest].ProbDomain();
+        Box domain = geom[lev_lowest].Domain();
+        domain.coarsen(amr_ls_crse);
+
+        const IntVect & dom_lo = domain.smallEnd();
+        const IntVect & dom_hi = domain.bigEnd();
+        IntVect n_cells = dom_hi - dom_lo;
+        Vector<int> v_cells = {
+            AMREX_D_DECL(n_cells[0], n_cells[1], n_cells[2])
+        };
+
+        amrex::Print() << "Declaring AMR levelset:" << std::endl
+                       << "coarsest level: " << domain << " n_cells: " << n_cells;
+
+        amrex::Print() << std::endl << rb << std::endl;
+
+        EB2::CylinderIF if_cyl(radius, height, direction, center, inside);
+
+        if (close_bottom)
+        {
+            Array<Real,3> point{0.0, 0.0, 0.0};
+            Array<Real,3> normal{0.0, 0.0, 0.0};
+
+            point[direction] = geom[lev_lowest].ProbLo(direction) + offset;
+            normal[direction] = -1.0;
+
+            EB2::PlaneIF if_plane(point, normal);
+            auto if_union = EB2::makeUnion(if_cyl, if_plane);
+
+            amr_level_set.reset(new LSCore<decltype(if_union)>(EB2::makeShop(if_union),
+                                                               & rb, amr_ls_max_level, v_cells));
+        }
+        else
+        {
+            amr_level_set.reset(new LSCore<decltype(if_cyl)>(EB2::makeShop(if_cyl)));
+        }
+
+        amrex::Print() << "... done declaring AMR levelset" << std::endl;
     }
 }

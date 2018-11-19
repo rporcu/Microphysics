@@ -119,6 +119,16 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.queryarr("avg_region_z_t", avg_region_z_t );
         pp.queryarr("avg_region_z_b", avg_region_z_b );
     }
+
+    {
+        ParmParse pp("eb");
+        pp.query("use_amr_ls",  use_amr_ls);
+        pp.query("amr_ls_crse", amr_ls_crse);
+        pp.query("max_eb_pad",  amr_ls_eb_pad);
+        pp.query("amr_baseline_tag", amr_ls_baseline_tag);
+        pp.query("amr_tag_step", amr_ls_tag_step);
+        pp.query("amr_max_level", amr_ls_max_level);
+    }
 }
 
 void
@@ -199,26 +209,35 @@ mfix::Init(Real dt, Real time)
            amrex::Abort("Bad data in set_ps");
     }
 
+
     for (int lev = 0; lev < nlev; lev++)
     {
        mfix_set_bc_type(lev);
 
-       // Allocate container for eb-normals
-       eb_normals = unique_ptr<MultiFab>(new MultiFab);
-       dummy = unique_ptr<MultiFab>(new MultiFab);
+       // NOTE: this would break with mult-level simulations => construct this
+       // for level 0 only
 
-       // Level-Set: initialize container for level set
-       // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)
-       //            -> use min to intersect new eb boundaries (in update)
-       level_set = std::unique_ptr<LSFactory>(
+       if (lev == 0) {
+           // Allocate container for eb-normals
+           eb_normals = unique_ptr<MultiFab>(new MultiFab);
+           dummy      = unique_ptr<MultiFab>(new MultiFab);
+
+           // Level-Set: initialize container for level set. The level-set
+           // MultiFab is defined here, and set to (fortran) huge(amrex_real)
+           //            -> use min to intersect new eb boundaries (in update)
+           level_set = std::unique_ptr<LSFactory>(
                new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
-                   levelset__pad, levelset__eb_pad,
-                   pc->ParticleBoxArray(lev), pc->Geom(lev), pc->ParticleDistributionMap(lev))
-            );
+                             levelset__pad, levelset__eb_pad,
+                             pc->ParticleBoxArray(lev),
+                             pc->Geom(lev),
+                             pc->ParticleDistributionMap(lev))
+               );
+
+      }
 
        // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
-       // (otherwise, if there are no walls/boundaries in the simulation, saving a
-       // plot file or checkpoint will segfault).
+       // (otherwise, if there are no walls/boundaries in the simulation, saving
+       // a plot file or checkpoint will segfault).
        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
        const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
        ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
@@ -395,9 +414,8 @@ mfix::check_data ()
 void
 mfix::InitLevelData(Real dt, Real time)
 {
-    // This needs is needed before initializing level MultiFabs: ebfactories should
+    // This is needed before initializing level MultiFabs: ebfactories should
     // not change after the eb-dependent MultiFabs are allocated.
-
     make_eb_geometry();
 
     // Allocate the fluid data, NOTE: this depends on the ebfactories.

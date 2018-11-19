@@ -26,6 +26,7 @@
 #include <mfix_eb_if.H>
 
 #include <AMReX_EB_levelset.H>
+#include <AMReX_EB_LSCoreBase.H>
 
 #include <MacProjection.H>
 
@@ -75,6 +76,8 @@ public:
     void make_mg_bc(int mg_bc[]);
 
     void make_eb_geometry ();
+    void make_amr_geometry ();
+
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(bool & has_walls);
 
@@ -165,27 +168,37 @@ protected:
 
 private:
 
-    void make_eb_general  ();
-    void make_eb_box      ();
-    void make_eb_cylinder ();
-    void make_eb_hopper   ();
-    void make_eb_cyclone  ();
+    void make_eb_general();
+
+    void make_eb_box();
+
+    void make_eb_cylinder();
+    void make_amr_cylinder();
+
+    void make_eb_hopper();
+
+    void make_eb_cyclone();
+
     void make_eb_hourglass();
-    void make_eb_clr      ();
+
+    void make_eb_clr();
+
     void make_eb_clr_riser();
-    void make_eb_regular  ();
+
+    void make_eb_regular();
 
     void MakeBCArrays();
 
     void check_data();
 
-    void MakeNewLevelFromScratch(int lev, Real time,
-            const BoxArray& new_grids, const DistributionMapping& new_dmap) override;
+    void MakeNewLevelFromScratch(int lev, Real time, const BoxArray& new_grids,
+                                 const DistributionMapping& new_dmap) override;
 
-    void ReMakeNewLevelFromScratch(int lev,
-            const BoxArray& new_grids, const DistributionMapping& new_dmap);
+    void ReMakeNewLevelFromScratch(int lev,const BoxArray& new_grids,
+                                   const DistributionMapping& new_dmap);
 
-    void WriteHeader(const std::string& name, int nstep, Real dt, Real time, bool is_checkpoint) const;
+    void WriteHeader(const std::string & name, int nstep, Real dt, Real time,
+                     bool is_checkpoint) const;
     void WritePlotHeader(const std::string& name, int nstep, Real dt, Real time) const;
     void WriteCheckHeader(const std::string& name, int nstep, Real dt, Real time) const;
 
@@ -224,7 +237,8 @@ private:
                                        Vector< std::unique_ptr<MultiFab> >& vel,
                                        amrex::Real time);
 
-    void mfix_compute_divtau(int lev, amrex::MultiFab& divtau, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_compute_divtau(int lev, amrex::MultiFab& divtau,
+                             Vector< std::unique_ptr<MultiFab> >& vel);
 
     int  steady_state_reached(Real dt);
 
@@ -237,15 +251,15 @@ private:
 
     void mfix_diffuse_velocity(amrex::Real time, amrex::Real dt);
 
-    void mfix_add_drag_terms (amrex::Real dt);
+    void mfix_add_drag_terms(amrex::Real dt);
 
-    void mfix_add_gravity            (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_add_gravity(int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel);
     void mfix_compute_velocity_slopes(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
-    void mfix_compute_velocity_at_faces (int lev, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_compute_velocity_at_faces(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
 
-    void mfix_compute_diveu (amrex::Real time);
+    void mfix_compute_diveu(amrex::Real time);
 
-    void mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p);
+    void mfix_extrap_pressure(int lev, std::unique_ptr<amrex::MultiFab>& p);
 
     void mfix_print_max_vel(int lev);
 
@@ -439,7 +453,7 @@ private:
     vector<Real> avg_region_y_n;
     vector<Real> avg_region_z_b;
     vector<Real> avg_region_z_t;
-    
+
     //
     // Here we set the number of ghost nodes of the field arrays.
     // Since this is  a class attribute, it will be propagated to
@@ -488,6 +502,32 @@ private:
 
     // stores level-set (nodal index space corresponding to cells, but n_refinement times finer)
     std::unique_ptr<LSFactory> level_set;
+
+    // points to the AMR level-set
+    std::unique_ptr<LSCoreBase> amr_level_set;
+
+    //
+    // Parameters describing the AMR level-set
+    //
+
+    bool use_amr_ls   = false;
+
+    // How much coarser should the zeroth-level of the level-set be? This is
+    // needed because the coarse level is used to describe the approximate
+    // level-set far from any boundaries.
+    int amr_ls_crse = 4;
+    // The max search-radius (ghost cells) over which to look for eb-facets
+    int amr_ls_eb_pad     = 4;
+    int amr_ls_max_eb_pad = 4;
+    // The base-line refinement value. This is a fiddly one: it needs to be
+    // small enough so that all eb facets are picked up but also not too small
+    // which would make the amr_ls data structure overly refined.
+    Real amr_ls_baseline_tag = 1.e-4;
+    // Level-set refinement tagging step size. Also a bit fiddly: this sets the
+    // steps (from the baseline tag) which are used to refine the AMR level-set
+    Real amr_ls_tag_step     = 1.e-5;
+    // Max number of levels in AMR level-set
+    int amr_ls_max_level = 1;
 
 
     void mfix_update_ebfactory (int a_lev);
