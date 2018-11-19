@@ -148,7 +148,6 @@ int main (int argc, char* argv[])
     // Initialize derived internals
     my_mfix.Init(dt,time);
 
-#if 0
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
@@ -314,7 +313,6 @@ int main (int argc, char* argv[])
         std::cout << "Time spent in main      " << end_time << std::endl;
         std::cout << "Time spent in main-init " << end_time-end_init << std::endl;
     }
-#endif
 
     BL_PROFILE_REGION_STOP("mfix::main()");
     BL_PROFILE_VAR_STOP(pmain);
