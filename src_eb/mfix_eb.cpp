@@ -88,6 +88,9 @@ void mfix::make_eb_geometry ()
 
 void mfix::make_amr_geometry ()
 {
+    if (! use_amr_ls)
+        return;
+
 
   /******************************************************************************
    * mfix.geometry=<string> specifies the EB geometry. <string> can be on of    *
