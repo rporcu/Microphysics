@@ -13,6 +13,8 @@ mfix::mfix_compute_dt(Real time, Real stop_time, int steady_state, Real& dt)
     Real wmax = -1.e20;
     Real romin = 1.e20;
     Real mumax = 0.0;
+
+    Real ome = 1.0 - 1.e-12;
     
     // We only compute gp0max on the coarset level because it is the same at all levels
     Real gp0max[3];
@@ -36,7 +38,7 @@ mfix::mfix_compute_dt(Real time, Real stop_time, int steady_state, Real& dt)
 
     if ( fixed_dt )
     {
-        if ( dt_new < dt && cfl > 0)
+        if ( dt_new < dt*ome && cfl > 0)
         {
             amrex::Print() << "WARNING: fixed dt does not satisfy CFL condition: "
                            << " fixed dt = "  << dt
