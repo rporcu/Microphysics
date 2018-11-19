@@ -34,7 +34,7 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
        }
     }
     BL_PROFILE_VAR_STOP(fluidSolve);
-    
+
     // This returns the drag force on the particle
     Real new_time = time+dt;
     if (solve_dem && solve_fluid)
@@ -48,12 +48,39 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
     BL_PROFILE_VAR("PARTICLES SOLVE",particlesSolve);
     if (solve_dem)
     {
-        for (int lev = 0; lev < nlev; lev++)
-           pc->EvolveParticles(lev, nstep, dt, time,
-                            particle_ebfactory[lev].get(), eb_normals.get(),
-                            level_set->get_data(), level_set->get_valid(), level_set->get_ls_ref(),
-                            dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io
-      );
+        if (use_amr_ls) {
+            // TODO: this is a bit of hack, but it works for now
+            int lev_ebfactory = 0;
+            for (int lev = 0; lev <= amr_level_set->finestLevel(); lev ++){
+                const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
+
+                //TODO: valid is defunct, passing it as a legacy
+                iMultiFab ls_valid(ls_lev->boxArray(), ls_lev->DistributionMap(),
+                                   ls_lev->nComp(), ls_lev->nGrow());
+                ls_valid.setVal(1);
+                amrex::Print() << "hi lev " << lev << std::endl;
+                pc->EvolveParticles(lev, nstep, dt, time,
+                                    particle_ebfactory[lev_ebfactory].get(), eb_normals.get(),
+                                    ls_lev, & ls_valid, 1,
+                                    dummy.get(),
+                                    particle_cost[lev].get(), knapsack_weight_type,
+                                    subdt_io
+                    );
+                amrex::Print() << "bye lev " << lev << std::endl;
+            }
+        } else {
+
+            for (int lev = 0; lev < nlev; lev++)
+                pc->EvolveParticles(lev, nstep, dt, time,
+                                    particle_ebfactory[lev].get(), eb_normals.get(),
+                                    level_set->get_data(),
+                                    level_set->get_valid(),
+                                    level_set->get_ls_ref(),
+                                    dummy.get(),
+                                    particle_cost[lev].get(), knapsack_weight_type,
+                                    subdt_io
+                    );
+        }
 
         //  Compute Eulerian velocities in selected regions
         for (int lev = 0; lev < nlev; lev++)

@@ -51,7 +51,11 @@ mfix::ResizeArrays ()
     int nlevs_max = maxLevel() + 1;
 
     // Particle Container
-    pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
+    if (use_amr_ls) {
+        pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(amr_level_set.get()));
+    } else {
+        pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
+    }
 
     // HACK: temporary flag used to turn on legacy mode
     //   (used in evlove particles)
