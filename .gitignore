@@ -30,6 +30,10 @@ build/
 .build/
 .vscode/
 
+
+# Make lint
+exec_cc/Make.local
+
 # Error/Debug output
 tutorials/**/pout.*
 tutorials/**/Backtrace.*
