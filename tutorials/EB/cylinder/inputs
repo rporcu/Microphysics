@@ -118,7 +118,7 @@ cylinder.center    = 1.6e-3   1.6e-3   0
 
 
 eb.use_amr_ls = true
-eb.amr_max_level = 4;
+eb.amr_max_level = 3;
 
 eb_amr.eb_pad     = 1
 eb_amr.max_eb_pad = 16

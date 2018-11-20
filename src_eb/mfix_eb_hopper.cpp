@@ -10,6 +10,7 @@
 //#include <sstream>
 
 #include <algorithm>
+#include <AMReX_EB_utils.H>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
 #include <mfix_eb_F.H>
@@ -123,7 +124,7 @@ mfix::make_eb_hopper()
     const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
 
     for (int lev = 0; lev < nlev; lev++)
-    { 
+    {
 
     eb_level_fluid     = & eb_is.getLevel(geom[lev]);
     eb_level_particles =   eb_level_fluid;
@@ -148,7 +149,10 @@ mfix::make_eb_hopper()
                                                              m_eb_full_grow_cells},
                                                             m_eb_support_level));
 
-       eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
+       // eb_normals[lev] = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy[lev].get());
+       eb_normals[lev]->define(grids[lev], dmap[lev], 3, 2, MFInfo(), *particle_ebfactory[lev]);
+       amrex::FillEBNormals( * eb_normals[lev], * particle_ebfactory[lev], geom[lev]);
+
 
        /*************************************************************************
         *                                                                       *
@@ -222,5 +226,5 @@ mfix::make_eb_hopper()
 
        amrex::Print() << "Done making the fluid ebfactory ..." << std::endl;
     }
-    } 
+    }
 }

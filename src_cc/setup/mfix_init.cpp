@@ -214,14 +214,14 @@ mfix::Init(Real dt, Real time)
     {
        mfix_set_bc_type(lev);
 
+       // Allocate container for eb-normals
+       eb_normals[lev] = std::unique_ptr<MultiFab>(new MultiFab);
+       dummy[lev]      = std::unique_ptr<MultiFab>(new MultiFab);
+
        // NOTE: this would break with mult-level simulations => construct this
        // for level 0 only
 
        if (lev == 0) {
-           // Allocate container for eb-normals
-           eb_normals = unique_ptr<MultiFab>(new MultiFab);
-           dummy      = unique_ptr<MultiFab>(new MultiFab);
-
            // Level-Set: initialize container for level set. The level-set
            // MultiFab is defined here, and set to (fortran) huge(amrex_real)
            //            -> use min to intersect new eb boundaries (in update)
@@ -510,42 +510,61 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
   if (solve_dem)
   {
      // Auto generated particles may be out of the domain. This call will remove
-     // them. Note that this has to occur after the EB geometry is created.
-     //if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory[finest_level])
-     if (!restart_flag && particle_ebfactory[finest_level])
-     {
-       amrex::Print() << "Clean up auto-generated particles.\n";
-       pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
-                            level_set->get_data(),
-                            level_set->get_valid(),
-                            level_set->get_ls_ref());
+     // them. Note that this has to occur after the EB geometry is created. if
+     // (particle_init_type == "Auto" && !restart_flag &&
+     // particle_ebfactory[finest_level])
 
+      if (use_amr_ls) {
+          amrex::Print() << "Clean up auto-generated particles.\n" << std::endl;
+          for (int ilev = 0; ilev <= pc->finestLevel(); ilev ++){
+              EBFArrayBoxFactory ebfactory(* eb_level_particles, pc->Geom(ilev),
+                                           pc->ParticleBoxArray(ilev), pc->ParticleDistributionMap(ilev),
+                                           {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                                           m_eb_support_level);
+              const MultiFab * ls_data = amr_level_set->getLevelSet(ilev);
+              iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
+                                 ls_data->nComp(), ls_data->nGrow());
+              ls_valid.setVal(1);
+              // amrex::Print() << ls_data->boxArray() << std::endl;
+              pc->RemoveOutOfRange(ilev, & ebfactory, ls_data, & ls_valid, 1);
 
-     }
+          }
+      } else {
+          if (! restart_flag && particle_ebfactory[finest_level])
+          {
+              amrex::Print() << "Clean up auto-generated particles.\n";
+              pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
+                                   level_set->get_data(),
+                                   level_set->get_valid(),
+                                   level_set->get_ls_ref());
+          }
+      }
 
-     for (int lev = 0; lev < nlev; lev++)
-     {
+     if (!use_amr_ls) {
+         for (int lev = 0; lev < nlev; lev++)
+         {
 
-        // We need to do this *after* restart (hence putting this here not in Init)
-        // because we may want to move from KDTree to Knapsack, or change the
-        // particle_max_grid_size on restart.
-        if (load_balance_type == "KnapSack" &&
-            dual_grid && particle_max_grid_size_x > 0
-                      && particle_max_grid_size_y > 0
-                      && particle_max_grid_size_z > 0)
-        {
-            BoxArray particle_ba(geom[lev].Domain());
-            IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                           particle_max_grid_size_y,
-                                           particle_max_grid_size_z);
-            particle_ba.maxSize(particle_max_grid_size);
-            DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
-            pc->Regrid(particle_dm, particle_ba);
-        }
+             // We need $to do this *after* restart (hence putting this here not
+             // in Init) because we may want to move from KDTree to Knapsack, or
+             // change the particle_max_grid_size on restart.
+             if (load_balance_type == "KnapSack" &&
+                 dual_grid && particle_max_grid_size_x > 0
+                           && particle_max_grid_size_y > 0
+                           && particle_max_grid_size_z > 0)
+             {
+                 BoxArray particle_ba(geom[lev].Domain());
+                 IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                                particle_max_grid_size_y,
+                                                particle_max_grid_size_z);
+                 particle_ba.maxSize(particle_max_grid_size);
+                 DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+                 pc->Regrid(particle_dm, particle_ba);
+             }
+         }
      }
 
      Real avg_dp[10], avg_ro[10];
-     pc -> GetParticleAvgProp( avg_dp, avg_ro );
+     pc->GetParticleAvgProp( avg_dp, avg_ro );
      init_collision(avg_dp, avg_ro);
   }
 

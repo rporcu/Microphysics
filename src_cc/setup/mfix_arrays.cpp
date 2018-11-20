@@ -1,10 +1,10 @@
 #include <mfix.H>
 
 void
-mfix::AllocateArrays (int lev)  
+mfix::AllocateArrays (int lev)
 {
     mfix_update_ebfactory(lev);
-   
+
     // ********************************************************************************
     // Cell- or node-based arrays
     // ********************************************************************************
@@ -182,9 +182,9 @@ mfix::AllocateArrays (int lev)
 
     m_u_mac[lev]->setVal(0.);
     m_v_mac[lev]->setVal(0.);
-    m_w_mac[lev]->setVal(0.);    
+    m_w_mac[lev]->setVal(0.);
 
-    
+
 }
 
 
@@ -200,9 +200,9 @@ mfix::RegridArrays (int lev)
     //
     // After calling copy() with dst_ngrow set to ng, we do not need to call
     // FillBoundary().
-    // 
     //
-    
+    //
+
     // Void fraction
     int ng = ep_g[lev]->nGrow();
     std::unique_ptr<MultiFab> ep_g_new(new MultiFab(grids[lev],dmap[lev],1,ng));
@@ -484,7 +484,7 @@ mfix::RegridArrays (int lev)
     std::unique_ptr<MultiFab> zslopes_new(new  MultiFab(grids[lev], dmap[lev],zslopes[lev]->nComp(),nghost));
     zslopes[lev] = std::move(zslopes_new);
     zslopes[lev] -> setVal(0.);
-    
+
 
    /****************************************************************************
     * Nodal Arrays                                                             *
@@ -522,7 +522,7 @@ mfix::RegridArrays (int lev)
     }
 }
 
-// This function checks if ebfactory is allocated with 
+// This function checks if ebfactory is allocated with
 // the proper dm and ba
 
 void
@@ -532,37 +532,34 @@ mfix::mfix_update_ebfactory (int a_lev)
    // has already been defined
    AMREX_ASSERT(not EB2::IndexSpace::empty());
 
-   const DistributionMapping&      dm = DistributionMap(a_lev);
-   const BoxArray&                 ba = boxArray(a_lev);
-   const EB2::IndexSpace&        ebis = EB2::IndexSpace::top();
-   const EB2::Level&      ebis_level  = ebis.getLevel(geom[a_lev]);
-      
+   const DistributionMapping & dm = DistributionMap(a_lev);
+   const BoxArray &            ba = boxArray(a_lev);
+
    if ( ebfactory[a_lev].get() == nullptr )
    {
       amrex::Print() << "Updating ebfactory" << std::endl;
 
-      ebfactory[a_lev].reset(new EBFArrayBoxFactory( ebis_level, geom[a_lev], ba, dm,
-                                                     {m_eb_basic_grow_cells,
-                                                           m_eb_volume_grow_cells,
-                                                           m_eb_full_grow_cells},
+      ebfactory[a_lev].reset(new EBFArrayBoxFactory(* eb_level_fluid, geom[a_lev], ba, dm,
+                                                    {m_eb_basic_grow_cells,
+                                                     m_eb_volume_grow_cells,
+                                                     m_eb_full_grow_cells},
                                                      m_eb_support_level));
    }
-   else                         
+   else
    {
       amrex::Print() << "Updating ebfactory" << std::endl;
-      
+
       const DistributionMapping&  eb_dm = ebfactory[a_lev]->DistributionMap();
       const BoxArray&             eb_ba = ebfactory[a_lev]->boxArray();
 
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
 
-         ebfactory[a_lev].reset(new EBFArrayBoxFactory( ebis_level, geom[a_lev], ba, dm,
-                                                        {m_eb_basic_grow_cells,
-                                                              m_eb_volume_grow_cells,
-                                                              m_eb_full_grow_cells},
-                                                        m_eb_support_level));         
+         ebfactory[a_lev].reset(new EBFArrayBoxFactory(* eb_level_fluid, geom[a_lev], ba, dm,
+                                                       {m_eb_basic_grow_cells,
+                                                        m_eb_volume_grow_cells,
+                                                        m_eb_full_grow_cells},
+                                                       m_eb_support_level));
       }
    }
 }
-   

@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <type_traits>
+#include <AMReX_EB_utils.H>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
 #include <mfix_eb_F.H>
@@ -382,7 +383,10 @@ mfix::make_eb_general() {
                                                               m_eb_full_grow_cells},
                                                              m_eb_support_level));
 
-        eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
+        // eb_normals[lev] = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy[lev].get());
+        eb_normals[lev]->define(grids[lev], dmap[lev], 3, 2, MFInfo(), *particle_ebfactory[lev]);
+        amrex::FillEBNormals( * eb_normals[lev], * particle_ebfactory[lev], geom[lev]);
+
 
         /************************************************************************
          *                                                                      *

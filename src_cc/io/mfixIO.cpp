@@ -761,12 +761,29 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
     }
     else // no fluid
     {
+        // Some post-processing tools (such as yt) might still need some basic
+        // MultiFab header information to function. We provide this here by
+        // creating an "empty" plotfile header (which essentially only contains
+        // the BoxArray information). Particle data is saved elsewhere.
 
-        Vector<const MultiFab*> mf;
+        Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
         Vector<std::string>  names;
+        // NOTE: leave names vector empty => header should reflect nComp = 0
+        //names.insert(names.end(), "placeholder");
 
-        amrex::WriteMultiLevelPlotfile(plotfilename, 0, mf, names,
-                                       Geom(), time, istep, refRatio());
+        // Create empty MultiFab containing the right BoxArray (NOTE: setting
+        // nComp = 1 here to avoid assertion fail in debug build).
+        for (int lev = 0; lev <= finest_level; ++lev)
+            mf[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+
+        Vector<const MultiFab*> mf2(finest_level+1);
+
+        for (int lev = 0; lev <= finest_level; ++lev)
+            mf2[lev] = mf[lev].get();
+
+        // Write only the Headers corresponding to the "empty" mf/mf2 MultiFabs
+        amrex::WriteMultiLevelPlotfileHeaders(plotfilename, finest_level+1, mf2, names,
+                                              Geom(), time, istep, refRatio());
 
     }
 

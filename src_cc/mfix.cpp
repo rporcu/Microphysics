@@ -131,6 +131,9 @@ mfix::ResizeArrays ()
     // EB factory
     ebfactory.resize(nlevs_max);
     particle_ebfactory.resize(nlevs_max);
+
+    eb_normals.resize(nlevs_max);
+    dummy.resize(nlevs_max);
 }
 
 void
