@@ -662,22 +662,22 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         * Update runtime cost (used in load-balancing)                        *
         ***********************************************************************/
 
-        if (lev == 0)
-        if (cost) {
-             // Runtime cost is either (weighted by tile box size):
-             //   * time spent
-             //   * number of particles
-             const Box& tbx = pti.tilebox();
-             if (knapsack_weight_type == "RunTimeCosts")
-             {
-                wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-             }
-             else if (knapsack_weight_type == "NumParticles")
-             {
-                wt = nrp / tbx.d_numPts();
-             }
-             (*cost)[pti].plus(wt, tbx);
-         }
+        //if (lev == 0)
+        //if (cost) {
+        //     // Runtime cost is either (weighted by tile box size):
+        //     //   * time spent
+        //     //   * number of particles
+        //     const Box& tbx = pti.tilebox();
+        //     if (knapsack_weight_type == "RunTimeCosts")
+        //     {
+        //        wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+        //     }
+        //     else if (knapsack_weight_type == "NumParticles")
+        //     {
+        //        wt = nrp / tbx.d_numPts();
+        //     }
+        //     (*cost)[pti].plus(wt, tbx);
+        // }
       }
 
       // Update substep count
