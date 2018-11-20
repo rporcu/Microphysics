@@ -830,9 +830,8 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
     else {
       // If mf_to_be_filled is not defined on the particle_box_array, then we need
       // to make a temporary here and copy into mf_to_be_filled at the end.
-      mf_pointer = new MultiFab(ParticleBoxArray(lev),
-        ParticleDistributionMap(lev),
-        ncomp, mf_to_be_filled.nGrow());
+      mf_pointer = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                                ncomp, mf_to_be_filled.nGrow());
     }
 
     // We must have ghost cells for each FAB so that a particle in one grid can spread
@@ -958,16 +957,27 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
                                                IArrayBox& bc_klo, IArrayBox& bc_khi,
                                                int fortran_beta_comp, int fortran_vel_comp, int nghost )
 {
+    int lev = 0;
+    AMREX_ASSERT(OnSameGrids(lev,beta_mf)==OnSameGrids(lev,beta_vel_mf));
+        
     BL_PROFILE("MFIXParticleContainer::PICMultiDeposition()");
 
-    int   lev = 0;
+    MultiFab*  beta_ptr;
+    MultiFab*  beta_vel_ptr; 
 
-    // Make temporaries here and copy into beta_mf and beta_vel_mf at the end.
-
-    MultiFab* beta_ptr     = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                                          beta_mf.nComp(), beta_mf.nGrow());
-    MultiFab* beta_vel_ptr = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                                          beta_vel_mf.nComp(), beta_vel_mf.nGrow());
+    if (OnSameGrids(lev,beta_mf))
+    {
+      beta_ptr     = &beta_mf;
+      beta_vel_ptr = &beta_vel_mf;
+    }
+    else
+    {
+        // Make temporaries here and copy into beta_mf and beta_vel_mf at the end.
+        beta_ptr     = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                                    beta_mf.nComp(), beta_mf.nGrow());
+        beta_vel_ptr = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                                    beta_vel_mf.nComp(), beta_vel_mf.nGrow());
+    }
 
     const Real      strttime    = ParallelDescriptor::second();
     const Geometry& gm          = Geom(lev);
@@ -1061,29 +1071,17 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
     beta_ptr->SumBoundary(gm.periodicity());
     beta_vel_ptr->SumBoundary(gm.periodicity());
 
-    // Copy back from mf_pointer
-    beta_mf.copy    (*beta_ptr,0,0,beta_mf.nComp());
-    beta_vel_mf.copy(*beta_vel_ptr,0,0,beta_vel_mf.nComp());
-
-    delete beta_ptr;
-    delete beta_vel_ptr;
-
+    if ( &beta_mf != beta_ptr)
+    {
+        // Copy back from mf_pointer
+        beta_mf.copy    (*beta_ptr,0,0,beta_mf.nComp());
+        beta_vel_mf.copy(*beta_vel_ptr,0,0,beta_vel_mf.nComp());
+        
+        delete beta_ptr;
+        delete beta_vel_ptr;
+    }
+    
     const Box domain(Geom(lev).Domain());
-
-    // NOTE:  In the following routine, we "flip" any part of "beta" or of "beta_vel" that
-    //        has been deposited outside the domain at a FSW or NSW.  This applies to both
-    //        "drag" and "f_gds" (as they are known in the fluid update) and to both
-    //        normal and tangential components.
-    // for (MFIter mfi(beta_vel_mf); mfi.isValid(); ++mfi) {
-
-    //   flip_drag_terms(BL_TO_FORTRAN_ANYD(    beta_mf[mfi]),
-    //                   BL_TO_FORTRAN_ANYD(beta_vel_mf[mfi]),
-    //                   bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-    //                   bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-    //                   bc_klo.dataPtr(), bc_khi.dataPtr(),
-    //                   domain.loVect(), domain.hiVect(),
-    //                   &nghost);
-    // }
 
     if (m_verbose > 1) {
       Real stoptime = ParallelDescriptor::second() - strttime;
