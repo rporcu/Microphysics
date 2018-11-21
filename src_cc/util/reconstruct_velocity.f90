@@ -51,17 +51,17 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    integer             :: i, j, k
 
    ! Width of narrow band 
-   real(rt), parameter :: band_width    = 2.0_rt
+   real(rt), parameter :: band_width    = 1.5_rt
    real(rt)            :: phi_threshold 
 
    ! Amout of "correction" to go from mirror point to interpolation point
-   real(rt), parameter :: eps = 0.01_rt
+   real(rt), parameter :: eps = 0.1_rt
 
    ! Coordinates, level set, and normal of cell center
    real(rt)            :: x_cc(3), phi_cc, norm_cc(3) 
 
    ! Coordinates, level set, and normal of mirror point
-   real(rt)            :: x_m(3), phi_m, norm_m(3)
+   real(rt)            :: x_m(3), norm_m(3)
 
    ! Coordinates and velocity at interpolation point
    real(rt)            :: x_i(3), vel_i(3)
@@ -69,10 +69,8 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    ! Other local variables
    real(rt)            :: odx(3)
 
-
    odx = one / dx
    phi_threshold = band_width * maxval(dx)
-
    
    ! We can avoid filling the first and last layer of cells since
    ! vel_in will be used for trilinear interpolation only and this require only
@@ -91,7 +89,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
             ! of the cell
             if ( is_covered_cell(flags(i,j,k))                          .and. &
              &   minval(abs(phi(i:i+1,j:j+1,k:k+1))) <= phi_threshold ) then
-
+               
                ! Coordinates of cell center
                x_cc = ( real([i,j,k],rt) + half ) * dx 
 
@@ -103,12 +101,12 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
                x_m  = x_cc + two * abs(phi_cc) * norm_cc
 
                ! Get phi and normal at cell center
-               call amrex_eb_interp_levelset(x_m, x0, n_refine, phi, phlo, phhi, dx, phi_m)
                call amrex_eb_normal_levelset(x_m, x0, n_refine, phi, phlo, phhi, dx, norm_m)
 
                ! Find location of interpolation point
                ! by correcting mirror location to (hopefully) account for corner cases
-               x_i  = x_m + eps * maxval(dx) * norm_m
+               ! We are being conservative and use a full dx for shifting the point.
+               x_i  = x_m + maxval(dx) * norm_m
 
                ! Compute interpolated velocity at x_i
                vel_i = trilinear_interp_eb(vel_in, vilo, vihi, 3, flags, flo, fhi, x_i, x0, dx)
