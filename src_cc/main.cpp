@@ -81,6 +81,7 @@ int main (int argc, char* argv[])
     // AMReX will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
     amrex::Initialize(argc,argv);
+    {
     BL_PROFILE_VAR("main()", pmain)
     BL_PROFILE_REGION_START("mfix::main()");
 
@@ -317,6 +318,7 @@ int main (int argc, char* argv[])
     BL_PROFILE_REGION_STOP("mfix::main()");
     BL_PROFILE_VAR_STOP(pmain);
 
+    }
     amrex::Finalize();
     return 0;
 }
