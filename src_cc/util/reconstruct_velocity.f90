@@ -1,11 +1,11 @@
 !
 ! This subroutines reconstructs the velocity field in the covered
 ! cells within a narrow band around the EB walls
-! 
+!
 ! Author: Michele Rosso, LBL
 !
 ! Date:   November 15, 2018
-! 
+!
 subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
  &                                 vel_in, vilo, vihi,       &
  &                                phi, phlo, phhi, n_refine, &
@@ -50,15 +50,15 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    ! Loop indeces
    integer             :: i, j, k
 
-   ! Width of narrow band 
+   ! Width of narrow band
    real(rt), parameter :: band_width    = 1.5_rt
-   real(rt)            :: phi_threshold 
+   real(rt)            :: phi_threshold
 
    ! Amout of "correction" to go from mirror point to interpolation point
    real(rt), parameter :: eps = 0.1_rt
 
    ! Coordinates, level set, and normal of cell center
-   real(rt)            :: x_cc(3), phi_cc, norm_cc(3) 
+   real(rt)            :: x_cc(3), phi_cc, norm_cc(3)
 
    ! Coordinates, level set, and normal of mirror point
    real(rt)            :: x_m(3), norm_m(3)
@@ -71,7 +71,8 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
 
    odx = one / dx
    phi_threshold = band_width * maxval(dx)
-   
+
+
    ! We can avoid filling the first and last layer of cells since
    ! vel_in will be used for trilinear interpolation only and this require only
    ! 1 layer of ghost nodes ( and in EB land, the velocity field has multiple layers of
@@ -89,9 +90,9 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
             ! of the cell
             if ( is_covered_cell(flags(i,j,k))                          .and. &
              &   minval(abs(phi(i:i+1,j:j+1,k:k+1))) <= phi_threshold ) then
-               
+
                ! Coordinates of cell center
-               x_cc = ( real([i,j,k],rt) + half ) * dx 
+               x_cc = ( real([i,j,k],rt) + half ) * dx
 
                ! Get phi and normal at cell center
                call amrex_eb_interp_levelset(x_cc, x0, n_refine, phi, phlo, phhi, dx, phi_cc)
@@ -124,6 +125,3 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
 
 
 end subroutine reconstruct_velocity
-
-
-
