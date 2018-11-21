@@ -139,30 +139,47 @@ mfix::Init(Real dt, Real time)
     // Note that finest_level = nlev-1
     finest_level = nlev-1;
 
+    if (use_amr_ls) 
+       finest_level = amr_level_set->finestLevel();
+
     // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
     DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
     MakeNewLevelFromScratch(0, time, ba, dm);
+    std::cout << "Level 0 grids: " << ba << std::endl;
 
     for (int lev = 1; lev <= finest_level; lev++)
     {
-       // This refines the central half of the domain
-       int ilo = ba[0].size()[0] / 2;
-       int ihi = 3*ba[0].size()[0]/2-1;
-       IntVect lo(ilo,ilo,ilo);
-       IntVect hi(ihi,ihi,ihi);
-       Box bx(lo,hi);
-       BoxArray ba_ref(bx);
+       if (use_amr_ls) 
+       {
+          const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
+          BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0}); 
+          std::cout << "Level " << lev << " grids: " << ba_ref << std::endl;
+          if (m_verbose > 0)
+            std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
+          DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
+          MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
+       } 
+       else 
+       {
+          // This refines the central half of the domain
+          int ilo = ba[0].size()[0] / 2;
+          int ihi = 3*ba[0].size()[0]/2-1;
+          IntVect lo(ilo,ilo,ilo);
+          IntVect hi(ihi,ihi,ihi);
+          Box bx(lo,hi);
+          BoxArray ba_ref(bx);
+   
+          // This refines the whole domain
+          // BoxArray ba_ref(ba);
+          // ba_ref.refine(2);
 
-       // This refines the whole domain
-       // BoxArray ba_ref(ba);
-       // ba_ref.refine(2);
-       if (m_verbose > 0)
-           std::cout << "Setting refined region to " << ba_ref << std::endl;
-
-       DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
-       MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
+          if (m_verbose > 0)
+            std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
+          DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
+          MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
+       }
     }
 
     // ******************************************************
@@ -286,7 +303,7 @@ mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
     int n = 10;
 
     // Here we hard-wire the minimum size in any one direction the boxes can be
-    int min_grid_size = 4;
+    int min_grid_size = 8;
 
     IntVect chunk(domain.length(0),domain.length(1),domain.length(2));
 
