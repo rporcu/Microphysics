@@ -226,40 +226,44 @@ mfix::Init(Real dt, Real time)
            amrex::Abort("Bad data in set_ps");
     }
 
+    if (solve_fluid)
+      for (int lev = 0; lev < nlev; lev++)
+          mfix_set_bc_type(lev);
 
-    for (int lev = 0; lev < nlev; lev++)
+    if (solve_dem)
     {
-       mfix_set_bc_type(lev);
+       for (int lev = 0; lev < nlev; lev++)
+       {
+          // Allocate container for eb-normals
+          eb_normals[lev] = std::unique_ptr<MultiFab>(new MultiFab);
+          dummy[lev]      = std::unique_ptr<MultiFab>(new MultiFab);
 
-       // Allocate container for eb-normals
-       eb_normals[lev] = std::unique_ptr<MultiFab>(new MultiFab);
-       dummy[lev]      = std::unique_ptr<MultiFab>(new MultiFab);
+          // NOTE: this would break with mult-level simulations => construct this
+          // for level 0 only
 
-       // NOTE: this would break with mult-level simulations => construct this
-       // for level 0 only
+          if (lev == 0) {
+              // Level-Set: initialize container for level set. The level-set
+              // MultiFab is defined here, and set to (fortran) huge(amrex_real)
+              //            -> use min to intersect new eb boundaries (in update)
+              level_set = std::unique_ptr<LSFactory>(
+                  new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
+                                levelset__pad, levelset__eb_pad,
+                                pc->ParticleBoxArray(lev),
+                                pc->Geom(lev),
+                                pc->ParticleDistributionMap(lev))
+                  );
+   
+         }
 
-       if (lev == 0) {
-           // Level-Set: initialize container for level set. The level-set
-           // MultiFab is defined here, and set to (fortran) huge(amrex_real)
-           //            -> use min to intersect new eb boundaries (in update)
-           level_set = std::unique_ptr<LSFactory>(
-               new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
-                             levelset__pad, levelset__eb_pad,
-                             pc->ParticleBoxArray(lev),
-                             pc->Geom(lev),
-                             pc->ParticleDistributionMap(lev))
-               );
-
-      }
-
-       // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
-       // (otherwise, if there are no walls/boundaries in the simulation, saving
-       // a plot file or checkpoint will segfault).
-       std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-       const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
-       ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
-       ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
-       ls[lev]->FillBoundary(geom[lev].periodicity());
+          // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
+          // (otherwise, if there are no walls/boundaries in the simulation, saving
+          // a plot file or checkpoint will segfault).
+          std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+          const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+          ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
+          ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
+          ls[lev]->FillBoundary(geom[lev].periodicity());
+       }
     }
 
     // Create MAC projection object
@@ -303,7 +307,7 @@ mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
     int n = 10;
 
     // Here we hard-wire the minimum size in any one direction the boxes can be
-    int min_grid_size = 8;
+    int min_grid_size = 4;
 
     IntVect chunk(domain.length(0),domain.length(1),domain.length(2));
 
