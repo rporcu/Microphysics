@@ -195,7 +195,7 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
 
         for (int lev = 0; lev < nlev; lev++)
         {
-           matrix.setSigma(0, *(b[lev][0]));
+           matrix.setSigma(lev, *(b[lev][0]));
 
            // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
            this_phi[lev]->setVal(0.);
