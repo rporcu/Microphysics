@@ -33,8 +33,8 @@ mfix::InitIOData ()
     pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "vort", "diveu", "level-set", "volfrac"};
     pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &vort,  &diveu,  &ls};
 
-    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level-set"};
-    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &ls};
+    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g"};
+    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g};
 }
 
 void
@@ -169,26 +169,29 @@ mfix::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time
     }
 
 
-    // The level set might have a higher refinement than the mfix level.
-    //      => Current mechanism for saving checkpoint files requires the same
-    //         BoxArray for all MultiFabss on the same level
-    // Save raw level-set data separately for now, and incorporate into levels,
-    // once MFiX can handle multi-level EB.
-    std::stringstream raw_ls_name;
-    raw_ls_name << checkpointname << "/ls_raw";
-    amrex::VisMF::Write( * level_set->get_data(), raw_ls_name.str() );
+    if (solve_dem)
+    {
+       // The level set might have a higher refinement than the mfix level.
+       //      => Current mechanism for saving checkpoint files requires the same
+       //         BoxArray for all MultiFabss on the same level
+       // Save raw level-set data separately for now, and incorporate into levels,
+       // once MFiX can handle multi-level EB.
+       std::stringstream raw_ls_name;
+       raw_ls_name << checkpointname << "/ls_raw";
+       amrex::VisMF::Write( * level_set->get_data(), raw_ls_name.str() );
 
-    // Also save the paramters necessary to re-buid the LSFactory
-    int levelset_params[] = { level_set->get_ls_ref(),
-                              level_set->get_ls_pad(),
-                              level_set->get_eb_ref(),
-                              level_set->get_eb_pad() };
+       // Also save the paramters necessary to re-buid the LSFactory
+       int levelset_params[] = { level_set->get_ls_ref(),
+                                 level_set->get_ls_pad(),
+                                 level_set->get_eb_ref(),
+                                 level_set->get_eb_pad() };
 
-    std::ofstream param_file;
-    std::stringstream param_file_name;
-    param_file_name << checkpointname << "/LSFactory_params";
-    param_file.open(param_file_name.str());
-    amrex::writeIntData(levelset_params, 4, param_file);
+       std::ofstream param_file;
+       std::stringstream param_file_name;
+       param_file_name << checkpointname << "/LSFactory_params";
+       param_file.open(param_file_name.str());
+       amrex::writeIntData(levelset_params, 4, param_file);
+   }
 }
 
 void
