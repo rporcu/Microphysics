@@ -150,7 +150,10 @@ void mfix::make_eb_cylinder()
                                                                 m_eb_full_grow_cells},
                                                                m_eb_support_level));
 
-          eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
+          //eb_normals[lev] = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy[lev].get());
+          dummy[lev]->define(grids[lev], dmap[lev], 1, 0, MFInfo(), * particle_ebfactory[lev]);
+          eb_normals[lev]->define(grids[lev], dmap[lev], 3, 2, MFInfo(), *particle_ebfactory[lev]);
+          amrex::FillEBNormals( * eb_normals[lev], * particle_ebfactory[lev], geom[lev]);
        }
 
        /*************************************************************************
@@ -298,7 +301,8 @@ void mfix::make_amr_cylinder()
 
         const IntVect & dom_lo = domain.smallEnd();
         const IntVect & dom_hi = domain.bigEnd();
-        IntVect n_cells = dom_hi - dom_lo;
+        // Picket-fence principle
+        IntVect n_cells = dom_hi - dom_lo + IntVect{1, 1, 1};
         Vector<int> v_cells = {
             AMREX_D_DECL(n_cells[0], n_cells[1], n_cells[2])
         };

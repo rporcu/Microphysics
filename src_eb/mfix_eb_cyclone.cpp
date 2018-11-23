@@ -13,6 +13,7 @@
 //#include <sstream>
 
 #include <algorithm>
+#include <AMReX_EB_utils.H>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
 #include <mfix_eb_F.H>
@@ -156,7 +157,7 @@ mfix::make_eb_cyclone()
           // intercept the cyclone + plane level (if it is built)
           const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
           eb_level_particles = & eb_is.getLevel(geom[lev]);
-   
+
           particle_ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
                                                                geom[lev], grids[lev], dmap[lev],
                                                                {m_eb_basic_grow_cells,
@@ -164,15 +165,18 @@ mfix::make_eb_cyclone()
                                                                 m_eb_full_grow_cells},
                                                                m_eb_support_level));
 
-          eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
+          // eb_normals[lev] = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy[lev].get());
+          eb_normals[lev]->define(grids[lev], dmap[lev], 3, 2, MFInfo(), *particle_ebfactory[lev]);
+          amrex::FillEBNormals( * eb_normals[lev], * particle_ebfactory[lev], geom[lev]);
+
 
           /*************************************************************************
            *                                                                       *
            * Fill level-set:                                                       *
            *                                                                       *
            *************************************************************************/
- 
-          if (!levelset__restart) 
+
+          if (!levelset__restart)
           {
            amrex::Print() << "Creating the levelset ..." << std::endl;
 
@@ -224,7 +228,7 @@ mfix::make_eb_cyclone()
        if (solve_fluid)
        {
           amrex::Print() << "Now making the fluid ebfactory ..." << std::endl;
-   
+
           eb_level_fluid = & ebis_lev_cyc;
 
           ebfactory[lev].reset(new EBFArrayBoxFactory(
