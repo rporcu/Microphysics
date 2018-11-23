@@ -13,10 +13,11 @@ mfix::mfix_compute_ugradu_predictor ( Vector< std::unique_ptr<MultiFab> >& conv,
 {
     BL_PROFILE("mfix::mfix_compute_ugradu");
 
-    // We don't need to call the slopes routine again because 
-    //    it is called from mfix_compute_velocity_at_faces
     for (int lev=0; lev < nlev; ++lev)
+    {
         mfix_compute_velocity_at_faces( lev, vel );
+        mfix_compute_velocity_slopes( lev, vel );
+    }
 
     // Do projection on all AMR levels in one shot 
     mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, time );

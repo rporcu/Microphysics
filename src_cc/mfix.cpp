@@ -51,18 +51,15 @@ mfix::ResizeArrays ()
     int nlevs_max = maxLevel() + 1;
 
     // Particle Container
-    if (solve_dem)
-    {
-       if (use_amr_ls) {
-           pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(amr_level_set.get()));
-       } else {
-           pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
-       }
-
-       // HACK: temporary flag used to turn on legacy mode
-       //   (used in evlove particles)
-       pc -> legacy__eb_collisions = legacy__eb_collisions;
+    if (use_amr_ls) {
+        pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(amr_level_set.get()));
+    } else {
+        pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
     }
+
+    // HACK: temporary flag used to turn on legacy mode
+    //   (used in evlove particles)
+    pc -> legacy__eb_collisions = legacy__eb_collisions;
 
     ep_g.resize(nlevs_max);
     ep_go.resize(nlevs_max);
@@ -133,9 +130,7 @@ mfix::ResizeArrays ()
 
     // EB factory
     ebfactory.resize(nlevs_max);
-
-    if (solve_dem)
-       particle_ebfactory.resize(nlevs_max);
+    particle_ebfactory.resize(nlevs_max);
 }
 
 void
