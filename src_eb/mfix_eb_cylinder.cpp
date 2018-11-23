@@ -298,7 +298,10 @@ void mfix::make_amr_cylinder()
 
         const IntVect & dom_lo = domain.smallEnd();
         const IntVect & dom_hi = domain.bigEnd();
-        IntVect n_cells = dom_hi - dom_lo;
+
+        // Picket-fence principle
+        IntVect n_cells = dom_hi - dom_lo + IntVect{1, 1, 1};
+
         Vector<int> v_cells = {
             AMREX_D_DECL(n_cells[0], n_cells[1], n_cells[2])
         };
