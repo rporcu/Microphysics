@@ -232,9 +232,8 @@ mfix::Init(Real dt, Real time)
            amrex::Abort("Bad data in set_ps");
     }
 
-    if (solve_fluid)
-      for (int lev = 0; lev < nlev; lev++)
-          mfix_set_bc_type(lev);
+   for (int lev = 0; lev < nlev; lev++)
+       mfix_set_bc_type(lev);
 
     if (solve_dem)
     {
