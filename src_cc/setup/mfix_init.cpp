@@ -260,16 +260,16 @@ mfix::Init(Real dt, Real time)
                                 pc->ParticleDistributionMap(lev))
                   );
    
-         }
+          }
 
-         // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
-         // (otherwise, if there are no walls/boundaries in the simulation, saving
-         // a plot file or checkpoint will segfault).
-         std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-         const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
-         ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
-         ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
-         ls[lev]->FillBoundary(geom[lev].periodicity());
+          // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
+          // (otherwise, if there are no walls/boundaries in the simulation, saving
+          // a plot file or checkpoint will segfault).
+          std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+          const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+          ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
+          ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
+          ls[lev]->FillBoundary(geom[lev].periodicity());
        }
     }
 
