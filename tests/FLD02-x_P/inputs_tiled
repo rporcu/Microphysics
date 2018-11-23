@@ -5,8 +5,6 @@ amr.n_cell = 3 8 1
 #    this is used to decompose the domain for parallel calculations.
 amr.max_grid_size = 8
 
-amr.blocking_factor = 1
-
 # Maximum tile size within each grid
 fabarray.mfiter_tile_size = 4 2 4
 

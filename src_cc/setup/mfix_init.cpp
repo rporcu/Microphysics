@@ -139,47 +139,30 @@ mfix::Init(Real dt, Real time)
     // Note that finest_level = nlev-1
     finest_level = nlev-1;
 
-    if (use_amr_ls) 
-       finest_level = std::min(amr_level_set->finestLevel(),max_level);
-
     // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
     DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
     MakeNewLevelFromScratch(0, time, ba, dm);
-    std::cout << "Level 0 grids: " << ba << std::endl;
 
     for (int lev = 1; lev <= finest_level; lev++)
     {
-       if (use_amr_ls) 
-       {
-          const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
-          BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0}); 
-          std::cout << "Level " << lev << " grids: " << ba_ref << std::endl;
-          if (m_verbose > 0)
-            std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
-          DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
-          MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
-       } 
-       else 
-       {
-          // This refines the central half of the domain
-          int ilo = ba[0].size()[0] / 2;
-          int ihi = 3*ba[0].size()[0]/2-1;
-          IntVect lo(ilo,ilo,ilo);
-          IntVect hi(ihi,ihi,ihi);
-          Box bx(lo,hi);
-          BoxArray ba_ref(bx);
-   
-          // This refines the whole domain
-          // BoxArray ba_ref(ba);
-          // ba_ref.refine(2);
+       // This refines the central half of the domain
+       int ilo = ba[0].size()[0] / 2;
+       int ihi = 3*ba[0].size()[0]/2-1;
+       IntVect lo(ilo,ilo,ilo);
+       IntVect hi(ihi,ihi,ihi);
+       Box bx(lo,hi);
+       BoxArray ba_ref(bx);
 
-          if (m_verbose > 0)
-            std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
-          DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
-          MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
-       }
+       // This refines the whole domain
+       // BoxArray ba_ref(ba);
+       // ba_ref.refine(2);
+       if (m_verbose > 0)
+           std::cout << "Setting refined region to " << ba_ref << std::endl;
+
+       DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
+       MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
     }
 
     // ******************************************************
@@ -226,44 +209,40 @@ mfix::Init(Real dt, Real time)
            amrex::Abort("Bad data in set_ps");
     }
 
-    if (solve_fluid)
-      for (int lev = 0; lev < nlev; lev++)
-          mfix_set_bc_type(lev);
 
-    if (solve_dem)
+    for (int lev = 0; lev < nlev; lev++)
     {
-       for (int lev = 0; lev < nlev; lev++)
-       {
-          // Allocate container for eb-normals
-          eb_normals[lev] = std::unique_ptr<MultiFab>(new MultiFab);
-          dummy[lev]      = std::unique_ptr<MultiFab>(new MultiFab);
+       mfix_set_bc_type(lev);
 
-          // NOTE: this would break with mult-level simulations => construct this
-          // for level 0 only
+       // NOTE: this would break with mult-level simulations => construct this
+       // for level 0 only
 
-          if (lev == 0) {
-              // Level-Set: initialize container for level set. The level-set
-              // MultiFab is defined here, and set to (fortran) huge(amrex_real)
-              //            -> use min to intersect new eb boundaries (in update)
-              level_set = std::unique_ptr<LSFactory>(
-                  new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
-                                levelset__pad, levelset__eb_pad,
-                                pc->ParticleBoxArray(lev),
-                                pc->Geom(lev),
-                                pc->ParticleDistributionMap(lev))
-                  );
-   
-         }
+       if (lev == 0) {
+           // Allocate container for eb-normals
+           eb_normals = unique_ptr<MultiFab>(new MultiFab);
+           dummy      = unique_ptr<MultiFab>(new MultiFab);
 
-          // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
-          // (otherwise, if there are no walls/boundaries in the simulation, saving
-          // a plot file or checkpoint will segfault).
-          std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-          const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
-          ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
-          ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
-          ls[lev]->FillBoundary(geom[lev].periodicity());
-       }
+           // Level-Set: initialize container for level set. The level-set
+           // MultiFab is defined here, and set to (fortran) huge(amrex_real)
+           //            -> use min to intersect new eb boundaries (in update)
+           level_set = std::unique_ptr<LSFactory>(
+               new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
+                             levelset__pad, levelset__eb_pad,
+                             pc->ParticleBoxArray(lev),
+                             pc->Geom(lev),
+                             pc->ParticleDistributionMap(lev))
+               );
+
+      }
+
+       // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
+       // (otherwise, if there are no walls/boundaries in the simulation, saving
+       // a plot file or checkpoint will segfault).
+       std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+       const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+       ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
+       ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
+       ls[lev]->FillBoundary(geom[lev].periodicity());
     }
 
     // Create MAC projection object
@@ -531,61 +510,42 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
   if (solve_dem)
   {
      // Auto generated particles may be out of the domain. This call will remove
-     // them. Note that this has to occur after the EB geometry is created. if
-     // (particle_init_type == "Auto" && !restart_flag &&
-     // particle_ebfactory[finest_level])
+     // them. Note that this has to occur after the EB geometry is created.
+     //if (particle_init_type == "Auto" && !restart_flag && particle_ebfactory[finest_level])
+     if (!restart_flag && particle_ebfactory[finest_level])
+     {
+       amrex::Print() << "Clean up auto-generated particles.\n";
+       pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
+                            level_set->get_data(),
+                            level_set->get_valid(),
+                            level_set->get_ls_ref());
 
-      if (use_amr_ls) {
-          amrex::Print() << "Clean up auto-generated particles.\n" << std::endl;
-          for (int ilev = 0; ilev <= pc->finestLevel(); ilev ++){
-              EBFArrayBoxFactory ebfactory(* eb_level_particles, pc->Geom(ilev),
-                                           pc->ParticleBoxArray(ilev), pc->ParticleDistributionMap(ilev),
-                                           {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                                           m_eb_support_level);
-              const MultiFab * ls_data = amr_level_set->getLevelSet(ilev);
-              iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
-                                 ls_data->nComp(), ls_data->nGrow());
-              ls_valid.setVal(1);
-              // amrex::Print() << ls_data->boxArray() << std::endl;
-              pc->RemoveOutOfRange(ilev, & ebfactory, ls_data, & ls_valid, 1);
 
-          }
-      } else {
-          if (! restart_flag && particle_ebfactory[finest_level])
-          {
-              amrex::Print() << "Clean up auto-generated particles.\n";
-              pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
-                                   level_set->get_data(),
-                                   level_set->get_valid(),
-                                   level_set->get_ls_ref());
-          }
-      }
+     }
 
-     if (!use_amr_ls) {
-         for (int lev = 0; lev < nlev; lev++)
-         {
+     for (int lev = 0; lev < nlev; lev++)
+     {
 
-             // We need $to do this *after* restart (hence putting this here not
-             // in Init) because we may want to move from KDTree to Knapsack, or
-             // change the particle_max_grid_size on restart.
-             if (load_balance_type == "KnapSack" &&
-                 dual_grid && particle_max_grid_size_x > 0
-                           && particle_max_grid_size_y > 0
-                           && particle_max_grid_size_z > 0)
-             {
-                 BoxArray particle_ba(geom[lev].Domain());
-                 IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                                particle_max_grid_size_y,
-                                                particle_max_grid_size_z);
-                 particle_ba.maxSize(particle_max_grid_size);
-                 DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
-                 pc->Regrid(particle_dm, particle_ba);
-             }
-         }
+        // We need to do this *after* restart (hence putting this here not in Init)
+        // because we may want to move from KDTree to Knapsack, or change the
+        // particle_max_grid_size on restart.
+        if (load_balance_type == "KnapSack" &&
+            dual_grid && particle_max_grid_size_x > 0
+                      && particle_max_grid_size_y > 0
+                      && particle_max_grid_size_z > 0)
+        {
+            BoxArray particle_ba(geom[lev].Domain());
+            IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                           particle_max_grid_size_y,
+                                           particle_max_grid_size_z);
+            particle_ba.maxSize(particle_max_grid_size);
+            DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+            pc->Regrid(particle_dm, particle_ba);
+        }
      }
 
      Real avg_dp[10], avg_ro[10];
-     pc->GetParticleAvgProp( avg_dp, avg_ro );
+     pc -> GetParticleAvgProp( avg_dp, avg_ro );
      init_collision(avg_dp, avg_ro);
   }
 
