@@ -14,7 +14,7 @@ mfix::mfix_compute_dt(Real time, Real stop_time, int steady_state, Real& dt)
     Real romin = 1.e20;
     Real mumax = 0.0;
 
-    Real ome = 1.0 - 1.e-12;
+    Real ope = 1.0 + 1.e-12;
     
     // We only compute gp0max on the coarset level because it is the same at all levels
     Real gp0max[3];
@@ -36,9 +36,12 @@ mfix::mfix_compute_dt(Real time, Real stop_time, int steady_state, Real& dt)
                      gp0max, geom[finest_level].CellSize(), &cfl, 
                      &steady_state, &time, &stop_time, &dt_new);
 
+    // dt_new is the step calculated with a cfl contraint; dt is the value set by fixed_dt
+    // When the test was on dt > dt_new, there were cases where they were effectively equal 
+    //   but (dt > dt_new) was being set to true due to precision issues.
     if ( fixed_dt )
     {
-        if ( dt_new < dt*ome && cfl > 0)
+        if ( dt > dt_new*ope && cfl > 0)
         {
             amrex::Print() << "WARNING: fixed dt does not satisfy CFL condition: "
                            << " fixed dt = "  << dt
