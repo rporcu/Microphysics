@@ -60,6 +60,7 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     {
         amrex::Print() << "AT LEVEL " << lev << " BEFORE PROJECTION: \n";
         mfix_print_max_vel(lev);
+        mfix_print_max_gp (lev);
         amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
         
         // Here we add the (1/rho gradp) back to ustar (note the +dt)
@@ -157,6 +158,7 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     {
         amrex::Print() << "AT LEVEL " << lev << " AFTER PROJECTION: \n";
         mfix_print_max_vel(lev);
+        mfix_print_max_gp (lev);
         amrex::Print() << "max(abs(diveu)) = " <<  mfix_norm0(diveu, lev, 0) << "\n";
     }
 }
