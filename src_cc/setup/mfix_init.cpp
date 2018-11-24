@@ -98,6 +98,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     solve_dem    = solve_dem_in;
     call_udf     = call_udf_in;
 
+    if (solve_dem)
     {
         ParmParse pp("particles");
 
@@ -121,6 +122,11 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 
     {
+        ParmParse pp("amr");
+        pp.query("amr_max_level", amr_max_level);
+    }
+
+    {
         ParmParse pp("eb");
         pp.query("use_amr_ls",  use_amr_ls);
         pp.query("amr_ls_crse", amr_ls_crse);
@@ -140,7 +146,7 @@ mfix::Init(Real dt, Real time)
     finest_level = nlev-1;
 
     if (use_amr_ls) 
-       finest_level = amr_level_set->finestLevel();
+       finest_level = std::min(amr_level_set->finestLevel(),max_level);
 
     // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
@@ -226,9 +232,8 @@ mfix::Init(Real dt, Real time)
            amrex::Abort("Bad data in set_ps");
     }
 
-    if (solve_fluid)
-      for (int lev = 0; lev < nlev; lev++)
-          mfix_set_bc_type(lev);
+   for (int lev = 0; lev < nlev; lev++)
+       mfix_set_bc_type(lev);
 
     if (solve_dem)
     {
@@ -253,7 +258,7 @@ mfix::Init(Real dt, Real time)
                                 pc->ParticleDistributionMap(lev))
                   );
    
-         }
+          }
 
           // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
           // (otherwise, if there are no walls/boundaries in the simulation, saving
