@@ -145,7 +145,7 @@ mfix::Init(Real dt, Real time)
     // Note that finest_level = nlev-1
     finest_level = nlev-1;
 
-    if (use_amr_ls) 
+    if (use_amr_ls)
        finest_level = std::min(amr_level_set->finestLevel(),max_level);
 
     // Define coarse level BoxArray and DistributionMap
@@ -157,17 +157,17 @@ mfix::Init(Real dt, Real time)
 
     for (int lev = 1; lev <= finest_level; lev++)
     {
-       if (use_amr_ls) 
+       if (use_amr_ls)
        {
           const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
-          BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0}); 
+          BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0});
           std::cout << "Level " << lev << " grids: " << ba_ref << std::endl;
           if (m_verbose > 0)
             std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
           DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
           MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
-       } 
-       else 
+       }
+       else
        {
           // This refines the central half of the domain
           int ilo = ba[0].size()[0] / 2;
@@ -176,7 +176,7 @@ mfix::Init(Real dt, Real time)
           IntVect hi(ihi,ihi,ihi);
           Box bx(lo,hi);
           BoxArray ba_ref(bx);
-   
+
           // This refines the whole domain
           // BoxArray ba_ref(ba);
           // ba_ref.refine(2);
@@ -257,7 +257,7 @@ mfix::Init(Real dt, Real time)
                                 pc->Geom(lev),
                                 pc->ParticleDistributionMap(lev))
                   );
-   
+
           }
 
           // Make sure that at (at least) an initial MultiFab is stored in ls[lev].

@@ -568,40 +568,45 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          // Only call the routine for wall collisions if we actually have walls
          if (ebfactory != NULL)
          {
-            const auto& sfab = static_cast <EBFArrayBox const&>((*dummy)[pti]);
-            const auto& flag = sfab.getEBCellFlagFab();
+             // Get particle EB geometric info (the inputted `dummy` is defined
+             // on the wrong grids)
+             MultiFab  dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                             1, 0, MFInfo(), * ebfactory);
 
-            if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
-            {
-               const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
+             const auto & sfab = static_cast <EBFArrayBox const &>(dummy[pti]);
+             const auto & flag = sfab.getEBCellFlagFab();
 
-               // Calculate forces and torques from particle-wall collisions
-               BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-               if(legacy__eb_collisions) {
-                   calc_wall_collisions(particles, & ntot, & nrp,
-                                        tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                        BL_TO_FORTRAN_3D(flag),
-                                        BL_TO_FORTRAN_3D((* eb_normals)[pti]),
-                                        BL_TO_FORTRAN_3D((* bndrycent)[pti]),
-                                        dx);
-               } else {
-                   calc_wall_collisions_ls(particles, & ntot, & nrp,
-                                           tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                           BL_TO_FORTRAN_3D((* ls_valid)[pti]),
-                                           BL_TO_FORTRAN_3D((* ls_phi)[pti]),
-                                           dx, & ls_refinement);
-               }
+             if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
+             {
+                 const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
 
-               // Debugging: copy data from the fc (all forces) vector to the
-               // wfor (wall forces) vector.
-               if (debug_level > 0) {
-                   for (int i = 0; i < wfor[index].size(); i++ ) {
-                       wfor[index][i] = fc[index][i];
-                   }
-               }
+                 // Calculate forces and torques from particle-wall collisions
+                 BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
+                 if(legacy__eb_collisions) {
+                     calc_wall_collisions(particles, & ntot, & nrp,
+                                          tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                          BL_TO_FORTRAN_3D(flag),
+                                          BL_TO_FORTRAN_3D((* eb_normals)[pti]),
+                                          BL_TO_FORTRAN_3D((* bndrycent)[pti]),
+                                          dx);
+                 } else {
+                     calc_wall_collisions_ls(particles, & ntot, & nrp,
+                                             tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                             BL_TO_FORTRAN_3D((* ls_valid)[pti]),
+                                             BL_TO_FORTRAN_3D((* ls_phi)[pti]),
+                                             dx, & ls_refinement);
+                 }
 
-               BL_PROFILE_VAR_STOP(calc_wall_collisions);
-            }
+                 // Debugging: copy data from the fc (all forces) vector to the
+                 // wfor (wall forces) vector.
+                 if (debug_level > 0) {
+                     for (int i = 0; i < wfor[index].size(); i++ ) {
+                         wfor[index][i] = fc[index][i];
+                     }
+                 }
+
+                 BL_PROFILE_VAR_STOP(calc_wall_collisions);
+             }
          }
 
         /***********************************************************************
@@ -911,7 +916,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
                                     BL_TO_FORTRAN_ANYD(flags),
                                     plo, dx, &fortran_particle_comp);
             }
-                
+
 
 #ifdef _OPENMP
             amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
@@ -922,7 +927,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
     }
 
     // Move any field deposited outside the domain back into the domain
-    // when BC is pressure inlet and mass inflow. 
+    // when BC is pressure inlet and mass inflow.
     Box domain(Geom(lev).Domain());
 
     for (MFIter mfi(*mf_pointer); mfi.isValid(); ++mfi) {
@@ -993,7 +998,7 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
     // Get particle EB geometric info
     MultiFab  dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
                     1, 0, MFInfo(), ebfactory);
-    
+
     const amrex::MultiFab*   volfrac;
     volfrac = &(ebfactory.getVolFrac());
 
@@ -1044,7 +1049,7 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
             const EBCellFlagFab&    flags = dummy_fab.getEBCellFlagFab();
 
             const Box& box = pti.tilebox(); // I need a box without ghosts
-            
+
             if (flags.getType(box) != FabType::covered )
             {
                 mfix_multi_deposit_cic_eb(particles.data(), nstride, np,
@@ -1274,15 +1279,15 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
      Real p_diam = 0.0; //particle diameters
      Real p_dens = 0.0; //particle density
 
-     for (int lev = 0; lev < nlev; lev++) 
+     for (int lev = 0; lev < nlev; lev++)
      {
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:p_num, p_diam, p_dens)
 #endif
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
           auto& particles = pti.GetArrayOfStructs();
-   
+
           for (const auto& p: particles){
             if ( phse==p.idata(intData::phase) ){
               p_num  += 1.0;
@@ -1307,7 +1312,7 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
    }
 }
 
-void MFIXParticleContainer::UpdateMaxVelocity() 
+void MFIXParticleContainer::UpdateMaxVelocity()
 {
     Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
 
@@ -1316,10 +1321,10 @@ void MFIXParticleContainer::UpdateMaxVelocity()
 #endif
     for (int lev = 0; lev < nlev; lev++)
     {
-       for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti) 
+       for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
        {
            auto & particles = pti.GetArrayOfStructs();
-           for(const auto & particle : particles) 
+           for(const auto & particle : particles)
            {
               max_vel_x = std::max(Real(std::fabs(particle.rdata(realData::velx))), max_vel_x);
               max_vel_y = std::max(Real(std::fabs(particle.rdata(realData::vely))), max_vel_y);
@@ -1331,7 +1336,7 @@ void MFIXParticleContainer::UpdateMaxVelocity()
 }
 
 void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Vector<Real>> pfor,
-                                             std::map<PairIndex, Vector<Real>> wfor) 
+                                             std::map<PairIndex, Vector<Real>> wfor)
 {
     Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
     Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
@@ -1341,7 +1346,7 @@ void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Vector<Real>> p
 #ifdef _OPENMP
 #pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z)
 #endif
-       for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti) 
+       for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
        {
         PairIndex index(pti.index(), pti.LocalTileIndex());
 
@@ -1375,7 +1380,7 @@ void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Vector<Real>> p
     loc_maxwfor = RealVect(max_wfor_x, max_wfor_y, max_wfor_z);
 }
 
-RealVect MFIXParticleContainer::GetMaxVelocity() 
+RealVect MFIXParticleContainer::GetMaxVelocity()
 {
     Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
 
@@ -1387,7 +1392,7 @@ RealVect MFIXParticleContainer::GetMaxVelocity()
     return max_vel;
 };
 
-Vector<RealVect> MFIXParticleContainer::GetMaxForces() 
+Vector<RealVect> MFIXParticleContainer::GetMaxForces()
 {
     Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
     Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
