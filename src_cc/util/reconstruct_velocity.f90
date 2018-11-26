@@ -109,6 +109,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
                ! Find location of "mirror" point by iteration if necessary
                x_m  = x_cc + two * abs(phi_cc) * norm_cc
 
+               iter = 0
                find_mirror: do
                   
                   ! Get phi and normal at mirror point                  
