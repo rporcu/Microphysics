@@ -11,7 +11,7 @@ mfix::Regrid ()
 {
     BL_PROFILE_REGION_START("mfix::Regrid()");
 
-    int base_lev = 0; 
+    int base_lev = 0;
 
     if (load_balance_type == "KDTree")
     {
@@ -50,17 +50,12 @@ mfix::Regrid ()
 
 
        if (particle_ebfactory[base_lev]) {
-           particle_ebfactory[base_lev].reset(new EBFArrayBoxFactory(
-                                                        * eb_level_particles,
-                                                        geom[base_lev],
-                                                        pc->ParticleBoxArray(base_lev),
-                                                        pc->ParticleDistributionMap(base_lev),
-                                                        {m_eb_basic_grow_cells,
-                                                         m_eb_volume_grow_cells,
-                                                         m_eb_full_grow_cells},
-                                                        m_eb_support_level
-                                                    )
-                                              );
+           particle_ebfactory[base_lev].reset(
+               new EBFArrayBoxFactory ( * eb_level_particles, geom[base_lev],
+                                        pc->ParticleBoxArray(base_lev), pc->ParticleDistributionMap(base_lev),
+                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                                        m_eb_support_level )
+               );
 
            // eb_normals is a legacy of the old collision algorithm -> deprecated
            eb_normals   = pc->EBNormals(base_lev, particle_ebfactory[base_lev].get(), dummy.get());
@@ -95,7 +90,7 @@ mfix::Regrid ()
                 fluid_cost[lev].reset(new MultiFab(grids[lev], new_fluid_dm, 1, 0));
                 fluid_cost[lev]->setVal(0.0);
             }
- 
+
             mfix_set_p0();
             mfix_set_bc0();
 
@@ -115,16 +110,12 @@ mfix::Regrid ()
                 particle_cost[lev]->setVal(0.0);
 
                 if (particle_ebfactory[lev]) {
-                    particle_ebfactory[lev].reset(new EBFArrayBoxFactory(
-                                                            * eb_level_particles,
-                                                            geom[lev], pc->ParticleBoxArray(lev),
-                                                            pc->ParticleDistributionMap(lev),
-                                                            {m_eb_basic_grow_cells,
-                                                             m_eb_volume_grow_cells,
-                                                             m_eb_full_grow_cells},
-                                                            m_eb_support_level
-                                                        )
-                                                  );
+                    particle_ebfactory[lev].reset(
+                        new EBFArrayBoxFactory ( * eb_level_particles, geom[lev],
+                                                 pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
+                                                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                                  m_eb_full_grow_cells}, m_eb_support_level )
+                        );
 
                     // eb_normals is a legacy of the old collision algorithm -> deprecated
                     eb_normals   = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
@@ -183,10 +174,9 @@ mfix::Regrid ()
         }
     }
 
-    // Note that this is still being done here (instead of
-    // mfix::RegridArrays, which only acts on the fluid grid) because of
-    // a dual grid: the level-set factory object regrids using the
-    // ParticleDistributionMap.
+    // Note that this is still being done here (instead of mfix::RegridArrays,
+    // which only acts on the fluid grid) because of the dual grid: the level-set
+    // factory object the ls data live on the particle grids.
     level_set->regrid(pc->ParticleBoxArray(base_lev), pc->ParticleDistributionMap(base_lev));
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");

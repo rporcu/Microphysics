@@ -352,7 +352,8 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag;
     Vector< std::unique_ptr<MultiFab> > f_gds;
 
-    // Level-Set Data
+    // Level-Set Data => used for fluid reconstruction in particle drag
+    // calculation
     Vector< std::unique_ptr<MultiFab> > ls;
 
     // These are multi-component multifabs

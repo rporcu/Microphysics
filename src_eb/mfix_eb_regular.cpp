@@ -47,7 +47,7 @@ mfix::make_eb_regular()
     if (solve_fluid) {
         bool has_walls = false;
         std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_real_walls(has_walls);
-  
+
         if (has_walls){
             auto gshop = EB2::makeShop(* impfunc_walls);
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
@@ -56,7 +56,7 @@ mfix::make_eb_regular()
             auto gshop = EB2::makeShop(my_regular);
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
         }
- 
+
         const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
 
         for (int lev = 0; lev < nlev; lev++)
@@ -75,11 +75,11 @@ mfix::make_eb_regular()
     // true iff there are walls.
     bool has_walls = false;
 
-    if (solve_dem) 
+    if (solve_dem)
     {
         std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_walls(has_walls);
 
-        if (has_walls) 
+        if (has_walls)
         {
             auto gshop = EB2::makeShop(* impfunc_walls);
             EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
@@ -100,11 +100,11 @@ mfix::make_eb_regular()
            const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
            eb_level_particles = & eb_is.getLevel(geom[lev]);
 
-           particle_ebfactory[lev].reset(new EBFArrayBoxFactory(
-                                               * eb_level_particles,
-                                               geom[lev], grids[lev], dmap[lev],
-                                               {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                                m_eb_full_grow_cells}, m_eb_support_level));
+           particle_ebfactory[lev].reset(
+               new EBFArrayBoxFactory(* eb_level_particles, geom[lev], grids[lev], dmap[lev],
+                                      {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                                      m_eb_support_level)
+               );
 
            eb_normals = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy.get());
         }
@@ -117,20 +117,19 @@ mfix::make_eb_regular()
          *       particle radius > 1                                             *
          *                                                                       *
          *************************************************************************/
-   
+
         if (has_walls) {
             if (!levelset__restart) level_set->intersection_impfunc( * mf_impfunc);
             else
                 amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
                                << std::endl;
         }
-  
+
         // store copy of level set (for plotting).
         std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+        int ng = ls_data->nGrow();
+
         for (int lev = 0; lev < nlev; lev++)
-        {
-           ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
-           ls[lev]->FillBoundary(geom[lev].periodicity());
-        }
+            ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
     }
 }

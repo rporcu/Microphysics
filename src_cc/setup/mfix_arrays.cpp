@@ -1,10 +1,10 @@
 #include <mfix.H>
 
 void
-mfix::AllocateArrays (int lev)  
+mfix::AllocateArrays (int lev)
 {
     mfix_update_ebfactory(lev);
-   
+
     // ********************************************************************************
     // Cell- or node-based arrays
     // ********************************************************************************
@@ -182,9 +182,9 @@ mfix::AllocateArrays (int lev)
 
     m_u_mac[lev]->setVal(0.);
     m_v_mac[lev]->setVal(0.);
-    m_w_mac[lev]->setVal(0.);    
+    m_w_mac[lev]->setVal(0.);
 
-    
+
 }
 
 
@@ -200,9 +200,9 @@ mfix::RegridArrays (int lev)
     //
     // After calling copy() with dst_ngrow set to ng, we do not need to call
     // FillBoundary().
-    // 
     //
-    
+    //
+
     // Void fraction
     int ng = ep_g[lev]->nGrow();
     std::unique_ptr<MultiFab> ep_g_new(new MultiFab(grids[lev],dmap[lev],1,ng));
@@ -484,21 +484,22 @@ mfix::RegridArrays (int lev)
     std::unique_ptr<MultiFab> zslopes_new(new  MultiFab(grids[lev], dmap[lev],zslopes[lev]->nComp(),nghost));
     zslopes[lev] = std::move(zslopes_new);
     zslopes[lev] -> setVal(0.);
-    
+
 
    /****************************************************************************
-    * Nodal Arrays                                                             *
-    ****************************************************************************/
+    * Particle Grid Based Arrays                                               *
+    ***************************************************************************/
 
     // Create a nodal BoxArray
-    const BoxArray & new_nodal_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+    const BoxArray & new_pc_nd_grids = amrex::convert(pc->ParticleBoxArray(lev), IntVect{1, 1, 1});
 
-    // Level-set
-    // For the level set we set src_nghost to ng as well, even if it's potentially
-    // not totally safe. This way we have the domain ghost cells filled properly.
+    // Level-set data used for fluid reconstruction in particle drag
+    // calculation. For the level set we set src_nghost to ng as well, even if
+    // it's potentially not totally safe. This way we have the domain ghost
+    // cells filled properly.
     ng = ls[lev]->nGrow();
-    std::unique_ptr<MultiFab> ls_new(new MultiFab(new_nodal_grids, dmap[lev], 1, ng ));
-    ls_new->copy(*ls[lev],0,0,1,ng,ng);
+    std::unique_ptr<MultiFab> ls_new(new MultiFab(new_pc_nd_grids, pc->ParticleDistributionMap(lev), 1, ng));
+    ls_new->copy(* ls[lev], 0, 0, 1, ng, ng);
     ls[lev] = std::move(ls_new);
 
 
@@ -522,7 +523,7 @@ mfix::RegridArrays (int lev)
     }
 }
 
-// This function checks if ebfactory is allocated with 
+// This function checks if ebfactory is allocated with
 // the proper dm and ba
 
 void
@@ -536,7 +537,7 @@ mfix::mfix_update_ebfactory (int a_lev)
    const BoxArray&                 ba = boxArray(a_lev);
    const EB2::IndexSpace&        ebis = EB2::IndexSpace::top();
    const EB2::Level&      ebis_level  = ebis.getLevel(geom[a_lev]);
-      
+
    if ( ebfactory[a_lev].get() == nullptr )
    {
       amrex::Print() << "Updating ebfactory" << std::endl;
@@ -547,10 +548,10 @@ mfix::mfix_update_ebfactory (int a_lev)
                                                            m_eb_full_grow_cells},
                                                      m_eb_support_level));
    }
-   else                         
+   else
    {
       amrex::Print() << "Updating ebfactory" << std::endl;
-      
+
       const DistributionMapping&  eb_dm = ebfactory[a_lev]->DistributionMap();
       const BoxArray&             eb_ba = ebfactory[a_lev]->boxArray();
 
@@ -561,8 +562,7 @@ mfix::mfix_update_ebfactory (int a_lev)
                                                         {m_eb_basic_grow_cells,
                                                               m_eb_volume_grow_cells,
                                                               m_eb_full_grow_cells},
-                                                        m_eb_support_level));         
+                                                        m_eb_support_level));
       }
    }
 }
-   
