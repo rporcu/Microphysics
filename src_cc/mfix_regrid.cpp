@@ -176,8 +176,9 @@ mfix::Regrid ()
 
     // Note that this is still being done here (instead of mfix::RegridArrays,
     // which only acts on the fluid grid) because of the dual grid: the level-set
-    // factory object the ls data live on the particle grids.
-    level_set->regrid(pc->ParticleBoxArray(base_lev), pc->ParticleDistributionMap(base_lev));
+    // factory object and the ls data both live on the particle grids.
+    if (solve_dem)
+        level_set->regrid(pc->ParticleBoxArray(base_lev), pc->ParticleDistributionMap(base_lev));
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }

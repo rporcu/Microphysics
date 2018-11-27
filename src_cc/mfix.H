@@ -528,8 +528,12 @@ private:
     // Level-set refinement tagging step size. Also a bit fiddly: this sets the
     // steps (from the baseline tag) which are used to refine the AMR level-set
     Real amr_ls_tag_step     = 1.e-5;
-    // Max number of levels in AMR level-set
-    int amr_ls_max_level = 1;
+
+    // Max level in AMR level-set
+    int amr_ls_max_level = 0;
+
+    // Max level for fluid solve
+    int amr_max_level = 0;
 
 
     void mfix_update_ebfactory (int a_lev);

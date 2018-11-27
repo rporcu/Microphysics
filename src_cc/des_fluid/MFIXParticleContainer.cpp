@@ -194,7 +194,9 @@ void MFIXParticleContainer::InitParticlesAuto()
 }
 
 void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
-        const MultiFab * ls_phi, const iMultiFab * ls_valid, int ls_refinement) {
+                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
+                                             int ls_refinement)
+{
 
     // Only call the routine for wall collisions if we actually have walls
     if (ebfactory != NULL) {
@@ -202,6 +204,9 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
         Box domain(Geom(lev).Domain());
         const Real * dx = Geom(lev).CellSize();
         MultiFab dummy;
+
+        // amrex::Print() << ParticleBoxArray(lev) << std::endl;
+
         dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev),
                      1, 0, MFInfo(), * ebfactory);
 
@@ -385,8 +390,8 @@ MFIXParticleContainer::InitData()
 {
 }
 
-std::unique_ptr<MultiFab>
-MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiFab * dummy)
+std::unique_ptr<MultiFab> MFIXParticleContainer::EBNormals(int lev,
+                                                           EBFArrayBoxFactory * ebfactory, MultiFab * dummy)
 {
     // Container for normal data
     std::unique_ptr<MultiFab> normal = std::unique_ptr<MultiFab>(new MultiFab);
@@ -397,7 +402,7 @@ MFIXParticleContainer::EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiF
         std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = ebfactory->getAreaFrac();
 
         // We pre-compute the normals
-        normal -> define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 2);
+        normal->define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 2);
 
         for(MFIter mfi(* normal, true); mfi.isValid(); ++mfi){
             Box tile_box = mfi.tilebox();
@@ -504,12 +509,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
       // list (Note that this fills the neighbour list after every redistribute
       // operation)
       if (n % 25 == 0) {
-          clearNeighbors(lev);
+          if (lev == 0) clearNeighbors(lev);
           Redistribute();
-          fillNeighbors(lev);
-          buildNeighborList(lev, MFIXCheckPair, sort_neighbor_list);
+          if (lev == 0) fillNeighbors(lev);
+          if (lev == 0) buildNeighborList(lev, MFIXCheckPair, sort_neighbor_list);
       } else {
-          updateNeighbors(lev);
+          if (lev == 0) updateNeighbors(lev);
       }
 
 #ifdef _OPENMP
@@ -606,6 +611,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 #if 1
          BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
 
+         if (lev == 0)
          calc_particle_collisions ( particles                     , &nrp,
                                     neighbors[index].dataPtr()    , &size_ng,
                                     neighbor_list[index].dataPtr(), &size_nl,
@@ -656,21 +662,22 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         * Update runtime cost (used in load-balancing)                        *
         ***********************************************************************/
 
-        if (cost) {
-             // Runtime cost is either (weighted by tile box size):
-             //   * time spent
-             //   * number of particles
-             const Box& tbx = pti.tilebox();
-             if (knapsack_weight_type == "RunTimeCosts")
-             {
-                wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-             }
-             else if (knapsack_weight_type == "NumParticles")
-             {
-                wt = nrp / tbx.d_numPts();
-             }
-             (*cost)[pti].plus(wt, tbx);
-         }
+        //if (lev == 0)
+        //if (cost) {
+        //     // Runtime cost is either (weighted by tile box size):
+        //     //   * time spent
+        //     //   * number of particles
+        //     const Box& tbx = pti.tilebox();
+        //     if (knapsack_weight_type == "RunTimeCosts")
+        //     {
+        //        wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+        //     }
+        //     else if (knapsack_weight_type == "NumParticles")
+        //     {
+        //        wt = nrp / tbx.d_numPts();
+        //     }
+        //     (*cost)[pti].plus(wt, tbx);
+        // }
       }
 
       // Update substep count
@@ -721,7 +728,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     // Redistribute particles at the end of all substeps (note that the
     // particle neighbour list needs to be reset when redistributing).
-    clearNeighbors(lev);
+    if (lev == 0) clearNeighbors(lev);
     Redistribute();
 
    /****************************************************************************
@@ -858,7 +865,7 @@ void MFIXParticleContainer::PICDeposition(amrex::MultiFab& mf_to_be_filled,
     // Get particle EB geometric info
     MultiFab      dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
                         1, 0, MFInfo(), ebfactory);
-    
+
     const amrex::MultiFab*                    volfrac;
     volfrac = &(ebfactory.getVolFrac());
 

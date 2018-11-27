@@ -44,8 +44,6 @@ void ReadParameters ()
      pp.query("stop_time", stop_time);
      pp.query("max_step", max_step);
 
-     pp.add("blocking_factor",1);
-
      pp.query("check_file", check_file);
      pp.query("check_int", check_int);
 
