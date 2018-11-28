@@ -12,6 +12,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
  &                                flags, flo, fhi,           &
  &                                x0, dx  ) bind(C)
 
+   use amrex_error_module,      only: amrex_abort
    use interpolation_m,         only: trilinear_interp_eb
    use amrex_fort_module,       only: rt => amrex_real
    use iso_c_binding,           only: c_int
@@ -50,9 +51,9 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    ! Loop indeces
    integer             :: i, j, k
 
-   ! Width of narrow band
-   real(rt), parameter :: band_width    = 1.5_rt
-   real(rt)            :: phi_threshold
+   ! Width of narrow band 
+   real(rt), parameter :: band_width    = two
+   real(rt)            :: phi_threshold 
 
    ! Amout of "correction" to go from mirror point to interpolation point
    real(rt), parameter :: eps = 0.1_rt
@@ -61,12 +62,15 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    real(rt)            :: x_cc(3), phi_cc, norm_cc(3)
 
    ! Coordinates, level set, and normal of mirror point
-   real(rt)            :: x_m(3), norm_m(3)
+   real(rt)            :: x_m(3), phi_m, norm_m(3)
 
    ! Coordinates and velocity at interpolation point
    real(rt)            :: x_i(3), vel_i(3)
 
    ! Other local variables
+   real(rt), parameter :: sqrt2 = sqrt(two)
+   real(rt), parameter :: max_iter = 10 ! Max number of iterations to find mirror point
+   real(rt)            :: iter 
    real(rt)            :: odx(3)
 
    odx = one / dx
@@ -94,15 +98,36 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
                ! Coordinates of cell center
                x_cc = ( real([i,j,k],rt) + half ) * dx
 
-               ! Get phi and normal at cell center
+               ! Get phi at cell center
                call amrex_eb_interp_levelset(x_cc, x0, n_refine, phi, phlo, phhi, dx, phi_cc)
+
+               ! Skip innermost loop if cell is too far from zero level set
+               if (abs(phi_cc) > band_width*maxval(dx)) cycle
+               
+               ! Get normal at cell center
                call amrex_eb_normal_levelset(x_cc, x0, n_refine, phi, phlo, phhi, dx, norm_cc)
 
-               ! First find location of "mirror" point
+               ! Find location of "mirror" point by iteration if necessary
                x_m  = x_cc + two * abs(phi_cc) * norm_cc
 
-               ! Get phi and normal at cell center
-               call amrex_eb_normal_levelset(x_m, x0, n_refine, phi, phlo, phhi, dx, norm_m)
+               iter = 0
+               find_mirror: do
+                  
+                  ! Get phi and normal at mirror point                  
+                  call amrex_eb_interp_levelset(x_m, x0, n_refine, phi, phlo, phhi, dx, phi_m)
+                  call amrex_eb_normal_levelset(x_m, x0, n_refine, phi, phlo, phhi, dx, norm_m)
+
+                  if ( phi_m > maxval(dx)/sqrt2 ) exit find_mirror
+
+                  x_m = x_m + maxval(dx) * norm_m
+
+                  iter = iter + 1
+
+                  if ( iter > max_iter ) &
+                   call amrex_abort("reconstruct_velocity: cannot find mirror point")
+                  
+               end do find_mirror
+
 
                ! Find location of interpolation point
                ! by correcting mirror location to (hopefully) account for corner cases
