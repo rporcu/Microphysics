@@ -716,7 +716,9 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
                   if (solve_dem) {
                       MultiFab phi(amrex::convert(grids[lev], IntVect{1, 1, 1}), dmap[lev], 1, 0);
                       phi.copy(*(*pltscalarVars[i] )[lev].get(), 0, 0, 1);
-                      // amrex::average_node_to_cellcenter(*mf[lev], dcomp, *(*pltscalarVars[i] )[lev].get(), 0, 1);
+                      // amrex::average_node_to_cellcenter(* mf[lev], dcomp,
+                      //                                   *(*pltscalarVars[i] )[lev].get(),
+                      //                                   0, 1);
                       amrex::average_node_to_cellcenter(* mf[lev], dcomp, phi, 0, 1);
                   } else {
                       mf[lev]->setVal(0.0,dcomp,1,0);

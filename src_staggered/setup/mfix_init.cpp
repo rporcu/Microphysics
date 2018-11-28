@@ -182,18 +182,18 @@ mfix::Init(int lev, Real dt, Real time)
     //            -> use min to intersect new eb boundaries (in update)
     level_set = std::unique_ptr<LSFactory>(
             new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
-                levelset__pad, levelset__eb_pad,
-                pc->ParticleBoxArray(lev), pc->Geom(lev), pc->ParticleDistributionMap(lev))
+                          levelset__pad, levelset__eb_pad,
+                          pc->ParticleBoxArray(lev), pc->Geom(lev), pc->ParticleDistributionMap(lev))
             );
 
     // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
     // (otherwise, if there are no walls/boundaries in the simulation, saving a
     // plot file or checkpoint will segfault).
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-    const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
-    ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
-    ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 /*ls[lev]->nGrow(), ls[lev]->nGrow()*/);
-    ls[lev]->FillBoundary(geom[lev].periodicity());
+    const BoxArray & nd_grids = amrex::convert(pc->ParticleBoxArray(lev), IntVect{1,1,1});
+    int ng = ls_data->nGrow();
+    ls[lev].reset(new MultiFab(nd_grids, pc->ParticleDistributionMap(lev), 1, ng));
+    ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
 
     // Create MAC projection object
     mac_projection.reset( new MacProjection(this,nghost) );
@@ -313,16 +313,16 @@ mfix::ReMakeNewLevelFromScratch(int lev,
     // After replicate, new BAs needs to be passed to the level-set factory.
     // Also: mfix::ls needs to be replaced to reflect the new BA.
     level_set = std::unique_ptr<LSFactory>(
-                                           new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
-                                                         levelset__pad, levelset__eb_pad,
-                                                         new_grids, geom[lev], new_dmap)
-                                           );
+        new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
+                      levelset__pad, levelset__eb_pad,
+                      new_grids, geom[lev], new_dmap)
+        );
 
     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-    const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
-    ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, nghost));
-    ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0 );
-    ls[lev]->FillBoundary(geom[lev].periodicity());
+    const BoxArray & nd_grids = amrex::convert(pc->ParticleBoxArray(lev), IntVect{1,1,1});
+    int ng = ls_data->nGrow();
+    ls[lev].reset(new MultiFab(nd_grids, pc->ParticleDistributionMap(lev), 1, ng));
+    ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
 }
 
 void
