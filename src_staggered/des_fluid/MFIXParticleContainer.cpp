@@ -524,8 +524,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             // Neighbor particles
             PairIndex index(pti.index(), pti.LocalTileIndex());
-            int size_ng = neighbors[index].size();
-            int size_nl = neighbor_list[index].size();
+            int size_ng = neighbors[lev][index].size();
+            int size_nl = neighbor_list[lev][index].size();
 
             // Number of particles including neighbor particles
             int ntot = nrp + size_ng;
@@ -600,8 +600,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
 
             calc_particle_collisions(particles                     , & nrp,
-                    neighbors[index].dataPtr()    , & size_ng,
-                    neighbor_list[index].dataPtr(), & size_nl,
+                    neighbors[lev][index].dataPtr()    , & size_ng,
+                    neighbor_list[lev][index].dataPtr(), & size_nl,
                     tow[index].dataPtr(), fc[index].dataPtr(),
                     & subdt, & ncoll);
 
@@ -623,8 +623,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
             calc_particle_collisions_soa ( particles                     , &nrp,
-                    neighbors[index].dataPtr()    , &size_ng,
-                    neighbor_list[index].dataPtr(), &size_nl,
+                    neighbors[lev][index].dataPtr()    , &size_ng,
+                    neighbor_list[lev][index].dataPtr(), &size_nl,
                     tow[index].dataPtr(), fc[index].dataPtr(), &subdt, &ncoll);
             BL_PROFILE_VAR_STOP(calc_particle_collisions);
 #endif
@@ -1374,7 +1374,7 @@ void MFIXParticleContainer::UpdateMaxForces(int lev, std::map<PairIndex, Vector<
         //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
         // Where n is the total number of particle and neighbor particles.
         const int nrp     = NumberOfParticles(pti);
-        const int size_ng = neighbors[index].size();
+        const int size_ng = neighbors[lev][index].size();
         // Number of particles including neighbor particles
         const int ntot = nrp + size_ng;
 
