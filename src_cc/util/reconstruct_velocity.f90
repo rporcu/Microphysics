@@ -101,7 +101,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
                call amrex_eb_interp_levelset(x_cc, x0, n_refine, phi, phlo, phhi, dx, phi_cc)
 
                ! Skip innermost loop if cell is too far from zero level set
-               if (abs(phi_cc) > maxval(dx)) cycle
+               if (abs(phi_cc) > band_width*maxval(dx)) cycle
                
                ! Get normal at cell center
                call amrex_eb_normal_levelset(x_cc, x0, n_refine, phi, phlo, phhi, dx, norm_cc)
