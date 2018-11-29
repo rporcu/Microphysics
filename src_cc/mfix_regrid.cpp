@@ -52,6 +52,9 @@ mfix::Regrid ()
 
 
        if (particle_ebfactory[base_lev]) {
+           // NOTE: for now I moved the to the mfix grid to deal with the
+           // multi-level level-sets. TODO: cleanup.
+
            // particle_ebfactory[base_lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
            //                                                           geom[base_lev],
            //                                                           pc->ParticleBoxArray(base_lev),
@@ -70,7 +73,6 @@ mfix::Regrid ()
                                                                       m_eb_full_grow_cells},
                                                                      m_eb_support_level )
                );
-
 
            // eb_normals is a legacy of the old collision algorithm -> deprecated
            // eb_normals[base_lev] = pc->EBNormals(
@@ -130,6 +132,9 @@ mfix::Regrid ()
                 particle_cost[lev]->setVal(0.0);
 
                 if (particle_ebfactory[lev]) {
+                    // NOTE: for now I moved the to the mfix grid to deal with the
+                    // multi-level level-sets. TODO: cleanup.
+
                     // particle_ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
                     //                                                      geom[lev],
                     //                                                      pc->ParticleBoxArray(lev),
@@ -146,7 +151,6 @@ mfix::Regrid ()
                                                                           m_eb_full_grow_cells},
                                                                          m_eb_support_level)
                         );
-
 
                     // eb_normals is a legacy of the old collision algorithm -> deprecated
                     // eb_normals[lev] = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy[lev].get());
@@ -199,6 +203,10 @@ mfix::Regrid ()
             if (solve_fluid) mfix_set_bc0();
 
             if (particle_ebfactory[base_lev]) {
+                // NOTE: for now I moved the to the mfix grid to deal with the
+                // multi-level level-sets. TODO: cleanup.
+
+
                 // particle_ebfactory[base_lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
                 //                                                           geom[base_lev],
                 //                                                           pc->ParticleBoxArray(base_lev),
@@ -229,10 +237,13 @@ mfix::Regrid ()
         }
     }
 
-    // Note that this is still being done here (instead of
-    // mfix::RegridArrays, which only acts on the fluid grid) because of
-    // a dual grid: the level-set factory object regrids using the
-    // ParticleDistributionMap.
+
+    // Note that this is still being done here (instead of mfix::RegridArrays,
+    // which only acts on the fluid grid) because of the dual grid. NOTE: the
+    // level-set factory object and the ls data should both live on the particle
+    // grids. But for now I moved the to the mfix grid to deal with the
+    // multi-level level-sets. TODO: cleanup.
+
     // level_set->regrid(pc->ParticleBoxArray(base_lev), pc->ParticleDistributionMap(base_lev));
     if (solve_dem)
        level_set->regrid(grids[base_lev], dmap[base_lev]);

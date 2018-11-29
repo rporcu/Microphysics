@@ -101,11 +101,11 @@ mfix::make_eb_regular()
            const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
            eb_level_particles = & eb_is.getLevel(geom[lev]);
 
-           particle_ebfactory[lev].reset(new EBFArrayBoxFactory(
-                                               * eb_level_particles,
-                                               geom[lev], grids[lev], dmap[lev],
-                                               {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                                m_eb_full_grow_cells}, m_eb_support_level));
+           particle_ebfactory[lev].reset(
+               new EBFArrayBoxFactory(* eb_level_particles, geom[lev], grids[lev], dmap[lev],
+                                      {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                                      m_eb_support_level)
+               );
 
            // eb_normals[lev] = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy[lev].get());
            eb_normals[lev]->define(grids[lev], dmap[lev], 3, 2, MFInfo(), *particle_ebfactory[lev]);
@@ -126,14 +126,6 @@ mfix::make_eb_regular()
             else
                 amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
                                << std::endl;
-        }
-
-        // store copy of level set (for plotting).
-        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-        for (int lev = 0; lev < nlev; lev++)
-        {
-           ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
-           ls[lev]->FillBoundary(geom[lev].periodicity());
         }
     }
 }

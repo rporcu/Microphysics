@@ -487,18 +487,19 @@ mfix::RegridArrays (int lev)
 
 
    /****************************************************************************
-    * Nodal Arrays                                                             *
-    ****************************************************************************/
+    * Particle Grid Based Arrays                                               *
+    ***************************************************************************/
 
     // Create a nodal BoxArray
-    const BoxArray & new_nodal_grids = amrex::convert(grids[lev], IntVect{1,1,1});
+    const BoxArray & new_pc_nd_grids = amrex::convert(pc->ParticleBoxArray(lev), IntVect{1, 1, 1});
 
-    // Level-set
-    // For the level set we set src_nghost to ng as well, even if it's potentially
-    // not totally safe. This way we have the domain ghost cells filled properly.
+    // Level-set data used for fluid reconstruction in particle drag
+    // calculation. For the level set we set src_nghost to ng as well, even if
+    // it's potentially not totally safe. This way we have the domain ghost
+    // cells filled properly.
     ng = ls[lev]->nGrow();
-    std::unique_ptr<MultiFab> ls_new(new MultiFab(new_nodal_grids, dmap[lev], 1, ng ));
-    ls_new->copy(*ls[lev],0,0,1,ng,ng);
+    std::unique_ptr<MultiFab> ls_new(new MultiFab(new_pc_nd_grids, pc->ParticleDistributionMap(lev), 1, ng));
+    ls_new->copy(* ls[lev], 0, 0, 1, ng, ng);
     ls[lev] = std::move(ls_new);
 
 
@@ -543,7 +544,7 @@ mfix::mfix_update_ebfactory (int a_lev)
                                                     {m_eb_basic_grow_cells,
                                                      m_eb_volume_grow_cells,
                                                      m_eb_full_grow_cells},
-                                                     m_eb_support_level));
+                                                    m_eb_support_level));
    }
    else
    {
@@ -554,7 +555,6 @@ mfix::mfix_update_ebfactory (int a_lev)
 
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
-
          ebfactory[a_lev].reset(new EBFArrayBoxFactory(* eb_level_fluid, geom[a_lev], ba, dm,
                                                        {m_eb_basic_grow_cells,
                                                         m_eb_volume_grow_cells,

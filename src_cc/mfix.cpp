@@ -109,7 +109,8 @@ mfix::ResizeArrays ()
     m_v_mac.resize(nlevs_max);
     m_w_mac.resize(nlevs_max);
 
-    // MultiFab storing level-set data
+    // MultiFab storing level-set data used for fluid reconstruction in particle
+    // drag calculation
     ls.resize(nlevs_max);
 
     xslopes.resize(nlevs_max);
@@ -157,7 +158,7 @@ mfix::usr3()
           {
              const Box& sbx = (*p_g[lev])[mfi].box();
              const Box& ubx = (*vel_g[lev])[mfi].box();
-   
+
              mfix_usr3((*vel_g[lev])[mfi].dataPtr(0), ubx.loVect(), ubx.hiVect(),
                        (*vel_g[lev])[mfi].dataPtr(1), ubx.loVect(), ubx.hiVect(),
                        (*vel_g[lev])[mfi].dataPtr(2), ubx.loVect(), ubx.hiVect(),
@@ -205,9 +206,9 @@ mfix::fill_mf_bc(int lev, MultiFab& mf)
     {
 	const Box& sbx = mf[mfi].box();
 	fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
-		 bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(), 
+		 bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                  bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-		 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(), 
+		 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                  domain.loVect(), domain.hiVect(), &nghost);
     }
 }
@@ -224,7 +225,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
        // This call simply deposits the particle volume onto the grid in a PIC-like manner
        for (int lev = 0; lev < nlev; lev++)
            pc->CalcVolumeFraction(*ep_g[lev], *particle_ebfactory[lev],
-                                  *bc_ilo[lev],*bc_ihi[lev], 
+                                  *bc_ilo[lev],*bc_ihi[lev],
                                   *bc_jlo[lev],*bc_jhi[lev],
                                   *bc_klo[lev],*bc_khi[lev],
                                   nghost);
@@ -247,7 +248,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
        fill_mf_bc(lev,*rop_g[lev]);
    }
 
-    // Sum up all the values of ep_g[lev] 
+    // Sum up all the values of ep_g[lev]
     // HACK  -- THIS SHOULD BE a multilevel sum
     for (int lev = 0; lev < nlev; lev++)
        sum_vol = ep_g[lev]->sum();

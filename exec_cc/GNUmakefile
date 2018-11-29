@@ -21,7 +21,6 @@ TINY_PROFILE  = FALSE
 # physics
 DIM      = 3
 
-
 # Checking for Make.local in current directory. Check the Make.local.template
 # for more info.
 ifneq ("$(wildcard Make.local)", "")

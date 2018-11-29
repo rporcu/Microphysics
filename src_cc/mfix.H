@@ -352,7 +352,8 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag;
     Vector< std::unique_ptr<MultiFab> > f_gds;
 
-    // Level-Set Data
+    // Level-Set Data => used for fluid reconstruction in particle drag
+    // calculation
     Vector< std::unique_ptr<MultiFab> > ls;
 
     // These are multi-component multifabs
@@ -531,7 +532,7 @@ private:
     // Max level in AMR level-set
     int amr_ls_max_level = 0;
 
-    // Max level at which to solve the fluid equations 
+    // Max level at which to solve the fluid equations
     int amr_max_level = 0;
 
     void mfix_update_ebfactory (int a_lev);

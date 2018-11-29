@@ -1,17 +1,18 @@
 !
 ! This subroutines reconstructs the velocity field in the covered
 ! cells within a narrow band around the EB walls
-! 
+!
 ! Author: Michele Rosso, LBL
 !
 ! Date:   November 15, 2018
-! 
+!
 subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
  &                                 vel_in, vilo, vihi,       &
  &                                phi, phlo, phhi, n_refine, &
  &                                flags, flo, fhi,           &
  &                                x0, dx  ) bind(C)
 
+   use amrex_error_module,      only: amrex_abort
    use interpolation_m,         only: trilinear_interp_eb
    use amrex_fort_module,       only: rt => amrex_real
    use iso_c_binding,           only: c_int
@@ -51,14 +52,14 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    integer             :: i, j, k
 
    ! Width of narrow band 
-   real(rt), parameter :: band_width    = 2.0_rt
+   real(rt), parameter :: band_width    = two
    real(rt)            :: phi_threshold 
 
    ! Amout of "correction" to go from mirror point to interpolation point
-   real(rt), parameter :: eps = 0.01_rt
+   real(rt), parameter :: eps = 0.1_rt
 
    ! Coordinates, level set, and normal of cell center
-   real(rt)            :: x_cc(3), phi_cc, norm_cc(3) 
+   real(rt)            :: x_cc(3), phi_cc, norm_cc(3)
 
    ! Coordinates, level set, and normal of mirror point
    real(rt)            :: x_m(3), phi_m, norm_m(3)
@@ -67,13 +68,15 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    real(rt)            :: x_i(3), vel_i(3)
 
    ! Other local variables
+   real(rt), parameter :: sqrt2 = sqrt(two)
+   real(rt), parameter :: max_iter = 10 ! Max number of iterations to find mirror point
+   real(rt)            :: iter 
    real(rt)            :: odx(3)
-
 
    odx = one / dx
    phi_threshold = band_width * maxval(dx)
 
-   
+
    ! We can avoid filling the first and last layer of cells since
    ! vel_in will be used for trilinear interpolation only and this require only
    ! 1 layer of ghost nodes ( and in EB land, the velocity field has multiple layers of
@@ -93,22 +96,43 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
              &   minval(abs(phi(i:i+1,j:j+1,k:k+1))) <= phi_threshold ) then
 
                ! Coordinates of cell center
-               x_cc = ( real([i,j,k],rt) + half ) * dx 
+               x_cc = ( real([i,j,k],rt) + half ) * dx
 
-               ! Get phi and normal at cell center
+               ! Get phi at cell center
                call amrex_eb_interp_levelset(x_cc, x0, n_refine, phi, phlo, phhi, dx, phi_cc)
+
+               ! Skip innermost loop if cell is too far from zero level set
+               if (abs(phi_cc) > band_width*maxval(dx)) cycle
+               
+               ! Get normal at cell center
                call amrex_eb_normal_levelset(x_cc, x0, n_refine, phi, phlo, phhi, dx, norm_cc)
 
-               ! First find location of "mirror" point
+               ! Find location of "mirror" point by iteration if necessary
                x_m  = x_cc + two * abs(phi_cc) * norm_cc
 
-               ! Get phi and normal at cell center
-               call amrex_eb_interp_levelset(x_m, x0, n_refine, phi, phlo, phhi, dx, phi_m)
-               call amrex_eb_normal_levelset(x_m, x0, n_refine, phi, phlo, phhi, dx, norm_m)
+               iter = 0
+               find_mirror: do
+                  
+                  ! Get phi and normal at mirror point                  
+                  call amrex_eb_interp_levelset(x_m, x0, n_refine, phi, phlo, phhi, dx, phi_m)
+                  call amrex_eb_normal_levelset(x_m, x0, n_refine, phi, phlo, phhi, dx, norm_m)
+
+                  if ( phi_m > maxval(dx)/sqrt2 ) exit find_mirror
+
+                  x_m = x_m + maxval(dx) * norm_m
+
+                  iter = iter + 1
+
+                  if ( iter > max_iter ) &
+                   call amrex_abort("reconstruct_velocity: cannot find mirror point")
+                  
+               end do find_mirror
+
 
                ! Find location of interpolation point
                ! by correcting mirror location to (hopefully) account for corner cases
-               x_i  = x_m + eps * maxval(dx) * norm_m
+               ! We are being conservative and use a full dx for shifting the point.
+               x_i  = x_m + maxval(dx) * norm_m
 
                ! Compute interpolated velocity at x_i
                vel_i = trilinear_interp_eb(vel_in, vilo, vihi, 3, flags, flo, fhi, x_i, x0, dx)
@@ -126,6 +150,3 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
 
 
 end subroutine reconstruct_velocity
-
-
-
