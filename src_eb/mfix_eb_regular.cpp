@@ -124,12 +124,5 @@ mfix::make_eb_regular()
                 amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
                                << std::endl;
         }
-
-        // store copy of level set (for plotting).
-        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-        int ng = ls_data->nGrow();
-
-        for (int lev = 0; lev < nlev; lev++)
-            ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
     }
 }

@@ -199,11 +199,6 @@ mfix::make_eb_cyclone()
 
            level_set->intersection_ebf(eb_factory_cyclone, * mf_impfunc_cyc );
 
-           // store copy of level set (for plotting).
-           std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-           ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
-           ls[lev]->FillBoundary(geom[lev].periodicity());
-
            amrex::Print() << "Done making the levelset ..." << std::endl;
 
           } else {
@@ -224,7 +219,7 @@ mfix::make_eb_cyclone()
        if (solve_fluid)
        {
           amrex::Print() << "Now making the fluid ebfactory ..." << std::endl;
-   
+
           eb_level_fluid = & ebis_lev_cyc;
 
           ebfactory[lev].reset(new EBFArrayBoxFactory(
