@@ -96,7 +96,6 @@ void mfix::mfix_calc_drag_fluid(Real time)
         const MultiFab & phi = * ls[lev];
 
 
-
 #ifdef _OPENMP
 #pragma omp parallel
 #endif

@@ -181,8 +181,8 @@ mfix::make_eb_box()
                level_set->intersection_impfunc(* mf_impfunc_box);
                // store copy of level set (for plotting).
                std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-               ls[lev]->copy(* ls_data, 0, 0, 1, 0, 0);
-               ls[lev]->FillBoundary(geom[lev].periodicity());
+               int ng = ls_data->nGrow();
+               ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
 
                amrex::Print() << "Done making the levelset ..." << std::endl;
 
