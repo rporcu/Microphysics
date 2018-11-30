@@ -411,6 +411,7 @@ private:
     static std::string particle_init_type;
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
+    static int load_balance_fluid; 
 
     // Options to control time stepping
     Real cfl = 0.5;
