@@ -83,7 +83,7 @@ mfix::make_eb_general() {
      * Generate IntersectionIF representing a planar (partial) partition        *
      *          this partition has finite thickness and penetrates the "bottom" *
      *          wall => it is constructed using 3 PlaneIFs                      *
-     ****************************************************************************/
+     ***************************************************************************/
     if (use_divider) {
         amrex::Print() << "Using divider-wall geometry" << std::endl;
 
@@ -95,7 +95,7 @@ mfix::make_eb_general() {
      *                                                                         *
      * Build EB Factories                                                      *
      *                                                                         *
-     ***************************************************************************/
+     **************************************************************************/
 
     // Stores implicit function for the combined particle IF
     std::unique_ptr<MultiFab> mf_impfunc;

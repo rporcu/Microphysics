@@ -138,7 +138,6 @@ void mfix::make_amr_regular()
 
     if (use_amr_ls)
     {
-
         int lev_lowest = 0;
 
         const RealBox & rb = geom[lev_lowest].ProbDomain();

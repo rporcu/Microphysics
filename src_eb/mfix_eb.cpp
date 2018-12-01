@@ -161,28 +161,23 @@ void mfix::make_amr_geometry ()
      ***************************************************************************/
 
     if (geom_type == "box") {
-        amrex::Print() << "\n Building box geometry." << std::endl;
+        amrex::Print() << "\n Building box AMR level-set." << std::endl;
         make_amr_box();
     } else if (geom_type == "cylinder") {
-        amrex::Print() << "\n Building cylinder geometry." << std::endl;
+        amrex::Print() << "\n Building cylinder AMR level-set." << std::endl;
         make_amr_cylinder();
     } else if (geom_type == "hopper") {
-        amrex::Print() << "\n Building hopper geometry." << std::endl;
-        amrex::Abort("hopper amr geometry not implemented yet");
-        //make_eb_hopper();
+        amrex::Print() << "\n Building hopper AMR level-set." << std::endl;
+        make_amr_hopper();
     } else if (geom_type == "cyclone") {
-        amrex::Print() << "\n Building cyclone geometry." << std::endl;
-        amrex::Abort("cyclone amr geometry not implemented yet");
-        //make_eb_cyclone();
+        amrex::Print() << "\n Building cyclone AMR level-set." << std::endl;
+        make_amr_cyclone();
     } else if(geom_type == "general") {
-        amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
-        amrex::Abort("general amr geometry not implemented yet");
-        //make_eb_general();
+        amrex::Print() << "\n Building general AMR level-set (poly2 with extra walls)." << std::endl;
+        make_amr_general();
     } else {
         amrex::Print() << "\n No EB geometry declared in inputs => "
-                       << " Will read walls from mfix.dat only."
                        << std::endl;
-        amrex::Abort("regular amr geometry not implemented yet");
         make_amr_regular();
     }
 
