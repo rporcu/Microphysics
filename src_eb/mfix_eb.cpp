@@ -174,9 +174,10 @@ void mfix::make_amr_geometry ()
         make_amr_cyclone();
     } else if(geom_type == "general") {
         amrex::Print() << "\n Building general AMR level-set (poly2 with extra walls)." << std::endl;
-        // make_amr_general();
+        make_amr_general();
     } else {
         amrex::Print() << "\n No EB geometry declared in inputs => "
+                       << " Will read walls from mfix.dat only."
                        << std::endl;
         make_amr_regular();
     }

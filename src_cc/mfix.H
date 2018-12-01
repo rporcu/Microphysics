@@ -169,6 +169,7 @@ protected:
 private:
 
     void make_eb_general();
+    void make_amr_general();
 
     void make_eb_box();
     void make_amr_box();
