@@ -177,8 +177,10 @@ private:
     void make_amr_cylinder();
 
     void make_eb_hopper();
+    void make_amr_hopper();
 
     void make_eb_cyclone();
+    void make_amr_cyclone();
 
     void make_eb_hourglass();
 

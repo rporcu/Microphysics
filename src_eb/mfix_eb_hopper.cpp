@@ -6,11 +6,9 @@
 #include <AMReX_EB2_IF_Translation.H>
 #include <AMReX_EB2_IF_Rotation.H>
 
-//#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
-//#include <sstream>
-
 #include <algorithm>
 #include <AMReX_EB_utils.H>
+#include <AMReX_EB_LSCore.H>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
 #include <mfix_eb_F.H>
