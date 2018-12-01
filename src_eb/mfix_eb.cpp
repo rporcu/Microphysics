@@ -162,8 +162,7 @@ void mfix::make_amr_geometry ()
 
     if (geom_type == "box") {
         amrex::Print() << "\n Building box geometry." << std::endl;
-        amrex::Abort("box amr geometry not implemented yet");
-        //make_eb_box();
+        make_amr_box();
     } else if (geom_type == "cylinder") {
         amrex::Print() << "\n Building cylinder geometry." << std::endl;
         make_amr_cylinder();
@@ -184,7 +183,7 @@ void mfix::make_amr_geometry ()
                        << " Will read walls from mfix.dat only."
                        << std::endl;
         amrex::Abort("regular amr geometry not implemented yet");
-        //make_eb_regular();
+        make_amr_regular();
     }
 
 

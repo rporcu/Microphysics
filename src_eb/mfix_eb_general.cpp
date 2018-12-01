@@ -6,9 +6,6 @@
 
 #include <mfix_eb_if.H>
 
-//#include <AMReX_VisMF.H>  // amrex::VisMF::Write(MultiFab)
-//#include <sstream>
-
 #include <algorithm>
 #include <type_traits>
 #include <AMReX_EB_utils.H>
@@ -35,7 +32,7 @@ mfix::make_eb_general() {
 
     /****************************************************************************
      * IF using divider => Extract parameters                                   *
-     ****************************************************************************/
+     ***************************************************************************/
 
     int div_dir = 0;
     Real div_pos, div_height, div_width;
@@ -61,7 +58,7 @@ mfix::make_eb_general() {
 
     /****************************************************************************
      * Generate PolynomialIF representing the non-planar EB walls               *
-     ****************************************************************************/
+     ***************************************************************************/
     if (use_poly2) {
         amrex::Print() << "Using poly2 geometry" << std::endl;
 
@@ -71,7 +68,7 @@ mfix::make_eb_general() {
     /****************************************************************************
      * Generate UnionListIF representing the planar EB walls                    *
      *          this IF represents the union of a list of planes (walls)        *
-     ****************************************************************************/
+     ***************************************************************************/
     // Flags checking if mfix.dat even has walls
     // IMPORTANT NOTE: has_real_walls => has_walls <=> ! has_walls => ! has_real_walls
     bool has_walls = false, has_real_walls = false;
