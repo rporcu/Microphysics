@@ -971,11 +971,11 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
 {
     int lev = 0;
     AMREX_ASSERT(OnSameGrids(lev,beta_mf)==OnSameGrids(lev,beta_vel_mf));
-        
+
     BL_PROFILE("MFIXParticleContainer::PICMultiDeposition()");
 
     MultiFab*  beta_ptr;
-    MultiFab*  beta_vel_ptr; 
+    MultiFab*  beta_vel_ptr;
 
     if (OnSameGrids(lev,beta_mf))
     {
@@ -1088,11 +1088,11 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
         // Copy back from mf_pointer
         beta_mf.copy    (*beta_ptr,0,0,beta_mf.nComp());
         beta_vel_mf.copy(*beta_vel_ptr,0,0,beta_vel_mf.nComp());
-        
+
         delete beta_ptr;
         delete beta_vel_ptr;
     }
-    
+
     const Box domain(Geom(lev).Domain());
 
     if (m_verbose > 1) {

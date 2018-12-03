@@ -46,16 +46,12 @@ void mfix::WriteEBSurface()
     areafrac  =  ebf->getAreaFrac();
     bndrycent = &(ebf->getBndryCent());
 
-    mfix_eb_to_polygon(dx, bx.loVect(), bx.hiVect(),
-         my_flag.dataPtr(), my_flag.loVect(), my_flag.hiVect(),
-         (*bndrycent)[mfi].dataPtr(),
-         (*bndrycent)[mfi].loVect(), (*bndrycent)[mfi].hiVect(),
-         (*areafrac[0])[mfi].dataPtr(),
-         (*areafrac[0])[mfi].loVect(), (*areafrac[0])[mfi].hiVect(),
-         (*areafrac[1])[mfi].dataPtr(),
-         (*areafrac[1])[mfi].loVect(), (*areafrac[1])[mfi].hiVect(),
-         (*areafrac[2])[mfi].dataPtr(),
-         (*areafrac[2])[mfi].loVect(), (*areafrac[2])[mfi].hiVect());
+    mfix_eb_to_polygon(dx, BL_TO_FORTRAN_BOX(bx),
+                       BL_TO_FORTRAN_3D(my_flag),
+                       BL_TO_FORTRAN_3D((* bndrycent)[mfi]),
+                       BL_TO_FORTRAN_3D((*areafrac[0])[mfi]),
+                       BL_TO_FORTRAN_3D((*areafrac[1])[mfi]),
+                       BL_TO_FORTRAN_3D((*areafrac[2])[mfi])   );
   }
 
   int cpu = ParallelDescriptor::MyProc();
