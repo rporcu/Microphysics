@@ -236,8 +236,6 @@ void mfix::make_amr_cylinder()
 {
     ParmParse pp("cylinder");
 
-    int max_level_here = 0;
-
     /****************************************************************************
      * Get cylinder information from inputs file.                               *
      ***************************************************************************/

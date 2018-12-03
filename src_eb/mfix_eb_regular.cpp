@@ -134,8 +134,6 @@ mfix::make_eb_regular()
 void mfix::make_amr_regular()
 {
 
-    bool has_walls = false;
-
     if (use_amr_ls)
     {
         int lev_lowest = 0;
