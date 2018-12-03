@@ -497,10 +497,10 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         // list (Note that this fills the neighbour list after every redistribute
         // operation)
         if (n % 25 == 0) {
-            clearNeighbors(lev);
+            clearNeighbors();
             Redistribute();
-            fillNeighbors(lev);
-            buildNeighborList(lev, MFIXCheckPair, sort_neighbor_list);
+            fillNeighbors();
+            buildNeighborList(MFIXCheckPair, sort_neighbor_list);
         } else {
             updateNeighbors(lev);
         }
@@ -714,7 +714,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     // Redistribute particles at the end of all substeps (note that the
     // particle neighbour list needs to be reset when redistributing).
-    clearNeighbors(lev);
+    clearNeighbors();
     Redistribute();
 
 
