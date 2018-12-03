@@ -432,14 +432,16 @@ std::unique_ptr<MultiFab> MFIXParticleContainer::EBNormals(int lev,
 
 
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
-        EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals,
-        const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
-        MultiFab * dummy, MultiFab * cost, std::string & knapsack_weight_type, int subdt_io)
+                                            EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals,
+                                            const MultiFab * ls_phi, const iMultiFab * ls_valid,
+                                            const int ls_refinement, MultiFab * dummy,
+                                            MultiFab * cost, std::string & knapsack_weight_type,
+                                            int subdt_io)
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
-    amrex::Print() << "Evolving particles... " << std::endl;
+    amrex::Print() << "Evolving particles on level: " << lev << " ... " << std::endl;
 
     /****************************************************************************
      * DEBUG flag toggles:                                                      *
@@ -568,12 +570,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          // Only call the routine for wall collisions if we actually have walls
          if (ebfactory != NULL)
          {
-             // Get particle EB geometric info (the inputted `dummy` is defined
-             // on the wrong grids)
-             MultiFab  dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                             1, 0, MFInfo(), * ebfactory);
-
-             const auto & sfab = static_cast <EBFArrayBox const &>(dummy[pti]);
+             const auto & sfab = static_cast <EBFArrayBox const &>((* dummy)[pti]);
              const auto & flag = sfab.getEBCellFlagFab();
 
              if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
@@ -666,22 +663,21 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         * Update runtime cost (used in load-balancing)                        *
         ***********************************************************************/
 
-        //if (lev == 0)
-        //if (cost) {
-        //     // Runtime cost is either (weighted by tile box size):
-        //     //   * time spent
-        //     //   * number of particles
-        //     const Box& tbx = pti.tilebox();
-        //     if (knapsack_weight_type == "RunTimeCosts")
-        //     {
-        //        wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
-        //     }
-        //     else if (knapsack_weight_type == "NumParticles")
-        //     {
-        //        wt = nrp / tbx.d_numPts();
-        //     }
-        //     (*cost)[pti].plus(wt, tbx);
-        // }
+        if (cost) {
+             // Runtime cost is either (weighted by tile box size):
+             //   * time spent
+             //   * number of particles
+             const Box& tbx = pti.tilebox();
+             if (knapsack_weight_type == "RunTimeCosts")
+             {
+                wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+             }
+             else if (knapsack_weight_type == "NumParticles")
+             {
+                wt = nrp / tbx.d_numPts();
+             }
+             (*cost)[pti].plus(wt, tbx);
+         }
       }
 
       // Update substep count
@@ -732,7 +728,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     // Redistribute particles at the end of all substeps (note that the
     // particle neighbour list needs to be reset when redistributing).
-    if (lev == 0) clearNeighbors(lev);
+    clearNeighbors(lev);
     Redistribute();
 
    /****************************************************************************

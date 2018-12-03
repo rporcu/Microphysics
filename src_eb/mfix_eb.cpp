@@ -188,9 +188,15 @@ void mfix::make_amr_geometry ()
         amrex::Print() << "Constructing AMR levelset on "
                        << amr_ls_max_level + 1 << " levels" << std::endl;
 
+        int ct_lev = 0;
         Vector<Real> ls_tags;
-        for (Real tag = amr_ls_baseline_tag; tag > 0; tag -= amr_ls_tag_step)
+        for (Real tag = amr_ls_baseline_tag; tag > 0; tag -= amr_ls_tag_step){
             ls_tags.push_back(tag);
+            ct_lev ++;
+
+            if (ct_lev >= amr_ls_max_level + 1)
+                break;
+        }
 
         amrex::Print() << "Level tags: ";
         for (Real tag : ls_tags)

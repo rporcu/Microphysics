@@ -54,18 +54,14 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
                 const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
                 const iMultiFab * ls_valid = amr_level_set->getValid(lev);
 
-                amrex::Print() << "hi lev " << lev << std::endl;
-
                 pc->EvolveParticles(lev, nstep, dt, time,
                                     particle_ebfactory[lev].get(),
                                     eb_normals[lev].get(),
                                     ls_lev, ls_valid, 1,
                                     dummy[lev].get(),
                                     particle_cost[lev].get(), knapsack_weight_type,
-                                    subdt_io
-                    );
+                                    subdt_io                                         );
 
-                amrex::Print() << "bye lev " << lev << std::endl;
             }
 
         } else {
@@ -78,8 +74,7 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
                                     level_set->get_ls_ref(),
                                     dummy[lev].get(),
                                     particle_cost[lev].get(), knapsack_weight_type,
-                                    subdt_io
-                    );
+                                    subdt_io                                          );
         }
 
         //  Compute Eulerian velocities in selected regions
