@@ -138,7 +138,7 @@ mfix::ResizeArrays ()
 
     int nlevs_max_part = nlevs_max;
     if (use_amr_ls)
-        nlevs_max_part = amr_level_set->maxLevel();
+        nlevs_max_part = amr_level_set->maxLevel() + 1;
 
 
     // Particle and Fluid costs

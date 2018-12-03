@@ -548,17 +548,8 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
       if (use_amr_ls) {
           amrex::Print() << "Clean up auto-generated particles.\n" << std::endl;
           for (int ilev = 0; ilev <= pc->finestLevel(); ilev ++){
-              // EBFArrayBoxFactory ebfactory(* eb_level_particles, pc->Geom(ilev),
-              //                              pc->ParticleBoxArray(ilev),
-              //                              pc->ParticleDistributionMap(ilev),
-              //                              {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-              //                               m_eb_full_grow_cells}, m_eb_support_level);
               const MultiFab * ls_data = amr_level_set->getLevelSet(ilev);
               const iMultiFab * ls_valid = amr_level_set->getValid(ilev);
-              // iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
-              //                    ls_data->nComp(), ls_data->nGrow());
-              // ls_valid.setVal(1);
-              // amrex::Print() << ls_data->boxArray() << std::endl;
               pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(), ls_data, ls_valid, 1);
 
           }
