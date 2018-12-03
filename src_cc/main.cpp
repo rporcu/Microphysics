@@ -144,7 +144,7 @@ int main (int argc, char* argv[])
     my_mfix.ResizeArrays();
 
     // Initialize derived internals
-    my_mfix.Init(dt,time);
+    my_mfix.Init(dt, time);
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;

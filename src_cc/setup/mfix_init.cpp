@@ -462,7 +462,11 @@ mfix::InitLevelData(Real dt, Real time)
       } else if (particle_init_type == "Random")
       {
         int n_per_cell = 1;
-        amrex::Print() << "Randomly initializing " << n_per_cell << " particles per cell ..." << std::endl;
+
+        amrex::Print() << "Randomly initializing " << n_per_cell
+                       << " particles per cell ..."
+                       << std::endl;
+
         Real  radius = 1.0;
         Real  volume = 1.0;
         Real    mass = 1.0;
@@ -479,8 +483,11 @@ mfix::InitLevelData(Real dt, Real time)
         Real  omegaz = 0.0;
         int    phase = 1;
         int    state = 0;
+
         MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
-                velx,vely,velz,omegax,omegay,omegaz,dragx,dragy,dragz,phase,state};
+                                                         velx,vely,velz,omegax,omegay,omegaz,
+                                                         dragx,dragy,dragz,phase,state};
+
         pc->InitNRandomPerCell(n_per_cell, pdata);
         pc->WriteAsciiFileForInit ("random_particles");
         exit(0);

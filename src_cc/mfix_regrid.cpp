@@ -52,34 +52,28 @@ mfix::Regrid ()
 
 
        if (particle_ebfactory[base_lev]) {
-           // NOTE: for now I moved the to the mfix grid to deal with the
-           // multi-level level-sets. TODO: cleanup.
 
-           // particle_ebfactory[base_lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
-           //                                                           geom[base_lev],
-           //                                                           pc->ParticleBoxArray(base_lev),
-           //                                                           pc->ParticleDistributionMap(base_lev),
-           //                                                           {m_eb_basic_grow_cells,
-           //                                                            m_eb_volume_grow_cells,
-           //                                                            m_eb_full_grow_cells},
-           //                                                           m_eb_support_level )
-           //     );
-           particle_ebfactory[base_lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
-                                                                     geom[base_lev],
-                                                                     grids[base_lev],
-                                                                     dmap[base_lev],
-                                                                     {m_eb_basic_grow_cells,
-                                                                      m_eb_volume_grow_cells,
-                                                                      m_eb_full_grow_cells},
-                                                                     m_eb_support_level )
+           particle_ebfactory[base_lev].reset(
+               new EBFArrayBoxFactory(* eb_level_particles, geom[base_lev],
+                                      pc->ParticleBoxArray(base_lev),
+                                      pc->ParticleDistributionMap(base_lev),
+                                      {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                       m_eb_full_grow_cells}, m_eb_support_level )
                );
 
            // eb_normals is a legacy of the old collision algorithm -> deprecated
            // eb_normals[base_lev] = pc->EBNormals(
            //     base_lev, particle_ebfactory[base_lev].get(),dummy[base_lev].get());
-           eb_normals[base_lev]->define(grids[base_lev], dmap[base_lev], 3, 2,
-                                        MFInfo(), * particle_ebfactory[base_lev]);
-           amrex::FillEBNormals( * eb_normals[base_lev], * particle_ebfactory[base_lev], geom[base_lev]);
+
+           // eb_normals[base_lev]->define(grids[base_lev], dmap[base_lev], 3, 2,
+           //                              MFInfo(), * particle_ebfactory[base_lev]);
+           eb_normals[base_lev]->define(pc->ParticleBoxArray(base_lev),
+                                        pc->ParticleDistributionMap(base_lev),
+                                        3, 2, MFInfo(), * particle_ebfactory[base_lev]);
+
+           amrex::FillEBNormals( * eb_normals[base_lev], * particle_ebfactory[base_lev],
+                                 geom[base_lev]);
+
        }
 
     } else if (load_balance_type == "KnapSack") {
@@ -132,29 +126,25 @@ mfix::Regrid ()
                 particle_cost[lev]->setVal(0.0);
 
                 if (particle_ebfactory[lev]) {
-                    // NOTE: for now I moved the to the mfix grid to deal with the
-                    // multi-level level-sets. TODO: cleanup.
 
-                    // particle_ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
-                    //                                                      geom[lev],
-                    //                                                      pc->ParticleBoxArray(lev),
-                    //                                                      pc->ParticleDistributionMap(lev),
-                    //                                                      {m_eb_basic_grow_cells,
-                    //                                                       m_eb_volume_grow_cells,
-                    //                                                       m_eb_full_grow_cells},
-                    //                                                      m_eb_support_level)
-                    //     );
-                    particle_ebfactory[lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
-                                                                         geom[lev], grids[lev], dmap[lev],
-                                                                         {m_eb_basic_grow_cells,
-                                                                          m_eb_volume_grow_cells,
-                                                                          m_eb_full_grow_cells},
-                                                                         m_eb_support_level)
+                    particle_ebfactory[lev].reset(
+                        new EBFArrayBoxFactory(* eb_level_particles, geom[lev],
+                                               pc->ParticleBoxArray(lev),
+                                               pc->ParticleDistributionMap(lev),
+                                               {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                                m_eb_full_grow_cells}, m_eb_support_level)
                         );
 
                     // eb_normals is a legacy of the old collision algorithm -> deprecated
-                    // eb_normals[lev] = pc->EBNormals(lev, particle_ebfactory[lev].get(), dummy[lev].get());
-                    eb_normals[lev]->define(grids[lev], dmap[lev], 3, 2, MFInfo(), *particle_ebfactory[lev]);
+                    // eb_normals[lev] = pc->EBNormals(
+                    //     lev, particle_ebfactory[lev].get(), dummy[lev].get());
+
+                    // eb_normals[lev]->define(grids[lev], dmap[lev], 3, 2,
+                    //                         MFInfo(), *particle_ebfactory[lev]);
+                    eb_normals[base_lev]->define(pc->ParticleBoxArray(lev),
+                                                 pc->ParticleDistributionMap(lev),
+                                                 3, 2, MFInfo(), * particle_ebfactory[lev]);
+
                     amrex::FillEBNormals( * eb_normals[lev], * particle_ebfactory[lev], geom[lev]);
                 }
             }
@@ -203,36 +193,27 @@ mfix::Regrid ()
             if (solve_fluid) mfix_set_bc0();
 
             if (particle_ebfactory[base_lev]) {
-                // NOTE: for now I moved the to the mfix grid to deal with the
-                // multi-level level-sets. TODO: cleanup.
 
-
-                // particle_ebfactory[base_lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
-                //                                                           geom[base_lev],
-                //                                                           pc->ParticleBoxArray(base_lev),
-                //                                                           pc->ParticleDistributionMap(base_lev),
-                //                                                           {m_eb_basic_grow_cells,
-                //                                                            m_eb_volume_grow_cells,
-                //                                                            m_eb_full_grow_cells},
-                //                                                           m_eb_support_level)
-                //     );
-                particle_ebfactory[base_lev].reset(new EBFArrayBoxFactory(* eb_level_particles,
-                                                                          geom[base_lev],
-                                                                          grids[base_lev],
-                                                                          dmap[base_lev],
-                                                                          {m_eb_basic_grow_cells,
-                                                                           m_eb_volume_grow_cells,
-                                                                           m_eb_full_grow_cells},
-                                                                          m_eb_support_level)
+                particle_ebfactory[base_lev].reset(
+                    new EBFArrayBoxFactory(* eb_level_particles, geom[base_lev],
+                                           pc->ParticleBoxArray(base_lev),
+                                           pc->ParticleDistributionMap(base_lev),
+                                           {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                            m_eb_full_grow_cells}, m_eb_support_level)
                     );
-
 
                 // eb_normals is a legacy of the old collision algorithm -> deprecated
                 // eb_normals[base_lev] = pc->EBNormals(
                 //     base_lev, particle_ebfactory[base_lev].get(), dummy[base_lev].get());
-                eb_normals[base_lev]->define(grids[base_lev], dmap[base_lev], 3, 2,
-                                             MFInfo(), * particle_ebfactory[base_lev]);
-                amrex::FillEBNormals( * eb_normals[base_lev], * particle_ebfactory[base_lev], geom[base_lev]);
+
+                // eb_normals[base_lev]->define(grids[base_lev], dmap[base_lev], 3, 2,
+                //                              MFInfo(), * particle_ebfactory[base_lev]);
+                eb_normals[base_lev]->define(pc->ParticleBoxArray(base_lev),
+                                             pc->ParticleDistributionMap(base_lev),
+                                             3, 2, MFInfo(), * particle_ebfactory[base_lev]);
+
+                amrex::FillEBNormals( * eb_normals[base_lev], * particle_ebfactory[base_lev],
+                                      geom[base_lev]);
             }
         }
     }
