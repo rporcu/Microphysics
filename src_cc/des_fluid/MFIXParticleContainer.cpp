@@ -509,12 +509,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
       // list (Note that this fills the neighbour list after every redistribute
       // operation)
       if (n % 25 == 0) {
-          if (lev == 0) clearNeighbors(lev);
+          clearNeighbors();
           Redistribute();
-          if (lev == 0) fillNeighbors(lev);
-          if (lev == 0) buildNeighborList(lev, MFIXCheckPair, sort_neighbor_list);
+          fillNeighbors();
+          buildNeighborList(MFIXCheckPair, sort_neighbor_list);
       } else {
-          if (lev == 0) updateNeighbors(lev);
+          updateNeighbors(lev);
       }
 
 #ifdef _OPENMP
@@ -611,7 +611,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 #if 1
          BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
 
-         if (lev == 0)
          calc_particle_collisions ( particles                     , &nrp,
                                     neighbors[lev][index].dataPtr()    , &size_ng,
                                     neighbor_list[lev][index].dataPtr(), &size_nl,
@@ -728,7 +727,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     // Redistribute particles at the end of all substeps (note that the
     // particle neighbour list needs to be reset when redistributing).
-    if (lev == 0) clearNeighbors(lev);
+    clearNeighbors();
     Redistribute();
 
    /****************************************************************************
