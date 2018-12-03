@@ -11,7 +11,8 @@ void mfix::WriteEBSurface()
 
   const Real* dx = Geom(lev).CellSize();
 
-  BoxArray ba = grids[lev];
+  BoxArray & ba            = grids[lev];
+  DistributionMapping & dm = dmap[lev];
 
   // This creates the associated Distribution Mapping
   // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
@@ -20,11 +21,13 @@ void mfix::WriteEBSurface()
 
   if (particle_ebfactory[lev] != nullptr) {
       ebf = particle_ebfactory[lev].get();
+      ba  = pc->ParticleBoxArray(lev);
+      dm  = pc->ParticleDistributionMap(lev);
   } else {
       ebf = ebfactory[lev].get();
   }
 
-  MultiFab mf_ba(ba, dmap[lev], 1, 0, MFInfo(), * ebf);
+  MultiFab mf_ba(ba, dm, 1, 0, MFInfo(), * ebf);
 
 
   // // // Deliberately didn't time this loop.
