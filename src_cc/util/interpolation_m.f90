@@ -19,6 +19,7 @@ module interpolation_m
 
    public trilinear_interp
    public trilinear_interp_eb
+   public interp_stencil_is_valid
 
 
    interface trilinear_interp
@@ -34,6 +35,28 @@ module interpolation_m
 
 
 contains
+
+   !
+   ! Check whether interpolation stencil around x_i is valid
+   ! 
+   function interp_stencil_is_valid ( x_i, x_0, dx, flags, flo, fhi ) result(res)
+
+      use amrex_ebcellflag_module, only: is_covered_cell
+
+      real(rt),       intent(in   ) :: x_i(3), x_0(3), dx(3)
+      integer(c_int), intent(in   ) :: flo(3), fhi(3)
+      integer(c_int), intent(in   ) :: flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))     
+      logical                       :: res
+      integer                       :: i, j, k  
+
+      ! Pick upper cell in the stencil
+      i = floor((x_i(1) - x_0(1))/dx(1) + half)
+      j = floor((x_i(2) - x_0(2))/dx(2) + half)
+      k = floor((x_i(3) - x_0(3))/dx(3) + half)
+
+      res = .not. any(is_covered_cell(flags(i-1:i,j-1:j,k-1:k)))     
+
+   end function interp_stencil_is_valid
 
    !
    ! Single variable interpolation

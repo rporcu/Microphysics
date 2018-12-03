@@ -13,7 +13,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
  &                                x0, dx  ) bind(C)
 
    use amrex_error_module,      only: amrex_abort
-   use interpolation_m,         only: trilinear_interp_eb
+   use interpolation_m,         only: trilinear_interp, interp_stencil_is_valid
    use amrex_fort_module,       only: rt => amrex_real
    use iso_c_binding,           only: c_int
    use particle_mod,            only: particle_t
@@ -61,14 +61,13 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    ! Coordinates, level set, and normal of cell center
    real(rt)            :: x_cc(3), phi_cc, norm_cc(3)
 
-   ! Coordinates, level set, and normal of mirror point
-   real(rt)            :: x_m(3), phi_m, norm_m(3)
+   ! ! Coordinates, level set, and normal of mirror point
+   ! real(rt)            :: x_m(3), phi_m, norm_m(3)
 
-   ! Coordinates and velocity at interpolation point
-   real(rt)            :: x_i(3), vel_i(3)
+   ! Coordinates, level set, normal  and velocity at interpolation point
+   real(rt)            :: x_i(3), phi_i, norm_i(3), vel_i(3)
 
    ! Other local variables
-   real(rt), parameter :: sqrt2 = sqrt(two)
    real(rt), parameter :: max_iter = 10 ! Max number of iterations to find mirror point
    real(rt)            :: iter 
    real(rt)            :: odx(3)
@@ -107,40 +106,36 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
                ! Get normal at cell center
                call amrex_eb_normal_levelset(x_cc, x0, n_refine, phi, phlo, phhi, dx, norm_cc)
 
-               ! Find location of "mirror" point by iteration if necessary
-               x_m  = x_cc + two * abs(phi_cc) * norm_cc
+               ! Find location of interpolation point by iteration if necessary
+               x_i  = x_cc + two * abs(phi_cc) * norm_cc
 
                iter = 0
-               find_mirror: do
-                  
-                  ! Get phi and normal at mirror point                  
-                  call amrex_eb_interp_levelset(x_m, x0, n_refine, phi, phlo, phhi, dx, phi_m)
-                  call amrex_eb_normal_levelset(x_m, x0, n_refine, phi, phlo, phhi, dx, norm_m)
+               find_xi: do
 
-                  if ( phi_m > maxval(dx)/sqrt2 ) exit find_mirror
+                  if ( interp_stencil_is_valid(x_i, x0, dx, flags, flo, fhi) ) exit find_xi
 
-                  x_m = x_m + maxval(dx) * norm_m
+                  ! Get normal at interpolation point                  
+                  call amrex_eb_normal_levelset(x_i, x0, n_refine, phi, phlo, phhi, dx, norm_i)
+
+                  x_i = x_i + maxval(dx) * norm_i
 
                   iter = iter + 1
 
                   if ( iter > max_iter ) &
                    call amrex_abort("reconstruct_velocity: cannot find mirror point")
                   
-               end do find_mirror
+               end do find_xi
 
-
-               ! Find location of interpolation point
-               ! by correcting mirror location to (hopefully) account for corner cases
-               ! We are being conservative and use a full dx for shifting the point.
-               x_i  = x_m + maxval(dx) * norm_m
-
+               ! Get phi at interpolation point
+               call amrex_eb_interp_levelset(x_i, x0, n_refine, phi, phlo, phhi, dx, phi_i)
+               
                ! Compute interpolated velocity at x_i
-               vel_i = trilinear_interp_eb(vel_in, vilo, vihi, 3, flags, flo, fhi, x_i, x0, dx)
+               vel_i = trilinear_interp(vel_in, vilo, vihi, 3, x_i, x0, dx)
 
                ! Since interpolation point is only slightly shifted with respect to
                ! the mirror point, we approximate vel at mirror point with vel_i and
                ! then use linear interpolation between x_m and x_c
-               vel_out(i,j,k,:) = - vel_i
+               vel_out(i,j,k,:) = vel_i * phi_cc / phi_i 
 
             end if
 
