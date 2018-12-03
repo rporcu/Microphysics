@@ -49,37 +49,25 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
     if (solve_dem)
     {
         if (use_amr_ls) {
-            // TODO: this is a bit of hack, but it works for now
-            int lev_ebfactory = 0;
-            for (int lev = 0; lev <= amr_level_set->finestLevel(); lev ++){
+
+            for (int lev = 0; lev <= amr_level_set->finestLevel(); lev ++) {
                 const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
-
-                //TODO: valid is defunct, passing it as a legacy
-                iMultiFab ls_valid(ls_lev->boxArray(), ls_lev->DistributionMap(),
-                                   ls_lev->nComp(), ls_lev->nGrow());
-                ls_valid.setVal(1);
-
-                EBFArrayBoxFactory ebfactory(* eb_level_particles, pc->Geom(lev),
-                                             pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev),
-                                             {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                                             m_eb_support_level);
-                MultiFab dummy_loc(pc->ParticleBoxArray(lev), pc->ParticleDistributionMap(lev), 1, 0,
-                                   MFInfo(), ebfactory);
+                const iMultiFab * ls_valid = amr_level_set->getValid(lev);
 
                 amrex::Print() << "hi lev " << lev << std::endl;
 
                 pc->EvolveParticles(lev, nstep, dt, time,
-                                    //particle_ebfactory[lev_ebfactory].get(),
-                                    & ebfactory,
-                                    eb_normals[lev_ebfactory].get(),
-                                    ls_lev, & ls_valid, 1,
-                                    //dummy[lev_ebfactory].get(),
-                                    & dummy_loc,
-                                    particle_cost[lev_ebfactory].get(), knapsack_weight_type,
+                                    particle_ebfactory[lev].get(),
+                                    eb_normals[lev].get(),
+                                    ls_lev, ls_valid, 1,
+                                    dummy[lev].get(),
+                                    particle_cost[lev].get(), knapsack_weight_type,
                                     subdt_io
                     );
+
                 amrex::Print() << "bye lev " << lev << std::endl;
             }
+
         } else {
 
             for (int lev = 0; lev < nlev; lev++)

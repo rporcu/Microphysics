@@ -74,6 +74,10 @@ mfix::Regrid ()
            amrex::FillEBNormals( * eb_normals[base_lev], * particle_ebfactory[base_lev],
                                  geom[base_lev]);
 
+           dummy[base_lev]->define(pc->ParticleBoxArray(base_lev),
+                                   pc->ParticleDistributionMap(base_lev),
+                                   3, 2, MFInfo(), * particle_ebfactory[base_lev]);
+
        }
 
     } else if (load_balance_type == "KnapSack") {
@@ -146,6 +150,10 @@ mfix::Regrid ()
                                                  3, 2, MFInfo(), * particle_ebfactory[lev]);
 
                     amrex::FillEBNormals( * eb_normals[lev], * particle_ebfactory[lev], geom[lev]);
+
+                    dummy[base_lev]->define(pc->ParticleBoxArray(lev),
+                                            pc->ParticleDistributionMap(lev),
+                                            3, 2, MFInfo(), * particle_ebfactory[lev]);
                 }
             }
 
@@ -214,6 +222,10 @@ mfix::Regrid ()
 
                 amrex::FillEBNormals( * eb_normals[base_lev], * particle_ebfactory[base_lev],
                                       geom[base_lev]);
+
+                dummy[base_lev]->define(pc->ParticleBoxArray(base_lev),
+                                        pc->ParticleDistributionMap(base_lev),
+                                        3, 2, MFInfo(), * particle_ebfactory[base_lev]);
             }
         }
     }
