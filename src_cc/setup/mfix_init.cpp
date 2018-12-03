@@ -43,9 +43,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Should we use explicit vs implicit diffusion
         pp.query( "explicit_diffusion", explicit_diffusion );
 
-        if (explicit_diffusion < 1)
-            amrex::Abort("Implicit diffusion is not supported");
-
         // The default type is "AsciiFile" but we can over-write that in the inputs file
         //  with "Random"
         pp.query("particle_init_type", particle_init_type);
