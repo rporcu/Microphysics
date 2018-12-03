@@ -172,7 +172,7 @@ int main (int argc, char* argv[])
     amrex::Print() << "Regridding at step " << nstep << std::endl;
     my_mfix.Regrid();
 
-    my_mfix.PostInit( dt, time, nstep, restart_flag, stop_time, steady_state );
+    my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time, steady_state);
 
     // Write out EB sruface
     if(write_eb_surface)
