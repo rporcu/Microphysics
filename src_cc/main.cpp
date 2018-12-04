@@ -36,6 +36,8 @@ int par_ascii_int = -1;
 int  last_par_ascii  = -1;
 std::string par_ascii_file {"par"};
 
+void set_ptr_to_mfix(mfix& my_mfix);
+
 void ReadParameters ()
 {
   {
@@ -80,7 +82,7 @@ int main (int argc, char* argv[])
     //        command line arguments are in mfix-format so it will just ignore them.
     amrex::Initialize(argc,argv);
     { // This start bracket and the end bracket before Finalize are essential so
-      //that the mfix object is deleted before Finalize
+      // that the mfix object is deleted before Finalize
 
     BL_PROFILE_VAR("main()", pmain)
     BL_PROFILE_REGION_START("mfix::main()");
@@ -132,6 +134,8 @@ int main (int argc, char* argv[])
     //                                                             |
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix my_mfix;
+
+    set_ptr_to_mfix(my_mfix);
 
     // Initialize internals from ParamParse database
     my_mfix.InitParams(solve_fluid, solve_dem, call_udf);
@@ -315,8 +319,8 @@ int main (int argc, char* argv[])
     BL_PROFILE_REGION_STOP("mfix::main()");
     BL_PROFILE_VAR_STOP(pmain);
 
-    } // This end bracket and the start bracket after Initialize are essential so that the
-      //      mfix object is deleted before Finalize
+    } // This end bracket and the start bracket after Initialize are essential so
+      // that the mfix object is deleted before Finalize
 
     amrex::Finalize();
     return 0;

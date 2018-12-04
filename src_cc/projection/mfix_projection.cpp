@@ -84,13 +84,9 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     // Compute right hand side, AKA div(ep_g* u) / dt
     mfix_compute_diveu(time);
 
+    // Initialize phi to zero (any non-zero bc's are stored in p0)
     for (int lev = 0; lev < nlev; lev++)
-    {
-        diveu[lev] -> mult(1.0/scaling_factor, diveu[lev]->nGrow() );
-       
-        // Initialize phi to zero (any non-zero bc's are stored in p0)
         phi[lev] -> setVal(0.);
-    }
 
     // Compute the PPE coefficients = (ep_g / rho) 
     mfix_compute_bcoeff_ppe( );
@@ -113,27 +109,22 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
  
     for (int lev = 0; lev < nlev; lev++)
     {
-        // The fluxes currently hold MINUS (ep_g/rho) * grad(phi) so we divide by ep_g
+        // The fluxes currently hold MINUS (dt) * (ep_g/rho) * grad(phi) so we divide by ep_g
         MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 0, 1, 0 );
         MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 1, 1, 0 );
         MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 2, 1, 0 );
 
-        //
-        // NOTE: THE SIGN OF DT (scaling_factor) IS CORRECT HERE
-        //
-        amrex::Print() << "Multiplying fluxes at level " << lev << " by dt " << scaling_factor << std::endl;
-
-        // The fluxes currently hold MINUS (1/rho) * grad(phi) so we multiply by dt
-        fluxes[lev]->mult( scaling_factor, fluxes[lev]->nGrow() );
-
-        // Now we correct the velocity with MINUS dt * (1/rho) * grad(phi),
+        // Now we correct the velocity with MINUS (dt) * (1/rho) * grad(phi),
         MultiFab::Add( *vel_g[lev], *fluxes[lev], 0, 0, 3, 0);
 
-        // The fluxes currently hold MINUS dt * (1/rho) * grad(phi), 
+        // The fluxes currently hold MINUS (dt) * (1/rho) * grad(phi), 
         // so now we multiply by rho and divide by (-dt) to get grad(phi)
         fluxes[lev]->mult ( -1/scaling_factor, fluxes[lev]->nGrow() );
         for (int n = 0; n < 3; n++)
             MultiFab::Multiply(*fluxes[lev],(*ro_g[lev]),0,n,1,fluxes[lev]->nGrow());
+
+        // phi currently holds (dt) * phi so we divide by (dt) to get (phi)
+        phi[lev]->mult ( 1/scaling_factor, phi[lev]->nGrow() );
 
         if (proj_2)
         {

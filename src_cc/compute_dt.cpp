@@ -14,7 +14,7 @@ mfix::mfix_compute_dt(Real time, Real stop_time, int steady_state, Real& dt)
     Real romin = 1.e20;
     Real mumax = 0.0;
 
-    Real ope = 1.0 + 1.e-12;
+    Real ope = 1.0 + 1.e-8;
     
     // We only compute gp0max on the coarset level because it is the same at all levels
     Real gp0max[3];
