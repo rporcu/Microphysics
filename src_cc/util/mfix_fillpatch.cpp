@@ -38,9 +38,7 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
     int lev = 0;
     for (int ilev = 0; ilev < 10; ilev++)
     {
-       std::cout << "HERE AT ILEV " << ilev << std::endl;
        const Geometry& lev_geom = mfix_for_fillpatching->GetParGDB()->Geom(ilev);
-       std::cout << "LEVGEOM " << lev_geom << std::endl;
        if (domain.length()[0] == (lev_geom.Domain()).length()[0]) 
        {
          lev = ilev;
