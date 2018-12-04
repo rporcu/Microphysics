@@ -11,24 +11,21 @@
 #include <AMReX_AmrCore.H>
 #include <AMReX_iMultiFab.H>
 #include <AMReX_BLProfiler.H>
-
-#include <MFIXParticleContainer.H>
+#include <AMReX_PhysBCFunct.H>
 
 #include <AMReX_EBFabFactory.H>
-
 #include <AMReX_EBFArrayBox.H>
-
 #include <AMReX_EB2.H>
 #include <AMReX_EB2_IF_Plane.H>
 #include <AMReX_EB2_IF_Polynomial.H>
 #include <AMReX_EB2_IF_Translation.H>
 #include <AMReX_EB2_IF_Intersection.H>
-#include <mfix_eb_if.H>
-
 #include <AMReX_EB_levelset.H>
 #include <AMReX_EB_LSCoreBase.H>
 
+#include <MFIXParticleContainer.H>
 #include <MacProjection.H>
+#include <mfix_eb_if.H>
 
 class mfix
     : public AmrCore
@@ -115,6 +112,16 @@ public:
     int levelset__pad = 2;           // padding of the level-set grid
     int levelset__eb_pad = 2;        // padding of the EBIS used to generate the level-set (useful for
                                      // ensuring that neighbor grids are considered when filling LS)
+
+     const int* get_bc_ilo_ptr(int lev) {return bc_ilo[lev]->dataPtr();}
+     const int* get_bc_ihi_ptr(int lev) {return bc_ihi[lev]->dataPtr();}
+     const int* get_bc_jlo_ptr(int lev) {return bc_jlo[lev]->dataPtr();}
+     const int* get_bc_jhi_ptr(int lev) {return bc_jhi[lev]->dataPtr();}
+     const int* get_bc_klo_ptr(int lev) {return bc_klo[lev]->dataPtr();}
+     const int* get_bc_khi_ptr(int lev) {return bc_khi[lev]->dataPtr();}
+
+     int get_nghost() { return nghost; }
+
 protected:
 
     //! Tagging cells for refinement
@@ -156,7 +163,10 @@ protected:
     void mfix_set_scalar_bcs ();
     void mfix_set_velocity_bcs (amrex::Real time, int extrap_dir_bcs);
 
-    void FillPatch (int lev, MultiFab& mf, MultiFab& cmf, MultiFab& fmf, int icomp, int ncomp);
+    void FillPatchVel (int lev, amrex::Real time, MultiFab& mf, int icomp, int ncomp,
+                       const Vector<BCRec>& bcr);
+    void GetDataVel   (int lev, amrex::Real time, amrex::Vector<amrex::MultiFab*>& data,
+                       amrex::Vector<amrex::Real>& datatime);
 
     void mfix_calc_volume_fraction(Real& sum_vol);
     void mfix_calc_drag_fluid(amrex::Real time);
@@ -254,8 +264,13 @@ private:
     void mfix_add_drag_terms(amrex::Real dt);
 
     void mfix_add_gravity(int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel);
+#if 0
     void mfix_compute_velocity_slopes(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
     void mfix_compute_velocity_at_faces(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
+#endif
+
+    void mfix_compute_velocity_slopes(int lev, amrex::Real time, MultiFab& vel);
+    void mfix_compute_MAC_velocity_at_faces(amrex::Real time, Vector< std::unique_ptr<MultiFab> >& vel);
 
     void mfix_compute_diveu(amrex::Real time);
 
@@ -471,9 +486,14 @@ private:
     const int m_eb_volume_grow_cells = nghost;
     const int m_eb_full_grow_cells = nghost;
 
-
     int nodal_pressure = 1;
     int explicit_diffusion = 1;
+
+    /****************************************************************************
+     *                                                                          *
+     * I/O stuff
+     *                                                                          *
+     ****************************************************************************/
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
@@ -484,6 +504,19 @@ private:
 
     Vector< const Vector< std::unique_ptr<MultiFab> >* > pltscalarVars;
     Vector< std::string > chkscaVarsName;
+
+    /****************************************************************************
+     *                                                                          *
+     * Used for fillpatching ...
+     *                                                                          *
+     ****************************************************************************/
+
+     Vector<Real> t_old;
+     Vector<Real> t_new;
+
+     amrex::Vector<BCRec> bcs_u; // For velocity components
+     amrex::Vector<BCRec> bcs_s; // For scalars
+     amrex::Vector<BCRec> bcs_f; // For generic first-order extrapolation
 
 
     /****************************************************************************
