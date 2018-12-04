@@ -17,6 +17,7 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
     BL_PROFILE("mfix::EvolveFluid");
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
+
     // Extrapolate boundary values for density and volume fraction
     // The subsequent call to mfix_set_scalar_bcs will only overwrite
     // rop_g and ep_g ghost values for PINF and POUT
@@ -55,6 +56,13 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
     do
     {
         mfix_compute_dt(time, stop_time, steady_state, dt);
+
+        // Set new and old time to correctly use in fillpatching
+        for (int lev = 0; lev < nlev; lev++)
+        {
+            t_old[lev] = time; 
+            t_new[lev] = time+dt; 
+        }
 
         if (steady_state)
         {
@@ -179,8 +187,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
    for (int lev = 0; lev < nlev; lev++)
       MultiFab::Copy (*vel_go[lev], *vel_g[lev],   0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
-    // Create temporary multifabs to hold the old-time conv and divtau
-    //    so we don't have to re-compute them in the corrector
+    // Create temporary multifabs to hold conv and divtau
     Vector<std::unique_ptr<MultiFab> > conv;
     Vector<std::unique_ptr<MultiFab> > divtau;
 
@@ -199,12 +206,6 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
        amrex::Print() << "In initial_iterations: iter = " << iter <<  "\n";
 
        bool proj_2 = false;
-       for (int lev = 0; lev < nlev; lev++)
-       { 
-          //  Create temporary multifabs to hold conv and divtau
-          MultiFab   conv(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-          MultiFab divtau(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-       } 
 
        mfix_apply_predictor (conv, divtau, time, dt, proj_2);
 

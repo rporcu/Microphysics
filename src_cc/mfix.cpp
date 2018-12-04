@@ -10,6 +10,7 @@
 std::string mfix::particle_init_type   = "AsciiFile";
 std::string mfix::load_balance_type    = "FixedSize";
 std::string mfix::knapsack_weight_type = "RunTimeCosts";
+int         mfix::load_balance_fluid   = 1;
 
 // Define unit vectors for easily convert indeces
 amrex::IntVect mfix::e_x(1,0,0);
@@ -38,11 +39,12 @@ mfix::mfix ()
 
     istep.resize(nlev, 0);
 
-#if 0
-    nsubsteps.resize(nlevs_max, 1);
-    for (int lev = 1; lev <= maxLevel(); ++lev)
-        nsubsteps[lev] = MaxRefRatio(lev-1);
-#endif
+    t_old.resize(nlev,-1.e100);
+    t_new.resize(nlev,0.0);
+
+    bcs_u.resize(3); // one for each velocity component
+    bcs_s.resize(1); // just one for now
+    bcs_f.resize(1); // just one
 }
 
 void

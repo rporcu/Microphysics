@@ -36,6 +36,8 @@ int par_ascii_int = -1;
 int  last_par_ascii  = -1;
 std::string par_ascii_file {"par"};
 
+void set_ptr_to_mfix(mfix& my_mfix);
+
 void ReadParameters ()
 {
   {
@@ -132,6 +134,8 @@ int main (int argc, char* argv[])
     //                                                             |
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix my_mfix;
+
+    set_ptr_to_mfix(my_mfix);
 
     // Initialize internals from ParamParse database
     my_mfix.InitParams(solve_fluid, solve_dem, call_udf);

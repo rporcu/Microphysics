@@ -43,9 +43,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Should we use explicit vs implicit diffusion
         pp.query( "explicit_diffusion", explicit_diffusion );
 
-        if (explicit_diffusion < 1)
-            amrex::Abort("Implicit diffusion is not supported");
-
         // The default type is "AsciiFile" but we can over-write that in the inputs file
         //  with "Random"
         pp.query("particle_init_type", particle_init_type);
@@ -53,11 +50,13 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // The default type is "FixedSize" but we can over-write that in the inputs file
         //  with "KDTree" or "KnapSack"
         pp.query("load_balance_type", load_balance_type);
-        pp.query("knapsack_weight_type" , knapsack_weight_type);
-
+        pp.query("knapsack_weight_type", knapsack_weight_type);
+        pp.query("load_balance_fluid", load_balance_fluid);
+        
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
                             load_balance_type == "KDTree"    ||
-                            load_balance_type == "KnapSack");
+                            load_balance_type == "KnapSack"  ||
+                            load_balance_type == "SFC"       );
 
         AMREX_ALWAYS_ASSERT(knapsack_weight_type == "RunTimeCosts" ||
                             knapsack_weight_type == "NumParticles"  );
@@ -292,7 +291,7 @@ mfix::MakeBaseGrids () const
 
     if ( refine_grid_layout &&
          ba.size() < ParallelDescriptor::NProcs() &&
-         (load_balance_type == "FixedSize" || load_balance_type == "KnapSack") ) {
+         (load_balance_type == "FixedSize" || load_balance_type == "KnapSack" || load_balance_type == "SFC") ) {
         ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
     }
 
@@ -509,7 +508,7 @@ mfix::InitLevelData(Real dt, Real time)
       pc->Redistribute();
 
       // used in load balancing
-      if (load_balance_type == "KnapSack")
+      if (load_balance_type == "KnapSack" || load_balance_type == "SFC")
       {
           for (int lev = 0; lev < nlev; lev++)
           {
@@ -526,7 +525,7 @@ mfix::InitLevelData(Real dt, Real time)
 
     if (solve_fluid)
     {
-       if (load_balance_type == "KnapSack")
+       if (load_balance_type == "KnapSack" || load_balance_type == "SFC")
        {
           for (int lev = 0; lev < nlev; lev++)
           {
@@ -567,6 +566,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
           }
       }
 
+
      if (!use_amr_ls) {
          for (int lev = 0; lev < nlev; lev++)
          {
@@ -574,7 +574,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
              // We need $to do this *after* restart (hence putting this here not
              // in Init) because we may want to move from KDTree to Knapsack, or
              // change the particle_max_grid_size on restart.
-             if (load_balance_type == "KnapSack" &&
+             if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
                  dual_grid && particle_max_grid_size_x > 0
                            && particle_max_grid_size_y > 0
                            && particle_max_grid_size_z > 0)
@@ -588,6 +588,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                  pc->Regrid(particle_dm, particle_ba);
              }
          }
+
      }
 
      Real avg_dp[10], avg_ro[10];

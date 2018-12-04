@@ -80,9 +80,9 @@ mfix::Regrid ()
 
        }
 
-    } else if (load_balance_type == "KnapSack") {
+    } else if (load_balance_type == "KnapSack" || load_balance_type == "SFC") {
 
-        amrex::Print() << "Load balancing using KnapSack " << std::endl;
+        amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
 
         if (solve_dem)
            AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
@@ -94,20 +94,32 @@ mfix::Regrid ()
         if (dual_grid) {
             AMREX_ALWAYS_ASSERT(solve_fluid);
 
-            for (int lev = base_lev; lev <= finestLevel(); ++lev)
+            if (load_balance_fluid > 0)
             {
-                DistributionMapping new_fluid_dm =
-                    DistributionMapping::makeKnapSack(*fluid_cost[lev]);
+                for (int lev = base_lev; lev <= finestLevel(); ++lev)                   
+                {
 
-                bool dm_changed = (new_fluid_dm !=  dmap[lev]);
+                    DistributionMapping new_fluid_dm;
+                    
+                    if ( load_balance_type == "KnapSack" )
+                    {
+                        new_fluid_dm = DistributionMapping::makeKnapSack(*fluid_cost[lev]);
+                    }
+                    else
+                    {
+                        new_fluid_dm = DistributionMapping::makeSFC(*fluid_cost[lev],false);
+                    }
 
-                SetDistributionMap(lev, new_fluid_dm);
+                    bool dm_changed = (new_fluid_dm !=  dmap[lev]);
 
-                if (dm_changed)
-                    RegridArrays(lev);
+                    SetDistributionMap(lev, new_fluid_dm);
 
-                fluid_cost[lev].reset(new MultiFab(grids[lev], new_fluid_dm, 1, 0));
-                fluid_cost[lev]->setVal(0.0);
+                    if (dm_changed)
+                        RegridArrays(lev);
+
+                    fluid_cost[lev].reset(new MultiFab(grids[lev], new_fluid_dm, 1, 0));
+                    fluid_cost[lev]->setVal(0.0);
+                }
             }
 
             mfix_set_p0();
@@ -118,9 +130,16 @@ mfix::Regrid ()
 
             for (int lev = base_lev; lev <= finestLevel(); ++lev)
             {
-
-                DistributionMapping new_particle_dm =
-                    DistributionMapping::makeKnapSack(*particle_cost[lev]);
+                DistributionMapping new_particle_dm;
+                
+                if ( load_balance_type == "KnapSack" )
+                {
+                    new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev]);
+                }
+                else
+                {
+                    new_particle_dm = DistributionMapping::makeSFC(*particle_cost[lev],false);
+                }
 
                 if (! use_amr_ls)
                     pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev));
