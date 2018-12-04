@@ -13,7 +13,8 @@ mfix::Regrid ()
 
     int base_lev = 0;
 
-    if (load_balance_type == "KDTree")
+
+    if (load_balance_type == "KDTree")  // KDTree load balancing type
     {
         if (solve_dem)
            AMREX_ALWAYS_ASSERT(particle_cost[0] == nullptr);
@@ -61,7 +62,9 @@ mfix::Regrid ()
            eb_normals   = pc->EBNormals(base_lev, particle_ebfactory[base_lev].get(), dummy.get());
        }
 
-    } else if (load_balance_type == "KnapSack" || load_balance_type == "SFC") {
+    }
+    else if (load_balance_type == "KnapSack" || load_balance_type == "SFC") // Knapsack and SFC
+    {
 
         amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
 
@@ -72,7 +75,8 @@ mfix::Regrid ()
 
         if (ParallelDescriptor::NProcs() == 1) return;
 
-        if (dual_grid) {
+        if (dual_grid)  //  Beginning of dual grid regridding 
+        {
             AMREX_ALWAYS_ASSERT(solve_fluid);
 
             if (load_balance_fluid > 0)
@@ -141,7 +145,9 @@ mfix::Regrid ()
                 }
             }
 
-        } else {
+        }    
+        else  // Single-grid regridding  
+        {
 
             MultiFab costs(grids[base_lev], dmap[base_lev], 1, 0);
             costs.setVal(0.0);
