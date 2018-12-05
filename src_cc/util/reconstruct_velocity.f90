@@ -102,7 +102,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
 
                ! Skip innermost loop if cell is too far from zero level set
                if (abs(phi_cc) > band_width*maxval(dx)) cycle
-               
+
                ! Get normal at cell center
                call amrex_eb_normal_levelset(x_cc, x0, n_refine, phi, phlo, phhi, dx, norm_cc)
 
@@ -122,13 +122,13 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
                   iter = iter + 1
 
                   if ( iter > max_iter ) &
-                   call amrex_abort("reconstruct_velocity: cannot find mirror point")
-                  
+                   call amrex_abort("reconstruct_velocity(): cannot find interpolation point")
+
                end do find_xi
 
                ! Get phi at interpolation point
                call amrex_eb_interp_levelset(x_i, x0, n_refine, phi, phlo, phhi, dx, phi_i)
-               
+
                ! Compute interpolated velocity at x_i
                vel_i = trilinear_interp(vel_in, vilo, vihi, 3, x_i, x0, dx)
 
@@ -143,5 +143,45 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
       end do
    end do
 
+contains
+
+
+   !
+   ! This is a function to debug the interpolation point search
+   ! 
+   subroutine  debug(a_i, a_j, a_k)
+
+      integer, intent(in) :: a_i, a_j, a_k
+      integer             :: ii, jj, kk
+
+      if (.not. (i==a_i .and. j==a_j .and. k==a_k) ) return
+
+      ii = floor( ( x_i(1) - x0(1) ) / dx(1) + half)
+      jj = floor( ( x_i(2) - x0(2) ) / dx(2) + half)
+      kk = floor( ( x_i(3) - x0(3) ) / dx(3) + half)
+
+      print *, "Level set stencil = "
+      print *, phi(ii-1:ii+1,jj-1:jj+1,kk-1:kk+1)
+
+      call amrex_eb_interp_levelset(x_i, x0, n_refine, phi, phlo, phhi, dx, phi_i)
+      print *, "===================================================== "
+      print *, "iter = ", iter
+      print *, "x_i = "
+      print *,  x_i
+      print *, "x0 = "
+      print *,  x0
+      print *, "norm_i = "
+      print *,  norm_i
+      print *, "phi_i = ", phi_i
+      print *, " interpolation stencil reference cell indeces"
+      print *, ii, jj, kk
+      print *, "is stencil covered ? "
+      print *,  is_covered_cell(flags(ii-1:ii,jj-1:jj,kk-1:kk))
+      print *, "is inteprolation stencil valid ? "
+      print *,  interp_stencil_is_valid(x_i, x0, dx, flags, flo, fhi)
+      print *
+      print *
+
+   end subroutine debug
 
 end subroutine reconstruct_velocity
