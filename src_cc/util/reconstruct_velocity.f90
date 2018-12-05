@@ -68,8 +68,8 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    real(rt)            :: x_i(3), phi_i, norm_i(3), vel_i(3)
 
    ! Other local variables
-   real(rt), parameter :: max_iter = 10 ! Max number of iterations to find mirror point
-   real(rt)            :: iter 
+   integer, parameter  :: max_iter = 20 ! Max number of iterations to find mirror point
+   integer             :: iter 
    real(rt)            :: odx(3)
 
    odx = one / dx
