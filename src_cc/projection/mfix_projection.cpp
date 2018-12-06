@@ -189,8 +189,14 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
         matrix.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
                              {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
 
-        // Note: it is really important NOT to override the RAP CoarseningStrategy for EB 
-        // matrix.setCoarseningStrategy(MLNodeLaplacian::CoarseningStrategy::Sigma);
+        // This is a terrible hack but it works for now -- if the domain is only one cell wide
+        //      then the solver goes straight to BiCG instead of doing multigrid smoothing and
+        //      it needs the weighting that comes with CoarseningStrategy::Sigma
+        // Otherwise it is important that we stick with CoarseningStrategy::RAP otherwise
+        //      we will use the wrong mask in getNodalSum when we try to impose solvability
+        Box domain(geom[0].Domain());
+        if (domain.size()[0] == 1 || domain.size()[1] == 1 || domain.size()[2] == 1)
+           matrix.setCoarseningStrategy(MLNodeLaplacian::CoarseningStrategy::Sigma);
 
         for (int lev = 0; lev < nlev; lev++)
         {
