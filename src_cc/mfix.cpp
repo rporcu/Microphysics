@@ -10,6 +10,7 @@
 std::string mfix::particle_init_type   = "AsciiFile";
 std::string mfix::load_balance_type    = "FixedSize";
 std::string mfix::knapsack_weight_type = "RunTimeCosts";
+int         mfix::load_balance_fluid   = 1;
 
 // Define unit vectors for easily convert indeces
 amrex::IntVect mfix::e_x(1,0,0);
