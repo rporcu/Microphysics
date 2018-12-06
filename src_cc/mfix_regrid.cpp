@@ -146,8 +146,6 @@ mfix::Regrid ()
                 }
 
                 pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev));
-                if (use_amr_ls)
-                    amr_level_set->UpdateGrids(lev, pc->ParticleBoxArray(lev), new_particle_dm);
 
                 particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
                                                       new_particle_dm, 1, 0));
@@ -228,9 +226,6 @@ mfix::Regrid ()
 
             if (solve_dem){
                 pc->Regrid(dmap[base_lev], grids[base_lev]);
-                if (use_amr_ls)
-                    amr_level_set->UpdateGrids(base_lev, pc->ParticleBoxArray(base_lev),
-                                               dmap[base_lev]);
             }
 
             if (solve_fluid) mfix_set_bc0();
@@ -267,14 +262,17 @@ mfix::Regrid ()
 
 
     // Note that this is still being done here (instead of mfix::RegridArrays,
-    // which only acts on the fluid grid) because of the dual grid. NOTE: the
-    // level-set factory object and the ls data should both live on the particle
-    // grids. But for now I moved the to the mfix grid to deal with the
-    // multi-level level-sets. TODO: cleanup.
+    // which only acts on the fluid grid) because of the dual grid.
 
-    // level_set->regrid(pc->ParticleBoxArray(base_lev), pc->ParticleDistributionMap(base_lev));
     if (solve_dem)
-       level_set->regrid(grids[base_lev], dmap[base_lev]);
+        level_set->regrid(pc->ParticleBoxArray(base_lev),
+                          pc->ParticleDistributionMap(base_lev));
+
+
+    if (use_amr_ls)
+        for (int i_lev = 0; i_lev < pc->finestLevel(); i_lev ++)
+            amr_level_set->UpdateGrids(i_lev, pc->ParticleBoxArray(i_lev),
+                                       pc->ParticleDistributionMap(i_lev))
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }
