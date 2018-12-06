@@ -94,17 +94,17 @@ mfix::Regrid ()
 
         if (ParallelDescriptor::NProcs() == 1) return;
 
-        if (dual_grid)  //  Beginning of dual grid regridding 
+        if (dual_grid)  //  Beginning of dual grid regridding
         {
             AMREX_ALWAYS_ASSERT(solve_fluid);
 
             if (load_balance_fluid > 0)
             {
-                for (int lev = base_lev; lev <= finestLevel(); ++lev)                   
+                for (int lev = base_lev; lev <= finestLevel(); ++lev)
                 {
 
                     DistributionMapping new_fluid_dm;
-                    
+
                     if ( load_balance_type == "KnapSack" )
                     {
                         new_fluid_dm = DistributionMapping::makeKnapSack(*fluid_cost[lev]);
@@ -135,7 +135,7 @@ mfix::Regrid ()
             for (int lev = base_lev; lev <= finestLevel(); ++lev)
             {
                 DistributionMapping new_particle_dm;
-                
+
                 if ( load_balance_type == "KnapSack" )
                 {
                     new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev]);
@@ -145,8 +145,9 @@ mfix::Regrid ()
                     new_particle_dm = DistributionMapping::makeSFC(*particle_cost[lev],false);
                 }
 
-                if (! use_amr_ls)
-                    pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev));
+                pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev));
+                if (use_amr_ls)
+                    amr_level_set->UpdateGrids(lev, pc->ParticleBoxArray(lev), new_particle_dm);
 
                 particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
                                                       new_particle_dm, 1, 0));
@@ -168,21 +169,25 @@ mfix::Regrid ()
 
                     // eb_normals[lev]->define(grids[lev], dmap[lev], 3, 2,
                     //                         MFInfo(), *particle_ebfactory[lev]);
-                    eb_normals[base_lev]->define(pc->ParticleBoxArray(lev),
+                    eb_normals[lev]->define(pc->ParticleBoxArray(lev),
                                                  pc->ParticleDistributionMap(lev),
                                                  3, 2, MFInfo(), * particle_ebfactory[lev]);
 
                     amrex::FillEBNormals( * eb_normals[lev], * particle_ebfactory[lev], geom[lev]);
 
-                    dummy[base_lev]->define(pc->ParticleBoxArray(lev),
+                    dummy[lev]->define(pc->ParticleBoxArray(lev),
                                             pc->ParticleDistributionMap(lev),
                                             3, 2, MFInfo(), * particle_ebfactory[lev]);
                 }
             }
 
-        }    
-        else  // Single-grid regridding  
+        }
+        else  // Single-grid regridding
         {
+
+            //NOTE: why are particle costs defined on fluid grids here? Or am I
+            //not supposed to care because the grids are the same? (this might
+            //break if there are more particle grid levels).
 
             MultiFab costs(grids[base_lev], dmap[base_lev], 1, 0);
             costs.setVal(0.0);
@@ -220,9 +225,14 @@ mfix::Regrid ()
                particle_cost[base_lev]->setVal(0.0);
             }
 
-            if (! use_amr_ls) {
-                if (solve_dem) pc->Regrid(dmap[base_lev], grids[base_lev]);
+
+            if (solve_dem){
+                pc->Regrid(dmap[base_lev], grids[base_lev]);
+                if (use_amr_ls)
+                    amr_level_set->UpdateGrids(base_lev, pc->ParticleBoxArray(base_lev),
+                                               dmap[base_lev]);
             }
+
             if (solve_fluid) mfix_set_bc0();
 
             if (particle_ebfactory[base_lev]) {
