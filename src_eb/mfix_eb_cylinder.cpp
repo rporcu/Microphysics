@@ -165,7 +165,7 @@ void mfix::make_eb_cylinder()
           {
            amrex::Print() << "Creating the levelset ..." << std::endl;
 
-           // // If there is a bottom plane, fill level set with plane IF first
+           // // if there is a bottom plane, fill level set with plane IF first
            // if(close_bottom) {
            //     std::unique_ptr<MultiFab> mf_impfunc_wall = wall_lsfactory->fill_impfunc();
            //     level_set->intersection_impfunc(* mf_impfunc_wall);
@@ -194,8 +194,13 @@ void mfix::make_eb_cylinder()
                                                   level_set->get_dm(),
                                                   {eb_grow, eb_grow, eb_grow}, EBSupport::full);
 
-           //level_set->intersection_ebf(eb_factory_cylinder, * mf_impfunc_cyl );
+           // level_set->intersection_ebf(eb_factory_cylinder, * mf_impfunc_cyl );
            level_set->fill_ebf_loc(eb_factory_cylinder, * mf_impfunc_cyl );
+           // if there is a bottom plane, fill level set with plane IF after fill_ebf_loc
+           if(close_bottom) {
+               std::unique_ptr<MultiFab> mf_impfunc_wall = wall_lsfactory->fill_impfunc();
+               level_set->intersection_impfunc(* mf_impfunc_wall);
+           }
 
 
            amrex::Print() << "Done making the levelset ..." << std::endl;
