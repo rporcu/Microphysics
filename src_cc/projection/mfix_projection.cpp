@@ -58,6 +58,7 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     // Print info about predictor step
     for (int lev = 0; lev < nlev; lev++)
     {
+
         amrex::Print() << "AT LEVEL " << lev << " BEFORE PROJECTION: \n";
         mfix_print_max_vel(lev);
         mfix_print_max_gp (lev);
@@ -82,7 +83,11 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     mfix_set_velocity_bcs (time, 0);
 
     // Compute right hand side, AKA div(ep_g* u) / dt
+
     mfix_compute_diveu(time);
+
+    for (int lev = 0; lev < nlev; lev++)
+       amrex::Print() << "At level " << lev << ": max(abs(dive(u+gp/rho))) = " << mfix_norm0(diveu, lev, 0) << "\n";
 
     // Initialize phi to zero (any non-zero bc's are stored in p0)
     for (int lev = 0; lev < nlev; lev++)
@@ -184,7 +189,8 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
         matrix.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
                              {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
 
-        matrix.setCoarseningStrategy(MLNodeLaplacian::CoarseningStrategy::Sigma);
+        // Note: it is really important NOT to override the RAP CoarseningStrategy for EB 
+        // matrix.setCoarseningStrategy(MLNodeLaplacian::CoarseningStrategy::Sigma);
 
         for (int lev = 0; lev < nlev; lev++)
         {
