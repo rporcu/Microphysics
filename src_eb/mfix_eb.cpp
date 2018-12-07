@@ -198,12 +198,13 @@ void mfix::make_amr_geometry ()
                 break;
         }
 
-        amrex::Print() << "Level tags: ";
-        for (Real tag : ls_tags)
-            amrex::Print() << tag << " ";
-        amrex::Print() << std::endl;
+        // amrex::Print() << "Level tags: ";
+        // for (Real tag : ls_tags)
+        //     amrex::Print() << tag << " ";
+        // amrex::Print() << std::endl;
 
-        amr_level_set->InitData(ls_tags);
+        //amr_level_set->InitData(ls_tags);
+        amr_level_set->InitData(false); // Don't use levelset tagging, instead use volfrac
         amr_level_set->WritePlotFile();
         amrex::Print() << "... done constructing AMR levelset" << std::endl;
     }
