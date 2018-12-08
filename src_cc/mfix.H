@@ -441,10 +441,12 @@ private:
     // enable output_manager during des_time_loop
     bool subdt_io;
 
+    // Parameters to control load balancing
     static std::string particle_init_type;
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
-    static int load_balance_fluid; 
+    static int load_balance_fluid;
+    static int knapsack_nmax;
 
     // Options to control time stepping
     Real cfl = 0.5;
