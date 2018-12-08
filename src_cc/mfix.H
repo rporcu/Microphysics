@@ -176,6 +176,8 @@ protected:
 
     void RegridArrays (int lev);
 
+    void RegridLevelSetArray (int a_lev);
+
 private:
 
     void make_eb_general();
@@ -570,7 +572,7 @@ private:
     int amr_max_level = 0;
 
 
-    void mfix_update_ebfactory (int a_lev);
+    bool mfix_update_ebfactory (int a_lev);
 
 };
 
