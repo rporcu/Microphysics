@@ -38,39 +38,33 @@ include ( MFIX_Options )
 #
 # AMReX-related config options
 #
-set ( AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags for AMReX (Superbuild only)" )
+set( AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags for AMReX (Superbuild only)" )
 
-set ( AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
+set( AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
 
-option ( AMREX_ENABLE_EB "Build EB code" ON)
+option( AMREX_ENABLE_PIC "Build position-independent code" NO)
 
-option ( AMREX_ENABLE_PIC "Build position-independent code" OFF)
+option( AMREX_ENABLE_DP "Enable double precision" YES)
 
-option ( AMREX_ENABLE_MPI  "Enable MPI"  ON)
+option( AMREX_ENABLE_ASSERTION "Enable assertions" NO)
 
-option ( AMREX_ENABLE_OMP  "Enable OpenMP" OFF)
+option( AMREX_ENABLE_BASE_PROFILE "Enable basic profiling" NO)
 
-option ( AMREX_ENABLE_DP "Enable double precision" ON)
+option( AMREX_ENABLE_TINY_PROFILE "Enable tiny-profiling" YES)
 
-option ( AMREX_ENABLE_ASSERTION "Enable assertions" OFF)
+option( AMREX_ENABLE_TRACE_PROFILE "Enable trace-profiling" NO)
 
-option ( AMREX_ENABLE_BASE_PROFILE "Enable basic profiling" OFF )
+option( AMREX_ENABLE_MEM_PROFILE   "Enable memory profiling" NO)
 
-option ( AMREX_ENABLE_TINY_PROFILE "Enable tiny-profiling" ON)
+option( AMREX_ENABLE_COMM_PROFILE  "Enable communicator-profiling" NO)
 
-option ( AMREX_ENABLE_TRACE_PROFILE "Enable trace-profiling" OFF )
+option( AMREX_ENABLE_BACKTRACE "Enable backtracing" NO)
 
-option ( AMREX_ENABLE_MEM_PROFILE   "Enable memory profiling" OFF )
+option( AMREX_ENABLE_PROFPARSER "Enable profile parser" NO)
 
-option ( AMREX_ENABLE_COMM_PROFILE  "Enable communicator-profiling" OFF )
+option( AMREX_ENABLE_DP_PARTICLES "Enable double-precision particle data" YES)
 
-option ( AMREX_ENABLE_BACKTRACE "Enable backtracing" OFF)
-
-option ( AMREX_ENABLE_PROFPARSER "Enable profile parser" OFF)
-
-option ( AMREX_ENABLE_DP_PARTICLES "Enable double-precision particle data" ON )
-
-set ( AMREX_GIT_COMMIT "" CACHE STRING "AMReX git commit to use in superbuild")
+set( AMREX_GIT_COMMIT "" CACHE STRING "AMReX git commit to use in superbuild")
 
 #
 # Set the git commit to use for amrex
@@ -107,17 +101,17 @@ ExternalProject_Add ( amrex
    GIT_TAG         ${AMREX_GIT_TAG}
    CMAKE_ARGS
    -DENABLE_PIC=${AMREX_ENABLE_PIC}
-   -DENABLE_OMP=${AMREX_ENABLE_OMP}
-   -DENABLE_MPI=${AMREX_ENABLE_MPI}
+   -DENABLE_OMP=${ENABLE_OMP}
+   -DENABLE_MPI=${ENABLE_MPI}
    -DENABLE_DP=${AMREX_ENABLE_DP}
-   -DENABLE_PARTICLES=ON
+   -DENABLE_PARTICLES=YES
    -DENABLE_DP_PARTICLES=${AMREX_ENABLE_DP_PARTICLES}
    -DDIM=3
    -DDEBUG=${DEBUG}
-   -DENABLE_AMRDATA=ON # Needed to compile postprocessing tools
-   -DENABLE_LINEAR_SOLVERS=ON
-   -DENABLE_EB=${AMREX_ENABLE_EB}
-   -DENABLE_FORTRAN_INTERFACES=OFF
+   -DENABLE_AMRDATA=YES # Needed to compile postprocessing tools
+   -DENABLE_LINEAR_SOLVERS=YES
+   -DENABLE_EB=YES
+   -DENABLE_FORTRAN_INTERFACES=NO
    -DENABLE_BASE_PROFILE=${AMREX_ENABLE_BASE_PROFILE}
    -DENABLE_TINY_PROFILE=${AMREX_ENABLE_TINY_PROFILE}
    -DENABLE_COMM_PROFILE=${AMREX_ENABLE_COMM_PROFILE}
@@ -127,7 +121,7 @@ ExternalProject_Add ( amrex
    -DENABLE_FPE=${ENABLE_FPE}
    -DENABLE_ASSERTIONS=${AMREX_ENABLE_ASSERTION}
    -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-   -DENABLE_3D_NODAL_MLMG=yes
+   -DENABLE_3D_NODAL_MLMG=YES
    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
    -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
@@ -161,6 +155,8 @@ ExternalProject_Add ( mfix
    -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
    -DCMAKE_Fortran_FLAGS=${CMAKE_Fortran_FLAGS}
    -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+   -DENABLE_MPI=${ENABLE_MPI}
+   -DENABLE_OMP=${ENABLE_OMP}
    -DENABLE_FPE=${ENABLE_FPE}
    -DENABLE_PROJCC=${ENABLE_PROJCC}
    -DENABLE_PTESTS=${ENABLE_PTESTS}

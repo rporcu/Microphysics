@@ -107,7 +107,7 @@ target_include_directories ( ${MFIX_LIBNAME} PUBLIC ${MFIX_INCLUDE_PATHS} )
 #
 # Link to imported AMReX
 #
-target_link_libraries ( ${MFIX_LIBNAME} AMReX::amrex )
+target_link_libraries ( ${MFIX_LIBNAME} PUBLIC AMReX::amrex )
 
 #
 # Set the default flags 
@@ -200,3 +200,32 @@ if (DEFINED ENABLE_FPE)
 else ()
    message (AUTHOR_WARNING "Variable ENABLE_FPE is not defined")
 endif ()
+
+
+#
+# Setup OpenMP
+#
+if (ENABLE_OMP)
+   find_package (OpenMP REQUIRED)
+
+   # Additional compiler flags
+   strip (OpenMP_C_FLAGS)
+   strip (OpenMP_CXX_FLAGS)
+   strip (OpenMP_Fortran_FLAGS)
+
+   target_compile_options ( ${MFIX_LIBNAME} PUBLIC
+      $<$<COMPILE_LANGUAGE:Fortran>:${OpenMP_Fortran_FLAGS}>
+      $<$<COMPILE_LANGUAGE:C>:${OpenMP_C_FLAGS}>
+      $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>
+      )
+
+   # The openMP flags are required also during linking phase
+   # The NON-clean way of achiving this is by adding a flag to the linker
+   # as follows. Notice that in more recent version of CMake, openMP becomes
+   # an imported target, thus provinding a clean way to do this
+   strip (OpenMP_CXX_FLAGS)
+   target_link_libraries( ${MFIX_LIBNAME} PUBLIC ${OpenMP_CXX_FLAGS} )
+else ()
+   # Cray compiler has OMP turned on by default
+   target_compile_options ( ${MFIX_LIBNAME} PUBLIC $<$<CXX_COMPILER_ID:Cray>:-h;noomp> $<$<C_COMPILER_ID:Cray>:-h;noomp> )
+endif()
