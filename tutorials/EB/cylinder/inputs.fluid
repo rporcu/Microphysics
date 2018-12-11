@@ -1,11 +1,19 @@
-#_______________________________________________________________________
-# Geometry / grids / tiles
 
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
-amr.max_level = 0
+amr.max_level = 1
+
+amr.max_step = 0
+
+amr.stop_time = 0.20
+
+mfix.mg_verbose = 2
+
+amrex.fpe_trap_invalid = 1
+
+amr.blocking_factor = 4
 
 geometry.coord_sys   = 0                       # 0: Cartesian
-geometry.is_periodic = 0       0       0       # Is periodic in each direction?
+geometry.is_periodic = 1       1       0       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
 geometry.prob_hi     = 0.0032  0.0032  0.0048  # hi corner of physical domain
 
@@ -24,8 +32,6 @@ maxboxsize          = 1024
 fabarray.mfiter_tile_size = 1024 1024 1024
 # Maximum particle title size
 particles.tile_size       = 1024 1024 1024
-
-
 
 #_______________________________________________________________________
 # IO / Checkpointing
@@ -53,11 +59,7 @@ amr.check_file     ="chk"
 #mfix.use_proj_method = 1
 #mfix.fixed_dt        = 1
 
-amr.stop_time = 0.20
-
-mfix.particle_init_type = "Auto"
-
-
+#mfix.particle_init_type = "Auto"
 
 #_______________________________________________________________________
 # Particle load balancing
@@ -76,14 +78,12 @@ amr.regrid_int         = 25
 mfix.knapsack_weight_type = "NumParticles"
 mfix.knapsack_weight_type = "RunTimeCosts"
 
-
-
 #_______________________________________________________________________
 # EB Settings
 
 # Level-set refinement and padding
-mfix.levelset__refinement    = 2
-mfix.levelset__pad           = 4
+mfix.levelset__refinement    = 1
+mfix.levelset__pad           = 2
 
 # EBIS refinement and padding
 mfix.levelset__eb_refinement = 1
@@ -93,25 +93,15 @@ mfix.levelset__eb_pad        = 8
 #!-----------------------------------------------------------//
 mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
-# #
-# # Construct cylinder using Poly2 geometry:
-# # Cylinder ::  x^2 + y^2 = R^2
-# #
-# 
-# mfix.use_walls        = true
-# mfix.use_poly2        = true
-# mfix.poly2_mirror     = true  # Fluid is on the inside of cylinder
-# 
-# mfix.poly2_x_coeffs  =   0.00     0.00     1.00
-# mfix.poly2_y_coeffs  =   0.00     0.00     1.00
-# mfix.poly2_z_coeffs  =  -2.56e-6  0.00     0.00
-# mfix.poly2_translate =   1.6e-3   1.6e-3   0.00
-
-#
-# Alternative to Poly2....
-#
-
 mfix.geometry = "cylinder"
 cylinder.direction = 2
 cylinder.radius    = 1.6e-3
 cylinder.center    = 1.6e-3   1.6e-3   0
+
+eb.use_amr_ls = true
+eb.amr_max_level = 1;
+
+eb_amr.eb_pad     = 1
+eb_amr.max_eb_pad = 16
+
+amr.ref_ratio       = 2 2 2 2 2 # refinement ratio

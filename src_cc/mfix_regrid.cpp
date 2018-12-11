@@ -6,6 +6,8 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
+#include <AMReX_EB_utils.H>
+
 void
 mfix::Regrid ()
 {
@@ -48,9 +50,9 @@ mfix::Regrid ()
            mfix_extrap_pressure(base_lev,p0_g[base_lev]);
        }
 
-       // This calls re-creates a proper particle_ebfactories
-       //  and regrids all the multifab that depend on it
-       if (solve_dem) 
+       // This calls re-creates a proper particle_ebfactories and regrids all
+       // the multifab that depend on it
+       if (solve_dem)
            RegridLevelSetArray(base_lev);
 
     }
@@ -66,17 +68,17 @@ mfix::Regrid ()
 
         if (ParallelDescriptor::NProcs() == 1) return;
 
-        if (dual_grid)  //  Beginning of dual grid regridding 
+        if (dual_grid)  //  Beginning of dual grid regridding
         {
             AMREX_ALWAYS_ASSERT(solve_fluid);
 
             if (load_balance_fluid > 0)
             {
-                for (int lev = base_lev; lev <= finestLevel(); ++lev)                   
+                for (int lev = base_lev; lev <= finestLevel(); ++lev)
                 {
 
                     DistributionMapping new_fluid_dm;
-                    
+
                     if ( load_balance_type == "KnapSack" )
                     {
                         new_fluid_dm = DistributionMapping::makeKnapSack(*fluid_cost[lev],knapsack_nmax);
@@ -104,7 +106,7 @@ mfix::Regrid ()
             for (int lev = base_lev; lev <= finestLevel(); ++lev)
             {
                 DistributionMapping new_particle_dm;
-                
+
                 if ( load_balance_type == "KnapSack" )
                 {
                     new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev],knapsack_nmax);
@@ -122,20 +124,32 @@ mfix::Regrid ()
 
                 // This calls re-creates a proper particle_ebfactories
                 //  and regrids all the multifab that depend on it
-                if (solve_dem) 
-                    RegridLevelSetArray(lev);  
+                if (solve_dem)
+                    RegridLevelSetArray(lev);
             }
 
-        }    
-        else  // Single-grid regridding  
+        }
+        else  // Single-grid regridding
         {
+
+            //NOTE: why are particle costs defined on fluid grids here? Or am I
+            //not supposed to care because the grids are the same? (this might
+            //break if there are more particle grid levels).
 
             MultiFab costs(grids[base_lev], dmap[base_lev], 1, 0);
             costs.setVal(0.0);
-            if (solve_dem)
-               costs.plus(*particle_cost[base_lev], 0, 1, 0);
-            if (solve_fluid)
-                costs.plus(*fluid_cost[base_lev], 0, 1, 0);
+            if (solve_dem) {
+                // costs.plus(* particle_cost[base_lev], 0, 1, 0);
+                MultiFab particle_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
+                particle_cost_loc.copy(* particle_cost[base_lev], 0, 0, 1);
+                costs.plus(particle_cost_loc, 0, 1, 0);
+            }
+            if (solve_fluid) {
+                // costs.plus(* fluid_cost[base_lev], 0, 1, 0);
+                MultiFab fluid_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
+                fluid_cost_loc.copy(* fluid_cost[base_lev], 0, 0, 1);
+                costs.plus(fluid_cost_loc, 0, 1, 0);
+            }
 
             DistributionMapping newdm = DistributionMapping::makeKnapSack(costs,knapsack_nmax);
 
@@ -156,16 +170,25 @@ mfix::Regrid ()
                particle_cost[base_lev]->setVal(0.0);
             }
 
-            if (solve_dem)   pc->Regrid(dmap[base_lev], grids[base_lev]);
+
+            if (solve_dem){
+                pc->Regrid(dmap[base_lev], grids[base_lev]);
+            }
+
             if (solve_fluid) mfix_set_bc0();
 
             // This calls re-creates a proper particles_ebfactory
             //  and regrids all the multifab that depend on it
-            if (solve_dem) 
-                RegridLevelSetArray(base_lev); 
+            if (solve_dem)
+                RegridLevelSetArray(base_lev);
 
         }
     }
+
+if (use_amr_ls)
+    for (int i_lev = 0; i_lev < pc->finestLevel(); i_lev ++)
+        amr_level_set->UpdateGrids(i_lev, pc->ParticleBoxArray(i_lev),
+                                   pc->ParticleDistributionMap(i_lev))
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }

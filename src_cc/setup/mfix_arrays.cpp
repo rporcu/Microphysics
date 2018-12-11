@@ -1,4 +1,5 @@
 #include <mfix.H>
+#include <AMReX_EB_utils.H>
 
 void
 mfix::AllocateArrays (int lev)
@@ -524,13 +525,13 @@ mfix::RegridArrays (int lev)
 // This has to be done separately from the regridding of
 // the other field variables since LS is generated with
 // the particle_ebfactory, not the plain ebfactory.
-// 
+//
 void
 mfix::RegridLevelSetArray (int a_lev)
 {
    // First check if particle_ebfactory is allocated
-   // with the proper dm and ba   
-    
+   // with the proper dm and ba
+
    // This assert is to verify that some kind of EB geometry
    // has already been defined
    AMREX_ASSERT(not EB2::IndexSpace::empty());
@@ -544,9 +545,11 @@ mfix::RegridLevelSetArray (int a_lev)
    {
       amrex::Print() << "Updating particle ebfactory" << std::endl;
 
-      particle_ebfactory[a_lev].reset(new EBFArrayBoxFactory( *eb_level_particles, geom[a_lev], ba, dm,
-                                                            {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                                                    m_eb_full_grow_cells}, m_eb_support_level));
+      particle_ebfactory[a_lev].reset(
+          new EBFArrayBoxFactory(* eb_level_particles, geom[a_lev], ba, dm,
+                                  {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                   m_eb_full_grow_cells}, m_eb_support_level)
+          );
 
       changed = true;
 
@@ -561,9 +564,12 @@ mfix::RegridLevelSetArray (int a_lev)
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
 
-         particle_ebfactory[a_lev].reset(new EBFArrayBoxFactory( *eb_level_particles, geom[a_lev], ba, dm,
-                                                                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                                                         m_eb_full_grow_cells}, m_eb_support_level));
+         particle_ebfactory[a_lev].reset(
+             new EBFArrayBoxFactory( *eb_level_particles, geom[a_lev], ba, dm,
+                                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                      m_eb_full_grow_cells}, m_eb_support_level)
+             );
+
          changed = true;
       }
    }
@@ -578,12 +584,24 @@ mfix::RegridLevelSetArray (int a_lev)
        // it's potentially not totally safe. This way we have the domain ghost
        // cells filled properly.
        int ng = ls[a_lev]->nGrow();
-       std::unique_ptr<MultiFab> ls_new(new MultiFab(new_pc_nd_grids, dm, 1, ng, MFInfo(), *particle_ebfactory[a_lev]));
+       std::unique_ptr<MultiFab> ls_new(
+           new MultiFab(new_pc_nd_grids, dm, 1, ng, MFInfo(), *particle_ebfactory[a_lev]));
        ls_new->copy(*ls[a_lev], 0, 0, 1, ng, ng);
        ls[a_lev] = std::move(ls_new);
 
        // eb_normals is a legacy of the old collision algorithm -> deprecated
-       eb_normals  = pc->EBNormals(a_lev, particle_ebfactory[a_lev].get(), dummy.get());
+       //eb_normals  = pc->EBNormals(a_lev, particle_ebfactory[a_lev].get(), dummy.get());
+
+       eb_normals[a_lev]->define(pc->ParticleBoxArray(a_lev),
+                                 pc->ParticleDistributionMap(a_lev),
+                                 3, 2, MFInfo(), * particle_ebfactory[a_lev]);
+
+       amrex::FillEBNormals( * eb_normals[a_lev], * particle_ebfactory[a_lev],
+                             geom[a_lev]);
+
+       dummy[a_lev]->define(pc->ParticleBoxArray(a_lev),
+                            pc->ParticleDistributionMap(a_lev),
+                            3, 2, MFInfo(), * particle_ebfactory[a_lev]);
 
        // This call is needed because of the dual grid: the level-set
        // factory object and the ls data both live on the particle grids.
@@ -602,8 +620,8 @@ mfix::mfix_update_ebfactory (int a_lev)
    // has already been defined
    AMREX_ASSERT(not EB2::IndexSpace::empty());
 
-   const DistributionMapping&      dm = DistributionMap(a_lev);
-   const BoxArray&                 ba = boxArray(a_lev);
+   const DistributionMapping & dm = DistributionMap(a_lev);
+   const BoxArray &            ba = boxArray(a_lev);
 
    bool is_updated = false;
 
@@ -611,11 +629,11 @@ mfix::mfix_update_ebfactory (int a_lev)
    {
       amrex::Print() << "Updating ebfactory" << std::endl;
 
-      ebfactory[a_lev].reset(new EBFArrayBoxFactory( *eb_level_fluid, geom[a_lev], ba, dm,
-                                                     {m_eb_basic_grow_cells,
-                                                           m_eb_volume_grow_cells,
-                                                           m_eb_full_grow_cells},
-                                                     m_eb_support_level));
+      ebfactory[a_lev].reset(
+          new EBFArrayBoxFactory(* eb_level_fluid, geom[a_lev], ba, dm,
+                                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                  m_eb_full_grow_cells}, m_eb_support_level)
+          );
 
       is_updated = true;
    }
@@ -628,12 +646,11 @@ mfix::mfix_update_ebfactory (int a_lev)
 
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
-
-         ebfactory[a_lev].reset(new EBFArrayBoxFactory( *eb_level_fluid, geom[a_lev], ba, dm,
-                                                        {m_eb_basic_grow_cells,
-                                                              m_eb_volume_grow_cells,
-                                                              m_eb_full_grow_cells},
-                                                        m_eb_support_level));
+         ebfactory[a_lev].reset(
+             new EBFArrayBoxFactory(* eb_level_fluid, geom[a_lev], ba, dm,
+                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                     m_eb_full_grow_cells}, m_eb_support_level)
+             );
 
          is_updated = true;
       }

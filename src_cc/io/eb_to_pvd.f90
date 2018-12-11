@@ -68,8 +68,8 @@ contains
            ! if( .not.is_regular_cell(flag(i,j,k))) then
 
            ! If covered cells are accounted for in this loop, a FPE arises
-           ! since apnorm is zero. 
-           if (is_single_valued_cell(flag(i,j,k))) then 
+           ! since apnorm is zero.
+           if (is_single_valued_cell(flag(i,j,k))) then
 
               ! Calculate unit normal
               axm = apx(i,  j  , k  )

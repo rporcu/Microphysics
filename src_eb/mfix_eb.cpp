@@ -161,30 +161,25 @@ void mfix::make_amr_geometry ()
      ***************************************************************************/
 
     if (geom_type == "box") {
-        amrex::Print() << "\n Building box geometry." << std::endl;
-        amrex::Abort("box amr geometry not implemented yet");
-        //make_eb_box();
+        amrex::Print() << "\n Building box AMR level-set." << std::endl;
+        make_amr_box();
     } else if (geom_type == "cylinder") {
-        amrex::Print() << "\n Building cylinder geometry." << std::endl;
+        amrex::Print() << "\n Building cylinder AMR level-set." << std::endl;
         make_amr_cylinder();
     } else if (geom_type == "hopper") {
-        amrex::Print() << "\n Building hopper geometry." << std::endl;
-        amrex::Abort("hopper amr geometry not implemented yet");
-        //make_eb_hopper();
+        amrex::Print() << "\n Building hopper AMR level-set." << std::endl;
+        make_amr_hopper();
     } else if (geom_type == "cyclone") {
-        amrex::Print() << "\n Building cyclone geometry." << std::endl;
-        amrex::Abort("cyclone amr geometry not implemented yet");
-        //make_eb_cyclone();
+        amrex::Print() << "\n Building cyclone AMR level-set." << std::endl;
+        make_amr_cyclone();
     } else if(geom_type == "general") {
-        amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
-        amrex::Abort("general amr geometry not implemented yet");
-        //make_eb_general();
+        amrex::Print() << "\n Building general AMR level-set (poly2 with extra walls)." << std::endl;
+        make_amr_general();
     } else {
         amrex::Print() << "\n No EB geometry declared in inputs => "
                        << " Will read walls from mfix.dat only."
                        << std::endl;
-        amrex::Abort("regular amr geometry not implemented yet");
-        //make_eb_regular();
+        make_amr_regular();
     }
 
 
@@ -193,16 +188,23 @@ void mfix::make_amr_geometry ()
         amrex::Print() << "Constructing AMR levelset on "
                        << amr_ls_max_level + 1 << " levels" << std::endl;
 
+        int ct_lev = 0;
         Vector<Real> ls_tags;
-        for (Real tag = amr_ls_baseline_tag; tag > 0; tag -= amr_ls_tag_step)
+        for (Real tag = amr_ls_baseline_tag; tag > 0; tag -= amr_ls_tag_step){
             ls_tags.push_back(tag);
+            ct_lev ++;
 
-        amrex::Print() << "Level tags: ";
-        for (Real tag : ls_tags)
-            amrex::Print() << tag << " ";
-        amrex::Print() << std::endl;
+            if (ct_lev >= amr_ls_max_level + 1)
+                break;
+        }
 
-        amr_level_set->InitData(ls_tags);
+        // amrex::Print() << "Level tags: ";
+        // for (Real tag : ls_tags)
+        //     amrex::Print() << tag << " ";
+        // amrex::Print() << std::endl;
+
+        //amr_level_set->InitData(ls_tags);
+        amr_level_set->InitData(false); // Don't use levelset tagging, instead use volfrac
         amr_level_set->WritePlotFile();
         amrex::Print() << "... done constructing AMR levelset" << std::endl;
     }

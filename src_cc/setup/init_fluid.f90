@@ -47,6 +47,7 @@ module init_fluid_module
       call set_ic(slo, shi, domlo, domhi, dx, dy, dz, vel_g)
 
       ! call init_periodic_vortices ( lo, hi, vel_g, slo, shi, dx, dy, dz, domlo)
+      ! call init_helix ( lo, hi, vel_g, slo, shi, dx, dy, dz, domlo)
 
       ! Set the initial fluid density and viscosity
       ro_g  = ro_g0
@@ -55,6 +56,88 @@ module init_fluid_module
       call calc_mu_g(slo, shi, lo, hi, mu_g, lambda_g)
 
    end subroutine init_fluid
+
+   subroutine init_helix ( lo, hi, vel, slo, shi, dx, dy, dz, domlo)
+
+      use amrex_fort_module, only: ar => amrex_real
+      use iso_c_binding ,    only: c_int
+      use param,             only: zero, half, one
+ 
+      implicit none
+
+      ! Array bounds
+      integer(c_int),   intent(in   ) :: slo(3), shi(3)
+
+      ! Tile bounds
+      integer(c_int),   intent(in   ) ::  lo(3),  hi(3)
+      
+      ! Grid and domain lower bound
+      integer(c_int),   intent(in   ) :: domlo(3)
+      real(ar),         intent(in   ) :: dx, dy, dz
+      
+      ! Arrays
+      real(ar),         intent(inout) ::                   &
+           & vel(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
+
+      ! Local variables
+      integer(c_int)                  :: i, j, k, plane
+      real(ar)                        :: x, y, z, r, fac
+
+      plane = 3
+ 
+      fac = 0.01
+
+      select case ( plane )
+
+      case (1)  ! around x-axis
+         
+         do j = lo(2), hi(2)
+            y =  ( real(j,ar) + half ) * dy - .0016
+            do k = lo(3), hi(3)
+               z =  ( real(k,ar) + half ) * dz - .0016
+               r = sqrt(y*y + z*z)
+               do i = lo(1), hi(1) 
+                  vel(i,j,k,1) = 0.0
+                  vel(i,j,k,2) =  fac * z/r
+                  vel(i,j,k,3) = -fac * y/r
+               end do
+            end do
+         end do
+         
+      case (2)  ! around y-axis
+         
+         do k = lo(3), hi(3)
+            z =  ( real(k,ar) + half ) * dz - .0016
+            do i = lo(1), hi(1)
+               x =  ( real(i,ar) + half ) * dx- .0016
+               r = sqrt(x*x + z*z)
+               do j = lo(2), hi(2)
+                  vel(i,j,k,1) =  fac * z/r
+                  vel(i,j,k,2) = 0.0
+                  vel(i,j,k,3) = -fac * x/r
+               end do
+            end do
+         end do
+         
+      case (3)  ! around z-axis
+         
+         do i = lo(1), hi(1)
+            x =  ( real(i,ar) + half ) * dx
+            do k = lo(3), hi(3)
+               z =  ( real(k,ar) + half ) * dz
+               do j = lo(2), hi(2)
+                  y =  ( real(j,ar) + half ) * dy
+                  r = sqrt(x*x + y*y)
+                  vel(i,j,k,1) =  fac * y/r
+                  vel(i,j,k,2) = -fac * x/r
+                  vel(i,j,k,3) = 0.0
+               end do
+            end do
+         end do
+         
+      end select 
+         
+   end subroutine init_helix
 
    subroutine init_periodic_vortices ( lo, hi, vel, slo, shi, dx, dy, dz, domlo)
 

@@ -147,7 +147,7 @@ mfix::Init(Real dt, Real time)
     // Note that finest_level = nlev-1
     finest_level = nlev-1;
 
-    if (use_amr_ls) 
+    if (use_amr_ls)
        finest_level = std::min(amr_level_set->finestLevel(),max_level);
 
     // Define coarse level BoxArray and DistributionMap
@@ -159,17 +159,18 @@ mfix::Init(Real dt, Real time)
 
     for (int lev = 1; lev <= finest_level; lev++)
     {
-       if (use_amr_ls) 
+       if (use_amr_ls)
        {
           const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
-          BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0}); 
+          BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0});
+
           std::cout << "Level " << lev << " grids: " << ba_ref << std::endl;
           if (m_verbose > 0)
             std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
           DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
           MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
-       } 
-       else 
+       }
+       else
        {
           // This refines the central half of the domain
           int ilo = ba[0].size()[0] / 2;
@@ -178,7 +179,7 @@ mfix::Init(Real dt, Real time)
           IntVect hi(ihi,ihi,ihi);
           Box bx(lo,hi);
           BoxArray ba_ref(bx);
-   
+
           // This refines the whole domain
           // BoxArray ba_ref(ba);
           // ba_ref.refine(2);
@@ -241,11 +242,9 @@ mfix::Init(Real dt, Real time)
     {
        for (int lev = 0; lev < nlev; lev++)
        {
-          if (lev == 0) {
-             // Allocate container for eb-normals
-             eb_normals = std::unique_ptr<MultiFab>(new MultiFab);
-             dummy      = std::unique_ptr<MultiFab>(new MultiFab);
-          }
+          // Allocate container for eb-normals
+          eb_normals[lev] = std::unique_ptr<MultiFab>(new MultiFab);
+          dummy[lev]      = std::unique_ptr<MultiFab>(new MultiFab);
 
           // NOTE: this would break with mult-level simulations => construct this
           // for level 0 only
@@ -468,7 +467,11 @@ mfix::InitLevelData(Real dt, Real time)
       } else if (particle_init_type == "Random")
       {
         int n_per_cell = 1;
-        amrex::Print() << "Randomly initializing " << n_per_cell << " particles per cell ..." << std::endl;
+
+        amrex::Print() << "Randomly initializing " << n_per_cell
+                       << " particles per cell ..."
+                       << std::endl;
+
         Real  radius = 1.0;
         Real  volume = 1.0;
         Real    mass = 1.0;
@@ -485,8 +488,11 @@ mfix::InitLevelData(Real dt, Real time)
         Real  omegaz = 0.0;
         int    phase = 1;
         int    state = 0;
+
         MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
-                velx,vely,velz,omegax,omegay,omegaz,dragx,dragy,dragz,phase,state};
+                                                         velx,vely,velz,omegax,omegay,omegaz,
+                                                         dragx,dragy,dragz,phase,state};
+
         pc->InitNRandomPerCell(n_per_cell, pdata);
         pc->WriteAsciiFileForInit ("random_particles");
         exit(0);
@@ -547,16 +553,9 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
       if (use_amr_ls) {
           amrex::Print() << "Clean up auto-generated particles.\n" << std::endl;
           for (int ilev = 0; ilev <= pc->finestLevel(); ilev ++){
-              EBFArrayBoxFactory ebfactory(* eb_level_particles, pc->Geom(ilev),
-                                           pc->ParticleBoxArray(ilev), pc->ParticleDistributionMap(ilev),
-                                           {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                                           m_eb_support_level);
               const MultiFab * ls_data = amr_level_set->getLevelSet(ilev);
-              iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
-                                 ls_data->nComp(), ls_data->nGrow());
-              ls_valid.setVal(1);
-              // amrex::Print() << ls_data->boxArray() << std::endl;
-              pc->RemoveOutOfRange(ilev, & ebfactory, ls_data, & ls_valid, 1);
+              const iMultiFab * ls_valid = amr_level_set->getValid(ilev);
+              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(), ls_data, ls_valid, 1);
 
           }
       } else {

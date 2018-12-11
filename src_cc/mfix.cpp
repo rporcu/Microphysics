@@ -57,9 +57,13 @@ mfix::ResizeArrays ()
     if (solve_dem)
     {
        if (use_amr_ls) {
-           pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(amr_level_set.get()));
+           pc = std::unique_ptr<MFIXParticleContainer> (
+               new MFIXParticleContainer(amr_level_set.get())
+               );
        } else {
-           pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
+           pc = std::unique_ptr<MFIXParticleContainer> (
+               new MFIXParticleContainer(this)
+               );
        }
 
        // HACK: temporary flag used to turn on legacy mode
@@ -130,16 +134,33 @@ mfix::ResizeArrays ()
         bcoeff_diff[i].resize(3);
     }
 
+
+    /****************************************************************************
+     * Particle-data can live on a different number of levels                   *
+     ***************************************************************************/
+
+    int nlevs_max_part = nlevs_max;
+    if (use_amr_ls)
+        nlevs_max_part = amr_level_set->maxLevel() + 1;
+
+
+    // Particle and Fluid costs
     if (solve_dem)
-       particle_cost.resize(nlevs_max);
+            particle_cost.resize(nlevs_max_part);
+
     if (solve_fluid)
-       fluid_cost.resize(nlevs_max);
+        fluid_cost.resize(nlevs_max);
 
     // EB factory
     ebfactory.resize(nlevs_max);
 
-    if (solve_dem)
-       particle_ebfactory.resize(nlevs_max);
+    if (solve_dem){
+        particle_ebfactory.resize(nlevs_max_part);
+    }
+
+    // For legacy reasons: EB normals and Dummy MF
+    eb_normals.resize(nlevs_max_part);
+    dummy.resize(nlevs_max_part);
 }
 
 void

@@ -375,6 +375,7 @@ contains
                      du_c = half * ( vel(i,j,k+1,n) - vel(i,j,k-1,n) )
 
                      zslopes(i,j,k,n) = mc_limiter ( du_l, du_c, du_r )
+
                   end if
                end do
             end do
@@ -531,9 +532,6 @@ contains
       end if
 
    end subroutine compute_slopes_eb
-
-
-
    
 
    !
