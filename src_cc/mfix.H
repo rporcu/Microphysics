@@ -555,7 +555,7 @@ private:
     // How much coarser should the zeroth-level of the level-set be? This is
     // needed because the coarse level is used to describe the approximate
     // level-set far from any boundaries.
-    int amr_ls_crse = 4;
+    int amr_ls_crse = 1;
     // The max search-radius (ghost cells) over which to look for eb-facets
     int amr_ls_eb_pad     = 4;
     int amr_ls_max_eb_pad = 4;
