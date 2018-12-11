@@ -177,8 +177,8 @@ mfix::Regrid ()
 
             if (solve_fluid) mfix_set_bc0();
 
-            // This calls re-creates a proper particles_ebfactory
-            //  and regrids all the multifab that depend on it
+            // This calls re-creates a proper particles_ebfactory and regrids
+            // all the multifab that depend on it
             if (solve_dem)
                 RegridLevelSetArray(base_lev);
 

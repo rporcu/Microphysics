@@ -520,20 +520,18 @@ mfix::RegridArrays (int lev)
 
 
 //
-// This function regrids the level set function and updates
-// particle_ebfactory.
-// This has to be done separately from the regridding of
-// the other field variables since LS is generated with
-// the particle_ebfactory, not the plain ebfactory.
+// This function regrids the level set function and updates particle_ebfactory.
+// This has to be done separately from the regridding of the other field
+// variables since LS is generated with the particle_ebfactory, not the plain
+// ebfactory.
 //
 void
 mfix::RegridLevelSetArray (int a_lev)
 {
-   // First check if particle_ebfactory is allocated
-   // with the proper dm and ba
+   // First check if particle_ebfactory is allocated with the proper dm and ba
 
-   // This assert is to verify that some kind of EB geometry
-   // has already been defined
+   // This assert is to verify that some kind of EB geometry has already been
+   // defined
    AMREX_ASSERT(not EB2::IndexSpace::empty());
 
    const DistributionMapping&      dm = pc->ParticleDistributionMap(a_lev);
@@ -558,8 +556,8 @@ mfix::RegridLevelSetArray (int a_lev)
    {
       amrex::Print() << "Updating particle ebfactory" << std::endl;
 
-      const DistributionMapping&  eb_dm = ebfactory[a_lev]->DistributionMap();
-      const BoxArray&             eb_ba = ebfactory[a_lev]->boxArray();
+      const DistributionMapping&  eb_dm = particle_ebfactory[a_lev]->DistributionMap();
+      const BoxArray&             eb_ba = particle_ebfactory[a_lev]->boxArray();
 
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
