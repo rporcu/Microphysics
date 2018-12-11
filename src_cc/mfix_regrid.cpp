@@ -116,7 +116,7 @@ mfix::Regrid ()
                     new_particle_dm = DistributionMapping::makeSFC(*particle_cost[lev],false);
                 }
 
-                pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev));
+                pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev), lev);
 
                 particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
                                                       new_particle_dm, 1, 0));
@@ -172,7 +172,7 @@ mfix::Regrid ()
 
 
             if (solve_dem){
-                pc->Regrid(dmap[base_lev], grids[base_lev]);
+                pc->Regrid(dmap[base_lev], grids[base_lev], base_lev);
             }
 
             if (solve_fluid) mfix_set_bc0();
