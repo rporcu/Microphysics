@@ -70,6 +70,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
           amr_pp.query("dual_grid", dual_grid);
         }
 
+        if (load_balance_type == "KnapSack")
+            pp.query("knapsack_nmax", knapsack_nmax);
+
         // If subdt_io is true, des_time_loop calls output_manager
         subdt_io = false; // default to false (if not present in inputs file)
         pp.query("subdt_io", subdt_io);

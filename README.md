@@ -54,11 +54,11 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 | CMAKE_CXX_FLAGS              | User-defined C++ flags for MFIX build              | valid C++ compiler flags     |   None              |
 | AMREX_Fortran_FLAGS          | User-defined Fortran flags  for AMReX build        | valid F90 compiler flags     |   None              |
 | AMREX_CXX_FLAGS              | User-defined C++ flags for AMReX build             | valid C++ compiler flags     |   None              |
+| ENABLE_MPI                   | Enable build with MPI                              |   0/1                        |   1                 |
+| ENABLE_OMP                   | Enable build with OpenMP                           |   0/1                        |   0                 |
 | ENABLE_FPE                   | Build with Floating-Point Exceptions checks        |   0/1                        |   0                 |
 | ENABLE_PTESTS                | Include tests for projection method in Ctest suite |   0/1                        |   0                 |
 | ENABLE_STESTS                | Include tests for SIMPLE method in Ctest suite     |   0/1                        |   1                 |
-| AMREX_ENABLE_MPI             | Enable build with MPI                              |   0/1                        |   1                 |
-| AMREX_ENABLE_OMP             | Enable build with OpenMP                           |   0/1                        |   0                 |
 | AMREX_ENABLE_DP              | Enable double precision                            |   0/1                        |   1                 |
 | AMREX_ENABLE_DP_PARTICLES    | Enable double precision in particles classes       |   0/1                        |   1                 |
 | AMREX_ENABLE_BASE_PROFILE    | Include profiling info                             |   0/1                        |   0                 |

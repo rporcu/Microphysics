@@ -996,10 +996,6 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
     beta_vel_ptr->setVal(0.0);
 
     using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
-    const int* lo;
-    const int* hi;
-    Real* bx_dataptr;
-    Real* bu_dataptr;
 
     // Get particle EB geometric info
     MultiFab  dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
@@ -1012,6 +1008,11 @@ void MFIXParticleContainer::PICMultiDeposition(amrex::MultiFab& beta_mf,
 #pragma omp parallel
 #endif
     {
+        const int* lo;
+        const int* hi;
+        Real* bx_dataptr;
+        Real* bu_dataptr;
+
         FArrayBox local_x_vol, local_u_vol;
         for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
 

@@ -151,7 +151,7 @@ int main ( int argc, char* argv[] )
 
     for (int m = 0; m < lineFabs[0]->size (); ++m )
     {
-	amrData.CellLoc ( finestLevel, iv.shift(dir-1, min(1,m) ), x );
+	amrData.CellLoc ( finestLevel, iv.shift(dir-1, amrex::min(1,m) ), x );
 	
 	outfile << setw(25) << x[dir-1];
 

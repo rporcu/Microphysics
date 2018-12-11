@@ -89,67 +89,66 @@ void mfix::mfix_calc_drag_fluid(Real time)
 
         }
 
-        // Create fab to host reconstructed velocity field
-        FArrayBox vel_r;
-
         // Phi is always on the particles grid
         const MultiFab & phi = * ls[lev];
-
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-        for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
         {
-
-            auto& particles = pti.GetArrayOfStructs();
-            const int np = particles.size();
-
-            // this is to check efficiently if this tile contains any eb stuff
-            const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_ptr)[pti]);
-            const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
-            Box bx = pti.tilebox ();
-
-            if (flags.getType(amrex::grow(bx,0)) != FabType::covered)
+            // Create fab to host reconstructed velocity field
+            FArrayBox vel_r;
+            
+            for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
             {
-                if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
+                auto& particles = pti.GetArrayOfStructs();
+                const int np = particles.size();
+
+                // this is to check efficiently if this tile contains any eb stuff
+                const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_ptr)[pti]);
+                const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
+                Box bx = pti.tilebox ();
+
+                if (flags.getType(amrex::grow(bx,0)) != FabType::covered)
                 {
+                    if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
+                    {
 
-                    calc_particle_beta( BL_TO_FORTRAN_ANYD((*ep_ptr)[pti]),
-                                        (*ro_ptr)[pti].dataPtr(),
-                                        (*mu_ptr)[pti].dataPtr(),
-                                        BL_TO_FORTRAN_ANYD((*vel_ptr)[pti]),
-                                        &np, particles.data(),
-                                        geom[lev].ProbLo(), geom[lev].CellSize());
+                        calc_particle_beta( BL_TO_FORTRAN_ANYD((*ep_ptr)[pti]),
+                                            (*ro_ptr)[pti].dataPtr(),
+                                            (*mu_ptr)[pti].dataPtr(),
+                                            BL_TO_FORTRAN_ANYD((*vel_ptr)[pti]),
+                                            &np, particles.data(),
+                                            geom[lev].ProbLo(), geom[lev].CellSize());
+                    }
+                    else
+                    {
+
+                        Box gbox = amrex::grow(bx,2);
+                        vel_r.resize(gbox,3);
+
+                        reconstruct_velocity( BL_TO_FORTRAN_ANYD(vel_r),
+                                              BL_TO_FORTRAN_ANYD((*vel_ptr)[pti]),
+                                              BL_TO_FORTRAN_ANYD((phi)[pti]),
+                                              1,
+                                              BL_TO_FORTRAN_ANYD(flags),
+                                              geom[lev].ProbLo(), geom[lev].CellSize());
+
+                        calc_particle_beta( BL_TO_FORTRAN_ANYD((*ep_ptr)[pti]),
+                                            (*ro_ptr)[pti].dataPtr(),
+                                            (*mu_ptr)[pti].dataPtr(),
+                                            BL_TO_FORTRAN_ANYD(vel_r),
+                                            &np, particles.data(),
+                                            geom[lev].ProbLo(), geom[lev].CellSize());
+                    }
                 }
-                else
-                {
 
-                    Box gbox = amrex::grow(bx,2);
-                    vel_r.resize(gbox,3);
-
-                    reconstruct_velocity( BL_TO_FORTRAN_ANYD(vel_r),
-                                          BL_TO_FORTRAN_ANYD((*vel_ptr)[pti]),
-                                          BL_TO_FORTRAN_ANYD((phi)[pti]),
-                                          1,
-                                          BL_TO_FORTRAN_ANYD(flags),
-                                          geom[lev].ProbLo(), geom[lev].CellSize());
-
-                    calc_particle_beta( BL_TO_FORTRAN_ANYD((*ep_ptr)[pti]),
-                                        (*ro_ptr)[pti].dataPtr(),
-                                        (*mu_ptr)[pti].dataPtr(),
-                                        BL_TO_FORTRAN_ANYD(vel_r),
-                                        &np, particles.data(),
-                                        geom[lev].ProbLo(), geom[lev].CellSize());
-                }
             }
-
         }
-
+        
         // ******************************************************************************
         // Now use the beta of individual particles to create the drag terms on the fluid
         // ******************************************************************************
-
         drag_ptr  -> setVal(0.0L);
         f_gds_ptr -> setVal(0.0L);
 
@@ -271,17 +270,16 @@ mfix::mfix_calc_drag_particle(Real time)
 
         }
 
-
-        // Create fab to host reconstructed velocity field
-        FArrayBox vel_r;
-
         // Phi is always on the particles grid
         const MultiFab & phi = * ls[lev];
-
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
+        {
+            // Create fab to host reconstructed velocity field
+            FArrayBox vel_r;
+            
             for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
             {
                 auto& particles = pti.GetArrayOfStructs();
@@ -325,11 +323,12 @@ mfix::mfix_calc_drag_particle(Real time)
                 }
 
             }
+        }
 
-            // Reset velocity Dirichlet bc's to face values
-            // HACK -- NOTE WE ARE CALLING THIS ON ALL LEVELS BUT ONLY NEED IT ON ONE LEVEL
-            extrap_dir_bcs = 0;
-            mfix_set_velocity_bcs(time, extrap_dir_bcs);
+        // Reset velocity Dirichlet bc's to face values
+        // HACK -- NOTE WE ARE CALLING THIS ON ALL LEVELS BUT ONLY NEED IT ON ONE LEVEL
+        extrap_dir_bcs = 0;
+        mfix_set_velocity_bcs(time, extrap_dir_bcs);
 
     } // lev
 }
