@@ -438,7 +438,7 @@ std::unique_ptr<MultiFab> MFIXParticleContainer::EBNormals(int lev,
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
                                             EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals,
                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
-                                            const int ls_refinement, MultiFab * dummy,
+                                            const int ls_refinement, 
                                             MultiFab * cost, std::string & knapsack_weight_type,
                                             int subdt_io)
 {
@@ -496,6 +496,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         pfor[index] = Vector<Real>();
         wfor[index] = Vector<Real>();
     }
+
+    /****************************************************************************
+     * Get particle EB geometric info
+     ***************************************************************************/
+    MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                   1, 0, MFInfo(), *ebfactory);
 
     /****************************************************************************
      * Iterate over sub-steps                                                   *
@@ -575,7 +581,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             // walls
             if (ebfactory != NULL)
             {
-                const auto & sfab = static_cast <EBFArrayBox const &>((* dummy)[pti]);
+                const auto & sfab = static_cast <EBFArrayBox const &>(dummy[pti]);
                 const auto & flag = sfab.getEBCellFlagFab();
 
                 if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
@@ -890,8 +896,8 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
        using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
 
        // Get particle EB geometric info
-       MultiFab      dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                           1, 0, MFInfo(), *ebfactory[lev]);
+       MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                      1, 0, MFInfo(), *ebfactory[lev]);
 
        const amrex::MultiFab*                    volfrac;
        volfrac = &(ebfactory[lev]->getVolFrac());
