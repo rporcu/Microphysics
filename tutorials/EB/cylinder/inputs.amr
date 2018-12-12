@@ -2,7 +2,7 @@
 # Geometry / grids / tiles
 
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
-amr.max_level = 0
+amr.max_level = 1
 
 geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 1       1       0       # Is periodic in each direction?
@@ -14,18 +14,17 @@ amr.n_cell = 32 32 48
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
-#amr.max_grid_size   = 1024
 amr.max_grid_size_x = 32
 amr.max_grid_size_y = 32
 amr.max_grid_size_z = 32
 maxboxsize          = 1024
 
+amr.blocking_factor = 8
+
 # Maximum tile size within each grid
 fabarray.mfiter_tile_size = 1024 1024 1024
 # Maximum particle title size
 particles.tile_size       = 1024 1024 1024
-
-
 
 #_______________________________________________________________________
 # IO / Checkpointing
