@@ -135,11 +135,14 @@ public:
     ///
     /// Calculate gas volume fraction using a PIC deposition of particle volume
     ///
-    void CalcVolumeFraction(amrex::MultiFab& mf,
-                            const EBFArrayBoxFactory& ebfactory,
-                            IArrayBox& bc_ilo, IArrayBox& bc_ihi,
-                            IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                            IArrayBox& bc_klo, IArrayBox& bc_khi,
+    void CalcVolumeFraction(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & mf,
+                            const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
                             int nghost);
 
     void CapSolidsVolFrac(amrex::MultiFab& eps);
@@ -147,11 +150,14 @@ public:
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction
     ///
-    void PICDeposition(amrex::MultiFab& mf,
-                       const EBFArrayBoxFactory& ebfactory,
-                       IArrayBox& bc_ilo, IArrayBox& bc_ihi,
-                       IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                       IArrayBox& bc_klo, IArrayBox& bc_khi,
+    void PICDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & mf,
+                       const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
                        int fortran_particle_comp, int nghost);
 
     ///
