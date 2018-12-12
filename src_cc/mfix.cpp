@@ -272,3 +272,14 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     for (int lev = 0; lev < nlev; lev++)
        sum_vol = ep_g[lev]->sum();
 }
+
+void
+mfix::avgDown (const MultiFab& S_fine, MultiFab& S_crse)
+{
+    BL_PROFILE("mfix::avgDown()");
+ 
+    int ref_ratio = 2;
+
+    amrex::EB_average_down(S_fine, S_crse, 0, S_fine.nComp(), ref_ratio);
+}
+

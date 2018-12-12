@@ -178,6 +178,8 @@ protected:
 
     void RegridLevelSetArray (int a_lev);
 
+    void avgDown (const amrex::MultiFab& S_fine, amrex::MultiFab& S_crse);
+
 private:
 
     void make_eb_general();

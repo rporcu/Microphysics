@@ -8,6 +8,9 @@
 #include <AMReX_MultiCutFab.H>
 #include <AMReX_EB_F.H>
 
+#include <AMReX_EBAmrUtil.H>
+#include <AMReX_EBMultiFabUtil.H>
+
 #include <math.h>
 
 #include "mfix_F.H"
@@ -802,6 +805,12 @@ void MFIXParticleContainer::CalcVolumeFraction(const amrex::Vector< std::unique_
     {    
         mf_to_be_filled[lev]->mult(-1.0,mf_to_be_filled[lev]->nGrow());
         mf_to_be_filled[lev]->plus( 1.0,mf_to_be_filled[lev]->nGrow());
+    }    
+
+    int ref_ratio = 2;
+    for (int lev = nlev-1; lev > 0; lev--) 
+    {    
+         amrex::EB_average_down(*mf_to_be_filled[lev], *mf_to_be_filled[lev-1], 0, 1, ref_ratio);
     }    
 
     // Impose a lower bound on volume fraction
