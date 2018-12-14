@@ -47,6 +47,10 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         //  with "Random"
         pp.query("particle_init_type", particle_init_type);
 
+        // Options to control initial projections (mostly we use these for debugging)
+        pp.query("initial_iterations", initial_iterations);
+        pp.query("do_initial_proj"   , do_initial_proj);
+
         // The default type is "FixedSize" but we can over-write that in the inputs file
         //  with "KDTree" or "KnapSack"
         pp.query("load_balance_type", load_balance_type);
@@ -756,10 +760,12 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
      mfix_set_scalar_bcs();
 
      // Project the initial velocity field
-     mfix_project_velocity();
+     if (do_initial_proj)
+        mfix_project_velocity();
 
      // Iterate to compute the initial pressure
-     mfix_initial_iterations(dt,stop_time,steady_state);
+     if (initial_iterations > 0)
+        mfix_initial_iterations(dt,stop_time,steady_state);
   }
 
 }

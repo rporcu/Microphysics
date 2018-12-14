@@ -501,6 +501,9 @@ private:
     int nodal_pressure = 1;
     int explicit_diffusion = 1;
 
+    bool do_initial_proj    = true;
+    int  initial_iterations = 2;
+
     /****************************************************************************
      *                                                                          *
      * I/O stuff                                                                *
