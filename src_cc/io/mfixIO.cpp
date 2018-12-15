@@ -7,6 +7,8 @@
 
 #include <AMReX_buildInfo.H>
 
+#include <AMReX_EBMultiFabUtil.H>
+
 #include <mfix.H>
 #include <mfix_F.H>
 
@@ -676,7 +678,6 @@ void mfix::WriteJobInfo (const std::string& dir) const
     }
 }
 
-
 void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time ) const
 {
     BL_PROFILE("mfix::WritePlotFile()");
@@ -696,7 +697,7 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
 
           // the "+1" here is for volfrac
           const int ncomp = vecVarsName.size() + pltscalarVars.size() + 1;
-          mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
+          mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow,  MFInfo(), *ebfactory[lev]));
 
           // Velocity components
           MultiFab::Copy(*mf[lev], (*vel_g[lev]), 0, 0, 1, 0);
@@ -716,16 +717,19 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
                   // Level set lives on nodes, AMRVis doesn't =>  map the nodal
                   // MultiFab to the cell-centered MultiFab:
                   // if (ebfactory[lev]) {
-                  if (solve_dem) {
-                      MultiFab phi(amrex::convert(grids[lev], IntVect{1, 1, 1}), dmap[lev], 1, 0);
-                      phi.copy(*(*pltscalarVars[i] )[lev].get(), 0, 0, 1);
-                      // amrex::average_node_to_cellcenter(* mf[lev], dcomp,
-                      //                                   *(*pltscalarVars[i] )[lev].get(),
-                      //                                   0, 1);
-                      amrex::average_node_to_cellcenter(* mf[lev], dcomp, phi, 0, 1);
-                  } else {
-                      mf[lev]->setVal(0.0,dcomp,1,0);
-                  }
+                  // if (solve_dem) {
+                  //     MultiFab phi(amrex::convert(grids[lev], IntVect{1, 1, 1}), dmap[lev], 1, 0);
+                  //     phi.copy(*(*pltscalarVars[i] )[lev].get(), 0, 0, 1);
+                  //     // amrex::average_node_to_cellcenter(* mf[lev], dcomp,
+                  //     //                                   *(*pltscalarVars[i] )[lev].get(),
+                  //     //                                   0, 1);
+                  //     amrex::average_node_to_cellcenter(* mf[lev], dcomp, phi, 0, 1);
+                  // } else {
+                  //     mf[lev]->setVal(0.0,dcomp,1,0);
+                  // }
+
+                       mf[lev]->setVal(0.0,dcomp,1,0);
+
               } else if (pltscaVarsName[i] == "p_g") {
                   if (nodal_pressure) {
                      MultiFab p_nd(p_g[lev]->boxArray(),dmap[lev],1,0);
@@ -738,7 +742,8 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
                      MultiFab::Add (*mf[lev], (*p0_g[lev]), 0, dcomp, 1, 0);
                   }
               } else if (pltscaVarsName[i] == "diveu") {
-                 amrex::average_node_to_cellcenter(*mf[lev], dcomp, *(*pltscalarVars[i] )[lev].get(), 0, 1);
+                 // amrex::average_node_to_cellcenter(*mf[lev], dcomp, *(*pltscalarVars[i] )[lev].get(), 0, 1);
+                 mf[lev]->setVal(0.0,dcomp,1,0);
               } else {
                  MultiFab::Copy(*mf[lev], *((*pltscalarVars[i])[lev].get()), 0, dcomp, 1, 0);
               }
@@ -755,6 +760,7 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
        Vector<const MultiFab*> mf2(nlev);
 
        for (int lev = 0; lev < nlev; ++lev) {
+           EB_set_covered(*mf[lev], 0.0);
            mf2[lev] = mf[lev].get();
        }
 
