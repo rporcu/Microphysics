@@ -200,7 +200,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
        divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
     }
 
-   for (int iter = 0; iter < 3; ++iter)
+   for (int iter = 0; iter < initial_iterations; ++iter)
    {
        amrex::Print() << " " << std::endl;
        amrex::Print() << "In initial_iterations: iter = " << iter <<  "\n";
