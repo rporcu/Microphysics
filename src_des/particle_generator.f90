@@ -81,11 +81,13 @@ contains
       enddo
 
       select case(trim(ic_pack_type(icv)))
-      case('HCP'   ); call hex_close_pack(icv, type, lo, hi, np, pc, dx, dy, dz)
-      case('RANDOM'); call random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
-      case DEFAULT
-         write(*,*) "Unknown particle generator fill type"
-         stop 1000
+          case('HCP'   ); call hex_close_pack(icv, type, lo, hi, np, pc, dx, dy, dz)
+          case('RANDOM'); call random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
+          case('ONEPER'); call one_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
+          case('EIGHTPER'); call eight_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
+          case DEFAULT
+             write(*,*) "Unknown particle generator fill type"
+             stop 1000
       end select
 
       ! No more work.
@@ -269,6 +271,260 @@ contains
 
       return
    end subroutine hex_close_pack
+
+   !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+   !                                                                      !
+   !  Subroutine: one_per_fill                                            !
+   !                                                                      !
+   !  Purpose: Generate initial solids packing based on putting one       !
+   !           per cell                                                   !
+   !                                                                      !
+   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine one_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
+
+      use ic, only: dim_ic, ic_defined
+      use ic, only: ic_ep_s
+
+      use ic, only: ic_x_e, ic_y_n, ic_z_t
+      use ic, only: ic_x_w, ic_y_s, ic_z_b
+
+      use ic, only: ic_dp_mean
+      use ic, only: ic_dp_max
+
+      use param, only: is_defined
+
+      use calc_cell_module, only: calc_cell_ic
+      use constant, only: pi
+
+      implicit none
+
+      integer(c_int), intent(in   ) :: icv, type, lo(3), hi(3)
+      integer(c_int), intent(inout) :: np, pc
+      real(rt),       intent(in   ) :: dx, dy, dz
+
+      real(rt), parameter :: sqrt3 = sqrt(3.0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+
+      ! indices
+      integer :: i_w, i_e
+      integer :: j_s, j_n
+      integer :: k_b, k_t
+
+      integer  :: i,j,k
+      real(rt) :: ic_vol
+      real(rt) :: ic_dlo(3), ic_dhi(3)
+      real(rt) :: max_dp, max_rp
+      real(rt) :: pos(3)
+
+      integer :: seed, max_seed(3), seed_lo(3), seed_hi(3)
+
+      call calc_cell_ic(dx, dy, dz, &
+       ic_x_w(icv), ic_y_s(icv), ic_z_b(icv), &
+       ic_x_e(icv), ic_y_n(icv), ic_z_t(icv), &
+       i_w, i_e, j_s, j_n, k_b, k_t)
+
+      ! Start/end of IC domain bounds
+      ic_dlo(1) = (max(lo(1), i_w)    ) * dx
+      ic_dlo(2) = (max(lo(2), j_s)    ) * dy
+      ic_dlo(3) = (max(lo(3), k_b)    ) * dz
+      ic_dhi(1) = (min(hi(1), i_e) + 1) * dx
+      ic_dhi(2) = (min(hi(2), j_n) + 1) * dy
+      ic_dhi(3) = (min(hi(3), k_t) + 1) * dz
+
+      ! physical volume of IC region
+      ic_vol = (ic_x_e(icv) - ic_x_w(icv)) * &
+       (ic_y_n(icv) - ic_y_s(icv)) * &
+       (ic_z_t(icv) - ic_z_b(icv))
+
+      ! Spacing is based on maximum particle size
+      if(is_defined(ic_dp_max(icv,type))) then
+         max_dp = ic_dp_max(icv,type)
+      else
+         max_dp = ic_dp_mean(icv,type)
+      endif
+      max_rp = 0.5d0 * max_dp
+
+      ! Particle count is based on mean particle size
+      seed = ic_vol * ic_ep_s(icv,type) / &
+       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+
+      ! Total to seed over the whole IC region
+      max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
+      max_seed(3) = int((ic_z_t(icv) - ic_z_b(icv) - max_dp)/(sqrt3*max_rp))
+      max_seed(2) = int(seed / (max_seed(1)*max_seed(3)))
+
+      ! local grid seed loop hi/lo
+      seed_lo(1) = nint((ic_dlo(1) - i_w*dx) / max_dp)
+      seed_lo(3) = nint((ic_dlo(3) - k_b*dz) / (sqrt3 * max_rp))
+      seed_lo(2) = nint((ic_dlo(2) - j_s*dy) / ((sqrt6o3x2) * max_rp))
+
+      seed_hi(1) = nint((ic_dhi(1) - i_w*dx) /  max_dp - seed_lo(1)*max_dp)
+      seed_hi(3) = nint((ic_dhi(3) - k_b*dz) / (sqrt3 * max_rp) - seed_lo(1)*max_dp)
+      seed_hi(2) = nint((ic_dhi(2) - j_s*dy) / ((sqrt6o3x2) * max_rp) - seed_lo(1)*max_dp)
+
+      seed_hi(1) = min(max_seed(1), seed_hi(1)-1)
+      seed_hi(3) = min(max_seed(3), seed_hi(3)-1)
+      seed_hi(2) = min(max_seed(2), seed_hi(2)-1)
+
+      pos = -1.0d20
+      np = 0
+
+      ! This routine arbitrarily puts one particle at the center of each cell.
+      do j = lo(2), hi(2)
+         pos(2) = (j + 0.5d0)*dy
+         if (pos(2).ge.ic_y_s(icv) .and. pos(2).le.ic_y_n(icv)) then
+
+            do k = lo(3), hi(3)
+                pos(3) = (k + 0.5d0)*dz
+                if (pos(3).ge.ic_z_b(icv) .and. pos(3).le.ic_z_t(icv)) then
+
+                   do i = lo(1), hi(1)
+                       pos(1) = (i + 0.5d0)*dx
+                       if (pos(1).ge.ic_x_w(icv) .and. pos(1).le.ic_x_e(icv)) then
+
+                            np = np + 1 ! local to type
+                            pc = pc + 1 ! local to routine
+        
+                            call grow_pdata(pc)
+     
+                            rdata(pc,1:3) = pos
+                       end if
+                   enddo
+
+                end if
+            enddo
+         end if
+      enddo
+
+   end subroutine one_per_fill
+
+   !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+   !                                                                      !
+   !  Subroutine: eight_per_fill                                            !
+   !                                                                      !
+   !  Purpose: Generate initial solids packing based on putting eight     !
+   !           per cell                                                   !
+   !                                                                      !
+   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine eight_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
+
+      use ic, only: dim_ic, ic_defined
+      use ic, only: ic_ep_s
+
+      use ic, only: ic_x_e, ic_y_n, ic_z_t
+      use ic, only: ic_x_w, ic_y_s, ic_z_b
+
+      use ic, only: ic_dp_mean
+      use ic, only: ic_dp_max
+
+      use param, only: is_defined
+
+      use calc_cell_module, only: calc_cell_ic
+      use constant, only: pi
+
+      implicit none
+
+      integer(c_int), intent(in   ) :: icv, type, lo(3), hi(3)
+      integer(c_int), intent(inout) :: np, pc
+      real(rt),       intent(in   ) :: dx, dy, dz
+
+      real(rt), parameter :: sqrt3 = sqrt(3.0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+
+      ! indices
+      integer :: i_w, i_e
+      integer :: j_s, j_n
+      integer :: k_b, k_t
+
+      integer  :: i,j,k
+      real(rt) :: ic_vol
+      real(rt) :: ic_dlo(3), ic_dhi(3)
+      real(rt) :: max_dp, max_rp
+      real(rt) :: pos(3)
+
+      integer :: seed, max_seed(3), seed_lo(3), seed_hi(3)
+
+      call calc_cell_ic(dx, dy, dz, &
+       ic_x_w(icv), ic_y_s(icv), ic_z_b(icv), &
+       ic_x_e(icv), ic_y_n(icv), ic_z_t(icv), &
+       i_w, i_e, j_s, j_n, k_b, k_t)
+
+      ! Start/end of IC domain bounds
+      ic_dlo(1) = (max(lo(1), i_w)    ) * dx
+      ic_dlo(2) = (max(lo(2), j_s)    ) * dy
+      ic_dlo(3) = (max(lo(3), k_b)    ) * dz
+      ic_dhi(1) = (min(hi(1), i_e) + 1) * dx
+      ic_dhi(2) = (min(hi(2), j_n) + 1) * dy
+      ic_dhi(3) = (min(hi(3), k_t) + 1) * dz
+
+      ! physical volume of IC region
+      ic_vol = (ic_x_e(icv) - ic_x_w(icv)) * &
+       (ic_y_n(icv) - ic_y_s(icv)) * &
+       (ic_z_t(icv) - ic_z_b(icv))
+
+      ! Spacing is based on maximum particle size
+      if(is_defined(ic_dp_max(icv,type))) then
+         max_dp = ic_dp_max(icv,type)
+      else
+         max_dp = ic_dp_mean(icv,type)
+      endif
+      max_rp = 0.5d0 * max_dp
+
+      ! Particle count is based on mean particle size
+      seed = ic_vol * ic_ep_s(icv,type) / &
+       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+
+      ! Total to seed over the whole IC region
+      max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
+      max_seed(3) = int((ic_z_t(icv) - ic_z_b(icv) - max_dp)/(sqrt3*max_rp))
+      max_seed(2) = int(seed / (max_seed(1)*max_seed(3)))
+
+      ! local grid seed loop hi/lo
+      seed_lo(1) = nint((ic_dlo(1) - i_w*dx) / max_dp)
+      seed_lo(3) = nint((ic_dlo(3) - k_b*dz) / (sqrt3 * max_rp))
+      seed_lo(2) = nint((ic_dlo(2) - j_s*dy) / ((sqrt6o3x2) * max_rp))
+
+      seed_hi(1) = nint((ic_dhi(1) - i_w*dx) /  max_dp - seed_lo(1)*max_dp)
+      seed_hi(3) = nint((ic_dhi(3) - k_b*dz) / (sqrt3 * max_rp) - seed_lo(1)*max_dp)
+      seed_hi(2) = nint((ic_dhi(2) - j_s*dy) / ((sqrt6o3x2) * max_rp) - seed_lo(1)*max_dp)
+
+      seed_hi(1) = min(max_seed(1), seed_hi(1)-1)
+      seed_hi(3) = min(max_seed(3), seed_hi(3)-1)
+      seed_hi(2) = min(max_seed(2), seed_hi(2)-1)
+
+      pos = -1.0d20
+      np = 0
+
+      ! This routine arbitrarily puts eight particles per cell, one at the center
+      !      of each quadrant
+
+      do j = 2*lo(2), 2*hi(2)+1
+         pos(2) = (j + 0.5d0)*dy/2.d0
+         if (pos(2).ge.ic_y_s(icv) .and. pos(2).le.ic_y_n(icv)) then
+
+            do k = 2*lo(3), 2*hi(3)+1
+                pos(3) = (k + 0.5d0)*dz/2.d0
+                if (pos(3).ge.ic_z_b(icv) .and. pos(3).le.ic_z_t(icv)) then
+
+                   do i = 2*lo(1), 2*hi(1)+1
+                       pos(1) = (i + 0.5d0)*dx/2.d0
+                       if (pos(1).ge.ic_x_w(icv) .and. pos(1).le.ic_x_e(icv)) then
+
+                            np = np + 1 ! local to type
+                            pc = pc + 1 ! local to routine
+        
+                            call grow_pdata(pc)
+     
+                            rdata(pc,1:3) = pos
+                       end if
+                   enddo
+
+                end if
+            enddo
+         end if
+      enddo
+
+   end subroutine eight_per_fill
 
    !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
    !                                                                      !
