@@ -742,8 +742,7 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
                      MultiFab::Add (*mf[lev], (*p0_g[lev]), 0, dcomp, 1, 0);
                   }
               } else if (pltscaVarsName[i] == "diveu") {
-                 // amrex::average_node_to_cellcenter(*mf[lev], dcomp, *(*pltscalarVars[i] )[lev].get(), 0, 1);
-                 mf[lev]->setVal(0.0,dcomp,1,0);
+                 amrex::average_node_to_cellcenter(*mf[lev], dcomp, *(*pltscalarVars[i] )[lev].get(), 0, 1);
               } else {
                  MultiFab::Copy(*mf[lev], *((*pltscalarVars[i])[lev].get()), 0, dcomp, 1, 0);
               }
