@@ -189,15 +189,19 @@ protected:
 private:
 
     void make_eb_general();
+    void make_amr_general();
 
     void make_eb_box();
+    void make_amr_box();
 
     void make_eb_cylinder();
     void make_amr_cylinder();
 
     void make_eb_hopper();
+    void make_amr_hopper();
 
     void make_eb_cyclone();
+    void make_amr_cyclone();
 
     void make_eb_hourglass();
 
@@ -206,6 +210,7 @@ private:
     void make_eb_clr_riser();
 
     void make_eb_regular();
+    void make_amr_regular();
 
     // According to Weiqun `fix_up_geometry` is deprecated.
     //void fix_up_geometry(EBFArrayBoxFactory* my_eb_factory, int lev);
@@ -518,8 +523,8 @@ private:
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 
     // stores eb_normals (commond index-space with cells)
-    std::unique_ptr<MultiFab> eb_normals;
-    std::unique_ptr<MultiFab> dummy;
+    Vector< std::unique_ptr<MultiFab> > eb_normals;
+    Vector< std::unique_ptr<MultiFab> > dummy;
 
     // stores level-set (nodal index space corresponding to cells, but n_refinement times finer)
     std::unique_ptr<LSFactory> level_set;

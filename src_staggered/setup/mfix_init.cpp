@@ -174,8 +174,8 @@ mfix::Init(int lev, Real dt, Real time)
     mfix_set_bc_type(lev);
 
     // Allocate container for eb-normals
-    eb_normals = unique_ptr<MultiFab>(new MultiFab);
-    dummy = unique_ptr<MultiFab>(new MultiFab);
+    eb_normals[lev] = std::unique_ptr<MultiFab>(new MultiFab);
+    dummy[lev]      = std::unique_ptr<MultiFab>(new MultiFab);
 
     // Level-Set: initialize container for level set
     // level-set MultiFab is defined here, and set to (fortran) huge(amrex_real)

@@ -42,9 +42,9 @@ mfix::Evolve(int lev, int nstep, int set_normg, int steady_state,  Real& dt, Rea
     if (solve_dem)
     {
         pc->EvolveParticles(lev, nstep, dt, time,
-                            particle_ebfactory[lev].get(), eb_normals.get(),
+                            particle_ebfactory[lev].get(), eb_normals[lev].get(),
                             level_set->get_data(), level_set->get_valid(), level_set->get_ls_ref(),
-                            dummy.get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io
+                            dummy[lev].get(), particle_cost[lev].get(), knapsack_weight_type, subdt_io
 	    );
 
         //  Compute Eulerian velocities in selected regions
