@@ -25,8 +25,8 @@ extern "C"
 
 
     void mfix_deposit_cic_eb(
-        const amrex_particle_real*, int ns, int np, int nc,
-        amrex_real* mf, const int* lo, const int* hi,
+        const amrex_particle_real*, int ns, int np, 
+        amrex_real* vol,          const int* vlo, const int* vhi,
         const amrex_real* vratio, const int* slo, const int* shi,
         const void*        flags, const int* flo, const int* fhi, 
         const amrex_real* plo, const amrex_real* dx,

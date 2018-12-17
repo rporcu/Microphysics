@@ -14,14 +14,15 @@ module mfix_particle_pic_module
 
 contains
 
-   subroutine mfix_deposit_cic_eb ( particles, ns, np, nc, vol, lo, hi, &
+   subroutine mfix_deposit_cic_eb ( particles, ns, np,                  &
+        &                           vol   , vlo, vhi,                   &
         &                           vratio, slo, shi,                   &
         &                           flags,  flo, fhi,                   &
         &                           plo, dx, particle_comp ) bind(C)
 
       real(amrex_particle_real), intent(in   )  :: particles(ns,np)
-      integer, value,            intent(in   )  :: ns, np, nc
-      integer,                   intent(in   )  ::  lo(3),  hi(3)
+      integer, value,            intent(in   )  :: ns, np    
+      integer,                   intent(in   )  :: vlo(3), vhi(3)
       integer,                   intent(in   )  :: slo(3), shi(3)
       integer,                   intent(in   )  :: flo(3), fhi(3)
       
@@ -29,7 +30,7 @@ contains
            &  vratio(slo(1):shi(1), slo(2):shi(2), slo(3):shi(3))
       
       real(amrex_real),          intent(inout)  ::           &
-           &  vol(lo(1):hi(1), lo(2):hi(2), lo(3):hi(3),nc)
+           &  vol(vlo(1):vhi(1), vlo(2):vhi(2), vlo(3):vhi(3))
 
       integer(c_int),             intent(in   ) ::  &
            & flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
@@ -90,7 +91,7 @@ contains
                do ii = -1, 0
                   if (is_covered_cell(flags(i+ii, j+jj, k+kk))) cycle
                   this_cell_volume = vratio(i+ii, j+jj, k+kk) * regular_cell_volume
-                  vol(i+ii, j+jj, k+kk, 1) = vol(i+ii, j+jj, k+kk, 1) + &
+                  vol(i+ii, j+jj, k+kk) = vol(i+ii, j+jj, k+kk) + &
                        &                     weights(ii,jj,kk) * pvol / this_cell_volume
                end do
             end do
@@ -99,9 +100,6 @@ contains
       end do
 
    end subroutine mfix_deposit_cic_eb
-
-   
-
 
    subroutine mfix_multi_deposit_cic_eb (particles, ns, np, mf_x, mf_u, &
         lo, hi, vratio, slo, shi, plo, dx, beta_comp, vel_comp) bind(c)

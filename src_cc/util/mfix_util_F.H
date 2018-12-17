@@ -74,7 +74,10 @@ extern "C"
        const void *     flags,      const int*  flo, const int*  fhi,
        const amrex::Real* x0, const amrex::Real* dx );
 
-
+    void phifill (BL_FORT_FAB_ARG_3D(state),
+                  const int* dlo, const int* dhi,
+                  const amrex_real* dx, const amrex_real* glo,
+                  const amrex_real* time, const int* bc);
 #ifdef __cplusplus
 }
 #endif

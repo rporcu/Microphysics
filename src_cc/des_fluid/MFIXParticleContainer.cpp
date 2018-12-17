@@ -9,13 +9,16 @@
 #include <AMReX_EB_F.H>
 
 #include <AMReX_EBAmrUtil.H>
+#include <AMReX_EBSupport.H>
 #include <AMReX_EBMultiFabUtil.H>
+#include <AMReX_FillPatchUtil.H>
 
 #include <math.h>
 
 #include "mfix_F.H"
 #include "mfix_des_F.H"
 #include "mfix_eb_F.H"
+#include "mfix_util_F.H"
 
 using namespace amrex;
 using namespace std;
@@ -805,24 +808,17 @@ void MFIXParticleContainer::CalcVolumeFraction(const amrex::Vector< std::unique_
                   bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
                   fortran_volume_comp,nghost);
 
-    // Now define this mf = (1 - particle_vol)
-    int nlev = mf_to_be_filled.size();
     for (int lev = 0; lev < nlev; lev++) 
     {    
+        // Now define this mf = (1 - particle_vol)
         mf_to_be_filled[lev]->mult(-1.0,mf_to_be_filled[lev]->nGrow());
         mf_to_be_filled[lev]->plus( 1.0,mf_to_be_filled[lev]->nGrow());
-    }    
 
-    int ref_ratio = 2;
-    for (int lev = nlev-1; lev > 0; lev--) 
-    {    
-         amrex::EB_average_down(*mf_to_be_filled[lev], *mf_to_be_filled[lev-1], 0, 1, ref_ratio);
-    }    
+        EB_set_covered(*mf_to_be_filled[lev],0.0);
 
-    // Impose a lower bound on volume fraction
-    for (int lev = 0; lev < nlev; lev++) 
+        // Impose a lower bound on volume fraction
         CapSolidsVolFrac(*mf_to_be_filled[lev]);
-
+    }    
 }
 
 void MFIXParticleContainer::CalcDragOnFluid(amrex::MultiFab& beta_mf,
@@ -855,52 +851,73 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
     int  nlev = mf_to_be_filled.size();
     int ncomp = 1;
 
-    MultiFab* mf_pointer;
+    MultiFab* mf_pointer[nlev];
 
     // Start the timers ...
     const Real      strttime    = ParallelDescriptor::second();
 
+    if (nlev > 2) 
+      amrex::Abort("For right now MFIXParticleContainer::PICDeposition can only handle up to 2 levels");
+
     for (int lev = 0; lev < nlev; lev++)
     {
-
-       if (OnSameGrids(lev, *mf_to_be_filled[lev])) {
+       if (lev == 0 && OnSameGrids(lev, *mf_to_be_filled[lev])) {
           // If we are already working with the internal mf defined on the
           // particle_box_array, then we just work with this.
-          mf_pointer = mf_to_be_filled[lev].get();
-       }
-       else {
+          mf_pointer[lev] = mf_to_be_filled[lev].get();
+
+       } else if (lev == 0 && !OnSameGrids(lev, *mf_to_be_filled[lev]))  {
           // If mf_to_be_filled is not defined on the particle_box_array, then we need
           // to make a temporary here and copy into mf_to_be_filled at the end.
-          mf_pointer = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                                    ncomp, mf_to_be_filled[lev]->nGrow());
+          mf_pointer[lev] = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                                         ncomp, mf_to_be_filled[lev]->nGrow());
+
+       } else {
+          // If lev > 0 we make a temporary at the coarse resolution
+          BoxArray ba_crse(amrex::coarsen(ParticleBoxArray(lev),this->m_gdb->refRatio(0)));
+          mf_pointer[lev] = new MultiFab(ba_crse, ParticleDistributionMap(lev),
+                                         ncomp, 1);
        }
 
        // We must have ghost cells for each FAB so that a particle in one grid can spread
        // its effect to an adjacent grid by first putting the value into ghost cells of its
        // own grid.  The mf->sumBoundary call then adds the value from one grid's ghost cell
        // to another grid's valid region.
-       if (mf_pointer->nGrow() < 1)
+       if (mf_pointer[lev]->nGrow() < 1)
           amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
-       const Geometry& gm          = Geom(lev);
-       const Real*     plo         = gm.ProbLo();
-       const Real*     dx          = gm.CellSize();
+       mf_pointer[lev]->setVal(0.0,0,1,mf_pointer[lev]->nGrow());
+    }
+
+    // We always use the coarse dx
+    const Geometry& gm          = Geom(0);
+    const Real*     plo         = gm.ProbLo();
+    const Real*     dx          = gm.CellSize();
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-       for (MFIter mfi(*mf_pointer, true); mfi.isValid(); ++mfi) {
-           (*mf_pointer)[mfi].setVal(0);
+    using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
+
+    const FabArray<EBCellFlagFab>* flags;
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
+
+       Vector<int> ngrow = {1,1,1};
+       std::unique_ptr<EBFArrayBoxFactory> crse_factory;
+
+       if (lev == 0) {
+          flags   = &(ebfactory[lev]->getMultiEBCellFlagFab());
+       } else {
+          // std::unique_ptr<EBFArrayBoxFactory> 
+          crse_factory = makeEBFabFactory(
+                 gm, mf_pointer[lev]->boxArray(), mf_pointer[lev]->DistributionMap(),
+                 ngrow, EBSupport::volume);
+          flags   = &(crse_factory->getMultiEBCellFlagFab());
        }
 
-       using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
-
-       // Get particle EB geometric info
-       MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                      1, 0, MFInfo(), *ebfactory[lev]);
-
-       const amrex::MultiFab*                    volfrac;
-       volfrac = &(ebfactory[lev]->getVolFrac());
+       const MultiFab* volfrac = (lev == 0) ? &(ebfactory[lev]->getVolFrac()) : &(crse_factory->getVolFrac());
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -911,7 +928,7 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
             const auto& particles = pti.GetArrayOfStructs();
             int nstride = particles.dataShape().first;
             const long nrp = pti.numParticles();
-            FArrayBox& fab = (*mf_pointer)[pti];
+            FArrayBox& fab = (*mf_pointer[lev])[pti];
             Real* data_ptr;
             const int *lo, *hi;
 #ifdef _OPENMP
@@ -929,20 +946,15 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
             hi = box.hiVect();
 #endif
 
-            // this is to check efficiently if this tile contains any eb stuff
-            const EBFArrayBox&  dummy_fab = static_cast<EBFArrayBox const&>(dummy[pti]);
-            const EBCellFlagFab&    flags = dummy_fab.getEBCellFlagFab();
-
             const Box& bx  = pti.tilebox(); // I need a box without ghosts
 
-            if (flags.getType(bx) != FabType::covered ) {
-                mfix_deposit_cic_eb(particles.data(), nstride, nrp, ncomp, data_ptr,
-                                    lo, hi,
+            if ((*flags)[pti].getType(bx) != FabType::covered ) {
+                mfix_deposit_cic_eb(particles.data(), nstride, nrp, 
+                                    data_ptr, lo, hi,
                                     BL_TO_FORTRAN_ANYD((*volfrac)[pti]),
-                                    BL_TO_FORTRAN_ANYD(flags),
+                                    BL_TO_FORTRAN_ANYD((*flags)[pti]),
                                     plo, dx, &fortran_particle_comp);
             }
-
 
 #ifdef _OPENMP
             amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
@@ -956,30 +968,63 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
        // when BC is pressure inlet and mass inflow.
        Box domain(Geom(lev).Domain());
 
-       for (MFIter mfi(*mf_pointer); mfi.isValid(); ++mfi) {
+       for (MFIter mfi(*mf_pointer[lev]); mfi.isValid(); ++mfi) {
    
-         const Box& sbx = (*mf_pointer)[mfi].box();
+         const Box& sbx = (*mf_pointer[lev])[mfi].box();
    
          flip_particle_vol(sbx.loVect(), sbx.hiVect(),
-                           (*mf_pointer)[mfi].dataPtr(),
+                           (*mf_pointer[lev])[mfi].dataPtr(),
                            (*bc_ilo[lev]).dataPtr(), (*bc_ihi[lev]).dataPtr(),
                            (*bc_jlo[lev]).dataPtr(), (*bc_jhi[lev]).dataPtr(),
                            (*bc_klo[lev]).dataPtr(), (*bc_khi[lev]).dataPtr(),
                            domain.loVect(), domain.hiVect(),
                            &nghost );
        }
-
-       mf_pointer->SumBoundary(gm.periodicity());
-
-       // If mf_to_be_filled is not defined on the particle_box_array, then we need
-       // to copy here from mf_pointer into mf_to_be_filled. I believe that we don't
-       // need any information in ghost cells so we don't copy those.
-       if (mf_pointer != mf_to_be_filled[lev].get()) {
-         mf_to_be_filled[lev]->copy(*mf_pointer,0,0,ncomp);
-         delete mf_pointer;
-       }
-
     }
+
+    int  src_nghost = 1;
+    int dest_nghost = 0;
+    for (int lev = 1; lev < nlev; lev++)
+        mf_pointer[0]->copy(*mf_pointer[lev],0,0,ncomp,src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
+
+    mf_pointer[0]->SumBoundary(gm.periodicity());
+
+    if (nlev > 1)
+    {
+        IntVect ref_ratio(this->m_gdb->refRatio(0));
+
+        // Now interpolate from the coarse grid to define the fine grid ep-g
+        Interpolater* mapper = &cell_cons_interp;
+        int lo_bc[] = {BCType::foextrap, BCType::foextrap, BCType::foextrap};
+        int hi_bc[] = {BCType::foextrap, BCType::foextrap, BCType::foextrap};
+        Vector<BCRec> bcs(1, BCRec(lo_bc, hi_bc));
+
+        BndryFuncArray bfunc(phifill);
+
+        Real time = 0.0;
+        for (int lev = 1; lev < nlev; lev++)
+        {
+            PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
+            PhysBCFunct<BndryFuncArray> fphysbc(Geom(lev  ), bcs, bfunc);
+            mf_to_be_filled[lev]->setVal(0.0);
+            amrex::InterpFromCoarseLevel(*mf_to_be_filled[lev], time, *mf_pointer[lev-1],
+                                         0, 0, 1, Geom(lev-1), Geom(lev),
+                                         cphysbc, 0, fphysbc, 0,
+                                         ref_ratio, mapper,
+                                         bcs, 0);
+        }
+    }
+
+    // If mf_to_be_filled is not defined on the particle_box_array, then we need
+    // to copy here from mf_pointer into mf_to_be_filled. I believe that we don't
+    // need any information in ghost cells so we don't copy those.
+
+    if (mf_pointer[0] != mf_to_be_filled[0].get())  
+       mf_to_be_filled[0]->copy(*mf_pointer[0],0,0,ncomp);
+
+    for (int lev = 0; lev < nlev; lev++)
+       if (mf_pointer[lev] != mf_to_be_filled[lev].get()) 
+          delete mf_pointer[lev];
 
     if (m_verbose > 1) {
       Real stoptime = ParallelDescriptor::second() - strttime;

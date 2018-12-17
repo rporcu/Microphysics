@@ -551,8 +551,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
   {
      // Auto generated particles may be out of the domain. This call will remove
      // them. Note that this has to occur after the EB geometry is created. if
-     // (particle_init_type == "Auto" && !restart_flag &&
-     // particle_ebfactory[finest_level])
+     // (particle_init_type == "Auto" && !restart_flag && particle_ebfactory[finest_level])
 
       if (use_amr_ls) {
           amrex::Print() << "Clean up auto-generated particles.\n" << std::endl;
@@ -572,7 +571,6 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                                    level_set->get_ls_ref());
           }
       }
-
 
      if (!use_amr_ls) {
          for (int lev = 0; lev < nlev; lev++)
@@ -603,21 +601,11 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
      init_collision(avg_dp, avg_ro);
   }
 
-  // Initial fluid arrays: pressure, velocity, density, viscosity
-  amrex::Print() << "CALLING MFIX INIT FLUID " << solve_fluid << std::endl;
-
   if (solve_fluid)
      mfix_init_fluid(restart_flag,dt,stop_time,steady_state);
 
   // Call user-defined subroutine to set constants, check data, etc.
   if (call_udf) mfix_usr0();
-
-  // Calculate the initial volume fraction
-  if (solve_fluid)
-  {
-     mfix_calc_volume_fraction(sum_vol_orig);
-     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
-  }
 }
 
 void
@@ -756,6 +744,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
   {
      // We need to initialize the volume fraction ep_g before the first projection
      mfix_calc_volume_fraction(sum_vol_orig);
+     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
 
      mfix_set_scalar_bcs();
 
@@ -767,7 +756,6 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
      if (initial_iterations > 0)
         mfix_initial_iterations(dt,stop_time,steady_state);
   }
-
 }
 
 void

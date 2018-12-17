@@ -178,7 +178,7 @@ protected:
 
     void RegridLevelSetArray (int a_lev);
 
-    void avgDown (const amrex::MultiFab& S_fine, amrex::MultiFab& S_crse);
+    void avgDown (int crse_lev, const amrex::MultiFab& S_fine, amrex::MultiFab& S_crse);
 
 private:
 

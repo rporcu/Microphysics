@@ -247,7 +247,6 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
        pc->CalcVolumeFraction(ep_g, particle_ebfactory,
                               bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi,
                               nghost);
-
     }
     else
     {
@@ -265,7 +264,9 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
        // This sets the values outside walls or periodic boundaries
        fill_mf_bc(lev,*ep_g[lev]);
        fill_mf_bc(lev,*rop_g[lev]);
+
    }
+
 
     // Sum up all the values of ep_g[lev]
     // HACK  -- THIS SHOULD BE a multilevel sum
@@ -274,12 +275,9 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 }
 
 void
-mfix::avgDown (const MultiFab& S_fine, MultiFab& S_crse)
+mfix::avgDown (int crse_lev, const MultiFab& S_fine, MultiFab& S_crse)
 {
     BL_PROFILE("mfix::avgDown()");
  
-    int ref_ratio = 2;
-
-    amrex::EB_average_down(S_fine, S_crse, 0, S_fine.nComp(), ref_ratio);
+    amrex::EB_average_down(S_fine, S_crse, 0, S_fine.nComp(), refRatio(crse_lev));
 }
-
