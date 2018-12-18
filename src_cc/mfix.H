@@ -502,7 +502,7 @@ private:
     int explicit_diffusion = 1;
 
     bool do_initial_proj    = true;
-    int  initial_iterations = 2;
+    int  initial_iterations = 3;
 
     /****************************************************************************
      *                                                                          *
