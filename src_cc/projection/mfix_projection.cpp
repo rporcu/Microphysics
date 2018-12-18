@@ -47,10 +47,8 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
-    for (int lev = 0; lev < nlev; lev++)
-        vel_g[lev] -> FillBoundary(geom[lev].periodicity());
-
-    // Swap ghost cells and apply BCs to velocity
+    // Swap ghost cells and apply BCs to velocity -- we need to do this to make sure
+    //      that the divergence operator can see inflow values
     mfix_set_velocity_bcs(time, 0);
 
     mfix_compute_diveu(time);
@@ -58,10 +56,13 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     // Print info about predictor step
     for (int lev = 0; lev < nlev; lev++)
     {
-
         amrex::Print() << "AT LEVEL " << lev << " BEFORE PROJECTION: \n";
         mfix_print_max_vel(lev);
         mfix_print_max_gp (lev);
+    }
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
         amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
         
         // Here we add (dt * (1/rho gradp)) to ustar
@@ -145,6 +146,12 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
         }
     }
 
+    for (int lev = nlev-1; lev > 0; lev--)
+    {
+        avgDown (lev-1, *vel_g[lev], *vel_g[lev-1]); 
+        avgDown (lev-1, *   gp[lev],    *gp[lev-1]); 
+    }
+
     // Swap ghost cells and apply BCs to velocity
     mfix_set_velocity_bcs (time, 0);
 
@@ -189,11 +196,6 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
         matrix.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
                              {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
 
-        // It is important that we use the same CoarseningStrategy when 
-        //     we call the divergence as when we solve the Poisson equation
-        //     -- otherwise we will use the wrong mask in getNodalSum when we try to impose solvability
-        //   matrix.setCoarseningStrategy(MLNodeLaplacian::CoarseningStrategy::Sigma);
-
         for (int lev = 0; lev < nlev; lev++)
         {
            matrix.setSigma(lev, *(b[lev][0]));
@@ -213,6 +215,10 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
         solver.setVerbose (mg_verbose);
         solver.setCGVerbose (mg_cg_verbose);
         solver.setCGMaxIter (mg_cg_maxiter);
+
+        // solver.setBottomSolver(MLMG::BottomSolver::bicgstab);
+        // solver.setPreSmooth (20);
+        // solver.setPostSmooth (20);
 
         // 
         // Finally, solve the system
