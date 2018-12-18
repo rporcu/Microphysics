@@ -145,28 +145,32 @@ void mfix::mfix_calc_drag_fluid(Real time)
 
             }
         }
+    } // lev
         
-        // ******************************************************************************
-        // Now use the beta of individual particles to create the drag terms on the fluid
-        // ******************************************************************************
-        drag_ptr  -> setVal(0.0L);
-        f_gds_ptr -> setVal(0.0L);
+    // ******************************************************************************
+    // Now use the beta of individual particles to create the drag terms on the fluid
+    // ******************************************************************************
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       drag[lev] ->setVal(0.0L);
+       f_gds[lev]->setVal(0.0L);
+    }
 
-        pc -> CalcDragOnFluid(*f_gds_ptr, *drag_ptr, *particle_ebfactory[lev],
-                              *bc_ilo[lev],*bc_ihi[lev],*bc_jlo[lev],*bc_jhi[lev],
-                              *bc_klo[lev],*bc_khi[lev],nghost);
+    pc -> CalcDragOnFluid(f_gds, drag, particle_ebfactory,
+                          bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi,
+                          nghost);
 
-
-        if (!OnSameGrids)
-        {
-            // Copy back from the dual grids.
-            drag[lev] ->copy(*drag_pba);
-            f_gds[lev]->copy(*f_gds_pba);
-        }
-
+    for (int lev = 0; lev < nlev; lev++)
+    {
         // The projection method uses drag to update u, not (cell_vol * u), so we must divide by vol here
         //     and we will divide by density in the update.
+
+        Real dx = geom[lev].CellSize(0);
+        Real dy = geom[lev].CellSize(1);
+        Real dz = geom[lev].CellSize(2);
+
         Real ovol = 1./(dx*dy*dz);
+
         drag[lev]->mult(ovol);
         f_gds[lev]->mult(ovol);
 

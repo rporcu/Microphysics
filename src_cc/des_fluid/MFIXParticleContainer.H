@@ -163,21 +163,29 @@ public:
     ///
     /// Calculate particle-induced drag on the fluid
     ///
-    void CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf,
-                         const EBFArrayBoxFactory& ebfactory,
-                         IArrayBox& bc_ilo, IArrayBox& bc_ihi,
-                         IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                         IArrayBox& bc_klo, IArrayBox& bc_khi,
+    void CalcDragOnFluid(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
+                         const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+                         const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
                          int nghost);
 
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-    void PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf,
-                            const EBFArrayBoxFactory& ebfactory,
-                            IArrayBox& bc_ilo, IArrayBox& bc_ihi,
-                            IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                            IArrayBox& bc_klo, IArrayBox& bc_khi,
+    void PICMultiDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
+                            const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+                            const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
                             int fortran_beta_comp, int fortran_vel_comp, int nghost);
     ///
     /// Flag switching from calc_wall_collisions to calc_wall_collisions_ls if true
