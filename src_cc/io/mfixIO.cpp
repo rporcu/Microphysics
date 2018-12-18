@@ -32,8 +32,8 @@ mfix::InitIOData ()
     // Define the list of scalar variables at cell centers that need to be
     // written to plotfile/checkfile. "volfrac" MUST always be last without any
     // mf associated to it!!!
-    pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "vort", "diveu", "level-set", "volfrac"};
-    pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &vort,  &diveu,  &ls};
+    pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "vort", "diveu", "volfrac"};
+    pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &vort,  &diveu};
 
     chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g"};
     chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g};
@@ -712,25 +712,7 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
           // Scalar variables
           int dcomp = vecVarsName.size();
           for( int i = 0; i < pltscalarVars.size(); i++ ) {
-              if (pltscaVarsName[i] == "level-set")
-              {
-                  // Level set lives on nodes, AMRVis doesn't =>  map the nodal
-                  // MultiFab to the cell-centered MultiFab:
-                  // if (ebfactory[lev]) {
-                  // if (solve_dem) {
-                  //     MultiFab phi(amrex::convert(grids[lev], IntVect{1, 1, 1}), dmap[lev], 1, 0);
-                  //     phi.copy(*(*pltscalarVars[i] )[lev].get(), 0, 0, 1);
-                  //     // amrex::average_node_to_cellcenter(* mf[lev], dcomp,
-                  //     //                                   *(*pltscalarVars[i] )[lev].get(),
-                  //     //                                   0, 1);
-                  //     amrex::average_node_to_cellcenter(* mf[lev], dcomp, phi, 0, 1);
-                  // } else {
-                  //     mf[lev]->setVal(0.0,dcomp,1,0);
-                  // }
-
-                       mf[lev]->setVal(0.0,dcomp,1,0);
-
-              } else if (pltscaVarsName[i] == "p_g") {
+              if (pltscaVarsName[i] == "p_g") {
                   if (nodal_pressure) {
                      MultiFab p_nd(p_g[lev]->boxArray(),dmap[lev],1,0);
                      p_nd.setVal(0.);
