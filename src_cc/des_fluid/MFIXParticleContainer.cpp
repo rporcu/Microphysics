@@ -894,9 +894,6 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
     const Real*     plo         = gm.ProbLo();
     const Real*     dx          = gm.CellSize();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
     using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
 
     const FabArray<EBCellFlagFab>* flags;
