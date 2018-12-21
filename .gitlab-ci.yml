@@ -26,6 +26,8 @@ variables:
     - make -j 4
     - cd mfix
     - ctest -R $TEST_REGEX
+  only:
+    - develop
   tags:
     - docker
   retry: 2
