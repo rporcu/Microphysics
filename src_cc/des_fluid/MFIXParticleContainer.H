@@ -101,7 +101,7 @@ public:
 
     void EvolveParticles(int lev, int nstep, Real dt, Real time, EBFArrayBoxFactory * ebfactory,
             MultiFab * eb_normals, const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
-            MultiFab * dummy, MultiFab * cost, std::string & knapsack_weight_type, int subdt_io);
+            MultiFab * cost, std::string & knapsack_weight_type, int subdt_io);
 
     void GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro)[10]);
 
@@ -135,10 +135,14 @@ public:
     ///
     /// Calculate gas volume fraction using a PIC deposition of particle volume
     ///
-    void CalcVolumeFraction(amrex::MultiFab& mf,
-                            IArrayBox& bc_ilo, IArrayBox& bc_ihi,
-                            IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                            IArrayBox& bc_klo, IArrayBox& bc_khi,
+    void CalcVolumeFraction(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & mf,
+                            const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
                             int nghost);
 
     void CapSolidsVolFrac(amrex::MultiFab& eps);
@@ -146,28 +150,42 @@ public:
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction
     ///
-    void PICDeposition(amrex::MultiFab& mf,
-                       IArrayBox& bc_ilo, IArrayBox& bc_ihi,
-                       IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                       IArrayBox& bc_klo, IArrayBox& bc_khi,
+    void PICDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & mf,
+                       const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
+                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
                        int fortran_particle_comp, int nghost);
 
     ///
     /// Calculate particle-induced drag on the fluid
     ///
-    void CalcDragOnFluid(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf, 
-                         IArrayBox& bc_ilo, IArrayBox& bc_ihi,
-                         IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                         IArrayBox& bc_klo, IArrayBox& bc_khi,
+    void CalcDragOnFluid(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
+                         const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+                         const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
+                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
                          int nghost);
 
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-    void PICMultiDeposition(amrex::MultiFab& beta_mf, amrex::MultiFab& beta_vel_mf, 
-                            IArrayBox& bc_ilo, IArrayBox& bc_ihi,
-                            IArrayBox& bc_jlo, IArrayBox& bc_jhi,
-                            IArrayBox& bc_klo, IArrayBox& bc_khi,
+    void PICMultiDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
+                            const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+                            const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
+                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
                             int fortran_beta_comp, int fortran_vel_comp, int nghost);
     ///
     /// Flag switching from calc_wall_collisions to calc_wall_collisions_ls if true

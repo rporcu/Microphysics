@@ -5,6 +5,7 @@
 #     - build/
 
 # image: mfixexa
+image: mwm126/mfix-ctest
 
 variables:
   CC: "gcc"
@@ -18,7 +19,7 @@ variables:
 
 .test: &test_template
   script:
-    - module purge; module load $MODULES
+    # - module purge; module load $MODULES
     - mkdir build
     - cd build
     - env F77=$FC F90=$FC cmake -DAMREX_ENABLE_MPI=$ENABLE_MPI -DAMREX_ENABLE_OMP=$ENABLE_OMP ..
@@ -26,7 +27,7 @@ variables:
     - cd mfix
     - ctest -R $TEST_REGEX
   tags:
-    - joule
+    - docker
   retry: 2
 
 
@@ -40,7 +41,7 @@ multiple-grid-serial:
     TEST_REGEX: "MGS"
   <<: *test_template
 
-multiple-grid-parallel:
+.multiple-grid-parallel:
   variables:
     CC: "mpicc"
     CXX: "mpic++"

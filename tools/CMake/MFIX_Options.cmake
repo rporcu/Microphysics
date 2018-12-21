@@ -34,13 +34,17 @@ else ()
    set ( CMAKE_BUILD_TYPE "Release" )
 endif ()
 
-string ( TOUPPER ${CMAKE_BUILD_TYPE} MFIX_BUILD_TYPE )  
+string ( TOUPPER ${CMAKE_BUILD_TYPE} MFIX_BUILD_TYPE )
 
-option ( ENABLE_FPE "Enable Floating Point Exceptions checks" OFF )
+option( ENABLE_OMP "Enable OpenMP" NO )
 
-option ( ENABLE_PROJCC "Enable Approximate Projection" OFF)
+option( ENABLE_MPI "Enable MPI" YES )
 
-option ( ENABLE_PTESTS "Include tests for projection method in Ctest suite " OFF )
+option( ENABLE_FPE "Enable Floating Point Exceptions checks" NO )
 
-option ( ENABLE_STESTS "Include tests for SIMPLE method in Ctest suite " ON )
+option( ENABLE_PROJCC "Enable Approximate Projection" YES )
+
+option( ENABLE_PTESTS "Include tests for projection method in Ctest suite " NO )
+
+option( ENABLE_STESTS "Include tests for SIMPLE method in Ctest suite " YES )
 

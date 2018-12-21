@@ -13,6 +13,8 @@ mfix::mfix_compute_dt(Real time, Real stop_time, int steady_state, Real& dt)
     Real wmax = -1.e20;
     Real romin = 1.e20;
     Real mumax = 0.0;
+
+    Real ope = 1.0 + 1.e-8;
     
     // We only compute gp0max on the coarset level because it is the same at all levels
     Real gp0max[3];
@@ -23,20 +25,23 @@ mfix::mfix_compute_dt(Real time, Real stop_time, int steady_state, Real& dt)
     for (int lev = 0; lev < nlev; lev++)
     {
        // Compute dt for this time step
-       umax  = max(umax,mfix_norm0 ( vel_g, lev, 0 ));
-       vmax  = max(vmax,mfix_norm0 ( vel_g, lev, 1 ));
-       wmax  = max(wmax,mfix_norm0 ( vel_g, lev, 2 ));
-       romin = min(romin,mfix_norm0( rop_g, lev, 0 ));
-       mumax = max(mumax,mfix_norm0( mu_g,  lev, 0 ));
+       umax  = amrex::max(umax,mfix_norm0 ( vel_g, lev, 0 ));
+       vmax  = amrex::max(vmax,mfix_norm0 ( vel_g, lev, 1 ));
+       wmax  = amrex::max(wmax,mfix_norm0 ( vel_g, lev, 2 ));
+       romin = amrex::min(romin,mfix_norm0( rop_g, lev, 0 ));
+       mumax = amrex::max(mumax,mfix_norm0( mu_g,  lev, 0 ));
     }
 
     compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax, 
                      gp0max, geom[finest_level].CellSize(), &cfl, 
                      &steady_state, &time, &stop_time, &dt_new);
 
+    // dt_new is the step calculated with a cfl contraint; dt is the value set by fixed_dt
+    // When the test was on dt > dt_new, there were cases where they were effectively equal 
+    //   but (dt > dt_new) was being set to true due to precision issues.
     if ( fixed_dt )
     {
-        if ( dt_new < dt && cfl > 0)
+        if ( dt > dt_new*ope && cfl > 0)
         {
             amrex::Print() << "WARNING: fixed dt does not satisfy CFL condition: "
                            << " fixed dt = "  << dt
@@ -47,7 +52,7 @@ mfix::mfix_compute_dt(Real time, Real stop_time, int steady_state, Real& dt)
     }
     else
     {
-        dt = min( dt_new, dt_max );
+        dt = amrex::min( dt_new, dt_max );
 
         if ( dt < dt_min )
             amrex::Abort ("Current dt is smaller than dt_min");

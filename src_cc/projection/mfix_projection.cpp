@@ -47,10 +47,8 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
-    for (int lev = 0; lev < nlev; lev++)
-        vel_g[lev] -> FillBoundary(geom[lev].periodicity());
-
-    // Swap ghost cells and apply BCs to velocity
+    // Swap ghost cells and apply BCs to velocity -- we need to do this to make sure
+    //      that the divergence operator can see inflow values
     mfix_set_velocity_bcs(time, 0);
 
     mfix_compute_diveu(time);
@@ -60,9 +58,14 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     {
         amrex::Print() << "AT LEVEL " << lev << " BEFORE PROJECTION: \n";
         mfix_print_max_vel(lev);
+        mfix_print_max_gp (lev);
+    }
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
         amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
         
-        // Here we add the (1/rho gradp) back to ustar (note the +dt)
+        // Here we add (dt * (1/rho gradp)) to ustar
         if (proj_2)
         {
             // Convert velocities to momenta
@@ -81,15 +84,15 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     mfix_set_velocity_bcs (time, 0);
 
     // Compute right hand side, AKA div(ep_g* u) / dt
+
     mfix_compute_diveu(time);
 
     for (int lev = 0; lev < nlev; lev++)
-    {
-        diveu[lev] -> mult(1.0/scaling_factor, diveu[lev]->nGrow() );
-       
-        // Initialize phi to zero (any non-zero bc's are stored in p0)
+       amrex::Print() << "At level " << lev << ": max(abs(dive(u+gp/rho))) = " << mfix_norm0(diveu, lev, 0) << "\n";
+
+    // Initialize phi to zero (any non-zero bc's are stored in p0)
+    for (int lev = 0; lev < nlev; lev++)
         phi[lev] -> setVal(0.);
-    }
 
     // Compute the PPE coefficients = (ep_g / rho) 
     mfix_compute_bcoeff_ppe( );
@@ -112,27 +115,22 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
  
     for (int lev = 0; lev < nlev; lev++)
     {
-        // The fluxes currently hold MINUS (ep_g/rho) * grad(phi) so we divide by ep_g
+        // The fluxes currently hold MINUS (dt) * (ep_g/rho) * grad(phi) so we divide by ep_g
         MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 0, 1, 0 );
         MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 1, 1, 0 );
         MultiFab::Divide( *fluxes[lev], *ep_g[lev], 0, 2, 1, 0 );
 
-        //
-        // NOTE: THE SIGN OF DT (scaling_factor) IS CORRECT HERE
-        //
-        amrex::Print() << "Multiplying fluxes at level " << lev << " by dt " << scaling_factor << std::endl;
-
-        // The fluxes currently hold MINUS (1/rho) * grad(phi) so we multiply by dt
-        fluxes[lev]->mult( scaling_factor, fluxes[lev]->nGrow() );
-
-        // Now we correct the velocity with MINUS dt * (1/rho) * grad(phi),
+        // Now we correct the velocity with MINUS (dt) * (1/rho) * grad(phi),
         MultiFab::Add( *vel_g[lev], *fluxes[lev], 0, 0, 3, 0);
 
-        // The fluxes currently hold MINUS dt * (1/rho) * grad(phi), 
+        // The fluxes currently hold MINUS (dt) * (1/rho) * grad(phi), 
         // so now we multiply by rho and divide by (-dt) to get grad(phi)
         fluxes[lev]->mult ( -1/scaling_factor, fluxes[lev]->nGrow() );
         for (int n = 0; n < 3; n++)
             MultiFab::Multiply(*fluxes[lev],(*ro_g[lev]),0,n,1,fluxes[lev]->nGrow());
+
+        // phi currently holds (dt) * phi so we divide by (dt) to get (phi)
+        phi[lev]->mult ( 1/scaling_factor, phi[lev]->nGrow() );
 
         if (proj_2)
         {
@@ -148,6 +146,12 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
         }
     }
 
+    for (int lev = nlev-1; lev > 0; lev--)
+    {
+        avgDown (lev-1, *vel_g[lev], *vel_g[lev-1]); 
+        avgDown (lev-1, *   gp[lev],    *gp[lev-1]); 
+    }
+
     // Swap ghost cells and apply BCs to velocity
     mfix_set_velocity_bcs (time, 0);
 
@@ -155,9 +159,9 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        // Print info about predictor step
         amrex::Print() << "AT LEVEL " << lev << " AFTER PROJECTION: \n";
         mfix_print_max_vel(lev);
+        mfix_print_max_gp (lev);
         amrex::Print() << "max(abs(diveu)) = " <<  mfix_norm0(diveu, lev, 0) << "\n";
     }
 }
@@ -185,18 +189,16 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
         //        (del dot b sigma grad)) phi
         //
         LPInfo                       info;
-        MLNodeLaplacian              matrix(geom, grids, dmap, info);
+        MLNodeLaplacian              matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
 
         matrix.setGaussSeidel(true);
         matrix.setHarmonicAverage(false);
         matrix.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
                              {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
 
-        matrix.setCoarseningStrategy(MLNodeLaplacian::CoarseningStrategy::Sigma);
-
         for (int lev = 0; lev < nlev; lev++)
         {
-           matrix.setSigma(0, *(b[lev][0]));
+           matrix.setSigma(lev, *(b[lev][0]));
 
            // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
            this_phi[lev]->setVal(0.);
@@ -213,6 +215,10 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
         solver.setVerbose (mg_verbose);
         solver.setCGVerbose (mg_cg_verbose);
         solver.setCGMaxIter (mg_cg_maxiter);
+
+        // solver.setBottomSolver(MLMG::BottomSolver::bicgstab);
+        // solver.setPreSmooth (20);
+        // solver.setPostSmooth (20);
 
         // 
         // Finally, solve the system

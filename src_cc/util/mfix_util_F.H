@@ -65,6 +65,19 @@ extern "C"
         const int* ng, const int* extrap_dir_bcs
        );
 
+       
+   void reconstruct_velocity (
+       amrex::Real* vel_out,        const int* volo, const int* vohi,
+       const amrex::Real* vel_in,   const int* vilo, const int* vihi, 
+       const amrex::Real* phi,      const int* phlo, const int* phhi,
+       const int n_refine, 
+       const void *     flags,      const int*  flo, const int*  fhi,
+       const amrex::Real* x0, const amrex::Real* dx );
+
+    void phifill (BL_FORT_FAB_ARG_3D(state),
+                  const int* dlo, const int* dhi,
+                  const amrex_real* dx, const amrex_real* glo,
+                  const amrex_real* time, const int* bc);
 #ifdef __cplusplus
 }
 #endif

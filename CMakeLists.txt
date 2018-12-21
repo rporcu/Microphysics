@@ -59,6 +59,15 @@ if ( NOT ( AMREX_ENABLE_PARTICLES AND AMREX_ENABLE_AMRDATA
    message ( FATAL_ERROR "AMReX installation missing required components!")
 endif ()
 
+if (ENABLE_OMP AND (NOT AMREX_ENABLE_OMP) )
+   message(FATAL_ERROR "Option ENABLE_OMP requires AMReX to be built with OpenMP support")
+endif ()
+
+if (ENABLE_MPI AND (NOT AMREX_ENABLE_MPI) )
+   message(FATAL_ERROR "Option ENABLE_MPI requires AMReX to be built with MPI support")
+endif ()
+
+
 if ( NOT ( "${MFIX_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
    message (WARNING "MFIX build type (${MFIX_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
 endif ()

@@ -1,5 +1,6 @@
 f90EXE_sources += calc_drag.f90
 f90EXE_sources += construct_gradp.f90
+f90EXE_sources += flip_particle_vol.f90
 f90EXE_sources += particle_pic.f90
 f90EXE_sources += set_drag_bcs.f90
 

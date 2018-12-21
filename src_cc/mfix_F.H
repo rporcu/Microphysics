@@ -103,15 +103,6 @@ extern "C"
                 const int* ng, const int* nodal_pressure
        );
 
-    void set_velocity_bcs (
-        amrex::Real* vel_g, const int* ulo, const int* uhi,
-	const int* bc_ilo, const int* bc_ihi,
-	const int* bc_jlo, const int* bc_jhi,
-	const int* bc_klo, const int* bc_khi,
-	const int* domlo , const int* domhi,
-        const int* ng, const int* extrap_dir_bcs
-       );
-
     void set_vec_bcs (
         amrex::Real* vec, const int* ulo, const int* uhi,
 	const int* bc_ilo, const int* bc_ihi,
@@ -147,32 +138,6 @@ extern "C"
         const int*  np, void* particles,
         amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
         amrex::Real* ep_g 
-        );
-
-    void mfix_deposit_cic(const amrex_particle_real*, int ns, int np, int nc,
-                          amrex_real* mf, const int* lo, const int* hi,
-                          const amrex_real* plo, const amrex_real* dx,
-                          const int* fortran_comp
-        );
-
-    void calc_particle_beta(
-       const int* slo, const int* shi,
-       amrex::Real*  ep_g, amrex::Real* ro_g,
-       amrex::Real* vel_g, amrex::Real* mu_g,
-       amrex::Real* xsl,   amrex::Real*  ysl, amrex::Real* zsl,
-       const int* np, void* particles,
-       const amrex::Real* x0, const amrex::Real* dx,
-       const int interp_type 
-        );
-
-    void calc_drag_particle(  
-            const amrex::Real* gp , const int* gplo , const int* gphi,
-            const amrex::Real* gp0, const int* gp0lo, const int* gp0hi,
-            const amrex::Real* vel, const int* ulo, const int* uhi,
-            const amrex::Real* xsl, const amrex::Real* ysl, 
-            const amrex::Real* zsl, const int* slo, const int* shi,
-            const int* np, void* particles, const amrex::Real* dx, 
-            const amrex::Real* x0, int interp_type
         );
 
     void physical_prop(const int* slo, const int* shi,

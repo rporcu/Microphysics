@@ -54,11 +54,11 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 | CMAKE_CXX_FLAGS              | User-defined C++ flags for MFIX build              | valid C++ compiler flags     |   None              |
 | AMREX_Fortran_FLAGS          | User-defined Fortran flags  for AMReX build        | valid F90 compiler flags     |   None              |
 | AMREX_CXX_FLAGS              | User-defined C++ flags for AMReX build             | valid C++ compiler flags     |   None              |
+| ENABLE_MPI                   | Enable build with MPI                              |   0/1                        |   1                 |
+| ENABLE_OMP                   | Enable build with OpenMP                           |   0/1                        |   0                 |
 | ENABLE_FPE                   | Build with Floating-Point Exceptions checks        |   0/1                        |   0                 |
 | ENABLE_PTESTS                | Include tests for projection method in Ctest suite |   0/1                        |   0                 |
 | ENABLE_STESTS                | Include tests for SIMPLE method in Ctest suite     |   0/1                        |   1                 |
-| AMREX_ENABLE_MPI             | Enable build with MPI                              |   0/1                        |   1                 |
-| AMREX_ENABLE_OMP             | Enable build with OpenMP                           |   0/1                        |   0                 |
 | AMREX_ENABLE_DP              | Enable double precision                            |   0/1                        |   1                 |
 | AMREX_ENABLE_DP_PARTICLES    | Enable double precision in particles classes       |   0/1                        |   1                 |
 | AMREX_ENABLE_BASE_PROFILE    | Include profiling info                             |   0/1                        |   0                 |
@@ -93,7 +93,7 @@ Clone AMReX from the official Git repository and checkout the _development_ bran
 ```
 Next, configure, build and install AMReX as follows: 
 ```shell
-> cmake AMREX_CONFIG_OPTIONS -DENABLE_PARTICLES=1 -DENABLE_AMRDATA=1 -DENABLE_EB=1 -DCMAKE_INSTALL_PREFIX:PATH=/absolute/path/to/installdir .
+> cmake AMREX_CONFIG_OPTIONS -DENABLE_PARTICLES=1 -DENABLE_AMRDATA=1 -DENABLE_EB=1 -DENABLE_3D_NODAL_MLMG=1 -DCMAKE_INSTALL_PREFIX:PATH=/absolute/path/to/installdir .
 > make install
 ```
 Here,`AMREX_CONFIG_OPTIONS` are optional configure options for AMReX. Please refer to the AMReX user guide

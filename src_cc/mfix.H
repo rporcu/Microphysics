@@ -11,23 +11,21 @@
 #include <AMReX_AmrCore.H>
 #include <AMReX_iMultiFab.H>
 #include <AMReX_BLProfiler.H>
-
-#include <MFIXParticleContainer.H>
+#include <AMReX_PhysBCFunct.H>
 
 #include <AMReX_EBFabFactory.H>
-
 #include <AMReX_EBFArrayBox.H>
-
 #include <AMReX_EB2.H>
 #include <AMReX_EB2_IF_Plane.H>
 #include <AMReX_EB2_IF_Polynomial.H>
 #include <AMReX_EB2_IF_Translation.H>
 #include <AMReX_EB2_IF_Intersection.H>
-#include <mfix_eb_if.H>
-
 #include <AMReX_EB_levelset.H>
+#include <AMReX_EB_LSCoreBase.H>
 
+#include <MFIXParticleContainer.H>
 #include <MacProjection.H>
+#include <mfix_eb_if.H>
 
 class mfix
     : public AmrCore
@@ -75,6 +73,8 @@ public:
     void make_mg_bc(int mg_bc[]);
 
     void make_eb_geometry ();
+    void make_amr_geometry ();
+
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(bool & has_walls);
 
@@ -112,6 +112,16 @@ public:
     int levelset__pad = 2;           // padding of the level-set grid
     int levelset__eb_pad = 2;        // padding of the EBIS used to generate the level-set (useful for
                                      // ensuring that neighbor grids are considered when filling LS)
+
+     const int* get_bc_ilo_ptr(int lev) {return bc_ilo[lev]->dataPtr();}
+     const int* get_bc_ihi_ptr(int lev) {return bc_ihi[lev]->dataPtr();}
+     const int* get_bc_jlo_ptr(int lev) {return bc_jlo[lev]->dataPtr();}
+     const int* get_bc_jhi_ptr(int lev) {return bc_jhi[lev]->dataPtr();}
+     const int* get_bc_klo_ptr(int lev) {return bc_klo[lev]->dataPtr();}
+     const int* get_bc_khi_ptr(int lev) {return bc_khi[lev]->dataPtr();}
+
+     int get_nghost() { return nghost; }
+
 protected:
 
     //! Tagging cells for refinement
@@ -153,7 +163,10 @@ protected:
     void mfix_set_scalar_bcs ();
     void mfix_set_velocity_bcs (amrex::Real time, int extrap_dir_bcs);
 
-    void FillPatch (int lev, MultiFab& mf, MultiFab& cmf, MultiFab& fmf, int icomp, int ncomp);
+    void FillPatchVel (int lev, amrex::Real time, MultiFab& mf, int icomp, int ncomp,
+                       const Vector<BCRec>& bcr);
+    void GetDataVel   (int lev, amrex::Real time, amrex::Vector<amrex::MultiFab*>& data,
+                       amrex::Vector<amrex::Real>& datatime);
 
     void mfix_calc_volume_fraction(Real& sum_vol);
     void mfix_calc_drag_fluid(amrex::Real time);
@@ -163,29 +176,48 @@ protected:
 
     void RegridArrays (int lev);
 
+    void RegridLevelSetArray (int a_lev);
+
+    void avgDown (int crse_lev, const amrex::MultiFab& S_fine, amrex::MultiFab& S_crse);
+
 private:
 
-    void make_eb_general  ();
-    void make_eb_box      ();
-    void make_eb_cylinder ();
-    void make_eb_hopper   ();
-    void make_eb_cyclone  ();
+    void make_eb_general();
+    void make_amr_general();
+
+    void make_eb_box();
+    void make_amr_box();
+
+    void make_eb_cylinder();
+    void make_amr_cylinder();
+
+    void make_eb_hopper();
+    void make_amr_hopper();
+
+    void make_eb_cyclone();
+    void make_amr_cyclone();
+
     void make_eb_hourglass();
-    void make_eb_clr      ();
+
+    void make_eb_clr();
+
     void make_eb_clr_riser();
-    void make_eb_regular  ();
+
+    void make_eb_regular();
+    void make_amr_regular();
 
     void MakeBCArrays();
 
     void check_data();
 
-    void MakeNewLevelFromScratch(int lev, Real time,
-            const BoxArray& new_grids, const DistributionMapping& new_dmap) override;
+    void MakeNewLevelFromScratch(int lev, Real time, const BoxArray& new_grids,
+                                 const DistributionMapping& new_dmap) override;
 
-    void ReMakeNewLevelFromScratch(int lev,
-            const BoxArray& new_grids, const DistributionMapping& new_dmap);
+    void ReMakeNewLevelFromScratch(int lev,const BoxArray& new_grids,
+                                   const DistributionMapping& new_dmap);
 
-    void WriteHeader(const std::string& name, int nstep, Real dt, Real time, bool is_checkpoint) const;
+    void WriteHeader(const std::string & name, int nstep, Real dt, Real time,
+                     bool is_checkpoint) const;
     void WritePlotHeader(const std::string& name, int nstep, Real dt, Real time) const;
     void WriteCheckHeader(const std::string& name, int nstep, Real dt, Real time) const;
 
@@ -224,7 +256,8 @@ private:
                                        Vector< std::unique_ptr<MultiFab> >& vel,
                                        amrex::Real time);
 
-    void mfix_compute_divtau(int lev, amrex::MultiFab& divtau, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_compute_divtau(int lev, amrex::MultiFab& divtau,
+                             Vector< std::unique_ptr<MultiFab> >& vel);
 
     int  steady_state_reached(Real dt);
 
@@ -237,17 +270,23 @@ private:
 
     void mfix_diffuse_velocity(amrex::Real time, amrex::Real dt);
 
-    void mfix_add_drag_terms (amrex::Real dt);
+    void mfix_add_drag_terms(amrex::Real dt);
 
-    void mfix_add_gravity            (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_add_gravity(int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel);
+#if 0
     void mfix_compute_velocity_slopes(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
-    void mfix_compute_velocity_at_faces (int lev, Vector< std::unique_ptr<MultiFab> >& vel);
+    void mfix_compute_velocity_at_faces(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
+#endif
 
-    void mfix_compute_diveu (amrex::Real time);
+    void mfix_compute_velocity_slopes(int lev, amrex::Real time, MultiFab& vel);
+    void mfix_compute_MAC_velocity_at_faces(amrex::Real time, Vector< std::unique_ptr<MultiFab> >& vel);
 
-    void mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p);
+    void mfix_compute_diveu(amrex::Real time);
+
+    void mfix_extrap_pressure(int lev, std::unique_ptr<amrex::MultiFab>& p);
 
     void mfix_print_max_vel(int lev);
+    void mfix_print_max_gp (int lev);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids() const;
@@ -337,7 +376,8 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag;
     Vector< std::unique_ptr<MultiFab> > f_gds;
 
-    // Level-Set Data
+    // Level-Set Data => used for fluid reconstruction in particle drag
+    // calculation
     Vector< std::unique_ptr<MultiFab> > ls;
 
     // These are multi-component multifabs
@@ -387,6 +427,9 @@ private:
     int solve_fluid;
     int solve_dem;
 
+    // Options to control mfix verbosity level
+    int m_verbose = 0;
+
     // Options to control MLMG behavior
     int  mg_verbose = 0;
     int  mg_cg_verbose = 0;
@@ -405,9 +448,12 @@ private:
     // enable output_manager during des_time_loop
     bool subdt_io;
 
+    // Parameters to control load balancing
     static std::string particle_init_type;
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
+    static int load_balance_fluid;
+    static int knapsack_nmax;
 
     // Options to control time stepping
     Real cfl = 0.5;
@@ -437,10 +483,6 @@ private:
     vector<Real> avg_region_z_b;
     vector<Real> avg_region_z_t;
 
-    // Option to control interpolation type
-    int m_drag_interp_type = 1; // 0 -> no interp, 1 -> standard interp, 2 -> slope interp 
-    int m_beta_interp_type = 1; // 0 -> no interp, 1 -> standard interp, 2 -> slope interp
-    
     //
     // Here we set the number of ghost nodes of the field arrays.
     // Since this is  a class attribute, it will be propagated to
@@ -456,9 +498,17 @@ private:
     const int m_eb_volume_grow_cells = nghost;
     const int m_eb_full_grow_cells = nghost;
 
-
-    int nodal_pressure = 0;
+    int nodal_pressure = 1;
     int explicit_diffusion = 1;
+
+    bool do_initial_proj    = true;
+    int  initial_iterations = 3;
+
+    /****************************************************************************
+     *                                                                          *
+     * I/O stuff                                                                *
+     *                                                                          *
+     ***************************************************************************/
 
     // Variables to simplify IO -- the vectors are the same for plt/chk
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
@@ -470,12 +520,25 @@ private:
     Vector< const Vector< std::unique_ptr<MultiFab> >* > pltscalarVars;
     Vector< std::string > chkscaVarsName;
 
+    /****************************************************************************
+     *                                                                          *
+     * Used for fillpatching ...                                                *
+     *                                                                          *
+     ***************************************************************************/
+
+     Vector<Real> t_old;
+     Vector<Real> t_new;
+
+     amrex::Vector<BCRec> bcs_u; // For velocity components
+     amrex::Vector<BCRec> bcs_s; // For scalars
+     amrex::Vector<BCRec> bcs_f; // For generic first-order extrapolation
+
 
     /****************************************************************************
      *                                                                          *
      * EB Data (including level-set data)                                       *
      *                                                                          *
-     ****************************************************************************/
+     ***************************************************************************/
 
     const EB2::Level * eb_level_fluid;
     const EB2::Level * eb_level_particles;
@@ -484,14 +547,43 @@ private:
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 
     // stores eb_normals (commond index-space with cells)
-    std::unique_ptr<MultiFab> eb_normals;
-    std::unique_ptr<MultiFab> dummy;
+    Vector< std::unique_ptr<MultiFab> > eb_normals;
+    Vector< std::unique_ptr<MultiFab> > dummy;
 
     // stores level-set (nodal index space corresponding to cells, but n_refinement times finer)
     std::unique_ptr<LSFactory> level_set;
 
+    // points to the AMR level-set
+    std::unique_ptr<LSCoreBase> amr_level_set;
 
-    void mfix_update_ebfactory (int a_lev);
+    //
+    // Parameters describing the AMR level-set
+    //
+
+    bool use_amr_ls   = false;
+
+    // How much coarser should the zeroth-level of the level-set be? This is
+    // needed because the coarse level is used to describe the approximate
+    // level-set far from any boundaries.
+    int amr_ls_crse = 1;
+    // The max search-radius (ghost cells) over which to look for eb-facets
+    int amr_ls_eb_pad     = 4;
+    int amr_ls_max_eb_pad = 4;
+    // The base-line refinement value. This is a fiddly one: it needs to be
+    // small enough so that all eb facets are picked up but also not too small
+    // which would make the amr_ls data structure overly refined.
+    Real amr_ls_baseline_tag = 1.e-4;
+    // Level-set refinement tagging step size. Also a bit fiddly: this sets the
+    // steps (from the baseline tag) which are used to refine the AMR level-set
+    Real amr_ls_tag_step     = 1.e-5;
+
+    // Max level in AMR level-set
+    int amr_ls_max_level = 0;
+
+    // Max level at which to solve the fluid equations
+    int amr_max_level = 0;
+
+    bool mfix_update_ebfactory (int a_lev);
 
 };
 

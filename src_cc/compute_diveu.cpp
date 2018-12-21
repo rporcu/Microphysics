@@ -19,13 +19,12 @@
 void
 mfix::mfix_compute_diveu (Real time)
 {
+    // Note that the solver imposes the boundary conditions with the right scalings so we don't 
+    //      fill any ghost cells here.
     if (nodal_pressure == 1)
     {
         Vector<std::unique_ptr<MultiFab> > epu;
         epu.resize(nlev);
-
-        int extrap_dir_bcs = 0;
-        mfix_set_velocity_bcs (time, extrap_dir_bcs);
 
         for (int lev = 0; lev < nlev; lev++)
         {
@@ -43,14 +42,16 @@ mfix::mfix_compute_diveu (Real time)
             for (int n = 0; n < 3; n++)
                 MultiFab::Multiply( *epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow() );
 
-            epu[lev]->FillBoundary (geom[lev].periodicity());     
+
+            epu[lev]->FillBoundary (geom[lev].periodicity());
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-           // Extrapolate Dirichlet values to ghost cells -- but do it differently in that 
-           //  no-slip walls are treated exactly like slip walls -- this is only relevant
-           //  when going into the projection
+           // Extrapolate Dirichlet values to ghost cells -- but do it differently in that
+           //  no-slip walls are treated exactly like slip walls -- 
+           // Note that this routine is essential to impose the correct inflow bc's on 
+           //  the product ep_g * vel_g 
            for (MFIter mfi((*epu[lev]), true); mfi.isValid(); ++mfi)
            {
                 set_vec_bcs ( BL_TO_FORTRAN_ANYD((*epu[lev])[mfi]),
@@ -62,14 +63,14 @@ mfix::mfix_compute_diveu (Real time)
            }
 
            epu[lev]->FillBoundary (geom[lev].periodicity());
-       }
+        }
 
         // Define the operator in order to compute the multi-level divergence
         //
         //        (del dot b sigma grad)) phi
         //
         LPInfo                       info;
-        MLNodeLaplacian              matrix(geom, grids, dmap, info);
+        MLNodeLaplacian              matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
 
         // Set domain BCs for Poisson's solver
         // The domain BCs refer to level 0 only
@@ -87,7 +88,6 @@ mfix::mfix_compute_diveu (Real time)
                              {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
 
         matrix.compDivergence(GetVecOfPtrs(diveu), GetVecOfPtrs(epu)); 
-
     }
     else
     {

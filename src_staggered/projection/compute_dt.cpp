@@ -47,7 +47,7 @@ mfix::mfix_compute_dt(int lev, Real time, Real stop_time, int steady_state, Real
     }
     else
     {	    
-	dt = min( dt_new, dt_max );
+	dt = amrex::min( dt_new, dt_max );
 
 	if ( dt < dt_min )
 	    amrex::Abort ("Current dt is smaller than dt_min");
