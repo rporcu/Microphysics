@@ -25,6 +25,8 @@ mfix.mg_verbose         = 1
 mfix.mg_rtol            = 1.e-6
 mfix.bottom_solver_type = "smoother"
 
+amr.blocking_factor = 1
+
 #_______________________________________________________________________
 # Geometry / grids / tiles
 
