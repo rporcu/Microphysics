@@ -17,6 +17,12 @@ mfix.use_mac_proj       = true
 
 mfix.particle_init_type = "Auto"
 
+amr.blocking_factor = 2
+
+mfix.mg_verbose = 2
+mfix.mg_atol    = 1.e-12
+mfix.mg_rtol    = 1.e-8
+
 #_______________________________________________________________________
 # Geometry / grids / tiles
 
