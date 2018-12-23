@@ -811,7 +811,9 @@ void MFIXParticleContainer::CalcVolumeFraction(const amrex::Vector< std::unique_
         mf_to_be_filled[lev]->mult(-1.0,mf_to_be_filled[lev]->nGrow());
         mf_to_be_filled[lev]->plus( 1.0,mf_to_be_filled[lev]->nGrow());
 
-        EB_set_covered(*mf_to_be_filled[lev],0.0);
+        // We set ep_g to 1 rather than 0 in covered cells so that when we divide by ep_g 
+        //    following the projection we don't have to protect against divide by 0.
+        EB_set_covered(*mf_to_be_filled[lev],1.0);
 
         // Impose a lower bound on volume fraction
         CapSolidsVolFrac(*mf_to_be_filled[lev]);
@@ -1049,7 +1051,8 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
     if (nlev > 2)
       amrex::Abort("For right now MFIXParticleContainer::PICMultiDeposition can only handle up to 2 levels");
 
-    AMREX_ASSERT(OnSameGrids(lev,beta_mf)==OnSameGrids(lev,beta_vel_mf));
+    for (int lev = 0; lev < nlev; lev++)
+       AMREX_ASSERT(OnSameGrids(lev,*beta_mf[lev])==OnSameGrids(lev,*beta_vel_mf[lev]));
 
     MultiFab*  beta_ptr[nlev];
     MultiFab*  beta_vel_ptr[nlev];
