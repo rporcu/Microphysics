@@ -26,6 +26,8 @@ mfix.mg_verbose         = 0
 mfix.mg_rtol            = 1.e-10
 mfix.bottom_solver_type = "bicg"
 
+amr.blocking_factor = 1
+
 #_______________________________________________________________________
 # Geometry / grids / tiles
 
