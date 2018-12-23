@@ -17,6 +17,8 @@ mfix.use_mac_proj       = true
 
 mfix.particle_init_type = "Auto"
 
+amr.blocking_factor = 1
+
 #_______________________________________________________________________
 # Geometry / grids / tiles
 
