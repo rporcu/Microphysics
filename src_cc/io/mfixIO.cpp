@@ -585,7 +585,7 @@ void mfix::WriteJobInfo (const std::string& dir) const
        std::string FullPathJobInfoFile = dir;
        std::string PrettyLine = "===============================================================================\n";
 
-       FullPathJobInfoFile += "/Mfix_job_info";
+       FullPathJobInfoFile += "/job_info";
        jobInfoFile.open(FullPathJobInfoFile.c_str(), std::ios::out);
 
        // job information
