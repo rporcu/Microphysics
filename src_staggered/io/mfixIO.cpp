@@ -763,8 +763,8 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
             mf2[lev] = mf[lev].get();
 
         // Write only the Headers corresponding to the "empty" mf/mf2 MultiFabs
-        //amrex::WriteMultiLevelPlotfileHeaders(plotfilename, finest_level+1, mf2, names,
-        //                                      Geom(), time, istep, refRatio());
+        amrex::WriteMultiLevelPlotfileHeaders(plotfilename, finest_level+1, mf2, names,
+                                              Geom(), time, istep, refRatio());
     }
 
     WriteJobInfo(plotfilename);
