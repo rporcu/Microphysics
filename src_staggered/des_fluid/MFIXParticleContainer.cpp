@@ -422,7 +422,7 @@ std::unique_ptr<MultiFab> MFIXParticleContainer::EBNormals(int lev,
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
         EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals,
         const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
-        MultiFab * dummy, MultiFab * cost, std::string & knapsack_weight_type, int subdt_io)
+        MultiFab * cost, std::string & knapsack_weight_type, int subdt_io)
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
@@ -478,6 +478,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         pfor[index] = Vector<Real>();
         wfor[index] = Vector<Real>();
     }
+
+    /****************************************************************************
+     * Get particle EB geometric info
+     ***************************************************************************/
+    MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                   1, 0, MFInfo(), *ebfactory);
 
    /****************************************************************************
     * Iterate over sub-steps                                                   *
@@ -556,7 +562,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             // Only call the routine for wall collisions if we actually have walls
             if (ebfactory != NULL)
             {
-                const auto& sfab = static_cast <EBFArrayBox const&>((*dummy)[pti]);
+                const auto& sfab = static_cast <EBFArrayBox const&>(dummy[pti]);
                 const auto& flag = sfab.getEBCellFlagFab();
 
                 if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
