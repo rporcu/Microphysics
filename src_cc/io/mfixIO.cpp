@@ -614,10 +614,21 @@ void mfix::WriteJobInfo (const std::string& dir) const
 
        jobInfoFile << "COMP:          " << buildInfoGetComp() << "\n";
        jobInfoFile << "COMP version:  " << buildInfoGetCompVersion() << "\n";
-       jobInfoFile << "FCOMP:         " << buildInfoGetFcomp() << "\n";
-       jobInfoFile << "FCOMP version: " << buildInfoGetFcompVersion() << "\n";
 
        jobInfoFile << "\n";
+
+       jobInfoFile << "C++ compiler:  " << buildInfoGetCXXName() << "\n";
+       jobInfoFile << "C++ flags:     " << buildInfoGetCXXFlags() << "\n";
+
+       jobInfoFile << "\n";
+
+       jobInfoFile << "Fortran comp:  " << buildInfoGetFName() << "\n";
+       jobInfoFile << "Fortran flags: " << buildInfoGetFFlags() << "\n";
+
+       jobInfoFile << "\n";
+
+       jobInfoFile << "Link flags:    " << buildInfoGetLinkFlags() << "\n";
+       jobInfoFile << "Libraries:     " << buildInfoGetLibraries() << "\n";
 
        const char* githash1 = buildInfoGetGitHash(1);
        const char* githash2 = buildInfoGetGitHash(2);
