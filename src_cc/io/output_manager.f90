@@ -65,7 +65,7 @@ contains
                  particles, xlength, ylength, zlength )
 
             write(ext_end,"(i3.3)") lc
-            call notify_user('.USR:',EXT_END)
+            ! call notify_user('.USR:',EXT_END)
             IDX = IDX + 1
          end if
       end do
