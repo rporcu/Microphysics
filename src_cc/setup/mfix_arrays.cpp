@@ -429,6 +429,38 @@ mfix::RegridArrays (int lev)
     drag[lev] = std::move(drag_new);
     drag[lev]->setVal(0.);
 
+    // Arrays to store the solution and rhs for the diffusion solve
+    std::unique_ptr<MultiFab> phi_diff_new(new  MultiFab(grids[lev], dmap[lev], 1, nghost,
+                                                         MFInfo(), *ebfactory[lev]));
+    phi_diff[lev] = std::move(phi_diff_new);
+    phi_diff[lev] -> setVal(0.);
+
+    std::unique_ptr<MultiFab> rhs_diff_new(new  MultiFab(grids[lev], dmap[lev], 1, nghost,
+                                                         MFInfo(), *ebfactory[lev]));
+    rhs_diff[lev] = std::move(rhs_diff_new);
+    rhs_diff[lev] -> setVal(0.);
+
+    // Slopes in x-direction
+    ng = xslopes[lev] -> nGrow();
+    std::unique_ptr<MultiFab> xslopes_new(new  MultiFab(grids[lev], dmap[lev],xslopes[lev]->nComp(),nghost,
+                                                        MFInfo(), *ebfactory[lev]));
+    xslopes[lev] = std::move(xslopes_new);
+    xslopes[lev] -> setVal(0.);
+
+    // Slopes in y-direction
+    ng = yslopes[lev] -> nGrow();
+    std::unique_ptr<MultiFab> yslopes_new(new  MultiFab(grids[lev], dmap[lev],yslopes[lev]->nComp(),nghost,
+                                                        MFInfo(), *ebfactory[lev]));
+    yslopes[lev] = std::move(yslopes_new);
+    yslopes[lev] -> setVal(0.);
+
+    // Slopes in z-direction
+    ng = zslopes[lev] -> nGrow();
+    std::unique_ptr<MultiFab> zslopes_new(new  MultiFab(grids[lev], dmap[lev],zslopes[lev]->nComp(),nghost,
+                                                        MFInfo(), *ebfactory[lev]));
+    zslopes[lev] = std::move(zslopes_new);
+    zslopes[lev] -> setVal(0.);
+
    /****************************************************************************
     * Face-based Arrays                                                        *
     ****************************************************************************/
@@ -475,27 +507,6 @@ mfix::RegridArrays (int lev)
     std::unique_ptr<MultiFab> bc2_new(new MultiFab(z_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
     bcoeff_diff[lev][2] = std::move(bc2_new);
     bcoeff_diff[lev][2] -> setVal(0.0);
-
-    // Slopes in x-direction
-    ng = xslopes[lev] -> nGrow();
-    std::unique_ptr<MultiFab> xslopes_new(new  MultiFab(grids[lev], dmap[lev],xslopes[lev]->nComp(),nghost,
-                                                        MFInfo(), *ebfactory[lev]));
-    xslopes[lev] = std::move(xslopes_new);
-    xslopes[lev] -> setVal(0.);
-
-    // Slopes in y-direction
-    ng = yslopes[lev] -> nGrow();
-    std::unique_ptr<MultiFab> yslopes_new(new  MultiFab(grids[lev], dmap[lev],yslopes[lev]->nComp(),nghost,
-                                                        MFInfo(), *ebfactory[lev]));
-    yslopes[lev] = std::move(yslopes_new);
-    yslopes[lev] -> setVal(0.);
-
-    // Slopes in z-direction
-    ng = zslopes[lev] -> nGrow();
-    std::unique_ptr<MultiFab> zslopes_new(new  MultiFab(grids[lev], dmap[lev],zslopes[lev]->nComp(),nghost,
-                                                        MFInfo(), *ebfactory[lev]));
-    zslopes[lev] = std::move(zslopes_new);
-    zslopes[lev] -> setVal(0.);
 
     // ********************************************************************************
     // Make sure we fill the ghost cells as appropriate -- this is copied from init_fluid
