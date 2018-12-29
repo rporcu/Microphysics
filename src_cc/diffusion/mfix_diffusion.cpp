@@ -214,10 +214,13 @@ mfix::solve_diffusion_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& 
    //
    MLMG  solver(matrix);
 
+   // Set the verbosity
+   solver.setVerbose   (diff_mg_verbose);
+   solver.setCGVerbose (diff_mg_cg_verbose);
+
+   // Set the max number of iterations
    solver.setMaxIter (mg_max_iter);
    solver.setMaxFmgIter (mg_max_fmg_iter);
-   solver.setVerbose (mg_verbose);
-   solver.setCGVerbose (mg_cg_verbose);
    solver.setCGMaxIter (mg_cg_maxiter);
 
    // This ensures that ghost cells of sol are correctly filled when returned from the solver

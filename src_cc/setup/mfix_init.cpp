@@ -100,6 +100,12 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("levelset__eb_pad", levelset__eb_pad);
     }
 
+    {
+        ParmParse pp("diffusion");
+        pp.query( "mg_verbose"   , diff_mg_verbose );
+        pp.query( "mg_cg_verbose", diff_mg_cg_verbose );
+    }
+
     solve_fluid  = solve_fluid_in;
     solve_dem    = solve_dem_in;
     call_udf     = call_udf_in;

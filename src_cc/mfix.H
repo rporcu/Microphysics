@@ -431,13 +431,19 @@ private:
     int m_verbose = 0;
 
     // Options to control MLMG behavior
-    int  mg_verbose = 0;
-    int  mg_cg_verbose = 0;
     int  mg_max_iter = 100;
     int  mg_cg_maxiter = 100;
     int  mg_max_fmg_iter = 0;
     Real mg_rtol = 1.0e-11;
     Real mg_atol = 1.0e-14;
+
+    // Verbosity for the nodal solve
+    int  mg_verbose = 0;
+    int  mg_cg_verbose = 0;
+
+    // Verbosity for the diffusion solve
+    int  diff_mg_verbose = 0;
+    int  diff_mg_cg_verbose = 0;
 
     // Tolerance to check for steady state
     Real steady_state_tol = 1.0e-5  ;
