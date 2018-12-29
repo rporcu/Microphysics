@@ -160,7 +160,8 @@ void mfix::make_eb_cylinder()
         {
             for (int lev = 0; lev < nlev; lev++)
             {
-                amrex::Print() << "Creating the levelset ..." << std::endl;
+                amrex::Print() << "Creating the levelset at level " << lev << std::endl;
+                const Real      strttime    = ParallelDescriptor::second();
 
                 // // If there is a bottom plane, fill level set with plane IF first
                 // if(close_bottom) {
@@ -197,9 +198,11 @@ void mfix::make_eb_cylinder()
                 if(close_bottom) {
                     std::unique_ptr<MultiFab> mf_impfunc_wall = wall_lsfactory->fill_impfunc();
                     level_set->intersection_impfunc(* mf_impfunc_wall);
-           }
+                }
 
-                amrex::Print() << "Done making the levelset ..." << std::endl;
+                const Real endtime    = ParallelDescriptor::second() - strttime;
+                amrex::Print() << "Making the levelset at level " << lev << 
+                                  " took " << endtime << " seconds" << std::endl;
             }
 
         } else {
