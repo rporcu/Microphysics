@@ -18,13 +18,12 @@ mfix.particle_init_type = "Auto"
 
 amr.blocking_factor = 2
 
-mac.mg_verbose          = 0
-mac.mg_rtol             = 1.e-08
-mac.bottom_solver_type  = "bicg"
+mac.mg_verbose          = 1
 
-mfix.mg_verbose         = 0
-mfix.mg_rtol            = 1.e-06
-mfix.bottom_solver_type = "bicg"
+diffusion.mg_verbose = 0
+
+mfix.mg_verbose         = 1
+mfix.mg_cg_verbose      = 0
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -45,9 +44,9 @@ amr.n_cell =  40   10   10
 # Maximum allowable size of each fluid subdomain in the problem domain;
 
 # Fluid
-amr.max_grid_size_x = 20
-amr.max_grid_size_y =  5
-amr.max_grid_size_z =  5
+amr.max_grid_size_x = 10
+amr.max_grid_size_y = 10
+amr.max_grid_size_z = 10
 
 # Particles (not with KDTree)
 #particles.max_grid_size_x =   32
@@ -75,7 +74,7 @@ mfix.levelset__pad           = 8 # levelset ghost cells
 # => only needed when using multiple grids
 mfix.levelset__eb_pad        = 8 # EB extends into neighboring grids
 
-mfix.write_eb_surface = true  # Needed to output eb-surfaces
+mfix.write_eb_surface = false  # Needed to output eb-surfaces
 
 #! EB geometry
 #!-----------------------------------------------------------//
@@ -118,7 +117,7 @@ amr.regrid_int         = 25
 amr.par_ascii_int  = -1
 amr.par_ascii_file ="vis"
 
-amr.plot_int       = -1
+amr.plot_int       = 100
 amr.plot_file      ="plt"
 
 amr.check_int      = -1

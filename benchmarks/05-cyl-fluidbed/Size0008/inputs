@@ -16,14 +16,6 @@ mfix.explicit_diffusion = 1
 
 mfix.particle_init_type = "Auto"
 
-mac.mg_verbose          = 0
-mac.mg_rtol             = 1.e-10
-mac.bottom_solver_type  = "bicg"
-
-mfix.mg_verbose         = 0
-mfix.mg_rtol            = 1.e-10
-mfix.bottom_solver_type = "bicg"
-
 #_______________________________________________________________________
 # Geometry / grids / tiles
 
@@ -71,7 +63,7 @@ mfix.levelset__pad           = 8 # levelset ghost cells
 
 # EB refinement and padding
 # => only needed when using multiple grids
-#mfix.levelset__eb_pad        = 8 # EB extends into neighboring grids
+mfix.levelset__eb_pad        = 8 # EB extends into neighboring grids
 
 #mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
@@ -105,7 +97,6 @@ amr.regrid_int         = -1
 
 #mfix.knapsack_weight_type = "NumParticles"
 #mfix.knapsack_weight_type = "RunTimeCosts"
-
 
 #_______________________________________________________________________
 # IO / Checkpointing
