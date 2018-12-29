@@ -129,7 +129,7 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
    // Loop over the velocity components
    for (int i = 0; i < 3; i++)
    {
-         amrex::Print() << "Diffusing velocity component " << i << std::endl;
+      amrex::Print() << "Diffusing velocity component " << i << std::endl;
 
       for (int lev = 0; lev < nlev; lev++)
       {

@@ -191,7 +191,6 @@ mfix::AllocateArrays (int lev)
 void
 mfix::RegridArrays (int lev)
 {
-
     bool need_regrid = mfix_update_ebfactory(lev);
 
     // exit this function is ebfactory has not been updated
@@ -474,8 +473,8 @@ mfix::RegridArrays (int lev)
 
     // Diffusion coefficient on z-faces
     std::unique_ptr<MultiFab> bc2_new(new MultiFab(z_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
-    bcoeff[lev][2] = std::move(bc2_new);
-    bcoeff[lev][2] -> setVal(0.0);
+    bcoeff_diff[lev][2] = std::move(bc2_new);
+    bcoeff_diff[lev][2] -> setVal(0.0);
 
     // Slopes in x-direction
     ng = xslopes[lev] -> nGrow();
