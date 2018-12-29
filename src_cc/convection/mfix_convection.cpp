@@ -296,7 +296,6 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
        // State with ghost cells
        MultiFab Sborder(grids[lev], dmap[lev], vel_g[lev]->nComp(), nghost,  MFInfo(), *ebfactory[lev]);
        FillPatchVel(lev, time, Sborder, 0, Sborder.nComp(), bcs_u);
-       std::cout << " Successfully filled at level " << lev << std::endl;
     
        // First compute the slopes
        mfix_compute_velocity_slopes( lev, time, Sborder );
