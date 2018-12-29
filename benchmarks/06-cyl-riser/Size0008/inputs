@@ -19,9 +19,12 @@ mfix.particle_init_type = "Auto"
 
 amr.blocking_factor = 2
 
-mfix.mg_verbose = 2
-mfix.mg_atol    = 1.e-12
-mfix.mg_rtol    = 1.e-8
+mac.mg_verbose          = 1
+
+diffusion.mg_verbose = 0
+
+mfix.mg_verbose         = 1
+mfix.mg_cg_verbose      = 0
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -70,7 +73,7 @@ mfix.levelset__pad           = 8 # levelset influence in refined units
 
 # EB refinement and padding
 # => only needed when using multiple grids
-#mfix.levelset__eb_pad        = 8 # EB extends into neighboring grids
+mfix.levelset__eb_pad        = 8 # EB extends into neighboring grids
 
 mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
@@ -116,7 +119,6 @@ amr.regrid_int         = 25
 #particles.avg_region_y_n = 0.002
 #particles.avg_region_z_b = 0.0
 #particles.avg_region_z_t = 0.002
-
 
 #_______________________________________________________________________
 # IO / Checkpointing
