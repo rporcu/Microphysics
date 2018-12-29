@@ -1,0 +1,7 @@
+add_sources( convection_mod.f90 )
+add_sources( mfix_mac_F.H )
+add_sources( macproj_mod.f90 slopes_mod.f90 )
+add_sources( set_mac_velocity_bcs.f90 )
+add_sources( MacProjection.H MacProjection.cpp )
+add_sources( mfix_convection.cpp )
+add_sources( convection_eb_mod.f90 )

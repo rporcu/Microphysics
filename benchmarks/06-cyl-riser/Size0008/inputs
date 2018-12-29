@@ -15,9 +15,13 @@ mfix.explicit_diffusion = 1
 
 mfix.use_mac_proj       = true
 
-mfix.ugradu_type        = 3
-
 mfix.particle_init_type = "Auto"
+
+amr.blocking_factor = 2
+
+mfix.mg_verbose = 2
+mfix.mg_atol    = 1.e-12
+mfix.mg_rtol    = 1.e-8
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -100,6 +104,18 @@ amr.regrid_int         = 25
 
 #mfix.knapsack_weight_type = "NumParticles"
 #mfix.knapsack_weight_type = "RunTimeCosts"
+
+#_______________________________________________________________________
+# user data processing
+#mfix.write_user = true
+#particles.avg_vel_file = mean_Vp  # particle averages interval
+#particles.avg_vel_int = 10
+#particles.avg_region_x_w = 0.0
+#particles.avg_region_x_e = 0.008
+#particles.avg_region_y_s = 0.0
+#particles.avg_region_y_n = 0.002
+#particles.avg_region_z_b = 0.0
+#particles.avg_region_z_t = 0.002
 
 
 #_______________________________________________________________________

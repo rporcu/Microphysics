@@ -1,0 +1,107 @@
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 1
+
+amr.max_step = 0
+
+amr.stop_time = 0.20
+
+mfix.mg_verbose = 2
+
+amrex.fpe_trap_invalid = 1
+
+amr.blocking_factor = 4
+
+geometry.coord_sys   = 0                       # 0: Cartesian
+geometry.is_periodic = 1       1       0       # Is periodic in each direction?
+geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
+geometry.prob_hi     = 0.0032  0.0032  0.0048  # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell = 32 32 48
+
+# Maximum allowable size of each subdomain in the problem domain;
+#    this is used to decompose the domain for parallel calculations.
+#amr.max_grid_size   = 1024
+amr.max_grid_size_x = 32
+amr.max_grid_size_y = 32
+amr.max_grid_size_z = 32
+maxboxsize          = 1024
+
+# Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+# Maximum particle title size
+particles.tile_size       = 1024 1024 1024
+
+#_______________________________________________________________________
+# IO / Checkpointing
+
+amr.par_ascii_int  = -1
+amr.par_ascii_file ="vis"
+
+amr.plot_int       = 100
+amr.plot_file      ="plt"
+
+amr.check_int      = 100
+amr.check_file     ="chk"
+
+#! Restart from checkpoint
+#!-----------------------------------------------------------//
+#amr.restart   ="chk00100"
+
+
+
+#_______________________________________________________________________
+# Solver settings
+
+#! Fluid solver
+#!-----------------------------------------------------------//
+#mfix.use_proj_method = 1
+#mfix.fixed_dt        = 1
+
+#mfix.particle_init_type = "Auto"
+
+#_______________________________________________________________________
+# Particle load balancing
+
+#mfix.load_balance_type = "FixedSize"
+mfix.load_balance_type = "KnapSack"
+
+amr.dual_grid          = 0
+amr.regrid_int         = 25
+
+#! KnapSack settings
+#!-----------------------------------------------------------//
+#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+#this option is only relevant if load_balance_type = KnapSack
+
+mfix.knapsack_weight_type = "NumParticles"
+mfix.knapsack_weight_type = "RunTimeCosts"
+
+#_______________________________________________________________________
+# EB Settings
+
+# Level-set refinement and padding
+mfix.levelset__refinement    = 1
+mfix.levelset__pad           = 2
+
+# EBIS refinement and padding
+mfix.levelset__eb_refinement = 1
+mfix.levelset__eb_pad        = 8
+
+#! EB geometry
+#!-----------------------------------------------------------//
+mfix.write_eb_surface = true  # Needed to output eb-surfaces
+
+mfix.geometry = "cylinder"
+cylinder.direction = 2
+cylinder.radius    = 1.6e-3
+cylinder.center    = 1.6e-3   1.6e-3   0
+
+eb.use_amr_ls = true
+eb.amr_max_level = 1;
+
+eb_amr.eb_pad     = 1
+eb_amr.max_eb_pad = 16
+
+amr.ref_ratio       = 2 2 2 2 2 # refinement ratio

@@ -29,41 +29,6 @@ extern "C"
       const amrex::Real* stop_time,
       amrex::Real*  dt);
  
-   void compute_gradp0_max (
-      const int* lo, const int* hi,
-      amrex::Real* p0_g, const int* slo, const int* shi,
-      const amrex::Real* gradp0max, const amrex::Real* dx,
-      const int* nodal_pressure);
-
-   void add_grad_pcc (
-      const int* lo, const int* hi,
-      amrex::Real* vel, const int* ulo, const int* uhi,
-      const amrex::Real* ro_g, const int* slo, const int* shi,
-      const amrex::Real* p, const amrex::Real* p0,
-      const amrex::Real* dx, const amrex::Real* c);
-
-   void add_grad_pnd (
-      const int* lo, const int* hi,
-      amrex::Real* vel, const int* ulo, const int* uhi,
-      const amrex::Real* ro_g, const int* slo, const int* shi,
-      const amrex::Real* p, 
-      const amrex::Real* p0, const int* rlo, const int* rhi,
-      const amrex::Real* dx, const amrex::Real* c);
-
-   void add_grad_phicc (
-      const int* lo, const int* hi,
-      amrex::Real* vel, const int* ulo, const int* uhi,
-      const amrex::Real* ro_g, const int* slo, const int* shi,
-      const amrex::Real* phi, 
-      const amrex::Real* dx, const amrex::Real* c);
-
-   void add_grad_phind (
-      const int* lo, const int* hi,
-      amrex::Real* vel, const int* ulo, const int* uhi,
-      const amrex::Real* ro_g, const int* slo, const int* shi,
-      const amrex::Real* phi, const int* rlo, const int* rhi,
-      const amrex::Real* dx, const amrex::Real* c);
-
    void compute_velocity_at_faces (
       const int* lo, const int* hi,
       const amrex::Real* u_mac, const int* ulo, const int* uhi, 
@@ -146,19 +111,6 @@ extern "C"
       const int* bct_jlo, const int* bct_jhi,
       const int* bct_klo, const int* bct_khi);
 
-   void compute_diveucc (
-      const int* lo,  const int*  hi,
-      amrex::Real* diveu,  const int* slo, const int* shi,
-      const amrex::Real* ep_g,
-      const amrex::Real* vel,    const int* ulo, const int* uhi,
-      const amrex::Real* dx);
-
-   void compute_diveund (
-      const int* lo,  const int*  hi,
-      amrex::Real* diveu,  const int* slo, const int* shi,
-      const amrex::Real* vec,    const int* ulo, const int* uhi,
-      const amrex::Real* dx);
-    
    void set_poisson_solver_bcs (
       const int* lo, const int* hi,
       amrex::Real* rhs, const int* slo, const int* shi,
@@ -169,27 +121,19 @@ extern "C"
       const int* bc_lo, const int* bc_hi,
       const amrex::Real* dx, const int* domlo, const int* domhi );
 
-   void add_forcing (
+   void add_gravity (
       const int* lo, const int* hi,
-      amrex::Real* vel,  const int* ulo, const int* uhi,
-      const amrex::Real* drag, const int* dlo, const int* dhi,
-      const amrex::Real* ro_g, const int* slo, const int* shi,
-      const amrex::Real* rop_g,
-      const int* domlo, const int* domhi,
-      const amrex::Real* dx, const amrex::Real* dt);
+      amrex::Real* vel    , const int* ulo, const int* uhi,
+      const amrex::Real* dt);
     
-   void compute_intermediate_velocity (
+   void add_drag_terms (
       const int* lo, const int* hi,
-      amrex::Real* vel,   const int* ulo, const int* uhi,
-      const amrex::Real* f_gds, const int* flo, const int* fhi,
-      const amrex::Real* rop,   const int* slo, const int* shi,
+            amrex::Real* vel,     const int* ulo, const int* uhi,
+      const amrex::Real* f_gds,   const int* flo, const int* fhi,
+      const amrex::Real* drag,    const int* dlo, const int* dhi,
+      const amrex::Real* rop,     const int* slo, const int* shi,
+      const amrex::Real* volfrac, const int* vlo, const int* vhi,
       const amrex::Real* dt );
-
-   void compute_bcoeff_cc (
-      const int* lo,  const int*  hi,
-      amrex::Real* bcoeff, const int* blo, const int* bhi,
-      const amrex::Real* rop_g, const int* slo, const int* shi,
-      const amrex::Real* ep_g, const int* dir );
 
    void compute_bcoeff_nd (
       const int* lo,  const int*  hi,
@@ -204,32 +148,6 @@ extern "C"
       const amrex::Real* scale, const int* singular,
       const int*  domlo, const int *domhi );
 
-   void extrap_pressure_to_ghost_cells (
-      amrex::Real* p_g, const int* slo, const int* shi,
-      const int* bc_ilo, const int* bc_ihi,
-      const int* bc_jlo, const int* bc_jhi,
-      const int* bc_klo, const int* bc_khi,
-      const int* domlo , const int* domhi,
-      const int* nghost
-      );
-
-   void set_scalar_bcs (
-      amrex::Real* ep_g, const int* slo, const int* shi,
-      amrex::Real* ro_g,    amrex::Real* rop_g,
-      amrex::Real* mu_g,    amrex::Real* lambda_g,
-      const int* bc_ilo, const int* bc_ihi,
-      const int* bc_jlo, const int* bc_jhi,
-      const int* bc_klo, const int* bc_khi,
-      const int* domlo , const int* domhi,
-      const int* nghost
-      );
-
-   void set_pressure_bcs (
-      amrex::Real* p_g, const int* slo, const int* shi,
-      const int* bc_ilo, const int* bc_ihi,
-      const int* bc_jlo, const int* bc_jhi,
-      const int* bc_klo, const int* bc_khi,
-      const int* domlo , const int* domhi);
 #ifdef __cplusplus
 }
 #endif

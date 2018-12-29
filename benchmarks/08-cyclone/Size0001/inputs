@@ -19,6 +19,8 @@ mfix.ugradu_type        = 3
 
 mfix.particle_init_type = "Auto"
 
+amr.blocking_factor = 4
+
 #_______________________________________________________________________
 # Geometry / grids / tiles
 

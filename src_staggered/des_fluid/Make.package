@@ -1,0 +1,11 @@
+f90EXE_sources += calc_drag.f90
+f90EXE_sources += construct_gradp.f90
+f90EXE_sources += flip_particle_vol.f90
+f90EXE_sources += particle_pic.f90
+f90EXE_sources += set_drag_bcs.f90
+
+F90EXE_headers += mfix_des_F.H
+
+CEXE_sources += MFIXParticleContainer.cpp 
+CEXE_headers += MFIXParticleContainer.H
+

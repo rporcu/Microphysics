@@ -1,0 +1,5 @@
+add_sources( diffusion_mod.f90 )
+add_sources( diffusion_eb_mod.f90)
+add_sources( eb_wallflux_mod.f90 )
+add_sources( mfix_diffusion.cpp )
+add_sources( mfix_diff_F.H )

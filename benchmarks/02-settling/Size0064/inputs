@@ -10,6 +10,8 @@ amr.max_grid_size_x = 10
 amr.max_grid_size_y = 10
 amr.max_grid_size_z = 10
 
+amr.blocking_factor = 10
+
 # Maximum tile size within each grid
 fabarray.mfiter_tile_size = 1024 1024 1024
 

@@ -5,7 +5,7 @@
 amr.max_level = 0
 
 geometry.coord_sys   = 0                       # 0: Cartesian
-geometry.is_periodic = 1       1       0       # Is periodic in each direction?
+geometry.is_periodic = 0       0       0       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
 geometry.prob_hi     = 0.0032  0.0032  0.0048  # hi corner of physical domain
 
@@ -82,22 +82,36 @@ mfix.knapsack_weight_type = "RunTimeCosts"
 # EB Settings
 
 # Level-set refinement and padding
-mfix.levelset__refinement    = 1
-mfix.levelset__pad           = 2
+mfix.levelset__refinement    = 2
+mfix.levelset__pad           = 4
 
 # EBIS refinement and padding
 mfix.levelset__eb_refinement = 1
 mfix.levelset__eb_pad        = 8
 
-mfix.use_walls        = true
-mfix.use_poly2        = true
-mfix.poly2_mirror     = true  # Fluid is on the inside of cylinder
-mfix.write_eb_surface = true  # Needed to output eb-surfaces
-
 #! EB geometry
 #!-----------------------------------------------------------//
-# Cylinder ::  x^2 + y^2 = R^2
-mfix.poly2_x_coeffs  =   0.00     0.00     1.00
-mfix.poly2_y_coeffs  =   0.00     0.00     1.00
-mfix.poly2_z_coeffs  =  -2.56e-6  0.00     0.00
-mfix.poly2_translate =   1.6e-3   1.6e-3   0.00
+mfix.write_eb_surface = true  # Needed to output eb-surfaces
+
+# #
+# # Construct cylinder using Poly2 geometry:
+# # Cylinder ::  x^2 + y^2 = R^2
+# #
+# 
+# mfix.use_walls        = true
+# mfix.use_poly2        = true
+# mfix.poly2_mirror     = true  # Fluid is on the inside of cylinder
+# 
+# mfix.poly2_x_coeffs  =   0.00     0.00     1.00
+# mfix.poly2_y_coeffs  =   0.00     0.00     1.00
+# mfix.poly2_z_coeffs  =  -2.56e-6  0.00     0.00
+# mfix.poly2_translate =   1.6e-3   1.6e-3   0.00
+
+#
+# Alternative to Poly2....
+#
+
+mfix.geometry = "cylinder"
+cylinder.direction = 2
+cylinder.radius    = 1.6e-3
+cylinder.center    = 1.6e-3   1.6e-3   0

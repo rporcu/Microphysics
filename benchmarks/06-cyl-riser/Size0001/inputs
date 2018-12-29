@@ -15,8 +15,6 @@ mfix.explicit_diffusion = 1
 
 mfix.use_mac_proj       = true
 
-mfix.ugradu_type        = 3
-
 mfix.particle_init_type = "Auto"
 
 mac.mg_verbose          = 1
@@ -26,6 +24,8 @@ mac.bottom_solver_type  = "smoother"
 mfix.mg_verbose         = 1
 mfix.mg_rtol            = 1.e-6
 mfix.bottom_solver_type = "smoother"
+
+amr.blocking_factor = 1
 
 #_______________________________________________________________________
 # Geometry / grids / tiles

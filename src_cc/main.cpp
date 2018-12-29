@@ -6,11 +6,10 @@
 #include <AMReX_VisMF.H>
 #include <AMReX_iMultiFab.H>
 
-#include <mfix_level.H>
+#include <mfix.H>
 #include <mfix_F.H>
 
 int   max_step    = -1;
-int   verbose     = -1;
 int   regrid_int  = -1;
 Real stop_time    = -1.0;
 
@@ -37,6 +36,8 @@ int par_ascii_int = -1;
 int  last_par_ascii  = -1;
 std::string par_ascii_file {"par"};
 
+void set_ptr_to_mfix(mfix& my_mfix);
+
 void ReadParameters ()
 {
   {
@@ -44,8 +45,6 @@ void ReadParameters ()
 
      pp.query("stop_time", stop_time);
      pp.query("max_step", max_step);
-
-     pp.add("blocking_factor",1);
 
      pp.query("check_file", check_file);
      pp.query("check_int", check_int);
@@ -62,7 +61,6 @@ void ReadParameters ()
      pp.query("repl_x", repl_x);
      pp.query("repl_y", repl_y);
      pp.query("repl_z", repl_z);
-     pp.query("verbose", verbose);
      pp.query("regrid_int",regrid_int);
   }
 
@@ -83,6 +81,9 @@ int main (int argc, char* argv[])
     // AMReX will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
     amrex::Initialize(argc,argv);
+    { // This start bracket and the end bracket before Finalize are essential so
+      // that the mfix object is deleted before Finalize
+
     BL_PROFILE_VAR("main()", pmain)
     BL_PROFILE_REGION_START("mfix::main()");
 
@@ -129,30 +130,32 @@ int main (int argc, char* argv[])
     if ( ParallelDescriptor::IOProcessor() )
        check_inputs(&dt);
 
-    // Default AMR level = 0
-    int lev = 0;
+    // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
+    //                                                             |
+    //  => Geometry is constructed here: (constructs Geometry) ----+
+    mfix my_mfix;
 
-    // Default constructor. Note inheritance: mfix_level : AmrCore : AmrMesh
-    //                                                                  |
-    //  => Geometry is constructed here:  (constructs Geometry) --------+
-    mfix_level my_mfix;
+    set_ptr_to_mfix(my_mfix);
 
     // Initialize internals from ParamParse database
     my_mfix.InitParams(solve_fluid, solve_dem, call_udf);
 
-    // Initialize memory for data-array internals
-    // Note: MFIXParticleContainer is created here
+    // This needs to be done before initializing the particle container.
+    my_mfix.make_amr_geometry();
+
+    // Initialize memory for data-array internals NOTE: MFIXParticleContainer is
+    // created here
     my_mfix.ResizeArrays();
 
     // Initialize derived internals
-    my_mfix.Init(lev,dt,time);
+    my_mfix.Init(dt, time);
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
     {
         // NOTE: this also builds ebfactories and level-set
-        my_mfix.InitLevelData(lev,dt,time);
+        my_mfix.InitLevelData(dt,time);
     }
     else
     {
@@ -169,17 +172,15 @@ int main (int argc, char* argv[])
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
 
-
-
     // This checks if we want to regrid using the KDTree or KnapSack approach
     amrex::Print() << "Regridding at step " << nstep << std::endl;
-    my_mfix.Regrid(lev);
+    my_mfix.Regrid();
 
-    my_mfix.PostInit( lev, dt, time, nstep, restart_flag, stop_time, steady_state );
+    my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time, steady_state);
 
     // Write out EB sruface
     if(write_eb_surface)
-      my_mfix.WriteEBSurface(lev);
+      my_mfix.WriteEBSurface();
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
@@ -192,7 +193,7 @@ int main (int argc, char* argv[])
 
     // Call to output before entering time march loop
     if (solve_fluid && ParallelDescriptor::IOProcessor()  && solve_dem )
-       my_mfix.output(lev,estatus,finish,nstep,dt,time);
+       my_mfix.output(estatus,finish,nstep,dt,time);
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
     // only if solve_fluid = T
@@ -203,7 +204,7 @@ int main (int argc, char* argv[])
     if ( (restart_file.empty() || plotfile_on_restart) && plot_int > 0 )
     {
        if (solve_fluid)
-          my_mfix.mfix_compute_vort(lev);
+          my_mfix.mfix_compute_vort();
        my_mfix.WritePlotFile( plot_file, nstep, dt, time );
     }
 
@@ -224,7 +225,7 @@ int main (int argc, char* argv[])
     }
 
     bool do_not_evolve =  !steady_state && ( (max_step == 0) ||
-                     ( (stop_time >= 0.) && (time >  stop_time) ) || 
+                     ( (stop_time >= 0.) && (time >  stop_time) ) ||
                      ( (stop_time <= 0.) && (max_step <= 0) ) );
 
     { // Start profiling solve here
@@ -232,7 +233,7 @@ int main (int argc, char* argv[])
         BL_PROFILE("mfix_solve");
         BL_PROFILE_REGION("mfix_solve");
 
-        if ( !do_not_evolve) 
+        if ( !do_not_evolve)
         {
             while (finish == 0)
             {
@@ -243,10 +244,10 @@ int main (int argc, char* argv[])
                 if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
                 {
                    amrex::Print() << "Regridding at step " << nstep << std::endl;
-                   my_mfix.Regrid(lev);
+                   my_mfix.Regrid();
                 }
 
-                my_mfix.Evolve(lev,nstep,steady_state,dt,prev_dt,time,stop_time);
+                my_mfix.Evolve(nstep,steady_state,dt,prev_dt,time,stop_time);
 
                 Real end_step = ParallelDescriptor::second() - strt_step;
                 ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
@@ -261,7 +262,7 @@ int main (int argc, char* argv[])
                     if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
                     {
                         if (solve_fluid)
-                           my_mfix.mfix_compute_vort(lev);
+                           my_mfix.mfix_compute_vort();
                         my_mfix.WritePlotFile( plot_file, nstep, dt, time );
                         last_plt = nstep;
                     }
@@ -278,15 +279,15 @@ int main (int argc, char* argv[])
                         last_par_ascii = nstep;
                     }
 
-                    if (write_user) my_mfix.WriteUSER(lev, dt, time);
+                    if (write_user) my_mfix.WriteUSER(dt, time);
                 }
 
                 if (ParallelDescriptor::IOProcessor() && solve_dem )
-                    my_mfix.output(lev,estatus,finish,nstep,dt,time);
+                    my_mfix.output(estatus,finish,nstep,dt,time);
 
                 // Mechanism to terminate MFIX normally.
                 do_not_evolve =  steady_state || (
-                     ( (stop_time >= 0.) && (time+0.1*dt >= stop_time) ) ||  
+                     ( (stop_time >= 0.) && (time+0.1*dt >= stop_time) ) ||
                      ( max_step >= 0 && nstep >= max_step ) );
                 if ( do_not_evolve ) finish = 1;
             }
@@ -304,7 +305,7 @@ int main (int argc, char* argv[])
     if ( par_ascii_int > 0  && nstep != last_par_ascii)
         my_mfix.WriteParticleAscii ( par_ascii_file, nstep );
 
-    my_mfix.usr3(0);
+    my_mfix.usr3();
 
     Real end_time = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());
@@ -317,6 +318,9 @@ int main (int argc, char* argv[])
 
     BL_PROFILE_REGION_STOP("mfix::main()");
     BL_PROFILE_VAR_STOP(pmain);
+
+    } // This end bracket and the start bracket after Initialize are essential so
+      // that the mfix object is deleted before Finalize
 
     amrex::Finalize();
     return 0;

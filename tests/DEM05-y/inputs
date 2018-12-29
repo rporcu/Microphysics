@@ -7,6 +7,8 @@ amr.n_cell = 5 2 5
 #    this is used to decompose the domain for parallel calculations.
 amr.max_grid_size = 1024
 
+amr.blocking_factor = 1
+
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
 

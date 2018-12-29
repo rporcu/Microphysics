@@ -10,14 +10,17 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 Bdirs 	:= src_cc
 Bdirs 	+= src_cc/des_fluid
 Bdirs 	+= src_cc/io
+Bdirs 	+= src_cc/convection
+Bdirs 	+= src_cc/diffusion
 Bdirs 	+= src_cc/projection
+Bdirs 	+= src_cc/setup
+Bdirs 	+= src_cc/util
 
-#NOTE: these are in src not src_cc
-Bdirs 	+= src/check_data
-Bdirs 	+= src/des
-Bdirs 	+= src/eb
-Bdirs 	+= src/mods
-Bdirs 	+= src/usr
+Bdirs 	+= check_data
+Bdirs 	+= mods
+Bdirs 	+= src_des
+Bdirs 	+= src_eb
+Bdirs 	+= usr
 
 Bpack	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))
@@ -26,12 +29,11 @@ include $(Bpack)
 INCLUDE_LOCATIONS += $(Blocs)
 VPATH_LOCATIONS   += $(Blocs)
 
-INCLUDE_LOCATIONS += $(TOP)/src/include
-VPATH_LOCATIONS   += $(TOP)/src/include
-
-#These are the directories in AMReX
+INCLUDE_LOCATIONS += $(TOP)/src_staggered/include
+VPATH_LOCATIONS   += $(TOP)/src_staggered/include
 
 Pdirs   := Base AmrCore Boundary Particle EB
+Pdirs   += Extern/Algoim
 
 ifeq ($(USE_HYPRE), TRUE)
 Pdirs   += Extern/HYPRE
@@ -44,15 +46,25 @@ include $(Ppack)
 INCLUDE_LOCATIONS += $(Plocs)
 VPATH_LOCATIONS   += $(Plocs)
 
-ifeq ($(USE_MG), TRUE)
-  include $(AMREX_HOME)/Src/LinearSolvers/C_CellMG/Make.package
-  INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/C_CellMG
-  VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/C_CellMG
+include $(AMREX_HOME)/Src/LinearSolvers/C_CellMG/Make.package
+INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/C_CellMG
+VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/C_CellMG
 
-  include $(AMREX_HOME)/Src/LinearSolvers/MLMG/Make.package
-  INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/MLMG
-  VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/MLMG
-endif
+include $(AMREX_HOME)/Src/LinearSolvers/MLMG/Make.package
+INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/MLMG
+VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/MLMG
+
+ALGOIM_HOME ?= /path/to/algoim
+BLITZ_HOME  ?= /path/to/blitz
+INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/Extern/Algoim
+INCLUDE_LOCATIONS += $(ALGOIM_HOME)/src
+INCLUDE_LOCATIONS += $(BLITZ_HOME)/include
+VPATH_LOCATIONS   += $(AMREX_HOME)/Src/Extern/Algoim
+VPATH_LOCATIONS   += $(ALGOIM_HOME)
+
+DEFINES += -DUSE_ALGOIM
+
+#These are the directories in AMReX
 
 all: $(executable)
 	$(SILENT) $(RM) AMReX_buildInfo.cpp

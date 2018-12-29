@@ -13,11 +13,6 @@ module projection_mod
    implicit none
    private
 
-   ! Define here the unit vectors
-   ! This is used to shift index  based on how the variable is staggered
-   ! Check e_x, e_y and e_z in mfix_level.H
-   integer(c_int), parameter :: e_i(3,3) = reshape ( [1,0,0,0,1,0,0,0,1], [3,3] )
-
 contains
 
    !
@@ -91,167 +86,17 @@ contains
       dt = min ( dt, 1.01*old_dt )
 
       ! Don't overshoot the final time if not running to steady state
-      if (steady_state .eq. 0 .and. stop_time .ge. 0.) then
-         if (time+dt .gt. stop_time) &
+      if (steady_state == 0 .and. stop_time > 0.) then
+         if (time+dt > stop_time) &
               dt = stop_time - time
       end if
 
    end subroutine compute_new_dt
 
    !
-   ! Computes  vel = vel + c * (1/rho) grad(phi)
+   ! Add gravitational acceleration terms to velocity
    !
-   ! vel  = velocity            defined at cell centers
-   ! ro_g = density field       defined at cell centers
-   ! phi  = pressure correction defined at cell centers
-   ! c    = real constant
-   !
-   subroutine add_grad_phicc ( lo, hi, vel, ulo, uhi, ro_g, slo, shi, &
-        & phi, dx, c ) bind (C)
-
-      ! Loop bounds
-      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
-
-      ! Array bounds
-      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
-      integer(c_int),  intent(in   ) :: slo(3), shi(3)
-
-      ! Grid and time spacing
-      real(ar),        intent(in   ) :: c, dx(3)
-
-      ! Arrays
-      real(ar),        intent(in   ) ::                       &
-           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-           phi(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(ar),        intent(inout) ::                       &
-           vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
-
-      ! Local variables
-      integer(c_int)                 :: i, j, k
-      real(ar)                       :: odx, ody, odz
-      real(ar)                       :: oro_x_lo, dp_x_lo
-      real(ar)                       :: oro_x_hi, dp_x_hi
-      real(ar)                       :: oro_y_lo, dp_y_lo
-      real(ar)                       :: oro_y_hi, dp_y_hi
-      real(ar)                       :: oro_z_lo, dp_z_lo
-      real(ar)                       :: oro_z_hi, dp_z_hi
-
-      odx = one / dx(1)
-      ody = one / dx(2)
-      odz = one / dx(3)
-
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-
-               oro_x_lo  = half * ( one/ro_g(i,j,k) + one/ro_g(i-1,j,k) )
-               dp_x_lo  =  phi(i,j,k) -  phi(i-1,j,k)
-
-               oro_x_hi  = half * ( one/ro_g(i+1,j,k) + one/ro_g(i,j,k) )
-               dp_x_hi  =  phi(i+1,j,k) -  phi(i,j,k)
-
-               vel(i,j,k,1) = vel(i,j,k,1) + half * c * odx * (     &
-                    oro_x_hi * dp_x_hi + oro_x_lo * dp_x_lo )
-
-               oro_y_lo  = half * ( one/ro_g(i,j,k) + one/ro_g(i,j-1,k) )
-               dp_y_lo  =  phi(i,j,k) -  phi(i,j-1,k)
-
-               oro_y_hi  = half * ( one/ro_g(i,j+1,k) + one/ro_g(i,j,k) )
-               dp_y_hi  =  phi(i,j+1,k) -  phi(i,j,k)
-
-               vel(i,j,k,2) = vel(i,j,k,2) + half * c * ody * (     &
-                    oro_y_hi * dp_y_hi + oro_y_lo * dp_y_lo )
-
-               oro_z_lo  = half * ( one/ro_g(i,j,k) + one/ro_g(i,j,k-1) )
-               dp_z_lo  =  phi(i,j,k) -  phi(i,j,k-1)
-
-               oro_z_hi  = half * ( one/ro_g(i,j,k+1) + one/ro_g(i,j,k) )
-               dp_z_hi  =  phi(i,j,k+1) -  phi(i,j,k)
-
-               vel(i,j,k,3) = vel(i,j,k,3) + half * c * odz * (     &
-                    oro_z_hi * dp_z_hi + oro_z_lo * dp_z_lo )
-
-            end do
-         end do
-      end do
-
-   end subroutine add_grad_phicc
-
-   !
-   ! Computes  vel = vel + c * (1/rho) grad(phi)
-   !
-   ! vel  = velocity            defined at cell centers
-   ! ro_g = density field       defined at cell centers
-   ! phi  = pressure correction defined at nodes
-   ! c    = real constant
-   !
-   subroutine add_grad_phind ( lo, hi, vel, ulo, uhi, ro_g, slo, shi, &
-        phi, rlo, rhi, dx, c ) bind (C)
-
-      ! Loop bounds
-      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
-
-      ! Array bounds
-      integer(c_int),  intent(in   ) :: ulo(3), uhi(3)
-      integer(c_int),  intent(in   ) :: slo(3), shi(3)
-      integer(c_int),  intent(in   ) :: rlo(3), rhi(3)
-
-      ! Grid and time spacing
-      real(ar),        intent(in   ) :: c, dx(3)
-
-      ! Arrays
-      real(ar),        intent(in   ) ::                       &
-           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-           phi(rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
-
-      real(ar),        intent(inout) ::                       &
-           vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
-
-      ! Local variables
-      integer(c_int)                 :: i, j, k
-      real(ar)                       :: odx, ody, odz, oro
-      real(ar)                       :: phix, phiy, phiz
-
-      odx = one / dx(1)
-      ody = one / dx(2)
-      odz = one / dx(3)
-
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-
-               phix = 0.25d0 * ( &
-                    phi(i+1,j,k) +  phi(i+1,j+1,k) +  phi(i+1,j,k+1) +  phi(i+1,j+1,k+1) &
-                    -  phi(i  ,j,k) -  phi(i  ,j+1,k) -  phi(i  ,j,k+1) -  phi(i  ,j+1,k+1) )
-
-               phiy = 0.25d0 * ( &
-                    phi(i,j+1,k) +  phi(i+1,j+1,k) +  phi(i,j+1,k+1) +  phi(i+1,j+1,k+1) &
-                    -  phi(i,j  ,k) -  phi(i+1,j  ,k) -  phi(i,j  ,k+1) -  phi(i+1,j  ,k+1) )
-
-               phiz = 0.25d0 * ( &
-                    phi(i,j,k+1) +  phi(i+1,j,k+1) +  phi(i,j+1,k+1) +  phi(i+1,j+1,k+1) &
-                    -  phi(i,j,k  ) -  phi(i+1,j,k  ) -  phi(i,j+1,k  ) -  phi(i+1,j+1,k  ) )
-
-               oro = 1.d0/ro_g(i,j,k)
-
-               vel(i,j,k,1) = vel(i,j,k,1) + c * odx * oro * phix
-               vel(i,j,k,2) = vel(i,j,k,2) + c * ody * oro * phiy
-               vel(i,j,k,3) = vel(i,j,k,3) + c * odz * oro * phiz
-
-            end do
-         end do
-      end do
-
-   end subroutine add_grad_phind
-
-   !
-   ! Add forcing (acceleration) terms to velocity
-   ! These terms include the volumetric forces and the explicit part of the
-   ! particle/fluid momentum exchange
-   !
-   subroutine add_forcing ( lo, hi, vel, ulo, uhi, drag, dlo, dhi, &
-        & ro_g, slo, shi, rop_g, domlo, domhi, dx, dt )  bind(C)
+   subroutine add_gravity ( lo, hi, vel, ulo, uhi, dt )  bind(C) 
 
       use constant, only: gravity
 
@@ -259,78 +104,64 @@ contains
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
 
       ! Array bounds
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3)
-      integer(c_int), intent(in   ) :: dlo(3), dhi(3)
 
       ! Time step width
       real(ar),       intent(in   ) :: dt
-
-      ! Domain bounds
-      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
-
-      ! Grid
-      real(ar),       intent(in   ) :: dx(3)
-
-      ! Arrays
-      real(ar),       intent(in   ) :: &
-           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           drag(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3)
 
       real(ar),       intent(inout) :: &
            vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
 
       ! Local variables
-      integer(c_int)                :: i, j, k , n
+      integer(c_int)                :: i, j, k
 
-      do n = 1, 3
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
-                  vel(i,j,k,n) = vel(i,j,k,n) + dt * ( gravity(n) + drag(i,j,k,n) / rop_g(i,j,k) )
+               vel(i,j,k,1) = vel(i,j,k,1) + dt * gravity(1) 
+               vel(i,j,k,2) = vel(i,j,k,2) + dt * gravity(2)
+               vel(i,j,k,3) = vel(i,j,k,3) + dt * gravity(3)
 
-               end do
             end do
          end do
       end do
 
-   end subroutine add_forcing
+   end subroutine add_gravity
 
    !
-   ! This part takes care of performing an implicit solve for the
-   ! intermediate velocity.
-   ! Currently, this is equivalent to dividing by a diagonal coefficient
-   ! since the only implicit term is the fluid/particle momentum exchange.
+   ! This adds both components of the drag term
+   ! Here f_gds = beta
+   !      drag  = beta * particle_velocity
+   ! 
+   ! So the drag term we add is beta * (particle_velocity - fluid_velocity)
+   !                          = drag - f_gds * fluid_velocity
    !
-   ! Upon entry, vel contains the rhs of the system to be solved and on exit
-   ! the solution of the system itself. This means that we are solving;
-   !
-   !    A*vel = rhs  with rhs = vel upon entry
-   !
-   ! So far the above system reduces to:
-   !
-   !    vel = vel / (A)_diagonal
-   !
-   subroutine compute_intermediate_velocity ( lo, hi, vel, ulo, uhi, &
-        & f_gds, flo, fhi, rop, slo, shi, dt ) bind(C)
+   subroutine add_drag_terms ( lo, hi, vel, ulo, uhi, &
+                               f_gds  , flo, fhi, &
+                               drag   , dlo, dhi, &
+                               rop    , slo, shi, &
+                               volfrac, vlo, vhi, dt ) bind(C)
 
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
 
       ! Array bounds
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3)
+      integer(c_int), intent(in   ) :: dlo(3), dhi(3)
       integer(c_int), intent(in   ) :: flo(3), fhi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: vlo(3), vhi(3)
 
       ! Time step width
       real(ar),       intent(in   ) :: dt
 
       ! Arrays
       real(ar),       intent(in   ) :: &
-           rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           f_gds(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
+               rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+             f_gds(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3)), &
+              drag(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3), &
+           volfrac(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       real(ar),       intent(inout) :: &
            vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
@@ -343,59 +174,17 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               orop       = one / rop(i,j,k)
+               orop       = dt * volfrac(i,j,k) / rop(i,j,k)
 
-               vel(i,j,k,1) = vel(i,j,k,1) / (one + dt * f_gds(i,j,k) * orop)
-               vel(i,j,k,2) = vel(i,j,k,2) / (one + dt * f_gds(i,j,k) * orop)
-               vel(i,j,k,3) = vel(i,j,k,3) / (one + dt * f_gds(i,j,k) * orop)
+               vel(i,j,k,1) = ( vel(i,j,k,1) + drag(i,j,k,1) * orop) / (one + f_gds(i,j,k) * orop)
+               vel(i,j,k,2) = ( vel(i,j,k,2) + drag(i,j,k,2) * orop) / (one + f_gds(i,j,k) * orop)
+               vel(i,j,k,3) = ( vel(i,j,k,3) + drag(i,j,k,3) * orop) / (one + f_gds(i,j,k) * orop)
 
             end do
          end do
       end do
 
-   end subroutine compute_intermediate_velocity
-
-   !
-   ! Compute the coefficients of the PPE, i.e. ep_g / ro_g,
-   ! at the faces of the pressure cells along the "dir"-axis.
-   !
-   subroutine compute_bcoeff_cc ( lo, hi, bcoeff, blo, bhi, &
-        ro_g, slo, shi, ep_g, dir )  bind(C)
-
-      ! Loop bounds
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-
-      ! Array bounds
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: blo(3),bhi(3)
-
-      ! Direction
-      integer(c_int), intent(in   ) :: dir
-
-      ! Arrays
-      real(ar),       intent(in   ) :: &
-           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(ar),       intent(  out) :: &
-           bcoeff(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3))
-
-      integer      :: i, j, k, i0, j0, k0
-
-      i0 = e_i(dir,1)
-      j0 = e_i(dir,2)
-      k0 = e_i(dir,3)
-
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
-               bcoeff(i,j,k) = half * (     ep_g(i,j,k) +     ep_g(i-i0,j-j0,k-k0) ) * &
-                    & half * ( one/ro_g(i,j,k) + one/ro_g(i-i0,j-j0,k-k0) )
-            end do
-         end do
-      end do
-
-   end subroutine compute_bcoeff_cc
+   end subroutine add_drag_terms
 
    subroutine compute_bcoeff_nd ( lo, hi, bcoeff, blo, bhi, &
         ro_g, slo, shi, ep_g, dir )  bind(C)
@@ -563,257 +352,4 @@ contains
 
    end subroutine set_ppe_bc
 
-   !
-   ! Compute the cell-centered divergence of ep_g * u_g
-   !
-   subroutine compute_diveucc ( lo, hi, diveu, slo, shi, ep_g, vel, ulo, uhi, dx) &
-        bind(C)
-
-      ! Loop bounds
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-
-      ! Arrays bounds
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: ulo(3),uhi(3)
-
-      ! Grid
-      real(ar),       intent(in   ) :: dx(3)
-
-      ! Array
-      real(ar),       intent(  out) :: &
-           diveu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(ar),       intent(in   ) :: &
-           vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3), &
-           ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      ! Local variables
-      integer  :: i, j, k
-      real(ar) :: odx, ody, odz
-      real(ar) :: eu_e, eu_w, ev_n, ev_s, ew_t, ew_b
-
-      odx = one / dx(1)
-      ody = one / dx(2)
-      odz = one / dx(3)
-
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-
-               ! Face values
-               eu_e = half * ( ep_g(i+1,j,k  ) + ep_g(i,j,k  ) ) * &
-                    half * (  vel(i+1,j,k,1) +  vel(i,j,k,1) )
-               eu_w = half * ( ep_g(i-1,j,k  ) + ep_g(i,j,k  ) ) * &
-                    half * (  vel(i-1,j,k,1) +  vel(i,j,k,1) )
-
-               ev_n = half * ( ep_g(i,j+1,k  ) + ep_g(i,j,k  ) ) * &
-                    half * (  vel(i,j+1,k,2) +  vel(i,j,k,2) )
-               ev_s = half * ( ep_g(i,j-1,k  ) + ep_g(i,j,k  ) ) * &
-                    half * (  vel(i,j-1,k,2) +  vel(i,j,k,2) )
-
-               ew_t = half * ( ep_g(i,j,k+1  ) + ep_g(i,j,k  ) ) * &
-                    half * (  vel(i,j,k+1,3) +  vel(i,j,k,3) )
-               ew_b = half * ( ep_g(i,j,k-1  ) + ep_g(i,j,k  ) ) * &
-                    half * (  vel(i,j,k-1,3) +  vel(i,j,k,3) )
-
-               ! Divergence
-               diveu(i,j,k) = (eu_e - eu_w) * odx + (ev_n - ev_s) * ody + &
-                    &         (ew_t - ew_b) * odz
-
-            end do
-         end do
-      end do
-
-   end subroutine compute_diveucc
-
-   subroutine compute_diveund ( lo, hi, diveu, slo, shi, vec, ulo, uhi, dx) &
-        bind(C)
-
-      ! Loop bounds
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-
-      ! Arrays bounds
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: ulo(3),uhi(3)
-
-      ! Grid
-      real(ar),       intent(in   ) :: dx(3)
-
-      ! Array
-      real(ar),       intent(  out) :: &
-           diveu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(ar),       intent(in   ) :: &
-           vec(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
-
-      ! Local variables
-      integer  :: i, j, k
-      real(ar) :: odx, ody, odz
-      real(ar) :: eu_x, eu_y, eu_z
-
-      odx = one / dx(1)
-      ody = one / dx(2)
-      odz = one / dx(3)
-
-      ! Note these are nodal indices
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-
-               ! Divergence
-               eu_x = ( vec(i  ,j  ,k  ,1) + vec(i  ,j-1,k  ,1) &
-                    +vec(i  ,j  ,k-1,1) + vec(i  ,j-1,k-1,1) &
-                    -vec(i-1,j  ,k  ,1) - vec(i-1,j-1,k  ,1) &
-                    -vec(i-1,j  ,k-1,1) - vec(i-1,j-1,k-1,1) )
-
-               eu_y = ( vec(i  ,j  ,k  ,2) + vec(i-1,j  ,k  ,2) &
-                    +vec(i  ,j  ,k-1,2) + vec(i-1,j  ,k-1,2) &
-                    -vec(i  ,j-1,k  ,2) - vec(i-1,j-1,k  ,2) &
-                    -vec(i  ,j-1,k-1,2) - vec(i-1,j-1,k-1,2) )
-
-               eu_z = ( vec(i  ,j  ,k  ,3) + vec(i-1,j  ,k  ,3) &
-                    +vec(i  ,j-1,k  ,3) + vec(i-1,j-1,k  ,3) &
-                    -vec(i  ,j  ,k-1,3) - vec(i-1,j  ,k-1,3) &
-                    -vec(i  ,j-1,k-1,3) - vec(i-1,j-1,k-1,3) )
-
-               diveu(i,j,k) = 0.25d0 * (eu_x*odx + eu_y*ody + eu_z*odz)
- 
-            end do
-         end do
-      end do
-
-   end subroutine compute_diveund
-
-   subroutine compute_gradp0_max ( lo, hi, p0, slo, shi, gp0_max, dx, nodal_pressure) &
-        bind (C)
-
-      ! Loop bounds
-      integer(c_int),  intent(in   ) :: lo(3),  hi(3)
-
-      ! Array bounds
-      integer(c_int),  intent(in   ) :: slo(3), shi(3)
-
-      ! Grid and time spacing
-      real(ar),        intent(in   ) :: dx(3)
-      real(ar),        intent(  out) :: gp0_max(3)
-
-      ! Arrays
-      real(ar),        intent(in   ) ::                       &
-           p0(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      integer(c_int),  intent(in   ) :: nodal_pressure
-
-      ! Local variables
-      integer(c_int) :: i, j, k
-      real(ar)       :: odx, ody, odz
-
-      odx = one / dx(1)
-      ody = one / dx(2)
-      odz = one / dx(3)
-
-      gp0_max(:) = zero
-
-      if ( nodal_pressure == 1 ) then
-
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
-
-                  gp0_max(1) = max( gp0_max(1), abs( &
-                       p0(i+1,j,k) + p0(i+1,j+1,k) + p0(i+1,j,k+1) + p0(i+1,j+1,k+1) &
-                       - p0(i  ,j,k) - p0(i  ,j+1,k) - p0(i  ,j,k+1) - p0(i  ,j+1,k+1) ) )
-
-                  gp0_max(2) = max( gp0_max(2), abs( &
-                       p0(i,j+1,k) + p0(i+1,j+1,k) + p0(i,j+1,k+1) + p0(i+1,j+1,k+1) &
-                       - p0(i,j  ,k) - p0(i+1,j  ,k) - p0(i,j  ,k+1) - p0(i+1,j  ,k+1) ) )
-
-                  gp0_max(3) = max( gp0_max(3), abs( &
-                       p0(i,j,k+1) + p0(i+1,j,k+1) + p0(i,j+1,k+1) + p0(i+1,j+1,k+1) &
-                       - p0(i,j,k  ) - p0(i+1,j,k  ) - p0(i,j+1,k  ) - p0(i+1,j+1,k  ) ) )
-
-
-               end do
-            end do
-         end do
-
-         gp0_max(1) = gp0_max(1) * odx * 0.25d0
-         gp0_max(2) = gp0_max(2) * ody * 0.25d0
-         gp0_max(3) = gp0_max(3) * odz * 0.25d0
-
-      else
-
-         ! The box is cell-centered
-         do k = lo(3), hi(3)+1
-            do j = lo(2), hi(2)+1
-               do i = lo(1), hi(1)+1
-
-                  gp0_max(1) = max( gp0_max(1), abs(p0(i,j,k) - p0(i-1,j,k)))
-                  gp0_max(2) = max( gp0_max(2), abs(p0(i,j,k) - p0(i,j-1,k)))
-                  gp0_max(3) = max( gp0_max(3), abs(p0(i,j,k) - p0(i,j,k-1)))
-
-               end do
-            end do
-         end do
-
-         gp0_max(1) = gp0_max(1) * odx
-         gp0_max(2) = gp0_max(2) * ody
-         gp0_max(3) = gp0_max(3) * odz
-
-      end if
-
-   end subroutine compute_gradp0_max
-
-   !
-   ! Average to faces in chosen direction  -- note we only average the "idir"th 
-   !    component of cc onto the idir'th face
-   ! 
-   subroutine average_cc_to_fc ( lo, hi, fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi,  &
-                                 cc, slo, shi) bind(C) 
-
-      ! Loop bounds (assumed face centered!)
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-
-      ! Arrays bounds
-      integer(c_int), intent(in   ) :: fxlo(3),fxhi(3)
-      integer(c_int), intent(in   ) :: fylo(3),fyhi(3)
-      integer(c_int), intent(in   ) :: fzlo(3),fzhi(3)
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-
-      ! Array
-      real(ar),       intent(inout) :: &
-           fx(fxlo(1):fxhi(1),fxlo(2):fxhi(2),fxlo(3):fxhi(3)), &
-           fy(fylo(1):fyhi(1),fylo(2):fyhi(2),fylo(3):fyhi(3)), &
-           fz(fzlo(1):fzhi(1),fzlo(2):fzhi(2),fzlo(3):fzhi(3))
-
-      real(ar),       intent(in   ) :: &
-           cc(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
-      
-      ! Local variables
-      integer  :: i, j, k
-
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)+1
-               fx(i,j,k) = half * ( cc(i-1,j,k,1) + cc(i,j,k,1) )  
-            end do
-         end do
-      end do
-
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)+1
-            do i = lo(1), hi(1)
-               fy(i,j,k) = half * ( cc(i,j-1,k,2) + cc(i,j,k,2) )  
-            end do
-         end do
-      end do
-
-      do k = lo(3), hi(3)+1
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-               fz(i,j,k) = half * ( cc(i,j,k-1,3) + cc(i,j,k,3) )  
-            end do
-         end do
-      end do
-
-   end subroutine average_cc_to_fc
 end module projection_mod

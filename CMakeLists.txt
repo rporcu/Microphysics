@@ -59,6 +59,15 @@ if ( NOT ( AMREX_ENABLE_PARTICLES AND AMREX_ENABLE_AMRDATA
    message ( FATAL_ERROR "AMReX installation missing required components!")
 endif ()
 
+if (ENABLE_OMP AND (NOT AMREX_ENABLE_OMP) )
+   message(FATAL_ERROR "Option ENABLE_OMP requires AMReX to be built with OpenMP support")
+endif ()
+
+if (ENABLE_MPI AND (NOT AMREX_ENABLE_MPI) )
+   message(FATAL_ERROR "Option ENABLE_MPI requires AMReX to be built with MPI support")
+endif ()
+
+
 if ( NOT ( "${MFIX_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
    message (WARNING "MFIX build type (${MFIX_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
 endif ()
@@ -69,13 +78,13 @@ endif ()
 if ( ENABLE_PROJCC )
   set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src_cc/main.cpp )
 else ()
-  set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
+  set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src_staggered/main.cpp )
 endif ()
 
 #
 # Core MFIX library
-# For the time being, we keep to versions: one with sources in src/
-# ( SIMPLE + Exact Projection ), one with sources in both src_cc/ and src/
+# For the time being, we keep to versions: one with sources in src_staggered/
+# ( SIMPLE + Exact Projection ), one with sources in both src_cc/ and src_staggered/
 # ( Approximate Projection only ).
 #
 if (ENABLE_PROJCC)
@@ -84,12 +93,11 @@ if (ENABLE_PROJCC)
   set (ENABLE_PTESTS ON)
   set (ENABLE_STESTS OFF)
 else ()
-  add_subdirectory (src)
+  add_subdirectory (src_staggered)
 endif ()
 
 # Print out config summary
 print_mfix_configuration_summary (${MFIX_LIBNAME})
-
 
 # We should check what this line does
 file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)

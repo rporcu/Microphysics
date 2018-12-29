@@ -13,26 +13,40 @@ tmp.*
 
 Size*
 
+Makefile
+
+
 # Code Info
 compile_commands.json
 tags
 TAGS
 .ctags
 
+
 # OS Lint
 .DS_Store
 .dirstamp
 
-Makefile
 
 # IDE Lint
 build/
 .build/
 .vscode/
 
+
+# Make lint
+exec/mfix3d*
+exec/tmp_build_dir/*
+exec_cc/Make.local
+exec_cc/mfix3d.*
+exec_cc/tmp_build_dir/*
+exec_cc/AMReX_buildInfo.cpp
+
+
 # Error/Debug output
 tutorials/**/pout.*
 tutorials/**/Backtrace.*
+
 
 # EB/Paraview files
 tutorials/**/*.vtr
@@ -40,20 +54,26 @@ tutorials/**/eb*.pvtp
 tutorials/**/*.vtp
 tutorials/**/*.pvd
 
+
 # Raw particle data
 tutorials/**/vis*
 tutorials/**/par*
+
 
 # Amrvis plotfiles and checkpoint files
 tutorials/**/plt*
 tutorials/**/chk*
 tutorials/**/R_*
+tutorials/**/ls_plt*
+
 
 # Misc output
 tutorials/**/*.out
 
+
 # Documentation Lint
 doc/Doxyfile
+
 
 # Tex Lint
 doc/UsersGuide/*.aux

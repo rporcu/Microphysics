@@ -1,8 +1,9 @@
 f90EXE_sources += calc_drag.f90
 f90EXE_sources += calc_particle_beta.f90
-f90EXE_sources += set_gradp_bcs.f90
+f90EXE_sources += flip_drag_terms.f90
+f90EXE_sources += flip_particle_vol.f90
 f90EXE_sources += particle_pic.f90
-f90EXE_sources += set_drag_bcs.f90
+f90EXE_sources += set_gradp_bcs.f90
 
 F90EXE_headers += mfix_des_F.H
 

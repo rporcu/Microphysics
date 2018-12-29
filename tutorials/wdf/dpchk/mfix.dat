@@ -1,0 +1,137 @@
+########################################################################
+#                                                                      #
+# Author:                                               Date: xx-xxxx  #
+# Modified: J. Musser                                   Date: 08-2017  #
+# Modified: wdf                                         Date: 03-2018  #
+#                                                                      #
+# Description: Small Scale Challenge Problem I (SSCP-I)                #
+#                                                                      #
+# Reference: B. Gopalan, et al., Measurements of pressure drop and     #
+#            particle velocity in a pseudo 2-D rectangular bed with    #
+#            Geldart Group D particles, Powder Tech., 291 299-310      #
+#            (2016)                                                    #
+#                                                                      #
+########################################################################
+
+  RUN_NAME = 'R'
+  DESCRIPTION = 'sscpi'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+#amr  TSTOP = 65.1
+
+  DT     = 1.00E-04
+  DT_MIN = 1.00E-09
+  DT_MAX = 1.00E-04
+
+  FULL_LOG = .T.
+  CALL_USR = .F.
+
+  DRAG_TYPE = 'GIDASPOW_BLEND'
+
+  GRAVITY(1) = -9.80665E+00
+  GRAVITY(2) = 0.0d0
+  GRAVITY(3) = 0.0d0
+
+#_______________________________________________________________________
+# NUMERICAL SECTION
+
+  TOL_RESID = 1.0E-03
+  MAX_NIT = 200
+
+#_______________________________________________________________________
+# MATERIAL SECTION
+
+! Gas Section
+!---------------------------------------------------------------------//
+  RO_g0 = 1.2E+00   ! (kg/m3)
+  MU_g0 = 1.8E-05   ! (Pa.sec)
+
+
+! Particle Section
+!---------------------------------------------------------------------//
+
+  PARTICLE_TYPES = 1
+
+! Friction coefficient. (1)
+  MEW =   0.10               ! particle-particle
+  MEW_W = 0.10               ! particle-wall
+
+! Normal collision spring constant. (N/m)
+  KN =   440.0               ! particle-particle
+  KN_W = 440.0               ! particle-wall
+
+! Restitution coefficient. (1)
+  DES_EN_INPUT = 0.95        ! particle-particle
+  DES_EN_WALL_INPUT = 0.95   ! particle-wall
+
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+  IC_X_w(1) =   0.000   ! (m)
+  IC_X_e(1) =   0.120   ! (m)
+  IC_Y_s(1) =   0.000   ! (m)
+  IC_Y_n(1) =   0.044   ! (m)
+  IC_Z_b(1) =   0.000   ! (m)
+  IC_Z_t(1) =   0.010   ! (m)
+
+  IC_EP_g(1) =  1.000   ! (m)
+
+  IC_U_g(1) =   0.000   ! (m)
+  IC_V_g(1) =   0.000   ! (m)
+  IC_W_g(1) =   0.000   ! (m)
+
+
+#_______________________________________________________________________
+# BOUNDARY CONDITIONS SECTION
+
+! Uniform Inflow:
+!---------------------------------------------------------------------//
+  BC_X_w(1) =    0.000   ! (m)
+  BC_X_e(1) =    0.000   ! (m)
+  BC_Y_s(1) =    0.000   ! (m)
+  BC_Y_n(1) =    0.044   ! (m)
+  BC_Z_b(1) =    0.000   ! (m)
+  BC_Z_t(1) =    0.010   ! (m)
+
+  BC_TYPE(1) =   'MI'
+  BC_EP_g(1) =   1.0
+  BC_P_g(1)  =   0.0     ! (Pa)
+
+  BC_U_g(1) =    0.450   ! (m/sec)
+  BC_V_g(1) =    0.000   ! (m/sec)
+  BC_W_g(1) =    0.000   ! (m/sec)
+
+
+! Top Pressure Outflow:
+!---------------------------------------------------------------------//
+  BC_X_w(2) =    0.120   ! (m)
+  BC_X_e(2) =    0.120   ! (m)
+  BC_Y_s(2) =    0.000   ! (m)
+  BC_Y_n(2) =    0.044   ! (m)
+  BC_Z_b(2) =    0.000   ! (m)
+  BC_Z_t(2) =    0.010   ! (m)
+
+  BC_TYPE(2) =   'PO'
+
+  BC_P_g(2) =    0.0     ! (Pa)
+
+
+#_______________________________________________________________________
+# USER OUTPUT CONTROL
+
+! pg bottom plane
+!---------------------------------------------------------------------//
+
+   USR_DT(1) = 0.01     ! (sec)
+
+  USR_X_w(1) = 0.00125   ! (m) ! y1 = dy/2
+  USR_X_e(1) = 0.00125   ! (m) !
+  USR_Y_s(1) = 0.000     ! (m)
+  USR_Y_n(1) = 0.044     ! (m)
+  USR_Z_b(1) = 0.000     ! (m)
+  USR_Z_t(1) = 0.010     ! (m)
+
+
