@@ -206,12 +206,8 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
     if (ebfactory != NULL) {
 
         const Real * dx = Geom(lev).CellSize();
-        MultiFab dummy;
 
-        // amrex::Print() << ParticleBoxArray(lev) << std::endl;
-
-        dummy.define(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                     1, 0, MFInfo(), * ebfactory);
+        const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
 
         for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti) {
             // Real particles
@@ -219,15 +215,12 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
 
             void * particles  = pti.GetArrayOfStructs().data();
 
-            const auto & sfab = static_cast <EBFArrayBox const&>((dummy)[pti]);
-            const auto & flag = sfab.getEBCellFlagFab();
-
             const Box & bx = pti.tilebox();
 
             // Remove particles outside of or touching the walls
-            if (flag.getType(bx) != FabType::regular)
+            if ((*flags)[pti].getType(bx) != FabType::regular)
             {
-                if (flag.getType(bx) == FabType::covered)
+                if ((*flags)[pti].getType(bx) == FabType::covered)
                 {
                     for (auto & p: pti.GetArrayOfStructs())
                         p.id() = -1;
@@ -238,7 +231,7 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
                     rm_wall_collisions_eb(particles, &nrp,
                                           BL_TO_FORTRAN_3D((*ls_valid)[pti]),
                                           BL_TO_FORTRAN_3D((*ls_phi)[pti]),
-                                          BL_TO_FORTRAN_3D(flag),
+                                          BL_TO_FORTRAN_3D((*flags)[pti]),
                                           Geom(lev).ProbLo(),
                                           dx, & ls_refinement);
                 }
@@ -394,47 +387,6 @@ MFIXParticleContainer::InitData()
 {
 }
 
-std::unique_ptr<MultiFab> MFIXParticleContainer::EBNormals(int lev,
-                                                           EBFArrayBoxFactory * ebfactory, MultiFab * dummy)
-{
-    // Container for normal data
-    std::unique_ptr<MultiFab> normal = std::unique_ptr<MultiFab>(new MultiFab);
-
-    // Only call the routine for wall collisions if the box has a wall
-    if (ebfactory != NULL) {
-        dummy->define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0, MFInfo(), * ebfactory);
-        std::array<const MultiCutFab*, AMREX_SPACEDIM> areafrac = ebfactory->getAreaFrac();
-
-        // We pre-compute the normals
-        normal->define(ParticleBoxArray(lev), ParticleDistributionMap(lev), 3, 2);
-
-        for(MFIter mfi(* normal, true); mfi.isValid(); ++mfi){
-            Box tile_box = mfi.tilebox();
-            const int* lo = tile_box.loVect();
-            const int* hi = tile_box.hiVect();
-
-            const auto& sfab = static_cast <EBFArrayBox const&>((*dummy)[mfi]);
-            const auto& flag = sfab.getEBCellFlagFab();
-
-            if (flag.getType(amrex::grow(tile_box,1)) == FabType::singlevalued)
-            {
-               BL_PROFILE_VAR("compute_normals()", compute_normals);
-                amrex_eb_compute_normals(lo, hi,
-                                         BL_TO_FORTRAN_3D(flag),
-                                         BL_TO_FORTRAN_3D((* normal)[mfi]),
-                                         BL_TO_FORTRAN_3D((* areafrac[0])[mfi]),
-                                         BL_TO_FORTRAN_3D((* areafrac[1])[mfi]),
-                                         BL_TO_FORTRAN_3D((* areafrac[2])[mfi])   );
-               BL_PROFILE_VAR_STOP(compute_normals);
-            }
-        }
-        normal->FillBoundary(Geom(0).periodicity());
-    }
-
-    return normal;
-}
-
-
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
                                             EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals,
                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
@@ -500,8 +452,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     /****************************************************************************
      * Get particle EB geometric info
      ***************************************************************************/
-    MultiFab dummy(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                   1, 0, MFInfo(), *ebfactory);
+    const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
 
     /****************************************************************************
      * Iterate over sub-steps                                                   *
@@ -581,10 +532,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             // walls
             if (ebfactory != NULL)
             {
-                const auto & sfab = static_cast <EBFArrayBox const &>(dummy[pti]);
-                const auto & flag = sfab.getEBCellFlagFab();
-
-                if (flag.getType(amrex::grow(bx,1)) == FabType::singlevalued)
+                if ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued)
                 {
                     const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
 
@@ -593,7 +541,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     if(legacy__eb_collisions) {
                         calc_wall_collisions(particles, & ntot, & nrp,
                                              tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                             BL_TO_FORTRAN_3D(flag),
+                                             BL_TO_FORTRAN_3D((*flags)[pti]),
                                              BL_TO_FORTRAN_3D((* eb_normals)[pti]),
                                              BL_TO_FORTRAN_3D((* bndrycent)[pti]),
                                              dx);

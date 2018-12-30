@@ -597,9 +597,6 @@ mfix::RegridLevelSetArray (int a_lev)
        ls_new->copy(*ls[a_lev], 0, 0, 1, ng, ng);
        ls[a_lev] = std::move(ls_new);
 
-       // eb_normals is a legacy of the old collision algorithm -> deprecated
-       //eb_normals  = pc->EBNormals(a_lev, particle_ebfactory[a_lev].get(), dummy.get());
-
        eb_normals[a_lev]->define(pc->ParticleBoxArray(a_lev),
                                  pc->ParticleDistributionMap(a_lev),
                                  3, 2, MFInfo(), * particle_ebfactory[a_lev]);
