@@ -68,11 +68,11 @@ particles.tile_size = 1024 1024 1024
 
 # Level-set refinement and padding
 mfix.levelset__refinement    = 4 # levelset resolution
-mfix.levelset__pad           = 8 # levelset ghost cells
+mfix.levelset__pad           = 4 # levelset ghost cells
 
 # EB refinement and padding
 # => only needed when using multiple grids
-mfix.levelset__eb_pad        = 8 # EB extends into neighboring grids
+mfix.levelset__eb_pad        = 2 # EB extends into neighboring grids
 
 mfix.write_eb_surface = false  # Needed to output eb-surfaces
 
