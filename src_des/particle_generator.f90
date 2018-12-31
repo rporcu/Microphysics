@@ -82,7 +82,8 @@ contains
 
       select case(trim(ic_pack_type(icv)))
           case('HCP'   ); call hex_close_pack(icv, type, lo, hi, np, pc, dx, dy, dz)
-          case('RANDOM'); call random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
+          case('RANDOM'); call random_fill(icv, type, lo, hi, np, pc, dx, dy, dz, .false.)
+          case('PSEUDO_RANDOM'); call random_fill(icv, type, lo, hi, np, pc, dx, dy, dz, .true. )
           case('ONEPER'); call one_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
           case('EIGHTPER'); call eight_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
           case DEFAULT
@@ -534,7 +535,7 @@ contains
    !           particles in the ic region.                                !
    !                                                                      !
    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine random_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
+   subroutine random_fill(icv, type, lo, hi, np, pc, dx, dy, dz, fix_seed)
 
       use ic, only: dim_ic, ic_defined
       use ic, only: ic_ep_s
@@ -554,6 +555,7 @@ contains
 
       integer(c_int), intent(in   ) :: icv, type, lo(3), hi(3)
       integer(c_int), intent(inout) :: np, pc
+      logical       , intent(in   ) :: fix_seed
       real(rt),       intent(in   ) :: dx, dy, dz
 
       real(rt), parameter :: sqrt3 = sqrt(3.0)
@@ -624,6 +626,9 @@ contains
       np = 0
       fails = 0
       pinc = 0
+
+      if (fix_seed) &
+         call init_random_seed(fix_seed)
 
       do while (np < seed .and. fails < maxfails)
 
@@ -773,7 +778,7 @@ contains
       !-----------------------------------------------
 
       nsize = size(dp(:))
-      ! call init_random_seed
+      ! call init_random_seed(.false.)
 
       i=1
       do while(i<= ceiling(real(nsize/2.0)))
@@ -844,7 +849,7 @@ contains
       integer :: nsize, lc
       real(rt) :: lscale
 
-      ! call init_random_seed
+      ! call init_random_seed(.false.)
       call random_number(dp)
 
       lscale = dp_max - dp_min
@@ -864,9 +869,11 @@ contains
    !                                                                     !
    !                                                                     !
    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   subroutine init_random_seed
+   subroutine init_random_seed(fix_seed)
 
       implicit none
+
+      logical, intent(in)  :: fix_seed
 
       !-----------------------------------------------
       ! local variables
@@ -880,6 +887,11 @@ contains
       allocate( iseed(isize) )
       call random_seed(get=iseed)
       iseed = iseed * (idate(8)-500) ! idate(8) contains millisecond
+
+      ! Note -- "10" is arbitrary -- we just need something repeatable for 
+      !     regression testing
+      if ( fix_seed ) iseed(:) = 10
+
       call random_seed(put=iseed)
 
       if(allocated(iseed)) deallocate( iseed )
@@ -1127,7 +1139,6 @@ contains
                ! interpolates level-set from nodal phi to position pos
                call amrex_eb_interp_levelset( pos, plo, n_refine, &
                 &   phi, phlo, phhi, dx, ls_value)
-
                if (ls_value < rp) particles(p)%id = -1
             end if
             
