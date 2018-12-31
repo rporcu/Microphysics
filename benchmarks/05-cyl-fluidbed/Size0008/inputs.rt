@@ -84,7 +84,7 @@ cylinder.internal_flow = true
 cylinder.closed_bottom = true
 cylinder.bottom_offset = 1.0e-8
 
-cylinder.radius = 0.00099
+cylinder.radius = 0.0009
 cylinder.height = -1.0
 
 cylinder.direction = 0
