@@ -88,7 +88,7 @@ mfix.geometry = "cylinder"
 cylinder.internal_flow = true
 cylinder.closed_bottom = false
 
-cylinder.radius = 0.00099
+cylinder.radius = 0.0009
 cylinder.height = -1.0
 
 cylinder.direction = 0
