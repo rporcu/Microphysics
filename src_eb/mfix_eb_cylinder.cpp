@@ -193,11 +193,11 @@ void mfix::make_eb_cylinder()
                                                        {eb_grow, eb_grow, eb_grow}, EBSupport::full);
 
                 //level_set->intersection_ebf(eb_factory_cylinder, * mf_impfunc_cyl );
-                level_set->fill(eb_factory_cylinder, * mf_impfunc_cyl, level_set->get_eb_pad());
+                level_set->Fill(eb_factory_cylinder, * mf_impfunc_cyl, level_set->get_eb_pad());
                 // if there is a bottom plane, fill level set with plane IF after fill
                 if(close_bottom) {
                     std::unique_ptr<MultiFab> mf_impfunc_wall = wall_lsfactory->fill_impfunc();
-                    level_set->intersection_impfunc(* mf_impfunc_wall);
+                    level_set->Intersect(* mf_impfunc_wall);
                 }
 
                 const Real endtime    = ParallelDescriptor::second() - strttime;

@@ -122,7 +122,7 @@ mfix::make_eb_regular()
          ***********************************************************************/
 
         if (has_walls) {
-            if (!levelset__restart) level_set->intersection_impfunc( * mf_impfunc);
+            if (!levelset__restart) level_set->Intersect( * mf_impfunc);
             else
                 amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
                                << std::endl;

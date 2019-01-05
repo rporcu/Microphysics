@@ -197,7 +197,7 @@ mfix::make_eb_cyclone()
                                                       level_set->get_dm(),
                                                       {eb_grow, eb_grow, eb_grow}, EBSupport::full);
 
-                level_set->intersection_ebf(eb_factory_cyclone, * mf_impfunc_cyc );
+                level_set->Intersect(eb_factory_cyclone, * mf_impfunc_cyc );
 
                 amrex::Print() << "Done making the levelset ..." << std::endl;
 

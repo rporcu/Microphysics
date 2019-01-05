@@ -177,7 +177,7 @@ void mfix::make_eb_box()
 
                     // Plane implicit function is already a signed distance function => it's
                     // just easier to fill the level-set this way
-                    level_set->intersection_impfunc(* mf_impfunc_box);
+                    level_set->Intersect(* mf_impfunc_box);
 
                     amrex::Print() << "Done making the levelset ..." << std::endl;
 

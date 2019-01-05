@@ -398,7 +398,7 @@ void mfix::make_eb_general() {
                 amrex::Print() << "Creating the levelset ..." << std::endl;
 
                 if (use_walls){
-                    level_set->intersection_impfunc(* mf_impfunc_walls);
+                    level_set->Intersect(* mf_impfunc_walls);
                 }
 
                 if (use_poly2) {
@@ -409,7 +409,7 @@ void mfix::make_eb_general() {
                                                        level_set->get_dm(),
                                                        {eb_pad, eb_pad, eb_pad},
                                                        EBSupport::full);
-                    level_set->intersection_ebf(eb_factory_poly, * mf_impfunc_poly2);
+                    level_set->Intersect(eb_factory_poly, * mf_impfunc_poly2);
                 }
 
                 amrex::Print() << "Done making the levelset ..." << std::endl;
