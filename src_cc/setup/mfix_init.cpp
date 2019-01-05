@@ -81,11 +81,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         subdt_io = false; // default to false (if not present in inputs file)
         pp.query("subdt_io", subdt_io);
 
-        // If true, then compute particle/EB collisions directly using
-        // neighbouring eb-facets WARNING: this mode can be slow, and EB-facets
-        // can sometimes not be "water-tight"
-        pp.query("legacy__eb_collisions", legacy__eb_collisions);
-
         // Parameters used be the level-set algorithm. Refer to LSFactory (or
         // mfix.H) for more details:
         //   -> refinement: how well resolved (fine) the (level-set/EB-facet)

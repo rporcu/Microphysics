@@ -103,9 +103,6 @@ public:
     // the level-set data).
     bool levelset__restart = false;
 
-    // flag switching from calc_wall_collisions_ls to calc_wall_collisions if true
-    bool legacy__eb_collisions = false;
-
     ///
     /// Parameters describing the level-set grid:
     ///

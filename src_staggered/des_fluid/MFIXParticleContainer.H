@@ -174,12 +174,6 @@ public:
                             IArrayBox& bc_klo, IArrayBox& bc_khi,
                             int fortran_beta_comp, int fortran_vel_comp, int nghost);
 
-    ///
-    /// Flag switching from calc_wall_collisions to calc_wall_collisions_ls if true
-    ///
-    bool legacy__eb_collisions = false;
-
-
     //
     // Posprocessing utilities to compute spatially-averaged particle velocities
     // 

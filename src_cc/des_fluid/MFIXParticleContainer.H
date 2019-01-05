@@ -185,10 +185,6 @@ public:
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
                             int fortran_beta_comp, int fortran_vel_comp, int nghost);
-    ///
-    /// Flag switching from calc_wall_collisions to calc_wall_collisions_ls if true
-    ///
-    bool legacy__eb_collisions = false;
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities

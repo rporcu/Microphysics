@@ -65,10 +65,6 @@ mfix::ResizeArrays ()
                new MFIXParticleContainer(this)
                );
        }
-
-       // HACK: temporary flag used to turn on legacy mode
-       //   (used in evlove particles)
-       pc -> legacy__eb_collisions = legacy__eb_collisions;
     }
 
     ep_g.resize(nlevs_max);
