@@ -22,6 +22,12 @@ extern "C"
                             const amrex::Real* cc, const int* slo, const int* shi
       );
 
+    void mfix_sum_mf ( const int* lo, const int* hi, 
+                       const BL_FORT_FAB_ARG_3D(rho),
+                       const amrex::Real* dx, 
+                       const BL_FORT_FAB_ARG_3D(vol), 
+                       amrex::Real* mass );
+
     void compute_vort (
         const int* lo,  const int*  hi,
         amrex::Real* vort , const int* slo, const int* shi,

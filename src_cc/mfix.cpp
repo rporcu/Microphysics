@@ -268,10 +268,13 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
    }
 
 
-    // Sum up all the values of ep_g[lev]
-    // HACK  -- THIS SHOULD BE a multilevel sum
-    for (int lev = 0; lev < nlev; lev++)
-       sum_vol = ep_g[lev]->sum();
+    // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac
+    // Note ep_g = 1 - particle_volume / this_cell_volume where 
+    //    this_cell_volume = (volfrac * dx * dy * dz)
+    // When we define the sum we add up (ep_g * volfrac) so that the total sum
+    //    does not depend on whether a particle is in a full or cut cell.
+    int lev = 0; int comp = 0;
+    sum_vol = volWgtSum(lev,*ep_g[lev],comp);
 }
 
 void

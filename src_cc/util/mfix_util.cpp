@@ -200,3 +200,36 @@ mfix::mfix_norm1 ( MultiFab& mf, int lev, int comp )
 
    return mf_tmp.norm1( comp, geom[lev].periodicity() );
 }
+
+Real
+mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local) 
+{
+    BL_PROFILE("mfix::volWgtSum()");
+
+    Real        sum     = 0.0;
+    const Real* dx      = geom[lev].CellSize();
+
+    const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:sum)
+#endif    
+    for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
+    {
+        const FArrayBox& fab = mf[mfi];
+
+        const Box& box  = mfi.tilebox();
+        const int* lo   = box.loVect();
+        const int* hi   = box.hiVect();
+
+#pragma gpu
+	mfix_sum_mf(AMREX_INT_ANYD(lo),AMREX_INT_ANYD(hi),BL_TO_FORTRAN_N_ANYD(fab,comp),
+	  	    AMREX_REAL_ANYD(dx),BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+                    AMREX_MFITER_REDUCE_SUM(&sum));
+    }
+
+    if (!local)
+	ParallelDescriptor::ReduceRealSum(sum);
+
+    return sum;
+}

@@ -748,9 +748,18 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
 
   if (is_restarting == 0)
   {
-     // We need to initialize the volume fraction ep_g before the first projection
+     // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
+     ep_g[0]->setVal(1.0);
+     sum_vol_orig = volWgtSum(0,*ep_g[0],0);
+     Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
+
+     Real domain_vol = sum_vol_orig;
+
+     // Now initialize the volume fraction ep_g before the first projection
      mfix_calc_volume_fraction(sum_vol_orig);
      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+
+     Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
 
      mfix_set_scalar_bcs();
 

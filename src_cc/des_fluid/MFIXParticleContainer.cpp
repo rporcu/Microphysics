@@ -766,6 +766,10 @@ void MFIXParticleContainer::CalcVolumeFraction(const amrex::Vector< std::unique_
         // Impose a lower bound on volume fraction
         CapSolidsVolFrac(*mf_to_be_filled[lev]);
     }    
+
+    // HACK -- we really should average down (ep_g * volfrac) not ep_g.
+    for (int lev = nlev-1; lev > 0; lev++) 
+        amrex::EB_average_down(*mf_to_be_filled[lev],*mf_to_be_filled[lev-1],0,1,this->m_gdb->refRatio(lev-1));
 }
 
 void MFIXParticleContainer::CalcDragOnFluid(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,

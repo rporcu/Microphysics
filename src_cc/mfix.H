@@ -310,6 +310,8 @@ private:
     void mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
                                  Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc );
 
+    Real volWgtSum (int lev, const amrex::MultiFab& mf, int comp, bool local=false);
+
     static int nlev;
 
     Vector<int> istep = {1} ;
