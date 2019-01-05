@@ -155,11 +155,6 @@ void mfix::make_eb_box()
                                             m_eb_full_grow_cells}, m_eb_support_level)
                     );
 
-                eb_normals[lev]->define(grids[lev], dmap[lev], 3, 2,
-                                        MFInfo(), * particle_ebfactory[lev]);
-                amrex::FillEBNormals( * eb_normals[lev], * particle_ebfactory[lev], geom[lev]);
-
-
                 /****************************************************************
                  *                                                              *
                  * Fill level-set:                                              *

@@ -56,7 +56,6 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
 
                 pc->EvolveParticles(lev, nstep, dt, time,
                                     particle_ebfactory[lev].get(),
-                                    eb_normals[lev].get(),
                                     ls_lev, ls_valid, 1,
                                     particle_cost[lev].get(), knapsack_weight_type,
                                     subdt_io                                         );
@@ -67,7 +66,7 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
 
             for (int lev = 0; lev < nlev; lev++)
                 pc->EvolveParticles(lev, nstep, dt, time,
-                                    particle_ebfactory[lev].get(), eb_normals[lev].get(),
+                                    particle_ebfactory[lev].get(), 
                                     level_set->get_data(),
                                     level_set->get_valid(),
                                     level_set->get_ls_ref(),

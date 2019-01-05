@@ -157,10 +157,6 @@ mfix::ResizeArrays ()
     if (solve_dem){
         particle_ebfactory.resize(nlevs_max_part);
     }
-
-    // For legacy reasons: EB normals and Dummy MF
-    eb_normals.resize(nlevs_max_part);
-    dummy.resize(nlevs_max_part);
 }
 
 void

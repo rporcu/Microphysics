@@ -597,22 +597,10 @@ mfix::RegridLevelSetArray (int a_lev)
        ls_new->copy(*ls[a_lev], 0, 0, 1, ng, ng);
        ls[a_lev] = std::move(ls_new);
 
-       eb_normals[a_lev]->define(pc->ParticleBoxArray(a_lev),
-                                 pc->ParticleDistributionMap(a_lev),
-                                 3, 2, MFInfo(), * particle_ebfactory[a_lev]);
-
-       amrex::FillEBNormals( * eb_normals[a_lev], * particle_ebfactory[a_lev],
-                             geom[a_lev]);
-
-       dummy[a_lev]->define(pc->ParticleBoxArray(a_lev),
-                            pc->ParticleDistributionMap(a_lev),
-                            3, 2, MFInfo(), * particle_ebfactory[a_lev]);
-
        // This call is needed because of the dual grid: the level-set
        // factory object and the ls data both live on the particle grids.
        level_set->regrid(ba, dm);
    }
-
 }
 
 

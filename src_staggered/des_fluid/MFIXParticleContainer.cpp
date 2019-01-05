@@ -420,7 +420,7 @@ std::unique_ptr<MultiFab> MFIXParticleContainer::EBNormals(int lev,
 
 
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
-        EBFArrayBoxFactory * ebfactory, MultiFab * eb_normals,
+        EBFArrayBoxFactory * ebfactory, 
         const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
         MultiFab * cost, std::string & knapsack_weight_type, int subdt_io)
 {
@@ -571,20 +571,11 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                     // Calculate forces and torques from particle-wall collisions
                     BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-                    if(legacy__eb_collisions) {
-                        calc_wall_collisions(particles, & ntot, & nrp,
-                                             tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                             BL_TO_FORTRAN_3D(flag),
-                                             BL_TO_FORTRAN_3D((* eb_normals)[pti]),
-                                             BL_TO_FORTRAN_3D((* bndrycent)[pti]),
-                                             dx);
-                    } else {
-                        calc_wall_collisions_ls(particles, & ntot, & nrp,
-                                                tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                                BL_TO_FORTRAN_3D((* ls_valid)[pti]),
-                                                BL_TO_FORTRAN_3D((* ls_phi)[pti]),
-                                                dx, & ls_refinement);
-                    }
+                    calc_wall_collisions_ls(particles, & ntot, & nrp,
+                                            tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                            BL_TO_FORTRAN_3D((* ls_valid)[pti]),
+                                            BL_TO_FORTRAN_3D((* ls_phi)[pti]),
+                                            dx, & ls_refinement);
 
                     // Debugging: copy data from the fc (all forces) vector to the
                     // wfor (wall forces) vector.

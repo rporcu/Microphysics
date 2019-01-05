@@ -100,7 +100,7 @@ public:
     std::unique_ptr<MultiFab> EBNormals(int lev, EBFArrayBoxFactory * ebfactory, MultiFab * dummy);
 
     void EvolveParticles(int lev, int nstep, Real dt, Real time, EBFArrayBoxFactory * ebfactory,
-            MultiFab * eb_normals, const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
+            const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
             MultiFab * cost, std::string & knapsack_weight_type, int subdt_io);
 
     void GetParticleAvgProp(int lev, Real (&avg_dp)[10], Real (&avg_ro)[10]);

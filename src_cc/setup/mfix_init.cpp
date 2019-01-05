@@ -252,10 +252,6 @@ mfix::Init(Real dt, Real time)
     {
        for (int lev = 0; lev < nlev; lev++)
        {
-          // Allocate container for eb-normals
-          eb_normals[lev] = std::unique_ptr<MultiFab>(new MultiFab);
-          dummy[lev]      = std::unique_ptr<MultiFab>(new MultiFab);
-
           // NOTE: this would break with mult-level simulations => construct this
           // for level 0 only
 

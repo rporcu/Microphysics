@@ -144,10 +144,6 @@ void mfix::make_eb_cylinder()
                 new EBFArrayBoxFactory(* eb_level_particles, geom[lev], grids[lev], dmap[lev],
                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                         m_eb_full_grow_cells}, m_eb_support_level));
-
-            dummy[lev]->define(grids[lev], dmap[lev], 1, 0, MFInfo(), * particle_ebfactory[lev]);
-            eb_normals[lev]->define(grids[lev], dmap[lev], 3, 2, MFInfo(), *particle_ebfactory[lev]);
-            amrex::FillEBNormals( * eb_normals[lev], * particle_ebfactory[lev], geom[lev]);
         }
 
         /*************************************************************************

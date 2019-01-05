@@ -72,10 +72,6 @@ mfix::Regrid (int base_lev, int nstep)
                                                         m_eb_support_level
                                                     )
                                               );
-
-           // eb_normals is a legacy of the old collision algorithm -> deprecated
-           eb_normals[base_lev] = pc->EBNormals(base_lev, particle_ebfactory[base_lev].get(),
-                                                dummy[base_lev].get());
        }
 
     } else if (load_balance_type == "KnapSack") {
@@ -146,9 +142,6 @@ mfix::Regrid (int base_lev, int nstep)
                                                         )
                                                   );
 
-                    // eb_normals is a legacy of the old collision algorithm -> deprecated
-                    eb_normals[lev] = pc->EBNormals(lev, particle_ebfactory[lev].get(),
-                                                    dummy[lev].get());
                 }
             }
 
@@ -210,9 +203,6 @@ mfix::Regrid (int base_lev, int nstep)
                                                         )
                                                    );
 
-                // eb_normals is a legacy of the old collision algorithm -> deprecated
-                eb_normals[base_lev] = pc->EBNormals(base_lev, particle_ebfactory[base_lev].get(),
-                                                     dummy[base_lev].get());
             }
         }
     }
