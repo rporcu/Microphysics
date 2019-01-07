@@ -72,29 +72,15 @@ if ( NOT ( "${MFIX_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
    message (WARNING "MFIX build type (${MFIX_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
 endif ()
 
-#
-# This is the main file
-#
-if ( ENABLE_PROJCC )
-  set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src_cc/main.cpp )
-else ()
-  set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src_staggered/main.cpp )
-endif ()
+set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
 #
 # Core MFIX library
-# For the time being, we keep to versions: one with sources in src_staggered/
-# ( SIMPLE + Exact Projection ), one with sources in both src_cc/ and src_staggered/
-# ( Approximate Projection only ).
 #
-if (ENABLE_PROJCC)
-  message ( WARNING "Building MFIX in experimental APPROXIMATE PROJECTION mode (ENABLE_PROJCC=on)" )
-  add_subdirectory (src_cc)
-  set (ENABLE_PTESTS ON)
-  set (ENABLE_STESTS OFF)
-else ()
-  add_subdirectory (src_staggered)
-endif ()
+message ( WARNING "Building MFIX in experimental APPROXIMATE PROJECTION mode (ENABLE_PROJCC=on)" )
+add_subdirectory (src)
+set (ENABLE_PTESTS ON)
+set (ENABLE_STESTS OFF)
 
 # Print out config summary
 print_mfix_configuration_summary (${MFIX_LIBNAME})

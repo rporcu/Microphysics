@@ -7,22 +7,21 @@
 # to the source file.
 #
 set ( MFIX_Fortran_MOD_PATH ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mod )
-set ( MFIX_INCLUDE_PATHS  ${CMAKE_CURRENT_LIST_DIR}/include ${MFIX_Fortran_MOD_PATH})
+set ( MFIX_INCLUDE_PATHS  include ${MFIX_Fortran_MOD_PATH})
 
 macro ( add_sources )
-   foreach ( item IN ITEMS ${ARGN} )
-      set ( source_name  ${CMAKE_CURRENT_LIST_DIR}/${item} )
-      string ( REPLACE "//" "/" source_name ${source_name})
-      target_sources ( ${MFIX_LIBNAME} PRIVATE ${source_name} )
+  foreach ( item IN ITEMS ${ARGN} )
+    set ( source_name  ${CMAKE_CURRENT_LIST_DIR}/${item} )
+    string ( REPLACE "//" "/" source_name ${source_name})
+    target_sources ( ${MFIX_LIBNAME} PRIVATE ${source_name} )
 
-      # Add folder to list of includes if necessary
-      get_filename_component ( filetype ${source_name} EXT )
-      if ( (${filetype} MATCHES ".h") OR (${filetype} MATCHES ".H" ) )
-	 list (APPEND MFIX_INCLUDE_PATHS ${CMAKE_CURRENT_LIST_DIR})
-      endif()
-   endforeach()
+    # Add folder to list of includes if necessary
+    get_filename_component ( filetype ${source_name} EXT )
+    if ( (${filetype} MATCHES ".h") OR (${filetype} MATCHES ".H" ) )
+      list (APPEND MFIX_INCLUDE_PATHS ${CMAKE_CURRENT_LIST_DIR})
+    endif()
+  endforeach()
 endmacro()
-
 
 #
 # Fist, define the library we want to add
@@ -43,34 +42,37 @@ set_target_properties ( ${MFIX_LIBNAME}
 #
 # Uncategorized
 # 
-add_sources ( fill_bc0.f90 )
-add_sources ( mfix_evolve.cpp )
-add_sources ( mfix.cpp )
+add_sources ( compute_dt.cpp )
 add_sources ( mfix_regrid.cpp )
-add_sources ( mfix.H mfix_F.H )
-add_sources ( calc_tau.f90 compute_divu.f90 compute_vort.f90 )
-add_sources ( set_mac_velocity_bcs.f90 )
-add_sources ( zero_wall_norm_vel.f90 )
+add_sources ( mfix_advance.cpp )
+add_sources ( compute_diveu.cpp )
+add_sources ( mfix_drag.cpp )
+add_sources ( mfix_evolve.cpp  )
+add_sources ( mfix.cpp  )
+add_sources ( main.cpp )
+add_sources ( mfix_F.H )
+add_sources ( mfix.H )
 
 #
-# Fortran Modules
-#
-include ( ../mods/CMakeLists.txt )
+# I/0
+# 
+include ( io/CMakeLists.txt )
 
 #
-# Particle/fluid
+# Convection
+#
+include ( convection/CMakeLists.txt )
+
+#
+# DES
 #
 include ( des_fluid/CMakeLists.txt )
+include ( src_des/CMakeLists.txt )
 
 #
-# Data checks
+# Diffusion
 #
-include ( ../check_data/CMakeLists.txt )
-
-#
-# I/O routines
-#
-include ( io/CMakeLists.txt )
+include ( diffusion/CMakeLists.txt )
 
 #
 # Projection
@@ -78,44 +80,43 @@ include ( io/CMakeLists.txt )
 include ( projection/CMakeLists.txt )
 
 #
-# Setup routines
-#
+# Setup
+# 
 include ( setup/CMakeLists.txt )
 
 #
-# SIMPLE routines
-#
-include ( simple/CMakeLists.txt )
-
-#
-# Users hooks
-#
-include ( ../usr/CMakeLists.txt )
-
-#
-# EB routines
-#
-include ( ../src_eb/CMakeLists.txt )
-
-#
-# Particle routines
-#
-include ( ../src_des/CMakeLists.txt )
-
+# Utility functions
 # 
-# Add the include paths
-# By adding the include paths as a property of mfixcore, we make sure
-# that these same paths will be used whenever another target target
-# lists mficore as a dependency
+include ( util/CMakeLists.txt )
+
 #
+# Setup check functions
+#
+include ( check_data/CMakeLists.txt )
+
+#
+# Global module files
+#
+include ( mods/CMakeLists.txt )
+
+#
+# User hooks (UDFs)
+#
+include ( usr/CMakeLists.txt )
+
+#
+# Embedded boundary functions
+#
+include ( eb/CMakeLists.txt )
+
+# Remove duplicates from include lists
 list ( REMOVE_DUPLICATES MFIX_INCLUDE_PATHS )
 target_include_directories ( ${MFIX_LIBNAME} PUBLIC ${MFIX_INCLUDE_PATHS} )
 
 #
 # Link to imported AMReX
 #
-target_link_libraries ( ${MFIX_LIBNAME} AMReX::amrex )
-
+target_link_libraries ( ${MFIX_LIBNAME} PUBLIC AMReX::amrex )
 
 #
 # Set the default flags 
@@ -190,21 +191,50 @@ if (DEFINED ENABLE_FPE)
 	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
 	 -ftrapv>>
 	 # Intel
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+	 $<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:Fortran>:
 	 -fpe3>>
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+	 $<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:CXX>:
 	 -fpe3>>
 	 # Cray
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:Fortran>:
 	 -K trap=fp>>
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:CXX>:
 	 -K trap=fp>>
 	 #  PGI
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
+	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:Fortran>:
 	 -Ktrap=divz,inv>>
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
+	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:CXX>:
 	 >> )
    endif ()
 else ()
    message (AUTHOR_WARNING "Variable ENABLE_FPE is not defined")
 endif ()
+
+
+#
+# Setup OpenMP
+#
+if (ENABLE_OMP)
+   find_package (OpenMP REQUIRED)
+
+   # Additional compiler flags
+   strip (OpenMP_C_FLAGS)
+   strip (OpenMP_CXX_FLAGS)
+   strip (OpenMP_Fortran_FLAGS)
+
+   target_compile_options ( ${MFIX_LIBNAME} PUBLIC
+      $<$<COMPILE_LANGUAGE:Fortran>:${OpenMP_Fortran_FLAGS}>
+      $<$<COMPILE_LANGUAGE:C>:${OpenMP_C_FLAGS}>
+      $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>
+      )
+
+   # The openMP flags are required also during linking phase
+   # The NON-clean way of achiving this is by adding a flag to the linker
+   # as follows. Notice that in more recent version of CMake, openMP becomes
+   # an imported target, thus provinding a clean way to do this
+   strip (OpenMP_CXX_FLAGS)
+   target_link_libraries( ${MFIX_LIBNAME} PUBLIC ${OpenMP_CXX_FLAGS} )
+else ()
+   # Cray compiler has OMP turned on by default
+   target_compile_options ( ${MFIX_LIBNAME} PUBLIC $<$<CXX_COMPILER_ID:Cray>:-h;noomp> $<$<C_COMPILER_ID:Cray>:-h;noomp> )
+endif()
