@@ -882,15 +882,18 @@ contains
       integer,allocatable  :: iseed(:)
       !-----------------------------------------------
 
-      call date_and_time(values=idate)
       call random_seed(size=isize)
       allocate( iseed(isize) )
       call random_seed(get=iseed)
-      iseed = iseed * (idate(8)-500) ! idate(8) contains millisecond
 
       ! Note -- "10" is arbitrary -- we just need something repeatable for 
       !     regression testing
-      if ( fix_seed ) iseed(:) = 10
+      if ( fix_seed ) then
+         iseed(:) = 10
+      else
+         call date_and_time(values=idate)
+         iseed = iseed * (idate(8)-500) ! idate(8) contains millisecond
+      end if
 
       call random_seed(put=iseed)
 
