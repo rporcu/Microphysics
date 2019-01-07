@@ -81,11 +81,6 @@
           do i = lo(1), hi(1)
 
              dm = rho(i,j,k) * vol(i,j,k)
-             ! dm = rho(i,j,k)
-
-             if (k.eq.2 .and. vol(i,j,k) .lt. 1.0d0)  then
-                print *,' USING ',i,j,k,vol(i,j,k)
-             end if
 
              call amrex_add(mass, dm)
 
