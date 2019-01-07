@@ -517,7 +517,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         // Overwrite initial level-set data using the loaded MultiFab
         level_set->set_data(ls_mf);
 
-        // Make sure that at (at least) an initial MultiFab ist stored in ls[lev].
+        // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
         // (otherwise, if there are no walls/boundaries in the simulation, saving a
         // plot file or checkpoint will segfault).
         std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
