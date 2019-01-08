@@ -29,7 +29,6 @@ void mfix::make_eb_cylinder()
      * Get cylinder information from inputs file.                               *
      ***************************************************************************/
     bool inside       = true;
-    Real offset       = 1.0e-8;
 
     Real radius    = 0.0002;
     Real height    = -1.;
@@ -38,7 +37,6 @@ void mfix::make_eb_cylinder()
     Vector<Real> centervec(3);
 
     pp.query("internal_flow", inside);
-    pp.query("bottom_offset", offset);
 
     pp.query("radius",     radius);
     pp.query("height",     height);
@@ -59,7 +57,6 @@ void mfix::make_eb_cylinder()
     amrex::Print() << " Internal Flow: " << inside << std::endl;
     amrex::Print() << " Radius:    " << radius    << std::endl;
     amrex::Print() << " Height:    " << height    << std::endl;
-    amrex::Print() << " Offset:    " << offset    << std::endl;
     amrex::Print() << " Direction: " << direction << std::endl;
     amrex::Print() << " Center:    " << center[0] << ", "
                    << center[1] << ", "
@@ -198,7 +195,6 @@ void mfix::make_amr_cylinder()
      ***************************************************************************/
 
     bool inside       = true;
-    Real offset       = 1.0e-8;
 
     Real radius    = 0.0002;
     Real height    = -1.;
@@ -207,7 +203,6 @@ void mfix::make_amr_cylinder()
     Vector<Real> centervec(3);
 
     pp.query("internal_flow", inside);
-    pp.query("bottom_offset", offset);
 
     pp.query("radius",     radius);
     pp.query("height",     height);
@@ -220,7 +215,6 @@ void mfix::make_amr_cylinder()
     amrex::Print() << " Internal Flow: " << inside << std::endl;
     amrex::Print() << " Radius:    " << radius    << std::endl;
     amrex::Print() << " Height:    " << height    << std::endl;
-    amrex::Print() << " Offset:    " << offset    << std::endl;
     amrex::Print() << " Direction: " << direction << std::endl;
     amrex::Print() << " Center:    " << center[0] << ", "
                    << center[1] << ", "
