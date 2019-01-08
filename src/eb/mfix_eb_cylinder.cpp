@@ -149,6 +149,9 @@ void mfix::make_eb_cylinder()
                                   " took " << endtime << " seconds" << std::endl;
             }
 
+            amrex::Print() << "Modifying level set to see inflow" << std::endl;
+            mfix_set_ls_near_inflow();
+
         } else {
             amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
                            << std::endl;

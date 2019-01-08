@@ -184,7 +184,6 @@ mfix::AllocateArrays (int lev)
     m_u_mac[lev]->setVal(0.);
     m_v_mac[lev]->setVal(0.);
     m_w_mac[lev]->setVal(0.);
-
 }
 
 
@@ -603,7 +602,6 @@ mfix::RegridLevelSetArray (int a_lev)
 
        amrex::Print() << "Modifying level set to see inflow" << std::endl;
        mfix_set_ls_near_inflow();
-       exit(0);
    }
 }
 
