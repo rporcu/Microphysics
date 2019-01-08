@@ -532,12 +532,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
        fill_mf_bc(lev,*ep_g[lev]);
        fill_mf_bc(lev,*ep_go[lev]);
 
-       if (!nodal_pressure )
-       {
-           fill_mf_bc(lev,*p_g[lev]);
-           fill_mf_bc(lev,*p_go[lev]);
-       }
-
        fill_mf_bc(lev,*ro_g[lev]);
        fill_mf_bc(lev,*ro_go[lev]);
        fill_mf_bc(lev,*rop_g[lev]);
@@ -708,16 +702,11 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
           int dcomp = vecVarsName.size();
           for( int i = 0; i < pltscalarVars.size(); i++ ) {
               if (pltscaVarsName[i] == "p_g") {
-                  if (nodal_pressure) {
-                     MultiFab p_nd(p_g[lev]->boxArray(),dmap[lev],1,0);
-                     p_nd.setVal(0.);
-                     MultiFab::Copy(p_nd, (* p_g[lev]), 0, 0, 1, 0);
-                     MultiFab::Add (p_nd, (*p0_g[lev]), 0, 0, 1, 0);
-                     amrex::average_node_to_cellcenter(*mf[lev], dcomp, p_nd, 0, 1);
-                  } else {
-                     MultiFab::Copy(*mf[lev], (* p_g[lev]), 0, dcomp, 1, 0);
-                     MultiFab::Add (*mf[lev], (*p0_g[lev]), 0, dcomp, 1, 0);
-                  }
+                MultiFab p_nd(p_g[lev]->boxArray(),dmap[lev],1,0);
+                p_nd.setVal(0.);
+                MultiFab::Copy(p_nd, (* p_g[lev]), 0, 0, 1, 0);
+                MultiFab::Add (p_nd, (*p0_g[lev]), 0, 0, 1, 0);
+                amrex::average_node_to_cellcenter(*mf[lev], dcomp, p_nd, 0, 1);
               } else if (pltscaVarsName[i] == "diveu") {
                  amrex::average_node_to_cellcenter(*mf[lev], dcomp, *(*pltscalarVars[i] )[lev].get(), 0, 1);
               } else {

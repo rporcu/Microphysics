@@ -5,8 +5,6 @@ amrex.fpe_trap_invalid = 0
 
 mfix.write_user = true  # Pg and EPg volume averaging in mfix.dat
 
-mfix.nodal_pressure = 1
-
 #! Fluid solver
 #!-----------------------------------------------------------//
 mfix.fixed_dt         = 0

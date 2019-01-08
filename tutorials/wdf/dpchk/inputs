@@ -21,7 +21,7 @@ particles.tile_size       = 1024 1024 1024
 # SIMPLE or Projection Method for p-v coupling
 mfix.use_proj_method    = 1
 ## mfix.upwind_ep = 0
-mfix.nodal_pressure     = 1
+
 mfix.explicit_diffusion = 0
 mfix.use_mac_proj       = true
 mfix.ugradu_type        = 3
@@ -55,4 +55,3 @@ mfix.levelset__pad        = 16      # how far (in refined units) should the leve
 
 mfix.levelset__eb_refinement = 1   # resolution of the eb used for generating the levelset
 mfix.levelset__eb_pad        = 2   # how far the eb extends out of the problem domain
-

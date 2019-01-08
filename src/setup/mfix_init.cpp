@@ -30,9 +30,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_rtol", mg_rtol );
         pp.query( "mg_atol", mg_atol );
 
-        // Option to control approximate projection
-        pp.query("nodal_pressure", nodal_pressure);
-
         // Default bottom solver is bicgstab, but alternatives are "smoother" or "hypre"
         bottom_solver_type = "bicgstab";
         pp.query( "bottom_solver_type",  bottom_solver_type );
@@ -56,7 +53,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("load_balance_type", load_balance_type);
         pp.query("knapsack_weight_type", knapsack_weight_type);
         pp.query("load_balance_fluid", load_balance_fluid);
-        
+
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
                             load_balance_type == "KDTree"    ||
                             load_balance_type == "KnapSack"  ||
@@ -291,8 +288,8 @@ mfix::Init(Real dt, Real time)
     // Create MAC projection object
     mac_projection.reset( new MacProjection(this, nghost, &ebfactory ) );
     mac_projection -> set_bcs( bc_ilo, bc_ihi,
-			       bc_jlo, bc_jhi,
-			       bc_klo, bc_khi );
+             bc_jlo, bc_jhi,
+             bc_klo, bc_khi );
 }
 
 BoxArray
@@ -722,17 +719,15 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
          const Box& sbx =  (*ep_g[lev])[mfi].box();
 
          zero_wall_norm_vel(sbx.loVect(), sbx.hiVect(),
-   			 (*vel_g[lev])[mfi].dataPtr(),
-   			 bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-   			 bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-   			 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-			 domain.loVect(), domain.hiVect(),
-			 &nghost);
+         (*vel_g[lev])[mfi].dataPtr(),
+         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+         bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+       domain.loVect(), domain.hiVect(),
+       &nghost);
        }
     }
 
-     if (!nodal_pressure)
-        mfix_extrap_pressure(lev,p0_g[lev]);
 
      fill_mf_bc(lev,*ep_g[lev]);
      fill_mf_bc(lev,*ro_g[lev]);
@@ -743,11 +738,6 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
      fill_mf_bc(lev,*mu_g[lev]);
      fill_mf_bc(lev,*lambda_g[lev]);
 
-     if (is_restarting == 1)
-     {
-        if (!nodal_pressure)
-           mfix_extrap_pressure(lev, p_g[lev]);
-     }
   }
 
   if (is_restarting == 0)
@@ -797,11 +787,8 @@ mfix::mfix_set_bc0()
                  bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                  bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                  bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                 domain.loVect(), domain.hiVect(), &nghost, &nodal_pressure);
+                 domain.loVect(), domain.hiVect(), &nghost);
        }
-
-     if (!nodal_pressure)
-        fill_mf_bc(lev,*p_g[lev]);
 
      fill_mf_bc(lev,*ep_g[lev]);
      fill_mf_bc(lev,*ro_g[lev]);
@@ -860,7 +847,7 @@ mfix::mfix_set_p0()
                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-               &nghost, &nodal_pressure );
+               &nghost );
       }
 
      p0_g[lev]->FillBoundary(p0_periodicity);
@@ -900,10 +887,10 @@ mfix::mfix_set_ls_near_inflow()
    } else {
 
       // Here we assume that the particles and fluid only exist on one level
-      int lev = 0; 
+      int lev = 0;
 
-      // ... but that the level set may be at a finer resolution. 
-      int n = level_set->get_ls_ref(); 
+      // ... but that the level set may be at a finer resolution.
+      int n = level_set->get_ls_ref();
       {
           Box domain(geom[lev].Domain());
           const Real *dx = geom[lev].CellSize();

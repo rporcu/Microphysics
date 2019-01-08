@@ -10,7 +10,7 @@
    subroutine set_bc0(slo, shi, &
                       ep_g, ro_g, rop_g, mu_g, lambda_g, &
                       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-                      bc_klo_type, bc_khi_type, domlo, domhi, ng, nodal_pressure) &
+                      bc_klo_type, bc_khi_type, domlo, domhi, ng) &
       bind(C, name="set_bc0")
 
       use amrex_fort_module, only : rt => amrex_real
@@ -29,7 +29,7 @@
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
-      integer(c_int), intent(in   ) :: ng, nodal_pressure
+      integer(c_int), intent(in   ) :: ng
 
       real(rt), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

@@ -10,7 +10,7 @@
                         gp0, glo, ghi, &
                         dx, dy, dz, xlength, ylength, zlength, delp_dir, &
                         bct_ilo, bct_ihi, bct_jlo, bct_jhi, &
-                        bct_klo, bct_khi, ng, nodal_pressure) &
+                        bct_klo, bct_khi, ng) &
                  bind(C, name="set_p0")
 
       use bc       , only: delp_x, delp_y, delp_z
@@ -32,7 +32,7 @@
       integer, intent(in) ::  lo(3),  hi(3)
       integer, intent(in) :: slo(3), shi(3)
       integer, intent(in) :: glo(3), ghi(3)
-      integer, intent(in) :: domlo(3), domhi(3), ng, nodal_pressure
+      integer, intent(in) :: domlo(3), domhi(3), ng
 
       real(ar), intent(inout) :: p0_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -99,13 +99,7 @@
          !  This hack allows to set the IC pressure  at L-dx/2 for both
          !  nodal and CC pressure -> reference value for pressure, AKA IC_P_G,
          !  is set at the last cell center location.
-         real(ar) :: offset 
-         
-         if ( nodal_pressure == 1 ) then
-            offset = - 0.5_ar
-         else
-            offset = 0.0_ar
-         end if
+         real(ar), parameter :: offset = - 0.5_ar
 
          if (abs(delp_x) > epsilon(zero)) then
             dpodx = delp_x/xlength
@@ -138,7 +132,7 @@
          endif
 
       end block
-         
+
       GOTO 100   ! pressure in all intial condition region cells was defined
 
 ! ----------------------------------------------------------------<<<
@@ -240,18 +234,12 @@
 ! ---------------------------------------------------------------->>>
 
       block
-         integer offset
+         integer, parameter :: offset = 1
 
-         if (nodal_pressure == 1) then
-            offset = 1
-         else
-            offset = 0
-         end if
-         
          nlft = max(0,domlo(1)-slo(1)+offset)
          nbot = max(0,domlo(2)-slo(2)+offset)
          ndwn = max(0,domlo(3)-slo(3)+offset)
-         
+
          nrgt = max(0,shi(1)-domhi(1))
          ntop = max(0,shi(2)-domhi(2))
          nup  = max(0,shi(3)-domhi(3))
@@ -265,23 +253,13 @@
                jbc = j
                if (k .gt. domhi(3)+ng) kbc = kbc - 1
                if (j .gt. domhi(2)+ng) jbc = jbc - 1
-               
+
                select case ( bct_ilo(jbc,kbc,1) )
 
                case (pinf_, pout_)
 
                    bcv = bct_ilo(jbc,kbc,2)
-                   if (nodal_pressure .eq. 1) then
-                       p0_g(slo(1):domlo(1)  ,j,k) = scale_pressure(bc_p_g(bcv))
-                   else
-                       p0_g(slo(1):domlo(1)-1,j,k) = scale_pressure(bc_p_g(bcv))
-                   endif
-
-               case (minf_)
-
-                   if (nodal_pressure .eq. 0) &
-                       p0_g(slo(1):domlo(1)-1,j,k) = &
-                           2.d0 * p0_g(domlo(1),j,k) - p0_g(domlo(1)+1,j,k)
+                   p0_g(slo(1):domlo(1)  ,j,k) = scale_pressure(bc_p_g(bcv))
 
                end select
             end do
@@ -296,19 +274,13 @@
                jbc = j
                if (k .gt. domhi(3)+ng) kbc = kbc - 1
                if (j .gt. domhi(2)+ng) jbc = jbc - 1
-               
+
                select case ( bct_ihi(jbc,kbc,1) )
 
                case (pinf_, pout_)
 
                    bcv = bct_ihi(jbc,kbc,2)
                    p0_g(domhi(1)+1:shi(1),j,k) = scale_pressure(bc_p_g(bcv))
-
-               case (minf_)
-
-                   if (nodal_pressure .eq. 0) &
-                       p0_g(domhi(1)+1:shi(1),j,k) = &
-                           2.d0 * p0_g(domhi(1),j,k) - p0_g(domhi(1)-1,j,k)
 
                end select
             end do
@@ -323,23 +295,13 @@
                ibc = i
                if (k .gt. domhi(3)+ng) kbc = kbc - 1
                if (i .gt. domhi(1)+ng) ibc = ibc - 1
-               
+
                select case ( bct_jlo(ibc,kbc,1) )
 
                case (pinf_, pout_)
 
                    bcv = bct_jlo(ibc,kbc,2)
-                   if (nodal_pressure .eq. 1) then
-                       p0_g(i,slo(2):domlo(2)  ,k) = scale_pressure(bc_p_g(bcv))
-                   else
-                       p0_g(i,slo(2):domlo(2)-1,k) = scale_pressure(bc_p_g(bcv))
-                   endif
-
-               case (minf_)
-
-                   if (nodal_pressure .eq. 0) &
-                       p0_g(i,slo(2):domlo(2)-1,k) = &
-                           2.d0 * p0_g(i,domlo(2),k) - p0_g(i,domlo(2)+1,k)
+                   p0_g(i,slo(2):domlo(2)  ,k) = scale_pressure(bc_p_g(bcv))
 
                end select
             end do
@@ -354,19 +316,13 @@
                ibc = i
                if (k .gt. domhi(3)+ng) kbc = kbc - 1
                if (i .gt. domhi(1)+ng) ibc = ibc - 1
-               
+
                select case ( bct_jhi(ibc,kbc,1) )
 
                case (pinf_, pout_)
 
                   bcv = bct_jhi(ibc,kbc,2)
                   p0_g(i,domhi(2)+1:shi(2),k) = scale_pressure(bc_p_g(bcv))
-
-               case (minf_)
-
-                   if (nodal_pressure .eq. 0) &
-                       p0_g(i,domhi(2)+1:shi(2),k) = &
-                           2.d0 * p0_g(i,domhi(2),k) - p0_g(i,domhi(2)-1,k)
 
                end select
             end do
@@ -387,17 +343,7 @@
                case (pinf_, pout_)
 
                   bcv = bct_klo(ibc,jbc,2)
-                  if (nodal_pressure .eq. 1) then
-                      p0_g(i,j,slo(3):domlo(3)  ) = scale_pressure(bc_p_g(bcv))
-                  else
-                      p0_g(i,j,slo(3):domlo(3)-1) = scale_pressure(bc_p_g(bcv))
-                  endif
-
-               case (minf_)
-
-                   if (nodal_pressure .eq. 0) &
-                       p0_g(i,j,slo(3):domlo(3)-1) = &
-                           2.d0 * p0_g(i,j,domlo(3)) - p0_g(i,j,domlo(3)+1)
+                  p0_g(i,j,slo(3):domlo(3)  ) = scale_pressure(bc_p_g(bcv))
 
                end select
             end do
@@ -419,12 +365,6 @@
 
                    bcv = bct_khi(ibc,jbc,2)
                    p0_g(i,j,domhi(3)+1:shi(3)) = scale_pressure(bc_p_g(bcv))
-
-               case (minf_)
-
-                   if (nodal_pressure .eq. 0) &
-                       p0_g(i,j,domhi(3)+1:shi(3)) = &
-                           2.d0 * p0_g(i,j,domhi(3)) - p0_g(i,j,domhi(3)-1)
 
                end select
             end do

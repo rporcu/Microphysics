@@ -60,8 +60,8 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
         // Set new and old time to correctly use in fillpatching
         for (int lev = 0; lev < nlev; lev++)
         {
-            t_old[lev] = time; 
-            t_new[lev] = time+dt; 
+            t_old[lev] = time;
+            t_new[lev] = time+dt;
         }
 
         if (steady_state)
@@ -76,69 +76,69 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
         for (int lev = 0; lev < nlev; lev++)
         {
            // Back up field variables to old
-   	   MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
-   	   MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
-	   MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
-	   MultiFab::Copy (*rop_go[lev], *rop_g[lev], 0, 0, rop_g[lev]->nComp(), rop_go[lev]->nGrow());
-	   MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
+          MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
+          MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
+          MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
+          MultiFab::Copy (*rop_go[lev], *rop_g[lev], 0, 0, rop_g[lev]->nComp(), rop_go[lev]->nGrow());
+          MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
            // User hooks
            for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
-       	      mfix_usr2();
+              mfix_usr2();
         }
 
-	//
-	// Time integration step
-	//
+        //
+        // Time integration step
+        //
         Real new_time = time+dt;
-	
-	// Calculate drag coefficient
-	if (solve_dem)
-	    mfix_calc_drag_fluid(time);
 
-        // Predictor step 
+        // Calculate drag coefficient
+        if (solve_dem)
+          mfix_calc_drag_fluid(time);
+
+        // Predictor step
         bool proj_2_pred = true;
         mfix_apply_predictor ( conv_old, divtau_old, time, dt, proj_2_pred );
 
         // Print info about predictor step
         amrex::Print() << "\nAfter predictor step at time " << new_time << std::endl;
         for (int lev = 0; lev < nlev; lev++)
-    	    mfix_print_max_vel (lev);
+          mfix_print_max_vel (lev);
 
         mfix_compute_diveu(new_time);
 
         for (int lev = 0; lev < nlev; lev++)
-	    amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
+          amrex::Print() << "max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
 
-	// Calculate drag coefficient
-	if (solve_dem)
-	    mfix_calc_drag_fluid(new_time);
-	
-	// Corrector step 
+        // Calculate drag coefficient
+        if (solve_dem)
+          mfix_calc_drag_fluid(new_time);
+
+        // Corrector step
         bool proj_2_corr = true;
-	mfix_apply_corrector ( conv_old, divtau_old, time, dt, proj_2_corr );
+        mfix_apply_corrector ( conv_old, divtau_old, time, dt, proj_2_corr );
 
         // Print info about corrector step
         amrex::Print() << "\nAfter corrector step at time " << new_time << std::endl;
         for (int lev = 0; lev < nlev; lev++)
-    	    mfix_print_max_vel (lev);
+          mfix_print_max_vel (lev);
 
- 	mfix_compute_diveu (new_time);
+        mfix_compute_diveu (new_time);
 
         for (int lev = 0; lev < nlev; lev++)
-	    amrex::Print() << "  max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
-	    
-	// 
-        // Check whether to exit the loop or not
-	// 
-	if (steady_state) {
-	    keep_looping = !steady_state_reached ( dt ); 
-        } else {
-	    keep_looping = 0;
-	}
+          amrex::Print() << "  max(abs(diveu)) = " << mfix_norm0(diveu, lev, 0) << "\n";
 
-	// Update interations count
-	++iter;
+        //
+        // Check whether to exit the loop or not
+        //
+        if (steady_state) {
+          keep_looping = !steady_state_reached ( dt );
+        } else {
+          keep_looping = 0;
+        }
+
+        // Update interations count
+        ++iter;
     }
     while ( keep_looping );
 
@@ -209,7 +209,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
 
        mfix_apply_predictor (conv, divtau, time, dt, proj_2);
 
-       // Replace vel_g by the original values 
+       // Replace vel_g by the original values
        for (int lev = 0; lev < nlev; lev++)
           MultiFab::Copy (*vel_g[lev], *vel_go[lev], 0, 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow());
 
@@ -249,7 +249,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
 //
 void
 mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
-	                    Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                      Vector< std::unique_ptr<MultiFab> >& divtau_old,
                             Real time, Real dt, bool proj_2)
 {
     // We use the new-time value for things computed on the "*" state
@@ -257,13 +257,13 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 
     // Compute the explicit advective term R_u^n
     mfix_compute_ugradu_predictor( conv_old, vel_go, time );
-    
+
     for (int lev = 0; lev < nlev; lev++)
     {
         // If explicit_diffusion == true  then we compute the full diffusive terms here
         // If explicit_diffusion == false then we compute only the off-diagonal terms here
         mfix_compute_divtau( lev, *divtau_old[lev], vel_go );
-    
+
         // First add the convective term
         MultiFab::Saxpy (*vel_g[lev], dt, *conv_old[lev], 0, 0, 3, 0);
 
@@ -273,7 +273,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 
         // Add the gravitational forcing
         mfix_add_gravity ( lev, dt, vel_g);
-  
+
         // Convert velocities to momenta
         for (int n = 0; n < 3; n++)
             MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
@@ -294,7 +294,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
         mfix_diffuse_velocity(new_time,dt);
- 
+
     // Project velocity field
     mfix_apply_projection ( new_time, dt, proj_2 );
 
@@ -334,7 +334,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 //
 void
 mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
-	                    Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                      Vector< std::unique_ptr<MultiFab> >& divtau_old,
                             Real time, Real dt, bool proj_2)
 {
     BL_PROFILE("mfix::mfix_apply_corrector");
@@ -355,7 +355,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
          conv[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
        divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
     }
- 
+
     // Compute the explicit advective term R_u^*
     mfix_compute_ugradu_corrector( conv, vel_g, new_time );
 
@@ -364,11 +364,11 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
         // If explicit_diffusion == true  then we compute the full diffusive terms here
         // If explicit_diffusion == false then we compute only the off-diagonal terms here
         mfix_compute_divtau( lev, *divtau[lev], vel_g);
-          
-        // Define u_g = u_go + dt/2 (R_u^* + R_u^n) 
-        MultiFab::LinComb (*vel_g[lev], 1.0, *vel_go[lev], 0, dt/2.0, *conv[lev]    , 0, 0, 3, 0); 
+
+        // Define u_g = u_go + dt/2 (R_u^* + R_u^n)
+        MultiFab::LinComb (*vel_g[lev], 1.0, *vel_go[lev], 0, dt/2.0, *conv[lev]    , 0, 0, 3, 0);
         MultiFab::Saxpy   (*vel_g[lev],                       dt/2.0, *conv_old[lev], 0, 0, 3, 0);
-  
+
         // Add the diffusion terms (either all if explicit_diffusion == true or just the
         //    off-diagonal terms if explicit_diffusion == false)
         MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau[lev]    , 0, 0, 3, 0);
@@ -380,16 +380,16 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
         // Convert velocities to momenta
         for (int n = 0; n < 3; n++)
            MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
-  
+
         // Add (-dt grad p to momenta)
         MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
         MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
-  
+
         // Convert momenta back to velocities
         for (int n = 0; n < 3; n++)
             MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
     }
-  
+
     // Compute intermediate velocity if drag terms present
     if (solve_dem)
         mfix_add_drag_terms (dt);
@@ -397,7 +397,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
        mfix_diffuse_velocity(new_time,dt);
-  
+
     // Apply projection
     mfix_apply_projection (new_time, dt, proj_2);
 
@@ -405,22 +405,22 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 }
 
 void
-mfix::mfix_add_gravity (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel) 
+mfix::mfix_add_gravity (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel)
 
 {
     BL_PROFILE("mfix::mfix_add_gravity");
 
 #ifdef _OPENMP
-#pragma omp parallel 
+#pragma omp parallel
 #endif
     for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
     {
-	// Tilebox
-	Box bx = mfi.tilebox ();
+      // Tilebox
+      Box bx = mfi.tilebox ();
 
-	add_gravity ( BL_TO_FORTRAN_BOX(bx),  
-		      BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-		      &dt);
+      add_gravity ( BL_TO_FORTRAN_BOX(bx),
+                    BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
+                    &dt);
     }
 }
 
@@ -428,50 +428,50 @@ mfix::mfix_add_gravity (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFa
 // Implicit solve for the intermediate velocity.
 // Currently this means accounting for the implicit part of the fluid/particle
 // momentum exchange
-// 
+//
 void
 mfix::mfix_add_drag_terms ( amrex::Real dt )
 
 {
-    BL_PROFILE("mfix::mfix_add_drag");
+  BL_PROFILE("mfix::mfix_add_drag");
 
-    for (int lev = 0; lev < nlev; lev++)
+  for (int lev = 0; lev < nlev; lev++)
     {
-        // The volume fraction of each fluid cell (1 if uncovered, 0 if covered)
-        const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
-    
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-        for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi) 
-        {
-    	    // Tilebox
-	    Box bx = mfi.tilebox();
+      // The volume fraction of each fluid cell (1 if uncovered, 0 if covered)
+      const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
 
-	    add_drag_terms ( BL_TO_FORTRAN_BOX(bx),  
-			     BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-			     BL_TO_FORTRAN_ANYD((*f_gds[lev])[mfi]),
-		             BL_TO_FORTRAN_ANYD((*drag[lev])[mfi]),
-			     BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-                             BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
-			     &dt );
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+      for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
+        {
+          // Tilebox
+          Box bx = mfi.tilebox();
+
+          add_drag_terms ( BL_TO_FORTRAN_BOX(bx),
+                           BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                           BL_TO_FORTRAN_ANYD((*f_gds[lev])[mfi]),
+                           BL_TO_FORTRAN_ANYD((*drag[lev])[mfi]),
+                           BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
+                           BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+                           &dt );
         }
     }
 }
 
 //
 // Check if steady state has been reached by verifying that
-// 
+//
 //      max(abs( u^(n+1) - u^(n) )) < tol * dt
 //      max(abs( v^(n+1) - v^(n) )) < tol * dt
 //      max(abs( w^(n+1) - w^(n) )) < tol * dt
-// 
+//
 
 int
 mfix::steady_state_reached (Real dt)
 {
     //
-    // Count number of access 
+    // Count number of access
     //
     static int naccess = 0;
 
@@ -483,78 +483,71 @@ mfix::steady_state_reached (Real dt)
 
     //
     // Make sure velocity is up to date
-    // 
+    //
     for (int lev = 0; lev < nlev; lev++)
     {
-    
-       // 
+
+       //
        // Use temporaries to store the difference
        // between current and previous solution
-       // 
+       //
        MultiFab temp_vel(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),3,0);
        MultiFab::LinComb (temp_vel, 1.0, *vel_g[lev], 0, -1.0, *vel_go[lev], 0, 0, 3, 0);
 
        MultiFab tmp;
-    
-       if (nodal_pressure)
-       {
-          const BoxArray & nd_grid = amrex::convert(grids[lev], IntVect{1,1,1});
-          tmp.define( nd_grid, dmap[lev], 1, 0 );     
-       }
-       else
-       {
-   	tmp.define( grids[lev], dmap[lev], 1, 0 );
-       }
+
+       const BoxArray & nd_grid = amrex::convert(grids[lev], IntVect{1,1,1});
+       tmp.define( nd_grid, dmap[lev], 1, 0 );
 
        MultiFab::LinComb (tmp, 1.0, *p_g[lev], 0, -1.0, *p_go[lev], 0, 0, 1, 0);
-    
+
        Real delta_u = mfix_norm0(temp_vel,lev,0);
        Real delta_v = mfix_norm0(temp_vel,lev,1);
        Real delta_w = mfix_norm0(temp_vel,lev,2);
        Real delta_p = mfix_norm0(tmp,lev,0);
-    
-       Real tol = steady_state_tol; 
-    
+
+       Real tol = steady_state_tol;
+
        condition1[lev] = (delta_u < tol*dt) && (delta_v < tol*dt ) && (delta_w < tol*dt);
 
        //
        // Second stop condition
        //
-       Real du_n1 = mfix_norm1(temp_vel, lev, 0); 
-       Real dv_n1 = mfix_norm1(temp_vel, lev, 1); 
-       Real dw_n1 = mfix_norm1(temp_vel, lev, 2); 
-       Real dp_n1 = mfix_norm1(tmp, lev, 0); 
+       Real du_n1 = mfix_norm1(temp_vel, lev, 0);
+       Real dv_n1 = mfix_norm1(temp_vel, lev, 1);
+       Real dw_n1 = mfix_norm1(temp_vel, lev, 2);
+       Real dp_n1 = mfix_norm1(tmp, lev, 0);
        Real uo_n1 = mfix_norm1(vel_go, lev, 0);
        Real vo_n1 = mfix_norm1(vel_go, lev, 1);
        Real wo_n1 = mfix_norm1(vel_go, lev, 2);
        Real po_n1 = mfix_norm1(p_go, lev, 0);
-       
+
        Real tmp1, tmp2, tmp3, tmp4;
 
        Real local_tol = 1.0e-8;
-    
+
        if ( uo_n1 < local_tol ) {
-       	  tmp1 = 0.0;
+          tmp1 = 0.0;
        } else {
-       	  tmp1 = du_n1 / uo_n1;
+          tmp1 = du_n1 / uo_n1;
        };
 
        if ( vo_n1 < local_tol ) {
-       	  tmp2 = 0.0;
+          tmp2 = 0.0;
        } else {
-       	  tmp2 = dv_n1 / vo_n1;
+          tmp2 = dv_n1 / vo_n1;
        };
-    
+
        if ( wo_n1 < local_tol ) {
-       	  tmp3 = 0.0;
+          tmp3 = 0.0;
        } else {
-       	  tmp3 = dw_n1 / wo_n1;
+          tmp3 = dw_n1 / wo_n1;
        };
 
        if ( po_n1 < local_tol ) {
-       	  tmp4 = 0.0;
+          tmp4 = 0.0;
        } else {
-       	  tmp4 = dp_n1 / po_n1;
+          tmp4 = dp_n1 / po_n1;
        };
 
        condition2[lev] = (tmp1 < tol) && (tmp2 < tol) && (tmp3 < tol); // && (tmp4 < tol);
@@ -578,7 +571,7 @@ mfix::steady_state_reached (Real dt)
     // Count # access
     naccess++;
 
-    // 
+    //
     //  Always return negative to first access. This way
     //  initial zero velocity field do not test for false positive
     //
