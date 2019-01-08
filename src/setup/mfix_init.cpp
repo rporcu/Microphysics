@@ -96,8 +96,8 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
         // Not needed here... the role of refining EB is filled with AMR level-set
         levelset__eb_refinement = 1;
-        // Make sure that a coarsened level-set has a level-set pad of _at least_ 1;
-        levelset__pad = levelset__refinement;
+        // Make sure that a coarsened level-set has a level-set pad of _at least_ 2;
+        levelset__pad = 2*levelset__refinement;
         // Ensure that velocity_reconstruction has enough level-set to work off:
         levelset__eb_pad = 2; // (2 => EB lives on the same grid resolution as fluid)
 
