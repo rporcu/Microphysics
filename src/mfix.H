@@ -284,8 +284,6 @@ private:
 
     void mfix_compute_diveu(amrex::Real time);
 
-    void mfix_extrap_pressure(int lev, std::unique_ptr<amrex::MultiFab>& p);
-
     void mfix_print_max_vel(int lev);
     void mfix_print_max_gp (int lev);
 
@@ -308,8 +306,6 @@ private:
     Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
     Real mfix_norm0 ( MultiFab& mf, int lev, int comp );
 
-    void mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
-                                 Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc );
 
     Real volWgtSum (int lev, const amrex::MultiFab& mf, int comp, bool local=false);
 
@@ -507,7 +503,6 @@ private:
     const int m_eb_volume_grow_cells = nghost;
     const int m_eb_full_grow_cells = nghost;
 
-    int nodal_pressure = 1;
     int explicit_diffusion = 1;
 
     bool do_initial_proj    = true;

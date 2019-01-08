@@ -12,19 +12,19 @@ mfix::check_for_nans (int lev)
     bool ropg_has_nans = rop_g[lev] -> contains_nan (0);
 
     if (ug_has_nans)
-	amrex::Print() << "WARNING: u_g contains NaNs!!!";
+  amrex::Print() << "WARNING: u_g contains NaNs!!!";
 
     if (vg_has_nans)
-	amrex::Print() << "WARNING: v_g contains NaNs!!!";
+  amrex::Print() << "WARNING: v_g contains NaNs!!!";
 
     if (wg_has_nans)
-	amrex::Print() << "WARNING: w_g contains NaNs!!!";
+  amrex::Print() << "WARNING: w_g contains NaNs!!!";
 
     if (pg_has_nans)
-	amrex::Print() << "WARNING: p_g contains NaNs!!!";
+  amrex::Print() << "WARNING: p_g contains NaNs!!!";
 
     if (ropg_has_nans)
-	amrex::Print() << "WARNING: rop_g contains NaNs!!!";
+  amrex::Print() << "WARNING: rop_g contains NaNs!!!";
 
 }
 
@@ -34,7 +34,7 @@ mfix::check_for_nans (int lev)
 void
 mfix::mfix_print_max_vel(int lev)
 {
-    amrex::Print() << "max(abs(u/v/w/p))  = " << 
+    amrex::Print() << "max(abs(u/v/w/p))  = " <<
        mfix_norm0(vel_g, lev, 0) << "  " <<
        mfix_norm0(vel_g, lev, 1) << "  " <<
        mfix_norm0(vel_g, lev, 2) << "  " <<
@@ -48,69 +48,12 @@ mfix::mfix_print_max_vel(int lev)
 void
 mfix::mfix_print_max_gp (int lev)
 {
-    amrex::Print() << "max(abs(gpx/gpy/gpz))  = " << 
+    amrex::Print() << "max(abs(gpx/gpy/gpz))  = " <<
        mfix_norm0(gp, lev, 0) << "  " <<
        mfix_norm0(gp, lev, 1) << "  " <<
        mfix_norm0(gp, lev, 2) << "  " << std::endl;
 }
 
-//
-// This subroutines averages component by component
-// The assumption is that cc is multicomponent
-// 
-void
-mfix::mfix_average_cc_to_fc ( int lev, const MultiFab& cc,
-                                    Array<std::unique_ptr<MultiFab>,AMREX_SPACEDIM>& fc )
-{
-   AMREX_ASSERT(cc.nComp()==AMREX_SPACEDIM);
-   AMREX_ASSERT(AMREX_SPACEDIM==3);
-   
-   // 
-   // First allocate fc
-   //
-   BoxArray x_ba = cc.boxArray();
-   x_ba.surroundingNodes(0);
-   fc[0].reset(new MultiFab(x_ba,cc.DistributionMap(),1,nghost, MFInfo(), *ebfactory[lev]));
-   fc[0]->setVal(1.e200);
-
-   BoxArray y_ba = cc.boxArray();
-   y_ba.surroundingNodes(1);
-   fc[1].reset(new MultiFab(y_ba,cc.DistributionMap(),1,nghost, MFInfo(), *ebfactory[lev]));
-   fc[1]->setVal(1.e200);
-
-   BoxArray z_ba = cc.boxArray();
-   z_ba.surroundingNodes(2);
-   fc[2].reset(new MultiFab(z_ba,cc.DistributionMap(),1,nghost, MFInfo(), *ebfactory[lev]));
-   fc[2]->setVal(1.e200);
-
-   //
-   // Average
-   // We do not care about EB because faces in covered regions
-   // should never get used so we can set them to whatever values
-   // we like
-   //
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-   for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-   {
-      // Boxes for staggered components
-      Box bx = mfi.tilebox();
-
-      
-      average_cc_to_fc( BL_TO_FORTRAN_BOX(bx),
-                        BL_TO_FORTRAN_ANYD((*fc[0])[mfi]),
-                        BL_TO_FORTRAN_ANYD((*fc[1])[mfi]),
-                        BL_TO_FORTRAN_ANYD((*fc[2])[mfi]),
-                        BL_TO_FORTRAN_ANYD(cc[mfi]));
-
-   }
-
-   fc[0] -> FillBoundary(geom[lev].periodicity());
-   fc[1] -> FillBoundary(geom[lev].periodicity());
-   fc[2] -> FillBoundary(geom[lev].periodicity());
-   // We do not fill BCs and halo regions in this routine    
-} 
 
 void
 mfix::mfix_compute_vort ()
@@ -202,7 +145,7 @@ mfix::mfix_norm1 ( MultiFab& mf, int lev, int comp )
 }
 
 Real
-mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local) 
+mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 {
     BL_PROFILE("mfix::volWgtSum()");
 
@@ -213,7 +156,7 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:sum)
-#endif    
+#endif
     for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
     {
         const FArrayBox& fab = mf[mfi];
@@ -223,13 +166,13 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
         const int* hi   = box.hiVect();
 
 #pragma gpu
-	mfix_sum_mf(AMREX_INT_ANYD(lo),AMREX_INT_ANYD(hi),BL_TO_FORTRAN_N_ANYD(fab,comp),
-	  	    AMREX_REAL_ANYD(dx),BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+  mfix_sum_mf(AMREX_INT_ANYD(lo),AMREX_INT_ANYD(hi),BL_TO_FORTRAN_N_ANYD(fab,comp),
+          AMREX_REAL_ANYD(dx),BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
                     AMREX_MFITER_REDUCE_SUM(&sum));
     }
 
     if (!local)
-	ParallelDescriptor::ReduceRealSum(sum);
+  ParallelDescriptor::ReduceRealSum(sum);
 
     return sum;
 }

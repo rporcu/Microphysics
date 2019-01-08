@@ -15,17 +15,10 @@ extern "C"
 {
 #endif
 
-    void average_cc_to_fc ( const int* lo, const int* hi,
-                            amrex::Real* fcx, const int* fcxlo, const int* fcxhi,
-                            amrex::Real* fcy, const int* fcylo, const int* fcyhi,
-                            amrex::Real* fcz, const int* fczlo, const int* fczhi,
-                            const amrex::Real* cc, const int* slo, const int* shi
-      );
-
-    void mfix_sum_mf ( const int* lo, const int* hi, 
+    void mfix_sum_mf ( const int* lo, const int* hi,
                        const BL_FORT_FAB_ARG_3D(rho),
-                       const amrex::Real* dx, 
-                       const BL_FORT_FAB_ARG_3D(vol), 
+                       const amrex::Real* dx,
+                       const BL_FORT_FAB_ARG_3D(vol),
                        amrex::Real* mass );
 
     void compute_vort (
@@ -62,7 +55,7 @@ extern "C"
       const int* domlo , const int* domhi);
 
     void set_velocity_bcs (
-        amrex::Real* time, 
+        amrex::Real* time,
         amrex::Real* vel_g, const int* ulo, const int* uhi,
         const int* bc_ilo, const int* bc_ihi,
         const int* bc_jlo, const int* bc_jhi,
@@ -71,12 +64,12 @@ extern "C"
         const int* ng, const int* extrap_dir_bcs
        );
 
-       
+
    void reconstruct_velocity (
        amrex::Real* vel_out,        const int* volo, const int* vohi,
-       const amrex::Real* vel_in,   const int* vilo, const int* vihi, 
+       const amrex::Real* vel_in,   const int* vilo, const int* vihi,
        const amrex::Real* phi,      const int* phlo, const int* phhi,
-       const int n_refine, 
+       const int n_refine,
        const void *     flags,      const int*  flo, const int*  fhi,
        const amrex::Real* x0, const amrex::Real* dx );
 

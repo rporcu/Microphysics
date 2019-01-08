@@ -56,17 +56,17 @@ contains
 
                ep_f = half * ( ep_g(i,j,k) + ep_g(i-i0,j-j0,k-k0) )
 
-               bcoeff(i,j,k) = ep_f / ro_f 
+               bcoeff(i,j,k) = ep_f / ro_f
 
             end do
          end do
       end do
 
    end subroutine compute_bcoeff_mac
-   
+
    !
    ! Compute the cell-centered divergence of ep_g * {u_g,v_g,w_g}
-   ! 
+   !
    subroutine compute_mac_diveu ( lo, hi, diveu, slo, shi, ep_g, u_g, ulo, uhi, &
         & v_g, vlo, vhi, w_g, wlo, whi, dx )  bind(C)
 
@@ -79,7 +79,7 @@ contains
       integer(c_int), intent(in   ) :: vlo(3),vhi(3)
       integer(c_int), intent(in   ) :: wlo(3),whi(3)
 
-      ! Grid 
+      ! Grid
       real(ar),       intent(in   ) :: dx(3)
 
       ! Array
@@ -106,7 +106,7 @@ contains
             do i = lo(1), hi(1)
 
                eu_e = u_g(i+1,j,k) * half * ( ep_g(i+1,j,k) + ep_g(i  ,j,k) )
-               eu_w = u_g(i  ,j,k) * half * ( ep_g(i  ,j,k) + ep_g(i-1,j,k) )               
+               eu_w = u_g(i  ,j,k) * half * ( ep_g(i  ,j,k) + ep_g(i-1,j,k) )
 
                eu_n = v_g(i,j+1,k) * half * ( ep_g(i,j+1,k) + ep_g(i,j  ,k) )
                eu_s = v_g(i,j  ,k) * half * ( ep_g(i,j  ,k) + ep_g(i,j-1,k) )
@@ -127,13 +127,13 @@ contains
 
    !
    ! Compute the cell-centered divergence of ep_g * {u_g,v_g,w_g}
-   ! 
+   !
    subroutine compute_mac_diveu_eb ( lo, hi, diveu, slo, shi, ep_g, u_g, ulo, uhi, &
         & v_g, vlo, vhi, w_g, wlo, whi, afracx, axlo, axhi, afracy, aylo, ayhi,    &
         & afracz, azlo, azhi, vfrac, vflo, vfhi, flags, flo, fhi, dx )  bind(C)
 
       use amrex_ebcellflag_module, only: is_covered_cell
-      
+
       ! Loop bounds
       integer(c_int), intent(in   ) ::  lo(3), hi(3)
 
@@ -147,8 +147,8 @@ contains
       integer(c_int), intent(in   ) :: azlo(3),azhi(3)
       integer(c_int), intent(in   ) :: vflo(3),vfhi(3)
       integer(c_int), intent(in   ) :: flo(3), fhi(3)
-      
-      ! Grid 
+
+      ! Grid
       real(ar),       intent(in   ) :: dx(3)
 
       ! Array
@@ -167,7 +167,7 @@ contains
 
       integer(c_int), intent(in   ) ::                      &
            & flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
-           
+
       ! Local variables
       integer  :: i, j, k
       real(ar) :: odx, ody, odz
@@ -182,9 +182,9 @@ contains
             do i = lo(1), hi(1)
                if ( is_covered_cell(flags(i,j,k)) ) then
                   diveu(i,j,k) = my_huge
-               else                  
+               else
                   eu_e = u_g(i+1,j,k) * half * ( ep_g(i+1,j,k) + ep_g(i  ,j,k) )
-                  eu_w = u_g(i  ,j,k) * half * ( ep_g(i  ,j,k) + ep_g(i-1,j,k) )               
+                  eu_w = u_g(i  ,j,k) * half * ( ep_g(i  ,j,k) + ep_g(i-1,j,k) )
 
                   eu_n = v_g(i,j+1,k) * half * ( ep_g(i,j+1,k) + ep_g(i,j  ,k) )
                   eu_s = v_g(i,j  ,k) * half * ( ep_g(i,j  ,k) + ep_g(i,j-1,k) )

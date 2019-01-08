@@ -47,7 +47,6 @@ mfix::Regrid ()
        {
            mfix_set_p0();
            mfix_set_bc0();
-           mfix_extrap_pressure(base_lev,p0_g[base_lev]);
        }
 
        // This calls re-creates a proper particle_ebfactories and regrids all
@@ -99,9 +98,6 @@ mfix::Regrid ()
 
             mfix_set_p0();
             mfix_set_bc0();
-
-            for (int lev = base_lev; lev <= finestLevel(); ++lev)
-              mfix_extrap_pressure(lev,p0_g[lev]);
 
             for (int lev = base_lev; lev <= finestLevel(); ++lev)
             {

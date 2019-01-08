@@ -34,12 +34,12 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
 
     AmrParGDB* my_gdb = mfix_for_fillpatching->GetParGDB();
 
-    // This is a bit hack-y but does get us the right level 
+    // This is a bit hack-y but does get us the right level
     int lev = 0;
     for (int ilev = 0; ilev < 10; ilev++)
     {
        const Geometry& lev_geom = mfix_for_fillpatching->GetParGDB()->Geom(ilev);
-       if (domain.length()[0] == (lev_geom.Domain()).length()[0]) 
+       if (domain.length()[0] == (lev_geom.Domain()).length()[0])
        {
          lev = ilev;
          break;
@@ -69,17 +69,17 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
 
     for (int icomp = 0; icomp < numcomp; ++icomp)
     {
-        generic_fill(BL_TO_FORTRAN_N_ANYD(dest,dcomp+icomp), 
+        generic_fill(BL_TO_FORTRAN_N_ANYD(dest,dcomp+icomp),
                      BL_TO_FORTRAN_BOX(domain),
                      &icomp, dx, xlo, &time, bcr[bcomp+icomp].vect());
     }
 
 #else
-    set_velocity_bcs ( &time, 
-                       BL_TO_FORTRAN_ANYD(dest), 
-                       bc_ilo_ptr, bc_ihi_ptr, 
-                       bc_jlo_ptr, bc_jhi_ptr, 
-                       bc_klo_ptr, bc_khi_ptr, 
+    set_velocity_bcs ( &time,
+                       BL_TO_FORTRAN_ANYD(dest),
+                       bc_ilo_ptr, bc_ihi_ptr,
+                       bc_jlo_ptr, bc_jhi_ptr,
+                       bc_klo_ptr, bc_khi_ptr,
                        domain.loVect(), domain.hiVect(),
                        &nghost, &extrap_dir_bcs );
 #endif
@@ -220,7 +220,7 @@ mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
 #endif
      for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi)
      {
-        set_velocity_bcs ( &time, 
+        set_velocity_bcs ( &time,
                            BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
                            bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                            bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
@@ -233,30 +233,3 @@ mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
      vel_g[lev] -> FillBoundary (geom[lev].periodicity());
   }
 }
-
-//
-// Fills ghost cell values of pressure appropriately for the BC type
-//
-void
-mfix::mfix_extrap_pressure (int lev, std::unique_ptr<amrex::MultiFab>& p)
-{
-    BL_PROFILE("mfix::mfix_extrap_pressure()");
-    if (nodal_pressure == 1) return;
- 
-    Box domain(geom[lev].Domain());
- 
-    #ifdef _OPENMP
-    #pragma omp parallel
-    #endif
-    for (MFIter mfi(*p, true); mfi.isValid(); ++mfi) {
- 
-        extrap_pressure_to_ghost_cells (
-            BL_TO_FORTRAN_ANYD((*p)[mfi]),
-            bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-            bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-            bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-            domain.loVect(), domain.hiVect(),
-            &nghost);
-    }
-}
-
