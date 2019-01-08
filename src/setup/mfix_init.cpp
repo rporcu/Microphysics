@@ -90,9 +90,22 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         //                  problem domain the grid extends (avoids edge cases
         //                  in physical domain)
         pp.query("levelset__refinement", levelset__refinement);
-        pp.query("levelset__eb_refinement", levelset__eb_refinement);
-        pp.query("levelset__pad", levelset__pad);
-        pp.query("levelset__eb_pad", levelset__eb_pad);
+        //pp.query("levelset__eb_refinement", levelset__eb_refinement);
+        //pp.query("levelset__pad", levelset__pad);
+        //pp.query("levelset__eb_pad", levelset__eb_pad);
+
+        // Not needed here... the role of refining EB is filled with AMR level-set
+        levelset__eb_refinement = 1;
+        // Make sure that a coarsened level-set has a level-set pad of _at least_ 1;
+        levelset__pad = levelset__refinement;
+        // Ensure that velocity_reconstruction has enough level-set to work off:
+        levelset__eb_pad = 2; // (2 => EB lives on the same grid resolution as fluid)
+
+        amrex::Print() << "Auto-generating level-set parameters:" << std::endl
+                       << "eb_refinement = " << levelset__eb_refinement << std::endl
+                       << "levelset_pad  = " << levelset__pad << std::endl
+                       << "eb_pad        = " << levelset__eb_pad << std::endl;
+
     }
 
     {
