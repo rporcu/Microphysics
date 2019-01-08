@@ -227,7 +227,6 @@ contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SOLIDS_VOLFLOW_TO_VELOCITY                              !
-!  Author: M. Syamlal                                 Date: 28-JUL-92  !
 !                                                                      !
 !  Purpose: Convert volumetric and mass flow rates to velocities       !
 !     A specified mass flow rate is first converted to volumetric      !

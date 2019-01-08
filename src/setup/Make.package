@@ -10,6 +10,7 @@ f90EXE_sources += set_bc0.f90
 f90EXE_sources += set_bc_flow.f90 
 f90EXE_sources += set_bc_type.f90 
 f90EXE_sources += set_delp_dir.f90
+f90EXE_sources += set_ls_inflow.f90
 f90EXE_sources += set_p0.f90 
 f90EXE_sources += set_ps.f90 
 f90EXE_sources += zero_wall_norm_vel.f90

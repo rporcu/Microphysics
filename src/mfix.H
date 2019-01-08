@@ -153,6 +153,10 @@ protected:
     void mfix_set_bc0();
     void mfix_set_p0();
 
+    // The particles see an inflow face as a solid wall; thus instead of creating a separate EBfactory
+    //     for particles, we simply modify the level-set near inflow to see it as a wall
+    void mfix_set_ls_near_inflow();
+
     void mfix_project_velocity   ();
     void mfix_initial_iterations ( amrex::Real dt, amrex::Real stop_time, int steady_state );
     void mfix_apply_projection   ( amrex::Real dt, amrex::Real scaling_factor, bool proj_2 );

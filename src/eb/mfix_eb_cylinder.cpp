@@ -14,14 +14,9 @@
  *                                                                              *
  * Function to create a simple cylinder EB.                                     *
  *                                                                              *
- * Comments: The cylinder can either be closed or open at the bottom. At this   *
- * time, there is no option to put a "lid" on the top of the cylinder.          *
- *                                                                              *
- * The bottom of the cylinder is only applied to particles. This allows for the *
- * fluid to not have an EB surface generated that would block gas flow from a   *
- * mass inflow boundary. A more general implementation would check the mfix.dat *
- * file for inflows and outflows and correctly cap the top and bottom of the    *
- * cylinder.                                                                    *
+ * Comments: The EB for the cylinder is open at the top and bottom; if the      *
+ * boundary condition is mass inflow then we modify the level set so that       *
+ * the particles see it as a solid boundary.                                    *
  *                                                                              *
  *******************************************************************************/
 void mfix::make_eb_cylinder()
@@ -34,7 +29,6 @@ void mfix::make_eb_cylinder()
      * Get cylinder information from inputs file.                               *
      ***************************************************************************/
     bool inside       = true;
-    bool close_bottom = true;
     Real offset       = 1.0e-8;
 
     Real radius    = 0.0002;
@@ -44,7 +38,6 @@ void mfix::make_eb_cylinder()
     Vector<Real> centervec(3);
 
     pp.query("internal_flow", inside);
-    pp.query("closed_bottom", close_bottom);
     pp.query("bottom_offset", offset);
 
     pp.query("radius",     radius);
@@ -103,41 +96,10 @@ void mfix::make_eb_cylinder()
         amrex::Print() << " " << std::endl;
         amrex::Print() << "Now making the particle ebfactory ..." << std::endl;
 
-        // Plane IF generator for bottom plane (defined iff close_bottom==true)
-        std::unique_ptr<GShopLSFactory<EB2::PlaneIF>> wall_lsfactory;
-
-        if (close_bottom)
-        {
-            Array<Real,3> point{0.0, 0.0, 0.0};
-            Array<Real,3> normal{0.0, 0.0, 0.0};
-
-            point[direction] = geom[0].ProbLo(direction) + offset;
-            normal[direction] = -1.0;
-
-            amrex::Print() << "Capping bottom: " << std::endl;
-            amrex::Print() << "   Point:  " << point[0]  << ", "
-                           << point[1]  << ", "
-                           << point[2]  << std::endl;
-
-            amrex::Print() << "   Normal: " << normal[0] << ", "
-                           << normal[1] << ", "
-                           << normal[2] << std::endl;
-
-            EB2::PlaneIF my_plane(point, normal);
-
-            auto gshop = EB2::makeShop(EB2::makeUnion(my_cyl, my_plane));
-            EB2::Build(gshop, geom.back(), max_level_here,
-                       max_level_here + max_coarsening_level);
-
-            EB2::GeometryShop<EB2::PlaneIF> gshop_wall = EB2::makeShop(my_plane);
-            wall_lsfactory.reset(new GShopLSFactory<EB2::PlaneIF>(gshop_wall, * level_set));
-        }
-
         const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
 
         for (int lev = 0; lev < nlev; lev++)
         {
-            // Intercept the cylinder + plane level (if it is built)
             eb_level_particles = & eb_is.getLevel(geom[lev]);
 
             particle_ebfactory[lev].reset(
@@ -158,12 +120,6 @@ void mfix::make_eb_cylinder()
             {
                 amrex::Print() << "Creating the levelset at level " << lev << std::endl;
                 const Real      strttime    = ParallelDescriptor::second();
-
-                // // If there is a bottom plane, fill level set with plane IF first
-                // if(close_bottom) {
-                //     std::unique_ptr<MultiFab> mf_impfunc_wall = wall_lsfactory->fill_impfunc();
-                //     level_set->intersection_impfunc(* mf_impfunc_wall);
-                // }
 
                 // Construct EB2 Index space based on the refined geometry
                 // (level_set->get_eb_geom()). The IndexSpace's geometry needs
@@ -190,11 +146,6 @@ void mfix::make_eb_cylinder()
 
                 //level_set->intersection_ebf(eb_factory_cylinder, * mf_impfunc_cyl );
                 level_set->Fill(eb_factory_cylinder, * mf_impfunc_cyl, level_set->get_eb_pad());
-                // if there is a bottom plane, fill level set with plane IF after fill
-                if(close_bottom) {
-                    std::unique_ptr<MultiFab> mf_impfunc_wall = wall_lsfactory->fill_impfunc();
-                    level_set->Intersect(* mf_impfunc_wall);
-                }
 
                 const Real endtime    = ParallelDescriptor::second() - strttime;
                 amrex::Print() << "Making the levelset at level " << lev <<
@@ -247,7 +198,6 @@ void mfix::make_amr_cylinder()
      ***************************************************************************/
 
     bool inside       = true;
-    bool close_bottom = true;
     Real offset       = 1.0e-8;
 
     Real radius    = 0.0002;
@@ -257,7 +207,6 @@ void mfix::make_amr_cylinder()
     Vector<Real> centervec(3);
 
     pp.query("internal_flow", inside);
-    pp.query("closed_bottom", close_bottom);
     pp.query("bottom_offset", offset);
 
     pp.query("radius",     radius);
@@ -305,24 +254,7 @@ void mfix::make_amr_cylinder()
 
         EB2::CylinderIF if_cyl(radius, height, direction, center, inside);
 
-        if (close_bottom)
-        {
-            Array<Real,3> point{0.0, 0.0, 0.0};
-            Array<Real,3> normal{0.0, 0.0, 0.0};
-
-            point[direction] = geom[lev_lowest].ProbLo(direction) + offset;
-            normal[direction] = -1.0;
-
-            EB2::PlaneIF if_plane(point, normal);
-            auto if_union = EB2::makeUnion(if_cyl, if_plane);
-
-            amr_level_set.reset(new LSCore<decltype(if_union)>(EB2::makeShop(if_union),
-                                                               & rb, amr_ls_max_level, v_cells));
-        }
-        else
-        {
-            amr_level_set.reset(new LSCore<decltype(if_cyl)>(EB2::makeShop(if_cyl)));
-        }
+        amr_level_set.reset(new LSCore<decltype(if_cyl)>(EB2::makeShop(if_cyl)));
 
         amrex::Print() << "... done declaring AMR levelset" << std::endl;
     }

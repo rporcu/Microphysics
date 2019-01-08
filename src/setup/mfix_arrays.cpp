@@ -600,6 +600,10 @@ mfix::RegridLevelSetArray (int a_lev)
        // This call is needed because of the dual grid: the level-set
        // factory object and the ls data both live on the particle grids.
        level_set->regrid(ba, dm);
+
+       amrex::Print() << "Modifying level set to see inflow" << std::endl;
+       mfix_set_ls_near_inflow();
+       exit(0);
    }
 }
 

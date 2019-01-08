@@ -1,6 +1,5 @@
 !                                                                      !
 !  Subroutine: set_p0                                                  !
-!  Author: M. Syamlal                                 Date: 21-JAN-92  !
 !                                                                      !
 !  Purpose: Set the pressure field inside the bed assuming gravity     !
 !           is acting in the negative y-direction.                     !

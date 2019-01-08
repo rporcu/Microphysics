@@ -1,14 +1,12 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: set_bc0                                                 C
-!  Purpose: This subroutine does the initial setting of all boundary   C
-!  conditions. The user specifications of the boundary conditions are  C
-!  checked for veracity in various check_data/ routines:               C
-!  (e.g., check_boundary_conditions).                                  C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 29-JAN-92  C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: set_bc0                                                 !
+!  Purpose: This subroutine does the initial setting of all boundary   !
+!  conditions. The user specifications of the boundary conditions are  !
+!  checked for veracity in various check_data/ routines:               !
+!  (e.g., check_boundary_conditions).                                  !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine set_bc0(slo, shi, &
                       ep_g, ro_g, rop_g, mu_g, lambda_g, &
                       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &

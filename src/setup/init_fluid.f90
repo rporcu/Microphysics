@@ -250,7 +250,6 @@ module init_fluid_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_IC                                                  !
-!  Author: M. Syamlal                                 Date: 21-JAN-92  !
 !                                                                      !
 !  Purpose: This module sets all the initial conditions.               !
 !                                                                      !

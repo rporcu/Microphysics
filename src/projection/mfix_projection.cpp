@@ -59,6 +59,8 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
         amrex::Print() << "AT LEVEL " << lev << " BEFORE PROJECTION: \n";
         mfix_print_max_vel(lev);
         mfix_print_max_gp (lev);
+        amrex::Print() << "Min and Max of ep_g " << ep_g[lev]->min(0) << " " 
+                                                 << ep_g[lev]->max(0) << std::endl;
     }
 
     for (int lev = 0; lev < nlev; lev++)

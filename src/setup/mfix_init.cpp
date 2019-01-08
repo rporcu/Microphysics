@@ -854,3 +854,61 @@ mfix::mfix_set_p0()
       gp0[lev]->FillBoundary(p0_periodicity);
    }
 }
+
+void
+mfix::mfix_set_ls_near_inflow()
+{
+   if (use_amr_ls)
+   {
+      // The level set is always at the same level of refinement as the boundary condition arrays
+      int n = 1;
+
+      int finest_level = std::min(amr_level_set->finestLevel(),max_level);
+      for (int lev = 0; lev <= finest_level; lev++)
+      {
+          Box domain(geom[lev].Domain());
+          MultiFab * ls_phi = amr_level_set->getLevelSet(lev);
+          const Real *dx = geom[lev].CellSize();
+
+          // Don't tile this
+          for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
+          {
+              FArrayBox& ls_fab = (*ls_phi)[mfi];
+              const Box& sbx = ls_fab.box();
+
+              set_ls_inflow(
+                      BL_TO_FORTRAN_ANYD(ls_fab),
+                      bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                      bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                      bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+                      domain.loVect(), domain.hiVect(), &nghost, &n, dx);
+            }
+      }
+   } else {
+
+      // Here we assume that the particles and fluid only exist on one level
+      int lev = 0; 
+
+      // ... but that the level set may be at a finer resolution. 
+      int n = level_set->get_ls_ref(); 
+      {
+          Box domain(geom[lev].Domain());
+          const Real *dx = geom[lev].CellSize();
+          MultiFab* ls_phi = level_set->get_data();
+
+          // Don't tile this
+          for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
+          {
+              FArrayBox& ls_fab = (*ls_phi)[mfi];
+              const Box& sbx = ls_fab.box();
+
+              set_ls_inflow(
+                      BL_TO_FORTRAN_ANYD(ls_fab),
+                      bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                      bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                      bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+                      domain.loVect(), domain.hiVect(), &nghost, &n, dx);
+            }
+       }
+   }
+}
