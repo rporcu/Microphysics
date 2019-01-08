@@ -72,8 +72,6 @@ mfix.levelset__eb_pad        = 8 # EB extends into neighboring grids
 mfix.geometry = "cylinder"
 
 cylinder.internal_flow = true
-cylinder.closed_bottom = true
-cylinder.bottom_offset = 1.0e-8
 
 cylinder.radius  = 0.0009
 cylinder.height  = -1.

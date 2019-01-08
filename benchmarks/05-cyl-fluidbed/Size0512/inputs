@@ -80,8 +80,6 @@ mfix.levelset__pad           = 8 # levelset ghost cells
 mfix.geometry = "cylinder"
 
 cylinder.internal_flow = true
-cylinder.closed_bottom = true
-cylinder.bottom_offset = 1.0e-8
 
 cylinder.radius  = 0.0036
 cylinder.height  = -1.
