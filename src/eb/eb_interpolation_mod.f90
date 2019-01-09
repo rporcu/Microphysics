@@ -217,7 +217,7 @@ contains
       use amrex_ebcellflag_module, only: is_covered_cell
       use amrex_error_module,      only: amrex_abort
 
-      ! Face indeces: these must be consistent with a staggered indexing
+      ! Face indices: these must be consistent with a staggered indexing
       ! and therefore consistent with the value of dir
       integer(c_int),  intent(in   ) :: i, j, k
 

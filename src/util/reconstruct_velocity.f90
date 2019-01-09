@@ -48,7 +48,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    real(rt),       intent(inout) :: &
     &  vel_out(volo(1):vohi(1),volo(2):vohi(2),volo(3):vohi(3), 1:3)
 
-   ! Loop indeces
+   ! Loop indices
    integer             :: i, j, k
 
    ! Width of narrow band 
@@ -173,7 +173,7 @@ contains
       print *, "norm_i = "
       print *,  norm_i
       print *, "phi_i = ", phi_i
-      print *, " interpolation stencil reference cell indeces"
+      print *, " interpolation stencil reference cell indices"
       print *, ii, jj, kk
       print *, "is stencil covered ? "
       print *,  is_covered_cell(flags(ii-1:ii,jj-1:jj,kk-1:kk))

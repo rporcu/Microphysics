@@ -13,7 +13,7 @@ std::string mfix::knapsack_weight_type = "RunTimeCosts";
 int         mfix::load_balance_fluid   = 1;
 int         mfix::knapsack_nmax        = std::numeric_limits<int>::max();
 
-// Define unit vectors for easily convert indeces
+// Define unit vectors for easily convert indices
 amrex::IntVect mfix::e_x(1,0,0);
 amrex::IntVect mfix::e_y(0,1,0);
 amrex::IntVect mfix::e_z(0,0,1);

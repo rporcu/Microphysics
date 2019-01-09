@@ -26,7 +26,7 @@ contains
       ! Wall divergence operator
       real(rt),       intent(  out) :: divw(3)
 
-      ! Cell indeces 
+      ! Cell indices 
       integer(c_int), intent(in   ) :: i, j, k
 
       ! Grid spacing

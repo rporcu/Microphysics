@@ -11,7 +11,7 @@
 // For multigrid
 using namespace amrex;
 
-// Define unit vectors for easily convert indeces
+// Define unit vectors for easily convert indices
 IntVect MacProjection::e_x(1,0,0);
 IntVect MacProjection::e_y(0,1,0);
 IntVect MacProjection::e_z(0,0,1);
