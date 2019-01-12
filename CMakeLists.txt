@@ -80,7 +80,6 @@ set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 message ( WARNING "Building MFIX in experimental APPROXIMATE PROJECTION mode (ENABLE_PROJCC=on)" )
 add_subdirectory (src)
 set (ENABLE_PTESTS ON)
-set (ENABLE_STESTS OFF)
 
 # Print out config summary
 print_mfix_configuration_summary (${MFIX_LIBNAME})

@@ -7,6 +7,8 @@ amr.max_grid_size_y = 32
 amr.max_grid_size_y = 16
 amr.max_grid_size_y = 32
 
+amr.blocking_factor = 1
+
 # Maximum tile size within each grid
 fabarray.mfiter_tile_size = 64 16 16
  
@@ -20,6 +22,9 @@ amr.plot_file=FLD04
 
 amr.check_int = -1
 amr.par_ascii_int = -1
+
+mfix.use_proj_method = 1
+mfix.steady_state_tol=1.0e-2
 
 # Geometry
 geometry.coord_sys   = 0                  # 0: Cartesian

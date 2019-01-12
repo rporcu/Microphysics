@@ -58,7 +58,6 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 | ENABLE_OMP                   | Enable build with OpenMP                           |   0/1                        |   0                 |
 | ENABLE_FPE                   | Build with Floating-Point Exceptions checks        |   0/1                        |   0                 |
 | ENABLE_PTESTS                | Include tests for projection method in Ctest suite |   0/1                        |   0                 |
-| ENABLE_STESTS                | Include tests for SIMPLE method in Ctest suite     |   0/1                        |   1                 |
 | AMREX_ENABLE_DP              | Enable double precision                            |   0/1                        |   1                 |
 | AMREX_ENABLE_DP_PARTICLES    | Enable double precision in particles classes       |   0/1                        |   1                 |
 | AMREX_ENABLE_BASE_PROFILE    | Include profiling info                             |   0/1                        |   0                 |

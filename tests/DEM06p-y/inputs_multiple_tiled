@@ -25,6 +25,9 @@ amr.check_file = DEM06_chk
 amr.par_ascii_int  = 10
 amr.par_ascii_file = DEM06_par
 
+mfix.use_proj_method=1
+mfix.fixed_dt=1
+
 # Geometry
 geometry.coord_sys   = 0                  # 0: Cartesian
 geometry.is_periodic = 1     0     1      # Is periodic in each direction?

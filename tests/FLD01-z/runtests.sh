@@ -41,10 +41,10 @@ FCOMPARE=${FCOMPARE:-}
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
-${FEXTRACT} -p FLD0100001/ -d 1 -v w_g -s POST_VG.dat
+${FEXTRACT} -p FLD0100001/ -d 1 -v w_g -f 8 -s POST_VG.dat
 ${FEXTRACT} -p FLD0100001/ -d 3 -v p_g -s POST_PG.dat
 
 post_dats=POST*.dat
 for result in ${post_dats}; do
-    diff -u -I '#.*' "../FLD01-y/AUTOTEST/${result}" "${result}"
+    diff -b -u -I '#.*' "../FLD01-y/AUTOTEST/${result}" "${result}"
 done

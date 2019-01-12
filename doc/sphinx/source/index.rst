@@ -93,9 +93,6 @@ build of AMReX.
 | ENABLE\_PTESTS  | Include tests for projection | 0/1              | 0           |
 |                 | method in Ctest suite        |                  |             |
 +-----------------+------------------------------+------------------+-------------+
-| ENABLE\_STESTS  | Include tests for SIMPLE     | 0/1              | 1           |
-|                 | method in Ctest suite        |                  |             |
-+-----------------+------------------------------+------------------+-------------+
 | AMREX\_ENABLE\_ | Enable build with MPI        | 0/1              | 1           |
 | MPI             |                              |                  |             |
 +-----------------+------------------------------+------------------+-------------+
