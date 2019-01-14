@@ -98,6 +98,65 @@ void mfix::make_eb_geometry ()
 }
 
 
+void mfix::make_eb_factories () {
+
+    for (int lev = 0; lev < nlev; lev++) {
+        if (solve_fluid)
+            ebfactory[lev].reset(
+                new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                        m_eb_full_grow_cells}, m_eb_support_level)
+                );
+
+        if (solve_dem)
+            particle_ebfactory[lev].reset(
+                new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                        m_eb_full_grow_cells}, m_eb_support_level)
+                );
+    }
+}
+
+
+void mfix::fill_eb_levelsets () {
+    if (nlev == 1) {
+
+        //_______________________________________________________________________
+        // Baseline Level-Set
+
+        level_sets[0].reset(new MultiFab);
+        level_sets[0]->define(grids[0], dmap[0], 1, levelset__pad);
+        iMultiFab valid(grids[0], dmap[0], 1, levelset__pad);
+
+        LSFactory::fill_data(* level_sets[0], valid,
+                             * particle_ebfactory[0], * implicit_functions[0],
+                             32, 1, 1, geom[0], geom[0]);
+
+        //_______________________________________________________________________
+        // Refined Level-Set
+
+        // Set up refined geometry
+        Box dom = geom[0].Domain();
+        dom.refine(levelset__refinement);
+        Geometry geom_lev(dom);
+
+        // Set up refined BoxArray. NOTE: reference BoxArray is nodal
+        BoxArray ba = amrex::convert(grids[0], IntVect::TheNodeVector());
+        ba.refine(levelset__refinement);
+
+        level_sets[1].reset(new MultiFab);
+        level_sets[1]->define(ba, dmap[0], 1, levelset__pad);
+        iMultiFab valid_ref(ba, dmap[0], 1, levelset__pad);
+
+        LSFactory::fill_data(* level_sets[1], valid_ref,
+                             * particle_ebfactory[0], * implicit_functions[1],
+                             32, levelset__refinement, 1, geom_lev, geom[0]);
+    } else {
+
+    }
+}
+
+
 void mfix::make_amr_geometry ()
 {
     if (! use_amr_ls)

@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <AMReX_EB_utils.H>
-#include <AMReX_EB_LSCore.H>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
 #include <mfix_eb_F.H>
@@ -129,59 +128,61 @@ void mfix::make_eb_box()
 
         auto gshop = EB2::makeShop(if_box);
 
-        EB2::Build(gshop, geom.back(), max_level_here,
-                   max_level_here + max_coarsening_level);
+        build_eb_levels(gshop);
 
-        const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+        // EB2::Build(gshop, geom.back(), max_level_here,
+        //            max_level_here + max_coarsening_level);
 
-        for (int lev = 0; lev < nlev; lev++)
-        {
+        // const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
 
-            eb_level_fluid     = & eb_is.getLevel(geom[lev]);
-            eb_level_particles =   eb_level_fluid;
+        // for (int lev = 0; lev < nlev; lev++)
+        // {
 
-            if (solve_fluid)
-                ebfactory[lev].reset(
-                    new EBFArrayBoxFactory(* eb_level_fluid, geom[lev], grids[lev], dmap[lev],
-                                           {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                            m_eb_full_grow_cells}, m_eb_support_level)
-                    );
+        //     eb_level_fluid     = & eb_is.getLevel(geom[lev]);
+        //     eb_level_particles =   eb_level_fluid;
 
-            if (solve_dem)
-            {
-                particle_ebfactory[lev].reset(
-                    new EBFArrayBoxFactory(* eb_level_particles, geom[lev], grids[lev], dmap[lev],
-                                           {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                            m_eb_full_grow_cells}, m_eb_support_level)
-                    );
+        //     if (solve_fluid)
+        //         ebfactory[lev].reset(
+        //             new EBFArrayBoxFactory(* eb_level_fluid, geom[lev], grids[lev], dmap[lev],
+        //                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+        //                                     m_eb_full_grow_cells}, m_eb_support_level)
+        //             );
 
-                /****************************************************************
-                 *                                                              *
-                 * Fill level-set:                                              *
-                 *                                                              *
-                 ***************************************************************/
+        //     if (solve_dem)
+        //     {
+        //         particle_ebfactory[lev].reset(
+        //             new EBFArrayBoxFactory(* eb_level_particles, geom[lev], grids[lev], dmap[lev],
+        //                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+        //                                     m_eb_full_grow_cells}, m_eb_support_level)
+        //             );
 
-                if (!levelset__restart) {
-                    amrex::Print() << "Creating the levelset ..." << std::endl;
+        //         /****************************************************************
+        //          *                                                              *
+        //          * Fill level-set:                                              *
+        //          *                                                              *
+        //          ***************************************************************/
 
-                    GShopLSFactory<decltype(if_box)> gshop_lsfactory(gshop, * level_set);
+        //         if (!levelset__restart) {
+        //             amrex::Print() << "Creating the levelset ..." << std::endl;
 
-                    // Implicit function used by LSFactory => returned MF has
-                    // the same BA and DM as LSFactory
-                    std::unique_ptr<MultiFab> mf_impfunc_box = gshop_lsfactory.fill_impfunc();
+        //             GShopLSFactory<decltype(if_box)> gshop_lsfactory(gshop, * level_set);
 
-                    // Plane implicit function is already a signed distance function => it's
-                    // just easier to fill the level-set this way
-                    level_set->Intersect(* mf_impfunc_box);
+        //             // Implicit function used by LSFactory => returned MF has
+        //             // the same BA and DM as LSFactory
+        //             std::unique_ptr<MultiFab> mf_impfunc_box = gshop_lsfactory.fill_impfunc();
 
-                    amrex::Print() << "Done making the levelset ..." << std::endl;
+        //             // Plane implicit function is already a signed distance function => it's
+        //             // just easier to fill the level-set this way
+        //             level_set->Intersect(* mf_impfunc_box);
 
-                } else {
-                    amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
-                                   << std::endl;
-                }
-            }
-        }
+        //             amrex::Print() << "Done making the levelset ..." << std::endl;
+
+        //         } else {
+        //             amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
+        //                            << std::endl;
+        //         }
+        //     }
+        // }
 
         amrex::Print() << "Done making the ebfactories ..." << std::endl;
         amrex::Print() << " " << std::endl;

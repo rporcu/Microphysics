@@ -67,9 +67,14 @@ void mfix::mfix_calc_drag_fluid(Real time)
             mu_g_pba->FillBoundary(geom[lev].periodicity());
 
 
-            EBFArrayBoxFactory ebfactory_loc( * eb_level_fluid, geom[lev], pba, pdm,
+            // EBFArrayBoxFactory ebfactory_loc( * eb_level_fluid, geom[lev], pba, pdm,
+            //                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+            //                                    m_eb_full_grow_cells}, EBSupport::basic);
+
+            EBFArrayBoxFactory ebfactory_loc( * eb_levels[lev], geom[lev], pba, pdm,
                                               {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                m_eb_full_grow_cells}, EBSupport::basic);
+
 
             ng = vel_g[lev]->nGrow();
             vel_g_pba.reset(new MultiFab(pba,pdm,vel_g[lev]->nComp(),ng, MFInfo(), ebfactory_loc));
@@ -98,7 +103,7 @@ void mfix::mfix_calc_drag_fluid(Real time)
         {
             // Create fab to host reconstructed velocity field
             FArrayBox vel_r;
-            
+
             for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
             {
                 auto& particles = pti.GetArrayOfStructs();
@@ -146,7 +151,7 @@ void mfix::mfix_calc_drag_fluid(Real time)
             }
         }
     } // lev
-        
+
     // ******************************************************************************
     // Now use the beta of individual particles to create the drag terms on the fluid
     // ******************************************************************************
@@ -258,8 +263,12 @@ mfix::mfix_calc_drag_particle(Real time)
             gp0_pba->copy(*gp0[lev],0,0,gp0[lev]->nComp(),ng,ng);
             gp0_pba->FillBoundary(geom[lev].periodicity());
 
-            EBFArrayBoxFactory ebfactory_loc( * eb_level_fluid,
-                                              geom[lev], pba, pdm,
+            // EBFArrayBoxFactory ebfactory_loc( * eb_level_fluid,
+            //                                   geom[lev], pba, pdm,
+            //                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+            //                                    m_eb_full_grow_cells}, EBSupport::basic);
+
+            EBFArrayBoxFactory ebfactory_loc( * eb_levels[lev], geom[lev], pba, pdm,
                                               {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                m_eb_full_grow_cells}, EBSupport::basic);
 
@@ -283,7 +292,7 @@ mfix::mfix_calc_drag_particle(Real time)
         {
             // Create fab to host reconstructed velocity field
             FArrayBox vel_r;
-            
+
             for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
             {
                 auto& particles = pti.GetArrayOfStructs();

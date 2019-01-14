@@ -117,103 +117,106 @@ mfix::make_eb_hopper()
     amrex::Print() << "Building the hopper geometry ..." << std::endl;
 
     auto gshop = EB2::makeShop(my_hopper);
-    int max_coarsening_level = 100;
-    EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
 
-    const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+    build_eb_levels(gshop);
 
-    for (int lev = 0; lev < nlev; lev++)
-    {
+    // int max_coarsening_level = 100;
+    // EB2::Build(gshop, geom.back(), max_level_here, max_level_here + max_coarsening_level);
 
-        eb_level_fluid     = & eb_is.getLevel(geom[lev]);
-        eb_level_particles =   eb_level_fluid;
+    // const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+
+    // for (int lev = 0; lev < nlev; lev++)
+    // {
+
+    //     eb_level_fluid     = & eb_is.getLevel(geom[lev]);
+    //     eb_level_particles =   eb_level_fluid;
 
 
-        amrex::Print() << "Done building the hopper geometry" << std::endl;
+    //     amrex::Print() << "Done building the hopper geometry" << std::endl;
 
-        /************************************************************************
-         *                                                                      *
-         * THIS FILLS PARTICLE EBFACTORY                                        *
-         *                                                                      *
-         ***********************************************************************/
-        if (solve_dem)
-        {
-            amrex::Print() << " " << std::endl;
-            amrex::Print() << "Now  making the particle ebfactory ..." << std::endl;
+    //     /************************************************************************
+    //      *                                                                      *
+    //      * THIS FILLS PARTICLE EBFACTORY                                        *
+    //      *                                                                      *
+    //      ***********************************************************************/
+    //     if (solve_dem)
+    //     {
+    //         amrex::Print() << " " << std::endl;
+    //         amrex::Print() << "Now  making the particle ebfactory ..." << std::endl;
 
-            particle_ebfactory[lev].reset(
-                new EBFArrayBoxFactory(* eb_level_particles, geom[lev], grids[lev], dmap[lev],
-                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                        m_eb_full_grow_cells},m_eb_support_level)
-                );
+    //         particle_ebfactory[lev].reset(
+    //             new EBFArrayBoxFactory(* eb_level_particles, geom[lev], grids[lev], dmap[lev],
+    //                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+    //                                     m_eb_full_grow_cells},m_eb_support_level)
+    //             );
 
-            /********************************************************************
-             *                                                                  *
-             * Fill level-set:                                                  *
-             *                                                                  *
-             *******************************************************************/
+    //         /********************************************************************
+    //          *                                                                  *
+    //          * Fill level-set:                                                  *
+    //          *                                                                  *
+    //          *******************************************************************/
 
-            if (!levelset__restart) {
-                amrex::Print() << "Creating the levelset ..." << std::endl;
+    //         if (!levelset__restart) {
+    //             amrex::Print() << "Creating the levelset ..." << std::endl;
 
-                // neat trick: `decltype(my_hopper)` returns the IF data type of
-                // the hopper (which otherwise would be a long template string
-                // of compounded IFs ...). Together with `auto`, this lets use
-                // be more suspect.
-                GShopLSFactory<decltype(my_hopper)> gshop_lsfactory(gshop, * level_set);
-                std::unique_ptr<MultiFab> mf_impfunc = gshop_lsfactory.fill_impfunc();
+    //             // neat trick: `decltype(my_hopper)` returns the IF data type of
+    //             // the hopper (which otherwise would be a long template string
+    //             // of compounded IFs ...). Together with `auto`, this lets use
+    //             // be more suspect.
+    //             GShopLSFactory<decltype(my_hopper)> gshop_lsfactory(gshop, * level_set);
+    //             std::unique_ptr<MultiFab> mf_impfunc = gshop_lsfactory.fill_impfunc();
 
-                // Construct EB2 Index space based on the refined geometry
-                // (level_set->get_eb_geom()). The IndexSpace's geometry needs to
-                // match the one used by the eb_factory later.
+    //             // Construct EB2 Index space based on the refined geometry
+    //             // (level_set->get_eb_geom()). The IndexSpace's geometry needs to
+    //             // match the one used by the eb_factory later.
 
-                auto gshop = EB2::makeShop(my_hopper);
-                int max_coarsening_level = 100;
-                EB2::Build(gshop, level_set->get_eb_geom(), max_level_here,
-                           max_level_here + max_coarsening_level);
+    //             auto gshop = EB2::makeShop(my_hopper);
+    //             int max_coarsening_level = 100;
+    //             EB2::Build(gshop, level_set->get_eb_geom(), max_level_here,
+    //                        max_level_here + max_coarsening_level);
 
-                const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
-                const EB2::Level & eb_is_ref  = eb_is.getLevel(level_set->get_eb_geom());
+    //             const EB2::IndexSpace & eb_is = EB2::IndexSpace::top();
+    //             const EB2::Level & eb_is_ref  = eb_is.getLevel(level_set->get_eb_geom());
 
-                // Construct EBFABFactory based on the refined EB geometry (built above).
-                int eb_grow = level_set->get_eb_pad();
-                EBFArrayBoxFactory eb_factory(eb_is_ref,
-                                              level_set->get_eb_geom(),
-                                              level_set->get_eb_ba(),
-                                              level_set->get_dm(),
-                                              {eb_grow, eb_grow, eb_grow}, EBSupport::full);
+    //             // Construct EBFABFactory based on the refined EB geometry (built above).
+    //             int eb_grow = level_set->get_eb_pad();
+    //             EBFArrayBoxFactory eb_factory(eb_is_ref,
+    //                                           level_set->get_eb_geom(),
+    //                                           level_set->get_eb_ba(),
+    //                                           level_set->get_dm(),
+    //                                           {eb_grow, eb_grow, eb_grow}, EBSupport::full);
 
-                level_set->Intersect(eb_factory, * mf_impfunc);
+    //             level_set->Intersect(eb_factory, * mf_impfunc);
 
-                amrex::Print() << "Done making the levelset ..." << std::endl;
-            } else {
-                amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
-                               << std::endl;
-            }
+    //             amrex::Print() << "Done making the levelset ..." << std::endl;
+    //         } else {
+    //             amrex::Print() << "Loaded level-set is fine => skipping levelset calculation."
+    //                            << std::endl;
+    //         }
 
-            amrex::Print() << "Done making the particle ebfactory ..." << std::endl;
-            amrex::Print() << " " << std::endl;
-        }
+    //         amrex::Print() << "Done making the particle ebfactory ..." << std::endl;
+    //         amrex::Print() << " " << std::endl;
+    //     }
 
-        /************************************************************************
-         *                                                                      *
-         * THIS FILLS FLUID EBFACTORY                                           *
-         *                                                                      *
-         ***********************************************************************/
+    //     /************************************************************************
+    //      *                                                                      *
+    //      * THIS FILLS FLUID EBFACTORY                                           *
+    //      *                                                                      *
+    //      ***********************************************************************/
 
-        if (solve_fluid)
-        {
-            amrex::Print() << "Now  making the fluid ebfactory ..." << std::endl;
+    //     if (solve_fluid)
+    //     {
+    //         amrex::Print() << "Now  making the fluid ebfactory ..." << std::endl;
 
-            ebfactory[lev].reset(
-                new EBFArrayBoxFactory(* eb_level_fluid, geom[lev], grids[lev], dmap[lev],
-                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                        m_eb_full_grow_cells}, m_eb_support_level       )
-                );
+    //         ebfactory[lev].reset(
+    //             new EBFArrayBoxFactory(* eb_level_fluid, geom[lev], grids[lev], dmap[lev],
+    //                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+    //                                     m_eb_full_grow_cells}, m_eb_support_level       )
+    //             );
 
-            amrex::Print() << "Done making the fluid ebfactory ..." << std::endl;
-        }
-    }
+    //         amrex::Print() << "Done making the fluid ebfactory ..." << std::endl;
+    //     }
+    // }
 }
 
 void mfix::make_amr_hopper()

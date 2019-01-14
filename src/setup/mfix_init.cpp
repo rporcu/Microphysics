@@ -154,6 +154,12 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 }
 
+
+void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
+    LSCoreBase::FillVolfracTags(lev, tags, 8, grids, dmap, * eb_levels[lev], geom);
+}
+
+
 void
 mfix::Init(Real dt, Real time)
 {

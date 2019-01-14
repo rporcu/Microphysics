@@ -67,6 +67,8 @@ mfix::ResizeArrays ()
        }
     }
 
+    eb_levels.resize(nlevs_max);
+
     ep_g.resize(nlevs_max);
     ep_go.resize(nlevs_max);
 
@@ -142,7 +144,7 @@ mfix::ResizeArrays ()
 
     // Particle and Fluid costs
     if (solve_dem)
-            particle_cost.resize(nlevs_max_part);
+        particle_cost.resize(nlevs_max_part);
 
     if (solve_fluid)
         fluid_cost.resize(nlevs_max);
@@ -153,6 +155,9 @@ mfix::ResizeArrays ()
     if (solve_dem){
         particle_ebfactory.resize(nlevs_max_part);
     }
+
+    level_sets.resize(std::max(2, nlevs_max));
+    implicit_functions.resize(std::max(2, nlevs_max));
 }
 
 void

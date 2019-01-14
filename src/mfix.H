@@ -22,6 +22,7 @@
 #include <AMReX_EB2_IF_Intersection.H>
 #include <AMReX_EB_levelset.H>
 #include <AMReX_EB_LSCoreBase.H>
+#include <AMReX_EB_LSCore.H>
 
 #include <MFIXParticleContainer.H>
 #include <MacProjection.H>
@@ -74,7 +75,31 @@ public:
 
     void make_eb_geometry ();
     void make_amr_geometry ();
+    void make_eb_factories ();
+    void fill_eb_levelsets ();
 
+    template<class F> void build_eb_levels(EB2::GeometryShop<F> gshop){
+        for (int lev = 0; lev < nlev; lev ++)
+            eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom);
+
+        if (nlev == 1) {
+            // Base (fluid) level
+            GShopLSFactory<F> gshop_lsf_1(gshop, geom[0], grids[0], dmap[0],
+                                          levelset__pad);
+            implicit_functions[0] = gshop_lsf_1.fill_impfunc();
+
+            // Refined level
+            GShopLSFactory<F> gshop_lsf_2(gshop, geom[0], grids[0], dmap[0],
+                                          levelset__pad, levelset__refinement);
+            implicit_functions[1] = gshop_lsf_2.fill_impfunc();
+        } else {
+            for (int lev = 0; lev < nlev; lev ++) {
+                GShopLSFactory<F> gshop_lsf(gshop, geom[lev], grids[lev], dmap[lev],
+                                            levelset__pad);
+                implicit_functions[lev] = gshop_lsf.fill_impfunc();
+            }
+        }
+    };
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(bool & has_walls);
 
@@ -121,9 +146,8 @@ public:
 
 protected:
 
-    //! Tagging cells for refinement
-    virtual void ErrorEst(int lev, amrex::TagBoxArray& tags, amrex::Real time, int /*ngrow*/) override
-        { amrex::Abort("ErrorEst: To be implemented"); }
+     //! Tagging cells for refinement
+     virtual void ErrorEst(int lev, TagBoxArray & tags, Real time, int ngrow) override;
 
     //! Make a new level using provided BoxArray and
     //! DistributionMapping and fill with interpolated coarse level
@@ -375,8 +399,11 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag;
     Vector< std::unique_ptr<MultiFab> > f_gds;
 
-    // Level-Set Data => used for fluid reconstruction in particle drag
-    // calculation
+    // Level-Set Data => used for particle-wall collisions and fluid
+    // reconstruction in particle drag calculation. NOTE: this has at least 2
+    // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions
+    Vector< std::unique_ptr<MultiFab> > level_sets;
+    Vector< std::unique_ptr<MultiFab> > implicit_functions;
     Vector< std::unique_ptr<MultiFab> > ls;
 
     // These are multi-component multifabs
@@ -530,12 +557,12 @@ private:
      *                                                                          *
      ***************************************************************************/
 
-     Vector<Real> t_old;
-     Vector<Real> t_new;
+    Vector<Real> t_old;
+    Vector<Real> t_new;
 
-     amrex::Vector<BCRec> bcs_u; // For velocity components
-     amrex::Vector<BCRec> bcs_s; // For scalars
-     amrex::Vector<BCRec> bcs_f; // For generic first-order extrapolation
+    amrex::Vector<BCRec> bcs_u; // For velocity components
+    amrex::Vector<BCRec> bcs_s; // For scalars
+    amrex::Vector<BCRec> bcs_f; // For generic first-order extrapolation
 
 
     /****************************************************************************
@@ -544,8 +571,10 @@ private:
      *                                                                          *
      ***************************************************************************/
 
-    const EB2::Level * eb_level_fluid;
-    const EB2::Level * eb_level_particles;
+    Vector<const EB2::Level *> eb_levels;
+
+    // const EB2::Level * eb_level_fluid;
+    // const EB2::Level * eb_level_particles;
 
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
