@@ -114,9 +114,10 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
         if (solve_dem)
           mfix_calc_drag_fluid(new_time);
 
-        // Corrector step
         bool proj_2_corr = true;
-        mfix_apply_corrector ( conv_old, divtau_old, time, dt, proj_2_corr );
+        // Corrector step
+        if (!steady_state)
+          mfix_apply_corrector ( conv_old, divtau_old, time, dt, proj_2_corr );
 
         // Print info about corrector step
         amrex::Print() << "\nAfter corrector step at time " << new_time << std::endl;
