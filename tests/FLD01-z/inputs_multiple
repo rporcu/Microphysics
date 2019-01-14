@@ -20,9 +20,9 @@ amr.blocking_factor = 4
 amr.max_level = 0
 
 geometry.coord_sys   = 0                    # 0: Cartesian
-geometry.is_periodic = 0       1     1      # Is periodic in each direction?
-geometry.prob_lo     = 0.      0.    0.     # lo corner of physical domain
-geometry.prob_hi     = 0.01    0.01  0.01   # hi corner of physical domain
+geometry.is_periodic = 0      1      1      # Is periodic in each direction?
+geometry.prob_lo     = 0.     0.     0.     # lo corner of physical domain
+geometry.prob_hi     = 0.01   0.01   0.01   # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell =  8  8  8
