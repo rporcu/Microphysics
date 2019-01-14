@@ -496,8 +496,8 @@ private:
     // DO NOT USE  A LOCAL VARIABLE WITH THE SAME NAME
     //
 
-    // These values are required when fluid sees EB -- for now
-    const int nghost = 5;
+    // Four ghost cells are required when using EB
+    const int nghost = 4;
 
     const int m_eb_basic_grow_cells = nghost;
     const int m_eb_volume_grow_cells = nghost;
