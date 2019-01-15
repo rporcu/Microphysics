@@ -103,17 +103,18 @@
 
          if (abs(delp_x) > epsilon(zero)) then
             dpodx = delp_x/xlength
-            pj = pj - dpodx*dx*(hi(1)-domhi(1)+2 + offset )
+            pj = pj - dpodx*dx*(hi(1)-domhi(1)+ng+2 + offset )
             do i = shi(1), slo(1), -1
                pj = pj + dpodx*dx
                p0_g(i,slo(2):shi(2),slo(3):shi(3)) = scale_pressure(pj)
             enddo
             gp0(:,:,:,1) = -dpodx
          endif
+         stop
 
          if (abs(delp_y) > epsilon(zero)) then
             dpody = delp_y/ylength
-            pj = pj - dpody*dy*(hi(2)-domhi(2)+2 + offset )
+            pj = pj - dpody*dy*(hi(2)-domhi(2)+ng+2 + offset )
             do j = shi(2), slo(2), -1
                pj = pj + dpody*dy
                p0_g(slo(1):shi(1),j,slo(3):shi(3)) = scale_pressure(pj)
@@ -123,7 +124,7 @@
 
          if (abs(delp_z) > epsilon(zero)) then
             dpodz = delp_z/zlength
-            pj = pj - dpodz*dz*(hi(3)-domhi(3)+2 + offset )
+            pj = pj - dpodz*dz*(hi(3)-domhi(3)+ng+2 + offset )
             do k = shi(3), slo(3), -1
                pj = pj + dpodz*dz
                p0_g(slo(1):shi(1),slo(2):shi(2),k) = scale_pressure(pj)
