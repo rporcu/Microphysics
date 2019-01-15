@@ -110,7 +110,6 @@
             enddo
             gp0(:,:,:,1) = -dpodx
          endif
-         stop
 
          if (abs(delp_y) > epsilon(zero)) then
             dpody = delp_y/ylength
