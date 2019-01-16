@@ -159,15 +159,39 @@ void mfix::fill_eb_levelsets () {
             MultiFab impfunc = MFUtil::duplicate<MultiFab,
                                                  MFUtil::SymmetricGhost>(ba, dmap[0], * implicit_functions[1]);
 
-            LSFactory::fill_data(* level_sets[1], valid_ref, * particle_ebfactory[0], impfunc,
-                                 32, levelset__refinement, 1, geom_lev, geom[0]);
+            LSFactory::fill_data(* level_sets[1], valid_ref, * particle_ebfactory[1], impfunc,
+                                 32, levelset__refinement, 1, geom_lev, geom[1]);
         }
     } else {
 
         //_______________________________________________________________________
         // Multi-level level-set: build finer level using coarse level set
 
-        for (int lev = 0; lev < nlev; lev++) {
+        EBFArrayBoxFactory eb_factory(* eb_levels[0], geom[0], grids[0], dmap[0],
+                                      {levelset__eb_pad + 1, levelset__eb_pad + 1, levelset__eb_pad + 1},
+                                      EBSupport::full);
+
+        // NOTE: reference BoxArray is not nodal
+        BoxArray ba = amrex::convert(grids[0], IntVect::TheNodeVector());
+        level_sets[0].reset(new MultiFab);
+        level_sets[0]->define(ba, dmap[0], 1, levelset__pad);
+        iMultiFab valid(ba, dmap[0], 1, levelset__pad);
+
+        // NOTE: implicit function data might not be on the right grids
+        MultiFab impfunc = MFUtil::duplicate<MultiFab,
+                                             MFUtil::SymmetricGhost>(ba, dmap[0], * implicit_functions[0]);
+
+        LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
+                             32, 1, 1, geom[0], geom[0]);
+
+        for (int lev = 1; lev < nlev; lev++) {
+
+            // NOTE: reference BoxArray is not nodal
+            BoxArray ba = amrex::convert(grids[lev], IntVect::TheNodeVector());
+            level_sets[lev].reset(new MultiFab);
+            //level_sets[lev]->define(ba, dmap[lev], 1, levelset__pad);
+            iMultiFab valid(ba, dmap[lev], 1, levelset__pad);
+
             // Fills level-set[lev] with coarse data
             LSCoreBase::MakeNewLevelFromCoarse( * level_sets[lev], * level_sets[lev-1],
                                                grids[lev], dmap[lev], geom[lev], geom[lev-1],
@@ -178,9 +202,8 @@ void mfix::fill_eb_levelsets () {
                                           EBSupport::full);
 
             // NOTE: implicit function data might not be on the right grids
-            BoxArray ba = amrex::convert(grids[lev], IntVect::TheNodeVector());
             MultiFab impfunc = MFUtil::duplicate<MultiFab,
-                                             MFUtil::SymmetricGhost>(ba, dmap[0], * implicit_functions[1]);
+                                             MFUtil::SymmetricGhost>(ba, dmap[lev], * implicit_functions[lev]);
 
             IntVect ebt_size{AMREX_D_DECL(32, 32, 32)}; // Fudge factors...
             LSCoreBase::FillLevelSet(* level_sets[lev], * level_sets[lev], eb_factory, impfunc,
