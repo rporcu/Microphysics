@@ -146,9 +146,13 @@ int main (int argc, char* argv[])
     // Initialize memory for data-array internals NOTE: MFIXParticleContainer is
     // created here
     my_mfix.ResizeArrays();
+    my_mfix.make_eb_geometry();
 
     // Initialize derived internals
     my_mfix.Init(dt, time);
+
+    my_mfix.make_eb_factories();
+    my_mfix.fill_eb_levelsets();
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;

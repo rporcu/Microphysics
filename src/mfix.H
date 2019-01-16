@@ -79,23 +79,47 @@ public:
     void fill_eb_levelsets ();
 
     template<class F> void build_eb_levels(EB2::GeometryShop<F> gshop){
+
+        /************************************************************************
+         * Build EB levels                                                      *
+         ***********************************************************************/
+
         for (int lev = 0; lev < nlev; lev ++)
             eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom);
 
+
+
+        /************************************************************************
+         * Fill each level with implicit function values                        *
+         ***********************************************************************/
+
         if (nlev == 1) {
+
+            //___________________________________________________________________
+            // Single-level case: fill normal and refined implicit functions
+
+            // Get BoxArray and distribution mapping from EB level as the
+            // mfix::grids and mfix::dmap vectors have not been built yet
+            const BoxArray & ba            = eb_levels[0]->boxArray();
+            const DistributionMapping & dm = eb_levels[0]->DistributionMap();
+
             // Base (fluid) level
-            GShopLSFactory<F> gshop_lsf_1(gshop, geom[0], grids[0], dmap[0],
-                                          levelset__pad);
+            GShopLSFactory<F> gshop_lsf_1(gshop, geom[0], ba, dm, levelset__pad);
             implicit_functions[0] = gshop_lsf_1.fill_impfunc();
 
             // Refined level
-            GShopLSFactory<F> gshop_lsf_2(gshop, geom[0], grids[0], dmap[0],
-                                          levelset__pad, levelset__refinement);
+            GShopLSFactory<F> gshop_lsf_2(gshop, geom[0], ba, dm, levelset__pad, levelset__refinement);
             implicit_functions[1] = gshop_lsf_2.fill_impfunc();
         } else {
+
+            //___________________________________________________________________
+            // Multi-level case: fill function for each level
+
             for (int lev = 0; lev < nlev; lev ++) {
-                GShopLSFactory<F> gshop_lsf(gshop, geom[lev], grids[lev], dmap[lev],
-                                            levelset__pad);
+                const BoxArray & ba            = eb_levels[lev]->boxArray();
+                const DistributionMapping & dm = eb_levels[lev]->DistributionMap();
+
+                GShopLSFactory<F> gshop_lsf(gshop, geom[lev], ba, dm, levelset__pad);
                 implicit_functions[lev] = gshop_lsf.fill_impfunc();
             }
         }

@@ -84,17 +84,17 @@ void mfix::make_eb_geometry ()
         make_eb_regular();
     }
 
-    // store copy of level set (for plotting and velocity reconstruction).
-    if (solve_dem && !levelset__restart) {
-        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-        int ng = ls_data->nGrow();
+    // // store copy of level set (for plotting and velocity reconstruction).
+    // if (solve_dem && !levelset__restart) {
+    //     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    //     int ng = ls_data->nGrow();
 
-        // TODO: currently this is a wee bit of a hack... as each level is
-        // getting the same level-set function. Once the AMR levelset is fully
-        // implemented, use that instead.
-        for (int lev = 0; lev < nlev; lev++)
-            ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
-    }
+    //     // TODO: currently this is a wee bit of a hack... as each level is
+    //     // getting the same level-set function. Once the AMR levelset is fully
+    //     // implemented, use that instead.
+    //     for (int lev = 0; lev < nlev; lev++)
+    //         ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
+    // }
 }
 
 
@@ -123,34 +123,42 @@ void mfix::fill_eb_levelsets () {
 
         //_______________________________________________________________________
         // Baseline Level-Set
+        {
+            BoxArray ba = amrex::convert(grids[0], IntVect::TheNodeVector());
 
-        level_sets[0].reset(new MultiFab);
-        level_sets[0]->define(grids[0], dmap[0], 1, levelset__pad);
-        iMultiFab valid(grids[0], dmap[0], 1, levelset__pad);
+            level_sets[0].reset(new MultiFab);
+            level_sets[0]->define(ba, dmap[0], 1, levelset__pad);
+            iMultiFab valid(ba, dmap[0], 1, levelset__pad);
 
-        LSFactory::fill_data(* level_sets[0], valid,
-                             * particle_ebfactory[0], * implicit_functions[0],
-                             32, 1, 1, geom[0], geom[0]);
+            MultiFab impfunc = MFUtil::duplicate<MultiFab,
+                                                 MFUtil::SymmetricGhost>(ba, dmap[0], * implicit_functions[0]);
 
+            LSFactory::fill_data(* level_sets[0], valid,
+                                 * particle_ebfactory[0], impfunc, 32, 1, 1, geom[0], geom[0]);
+        }
         //_______________________________________________________________________
         // Refined Level-Set
+        {
+            // Set up refined geometry
+            Box dom = geom[0].Domain();
+            dom.refine(levelset__refinement);
+            Geometry geom_lev(dom);
 
-        // Set up refined geometry
-        Box dom = geom[0].Domain();
-        dom.refine(levelset__refinement);
-        Geometry geom_lev(dom);
+            // Set up refined BoxArray. NOTE: reference BoxArray is nodal
+            BoxArray ba = amrex::convert(grids[0], IntVect::TheNodeVector());
+            ba.refine(levelset__refinement);
 
-        // Set up refined BoxArray. NOTE: reference BoxArray is nodal
-        BoxArray ba = amrex::convert(grids[0], IntVect::TheNodeVector());
-        ba.refine(levelset__refinement);
+            level_sets[1].reset(new MultiFab);
+            level_sets[1]->define(ba, dmap[0], 1, levelset__pad);
+            iMultiFab valid_ref(ba, dmap[0], 1, levelset__pad);
 
-        level_sets[1].reset(new MultiFab);
-        level_sets[1]->define(ba, dmap[0], 1, levelset__pad);
-        iMultiFab valid_ref(ba, dmap[0], 1, levelset__pad);
+            MultiFab impfunc = MFUtil::duplicate<MultiFab,
+                                                 MFUtil::SymmetricGhost>(ba, dmap[0], * implicit_functions[1]);
 
-        LSFactory::fill_data(* level_sets[1], valid_ref,
-                             * particle_ebfactory[0], * implicit_functions[1],
-                             32, levelset__refinement, 1, geom_lev, geom[0]);
+            LSFactory::fill_data(* level_sets[1], valid_ref,
+                                 * particle_ebfactory[0], impfunc,
+                                 32, levelset__refinement, 1, geom_lev, geom[0]);
+        }
     } else {
 
     }
@@ -268,4 +276,3 @@ void mfix::make_amr_geometry ()
         amrex::Print() << "... done constructing AMR levelset" << std::endl;
     }
 }
-

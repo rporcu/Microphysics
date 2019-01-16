@@ -460,9 +460,9 @@ mfix::check_data ()
 void
 mfix::InitLevelData(Real dt, Real time)
 {
-    // This is needed before initializing level MultiFabs: ebfactories should
-    // not change after the eb-dependent MultiFabs are allocated.
-    make_eb_geometry();
+    // // This is needed before initializing level MultiFabs: ebfactories should
+    // // not change after the eb-dependent MultiFabs are allocated.
+    // make_eb_geometry();
 
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
     if (solve_fluid)
