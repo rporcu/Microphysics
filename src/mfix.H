@@ -108,7 +108,8 @@ public:
             implicit_functions[0] = gshop_lsf_1.fill_impfunc();
 
             // Refined level
-            GShopLSFactory<F> gshop_lsf_2(gshop, geom[0], ba, dm, levelset__pad, levelset__refinement);
+            GShopLSFactory<F> gshop_lsf_2(gshop, geom[0], ba, dm,
+                                          levelset__pad, levelset__refinement);
             implicit_functions[1] = gshop_lsf_2.fill_impfunc();
         } else {
 

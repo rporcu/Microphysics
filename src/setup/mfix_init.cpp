@@ -171,6 +171,12 @@ mfix::Init(Real dt, Real time)
     if (use_amr_ls)
        finest_level = std::min(amr_level_set->finestLevel(),max_level);
 
+    Print() << "Begin making grids" << std::endl;
+    SetIterateToFalse();
+    SetUseNewChop();
+    InitFromScratch(0.);
+    Print() << "Done making grids" << std::endl;
+
     // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
     DistributionMapping dm(ba, ParallelDescriptor::NProcs());
@@ -180,36 +186,45 @@ mfix::Init(Real dt, Real time)
 
     for (int lev = 1; lev <= finest_level; lev++)
     {
-       if (use_amr_ls)
-       {
-          const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
-          BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0});
+        // if (use_amr_ls)
+        // {
+        //    const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
+        //    BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0});
 
-          std::cout << "Level " << lev << " grids: " << ba_ref << std::endl;
-          if (m_verbose > 0)
-            std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
-          DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
-          MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
-       }
-       else
-       {
-          // This refines the central half of the domain
-          int ilo = ba[0].size()[0] / 2;
-          int ihi = 3*ba[0].size()[0]/2-1;
-          IntVect lo(ilo,ilo,ilo);
-          IntVect hi(ihi,ihi,ihi);
-          Box bx(lo,hi);
-          BoxArray ba_ref(bx);
+        //    std::cout << "Level " << lev << " grids: " << ba_ref << std::endl;
+        //    if (m_verbose > 0)
+        //      std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
+        //    DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
+        //    MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
+        // }
+        // else
+        // {
+        //    // This refines the central half of the domain
+        //    int ilo = ba[0].size()[0] / 2;
+        //    int ihi = 3*ba[0].size()[0]/2-1;
+        //    IntVect lo(ilo,ilo,ilo);
+        //    IntVect hi(ihi,ihi,ihi);
+        //    Box bx(lo,hi);
+        //    BoxArray ba_ref(bx);
 
-          // This refines the whole domain
-          // BoxArray ba_ref(ba);
-          // ba_ref.refine(2);
+        //    // This refines the whole domain
+        //    // BoxArray ba_ref(ba);
+        //    // ba_ref.refine(2);
 
-          if (m_verbose > 0)
-            std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
-          DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
-          MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
-       }
+        //    if (m_verbose > 0)
+        //      std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
+        //    DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
+        //    MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
+        // }
+
+        Print() << "asdf" << std::endl;
+
+        //if (m_verbose > 0)
+            std::cout << "Setting refined region at level " << lev
+                      << " to " << grids[lev] << std::endl;
+
+        MakeNewLevelFromScratch(lev, time, grids[lev], dmap[lev]);
+        Print() << "asdf done" << std::endl;
     }
 
     // ******************************************************

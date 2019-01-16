@@ -141,7 +141,7 @@ int main (int argc, char* argv[])
     my_mfix.InitParams(solve_fluid, solve_dem, call_udf);
 
     // This needs to be done before initializing the particle container.
-    my_mfix.make_amr_geometry();
+    // my_mfix.make_amr_geometry();
 
     // Initialize memory for data-array internals NOTE: MFIXParticleContainer is
     // created here
@@ -153,6 +153,8 @@ int main (int argc, char* argv[])
 
     my_mfix.make_eb_factories();
     my_mfix.fill_eb_levelsets();
+
+    //my_mfix.WritePlotFile(plot_file);
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
