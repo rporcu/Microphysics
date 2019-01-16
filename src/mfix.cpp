@@ -46,6 +46,46 @@ mfix::mfix ()
     bcs_u.resize(3); // one for each velocity component
     bcs_s.resize(1); // just one for now
     bcs_f.resize(1); // just one
+
+
+    /****************************************************************************
+     * Boundary conditions used by the level-set fill-patch                     *
+     ***************************************************************************/
+
+    bcs_ls.resize(1);
+
+    // // periodic boundaries
+    // int bc_lo[] = {BCType::int_dir, BCType::int_dir, BCType::int_dir};
+    // int bc_hi[] = {BCType::int_dir, BCType::int_dir, BCType::int_dir};
+
+    // walls (Neumann)
+    int bc_lo[] = {FOEXTRAP, FOEXTRAP, FOEXTRAP};
+    int bc_hi[] = {FOEXTRAP, FOEXTRAP, FOEXTRAP};
+
+    for (int idim = 0; idim < AMREX_SPACEDIM; ++idim) {
+        // lo-side BCs
+        if (bc_lo[idim] == BCType::int_dir  ||  // periodic uses "internal Dirichlet"
+            bc_lo[idim] == BCType::foextrap ||  // first-order extrapolation
+            bc_lo[idim] == BCType::ext_dir ) {  // external Dirichlet
+            bcs_ls[0].setLo(idim, bc_lo[idim]);
+        }
+        else {
+            amrex::Abort("Invalid level-set bc_lo");
+        }
+
+        // hi-side BCSs
+        if (bc_hi[idim] == BCType::int_dir  ||  // periodic uses "internal Dirichlet"
+            bc_hi[idim] == BCType::foextrap ||  // first-order extrapolation
+            bc_hi[idim] == BCType::ext_dir ) {  // external Dirichlet
+            bcs_ls[0].setHi(idim, bc_hi[idim]);
+        }
+        else {
+            amrex::Abort("Invalid level-set bc_hi");
+        }
+    }
+
+
+
 }
 
 void
