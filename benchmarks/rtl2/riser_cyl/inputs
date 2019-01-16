@@ -1,0 +1,137 @@
+#_______________________________________________________________________
+# Solver settings
+
+#amrex.fpe_trap_invalid = 1
+
+#! Fluid solver
+#!-----------------------------------------------------------//
+mfix.fixed_dt         = 0
+
+mfix.cfl = 0.5
+
+#amr.max_step = 100
+amr.stop_time = 3.0
+
+mfix.explicit_diffusion = 0
+
+mfix.particle_init_type = "Auto"
+
+amr.blocking_factor = 2
+
+mac.mg_verbose          = 1
+
+diffusion.mg_verbose = 0
+
+mfix.mg_verbose         = 1
+mfix.mg_cg_verbose      = 0
+
+#_______________________________________________________________________
+# Geometry / grids / tiles
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+geometry.coord_sys   = 0                       # 0: Cartesian
+geometry.is_periodic = 1       0       0       # Is periodic in each direction?
+geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
+geometry.prob_hi     = 0.008   0.002   0.002   # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell =  40   10   10
+
+#! Grids
+#!-----------------------------------------------------------//
+# Maximum allowable size of each fluid subdomain in the problem domain;
+
+# Fluid
+amr.max_grid_size_x = 1024
+amr.max_grid_size_y = 6
+amr.max_grid_size_z = 6
+
+# Particles (not with KDTree)
+#particles.max_grid_size_x =   32
+#particles.max_grid_size_y =   32
+#particles.max_grid_size_z =   32
+
+#! Tiles
+#!-----------------------------------------------------------//
+
+# Fluid: Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Particles: Maximum particle title size
+particles.tile_size = 1024 1024 1024
+
+
+#! EB settings
+#!-----------------------------------------------------------//
+
+# Level-set refinement and padding
+mfix.levelset__refinement    = 4 # levelset resolution
+mfix.levelset__pad           = 4 # levelset influence in refined units
+
+# EB refinement and padding
+# => only needed when using multiple grids
+mfix.levelset__eb_pad        = 2 # EB extends into neighboring grids
+
+mfix.write_eb_surface = false  # Needed to output eb-surfaces
+
+#! EB geometry
+#!-----------------------------------------------------------//
+
+mfix.geometry = "cylinder"
+
+cylinder.internal_flow = true
+cylinder.closed_bottom = false
+
+cylinder.radius = 0.000999
+cylinder.height = -1.0
+
+cylinder.direction = 0
+cylinder.center    =  0.004   0.001   0.001
+
+#_______________________________________________________________________
+# Particle load balancing
+
+#mfix.load_balance_type = "FixedSize"
+mfix.load_balance_type = "KnapSack"
+
+amr.dual_grid          = 0
+amr.regrid_int         = 25
+
+#! KnapSack settings
+#!-----------------------------------------------------------//
+#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+#this option is only relevant if load_balance_type = KnapSack
+
+#mfix.knapsack_weight_type = "NumParticles"
+#mfix.knapsack_weight_type = "RunTimeCosts"
+
+#_______________________________________________________________________
+# user data processing
+#mfix.write_user = true
+particles.avg_vel_file = mean_Vp  # particle averages interval
+particles.avg_vel_int = 10
+particles.avg_region_x_w = 0.0
+particles.avg_region_x_e = 0.008
+particles.avg_region_y_s = 0.0
+particles.avg_region_y_n = 0.002
+particles.avg_region_z_b = 0.0
+particles.avg_region_z_t = 0.002
+
+
+#_______________________________________________________________________
+# IO / Checkpointing
+
+amr.par_ascii_int  = -1
+amr.par_ascii_file ="vis"
+
+amr.plot_int       = -1
+amr.plot_file      ="plt"
+
+amr.check_int      = -1
+amr.check_file     ="chk"
+
+#! Restart from checkpoint
+#!-----------------------------------------------------------//
+#amr.restart   ="chk00100"

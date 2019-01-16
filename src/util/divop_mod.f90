@@ -132,7 +132,7 @@ contains
       idz = one / dx(3)
 
       ! Check number of ghost cells
-      if (ng < 5) call amrex_abort( "compute_divop(): ng must be >= 5")
+      if (ng < 4) call amrex_abort( "compute_divop(): ng must be >= 4")
 
       ! Check if we are computing divergence for viscous term by checking if
       ! both mu and lambda are passed in
