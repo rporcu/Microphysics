@@ -492,7 +492,7 @@ mfix::RegridLevelSetArray (int a_lev)
       }
    }
 
-   //if (changed)
+   if (changed)
    {
 
        Print() << "Regridding level-set on lev = " << a_lev << std::endl;

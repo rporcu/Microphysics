@@ -109,8 +109,8 @@ void mfix::make_eb_factories () {
 
         particle_ebfactory[lev].reset(
             new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                    m_eb_full_grow_cells}, m_eb_support_level)
+                                   {levelset__eb_pad + 1, levelset__eb_pad + 1,
+                                    levelset__eb_pad + 1}, m_eb_support_level)
             );
     }
 }
@@ -119,19 +119,22 @@ void mfix::make_eb_factories () {
 void mfix::fill_eb_levelsets () {
     if (nlev == 1) {
 
+        const DistributionMapping & part_dm = pc->ParticleDistributionMap(0);
+        const BoxArray &            part_ba = pc->ParticleBoxArray(0);
+
         //_______________________________________________________________________
         // Baseline Level-Set
         {
             // NOTE: reference BoxArray is not nodal
-            BoxArray ba = amrex::convert(grids[0], IntVect::TheNodeVector());
+            BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
 
             level_sets[0].reset(new MultiFab);
-            level_sets[0]->define(ba, dmap[0], 1, levelset__pad);
-            iMultiFab valid(ba, dmap[0], 1, levelset__pad);
+            level_sets[0]->define(ba, part_dm, 1, levelset__pad);
+            iMultiFab valid(ba, part_dm, 1, levelset__pad);
 
             // NOTE: implicit function data might not be on the right grids
             MultiFab impfunc = MFUtil::duplicate<MultiFab,
-                                                 MFUtil::SymmetricGhost>(ba, dmap[0], * implicit_functions[0]);
+                                                 MFUtil::SymmetricGhost>(ba, part_dm, * implicit_functions[0]);
 
             LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
                                  32, 1, 1, geom[0], geom[0]);
@@ -146,62 +149,67 @@ void mfix::fill_eb_levelsets () {
             Geometry geom_lev(dom);
 
             // Set up refined BoxArray. NOTE: reference BoxArray is not nodal
-            BoxArray ba = amrex::convert(grids[0], IntVect::TheNodeVector());
+            BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
             ba.refine(levelset__refinement);
 
             level_sets[1].reset(new MultiFab);
-            level_sets[1]->define(ba, dmap[0], 1, levelset__pad);
-            iMultiFab valid_ref(ba, dmap[0], 1, levelset__pad);
+            level_sets[1]->define(ba, part_dm, 1, levelset__pad);
+            iMultiFab valid_ref(ba, part_dm, 1, levelset__pad);
 
             // NOTE: implicit function data might not be on the right grids
             MultiFab impfunc = MFUtil::duplicate<MultiFab,
-                                                 MFUtil::SymmetricGhost>(ba, dmap[0], * implicit_functions[1]);
+                                                 MFUtil::SymmetricGhost>(ba, part_dm, * implicit_functions[1]);
 
             LSFactory::fill_data(* level_sets[1], valid_ref, * particle_ebfactory[0], impfunc,
                                  32, levelset__refinement, 1, geom_lev, geom[0]);
         }
     } else {
 
+        const DistributionMapping & part_dm = pc->ParticleDistributionMap(0);
+        const BoxArray &            part_ba = pc->ParticleBoxArray(0);
+
         //_______________________________________________________________________
         // Multi-level level-set: build finer level using coarse level set
 
-        EBFArrayBoxFactory eb_factory(* eb_levels[0], geom[0], grids[0], dmap[0],
+        EBFArrayBoxFactory eb_factory(* eb_levels[0], geom[0], part_ba, part_dm,
                                       {levelset__eb_pad + 1, levelset__eb_pad + 1, levelset__eb_pad + 1},
                                       EBSupport::full);
 
         // NOTE: reference BoxArray is not nodal
-        BoxArray ba = amrex::convert(grids[0], IntVect::TheNodeVector());
+        BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
         level_sets[0].reset(new MultiFab);
-        level_sets[0]->define(ba, dmap[0], 1, levelset__pad);
-        iMultiFab valid(ba, dmap[0], 1, levelset__pad);
+        level_sets[0]->define(ba, part_dm, 1, levelset__pad);
+        iMultiFab valid(ba, part_dm, 1, levelset__pad);
 
         // NOTE: implicit function data might not be on the right grids
         MultiFab impfunc = MFUtil::duplicate<MultiFab,
-                                             MFUtil::SymmetricGhost>(ba, dmap[0], * implicit_functions[0]);
+                                             MFUtil::SymmetricGhost>(ba, part_dm, * implicit_functions[0]);
 
         LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
                              32, 1, 1, geom[0], geom[0]);
 
         for (int lev = 1; lev < nlev; lev++) {
 
+            const DistributionMapping & part_dm = pc->ParticleDistributionMap(lev);
+            const BoxArray &            part_ba = pc->ParticleBoxArray(lev);
+
             // NOTE: reference BoxArray is not nodal
-            BoxArray ba = amrex::convert(grids[lev], IntVect::TheNodeVector());
+            BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
             level_sets[lev].reset(new MultiFab);
-            //level_sets[lev]->define(ba, dmap[lev], 1, levelset__pad);
-            iMultiFab valid(ba, dmap[lev], 1, levelset__pad);
+            iMultiFab valid(ba, part_dm, 1, levelset__pad);
 
             // Fills level-set[lev] with coarse data
             LSCoreBase::MakeNewLevelFromCoarse( * level_sets[lev], * level_sets[lev-1],
-                                               grids[lev], dmap[lev], geom[lev], geom[lev-1],
+                                               part_ba, part_dm, geom[lev], geom[lev-1],
                                                bcs_ls, refRatio(lev-1));
 
-            EBFArrayBoxFactory eb_factory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+            EBFArrayBoxFactory eb_factory(* eb_levels[lev], geom[lev], part_ba, part_dm,
                                           {levelset__eb_pad + 1, levelset__eb_pad + 1, levelset__eb_pad + 1},
                                           EBSupport::full);
 
             // NOTE: implicit function data might not be on the right grids
             MultiFab impfunc = MFUtil::duplicate<MultiFab,
-                                             MFUtil::SymmetricGhost>(ba, dmap[lev], * implicit_functions[lev]);
+                                             MFUtil::SymmetricGhost>(ba, part_dm, * implicit_functions[lev]);
 
             IntVect ebt_size{AMREX_D_DECL(32, 32, 32)}; // Fudge factors...
             LSCoreBase::FillLevelSet(* level_sets[lev], * level_sets[lev], eb_factory, impfunc,
