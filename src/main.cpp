@@ -29,6 +29,7 @@ std::string check_file {"chk"};
 int   plot_int = -1;
 int   last_plt = -1;
 std::string plot_file {"plt"};
+std::string static_plt_file {"const_plt"};
 
 bool plotfile_on_restart = false;
 
@@ -154,7 +155,7 @@ int main (int argc, char* argv[])
     my_mfix.make_eb_factories();
     my_mfix.fill_eb_levelsets();
 
-    //my_mfix.WritePlotFile(plot_file);
+    my_mfix.WriteStaticPlotFile(static_plt_file);
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
