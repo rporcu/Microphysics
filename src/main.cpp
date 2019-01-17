@@ -155,8 +155,6 @@ int main (int argc, char* argv[])
     my_mfix.make_eb_factories();
     my_mfix.fill_eb_levelsets();
 
-    my_mfix.WriteStaticPlotFile(static_plt_file);
-
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
@@ -182,6 +180,8 @@ int main (int argc, char* argv[])
     // This checks if we want to regrid using the KDTree or KnapSack approach
     amrex::Print() << "Regridding at step " << nstep << std::endl;
     my_mfix.Regrid();
+
+    my_mfix.WriteStaticPlotFile(static_plt_file);
 
     my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time, steady_state);
 

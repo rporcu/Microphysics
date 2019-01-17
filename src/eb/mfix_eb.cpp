@@ -101,19 +101,17 @@ void mfix::make_eb_geometry ()
 void mfix::make_eb_factories () {
 
     for (int lev = 0; lev < nlev; lev++) {
-        if (solve_fluid)
-            ebfactory[lev].reset(
-                new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                        m_eb_full_grow_cells}, m_eb_support_level)
-                );
+        ebfactory[lev].reset(
+            new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                    m_eb_full_grow_cells}, m_eb_support_level)
+            );
 
-        if (solve_dem)
-            particle_ebfactory[lev].reset(
-                new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                        m_eb_full_grow_cells}, m_eb_support_level)
-                );
+        particle_ebfactory[lev].reset(
+            new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                    m_eb_full_grow_cells}, m_eb_support_level)
+            );
     }
 }
 
@@ -159,8 +157,8 @@ void mfix::fill_eb_levelsets () {
             MultiFab impfunc = MFUtil::duplicate<MultiFab,
                                                  MFUtil::SymmetricGhost>(ba, dmap[0], * implicit_functions[1]);
 
-            LSFactory::fill_data(* level_sets[1], valid_ref, * particle_ebfactory[1], impfunc,
-                                 32, levelset__refinement, 1, geom_lev, geom[1]);
+            LSFactory::fill_data(* level_sets[1], valid_ref, * particle_ebfactory[0], impfunc,
+                                 32, levelset__refinement, 1, geom_lev, geom[0]);
         }
     } else {
 

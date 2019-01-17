@@ -227,6 +227,10 @@ mfix::Init(Real dt, Real time)
         Print() << "asdf done" << std::endl;
     }
 
+    if (solve_dem)
+        pc = std::unique_ptr<MFIXParticleContainer> ( new MFIXParticleContainer(this) );
+
+
     // ******************************************************
     // We only do these at level 0
     // ******************************************************

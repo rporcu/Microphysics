@@ -154,8 +154,8 @@ mfix::RegridArrays (int lev)
 {
     bool need_regrid = mfix_update_ebfactory(lev);
 
-    // exit this function is ebfactory has not been updated
-    // because that means that dm and ba haven't changed
+    // exit this function is ebfactory has not been updated because that means
+    // that dm and ba haven't changed
     if (!need_regrid)
         return;
 
@@ -449,7 +449,7 @@ mfix::RegridLevelSetArray (int a_lev)
 
    if ( particle_ebfactory[a_lev].get() == nullptr )
    {
-      amrex::Print() << "Updating particle ebfactory" << std::endl;
+      amrex::Print() << "Updating particle ebfactory 1" << std::endl;
 
       // particle_ebfactory[a_lev].reset(
       //     new EBFArrayBoxFactory(* eb_level_particles, geom[a_lev], ba, dm,
@@ -468,7 +468,7 @@ mfix::RegridLevelSetArray (int a_lev)
    }
    else
    {
-      amrex::Print() << "Updating particle ebfactory" << std::endl;
+      amrex::Print() << "Updating particle ebfactory 2" << std::endl;
 
       const DistributionMapping&  eb_dm = particle_ebfactory[a_lev]->DistributionMap();
       const BoxArray&             eb_ba = particle_ebfactory[a_lev]->boxArray();
@@ -492,8 +492,25 @@ mfix::RegridLevelSetArray (int a_lev)
       }
    }
 
-   if (changed)
+   //if (changed)
    {
+
+       Print() << "Regridding level-set on lev = " << a_lev << std::endl;
+       Print() << "level_sets.size() = " << level_sets.size() << std::endl;
+
+       const BoxArray nd_ba = grids[a_lev].surroundingNodes();
+
+       std::unique_ptr<MultiFab> new_level_set(new MultiFab);
+       MFUtil::regrid(* new_level_set, nd_ba, dmap[a_lev],
+                      * particle_ebfactory[a_lev], * level_sets[a_lev], true);
+       level_sets[a_lev] = std::move(new_level_set);
+
+       std::unique_ptr<MultiFab> new_impfunc(new MultiFab);
+       MFUtil::regrid(* new_impfunc, nd_ba, dmap[a_lev],
+                      * particle_ebfactory[a_lev], * implicit_functions[a_lev], true);
+       implicit_functions[a_lev] = std::move(new_impfunc);
+
+
        // Create a nodal BoxArray
        const BoxArray & new_pc_nd_grids = amrex::convert(ba, IntVect{1, 1, 1});
 
@@ -512,7 +529,8 @@ mfix::RegridLevelSetArray (int a_lev)
        level_set->regrid(ba, dm);
 
        amrex::Print() << "Modifying level set to see inflow" << std::endl;
-       mfix_set_ls_near_inflow();
+       //mfix_set_ls_near_inflow(); // TODO: fix!!!
+       Print() << "Done regridding level-set on lev = " << a_lev << std::endl;
    }
 }
 

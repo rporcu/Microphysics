@@ -11,6 +11,9 @@
 void
 mfix::Regrid ()
 {
+
+    Print() << solve_dem << " " << solve_fluid << std::endl;
+
     BL_PROFILE_REGION_START("mfix::Regrid()");
 
     int base_lev = 0;
@@ -181,10 +184,18 @@ mfix::Regrid ()
         }
     }
 
-if (use_amr_ls)
-    for (int i_lev = 0; i_lev < pc->finestLevel(); i_lev ++)
-        amr_level_set->UpdateGrids(i_lev, pc->ParticleBoxArray(i_lev),
-                                   pc->ParticleDistributionMap(i_lev))
+    if (solve_dem)
+        for (int i_lev = base_lev; i_lev < nlev; i_lev++)
+        {
+            // This calls re-creates a proper particle_ebfactories and regrids
+            //  all the multifab that depend on it
+            RegridLevelSetArray(i_lev);
+        }
+
+    if (use_amr_ls)
+        for (int i_lev = 0; i_lev < pc->finestLevel(); i_lev ++)
+            amr_level_set->UpdateGrids(i_lev, pc->ParticleBoxArray(i_lev),
+                                       pc->ParticleDistributionMap(i_lev))
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }

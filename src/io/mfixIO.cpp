@@ -814,7 +814,7 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
     Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets, & implicit_functions};
 
     const int ngrow = 0;
-    const int ncomp = static_names.size() + 1; // the "+1" here is for volfrac
+    const int ncomp = static_names.size();
 
 
     /****************************************************************************
@@ -828,8 +828,9 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(), * ebfactory[lev]));
+        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(), * particle_ebfactory[lev]));
 
+        // Don't iterate over all ncomp => last component is for volfrac
         for (int dcomp = 0; dcomp < ncomp - 1; dcomp++)
         {
             // amrex::average_node_to_cellcenter (MultiFab &cc, int dcomp, const MultiFab &nd,
@@ -840,7 +841,7 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
         if (ebfactory[lev]) {
             //MultiFab::Copy (MultiFab &dst, const MultiFab &src,
             //                int srccomp, int dstcomp, int numcomp, const IntVect &nghost)
-            MultiFab::Copy(* mf[lev], ebfactory[lev]->getVolFrac(), 0, ncomp - 1, 1, ngrow);
+            MultiFab::Copy(* mf[lev], particle_ebfactory[lev]->getVolFrac(), 0, ncomp - 1, 1, ngrow);
         } else {
             // setVal (value_type val, int comp, int num_comp, int nghost=0)
             mf[lev]->setVal(1.0, ncomp - 1, 1, ngrow);
@@ -849,7 +850,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 
     for (int lev = 0; lev < nlev; ++lev)
     {
-        EB_set_covered(* mf[lev], 0.0);
+        // Don't do this (below) as it zeros out the covered cells...
+        // EB_set_covered(* mf[lev], 0.0);
         mf_ptr[lev] = mf[lev].get();
     }
 
