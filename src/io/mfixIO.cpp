@@ -794,6 +794,73 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
 }
 
 
+void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
+{
+    BL_PROFILE("mfix::WriteStaticPlotFile()");
+
+    amrex::Print() << "  Writing static quantities " << plotfilename << std::endl;
+
+
+    /****************************************************************************
+     *                                                                          *
+     * Static (un-changing variables):                                          *
+     *     1. level-set data                                                    *
+     *     2. EB implicit function data                                         *
+     *     3. volfrac (from EB) data                                            *
+     *                                                                          *
+     ***************************************************************************/
+
+    Vector<std::string> static_names = {"level_sets", "implicit_functions", "volfrac"};
+    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets, & implicit_functions};
+
+    const int ngrow = 0;
+    const int ncomp = static_names.size() + 1; // the "+1" here is for volfrac
+
+
+    /****************************************************************************
+     *                                                                          *
+     * Collect variables together into a single multi-component MultiFab        *
+     *                                                                          *
+     ***************************************************************************/
+
+    Vector<std::unique_ptr<MultiFab>> mf(nlev);
+    Vector<const MultiFab *>          mf_ptr(nlev);
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
+        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(), * ebfactory[lev]));
+
+        for (int dcomp = 0; dcomp < ncomp - 1; dcomp++)
+        {
+            // amrex::average_node_to_cellcenter (MultiFab &cc, int dcomp, const MultiFab &nd,
+            //                                    int scomp, int ncomp, int ngrow=0)
+            amrex::average_node_to_cellcenter(* mf[lev], dcomp, *(*(static_vars[dcomp]))[lev], 0, 1, ngrow);
+        }
+
+        if (ebfactory[lev]) {
+            //MultiFab::Copy (MultiFab &dst, const MultiFab &src,
+            //                int srccomp, int dstcomp, int numcomp, const IntVect &nghost)
+            MultiFab::Copy(* mf[lev], ebfactory[lev]->getVolFrac(), 0, ncomp - 1, 1, ngrow);
+        } else {
+            // setVal (value_type val, int comp, int num_comp, int nghost=0)
+            mf[lev]->setVal(1.0, ncomp - 1, 1, ngrow);
+        }
+    }
+
+    for (int lev = 0; lev < nlev; ++lev)
+    {
+        EB_set_covered(* mf[lev], 0.0);
+        mf_ptr[lev] = mf[lev].get();
+    }
+
+    Real time = 0.;
+    amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf_ptr, static_names,
+                                   Geom(), time, istep, refRatio());
+
+    WriteJobInfo(plotfilename);
+}
+
+
 void
 mfix::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
 {

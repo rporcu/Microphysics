@@ -53,6 +53,8 @@ public:
     void WritePlotFile(std::string& plot_file_name,
             int nstep = 0, Real dt = 0.0, Real time = 0.0) const;
 
+    void WriteStaticPlotFile(const std::string & plot_file_name) const;
+
     void Restart(std::string& restart_chkfile, int *nstep, Real *dt, Real *time,
             IntVect& Nrep);
 
