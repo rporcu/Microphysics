@@ -12,8 +12,6 @@ void
 mfix::Regrid ()
 {
 
-    Print() << solve_dem << " " << solve_fluid << std::endl;
-
     BL_PROFILE_REGION_START("mfix::Regrid()");
 
     int base_lev = 0;

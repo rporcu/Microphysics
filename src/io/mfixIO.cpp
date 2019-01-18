@@ -833,15 +833,23 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
         // Don't iterate over all ncomp => last component is for volfrac
         for (int dcomp = 0; dcomp < ncomp - 1; dcomp++)
         {
+            BoxArray nd_ba = grids[lev];
+            nd_ba = nd_ba.surroundingNodes();
+            MultiFab mf_loc = MFUtil::regrid(nd_ba, dmap[lev], *(*(static_vars[dcomp]))[lev], true);
             // amrex::average_node_to_cellcenter (MultiFab &cc, int dcomp, const MultiFab &nd,
             //                                    int scomp, int ncomp, int ngrow=0)
-            amrex::average_node_to_cellcenter(* mf[lev], dcomp, *(*(static_vars[dcomp]))[lev], 0, 1, ngrow);
+            amrex::average_node_to_cellcenter(* mf[lev], dcomp, mf_loc, 0, 1, ngrow);
         }
 
         if (ebfactory[lev]) {
+            EBFArrayBoxFactory ebf(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                    m_eb_full_grow_cells}, m_eb_support_level);
+
             //MultiFab::Copy (MultiFab &dst, const MultiFab &src,
             //                int srccomp, int dstcomp, int numcomp, const IntVect &nghost)
-            MultiFab::Copy(* mf[lev], particle_ebfactory[lev]->getVolFrac(), 0, ncomp - 1, 1, ngrow);
+            MultiFab::Copy(* mf[lev], ebf.getVolFrac(), 0, ncomp - 1, 1, ngrow);
+
         } else {
             // setVal (value_type val, int comp, int num_comp, int nghost=0)
             mf[lev]->setVal(1.0, ncomp - 1, 1, ngrow);

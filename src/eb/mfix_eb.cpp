@@ -100,6 +100,13 @@ void mfix::make_eb_geometry ()
 
 void mfix::make_eb_factories () {
 
+    /****************************************************************************
+     *                                                                          *
+     * Fill EB factories as an initial run. Since the particle container might  *
+     * not have been created yet, use mfix grids instead.                       *
+     *                                                                          *
+     ***************************************************************************/
+
     for (int lev = 0; lev < nlev; lev++) {
         ebfactory[lev].reset(
             new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
@@ -107,10 +114,12 @@ void mfix::make_eb_factories () {
                                     m_eb_full_grow_cells}, m_eb_support_level)
             );
 
+        // Grow EB factory by +2 in order to avoid edge cases. This is not
+        // necessary for multi-level mfix.
         particle_ebfactory[lev].reset(
             new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {levelset__eb_pad + 1, levelset__eb_pad + 1,
-                                    levelset__eb_pad + 1}, m_eb_support_level)
+                                   {levelset__eb_pad + 2, levelset__eb_pad + 2,
+                                    levelset__eb_pad + 2}, m_eb_support_level)
             );
     }
 }
@@ -133,8 +142,7 @@ void mfix::fill_eb_levelsets () {
             iMultiFab valid(ba, part_dm, 1, levelset__pad);
 
             // NOTE: implicit function data might not be on the right grids
-            MultiFab impfunc = MFUtil::duplicate<MultiFab,
-                                                 MFUtil::SymmetricGhost>(ba, part_dm, * implicit_functions[0]);
+            MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[0]);
 
             LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
                                  32, 1, 1, geom[0], geom[0]);
@@ -157,11 +165,12 @@ void mfix::fill_eb_levelsets () {
             iMultiFab valid_ref(ba, part_dm, 1, levelset__pad);
 
             // NOTE: implicit function data might not be on the right grids
-            MultiFab impfunc = MFUtil::duplicate<MultiFab,
-                                                 MFUtil::SymmetricGhost>(ba, part_dm, * implicit_functions[1]);
+            MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[1]);
 
             LSFactory::fill_data(* level_sets[1], valid_ref, * particle_ebfactory[0], impfunc,
                                  32, levelset__refinement, 1, geom_lev, geom[0]);
+
+            VisMF::Write(*level_sets[1], "level_set");
         }
     } else {
 
