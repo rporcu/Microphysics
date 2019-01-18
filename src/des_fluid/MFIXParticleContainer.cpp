@@ -201,7 +201,6 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
                                              const MultiFab * ls_phi, const iMultiFab * ls_valid,
                                              int ls_refinement)
 {
-
     // Only call the routine for wall collisions if we actually have walls
     if (ebfactory != NULL) {
 

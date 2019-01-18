@@ -616,65 +616,100 @@ void
 mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                int steady_state)
 {
-  if (solve_dem)
-  {
-     // Auto generated particles may be out of the domain. This call will remove
-     // them. Note that this has to occur after the EB geometry is created. if
-     // (particle_init_type == "Auto" && !restart_flag && particle_ebfactory[finest_level])
+    if (solve_dem)
+    {
+        // Auto generated particles may be out of the domain. This call will
+        // remove them. Note that this has to occur after the EB geometry is
+        // created. if (particle_init_type == "Auto" && !restart_flag &&
+        // particle_ebfactory[finest_level])
 
-      if (use_amr_ls) {
-          amrex::Print() << "Clean up auto-generated particles.\n" << std::endl;
-          for (int ilev = 0; ilev <= pc->finestLevel(); ilev ++){
-              const MultiFab * ls_data = amr_level_set->getLevelSet(ilev);
-              const iMultiFab * ls_valid = amr_level_set->getValid(ilev);
-              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(), ls_data, ls_valid, 1);
+        if ((nlev == 1) && (!restart_flag && particle_ebfactory[finest_level]))
+        {
+            //___________________________________________________________________
+            // Only 1 refined level-set
 
-          }
-      } else {
-          if (! restart_flag && particle_ebfactory[finest_level])
-          {
-              amrex::Print() << "Clean up auto-generated particles.\n";
-              pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
-                                   level_set->get_data(),
-                                   level_set->get_valid(),
-                                   level_set->get_ls_ref());
-          }
-      }
+            Print() << "Clean up auto-generated particles.\n" << std::endl;
 
-     if (!use_amr_ls) {
-         for (int lev = 0; lev < nlev; lev++)
-         {
+            const MultiFab * ls_data = level_sets[1].get();
+            iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
+                               ls_data->nComp(), ls_data->nGrow());
 
-             // We need $to do this *after* restart (hence putting this here not
-             // in Init) because we may want to move from KDTree to Knapsack, or
-             // change the particle_max_grid_size on restart.
-             if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
-                 dual_grid && particle_max_grid_size_x > 0
-                           && particle_max_grid_size_y > 0
-                           && particle_max_grid_size_z > 0)
-             {
-                 BoxArray particle_ba(geom[lev].Domain());
-                 IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                                particle_max_grid_size_y,
-                                                particle_max_grid_size_z);
-                 particle_ba.maxSize(particle_max_grid_size);
-                 DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
-                 pc->Regrid(particle_dm, particle_ba);
-             }
-         }
+            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
+                                 ls_data, & ls_valid, levelset__refinement);
+        }
+        else if (!restart_flag && particle_ebfactory[finest_level])
+        {
+            //___________________________________________________________________
+            // Multi-level everything
 
-     }
+            Print() << "Clean up auto-generated particles.\n" << std::endl;
 
-     Real avg_dp[10], avg_ro[10];
-     pc->GetParticleAvgProp( avg_dp, avg_ro );
-     init_collision(avg_dp, avg_ro);
-  }
+            for (int ilev = 0; ilev < nlev; ilev ++)
+            {
+                const MultiFab * ls_data = level_sets[ilev].get();
+                iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
+                                   ls_data->nComp(), ls_data->nGrow());
 
-  if (solve_fluid)
-     mfix_init_fluid(restart_flag,dt,stop_time,steady_state);
+                pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(),
+                                     ls_data, & ls_valid, 1);
+            }
+        }
 
-  // Call user-defined subroutine to set constants, check data, etc.
-  if (call_udf) mfix_usr0();
+
+        // if (use_amr_ls) {
+        //     amrex::Print() << "Clean up auto-generated particles.\n" << std::endl;
+        //     for (int ilev = 0; ilev <= pc->finestLevel(); ilev ++){
+        //         const MultiFab * ls_data = amr_level_set->getLevelSet(ilev);
+        //         const iMultiFab * ls_valid = amr_level_set->getValid(ilev);
+        //         pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(), ls_data, ls_valid, 1);
+
+        //     }
+        // } else {
+        //     if (! restart_flag && particle_ebfactory[finest_level])
+        //     {
+        //         amrex::Print() << "Clean up auto-generated particles.\n";
+
+        //         pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
+        //                              level_set->get_data(),
+        //                              level_set->get_valid(),
+        //                              level_set->get_ls_ref());
+        //     }
+        // }
+
+        if (!use_amr_ls) {
+            for (int lev = 0; lev < nlev; lev++)
+            {
+
+                // We need $to do this *after* restart (hence putting this here
+                // not in Init) because we may want to move from KDTree to
+                // Knapsack, or change the particle_max_grid_size on restart.
+                if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
+                     dual_grid && particle_max_grid_size_x > 0
+                     && particle_max_grid_size_y > 0
+                     && particle_max_grid_size_z > 0)
+                {
+                    BoxArray particle_ba(geom[lev].Domain());
+                    IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                                   particle_max_grid_size_y,
+                                                   particle_max_grid_size_z);
+                    particle_ba.maxSize(particle_max_grid_size);
+                    DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+                    pc->Regrid(particle_dm, particle_ba);
+                }
+            }
+
+        }
+
+        Real avg_dp[10], avg_ro[10];
+        pc->GetParticleAvgProp( avg_dp, avg_ro );
+        init_collision(avg_dp, avg_ro);
+    }
+
+    if (solve_fluid)
+        mfix_init_fluid(restart_flag,dt,stop_time,steady_state);
+
+    // Call user-defined subroutine to set constants, check data, etc.
+    if (call_udf) mfix_usr0();
 }
 
 void

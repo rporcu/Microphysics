@@ -496,7 +496,6 @@ mfix::RegridLevelSetArray (int a_lev)
    {
 
        Print() << "Regridding level-set on lev = " << a_lev << std::endl;
-       Print() << "level_sets.size() = " << level_sets.size() << std::endl;
 
        const BoxArray nd_ba = amrex::convert(grids[a_lev], IntVect::TheNodeVector());
 
@@ -510,23 +509,48 @@ mfix::RegridLevelSetArray (int a_lev)
                       * particle_ebfactory[a_lev], * implicit_functions[a_lev], true);
        implicit_functions[a_lev] = std::move(new_impfunc);
 
+       //________________________________________________________________________
+       // If we're operating in single-level mode, the level-set has a second
+       // (refined) MultiFab that also needs to be regridded.
+       if ((nlev == 1) && (a_lev == 0))
+       {
+           Print() << "Also regridding refined level-set" << std::endl;
 
-       // Create a nodal BoxArray
-       const BoxArray & new_pc_nd_grids = amrex::convert(ba, IntVect{1, 1, 1});
+           BoxArray ref_nd_ba = amrex::convert(grids[a_lev], IntVect::TheNodeVector());
+           ref_nd_ba.refine(levelset__refinement);
 
-       // Level-set data used for fluid reconstruction in particle drag
-       // calculation. For the level set we set src_nghost to ng as well, even if
-       // it's potentially not totally safe. This way we have the domain ghost
-       // cells filled properly.
-       int ng = ls[a_lev]->nGrow();
-       std::unique_ptr<MultiFab> ls_new(
-           new MultiFab(new_pc_nd_grids, dm, 1, ng, MFInfo(), *particle_ebfactory[a_lev]));
-       ls_new->copy(*ls[a_lev], 0, 0, 1, ng, ng);
-       ls[a_lev] = std::move(ls_new);
+           std::unique_ptr<MultiFab> new_level_set(new MultiFab);
+           // MFUtil::regrid(* new_level_set, ref_nd_ba, dmap[a_lev],
+           //                * particle_ebfactory[a_lev], * level_sets[a_lev + 1], true);
+           MFUtil::regrid(* new_level_set, ref_nd_ba, dmap[a_lev],
+                          * level_sets[a_lev + 1], true);
+           level_sets[a_lev + 1] = std::move(new_level_set);
 
-       // This call is needed because of the dual grid: the level-set
-       // factory object and the ls data both live on the particle grids.
-       level_set->regrid(ba, dm);
+           std::unique_ptr<MultiFab> new_impfunc(new MultiFab);
+           // MFUtil::regrid(* new_impfunc, ref_nd_ba, dmap[a_lev],
+           //                * particle_ebfactory[a_lev], * implicit_functions[a_lev + 1], true);
+           MFUtil::regrid(* new_impfunc, ref_nd_ba, dmap[a_lev],
+                          * implicit_functions[a_lev + 1], true);
+           implicit_functions[a_lev + 1] = std::move(new_impfunc);
+       }
+
+       // // Create a nodal BoxArray
+       // const BoxArray & new_pc_nd_grids = amrex::convert(ba, IntVect{1, 1, 1});
+
+       // // Level-set data used for fluid reconstruction in particle drag
+       // // calculation. For the level set we set src_nghost to ng as well, even if
+       // // it's potentially not totally safe. This way we have the domain ghost
+       // // cells filled properly.
+       // int ng = ls[a_lev]->nGrow();
+       // std::unique_ptr<MultiFab> ls_new(
+       //     new MultiFab(new_pc_nd_grids, dm, 1, ng, MFInfo(), *particle_ebfactory[a_lev]));
+       // ls_new->copy(*ls[a_lev], 0, 0, 1, ng, ng);
+       // ls[a_lev] = std::move(ls_new);
+
+       // // This call is needed because of the dual grid: the level-set
+       // // factory object and the ls data both live on the particle grids.
+       // level_set->regrid(ba, dm);
+
 
        amrex::Print() << "Modifying level set to see inflow" << std::endl;
        //mfix_set_ls_near_inflow(); // TODO: fix!!!

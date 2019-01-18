@@ -156,6 +156,7 @@ void mfix::fill_eb_levelsets () {
 
         //_______________________________________________________________________
         // Refined Level-Set
+        // TODO: Don't actually refine this thing if levelset refinement is 1
         {
             // Set up refined geometry
             Box dom = geom[0].Domain();
@@ -176,7 +177,7 @@ void mfix::fill_eb_levelsets () {
             LSFactory::fill_data(* level_sets[1], valid_ref, * particle_ebfactory[0], impfunc,
                                  32, levelset__refinement, 1, geom_lev, geom[0]);
 
-            VisMF::Write(*level_sets[1], "level_set");
+            VisMF::Write(* level_sets[1], "level_set");
         }
     } else {
 

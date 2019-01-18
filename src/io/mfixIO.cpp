@@ -798,7 +798,7 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 {
     BL_PROFILE("mfix::WriteStaticPlotFile()");
 
-    amrex::Print() << "  Writing static quantities " << plotfilename << std::endl;
+    Print() << "  Writing static quantities " << plotfilename << std::endl;
 
 
     /****************************************************************************
@@ -867,6 +867,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
                                    Geom(), time, istep, refRatio());
 
     WriteJobInfo(plotfilename);
+
+    Print() << "  Done writing static quantities " << plotfilename << std::endl;
 }
 
 
