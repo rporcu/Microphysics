@@ -43,46 +43,86 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
     Real end_fluid = ParallelDescriptor::second() - start_fluid;
     ParallelDescriptor::ReduceRealMax(end_fluid, ParallelDescriptor::IOProcessorNumber());
 
+
+    /****************************************************************************
+     *                                                                          *
+     * Evolve Particles (Using Particle MD)                                     *
+     *                                                                          *
+     ***************************************************************************/
+
     Real start_particles = ParallelDescriptor::second();
 
     BL_PROFILE_VAR("PARTICLES SOLVE",particlesSolve);
     if (solve_dem)
     {
-        if (use_amr_ls) {
 
-            for (int lev = 0; lev <= amr_level_set->finestLevel(); lev ++) {
-                const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
-                const iMultiFab * ls_valid = amr_level_set->getValid(lev);
+        if (nlev == 1)
+        {
+            //___________________________________________________________________
+            // Single level case: the refined level-set is stored on level 1,
+            // everything else lives on level 0
+            int ilev = 0;
 
-                pc->EvolveParticles(lev, nstep, dt, time,
-                                    particle_ebfactory[lev].get(),
-                                    ls_lev, ls_valid, 1,
-                                    particle_cost[lev].get(), knapsack_weight_type,
-                                    subdt_io                                         );
+            const MultiFab * ls_data = level_sets[1].get();
+            iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
+                               ls_data->nComp(), ls_data->nGrow());
 
-            }
-
-        } else {
-
-            for (int lev = 0; lev < nlev; lev++)
-                pc->EvolveParticles(lev, nstep, dt, time,
-                                    particle_ebfactory[lev].get(), 
-                                    level_set->get_data(),
-                                    level_set->get_valid(),
-                                    level_set->get_ls_ref(),
-                                    particle_cost[lev].get(), knapsack_weight_type,
-                                    subdt_io                                          );
+            pc->EvolveParticles(ilev, nstep, dt, time, particle_ebfactory[ilev].get(),
+                                ls_data, & ls_valid, levelset__refinement,
+                                particle_cost[ilev].get(), knapsack_weight_type, subdt_io);
         }
+        else
+        {
+            //___________________________________________________________________
+            // Multi-level case: each level is treated separately
+
+            for (int lev = 0; lev < nlev; lev ++ )
+            {
+                const MultiFab * ls_data = level_sets[lev].get();
+                iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
+                                   ls_data->nComp(), ls_data->nGrow());
+
+                pc->EvolveParticles(lev, nstep, dt, time, particle_ebfactory[lev].get(),
+                                    ls_data, & ls_valid, 1,
+                                    particle_cost[lev].get(), knapsack_weight_type, subdt_io);
+            }
+        }
+
+        // if (use_amr_ls) {
+
+        //     for (int lev = 0; lev <= amr_level_set->finestLevel(); lev ++) {
+        //         const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
+        //         const iMultiFab * ls_valid = amr_level_set->getValid(lev);
+
+        //         pc->EvolveParticles(lev, nstep, dt, time,
+        //                             particle_ebfactory[lev].get(),
+        //                             ls_lev, ls_valid, 1,
+        //                             particle_cost[lev].get(), knapsack_weight_type,
+        //                             subdt_io                                         );
+
+        //     }
+
+        // } else {
+
+        //     for (int lev = 0; lev < nlev; lev++)
+        //         pc->EvolveParticles(lev, nstep, dt, time,
+        //                             particle_ebfactory[lev].get(),
+        //                             level_set->get_data(),
+        //                             level_set->get_valid(),
+        //                             level_set->get_ls_ref(),
+        //                             particle_cost[lev].get(), knapsack_weight_type,
+        //                             subdt_io                                          );
+        // }
 
         //  Compute Eulerian velocities in selected regions
         for (int lev = 0; lev < nlev; lev++)
-           if ( ( avg_vel_int > 0) && ( nstep % avg_vel_int == 0 ) )
-             pc -> ComputeAverageVelocities ( lev,
-               time,
-               avg_vel_file,
-               avg_region_x_w, avg_region_x_e,
-               avg_region_y_s, avg_region_y_n,
-               avg_region_z_b, avg_region_z_t );
+            if ( ( avg_vel_int > 0) && ( nstep % avg_vel_int == 0 ) )
+                pc -> ComputeAverageVelocities ( lev,
+                                                 time,
+                                                 avg_vel_file,
+                                                 avg_region_x_w, avg_region_x_e,
+                                                 avg_region_y_s, avg_region_y_n,
+                                                 avg_region_z_b, avg_region_z_t );
     }
     BL_PROFILE_VAR_STOP(particlesSolve);
 

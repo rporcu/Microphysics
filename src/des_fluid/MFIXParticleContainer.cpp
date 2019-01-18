@@ -387,9 +387,9 @@ MFIXParticleContainer::InitData()
 }
 
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
-                                            EBFArrayBoxFactory * ebfactory, 
+                                            EBFArrayBoxFactory * ebfactory,
                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
-                                            const int ls_refinement, 
+                                            const int ls_refinement,
                                             MultiFab * cost, std::string & knapsack_weight_type,
                                             int subdt_io)
 {
