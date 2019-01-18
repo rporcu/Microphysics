@@ -833,8 +833,7 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
         // Don't iterate over all ncomp => last component is for volfrac
         for (int dcomp = 0; dcomp < ncomp - 1; dcomp++)
         {
-            BoxArray nd_ba = grids[lev];
-            nd_ba = nd_ba.surroundingNodes();
+            const BoxArray nd_ba = amrex::convert(grids[lev], IntVect::TheNodeVector());
             MultiFab mf_loc = MFUtil::regrid(nd_ba, dmap[lev], *(*(static_vars[dcomp]))[lev], true);
             // amrex::average_node_to_cellcenter (MultiFab &cc, int dcomp, const MultiFab &nd,
             //                                    int scomp, int ncomp, int ngrow=0)

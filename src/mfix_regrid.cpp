@@ -135,16 +135,30 @@ mfix::Regrid ()
 
             MultiFab costs(grids[base_lev], dmap[base_lev], 1, 0);
             costs.setVal(0.0);
+
+            Print() << "grids = " << grids[base_lev] << std::endl;
+            Print() << "costs ba = " << costs.boxArray() << std::endl;
+            Print() << "particle_cost ba = " << particle_cost[base_lev]->boxArray() << std::endl;
+            //Print() << "fluid cost ba = " << fluid_cost[base_lev]->boxArray() << std::endl;
+
             if (solve_dem) {
                 // costs.plus(* particle_cost[base_lev], 0, 1, 0);
-                MultiFab particle_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
-                particle_cost_loc.copy(* particle_cost[base_lev], 0, 0, 1);
+
+                // MultiFab particle_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
+                // particle_cost_loc.copy(* particle_cost[base_lev], 0, 0, 1);
+                MultiFab particle_cost_loc = MFUtil::regrid(grids[base_lev], dmap[base_lev],
+                                                            * particle_cost[base_lev], true);
+
                 costs.plus(particle_cost_loc, 0, 1, 0);
             }
             if (solve_fluid) {
                 // costs.plus(* fluid_cost[base_lev], 0, 1, 0);
-                MultiFab fluid_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
-                fluid_cost_loc.copy(* fluid_cost[base_lev], 0, 0, 1);
+
+                // MultiFab fluid_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
+                // fluid_cost_loc.copy(* fluid_cost[base_lev], 0, 0, 1);
+                MultiFab fluid_cost_loc = MFUtil::regrid(grids[base_lev], dmap[base_lev],
+                                                         * fluid_cost[base_lev], true);
+
                 costs.plus(fluid_cost_loc, 0, 1, 0);
             }
 

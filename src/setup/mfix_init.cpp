@@ -315,6 +315,7 @@ mfix::Init(Real dt, Real time)
     mac_projection -> set_bcs( bc_ilo, bc_ihi,
              bc_jlo, bc_jhi,
              bc_klo, bc_khi );
+
 }
 
 BoxArray
