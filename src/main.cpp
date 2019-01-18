@@ -142,11 +142,7 @@ int main (int argc, char* argv[])
     // Initialize internals from ParamParse database
     my_mfix.InitParams(solve_fluid, solve_dem, call_udf);
 
-    // This needs to be done before initializing the particle container.
-    // my_mfix.make_amr_geometry();
-
-    // Initialize memory for data-array internals NOTE: MFIXParticleContainer is
-    // created here
+    // Initialize memory for data-array internals
     my_mfix.ResizeArrays();
     my_mfix.make_eb_geometry();
 
