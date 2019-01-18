@@ -260,7 +260,7 @@ private:
     void mfix_compute_divtau(int lev, amrex::MultiFab& divtau,
                              Vector< std::unique_ptr<MultiFab> >& vel);
 
-    int  steady_state_reached(Real dt);
+    int  steady_state_reached(Real dt, int iter);
 
     void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_old,
                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
@@ -446,6 +446,7 @@ private:
 
     // Tolerance to check for steady state
     Real steady_state_tol = 1.0e-5  ;
+    int  steady_state_max_iter = 100000000;
 
     int call_udf;
     bool dual_grid = false;

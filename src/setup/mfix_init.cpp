@@ -36,6 +36,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
         // Tolerance to check for steady state (projection only)
         pp.query( "steady_state_tol", steady_state_tol );
+        pp.query( "steady_state_max_iter", steady_state_max_iter );
 
         // Should we use explicit vs implicit diffusion
         pp.query( "explicit_diffusion", explicit_diffusion );

@@ -133,7 +133,7 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
         // Check whether to exit the loop or not
         //
         if (steady_state) {
-          keep_looping = !steady_state_reached ( dt );
+          keep_looping = !steady_state_reached ( dt, iter);
         } else {
           keep_looping = 0;
         }
@@ -469,7 +469,7 @@ mfix::mfix_add_drag_terms ( amrex::Real dt )
 //
 
 int
-mfix::steady_state_reached (Real dt)
+mfix::steady_state_reached (Real dt, int iter)
 {
     //
     // Count number of access
@@ -568,6 +568,8 @@ mfix::steady_state_reached (Real dt)
     {
        reached = reached && (condition1[lev] || condition2[lev]);
     }
+
+    reached = reached || (iter >= steady_state_max_iter);
 
     // Count # access
     naccess++;

@@ -190,13 +190,13 @@ module check_bc_geometry_module
       if (j_s > j_n) ier = 1
       if (i_w > i_e) ier = 1
 
-      if(ier /= 0)then
-         write(err_msg,1100) bcv,                                      &
-            'X', bc_x_w(bcv), bc_x_e(bcv), 'i', i_w, i_e, &
-            'Y', bc_y_s(bcv), bc_y_n(bcv), 'j', j_s, j_n, &
-            'Z', bc_z_b(bcv), bc_z_t(bcv), 'k', k_b, k_t
-         call flush_err_msg(abort=.true.)
-      endif
+      ! if(ier /= 0)then
+      !    write(err_msg,1100) bcv,                                      &
+      !       'X', bc_x_w(bcv), bc_x_e(bcv), 'i', i_w, i_e, &
+      !       'Y', bc_y_s(bcv), bc_y_n(bcv), 'j', j_s, j_n, &
+      !       'Z', bc_z_b(bcv), bc_z_t(bcv), 'k', k_b, k_t
+      !    call flush_err_msg(abort=.true.)
+      ! endif
 
  1100 FORMAT('Error 1100: Invalid location specified for BC ',I3,'.',  &
          3(/3x,A1,': ',g12.5,',',g12.5,8x,A1,': ',I8,',',I8),/         &
