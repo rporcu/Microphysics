@@ -30,27 +30,45 @@ mfix::~mfix ()
 
 mfix::mfix ()
 {
-    // Geometry on all levels has just been defined in the AmrCore constructor
 
-    // No valid BoxArray and DistributionMapping have been defined.
+    // NOTE: Geometry on all levels has just been defined in the AmrCore
+    // constructor. No valid BoxArray and DistributionMapping have been defined.
     // But the arrays for them have been resized.
+
+    /****************************************************************************
+     *                                                                          *
+     * Set max number of levels (nlevs)                                         *
+     *                                                                          *
+     ***************************************************************************/
 
     nlev = maxLevel() + 1;
     amrex::Print() << "Number of levels: " << nlev << std::endl;
+
+
+    /****************************************************************************
+     *                                                                          *
+     * Initialize time steps                                                    *
+     *                                                                          *
+     ***************************************************************************/
 
     istep.resize(nlev, 0);
 
     t_old.resize(nlev,-1.e100);
     t_new.resize(nlev,0.0);
 
+
+    /****************************************************************************
+     *                                                                          *
+     * Initialize boundary conditions (used by fill-patch)                      *
+     *                                                                          *
+     ***************************************************************************/
+
     bcs_u.resize(3); // one for each velocity component
     bcs_s.resize(1); // just one for now
     bcs_f.resize(1); // just one
 
-
-    /****************************************************************************
-     * Boundary conditions used by the level-set fill-patch                     *
-     ***************************************************************************/
+    //___________________________________________________________________________
+    // Boundary conditions used for level-sets
 
     bcs_ls.resize(1);
 
@@ -83,9 +101,6 @@ mfix::mfix ()
             amrex::Abort("Invalid level-set bc_hi");
         }
     }
-
-
-
 }
 
 void
@@ -93,20 +108,7 @@ mfix::ResizeArrays ()
 {
     int nlevs_max = maxLevel() + 1;
 
-    // Particle Container
-    if (solve_dem)
-    {
-       if (use_amr_ls) {
-           pc = std::unique_ptr<MFIXParticleContainer> (
-               new MFIXParticleContainer(amr_level_set.get())
-               );
-       } else {
-           pc = std::unique_ptr<MFIXParticleContainer> (
-               new MFIXParticleContainer(this)
-               );
-       }
-    }
-
+    // EB levels used to construct each level's EB factory
     eb_levels.resize(nlevs_max);
 
     ep_g.resize(nlevs_max);
