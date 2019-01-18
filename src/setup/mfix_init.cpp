@@ -156,6 +156,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
 
 void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
+    // Tag using each EB level's volfrac. This requires that the `eb_levels`
+    // have already been build. We use a buffer size of 8 (a bit of a fudge
+    // factor).
     LSCoreBase::FillVolfracTags(lev, tags, 8, grids, dmap, * eb_levels[lev], geom);
 }
 
@@ -165,17 +168,34 @@ mfix::Init(Real dt, Real time)
 {
     InitIOData();
 
-    // Note that finest_level = nlev-1
+    // Note that finest_level = last level
     finest_level = nlev-1;
 
-    if (use_amr_ls)
-       finest_level = std::min(amr_level_set->finestLevel(),max_level);
 
-    Print() << "Begin making grids" << std::endl;
+    /****************************************************************************
+     *                                                                          *
+     * Generate levels using ErrorEst tagging. This approach has been based on  *
+     * the LSCoreBase::Init().                                                  *
+     *                                                                          *
+     ***************************************************************************/
+
+    // This tells the AmrMesh class not to iterate when creating the initial
+    // grid hierarchy
     SetIterateToFalse();
+
+    // This tells the Cluster routine to use the new chopping routine which
+    // rejects cuts if they don't improve the efficiency
     SetUseNewChop();
+
+    // This Builds the new Grids
     InitFromScratch(0.);
-    Print() << "Done making grids" << std::endl;
+
+
+    /****************************************************************************
+     *                                                                          *
+     * MFIX-specific grid creation                                              *
+     *                                                                          *
+     ***************************************************************************/
 
     // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
@@ -193,7 +213,8 @@ mfix::Init(Real dt, Real time)
 
         //    std::cout << "Level " << lev << " grids: " << ba_ref << std::endl;
         //    if (m_verbose > 0)
-        //      std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
+        //      std::cout << "Setting refined region at level " << lev
+        //                << " to " << ba_ref << std::endl;
         //    DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
         //    MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
         // }
@@ -212,24 +233,39 @@ mfix::Init(Real dt, Real time)
         //    // ba_ref.refine(2);
 
         //    if (m_verbose > 0)
-        //      std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
+        //    {
+        //      std::cout << "Setting refined region at level " << lev
+        //                << " to " << ba_ref << std::endl;
+        //    }
         //    DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
         //    MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
         // }
 
-        Print() << "asdf" << std::endl;
-
-        //if (m_verbose > 0)
+       if (m_verbose > 0)
+       {
             std::cout << "Setting refined region at level " << lev
                       << " to " << grids[lev] << std::endl;
+       }
 
         MakeNewLevelFromScratch(lev, time, grids[lev], dmap[lev]);
-        Print() << "asdf done" << std::endl;
     }
 
-    if (solve_dem)
-        pc = std::unique_ptr<MFIXParticleContainer> ( new MFIXParticleContainer(this) );
 
+    /****************************************************************************
+     *                                                                          *
+     * Create particle container using mfix::ParGDB                             *
+     *                                                                          *
+     ***************************************************************************/
+
+    if (solve_dem)
+        pc = std::unique_ptr<MFIXParticleContainer>(new MFIXParticleContainer(this));
+
+
+    /****************************************************************************
+     *                                                                          *
+     * MFIX-Specific Initialization                                             *
+     *                                                                          *
+     ***************************************************************************/
 
     // ******************************************************
     // We only do these at level 0
@@ -264,51 +300,51 @@ mfix::Init(Real dt, Real time)
 
     // Set point sources.
     {
-       int err_ps = 0;
-       int is_ioproc = 0;
-       if ( ParallelDescriptor::IOProcessor() )
-           is_ioproc = 1;
+        int err_ps = 0;
+        int is_ioproc = 0;
+        if ( ParallelDescriptor::IOProcessor() )
+            is_ioproc = 1;
 
-       set_ps(&dx,&dy,&dz,&err_ps,&is_ioproc);
+        set_ps(&dx,&dy,&dz,&err_ps,&is_ioproc);
 
-       if (err_ps == 1)
-           amrex::Abort("Bad data in set_ps");
+        if (err_ps == 1)
+            amrex::Abort("Bad data in set_ps");
     }
 
-   for (int lev = 0; lev < nlev; lev++)
-       mfix_set_bc_type(lev);
+    for (int lev = 0; lev < nlev; lev++)
+        mfix_set_bc_type(lev);
 
-    if (solve_dem)
-    {
-       for (int lev = 0; lev < nlev; lev++)
-       {
-          // NOTE: this would break with mult-level simulations => construct this
-          // for level 0 only
+    // if (solve_dem)
+    // {
+    //    for (int lev = 0; lev < nlev; lev++)
+    //    {
+    //       // NOTE: this would break with mult-level simulations => construct this
+    //       // for level 0 only
 
-          if (lev == 0) {
-              // Level-Set: initialize container for level set. The level-set
-              // MultiFab is defined here, and set to (fortran) huge(amrex_real)
-              //            -> use min to intersect new eb boundaries (in update)
-              level_set = std::unique_ptr<LSFactory>(
-                  new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
-                                levelset__pad, levelset__eb_pad,
-                                pc->ParticleBoxArray(lev),
-                                pc->Geom(lev),
-                                pc->ParticleDistributionMap(lev))
-                  );
+    //       if (lev == 0) {
+    //           // Level-Set: initialize container for level set. The level-set
+    //           // MultiFab is defined here, and set to (fortran) huge(amrex_real)
+    //           //            -> use min to intersect new eb boundaries (in update)
+    //           level_set = std::unique_ptr<LSFactory>(
+    //               new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
+    //                             levelset__pad, levelset__eb_pad,
+    //                             pc->ParticleBoxArray(lev),
+    //                             pc->Geom(lev),
+    //                             pc->ParticleDistributionMap(lev))
+    //               );
 
-          }
+    //       }
 
-          // Make sure that at (at least) an initial MultiFab is stored in
-          // ls[lev]. (otherwise, if there are no walls/boundaries in the
-          // simulation, saving a plot file or checkpoint will segfault).
-          std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-          const BoxArray & nd_grids = amrex::convert(pc->ParticleBoxArray(lev), IntVect{1,1,1});
-          int ng = ls_data->nGrow();
-          ls[lev].reset(new MultiFab(nd_grids, pc->ParticleDistributionMap(lev), 1, ng));
-          ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
-       }
-    }
+    //       // Make sure that at (at least) an initial MultiFab is stored in
+    //       // ls[lev]. (otherwise, if there are no walls/boundaries in the
+    //       // simulation, saving a plot file or checkpoint will segfault).
+    //       std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    //       const BoxArray & nd_grids = amrex::convert(pc->ParticleBoxArray(lev), IntVect{1,1,1});
+    //       int ng = ls_data->nGrow();
+    //       ls[lev].reset(new MultiFab(nd_grids, pc->ParticleDistributionMap(lev), 1, ng));
+    //       ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
+    //    }
+    // }
 
     // Create MAC projection object
     mac_projection.reset( new MacProjection(this, nghost, &ebfactory ) );

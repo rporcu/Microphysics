@@ -79,19 +79,26 @@ public:
     void make_eb_factories ();
     void fill_eb_levelsets ();
 
-    template<class F> void build_eb_levels(EB2::GeometryShop<F> gshop){
+
+    //! Construct EB levels from Geometry shop. This builds each EB level and
+    //! saves a pointer to each level into `eb_levels`. Also fills the implicit
+    //! function values for each level in `implicit_functions`.
+    template<class F> void build_eb_levels (EB2::GeometryShop<F> gshop){
 
         /************************************************************************
+         *                                                                      *
          * Build EB levels                                                      *
+         *                                                                      *
          ***********************************************************************/
 
         for (int lev = 0; lev < nlev; lev ++)
             eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom);
 
 
-
         /************************************************************************
+         *                                                                      *
          * Fill each level with implicit function values                        *
+         *                                                                      *
          ***********************************************************************/
 
         if (nlev == 1) {
@@ -112,6 +119,7 @@ public:
             GShopLSFactory<F> gshop_lsf_2(gshop, geom[0], ba, dm,
                                           levelset__pad, levelset__refinement);
             implicit_functions[1] = gshop_lsf_2.fill_impfunc();
+
         } else {
 
             //___________________________________________________________________
@@ -124,6 +132,7 @@ public:
                 GShopLSFactory<F> gshop_lsf(gshop, geom[lev], ba, dm, levelset__pad);
                 implicit_functions[lev] = gshop_lsf.fill_impfunc();
             }
+
         }
     };
 

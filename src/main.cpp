@@ -144,12 +144,18 @@ int main (int argc, char* argv[])
 
     // Initialize memory for data-array internals
     my_mfix.ResizeArrays();
+
+    // Initialize EB geometry. This needs to be done before grid creation (in
+    // mfix::Init), as the grids are created using each EB-level's volfrac.
     my_mfix.make_eb_geometry();
 
     // Initialize derived internals
     my_mfix.Init(dt, time);
 
+    // Create EB factories on new grids
     my_mfix.make_eb_factories();
+
+    // Fill level-sets on each level
     my_mfix.fill_eb_levelsets();
 
     // Either init from scratch or from the checkpoint file
