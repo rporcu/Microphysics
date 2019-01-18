@@ -174,29 +174,26 @@ mfix::ResizeArrays ()
         bcoeff_diff[i].resize(3);
     }
 
+    // Fuid cost (load balancing)
+    fluid_cost.resize(nlevs_max);
 
-    /****************************************************************************
-     * Particle-data can live on a different number of levels                   *
-     ***************************************************************************/
-
-    int nlevs_max_part = nlevs_max;
-    if (use_amr_ls)
-        nlevs_max_part = amr_level_set->maxLevel() + 1;
-
-
-    // Particle and Fluid costs
-    if (solve_dem)
-        particle_cost.resize(nlevs_max_part);
-
-    if (solve_fluid)
-        fluid_cost.resize(nlevs_max);
-
-    // EB factory
+    // Fluid grid EB factory
     ebfactory.resize(nlevs_max);
 
-    if (solve_dem){
-        particle_ebfactory.resize(nlevs_max_part);
-    }
+
+    /****************************************************************************
+     *                                                                          *
+     * Initialize particle data (including level-set data)                      *
+     * NOTE: the level-set data (as well as implicit functions) live on at      *
+     *       least two levels                                                   *
+     *                                                                          *
+     ***************************************************************************/
+
+    // Particle costs (load balancing)
+    particle_cost.resize(nlevs_max);
+
+    // Particle grid EB factory
+    particle_ebfactory.resize(nlevs_max);
 
     level_sets.resize(std::max(2, nlevs_max));
     implicit_functions.resize(std::max(2, nlevs_max));
