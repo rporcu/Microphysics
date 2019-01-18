@@ -498,7 +498,7 @@ mfix::RegridLevelSetArray (int a_lev)
        Print() << "Regridding level-set on lev = " << a_lev << std::endl;
        Print() << "level_sets.size() = " << level_sets.size() << std::endl;
 
-       const BoxArray nd_ba = grids[a_lev].surroundingNodes();
+       const BoxArray nd_ba = amrex::convert(grids[a_lev], IntVect::TheNodeVector());
 
        std::unique_ptr<MultiFab> new_level_set(new MultiFab);
        MFUtil::regrid(* new_level_set, nd_ba, dmap[a_lev],
