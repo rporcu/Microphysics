@@ -136,6 +136,7 @@ int main (int argc, char* argv[])
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix my_mfix;
 
+    // Set global static pointer to mfix object. Used by fill-patch utility
     set_ptr_to_mfix(my_mfix);
 
     // Initialize internals from ParamParse database
