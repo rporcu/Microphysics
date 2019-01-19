@@ -219,12 +219,11 @@ void mfix::fill_eb_levelsets () {
                                                bcs_ls, refRatio(lev-1));
 
             EBFArrayBoxFactory eb_factory(* eb_levels[lev], geom[lev], part_ba, part_dm,
-                                          {levelset__eb_pad + 1, levelset__eb_pad + 1, levelset__eb_pad + 1},
-                                          EBSupport::full);
+                                          {levelset__eb_pad + 1, levelset__eb_pad + 1,
+                                           levelset__eb_pad + 1}, EBSupport::full);
 
             // NOTE: implicit function data might not be on the right grids
-            MultiFab impfunc = MFUtil::duplicate<MultiFab,
-                                             MFUtil::SymmetricGhost>(ba, part_dm, * implicit_functions[lev]);
+            MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[lev]);
 
             IntVect ebt_size{AMREX_D_DECL(32, 32, 32)}; // Fudge factors...
             LSCoreBase::FillLevelSet(* level_sets[lev], * level_sets[lev], eb_factory, impfunc,

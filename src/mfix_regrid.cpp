@@ -81,7 +81,8 @@ mfix::Regrid ()
 
                     if ( load_balance_type == "KnapSack" )
                     {
-                        new_fluid_dm = DistributionMapping::makeKnapSack(*fluid_cost[lev],knapsack_nmax);
+                        new_fluid_dm = DistributionMapping::makeKnapSack(*fluid_cost[lev],
+                                                                         knapsack_nmax);
                     }
                     else
                     {
@@ -106,7 +107,8 @@ mfix::Regrid ()
 
                 if ( load_balance_type == "KnapSack" )
                 {
-                    new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev],knapsack_nmax);
+                    new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev],
+                                                                        knapsack_nmax);
                 }
                 else
                 {
