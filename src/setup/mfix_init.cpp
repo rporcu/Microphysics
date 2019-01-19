@@ -656,29 +656,27 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
         }
 
 
-        // if (!use_amr_ls) {
-            for (int lev = 0; lev < nlev; lev++)
+        for (int lev = 0; lev < nlev; lev++)
+        {
+
+            // We need to do this *after* restart (hence putting this here not
+            // in Init) because we may want to move from KDTree to Knapsack, or
+            // change the particle_max_grid_size on restart.
+            if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
+                 dual_grid && particle_max_grid_size_x > 0
+                 && particle_max_grid_size_y > 0
+                 && particle_max_grid_size_z > 0)
             {
-
-                // We need $to do this *after* restart (hence putting this here
-                // not in Init) because we may want to move from KDTree to
-                // Knapsack, or change the particle_max_grid_size on restart.
-                if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
-                     dual_grid && particle_max_grid_size_x > 0
-                     && particle_max_grid_size_y > 0
-                     && particle_max_grid_size_z > 0)
-                {
-                    BoxArray particle_ba(geom[lev].Domain());
-                    IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                                   particle_max_grid_size_y,
-                                                   particle_max_grid_size_z);
-                    particle_ba.maxSize(particle_max_grid_size);
-                    DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
-                    pc->Regrid(particle_dm, particle_ba);
-                }
+                BoxArray particle_ba(geom[lev].Domain());
+                IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                               particle_max_grid_size_y,
+                                               particle_max_grid_size_z);
+                particle_ba.maxSize(particle_max_grid_size);
+                DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+                pc->Regrid(particle_dm, particle_ba);
             }
+        }
 
-            // }
 
         Real avg_dp[10], avg_ro[10];
         pc->GetParticleAvgProp( avg_dp, avg_ro );
