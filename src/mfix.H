@@ -243,28 +243,14 @@ protected:
 private:
 
     void make_eb_general();
-    // void make_amr_general();
-
     void make_eb_box();
-    // void make_amr_box();
-
     void make_eb_cylinder();
-    // void make_amr_cylinder();
-
     void make_eb_hopper();
-    // void make_amr_hopper();
-
     void make_eb_cyclone();
-    // void make_amr_cyclone();
-
     void make_eb_hourglass();
-
     void make_eb_clr();
-
     void make_eb_clr_riser();
-
     void make_eb_regular();
-    // void make_amr_regular();
 
     void MakeBCArrays();
 
