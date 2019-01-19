@@ -89,18 +89,6 @@ void mfix::make_eb_geometry ()
                        << std::endl;
         make_eb_regular();
     }
-
-    // // store copy of level set (for plotting and velocity reconstruction).
-    // if (solve_dem && !levelset__restart) {
-    //     std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-    //     int ng = ls_data->nGrow();
-
-    //     // TODO: currently this is a wee bit of a hack... as each level is
-    //     // getting the same level-set function. Once the AMR levelset is fully
-    //     // implemented, use that instead.
-    //     for (int lev = 0; lev < nlev; lev++)
-    //         ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
-    // }
 }
 
 
@@ -188,8 +176,8 @@ void mfix::fill_eb_levelsets () {
         // Multi-level level-set: build finer level using coarse level set
 
         EBFArrayBoxFactory eb_factory(* eb_levels[0], geom[0], part_ba, part_dm,
-                                      {levelset__eb_pad + 1, levelset__eb_pad + 1,
-                                       levelset__eb_pad + 1}, EBSupport::full);
+                                      {levelset__eb_pad + 2, levelset__eb_pad + 2,
+                                       levelset__eb_pad + 2}, EBSupport::full);
 
         // NOTE: reference BoxArray is not nodal
         BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
@@ -219,8 +207,8 @@ void mfix::fill_eb_levelsets () {
                                                bcs_ls, refRatio(lev-1));
 
             EBFArrayBoxFactory eb_factory(* eb_levels[lev], geom[lev], part_ba, part_dm,
-                                          {levelset__eb_pad + 1, levelset__eb_pad + 1,
-                                           levelset__eb_pad + 1}, EBSupport::full);
+                                          {levelset__eb_pad + 2, levelset__eb_pad + 2,
+                                           levelset__eb_pad + 2}, EBSupport::full);
 
             // NOTE: implicit function data might not be on the right grids
             MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[lev]);

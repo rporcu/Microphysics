@@ -133,45 +133,45 @@ mfix::make_eb_regular()
 }
 
 
-void mfix::make_amr_regular()
-{
-
-    if (use_amr_ls)
-    {
-        int lev_lowest = 0;
-
-        const RealBox & rb = geom[lev_lowest].ProbDomain();
-        Box domain = geom[lev_lowest].Domain();
-        domain.coarsen(amr_ls_crse);
-
-        const IntVect & dom_lo = domain.smallEnd();
-        const IntVect & dom_hi = domain.bigEnd();
-        // Picket-fence principle
-        IntVect n_cells = dom_hi - dom_lo + IntVect{1, 1, 1};
-        Vector<int> v_cells = {
-            AMREX_D_DECL(n_cells[0], n_cells[1], n_cells[2])
-        };
-
-        bool has_walls = false;
-        std::unique_ptr<UnionListIF<EB2::PlaneIF>> if_walls = get_walls(has_walls);
-
-        amrex::Print() << "Declaring AMR levelset:" << std::endl
-                       << "coarsest level: " << domain << " n_cells: " << n_cells << std::endl;
-
-
-        if (has_walls)
-        {
-            amr_level_set.reset(
-                new LSCore<std::decay<decltype(* if_walls)>::type>(EB2::makeShop(* if_walls),
-                                                                   & rb, amr_ls_max_level, v_cells)
-                );
-
-        } else {
-            EB2::AllRegularIF my_regular;
-            auto gshop = EB2::makeShop(my_regular);
-            amr_level_set.reset(new LSCore<EB2::AllRegularIF>(gshop, & rb, amr_ls_max_level, v_cells));
-        }
-
-        amrex::Print() << "... done declaring AMR levelset" << std::endl;
-    }
-}
+// void mfix::make_amr_regular()
+// {
+//
+//     if (use_amr_ls)
+//     {
+//         int lev_lowest = 0;
+//
+//         const RealBox & rb = geom[lev_lowest].ProbDomain();
+//         Box domain = geom[lev_lowest].Domain();
+//         domain.coarsen(amr_ls_crse);
+//
+//         const IntVect & dom_lo = domain.smallEnd();
+//         const IntVect & dom_hi = domain.bigEnd();
+//         // Picket-fence principle
+//         IntVect n_cells = dom_hi - dom_lo + IntVect{1, 1, 1};
+//         Vector<int> v_cells = {
+//             AMREX_D_DECL(n_cells[0], n_cells[1], n_cells[2])
+//         };
+//
+//         bool has_walls = false;
+//         std::unique_ptr<UnionListIF<EB2::PlaneIF>> if_walls = get_walls(has_walls);
+//
+//         amrex::Print() << "Declaring AMR levelset:" << std::endl
+//                        << "coarsest level: " << domain << " n_cells: " << n_cells << std::endl;
+//
+//
+//         if (has_walls)
+//         {
+//             amr_level_set.reset(
+//                 new LSCore<std::decay<decltype(* if_walls)>::type>(EB2::makeShop(* if_walls),
+//                                                                    & rb, amr_ls_max_level, v_cells)
+//                 );
+//
+//         } else {
+//             EB2::AllRegularIF my_regular;
+//             auto gshop = EB2::makeShop(my_regular);
+//             amr_level_set.reset(new LSCore<EB2::AllRegularIF>(gshop, & rb, amr_ls_max_level, v_cells));
+//         }
+//
+//         amrex::Print() << "... done declaring AMR levelset" << std::endl;
+//     }
+// }

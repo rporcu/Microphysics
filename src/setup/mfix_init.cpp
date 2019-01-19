@@ -513,13 +513,9 @@ mfix::check_data ()
     }
 }
 
-void
-mfix::InitLevelData(Real dt, Real time)
-{
-    // // This is needed before initializing level MultiFabs: ebfactories should
-    // // not change after the eb-dependent MultiFabs are allocated.
-    // make_eb_geometry();
 
+void mfix::InitLevelData(Real dt, Real time)
+{
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
     if (solve_fluid)
        for (int lev = 0; lev < nlev; lev++)
@@ -930,21 +926,24 @@ mfix::mfix_set_p0()
    }
 }
 
-void
-mfix::mfix_set_ls_near_inflow()
+
+void mfix::mfix_set_ls_near_inflow()
 {
+    // This function is a bit Wonky... TODO: figure out why we need + nghost
+    // (it's late at the moment, so I can't figure it it out right now...)
+    const int levelset_nghost = levelset__eb_pad + nghost;
+
     if (nlev > 1)
     {
-        // The level set is always at the same level of refinement as the boundary condition arrays
+        // The level set is always at the same level of refinement as the
+        // boundary condition arrays
         int n = 1;
 
-        int finest_level = std::min(amr_level_set->finestLevel(),max_level);
         for (int lev = 0; lev < nlev; lev++)
         {
             Box domain(geom[lev].Domain());
 
             MultiFab * ls_phi = level_sets[lev].get();
-
             const Real * dx   = geom[lev].CellSize();
 
             // Don't tile this
@@ -956,7 +955,7 @@ mfix::mfix_set_ls_near_inflow()
                                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                               domain.loVect(), domain.hiVect(), &nghost, &n, dx);
+                               domain.loVect(), domain.hiVect(), &levelset_nghost, &n, dx);
             }
         }
     }
@@ -971,11 +970,10 @@ mfix::mfix_set_ls_near_inflow()
         {
             Box domain(geom[lev].Domain());
             const Real * dx   = geom[lev].CellSize();
-
             MultiFab * ls_phi = level_sets[lev_ref].get();
 
             // Don't tile this
-            for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
+            for (MFIter mfi(* ls_phi); mfi.isValid(); ++mfi)
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
@@ -983,7 +981,7 @@ mfix::mfix_set_ls_near_inflow()
                                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                               domain.loVect(), domain.hiVect(), &nghost, &n, dx);
+                               domain.loVect(), domain.hiVect(), &levelset_nghost, &n, dx);
             }
         }
     }

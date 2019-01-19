@@ -507,37 +507,15 @@ mfix::RegridLevelSetArray (int a_lev)
            ref_nd_ba.refine(levelset__refinement);
 
            std::unique_ptr<MultiFab> new_level_set(new MultiFab);
-           // MFUtil::regrid(* new_level_set, ref_nd_ba, dmap[a_lev],
-           //                * particle_ebfactory[a_lev], * level_sets[a_lev + 1], true);
            MFUtil::regrid(* new_level_set, ref_nd_ba, dmap[a_lev],
                           * level_sets[a_lev + 1], true);
            level_sets[a_lev + 1] = std::move(new_level_set);
 
            std::unique_ptr<MultiFab> new_impfunc(new MultiFab);
-           // MFUtil::regrid(* new_impfunc, ref_nd_ba, dmap[a_lev],
-           //                * particle_ebfactory[a_lev], * implicit_functions[a_lev + 1], true);
            MFUtil::regrid(* new_impfunc, ref_nd_ba, dmap[a_lev],
                           * implicit_functions[a_lev + 1], true);
            implicit_functions[a_lev + 1] = std::move(new_impfunc);
        }
-
-       // // Create a nodal BoxArray
-       // const BoxArray & new_pc_nd_grids = amrex::convert(ba, IntVect{1, 1, 1});
-
-       // // Level-set data used for fluid reconstruction in particle drag
-       // // calculation. For the level set we set src_nghost to ng as well, even if
-       // // it's potentially not totally safe. This way we have the domain ghost
-       // // cells filled properly.
-       // int ng = ls[a_lev]->nGrow();
-       // std::unique_ptr<MultiFab> ls_new(
-       //     new MultiFab(new_pc_nd_grids, dm, 1, ng, MFInfo(), *particle_ebfactory[a_lev]));
-       // ls_new->copy(*ls[a_lev], 0, 0, 1, ng, ng);
-       // ls[a_lev] = std::move(ls_new);
-
-       // // This call is needed because of the dual grid: the level-set
-       // // factory object and the ls data both live on the particle grids.
-       // level_set->regrid(ba, dm);
-
 
        amrex::Print() << "Modifying level set to see inflow" << std::endl;
        mfix_set_ls_near_inflow(); // TODO: fix!!!
@@ -546,13 +524,11 @@ mfix::RegridLevelSetArray (int a_lev)
 }
 
 
-// This function checks if ebfactory is allocated with
-// the proper dm and ba
-bool
-mfix::mfix_update_ebfactory (int a_lev)
+//!  This function checks if ebfactory is allocated with the proper dm and ba
+bool mfix::mfix_update_ebfactory (int a_lev)
 {
-   // This assert is to verify that some kind of EB geometry
-   // has already been defined
+   // This assert is to verify that some kind of EB geometry has already been
+   // defined
    AMREX_ASSERT(not EB2::IndexSpace::empty());
 
    const DistributionMapping & dm = DistributionMap(a_lev);
@@ -562,13 +538,7 @@ mfix::mfix_update_ebfactory (int a_lev)
 
    if ( ebfactory[a_lev].get() == nullptr )
    {
-      amrex::Print() << "Updating ebfactory" << std::endl;
-
-      // ebfactory[a_lev].reset(
-      //     new EBFArrayBoxFactory(* eb_level_fluid, geom[a_lev], ba, dm,
-      //                            {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-      //                             m_eb_full_grow_cells}, m_eb_support_level)
-      //     );
+      Print() << "Updating ebfactory" << std::endl;
 
       ebfactory[a_lev].reset(
           new EBFArrayBoxFactory(* eb_levels[a_lev], geom[a_lev], ba, dm,
@@ -580,18 +550,13 @@ mfix::mfix_update_ebfactory (int a_lev)
    }
    else
    {
-      amrex::Print() << "Updating ebfactory" << std::endl;
 
       const DistributionMapping&  eb_dm = ebfactory[a_lev]->DistributionMap();
       const BoxArray&             eb_ba = ebfactory[a_lev]->boxArray();
 
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
-          // ebfactory[a_lev].reset(
-          //     new EBFArrayBoxFactory(* eb_level_fluid, geom[a_lev], ba, dm,
-          //                            {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-          //                             m_eb_full_grow_cells}, m_eb_support_level)
-          //     );
+          Print() << "Updating ebfactory" << std::endl;
 
           ebfactory[a_lev].reset(
               new EBFArrayBoxFactory(* eb_levels[a_lev], geom[a_lev], ba, dm,

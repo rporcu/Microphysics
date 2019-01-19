@@ -191,70 +191,70 @@ void mfix::make_eb_cylinder()
 }
 
 
-void mfix::make_amr_cylinder()
-{
-    ParmParse pp("cylinder");
-
-    /****************************************************************************
-     * Get cylinder information from inputs file.                               *
-     ***************************************************************************/
-
-    bool inside       = true;
-
-    Real radius    = 0.0002;
-    Real height    = -1.;
-
-    int direction  = 0;
-    Vector<Real> centervec(3);
-
-    pp.query("internal_flow", inside);
-
-    pp.query("radius",     radius);
-    pp.query("height",     height);
-    pp.query("direction",  direction);
-    pp.getarr("center",    centervec,  0, 3);
-    Array<Real,3> center={centervec[0], centervec[1], centervec[2]};
-
-
-    amrex::Print() << " " << std::endl;
-    amrex::Print() << " Internal Flow: " << inside << std::endl;
-    amrex::Print() << " Radius:    " << radius    << std::endl;
-    amrex::Print() << " Height:    " << height    << std::endl;
-    amrex::Print() << " Direction: " << direction << std::endl;
-    amrex::Print() << " Center:    " << center[0] << ", "
-                   << center[1] << ", "
-                   << center[2] << std::endl;
-
-
-    /****************************************************************************
-     *                                                                          *
-     * Construct AMR level-set                                                  *
-     *                                                                          *
-     ***************************************************************************/
-
-    if (use_amr_ls)
-    {
-        int lev_lowest = 0;
-
-        const RealBox & rb = geom[lev_lowest].ProbDomain();
-        Box domain = geom[lev_lowest].Domain();
-        domain.coarsen(amr_ls_crse);
-
-        const IntVect & dom_lo = domain.smallEnd();
-        const IntVect & dom_hi = domain.bigEnd();
-        // Picket-fence principle
-        IntVect n_cells = dom_hi - dom_lo + IntVect{1, 1, 1};
-        Vector<int> v_cells = {
-            AMREX_D_DECL(n_cells[0], n_cells[1], n_cells[2])
-        };
-
-        amrex::Print() << "Declaring AMR levelset:" << std::endl
-                       << "coarsest level: " << domain << " n_cells: " << n_cells << std::endl;
-
-        EB2::CylinderIF if_cyl(radius, height, direction, center, inside);
-
-        amr_level_set.reset(new LSCore<decltype(if_cyl)>(EB2::makeShop(if_cyl)));
-
-        amrex::Print() << "... done declaring AMR levelset" << std::endl;
-    }
-}
+// void mfix::make_amr_cylinder()
+// {
+//     ParmParse pp("cylinder");
+//
+//     /****************************************************************************
+//      * Get cylinder information from inputs file.                               *
+//      ***************************************************************************/
+//
+//     bool inside       = true;
+//
+//     Real radius    = 0.0002;
+//     Real height    = -1.;
+//
+//     int direction  = 0;
+//     Vector<Real> centervec(3);
+//
+//     pp.query("internal_flow", inside);
+//
+//     pp.query("radius",     radius);
+//     pp.query("height",     height);
+//     pp.query("direction",  direction);
+//     pp.getarr("center",    centervec,  0, 3);
+//     Array<Real,3> center={centervec[0], centervec[1], centervec[2]};
+//
+//
+//     amrex::Print() << " " << std::endl;
+//     amrex::Print() << " Internal Flow: " << inside << std::endl;
+//     amrex::Print() << " Radius:    " << radius    << std::endl;
+//     amrex::Print() << " Height:    " << height    << std::endl;
+//     amrex::Print() << " Direction: " << direction << std::endl;
+//     amrex::Print() << " Center:    " << center[0] << ", "
+//                    << center[1] << ", "
+//                    << center[2] << std::endl;
+//
+//
+//     /****************************************************************************
+//      *                                                                          *
+//      * Construct AMR level-set                                                  *
+//      *                                                                          *
+//      ***************************************************************************/
+//
+//     if (use_amr_ls)
+//     {
+//         int lev_lowest = 0;
+//
+//         const RealBox & rb = geom[lev_lowest].ProbDomain();
+//         Box domain = geom[lev_lowest].Domain();
+//         domain.coarsen(amr_ls_crse);
+//
+//         const IntVect & dom_lo = domain.smallEnd();
+//         const IntVect & dom_hi = domain.bigEnd();
+//         // Picket-fence principle
+//         IntVect n_cells = dom_hi - dom_lo + IntVect{1, 1, 1};
+//         Vector<int> v_cells = {
+//             AMREX_D_DECL(n_cells[0], n_cells[1], n_cells[2])
+//         };
+//
+//         amrex::Print() << "Declaring AMR levelset:" << std::endl
+//                        << "coarsest level: " << domain << " n_cells: " << n_cells << std::endl;
+//
+//         EB2::CylinderIF if_cyl(radius, height, direction, center, inside);
+//
+//         amr_level_set.reset(new LSCore<decltype(if_cyl)>(EB2::makeShop(if_cyl)));
+//
+//         amrex::Print() << "... done declaring AMR levelset" << std::endl;
+//     }
+// }

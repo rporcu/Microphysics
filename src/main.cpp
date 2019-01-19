@@ -162,7 +162,6 @@ int main (int argc, char* argv[])
     int restart_flag = 0;
     if (restart_file.empty())
     {
-        // NOTE: this also builds ebfactories and level-set
         my_mfix.InitLevelData(dt,time);
     }
     else
@@ -174,8 +173,8 @@ int main (int argc, char* argv[])
         // are recomputed for the replicated system).
         my_mfix.levelset__restart = true;
 
-        // NOTE: 1) this also builds ebfactories and level-set 2) this can
-        // change the grids (during replication)
+        // NOTE: during replication 1) this also re-builds ebfactories and
+        // level-set 2) this can change the grids
         IntVect Nrep(repl_x,repl_y,repl_z);
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
