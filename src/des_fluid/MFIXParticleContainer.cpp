@@ -223,7 +223,6 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
                 {
                     for (auto & p: pti.GetArrayOfStructs())
                         p.id() = -1;
-
                 }
                 else
                 {

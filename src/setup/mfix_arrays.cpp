@@ -427,12 +427,12 @@ mfix::RegridArrays (int lev)
 }
 
 
-//
-// This function regrids the level set function and updates particle_ebfactory.
-// This has to be done separately from the regridding of the other field
-// variables since LS is generated with the particle_ebfactory, not the plain
-// ebfactory.
-//
+//! This function regrids the level set function and updates
+//! `particle_ebfactory`. This has to be done separately from the regridding of
+//! the other field variables since LS and `particle_ebfactory` "live" on the
+//! particle grids. Furthermore, the LS always has an additional "refined" level
+//! if not operating in multi-level mode. Hence slightly different regridding
+//! rules are needed.
 void
 mfix::RegridLevelSetArray (int a_lev)
 {
