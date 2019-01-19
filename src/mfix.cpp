@@ -30,22 +30,77 @@ mfix::~mfix ()
 
 mfix::mfix ()
 {
-    // Geometry on all levels has just been defined in the AmrCore constructor
 
-    // No valid BoxArray and DistributionMapping have been defined.
+    // NOTE: Geometry on all levels has just been defined in the AmrCore
+    // constructor. No valid BoxArray and DistributionMapping have been defined.
     // But the arrays for them have been resized.
+
+    /****************************************************************************
+     *                                                                          *
+     * Set max number of levels (nlevs)                                         *
+     *                                                                          *
+     ***************************************************************************/
 
     nlev = maxLevel() + 1;
     amrex::Print() << "Number of levels: " << nlev << std::endl;
+
+
+    /****************************************************************************
+     *                                                                          *
+     * Initialize time steps                                                    *
+     *                                                                          *
+     ***************************************************************************/
 
     istep.resize(nlev, 0);
 
     t_old.resize(nlev,-1.e100);
     t_new.resize(nlev,0.0);
 
+
+    /****************************************************************************
+     *                                                                          *
+     * Initialize boundary conditions (used by fill-patch)                      *
+     *                                                                          *
+     ***************************************************************************/
+
     bcs_u.resize(3); // one for each velocity component
     bcs_s.resize(1); // just one for now
     bcs_f.resize(1); // just one
+
+    //___________________________________________________________________________
+    // Boundary conditions used for level-sets
+
+    bcs_ls.resize(1);
+
+    // // periodic boundaries
+    // int bc_lo[] = {BCType::int_dir, BCType::int_dir, BCType::int_dir};
+    // int bc_hi[] = {BCType::int_dir, BCType::int_dir, BCType::int_dir};
+
+    // walls (Neumann)
+    int bc_lo[] = {FOEXTRAP, FOEXTRAP, FOEXTRAP};
+    int bc_hi[] = {FOEXTRAP, FOEXTRAP, FOEXTRAP};
+
+    for (int idim = 0; idim < AMREX_SPACEDIM; ++idim) {
+        // lo-side BCs
+        if (bc_lo[idim] == BCType::int_dir  ||  // periodic uses "internal Dirichlet"
+            bc_lo[idim] == BCType::foextrap ||  // first-order extrapolation
+            bc_lo[idim] == BCType::ext_dir ) {  // external Dirichlet
+            bcs_ls[0].setLo(idim, bc_lo[idim]);
+        }
+        else {
+            amrex::Abort("Invalid level-set bc_lo");
+        }
+
+        // hi-side BCSs
+        if (bc_hi[idim] == BCType::int_dir  ||  // periodic uses "internal Dirichlet"
+            bc_hi[idim] == BCType::foextrap ||  // first-order extrapolation
+            bc_hi[idim] == BCType::ext_dir ) {  // external Dirichlet
+            bcs_ls[0].setHi(idim, bc_hi[idim]);
+        }
+        else {
+            amrex::Abort("Invalid level-set bc_hi");
+        }
+    }
 }
 
 void
@@ -53,19 +108,8 @@ mfix::ResizeArrays ()
 {
     int nlevs_max = maxLevel() + 1;
 
-    // Particle Container
-    if (solve_dem)
-    {
-       if (use_amr_ls) {
-           pc = std::unique_ptr<MFIXParticleContainer> (
-               new MFIXParticleContainer(amr_level_set.get())
-               );
-       } else {
-           pc = std::unique_ptr<MFIXParticleContainer> (
-               new MFIXParticleContainer(this)
-               );
-       }
-    }
+    // EB levels used to construct each level's EB factory
+    eb_levels.resize(nlevs_max);
 
     ep_g.resize(nlevs_max);
     ep_go.resize(nlevs_max);
@@ -130,29 +174,29 @@ mfix::ResizeArrays ()
         bcoeff_diff[i].resize(3);
     }
 
+    // Fuid cost (load balancing)
+    fluid_cost.resize(nlevs_max);
 
-    /****************************************************************************
-     * Particle-data can live on a different number of levels                   *
-     ***************************************************************************/
-
-    int nlevs_max_part = nlevs_max;
-    if (use_amr_ls)
-        nlevs_max_part = amr_level_set->maxLevel() + 1;
-
-
-    // Particle and Fluid costs
-    if (solve_dem)
-            particle_cost.resize(nlevs_max_part);
-
-    if (solve_fluid)
-        fluid_cost.resize(nlevs_max);
-
-    // EB factory
+    // Fluid grid EB factory
     ebfactory.resize(nlevs_max);
 
-    if (solve_dem){
-        particle_ebfactory.resize(nlevs_max_part);
-    }
+
+    /****************************************************************************
+     *                                                                          *
+     * Initialize particle data (including level-set data)                      *
+     * NOTE: the level-set data (as well as implicit functions) live on at      *
+     *       least two levels                                                   *
+     *                                                                          *
+     ***************************************************************************/
+
+    // Particle costs (load balancing)
+    particle_cost.resize(nlevs_max);
+
+    // Particle grid EB factory
+    particle_ebfactory.resize(nlevs_max);
+
+    level_sets.resize(std::max(2, nlevs_max));
+    implicit_functions.resize(std::max(2, nlevs_max));
 }
 
 void

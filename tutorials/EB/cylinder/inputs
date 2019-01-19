@@ -2,7 +2,7 @@
 # Geometry / grids / tiles
 
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
-amr.max_level = 0
+amr.max_level = 1
 
 geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 0       0       0       # Is periodic in each direction?
@@ -97,11 +97,11 @@ mfix.write_eb_surface = true  # Needed to output eb-surfaces
 # # Construct cylinder using Poly2 geometry:
 # # Cylinder ::  x^2 + y^2 = R^2
 # #
-# 
+#
 # mfix.use_walls        = true
 # mfix.use_poly2        = true
 # mfix.poly2_mirror     = true  # Fluid is on the inside of cylinder
-# 
+#
 # mfix.poly2_x_coeffs  =   0.00     0.00     1.00
 # mfix.poly2_y_coeffs  =   0.00     0.00     1.00
 # mfix.poly2_z_coeffs  =  -2.56e-6  0.00     0.00

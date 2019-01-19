@@ -50,9 +50,9 @@
 
       offset = 1.d-8
 
-      ! Here if the level set (slo,shi) is at a finer resolution (by nref) than 
+      ! Here if the level set (slo,shi) is at a finer resolution (by nref) than
       !  the boundary condition routines,
-      !  the domain boundaries (domlo,domhi), and dx, 
+      !  the domain boundaries (domlo,domhi), and dx,
       !     then we make sure to adjust by nref
       dx_fine(:) = dx(:) / dble(nref)
 
@@ -75,7 +75,7 @@
                           phi_ls(i,j,k) = dble(i)*dx_fine(1)-offset
 
                       ! Values outside the domain that are negative should see the min
-                      else 
+                      else
                           phi_ls(i,j,k) = min(phi_ls(i,j,k),dble(i)*dx_fine(1)-offset)
                       end if
                   end do
@@ -106,13 +106,13 @@
                   if (phi_ls( (domhi(1)+1)*nref,j,k) .gt. 0.) &
                       phi_ls( (domhi(1)+1)*nref,j,k) = -offset
 
-                  do i=(domhi(1)+1)*nref+1,shi(1) 
+                  do i=(domhi(1)+1)*nref+1,shi(1)
                       ! Values outside the domain that are positive can be ignored
                       if (phi_ls(i,j,k) .gt. 0.) then
                           phi_ls(i,j,k) = dble(domhi(1)-i+1)*dx_fine(1)-offset
 
                       ! Values outside the domain that are negative should see the min
-                      else 
+                      else
                           phi_ls(i,j,k) = min(phi_ls(i,j,k),dble(domhi(1)-i+1)*dx_fine(1)-offset)
                       end if
                   end do
@@ -126,13 +126,13 @@
             do i=slo(1),shi(1)
                if (any(bc_jlo_type(i/nref:i/nref+1,k/nref:k/nref+1,1) == MINF_)) then
 
-                  do j=slo(2),-1 
+                  do j=slo(2),-1
                       ! Values outside the domain that are positive can be ignored
                       if (phi_ls(i,0,k) .gt. 0.) then
                           phi_ls(i,j,k) = dble(j)*dx_fine(2)-offset
 
                       ! Values outside the domain that are negative should see the min
-                      else 
+                      else
                           phi_ls(i,j,k) = min(phi_ls(i,j,k),dble(j)*dx_fine(2)-offset)
                       end if
                   end do
@@ -162,13 +162,13 @@
                   if (phi_ls(i, (domhi(2)+1)*nref,k) .gt. 0.) &
                       phi_ls(i, (domhi(2)+1)*nref,k) = -offset
 
-                  do j=(domhi(2)+1)*nref+1,shi(2) 
+                  do j=(domhi(2)+1)*nref+1,shi(2)
                       ! Values outside the domain that are positive can be ignored
                       if (phi_ls(i,j,k) .gt. 0.) then
                           phi_ls(i,j,k) = dble(domhi(2)-j+1)*dx_fine(2)-offset
 
                       ! Values outside the domain that are negative should see the min
-                      else 
+                      else
                           phi_ls(i,j,k) = min(phi_ls(i,j,k),dble(domhi(2)-j+1)*dx_fine(2)-offset)
                       end if
                   end do
@@ -182,9 +182,9 @@
             do i=slo(1),shi(1)
                if (any(bc_klo_type(i/nref:i/nref+1,j/nref:j/nref+1,1) == MINF_)) then
 
-                  do k=slo(3),-1  
-                      ! Values outside the domain that are positive can be ignored 
-                      if (phi_ls(i,j,0) .gt. 0.) then 
+                  do k=slo(3),-1
+                      ! Values outside the domain that are positive can be ignored
+                      if (phi_ls(i,j,0) .gt. 0.) then
                           phi_ls(i,j,k) = dble(k)*dx_fine(3)-offset
 
                       ! Values outside the domain that are negative should see the min
@@ -218,13 +218,13 @@
                   if (phi_ls(i,j,(domhi(3)+1)*nref) .gt. 0.) &
                       phi_ls(i,j,(domhi(3)+1)*nref) = -offset
 
-                  do k=(domhi(3)+1)*nref+1,shi(3) 
+                  do k=(domhi(3)+1)*nref+1,shi(3)
                       ! Values outside the domain that are positive can be ignored
                       if (phi_ls(i,j,k) .gt. 0.) then
                           phi_ls(i,j,k) = dble(domhi(3)-k+1)*dx_fine(3)-offset
 
                       ! Values outside the domain that are negative should see the min
-                      else 
+                      else
                           phi_ls(i,j,k) = min(phi_ls(i,j,k),dble(domhi(3)-k+1)*dx_fine(3)-offset)
                       end if
                   end do

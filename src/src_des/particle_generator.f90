@@ -385,9 +385,9 @@ contains
 
                             np = np + 1 ! local to type
                             pc = pc + 1 ! local to routine
-        
+
                             call grow_pdata(pc)
-     
+
                             rdata(pc,1:3) = pos
                        end if
                    enddo
@@ -513,9 +513,9 @@ contains
 
                             np = np + 1 ! local to type
                             pc = pc + 1 ! local to routine
-        
+
                             call grow_pdata(pc)
-     
+
                             rdata(pc,1:3) = pos
                        end if
                    enddo
@@ -886,7 +886,7 @@ contains
       allocate( iseed(isize) )
       call random_seed(get=iseed)
 
-      ! Note -- "10" is arbitrary -- we just need something repeatable for 
+      ! Note -- "10" is arbitrary -- we just need something repeatable for
       !     regression testing
       if ( fix_seed ) then
          iseed(:) = 10
@@ -1103,7 +1103,7 @@ contains
       integer,          intent(in   )         :: phlo(3), phhi(3)
       integer,          intent(in   )         :: flo(3),  fhi(3)
 
-      ! LS refinement 
+      ! LS refinement
       integer,          intent(in   )         :: n_refine
 
       ! Grid spacing
@@ -1116,7 +1116,7 @@ contains
       integer,          intent(in   )         :: &
        &    valid( vlo(1):vhi(1), vlo(2):vhi(2), vlo(3):vhi(3) ), &
        &    flags( flo(1):fhi(1), flo(2):fhi(2), flo(3):fhi(3) )
-      
+
       real(rt),         intent(in   )         :: &
        &      phi(  phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
 
@@ -1138,13 +1138,13 @@ contains
 
             if (is_covered_cell(flags(ic,jc,kc))) then
                particles(p)%id = -1
-            else         
+            else
                ! interpolates level-set from nodal phi to position pos
                call amrex_eb_interp_levelset( pos, plo, n_refine, &
                 &   phi, phlo, phhi, dx, ls_value)
                if (ls_value < rp) particles(p)%id = -1
             end if
-            
+
          end associate
 
       end do

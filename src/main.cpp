@@ -29,6 +29,7 @@ std::string check_file {"chk"};
 int   plot_int = -1;
 int   last_plt = -1;
 std::string plot_file {"plt"};
+std::string static_plt_file {"const_plt"};
 
 bool plotfile_on_restart = false;
 
@@ -135,26 +136,32 @@ int main (int argc, char* argv[])
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix my_mfix;
 
+    // Set global static pointer to mfix object. Used by fill-patch utility
     set_ptr_to_mfix(my_mfix);
 
     // Initialize internals from ParamParse database
     my_mfix.InitParams(solve_fluid, solve_dem, call_udf);
 
-    // This needs to be done before initializing the particle container.
-    my_mfix.make_amr_geometry();
-
-    // Initialize memory for data-array internals NOTE: MFIXParticleContainer is
-    // created here
+    // Initialize memory for data-array internals
     my_mfix.ResizeArrays();
+
+    // Initialize EB geometry. This needs to be done before grid creation (in
+    // mfix::Init), as the grids are created using each EB-level's volfrac.
+    my_mfix.make_eb_geometry();
 
     // Initialize derived internals
     my_mfix.Init(dt, time);
+
+    // Create EB factories on new grids
+    my_mfix.make_eb_factories();
+
+    // Fill level-sets on each level
+    my_mfix.fill_eb_levelsets();
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
     if (restart_file.empty())
     {
-        // NOTE: this also builds ebfactories and level-set
         my_mfix.InitLevelData(dt,time);
     }
     else
@@ -166,8 +173,8 @@ int main (int argc, char* argv[])
         // are recomputed for the replicated system).
         my_mfix.levelset__restart = true;
 
-        // NOTE: 1) this also builds ebfactories and level-set 2) this can
-        // change the grids (during replication)
+        // NOTE: during replication 1) this also re-builds ebfactories and
+        // level-set 2) this can change the grids
         IntVect Nrep(repl_x,repl_y,repl_z);
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
@@ -175,6 +182,8 @@ int main (int argc, char* argv[])
     // This checks if we want to regrid using the KDTree or KnapSack approach
     amrex::Print() << "Regridding at step " << nstep << std::endl;
     my_mfix.Regrid();
+
+    my_mfix.WriteStaticPlotFile(static_plt_file);
 
     my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time, steady_state);
 

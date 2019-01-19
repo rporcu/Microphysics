@@ -35,8 +35,8 @@ mfix::InitIOData ()
     pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "vort", "diveu", "volfrac"};
     pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &vort,  &diveu};
 
-    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g"};
-    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g};
+    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets", "implicit_functions"};
+    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &level_sets,  &implicit_functions};
 }
 
 void
@@ -173,26 +173,29 @@ mfix::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time
 
     if (solve_dem)
     {
-       // The level set might have a higher refinement than the mfix level.
-       //      => Current mechanism for saving checkpoint files requires the same
-       //         BoxArray for all MultiFabss on the same level
-       // Save raw level-set data separately for now, and incorporate into levels,
-       // once MFiX can handle multi-level EB.
-       std::stringstream raw_ls_name;
-       raw_ls_name << checkpointname << "/ls_raw";
-       amrex::VisMF::Write( * level_set->get_data(), raw_ls_name.str() );
+        // The level set might have a higher refinement than the mfix level.
+        //      => Current mechanism for saving checkpoint files requires the
+        //         same BoxArray for all MultiFabss on the same level
+        // NOTE: the unrefined level-set (and the multi-level level set) are
+        // both saved with the standard checkpoint file.
+        std::stringstream raw_ls_name;
+        raw_ls_name << checkpointname << "/ls_raw";
 
-       // Also save the paramters necessary to re-buid the LSFactory
-       int levelset_params[] = { level_set->get_ls_ref(),
-                                 level_set->get_ls_pad(),
-                                 level_set->get_eb_ref(),
-                                 level_set->get_eb_pad() };
+        // There is always a level 1 in the level_sets array:
+        //    level_sets.size() == std::max(2, nlev)
+        VisMF::Write( * level_sets[1], raw_ls_name.str() );
 
-       std::ofstream param_file;
-       std::stringstream param_file_name;
-       param_file_name << checkpointname << "/LSFactory_params";
-       param_file.open(param_file_name.str());
-       amrex::writeIntData(levelset_params, 4, param_file);
+        // Also save the paramters necessary to re-buid the LSFactory
+        int levelset_params[] = { levelset__refinement,
+                                  levelset__pad,
+                                  levelset__eb_refinement,
+                                  levelset__eb_pad         };
+
+        std::ofstream param_file;
+        std::stringstream param_file_name;
+        param_file_name << checkpointname << "/LSFactory_params";
+        param_file.open(param_file_name.str());
+        amrex::writeIntData(levelset_params, 4, param_file);
    }
 }
 
@@ -791,6 +794,84 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
        bool is_checkpoint = true;
        pc -> Checkpoint(plotfilename, "particles", is_checkpoint, real_comp_names, int_comp_names);
     }
+}
+
+
+void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
+{
+    BL_PROFILE("mfix::WriteStaticPlotFile()");
+
+    Print() << "  Writing static quantities " << plotfilename << std::endl;
+
+
+    /****************************************************************************
+     *                                                                          *
+     * Static (un-changing variables):                                          *
+     *     1. level-set data                                                    *
+     *     2. EB implicit function data                                         *
+     *     3. volfrac (from EB) data                                            *
+     *                                                                          *
+     ***************************************************************************/
+
+    Vector<std::string> static_names = {"level_sets", "implicit_functions", "volfrac"};
+    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets, & implicit_functions};
+
+    const int ngrow = 0;
+    const int ncomp = static_names.size();
+
+
+    /****************************************************************************
+     *                                                                          *
+     * Collect variables together into a single multi-component MultiFab        *
+     *                                                                          *
+     ***************************************************************************/
+
+    Vector<std::unique_ptr<MultiFab>> mf(nlev);
+    Vector<const MultiFab *>          mf_ptr(nlev);
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
+        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(), * particle_ebfactory[lev]));
+
+        // Don't iterate over all ncomp => last component is for volfrac
+        for (int dcomp = 0; dcomp < ncomp - 1; dcomp++)
+        {
+            const BoxArray nd_ba = amrex::convert(grids[lev], IntVect::TheNodeVector());
+            MultiFab mf_loc = MFUtil::regrid(nd_ba, dmap[lev], *(*(static_vars[dcomp]))[lev], true);
+            // amrex::average_node_to_cellcenter (MultiFab &cc, int dcomp, const MultiFab &nd,
+            //                                    int scomp, int ncomp, int ngrow=0)
+            amrex::average_node_to_cellcenter(* mf[lev], dcomp, mf_loc, 0, 1, ngrow);
+        }
+
+        if (ebfactory[lev]) {
+            EBFArrayBoxFactory ebf(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                    m_eb_full_grow_cells}, m_eb_support_level);
+
+            //MultiFab::Copy (MultiFab &dst, const MultiFab &src,
+            //                int srccomp, int dstcomp, int numcomp, const IntVect &nghost)
+            MultiFab::Copy(* mf[lev], ebf.getVolFrac(), 0, ncomp - 1, 1, ngrow);
+
+        } else {
+            // setVal (value_type val, int comp, int num_comp, int nghost=0)
+            mf[lev]->setVal(1.0, ncomp - 1, 1, ngrow);
+        }
+    }
+
+    for (int lev = 0; lev < nlev; ++lev)
+    {
+        // Don't do this (below) as it zeros out the covered cells...
+        // EB_set_covered(* mf[lev], 0.0);
+        mf_ptr[lev] = mf[lev].get();
+    }
+
+    Real time = 0.;
+    amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf_ptr, static_names,
+                                   Geom(), time, istep, refRatio());
+
+    WriteJobInfo(plotfilename);
+
+    Print() << "  Done writing static quantities " << plotfilename << std::endl;
 }
 
 

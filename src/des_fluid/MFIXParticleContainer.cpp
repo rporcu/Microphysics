@@ -201,7 +201,6 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
                                              const MultiFab * ls_phi, const iMultiFab * ls_valid,
                                              int ls_refinement)
 {
-
     // Only call the routine for wall collisions if we actually have walls
     if (ebfactory != NULL) {
 
@@ -224,7 +223,6 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
                 {
                     for (auto & p: pti.GetArrayOfStructs())
                         p.id() = -1;
-
                 }
                 else
                 {
@@ -247,7 +245,8 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
         }
 
         ParallelDescriptor::ReduceLongSum(fin_np,ParallelDescriptor::IOProcessorNumber());
-        amrex::Print() << "Final number of particles: " << fin_np << std::endl;
+        amrex::Print() << "Final number of particles on level "
+                       << lev << ": " << fin_np << std::endl;
     }
 }
 
@@ -388,9 +387,9 @@ MFIXParticleContainer::InitData()
 }
 
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
-                                            EBFArrayBoxFactory * ebfactory, 
+                                            EBFArrayBoxFactory * ebfactory,
                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
-                                            const int ls_refinement, 
+                                            const int ls_refinement,
                                             MultiFab * cost, std::string & knapsack_weight_type,
                                             int subdt_io)
 {
@@ -727,14 +726,14 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     BL_PROFILE_REGION_STOP("mfix_dem::EvolveParticles()");
 }
 
-void MFIXParticleContainer::CalcVolumeFraction(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
-                                               const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory>  >& ebfactory,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
+void MFIXParticleContainer::CalcVolumeFraction(const Vector<std::unique_ptr<MultiFab>> & mf_to_be_filled,
+                                               const Vector<std::unique_ptr<EBFArrayBoxFactory>> & ebfactory,
+                                               const Vector<std::unique_ptr<IArrayBox>> & bc_ilo,
+                                               const Vector<std::unique_ptr<IArrayBox>> & bc_ihi,
+                                               const Vector<std::unique_ptr<IArrayBox>> & bc_jlo,
+                                               const Vector<std::unique_ptr<IArrayBox>> & bc_jhi,
+                                               const Vector<std::unique_ptr<IArrayBox>> & bc_klo,
+                                               const Vector<std::unique_ptr<IArrayBox>> & bc_khi,
                                                int nghost )
 {
 
@@ -744,34 +743,37 @@ void MFIXParticleContainer::CalcVolumeFraction(const amrex::Vector< std::unique_
                   bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
                   fortran_volume_comp,nghost);
 
-    for (int lev = 0; lev < nlev; lev++) 
-    {    
+    for (int lev = 0; lev < nlev; lev++)
+    {
         // Now define this mf = (1 - particle_vol)
         mf_to_be_filled[lev]->mult(-1.0,mf_to_be_filled[lev]->nGrow());
         mf_to_be_filled[lev]->plus( 1.0,mf_to_be_filled[lev]->nGrow());
 
-        // We set ep_g to 1 rather than 0 in covered cells so that when we divide by ep_g 
+        // We set ep_g to 1 rather than 0 in covered cells so that when we divide by ep_g
         //    following the projection we don't have to protect against divide by 0.
         EB_set_covered(*mf_to_be_filled[lev],1.0);
 
         // Impose a lower bound on volume fraction
         CapSolidsVolFrac(*mf_to_be_filled[lev]);
-    }    
+    }
 
     // HACK -- we really should average down (ep_g * volfrac) not ep_g.
-    for (int lev = nlev-1; lev > 0; lev++) 
-        amrex::EB_average_down(*mf_to_be_filled[lev],*mf_to_be_filled[lev-1],0,1,this->m_gdb->refRatio(lev-1));
+    for (int lev = nlev - 1; lev > 0; lev --)
+    {
+        amrex::EB_average_down(* mf_to_be_filled[lev], * mf_to_be_filled[lev - 1],
+                               0, 1, m_gdb->refRatio(lev - 1));
+    }
 }
 
-void MFIXParticleContainer::CalcDragOnFluid(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
-                                            const amrex::Vector< std::unique_ptr<MultiFab> >& beta_vel_mf,
-                                            const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory>  >& ebfactory,
-                                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
-                                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
-                                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
-                                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
-                                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
-                                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
+void MFIXParticleContainer::CalcDragOnFluid(const Vector<std::unique_ptr<MultiFab>> & beta_mf,
+                                            const Vector<std::unique_ptr<MultiFab>> & beta_vel_mf,
+                                            const Vector<std::unique_ptr<EBFArrayBoxFactory>> & ebfactory,
+                                            const Vector<std::unique_ptr<IArrayBox>> & bc_ilo,
+                                            const Vector<std::unique_ptr<IArrayBox>> & bc_ihi,
+                                            const Vector<std::unique_ptr<IArrayBox>> & bc_jlo,
+                                            const Vector<std::unique_ptr<IArrayBox>> & bc_jhi,
+                                            const Vector<std::unique_ptr<IArrayBox>> & bc_klo,
+                                            const Vector<std::unique_ptr<IArrayBox>> & bc_khi,
                                             int nghost )
 {
     int fortran_beta_comp = 15;
@@ -800,7 +802,7 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
     // Start the timers ...
     const Real      strttime    = ParallelDescriptor::second();
 
-    if (nlev > 2) 
+    if (nlev > 2)
       amrex::Abort("For right now MFIXParticleContainer::PICDeposition can only handle up to 2 levels");
 
     for (int lev = 0; lev < nlev; lev++)
@@ -851,7 +853,7 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
        if (lev == 0) {
           flags   = &(ebfactory[lev]->getMultiEBCellFlagFab());
        } else {
-          // std::unique_ptr<EBFArrayBoxFactory> 
+          // std::unique_ptr<EBFArrayBoxFactory>
           crse_factory = makeEBFabFactory(
                  gm, mf_pointer[lev]->boxArray(), mf_pointer[lev]->DistributionMap(),
                  ngrow, EBSupport::volume);
@@ -890,7 +892,7 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
             const Box& bx  = pti.tilebox(); // I need a box without ghosts
 
             if ((*flags)[pti].getType(bx) != FabType::covered ) {
-                mfix_deposit_cic_eb(particles.data(), nstride, nrp, 
+                mfix_deposit_cic_eb(particles.data(), nstride, nrp,
                                     data_ptr, lo, hi,
                                     BL_TO_FORTRAN_ANYD((*volfrac)[pti]),
                                     BL_TO_FORTRAN_ANYD((*flags)[pti]),
@@ -910,9 +912,9 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
        Box domain(Geom(lev).Domain());
 
        for (MFIter mfi(*mf_pointer[lev]); mfi.isValid(); ++mfi) {
-   
+
          const Box& sbx = (*mf_pointer[lev])[mfi].box();
-   
+
          flip_particle_vol(sbx.loVect(), sbx.hiVect(),
                            (*mf_pointer[lev])[mfi].dataPtr(),
                            (*bc_ilo[lev]).dataPtr(), (*bc_ihi[lev]).dataPtr(),
@@ -960,11 +962,11 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
     // to copy here from mf_pointer into mf_to_be_filled. I believe that we don't
     // need any information in ghost cells so we don't copy those.
 
-    if (mf_pointer[0] != mf_to_be_filled[0].get())  
+    if (mf_pointer[0] != mf_to_be_filled[0].get())
        mf_to_be_filled[0]->copy(*mf_pointer[0],0,0,ncomp);
 
     for (int lev = 0; lev < nlev; lev++)
-       if (mf_pointer[lev] != mf_to_be_filled[lev].get()) 
+       if (mf_pointer[lev] != mf_to_be_filled[lev].get())
           delete mf_pointer[lev];
 
     if (m_verbose > 1) {
@@ -1044,14 +1046,14 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
     const Real*     plo         = gm.ProbLo();
     const Real*     dx          = gm.CellSize();
 
-    using ParConstIter = ParConstIter<realData::count,intData::count,0,0>; 
+    using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
     const FabArray<EBCellFlagFab>* flags;
 
     for (int lev = 0; lev < nlev; lev++)
     {
         Vector<int> ngrow = {1,1,1};
         std::unique_ptr<EBFArrayBoxFactory> crse_factory;
- 
+
         if (lev == 0) {
            flags   = &(ebfactory[lev]->getMultiEBCellFlagFab());
         } else {
@@ -1182,9 +1184,9 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       if (beta_ptr[lev] != beta_mf[lev].get()) 
+       if (beta_ptr[lev] != beta_mf[lev].get())
           delete beta_ptr[lev];
-       if (beta_vel_ptr[lev] != beta_vel_mf[lev].get()) 
+       if (beta_vel_ptr[lev] != beta_vel_mf[lev].get())
           delete beta_vel_ptr[lev];
     }
 

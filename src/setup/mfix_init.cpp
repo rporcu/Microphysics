@@ -155,16 +155,48 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 }
 
+
+void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
+    // Tag using each EB level's volfrac. This requires that the `eb_levels`
+    // have already been build. We use a buffer size of 8 (a bit of a fudge
+    // factor).
+    LSCoreBase::FillVolfracTags(lev, tags, 8, grids, dmap, * eb_levels[lev], geom);
+}
+
+
 void
 mfix::Init(Real dt, Real time)
 {
     InitIOData();
 
-    // Note that finest_level = nlev-1
+    // Note that finest_level = last level
     finest_level = nlev-1;
 
-    if (use_amr_ls)
-       finest_level = std::min(amr_level_set->finestLevel(),max_level);
+
+    /****************************************************************************
+     *                                                                          *
+     * Generate levels using ErrorEst tagging. This approach has been based on  *
+     * the LSCoreBase::Init().                                                  *
+     *                                                                          *
+     ***************************************************************************/
+
+    // This tells the AmrMesh class not to iterate when creating the initial
+    // grid hierarchy
+    SetIterateToFalse();
+
+    // This tells the Cluster routine to use the new chopping routine which
+    // rejects cuts if they don't improve the efficiency
+    SetUseNewChop();
+
+    // This Builds the new Grids
+    InitFromScratch(0.);
+
+
+    /****************************************************************************
+     *                                                                          *
+     * MFIX-specific grid creation                                              *
+     *                                                                          *
+     ***************************************************************************/
 
     // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
@@ -175,37 +207,66 @@ mfix::Init(Real dt, Real time)
 
     for (int lev = 1; lev <= finest_level; lev++)
     {
-       if (use_amr_ls)
+        // if (use_amr_ls)
+        // {
+        //    const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
+        //    BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0});
+
+        //    std::cout << "Level " << lev << " grids: " << ba_ref << std::endl;
+        //    if (m_verbose > 0)
+        //      std::cout << "Setting refined region at level " << lev
+        //                << " to " << ba_ref << std::endl;
+        //    DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
+        //    MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
+        // }
+        // else
+        // {
+        //    // This refines the central half of the domain
+        //    int ilo = ba[0].size()[0] / 2;
+        //    int ihi = 3*ba[0].size()[0]/2-1;
+        //    IntVect lo(ilo,ilo,ilo);
+        //    IntVect hi(ihi,ihi,ihi);
+        //    Box bx(lo,hi);
+        //    BoxArray ba_ref(bx);
+
+        //    // This refines the whole domain
+        //    // BoxArray ba_ref(ba);
+        //    // ba_ref.refine(2);
+
+        //    if (m_verbose > 0)
+        //    {
+        //      std::cout << "Setting refined region at level " << lev
+        //                << " to " << ba_ref << std::endl;
+        //    }
+        //    DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
+        //    MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
+        // }
+
+       if (m_verbose > 0)
        {
-          const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
-          BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0});
-
-          std::cout << "Level " << lev << " grids: " << ba_ref << std::endl;
-          if (m_verbose > 0)
-            std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
-          DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
-          MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
+            std::cout << "Setting refined region at level " << lev
+                      << " to " << grids[lev] << std::endl;
        }
-       else
-       {
-          // This refines the central half of the domain
-          int ilo = ba[0].size()[0] / 2;
-          int ihi = 3*ba[0].size()[0]/2-1;
-          IntVect lo(ilo,ilo,ilo);
-          IntVect hi(ihi,ihi,ihi);
-          Box bx(lo,hi);
-          BoxArray ba_ref(bx);
 
-          // This refines the whole domain
-          // BoxArray ba_ref(ba);
-          // ba_ref.refine(2);
-
-          if (m_verbose > 0)
-            std::cout << "Setting refined region at level " << lev << " to " << ba_ref << std::endl;
-          DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
-          MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
-       }
+        MakeNewLevelFromScratch(lev, time, grids[lev], dmap[lev]);
     }
+
+
+    /****************************************************************************
+     *                                                                          *
+     * Create particle container using mfix::ParGDB                             *
+     *                                                                          *
+     ***************************************************************************/
+
+    if (solve_dem)
+        pc = std::unique_ptr<MFIXParticleContainer>(new MFIXParticleContainer(this));
+
+
+    /****************************************************************************
+     *                                                                          *
+     * MFIX-Specific Initialization                                             *
+     *                                                                          *
+     ***************************************************************************/
 
     // ******************************************************
     // We only do these at level 0
@@ -240,57 +301,58 @@ mfix::Init(Real dt, Real time)
 
     // Set point sources.
     {
-       int err_ps = 0;
-       int is_ioproc = 0;
-       if ( ParallelDescriptor::IOProcessor() )
-           is_ioproc = 1;
+        int err_ps = 0;
+        int is_ioproc = 0;
+        if ( ParallelDescriptor::IOProcessor() )
+            is_ioproc = 1;
 
-       set_ps(&dx,&dy,&dz,&err_ps,&is_ioproc);
+        set_ps(&dx,&dy,&dz,&err_ps,&is_ioproc);
 
-       if (err_ps == 1)
-           amrex::Abort("Bad data in set_ps");
+        if (err_ps == 1)
+            amrex::Abort("Bad data in set_ps");
     }
 
-   for (int lev = 0; lev < nlev; lev++)
-       mfix_set_bc_type(lev);
+    for (int lev = 0; lev < nlev; lev++)
+        mfix_set_bc_type(lev);
 
-    if (solve_dem)
-    {
-       for (int lev = 0; lev < nlev; lev++)
-       {
-          // NOTE: this would break with mult-level simulations => construct this
-          // for level 0 only
+    // if (solve_dem)
+    // {
+    //    for (int lev = 0; lev < nlev; lev++)
+    //    {
+    //       // NOTE: this would break with mult-level simulations => construct this
+    //       // for level 0 only
 
-          if (lev == 0) {
-              // Level-Set: initialize container for level set. The level-set
-              // MultiFab is defined here, and set to (fortran) huge(amrex_real)
-              //            -> use min to intersect new eb boundaries (in update)
-              level_set = std::unique_ptr<LSFactory>(
-                  new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
-                                levelset__pad, levelset__eb_pad,
-                                pc->ParticleBoxArray(lev),
-                                pc->Geom(lev),
-                                pc->ParticleDistributionMap(lev))
-                  );
+    //       if (lev == 0) {
+    //           // Level-Set: initialize container for level set. The level-set
+    //           // MultiFab is defined here, and set to (fortran) huge(amrex_real)
+    //           //            -> use min to intersect new eb boundaries (in update)
+    //           level_set = std::unique_ptr<LSFactory>(
+    //               new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
+    //                             levelset__pad, levelset__eb_pad,
+    //                             pc->ParticleBoxArray(lev),
+    //                             pc->Geom(lev),
+    //                             pc->ParticleDistributionMap(lev))
+    //               );
 
-          }
+    //       }
 
-          // Make sure that at (at least) an initial MultiFab is stored in
-          // ls[lev]. (otherwise, if there are no walls/boundaries in the
-          // simulation, saving a plot file or checkpoint will segfault).
-          std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-          const BoxArray & nd_grids = amrex::convert(pc->ParticleBoxArray(lev), IntVect{1,1,1});
-          int ng = ls_data->nGrow();
-          ls[lev].reset(new MultiFab(nd_grids, pc->ParticleDistributionMap(lev), 1, ng));
-          ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
-       }
-    }
+    //       // Make sure that at (at least) an initial MultiFab is stored in
+    //       // ls[lev]. (otherwise, if there are no walls/boundaries in the
+    //       // simulation, saving a plot file or checkpoint will segfault).
+    //       std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
+    //       const BoxArray & nd_grids = amrex::convert(pc->ParticleBoxArray(lev), IntVect{1,1,1});
+    //       int ng = ls_data->nGrow();
+    //       ls[lev].reset(new MultiFab(nd_grids, pc->ParticleDistributionMap(lev), 1, ng));
+    //       ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng);
+    //    }
+    // }
 
     // Create MAC projection object
     mac_projection.reset( new MacProjection(this, nghost, &ebfactory ) );
     mac_projection -> set_bcs( bc_ilo, bc_ihi,
              bc_jlo, bc_jhi,
              bc_klo, bc_khi );
+
 }
 
 BoxArray
@@ -452,13 +514,9 @@ mfix::check_data ()
     }
 }
 
-void
-mfix::InitLevelData(Real dt, Real time)
-{
-    // This is needed before initializing level MultiFabs: ebfactories should
-    // not change after the eb-dependent MultiFabs are allocated.
-    make_eb_geometry();
 
+void mfix::InitLevelData(Real dt, Real time)
+{
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
     if (solve_fluid)
        for (int lev = 0; lev < nlev; lev++)
@@ -555,65 +613,78 @@ void
 mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                int steady_state)
 {
-  if (solve_dem)
-  {
-     // Auto generated particles may be out of the domain. This call will remove
-     // them. Note that this has to occur after the EB geometry is created. if
-     // (particle_init_type == "Auto" && !restart_flag && particle_ebfactory[finest_level])
+    if (solve_dem)
+    {
+        // Auto generated particles may be out of the domain. This call will
+        // remove them. Note that this has to occur after the EB geometry is
+        // created. if (particle_init_type == "Auto" && !restart_flag &&
+        // particle_ebfactory[finest_level])
 
-      if (use_amr_ls) {
-          amrex::Print() << "Clean up auto-generated particles.\n" << std::endl;
-          for (int ilev = 0; ilev <= pc->finestLevel(); ilev ++){
-              const MultiFab * ls_data = amr_level_set->getLevelSet(ilev);
-              const iMultiFab * ls_valid = amr_level_set->getValid(ilev);
-              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(), ls_data, ls_valid, 1);
+        if ((nlev == 1) && (!restart_flag && particle_ebfactory[finest_level]))
+        {
+            //___________________________________________________________________
+            // Only 1 refined level-set
 
-          }
-      } else {
-          if (! restart_flag && particle_ebfactory[finest_level])
-          {
-              amrex::Print() << "Clean up auto-generated particles.\n";
-              pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
-                                   level_set->get_data(),
-                                   level_set->get_valid(),
-                                   level_set->get_ls_ref());
-          }
-      }
+            Print() << "Clean up auto-generated particles.\n" << std::endl;
 
-     if (!use_amr_ls) {
-         for (int lev = 0; lev < nlev; lev++)
-         {
+            const MultiFab * ls_data = level_sets[1].get();
+            iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
+                               ls_data->nComp(), ls_data->nGrow());
 
-             // We need $to do this *after* restart (hence putting this here not
-             // in Init) because we may want to move from KDTree to Knapsack, or
-             // change the particle_max_grid_size on restart.
-             if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
+            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
+                                 ls_data, & ls_valid, levelset__refinement);
+        }
+        else if (!restart_flag && particle_ebfactory[finest_level])
+        {
+            //___________________________________________________________________
+            // Multi-level everything
+
+            Print() << "Clean up auto-generated particles.\n" << std::endl;
+
+            for (int ilev = 0; ilev < nlev; ilev ++)
+            {
+                const MultiFab * ls_data = level_sets[ilev].get();
+                iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
+                                   ls_data->nComp(), ls_data->nGrow());
+
+                pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(),
+                                     ls_data, & ls_valid, 1);
+            }
+        }
+
+
+        for (int lev = 0; lev < nlev; lev++)
+        {
+
+            // We need to do this *after* restart (hence putting this here not
+            // in Init) because we may want to move from KDTree to Knapsack, or
+            // change the particle_max_grid_size on restart.
+            if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
                  dual_grid && particle_max_grid_size_x > 0
-                           && particle_max_grid_size_y > 0
-                           && particle_max_grid_size_z > 0)
-             {
-                 BoxArray particle_ba(geom[lev].Domain());
-                 IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                                particle_max_grid_size_y,
-                                                particle_max_grid_size_z);
-                 particle_ba.maxSize(particle_max_grid_size);
-                 DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
-                 pc->Regrid(particle_dm, particle_ba);
-             }
-         }
+                 && particle_max_grid_size_y > 0
+                 && particle_max_grid_size_z > 0)
+            {
+                BoxArray particle_ba(geom[lev].Domain());
+                IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                               particle_max_grid_size_y,
+                                               particle_max_grid_size_z);
+                particle_ba.maxSize(particle_max_grid_size);
+                DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+                pc->Regrid(particle_dm, particle_ba);
+            }
+        }
 
-     }
 
-     Real avg_dp[10], avg_ro[10];
-     pc->GetParticleAvgProp( avg_dp, avg_ro );
-     init_collision(avg_dp, avg_ro);
-  }
+        Real avg_dp[10], avg_ro[10];
+        pc->GetParticleAvgProp( avg_dp, avg_ro );
+        init_collision(avg_dp, avg_ro);
+    }
 
-  if (solve_fluid)
-     mfix_init_fluid(restart_flag,dt,stop_time,steady_state);
+    if (solve_fluid)
+        mfix_init_fluid(restart_flag,dt,stop_time,steady_state);
 
-  // Call user-defined subroutine to set constants, check data, etc.
-  if (call_udf) mfix_usr0();
+    // Call user-defined subroutine to set constants, check data, etc.
+    if (call_udf) mfix_usr0();
 }
 
 void
@@ -856,60 +927,63 @@ mfix::mfix_set_p0()
    }
 }
 
-void
-mfix::mfix_set_ls_near_inflow()
+
+void mfix::mfix_set_ls_near_inflow()
 {
-   if (use_amr_ls)
-   {
-      // The level set is always at the same level of refinement as the boundary condition arrays
-      int n = 1;
+    // This function is a bit Wonky... TODO: figure out why we need + nghost
+    // (it's late at the moment, so I can't figure it it out right now...)
+    const int levelset_nghost = levelset__eb_pad + nghost;
 
-      int finest_level = std::min(amr_level_set->finestLevel(),max_level);
-      for (int lev = 0; lev <= finest_level; lev++)
-      {
-          Box domain(geom[lev].Domain());
-          MultiFab * ls_phi = amr_level_set->getLevelSet(lev);
-          const Real *dx = geom[lev].CellSize();
+    if (nlev > 1)
+    {
+        // The level set is always at the same level of refinement as the
+        // boundary condition arrays
+        int n = 1;
 
-          // Don't tile this
-          for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
-          {
-              FArrayBox& ls_fab = (*ls_phi)[mfi];
-              const Box& sbx = ls_fab.box();
+        for (int lev = 0; lev < nlev; lev++)
+        {
+            Box domain(geom[lev].Domain());
 
-              set_ls_inflow(
-                      BL_TO_FORTRAN_ANYD(ls_fab),
-                      bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                      bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                      bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                      domain.loVect(), domain.hiVect(), &nghost, &n, dx);
+            MultiFab * ls_phi = level_sets[lev].get();
+            const Real * dx   = geom[lev].CellSize();
+
+            // Don't tile this
+            for (MFIter mfi(* ls_phi); mfi.isValid(); ++mfi)
+            {
+                FArrayBox & ls_fab = (* ls_phi)[mfi];
+
+                set_ls_inflow( BL_TO_FORTRAN_ANYD(ls_fab),
+                               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+                               domain.loVect(), domain.hiVect(), &levelset_nghost, &n, dx);
             }
-      }
-   } else {
+        }
+    }
+    else
+    {
+        // Here we assume that the particles and fluid only exist on one level
+        int lev = 0;
+        int lev_ref = 1;
 
-      // Here we assume that the particles and fluid only exist on one level
-      int lev = 0;
+        // ... but that the level set may be at a finer resolution.
+        int n = levelset__refinement;
+        {
+            Box domain(geom[lev].Domain());
+            const Real * dx   = geom[lev].CellSize();
+            MultiFab * ls_phi = level_sets[lev_ref].get();
 
-      // ... but that the level set may be at a finer resolution.
-      int n = level_set->get_ls_ref();
-      {
-          Box domain(geom[lev].Domain());
-          const Real *dx = geom[lev].CellSize();
-          MultiFab* ls_phi = level_set->get_data();
+            // Don't tile this
+            for (MFIter mfi(* ls_phi); mfi.isValid(); ++mfi)
+            {
+                FArrayBox & ls_fab = (* ls_phi)[mfi];
 
-          // Don't tile this
-          for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
-          {
-              FArrayBox& ls_fab = (*ls_phi)[mfi];
-              const Box& sbx = ls_fab.box();
-
-              set_ls_inflow(
-                      BL_TO_FORTRAN_ANYD(ls_fab),
-                      bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                      bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                      bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                      domain.loVect(), domain.hiVect(), &nghost, &n, dx);
+                set_ls_inflow( BL_TO_FORTRAN_ANYD(ls_fab),
+                               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+                               domain.loVect(), domain.hiVect(), &levelset_nghost, &n, dx);
             }
-       }
-   }
+        }
+    }
 }

@@ -11,6 +11,7 @@
 void
 mfix::Regrid ()
 {
+
     BL_PROFILE_REGION_START("mfix::Regrid()");
 
     int base_lev = 0;
@@ -80,7 +81,8 @@ mfix::Regrid ()
 
                     if ( load_balance_type == "KnapSack" )
                     {
-                        new_fluid_dm = DistributionMapping::makeKnapSack(*fluid_cost[lev],knapsack_nmax);
+                        new_fluid_dm = DistributionMapping::makeKnapSack(*fluid_cost[lev],
+                                                                         knapsack_nmax);
                     }
                     else
                     {
@@ -105,7 +107,8 @@ mfix::Regrid ()
 
                 if ( load_balance_type == "KnapSack" )
                 {
-                    new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev],knapsack_nmax);
+                    new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev],
+                                                                        knapsack_nmax);
                 }
                 else
                 {
@@ -134,16 +137,30 @@ mfix::Regrid ()
 
             MultiFab costs(grids[base_lev], dmap[base_lev], 1, 0);
             costs.setVal(0.0);
+
+            Print() << "grids = " << grids[base_lev] << std::endl;
+            Print() << "costs ba = " << costs.boxArray() << std::endl;
+            Print() << "particle_cost ba = " << particle_cost[base_lev]->boxArray() << std::endl;
+            //Print() << "fluid cost ba = " << fluid_cost[base_lev]->boxArray() << std::endl;
+
             if (solve_dem) {
                 // costs.plus(* particle_cost[base_lev], 0, 1, 0);
-                MultiFab particle_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
-                particle_cost_loc.copy(* particle_cost[base_lev], 0, 0, 1);
+
+                // MultiFab particle_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
+                // particle_cost_loc.copy(* particle_cost[base_lev], 0, 0, 1);
+                MultiFab particle_cost_loc = MFUtil::regrid(grids[base_lev], dmap[base_lev],
+                                                            * particle_cost[base_lev], true);
+
                 costs.plus(particle_cost_loc, 0, 1, 0);
             }
             if (solve_fluid) {
                 // costs.plus(* fluid_cost[base_lev], 0, 1, 0);
-                MultiFab fluid_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
-                fluid_cost_loc.copy(* fluid_cost[base_lev], 0, 0, 1);
+
+                // MultiFab fluid_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
+                // fluid_cost_loc.copy(* fluid_cost[base_lev], 0, 0, 1);
+                MultiFab fluid_cost_loc = MFUtil::regrid(grids[base_lev], dmap[base_lev],
+                                                         * fluid_cost[base_lev], true);
+
                 costs.plus(fluid_cost_loc, 0, 1, 0);
             }
 
@@ -181,10 +198,18 @@ mfix::Regrid ()
         }
     }
 
-if (use_amr_ls)
-    for (int i_lev = 0; i_lev < pc->finestLevel(); i_lev ++)
-        amr_level_set->UpdateGrids(i_lev, pc->ParticleBoxArray(i_lev),
-                                   pc->ParticleDistributionMap(i_lev))
+    if (solve_dem)
+        for (int i_lev = base_lev; i_lev < nlev; i_lev++)
+        {
+            // This calls re-creates a proper particle_ebfactories and regrids
+            //  all the multifab that depend on it
+            RegridLevelSetArray(i_lev);
+        }
+
+    if (use_amr_ls)
+        for (int i_lev = 0; i_lev < pc->finestLevel(); i_lev ++)
+            amr_level_set->UpdateGrids(i_lev, pc->ParticleBoxArray(i_lev),
+                                       pc->ParticleDistributionMap(i_lev))
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }

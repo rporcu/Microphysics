@@ -22,6 +22,7 @@
 #include <AMReX_EB2_IF_Intersection.H>
 #include <AMReX_EB_levelset.H>
 #include <AMReX_EB_LSCoreBase.H>
+#include <AMReX_EB_LSCore.H>
 
 #include <MFIXParticleContainer.H>
 #include <MacProjection.H>
@@ -52,6 +53,8 @@ public:
     void WritePlotFile(std::string& plot_file_name,
             int nstep = 0, Real dt = 0.0, Real time = 0.0) const;
 
+    void WriteStaticPlotFile(const std::string & plot_file_name) const;
+
     void Restart(std::string& restart_chkfile, int *nstep, Real *dt, Real *time,
             IntVect& Nrep);
 
@@ -73,8 +76,65 @@ public:
     void make_mg_bc(int mg_bc[]);
 
     void make_eb_geometry ();
-    void make_amr_geometry ();
+    void make_eb_factories ();
+    void fill_eb_levelsets ();
 
+
+    //! Construct EB levels from Geometry shop. This builds each EB level and
+    //! saves a pointer to each level into `eb_levels`. Also fills the implicit
+    //! function values for each level in `implicit_functions`.
+    template<class F> void build_eb_levels (EB2::GeometryShop<F> gshop){
+
+        /************************************************************************
+         *                                                                      *
+         * Build EB levels                                                      *
+         *                                                                      *
+         ***********************************************************************/
+
+        for (int lev = 0; lev < nlev; lev ++)
+            eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom);
+
+
+        /************************************************************************
+         *                                                                      *
+         * Fill each level with implicit function values                        *
+         *                                                                      *
+         ***********************************************************************/
+
+        if (nlev == 1) {
+
+            //___________________________________________________________________
+            // Single-level case: fill normal and refined implicit functions
+
+            // Get BoxArray and distribution mapping from EB level as the
+            // mfix::grids and mfix::dmap vectors have not been built yet
+            const BoxArray & ba            = eb_levels[0]->boxArray();
+            const DistributionMapping & dm = eb_levels[0]->DistributionMap();
+
+            // Base (fluid) level
+            GShopLSFactory<F> gshop_lsf_1(gshop, geom[0], ba, dm, levelset__pad);
+            implicit_functions[0] = gshop_lsf_1.fill_impfunc();
+
+            // Refined level
+            GShopLSFactory<F> gshop_lsf_2(gshop, geom[0], ba, dm,
+                                          levelset__pad, levelset__refinement);
+            implicit_functions[1] = gshop_lsf_2.fill_impfunc();
+
+        } else {
+
+            //___________________________________________________________________
+            // Multi-level case: fill function for each level
+
+            for (int lev = 0; lev < nlev; lev ++) {
+                const BoxArray & ba            = eb_levels[lev]->boxArray();
+                const DistributionMapping & dm = eb_levels[lev]->DistributionMap();
+
+                GShopLSFactory<F> gshop_lsf(gshop, geom[lev], ba, dm, levelset__pad);
+                implicit_functions[lev] = gshop_lsf.fill_impfunc();
+            }
+
+        }
+    };
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(bool & has_walls);
 
@@ -121,9 +181,8 @@ public:
 
 protected:
 
-    //! Tagging cells for refinement
-    virtual void ErrorEst(int lev, amrex::TagBoxArray& tags, amrex::Real time, int /*ngrow*/) override
-        { amrex::Abort("ErrorEst: To be implemented"); }
+     //! Tagging cells for refinement
+     virtual void ErrorEst(int lev, TagBoxArray & tags, Real time, int ngrow) override;
 
     //! Make a new level using provided BoxArray and
     //! DistributionMapping and fill with interpolated coarse level
@@ -184,28 +243,14 @@ protected:
 private:
 
     void make_eb_general();
-    void make_amr_general();
-
     void make_eb_box();
-    void make_amr_box();
-
     void make_eb_cylinder();
-    void make_amr_cylinder();
-
     void make_eb_hopper();
-    void make_amr_hopper();
-
     void make_eb_cyclone();
-    void make_amr_cyclone();
-
     void make_eb_hourglass();
-
     void make_eb_clr();
-
     void make_eb_clr_riser();
-
     void make_eb_regular();
-    void make_amr_regular();
 
     void MakeBCArrays();
 
@@ -375,8 +420,11 @@ private:
     Vector< std::unique_ptr<MultiFab> > drag;
     Vector< std::unique_ptr<MultiFab> > f_gds;
 
-    // Level-Set Data => used for fluid reconstruction in particle drag
-    // calculation
+    // Level-Set Data => used for particle-wall collisions and fluid
+    // reconstruction in particle drag calculation. NOTE: this has at least 2
+    // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions
+    Vector< std::unique_ptr<MultiFab> > level_sets;
+    Vector< std::unique_ptr<MultiFab> > implicit_functions;
     Vector< std::unique_ptr<MultiFab> > ls;
 
     // These are multi-component multifabs
@@ -497,8 +545,8 @@ private:
     // DO NOT USE  A LOCAL VARIABLE WITH THE SAME NAME
     //
 
-    // These values are required when fluid sees EB -- for now
-    const int nghost = 5;
+    // Four ghost cells are required when using EB
+    const int nghost = 4;
 
     const int m_eb_basic_grow_cells = nghost;
     const int m_eb_volume_grow_cells = nghost;
@@ -531,12 +579,14 @@ private:
      *                                                                          *
      ***************************************************************************/
 
-     Vector<Real> t_old;
-     Vector<Real> t_new;
+    Vector<Real> t_old;
+    Vector<Real> t_new;
 
-     amrex::Vector<BCRec> bcs_u; // For velocity components
-     amrex::Vector<BCRec> bcs_s; // For scalars
-     amrex::Vector<BCRec> bcs_f; // For generic first-order extrapolation
+    Vector<BCRec> bcs_ls; // used by the level-set fill-patch
+
+    Vector<BCRec> bcs_u; // For velocity components
+    Vector<BCRec> bcs_s; // For scalars
+    Vector<BCRec> bcs_f; // For generic first-order extrapolation
 
 
     /****************************************************************************
@@ -545,8 +595,10 @@ private:
      *                                                                          *
      ***************************************************************************/
 
-    const EB2::Level * eb_level_fluid;
-    const EB2::Level * eb_level_particles;
+    Vector<const EB2::Level *> eb_levels;
+
+    // const EB2::Level * eb_level_fluid;
+    // const EB2::Level * eb_level_particles;
 
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
