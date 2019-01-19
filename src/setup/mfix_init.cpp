@@ -656,27 +656,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
         }
 
 
-        // if (use_amr_ls) {
-        //     amrex::Print() << "Clean up auto-generated particles.\n" << std::endl;
-        //     for (int ilev = 0; ilev <= pc->finestLevel(); ilev ++){
-        //         const MultiFab * ls_data = amr_level_set->getLevelSet(ilev);
-        //         const iMultiFab * ls_valid = amr_level_set->getValid(ilev);
-        //         pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(), ls_data, ls_valid, 1);
-
-        //     }
-        // } else {
-        //     if (! restart_flag && particle_ebfactory[finest_level])
-        //     {
-        //         amrex::Print() << "Clean up auto-generated particles.\n";
-
-        //         pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
-        //                              level_set->get_data(),
-        //                              level_set->get_valid(),
-        //                              level_set->get_ls_ref());
-        //     }
-        // }
-
-        if (!use_amr_ls) {
+        // if (!use_amr_ls) {
             for (int lev = 0; lev < nlev; lev++)
             {
 
@@ -698,7 +678,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
                 }
             }
 
-        }
+            // }
 
         Real avg_dp[10], avg_ro[10];
         pc->GetParticleAvgProp( avg_dp, avg_ro );

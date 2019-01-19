@@ -88,32 +88,6 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
             }
         }
 
-        // if (use_amr_ls) {
-
-        //     for (int lev = 0; lev <= amr_level_set->finestLevel(); lev ++) {
-        //         const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
-        //         const iMultiFab * ls_valid = amr_level_set->getValid(lev);
-
-        //         pc->EvolveParticles(lev, nstep, dt, time,
-        //                             particle_ebfactory[lev].get(),
-        //                             ls_lev, ls_valid, 1,
-        //                             particle_cost[lev].get(), knapsack_weight_type,
-        //                             subdt_io                                         );
-
-        //     }
-
-        // } else {
-
-        //     for (int lev = 0; lev < nlev; lev++)
-        //         pc->EvolveParticles(lev, nstep, dt, time,
-        //                             particle_ebfactory[lev].get(),
-        //                             level_set->get_data(),
-        //                             level_set->get_valid(),
-        //                             level_set->get_ls_ref(),
-        //                             particle_cost[lev].get(), knapsack_weight_type,
-        //                             subdt_io                                          );
-        // }
-
         //  Compute Eulerian velocities in selected regions
         for (int lev = 0; lev < nlev; lev++)
             if ( ( avg_vel_int > 0) && ( nstep % avg_vel_int == 0 ) )
