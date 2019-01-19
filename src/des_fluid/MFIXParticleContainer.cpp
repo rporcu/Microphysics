@@ -246,7 +246,8 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
         }
 
         ParallelDescriptor::ReduceLongSum(fin_np,ParallelDescriptor::IOProcessorNumber());
-        amrex::Print() << "Final number of particles: " << fin_np << std::endl;
+        amrex::Print() << "Final number of particles on level "
+                       << lev << ": " << fin_np << std::endl;
     }
 }
 
