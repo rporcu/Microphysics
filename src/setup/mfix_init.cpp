@@ -143,16 +143,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         ParmParse pp("amr");
         pp.query("amr_max_level", amr_max_level);
     }
-
-    {
-        ParmParse pp("eb");
-        pp.query("use_amr_ls",  use_amr_ls);
-        pp.query("amr_ls_crse", amr_ls_crse);
-        pp.query("max_eb_pad",  amr_ls_eb_pad);
-        pp.query("amr_baseline_tag", amr_ls_baseline_tag);
-        pp.query("amr_tag_step", amr_ls_tag_step);
-        pp.query("amr_max_level", amr_ls_max_level);
-    }
 }
 
 
@@ -164,8 +154,7 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
 }
 
 
-void
-mfix::Init(Real dt, Real time)
+void mfix::Init(Real dt, Real time)
 {
     InitIOData();
 
@@ -355,8 +344,8 @@ mfix::Init(Real dt, Real time)
 
 }
 
-BoxArray
-mfix::MakeBaseGrids () const
+
+BoxArray mfix::MakeBaseGrids () const
 {
     BoxArray ba(geom[0].Domain());
 
@@ -379,8 +368,8 @@ mfix::MakeBaseGrids () const
     return ba;
 }
 
-void
-mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
+
+void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 {
     if ( ParallelDescriptor::IOProcessor() )
        amrex::Warning("Using max_grid_size only did not make enough grids for the number of processors");
@@ -427,8 +416,8 @@ mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
     }
 }
 
-void
-mfix::MakeNewLevelFromScratch (int lev, Real time,
+
+void mfix::MakeNewLevelFromScratch (int lev, Real time,
                                const BoxArray& new_grids, const DistributionMapping& new_dmap)
 {
 
@@ -458,8 +447,8 @@ mfix::MakeNewLevelFromScratch (int lev, Real time,
     }
 }
 
-void
-mfix::ReMakeNewLevelFromScratch (int lev,
+
+void mfix::ReMakeNewLevelFromScratch (int lev,
                                  const BoxArray & new_grids, const DistributionMapping & new_dmap)
 {
     SetBoxArray(lev, new_grids);
@@ -473,24 +462,10 @@ mfix::ReMakeNewLevelFromScratch (int lev,
 
     // We need to re-fill these arrays for the larger domain (after replication).
     mfix_set_bc_type(lev);
-
-    // After replicate, new BAs needs to be passed to the level-set factory.
-    // Also: mfix::ls needs to be replaced to reflect the new BA.
-    level_set = std::unique_ptr<LSFactory>(
-        new LSFactory(lev, levelset__refinement, levelset__eb_refinement,
-                      levelset__pad, levelset__eb_pad,
-                      new_grids, geom[lev], new_dmap)
-        );
-
-    std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-    const BoxArray & nd_grids = amrex::convert(pc->ParticleBoxArray(lev), IntVect{1,1,1});
-    int ng = ls_data->nGrow();
-    ls[lev].reset(new MultiFab(nd_grids, pc->ParticleDistributionMap(lev), 1, ng));
-    ls[lev]->copy(* ls_data, 0, 0, 1, ng, ng );
 }
 
-void
-mfix::check_data ()
+
+void mfix::check_data ()
 {
     Real dx = geom[0].CellSize(0);
     Real dy = geom[0].CellSize(1);
