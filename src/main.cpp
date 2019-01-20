@@ -155,8 +155,11 @@ int main (int argc, char* argv[])
     // Create EB factories on new grids
     my_mfix.make_eb_factories();
 
-    // Fill level-sets on each level
-    my_mfix.fill_eb_levelsets();
+    if (solve_dem)
+    {
+        // Fill level-sets on each level
+        my_mfix.fill_eb_levelsets();
+    }
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
@@ -183,7 +186,8 @@ int main (int argc, char* argv[])
     amrex::Print() << "Regridding at step " << nstep << std::endl;
     my_mfix.Regrid();
 
-    my_mfix.WriteStaticPlotFile(static_plt_file);
+    if (solve_dem)
+        my_mfix.WriteStaticPlotFile(static_plt_file);
 
     my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time, steady_state);
 
