@@ -511,23 +511,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             amrex::Print() << "     * Overwrote levelset__eb_pad = " << levelset__eb_pad
                            << " -> " << eb_pad << std::endl;
 
-        // Level-Set: initialize container class for level set
-        level_set = std::unique_ptr<LSFactory>(
-                                               new LSFactory(lev, ls_ref, eb_ref, ls_pad, eb_pad,
-                                                             pc->ParticleBoxArray(lev), pc->Geom(lev),
-                                                             pc->ParticleDistributionMap(lev))
-                                               );
-        // Overwrite initial level-set data using the loaded MultiFab
-        level_set->set_data(ls_mf);
-
-        // Make sure that at (at least) an initial MultiFab is stored in ls[lev].
-        // (otherwise, if there are no walls/boundaries in the simulation, saving a
-        // plot file or checkpoint will segfault).
-        std::unique_ptr<MultiFab> ls_data = level_set->coarsen_data();
-        const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
-        ls[lev].reset(new MultiFab(nd_grids, dmap[lev], 1, ls_data->nGrow()));
-        ls[lev]->copy(* ls_data, 0, 0, 1, ls[lev]->nGrow(), ls[lev]->nGrow());
-        ls[lev]->FillBoundary(geom[lev].periodicity());
+        // TODO: load level-set data from checkpoint file
+        // level_set->set_data(ls_mf);
     }
 
     if (solve_fluid)
