@@ -427,7 +427,6 @@ private:
      // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions
      Vector< std::unique_ptr<MultiFab> > level_sets;
      Vector< std::unique_ptr<MultiFab> > implicit_functions;
-     Vector< std::unique_ptr<MultiFab> > ls;
 
      // These are multi-component multifabs
      Vector< std::unique_ptr<MultiFab> > xslopes;

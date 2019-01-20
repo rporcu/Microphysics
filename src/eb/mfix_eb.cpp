@@ -120,7 +120,8 @@ void mfix::make_eb_factories () {
 
 
 void mfix::fill_eb_levelsets () {
-    if (nlev == 1) {
+    if (nlev == 1)
+    {
 
         const DistributionMapping & part_dm = pc->ParticleDistributionMap(0);
         const BoxArray &            part_ba = pc->ParticleBoxArray(0);
@@ -136,7 +137,7 @@ void mfix::fill_eb_levelsets () {
             iMultiFab valid(ba, part_dm, 1, levelset__pad);
 
             // NOTE: implicit function data might not be on the right grids
-            MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[0]);
+            MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[0], true);
 
             LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
                                  32, 1, 1, geom[0], geom[0]);
@@ -164,10 +165,10 @@ void mfix::fill_eb_levelsets () {
 
             LSFactory::fill_data(* level_sets[1], valid_ref, * particle_ebfactory[0], impfunc,
                                  32, levelset__refinement, 1, geom_lev, geom[0]);
-
-            VisMF::Write(* level_sets[1], "level_set");
         }
-    } else {
+    }
+    else
+    {
 
         const DistributionMapping & part_dm = pc->ParticleDistributionMap(0);
         const BoxArray &            part_ba = pc->ParticleBoxArray(0);
@@ -191,7 +192,8 @@ void mfix::fill_eb_levelsets () {
         LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
                              32, 1, 1, geom[0], geom[0]);
 
-        for (int lev = 1; lev < nlev; lev++) {
+        for (int lev = 1; lev < nlev; lev++)
+        {
 
             const DistributionMapping & part_dm = pc->ParticleDistributionMap(lev);
             const BoxArray &            part_ba = pc->ParticleBoxArray(lev);

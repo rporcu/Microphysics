@@ -156,10 +156,6 @@ mfix::ResizeArrays ()
     m_v_mac.resize(nlevs_max);
     m_w_mac.resize(nlevs_max);
 
-    // MultiFab storing level-set data used for fluid reconstruction in particle
-    // drag calculation
-    ls.resize(nlevs_max);
-
     xslopes.resize(nlevs_max);
     yslopes.resize(nlevs_max);
     zslopes.resize(nlevs_max);

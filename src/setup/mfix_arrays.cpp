@@ -518,7 +518,7 @@ mfix::RegridLevelSetArray (int a_lev)
        }
 
        amrex::Print() << "Modifying level set to see inflow" << std::endl;
-       mfix_set_ls_near_inflow(); // TODO: fix!!!
+       mfix_set_ls_near_inflow();
        Print() << "Done regridding level-set on lev = " << a_lev << std::endl;
    }
 }
