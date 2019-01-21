@@ -2,7 +2,7 @@
 # Geometry / grids / tiles
 
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
-amr.max_level = 1
+amr.max_level = 0
 
 geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 0       0       0       # Is periodic in each direction?
