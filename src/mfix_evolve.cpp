@@ -67,6 +67,10 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
             iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                ls_data->nComp(), ls_data->nGrow());
 
+            // Consider all values as valid
+            ls_valid.setVal(1);
+            ls_valid.FillBoundary(geom[ilev].periodicity());
+
             pc->EvolveParticles(ilev, nstep, dt, time, particle_ebfactory[ilev].get(),
                                 ls_data, & ls_valid, levelset__refinement,
                                 particle_cost[ilev].get(), knapsack_weight_type, subdt_io);
@@ -81,6 +85,10 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
                 const MultiFab * ls_data = level_sets[lev].get();
                 iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                    ls_data->nComp(), ls_data->nGrow());
+
+                // Consider all values as valid
+                ls_valid.setVal(1);
+                ls_valid.FillBoundary(geom[lev].periodicity());
 
                 pc->EvolveParticles(lev, nstep, dt, time, particle_ebfactory[lev].get(),
                                     ls_data, & ls_valid, 1,

@@ -119,10 +119,10 @@ void mfix::make_eb_factories () {
 }
 
 
-void mfix::fill_eb_levelsets () {
+void mfix::fill_eb_levelsets ()
+{
     if (nlev == 1)
     {
-
         const DistributionMapping & part_dm = pc->ParticleDistributionMap(0);
         const BoxArray &            part_ba = pc->ParticleBoxArray(0);
 
@@ -220,4 +220,83 @@ void mfix::fill_eb_levelsets () {
                                      ebt_size, levelset__eb_pad, geom[lev]);
         }
     }
+
+    // Add walls (for instance MI) to levelset data
+    intersect_ls_walls();
+}
+
+
+void mfix::intersect_ls_walls ()
+{
+
+    bool has_walls = false;
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
+    auto gshop = EB2::makeShop(* walls);
+
+    if (has_walls == false)
+        return;
+
+    if (nlev == 1)
+    {
+        //_______________________________________________________________________
+        // Baseline Level-Set
+        {
+            const int ng = level_sets[0]->nGrow();
+            const BoxArray & ba = level_sets[0]->boxArray();
+            const DistributionMapping & dm = level_sets[0]->DistributionMap();
+
+            MultiFab wall_if(ba, dm, 1, ng);
+            iMultiFab valid(ba, dm, 1, ng);
+            valid.setVal(1);
+
+            GShopLSFactory<UnionListIF<EB2::PlaneIF>> gshop_lsf(gshop, geom[0], ba, dm, ng);
+            std::unique_ptr<MultiFab> impfunc = gshop_lsf.fill_impfunc();
+
+            LSFactory::fill_data(wall_if, valid, *impfunc, levelset__eb_pad, geom[0]);
+            LSFactory::intersect_data(*level_sets[0], valid, wall_if, valid, geom[0]);
+        }
+
+        //_______________________________________________________________________
+        // Refined Level-Set
+        // TODO: Don't actually refine this thing if levelset refinement is 1
+        {
+            const int ng = level_sets[1]->nGrow();
+            const BoxArray & ba = level_sets[1]->boxArray();
+            const DistributionMapping & dm = level_sets[1]->DistributionMap();
+
+            MultiFab wall_if(ba, dm, 1, ng);
+            iMultiFab valid(ba, dm, 1, ng);
+            valid.setVal(1);
+
+            GShopLSFactory<UnionListIF<EB2::PlaneIF>> gshop_lsf(gshop, geom[0], ba, dm, ng);
+            std::unique_ptr<MultiFab> impfunc = gshop_lsf.fill_impfunc();
+
+            LSFactory::fill_data(wall_if, valid, *impfunc, levelset__eb_pad, geom[0]);
+            LSFactory::intersect_data(*level_sets[1], valid, wall_if, valid, geom[0]);
+        }
+    }
+    else
+    {
+        //_______________________________________________________________________
+        // Multi-level level-set: apply wall-intersection to each level
+
+        for (int lev = 0; lev < nlev; lev++)
+        {
+            const int ng = level_sets[lev]->nGrow();
+            const BoxArray & ba = level_sets[lev]->boxArray();
+            const DistributionMapping & dm = level_sets[lev]->DistributionMap();
+
+            MultiFab wall_if(ba, dm, 1, ng);
+            iMultiFab valid(ba, dm, 1, ng);
+            valid.setVal(1);
+
+            GShopLSFactory<UnionListIF<EB2::PlaneIF>> gshop_lsf(gshop, geom[lev], ba, dm, ng);
+            std::unique_ptr<MultiFab> impfunc = gshop_lsf.fill_impfunc();
+
+            LSFactory::fill_data(wall_if, valid, *impfunc, levelset__eb_pad, geom[lev]);
+            LSFactory::intersect_data(*level_sets[lev], valid, wall_if, valid, geom[lev]);
+        }
+    }
+
+
 }

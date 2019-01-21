@@ -799,7 +799,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
      ***************************************************************************/
 
     Vector<std::string> static_names = {"level_sets", "implicit_functions", "volfrac"};
-    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets, & implicit_functions};
+    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets,
+                                                                       & implicit_functions};
 
     const int ngrow = 0;
     const int ncomp = static_names.size();
@@ -816,7 +817,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(), * particle_ebfactory[lev]));
+        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(),
+                                   * particle_ebfactory[lev]));
 
         // Don't iterate over all ncomp => last component is for volfrac
         for (int dcomp = 0; dcomp < ncomp - 1; dcomp++)

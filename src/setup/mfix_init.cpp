@@ -96,7 +96,8 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Make sure that a coarsened level-set has a level-set pad of _at least_ 2;
         levelset__pad = 2*levelset__refinement;
         // Ensure that velocity_reconstruction has enough level-set to work off:
-        levelset__eb_pad = 2; // (2 => EB lives on the same grid resolution as fluid)
+        // (2 => EB lives on the same grid resolution as fluid)
+        levelset__eb_pad = std::max(2, levelset__pad);
 
         amrex::Print() << "Auto-generating level-set parameters:" << std::endl
                        << "eb_refinement = " << levelset__eb_refinement << std::endl
@@ -946,6 +947,27 @@ void mfix::mfix_set_ls_near_inflow()
             Box domain(geom[lev].Domain());
             const Real * dx   = geom[lev].CellSize();
             MultiFab * ls_phi = level_sets[lev_ref].get();
+
+            // Don't tile this
+            for (MFIter mfi(* ls_phi); mfi.isValid(); ++mfi)
+            {
+                FArrayBox & ls_fab = (* ls_phi)[mfi];
+
+                set_ls_inflow( BL_TO_FORTRAN_ANYD(ls_fab),
+                               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+                               domain.loVect(), domain.hiVect(), &levelset_nghost, &n, dx);
+            }
+        }
+
+        // ... now also "fix" the level-zero level-set (for consistency with
+        // multi-level levelset)
+        n = 1;
+        {
+            Box domain(geom[lev].Domain());
+            const Real * dx   = geom[lev].CellSize();
+            MultiFab * ls_phi = level_sets[lev].get();
 
             // Don't tile this
             for (MFIter mfi(* ls_phi); mfi.isValid(); ++mfi)

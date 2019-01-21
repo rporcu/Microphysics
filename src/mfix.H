@@ -79,6 +79,7 @@ public:
     void make_eb_geometry ();
     void make_eb_factories ();
     void fill_eb_levelsets ();
+    void intersect_ls_walls ();
 
 
     //! Construct EB levels from Geometry shop. This builds each EB level and
