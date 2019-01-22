@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
+#include <mfix_F.H>
 #include <mfix_eb_F.H>
 
 // TEMP: Remove after reconciling benchmarks
@@ -14,6 +15,37 @@
 
 void mfix::make_eb_geometry ()
 {
+
+    /****************************************************************************
+     *                                                                          *
+     * IMPORTANT: the MFIX BC types need to be set in order to correctly        *
+     *            identify walls (which are needed to build the right EBs)      *
+     *                                                                          *
+     ***************************************************************************/
+
+    MakeBCArrays();
+    check_data();
+
+    Real dx = geom[0].CellSize(0);
+    Real dy = geom[0].CellSize(1);
+    Real dz = geom[0].CellSize(2);
+
+    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
+    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
+    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
+
+    Box domain(geom[0].Domain());
+
+    int cyc_x=0, cyc_y=0, cyc_z=0;
+    if (geom[0].isPeriodic(0)) cyc_x = 1;
+    if (geom[0].isPeriodic(1)) cyc_y = 1;
+    if (geom[0].isPeriodic(2)) cyc_z = 1;
+
+    mfix_set_cyclic(&cyc_x, &cyc_y, &cyc_z);
+
+    for (int lev = 0; lev < nlev; lev++)
+        mfix_set_bc_type(lev);
+
 
     /****************************************************************************
      *                                                                          *
