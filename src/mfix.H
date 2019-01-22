@@ -95,7 +95,7 @@ public:
          ***********************************************************************/
 
         for (int lev = 0; lev < nlev; lev ++)
-            eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom);
+            eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
 
 
         /************************************************************************
