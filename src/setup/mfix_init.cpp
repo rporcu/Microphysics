@@ -200,11 +200,7 @@ void mfix::Init(Real dt, Real time)
     }
     else
     {
-        Vector<int> pmap(ParallelDescriptor::NProcs());
-        for (int i = 0; i < pmap.size(); i++)
-            pmap[i] = i;
-
-        DistributionMapping dm(pmap);
+        DistributionMapping dm(ba, ParallelDescriptor::NProcs());
         MakeNewLevelFromScratch(0, time, ba, dm);
     }
 
