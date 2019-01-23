@@ -190,6 +190,7 @@ void mfix::Init(Real dt, Real time)
     // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
     DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+    MakeNewLevelFromScratch(0, time, ba, dm);
 
     // HACK: The particle generator is sensitive to the dmap => manually set
     // dmap until this is fixed.
