@@ -189,20 +189,21 @@ void mfix::Init(Real dt, Real time)
 
     // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
-    //DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+    DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+
     // HACK: The particle generator is sensitive to the dmap => manually set
     // dmap until this is fixed.
-    if (ParallelDescriptor::NProcs() == 4)
-    {
-        // Legacy case of BENCH05 test
-        DistributionMapping dm(Vector<int>{0,3,2,1});
-        MakeNewLevelFromScratch(0, time, ba, dm);
-    }
-    else
-    {
-        DistributionMapping dm(ba, ParallelDescriptor::NProcs());
-        MakeNewLevelFromScratch(0, time, ba, dm);
-    }
+    //if (ParallelDescriptor::NProcs() == 4)
+    //{
+    //    // Legacy case of BENCH05 test
+    //    DistributionMapping dm(Vector<int>{0,3,2,1});
+    //    MakeNewLevelFromScratch(0, time, ba, dm);
+    //}
+    //else
+    //{
+    //    DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+    //    MakeNewLevelFromScratch(0, time, ba, dm);
+    //}
 
 
 
@@ -535,6 +536,9 @@ void mfix::InitLevelData(Real dt, Real time)
 
          pc->InitParticlesAuto();
 
+         // std::string plot_file {"plt"};
+         // WritePlotFile( plot_file, 0, 0, 0 );
+
       } else {
 
          amrex::Abort("Bad particle_init_type");
@@ -593,8 +597,17 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
             iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                ls_data->nComp(), ls_data->nGrow());
 
+            // std::string plot_file {"plt"};
+            // WritePlotFile( plot_file, 1, 0, 0 );
+
+
             pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
                                  ls_data, & ls_valid, levelset__refinement);
+
+            // WritePlotFile( plot_file, 2, 0, 0 );
+            // exit(0);
+
+
         }
         else if (!restart_flag && particle_ebfactory[finest_level])
         {
