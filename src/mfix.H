@@ -174,6 +174,8 @@ public:
     int levelset__eb_pad = 2;        // padding of the EBIS used to generate the level-set (useful for
                                      // ensuring that neighbor grids are considered when filling LS)
 
+    bool contains_ebs = false;
+
      const int * get_bc_ilo_ptr(int lev) {return bc_ilo[lev]->dataPtr();}
      const int * get_bc_ihi_ptr(int lev) {return bc_ihi[lev]->dataPtr();}
      const int * get_bc_jlo_ptr(int lev) {return bc_jlo[lev]->dataPtr();}

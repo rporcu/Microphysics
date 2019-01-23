@@ -287,12 +287,12 @@ void mfix::Init(Real dt, Real time)
 
 
     // This is being done by mfix::make_eb_geometry, otherwise it would be here
-    // int cyc_x=0, cyc_y=0, cyc_z=0;
-    // if (geom[0].isPeriodic(0)) cyc_x = 1;
-    // if (geom[0].isPeriodic(1)) cyc_y = 1;
-    // if (geom[0].isPeriodic(2)) cyc_z = 1;
-    //
-    // mfix_set_cyclic(&cyc_x, &cyc_y, &cyc_z);
+    int cyc_x=0, cyc_y=0, cyc_z=0;
+    if (geom[0].isPeriodic(0)) cyc_x = 1;
+    if (geom[0].isPeriodic(1)) cyc_y = 1;
+    if (geom[0].isPeriodic(2)) cyc_z = 1;
+
+    mfix_set_cyclic(&cyc_x, &cyc_y, &cyc_z);
 
     // Since these involving writing to output files we only do these on the IOProcessor
     if ( ParallelDescriptor::IOProcessor() )
@@ -319,8 +319,8 @@ void mfix::Init(Real dt, Real time)
     }
 
     // This is being done by mfix::make_eb_geometry, otherwise it would be here
-    // for (int lev = 0; lev < nlev; lev++)
-    //     mfix_set_bc_type(lev);
+    for (int lev = 0; lev < nlev; lev++)
+        mfix_set_bc_type(lev);
 
     // Create MAC projection object
     mac_projection.reset( new MacProjection(this, nghost, &ebfactory ) );
@@ -420,8 +420,8 @@ void mfix::MakeNewLevelFromScratch (int lev, Real time,
     {
         // This is being done by mfix::make_eb_geometry, otherwise it would be
         // here
-        // MakeBCArrays();
-        // check_data();
+        MakeBCArrays();
+        check_data();
 
         Real dx = geom[lev].CellSize(0);
         Real dy = geom[lev].CellSize(1);

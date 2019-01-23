@@ -109,26 +109,33 @@ void mfix::make_eb_geometry ()
      *                                                                          *
      ***************************************************************************/
 
+    contains_ebs = false; // default
+
     if (geom_type == "box") {
         amrex::Print() << "\n Building box geometry." << std::endl;
         make_eb_box();
+        contains_ebs = true;
     } else if (geom_type == "cylinder") {
         amrex::Print() << "\n Building cylinder geometry." << std::endl;
         make_eb_cylinder();
+        contains_ebs = true;
     } else if (geom_type == "hopper") {
         amrex::Print() << "\n Building hopper geometry." << std::endl;
         make_eb_hopper();
     } else if (geom_type == "cyclone") {
         amrex::Print() << "\n Building cyclone geometry." << std::endl;
         make_eb_cyclone();
+        contains_ebs = true;
     } else if(geom_type == "general") {
         amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
         make_eb_general();
+        contains_ebs = true;
     } else {
         amrex::Print() << "\n No EB geometry declared in inputs => "
                        << " Will read walls from mfix.dat only."
                        << std::endl;
         make_eb_regular();
+        contains_ebs = false;
     }
 }
 
@@ -284,12 +291,15 @@ void mfix::fill_eb_levelsets ()
 
     //___________________________________________________________________________
     // TEMP: Fill everything else using the LSFactory EBF filling routine
-    MultiFab impfunc = MFUtil::regrid(lsf.get_ls_ba(), part_dm, * implicit_functions[1], true);
-    lsf.Fill( * particle_ebfactory[0], impfunc);
+
+    if (contains_ebs)
+    {
+        MultiFab impfunc = MFUtil::regrid(lsf.get_ls_ba(), part_dm, * implicit_functions[1], true);
+        lsf.Fill( * particle_ebfactory[0], impfunc);
+    }
 
     level_sets[1] = lsf.copy_data(part_dm);
     level_sets[0] = lsf.coarsen_data();
-
 
     //___________________________________________________________________________
     // HACK: do not delete what follows, code below will be re-enabled after
