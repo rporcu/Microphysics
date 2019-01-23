@@ -287,7 +287,6 @@ void mfix::Init(Real dt, Real time)
     Box domain(geom[0].Domain());
 
 
-    // This is being done by mfix::make_eb_geometry, otherwise it would be here
     int cyc_x=0, cyc_y=0, cyc_z=0;
     if (geom[0].isPeriodic(0)) cyc_x = 1;
     if (geom[0].isPeriodic(1)) cyc_y = 1;
@@ -319,7 +318,6 @@ void mfix::Init(Real dt, Real time)
             amrex::Abort("Bad data in set_ps");
     }
 
-    // This is being done by mfix::make_eb_geometry, otherwise it would be here
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);
 
