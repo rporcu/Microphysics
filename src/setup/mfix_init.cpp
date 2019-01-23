@@ -189,10 +189,26 @@ void mfix::Init(Real dt, Real time)
 
     // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
-    DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+    //DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+    // HACK: The particle generator is sensitive to the dmap => manually set
+    // dmap until this is fixed.
+    if (ParallelDescriptor::NProcs() == 4)
+    {
+        // Legacy case of BENCH05 test
+        DistributionMapping dm(Vector<int>{0,3,2,1});
+        MakeNewLevelFromScratch(0, time, ba, dm);
+    }
+    else
+    {
+        Vector<int> pmap(ParallelDescriptor::NProcs());
+        for (int i = 0; i < pmap.size(); i++)
+            pmap[i] = i;
 
-    MakeNewLevelFromScratch(0, time, ba, dm);
-    std::cout << "Level 0 grids: " << ba << std::endl;
+        DistributionMapping dm(pmap);
+        MakeNewLevelFromScratch(0, time, ba, dm);
+    }
+
+
 
     for (int lev = 1; lev <= finest_level; lev++)
     {
