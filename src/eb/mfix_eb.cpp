@@ -426,7 +426,9 @@ void mfix::intersect_ls_walls ()
             GShopLSFactory<UnionListIF<EB2::PlaneIF>> gshop_lsf(gshop, geom[0], ba, dm, ng);
             std::unique_ptr<MultiFab> impfunc = gshop_lsf.fill_impfunc();
 
-            LSFactory::fill_data(wall_if, valid, *impfunc, levelset__eb_pad, geom[0]);
+            const auto & flags = particle_ebfactory[0]->getMultiEBCellFlagFab();
+            int ngrow_eb = flags.nGrow();
+            LSFactory::fill_data(wall_if, valid, *impfunc, ngrow_eb, geom[0]);
             LSFactory::intersect_data(*level_sets[0], valid, wall_if, valid, geom[0]);
         }
 
@@ -442,11 +444,18 @@ void mfix::intersect_ls_walls ()
             iMultiFab valid(ba, dm, 1, ng);
             valid.setVal(1);
 
-            GShopLSFactory<UnionListIF<EB2::PlaneIF>> gshop_lsf(gshop, geom[0], ba, dm, ng);
+            // Set up refined geometry
+            Box dom = geom[0].Domain();
+            dom.refine(levelset__refinement);
+            Geometry geom_lev(dom);
+
+            GShopLSFactory<UnionListIF<EB2::PlaneIF>> gshop_lsf(gshop, geom_lev, ba, dm, ng);
             std::unique_ptr<MultiFab> impfunc = gshop_lsf.fill_impfunc();
 
-            LSFactory::fill_data(wall_if, valid, *impfunc, levelset__eb_pad, geom[0]);
-            LSFactory::intersect_data(*level_sets[1], valid, wall_if, valid, geom[0]);
+            const auto & flags = particle_ebfactory[0]->getMultiEBCellFlagFab();
+            int ngrow_eb = flags.nGrow();
+            LSFactory::fill_data(wall_if, valid, *impfunc, ngrow_eb, geom_lev);
+            LSFactory::intersect_data(*level_sets[1], valid, wall_if, valid, geom_lev);
         }
     }
     else

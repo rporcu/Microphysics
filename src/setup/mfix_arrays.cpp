@@ -520,7 +520,7 @@ mfix::RegridLevelSetArray (int a_lev)
 
        // This is broken at the moment => using mfix::intersect_ls_walls () instead
        // Print() << "Modifying level set to see inflow" << std::endl;
-       // mfix_set_ls_near_inflow(); //TODO move the level-set creation
+       //mfix_set_ls_near_inflow(); //TODO move the level-set creation
        // Print() << "Done regridding level-set on lev = " << a_lev << std::endl;
    }
 }
