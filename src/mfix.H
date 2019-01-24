@@ -81,6 +81,16 @@ public:
     void fill_eb_levelsets ();
     void intersect_ls_walls ();
 
+    template<class F> void build_particle_eb_levels (EB2::GeometryShop<F> gshop)
+    {
+        if(solve_dem)
+        {
+            for (int lev = 0; lev < nlev; lev ++)
+                particle_eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop,
+                                                                  lev, geom, 100, 0);
+        }
+    }
+
 
     //! Construct EB levels from Geometry shop. This builds each EB level and
     //! saves a pointer to each level into `eb_levels`. Also fills the implicit
@@ -95,7 +105,10 @@ public:
          ***********************************************************************/
 
         for (int lev = 0; lev < nlev; lev ++)
+        {
             eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
+            particle_eb_levels[lev] = eb_levels[lev];
+        }
 
 
         /************************************************************************
@@ -600,6 +613,7 @@ private:
 
      //! EB levels
      Vector<const EB2::Level *> eb_levels;
+     Vector<const EB2::Level *> particle_eb_levels;
 
      //! EB factory that lives on the fluid grids
      Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;

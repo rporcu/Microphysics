@@ -147,7 +147,8 @@ void mfix::make_eb_factories () {
      *                                                                          *
      ***************************************************************************/
 
-    for (int lev = 0; lev < nlev; lev++) {
+    for (int lev = 0; lev < nlev; lev++)
+    {
         ebfactory[lev].reset(
             new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
@@ -157,7 +158,7 @@ void mfix::make_eb_factories () {
         // Grow EB factory by +2 in order to avoid edge cases. This is not
         // necessary for multi-level mfix.
         particle_ebfactory[lev].reset(
-            new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+            new EBFArrayBoxFactory(* particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
                                    {levelset__eb_pad + 2, levelset__eb_pad + 2,
                                     levelset__eb_pad + 2}, m_eb_support_level)
             );
@@ -428,6 +429,11 @@ void mfix::intersect_ls_walls ()
 
     if (has_walls == false)
         return;
+
+    // Ensure that the particle EB levels (and thus eb-factories) have the right
+    // volfrac at the MI
+    build_particle_eb_levels(gshop);
+    make_eb_factories();
 
     if (nlev == 1)
     {

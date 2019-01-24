@@ -110,6 +110,7 @@ mfix::ResizeArrays ()
 
     // EB levels used to construct each level's EB factory
     eb_levels.resize(nlevs_max);
+    particle_eb_levels.resize(nlevs_max);
 
     ep_g.resize(nlevs_max);
     ep_go.resize(nlevs_max);
