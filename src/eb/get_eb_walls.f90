@@ -36,10 +36,11 @@ subroutine mfix_get_walls(bcv, exists, normal, center) &
 
      select case (trim(bc_type(bcv)))
 
-     case('FREE_SLIP_WALL','FSW', &
-          'NO_SLIP_WALL'  ,'NSW', &
-          'PAR_SLIP_WALL' ,'PSW', &
-          'MASS_INFLOW'   ,'MI')
+!     case('FREE_SLIP_WALL','FSW', &
+!          'NO_SLIP_WALL'  ,'NSW', &
+!          'PAR_SLIP_WALL' ,'PSW', &
+!          'MASS_INFLOW'   ,'MI')
+     case('MASS_INFLOW'   ,'MI')
 
         exists = 1;
 
