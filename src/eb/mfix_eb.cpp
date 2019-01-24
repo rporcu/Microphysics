@@ -126,6 +126,7 @@ void mfix::make_eb_geometry ()
         contains_ebs = true;
     } else if(geom_type == "general") {
         amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
+        // TODO: deal with inflow volfrac
         make_eb_general();
         contains_ebs = true;
     } else {
@@ -430,10 +431,10 @@ void mfix::intersect_ls_walls ()
     if (has_walls == false)
         return;
 
-    // Ensure that the particle EB levels (and thus eb-factories) have the right
-    // volfrac at the MI
-    build_particle_eb_levels(gshop);
-    make_eb_factories();
+    // // Ensure that the particle EB levels (and thus eb-factories) have the right
+    // // volfrac at the MI
+    // build_particle_eb_levels(gshop);
+    // make_eb_factories();
 
     if (nlev == 1)
     {

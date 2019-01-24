@@ -53,13 +53,13 @@ mfix::make_eb_regular()
             auto gshop = EB2::makeShop(* impfunc_walls);
 
             build_eb_levels(gshop);
+            build_particle_eb_levels(gshop);
 
         } else {
             EB2::AllRegularIF my_regular;
             auto gshop = EB2::makeShop(my_regular);
 
             build_eb_levels(gshop);
-
         }
     }
 }

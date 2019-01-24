@@ -452,7 +452,7 @@ mfix::RegridLevelSetArray (int a_lev)
       amrex::Print() << "Updating particle ebfactory 1" << std::endl;
 
       particle_ebfactory[a_lev].reset(
-          new EBFArrayBoxFactory(* eb_levels[a_lev], geom[a_lev], ba, dm,
+          new EBFArrayBoxFactory(* particle_eb_levels[a_lev], geom[a_lev], ba, dm,
                                  {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                   m_eb_full_grow_cells}, m_eb_support_level)
           );
@@ -470,7 +470,7 @@ mfix::RegridLevelSetArray (int a_lev)
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
           particle_ebfactory[a_lev].reset(
-              new EBFArrayBoxFactory( * eb_levels[a_lev], geom[a_lev], ba, dm,
+              new EBFArrayBoxFactory( * particle_eb_levels[a_lev], geom[a_lev], ba, dm,
                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                        m_eb_full_grow_cells}, m_eb_support_level)
               );

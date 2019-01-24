@@ -128,5 +128,15 @@ mfix::make_eb_cyclone()
 
     build_eb_levels(gshop_cyc);
 
+    //_______________________________________________________________________
+    // Particles need the correct volfrac at the inflow
+    bool has_walls = false;
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
+    auto if_part = EB2::makeUnion(cyc_if, * walls);
+    auto gshop_part = EB2::makeShop(if_part);
+
+    build_particle_eb_levels(gshop_part);
+
+
     Print() << "Done making the fluid eb levels ..." << std::endl;
 }
