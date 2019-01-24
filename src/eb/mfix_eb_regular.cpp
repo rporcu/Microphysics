@@ -45,21 +45,49 @@ mfix::make_eb_regular()
     // are true
     std::unique_ptr<MultiFab> mf_impfunc;
 
-    if (solve_fluid) {
+    // if (solve_fluid)
+    {
         bool has_walls = false;
         std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_real_walls(has_walls);
 
-        if (has_walls){
+        if (has_walls)
+        {
             auto gshop = EB2::makeShop(* impfunc_walls);
 
             build_eb_levels(gshop);
-            build_particle_eb_levels(gshop);
 
-        } else {
+            //___________________________________________________________________
+            // Particles need the correct volfrac at the inflow
+            bool has_more_walls = false;
+            std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_more_walls);
+            if (has_more_walls)
+            {
+                auto if_part = EB2::makeUnion(* impfunc_walls, * walls);
+                auto gshop_part = EB2::makeShop(if_part);
+
+                build_particle_eb_levels(gshop_part);
+            }
+
+        }
+        else
+        {
             EB2::AllRegularIF my_regular;
             auto gshop = EB2::makeShop(my_regular);
 
             build_eb_levels(gshop);
+
+            //___________________________________________________________________
+            // Particles need the correct volfrac at the inflow
+            bool has_more_walls = false;
+            std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_more_walls);
+            if (has_more_walls)
+            {
+                auto if_part = EB2::makeUnion(my_regular, * walls);
+                auto gshop_part = EB2::makeShop(if_part);
+
+                build_particle_eb_levels(gshop_part);
+            }
+
         }
     }
 }
