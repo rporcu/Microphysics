@@ -350,6 +350,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             // This is needed before initializing level MultiFabs: ebfactories
             // should not change after the eb-dependent MultiFabs are allocated.
             make_eb_geometry();
+            make_eb_factories();
 
             // Allocate the fluid data, NOTE: this depends on the ebfactories.
             if (solve_fluid) AllocateArrays(lev);
@@ -492,8 +493,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             eb_ref = levelset_params[2], eb_pad = levelset_params[3];
 
         amrex::Print() << "     + Loaded level-set parameters:" << std::endl
-                       << "       ref = " << ls_ref << " pad = " << ls_pad
-                       << " eb_ref = " << eb_ref << " eb_pad = " << eb_pad
+                       << "       ref = " << ls_ref << "    pad = " << ls_pad
+                       << "    eb_ref = " << eb_ref << " eb_pad = " << eb_pad
                        << std::endl;
 
         // Inform the user if the checkpoint parameters do not match those in the
@@ -513,6 +514,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
         // TODO: load level-set data from checkpoint file
         // level_set->set_data(ls_mf);
+    } else {
+        fill_eb_levelsets();
     }
 
     if (solve_fluid)
