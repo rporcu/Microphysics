@@ -73,17 +73,22 @@ void mfix::make_eb_cylinder()
 
     build_eb_levels(gshop_cyl);
 
-    //_______________________________________________________________________
-    // Particles need the correct volfrac at the inflow
-    bool has_walls = false;
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
-    if (has_walls)
-    {
-        auto if_part = EB2::makeUnion(my_cyl, * walls);
-        auto gshop_part = EB2::makeShop(if_part);
+    //___________________________________________________________________________
+    // HACK: Don't do this to for the cylinder case:
+    // EB walls at MI was removed from benchmarks for cylinders => Even though
+    // this is inconsistent, don't run the code below before fixing BENCH05
+    // TODO: Add consistency
+    // //________________________________________________________________________
+    // // Particles need the correct volfrac at the inflow
+    // bool has_walls = false;
+    // std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
+    // if (has_walls)
+    // {
+    //     auto if_part = EB2::makeUnion(my_cyl, * walls);
+    //     auto gshop_part = EB2::makeShop(if_part);
 
-        build_particle_eb_levels(gshop_part);
-    }
+    //     build_particle_eb_levels(gshop_part);
+    // }
 
     Print() << "Done making the fluid eb levels ..." << std::endl;
 }

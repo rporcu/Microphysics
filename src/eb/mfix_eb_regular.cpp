@@ -82,8 +82,8 @@ mfix::make_eb_regular()
             std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_more_walls);
             if (has_more_walls)
             {
-                auto if_part = EB2::makeUnion(my_regular, * walls);
-                auto gshop_part = EB2::makeShop(if_part);
+                // auto if_part = EB2::makeUnion(my_regular, * walls);
+                auto gshop_part = EB2::makeShop(* walls);
 
                 build_particle_eb_levels(gshop_part);
             }
