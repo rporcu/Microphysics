@@ -487,13 +487,15 @@ mfix::RegridLevelSetArray (int a_lev)
        const BoxArray nd_ba = amrex::convert(grids[a_lev], IntVect::TheNodeVector());
 
        std::unique_ptr<MultiFab> new_level_set(new MultiFab);
-       MFUtil::regrid(* new_level_set, nd_ba, dmap[a_lev],
-                      * particle_ebfactory[a_lev], * level_sets[a_lev], true);
+       // MFUtil::regrid(* new_level_set, nd_ba, dmap[a_lev],
+       //                * particle_ebfactory[a_lev], * level_sets[a_lev], true);
+       MFUtil::regrid(* new_level_set, nd_ba, dmap[a_lev], * level_sets[a_lev], true);
        level_sets[a_lev] = std::move(new_level_set);
 
        std::unique_ptr<MultiFab> new_impfunc(new MultiFab);
-       MFUtil::regrid(* new_impfunc, nd_ba, dmap[a_lev],
-                      * particle_ebfactory[a_lev], * implicit_functions[a_lev], true);
+       //MFUtil::regrid(* new_impfunc, nd_ba, dmap[a_lev],
+       //               * particle_ebfactory[a_lev], * implicit_functions[a_lev], true);
+       MFUtil::regrid(* new_impfunc, nd_ba, dmap[a_lev], * implicit_functions[a_lev], true);
 
        implicit_functions[a_lev] = std::move(new_impfunc);
 
