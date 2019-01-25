@@ -56,6 +56,10 @@ mfix::make_eb_regular()
 
             build_eb_levels(gshop);
 
+            // Since walls are specified in the mfix.dat, setting the
+            // `contains_ebs` flag to true
+            contains_ebs = true;
+
             //___________________________________________________________________
             // Particles need the correct volfrac at the inflow
             bool has_more_walls = false;

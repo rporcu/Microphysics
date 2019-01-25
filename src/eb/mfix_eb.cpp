@@ -134,7 +134,10 @@ void mfix::make_eb_geometry ()
                        << " Will read walls from mfix.dat only."
                        << std::endl;
         make_eb_regular();
-        contains_ebs = false;
+
+        // NOTE: this is set internally depending if EBs where detected in the
+        // mfix.dat file.
+        //contains_ebs = false;
     }
 }
 
