@@ -307,7 +307,8 @@ void mfix::fill_eb_levelsets ()
         if (contains_ebs)
         {
             MultiFab impfunc = MFUtil::regrid(lsf.get_ls_ba(), part_dm, * implicit_functions[1], true);
-            lsf.Fill( * particle_ebfactory[0], impfunc);
+            //lsf.Fill( * particle_ebfactory[0], impfunc);
+            lsf.Fill( * ebfactory[0], impfunc);
         }
 
         level_sets[1] = lsf.copy_data(part_dm);
