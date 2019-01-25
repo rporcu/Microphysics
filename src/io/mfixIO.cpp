@@ -409,6 +409,17 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
        // Read scalar variables
        for (int i = 0; i < chkscalarVars.size(); i++ )
        {
+           Print() << "Working on: " << chkscaVarsName[i] << std::endl;
+           if (Nrep != IntVect::TheUnitVector())
+           {
+               if ((chkscaVarsName[i] == "level_sets")
+                   || (chkscaVarsName[i] == "implicit_functions"))
+               {
+                   Print() << "Skipping!" << std::endl;
+                   continue;
+               }
+           }
+
           MultiFab mf;
           VisMF::Read(mf,
                       amrex::MultiFabFileFullPrefix(lev,
@@ -420,7 +431,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               amrex::Print() << "  - loading scalar data: " << chkscaVarsName[i] << std::endl;
 
               // Copy mf into chkscalarVars
-              if(chkscaVarsName[i] == "level-set") {
+              if(chkscaVarsName[i] == "level_sets") {
                   // The level-set data is special, and because we want
                   // to access it even without a fluid present, it is
                   // loaded below.
