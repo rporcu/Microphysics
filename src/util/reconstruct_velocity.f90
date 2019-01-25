@@ -51,9 +51,9 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    ! Loop indices
    integer             :: i, j, k
 
-   ! Width of narrow band 
+   ! Width of narrow band
    real(rt), parameter :: band_width    = two
-   real(rt)            :: phi_threshold 
+   real(rt)            :: phi_threshold
 
    ! Amout of "correction" to go from mirror point to interpolation point
    real(rt), parameter :: eps = 0.1_rt
@@ -69,7 +69,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
 
    ! Other local variables
    integer, parameter  :: max_iter = 20 ! Max number of iterations to find mirror point
-   integer             :: iter 
+   integer             :: iter
    real(rt)            :: odx(3)
 
    odx = one / dx
@@ -114,7 +114,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
 
                   if ( interp_stencil_is_valid(x_i, x0, dx, flags, flo, fhi) ) exit find_xi
 
-                  ! Get normal at interpolation point                  
+                  ! Get normal at interpolation point
                   call amrex_eb_normal_levelset(x_i, x0, n_refine, phi, phlo, phhi, dx, norm_i)
 
                   x_i = x_i + maxval(dx) * norm_i
@@ -135,7 +135,8 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
                ! Since interpolation point is only slightly shifted with respect to
                ! the mirror point, we approximate vel at mirror point with vel_i and
                ! then use linear interpolation between x_m and x_c
-               vel_out(i,j,k,:) = vel_i * phi_cc / phi_i 
+
+               vel_out(i,j,k,:) = vel_i * phi_cc / phi_i
 
             end if
 
@@ -148,7 +149,7 @@ contains
 
    !
    ! This is a function to debug the interpolation point search
-   ! 
+   !
    subroutine  debug(a_i, a_j, a_k)
 
       integer, intent(in) :: a_i, a_j, a_k

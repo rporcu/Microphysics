@@ -444,6 +444,8 @@ contains
 
         plo = (/ 0., 0., 0. /)
 
+        ! open(unit=1, file="collisions.dat", access="append");
+
         do ll = 1, nrp
             ! get current particle
             p => particles(ll)
@@ -476,6 +478,8 @@ contains
                 overlap_n = rp - ls_value
 
                 if (ls_value .lt. rp) then
+
+                   ! write(1,*) pos, "ls_val=", ls_value
 
                     call amrex_eb_normal_levelset(pos, plo, n_refine, phi, phlo, phhi, dx, normal)
                     normal(:) = -normal(:)
@@ -551,6 +555,10 @@ contains
             !end if
 
         end do
+
+        ! write(1,*) " "
+
+        ! close(1)
     end subroutine calc_wall_collisions_ls
 
 

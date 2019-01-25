@@ -452,7 +452,7 @@ mfix::RegridLevelSetArray (int a_lev)
       amrex::Print() << "Updating particle ebfactory 1" << std::endl;
 
       particle_ebfactory[a_lev].reset(
-          new EBFArrayBoxFactory(* eb_levels[a_lev], geom[a_lev], ba, dm,
+          new EBFArrayBoxFactory(* particle_eb_levels[a_lev], geom[a_lev], ba, dm,
                                  {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                   m_eb_full_grow_cells}, m_eb_support_level)
           );
@@ -470,7 +470,7 @@ mfix::RegridLevelSetArray (int a_lev)
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
           particle_ebfactory[a_lev].reset(
-              new EBFArrayBoxFactory( * eb_levels[a_lev], geom[a_lev], ba, dm,
+              new EBFArrayBoxFactory( * particle_eb_levels[a_lev], geom[a_lev], ba, dm,
                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                        m_eb_full_grow_cells}, m_eb_support_level)
               );
@@ -487,13 +487,16 @@ mfix::RegridLevelSetArray (int a_lev)
        const BoxArray nd_ba = amrex::convert(grids[a_lev], IntVect::TheNodeVector());
 
        std::unique_ptr<MultiFab> new_level_set(new MultiFab);
-       MFUtil::regrid(* new_level_set, nd_ba, dmap[a_lev],
-                      * particle_ebfactory[a_lev], * level_sets[a_lev], true);
+       // MFUtil::regrid(* new_level_set, nd_ba, dmap[a_lev],
+       //                * particle_ebfactory[a_lev], * level_sets[a_lev], true);
+       MFUtil::regrid(* new_level_set, nd_ba, dmap[a_lev], * level_sets[a_lev], true);
        level_sets[a_lev] = std::move(new_level_set);
 
        std::unique_ptr<MultiFab> new_impfunc(new MultiFab);
-       MFUtil::regrid(* new_impfunc, nd_ba, dmap[a_lev],
-                      * particle_ebfactory[a_lev], * implicit_functions[a_lev], true);
+       //MFUtil::regrid(* new_impfunc, nd_ba, dmap[a_lev],
+       //               * particle_ebfactory[a_lev], * implicit_functions[a_lev], true);
+       MFUtil::regrid(* new_impfunc, nd_ba, dmap[a_lev], * implicit_functions[a_lev], true);
+
        implicit_functions[a_lev] = std::move(new_impfunc);
 
        //________________________________________________________________________
@@ -517,9 +520,10 @@ mfix::RegridLevelSetArray (int a_lev)
            implicit_functions[a_lev + 1] = std::move(new_impfunc);
        }
 
-       amrex::Print() << "Modifying level set to see inflow" << std::endl;
-       mfix_set_ls_near_inflow(); // TODO: fix!!!
-       Print() << "Done regridding level-set on lev = " << a_lev << std::endl;
+       // This is broken at the moment => using mfix::intersect_ls_walls () instead
+       // Print() << "Modifying level set to see inflow" << std::endl;
+       //mfix_set_ls_near_inflow(); //TODO move the level-set creation
+       // Print() << "Done regridding level-set on lev = " << a_lev << std::endl;
    }
 }
 

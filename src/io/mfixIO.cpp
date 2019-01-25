@@ -350,6 +350,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             // This is needed before initializing level MultiFabs: ebfactories
             // should not change after the eb-dependent MultiFabs are allocated.
             make_eb_geometry();
+            make_eb_factories();
 
             // Allocate the fluid data, NOTE: this depends on the ebfactories.
             if (solve_fluid) AllocateArrays(lev);
@@ -408,6 +409,17 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
        // Read scalar variables
        for (int i = 0; i < chkscalarVars.size(); i++ )
        {
+           Print() << "Working on: " << chkscaVarsName[i] << std::endl;
+           if (Nrep != IntVect::TheUnitVector())
+           {
+               if ((chkscaVarsName[i] == "level_sets")
+                   || (chkscaVarsName[i] == "implicit_functions"))
+               {
+                   Print() << "Skipping!" << std::endl;
+                   continue;
+               }
+           }
+
           MultiFab mf;
           VisMF::Read(mf,
                       amrex::MultiFabFileFullPrefix(lev,
@@ -419,7 +431,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               amrex::Print() << "  - loading scalar data: " << chkscaVarsName[i] << std::endl;
 
               // Copy mf into chkscalarVars
-              if(chkscaVarsName[i] == "level-set") {
+              if(chkscaVarsName[i] == "level_sets") {
                   // The level-set data is special, and because we want
                   // to access it even without a fluid present, it is
                   // loaded below.
@@ -492,8 +504,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             eb_ref = levelset_params[2], eb_pad = levelset_params[3];
 
         amrex::Print() << "     + Loaded level-set parameters:" << std::endl
-                       << "       ref = " << ls_ref << " pad = " << ls_pad
-                       << " eb_ref = " << eb_ref << " eb_pad = " << eb_pad
+                       << "       ref = " << ls_ref << "    pad = " << ls_pad
+                       << "    eb_ref = " << eb_ref << " eb_pad = " << eb_pad
                        << std::endl;
 
         // Inform the user if the checkpoint parameters do not match those in the
@@ -513,6 +525,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
         // TODO: load level-set data from checkpoint file
         // level_set->set_data(ls_mf);
+    } else {
+        fill_eb_levelsets();
     }
 
     if (solve_fluid)
@@ -799,7 +813,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
      ***************************************************************************/
 
     Vector<std::string> static_names = {"level_sets", "implicit_functions", "volfrac"};
-    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets, & implicit_functions};
+    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets,
+                                                                       & implicit_functions};
 
     const int ngrow = 0;
     const int ncomp = static_names.size();
@@ -816,7 +831,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(), * particle_ebfactory[lev]));
+        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(),
+                                   * particle_ebfactory[lev]));
 
         // Don't iterate over all ncomp => last component is for volfrac
         for (int dcomp = 0; dcomp < ncomp - 1; dcomp++)

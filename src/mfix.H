@@ -79,6 +79,17 @@ public:
     void make_eb_geometry ();
     void make_eb_factories ();
     void fill_eb_levelsets ();
+    void intersect_ls_walls ();
+
+    template<class F> void build_particle_eb_levels (EB2::GeometryShop<F> gshop)
+    {
+        if(solve_dem)
+        {
+            for (int lev = 0; lev < nlev; lev ++)
+                particle_eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop,
+                                                                  lev, geom, 100, 0);
+        }
+    }
 
 
     //! Construct EB levels from Geometry shop. This builds each EB level and
@@ -94,7 +105,10 @@ public:
          ***********************************************************************/
 
         for (int lev = 0; lev < nlev; lev ++)
-            eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom);
+        {
+            eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
+            particle_eb_levels[lev] = eb_levels[lev];
+        }
 
 
         /************************************************************************
@@ -172,6 +186,8 @@ public:
     int levelset__pad = 2;           // padding of the level-set grid
     int levelset__eb_pad = 2;        // padding of the EBIS used to generate the level-set (useful for
                                      // ensuring that neighbor grids are considered when filling LS)
+
+    bool contains_ebs = false;
 
      const int * get_bc_ilo_ptr(int lev) {return bc_ilo[lev]->dataPtr();}
      const int * get_bc_ihi_ptr(int lev) {return bc_ihi[lev]->dataPtr();}
@@ -427,7 +443,6 @@ private:
      // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions
      Vector< std::unique_ptr<MultiFab> > level_sets;
      Vector< std::unique_ptr<MultiFab> > implicit_functions;
-     Vector< std::unique_ptr<MultiFab> > ls;
 
      // These are multi-component multifabs
      Vector< std::unique_ptr<MultiFab> > xslopes;
@@ -599,6 +614,7 @@ private:
 
      //! EB levels
      Vector<const EB2::Level *> eb_levels;
+     Vector<const EB2::Level *> particle_eb_levels;
 
      //! EB factory that lives on the fluid grids
      Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;

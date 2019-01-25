@@ -110,6 +110,7 @@ mfix::ResizeArrays ()
 
     // EB levels used to construct each level's EB factory
     eb_levels.resize(nlevs_max);
+    particle_eb_levels.resize(nlevs_max);
 
     ep_g.resize(nlevs_max);
     ep_go.resize(nlevs_max);
@@ -155,10 +156,6 @@ mfix::ResizeArrays ()
     m_u_mac.resize(nlevs_max);
     m_v_mac.resize(nlevs_max);
     m_w_mac.resize(nlevs_max);
-
-    // MultiFab storing level-set data used for fluid reconstruction in particle
-    // drag calculation
-    ls.resize(nlevs_max);
 
     xslopes.resize(nlevs_max);
     yslopes.resize(nlevs_max);
