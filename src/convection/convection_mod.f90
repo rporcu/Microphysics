@@ -608,6 +608,9 @@ contains
    ! Upwind along direction normal to velocity component
    function upwind_normal ( umns, upls ) result (ev)
 
+      ! Small value to protect against tiny velocities used in upwinding
+      real(ar),        parameter     :: small_vel = 1.0d-10
+
       real(ar), intent(in) :: umns, upls
       real(ar)             :: ev, avg
 
@@ -615,7 +618,11 @@ contains
          ev = zero
       else 
          avg = half * ( upls + umns )
-         ev = merge ( umns, upls, avg >= zero ) 
+         if ( abs(avg) .lt. small_vel) then
+            ev = zero
+         else 
+            ev = merge ( umns, upls, avg >= zero ) 
+         endif
       end if
 
    end function upwind_normal
