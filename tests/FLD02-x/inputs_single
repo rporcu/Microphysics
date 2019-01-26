@@ -1,7 +1,7 @@
 #_______________________________________________________________________
 # Solver settings
 
-#amrex.fpe_trap_invalid = 1
+amrex.fpe_trap_invalid = 1
 
 #! Fluid solver
 #!-----------------------------------------------------------//
@@ -27,7 +27,6 @@ geometry.prob_hi     = 0.1    0.02   0.02   # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell =  80  16  16
-
 
 #! Grids
 #!-----------------------------------------------------------//
