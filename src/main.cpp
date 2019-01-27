@@ -136,6 +136,8 @@ int main (int argc, char* argv[])
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix my_mfix;
 
+    my_mfix.SetParameters(steady_state);
+
     // Set global static pointer to mfix object. Used by fill-patch utility
     set_ptr_to_mfix(my_mfix);
 
@@ -189,7 +191,7 @@ int main (int argc, char* argv[])
     if (solve_dem)
         my_mfix.WriteStaticPlotFile(static_plt_file);
 
-    my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time, steady_state);
+    my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time);
 
     // Write out EB sruface
     if(write_eb_surface)
@@ -260,7 +262,7 @@ int main (int argc, char* argv[])
                    my_mfix.Regrid();
                 }
 
-                my_mfix.Evolve(nstep,steady_state,dt,prev_dt,time,stop_time);
+                my_mfix.Evolve(nstep,dt,prev_dt,time,stop_time);
 
                 Real end_step = ParallelDescriptor::second() - strt_step;
                 ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());

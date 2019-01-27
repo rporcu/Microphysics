@@ -573,8 +573,7 @@ void mfix::InitLevelData(Real dt, Real time)
 }
 
 void
-mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
-               int steady_state)
+mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
 {
     if (solve_dem)
     {
@@ -644,7 +643,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
     }
 
     if (solve_fluid)
-        mfix_init_fluid(restart_flag,dt,stop_time,steady_state);
+        mfix_init_fluid(restart_flag,dt,stop_time);
 
     // Call user-defined subroutine to set constants, check data, etc.
     if (call_udf) mfix_usr0();
@@ -692,7 +691,7 @@ mfix::MakeBCArrays ()
 }
 
 void
-mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_state)
+mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 {
   Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
   Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
@@ -798,7 +797,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time, int steady_st
 
      // Iterate to compute the initial pressure
      if (initial_iterations > 0)
-        mfix_initial_iterations(dt,stop_time,steady_state);
+        mfix_initial_iterations(dt,stop_time);
   }
 }
 

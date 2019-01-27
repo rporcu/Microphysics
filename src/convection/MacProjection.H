@@ -39,7 +39,7 @@ public:
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ep,
                            const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro,
-                           amrex::Real time);
+                           amrex::Real time, int steady_state);
     
    void update_internals ();
 

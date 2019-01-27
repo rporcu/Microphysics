@@ -186,7 +186,7 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
 				  Vector< std::unique_ptr<MultiFab> >& w,
 				  Vector< std::unique_ptr<MultiFab> >& ep,
 				  const Vector< std::unique_ptr<MultiFab> >& ro,
-				  amrex::Real time)
+				  amrex::Real time, int steady_state)
 {
    BL_PROFILE("MacProjection::apply_projection()");
 
@@ -230,7 +230,6 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       for (int i=0; i<3; ++i)
          (vel[lev])[i]->FillBoundary( m_amrcore -> Geom(lev).periodicity() );
       
-
       if (verbose)
       {
          EB_computeDivergence(*m_diveu[lev],
@@ -266,8 +265,16 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       macproj.setBottomSolver(MLMG::BottomSolver::hypre);
    }
 
-   // Solve
-   macproj.project(m_mg_rtol,m_mg_atol);
+   if (steady_state)
+   {
+       // Solve using m_phi as an initial guess
+       macproj.project(GetVecOfPtrs(m_phi), m_mg_rtol,m_mg_atol);
+   } 
+   else 
+   {
+       // Solve with initial guess of zero
+       macproj.project(m_mg_rtol,m_mg_atol);
+   }
 
    // Get MAC velocities at face CENTER by dividing solution by ep at faces
    if (verbose)
@@ -295,9 +302,7 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
 
       // Set velocity bcs
       set_velocity_bcs( lev, u, v, w, time );
-
    }
-
 }
 
 

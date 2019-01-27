@@ -7,7 +7,7 @@
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
-mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, Real stop_time)
+mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 {
     BL_PROFILE_REGION_START("mfix::Evolve");
 
@@ -29,7 +29,7 @@ mfix::Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, 
     {
        if (solve_fluid)
        {
-          EvolveFluid(nstep,steady_state,dt,time,stop_time);
+          EvolveFluid(nstep,dt,time,stop_time);
           prev_dt = dt;
        }
     }

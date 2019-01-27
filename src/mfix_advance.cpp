@@ -11,7 +11,7 @@
 #include <AMReX_BLassert.H>
 
 void
-mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop_time )
+mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluid");
     BL_PROFILE("mfix::EvolveFluid");
@@ -55,7 +55,7 @@ mfix::EvolveFluid( int nstep, int steady_state, Real& dt,  Real& time, Real stop
 
     do
     {
-        mfix_compute_dt(time, stop_time, steady_state, dt);
+        mfix_compute_dt(time, stop_time, dt);
 
         // Set new and old time to correctly use in fillpatching
         for (int lev = 0; lev < nlev; lev++)
@@ -172,11 +172,11 @@ mfix::mfix_project_velocity ()
 }
 
 void
-mfix::mfix_initial_iterations (Real dt, Real stop_time, int steady_state)
+mfix::mfix_initial_iterations (Real dt, Real stop_time)
 {
 
    Real time = 0.0;
-   mfix_compute_dt(time,stop_time,steady_state,dt);
+   mfix_compute_dt(time,stop_time,dt);
 
    amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
 

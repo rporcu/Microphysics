@@ -2,7 +2,7 @@
 #include <mfix.H>
 
 void
-mfix::mfix_compute_dt(Real time, Real stop_time, int steady_state, Real& dt)
+mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
 {
     // DT is always computed even for fixed dt, so we can
     // issue a warning if fixed dt does not satisfy CFL condition.

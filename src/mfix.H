@@ -41,8 +41,7 @@ public:
 
     void InitLevelData(Real dt, Real time);
 
-    void PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time,
-                  int steady_state);
+    void PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time);
 
     void ResizeArrays();
 
@@ -65,7 +64,7 @@ public:
 
     void Regrid ();
 
-    void Evolve(int nstep, int steady_state, Real & dt, Real & prev_dt, Real time, Real stop_time);
+    void Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time);
 
     void usr3();
 
@@ -198,6 +197,9 @@ public:
 
      int get_nghost() { return nghost; }
 
+     void SetParameters(int steady_state_in) 
+         { steady_state = steady_state_in;}
+
 protected:
 
      //! Tagging cells for refinement
@@ -226,7 +228,7 @@ protected:
          amrex::Abort("ClearLevel: To be implemented");
      }
 
-     void mfix_init_fluid(int is_restarting, Real dt, Real stop_time, int steady_state);
+     void mfix_init_fluid(int is_restarting, Real dt, Real stop_time);
      void mfix_set_bc0();
      void mfix_set_p0();
 
@@ -236,7 +238,7 @@ protected:
      void mfix_set_ls_near_inflow();
 
      void mfix_project_velocity   ();
-     void mfix_initial_iterations ( Real dt, Real stop_time, int steady_state );
+     void mfix_initial_iterations ( Real dt, Real stop_time );
      void mfix_apply_projection   ( Real dt, Real scaling_factor, bool proj_2 );
 
      void mfix_set_scalar_bcs ();
@@ -290,7 +292,7 @@ private:
 
      static void GotoNextLine(std::istream & is);
 
-     void EvolveFluid(int nstep, int steady_state, Real & dt, Real & time, Real stop_time);
+     void EvolveFluid(int nstep, Real & dt, Real & time, Real stop_time);
 
      // Projection-related methods
      void solve_poisson_equation(Vector< Vector< std::unique_ptr<MultiFab> > >& b,
@@ -311,7 +313,7 @@ private:
 
      void check_for_nans(int lev);
 
-     void mfix_compute_dt(Real time, Real stop_time, int steady_state, Real & dt);
+     void mfix_compute_dt(Real time, Real stop_time, Real & dt);
 
      void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv,
                                         Vector< std::unique_ptr<MultiFab> >& vel,
@@ -324,7 +326,7 @@ private:
      void mfix_compute_divtau(int lev, MultiFab& divtau,
                               Vector< std::unique_ptr<MultiFab> >& vel);
 
-    int  steady_state_reached(Real dt, int iter);
+     int steady_state_reached(Real dt, int iter);
 
      void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_old,
                                Vector< std::unique_ptr<MultiFab> >& divtau_old,
@@ -487,6 +489,8 @@ private:
      // used if load_balance_type == "KnapSack"
      Vector<std::unique_ptr<MultiFab> > particle_cost;
      Vector<std::unique_ptr<MultiFab> > fluid_cost;
+
+     int steady_state = 0;
 
      int solve_fluid;
      int solve_dem;
