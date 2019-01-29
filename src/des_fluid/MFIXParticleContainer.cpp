@@ -1114,6 +1114,7 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
                 mfix_multi_deposit_cic_eb(particles.data(), nstride, np,
                                           bx_dataptr, bu_dataptr, lo, hi,
                                           BL_TO_FORTRAN_ANYD((*volfrac)[pti]),
+                                          BL_TO_FORTRAN_ANYD((*flags)[pti]),
                                           plo, dx, &fortran_beta_comp,
                                           &fortran_vel_comp);
            }

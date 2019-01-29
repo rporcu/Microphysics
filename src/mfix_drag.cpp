@@ -167,17 +167,6 @@ void mfix::mfix_calc_drag_fluid(Real time)
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        // The projection method uses drag to update u, not (cell_vol * u), so we must divide by vol here
-        //     and we will divide by density in the update.
-
-        Real dx = geom[lev].CellSize(0);
-        Real dy = geom[lev].CellSize(1);
-        Real dz = geom[lev].CellSize(2);
-
-        Real ovol = 1./(dx*dy*dz);
-
-        drag[lev]->mult(ovol);
-        f_gds[lev]->mult(ovol);
 
         // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
         drag[lev] -> FillBoundary(geom[lev].periodicity());
