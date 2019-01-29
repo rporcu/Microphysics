@@ -105,6 +105,10 @@ public:
 
         for (int lev = 0; lev < nlev; lev ++)
         {
+            // NOTE: the last two parameters are the max coarsening level and
+            // the required coarsening level. They are also used by the Poisson
+            // solver, => changing these will result in slight changes of the
+            // fluid solve.
             eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
             particle_eb_levels[lev] = eb_levels[lev];
         }
@@ -616,8 +620,10 @@ private:
       *                                                                         *
       **************************************************************************/
 
-     //! EB levels
+     //! EB levels representing fluid boundary conditions
      Vector<const EB2::Level *> eb_levels;
+     //! EB levels representing particle boundary conditions (same as
+     //! `mfix::eb_levels` but additional walls at MI BCs).
      Vector<const EB2::Level *> particle_eb_levels;
 
      //! EB factory that lives on the fluid grids
