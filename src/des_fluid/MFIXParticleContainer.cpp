@@ -1033,7 +1033,7 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
           amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
            beta_ptr[lev]->setVal(0.0,0,1,    beta_ptr[lev]->nGrow());
-       beta_vel_ptr[lev]->setVal(0.0,0,1,beta_vel_ptr[lev]->nGrow());
+       beta_vel_ptr[lev]->setVal(0.0,0,3,beta_vel_ptr[lev]->nGrow());
     }
 
     const int* lo;
