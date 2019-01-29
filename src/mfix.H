@@ -201,7 +201,7 @@ public:
 
      int get_nghost() { return nghost; }
 
-     void SetParameters(int steady_state_in) 
+     void SetParameters(int steady_state_in)
          { steady_state = steady_state_in;}
 
 protected:
@@ -328,7 +328,8 @@ private:
                                         Real time);
 
      void mfix_compute_divtau(int lev, MultiFab& divtau,
-                              Vector< std::unique_ptr<MultiFab> >& vel);
+                              Vector< std::unique_ptr<MultiFab> >& vel,
+                              int explicit_diffusion_flag);
 
      int steady_state_reached(Real dt, int iter);
 
@@ -576,8 +577,6 @@ private:
      const int m_eb_basic_grow_cells = nghost;
      const int m_eb_volume_grow_cells = nghost;
      const int m_eb_full_grow_cells = nghost;
-
-     int explicit_diffusion = 1;
 
      bool do_initial_proj    = true;
      int  initial_iterations = 3;

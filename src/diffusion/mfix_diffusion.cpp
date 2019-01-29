@@ -16,7 +16,8 @@
 void
 mfix::mfix_compute_divtau ( int lev,
                             MultiFab& divtau,
-                            Vector< std::unique_ptr<MultiFab> >& vel)
+                            Vector< std::unique_ptr<MultiFab> >& vel,
+                            int explicit_diffusion)
 {
    BL_PROFILE("mfix::mfix_compute_divtau");
    Box domain(geom[lev].Domain());
@@ -31,7 +32,7 @@ mfix::mfix_compute_divtau ( int lev,
    facecent  =   ebfactory[lev] -> getFaceCent();
    volfrac   = &(ebfactory[lev] -> getVolFrac());
    bndrycent = &(ebfactory[lev] -> getBndryCent());
-    
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -275,7 +276,7 @@ mfix::mfix_compute_bcoeff_diff ()
          compute_bcoeff_diff (BL_TO_FORTRAN_BOX(wbx),
                               BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][2]))[mfi]),
                               BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &zdir );
-   
+
       }
 
       bcoeff_diff[lev][0] -> FillBoundary(geom[lev].periodicity());
