@@ -56,37 +56,76 @@ mfix::mfix_print_max_gp (int lev)
 
 
 void
-mfix::mfix_compute_vort ()
+mfix::mfix_compute_vort (Real time)
 {
     BL_PROFILE("mfix::mfix_compute_vort");
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       Box domain(geom[lev].Domain());
+        Box domain(geom[lev].Domain());
+
+        // State with ghost cells
+        MultiFab Sborder(grids[lev], dmap[lev], vel_g[lev]->nComp(), vel_g[lev]->nComp(), 
+                         MFInfo(), *ebfactory[lev]);
+        FillPatchVel(lev, time, Sborder, 0, Sborder.nComp(), bcs_u);
+    
+        // Copy each FAB back from Sborder into the vel array, complete with filled ghost cells
+        MultiFab::Copy (*vel_g[lev], Sborder, 0, 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow());
+
+        // Get EB geometric info
+        Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
+        Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
+        const amrex::MultiFab*                    volfrac;
+        const amrex::MultiCutFab*                 bndrycent;
+
+        areafrac  =   ebfactory[lev] -> getAreaFrac();
+        facecent  =   ebfactory[lev] -> getFaceCent();
+        volfrac   = &(ebfactory[lev] -> getVolFrac());
+        bndrycent = &(ebfactory[lev] -> getBndryCent());
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-       for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-       {
-          // Tilebox
-          Box bx = mfi.tilebox ();
+        for (MFIter mfi(Sborder,true); mfi.isValid(); ++mfi)
+        {
+            // Tilebox
+            Box bx = mfi.tilebox ();
 
-          // This is to check efficiently if this tile contains any eb stuff
-          const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
-          const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
+            // This is to check efficiently if this tile contains any eb stuff
+            const EBFArrayBox& vel_fab = static_cast<EBFArrayBox const&>(Sborder[mfi]);
+            const EBCellFlagFab& flags = vel_fab.getEBCellFlagFab();
 
-          if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
-          {
-            compute_vort (
-                        BL_TO_FORTRAN_BOX(bx),
-                        BL_TO_FORTRAN_ANYD((* vort[lev])[mfi]),
-                        BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                        geom[lev].CellSize());
-          } else {
-             vort[lev]->setVal( 0.0, bx, 0, 1);
-          }
-       }
+            if (flags.getType(bx) == FabType::covered)
+            {
+                (*vort[lev])[mfi].setVal(1.2345e200, bx, 0, 3);
+            }
+            else
+            {
+                if(flags.getType(amrex::grow(bx, 0)) == FabType::regular)
+                {
+                    compute_vort(BL_TO_FORTRAN_BOX(bx),
+                                 BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
+                                 BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                                 geom[lev].CellSize());
+                }
+                else
+                {
+                    compute_vort_eb(BL_TO_FORTRAN_BOX(bx),
+                                    BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
+                                    BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                                    BL_TO_FORTRAN_ANYD(flags),
+                                    BL_TO_FORTRAN_ANYD((*areafrac[0])[mfi]),
+                                    BL_TO_FORTRAN_ANYD((*areafrac[1])[mfi]),
+                                    BL_TO_FORTRAN_ANYD((*areafrac[2])[mfi]),
+                                    BL_TO_FORTRAN_ANYD((*facecent[0])[mfi]),
+                                    BL_TO_FORTRAN_ANYD((*facecent[1])[mfi]),
+                                    BL_TO_FORTRAN_ANYD((*facecent[2])[mfi]),
+                                    BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+                                    BL_TO_FORTRAN_ANYD((*bndrycent)[mfi]),
+                                    geom[lev].CellSize());
+                }
+            }
+        }
     }
 }
 
