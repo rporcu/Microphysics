@@ -140,7 +140,10 @@ mfix::Regrid ()
 
             Print() << "grids = " << grids[base_lev] << std::endl;
             Print() << "costs ba = " << costs.boxArray() << std::endl;
-            Print() << "particle_cost ba = " << particle_cost[base_lev]->boxArray() << std::endl;
+
+            if(solve_dem)
+              Print() << "particle_cost ba = " << particle_cost[base_lev]->boxArray() << std::endl;
+
             //Print() << "fluid cost ba = " << fluid_cost[base_lev]->boxArray() << std::endl;
 
             if (solve_dem) {
