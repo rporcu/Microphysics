@@ -93,7 +93,7 @@ mfix::mfix_compute_vort (Real time)
             }
             else
             {
-                vort[lev]-setVal(0.0, bx, 0, 1);
+                vort[lev]->setVal(0.0, bx, 0, 1);
             }
         }
     }
