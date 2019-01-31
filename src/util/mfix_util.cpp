@@ -72,17 +72,6 @@ mfix::mfix_compute_vort (Real time)
         // Copy each FAB back from Sborder into the vel array, complete with filled ghost cells
         MultiFab::Copy (*vel_g[lev], Sborder, 0, 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow());
 
-        // Get EB geometric info
-        Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
-        Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
-        const amrex::MultiFab*                    volfrac;
-        const amrex::MultiCutFab*                 bndrycent;
-
-        areafrac  =   ebfactory[lev] -> getAreaFrac();
-        facecent  =   ebfactory[lev] -> getFaceCent();
-        volfrac   = &(ebfactory[lev] -> getVolFrac());
-        bndrycent = &(ebfactory[lev] -> getBndryCent());
-
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -95,35 +84,16 @@ mfix::mfix_compute_vort (Real time)
             const EBFArrayBox& vel_fab = static_cast<EBFArrayBox const&>(Sborder[mfi]);
             const EBCellFlagFab& flags = vel_fab.getEBCellFlagFab();
 
-            if (flags.getType(bx) == FabType::covered)
+            if(flags.getType(amrex::grow(bx, 0)) == FabType::regular)
             {
-                (*vort[lev])[mfi].setVal(1.2345e200, bx, 0, 3);
+                compute_vort(BL_TO_FORTRAN_BOX(bx),
+                             BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
+                             BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                             geom[lev].CellSize());
             }
             else
             {
-                if(flags.getType(amrex::grow(bx, 0)) == FabType::regular)
-                {
-                    compute_vort(BL_TO_FORTRAN_BOX(bx),
-                                 BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
-                                 BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                                 geom[lev].CellSize());
-                }
-                else
-                {
-                    compute_vort_eb(BL_TO_FORTRAN_BOX(bx),
-                                    BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
-                                    BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                                    BL_TO_FORTRAN_ANYD(flags),
-                                    BL_TO_FORTRAN_ANYD((*areafrac[0])[mfi]),
-                                    BL_TO_FORTRAN_ANYD((*areafrac[1])[mfi]),
-                                    BL_TO_FORTRAN_ANYD((*areafrac[2])[mfi]),
-                                    BL_TO_FORTRAN_ANYD((*facecent[0])[mfi]),
-                                    BL_TO_FORTRAN_ANYD((*facecent[1])[mfi]),
-                                    BL_TO_FORTRAN_ANYD((*facecent[2])[mfi]),
-                                    BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
-                                    BL_TO_FORTRAN_ANYD((*bndrycent)[mfi]),
-                                    geom[lev].CellSize());
-                }
+                vort[lev]-setVal(0.0, bx, 0, 1);
             }
         }
     }
