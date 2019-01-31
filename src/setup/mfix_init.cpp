@@ -7,6 +7,8 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
+#include <AMReX_EBFabFactory.H>
+
 void
 mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 {
@@ -158,21 +160,6 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
     eb_levels[lev]->fillVolFrac(volfrac, geom[lev]);
 
     amrex::TagVolfrac(tags, volfrac);
-
-    //___________________________________________________________________________
-    // Buffer tags (neighbors are tagged also) to prevent thin grids
-    // NOTE: We use a buffer size of 8 (a bit of a fudge factor).
-    // NOTE: int buffer < tags.nGrow() => repeat buffer/m_buffer times
-    const int buffer = 8;
-
-    int m_buffer = std::min(buffer, tags.nGrow());
-    int n_repeat = buffer/m_buffer;
-
-    for (int i = 0; i < n_repeat; i++)
-        tags.buffer(m_buffer);
-
-    int r_buffer = buffer - n_repeat*m_buffer;
-    tags.buffer(r_buffer);
 }
 
 
