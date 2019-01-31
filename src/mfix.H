@@ -179,7 +179,7 @@ public:
     // the level-set data).
     bool levelset__restart = false;
 
-    void mfix_compute_vort(Real time);
+    void mfix_compute_vort();
 
     ///
     /// Parameters describing the level-set grid:

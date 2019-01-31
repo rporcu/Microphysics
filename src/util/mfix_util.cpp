@@ -56,46 +56,37 @@ mfix::mfix_print_max_gp (int lev)
 
 
 void
-mfix::mfix_compute_vort (Real time)
+mfix::mfix_compute_vort ()
 {
     BL_PROFILE("mfix::mfix_compute_vort");
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        Box domain(geom[lev].Domain());
-
-        // State with ghost cells
-        MultiFab Sborder(grids[lev], dmap[lev], vel_g[lev]->nComp(), vel_g[lev]->nComp(), 
-                         MFInfo(), *ebfactory[lev]);
-        FillPatchVel(lev, time, Sborder, 0, Sborder.nComp(), bcs_u);
-    
-        // Copy each FAB back from Sborder into the vel array, complete with filled ghost cells
-        MultiFab::Copy (*vel_g[lev], Sborder, 0, 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow());
+       Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
-        for (MFIter mfi(Sborder,true); mfi.isValid(); ++mfi)
-        {
-            // Tilebox
-            Box bx = mfi.tilebox ();
+       for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
+       {
+          // Tilebox
+          Box bx = mfi.tilebox ();
 
-            // This is to check efficiently if this tile contains any eb stuff
-            const EBFArrayBox& vel_fab = static_cast<EBFArrayBox const&>(Sborder[mfi]);
-            const EBCellFlagFab& flags = vel_fab.getEBCellFlagFab();
+          // This is to check efficiently if this tile contains any eb stuff
+          const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
+          const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
-            if(flags.getType(amrex::grow(bx, 0)) == FabType::regular)
-            {
-                compute_vort(BL_TO_FORTRAN_BOX(bx),
-                             BL_TO_FORTRAN_ANYD((*vort[lev])[mfi]),
-                             BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                             geom[lev].CellSize());
-            }
-            else
-            {
-                vort[lev]->setVal(0.0, bx, 0, 1);
-            }
-        }
+          if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
+          {
+            compute_vort (
+                        BL_TO_FORTRAN_BOX(bx),
+                        BL_TO_FORTRAN_ANYD((* vort[lev])[mfi]),
+                        BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                        geom[lev].CellSize());
+          } else {
+             vort[lev]->setVal( 0.0, bx, 0, 1);
+          }
+       }
     }
 }
 
