@@ -275,7 +275,7 @@ mfix::mfix_calc_drag_particle(Real time)
         // Phi is always on the particles grid
         const MultiFab & phi = * level_sets[lev];
 
-        Print() << "reconstruction lev= " << lev;
+        amrex::Print() << "reconstruction lev= " << lev << "\n";
 
 #ifdef _OPENMP
 #pragma omp parallel
