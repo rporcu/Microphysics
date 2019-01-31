@@ -10,7 +10,7 @@ contains
 !  Purpose: read and verify input data, open files                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine get_data(dt)
+  subroutine get_data(mfix_dat, dt)
 
     use init_namelist_module, only: init_namelist
     use read_namelist_module, only: read_namelist
@@ -35,13 +35,14 @@ contains
 
     implicit none
 
+    character(len=*) :: mfix_dat
     real(rt), intent(  out) :: dt
 
     ! This module call routines to initialize the namelist variables.
     call init_namelist
 
     ! Read in the namelist variables from the ascii input file.
-    call read_namelist(dt)
+    call read_namelist(mfix_dat, dt)
 
     ! Set flag for coupled simulations
     des_continuum_coupled = (particle_types>0) .and. (abs(ro_g0) > 0.0d0)

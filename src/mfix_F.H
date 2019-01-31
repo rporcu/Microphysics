@@ -31,7 +31,7 @@ extern "C"
     void mfix_get_data(
         int* fluid, int* dem,
         int* steady_state, amrex::Real* dt, amrex::Real* dt_min, amrex::Real* dt_max,
-        amrex::Real* tstop, int* call_udf);
+        amrex::Real* tstop, int* call_udf, int* name_len, const char *cmfix_dat);
 
     void check_inputs(amrex::Real* dt);
 

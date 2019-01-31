@@ -37,6 +37,8 @@ int par_ascii_int = -1;
 int  last_par_ascii  = -1;
 std::string par_ascii_file {"par"};
 
+std::string mfix_dat {"mfix.dat"};
+
 void set_ptr_to_mfix(mfix& my_mfix);
 
 void ReadParameters ()
@@ -68,6 +70,7 @@ void ReadParameters ()
   {
      ParmParse pp("mfix");
 
+     pp.query("input_deck", mfix_dat);
      pp.query("write_user", write_user);
      pp.query("write_eb_surface", write_eb_surface);
   }
@@ -118,6 +121,9 @@ int main (int argc, char* argv[])
     Real time=0.0L;
     int nstep = 0;  // Current time step
 
+    const char *cmfix_dat = mfix_dat.c_str();
+    int name_len=mfix_dat.length();
+
     // Loads parameters (data) from fortran backend. Most notably this
     // subroutine loads the parameters from the `mfix.dat` file:
     //     mfix_get_data -> get_data -> read_namelist
@@ -125,7 +131,7 @@ int main (int argc, char* argv[])
     //      (loads `mfix.dat`) ---------------+
     mfix_get_data( &solve_fluid, &solve_dem, &steady_state,
                    &dt, &dt_min, &dt_max,
-                   &stop_time, &call_udf
+                   &stop_time, &call_udf, &name_len, cmfix_dat
                   );
 
     if ( ParallelDescriptor::IOProcessor() )

@@ -13,7 +13,8 @@ contains
 !                                                                          !
 !**************************************************************************!
   subroutine mfix_get_data( &
-     fluid, dem, steady_state, dt, dt_minC, dt_maxC, tstopC, call_udf) &
+       fluid, dem, steady_state, dt, dt_minC, dt_maxC, tstopC, call_udf, &
+       namelen, mfix_datC) &
      bind(C, name="mfix_get_data")
 
     use fld_const, only: ro_g0
@@ -21,6 +22,8 @@ contains
     use param, only: is_undefined
     use run, only: dem_solids, call_usr
     use run, only: dt_min, dt_max, tstop
+
+    use iso_c_binding, only: C_CHAR, c_null_char
 
     implicit none
 
@@ -31,7 +34,23 @@ contains
     real(rt),   intent(in ) :: tstopC
     real(rt),   intent(out) :: dt
 
-    call get_data(dt)
+    integer(c_int), intent(in   ) :: namelen
+    character(kind=c_char, len=1), dimension (namelen), intent (in) :: mfix_datC
+
+    character(len=namelen) :: mfix_dat
+    integer :: lc
+
+    mfix_dat = " "
+    do lc=1,namelen
+       if( mfix_datC(lc) == c_null_char) then
+          exit
+       else
+          mfix_dat(lc:lc) = mfix_datC(lc)
+       endif
+    enddo
+    ! write(*,*) "Full file name: >"//trim(mfix_dat)//"<"
+
+    call get_data(mfix_dat, dt)
 
 ! Flags for fluid setup
     fluid =  merge(1,0,abs(ro_g0) > tiny(0.0d0))

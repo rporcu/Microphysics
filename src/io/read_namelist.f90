@@ -14,7 +14,7 @@ MODULE read_namelist_module
 !     Purpose: Read in the NAMELIST variables                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_NAMELIST(dt_inout)
+      SUBROUTINE READ_NAMELIST(mfix_dat, dt_inout)
 
       use bc
       use drag, only: drag_c1, drag_d1
@@ -55,7 +55,8 @@ MODULE read_namelist_module
 
 ! Dummy Arguments:
 !------------------------------------------------------------------------//
-      real(rt), intent(  out) :: dt_inout
+      character(len=*), intent(in   ) :: mfix_dat
+      real(rt),         intent(  out) :: dt_inout
 
 ! Local Variables:
 !------------------------------------------------------------------------//
@@ -89,17 +90,17 @@ MODULE read_namelist_module
 
       ! Open the mfix.dat file. Report errors if the file is not located or
       ! there is difficulties opening it.
-      inquire(file='mfix.dat',exist=lEXISTS)
+      inquire(file=mfix_dat,exist=lEXISTS)
       IF(.NOT.lEXISTS) THEN
          WRITE(*,1000)
          stop 20010
 
  1000 FORMAT(2/,1X,70('*')/' From: READ_NAMELIST',/' Error 1000: ',    &
-         'The input data file, mfix.dat, is missing. Aborting.',/1x,   &
+         'The input data file, "//mfix_dat//", is missing. Aborting.',/1x,   &
          70('*'),2/)
 
       ELSE
-         OPEN(UNIT=UNIT_DAT, FILE='mfix.dat', STATUS='OLD', IOSTAT=IOS)
+         OPEN(UNIT=UNIT_DAT, FILE=mfix_dat, STATUS='OLD', IOSTAT=IOS)
          IF(IOS /= 0) THEN
             WRITE (*,1100)
             stop 20011
