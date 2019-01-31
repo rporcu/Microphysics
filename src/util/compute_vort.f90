@@ -43,10 +43,10 @@ contains
                uy = idy * ( vel(i,j+1,k,1) - vel(i,j-1,k,1))
                uz = idz * ( vel(i,j,k+1,1) - vel(i,j,k-1,1))
 
-               vx = idz * ( vel(i+1,j,k,2) - vel(i-1,j,k,2))
+               vx = idx * ( vel(i+1,j,k,2) - vel(i-1,j,k,2))
                vz = idz * ( vel(i,j,k+1,2) - vel(i,j,k-1,2))
 
-               wx = idz * ( vel(i+1,j,k,3) - vel(i-1,j,k,3))
+               wx = idx * ( vel(i+1,j,k,3) - vel(i-1,j,k,3))
                wy = idy * ( vel(i,j+1,k,3) - vel(i,j-1,k,3))
 
                ! The factor half is included here instead of in each of the above
