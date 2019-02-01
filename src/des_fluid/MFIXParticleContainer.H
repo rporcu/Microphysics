@@ -84,8 +84,6 @@ public:
 
     void InitData();
 
-    void InitGravity(Real* grav_in);
-
     void InitParticlesAscii(const std::string& file);
     void InitParticlesAuto();
     void RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,

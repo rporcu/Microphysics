@@ -1712,9 +1712,9 @@ void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt,
     int cnt = 0;
 
     // The C++ version below replaces this Fortran call
-    des_time_loop ( &nrp,  particles,
-                    &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-                    &xlen, &ylen, &zlen, &stime, &n);
+    // des_time_loop ( &nrp,  particles,
+    //                 &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
+    //                 &xlen, &ylen, &zlen, &stime, &n);
 
     for(auto & particle : my_particles)
     {
