@@ -15,6 +15,10 @@ extern "C"
 
     int des_continuum_coupled ();
 
+    void get_gravity (
+        amrex::Real* grav
+        );
+
     void calc_volume_fraction(
         const int*  lo, const int*  hi,
         const int* slo, const int* shi,

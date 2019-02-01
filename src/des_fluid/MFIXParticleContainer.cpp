@@ -54,9 +54,12 @@ void MFIXParticleContainer::AllocData ()
 {
     reserveData();
     resizeData();
+
+    get_gravity(gravity);
 }
 
-void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
+void MFIXParticleContainer::InitParticlesAscii(const std::string& file) 
+{
 
   // only read the file on the IO proc
   if (ParallelDescriptor::IOProcessor())  {
@@ -381,11 +384,6 @@ void MFIXParticleContainer::ReadStaticParameters ()
     }
 }
 
-void
-MFIXParticleContainer::InitData()
-{
-}
-
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
                                             EBFArrayBoxFactory * ebfactory,
                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
@@ -596,17 +594,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              * Move particles based on collision forces and torques             *
              *******************************************************************/
 
-            BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-#if 1
-            des_time_loop ( &nrp,  particles,
-                            &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-                            &xlen, &ylen, &zlen, &stime, &n);
-#else
-            des_time_loop_soa ( &nrp,  particles,
-                                &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-                                &xlen, &ylen, &zlen, &stime, &n);
-#endif
-            BL_PROFILE_VAR_STOP(des_time_loop);
+            time_advance(pti, ntot, subdt, tow[index], fc[index]);
 
             /********************************************************************
              * Update runtime cost (used in load-balancing)                     *
@@ -1715,4 +1703,37 @@ void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)
        const Box& sbx = mf_to_be_filled[mfi].box();
        mfix_cap_eps(sbx.loVect(), sbx.hiVect(), (mf_to_be_filled)[mfi].dataPtr());
     }
+}
+
+void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt, Vector<Real>& tow, Vector<Real>& fc)
+{
+    BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+    auto & my_particles = pti.GetArrayOfStructs();
+    int cnt = 0;
+
+    // The C++ version below replaces this Fortran call
+    des_time_loop ( &nrp,  particles,
+                    &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
+                    &xlen, &ylen, &zlen, &stime, &n);
+
+    for(auto & particle : my_particles)
+    {
+       particle.rdata(realData::velx) += subdt * (
+           (particle.rdata(realData::dragx) + fc[cnt       ]) /  particle.rdata(realData::mass) + gravity[0]);
+       particle.rdata(realData::vely) += subdt * (
+           (particle.rdata(realData::dragy) + fc[cnt+  ntot]) /  particle.rdata(realData::mass) + gravity[1]);
+       particle.rdata(realData::velz) += subdt * (
+           (particle.rdata(realData::dragz) + fc[cnt+2*ntot]) /  particle.rdata(realData::mass) + gravity[2]);
+
+       particle.rdata(realData::omegax) += subdt * particle.rdata(realData::oneOverI) * tow[cnt       ];
+       particle.rdata(realData::omegay) += subdt * particle.rdata(realData::oneOverI) * tow[cnt+  ntot];
+       particle.rdata(realData::omegaz) += subdt * particle.rdata(realData::oneOverI) * tow[cnt+2*ntot];
+
+       cnt += 1;
+
+       particle.pos(0) += subdt * particle.rdata(realData::velx);
+       particle.pos(1) += subdt * particle.rdata(realData::vely);
+       particle.pos(2) += subdt * particle.rdata(realData::velz);
+    }
+    BL_PROFILE_VAR_STOP(des_time_loop);
 }

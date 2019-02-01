@@ -17,7 +17,6 @@
       Use param, only: dim_m
 !---------------------------------------------------------------------//
 
-
 ! Gravitational acceleration
       real(rt) :: gravity(3)
 

@@ -84,6 +84,8 @@ public:
 
     void InitData();
 
+    void InitGravity(Real* grav_in);
+
     void InitParticlesAscii(const std::string& file);
     void InitParticlesAuto();
     void RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
@@ -203,6 +205,8 @@ private:
 
     int nlev;
 
+    Real gravity[3];
+
     ///
     /// We add a particle to the neighbor list if it's center is within 3 particle radii
     ///
@@ -223,6 +227,9 @@ private:
     RealVect loc_maxvel;
     RealVect loc_maxpfor;
     RealVect loc_maxwfor;
+
+    void time_advance(MFIXParIter& pti, int ntot, Real subdt, Vector<Real>& tow, Vector<Real>& fc);
+
 
 };
 #endif
