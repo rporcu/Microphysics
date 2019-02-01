@@ -1735,5 +1735,9 @@ void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt,
        particle.pos(1) += subdt * particle.rdata(realData::vely);
        particle.pos(2) += subdt * particle.rdata(realData::velz);
     }
+
+    const int nrp = NumberOfParticles(pti);
+    call_usr2_des(&nrp,my_particles.data());
+
     BL_PROFILE_VAR_STOP(des_time_loop);
 }
