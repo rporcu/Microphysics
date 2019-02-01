@@ -12,6 +12,12 @@
 void
 mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 {
+
+    // set n_error_buf (used in AmrMesh) to default (can overwrite later)
+    for (int i = 0; i < n_error_buf.size(); i++)
+        n_error_buf[i] = 8;
+
+
     {
         ParmParse pp("mfix");
 
@@ -143,10 +149,10 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.queryarr("avg_region_z_b", avg_region_z_b );
     }
 
-    {
-        ParmParse pp("amr");
-        pp.query("amr_max_level", amr_max_level);
-    }
+    //{
+    //    ParmParse pp("amr");
+    //    pp.query("amr_max_level", amr_max_level);
+    //}
 }
 
 
