@@ -228,6 +228,9 @@ private:
 
     void time_advance(MFIXParIter& pti, int ntot, Real subdt, Vector<Real>& tow, Vector<Real>& fc);
 
+    void set_particle_properties(int pstate, Real pradius, Real pdensity,
+                                 Real& pvol, Real& pmass, Real& omoi, Real& omega);
+
 
 };
 #endif

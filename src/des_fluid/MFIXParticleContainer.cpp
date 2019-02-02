@@ -110,8 +110,7 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file)
       p.cpu() = ParallelDescriptor::MyProc();
 
       // Compute other particle properties
-      set_particle_properties( &pstate, &pradius, &pdensity,
-                               &pvolume, &pmass, &pomoi, &pomega);
+      set_particle_properties( pstate, pradius, pdensity, pvolume, pmass, pomoi, pomega);
 
       // Set other particle properties
       p.idata(intData::phase)     = pphase;
@@ -1740,4 +1739,13 @@ void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt,
     call_usr2_des(&nrp,my_particles.data());
 
     BL_PROFILE_VAR_STOP(des_time_loop);
+}
+
+void MFIXParticleContainer::set_particle_properties(int pstate, Real pradius, Real pdensity,
+                                                    Real& pvol, Real& pmass, Real& omoi, Real& omega)
+{
+    pvol  = (4.0/3.0)*M_PI*pradius*pradius*pradius;
+    pmass = pvol * pdensity;
+    omoi  = 2.5/(pmass * pradius*pradius);
+    omega = 0.0;
 }
