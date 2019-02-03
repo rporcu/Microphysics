@@ -1744,8 +1744,8 @@ void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt,
 void MFIXParticleContainer::set_particle_properties(int pstate, Real pradius, Real pdensity,
                                                     Real& pvol, Real& pmass, Real& omoi, Real& omega)
 {
-    pvol  = (4.0/3.0)*M_PI*pradius*pradius*pradius;
+    pvol  = (4.0/3.0)*M_PI*(pradius*pradius*pradius);
     pmass = pvol * pdensity;
-    omoi  = 2.5/(pmass * pradius*pradius);
+    omoi  = 2.5/(pmass * (pradius*pradius));
     omega = 0.0;
 }
