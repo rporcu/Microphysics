@@ -490,9 +490,9 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
 
             case ( minf_)
 
-               vec(ulo(1):domlo(1)-1,j,k,1) = two * bc_ep_g(bcv) * bc_u_g(bcv) - vec(domlo(1),j,k,1)
-               vec(ulo(1):domlo(1)-1,j,k,2) = vec(domlo(1),j,k,2) 
-               vec(ulo(1):domlo(1)-1,j,k,3) = vec(domlo(1),j,k,3)
+               vec(ulo(1):domlo(1)-1,j,k,1) = bc_ep_g(bcv) * bc_u_g(bcv)
+               vec(ulo(1):domlo(1)-1,j,k,2) = bc_ep_g(bcv) * bc_v_g(bcv)
+               vec(ulo(1):domlo(1)-1,j,k,3) = bc_ep_g(bcv) * bc_w_g(bcv)
 
             end select
 
@@ -525,9 +525,9 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
 
             case ( minf_ )
 
-               vec(domhi(1)+1:uhi(1),j,k,1) = two * bc_ep_g(bcv) * bc_u_g(bcv) - vec(domhi(1),j,k,1)
-               vec(domhi(1)+1:uhi(1),j,k,2) = vec(domhi(1),j,k,2)
-               vec(domhi(1)+1:uhi(1),j,k,3) = vec(domhi(1),j,k,3)
+               vec(domhi(1)+1:uhi(1),j,k,1) = bc_ep_g(bcv) * bc_u_g(bcv)
+               vec(domhi(1)+1:uhi(1),j,k,2) = bc_ep_g(bcv) * bc_v_g(bcv)
+               vec(domhi(1)+1:uhi(1),j,k,3) = bc_ep_g(bcv) * bc_w_g(bcv)
 
             end select
 
@@ -560,9 +560,9 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
 
             case ( minf_ )
 
-               vec(i,ulo(2):domlo(2)-1,k,1) = vec(i,domlo(2),k,1)
-               vec(i,ulo(2):domlo(2)-1,k,2) = two * bc_ep_g(bcv) * bc_v_g(bcv) - vec(i,domlo(2),k,2)
-               vec(i,ulo(2):domlo(2)-1,k,3) = vec(i,domlo(2),k,3)
+               vec(i,ulo(2):domlo(2)-1,k,1) = bc_ep_g(bcv) * bc_u_g(bcv)
+               vec(i,ulo(2):domlo(2)-1,k,2) = bc_ep_g(bcv) * bc_v_g(bcv)
+               vec(i,ulo(2):domlo(2)-1,k,3) = bc_ep_g(bcv) * bc_w_g(bcv)
 
 
             end select
@@ -594,9 +594,9 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
 
             case ( minf_) 
 
-               vec(i,domhi(2)+1:uhi(2),k,1) = vec(i,domhi(2),k,1)
-               vec(i,domhi(2)+1:uhi(2),k,2) = two * bc_ep_g(bcv) * bc_v_g(bcv) - vec(i,domhi(2),k,2)
-               vec(i,domhi(2)+1:uhi(2),k,3) = vec(i,domhi(2),k,3)
+               vec(i,domhi(2)+1:uhi(2),k,1) = bc_ep_g(bcv) * bc_u_g(bcv)
+               vec(i,domhi(2)+1:uhi(2),k,2) = bc_ep_g(bcv) * bc_v_g(bcv)
+               vec(i,domhi(2)+1:uhi(2),k,3) = bc_ep_g(bcv) * bc_w_g(bcv)
 
 
             end select
@@ -630,9 +630,9 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
 
             case ( minf_ )
 
-               vec(i,j,ulo(3):domlo(3)-1,1) = vec(i,j,domlo(3),1)
-               vec(i,j,ulo(3):domlo(3)-1,2) = vec(i,j,domlo(3),2)
-               vec(i,j,ulo(3):domlo(3)-1,3) = two * bc_ep_g(bcv) * bc_w_g(bcv) - vec(i,j,domlo(3),3)
+               vec(i,j,ulo(3):domlo(3)-1,1) = bc_ep_g(bcv) * bc_u_g(bcv)
+               vec(i,j,ulo(3):domlo(3)-1,2) = bc_ep_g(bcv) * bc_v_g(bcv)
+               vec(i,j,ulo(3):domlo(3)-1,3) = bc_ep_g(bcv) * bc_w_g(bcv)
                
             end select
 
@@ -665,9 +665,9 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
 
             case ( minf_ ) 
 
-               vec(i,j,domhi(3)+1:uhi(3),1) = vec(i,j,domhi(3),1)
-               vec(i,j,domhi(3)+1:uhi(3),2) = vec(i,j,domhi(3),2) 
-               vec(i,j,domhi(3)+1:uhi(3),3) = two * bc_ep_g(bcv) * bc_w_g(bcv) - vec(i,j,domhi(3),3)
+               vec(i,j,domhi(3)+1:uhi(3),1) = bc_ep_g(bcv) * bc_u_g(bcv)
+               vec(i,j,domhi(3)+1:uhi(3),2) = bc_ep_g(bcv) * bc_v_g(bcv)
+               vec(i,j,domhi(3)+1:uhi(3),3) = bc_ep_g(bcv) * bc_w_g(bcv)
 
             end select
 
