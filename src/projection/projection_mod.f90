@@ -96,7 +96,7 @@ contains
    !
    ! Add gravitational acceleration terms to velocity
    !
-   subroutine add_gravity ( lo, hi, vel, ulo, uhi, dt )  bind(C) 
+   subroutine add_gravity ( lo, hi, vel, ulo, uhi, dt )  bind(C)
 
       use constant, only: gravity
 
@@ -119,7 +119,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               vel(i,j,k,1) = vel(i,j,k,1) + dt * gravity(1) 
+               vel(i,j,k,1) = vel(i,j,k,1) + dt * gravity(1)
                vel(i,j,k,2) = vel(i,j,k,2) + dt * gravity(2)
                vel(i,j,k,3) = vel(i,j,k,3) + dt * gravity(3)
 
@@ -133,7 +133,7 @@ contains
    ! This adds both components of the drag term
    ! Here f_gds = beta
    !      drag  = beta * particle_velocity
-   ! 
+   !
    ! So the drag term we add is beta * (particle_velocity - fluid_velocity)
    !                          = drag - f_gds * fluid_velocity
    !
@@ -174,7 +174,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               orop       = dt * volfrac(i,j,k) / rop(i,j,k)
+               orop         = dt / rop(i,j,k)
 
                vel(i,j,k,1) = ( vel(i,j,k,1) + drag(i,j,k,1) * orop) / (one + f_gds(i,j,k) * orop)
                vel(i,j,k,2) = ( vel(i,j,k,2) + drag(i,j,k,2) * orop) / (one + f_gds(i,j,k) * orop)
