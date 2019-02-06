@@ -62,8 +62,6 @@ void mfix::make_eb_geometry ()
      *                                                                          *
      * Legacy inputs:                                                           *
      *   -- mfix.hourglass = true <=> mfix.geometry=box                         *
-     *   -- mfix.clr       = true <=> mfix.geometry=clr                         *
-     *   -- mfix.clr_riser = true <=> mfix.geometry=clr_riser                   *
      *   -- mfix.use_walls = true <=> mfix.geometry=general                     *
      *   -- mfix.use_poy2  = true <=> mfix.geometry=general                     *
      *                                                                          *
@@ -71,13 +69,9 @@ void mfix::make_eb_geometry ()
 
 
     bool hourglass    = false;
-    bool clr          = false;
-    bool clr_riser    = false;
     bool eb_general   = false;
 
     pp.query("hourglass", hourglass);
-    pp.query("clr", clr);
-    pp.query("clr_riser", clr_riser);
 
     bool eb_poly2 = false;
     bool eb_walls = false;
@@ -87,7 +81,7 @@ void mfix::make_eb_geometry ()
     eb_general = eb_poly2 || eb_walls;
 
     // Avoid multiple (ambiguous) inputs
-    if (hourglass || clr || clr_riser || eb_general) {
+    if (hourglass || eb_general) {
         if (! geom_type.empty()) {
             amrex::Abort("The input file cannot specify both:\n"
                          "mfix.<geom_type>=true and mfix.geometry=<geom_type>\n"
@@ -96,8 +90,6 @@ void mfix::make_eb_geometry ()
     }
 
     if (hourglass)  geom_type = "hourglass";
-    if (clr)        geom_type = "clr";
-    if (clr_riser)  geom_type = "clr_riser";
     if (eb_general) geom_type = "general";
 
 
@@ -124,11 +116,15 @@ void mfix::make_eb_geometry ()
         amrex::Print() << "\n Building cyclone geometry." << std::endl;
         make_eb_cyclone();
         contains_ebs = true;
-    } else if(geom_type == "general") {
-        amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
-        // TODO: deal with inflow volfrac
-        make_eb_general();
+    } else if(geom_type == "air-reactor") {
+      amrex::Print() << "\n Building air-reactor geometry." << std::endl;
+        make_eb_air_reactor();
         contains_ebs = true;
+    } else if(geom_type == "general") {
+      amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
+      // TODO: deal with inflow volfrac
+      make_eb_general();
+      contains_ebs = true;
     } else {
         amrex::Print() << "\n No EB geometry declared in inputs => "
                        << " Will read walls from mfix.dat only."

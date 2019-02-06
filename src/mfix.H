@@ -201,7 +201,7 @@ public:
 
      int get_nghost() { return nghost; }
 
-     void SetParameters(int steady_state_in) 
+     void SetParameters(int steady_state_in)
          { steady_state = steady_state_in;}
 
 protected:
@@ -272,6 +272,7 @@ private:
      void make_eb_cylinder();
      void make_eb_hopper();
      void make_eb_cyclone();
+     void make_eb_air_reactor();
      void make_eb_hourglass();
      void make_eb_clr();
      void make_eb_clr_riser();
