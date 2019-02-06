@@ -21,19 +21,6 @@ module des_time_march_module
 
 contains
 
-   function des_is_continuum_coupled () result( is_coupled ) &
-        bind(C, name="des_continuum_coupled")
-
-      use discretelement, only: des_continuum_coupled
-
-      integer  :: is_coupled
-
-      is_coupled = 0
-
-      if ( des_continuum_coupled ) is_coupled = 1
-
-   end function des_is_continuum_coupled
-
    subroutine des_init_time_loop ( tstart, dt, nsubsteps, subdt, subdt_io) &
         bind(C, name="des_init_time_loop")
 

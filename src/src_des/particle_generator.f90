@@ -1018,72 +1018,7 @@ contains
       return
    end subroutine particle_write
 
-
-
-   !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-   !                                                                     !
-   !                                                                     !
-   !                                                                     !
-   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   subroutine rm_wall_collisions ( particles, nrp,           &
-    valid,     vlo,  vhi,     &
-    phi,       phlo, phhi,    &
-    dx,        n_refine     ) &
-    bind(C, name="rm_wall_collisions")
-
-      use particle_mod, only: particle_t
-
-      use param       , only: small_number, zero, one
-
-      use amrex_eb_levelset_module, only: amrex_eb_interp_levelset
-      use amrex_eb_levelset_module, only: amrex_eb_normal_levelset
-
-      implicit none
-
-      ! ** input varaibles
-
-      type(particle_t), intent(inout), target :: particles(nrp)
-      integer,          intent(in   )         :: nrp
-      integer,          intent(in   )         :: n_refine
-      integer,          intent(in   )         :: vlo(3),  vhi(3)
-      integer,          intent(in   )         :: phlo(3), phhi(3)
-
-      integer,          intent(in   )         :: valid( vlo(1): vhi(1),  vlo(2): vhi(2),  vlo(3): vhi(3) )
-      real(rt),         intent(in   )         :: phi(  phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
-      real(rt),         intent(in   )         :: dx (3)
-
-      ! pos: current particle's position
-      !  rp: current particle's radius
-      real(rt) :: pos(3), rp
-
-      !    plo: domain lo -- HACK this should get passed down
-      real(rt) :: plo(3), inv_dx(3), ls_value
-
-      integer :: p
-
-      inv_dx = 1.0_rt / dx
-      plo    = (/ 0.0_rt, 0.0_rt, 0.0_rt /)
-
-      ! itterate over particles
-      do p = 1, nrp
-
-         rp  = particles(p)%radius
-         pos = particles(p)%pos
-
-         ! interpolates levelset from nodal phi to position pos
-         call amrex_eb_interp_levelset(pos, plo, n_refine, &
-          phi, phlo, phhi, dx, ls_value);
-
-         if (ls_value < rp) particles(p)%id = -1
-
-      end do ! loop over particles
-
-   end subroutine rm_wall_collisions
-
-
-
    subroutine rm_wall_collisions_eb ( particles,    nrp, &
-    &                                 valid,  vlo,  vhi, &
     &                                 phi,   phlo, phhi, &
     &                                 flags,  flo,  fhi, &
     &                                 plo, dx, n_refine ) bind(C)
@@ -1099,7 +1034,6 @@ contains
       integer,          intent(in   )         :: nrp
 
       ! Array bounds
-      integer,          intent(in   )         :: vlo(3),  vhi(3)
       integer,          intent(in   )         :: phlo(3), phhi(3)
       integer,          intent(in   )         :: flo(3),  fhi(3)
 
@@ -1114,7 +1048,6 @@ contains
 
       ! Arrays
       integer,          intent(in   )         :: &
-       &    valid( vlo(1):vhi(1), vlo(2):vhi(2), vlo(3):vhi(3) ), &
        &    flags( flo(1):fhi(1), flo(2):fhi(2), flo(3):fhi(3) )
 
       real(rt),         intent(in   )         :: &
@@ -1141,7 +1074,7 @@ contains
             else
                ! interpolates level-set from nodal phi to position pos
                call amrex_eb_interp_levelset( pos, plo, n_refine, &
-                &   phi, phlo, phhi, dx, ls_value)
+                                              phi, phlo, phhi, dx, ls_value)
                if (ls_value < rp) particles(p)%id = -1
             end if
 

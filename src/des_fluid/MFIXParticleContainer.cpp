@@ -200,8 +200,7 @@ void MFIXParticleContainer::InitParticlesAuto()
 }
 
 void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
-                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
-                                             int ls_refinement)
+                                             const MultiFab * ls_phi, int ls_refinement)
 {
     // Only call the routine for wall collisions if we actually have walls
     if (ebfactory != NULL) {
@@ -229,7 +228,6 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
                 else
                 {
                     rm_wall_collisions_eb(particles, &nrp,
-                                          BL_TO_FORTRAN_3D((*ls_valid)[pti]),
                                           BL_TO_FORTRAN_3D((*ls_phi)[pti]),
                                           BL_TO_FORTRAN_3D((*flags)[pti]),
                                           Geom(lev).ProbLo(),

@@ -87,7 +87,7 @@ public:
     void InitParticlesAscii(const std::string& file);
     void InitParticlesAuto();
     void RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
-                          const MultiFab * ls_phi, const iMultiFab * ls_valid, int ls_refinement);
+                          const MultiFab * ls_phi, int ls_refinement);
 
     void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 
