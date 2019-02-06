@@ -623,7 +623,7 @@ private:
      //! EB levels representing fluid boundary conditions
      Vector<const EB2::Level *> eb_levels;
      //! EB levels representing particle boundary conditions (same as
-     //! `mfix::eb_levels` but additional walls at MI BCs).
+     //! `mfix::eb_levels` but might include additional walls at MI BCs).
      Vector<const EB2::Level *> particle_eb_levels;
 
      //! EB factory that lives on the fluid grids

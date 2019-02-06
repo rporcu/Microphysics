@@ -135,9 +135,8 @@ void mfix::make_eb_geometry ()
                        << std::endl;
         make_eb_regular();
 
-        // NOTE: this is set internally depending if EBs where detected in the
-        // mfix.dat file.
-        //contains_ebs = false;
+        // NOTE: `mfix::contains_ebs` this is set internally depending if EBs
+        // where detected in the mfix.dat file.
     }
 }
 
@@ -193,9 +192,12 @@ void mfix::fill_eb_levelsets ()
         LSFactory lsf(0, levelset__refinement, levelset__eb_refinement,
                       levelset__pad, levelset__eb_pad, part_ba, geom[0], part_dm );
 
+
         //___________________________________________________________________________
         // NOTE: Boxes are different (since we're not refining, we need to treat
-        // corners this way)
+        // corners this way). IMPORTANT: the box case is assembled from planes
+        // => fill the level-set with these (otherwise corners will be
+        // inaccurately resolved.)
 
         ParmParse pp("mfix");
 
@@ -205,9 +207,6 @@ void mfix::fill_eb_levelsets ()
 
         if (geom_type == "box")
         {
-            Print() << "HACK Altert! Building this level-set from an intersection of planes"
-                    << std::endl;
-
             ParmParse pp("box");
 
             if ( geom[0].isAllPeriodic() )
@@ -310,7 +309,6 @@ void mfix::fill_eb_levelsets ()
         if (contains_ebs)
         {
             MultiFab impfunc = MFUtil::regrid(lsf.get_ls_ba(), part_dm, * implicit_functions[1], true);
-            //lsf.Fill( * particle_ebfactory[0], impfunc);
             lsf.Fill( * ebfactory[0], impfunc);
         }
 
@@ -434,11 +432,6 @@ void mfix::intersect_ls_walls ()
 
     if (has_walls == false)
         return;
-
-    // // Ensure that the particle EB levels (and thus eb-factories) have the right
-    // // volfrac at the MI
-    // build_particle_eb_levels(gshop);
-    // make_eb_factories();
 
     if (nlev == 1)
     {
