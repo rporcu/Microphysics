@@ -608,7 +608,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
                                ls_data->nComp(), ls_data->nGrow());
 
             pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
-                                 ls_data, & ls_valid, levelset__refinement);
+                                 ls_data, levelset__refinement);
         }
         else if (!restart_flag && particle_ebfactory[finest_level])
         {
@@ -624,7 +624,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
                                    ls_data->nComp(), ls_data->nGrow());
 
                 pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(),
-                                     ls_data, & ls_valid, 1);
+                                     ls_data, 1);
             }
         }
 
