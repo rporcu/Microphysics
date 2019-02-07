@@ -199,57 +199,6 @@ void MFIXParticleContainer::InitParticlesAuto()
 
 }
 
-void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
-                                             const MultiFab * ls_phi, int ls_refinement)
-{
-    // Only call the routine for wall collisions if we actually have walls
-    if (ebfactory != NULL) {
-
-        const Real * dx = Geom(lev).CellSize();
-
-        const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
-
-        for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti) {
-            // Real particles
-            const int nrp = NumberOfParticles(pti);
-
-            void * particles  = pti.GetArrayOfStructs().data();
-
-            const Box & bx = pti.tilebox();
-
-            // Remove particles outside of or touching the walls
-            if ((*flags)[pti].getType(bx) != FabType::regular)
-            {
-                if ((*flags)[pti].getType(bx) == FabType::covered)
-                {
-                    for (auto & p: pti.GetArrayOfStructs())
-                        p.id() = -1;
-                }
-                else
-                {
-                    rm_wall_collisions_eb(particles, &nrp,
-                                          BL_TO_FORTRAN_3D((*ls_phi)[pti]),
-                                          BL_TO_FORTRAN_3D((*flags)[pti]),
-                                          Geom(lev).ProbLo(),
-                                          dx, & ls_refinement);
-                }
-            }
-        }
-
-        Redistribute();
-
-        long fin_np = 0;
-        for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti) {
-            long np = pti.numParticles();
-            fin_np += np;
-        }
-
-        ParallelDescriptor::ReduceLongSum(fin_np,ParallelDescriptor::IOProcessorNumber());
-        amrex::Print() << "Final number of particles on level "
-                       << lev << ": " << fin_np << std::endl;
-    }
-}
-
 void MFIXParticleContainer::PrintParticleCounts() {
 
   const int lev = 0;
