@@ -58,7 +58,7 @@ void MFIXParticleContainer::AllocData ()
     get_gravity(gravity);
 }
 
-void MFIXParticleContainer::InitParticlesAscii(const std::string& file) 
+void MFIXParticleContainer::InitParticlesAscii(const std::string& file)
 {
 
   // only read the file on the IO proc
@@ -970,10 +970,6 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
        beta_vel_ptr[lev]->setVal(0.0,0,3,beta_vel_ptr[lev]->nGrow());
     }
 
-    const int* lo;
-    const int* hi;
-    Real* bx_dataptr;
-    Real* bu_dataptr;
 
     // We always use the coarse dx
     const Geometry& gm          = Geom(0);
@@ -1004,6 +1000,12 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
 #pragma omp parallel
 #endif
         {
+
+        const int* lo;
+        const int* hi;
+        Real* bx_dataptr;
+        Real* bu_dataptr;
+
         FArrayBox local_x_vol, local_u_vol;
          for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
 
