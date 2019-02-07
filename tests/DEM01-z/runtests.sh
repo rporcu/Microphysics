@@ -7,7 +7,7 @@ if [ -n "$1" ]; then
    MFIX=$1
 fi
 
-rm -f POST_* &> /dev/null
+rm -rf const_plt* POST_* &> /dev/null
 
 DES_KN=10000
 for DES_ETA in 0.9 0.8 0.7 0.6; do

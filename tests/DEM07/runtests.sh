@@ -26,7 +26,7 @@ else
     MPIRUN=""
 fi
 
-rm -rf post_* ${RUN_NAME}* &> /dev/null
+rm -rf const_plt* POST_* &> /dev/null
 time -p ${MPIRUN} ${MFIX} ${INPUTS}
 
 ${FJOIN_PAR} -f DEM07_par --end 25 --var 100 --format 8 &> POST_GRAN_TEMP.NEW

@@ -32,7 +32,7 @@ fi
 
 FCOMPARE=${FCOMPARE:-}
 
-rm -rf POST_* ${RUN_NAME}* &> /dev/null
+rm -rf const_plt* POST_* &> /dev/null
 time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.stop_time=0.150"
 time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.restart=DEM06_chk00150"
 

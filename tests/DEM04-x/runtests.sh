@@ -7,7 +7,7 @@ if [ -n "$1" ]; then
     MFIX=$1
 fi
 
-rm -f POST_* &> /dev/null
+rm -rf const_plt* POST_* &> /dev/null
 
 for DES_MEW in 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0; do
   rm -f ${RUN_NAME}* &> /dev/null
