@@ -155,7 +155,7 @@ program fjoin_par
          if(dt /= -1.0) write(*,"(3x,f15.6)",advance='no') dt*lc2
 
          do lc4=1,var_count
-            call write_var(var(lc4))
+            call write_var(var(lc4), lc4==var_count)
          enddo
 
       endif
@@ -257,11 +257,13 @@ contains
 !                                                                       !
 !                                                                       !
 !-----------------------------------------------------------------------!
-    subroutine write_var(llc)
+    subroutine write_var(llc, ldone)
 
      implicit none
 
      integer, intent(in) :: llc
+     logical, intent(in) :: ldone
+
      integer :: lc
      real(dp) :: tmp
 
@@ -279,7 +281,7 @@ contains
               clean_value(particles(id) % rdata(llc))
         endif
      endif
-     write(*,*)' '
+     if(ldone) write(*,*)' '
 
    end subroutine write_var
 
