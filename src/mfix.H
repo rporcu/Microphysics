@@ -201,7 +201,7 @@ public:
 
      int get_nghost() { return nghost; }
 
-     void SetParameters(int steady_state_in) 
+     void SetParameters(int steady_state_in)
          { steady_state = steady_state_in;}
 
 protected:
@@ -543,6 +543,8 @@ private:
      int particle_max_grid_size_x = -1;
      int particle_max_grid_size_y = -1;
      int particle_max_grid_size_z = -1;
+
+     int removeOutOfRange = 1; // Flag to remove out-of-range particles
 
      static EBSupport m_eb_support_level;
 

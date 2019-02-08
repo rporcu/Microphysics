@@ -20,12 +20,16 @@
 # RUN CONTROL SECTION
 
   DT =     1.0d-4
-  DT_MAX = 2.0d-4
+  DT_MAX = 1.0d-4
 
   CALL_USR = .T.
 
   FULL_LOG = .F.  ! display residuals on screen
   NLOG = 250      ! time steps between updates to (.LOG) file
+
+  GRAVITY(1) =  0.d0
+  GRAVITY(2) = -9.80665d0
+  GRAVITY(3) =  0.d0
 
 #_______________________________________________________________________
 # MATERIAL SECTION
@@ -92,9 +96,3 @@
   BC_Y_n(1:2) =  0.0000  0.0018  ! (m)
 
   BC_Type(1:2) = 2*'NSW'
-
-
-#_______________________________________________________________________
-# USER OUTPUT CONTROL
-
-  USR_DT(1) = 1.0d-5
