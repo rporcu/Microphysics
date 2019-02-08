@@ -7,7 +7,6 @@ set( SGS_TESTS
    DEM04-x DEM04-y DEM04-z
    DEM05-x DEM05-y DEM05-z
    DEM06-x DEM06-y DEM06-z
-   DEM06p-x DEM06p-y DEM06p-z
    DEM07
    )
 
@@ -82,7 +81,6 @@ set( MGS_TESTS
    FLD02-x FLD02-y FLD02-z
    FLD03-x FLD03-y FLD03-z
    DEM06-x DEM06-y DEM06-z
-   DEM06p-x DEM06p-y DEM06p-z
    DEM07
    )
 
@@ -140,7 +138,6 @@ set( TGS_TESTS
    FLD02-x FLD02-y FLD02-z
    FLD03-x FLD03-y FLD03-z
    DEM06-x DEM06-y DEM06-z
-   DEM06p-x DEM06p-y DEM06p-z
    DEM07
    )
 
@@ -247,7 +244,6 @@ set( TGM_TESTS
    FLD02-x FLD02-y FLD02-z
    FLD03-x FLD03-y FLD03-z
    DEM06-x DEM06-y DEM06-z
-   DEM06p-x DEM06p-y DEM06p-z
    )
 
 if (AMREX_ENABLE_OMP AND AMREX_ENABLE_MPI)
@@ -305,7 +301,6 @@ if ( AMREX_ENABLE_MPI )
       FLD02-x FLD02-y FLD02-z
       FLD03-x FLD03-y FLD03-z
       DEM06-x DEM06-y DEM06-z
-      DEM06p-x DEM06p-y DEM06p-z
       DEM07
       )
 
