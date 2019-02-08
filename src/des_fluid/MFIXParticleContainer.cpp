@@ -25,6 +25,7 @@ using namespace std;
 
 bool MFIXParticleContainer::use_neighbor_list  {true};
 bool MFIXParticleContainer::sort_neighbor_list {false};
+Real MFIXParticleContainer::gravity[3] {0.0};
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     : NeighborParticleContainer<realData::count,intData::count>
@@ -55,7 +56,6 @@ void MFIXParticleContainer::AllocData ()
     reserveData();
     resizeData();
 
-    get_gravity(gravity);
 }
 
 void MFIXParticleContainer::InitParticlesAscii(const std::string& file)
@@ -309,6 +309,8 @@ void MFIXParticleContainer:: printParticles()
 void MFIXParticleContainer::ReadStaticParameters ()
 {
     static bool initialized = false;
+
+    get_gravity(gravity);
 
     if (!initialized)
     {

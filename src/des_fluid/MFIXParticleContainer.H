@@ -203,7 +203,7 @@ private:
 
     int nlev;
 
-    Real gravity[3];
+    static Real gravity[3];
 
     ///
     /// We add a particle to the neighbor list if it's center is within 3 particle radii
