@@ -13,7 +13,7 @@
 #  References:                                                         #
 #                                                                      #
 #  R. Garg, J. Galvin, T. Li, and S. Pannala, Documentation of open-   #
-#     source MFIX-DEM software for gas-solids flows," from URL:        #
+#     source MFIX-DEM software for gas-solids flows,  from URL:        #
 #     https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,      #
 #                                                                      #
 ########################################################################
@@ -27,27 +27,11 @@
   DT =     1.00d-3
   DT_MAX = 1.00d-3
 
-  CALL_USR = .TRUE.
-
-  FULL_LOG = .T.    ! display residuals on screen
-  NLOG = 25         ! frequency to updated log file (.LOG)
-
   DRAG_TYPE = 'USER_DRAG'
 
   GRAVITY(1) =  0.d0
   GRAVITY(2) = -9.80665d0
   GRAVITY(3) =  0.d0
-
-#_______________________________________________________________________
-# NUMERICAL SECTION
-
-  MAX_NIT = 250
-  TOL_RESID = 1.E-4
- 
-  LEQ_IT(1) = 50
-  LEQ_IT(2:4) = 3*20
- 
-  LEQ_TOL(1:4) = 4*1.0d-6
 
 #_______________________________________________________________________
 # MATERIAL SECTION
@@ -131,21 +115,3 @@
   BC_TYPE(2) =    "PO"
 
   BC_P_g(2)   =   0.00   ! (Pa)
-
-
-! Free slip walls:
-!---------------------------------------------------------------------//
-! BC_X_w(3:6) =     0.00   0.00   0.00   0.01   ! (m)
-! BC_X_e(3:6) =     0.01   0.01   0.00   0.01   ! (m)
-! BC_Y_s(3:6) =     0.00   0.00   0.00   0.00   ! (m)
-! BC_Y_n(3:6) =     0.10   0.10   0.10   0.10   ! (m)
-! BC_Z_b(3:6) =     0.00   0.01   0.00   0.00   ! (m)
-! BC_Z_t(3:6) =     0.00   0.01   0.01   0.01   ! (m)
-
-! BC_TYPE(3:6) =  4*'FSW'
-
-
-#_______________________________________________________________________
-# USER OUTPUT CONTROL
-
-  USR_DT(1) = 1.0d-2
