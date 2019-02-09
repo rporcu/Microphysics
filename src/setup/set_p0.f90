@@ -8,7 +8,7 @@
       subroutine set_p0(lo, hi, domlo, domhi, &
                         p0_g, slo, shi, &
                         gp0, glo, ghi, &
-                        dx, dy, dz, xlength, ylength, zlength, delp_dir, &
+                        dx, dy, dz, xlength, ylength, zlength, delp_dir_in, &
                         bct_ilo, bct_ihi, bct_jlo, bct_jhi, &
                         bct_klo, bct_khi, ng) &
                  bind(C, name="set_p0")
@@ -42,7 +42,7 @@
 
       real(ar), intent(in) :: dx, dy, dz
       real(ar), intent(in) :: xlength, ylength, zlength
-      integer     , intent(in) :: delp_dir
+      integer , intent(in) :: delp_dir_in
 
       integer(c_int), intent(in   ) :: &
            bct_ilo(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
@@ -56,11 +56,13 @@
 ! Local variables
 !-----------------------------------------------
       ! indices
-      integer :: i, j, k, ibc, jbc, kbc, icv, bcv
+      integer :: i, j, k, ibc, jbc, kbc
+      integer :: icv, bcv, bcv_lo, bcv_hi
       integer :: nlft, nbot, ndwn, nrgt, ntop, nup
+      integer :: delp_dir
 
       ! Gas pressure at the axial location j
-      real(ar) :: pj
+      real(ar) :: pj, p_lo, p_hi
 
       ! Average pressure drop per unit length
       real(ar) :: dpodx, dpody, dpodz
@@ -68,17 +70,124 @@
       ! Initialize all components of gp0 to zero
       gp0(:,:,:,:) = 0.d0
 
+      delp_dir = delp_dir_in
+
+! ---------------------------------------------------------------->>>
+!     If the bc's are pressure inflow/outflow then be sure to capture that in p0 and gp0
+! ---------------------------------------------------------------->>>
+
+      if ( (bct_ilo(domlo(2),domlo(3),1) .eq. pinf_)   .and. &
+           (bct_ihi(domlo(2),domlo(3),1) .eq. pout_) ) then
+
+          delp_dir = 0
+
+          bcv_lo = bct_ilo(domlo(2),domlo(3),2)
+          p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+          bcv_hi = bct_ihi(domlo(2),domlo(3),2)
+          p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+          delp_x = p_lo - p_hi
+
+          pj  = p_hi
+
+      else if ( bct_ihi(domlo(2),domlo(3),1) .eq. pinf_  .and. &
+                bct_ilo(domlo(2),domlo(3),1) .eq. pout_) then
+
+          delp_dir = 0
+
+          bcv_lo = bct_ilo(domlo(2),domlo(3),2)
+          p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+          bcv_hi = bct_ihi(domlo(2),domlo(3),2)
+          p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+          delp_x = p_lo - p_hi
+
+          pj  = p_hi
+
+      else if ( bct_jlo(domlo(1),domlo(3),1) .eq. pinf_  .and. &
+                bct_jhi(domlo(1),domlo(3),1) .eq. pout_) then
+
+
+          delp_dir = 1
+
+          bcv_lo = bct_jlo(domlo(1),domlo(3),2)
+          p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+          bcv_hi = bct_jhi(domlo(1),domlo(3),2)
+          p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+          delp_y = p_lo - p_hi
+
+          pj  = p_hi
+
+      else if ( bct_jhi(domlo(1),domlo(3),1) .eq. pinf_  .and. &
+                bct_jlo(domlo(1),domlo(3),1) .eq. pout_) then
+
+          delp_dir = 1
+
+          bcv_lo = bct_jlo(domlo(1),domlo(3),2)
+          p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+          bcv_hi = bct_jhi(domlo(1),domlo(3),2)
+          p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+          delp_y = p_lo - p_hi
+
+          pj = p_hi
+
+      else if ( bct_klo(domlo(1),domlo(2),1) .eq. pinf_  .and. &
+                bct_khi(domlo(1),domlo(2),1) .eq. pout_) then
+
+          delp_dir = 2
+
+          bcv_lo = bct_klo(domlo(1),domlo(1),2)
+          p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+          bcv_hi = bct_khi(domlo(1),domlo(2),2)
+          p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+          delp_z = p_lo - p_hi
+
+          pj  = p_hi
+
+
+      else if ( bct_khi(domlo(1),domlo(2),1) .eq. pinf_  .and. &
+                bct_klo(domlo(1),domlo(2),1) .eq. pout_) then
+
+          delp_dir = 2
+
+          bcv_lo = bct_klo(domlo(1),domlo(2),2)
+          p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+          bcv_hi = bct_khi(domlo(1),domlo(2),2)
+          p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+          delp_z = p_lo - p_hi
+
+          pj = p_hi
+
+      end if
+
 ! ---------------------------------------------------------------->>>
 
       !  Make sure that ic_p_g is set if using delp pressure conditions
       do icv = 1, dim_ic
          if (ic_defined(icv)) then
-            if ( delp_dir .ge. 0 ) then
+            if ( (delp_dir .ge. 0) .and. (delp_dir .eq. delp_dir_in) ) then
                if (.not. is_defined(ic_p_g(icv))) then
                   print *,'MUST DEFINE ic_p_g if using the DELP pressure condition'
                   stop
                end if
                pj = ic_p_g(icv)
+
+            else if ( (delp_dir .ge. 0) .and. (delp_dir .ne. delp_dir_in) ) then
+               if (is_defined(ic_p_g(icv))) then
+                  print *,'MUST not define ic_p_g if setting p_inflow and p_outflow'
+                  stop
+               end if
+
             else
                if (is_undefined(ic_p_g(icv))) goto 60
                if (gravity(1).ne.0.d0 .or. gravity(2).ne.0.d0 .or. gravity(3).ne.0.d0) goto 60
@@ -99,7 +208,8 @@
          !  This hack allows to set the IC pressure  at L-dx/2 for both
          !  nodal and CC pressure -> reference value for pressure, AKA IC_P_G,
          !  is set at the last cell center location.
-         real(ar), parameter :: offset = - 0.5_ar
+         real(ar) :: offset = - 0.5_ar
+         if (delp_dir .ne. delp_dir_in) offset = -1.0_ar
 
          if (abs(delp_x) > epsilon(zero)) then
             dpodx = delp_x/xlength
