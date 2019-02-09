@@ -124,6 +124,7 @@ MacProjection::update_internals ()
          m_phi[lev].reset( new MultiFab( m_amrcore -> boxArray(lev),
                                          m_amrcore -> DistributionMap(lev),
                                          1,m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
+         m_phi[lev]->setVal(0.);
 
          //
          // Staggered quantities
