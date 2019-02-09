@@ -46,5 +46,4 @@ amr.plot_int  = 1
 amr.plot_file = FLD03
 
 amr.check_int = -1
-
 amr.par_ascii_int = -1
