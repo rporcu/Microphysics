@@ -3,7 +3,7 @@
 
 amrex.fpe_trap_invalid = 1
 
-mfix.steady_state_tol=1.0e-4
+mfix.steady_state_tol=1.0e-10
 
 #! Fluid solver
 #!-----------------------------------------------------------//
@@ -16,13 +16,13 @@ amr.blocking_factor = 4
 amr.max_level = 0
 
 # Geometry
-geometry.coord_sys   = 0                # 0: Cartesian
-geometry.is_periodic = 0     1     0    # Is periodic in each direction?
-geometry.prob_lo     = 0.    0.    0.   # lo corner of physical domain
-geometry.prob_hi     = 0.01  0.01  0.01 # hi corner of physical domain
+geometry.coord_sys   = 0                 # 0: Cartesian
+geometry.is_periodic = 0     1      0    # Is periodic in each direction?
+geometry.prob_lo     = 0.    0.     0.   # lo corner of physical domain
+geometry.prob_hi     = 0.01  0.005  0.01 # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell = 8 8 8
+amr.n_cell = 8 4 8
 
 #! Grids
 #!-----------------------------------------------------------//
