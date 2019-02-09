@@ -38,23 +38,23 @@ contains
 
    !
    ! Check whether interpolation stencil around x_i is valid
-   ! 
+   !
    function interp_stencil_is_valid ( x_i, x_0, dx, flags, flo, fhi ) result(res)
 
       use amrex_ebcellflag_module, only: is_covered_cell
 
       real(rt),       intent(in   ) :: x_i(3), x_0(3), dx(3)
       integer(c_int), intent(in   ) :: flo(3), fhi(3)
-      integer(c_int), intent(in   ) :: flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))     
+      integer(c_int), intent(in   ) :: flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
       logical                       :: res
-      integer                       :: i, j, k  
+      integer                       :: i, j, k
 
       ! Pick upper cell in the stencil
       i = floor((x_i(1) - x_0(1))/dx(1) + half)
       j = floor((x_i(2) - x_0(2))/dx(2) + half)
       k = floor((x_i(3) - x_0(3))/dx(3) + half)
 
-      res = .not. any(is_covered_cell(flags(i-1:i,j-1:j,k-1:k)))     
+      res = .not. any(is_covered_cell(flags(i-1:i,j-1:j,k-1:k)))
 
    end function interp_stencil_is_valid
 
@@ -128,18 +128,19 @@ contains
    !
    ! Interpolate the sum of two variables
    !
-   function trilinear_interp_double_var (var1, var2, vlo, vhi, nc, x_i, x_0, dx) &
+   function trilinear_interp_double_var (var1, v1lo, v1hi, var2, v2lo, v2hi, nc, x_i, x_0, dx) &
     &       result(var_i)
 
       ! Array bounds
-      integer(c_int), intent(in   ) :: vlo(3), vhi(3)
+     integer(c_int), intent(in   ) :: v1lo(3), v1hi(3)
+     integer(c_int), intent(in   ) :: v2lo(3), v2hi(3)
 
       ! Number of components
       integer(c_int), intent(in   ) :: nc
 
       ! Field variable
-      real(rt),       intent(in   ) :: var1(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),1:nc)
-      real(rt),       intent(in   ) :: var2(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),1:nc)
+      real(rt),       intent(in   ) :: var1(v1lo(1):v1hi(1),v1lo(2):v1hi(2),v1lo(3):v1hi(3),1:nc)
+      real(rt),       intent(in   ) :: var2(v2lo(1):v2hi(1),v2lo(2):v2hi(2),v2lo(3):v2hi(3),1:nc)
 
       ! Coordinates of domain lower corner
       real(rt),       intent(in   ) :: x_0(3)
