@@ -71,7 +71,6 @@ subroutine calc_drag_particle( gp,  gplo,  gphi,  &
          velfp(:)  = trilinear_interp(vel, ulo,  uhi, 3, ppos, x0, dx)
          gradpg(:) = trilinear_interp(gp, gplo, gphi, 3, ppos, x0, dx )
 
-
          ! Particle drag calculation
          particles(p) % drag = pbeta*(velfp - pvel) - &
           &                (gradpg(:) + gp0(:)) * particles(p) % volume
@@ -166,7 +165,7 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
             jc  = floor((particles(p) % pos(2) - x0(2))*ody)
             kc  = floor((particles(p) % pos(3) - x0(3))*odz)
 
-            gradpg(:) = gp(ic,jc,kc,:) + gp0(:)
+            gradpg(:) = gp(ic,jc,kc,:)
 
          else
 
@@ -176,7 +175,7 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
 
          ! Particle drag calculation
          particles(p) % drag = pbeta*(velfp - pvel) - &
-          &                gradpg(:) * particles(p) % volume
+          &                (gradpg(:) + gp0(:)) * particles(p) % volume
 
       end associate
 
