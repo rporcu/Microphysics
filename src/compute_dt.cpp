@@ -16,6 +16,12 @@ mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
 
     Real ope = 1.0 + 1.e-8;
     
+    // We only compute gp0max on the coarset level because it is the same at all levels
+    Real gp0max[3];
+    gp0max[0]  = mfix_norm0 ( gp0, 0, 0 );
+    gp0max[1]  = mfix_norm0 ( gp0, 0, 1 );
+    gp0max[2]  = mfix_norm0 ( gp0, 0, 2 );
+
     for (int lev = 0; lev < nlev; lev++)
     {
        // Compute dt for this time step
@@ -26,13 +32,8 @@ mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
        mumax = amrex::max(mumax,mfix_norm0( mu_g,  lev, 0 ));
     }
 
-    Real norm_gp0[3];
-    norm_gp0[0] = std::abs(gp0[0]);
-    norm_gp0[1] = std::abs(gp0[1]);
-    norm_gp0[2] = std::abs(gp0[2]);
-
     compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax, 
-                     norm_gp0, geom[finest_level].CellSize(), &cfl, 
+                     gp0max, geom[finest_level].CellSize(), &cfl, 
                      &steady_state, &time, &stop_time, &dt_new);
 
     // dt_new is the step calculated with a cfl contraint; dt is the value set by fixed_dt

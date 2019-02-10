@@ -11,6 +11,7 @@ module mfix_particle_pic_module
 
    public :: mfix_deposit_cic_eb
    public :: mfix_multi_deposit_cic_eb
+   public :: get_gravity
 
 contains
 
@@ -210,5 +211,13 @@ contains
       end do
 
    end subroutine mfix_multi_deposit_cic_eb
+
+   subroutine get_gravity ( grav_out) bind(C)
+
+      use constant, only: gravity
+      real(amrex_real), intent(out)  :: grav_out(3)
+      grav_out(:) = gravity(:)
+
+   end subroutine get_gravity
 
 end module mfix_particle_pic_module

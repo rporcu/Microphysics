@@ -94,6 +94,42 @@ contains
    end subroutine compute_new_dt
 
    !
+   ! Add gravitational acceleration terms to velocity
+   !
+   subroutine add_gravity ( lo, hi, vel, ulo, uhi, dt )  bind(C)
+
+      use constant, only: gravity
+
+      ! Loop bounds
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+
+      ! Array bounds
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3)
+
+      ! Time step width
+      real(ar),       intent(in   ) :: dt
+
+      real(ar),       intent(inout) :: &
+           vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
+
+      ! Local variables
+      integer(c_int)                :: i, j, k
+
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+
+               vel(i,j,k,1) = vel(i,j,k,1) + dt * gravity(1)
+               vel(i,j,k,2) = vel(i,j,k,2) + dt * gravity(2)
+               vel(i,j,k,3) = vel(i,j,k,3) + dt * gravity(3)
+
+            end do
+         end do
+      end do
+
+   end subroutine add_gravity
+
+   !
    ! This adds both components of the drag term
    ! Here f_gds = beta
    !      drag  = beta * particle_velocity

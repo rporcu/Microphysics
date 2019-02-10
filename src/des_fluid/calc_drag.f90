@@ -9,7 +9,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine calc_drag_particle( gp,  gplo,  gphi,  &
- &                            gp0, &
+ &                            gp0, gp0lo, gp0hi,  &
  &                            vel,   ulo,   uhi,  &
  &                             np, particles, dx, &
  &                             x0 )  bind(C)
@@ -24,14 +24,14 @@ subroutine calc_drag_particle( gp,  gplo,  gphi,  &
 
    ! Array bounds
    integer(c_int), intent(in   )        ::   gplo(3),  gphi(3)
+   integer(c_int), intent(in   )        ::  gp0lo(3), gp0hi(3)
    integer(c_int), intent(in   )        ::    ulo(3),   uhi(3)
 
    ! Arrays
    real(rt),       intent(in   )        ::                           &
     & vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3),              &
-    &  gp(gplo(1):gphi(1),gplo(2):gphi(2),gplo(3):gphi(3),3)
-
-   real(rt),       intent(in   )        ::  gp0(3)
+    &  gp(gplo(1):gphi(1),gplo(2):gphi(2),gplo(3):gphi(3),3),        &
+    & gp0(gp0lo(1):gp0hi(1),gp0lo(2):gp0hi(2),gp0lo(3):gp0hi(3),3)
 
    ! Particles
    integer(c_int),   intent(in   )    :: np
@@ -48,20 +48,13 @@ subroutine calc_drag_particle( gp,  gplo,  gphi,  &
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer  :: p, i, j, k
-   real(rt) :: velfp(3), gradpg(3), gp2(3)
+   real(rt) :: velfp(3), gradpg(3)
    real(rt) :: pbeta
    real(rt) :: odx, ody, odz
-   real(rt), allocatable :: gp02(:,:,:,:)
- 
-   allocate(gp02(gplo(1):gphi(1),gplo(2):gphi(2),gplo(3):gphi(3),3))
 
    odx = one/dx(1)
    ody = one/dx(2)
    odz = one/dx(3)
-
-   gp02(:,:,:,1) = gp0(1)
-   gp02(:,:,:,2) = gp0(2)
-   gp02(:,:,:,3) = gp0(3)
 
    ! Calculate the gas phase forces acting on each particle.
    do p = 1, np
@@ -75,26 +68,23 @@ subroutine calc_drag_particle( gp,  gplo,  gphi,  &
          j = floor((ppos(2) - x0(2))*ody + half)
          k = floor((ppos(3) - x0(3))*odz + half)
 
-         velfp(:)  = trilinear_interp(vel, ulo,  uhi, 3, ppos, x0, dx)
-         gradpg(:) = trilinear_interp(gp, gplo, gphi, gp02, gplo, gphi, 3, ppos, x0, dx )
+         velfp(:)  = trilinear_interp(vel, ulo, uhi, 3, ppos, x0, dx)
+         gradpg(:) = trilinear_interp(gp, gplo, gphi, gp0, gp0lo, gp0hi, 3, ppos, x0, dx )
 
-!        gp2(:) = gradpg(:) + gp0(:)
 
          ! Particle drag calculation
          particles(p) % drag = pbeta*(velfp - pvel) - &
-          &                 gradpg(:) * particles(p) % volume
+          &                gradpg(:) * particles(p) % volume
 
       end associate
 
    end do
 
-   deallocate(gp02)
-
 end subroutine calc_drag_particle
 
 
 subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
- &                               gp0, &
+ &                               gp0, gp0lo,  gp0hi,  &
  &                               vel,   ulo,    uhi,  &
  &                             flags,   flo,    fhi,  &
  &                                np, particles, dx,  &
@@ -111,15 +101,15 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
 
    ! Array bounds
    integer(c_int), intent(in   )        ::   gplo(3),  gphi(3)
+   integer(c_int), intent(in   )        ::  gp0lo(3), gp0hi(3)
    integer(c_int), intent(in   )        ::    ulo(3),   uhi(3)
    integer(c_int), intent(in   )        ::    flo(3),   fhi(3)
 
    ! Arrays
    real(rt),       intent(in   )        ::                           &
     & vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3),              &
-    &  gp(gplo(1):gphi(1),gplo(2):gphi(2),gplo(3):gphi(3),3)
-
-   real(rt),       intent(in   )        :: gp0(3)
+    &  gp(gplo(1):gphi(1),gplo(2):gphi(2),gplo(3):gphi(3),3),        &
+    & gp0(gp0lo(1):gp0hi(1),gp0lo(2):gp0hi(2),gp0lo(3):gp0hi(3),3)
 
    integer(c_int), intent(in   ) ::  &
     & flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
@@ -142,6 +132,7 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
    real(rt) :: velfp(3), gradpg(3)
    real(rt) :: pbeta
    real(rt) :: odx, ody, odz
+
 
    odx = one/dx(1)
    ody = one/dx(2)
@@ -175,17 +166,17 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
             jc  = floor((particles(p) % pos(2) - x0(2))*ody)
             kc  = floor((particles(p) % pos(3) - x0(3))*odz)
 
-            gradpg(:) = gp(ic,jc,kc,:)
+            gradpg(:) = gp(ic,jc,kc,:) + gp0(ic,jc,kc,:)
 
          else
 
-            gradpg(:) = trilinear_interp(gp, gplo, gphi, 3, ppos, x0, dx )
+            gradpg(:) = trilinear_interp(gp, gplo, gphi, gp0, gp0lo, gp0hi, 3, ppos, x0, dx )
 
          end if
 
          ! Particle drag calculation
          particles(p) % drag = pbeta*(velfp - pvel) - &
-          &                (gradpg(:) + gp0(:)) * particles(p) % volume
+          &                gradpg(:) * particles(p) % volume
 
       end associate
 

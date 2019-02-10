@@ -22,8 +22,6 @@ int mfix::nlev = 1;
 
 EBSupport mfix::m_eb_support_level = EBSupport::full;
 
-Real mfix::gravity[3] {0.0};
-Real mfix::gp0[3]     {0.0};
 
 mfix::~mfix ()
 {
@@ -142,6 +140,7 @@ mfix::ResizeArrays ()
 
     // Pressure gradients
     gp.resize(nlevs_max);
+    gp0.resize(nlevs_max);
 
     f_gds.resize(nlevs_max);
     drag.resize(nlevs_max);

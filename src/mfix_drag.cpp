@@ -184,7 +184,7 @@ mfix::mfix_calc_drag_particle(Real time)
     {
 
         Box      domain(geom[lev].Domain());
-        MultiFab gp_tmp;
+        MultiFab gp_tmp, gp0_tmp;
 
         gp_tmp.define(grids[lev],dmap[lev],3,1);
 
@@ -223,15 +223,18 @@ mfix::mfix_calc_drag_particle(Real time)
 
         // Pointers to Multifabs of interest
         MultiFab*  gp_ptr;
+        MultiFab* gp0_ptr;
         MultiFab* vel_ptr;
 
         // Temporararies for dual grid case
         std::unique_ptr<MultiFab>   gp_pba;
+        std::unique_ptr<MultiFab>  gp0_pba;
         std::unique_ptr<MultiFab>  vel_pba;
 
         if (OnSameGrids)
         {
             gp_ptr  = &gp_tmp;
+            gp0_ptr = gp0[lev].get();
             vel_ptr = vel_g[lev].get();
         }
         else
@@ -243,6 +246,11 @@ mfix::mfix_calc_drag_particle(Real time)
             gp_pba.reset(new MultiFab(pba,pdm,gp_tmp.nComp(),ng));
             gp_pba->copy(gp_tmp,0,0,gp_tmp.nComp(),ng,ng);
             gp_pba->FillBoundary(geom[lev].periodicity());
+
+            ng = gp0[lev]->nGrow();
+            gp0_pba.reset(new MultiFab(pba,pdm,gp0[lev]->nComp(),ng));
+            gp0_pba->copy(*gp0[lev],0,0,gp0[lev]->nComp(),ng,ng);
+            gp0_pba->FillBoundary(geom[lev].periodicity());
 
             // EBFArrayBoxFactory ebfactory_loc( * eb_level_fluid,
             //                                   geom[lev], pba, pdm,
@@ -259,7 +267,9 @@ mfix::mfix_calc_drag_particle(Real time)
             vel_pba->FillBoundary(geom[lev].periodicity());
 
             gp_ptr  = gp_pba.get();
+            gp0_ptr = gp0_pba.get();
             vel_ptr = vel_pba.get();
+
         }
 
         // Phi is always on the particles grid
@@ -289,7 +299,7 @@ mfix::mfix_calc_drag_particle(Real time)
                     if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
                     {
                         calc_drag_particle( BL_TO_FORTRAN_ANYD((*gp_ptr)[pti]),
-                                            gp0, 
+                                            BL_TO_FORTRAN_ANYD((*gp0_ptr)[pti]),
                                             BL_TO_FORTRAN_ANYD((*vel_ptr)[pti]),
                                             &np, particles.data(),
                                             geom[lev].CellSize(), geom[lev].ProbLo());
@@ -307,7 +317,7 @@ mfix::mfix_calc_drag_particle(Real time)
                                               geom[lev].ProbLo(), geom[lev].CellSize()) ;
 
                         calc_drag_particle_eb( BL_TO_FORTRAN_ANYD((*gp_ptr)[pti]),
-                                               gp0, 
+                                               BL_TO_FORTRAN_ANYD((*gp0_ptr)[pti]),
                                                BL_TO_FORTRAN_ANYD(vel_r),
                                                BL_TO_FORTRAN_ANYD(flags),
                                                &np, particles.data(),
