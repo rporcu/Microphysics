@@ -157,8 +157,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     get_gravity(gravity);
 }
 
-
-
 //! Tag using each EB level's volfrac. This requires that the `eb_levels` have
 //! already been build.
 void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){

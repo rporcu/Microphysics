@@ -48,13 +48,20 @@ subroutine calc_drag_particle( gp,  gplo,  gphi,  &
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer  :: p, i, j, k
-   real(rt) :: velfp(3), gradpg(3)
+   real(rt) :: velfp(3), gradpg(3), gp2(3)
    real(rt) :: pbeta
    real(rt) :: odx, ody, odz
+   real(rt), allocatable :: gp02(:,:,:,:)
+ 
+   allocate(gp02(gplo(1):gphi(1),gplo(2):gphi(2),gplo(3):gphi(3),3))
 
    odx = one/dx(1)
    ody = one/dx(2)
    odz = one/dx(3)
+
+   gp02(:,:,:,1) = gp0(1)
+   gp02(:,:,:,2) = gp0(2)
+   gp02(:,:,:,3) = gp0(3)
 
    ! Calculate the gas phase forces acting on each particle.
    do p = 1, np
@@ -69,15 +76,19 @@ subroutine calc_drag_particle( gp,  gplo,  gphi,  &
          k = floor((ppos(3) - x0(3))*odz + half)
 
          velfp(:)  = trilinear_interp(vel, ulo,  uhi, 3, ppos, x0, dx)
-         gradpg(:) = trilinear_interp(gp, gplo, gphi, 3, ppos, x0, dx )
+         gradpg(:) = trilinear_interp(gp, gplo, gphi, gp02, gplo, gphi, 3, ppos, x0, dx )
+
+!        gp2(:) = gradpg(:) + gp0(:)
 
          ! Particle drag calculation
          particles(p) % drag = pbeta*(velfp - pvel) - &
-          &                (gradpg(:) + gp0(:)) * particles(p) % volume
+          &                 gradpg(:) * particles(p) % volume
 
       end associate
 
    end do
+
+   deallocate(gp02)
 
 end subroutine calc_drag_particle
 
@@ -131,7 +142,6 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
    real(rt) :: velfp(3), gradpg(3)
    real(rt) :: pbeta
    real(rt) :: odx, ody, odz
-
 
    odx = one/dx(1)
    ody = one/dx(2)

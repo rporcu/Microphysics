@@ -68,8 +68,8 @@ contains
 
       ! Gravity and/or gradient of p0
       f_cfl = abs(gravity(1)-gradp0max(1)) * odx + &
-           abs(gravity(2)-gradp0max(2)) * ody + &
-           abs(gravity(3)-gradp0max(3)) * odz
+              abs(gravity(2)-gradp0max(2)) * ody + &
+              abs(gravity(3)-gradp0max(3)) * odz
 
       ! Put all together
       tmp = (c_cfl + v_cfl)  + sqrt ( (c_cfl + v_cfl)**2 + four * f_cfl )

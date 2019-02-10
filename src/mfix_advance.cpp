@@ -419,7 +419,15 @@ mfix::mfix_add_gravity_and_gp (int lev, amrex::Real dt)
         for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
           for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
           {
-             vel_fab(i,j,k,n) -= dt * (gp_fab(i,j,k,n) + gp0[n]) / den_fab(i,j,k);
+             vel_fab(i,j,k,n) -= dt * gp_fab(i,j,k,n)/den_fab(i,j,k);
+          }
+
+      for (int n = 0; n < 3; n++)
+       for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
+        for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
+          for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
+          {
+             vel_fab(i,j,k,n) -= dt * gp0[n]/den_fab(i,j,k);
           }
     }
 }
