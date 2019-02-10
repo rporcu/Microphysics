@@ -147,7 +147,7 @@ program fjoin_par
 
          if(verbose) write(*,*)'reading    --> ',trim(fbase)//clc2
          open ( unit=funit, file=trim(fbase)//clc2 )
-         call read_particle_data
+         call read_particle_data()
          close ( funit )
          lc1 = lc1 + 1
 
@@ -155,7 +155,7 @@ program fjoin_par
          if(dt /= -1.0) write(*,"(3x,f15.6)",advance='no') dt*lc2
 
          do lc4=1,var_count
-            call write_var(var(lc4))
+            call write_var(var(lc4), lc4==var_count)
          enddo
 
       endif
@@ -191,7 +191,34 @@ contains
 !                                                                       !
 !                                                                       !
 !-----------------------------------------------------------------------!
-   subroutine read_particle_data
+   subroutine dealloc_particles
+
+
+     integer :: lc1
+
+     if(allocated(particles)) then
+        do lc1=1, size(particles)
+
+           if(allocated(particles(lc1)% rdata)) &
+                deallocate(particles(lc1) % rdata)
+
+           if(allocated(particles(lc1)% idata)) &
+                deallocate(particles(lc1) % idata)
+
+        end do
+
+        deallocate( particles )
+     endif
+
+   end subroutine dealloc_particles
+
+
+!-----------------------------------------------------------------------!
+!                                                                       !
+!                                                                       !
+!                                                                       !
+!-----------------------------------------------------------------------!
+   subroutine read_particle_data()
 
      implicit none
 
@@ -200,13 +227,22 @@ contains
      integer :: lc1
      logical :: lverbose
 
+     integer :: fnp
+
      lverbose = verbose .and. .false.
 
+     read (funit,*) fnp
      read (funit,*)
      read (funit,*)
      read (funit,*)
      read (funit,*)
-     read (funit,*)
+
+     if(fnp /= np) then
+        np = fnp
+        call dealloc_particles()
+        call   alloc_particles()
+     endif
+
 
      do lc1=1,np
 
@@ -257,11 +293,13 @@ contains
 !                                                                       !
 !                                                                       !
 !-----------------------------------------------------------------------!
-    subroutine write_var(llc)
+    subroutine write_var(llc, ldone)
 
      implicit none
 
      integer, intent(in) :: llc
+     logical, intent(in) :: ldone
+
      integer :: lc
      real(dp) :: tmp
 
@@ -279,7 +317,7 @@ contains
               clean_value(particles(id) % rdata(llc))
         endif
      endif
-     write(*,*)' '
+     if(ldone) write(*,*)' '
 
    end subroutine write_var
 

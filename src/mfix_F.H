@@ -102,15 +102,15 @@ extern "C"
 
     void set_p0(const int*  lo   , const int*  hi,
           const int* domlo , const int* domhi,
-                amrex::Real* p0_g , const int* rlo, const int* rhi,
-                amrex::Real* gp0_g, const int* glo, const int* ghi,
+          amrex::Real* p0_g , const int* rlo, const int* rhi,
+         amrex::Real* gp0_g, 
           amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
           amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
           int* delp_dir,
           const int* bc_ilo, const int* bc_ihi,
           const int* bc_jlo, const int* bc_jhi,
           const int* bc_klo, const int* bc_khi,
-                const int* ng
+          const int* ng
        );
 
     void set_vec_bcs (

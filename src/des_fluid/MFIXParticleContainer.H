@@ -87,7 +87,7 @@ public:
     void InitParticlesAscii(const std::string& file);
     void InitParticlesAuto();
     void RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
-                          const MultiFab * ls_phi, const iMultiFab * ls_valid, int ls_refinement);
+                          const MultiFab * ls_phi, int ls_refinement);
 
     void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 
@@ -203,7 +203,7 @@ private:
 
     int nlev;
 
-    Real gravity[3];
+    static Real gravity[3];
 
     ///
     /// We add a particle to the neighbor list if it's center is within 3 particle radii

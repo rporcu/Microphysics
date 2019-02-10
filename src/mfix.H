@@ -236,6 +236,9 @@ protected:
      void mfix_set_bc0();
      void mfix_set_p0();
 
+     static Real gp0[3];
+     static Real gravity[3];
+
      //! The particles see an inflow face as a solid wall; thus instead of
      //! creating a separate EBfactory for particles, we simply modify the
      //! level-set near inflow to see it as a wall
@@ -344,11 +347,7 @@ private:
 
      void mfix_add_drag_terms(Real dt);
 
-     void mfix_add_gravity(int lev, Real dt, Vector< std::unique_ptr<MultiFab> >& vel);
-#if 0
-     void mfix_compute_velocity_slopes(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
-     void mfix_compute_velocity_at_faces(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
-#endif
+     void mfix_add_gravity_and_gp(int lev, Real dt);
 
      void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
      void mfix_compute_MAC_velocity_at_faces(Real time, Vector< std::unique_ptr<MultiFab> >& vel);
@@ -432,7 +431,6 @@ private:
 
      // Pressure gradients
      Vector< std::unique_ptr<MultiFab> > gp ;
-     Vector< std::unique_ptr<MultiFab> > gp0;
 
      // Molecular viscosity
      Vector< std::unique_ptr<MultiFab> > mu_g ;
@@ -545,6 +543,8 @@ private:
      int particle_max_grid_size_y = -1;
      int particle_max_grid_size_z = -1;
 
+     int removeOutOfRange = 1; // Flag to remove out-of-range particles
+
      static EBSupport m_eb_support_level;
 
      Periodicity p0_periodicity;
@@ -624,7 +624,7 @@ private:
      //! EB levels representing fluid boundary conditions
      Vector<const EB2::Level *> eb_levels;
      //! EB levels representing particle boundary conditions (same as
-     //! `mfix::eb_levels` but additional walls at MI BCs).
+     //! `mfix::eb_levels` but might include additional walls at MI BCs).
      Vector<const EB2::Level *> particle_eb_levels;
 
      //! EB factory that lives on the fluid grids

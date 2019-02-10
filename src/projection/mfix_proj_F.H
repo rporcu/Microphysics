@@ -121,11 +121,6 @@ extern "C"
       const int* bc_lo, const int* bc_hi,
       const amrex::Real* dx, const int* domlo, const int* domhi );
 
-   void add_gravity (
-      const int* lo, const int* hi,
-      amrex::Real* vel    , const int* ulo, const int* uhi,
-      const amrex::Real* dt);
-    
    void add_drag_terms (
       const int* lo, const int* hi,
             amrex::Real* vel,     const int* ulo, const int* uhi,

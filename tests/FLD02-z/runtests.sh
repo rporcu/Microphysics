@@ -32,7 +32,7 @@ fi
 
 FCOMPARE=${FCOMPARE:-}
 
-rm -rf POST_* ${RUN_NAME}* &> /dev/null
+rm -rf POST_* const_plt* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
 ${FEXTRACT} -p FLD0200001/ -d 1 -t 1.0e-10 -v w_g -s POST_VG.dat

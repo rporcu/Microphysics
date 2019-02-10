@@ -59,19 +59,6 @@ mfix::make_eb_regular()
             // Since walls are specified in the mfix.dat, setting the
             // `contains_ebs` flag to true
             contains_ebs = true;
-
-            //___________________________________________________________________
-            // Particles need the correct volfrac at the inflow
-            bool has_more_walls = false;
-            std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_more_walls);
-            if (has_more_walls)
-            {
-                auto if_part = EB2::makeUnion(* impfunc_walls, * walls);
-                auto gshop_part = EB2::makeShop(if_part);
-
-                build_particle_eb_levels(gshop_part);
-            }
-
         }
         else
         {
@@ -79,19 +66,6 @@ mfix::make_eb_regular()
             auto gshop = EB2::makeShop(my_regular);
 
             build_eb_levels(gshop);
-
-            //___________________________________________________________________
-            // Particles need the correct volfrac at the inflow
-            bool has_more_walls = false;
-            std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_more_walls);
-            if (has_more_walls)
-            {
-                // auto if_part = EB2::makeUnion(my_regular, * walls);
-                auto gshop_part = EB2::makeShop(* walls);
-
-                build_particle_eb_levels(gshop_part);
-            }
-
         }
     }
 }

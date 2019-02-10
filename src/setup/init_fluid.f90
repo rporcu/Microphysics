@@ -257,7 +257,7 @@ module init_fluid_module
    subroutine set_ic(slo, shi, domlo, domhi, dx, dy, dz, vel_g)
 
       use ic, only: dim_ic, ic_defined
-      use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
+      use ic, only: ic_u_g, ic_v_g, ic_w_g
       use ic, only: ic_x_e, ic_y_n, ic_z_t
       use ic, only: ic_x_w, ic_y_s, ic_z_b
       use scales, only: scale_pressure
@@ -288,7 +288,7 @@ module init_fluid_module
       integer :: icv
 
       ! Temporary variables for storing IC values
-      real(rt) :: pgx, ugx, vgx, wgx
+      real(rt) :: ugx, vgx, wgx
 
       integer :: i_w, j_s, k_b
       integer :: i_e, j_n, k_t
@@ -303,7 +303,6 @@ module init_fluid_module
               i_w, i_e, j_s, j_n, k_b, k_t)
 
             ! Use the volume fraction already calculated from particle data
-            pgx = ic_p_g(icv)
             ugx = ic_u_g(icv)
             vgx = ic_v_g(icv)
             wgx = ic_w_g(icv)

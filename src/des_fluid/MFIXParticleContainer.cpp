@@ -25,6 +25,7 @@ using namespace std;
 
 bool MFIXParticleContainer::use_neighbor_list  {true};
 bool MFIXParticleContainer::sort_neighbor_list {false};
+Real MFIXParticleContainer::gravity[3] {0.0};
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     : NeighborParticleContainer<realData::count,intData::count>
@@ -55,10 +56,9 @@ void MFIXParticleContainer::AllocData ()
     reserveData();
     resizeData();
 
-    get_gravity(gravity);
 }
 
-void MFIXParticleContainer::InitParticlesAscii(const std::string& file) 
+void MFIXParticleContainer::InitParticlesAscii(const std::string& file)
 {
 
   // only read the file on the IO proc
@@ -199,59 +199,6 @@ void MFIXParticleContainer::InitParticlesAuto()
 
 }
 
-void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
-                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
-                                             int ls_refinement)
-{
-    // Only call the routine for wall collisions if we actually have walls
-    if (ebfactory != NULL) {
-
-        const Real * dx = Geom(lev).CellSize();
-
-        const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
-
-        for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti) {
-            // Real particles
-            const int nrp = NumberOfParticles(pti);
-
-            void * particles  = pti.GetArrayOfStructs().data();
-
-            const Box & bx = pti.tilebox();
-
-            // Remove particles outside of or touching the walls
-            if ((*flags)[pti].getType(bx) != FabType::regular)
-            {
-                if ((*flags)[pti].getType(bx) == FabType::covered)
-                {
-                    for (auto & p: pti.GetArrayOfStructs())
-                        p.id() = -1;
-                }
-                else
-                {
-                    rm_wall_collisions_eb(particles, &nrp,
-                                          BL_TO_FORTRAN_3D((*ls_valid)[pti]),
-                                          BL_TO_FORTRAN_3D((*ls_phi)[pti]),
-                                          BL_TO_FORTRAN_3D((*flags)[pti]),
-                                          Geom(lev).ProbLo(),
-                                          dx, & ls_refinement);
-                }
-            }
-        }
-
-        Redistribute();
-
-        long fin_np = 0;
-        for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti) {
-            long np = pti.numParticles();
-            fin_np += np;
-        }
-
-        ParallelDescriptor::ReduceLongSum(fin_np,ParallelDescriptor::IOProcessorNumber());
-        amrex::Print() << "Final number of particles on level "
-                       << lev << ": " << fin_np << std::endl;
-    }
-}
-
 void MFIXParticleContainer::PrintParticleCounts() {
 
   const int lev = 0;
@@ -362,6 +309,8 @@ void MFIXParticleContainer:: printParticles()
 void MFIXParticleContainer::ReadStaticParameters ()
 {
     static bool initialized = false;
+
+    get_gravity(gravity);
 
     if (!initialized)
     {
@@ -1023,10 +972,6 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
        beta_vel_ptr[lev]->setVal(0.0,0,3,beta_vel_ptr[lev]->nGrow());
     }
 
-    const int* lo;
-    const int* hi;
-    Real* bx_dataptr;
-    Real* bu_dataptr;
 
     // We always use the coarse dx
     const Geometry& gm          = Geom(0);
@@ -1057,6 +1002,12 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
 #pragma omp parallel
 #endif
         {
+
+        const int* lo;
+        const int* hi;
+        Real* bx_dataptr;
+        Real* bu_dataptr;
+
         FArrayBox local_x_vol, local_u_vol;
          for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
 

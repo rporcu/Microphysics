@@ -2,6 +2,7 @@
 
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
+#include <mfix_des_F.H>
 #include <AMReX_EBAmrUtil.H>
 #include <mfix.H>
 #include <AMReX_BC_TYPES.H>
@@ -16,7 +17,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     // set n_error_buf (used in AmrMesh) to default (can overwrite later)
     for (int i = 0; i < n_error_buf.size(); i++)
         n_error_buf[i] = 8;
-
 
     {
         ParmParse pp("mfix");
@@ -147,12 +147,14 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.queryarr("avg_region_y_s", avg_region_y_s );
         pp.queryarr("avg_region_z_t", avg_region_z_t );
         pp.queryarr("avg_region_z_b", avg_region_z_b );
+
+        // Keep particles that are initially touching the wall. Used by DEM tests.
+        pp.query("removeOutOfRange", removeOutOfRange );
+
+
     }
 
-    //{
-    //    ParmParse pp("amr");
-    //    pp.query("amr_max_level", amr_max_level);
-    //}
+    get_gravity(gravity);
 }
 
 
@@ -596,8 +598,11 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
         // created. if (particle_init_type == "Auto" && !restart_flag &&
         // particle_ebfactory[finest_level])
 
-        if ((nlev == 1) && (!restart_flag && particle_ebfactory[finest_level]))
+      if (removeOutOfRange)
         {
+
+          if ((nlev == 1) && (!restart_flag && particle_ebfactory[finest_level]))
+          {
             //___________________________________________________________________
             // Only 1 refined level-set
 
@@ -608,10 +613,10 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
                                ls_data->nComp(), ls_data->nGrow());
 
             pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
-                                 ls_data, & ls_valid, levelset__refinement);
-        }
-        else if (!restart_flag && particle_ebfactory[finest_level])
-        {
+                                 ls_data, levelset__refinement);
+          }
+          else if (!restart_flag && particle_ebfactory[finest_level])
+          {
             //___________________________________________________________________
             // Multi-level everything
 
@@ -619,13 +624,15 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
 
             for (int ilev = 0; ilev < nlev; ilev ++)
             {
-                const MultiFab * ls_data = level_sets[ilev].get();
-                iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
-                                   ls_data->nComp(), ls_data->nGrow());
+              const MultiFab * ls_data = level_sets[ilev].get();
+              iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
+                                 ls_data->nComp(), ls_data->nGrow());
 
-                pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(),
-                                     ls_data, & ls_valid, 1);
+              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(),
+                                   ls_data, 1);
             }
+          }
+
         }
 
 
@@ -890,7 +897,7 @@ mfix::mfix_set_p0()
         set_p0(bx.loVect(),  bx.hiVect(),
                domain.loVect(), domain.hiVect(),
                BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
-               BL_TO_FORTRAN_ANYD((*gp0[lev])[mfi]),
+               gp0, 
                &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
@@ -899,7 +906,6 @@ mfix::mfix_set_p0()
       }
 
      p0_g[lev]->FillBoundary(p0_periodicity);
-      gp0[lev]->FillBoundary(p0_periodicity);
    }
 }
 

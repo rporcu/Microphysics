@@ -1,7 +1,8 @@
 amr.stop_time = .001
 
+particles.removeOutOfRange = 0
+
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell = 10 4 10
 amr.n_cell = 5 2 5
 
 # Maximum allowable size of each subdomain in the problem domain;
@@ -20,3 +21,12 @@ geometry.prob_lo     = 0.      0.       0.       # lo corner of physical domain
 geometry.prob_hi     = 0.0045  0.0018   0.0045   # hi corner of physical domain
 
 mfix.geometry = box
+
+amr.plot_int   = -1
+amr.plot_file  = DEM03_plt
+
+amr.check_int  = -1
+amr.check_file = DEM03_chk
+
+amr.par_ascii_int  = 1
+amr.par_ascii_file = DEM03_par
