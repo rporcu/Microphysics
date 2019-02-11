@@ -395,22 +395,6 @@ mfix::mfix_add_gravity_and_gp (int lev, amrex::Real dt)
       Box bx = mfi.tilebox ();
 
       const auto& vel_fab = vel_g[lev]->array(mfi);
-
-      for (int n = 0; n < 3; n++)
-       for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
-        for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
-          for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
-          {
-             vel_fab(i,j,k,n) += dt * gravity[n];
-          }
-    }
-
-    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-    {
-      // Grown tilebox
-      Box bx = mfi.growntilebox ();
-
-      const auto& vel_fab = vel_g[lev]->array(mfi);
       const auto&  gp_fab =    gp[lev]->array(mfi);
       const auto& den_fab =  ro_g[lev]->array(mfi);
 
@@ -419,15 +403,8 @@ mfix::mfix_add_gravity_and_gp (int lev, amrex::Real dt)
         for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
           for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
           {
-             vel_fab(i,j,k,n) -= dt * gp_fab(i,j,k,n)/den_fab(i,j,k);
-          }
-
-      for (int n = 0; n < 3; n++)
-       for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
-        for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
-          for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
-          {
-             vel_fab(i,j,k,n) -= dt * gp00[n]/den_fab(i,j,k);
+             vel_fab(i,j,k,n) += dt * ( gravity[n]
+                                       -(gp_fab(i,j,k,n)+gp00[n])/den_fab(i,j,k) );
           }
     }
 }
