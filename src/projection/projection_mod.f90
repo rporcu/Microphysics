@@ -83,7 +83,7 @@ contains
       end if
 
       ! Don't let the timestep grow by more than 1% per step.
-      dt = min ( dt, 1.01*old_dt )
+      dt = min ( dt, 1.01d0*old_dt )
 
       ! Don't overshoot the final time if not running to steady state
       if (steady_state == 0 .and. stop_time > 0.) then
