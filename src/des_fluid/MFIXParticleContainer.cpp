@@ -475,43 +475,30 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             // Only call the routine for wall collisions if we actually have
             // walls
-
-            bool has_wall = false;
-            if ((ebfactory != NULL)
-                && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
+            if (ebfactory != NULL)
             {
-                    has_wall = true;
-            }
-            else
-            {
-                int int_has_wall = 0;
-                Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
-                ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
-                has_wall = (int_has_wall > 0);
-            }
+                if ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued)
+                {
+                    const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
 
+                    // Calculate forces and torques from particle-wall collisions
+                    BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
+                    calc_wall_collisions_ls(particles, & ntot, & nrp,
+                                            tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                            BL_TO_FORTRAN_3D((* ls_valid)[pti]),
+                                            BL_TO_FORTRAN_3D((* ls_phi)[pti]),
+                                            dx, & ls_refinement);
 
-            if (has_wall)
-            {
-                //const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
-
-                // Calculate forces and torques from particle-wall collisions
-                BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-                calc_wall_collisions_ls(particles, & ntot, & nrp,
-                                        tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                        BL_TO_FORTRAN_3D((* ls_valid)[pti]),
-                                        BL_TO_FORTRAN_3D((* ls_phi)[pti]),
-                                        dx, & ls_refinement);
-
-                // Debugging: copy data from the fc (all forces) vector to
-                // the wfor (wall forces) vector.
-                if (debug_level > 0) {
-                    for (int i = 0; i < wfor[index].size(); i++ ) {
-                        wfor[index][i] = fc[index][i];
+                    // Debugging: copy data from the fc (all forces) vector to
+                    // the wfor (wall forces) vector.
+                    if (debug_level > 0) {
+                        for (int i = 0; i < wfor[index].size(); i++ ) {
+                            wfor[index][i] = fc[index][i];
+                        }
                     }
-                }
 
-                BL_PROFILE_VAR_STOP(calc_wall_collisions);
+                    BL_PROFILE_VAR_STOP(calc_wall_collisions);
+                }
             }
 
             /********************************************************************

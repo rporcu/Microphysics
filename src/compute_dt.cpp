@@ -1,12 +1,31 @@
 #include "mfix_proj_F.H"
 #include <mfix.H>
 
+#include <cmath>
+#include <limits>
+
 void
 mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
 {
-    // DT is always computed even for fixed dt, so we can
-    // issue a warning if fixed dt does not satisfy CFL condition.
+    // dt is always computed even when fixed_dt is set, 
+    // so we can issue a warning if the value of fixed dt does not satisfy the CFL condition.
     Real dt_new = dt;
+
+    /* 
+       Compute new dt by using the formula derived in
+       "A Boundary Condition Capturing Method for Multiphase Incompressible Flow"
+       by Kang et al. (JCP).
+      
+       dt/2 * ( C+V + sqrt( (C+V)**2 + 4Fx/dx + 4Fy/dy + 4Fz/dz )
+     
+      where
+      
+      C = max(|U|)/dx + max(|V|)/dy + max(|W|)/dz    --> Convection
+      
+      V = 2 * max(mu/ro) * (1/dx^2 + 1/dy^2 +1/dz^2) --> Diffusion
+      
+      Fx, Fy, Fz = net acceleration due to external forces
+    */
 
     Real umax = -1.e20;
     Real vmax = -1.e20;
@@ -21,9 +40,13 @@ mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
     gp0max[1]  = std::abs(gp0[1]);
     gp0max[2]  = std::abs(gp0[2]);
 
+    Real c_cfl  = 0.0;
+    Real v_cfl  = 0.0;
+    Real f_cfl  = 0.0;
+    Real old_dt = dt;
+
     for (int lev = 0; lev < nlev; lev++)
     {
-       // Compute dt for this time step
        umax  = amrex::max(umax,mfix_norm0 ( vel_g, lev, 0 ));
        vmax  = amrex::max(vmax,mfix_norm0 ( vel_g, lev, 1 ));
        wmax  = amrex::max(wmax,mfix_norm0 ( vel_g, lev, 2 ));
@@ -31,9 +54,42 @@ mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
        mumax = amrex::max(mumax,mfix_norm0( mu_g,  lev, 0 ));
     }
 
-    compute_new_dt ( &umax, &vmax, &wmax, &romin, &mumax, 
-                     gp0max, geom[finest_level].CellSize(), &cfl, 
-                     &steady_state, &time, &stop_time, &dt_new);
+    const Real* dx = geom[finest_level].CellSize();
+
+    Real odx    = 1.0 / dx[0];
+    Real ody    = 1.0 / dx[1];
+    Real odz    = 1.0 / dx[2];
+
+    // Convection
+    c_cfl = std::max(std::max(umax*odx,vmax*ody), wmax*odz);
+
+    // Viscous
+    v_cfl = 2.0 * ( mumax / romin ) * ( odx*odx + ody*ody + odz*odz );
+
+    // Gravity and/or gradient of p0
+    f_cfl = std::abs(gravity[0]-gp0max[0]) * odx + 
+            std::abs(gravity[1]-gp0max[1]) * ody + 
+            std::abs(gravity[2]-gp0max[2]) * odz;
+
+    // Put all together
+    Real tmp_cfl = (c_cfl+v_cfl);
+    Real tmp     = tmp_cfl + std::sqrt( tmp_cfl*tmp_cfl + 4.0*f_cfl );
+    dt_new  = cfl * 2.0 / tmp;
+
+    // Protect against tmp very small
+    // This may happen, for example, when the initial velocity field
+    // is zero for an inviscid flow with no external forcing
+    Real eps = std::numeric_limits<Real>::epsilon();
+    if ( tmp <= eps ) dt_new = 0.5 * old_dt;
+
+    // Don't let the timestep grow by more than 1% per step.
+    dt_new = std::min ( dt_new, 1.01*old_dt );
+
+    // Don't overshoot the final time if not running to steady state
+    if (steady_state == 0 && stop_time > 0.) 
+    {
+       if (time+dt_new > stop_time) dt_new = stop_time - time;
+    }
 
     // dt_new is the step calculated with a cfl contraint; dt is the value set by fixed_dt
     // When the test was on dt > dt_new, there were cases where they were effectively equal 
