@@ -2,6 +2,7 @@
 
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
+#include <mfix_des_F.H>
 #include <AMReX_EBAmrUtil.H>
 #include <mfix.H>
 #include <AMReX_BC_TYPES.H>
@@ -12,11 +13,9 @@
 void
 mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 {
-
     // set n_error_buf (used in AmrMesh) to default (can overwrite later)
     for (int i = 0; i < n_error_buf.size(); i++)
         n_error_buf[i] = 8;
-
 
     {
         ParmParse pp("mfix");
@@ -154,12 +153,8 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
     }
 
-    //{
-    //    ParmParse pp("amr");
-    //    pp.query("amr_max_level", amr_max_level);
-    //}
+    get_gravity(gravity);
 }
-
 
 
 //! Tag using each EB level's volfrac. This requires that the `eb_levels` have
@@ -901,6 +896,7 @@ mfix::mfix_set_p0()
                domain.loVect(), domain.hiVect(),
                BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
                BL_TO_FORTRAN_ANYD((*gp0[lev])[mfi]),
+               gp00, 
                &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),

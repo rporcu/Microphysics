@@ -236,6 +236,9 @@ protected:
      void mfix_set_bc0();
      void mfix_set_p0();
 
+     static Real gp00[3];
+     static Real gravity[3];
+
      //! The particles see an inflow face as a solid wall; thus instead of
      //! creating a separate EBfactory for particles, we simply modify the
      //! level-set near inflow to see it as a wall
@@ -343,11 +346,7 @@ private:
 
      void mfix_add_drag_terms(Real dt);
 
-     void mfix_add_gravity(int lev, Real dt, Vector< std::unique_ptr<MultiFab> >& vel);
-#if 0
-     void mfix_compute_velocity_slopes(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
-     void mfix_compute_velocity_at_faces(int lev, Vector< std::unique_ptr<MultiFab> >& vel);
-#endif
+     void mfix_add_gravity_and_gp(int lev, Real dt);
 
      void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
      void mfix_compute_MAC_velocity_at_faces(Real time, Vector< std::unique_ptr<MultiFab> >& vel);
@@ -364,12 +363,6 @@ private:
      void mfix_set_bc_type(int lev);
 
      void fill_mf_bc(int lev,  MultiFab& mf);
-#if 0
-     void WritePlotFile() const;
-
-     // which step?
-     Vector<int> nsubsteps;  // how many substeps on each level?
-#endif
 
      Real mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
      Real mfix_norm1 ( MultiFab& mf, int lev, int comp );

@@ -8,6 +8,7 @@
       subroutine set_p0(lo, hi, domlo, domhi, &
                         p0_g, slo, shi, &
                         gp0, glo, ghi, &
+                        gp00, &
                         dx, dy, dz, xlength, ylength, zlength, delp_dir_in, &
                         bct_ilo, bct_ihi, bct_jlo, bct_jhi, &
                         bct_klo, bct_khi, ng) &
@@ -40,6 +41,8 @@
       real(ar), intent(inout) :: gp0&
          (glo(1):ghi(1),glo(2):ghi(2),glo(3):ghi(3),3)
 
+      real(ar), intent(inout) :: gp00(3)
+
       real(ar), intent(in) :: dx, dy, dz
       real(ar), intent(in) :: xlength, ylength, zlength
       integer , intent(in) :: delp_dir_in
@@ -69,6 +72,7 @@
 
       ! Initialize all components of gp0 to zero
       gp0(:,:,:,:) = 0.d0
+      gp00(:)      = 0.d0
 
       delp_dir = delp_dir_in
 
@@ -193,6 +197,7 @@
                if (gravity(1).ne.0.d0 .or. gravity(2).ne.0.d0 .or. gravity(3).ne.0.d0) goto 60
                p0_g(:,:,:) = ic_p_g(icv)
                 gp0(:,:,:,:) = 0.d0
+                gp00(:)      = 0.d0
             end if
          end if
       end do
@@ -219,6 +224,7 @@
                p0_g(i,slo(2):shi(2),slo(3):shi(3)) = scale_pressure(pj)
             enddo
             gp0(:,:,:,1) = -dpodx
+            gp00(1)      = -dpodx
          endif
 
          if (abs(delp_y) > epsilon(zero)) then
@@ -229,6 +235,7 @@
                p0_g(slo(1):shi(1),j,slo(3):shi(3)) = scale_pressure(pj)
             enddo
             gp0(:,:,:,2) = -dpody
+            gp00(2)      = -dpody
          endif
 
          if (abs(delp_z) > epsilon(zero)) then
@@ -239,6 +246,7 @@
                p0_g(slo(1):shi(1),slo(2):shi(2),k) = scale_pressure(pj)
             end do
             gp0(:,:,:,3) = -dpodz
+            gp00(3)      = -dpodz
          endif
 
       end block
@@ -265,6 +273,7 @@
       if (is_undefined(pj)) then
          p0_g = zero
          gp0  = zero
+         gp00 = zero
          goto 100
       endif
 
@@ -294,6 +303,7 @@
          endif
 
          gp0(glo(1):ghi(1),glo(2):ghi(2),glo(3):ghi(3),1)  = ro_g0 * gravity(1)
+         gp00(1) = ro_g0 * gravity(1)
 
       else if (abs(gravity(2)) > epsilon(0.0d0)) then
 
@@ -314,6 +324,7 @@
          endif
 
          gp0(glo(1):ghi(1),glo(2):ghi(2),glo(3):ghi(3),2)  = ro_g0 * gravity(2)
+         gp00(2) = ro_g0 * gravity(2)
 
       else if (abs(gravity(3)) > epsilon(0.0d0)) then
 
@@ -334,6 +345,7 @@
          endif
 
          gp0(glo(1):ghi(1),glo(2):ghi(2),glo(3):ghi(3),3)  = ro_g0 * gravity(3)
+         gp00(3) = ro_g0 * gravity(3)
 
       endif
 

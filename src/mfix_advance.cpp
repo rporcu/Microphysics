@@ -273,19 +273,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
         MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
 
         // Add the gravitational forcing
-        mfix_add_gravity ( lev, dt, vel_g);
-
-        // Convert velocities to momenta
-        for (int n = 0; n < 3; n++)
-            MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
-
-        // Add (-dt grad p to momenta)
-        MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
-        MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
-
-        // Convert momenta back to velocities
-        for (int n = 0; n < 3; n++)
-            MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+        mfix_add_gravity_and_gp ( lev, dt);
     }
 
     // Add the drag term implicitly
@@ -376,19 +364,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
         MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
 
         // Add the gravitational forcing
-        mfix_add_gravity ( lev, dt, vel_g);
-
-        // Convert velocities to momenta
-        for (int n = 0; n < 3; n++)
-           MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
-
-        // Add (-dt grad p to momenta)
-        MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
-        MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
-
-        // Convert momenta back to velocities
-        for (int n = 0; n < 3; n++)
-            MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
+        mfix_add_gravity_and_gp ( lev, dt);
     }
 
     // Compute intermediate velocity if drag terms present
@@ -406,10 +382,9 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 }
 
 void
-mfix::mfix_add_gravity (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel)
-
+mfix::mfix_add_gravity_and_gp (int lev, amrex::Real dt) 
 {
-    BL_PROFILE("mfix::mfix_add_gravity");
+    BL_PROFILE("mfix::mfix_add_gravity_and_gp");
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -419,9 +394,41 @@ mfix::mfix_add_gravity (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFa
       // Tilebox
       Box bx = mfi.tilebox ();
 
-      add_gravity ( BL_TO_FORTRAN_BOX(bx),
-                    BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-                    &dt);
+      const auto& vel_fab = vel_g[lev]->array(mfi);
+
+      for (int n = 0; n < 3; n++)
+       for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
+        for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
+          for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
+          {
+             vel_fab(i,j,k,n) += dt * gravity[n];
+          }
+    }
+
+    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
+    {
+      // Grown tilebox
+      Box bx = mfi.growntilebox ();
+
+      const auto& vel_fab = vel_g[lev]->array(mfi);
+      const auto&  gp_fab =    gp[lev]->array(mfi);
+      const auto& den_fab =  ro_g[lev]->array(mfi);
+
+      for (int n = 0; n < 3; n++)
+       for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
+        for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
+          for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
+          {
+             vel_fab(i,j,k,n) -= dt * gp_fab(i,j,k,n)/den_fab(i,j,k);
+          }
+
+      for (int n = 0; n < 3; n++)
+       for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
+        for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
+          for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
+          {
+             vel_fab(i,j,k,n) -= dt * gp00[n]/den_fab(i,j,k);
+          }
     }
 }
 

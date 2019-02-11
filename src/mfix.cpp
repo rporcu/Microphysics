@@ -22,6 +22,8 @@ int mfix::nlev = 1;
 
 EBSupport mfix::m_eb_support_level = EBSupport::full;
 
+Real mfix::gravity[3] {0.0};
+Real mfix::gp00[3]    {0.0};
 
 mfix::~mfix ()
 {
