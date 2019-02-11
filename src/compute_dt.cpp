@@ -16,12 +16,7 @@ mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
 
     Real ope = 1.0 + 1.e-8;
     
-    // We only compute gp0max on the coarset level because it is the same at all levels
     Real gp0max[3];
-//  gp0max[0]  = mfix_norm0 ( gp0, 0, 0 );
-//  gp0max[1]  = mfix_norm0 ( gp0, 0, 1 );
-//  gp0max[2]  = mfix_norm0 ( gp0, 0, 2 );
-
     gp0max[0]  = std::abs(gp00[0]);
     gp0max[1]  = std::abs(gp00[1]);
     gp0max[2]  = std::abs(gp00[2]);
