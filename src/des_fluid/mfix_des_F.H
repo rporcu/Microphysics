@@ -65,7 +65,7 @@ extern "C"
 
     void calc_drag_particle(
         const amrex::Real* gp , const int* gplo , const int* gphi,
-        const amrex::Real* gp0, const int* gp0lo, const int* gp0hi,
+        const amrex::Real* gp0, 
         const amrex::Real* vel, const int* ulo, const int* uhi,
         const int* np, void* particles, const amrex::Real* dx,
         const amrex::Real* x0
@@ -74,7 +74,7 @@ extern "C"
 
     void calc_drag_particle_eb(
         const amrex::Real* gp , const int* gplo , const int* gphi,
-        const amrex::Real* gp0, const int* gp0lo, const int* gp0hi,
+        const amrex::Real* gp0, 
         const amrex::Real* vel, const int* ulo,   const int* uhi,
         const void*  flags    , const int* flo,   const int* fhi,
         const int* np, void* particles, const amrex::Real* dx,

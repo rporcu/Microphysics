@@ -299,7 +299,7 @@ mfix::mfix_calc_drag_particle(Real time)
                     if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
                     {
                         calc_drag_particle( BL_TO_FORTRAN_ANYD((*gp_ptr)[pti]),
-                                            BL_TO_FORTRAN_ANYD((*gp0_ptr)[pti]),
+                                            gp00, 
                                             BL_TO_FORTRAN_ANYD((*vel_ptr)[pti]),
                                             &np, particles.data(),
                                             geom[lev].CellSize(), geom[lev].ProbLo());
@@ -317,7 +317,7 @@ mfix::mfix_calc_drag_particle(Real time)
                                               geom[lev].ProbLo(), geom[lev].CellSize()) ;
 
                         calc_drag_particle_eb( BL_TO_FORTRAN_ANYD((*gp_ptr)[pti]),
-                                               BL_TO_FORTRAN_ANYD((*gp0_ptr)[pti]),
+                                               gp00, 
                                                BL_TO_FORTRAN_ANYD(vel_r),
                                                BL_TO_FORTRAN_ANYD(flags),
                                                &np, particles.data(),
