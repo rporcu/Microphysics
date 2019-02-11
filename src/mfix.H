@@ -236,7 +236,7 @@ protected:
      void mfix_set_bc0();
      void mfix_set_p0();
 
-     static Real gp00[3];
+     static Real gp0[3];
      static Real gravity[3];
 
      //! The particles see an inflow face as a solid wall; thus instead of
@@ -424,7 +424,6 @@ private:
 
      // Pressure gradients
      Vector< std::unique_ptr<MultiFab> > gp ;
-     Vector< std::unique_ptr<MultiFab> > gp0;
 
      // Molecular viscosity
      Vector< std::unique_ptr<MultiFab> > mu_g ;

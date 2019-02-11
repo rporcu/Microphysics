@@ -17,9 +17,9 @@ mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
     Real ope = 1.0 + 1.e-8;
     
     Real gp0max[3];
-    gp0max[0]  = std::abs(gp00[0]);
-    gp0max[1]  = std::abs(gp00[1]);
-    gp0max[2]  = std::abs(gp00[2]);
+    gp0max[0]  = std::abs(gp0[0]);
+    gp0max[1]  = std::abs(gp0[1]);
+    gp0max[2]  = std::abs(gp0[2]);
 
     for (int lev = 0; lev < nlev; lev++)
     {

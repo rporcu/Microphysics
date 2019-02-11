@@ -895,8 +895,7 @@ mfix::mfix_set_p0()
         set_p0(bx.loVect(),  bx.hiVect(),
                domain.loVect(), domain.hiVect(),
                BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
-               BL_TO_FORTRAN_ANYD((*gp0[lev])[mfi]),
-               gp00, 
+               gp0, 
                &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
@@ -905,7 +904,6 @@ mfix::mfix_set_p0()
       }
 
      p0_g[lev]->FillBoundary(p0_periodicity);
-      gp0[lev]->FillBoundary(p0_periodicity);
    }
 }
 
