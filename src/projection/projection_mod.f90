@@ -15,63 +15,6 @@ module projection_mod
 
 contains
 
-   !
-   ! This adds both components of the drag term
-   ! Here f_gds = beta
-   !      drag  = beta * particle_velocity
-   !
-   ! So the drag term we add is beta * (particle_velocity - fluid_velocity)
-   !                          = drag - f_gds * fluid_velocity
-   !
-   subroutine add_drag_terms ( lo, hi, vel, ulo, uhi, &
-                               f_gds  , flo, fhi, &
-                               drag   , dlo, dhi, &
-                               rop    , slo, shi, &
-                               volfrac, vlo, vhi, dt ) bind(C)
-
-      ! Loop bounds
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-
-      ! Array bounds
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3)
-      integer(c_int), intent(in   ) :: dlo(3), dhi(3)
-      integer(c_int), intent(in   ) :: flo(3), fhi(3)
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
-      integer(c_int), intent(in   ) :: vlo(3), vhi(3)
-
-      ! Time step width
-      real(ar),       intent(in   ) :: dt
-
-      ! Arrays
-      real(ar),       intent(in   ) :: &
-               rop(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-             f_gds(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3)), &
-              drag(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3), &
-           volfrac(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-
-      real(ar),       intent(inout) :: &
-           vel(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),3)
-
-      ! Local variables
-      integer(c_int)                :: i, j, k
-      real(ar)                      :: orop
-
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
-
-               orop         = dt / rop(i,j,k)
-
-               vel(i,j,k,1) = ( vel(i,j,k,1) + drag(i,j,k,1) * orop) / (one + f_gds(i,j,k) * orop)
-               vel(i,j,k,2) = ( vel(i,j,k,2) + drag(i,j,k,2) * orop) / (one + f_gds(i,j,k) * orop)
-               vel(i,j,k,3) = ( vel(i,j,k,3) + drag(i,j,k,3) * orop) / (one + f_gds(i,j,k) * orop)
-
-            end do
-         end do
-      end do
-
-   end subroutine add_drag_terms
-
    subroutine compute_bcoeff_nd ( lo, hi, bcoeff, blo, bhi, &
         ro_g, slo, shi, ep_g, dir )  bind(C)
 
