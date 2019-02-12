@@ -151,7 +151,7 @@ void MFIXParticleContainer::InitParticlesAuto()
 
   // This uses the particle tile size. Note that the default is to tile so if we
   //      remove the true and don't explicitly add false it will still tile
-  for (MFIter mfi = MakeMFIter(lev,true); mfi.isValid(); ++mfi) {
+  for (MFIter mfi = MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
       // This is particles per grid so we reset to 0
       int pcount = 0;
@@ -426,7 +426,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         }
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:ncoll)
+#pragma omp parallel reduction(+:ncoll) if (Gpu::notInLaunchRegion())
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
@@ -639,7 +639,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     }
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
@@ -812,7 +812,7 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
        const MultiFab* volfrac = (lev == 0) ? &(ebfactory[lev]->getVolFrac()) : &(crse_factory->getVolFrac());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
        {
         FArrayBox local_vol;
@@ -1012,7 +1012,7 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
         const MultiFab* volfrac = (lev == 0) ? &(ebfactory[lev]->getVolFrac()) : &(crse_factory->getVolFrac());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         {
 
@@ -1198,7 +1198,7 @@ MFIXParticleContainer::writeAllForComparison(int lev)
   int Np_tot = 0;
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:Np_tot)
+#pragma omp parallel reduction(+:Np_tot) if (Gpu::notInLaunchRegion())
 #endif
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       Np_tot += pti.numParticles();
@@ -1327,7 +1327,7 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
      for (int lev = 0; lev < nlev; lev++)
      {
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:p_num, p_diam, p_dens)
+#pragma omp parallel reduction(+:p_num, p_diam, p_dens) if (Gpu::notInLaunchRegion())
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
@@ -1362,7 +1362,7 @@ void MFIXParticleContainer::UpdateMaxVelocity()
     Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z)
+#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z) if (Gpu::notInLaunchRegion())
 #endif
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -1389,7 +1389,7 @@ void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Vector<Real>> p
     for (int lev = 0; lev < nlev; lev++)
     {
 #ifdef _OPENMP
-#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z)
+#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z) if (Gpu::notInLaunchRegion())
 #endif
        for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
        {
@@ -1565,7 +1565,7 @@ void MFIXParticleContainer::ComputeAverageVelocities ( const int lev,
   Real sum_velz   = 0.;
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz)
+#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz) if (Gpu::notInLaunchRegion())
 #endif
   for ( MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
   {

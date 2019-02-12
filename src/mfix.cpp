@@ -255,9 +255,9 @@ mfix::fill_mf_bc(int lev, MultiFab& mf)
 
     // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(mf,TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
 	const Box& sbx = mf[mfi].box();
 	fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),

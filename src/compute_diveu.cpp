@@ -44,13 +44,13 @@ mfix::mfix_compute_diveu (Real time)
       epu[lev]->FillBoundary (geom[lev].periodicity());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
       // Extrapolate Dirichlet values to ghost cells -- but do it differently in that
       //  no-slip walls are treated exactly like slip walls --
       // Note that this routine is essential to impose the correct inflow bc's on
       //  the product ep_g * vel_g
-      for (MFIter mfi((*epu[lev]), true); mfi.isValid(); ++mfi)
+      for (MFIter mfi((*epu[lev]), TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
           set_vec_bcs ( BL_TO_FORTRAN_ANYD((*epu[lev])[mfi]),
                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),

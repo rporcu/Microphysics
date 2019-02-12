@@ -83,7 +83,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
           MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
            // User hooks
-           for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+           for (MFIter mfi(*ep_g[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
               mfix_usr2();
         }
 
@@ -389,9 +389,9 @@ mfix::mfix_add_gravity_and_gp (Real dt)
     {
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-       for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
+       for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
          // Tilebox
          Box bx = mfi.tilebox ();
@@ -400,14 +400,15 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          const auto&  gp_fab =    gp[lev]->array(mfi);
          const auto& den_fab =  ro_g[lev]->array(mfi);
 
-         for (int n = 0; n < 3; n++)
-          for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
-           for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
-             for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
-             {
-                vel_fab(i,j,k,n) += dt * ( gravity[n]
-                                          -(gp_fab(i,j,k,n)+gp0[n])/den_fab(i,j,k) );
-             }
+         amrex::ParallelFor(bx, 
+               [=] (int i, int j, int k)
+         {
+            Real inv_dens = 1.0 / den_fab(i,j,k);
+            vel_fab(i,j,k,0) += dt * ( gravity[0]-(gp_fab(i,j,k,0)+gp0[0])*inv_dens );
+            vel_fab(i,j,k,1) += dt * ( gravity[1]-(gp_fab(i,j,k,1)+gp0[1])*inv_dens );
+            vel_fab(i,j,k,2) += dt * ( gravity[2]-(gp_fab(i,j,k,2)+gp0[2])*inv_dens );
+
+         });
        }
     }
 }

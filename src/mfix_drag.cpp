@@ -98,7 +98,7 @@ void mfix::mfix_calc_drag_fluid(Real time)
         const MultiFab & phi = * level_sets[lev];
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         {
             // Create fab to host reconstructed velocity field
@@ -197,9 +197,9 @@ mfix::mfix_calc_drag_particle(Real time)
         //         to the domain from ghost cells interior to the domain
         //
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-        for (MFIter mfi(gp_tmp, true); mfi.isValid(); ++mfi)
+        for (MFIter mfi(gp_tmp, TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.tilebox();
             set_gradp_bcs ( bx.loVect(), bx.hiVect(),
@@ -264,7 +264,7 @@ mfix::mfix_calc_drag_particle(Real time)
         amrex::Print() << "reconstruction lev= " << lev << "\n";
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         {
             // Create fab to host reconstructed velocity field
