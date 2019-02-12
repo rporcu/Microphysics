@@ -133,28 +133,3 @@
   BC_P_g(2) = 0.0
 
 
-! user data processing: bottom pressure Tap
-!---------------------------------------------------------------------//
-
-! ave P_G at first row of nodes above inlet
-  USR_DT(1) =    1.0E-03 ! (sec)
-
-  USR_Y_s(1) =   0.000   ! (m)
-  USR_Y_n(1) =   0.002   ! (m)
-  USR_Z_b(1) =   0.000   ! (m)
-  USR_Z_t(1) =   0.002   ! (m)
-
-  USR_X_w(1) =   0.0002  ! (m)
-  USR_X_e(1) =   0.0002  ! (m)
-
-! ave P_G at second row of nodes above inlet
-  USR_DT(2) =    1.0E-03 ! (sec)
-
-  USR_Y_s(2) =   0.000   ! (m)
-  USR_Y_n(2) =   0.002   ! (m)
-  USR_Z_b(2) =   0.000   ! (m)
-  USR_Z_t(2) =   0.002   ! (m)
-
-  USR_X_w(2) =   0.0004  ! (m)
-  USR_X_e(2) =   0.0004  ! (m)
-

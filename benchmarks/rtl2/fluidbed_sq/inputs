@@ -98,15 +98,20 @@ amr.regrid_int         = 25
 
 #______________________________________________________________________
 # user data processing
-mfix.write_user = true
-particles.avg_vel_file = Np  # particle averages interval
-particles.avg_vel_int = 100
-particles.avg_region_x_w = 0.0
-particles.avg_region_x_e = 0.008
-particles.avg_region_y_s = 0.0
-particles.avg_region_y_n = 0.002
-particles.avg_region_z_b = 0.0
-particles.avg_region_z_t = 0.002
+amr.avg_int = 10
+amr.avg_file = "uio"
+
+amr.avg_vel_p =        1       0        0
+amr.avg_p_g   =        0       1        1
+amr.avg_ep_g  =        0       0        0
+amr.avg_vel_g =        0       0        0
+
+amr.avg_region_x_w =   0.000   0.0001   0.0003
+amr.avg_region_x_e =   0.008   0.0001   0.0003
+amr.avg_region_y_s =   0.000   0.000    0.000
+amr.avg_region_y_n =   0.002   0.002    0.002
+amr.avg_region_z_b =   0.000   0.000    0.000
+amr.avg_region_z_t =   0.002   0.002    0.002
 
 #_______________________________________________________________________
 # IO / Checkpointing
