@@ -1617,7 +1617,7 @@ void MFIXParticleContainer::ComputeAverageVelocities ( const int lev,
               std::ofstream  ofs;
               std::string    fname;
 
-              fname = basename + std::to_string(nr) + "pvel.dat";
+              fname = basename + "_vel_p_" + std::to_string(nr) + ".dat";
 
               // Open file
               if ( ncalls == 1 )

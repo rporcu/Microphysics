@@ -196,7 +196,8 @@ extern "C"
     void mfix_collect_fluid(
             const int*    lo,  const int*   hi,
             const int* domlo , const int* domhi,
-            amrex::Real* ep_g,        const int* slo, const int* shi, amrex::Real* p_g,
+            amrex::Real* ep_g,        const int* slo, const int* shi,
+            amrex::Real* p_g,         const int* plo, const int* phi,
             amrex::Real* vel_g,       const int* vlo, const int* vhi,
             const amrex_real* vratio, const int* rlo, const int* rhi,
             const amrex::Real* x_w, const amrex::Real* x_e,

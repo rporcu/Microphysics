@@ -959,8 +959,22 @@ mfix::ComputeAverageFluidVars ( const int lev,
 
   Box domain(geom[lev].Domain());
 
-  const amrex::MultiFab* volfrac;
-  volfrac = &(ebfactory[lev] -> getVolFrac());
+  const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
+
+  // New multiFab to hold the cell center pressure.
+  std::unique_ptr<MultiFab> pg_cc(new MultiFab(
+             ep_g[lev]->boxArray(), ep_g[lev]->DistributionMap(),
+             ep_g[lev]->nComp(),    ep_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]));
+
+  // Create a temporary nodal pressure multifab to sum in p_g and p0_g
+  MultiFab pg_nd(p_g[lev]->boxArray(), dmap[lev], 1, 0);
+  pg_nd.setVal(0.);
+  MultiFab::Copy(pg_nd, (* p_g[lev]), 0, 0, 1, 0);
+  MultiFab::Add (pg_nd, (*p0_g[lev]), 0, 0, 1, 0);
+
+  // Create a cell-center version of the combined pressure
+  amrex::average_node_to_cellcenter(*pg_cc, 0, pg_nd, 0, 1);
+
 
   for ( int nr = 0; nr < nregions; ++nr )
     {
@@ -983,8 +997,7 @@ mfix::ComputeAverageFluidVars ( const int lev,
       Real sum_p_g    = 0.;
       Real sum_ep_g   = 0.;
 
-
-#if(1)
+#if(0)
       amrex::Print() << "\n\n  Collecting field averages for region " << nr << "\n";
       if( size_p_g   > nr ) if( avg_p_g[nr]   == 1 ) amrex::Print() << "  > Gas pressure.......(p_g)\n";
       if( size_ep_g  > nr ) if( avg_ep_g[nr]  == 1 ) amrex::Print() << "  > Volume fraction....(ep_g)\n";
@@ -995,7 +1008,6 @@ mfix::ComputeAverageFluidVars ( const int lev,
       for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
         {
 
-          const Box& sbx = (*ep_g[lev])[mfi].box();
           const Box& bx  = mfi.validbox();
 
           // this is to check efficiently if this grid contains any eb stuff
@@ -1011,10 +1023,10 @@ mfix::ComputeAverageFluidVars ( const int lev,
 
                   mfix_collect_fluid(BL_TO_FORTRAN_BOX(bx),
                                      BL_TO_FORTRAN_BOX(domain),
-                                     BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-                                     (*p_g[lev])[mfi].dataPtr(),
+                                     BL_TO_FORTRAN_ANYD(( *ep_g[lev])[mfi]),
+                                     BL_TO_FORTRAN_ANYD((     *pg_cc)[mfi]),
                                      BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                                     BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+                                     BL_TO_FORTRAN_ANYD((   *volfrac)[mfi]),
                                      &avg_region_x_w[nr], &avg_region_x_e[nr],
                                      &avg_region_y_s[nr], &avg_region_y_n[nr],
                                      &avg_region_z_b[nr], &avg_region_z_t[nr], dx,
@@ -1064,8 +1076,8 @@ mfix::ComputeAverageFluidVars ( const int lev,
                 ofs.open ( fname.c_str(), ios::out | ios::app );
                 if ( !ofs.good() ) amrex::FileOpenFailed ( fname );
 
-                if ( !exists ) ofs << "#  Time   p_g" << std::endl;
-                ofs << time << " " << sum_p_g / sum_vol << std::endl;
+                if ( !exists ) ofs << "#  Time   p_g  vol" << std::endl;
+                ofs << time << " " << sum_p_g/sum_vol << "  " << sum_vol << std::endl;
 
                 ofs.close();
             }
