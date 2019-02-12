@@ -527,9 +527,6 @@ private:
      int call_udf;
      bool dual_grid = false;
 
-     // enable output_manager during des_time_loop
-     bool subdt_io;
-
      // Parameters to control load balancing
      static std::string particle_init_type;
      static std::string load_balance_type;

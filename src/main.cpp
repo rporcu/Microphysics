@@ -219,9 +219,6 @@ int main (int argc, char* argv[])
     int finish  = 0;
     int estatus = 0;
 
-    // Call to output before entering time march loop
-    if (solve_fluid && ParallelDescriptor::IOProcessor()  && solve_dem )
-       my_mfix.output(estatus,finish,nstep,dt,time);
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
     // only if solve_fluid = T
@@ -322,9 +319,6 @@ int main (int argc, char* argv[])
                       }
 
                 }
-
-                if (ParallelDescriptor::IOProcessor() && solve_dem )
-                    my_mfix.output(estatus,finish,nstep,dt,time);
 
                 // Mechanism to terminate MFIX normally.
                 do_not_evolve =  steady_state || (

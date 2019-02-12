@@ -336,8 +336,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                                             EBFArrayBoxFactory * ebfactory,
                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
                                             const int ls_refinement,
-                                            MultiFab * cost, std::string & knapsack_weight_type,
-                                            int subdt_io)
+                                            MultiFab * cost, std::string & knapsack_weight_type
+                                            )
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
@@ -375,7 +375,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     int   nsubsteps;
     Real  subdt, stime = time;
-    des_init_time_loop( &time, &dt, &nsubsteps, &subdt, &subdt_io );
+    des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
     /****************************************************************************
      * Init temporary storage:                                                  *
@@ -1151,27 +1151,6 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
     }
 }
 
-void MFIXParticleContainer::output(int estatus, int finish, int nstep, Real dt, Real time)
-{
-    for (int lev = 0; lev < nlev; lev++)
-    {
-       Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
-       Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
-       Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
-
-       // Not threaded because its writing output
-       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-       {
-
-         //number of particles
-         const int     np = NumberOfParticles(pti);
-         void* particles  = pti.GetArrayOfStructs().data();
-
-         output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
-                              particles, &finish);
-       }
-    }
-}
 
 void MFIXParticleContainer::writeAllAtLevel(int lev)
 {

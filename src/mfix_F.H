@@ -137,11 +137,6 @@ extern "C"
     void init_collision(amrex::Real *sum_dp, amrex::Real *sum_roi
         );
 
-    void output_manager ( const int* np,  amrex::Real* time, amrex::Real* dt,
-             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-             int* nstep, void* particles, int* finsh
-        );
-
     void calc_volume_fraction (
         const int*  lo, const int*  hi,
         const int* slo, const int* shi,

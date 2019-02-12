@@ -73,7 +73,7 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
             pc->EvolveParticles(ilev, nstep, dt, time, particle_ebfactory[ilev].get(),
                                 ls_data, & ls_valid, levelset__refinement,
-                                particle_cost[ilev].get(), knapsack_weight_type, subdt_io);
+                                particle_cost[ilev].get(), knapsack_weight_type);
         }
         else
         {
@@ -92,7 +92,7 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
                 pc->EvolveParticles(lev, nstep, dt, time, particle_ebfactory[lev].get(),
                                     ls_data, & ls_valid, 1,
-                                    particle_cost[lev].get(), knapsack_weight_type, subdt_io);
+                                    particle_cost[lev].get(), knapsack_weight_type);
             }
         }
 

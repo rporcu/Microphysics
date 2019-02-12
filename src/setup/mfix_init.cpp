@@ -83,9 +83,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         if (load_balance_type == "KnapSack")
             pp.query("knapsack_nmax", knapsack_nmax);
 
-        // If subdt_io is true, des_time_loop calls output_manager
-        subdt_io = false; // default to false (if not present in inputs file)
-        pp.query("subdt_io", subdt_io);
 
         // Parameters used be the level-set algorithm. Refer to LSFactory (or
         // mfix.H) for more details:
@@ -901,7 +898,7 @@ mfix::mfix_set_p0()
         set_p0(bx.loVect(),  bx.hiVect(),
                domain.loVect(), domain.hiVect(),
                BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
-               gp0, 
+               gp0,
                &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
