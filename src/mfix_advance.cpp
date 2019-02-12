@@ -434,9 +434,9 @@ mfix::mfix_add_drag_terms (Real dt)
   for (int lev = 0; lev < nlev; lev++)
   {
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
       // Tilebox
       Box bx = mfi.tilebox ();
@@ -446,15 +446,26 @@ mfix::mfix_add_drag_terms (Real dt)
       const auto& fgds_fab = f_gds[lev]->array(mfi);
       const auto&  rop_fab = rop_g[lev]->array(mfi);
 
-      for (int n = 0; n < 3; n++)
-       for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
-        for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
-          for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
-          {
-             Real orop = dt / rop_fab(i,j,k);
-             vel_fab(i,j,k,n) +=        drag_fab(i,j,k,n) * orop;
-             vel_fab(i,j,k,n) /= (1.0 + fgds_fab(i,j,k) * orop);
-          }
+      amrex::ParallelFor(bx, 
+            [=] (int i, int j, int k)
+
+     // When we go to GPU we replace above line by 
+     //     [=] AMREX_GPU_DEVICE (int i, int j, int k)
+         {
+             Real orop  = dt / rop_fab(i,j,k);
+             Real denom = 1.0 / (1.0 + fgds_fab(i,j,k) * orop);
+
+             vel_fab(i,j,k,0) = (vel_fab(i,j,k,0) + drag_fab(i,j,k,0) * orop) * denom;
+             vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + drag_fab(i,j,k,1) * orop) * denom;
+             vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;
+         });
+
+      // THE ABOVE LOOP IS IDENTICAL TO THIS
+      //  for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
+      //   for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
+      //     for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
+      //     {
+      //     }
     }
   }
 }
