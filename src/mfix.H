@@ -60,7 +60,20 @@ public:
 
     void WriteParticleAscii(std::string & par_ascii_file_name, int nstep = 0) const;
 
-    void WriteUSER(Real dt, Real time) const;
+    void WriteAverageRegions ( std::string& avg_file, int nstep, Real time = 0.0 ) const;
+
+    void ComputeAverageFluidVars ( const int lev,
+                                         const amrex::Real time,
+                                         const string&  basename,
+                                         const Vector<int>& avg_p_g,
+                                         const Vector<int>& avg_ep_g,
+                                         const Vector<int>& avg_vel_g,
+                                         const Vector<Real>& avg_region_x_w,
+                                         const Vector<Real>& avg_region_x_e,
+                                         const Vector<Real>& avg_region_y_s,
+                                         const Vector<Real>& avg_region_y_n,
+                                         const Vector<Real>& avg_region_z_b,
+                                         const Vector<Real>& avg_region_z_t ) const;
 
     void Regrid ();
 
@@ -553,8 +566,13 @@ private:
      //
      // Options to control the computing of particle eulerian velocities
      //
-     int avg_vel_int = -1;
-     std::string avg_vel_file {"avg_region"};
+
+     Vector<int> avg_p_g  ;
+     Vector<int> avg_ep_g ;
+     Vector<int> avg_vel_g;
+
+     Vector<int> avg_vel_p;
+
      Vector<Real> avg_region_x_e;
      Vector<Real> avg_region_x_w;
      Vector<Real> avg_region_y_s;

@@ -188,16 +188,17 @@ public:
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities
-    // 
+    //
     void ComputeAverageVelocities ( const int lev,
-				    const amrex::Real time,
-				    const string& basename,
-				    const vector<Real>& avg_region_x_w,
-				    const vector<Real>& avg_region_x_e,
-				    const vector<Real>& avg_region_y_s,
-				    const vector<Real>& avg_region_y_n,
-				    const vector<Real>& avg_region_z_b,
-				    const vector<Real>& avg_region_z_t );
+            const amrex::Real time,
+            const string& basename,
+            const Vector<int>& avg_vel_p,
+            const Vector<Real>& avg_region_x_w,
+            const Vector<Real>& avg_region_x_e,
+            const Vector<Real>& avg_region_y_s,
+            const Vector<Real>& avg_region_y_n,
+            const Vector<Real>& avg_region_z_b,
+            const Vector<Real>& avg_region_z_t );
 
 private:
 

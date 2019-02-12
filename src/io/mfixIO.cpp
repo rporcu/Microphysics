@@ -888,49 +888,234 @@ mfix::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
 
 
 void
-mfix::WriteUSER( Real dt, Real time) const
+mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
 {
-  int lev = nlev-1;
+  BL_PROFILE("mfix::WriteAverageRegions()");
+
+  for (int lev = 0; lev < nlev; lev++)
+    {
+
+      ComputeAverageFluidVars( lev,
+                               time,
+                               avg_file,
+                               avg_p_g,
+                               avg_ep_g,
+                               avg_vel_g,
+                               avg_region_x_w, avg_region_x_e,
+                               avg_region_y_s, avg_region_y_n,
+                               avg_region_z_b, avg_region_z_t );
+
+
+      //  Compute Eulerian velocities in selected regions
+        pc -> ComputeAverageVelocities ( lev,
+                                         time,
+                                         avg_file,
+                                         avg_vel_p,
+                                         avg_region_x_w, avg_region_x_e,
+                                         avg_region_y_s, avg_region_y_n,
+                                         avg_region_z_b, avg_region_z_t );
+
+    }
+
+}
+
+
+void
+mfix::ComputeAverageFluidVars ( const int lev,
+                   const amrex::Real time, const string&  basename,
+                   const Vector<int>& avg_p_g,
+                   const Vector<int>& avg_ep_g,
+                   const Vector<int>& avg_vel_g,
+                   const Vector<Real>& avg_region_x_w, const Vector<Real>& avg_region_x_e,
+                   const Vector<Real>& avg_region_y_s, const Vector<Real>& avg_region_y_n,
+                   const Vector<Real>& avg_region_z_b, const Vector<Real>& avg_region_z_t ) const
+{
+
+  int nregions = avg_region_x_w.size();
+
+  const int size_p_g   = avg_p_g.size();
+  const int size_ep_g  = avg_ep_g.size();
+  const int size_vel_g = avg_vel_g.size();
+
+  const Real * dx   = geom[lev].CellSize();
+
+  //
+  // Check the regions are defined correctly
+  //
+  if (  ( avg_region_x_e.size() != nregions ) ||
+        ( avg_region_y_s.size() != nregions ) ||
+        ( avg_region_y_n.size() != nregions ) ||
+        ( avg_region_z_b.size() != nregions ) ||
+        ( avg_region_z_t.size() != nregions )  )
+    {
+      amrex::Print () << "ComputeAverageVelocities: some regions are not properly defined: skipping.";
+      return;
+    }
+
+  const int var_count = 6;
+
+  // Array to hold the data for global collection.
+  vector<Real> regions_data(var_count*nregions, 0.0);
 
   Box domain(geom[lev].Domain());
 
-  Real dx = geom[lev].CellSize(0);
-  Real dy = geom[lev].CellSize(1);
-  Real dz = geom[lev].CellSize(2);
+  const amrex::MultiFab* volfrac;
+  volfrac = &(ebfactory[lev] -> getVolFrac());
 
-  Real accumulator[256];
-  for (int i=0; i<256; ++i)
-    accumulator[i] = 0.0L;
-
-  // Create a temporary multifab to hold (p_g + p0_g)
-  std::unique_ptr<MultiFab> pg_sum(new MultiFab(
-          p_g[lev]->boxArray(), p_g[lev]->DistributionMap(),
-          p_g[lev]->nComp(),    0));
-
-  // // Fill it with (p_g)
-  pg_sum->copy(*p_g[lev],0,0,1,0,0);
-
-  // Add in p0_g
-  MultiFab::Add(*pg_sum, *p0_g[lev], 0, 0, 1, 0);
-
-  // No tiling.
-  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+  for ( int nr = 0; nr < nregions; ++nr )
     {
-      const Box& sbx = (*ep_g[lev])[mfi].box();
-      const Box& bx  = mfi.validbox();
 
-      mfix_collect_fluid(bx.loVect(), bx.hiVect(),
-                         domain.loVect(), domain.hiVect(),
-                         BL_TO_FORTRAN_ANYD((   *pg_sum)[mfi]),
-                         BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-                         &dx, &dy, &dz, accumulator);
+      // Create Real box for this region
+      RealBox avg_region ( {AMREX_D_DECL(avg_region_x_w[nr],avg_region_y_s[nr],avg_region_z_b[nr])},
+                           {AMREX_D_DECL(avg_region_x_e[nr],avg_region_y_n[nr],avg_region_z_t[nr])} );
+
+      // Jump to next iteration if this averaging region is not valid
+      if ( !avg_region.ok () )
+        {
+          amrex::Print() << "ComputeAverageVelocities: region "<< nr <<" is invalid: skipping\n";
+          continue;
+        }
+
+      Real sum_vol    = 0.;
+      Real sum_velx   = 0.;
+      Real sum_vely   = 0.;
+      Real sum_velz   = 0.;
+      Real sum_p_g    = 0.;
+      Real sum_ep_g   = 0.;
+
+
+#if(1)
+      amrex::Print() << "\n\n  Collecting field averages for region " << nr << "\n";
+      if( size_p_g   > nr ) if( avg_p_g[nr]   == 1 ) amrex::Print() << "  > Gas pressure.......(p_g)\n";
+      if( size_ep_g  > nr ) if( avg_ep_g[nr]  == 1 ) amrex::Print() << "  > Volume fraction....(ep_g)\n";
+      if( size_vel_g > nr ) if( avg_vel_g[nr] == 1 ) amrex::Print() << "  > Gas velocity.......(m/s)\n";
+#endif
+
+      // Not tiling this loop.
+      for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
+        {
+
+          const Box& sbx = (*ep_g[lev])[mfi].box();
+          const Box& bx  = mfi.validbox();
+
+          // this is to check efficiently if this grid contains any eb stuff
+          const EBFArrayBox&  epg_fab = static_cast<EBFArrayBox const&>((*ep_g[lev])[mfi]);
+          const EBCellFlagFab&  flags = epg_fab.getEBCellFlagFab();
+
+          RealBox box_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
+
+          if (flags.getType(bx) != FabType::covered)
+            {
+              if ( box_region.intersects ( avg_region ) )
+                {
+
+                  mfix_collect_fluid(BL_TO_FORTRAN_BOX(bx),
+                                     BL_TO_FORTRAN_BOX(domain),
+                                     BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
+                                     (*p_g[lev])[mfi].dataPtr(),
+                                     BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                                     BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+                                     &avg_region_x_w[nr], &avg_region_x_e[nr],
+                                     &avg_region_y_s[nr], &avg_region_y_n[nr],
+                                     &avg_region_z_b[nr], &avg_region_z_t[nr], dx,
+                                     &sum_ep_g, &sum_p_g,  &sum_vol,
+                                     &sum_velx, &sum_vely, &sum_velz);
+                }
+            }
+        }
+
+      regions_data[var_count*nr + 0] = sum_vol;
+      regions_data[var_count*nr + 1] = sum_velx;
+      regions_data[var_count*nr + 2] = sum_vely;
+      regions_data[var_count*nr + 3] = sum_velz;
+      regions_data[var_count*nr + 4] = sum_p_g;
+      regions_data[var_count*nr + 5] = sum_ep_g;
+
     }
 
-  ParallelDescriptor::ReduceRealSum(accumulator,256);
+  // Compute parallel reductions
+  ParallelDescriptor::ReduceRealSum ( regions_data.data(),  var_count*nregions );
 
-  if (ParallelDescriptor::IOProcessor()) {
-    mfix_write_fluid(domain.loVect(), domain.hiVect(),
-                     &dx, &dy, &dz, &time, &dt, accumulator);
+  // Only the IO processor takes care of the output
+  if (ParallelDescriptor::IOProcessor())
+    {
+      for ( int nr = 0; nr < nregions; ++nr )
+        {
 
-  }
+          Real sum_vol  = regions_data[var_count*nr + 0];
+          Real sum_velx = regions_data[var_count*nr + 1];
+          Real sum_vely = regions_data[var_count*nr + 2];
+          Real sum_velz = regions_data[var_count*nr + 3];
+          Real sum_p_g  = regions_data[var_count*nr + 4];
+          Real sum_ep_g = regions_data[var_count*nr + 5];
+
+          std::ofstream  ofs;
+          std::string    fname;
+
+          if( size_p_g > nr )
+            {
+              if( avg_p_g[nr] == 1) {
+
+                fname = basename + "_p_g_" + std::to_string(nr) + ".dat";
+
+                std::ifstream ifile(fname.c_str());
+                bool exists = (bool)ifile;
+
+                ofs.open ( fname.c_str(), ios::out | ios::app );
+                if ( !ofs.good() ) amrex::FileOpenFailed ( fname );
+
+                if ( !exists ) ofs << "#  Time   p_g" << std::endl;
+                ofs << time << " " << sum_p_g / sum_vol << std::endl;
+
+                ofs.close();
+            }
+
+          }
+
+          if( size_ep_g  > nr )
+            {
+              if( avg_ep_g[nr] == 1)
+                {
+                  fname = basename + "_ep_g_" + std::to_string(nr) + ".dat";
+
+                  std::ifstream ifile(fname.c_str());
+                  bool exists = (bool)ifile;
+
+                  ofs.open ( fname.c_str(), ios::out | ios::app );
+                  if ( !ofs.good() ) amrex::FileOpenFailed ( fname );
+
+                  if ( !exists ) ofs << "#  Time   ep_g" << std::endl;
+                  ofs << time << " " << sum_ep_g / sum_vol << std::endl;
+
+                  ofs.close();
+
+                }
+            }
+
+          if( size_vel_g > nr )
+            {
+              if( avg_vel_g[nr] )
+                {
+                  fname = basename + "_vel_g_" + std::to_string(nr) + ".dat";
+
+                  std::ifstream ifile(fname.c_str());
+                  bool exists = (bool)ifile;
+
+                  ofs.open ( fname.c_str(), ios::out | ios::app );
+                  if ( !ofs.good() ) amrex::FileOpenFailed ( fname );
+
+                  if ( !exists ) ofs << "#  Time   velx  vely  velz" << std::endl;
+                  ofs << time << " " << sum_velx / sum_vol << " "
+                      <<                sum_vely / sum_vol << " "
+                      <<                sum_velz / sum_vol << std::endl;
+
+                  ofs.close();
+
+                }
+            }
+
+        }
+
+    }
+
 }

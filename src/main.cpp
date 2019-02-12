@@ -34,8 +34,12 @@ std::string static_plt_file {"const_plt"};
 bool plotfile_on_restart = false;
 
 int par_ascii_int = -1;
-int  last_par_ascii  = -1;
+int last_par_ascii  = -1;
 std::string par_ascii_file {"par"};
+
+int avg_int = -1;
+int last_avg  = -1;
+std::string avg_file {"avg_region"};
 
 std::string mfix_dat {"mfix.dat"};
 
@@ -56,6 +60,9 @@ void ReadParameters ()
      pp.query("plot_int", plot_int);
 
      pp.query("plotfile_on_restart", plotfile_on_restart);
+
+     pp.query("avg_int", avg_int );
+     pp.query("avg_file", avg_file);
 
      pp.query("par_ascii_file", par_ascii_file);
      pp.query("par_ascii_int", par_ascii_int);
@@ -245,6 +252,13 @@ int main (int argc, char* argv[])
        last_par_ascii = nstep;
     }
 
+    if ( avg_int > 0 )
+      {
+        my_mfix.WriteAverageRegions( avg_file, nstep, time );
+        last_avg = nstep;
+      }
+
+
     bool do_not_evolve =  !steady_state && ( (max_step == 0) ||
                      ( (stop_time >= 0.) && (time >  stop_time) ) ||
                      ( (stop_time <= 0.) && (max_step <= 0) ) );
@@ -300,7 +314,13 @@ int main (int argc, char* argv[])
                         last_par_ascii = nstep;
                     }
 
-                    if (write_user) my_mfix.WriteUSER(dt, time);
+
+                    if ( ( avg_int > 0) && ( nstep %  avg_int == 0 ) )
+                      {
+                        my_mfix.WriteAverageRegions( avg_file, nstep, time );
+                        last_avg = nstep;
+                      }
+
                 }
 
                 if (ParallelDescriptor::IOProcessor() && solve_dem )

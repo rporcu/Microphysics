@@ -199,13 +199,17 @@ extern "C"
        );
 
     void mfix_collect_fluid(
-            const int*  lo, const int*  hi,
+            const int*    lo,  const int*   hi,
             const int* domlo , const int* domhi,
-            amrex::Real* p   , const int* p_lo, const int* p_hi,
-            amrex::Real* ep_g, const int* s_lo, const int* s_hi,
-            amrex::Real* dx,   amrex::Real* dy,  amrex::Real* dz,
-            amrex::Real (&accumulator)[256]
-            );
+            amrex::Real* ep_g,        const int* slo, const int* shi, amrex::Real* p_g,
+            amrex::Real* vel_g,       const int* vlo, const int* vhi,
+            const amrex_real* vratio, const int* rlo, const int* rhi,
+            const amrex::Real* x_w, const amrex::Real* x_e,
+            const amrex::Real* y_s, const amrex::Real* y_n,
+            const amrex::Real* z_b, const amrex::Real* z_t, const amrex::Real* dx,
+            amrex::Real* sum_ep_g, amrex::Real* sum_p_g,  amrex::Real* sum_vol,
+            amrex::Real* sum_velx, amrex::Real* sum_vely, amrex::Real* sum_velz
+            ); const
 
     void mfix_write_fluid(const int* domlo , const int* domhi,
             amrex::Real* dx,   amrex::Real* dy,  amrex::Real* dz,
