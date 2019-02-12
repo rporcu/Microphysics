@@ -65,9 +65,9 @@ mfix::mfix_compute_vort ()
        Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-       for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
+       for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
           // Tilebox
           Box bx = mfi.tilebox ();
@@ -155,9 +155,9 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:sum)
+#pragma omp parallel reduction(+:sum) if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(mf,TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
         const FArrayBox& fab = mf[mfi];
 

@@ -77,7 +77,6 @@ set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 #
 # Core MFIX library
 #
-message ( WARNING "Building MFIX in experimental APPROXIMATE PROJECTION mode (ENABLE_PROJCC=on)" )
 add_subdirectory (src)
 set (ENABLE_PTESTS ON)
 

@@ -43,6 +43,12 @@ extern "C"
             const void* flag, const int* fglo, const int* fghi
         );
 
+
+    void ls_has_walls(int * has_wall,
+                      const amrex_real * phi, const int * phlo, const int * phhi,
+                      const amrex_real * tol
+        );
+
     void calc_wall_collisions_ls(
             void * rparticles, const int * ntot, const int * nrp,
             amrex_real * tow, amrex_real * fc, amrex_real * subdt,

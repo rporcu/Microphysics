@@ -13,7 +13,6 @@
 void
 mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 {
-
     // set n_error_buf (used in AmrMesh) to default (can overwrite later)
     for (int i = 0; i < n_error_buf.size(); i++)
         n_error_buf[i] = 8;
@@ -162,7 +161,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
     get_gravity(gravity);
 }
-
 
 
 //! Tag using each EB level's volfrac. This requires that the `eb_levels` have

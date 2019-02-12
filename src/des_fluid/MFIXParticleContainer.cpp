@@ -151,7 +151,7 @@ void MFIXParticleContainer::InitParticlesAuto()
 
   // This uses the particle tile size. Note that the default is to tile so if we
   //      remove the true and don't explicitly add false it will still tile
-  for (MFIter mfi = MakeMFIter(lev,true); mfi.isValid(); ++mfi) {
+  for (MFIter mfi = MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
       // This is particles per grid so we reset to 0
       int pcount = 0;
@@ -426,7 +426,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         }
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:ncoll)
+#pragma omp parallel reduction(+:ncoll) if (Gpu::notInLaunchRegion())
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
@@ -475,30 +475,43 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             // Only call the routine for wall collisions if we actually have
             // walls
-            if (ebfactory != NULL)
+
+            bool has_wall = false;
+            if ((ebfactory != NULL)
+                && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
             {
-                if ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued)
-                {
-                    const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
+                    has_wall = true;
+            }
+            else
+            {
+                int int_has_wall = 0;
+                Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
+                ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
+                has_wall = (int_has_wall > 0);
+            }
 
-                    // Calculate forces and torques from particle-wall collisions
-                    BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-                    calc_wall_collisions_ls(particles, & ntot, & nrp,
-                                            tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                            BL_TO_FORTRAN_3D((* ls_valid)[pti]),
-                                            BL_TO_FORTRAN_3D((* ls_phi)[pti]),
-                                            dx, & ls_refinement);
 
-                    // Debugging: copy data from the fc (all forces) vector to
-                    // the wfor (wall forces) vector.
-                    if (debug_level > 0) {
-                        for (int i = 0; i < wfor[index].size(); i++ ) {
-                            wfor[index][i] = fc[index][i];
-                        }
+            if (has_wall)
+            {
+                //const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
+
+                // Calculate forces and torques from particle-wall collisions
+                BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
+                calc_wall_collisions_ls(particles, & ntot, & nrp,
+                                        tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                        BL_TO_FORTRAN_3D((* ls_valid)[pti]),
+                                        BL_TO_FORTRAN_3D((* ls_phi)[pti]),
+                                        dx, & ls_refinement);
+
+                // Debugging: copy data from the fc (all forces) vector to
+                // the wfor (wall forces) vector.
+                if (debug_level > 0) {
+                    for (int i = 0; i < wfor[index].size(); i++ ) {
+                        wfor[index][i] = fc[index][i];
                     }
-
-                    BL_PROFILE_VAR_STOP(calc_wall_collisions);
                 }
+
+                BL_PROFILE_VAR_STOP(calc_wall_collisions);
             }
 
             /********************************************************************
@@ -626,7 +639,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     }
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
@@ -799,7 +812,7 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
        const MultiFab* volfrac = (lev == 0) ? &(ebfactory[lev]->getVolFrac()) : &(crse_factory->getVolFrac());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
        {
         FArrayBox local_vol;
@@ -999,7 +1012,7 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
         const MultiFab* volfrac = (lev == 0) ? &(ebfactory[lev]->getVolFrac()) : &(crse_factory->getVolFrac());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         {
 
@@ -1185,7 +1198,7 @@ MFIXParticleContainer::writeAllForComparison(int lev)
   int Np_tot = 0;
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:Np_tot)
+#pragma omp parallel reduction(+:Np_tot) if (Gpu::notInLaunchRegion())
 #endif
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       Np_tot += pti.numParticles();
@@ -1314,7 +1327,7 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
      for (int lev = 0; lev < nlev; lev++)
      {
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:p_num, p_diam, p_dens)
+#pragma omp parallel reduction(+:p_num, p_diam, p_dens) if (Gpu::notInLaunchRegion())
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
@@ -1349,7 +1362,7 @@ void MFIXParticleContainer::UpdateMaxVelocity()
     Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z)
+#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z) if (Gpu::notInLaunchRegion())
 #endif
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -1376,7 +1389,7 @@ void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Vector<Real>> p
     for (int lev = 0; lev < nlev; lev++)
     {
 #ifdef _OPENMP
-#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z)
+#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z) if (Gpu::notInLaunchRegion())
 #endif
        for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
        {
@@ -1562,7 +1575,7 @@ void MFIXParticleContainer::ComputeAverageVelocities ( const int lev,
           Real sum_velz   = 0.;
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz)
+#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz) if (Gpu::notInLaunchRegion())
 #endif
           for ( MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
             {

@@ -5,6 +5,24 @@ module wall_collisions
     implicit none
 contains
 
+  subroutine ls_has_walls(has_wall, phi, phlo, phhi, tol) bind(c, name="ls_has_walls")
+
+    integer,  intent(  out) :: has_wall
+    integer,  intent(in   ) :: phlo(3), phhi(3)
+    real(rt), intent(in   ) :: phi( phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
+    real(rt), intent(in   ) :: tol
+
+    if (any(phi(phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3)) .le. tol)) then
+       has_wall = 1
+    else
+       has_wall = 0
+    end if
+
+  end subroutine ls_has_walls
+
+
+
+
     subroutine calc_wall_collisions_ls(particles, np,   nrp,     &
                                        tow,       fc,   dtsolid, &
                                        valid,     vlo,  vhi,     &
