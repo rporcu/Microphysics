@@ -453,7 +453,7 @@ mfix::mfix_add_drag_terms (Real dt)
           {
              Real orop = dt / rop_fab(i,j,k);
              vel_fab(i,j,k,n) +=        drag_fab(i,j,k,n) * orop;
-             vel_fab(i,j,k,n) /= (1.0 + fgds_fab(i,j,k,n) * orop);
+             vel_fab(i,j,k,n) /= (1.0 + fgds_fab(i,j,k) * orop);
           }
     }
   }
