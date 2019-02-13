@@ -13,7 +13,6 @@
 void
 mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 {
-
     // set n_error_buf (used in AmrMesh) to default (can overwrite later)
     for (int i = 0; i < n_error_buf.size(); i++)
         n_error_buf[i] = 8;
@@ -84,9 +83,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         if (load_balance_type == "KnapSack")
             pp.query("knapsack_nmax", knapsack_nmax);
 
-        // If subdt_io is true, des_time_loop calls output_manager
-        subdt_io = false; // default to false (if not present in inputs file)
-        pp.query("subdt_io", subdt_io);
 
         // Parameters used be the level-set algorithm. Refer to LSFactory (or
         // mfix.H) for more details:
@@ -127,26 +123,13 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     call_udf     = call_udf_in;
 
     if (solve_dem)
-    {
+      {
         ParmParse pp("particles");
 
         pp.query("max_grid_size_x", particle_max_grid_size_x);
         pp.query("max_grid_size_y", particle_max_grid_size_y);
         pp.query("max_grid_size_z", particle_max_grid_size_z);
 
-        // Interval to compute the Eulerian velocities in given regions
-        pp.query("avg_vel_int", avg_vel_int );
-
-        // Base name for output
-        pp.query("avg_vel_file", avg_vel_file);
-
-        // Regions geometry
-        pp.queryarr("avg_region_x_e", avg_region_x_e );
-        pp.queryarr("avg_region_x_w", avg_region_x_w );
-        pp.queryarr("avg_region_y_n", avg_region_y_n );
-        pp.queryarr("avg_region_y_s", avg_region_y_s );
-        pp.queryarr("avg_region_z_t", avg_region_z_t );
-        pp.queryarr("avg_region_z_b", avg_region_z_b );
 
         // Keep particles that are initially touching the wall. Used by DEM tests.
         pp.query("removeOutOfRange", removeOutOfRange );
@@ -154,9 +137,27 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
     }
 
+    {
+      ParmParse amr_pp("amr");
+
+      amr_pp.queryarr("avg_p_g",   avg_p_g);
+      amr_pp.queryarr("avg_ep_g",  avg_ep_g);
+      amr_pp.queryarr("avg_vel_g", avg_vel_g);
+
+      amr_pp.queryarr("avg_vel_p", avg_vel_p);
+
+      // Regions geometry
+      amr_pp.queryarr("avg_region_x_e", avg_region_x_e );
+      amr_pp.queryarr("avg_region_x_w", avg_region_x_w );
+      amr_pp.queryarr("avg_region_y_n", avg_region_y_n );
+      amr_pp.queryarr("avg_region_y_s", avg_region_y_s );
+      amr_pp.queryarr("avg_region_z_t", avg_region_z_t );
+      amr_pp.queryarr("avg_region_z_b", avg_region_z_b );
+
+    }
+
     get_gravity(gravity);
 }
-
 
 
 //! Tag using each EB level's volfrac. This requires that the `eb_levels` have
@@ -897,7 +898,7 @@ mfix::mfix_set_p0()
         set_p0(bx.loVect(),  bx.hiVect(),
                domain.loVect(), domain.hiVect(),
                BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
-               gp0, 
+               gp0,
                &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),

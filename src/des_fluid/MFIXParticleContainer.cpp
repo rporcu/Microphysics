@@ -151,7 +151,7 @@ void MFIXParticleContainer::InitParticlesAuto()
 
   // This uses the particle tile size. Note that the default is to tile so if we
   //      remove the true and don't explicitly add false it will still tile
-  for (MFIter mfi = MakeMFIter(lev,true); mfi.isValid(); ++mfi) {
+  for (MFIter mfi = MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
       // This is particles per grid so we reset to 0
       int pcount = 0;
@@ -336,8 +336,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                                             EBFArrayBoxFactory * ebfactory,
                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
                                             const int ls_refinement,
-                                            MultiFab * cost, std::string & knapsack_weight_type,
-                                            int subdt_io)
+                                            MultiFab * cost, std::string & knapsack_weight_type
+                                            )
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
@@ -375,7 +375,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     int   nsubsteps;
     Real  subdt, stime = time;
-    des_init_time_loop( &time, &dt, &nsubsteps, &subdt, &subdt_io );
+    des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
     /****************************************************************************
      * Init temporary storage:                                                  *
@@ -426,7 +426,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         }
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:ncoll)
+#pragma omp parallel reduction(+:ncoll) if (Gpu::notInLaunchRegion())
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
@@ -475,30 +475,43 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             // Only call the routine for wall collisions if we actually have
             // walls
-            if (ebfactory != NULL)
+
+            bool has_wall = false;
+            if ((ebfactory != NULL)
+                && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
             {
-                if ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued)
-                {
-                    const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
+                    has_wall = true;
+            }
+            else
+            {
+                int int_has_wall = 0;
+                Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
+                ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
+                has_wall = (int_has_wall > 0);
+            }
 
-                    // Calculate forces and torques from particle-wall collisions
-                    BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-                    calc_wall_collisions_ls(particles, & ntot, & nrp,
-                                            tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                            BL_TO_FORTRAN_3D((* ls_valid)[pti]),
-                                            BL_TO_FORTRAN_3D((* ls_phi)[pti]),
-                                            dx, & ls_refinement);
 
-                    // Debugging: copy data from the fc (all forces) vector to
-                    // the wfor (wall forces) vector.
-                    if (debug_level > 0) {
-                        for (int i = 0; i < wfor[index].size(); i++ ) {
-                            wfor[index][i] = fc[index][i];
-                        }
+            if (has_wall)
+            {
+                //const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
+
+                // Calculate forces and torques from particle-wall collisions
+                BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
+                calc_wall_collisions_ls(particles, & ntot, & nrp,
+                                        tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
+                                        BL_TO_FORTRAN_3D((* ls_valid)[pti]),
+                                        BL_TO_FORTRAN_3D((* ls_phi)[pti]),
+                                        dx, & ls_refinement);
+
+                // Debugging: copy data from the fc (all forces) vector to
+                // the wfor (wall forces) vector.
+                if (debug_level > 0) {
+                    for (int i = 0; i < wfor[index].size(); i++ ) {
+                        wfor[index][i] = fc[index][i];
                     }
-
-                    BL_PROFILE_VAR_STOP(calc_wall_collisions);
                 }
+
+                BL_PROFILE_VAR_STOP(calc_wall_collisions);
             }
 
             /********************************************************************
@@ -626,7 +639,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     }
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
@@ -799,7 +812,7 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
        const MultiFab* volfrac = (lev == 0) ? &(ebfactory[lev]->getVolFrac()) : &(crse_factory->getVolFrac());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
        {
         FArrayBox local_vol;
@@ -999,7 +1012,7 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
         const MultiFab* volfrac = (lev == 0) ? &(ebfactory[lev]->getVolFrac()) : &(crse_factory->getVolFrac());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         {
 
@@ -1138,27 +1151,6 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
     }
 }
 
-void MFIXParticleContainer::output(int estatus, int finish, int nstep, Real dt, Real time)
-{
-    for (int lev = 0; lev < nlev; lev++)
-    {
-       Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
-       Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
-       Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
-
-       // Not threaded because its writing output
-       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-       {
-
-         //number of particles
-         const int     np = NumberOfParticles(pti);
-         void* particles  = pti.GetArrayOfStructs().data();
-
-         output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
-                              particles, &finish);
-       }
-    }
-}
 
 void MFIXParticleContainer::writeAllAtLevel(int lev)
 {
@@ -1185,7 +1177,7 @@ MFIXParticleContainer::writeAllForComparison(int lev)
   int Np_tot = 0;
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:Np_tot)
+#pragma omp parallel reduction(+:Np_tot) if (Gpu::notInLaunchRegion())
 #endif
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       Np_tot += pti.numParticles();
@@ -1314,7 +1306,7 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
      for (int lev = 0; lev < nlev; lev++)
      {
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:p_num, p_diam, p_dens)
+#pragma omp parallel reduction(+:p_num, p_diam, p_dens) if (Gpu::notInLaunchRegion())
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
@@ -1349,7 +1341,7 @@ void MFIXParticleContainer::UpdateMaxVelocity()
     Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z)
+#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z) if (Gpu::notInLaunchRegion())
 #endif
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -1376,7 +1368,7 @@ void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Vector<Real>> p
     for (int lev = 0; lev < nlev; lev++)
     {
 #ifdef _OPENMP
-#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z)
+#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z) if (Gpu::notInLaunchRegion())
 #endif
        for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
        {
@@ -1501,150 +1493,166 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
 void MFIXParticleContainer::ComputeAverageVelocities ( const int lev,
                    const amrex::Real time,
                    const string&  basename,
-                   const vector<Real>& avg_region_x_w,
-                   const vector<Real>& avg_region_x_e,
-                   const vector<Real>& avg_region_y_s,
-                   const vector<Real>& avg_region_y_n,
-                   const vector<Real>& avg_region_z_b,
-                   const vector<Real>& avg_region_z_t )
+                   const Vector<int>& avg_vel_p,
+                   const Vector<Real>& avg_region_x_w,
+                   const Vector<Real>& avg_region_x_e,
+                   const Vector<Real>& avg_region_y_s,
+                   const Vector<Real>& avg_region_y_n,
+                   const Vector<Real>& avg_region_z_b,
+                   const Vector<Real>& avg_region_z_t )
 {
 
-    // Count number of calls -- Used to determin when to create file from scratch
-    static int ncalls = 0;
-    ++ncalls;
+  // Count number of calls -- Used to determin when to create file from scratch
+  static int ncalls = 0;
+  ++ncalls;
 
-    int  nregions = avg_region_x_w.size();
+  int  nregions = avg_region_x_w.size();
 
-    //
-    // Check the regions are defined correctly
-    //
-    if (  ( avg_region_x_e.size() != nregions ) ||
-    ( avg_region_y_s.size() != nregions ) ||
-    ( avg_region_y_n.size() != nregions ) ||
-    ( avg_region_z_b.size() != nregions ) ||
-    ( avg_region_z_t.size() != nregions )  )
+  if(avg_vel_p.size() > 0)
     {
-  amrex::Print () << "ComputeAverageVelocities: some regions are not properly defined: skipping.";
-  return;
-    }
 
-    vector<long> region_np (nregions, 0);
-    vector<Real> region_velx (nregions, 0.0);
-    vector<Real> region_vely (nregions, 0.0);
-    vector<Real> region_velz (nregions, 0.0);
+      //
+      // Check the regions are defined correctly
+      //
+      if (  ( avg_region_x_e.size() != nregions ) ||
+            ( avg_region_y_s.size() != nregions ) ||
+            ( avg_region_y_n.size() != nregions ) ||
+            ( avg_region_z_b.size() != nregions ) ||
+            ( avg_region_z_t.size() != nregions )  )
+        {
+          amrex::Print () << "ComputeAverageVelocities: some regions are not properly defined: skipping.";
+          return;
+        }
 
-    for ( int nr = 0; nr < nregions; ++nr )
-    {
-  // Create Real box for this region
-  RealBox avg_region ( {AMREX_D_DECL(avg_region_x_w[nr],avg_region_y_s[nr],avg_region_z_b[nr])},
-           {AMREX_D_DECL(avg_region_x_e[nr],avg_region_y_n[nr],avg_region_z_t[nr])} );
+      vector<long> region_np (nregions, 0);
+      vector<Real> region_velx (nregions, 0.0);
+      vector<Real> region_vely (nregions, 0.0);
+      vector<Real> region_velz (nregions, 0.0);
 
-  // Jump to next iteration if this averaging region is not valid
-  if ( !avg_region.ok () )
-  {
-      amrex::Print() << "ComputeAverageVelocities: region "<< nr <<" is invalid: skipping\n";
-      continue;
-  }
+      for ( int nr = 0; nr < nregions; ++nr )
+        {
 
-  long sum_np     = 0;    // Number of particle in avg region
-  Real sum_velx   = 0.;
-  Real sum_vely   = 0.;
-  Real sum_velz   = 0.;
+          amrex::Print() << "size of avg_vel_p " << avg_vel_p[nr] << "\n";
+
+          // This region isn't needed for particle data.
+          if( avg_vel_p[nr] == 0) continue;
+
+          // Create Real box for this region
+          RealBox avg_region ( {AMREX_D_DECL(avg_region_x_w[nr],avg_region_y_s[nr],avg_region_z_b[nr])},
+                               {AMREX_D_DECL(avg_region_x_e[nr],avg_region_y_n[nr],avg_region_z_t[nr])} );
+
+          // Jump to next iteration if this averaging region is not valid
+          if ( !avg_region.ok () )
+            {
+              amrex::Print() << "ComputeAverageVelocities: region "<< nr <<" is invalid: skipping\n";
+              continue;
+            }
+
+          long sum_np     = 0;    // Number of particle in avg region
+          Real sum_velx   = 0.;
+          Real sum_vely   = 0.;
+          Real sum_velz   = 0.;
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz)
+#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz) if (Gpu::notInLaunchRegion())
 #endif
-  for ( MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
-  {
-      Box bx       = pti.tilebox ();
-      RealBox tile_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
+          for ( MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
+            {
+              Box bx       = pti.tilebox ();
+              RealBox tile_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
 
-      if ( tile_region.intersects ( avg_region ) )
-      {
-    const int np         = NumberOfParticles(pti);
-    const AoS &particles = pti.GetArrayOfStructs();
+              if ( tile_region.intersects ( avg_region ) )
+                {
+                  const int np         = NumberOfParticles(pti);
+                  const AoS &particles = pti.GetArrayOfStructs();
 
-    for (int p = 0; p < np; ++p )
-    {
-        if ( avg_region.contains ( &(particles[p].m_rdata.pos[0]) ) )
+                  for (int p = 0; p < np; ++p )
+                    {
+                      if ( avg_region.contains ( &(particles[p].m_rdata.pos[0]) ) )
+                        {
+                          sum_np++;
+                          sum_velx += particles[p].rdata(realData::velx);
+                          sum_vely += particles[p].rdata(realData::vely);
+                          sum_velz += particles[p].rdata(realData::velz);
+                        }
+
+                    }
+
+                }
+
+            }
+
+          region_np[nr]    = sum_np;
+          region_velx[nr]  = sum_velx;
+          region_vely[nr]  = sum_vely;
+          region_velz[nr]  = sum_velz;
+        }
+
+      // Compute parallel reductions
+      ParallelDescriptor::ReduceLongSum ( region_np.data(),   nregions );
+      ParallelDescriptor::ReduceRealSum ( region_velx.data(), nregions );
+      ParallelDescriptor::ReduceRealSum ( region_vely.data(), nregions );
+      ParallelDescriptor::ReduceRealSum ( region_velz.data(), nregions );
+
+      // Only the IO processor takes care of the output
+      if (ParallelDescriptor::IOProcessor())
         {
-      sum_np++;
-      sum_velx += particles[p].rdata(realData::velx);
-      sum_vely += particles[p].rdata(realData::vely);
-      sum_velz += particles[p].rdata(realData::velz);
+
+          for ( int nr = 0; nr < nregions; ++nr )
+            {
+
+              // Skip this region.
+              if( avg_vel_p[nr] == 0 ) continue;
+
+              //
+              // Compute averages (NaN if NP=0 )
+              //
+              region_velx[nr] /= region_np[nr];
+              region_vely[nr] /= region_np[nr];
+              region_velz[nr] /= region_np[nr];
+
+              //
+              // Print to file
+              //
+              std::ofstream  ofs;
+              std::string    fname;
+
+              fname = basename + "_vel_p_" + std::to_string(nr) + ".dat";
+
+              // Open file
+              if ( ncalls == 1 )
+                {
+                  // Create output files only the first time this function is called
+                  // Use ios:trunc to delete previous contect
+                  ofs.open ( fname.c_str(), ios::out | ios::trunc );
+                }
+              else
+                {
+                  // If this is not the first time we write to this file
+                  // we append to it
+                  ofs.open ( fname.c_str(), ios::out | ios::app );
+                }
+
+              // Check if file is good
+              if ( !ofs.good() )
+                amrex::FileOpenFailed ( fname );
+
+              // Print header if first access
+              if ( ncalls == 1 )
+                ofs << "#  Time   NP  U  V  W" << std::endl;
+
+              ofs << time << " "
+                  << region_np[nr] << " "
+                  << region_velx[nr] << " "
+                  << region_vely[nr] << " "
+                  << region_velz[nr] << std::endl;
+
+              ofs.close();
+            }
         }
 
     }
 
-      }
-
-  }
-
-  region_np[nr]    = sum_np;
-  region_velx[nr]  = sum_velx;
-  region_vely[nr]  = sum_vely;
-  region_velz[nr]  = sum_velz;
-    }
-
-    // Compute parallel reductions
-    ParallelDescriptor::ReduceLongSum ( region_np.data(),   nregions );
-    ParallelDescriptor::ReduceRealSum ( region_velx.data(), nregions );
-    ParallelDescriptor::ReduceRealSum ( region_vely.data(), nregions );
-    ParallelDescriptor::ReduceRealSum ( region_velz.data(), nregions );
-
-    // Only the IO processor takes care of the output
-    if (ParallelDescriptor::IOProcessor())
-    {
-
-  for ( int nr = 0; nr < nregions; ++nr )
-  {
-
-      //
-      // Compute averages (NaN if NP=0 )
-      //
-      region_velx[nr] /= region_np[nr];
-      region_vely[nr] /= region_np[nr];
-      region_velz[nr] /= region_np[nr];
-
-      //
-      // Print to file
-      //
-      std::ofstream  ofs;
-      std::string    fname;
-
-      fname = basename + std::to_string(nr) + ".dat";
-
-      // Open file
-      if ( ncalls == 1 )
-      {
-    // Create output files only the first time this function is called
-    // Use ios:trunc to delete previous contect
-    ofs.open ( fname.c_str(), ios::out | ios::trunc );
-      }
-      else
-      {
-    // If this is not the first time we write to this file
-    // we append to it
-    ofs.open ( fname.c_str(), ios::out | ios::app );
-      }
-
-      // Check if file is good
-      if ( !ofs.good() )
-    amrex::FileOpenFailed ( fname );
-
-      // Print header if first access
-      if ( ncalls == 1 )
-    ofs << "#  Time   NP  U  V  W" << std::endl;
-
-      ofs << time << " "
-    << region_np[nr] << " "
-    << region_velx[nr] << " "
-    << region_vely[nr] << " "
-    << region_velz[nr] << std::endl;
-
-      ofs.close();
-  }
-    }
 }
 
 void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)

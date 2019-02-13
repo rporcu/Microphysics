@@ -65,7 +65,7 @@ extern "C"
 
     void calc_drag_particle(
         const amrex::Real* gp , const int* gplo , const int* gphi,
-        const amrex::Real* gp0, 
+        const amrex::Real* gp0,
         const amrex::Real* vel, const int* ulo, const int* uhi,
         const int* np, void* particles, const amrex::Real* dx,
         const amrex::Real* x0
@@ -74,7 +74,7 @@ extern "C"
 
     void calc_drag_particle_eb(
         const amrex::Real* gp , const int* gplo , const int* gphi,
-        const amrex::Real* gp0, 
+        const amrex::Real* gp0,
         const amrex::Real* vel, const int* ulo,   const int* uhi,
         const void*  flags    , const int* flo,   const int* fhi,
         const int* np, void* particles, const amrex::Real* dx,
@@ -135,8 +135,7 @@ extern "C"
     void particle_get_position (void* particles, const int* nrp, amrex::Real* x, amrex::Real* y, amrex::Real* z);
 
     void des_init_time_loop(
-        const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt,
-        const int* subdt_io
+        const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt
         );
 
     void des_time_loop(
@@ -145,12 +144,6 @@ extern "C"
         amrex::Real* subdt,
         amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
         amrex::Real* stime, int* nstep
-        );
-
-    void output_manager(
-        const int* np, amrex::Real* time, amrex::Real* dt,
-        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-        int* nstep, void* particles, int* finsh
         );
 
     void call_usr3_des(const int* np, void* particles);

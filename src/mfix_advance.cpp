@@ -83,7 +83,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
           MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
            // User hooks
-           for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+           for (MFIter mfi(*ep_g[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
               mfix_usr2();
         }
 
@@ -271,14 +271,14 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
         // Add the diffusion terms (either all if explicit_diffusion == true or just the
         //    off-diagonal terms if explicit_diffusion == false)
         MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
-
-        // Add dt * (gravity - gp/rho - gp0/rho)
-        mfix_add_gravity_and_gp ( lev, dt);
     }
+
+     // Add source terms
+     mfix_add_gravity_and_gp(dt);
 
     // Add the drag term implicitly
     if (solve_dem)
-        mfix_add_drag_terms ( dt );
+        mfix_add_drag_terms (dt);
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
@@ -362,14 +362,14 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
         //    off-diagonal terms if explicit_diffusion == false)
         MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau[lev]    , 0, 0, 3, 0);
         MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
-
-        // Add dt * (gravity - gp/rho - gp0/rho)
-        mfix_add_gravity_and_gp ( lev, dt);
     }
 
-    // Compute intermediate velocity if drag terms present
+     // Add source terms
+     mfix_add_gravity_and_gp(dt);
+
+    // Add the drag term implicitly
     if (solve_dem)
-        mfix_add_drag_terms (dt);
+        mfix_add_drag_terms(dt);
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion)
@@ -382,45 +382,34 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 }
 
 void
-mfix::mfix_add_gravity_and_gp (int lev, amrex::Real dt) 
+mfix::mfix_add_gravity_and_gp (Real dt) 
 {
     BL_PROFILE("mfix::mfix_add_gravity_and_gp");
+    for (int lev = 0; lev < nlev; lev++)
+    {
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-    {
-      // Tilebox
-      Box bx = mfi.tilebox ();
+       for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+       {
+         // Tilebox
+         Box bx = mfi.tilebox ();
 
-      const auto& vel_fab = vel_g[lev]->array(mfi);
+         const auto& vel_fab = vel_g[lev]->array(mfi);
+         const auto&  gp_fab =    gp[lev]->array(mfi);
+         const auto& den_fab =  ro_g[lev]->array(mfi);
 
-      for (int n = 0; n < 3; n++)
-       for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
-        for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
-          for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
-          {
-             vel_fab(i,j,k,n) += dt * gravity[n];
-          }
-    }
+         amrex::ParallelFor(bx, 
+               [=] (int i, int j, int k)
+         {
+            Real inv_dens = 1.0 / den_fab(i,j,k);
+            vel_fab(i,j,k,0) += dt * ( gravity[0]-(gp_fab(i,j,k,0)+gp0[0])*inv_dens );
+            vel_fab(i,j,k,1) += dt * ( gravity[1]-(gp_fab(i,j,k,1)+gp0[1])*inv_dens );
+            vel_fab(i,j,k,2) += dt * ( gravity[2]-(gp_fab(i,j,k,2)+gp0[2])*inv_dens );
 
-    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-    {
-      // Grown tilebox
-      Box bx = mfi.growntilebox ();
-
-      const auto& vel_fab = vel_g[lev]->array(mfi);
-      const auto&  gp_fab =    gp[lev]->array(mfi);
-      const auto& den_fab =  ro_g[lev]->array(mfi);
-
-      for (int n = 0; n < 3; n++)
-       for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
-        for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
-          for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
-          {
-             vel_fab(i,j,k,n) -= dt * (gp_fab(i,j,k,n) + gp0[n]) / den_fab(i,j,k);
-          }
+         });
+       }
     }
 }
 
@@ -430,33 +419,56 @@ mfix::mfix_add_gravity_and_gp (int lev, amrex::Real dt)
 // momentum exchange
 //
 void
-mfix::mfix_add_drag_terms ( amrex::Real dt )
-
+mfix::mfix_add_drag_terms (Real dt)
 {
+  /*
+     This adds both components of the drag term
+     Here f_gds = beta
+          drag  = beta * particle_velocity
+    
+     So the drag term we add is beta * (particle_velocity - fluid_velocity)
+                              = drag - f_gds * fluid_velocity
+  */
+
   BL_PROFILE("mfix::mfix_add_drag");
 
   for (int lev = 0; lev < nlev; lev++)
-    {
-      // The volume fraction of each fluid cell (1 if uncovered, 0 if covered)
-      const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
-
+  {
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-      for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-        {
-          // Tilebox
-          Box bx = mfi.tilebox();
+    for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    {
+      // Tilebox
+      Box bx = mfi.tilebox ();
 
-          add_drag_terms ( BL_TO_FORTRAN_BOX(bx),
-                           BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                           BL_TO_FORTRAN_ANYD((*f_gds[lev])[mfi]),
-                           BL_TO_FORTRAN_ANYD((*drag[lev])[mfi]),
-                           BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-                           BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
-                           &dt );
-        }
+      const auto&  vel_fab = vel_g[lev]->array(mfi);
+      const auto& drag_fab =  drag[lev]->array(mfi);
+      const auto& fgds_fab = f_gds[lev]->array(mfi);
+      const auto&  rop_fab = rop_g[lev]->array(mfi);
+
+      amrex::ParallelFor(bx, 
+            [=] (int i, int j, int k)
+
+     // When we go to GPU we replace above line by 
+     //     [=] AMREX_GPU_DEVICE (int i, int j, int k)
+         {
+             Real orop  = dt / rop_fab(i,j,k);
+             Real denom = 1.0 / (1.0 + fgds_fab(i,j,k) * orop);
+
+             vel_fab(i,j,k,0) = (vel_fab(i,j,k,0) + drag_fab(i,j,k,0) * orop) * denom;
+             vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + drag_fab(i,j,k,1) * orop) * denom;
+             vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;
+         });
+
+      // THE ABOVE LOOP IS IDENTICAL TO THIS
+      //  for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
+      //   for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
+      //     for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
+      //     {
+      //     }
     }
+  }
 }
 
 //

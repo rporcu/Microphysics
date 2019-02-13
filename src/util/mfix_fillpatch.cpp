@@ -179,7 +179,7 @@ mfix::mfix_set_scalar_bcs ()
      Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
      for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
      {
@@ -216,7 +216,7 @@ mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
      Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
      for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi)
      {

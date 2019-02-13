@@ -327,7 +327,7 @@ MacProjection::set_velocity_bcs ( int lev,
    Box domain( m_amrcore->Geom(lev).Domain() );
 	
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
    for (MFIter mfi(*m_diveu[lev], false); mfi.isValid(); ++mfi)
    {
@@ -368,7 +368,7 @@ MacProjection::set_ccmf_bcs ( int lev, MultiFab& mf )
    // Fill all cell-centered arrays with first-order extrapolation at domain
    // boundaries
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
    for(MFIter mfi(mf,false); mfi.isValid(); ++mfi)
    {
@@ -412,9 +412,9 @@ MacProjection::compute_b_coeff ( const Vector< std::unique_ptr<MultiFab> >& u,
 
     
 #ifdef _OPENMP
-#pragma omp parallel 
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-   for (MFIter mfi(*ep[lev],true); mfi.isValid(); ++mfi)
+   for (MFIter mfi(*ep[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
    {
       // Boxes for staggered components
       Box bx  = mfi.tilebox();

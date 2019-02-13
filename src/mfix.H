@@ -60,7 +60,20 @@ public:
 
     void WriteParticleAscii(std::string & par_ascii_file_name, int nstep = 0) const;
 
-    void WriteUSER(Real dt, Real time) const;
+    void WriteAverageRegions ( std::string& avg_file, int nstep, Real time = 0.0 ) const;
+
+    void ComputeAverageFluidVars ( const int lev,
+                                         const amrex::Real time,
+                                         const string&  basename,
+                                         const Vector<int>& avg_p_g,
+                                         const Vector<int>& avg_ep_g,
+                                         const Vector<int>& avg_vel_g,
+                                         const Vector<Real>& avg_region_x_w,
+                                         const Vector<Real>& avg_region_x_e,
+                                         const Vector<Real>& avg_region_y_s,
+                                         const Vector<Real>& avg_region_y_n,
+                                         const Vector<Real>& avg_region_z_b,
+                                         const Vector<Real>& avg_region_z_t ) const;
 
     void Regrid ();
 
@@ -343,11 +356,9 @@ private:
                                Vector< std::unique_ptr<MultiFab> >& divtau_old,
                                Real time, Real dt, bool proj_2);
 
-     void mfix_diffuse_velocity(Real time, Real dt);
-
+     void mfix_add_gravity_and_gp(Real dt);
      void mfix_add_drag_terms(Real dt);
-
-     void mfix_add_gravity_and_gp(int lev, Real dt);
+     void mfix_diffuse_velocity(Real time, Real dt);
 
      void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
      void mfix_compute_MAC_velocity_at_faces(Real time, Vector< std::unique_ptr<MultiFab> >& vel);
@@ -364,12 +375,6 @@ private:
      void mfix_set_bc_type(int lev);
 
      void fill_mf_bc(int lev,  MultiFab& mf);
-#if 0
-     void WritePlotFile() const;
-
-     // which step?
-     Vector<int> nsubsteps;  // how many substeps on each level?
-#endif
 
      Real mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
      Real mfix_norm1 ( MultiFab& mf, int lev, int comp );
@@ -523,9 +528,6 @@ private:
      int call_udf;
      bool dual_grid = false;
 
-     // enable output_manager during des_time_loop
-     bool subdt_io;
-
      // Parameters to control load balancing
      static std::string particle_init_type;
      static std::string load_balance_type;
@@ -554,8 +556,13 @@ private:
      //
      // Options to control the computing of particle eulerian velocities
      //
-     int avg_vel_int = -1;
-     std::string avg_vel_file {"avg_region"};
+
+     Vector<int> avg_p_g  ;
+     Vector<int> avg_ep_g ;
+     Vector<int> avg_vel_g;
+
+     Vector<int> avg_vel_p;
+
      Vector<Real> avg_region_x_e;
      Vector<Real> avg_region_x_w;
      Vector<Real> avg_region_y_s;

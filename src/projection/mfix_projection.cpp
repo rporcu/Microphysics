@@ -246,9 +246,9 @@ mfix::mfix_compute_bcoeff_ppe ()
     {
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-      for (MFIter mfi(*ro_g[lev],true); mfi.isValid(); ++mfi)
+      for (MFIter mfi(*ro_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
           // Cell-centered tilebox
           Box bx = mfi.tilebox();

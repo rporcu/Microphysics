@@ -103,14 +103,14 @@ extern "C"
     void set_p0(const int*  lo   , const int*  hi,
           const int* domlo , const int* domhi,
           amrex::Real* p0_g , const int* rlo, const int* rhi,
-         amrex::Real* gp0_g, 
+          amrex::Real* gp0,
           amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
           amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
           int* delp_dir,
           const int* bc_ilo, const int* bc_ihi,
           const int* bc_jlo, const int* bc_jhi,
           const int* bc_klo, const int* bc_khi,
-          const int* ng
+                const int* ng
        );
 
     void set_vec_bcs (
@@ -135,11 +135,6 @@ extern "C"
         );
 
     void init_collision(amrex::Real *sum_dp, amrex::Real *sum_roi
-        );
-
-    void output_manager ( const int* np,  amrex::Real* time, amrex::Real* dt,
-             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-             int* nstep, void* particles, int* finsh
         );
 
     void calc_volume_fraction (
@@ -199,13 +194,18 @@ extern "C"
        );
 
     void mfix_collect_fluid(
-            const int*  lo, const int*  hi,
+            const int*    lo,  const int*   hi,
             const int* domlo , const int* domhi,
-            amrex::Real* p   , const int* p_lo, const int* p_hi,
-            amrex::Real* ep_g, const int* s_lo, const int* s_hi,
-            amrex::Real* dx,   amrex::Real* dy,  amrex::Real* dz,
-            amrex::Real (&accumulator)[256]
-            );
+            amrex::Real* ep_g,        const int* slo, const int* shi,
+            amrex::Real* p_g,         const int* plo, const int* phi,
+            amrex::Real* vel_g,       const int* vlo, const int* vhi,
+            const amrex_real* vratio, const int* rlo, const int* rhi,
+            const amrex::Real* x_w, const amrex::Real* x_e,
+            const amrex::Real* y_s, const amrex::Real* y_n,
+            const amrex::Real* z_b, const amrex::Real* z_t, const amrex::Real* dx,
+            amrex::Real* sum_ep_g, amrex::Real* sum_p_g,  amrex::Real* sum_vol,
+            amrex::Real* sum_velx, amrex::Real* sum_vely, amrex::Real* sum_velz
+            ); const
 
     void mfix_write_fluid(const int* domlo , const int* domhi,
             amrex::Real* dx,   amrex::Real* dy,  amrex::Real* dz,

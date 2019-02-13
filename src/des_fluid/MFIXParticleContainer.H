@@ -99,7 +99,7 @@ public:
 
     void EvolveParticles(int lev, int nstep, Real dt, Real time, EBFArrayBoxFactory * ebfactory,
             const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
-            MultiFab * cost, std::string & knapsack_weight_type, int subdt_io);
+            MultiFab * cost, std::string & knapsack_weight_type);
 
     void GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro)[10]);
 
@@ -188,16 +188,17 @@ public:
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities
-    // 
+    //
     void ComputeAverageVelocities ( const int lev,
-				    const amrex::Real time,
-				    const string& basename,
-				    const vector<Real>& avg_region_x_w,
-				    const vector<Real>& avg_region_x_e,
-				    const vector<Real>& avg_region_y_s,
-				    const vector<Real>& avg_region_y_n,
-				    const vector<Real>& avg_region_z_b,
-				    const vector<Real>& avg_region_z_t );
+            const amrex::Real time,
+            const string& basename,
+            const Vector<int>& avg_vel_p,
+            const Vector<Real>& avg_region_x_w,
+            const Vector<Real>& avg_region_x_e,
+            const Vector<Real>& avg_region_y_s,
+            const Vector<Real>& avg_region_y_n,
+            const Vector<Real>& avg_region_z_b,
+            const Vector<Real>& avg_region_z_t );
 
 private:
 

@@ -33,9 +33,9 @@ mfix::mfix_compute_divtau ( int lev,
    bndrycent = &(ebfactory[lev] -> getBndryCent());
     
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-   for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi) {
+   for (MFIter mfi(*vel[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
       // Tilebox
       Box bx = mfi.tilebox ();
@@ -252,9 +252,9 @@ mfix::mfix_compute_bcoeff_diff ()
    {
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-      for (MFIter mfi(*mu_g[lev],true); mfi.isValid(); ++mfi)
+      for (MFIter mfi(*mu_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
       {
          // Tileboxes for staggered components
          Box ubx = mfi.tilebox (e_x);

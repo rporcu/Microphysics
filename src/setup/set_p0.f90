@@ -66,7 +66,7 @@
       real(ar) :: dpodx, dpody, dpodz
 
       ! Initialize all components of gp0 to zero
-      gp0(:) = 0.d0
+      gp0(:)      = 0.d0
 
       delp_dir = delp_dir_in
 
@@ -190,7 +190,7 @@
                if (is_undefined(ic_p_g(icv))) goto 60
                if (gravity(1).ne.0.d0 .or. gravity(2).ne.0.d0 .or. gravity(3).ne.0.d0) goto 60
                p0_g(:,:,:) = ic_p_g(icv)
-                gp0(:) = 0.d0
+                gp0(:)     = 0.d0
             end if
          end if
       end do
@@ -291,7 +291,7 @@
             enddo
          endif
 
-         gp0(1)  = ro_g0 * gravity(1)
+         gp0(1) = ro_g0 * gravity(1)
 
       else if (abs(gravity(2)) > epsilon(0.0d0)) then
 
@@ -311,7 +311,7 @@
             enddo
          endif
 
-         gp0(2)  = ro_g0 * gravity(2)
+         gp0(2) = ro_g0 * gravity(2)
 
       else if (abs(gravity(3)) > epsilon(0.0d0)) then
 
@@ -331,7 +331,7 @@
             enddo
          endif
 
-         gp0(3)  = ro_g0 * gravity(3)
+         gp0(3) = ro_g0 * gravity(3)
 
       endif
 

@@ -70,8 +70,4 @@
       integer :: DEM_COUNT = 0
       integer :: PIC_COUNT = 0
 
-! Enable output (via output_manger) on the subdt time scale
-! (updated by des_init_time_loop)
-      logical :: subdt_io = .false.
-
       END MODULE RUN

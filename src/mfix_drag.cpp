@@ -98,7 +98,7 @@ void mfix::mfix_calc_drag_fluid(Real time)
         const MultiFab & phi = * level_sets[lev];
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         {
             // Create fab to host reconstructed velocity field
@@ -197,9 +197,9 @@ mfix::mfix_calc_drag_particle(Real time)
         //         to the domain from ghost cells interior to the domain
         //
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-        for (MFIter mfi(gp_tmp, true); mfi.isValid(); ++mfi)
+        for (MFIter mfi(gp_tmp, TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.tilebox();
             set_gradp_bcs ( bx.loVect(), bx.hiVect(),
@@ -244,11 +244,6 @@ mfix::mfix_calc_drag_particle(Real time)
             gp_pba->copy(gp_tmp,0,0,gp_tmp.nComp(),ng,ng);
             gp_pba->FillBoundary(geom[lev].periodicity());
 
-            // EBFArrayBoxFactory ebfactory_loc( * eb_level_fluid,
-            //                                   geom[lev], pba, pdm,
-            //                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-            //                                    m_eb_full_grow_cells}, EBSupport::basic);
-
             EBFArrayBoxFactory ebfactory_loc( * eb_levels[lev], geom[lev], pba, pdm,
                                               {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                m_eb_full_grow_cells}, EBSupport::basic);
@@ -260,6 +255,7 @@ mfix::mfix_calc_drag_particle(Real time)
 
             gp_ptr  = gp_pba.get();
             vel_ptr = vel_pba.get();
+
         }
 
         // Phi is always on the particles grid
@@ -268,7 +264,7 @@ mfix::mfix_calc_drag_particle(Real time)
         amrex::Print() << "reconstruction lev= " << lev << "\n";
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         {
             // Create fab to host reconstructed velocity field

@@ -48,6 +48,7 @@ mfix::AllocateArrays (int lev)
     diveu[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0, MFInfo(), *ebfactory[lev]));
     diveu[lev]->setVal(0.);
 
+
     // Presssure gradients
     gp[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
     gp[lev]->setVal(0.);

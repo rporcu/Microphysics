@@ -33,9 +33,9 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv,
         bndrycent = &(ebfactory[lev] -> getBndryCent());
        
 #ifdef _OPENMP
-#pragma omp parallel 
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-        for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
+        for (MFIter mfi(*vel[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             // Tilebox
             Box bx = mfi.tilebox ();
@@ -138,9 +138,9 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv,
         bndrycent = &(ebfactory[lev] -> getBndryCent());
        
 #ifdef _OPENMP
-#pragma omp parallel 
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-        for (MFIter mfi(*vel[lev],true); mfi.isValid(); ++mfi)
+        for (MFIter mfi(*vel[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             // Tilebox
             Box bx = mfi.tilebox ();
@@ -224,9 +224,9 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
     Box domain(geom[lev].Domain());
     
 #ifdef _OPENMP
-#pragma omp parallel 
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(Sborder,true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(Sborder,TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
        // Tilebox
        Box bx = mfi.tilebox ();
@@ -312,9 +312,9 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
     
        // Then compute velocity at faces
 #ifdef _OPENMP
-#pragma omp parallel 
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-       for (MFIter mfi(Sborder,true); mfi.isValid(); ++mfi)
+       for (MFIter mfi(Sborder,TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
            // Tilebox
           Box  bx = mfi.tilebox();
