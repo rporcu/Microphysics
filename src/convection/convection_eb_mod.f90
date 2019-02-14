@@ -118,7 +118,12 @@ contains
       real(ar) :: fx(lo(1)-nh:hi(1)+nh+1,lo(2)-nh:hi(2)+nh  ,lo(3)-nh:hi(3)+nh  ,3)
       real(ar) :: fy(lo(1)-nh:hi(1)+nh  ,lo(2)-nh:hi(2)+nh+1,lo(3)-nh:hi(3)+nh  ,3)
       real(ar) :: fz(lo(1)-nh:hi(1)+nh  ,lo(2)-nh:hi(2)+nh  ,lo(3)-nh:hi(3)+nh+1,3)
-
+      integer  :: fxlo(3), fxhi(3), fylo(3), fyhi(3), fzlo(3), fzhi(3)
+      real(ar) :: u_face, v_face, w_face
+      real(ar) :: upls, umns, vpls, vmns, wpls, wmns
+      integer  :: i, j, k, n
+      integer, parameter     :: bc_list(6) = [MINF_, NSW_, FSW_, PSW_, PINF_, POUT_]      
+      
       ! Check number of ghost cells
       if (ng < 4) call amrex_abort( "compute_divop(): ng must be >= 4")
 
@@ -127,127 +132,111 @@ contains
       ! Do this on ALL faces on the tile, i.e. INCLUDE as many ghost faces as
       ! possible
       !
-      block
-         real(ar)               :: u_face, v_face, w_face
-         real(ar)               :: upls, umns, vpls, vmns, wpls, wmns
-         integer                :: i, j, k, n
-         integer, parameter     :: bc_list(6) = [MINF_, NSW_, FSW_, PSW_, PINF_, POUT_]
+      do n = 1, 3
 
-
-         do n = 1, 3
-
-            !
-            ! ===================   X   ===================
-            !
-            do k = lo(3)-nh, hi(3)+nh
-               do j = lo(2)-nh, hi(2)+nh
-                  do i = lo(1)-nh, hi(1)+nh+1
-                      if ( afrac_x(i,j,k) > zero ) then
-                        if ( i <= domlo(1) .and. any(bc_ilo(j,k,1) == bc_list) ) then
-                           u_face =  vel(domlo(1)-1,j,k,n)
-                        else if ( i >= domhi(1)+1 .and. any(bc_ihi(j,k,1) == bc_list ) ) then
-                           u_face =  vel(domhi(1)+1,j,k,n)
-                        else
-                           upls  = vel(i  ,j,k,n) - half * xslopes(i  ,j,k,n)
-                           umns  = vel(i-1,j,k,n) + half * xslopes(i-1,j,k,n)
-
-                           u_face = upwind( umns, upls, u(i,j,k) )
-                        end if
+         !
+         ! ===================   X   ===================
+         !
+         do k = lo(3)-nh, hi(3)+nh
+            do j = lo(2)-nh, hi(2)+nh
+               do i = lo(1)-nh, hi(1)+nh+1
+                  if ( afrac_x(i,j,k) > zero ) then
+                     if ( i <= domlo(1) .and. any(bc_ilo(j,k,1) == bc_list) ) then
+                        u_face =  vel(domlo(1)-1,j,k,n)
+                     else if ( i >= domhi(1)+1 .and. any(bc_ihi(j,k,1) == bc_list ) ) then
+                        u_face =  vel(domhi(1)+1,j,k,n)
                      else
-                        u_face = my_huge
+                        upls  = vel(i  ,j,k,n) - half * xslopes(i  ,j,k,n)
+                        umns  = vel(i-1,j,k,n) + half * xslopes(i-1,j,k,n)
+
+                        u_face = upwind( umns, upls, u(i,j,k) )
                      end if
-                     fx(i,j,k,n) = half * (ep(i-1,j,k) + ep(i,j,k)) * u(i,j,k) * u_face
-                  end do
+                  else
+                     u_face = my_huge
+                  end if
+                  fx(i,j,k,n) = half * (ep(i-1,j,k) + ep(i,j,k)) * u(i,j,k) * u_face
                end do
             end do
-
-            !
-            ! ===================   Y   ===================
-            !
-            do k = lo(3)-nh, hi(3)+nh
-               do j = lo(2)-nh, hi(2)+nh+1
-                  do i = lo(1)-nh, hi(1)+nh
-                     if ( afrac_y(i,j,k) > zero ) then
-                        if ( j <= domlo(2) .and. any(bc_jlo(i,k,1) == bc_list) ) then
-                           v_face =  vel(i,domlo(2)-1,k,n)
-                        else if ( j >= domhi(2)+1 .and. any(bc_jhi(i,k,1) == bc_list ) ) then
-                           v_face =  vel(i,domhi(2)+1,k,n)
-                        else
-                           vpls  = vel(i,j  ,k,n) - half * yslopes(i,j  ,k,n)
-                           vmns  = vel(i,j-1,k,n) + half * yslopes(i,j-1,k,n)
-
-                           v_face = upwind( vmns, vpls, v(i,j,k) )
-                        end if
-                     else
-                        v_face = my_huge
-                     end if
-                     fy(i,j,k,n) = half * (ep(i,j-1,k) + ep(i,j,k)) * v(i,j,k) * v_face
-                  end do
-               end do
-            end do
-
-            !
-            ! ===================   Z   ===================
-            !
-            do k = lo(3)-nh, hi(3)+nh+1
-               do j = lo(2)-nh, hi(2)+nh
-                  do i = lo(1)-nh, hi(1)+nh
-                     if ( afrac_z(i,j,k) > zero ) then
-                        if ( k <= domlo(3) .and. any(bc_klo(i,j,1) == bc_list) ) then
-                           w_face =  vel(i,j,domlo(3)-1,n)
-                        else if ( k >= domhi(3)+1 .and. any(bc_khi(i,j,1) == bc_list ) ) then
-                           w_face =  vel(i,j,domhi(3)+1,n)
-                        else
-                           wpls  = vel(i,j,k  ,n) - half * zslopes(i,j,k  ,n)
-                           wmns  = vel(i,j,k-1,n) + half * zslopes(i,j,k-1,n)
-
-                           w_face = upwind( wmns, wpls, w(i,j,k) )
-                        end if
-                     else
-                        w_face = my_huge
-                     end if
-                     fz(i,j,k,n) = half * (ep(i,j,k-1) + ep(i,j,k)) * w(i,j,k) * w_face
-                  end do
-               end do
-            end do
-
          end do
 
-      end block
+         !
+         ! ===================   Y   ===================
+         !
+         do k = lo(3)-nh, hi(3)+nh
+            do j = lo(2)-nh, hi(2)+nh+1
+               do i = lo(1)-nh, hi(1)+nh
+                  if ( afrac_y(i,j,k) > zero ) then
+                     if ( j <= domlo(2) .and. any(bc_jlo(i,k,1) == bc_list) ) then
+                        v_face =  vel(i,domlo(2)-1,k,n)
+                     else if ( j >= domhi(2)+1 .and. any(bc_jhi(i,k,1) == bc_list ) ) then
+                        v_face =  vel(i,domhi(2)+1,k,n)
+                     else
+                        vpls  = vel(i,j  ,k,n) - half * yslopes(i,j  ,k,n)
+                        vmns  = vel(i,j-1,k,n) + half * yslopes(i,j-1,k,n)
 
-       divop: block
-         ! Compute div(tau) with EB algorithm
-         integer(c_int)  :: fxlo(3), fxhi(3), fylo(3), fyhi(3), fzlo(3), fzhi(3)
+                        v_face = upwind( vmns, vpls, v(i,j,k) )
+                     end if
+                  else
+                     v_face = my_huge
+                  end if
+                  fy(i,j,k,n) = half * (ep(i,j-1,k) + ep(i,j,k)) * v(i,j,k) * v_face
+               end do
+            end do
+         end do
 
-         fxlo = lo-nh
-         fylo = lo-nh
-         fzlo = lo-nh
+         !
+         ! ===================   Z   ===================
+         !
+         do k = lo(3)-nh, hi(3)+nh+1
+            do j = lo(2)-nh, hi(2)+nh
+               do i = lo(1)-nh, hi(1)+nh
+                  if ( afrac_z(i,j,k) > zero ) then
+                     if ( k <= domlo(3) .and. any(bc_klo(i,j,1) == bc_list) ) then
+                        w_face =  vel(i,j,domlo(3)-1,n)
+                     else if ( k >= domhi(3)+1 .and. any(bc_khi(i,j,1) == bc_list ) ) then
+                        w_face =  vel(i,j,domhi(3)+1,n)
+                     else
+                        wpls  = vel(i,j,k  ,n) - half * zslopes(i,j,k  ,n)
+                        wmns  = vel(i,j,k-1,n) + half * zslopes(i,j,k-1,n)
 
-         fxhi = hi + nh + [1,0,0]
-         fyhi = hi + nh + [0,1,0]
-         fzhi = hi + nh + [0,0,1]
+                        w_face = upwind( wmns, wpls, w(i,j,k) )
+                     end if
+                  else
+                     w_face = my_huge
+                  end if
+                  fz(i,j,k,n) = half * (ep(i,j,k-1) + ep(i,j,k)) * w(i,j,k) * w_face
+               end do
+            end do
+         end do
 
-         call compute_divop(lo, hi, ugradu, glo, ghi, vel, vlo, vhi, &
-              fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi, &
-              ep, elo, ehi, afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi,      &
-              cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi, flags, flo, fhi,      &
-              vfrac, vflo, vfhi, bcent, blo, bhi, domlo, domhi, dx, ng )
-      end block divop
+      end do
+
+      ! Compute div(tau) with EB algorithm
+      fxlo = lo-nh
+      fylo = lo-nh
+      fzlo = lo-nh
+
+      fxhi = hi + nh + [1,0,0]
+      fyhi = hi + nh + [0,1,0]
+      fzhi = hi + nh + [0,0,1]
+
+      call compute_divop(lo, hi, ugradu, glo, ghi, vel, vlo, vhi, &
+       fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi, &
+       ep, elo, ehi, afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi,      &
+       cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi, flags, flo, fhi,      &
+       vfrac, vflo, vfhi, bcent, blo, bhi, domlo, domhi, dx, ng )
 
       ! Divide by ep and return the negative
-      block
-         integer :: i,j,k,n
-
-         do n = 1, 3
-            do k = lo(3), hi(3)
-               do j = lo(2), hi(2)
-                  do i = lo(1), hi(1)
-                     ugradu(i,j,k,n) = - ugradu(i,j,k,n) / ep(i,j,k)
-                  end do
+      do n = 1, 3
+         do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
+                  ugradu(i,j,k,n) = - ugradu(i,j,k,n) / ep(i,j,k)
                end do
             end do
          end do
-      end block
+      end do
+
 
    end subroutine compute_ugradu_eb
 
