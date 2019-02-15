@@ -22,9 +22,9 @@ echo "Using INPUTS file ${INPUTS}"
 
 if [ "$ENABLE_MPI" -eq "1" ]; then
     if [ "$ENABLE_OMP" -eq "1" ]; then
-	MPIRUN="mpirun -np 2"
+  MPIRUN="mpirun -np 2"
     else
-	MPIRUN="mpirun -np 4"
+  MPIRUN="mpirun -np 4"
     fi
 else
     MPIRUN=""
@@ -32,7 +32,8 @@ fi
 
 FCOMPARE=${FCOMPARE:-}
 
-rm -rf POST_* ${RUN_NAME}* &> /dev/null
+rm -rf ${RUN_NAME}* const_plt* POST_* &> /dev/null
+
 time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.stop_time=0.150"
 time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.restart=DEM06_chk00150"
 

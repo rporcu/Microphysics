@@ -13,9 +13,18 @@ amr.blocking_factor = 4
 amr.max_level = 0
 
 # Geometry
-geometry.coord_sys   = 0                  # 0: Cartesian   
+geometry.coord_sys   = 0                  # 0: Cartesian
 geometry.is_periodic = 0     0     0      # Is periodic in each direction?
 geometry.prob_lo     = 0.    0.    0.       # lo corner of physical domain
 geometry.prob_hi     = 1.0   1.0   1.0      # hi corner of physical domain
 
 mfix.geometry = box
+
+amr.plot_int   = -1
+amr.plot_file  = DEM01_plt
+
+amr.check_int  = -1
+amr.check_file = DEM01_chk
+
+amr.par_ascii_int  = 1
+amr.par_ascii_file = DEM01_par

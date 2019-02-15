@@ -67,11 +67,6 @@ particles.tile_size = 1024 1024 1024
 
 # Level-set refinement and padding
 mfix.levelset__refinement    = 4 # levelset resolution
-mfix.levelset__pad           = 8 # levelset ghost cells
-
-# EB refinement and padding
-# => only needed when using multiple grids
-#mfix.levelset__eb_pad        = 8 # EB extends into neighboring grids
 
 #mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
@@ -80,8 +75,6 @@ mfix.levelset__pad           = 8 # levelset ghost cells
 mfix.geometry = "cylinder"
 
 cylinder.internal_flow = true
-cylinder.closed_bottom = true
-cylinder.bottom_offset = 1.0e-8
 
 cylinder.radius  = 0.0018
 cylinder.height  = -1.

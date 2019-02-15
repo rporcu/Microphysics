@@ -44,7 +44,5 @@ option( ENABLE_FPE "Enable Floating Point Exceptions checks" NO )
 
 option( ENABLE_PROJCC "Enable Approximate Projection" YES )
 
-option( ENABLE_PTESTS "Include tests for projection method in Ctest suite " NO )
-
-option( ENABLE_STESTS "Include tests for SIMPLE method in Ctest suite " YES )
+option( ENABLE_PTESTS "Include tests for projection method in Ctest suite " YES )
 

@@ -18,12 +18,7 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  DT = 1.0d-4
-
-  CALL_USR = .T.
-
-  FULL_LOG = .F.  ! display residuals on screen
-  NLOG = 250      ! time steps between updates to (.LOG) file
+  DT = 4.0d-4
 
   GRAVITY(1) =  0.d0
   GRAVITY(2) =  0.d0
@@ -85,22 +80,3 @@
   IC_U_g(1) =     0.0    ! (m/sec)
   IC_V_g(1) =     0.0    ! (m/sec)
   IC_W_g(1) =     0.0    ! (m/sec)
-
-
-#_______________________________________________________________________
-# BOUNDARY CONDITIONS SECTION
-
-  BC_X_w(1) =  0.00  ! (m)
-  BC_X_e(1) =  1.00  ! (m)
-  BC_Y_s(1) =  0.00  ! (m)
-  BC_Y_n(1) =  1.00  ! (m)
-  BC_Z_b(1) =  0.00  ! (m)
-  BC_Z_t(1) =  0.00  ! (m)
-
-  BC_TYPE(1) = 'NSW'
-
-
-#_______________________________________________________________________
-# USER OUTPUT CONTROL
-
-  USR_DT(1) = 1.0d-8

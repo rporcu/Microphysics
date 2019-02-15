@@ -1,5 +1,0 @@
-add_sources ( MFIXParticleContainer.H mfix_des_F.H )
-add_sources ( MFIXParticleContainer.cpp )
-add_sources ( calc_drag.f90 construct_gradp.f90 )
-add_sources ( particle_pic.f90 set_drag_bcs.f90 )
-add_sources ( flip_particle_vol.f90 )
