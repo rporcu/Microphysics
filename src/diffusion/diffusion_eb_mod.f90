@@ -109,7 +109,7 @@ contains
       real(rt) :: fx(lo(1)-nh:hi(1)+nh+1,lo(2)-nh:hi(2)+nh  ,lo(3)-nh:hi(3)+nh  ,3)
       real(rt) :: fy(lo(1)-nh:hi(1)+nh  ,lo(2)-nh:hi(2)+nh+1,lo(3)-nh:hi(3)+nh  ,3)
       real(rt) :: fz(lo(1)-nh:hi(1)+nh  ,lo(2)-nh:hi(2)+nh  ,lo(3)-nh:hi(3)+nh+1,3)
-
+      integer(c_int) :: fxlo(3), fxhi(3), fylo(3), fyhi(3), fzlo(3), fzhi(3)
       integer(c_int) :: i, j, k, n
       real(rt)       :: idx, idy, idz
      
@@ -143,25 +143,22 @@ contains
            flags, flo, fhi, lo, hi, dx, fz, nh,  domlo, domhi,  &
            do_explicit_diffusion )
       
-      divop: block
-         ! Compute div(tau) with EB algorithm
-         integer(c_int)  :: fxlo(3), fxhi(3), fylo(3), fyhi(3), fzlo(3), fzhi(3)
+      ! Compute div(tau) with EB algorithm
+      fxlo = lo-nh
+      fylo = lo-nh
+      fzlo = lo-nh
 
-         fxlo = lo-nh
-         fylo = lo-nh
-         fzlo = lo-nh
+      fxhi = hi + nh + [1,0,0]
+      fyhi = hi + nh + [0,1,0]
+      fzhi = hi + nh + [0,0,1]
 
-         fxhi = hi + nh + [1,0,0]
-         fyhi = hi + nh + [0,1,0]
-         fzhi = hi + nh + [0,0,1]
-         
-         call compute_divop( lo, hi, divtau, dlo, dhi, vel, vlo, vhi,          &
-              & fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi, ep, slo, shi,  &
-              & afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, &
-              & cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi,    &
-              & flags, flo, fhi, vfrac, vflo, vfhi, bcent, blo, bhi,           &
-              & domlo, domhi, dx, ng, mu, lambda, do_explicit_diffusion )
-      end block divop
+      call compute_divop( lo, hi, divtau, dlo, dhi, vel, vlo, vhi,          &
+       & fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi, ep, slo, shi,  &
+       & afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, &
+       & cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi,    &
+       & flags, flo, fhi, vfrac, vflo, vfhi, bcent, blo, bhi,           &
+       & domlo, domhi, dx, ng, mu, lambda, do_explicit_diffusion )
+
       
       ! Divide by ro*ep
       do n = 1, 3

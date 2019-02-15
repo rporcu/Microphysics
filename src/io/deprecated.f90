@@ -30,41 +30,39 @@ module DEPRECATED_OR_UNKNOWN_MODULE
 
       ! 
       ! Hack to easy the transition from simple to projection
-      !
-      block
-         
-         integer           :: i
-         integer           :: ie, ie1, ie2
+      !       
+      integer           :: i
+      integer           :: ie, ie1, ie2
 
-         ! If the input is an array, gotta take ie before the first
-         ! parentheses
-         ie1 = scan( input, "=" ) - 1
-         ie2 = scan( input, "(" ) - 1
+      ! If the input is an array, gotta take ie before the first
+      ! parentheses
+      ie1 = scan( input, "=" ) - 1
+      ie2 = scan( input, "(" ) - 1
 
-         if ( ie2 > 0 ) then
-            ie = min(ie1,ie2)
-         else
-            ie = ie1
-         end if      
+      if ( ie2 > 0 ) then
+         ie = min(ie1,ie2)
+      else
+         ie = ie1
+      end if
 
-         do i = 1, size(obsolete)
-            ! print *, "ie, ie1, ie2", ie, ie1, ie2
-            ! print *, trim( adjustl( input(1:ie) ) ),"|"
-            ! print *, trim( adjustl( obsolete(i) ) ),"|"
-            if ( trim( adjustl( input(1:ie) ) ) == trim( adjustl( obsolete(i) ) ) ) then
-               if (amrex_pd_ioprocessor()) then
-                  print *,""
-                  print *, "Keyword " // trim(adjustl(input(1:ie))) // " is OBSOLETE (relevant for SIMPLE only)"
-                  print *, "MFIX should stop this hack will prevent it to do so"
-                  print *, "This is to facilitate the transition from SIMPLE to Approximate Projection"
-                  print *, "Remove this hack when SIMPLE get axed"
-                  print *,""
-               end if
-               return           
-            endif                  
-         end do
-         
-      end block
+      do i = 1, size(obsolete)
+         ! print *, "ie, ie1, ie2", ie, ie1, ie2
+         ! print *, trim( adjustl( input(1:ie) ) ),"|"
+         ! print *, trim( adjustl( obsolete(i) ) ),"|"
+         if ( trim( adjustl( input(1:ie) ) ) == trim( adjustl( obsolete(i) ) ) ) then
+            if (amrex_pd_ioprocessor()) then
+               print *,""
+               print *, "Keyword " // trim(adjustl(input(1:ie))) // " is OBSOLETE (relevant for SIMPLE only)"
+               print *, "MFIX should stop this hack will prevent it to do so"
+               print *, "This is to facilitate the transition from SIMPLE to Approximate Projection"
+               print *, "Remove this hack when SIMPLE get axed"
+               print *,""
+            end if
+            return           
+         endif
+      end do
+
+
       
 ! 2015-2 Deprecated list:
 !-----------------------------------------------------------------------
