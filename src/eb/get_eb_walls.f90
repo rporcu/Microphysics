@@ -119,8 +119,7 @@ subroutine mfix_get_real_walls(bcv, exists, normal, center) &
 
      select case (trim(bc_type(bcv)))
 
-     case('FREE_SLIP_WALL','FSW', &
-          'NO_SLIP_WALL'  ,'NSW')
+     case('NO_SLIP_WALL'  ,'NSW')
 
         exists = 1;
 
