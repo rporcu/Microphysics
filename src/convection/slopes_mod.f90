@@ -47,7 +47,7 @@ module slopes_mod
    use amrex_fort_module, only: ar => amrex_real
    use iso_c_binding ,    only: c_int
    use param,             only: zero, half, one, my_huge
-   use bc,                only: minf_, nsw_, fsw_, psw_
+   use bc,                only: minf_, nsw_
 
    implicit none
    private
@@ -140,9 +140,7 @@ contains
             do j = lo(2), hi(2)
 
                if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
-                    ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
-                    ( bc_ilo_type(j,k,1) == FSW_ )  .or. &
-                    ( bc_ilo_type(j,k,1) == PSW_ )  ) then
+                    ( bc_ilo_type(j,k,1) == NSW_  )  ) then
 
                   du_l = two*(vel(i  ,j,k,n) - vel(i-1,j,k,n))
                   du_r = two*(vel(i+1,j,k,n) - vel(i  ,j,k,n))
@@ -165,9 +163,7 @@ contains
 
 
                if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
-                    ( bc_ihi_type(j,k,1) == NSW_ )  .or. &
-                    ( bc_ihi_type(j,k,1) == FSW_ )  .or. &
-                    ( bc_ihi_type(j,k,1) == PSW_ )  ) then
+                    ( bc_ihi_type(j,k,1) == NSW_  )  ) then
 
                   du_l = two*(vel(i  ,j,k,n) - vel(i-1,j,k,n))
                   du_r = two*(vel(i+1,j,k,n) - vel(i  ,j,k,n))
@@ -189,9 +185,7 @@ contains
             do i = lo(1), hi(1)
 
                if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
-                    ( bc_jlo_type(i,k,1) == FSW_ )  .or. &
-                    ( bc_jlo_type(i,k,1) == PSW_ )  ) then
+                    ( bc_jlo_type(i,k,1) == NSW_  )  ) then
 
                   du_l = two*(vel(i,j  ,k,n) - vel(i,j-1,k,n))
                   du_r = two*(vel(i,j+1,k,n) - vel(i,j  ,k,n))
@@ -214,9 +208,7 @@ contains
 
 
                if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jhi_type(i,k,1) == NSW_ )  .or. &
-                    ( bc_jhi_type(i,k,1) == FSW_ )  .or. &
-                    ( bc_jhi_type(i,k,1) == PSW_ )  ) then
+                    ( bc_jhi_type(i,k,1) == NSW_  )  ) then
 
                   du_l = two*(vel(i,j  ,k,n) - vel(i,j-1,k,n))
                   du_r = two*(vel(i,j+1,k,n) - vel(i,j  ,k,n))
@@ -238,9 +230,7 @@ contains
             do i = lo(1), hi(1)
 
                if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_klo_type(i,j,1) == NSW_ )  .or. &
-                    ( bc_klo_type(i,j,1) == FSW_ )  .or. &
-                    ( bc_klo_type(i,j,1) == PSW_ )  ) then
+                    ( bc_klo_type(i,j,1) == NSW_  )  ) then
 
                   du_l = two*(vel(i,j,k  ,n) - vel(i,j,k-1,n))
                   du_r = two*(vel(i,j,k+1,n) - vel(i,j,k  ,n))
@@ -262,9 +252,7 @@ contains
             do i = lo(1), hi(1)
 
                if ( ( bc_khi_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_khi_type(i,j,1) == NSW_ )  .or. &
-                    ( bc_khi_type(i,j,1) == FSW_ )  .or. &
-                    ( bc_khi_type(i,j,1) == PSW_ )  ) then
+                    ( bc_khi_type(i,j,1) == NSW_  )  ) then
 
                   du_l = two*(vel(i,j,k  ,n) - vel(i,j,k-1,n))
                   du_r = two*(vel(i,j,k+1,n) - vel(i,j,k  ,n))
@@ -394,9 +382,7 @@ contains
                do j = lo(2), hi(2)
 
                   if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
-                       ( bc_ilo_type(j,k,1) == NSW_ )  .or. &
-                       ( bc_ilo_type(j,k,1) == FSW_ )  .or. &
-                       ( bc_ilo_type(j,k,1) == PSW_ )  ) then
+                       ( bc_ilo_type(j,k,1) == NSW_  )  ) then
 
                      du_l = two*(vel(i  ,j,k,n) - vel(i-1,j,k,n))
                      du_r = two*(vel(i+1,j,k,n) - vel(i  ,j,k,n))
@@ -419,9 +405,7 @@ contains
 
 
                if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
-                    ( bc_ihi_type(j,k,1) == NSW_ )  .or. &
-                    ( bc_ihi_type(j,k,1) == FSW_ )  .or. &
-                    ( bc_ihi_type(j,k,1) == PSW_ )  ) then
+                    ( bc_ihi_type(j,k,1) == NSW_  )  ) then
 
                   du_l = two*(vel(i  ,j,k,n) - vel(i-1,j,k,n))
                   du_r = two*(vel(i+1,j,k,n) - vel(i  ,j,k,n))
@@ -443,9 +427,7 @@ contains
             do i = lo(1), hi(1)
 
                if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jlo_type(i,k,1) == NSW_ )  .or. &
-                    ( bc_jlo_type(i,k,1) == FSW_ )  .or. &
-                    ( bc_jlo_type(i,k,1) == PSW_ )  ) then
+                    ( bc_jlo_type(i,k,1) == NSW_  )  ) then
 
                   du_l = two*(vel(i,j  ,k,n) - vel(i,j-1,k,n))
                   du_r = two*(vel(i,j+1,k,n) - vel(i,j  ,k,n))
@@ -468,9 +450,7 @@ contains
 
 
                if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jhi_type(i,k,1) == NSW_ )  .or. &
-                    ( bc_jhi_type(i,k,1) == FSW_ )  .or. &
-                    ( bc_jhi_type(i,k,1) == PSW_ )  ) then
+                    ( bc_jhi_type(i,k,1) == NSW_  )  ) then
 
                   du_l = two*(vel(i,j  ,k,n) - vel(i,j-1,k,n))
                   du_r = two*(vel(i,j+1,k,n) - vel(i,j  ,k,n))
@@ -492,9 +472,7 @@ contains
             do i = lo(1), hi(1)
 
                if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_klo_type(i,j,1) == NSW_ )  .or. &
-                    ( bc_klo_type(i,j,1) == FSW_ )  .or. &
-                    ( bc_klo_type(i,j,1) == PSW_ )  ) then
+                    ( bc_klo_type(i,j,1) == NSW_  )  ) then
 
                   du_l = two*(vel(i,j,k  ,n) - vel(i,j,k-1,n))
                   du_r = two*(vel(i,j,k+1,n) - vel(i,j,k  ,n))
@@ -516,9 +494,7 @@ contains
             do i = lo(1), hi(1)
 
                if ( ( bc_khi_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_khi_type(i,j,1) == NSW_ )  .or. &
-                    ( bc_khi_type(i,j,1) == FSW_ )  .or. &
-                    ( bc_khi_type(i,j,1) == PSW_ )  ) then
+                    ( bc_khi_type(i,j,1) == NSW_  )  ) then
 
                   du_l = two*(vel(i,j,k  ,n) - vel(i,j,k-1,n))
                   du_r = two*(vel(i,j,k+1,n) - vel(i,j,k  ,n))

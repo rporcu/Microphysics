@@ -73,7 +73,7 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g, lambda_g,&
 
             select case (bct_ilo(j,k,1))
                
-            case ( pinf_, pout_, nsw_, fsw_) 
+            case ( pinf_, pout_, nsw_) 
 
                ep_g(slo(1):domlo(1)-1,j,k) =     ep_g(domlo(1),j,k)
                ro_g(slo(1):domlo(1)-1,j,k) =     ro_g(domlo(1),j,k)
@@ -119,7 +119,7 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g, lambda_g,&
             
             select case ( bct_ihi(j,k,1) )
 
-            case ( pinf_, pout_, nsw_, fsw_) 
+            case ( pinf_, pout_, nsw_) 
 
                    ep_g(domhi(1)+1:shi(1),j,k) =     ep_g(domhi(1)  ,j,k)
                    ro_g(domhi(1)+1:shi(1),j,k) =     ro_g(domhi(1)  ,j,k)
@@ -158,7 +158,7 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g, lambda_g,&
 
             select case ( bct_jlo(i,k,1) )
 
-            case ( pinf_, pout_, nsw_, fsw_) 
+            case ( pinf_, pout_, nsw_) 
 
                    ep_g(i,slo(2):domlo(2)-1,k) =     ep_g(i,domlo(2),k)
                    ro_g(i,slo(2):domlo(2)-1,k) =     ro_g(i,domlo(2),k)
@@ -197,7 +197,7 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g, lambda_g,&
 
             select case ( bct_jhi(i,k,1) )
 
-            case ( pinf_, pout_, nsw_, fsw_) 
+            case ( pinf_, pout_, nsw_) 
 
                    ep_g(i,domhi(2)+1:shi(2),k) =     ep_g(i,domhi(2)  ,k)
                    ro_g(i,domhi(2)+1:shi(2),k) =     ro_g(i,domhi(2)  ,k)
@@ -235,7 +235,7 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g, lambda_g,&
 
             select case (bct_klo(i,j,1))
 
-            case ( pinf_, pout_, nsw_, fsw_) 
+            case ( pinf_, pout_, nsw_) 
 
                    ep_g(i,j,slo(3):domlo(3)-1) =     ep_g(i,j,domlo(3))
                    ro_g(i,j,slo(3):domlo(3)-1) =     ro_g(i,j,domlo(3))
@@ -273,7 +273,7 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g, lambda_g,&
 
             select case ( bct_khi(i,j,1) )
 
-            case ( pinf_, pout_, nsw_, fsw_) 
+            case ( pinf_, pout_, nsw_) 
              
                    ep_g(i,j,domhi(3)+1:shi(3)) =     ep_g(i,j,domhi(3)  )
                    ro_g(i,j,domhi(3)+1:shi(3)) =     ro_g(i,j,domhi(3)  )

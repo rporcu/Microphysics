@@ -22,7 +22,7 @@ module set_bc_type_module
 
       use bc, only: bc_defined, bc_type, bc_plane
 
-      use bc, only: nsw_, fsw_, psw_, pinf_, pout_, minf_, ignore_
+      use bc, only: nsw_, pinf_, pout_, minf_, ignore_
       use bc, only: undef_cell, cycl_
       use bc, only: cyclic_x, cyclic_y, cyclic_z
 
@@ -72,9 +72,7 @@ module set_bc_type_module
          if (bc_defined(bcv)) then
 
             select case (trim(bc_type(bcv)))
-               case('FREE_SLIP_WALL','FSW'); type = fsw_
                case('NO_SLIP_WALL'  ,'NSW'); type = nsw_
-               case('PAR_SLIP_WALL' ,'PSW'); type = psw_
                case('P_INFLOW'      ,'PI' ); type = pinf_
                case('P_OUTFLOW'     ,'PO' ); type = pout_
                case('MASS_INFLOW'   ,'MI' ); type = minf_
@@ -85,7 +83,7 @@ module set_bc_type_module
             end select
 
             select case(type)
-            case(nsw_, fsw_, psw_,ignore_)
+            case(nsw_, ignore_)
                call calc_cell_bc_wall(domlo, domhi, &
                   xlength, ylength, zlength, dx, dy, dz, &
                   bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &

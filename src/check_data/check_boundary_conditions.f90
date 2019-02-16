@@ -48,8 +48,6 @@ module check_boundary_conditions_module
       use check_bc_geometry_module, only: check_bc_geometry_flow
       use check_bc_geometry_module, only: check_bc_geometry_wall
 
-      use check_bc_walls_module,    only: check_bc_walls
-
       use check_bc_inflow_module,   only: check_bc_mass_inflow
       use check_bc_inflow_module,   only: check_bc_p_inflow
 
@@ -107,12 +105,9 @@ module check_boundary_conditions_module
                call check_bc_p_outflow(bcv)
                call check_bc_outflow(mmax, bcv)
 
-            case ('FREE_SLIP_WALL','FSW',&
-                  'PAR_SLIP_WALL', 'PSW',&
-                  'NO_SLIP_WALL',  'NSW')
+            case ('NO_SLIP_WALL',  'NSW')
                call check_bc_geometry_wall(bcv,dx,dy,dz,&
                   xlength,ylength,zlength,domlo,domhi)
-               call check_bc_walls(bcv)
 
             end select
 
