@@ -9,7 +9,7 @@ module convection_mod
    use amrex_fort_module, only: ar => amrex_real
    use iso_c_binding ,    only: c_int
    use param,             only: zero, half, one, my_huge
-   use bc,                only: minf_, nsw_, pinf_, pout_
+   use bc,                only: minf_, pinf_, pout_
 
    implicit none
    private
@@ -63,7 +63,7 @@ contains
 
       ! Local variables
       integer(c_int)                 :: i, j, k
-      integer, parameter             :: bc_list(4) = [MINF_, NSW_, PINF_, POUT_]
+      integer, parameter             :: bc_list(3) = [MINF_, PINF_, POUT_]
       real(ar)                       :: upls, umns, vpls, vmns, wpls, wmns
 
       do k = lo(3), hi(3)
@@ -165,7 +165,7 @@ contains
       
       ! Local variables
       integer(c_int)                 :: i, j, k
-      integer, parameter             :: bc_list(4) = [MINF_, NSW_, PINF_, POUT_]
+      integer, parameter             :: bc_list(3) = [MINF_, PINF_, POUT_]
       real(ar)                       :: upls, umns
 
       ! First we compute the face centered MAC velocity
@@ -240,7 +240,7 @@ contains
       
       ! Local variables
       integer(c_int)                 :: i, j, k
-      integer, parameter             :: bc_list(4) = [MINF_, NSW_, PINF_, POUT_]
+      integer, parameter             :: bc_list(3) = [MINF_, PINF_, POUT_]
       real(ar)                       :: vpls, vmns
 
       do k = lo(3)-1, hi(3)+1
@@ -312,7 +312,7 @@ contains
       
       ! Local variables
       integer(c_int)                 :: i, j, k
-      integer, parameter             :: bc_list(4) = [MINF_, NSW_, PINF_, POUT_]
+      integer, parameter             :: bc_list(3) = [MINF_, PINF_, POUT_]
       real(ar)                       :: wpls, wmns
 
       ! First we compute the face centered MAC velocity
@@ -409,7 +409,7 @@ contains
       real(ar)                       :: epv_hi_y, epv_lo_y
       real(ar)                       :: epw_hi_z, epw_lo_z
       real(ar)                       :: divumac
-      integer, parameter             :: bc_list(4) = [MINF_, NSW_, PINF_, POUT_]
+      integer, parameter             :: bc_list(3) = [MINF_, PINF_, POUT_]
       
       idx = one / dx(1)
       idy = one / dx(2)
@@ -423,7 +423,7 @@ contains
                ! West face
                ! ****************************************************
 
-               ! In the case of MINF, NSW, we are using the prescribed Dirichlet value
+               ! In the case of MINF       we are using the prescribed Dirichlet value
                ! In the case of PINF, POUT we are using the upwind value
                if (i.eq.domlo(1) .and. any(bc_ilo_type(j,k,1) == bc_list ) ) then
                   u_w =  vel(i-1,j,k,1)
@@ -446,7 +446,7 @@ contains
                ! East face
                ! ****************************************************
 
-               ! In the case of MINF, NSW, we are using the prescribed Dirichlet value
+               ! In the case of MINF       we are using the prescribed Dirichlet value
                ! In the case of PINF, POUT we are using the upwind value
                if (i.eq.domhi(1) .and. any(bc_ihi_type(j,k,1) == bc_list ) ) then
                   u_e =  vel(i+1,j,k,1)
@@ -469,7 +469,7 @@ contains
                ! South face
                ! ****************************************************
 
-               ! In the case of MINF, NSW, we are using the prescribed Dirichlet value
+               ! In the case of MINF       we are using the prescribed Dirichlet value
                ! In the case of PINF, POUT we are using the upwind value
                if (j.eq.domlo(2) .and. any(bc_jlo_type(i,k,1) == bc_list ) ) then
                   u_s =  vel(i,j-1,k,1)
@@ -492,7 +492,7 @@ contains
                ! North face
                ! ****************************************************
 
-               ! In the case of MINF, NSW, we are using the prescribed Dirichlet value
+               ! In the case of MINF       we are using the prescribed Dirichlet value
                ! In the case of PINF, POUT we are using the upwind value
                if (j.eq.domhi(2) .and.  any(bc_jhi_type(i,k,1) == bc_list ) ) then
                   u_n =  vel(i,j+1,k,1)
@@ -515,7 +515,7 @@ contains
                ! Bottom face
                ! ****************************************************
 
-               ! In the case of MINF, NSW  we are using the prescribed Dirichlet value
+               ! In the case of MINF       we are using the prescribed Dirichlet value
                ! In the case of PINF, POUT we are using the upwind value
                if (k.eq.domlo(3) .and. any( bc_klo_type(i,j,1) == bc_list ) ) then
                    u_b =  vel(i,j,k-1,1)
@@ -538,7 +538,7 @@ contains
                ! Top face
                ! ****************************************************
 
-               ! In the case of MINF, NSW, we are using the prescribed Dirichlet value
+               ! In the case of MINF       we are using the prescribed Dirichlet value
                ! In the case of PINF, POUT we are using the upwind value
                if (k.eq.domhi(3) .and. any( bc_khi_type(i,j,1) == bc_list ) ) then
                   u_t =  vel(i,j,k+1,1)

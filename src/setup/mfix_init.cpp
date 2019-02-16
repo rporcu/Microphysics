@@ -768,6 +768,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time
+#if 0
      if ( !is_restarting ) {
 
        for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
@@ -783,7 +784,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
        &nghost);
        }
     }
-
+#endif
 
      fill_mf_bc(lev,*ep_g[lev]);
      fill_mf_bc(lev,*ro_g[lev]);

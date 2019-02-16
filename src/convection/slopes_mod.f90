@@ -47,7 +47,7 @@ module slopes_mod
    use amrex_fort_module, only: ar => amrex_real
    use iso_c_binding ,    only: c_int
    use param,             only: zero, half, one, my_huge
-   use bc,                only: minf_, nsw_
+   use bc,                only: minf_
 
    implicit none
    private
@@ -139,8 +139,7 @@ contains
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
 
-               if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
-                    ( bc_ilo_type(j,k,1) == NSW_  )  ) then
+               if ( bc_ilo_type(j,k,1) == MINF_ ) then
 
                   du_l = two*(vel(i  ,j,k,n) - vel(i-1,j,k,n))
                   du_r = two*(vel(i+1,j,k,n) - vel(i  ,j,k,n))
@@ -162,8 +161,7 @@ contains
             do j = lo(2), hi(2)
 
 
-               if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
-                    ( bc_ihi_type(j,k,1) == NSW_  )  ) then
+               if ( bc_ihi_type(j,k,1) == MINF_ ) then
 
                   du_l = two*(vel(i  ,j,k,n) - vel(i-1,j,k,n))
                   du_r = two*(vel(i+1,j,k,n) - vel(i  ,j,k,n))
@@ -184,8 +182,7 @@ contains
          do k = lo(3), hi(3)
             do i = lo(1), hi(1)
 
-               if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jlo_type(i,k,1) == NSW_  )  ) then
+               if ( bc_jlo_type(i,k,1) == MINF_ ) then
 
                   du_l = two*(vel(i,j  ,k,n) - vel(i,j-1,k,n))
                   du_r = two*(vel(i,j+1,k,n) - vel(i,j  ,k,n))
@@ -207,8 +204,7 @@ contains
             do i = lo(1), hi(1)
 
 
-               if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jhi_type(i,k,1) == NSW_  )  ) then
+               if ( bc_jhi_type(i,k,1) == MINF_ ) then
 
                   du_l = two*(vel(i,j  ,k,n) - vel(i,j-1,k,n))
                   du_r = two*(vel(i,j+1,k,n) - vel(i,j  ,k,n))
@@ -229,8 +225,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_klo_type(i,j,1) == NSW_  )  ) then
+               if ( bc_klo_type(i,j,1) == MINF_ ) then
 
                   du_l = two*(vel(i,j,k  ,n) - vel(i,j,k-1,n))
                   du_r = two*(vel(i,j,k+1,n) - vel(i,j,k  ,n))
@@ -251,8 +246,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               if ( ( bc_khi_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_khi_type(i,j,1) == NSW_  )  ) then
+               if ( bc_khi_type(i,j,1) == MINF_ ) then
 
                   du_l = two*(vel(i,j,k  ,n) - vel(i,j,k-1,n))
                   du_r = two*(vel(i,j,k+1,n) - vel(i,j,k  ,n))
@@ -381,8 +375,7 @@ contains
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
 
-                  if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
-                       ( bc_ilo_type(j,k,1) == NSW_  )  ) then
+                  if ( bc_ilo_type(j,k,1) == MINF_ ) then
 
                      du_l = two*(vel(i  ,j,k,n) - vel(i-1,j,k,n))
                      du_r = two*(vel(i+1,j,k,n) - vel(i  ,j,k,n))
@@ -404,8 +397,7 @@ contains
             do j = lo(2), hi(2)
 
 
-               if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
-                    ( bc_ihi_type(j,k,1) == NSW_  )  ) then
+               if ( bc_ihi_type(j,k,1) == MINF_ ) then
 
                   du_l = two*(vel(i  ,j,k,n) - vel(i-1,j,k,n))
                   du_r = two*(vel(i+1,j,k,n) - vel(i  ,j,k,n))
@@ -426,8 +418,7 @@ contains
          do k = lo(3), hi(3)
             do i = lo(1), hi(1)
 
-               if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jlo_type(i,k,1) == NSW_  )  ) then
+               if ( bc_jlo_type(i,k,1) == MINF_ ) then
 
                   du_l = two*(vel(i,j  ,k,n) - vel(i,j-1,k,n))
                   du_r = two*(vel(i,j+1,k,n) - vel(i,j  ,k,n))
@@ -449,8 +440,7 @@ contains
             do i = lo(1), hi(1)
 
 
-               if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
-                    ( bc_jhi_type(i,k,1) == NSW_  )  ) then
+               if ( bc_jhi_type(i,k,1) == MINF_ ) then
 
                   du_l = two*(vel(i,j  ,k,n) - vel(i,j-1,k,n))
                   du_r = two*(vel(i,j+1,k,n) - vel(i,j  ,k,n))
@@ -471,8 +461,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_klo_type(i,j,1) == NSW_  )  ) then
+               if ( bc_klo_type(i,j,1) == MINF_ ) then
 
                   du_l = two*(vel(i,j,k  ,n) - vel(i,j,k-1,n))
                   du_r = two*(vel(i,j,k+1,n) - vel(i,j,k  ,n))
@@ -493,8 +482,7 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               if ( ( bc_khi_type(i,j,1) == MINF_ ) .or. &
-                    ( bc_khi_type(i,j,1) == NSW_  )  ) then
+               if ( bc_khi_type(i,j,1) == MINF_ ) then
 
                   du_l = two*(vel(i,j,k  ,n) - vel(i,j,k-1,n))
                   du_r = two*(vel(i,j,k+1,n) - vel(i,j,k  ,n))

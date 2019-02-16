@@ -82,12 +82,6 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                v_g(vlo(1):domlo(1)-1,j,k) = 0.0d0
                w_g(wlo(1):domlo(1)-1,j,k) = 0.0d0
 
-            case ( nsw_) 
-
-               u_g(ulo(1):domlo(1)  ,j,k) =  0.0d0
-               v_g(vlo(1):domlo(1)-1,j,k) = -v_g(domlo(1),j,k)
-               w_g(wlo(1):domlo(1)-1,j,k) = -w_g(domlo(1),j,k)
-
             end select
             
          end do
@@ -116,12 +110,6 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                v_g(domhi(1)+1:vhi(1),j,k) = 0.0d0
                w_g(domhi(1)+1:whi(1),j,k) = 0.0d0
 
-            case ( nsw_ ) 
-
-               u_g(domhi(1)+1:uhi(1),j,k) =  0.0d0
-               v_g(domhi(1)+1:vhi(1),j,k) = -v_g(domhi(1),j,k)
-               w_g(domhi(1)+1:whi(1),j,k) = -w_g(domhi(1),j,k)
-
             end select
 
          end do
@@ -148,12 +136,6 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                u_g(i,ulo(2):domlo(2)-1,k) = 0.0d0
                v_g(i,vlo(2):domlo(2)  ,k) = bc_v_g(bcv)
                w_g(i,wlo(2):domlo(2)-1,k) = 0.0d0
-
-            case ( nsw_ )
-
-               u_g(i,ulo(2):domlo(2)-1,k) = -u_g(i,domlo(2),k)
-               v_g(i,vlo(2):domlo(2)  ,k) =  0.0d0
-               w_g(i,wlo(2):domlo(2)-1,k) = -w_g(i,domlo(2),k)
 
             end select
 
@@ -183,12 +165,6 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                v_g(i,domhi(2)+1:vhi(2),k) = bc_v_g(bcv)
                w_g(i,domhi(2)+1:whi(2),k) = 0.0d0
 
-            case ( nsw_) 
-
-               u_g(i,domhi(2)+1:uhi(2),k) = -u_g(i,domhi(2),k)
-               v_g(i,domhi(2)+1:vhi(2),k) =  0.0d0
-               w_g(i,domhi(2)+1:whi(2),k) = -w_g(i,domhi(2),k)
-
             end select
          end do
       end do
@@ -215,12 +191,6 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                v_g(i,j,vlo(3):domlo(3)-1) = 0.0d0
                w_g(i,j,wlo(3):domlo(3)  ) = bc_w_g(bcv)
 
-            case ( nsw_ )
-
-               u_g(i,j,ulo(3):domlo(3)-1) = -u_g(i,j,domlo(3))
-               v_g(i,j,vlo(3):domlo(3)-1) = -v_g(i,j,domlo(3))
-               w_g(i,j,wlo(3):domlo(3)  ) =  0.0d0
-
             end select
          end do
       end do
@@ -246,12 +216,6 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                u_g(i,j,domhi(3)+1:uhi(3)) = 0.0d0
                v_g(i,j,domhi(3)+1:vhi(3)) = 0.0d0
                w_g(i,j,domhi(3)+1:whi(3)) = bc_w_g(bcv)
-
-            case ( nsw_ ) 
-
-               u_g(i,j,domhi(3)+1:uhi(3)) = -u_g(i,j,domhi(3))
-               v_g(i,j,domhi(3)+1:vhi(3)) = -v_g(i,j,domhi(3))
-               w_g(i,j,domhi(3)+1:whi(3)) =  0.0d0
 
             end select
          end do
