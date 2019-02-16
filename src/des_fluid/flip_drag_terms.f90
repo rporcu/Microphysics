@@ -2,9 +2,9 @@
 !                                                                      C
 !  Subroutine: flip_drag_terms                                         C
 !                                                                      C
-!  Purpose: This subroutine "flips" any part of "beta" (aka beta)     C
+!  Purpose: This subroutine "flips" any part of "beta" (aka beta)      C
 !           or "beta*vpart" (aka drag)                                 C
-!           deposited outside the domain at a FSW or NSW               C
+!           deposited outside the domain at a NSW                      C
 !           back into the domain.                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
@@ -18,7 +18,7 @@ subroutine flip_drag_terms(beta, blo, bhi, &
   use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
-  use bc, only: NSW_, FSW_, cyclic_x, cyclic_y, cyclic_z
+  use bc, only: NSW_, cyclic_x, cyclic_y, cyclic_z
 
   implicit none
 
@@ -52,7 +52,7 @@ subroutine flip_drag_terms(beta, blo, bhi, &
 
      do k = dlo(3), dhi(3)
       do j = dlo(2), dhi(2)
-        if (bct_ilo(j,k,1) == FSW_ .or. bct_ilo(j,k,1) == NSW_) then
+        if (bct_ilo(j,k,1) == NSW_) then
             beta(domlo(1),j,k  ) = beta(domlo(1),j,k  ) + beta(domlo(1)-1,j,k  )
             drag(domlo(1),j,k,1) = drag(domlo(1),j,k,1) + drag(domlo(1)-1,j,k,1)
             drag(domlo(1),j,k,2) = drag(domlo(1),j,k,2) + drag(domlo(1)-1,j,k,2)
@@ -71,7 +71,7 @@ subroutine flip_drag_terms(beta, blo, bhi, &
 
      do k = dlo(3), dhi(3)
       do j = dlo(2), dhi(2)
-        if (bct_ihi(j,k,1) == FSW_ .or. bct_ihi(j,k,1) == NSW_) then
+        if (bct_ihi(j,k,1) == NSW_) then
             beta(domhi(1),j,k  ) = beta(domhi(1),j,k  ) + beta(domhi(1)+1,j,k  )
             drag(domhi(1),j,k,1) = drag(domhi(1),j,k,1) + drag(domhi(1)+1,j,k,1)
             drag(domhi(1),j,k,2) = drag(domhi(1),j,k,2) + drag(domhi(1)+1,j,k,2)
@@ -90,7 +90,7 @@ subroutine flip_drag_terms(beta, blo, bhi, &
 
      do k = dlo(3), dhi(3)
       do i = dlo(1), dhi(1)
-        if (bct_jlo(i,k,1) == FSW_ .or. bct_jlo(i,k,1) == NSW_) then
+        if (bct_jlo(i,k,1) == NSW_) then
             beta(i,domlo(2),k  ) = beta(i,domlo(2),k  ) + beta(i,domlo(2)-1,k  )
             drag(i,domlo(2),k,1) = drag(i,domlo(2),k,1) + drag(i,domlo(2)-1,k,1)
             drag(i,domlo(2),k,2) = drag(i,domlo(2),k,2) + drag(i,domlo(2)-1,k,2)
@@ -109,7 +109,7 @@ subroutine flip_drag_terms(beta, blo, bhi, &
 
      do k = dlo(3), dhi(3)
       do i = dlo(1), dhi(1)
-        if (bct_jhi(i,k,1) == FSW_ .or. bct_jhi(i,k,1) == NSW_) then
+        if (bct_jhi(i,k,1) == NSW_) then
             beta(i,domhi(2),k  ) = beta(i,domhi(2),k  ) + beta(i,domhi(2)+1,k  )
             drag(i,domhi(2),k,1) = drag(i,domhi(2),k,1) + drag(i,domhi(2)+1,k,1)
             drag(i,domhi(2),k,2) = drag(i,domhi(2),k,2) + drag(i,domhi(2)+1,k,2)
@@ -128,7 +128,7 @@ subroutine flip_drag_terms(beta, blo, bhi, &
 
      do j = dlo(2), dhi(2)
       do i = dlo(1), dhi(1)
-        if (bct_klo(i,j,1) == FSW_ .or. bct_klo(i,j,1) == NSW_) then
+        if (bct_klo(i,j,1) == NSW_) then
             beta(i,j,domlo(3)  ) = beta(i,j,domlo(3)  ) + beta(i,j,domlo(3)-1  )
             drag(i,j,domlo(3),1) = drag(i,j,domlo(3),1) + drag(i,j,domlo(3)-1,1)
             drag(i,j,domlo(3),2) = drag(i,j,domlo(3),2) + drag(i,j,domlo(3)-1,2)
@@ -148,7 +148,7 @@ subroutine flip_drag_terms(beta, blo, bhi, &
      do j = dlo(2), dhi(2)
       do i = dlo(1), dhi(1)
 
-        if (bct_khi(i,j,1) == FSW_ .or. bct_khi(i,j,1) == NSW_) then
+        if (bct_khi(i,j,1) == NSW_) then
             beta(i,j,domhi(3)  ) = beta(i,j,domhi(3)  ) + beta(i,j,domhi(3)+1  )
             drag(i,j,domhi(3),1) = drag(i,j,domhi(3),1) + drag(i,j,domhi(3)+1,1)
             drag(i,j,domhi(3),2) = drag(i,j,domhi(3),2) + drag(i,j,domhi(3)+1,2)
