@@ -13,6 +13,7 @@ subroutine mfix_get_walls(bcv, exists, normal, center) &
 
   use bc, only: bc_defined, bc_type, bc_plane
   use bc, only: bc_normal, bc_center
+  use bc, only: nsw_, fsw_, psw_
 
   use bc, only: bc_x_w, bc_y_s, bc_z_b
   use bc, only: bc_x_e, bc_y_n, bc_z_t
@@ -37,6 +38,10 @@ subroutine mfix_get_walls(bcv, exists, normal, center) &
 
      select case (trim(bc_type(bcv)))
 
+!     case('FREE_SLIP_WALL','FSW', &
+!          'NO_SLIP_WALL'  ,'NSW', &
+!          'PAR_SLIP_WALL' ,'PSW', &
+!          'MASS_INFLOW'   ,'MI')
      case('MASS_INFLOW'   ,'MI')
 
         exists = 1;
@@ -97,6 +102,7 @@ subroutine mfix_get_real_walls(bcv, exists, normal, center) &
 
   use bc, only: bc_defined, bc_type, bc_plane
   use bc, only: bc_normal, bc_center
+  use bc, only: nsw_, fsw_, psw_
 
   use bc, only: bc_x_w, bc_y_s, bc_z_b
   use bc, only: bc_x_e, bc_y_n, bc_z_t
@@ -120,7 +126,8 @@ subroutine mfix_get_real_walls(bcv, exists, normal, center) &
      select case (trim(bc_type(bcv)))
 
      case('FREE_SLIP_WALL','FSW', &
-          'NO_SLIP_WALL'  ,'NSW')
+          'NO_SLIP_WALL'  ,'NSW', &
+          'PAR_SLIP_WALL' ,'PSW')
 
         exists = 1;
 

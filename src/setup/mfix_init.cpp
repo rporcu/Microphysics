@@ -488,7 +488,7 @@ void mfix::check_data ()
     // Only call this check on one processor since it has a bunch of print statements
     if ( ParallelDescriptor::IOProcessor() )
     {
-//     check_boundary_conditions(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
+       check_boundary_conditions(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
        check_point_sources(&dx,&dy,&dz);
        check_bc_flow();
     }

@@ -23,7 +23,7 @@ subroutine fill_bc0(s, slo, shi, &
 
    use iso_c_binding,     only: c_int
    use amrex_fort_module, only: rt => amrex_real
-   use bc,                only: NSW_, IGNORE_
+   use bc,                only: NSW_, FSW_, PSW_, IGNORE_
 
    implicit none
 
@@ -55,7 +55,7 @@ subroutine fill_bc0(s, slo, shi, &
    integer            :: i, j, k
 
    ! These are the BCS for which we need to extrapolate
-   integer, parameter :: valid_bcs(2) = [NSW_, IGNORE_]
+   integer, parameter :: valid_bcs(4) = [NSW_, FSW_, PSW_, IGNORE_]
 
    !......................................................................
 

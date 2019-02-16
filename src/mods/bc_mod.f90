@@ -79,6 +79,8 @@ module bc
   integer, parameter :: pout_      =  11 ! pressure outflow cell
   integer, parameter :: minf_      =  20 ! mass flux inflow cell
   integer, parameter :: nsw_       = 100 ! wall with no-slip b.c.
+  integer, parameter :: fsw_       = 101 ! wall with free-slip
+  integer, parameter :: psw_       = 102 ! wall with partial-slip b.c.
   integer, parameter :: cycl_      =  50 ! cyclic b.c.
   integer, parameter :: cycp_      =  51 ! cyclic b.c. with pressure drop
 
@@ -224,8 +226,24 @@ contains
                bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
                i_w, i_e, j_s, j_n, k_b, k_t)
              flow_bc = .true.
+          case ('FREE_SLIP_WALL','FSW')
+             write (unit_out,"(9x,'Velocity gradients are zero')")
+             call calc_cell_bc_wall(domlo, domhi, &
+               xlength, ylength, zlength, dx, dy, dz, &
+               bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+               bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+               i_w, i_e, j_s, j_n, k_b, k_t)
+             flow_bc = .false.
           case ('NO_SLIP_WALL','NSW')
              write (unit_out,"(9x,'Velocity is zero at wall')")
+             call calc_cell_bc_wall(domlo, domhi, &
+               xlength, ylength, zlength, dx, dy, dz, &
+               bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+               bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+               i_w, i_e, j_s, j_n, k_b, k_t)
+             flow_bc = .false.
+          case ('PAR_SLIP_WALL','PSW')
+             write (unit_out,"(9x,'Partial slip condition at wall')")
              call calc_cell_bc_wall(domlo, domhi, &
                xlength, ylength, zlength, dx, dy, dz, &
                bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
@@ -303,6 +321,16 @@ contains
 1670  format(9X,'X-component of solids phase-',I2,' velocity (BC_U_s) ...... ',g12.5)
 1671  format(9X,'Y-component of solids phase-',I2,' velocity (BC_V_s) ...... ',g12.5)
 1672  format(9X,'Z-component of solids phase-',I2,' velocity (BC_W_s) ...... ',g12.5)
+
+          else
+             if (bc_type(bcv) == 'PAR_SLIP_WALL' .or. bc_type(bcv) == 'PSW') &
+               write (unit_out, 1675) bc_hw_g(bcv), &
+               bc_uw_g(bcv), bc_vw_g(bcv), bc_ww_g(bcv)
+
+1675  format(9X,'Partial slip coefficient (BC_hw_g) .... ',G12.5,/,&
+             9X,'Slip velocity U at wall (BC_Uw_g) ..... ',G12.5,/,&
+             9X,'Slip velocity V at wall (BC_Vw_g) ..... ',G12.5,/,&
+             9X,'Slip velocity W at wall (BC_Ww_g) ..... ',G12.5)
 
           endif
        endif

@@ -3,7 +3,7 @@ module convection_eb_mod
    use amrex_fort_module,       only: ar => amrex_real
    use iso_c_binding ,          only: c_int
    use param,                   only: zero, half, one, my_huge
-   use bc,                      only: minf_, nsw_, pinf_, pout_
+   use bc,                      only: minf_, nsw_, fsw_, psw_, pinf_, pout_
    use amrex_error_module,      only: amrex_abort
    use amrex_ebcellflag_module, only: is_covered_cell, is_single_valued_cell, &
         &                             get_neighbor_cells
@@ -122,7 +122,7 @@ contains
       real(ar) :: u_face, v_face, w_face
       real(ar) :: upls, umns, vpls, vmns, wpls, wmns
       integer  :: i, j, k, n
-      integer, parameter     :: bc_list(4) = [MINF_, NSW_, PINF_, POUT_]      
+      integer, parameter     :: bc_list(6) = [MINF_, NSW_, FSW_, PSW_, PINF_, POUT_]      
       
       ! Check number of ghost cells
       if (ng < 4) call amrex_abort( "compute_divop(): ng must be >= 4")

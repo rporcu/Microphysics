@@ -88,6 +88,12 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                v_g(vlo(1):domlo(1)-1,j,k) = -v_g(domlo(1),j,k)
                w_g(wlo(1):domlo(1)-1,j,k) = -w_g(domlo(1),j,k)
 
+            case ( fsw_)
+               
+               u_g(ulo(1):domlo(1)  ,j,k) = 0.0d0
+               v_g(vlo(1):domlo(1)-1,j,k) = v_g(domlo(1),j,k)
+               w_g(wlo(1):domlo(1)-1,j,k) = w_g(domlo(1),j,k)
+
             end select
             
          end do
@@ -122,6 +128,12 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                v_g(domhi(1)+1:vhi(1),j,k) = -v_g(domhi(1),j,k)
                w_g(domhi(1)+1:whi(1),j,k) = -w_g(domhi(1),j,k)
 
+            case ( fsw_ ) 
+
+               u_g(domhi(1)+1:uhi(1),j,k) = 0.0d0
+               v_g(domhi(1)+1:vhi(1),j,k) = v_g(domhi(1),j,k)
+               w_g(domhi(1)+1:whi(1),j,k) = w_g(domhi(1),j,k)
+
             end select
 
          end do
@@ -154,6 +166,12 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                u_g(i,ulo(2):domlo(2)-1,k) = -u_g(i,domlo(2),k)
                v_g(i,vlo(2):domlo(2)  ,k) =  0.0d0
                w_g(i,wlo(2):domlo(2)-1,k) = -w_g(i,domlo(2),k)
+
+            case ( fsw_)
+
+               u_g(i,ulo(2):domlo(2)-1,k) = u_g(i,domlo(2),k)
+               v_g(i,vlo(2):domlo(2)  ,k) = 0.0d0
+               w_g(i,wlo(2):domlo(2)-1,k) = w_g(i,domlo(2),k)
 
             end select
 
@@ -189,6 +207,12 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                v_g(i,domhi(2)+1:vhi(2),k) =  0.0d0
                w_g(i,domhi(2)+1:whi(2),k) = -w_g(i,domhi(2),k)
 
+            case ( fsw_)
+
+               u_g(i,domhi(2)+1:uhi(2),k) = u_g(i,domhi(2),k)
+               v_g(i,domhi(2)+1:vhi(2),k) = 0.0d0
+               w_g(i,domhi(2)+1:whi(2),k) = w_g(i,domhi(2),k)
+
             end select
          end do
       end do
@@ -221,6 +245,12 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                v_g(i,j,vlo(3):domlo(3)-1) = -v_g(i,j,domlo(3))
                w_g(i,j,wlo(3):domlo(3)  ) =  0.0d0
 
+            case ( fsw_ ) 
+
+               u_g(i,j,ulo(3):domlo(3)-1) = u_g(i,j,domlo(3))
+               v_g(i,j,vlo(3):domlo(3)-1) = v_g(i,j,domlo(3))
+               w_g(i,j,wlo(3):domlo(3)  ) = 0.0d0
+               
             end select
          end do
       end do
@@ -253,7 +283,96 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
                v_g(i,j,domhi(3)+1:vhi(3)) = -v_g(i,j,domhi(3))
                w_g(i,j,domhi(3)+1:whi(3)) =  0.0d0
 
+            case ( fsw_ ) 
+
+               u_g(i,j,domhi(3)+1:uhi(3)) = u_g(i,j,domhi(3))
+               v_g(i,j,domhi(3)+1:vhi(3)) = v_g(i,j,domhi(3))
+               w_g(i,j,domhi(3)+1:whi(3)) = 0.0d0
+
             end select
+         end do
+      end do
+   endif
+
+   ! *********************************************************************************
+   ! We have to do the PSW bc's last because otherwise non-zero moving wall values
+   ! can get over-written
+   ! *********************************************************************************
+
+   if (nlft .gt. 0) then
+      do k=slo(3),shi(3)
+         do j=slo(2),shi(2)
+            bcv = bct_ilo(j,k,2)
+            if (bct_ilo(j,k,1) == PSW_) then
+               u_g(ulo(1):domlo(1)  ,j,k) = 0.0d0
+               v_g(vlo(1):domlo(1)-1,j,k) = 2.0*bc_vw_g(bcv) - v_g(domlo(1),j,k)
+               w_g(wlo(1):domlo(1)-1,j,k) = 2.0*bc_ww_g(bcv) - w_g(domlo(1),j,k)
+            end if
+         end do
+      end do
+   endif
+
+   if (nrgt .gt. 0) then
+      do k=slo(3),shi(3)
+         do j=slo(2),shi(2)
+            bcv = bct_ihi(j,k,2)
+            if (bct_ihi(j,k,1) == PSW_) then
+               u_g(domhi(1)+1:uhi(1),j,k) = 0.0d0
+               v_g(domhi(1)+1:vhi(1),j,k) = 2.0*bc_vw_g(bcv) - v_g(domhi(1),j,k)
+               w_g(domhi(1)+1:whi(1),j,k) = 2.0*bc_ww_g(bcv) - w_g(domhi(1),j,k)
+            end if
+         end do
+      end do
+   endif
+
+   if (nbot .gt. 0) then
+      do k=slo(3),shi(3)
+         do i=slo(1),shi(1)
+            bcv = bct_jlo(i,k,2)
+            if (bct_jlo(i,k,1) == PSW_)then
+               u_g(i,ulo(2):domlo(2)-1,k) = 2.0*bc_uw_g(bcv) - u_g(i,domlo(2),k)
+               v_g(i,vlo(2):domlo(2)  ,k) = 0.0d0
+               w_g(i,wlo(2):domlo(2)-1,k) = 2.0*bc_ww_g(bcv) - w_g(i,domlo(2),k)
+            end if
+         end do
+      end do
+   endif
+
+   if (ntop .gt. 0) then
+      do k=slo(3),shi(3)
+         do i=slo(1),shi(1)
+            bcv = bct_jhi(i,k,2)
+            if (bct_jhi(i,k,1) == PSW_)then
+               u_g(i,domhi(2)+1:uhi(2),k) = 2.0*bc_uw_g(bcv) - u_g(i,domhi(2),k)
+               v_g(i,domhi(2)+1:vhi(2),k) = 0.0d0
+               w_g(i,domhi(2)+1:whi(2),k) = 2.0*bc_ww_g(bcv) - w_g(i,domhi(2),k)
+            end if
+         end do
+      end do
+   endif
+
+   if (ndwn .gt. 0) then
+      do j=slo(2),shi(2)
+         do i=slo(1),shi(1)
+            bcv = bct_klo(i,j,2)
+            if (bct_klo(i,j,1) == PSW_) then
+               u_g(i,j,ulo(3):domlo(3)-1) = 2.0*bc_uw_g(bcv) - u_g(i,j,domlo(3))
+               v_g(i,j,vlo(3):domlo(3)-1) = 2.0*bc_vw_g(bcv) - v_g(i,j,domlo(3))
+               w_g(i,j,wlo(3):domlo(3)  ) = 0.0d0
+            end if
+         end do
+      end do
+   endif
+
+   if (nup .gt. 0) then
+      do j=slo(2),shi(2)
+         do i=slo(1),shi(1)
+            bcv = bct_khi(i,j,2)
+            if (bct_khi(i,j,1) == PSW_) then
+               u_g(i,j,domhi(3)+1:uhi(3)) = 2.0*bc_uw_g(bcv) - u_g(i,j,domhi(3))
+               v_g(i,j,domhi(3)+1:vhi(3)) = 2.0*bc_vw_g(bcv) - v_g(i,j,domhi(3))
+               w_g(i,j,domhi(3)+1:whi(3)) = 0.0d0
+            end if
          end do
       end do
    endif

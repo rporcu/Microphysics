@@ -16,7 +16,7 @@ subroutine zero_wall_norm_vel(slo, shi, &
   use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
-  use bc, only: nsw_, pinf_, pout_, minf_
+  use bc, only: nsw_, fsw_, psw_, pinf_, pout_, minf_
 
   implicit none
 
@@ -58,7 +58,9 @@ subroutine zero_wall_norm_vel(slo, shi, &
         do k=slo(3),shi(3)
            do j=slo(2),shi(2)
               bcv = bc_ilo_type(j,k,2)
-              if(bc_ilo_type(j,k,1) == NSW_) then
+              if(bc_ilo_type(j,k,1) == NSW_ .or. &
+                 bc_ilo_type(j,k,1) == PSW_ .or. &
+                 bc_ilo_type(j,k,1) == FSW_) then
 
                  vel_g(ilo-i,j,k,1) = 0.d0
 
@@ -74,7 +76,9 @@ subroutine zero_wall_norm_vel(slo, shi, &
         do k=slo(3),shi(3)
            do j=slo(2),shi(2)
               bcv = bc_ihi_type(j,k,2)
-              if(bc_ihi_type(j,k,1) == NSW_) then
+              if(bc_ihi_type(j,k,1) == NSW_ .or. &
+                 bc_ihi_type(j,k,1) == PSW_ .or. &
+                 bc_ihi_type(j,k,1) == FSW_) then
 
                  vel_g(ihi+i,j,k,1) = 0.d0
 
@@ -90,7 +94,9 @@ subroutine zero_wall_norm_vel(slo, shi, &
         do k=slo(3),shi(3)
            do i=slo(1),shi(1)
               bcv = bc_jlo_type(i,k,2)
-              if(bc_jlo_type(i,k,1) == NSW_) then
+              if(bc_jlo_type(i,k,1) == NSW_ .or. &
+                 bc_jlo_type(i,k,1) == PSW_ .or. &
+                 bc_jlo_type(i,k,1) == FSW_) then
 
                  vel_g(i,jlo-j,k,2) = 0.d0
 
@@ -106,7 +112,9 @@ subroutine zero_wall_norm_vel(slo, shi, &
         do k=slo(3),shi(3)
            do i=slo(1),shi(1)
               bcv = bc_jhi_type(i,k,2)
-              if(bc_jhi_type(i,k,1) == NSW_) then
+              if(bc_jhi_type(i,k,1) == NSW_ .or. &
+                 bc_jhi_type(i,k,1) == PSW_ .or. &
+                 bc_jhi_type(i,k,1) == FSW_) then
 
                  vel_g(i,jhi+j,k,2) = 0.d0
 
@@ -122,7 +130,9 @@ subroutine zero_wall_norm_vel(slo, shi, &
         do j=slo(2),shi(2)
            do i=slo(1),shi(1)
               bcv = bc_klo_type(i,j,2)
-              if(bc_klo_type(i,j,1) == NSW_) then
+              if(bc_klo_type(i,j,1) == NSW_ .or. &
+                 bc_klo_type(i,j,1) == PSW_ .or. &
+                 bc_klo_type(i,j,1) == FSW_) then
 
                  vel_g(i,j,klo-k,3) = 0.d0
 
@@ -138,7 +148,9 @@ subroutine zero_wall_norm_vel(slo, shi, &
         do j=slo(2),shi(2)
            do i=slo(1),shi(1)
               bcv = bc_khi_type(i,j,2)
-              if(bc_khi_type(i,j,1) == NSW_) then
+              if(bc_khi_type(i,j,1) == NSW_ .or. &
+                 bc_khi_type(i,j,1) == PSW_ .or. &
+                 bc_khi_type(i,j,1) == FSW_) then
 
                  vel_g(i,j,khi+k,3) = 0.d0
 

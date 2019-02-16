@@ -48,23 +48,24 @@ module check_bc_geometry_module
       logical :: RECOGNIZED_BC_TYPE
 
       ! Total number of valid BC types
-      integer, PARAMETER :: DIM_BCTYPE = 10
+      integer, PARAMETER :: DIM_BCTYPE = 14
 
       ! Valid boundary condition types
       CHARACTER(LEN=16), DIMENSION(1:DIM_BCTYPE) ::VALID_BC_TYPE = (/&
            'MASS_INFLOW     ', 'MI              ',&
            'P_INFLOW        ', 'PI              ',&
            'P_OUTFLOW       ', 'PO              ',&
+           'FREE_SLIP_WALL  ', 'FSW             ',&
            'NO_SLIP_WALL    ', 'NSW             ',&
-           'IGNORE          ', 'IG              '/)
+           'IGNORE          ', 'IG              ',&
+           'PAR_SLIP_WALL   ', 'PSW             '/)
 !......................................................................!
 
       call init_err_msg("CHECK_BC_GEOMETRY")
 
       do bcv = 1, dim_bc
 
-         print *,'BC_TYPE ', bc_type(bcv)
-         if (bc_type(bcv)/=undefined_c .and. bc_type(bcv)/='DUMMY')then
+         if(bc_type(bcv)/=undefined_c .and. bc_type(bcv)/='DUMMY')then
             recognized_bc_type = .false.
             do i = 1, dim_bctype
                 valid_bc_type(i) = trim(valid_bc_type(i))

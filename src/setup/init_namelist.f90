@@ -469,8 +469,20 @@ MODULE INIT_NAMELIST_MODULE
 !      values of fluid and solids velocities are only used initially
 !      as MFIX computes these values at this inlet boundary.' />
 !
+!  <valid value='FREE_SLIP_WALL' alias='FSW'
+!    note='Velocity gradients at the wall vanish./>
+!
 !  <valid value='NO_SLIP_WALL' alias='NSW'
 !    note='All components of the velocity vanish at the wall./>
+!
+!  <valid value='PAR_SLIP_WALL' alias='PSW'
+!    note='Partial slip at the wall implemented as
+!      dv/dn + hw (v - vw) = 0, where n is the normal pointing from the
+!      fluid into the wall. The coefficients hw and vw should be
+!      specified. For free slip set hw = 0. For no slip leave hw
+!      undefined (hw=+inf) and set vw = 0. To set hw = +inf, leave it
+!      unspecified. />
+      BC_TYPE(:) = UNDEFINED_C
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
