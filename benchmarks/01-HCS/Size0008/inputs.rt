@@ -20,8 +20,6 @@ amr.max_level = 0
 amr.plot_int  = 10
 amr.check_int  = -25
 
-mfix.use_proj_method=0
-
 # Geometry
 geometry.coord_sys   = 0                      # 0: Cartesian
 geometry.is_periodic = 1       1      1       # Is periodic in each direction?
