@@ -61,6 +61,10 @@ mfix::mfix_compute_diveu (Real time)
         }
 
       epu[lev]->FillBoundary (geom[lev].periodicity());
+
+      // We set these to zero because if the values in the covered cells are undefined,
+      //   even though they are multiplied by zero in the divu computation, we can still get NaNs
+      EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
     }
 
   // Define the operator in order to compute the multi-level divergence
