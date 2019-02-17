@@ -18,7 +18,6 @@ amr.plot_int   = 10
 #amr.plot_file  = DEM06_plt
 
 # Use projection method
-mfix.use_proj_method = 1
 vortices_plane = 3
 
 # Geometry

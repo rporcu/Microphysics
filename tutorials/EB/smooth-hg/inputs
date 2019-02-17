@@ -41,16 +41,6 @@ amr.check_file     ="chk"
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00200"
 
-
-
-#_______________________________________________________________________
-# Solver settings
-
-#! Fluid solver
-#!-----------------------------------------------------------//
-#mfix.use_proj_method = 1
-#mfix.fixed_dt        = 1
-
 amr.stop_time = 20
 
 mfix.particle_init_type = "Auto"
