@@ -764,28 +764,6 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 
   for (int lev = 0; lev < nlev; lev++)
   {
-     Box domain(geom[lev].Domain());
-
-     // We deliberately don't tile this loop since we will be looping
-     //    over bc's on faces and it makes more sense to do this one grid at a time
-#if 0
-     if ( !is_restarting ) {
-
-       for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
-
-         const Box& sbx =  (*ep_g[lev])[mfi].box();
-
-         zero_wall_norm_vel(sbx.loVect(), sbx.hiVect(),
-         (*vel_g[lev])[mfi].dataPtr(),
-         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-         bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-       domain.loVect(), domain.hiVect(),
-       &nghost);
-       }
-    }
-#endif
-
      fill_mf_bc(lev,*ep_g[lev]);
      fill_mf_bc(lev,*ro_g[lev]);
      fill_mf_bc(lev,*rop_g[lev]);
@@ -794,7 +772,6 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 
      fill_mf_bc(lev,*mu_g[lev]);
      fill_mf_bc(lev,*lambda_g[lev]);
-
   }
 
   if (is_restarting == 0)

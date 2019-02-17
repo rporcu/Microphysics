@@ -73,17 +73,11 @@ subroutine set_velocity_bcs ( time, vel, ulo, uhi, &
                vel(ulo(1):domlo(1)-1,j,k,2) =  zero
                vel(ulo(1):domlo(1)-1,j,k,3) =  zero
 
-            case ( nsw_) 
-
-               vel(ulo(1):domlo(1)-1,j,k,1) = zero
-               vel(ulo(1):domlo(1)-1,j,k,2) = zero
-               vel(ulo(1):domlo(1)-1,j,k,3) = zero
-
             end select
 
             if (extrap_dir_bcs .gt. 0) then
                select case (bct_ilo(j,k,1))
-               case ( minf_, nsw_) 
+               case ( minf_) 
                      vel(domlo(1)-1,j,k,1:3) = two*vel(domlo(1)-1,j,k,1:3) - vel(domlo(1),j,k,1:3)
                end select
             end if
@@ -114,17 +108,11 @@ subroutine set_velocity_bcs ( time, vel, ulo, uhi, &
                vel(domhi(1)+1:uhi(1),j,k,2) = zero
                vel(domhi(1)+1:uhi(1),j,k,3) = zero
 
-            case ( nsw_ ) 
-
-               vel(domhi(1)+1:uhi(1),j,k,1) = zero
-               vel(domhi(1)+1:uhi(1),j,k,2) = zero
-               vel(domhi(1)+1:uhi(1),j,k,3) = zero
-
             end select
 
             if (extrap_dir_bcs .gt. 0) then
                select case (bct_ihi(j,k,1))
-               case ( minf_, nsw_)
+               case ( minf_)
                      vel(domhi(1)+1,j,k,1:3) = two*vel(domhi(1)+1,j,k,1:3) - vel(domhi(1),j,k,1:3)
                end select
             end if
@@ -154,17 +142,11 @@ subroutine set_velocity_bcs ( time, vel, ulo, uhi, &
                vel(i,ulo(2):domlo(2)-1,k,2) = bc_v_g(bcv)
                vel(i,ulo(2):domlo(2)-1,k,3) = zero
 
-            case ( nsw_ )
-
-               vel(i,ulo(2):domlo(2)-1,k,1) = zero
-               vel(i,ulo(2):domlo(2)-1,k,2) = zero
-               vel(i,ulo(2):domlo(2)-1,k,3) = zero
-
             end select
 
             if (extrap_dir_bcs .gt. 0) then
                select case (bct_jlo(i,k,1))
-               case ( minf_, nsw_)
+               case ( minf_)
                      vel(i,domlo(2)-1,k,1:3) = two*vel(i,domlo(2)-1,k,1:3) - vel(i,domlo(2),k,1:3)
                end select
             end if
@@ -195,17 +177,11 @@ subroutine set_velocity_bcs ( time, vel, ulo, uhi, &
                vel(i,domhi(2)+1:uhi(2),k,2) = bc_v_g(bcv)
                vel(i,domhi(2)+1:uhi(2),k,3) = zero
 
-            case ( nsw_) 
-
-               vel(i,domhi(2)+1:uhi(2),k,1) = zero
-               vel(i,domhi(2)+1:uhi(2),k,2) = zero
-               vel(i,domhi(2)+1:uhi(2),k,3) = zero
-
             end select
 
             if (extrap_dir_bcs .gt. 0) then
                select case (bct_jhi(i,k,1))
-               case ( minf_, nsw_)
+               case ( minf_)
                      vel(i,domhi(2)+1,k,1:3) = two*vel(i,domhi(2)+1,k,1:3) - vel(i,domhi(2),k,1:3)
                end select
             end if
@@ -235,17 +211,11 @@ subroutine set_velocity_bcs ( time, vel, ulo, uhi, &
                vel(i,j,ulo(3):domlo(3)-1,2) = zero
                vel(i,j,ulo(3):domlo(3)-1,3) = bc_w_g(bcv)
 
-            case ( nsw_ )
-
-               vel(i,j,ulo(3):domlo(3)-1,1) = zero
-               vel(i,j,ulo(3):domlo(3)-1,2) = zero
-               vel(i,j,ulo(3):domlo(3)-1,3) = zero
-
             end select
 
             if (extrap_dir_bcs .gt. 0) then
                select case (bct_klo(i,j,1))
-               case ( minf_, nsw_)
+               case ( minf_)
                      vel(i,j,domlo(3)-1,1:3) = two*vel(i,j,domlo(3)-1,1:3) - vel(i,j,domlo(3),1:3)
                end select
             end if
@@ -275,17 +245,11 @@ subroutine set_velocity_bcs ( time, vel, ulo, uhi, &
                vel(i,j,domhi(3)+1:uhi(3),2) = zero
                vel(i,j,domhi(3)+1:uhi(3),3) = bc_w_g(bcv)
 
-            case ( nsw_ ) 
-
-               vel(i,j,domhi(3)+1:uhi(3),1) = zero
-               vel(i,j,domhi(3)+1:uhi(3),2) = zero
-               vel(i,j,domhi(3)+1:uhi(3),3) = zero
-
             end select
 
             if (extrap_dir_bcs .gt. 0) then
                select case (bct_khi(i,j,1))
-               case ( minf_, nsw_)
+               case ( minf_)
                      vel(i,j,domhi(3)+1,1:3) = two*vel(i,j,domhi(3)+1,1:3) - vel(i,j,domhi(3),1:3)
                end select
             end if
@@ -361,12 +325,6 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
                vec(ulo(1):domlo(1)-1,j,k,2) =  vec(domlo(1),j,k,2)
                vec(ulo(1):domlo(1)-1,j,k,3) =  vec(domlo(1),j,k,3)
 
-            case ( nsw_) 
-               
-               vec(ulo(1):domlo(1)-1,j,k,1) =  -vec(domlo(1),j,k,1)
-               vec(ulo(1):domlo(1)-1,j,k,2) =   vec(domlo(1),j,k,2)
-               vec(ulo(1):domlo(1)-1,j,k,3) =   vec(domlo(1),j,k,3)
-
             case ( minf_)
 
                vec(ulo(1):domlo(1)-1,j,k,1) = bc_ep_g(bcv) * bc_u_g(bcv)
@@ -395,12 +353,6 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
                vec(domhi(1)+1:uhi(1),j,k,1) = vec(domhi(1),j,k,1)
                vec(domhi(1)+1:uhi(1),j,k,2) = vec(domhi(1),j,k,2)
                vec(domhi(1)+1:uhi(1),j,k,3) = vec(domhi(1),j,k,3)
-
-            case ( nsw_) 
-
-               vec(domhi(1)+1:uhi(1),j,k,1) = -vec(domhi(1),j,k,1)
-               vec(domhi(1)+1:uhi(1),j,k,2) =  vec(domhi(1),j,k,2)
-               vec(domhi(1)+1:uhi(1),j,k,3) =  vec(domhi(1),j,k,3)
 
             case ( minf_ )
 
@@ -431,12 +383,6 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
                vec(i,ulo(2):domlo(2)-1,k,2) = vec(i,domlo(2),k,2)
                vec(i,ulo(2):domlo(2)-1,k,3) = vec(i,domlo(2),k,3)
 
-            case ( nsw_) 
-
-               vec(i,ulo(2):domlo(2)-1,k,1) =  vec(i,domlo(2),k,1)
-               vec(i,ulo(2):domlo(2)-1,k,2) = -vec(i,domlo(2),k,2)
-               vec(i,ulo(2):domlo(2)-1,k,3) =  vec(i,domlo(2),k,3)
-
             case ( minf_ )
 
                vec(i,ulo(2):domlo(2)-1,k,1) = bc_ep_g(bcv) * bc_u_g(bcv)
@@ -464,12 +410,6 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
                vec(i,domhi(2)+1:uhi(2),k,1) = vec(i,domhi(2),k,1)
                vec(i,domhi(2)+1:uhi(2),k,2) = vec(i,domhi(2),k,2)
                vec(i,domhi(2)+1:uhi(2),k,3) = vec(i,domhi(2),k,3)
-
-            case ( nsw_) 
-               
-               vec(i,domhi(2)+1:uhi(2),k,1) =  vec(i,domhi(2),k,1)
-               vec(i,domhi(2)+1:uhi(2),k,2) = -vec(i,domhi(2),k,2)
-               vec(i,domhi(2)+1:uhi(2),k,3) =  vec(i,domhi(2),k,3)
 
             case ( minf_) 
 
@@ -501,12 +441,6 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
                vec(i,j,ulo(3):domlo(3)-1,2) =  vec(i,j,domlo(3),2)
                vec(i,j,ulo(3):domlo(3)-1,3) =  vec(i,j,domlo(3),3)
 
-            case ( nsw_) 
-
-               vec(i,j,ulo(3):domlo(3)-1,1) =  vec(i,j,domlo(3),1)
-               vec(i,j,ulo(3):domlo(3)-1,2) =  vec(i,j,domlo(3),2)
-               vec(i,j,ulo(3):domlo(3)-1,3) = -vec(i,j,domlo(3),3)
-
             case ( minf_ )
 
                vec(i,j,ulo(3):domlo(3)-1,1) = bc_ep_g(bcv) * bc_u_g(bcv)
@@ -535,12 +469,6 @@ subroutine set_vec_bcs ( vec, ulo, uhi, &
                vec(i,j,domhi(3)+1:uhi(3),1) = vec(i,j,domhi(3),1)
                vec(i,j,domhi(3)+1:uhi(3),2) = vec(i,j,domhi(3),2)
                vec(i,j,domhi(3)+1:uhi(3),3) = vec(i,j,domhi(3),3)
-
-            case ( nsw_) 
-
-               vec(i,j,domhi(3)+1:uhi(3),1) =  vec(i,j,domhi(3),1)
-               vec(i,j,domhi(3)+1:uhi(3),2) =  vec(i,j,domhi(3),2)
-               vec(i,j,domhi(3)+1:uhi(3),3) = -vec(i,j,domhi(3),3)
 
             case ( minf_ ) 
 
