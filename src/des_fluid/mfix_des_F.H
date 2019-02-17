@@ -108,16 +108,6 @@ extern "C"
         const int* nghost
         );
 
-    void flip_drag_terms(
-        amrex::Real* beta  , const int* blo, const int* bhi,
-        amrex::Real* beta_u, const int* dlo, const int* dhi,
-        const int* bc_ilo, const int* bc_ihi,
-        const int* bc_jlo, const int* bc_jhi,
-        const int* bc_klo, const int* bc_khi,
-        const int* domlo, const int* domhi,
-        const int* nghost
-        );
-
     void set_particle_properties(
         const int* pstate, amrex::Real* pradius, amrex::Real* pdensity,
         amrex::Real* pvol, amrex::Real* pmass, amrex::Real* omoi, amrex::Real* omega

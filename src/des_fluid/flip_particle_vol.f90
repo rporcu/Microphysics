@@ -46,7 +46,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
      do k=slo(3),shi(3)
         do j=slo(2),shi(2)
            if (bc_ilo_type(j,k,1) == PINF_ .or. &
-                bc_ilo_type(j,k,1) == MINF_ ) then
+               bc_ilo_type(j,k,1) == MINF_ ) then
               
                vol(ilo,j,k) = vol(ilo,j,k) + vol(ilo-1,j,k)
                vol(ilo-1,j,k) = 0.d0
