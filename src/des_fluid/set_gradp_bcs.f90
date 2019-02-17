@@ -51,10 +51,6 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
                gp(domlo(1)-1,j,k,2) = zero
                gp(domlo(1)-1,j,k,3) = zero
 
-            case ( nsw_)
-
-               gp(domlo(1)-1,j,k,:) = -gp(domlo(1),j,k,:)
-
             end select
       end do
       end do
@@ -76,10 +72,6 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
                gp(domhi(1)+1,j,k,2) = zero
                gp(domhi(1)+1,j,k,3) = zero
 
-            case ( nsw_)
-
-               gp(domhi(1)+1,j,k,:) = -gp(domhi(1),j,k,:)
-
             end select
       end do
       end do
@@ -100,10 +92,6 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
                gp(i,domlo(2)-1,k,2) = gp(i,domlo(2),k,1  )
                gp(i,domlo(2)-1,k,1) = zero
                gp(i,domlo(2)-1,k,3) = zero
-
-            case ( nsw_)
-
-               gp(i,domlo(2)-1,k,:) = -gp(i,domlo(2),k,:)
 
             end select
       end do
@@ -127,10 +115,6 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
                gp(i,domhi(2)+1,k,1) = zero
                gp(i,domhi(2)+1,k,3) = zero
 
-            case ( nsw_)
-
-               gp(i,domhi(2)+1,k,:) = -gp(i,domhi(2),k,:)
-
             end select
       end do
       end do
@@ -153,10 +137,6 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
                gp(i,j,domlo(3)-1,1) = zero
                gp(i,j,domlo(3)-1,2) = zero
 
-            case ( nsw_)
-
-               gp(i,j,domlo(3)-1,:) = -gp(i,j,domlo(3),:)
-
             end select
       end do
       end do
@@ -178,10 +158,6 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
                gp(i,j,domhi(3)+1,3) = gp(i,j,domhi(3),3)
                gp(i,j,domhi(3)+1,1) = zero
                gp(i,j,domhi(3)+1,2) = zero
-
-            case ( nsw_)
-
-               gp(i,j,domhi(3)+1,:) = -gp(i,j,domhi(3),:)
 
             end select
       end do

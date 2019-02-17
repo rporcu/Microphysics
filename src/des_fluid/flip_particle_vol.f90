@@ -16,7 +16,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
   use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
-  use bc, only: nsw_, pinf_, pout_, minf_
+  use bc, only: pinf_, pout_, minf_
 
   implicit none
 

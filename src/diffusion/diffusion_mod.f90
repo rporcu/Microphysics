@@ -536,7 +536,7 @@ contains
                        bc_klo_type, bc_khi_type)
 
 
-   use bc, only: minf_, nsw_, pout_, ignore_
+   use bc, only: minf_, pout_, ignore_
 
    integer,  intent(in   ) :: vinlo(3), vinhi(3)
    integer,  intent(in   ) ::    lo(3),    hi(3)
@@ -570,8 +570,7 @@ contains
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
 
-                  if ( ( bc_ilo_type(j,k,1) == MINF_ )  .or. &
-                       ( bc_ilo_type(j,k,1) == NSW_ )  ) then
+                  if ( bc_ilo_type(j,k,1) == MINF_ )  then
 
                      vel(:lo(1)-1,j,k,n) = 2.d0*vel_in(lo(1)-1,j,k,n) - vel_in(lo(1),j,k,n)
 
@@ -594,8 +593,7 @@ contains
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
 
-                  if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
-                       ( bc_ihi_type(j,k,1) == NSW_ )  ) then
+                  if ( bc_ihi_type(j,k,1) == MINF_ )  then
 
                      vel(hi(1)+1:,j,k,n) = 2.d0*vel_in(hi(1)+1,j,k,n) - vel_in(hi(1),j,k,n)
 
@@ -618,8 +616,7 @@ contains
             do k = lo(3), hi(3)
                do i = lo(1)-1, hi(1)+1
 
-                  if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
-                       ( bc_jlo_type(i,k,1) == NSW_ )  ) then
+                  if ( bc_jlo_type(i,k,1) == MINF_ ) then
                      
                      vel(i,:lo(2)-1,k,n) = 2.d0*vel_in(i,lo(2)-1,k,n) - vel_in(i,lo(2),k,n)
 
@@ -642,8 +639,7 @@ contains
             do k = lo(3), hi(3)
                do i = lo(1)-1, hi(1)+1
 
-                  if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
-                       ( bc_jhi_type(i,k,1) == NSW_ )  ) then
+                  if ( bc_jhi_type(i,k,1) == MINF_ ) then
 
                      vel(i,hi(2)+1:,k,n) = 2.d0*vel_in(i,hi(2)+1,k,n) - vel_in(i,hi(2),k,n)
 
@@ -667,8 +663,7 @@ contains
             do j = lo(2)-1, hi(2)+1
                do i = lo(1)-1, hi(1)+1
 
-                  if ( ( bc_klo_type(i,j,1) == MINF_ ) .or. &
-                       ( bc_klo_type(i,j,1) == NSW_  )  ) then 
+                  if ( bc_klo_type(i,j,1) == MINF_ ) then
 
                      vel(i,j,:lo(3)-1,n) = 2.d0*vel_in(i,j,lo(3)-1,n) - vel_in(i,j,lo(3),n)
 
@@ -691,8 +686,7 @@ contains
             do j = lo(2)-1, hi(2)+1
                do i = lo(1)-1, hi(1)+1
 
-                  if ( ( bc_khi_type(i,j,1) == MINF_ ) .or. &
-                       ( bc_khi_type(i,j,1) == NSW_  )  ) then
+                  if ( bc_khi_type(i,j,1) == MINF_ ) then
 
                      vel(i,j,hi(3)+1:,n) = 2.d0*vel_in(i,j,hi(3)+1,n) - vel_in(i,j,hi(3),n)
 
@@ -716,8 +710,7 @@ contains
             do k = lo(3)-1, hi(3)+1
                do j = lo(2)-1, hi(2)+1
 
-                  if ( ( bc_ilo_type(j,k,1) == MINF_ ) .or. &
-                       ( bc_ilo_type(j,k,1) == NSW_  )  ) then
+                  if ( bc_ilo_type(j,k,1) == MINF_ ) then
 
                        vel(lo(1)-1,j,k,n) = 2.d0*vel_in(lo(1)-1,j,k,n) - vel_in(lo(1),j,k,n)
 
@@ -737,8 +730,7 @@ contains
                do j = lo(2)-1, hi(2)+1
 
 
-                  if ( ( bc_ihi_type(j,k,1) == MINF_ ) .or. &
-                       ( bc_ihi_type(j,k,1) == NSW_ )  ) then
+                  if ( bc_ihi_type(j,k,1) == MINF_ ) then
 
                    vel(hi(1)+1,j,k,n) = 2.d0*vel_in(hi(1)+1,j,k,n) - vel_in(hi(1),j,k,n)
 
@@ -757,8 +749,7 @@ contains
             do k = lo(3)-1, hi(3)+1
                do i = lo(1)-1, hi(1)+1
 
-                  if ( ( bc_jlo_type(i,k,1) == MINF_ ) .or. &
-                       ( bc_jlo_type(i,k,1) == NSW_  )  ) then
+                  if ( bc_jlo_type(i,k,1) == MINF_ ) then
 
                      vel(i,lo(2)-1,k,n) = 2.d0*vel_in(i,lo(2)-1,k,n) - vel_in(i,lo(2),k,n)
 
@@ -777,8 +768,7 @@ contains
             do k = lo(3)-1, hi(3)+1
                do i = lo(1)-1, hi(1)+1
 
-                  if ( ( bc_jhi_type(i,k,1) == MINF_ ) .or. &
-                       ( bc_jhi_type(i,k,1) == NSW_  )  ) then
+                  if ( bc_jhi_type(i,k,1) == MINF_ ) then
 
                      vel(i,hi(2)+1,k,n) = 2.d0*vel_in(i,hi(2)+1,k,n) - vel_in(i,hi(2),k,n)
 
