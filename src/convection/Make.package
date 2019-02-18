@@ -5,6 +5,7 @@ f90EXE_sources += set_mac_velocity_bcs.f90
 f90EXE_sources += slopes_mod.f90
 
 CEXE_sources += mfix_convection.cpp
+CEXE_sources += mfix_slopes.cpp
 CEXE_sources += MacProjection.cpp
 CEXE_headers += MacProjection.H
 
