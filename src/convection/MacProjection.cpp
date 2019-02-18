@@ -428,29 +428,41 @@ MacProjection::compute_b_coeff ( const Vector< std::unique_ptr<MultiFab> >& u,
 
       if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
       {
-         m_b[lev][0] -> setVal( 1.2345e300, ubx, 0, 1);
-         m_b[lev][1] -> setVal( 1.2345e300, vbx, 0, 1);
-         m_b[lev][2] -> setVal( 1.2345e300, wbx, 0, 1);
+          m_b[lev][0] -> setVal( 1.2345e300, ubx, 0, 1);
+          m_b[lev][1] -> setVal( 1.2345e300, vbx, 0, 1);
+          m_b[lev][2] -> setVal( 1.2345e300, wbx, 0, 1);
       }
       else
       {
-         // X direction
-         compute_bcoeff_mac (BL_TO_FORTRAN_BOX(ubx),
-                             BL_TO_FORTRAN_ANYD((*(m_b[lev][0]))[mfi]),
-                             BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
-                             (*ep[lev])[mfi].dataPtr(), &xdir );
+          const auto& betax_fab = (*(m_b[lev])[0]).array(mfi);
+          const auto& betay_fab = (*(m_b[lev])[1]).array(mfi);
+          const auto& betaz_fab = (*(m_b[lev])[2]).array(mfi);
+          const auto&   den_fab =  ro[lev]->array(mfi);
+          const auto&   epg_fab =  ep[lev]->array(mfi);
 
-         // Y direction
-         compute_bcoeff_mac (BL_TO_FORTRAN_BOX(vbx),
-                             BL_TO_FORTRAN_ANYD((*(m_b[lev][1]))[mfi]),
-                             BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
-                             (*ep[lev])[mfi].dataPtr(), &ydir );
+          amrex::ParallelFor(ubx, 
+                [=] (int i, int j, int k)
+          {
+             // X-faces
+             betax_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i-1,j,k) ) /
+                                ( den_fab(i,j,k) + den_fab(i-1,j,k) );
+          });
 
-         // Z direction
-         compute_bcoeff_mac (BL_TO_FORTRAN_BOX(wbx),
-                             BL_TO_FORTRAN_ANYD((*(m_b[lev][2]))[mfi]),
-                             BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
-                             (*ep[lev])[mfi].dataPtr(), &zdir );
+          amrex::ParallelFor(vbx, 
+                [=] (int i, int j, int k)
+          {
+             // Y-faces
+             betay_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i,j-1,k) ) /
+                                ( den_fab(i,j,k) + den_fab(i,j-1,k) );
+          });
+
+          amrex::ParallelFor(wbx, 
+                [=] (int i, int j, int k)
+          {
+             // Z-faces
+             betaz_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i,j,k-1) ) /
+                                ( den_fab(i,j,k) + den_fab(i,j,k-1) );
+          });
       }
    }
 
