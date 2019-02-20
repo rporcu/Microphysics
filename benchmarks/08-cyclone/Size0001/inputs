@@ -74,6 +74,11 @@ hopper.funnel_height  = 0.00100
 hopper.direction = 0
 hopper.center    =  0.0000  0.0005  0.0005
 
+xlo.type = "po"
+xlo.velocity = 0.0
+
+xhi.type = "po"
+xhi.pressure = 0.0
 
 #_______________________________________________________________________
 # Particle load balancing

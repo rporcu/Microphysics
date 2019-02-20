@@ -82,6 +82,13 @@ cylinder.height  = -1.
 cylinder.direction = 0
 cylinder.center    =  0.008   0.002   0.002
 
+xlo.type = "mi"
+xlo.velocity = 0.015
+
+xhi.type = "po"
+xhi.pressure = 0.0
+
+
 #_______________________________________________________________________
 # Particle load balancing
 
