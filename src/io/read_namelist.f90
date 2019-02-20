@@ -181,7 +181,6 @@ MODULE read_namelist_module
       include 'geometry.inc'
       include 'gas_phase.inc'
       include 'initial_conditions.inc'
-      include 'boundary_conditions.inc'
       include 'point_sources.inc'
       include 'usr_hooks.inc'
       include 'desnamelist.inc'
@@ -231,14 +230,6 @@ MODULE read_namelist_module
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=INITIAL_CONDITIONS, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
-
-
-! Boundary condition keywords
-      STRING=''; STRING = '&BOUNDARY_CONDITIONS '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=BOUNDARY_CONDITIONS, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
-
 
 ! Point source keywords
       STRING=''; STRING = '&POINT_SOURCES '//&

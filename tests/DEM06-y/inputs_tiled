@@ -54,6 +54,16 @@ fabarray.mfiter_tile_size = 5  5  5
 particles.tile_size =  5  5  5
 
 
+#! EB settings
+#!-----------------------------------------------------------//
+
+ylo.type = "mi"
+ylo.velocity =  0.4
+
+yhi.type = "po"
+yhi.pressure = 0.0
+
+
 #_______________________________________________________________________
 # IO / Checkpointing
 

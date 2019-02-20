@@ -141,13 +141,15 @@ int main (int argc, char* argv[])
                    &stop_time, &call_udf, &name_len, cmfix_dat
                   );
 
-    if ( ParallelDescriptor::IOProcessor() )
-       check_inputs(&dt);
-
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
     //                                                             |
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix my_mfix;
+
+    my_mfix.get_input_bcs();
+
+    if ( ParallelDescriptor::IOProcessor() )
+      check_inputs(&dt);
 
     my_mfix.SetParameters(steady_state);
 

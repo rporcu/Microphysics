@@ -44,10 +44,6 @@ module check_boundary_conditions_module
 ! Maximum number of disperse phases
       use param, only: DIM_M
 
-      use check_bc_geometry_module, only: check_bc_geometry
-      use check_bc_geometry_module, only: check_bc_geometry_flow
-      use check_bc_geometry_module, only: check_bc_geometry_wall
-
       use check_bc_inflow_module,   only: check_bc_mass_inflow
       use check_bc_inflow_module,   only: check_bc_p_inflow
 
@@ -71,8 +67,6 @@ module check_boundary_conditions_module
 ! Initialize the error manager.
       call init_err_msg("CHECK_BOUNDARY_CONDITIONS")
 
-! Determine which BCs are DEFINED
-      call check_bc_geometry
 
 ! Loop over each defined BC and check the user data.
       do bcv = 1, dim_bc
@@ -87,27 +81,17 @@ module check_boundary_conditions_module
             select case (trim(bc_type(bcv)))
 
             case ('MASS_INFLOW', 'MI')
-               call check_bc_geometry_flow(bcv,dx,dy,dz,&
-                  xlength,ylength,zlength,domlo,domhi)
                call check_bc_mass_inflow(mmax, skip, bcv)
                ! call check_bc_inflow(mmax,skip,bcv)
 
             case ('P_INFLOW', 'PI')
-               call check_bc_geometry_flow(bcv,dx,dy,dz,&
-                  xlength,ylength,zlength,domlo,domhi)
                call check_bc_p_inflow(mmax, skip, bcv)
                ! call check_bc_inflow(mmax, skip, bcv)
                call check_bc_outflow(mmax, bcv)
 
             case ('P_OUTFLOW','PO')
-               call check_bc_geometry_flow(bcv,dx,dy,dz,&
-                  xlength,ylength,zlength,domlo,domhi)
                call check_bc_p_outflow(bcv)
                call check_bc_outflow(mmax, bcv)
-
-            case ('NO_SLIP_WALL',  'NSW')
-               call check_bc_geometry_wall(bcv,dx,dy,dz,&
-                  xlength,ylength,zlength,domlo,domhi)
 
             end select
 

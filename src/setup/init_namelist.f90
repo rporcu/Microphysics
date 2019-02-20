@@ -392,42 +392,6 @@ MODULE INIT_NAMELIST_MODULE
 !#####################################################################!
 
 !<keyword category="Boundary Condition" required="false">
-!  <description>X coordinate of the west face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_X_W(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>X coordinate of the east face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_X_E(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Y coordinate of the south face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Y_S(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Y coordinate of the north face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Y_N(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Z coordinate of the bottom face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Z_B(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Z coordinate of the top face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Z_T(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
 !  <description>Z coordinate of the top face or edge.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
       BC_NORMAL(:,:) = UNDEFINED

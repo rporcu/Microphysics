@@ -53,6 +53,26 @@ fabarray.mfiter_tile_size = 1024 1024 1024
 # Particles: Maximum particle title size
 particles.tile_size = 1024 1024 1024
 
+#! EB settings
+#!-----------------------------------------------------------//
+
+xlo.type = "mi"
+xlo.velocity =     10.0
+
+xhi.type = "po"
+xhi.pressure = 101325.0
+
+ylo.type = "nsw"
+ylo.location = 0.005
+
+yhi.type = "nsw"
+yhi.location = 0.015
+
+zlo.type = "nsw"
+zlo.location = 0.005
+
+zhi.type = "nsw"
+zhi.location = 0.015
 
 #_______________________________________________________________________
 # IO / Checkpointing

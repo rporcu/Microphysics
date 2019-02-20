@@ -170,6 +170,12 @@ public:
         }
     };
 
+
+  void get_input_bcs();
+
+  void set_input_bcs(const std::string bcID, const int index,
+                     const int cyclic, const Real domloc);
+
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(bool & has_walls);
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls(bool & has_real_walls);

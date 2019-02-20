@@ -1,4 +1,4 @@
-add_sources ( check_bc_flow.f90  check_bc_geometry.f90 )
+add_sources ( check_bc_flow.f90 )
 add_sources ( check_bc_inflow.f90 check_bc_outflow.f90 )
 add_sources ( check_boundary_conditions.f90 )
 add_sources ( check_collision_model.f90 check_gas_properties.f90 )

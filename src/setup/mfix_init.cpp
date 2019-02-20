@@ -482,9 +482,6 @@ void mfix::check_data ()
 
     Box domain(geom[0].Domain());
 
-    // Convert (mass, volume) flows to velocities.
-    set_bc_flow(&xlen, &ylen, &zlen, &dx, &dy, &dz);
-
     // Only call this check on one processor since it has a bunch of print statements
     if ( ParallelDescriptor::IOProcessor() )
     {

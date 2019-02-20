@@ -16,11 +16,10 @@ extern "C"
 #endif
     void mfix_add_argument(char* fname, int* nlen);
 
-    void set_resid_p(amrex::Real& val);
-
-    void write_out0(amrex::Real* time, amrex::Real* dt, amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-        const int* domlo, const int* domhi);
+    void write_out0(amrex::Real* time, amrex::Real* dt,
+                    amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
+                    amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
+                    const int* domlo, const int* domhi);
 
     void write_usr0();
 
@@ -46,10 +45,13 @@ extern "C"
 
     void check_point_sources(amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
 
-    void set_bc_flow(amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-         amrex::Real* dx,      amrex::Real* dy,      amrex::Real* dz  );
-
     void check_bc_flow();
+
+    void mfix_set_bc_mod(const int* pID, const int* pType,
+                         const amrex::Real* pLo, const amrex::Real* pHi,
+                         amrex::Real* pLoc,
+                         amrex::Real* pPg,
+                         amrex::Real* pVel);
 
     void set_bc_type(
         const int* bc_ilo, const int* bc_ihi,

@@ -41,6 +41,19 @@ amr.max_grid_size_z =  4
 fabarray.mfiter_tile_size = 1024 1024 1024
 
 
+#! EB settings
+#!-----------------------------------------------------------//
+
+xlo.type = "pi"
+xlo.pressure = 12.0
+
+xhi.type = "po"
+xhi.pressure =  0.0
+
+ylo.type = "nsw"
+yhi.type = "nsw"
+
+
 #_______________________________________________________________________
 # IO / Checkpointing
 
