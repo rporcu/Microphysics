@@ -79,6 +79,16 @@ mfix.write_eb_surface = false  # Needed to output eb-surfaces
 #! EB geometry
 #!-----------------------------------------------------------//
 
+#! BCs 
+#!-----------------------------------------------------------//
+xlo.location = 0.0
+xlo.type = "mi"
+xlo.velocity = 0.015
+
+xhi.location = 0.008
+xhi.type = "po"
+xhi.pressure = 0.0
+
 #_______________________________________________________________________
 # Particle load balancing
 

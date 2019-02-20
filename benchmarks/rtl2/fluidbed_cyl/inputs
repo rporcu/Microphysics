@@ -90,6 +90,16 @@ cylinder.height = -1.0
 cylinder.direction = 0
 cylinder.center    =  0.004   0.001   0.001
 
+#! BCs 
+#!-----------------------------------------------------------//
+xlo.location = 0.0
+xlo.type = "mi"
+xlo.velocity = 0.015
+
+xhi.location = 0.008
+xhi.type = "po"
+xhi.pressure = 0.0
+
 #_______________________________________________________________________
 # Particle load balancing
 
