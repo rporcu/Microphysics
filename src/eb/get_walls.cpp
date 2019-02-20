@@ -20,7 +20,7 @@ mfix::get_walls(bool & has_walls) {
     // Walls can be defined per phase => Itterarte over all phases and check
     // each for walls in the mfix.dat
     Vector<EB2::PlaneIF> planes;
-    for (int i = 1; i <= 500; i++) {
+    for (int i = 1; i <= 6; i++) {
         int exists;
         RealVect normal, center;
         mfix_get_walls(& i, & exists, & normal, & center);
