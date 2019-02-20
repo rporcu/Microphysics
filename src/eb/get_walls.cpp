@@ -96,6 +96,7 @@ void
 mfix::set_input_bcs(const std::string bcID, const int index,
                     const int cyclic, const Real domloc) {
 
+  const int und_  =   0;
   const int ig_   =   9;
   const int pinf_ =  10;
   const int pout_ =  11;
@@ -118,10 +119,7 @@ mfix::set_input_bcs(const std::string bcID, const int index,
   if (bc_type == "null"){
 
     // Unspecified domain extents are assumed to be walls flush with
-    // the domain boundary.
-    if(cyclic == 0) {
-      itype = nsw_;
-    }
+    itype = (cyclic == 1) ? und_ : ig_;
 
   } else if(bc_type == "pressure_inflow"  || bc_type == "pi" ||
             bc_type == "PRESSURE_INFLOW"  || bc_type == "PI" ) {
@@ -164,7 +162,7 @@ mfix::set_input_bcs(const std::string bcID, const int index,
 
   }
 
-  if ( cyclic == 1 && itype != ig_){
+  if ( cyclic == 1 && itype != und_){
     amrex::Abort("Cannot mix periodic BCs and Wall/Flow BCs.\n");
   }
 

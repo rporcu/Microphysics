@@ -24,6 +24,7 @@ module set_bc_type_module
 
       use bc, only: nsw_, pinf_, pout_, minf_, ignore_
       use bc, only: undef_cell
+      use bc, only: cyclic_x, cyclic_y, cyclic_z
 
       use param, only: dim_bc
       use param, only: equal
@@ -57,12 +58,18 @@ module set_bc_type_module
 
       integer :: i_w, j_s, k_b, i_e, j_n, k_t
 
-      bc_ilo_type(:,:,1) = ignore_
-      bc_ihi_type(:,:,1) = ignore_
-      bc_jlo_type(:,:,1) = ignore_
-      bc_jhi_type(:,:,1) = ignore_
-      bc_klo_type(:,:,1) = ignore_
-      bc_khi_type(:,:,1) = ignore_
+      ! bc_ilo_type(:,:,1) = ignore_
+      ! bc_ihi_type(:,:,1) = ignore_
+      ! bc_jlo_type(:,:,1) = ignore_
+      ! bc_jhi_type(:,:,1) = ignore_
+      ! bc_klo_type(:,:,1) = ignore_
+      ! bc_khi_type(:,:,1) = ignore_
+      bc_ilo_type(:,:,1) = merge(undef_cell, nsw_, cyclic_x)
+      bc_ihi_type(:,:,1) = merge(undef_cell, nsw_, cyclic_x)
+      bc_jlo_type(:,:,1) = merge(undef_cell, nsw_, cyclic_y)
+      bc_jhi_type(:,:,1) = merge(undef_cell, nsw_, cyclic_y)
+      bc_klo_type(:,:,1) = merge(undef_cell, nsw_, cyclic_z)
+      bc_khi_type(:,:,1) = merge(undef_cell, nsw_, cyclic_z)
 
       do bcv = 1, dim_bc
          if (bc_defined(bcv)) then
@@ -120,6 +127,7 @@ module set_bc_type_module
 subroutine mfix_set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel) &
      bind(c,name='mfix_set_bc_mod')
 
+  use bc, only: bc_defined
   use bc, only: bc_type, bc_plane
 
   use bc, only: nsw_, pinf_, pout_, minf_, ignore_
@@ -212,11 +220,15 @@ subroutine mfix_set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel) &
      case(5,6); bc_w_g(pID) = pVel;
      end select
 
+     bc_defined(pID) = .true.
+
   case(pinf_)
 
      bc_type(pID) = 'PI'
 
      bc_p_g(pID) =   pPg;
+
+     bc_defined(pID) = .true.
 
   case(pout_)
 
@@ -224,17 +236,23 @@ subroutine mfix_set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel) &
 
      bc_p_g(pID) =   pPg;
 
+     bc_defined(pID) = .true.
+
   case(nsw_)
 
      bc_type(pID) = 'NSW'
+
+     bc_defined(pID) = .true.
 
   case(ignore_)
 
      bc_type(pID) = 'IG'
 
+     bc_defined(pID) = .true.
+
   case default
-     write(6,*) 'unknown bc type'
-     stop 7665
+
+     bc_defined(pID) = .false.
 
   end select
 

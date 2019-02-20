@@ -20,9 +20,11 @@ module bc
   logical :: cyclic_y = .false.
   logical :: cyclic_z = .false.
 
+  logical :: bc_defined(1:dim_bc) = .false.
+
   ! Boundary condition location (EB planes)
-  real(rt) :: BC_Normal(dim_bc,1:3) = undefined
-  real(rt) :: BC_Center(dim_bc,1:3) = undefined
+  real(rt) :: BC_Normal(1:dim_bc,1:3) = undefined
+  real(rt) :: BC_Center(1:dim_bc,1:3) = undefined
 
   ! Void fraction in a specified boundary
   real(rt) :: BC_EP_g(dim_bc), BC_EP_s(dim_bc, dim_m)
@@ -95,33 +97,6 @@ contains
     cyclic_z = (cyc_z == 1)
 
   end subroutine set_cyclic
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-! Subroutine: bc_defined                                               !
-!                                                                      !
-! Purpose: Return if a BC region has been defined based on coordinates !
-! defined in the input deck.                                           !
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  logical function bc_defined(icv)
-
-    use param, only: is_defined
-
-    integer, intent(in) :: icv
-
-    bc_defined = is_defined(bc_normal(icv,1)) .or. &
-                 is_defined(bc_normal(icv,2)) .or. &
-                 is_defined(bc_normal(icv,3)) .or. &
-                 is_defined(bc_center(icv,1)) .or. &
-                 is_defined(bc_center(icv,2)) .or. &
-                 is_defined(bc_center(icv,3))
-
-! An IC is defined for restart runs only if it is a 'PATCH'.
-    if(bc_type(icv) == 'DUMMY') bc_defined = .false.
-
-  end function bc_defined
-
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
