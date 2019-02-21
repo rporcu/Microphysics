@@ -47,13 +47,6 @@ extern "C"
       const int* nghost
       );
 
-   void set_pressure_bcs (
-      amrex::Real* p_g, const int* slo, const int* shi,
-      const int* bc_ilo, const int* bc_ihi,
-      const int* bc_jlo, const int* bc_jhi,
-      const int* bc_klo, const int* bc_khi,
-      const int* domlo , const int* domhi);
-
     void set_velocity_bcs (
         amrex::Real* time,
         amrex::Real* vel_g, const int* ulo, const int* uhi,
