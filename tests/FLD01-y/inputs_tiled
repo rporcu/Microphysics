@@ -8,9 +8,6 @@
 
 mfix.steady_state_tol = 1.0e-10
 
-mfix.explicit_diffusion = 0
-mfix.fixed_dt           = 0
-
 amr.blocking_factor = 4
 
 #_______________________________________________________________________

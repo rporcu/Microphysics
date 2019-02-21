@@ -591,7 +591,7 @@ private:
      const int m_eb_volume_grow_cells = nghost;
      const int m_eb_full_grow_cells = nghost;
 
-     int explicit_diffusion = 1;
+     int explicit_diffusion = 0;
 
      bool do_initial_proj    = true;
      int  initial_iterations = 3;
