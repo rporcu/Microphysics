@@ -41,7 +41,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_ilo(j,k,1))
 
-            case ( pinf_, pout_, ignore_)
+            case ( pinf_, pout_)
 
                gp(domlo(1)-1,j,k,:) = gp(domlo(1),j,k,:)
 
@@ -62,7 +62,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_ihi(j,k,1))
 
-            case ( pinf_, pout_, ignore_)
+            case ( pinf_, pout_)
 
                gp(domhi(1)+1,j,k,:) = gp(domhi(1),j,k,:)
 
@@ -83,7 +83,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_jlo(i,k,1))
 
-            case ( pinf_, pout_, ignore_)
+            case ( pinf_, pout_)
 
                gp(i,domlo(2)-1,k,:) = gp(i,domlo(2),k,:)
 
@@ -105,7 +105,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_jhi(i,k,1))
 
-            case ( pinf_, pout_, ignore_)
+            case ( pinf_, pout_)
 
                gp(i,domhi(2)+1,k,:) = gp(i,domhi(2),k,:)
 
@@ -127,7 +127,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_klo(i,j,1))
 
-            case ( pinf_, pout_, ignore_)
+            case ( pinf_, pout_)
 
                gp(i,j,domlo(3)-1,:) = gp(i,j,domlo(3),:)
 
@@ -149,7 +149,7 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             select case (bct_khi(i,j,1))
 
-            case ( pinf_, pout_, ignore_)
+            case ( pinf_, pout_)
 
                gp(i,j,domhi(3)+1,:) = gp(i,j,domhi(3),:)
 
