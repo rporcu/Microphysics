@@ -245,18 +245,11 @@ mfix::mfix_set_bc_type(int lev)
 void
 mfix::fill_mf_bc(int lev, MultiFab& mf)
 {
-    Box domain(geom[lev].Domain());
-
     if (!mf.boxArray().ixType().cellCentered())
 	amrex::Error("fill_mf_bc only used for cell-centered arrays!");
 
     // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
     mf.FillBoundary(geom[lev].periodicity());
-
-    // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
 }
 
 void mfix::mfix_calc_volume_fraction(Real& sum_vol)
