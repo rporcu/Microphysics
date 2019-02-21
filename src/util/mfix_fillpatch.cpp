@@ -229,7 +229,7 @@ mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
                            &nghost, &extrap_dir_bcs );
      }
 
-     EB_set_covered(*vel_g[lev], 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow(), 0.0);
+     EB_set_covered(*vel_g[lev], 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow(), 1.e20);
 
      // Do this after as well as before to pick up terms that got updated in the call above
      vel_g[lev] -> FillBoundary (geom[lev].periodicity());
