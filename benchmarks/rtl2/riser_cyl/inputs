@@ -5,14 +5,11 @@
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.fixed_dt         = 0
 
 mfix.cfl = 0.5
 
 #amr.max_step = 100
 amr.stop_time = 3.0
-
-mfix.explicit_diffusion = 0
 
 mfix.particle_init_type = "Auto"
 
