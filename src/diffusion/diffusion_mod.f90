@@ -536,7 +536,7 @@ contains
                        bc_klo_type, bc_khi_type)
 
 
-   use bc, only: minf_, pout_
+   use bc, only: minf_, pout_, ignore_
 
    integer,  intent(in   ) :: vinlo(3), vinhi(3)
    integer,  intent(in   ) ::    lo(3),    hi(3)
