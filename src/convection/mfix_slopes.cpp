@@ -3,6 +3,8 @@
 #include <mfix_proj_F.H>
 #include <mfix_mac_F.H>
 
+#include <AMReX_EBMultiFabUtil.H>
+
 //
 // Compute the slopes of each velocity component in all three directions
 // 
@@ -10,6 +12,8 @@ void
 mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
 {
     BL_PROFILE("mfix::mfix_compute_velocity_slopes");
+
+    EB_set_covered(Sborder, 0, Sborder.nComp(), 1, 1.e20);
 
     Box domain(geom[lev].Domain());
     
