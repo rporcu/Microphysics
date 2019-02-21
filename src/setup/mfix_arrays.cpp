@@ -405,16 +405,17 @@ mfix::RegridArrays (int lev)
     // Make sure we fill the ghost cells as appropriate -- this is copied from init_fluid
     // ********************************************************************************
 
-    fill_mf_bc(lev,*ep_g[lev]);
-    fill_mf_bc(lev,*ep_go[lev]);
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*ro_go[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-    fill_mf_bc(lev,*rop_go[lev]);
+      ep_g[lev]->FillBoundary(geom[lev].periodicity());
+     ep_go[lev]->FillBoundary(geom[lev].periodicity());
 
-    fill_mf_bc(lev,*mu_g[lev]);
-    fill_mf_bc(lev,*lambda_g[lev]);
+      ro_g[lev]->FillBoundary(geom[lev].periodicity());
+     ro_go[lev]->FillBoundary(geom[lev].periodicity());
 
+     rop_g[lev]->FillBoundary(geom[lev].periodicity());
+    rop_go[lev]->FillBoundary(geom[lev].periodicity());
+
+        mu_g[lev]->FillBoundary(geom[lev].periodicity());
+    lambda_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 

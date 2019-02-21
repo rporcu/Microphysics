@@ -211,7 +211,6 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       compute_b_coeff( u, v, w, ep, ro, lev );
       
       // Compute ep at faces
-      set_ccmf_bcs( lev, *ep[lev] );
       ep[lev]->FillBoundary(m_amrcore -> Geom(lev).periodicity());
      
       average_cellcenter_to_face( GetArrOfPtrs(m_ep[lev]), *ep[lev], m_amrcore -> Geom(lev) );
@@ -345,21 +344,6 @@ MacProjection::set_velocity_bcs ( int lev,
                              &m_nghost );
    }	
     
-}
-
-//
-// Set Cell-Centered-Multifab BCs
-// 
-void
-MacProjection::set_ccmf_bcs ( int lev, MultiFab& mf )
-{
-   Box domain( m_amrcore->Geom(lev).Domain() );
-
-   if(!mf.boxArray().ixType().cellCentered())
-      amrex::Error("MacProjection::set_ccmf_bcs() can only be used for cell-centered arrays!");
-
-   // Impose periodic bc's at domain boundaries and fine-fine copies in the interio
-   mf.FillBoundary(m_amrcore -> Geom(lev).periodicity());
 }
 
 //

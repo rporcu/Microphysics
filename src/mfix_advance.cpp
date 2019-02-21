@@ -23,9 +23,9 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
     // rop_g and ep_g ghost values for PINF and POUT
     for (int lev = 0; lev < nlev; lev++)
     {
-       fill_mf_bc ( lev, *rop_g[lev] );
-       fill_mf_bc ( lev, *ep_g[lev] );
-       fill_mf_bc ( lev, *mu_g[lev] );
+       rop_g[lev]->FillBoundary(geom[lev].periodicity());
+        ep_g[lev]->FillBoundary(geom[lev].periodicity());
+        mu_g[lev]->FillBoundary(geom[lev].periodicity());
     }
 
     // Fill ghost nodes and reimpose boundary conditions

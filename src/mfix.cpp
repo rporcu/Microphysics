@@ -242,16 +242,6 @@ mfix::mfix_set_bc_type(int lev)
                 &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost);
 }
 
-void
-mfix::fill_mf_bc(int lev, MultiFab& mf)
-{
-    if (!mf.boxArray().ixType().cellCentered())
-	amrex::Error("fill_mf_bc only used for cell-centered arrays!");
-
-    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
-    mf.FillBoundary(geom[lev].periodicity());
-}
-
 void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 {
     BL_PROFILE("mfix::mfix_calc_volume_fraction()");
@@ -274,15 +264,13 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 
     for (int lev = 0; lev < nlev; lev++)
     {
-
        // Now define rop_g = ro_g * ep_g
        MultiFab::Copy(*rop_g[lev], *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow());
        MultiFab::Multiply((*rop_g[lev]), (*ep_g[lev]), 0, 0, 1, rop_g[lev]->nGrow());
 
        // This sets the values outside walls or periodic boundaries
-       fill_mf_bc(lev,*ep_g[lev]);
-       fill_mf_bc(lev,*rop_g[lev]);
-
+        ep_g[lev]->FillBoundary(geom[lev].periodicity());
+       rop_g[lev]->FillBoundary(geom[lev].periodicity());
    }
 
 

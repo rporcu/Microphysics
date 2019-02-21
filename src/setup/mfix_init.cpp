@@ -761,14 +761,13 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 
   for (int lev = 0; lev < nlev; lev++)
   {
-     fill_mf_bc(lev,*ep_g[lev]);
-     fill_mf_bc(lev,*ro_g[lev]);
-     fill_mf_bc(lev,*rop_g[lev]);
+         ep_g[lev]->FillBoundary(geom[lev].periodicity());
+         ro_g[lev]->FillBoundary(geom[lev].periodicity());
+        rop_g[lev]->FillBoundary(geom[lev].periodicity());
+         mu_g[lev]->FillBoundary(geom[lev].periodicity());
+     lambda_g[lev]->FillBoundary(geom[lev].periodicity());
 
      vel_g[lev]->FillBoundary(geom[lev].periodicity());
-
-     fill_mf_bc(lev,*mu_g[lev]);
-     fill_mf_bc(lev,*lambda_g[lev]);
   }
 
   if (is_restarting == 0)
@@ -821,9 +820,9 @@ mfix::mfix_set_bc0()
                  domain.loVect(), domain.hiVect(), &nghost);
        }
 
-     fill_mf_bc(lev,*ep_g[lev]);
-     fill_mf_bc(lev,*ro_g[lev]);
-     fill_mf_bc(lev,*rop_g[lev]);
+      ep_g[lev]->FillBoundary(geom[lev].periodicity());
+      ro_g[lev]->FillBoundary(geom[lev].periodicity());
+     rop_g[lev]->FillBoundary(geom[lev].periodicity());
    }
 
    // Put velocity Dirichlet bc's on faces
