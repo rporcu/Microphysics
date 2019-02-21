@@ -257,15 +257,6 @@ mfix::fill_mf_bc(int lev, MultiFab& mf)
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(mf,TilingIfNotGPU()); mfi.isValid(); ++mfi)
-    {
-	const Box& sbx = mf[mfi].box();
-	fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
-		 bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                 bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-		 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                 domain.loVect(), domain.hiVect(), &nghost);
-    }
 }
 
 void mfix::mfix_calc_volume_fraction(Real& sum_vol)

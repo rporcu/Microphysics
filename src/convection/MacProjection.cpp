@@ -212,6 +212,7 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       
       // Compute ep at faces
       set_ccmf_bcs( lev, *ep[lev] );
+      ep[lev]->FillBoundary(m_amrcore -> Geom(lev).periodicity());
      
       average_cellcenter_to_face( GetArrOfPtrs(m_ep[lev]), *ep[lev], m_amrcore -> Geom(lev) );
 
@@ -352,40 +353,13 @@ MacProjection::set_velocity_bcs ( int lev,
 void
 MacProjection::set_ccmf_bcs ( int lev, MultiFab& mf )
 {
-
    Box domain( m_amrcore->Geom(lev).Domain() );
 
    if(!mf.boxArray().ixType().cellCentered())
       amrex::Error("MacProjection::set_ccmf_bcs() can only be used for cell-centered arrays!");
 
-   // Impose periodic bc's at domain boundaries and fine-fine copies in the
-   // interior It is essential that we do this before the call to fill_bc0
-   // below since fill_bc0 can extrapolate out to fill ghost cells outside the
-   // domain after we have filled ghost cells inside the domain, but doing
-   // this call after fill_bc0 can't fill ghost cells from ghost cells.
+   // Impose periodic bc's at domain boundaries and fine-fine copies in the interio
    mf.FillBoundary(m_amrcore -> Geom(lev).periodicity());
-
-   // Fill all cell-centered arrays with first-order extrapolation at domain
-   // boundaries
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-   for(MFIter mfi(mf,false); mfi.isValid(); ++mfi)
-   {
-      const Box& sbx = mf[mfi].box();
-
-      fill_bc0( mf[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-                (*m_bc_ilo)[lev]->dataPtr(), (*m_bc_ihi)[lev]->dataPtr(),
-                (*m_bc_jlo)[lev]->dataPtr(), (*m_bc_jhi)[lev]->dataPtr(),
-                (*m_bc_klo)[lev]->dataPtr(), (*m_bc_khi)[lev]->dataPtr(),
-                domain.loVect(),  domain.hiVect(),
-                &m_nghost );
-   }
-
-   // Impose periodic bc's at domain boundaries and fine-fine copies in the
-   // interior It's not 100% clear whether we need this call or not.  Worth
-   // testing.
-   mf.FillBoundary( m_amrcore -> Geom(lev).periodicity() );
 }
 
 //
