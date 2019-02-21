@@ -6,6 +6,8 @@
 #include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
 
+#include <AMReX_EBMultiFabUtil.H>
+
 // For multigrid
 #include <AMReX_MLMG.H>
 #include <AMReX_MLEBABecLap.H>
@@ -20,6 +22,8 @@ mfix::mfix_compute_divtau ( int lev,
 {
    BL_PROFILE("mfix::mfix_compute_divtau");
    Box domain(geom[lev].Domain());
+
+   EB_set_covered(*vel[lev], 0, vel[lev]->nComp(), vel[lev]->nGrow(), 1.e20);
 
    // Get EB geometric info
    Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
