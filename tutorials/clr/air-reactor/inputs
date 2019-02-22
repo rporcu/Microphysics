@@ -1,3 +1,6 @@
+
+amrex.fpe_trap_invalid = 1
+
 #_______________________________________________________________________
 # Solver settings
 
@@ -78,6 +81,12 @@ mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
 #! EB geometry
 #!-----------------------------------------------------------//
+
+xlo.type = mi
+xlo.velocity = 0.0
+
+xhi.type = po
+xhi.pressure = 101325.0
 
 mfix.geometry = "air-reactor"
 

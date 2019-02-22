@@ -121,11 +121,13 @@ mfix::set_input_bcs(const std::string bcID, const int index,
     // Unspecified domain extents are assumed to be walls flush with
     itype = (cyclic == 1) ? und_ : ig_;
 
+    if(cyclic == 0)
+      amrex::Print() << bcID <<" set to ignore. "  << std::endl;
+
   } else if(bc_type == "pressure_inflow"  || bc_type == "pi" ||
             bc_type == "PRESSURE_INFLOW"  || bc_type == "PI" ) {
 
-    // Flag that this is a pressure inflow.
-    amrex::Print() << "Found a Pressure Inflow at " << bcID << std::endl;
+    amrex::Print() << bcID <<" set to pressure inflow. "  << std::endl;
     itype = pinf_;
 
     pp.get("pressure", pressure);
@@ -133,8 +135,7 @@ mfix::set_input_bcs(const std::string bcID, const int index,
   } else if(bc_type == "pressure_outflow" || bc_type == "po" ||
             bc_type == "PRESSURE_OUTFLOW" || bc_type == "PO" ) {
 
-    // Flag that this is a pressure outflow.
-    amrex::Print() << "Found a Pressure Outflow at " << bcID << std::endl;
+    amrex::Print() << bcID <<" set to pressure outflow. "  << std::endl;
     itype = pout_;
 
     pp.get("pressure", pressure);
@@ -144,7 +145,7 @@ mfix::set_input_bcs(const std::string bcID, const int index,
              bc_type == "MASS_INFLOW"     || bc_type == "MI" ) {
 
     // Flag that this is a mass inflow.
-    amrex::Print() << "Found a Mass Inflow at " << bcID << std::endl;
+    amrex::Print() << bcID <<" set to mass inflow. "  << std::endl;
     itype = minf_;
 
     pp.query("pressure", pressure);
@@ -155,7 +156,7 @@ mfix::set_input_bcs(const std::string bcID, const int index,
              bc_type == "NO_SLIP_WALL"    || bc_type == "NSW" ) {
 
     // Flag that this is a no-slip wall.
-    amrex::Print() << "Found a No-Slip Wall at " << bcID << std::endl;
+    amrex::Print() << bcID <<" set to no-slip wall. "  << std::endl;
     itype = nsw_;
 
     pp.query("location", location);
