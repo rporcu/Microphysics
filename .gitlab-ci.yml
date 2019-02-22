@@ -5,7 +5,7 @@
 #     - build/
 
 # image: mfixexa
-image: mwm126/mfix-ctest
+image: mwm126/anaconda3:latest
 
 variables:
   CC: "gcc"
