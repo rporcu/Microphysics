@@ -5,7 +5,7 @@
 #     - build/
 
 # image: mfixexa
-image: mwm126/mfix-ctest
+image: mwm126/anaconda3:latest
 
 variables:
   CC: "gcc"
@@ -26,8 +26,8 @@ variables:
     - make -j 4
     - cd mfix
     - ctest -R $TEST_REGEX
-  only:
-    - develop
+  # only:
+    # - develop
   tags:
     - docker
   retry: 2
