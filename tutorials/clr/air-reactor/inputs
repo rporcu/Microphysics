@@ -85,8 +85,8 @@ mfix.write_eb_surface = true  # Needed to output eb-surfaces
 xlo.type = mi
 xlo.velocity = 0.0
 
-xhi.type = po
-xhi.pressure = 101325.0
+zhi.type = po
+zhi.pressure = 101325.0
 
 mfix.geometry = "air-reactor"
 
