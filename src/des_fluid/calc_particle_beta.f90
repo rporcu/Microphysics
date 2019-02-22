@@ -64,8 +64,7 @@ subroutine calc_particle_beta ( ep_g, slo, shi,       &
 
         velfp(:)  = trilinear_interp(vel_g, ulo, uhi, 3, ppos, x0, dx)
 
-
-        ! Indeces of cell where particle is located
+        ! Indices of cell where particle is located
         i = floor((ppos(1) - x0(1))*odx)
         j = floor((ppos(2) - x0(2))*ody)
         k = floor((ppos(3) - x0(3))*odz)

@@ -1064,7 +1064,7 @@ contains
 
          associate( rp => particles(p)%radius, pos => particles(p)%pos )
 
-            ! Indeces of the cells containing the particle center
+            ! Indices of the cells containing the particle center
             ic = floor( ( pos(1) - plo(1) ) * odx(1) )
             jc = floor( ( pos(2) - plo(2) ) * odx(2) )
             kc = floor( ( pos(3) - plo(3) ) * odx(3) )
