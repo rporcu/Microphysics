@@ -147,9 +147,6 @@ mfix::make_eb_air_reactor()
      ***************************************************************************/
 
     // Construct EB2 Index Space
-    Print() << "Building the air-reactor geometry ..." << std::endl;
-
-    // auto gshop_cyc = EB2::makeShop(EB2::makeUnion(my_cyclone, false_bottom));
     auto gshop_cyc = EB2::makeShop(airreactor);
 
     build_eb_levels(gshop_cyc);

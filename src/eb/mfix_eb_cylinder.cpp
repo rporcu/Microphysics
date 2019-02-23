@@ -61,10 +61,6 @@ void mfix::make_eb_cylinder()
                    << center[1] << ", "
                    << center[2] << std::endl;
 
-
-    // Create the cylinder -- used for both fluid and particles
-    amrex::Print() << "Building the cylinder (side wall) geometry ..." << std::endl;
-
     // Build the Cylinder geometry first representing the curved walls (this is
     // always present regardless of user input).
     EB2::CylinderIF my_cyl(radius, height, direction, center, inside);

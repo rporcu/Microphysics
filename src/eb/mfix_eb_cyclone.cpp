@@ -119,11 +119,8 @@ mfix::make_eb_cyclone()
      ***************************************************************************/
 
     // Construct EB2 Index Space
-    Print() << "Building the cyclone geometry ..." << std::endl;
-
     auto cyc_if = EB2::makeUnion(my_cyclone, false_bottom);
 
-    // auto gshop_cyc = EB2::makeShop(EB2::makeUnion(my_cyclone, false_bottom));
     auto gshop_cyc = EB2::makeShop(cyc_if);
 
     build_eb_levels(gshop_cyc);

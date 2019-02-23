@@ -114,8 +114,6 @@ mfix::make_eb_hopper()
     auto my_hopper = EB2::translate(hopper1, center);
 
     // Construct EB2 Index Space
-    Print() << "Building the hopper geometry ..." << std::endl;
-
     auto gshop = EB2::makeShop(my_hopper);
 
     build_eb_levels(gshop);
