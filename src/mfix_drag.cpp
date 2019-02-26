@@ -92,6 +92,8 @@ void mfix::mfix_calc_drag_fluid(Real time)
         // Phi is always on the particles grid
         const MultiFab & phi = * level_sets[lev];
 
+        int band_width = 2;
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -132,7 +134,8 @@ void mfix::mfix_calc_drag_fluid(Real time)
                                               BL_TO_FORTRAN_ANYD((phi)[pti]),
                                               1,
                                               BL_TO_FORTRAN_ANYD(flags),
-                                              geom[lev].ProbLo(), geom[lev].CellSize());
+                                              geom[lev].ProbLo(), geom[lev].CellSize(),
+                                              &band_width);
 
                         calc_particle_beta( BL_TO_FORTRAN_ANYD((*ep_ptr)[pti]),
                                             (*ro_ptr)[pti].dataPtr(),
@@ -256,7 +259,7 @@ mfix::mfix_calc_drag_particle(Real time)
         // Phi is always on the particles grid
         const MultiFab & phi = * level_sets[lev];
 
-        amrex::Print() << "reconstruction lev= " << lev << "\n";
+        int band_width = 2;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -295,7 +298,8 @@ mfix::mfix_calc_drag_particle(Real time)
                                               BL_TO_FORTRAN_ANYD((phi)[pti]),
                                               1, //level_set -> get_ls_ref(),
                                               BL_TO_FORTRAN_ANYD(flags),
-                                              geom[lev].ProbLo(), geom[lev].CellSize()) ;
+                                              geom[lev].ProbLo(), geom[lev].CellSize(),
+                                              &band_width);
 
                         calc_drag_particle_eb( BL_TO_FORTRAN_ANYD((*gp_ptr)[pti]),
                                                gp0, 

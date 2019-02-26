@@ -64,7 +64,8 @@ extern "C"
        const amrex::Real* phi,      const int* phlo, const int* phhi,
        const int n_refine,
        const void *     flags,      const int*  flo, const int*  fhi,
-       const amrex::Real* x0, const amrex::Real* dx );
+       const amrex::Real* x0, const amrex::Real* dx,
+       const int* band_width);
 
     void phifill (BL_FORT_FAB_ARG_3D(state),
                   const int* dlo, const int* dhi,

@@ -42,6 +42,8 @@ mfix::mfix_compute_divtau ( int lev,
 
    // Phi is always on the particles grid
    const MultiFab & phi = * level_sets[lev];
+
+   int band_width = 1;
     
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -81,7 +83,7 @@ mfix::mfix_compute_divtau ( int lev,
          {
 
 #if 1
-            Box gbox = amrex::grow(bx,2);
+            Box gbox = amrex::grow(bx,4);
             vel_r.resize(gbox,3);
 
             reconstruct_velocity( BL_TO_FORTRAN_ANYD(vel_r),
@@ -89,7 +91,8 @@ mfix::mfix_compute_divtau ( int lev,
                                   BL_TO_FORTRAN_ANYD((phi)[mfi]),
                                   1,
                                   BL_TO_FORTRAN_ANYD(flags),
-                                  geom[lev].ProbLo(), geom[lev].CellSize());
+                                  geom[lev].ProbLo(), geom[lev].CellSize(),
+                                  &band_width);
 #endif
 
             compute_divtau_eb(
