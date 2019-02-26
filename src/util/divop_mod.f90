@@ -245,7 +245,8 @@ contains
                         if (n==1) then
                            call compute_diff_wallflux( divdiff_w(:,iwall), dx, i, j, k, &
                             vel, vllo, vlhi, lambda, mu, elo, ehi, bcent, blo, bhi,     &
-                            afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, do_explicit_diffusion)
+                            afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, &
+                            vfrac, vflo, vfhi, do_explicit_diffusion)
                         end if
                         divc(i,j,k) = divc(i,j,k) - divdiff_w(n,iwall) / ( dx(n) * vfrac(i,j,k) )
                      end if
@@ -253,8 +254,8 @@ contains
                   else
 
                      divc(i,j,k) =   ( ( fx(i+1,j  ,k  ,n) - fx(i,j,k,n) ) * idx  &
-                      &          + ( fy(i  ,j+1,k  ,n) - fy(i,j,k,n) ) * idy  &
-                      &          + ( fz(i  ,j  ,k+1,n) - fz(i,j,k,n) ) * idz  )
+                      &              + ( fy(i  ,j+1,k  ,n) - fy(i,j,k,n) ) * idy  &
+                      &              + ( fz(i  ,j  ,k+1,n) - fz(i,j,k,n) ) * idz  )
 
                   end if
 

@@ -67,14 +67,9 @@ void mfix::mfix_calc_drag_fluid(Real time)
             mu_g_pba->FillBoundary(geom[lev].periodicity());
 
 
-            // EBFArrayBoxFactory ebfactory_loc( * eb_level_fluid, geom[lev], pba, pdm,
-            //                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-            //                                    m_eb_full_grow_cells}, EBSupport::basic);
-
             EBFArrayBoxFactory ebfactory_loc( * eb_levels[lev], geom[lev], pba, pdm,
                                               {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                                m_eb_full_grow_cells}, EBSupport::basic);
-
 
             ng = vel_g[lev]->nGrow();
             vel_g_pba.reset(new MultiFab(pba,pdm,vel_g[lev]->nComp(),ng, MFInfo(), ebfactory_loc));

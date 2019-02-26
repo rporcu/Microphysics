@@ -75,6 +75,8 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    odx = one / dx
    phi_threshold = band_width * maxval(dx)
 
+   print *,'DIMS OF VEL_IN  ',vilo(:), vihi(:)
+   print *,'DIMS OF VEL_OUT ',volo(:), vohi(:)
 
    ! We can avoid filling the first and last layer of cells since
    ! vel_in will be used for trilinear interpolation only and this require only

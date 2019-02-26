@@ -1,6 +1,7 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix_diff_F.H>
+#include <mfix_util_F.H>
 #include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
@@ -23,7 +24,7 @@ mfix::mfix_compute_divtau ( int lev,
    BL_PROFILE("mfix::mfix_compute_divtau");
    Box domain(geom[lev].Domain());
 
-   EB_set_covered(*vel[lev], 0, vel[lev]->nComp(), vel[lev]->nGrow(), 1.e20);
+   EB_set_covered(*vel[lev], 0, vel[lev]->nComp(), vel[lev]->nGrow(), 1.e40);
 
    // Get EB geometric info
    Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
@@ -35,6 +36,12 @@ mfix::mfix_compute_divtau ( int lev,
    facecent  =   ebfactory[lev] -> getFaceCent();
    volfrac   = &(ebfactory[lev] -> getVolFrac());
    bndrycent = &(ebfactory[lev] -> getBndryCent());
+
+   // Create fab to host reconstructed velocity field
+   FArrayBox vel_r;
+
+   // Phi is always on the particles grid
+   const MultiFab & phi = * level_sets[lev];
     
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -72,10 +79,24 @@ mfix::mfix_compute_divtau ( int lev,
          }
          else
          {
+
+#if 1
+            Box gbox = amrex::grow(bx,2);
+            vel_r.resize(gbox,3);
+
+            reconstruct_velocity( BL_TO_FORTRAN_ANYD(vel_r),
+                                  BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
+                                  BL_TO_FORTRAN_ANYD((phi)[mfi]),
+                                  1,
+                                  BL_TO_FORTRAN_ANYD(flags),
+                                  geom[lev].ProbLo(), geom[lev].CellSize());
+#endif
+
             compute_divtau_eb(
                BL_TO_FORTRAN_BOX(bx),
                BL_TO_FORTRAN_ANYD(divtau[mfi]),
-               BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
+               BL_TO_FORTRAN_ANYD(vel_r),
+//             BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
                (*mu_g[lev])[mfi].dataPtr(),
                (*lambda_g[lev])[mfi].dataPtr(),
                (*ro_g[lev])[mfi].dataPtr(),
