@@ -10,7 +10,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
  &                                 vel_in, vilo, vihi,       &
  &                                phi, phlo, phhi, n_refine, &
  &                                flags, flo, fhi,           &
- &                                x0, dx  ) bind(C)
+ &                                x0, dx, band_width  ) bind(C)
 
    use amrex_error_module,      only: amrex_abort
    use interpolation_m,         only: trilinear_interp, interp_stencil_is_valid
@@ -29,6 +29,8 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    integer(c_int), intent(in   ) :: volo(3), vohi(3)
    integer(c_int), intent(in   ) :: phlo(3), phhi(3)
    integer(c_int), intent(in   ) ::  flo(3),  fhi(3)
+
+   integer(c_int), intent(in   ) :: band_width
 
    ! Grid info
    real(rt),       intent(in   ) :: dx(3)
@@ -52,7 +54,6 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    integer             :: i, j, k
 
    ! Width of narrow band
-   real(rt), parameter :: band_width    = two
    real(rt)            :: phi_threshold
 
    ! Amout of "correction" to go from mirror point to interpolation point
