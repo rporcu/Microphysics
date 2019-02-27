@@ -78,6 +78,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
 
    print *,'DIMS OF VEL_IN  ',vilo(:), vihi(:)
    print *,'DIMS OF VEL_OUT ',volo(:), vohi(:)
+   print *,'DIMS OF PHI     ',phlo(:), phhi(:)
 
    ! We can avoid filling the first and last layer of cells since
    ! vel_in will be used for trilinear interpolation only and this require only

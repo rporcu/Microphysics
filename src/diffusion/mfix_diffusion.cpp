@@ -44,7 +44,26 @@ mfix::mfix_compute_divtau ( int lev,
    const MultiFab & phi = * level_sets[lev];
 
    int band_width = 1;
-    
+ 
+   bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
+                       (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
+
+   const MultiFab* phi_ptr;
+
+   // This will be temporaries only for the dual grid case
+   std::unique_ptr<MultiFab>  phi_fba;
+
+   BoxArray            fba = p_g[lev]->boxArray();
+   DistributionMapping fdm = p_g[lev]->DistributionMap();
+
+   // Temporary       arrays  -- CHECK COPY() ROUTINE
+   phi_fba.reset(new MultiFab(fba,fdm, phi.nComp(), vel[lev]->nGrow()));
+   phi_fba->copy(phi,0,0,1, phi.nGrow(), vel[lev]->nGrow());
+   phi_fba->FillBoundary(geom[lev].periodicity());
+
+   phi_ptr = phi_fba.get();
+
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -83,12 +102,13 @@ mfix::mfix_compute_divtau ( int lev,
          {
 
 #if 1
+
             Box gbox = amrex::grow(bx,4);
             vel_r.resize(gbox,3);
 
             reconstruct_velocity( BL_TO_FORTRAN_ANYD(vel_r),
                                   BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-                                  BL_TO_FORTRAN_ANYD((phi)[mfi]),
+                                  BL_TO_FORTRAN_ANYD((*phi_ptr)[mfi]),
                                   1,
                                   BL_TO_FORTRAN_ANYD(flags),
                                   geom[lev].ProbLo(), geom[lev].CellSize(),
