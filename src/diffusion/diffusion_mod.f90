@@ -556,10 +556,6 @@ contains
 
      integer :: i,j,k,n
 
-     print *,'VINLO ',vinlo(:)
-     print *,'VEL LO ',lo(:)
-     print *,'NG ',ng
-
      if ( (vinlo(1) .gt. lo(1)-ng) .or. (vinlo(2) .gt. lo(2)-ng) .or. (vinlo(3) .gt. lo(3)-ng) ) &
          call bl_abort("Not enough ghost cells in vel_in in fill_vel_diff_bc")
 

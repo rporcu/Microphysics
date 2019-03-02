@@ -6,8 +6,6 @@ module eb_diffusion_mod
    use amrex_error_module,  only: amrex_abort
    use amrex_mempool_module, only: amrex_allocate, amrex_deallocate
 
-   use amrex_ebcellflag_module, only : is_covered_cell
-
    implicit none
    private
 
@@ -168,25 +166,15 @@ contains
             do j = lo(2), hi(2)
                do i = lo(1), hi(1)                 
                   divtau(i,j,k,n) = divtau(i,j,k,n) / ( ro(i,j,k) * ep(i,j,k) )
-                  if (i.eq.424 .and. j.eq.13 .and. k.eq.12) then
-                     print *,'DIVTAU ',i,j,k,n,divtau(i,j,k,n), vfrac(i,j,k)
-                  end if
                end do
             end do
          end do
       end do
 
-      do k = 12,14
-      do j = 12,14
-      do i = 425,427
-          print *,'VFRAC ',i,j,k,vfrac(i,j,k)
-      end do
-      end do
-      end do
-
       call amrex_deallocate(vel)
       
    end subroutine compute_divtau_eb
+
 
 
    !<$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$>!

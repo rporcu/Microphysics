@@ -24,17 +24,8 @@ void mfix::make_eb_geometry ()
     MakeBCArrays();
     check_data();
 
-    Real dx = geom[0].CellSize(0);
-    Real dy = geom[0].CellSize(1);
-    Real dz = geom[0].CellSize(2);
-
-    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
-    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
-    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
-
-    Box domain(geom[0].Domain());
-
     int cyc_x=0, cyc_y=0, cyc_z=0;
+
     if (geom[0].isPeriodic(0)) cyc_x = 1;
     if (geom[0].isPeriodic(1)) cyc_y = 1;
     if (geom[0].isPeriodic(2)) cyc_z = 1;
@@ -44,14 +35,12 @@ void mfix::make_eb_geometry ()
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);
 
-
     /****************************************************************************
      *                                                                          *
      * mfix.geometry=<string> specifies the EB geometry. <string> can be on of  *
      * box, cylinder, hopper, clr, clr_riser, general (or blank)                *
      *                                                                          *
      ***************************************************************************/
-
 
     ParmParse pp("mfix");
 

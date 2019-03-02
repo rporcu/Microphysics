@@ -246,7 +246,7 @@ contains
                            call compute_diff_wallflux( divdiff_w(:,iwall), dx, i, j, k, &
                             vel, vllo, vlhi, lambda, mu, elo, ehi, bcent, blo, bhi,     &
                             afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, &
-                            vfrac, vflo, vfhi, do_explicit_diffusion)
+                            do_explicit_diffusion)
                         end if
                         divc(i,j,k) = divc(i,j,k) - divdiff_w(n,iwall) / ( dx(n) * vfrac(i,j,k) )
                      end if
