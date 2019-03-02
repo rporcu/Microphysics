@@ -50,7 +50,8 @@ contains
         domlo, domhi, &
         bc_ilo, bc_ihi, &
         bc_jlo, bc_jhi, &
-        bc_klo, bc_khi, dx, ng ) bind(C)
+        bc_klo, bc_khi, dx, ng, &
+        covered_val ) bind(C)
 
       use divop_mod, only: compute_divop
 
@@ -111,6 +112,8 @@ contains
            & bc_klo(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
            & bc_khi(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
            & flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
+
+      real(ar),        intent(in   ) :: covered_val
 
       ! Temporary array to handle convective fluxes at the cell faces (staggered)
       ! Just reserve space for the tile + 3 ghost layers
@@ -224,7 +227,7 @@ contains
        fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi, &
        ep, elo, ehi, afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi,      &
        cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi, flags, flo, fhi,      &
-       vfrac, vflo, vfhi, bcent, blo, bhi, domlo, domhi, dx, ng )
+       vfrac, vflo, vfhi, bcent, blo, bhi, domlo, domhi, dx, ng, covered_val )
 
       ! Divide by ep and return the negative
       do n = 1, 3
@@ -237,10 +240,7 @@ contains
          end do
       end do
 
-
    end subroutine compute_ugradu_eb
-
-
 
    ! Upwind non-normal velocity
    function upwind ( velmns, velpls, uedge ) result (ev)

@@ -76,10 +76,6 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
    odx = one / dx
    phi_threshold = band_width * maxval(dx)
 
-   print *,'DIMS OF VEL_IN  ',vilo(:), vihi(:)
-   print *,'DIMS OF VEL_OUT ',volo(:), vohi(:)
-   print *,'DIMS OF PHI     ',phlo(:), phhi(:)
-
    ! We can avoid filling the first and last layer of cells since
    ! vel_in will be used for trilinear interpolation only and this require only
    ! 1 layer of ghost nodes ( and in EB land, the velocity field has multiple layers of

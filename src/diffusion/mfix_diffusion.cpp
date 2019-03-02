@@ -23,7 +23,7 @@ mfix::mfix_compute_divtau ( int lev,
    BL_PROFILE("mfix::mfix_compute_divtau");
    Box domain(geom[lev].Domain());
 
-   EB_set_covered(*vel[lev], 0, vel[lev]->nComp(), vel[lev]->nGrow(), 1.e40);
+   EB_set_covered(*vel[lev], 0, vel[lev]->nComp(), vel[lev]->nGrow(), covered_val);
 
    // Get EB geometric info
    Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
@@ -93,7 +93,8 @@ mfix::mfix_compute_divtau ( int lev,
                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-               geom[lev].CellSize(), &nghost, &explicit_diffusion );
+               geom[lev].CellSize(), &nghost, &explicit_diffusion,
+               &covered_val );
 
          }
       }

@@ -21,7 +21,8 @@ contains
         apx, axlo, axhi,   &
         apy, aylo, ayhi,   &
         apz, azlo, azhi,   &
-        do_explicit_diffusion)
+        do_explicit_diffusion, &
+        covered_val)
 
       ! Wall divergence operator
       real(rt),       intent(  out) :: divw(3)
@@ -55,6 +56,8 @@ contains
       !     by computing the full tensor then subtracting the diagonal terms
       integer(c_int),  intent(in   ) :: do_explicit_diffusion
 
+      real(rt),        intent(in   ) :: covered_val
+
       ! Local variable
       real(rt)   :: dxinv(3)
       real(rt)   :: dapx, dapy, dapz
@@ -64,14 +67,11 @@ contains
       real(rt)   :: u1, v1, w1, u2, v2, w2, dudn, dvdn, dwdn
       real(rt)   :: dudx, dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz, divu
       real(rt)   :: tauxx, tauyy, tauzz, tauxy, tauxz, tauyx, tauyz, tauzx, tauzy, tautmp
-      real(rt)   :: huge_val
       integer    :: ixit, iyit, izit, is
       
       divw  = zero
       dxinv = one / dx 
 
-      huge_val = 1.d40
-      
       dapx = apx(i+1,j,k)-apx(i,j,k)
       dapy = apy(i,j+1,k)-apy(i,j,k)
       dapz = apz(i,j,k+1)-apz(i,j,k)
@@ -111,9 +111,9 @@ contains
          !
          !
          ! interpolation
-         u1 = interp2d(yit,zit,vel(i+is,iyit-1:iyit+1,izit-1:izit+1,1),huge_val)
-         v1 = interp2d(yit,zit,vel(i+is,iyit-1:iyit+1,izit-1:izit+1,2),huge_val)
-         w1 = interp2d(yit,zit,vel(i+is,iyit-1:iyit+1,izit-1:izit+1,3),huge_val)
+         u1 = interp2d(yit,zit,vel(i+is,iyit-1:iyit+1,izit-1:izit+1,1),covered_val)
+         v1 = interp2d(yit,zit,vel(i+is,iyit-1:iyit+1,izit-1:izit+1,2),covered_val)
+         w1 = interp2d(yit,zit,vel(i+is,iyit-1:iyit+1,izit-1:izit+1,3),covered_val)
 
          !
          ! the line intersects the y-z plane (x = 2*s) at ...
@@ -127,9 +127,9 @@ contains
          zit = zit - nint(zit)
          !
          ! interpolation
-         u2 = interp2d(yit,zit,vel(i+2*is,iyit-1:iyit+1,izit-1:izit+1,1),huge_val)
-         v2 = interp2d(yit,zit,vel(i+2*is,iyit-1:iyit+1,izit-1:izit+1,2),huge_val)
-         w2 = interp2d(yit,zit,vel(i+2*is,iyit-1:iyit+1,izit-1:izit+1,3),huge_val)
+         u2 = interp2d(yit,zit,vel(i+2*is,iyit-1:iyit+1,izit-1:izit+1,1),covered_val)
+         v2 = interp2d(yit,zit,vel(i+2*is,iyit-1:iyit+1,izit-1:izit+1,2),covered_val)
+         w2 = interp2d(yit,zit,vel(i+2*is,iyit-1:iyit+1,izit-1:izit+1,3),covered_val)
 
       else if (abs(anrmy).ge.abs(anrmx) .and. abs(anrmy).ge.abs(anrmz)) then
          ! z-x plane
@@ -144,9 +144,9 @@ contains
          xit = xit - nint(xit)
          zit = zit - nint(zit)
 
-         u1 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+is,izit-1:izit+1,1),huge_val)
-         v1 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+is,izit-1:izit+1,2),huge_val)
-         w1 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+is,izit-1:izit+1,3),huge_val)
+         u1 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+is,izit-1:izit+1,1),covered_val)
+         v1 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+is,izit-1:izit+1,2),covered_val)
+         w1 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+is,izit-1:izit+1,3),covered_val)
 
          d2 = (bct(2) - 2.d0*s) * (one/anrmy)
          xit = bct(1) - d2*anrmx
@@ -156,9 +156,9 @@ contains
          xit = xit - nint(xit)
          zit = zit - nint(zit)
 
-         u2 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+2*is,izit-1:izit+1,1),huge_val)
-         v2 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+2*is,izit-1:izit+1,2),huge_val)
-         w2 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+2*is,izit-1:izit+1,3),huge_val)
+         u2 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+2*is,izit-1:izit+1,1),covered_val)
+         v2 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+2*is,izit-1:izit+1,2),covered_val)
+         w2 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+2*is,izit-1:izit+1,3),covered_val)
 
       else
          ! x-y plane
@@ -173,9 +173,9 @@ contains
          xit = xit - nint(xit)
          yit = yit - nint(yit)
 
-         u1 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+is,1),huge_val)
-         v1 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+is,2),huge_val)
-         w1 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+is,3),huge_val)
+         u1 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+is,1),covered_val)
+         v1 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+is,2),covered_val)
+         w1 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+is,3),covered_val)
 
          d2 = (bct(3) - 2.d0*s) * (one/anrmz)
          xit = bct(1) - d2*anrmx
@@ -185,9 +185,9 @@ contains
          xit = xit - nint(xit)
          yit = yit - nint(yit)
 
-         u2 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+2*is,1),huge_val)
-         v2 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+2*is,2),huge_val)
-         w2 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+2*is,3),huge_val)
+         u2 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+2*is,1),covered_val)
+         v2 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+2*is,2),covered_val)
+         w2 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+2*is,3),covered_val)
 
       end if
 
@@ -252,16 +252,16 @@ contains
    end subroutine compute_diff_wallflux
 
 
-   real(rt) function interp2d(yit,zit,v,huge_val)
+   real(rt) function interp2d(yit,zit,v,covered_val)
 
-      real(rt), intent(in) :: yit,zit,v(3,3),huge_val
+      real(rt), intent(in) :: yit,zit,v(3,3),covered_val
 
       real(rt)             :: cym,cy0,cyp,czm,cz0,czp
       real(rt)             :: val(3),val_c(3),val_l(3),val_r(3)
       real(rt)             :: interp2d_l, interp2d_c, interp2d_r
-      real(rt)             :: huge_eps
+      real(rt)             :: covered_eps
 
-      huge_eps = 1.d-10 * huge_val
+      covered_eps = 1.d-10 * covered_val
 
       ! Coefficents for quadratic interpolation
       cym = half*yit*(yit-one)
@@ -272,9 +272,9 @@ contains
       val_l(1:3) = -yit*v(1,1:3) + (one+yit)*v(2,1:3)
       val_r(1:3) =                 (one-yit)*v(2,1:3) + yit*v(3,1:3)
 
-      if (any(abs(val_l(1:3)) .gt. huge_eps)) then
+      if (any(abs(val_l(1:3)) .gt. covered_eps)) then
          val(1:3) = val_r(1:3)
-      else if (any(abs(val_r(1:3)) .gt. huge_eps)) then
+      else if (any(abs(val_r(1:3)) .gt. covered_eps)) then
          val(1:3) = val_l(1:3)
       else
          val(1:3) = val_c(1:3)
@@ -288,15 +288,15 @@ contains
       interp2d_l = -yit*val(1) + (one+yit)*val(2)
       interp2d_r =               (one-yit)*val(2) + yit*val(3)
 
-      if (abs(interp2d_l) .gt. huge_eps) then
+      if (abs(interp2d_l) .gt. covered_eps) then
          interp2d = interp2d_r
-      else if (abs(interp2d_r) .gt. huge_eps) then
+      else if (abs(interp2d_r) .gt. covered_eps) then
          interp2d = interp2d_l
       else
          interp2d = interp2d_c
       end if
 
-      if (abs(interp2d) .gt. huge_eps) then
+      if (abs(interp2d) .gt. covered_eps) then
          print *,'OOPS IN INTERP ', interp2d
          print *,'L R C          ', interp2d_l, interp2d_r, interp2d_c
          print *,'VAL_L          ',val_l(:)

@@ -49,7 +49,7 @@ extern "C"
           const int* bc_jlo_type, const int* bc_jhi_type,
           const int* bc_klo_type, const int* bc_khi_type,
           const amrex::Real* dx, const int* ng,
-          int* do_explicit_diffusion);
+          int* do_explicit_diffusion, amrex::Real* covered_val);
 
   void set_diff_bc (
           int* bc_lo, int* bc_hi,

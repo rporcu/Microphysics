@@ -13,7 +13,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
 {
     BL_PROFILE("mfix::mfix_compute_velocity_slopes");
 
-    EB_set_covered(Sborder, 0, Sborder.nComp(), 1, 1.e20);
+    EB_set_covered(Sborder, 0, Sborder.nComp(), 1, covered_val);
 
     Box domain(geom[lev].Domain());
     
