@@ -111,9 +111,7 @@ contains
          !
          !
          ! interpolation
-         u1 = interp2d(yit,zit,vel(i+is,iyit-1:iyit+1,izit-1:izit+1,1),covered_val)
-         v1 = interp2d(yit,zit,vel(i+is,iyit-1:iyit+1,izit-1:izit+1,2),covered_val)
-         w1 = interp2d(yit,zit,vel(i+is,iyit-1:iyit+1,izit-1:izit+1,3),covered_val)
+         call interp2d(u1,v1,w1,yit,zit,vel(i+is,iyit-1:iyit+1,izit-1:izit+1,1:3),covered_val)
 
          !
          ! the line intersects the y-z plane (x = 2*s) at ...
@@ -127,9 +125,7 @@ contains
          zit = zit - nint(zit)
          !
          ! interpolation
-         u2 = interp2d(yit,zit,vel(i+2*is,iyit-1:iyit+1,izit-1:izit+1,1),covered_val)
-         v2 = interp2d(yit,zit,vel(i+2*is,iyit-1:iyit+1,izit-1:izit+1,2),covered_val)
-         w2 = interp2d(yit,zit,vel(i+2*is,iyit-1:iyit+1,izit-1:izit+1,3),covered_val)
+         call interp2d(u2,v2,w2,yit,zit,vel(i+2*is,iyit-1:iyit+1,izit-1:izit+1,1:3),covered_val)
 
       else if (abs(anrmy).ge.abs(anrmx) .and. abs(anrmy).ge.abs(anrmz)) then
          ! z-x plane
@@ -144,9 +140,7 @@ contains
          xit = xit - nint(xit)
          zit = zit - nint(zit)
 
-         u1 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+is,izit-1:izit+1,1),covered_val)
-         v1 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+is,izit-1:izit+1,2),covered_val)
-         w1 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+is,izit-1:izit+1,3),covered_val)
+         call interp2d(u1,v1,w1,xit,zit,vel(ixit-1:ixit+1,j+is,izit-1:izit+1,1:3),covered_val)
 
          d2 = (bct(2) - 2.d0*s) * (one/anrmy)
          xit = bct(1) - d2*anrmx
@@ -156,9 +150,7 @@ contains
          xit = xit - nint(xit)
          zit = zit - nint(zit)
 
-         u2 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+2*is,izit-1:izit+1,1),covered_val)
-         v2 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+2*is,izit-1:izit+1,2),covered_val)
-         w2 = interp2d(xit,zit, vel(ixit-1:ixit+1,j+2*is,izit-1:izit+1,3),covered_val)
+         call interp2d(u2,v2,w2,xit,zit,vel(ixit-1:ixit+1,j+2*is,izit-1:izit+1,1:3),covered_val)
 
       else
          ! x-y plane
@@ -173,9 +165,7 @@ contains
          xit = xit - nint(xit)
          yit = yit - nint(yit)
 
-         u1 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+is,1),covered_val)
-         v1 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+is,2),covered_val)
-         w1 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+is,3),covered_val)
+         call interp2d(u1,v1,w1,xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+is,1:3),covered_val)
 
          d2 = (bct(3) - 2.d0*s) * (one/anrmz)
          xit = bct(1) - d2*anrmx
@@ -185,9 +175,7 @@ contains
          xit = xit - nint(xit)
          yit = yit - nint(yit)
 
-         u2 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+2*is,1),covered_val)
-         v2 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+2*is,2),covered_val)
-         w2 = interp2d(xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+2*is,3),covered_val)
+         call interp2d(u2,v2,w2,xit,yit,vel(ixit-1:ixit+1,iyit-1:iyit+1,k+2*is,1:3),covered_val)
 
       end if
 
@@ -251,14 +239,14 @@ contains
 
    end subroutine compute_diff_wallflux
 
+   subroutine interp2d(u1,v1,w1,yit,zit,v,covered_val)
 
-   real(rt) function interp2d(yit,zit,v,covered_val)
-
-      real(rt), intent(in) :: yit,zit,v(3,3),covered_val
+      real(rt), intent(in   ) :: yit,zit,v(3,3,3),covered_val
+      real(rt), intent(  out) :: u1,v1,w1
 
       real(rt)             :: cym,cy0,cyp,czm,cz0,czp
-      real(rt)             :: val(3),val_c(3),val_l(3),val_r(3)
-      real(rt)             :: interp2d_l, interp2d_c, interp2d_r
+      real(rt)             :: val(3,3),val_c(3,3),val_l(3,3),val_r(3,3)
+      real(rt)             :: interp2d_l(3), interp2d_c(3), interp2d_r(3)
       real(rt)             :: covered_eps
 
       covered_eps = 1.d-10 * covered_val
@@ -268,49 +256,45 @@ contains
       cy0 = one-yit*yit
       cyp = half*yit*(yit+one)
 
-      val_c(1:3) =  cym*v(1,1:3) +       cy0*v(2,1:3) + cyp*v(3,1:3)
-      val_l(1:3) = -yit*v(1,1:3) + (one+yit)*v(2,1:3)
-      val_r(1:3) =                 (one-yit)*v(2,1:3) + yit*v(3,1:3)
+      val_c(1:3,1:3) =  cym*v(1,1:3,1:3) +       cy0*v(2,1:3,1:3) + cyp*v(3,1:3,1:3)
+      val_l(1:3,1:3) = -yit*v(1,1:3,1:3) + (one+yit)*v(2,1:3,1:3)
+      val_r(1:3,1:3) =                     (one-yit)*v(2,1:3,1:3) + yit*v(3,1:3,1:3)
 
-      if (any(abs(val_l(1:3)) .gt. covered_eps)) then
-         val(1:3) = val_r(1:3)
-      else if (any(abs(val_r(1:3)) .gt. covered_eps)) then
-         val(1:3) = val_l(1:3)
+      if (any(abs(val_l(1:3,1)) .gt. covered_eps)) then
+         val(1:3,1:3) = val_r(1:3,1:3)
+      else if (any(abs(val_r(1:3,1)) .gt. covered_eps)) then
+         val(1:3,1:3) = val_l(1:3,1:3)
       else
-         val(1:3) = val_c(1:3)
+         val(1:3,1:3) = val_c(1:3,1:3)
       end if
 
+      ! Coefficents for quadratic interpolation
       czm = half*zit*(zit-one)
       cz0 = one-zit*zit
       czp = half*zit*(zit+one)
 
-      interp2d_c =  czm*val(1) +       cz0*val(2) + czp*val(3)
-      interp2d_l = -yit*val(1) + (one+yit)*val(2)
-      interp2d_r =               (one-yit)*val(2) + yit*val(3)
+      interp2d_c(1:3) =  czm*val(1,1:3) +       cz0*val(2,1:3) + czp*val(3,1:3)
+      interp2d_l(1:3) = -yit*val(1,1:3) + (one+yit)*val(2,1:3)
+      interp2d_r(1:3) =                   (one-yit)*val(2,1:3) + yit*val(3,1:3)
 
-      if (abs(interp2d_l) .gt. covered_eps) then
-         interp2d = interp2d_r
-      else if (abs(interp2d_r) .gt. covered_eps) then
-         interp2d = interp2d_l
+      if (abs(interp2d_l(1)) .gt. covered_eps) then
+         u1 = interp2d_r(1)
+         v1 = interp2d_r(2)
+         w1 = interp2d_r(3)
+      else if (abs(interp2d_r(1)) .gt. covered_eps) then
+         u1 = interp2d_l(1)
+         v1 = interp2d_l(2)
+         w1 = interp2d_l(3)
       else
-         interp2d = interp2d_c
-      end if
-
-      if (abs(interp2d) .gt. covered_eps) then
-         print *,'OOPS IN INTERP ', interp2d
-         print *,'L R C          ', interp2d_l, interp2d_r, interp2d_c
-         print *,'VAL_L          ',val_l(:)
-         print *,'VAL_R          ',val_r(:)
-         print *,'VAL_C          ',val_c(:)
-         print *,'VAL            ',val(:)
-         print *,'VEL            ',v(:,:)
-         stop
+         u1 = interp2d_c(1)
+         v1 = interp2d_c(2)
+         w1 = interp2d_c(3)
       end if
 
       ! interp2d = czm*(cym*v(1,1) + cy0*v(2,1) + cyp*v(3,1)) &
       !      +     cz0*(cym*v(1,2) + cy0*v(2,2) + cyp*v(3,2)) &
       !      +     czp*(cym*v(1,3) + cy0*v(2,3) + cyp*v(3,3))
 
-   end function interp2d
+   end subroutine interp2d
 
 end module eb_wallflux_mod
