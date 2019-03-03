@@ -210,6 +210,9 @@ mfix::solve_diffusion_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& 
       // This sets the spatially varying b coefficients
       matrix.setBCoeffs ( lev, b_tmp );
 
+      // This sets the coefficient on the wall and defines it as a Dirichlet wall for the solve.
+      matrix.setEBDirichlet ( lev, *(GetVecOfConstPtrs(sol)[lev]), (*mu_g[lev]) );
+
       // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
       matrix.setLevelBC ( lev, GetVecOfConstPtrs(sol)[lev] );
    }

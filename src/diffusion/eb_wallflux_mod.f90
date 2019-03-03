@@ -203,34 +203,39 @@ contains
       divu = dudx+dvdy+dwdz
       tautmp = lam(i,j,k)*divu  ! This MUST be verified
 
-      tauxx = mu(i,j,k) * (dudx + dudx) + tautmp
-      tauxy = mu(i,j,k) * (dudy + dvdx)
-      tauxz = mu(i,j,k) * (dudz + dwdx)
-
-      tauyx = mu(i,j,k) * (dvdx + dudy)
-      tauyy = mu(i,j,k) * (dvdy + dvdy) + tautmp
-      tauyz = mu(i,j,k) * (dvdz + dwdy)
-
-      tauzx = mu(i,j,k) * (dwdx + dudz)
-      tauzy = mu(i,j,k) * (dwdy + dvdz)
-      tauzz = mu(i,j,k) * (dwdz + dwdz) + tautmp
-
-      if (do_explicit_diffusion .eq. 0) then
+      if (do_explicit_diffusion .eq. 1) then
          !
-         ! Subtract diagonal terms of stress tensor, to be obtained through 
-         ! implicit solve instead.                   
+         ! Stress tensor is fully explicit 
          !
-         tauxx = tauxx - mu(i,j,k) * dudx
-         tauxy = tauxy - mu(i,j,k) * dudy
-         tauxz = tauxz - mu(i,j,k) * dudz
+         tauxx = mu(i,j,k) * (dudx + dudx) + tautmp
+         tauxy = mu(i,j,k) * (dudy + dvdx)
+         tauxz = mu(i,j,k) * (dudz + dwdx)
 
-         tauyx = tauyx - mu(i,j,k) * dvdx
-         tauyy = tauyy - mu(i,j,k) * dvdy
-         tauyz = tauyz - mu(i,j,k) * dvdz
+         tauyx = mu(i,j,k) * (dvdx + dudy)
+         tauyy = mu(i,j,k) * (dvdy + dvdy) + tautmp
+         tauyz = mu(i,j,k) * (dvdz + dwdy)
 
-         tauzx = tauzx - mu(i,j,k) * dwdx
-         tauzy = tauzy - mu(i,j,k) * dwdy
-         tauzz = tauzz - mu(i,j,k) * dwdz
+         tauzx = mu(i,j,k) * (dwdx + dudz)
+         tauzy = mu(i,j,k) * (dwdy + dvdz)
+         tauzz = mu(i,j,k) * (dwdz + dwdz) + tautmp
+
+      else 
+         !
+         ! Stress tensor is partially explicit and partically implicit
+         ! Here we neglect diagonal terms of stress tensor -- they will be 
+         ! obtained through implicit solve.                   
+         !
+         tauxx = mu(i,j,k) * dudx + tautmp
+         tauxy = mu(i,j,k) * dvdx
+         tauxz = mu(i,j,k) * dwdx
+
+         tauyx = mu(i,j,k) * dudy
+         tauyy = mu(i,j,k) * dvdy + tautmp
+         tauyz = mu(i,j,k) * dwdy
+
+         tauzx = mu(i,j,k) * dudz
+         tauzy = mu(i,j,k) * dvdz
+         tauzz = mu(i,j,k) * dwdz + tautmp
       end if
 
       divw(1) = dxinv(1) * (dapx*tauxx + dapy*tauyx + dapz*tauzx)

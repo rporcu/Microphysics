@@ -238,12 +238,13 @@ contains
 
 
                      divc(i,j,k) = ( ( fxp - fxm ) * idx + &
-                      &          ( fyp - fym ) * idy + &
-                      &          ( fzp - fzm ) * idz ) / vfrac(i,j,k)
+                      &              ( fyp - fym ) * idy + &
+                      &              ( fzp - fzm ) * idz ) / vfrac(i,j,k)
 
                      ! Add viscous wall fluxes (compute three components only
                      ! during the first pass, i.e. for n=1
                      iwall = iwall + 1
+
                      if (is_viscous) then
                         if (n==1) then
                            call compute_diff_wallflux( divdiff_w(:,iwall), dx, i, j, k, &
