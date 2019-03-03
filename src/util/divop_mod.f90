@@ -128,7 +128,7 @@ contains
       integer(c_int)                 :: i, j, k, n, nbr(-1:1,-1:1,-1:1)
       integer(c_int)                 :: nwalls
       real(ar)                       :: idx, idy, idz
-      logical                        :: is_viscous
+      logical                        :: is_dirichlet
       real(ar)                       :: fxp, fxm, fyp, fym, fzp, fzm
       integer                        :: ii, jj, kk
       real(ar)                       :: divnc, vtot, wtot
@@ -145,9 +145,9 @@ contains
       ! Check if we are computing divergence for viscous term by checking if
       ! both mu and lambda are passed in
       if ( present(mu) .and. present(lambda) ) then
-         is_viscous = .true.
+         is_dirichlet = .true.
       else if ( .not. present(mu) .and. .not. present(lambda) ) then
-         is_viscous = .false.
+         is_dirichlet = .false.
       else
          call amrex_abort("compute_divop(): either mu or lambda is not passed in")
       end if
@@ -162,7 +162,7 @@ contains
       ! Allocate arrays to host viscous wall fluxes
       !
       nwalls = 0
-      if (is_viscous) then
+      if (is_dirichlet) then
          do k = lo(3)-2, hi(3)+2
             do j = lo(2)-2, hi(2)+2
                do i = lo(1)-2, hi(1)+2
@@ -245,7 +245,7 @@ contains
                      ! during the first pass, i.e. for n=1
                      iwall = iwall + 1
 
-                     if (is_viscous) then
+                     if (is_dirichlet) then
                         if (n==1) then
                            call compute_diff_wallflux( divdiff_w(:,iwall), dx, i, j, k, &
                             vel, vllo, vlhi, lambda, mu, elo, ehi, bcent, blo, bhi,     &
@@ -364,7 +364,7 @@ contains
       !
       ! Delete working arrays
       ! 
-      if (is_viscous) deallocate(divdiff_w)
+      if (is_dirichlet) deallocate(divdiff_w)
 
    end subroutine compute_divop
 
