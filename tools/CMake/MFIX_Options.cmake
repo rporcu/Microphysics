@@ -42,7 +42,3 @@ option( ENABLE_MPI "Enable MPI" YES )
 
 option( ENABLE_FPE "Enable Floating Point Exceptions checks" NO )
 
-option( ENABLE_PROJCC "Enable Approximate Projection" YES )
-
-option( ENABLE_PTESTS "Include tests for projection method in Ctest suite " YES )
-

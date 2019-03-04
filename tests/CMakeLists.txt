@@ -65,14 +65,11 @@ foreach( THIS_TEST ${SGS_TESTS})
 
    # Make sure that fcompare and fextract are always built before a test is run
    add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-   # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
+ 
+   add_test(NAME ${TEST_NAME}_SGS
+      COMMAND make  ${TEST_RUN}
+      WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
 
-   # Setup for running the whole suite of tests via ctest
-   if (ENABLE_PTESTS )
-      add_test(NAME ${TEST_NAME}_SGS
-	 COMMAND make  ${TEST_RUN}
-	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
-   endif ()
 endforeach( THIS_TEST ${SGS_TESTS} )
 
 
@@ -120,14 +117,10 @@ foreach( THIS_TEST ${MGS_TESTS})
 
    # Make sure that fcompare and fextract are always built before a test is run
    add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-   # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
-   # Setup for running the whole suite of tests via ctest
-   if (ENABLE_PTESTS )
-      add_test(NAME ${TEST_NAME}_MGS
-	 COMMAND make  ${TEST_RUN}
-	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
-   endif ()
+   add_test(NAME ${TEST_NAME}_MGS
+      COMMAND make  ${TEST_RUN}
+      WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
    
 endforeach( THIS_TEST ${MGS_TESTS} )
 
@@ -177,14 +170,11 @@ foreach( THIS_TEST ${TGS_TESTS})
 
    # Make sure that fcompare and fextract are always built before a test is run
    add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-   # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
-   # Setup for running the whole suite of tests via ctest
-   if (ENABLE_PTESTS  )
-      add_test(NAME ${TEST_NAME}_TGS
-	 COMMAND make  ${TEST_RUN}
-	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
-   endif ()
+   add_test(NAME ${TEST_NAME}_TGS
+      COMMAND make  ${TEST_RUN}
+      WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+
 endforeach( THIS_TEST ${TGS_TESTS} )
 
 
@@ -225,14 +215,10 @@ if ( AMREX_ENABLE_OMP )
 
       # Make sure that fcompare and fextract are always built before a test is run
       add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-      # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
-      # Setup for running the whole suite of tests via ctest
-      if (ENABLE_PTESTS  )
-	 add_test(NAME ${TEST_NAME}_TGSO
-	    COMMAND make  ${TEST_RUN}
-	    WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
-      endif ()
+      add_test(NAME ${TEST_NAME}_TGSO
+	 COMMAND make  ${TEST_RUN}
+	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
       
    endforeach( THIS_TEST ${TGS_TESTS} )
 
@@ -282,14 +268,11 @@ if (AMREX_ENABLE_OMP AND AMREX_ENABLE_MPI)
 
       # Make sure that fcompare and fextract are always built before a test is run
       add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-      # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
-      # Setup for running the whole suite of tests via ctest
-      if (ENABLE_PTESTS  )
-	 add_test(NAME ${TEST_NAME}_TGPO
-	    COMMAND make  ${TEST_RUN}
-	    WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
-      endif() 
+      add_test(NAME ${TEST_NAME}_TGPO
+	 COMMAND make  ${TEST_RUN}
+	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+ 
    endforeach( THIS_TEST ${TGM_TESTS} )
 endif()
 
@@ -339,13 +322,10 @@ if ( AMREX_ENABLE_MPI )
 
       # Make sure that fcompare and fextract are always built before a test is run
       add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-      # add_dependencies ( ${TEST_RUN} ${FCOMPARE_PAR_EXE} ${FEXTRACT_EXE})
 
-      # Setup for running the whole suite of tests via ctest
-      if (ENABLE_PTESTS  )
-	 add_test(NAME ${TEST_NAME}_MGP
-	    COMMAND make  ${TEST_RUN}
-	    WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
-      endif ()
+      add_test(NAME ${TEST_NAME}_MGP
+	 COMMAND make  ${TEST_RUN}
+	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+
    endforeach( THIS_TEST ${MGP_TESTS} )
 endif (AMREX_ENABLE_MPI)

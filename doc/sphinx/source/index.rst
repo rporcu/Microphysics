@@ -90,9 +90,6 @@ build of AMReX.
 | ENABLE\_FPE     | Build with Floating-Point    | 0/1              | 0           |
 |                 | Exceptions checks            |                  |             |
 +-----------------+------------------------------+------------------+-------------+
-| ENABLE\_PTESTS  | Include tests for projection | 0/1              | 0           |
-|                 | method in Ctest suite        |                  |             |
-+-----------------+------------------------------+------------------+-------------+
 | AMREX\_ENABLE\_ | Enable build with MPI        | 0/1              | 1           |
 | MPI             |                              |                  |             |
 +-----------------+------------------------------+------------------+-------------+
