@@ -186,9 +186,6 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       solver.setMaxIter (mg_max_iter);
       solver.setMaxFmgIter (mg_max_fmg_iter);
       solver.setCGMaxIter (mg_cg_maxiter);
-   
-      // This ensures that ghost cells of sol are correctly filled when returned from the solver
-      solver.setFinalFillBC(true);
 
       // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
       for (int lev = 0; lev < nlev; lev++)
@@ -198,26 +195,24 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
 
          matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi_diff)[lev] );
 
-         // This sets the coefficient on the wall and defines it as a homogeneous Dirichlet wall for the solve.
-         // matrix.setEBHomogDirichlet ( lev, (*mu_g[lev]) );
-
          // Define RHS = (rop) * (vel_g)
          MultiFab::Multiply((*rhs_diff[lev]), (*rop_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
       }
+
+      // This ensures that ghost cells of sol are correctly filled when returned from the solver
+      solver.setFinalFillBC(true);
 
       //
       // Finally, solve the system
       //
       //  (1 - div dot mu grad) u = RHS
       //
-      //
-     
       solver.solve ( GetVecOfPtrs(phi_diff), GetVecOfConstPtrs(rhs_diff), mg_rtol, mg_atol );
-      
+
       for (int lev = 0; lev < nlev; lev++)
       {
-         vel_g[lev] -> copy(*phi_diff[lev],0,i,1,nghost,nghost);
-         vel_g[lev] -> FillBoundary (geom[lev].periodicity());
+         phi_diff[lev] -> FillBoundary (geom[lev].periodicity());
+         vel_g[lev]->copy(*phi_diff[lev],0,i,1,nghost,nghost);
       }
    }
 
