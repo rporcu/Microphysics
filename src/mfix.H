@@ -171,13 +171,13 @@ public:
     };
 
 
-  void get_input_bcs();
+    void get_input_bcs();
 
-  void set_input_bcs(const std::string bcID, const int index,
-                     const int cyclic, const Real domloc);
+    void set_input_bcs(const std::string bcID, const int index,
+                       const int cyclic, const Real domloc);
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(bool & has_walls);
-
+    
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls(bool & has_real_walls);
 
     std::unique_ptr<
@@ -211,21 +211,23 @@ public:
 
     bool contains_ebs = false;
 
-     const int * get_bc_ilo_ptr(int lev) {return bc_ilo[lev]->dataPtr();}
-     const int * get_bc_ihi_ptr(int lev) {return bc_ihi[lev]->dataPtr();}
-     const int * get_bc_jlo_ptr(int lev) {return bc_jlo[lev]->dataPtr();}
-     const int * get_bc_jhi_ptr(int lev) {return bc_jhi[lev]->dataPtr();}
-     const int * get_bc_klo_ptr(int lev) {return bc_klo[lev]->dataPtr();}
-     const int * get_bc_khi_ptr(int lev) {return bc_khi[lev]->dataPtr();}
-
-     int get_nghost() { return nghost; }
-
-     void SetParameters(int steady_state_in)
-         { steady_state = steady_state_in;}
-
-     void mfix_add_drag_terms(Real dt);
-
-     void mfix_add_gravity_and_gp(Real dt);
+    const int * get_bc_ilo_ptr(int lev) {return bc_ilo[lev]->dataPtr();}
+    const int * get_bc_ihi_ptr(int lev) {return bc_ihi[lev]->dataPtr();}
+    const int * get_bc_jlo_ptr(int lev) {return bc_jlo[lev]->dataPtr();}
+    const int * get_bc_jhi_ptr(int lev) {return bc_jhi[lev]->dataPtr();}
+    const int * get_bc_klo_ptr(int lev) {return bc_klo[lev]->dataPtr();}
+    const int * get_bc_khi_ptr(int lev) {return bc_khi[lev]->dataPtr();}
+    
+    int get_nghost() { return nghost; }
+    
+    void SetParameters(int steady_state_in)
+    { steady_state = steady_state_in;}
+    
+    void mfix_add_drag_terms(Real dt);
+    
+    void mfix_add_gravity_and_gp(Real dt);
+    
+    void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
 
 protected:
 
@@ -368,7 +370,6 @@ private:
 
      void mfix_diffuse_velocity(Real time, Real dt);
 
-     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
      void mfix_compute_MAC_velocity_at_faces(Real time, Vector< std::unique_ptr<MultiFab> >& vel);
 
      void mfix_compute_diveu(Real time);
