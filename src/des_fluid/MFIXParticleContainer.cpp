@@ -227,8 +227,10 @@ void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, Distributio
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
         auto& particles = pti.GetArrayOfStructs();
+        Gpu::HostVector<ParticleType> host_particles;
+        Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
-        for (const auto& p: particles)
+        for (const auto& p: host_particles)
         {
            //
            // Shift the position.
@@ -1158,8 +1160,10 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
         auto& particles = pti.GetArrayOfStructs();
+        Gpu::HostVector<ParticleType> host_particles;
+        Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
-        for (const auto& p: particles)
+        for (const auto& p: host_particles)
         {
            const IntVect& iv = Index(p, lev);
 
@@ -1190,8 +1194,10 @@ MFIXParticleContainer::writeAllForComparison(int lev)
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
       auto& particles = pti.GetArrayOfStructs();
+      Gpu::HostVector<ParticleType> host_particles;
+      Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
-      for (const auto& p: particles)
+      for (const auto& p: host_particles)
          cout << p.pos(0)   << " " << p.pos(1)   << " " << p.pos(2) <<  " " <<
                  p.rdata(1) << " " << p.rdata(2) << " " << p.rdata(2) <<  " " <<
                  ParallelDescriptor::MyProc() << " " << p.id() << std::endl;
@@ -1257,27 +1263,30 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
 
               auto& particles = pti.GetArrayOfStructs();
 
-    int index = 0;
-                for (const auto& p: particles)
-                {
-        if (p.id() > 0) {
-                        File << p.idata(intData::phase) << ' ';
-                        File << p.pos(0) << ' ';
-                        File << p.pos(1) << ' ';
-                        File << p.pos(2) << ' ';
-                        File << p.rdata(realData::radius) << ' ';
-                        File << p.rdata(realData::density) << ' ';
-                        File << p.rdata(realData::velx) << ' ';
-                        File << p.rdata(realData::vely) << ' ';
-                        File << p.rdata(realData::velz) << ' ';
+              Gpu::HostVector<ParticleType> host_particles;
+              Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
-                        File << '\n';
-
-                        index++;
-                    }
-                }
+              int index = 0;
+              for (const auto& p: host_particles)
+              {
+                  if (p.id() > 0) {
+                      File << p.idata(intData::phase) << ' ';
+                      File << p.pos(0) << ' ';
+                      File << p.pos(1) << ' ';
+                      File << p.pos(2) << ' ';
+                      File << p.rdata(realData::radius) << ' ';
+                      File << p.rdata(realData::density) << ' ';
+                      File << p.rdata(realData::velx) << ' ';
+                      File << p.rdata(realData::vely) << ' ';
+                      File << p.rdata(realData::velz) << ' ';
+                      
+                      File << '\n';
+                      
+                      index++;
+                  }
               }
-
+            }
+            
             File.flush();
 
             File.close();
@@ -1310,15 +1319,19 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
-          auto& particles = pti.GetArrayOfStructs();
-
-          for (const auto& p: particles){
-            if ( phse==p.idata(intData::phase) ){
-              p_num  += 1.0;
-              p_diam += p.rdata(realData::radius) * 2.0;
-              p_dens += p.rdata(realData::density);
+            auto& particles = pti.GetArrayOfStructs();
+            
+            Gpu::HostVector<ParticleType> host_particles;
+            Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+            
+            for (const auto& p: host_particles){
+                if ( phse==p.idata(intData::phase) )
+                {
+                    p_num  += 1.0;
+                    p_diam += p.rdata(realData::radius) * 2.0;
+                    p_dens += p.rdata(realData::density);
+                }
             }
-          }
         }
      }
 
@@ -1348,7 +1361,10 @@ void MFIXParticleContainer::UpdateMaxVelocity()
        for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
        {
            auto & particles = pti.GetArrayOfStructs();
-           for(const auto & particle : particles)
+           Gpu::HostVector<ParticleType> host_particles;
+           Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+
+           for(const auto & particle : host_particles)
            {
               max_vel_x = std::max(Real(std::fabs(particle.rdata(realData::velx))), max_vel_x);
               max_vel_y = std::max(Real(std::fabs(particle.rdata(realData::vely))), max_vel_y);
@@ -1666,37 +1682,33 @@ void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)
 void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt, Vector<Real>& tow, Vector<Real>& fc)
 {
     BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-    auto & my_particles = pti.GetArrayOfStructs();
-    int cnt = 0;
 
-    // The C++ version below replaces this Fortran call
-    // des_time_loop ( &nrp,  particles,
-    //                 &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-    //                 &xlen, &ylen, &zlen, &stime, &n);
+    auto& particles = pti.GetArrayOfStructs();
+    const int np = pti.numParticles();
 
-    for(auto & particle : my_particles)
+    for(int i = 0; i < np; ++i)
     {
-       particle.rdata(realData::velx) += subdt * (
-           (particle.rdata(realData::dragx) + fc[cnt       ]) /  particle.rdata(realData::mass) + gravity[0]);
-       particle.rdata(realData::vely) += subdt * (
-           (particle.rdata(realData::dragy) + fc[cnt+  ntot]) /  particle.rdata(realData::mass) + gravity[1]);
-       particle.rdata(realData::velz) += subdt * (
-           (particle.rdata(realData::dragz) + fc[cnt+2*ntot]) /  particle.rdata(realData::mass) + gravity[2]);
-
-       particle.rdata(realData::omegax) += subdt * particle.rdata(realData::oneOverI) * tow[cnt       ];
-       particle.rdata(realData::omegay) += subdt * particle.rdata(realData::oneOverI) * tow[cnt+  ntot];
-       particle.rdata(realData::omegaz) += subdt * particle.rdata(realData::oneOverI) * tow[cnt+2*ntot];
-
-       cnt += 1;
-
-       particle.pos(0) += subdt * particle.rdata(realData::velx);
-       particle.pos(1) += subdt * particle.rdata(realData::vely);
-       particle.pos(2) += subdt * particle.rdata(realData::velz);
+        ParticleType& p = particles[i];
+        
+        p.rdata(realData::velx) += subdt * (
+                                            (p.rdata(realData::dragx) + fc[i       ]) /  p.rdata(realData::mass) + gravity[0]);
+        p.rdata(realData::vely) += subdt * (
+                                            (p.rdata(realData::dragy) + fc[i + ntot]) /  p.rdata(realData::mass) + gravity[1]);
+        p.rdata(realData::velz) += subdt * (
+                                            (p.rdata(realData::dragz) + fc[i+2*ntot]) /  p.rdata(realData::mass) + gravity[2]);
+        
+        p.rdata(realData::omegax) += subdt * p.rdata(realData::oneOverI) * tow[i       ];
+        p.rdata(realData::omegay) += subdt * p.rdata(realData::oneOverI) * tow[i+  ntot];
+        p.rdata(realData::omegaz) += subdt * p.rdata(realData::oneOverI) * tow[i+2*ntot];
+        
+        p.pos(0) += subdt * p.rdata(realData::velx);
+        p.pos(1) += subdt * p.rdata(realData::vely);
+        p.pos(2) += subdt * p.rdata(realData::velz);
     }
-
+    
     const int nrp = NumberOfParticles(pti);
-    call_usr2_des(&nrp,my_particles.data());
-
+    call_usr2_des(&nrp,particles.data());
+    
     BL_PROFILE_VAR_STOP(des_time_loop);
 }
 
