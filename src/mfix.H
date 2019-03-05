@@ -223,6 +223,10 @@ public:
      void SetParameters(int steady_state_in)
          { steady_state = steady_state_in;}
 
+     void mfix_add_drag_terms(Real dt);
+
+     void mfix_add_gravity_and_gp(Real dt);
+
 protected:
 
      //! Tagging cells for refinement
@@ -362,8 +366,6 @@ private:
                                Vector< std::unique_ptr<MultiFab> >& divtau_old,
                                Real time, Real dt, bool proj_2);
 
-     void mfix_add_gravity_and_gp(Real dt);
-     void mfix_add_drag_terms(Real dt);
      void mfix_diffuse_velocity(Real time, Real dt);
 
      void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
