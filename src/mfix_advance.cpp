@@ -400,14 +400,12 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          const auto&  gp_fab =    gp[lev]->array(mfi);
          const auto& den_fab =  ro_g[lev]->array(mfi);
 
-         amrex::ParallelFor(bx, 
-               [=] (int i, int j, int k)
+         amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
          {
-            Real inv_dens = 1.0 / den_fab(i,j,k);
-            vel_fab(i,j,k,0) += dt * ( gravity[0]-(gp_fab(i,j,k,0)+gp0[0])*inv_dens );
-            vel_fab(i,j,k,1) += dt * ( gravity[1]-(gp_fab(i,j,k,1)+gp0[1])*inv_dens );
-            vel_fab(i,j,k,2) += dt * ( gravity[2]-(gp_fab(i,j,k,2)+gp0[2])*inv_dens );
-
+             Real inv_dens = 1.0 / den_fab(i,j,k);
+             vel_fab(i,j,k,0) += dt * ( gravity[0]-(gp_fab(i,j,k,0)+gp0[0])*inv_dens );
+             vel_fab(i,j,k,1) += dt * ( gravity[1]-(gp_fab(i,j,k,1)+gp0[1])*inv_dens );
+             vel_fab(i,j,k,2) += dt * ( gravity[2]-(gp_fab(i,j,k,2)+gp0[2])*inv_dens );
          });
        }
     }
@@ -442,16 +440,13 @@ mfix::mfix_add_drag_terms (Real dt)
       // Tilebox
       Box bx = mfi.tilebox ();
 
-      const auto&  vel_fab = vel_g[lev]->array(mfi);
-      const auto& drag_fab =  drag[lev]->array(mfi);
-      const auto& fgds_fab = f_gds[lev]->array(mfi);
-      const auto&  rop_fab = rop_g[lev]->array(mfi);
+      const auto  vel_fab = vel_g[lev]->array(mfi);
+      const auto drag_fab =  drag[lev]->array(mfi);
+      const auto fgds_fab = f_gds[lev]->array(mfi);
+      const auto  rop_fab = rop_g[lev]->array(mfi);
 
       amrex::ParallelFor(bx, 
-            [=] (int i, int j, int k)
-
-     // When we go to GPU we replace above line by 
-     //     [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            [=] AMREX_GPU_DEVICE (int i, int j, int k)
          {
              Real orop  = dt / rop_fab(i,j,k);
              Real denom = 1.0 / (1.0 + fgds_fab(i,j,k) * orop);
@@ -460,13 +455,6 @@ mfix::mfix_add_drag_terms (Real dt)
              vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + drag_fab(i,j,k,1) * orop) * denom;
              vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;
          });
-
-      // THE ABOVE LOOP IS IDENTICAL TO THIS
-      //  for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
-      //   for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
-      //     for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
-      //     {
-      //     }
     }
   }
 }
