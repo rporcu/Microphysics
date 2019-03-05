@@ -207,7 +207,7 @@ extern "C"
             const amrex::Real* z_b, const amrex::Real* z_t, const amrex::Real* dx,
             amrex::Real* sum_ep_g, amrex::Real* sum_p_g,  amrex::Real* sum_vol,
             amrex::Real* sum_velx, amrex::Real* sum_vely, amrex::Real* sum_velz
-            ); const
+            );
 
     void mfix_write_fluid(const int* domlo , const int* domhi,
             amrex::Real* dx,   amrex::Real* dy,  amrex::Real* dz,
