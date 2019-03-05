@@ -398,28 +398,25 @@ MacProjection::compute_b_coeff ( const Vector< std::unique_ptr<MultiFab> >& u,
           const auto&   den_fab =  ro[lev]->array(mfi);
           const auto&   epg_fab =  ep[lev]->array(mfi);
 
-          amrex::ParallelFor(ubx, 
-                [=] (int i, int j, int k)
+          amrex::ParallelFor(ubx, [=] AMREX_GPU_HOST_DEVICE (int i, int j, int k)
           {
-             // X-faces
-             betax_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i-1,j,k) ) /
-                                ( den_fab(i,j,k) + den_fab(i-1,j,k) );
+              // X-faces
+              betax_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i-1,j,k) ) /
+                  ( den_fab(i,j,k) + den_fab(i-1,j,k) );
+          });
+          
+          amrex::ParallelFor(vbx, [=] AMREX_GPU_HOST_DEVICE (int i, int j, int k)
+          {
+              // Y-faces
+              betay_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i,j-1,k) ) /
+                  ( den_fab(i,j,k) + den_fab(i,j-1,k) );
           });
 
-          amrex::ParallelFor(vbx, 
-                [=] (int i, int j, int k)
+          amrex::ParallelFor(wbx, [=] AMREX_GPU_HOST_DEVICE (int i, int j, int k)
           {
-             // Y-faces
-             betay_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i,j-1,k) ) /
-                                ( den_fab(i,j,k) + den_fab(i,j-1,k) );
-          });
-
-          amrex::ParallelFor(wbx, 
-                [=] (int i, int j, int k)
-          {
-             // Z-faces
-             betaz_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i,j,k-1) ) /
-                                ( den_fab(i,j,k) + den_fab(i,j,k-1) );
+              // Z-faces
+              betaz_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i,j,k-1) ) /
+                  ( den_fab(i,j,k) + den_fab(i,j,k-1) );
           });
       }
    }
