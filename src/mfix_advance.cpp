@@ -440,10 +440,10 @@ mfix::mfix_add_drag_terms (Real dt)
       // Tilebox
       Box bx = mfi.tilebox ();
 
-      const auto  vel_fab = vel_g[lev]->array(mfi);
-      const auto drag_fab =  drag[lev]->array(mfi);
-      const auto fgds_fab = f_gds[lev]->array(mfi);
-      const auto  rop_fab = rop_g[lev]->array(mfi);
+      const auto&  vel_fab = vel_g[lev]->array(mfi);
+      const auto& drag_fab =  drag[lev]->array(mfi);
+      const auto& fgds_fab = f_gds[lev]->array(mfi);
+      const auto&  rop_fab = rop_g[lev]->array(mfi);
 
       amrex::ParallelFor(bx, 
             [=] AMREX_GPU_DEVICE (int i, int j, int k)
