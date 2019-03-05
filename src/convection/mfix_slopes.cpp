@@ -49,7 +49,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                const auto&  zs_fab = zslopes[lev]->array(mfi);
                
                int ncomp = Sborder.nComp();
-               amrex::ParallelFor(bx, ncomp, [=] AMREX_GPU_DEVICE (int i, int j, int k, int n)
+               AMREX_CUDA_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
                {
                    // X direction
                    Real du_xl = 2.0*(vel_fab(i  ,j,k,n) - vel_fab(i-1,j,k,n));
@@ -90,7 +90,8 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                Real my_huge = 1.e100;
                
                int ncomp = Sborder.nComp();
-               amrex::ParallelFor(bx, ncomp, [=] AMREX_GPU_DEVICE (int i, int j, int k, int n)
+
+               AMREX_CUDA_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
                {
                    if (flag_fab(i,j,k).isCovered())
                    {
