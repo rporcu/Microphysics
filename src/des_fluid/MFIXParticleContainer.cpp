@@ -341,6 +341,100 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                                             MultiFab * cost, std::string & knapsack_weight_type
                                             )
 {
+#ifdef AMREX_USE_CUDA
+
+    BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
+    BL_PROFILE("mfix_dem::EvolveParticles()");
+
+    amrex::Print() << "Evolving particles on level: " << lev << " ... " << std::endl;
+
+    /****************************************************************************
+     * DEBUG flag toggles:                                                      *
+     *   -> Print number of collisions                                          *
+     *   -> Print max (over substeps) particle velocity at each time step       *
+     *   -> Print max particle-wall and particle-particle forces                *
+     ***************************************************************************/
+
+    // Debug level controls the detail of debug outut:
+    //   -> debug_level = 0 : no debug output
+    //   -> debug_level = 1 : debug output for every fluid step
+    //   -> debug_level = 2 : debug output for every substep
+    const int debug_level = 0;
+
+    /****************************************************************************
+     * Geometry                                                                 *
+     ***************************************************************************/
+
+    Box domain(Geom(lev).Domain());
+
+    const Real* dx = Geom(lev).CellSize();
+
+    Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
+    Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
+    Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
+
+    /****************************************************************************
+     * Init substeps                                                            *
+     ***************************************************************************/
+
+    int   nsubsteps;
+    Real  subdt, stime = time;
+    des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
+
+    /****************************************************************************
+     * Init temporary storage:                                                  *
+     *   -> particle-particle, and particle-wall forces                         *
+     *   -> particle-particle, and particle-wall torques                        *
+     ***************************************************************************/
+
+    std::map<PairIndex, Vector<Real>> tow;
+    std::map<PairIndex, Vector<Real>> fc, pfor, wfor;
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
+        PairIndex index(pti.index(), pti.LocalTileIndex());
+        tow[index] = Vector<Real>();
+        fc[index] = Vector<Real>();
+        pfor[index] = Vector<Real>();
+        wfor[index] = Vector<Real>();
+    }
+
+    /****************************************************************************
+     * Get particle EB geometric info
+     ***************************************************************************/
+    const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
+
+    /****************************************************************************
+     * Iterate over sub-steps                                                   *
+     ***************************************************************************/
+
+    int ncoll_total = 0;  // Counts total number of collisions
+    loc_maxvel  = RealVect(0., 0., 0.);  // Tracks max (absolute) velocity
+    loc_maxpfor = RealVect(0., 0., 0.);  // Tracks max particle-particle force
+    loc_maxwfor = RealVect(0., 0., 0.);  // Tracks max particle-wall force
+    int n = 0; // Counts sub-steps
+
+    while (n < nsubsteps)
+    {
+        int ncoll = 0;  // Counts number of collisions (over sub-steps)
+        
+        // Redistribute particles ever so often BUT always update the neighbour
+        // list (Note that this fills the neighbour list after every
+        // redistribute operation)
+        if (n % 25 == 0) {
+            clearNeighbors();
+            Redistribute();
+            fillNeighbors();
+            buildNeighborList(MFIXCheckPair(), sort_neighbor_list);
+        } else {
+            updateNeighbors();
+        }
+    }
+    amrex::Print() << "done. \n";
+    
+    BL_PROFILE_REGION_STOP("mfix_dem::EvolveParticles()");
+
+#else
+
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
@@ -422,9 +516,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             clearNeighbors();
             Redistribute();
             fillNeighbors();
-            buildNeighborList(MFIXCheckPair, sort_neighbor_list);
+            buildNeighborList(MFIXCheckPair(), sort_neighbor_list);
         } else {
-            updateNeighbors(lev);
+            updateNeighbors();
         }
 
 #ifdef _OPENMP
@@ -675,6 +769,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     amrex::Print() << "done. \n";
 
     BL_PROFILE_REGION_STOP("mfix_dem::EvolveParticles()");
+
+#endif
 }
 
 void MFIXParticleContainer::CalcVolumeFraction(const Vector<std::unique_ptr<MultiFab>> & mf_to_be_filled,

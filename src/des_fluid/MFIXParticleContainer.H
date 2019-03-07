@@ -42,6 +42,22 @@ struct intData
     };
 };
 
+///
+/// We add a particle to the neighbor list if its center is within 3 particle radii
+///
+struct MFIXCheckPair
+{
+    template <class P>
+    AMREX_GPU_DEVICE AMREX_INLINE
+    bool operator()(const P& p1, const P& p2) const
+    {
+        return AMREX_D_TERM(   (p1.pos(0) - p2.pos(0))*(p1.pos(0) - p2.pos(0)) ,
+                             + (p1.pos(1) - p2.pos(1))*(p1.pos(1) - p2.pos(1)) ,
+                             + (p1.pos(2) - p2.pos(2))*(p1.pos(2) - p2.pos(2)) )
+            <= 9.0*p1.rdata(0)*p1.rdata(0);
+    }
+};
+
 class MFIXParIter
     : public amrex::ParIter<realData::count,intData::count,0,0>
 {
@@ -55,23 +71,6 @@ class MFIXParticleContainer final
 public:
 
     using MyConstParIter = ParConstIter<realData::count,intData::count,0,0>;
-    // Data type returned by MFIXParIter::ArrayOfStructs::data (accesses
-    // particle data represented by realData)
-    //using RealType       = typename ParticleType::RealType;
-    //using AoS            = ArrayOfStructs<realData::count, intData::count>;
-
-    ///
-    /// We add a particle to the neighbor list if its center is within 3 particle radii
-    ///
-    struct {
-        bool operator()(const ParticleType& p1, const ParticleType& p2) const
-        {
-            return AMREX_D_TERM(   (p1.pos(0) - p2.pos(0))*(p1.pos(0) - p2.pos(0))   ,
-                                   + (p1.pos(1) - p2.pos(1))*(p1.pos(1) - p2.pos(1)) ,
-                                   + (p1.pos(2) - p2.pos(2))*(p1.pos(2) - p2.pos(2)) )
-                <= 9.0*p1.rdata(0)*p1.rdata(0);
-        }
-    } MFIXCheckPair;
 
     // Get number of particles
     int NumberOfParticles(MFIXParIter& pti){
