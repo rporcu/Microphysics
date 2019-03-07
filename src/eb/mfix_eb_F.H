@@ -48,15 +48,15 @@ extern "C"
                       const amrex_real * phi, const int * phlo, const int * phhi,
                       const amrex_real * tol
         );
-
-    void calc_wall_collisions_ls(
-            void * rparticles, const int * ntot, const int * nrp,
-            amrex_real * tow, amrex_real * fc, amrex_real * subdt,
-            const int * valid,      const int * vlo,  const int * vhi,
-            const amrex_real * phi, const int * phlo, const int * phhi,
-            const amrex_real * dx, const int * n_refine
+    
+    void calc_wall_collisions(
+        void * rparticles, const int * ntot, const int * nrp,
+        amrex_real * tow, amrex_real * fc, amrex_real * subdt,
+        const int * valid,      const int * vlo,  const int * vhi,
+        const amrex_real * phi, const int * phlo, const int * phhi,
+        const amrex_real * dx, const int * n_refine
         );
-
+    
     void rm_wall_collisions_eb(
             void* rparticle,  const int* nrp,
             const amrex_real*   phi, const int* phlo, const int* phhi,

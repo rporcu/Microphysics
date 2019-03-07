@@ -435,6 +435,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             // Timer used for load-balancing
             Real wt = ParallelDescriptor::second();
 
+            const Box& bx = pti.tilebox();
             PairIndex index(pti.index(), pti.LocalTileIndex());
             
             const int nrp = GetParticles(lev)[index].numRealParticles();            
@@ -451,10 +452,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             // Number of particles including neighbor particles
             int ntot = nrp + size_ng;
-
-            // Particle tile box: used to check if the tile-box contains walls
-            // => if not, then don't check for wall collisions.
-            const Box& bx = pti.tilebox();
 
             // Particle-particle (and particle-wall) forces and torques. We need
             // these to be zero every time we start a new batch (i.e tile and
@@ -495,11 +492,11 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             {
                 // Calculate forces and torques from particle-wall collisions
                 BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-                calc_wall_collisions_ls(particles, & ntot, & nrp,
-                                        tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                        BL_TO_FORTRAN_3D((* ls_valid)[pti]),
-                                        BL_TO_FORTRAN_3D((* ls_phi)[pti]),
-                                        dx, & ls_refinement);
+                calc_wall_collisions(particles, &ntot, &nrp,
+                                     tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
+                                     BL_TO_FORTRAN_3D((*ls_valid)[pti]),
+                                     BL_TO_FORTRAN_3D((*ls_phi)[pti]),
+                                     dx, &ls_refinement);
                 
                 // Debugging: copy data from the fc (all forces) vector to
                 // the wfor (wall forces) vector.
@@ -613,7 +610,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     // neighbour list needs to be reset when redistributing).
     clearNeighbors();
     Redistribute();
-
+    
     /****************************************************************************
      * DEBUG: output the total number of collisions over all substeps           *
      *        output the maximum velocity and forces over all substeps          *

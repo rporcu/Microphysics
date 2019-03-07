@@ -23,12 +23,12 @@ contains
 
 
 
-    subroutine calc_wall_collisions_ls(particles, np,   nrp,     &
-                                       tow,       fc,   dtsolid, &
-                                       valid,     vlo,  vhi,     &
-                                       phi,       phlo, phhi,    &
-                                       dx,        n_refine     ) &
-               bind(c, name="calc_wall_collisions_ls")
+    subroutine calc_wall_collisions(particles, np,   nrp,     &
+                                    tow,       fc,   dtsolid, &
+                                    valid,     vlo,  vhi,     &
+                                    phi,       phlo, phhi,    &
+                                    dx,        n_refine     ) &
+               bind(c, name="calc_wall_collisions")
 
         use particle_mod,   only: particle_t
         use discretelement, only: des_coll_model_enum
@@ -187,6 +187,6 @@ contains
 
         end do
 
-    end subroutine calc_wall_collisions_ls
+    end subroutine calc_wall_collisions
 
 end module wall_collisions

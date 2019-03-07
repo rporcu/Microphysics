@@ -81,15 +81,6 @@ extern "C"
         const amrex::Real* x0
         );
 
-    void calc_wall_collisions(
-        void* rparticles, const int* ntot, const int* nrp,
-        amrex::Real* tow, amrex::Real* fc, amrex::Real* subdt,
-        const void* flag, const int* fglo, const int* fghi,
-        const amrex_real* normal, const int* nlo, const int* nhi,
-        const amrex_real* bcent,  const int* blo, const int* bhi,
-        const amrex::Real* dx
-        );
-
     void calc_particle_collisions(
         void* rparticles, const int* nrp,
         void* gparticles, const int* ngp,
