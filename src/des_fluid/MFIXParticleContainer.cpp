@@ -422,7 +422,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             fillNeighbors();
             buildNeighborList(MFIXCheckPair, sort_neighbor_list);
         } else {
-            updateNeighbors(lev);
+            updateNeighbors();
         }
 
 #ifdef _OPENMP
