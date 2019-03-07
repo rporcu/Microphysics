@@ -105,8 +105,8 @@ public:
     //Real GetMaxRadius(int lev);
 
     void UpdateMaxVelocity();
-    void UpdateMaxForces(std::map<PairIndex, Vector<Real>> pfor,
-                         std::map<PairIndex, Vector<Real>> wfor);
+    void UpdateMaxForces(std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> pfor,
+                         std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> wfor);
     RealVect GetMaxVelocity();
     Vector<RealVect> GetMaxForces();
 
@@ -192,12 +192,12 @@ public:
             const amrex::Real time,
             const string& basename,
             const Vector<int>& avg_vel_p,
-            const Vector<Real>& avg_region_x_w,
-            const Vector<Real>& avg_region_x_e,
-            const Vector<Real>& avg_region_y_s,
-            const Vector<Real>& avg_region_y_n,
-            const Vector<Real>& avg_region_z_b,
-            const Vector<Real>& avg_region_z_t );
+            const Gpu::ManagedDeviceVector<Real>& avg_region_x_w,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_x_e,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_y_s,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_y_n,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_z_b,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_z_t );
 
 private:
 
@@ -226,7 +226,8 @@ private:
     RealVect loc_maxpfor;
     RealVect loc_maxwfor;
 
-    void time_advance(MFIXParIter& pti, int ntot, Real subdt, Vector<Real>& tow, Vector<Real>& fc);
+    void time_advance(MFIXParIter& pti, int ntot, Real subdt, 
+                      Gpu::ManagedDeviceVector<Real>& tow, Gpu::ManagedDeviceVector<Real>& fc);
 
     void set_particle_properties(int pstate, Real pradius, Real pdensity,
                                  Real& pvol, Real& pmass, Real& omoi, Real& omega);

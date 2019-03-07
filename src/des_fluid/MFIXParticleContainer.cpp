@@ -385,15 +385,15 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
      *   -> particle-particle, and particle-wall torques                        *
      ***************************************************************************/
 
-    std::map<PairIndex, Vector<Real>> tow;
-    std::map<PairIndex, Vector<Real>> fc, pfor, wfor;
+    std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> tow;
+    std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> fc, pfor, wfor;
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
         PairIndex index(pti.index(), pti.LocalTileIndex());
-        tow[index] = Vector<Real>();
-        fc[index] = Vector<Real>();
-        pfor[index] = Vector<Real>();
-        wfor[index] = Vector<Real>();
+        tow[index]  = Gpu::ManagedDeviceVector<Real>();
+        fc[index]   = Gpu::ManagedDeviceVector<Real>();
+        pfor[index] = Gpu::ManagedDeviceVector<Real>();
+        wfor[index] = Gpu::ManagedDeviceVector<Real>();
     }
 
     /****************************************************************************
@@ -1355,8 +1355,8 @@ void MFIXParticleContainer::UpdateMaxVelocity()
     loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
 }
 
-void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Vector<Real>> pfor,
-                                             std::map<PairIndex, Vector<Real>> wfor)
+void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> pfor,
+                                             std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> wfor)
 {
     Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
     Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
@@ -1486,16 +1486,17 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
   }
 }
 
-void MFIXParticleContainer::ComputeAverageVelocities ( const int lev,
-                   const amrex::Real time,
-                   const string&  basename,
-                   const Vector<int>& avg_vel_p,
-                   const Vector<Real>& avg_region_x_w,
-                   const Vector<Real>& avg_region_x_e,
-                   const Vector<Real>& avg_region_y_s,
-                   const Vector<Real>& avg_region_y_n,
-                   const Vector<Real>& avg_region_z_b,
-                   const Vector<Real>& avg_region_z_t )
+void MFIXParticleContainer::
+ComputeAverageVelocities ( const int lev,
+                           const amrex::Real time,
+                           const string&  basename,
+                           const Vector<int>& avg_vel_p,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_x_w,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_x_e,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_y_s,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_y_n,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_z_b,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_z_t )
 {
 
   // Count number of calls -- Used to determin when to create file from scratch
@@ -1659,7 +1660,8 @@ void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)
     }
 }
 
-void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt, Vector<Real>& tow, Vector<Real>& fc)
+void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt, 
+                                         Gpu::ManagedDeviceVector<Real>& tow, Gpu::ManagedDeviceVector<Real>& fc)
 {
     BL_PROFILE_VAR("des_time_loop()", des_time_loop);
 
