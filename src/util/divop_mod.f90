@@ -46,7 +46,7 @@ contains
         vfrac,   vflo, vfhi, &
         bcent,    blo,  bhi, &
         domlo, domhi,        &
-        dx, ng, covered_val, &
+        dx, ng, &
         mu, lambda , & 
         do_explicit_diffusion ) bind(C)
 
@@ -97,8 +97,6 @@ contains
            & vfrac(vflo(1):vfhi(1),vflo(2):vfhi(2),vflo(3):vfhi(3)),   &
            &   vel(vllo(1):vlhi(1),vllo(2):vlhi(2),vllo(3):vlhi(3),3), &
            & bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
-
-      real(ar),        intent(in   ) :: covered_val
 
       ! Optional arrays (only for viscous calculations)
       real(ar),        intent(in   ), optional  ::                &
@@ -247,10 +245,13 @@ contains
 
                      if (is_dirichlet) then
                         if (n==1) then
-                           call compute_diff_wallflux( divdiff_w(:,iwall), dx, i, j, k, &
-                            vel, vllo, vlhi, lambda, mu, elo, ehi, bcent, blo, bhi,     &
-                            afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, &
-                            do_explicit_diffusion,covered_val)
+                           call compute_diff_wallflux( divdiff_w(:,iwall), dx, i, j, k,       &
+                                                       vel, vllo, vlhi, lambda, mu, elo, ehi, &
+                                                       bcent, blo, bhi, flags, flo, fhi,      &
+                                                       afrac_x, axlo, axhi,                   &
+                                                       afrac_y, aylo, ayhi,                   &
+                                                       afrac_z, azlo, azhi,                   &
+                                                       do_explicit_diffusion)
                         end if
                         divc(i,j,k) = divc(i,j,k) - divdiff_w(n,iwall) / ( dx(n) * vfrac(i,j,k) )
                      end if

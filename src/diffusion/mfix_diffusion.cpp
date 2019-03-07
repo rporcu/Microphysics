@@ -93,8 +93,7 @@ mfix::mfix_compute_divtau ( int lev,
                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-               geom[lev].CellSize(), &nghost, &explicit_diffusion,
-               &covered_val );
+               geom[lev].CellSize(), &nghost, &explicit_diffusion);
 
          }
       }
@@ -169,6 +168,14 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
 
       // This sets the spatially varying b coefficients
       matrix.setBCoeffs ( lev, b_tmp );
+
+      // This sets the coefficient on the wall and defines it as a homogeneous Dirichlet bc for the solve.
+      matrix.setEBHomogDirichlet ( lev, (*mu_g[lev]) );
+
+      // This tells the solver to use the higher order extrapolation to define d(phi)/dn at EB walls
+      // This may not be robust in the presence of small cells so it is an option, not required
+      //     (but does get Poiseuille flow right in the presence of walls at cell boundaries)
+      matrix.setEBHODirichlet ( );
    }
 
    // Loop over the velocity components
@@ -192,6 +199,9 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       {
          rhs_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
          phi_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
+
+         EB_set_covered(*phi_diff[lev], 0, phi_diff[lev]->nComp(), phi_diff[lev]->nGrow(), covered_val);
+         phi_diff[lev] -> FillBoundary (geom[lev].periodicity());
 
          matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi_diff)[lev] );
 
