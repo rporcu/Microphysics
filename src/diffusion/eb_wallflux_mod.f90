@@ -162,10 +162,6 @@ contains
          tauzz = tauzz - mu(i,j,k) * dwdz
       end if
 
-      ! divw(1) = dxinv(1) * (dapx*tauxx + dapy*tauyx + dapz*tauzx)
-      ! divw(2) = dxinv(2) * (dapx*tauxy + dapy*tauyy + dapz*tauzy)
-      ! divw(3) = dxinv(3) * (dapx*tauxz + dapy*tauyz + dapz*tauzz)
-
       divw(1) = dxinv(1) * (dapx*tauxx + dapy*tauxy + dapz*tauxz)
       divw(2) = dxinv(2) * (dapx*tauyx + dapy*tauyy + dapz*tauyz)
       divw(3) = dxinv(3) * (dapx*tauzx + dapy*tauzy + dapz*tauzz)
