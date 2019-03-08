@@ -42,8 +42,8 @@ amr.n_cell =  40   10   10
 
 # Fluid
 amr.max_grid_size_x = 1024
-amr.max_grid_size_y = 6
-amr.max_grid_size_z = 6
+amr.max_grid_size_y = 5
+amr.max_grid_size_z = 5
 
 # Particles (not with KDTree)
 #particles.max_grid_size_x =   32
