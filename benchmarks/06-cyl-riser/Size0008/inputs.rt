@@ -44,10 +44,6 @@ amr.max_grid_size_x = 1024
 amr.max_grid_size_y = 1024
 amr.max_grid_size_z = 1024
 
-amr.max_grid_size_x = 10
-amr.max_grid_size_y = 10
-amr.max_grid_size_z = 10
-
 # Particles (not with KDTree)
 #particles.max_grid_size_x =   32
 #particles.max_grid_size_y =   32
