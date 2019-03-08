@@ -40,5 +40,7 @@ option( ENABLE_OMP "Enable OpenMP" NO )
 
 option( ENABLE_MPI "Enable MPI" YES )
 
+option( ENABLE_CUDA "Enable CUDA" YES )
+
 option( ENABLE_FPE "Enable Floating Point Exceptions checks" NO )
 

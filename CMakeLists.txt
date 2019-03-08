@@ -53,6 +53,7 @@ set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
 # Import AMReX. Do it here so it is visibile to all targets
 find_package (AMReX REQUIRED HINTS ${AMREX_INSTALL_DIR})
 echo_amrex_config_options ()
+list(APPEND CMAKE_MODULE_PATH ${AMREX_MODULES_PATH})
 
 if ( NOT ( AMREX_ENABLE_PARTICLES AND AMREX_ENABLE_AMRDATA
 	 AND AMREX_ENABLE_EB) )
@@ -67,12 +68,20 @@ if (ENABLE_MPI AND (NOT AMREX_ENABLE_MPI) )
    message(FATAL_ERROR "Option ENABLE_MPI requires AMReX to be built with MPI support")
 endif ()
 
+if (ENABLE_CUDA AND (NOT AMREX_ENABLE_CUDA) )
+   message(FATAL_ERROR "Option ENABLE_CUDA requires AMReX to be built with CUDA support")
+endif ()
 
 if ( NOT ( "${MFIX_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
    message (WARNING "MFIX build type (${MFIX_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
 endif ()
 
 set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
+
+if (ENABLE_CUDA)
+   set(CUDA_MAXREGCOUNT "255")
+   include(AMReX_SetupCUDA)
+endif ()
 
 #
 # Core MFIX library
@@ -84,8 +93,19 @@ print_mfix_configuration_summary (${MFIX_LIBNAME})
 
 # We should check what this line does
 file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
+
+
 add_executable (${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} )
 target_link_libraries ( ${MFIX_EXENAME} ${MFIX_LIBNAME} )
+
+if ( ENABLE_CUDA)
+   set_source_files_properties(${MAIN} PROPERTIES LANGUAGE CUDA )
+   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std=c++14 -Xcompiler=-std=c++14")
+   set_target_properties( ${MFIX_EXENAME}
+      PROPERTIES
+      CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
+      )
+endif ()
 
 # Configure type-checking target
 include ( MFIX_Typecheck )
