@@ -50,7 +50,7 @@ option( AMREX_ENABLE_ASSERTION "Enable assertions" NO)
 
 option( AMREX_ENABLE_BASE_PROFILE "Enable basic profiling" NO)
 
-option( AMREX_ENABLE_TINY_PROFILE "Enable tiny-profiling" YES)
+option( AMREX_ENABLE_TINY_PROFILE "Enable tiny-profiling" NO)
 
 option( AMREX_ENABLE_TRACE_PROFILE "Enable trace-profiling" NO)
 
