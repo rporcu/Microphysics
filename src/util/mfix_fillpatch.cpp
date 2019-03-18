@@ -90,6 +90,9 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
 void
 mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, const Vector<BCRec>& bcs)
 {
+    // Hack so that ghost cells are not undefined
+    mf.setVal(1.e40);
+
     if (lev == 0)
     {
         Vector<MultiFab*> smf;
