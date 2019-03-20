@@ -442,13 +442,15 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             RealType* particles  = pti.GetArrayOfStructs().data();
 
 #ifdef AMREX_USE_CUDA
-
-            
-
+            auto& plev = GetParticles(lev);
+            auto& ptile = plev[index];
+            auto& aos   = ptile.GetArrayOfStructs();
+            int size_ng = aos.numNeighborParticles();            
 #else
             // Neighbor particles
             int size_ng = neighbors[lev][index].size();
             int size_nl = neighbor_list[lev][index].size();
+#endif
 
             // Number of particles including neighbor particles
             int ntot = nrp + size_ng;
@@ -472,6 +474,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              * Particle-Wall collision forces (and torques)                     *
              *******************************************************************/
 
+#ifdef AMREX_USE_CUDA
+
+#else
             // Only call the routine for wall collisions if we actually have walls
             bool has_wall = false;
             if ((ebfactory != NULL)
