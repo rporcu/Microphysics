@@ -81,7 +81,7 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       matrix.setBCoeffs ( lev, b_tmp );
 
       // This sets the coefficient on the wall and defines it as a homogeneous Dirichlet bc for the solve.
-      matrix.setEBHomogDirichlet ( lev, (*mu_g[lev]) );
+      matrix.setEBHomogDirichlet (lev);
 
       // This tells the solver to use the higher order extrapolation to define d(phi)/dn at EB walls
       // This may not be robust in the presence of small cells so it is an option, not required
