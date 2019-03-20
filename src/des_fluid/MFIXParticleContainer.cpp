@@ -474,9 +474,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              * Particle-Wall collision forces (and torques)                     *
              *******************************************************************/
 
-#ifdef AMREX_USE_CUDA
-
-#else
             // Only call the routine for wall collisions if we actually have walls
             bool has_wall = false;
             if ((ebfactory != NULL)
@@ -519,7 +516,45 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              *******************************************************************/
 
             BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
+
+#ifdef AMREX_USE_CUDA
+            auto nbor_data = m_neighbor_list[index].data();
+            ParticleType* pstruct = aos().dataPtr();
             
+            constexpr Real small_number = 1.0e-12;
+            long ncoll = 0;
+            long* pncoll = &ncoll;
+
+            Real eps = std::numeric_limits<Real>::epsilon();
+
+            // now we loop over the neighbor list and compute the forces
+            AMREX_FOR_1D ( nrp, i,
+            {
+                ParticleType& p1 = pstruct[i];
+                for (const auto& p2 : nbor_data.getNeighbors(i))
+                {
+                    Real dx = p1.pos(0) - p2.pos(0);
+                    Real dy = p1.pos(1) - p2.pos(1);
+                    Real dz = p1.pos(2) - p2.pos(2);
+                    
+                    Real r2 = dx*dx + dy*dy + dz*dz;
+                    Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
+
+                    if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
+                    {
+                        Cuda::Atomic::Add(pncoll, 1);
+                        Real dist_mag = sqrt(r2);
+                        AMREX_ALWAYS_ASSERT(dist_mag >= eps);
+
+                        Real nx = dx / dist_mag;
+                        Real ny = dy / dist_mag;
+                        Real nz = dz / dist_mag;
+                        
+                        Real overlap_n = r_lm - dist_mag;
+                    }
+                }
+            });
+#else            
             calc_particle_collisions ( particles                          , &nrp,
                                        neighbors[lev][index].dataPtr()    , &size_ng,
                                        neighbor_list[lev][index].dataPtr(), &size_nl,
@@ -535,13 +570,16 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     pfor[index][i] = fc[index][i] - wfor[index][i];
                 }
             }
-            
+#endif            
             BL_PROFILE_VAR_STOP(calc_particle_collisions);
             
             /********************************************************************
              * Move particles based on collision forces and torques             *
              *******************************************************************/
-            
+
+#ifdef AMREX_USE_CUDA
+
+#else                        
             time_advance(pti, ntot, subdt, tow[index], fc[index]);
 #endif
             /********************************************************************
