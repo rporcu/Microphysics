@@ -20,6 +20,7 @@
 #include "mfix_eb_F.H"
 #include "mfix_util_F.H"
 #include "mfix_des_K.H"
+#include "MFIX_DEM_Parms.H"
 
 using namespace amrex;
 using namespace std;
@@ -527,9 +528,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             long* pncoll = &ncoll;
 
             Real eps = std::numeric_limits<Real>::epsilon();
-
-            enum CollisionModel {HERTZIAN, LSD};
-
+            
             // now we loop over the neighbor list and compute the forces
             AMREX_FOR_1D ( nrp, i,
             {
@@ -566,8 +565,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         Real kt_des; 
                         Real etan_des;
                         Real etat_des;
-                        CollisionModel cmod = HERTZIAN;
-                        if (cmod == HERTZIAN)
+                        if (DEM::CollisionModel == DEM::HERTZIAN)
                         {
                             amrex::Abort("Not implemented");
                         }

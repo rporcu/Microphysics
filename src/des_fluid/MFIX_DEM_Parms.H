@@ -6,6 +6,14 @@
 
 namespace DEM
 {
+
+    enum COLLISIONMODEL {
+        HERTZIAN = 0,
+        LSD
+    };
+
+    extern AMREX_GPU_DEVICE_MANAGED COLLISIONMODEL CollisionModel;
+
     // tangential component of spring constant
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt;
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt_w;
@@ -18,7 +26,25 @@ namespace DEM
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt_fac;
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt_w_fac;
 
+    // normal and tangential components of the damping coefficients
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real etan;
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real etan_w;
+
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real etat;
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real etat_w;
+
+    // coefficients of restitution, normal and tangential
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real en_input[1];
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real et_input[1];
+
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real en_w_input[1];
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real et_w_input[1];
+       
     void Initialize ();
+
+    void InitializeLSD ();
+
+    void InitializeHertzian ();    
 }
 
 #endif
