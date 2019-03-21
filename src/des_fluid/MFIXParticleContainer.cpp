@@ -522,11 +522,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             auto nbor_data = m_neighbor_list[index].data();
             ParticleType* pstruct = aos().dataPtr();
             
-            constexpr Real small_number = 1.0e-12;
+            constexpr Real small_number = 1.0e-15;
             long ncoll = 0;
             long* pncoll = &ncoll;
 
             Real eps = std::numeric_limits<Real>::epsilon();
+
+            enum CollisionModel {HERTZIAN, LSD};
 
             // now we loop over the neighbor list and compute the forces
             AMREX_FOR_1D ( nrp, i,
@@ -557,6 +559,22 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         Real vrel_t[3];
 
                         cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
+
+                        Real k;
+                        Real kt; 
+                        Real kn_des;
+                        Real kt_des; 
+                        Real etan_des;
+                        Real etat_des;
+                        CollisionModel cmod = HERTZIAN;
+                        if (cmod == HERTZIAN)
+                        {
+                            amrex::Abort("Not implemented");
+                        }
+                        else
+                        {
+                            amrex::Abort("Not implemented");                            
+                        }
                     }
                 }
             });

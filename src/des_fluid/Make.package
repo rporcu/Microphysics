@@ -8,7 +8,7 @@ F90EXE_headers += mfix_des_F.H
 
 CEXE_headers += mfix_des_K.H
 
-CEXE_sources += MFIXParticleContainer.cpp 
+CEXE_sources += MFIXParticleContainer.cpp MFIX_DEM_Parms.cpp
 CEXE_sources += MFIX_PC_RemoveOutOfRange.cpp 
-CEXE_headers += MFIXParticleContainer.H
+CEXE_headers += MFIXParticleContainer.H MFIX_DEM_Parms.H
 
