@@ -546,12 +546,17 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         Cuda::Atomic::Add(pncoll, 1);
                         Real dist_mag = sqrt(r2);
                         AMREX_ALWAYS_ASSERT(dist_mag >= eps);
-
-                        Real nx = dx / dist_mag;
-                        Real ny = dy / dist_mag;
-                        Real nz = dz / dist_mag;
+                        
+                        Real normal[3];
+                        normal[0] = dx / dist_mag;
+                        normal[1] = dy / dist_mag;
+                        normal[2] = dz / dist_mag;
                         
                         Real overlap_n = r_lm - dist_mag;
+                        Real vrel_trans_norm;
+                        Real vrel_t[3];
+
+                        cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
                     }
                 }
             });
