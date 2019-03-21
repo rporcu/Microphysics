@@ -22,7 +22,13 @@ namespace DEM
         else amrex::Abort("DEM collision model not recognized");
     }    
 
-    void InitializeLSD () {}
+    void InitializeLSD () 
+    {
+        
+    }
 
-    void InitializeHertzian () {}
+    void InitializeHertzian ()
+    {
+        amrex::Abort("The Hertzian collision model is currently not recognized");
+    }
 }
