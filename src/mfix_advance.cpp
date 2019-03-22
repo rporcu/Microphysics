@@ -250,7 +250,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 //
 void
 mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
-                      Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                            Vector< std::unique_ptr<MultiFab> >& divtau_old,
                             Real time, Real dt, bool proj_2)
 {
     // We use the new-time value for things computed on the "*" state
