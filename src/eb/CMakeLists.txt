@@ -12,5 +12,4 @@ add_sources ( mfix_eb_if.H )
 add_sources ( get_walls.cpp )
 add_sources ( get_eb_walls.f90 )
 
-add_sources ( eb_interpolation_mod.f90 )
 add_sources ( writeEBsurface.cpp )
