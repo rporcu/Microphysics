@@ -40,10 +40,10 @@ contains
 
     ! This module call routines to initialize the namelist variables.
     call init_namelist
-
+    
     ! Read in the namelist variables from the ascii input file.
     call read_namelist(mfix_dat, dt)
-
+    
     ! Set flag for coupled simulations
     des_continuum_coupled = (particle_types>0) .and. (abs(ro_g0) > 0.0d0)
     dem_solids = (particle_types > 0)

@@ -7,8 +7,9 @@
 #include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
-
 #include <AMReX_EBFabFactory.H>
+
+#include <MFIX_DEM_Params.H>
 
 void
 mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
@@ -659,6 +660,8 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
         Real avg_dp[10], avg_ro[10];
         pc->GetParticleAvgProp( avg_dp, avg_ro );
         init_collision(avg_dp, avg_ro);
+
+        DEMParams::Initialize();
     }
 
     if (solve_fluid)

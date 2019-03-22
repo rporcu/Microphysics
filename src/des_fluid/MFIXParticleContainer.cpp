@@ -565,7 +565,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         Real kt_des; 
                         Real etan_des;
                         Real etat_des;
-                        if (DEM::CollisionModel == DEM::HERTZIAN)
+                        if (DEMParams::CollisionModel == DEMParams::HERTZIAN)
                         {
                             amrex::Abort("Not implemented");
                         }
