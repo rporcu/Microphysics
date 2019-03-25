@@ -155,9 +155,9 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:sum) if (Gpu::notInLaunchRegion())
+#pragma omp parallel reduction(+:sum)
 #endif
-    for (MFIter mfi(mf,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
     {
         const FArrayBox& fab = mf[mfi];
 
@@ -165,14 +165,13 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
         const int* lo   = box.loVect();
         const int* hi   = box.hiVect();
 
-#pragma gpu
-  mfix_sum_mf(AMREX_INT_ANYD(lo),AMREX_INT_ANYD(hi),BL_TO_FORTRAN_N_ANYD(fab,comp),
-          AMREX_REAL_ANYD(dx),BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
-                    AMREX_MFITER_REDUCE_SUM(&sum));
+        mfix_sum_mf(lo, hi, BL_TO_FORTRAN_N_ANYD(fab, comp),
+                    dx, BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+                    &sum);
     }
 
     if (!local)
-  ParallelDescriptor::ReduceRealSum(sum);
+        ParallelDescriptor::ReduceRealSum(sum);
 
     return sum;
 }
