@@ -17,10 +17,23 @@ subroutine get_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out, kn
                                     etat_out(dim_m, dim_m), etat_w_out(dim_m)
    integer(c_int), intent(inout) :: nphase_out
 
+   integer :: i, j
+
    nphase_out = mmax
-   etan_out = des_etan
+   kt_out = kt
+   kt_w_out = kt_w
+   kn_out = kn
+   kn_w_out = kn_w
+
+   ! convert from Fortran to C ordering here
+   do i = 1, dim_m
+      do j = 1, dim_m
+         etan_out(i, j) = des_etan(j, i)
+         etat_out(i, j) = des_etat(j, i)
+      end do
+   end do
+
    etan_w_out = des_etan_wall
-   etat_out = des_etat
    etat_w_out = des_etat_wall
 
 end subroutine get_collision_coefficients
