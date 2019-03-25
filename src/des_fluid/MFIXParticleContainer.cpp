@@ -559,19 +559,24 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                         cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
 
-                        Real k;
-                        Real kt; 
                         Real kn_des;
                         Real kt_des; 
                         Real etan_des;
                         Real etat_des;
+
+                        int phase1 = p1.idata(intData::phase);
+                        int phase2 = p2.idata(intData::phase);
+
                         if (DEMParams::CollisionModel == DEMParams::HERTZIAN)
-                        {
+                        {                            
                             amrex::Abort("Not implemented");
                         }
                         else
-                        {
-                            amrex::Abort("Not implemented");                            
+                            {
+                            kn_des = DEMParams::kn;
+                            kt_des = DEMParams::kt;
+                            etan_des = DEMParams::etan[phase1][phase2];
+                            etat_des = DEMParams::etat[phase1][phase2];
                         }
                     }
                 }
