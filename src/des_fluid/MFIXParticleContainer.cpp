@@ -1366,7 +1366,7 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
         {
             auto& particles = pti.GetArrayOfStructs();
             
-            Gpu::HostVector<ParticleType> host_particles;
+            Gpu::HostVector<ParticleType> host_particles(pti.numParticles());
             Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
             
             for (const auto& p: host_particles){
