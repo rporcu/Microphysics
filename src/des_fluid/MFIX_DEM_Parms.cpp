@@ -2,6 +2,8 @@
 #include <AMReX_Arena.H>
 #include <MFIX_DEM_Parms.H>
 
+#include <mfix_des_F.H>
+
 namespace DEMParams
 {
     AMREX_GPU_DEVICE_MANAGED COLLISIONMODEL CollisionModel = LSD;
@@ -30,8 +32,6 @@ namespace DEMParams
     AMREX_GPU_DEVICE_MANAGED amrex::Real en_w_input[NMAX];
     AMREX_GPU_DEVICE_MANAGED amrex::Real et_w_input[NMAX];
     
-    AMREX_GPU_DEVICE_MANAGED int num_phases;
-
     void Initialize ()
     {
         if      (CollisionModel == LSD     ) InitializeLSD();
@@ -41,7 +41,17 @@ namespace DEMParams
     
     void InitializeLSD () 
     {
-        NPHASE = 1;
+        get_collision_coefficients(&NPHASE, &kt, &kt_w, &kn, &kn_w, 
+                                   &etan[0][0], &etan_w[0], &etat[0][0], &etat_w[0]); 
+
+        amrex::Print() << NPHASE << "\n";
+        amrex::Print() << kt << "\n";
+        amrex::Print() << kt_w << "\n";
+        amrex::Print() << kn << "\n";
+        amrex::Print() << kn_w << "\n";
+
+
+        amrex::Abort();
     }
     
     void InitializeHertzian ()
