@@ -578,6 +578,39 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                             etan_des = DEMParams::etan[phase1][phase2];
                             etat_des = DEMParams::etat[phase1][phase2];
                         }
+
+                        Real fn[3];
+                        Real ft[3];
+                        Real overlap_t[3];
+                        Real mag_overlap_t;
+
+                        // calculate the normal contact force
+                        fn[0] = -(kn_des*overlap_n*normal[0] + etan_des*vrel_trans_norm*normal[0]);
+                        fn[1] = -(kn_des*overlap_n*normal[1] + etan_des*vrel_trans_norm*normal[1]);
+                        fn[2] = -(kn_des*overlap_n*normal[2] + etan_des*vrel_trans_norm*normal[2]);
+
+                        // calculate the tangential overlap
+                        overlap_t[0] = subdt*vrel_t[0];
+                        overlap_t[1] = subdt*vrel_t[1];
+                        overlap_t[2] = subdt*vrel_t[2];
+                        mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
+                        
+                        if (mag_overlap_t > 0.0) {
+                            Real fnmd = DEMParams::mew * sqrt(dot_product(fn, fn));
+                            Real tangent[3];
+                            tangent[0] = overlap_t[0]/mag_overlap_t;
+                            tangent[1] = overlap_t[1]/mag_overlap_t;
+                            tangent[2] = overlap_t[2]/mag_overlap_t;
+                            ft[0] = -fnmd * tangent[0];
+                            ft[1] = -fnmd * tangent[1];
+                            ft[2] = -fnmd * tangent[2];
+                        } else {
+                            ft[0] = 0.0;
+                            ft[1] = 0.0;
+                            ft[2] = 0.0;
+                        }
+                                             
+                        
                     }
                 }
             });

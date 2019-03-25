@@ -17,6 +17,9 @@ namespace DEMParams
     
     AMREX_GPU_DEVICE_MANAGED amrex::Real kt_fac = 2.0/7.0;
     AMREX_GPU_DEVICE_MANAGED amrex::Real kt_w_fac = 2.0/7.0;
+
+    AMREX_GPU_DEVICE_MANAGED amrex::Real mew;
+    AMREX_GPU_DEVICE_MANAGED amrex::Real mew_w;
     
     // normal and tangential components of the damping coefficients
     AMREX_GPU_DEVICE_MANAGED amrex::Real etan[NMAX][NMAX];
@@ -41,7 +44,7 @@ namespace DEMParams
     
     void InitializeLSD () 
     {
-        get_collision_coefficients(&NPHASE, &kt, &kt_w, &kn, &kn_w, 
+        get_collision_coefficients(&NPHASE, &kt, &kt_w, &kn, &kn_w, &mew, &mew_w,
                                    &etan[0][0], &etan_w[0], &etat[0][0], &etat_w[0]);
     }
     

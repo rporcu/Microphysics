@@ -23,6 +23,10 @@ namespace DEMParams
     // normal component of spring constant
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kn;
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kn_w;
+
+    // friction coefficients for particle-particle and particle-wall collisions
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real mew;
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real mew_w;
     
     // assumed to be a constant factor relating these for linear spring-dashpot
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt_fac;
