@@ -98,6 +98,8 @@ int main (int argc, char* argv[])
     BL_PROFILE_VAR("main()", pmain)
     BL_PROFILE_REGION_START("mfix::main()");
 
+    amrex::Cuda::setLaunchRegion(false);
+
     // Setting format to NATIVE rather than default of NATIVE_32
     FArrayBox::setFormat(FABio::FAB_NATIVE);
 

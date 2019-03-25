@@ -529,6 +529,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             Real eps = std::numeric_limits<Real>::epsilon();
             
+            Real* fc_ptr = fc[index].dataPtr();
+            Real* tow_ptr = tow[index].dataPtr();
+
             // now we loop over the neighbor list and compute the forces
             AMREX_FOR_1D ( nrp, i,
             {
@@ -609,8 +612,25 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                             ft[1] = 0.0;
                             ft[2] = 0.0;
                         }
-                                             
+                                
+                        // each particle updates its force (no need for atomics)
+                        fc_ptr[i         ] += fn[0] + ft[0];
+                        fc_ptr[i + ntot  ] += fn[1] + ft[1];
+                        fc_ptr[i + 2*ntot] += fn[2] + ft[2];
                         
+                        Real r1 = p1.rdata(realData::radius);
+                        Real r2 = p2.rdata(realData::radius);
+                                               
+                        Real dist_cl = 0.5 * (dist_mag + (r1*r1 - r2*r2) / dist_mag);
+                        dist_cl = dist_mag - dist_cl;
+                        
+                        Real tow_force[3];
+
+                        cross_product(normal, ft, tow_force);
+
+                        tow_ptr[i         ] += dist_cl*tow_force[0];
+                        tow_ptr[i + ntot  ] += dist_cl*tow_force[1];
+                        tow_ptr[i + 2*ntot] += dist_cl*tow_force[2];
                     }
                 }
             });
