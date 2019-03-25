@@ -9,7 +9,7 @@
 #include <AMReX_Box.H>
 #include <AMReX_EBFabFactory.H>
 
-#include <MFIX_DEM_Params.H>
+#include <MFIX_DEM_Parms.H>
 
 void
 mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)

@@ -13,6 +13,10 @@ extern "C"
 {
 #endif
 
+    void get_collision_coefficents(int* nphase, amrex::Real* kt, amrex::Real* kt_w,
+                                   amrex::Real* kn, amrex::Real* kn_w, amrex::Real* etan,
+                                   amrex::Real* etan_w, amrex::Real* etat,amrex::Real* etat_w);
+    
     int des_continuum_coupled ();
 
     void get_gravity (
