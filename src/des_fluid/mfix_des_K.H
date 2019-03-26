@@ -1,6 +1,6 @@
 #include "MFIXParticleContainer.H"
 
-AMREX_GPU_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void cross_product (const Real* a, const Real* b, Real* c)
 {
     c[0] = a[1]*b[2] - a[2]*b[1];
@@ -8,13 +8,13 @@ void cross_product (const Real* a, const Real* b, Real* c)
     c[2] = a[0]*b[1] - a[1]*b[0];
 }
 
-AMREX_GPU_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_INLINE
 Real dot_product (const Real* a, const Real* b)
 {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
 
-AMREX_GPU_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void cfrelvel (const MFIXParticleContainer::ParticleType& p1, 
                const MFIXParticleContainer::ParticleType& p2,
                Real& vrn, Real* vslip, const Real* normal, 
