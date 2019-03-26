@@ -504,8 +504,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 Real* fc_ptr = fc[index].dataPtr();
                 Real* tow_ptr = tow[index].dataPtr();
 
-                //                AMREX_FOR_1D ( nrp, i,
-                for (int i = 0; i < nrp; ++i)
+                AMREX_FOR_1D ( nrp, i,
                 {
                     ParticleType& p = pstruct[i];
                     Real rp = p.rdata(realData::radius);
@@ -607,8 +606,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         tow_ptr[i + ntot  ] += ls_value*tow_force[1];
                         tow_ptr[i + 2*ntot] += ls_value*tow_force[2];                        
                     }
-                }
-                //                });                
+                });                
 #else
                 calc_wall_collisions(particles, &ntot, &nrp,
                                      tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
