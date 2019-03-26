@@ -442,13 +442,14 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             const int nrp = GetParticles(lev)[index].numRealParticles();            
             RealType* particles  = pti.GetArrayOfStructs().data();
 
-#ifdef AMREX_USE_CUDA
             auto& plev = GetParticles(lev);
             auto& ptile = plev[index];
             auto& aos   = ptile.GetArrayOfStructs();
+
+            // Neighbor particles
+#ifdef AMREX_USE_CUDA
             int size_ng = aos.numNeighborParticles();            
 #else
-            // Neighbor particles
             int size_ng = neighbors[lev][index].size();
             int size_nl = neighbor_list[lev][index].size();
 #endif
@@ -494,7 +495,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             {
                 // Calculate forces and torques from particle-wall collisions
                 BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-#ifdef AMREX_USE_CUDA
+
                 auto& geom = this->Geom(lev);
                 const auto dxi = geom.InvCellSizeArray();
                 const auto plo = geom.ProbLoArray();
@@ -607,13 +608,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         tow_ptr[i + 2*ntot] += ls_value*tow_force[2];                        
                     }
                 });                
-#else
-                calc_wall_collisions(particles, &ntot, &nrp,
-                                     tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-                                     BL_TO_FORTRAN_3D((*ls_valid)[pti]),
-                                     BL_TO_FORTRAN_3D((*ls_phi)[pti]),
-                                     dx, &ls_refinement);
-#endif                
+
                 // Debugging: copy data from the fc (all forces) vector to
                 // the wfor (wall forces) vector.
                 if (debug_level > 0) {
