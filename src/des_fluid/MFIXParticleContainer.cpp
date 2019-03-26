@@ -538,9 +538,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 ParticleType& p1 = pstruct[i];
                 for (const auto& p2 : nbor_data.getNeighbors(i))
                 {
-                    Real dx = p1.pos(0) - p2.pos(0);
-                    Real dy = p1.pos(1) - p2.pos(1);
-                    Real dz = p1.pos(2) - p2.pos(2);
+                    Real dx = p2.pos(0) - p1.pos(0);
+                    Real dy = p2.pos(1) - p1.pos(1);
+                    Real dz = p2.pos(2) - p1.pos(2);
                     
                     Real r2 = dx*dx + dy*dy + dz*dz;
                     Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
@@ -578,8 +578,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                             {
                             kn_des = DEMParams::kn;
                             kt_des = DEMParams::kt;
-                            etan_des = DEMParams::etan[phase1][phase2];
-                            etat_des = DEMParams::etat[phase1][phase2];
+                            etan_des = DEMParams::etan[phase1-1][phase2-1];
+                            etat_des = DEMParams::etat[phase1-1][phase2-1];
                         }
 
                         Real fn[3];
@@ -598,7 +598,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         overlap_t[2] = subdt*vrel_t[2];
                         mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
                         
-                        if (mag_overlap_t > 0.0) {
+                        if (mag_overlap_t > 0.0) {                            
                             Real fnmd = DEMParams::mew * sqrt(dot_product(fn, fn));
                             Real tangent[3];
                             tangent[0] = overlap_t[0]/mag_overlap_t;
@@ -612,7 +612,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                             ft[1] = 0.0;
                             ft[2] = 0.0;
                         }
-                                
+
                         // each particle updates its force (no need for atomics)
                         fc_ptr[i         ] += fn[0] + ft[0];
                         fc_ptr[i + ntot  ] += fn[1] + ft[1];
@@ -631,8 +631,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         tow_ptr[i         ] += dist_cl*tow_force[0];
                         tow_ptr[i + ntot  ] += dist_cl*tow_force[1];
                         tow_ptr[i + 2*ntot] += dist_cl*tow_force[2];
+                        } 
                     }
-                }
             });
 #else            
             calc_particle_collisions ( particles                          , &nrp,
@@ -652,16 +652,43 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             }
 #endif            
             BL_PROFILE_VAR_STOP(calc_particle_collisions);
-            
+
             /********************************************************************
              * Move particles based on collision forces and torques             *
              *******************************************************************/
 
 #ifdef AMREX_USE_CUDA
 
+            Real grav[3];
+            grav[0] = gravity[0];
+            grav[1] = gravity[1];
+            grav[2] = gravity[2];
+
+            Real* grav_ptr = &grav[0];
+
+            AMREX_FOR_1D ( nrp, i,
+            {
+                ParticleType& p = pstruct[i];
+                
+                p.rdata(realData::velx) += subdt * (
+                    (p.rdata(realData::dragx) + fc_ptr[i       ]) /  p.rdata(realData::mass) + grav_ptr[0]);
+                p.rdata(realData::vely) += subdt * (
+                    (p.rdata(realData::dragy) + fc_ptr[i + ntot]) /  p.rdata(realData::mass) + grav_ptr[1]);
+                p.rdata(realData::velz) += subdt * (
+                    (p.rdata(realData::dragz) + fc_ptr[i+2*ntot]) /  p.rdata(realData::mass) + grav_ptr[2]);
+                
+                p.rdata(realData::omegax) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i       ];
+                p.rdata(realData::omegay) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i+  ntot];
+                p.rdata(realData::omegaz) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i+2*ntot];
+                
+                p.pos(0) += subdt * p.rdata(realData::velx);
+                p.pos(1) += subdt * p.rdata(realData::vely);
+                p.pos(2) += subdt * p.rdata(realData::velz);
+            });
 #else                        
             time_advance(pti, ntot, subdt, tow[index], fc[index]);
 #endif
+
             /********************************************************************
              * Update runtime cost (used in load-balancing)                     *
              *******************************************************************/
