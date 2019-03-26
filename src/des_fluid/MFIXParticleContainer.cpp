@@ -501,8 +501,11 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 const auto phiarr = ls_phi->array(pti);
 
                 ParticleType* pstruct = aos().dataPtr();
+                Real* fc_ptr = fc[index].dataPtr();
+                Real* tow_ptr = tow[index].dataPtr();
 
-                AMREX_FOR_1D ( nrp, i,
+                //                AMREX_FOR_1D ( nrp, i,
+                for (int i = 0; i < nrp; ++i)
                 {
                     ParticleType& p = pstruct[i];
                     Real rp = p.rdata(realData::radius);
@@ -511,7 +514,101 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                     Real overlap_n = rp - ls_value;
 
-                });                
+                    if (ls_value < rp)
+                    {
+                        Real normal[3];
+                        level_set_normal(p, ls_refinement, &normal[0], phiarr, plo, dxi);
+
+                        normal[0] *= -1;
+                        normal[1] *= -1;
+                        normal[2] *= -1;
+
+                        Real v_rot[3];                       
+                        v_rot[0] = ls_value * p.rdata(realData::omegax);
+                        v_rot[1] = ls_value * p.rdata(realData::omegay);
+                        v_rot[2] = ls_value * p.rdata(realData::omegaz);
+                        
+                        Real vreltrans[3];
+                        Real cprod[3];
+                        
+                        cross_product(v_rot, normal, cprod);
+                        vreltrans[0] = p.rdata(realData::velx) + cprod[0];
+                        vreltrans[1] = p.rdata(realData::vely) + cprod[1];
+                        vreltrans[2] = p.rdata(realData::velz) + cprod[2];
+
+                        Real vreltrans_norm = dot_product(vreltrans, normal);
+                        
+                        Real vrel_t[3];
+                        vrel_t[0] = vreltrans[0] - vreltrans_norm*normal[0];
+                        vrel_t[1] = vreltrans[1] - vreltrans_norm*normal[1];
+                        vrel_t[2] = vreltrans[2] - vreltrans_norm*normal[2];
+
+                        int phase = p.idata(intData::phase);
+
+                        Real kn_des_w;
+                        Real kt_des_w; 
+                        Real etan_des_w;
+                        Real etat_des_w;
+
+                        if (DEMParams::CollisionModel == DEMParams::HERTZIAN)
+                        {                            
+                            amrex::Abort("Not implemented");
+                        }
+                        else
+                        {
+                            kn_des_w   = DEMParams::kn_w;
+                            kt_des_w   = DEMParams::kt_w;
+                            etan_des_w = DEMParams::etan_w[phase-1];
+                            etat_des_w = DEMParams::etat_w[phase-1];
+                        }
+
+                        Real fn[3];
+                        Real ft[3];
+                        Real overlap_t[3];
+                        Real mag_overlap_t;
+
+                        // calculate the normal contact force
+                        fn[0] = -(kn_des_w*overlap_n*normal[0] + etan_des_w*vreltrans_norm*normal[0]);
+                        fn[1] = -(kn_des_w*overlap_n*normal[1] + etan_des_w*vreltrans_norm*normal[1]);
+                        fn[2] = -(kn_des_w*overlap_n*normal[2] + etan_des_w*vreltrans_norm*normal[2]);
+
+                        // calculate the tangential displacement
+                        overlap_t[0] = subdt*vrel_t[0];
+                        overlap_t[1] = subdt*vrel_t[1];
+                        overlap_t[2] = subdt*vrel_t[2];
+
+                        mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
+                        
+                        if (mag_overlap_t > 0.0) {                            
+                            Real fnmd = DEMParams::mew * sqrt(dot_product(fn, fn));
+                            Real tangent[3];
+                            tangent[0] = overlap_t[0]/mag_overlap_t;
+                            tangent[1] = overlap_t[1]/mag_overlap_t;
+                            tangent[2] = overlap_t[2]/mag_overlap_t;
+                            ft[0] = -fnmd * tangent[0];
+                            ft[1] = -fnmd * tangent[1];
+                            ft[2] = -fnmd * tangent[2];
+                        } else {
+                            ft[0] = 0.0;
+                            ft[1] = 0.0;
+                            ft[2] = 0.0;
+                        }
+
+                        // each particle updates its force (no need for atomics)
+                        fc_ptr[i         ] += fn[0] + ft[0];
+                        fc_ptr[i + ntot  ] += fn[1] + ft[1];
+                        fc_ptr[i + 2*ntot] += fn[2] + ft[2];
+                        
+                        Real tow_force[3];
+
+                        cross_product(normal, ft, tow_force);
+
+                        tow_ptr[i         ] += ls_value*tow_force[0];
+                        tow_ptr[i + ntot  ] += ls_value*tow_force[1];
+                        tow_ptr[i + 2*ntot] += ls_value*tow_force[2];                        
+                    }
+                }
+                //                });                
 #else
                 calc_wall_collisions(particles, &ntot, &nrp,
                                      tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
