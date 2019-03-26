@@ -56,13 +56,11 @@ void cfrelvel (const MFIXParticleContainer::ParticleType& p1,
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void interp_level_set (MFIXParticleContainer::ParticleType const& p,
-                       amrex::Real& ls_value, const int n_refine,
-                       amrex::Array4<amrex::Real const> const& phi,
-                       amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
-                       amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi)
+amrex::Real interp_level_set (MFIXParticleContainer::ParticleType const& p, const int n_refine,
+                              amrex::Array4<amrex::Real const> const& phi,
+                              amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
+                              amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi)
 {
-
     amrex::Real scaled_dxi[3];
     scaled_dxi[0] = n_refine * dxi[0];
     scaled_dxi[1] = n_refine * dxi[1];
@@ -84,6 +82,7 @@ void interp_level_set (MFIXParticleContainer::ParticleType const& p,
     amrex::Real wy_lo = 1.0 - wy_hi;
     amrex::Real wz_lo = 1.0 - wz_hi;
 
+    amrex::Real ls_value;
     ls_value = phi(i,   j  , k  ) * wx_lo * wy_lo * wz_lo;
     ls_value = phi(i+1, j  , k  ) * wx_hi * wy_lo * wz_lo;
     ls_value = phi(i,   j+1, k  ) * wx_lo * wy_hi * wz_lo;
@@ -92,4 +91,6 @@ void interp_level_set (MFIXParticleContainer::ParticleType const& p,
     ls_value = phi(i+1, j  , k+1) * wx_hi * wy_lo * wz_hi;
     ls_value = phi(i  , j+1, k+1) * wx_lo * wy_hi * wz_hi;
     ls_value = phi(i+1, j+1, k+1) * wx_hi * wy_hi * wz_hi;
+    
+    return ls_value;
 }

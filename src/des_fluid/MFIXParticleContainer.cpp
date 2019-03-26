@@ -340,8 +340,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                                             EBFArrayBoxFactory * ebfactory,
                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
                                             const int ls_refinement,
-                                            MultiFab * cost, std::string & knapsack_weight_type
-                                            )
+                                            MultiFab * cost, std::string & knapsack_weight_type)
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
@@ -491,17 +490,35 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 has_wall = (int_has_wall > 0);
             }
 
-
             if (has_wall)
             {
                 // Calculate forces and torques from particle-wall collisions
                 BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
+#ifdef AMREX_USE_CUDA
+                auto& geom = this->Geom(lev);
+                const auto dxi = geom.InvCellSizeArray();
+                const auto plo = geom.ProbLoArray();
+                const auto phiarr = ls_phi->array(pti);
+
+                ParticleType* pstruct = aos().dataPtr();
+
+                AMREX_FOR_1D ( nrp, i,
+                {
+                    ParticleType& p = pstruct[i];
+                    Real rp = p.rdata(realData::radius);
+                    
+                    Real ls_value = interp_level_set(p, ls_refinement, phiarr, plo, dxi);
+
+                    Real overlap_n = rp - ls_value;
+
+                });                
+#else
                 calc_wall_collisions(particles, &ntot, &nrp,
                                      tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
                                      BL_TO_FORTRAN_3D((*ls_valid)[pti]),
                                      BL_TO_FORTRAN_3D((*ls_phi)[pti]),
                                      dx, &ls_refinement);
-                
+#endif                
                 // Debugging: copy data from the fc (all forces) vector to
                 // the wfor (wall forces) vector.
                 if (debug_level > 0) {
@@ -509,7 +526,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         wfor[index][i] = fc[index][i];
                     }
                 }
-                
                 BL_PROFILE_VAR_STOP(calc_wall_collisions);
             }
 
