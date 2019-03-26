@@ -17,14 +17,15 @@ contains
    ! We use no-slip boundary for velocities.
    !
    subroutine compute_diff_wallflux (divw, dx, i, j, k, &
-        vel, vlo, vhi,     &
-        lam, mu, slo, shi, &
-        bcent, blo, bhi,   &
-        flag,  flo, fhi,   &
-        apx, axlo, axhi,   &
-        apy, aylo, ayhi,   &
-        apz, azlo, azhi,   &
-        do_explicit_diffusion)
+        vel, vlo, vhi,         &
+        lam, mu, slo, shi,     &
+        bcent, blo, bhi,       &
+        flag,  flo, fhi,       &
+        apx, axlo, axhi,       &
+        apy, aylo, ayhi,       &
+        apz, azlo, azhi,       &
+        do_explicit_diffusion, &
+        eb_ho_dirichlet)
 
       ! Wall divergence operator
       real(rt),       intent(  out) :: divw(3)
@@ -60,6 +61,7 @@ contains
       ! If false then we include all only the off-diagonal terms here -- we do this
       !     by computing the full tensor then subtracting the diagonal terms
       integer(c_int),  intent(in   ) :: do_explicit_diffusion
+      integer(c_int),  intent(in   ) :: eb_ho_dirichlet
 
       ! Local variable
       real(rt)   :: dxinv(3)
@@ -97,23 +99,43 @@ contains
       ! Value on wall -- here we enforce no-slip therefore 0 for all components
       phib = 0.d0
 
-      call compute_dphidn_3d(dudn, dxinv, i, j, k, &
-                             vel(:,:,:,1), vlo, vhi, &
-                             flag, flo, fhi, &
-                             bcent(i,j,k,:), phib,  &
-                             anrmx, anrmy, anrmz)
+      if (eb_ho_dirichlet .eq. 1) then
+         call compute_dphidn_3d_ho(dudn, dxinv, i, j, k, &
+                                   vel(:,:,:,1), vlo, vhi, &
+                                   flag, flo, fhi, &
+                                   bcent(i,j,k,:), phib,  &
+                                   anrmx, anrmy, anrmz)
 
-      call compute_dphidn_3d(dvdn, dxinv, i, j, k, &
-                             vel(:,:,:,2), vlo, vhi, &
-                             flag, flo, fhi, &
-                             bcent(i,j,k,:), phib,  &
-                             anrmx, anrmy, anrmz)
+         call compute_dphidn_3d_ho(dvdn, dxinv, i, j, k, &
+                                   vel(:,:,:,2), vlo, vhi, &
+                                   flag, flo, fhi, &
+                                   bcent(i,j,k,:), phib,  &
+                                   anrmx, anrmy, anrmz)
 
-      call compute_dphidn_3d(dwdn, dxinv, i, j, k, &
-                             vel(:,:,:,3), vlo, vhi, &
-                             flag, flo, fhi, &
-                             bcent(i,j,k,:), phib,  &
-                             anrmx, anrmy, anrmz)
+         call compute_dphidn_3d_ho(dwdn, dxinv, i, j, k, &
+                                   vel(:,:,:,3), vlo, vhi, &
+                                   flag, flo, fhi, &
+                                   bcent(i,j,k,:), phib,  &
+                                   anrmx, anrmy, anrmz)
+      else
+         call compute_dphidn_3d(dudn, dxinv, i, j, k, &
+                                vel(:,:,:,1), vlo, vhi, &
+                                flag, flo, fhi, &
+                                bcent(i,j,k,:), phib,  &
+                                anrmx, anrmy, anrmz)
+
+         call compute_dphidn_3d(dvdn, dxinv, i, j, k, &
+                                vel(:,:,:,2), vlo, vhi, &
+                                flag, flo, fhi, &
+                                bcent(i,j,k,:), phib,  &
+                                anrmx, anrmy, anrmz)
+
+         call compute_dphidn_3d(dwdn, dxinv, i, j, k, &
+                                vel(:,:,:,3), vlo, vhi, &
+                                flag, flo, fhi, &
+                                bcent(i,j,k,:), phib,  &
+                                anrmx, anrmy, anrmz)
+      end if
 
       !
       ! transform them to d/dx, d/dy and d/dz given transverse derivatives are zero

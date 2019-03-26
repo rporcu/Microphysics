@@ -16,25 +16,26 @@ module eb_diffusion_mod
 contains
 
    subroutine compute_divtau_eb ( lo, hi,  &
-        divtau, dlo, dhi,    &
-        vel_in, vinlo, vinhi,&
-        mu, lambda, ro,      &
-        ep, slo, shi,        &
-        flags,    flo,  fhi, &
-        afrac_x, axlo, axhi, &
-        afrac_y, aylo, ayhi, &
-        afrac_z, azlo, azhi, &
-        cent_x,  cxlo, cxhi, &
-        cent_y,  cylo, cyhi, &
-        cent_z,  czlo, czhi, &
-        vfrac,   vflo, vfhi, &
-        bcent,    blo,  bhi, &
-        domlo,  domhi,       &
-        bc_ilo, bc_ihi,      &
-        bc_jlo, bc_jhi,      &
-        bc_klo, bc_khi,      &
-        dx, ng,              &
-        do_explicit_diffusion) bind(C)
+        divtau, dlo, dhi,      &
+        vel_in, vinlo, vinhi,  &
+        mu, lambda, ro,        &
+        ep, slo, shi,          &
+        flags,    flo,  fhi,   &
+        afrac_x, axlo, axhi,   &
+        afrac_y, aylo, ayhi,   &
+        afrac_z, azlo, azhi,   &
+        cent_x,  cxlo, cxhi,   &
+        cent_y,  cylo, cyhi,   &
+        cent_z,  czlo, czhi,   &
+        vfrac,   vflo, vfhi,   &
+        bcent,    blo,  bhi,   &
+        domlo,  domhi,         &
+        bc_ilo, bc_ihi,        &
+        bc_jlo, bc_jhi,        &
+        bc_klo, bc_khi,        &
+        dx, ng,                &
+        do_explicit_diffusion, &
+        eb_ho_dirichlet) bind(C)
 
       use diffusion_mod, only: fill_vel_diff_bc
       use divop_mod,     only: compute_divop
@@ -98,6 +99,7 @@ contains
       ! If false then we include all only the off-diagonal terms here -- we do this
       !     by computing the full tensor then subtracting the diagonal terms
       integer(c_int),  intent(in   ) :: do_explicit_diffusion
+      integer(c_int),  intent(in   ) :: eb_ho_dirichlet
 
       ! Temporary array just to handle bc's
       integer(c_int) :: vlo(3), vhi(3)
@@ -157,7 +159,7 @@ contains
        & afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, &
        & cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi,    &
        & flags, flo, fhi, vfrac, vflo, vfhi, bcent, blo, bhi,           &
-       & domlo, domhi, dx, ng, mu, lambda, do_explicit_diffusion )
+       & domlo, domhi, dx, ng, mu, lambda, do_explicit_diffusion, eb_ho_dirichlet )
 
       
       ! Divide by ro*ep

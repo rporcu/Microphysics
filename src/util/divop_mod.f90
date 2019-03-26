@@ -30,25 +30,26 @@ contains
    !
    !
    subroutine compute_divop ( lo, hi, &
-        div, dlo, dhi, &
-        vel,vllo,vlhi, &
-        fx,  fxlo, fxhi, &
-        fy,  fylo, fyhi, &
-        fz,  fzlo, fzhi, &
-        ep,  elo, ehi, &
-        afrac_x, axlo, axhi, &
-        afrac_y, aylo, ayhi, &
-        afrac_z, azlo, azhi, &
-        cent_x,  cxlo, cxhi, &
-        cent_y,  cylo, cyhi, &
-        cent_z,  czlo, czhi, &
-        flags,    flo,  fhi, &
-        vfrac,   vflo, vfhi, &
-        bcent,    blo,  bhi, &
-        domlo, domhi,        &
-        dx, ng, &
-        mu, lambda , & 
-        do_explicit_diffusion ) bind(C)
+        div, dlo, dhi,         &
+        vel,vllo,vlhi,         &
+        fx,  fxlo, fxhi,       &
+        fy,  fylo, fyhi,       &
+        fz,  fzlo, fzhi,       &
+        ep,  elo, ehi,         &
+        afrac_x, axlo, axhi,   &
+        afrac_y, aylo, ayhi,   &
+        afrac_z, azlo, azhi,   &
+        cent_x,  cxlo, cxhi,   &
+        cent_y,  cylo, cyhi,   &
+        cent_z,  czlo, czhi,   &
+        flags,    flo,  fhi,   &
+        vfrac,   vflo, vfhi,   &
+        bcent,    blo,  bhi,   &
+        domlo, domhi,          &
+        dx, ng,                &
+        mu, lambda,            & 
+        do_explicit_diffusion, &
+        eb_ho_dirichlet ) bind(C)
 
       use bc
       use amrex_eb_util_module, only: amrex_eb_interpolate_to_face_centroid_per_cell
@@ -114,6 +115,7 @@ contains
       ! If false then we include all only the off-diagonal terms here -- we do this
       !     by computing the full tensor then subtracting the diagonal terms
       integer(c_int),  intent(in   ), optional :: do_explicit_diffusion
+      integer(c_int),  intent(in   ), optional :: eb_ho_dirichlet
 
       ! Conservative div and EB stuff
       real(ar)  ::    &
@@ -248,7 +250,8 @@ contains
                                                        afrac_x, axlo, axhi,                   &
                                                        afrac_y, aylo, ayhi,                   &
                                                        afrac_z, azlo, azhi,                   &
-                                                       do_explicit_diffusion)
+                                                       do_explicit_diffusion,                 &
+                                                       eb_ho_dirichlet)
                         end if
                         divc(i,j,k) = divc(i,j,k) - divdiff_w(n,iwall) / ( dx(n) * vfrac(i,j,k) )
                      end if
