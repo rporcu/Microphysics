@@ -86,7 +86,8 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       // This tells the solver to use the higher order extrapolation to define d(phi)/dn at EB walls
       // This may not be robust in the presence of small cells so it is an option, not required
       //     (but does get Poiseuille flow right in the presence of walls at cell boundaries)
-      matrix.setEBHODirichlet ( );
+      if (eb_ho_dirichlet == 1)
+         matrix.setEBHODirichlet ( );
    }
 
    // Loop over the velocity components
