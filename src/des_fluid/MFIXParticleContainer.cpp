@@ -651,7 +651,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     {
                         Cuda::Atomic::Add(pncoll, 1);
                         Real dist_mag = sqrt(r2);
-                        AMREX_ALWAYS_ASSERT(dist_mag >= eps);
+                        AMREX_ASSERT(dist_mag >= eps);
                         
                         Real normal[3];
                         normal[0] = dx / dist_mag;
