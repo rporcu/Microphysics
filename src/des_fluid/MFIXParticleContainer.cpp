@@ -445,6 +445,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             auto& plev = GetParticles(lev);
             auto& ptile = plev[index];
             auto& aos   = ptile.GetArrayOfStructs();
+            ParticleType* pstruct = aos().dataPtr();
 
             // Neighbor particles
 #ifdef AMREX_USE_CUDA
@@ -464,6 +465,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             fc[index].clear();
             tow[index].resize(ntot*3,0.0);
             fc[index].resize(ntot*3,0.0);
+
+            Real* fc_ptr = fc[index].dataPtr();
+            Real* tow_ptr = tow[index].dataPtr();
 
             // For debugging: keep track of particle-particle (pfor) and
             // particle-wall (wfor) forces
@@ -500,10 +504,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 const auto dxi = geom.InvCellSizeArray();
                 const auto plo = geom.ProbLoArray();
                 const auto phiarr = ls_phi->array(pti);
-
-                ParticleType* pstruct = aos().dataPtr();
-                Real* fc_ptr = fc[index].dataPtr();
-                Real* tow_ptr = tow[index].dataPtr();
 
                 AMREX_FOR_1D ( nrp, i,
                 {
@@ -627,7 +627,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
 #ifdef AMREX_USE_CUDA
             auto nbor_data = m_neighbor_list[index].data();
-            ParticleType* pstruct = aos().dataPtr();
             
             constexpr Real small_number = 1.0e-15;
             long ncoll = 0;
@@ -635,9 +634,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             Real eps = std::numeric_limits<Real>::epsilon();
             
-            Real* fc_ptr = fc[index].dataPtr();
-            Real* tow_ptr = tow[index].dataPtr();
-
             // now we loop over the neighbor list and compute the forces
             AMREX_FOR_1D ( nrp, i,
             {
@@ -763,8 +759,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              * Move particles based on collision forces and torques             *
              *******************************************************************/
 
-#ifdef AMREX_USE_CUDA
-
             Real grav[3];
             grav[0] = gravity[0];
             grav[1] = gravity[1];
@@ -791,9 +785,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 p.pos(1) += subdt * p.rdata(realData::vely);
                 p.pos(2) += subdt * p.rdata(realData::velz);
             });
-#else                        
-            time_advance(pti, ntot, subdt, tow[index], fc[index]);
-#endif
 
             /********************************************************************
              * Update runtime cost (used in load-balancing)                     *
@@ -1914,40 +1905,6 @@ void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)
        const Box& sbx = mf_to_be_filled[mfi].box();
        mfix_cap_eps(sbx.loVect(), sbx.hiVect(), (mf_to_be_filled)[mfi].dataPtr());
     }
-}
-
-void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt, 
-                                         Gpu::ManagedDeviceVector<Real>& tow, Gpu::ManagedDeviceVector<Real>& fc)
-{
-    BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-
-    auto& particles = pti.GetArrayOfStructs();
-    const int np = pti.numParticles();
-
-    for(int i = 0; i < np; ++i)
-    {
-        ParticleType& p = particles[i];
-        
-        p.rdata(realData::velx) += subdt * (
-                                            (p.rdata(realData::dragx) + fc[i       ]) /  p.rdata(realData::mass) + gravity[0]);
-        p.rdata(realData::vely) += subdt * (
-                                            (p.rdata(realData::dragy) + fc[i + ntot]) /  p.rdata(realData::mass) + gravity[1]);
-        p.rdata(realData::velz) += subdt * (
-                                            (p.rdata(realData::dragz) + fc[i+2*ntot]) /  p.rdata(realData::mass) + gravity[2]);
-        
-        p.rdata(realData::omegax) += subdt * p.rdata(realData::oneOverI) * tow[i       ];
-        p.rdata(realData::omegay) += subdt * p.rdata(realData::oneOverI) * tow[i+  ntot];
-        p.rdata(realData::omegaz) += subdt * p.rdata(realData::oneOverI) * tow[i+2*ntot];
-        
-        p.pos(0) += subdt * p.rdata(realData::velx);
-        p.pos(1) += subdt * p.rdata(realData::vely);
-        p.pos(2) += subdt * p.rdata(realData::velz);
-    }
-    
-    const int nrp = NumberOfParticles(pti);
-    call_usr2_des(&nrp,particles.data());
-    
-    BL_PROFILE_VAR_STOP(des_time_loop);
 }
 
 void MFIXParticleContainer::set_particle_properties(int pstate, Real pradius, Real pdensity,
