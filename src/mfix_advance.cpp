@@ -403,7 +403,7 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          const auto grav_loc = gravity;
          const auto  gp0_loc = gp0;
 
-         amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+         AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k, 
          {
              Real inv_dens = 1.0 / den_fab(i,j,k);
              vel_fab(i,j,k,0) += dt * ( grav_loc[0]-(gp_fab(i,j,k,0)+gp0_loc[0])*inv_dens );
@@ -448,7 +448,7 @@ mfix::mfix_add_drag_terms (Real dt)
       const auto& fgds_fab = f_gds[lev]->array(mfi);
       const auto&  rop_fab = rop_g[lev]->array(mfi);
 
-      amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k, 
       {
           Real orop  = dt / rop_fab(i,j,k);
           Real denom = 1.0 / (1.0 + fgds_fab(i,j,k) * orop);
