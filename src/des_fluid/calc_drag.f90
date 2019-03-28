@@ -154,29 +154,38 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
 
          velfp(:) = trilinear_interp(vel, ulo, uhi, 3, ppos, x0, dx)
 
-         !
-         ! gradp is interpolated only if there are not covered cells
-         ! in the stencil. If any covered cell is present in the stencil,
-         ! we use the cell gradp
-         !
-         if ( any( is_covered_cell(flags(i-1:i,j-1:j,k-1:k) )) ) then
+         ! If the particle has gone outside the fluid region then we will 
+         !    let the wall collision term bring it back and not use any 
+         !    extrapolated fluid quantities in a covered region
+         if (is_covered_cell(flags(i,j,k))) then
 
-            ic  = floor((particles(p) % pos(1) - x0(1))*odx)
-            jc  = floor((particles(p) % pos(2) - x0(2))*ody)
-            kc  = floor((particles(p) % pos(3) - x0(3))*odz)
-
-            gradpg(:) = gp(ic,jc,kc,:) + gp0(:)
+             particles(p) % drag = zero
 
          else
+             !
+             ! gradp is interpolated only if there are not covered cells
+             ! in the stencil. If any covered cell is present in the stencil,
+             ! we use the cell gradp
+             !
+             if ( any( is_covered_cell(flags(i-1:i,j-1:j,k-1:k) )) ) then
 
-            gradpg(:) = trilinear_interp(gp, gplo, gphi, 3, ppos, x0, dx)
-            gradpg(:) = gradpg(:) + gp0(:)
+                ic  = floor((particles(p) % pos(1) - x0(1))*odx)
+                jc  = floor((particles(p) % pos(2) - x0(2))*ody)
+                kc  = floor((particles(p) % pos(3) - x0(3))*odz)
+    
+                gradpg(:) = gp(ic,jc,kc,:) + gp0(:)
 
+             else
+
+                gradpg(:) = trilinear_interp(gp, gplo, gphi, 3, ppos, x0, dx)
+                gradpg(:) = gradpg(:) + gp0(:)
+
+             end if
+
+             ! Particle drag calculation
+             particles(p) % drag = pbeta*(velfp - pvel) - &
+                                   gradpg(:) * particles(p) % volume
          end if
-
-         ! Particle drag calculation
-         particles(p) % drag = pbeta*(velfp - pvel) - &
-          &                gradpg(:) * particles(p) % volume
 
       end associate
 
