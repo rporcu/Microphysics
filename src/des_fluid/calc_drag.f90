@@ -128,6 +128,7 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer  :: p, i, j, k, ic, jc, kc
+   integer  :: iloc, jloc, kloc
    real(rt) :: velfp(3), gradpg(3)
    real(rt) :: pbeta
    real(rt) :: odx, ody, odz
@@ -147,21 +148,27 @@ subroutine calc_drag_particle_eb( gp,  gplo,   gphi,  &
 
          pbeta = particles(p) % drag(1)
 
+         ! This identifies which cell the particle is in
+         iloc = floor((ppos(1) - x0(1))*odx)
+         jloc = floor((ppos(2) - x0(2))*ody)
+         kloc = floor((ppos(3) - x0(3))*odz)
+
          ! Pick upper cell in the stencil
          i = floor((ppos(1) - x0(1))*odx + half)
          j = floor((ppos(2) - x0(2))*ody + half)
          k = floor((ppos(3) - x0(3))*odz + half)
 
-         velfp(:) = trilinear_interp(vel, ulo, uhi, 3, ppos, x0, dx)
-
          ! If the particle has gone outside the fluid region then we will 
          !    let the wall collision term bring it back and not use any 
          !    extrapolated fluid quantities in a covered region
-         if (is_covered_cell(flags(i,j,k))) then
+         if (is_covered_cell(flags(iloc,jloc,kloc))) then
 
              particles(p) % drag = zero
 
          else
+
+             velfp(:) = trilinear_interp(vel, ulo, uhi, 3, ppos, x0, dx)
+
              !
              ! gradp is interpolated only if there are not covered cells
              ! in the stencil. If any covered cell is present in the stencil,
