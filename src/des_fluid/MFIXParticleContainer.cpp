@@ -980,7 +980,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
     MultiFab* mf_pointer[nlev];
 
     // Start the timers ...
-    const Real      strttime    = ParallelDescriptor::second();
+    const Real strttime = ParallelDescriptor::second();
 
     if (nlev > 2)
       amrex::Abort("For right now MFIXParticleContainer::PICDeposition can only handle up to 2 levels");
@@ -1254,7 +1254,7 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
 {
     BL_PROFILE("MFIXParticleContainer::PICMultiDeposition()");
     
-    const Real      strttime    = ParallelDescriptor::second();
+    const Real strttime = ParallelDescriptor::second();
     
     if (nlev > 2)
         amrex::Abort("For right now MFIXParticleContainer::PICMultiDeposition can only handle up to 2 levels");
@@ -1299,11 +1299,11 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
        beta_vel_ptr[lev]->setVal(0.0,0,3,beta_vel_ptr[lev]->nGrow());
     }
 
-
     // We always use the coarse dx
     const Geometry& gm          = Geom(0);
-    const Real*     plo         = gm.ProbLo();
-    const Real*     dx          = gm.CellSize();
+    const auto      plo         = gm.ProbLoArray();
+    const auto      dx          = gm.CellSizeArray();
+    const auto      dxi         = gm.InvCellSizeArray();
 
     using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
     const FabArray<EBCellFlagFab>* flags;
@@ -1339,8 +1339,9 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
          for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
 
             const auto& particles = pti.GetArrayOfStructs();
+            const ParticleType* pstruct = particles().dataPtr();
             int nstride = particles.dataShape().first;
-            const long np = pti.numParticles();
+            const long nrp = pti.numParticles();
 
             FArrayBox& beta_fab = (*beta_ptr[lev])[pti];
             FArrayBox& beta_vel_fab = (*beta_vel_ptr[lev])[pti];
@@ -1376,13 +1377,78 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
 
             if ((*flags)[pti].getType(box) != FabType::covered )
             {
-                mfix_multi_deposit_cic_eb(particles.data(), nstride, np,
-                                          bx_dataptr, bu_dataptr, lo, hi,
-                                          BL_TO_FORTRAN_ANYD((*volfrac)[pti]),
-                                          BL_TO_FORTRAN_ANYD((*flags)[pti]),
-                                          plo, dx, &fortran_beta_comp,
-                                          &fortran_vel_comp);
-           }
+                auto beta_arr = beta_fab.array();
+                auto beta_vel_arr = beta_vel_fab.array();
+                auto flagsarr = (*flags)[pti].array();
+                auto vratioarr = (*volfrac)[pti].array();
+                
+                AMREX_FOR_1D ( nrp, ip, 
+                {
+                    const ParticleType& p = pstruct[ip];
+                    
+                    amrex::Real reg_cell_vol = dx[0]*dx[1]*dx[2];
+  
+                    amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
+                    amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
+                    amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
+                    
+                    int i = std::floor(x);
+                    int j = std::floor(y);
+                    int k = std::floor(z);
+                    
+                    amrex::Real wx_hi = x - i;
+                    amrex::Real wy_hi = y - j;
+                    amrex::Real wz_hi = z - k;
+                    
+                    amrex::Real wx_lo = 1.0 - wx_hi;
+                    amrex::Real wy_lo = 1.0 - wy_hi;
+                    amrex::Real wz_lo = 1.0 - wz_hi;
+                    
+                    amrex::Real weights[2][2][2];
+
+                    weights[0][0][0] = vratioarr(i-1, j-1, k-1) * wx_lo * wy_lo * wz_lo;
+                    weights[0][0][1] = vratioarr(i-1, j-1, k  ) * wx_lo * wy_lo * wz_hi;
+                    weights[0][1][0] = vratioarr(i-1, j  , k-1) * wx_lo * wy_hi * wz_lo;
+                    weights[0][1][1] = vratioarr(i-1, j  , k  ) * wx_lo * wy_hi * wz_hi;
+                    weights[1][0][0] = vratioarr(i  , j-1, k-1) * wx_hi * wy_lo * wz_lo;
+                    weights[1][0][1] = vratioarr(i  , j-1, k  ) * wx_hi * wy_lo * wz_hi;
+                    weights[1][1][0] = vratioarr(i  , j  , k-1) * wx_hi * wy_hi * wz_lo;
+                    weights[1][1][1] = vratioarr(i  , j  , k  ) * wx_hi * wy_hi * wz_hi;
+
+                    amrex::Real total_weight = 0.0;
+                    for (int ii = 0; ii <= 1; ++ii)
+                        for (int jj = 0; jj <= 1; ++jj)
+                            for (int kk = 0; kk <= 1; ++kk)
+                                total_weight += weights[ii][jj][kk];
+                    
+                    for (int ii = 0; ii <= 1; ++ii)
+                        for (int jj = 0; jj <= 1; ++jj)
+                            for (int kk = 0; kk <= 1; ++kk)
+                                weights[ii][jj][kk] /= total_weight;
+
+                    amrex::Real pbeta = p.rdata(realData::dragx);
+                    amrex::Real pvx   = p.rdata(realData::velx) * pbeta;
+                    amrex::Real pvy   = p.rdata(realData::vely) * pbeta;
+                    amrex::Real pvz   = p.rdata(realData::velz) * pbeta;
+
+                    for (int ii = -1; ii <= 0; ++ii) {
+                        for (int jj = -1; jj <= 0; ++jj) {
+                            for (int kk = -1; kk <= 0; ++kk) {
+                                if (flagsarr(i+ii,j+jj,k+kk) == EBCellFlag::TheCoveredCell())
+                                    continue;
+
+                                amrex::Real this_cell_vol = vratioarr(i+ii,j+jj,k+kk) * reg_cell_vol;
+                                amrex::Real weight_vol = weights[ii+1][jj+1][kk+1]/this_cell_vol;
+
+                                amrex::Gpu::Atomic::Add(&beta_arr(i+ii,j+jj,k+kk), weight_vol*pbeta);
+                                amrex::Gpu::Atomic::Add(&beta_vel_arr(i+ii,j+jj,k+kk,0),weight_vol*pvx);
+                                amrex::Gpu::Atomic::Add(&beta_vel_arr(i+ii,j+jj,k+kk,1),weight_vol*pvy);
+                                amrex::Gpu::Atomic::Add(&beta_vel_arr(i+ii,j+jj,k+kk,2),weight_vol*pvz);
+                            }
+                        }
+                    }
+                });
+            }
 
 #ifdef _OPENMP
             amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_x_vol),
