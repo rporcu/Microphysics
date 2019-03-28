@@ -9,7 +9,6 @@ image: mwm126/anaconda3:latest
 
 variables:
   CC: "gcc"
-  CTEST_OUTPUT_ON_FAILURE: "1"
   CXX: "g++"
   ENABLE_MPI: "0"
   ENABLE_OMP: "0"
