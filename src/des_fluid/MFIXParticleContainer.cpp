@@ -421,7 +421,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         // redistribute operation)
         if (n % 25 == 0) {
             clearNeighbors();
-            Redistribute();
+            Redistribute(0, 0, 0, 1);
             fillNeighbors();
             buildNeighborList(MFIXCheckPair(), sort_neighbor_list);
         } else {
@@ -736,6 +736,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         } 
                     }
             });
+
 #else            
             calc_particle_collisions ( particles                          , &nrp,
                                        neighbors[lev][index].dataPtr()    , &size_ng,
@@ -753,6 +754,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 }
             }
 #endif            
+
             BL_PROFILE_VAR_STOP(calc_particle_collisions);
 
             /********************************************************************
@@ -856,7 +858,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     // Redistribute particles at the end of all substeps (note that the particle
     // neighbour list needs to be reset when redistributing).
     clearNeighbors();
-    Redistribute();
+    Redistribute(0, 0, 0, 1);
     
     /****************************************************************************
      * DEBUG: output the total number of collisions over all substeps           *
@@ -1146,28 +1148,6 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
 
         }
        }
-
-       for (MFIter mfi(*flags); mfi.isValid(); ++mfi) {
-           
-           const Box& bx = (*flags)[mfi].box();
-           
-           auto flagsarr = (*flags)[mfi].array();
-           amrex::GpuArray<unsigned int, 1> cnt;
-           cnt[0] = 0;
-           unsigned int* cnt_ptr = &cnt[0];
-
-           constexpr unsigned int max_unsigned_int = std::numeric_limits<unsigned int>::max();
-
-           AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k, 
-           {
-               if (flagsarr(i,j,k) == EBCellFlag::TheCoveredCell())
-                   Cuda::Atomic::Inc(cnt_ptr, max_unsigned_int);
-           });
-           
-           amrex::Print() << cnt[0] << "\n";
-           
-       }
-
 
        // Move any field deposited outside the domain back into the domain
        // when BC is pressure inlet and mass inflow.
