@@ -268,6 +268,14 @@ mfix::mfix_calc_drag_particle(Real time)
             // Create fab to host reconstructed velocity field
             FArrayBox vel_r;
 
+            Real x0 = geom[lev].ProbLo(0);
+            Real y0 = geom[lev].ProbLo(1);
+            Real z0 = geom[lev].ProbLo(2);
+
+            Real odx = 1./geom[lev].CellSize(0);
+            Real ody = 1./geom[lev].CellSize(1);
+            Real odz = 1./geom[lev].CellSize(2);
+
             for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
             {
                 auto& particles = pti.GetArrayOfStructs();
@@ -282,11 +290,66 @@ mfix::mfix_calc_drag_particle(Real time)
                 {
                     if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
                     {
-                        calc_drag_particle( BL_TO_FORTRAN_ANYD((*gp_ptr)[pti]),
-                                            gp0, 
-                                            BL_TO_FORTRAN_ANYD((*vel_ptr)[pti]),
-                                            &np, particles.data(),
-                                            geom[lev].CellSize(), geom[lev].ProbLo());
+
+                        const auto& vel_fab = vel_ptr->array(pti);
+                        const auto&  gp_fab =  gp_ptr->array(pti);
+
+                        for(auto & particle : particles)
+                        {
+                            Real pbeta = particle.rdata(realData::dragx);
+
+                            // Pick upper cell in the stencil
+                            Real lx = (particle.pos(0) - x0)*odx + 0.5;
+                            Real ly = (particle.pos(1) - y0)*ody + 0.5;
+                            Real lz = (particle.pos(2) - z0)*odz + 0.5;
+
+                            int i = std::floor(lx);
+                            int j = std::floor(ly);
+                            int k = std::floor(lz);
+ 
+                            // Weights
+                            Real sx_hi = lx - i;  Real sx_lo = 1.0 - sx_hi;
+                            Real sy_hi = ly - j;  Real sy_lo = 1.0 - sy_hi;
+                            Real sz_hi = lz - k;  Real sz_lo = 1.0 - sz_hi;
+
+                            Real velfp[3];
+                            for (int n = 0; n < 3; n++)
+                               velfp[n] = sx_lo*sy_lo*sz_lo*vel_fab(i-1, j-1, k-1,n) + 
+                                          sx_lo*sy_lo*sz_hi*vel_fab(i-1, j-1, k  ,n) + 
+                                          sx_lo*sy_hi*sz_lo*vel_fab(i-1, j  , k-1,n) + 
+                                          sx_lo*sy_hi*sz_hi*vel_fab(i-1, j  , k  ,n) + 
+                                          sx_hi*sy_lo*sz_lo*vel_fab(i  , j-1, k-1,n) + 
+                                          sx_hi*sy_lo*sz_hi*vel_fab(i  , j-1, k  ,n) + 
+                                          sx_hi*sy_hi*sz_lo*vel_fab(i  , j  , k-1,n) + 
+                                          sx_hi*sy_hi*sz_hi*vel_fab(i  , j  , k  ,n);
+
+                            Real gradp[3];
+                            for (int n = 0; n < 3; n++)
+                               gradp[n] = sx_lo*sy_lo*sz_lo* gp_fab(i-1, j-1, k-1,n) + 
+                                          sx_lo*sy_lo*sz_hi* gp_fab(i-1, j-1, k  ,n) + 
+                                          sx_lo*sy_hi*sz_lo* gp_fab(i-1, j  , k-1,n) + 
+                                          sx_lo*sy_hi*sz_hi* gp_fab(i-1, j  , k  ,n) + 
+                                          sx_hi*sy_lo*sz_lo* gp_fab(i  , j-1, k-1,n) + 
+                                          sx_hi*sy_lo*sz_hi* gp_fab(i  , j-1, k  ,n) + 
+                                          sx_hi*sy_hi*sz_lo* gp_fab(i  , j  , k-1,n) + 
+                                          sx_hi*sy_hi*sz_hi* gp_fab(i  , j  , k  ,n);
+ 
+                           // Particle drag calculation
+                           particle.rdata(realData::dragx) = pbeta * ( velfp[0] - particle.rdata(realData::velx) ) -
+                                                            (gradp[0] + gp0[0]) * particle.rdata(realData::volume);
+ 
+                           particle.rdata(realData::dragy) = pbeta * ( velfp[1] - particle.rdata(realData::vely) ) -
+                                                            (gradp[1] + gp0[1]) * particle.rdata(realData::volume);
+ 
+                           particle.rdata(realData::dragz) = pbeta * ( velfp[2] - particle.rdata(realData::velz) ) -
+                                                            (gradp[2] + gp0[2]) * particle.rdata(realData::volume);
+                        }
+
+                        // calc_drag_particle( BL_TO_FORTRAN_ANYD((*gp_ptr)[pti]),
+                        //                     gp0, 
+                        //                     BL_TO_FORTRAN_ANYD((*vel_ptr)[pti]),
+                        //                     &np, particles.data(),
+                        //                     geom[lev].CellSize(), geom[lev].ProbLo());
                     }
                     else
                     {
