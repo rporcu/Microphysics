@@ -46,5 +46,5 @@ ${FEXTRACT} -p FLD0100001/ -d 3 -v p_g -s POST_PG.dat
 
 post_dats=POST*.dat
 for result in ${post_dats}; do
-    diff -b -u -I '#.*' "../FLD01-y/AUTOTEST/${result}" "${result}"
+    diff -b -u -I '#.*' "../FLD01-y-ho/AUTOTEST/${result}" "${result}"
 done
