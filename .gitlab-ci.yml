@@ -13,12 +13,9 @@ variables:
   ENABLE_MPI: "0"
   ENABLE_OMP: "0"
   FC: "gfortran"
-  MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
-  MODULES: "git/2.16.2 cmake gnu/6.1.0"
 
 .test: &test_template
   script:
-    # - module purge; module load $MODULES
     - mkdir build
     - cd build
     - env F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OMP=$ENABLE_OMP ..
@@ -42,13 +39,12 @@ multiple-grid-serial:
     TEST_REGEX: "MGS"
   <<: *test_template
 
-.multiple-grid-parallel:
+multiple-grid-parallel:
   variables:
     CC: "mpicc"
     CXX: "mpic++"
     ENABLE_MPI: "1"
     FC: "mpifort"
-    MODULES: "git/2.16.2 cmake gnu/6.1.0 openmpi/1.10.2_gnu6.1"
     TEST_REGEX: "MGP"
   <<: *test_template
 
@@ -57,7 +53,7 @@ tiled-grid-serial:
     TEST_REGEX: "TGS"
   <<: *test_template
 
-.tiled-grid-parallel-openmp:
+tiled-grid-parallel-openmp:
   variables:
     ENABLE_OMP: "1"
     TEST_REGEX: "TGP"
