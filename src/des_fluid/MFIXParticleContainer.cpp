@@ -1665,14 +1665,9 @@ void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)
 
 void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt, Vector<Real>& tow, Vector<Real>& fc)
 {
-    BL_PROFILE_VAR("des_time_loop()", des_time_loop);
+    BL_PROFILE_REGION_START("mfix_dem::time_advance()");
     auto & my_particles = pti.GetArrayOfStructs();
     int cnt = 0;
-
-    // The C++ version below replaces this Fortran call
-    // des_time_loop ( &nrp,  particles,
-    //                 &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-    //                 &xlen, &ylen, &zlen, &stime, &n);
 
     for(auto & particle : my_particles)
     {
@@ -1697,7 +1692,7 @@ void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt,
     const int nrp = NumberOfParticles(pti);
     call_usr2_des(&nrp,my_particles.data());
 
-    BL_PROFILE_VAR_STOP(des_time_loop);
+    BL_PROFILE_REGION_STOP("mfix_dem::time_advance()");
 }
 
 void MFIXParticleContainer::set_particle_properties(int pstate, Real pradius, Real pdensity,
