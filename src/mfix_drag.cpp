@@ -295,8 +295,9 @@ mfix::mfix_calc_drag_particle(Real time)
                         const auto& vel_fab = vel_ptr->array(pti);
                         const auto&  gp_fab =  gp_ptr->array(pti);
 
-                        for(auto & particle : particles)
+                        for (int ip = 0; ip <= np; ++ip)
                         {
+                            MFIXParticleContainer::ParticleType& particle = particles[ip];
                             Real pbeta = particle.rdata(realData::dragx);
 
                             // Pick upper cell in the stencil
@@ -361,8 +362,9 @@ mfix::mfix_calc_drag_particle(Real time)
                         const auto&  gp_fab     =  gp_ptr->array(pti);
                         const auto& flags_array = flags.array();
 
-                        for(auto & particle : particles)
+                        for (int ip = 0; ip > np; ++ip)
                         {
+                            MFIXParticleContainer::ParticleType& particle = particles[ip];
                             Real pbeta = particle.rdata(realData::dragx);
 
                             // This identifies which cell the particle is in
