@@ -49,10 +49,7 @@ public:
                            amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
                            amrex::Real time);
 
-   void compute_b_coeff ( const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& u, 
-                          const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& v,
-                          const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& w,
-                          const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ep,
+   void compute_b_coeff ( const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ep,
                           const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro,
                           int lev );
    
@@ -98,10 +95,6 @@ private:
    amrex::Real m_mg_atol = 0.0;
 
    void read_inputs ();
-
-   void compute_b_coeff ( const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ep,
-                          const amrex::Vector< std::unique_ptr<amrex::MultiFab> >& ro,
-                          int lev );
 
    //
    // Stuff to compute norms of EB-MultiFabs
