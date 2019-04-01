@@ -13,96 +13,6 @@
 #include <AMReX_MLEBABecLap.H>
 
 //
-// Explicit diffusion
-//
-void
-mfix::mfix_compute_divtau ( int lev,
-                            MultiFab& divtau,
-                            Vector< std::unique_ptr<MultiFab> >& vel)
-{
-   BL_PROFILE("mfix::mfix_compute_divtau");
-   Box domain(geom[lev].Domain());
-
-   EB_set_covered(*vel[lev], 0, vel[lev]->nComp(), vel[lev]->nGrow(), covered_val);
-
-   // Get EB geometric info
-   Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
-   Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
-   const amrex::MultiFab*                    volfrac;
-   const amrex::MultiCutFab*                 bndrycent;
-
-   areafrac  =   ebfactory[lev] -> getAreaFrac();
-   facecent  =   ebfactory[lev] -> getFaceCent();
-   volfrac   = &(ebfactory[lev] -> getVolFrac());
-   bndrycent = &(ebfactory[lev] -> getBndryCent());
-    
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-   for (MFIter mfi(*vel[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-
-      // Tilebox
-      Box bx = mfi.tilebox ();
-
-      // this is to check efficiently if this tile contains any eb stuff
-      const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
-      const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
-
-      if (flags.getType(bx) == FabType::covered)
-      {
-         divtau[mfi].setVal(1.2345e200, bx, 0, 3);
-      }
-      else
-      {
-         if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular)
-         {
-            compute_divtau(
-               BL_TO_FORTRAN_BOX(bx),
-               BL_TO_FORTRAN_ANYD(divtau[mfi]),
-               BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-               (*mu_g[lev])[mfi].dataPtr(),
-               (*lambda_g[lev])[mfi].dataPtr(),
-               (*ro_g[lev])[mfi].dataPtr(),
-               BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-               domain.loVect (), domain.hiVect (),
-               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-               geom[lev].CellSize(), &nghost, &explicit_diffusion);
-         }
-         else
-         {
-            compute_divtau_eb(
-               BL_TO_FORTRAN_BOX(bx),
-               BL_TO_FORTRAN_ANYD(divtau[mfi]),
-               BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-               (*mu_g[lev])[mfi].dataPtr(),
-               (*lambda_g[lev])[mfi].dataPtr(),
-               (*ro_g[lev])[mfi].dataPtr(),
-               BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-               BL_TO_FORTRAN_ANYD(flags),
-               BL_TO_FORTRAN_ANYD((*areafrac[0])[mfi]),
-               BL_TO_FORTRAN_ANYD((*areafrac[1])[mfi]),
-               BL_TO_FORTRAN_ANYD((*areafrac[2])[mfi]),
-               BL_TO_FORTRAN_ANYD((*facecent[0])[mfi]),
-               BL_TO_FORTRAN_ANYD((*facecent[1])[mfi]),
-               BL_TO_FORTRAN_ANYD((*facecent[2])[mfi]),
-               BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
-               BL_TO_FORTRAN_ANYD((*bndrycent)[mfi]),
-               domain.loVect (), domain.hiVect (),
-               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-               geom[lev].CellSize(), &nghost, &explicit_diffusion,
-               &covered_val );
-
-         }
-      }
-   }
-}
-
-
-//
 // Implicit diffusion
 //
 void
@@ -169,6 +79,15 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
 
       // This sets the spatially varying b coefficients
       matrix.setBCoeffs ( lev, b_tmp );
+
+      // This sets the coefficient on the wall and defines it as a homogeneous Dirichlet bc for the solve.
+      matrix.setEBHomogDirichlet ( lev, (*mu_g[lev]) );
+
+      // This tells the solver to use the higher order extrapolation to define d(phi)/dn at EB walls
+      // This may not be robust in the presence of small cells so it is an option, not required
+      //     (but does get Poiseuille flow right in the presence of walls at cell boundaries)
+      if (eb_ho_dirichlet == 1)
+         matrix.setEBHODirichlet ( );
    }
 
    // Loop over the velocity components
@@ -192,6 +111,9 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       {
          rhs_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
          phi_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
+
+         EB_set_covered(*phi_diff[lev], 0, phi_diff[lev]->nComp(), phi_diff[lev]->nGrow(), covered_val);
+         phi_diff[lev] -> FillBoundary (geom[lev].periodicity());
 
          matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi_diff)[lev] );
 

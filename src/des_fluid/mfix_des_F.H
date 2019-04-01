@@ -24,15 +24,6 @@ extern "C"
         amrex::Real* grav
         );
 
-    void calc_volume_fraction(
-        const int*  lo, const int*  hi,
-        const int* slo, const int* shi,
-        const int*  np, void* particles,
-        amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-        amrex::Real* ep_g
-        );
-
-
     void mfix_deposit_cic_eb(
         const amrex_particle_real*, int ns, int np,
         amrex_real* vol,          const int* vlo, const int* vhi,
@@ -66,7 +57,6 @@ extern "C"
         const int* np, void* particles,
         const amrex::Real* x0, const amrex::Real* dx
         );
-
 
     void calc_drag_particle(
         const amrex::Real* gp , const int* gplo , const int* gphi,
@@ -122,14 +112,6 @@ extern "C"
 
     void des_init_time_loop(
         const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt
-        );
-
-    void des_time_loop(
-        const int* nrp,  void* rparticles,
-        const int* nf, amrex::Real* tow, amrex::Real* fc,
-        amrex::Real* subdt,
-        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-        amrex::Real* stime, int* nstep
         );
 
     void call_usr3_des(const int* np, void* particles);

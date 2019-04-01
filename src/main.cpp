@@ -15,6 +15,7 @@ Real stop_time    = -1.0;
 
 bool write_user   = false;
 bool write_eb_surface = false;
+bool write_ls         = false;
 
 std::string restart_file {""};
 
@@ -80,6 +81,7 @@ void ReadParameters ()
      pp.query("input_deck", mfix_dat);
      pp.query("write_user", write_user);
      pp.query("write_eb_surface", write_eb_surface);
+     pp.query("write_ls", write_ls);
   }
 }
 
@@ -202,7 +204,7 @@ int main (int argc, char* argv[])
     amrex::Print() << "Regridding at step " << nstep << std::endl;
     my_mfix.Regrid();
 
-    if (solve_dem)
+    if (solve_dem && write_ls)
         my_mfix.WriteStaticPlotFile(static_plt_file);
 
     my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time);

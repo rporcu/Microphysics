@@ -90,6 +90,9 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
 void
 mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, const Vector<BCRec>& bcs)
 {
+    // Hack so that ghost cells are not undefined
+    mf.setVal(covered_val);
+
     if (lev == 0)
     {
         Vector<MultiFab*> smf;
@@ -212,6 +215,9 @@ mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
 
   for (int lev = 0; lev < nlev; lev++)
   {
+     // Set all values outside the domain to covered_val just to avoid use of undefined
+     vel_g[lev]->setDomainBndry(covered_val,geom[lev]);
+
      vel_g[lev] -> FillBoundary (geom[lev].periodicity());
      Box domain(geom[lev].Domain());
 

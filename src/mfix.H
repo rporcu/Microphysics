@@ -595,6 +595,7 @@ private:
      const int m_eb_full_grow_cells = nghost;
 
      int explicit_diffusion = 0;
+     int eb_ho_dirichlet    = 0;
 
      bool do_initial_proj    = true;
      int  initial_iterations = 3;

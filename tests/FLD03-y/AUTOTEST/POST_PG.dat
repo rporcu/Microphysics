@@ -1,6 +1,6 @@
-# 1-d slice in x-direction, file: FLD0300001/
+# 1-d slice in y-direction, file: FLD0300001/
 # time =      0.000000000E+00
-#                       x                      p_g
+#                       y                      p_g
           6.250000000E-04          1.125000000E+01
           1.875000000E-03          9.750000000E+00
           3.125000000E-03          8.250000000E+00

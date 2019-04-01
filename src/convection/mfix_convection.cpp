@@ -99,7 +99,7 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv,
                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                         bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                        geom[lev].CellSize(), &nghost, &covered_val);
+                        geom[lev].CellSize(), &nghost);
                 }
             }
         }
@@ -203,7 +203,7 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv,
                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                         bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                        geom[lev].CellSize(), &nghost, &covered_val);
+                        geom[lev].CellSize(), &nghost);
 
                 }
             }
