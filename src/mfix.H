@@ -168,8 +168,7 @@ public:
             }
 
         }
-    };
-
+    }
 
     void get_input_bcs();
 
