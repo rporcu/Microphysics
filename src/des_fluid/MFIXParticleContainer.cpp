@@ -546,9 +546,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         int phase = p.idata(intData::phase);
 
                         Real kn_des_w;
-                        Real kt_des_w; 
                         Real etan_des_w;
-                        Real etat_des_w;
+
+                        // NOTE - we don't use the tangential components right now, 
+                        // but we might in the future
+                        // Real kt_des_w;
+                        // Real etat_des_w;
 
                         if (DEMParams::CollisionModel == DEMParams::HERTZIAN)
                         {                            
@@ -557,9 +560,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         else
                         {
                             kn_des_w   = DEMParams::kn_w;
-                            kt_des_w   = DEMParams::kt_w;
                             etan_des_w = DEMParams::etan_w[phase-1];
-                            etat_des_w = DEMParams::etat_w[phase-1];
+                            // kt_des_w   = DEMParams::kt_w;
+                            // etat_des_w = DEMParams::etat_w[phase-1];
                         }
 
                         Real fn[3];
@@ -664,10 +667,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                         cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
 
-                        Real kn_des;
-                        Real kt_des; 
-                        Real etan_des;
-                        Real etat_des;
+                        Real kn_des_w;
+                        Real etan_des_w;
+
+                        // NOTE - we don't use the tangential components right now, 
+                        // but we might in the future
+                        // Real kt_des_w;
+                        // Real etat_des_w;
 
                         int phase1 = p1.idata(intData::phase);
                         int phase2 = p2.idata(intData::phase);
@@ -679,9 +685,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         else
                             {
                             kn_des = DEMParams::kn;
-                            kt_des = DEMParams::kt;
+                            // kt_des = DEMParams::kt;
                             etan_des = DEMParams::etan[phase1-1][phase2-1];
-                            etat_des = DEMParams::etat[phase1-1][phase2-1];
+                            // etat_des = DEMParams::etat[phase1-1][phase2-1];
                         }
 
                         Real fn[3];
