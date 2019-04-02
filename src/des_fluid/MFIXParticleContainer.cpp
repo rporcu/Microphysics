@@ -796,6 +796,10 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 p.pos(2) += subdt * p.rdata(realData::velz);
             });
 
+            Gpu::Device::streamSynchronize();
+
+            call_usr2_des(&nrp, pstruct);
+            
             /********************************************************************
              * Update runtime cost (used in load-balancing)                     *
              *******************************************************************/
