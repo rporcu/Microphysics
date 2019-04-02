@@ -25,8 +25,6 @@ void mfix::mfix_calc_drag_fluid(Real time)
         MultiFab* ro_ptr;
         MultiFab* mu_ptr;
         MultiFab* vel_ptr;
-        MultiFab* drag_ptr;
-        MultiFab* f_gds_ptr;
 
         // This will be temporaries only for the dual grid case
         std::unique_ptr<MultiFab>  ep_g_pba;
@@ -42,8 +40,6 @@ void mfix::mfix_calc_drag_fluid(Real time)
             ro_ptr    =  ro_g[lev].get();
             mu_ptr    =  mu_g[lev].get();
             vel_ptr   = vel_g[lev].get();
-            drag_ptr  =  drag[lev].get();
-            f_gds_ptr = f_gds[lev].get();
         }
         else
         {
@@ -84,9 +80,6 @@ void mfix::mfix_calc_drag_fluid(Real time)
             ro_ptr    =  ro_g_pba.get();
             mu_ptr    =  mu_g_pba.get();
             vel_ptr   = vel_g_pba.get();
-            drag_ptr  =  drag_pba.get();
-            f_gds_ptr = f_gds_pba.get();
-
         }
 
         // Phi is always on the particles grid
