@@ -229,7 +229,8 @@ void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, Distributio
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
         auto& particles = pti.GetArrayOfStructs();
-        Gpu::HostVector<ParticleType> host_particles;
+        int np = pti.numParticles();
+        Gpu::HostVector<ParticleType> host_particles(np);
         Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
         for (const auto& p: host_particles)
@@ -1525,7 +1526,8 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
         auto& particles = pti.GetArrayOfStructs();
-        Gpu::HostVector<ParticleType> host_particles;
+        int np = pti.numParticles();
+        Gpu::HostVector<ParticleType> host_particles(np);
         Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
         for (const auto& p: host_particles)
@@ -1559,7 +1561,8 @@ MFIXParticleContainer::writeAllForComparison(int lev)
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
       auto& particles = pti.GetArrayOfStructs();
-      Gpu::HostVector<ParticleType> host_particles;
+      int np = pti.numParticles();
+      Gpu::HostVector<ParticleType> host_particles(np);
       Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
       for (const auto& p: host_particles)
@@ -1627,8 +1630,9 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
             for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
               auto& particles = pti.GetArrayOfStructs();
-
-              Gpu::HostVector<ParticleType> host_particles;
+              int np = pti.numParticles();
+              
+              Gpu::HostVector<ParticleType> host_particles(np);
               Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
               int index = 0;
@@ -1726,7 +1730,8 @@ void MFIXParticleContainer::UpdateMaxVelocity()
        for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
        {
            auto & particles = pti.GetArrayOfStructs();
-           Gpu::HostVector<ParticleType> host_particles;
+           int np = pti.numParticles();
+           Gpu::HostVector<ParticleType> host_particles(np);
            Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
            for(const auto & particle : host_particles)
