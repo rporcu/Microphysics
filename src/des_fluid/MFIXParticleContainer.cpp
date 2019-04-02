@@ -635,8 +635,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             long ncoll = 0;
             long* pncoll = &ncoll;
 
+#if defined(AMREX_DEBUG) && defined(AMREX_USE_ASSERTION)
             Real eps = std::numeric_limits<Real>::epsilon();
-            
+#endif
             // now we loop over the neighbor list and compute the forces
             AMREX_FOR_1D ( nrp, i,
             {
@@ -667,13 +668,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                         cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
 
-                        Real kn_des_w;
-                        Real etan_des_w;
+                        Real kn_des;
+                        Real etan_des;
 
                         // NOTE - we don't use the tangential components right now, 
                         // but we might in the future
-                        // Real kt_des_w;
-                        // Real etat_des_w;
+                        // Real kt_des;
+                        // Real etat_des;
 
                         int phase1 = p1.idata(intData::phase);
                         int phase2 = p2.idata(intData::phase);
