@@ -1561,8 +1561,8 @@ MFIXParticleContainer::writeAllForComparison(int lev)
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
       auto& particles = pti.GetArrayOfStructs();
-      int np = pti.numParticles()
-          Gpu::HostVector<ParticleType> host_particles(np);
+      int np = pti.numParticles();
+      Gpu::HostVector<ParticleType> host_particles(np);
       Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
       for (const auto& p: host_particles)
