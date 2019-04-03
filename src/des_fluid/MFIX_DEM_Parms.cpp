@@ -1,6 +1,7 @@
 #include <AMReX.H>
 #include <AMReX_Arena.H>
 #include <MFIX_DEM_Parms.H>
+#include <AMReX_Print.H>
 
 #include <mfix_des_F.H>
 
@@ -37,19 +38,27 @@ namespace DEMParams
     
     void Initialize ()
     {
+
+        int coll_model_flag;
+        get_collision_model(&coll_model_flag);
+        CollisionModel = static_cast<COLLISIONMODEL>(coll_model_flag);
+        
         if      (CollisionModel == LSD     ) InitializeLSD();
         else if (CollisionModel == HERTZIAN) InitializeHertzian();
-        else amrex::Abort("DEM collision model not recognized");
+        else amrex::Abort("DEM collision model not recognized.");
     }
     
     void InitializeLSD () 
     {
-        get_collision_coefficients(&NPHASE, &kt, &kt_w, &kn, &kn_w, &mew, &mew_w,
-                                   &etan[0][0], &etan_w[0], &etat[0][0], &etat_w[0]);
+        get_lsd_collision_coefficients(&NPHASE,
+                                       &kt, &kt_w, &kn, &kn_w,
+                                       &mew, &mew_w,
+                                       &etan[0][0], &etan_w[0],
+                                       &etat[0][0], &etat_w[0]);      
     }
     
     void InitializeHertzian ()
     {
-        amrex::Abort("The Hertzian collision model is currently not recognized");
+        amrex::Abort("The Hertzian collision model is currently supported.");
     }
 }

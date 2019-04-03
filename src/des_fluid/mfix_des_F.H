@@ -13,10 +13,14 @@ extern "C"
 {
 #endif
 
-    void get_collision_coefficients(int* nphase, amrex::Real* kt, amrex::Real* kt_w,
-                                    amrex::Real* kn, amrex::Real* kn_w, amrex::Real* mew,
-                                    amrex::Real* mew_w, amrex::Real* etan,
-                                    amrex::Real* etan_w, amrex::Real* etat,amrex::Real* etat_w);
+    void get_collision_model(int* coll_model_flag);
+    
+    void get_lsd_collision_coefficients(int* nphase,
+                                        amrex::Real* kt, amrex::Real* kt_w,
+                                        amrex::Real* kn, amrex::Real* kn_w,
+                                        amrex::Real* mew, amrex::Real* mew_w,
+                                        amrex::Real* etan, amrex::Real* etan_w,
+                                        amrex::Real* etat, amrex::Real* etat_w);
     
     int des_continuum_coupled ();
 

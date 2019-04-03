@@ -1,8 +1,20 @@
+subroutine get_collision_model( flag_out ) bind(C, name="get_collision_model")
 
-subroutine get_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out, kn_w_out, &
-                                        mew_out, mew_w_out, etan_out, etan_w_out, etat_out, & 
-                                        etat_w_out ) &
-  bind(C, name="get_collision_coefficients")
+  use iso_c_binding,                 only: c_int
+  use discretelement,                only: des_coll_model_enum
+
+  implicit none
+
+  integer(c_int), intent(inout) :: flag_out
+
+  flag_out = des_coll_model_enum
+
+end subroutine get_collision_model
+
+subroutine get_lsd_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out, kn_w_out, &
+     mew_out, mew_w_out, etan_out, etan_w_out, etat_out, & 
+     etat_w_out ) &
+     bind(C, name="get_lsd_collision_coefficients")
 
    use amrex_fort_module,               only: rt => amrex_real
    use iso_c_binding,                   only: c_int
@@ -31,6 +43,7 @@ subroutine get_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out, kn
    ! convert from Fortran to C ordering here
    do i = 1, dim_m
       do j = 1, dim_m
+         print *, des_etan(i, j)
          etan_out(i, j) = des_etan(j, i)
          etat_out(i, j) = des_etat(j, i)
       end do
@@ -39,4 +52,4 @@ subroutine get_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out, kn
    etan_w_out = des_etan_wall
    etat_w_out = des_etat_wall
 
-end subroutine get_collision_coefficients
+end subroutine get_lsd_collision_coefficients
