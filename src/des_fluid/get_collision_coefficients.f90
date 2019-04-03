@@ -43,7 +43,6 @@ subroutine get_lsd_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out
    ! convert from Fortran to C ordering here
    do i = 1, dim_m
       do j = 1, dim_m
-         print *, des_etan(i, j)
          etan_out(i, j) = des_etan(j, i)
          etat_out(i, j) = des_etat(j, i)
       end do
