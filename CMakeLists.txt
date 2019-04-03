@@ -86,7 +86,8 @@ endif ()
 #
 # Core MFIX library
 #
-add_subdirectory (src)
+add_library(mfixcore)
+add_subdirectory(src)
 
 # Print out config summary
 print_mfix_configuration_summary (${MFIX_LIBNAME})

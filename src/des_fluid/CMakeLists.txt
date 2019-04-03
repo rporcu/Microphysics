@@ -1,10 +1,19 @@
-add_sources ( calc_particle_beta.f90 )
-add_sources ( flip_particle_vol.f90 )
-add_sources ( particle_pic.f90  )
-add_sources ( set_gradp_bcs.f90  )
-add_sources ( get_collision_coefficients.f90  )
-add_sources ( mfix_des_F.H )
-add_sources ( mfix_des_K.H )
-add_sources ( MFIXParticleContainer.cpp  MFIXParticleContainer.H )
-add_sources ( MFIX_DEM_Parms.cpp  MFIX_DEM_Parms.H )
-add_sources ( MFIX_PC_RemoveOutOfRange.cpp )
+target_include_directories( mfixcore
+   PUBLIC
+   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>)
+
+target_sources( mfixcore
+   PRIVATE
+   calc_particle_beta.f90
+   flip_particle_vol.f90
+   particle_pic.f90 
+   set_gradp_bcs.f90 
+   get_collision_coefficients.f90 
+   mfix_des_F.H
+   mfix_des_K.H
+   MFIXParticleContainer.cpp
+   MFIXParticleContainer.H
+   MFIX_DEM_Parms.cpp
+   MFIX_DEM_Parms.H
+   MFIX_PC_RemoveOutOfRange.cpp
+   )
