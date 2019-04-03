@@ -534,6 +534,8 @@ private:
      int call_udf;
      bool dual_grid = false;
 
+     bool ooo_debug = false;
+
      // Parameters to control load balancing
      static std::string particle_init_type;
      static std::string load_balance_type;

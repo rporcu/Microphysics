@@ -4,6 +4,7 @@
 void
 mfix::AllocateArrays (int lev)
 {
+    if (ooo_debug) amrex::Print() << "AllocateArrays" << std::endl;
     mfix_update_ebfactory(lev);
 
     // ********************************************************************************
@@ -150,6 +151,7 @@ mfix::AllocateArrays (int lev)
 void
 mfix::RegridArrays (int lev)
 {
+    if (ooo_debug) amrex::Print() << "RegridArrays" << std::endl;
     bool need_regrid = mfix_update_ebfactory(lev);
 
     // exit this function is ebfactory has not been updated because that means
@@ -428,6 +430,7 @@ mfix::RegridArrays (int lev)
 void
 mfix::RegridLevelSetArray (int a_lev)
 {
+    if (ooo_debug) amrex::Print() << "RegridLevelSetArray" << std::endl;
    // First check if particle_ebfactory is allocated with the proper dm and ba
 
    // This assert is to verify that some kind of EB geometry has already been
@@ -523,6 +526,7 @@ mfix::RegridLevelSetArray (int a_lev)
 //!  This function checks if ebfactory is allocated with the proper dm and ba
 bool mfix::mfix_update_ebfactory (int a_lev)
 {
+    if (ooo_debug) amrex::Print() << "mfix_update_ebfactory" << std::endl;
    // This assert is to verify that some kind of EB geometry has already been
    // defined
    AMREX_ASSERT(not EB2::IndexSpace::empty());

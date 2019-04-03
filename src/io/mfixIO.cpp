@@ -25,6 +25,7 @@ namespace
 void
 mfix::InitIOData ()
 {
+    if (ooo_debug) amrex::Print() << "InitIOData" << std::endl;
     // Define the list of vector variables on faces that need to be written
     // to plotfile/checkfile.
     vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
@@ -203,6 +204,7 @@ void
 mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                IntVect& Nrep)
 {
+    if (ooo_debug) amrex::Print() << "Restart" << std::endl;
     BL_PROFILE("mfix::Restart()");
 
     amrex::Print() << "  Restarting from checkpoint " << restart_file << std::endl;
@@ -293,13 +295,10 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         Geometry::ProbDomain(RealBox(prob_lo,prob_hi));
 
         for (int lev = 0; lev < nlevs; ++lev) {
+
             BoxArray orig_ba,ba;
             orig_ba.readFrom(is);
             GotoNextLine(is);
-
-            SetBoxArray(lev,orig_ba);
-            DistributionMapping orig_dm { orig_ba, ParallelDescriptor::NProcs() };
-            SetDistributionMap(lev,orig_dm);
 
             Box orig_domain(orig_ba.minimalBox());
 
@@ -311,6 +310,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
             // Particle data is loaded into the MFIXParticleContainer's base
             // class using amrex::NeighborParticleContainer::Restart
+
             if ( solve_dem && lev == 0)
               pc->Restart(restart_file, "particles");
 
@@ -340,9 +340,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                Box new_domain(ba.minimalBox());
                geom[lev].Domain(new_domain);
 
-               amrex::Print() << " NEW BA has " <<      ba.size()  << " GRIDS " << std::endl;
-               amrex::Print() << " NEW Domain" << geom[0].Domain() << std::endl;
-
                DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
                ReMakeNewLevelFromScratch(lev,ba,dm);
             }
@@ -358,8 +355,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     }
 
     amrex::Print() << "  Finished reading header" << std::endl;
-
-
 
     /***************************************************************************
      * Load fluid data                                                         *
@@ -420,24 +415,29 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                }
            }
 
+          // If we have created the walls using the domain boundary conditions and not 
+          //    by creating them from implicit functions, then the implicit_functions mf
+          //    will be empty.  We don't want to fail when reading so we allow the code
+          //    to read it in an empty multifab just for this one.
+          int allow_empty_mf = 0;
+          if (chkscaVarsName[i] == "implicit_functions") allow_empty_mf = 1;
+
           MultiFab mf;
           VisMF::Read(mf,
                       amrex::MultiFabFileFullPrefix(lev,
                                                     restart_file, level_prefix,
-                                                    chkscaVarsName[i])
+                                                    chkscaVarsName[i]),
+                                                    nullptr, 
+                                                    ParallelDescriptor::IOProcessorNumber(),
+                                                    allow_empty_mf
               );
 
           if (Nrep == IntVect::TheUnitVector()) {
+
               amrex::Print() << "  - loading scalar data: " << chkscaVarsName[i] << std::endl;
 
-              // Copy mf into chkscalarVars
-              if(chkscaVarsName[i] == "level_sets") {
-                  // The level-set data is special, and because we want
-                  // to access it even without a fluid present, it is
-                  // loaded below.
-              } else {
-                  ( * chkscalarVars[i])[lev]->copy(mf, 0, 0, 1, 0, 0);
-              }
+             // Copy from the mf we used to read in to the mf we will use going forward
+             (*chkscalarVars[i])[lev]->copy(mf, 0, 0, 1, 0, 0);
 
 
           } else {
@@ -459,6 +459,18 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         }
        }
        amrex::Print() << "  Finished reading fluid data" << std::endl;
+    }
+
+    // Make sure that the particle BoxArray is the same as the mesh data -- we can
+    //      create a dual grid decomposition in the regrid operation
+    if ( solve_dem)
+    {
+        for (int lev = 0; lev <= finestLevel(); lev++) 
+        {
+          pc->SetParticleBoxArray       (lev, grids[lev]);
+          pc->SetParticleDistributionMap(lev,  dmap[lev]);
+        }
+        pc->Redistribute();
     }
 
     int lev = 0;

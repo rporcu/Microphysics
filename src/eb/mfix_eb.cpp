@@ -156,7 +156,7 @@ void mfix::make_eb_factories () {
 
 void mfix::fill_eb_levelsets ()
 {
-
+    if (ooo_debug) amrex::Print() << "fill_eb_levelsets" << std::endl;
     /****************************************************************************
      *                                                                          *
      * Fill levels either as a single level with refinement, or as a proper     *

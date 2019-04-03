@@ -11,7 +11,7 @@
 void
 mfix::Regrid ()
 {
-
+    if (ooo_debug) amrex::Print() << "Regrid" << std::endl;
     BL_PROFILE_REGION_START("mfix::Regrid()");
 
     int base_lev = 0;
