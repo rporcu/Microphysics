@@ -176,7 +176,7 @@ public:
                        const int cyclic, const Real domloc);
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(bool & has_walls);
-    
+
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls(bool & has_real_walls);
 
     std::unique_ptr<
@@ -216,16 +216,16 @@ public:
     const int * get_bc_jhi_ptr(int lev) {return bc_jhi[lev]->dataPtr();}
     const int * get_bc_klo_ptr(int lev) {return bc_klo[lev]->dataPtr();}
     const int * get_bc_khi_ptr(int lev) {return bc_khi[lev]->dataPtr();}
-    
+
     int get_nghost() { return nghost; }
-    
+
     void SetParameters(int steady_state_in)
     { steady_state = steady_state_in;}
-    
+
     void mfix_add_drag_terms(Real dt);
-    
+
     void mfix_add_gravity_and_gp(Real dt);
-    
+
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
 
 protected:
@@ -447,8 +447,6 @@ private:
      Vector< std::unique_ptr<MultiFab> > mu_g ;
 
      // Cell-based
-     Vector< std::unique_ptr<MultiFab> > lambda_g;
-     Vector< std::unique_ptr<MultiFab> > trD_g;
      Vector< std::unique_ptr<MultiFab> > vort;
 
      Vector< std::unique_ptr<MultiFab> > drag;

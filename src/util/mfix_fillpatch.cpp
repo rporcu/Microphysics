@@ -190,7 +190,6 @@ mfix::mfix_set_scalar_bcs ()
                         (*ro_g[lev])[mfi].dataPtr (),
                         (*rop_g[lev])[mfi].dataPtr (),
                         (*mu_g[lev])[mfi].dataPtr (),
-                        (*lambda_g[lev])[mfi].dataPtr (),
                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                         bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
@@ -201,7 +200,6 @@ mfix::mfix_set_scalar_bcs ()
         ro_g[lev] -> FillBoundary (geom[lev].periodicity());
        rop_g[lev] -> FillBoundary (geom[lev].periodicity());
         mu_g[lev] -> FillBoundary (geom[lev].periodicity());
-    lambda_g[lev] -> FillBoundary (geom[lev].periodicity());
   }
 }
 

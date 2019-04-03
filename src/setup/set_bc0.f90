@@ -8,7 +8,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine set_bc0(slo, shi, &
-                      ep_g, ro_g, rop_g, mu_g, lambda_g, &
+                      ep_g, ro_g, rop_g, mu_g, &
                       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
                       bc_klo_type, bc_khi_type, domlo, domhi, ng) &
       bind(C, name="set_bc0")
@@ -31,16 +31,11 @@
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
       integer(c_int), intent(in   ) :: ng
 
-      real(rt), intent(inout) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(rt), intent(inout) :: ro_g&
-           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(rt), intent(inout) :: rop_g&
-           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(rt), intent(inout) :: mu_g&
-           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(rt), intent(inout) :: lambda_g&
-           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(rt), intent(inout) :: &
+            ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) ,&
+            ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
+            mu_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int), intent(in   ) :: &
            bc_ilo_type(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
@@ -57,7 +52,7 @@
 
       integer    nlft, nrgt, nbot, ntop, nup, ndwn
 
-      real(rt) :: bc_ro_g, bc_mu_g, bc_lambda_g
+      real(rt) :: bc_ro_g, bc_mu_g
 !--------------------------------------------------------------------//
 
       nlft = max(0,domlo(1)-slo(1))
@@ -82,17 +77,14 @@
 
                   if (is_undefined(mu_g0)) then
                      bc_mu_g     = sutherland(bc_t_g(bcv))
-                     bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
                   else
                      bc_mu_g     = mu_g0
-                     bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                   endif
 
                       ep_g(slo(1):domlo(1)-1,j,k) = bc_ep_g(bcv)
                       ro_g(slo(1):domlo(1)-1,j,k) = bc_ro_g
                      rop_g(slo(1):domlo(1)-1,j,k) = bc_ro_g*bc_ep_g(bcv)
                       mu_g(slo(1):domlo(1)-1,j,k) = bc_mu_g
-                  lambda_g(slo(1):domlo(1)-1,j,k) = bc_lambda_g
 
                end if
 
@@ -114,17 +106,14 @@
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
-                      bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
                    else
                       bc_mu_g     = mu_g0
-                      bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
                         ep_g(domhi(1)+1:shi(1),j,k) = bc_ep_g(bcv)
                         ro_g(domhi(1)+1:shi(1),j,k) = bc_ro_g
                        rop_g(domhi(1)+1:shi(1),j,k) = bc_ro_g*bc_ep_g(bcv)
                         mu_g(domhi(1)+1:shi(1),j,k) = bc_mu_g
-                    lambda_g(domhi(1)+1:shi(1),j,k) = bc_lambda_g
 
                end if
 
@@ -146,17 +135,14 @@
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
-                      bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
                    else
                       bc_mu_g     = mu_g0
-                      bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
                       ep_g(i,slo(2):domlo(2)-1,k) = bc_ep_g(bcv)
                       ro_g(i,slo(2):domlo(2)-1,k) = bc_ro_g
                      rop_g(i,slo(2):domlo(2)-1,k) = bc_ro_g*bc_ep_g(bcv)
                       mu_g(i,slo(2):domlo(2)-1,k) = bc_mu_g
-                  lambda_g(i,slo(2):domlo(2)-1,k) = bc_lambda_g
 
                end if
 
@@ -178,17 +164,14 @@
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
-                      bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
                    else
                       bc_mu_g     = mu_g0
-                      bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
                       ep_g(i,domhi(2)+1:shi(2),k) = bc_ep_g(bcv)
                       ro_g(i,domhi(2)+1:shi(2),k) = bc_ro_g
                      rop_g(i,domhi(2)+1:shi(2),k) = bc_ro_g*bc_ep_g(bcv)
                       mu_g(i,domhi(2)+1:shi(2),k) = bc_mu_g
-                  lambda_g(i,domhi(2)+1:shi(2),k) = bc_lambda_g
 
                end if
 
@@ -210,17 +193,14 @@
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
-                      bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
                    else
                       bc_mu_g     = mu_g0
-                      bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
                        ep_g(i,j,slo(3):domlo(3)-1) = bc_ep_g(bcv)
                        ro_g(i,j,slo(3):domlo(3)-1) = bc_ro_g
                       rop_g(i,j,slo(3):domlo(3)-1) = bc_ro_g*bc_ep_g(bcv)
                        mu_g(i,j,slo(3):domlo(3)-1) = bc_mu_g
-                   lambda_g(i,j,slo(3):domlo(3)-1) = bc_lambda_g
 
                end if
 
@@ -242,17 +222,14 @@
 
                    if (is_undefined(mu_g0)) then
                       bc_mu_g     = sutherland(bc_t_g(bcv))
-                      bc_lambda_g = -(2.0d0/3.0d0) * bc_mu_g
                    else
                       bc_mu_g     = mu_g0
-                      bc_lambda_g = -(2.0d0/3.0d0) * mu_g0
                    endif
 
                        ep_g(i,j,domhi(3)+1:shi(3)) = bc_ep_g(bcv)
                        ro_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g
                       rop_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g*bc_ep_g(bcv)
                        mu_g(i,j,domhi(3)+1:shi(3)) = bc_mu_g
-                   lambda_g(i,j,domhi(3)+1:shi(3)) = bc_lambda_g
 
                end if
 

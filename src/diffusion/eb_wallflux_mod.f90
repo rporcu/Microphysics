@@ -1,13 +1,13 @@
 module eb_wallflux_mod
-   
+
    use amrex_fort_module,  only: rt=>amrex_real, c_int
    use amrex_error_module, only: amrex_abort
-   use param,              only: zero, half, one
+   use param,              only: zero, half, one, two_thirds
 
    use amrex_mlebabeclap_3d_module
-   
+
    implicit none
-   
+
    private
    public      :: compute_diff_wallflux
 
@@ -18,7 +18,7 @@ contains
    !
    subroutine compute_diff_wallflux (divw, dx, i, j, k, &
         vel, vlo, vhi,         &
-        lam, mu, slo, shi,     &
+        mu, slo, shi,          &
         bcent, blo, bhi,       &
         flag,  flo, fhi,       &
         apx, axlo, axhi,       &
@@ -30,7 +30,7 @@ contains
       ! Wall divergence operator
       real(rt),       intent(  out) :: divw(3)
 
-      ! Cell indices 
+      ! Cell indices
       integer(c_int), intent(in   ) :: i, j, k
 
       ! Grid spacing
@@ -48,7 +48,6 @@ contains
       ! Arrays
       real(rt),       intent(in   ) ::                               &
            &   vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3),     &
-           &   lam(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),       &
            &    mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),       &
            & bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3),     &
            & apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3)),   &
@@ -74,9 +73,9 @@ contains
       real(rt)   :: tauxx, tauyy, tauzz, tauxy, tauxz, tauyx, tauyz, tauzx, tauzy, tautmp
       real(rt)   :: phib
       integer    :: ixit, iyit, izit, is
-      
+
       divw  = zero
-      dxinv = one / dx 
+      dxinv = one / dx
 
       dapx = apx(i+1,j,k)-apx(i,j,k)
       dapy = apy(i,j+1,k)-apy(i,j,k)
@@ -95,7 +94,7 @@ contains
 
       ! The center of the wall
       bct = bcent(i,j,k,:)
-  
+
       ! Value on wall -- here we enforce no-slip therefore 0 for all components
       phib = 0.d0
 
@@ -152,7 +151,7 @@ contains
       dwdz = dwdn * anrmz
 
       divu = dudx+dvdy+dwdz
-      tautmp = lam(i,j,k)*divu  ! This MUST be verified
+      tautmp = -two_thirds*mu(i,j,k)*divu  ! This MUST be verified
 
       tauxx = mu(i,j,k) * (dudx + dudx) + tautmp
       tauxy = mu(i,j,k) * (dudy + dvdx)
@@ -168,8 +167,8 @@ contains
 
       if (do_explicit_diffusion .eq. 0) then
          !
-         ! Subtract diagonal terms of stress tensor, to be obtained through 
-         ! implicit solve instead.                   
+         ! Subtract diagonal terms of stress tensor, to be obtained through
+         ! implicit solve instead.
          !
          tauxx = tauxx - mu(i,j,k) * dudx
          tauxy = tauxy - mu(i,j,k) * dudy
