@@ -416,7 +416,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     while (n < nsubsteps)
     {
         int ncoll = 0;  // Counts number of collisions (over sub-steps)
-        
+
         // Redistribute particles ever so often BUT always update the neighbour
         // list (Note that this fills the neighbour list after every
         // redistribute operation)
@@ -439,8 +439,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             const Box& bx = pti.tilebox();
             PairIndex index(pti.index(), pti.LocalTileIndex());
-            
-            const int nrp = GetParticles(lev)[index].numRealParticles();            
+
+            const int nrp = GetParticles(lev)[index].numRealParticles();
             RealType* particles  = pti.GetArrayOfStructs().data();
 
             auto& plev = GetParticles(lev);
@@ -450,7 +450,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             // Neighbor particles
 #ifdef AMREX_USE_CUDA
-            int size_ng = aos.numNeighborParticles();            
+            int size_ng = aos.numNeighborParticles();
 #else
             int size_ng = neighbors[lev][index].size();
             int size_nl = neighbor_list[lev][index].size();
@@ -510,7 +510,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 {
                     ParticleType& p = pstruct[i];
                     Real rp = p.rdata(realData::radius);
-                    
+
                     Real ls_value = interp_level_set(p, ls_refinement, phiarr, plo, dxi);
 
                     Real overlap_n = rp - ls_value;
@@ -524,21 +524,21 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         normal[1] *= -1;
                         normal[2] *= -1;
 
-                        Real v_rot[3];                       
+                        Real v_rot[3];
                         v_rot[0] = ls_value * p.rdata(realData::omegax);
                         v_rot[1] = ls_value * p.rdata(realData::omegay);
                         v_rot[2] = ls_value * p.rdata(realData::omegaz);
-                        
+
                         Real vreltrans[3];
                         Real cprod[3];
-                        
+
                         cross_product(v_rot, normal, cprod);
                         vreltrans[0] = p.rdata(realData::velx) + cprod[0];
                         vreltrans[1] = p.rdata(realData::vely) + cprod[1];
                         vreltrans[2] = p.rdata(realData::velz) + cprod[2];
 
                         Real vreltrans_norm = dot_product(vreltrans, normal);
-                        
+
                         Real vrel_t[3];
                         vrel_t[0] = vreltrans[0] - vreltrans_norm*normal[0];
                         vrel_t[1] = vreltrans[1] - vreltrans_norm*normal[1];
@@ -549,21 +549,16 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         Real kn_des_w;
                         Real etan_des_w;
 
-                        // NOTE - we don't use the tangential components right now, 
+                        // NOTE - we don't use the tangential components right now,
                         // but we might in the future
                         // Real kt_des_w;
                         // Real etat_des_w;
 
-                        if (DEMParams::CollisionModel == DEMParams::HERTZIAN)
-                        {                            
-                            amrex::Abort("Not implemented");
-                        }
-                        else
                         {
-                            kn_des_w   = DEMParams::kn_w;
-                            etan_des_w = DEMParams::etan_w[phase-1];
-                            // kt_des_w   = DEMParams::kt_w;
-                            // etat_des_w = DEMParams::etat_w[phase-1];
+                          kn_des_w   = DEMParams::kn_w;
+                          etan_des_w = DEMParams::etan_w[phase-1];
+                          // kt_des_w   = DEMParams::kt_w;
+                          // etat_des_w = DEMParams::etat_w[phase-1];
                         }
 
                         Real fn[3];
@@ -582,8 +577,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         overlap_t[2] = subdt*vrel_t[2];
 
                         mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
-                        
-                        if (mag_overlap_t > 0.0) {                            
+
+                        if (mag_overlap_t > 0.0) {
                             Real fnmd = DEMParams::mew * sqrt(dot_product(fn, fn));
                             Real tangent[3];
                             tangent[0] = overlap_t[0]/mag_overlap_t;
@@ -602,16 +597,16 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         fc_ptr[i         ] += fn[0] + ft[0];
                         fc_ptr[i + ntot  ] += fn[1] + ft[1];
                         fc_ptr[i + 2*ntot] += fn[2] + ft[2];
-                        
+
                         Real tow_force[3];
 
                         cross_product(normal, ft, tow_force);
 
                         tow_ptr[i         ] += ls_value*tow_force[0];
                         tow_ptr[i + ntot  ] += ls_value*tow_force[1];
-                        tow_ptr[i + 2*ntot] += ls_value*tow_force[2];                        
+                        tow_ptr[i + 2*ntot] += ls_value*tow_force[2];
                     }
-                });                
+                });
 
                 // Debugging: copy data from the fc (all forces) vector to
                 // the wfor (wall forces) vector.
@@ -631,7 +626,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
 #ifdef AMREX_USE_CUDA
             auto nbor_data = m_neighbor_list[index].data();
-            
+
             constexpr Real small_number = 1.0e-15;
             long ncoll = 0;
             long* pncoll = &ncoll;
@@ -648,7 +643,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     Real dx = p2.pos(0) - p1.pos(0);
                     Real dy = p2.pos(1) - p1.pos(1);
                     Real dz = p2.pos(2) - p1.pos(2);
-                    
+
                     Real r2 = dx*dx + dy*dy + dz*dz;
                     Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
 
@@ -657,12 +652,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         Cuda::Atomic::Add(pncoll, 1);
                         Real dist_mag = sqrt(r2);
                         AMREX_ASSERT(dist_mag >= eps);
-                        
+
                         Real normal[3];
                         normal[0] = dx / dist_mag;
                         normal[1] = dy / dist_mag;
                         normal[2] = dz / dist_mag;
-                        
+
                         Real overlap_n = r_lm - dist_mag;
                         Real vrel_trans_norm;
                         Real vrel_t[3];
@@ -672,7 +667,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         Real kn_des;
                         Real etan_des;
 
-                        // NOTE - we don't use the tangential components right now, 
+                        // NOTE - we don't use the tangential components right now,
                         // but we might in the future
                         // Real kt_des;
                         // Real etat_des;
@@ -680,16 +675,11 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         int phase1 = p1.idata(intData::phase);
                         int phase2 = p2.idata(intData::phase);
 
-                        if (DEMParams::CollisionModel == DEMParams::HERTZIAN)
-                        {                            
-                            amrex::Abort("Not implemented");
-                        }
-                        else
-                            {
-                            kn_des = DEMParams::kn;
-                            // kt_des = DEMParams::kt;
-                            etan_des = DEMParams::etan[phase1-1][phase2-1];
-                            // etat_des = DEMParams::etat[phase1-1][phase2-1];
+                        {
+                          kn_des = DEMParams::kn;
+                          // kt_des = DEMParams::kt;
+                          etan_des = DEMParams::etan[phase1-1][phase2-1];
+                          // etat_des = DEMParams::etat[phase1-1][phase2-1];
                         }
 
                         Real fn[3];
@@ -707,8 +697,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         overlap_t[1] = subdt*vrel_t[1];
                         overlap_t[2] = subdt*vrel_t[2];
                         mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
-                        
-                        if (mag_overlap_t > 0.0) {                            
+
+                        if (mag_overlap_t > 0.0) {
                             Real fnmd = DEMParams::mew * sqrt(dot_product(fn, fn));
                             Real tangent[3];
                             tangent[0] = overlap_t[0]/mag_overlap_t;
@@ -727,13 +717,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         fc_ptr[i         ] += fn[0] + ft[0];
                         fc_ptr[i + ntot  ] += fn[1] + ft[1];
                         fc_ptr[i + 2*ntot] += fn[2] + ft[2];
-                        
+
                         Real r1 = p1.rdata(realData::radius);
                         Real r2 = p2.rdata(realData::radius);
-                                               
+
                         Real dist_cl = 0.5 * (dist_mag + (r1*r1 - r2*r2) / dist_mag);
                         dist_cl = dist_mag - dist_cl;
-                        
+
                         Real tow_force[3];
 
                         cross_product(normal, ft, tow_force);
@@ -741,17 +731,17 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         tow_ptr[i         ] += dist_cl*tow_force[0];
                         tow_ptr[i + ntot  ] += dist_cl*tow_force[1];
                         tow_ptr[i + 2*ntot] += dist_cl*tow_force[2];
-                        } 
+                        }
                     }
             });
 
-#else            
+#else
             calc_particle_collisions ( particles                          , &nrp,
                                        neighbors[lev][index].dataPtr()    , &size_ng,
                                        neighbor_list[lev][index].dataPtr(), &size_nl,
                                        tow[index].dataPtr(), fc[index].dataPtr(),
                                        &subdt, &ncoll);
-            
+
             // Debugging: copy data from the fc (all forces) vector to the wfor
             // (wall forces) vector. Note that since fc already contains the
             // wall forces, these need to be subtracted here.
@@ -761,7 +751,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     pfor[index][i] = fc[index][i] - wfor[index][i];
                 }
             }
-#endif            
+#endif
 
             BL_PROFILE_VAR_STOP(calc_particle_collisions);
 
@@ -779,18 +769,18 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             AMREX_FOR_1D ( nrp, i,
             {
                 ParticleType& p = pstruct[i];
-                
+
                 p.rdata(realData::velx) += subdt * (
                     (p.rdata(realData::dragx) + fc_ptr[i       ]) /  p.rdata(realData::mass) + grav_ptr[0]);
                 p.rdata(realData::vely) += subdt * (
                     (p.rdata(realData::dragy) + fc_ptr[i + ntot]) /  p.rdata(realData::mass) + grav_ptr[1]);
                 p.rdata(realData::velz) += subdt * (
                     (p.rdata(realData::dragz) + fc_ptr[i+2*ntot]) /  p.rdata(realData::mass) + grav_ptr[2]);
-                
+
                 p.rdata(realData::omegax) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i       ];
                 p.rdata(realData::omegay) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i+  ntot];
                 p.rdata(realData::omegaz) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i+2*ntot];
-                
+
                 p.pos(0) += subdt * p.rdata(realData::velx);
                 p.pos(1) += subdt * p.rdata(realData::vely);
                 p.pos(2) += subdt * p.rdata(realData::velz);
@@ -799,11 +789,11 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             Gpu::Device::streamSynchronize();
 
             call_usr2_des(&nrp, pstruct);
-            
+
             /********************************************************************
              * Update runtime cost (used in load-balancing)                     *
              *******************************************************************/
-            
+
             if (cost)
             {
                 // Runtime cost is either (weighted by tile box size):
@@ -824,7 +814,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
         // Update substep count
         n += 1;
-        
+
         /************************************************************************
          * DEBUG: output the number of collisions in current substep            *
          *        output the max velocity (and forces) in current substep       *
@@ -864,14 +854,14 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                            << " pwy= " << max_forces[1][1]
                            << " pwz= " << max_forces[1][2] << std::endl;
 
-        }        
+        }
     } // end of loop over substeps
 
     // Redistribute particles at the end of all substeps (note that the particle
     // neighbour list needs to be reset when redistributing).
     clearNeighbors();
     Redistribute(0, 0, 0, 1);
-    
+
     /****************************************************************************
      * DEBUG: output the total number of collisions over all substeps           *
      *        output the maximum velocity and forces over all substeps          *
@@ -880,15 +870,15 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         ParallelDescriptor::ReduceIntSum(ncoll_total, ParallelDescriptor::IOProcessorNumber());
         Print() << "Number of collisions: " << ncoll_total << " in " << nsubsteps << " substeps " << std::endl;
     }
-    
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-    {        
+    {
         const int nrp   = NumberOfParticles(pti);
         void* particles = pti.GetArrayOfStructs().data();
-        
+
         call_usr3_des( &nrp, particles );
     }
 
@@ -988,7 +978,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
               int fortran_particle_comp, int nghost )
 {
     BL_PROFILE("MFIXParticleContainer::PICDeposition()");
-    
+
     int ncomp = 1;
 
     MultiFab* mf_pointer[nlev];
@@ -1043,7 +1033,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
     {
         Vector<int> ngrow = {1,1,1};
         std::unique_ptr<EBFArrayBoxFactory> crse_factory;
-        
+
         if (lev == 0) {
             flags   = &(ebfactory[lev]->getMultiEBCellFlagFab());
         } else {
@@ -1053,7 +1043,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
                   ngrow, EBSupport::volume);
             flags   = &(crse_factory->getMultiEBCellFlagFab());
         }
-        
+
         const MultiFab* volfrac = (lev == 0) ? &(ebfactory[lev]->getVolFrac()) : &(crse_factory->getVolFrac());
 
 #ifdef _OPENMP
@@ -1092,29 +1082,29 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
                 auto volarr = fab.array();
                 auto flagsarr = (*flags)[pti].array();
                 auto vratioarr = (*volfrac)[pti].array();
-  
-                AMREX_FOR_1D ( nrp, ip, 
+
+                AMREX_FOR_1D ( nrp, ip,
                 {
                     const ParticleType& p = pstruct[ip];
-                    
+
                     amrex::Real reg_cell_vol = dx[0]*dx[1]*dx[2];
-  
+
                     amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
                     amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
                     amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
-                    
+
                     int i = std::floor(x);
                     int j = std::floor(y);
                     int k = std::floor(z);
-                    
+
                     amrex::Real wx_hi = x - i;
                     amrex::Real wy_hi = y - j;
                     amrex::Real wz_hi = z - k;
-                    
+
                     amrex::Real wx_lo = 1.0 - wx_hi;
                     amrex::Real wy_lo = 1.0 - wy_hi;
                     amrex::Real wz_lo = 1.0 - wz_hi;
-                    
+
                     amrex::Real weights[2][2][2];
 
                     weights[0][0][0] = vratioarr(i-1, j-1, k-1) * wx_lo * wy_lo * wz_lo;
@@ -1131,7 +1121,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
                         for (int jj = 0; jj <= 1; ++jj)
                             for (int kk = 0; kk <= 1; ++kk)
                                 total_weight += weights[ii][jj][kk];
-                    
+
                     for (int ii = 0; ii <= 1; ++ii)
                         for (int jj = 0; jj <= 1; ++jj)
                             for (int kk = 0; kk <= 1; ++kk)
@@ -1145,14 +1135,14 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
                                 if (flagsarr(i+ii,j+jj,k+kk) == EBCellFlag::TheCoveredCell())
                                     continue;
                                 amrex::Real this_cell_vol = vratioarr(i+ii,j+jj,k+kk) * reg_cell_vol;
-                                amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk), 
+                                amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk),
                                                         weights[ii+1][jj+1][kk+1]*pvol/this_cell_vol);
                             }
                         }
                     }
                 });
             }
-            
+
 #ifdef _OPENMP
             amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
                                         BL_TO_FORTRAN_3D(fab), ncomp);
@@ -1245,15 +1235,15 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
                    int fortran_beta_comp, int fortran_vel_comp, int nghost )
 {
     BL_PROFILE("MFIXParticleContainer::PICMultiDeposition()");
-    
+
     const Real strttime = ParallelDescriptor::second();
-    
+
     if (nlev > 2)
         amrex::Abort("For right now MFIXParticleContainer::PICMultiDeposition can only handle up to 2 levels");
-    
+
     for (int lev = 0; lev < nlev; lev++)
         AMREX_ASSERT(OnSameGrids(lev,*beta_mf[lev])==OnSameGrids(lev,*beta_vel_mf[lev]));
-    
+
     MultiFab*  beta_ptr[nlev];
     MultiFab*  beta_vel_ptr[nlev];
 
@@ -1373,29 +1363,29 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
                 auto beta_vel_arr = beta_vel_fab.array();
                 auto flagsarr = (*flags)[pti].array();
                 auto vratioarr = (*volfrac)[pti].array();
-                
-                AMREX_FOR_1D ( nrp, ip, 
+
+                AMREX_FOR_1D ( nrp, ip,
                 {
                     const ParticleType& p = pstruct[ip];
-                    
+
                     amrex::Real reg_cell_vol = dx[0]*dx[1]*dx[2];
-  
+
                     amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
                     amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
                     amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
-                    
+
                     int i = std::floor(x);
                     int j = std::floor(y);
                     int k = std::floor(z);
-                    
+
                     amrex::Real wx_hi = x - i;
                     amrex::Real wy_hi = y - j;
                     amrex::Real wz_hi = z - k;
-                    
+
                     amrex::Real wx_lo = 1.0 - wx_hi;
                     amrex::Real wy_lo = 1.0 - wy_hi;
                     amrex::Real wz_lo = 1.0 - wz_hi;
-                    
+
                     amrex::Real weights[2][2][2];
 
                     weights[0][0][0] = vratioarr(i-1, j-1, k-1) * wx_lo * wy_lo * wz_lo;
@@ -1412,7 +1402,7 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
                         for (int jj = 0; jj <= 1; ++jj)
                             for (int kk = 0; kk <= 1; ++kk)
                                 total_weight += weights[ii][jj][kk];
-                    
+
                     for (int ii = 0; ii <= 1; ++ii)
                         for (int jj = 0; jj <= 1; ++jj)
                             for (int kk = 0; kk <= 1; ++kk)
@@ -1635,7 +1625,7 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
 
               auto& particles = pti.GetArrayOfStructs();
               int np = pti.numParticles();
-              
+
               Gpu::HostVector<ParticleType> host_particles(np);
               Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
@@ -1652,14 +1642,14 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
                       File << p.rdata(realData::velx) << ' ';
                       File << p.rdata(realData::vely) << ' ';
                       File << p.rdata(realData::velz) << ' ';
-                      
+
                       File << '\n';
-                      
+
                       index++;
                   }
               }
             }
-            
+
             File.flush();
 
             File.close();
@@ -1693,10 +1683,10 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
             auto& particles = pti.GetArrayOfStructs();
-            
+
             Gpu::HostVector<ParticleType> host_particles(pti.numParticles());
             Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
-            
+
             for (const auto& p: host_particles){
                 if ( phse==p.idata(intData::phase) )
                 {

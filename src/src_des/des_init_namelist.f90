@@ -28,8 +28,6 @@ MODULE DES_INIT_NAMELIST_MODULE
       SUBROUTINE DES_INIT_NAMELIST
 
 
-      use discretelement, only: des_coll_model
-
       use discretelement, only: des_continuum_coupled
       use discretelement, only: des_explicitly_coupled
       use discretelement, only: des_oneway_coupled
@@ -40,10 +38,6 @@ MODULE DES_INIT_NAMELIST_MODULE
       use discretelement, only: mew, mew_w
 
       use discretelement, only: des_en_input, des_en_wall_input
-      use discretelement, only: des_et_input, des_et_wall_input
-
-      use discretelement, only: e_young, ew_young
-      use discretelement, only: v_poisson, vw_poisson
 
       use discretelement, only: des_etat_fac, des_etat_w_fac
 
@@ -105,20 +99,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 ! DEM ONLY:            Discrete Element Model                         !
 !#####################################################################!
 
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
-!    Collision model for the soft-sphere approach used in DEM model.
-!    All models require specifying the following parameters: DES_EN_INPUT,
-!    DES_EN_WALL_INPUT, MEW, and MEW_W.
-!  </description>
-!  <valid value="LSD" note="The linear spring-dashpot model.
-!    Requires: KN, KN_W, KT_FAC, KT_W_FAC, DES_ETAT_FAC, DES_ETAT_W_FAC."/>
-!  <valid value="HERTZIAN" note="The Hertzian model.
-!    Requires: DES_ET_INPUT, DES_ET_WALL_INPUT, E_YOUNG, EW_YOUNG
-!    V_POISSON, VW_POISSON."/>
-      DES_COLL_MODEL = 'LSD'
-!</keyword>
-
 
 !<keyword category="Discrete Element Model" required="false" dem="true">
 !  <description>
@@ -136,7 +116,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 !    spring constant for particle-particle collisions as KT_FAC*KN.
 !    Required when using the linear spring-dashpot collision model.
 !  </description>
-!  <dependent keyword="DES_COLL_MODEL" value="LSD"/>
 !  <range min="0.0" max="1.0" />
       KT_FAC = 2.d0/7.d0
 !</keyword>
@@ -158,7 +137,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 !    spring constant for particle-wall collisions as KT_W_FAC*KN_W.
 !    Required when using the linear spring-dashpot collision model.
 !  </description>
-!  <dependent keyword="DES_COLL_MODEL" value="LSD"/>
 !  <range min="0.0" max="1.0" />
       KT_W_FAC = 2.d0/7.d0
 !</keyword>
@@ -210,35 +188,10 @@ MODULE DES_INIT_NAMELIST_MODULE
 
 !<keyword category="Discrete Element Model" required="false" dem="true">
 !  <description>
-!    Tangential restitution coefficient for inter-particle collisions.
-!    Values are defined in a one dimensional array. This is required
-!    input when using the Hertzian collision model.
-! </description>
-! <dependent keyword="DES_COLL_MODEL" value="HERTZIAN"/>
-! <range min="0.0" max="1.0" />
-      DES_ET_INPUT(:) = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Discrete Element Model" required="false" dem="true">
-!  <description>
-!    Tangential restitution coefficient for particle wall collisions.
-!    Values are defined in a one dimensional array. This is required
-!    input when using the Hertzian collision model.
-!  </description>
-! <range min="0.0" max="1.0" />
-! <dependent keyword="DES_COLL_MODEL" value="HERTZIAN"/>
-      DES_ET_WALL_INPUT(:) = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Discrete Element Model" required="false" dem="true">
-!  <description>
 !    Ratio of the tangential damping factor to the normal damping factor
 !    for inter-particle collisions.  Required for the linear spring-
 !    dashpot model collision model
 !  </description>
-!  <dependent keyword="DES_COLL_MODEL" value="LSD"/>
 !  <range min="0.0" max="1.0" />
       DES_ETAT_FAC = HALF
 !</keyword>
@@ -249,58 +202,13 @@ MODULE DES_INIT_NAMELIST_MODULE
 !    Ratio of the tangential damping factor to the normal damping
 !    factor for particle-wall collisions. Required for the linear
 !    spring-dashpot model for soft-spring collision modelling under
-!    DEM. For the Hertzian model, the tangential damping coefficients
-!    have to be explicitly specified and specification of this
-!    variable is not required.
+!    DEM.
 ! </description>
-! <dependent keyword="DES_COLL_MODEL" value="LSD"/>
 ! <range min="0.0" max="1.0" />
 ! <valid value="UNDEFINED" note="For LSD model, if left undefined, MFIX
 ! will revert to default value of 0.5" />
       DES_ETAT_W_FAC = HALF
 !</keyword>
-
-
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
-!    Youngs modulus for the wall [barye in CGS]. Required when using the
-!    Hertzian spring-dashpot model.
-!  </description>
-!  <dependent keyword="DES_COLL_MODEL" value="HERTZIAN"/>
-      EW_YOUNG = UNDEFINED
-!</keyword>
-
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
-!    Poisson ratio for the wall. Required when using the Hertzian
-!    spring-dashpot model.
-!  </description>
-!  <dependent keyword="DES_COLL_MODEL" value="HERTZIAN"/>
-      VW_POISSON = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
-!    Youngs modulus for the particle [barye in CGS]. Required when using
-!    the Hertzian spring-dashpot model.
-!  </description>
-!  <arg index="1" id="Phase" min="1" max="MMAX"/>
-!  <dependent keyword="DES_COLL_MODEL" value="HERTZIAN"/>
-      E_YOUNG(:DIM_M) = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
-!    Poissons ratio for the particle. Required when using the Hertzian
-!    spring-dashpot model.
-!  </description>
-!  <arg index="1" id="Phase" min="1" max="MMAX"/>
-!  <dependent keyword="DES_COLL_MODEL" value="HERTZIAN"/>
-      V_POISSON(:DIM_M) = UNDEFINED
-!</keyword>
-
 
 
 

@@ -31,8 +31,7 @@ contains
                bind(c, name="calc_wall_collisions")
 
         use particle_mod,   only: particle_t
-        use discretelement, only: des_coll_model_enum
-        use discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
+        use discretelement, only: des_etat_wall, des_etan_wall
         use discretelement, only: des_crossprdct
         use discretelement, only: kn_w, kt_w, mew_w
 
@@ -137,20 +136,10 @@ contains
                     ! calculate the spring model parameters.
                     phasell = particles(ll) % phase
 
-                    ! hertz vs linear spring-dashpot contact model
-                    if ( des_coll_model_enum == hertzian ) then
-                        sqrt_overlap = sqrt(overlap_n)
-                        kn_des_w     = hert_kwn(phasell)*sqrt_overlap
-                        kt_des_w     = hert_kwt(phasell)*sqrt_overlap
-                        sqrt_overlap = sqrt(sqrt_overlap)
-                        etan_des_w   = des_etan_wall(phasell)*sqrt_overlap
-                        etat_des_w   = des_etat_wall(phasell)*sqrt_overlap
-                    else
-                        kn_des_w     = kn_w
-                        kt_des_w     = kt_w
-                        etan_des_w   = des_etan_wall(phasell)
-                        etat_des_w   = des_etat_wall(phasell)
-                    end if
+                    kn_des_w     = kn_w
+                    kt_des_w     = kt_w
+                    etan_des_w   = des_etan_wall(phasell)
+                    etat_des_w   = des_etat_wall(phasell)
 
                     ! calculate the normal contact force
                     fn(:) = -(kn_des_w * overlap_n  + etan_des_w * v_rel_trans_norm) * normal(:)

@@ -5,8 +5,8 @@
       use iso_c_binding  , only: c_int
       use particle_mod   , only: particle_t
       use cfrelvel_module, only: cfrelvel
-      use discretelement , only: des_coll_model_enum, des_crossprdct
-      use discretelement , only: des_etan, des_etat, hert_kt, hert_kn, kn, kt, mew, hertzian
+      use discretelement , only: des_crossprdct
+      use discretelement , only: des_etan, des_etat, kn, kt, mew
       use error_manager  , only: init_err_msg, flush_err_msg, err_msg, ival
       use param          , only: small_number
 
@@ -128,21 +128,11 @@
             radiusii = particles(ii) % radius
             phaseii  = particles(ii) % phase
 
-            ! hertz spring-dashpot contact model
-            if ( des_coll_model_enum == hertzian ) then
-               sqrt_overlap = sqrt(overlap_n)
-               kn_des       = hert_kn(phasell,phaseii)*sqrt_overlap
-               kt_des       = hert_kt(phasell,phaseii)*sqrt_overlap
-               sqrt_overlap = sqrt(sqrt_overlap)
-               etan_des     = des_etan(phasell,phaseii)*sqrt_overlap
-               etat_des     = des_etat(phasell,phaseii)*sqrt_overlap
-               ! linear spring-dashpot contact model
-            else
-               kn_des   = kn
-               kt_des   = kt
-               etan_des = des_etan(phasell,phaseii)
-               etat_des = des_etat(phasell,phaseii)
-            end if
+            ! linear spring-dashpot contact model
+            kn_des   = kn
+            kt_des   = kt
+            etan_des = des_etan(phasell,phaseii)
+            etat_des = des_etat(phasell,phaseii)
 
             ! calculate the normal contact force
             fn(:) =  -(   kn_des * overlap_n        * normal(:) + &
@@ -186,7 +176,7 @@
             ! for each particle the signs of norm and ft both flip, so add the same torque
             tow(ll,:) = tow(ll,:) + tow_tmp(:,1)
             tow(ii,:) = tow(ii,:) + tow_tmp(:,2)
- 
+
             ! **********************************************************
 
          end do
