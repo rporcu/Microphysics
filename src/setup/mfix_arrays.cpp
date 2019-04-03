@@ -58,10 +58,6 @@ mfix::AllocateArrays (int lev)
     mu_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
     mu_g[lev]->setVal(0.);
 
-    // Coefficient of grad(div(u)) in viscous terms
-    lambda_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    lambda_g[lev]->setVal(0.);
-
     // Current velocity
     vel_g[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
     vel_g[lev]->setVal(0.);
@@ -69,10 +65,6 @@ mfix::AllocateArrays (int lev)
     // Old velocity
     vel_go[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
     vel_go[lev]->setVal(0.);
-
-    // Div(u)
-    trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    trD_g[lev]->setVal(0.);
 
     // Vorticity
     vort[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
@@ -268,13 +260,6 @@ mfix::RegridArrays (int lev)
     mu_g_new->copy(*mu_g[lev],0,0,1,0,ng);
     mu_g[lev] = std::move(mu_g_new);
 
-    // Lambda
-    ng = lambda_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> lambda_g_new(new MultiFab(grids[lev],dmap[lev],1,ng, MFInfo(), *ebfactory[lev]));
-    lambda_g_new->setVal(0.0);
-    lambda_g_new->copy(*lambda_g[lev],0,0,1,0,ng);
-    lambda_g[lev] = std::move(lambda_g_new);
-
     // Gas velocity
     ng = vel_g[lev]->nGrow();
     std::unique_ptr<MultiFab> vel_g_new(new MultiFab(grids[lev],dmap[lev],vel_g[lev]->nComp(),ng,
@@ -297,12 +282,6 @@ mfix::RegridArrays (int lev)
     gp_new->setVal(0.0);
     gp_new->copy(*gp[lev],0,0,1,0,ng);
     gp[lev] = std::move(gp_new);
-
-    // Trace(D)
-    ng = trD_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> trD_g_new(new MultiFab(grids[lev],dmap[lev],1,ng, MFInfo(), *ebfactory[lev]));
-    trD_g[lev] = std::move(trD_g_new);
-    trD_g[lev]->setVal(0.);
 
     // Vorticity
     ng = vort[lev]->nGrow();
@@ -417,7 +396,6 @@ mfix::RegridArrays (int lev)
     rop_go[lev]->FillBoundary(geom[lev].periodicity());
 
         mu_g[lev]->FillBoundary(geom[lev].periodicity());
-    lambda_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 

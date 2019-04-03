@@ -67,7 +67,7 @@ extern "C"
         const int* slo, const int* shi,
         amrex::Real* ep_g,
         amrex::Real* ro_g,  amrex::Real* rop_g,
-        amrex::Real* mu_g,  amrex::Real* lambda_g,
+        amrex::Real* mu_g,
         const int* bc_ilo, const int* bc_ihi,
         const int* bc_jlo, const int* bc_jhi,
         const int* bc_klo, const int* bc_khi,
@@ -91,7 +91,7 @@ extern "C"
         amrex::Real* ep_g,  amrex::Real* ro_g,
         amrex::Real* rop_g, amrex::Real* p_g,
         amrex::Real* vel_g,
-        amrex::Real* mu_g,  amrex::Real* lambda_g,
+        amrex::Real* mu_g,
         amrex::Real* dx,    amrex::Real* dy,       amrex::Real* dz,
         amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength
        );
@@ -99,7 +99,7 @@ extern "C"
     void init_fluid_restart(
           const int* slo, const int* shi,
           const int*  lo, const int*  hi,
-          amrex::Real* mu_g,    amrex::Real* lambda_g
+          amrex::Real* mu_g
        );
 
     void set_p0(const int*  lo   , const int*  hi,

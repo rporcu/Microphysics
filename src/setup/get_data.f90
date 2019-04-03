@@ -23,9 +23,6 @@ contains
     use discretelement, only: des_continuum_coupled, des_oneway_coupled
     use fld_const, only: ro_g0
 
-    use discretelement, only: des_coll_model, des_coll_model_enum, &
-                              lsd, hertzian
-
     use drag, only: drag_type, drag_type_enum, syam_obrien, gidaspow, &
                     gidaspow_pcf, gidaspow_blend, gidaspow_blend_pcf, &
                     wen_yu, wen_yu_pcf, koch_hill, koch_hill_pcf, bvk,&
@@ -40,10 +37,10 @@ contains
 
     ! This module call routines to initialize the namelist variables.
     call init_namelist
-    
+
     ! Read in the namelist variables from the ascii input file.
     call read_namelist(mfix_dat, dt)
-    
+
     ! Set flag for coupled simulations
     des_continuum_coupled = (particle_types>0) .and. (abs(ro_g0) > 0.0d0)
     dem_solids = (particle_types > 0)
@@ -67,12 +64,6 @@ contains
     case ('WEN_YU_PCF'); drag_type_enum = wen_yu_pcf
     case ('KOCH_HILL_PCF'); drag_type_enum = koch_hill_pcf
     case ('USER_DRAG','USR_DRAG'); drag_type_enum = user_drag
-    end select
-
-    ! Check collision model specific parameters.
-    select case (trim(adjustl(des_coll_model)))
-    case('LSD'); des_coll_model_enum = lsd
-    case('HERTZIAN'); des_coll_model_enum = hertzian
     end select
 
   end subroutine get_data

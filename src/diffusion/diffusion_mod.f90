@@ -14,7 +14,7 @@ module diffusion_mod
 
    use amrex_fort_module, only: rt => amrex_real
    use iso_c_binding ,    only: c_int
-   use param,             only: zero, half, one, two
+   use param,             only: zero, half, one, two, two_thirds
    use amrex_mempool_module, only: amrex_allocate, amrex_deallocate
 
    implicit none
@@ -41,8 +41,7 @@ contains
    subroutine compute_divtau ( lo, hi,   &
         divtau, dlo, dhi, &
         vel_in, vinlo, vinhi, &
-        mu, lambda, ro,    &
-        ep,    slo, shi, &
+        mu, ro, ep,  slo, shi, &
         domlo, domhi,     &
         bc_ilo_type, bc_ihi_type, &
         bc_jlo_type, bc_jhi_type, &
@@ -76,8 +75,7 @@ contains
          & vel_in(vinlo(1):vinhi(1),vinlo(2):vinhi(2),vinlo(3):vinhi(3),3), &
          &      ro(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
          &      ep(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-         &      mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),  &
-         &  lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         &      mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
     real(rt),        intent(inout) ::                        &
          & divtau(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3)
@@ -167,12 +165,12 @@ contains
              mu_b = half * (mu(i,j,k) + mu(i,j,k-1))
              mu_t = half * (mu(i,j,k) + mu(i,j,k+1))
 
-             lambda_w = half * (lambda(i,j,k) + lambda(i-1,j,k))
-             lambda_e = half * (lambda(i,j,k) + lambda(i+1,j,k))
-             lambda_s = half * (lambda(i,j,k) + lambda(i,j-1,k))
-             lambda_n = half * (lambda(i,j,k) + lambda(i,j+1,k))
-             lambda_b = half * (lambda(i,j,k) + lambda(i,j,k-1))
-             lambda_t = half * (lambda(i,j,k) + lambda(i,j,k+1))
+             lambda_w = -two_thirds * mu_w
+             lambda_e = -two_thirds * mu_e
+             lambda_s = -two_thirds * mu_s
+             lambda_n = -two_thirds * mu_n
+             lambda_b = -two_thirds * mu_b
+             lambda_t = -two_thirds * mu_t
 
              !*************************************
              !         div(tau)_x
@@ -618,11 +616,11 @@ contains
                do i = lo(1)-1, hi(1)+1
 
                   if ( bc_jlo_type(i,k,1) == MINF_ ) then
-                     
+
                      vel(i,:lo(2)-1,k,n) = 2.d0*vel_in(i,lo(2)-1,k,n) - vel_in(i,lo(2),k,n)
 
                   else if ( bc_jlo_type(i,k,1) == POUT_) then
-                     
+
                      vel(i,:lo(2)-1,k,n) = vel_in(i,lo(2),k,n)
 
                   end if

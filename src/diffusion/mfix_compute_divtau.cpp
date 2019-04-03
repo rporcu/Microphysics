@@ -29,7 +29,7 @@ mfix::mfix_compute_divtau ( int lev,
    facecent  =   ebfactory[lev] -> getFaceCent();
    volfrac   = &(ebfactory[lev] -> getVolFrac());
    bndrycent = &(ebfactory[lev] -> getBndryCent());
-    
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -55,7 +55,6 @@ mfix::mfix_compute_divtau ( int lev,
                BL_TO_FORTRAN_ANYD(divtau[mfi]),
                BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
                (*mu_g[lev])[mfi].dataPtr(),
-               (*lambda_g[lev])[mfi].dataPtr(),
                (*ro_g[lev])[mfi].dataPtr(),
                BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
                domain.loVect (), domain.hiVect (),
@@ -71,7 +70,6 @@ mfix::mfix_compute_divtau ( int lev,
                BL_TO_FORTRAN_ANYD(divtau[mfi]),
                BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
                (*mu_g[lev])[mfi].dataPtr(),
-               (*lambda_g[lev])[mfi].dataPtr(),
                (*ro_g[lev])[mfi].dataPtr(),
                BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
                BL_TO_FORTRAN_ANYD(flags),
@@ -94,4 +92,3 @@ mfix::mfix_compute_divtau ( int lev,
       }
    }
 }
-

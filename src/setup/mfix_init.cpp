@@ -750,24 +750,24 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
        // We deliberately don't tile this loop since we will be looping
        //    over bc's on faces and it makes more sense to do this one grid at a time
        for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) {
-  
+
           const Box& bx = mfi.validbox();
           const Box& sbx = (*ep_g[lev])[mfi].box();
-  
+
         if ( is_restarting ) {
-  
+
             init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
-                 (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr());
-  
+                 (*mu_g[lev])[mfi].dataPtr() );
+
           } else {
-  
+
             init_fluid(sbx.loVect(), sbx.hiVect(),
                  bx.loVect(),  bx.hiVect(),
                  domain.loVect(), domain.hiVect(),
                  (*ep_g[lev])[mfi].dataPtr(),  (*ro_g[lev])[mfi].dataPtr(),
                  (*rop_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
                  (*vel_g[lev])[mfi].dataPtr(),
-                 (*mu_g[lev])[mfi].dataPtr(),  (*lambda_g[lev])[mfi].dataPtr(),
+                 (*mu_g[lev])[mfi].dataPtr(),
                  &dx, &dy, &dz, &xlen, &ylen, &zlen);
           }
        }
@@ -785,7 +785,6 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
          ro_g[lev]->FillBoundary(geom[lev].periodicity());
         rop_g[lev]->FillBoundary(geom[lev].periodicity());
          mu_g[lev]->FillBoundary(geom[lev].periodicity());
-     lambda_g[lev]->FillBoundary(geom[lev].periodicity());
 
      vel_g[lev]->FillBoundary(geom[lev].periodicity());
   }
@@ -834,7 +833,7 @@ mfix::mfix_set_bc0()
          set_bc0(sbx.loVect(), sbx.hiVect(),
                  (*ep_g[lev])[mfi].dataPtr(),
                   (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
-                  (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
+                  (*mu_g[lev])[mfi].dataPtr(),
                  bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                  bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                  bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),

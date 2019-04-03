@@ -147,8 +147,6 @@ mfix::ResizeArrays ()
     drag.resize(nlevs_max);
 
     mu_g.resize(nlevs_max);
-    lambda_g.resize(nlevs_max);
-    trD_g.resize(nlevs_max);
 
     // Vorticity
     vort.resize(nlevs_max);
@@ -275,7 +273,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 
 
     // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac
-    // Note ep_g = 1 - particle_volume / this_cell_volume where 
+    // Note ep_g = 1 - particle_volume / this_cell_volume where
     //    this_cell_volume = (volfrac * dx * dy * dz)
     // When we define the sum we add up (ep_g * volfrac) so that the total sum
     //    does not depend on whether a particle is in a full or cut cell.
@@ -287,6 +285,6 @@ void
 mfix::avgDown (int crse_lev, const MultiFab& S_fine, MultiFab& S_crse)
 {
     BL_PROFILE("mfix::avgDown()");
- 
+
     amrex::EB_average_down(S_fine, S_crse, 0, S_fine.nComp(), refRatio(crse_lev));
 }

@@ -415,7 +415,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                }
            }
 
-          // If we have created the walls using the domain boundary conditions and not 
+          // If we have created the walls using the domain boundary conditions and not
           //    by creating them from implicit functions, then the implicit_functions mf
           //    will be empty.  We don't want to fail when reading so we allow the code
           //    to read it in an empty multifab just for this one.
@@ -427,7 +427,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                       amrex::MultiFabFileFullPrefix(lev,
                                                     restart_file, level_prefix,
                                                     chkscaVarsName[i]),
-                                                    nullptr, 
+                                                    nullptr,
                                                     ParallelDescriptor::IOProcessorNumber(),
                                                     allow_empty_mf
               );
@@ -465,7 +465,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     //      create a dual grid decomposition in the regrid operation
     if ( solve_dem)
     {
-        for (int lev = 0; lev <= finestLevel(); lev++) 
+        for (int lev = 0; lev <= finestLevel(); lev++)
         {
           pc->SetParticleBoxArray       (lev, grids[lev]);
           pc->SetParticleDistributionMap(lev,  dmap[lev]);
@@ -553,7 +553,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
        rop_go[lev]->FillBoundary(geom[lev].periodicity());
 
            mu_g[lev]->FillBoundary(geom[lev].periodicity());
-       lambda_g[lev]->FillBoundary(geom[lev].periodicity());
 
        // Fill the bc's just in case
         vel_g[lev]->FillBoundary(geom[lev].periodicity());

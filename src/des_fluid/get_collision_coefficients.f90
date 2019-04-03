@@ -1,18 +1,5 @@
-subroutine get_collision_model( flag_out ) bind(C, name="get_collision_model")
-
-  use iso_c_binding,                 only: c_int
-  use discretelement,                only: des_coll_model_enum
-
-  implicit none
-
-  integer(c_int), intent(inout) :: flag_out
-
-  flag_out = des_coll_model_enum
-
-end subroutine get_collision_model
-
 subroutine get_lsd_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out, kn_w_out, &
-     mew_out, mew_w_out, etan_out, etan_w_out, etat_out, & 
+     mew_out, mew_w_out, etan_out, etan_w_out, etat_out, &
      etat_w_out ) &
      bind(C, name="get_lsd_collision_coefficients")
 
@@ -22,7 +9,7 @@ subroutine get_lsd_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out
    use constant,                        only: mmax
    use discretelement,                   only: kn, kn_w, kt, kt_w, kt_fac, kt_w_fac, mew, mew_w, &
                                               des_etan, des_etan_wall, des_etat, des_etat_wall
-                                              
+
    implicit none
 
    real(rt),       intent(inout) :: kt_out, kt_w_out, kn_out, kn_w_out, mew_out, mew_w_out

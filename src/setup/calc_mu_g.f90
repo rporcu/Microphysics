@@ -11,7 +11,7 @@ contains
 !  Purpose: Initialize the gas density.                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine calc_mu_g(slo, shi, lo, hi, mu_g, lambda_g)
+  subroutine calc_mu_g(slo, shi, lo, hi, mu_g)
 
     use eos, only: sutherland
     use fld_const, only: mu_g0
@@ -24,12 +24,11 @@ contains
     integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
 
     real(rt), intent(  out) ::  &
-             mu_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-         lambda_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+             mu_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables .....................................................//
       integer :: i,j,k
-      real(rt) :: mu_val, lambda_val
+      real(rt) :: mu_val
 
       ! Set the initial viscosity
       if (is_undefined(mu_g0)) then
@@ -37,13 +36,11 @@ contains
       else
          mu_val = mu_g0
       endif
-      lambda_val = -(2.0d0/3.0d0) * mu_val
 
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
                mu_g(i,j,k) = mu_val
-               lambda_g(i,j,k) = lambda_val
             enddo
          enddo
       enddo

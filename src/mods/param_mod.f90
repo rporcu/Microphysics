@@ -43,6 +43,7 @@ module param
       real(rt), parameter :: half = 0.5d0
       real(rt), parameter :: one  = 1.0d0
       real(rt), parameter :: two  = 2.0d0
+      real(rt), parameter :: two_thirds  = 2.0_rt / 3.0_rt
 
       real(rt), parameter :: my_huge  = 1.d200
 
