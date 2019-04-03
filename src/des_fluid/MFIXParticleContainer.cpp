@@ -633,8 +633,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             auto nbor_data = m_neighbor_list[index].data();
             
             constexpr Real small_number = 1.0e-15;
-            long ncoll = 0;
-            long* pncoll = &ncoll;
+            int* pncoll = &ncoll;
 
 #if defined(AMREX_DEBUG) && defined(AMREX_USE_ASSERTION)
             Real eps = std::numeric_limits<Real>::epsilon();
@@ -745,13 +744,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     }
             });
 
-#else            
+#else 
             calc_particle_collisions ( particles                          , &nrp,
                                        neighbors[lev][index].dataPtr()    , &size_ng,
                                        neighbor_list[lev][index].dataPtr(), &size_nl,
                                        tow[index].dataPtr(), fc[index].dataPtr(),
                                        &subdt, &ncoll);
-            
+
             // Debugging: copy data from the fc (all forces) vector to the wfor
             // (wall forces) vector. Note that since fc already contains the
             // wall forces, these need to be subtracted here.
@@ -831,8 +830,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          *        update max velocities and forces                              *
          ***********************************************************************/
 
+        if (debug_level > 0) ncoll_total += ncoll;
+       
         if (debug_level > 1) {
-            ncoll_total += ncoll;
             ParallelDescriptor::ReduceIntSum(ncoll, ParallelDescriptor::IOProcessorNumber());
             Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
         }
