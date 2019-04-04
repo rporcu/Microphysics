@@ -9,7 +9,7 @@
 !  Date: December 20, 2017
 !
 !
-subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
+subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, mu_g,&
      & bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,  &
      & domlo, domhi, ng ) bind(C)
 
@@ -45,7 +45,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
    real(ar),      intent(inout) ::  &
         ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),     &
         ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),     &
-        rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),    &
         mu_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
    ! Local variables
@@ -75,7 +74,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
 
                ep_g(slo(1):domlo(1)-1,j,k) =     ep_g(domlo(1),j,k)
                ro_g(slo(1):domlo(1)-1,j,k) =     ro_g(domlo(1),j,k)
-               rop_g(slo(1):domlo(1)-1,j,k) =    rop_g(domlo(1),j,k)
                mu_g(slo(1):domlo(1)-1,j,k) =     mu_g(domlo(1),j,k)
 
             case ( minf_)
@@ -86,16 +84,8 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
                   bc_mu_g     = mu_g0
                endif
 
-               ! ep_g and rop_g BCs are inconsistent. This is because
-               ! projection implementation requires bc_ep_g(bcv) to be defined
-               ! at the inlet face. Therefore, ep_g at the first ghost cell will
-               ! have a fictitious value. Therefore we cannot set rop_g to be
-               ! ro_g * ep_g at the ghost node, otherwise even ro_g would have a
-               ! fictitious value. However, this create an inconsistency
                ep_g(domlo(1)-1,j,k)  = 2.0_ar * bc_ep_g(bcv) - ep_g(domlo(1),j,k)
-
                ro_g(slo(1):domlo(1)-1,j,k)     = bc_ro_g
-               rop_g(slo(1):domlo(1)-1,j,k)    = bc_ro_g * bc_ep_g(bcv)
                mu_g(slo(1):domlo(1)-1,j,k)     = bc_mu_g
 
             end select
@@ -117,7 +107,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
 
                    ep_g(domhi(1)+1:shi(1),j,k) =     ep_g(domhi(1)  ,j,k)
                    ro_g(domhi(1)+1:shi(1),j,k) =     ro_g(domhi(1)  ,j,k)
-                  rop_g(domhi(1)+1:shi(1),j,k) =    rop_g(domhi(1)  ,j,k)
                    mu_g(domhi(1)+1:shi(1),j,k) =     mu_g(domhi(1)  ,j,k)
 
             case ( minf_ )
@@ -130,7 +119,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
 
                    ep_g(domhi(1)+1,j,k) = 2.0_ar*bc_ep_g(bcv) - ep_g(domhi(1),j,k)
                    ro_g(domhi(1)+1:shi(1),j,k) = bc_ro_g
-                  rop_g(domhi(1)+1:shi(1),j,k) = bc_ro_g * bc_ep_g(bcv)
                    mu_g(domhi(1)+1:shi(1),j,k) = bc_mu_g
 
             end select
@@ -152,7 +140,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
 
                    ep_g(i,slo(2):domlo(2)-1,k) =     ep_g(i,domlo(2),k)
                    ro_g(i,slo(2):domlo(2)-1,k) =     ro_g(i,domlo(2),k)
-                  rop_g(i,slo(2):domlo(2)-1,k) =    rop_g(i,domlo(2),k)
                    mu_g(i,slo(2):domlo(2)-1,k) =     mu_g(i,domlo(2),k)
 
             case ( minf_ )
@@ -165,7 +152,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
 
                    ep_g(i,domlo(2)-1,k) = 2.0_ar*bc_ep_g(bcv) - ep_g(i,domlo(2),k)
                    ro_g(i,slo(2):domlo(2)-1,k) = bc_ro_g
-                  rop_g(i,slo(2):domlo(2)-1,k) = bc_ro_g * bc_ep_g(bcv)
                    mu_g(i,slo(2):domlo(2)-1,k) = bc_mu_g
 
             end select
@@ -187,7 +173,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
 
                    ep_g(i,domhi(2)+1:shi(2),k) =     ep_g(i,domhi(2)  ,k)
                    ro_g(i,domhi(2)+1:shi(2),k) =     ro_g(i,domhi(2)  ,k)
-                  rop_g(i,domhi(2)+1:shi(2),k) =    rop_g(i,domhi(2)  ,k)
                    mu_g(i,domhi(2)+1:shi(2),k) =     mu_g(i,domhi(2)  ,k)
 
             case ( minf_)
@@ -200,7 +185,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
 
                    ep_g(i,domhi(2)+1,k) = 2.0_ar*bc_ep_g(bcv) - ep_g(i,domhi(2),k)
                    ro_g(i,domhi(2)+1:shi(2),k) = bc_ro_g
-                  rop_g(i,domhi(2)+1:shi(2),k) = bc_ro_g * bc_ep_g(bcv)
                    mu_g(i,domhi(2)+1:shi(2),k) = bc_mu_g
 
             end select
@@ -221,7 +205,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
 
                    ep_g(i,j,slo(3):domlo(3)-1) =     ep_g(i,j,domlo(3))
                    ro_g(i,j,slo(3):domlo(3)-1) =     ro_g(i,j,domlo(3))
-                  rop_g(i,j,slo(3):domlo(3)-1) =    rop_g(i,j,domlo(3))
                    mu_g(i,j,slo(3):domlo(3)-1) =     mu_g(i,j,domlo(3))
 
             case ( minf_ )
@@ -234,7 +217,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
 
                    ep_g(i,j,domlo(3)-1) = 2.0_ar*bc_ep_g(bcv) - ep_g(i,j,domlo(3))
                    ro_g(i,j,slo(3):domlo(3)-1) = bc_ro_g
-                  rop_g(i,j,slo(3):domlo(3)-1) = bc_ro_g * bc_ep_g(bcv)
                    mu_g(i,j,slo(3):domlo(3)-1) = bc_mu_g
 
             end select
@@ -255,7 +237,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
 
                    ep_g(i,j,domhi(3)+1:shi(3)) =     ep_g(i,j,domhi(3)  )
                    ro_g(i,j,domhi(3)+1:shi(3)) =     ro_g(i,j,domhi(3)  )
-                  rop_g(i,j,domhi(3)+1:shi(3)) =    rop_g(i,j,domhi(3)  )
                    mu_g(i,j,domhi(3)+1:shi(3)) =     mu_g(i,j,domhi(3)  )
 
             case ( minf_ )
@@ -268,7 +249,6 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, rop_g, mu_g,&
 
                    ep_g(i,j,domhi(3)+1) = 2.0_ar*bc_ep_g(bcv) - ep_g(i,j,domhi(3)+1)
                    ro_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g
-                  rop_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g * bc_ep_g(bcv)
                    mu_g(i,j,domhi(3)+1:shi(3)) = bc_mu_g
 
             end select

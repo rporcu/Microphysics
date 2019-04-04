@@ -32,13 +32,14 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("verbose", m_verbose);
 
         // Options to control MGML behavior
-        pp.query( "mg_verbose", mg_verbose );
-        pp.query( "mg_cg_verbose", mg_cg_verbose );
-        pp.query( "mg_max_iter", mg_max_iter );
-        pp.query( "mg_cg_maxiter", mg_cg_maxiter );
-        pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
-        pp.query( "mg_rtol", mg_rtol );
-        pp.query( "mg_atol", mg_atol );
+        pp.query( "mg_verbose"             , nodal_mg_verbose );
+        pp.query( "mg_cg_verbose"          , nodal_mg_cg_verbose );
+        pp.query( "mg_max_iter"            , nodal_mg_max_iter );
+        pp.query( "mg_cg_maxiter"          , nodal_mg_cg_maxiter );
+        pp.query( "mg_max_fmg_iter"        , nodal_mg_max_fmg_iter );
+        pp.query( "mg_rtol"                , nodal_mg_rtol );
+        pp.query( "mg_atol"                , nodal_mg_atol );
+        pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
 
         // Default bottom solver is bicgstab, but alternatives are "smoother" or "hypre"
         bottom_solver_type = "bicgstab";
@@ -764,8 +765,9 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
             init_fluid(sbx.loVect(), sbx.hiVect(),
                  bx.loVect(),  bx.hiVect(),
                  domain.loVect(), domain.hiVect(),
-                 (*ep_g[lev])[mfi].dataPtr(),  (*ro_g[lev])[mfi].dataPtr(),
-                 (*rop_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+                 (*ep_g[lev])[mfi].dataPtr(),  
+                 (*ro_g[lev])[mfi].dataPtr(),
+                 (*p_g[lev])[mfi].dataPtr(),
                  (*vel_g[lev])[mfi].dataPtr(),
                  (*mu_g[lev])[mfi].dataPtr(),
                  &dx, &dy, &dz, &xlen, &ylen, &zlen);
@@ -783,7 +785,6 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
   {
          ep_g[lev]->FillBoundary(geom[lev].periodicity());
          ro_g[lev]->FillBoundary(geom[lev].periodicity());
-        rop_g[lev]->FillBoundary(geom[lev].periodicity());
          mu_g[lev]->FillBoundary(geom[lev].periodicity());
 
      vel_g[lev]->FillBoundary(geom[lev].periodicity());
@@ -832,7 +833,7 @@ mfix::mfix_set_bc0()
 
          set_bc0(sbx.loVect(), sbx.hiVect(),
                  (*ep_g[lev])[mfi].dataPtr(),
-                  (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
+                  (*ro_g[lev])[mfi].dataPtr(), 
                   (*mu_g[lev])[mfi].dataPtr(),
                  bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                  bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
@@ -842,7 +843,6 @@ mfix::mfix_set_bc0()
 
       ep_g[lev]->FillBoundary(geom[lev].periodicity());
       ro_g[lev]->FillBoundary(geom[lev].periodicity());
-     rop_g[lev]->FillBoundary(geom[lev].periodicity());
    }
 
    // Put velocity Dirichlet bc's on faces

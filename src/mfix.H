@@ -386,6 +386,10 @@ private:
      Real mfix_norm1 ( MultiFab& mf, int lev, int comp );
      Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
      Real mfix_norm0 ( MultiFab& mf, int lev, int comp );
+     Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf1, 
+                       const Vector< std::unique_ptr<MultiFab>>& mf2, 
+                       int lev, int comp1, int comp2 );
+     Real mfix_norm0 ( MultiFab& mf1, MultiFab& mf2, int lev, int comp1, int comp2 );
 
      Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
@@ -425,10 +429,6 @@ private:
      // Gas density
      Vector< std::unique_ptr<MultiFab> > ro_g ;
      Vector< std::unique_ptr<MultiFab> > ro_go;
-
-     // Gas bulk density
-     Vector< std::unique_ptr<MultiFab> > rop_g ;
-     Vector< std::unique_ptr<MultiFab> > rop_go;
 
      // Gas velocity
      Vector< std::unique_ptr<MultiFab> > vel_g ;
@@ -510,20 +510,61 @@ private:
      // Options to control mfix verbosity level
      int m_verbose = 0;
 
-     // Options to control MLMG behavior
-     int  mg_max_iter = 100;
-     int  mg_cg_maxiter = 100;
-     int  mg_max_fmg_iter = 0;
-     Real mg_rtol = 1.0e-11;
-     Real mg_atol = 1.0e-14;
+     // ***************************************************************
+     // Nodal solve
+     // ***************************************************************
 
-     // Verbosity for the nodal solve
-     int  mg_verbose = 0;
-     int  mg_cg_verbose = 0;
+     // Verbosity
+     int  nodal_mg_verbose = 0;
+     int  nodal_mg_cg_verbose = 0;
 
-     // Verbosity for the diffusion solve
+     // Control MLMG behavior
+     int  nodal_mg_max_iter = 100;
+     int  nodal_mg_cg_maxiter = 100;
+     int  nodal_mg_max_fmg_iter = 0;
+     Real nodal_mg_rtol = 1.0e-11;
+     Real nodal_mg_atol = 1.0e-14;
+
+     // Max coarsening level
+     int  nodal_mg_max_coarsening_level = 100;
+
+     // ***************************************************************
+     // MAC solve
+     // ***************************************************************
+
+     // Verbosity
+     int  mac_mg_verbose = 0;
+     int  mac_mg_cg_verbose = 0;
+
+     // Control MLMG behavior
+     int  mac_mg_max_iter = 100;
+     int  mac_mg_cg_maxiter = 100;
+     int  mac_mg_max_fmg_iter = 0;
+     Real mac_mg_rtol = 1.0e-11;
+     Real mac_mg_atol = 1.0e-14;
+
+     // Max coarsening level
+     int  mac_mg_max_coarsening_level = 0;
+     // ***************************************************************
+
+     // ***************************************************************
+     // Diffusion solve
+     // ***************************************************************
+
+     // Verbosity 
      int  diff_mg_verbose = 0;
      int  diff_mg_cg_verbose = 0;
+
+     // Control MLMG behavior
+     int  diff_mg_max_iter = 100;
+     int  diff_mg_cg_maxiter = 100;
+     int  diff_mg_max_fmg_iter = 0;
+     Real diff_mg_rtol = 1.0e-11;
+     Real diff_mg_atol = 1.0e-14;
+
+     // Max coarsening level
+     int  diff_mg_max_coarsening_level = 0;
+     // ***************************************************************
 
      // Tolerance to check for steady state
      Real steady_state_tol = 1.0e-5  ;
@@ -532,6 +573,7 @@ private:
      int call_udf;
      bool dual_grid = false;
 
+     // If true then print the name of the routine we are in
      bool ooo_debug = false;
 
      // Parameters to control load balancing

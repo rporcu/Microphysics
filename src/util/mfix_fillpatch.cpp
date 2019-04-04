@@ -188,7 +188,6 @@ mfix::mfix_set_scalar_bcs ()
      {
         set_scalar_bcs ( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
                         (*ro_g[lev])[mfi].dataPtr (),
-                        (*rop_g[lev])[mfi].dataPtr (),
                         (*mu_g[lev])[mfi].dataPtr (),
                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
@@ -198,7 +197,6 @@ mfix::mfix_set_scalar_bcs ()
       }
         ep_g[lev] -> FillBoundary (geom[lev].periodicity());
         ro_g[lev] -> FillBoundary (geom[lev].periodicity());
-       rop_g[lev] -> FillBoundary (geom[lev].periodicity());
         mu_g[lev] -> FillBoundary (geom[lev].periodicity());
   }
 }

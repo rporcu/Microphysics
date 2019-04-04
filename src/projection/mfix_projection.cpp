@@ -188,6 +188,7 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
     //        (del dot b sigma grad)) phi
     //
     LPInfo                       info;
+    info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
     MLNodeLaplacian              matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
 
     matrix.setGaussSeidel(true);
@@ -209,11 +210,12 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
     //
     MLMG  solver(matrix);
 
-    solver.setMaxIter (mg_max_iter);
-    solver.setMaxFmgIter (mg_max_fmg_iter);
-    solver.setVerbose (mg_verbose);
-    solver.setCGVerbose (mg_cg_verbose);
-    solver.setCGMaxIter (mg_cg_maxiter);
+    solver.setMaxIter (nodal_mg_max_iter);
+    solver.setMaxFmgIter (nodal_mg_max_fmg_iter);
+
+    solver.setVerbose (nodal_mg_verbose);
+    solver.setCGVerbose (nodal_mg_cg_verbose);
+    solver.setCGMaxIter (nodal_mg_cg_maxiter);
 
     // solver.setBottomSolver(MLMG::BottomSolver::bicgstab);
     // solver.setPreSmooth (20);
@@ -222,7 +224,8 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
     //
     // Finally, solve the system
     //
-    solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol );
+    // solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), nodal_mg_rtol, nodal_mg_atol, "mlmg" );
+    solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), nodal_mg_rtol, nodal_mg_atol);
     solver.getFluxes( amrex::GetVecOfPtrs(fluxes) );
 
     for (int lev = 0; lev < nlev; lev++)

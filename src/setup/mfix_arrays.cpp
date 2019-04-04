@@ -23,12 +23,6 @@ mfix::AllocateArrays (int lev)
     ro_g[lev]->setVal(0.);
     ro_go[lev]->setVal(0.);
 
-    // Gas bulk density
-    rop_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    rop_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    rop_g[lev]->setVal(0.);
-    rop_go[lev]->setVal(0.);
-
     const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
 
     p0_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
@@ -187,20 +181,6 @@ mfix::RegridArrays (int lev)
     ro_go_new->setVal(0.0);
     ro_go_new->copy(*ro_go[lev],0,0,1,ng,ng);
     ro_go[lev] = std::move(ro_go_new);
-
-    // Gas bulk density
-    ng = rop_g[lev]->nGrow();
-    std::unique_ptr<MultiFab> rop_g_new(new MultiFab(grids[lev],dmap[lev],1,ng, MFInfo(), *ebfactory[lev]));
-    rop_g_new->setVal(0.0);
-    rop_g_new->copy(*rop_g[lev],0,0,1,0,ng);
-    rop_g[lev] = std::move(rop_g_new);
-
-    // Old gas bulk density
-    ng = rop_go[lev]->nGrow();
-    std::unique_ptr<MultiFab> rop_go_new(new MultiFab(grids[lev],dmap[lev],1,ng, MFInfo(), *ebfactory[lev]));
-    rop_go_new->setVal(0.0);
-    rop_go_new->copy(*rop_go[lev],0,0,1,0,ng);
-    rop_go[lev] = std::move(rop_go_new);
 
     const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
 
@@ -391,9 +371,6 @@ mfix::RegridArrays (int lev)
 
       ro_g[lev]->FillBoundary(geom[lev].periodicity());
      ro_go[lev]->FillBoundary(geom[lev].periodicity());
-
-     rop_g[lev]->FillBoundary(geom[lev].periodicity());
-    rop_go[lev]->FillBoundary(geom[lev].periodicity());
 
         mu_g[lev]->FillBoundary(geom[lev].periodicity());
 }

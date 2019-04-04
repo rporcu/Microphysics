@@ -6,7 +6,7 @@ module init_fluid_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine init_fluid(slo, shi, lo, hi, &
-                         domlo, domhi, ep_g, ro_g, rop_g, p_g, vel_g, &
+                         domlo, domhi, ep_g, ro_g, p_g, vel_g, &
                          mu_g, dx, dy, dz, xlength, ylength, zlength) &
       bind(C, name="init_fluid")
 
@@ -26,7 +26,6 @@ module init_fluid_module
       real(rt), intent(inout) :: &
             ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),   &
             ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),   &
-           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),   &
              p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),   &
            vel_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3), &
             mu_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -42,7 +41,6 @@ module init_fluid_module
 
       ! Set the initial fluid density and viscosity
       ro_g  = ro_g0
-      rop_g = ro_g0 * ep_g
 
       call calc_mu_g(slo, shi, lo, hi, mu_g)
 

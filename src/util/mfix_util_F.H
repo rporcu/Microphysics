@@ -38,7 +38,7 @@ extern "C"
 
    void set_scalar_bcs (
       amrex::Real* ep_g, const int* slo, const int* shi,
-      amrex::Real* ro_g,    amrex::Real* rop_g,
+      amrex::Real* ro_g, 
       amrex::Real* mu_g,
       const int* bc_ilo, const int* bc_ihi,
       const int* bc_jlo, const int* bc_jhi,

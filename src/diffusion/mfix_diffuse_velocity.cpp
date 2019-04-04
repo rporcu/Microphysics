@@ -75,7 +75,13 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       b_tmp[2] = tmp[2];
 
       // This sets the spatially varying A coefficients
-      matrix.setACoeffs ( lev, (*rop_g[lev]) );
+      MultiFab a_coeff( ro_g[lev]->boxArray(), ro_g[lev]->DistributionMap(), 1, ro_g[lev]->nGrow(),
+                        MFInfo(), *ebfactory[lev]);
+
+      MultiFab::Copy    ( a_coeff, *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow() );
+      MultiFab::Multiply( a_coeff, *ep_g[lev], 0, 0, 1, ep_g[lev]->nGrow() );
+
+      matrix.setACoeffs ( lev, a_coeff );
 
       // This sets the spatially varying b coefficients
       matrix.setBCoeffs ( lev, b_tmp );
@@ -102,9 +108,9 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       solver.setCGVerbose (diff_mg_cg_verbose);
 
       // Set the max number of iterations
-      solver.setMaxIter (mg_max_iter);
-      solver.setMaxFmgIter (mg_max_fmg_iter);
-      solver.setCGMaxIter (mg_cg_maxiter);
+      solver.setMaxIter (diff_mg_max_iter);
+      solver.setMaxFmgIter (diff_mg_max_fmg_iter);
+      solver.setCGMaxIter (diff_mg_cg_maxiter);
 
       // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
       for (int lev = 0; lev < nlev; lev++)
@@ -117,8 +123,9 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
 
          matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi_diff)[lev] );
 
-         // Define RHS = (rop) * (vel_g)
-         MultiFab::Multiply((*rhs_diff[lev]), (*rop_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
+         // Define RHS = (ro_g) * (ep_g) * (vel_g)
+         MultiFab::Multiply((*rhs_diff[lev]), (*ro_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
+         MultiFab::Multiply((*rhs_diff[lev]), (*ep_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
       }
 
       // This ensures that ghost cells of sol are correctly filled when returned from the solver
@@ -129,7 +136,7 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       //
       //  (1 - div dot mu grad) u = RHS
       //
-      solver.solve ( GetVecOfPtrs(phi_diff), GetVecOfConstPtrs(rhs_diff), mg_rtol, mg_atol );
+      solver.solve ( GetVecOfPtrs(phi_diff), GetVecOfConstPtrs(rhs_diff), diff_mg_rtol, diff_mg_atol );
 
       for (int lev = 0; lev < nlev; lev++)
       {

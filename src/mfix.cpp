@@ -126,9 +126,6 @@ mfix::ResizeArrays ()
     ro_g.resize(nlevs_max);
     ro_go.resize(nlevs_max);
 
-    rop_g.resize(nlevs_max);
-    rop_go.resize(nlevs_max);
-
     phi.resize(nlevs_max);
     diveu.resize(nlevs_max);
 
@@ -260,17 +257,9 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
           ep_g[lev]->setVal(1.);
     }
 
+    // This sets the values outside walls or periodic boundaries
     for (int lev = 0; lev < nlev; lev++)
-    {
-       // Now define rop_g = ro_g * ep_g
-       MultiFab::Copy(*rop_g[lev], *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow());
-       MultiFab::Multiply((*rop_g[lev]), (*ep_g[lev]), 0, 0, 1, rop_g[lev]->nGrow());
-
-       // This sets the values outside walls or periodic boundaries
         ep_g[lev]->FillBoundary(geom[lev].periodicity());
-       rop_g[lev]->FillBoundary(geom[lev].periodicity());
-   }
-
 
     // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac
     // Note ep_g = 1 - particle_volume / this_cell_volume where
