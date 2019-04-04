@@ -8,7 +8,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine set_bc0(slo, shi, &
-                      ep_g, ro_g, rop_g, mu_g, &
+                      ep_g, ro_g, mu_g, &
                       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
                       bc_klo_type, bc_khi_type, domlo, domhi, ng) &
       bind(C, name="set_bc0")
@@ -34,7 +34,6 @@
       real(rt), intent(inout) :: &
             ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) ,&
             ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           rop_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
             mu_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int), intent(in   ) :: &
@@ -83,7 +82,6 @@
 
                       ep_g(slo(1):domlo(1)-1,j,k) = bc_ep_g(bcv)
                       ro_g(slo(1):domlo(1)-1,j,k) = bc_ro_g
-                     rop_g(slo(1):domlo(1)-1,j,k) = bc_ro_g*bc_ep_g(bcv)
                       mu_g(slo(1):domlo(1)-1,j,k) = bc_mu_g
 
                end if
@@ -112,7 +110,6 @@
 
                         ep_g(domhi(1)+1:shi(1),j,k) = bc_ep_g(bcv)
                         ro_g(domhi(1)+1:shi(1),j,k) = bc_ro_g
-                       rop_g(domhi(1)+1:shi(1),j,k) = bc_ro_g*bc_ep_g(bcv)
                         mu_g(domhi(1)+1:shi(1),j,k) = bc_mu_g
 
                end if
@@ -141,7 +138,6 @@
 
                       ep_g(i,slo(2):domlo(2)-1,k) = bc_ep_g(bcv)
                       ro_g(i,slo(2):domlo(2)-1,k) = bc_ro_g
-                     rop_g(i,slo(2):domlo(2)-1,k) = bc_ro_g*bc_ep_g(bcv)
                       mu_g(i,slo(2):domlo(2)-1,k) = bc_mu_g
 
                end if
@@ -170,7 +166,6 @@
 
                       ep_g(i,domhi(2)+1:shi(2),k) = bc_ep_g(bcv)
                       ro_g(i,domhi(2)+1:shi(2),k) = bc_ro_g
-                     rop_g(i,domhi(2)+1:shi(2),k) = bc_ro_g*bc_ep_g(bcv)
                       mu_g(i,domhi(2)+1:shi(2),k) = bc_mu_g
 
                end if
@@ -199,7 +194,6 @@
 
                        ep_g(i,j,slo(3):domlo(3)-1) = bc_ep_g(bcv)
                        ro_g(i,j,slo(3):domlo(3)-1) = bc_ro_g
-                      rop_g(i,j,slo(3):domlo(3)-1) = bc_ro_g*bc_ep_g(bcv)
                        mu_g(i,j,slo(3):domlo(3)-1) = bc_mu_g
 
                end if
@@ -228,7 +222,6 @@
 
                        ep_g(i,j,domhi(3)+1:shi(3)) = bc_ep_g(bcv)
                        ro_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g
-                      rop_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g*bc_ep_g(bcv)
                        mu_g(i,j,domhi(3)+1:shi(3)) = bc_mu_g
 
                end if

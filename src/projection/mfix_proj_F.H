@@ -127,7 +127,7 @@ extern "C"
    void compute_bcoeff_nd (
       const int* lo,  const int*  hi,
       amrex::Real* bcoeff, const int* blo, const int* bhi,
-      const amrex::Real* rop_g, const int* slo, const int* shi,
+      const amrex::Real* ro_g, const int* slo, const int* shi,
       const amrex::Real* ep_g, const int* dir );
 
    void set_phi (

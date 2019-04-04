@@ -764,8 +764,9 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
             init_fluid(sbx.loVect(), sbx.hiVect(),
                  bx.loVect(),  bx.hiVect(),
                  domain.loVect(), domain.hiVect(),
-                 (*ep_g[lev])[mfi].dataPtr(),  (*ro_g[lev])[mfi].dataPtr(),
-                 (*rop_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+                 (*ep_g[lev])[mfi].dataPtr(),  
+                 (*ro_g[lev])[mfi].dataPtr(),
+                 (*p_g[lev])[mfi].dataPtr(),
                  (*vel_g[lev])[mfi].dataPtr(),
                  (*mu_g[lev])[mfi].dataPtr(),
                  &dx, &dy, &dz, &xlen, &ylen, &zlen);
@@ -783,7 +784,6 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
   {
          ep_g[lev]->FillBoundary(geom[lev].periodicity());
          ro_g[lev]->FillBoundary(geom[lev].periodicity());
-        rop_g[lev]->FillBoundary(geom[lev].periodicity());
          mu_g[lev]->FillBoundary(geom[lev].periodicity());
 
      vel_g[lev]->FillBoundary(geom[lev].periodicity());
@@ -832,7 +832,7 @@ mfix::mfix_set_bc0()
 
          set_bc0(sbx.loVect(), sbx.hiVect(),
                  (*ep_g[lev])[mfi].dataPtr(),
-                  (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
+                  (*ro_g[lev])[mfi].dataPtr(), 
                   (*mu_g[lev])[mfi].dataPtr(),
                  bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                  bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
@@ -842,7 +842,6 @@ mfix::mfix_set_bc0()
 
       ep_g[lev]->FillBoundary(geom[lev].periodicity());
       ro_g[lev]->FillBoundary(geom[lev].periodicity());
-     rop_g[lev]->FillBoundary(geom[lev].periodicity());
    }
 
    // Put velocity Dirichlet bc's on faces

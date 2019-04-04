@@ -34,10 +34,10 @@ mfix::InitIOData ()
     // written to plotfile/checkfile. "volfrac" MUST always be last without any
     // mf associated to it!!!
     pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "vort", "diveu", "volfrac"};
-    pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &vort,  &diveu};
+    pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &ep_g,  &mu_g,  &vort,  &diveu};
 
     chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets", "implicit_functions"};
-    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &level_sets,  &implicit_functions};
+    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &ep_g,  &mu_g,  &level_sets,  &implicit_functions};
 }
 
 void
@@ -549,8 +549,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         ro_g[lev]->FillBoundary(geom[lev].periodicity());
        ro_go[lev]->FillBoundary(geom[lev].periodicity());
 
-        rop_g[lev]->FillBoundary(geom[lev].periodicity());
-
          mu_g[lev]->FillBoundary(geom[lev].periodicity());
 
        // Fill the bc's just in case
@@ -720,6 +718,8 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
                 MultiFab::Copy(p_nd, (* p_g[lev]), 0, 0, 1, 0);
                 MultiFab::Add (p_nd, (*p0_g[lev]), 0, 0, 1, 0);
                 amrex::average_node_to_cellcenter(*mf[lev], dcomp, p_nd, 0, 1);
+              } else if (pltscaVarsName[i] == "rop_g") {
+                 MultiFab::Copy(*mf[lev], (*ep_g[lev]), 0, dcomp, 1, 0);
               } else if (pltscaVarsName[i] == "diveu") {
                  amrex::average_node_to_cellcenter(*mf[lev], dcomp, *(*pltscalarVars[i] )[lev].get(), 0, 1);
               } else {

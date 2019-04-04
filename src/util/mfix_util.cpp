@@ -9,7 +9,6 @@ mfix::check_for_nans (int lev)
     bool vg_has_nans = vel_g[lev] -> contains_nan (1);
     bool wg_has_nans = vel_g[lev] -> contains_nan (2);
     bool pg_has_nans =   p_g[lev] -> contains_nan (0);
-    bool ropg_has_nans = rop_g[lev] -> contains_nan (0);
 
     if (ug_has_nans)
   amrex::Print() << "WARNING: u_g contains NaNs!!!";
@@ -22,10 +21,6 @@ mfix::check_for_nans (int lev)
 
     if (pg_has_nans)
   amrex::Print() << "WARNING: p_g contains NaNs!!!";
-
-    if (ropg_has_nans)
-  amrex::Print() << "WARNING: rop_g contains NaNs!!!";
-
 }
 
 //

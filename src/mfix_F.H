@@ -17,9 +17,9 @@ extern "C"
     void mfix_add_argument(char* fname, int* nlen);
 
     void write_out0(amrex::Real* time, amrex::Real* dt,
-                    amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-                    amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-                    const int* domlo, const int* domhi);
+             amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
+             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
+             const int* domlo, const int* domhi);
 
     void write_usr0();
 
@@ -28,51 +28,51 @@ extern "C"
     void set_delp_dir(int* delp_dir);
 
     void mfix_get_data(
-        int* fluid, int* dem,
-        int* steady_state, amrex::Real* dt, amrex::Real* dt_min, amrex::Real* dt_max,
-        amrex::Real* tstop, int* call_udf, int* name_len, const char *cmfix_dat);
+             int* fluid, int* dem,
+             int* steady_state, amrex::Real* dt, amrex::Real* dt_min, amrex::Real* dt_max,
+             amrex::Real* tstop, int* call_udf, int* name_len, const char *cmfix_dat);
 
     void check_inputs(amrex::Real* dt);
 
     void mfix_set_cyclic(int* cyc_x, int* cyc_y, int* cyc_z);
 
     void check_initial_conditions(amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-          const int* domlo, const int* domhi);
+             const int* domlo, const int* domhi);
 
     void check_boundary_conditions(amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-           amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-           const int* domlo, const int* domhi);
+             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
+             const int* domlo, const int* domhi);
 
     void check_point_sources(amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
 
     void check_bc_flow();
 
     void mfix_set_bc_mod(const int* pID, const int* pType,
-                         const amrex::Real* pLo, const amrex::Real* pHi,
-                         amrex::Real* pLoc,
-                         amrex::Real* pPg,
-                         amrex::Real* pVel);
+             const amrex::Real* pLo, const amrex::Real* pHi,
+             amrex::Real* pLoc,
+             amrex::Real* pPg,
+             amrex::Real* pVel);
 
     void set_bc_type(
-        const int* bc_ilo, const int* bc_ihi,
-        const int* bc_jlo, const int* bc_jhi,
-        const int* bc_klo, const int* bc_khi,
-        const int* domlo , const int* domhi,
-        amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-        amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen,
-        const int* ng
+             const int* bc_ilo, const int* bc_ihi,
+             const int* bc_jlo, const int* bc_jhi,
+             const int* bc_klo, const int* bc_khi,
+             const int* domlo , const int* domhi,
+             amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
+             amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen,
+             const int* ng
     );
 
     void set_bc0(
-        const int* slo, const int* shi,
-        amrex::Real* ep_g,
-        amrex::Real* ro_g,  amrex::Real* rop_g,
-        amrex::Real* mu_g,
-        const int* bc_ilo, const int* bc_ihi,
-        const int* bc_jlo, const int* bc_jhi,
-        const int* bc_klo, const int* bc_khi,
-        const int* domlo , const int* domhi,
-        const int* ng
+             const int* slo, const int* shi,
+             amrex::Real* ep_g,
+             amrex::Real* ro_g,  
+             amrex::Real* mu_g,
+             const int* bc_ilo, const int* bc_ihi,
+             const int* bc_jlo, const int* bc_jhi,
+             const int* bc_klo, const int* bc_khi,
+             const int* domlo , const int* domhi,
+             const int* ng
     );
 
     void set_ls_inflow(
@@ -86,79 +86,75 @@ extern "C"
     );
 
     void init_fluid(const int* slo, const int* shi,
-        const int*  lo, const int*  hi,
-        const int* domlo , const int* domhi,
-        amrex::Real* ep_g,  amrex::Real* ro_g,
-        amrex::Real* rop_g, amrex::Real* p_g,
-        amrex::Real* vel_g,
-        amrex::Real* mu_g,
-        amrex::Real* dx,    amrex::Real* dy,       amrex::Real* dz,
-        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength
+             const int*  lo, const int*  hi,
+             const int* domlo , const int* domhi,
+             amrex::Real* ep_g,  
+             amrex::Real* ro_g,
+             amrex::Real* p_g,
+             amrex::Real* vel_g,
+             amrex::Real* mu_g,
+             amrex::Real* dx,    amrex::Real* dy,       amrex::Real* dz,
+             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength
        );
 
     void init_fluid_restart(
-          const int* slo, const int* shi,
-          const int*  lo, const int*  hi,
-          amrex::Real* mu_g
+             const int* slo, const int* shi,
+             const int*  lo, const int*  hi,
+             amrex::Real* mu_g
        );
 
     void set_p0(const int*  lo   , const int*  hi,
-          const int* domlo , const int* domhi,
-          amrex::Real* p0_g , const int* rlo, const int* rhi,
-          amrex::Real* gp0,
-          amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
-          amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-          int* delp_dir,
-          const int* bc_ilo, const int* bc_ihi,
-          const int* bc_jlo, const int* bc_jhi,
-          const int* bc_klo, const int* bc_khi,
-                const int* ng
+             const int* domlo , const int* domhi,
+             amrex::Real* p0_g , const int* rlo, const int* rhi,
+             amrex::Real* gp0,
+             amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
+             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
+             int* delp_dir,
+             const int* bc_ilo, const int* bc_ihi,
+             const int* bc_jlo, const int* bc_jhi,
+             const int* bc_klo, const int* bc_khi,
+             const int* ng
        );
 
     void set_vec_bcs (
-        amrex::Real* vec, const int* ulo, const int* uhi,
-        const int* bc_ilo, const int* bc_ihi,
-        const int* bc_jlo, const int* bc_jhi,
-        const int* bc_klo, const int* bc_khi,
-        const int* domlo , const int* domhi,
-        const int* ng
+             amrex::Real* vec, const int* ulo, const int* uhi,
+             const int* bc_ilo, const int* bc_ihi,
+             const int* bc_jlo, const int* bc_jhi,
+             const int* bc_klo, const int* bc_khi,
+             const int* domlo , const int* domhi,
+             const int* ng
        );
 
     void mfix_cap_eps(const int* slo, const int* shi, amrex::Real* ep_g);
 
     void zero_wall_norm_vel(
-        const int* slo, const int* shi,
-        amrex::Real* vel_g,
-        const int* bc_ilo, const int* bc_ihi,
-        const int* bc_jlo, const int* bc_jhi,
-        const int* bc_klo, const int* bc_khi,
-        const int* domlo , const int* domhi,
-        const int* ng
+             const int* slo, const int* shi,
+             amrex::Real* vel_g,
+             const int* bc_ilo, const int* bc_ihi,
+             const int* bc_jlo, const int* bc_jhi,
+             const int* bc_klo, const int* bc_khi,
+             const int* domlo , const int* domhi,
+             const int* ng
         );
 
     void init_collision(amrex::Real *sum_dp, amrex::Real *sum_roi
         );
 
     void calc_volume_fraction (
-        const int*  lo, const int*  hi,
-        const int* slo, const int* shi,
-        const int*  np, void* particles,
-        amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-        amrex::Real* ep_g
+             const int*  lo, const int*  hi,
+             const int* slo, const int* shi,
+             const int*  np, void* particles,
+             amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
+             amrex::Real* ep_g
         );
 
-    void physical_prop(const int* slo, const int* shi,
-           const int* lo, const int* hi,
-           int* level, amrex::Real* ro_g, amrex::Real* p_g,
-           amrex::Real* ep_g, amrex::Real* rop_g
-        );
-
-    void fill_bc0(amrex::Real* s, const int* slo, const int* shi,
-  const int* bc_ilo, const int* bc_ihi,
-  const int* bc_jlo, const int* bc_jhi,
-  const int* bc_klo, const int* bc_khi,
-        const int* domlo , const int* domhi,
-        const int* ng
+    void fill_bc0(
+             amrex::Real* s, const int* slo, const int* shi,
+             const int* bc_ilo, const int* bc_ihi,
+             const int* bc_jlo, const int* bc_jhi,
+             const int* bc_klo, const int* bc_khi,
+             const int* domlo , const int* domhi,
+             const int* ng
         );
 
     void mfix_usr0();
@@ -168,31 +164,29 @@ extern "C"
     void mfix_usr2();
 
     void mfix_usr3(
-            amrex::Real* u_g, const int*, const int*,
-            amrex::Real* v_g, const int*, const int*,
-            amrex::Real* w_g, const int*, const int*,
-            amrex::Real* p_g, const int*, const int*,
-            amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
+             amrex::Real* u_g, const int*, const int*,
+             amrex::Real* v_g, const int*, const int*,
+             amrex::Real* w_g, const int*, const int*,
+             amrex::Real* p_g, const int*, const int*,
+             amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
 
     void mfix_finl_err_msg();
-
-
 
     void set_gradp_bcs (
              const int* slo, const int* shi,
              amrex::Real* gp, const int* glo, const int* ghi,
-       const int* bc_ilo, const int* bc_ihi,
-       const int* bc_jlo, const int* bc_jhi,
-       const int* bc_klo, const int* bc_khi,
-       const int* domlo , const int* domhi,
+             const int* bc_ilo, const int* bc_ihi,
+             const int* bc_jlo, const int* bc_jhi,
+             const int* bc_klo, const int* bc_khi,
+             const int* domlo , const int* domhi,
              const int* ng
        );
 
     void init_periodic_vortices (
-  const int* lo,  const int*  hi,
-  amrex::Real* vel,  const int* ulo, const int* uhi,
-  const amrex::Real* dx,
-  const int*  domlo, const int* plane
+            const int* lo,  const int*  hi,
+            amrex::Real* vel,  const int* ulo, const int* uhi,
+            const amrex::Real* dx,
+            const int*  domlo, const int* plane
        );
 
     void mfix_collect_fluid(
