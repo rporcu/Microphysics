@@ -75,7 +75,13 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       b_tmp[2] = tmp[2];
 
       // This sets the spatially varying A coefficients
-      matrix.setACoeffs ( lev, (*rop_g[lev]) );
+      MultiFab a_coeff( ro_g[lev]->boxArray(), ro_g[lev]->DistributionMap(), 1, ro_g[lev]->nGrow(),
+                        MFInfo(), *ebfactory[lev]);
+
+      MultiFab::Copy    ( a_coeff, *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow() );
+      MultiFab::Multiply( a_coeff, *ep_g[lev], 0, 0, 1, ep_g[lev]->nGrow() );
+
+      matrix.setACoeffs ( lev, a_coeff );
 
       // This sets the spatially varying b coefficients
       matrix.setBCoeffs ( lev, b_tmp );
@@ -117,8 +123,9 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
 
          matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi_diff)[lev] );
 
-         // Define RHS = (rop) * (vel_g)
-         MultiFab::Multiply((*rhs_diff[lev]), (*rop_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
+         // Define RHS = (ro_g) * (ep_g) * (vel_g)
+         MultiFab::Multiply((*rhs_diff[lev]), (*ro_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
+         MultiFab::Multiply((*rhs_diff[lev]), (*ep_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
       }
 
       // This ensures that ghost cells of sol are correctly filled when returned from the solver

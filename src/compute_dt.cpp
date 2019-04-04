@@ -47,11 +47,14 @@ mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
 
     for (int lev = 0; lev < nlev; lev++)
     {
+       // These take the min over un-covered cells
        umax  = amrex::max(umax,mfix_norm0 ( vel_g, lev, 0 ));
        vmax  = amrex::max(vmax,mfix_norm0 ( vel_g, lev, 1 ));
        wmax  = amrex::max(wmax,mfix_norm0 ( vel_g, lev, 2 ));
-       romin = amrex::min(romin,mfix_norm0( rop_g, lev, 0 ));
        mumax = amrex::max(mumax,mfix_norm0( mu_g,  lev, 0 ));
+
+       // This takes the min of (ro_g * ep_g) over un-covered cells
+       romin = amrex::min(romin, mfix_norm0( ro_g, ep_g, lev, 0, 0 ));
     }
 
     const Real* dx = geom[finest_level].CellSize();
