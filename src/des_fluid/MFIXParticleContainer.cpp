@@ -359,7 +359,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     //   -> debug_level = 0 : no debug output
     //   -> debug_level = 1 : debug output for every fluid step
     //   -> debug_level = 2 : debug output for every substep
-    const int debug_level = 2;
+    const int debug_level = 0;
 
     /****************************************************************************
      * Geometry                                                                 *
