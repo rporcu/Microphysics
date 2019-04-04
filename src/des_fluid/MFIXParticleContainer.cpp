@@ -359,7 +359,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     //   -> debug_level = 0 : no debug output
     //   -> debug_level = 1 : debug output for every fluid step
     //   -> debug_level = 2 : debug output for every substep
-    const int debug_level = 0;
+    const int debug_level = 2;
 
     /****************************************************************************
      * Geometry                                                                 *
@@ -455,10 +455,10 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             int size_ng = neighbors[lev][index].size();
             int size_nl = neighbor_list[lev][index].size();
 #endif
-
+            
             // Number of particles including neighbor particles
             int ntot = nrp + size_ng;
-
+            
             // Particle-particle (and particle-wall) forces and torques. We need
             // these to be zero every time we start a new batch (i.e tile and
             // substep) of particles.
@@ -466,10 +466,10 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             fc[index].clear();
             tow[index].resize(ntot*3,0.0);
             fc[index].resize(ntot*3,0.0);
-
+            
             Real* fc_ptr = fc[index].dataPtr();
             Real* tow_ptr = tow[index].dataPtr();
-
+            
             // For debugging: keep track of particle-particle (pfor) and
             // particle-wall (wfor) forces
             pfor[index].clear();
@@ -545,22 +545,15 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         vrel_t[2] = vreltrans[2] - vreltrans_norm*normal[2];
 
                         int phase = p.idata(intData::phase);
-
-                        Real kn_des_w;
-                        Real etan_des_w;
-
+                        
+                        Real kn_des_w   = DEMParams::kn_w;
+                        Real etan_des_w = DEMParams::etan_w[phase-1];
+                        
                         // NOTE - we don't use the tangential components right now,
                         // but we might in the future
-                        // Real kt_des_w;
-                        // Real etat_des_w;
-
-                        {
-                          kn_des_w   = DEMParams::kn_w;
-                          etan_des_w = DEMParams::etan_w[phase-1];
-                          // kt_des_w   = DEMParams::kt_w;
-                          // etat_des_w = DEMParams::etat_w[phase-1];
-                        }
-
+                        // Real kt_des_w = DEMParams::kt_w;
+                        // Real etat_des_w = DEMParams::etat_w[phase-1];
+                        
                         Real fn[3];
                         Real ft[3];
                         Real overlap_t[3];
@@ -611,6 +604,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 // Debugging: copy data from the fc (all forces) vector to
                 // the wfor (wall forces) vector.
                 if (debug_level > 0) {
+                    Gpu::Device::streamSynchronize();
                     for (int i = 0; i < wfor[index].size(); i++ ) {
                         wfor[index][i] = fc[index][i];
                     }
@@ -663,24 +657,17 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                         cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
 
-                        Real kn_des;
-                        Real etan_des;
-
-                        // NOTE - we don't use the tangential components right now,
-                        // but we might in the future
-                        // Real kt_des;
-                        // Real etat_des;
-
                         int phase1 = p1.idata(intData::phase);
                         int phase2 = p2.idata(intData::phase);
 
-                        {
-                          kn_des = DEMParams::kn;
-                          // kt_des = DEMParams::kt;
-                          etan_des = DEMParams::etan[phase1-1][phase2-1];
-                          // etat_des = DEMParams::etat[phase1-1][phase2-1];
-                        }
-
+                        Real kn_des = DEMParams::kn;
+                        Real etan_des = DEMParams::etan[phase1-1][phase2-1];
+                        
+                        // NOTE - we don't use the tangential components right now,
+                        // but we might in the future
+                        // Real kt_des = DEMParams::kt;
+                        // Real etat_des = DEMParams::etat[phase1-1][phase2-1];
+                        
                         Real fn[3];
                         Real ft[3];
                         Real overlap_t[3];
@@ -739,6 +726,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                                        neighbor_list[lev][index].dataPtr(), &size_nl,
                                        tow[index].dataPtr(), fc[index].dataPtr(),
                                        &subdt, &ncoll);
+#endif
 
             // Debugging: copy data from the fc (all forces) vector to the wfor
             // (wall forces) vector. Note that since fc already contains the
@@ -749,7 +737,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     pfor[index][i] = fc[index][i] - wfor[index][i];
                 }
             }
-#endif
 
             BL_PROFILE_VAR_STOP(calc_particle_collisions);
 
@@ -867,7 +854,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
      ***************************************************************************/
     if (debug_level > 0) {
         ParallelDescriptor::ReduceIntSum(ncoll_total, ParallelDescriptor::IOProcessorNumber());
-        Print() << "Number of collisions: " << ncoll_total << " in " << nsubsteps << " substeps " << std::endl;
+        amrex::Print() << "Number of collisions: " << ncoll_total << " in " << nsubsteps << " substeps " << std::endl;
     }
 
 #ifdef _OPENMP
@@ -1711,7 +1698,7 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
    }
 }
 
-void MFIXParticleContainer::UpdateMaxVelocity()
+void MFIXParticleContainer::UpdateMaxVelocity ()
 {
     Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
 
@@ -1749,34 +1736,41 @@ void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Gpu::ManagedDev
 #ifdef _OPENMP
 #pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z) if (Gpu::notInLaunchRegion())
 #endif
-       for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
-       {
-        PairIndex index(pti.index(), pti.LocalTileIndex());
+        for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
+        {
+            PairIndex index(pti.index(), pti.LocalTileIndex());
 
-        // Note the particle force data layout:
-        //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
-        // Where n is the total number of particle and neighbor particles.
-        const int nrp     = NumberOfParticles(pti);
-        const int size_ng = neighbors[lev][index].size();
-        // Number of particles including neighbor particles
-        const int ntot = nrp + size_ng;
+            // Note the particle force data layout:
+            //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
+            // Where n is the total number of particle and neighbor particles.
+            const int nrp     = NumberOfParticles(pti);
+#ifdef AMREX_USE_CUDA
+            auto& plev = GetParticles(lev);
+            auto& ptile = plev[index];
+            auto& aos   = ptile.GetArrayOfStructs();
+            int size_ng = aos.numNeighborParticles();
+#else
+            int size_ng = neighbors[lev][index].size();
+#endif
+            // Number of particles including neighbor particles
+            const int ntot = nrp + size_ng;
 
-        // Find max (abs) of particle-particle forces:
-        for(int i = 0; i < ntot; i++ )
-            max_pfor_x = std::max(Real(std::fabs(pfor[index][i])), max_pfor_x);
-        for(int i = ntot; i < 2 * ntot; i++ )
-            max_pfor_y = std::max(Real(std::fabs(pfor[index][i])), max_pfor_y);
-        for(int i = 2 * ntot; i < 3 * ntot; i++ )
-            max_pfor_z = std::max(Real(std::fabs(pfor[index][i])), max_pfor_z);
-
-        // Find max (abs) of particle-wall forces:
-        for(int i = 0; i < ntot; i++ )
-            max_wfor_x = std::max(Real(std::fabs(wfor[index][i])), max_wfor_x);
-        for(int i = ntot; i < 2 * ntot; i++ )
-            max_wfor_y = std::max(Real(std::fabs(wfor[index][i])), max_wfor_y);
-        for(int i = 2 * ntot; i < 3 * ntot; i++ )
-            max_wfor_z = std::max(Real(std::fabs(wfor[index][i])), max_wfor_z);
-       }
+            // Find max (abs) of particle-particle forces:
+            for(int i = 0; i < ntot; i++ )
+                max_pfor_x = std::max(Real(std::fabs(pfor[index][i])), max_pfor_x);
+            for(int i = ntot; i < 2 * ntot; i++ )
+                max_pfor_y = std::max(Real(std::fabs(pfor[index][i])), max_pfor_y);
+            for(int i = 2 * ntot; i < 3 * ntot; i++ )
+                max_pfor_z = std::max(Real(std::fabs(pfor[index][i])), max_pfor_z);
+            
+            // Find max (abs) of particle-wall forces:
+            for(int i = 0; i < ntot; i++ )
+                max_wfor_x = std::max(Real(std::fabs(wfor[index][i])), max_wfor_x);
+            for(int i = ntot; i < 2 * ntot; i++ )
+                max_wfor_y = std::max(Real(std::fabs(wfor[index][i])), max_wfor_y);
+            for(int i = 2 * ntot; i < 3 * ntot; i++ )
+                max_wfor_z = std::max(Real(std::fabs(wfor[index][i])), max_wfor_z);
+        }
     }
 
     loc_maxpfor = RealVect(max_pfor_x, max_pfor_y, max_pfor_z);
