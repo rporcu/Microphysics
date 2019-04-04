@@ -622,7 +622,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             auto nbor_data = m_neighbor_list[index].data();
 
             constexpr Real small_number = 1.0e-15;
-            int* pncoll = &ncoll;
+            Gpu::DeviceScalar<int> ncoll_gpu(ncoll);
+            int* pncoll = ncoll_gpu.dataPtr();
 
 #if defined(AMREX_DEBUG) && defined(AMREX_USE_ASSERTION)
             Real eps = std::numeric_limits<Real>::epsilon();
@@ -744,23 +745,21 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              * Move particles based on collision forces and torques             *
              *******************************************************************/
 
-            Real grav[3];
+            GpuArray<Real, 3> grav;
             grav[0] = gravity[0];
             grav[1] = gravity[1];
             grav[2] = gravity[2];
-
-            Real* grav_ptr = &grav[0];
 
             AMREX_FOR_1D ( nrp, i,
             {
                 ParticleType& p = pstruct[i];
 
                 p.rdata(realData::velx) += subdt * (
-                    (p.rdata(realData::dragx) + fc_ptr[i       ]) /  p.rdata(realData::mass) + grav_ptr[0]);
+                    (p.rdata(realData::dragx) + fc_ptr[i       ]) /  p.rdata(realData::mass) + grav[0]);
                 p.rdata(realData::vely) += subdt * (
-                    (p.rdata(realData::dragy) + fc_ptr[i + ntot]) /  p.rdata(realData::mass) + grav_ptr[1]);
+                    (p.rdata(realData::dragy) + fc_ptr[i + ntot]) /  p.rdata(realData::mass) + grav[1]);
                 p.rdata(realData::velz) += subdt * (
-                    (p.rdata(realData::dragz) + fc_ptr[i+2*ntot]) /  p.rdata(realData::mass) + grav_ptr[2]);
+                    (p.rdata(realData::dragz) + fc_ptr[i+2*ntot]) /  p.rdata(realData::mass) + grav[2]);
 
                 p.rdata(realData::omegax) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i       ];
                 p.rdata(realData::omegay) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i+  ntot];
@@ -773,6 +772,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
             Gpu::Device::streamSynchronize();
 
+#ifdef AMREX_USE_CUDA
+            ncoll = ncoll_gpu.dataValue();
+#endif
             call_usr2_des(&nrp, pstruct);
 
             /********************************************************************
