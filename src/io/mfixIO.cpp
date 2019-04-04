@@ -550,9 +550,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
        ro_go[lev]->FillBoundary(geom[lev].periodicity());
 
         rop_g[lev]->FillBoundary(geom[lev].periodicity());
-       rop_go[lev]->FillBoundary(geom[lev].periodicity());
 
-           mu_g[lev]->FillBoundary(geom[lev].periodicity());
+         mu_g[lev]->FillBoundary(geom[lev].periodicity());
 
        // Fill the bc's just in case
         vel_g[lev]->FillBoundary(geom[lev].periodicity());

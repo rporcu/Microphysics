@@ -127,7 +127,6 @@ mfix::ResizeArrays ()
     ro_go.resize(nlevs_max);
 
     rop_g.resize(nlevs_max);
-    rop_go.resize(nlevs_max);
 
     phi.resize(nlevs_max);
     diveu.resize(nlevs_max);

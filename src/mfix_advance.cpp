@@ -79,7 +79,6 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
           MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
           MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
           MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
-          MultiFab::Copy (*rop_go[lev], *rop_g[lev], 0, 0, rop_g[lev]->nComp(), rop_go[lev]->nGrow());
           MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
            // User hooks

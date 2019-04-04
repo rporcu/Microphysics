@@ -432,7 +432,6 @@ private:
 
      // Gas bulk density
      Vector< std::unique_ptr<MultiFab> > rop_g ;
-     Vector< std::unique_ptr<MultiFab> > rop_go;
 
      // Gas velocity
      Vector< std::unique_ptr<MultiFab> > vel_g ;
