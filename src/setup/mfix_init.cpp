@@ -32,13 +32,14 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("verbose", m_verbose);
 
         // Options to control MGML behavior
-        pp.query( "mg_verbose", mg_verbose );
-        pp.query( "mg_cg_verbose", mg_cg_verbose );
-        pp.query( "mg_max_iter", mg_max_iter );
-        pp.query( "mg_cg_maxiter", mg_cg_maxiter );
-        pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
-        pp.query( "mg_rtol", mg_rtol );
-        pp.query( "mg_atol", mg_atol );
+        pp.query( "mg_verbose"             , nodal_mg_verbose );
+        pp.query( "mg_cg_verbose"          , nodal_mg_cg_verbose );
+        pp.query( "mg_max_iter"            , nodal_mg_max_iter );
+        pp.query( "mg_cg_maxiter"          , nodal_mg_cg_maxiter );
+        pp.query( "mg_max_fmg_iter"        , nodal_mg_max_fmg_iter );
+        pp.query( "mg_rtol"                , nodal_mg_rtol );
+        pp.query( "mg_atol"                , nodal_mg_atol );
+        pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
 
         // Default bottom solver is bicgstab, but alternatives are "smoother" or "hypre"
         bottom_solver_type = "bicgstab";

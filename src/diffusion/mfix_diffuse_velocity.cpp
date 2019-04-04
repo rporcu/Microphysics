@@ -108,9 +108,9 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       solver.setCGVerbose (diff_mg_cg_verbose);
 
       // Set the max number of iterations
-      solver.setMaxIter (mg_max_iter);
-      solver.setMaxFmgIter (mg_max_fmg_iter);
-      solver.setCGMaxIter (mg_cg_maxiter);
+      solver.setMaxIter (diff_mg_max_iter);
+      solver.setMaxFmgIter (diff_mg_max_fmg_iter);
+      solver.setCGMaxIter (diff_mg_cg_maxiter);
 
       // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
       for (int lev = 0; lev < nlev; lev++)
@@ -136,7 +136,7 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       //
       //  (1 - div dot mu grad) u = RHS
       //
-      solver.solve ( GetVecOfPtrs(phi_diff), GetVecOfConstPtrs(rhs_diff), mg_rtol, mg_atol );
+      solver.solve ( GetVecOfPtrs(phi_diff), GetVecOfConstPtrs(rhs_diff), diff_mg_rtol, diff_mg_atol );
 
       for (int lev = 0; lev < nlev; lev++)
       {
