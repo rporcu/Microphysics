@@ -355,7 +355,7 @@ mfix::mfix_calc_drag_particle(Real time)
                         const auto&  gp_fab     =  gp_ptr->array(pti);
                         const auto& flags_array = flags.array();
 
-                        for (int ip = 0; ip > np; ++ip)
+                        for (int ip = 0; ip < np; ++ip)
                         {
                             MFIXParticleContainer::ParticleType& particle = particles[ip];
                             Real pbeta = particle.rdata(realData::dragx);
