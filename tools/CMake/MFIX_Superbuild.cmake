@@ -64,6 +64,8 @@ option( AMREX_ENABLE_PROFPARSER "Enable profile parser" NO)
 
 option( AMREX_ENABLE_DP_PARTICLES "Enable double-precision particle data" YES)
 
+set(AMREX_CUDA_ARCH "Auto" CACHE STRING "CUDA architecture (Use 'Auto' for automatic detection)")
+
 set( AMREX_GIT_COMMIT "" CACHE STRING "AMReX git commit to use in superbuild")
 
 #
@@ -104,6 +106,7 @@ ExternalProject_Add ( amrex
    -DENABLE_OMP=${ENABLE_OMP}
    -DENABLE_MPI=${ENABLE_MPI}
    -DENABLE_CUDA=${ENABLE_CUDA}
+   -DCUDA_ARCH=${AMREX_CUDA_ARCH}
    -DENABLE_DP=${AMREX_ENABLE_DP}
    -DENABLE_PARTICLES=YES
    -DENABLE_DP_PARTICLES=${AMREX_ENABLE_DP_PARTICLES}
