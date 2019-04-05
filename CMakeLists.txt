@@ -79,8 +79,7 @@ endif ()
 set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
 if (ENABLE_CUDA)
-   set(CUDA_MAXREGCOUNT "255")
-   include(AMReX_SetupCUDA)
+   setup_cuda()
 endif ()
 
 #
