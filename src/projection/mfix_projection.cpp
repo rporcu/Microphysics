@@ -1,17 +1,4 @@
-#include <AMReX_ParmParse.H>
-
-#include <mfix_proj_F.H>
-#include <mfix_mac_F.H>
-#include <mfix_F.H>
 #include <mfix.H>
-#include <AMReX_BC_TYPES.H>
-#include <AMReX_Box.H>
-#include <AMReX_VisMF.H>
-
-// For multigrid
-#include <AMReX_MLMG.H>
-#include <AMReX_MLEBABecLap.H>
-#include <AMReX_MLNodeLaplacian.H>
 
 //
 // Computes the following decomposition:
@@ -33,19 +20,6 @@ void
 mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool proj_2 )
 {
     BL_PROFILE("mfix::mfix_apply_projection");
-
-
-    // Set domain BCs for Poisson's solver
-    // The domain BCs refer to level 0 only
-    int bc_lo[3], bc_hi[3];
-    Box domain(geom[0].Domain());
-
-    set_ppe_bc(bc_lo, bc_hi,
-               domain.loVect(), domain.hiVect(),
-               &nghost,
-               bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-               bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-               bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
     // Swap ghost cells and apply BCs to velocity -- we need to do this to make sure
     //      that the divergence operator can see inflow values
@@ -117,7 +91,8 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     }
 
     // Solve PPE
-    solve_poisson_equation( bcoeff, phi, diveu, fluxes, bc_lo, bc_hi);
+    mfix_setup_nodal_solver (phi);
+    mfix_solve_poisson_equation (phi, diveu, bcoeff, fluxes);
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -172,62 +147,25 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     }
 }
 
-//
-// Solve PPE:
-//
-//                  div( eps_g/rho * grad(phi) ) = div(eps_g*u)
-//
 void
-mfix::solve_poisson_equation ( Vector< std::unique_ptr<MultiFab> >& b,
-                               Vector< std::unique_ptr<MultiFab> >& this_phi,
-                               Vector< std::unique_ptr<MultiFab> >& rhs,
-                               Vector< std::unique_ptr<MultiFab> >& fluxes,
-                               int bc_lo[], int bc_hi[])
+mfix::mfix_solve_poisson_equation ( Vector< std::unique_ptr<MultiFab> >& this_phi,
+                                    Vector< std::unique_ptr<MultiFab> >& rhs,
+                                    Vector< std::unique_ptr<MultiFab> >& b,
+                                    Vector< std::unique_ptr<MultiFab> >& fluxes)
 {
-    BL_PROFILE("mfix::solve_poisson_equation");
-
+    BL_PROFILE("mfix::mfix_solve_poisson_equation");
     //
-    // First define the matrix (operator).
+    // When we created nodal_matrix we didn't call setSigma so the coefficients are initially 0
+    // Here we set them to the values we will actually use
     //
-    //        (del dot b sigma grad)) phi
-    //
-    LPInfo                       info;
-    info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
-    MLNodeLaplacian matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory), 
-                           nodal_use_hypre);
-
-    matrix.setGaussSeidel(true);
-    matrix.setHarmonicAverage(false);
-    matrix.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
-                         {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
-
     for (int lev = 0; lev < nlev; lev++)
-      {
-        matrix.setSigma(lev, *b[lev]);
-
-        // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
-        this_phi[lev]->setVal(0.);
-        matrix.setLevelBC ( lev, GetVecOfConstPtrs(this_phi)[lev] );
-      }
+       nodal_matrix->setSigma(lev, *b[lev]);
 
     //
-    // Then setup the solver ----------------------
+    // Solve div( eps_g/rho * grad(phi) ) = div(eps_g*u)
     //
-    MLMG  solver(matrix);
-
-    solver.setMaxIter (nodal_mg_max_iter);
-    solver.setMaxFmgIter (nodal_mg_max_fmg_iter);
-
-    solver.setVerbose (nodal_mg_verbose);
-    solver.setCGVerbose (nodal_mg_cg_verbose);
-    solver.setCGMaxIter (nodal_mg_cg_maxiter);
-
-    //
-    // Finally, solve the system
-    //
-    // solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), nodal_mg_rtol, nodal_mg_atol, "mlmg" );
-    solver.solve ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), nodal_mg_rtol, nodal_mg_atol);
-    solver.getFluxes( amrex::GetVecOfPtrs(fluxes) );
+    nodal_solver->solve    ( GetVecOfPtrs(this_phi), GetVecOfConstPtrs(rhs), nodal_mg_rtol, nodal_mg_atol);
+    nodal_solver->getFluxes( GetVecOfPtrs(fluxes) );
 
     for (int lev = 0; lev < nlev; lev++)
       this_phi[lev] -> FillBoundary(geom[lev].periodicity());

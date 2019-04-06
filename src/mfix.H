@@ -24,6 +24,8 @@
 #include <AMReX_EB_LSCore.H>
 
 #include <MFIXParticleContainer.H>
+#include <AMReX_MLMG.H>
+#include <AMReX_MLNodeLaplacian.H>
 #include <MacProjection.H>
 #include <mfix_eb_if.H>
 
@@ -327,11 +329,11 @@ private:
      void EvolveFluid(int nstep, Real & dt, Real & time, Real stop_time);
 
      // Projection-related methods
-     void solve_poisson_equation(Vector< std::unique_ptr<MultiFab> >& b,
-                                 Vector< std::unique_ptr<MultiFab> >& phi,
-                                 Vector< std::unique_ptr<MultiFab> >& rhs,
-                                 Vector< std::unique_ptr<MultiFab> >& fluxes,
-                                 int bc_lo[], int bc_hi[]);
+     void mfix_setup_nodal_solver( Vector< std::unique_ptr<MultiFab> >& phi);
+     void mfix_solve_poisson_equation( Vector< std::unique_ptr<MultiFab> >& phi,
+                                       Vector< std::unique_ptr<MultiFab> >& rhs,
+                                       Vector< std::unique_ptr<MultiFab> >& b,
+                                       Vector< std::unique_ptr<MultiFab> >& fluxes);
 
      // Solve implicit diffusion
      void solve_diffusion_equation(Vector< Vector< std::unique_ptr<MultiFab> > >& b,
@@ -529,6 +531,12 @@ private:
 
      // Use hypre instead of GMG to solve?
      bool nodal_use_hypre = false;
+
+     // Linear operator
+     std::unique_ptr<MLNodeLaplacian> nodal_matrix;
+
+     // Solver 
+     std::unique_ptr<MLMG> nodal_solver;
 
      // ***************************************************************
      // MAC solve
