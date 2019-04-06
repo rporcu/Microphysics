@@ -2,7 +2,7 @@
 #include <mfix.H>
 
 void
-mfix::mfix_setup_nodal_solver ( Vector< std::unique_ptr<MultiFab> >& this_phi )
+mfix::mfix_setup_nodal_solver ()
 {
     BL_PROFILE("mfix::mfix_setup_nodal_solver");
 
@@ -33,13 +33,6 @@ mfix::mfix_setup_nodal_solver ( Vector< std::unique_ptr<MultiFab> >& this_phi )
     nodal_matrix->setHarmonicAverage(false);
     nodal_matrix->setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
                                 {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
-
-    for (int lev = 0; lev < nlev; lev++)
-      {
-        // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
-        this_phi[lev]->setVal(0.);
-//      nodal_matrix->setLevelBC ( lev, GetVecOfConstPtrs(this_phi)[lev] );
-      }
 
     //
     // Then setup the solver ----------------------

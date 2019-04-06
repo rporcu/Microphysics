@@ -91,7 +91,7 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     }
 
     // Solve PPE
-    mfix_setup_nodal_solver (phi);
+    mfix_setup_nodal_solver ();
     mfix_solve_poisson_equation (phi, diveu, bcoeff, fluxes);
 
     for (int lev = 0; lev < nlev; lev++)

@@ -329,7 +329,7 @@ private:
      void EvolveFluid(int nstep, Real & dt, Real & time, Real stop_time);
 
      // Projection-related methods
-     void mfix_setup_nodal_solver( Vector< std::unique_ptr<MultiFab> >& phi);
+     void mfix_setup_nodal_solver();
      void mfix_solve_poisson_equation( Vector< std::unique_ptr<MultiFab> >& phi,
                                        Vector< std::unique_ptr<MultiFab> >& rhs,
                                        Vector< std::unique_ptr<MultiFab> >& b,
