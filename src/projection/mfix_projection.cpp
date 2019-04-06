@@ -178,7 +178,7 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
              Vector< std::unique_ptr<MultiFab> >& this_phi,
              Vector< std::unique_ptr<MultiFab> >& rhs,
              Vector< std::unique_ptr<MultiFab> >& fluxes,
-             int bc_lo[], int bc_hi[] )
+             int bc_lo[], int bc_hi[])
 {
     BL_PROFILE("mfix::solve_poisson_equation");
 
@@ -189,7 +189,8 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
     //
     LPInfo                       info;
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
-    MLNodeLaplacian              matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
+    MLNodeLaplacian matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory), 
+                           nodal_use_hypre);
 
     matrix.setGaussSeidel(true);
     matrix.setHarmonicAverage(false);
@@ -216,10 +217,6 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
     solver.setVerbose (nodal_mg_verbose);
     solver.setCGVerbose (nodal_mg_cg_verbose);
     solver.setCGMaxIter (nodal_mg_cg_maxiter);
-
-    // solver.setBottomSolver(MLMG::BottomSolver::bicgstab);
-    // solver.setPreSmooth (20);
-    // solver.setPostSmooth (20);
 
     //
     // Finally, solve the system

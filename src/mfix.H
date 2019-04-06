@@ -528,6 +528,9 @@ private:
      // Max coarsening level
      int  nodal_mg_max_coarsening_level = 100;
 
+     // Use hypre instead of GMG to solve?
+     bool nodal_use_hypre = false;
+
      // ***************************************************************
      // MAC solve
      // ***************************************************************
