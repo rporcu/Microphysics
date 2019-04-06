@@ -140,14 +140,6 @@ extern "C"
     void init_collision(amrex::Real *sum_dp, amrex::Real *sum_roi
         );
 
-    void calc_volume_fraction (
-             const int*  lo, const int*  hi,
-             const int* slo, const int* shi,
-             const int*  np, void* particles,
-             amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-             amrex::Real* ep_g
-        );
-
     void fill_bc0(
              amrex::Real* s, const int* slo, const int* shi,
              const int* bc_ilo, const int* bc_ihi,

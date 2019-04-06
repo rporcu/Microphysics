@@ -97,7 +97,11 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
         phi[lev] -> setVal(0.);
 
     // Compute the PPE coefficients = (ep_g / rho)
-    mfix_compute_bcoeff_ppe( );
+    for (int lev = 0; lev < nlev; lev++)
+    {
+         MultiFab::Copy  (*bcoeff[lev],*ep_g[lev],0,0,1,0);
+         MultiFab::Divide(*bcoeff[lev],*ro_g[lev],0,0,1,0);
+    }
 
     Vector<std::unique_ptr<MultiFab> > fluxes;
 
@@ -174,11 +178,11 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
 //                  div( eps_g/rho * grad(phi) ) = div(eps_g*u)
 //
 void
-mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-             Vector< std::unique_ptr<MultiFab> >& this_phi,
-             Vector< std::unique_ptr<MultiFab> >& rhs,
-             Vector< std::unique_ptr<MultiFab> >& fluxes,
-             int bc_lo[], int bc_hi[])
+mfix::solve_poisson_equation ( Vector< std::unique_ptr<MultiFab> >& b,
+                               Vector< std::unique_ptr<MultiFab> >& this_phi,
+                               Vector< std::unique_ptr<MultiFab> >& rhs,
+                               Vector< std::unique_ptr<MultiFab> >& fluxes,
+                               int bc_lo[], int bc_hi[])
 {
     BL_PROFILE("mfix::solve_poisson_equation");
 
@@ -199,7 +203,7 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
 
     for (int lev = 0; lev < nlev; lev++)
       {
-        matrix.setSigma(lev, *(b[lev][0]));
+        matrix.setSigma(lev, *b[lev]);
 
         // By this point we must have filled the Dirichlet values of phi stored in the ghost cells
         this_phi[lev]->setVal(0.);
@@ -227,54 +231,4 @@ mfix::solve_poisson_equation ( Vector< Vector< std::unique_ptr<MultiFab> > >& b,
 
     for (int lev = 0; lev < nlev; lev++)
       this_phi[lev] -> FillBoundary(geom[lev].periodicity());
-}
-
-//
-// Computes bcoeff = ep_g/ro_g at the faces of the scalar cells
-//
-void
-mfix::mfix_compute_bcoeff_ppe ()
-{
-    BL_PROFILE("mfix::mfix_compute_bcoeff_ppe");
-
-    // Directions
-    int xdir = 1;
-    int ydir = 2;
-    int zdir = 3;
-
-    for (int lev = 0; lev < nlev; lev++)
-    {
-
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-      for (MFIter mfi(*ro_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-        {
-          // Cell-centered tilebox
-          Box bx = mfi.tilebox();
-
-          // X direction
-          compute_bcoeff_nd (BL_TO_FORTRAN_BOX(bx),
-                             BL_TO_FORTRAN_ANYD((*(bcoeff[lev][0]))[mfi]),
-                             BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-                             (*ep_g[lev])[mfi].dataPtr(), &xdir );
-
-          // Y direction
-          compute_bcoeff_nd (BL_TO_FORTRAN_BOX(bx),
-                             BL_TO_FORTRAN_ANYD((*(bcoeff[lev][1]))[mfi]),
-                             BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-                             (*ep_g[lev])[mfi].dataPtr(), &ydir );
-
-          // Z direction
-          compute_bcoeff_nd (BL_TO_FORTRAN_BOX(bx),
-                             BL_TO_FORTRAN_ANYD((*(bcoeff[lev][2]))[mfi]),
-                             BL_TO_FORTRAN_ANYD((*ro_g[lev])[mfi]),
-                             (*ep_g[lev])[mfi].dataPtr(), &zdir );
-
-        }
-
-      bcoeff[lev][0] -> FillBoundary(geom[lev].periodicity());
-      bcoeff[lev][1] -> FillBoundary(geom[lev].periodicity());
-      bcoeff[lev][2] -> FillBoundary(geom[lev].periodicity());
-    }
 }

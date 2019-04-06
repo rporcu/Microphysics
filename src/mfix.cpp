@@ -158,9 +158,6 @@ mfix::ResizeArrays ()
     zslopes.resize(nlevs_max);
 
     bcoeff.resize(nlevs_max);
-    for (int i = 0; i < nlevs_max; ++i ) {
-        bcoeff[i].resize(3);
-    }
 
     bcoeff_diff.resize(nlevs_max);
     for (int i = 0; i < nlevs_max; ++i ) {

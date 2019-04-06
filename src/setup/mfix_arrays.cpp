@@ -95,14 +95,8 @@ mfix::AllocateArrays (int lev)
     // ********************************************************************************
 
     // When the pressure is on nodes, bcoeff is at cell centers
-    bcoeff[lev][0].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    bcoeff[lev][0]->setVal(0.);
-
-    bcoeff[lev][1].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    bcoeff[lev][1]->setVal(0.);
-
-    bcoeff[lev][2].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    bcoeff[lev][2]->setVal(0.);
+    bcoeff[lev].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    bcoeff[lev]->setVal(0.);
 
     // ****************************************************************
 
@@ -218,20 +212,10 @@ mfix::RegridArrays (int lev)
     phi[lev] = std::move(phi_new);
     phi[lev]->setVal(0.);
 
-    std::unique_ptr<MultiFab> bc0_new(new MultiFab(grids[lev],dmap[lev],1,bcoeff[lev][0]->nGrow(),
+    std::unique_ptr<MultiFab> bc0_new(new MultiFab(grids[lev],dmap[lev],1,bcoeff[lev]->nGrow(),
                                                   MFInfo(), *ebfactory[lev] ));
-    bcoeff[lev][0] = std::move(bc0_new);
-    bcoeff[lev][0]->setVal(0.);
-
-    std::unique_ptr<MultiFab> bc1_new(new MultiFab(grids[lev],dmap[lev],1,bcoeff[lev][1]->nGrow(),
-                                                  MFInfo(), *ebfactory[lev] ));
-    bcoeff[lev][1] = std::move(bc1_new);
-    bcoeff[lev][1]->setVal(0.);
-
-    std::unique_ptr<MultiFab> bc2_new(new MultiFab(grids[lev],dmap[lev],1,bcoeff[lev][2]->nGrow(),
-                                                  MFInfo(), *ebfactory[lev] ));
-    bcoeff[lev][2] = std::move(bc2_new);
-    bcoeff[lev][2]->setVal(0.);
+    bcoeff[lev] = std::move(bc0_new);
+    bcoeff[lev]->setVal(0.);
 
     // Molecular viscosity
     ng = mu_g[lev]->nGrow();

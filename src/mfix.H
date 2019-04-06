@@ -327,7 +327,7 @@ private:
      void EvolveFluid(int nstep, Real & dt, Real & time, Real stop_time);
 
      // Projection-related methods
-     void solve_poisson_equation(Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+     void solve_poisson_equation(Vector< std::unique_ptr<MultiFab> >& b,
                                  Vector< std::unique_ptr<MultiFab> >& phi,
                                  Vector< std::unique_ptr<MultiFab> >& rhs,
                                  Vector< std::unique_ptr<MultiFab> >& fluxes,
@@ -340,7 +340,6 @@ private:
                                    int bc_lo[], int bc_hi[],
                                    Real dt);
 
-     void mfix_compute_bcoeff_ppe();
      void mfix_compute_bcoeff_diff();
 
      void check_for_nans(int lev);
@@ -476,7 +475,7 @@ private:
      Vector< std::unique_ptr<MultiFab> > fp;
 
      // Coefficients b of div(b*grad(p))
-     Vector< Vector< std::unique_ptr<MultiFab> > > bcoeff;
+     Vector< std::unique_ptr<MultiFab> > bcoeff;
 
      // Coefficients b in implicit diffusion solve
      Vector< Vector< std::unique_ptr<MultiFab> > > bcoeff_diff;

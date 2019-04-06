@@ -15,20 +15,6 @@ extern "C"
 {
 #endif
 
-   void compute_new_dt ( 
-      const amrex::Real* umax,
-      const amrex::Real* vmax,
-      const amrex::Real* wmax,
-      const amrex::Real* romin,
-      const amrex::Real* mumax,
-      const amrex::Real* gradp0max,
-      const amrex::Real* dx,
-      const amrex::Real* cfl,
-      const         int* steady_state,
-      const amrex::Real* time,
-      const amrex::Real* stop_time,
-      amrex::Real*  dt);
- 
    void compute_velocity_at_faces (
       const int* lo, const int* hi,
       const amrex::Real* u_mac, const int* ulo, const int* uhi, 
@@ -109,33 +95,6 @@ extern "C"
       const amrex::Real* oro_z, const int* wlo, const int* whi,
       const int* bc_lo, const int* bc_hi,
       const amrex::Real* dx, const int* domlo, const int* domhi );
-
-   void add_gravity (
-      const int* lo, const int* hi,
-      amrex::Real* vel    , const int* ulo, const int* uhi,
-      const amrex::Real* dt);
-    
-   void add_drag_terms (
-      const int* lo, const int* hi,
-            amrex::Real* vel,     const int* ulo, const int* uhi,
-      const amrex::Real* f_gds,   const int* flo, const int* fhi,
-      const amrex::Real* drag,    const int* dlo, const int* dhi,
-      const amrex::Real* rop,     const int* slo, const int* shi,
-      const amrex::Real* volfrac, const int* vlo, const int* vhi,
-      const amrex::Real* dt );
-
-   void compute_bcoeff_nd (
-      const int* lo,  const int*  hi,
-      amrex::Real* bcoeff, const int* blo, const int* bhi,
-      const amrex::Real* ro_g, const int* slo, const int* shi,
-      const amrex::Real* ep_g, const int* dir );
-
-   void set_phi (
-      const int* lo, const int* hi,
-      amrex::Real* phi, const int* slo, const int* shi,
-      amrex::Real* pg,
-      const amrex::Real* scale, const int* singular,
-      const int*  domlo, const int *domhi );
 
 #ifdef __cplusplus
 }
