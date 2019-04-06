@@ -43,6 +43,8 @@ public:
 
     void InitLevelData(Real dt, Real time);
 
+    void mfix_setup_nodal_solver();
+
     void PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time);
 
     void ResizeArrays();
@@ -224,13 +226,13 @@ public:
     void SetParameters(int steady_state_in)
     { steady_state = steady_state_in;}
 
+protected:
+
     void mfix_add_drag_terms(Real dt);
 
     void mfix_add_gravity_and_gp(Real dt);
 
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
-
-protected:
 
      //! Tagging cells for refinement
      virtual void ErrorEst(int lev, TagBoxArray & tags, Real time, int ngrow) override;
@@ -329,7 +331,6 @@ private:
      void EvolveFluid(int nstep, Real & dt, Real & time, Real stop_time);
 
      // Projection-related methods
-     void mfix_setup_nodal_solver();
      void mfix_solve_poisson_equation( Vector< std::unique_ptr<MultiFab> >& phi,
                                        Vector< std::unique_ptr<MultiFab> >& rhs,
                                        Vector< std::unique_ptr<MultiFab> >& b,

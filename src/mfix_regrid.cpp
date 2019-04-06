@@ -209,6 +209,8 @@ mfix::Regrid ()
             RegridLevelSetArray(i_lev);
         }
 
+    if (solve_fluid)
+       mfix_setup_nodal_solver();
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }
