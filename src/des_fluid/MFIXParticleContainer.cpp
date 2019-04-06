@@ -625,7 +625,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             Gpu::DeviceScalar<int> ncoll_gpu(ncoll);
             int* pncoll = ncoll_gpu.dataPtr();
 
-#if defined(AMREX_DEBUG) && defined(AMREX_USE_ASSERTION)
+#if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
             Real eps = std::numeric_limits<Real>::epsilon();
 #endif
             // now we loop over the neighbor list and compute the forces

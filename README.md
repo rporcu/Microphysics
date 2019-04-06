@@ -150,27 +150,27 @@ o To compare point-by-point field data, the environment variable
 
 ## Run all tests
 ```shell
-> cd to mfix-build-dir
+> cd to mfix-build-dir/mfix
 > ctest
 ```
 ## List all tests (without running them)
 ```shell
-> cd to mfix-build-dir
+> cd to mfix-build-dir/mfix
 > ctest -N
 ```
 ## Run a particular test by the index listed in ctest -N
 ```shell
-> cd to mfix-build-dir
+> cd to mfix-build-dir/mfix
 > ctest -I 3,3             # run the third test
 ```
 ## Run a particular test by name
 ```shell
-> cd to mfix-build-dir
+> cd to mfix-build-dir/mfix
 > ctest -R DEM01  # running all tests with "DEM01" in the test name
 ```
 ## Run a particular test via make
 ```shell
-> cd to mfix-build-dir
+> cd to mfix-build-dir/mfix
 > make run_DEM01-x  # running "DEM01-x" and output to the screen
 ```
 
@@ -218,12 +218,13 @@ mkdir /home/user/exa-rt/benchmark
 cd /home/user/exa-rt
 git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
 git clone https://github.com/AMReX-Codes/amrex.git
+git clone https://github.com/AMReX-Codes/regression_testing.git
 ```
 
 2. Create a local copy the regression test setup file from the
 MFIX repository.
 ```shell
-cp mfix/RegressionTesting/MFIX-tests.ini MFIX-local.ini
+cp mfix/tools/MFIX-tests.ini MFIX-local.ini
 ```
 
 3. Edit the local setup file.
@@ -239,18 +240,20 @@ Specify the AMReX source directory location under the `[AMReX]` heading.
 [AMReX]
 dir = /home/user/exa-rt/amrex
 branch = development
+cmakeSetupOpts = -DENABLE_AMRDATA=ON -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_PARTICLES=ON -DENABLE_EB=ON -DENABLE_3D_NODAL_MLMG=yes
 ```
 Specify the MFIX-Exa source directory location under the `[source]` heading.
 ```shell
 [source]
 dir = /home/user/exa-rt/mfix
 branch = develop
+cmakeSetupOpts = -DAMREX_INSTALL_DIR=/home/user/exa-rt/amrex/installdir
 ```
 4. Run the AMReX regression test tool. The second argument is a user
 supplied comment.
 ```shell
 cd /home/user/exa-rt
-amrex/Tools/RegressionTesting/regtest.py --make_benchmarks "MFIX" MFIX-local.ini
+regression_testing/regtest.py --make_benchmarks "MFIX" MFIX-local.ini
 ```
 
 

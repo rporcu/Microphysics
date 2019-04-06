@@ -26,7 +26,7 @@ enable_language (Fortran)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER   4eb4e7a25050ca83f02e551fcb9b8a591834395 )
-set (AMREX_GIT_COMMIT_DEVELOP 1be04740cc240bf6f6604f614625c63b99e79f70 )
+set (AMREX_GIT_COMMIT_DEVELOP 36eb7d91ba4b8e8ff788e83f7dad2b6029fcb3d9 )
 
 set (AMREX_GIT_TAG)  # The commit id or branch to download
 
@@ -63,6 +63,8 @@ option( AMREX_ENABLE_BACKTRACE "Enable backtracing" NO)
 option( AMREX_ENABLE_PROFPARSER "Enable profile parser" NO)
 
 option( AMREX_ENABLE_DP_PARTICLES "Enable double-precision particle data" YES)
+
+set(AMREX_CUDA_ARCH "Auto" CACHE STRING "CUDA architecture (Use 'Auto' for automatic detection)")
 
 set( AMREX_GIT_COMMIT "" CACHE STRING "AMReX git commit to use in superbuild")
 
@@ -104,6 +106,7 @@ ExternalProject_Add ( amrex
    -DENABLE_OMP=${ENABLE_OMP}
    -DENABLE_MPI=${ENABLE_MPI}
    -DENABLE_CUDA=${ENABLE_CUDA}
+   -DCUDA_ARCH=${AMREX_CUDA_ARCH}
    -DENABLE_DP=${AMREX_ENABLE_DP}
    -DENABLE_PARTICLES=YES
    -DENABLE_DP_PARTICLES=${AMREX_ENABLE_DP_PARTICLES}
