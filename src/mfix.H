@@ -481,7 +481,7 @@ private:
      Vector< std::unique_ptr<MultiFab> > bcoeff;
 
      // Coefficients b in implicit diffusion solve
-     Vector< Vector< std::unique_ptr<MultiFab> > > bcoeff_diff;
+     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff_diff;
 
      // Pressure increment
      Vector< std::unique_ptr<MultiFab> > phi;

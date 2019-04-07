@@ -158,11 +158,7 @@ mfix::ResizeArrays ()
     zslopes.resize(nlevs_max);
 
     bcoeff.resize(nlevs_max);
-
     bcoeff_diff.resize(nlevs_max);
-    for (int i = 0; i < nlevs_max; ++i ) {
-        bcoeff_diff[i].resize(3);
-    }
 
     // Fuid cost (load balancing)
     fluid_cost.resize(nlevs_max);

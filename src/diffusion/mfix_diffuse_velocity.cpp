@@ -39,7 +39,7 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
                 bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
    // Compute the coefficients
-   mfix_compute_bcoeff_diff();
+   mfix_compute_bcoeff_diff ();
 
    //
    // First define the matrix (operator).
@@ -49,7 +49,6 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
    //
    LPInfo                       info;
    MLEBABecLap matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
-   Vector<const MultiFab*>      tmp;
    array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
 
    // It is essential that we set MaxOrder of the solver to 2
@@ -69,11 +68,6 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
    // Copy the PPE coefficient into the proper data strutcure
    for (int lev = 0; lev < nlev; lev++)
    {
-      tmp = amrex::GetVecOfConstPtrs ( bcoeff_diff[lev] ) ;
-      b_tmp[0] = tmp[0];
-      b_tmp[1] = tmp[1];
-      b_tmp[2] = tmp[2];
-
       // This sets the spatially varying A coefficients
       MultiFab a_coeff( ro_g[lev]->boxArray(), ro_g[lev]->DistributionMap(), 1, ro_g[lev]->nGrow(),
                         MFInfo(), *ebfactory[lev]);
@@ -84,7 +78,7 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       matrix.setACoeffs ( lev, a_coeff );
 
       // This sets the spatially varying b coefficients
-      matrix.setBCoeffs ( lev, b_tmp );
+      matrix.setBCoeffs ( lev, GetArrOfConstPtrs(bcoeff_diff[lev]) );
 
       // This sets the coefficient on the wall and defines it as a homogeneous Dirichlet bc for the solve.
       matrix.setEBHomogDirichlet ( lev, (*mu_g[lev]) );
@@ -157,40 +151,9 @@ mfix::mfix_compute_bcoeff_diff ()
 {
    BL_PROFILE("mfix::mfix_compute_bcoeff_diff");
 
-   // Directions
-   int xdir = 1;
-   int ydir = 2;
-   int zdir = 3;
-
    for (int lev = 0; lev < nlev; lev++)
    {
-
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-      for (MFIter mfi(*mu_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-      {
-         // Tileboxes for staggered components
-         Box ubx = mfi.tilebox (e_x);
-         Box vbx = mfi.tilebox (e_y);
-         Box wbx = mfi.tilebox (e_z);
-
-         // X direction
-         compute_bcoeff_diff (BL_TO_FORTRAN_BOX(ubx),
-                              BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][0]))[mfi]),
-                              BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &xdir );
-
-         // Y direction
-         compute_bcoeff_diff (BL_TO_FORTRAN_BOX(vbx),
-                              BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][1]))[mfi]),
-                              BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &ydir );
-
-         // Z direction
-         compute_bcoeff_diff (BL_TO_FORTRAN_BOX(wbx),
-                              BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][2]))[mfi]),
-                              BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &zdir );
-   
-      }
+       average_cellcenter_to_face( GetArrOfPtrs(bcoeff_diff[lev]), *mu_g[lev], geom[lev] );
 
       bcoeff_diff[lev][0] -> FillBoundary(geom[lev].periodicity());
       bcoeff_diff[lev][1] -> FillBoundary(geom[lev].periodicity());

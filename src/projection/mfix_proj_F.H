@@ -15,69 +15,6 @@ extern "C"
 {
 #endif
 
-   void compute_velocity_at_faces (
-      const int* lo, const int* hi,
-      const amrex::Real* u_mac, const int* ulo, const int* uhi, 
-      const amrex::Real* v_mac, const int* vlo, const int* vhi, 
-      const amrex::Real* w_mac, const int* wlo, const int* whi, 
-      const amrex::Real* vel   ,  const int* vello, const int* velhi, 
-      const amrex::Real* xslopes, const int* slo, const int* shi, 
-      const amrex::Real* yslopes, 
-      const amrex::Real* zslopes, 
-      const int* bc_ilo_type, const int* bc_ihi_type, 
-      const int* bc_jlo_type, const int* bc_jhi_type,
-      const int* bc_klo_type, const int* bc_khi_type,
-      const int* ng, 
-      const int* domlo, const int* domhi );
-
-   void compute_velocity_at_x_faces_eb (
-      const int* lo, const int* hi,
-            amrex::Real* u_mac,     const int* ulo,   const int* uhi, 
-      const amrex::Real* vel   ,    const int* vello, const int* velhi, 
-      const amrex::Real* slopes,    const int* slo,   const int* shi,
-      const amrex::Real* areafrac,  const int* alo,   const int* ahi,
-      const amrex::Real* cent,      const int* clo,   const int* chi,
-      const void*        flags,     const int* flo,   const int* fhi,
-      const int* bc_ilo_type,       const int* bc_ihi_type, 
-      const int* ng, 
-      const int* domlo, const int* domhi );
-
-   void compute_velocity_at_y_faces_eb (
-      const int* lo, const int* hi,
-            amrex::Real* v_mac,     const int* vlo,   const int* vhi, 
-      const amrex::Real* vel   ,    const int* vello, const int* velhi, 
-      const amrex::Real* slopes,    const int* slo,   const int* shi,
-      const amrex::Real* areafrac,  const int* alo,   const int* ahi,
-      const amrex::Real* cent,      const int* clo,   const int* chi,
-      const void*        flags,     const int* flo,   const int* fhi,
-      const int* bc_jlo_type,       const int* bc_jhi_type, 
-      const int* ng, 
-      const int* domlo, const int* domhi );
-
-   void compute_velocity_at_z_faces_eb (
-      const int* lo, const int* hi,
-            amrex::Real* w_mac,     const int* wlo,   const int* whi, 
-      const amrex::Real* vel   ,    const int* vello, const int* velhi, 
-      const amrex::Real* slopes,    const int* slo,   const int* shi,
-      const amrex::Real* areafrac,  const int* alo,   const int* ahi,
-      const amrex::Real* cent,      const int* clo,   const int* chi,
-      const void*        flags,     const int* flo,   const int* fhi,
-      const int* bc_klo_type,       const int* bc_khi_type, 
-      const int* ng, 
-      const int* domlo, const int* domhi );   
-
-   void correct_slopes (
-      const int* lo, const int* hi,
-      const amrex::Real* u, const int* ulo, const int* uhi, 
-      amrex::Real* xslopes, amrex::Real* yslopes,
-      amrex::Real* zslopes, const int* slo, const int* shi, 
-      const void* flags, const int* flo, const int* fhi,
-      const int* domlo, const int* domhi,
-      const int* bc_ilo_type, const int* bc_ihi_type, 
-      const int* bc_jlo_type, const int* bc_jhi_type,
-      const int* bc_klo_type, const int* bc_khi_type,
-      const int* nghost );
-
    void set_ppe_bc (
       int* bc_lo, int* bc_hi,
       const int* domlo, const int* domhi,
@@ -85,16 +22,6 @@ extern "C"
       const int* bct_ilo, const int* bct_ihi, 
       const int* bct_jlo, const int* bct_jhi,
       const int* bct_klo, const int* bct_khi);
-
-   void set_poisson_solver_bcs (
-      const int* lo, const int* hi,
-      amrex::Real* rhs, const int* slo, const int* shi,
-      amrex::Real* phi, 
-      const amrex::Real* oro_x, const int* ulo, const int* uhi,
-      const amrex::Real* oro_y, const int* vlo, const int* vhi,
-      const amrex::Real* oro_z, const int* wlo, const int* whi,
-      const int* bc_lo, const int* bc_hi,
-      const amrex::Real* dx, const int* domlo, const int* domhi );
 
 #ifdef __cplusplus
 }
