@@ -1,7 +1,4 @@
 #include <mfix.H>
-#include <mfix_F.H>
-#include <mfix_proj_F.H>
-#include <mfix_mac_F.H>
 
 void
 mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
@@ -32,6 +29,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
        facecent  =   ebfactory[lev] -> getFaceCent();
 
        Real small_vel = 1.e-10;
+       Real  huge_vel = 1.e100;
     
        // Then compute velocity at faces
 #ifdef _OPENMP
@@ -63,20 +61,76 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
           const auto& vmac_fab = (m_v_mac[lev])->array(mfi);
           const auto& wmac_fab = (m_w_mac[lev])->array(mfi);
 
+          // Face-centered areas
+          const auto& ax_fab = areafrac[0]->array(mfi);
+          const auto& ay_fab = areafrac[1]->array(mfi);
+          const auto& az_fab = areafrac[2]->array(mfi);
+
           if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
           {
              m_u_mac[lev] -> setVal( 1.2345e300, ubx, 0, 1);
              m_v_mac[lev] -> setVal( 1.2345e300, vbx, 0, 1);
              m_w_mac[lev] -> setVal( 1.2345e300, wbx, 0, 1);
           }
-          else
+          else if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
           {
              // No cut cells in tile + 1-cell witdh halo -> use non-eb routine
-             if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
+             AMREX_CUDA_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
              {
-                AMREX_CUDA_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
-                {
-                    // X-faces
+                 // X-faces
+                 Real upls     = ccvel_fab(i  ,j,k,0) - 0.5 * xslopes_fab(i  ,j,k,0);
+                 Real umns     = ccvel_fab(i-1,j,k,0) + 0.5 * xslopes_fab(i-1,j,k,0);
+                 if ( umns < 0.0 && upls > 0.0 ) {
+                    umac_fab(i,j,k) = 0.0;
+                 } else {
+                    Real avg = 0.5 * ( upls + umns );
+                    if ( std::abs(avg) <  small_vel) { umac_fab(i,j,k) = 0.0;
+                    } else if (avg >= 0)             { umac_fab(i,j,k) = umns;
+                    } else                           { umac_fab(i,j,k) = upls;
+                    }
+                 }
+             });
+
+             AMREX_CUDA_HOST_DEVICE_FOR_3D(vbx, i, j, k,
+             {
+                 // Y-faces
+                 Real upls     = ccvel_fab(i,j  ,k,1) - 0.5 * yslopes_fab(i,j  ,k,1);
+                 Real umns     = ccvel_fab(i,j-1,k,1) + 0.5 * yslopes_fab(i,j-1,k,1);
+                 if ( umns < 0.0 && upls > 0.0 ) {
+                    vmac_fab(i,j,k) = 0.0;
+                 } else {
+                    Real avg = 0.5 * ( upls + umns );
+                    if ( std::abs(avg) <  small_vel) { vmac_fab(i,j,k) = 0.0;
+                    } else if (avg >= 0)             { vmac_fab(i,j,k) = umns;
+                    } else                           { vmac_fab(i,j,k) = upls;
+                    }
+                 }
+             });
+
+             AMREX_CUDA_HOST_DEVICE_FOR_3D(wbx, i, j, k,
+             {
+                 // Z-faces
+                 Real upls     = ccvel_fab(i,j,k  ,2) - 0.5 * zslopes_fab(i,j,k  ,2);
+                 Real umns     = ccvel_fab(i,j,k-1,2) + 0.5 * zslopes_fab(i,j,k-1,2);
+                 if ( umns < 0.0 && upls > 0.0 ) {
+                    wmac_fab(i,j,k) = 0.0;
+                 } else {
+                    Real avg = 0.5 * ( upls + umns );
+                    if ( std::abs(avg) <  small_vel) { wmac_fab(i,j,k) = 0.0;
+                    } else if (avg >= 0)             { wmac_fab(i,j,k) = umns;
+                    } else                           { wmac_fab(i,j,k) = upls;
+                    }
+                 }
+             });
+
+          } else {
+
+             // This FAB has cut cells
+             AMREX_CUDA_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
+             {
+                 // X-faces
+                 if (ax_fab(i,j,k) > 0.0)
+                 {
                     Real upls     = ccvel_fab(i  ,j,k,0) - 0.5 * xslopes_fab(i  ,j,k,0);
                     Real umns     = ccvel_fab(i-1,j,k,0) + 0.5 * xslopes_fab(i-1,j,k,0);
                     if ( umns < 0.0 && upls > 0.0 ) {
@@ -88,11 +142,16 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
                        } else                           { umac_fab(i,j,k) = upls;
                        }
                     }
-                });
+                 } else {
+                       umac_fab(i,j,k) = huge_vel;
+                 }
+             });
 
-                AMREX_CUDA_HOST_DEVICE_FOR_3D(vbx, i, j, k,
-                {
-                    // Y-faces
+             AMREX_CUDA_HOST_DEVICE_FOR_3D(vbx, i, j, k,
+             {
+                 // Y-faces
+                 if (ay_fab(i,j,k) > 0.0)
+                 {
                     Real upls     = ccvel_fab(i,j  ,k,1) - 0.5 * yslopes_fab(i,j  ,k,1);
                     Real umns     = ccvel_fab(i,j-1,k,1) + 0.5 * yslopes_fab(i,j-1,k,1);
                     if ( umns < 0.0 && upls > 0.0 ) {
@@ -104,11 +163,16 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
                        } else                           { vmac_fab(i,j,k) = upls;
                        }
                     }
-                });
+                 } else {
+                       vmac_fab(i,j,k) = huge_vel;
+                 }
+             });
 
-                AMREX_CUDA_HOST_DEVICE_FOR_3D(wbx, i, j, k,
-                {
-                    // Z-faces
+             AMREX_CUDA_HOST_DEVICE_FOR_3D(wbx, i, j, k,
+             {
+                 // Z-faces
+                 if (az_fab(i,j,k) > 0.0)
+                 {
                     Real upls     = ccvel_fab(i,j,k  ,2) - 0.5 * zslopes_fab(i,j,k  ,2);
                     Real umns     = ccvel_fab(i,j,k-1,2) + 0.5 * zslopes_fab(i,j,k-1,2);
                     if ( umns < 0.0 && upls > 0.0 ) {
@@ -120,58 +184,13 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
                        } else                           { wmac_fab(i,j,k) = upls;
                        }
                     }
-                });
+                 } else {
+                       wmac_fab(i,j,k) = huge_vel;
+                 }
+             });
 
-#if 0
-                compute_velocity_at_faces(
-                   BL_TO_FORTRAN_BOX(bx),  
-                   BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*xslopes[lev])[mfi]),
-                   (*yslopes[lev])[mfi].dataPtr(),
-                   (*zslopes[lev])[mfi].dataPtr(),
-                   bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                   bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                   bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                   &nghost, domain.loVect(), domain.hiVect() );
-#endif
-             }
-             else
-             {
-                compute_velocity_at_x_faces_eb(
-                   BL_TO_FORTRAN_BOX(ubx),
-                   BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*xslopes[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*areafrac[0])[mfi]),
-                   BL_TO_FORTRAN_ANYD(flags),
-                   bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                   &nghost, domain.loVect (), domain.hiVect () );           
-
-                compute_velocity_at_y_faces_eb(
-                   BL_TO_FORTRAN_BOX(vbx),
-                   BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*yslopes[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*areafrac[1])[mfi]),
-                   BL_TO_FORTRAN_ANYD(flags),
-                   bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                   &nghost, domain.loVect (), domain.hiVect () );
-
-                compute_velocity_at_z_faces_eb(
-                   BL_TO_FORTRAN_BOX(wbx),
-                   BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*areafrac[2])[mfi]),
-                   BL_TO_FORTRAN_ANYD(flags),
-                   bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                   &nghost, domain.loVect (), domain.hiVect () );
-             }
-          }
-       }
+          } // Cut cells
+       } // MFIter
     }   // end loop over levels
 
     // Note that we will call set_velocity_bcs in mac_projection so we don't need to call it here
