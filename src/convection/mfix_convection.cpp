@@ -289,7 +289,6 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
                    BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
                    BL_TO_FORTRAN_ANYD((*xslopes[lev])[mfi]),
                    BL_TO_FORTRAN_ANYD((*areafrac[0])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*facecent[0])[mfi]),
                    BL_TO_FORTRAN_ANYD(flags),
                    bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                    &nghost, domain.loVect (), domain.hiVect () );           
@@ -300,7 +299,6 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
                    BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
                    BL_TO_FORTRAN_ANYD((*yslopes[lev])[mfi]),
                    BL_TO_FORTRAN_ANYD((*areafrac[1])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*facecent[1])[mfi]),
                    BL_TO_FORTRAN_ANYD(flags),
                    bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                    &nghost, domain.loVect (), domain.hiVect () );
@@ -311,7 +309,6 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
                    BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
                    BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
                    BL_TO_FORTRAN_ANYD((*areafrac[2])[mfi]),
-                   BL_TO_FORTRAN_ANYD((*facecent[2])[mfi]),
                    BL_TO_FORTRAN_ANYD(flags),
                    bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                    &nghost, domain.loVect (), domain.hiVect () );
@@ -319,6 +316,9 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
           }
        }
     }   // end loop over levels
+
+    // Note that we will call set_velocity_bcs in mac_projection so we don't need to call it here
+    // set_velocity_bcs( lev, m_u_mac, m_v_mac, m_w_mac, time );
 
     // Do projection on all AMR levels in one shot 
     mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, time, steady_state );

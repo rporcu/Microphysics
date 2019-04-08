@@ -77,7 +77,6 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
 
             case ( minf_)
 
-
                u_g(ulo(1):domlo(1)  ,j,k) = bc_u_g(bcv)
                v_g(vlo(1):domlo(1)-1,j,k) = 0.0d0
                w_g(wlo(1):domlo(1)-1,j,k) = 0.0d0
@@ -105,7 +104,6 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
 
             case ( minf_ )
                
-
                u_g(domhi(1)+1:uhi(1),j,k) = bc_u_g(bcv)
                v_g(domhi(1)+1:vhi(1),j,k) = 0.0d0
                w_g(domhi(1)+1:whi(1),j,k) = 0.0d0

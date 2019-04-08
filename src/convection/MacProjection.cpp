@@ -393,21 +393,21 @@ MacProjection::compute_b_coeff ( const Vector< std::unique_ptr<MultiFab> >& ep,
           {
               // X-faces
               betax_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i-1,j,k) ) /
-                  ( den_fab(i,j,k) + den_fab(i-1,j,k) );
+                                 ( den_fab(i,j,k) + den_fab(i-1,j,k) );
           });
 
           AMREX_CUDA_HOST_DEVICE_FOR_3D(vbx, i, j, k,
           {
               // Y-faces
               betay_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i,j-1,k) ) /
-                  ( den_fab(i,j,k) + den_fab(i,j-1,k) );
+                                 ( den_fab(i,j,k) + den_fab(i,j-1,k) );
           });
 
           AMREX_CUDA_HOST_DEVICE_FOR_3D(wbx, i, j, k,
           {
               // Z-faces
               betaz_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i,j,k-1) ) /
-                  ( den_fab(i,j,k) + den_fab(i,j,k-1) );
+                                 ( den_fab(i,j,k) + den_fab(i,j,k-1) );
           });
       }
    }
