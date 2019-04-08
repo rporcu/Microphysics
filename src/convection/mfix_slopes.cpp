@@ -87,15 +87,6 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                const auto&  zs_fab  = zslopes[lev]->array(mfi);
                const auto& flag_fab =         flags.array();
                
-               Real my_huge = 1.e100;
-
-               const auto&  ilo_ifab  = bc_ilo[lev]->array();
-               const auto&  ihi_ifab  = bc_ihi[lev]->array();
-               const auto&  jlo_ifab  = bc_jlo[lev]->array();
-               const auto&  jhi_ifab  = bc_jhi[lev]->array();
-               const auto&  klo_ifab  = bc_klo[lev]->array();
-               const auto&  khi_ifab  = bc_khi[lev]->array();
-               
                int ncomp = Sborder.nComp();
 
                AMREX_CUDA_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
@@ -141,75 +132,96 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                        zslope          = (du_zr*du_zl > 0.0) ? zslope : 0.0;
                        zs_fab(i,j,k,n) = (du_zc       > 0.0) ? zslope : -zslope;
 
-                       // TODO -- do we have domain and ilo_fab, etc on GPU???
-                       // TODO -- we need to use "MINF" from the Fortran, not hard-wire this to 20
-                       if ( (i == domain.loVect()[0]) && !flag_fab(i,j,k).isCovered() && ilo_ifab(0,j,k,0) == 20) 
-                       {
-                           du_xl = 2.0*(vel_fab(i  ,j,k,n) - vel_fab(i-1,j,k,n));
-                           du_xr = 2.0*(vel_fab(i+1,j,k,n) - vel_fab(i  ,j,k,n));
-                           du_xc = (vel_fab(i+1,j,k,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i-1,j,k,n))/3.0;
-
-                           Real xslope = amrex::min(std::abs(du_xl),std::abs(du_xc),std::abs(du_xr));
-                           xslope          = (du_xr*du_xl > 0.0) ? xslope : 0.0;
-                           xs_fab(i,j,k,n) = (du_xc       > 0.0) ? xslope : -xslope;
-                       }
-                       if ( (i == domain.hiVect()[0]) && !flag_fab(i,j,k).isCovered() && ihi_ifab(0,j,k,0) == 20) 
-                       {
-                           du_xl = 2.0*(vel_fab(i  ,j,k,n) - vel_fab(i-1,j,k,n));
-                           du_xr = 2.0*(vel_fab(i+1,j,k,n) - vel_fab(i  ,j,k,n));
-                           du_xc = -(vel_fab(i-1,j,k,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i+1,j,k,n))/3.0;
-
-                           xslope = amrex::min(std::abs(du_xl),std::abs(du_xc),std::abs(du_xr));
-                           xslope          = (du_xr*du_xl > 0.0) ? xslope : 0.0;
-                           xs_fab(i,j,k,n) = (du_xc       > 0.0) ? xslope : -xslope;
-                       }
-
-                       if ( (j == domain.loVect()[1]) && !flag_fab(i,j,k).isCovered() && jlo_ifab(i,0,k,0) == 20) 
-                       {
-                           du_yl = 2.0*(vel_fab(i,j  ,k,n) - vel_fab(i,j-1,k,n));
-                           du_yr = 2.0*(vel_fab(i,j+1,k,n) - vel_fab(i,j  ,k,n));
-                           du_yc = (vel_fab(i,j+1,k,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i,j-1,k,n))/3.0;
-
-                           yslope = amrex::min(std::abs(du_yl),std::abs(du_yc),std::abs(du_yr));
-                           yslope          = (du_yr*du_yl > 0.0) ? yslope : 0.0;
-                           ys_fab(i,j,k,n) = (du_yc       > 0.0) ? yslope : -yslope;
-                       }
-                       if ( (j == domain.hiVect()[1]) && !flag_fab(i,j,k).isCovered() && jhi_ifab(i,0,k,0) == 20) 
-                       {
-                           du_yl = 2.0*(vel_fab(i,j  ,k,n) - vel_fab(i,j-1,k,n));
-                           du_yr = 2.0*(vel_fab(i,j+1,k,n) - vel_fab(i,j  ,k,n));
-                           du_yc = -(vel_fab(i,j-1,k,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i,j+1,k,n))/3.0;
-
-                           yslope = amrex::min(std::abs(du_yl),std::abs(du_yc),std::abs(du_yr));
-                           yslope          = (du_yr*du_yl > 0.0) ? yslope : 0.0;
-                           ys_fab(i,j,k,n) = (du_yc       > 0.0) ? yslope : -yslope;
-                       }
-
-                       if ( (k == domain.loVect()[2]) && !flag_fab(i,j,k).isCovered() && klo_ifab(i,j,0,0) == 20) 
-                       {
-                           du_zl = 2.0*(vel_fab(i,j,k  ,n) - vel_fab(i,j,k-1,n));
-                           du_zr = 2.0*(vel_fab(i,j,k+1,n) - vel_fab(i,j,k  ,n));
-                           du_zc = (vel_fab(i,j,k+1,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i,j,k-1,n))/3.0;
-
-                           zslope = amrex::min(std::abs(du_zl),std::abs(du_zc),std::abs(du_zr));
-                           zslope          = (du_zr*du_zl > 0.0) ? zslope : 0.0;
-                           zs_fab(i,j,k,n) = (du_zc       > 0.0) ? zslope : -zslope;
-                       }
-                       if ( (k == domain.hiVect()[2]) && !flag_fab(i,j,k).isCovered() && khi_ifab(i,j,0,0) == 20) 
-                       {
-                           du_zl = 2.0*(vel_fab(i,j,k  ,n) - vel_fab(i,j,k-1,n));
-                           du_zr = 2.0*(vel_fab(i,j,k+1,n) - vel_fab(i,j,k  ,n));
-                           du_zc = -(vel_fab(i,j,k-1,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i,j,k+1,n))/3.0;
-
-                           zslope = amrex::min(std::abs(du_zl),std::abs(du_zc),std::abs(du_zr));
-                           zslope          = (du_zr*du_zl > 0.0) ? zslope : 0.0;
-                           zs_fab(i,j,k,n) = (du_zc       > 0.0) ? zslope : -zslope;
-                       }
                    }
                });
-           }
-       }
-    }
+           } // end of cut cell region
+
+           // TODO -- do we have domain and ilo_fab, etc on GPU???
+           // TODO -- we need to use "MINF" from the Fortran, not hard-wire this to 20
+
+           const auto& vel_fab  =      Sborder.array(mfi);
+           const auto&  xs_fab  = xslopes[lev]->array(mfi);
+           const auto&  ys_fab  = yslopes[lev]->array(mfi);
+           const auto&  zs_fab  = zslopes[lev]->array(mfi);
+           const auto& flag_fab =         flags.array();
+
+           const auto&  ilo_ifab  = bc_ilo[lev]->array();
+           const auto&  ihi_ifab  = bc_ihi[lev]->array();
+           const auto&  jlo_ifab  = bc_jlo[lev]->array();
+           const auto&  jhi_ifab  = bc_jhi[lev]->array();
+           const auto&  klo_ifab  = bc_klo[lev]->array();
+           const auto&  khi_ifab  = bc_khi[lev]->array();
+           
+           int ncomp = Sborder.nComp();
+
+           AMREX_CUDA_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
+           {
+               if ( (i == domain.loVect()[0]) && !flag_fab(i,j,k).isCovered() && ilo_ifab(0,j,k,0) == 20) 
+               {
+                   Real du_xl = 2.0*(vel_fab(i  ,j,k,n) - vel_fab(i-1,j,k,n));
+                   Real du_xr = 2.0*(vel_fab(i+1,j,k,n) - vel_fab(i  ,j,k,n));
+                   Real du_xc = (vel_fab(i+1,j,k,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i-1,j,k,n))/3.0;
+    
+                   Real xslope = amrex::min(std::abs(du_xl),std::abs(du_xc),std::abs(du_xr));
+                   xslope          = (du_xr*du_xl > 0.0) ? xslope : 0.0;
+                   xs_fab(i,j,k,n) = (du_xc       > 0.0) ? xslope : -xslope;
+               }
+               if ( (i == domain.hiVect()[0]) && !flag_fab(i,j,k).isCovered() && ihi_ifab(0,j,k,0) == 20) 
+               {
+                   Real du_xl = 2.0*(vel_fab(i  ,j,k,n) - vel_fab(i-1,j,k,n));
+                   Real du_xr = 2.0*(vel_fab(i+1,j,k,n) - vel_fab(i  ,j,k,n));
+                   Real du_xc = -(vel_fab(i-1,j,k,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i+1,j,k,n))/3.0;
+    
+                   Real xslope = amrex::min(std::abs(du_xl),std::abs(du_xc),std::abs(du_xr));
+                   xslope          = (du_xr*du_xl > 0.0) ? xslope : 0.0;
+                   xs_fab(i,j,k,n) = (du_xc       > 0.0) ? xslope : -xslope;
+               }
+
+               if ( (j == domain.loVect()[1]) && !flag_fab(i,j,k).isCovered() && jlo_ifab(i,0,k,0) == 20) 
+               {
+                   Real du_yl = 2.0*(vel_fab(i,j  ,k,n) - vel_fab(i,j-1,k,n));
+                   Real du_yr = 2.0*(vel_fab(i,j+1,k,n) - vel_fab(i,j  ,k,n));
+                   Real du_yc = (vel_fab(i,j+1,k,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i,j-1,k,n))/3.0;
+                   // std::cout << "UPDATING " << i << " " << j << " " << k << std::endl;
+
+                   Real yslope = amrex::min(std::abs(du_yl),std::abs(du_yc),std::abs(du_yr));
+                   yslope          = (du_yr*du_yl > 0.0) ? yslope : 0.0;
+                   ys_fab(i,j,k,n) = (du_yc       > 0.0) ? yslope : -yslope;
+               }
+               if ( (j == domain.hiVect()[1]) && !flag_fab(i,j,k).isCovered() && jhi_ifab(i,0,k,0) == 20) 
+               {
+                   Real du_yl = 2.0*(vel_fab(i,j  ,k,n) - vel_fab(i,j-1,k,n));
+                   Real du_yr = 2.0*(vel_fab(i,j+1,k,n) - vel_fab(i,j  ,k,n));
+                   Real du_yc = -(vel_fab(i,j-1,k,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i,j+1,k,n))/3.0;
+
+                   Real yslope = amrex::min(std::abs(du_yl),std::abs(du_yc),std::abs(du_yr));
+                   yslope          = (du_yr*du_yl > 0.0) ? yslope : 0.0;
+                   ys_fab(i,j,k,n) = (du_yc       > 0.0) ? yslope : -yslope;
+               }
+
+               if ( (k == domain.loVect()[2]) && !flag_fab(i,j,k).isCovered() && klo_ifab(i,j,0,0) == 20) 
+               {
+                   Real du_zl = 2.0*(vel_fab(i,j,k  ,n) - vel_fab(i,j,k-1,n));
+                   Real du_zr = 2.0*(vel_fab(i,j,k+1,n) - vel_fab(i,j,k  ,n));
+                   Real du_zc = (vel_fab(i,j,k+1,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i,j,k-1,n))/3.0;
+    
+                   Real zslope = amrex::min(std::abs(du_zl),std::abs(du_zc),std::abs(du_zr));
+                   zslope          = (du_zr*du_zl > 0.0) ? zslope : 0.0;
+                   zs_fab(i,j,k,n) = (du_zc       > 0.0) ? zslope : -zslope;
+               }
+               if ( (k == domain.hiVect()[2]) && !flag_fab(i,j,k).isCovered() && khi_ifab(i,j,0,0) == 20) 
+               {
+                   Real du_zl = 2.0*(vel_fab(i,j,k  ,n) - vel_fab(i,j,k-1,n));
+                   Real du_zr = 2.0*(vel_fab(i,j,k+1,n) - vel_fab(i,j,k  ,n));
+                   Real du_zc = -(vel_fab(i,j,k-1,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i,j,k+1,n))/3.0;
+    
+                   Real zslope = amrex::min(std::abs(du_zl),std::abs(du_zc),std::abs(du_zr));
+                   zslope          = (du_zr*du_zl > 0.0) ? zslope : 0.0;
+                   zs_fab(i,j,k,n) = (du_zc       > 0.0) ? zslope : -zslope;
+               }
+           });
+        } // not covered
+    } // MFIter
     
     xslopes[lev] -> FillBoundary(geom[lev].periodicity());
     yslopes[lev] -> FillBoundary(geom[lev].periodicity());
