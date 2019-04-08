@@ -142,6 +142,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                        zs_fab(i,j,k,n) = (du_zc       > 0.0) ? zslope : -zslope;
 
                        // TODO -- do we have domain and ilo_fab, etc on GPU???
+                       // TODO -- we need to use "MINF" from the Fortran, not hard-wire this to 20
                        if ( (i == domain.loVect()[0]) && !flag_fab(i,j,k).isCovered() && ilo_ifab(0,j,k,0) == 20) 
                        {
                            du_xl = 2.0*(vel_fab(i  ,j,k,n) - vel_fab(i-1,j,k,n));
