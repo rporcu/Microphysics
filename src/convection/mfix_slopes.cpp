@@ -182,7 +182,6 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                    Real du_yl = 2.0*(vel_fab(i,j  ,k,n) - vel_fab(i,j-1,k,n));
                    Real du_yr = 2.0*(vel_fab(i,j+1,k,n) - vel_fab(i,j  ,k,n));
                    Real du_yc = (vel_fab(i,j+1,k,n)+3.0*vel_fab(i,j,k,n)-4.0*vel_fab(i,j-1,k,n))/3.0;
-                   // std::cout << "UPDATING " << i << " " << j << " " << k << std::endl;
 
                    Real yslope = amrex::min(std::abs(du_yl),std::abs(du_yc),std::abs(du_yr));
                    yslope          = (du_yr*du_yl > 0.0) ? yslope : 0.0;
