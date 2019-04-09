@@ -22,6 +22,7 @@ variables:
   tags:
     - docker
   script:
+    - git -C subprojects/amrex submodule update --init
     - AMREX_SHA=$(grep 'set\s*(\s*AMREX_GIT_COMMIT_DEVELOP' tools/CMake/MFIX_Superbuild.cmake | awk '{print $3}')
     - git -C subprojects/amrex checkout $AMREX_SHA
     - cmake -S subprojects/amrex
@@ -72,6 +73,8 @@ build-openmp:
     - cd build
     - ctest -R $TEST_REGEX
   allow_failure: true
+  only:
+    - develop
   tags:
     - docker
 
