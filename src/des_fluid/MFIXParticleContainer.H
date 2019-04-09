@@ -156,8 +156,7 @@ public:
     ///
     /// Calculate particle-induced drag on the fluid
     ///
-    void CalcDragOnFluid(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
-                         const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+    void CalcDragOnFluid(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
                          const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
@@ -170,8 +169,7 @@ public:
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-    void PICMultiDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
-                            const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+    void PICMultiDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
                             const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,

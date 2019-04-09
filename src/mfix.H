@@ -388,8 +388,8 @@ private:
      Real mfix_norm1 ( MultiFab& mf, int lev, int comp );
      Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
      Real mfix_norm0 ( MultiFab& mf, int lev, int comp );
-     Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf1, 
-                       const Vector< std::unique_ptr<MultiFab>>& mf2, 
+     Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf1,
+                       const Vector< std::unique_ptr<MultiFab>>& mf2,
                        int lev, int comp1, int comp2 );
      Real mfix_norm0 ( MultiFab& mf1, MultiFab& mf2, int lev, int comp1, int comp2 );
 
@@ -452,7 +452,6 @@ private:
      Vector< std::unique_ptr<MultiFab> > vort;
 
      Vector< std::unique_ptr<MultiFab> > drag;
-     Vector< std::unique_ptr<MultiFab> > f_gds;
 
      // Level-Set Data => used for particle-wall collisions and fluid
      // reconstruction in particle drag calculation. NOTE: this has at least 2
@@ -536,7 +535,7 @@ private:
      // Linear operator
      std::unique_ptr<MLNodeLaplacian> nodal_matrix;
 
-     // Solver 
+     // Solver
      std::unique_ptr<MLMG> nodal_solver;
 
      // ***************************************************************
@@ -562,7 +561,7 @@ private:
      // Diffusion solve
      // ***************************************************************
 
-     // Verbosity 
+     // Verbosity
      int  diff_mg_verbose = 0;
      int  diff_mg_cg_verbose = 0;
 

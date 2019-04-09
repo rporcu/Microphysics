@@ -936,8 +936,7 @@ CalcVolumeFraction(const Vector<std::unique_ptr<MultiFab>> & mf_to_be_filled,
 }
 
 void MFIXParticleContainer::
-CalcDragOnFluid(const Vector<std::unique_ptr<MultiFab>> & beta_mf,
-                const Vector<std::unique_ptr<MultiFab>> & beta_vel_mf,
+CalcDragOnFluid(const Vector<std::unique_ptr<MultiFab>> & drag_mf,
                 const Vector<std::unique_ptr<EBFArrayBoxFactory>> & ebfactory,
                 const Vector<std::unique_ptr<IArrayBox>> & bc_ilo,
                 const Vector<std::unique_ptr<IArrayBox>> & bc_ihi,
@@ -949,7 +948,7 @@ CalcDragOnFluid(const Vector<std::unique_ptr<MultiFab>> & beta_mf,
 {
     int fortran_beta_comp = 15;
     int fortran_vel_comp  =  9;
-    PICMultiDeposition(beta_mf, beta_vel_mf, ebfactory,
+    PICMultiDeposition(drag_mf, ebfactory,
                        bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi,
                        fortran_beta_comp, fortran_vel_comp, nghost);
 }
@@ -1211,8 +1210,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
 }
 
 void MFIXParticleContainer::
-PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
-                   const amrex::Vector< std::unique_ptr<MultiFab> >& beta_vel_mf,
+PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
                    const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory>  >& ebfactory,
                    const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
                    const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
@@ -1229,44 +1227,35 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
     if (nlev > 2)
         amrex::Abort("For right now MFIXParticleContainer::PICMultiDeposition can only handle up to 2 levels");
 
-    for (int lev = 0; lev < nlev; lev++)
-        AMREX_ASSERT(OnSameGrids(lev,*beta_mf[lev])==OnSameGrids(lev,*beta_vel_mf[lev]));
-
-    MultiFab*  beta_ptr[nlev];
-    MultiFab*  beta_vel_ptr[nlev];
+    MultiFab*  drag_ptr[nlev];
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       if (lev == 0 && OnSameGrids(lev, *beta_mf[lev])) {
+       if (lev == 0 && OnSameGrids(lev, *drag_mf[lev])) {
           // If we are already working with the internal mf defined on the
           // particle_box_array, then we just work with this.
-              beta_ptr[lev] = beta_mf[lev].get();
-          beta_vel_ptr[lev] = beta_vel_mf[lev].get();
+          drag_ptr[lev] = drag_mf[lev].get();
 
-       } else if (lev == 0 && !OnSameGrids(lev, *beta_mf[lev]))  {
+       } else if (lev == 0 && !OnSameGrids(lev, *drag_mf[lev]))  {
           // If beta_mf is not defined on the particle_box_array, then we need
           // to make a temporary here and copy into beta_mf at the end.
-          beta_ptr[lev]     = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                                           beta_mf[lev]->nComp(), beta_mf[lev]->nGrow());
-          beta_vel_ptr[lev] = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                                           beta_vel_mf[lev]->nComp(), beta_vel_mf[lev]->nGrow());
+          drag_ptr[lev] = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                                       drag_mf[lev]->nComp(), drag_mf[lev]->nGrow());
 
        } else {
           // If lev > 0 we make a temporary at the coarse resolution
           BoxArray ba_crse(amrex::coarsen(ParticleBoxArray(lev),this->m_gdb->refRatio(0)));
-              beta_ptr[lev] = new MultiFab(ba_crse, ParticleDistributionMap(lev),beta_mf[lev]->nComp()    ,1);
-          beta_vel_ptr[lev] = new MultiFab(ba_crse, ParticleDistributionMap(lev),beta_vel_mf[lev]->nComp(),1);
+          drag_ptr[lev] = new MultiFab(ba_crse, ParticleDistributionMap(lev),drag_mf[lev]->nComp(),1);
        }
 
        // We must have ghost cells for each FAB so that a particle in one grid can spread
        // its effect to an adjacent grid by first putting the value into ghost cells of its
        // own grid.  The mf->sumBoundary call then adds the value from one grid's ghost cell
        // to another grid's valid region.
-       if (beta_ptr[lev]->nGrow() < 1)
+       if (drag_ptr[lev]->nGrow() < 1)
           amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
-           beta_ptr[lev]->setVal(0.0,0,1,    beta_ptr[lev]->nGrow());
-       beta_vel_ptr[lev]->setVal(0.0,0,3,beta_vel_ptr[lev]->nGrow());
+       drag_ptr[lev]->setVal(0.0,0,4,drag_ptr[lev]->nGrow());
     }
 
     // We always use the coarse dx
@@ -1288,7 +1277,7 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
         } else {
            // std::unique_ptr<EBFArrayBoxFactory>
            crse_factory = makeEBFabFactory(
-                  gm, beta_ptr[lev]->boxArray(), beta_ptr[lev]->DistributionMap(),
+                  gm, drag_ptr[lev]->boxArray(), drag_ptr[lev]->DistributionMap(),
                   ngrow, EBSupport::volume);
            flags   = &(crse_factory->getMultiEBCellFlagFab());
         }
@@ -1313,8 +1302,7 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
             int nstride = particles.dataShape().first;
             const long nrp = pti.numParticles();
 
-            FArrayBox& beta_fab = (*beta_ptr[lev])[pti];
-            FArrayBox& beta_vel_fab = (*beta_vel_ptr[lev])[pti];
+            FArrayBox& drag_fab = (*drag_ptr[lev])[pti];
 
 #ifdef _OPENMP
             // Note that we actually grow the tilebox rather than calling growntilebox
@@ -1322,23 +1310,19 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
             Box grown_tilebox = pti.tilebox();
             grown_tilebox.grow(1);
 
-            int ncomp = BL_SPACEDIM;
-            local_x_vol.resize(grown_tilebox,1);
-            local_u_vol.resize(grown_tilebox,ncomp);
+            int ncomp = 4;
+            local_vol.resize(grown_tilebox,ncomp);
 
-            local_x_vol = 0.0;
-            local_u_vol = 0.0;
+            local_vol = 0.0;
 
-            bx_dataptr = local_x_vol.dataPtr();
-            bu_dataptr = local_u_vol.dataPtr();
+            bu_dataptr = local_vol.dataPtr();
 
             lo = grown_tilebox.loVect();
             hi = grown_tilebox.hiVect();
 #else
-            bx_dataptr = beta_fab.dataPtr();
-            bu_dataptr = beta_vel_fab.dataPtr();
+            bx_dataptr = drag_fab.dataPtr();
 
-            const Box& bx  = beta_fab.box();
+            const Box& bx  = drag_fab.box();
 
             lo = bx.loVect();
             hi = bx.hiVect();
@@ -1347,8 +1331,7 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
 
             if ((*flags)[pti].getType(box) != FabType::covered )
             {
-                auto beta_arr = beta_fab.array();
-                auto beta_vel_arr = beta_vel_fab.array();
+                auto drag_arr = drag_fab.array();
                 auto flagsarr = (*flags)[pti].array();
                 auto vratioarr = (*volfrac)[pti].array();
 
@@ -1410,10 +1393,10 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
                                 amrex::Real this_cell_vol = vratioarr(i+ii,j+jj,k+kk) * reg_cell_vol;
                                 amrex::Real weight_vol = weights[ii+1][jj+1][kk+1]/this_cell_vol;
 
-                                amrex::Gpu::Atomic::Add(&beta_arr(i+ii,j+jj,k+kk), weight_vol*pbeta);
-                                amrex::Gpu::Atomic::Add(&beta_vel_arr(i+ii,j+jj,k+kk,0),weight_vol*pvx);
-                                amrex::Gpu::Atomic::Add(&beta_vel_arr(i+ii,j+jj,k+kk,1),weight_vol*pvy);
-                                amrex::Gpu::Atomic::Add(&beta_vel_arr(i+ii,j+jj,k+kk,2),weight_vol*pvz);
+                                amrex::Gpu::Atomic::Add(&drag_arr(i+ii,j+jj,k+kk,0),weight_vol*pvx);
+                                amrex::Gpu::Atomic::Add(&drag_arr(i+ii,j+jj,k+kk,1),weight_vol*pvy);
+                                amrex::Gpu::Atomic::Add(&drag_arr(i+ii,j+jj,k+kk,2),weight_vol*pvz);
+                                amrex::Gpu::Atomic::Add(&drag_arr(i+ii,j+jj,k+kk,3),weight_vol*pbeta);
                             }
                         }
                     }
@@ -1421,10 +1404,8 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
             }
 
 #ifdef _OPENMP
-            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_x_vol),
-                                        BL_TO_FORTRAN_3D(beta_fab), beta_fab.nComp());
-            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_u_vol),
-                                        BL_TO_FORTRAN_3D(beta_vel_fab), beta_vel_fab.nComp());
+            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
+                                        BL_TO_FORTRAN_3D(drag_fab), drag_fab.nComp());
 #endif
 
          }
@@ -1435,12 +1416,10 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
     int dest_nghost = 0;
     for (int lev = 1; lev < nlev; lev++)
     {
-            beta_ptr[0]->copy(    *beta_ptr[lev],0,0,beta_ptr[0]->nComp()    ,src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
-        beta_vel_ptr[0]->copy(*beta_vel_ptr[lev],0,0,beta_vel_ptr[0]->nComp(),src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
+        drag_ptr[0]->copy(*drag_ptr[lev],0,0,drag_ptr[0]->nComp(),src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
     }
 
-    beta_ptr[0]->SumBoundary(gm.periodicity());
-    beta_vel_ptr[0]->SumBoundary(gm.periodicity());
+    drag_ptr[0]->SumBoundary(gm.periodicity());
 
     if (nlev > 1)
     {
@@ -1459,14 +1438,8 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
         {
             PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
             PhysBCFunct<BndryFuncArray> fphysbc(Geom(lev  ), bcs, bfunc);
-                beta_mf[lev]->setVal(0.0);
-            beta_vel_mf[lev]->setVal(0.0);
-            amrex::InterpFromCoarseLevel(*beta_mf[lev], time, *beta_ptr[lev-1],
-                                         0, 0, 1, Geom(lev-1), Geom(lev),
-                                         cphysbc, 0, fphysbc, 0,
-                                         ref_ratio, mapper,
-                                         bcs, 0);
-            amrex::InterpFromCoarseLevel(*beta_vel_mf[lev], time, *beta_vel_ptr[lev-1],
+            drag_mf[lev]->setVal(0.0);
+            amrex::InterpFromCoarseLevel(*drag_mf[lev], time, *drag_ptr[lev-1],
                                          0, 0, 1, Geom(lev-1), Geom(lev),
                                          cphysbc, 0, fphysbc, 0,
                                          ref_ratio, mapper,
@@ -1478,18 +1451,15 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
     // to copy here from mf_pointer into mf_to_be_filled. I believe that we don't
     // need any information in ghost cells so we don't copy those.
 
-    if (beta_ptr[0] != beta_mf[0].get())
+    if (drag_ptr[0] != drag_mf[0].get())
     {
-           beta_mf[0]->copy(    *beta_ptr[0],0,0,beta_mf[0]->nComp());
-       beta_vel_mf[0]->copy(*beta_vel_ptr[0],0,0,beta_vel_mf[0]->nComp());
+       drag_mf[0]->copy(*drag_ptr[0],0,0,drag_mf[0]->nComp());
     }
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       if (beta_ptr[lev] != beta_mf[lev].get())
-          delete beta_ptr[lev];
-       if (beta_vel_ptr[lev] != beta_vel_mf[lev].get())
-          delete beta_vel_ptr[lev];
+       if (drag_ptr[lev] != drag_mf[lev].get())
+          delete drag_ptr[lev];
     }
 
     if (m_verbose > 1) {

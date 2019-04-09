@@ -64,14 +64,10 @@ mfix::AllocateArrays (int lev)
     vort[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
     vort[lev]->setVal(0.);
 
-    // This is the deposition onto the grid of the beta coefficient
-    // for fluid vel in the expression beta*(fluid_vel _ particle_vel)
-    // Note this only needs one component since all velocity components are co-located
-    f_gds[lev].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    f_gds[lev]->setVal(0.);
-
-    // This is the deposition onto the grid of the drag term experienced by the particle
-    drag[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
+    // This is the deposition of the drag force onto the grid
+    // 0,1,2 is (drag coefficient * particle velocity)
+    // 4 is drag coefficient
+    drag[lev].reset(new  MultiFab(grids[lev],dmap[lev],4,nghost, MFInfo(), *ebfactory[lev]));
     drag[lev]->setVal(0.);
 
     // Arrays to store the solution and rhs for the diffusion solve
@@ -252,13 +248,6 @@ mfix::RegridArrays (int lev)
     std::unique_ptr<MultiFab> vort_new(new MultiFab(grids[lev],dmap[lev],1,ng, MFInfo(), *ebfactory[lev]));
     vort[lev] = std::move(vort_new);
     vort[lev]->setVal(0.);
-
-    // Coefficient in drag
-    ng = f_gds[lev]->nGrow();
-    std::unique_ptr<MultiFab> f_gds_new(new MultiFab(grids[lev],dmap[lev],f_gds[lev]->nComp(),ng,
-                                                     MFInfo(), *ebfactory[lev]));
-    f_gds[lev] = std::move(f_gds_new);
-    f_gds[lev]->setVal(0.);
 
     // Particle/fluid drag
     ng = drag[lev]->nGrow();

@@ -232,7 +232,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
 //
-//     vel_g = (vel_g + drag_u/(ro_g*ep_g) / ( 1 + dt * f_gds/(ro_g*ep_g)
+//     drag_coeff = drag(3)
+//     drag_coeff*velp = drag(0:2)
+//
+//     vel_g = (vel_g + (drag_coeff*velp)/(ro_g*ep_g) / ( 1 + dt * drag_coeff/(ro_g*ep_g)
 //
 //  4. Solve for phi
 //
@@ -305,7 +308,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
 //
-//     vel_g = (vel_g + drag_u/(ro_g*ep_g) / ( 1 + dt * f_gds/(ro_g*ep_g)
+//     vel_g = (vel_g + (drag_coeff*velp)/(ro_g*ep_g) / ( 1 + dt * drag_coeff/(ro_g*ep_g)
 //
 //  4. Solve for phi
 //
@@ -380,7 +383,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 }
 
 void
-mfix::mfix_add_gravity_and_gp (Real dt) 
+mfix::mfix_add_gravity_and_gp (Real dt)
 {
     BL_PROFILE("mfix::mfix_add_gravity_and_gp");
     for (int lev = 0; lev < nlev; lev++)
@@ -401,7 +404,7 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          const auto grav_loc = gravity;
          const auto  gp0_loc = gp0;
 
-         AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k, 
+         AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
          {
              Real inv_dens = 1.0 / den_fab(i,j,k);
              vel_fab(i,j,k,0) += dt * ( grav_loc[0]-(gp_fab(i,j,k,0)+gp0_loc[0])*inv_dens );
@@ -422,11 +425,8 @@ mfix::mfix_add_drag_terms (Real dt)
 {
   /*
      This adds both components of the drag term
-     Here f_gds = beta
-          drag  = beta * particle_velocity
-    
      So the drag term we add is beta * (particle_velocity - fluid_velocity)
-                              = drag - f_gds * fluid_velocity
+                              = dra(0:2) - drag(3) * fluid_velocity
   */
 
   BL_PROFILE("mfix::mfix_add_drag");
@@ -443,15 +443,14 @@ mfix::mfix_add_drag_terms (Real dt)
 
       const auto&  vel_fab = vel_g[lev]->array(mfi);
       const auto& drag_fab =  drag[lev]->array(mfi);
-      const auto& fgds_fab = f_gds[lev]->array(mfi);
       const auto&   ro_fab =  ro_g[lev]->array(mfi);
       const auto&   ep_fab =  ep_g[lev]->array(mfi);
 
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k, 
+      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
           Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
-          Real denom = 1.0 / (1.0 + fgds_fab(i,j,k) * orop);
-          
+          Real denom = 1.0 / (1.0 + drag_fab(i,j,k,3) * orop);
+
           vel_fab(i,j,k,0) = (vel_fab(i,j,k,0) + drag_fab(i,j,k,0) * orop) * denom;
           vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + drag_fab(i,j,k,1) * orop) * denom;
           vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;
