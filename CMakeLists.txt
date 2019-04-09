@@ -21,9 +21,26 @@ endif ()
 #
 # Now decide if invoking superbuild. If so, this listfile will be
 # re-read by the MFIX_Superbuild.cmake
+# Also add targets to clean sub-projects
 #
 if ( SUPERBUILD )
-   include ( MFIX_Superbuild )
+   include( MFIX_Superbuild )
+
+   add_custom_target(clean_mfix
+      COMMAND make clean
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/mfix
+      COMMENT "Cleaning mfix"
+      )
+   
+   add_custom_target(clean_amrex
+      COMMAND cd builddir && make clean
+      COMMAND rm -rf installdir/*
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/amrex
+      COMMENT "Cleaning amrex"
+      )
+
+   add_custom_target(realclean)
+   add_dependencies(realclean clean_mfix clean_amrex)
    return ()
 endif ()
 
