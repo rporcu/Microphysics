@@ -10,7 +10,6 @@ if [ -n "$1" ]; then
 fi
 
 if [ -n "$2" ]; then
-    FCOMPARE=$2/plt_compare_diff_grids
     FJOIN_PAR=$2/fjoin_par
 fi
 
@@ -29,8 +28,6 @@ if [ "$ENABLE_MPI" -eq "1" ]; then
 else
     MPIRUN=""
 fi
-
-FCOMPARE=${FCOMPARE:-}
 
 rm -rf ${RUN_NAME}* const_plt* POST_* &> /dev/null
 

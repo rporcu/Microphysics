@@ -1,5 +1,4 @@
 //
-// C++ version of fextract.f90.
 // This does not rely on FBaselib and is based on AmrDeriveLineValues.cpp
 //
 //  Author: Michele Rosso

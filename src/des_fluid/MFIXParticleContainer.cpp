@@ -455,10 +455,10 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             int size_ng = neighbors[lev][index].size();
             int size_nl = neighbor_list[lev][index].size();
 #endif
-            
+
             // Number of particles including neighbor particles
             int ntot = nrp + size_ng;
-            
+
             // Particle-particle (and particle-wall) forces and torques. We need
             // these to be zero every time we start a new batch (i.e tile and
             // substep) of particles.
@@ -466,10 +466,10 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             fc[index].clear();
             tow[index].resize(ntot*3,0.0);
             fc[index].resize(ntot*3,0.0);
-            
+
             Real* fc_ptr = fc[index].dataPtr();
             Real* tow_ptr = tow[index].dataPtr();
-            
+
             // For debugging: keep track of particle-particle (pfor) and
             // particle-wall (wfor) forces
             pfor[index].clear();
@@ -545,15 +545,15 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         vrel_t[2] = vreltrans[2] - vreltrans_norm*normal[2];
 
                         int phase = p.idata(intData::phase);
-                        
+
                         Real kn_des_w   = DEMParams::kn_w;
                         Real etan_des_w = DEMParams::etan_w[phase-1];
-                        
+
                         // NOTE - we don't use the tangential components right now,
                         // but we might in the future
                         // Real kt_des_w = DEMParams::kt_w;
                         // Real etat_des_w = DEMParams::etat_w[phase-1];
-                        
+
                         Real fn[3];
                         Real ft[3];
                         Real overlap_t[3];
@@ -663,12 +663,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                         Real kn_des = DEMParams::kn;
                         Real etan_des = DEMParams::etan[phase1-1][phase2-1];
-                        
+
                         // NOTE - we don't use the tangential components right now,
                         // but we might in the future
                         // Real kt_des = DEMParams::kt;
                         // Real etat_des = DEMParams::etat[phase1-1][phase2-1];
-                        
+
                         Real fn[3];
                         Real ft[3];
                         Real overlap_t[3];
@@ -809,7 +809,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          ***********************************************************************/
 
         if (debug_level > 0) ncoll_total += ncoll;
-       
+
         if (debug_level > 1) {
             ParallelDescriptor::ReduceIntSum(ncoll, ParallelDescriptor::IOProcessorNumber());
             Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
@@ -1525,36 +1525,6 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
 }
 
 void
-MFIXParticleContainer::writeAllForComparison(int lev)
-{
-  int Np_tot = 0;
-
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:Np_tot) if (Gpu::notInLaunchRegion())
-#endif
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-      Np_tot += pti.numParticles();
-
-  ParallelDescriptor::ReduceIntSum(Np_tot,ParallelDescriptor::IOProcessorNumber());
-
-  cout << Np_tot << std::endl;
-
-  // Not threaded because its print to terminal
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-  {
-      auto& particles = pti.GetArrayOfStructs();
-      int np = pti.numParticles();
-      Gpu::HostVector<ParticleType> host_particles(np);
-      Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
-
-      for (const auto& p: host_particles)
-         cout << p.pos(0)   << " " << p.pos(1)   << " " << p.pos(2) <<  " " <<
-                 p.rdata(1) << " " << p.rdata(2) << " " << p.rdata(2) <<  " " <<
-                 ParallelDescriptor::MyProc() << " " << p.id() << std::endl;
-  }
-}
-
-void
 MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
 {
     BL_ASSERT(!filename.empty());
@@ -1764,7 +1734,7 @@ void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Gpu::ManagedDev
                 max_pfor_y = std::max(Real(std::fabs(pfor[index][i])), max_pfor_y);
             for(int i = 2 * ntot; i < 3 * ntot; i++ )
                 max_pfor_z = std::max(Real(std::fabs(pfor[index][i])), max_pfor_z);
-            
+
             // Find max (abs) of particle-wall forces:
             for(int i = 0; i < ntot; i++ )
                 max_wfor_x = std::max(Real(std::fabs(wfor[index][i])), max_wfor_x);
