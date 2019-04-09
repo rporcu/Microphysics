@@ -186,6 +186,7 @@ void mfix::Init(Real dt, Real time)
 {
     if (ooo_debug) amrex::Print() << "Init" << std::endl;
     InitIOData();
+    InitIOPltData();
 
     // Note that finest_level = last level
     finest_level = nlev-1;
