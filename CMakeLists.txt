@@ -51,7 +51,7 @@ set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
 
 
 # Import AMReX. Do it here so it is visibile to all targets
-find_package (AMReX REQUIRED HINTS ${AMREX_INSTALL_DIR})
+find_package(AMReX 19.03.1.348 REQUIRED HINTS ${AMREX_INSTALL_DIR})
 echo_amrex_config_options ()
 list(APPEND CMAKE_MODULE_PATH ${AMREX_MODULES_PATH})
 
@@ -66,6 +66,10 @@ endif ()
 
 if (ENABLE_MPI AND (NOT AMREX_ENABLE_MPI) )
    message(FATAL_ERROR "Option ENABLE_MPI requires AMReX to be built with MPI support")
+endif ()
+
+if (ENABLE_HYPRE AND (NOT AMREX_ENABLE_HYPRE) )
+   message(FATAL_ERROR "Option ENABLE_HYPRE requires AMReX to be built with HYPRE support")
 endif ()
 
 if (ENABLE_CUDA AND (NOT AMREX_ENABLE_CUDA) )
