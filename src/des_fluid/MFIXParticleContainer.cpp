@@ -1294,7 +1294,7 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
         Real* bx_dataptr;
         Real* bu_dataptr;
 
-        FArrayBox local_x_vol, local_u_vol;
+        FArrayBox local_vol;
          for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
 
             const auto& particles = pti.GetArrayOfStructs();
