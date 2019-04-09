@@ -25,7 +25,7 @@ o __Using an existing AMReX Library:__  MFIX-Exa is linked to an
 
 ## SUPERBUILD Instructions (recommended)
 
-When building in __SUPERBUILD__ mode, MFIX-Exa build system will take 
+When building in __SUPERBUILD__ mode, MFIX-Exa build system will take
 care of downloading, configuring and installing AMReX as part of the
 MFIX-Exa build. The following commands build MFIX-Exa and AMReX in a single step.
 
@@ -43,7 +43,7 @@ to the AMReX github repository is required.
 The optional string `CONFIG_OPTIONS` allows to customize the build of both AMReX and MFIX-Exa.
 `CONFIG_OPTIONS` is a list of one or more configuration options given in the form
 __-D__*OPTION=VALUE*`.
- 
+
 The table below lists configuration options, possible values, and their effect on the build.
 Options prefixed by `AMREX_` are specific to the build of AMReX.
 
@@ -61,23 +61,23 @@ Options prefixed by `AMREX_` are specific to the build of AMReX.
 | AMREX_ENABLE_DP_PARTICLES    | Enable double precision in particles classes       |   0/1                        |   1                 |
 | AMREX_ENABLE_BASE_PROFILE    | Include profiling info                             |   0/1                        |   0                 |
 | AMREX_ENABLE_TINY_PROFILE    | Include tiny profiling info                        |   0/1                        |   0                 |
-| AMREX_ENABLE_COMM_PROFILE    | Include communicators profiling info               |   0/1                        |   0                 |               
-| AMREX_ENABLE_TRACE_PROFILE   | Include trace profiling info                       |   0/1                        |   0                 |              
+| AMREX_ENABLE_COMM_PROFILE    | Include communicators profiling info               |   0/1                        |   0                 |
+| AMREX_ENABLE_TRACE_PROFILE   | Include trace profiling info                       |   0/1                        |   0                 |
 | AMREX_ENABLE_MEM_PROFILE     | Include memory profiling info                      |   0/1                        |   0                 |
 | AMREX_ENABLE_BACKTRACE       | Include backtrace info                             |   0/1                        |   0                 |
 | AMREX_ENABLE_PROFPARSER      | Include profile parser                             |   0/1                        |   0                 |
-| AMREX_ENABLE_PIC             | Build position-independent code                    |   0/1                        |   0                 |              
+| AMREX_ENABLE_PIC             | Build position-independent code                    |   0/1                        |   0                 |
 | AMREX_ENABLE_ASSERTION       | Build position-independent code                    |   0/1                        |   0                 |
 | AMREX_GIT_COMMIT             | AMReX commit to be used in the build               | valid git commit id/branch   |   None              |
 | AMREX_INSTALL_DIR            | Global path to AMReX install directory             | valid global path            |   None (superbuild) |
- 
+
 `SUPERBUILD mode is enabled automatically when AMREX_INSTALL_DIR is not given.`
 
-Example: build mfix with custom fortran flags, AMReX profiling enabled and single precision particles:
+Example: build mfix with custom Fortran flags, AMReX profiling enabled and single precision particles:
 
 ```
 cmake -DMFIX_FFLAGS_OVERRIDES="custom flags" -DAMREX_ENABLE_BASE_PROFILE=1 -DAMREX_ENABLE_DP_PARTICLES=0 ..
-```  
+```
 
 ## Building MFIX-Exa using a separate AMReX installation (no superbuild)
 
@@ -89,7 +89,7 @@ Clone AMReX from the official Git repository and checkout the _development_ bran
 > cd amrex
 > git checkout development
 ```
-Next, configure, build and install AMReX as follows: 
+Next, configure, build and install AMReX as follows:
 ```shell
 > cmake AMREX_CONFIG_OPTIONS -DENABLE_PARTICLES=1 -DENABLE_AMRDATA=1 -DENABLE_EB=1 -DENABLE_3D_NODAL_MLMG=1 -DCMAKE_INSTALL_PREFIX:PATH=/absolute/path/to/installdir .
 > make install
@@ -107,7 +107,7 @@ Clone and build MFIX-Exa.
 > make -j
 ```
 Here, `CONFIG_OPTIONS` are MFIX-Exa specific configuration options, that is, any option NOT prefixed by `AMREX_`
-in the table above. Options prefixed by `AMREX_` are always ignored 
+in the table above. Options prefixed by `AMREX_` are always ignored
 when using an external AMReX installation.
 
 ## Few more notes on building MFIX-Exa
@@ -126,7 +126,7 @@ provided, or the environmental variables `FFLAGS`/`CXXFLAGS` are set.
 
 
 # Running MFIX Test Suite
-MFIX-Exa comes  with several tests aimed at evaluating software functionalities.
+MFIX-Exa comes with several tests aimed at evaluating software functionalities.
 The source files as well as the required input files for each test are located in
 the `tests` directory. The `tests` directory is copied to the build directory
 during MFIX-Exa configuration process. When a test is run (see below), output
@@ -139,14 +139,6 @@ o To compare results to archived flow slices stored in `AUTOTEST`
   must point to the location of the AMReX `fextract` utility located
   in the directory, `amrex/Tools/PostProcessing/F_Src`. Additionally,
   `numdiff` must be installed for comparing results.
-
-o To compare point-by-point field data, the environment variable
-  `FCOMPARE` must point the AMReX utility `plt_compare_diff_grids`
-  found in the directory, `amrex/Tools/PostProcessing/F_Src`.
-  Additionally, the environment variable `MFIX_BENCHMARKS_HOME`
-  must point to the location of a local regression test data set.
-  See _Generating local regression test data_ for instructions on
-  creating a local regression test data set.
 
 ## Run all tests
 ```shell
@@ -184,22 +176,22 @@ If GRID variable is not defined, the default is to run the tests for all grid ty
 
 ## Run a user-defined case
 ```shell
-> ./mfix inputs-myrun 
+> ./mfix inputs-myrun
 ```
 _inputs-myrun_ is a text file containing the AMReX input parameters; this can be named anything
 as long as it is the __first__ argument following the executable.  Note that many of the problem
-parameters are still defined in _mfix.dat_. 
+parameters are still defined in _mfix.dat_.
 
 # See the User's Guide for more about MFIX-Exa
 
-To build the User's Guide, 
+To build the User's Guide,
 
 ```shell
 > cd doc/UsersGuide
-> make 
+> make
 ```
 
-This will build a pdf of the MFIX-Exa User's Guide, which contains information
+This will build a PDF of the MFIX-Exa User's Guide, which contains information
 about the equations being solved, run-time parameters, checkpoint/restart
 capability, options for visualization and more.
 
