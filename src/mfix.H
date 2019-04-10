@@ -488,8 +488,11 @@ private:
      // RHS for cell-centered solves
      Vector< std::unique_ptr<MultiFab> > rhs_cc;
 
-     // Solution for cell-centered solves
+     // Solution for diffusion solves
      Vector< std::unique_ptr<MultiFab> > phi_cc;
+
+     // Solution for MAC projection
+     Vector< std::unique_ptr<MultiFab> > phi_mac;
 
      //
      Vector< std::unique_ptr<MultiFab> > fp;

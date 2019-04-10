@@ -128,9 +128,14 @@ mfix::ResizeArrays ()
     phi_nd.resize(nlevs_max);
     diveu.resize(nlevs_max);
 
-    // RHS and solution arrays for cell-centered solves
+    // RHS arrays for cell-centered solves
     rhs_cc.resize(nlevs_max);
+
+    // Solution array for diffusion solves
     phi_cc.resize(nlevs_max);
+
+    // Solution array for MAC projection
+    phi_mac.resize(nlevs_max);
 
     // Current (vel_g) and old (vel_go) velocities
     vel_g.resize(nlevs_max);

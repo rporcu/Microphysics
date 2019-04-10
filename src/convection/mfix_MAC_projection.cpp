@@ -45,7 +45,7 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
 {
    BL_PROFILE("mfix::apply_MAC_projection()");
 
-   if (verbose)
+   if (m_verbose)
       Print() << "MAC Projection:\n";
 
    // Check that everything is consistent with amrcore
@@ -55,7 +55,7 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    Vector<Array<MultiFab*,AMREX_SPACEDIM> > vel;
    vel.resize(finest_level+1);
 
-   if (verbose)
+   if (m_verbose)
       Print() << " >> Before projection\n" ; 
    
    for ( int lev=0; lev <= finest_level; ++lev )
@@ -91,7 +91,7 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
       for (int i=0; i<3; ++i)
          (vel[lev])[i]->FillBoundary( geom[lev].periodicity() );
       
-      if (verbose)
+      if (m_verbose)
       {
          EB_computeDivergence(*rhs_cc[lev],
                               GetArrOfConstPtrs(vel[lev]),
@@ -128,8 +128,9 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
 
    if (steady_state)
    {
-       // Solve using phi_cc as an initial guess
-       macproj.project(GetVecOfPtrs(phi_cc), mac_mg_rtol,mac_mg_atol);
+       // Solve using phi_mac as an initial guess -- note that phi_mac is
+       //       stored from iteration to iteration
+       macproj.project(GetVecOfPtrs(phi_mac), mac_mg_rtol,mac_mg_atol);
    } 
    else 
    {
@@ -138,12 +139,12 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    }
 
    // Get MAC velocities at face CENTER by dividing solution by ep at faces
-   if (verbose)
+   if (m_verbose)
       Print() << " >> After projection\n" ; 
    
    for ( int lev=0; lev <= finest_level ; ++lev )
    {   
-      if (verbose)
+      if (m_verbose)
       {
          vel[lev][0]->FillBoundary( geom[lev].periodicity() );
          vel[lev][1]->FillBoundary( geom[lev].periodicity() );

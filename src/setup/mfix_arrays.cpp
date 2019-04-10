@@ -66,9 +66,17 @@ mfix::AllocateArrays (int lev)
     drag[lev].reset(new  MultiFab(grids[lev],dmap[lev],4,nghost, MFInfo(), *ebfactory[lev]));
     drag[lev]->setVal(0.);
 
-    // Arrays to store the solution and rhs for cell-centered solve
+    // Array to store the solution for diffusion solves
     phi_cc[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    phi_cc[lev] -> setVal(0.);
+
+    // Array to store the solution for MAC projections
+    phi_mac[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    phi_mac[lev] -> setVal(0.);
+
+    // Array to store the rhs for cell-centered solves
     rhs_cc[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    rhs_cc[lev] -> setVal(0.);
 
     // Slopes in x-direction
     xslopes[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
@@ -260,12 +268,19 @@ mfix::RegridArrays (int lev)
     drag[lev] = std::move(drag_new);
     drag[lev]->setVal(0.);
 
-    // Arrays to store the solution and rhs for cell-centered solves
+    // Arrays to store the solution for diffusion solves
     std::unique_ptr<MultiFab> phi_cc_new(new  MultiFab(grids[lev], dmap[lev], 1, nghost,
-                                                         MFInfo(), *ebfactory[lev]));
+                                                       MFInfo(), *ebfactory[lev]));
     phi_cc[lev] = std::move(phi_cc_new);
     phi_cc[lev] -> setVal(0.);
 
+    // Arrays to store the solution for the MAC projection
+    std::unique_ptr<MultiFab> phi_mac_new(new  MultiFab(grids[lev], dmap[lev], 1, nghost,
+                                                        MFInfo(), *ebfactory[lev]));
+    phi_mac[lev] = std::move(phi_mac_new);
+    phi_mac[lev] -> setVal(0.);
+
+    // Array to store the rhs for cell-centered solves
     std::unique_ptr<MultiFab> rhs_cc_new(new  MultiFab(grids[lev], dmap[lev], 1, nghost,
                                                        MFInfo(), *ebfactory[lev]));
     rhs_cc[lev] = std::move(rhs_cc_new);
