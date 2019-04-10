@@ -22,10 +22,7 @@ variables:
   tags:
     - docker
   script:
-    - git -C subprojects/amrex submodule update --init
-    - AMREX_SHA=$(grep 'set\s*(\s*AMREX_GIT_COMMIT_DEVELOP' tools/CMake/MFIX_Superbuild.cmake | awk '{print $3}')
-    - git -C subprojects/amrex pull
-    - git -C subprojects/amrex checkout $AMREX_SHA
+    - git submodule update --init
     - cmake -S subprojects/amrex
             -B amrex_build
             -DENABLE_PARTICLES=1
