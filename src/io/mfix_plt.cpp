@@ -67,6 +67,68 @@ mfix::InitIOPltData ()
 
     }
 
+  if(solve_dem)
+    {
+
+
+      int plt_ccse_regtest = 0;
+      pp.query("plt_regtest", plt_ccse_regtest);
+
+      // All flags are true by default so we only need to turn off the
+      // variables we don't want if not doing CCSE regression tests.
+      if(plt_ccse_regtest == 0) {
+
+        int input_value = 0;
+        pp.query("plt_radius",   input_value );
+        write_real_comp[0] = input_value;
+
+        input_value = 0;
+        pp.query("plt_volume",   input_value );
+        write_real_comp[1] = input_value;
+
+        input_value = 0;
+        pp.query("plt_mass",     input_value );
+        write_real_comp[2] = input_value;
+
+        input_value = 0;
+        pp.query("plt_ro_p",     input_value );
+        write_real_comp[3] = input_value;
+
+        input_value = 0;
+        pp.query("plt_omoi"   ,  input_value );
+        write_real_comp[4] = input_value;
+
+        input_value = 1;
+        pp.query("plt_vel_p"   ,  input_value );
+        write_real_comp[5] = input_value;
+        write_real_comp[6] = input_value;
+        write_real_comp[7] = input_value;
+
+        input_value = 0;
+        pp.query("plt_omega_p",   input_value );
+        write_real_comp[8] = input_value;
+        write_real_comp[9] = input_value;
+        write_real_comp[10] = input_value;
+
+        input_value = 0;
+        pp.query("plt_drag_p",   input_value );
+        write_real_comp[11] = input_value;
+        write_real_comp[12] = input_value;
+        write_real_comp[13] = input_value;
+
+
+        input_value = 0;
+        pp.query("plt_phase",   input_value );
+        write_int_comp[0] = input_value;
+
+        input_value = 0;
+        pp.query("plt_state",   input_value );
+        write_int_comp[1] = input_value;
+
+      }
+
+    }
+
 }
 
 
@@ -243,24 +305,25 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
         Vector<std::string> real_comp_names;
         Vector<std::string>  int_comp_names;
         real_comp_names.push_back("radius");
-        // real_comp_names.push_back("volume");
-        // real_comp_names.push_back("mass");
-        // real_comp_names.push_back("density");
-        // real_comp_names.push_back("omoi");
+        real_comp_names.push_back("volume");
+        real_comp_names.push_back("mass");
+        real_comp_names.push_back("density");
+        real_comp_names.push_back("omoi");
         real_comp_names.push_back("velx");
         real_comp_names.push_back("vely");
         real_comp_names.push_back("velz");
-        // real_comp_names.push_back("omegax");
-        // real_comp_names.push_back("omegay");
-        // real_comp_names.push_back("omegaz");
-        // real_comp_names.push_back("dragx");
-        // real_comp_names.push_back("dragy");
-        // real_comp_names.push_back("dragz");
-         // int_comp_names.push_back("phase");
-         // int_comp_names.push_back("state");
+        real_comp_names.push_back("omegax");
+        real_comp_names.push_back("omegay");
+        real_comp_names.push_back("omegaz");
+        real_comp_names.push_back("dragx");
+        real_comp_names.push_back("dragy");
+        real_comp_names.push_back("dragz");
+        int_comp_names.push_back("phase");
+        int_comp_names.push_back("state");
 
-       bool is_checkpoint = true;
-       pc -> Checkpoint(plotfilename, "particles", is_checkpoint, real_comp_names, int_comp_names);
+       pc -> WritePlotFile(plotfilename, "particles",
+                           write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+
     }
 }
 

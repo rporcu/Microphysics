@@ -389,8 +389,8 @@ private:
      Real mfix_norm1 ( MultiFab& mf, int lev, int comp );
      Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
      Real mfix_norm0 ( MultiFab& mf, int lev, int comp );
-     Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf1, 
-                       const Vector< std::unique_ptr<MultiFab>>& mf2, 
+     Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf1,
+                       const Vector< std::unique_ptr<MultiFab>>& mf2,
                        int lev, int comp1, int comp2 );
      Real mfix_norm0 ( MultiFab& mf1, MultiFab& mf2, int lev, int comp1, int comp2 );
 
@@ -537,7 +537,7 @@ private:
      // Linear operator
      std::unique_ptr<MLNodeLaplacian> nodal_matrix;
 
-     // Solver 
+     // Solver
      std::unique_ptr<MLMG> nodal_solver;
 
      // ***************************************************************
@@ -563,7 +563,7 @@ private:
      // Diffusion solve
      // ***************************************************************
 
-     // Verbosity 
+     // Verbosity
      int  diff_mg_verbose = 0;
      int  diff_mg_cg_verbose = 0;
 
@@ -646,6 +646,11 @@ private:
      // Total number of variables to write in plot file
      int pltVarCount = 0;
 
+     // Flags for saving particle data. By default, we have all flags on,
+     // we turn off what we don't want in the init IO routine. This is somewhat
+     // different from what we do with the fluid.
+     Vector<int> write_real_comp = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+     Vector<int> write_int_comp = {1, 1};
 
      //
      // Here we set the number of ghost nodes of the field arrays.
