@@ -35,7 +35,6 @@ variables:
     - cmake -S subprojects/amrex
             -B amrex_build
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-            -DCMAKE_Fortran_COMPILER_LAUNCHER=ccache
             -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME
             -DENABLE_3D_NODAL_MLMG=1
             -DENABLE_AMRDATA=1
