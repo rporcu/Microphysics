@@ -25,4 +25,4 @@ box.Hi = 1.0  1.0  1.0
 
 box.offset = 1.0e-15
 
-amr.plt_ccse_regtest = 1
+amr.plt_regtest = 1
