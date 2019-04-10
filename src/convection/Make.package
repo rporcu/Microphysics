@@ -4,9 +4,7 @@ f90EXE_sources += set_mac_velocity_bcs.f90
 
 CEXE_sources += mfix_compute_ugradu.cpp
 CEXE_sources += mfix_compute_MAC_velocities.cpp 
-
+CEXE_sources += mfix_MAC_projection.cpp 
 CEXE_sources += mfix_slopes.cpp
-CEXE_sources += MacProjection.cpp
-CEXE_headers += MacProjection.H
 
 F90EXE_headers += mfix_mac_F.H

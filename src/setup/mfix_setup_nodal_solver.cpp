@@ -11,12 +11,15 @@ mfix::mfix_setup_nodal_solver ()
     int bc_lo[3], bc_hi[3];
     Box domain(geom[0].Domain());
 
-    set_ppe_bc(bc_lo, bc_hi,
-               domain.loVect(), domain.hiVect(),
-               &nghost,
-               bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-               bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-               bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
+    set_ppe_bcs(bc_lo, bc_hi,
+                domain.loVect(), domain.hiVect(),
+                &nghost,
+                bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
+                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
+                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
+
+    ppe_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
+    ppe_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
 
     //
     // First define the matrix (operator).
@@ -31,8 +34,7 @@ mfix::mfix_setup_nodal_solver ()
 
     nodal_matrix->setGaussSeidel(true);
     nodal_matrix->setHarmonicAverage(false);
-    nodal_matrix->setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
-                                {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
+    nodal_matrix->setDomainBC ( ppe_lobc, ppe_hibc);
 
     //
     // Then setup the solver ----------------------

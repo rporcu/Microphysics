@@ -39,7 +39,14 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
                 bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
    // Compute the coefficients
-   mfix_compute_bcoeff_diff ();
+   for (int lev = 0; lev < nlev; lev++)
+   {
+       average_cellcenter_to_face( GetArrOfPtrs(bcoeff_cc[lev]), *mu_g[lev], geom[lev] );
+
+      bcoeff_cc[lev][0] -> FillBoundary(geom[lev].periodicity());
+      bcoeff_cc[lev][1] -> FillBoundary(geom[lev].periodicity());
+      bcoeff_cc[lev][2] -> FillBoundary(geom[lev].periodicity());
+   }
 
    //
    // First define the matrix (operator).
@@ -78,7 +85,7 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       matrix.setACoeffs ( lev, a_coeff );
 
       // This sets the spatially varying b coefficients
-      matrix.setBCoeffs ( lev, GetArrOfConstPtrs(bcoeff_diff[lev]) );
+      matrix.setBCoeffs ( lev, GetArrOfConstPtrs(bcoeff_cc[lev]) );
 
       // This sets the coefficient on the wall and defines it as a homogeneous Dirichlet bc for the solve.
       matrix.setEBHomogDirichlet ( lev, (*mu_g[lev]) );
@@ -109,17 +116,17 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
       for (int lev = 0; lev < nlev; lev++)
       {
-         rhs_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
-         phi_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
+         rhs_cc[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
+         phi_cc[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
 
-         EB_set_covered(*phi_diff[lev], 0, phi_diff[lev]->nComp(), phi_diff[lev]->nGrow(), covered_val);
-         phi_diff[lev] -> FillBoundary (geom[lev].periodicity());
+         EB_set_covered(*phi_cc[lev], 0, phi_cc[lev]->nComp(), phi_cc[lev]->nGrow(), covered_val);
+         phi_cc[lev] -> FillBoundary (geom[lev].periodicity());
 
-         matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi_diff)[lev] );
+         matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi_cc)[lev] );
 
          // Define RHS = (ro_g) * (ep_g) * (vel_g)
-         MultiFab::Multiply((*rhs_diff[lev]), (*ro_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
-         MultiFab::Multiply((*rhs_diff[lev]), (*ep_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
+         MultiFab::Multiply((*rhs_cc[lev]), (*ro_g[lev]), 0, 0, 1, rhs_cc[lev]->nGrow());
+         MultiFab::Multiply((*rhs_cc[lev]), (*ep_g[lev]), 0, 0, 1, rhs_cc[lev]->nGrow());
       }
 
       // This ensures that ghost cells of sol are correctly filled when returned from the solver
@@ -130,33 +137,15 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       //
       //  (1 - div dot mu grad) u = RHS
       //
-      solver.solve ( GetVecOfPtrs(phi_diff), GetVecOfConstPtrs(rhs_diff), diff_mg_rtol, diff_mg_atol );
+      solver.solve ( GetVecOfPtrs(phi_cc), GetVecOfConstPtrs(rhs_cc), diff_mg_rtol, diff_mg_atol );
 
       for (int lev = 0; lev < nlev; lev++)
       {
-         phi_diff[lev] -> FillBoundary (geom[lev].periodicity());
-         vel_g[lev]->copy(*phi_diff[lev],0,i,1,nghost,nghost);
+         phi_cc[lev] -> FillBoundary (geom[lev].periodicity());
+         vel_g[lev]->copy(*phi_cc[lev],0,i,1,nghost,nghost);
       }
    }
 
    // Swap ghost cells and apply BCs to velocity
    mfix_set_velocity_bcs (time, 0);
-}
-
-//
-// Computes bcoeff = mu_g at the faces of the scalar cells
-//
-void
-mfix::mfix_compute_bcoeff_diff ()
-{
-   BL_PROFILE("mfix::mfix_compute_bcoeff_diff");
-
-   for (int lev = 0; lev < nlev; lev++)
-   {
-       average_cellcenter_to_face( GetArrOfPtrs(bcoeff_diff[lev]), *mu_g[lev], geom[lev] );
-
-      bcoeff_diff[lev][0] -> FillBoundary(geom[lev].periodicity());
-      bcoeff_diff[lev][1] -> FillBoundary(geom[lev].periodicity());
-      bcoeff_diff[lev][2] -> FillBoundary(geom[lev].periodicity());
-   }
 }

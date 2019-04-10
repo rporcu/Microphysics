@@ -68,13 +68,13 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
 
     // Initialize phi to zero (any non-zero bc's are stored in p0)
     for (int lev = 0; lev < nlev; lev++)
-        phi[lev] -> setVal(0.);
+        phi_nd[lev] -> setVal(0.);
 
     // Compute the PPE coefficients = (ep_g / rho)
     for (int lev = 0; lev < nlev; lev++)
     {
-         MultiFab::Copy  (*bcoeff[lev],*ep_g[lev],0,0,1,0);
-         MultiFab::Divide(*bcoeff[lev],*ro_g[lev],0,0,1,0);
+         MultiFab::Copy  (*bcoeff_nd[lev],*ep_g[lev],0,0,1,0);
+         MultiFab::Divide(*bcoeff_nd[lev],*ro_g[lev],0,0,1,0);
     }
 
     Vector<std::unique_ptr<MultiFab> > fluxes;
@@ -92,7 +92,7 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
 
     // Solve PPE
     mfix_setup_nodal_solver ();
-    mfix_solve_poisson_equation (phi, diveu, bcoeff, fluxes);
+    mfix_solve_poisson_equation (phi_nd, diveu, bcoeff_nd, fluxes);
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -111,18 +111,18 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
             MultiFab::Multiply(*fluxes[lev],(*ro_g[lev]),0,n,1,fluxes[lev]->nGrow());
 
         // phi currently holds (dt) * phi so we divide by (dt) to get (phi)
-        phi[lev]->mult ( 1/scaling_factor, phi[lev]->nGrow() );
+        phi_nd[lev]->mult ( 1/scaling_factor, phi_nd[lev]->nGrow() );
 
         if (proj_2)
         {
             // p := phi
-            MultiFab::Copy (*p_g[lev],    *phi[lev], 0, 0, 1,    phi[lev]->nGrow());
+            MultiFab::Copy (*p_g[lev], *phi_nd[lev], 0, 0, 1, phi_nd[lev]->nGrow());
             MultiFab::Copy ( *gp[lev], *fluxes[lev], 0, 0, 3, fluxes[lev]->nGrow());
         }
         else
         {
             // p := p + phi
-            MultiFab::Add (*p_g[lev],    *phi[lev], 0, 0, 1,    phi[lev]->nGrow());
+            MultiFab::Add (*p_g[lev], *phi_nd[lev], 0, 0, 1, phi_nd[lev]->nGrow());
             MultiFab::Add ( *gp[lev], *fluxes[lev], 0, 0, 3, fluxes[lev]->nGrow());
         }
     }

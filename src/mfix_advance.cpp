@@ -152,11 +152,6 @@ mfix::mfix_project_velocity ()
 
     amrex::Print() << "Initial projection:\n";
 
-    // Need to add this call here so that the MACProjection internal arrays
-    //  are allocated so that the cell-centered projection can use the MAC
-    //  data structures and set_velocity_bcs routine
-    mac_projection->update_internals();
-
     bool proj_2 = true;
     Real time = 0.0;
     mfix_apply_projection ( time, dummy_dt, proj_2 );

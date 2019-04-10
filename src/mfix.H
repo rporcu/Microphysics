@@ -26,7 +26,6 @@
 #include <MFIXParticleContainer.H>
 #include <AMReX_MLMG.H>
 #include <AMReX_MLNodeLaplacian.H>
-#include <MacProjection.H>
 #include <mfix_eb_if.H>
 
 class mfix
@@ -36,6 +35,16 @@ public:
 
     mfix ();
     ~mfix ();
+
+     // Face-based coefficients b in implicit diffusion solve
+     //    and in MAC projection
+     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff_cc;
+     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
+     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
+
+    // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_lobc;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_hibc;
 
     void InitParams(int solve_fluid, int solve_dem, int call_udf );
 
@@ -276,8 +285,21 @@ protected:
      void mfix_initial_iterations ( Real dt, Real stop_time );
      void mfix_apply_projection   ( Real dt, Real scaling_factor, bool proj_2 );
 
+     void apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u, 
+                                 Vector< std::unique_ptr<MultiFab> >& v,
+                                 Vector< std::unique_ptr<MultiFab> >& w,
+                                 Vector< std::unique_ptr<MultiFab> >& ep,
+                                 const Vector< std::unique_ptr<MultiFab> >& ro,
+                                 Real time, int steady_state);
+
      void mfix_set_scalar_bcs ();
      void mfix_set_velocity_bcs (Real time, int extrap_dir_bcs);
+
+     void set_MC_velocity_bcs ( int lev,
+                                Vector< std::unique_ptr<MultiFab> >& u,
+                                Vector< std::unique_ptr<MultiFab> >& v,
+                                Vector< std::unique_ptr<MultiFab> >& w,
+                                Real time);
 
      void FillPatchVel (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
                         const Vector<BCRec> & bcr);
@@ -342,8 +364,6 @@ private:
                                    Vector< std::unique_ptr<MultiFab> >& rhs,
                                    int bc_lo[], int bc_hi[],
                                    Real dt);
-
-     void mfix_compute_bcoeff_diff();
 
      void check_for_nans(int lev);
 
@@ -439,9 +459,6 @@ private:
      // Base state pressure
      Vector< std::unique_ptr<MultiFab> > p0_g;
 
-     // Pressure correction
-     Vector< std::unique_ptr<MultiFab> > pp_g;
-
      // Pressure gradients
      Vector< std::unique_ptr<MultiFab> > gp ;
 
@@ -467,34 +484,25 @@ private:
      // div (ep_g * u)
      Vector< std::unique_ptr<MultiFab> > diveu;
 
-     // RHS for implicit diffusion solve
-     Vector< std::unique_ptr<MultiFab> > rhs_diff;
+     // RHS for cell-centered solves
+     Vector< std::unique_ptr<MultiFab> > rhs_cc;
 
-     // Solution for implicit diffusion solve
-     Vector< std::unique_ptr<MultiFab> > phi_diff;
+     // Solution for cell-centered solves
+     Vector< std::unique_ptr<MultiFab> > phi_cc;
 
      //
      Vector< std::unique_ptr<MultiFab> > fp;
 
-     // Coefficients b of div(b*grad(p))
-     Vector< std::unique_ptr<MultiFab> > bcoeff;
-
-     // Coefficients b in implicit diffusion solve
-     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff_diff;
+     // Cell-centered coefficients b in nodal solve
+     Vector< std::unique_ptr<MultiFab> > bcoeff_nd;
 
      // Pressure increment
-     Vector< std::unique_ptr<MultiFab> > phi;
+     Vector< std::unique_ptr<MultiFab> > phi_nd;
 
      // MAC velocity
      Vector< std::unique_ptr<MultiFab> > m_u_mac;
      Vector< std::unique_ptr<MultiFab> > m_v_mac;
      Vector< std::unique_ptr<MultiFab> > m_w_mac;
-     // Vector< std::unique_ptr<MultiFab> > m_uo_mac;
-     // Vector< std::unique_ptr<MultiFab> > m_vo_mac;
-     // Vector< std::unique_ptr<MultiFab> > m_wo_mac;
-
-     // MAC projection object
-     std::unique_ptr<MacProjection> mac_projection;
 
      // What solver to use as the bottom solver in the MLMG solves.
      std::string bottom_solver_type;

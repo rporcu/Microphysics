@@ -197,5 +197,5 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
     // set_velocity_bcs( lev, m_u_mac, m_v_mac, m_w_mac, time );
 
     // Do projection on all AMR levels in one shot 
-    mac_projection -> apply_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, time, steady_state );
+    apply_MAC_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, time, steady_state );
 }

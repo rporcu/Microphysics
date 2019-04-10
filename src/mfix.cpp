@@ -121,17 +121,16 @@ mfix::ResizeArrays ()
     p_go.resize(nlevs_max);
 
     p0_g.resize(nlevs_max);
-    pp_g.resize(nlevs_max);
 
     ro_g.resize(nlevs_max);
     ro_go.resize(nlevs_max);
 
-    phi.resize(nlevs_max);
+    phi_nd.resize(nlevs_max);
     diveu.resize(nlevs_max);
 
-    // RHS and solution arrays for diffusive solve
-    rhs_diff.resize(nlevs_max);
-    phi_diff.resize(nlevs_max);
+    // RHS and solution arrays for cell-centered solves
+    rhs_cc.resize(nlevs_max);
+    phi_cc.resize(nlevs_max);
 
     // Current (vel_g) and old (vel_go) velocities
     vel_g.resize(nlevs_max);
@@ -156,8 +155,10 @@ mfix::ResizeArrays ()
     yslopes.resize(nlevs_max);
     zslopes.resize(nlevs_max);
 
-    bcoeff.resize(nlevs_max);
-    bcoeff_diff.resize(nlevs_max);
+    bcoeff_nd.resize(nlevs_max);
+    bcoeff_cc.resize(nlevs_max);
+      ep_face.resize(nlevs_max);
+      ro_face.resize(nlevs_max);
 
     // Fuid cost (load balancing)
     fluid_cost.resize(nlevs_max);

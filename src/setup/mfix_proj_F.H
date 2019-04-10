@@ -15,7 +15,7 @@ extern "C"
 {
 #endif
 
-   void set_ppe_bc (
+   void set_ppe_bcs (
       int* bc_lo, int* bc_hi,
       const int* domlo, const int* domhi,
       const int* ng, 

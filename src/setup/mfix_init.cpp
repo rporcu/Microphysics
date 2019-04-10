@@ -72,6 +72,13 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("knapsack_weight_type", knapsack_weight_type);
         pp.query("load_balance_fluid", load_balance_fluid);
 
+        ParmParse pp_mac("mac");
+        pp.query( "mg_verbose"   , mac_mg_verbose );
+        pp.query( "mg_rtol"      , mac_mg_rtol );
+        pp.query( "mg_atol"      , mac_mg_atol );
+        pp.query( "mg_max_iter"  , mac_mg_max_iter );
+        pp.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
+
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
                             load_balance_type == "KDTree"    ||
                             load_balance_type == "KnapSack"  ||
@@ -348,13 +355,6 @@ void mfix::Init(Real dt, Real time)
 
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);
-
-    // Create MAC projection object
-    mac_projection.reset( new MacProjection(this, nghost, &ebfactory ) );
-    mac_projection -> set_bcs( bc_ilo, bc_ihi,
-             bc_jlo, bc_jhi,
-             bc_klo, bc_khi );
-
 }
 
 
