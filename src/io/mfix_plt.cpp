@@ -34,6 +34,7 @@ mfix::InitIOPltData ()
 
       pp.query("plt_vel_g",   plt_vel_g  );
       pp.query("plt_ep_g",    plt_ep_g   );
+      pp.query("plt_p_g",     plt_p_g    );
       pp.query("plt_ro_g",    plt_ro_g   );
       pp.query("plt_mu_g",    plt_mu_g   );
       pp.query("plt_diveu",   plt_diveu  );
@@ -49,6 +50,7 @@ mfix::InitIOPltData ()
       if(plt_ccse_regtest != 0) {
         plt_vel_g   = 1;
         plt_ep_g    = 1;
+        plt_p_g     = 1;
         plt_ro_g    = 1;
         plt_mu_g    = 1;
         plt_diveu   = 1;
@@ -60,6 +62,7 @@ mfix::InitIOPltData ()
       if( plt_vel_g   == 1) pltVarCount += 3;
       if( plt_gradp_g == 1) pltVarCount += 3;
       if( plt_ep_g    == 1) pltVarCount += 1;
+      if( plt_p_g     == 1) pltVarCount += 1;
       if( plt_ro_g    == 1) pltVarCount += 1;
       if( plt_mu_g    == 1) pltVarCount += 1;
       if( plt_diveu   == 1) pltVarCount += 1;
@@ -199,6 +202,7 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
         // Fluid pressure
         if( plt_p_g    == 1) {
 
+          pltFldNames.push_back("p_g");
           MultiFab p_nd(p_g[lev]->boxArray(),dmap[lev],1,0);
           p_nd.setVal(0.);
           MultiFab::Copy(p_nd, (* p_g[lev]), 0, 0, 1, 0);
