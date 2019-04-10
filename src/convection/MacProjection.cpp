@@ -67,14 +67,12 @@ MacProjection::set_bcs ( Vector< std::unique_ptr<IArrayBox> >& a_bc_ilo,
                          Vector< std::unique_ptr<IArrayBox> >& a_bc_klo,
                          Vector< std::unique_ptr<IArrayBox> >& a_bc_khi)
 {
-#if 1
    m_bc_ilo = &a_bc_ilo;
    m_bc_ihi = &a_bc_ihi;
    m_bc_jlo = &a_bc_jlo;
    m_bc_jhi = &a_bc_jhi;
    m_bc_klo = &a_bc_klo;
    m_bc_khi = &a_bc_khi;
-#endif
 
    int bc_lo[3], bc_hi[3];
     
@@ -105,6 +103,7 @@ MacProjection::update_internals ()
       m_phi.resize(m_amrcore->finestLevel()+1);
       m_b.resize(m_amrcore->finestLevel()+1);
       m_ep.resize(m_amrcore->finestLevel()+1);
+      m_ro.resize(m_amrcore->finestLevel()+1);
    }
     
    for (int lev=0; lev <= m_amrcore->finestLevel(); ++lev )
@@ -135,6 +134,8 @@ MacProjection::update_internals ()
                                            1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
          m_ep[lev][0].reset( new  MultiFab( x_ba, m_amrcore -> DistributionMap(lev),
                                             1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
+         m_ro[lev][0].reset( new  MultiFab( x_ba, m_amrcore -> DistributionMap(lev),
+                                            1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
 
          BoxArray y_ba = m_amrcore -> boxArray(lev);
          y_ba = y_ba.surroundingNodes(1);
@@ -142,12 +143,16 @@ MacProjection::update_internals ()
                                            1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
          m_ep[lev][1].reset( new  MultiFab( y_ba, m_amrcore -> DistributionMap(lev),
                                             1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
+         m_ro[lev][1].reset( new  MultiFab( y_ba, m_amrcore -> DistributionMap(lev),
+                                            1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
 
          BoxArray z_ba = m_amrcore -> boxArray(lev);
          z_ba = z_ba.surroundingNodes(2);
          m_b[lev][2].reset( new  MultiFab( z_ba, m_amrcore -> DistributionMap(lev),
                                            1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
          m_ep[lev][2].reset( new  MultiFab( z_ba, m_amrcore -> DistributionMap(lev),
+                                            1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
+         m_ro[lev][2].reset( new  MultiFab( z_ba, m_amrcore -> DistributionMap(lev),
                                             1, m_nghost, MFInfo(), *((*m_ebfactory)[lev]) ) );
 	   
       };
@@ -207,21 +212,28 @@ MacProjection::apply_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    
    for ( int lev=0; lev <= m_amrcore -> finestLevel(); ++lev )
    {
-      // Compute beta coefficients ( div(beta*grad(phi)) = RHS )
-      compute_b_coeff( ep, ro, lev );
-      
       // Compute ep at faces
       ep[lev]->FillBoundary(m_amrcore -> Geom(lev).periodicity());
      
       average_cellcenter_to_face( GetArrOfPtrs(m_ep[lev]), *ep[lev], m_amrcore -> Geom(lev) );
+      average_cellcenter_to_face( GetArrOfPtrs(m_ro[lev]), *ro[lev], m_amrcore -> Geom(lev) );
 
-      // Set velocity bcs
+      MultiFab::Copy( *m_b[lev][0], *(m_ep[lev][0]), 0, 0, 1, 0 );
+      MultiFab::Copy( *m_b[lev][1], *(m_ep[lev][1]), 0, 0, 1, 0 );
+      MultiFab::Copy( *m_b[lev][2], *(m_ep[lev][2]), 0, 0, 1, 0 );
+
+      // Set velocity bcs -- before we multiply by ep
       set_velocity_bcs( lev, u, v, w, time );
 
       // Compute ep*u at faces and store it in u, v, w
       MultiFab::Multiply( *u[lev], *(m_ep[lev][0]), 0, 0, 1, 0 );
       MultiFab::Multiply( *v[lev], *(m_ep[lev][1]), 0, 0, 1, 0 );
       MultiFab::Multiply( *w[lev], *(m_ep[lev][2]), 0, 0, 1, 0 );
+
+      // Compute beta coefficients for div(beta*grad(phi)) = RHS:  beta = ep / ro
+      MultiFab::Divide( *m_b[lev][0], *(m_ro[lev][0]), 0, 0, 1, 0 );
+      MultiFab::Divide( *m_b[lev][1], *(m_ro[lev][1]), 0, 0, 1, 0 );
+      MultiFab::Divide( *m_b[lev][2], *(m_ro[lev][2]), 0, 0, 1, 0 );
 
       // Store in temporaries
       (vel[lev])[0] = u[lev].get();
@@ -345,78 +357,6 @@ MacProjection::set_velocity_bcs ( int lev,
    }	
     
 }
-
-//
-// Computes the staggered Poisson's operator coefficients:
-//
-//      bcoeff = ep/ro
-//
-// Values are edge-centered.
-// 
-void
-MacProjection::compute_b_coeff ( const Vector< std::unique_ptr<MultiFab> >& ep,
-				 const Vector< std::unique_ptr<MultiFab> >& ro,
-                                 int lev )
-{
-   BL_PROFILE("MacProjection::compute_b_coeff");
-
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-   for (MFIter mfi(*ep[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-   {
-      // Boxes for staggered components
-      Box bx  = mfi.tilebox();
-      Box ubx = mfi.tilebox(e_x);
-      Box vbx = mfi.tilebox(e_y);
-      Box wbx = mfi.tilebox(e_z);
-
-      // this is to check efficiently if this tile contains any eb stuff
-      const EBFArrayBox&  div_fab = static_cast<EBFArrayBox const&>((*m_diveu[lev])[mfi]);
-      const EBCellFlagFab&  flags = div_fab.getEBCellFlagFab();
-
-      if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
-      {
-          m_b[lev][0] -> setVal( 1.2345e300, ubx, 0, 1);
-          m_b[lev][1] -> setVal( 1.2345e300, vbx, 0, 1);
-          m_b[lev][2] -> setVal( 1.2345e300, wbx, 0, 1);
-      }
-      else
-      {
-          const auto& betax_fab = (*(m_b[lev])[0]).array(mfi);
-          const auto& betay_fab = (*(m_b[lev])[1]).array(mfi);
-          const auto& betaz_fab = (*(m_b[lev])[2]).array(mfi);
-          const auto&   den_fab =  ro[lev]->array(mfi);
-          const auto&   epg_fab =  ep[lev]->array(mfi);
-
-          AMREX_CUDA_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
-          {
-              // X-faces
-              betax_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i-1,j,k) ) /
-                                 ( den_fab(i,j,k) + den_fab(i-1,j,k) );
-          });
-
-          AMREX_CUDA_HOST_DEVICE_FOR_3D(vbx, i, j, k,
-          {
-              // Y-faces
-              betay_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i,j-1,k) ) /
-                                 ( den_fab(i,j,k) + den_fab(i,j-1,k) );
-          });
-
-          AMREX_CUDA_HOST_DEVICE_FOR_3D(wbx, i, j, k,
-          {
-              // Z-faces
-              betaz_fab(i,j,k) = ( epg_fab(i,j,k) + epg_fab(i,j,k-1) ) /
-                                 ( den_fab(i,j,k) + den_fab(i,j,k-1) );
-          });
-      }
-   }
-
-   m_b[lev][0] -> FillBoundary( m_amrcore -> Geom(lev).periodicity() );
-   m_b[lev][1] -> FillBoundary( m_amrcore -> Geom(lev).periodicity() );
-   m_b[lev][2] -> FillBoundary( m_amrcore -> Geom(lev).periodicity() );
-}
-
 
 //
 // Norm 0 for EB Multifab
