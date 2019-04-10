@@ -203,6 +203,7 @@ public:
     void WriteEBSurface();
 
     void InitIOData();
+    void InitIOPltData();
 
     static std::string get_load_balance_type();
 
@@ -638,6 +639,26 @@ private:
      Vector<Real> avg_region_z_b;
      Vector<Real> avg_region_z_t;
 
+     // Flags for saving fluid data in plot files
+     int plt_vel_g   = 1;
+     int plt_ep_g    = 1;
+     int plt_p_g     = 0;
+     int plt_ro_g    = 0;
+     int plt_mu_g    = 0;
+     int plt_diveu   = 0;
+     int plt_volfrac = 0;
+     int plt_gradp_g = 0;
+     int plt_vort    = 0;
+
+     // Total number of variables to write in plot file
+     int pltVarCount = 0;
+
+     // Flags for saving particle data. By default, we have all flags on,
+     // we turn off what we don't want in the init IO routine. This is somewhat
+     // different from what we do with the fluid.
+     Vector<int> write_real_comp = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+     Vector<int> write_int_comp = {1, 1};
+
      //
      // Here we set the number of ghost nodes of the field arrays.
      // Since this is  a class attribute, it will be propagated to
@@ -665,14 +686,11 @@ private:
       *                                                                         *
       **************************************************************************/
 
-     // Variables to simplify IO -- the vectors are the same for plt/chk
+     // Variables to simplify checkpoint IO
      Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
      Vector< std::string > vecVarsName;
 
      Vector< const Vector< std::unique_ptr<MultiFab> >* > chkscalarVars;
-     Vector< std::string > pltscaVarsName;
-
-     Vector< const Vector< std::unique_ptr<MultiFab> >* > pltscalarVars;
      Vector< std::string > chkscaVarsName;
 
      /***************************************************************************
