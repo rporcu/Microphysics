@@ -31,7 +31,7 @@ if ( SUPERBUILD )
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/mfix
       COMMENT "Cleaning mfix"
       )
-   
+
    add_custom_target(clean_amrex
       COMMAND cd builddir && make clean
       COMMAND rm -rf installdir/*
@@ -73,7 +73,7 @@ echo_amrex_config_options ()
 list(APPEND CMAKE_MODULE_PATH ${AMREX_MODULES_PATH})
 
 if ( NOT ( AMREX_ENABLE_PARTICLES AND AMREX_ENABLE_AMRDATA
-	 AND AMREX_ENABLE_EB) )
+   AND AMREX_ENABLE_EB) )
    message ( FATAL_ERROR "AMReX installation missing required components!")
 endif ()
 
@@ -93,8 +93,8 @@ if (ENABLE_CUDA AND (NOT AMREX_ENABLE_CUDA) )
    message(FATAL_ERROR "Option ENABLE_CUDA requires AMReX to be built with CUDA support")
 endif ()
 
-if ( NOT ( "${MFIX_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
-   message (WARNING "MFIX build type (${MFIX_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
+if ( NOT ( "${CMAKE_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
+   message (FATAL_ERROR "MFIX build type (${CMAKE_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
 endif ()
 
 set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
