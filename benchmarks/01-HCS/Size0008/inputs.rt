@@ -19,7 +19,6 @@ particles.tile_size = 32 32 32
 amr.max_level = 0
 amr.plot_int  = 10
 amr.check_int  = -25
-amr.plt_regtest = 1
 
 # Geometry
 geometry.coord_sys   = 0                      # 0: Cartesian
