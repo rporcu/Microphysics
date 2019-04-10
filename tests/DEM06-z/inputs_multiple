@@ -76,3 +76,5 @@ amr.check_file = DEM06_chk
 
 amr.par_ascii_int  = 10
 amr.par_ascii_file = DEM06_par
+
+amr.plt_ccse_regtest = 1

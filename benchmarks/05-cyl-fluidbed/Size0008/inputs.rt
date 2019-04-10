@@ -117,6 +117,8 @@ amr.plot_file      ="plt"
 amr.check_int      = -1
 amr.check_file     ="chk"
 
+amr.plt_ccse_regtest = 1
+
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"

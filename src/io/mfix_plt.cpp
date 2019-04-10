@@ -27,10 +27,10 @@ mfix::InitIOPltData ()
 
   pltVarCount = 0;
 
+  ParmParse pp("amr");
+
   if (solve_fluid)
     {
-
-      ParmParse pp("amr");
 
       pp.query("plt_vel_g",   plt_vel_g  );
       pp.query("plt_ep_g",    plt_ep_g   );

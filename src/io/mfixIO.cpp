@@ -142,27 +142,7 @@ mfix::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time
 
     if ( solve_dem )
     {
-        Vector<std::string> real_comp_names;
-        Vector<std::string>  int_comp_names;
-        real_comp_names.push_back("radius");
-        real_comp_names.push_back("volume");
-        real_comp_names.push_back("mass");
-        real_comp_names.push_back("density");
-        real_comp_names.push_back("omoi");
-        real_comp_names.push_back("velx");
-        real_comp_names.push_back("vely");
-        real_comp_names.push_back("velz");
-        real_comp_names.push_back("omegax");
-        real_comp_names.push_back("omegay");
-        real_comp_names.push_back("omegaz");
-        real_comp_names.push_back("dragx");
-        real_comp_names.push_back("dragy");
-        real_comp_names.push_back("dragz");
-         int_comp_names.push_back("phase");
-         int_comp_names.push_back("state");
-
-       bool is_checkpoint = true;
-       pc -> Checkpoint(checkpointname, "particles", is_checkpoint, real_comp_names, int_comp_names);
+       pc -> Checkpoint(checkpointname, "particles");
     }
 
 
