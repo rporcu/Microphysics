@@ -87,3 +87,5 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="restart-file"
+
+amr.plt_regtest = 1

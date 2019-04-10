@@ -65,3 +65,5 @@ amr.check_file = DEM07_chk
 
 amr.par_ascii_int  = 1
 amr.par_ascii_file = DEM07_par
+
+amr.plt_regtest = 1
