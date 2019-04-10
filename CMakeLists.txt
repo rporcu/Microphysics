@@ -94,7 +94,7 @@ if (ENABLE_CUDA AND (NOT AMREX_ENABLE_CUDA) )
 endif ()
 
 if ( NOT ( "${CMAKE_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
-   message (FATAL_ERROR "MFIX build type (${CMAKE_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
+   message (WARNING "MFIX build type (${CMAKE_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
 endif ()
 
 set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
