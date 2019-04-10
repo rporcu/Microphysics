@@ -143,6 +143,13 @@ add_subdirectory ( tests )
 include (MFIX_Tags)
 add_tags_targets ()
 
+# Use ccache (if present) to speedup compilation
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif()
+
 # Add a target to generate API documentation with Doxygen
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
