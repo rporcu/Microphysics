@@ -184,7 +184,6 @@ MODULE read_namelist_module
       include 'point_sources.inc'
       include 'usr_hooks.inc'
       include 'desnamelist.inc'
-      include 'usrnlst.inc'
 
       ERROR = .FALSE.
 
@@ -248,12 +247,6 @@ MODULE read_namelist_module
        STRING=''; STRING = '&DES_INPUT_DATA '//&
             trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
        READ(STRING, NML=DES_INPUT_DATA, IOSTAT=IOS)
-       IF(IOS == 0)  RETURN
-
-! User defined input parameters.
-       STRING=''; STRING = '&USR_INPUT_DATA '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-       READ(STRING, NML=USR_INPUT_DATA, IOSTAT=IOS)
        IF(IOS == 0)  RETURN
 
        ERROR = .TRUE.
