@@ -32,8 +32,8 @@ variables:
     - docker
   script:
     - git submodule update --init
-    - if [[ $CI_COMMIT_REF_NAME == "develop" ]]; then DEBUG="OFF"; else DEBUG="ON"
-    - if [[ $CI_COMMIT_REF_NAME == "develop" ]]; then BUILDTYPE="Release"; else BUILDTYPE="Debug"
+    - if [[ $CI_COMMIT_REF_NAME == "develop" ]]; then DEBUG="OFF"; else DEBUG="ON"; fi
+    - if [[ $CI_COMMIT_REF_NAME == "develop" ]]; then BUILDTYPE="Release"; else BUILDTYPE="Debug"; fi
     - cmake -S subprojects/amrex
             -B amrex_build
             -DCMAKE_BUILD_TYPE=$BUILDTYPE
