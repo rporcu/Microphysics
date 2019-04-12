@@ -47,7 +47,8 @@ contains
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine init_collision_lsd
 
-  use constant,       only: pi, mmax
+  use constant,       only: mmax
+  use amrex_constants_module, only: M_PI
   use discretelement, only: kn, kn_w, kt, kt_w, kt_fac, kt_w_fac, &
       & des_etan, des_etan_wall, des_etat, des_etat_wall,        &
       & des_en_input, des_en_wall_input, &
@@ -69,7 +70,7 @@ contains
   lc = 0
   do m = 1, mmax
 
-     mass_m = (pi/6.d0)*(d_p0(m)**3)*ro_s0(m)
+     mass_m = (M_PI/6.d0)*(d_p0(m)**3)*ro_s0(m)
 
      ! Particle-Particle Collision Parameters
      do l = m, mmax
@@ -78,13 +79,13 @@ contains
         en = des_en_input(lc)
 
         ! Calculate masses used for collision calculations.
-        mass_l = (pi/6.d0)*(d_p0(l)**3)*ro_s0(l)
+        mass_l = (M_PI/6.d0)*(d_p0(l)**3)*ro_s0(l)
         mass_eff = mass_m*mass_l/(mass_m+mass_l)
 
         ! Calculate the M-L normal and tangential damping coefficients.
         if(abs(en) > zero) then
            des_etan(m,l) = 2.0d0*sqrt(kn*mass_eff) * abs(log(en))
-           des_etan(m,l) = des_etan(m,l)/sqrt(pi*pi + (log(en)**2))
+           des_etan(m,l) = des_etan(m,l)/sqrt(M_PI*M_PI + (log(en)**2))
         else
            des_etan(m,l) = 2.0d0*sqrt(kn*mass_eff)
         endif
@@ -95,7 +96,7 @@ contains
         des_etat(l,m) = des_etat(m,l)
 
         ! Calculate the collision time scale.
-        tcoll_tmp = pi/sqrt(kn/mass_eff -                          &
+        tcoll_tmp = M_PI/sqrt(kn/mass_eff -                          &
           ((des_etan(m,l)/mass_eff)**2)/4.d0)
         tcoll = min(tcoll_tmp, tcoll)
      end do
@@ -107,14 +108,14 @@ contains
      ! Calculate the M-Wall normal and tangential damping coefficients.
      if(abs(en) > zero) then
         des_etan_wall(m) = 2.d0*sqrt(kn_w*mass_eff)*abs(log(en))
-        des_etan_wall(m) = des_etan_wall(m)/sqrt(pi*pi+(log(en))**2)
+        des_etan_wall(m) = des_etan_wall(m)/sqrt(M_PI*M_PI+(log(en))**2)
      else
         des_etan_wall(m) = 2.d0*sqrt(kn_w*mass_eff)
      endif
      des_etat_wall(m) = des_etat_w_fac*des_etan_wall(m)
 
      ! Calculate the collision time scale.
-     tcoll_tmp = pi/sqrt(kn_w/mass_eff -                           &
+     tcoll_tmp = M_PI/sqrt(kn_w/mass_eff -                           &
        ((des_etan_wall(m)/mass_eff)**2.d0)/4.d0)
      tcoll = min(tcoll_tmp, tcoll)
   enddo
