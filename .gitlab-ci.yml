@@ -46,6 +46,7 @@ variables:
     - cmake -S .
             -B build
             -DAMREX_INSTALL_DIR=$AMREX_HOME
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
     - make -C build -j 4
