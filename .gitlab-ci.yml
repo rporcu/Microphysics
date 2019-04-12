@@ -32,8 +32,11 @@ variables:
     - docker
   script:
     - git submodule update --init
+    - if [[ $CI_COMMIT_REF_NAME == "develop" ]]; then DEBUG="OFF"; else DEBUG="ON"
+    - if [[ $CI_COMMIT_REF_NAME == "develop" ]]; then BUILDTYPE="Release"; else BUILDTYPE="Debug"
     - cmake -S subprojects/amrex
             -B amrex_build
+            -DCMAKE_BUILD_TYPE=$BUILDTYPE
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
             -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME
             -DENABLE_3D_NODAL_MLMG=1
@@ -46,6 +49,7 @@ variables:
     - cmake -S .
             -B build
             -DAMREX_INSTALL_DIR=$AMREX_HOME
+            -DDEBUG=$DEBUG
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
     - make -C build -j 4
