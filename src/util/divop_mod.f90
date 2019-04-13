@@ -249,6 +249,7 @@ contains
                                                        afrac_x, axlo, axhi,                   &
                                                        afrac_y, aylo, ayhi,                   &
                                                        afrac_z, azlo, azhi,                   &
+                                                       vfrac  , vflo, vfhi,                   &
                                                        do_explicit_diffusion,                 &
                                                        eb_ho_dirichlet)
                         end if

@@ -15,10 +15,11 @@
 subroutine usr3_des ( np, particles )
 
    use amrex_constants_module, only: M_PI
-   use usr,               only: init_angle, init_vel_t
    use amrex_fort_module, only: c_real => amrex_real
    use particle_mod,      only: particle_t
    use run,               only: des_tstart, des_dt, tstop
+   use usr,               only: init_angle, init_vel_t
+
    implicit none
 
    integer,          intent(in   ) :: np
@@ -60,7 +61,7 @@ subroutine usr3_des ( np, particles )
            ! Write the results to a file.
            write(UDF_UNIT,"(3(3x,F11.4))") INIT_ANGLE(P), RBND_ANGLE(1:2)
        end do
-   
+
        close(UDF_UNIT)
 
        ! Particle-wall Tangential Restitution Coefficient

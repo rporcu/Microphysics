@@ -1,5 +1,6 @@
 module usr
 
+     use amrex_constants_module, only: M_PI
      use amrex_fort_module, only : c_real => amrex_real
 
      ! a dummy variable listed in usrnlst.inc
@@ -90,7 +91,6 @@ module usr
       double precision function F12k(y1, y2)
 
       use discretelement, only: KN
-      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -122,7 +122,6 @@ module usr
       double precision function F12d(x1, x2)
 
       use discretelement, only: DES_ETAN
-      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -217,8 +216,6 @@ module usr
 !......................................................................!
       double precision function F21k(y1, y2)
 
-      use amrex_constants_module, only: M_PI
-
       implicit none
 
       double precision, intent(in) :: y1, y2 ! particle height
@@ -248,8 +245,6 @@ module usr
 !  page 22, Equation (67).                                             !
 !......................................................................!
       double precision function F21d(x1, x2)
-
-      use amrex_constants_module, only: M_PI
 
       implicit none
 
