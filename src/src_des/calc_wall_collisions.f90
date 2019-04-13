@@ -81,7 +81,7 @@ contains
         ! ls_valid: indicates if particle is near wall (and level-set needs to be tested)
         !logical                    :: ls_valid
 
-        real(rt) :: v_rel_trans_norm, sqrt_overlap, kn_des_w, kt_des_w, etan_des_w, etat_des_w
+        real(rt) :: v_rel_trans_norm, kn_des_w, kt_des_w, etan_des_w, etat_des_w
         real(rt) :: mag_overlap_t, fnmd
 
         !---------------------------------------------------------------------

@@ -32,8 +32,6 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
 
     const Box& domain = geom.Domain();
 
-    AmrParGDB* my_gdb = mfix_for_fillpatching->GetParGDB();
-
     // This is a bit hack-y but does get us the right level
     int lev = 0;
     for (int ilev = 0; ilev < 10; ilev++)

@@ -493,10 +493,6 @@ void mfix::check_data ()
     Real dy = geom[0].CellSize(1);
     Real dz = geom[0].CellSize(2);
 
-    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
-    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
-    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
-
     Box domain(geom[0].Domain());
 
     // Only call this check on one processor since it has a bunch of print statements
@@ -767,7 +763,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
             init_fluid(sbx.loVect(), sbx.hiVect(),
                  bx.loVect(),  bx.hiVect(),
                  domain.loVect(), domain.hiVect(),
-                 (*ep_g[lev])[mfi].dataPtr(),  
+                 (*ep_g[lev])[mfi].dataPtr(),
                  (*ro_g[lev])[mfi].dataPtr(),
                  (*p_g[lev])[mfi].dataPtr(),
                  (*vel_g[lev])[mfi].dataPtr(),
@@ -835,7 +831,7 @@ mfix::mfix_set_bc0()
 
          set_bc0(sbx.loVect(), sbx.hiVect(),
                  (*ep_g[lev])[mfi].dataPtr(),
-                  (*ro_g[lev])[mfi].dataPtr(), 
+                  (*ro_g[lev])[mfi].dataPtr(),
                   (*mu_g[lev])[mfi].dataPtr(),
                  bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                  bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),

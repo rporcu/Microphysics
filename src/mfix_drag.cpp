@@ -14,10 +14,6 @@ void mfix::mfix_calc_drag_fluid(Real time)
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        Real dx = geom[lev].CellSize(0);
-        Real dy = geom[lev].CellSize(1);
-        Real dz = geom[lev].CellSize(2);
-
         bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                              (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 

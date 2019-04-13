@@ -26,11 +26,8 @@
       SUBROUTINE WRITE_DAT_HEADER(FNAME, VAR)
 
       use run, only: DESCRIPTION
-      use discretelement, only: particle_types
 
       IMPLICIT NONE
-
-      INTEGER :: M, N
 
       CHARACTER(len=*) :: FNAME
       CHARACTER(len=*) :: VAR

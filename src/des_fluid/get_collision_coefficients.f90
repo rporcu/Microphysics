@@ -7,7 +7,7 @@ subroutine get_lsd_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out
    use iso_c_binding,                   only: c_int
    use param,                           only: dim_m
    use constant,                        only: mmax
-   use discretelement,                   only: kn, kn_w, kt, kt_w, kt_fac, kt_w_fac, mew, mew_w, &
+   use discretelement,                   only: kn, kn_w, kt, kt_w, mew, mew_w, &
                                               des_etan, des_etan_wall, des_etat, des_etat_wall
 
    implicit none

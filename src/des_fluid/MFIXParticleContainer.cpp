@@ -369,16 +369,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     const Real* dx = Geom(lev).CellSize();
 
-    Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
-    Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
-    Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
-
     /****************************************************************************
      * Init substeps                                                            *
      ***************************************************************************/
 
     int   nsubsteps;
-    Real  subdt, stime = time;
+    Real  subdt;
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
     /****************************************************************************
@@ -1042,7 +1038,6 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
             const auto& particles = pti.GetArrayOfStructs();
             const ParticleType* pstruct = particles().dataPtr();
 
-            int nstride = particles.dataShape().first;
             const long nrp = pti.numParticles();
             FArrayBox& fab = (*mf_pointer[lev])[pti];
             Real* data_ptr;
@@ -1292,14 +1287,12 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
         const int* lo;
         const int* hi;
         Real* bx_dataptr;
-        Real* bu_dataptr;
 
         FArrayBox local_vol;
          for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
 
             const auto& particles = pti.GetArrayOfStructs();
             const ParticleType* pstruct = particles().dataPtr();
-            int nstride = particles.dataShape().first;
             const long nrp = pti.numParticles();
 
             FArrayBox& drag_fab = (*drag_ptr[lev])[pti];

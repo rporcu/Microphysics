@@ -22,8 +22,6 @@ void mfix::make_eb_cylinder()
 {
     ParmParse pp("cylinder");
 
-    int max_level_here = 0;
-
     /****************************************************************************
      * Get cylinder information from inputs file.                               *
      ***************************************************************************/
@@ -48,9 +46,6 @@ void mfix::make_eb_cylinder()
      * Build standard EB Factories                                              *
      *                                                                          *
      ***************************************************************************/
-
-    // set up ebfactory
-    EBSupport m_eb_support_level = EBSupport::full;
 
     amrex::Print() << " " << std::endl;
     amrex::Print() << " Internal Flow: " << inside << std::endl;

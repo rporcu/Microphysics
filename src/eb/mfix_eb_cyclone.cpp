@@ -29,12 +29,6 @@ mfix::make_eb_cyclone()
 {
     ParmParse pp("hopper");
 
-    int max_level_here = 0;
-
-    // set up ebfactory
-
-    EBSupport m_eb_support_level = EBSupport::full;
-
     /****************************************************************************
      * Build the cyclone's inlet tube.                                          *
      ***************************************************************************/
