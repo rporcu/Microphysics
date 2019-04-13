@@ -21,9 +21,10 @@ contains
         mu, slo, shi,          &
         bcent, blo, bhi,       &
         flag,  flo, fhi,       &
-        apx, axlo, axhi,       &
-        apy, aylo, ayhi,       &
-        apz, azlo, azhi,       &
+        apx,  axlo, axhi,      &
+        apy,  aylo, ayhi,      &
+        apz,  azlo, azhi,      &
+        vfrac, vflo, vfhi,     &
         do_explicit_diffusion, &
         eb_ho_dirichlet)
 
@@ -50,9 +51,10 @@ contains
            &   vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3),     &
            &    mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),       &
            & bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3),     &
-           & apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3)),   &
-           & apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3)),   &
-           & apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3))
+           &   apx(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3)), &
+           &   apy(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3)), &
+           &   apz(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3)), &
+           & vfrac(vflo(1):vfhi(1),vflo(2):vfhi(2),vflo(3):vfhi(3))
 
       integer(c_int),  intent(in   ) :: flag(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
 
@@ -103,7 +105,7 @@ contains
                                    vel(:,:,:,1), vlo, vhi, &
                                    flag, flo, fhi, &
                                    bcent(i,j,k,:), phib,  &
-                                   anrmx, anrmy, anrmz)
+                                   anrmx, anrmy, anrmz, vf)
 
          call compute_dphidn_3d_ho(dvdn, dxinv, i, j, k, &
                                    vel(:,:,:,2), vlo, vhi, &
@@ -121,19 +123,19 @@ contains
                                 vel(:,:,:,1), vlo, vhi, &
                                 flag, flo, fhi, &
                                 bcent(i,j,k,:), phib,  &
-                                anrmx, anrmy, anrmz)
+                                anrmx, anrmy, anrmz, vfrac(i,j,k))
 
          call compute_dphidn_3d(dvdn, dxinv, i, j, k, &
                                 vel(:,:,:,2), vlo, vhi, &
                                 flag, flo, fhi, &
                                 bcent(i,j,k,:), phib,  &
-                                anrmx, anrmy, anrmz)
+                                anrmx, anrmy, anrmz, vfrac(i,j,k))
 
          call compute_dphidn_3d(dwdn, dxinv, i, j, k, &
                                 vel(:,:,:,3), vlo, vhi, &
                                 flag, flo, fhi, &
                                 bcent(i,j,k,:), phib,  &
-                                anrmx, anrmy, anrmz)
+                                anrmx, anrmy, anrmz, vfrac(i,j,k))
       end if
 
       !
