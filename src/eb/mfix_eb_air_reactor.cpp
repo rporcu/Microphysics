@@ -46,11 +46,7 @@ mfix::make_eb_air_reactor()
 
     pp.query("outlet",  outlet_height );
 
-    int max_level_here = 0;
-
     // set up ebfactory
-
-    EBSupport m_eb_support_level = EBSupport::full;
 
     Array<Real,3> point, normal, center;
 

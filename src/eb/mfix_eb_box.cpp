@@ -20,8 +20,6 @@ void mfix::make_eb_box()
 {
     ParmParse pp("box");
 
-    int max_level_here = 0;
-
     /****************************************************************************
      *                                                                          *
      * Build standard EB Factories                                              *
@@ -29,10 +27,6 @@ void mfix::make_eb_box()
      ***************************************************************************/
 
     // set up ebfactory
-
-    EBSupport m_eb_support_level = EBSupport::full;
-
-    int max_coarsening_level = 100;
 
     amrex::Print() << " " << std::endl;
     amrex::Print() << "Now making the ebfactories ..." << std::endl;

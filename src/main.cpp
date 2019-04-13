@@ -223,8 +223,6 @@ int main (int argc, char* argv[])
        std::cout << "Time spent in init      " << end_init << std::endl;
 
     int finish  = 0;
-    int estatus = 0;
-
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
     // only if solve_fluid = T

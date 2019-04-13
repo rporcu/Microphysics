@@ -56,7 +56,6 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
    //
    LPInfo                       info;
    MLEBABecLap matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
-   array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
 
    // It is essential that we set MaxOrder of the solver to 2
    // if we want to use the standard sol(i)-sol(i-1) approximation

@@ -69,9 +69,8 @@ contains
       real(rt)   :: dxinv(3)
       real(rt)   :: dapx, dapy, dapz
       real(rt)   :: apnorm, apnorminv, anrmx, anrmy, anrmz
-      real(rt)   :: xit, yit, zit, s
-      real(rt)   :: bct(3), d1, d2, ddinv
-      real(rt)   :: u1, v1, w1, u2, v2, w2, dudn, dvdn, dwdn
+      real(rt)   :: bct(3)
+      real(rt)   :: dudn, dvdn, dwdn
       real(rt)   :: dudx, dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz, divu
       real(rt)   :: tauxx, tauyy, tauzz, tauxy, tauxz, tauyx, tauyz, tauzx, tauzy, tautmp
       real(rt)   :: phib

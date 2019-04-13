@@ -19,8 +19,6 @@ void mfix::make_eb_general() {
 
     ParmParse pp("mfix");
 
-    int max_level_here = 0;
-
     bool use_walls   = true;
     bool use_poly2   = false;
     bool use_divider = false;
@@ -103,13 +101,6 @@ void mfix::make_eb_general() {
     std::unique_ptr<MultiFab> mf_impfunc_walls;
     // Stores implicit function representing the polynomial "walls"
     std::unique_ptr<MultiFab> mf_impfunc_poly2;
-    // For DEM: save the polynomial level separately (to allow "water-tight"
-    // intersection with walls).
-    const EB2::Level * poly_lev;
-
-    EBSupport m_eb_support_level = EBSupport::full;
-
-    int max_coarsening_level = 100;
 
     for (int lev = 0; lev < nlev; lev++)
     {

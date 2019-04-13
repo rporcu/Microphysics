@@ -30,9 +30,6 @@
       ! collision in the normal direction
       real(rt) :: overlap_n, overlap_t(3)
 
-      ! square root of the overlap
-      real(rt) :: sqrt_overlap
-
       ! distance vector between two particle centers or between a particle
       ! center and wall when the two surfaces are just at contact (i.e. no
       ! overlap)

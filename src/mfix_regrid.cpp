@@ -29,9 +29,6 @@ mfix::Regrid ()
 
        if (!dual_grid)
        {
-           bool ba_changed = (pc->ParticleBoxArray(base_lev)        != grids[base_lev]);
-           bool dm_changed = (pc->ParticleDistributionMap(base_lev) !=  dmap[base_lev]);
-
            SetBoxArray       (base_lev, pc->ParticleBoxArray(base_lev));
            SetDistributionMap(base_lev, pc->ParticleDistributionMap(base_lev));
 
