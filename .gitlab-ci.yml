@@ -54,7 +54,7 @@ variables:
             -DDEBUG=$DEBUG
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
-    - make -C build -j 4
+    - make -C build build_tests -j 4
   artifacts:
     name: "$CI_JOB_NAME"
     expire_in: 1 week
