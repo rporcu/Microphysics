@@ -1286,7 +1286,6 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
 
         const int* lo;
         const int* hi;
-        Real* bx_dataptr;
 
         FArrayBox local_vol;
          for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
@@ -1308,12 +1307,9 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
 
             local_vol = 0.0;
 
-            bu_dataptr = local_vol.dataPtr();
-
             lo = grown_tilebox.loVect();
             hi = grown_tilebox.hiVect();
 #else
-            bx_dataptr = drag_fab.dataPtr();
 
             const Box& bx  = drag_fab.box();
 
