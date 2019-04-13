@@ -14,7 +14,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine usr3_des ( np, particles )
 
-   use constant,          only: PI
+   use amrex_constants_module, only: M_PI
    use usr,               only: init_angle, init_vel_t
    use amrex_fort_module, only: c_real => amrex_real
    use particle_mod,      only: particle_t
@@ -50,12 +50,12 @@ subroutine usr3_des ( np, particles )
            ! Calculate the particle-wall rebound angle.
            P = LC+31
            VEL_YZ(1) = sqrt(particles(p) % vel(1)**2 + particles(p) % vel(3)**2)
-           RBND_ANGLE(1) = atan(VEL_YZ(1)/particles(p) % vel(2))*180.0/PI
+           RBND_ANGLE(1) = atan(VEL_YZ(1)/particles(p) % vel(2))*180.0/M_PI
 
            ! Calculate the particle-wall rebound angle.
            P = LC
            VEL_YZ(2) = sqrt(particles(p) % vel(1)**2 + particles(p) % vel(3)**2)
-           RBND_ANGLE(2) = atan(VEL_YZ(2)/particles(p) % vel(2))*180.0/PI
+           RBND_ANGLE(2) = atan(VEL_YZ(2)/particles(p) % vel(2))*180.0/M_PI
 
            ! Write the results to a file.
            write(UDF_UNIT,"(3(3x,F11.4))") INIT_ANGLE(P), RBND_ANGLE(1:2)

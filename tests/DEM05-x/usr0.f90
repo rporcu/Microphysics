@@ -13,8 +13,7 @@
       SUBROUTINE USR0
 
 
-      use constant, only: PI
-
+      use amrex_constants_module, only: M_PI
 
       use usr, only: init_vel_t, init_angle
 
@@ -93,7 +92,7 @@
 ! Store the collision angle and initial tangential velocity
       DO NP=1, 62
          INIT_VEL_T(NP) = sqrt(lTMP(NP,2)**2 + lTMP(NP,3)**2)
-         INIT_ANGLE(NP) = abs(atan(INIT_VEL_T(NP)/lTMP(NP,1)))*180.0/PI
+         INIT_ANGLE(NP) = abs(atan(INIT_VEL_T(NP)/lTMP(NP,1)))*180.0/M_PI
       ENDDO
 
       END SUBROUTINE USR0
