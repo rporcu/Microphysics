@@ -75,7 +75,8 @@ contains
       real(rt)   :: dudx, dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz, divu
       real(rt)   :: tauxx, tauyy, tauzz, tauxy, tauxz, tauyx, tauyz, tauzx, tauzy, tautmp
       real(rt)   :: phib
-      integer    :: ixit, iyit, izit, is
+      integer    :: ixit, iyit, izit, is, index
+      real(rt)   :: dphidn(3)
 
       divw  = zero
       dxinv = one / dx
@@ -101,43 +102,22 @@ contains
       ! Value on wall -- here we enforce no-slip therefore 0 for all components
       phib = 0.d0
 
-      if (eb_ho_dirichlet .eq. 1) then
-         call compute_dphidn_3d_ho(dudn, dxinv, i, j, k, &
-                                   vel(:,:,:,1), vlo, vhi, &
-                                   flag, flo, fhi, &
-                                   bcent(i,j,k,:), phib,  &
-                                   anrmx, anrmy, anrmz)
-
-         call compute_dphidn_3d_ho(dvdn, dxinv, i, j, k, &
-                                   vel(:,:,:,2), vlo, vhi, &
-                                   flag, flo, fhi, &
-                                   bcent(i,j,k,:), phib,  &
-                                   anrmx, anrmy, anrmz)
-
-         call compute_dphidn_3d_ho(dwdn, dxinv, i, j, k, &
-                                   vel(:,:,:,3), vlo, vhi, &
-                                   flag, flo, fhi, &
-                                   bcent(i,j,k,:), phib,  &
-                                   anrmx, anrmy, anrmz)
-      else
-         call compute_dphidn_3d(dudn, dxinv, i, j, k, &
-                                vel(:,:,:,1), vlo, vhi, &
-                                flag, flo, fhi, &
-                                bcent(i,j,k,:), phib,  &
-                                anrmx, anrmy, anrmz, vfrac(i,j,k))
-
-         call compute_dphidn_3d(dvdn, dxinv, i, j, k, &
-                                vel(:,:,:,2), vlo, vhi, &
-                                flag, flo, fhi, &
-                                bcent(i,j,k,:), phib,  &
-                                anrmx, anrmy, anrmz, vfrac(i,j,k))
-
-         call compute_dphidn_3d(dwdn, dxinv, i, j, k, &
-                                vel(:,:,:,3), vlo, vhi, &
-                                flag, flo, fhi, &
-                                bcent(i,j,k,:), phib,  &
-                                anrmx, anrmy, anrmz, vfrac(i,j,k))
-      end if
+      dphidn = [dudn, dvdn, dwdn]
+      do index = 1, 3
+         if (eb_ho_dirichlet .eq. 1) then
+            call compute_dphidn_3d_ho(dphidn(index), dxinv, i, j, k, &
+               vel(:,:,:,index), vlo, vhi, &
+               flag, flo, fhi, &
+               bcent(i,j,k,:), phib,  &
+               anrmx, anrmy, anrmz)
+         else
+            call compute_dphidn_3d(dphidn(index), dxinv, i, j, k, &
+               vel(:,:,:,index), vlo, vhi, &
+               flag, flo, fhi, &
+               bcent(i,j,k,:), phib,  &
+               anrmx, anrmy, anrmz, vfrac(i,j,k))
+         end if
+      end do
 
       !
       ! transform them to d/dx, d/dy and d/dz given transverse derivatives are zero
