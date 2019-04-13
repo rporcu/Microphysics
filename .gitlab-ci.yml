@@ -2,10 +2,11 @@ image: mwm126/anaconda3:latest
 
 before_script:
   - mkdir -p ccache
-  - export CCACHE_BASEDIR=${PWD}
-  - export CCACHE_DIR=${PWD}/ccache
+  - export CCACHE_BASEDIR=${CI_PROJECT_DIR}
+  - export CCACHE_DIR=${CI_PROJECT_DIR}/ccache
 
 cache:
+  key: ${CI_JOB_NAME}
   paths:
     - ccache/
 
@@ -20,6 +21,7 @@ variables:
   ENABLE_MPI: "0"
   ENABLE_OMP: "0"
   FC: "gfortran"
+  GIT_CLEAN_FLAGS: -fdx -e ccache/
   GIT_DEPTH: 1
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: normal
@@ -32,8 +34,11 @@ variables:
     - docker
   script:
     - git submodule update --init
+    - if [[ $CI_COMMIT_REF_NAME == "develop" ]]; then DEBUG="OFF"; else DEBUG="ON"; fi
+    - if [[ $CI_COMMIT_REF_NAME == "develop" ]]; then BUILDTYPE="Release"; else BUILDTYPE="Debug"; fi
     - cmake -S subprojects/amrex
             -B amrex_build
+            -DCMAKE_BUILD_TYPE=$BUILDTYPE
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
             -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME
             -DENABLE_3D_NODAL_MLMG=1
@@ -46,7 +51,7 @@ variables:
     - cmake -S .
             -B build
             -DAMREX_INSTALL_DIR=$AMREX_HOME
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+            -DDEBUG=$DEBUG
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
     - make -C build -j 4
