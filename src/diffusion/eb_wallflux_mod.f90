@@ -43,6 +43,7 @@ contains
       integer(c_int), intent(in   ) :: axlo(3), axhi(3)
       integer(c_int), intent(in   ) :: aylo(3), ayhi(3)
       integer(c_int), intent(in   ) :: azlo(3), azhi(3)
+      integer(c_int), intent(in   ) :: vflo(3), vfhi(3)
       integer(c_int), intent(in   ) ::  blo(3),  bhi(3)
       integer(c_int), intent(in   ) ::  flo(3),  fhi(3)
 
@@ -105,7 +106,7 @@ contains
                                    vel(:,:,:,1), vlo, vhi, &
                                    flag, flo, fhi, &
                                    bcent(i,j,k,:), phib,  &
-                                   anrmx, anrmy, anrmz, vf)
+                                   anrmx, anrmy, anrmz)
 
          call compute_dphidn_3d_ho(dvdn, dxinv, i, j, k, &
                                    vel(:,:,:,2), vlo, vhi, &
