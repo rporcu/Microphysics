@@ -15,10 +15,10 @@
 subroutine usr3_des ( np, particles )
 
    use amrex_constants_module, only: M_PI
-   use usr,               only: init_angle, init_vel_t
    use amrex_fort_module, only: c_real => amrex_real
    use particle_mod,      only: particle_t
    use run,               only: des_tstart, des_dt, tstop
+   use usr,               only: init_angle, init_vel_t
 
    implicit none
 
@@ -57,7 +57,7 @@ subroutine usr3_des ( np, particles )
            P = LC
            VEL_YZ(2) = sqrt(particles(p) % vel(2)**2 + particles(p) % vel(3)**2)
            RBND_ANGLE(2) = atan(VEL_YZ(2)/particles(p) % vel(1))*180.0/M_PI
-      
+
            ! Write the results to a file.
            write(UDF_UNIT,"(3(3x,F11.4))") INIT_ANGLE(P), RBND_ANGLE(1:2)
        end do
@@ -75,12 +75,12 @@ subroutine usr3_des ( np, particles )
            P = LC+31
            VEL_YZ(1) = sqrt(particles(p) % vel(2)**2 + particles(p) % vel(3)**2)
            RST_COEFF(1) =  VEL_YZ(1)/INIT_VEL_T(p)
-           
+
            ! Calculate the particle-wall restitution coefficient.
            P=LC
            VEL_YZ(2) = sqrt(particles(p) % vel(2)**2 + particles(p) % vel(3)**2)
            RST_COEFF(2) =  VEL_YZ(2)/INIT_VEL_T(p)
-           
+
            ! Write the results to a file.
            write(UDF_UNIT,"(3(3x,F11.4))") INIT_ANGLE(P), RST_COEFF(1:2)
        end do
@@ -105,7 +105,7 @@ subroutine usr3_des ( np, particles )
            ! Write the results to a file.
            write(UDF_UNIT,"(3(3x,F11.4))") INIT_ANGLE(P), ROT_YZ(1:2)
        end do
-   
+
    end if
    close(UDF_UNIT)
 

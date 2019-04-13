@@ -13,7 +13,6 @@
       SUBROUTINE USR0
 
       use amrex_constants_module, only: M_PI
-
       use usr, only: init_vel_t, init_angle
 
       IMPLICIT NONE
