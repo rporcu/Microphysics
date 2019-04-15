@@ -91,6 +91,12 @@ build-openmp:
     - develop
   tags:
     - docker
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - build/Testing/
 
 .test_serial: &serial_test_template
   <<: *test_template
