@@ -1,16 +1,15 @@
-
-subroutine get_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out, kn_w_out, &
-                                        mew_out, mew_w_out, etan_out, etan_w_out, etat_out, & 
-                                        etat_w_out ) &
-  bind(C, name="get_collision_coefficients")
+subroutine get_lsd_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out, kn_w_out, &
+     mew_out, mew_w_out, etan_out, etan_w_out, etat_out, &
+     etat_w_out ) &
+     bind(C, name="get_lsd_collision_coefficients")
 
    use amrex_fort_module,               only: rt => amrex_real
    use iso_c_binding,                   only: c_int
    use param,                           only: dim_m
    use constant,                        only: mmax
-   use discretelement,                   only: kn, kn_w, kt, kt_w, kt_fac, kt_w_fac, mew, mew_w, &
+   use discretelement,                   only: kn, kn_w, kt, kt_w, mew, mew_w, &
                                               des_etan, des_etan_wall, des_etat, des_etat_wall
-                                              
+
    implicit none
 
    real(rt),       intent(inout) :: kt_out, kt_w_out, kn_out, kn_w_out, mew_out, mew_w_out
@@ -39,4 +38,4 @@ subroutine get_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out, kn
    etan_w_out = des_etan_wall
    etat_w_out = des_etat_wall
 
-end subroutine get_collision_coefficients
+end subroutine get_lsd_collision_coefficients

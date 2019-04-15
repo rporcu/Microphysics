@@ -43,7 +43,7 @@ contains
       use ic, only: ic_dp_max,  ic_ro_s_max
 
       use discretelement, only: particle_types
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -121,7 +121,7 @@ contains
       pc = init_pc
       nplp: do p=1,np
 
-         pvol = (pi/6.0d0)*dp(p)**3
+         pvol = (M_PI/6.0d0)*dp(p)**3
 
          pc = pc + 1
 
@@ -172,7 +172,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -224,7 +224,7 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ! Total to seed over the whole IC region
       max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
@@ -295,7 +295,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -347,7 +347,7 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ! Total to seed over the whole IC region
       max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
@@ -421,7 +421,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -473,7 +473,7 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ! Total to seed over the whole IC region
       max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
@@ -549,7 +549,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -606,7 +606,7 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ic_len = ic_dhi - ic_dlo - max_dp
       ic_dlo = ic_dlo + max_rp
@@ -714,7 +714,7 @@ contains
     bind(C, name="mfix_particle_generator_prop")
 
       use particle_mod
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       integer(c_int),   intent(in   ) :: nrp
       type(particle_t), intent(inout) :: particles(nrp)
@@ -732,7 +732,7 @@ contains
          rad  = rdata(p,4)
          rho  = rdata(p,5)
 
-         vol  = (4.0d0/3.0d0)*pi*rad**3
+         vol  = (4.0d0/3.0d0)*M_PI*rad**3
          mass = vol * rho
          omoi = 2.5d0/(mass * rad**2)
 

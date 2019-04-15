@@ -2,13 +2,14 @@ target_include_directories(mfixcore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIS
 
 target_sources( mfixcore
    PRIVATE
-   convection_mod.f90 
+   convection_mod.f90
    mfix_mac_F.H
-   slopes_mod.f90
    set_mac_velocity_bcs.f90
-   MacProjection.H
-   MacProjection.cpp
-   mfix_convection.cpp
+   mfix_compute_ugradu.cpp
+   mfix_compute_MAC_velocities.cpp
+   mfix_MAC_projection.cpp
    mfix_slopes.cpp
    convection_eb_mod.f90
    )
+
+

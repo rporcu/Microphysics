@@ -1,52 +1,3 @@
-!
-!
-!  This module contains the subroutines to perform some of the steps of the
-!  projection method.
-!
-!
-module projection_mod
-
-   use amrex_fort_module, only: ar => amrex_real
-   use iso_c_binding ,    only: c_int
-   use param,             only: zero, half, one
-
-   implicit none
-   private
-
-contains
-
-   subroutine compute_bcoeff_nd ( lo, hi, bcoeff, blo, bhi, &
-        ro_g, slo, shi, ep_g, dir )  bind(C)
-
-      ! Loop bounds
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
-
-      ! Array bounds
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: blo(3),bhi(3)
-
-      ! Direction
-      integer(c_int), intent(in   ) :: dir
-
-      ! Arrays
-      real(ar),       intent(in   ) :: &
-           ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(ar),       intent(  out) :: &
-           bcoeff(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3))
-
-      integer      :: i, j, k
-
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
-               bcoeff(i,j,k) =  ep_g(i,j,k) / ro_g(i,j,k)
-            end do
-         end do
-      end do
-
-   end subroutine compute_bcoeff_nd
 
    !
    ! Set the boundary condition for Pressure Poisson Equation (PPE)
@@ -56,11 +7,17 @@ contains
    ! the user-provided BCs are uniform, and then return a single BC type for
    ! each domain wall.
    !
-   subroutine set_ppe_bc ( bc_lo, bc_hi, domlo, domhi, ng, bct_ilo, bct_ihi, &
-        & bct_jlo, bct_jhi, bct_klo, bct_khi)  bind(C)
+   subroutine set_ppe_bcs ( bc_lo, bc_hi, domlo, domhi, ng,  &
+                            bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi)  bind(C)
+
+      use amrex_fort_module, only: ar => amrex_real
+      use iso_c_binding ,    only: c_int
+      use param,             only: zero, half, one
 
       use amrex_lo_bctypes_module
       use bc
+
+      implicit none
 
       ! Array of global BC types
       integer(c_int), intent(  out) :: bc_lo(3), bc_hi(3)
@@ -179,6 +136,4 @@ contains
 
       end function get_bc_face
 
-   end subroutine set_ppe_bc
-
-end module projection_mod
+   end subroutine set_ppe_bcs

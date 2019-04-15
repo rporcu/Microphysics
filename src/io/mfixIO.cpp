@@ -25,18 +25,13 @@ namespace
 void
 mfix::InitIOData ()
 {
+    if (ooo_debug) amrex::Print() << "InitIOData" << std::endl;
     // Define the list of vector variables on faces that need to be written
     // to plotfile/checkfile.
     vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
-    // Define the list of scalar variables at cell centers that need to be
-    // written to plotfile/checkfile. "volfrac" MUST always be last without any
-    // mf associated to it!!!
-    pltscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "vort", "diveu", "volfrac"};
-    pltscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &vort,  &diveu};
-
     chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets", "implicit_functions"};
-    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &rop_g,  &mu_g,  &level_sets,  &implicit_functions};
+    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &ep_g,  &mu_g,  &level_sets,  &implicit_functions};
 }
 
 void
@@ -147,27 +142,7 @@ mfix::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time
 
     if ( solve_dem )
     {
-        Vector<std::string> real_comp_names;
-        Vector<std::string>  int_comp_names;
-        real_comp_names.push_back("radius");
-        real_comp_names.push_back("volume");
-        real_comp_names.push_back("mass");
-        real_comp_names.push_back("density");
-        real_comp_names.push_back("omoi");
-        real_comp_names.push_back("velx");
-        real_comp_names.push_back("vely");
-        real_comp_names.push_back("velz");
-        real_comp_names.push_back("omegax");
-        real_comp_names.push_back("omegay");
-        real_comp_names.push_back("omegaz");
-        real_comp_names.push_back("dragx");
-        real_comp_names.push_back("dragy");
-        real_comp_names.push_back("dragz");
-         int_comp_names.push_back("phase");
-         int_comp_names.push_back("state");
-
-       bool is_checkpoint = true;
-       pc -> Checkpoint(checkpointname, "particles", is_checkpoint, real_comp_names, int_comp_names);
+       pc -> Checkpoint(checkpointname, "particles");
     }
 
 
@@ -203,6 +178,7 @@ void
 mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                IntVect& Nrep)
 {
+    if (ooo_debug) amrex::Print() << "Restart" << std::endl;
     BL_PROFILE("mfix::Restart()");
 
     amrex::Print() << "  Restarting from checkpoint " << restart_file << std::endl;
@@ -293,13 +269,10 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         Geometry::ProbDomain(RealBox(prob_lo,prob_hi));
 
         for (int lev = 0; lev < nlevs; ++lev) {
+
             BoxArray orig_ba,ba;
             orig_ba.readFrom(is);
             GotoNextLine(is);
-
-            SetBoxArray(lev,orig_ba);
-            DistributionMapping orig_dm { orig_ba, ParallelDescriptor::NProcs() };
-            SetDistributionMap(lev,orig_dm);
 
             Box orig_domain(orig_ba.minimalBox());
 
@@ -311,6 +284,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
             // Particle data is loaded into the MFIXParticleContainer's base
             // class using amrex::NeighborParticleContainer::Restart
+
             if ( solve_dem && lev == 0)
               pc->Restart(restart_file, "particles");
 
@@ -340,9 +314,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                Box new_domain(ba.minimalBox());
                geom[lev].Domain(new_domain);
 
-               amrex::Print() << " NEW BA has " <<      ba.size()  << " GRIDS " << std::endl;
-               amrex::Print() << " NEW Domain" << geom[0].Domain() << std::endl;
-
                DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
                ReMakeNewLevelFromScratch(lev,ba,dm);
             }
@@ -358,8 +329,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     }
 
     amrex::Print() << "  Finished reading header" << std::endl;
-
-
 
     /***************************************************************************
      * Load fluid data                                                         *
@@ -420,24 +389,29 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                }
            }
 
+          // If we have created the walls using the domain boundary conditions and not
+          //    by creating them from implicit functions, then the implicit_functions mf
+          //    will be empty.  We don't want to fail when reading so we allow the code
+          //    to read it in an empty multifab just for this one.
+          int allow_empty_mf = 0;
+          if (chkscaVarsName[i] == "implicit_functions") allow_empty_mf = 1;
+
           MultiFab mf;
           VisMF::Read(mf,
                       amrex::MultiFabFileFullPrefix(lev,
                                                     restart_file, level_prefix,
-                                                    chkscaVarsName[i])
+                                                    chkscaVarsName[i]),
+                                                    nullptr,
+                                                    ParallelDescriptor::IOProcessorNumber(),
+                                                    allow_empty_mf
               );
 
           if (Nrep == IntVect::TheUnitVector()) {
+
               amrex::Print() << "  - loading scalar data: " << chkscaVarsName[i] << std::endl;
 
-              // Copy mf into chkscalarVars
-              if(chkscaVarsName[i] == "level_sets") {
-                  // The level-set data is special, and because we want
-                  // to access it even without a fluid present, it is
-                  // loaded below.
-              } else {
-                  ( * chkscalarVars[i])[lev]->copy(mf, 0, 0, 1, 0, 0);
-              }
+             // Copy from the mf we used to read in to the mf we will use going forward
+             (*chkscalarVars[i])[lev]->copy(mf, 0, 0, 1, 0, 0);
 
 
           } else {
@@ -459,6 +433,18 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         }
        }
        amrex::Print() << "  Finished reading fluid data" << std::endl;
+    }
+
+    // Make sure that the particle BoxArray is the same as the mesh data -- we can
+    //      create a dual grid decomposition in the regrid operation
+    if ( solve_dem)
+    {
+        for (int lev = 0; lev <= finestLevel(); lev++)
+        {
+          pc->SetParticleBoxArray       (lev, grids[lev]);
+          pc->SetParticleDistributionMap(lev,  dmap[lev]);
+        }
+        pc->Redistribute();
     }
 
     int lev = 0;
@@ -537,11 +523,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         ro_g[lev]->FillBoundary(geom[lev].periodicity());
        ro_go[lev]->FillBoundary(geom[lev].periodicity());
 
-        rop_g[lev]->FillBoundary(geom[lev].periodicity());
-       rop_go[lev]->FillBoundary(geom[lev].periodicity());
-
-           mu_g[lev]->FillBoundary(geom[lev].periodicity());
-       lambda_g[lev]->FillBoundary(geom[lev].periodicity());
+         mu_g[lev]->FillBoundary(geom[lev].periodicity());
 
        // Fill the bc's just in case
         vel_g[lev]->FillBoundary(geom[lev].periodicity());
@@ -668,212 +650,6 @@ void mfix::WriteJobInfo (const std::string& dir) const
 
         jobInfoFile.close();
   }
-}
-
-void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time ) const
-{
-    BL_PROFILE("mfix::WritePlotFile()");
-
-    const std::string& plotfilename = amrex::Concatenate(plot_file,nstep);
-
-    amrex::Print() << "  Writing plotfile " << plotfilename << std::endl;
-
-
-    if (solve_fluid)
-    {
-       const int ngrow = 0;
-
-       Vector< std::unique_ptr<MultiFab> > mf(nlev);
-
-       for (int lev = 0; lev < nlev; ++lev) {
-
-          // the "+1" here is for volfrac
-          const int ncomp = vecVarsName.size() + pltscalarVars.size() + 1;
-          mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow,  MFInfo(), *ebfactory[lev]));
-
-          // Velocity components
-          MultiFab::Copy(*mf[lev], (*vel_g[lev]), 0, 0, 1, 0);
-          MultiFab::Copy(*mf[lev], (*vel_g[lev]), 1, 1, 1, 0);
-          MultiFab::Copy(*mf[lev], (*vel_g[lev]), 2, 2, 1, 0);
-
-          // Pressure gradient components
-          MultiFab::Copy(*mf[lev], (*gp[lev]), 0, 3, 1, 0);
-          MultiFab::Copy(*mf[lev], (*gp[lev]), 1, 4, 1, 0);
-          MultiFab::Copy(*mf[lev], (*gp[lev]), 2, 5, 1, 0);
-
-          // Scalar variables
-          int dcomp = vecVarsName.size();
-          for( int i = 0; i < pltscalarVars.size(); i++ ) {
-              if (pltscaVarsName[i] == "p_g") {
-                MultiFab p_nd(p_g[lev]->boxArray(),dmap[lev],1,0);
-                p_nd.setVal(0.);
-                MultiFab::Copy(p_nd, (* p_g[lev]), 0, 0, 1, 0);
-                MultiFab::Add (p_nd, (*p0_g[lev]), 0, 0, 1, 0);
-                amrex::average_node_to_cellcenter(*mf[lev], dcomp, p_nd, 0, 1);
-              } else if (pltscaVarsName[i] == "diveu") {
-                 amrex::average_node_to_cellcenter(*mf[lev], dcomp, *(*pltscalarVars[i] )[lev].get(), 0, 1);
-              } else {
-                 MultiFab::Copy(*mf[lev], *((*pltscalarVars[i])[lev].get()), 0, dcomp, 1, 0);
-              }
-              dcomp++;
-          }
-
-          if (ebfactory[lev]) {
-              MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, dcomp, 1, 0);
-          } else {
-              mf[lev]->setVal(1.0,dcomp,1,0);
-          }
-       }
-
-       Vector<const MultiFab*> mf2(nlev);
-
-       for (int lev = 0; lev < nlev; ++lev) {
-           EB_set_covered(*mf[lev], 0.0);
-           mf2[lev] = mf[lev].get();
-       }
-
-       // Concatenate scalar and vector var names
-       Vector<std::string>  names;
-       names.insert( names.end(),    vecVarsName.begin(),    vecVarsName.end());
-       names.insert( names.end(), pltscaVarsName.begin(), pltscaVarsName.end());
-
-       amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf2, names,
-                                      Geom(), time, istep, refRatio());
-    }
-    else // no fluid
-    {
-        // Some post-processing tools (such as yt) might still need some basic
-        // MultiFab header information to function. We provide this here by
-        // creating an "empty" plotfile header (which essentially only contains
-        // the BoxArray information). Particle data is saved elsewhere.
-
-        Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
-        Vector<std::string>  names;
-        // NOTE: leave names vector empty => header should reflect nComp = 0
-        //names.insert(names.end(), "placeholder");
-
-        // Create empty MultiFab containing the right BoxArray (NOTE: setting
-        // nComp = 1 here to avoid assertion fail in debug build).
-        for (int lev = 0; lev <= finest_level; ++lev)
-            mf[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
-
-        Vector<const MultiFab*> mf2(finest_level+1);
-
-        for (int lev = 0; lev <= finest_level; ++lev)
-            mf2[lev] = mf[lev].get();
-
-        // Write only the Headers corresponding to the "empty" mf/mf2 MultiFabs
-        amrex::WriteMultiLevelPlotfileHeaders(plotfilename, finest_level+1, mf2, names,
-                                              Geom(), time, istep, refRatio());
-
-    }
-
-    WriteJobInfo(plotfilename);
-
-    if ( solve_dem )
-    {
-        Vector<std::string> real_comp_names;
-        Vector<std::string>  int_comp_names;
-        real_comp_names.push_back("radius");
-        real_comp_names.push_back("volume");
-        real_comp_names.push_back("mass");
-        real_comp_names.push_back("density");
-        real_comp_names.push_back("omoi");
-        real_comp_names.push_back("velx");
-        real_comp_names.push_back("vely");
-        real_comp_names.push_back("velz");
-        real_comp_names.push_back("omegax");
-        real_comp_names.push_back("omegay");
-        real_comp_names.push_back("omegaz");
-        real_comp_names.push_back("dragx");
-        real_comp_names.push_back("dragy");
-        real_comp_names.push_back("dragz");
-         int_comp_names.push_back("phase");
-         int_comp_names.push_back("state");
-
-       bool is_checkpoint = true;
-       pc -> Checkpoint(plotfilename, "particles", is_checkpoint, real_comp_names, int_comp_names);
-    }
-}
-
-
-void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
-{
-    BL_PROFILE("mfix::WriteStaticPlotFile()");
-
-    Print() << "  Writing static quantities " << plotfilename << std::endl;
-
-
-    /****************************************************************************
-     *                                                                          *
-     * Static (un-changing variables):                                          *
-     *     1. level-set data                                                    *
-     *     2. EB implicit function data                                         *
-     *     3. volfrac (from EB) data                                            *
-     *                                                                          *
-     ***************************************************************************/
-
-    Vector<std::string> static_names = {"level_sets", "implicit_functions", "volfrac"};
-    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets,
-                                                                       & implicit_functions};
-
-    const int ngrow = 0;
-    const int ncomp = static_names.size();
-
-
-    /****************************************************************************
-     *                                                                          *
-     * Collect variables together into a single multi-component MultiFab        *
-     *                                                                          *
-     ***************************************************************************/
-
-    Vector<std::unique_ptr<MultiFab>> mf(nlev);
-    Vector<const MultiFab *>          mf_ptr(nlev);
-
-    for (int lev = 0; lev < nlev; lev++)
-    {
-        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(),
-                                   * particle_ebfactory[lev]));
-
-        // Don't iterate over all ncomp => last component is for volfrac
-        for (int dcomp = 0; dcomp < ncomp - 1; dcomp++)
-        {
-            const BoxArray nd_ba = amrex::convert(grids[lev], IntVect::TheNodeVector());
-            MultiFab mf_loc = MFUtil::regrid(nd_ba, dmap[lev], *(*(static_vars[dcomp]))[lev], true);
-            // amrex::average_node_to_cellcenter (MultiFab &cc, int dcomp, const MultiFab &nd,
-            //                                    int scomp, int ncomp, int ngrow=0)
-            amrex::average_node_to_cellcenter(* mf[lev], dcomp, mf_loc, 0, 1, ngrow);
-        }
-
-        if (ebfactory[lev]) {
-            EBFArrayBoxFactory ebf(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                    m_eb_full_grow_cells}, m_eb_support_level);
-
-            //MultiFab::Copy (MultiFab &dst, const MultiFab &src,
-            //                int srccomp, int dstcomp, int numcomp, const IntVect &nghost)
-            MultiFab::Copy(* mf[lev], ebf.getVolFrac(), 0, ncomp - 1, 1, ngrow);
-
-        } else {
-            // setVal (value_type val, int comp, int num_comp, int nghost=0)
-            mf[lev]->setVal(1.0, ncomp - 1, 1, ngrow);
-        }
-    }
-
-    for (int lev = 0; lev < nlev; ++lev)
-    {
-        // Don't do this (below) as it zeros out the covered cells...
-        // EB_set_covered(* mf[lev], 0.0);
-        mf_ptr[lev] = mf[lev].get();
-    }
-
-    Real time = 0.;
-    amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf_ptr, static_names,
-                                   Geom(), time, istep, refRatio());
-
-    WriteJobInfo(plotfilename);
-
-    Print() << "  Done writing static quantities " << plotfilename << std::endl;
 }
 
 

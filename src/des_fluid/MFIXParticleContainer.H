@@ -111,10 +111,6 @@ public:
     Vector<RealVect> GetMaxForces();
 
     void BalanceParticleLoad_KDTree();
-    ///
-    /// Write out all particles at a level in the format fcompare_par can read
-    ///
-    void writeAllForComparison(int lev);
 
     ///
     /// Write out all particles in the format of the particle_input.dat files so we
@@ -160,8 +156,7 @@ public:
     ///
     /// Calculate particle-induced drag on the fluid
     ///
-    void CalcDragOnFluid(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
-                         const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+    void CalcDragOnFluid(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
                          const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
@@ -174,8 +169,7 @@ public:
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-    void PICMultiDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
-                            const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+    void PICMultiDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
                             const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
@@ -226,7 +220,7 @@ private:
     RealVect loc_maxpfor;
     RealVect loc_maxwfor;
 
-    void time_advance(MFIXParIter& pti, int ntot, Real subdt, 
+    void time_advance(MFIXParIter& pti, int ntot, Real subdt,
                       Gpu::ManagedDeviceVector<Real>& tow, Gpu::ManagedDeviceVector<Real>& fc);
 
     void set_particle_properties(int pstate, Real pradius, Real pdensity,

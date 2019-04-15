@@ -131,3 +131,5 @@ xlo.velocity = 0.015
 
 xhi.type = "po"
 xhi.pressure = 0.0
+
+amr.plt_regtest = 1

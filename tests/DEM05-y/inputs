@@ -13,7 +13,7 @@ amr.blocking_factor = 1
 amr.max_level = 0
 
 # Geometry
-geometry.coord_sys   = 0                  # 0: Cartesian   
+geometry.coord_sys   = 0                  # 0: Cartesian
 geometry.is_periodic = 1     0     1      # Is periodic in each direction?
 geometry.prob_lo     = 0.    0.    0.       # lo corner of physical domain
 geometry.prob_hi     = 0.5   0.2   0.5      # hi corner of physical domain
@@ -24,3 +24,5 @@ box.Lo = 0.0  0.0  0.0
 box.Hi = 1.0  1.0  1.0
 
 box.offset = 1.0e-15
+
+amr.plt_regtest = 1

@@ -32,8 +32,6 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
 
     const Box& domain = geom.Domain();
 
-    AmrParGDB* my_gdb = mfix_for_fillpatching->GetParGDB();
-
     // This is a bit hack-y but does get us the right level
     int lev = 0;
     for (int ilev = 0; ilev < 10; ilev++)
@@ -188,9 +186,7 @@ mfix::mfix_set_scalar_bcs ()
      {
         set_scalar_bcs ( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
                         (*ro_g[lev])[mfi].dataPtr (),
-                        (*rop_g[lev])[mfi].dataPtr (),
                         (*mu_g[lev])[mfi].dataPtr (),
-                        (*lambda_g[lev])[mfi].dataPtr (),
                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                         bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
@@ -199,9 +195,11 @@ mfix::mfix_set_scalar_bcs ()
       }
         ep_g[lev] -> FillBoundary (geom[lev].periodicity());
         ro_g[lev] -> FillBoundary (geom[lev].periodicity());
-       rop_g[lev] -> FillBoundary (geom[lev].periodicity());
         mu_g[lev] -> FillBoundary (geom[lev].periodicity());
-    lambda_g[lev] -> FillBoundary (geom[lev].periodicity());
+
+        EB_set_covered(*ep_g[lev], 0, ep_g[lev]->nComp(), ep_g[lev]->nGrow(), covered_val);
+        EB_set_covered(*ro_g[lev], 0, ro_g[lev]->nComp(), ro_g[lev]->nGrow(), covered_val);
+        EB_set_covered(*mu_g[lev], 0, mu_g[lev]->nComp(), mu_g[lev]->nGrow(), covered_val);
   }
 }
 

@@ -20,6 +20,8 @@ amr.max_level  = 0
 amr.plot_int   = 25
 amr.check_int  = 25
 
+amr.plt_regtest = 1
+
 amr.restart = newchk00000_for_replicate
 
 amr.repl_x = 2

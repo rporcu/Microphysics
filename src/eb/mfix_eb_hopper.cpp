@@ -27,8 +27,6 @@ mfix::make_eb_hopper()
 {
     ParmParse pp("hopper");
 
-    int max_level_here = 0;
-
     /****************************************************************************
      * Get hopper information from inputs file.                                 *
      ***************************************************************************/
@@ -53,9 +51,6 @@ mfix::make_eb_hopper()
      * Build standard EB Factories                                              *
      *                                                                          *
      ***************************************************************************/
-
-    // set up ebfactory
-    EBSupport m_eb_support_level = EBSupport::full;
 
     amrex::Print() << " " << std::endl;
     amrex::Print() << " Orifice Radius: " << orifice_radius << std::endl;

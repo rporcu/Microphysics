@@ -122,8 +122,6 @@ contains
     integer(c_int), intent(in) :: domlo(3), domhi(3)
 
     integer :: bcv, m
-    integer :: i_w, j_s, k_b
-    integer :: i_e, j_n, k_t
 
     logical :: flow_bc
 

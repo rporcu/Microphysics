@@ -23,9 +23,6 @@
 ! Universal gas constant; (Pa.m3/kmol.K)
       real(rt), parameter :: gas_const = 8314.56D0
 
-! Pi, the ubiquitous irrational number
-      real(rt), PARAMETER :: pi = 4.d0*atan(1.d0)
-
 ! Solids phase constants
 !-----------------------------------------------------------------------
 ! Number of solids phases

@@ -1,4 +1,3 @@
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: calc_particle_beta                                      !
@@ -49,7 +48,7 @@ subroutine calc_particle_beta ( ep_g, slo, shi,       &
    !---------------------------------------------------------------------//
    ! Loop counters: Particle, fluid cell, neighbor cells
    integer  :: p, i, j, k
-   real(rt) :: velfp(3), velp(3), beta
+   real(rt) :: velfp(3), beta
    real(rt) :: odx, ody, odz, ovol
 
    odx  = one/dx(1)

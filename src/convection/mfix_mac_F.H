@@ -9,7 +9,6 @@ extern "C"
 {
 #endif
 
-
     void compute_ugradu (
 	const int* lo, const int* hi,
 	amrex::Real* rhs, const int* rlo, const int* rhi, 

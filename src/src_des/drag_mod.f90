@@ -253,7 +253,7 @@ contains
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use constant, only : PI
+      use amrex_constants_module, only : M_PI
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -306,7 +306,7 @@ contains
       WenYu = 0.75D0*C_d*VREL*ROPg*EPg**(-2.65D0) / DPM
 
 ! Switch function
-      PHI_gs = ATAN(150.D0*1.75D0*(EPg - 0.8D0))/PI + 0.5D0
+      PHI_gs = ATAN(150.D0*1.75D0*(EPg - 0.8D0))/M_PI + 0.5D0
 
 ! Blend the models
       lDgA = (1.D0-PHI_gs)*Ergun + PHI_gs*WenYu

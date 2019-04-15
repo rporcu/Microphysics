@@ -2,16 +2,12 @@
 
 set -euo pipefail
 
-# set case directory
-RUN_NAME="FLD01"
-
 MFIX=./mfix
 if [ -n "$1" ]; then
     MFIX=$1
 fi
 
 if [ -n "$2" ]; then
-    FCOMPARE=$2/plt_compare_diff_grids
     FEXTRACT=$2/fextract
 fi
 if [ -z "${FEXTRACT}" ]; then
@@ -33,8 +29,6 @@ if [ "$ENABLE_MPI" -eq "1" ]; then
 else
     MPIRUN=""
 fi
-
-FCOMPARE=${FCOMPARE:-}
 
 rm -rf const_plt* POST_* &> /dev/null
 time -p ${MPIRUN} "${MFIX}" "${INPUTS}"

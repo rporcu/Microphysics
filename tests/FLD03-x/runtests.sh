@@ -11,7 +11,6 @@ if [ -n "$1" ]; then
 fi
 
 if [ -n "$2" ]; then
-    FCOMPARE=$2/plt_compare_diff_grids
     FEXTRACT=$2/fextract
 fi
 if [ -z "${FEXTRACT}" ]; then
@@ -34,8 +33,6 @@ if [ "$ENABLE_MPI" -eq "1" ]; then
 else
     MPIRUN=""
 fi
-
-FCOMPARE=${FCOMPARE:-}
 
 rm -rf POST_* const_plt* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} "${MFIX}" "${INPUTS}"

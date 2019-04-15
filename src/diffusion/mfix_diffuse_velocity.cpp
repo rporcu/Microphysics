@@ -39,7 +39,14 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
                 bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
    // Compute the coefficients
-   mfix_compute_bcoeff_diff();
+   for (int lev = 0; lev < nlev; lev++)
+   {
+       average_cellcenter_to_face( GetArrOfPtrs(bcoeff_cc[lev]), *mu_g[lev], geom[lev] );
+
+      bcoeff_cc[lev][0] -> FillBoundary(geom[lev].periodicity());
+      bcoeff_cc[lev][1] -> FillBoundary(geom[lev].periodicity());
+      bcoeff_cc[lev][2] -> FillBoundary(geom[lev].periodicity());
+   }
 
    //
    // First define the matrix (operator).
@@ -49,8 +56,6 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
    //
    LPInfo                       info;
    MLEBABecLap matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
-   Vector<const MultiFab*>      tmp;
-   array<MultiFab const*,AMREX_SPACEDIM>   b_tmp;
 
    // It is essential that we set MaxOrder of the solver to 2
    // if we want to use the standard sol(i)-sol(i-1) approximation
@@ -69,16 +74,17 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
    // Copy the PPE coefficient into the proper data strutcure
    for (int lev = 0; lev < nlev; lev++)
    {
-      tmp = amrex::GetVecOfConstPtrs ( bcoeff_diff[lev] ) ;
-      b_tmp[0] = tmp[0];
-      b_tmp[1] = tmp[1];
-      b_tmp[2] = tmp[2];
-
       // This sets the spatially varying A coefficients
-      matrix.setACoeffs ( lev, (*rop_g[lev]) );
+      MultiFab a_coeff( ro_g[lev]->boxArray(), ro_g[lev]->DistributionMap(), 1, ro_g[lev]->nGrow(),
+                        MFInfo(), *ebfactory[lev]);
+
+      MultiFab::Copy    ( a_coeff, *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow() );
+      MultiFab::Multiply( a_coeff, *ep_g[lev], 0, 0, 1, ep_g[lev]->nGrow() );
+
+      matrix.setACoeffs ( lev, a_coeff );
 
       // This sets the spatially varying b coefficients
-      matrix.setBCoeffs ( lev, b_tmp );
+      matrix.setBCoeffs ( lev, GetArrOfConstPtrs(bcoeff_cc[lev]) );
 
       // This sets the coefficient on the wall and defines it as a homogeneous Dirichlet bc for the solve.
       matrix.setEBHomogDirichlet ( lev, (*mu_g[lev]) );
@@ -102,23 +108,24 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       solver.setCGVerbose (diff_mg_cg_verbose);
 
       // Set the max number of iterations
-      solver.setMaxIter (mg_max_iter);
-      solver.setMaxFmgIter (mg_max_fmg_iter);
-      solver.setCGMaxIter (mg_cg_maxiter);
+      solver.setMaxIter (diff_mg_max_iter);
+      solver.setMaxFmgIter (diff_mg_max_fmg_iter);
+      solver.setCGMaxIter (diff_mg_cg_maxiter);
 
       // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
       for (int lev = 0; lev < nlev; lev++)
       {
-         rhs_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
-         phi_diff[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
+         rhs_cc[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
+         phi_cc[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
 
-         EB_set_covered(*phi_diff[lev], 0, phi_diff[lev]->nComp(), phi_diff[lev]->nGrow(), covered_val);
-         phi_diff[lev] -> FillBoundary (geom[lev].periodicity());
+         EB_set_covered(*phi_cc[lev], 0, phi_cc[lev]->nComp(), phi_cc[lev]->nGrow(), covered_val);
+         phi_cc[lev] -> FillBoundary (geom[lev].periodicity());
 
-         matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi_diff)[lev] );
+         matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi_cc)[lev] );
 
-         // Define RHS = (rop) * (vel_g)
-         MultiFab::Multiply((*rhs_diff[lev]), (*rop_g[lev]), 0, 0, 1, rhs_diff[lev]->nGrow());
+         // Define RHS = (ro_g) * (ep_g) * (vel_g)
+         MultiFab::Multiply((*rhs_cc[lev]), (*ro_g[lev]), 0, 0, 1, rhs_cc[lev]->nGrow());
+         MultiFab::Multiply((*rhs_cc[lev]), (*ep_g[lev]), 0, 0, 1, rhs_cc[lev]->nGrow());
       }
 
       // This ensures that ghost cells of sol are correctly filled when returned from the solver
@@ -129,64 +136,15 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       //
       //  (1 - div dot mu grad) u = RHS
       //
-      solver.solve ( GetVecOfPtrs(phi_diff), GetVecOfConstPtrs(rhs_diff), mg_rtol, mg_atol );
+      solver.solve ( GetVecOfPtrs(phi_cc), GetVecOfConstPtrs(rhs_cc), diff_mg_rtol, diff_mg_atol );
 
       for (int lev = 0; lev < nlev; lev++)
       {
-         phi_diff[lev] -> FillBoundary (geom[lev].periodicity());
-         vel_g[lev]->copy(*phi_diff[lev],0,i,1,nghost,nghost);
+         phi_cc[lev] -> FillBoundary (geom[lev].periodicity());
+         vel_g[lev]->copy(*phi_cc[lev],0,i,1,nghost,nghost);
       }
    }
 
    // Swap ghost cells and apply BCs to velocity
    mfix_set_velocity_bcs (time, 0);
-}
-
-//
-// Computes bcoeff = mu_g at the faces of the scalar cells
-//
-void
-mfix::mfix_compute_bcoeff_diff ()
-{
-   BL_PROFILE("mfix::mfix_compute_bcoeff_diff");
-
-   // Directions
-   int xdir = 1;
-   int ydir = 2;
-   int zdir = 3;
-
-   for (int lev = 0; lev < nlev; lev++)
-   {
-
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-      for (MFIter mfi(*mu_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-      {
-         // Tileboxes for staggered components
-         Box ubx = mfi.tilebox (e_x);
-         Box vbx = mfi.tilebox (e_y);
-         Box wbx = mfi.tilebox (e_z);
-
-         // X direction
-         compute_bcoeff_diff (BL_TO_FORTRAN_BOX(ubx),
-                              BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][0]))[mfi]),
-                              BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &xdir );
-
-         // Y direction
-         compute_bcoeff_diff (BL_TO_FORTRAN_BOX(vbx),
-                              BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][1]))[mfi]),
-                              BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &ydir );
-
-         // Z direction
-         compute_bcoeff_diff (BL_TO_FORTRAN_BOX(wbx),
-                              BL_TO_FORTRAN_ANYD((*(bcoeff_diff[lev][2]))[mfi]),
-                              BL_TO_FORTRAN_ANYD((*mu_g[lev])[mfi]), &zdir );
-   
-      }
-
-      bcoeff_diff[lev][0] -> FillBoundary(geom[lev].periodicity());
-      bcoeff_diff[lev][1] -> FillBoundary(geom[lev].periodicity());
-      bcoeff_diff[lev][2] -> FillBoundary(geom[lev].periodicity());
-   }
 }

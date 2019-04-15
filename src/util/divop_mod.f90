@@ -47,7 +47,7 @@ contains
         bcent,    blo,  bhi,   &
         domlo, domhi,          &
         dx, ng,                &
-        mu, lambda,            & 
+        mu,                    &
         do_explicit_diffusion, &
         eb_ho_dirichlet ) bind(C)
 
@@ -101,8 +101,7 @@ contains
 
       ! Optional arrays (only for viscous calculations)
       real(ar),        intent(in   ), optional  ::                &
-           &     mu(elo(1):ehi(1),elo(2):ehi(2),elo(3):ehi(3)),   &
-           & lambda(elo(1):ehi(1),elo(2):ehi(2),elo(3):ehi(3))
+           &     mu(elo(1):ehi(1),elo(2):ehi(2),elo(3):ehi(3))
 
       real(ar),        intent(inout) ::                           &
            & div(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3)
@@ -143,13 +142,13 @@ contains
       if (ng < 4) call amrex_abort( "compute_divop(): ng must be >= 4")
 
       ! Check if we are computing divergence for viscous term by checking if
-      ! both mu and lambda are passed in
-      if ( present(mu) .and. present(lambda) ) then
+      ! mu was passed in
+      if ( present(mu) ) then
          is_dirichlet = .true.
-      else if ( .not. present(mu) .and. .not. present(lambda) ) then
+      else if ( .not. present(mu)  ) then
          is_dirichlet = .false.
       else
-         call amrex_abort("compute_divop(): either mu or lambda is not passed in")
+         call amrex_abort("compute_divop(): either mu is not passed in")
       end if
 
       if ( abs(dx(1) - dx(2)) > epsilon(0.0_ar) .or.&
@@ -157,7 +156,7 @@ contains
            abs(dx(3) - dx(2)) > epsilon(0.0_ar) ) then
          call amrex_abort("compute_divop(): grid spacing must be uniform")
       end if
-      
+
       !
       ! Allocate arrays to host viscous wall fluxes
       !
@@ -202,7 +201,7 @@ contains
          !
          iwall = 0
 
-         divc = zero  
+         divc = zero
 
          do k = lo(3)-2, hi(3)+2
             do j = lo(2)-2, hi(2)+2
@@ -216,7 +215,7 @@ contains
 
                      call get_neighbor_cells( flags(i,j,k), nbr )
 
-                     fxp = amrex_eb_interpolate_to_face_centroid_per_cell( & 
+                     fxp = amrex_eb_interpolate_to_face_centroid_per_cell( &
                          i+1, j, k, 1, fx, fxlo, n, afrac_x, axlo, cent_x, cxlo, nbr )
 
                      fxm = amrex_eb_interpolate_to_face_centroid_per_cell( &
@@ -245,11 +244,12 @@ contains
                      if (is_dirichlet) then
                         if (n==1) then
                            call compute_diff_wallflux( divdiff_w(:,iwall), dx, i, j, k,       &
-                                                       vel, vllo, vlhi, lambda, mu, elo, ehi, &
+                                                       vel, vllo, vlhi, mu, elo, ehi,         &
                                                        bcent, blo, bhi, flags, flo, fhi,      &
                                                        afrac_x, axlo, axhi,                   &
                                                        afrac_y, aylo, ayhi,                   &
                                                        afrac_z, azlo, azhi,                   &
+                                                       vfrac  , vflo, vfhi,                   &
                                                        do_explicit_diffusion,                 &
                                                        eb_ho_dirichlet)
                         end if
@@ -307,7 +307,7 @@ contains
 
          !
          ! Step 3: redistribute excess/loss of mass
-         !        
+         !
          do k = lo(3)-1, hi(3)+1
             do j = lo(2)-1, hi(2)+1
                do i = lo(1)-1, hi(1)+1
@@ -364,7 +364,7 @@ contains
 
       !
       ! Delete working arrays
-      ! 
+      !
       if (is_dirichlet) deallocate(divdiff_w)
 
    end subroutine compute_divop

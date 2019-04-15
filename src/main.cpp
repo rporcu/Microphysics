@@ -200,6 +200,9 @@ int main (int argc, char* argv[])
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
 
+    if (solve_fluid)
+       my_mfix.mfix_setup_nodal_solver();
+
     // This checks if we want to regrid using the KDTree or KnapSack approach
     amrex::Print() << "Regridding at step " << nstep << std::endl;
     my_mfix.Regrid();
@@ -220,8 +223,6 @@ int main (int argc, char* argv[])
        std::cout << "Time spent in init      " << end_init << std::endl;
 
     int finish  = 0;
-    int estatus = 0;
-
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
     // only if solve_fluid = T

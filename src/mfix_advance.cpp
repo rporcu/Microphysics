@@ -20,10 +20,9 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
 
     // Extrapolate boundary values for density and volume fraction
     // The subsequent call to mfix_set_scalar_bcs will only overwrite
-    // rop_g and ep_g ghost values for PINF and POUT
+    // ep_g ghost values for PINF and POUT
     for (int lev = 0; lev < nlev; lev++)
     {
-       rop_g[lev]->FillBoundary(geom[lev].periodicity());
         ep_g[lev]->FillBoundary(geom[lev].periodicity());
         mu_g[lev]->FillBoundary(geom[lev].periodicity());
     }
@@ -79,7 +78,6 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
           MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
           MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
           MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
-          MultiFab::Copy (*rop_go[lev], *rop_g[lev], 0, 0, rop_g[lev]->nComp(), rop_go[lev]->nGrow());
           MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
            // User hooks
@@ -154,11 +152,6 @@ mfix::mfix_project_velocity ()
 
     amrex::Print() << "Initial projection:\n";
 
-    // Need to add this call here so that the MACProjection internal arrays
-    //  are allocated so that the cell-centered projection can use the MAC
-    //  data structures and set_velocity_bcs routine
-    mac_projection->update_internals();
-
     bool proj_2 = true;
     Real time = 0.0;
     mfix_apply_projection ( time, dummy_dt, proj_2 );
@@ -224,7 +217,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 //
 //  1. Compute
 //
-//     vel_g = vel_go + dt * R_u^n + dt * divtau*(1/rop_g)
+//     vel_g = vel_go + dt * R_u^n + dt * divtau*(1/(ro_g*ep_g))
 //
 //  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
 //     and explicit part of particles momentum exchange )
@@ -234,7 +227,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
 //
-//     vel_g = (vel_g + drag_u/rop_g) / ( 1 + dt * f_gds/rop_g )
+//     drag_coeff = drag(3)
+//     drag_coeff*velp = drag(0:2)
+//
+//     vel_g = (vel_g + (drag_coeff*velp)/(ro_g*ep_g) / ( 1 + dt * drag_coeff/(ro_g*ep_g)
 //
 //  4. Solve for phi
 //
@@ -295,7 +291,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 //
 //  1. Compute
 //
-//     vel_g = vel_go + dt * (R_u^* + R_u^n) / 2 + dt * divtau*(1/rop_g)
+//     vel_g = vel_go + dt * (R_u^* + R_u^n) / 2 + dt * divtau*(1/(ro_g*ep_g))
 //
 //     where the starred variables are computed using "predictor-step" variables.
 //
@@ -307,7 +303,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
 //
-//     vel_g = (vel_g + drag_u/rop_g) / ( 1 + dt * f_gds/rop_g )
+//     vel_g = (vel_g + (drag_coeff*velp)/(ro_g*ep_g) / ( 1 + dt * drag_coeff/(ro_g*ep_g)
 //
 //  4. Solve for phi
 //
@@ -382,7 +378,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 }
 
 void
-mfix::mfix_add_gravity_and_gp (Real dt) 
+mfix::mfix_add_gravity_and_gp (Real dt)
 {
     BL_PROFILE("mfix::mfix_add_gravity_and_gp");
     for (int lev = 0; lev < nlev; lev++)
@@ -403,7 +399,7 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          const auto grav_loc = gravity;
          const auto  gp0_loc = gp0;
 
-         AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k, 
+         AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
          {
              Real inv_dens = 1.0 / den_fab(i,j,k);
              vel_fab(i,j,k,0) += dt * ( grav_loc[0]-(gp_fab(i,j,k,0)+gp0_loc[0])*inv_dens );
@@ -424,11 +420,8 @@ mfix::mfix_add_drag_terms (Real dt)
 {
   /*
      This adds both components of the drag term
-     Here f_gds = beta
-          drag  = beta * particle_velocity
-    
      So the drag term we add is beta * (particle_velocity - fluid_velocity)
-                              = drag - f_gds * fluid_velocity
+                              = dra(0:2) - drag(3) * fluid_velocity
   */
 
   BL_PROFILE("mfix::mfix_add_drag");
@@ -445,14 +438,14 @@ mfix::mfix_add_drag_terms (Real dt)
 
       const auto&  vel_fab = vel_g[lev]->array(mfi);
       const auto& drag_fab =  drag[lev]->array(mfi);
-      const auto& fgds_fab = f_gds[lev]->array(mfi);
-      const auto&  rop_fab = rop_g[lev]->array(mfi);
+      const auto&   ro_fab =  ro_g[lev]->array(mfi);
+      const auto&   ep_fab =  ep_g[lev]->array(mfi);
 
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k, 
+      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
-          Real orop  = dt / rop_fab(i,j,k);
-          Real denom = 1.0 / (1.0 + fgds_fab(i,j,k) * orop);
-          
+          Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
+          Real denom = 1.0 / (1.0 + drag_fab(i,j,k,3) * orop);
+
           vel_fab(i,j,k,0) = (vel_fab(i,j,k,0) + drag_fab(i,j,k,0) * orop) * denom;
           vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + drag_fab(i,j,k,1) * orop) * denom;
           vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;

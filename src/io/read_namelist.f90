@@ -20,9 +20,9 @@ MODULE read_namelist_module
       use drag, only: drag_c1, drag_d1
       use constant, only: gravity
       use deprecated_or_unknown_module, only: deprecated_or_unknown
-      use discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input, particle_types
-      use discretelement, only: des_etat_fac, des_etat_w_fac, v_poisson, vw_poisson
-      use discretelement, only: des_explicitly_coupled, des_oneway_coupled, e_young, ew_young
+      use discretelement, only: des_en_input, des_en_wall_input, particle_types
+      use discretelement, only: des_etat_fac, des_etat_w_fac
+      use discretelement, only: des_explicitly_coupled, des_oneway_coupled
       use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, des_etat_w_fac
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
 
@@ -184,7 +184,6 @@ MODULE read_namelist_module
       include 'point_sources.inc'
       include 'usr_hooks.inc'
       include 'desnamelist.inc'
-      include 'usrnlst.inc'
 
       ERROR = .FALSE.
 
@@ -248,12 +247,6 @@ MODULE read_namelist_module
        STRING=''; STRING = '&DES_INPUT_DATA '//&
             trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
        READ(STRING, NML=DES_INPUT_DATA, IOSTAT=IOS)
-       IF(IOS == 0)  RETURN
-
-! User defined input parameters.
-       STRING=''; STRING = '&USR_INPUT_DATA '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-       READ(STRING, NML=USR_INPUT_DATA, IOSTAT=IOS)
        IF(IOS == 0)  RETURN
 
        ERROR = .TRUE.

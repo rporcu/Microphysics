@@ -14,6 +14,7 @@
 void
 mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 {
+    if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
     // set n_error_buf (used in AmrMesh) to default (can overwrite later)
     for (int i = 0; i < n_error_buf.size(); i++)
         n_error_buf[i] = 8;
@@ -31,13 +32,15 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("verbose", m_verbose);
 
         // Options to control MGML behavior
-        pp.query( "mg_verbose", mg_verbose );
-        pp.query( "mg_cg_verbose", mg_cg_verbose );
-        pp.query( "mg_max_iter", mg_max_iter );
-        pp.query( "mg_cg_maxiter", mg_cg_maxiter );
-        pp.query( "mg_max_fmg_iter", mg_max_fmg_iter );
-        pp.query( "mg_rtol", mg_rtol );
-        pp.query( "mg_atol", mg_atol );
+        pp.query( "mg_verbose"             , nodal_mg_verbose );
+        pp.query( "mg_cg_verbose"          , nodal_mg_cg_verbose );
+        pp.query( "mg_max_iter"            , nodal_mg_max_iter );
+        pp.query( "mg_cg_maxiter"          , nodal_mg_cg_maxiter );
+        pp.query( "mg_max_fmg_iter"        , nodal_mg_max_fmg_iter );
+        pp.query( "mg_rtol"                , nodal_mg_rtol );
+        pp.query( "mg_atol"                , nodal_mg_atol );
+        pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
+        pp.query( "mg_use_hypre"           , nodal_use_hypre );
 
         // Default bottom solver is bicgstab, but alternatives are "smoother" or "hypre"
         bottom_solver_type = "bicgstab";
@@ -53,6 +56,8 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Should we use HO extrapolation at EB faces for the diffusion solve
         pp.query( "eb_ho_dirichlet", eb_ho_dirichlet );
 
+        pp.query("ooo_debug", ooo_debug);
+
         // The default type is "AsciiFile" but we can over-write that in the inputs file
         //  with "Random"
         pp.query("particle_init_type", particle_init_type);
@@ -66,6 +71,13 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("load_balance_type", load_balance_type);
         pp.query("knapsack_weight_type", knapsack_weight_type);
         pp.query("load_balance_fluid", load_balance_fluid);
+
+        ParmParse pp_mac("mac");
+        pp.query( "mg_verbose"   , mac_mg_verbose );
+        pp.query( "mg_rtol"      , mac_mg_rtol );
+        pp.query( "mg_atol"      , mac_mg_atol );
+        pp.query( "mg_max_iter"  , mac_mg_max_iter );
+        pp.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
 
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
                             load_balance_type == "KDTree"    ||
@@ -167,6 +179,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 //! Tag using each EB level's volfrac. This requires that the `eb_levels` have
 //! already been build.
 void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
+    if (ooo_debug) amrex::Print() << "ErrorEst" << std::endl;
     //___________________________________________________________________________
     // Tag all cells with volfrac \in (0, 1)
     MultiFab volfrac(grids[lev], dmap[lev], 1, 1);
@@ -178,7 +191,9 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
 
 void mfix::Init(Real dt, Real time)
 {
+    if (ooo_debug) amrex::Print() << "Init" << std::endl;
     InitIOData();
+    InitIOPltData();
 
     // Note that finest_level = last level
     finest_level = nlev-1;
@@ -278,7 +293,6 @@ void mfix::Init(Real dt, Real time)
         MakeNewLevelFromScratch(lev, time, grids[lev], dmap[lev]);
     }
 
-
     /****************************************************************************
      *                                                                          *
      * Create particle container using mfix::ParGDB                             *
@@ -342,18 +356,12 @@ void mfix::Init(Real dt, Real time)
 
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);
-
-    // Create MAC projection object
-    mac_projection.reset( new MacProjection(this, nghost, &ebfactory ) );
-    mac_projection -> set_bcs( bc_ilo, bc_ihi,
-             bc_jlo, bc_jhi,
-             bc_klo, bc_khi );
-
 }
 
 
 BoxArray mfix::MakeBaseGrids () const
 {
+    if (ooo_debug) amrex::Print() << "MakeBaseGrids" << std::endl;
     BoxArray ba(geom[0].Domain());
 
     ba.maxSize(max_grid_size[0]);
@@ -378,6 +386,7 @@ BoxArray mfix::MakeBaseGrids () const
 
 void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 {
+    if (ooo_debug) amrex::Print() << "ChopGrids" << std::endl;
     if ( ParallelDescriptor::IOProcessor() )
        amrex::Warning("Using max_grid_size only did not make enough grids for the number of processors");
 
@@ -427,7 +436,7 @@ void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 void mfix::MakeNewLevelFromScratch (int lev, Real time,
                                const BoxArray& new_grids, const DistributionMapping& new_dmap)
 {
-
+    if (ooo_debug) amrex::Print() << "MakeNewLevelFromScratch" << std::endl;
     if (m_verbose > 0)
     {
         std::cout << "MAKING NEW LEVEL " << lev << std::endl;
@@ -436,6 +445,8 @@ void mfix::MakeNewLevelFromScratch (int lev, Real time,
 
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
+    amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
+    amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
 
     if (lev == 0)
     {
@@ -460,6 +471,7 @@ void mfix::MakeNewLevelFromScratch (int lev, Real time,
 void mfix::ReMakeNewLevelFromScratch (int lev,
                                  const BoxArray & new_grids, const DistributionMapping & new_dmap)
 {
+    if (ooo_debug) amrex::Print() << "ReMakeNewLevelFromScratch" << std::endl;
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
@@ -476,13 +488,10 @@ void mfix::ReMakeNewLevelFromScratch (int lev,
 
 void mfix::check_data ()
 {
+    if (ooo_debug) amrex::Print() << "check_data" << std::endl;
     Real dx = geom[0].CellSize(0);
     Real dy = geom[0].CellSize(1);
     Real dz = geom[0].CellSize(2);
-
-    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
-    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
-    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
     Box domain(geom[0].Domain());
 
@@ -498,6 +507,7 @@ void mfix::check_data ()
 
 void mfix::InitLevelData(Real dt, Real time)
 {
+    if (ooo_debug) amrex::Print() << "InitLevelData" << std::endl;
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
     if (solve_fluid)
        for (int lev = 0; lev < nlev; lev++)
@@ -593,6 +603,7 @@ void mfix::InitLevelData(Real dt, Real time)
 void
 mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
 {
+    if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
     if (solve_dem)
     {
         // Auto generated particles may be out of the domain. This call will
@@ -677,6 +688,7 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
 void
 mfix::MakeBCArrays ()
 {
+    if (ooo_debug) amrex::Print() << "MakeBCArrays" << std::endl;
     bc_ilo.resize(nlev);
     bc_ihi.resize(nlev);
     bc_jlo.resize(nlev);
@@ -718,48 +730,50 @@ mfix::MakeBCArrays ()
 void
 mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 {
-  Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
-  Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
-  Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
+    if (ooo_debug) amrex::Print() << "make_init_fluid" << std::endl;
+    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
+    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
+    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
-  // Here we set bc values for p and u,v,w before the IC's are set
-  mfix_set_bc0();
+    // Here we set bc values for p and u,v,w before the IC's are set
+    mfix_set_bc0();
 
-  for (int lev = 0; lev < nlev; lev++)
-  {
-     Box domain(geom[lev].Domain());
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       Box domain(geom[lev].Domain());
 
-     Real dx = geom[lev].CellSize(0);
-     Real dy = geom[lev].CellSize(1);
-     Real dz = geom[lev].CellSize(2);
+       Real dx = geom[lev].CellSize(0);
+       Real dy = geom[lev].CellSize(1);
+       Real dz = geom[lev].CellSize(2);
 
-     // We deliberately don't tile this loop since we will be looping
-     //    over bc's on faces and it makes more sense to do this one grid at a time
-     for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) {
+       // We deliberately don't tile this loop since we will be looping
+       //    over bc's on faces and it makes more sense to do this one grid at a time
+       for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) {
 
-        const Box& bx = mfi.validbox();
-        const Box& sbx = (*ep_g[lev])[mfi].box();
+          const Box& bx = mfi.validbox();
+          const Box& sbx = (*ep_g[lev])[mfi].box();
 
         if ( is_restarting ) {
 
-          init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
-               (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr());
+            init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
+                 (*mu_g[lev])[mfi].dataPtr() );
 
-        } else {
+          } else {
 
-          init_fluid(sbx.loVect(), sbx.hiVect(),
-               bx.loVect(),  bx.hiVect(),
-               domain.loVect(), domain.hiVect(),
-               (*ep_g[lev])[mfi].dataPtr(),  (*ro_g[lev])[mfi].dataPtr(),
-               (*rop_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
-               (*vel_g[lev])[mfi].dataPtr(),
-               (*mu_g[lev])[mfi].dataPtr(),  (*lambda_g[lev])[mfi].dataPtr(),
-               &dx, &dy, &dz, &xlen, &ylen, &zlen);
-        }
-     }
-  }
+            init_fluid(sbx.loVect(), sbx.hiVect(),
+                 bx.loVect(),  bx.hiVect(),
+                 domain.loVect(), domain.hiVect(),
+                 (*ep_g[lev])[mfi].dataPtr(),
+                 (*ro_g[lev])[mfi].dataPtr(),
+                 (*p_g[lev])[mfi].dataPtr(),
+                 (*vel_g[lev])[mfi].dataPtr(),
+                 (*mu_g[lev])[mfi].dataPtr(),
+                 &dx, &dy, &dz, &xlen, &ylen, &zlen);
+          }
+       }
+    }
 
-  mfix_set_p0();
+    mfix_set_p0();
 
   // Here we re-set the bc values for p and u,v,w just in case init_fluid
   //      over-wrote some of the bc values with ic values
@@ -769,9 +783,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
   {
          ep_g[lev]->FillBoundary(geom[lev].periodicity());
          ro_g[lev]->FillBoundary(geom[lev].periodicity());
-        rop_g[lev]->FillBoundary(geom[lev].periodicity());
          mu_g[lev]->FillBoundary(geom[lev].periodicity());
-     lambda_g[lev]->FillBoundary(geom[lev].periodicity());
 
      vel_g[lev]->FillBoundary(geom[lev].periodicity());
   }
@@ -806,8 +818,9 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 void
 mfix::mfix_set_bc0()
 {
-  for (int lev = 0; lev < nlev; lev++)
-  {
+    if (ooo_debug) amrex::Print() << "mfix_set_bc0" << std::endl;
+    for (int lev = 0; lev < nlev; lev++)
+    {
 
      Box domain(geom[lev].Domain());
 
@@ -818,8 +831,8 @@ mfix::mfix_set_bc0()
 
          set_bc0(sbx.loVect(), sbx.hiVect(),
                  (*ep_g[lev])[mfi].dataPtr(),
-                  (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
-                  (*mu_g[lev])[mfi].dataPtr(), (*lambda_g[lev])[mfi].dataPtr(),
+                  (*ro_g[lev])[mfi].dataPtr(),
+                  (*mu_g[lev])[mfi].dataPtr(),
                  bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                  bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                  bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
@@ -828,7 +841,6 @@ mfix::mfix_set_bc0()
 
       ep_g[lev]->FillBoundary(geom[lev].periodicity());
       ro_g[lev]->FillBoundary(geom[lev].periodicity());
-     rop_g[lev]->FillBoundary(geom[lev].periodicity());
    }
 
    // Put velocity Dirichlet bc's on faces
@@ -843,7 +855,7 @@ mfix::mfix_set_bc0()
 void
 mfix::mfix_set_p0()
 {
-
+    if (ooo_debug) amrex::Print() << "mfix_set_p0" << std::endl;
   Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
   Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
   Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
@@ -893,6 +905,7 @@ mfix::mfix_set_p0()
 
 void mfix::mfix_set_ls_near_inflow()
 {
+    if (ooo_debug) amrex::Print() << "mfix_ls_near_inflow" << std::endl;
     // This function is a bit Wonky... TODO: figure out why we need + nghost
     // (it's late at the moment, so I can't figure it it out right now...)
     const int levelset_nghost = levelset__eb_pad + nghost;

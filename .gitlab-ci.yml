@@ -1,60 +1,142 @@
-# cache:
-#   key: "$CI_BUILD_REF_NAME"
-#   untracked: true
-#   paths:
-#     - build/
-
-# image: mfixexa
 image: mwm126/anaconda3:latest
 
+before_script:
+  - mkdir -p ccache
+  - export CCACHE_BASEDIR=${CI_PROJECT_DIR}
+  - export CCACHE_DIR=${CI_PROJECT_DIR}/ccache
+
+cache:
+  key: ${CI_JOB_NAME}
+  paths:
+    - ccache/
+
+stages:
+  - build
+  - test
+
 variables:
+  AMREX_HOME: "${CI_PROJECT_DIR}/amrex_install"
   CC: "gcc"
   CXX: "g++"
   ENABLE_MPI: "0"
   ENABLE_OMP: "0"
   FC: "gfortran"
+  GIT_CLEAN_FLAGS: -fdx -e ccache/
+  GIT_DEPTH: 1
+  GIT_STRATEGY: fetch
+  GIT_SUBMODULE_STRATEGY: normal
 
-.test: &test_template
-  script:
-    - mkdir build
-    - cd build
-    - env F77=$FC F90=$FC cmake -DENABLE_MPI=$ENABLE_MPI -DENABLE_OMP=$ENABLE_OMP ..
-    - make -j 4
-    - cd mfix
-    - ctest -R $TEST_REGEX
-  only:
-    - develop
+###### Build jobs #####
+
+.build: &build_template
+  stage: build
   tags:
     - docker
-  retry: 2
+  script:
+    - git submodule update --init
+    - if [[ $CI_COMMIT_REF_NAME == "develop" ]]; then DEBUG="OFF"; else DEBUG="ON"; fi
+    - if [[ $CI_COMMIT_REF_NAME == "develop" ]]; then BUILDTYPE="Release"; else BUILDTYPE="Debug"; fi
+    - cmake -S subprojects/amrex
+            -B amrex_build
+            -DCMAKE_BUILD_TYPE=$BUILDTYPE
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+            -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME
+            -DENABLE_3D_NODAL_MLMG=1
+            -DENABLE_AMRDATA=1
+            -DENABLE_EB=1
+            -DENABLE_MPI=$ENABLE_MPI
+            -DENABLE_OMP=$ENABLE_OMP
+            -DENABLE_PARTICLES=1
+    - make -C amrex_build install -j 4
+    - cmake -S .
+            -B build
+            -DAMREX_INSTALL_DIR=$AMREX_HOME
+            -DDEBUG=$DEBUG
+            -DENABLE_MPI=$ENABLE_MPI
+            -DENABLE_OMP=$ENABLE_OMP
+    - make -C build build_tests -j 4
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 week
+    paths:
+      - amrex_install/
+      - build
 
+build-serial:
+  <<: *build_template
 
-single-grid-serial:
-  variables:
-    TEST_REGEX: "SGS"
-  <<: *test_template
-
-multiple-grid-serial:
-  variables:
-    TEST_REGEX: "MGS"
-  <<: *test_template
-
-multiple-grid-parallel:
+build-mpi:
   variables:
     CC: "mpicc"
     CXX: "mpic++"
     ENABLE_MPI: "1"
     FC: "mpifort"
-    TEST_REGEX: "MGP"
+  <<: *build_template
+
+build-openmp:
+  variables:
+    ENABLE_OMP: "1"
+  <<: *build_template
+
+
+###### Test jobs #####
+
+.test_job: &test_template
+  stage: test
+  script:
+    - cd build
+    - ctest -R $TEST_REGEX
+  allow_failure: true
+  only:
+    - develop
+  tags:
+    - docker
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - build/Testing/
+
+.test_serial: &serial_test_template
   <<: *test_template
+  dependencies:
+    - build-serial
+
+single-grid-serial:
+  variables:
+    TEST_REGEX: "SGS"
+  <<: *serial_test_template
+
+multiple-grid-serial:
+  variables:
+    TEST_REGEX: "MGS"
+  <<: *serial_test_template
 
 tiled-grid-serial:
   variables:
     TEST_REGEX: "TGS"
+  <<: *serial_test_template
+
+
+.test_parallel: &parallel_test_template
   <<: *test_template
+  dependencies:
+    - build-mpi
+
+multiple-grid-parallel:
+  variables:
+    TEST_REGEX: "MGP"
+  <<: *parallel_test_template
+
+
+.test_openmp: &openmp_test_template
+  <<: *test_template
+  dependencies:
+    - build-openmp
 
 tiled-grid-parallel-openmp:
   variables:
     ENABLE_OMP: "1"
     TEST_REGEX: "TGP"
-  <<: *test_template
+  <<: *openmp_test_template

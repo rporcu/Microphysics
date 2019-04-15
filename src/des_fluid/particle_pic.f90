@@ -181,7 +181,7 @@ contains
 
          ! The projection method uses drag to update u, not (cell_vol * u),
          ! so we must divide by the cell volume here so that later when we
-         ! divide by bulk density (rop_g) it all works.
+         ! divide by bulk density it all works.
 
          ! Perform deposition
          do kk = -1, 0

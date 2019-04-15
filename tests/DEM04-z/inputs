@@ -34,3 +34,4 @@ amr.check_file = DEM03_chk
 
 amr.par_ascii_int  = 1
 amr.par_ascii_file = DEM04_par
+amr.plt_regtest = 1
