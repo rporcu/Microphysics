@@ -114,7 +114,7 @@ contains
                vel(:,:,:,index), vlo, vhi, &
                flag, flo, fhi, &
                bcent(i,j,k,:), phib,  &
-               anrmx, anrmy, anrmz)
+               anrmx, anrmy, anrmz, vfrac(i,j,k))
          end if
       end do
 
