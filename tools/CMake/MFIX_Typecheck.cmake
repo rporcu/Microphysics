@@ -123,8 +123,10 @@ AMReX::amrex and MFIX_LIBNAME are defined ")
    # Get rid of genex in defines list. Since they should be
    # only related to fortran stuff, we should be fine
    string ( GENEX_STRIP "${AMREX_DEFINES}" AMREX_DEFINES )
-   string ( REPLACE ";" ";-D" TYPECHECK_DEFINES "-D${AMREX_DEFINES}" )
-
+   if(AMREX_DEFINES)
+      string ( REPLACE ";" ";-D" TYPECHECK_DEFINES "-D${AMREX_DEFINES}" )
+   endif ()
+   
    set (CPPDHEADERS)
    foreach ( file ${F90HEADERS} )
       get_filename_component ( fname ${file} NAME ) # This strips away the path
@@ -173,7 +175,7 @@ AMReX::amrex and MFIX_LIBNAME are defined ")
    # 
    # Add typecheck target
    #
-   add_custom_target ( typecheck
+   add_custom_target( typecheck
       COMMAND python3  ${AMREX_TYPECHECKER}
       --workdir ${TYPECHECK_DIR} --output ${TYPECHECK_DIR}/amrex_typecheck.ou
       DEPENDS ${F90ORIG} ${CPPDHEADERS}

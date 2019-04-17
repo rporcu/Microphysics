@@ -109,6 +109,7 @@ mfix::set_input_bcs(const std::string bcID, const int index,
   Real pressure = -1.0;
   Real velocity =  0.0;
   Real location = domloc;
+  Vector<Real> velocity_in;
 
   std::string bc_type = "null";
 
@@ -149,7 +150,7 @@ mfix::set_input_bcs(const std::string bcID, const int index,
     itype = minf_;
 
     pp.query("pressure", pressure);
-    pp.get("velocity", velocity);
+    pp.queryarr("velocity", velocity_in );
 
 
   } else if (bc_type == "no_slip_wall"    || bc_type == "nsw" ||
@@ -167,10 +168,89 @@ mfix::set_input_bcs(const std::string bcID, const int index,
     amrex::Abort("Cannot mix periodic BCs and Wall/Flow BCs.\n");
   }
 
+
+  // Treat the first velocity as-usual.
+  int velocity_size = velocity_in.size();
+  if(velocity_size == 1) velocity = velocity_in[0];
+
+
   const Real* plo = geom[0].ProbLo();
   const Real* phi = geom[0].ProbHi();
 
   mfix_set_bc_mod(&index, &itype, plo, phi,
                   &location, &pressure, &velocity);
+
+  // If more than one velocity is provided for a mass inflow, then there
+  // sub-regions have been defined to overlap. These are appended to the
+  // BC list.
+
+  if(velocity_in.size() > 1){
+
+    Vector<Real> xlo, xhi, ylo, yhi, zlo, zhi;
+
+    if( index == 1 || index == 2){
+
+      pp.queryarr("ylo", ylo );
+      pp.queryarr("yhi", yhi );
+      pp.queryarr("zlo", zlo );
+      pp.queryarr("zhi", zhi );
+
+      // Copy in values for x.
+      Real val = (index == 1) ? plo[0] : phi[0];
+      for (int bc = 0; bc < velocity_size - 1; bc++) {
+        xlo.push_back(val);
+        xhi.push_back(val);
+      }
+
+    } else if( index == 3 || index == 4) {
+
+      pp.queryarr("xlo", xlo );
+      pp.queryarr("xhi", xhi );
+      pp.queryarr("zlo", zlo );
+      pp.queryarr("zhi", zhi );
+
+      // Copy in values for y.
+      Real val = (index == 3) ? plo[1] : phi[1];
+      for (int bc = 0; bc < velocity_size - 1; bc++) {
+        ylo.push_back(val);
+        yhi.push_back(val);
+      }
+
+    } else if( index == 5 || index == 6) {
+
+      pp.queryarr("xlo", xlo );
+      pp.queryarr("xhi", xhi );
+      pp.queryarr("ylo", ylo );
+      pp.queryarr("yhi", yhi );
+
+      // Copy in values for z.
+      Real val = (index == 5) ? plo[2] : phi[2];
+      for (int bc = 0; bc < velocity_size - 1; bc++) {
+        zlo.push_back(val);
+        zhi.push_back(val);
+      }
+
+    }
+
+    // Make sure all the arrays are the correct size.
+    AMREX_ALWAYS_ASSERT(xlo.size() == velocity_size-1);
+    AMREX_ALWAYS_ASSERT(xhi.size() == velocity_size-1);
+    AMREX_ALWAYS_ASSERT(ylo.size() == velocity_size-1);
+    AMREX_ALWAYS_ASSERT(yhi.size() == velocity_size-1);
+    AMREX_ALWAYS_ASSERT(zlo.size() == velocity_size-1);
+    AMREX_ALWAYS_ASSERT(zhi.size() == velocity_size-1);
+
+    for (int bc = 0; bc < velocity_size -1; bc++) {
+
+      velocity = velocity_in[bc+1];
+
+      mfix_set_bc_mod_add_mi(&index,
+                      &xlo[bc], &ylo[bc], &zlo[bc],
+                      &xhi[bc], &yhi[bc], &zhi[bc],
+                      &pressure, &velocity);
+    }
+  }
+
+
 
 }

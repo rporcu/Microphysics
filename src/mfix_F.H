@@ -2,7 +2,6 @@
 
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
-#include "AMReX_RealVect.H"
 
 #ifdef BL_SINGLE_PRECISION_PARTICLES
 typedef float amrex_particle_real;
@@ -53,6 +52,12 @@ extern "C"
              amrex::Real* pPg,
              amrex::Real* pVel);
 
+  void mfix_set_bc_mod_add_mi(const int* pPlane,
+                       amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
+                       amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
+                       amrex::Real* pPg, amrex::Real* pVel
+                              );
+
     void set_bc_type(
              const int* bc_ilo, const int* bc_ihi,
              const int* bc_jlo, const int* bc_jhi,
@@ -66,7 +71,7 @@ extern "C"
     void set_bc0(
              const int* slo, const int* shi,
              amrex::Real* ep_g,
-             amrex::Real* ro_g,  
+             amrex::Real* ro_g,
              amrex::Real* mu_g,
              const int* bc_ilo, const int* bc_ihi,
              const int* bc_jlo, const int* bc_jhi,
@@ -88,7 +93,7 @@ extern "C"
     void init_fluid(const int* slo, const int* shi,
              const int*  lo, const int*  hi,
              const int* domlo , const int* domhi,
-             amrex::Real* ep_g,  
+             amrex::Real* ep_g,
              amrex::Real* ro_g,
              amrex::Real* p_g,
              amrex::Real* vel_g,
