@@ -42,3 +42,5 @@ option( ENABLE_HYPRE "Enable HYPRE" NO )
 option( ENABLE_CUDA "Enable CUDA" NO )
 
 option( ENABLE_FPE "Enable Floating Point Exceptions checks" NO )
+
+option( SUBMOD "Use submodules with Superbuild" NO )

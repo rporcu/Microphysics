@@ -24,7 +24,11 @@ endif ()
 # Also add targets to clean sub-projects
 #
 if ( SUPERBUILD )
-   include( MFIX_Superbuild )
+  if ( SUBMOD )
+    include( MFIX_Superbuild2 )
+  else()
+    include( MFIX_Superbuild )
+ endif ()
 
    add_custom_target(clean_mfix
       COMMAND make clean
