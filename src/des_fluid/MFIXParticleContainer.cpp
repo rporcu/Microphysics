@@ -378,26 +378,48 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
     /****************************************************************************
+     * Get particle EB geometric info
+     ***************************************************************************/
+    const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
+
+    /****************************************************************************
      * Init temporary storage:                                                  *
      *   -> particle-particle, and particle-wall forces                         *
      *   -> particle-particle, and particle-wall torques                        *
      ***************************************************************************/
-
     std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> tow;
     std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> fc, pfor, wfor;
+
+    std::map<PairIndex, bool> tile_has_walls;
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
+        const Box& bx = pti.tilebox();
         PairIndex index(pti.index(), pti.LocalTileIndex());
         tow[index]  = Gpu::ManagedDeviceVector<Real>();
         fc[index]   = Gpu::ManagedDeviceVector<Real>();
         pfor[index] = Gpu::ManagedDeviceVector<Real>();
         wfor[index] = Gpu::ManagedDeviceVector<Real>();
-    }
 
-    /****************************************************************************
-     * Get particle EB geometric info
-     ***************************************************************************/
-    const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
+        // Only call the routine for wall collisions if we actually have walls
+        BL_PROFILE_VAR("ls_has_walls", has_wall);
+        bool has_wall = false;
+        if ((ebfactory != NULL)
+            && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
+        {
+            has_wall = true;
+        }
+        else
+        {
+            int int_has_wall = 0;
+            Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
+            ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
+            has_wall = (int_has_wall > 0);
+        }
+        
+        tile_has_walls[index] = has_wall;
+
+        BL_PROFILE_VAR_STOP(has_wall);
+    }
 
     /****************************************************************************
      * Iterate over sub-steps                                                   *
@@ -477,22 +499,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              * Particle-Wall collision forces (and torques)                     *
              *******************************************************************/
 
-            // Only call the routine for wall collisions if we actually have walls
-            bool has_wall = false;
-            if ((ebfactory != NULL)
-                && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
-            {
-                has_wall = true;
-            }
-            else
-            {
-                int int_has_wall = 0;
-                Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
-                ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
-                has_wall = (int_has_wall > 0);
-            }
-
-            if (has_wall)
+            if (tile_has_walls[index])
             {
                 // Calculate forces and torques from particle-wall collisions
                 BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
