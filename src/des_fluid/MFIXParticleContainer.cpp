@@ -378,26 +378,48 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
     /****************************************************************************
+     * Get particle EB geometric info
+     ***************************************************************************/
+    const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
+
+    /****************************************************************************
      * Init temporary storage:                                                  *
      *   -> particle-particle, and particle-wall forces                         *
      *   -> particle-particle, and particle-wall torques                        *
      ***************************************************************************/
-
     std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> tow;
     std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> fc, pfor, wfor;
+
+    std::map<PairIndex, bool> tile_has_walls;
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
+        const Box& bx = pti.tilebox();
         PairIndex index(pti.index(), pti.LocalTileIndex());
         tow[index]  = Gpu::ManagedDeviceVector<Real>();
         fc[index]   = Gpu::ManagedDeviceVector<Real>();
         pfor[index] = Gpu::ManagedDeviceVector<Real>();
         wfor[index] = Gpu::ManagedDeviceVector<Real>();
-    }
 
-    /****************************************************************************
-     * Get particle EB geometric info
-     ***************************************************************************/
-    const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
+        // Only call the routine for wall collisions if we actually have walls
+        BL_PROFILE_VAR("ls_has_walls", has_wall);
+        bool has_wall = false;
+        if ((ebfactory != NULL)
+            && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
+        {
+            has_wall = true;
+        }
+        else
+        {
+            int int_has_wall = 0;
+            Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
+            ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
+            has_wall = (int_has_wall > 0);
+        }
+        
+        tile_has_walls[index] = has_wall;
+
+        BL_PROFILE_VAR_STOP(has_wall);
+    }
 
     /****************************************************************************
      * Iterate over sub-steps                                                   *
@@ -477,26 +499,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              * Particle-Wall collision forces (and torques)                     *
              *******************************************************************/
 
-            // Only call the routine for wall collisions if we actually have walls
-            bool has_wall = false;
-            if ((ebfactory != NULL)
-                && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
-            {
-                has_wall = true;
-            }
-            else
-            {
-                int int_has_wall = 0;
-                Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
-                ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
-                has_wall = (int_has_wall > 0);
-            }
-
-            if (has_wall)
+            if (tile_has_walls[index])
             {
                 // Calculate forces and torques from particle-wall collisions
+#ifndef AMREX_USE_CUDA
                 BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-
+#endif
                 auto& geom = this->Geom(lev);
                 const auto dxi = geom.InvCellSizeArray();
                 const auto plo = geom.ProbLoArray();
@@ -605,14 +613,18 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         wfor[index][i] = fc[index][i];
                     }
                 }
+#ifndef AMREX_USE_CUDA
                 BL_PROFILE_VAR_STOP(calc_wall_collisions);
+#endif
             }
 
             /********************************************************************
              * Particle-Particle collision forces (and torques)                 *
              *******************************************************************/
 
+#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
+#endif
 
 #ifdef AMREX_USE_CUDA
             auto nbor_data = m_neighbor_list[index].data();
@@ -735,8 +747,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 }
             }
 
+#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR_STOP(calc_particle_collisions);
+#endif
 
+#ifndef AMREX_USE_CUDA
+            BL_PROFILE_VAR("des_time_march()", des_time_march);
+#endif
             /********************************************************************
              * Move particles based on collision forces and torques             *
              *******************************************************************/
@@ -767,6 +784,10 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             });
 
             Gpu::Device::streamSynchronize();
+
+#ifndef AMREX_USE_CUDA
+            BL_PROFILE_VAR_STOP(des_time_march);
+#endif
 
 #ifdef AMREX_USE_CUDA
             ncoll = ncoll_gpu.dataValue();
@@ -1040,21 +1061,13 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
 
             const long nrp = pti.numParticles();
             FArrayBox& fab = (*mf_pointer[lev])[pti];
-            Real* data_ptr;
-            const int *lo, *hi;
 #ifdef _OPENMP
             Box tile_box = pti.tilebox();
             tile_box.grow(1);
             local_vol.resize(tile_box,ncomp);
             local_vol = 0.0;
-            data_ptr = local_vol.dataPtr();
-            lo = tile_box.loVect();
-            hi = tile_box.hiVect();
 #else
-            data_ptr = fab.dataPtr();
             const Box& box = fab.box();
-            lo = box.loVect();
-            hi = box.hiVect();
 #endif
 
             const Box& bx  = pti.tilebox(); // I need a box without ghosts
