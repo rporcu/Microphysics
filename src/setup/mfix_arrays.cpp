@@ -116,7 +116,7 @@ mfix::AllocateArrays (int lev)
       ro_face[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
       m_v_mac[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
 
-    // Create a BoxArray on y-faces.
+    // Create a BoxArray on z-faces.
     BoxArray z_edge_ba = grids[lev];
     z_edge_ba.surroundingNodes(2);
     bcoeff_cc[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
@@ -324,6 +324,16 @@ mfix::RegridArrays (int lev)
     bcoeff_cc[lev][0] = std::move(bc0_diff_new);
     bcoeff_cc[lev][0] -> setVal(0.0);
 
+    // ep on x-faces
+    std::unique_ptr<MultiFab> ep0_new(new MultiFab(x_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
+    ep_face[lev][0] = std::move(ep0_new);
+    ep_face[lev][0] -> setVal(0.0);
+
+    // ro on x-faces
+    std::unique_ptr<MultiFab> ro0_new(new MultiFab(x_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
+    ro_face[lev][0] = std::move(ro0_new);
+    ro_face[lev][0] -> setVal(0.0);
+
    //****************************************************************************
 
     BoxArray y_ba = grids[lev];
@@ -339,6 +349,16 @@ mfix::RegridArrays (int lev)
     bcoeff_cc[lev][1] = std::move(bc1_diff_new);
     bcoeff_cc[lev][1] -> setVal(0.0);
 
+    // ep on y-faces
+    std::unique_ptr<MultiFab> ep1_new(new MultiFab(y_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
+    ep_face[lev][1] = std::move(ep1_new);
+    ep_face[lev][1] -> setVal(0.0);
+
+    // ro on y-faces
+    std::unique_ptr<MultiFab> ro1_new(new MultiFab(y_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
+    ro_face[lev][1] = std::move(ro1_new);
+    ro_face[lev][1] -> setVal(0.0);
+
    //****************************************************************************
 
     BoxArray z_ba = grids[lev];
@@ -353,6 +373,16 @@ mfix::RegridArrays (int lev)
     std::unique_ptr<MultiFab> bc2_diff_new(new MultiFab(z_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
     bcoeff_cc[lev][2] = std::move(bc2_diff_new);
     bcoeff_cc[lev][2] -> setVal(0.0);
+
+    // ep on z-faces
+    std::unique_ptr<MultiFab> ep2_new(new MultiFab(z_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
+    ep_face[lev][2] = std::move(ep2_new);
+    ep_face[lev][2] -> setVal(0.0);
+
+    // ro on z-faces
+    std::unique_ptr<MultiFab> ro2_new(new MultiFab(z_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
+    ro_face[lev][2] = std::move(ro2_new);
+    ro_face[lev][2] -> setVal(0.0);
 
     // ********************************************************************************
     // Make sure we fill the ghost cells as appropriate -- this is copied from init_fluid
