@@ -1047,21 +1047,13 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
 
             const long nrp = pti.numParticles();
             FArrayBox& fab = (*mf_pointer[lev])[pti];
-            Real* data_ptr;
-            const int *lo, *hi;
 #ifdef _OPENMP
             Box tile_box = pti.tilebox();
             tile_box.grow(1);
             local_vol.resize(tile_box,ncomp);
             local_vol = 0.0;
-            data_ptr = local_vol.dataPtr();
-            lo = tile_box.loVect();
-            hi = tile_box.hiVect();
 #else
-            data_ptr = fab.dataPtr();
             const Box& box = fab.box();
-            lo = box.loVect();
-            hi = box.hiVect();
 #endif
 
             const Box& bx  = pti.tilebox(); // I need a box without ghosts
