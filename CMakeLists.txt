@@ -106,7 +106,6 @@ endif ()
 #
 # Core MFIX library
 #
-add_library(mfixcore)
 add_subdirectory(src)
 
 # Print out config summary
@@ -127,10 +126,6 @@ if ( ENABLE_CUDA)
       CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
       )
 endif ()
-
-# Configure type-checking target
-include ( MFIX_Typecheck )
-add_typecheck_target()
 
 # Tools
 set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/tools/)

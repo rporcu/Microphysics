@@ -1,26 +1,80 @@
 # 
-# FUNCTION: add_typecheck_target
+# This module  provides function add_typecheck_target().
 # 
-# Adds a target to typecheck C++ calls to Fortran routines.
+# add_typecheck_target() adds a target to check C++ signatures of Fortran routines are
+# consistet with the Fortran interface of the routine itself.
 # Works only with GNU compiler so it returns if the compiler id is not GNU.
-## Checks for Fortran/C++ headers in the dir of inclusion, and in all dirs below.
 #
-function ( add_typecheck_target )
+function( add_typecheck_target _target)
 
-   if (NOT (CMAKE_Fortran_COMPILER_ID MATCHES GNU))
+   # 
+   # Check if we have all we need to define the typecheck target
+   # 
+   if ( NOT (CMAKE_Fortran_COMPILER_ID MATCHES GNU) OR NOT (CMAKE_C_COMPILER_ID MATCHES GNU) )
+      message(WARNING "Typecheck disabled because compiler ID is not GNU")
       return ()
    endif ()
 
-   if ( (NOT (TARGET AMReX::amrex)) OR (NOT (TARGET ${MFIX_LIBNAME} )) )
-      message (AUTHOR_WARNING "add_typecheck_target() can be called only after targets
-AMReX::amrex and MFIX_LIBNAME are defined ")
+   if (NOT (TARGET AMReX::amrex) )
+      message(FATAL_ERROR "Target AMReX::amrex does not exist")
+   endif ()
+
+   if ( NOT (TARGET ${_target}) )
+      message(AUTHOR_WARNING "Skipping type-checking on target ${_target} bacause it does not exist")
       return ()
    endif ()
 
+   find_package(Python3 COMPONENTS Interpreter Development QUIET)
+   if (NOT Python3_FOUND)
+      message(WARNING "Typecheck disabled because Python 3 was not found")
+      return ()     
+   endif ()
+
+   # 
+   # Set directory for typecheck 
+   # 
+   set( TYPECHECK_DIR  "${CMAKE_CURRENT_BINARY_DIR}/TypeCheckTemp/${_target}" )
+
+   # 
+   # Get the fortran sources and the fortran-interfaces headers from _target   
+   # 
+   get_target_property( _sources ${_target} SOURCES )
+
+   set(_fsources ${_sources})
+   list(FILTER _fsources INCLUDE REGEX "(\.f90|\.f|\.F90|\.F)$" )
+   
+   set(_fheaders ${_sources})
+   list(FILTER _fheaders INCLUDE REGEX "(\_f\.H|\_F\.H)$")
+
+   # 
+   # Find includes and defines required for those sources
+   # Must be done manually since we will use them in a custom command
    #
-   # Directory for typecheck 
-   #
-   set ( TYPECHECK_DIR  ${CMAKE_BINARY_DIR}/TypeCheckTemp )
+   set(_includes ${TYPECHECK_DIR})
+
+   get_target_property( _target_includes ${_target}    INCLUDE_DIRECTORIES )
+   get_target_property( _amrex_includes  AMReX::amrex  INTERFACE_INCLUDE_DIRECTORIES )
+
+   foreach (_item IN LISTS _target_includes _amrex_includes)
+      if (_item)
+         list(APPEND _includes  ${_item})
+      endif ()
+   endforeach ()
+   
+   list( REMOVE_DUPLICATES _includes )
+
+   set(_defines)
+
+   get_target_property( _target_defines ${_target}    COMPILE_DEFINITIONS )
+   get_target_property( _amrex_defines  AMReX::amrex  INTERFACE_COMPILE_DEFINITIONS )
+
+   foreach (_item IN LISTS _target_defines _amrex_defines)
+      if (_item)
+         list(APPEND _defines  ${_item})
+      endif ()
+   endforeach ()
+   
+   list( REMOVE_DUPLICATES _defines )
 
 
    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -34,69 +88,44 @@ AMReX::amrex and MFIX_LIBNAME are defined ")
    # of the type check (see below) will fail because
    # it will not be able to include symbols
    # if modules are not there.
-   # We use a "static library" rather than an "object library"
-   # because this way we can use AMReX transitive dependencies
-   # 
-   add_library ( typecheckobjs STATIC EXCLUDE_FROM_ALL "" ) 
-   target_link_libraries ( typecheckobjs AMReX::amrex )
-   set_target_properties ( typecheckobjs
+   #
+
+   # ---------------------------------------------------------------------------------
+   # NOTE:
+   # ---------------------------------------------------------------------------------
+   # We could skip generating the objs file and create only the modules
+   # by setting the following compile option:
+   # target_compile_options(typecheckobjs PRIVATE -fsyntax-only)
+   # However, since this would only generate ".mod" files and no ".o" files, the target
+   # would always be out of date and repeat itself.
+   # A work around would be to create the module and the orig file at the same time.
+   # this could be achieved with a add_custom_command which is aware of dependecies info.
+   # To this end, we could use IMPLICIT_DEPENDS. Unfortunately this option is supported
+   # for C and C++ only for now.
+
+   set(_typecheckobjs  typecheckobjs_${_target})
+   
+   add_library( ${_typecheckobjs} OBJECT EXCLUDE_FROM_ALL )
+
+   target_sources( ${_typecheckobjs} 
+      PRIVATE
+      ${_fsources}
+      )
+
+   set_target_properties( ${_typecheckobjs} 
       PROPERTIES
-      Fortran_MODULE_DIRECTORY   ${TYPECHECK_DIR} )
+      Fortran_MODULE_DIRECTORY  ${TYPECHECK_DIR}
+      )
 
-
-   #
-   # Get the fortran sources and the fortran headers from MFIXCORE
-   #
-   get_target_property ( MFIX_ALLSRC ${MFIX_LIBNAME} SOURCES )
-
-   set ( F90SRC )
-   set ( F90HEADERS )
-   set ( HEXT ".H" )
-   set ( FEXT ".f90;.F90;.f;.F")
-
-   foreach ( item ${MFIX_ALLSRC} )
-      
-      # Get the file extension
-      get_filename_component ( FILETYPE ${item} EXT )
-
-      # Add to F90 sources
-      if ( FILETYPE IN_LIST FEXT )
-	 list ( APPEND F90SRC ${item} )
-      endif()
-
-      # Add to F90 Headers
-      if ( FILETYPE IN_LIST HEXT)
-	 string ( REGEX MATCH "_f.H" COND1 ${item})
-	 string ( REGEX MATCH "_F.H" COND2 ${item})
-
-	 if ( COND1 OR COND2 )
-	    list ( APPEND F90HEADERS ${item})	
-	 endif ()
-
-      endif ()
-      
-   endforeach ()
-
-   # Set sources
-   target_sources (typecheckobjs PRIVATE ${F90SRC} ${F90HEADERS} )
-
-
-   #
-   # Find includes needed for typecheck.
-   # Must be done manually since we will use them in a custom command
-   #
-   set (TYPECHECK_INCLUDES)
-
-   get_target_property ( MFIX_INCLUDE_PATHS ${MFIX_LIBNAME} INCLUDE_DIRECTORIES )
-   get_target_property ( AMREX_INCLUDE_PATHS AMReX::amrex   INTERFACE_INCLUDE_DIRECTORIES )
-
-   string (REPLACE ";" ";-I" TYPECHECK_INCLUDES
-      "-I${MFIX_INCLUDE_PATHS};${AMREX_INCLUDE_PATHS};${TYPECHECK_DIR}")
-   list ( REMOVE_DUPLICATES TYPECHECK_INCLUDES )
-
-   # MFIX includes are needed by typecheckobjs
-   target_include_directories ( typecheckobjs PUBLIC ${MFIX_INCLUDE_PATHS} )
-
+   target_include_directories( ${_typecheckobjs} 
+      PUBLIC
+      ${_target_includes} ${TYPECHECK_DIR}
+      )
+   
+   target_link_libraries( ${_typecheckobjs} 
+      PRIVATE
+      AMReX::amrex
+      )
 
    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
    # STEP 2: create CPPD files from C++ headers
@@ -113,73 +142,81 @@ AMReX::amrex and MFIX_LIBNAME are defined ")
       set (AMREX_PARTICLE_REAL  float)
    endif ()
 
-
    #
-   # Find AMReX defines 
-   #
-   get_target_property ( AMREX_DEFINES AMReX::amrex INTERFACE_COMPILE_DEFINITIONS )
+   # Manually setup includes and defines
+   # 
+   if (_includes)
+      string(REPLACE ";" ";-I" _includes "-I${_includes}")
+   endif ()
 
-
-   # Get rid of genex in defines list. Since they should be
-   # only related to fortran stuff, we should be fine
-   string ( GENEX_STRIP "${AMREX_DEFINES}" AMREX_DEFINES )
-   if(AMREX_DEFINES)
-      string ( REPLACE ";" ";-D" TYPECHECK_DEFINES "-D${AMREX_DEFINES}" )
+   # get rid of genex in define list
+   string( GENEX_STRIP "${_defines}" _defines )
+   if (_defines)
+      string(REPLACE ";" ";-D" _defines "-D${_defines}")
    endif ()
    
-   set (CPPDHEADERS)
-   foreach ( file ${F90HEADERS} )
-      get_filename_component ( fname ${file} NAME ) # This strips away the path
-      set ( CPPD_FILE ${fname}-cppd.h )
-      get_filename_component ( fullname ${file} ABSOLUTE ) # This add the absolute path to fname
-      add_custom_command ( OUTPUT  ${CPPD_FILE} COMMAND ${CMAKE_C_COMPILER}
-	 ARGS ${TYPECHECK_DEFINES} ${TYPECHECK_INCLUDES} -E -P -x c -std=c99 ${fullname} > ${CPPD_FILE}
+   set (_cppd)
+   foreach ( _file IN LISTS _fheaders )
+      get_filename_component( _fname    ${_file} NAME )     # This strips away the path
+      get_filename_component( _fullname ${_file} ABSOLUTE ) # This add the absolute path to fname
+      set( _cppd_file ${TYPECHECK_DIR}/${_fname}-cppd.h )
+      add_custom_command(
+         OUTPUT  ${_cppd_file}
+         COMMAND ${CMAKE_C_COMPILER}
+	 ARGS    ${_defines} ${_includes} -E -P -x c -std=c99 ${_fullname} > ${_cppd_file}
 	 COMMAND sed
-	 ARGS -i -e 's/amrex::Real/${AMREX_REAL}/g' ${CPPD_FILE} 
+	 ARGS -i -e 's/amrex::Real/${AMREX_REAL}/g' ${_cppd_file}
 	 COMMAND sed
-	 ARGS -i -e 's/amrex_real/${AMREX_REAL}/g' ${CPPD_FILE} 
+	 ARGS -i -e 's/amrex_real/${AMREX_REAL}/g' ${_cppd_file}
 	 COMMAND sed
-	 ARGS -i -e 's/amrex_particle_real/${AMREX_PARTICLE_REAL}/g' ${CPPD_FILE}
+	 ARGS -i -e 's/amrex_particle_real/${AMREX_PARTICLE_REAL}/g' ${_cppd_file}
 	 COMMAND sed
-	 ARGS -i -e '/typedef\\s*${AMREX_REAL}/d' ${CPPD_FILE} 
+	 ARGS -i -e '/typedef\\s*${AMREX_REAL}/d' ${_cppd_file}
+         COMMAND sed
+         ARGS -i -e 's/AMREX_GPU_DEVICE/ /g' ${_cppd_file}
+         COMMAND sed
+         ARGS -i -e 's/AMREX_GPU_HOST_DEVICE/ /g' ${_cppd_file}
 	 COMMAND sed
-	 ARGS -i -e 's/\\&/*/g' ${CPPD_FILE} 
-	 DEPENDS ${file} typecheckobjs # Leave dependency to typecheck so typecheckdir is created
-	 WORKING_DIRECTORY ${TYPECHECK_DIR}  
-	 COMMENT "Generating ${CPPD_FILE} " )
-      list (APPEND CPPDHEADERS ${CPPD_FILE})
+	 ARGS -i -e 's/\\&/*/g' ${_cppd_file}
+         DEPENDS ${_file} 
+	 WORKING_DIRECTORY ${TYPECHECK_DIR}
+	 COMMENT "Generating ${_fname}-cppd.h" )
+      list(APPEND _cppd ${_cppd_file})
    endforeach ()
 
-
-
+   
    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-   # STEP 3: generate origin files from fortran sources
+   # STEP 3: generate orig files from fortran sources
    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-   set (F90ORIG)
-   foreach ( file ${F90SRC} )
-      get_filename_component ( fname ${file} NAME ) # This strips away the path
-      set ( ORIG_FILE ${fname}.orig )
-      get_filename_component ( fullname ${file} ABSOLUTE ) # This add the absolute path to fname
-      add_custom_command (
-	 OUTPUT   ${ORIG_FILE}
-	 COMMAND  ${CMAKE_Fortran_COMPILER}
-	 ARGS
-	 ${TYPECHECK_DEFINES} ${TYPECHECK_INCLUDES} -fsyntax-only -fdump-fortran-original ${fullname} > ${ORIG_FILE}
-	 DEPENDS   ${file} typecheckobjs
-	 WORKING_DIRECTORY    ${TYPECHECK_DIR} 
-	 COMMENT  "Generating ${ORIG_FILE} " )
-      list (APPEND F90ORIG ${ORIG_FILE}) 
+   set(_orig)
+   foreach ( _file IN LISTS _fsources )
+      get_filename_component( _fname    ${_file} NAME )     # This strips away the path
+      get_filename_component( _fullname ${_file} ABSOLUTE ) # This add the absolute path to fname
+      set( _orig_file ${TYPECHECK_DIR}/${_fname}.orig )     # Use fullpath otherwise it rebuilds everytime 
+      add_custom_command(
+         OUTPUT   ${_orig_file}
+         COMMAND  ${CMAKE_Fortran_COMPILER}
+         ARGS     ${_defines} ${_includes} -fsyntax-only -fdump-fortran-original ${_fullname} > ${_orig_file}
+         DEPENDS  ${_file} ${_typecheckobjs}
+         WORKING_DIRECTORY    ${TYPECHECK_DIR} 
+         COMMENT  "Generating ${_fname}.orig" )
+      list(APPEND _orig ${_orig_file}) 
    endforeach ()
 
 
    # 
    # Add typecheck target
    #
-   add_custom_target( typecheck
+   set(_outfile  "${TYPECHECK_DIR}/${_target}_typecheck.ou" )
+   
+   add_custom_target( typecheck_${_target}
       COMMAND python3  ${AMREX_TYPECHECKER}
-      --workdir ${TYPECHECK_DIR} --output ${TYPECHECK_DIR}/amrex_typecheck.ou
-      DEPENDS ${F90ORIG} ${CPPDHEADERS}
+      --workdir ${TYPECHECK_DIR} --output ${_outfile}
+      DEPENDS ${_cppd} ${_orig}
       WORKING_DIRECTORY ${TYPECHECK_DIR}
       )
+
+   # Add rules to remove typecheck outfile when cleaning 
+   set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${_outfile})
    
 endfunction ()

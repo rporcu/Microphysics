@@ -1,3 +1,5 @@
+add_library(mfixcore)
+
 # 
 # Path where to store module files
 # 
@@ -189,4 +191,11 @@ if (DEFINED ENABLE_FPE)
 else ()
    message (AUTHOR_WARNING "Variable ENABLE_FPE is not defined")
 endif ()
+
+
+#
+# Add typecheck target for mfixcore
+#
+include( MFIX_Typecheck )
+add_typecheck_target(mfixcore)
 
