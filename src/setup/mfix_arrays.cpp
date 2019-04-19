@@ -461,13 +461,13 @@ mfix::RegridLevelSetArray (int a_lev)
        std::unique_ptr<MultiFab> new_level_set(new MultiFab);
        // MFUtil::regrid(* new_level_set, nd_ba, dmap[a_lev],
        //                * particle_ebfactory[a_lev], * level_sets[a_lev], true);
-       MFUtil::regrid(* new_level_set, nd_ba, dmap[a_lev], * level_sets[a_lev], true);
+       MFUtil::regrid(* new_level_set, nd_ba, dm, * level_sets[a_lev], true);
        level_sets[a_lev] = std::move(new_level_set);
 
        std::unique_ptr<MultiFab> new_impfunc(new MultiFab);
        //MFUtil::regrid(* new_impfunc, nd_ba, dmap[a_lev],
        //               * particle_ebfactory[a_lev], * implicit_functions[a_lev], true);
-       MFUtil::regrid(* new_impfunc, nd_ba, dmap[a_lev], * implicit_functions[a_lev], true);
+       MFUtil::regrid(* new_impfunc, nd_ba, dm, * implicit_functions[a_lev], true);
 
        implicit_functions[a_lev] = std::move(new_impfunc);
 
@@ -482,12 +482,12 @@ mfix::RegridLevelSetArray (int a_lev)
            ref_nd_ba.refine(levelset__refinement);
 
            std::unique_ptr<MultiFab> new_level_set(new MultiFab);
-           MFUtil::regrid(* new_level_set, ref_nd_ba, dmap[a_lev],
+           MFUtil::regrid(* new_level_set, ref_nd_ba, dm,
                           * level_sets[a_lev + 1], true);
            level_sets[a_lev + 1] = std::move(new_level_set);
 
            std::unique_ptr<MultiFab> new_impfunc(new MultiFab);
-           MFUtil::regrid(* new_impfunc, ref_nd_ba, dmap[a_lev],
+           MFUtil::regrid(* new_impfunc, ref_nd_ba, dm,
                           * implicit_functions[a_lev + 1], true);
            implicit_functions[a_lev + 1] = std::move(new_impfunc);
        }
