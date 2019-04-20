@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required(VERSION 3.14)
 
 #
 # Set the search path for cmake modules
@@ -72,7 +72,7 @@ set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
 
 
 # Import AMReX. Do it here so it is visibile to all targets
-find_package(AMReX 19.03.1.348 REQUIRED HINTS ${AMREX_INSTALL_DIR})
+find_package(AMReX 19.03.1.243 HINTS ${AMREX_INSTALL_DIR})
 echo_amrex_config_options ()
 list(APPEND CMAKE_MODULE_PATH ${AMREX_MODULES_PATH})
 
