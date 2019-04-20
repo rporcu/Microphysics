@@ -204,14 +204,9 @@ mfix::usr3()
           // We deliberately don't tile this loop
           for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
           {
-             const Box& sbx = (*p_g[lev])[mfi].box();
-             const Box& ubx = (*vel_g[lev])[mfi].box();
-
-             mfix_usr3((*vel_g[lev])[mfi].dataPtr(0), ubx.loVect(), ubx.hiVect(),
-                       (*vel_g[lev])[mfi].dataPtr(1), ubx.loVect(), ubx.hiVect(),
-                       (*vel_g[lev])[mfi].dataPtr(2), ubx.loVect(), ubx.hiVect(),
-                       (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-                        &dx, &dy, &dz);
+             mfix_usr3(BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                       BL_TO_FORTRAN_ANYD((  *p_g[lev])[mfi]),
+                       &dx, &dy, &dz);
           }
        }
     }

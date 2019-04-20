@@ -1,8 +1,8 @@
 module amrex_to_mfix_module
 ! _________________________________________________________________
 
-  use amrex_fort_module, only : rt => amrex_real
-  use iso_c_binding , only: c_int, c_char
+  use amrex_fort_module, only: rt => amrex_real
+  use iso_c_binding,     only: c_int, c_char
 
   implicit none
 
@@ -83,10 +83,11 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr1() &
+  subroutine mfix_usr1(time) &
        bind(C, name="mfix_usr1")
-
-    call usr1
+    real(rt), intent(in   ) :: time
+     
+    call usr1(time)
 
   end subroutine mfix_usr1
 
@@ -96,7 +97,7 @@ contains
 !**************************************************************************!
   subroutine mfix_usr2() &
        bind(C, name="mfix_usr2")
-
+     
     call usr2
 
   end subroutine mfix_usr2

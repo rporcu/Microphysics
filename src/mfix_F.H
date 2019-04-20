@@ -161,10 +161,8 @@ extern "C"
     void mfix_usr2();
 
     void mfix_usr3(
-             amrex::Real* u_g, const int*, const int*,
-             amrex::Real* v_g, const int*, const int*,
-             amrex::Real* w_g, const int*, const int*,
-             amrex::Real* p_g, const int*, const int*,
+             amrex::Real* vel_g, const int* ulo, const int* uhi,
+             amrex::Real* p_g,   const int* slo, const int* shi,
              amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
 
     void mfix_finl_err_msg();
@@ -182,8 +180,9 @@ extern "C"
     void init_periodic_vortices (
             const int* lo,  const int*  hi,
             amrex::Real* vel,  const int* ulo, const int* uhi,
-            const amrex::Real* dx,
-            const int*  domlo, const int* plane
+            const amrex::Real* dx, const amrex::Real* dy,
+            const amrex::Real* dz,
+            const int*  domlo
        );
 
     void mfix_collect_fluid(

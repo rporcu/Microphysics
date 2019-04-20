@@ -236,13 +236,15 @@ public:
     void SetParameters(int steady_state_in)
     { steady_state = steady_state_in;}
 
-protected:
-
     void mfix_add_drag_terms(Real dt);
 
     void mfix_add_gravity_and_gp(Real dt);
 
+    void mfix_compute_MAC_velocity_at_faces(Real time, Vector< std::unique_ptr<MultiFab> >& vel);
+
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
+
+protected:
 
      //! Tagging cells for refinement
      virtual void ErrorEst(int lev, TagBoxArray & tags, Real time, int ngrow) override;
@@ -391,8 +393,6 @@ private:
                                Real time, Real dt, bool proj_2);
 
      void mfix_diffuse_velocity(Real time, Real dt);
-
-     void mfix_compute_MAC_velocity_at_faces(Real time, Vector< std::unique_ptr<MultiFab> >& vel);
 
      void mfix_compute_diveu(Real time);
 
