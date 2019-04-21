@@ -87,8 +87,8 @@ build-openmp:
     - cd build
     - ctest -R $TEST_REGEX
   allow_failure: true
-  only:
-    - develop
+  # only:
+    # - develop
   tags:
     - docker
   artifacts:
