@@ -2,7 +2,7 @@ set( SGS_TESTS
    FLD01-x FLD01-y FLD01-z
    FLD01-x-ho FLD01-y-ho FLD01-z-ho
    FLD02-x FLD02-y FLD02-z
-   FLD03-x FLD03-y FLD03-z  
+   FLD03-x FLD03-y FLD03-z
    DEM01-x DEM01-y DEM01-z
    DEM03-x DEM03-y DEM03-z
    DEM04-x DEM04-y DEM04-z
@@ -43,19 +43,12 @@ foreach( THIS_TEST ${SGS_TESTS})
 
    # Create test dir in build path if needed
    # Update test files if needed
-   if(APPLE)
-      add_custom_command(TARGET ${TEST_EXE} PRE_BUILD
-         COMMAND [ -d ${TEST_DIR} ] || mkdir ${TEST_DIR}
-         COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST}/* .
-         WORKING_DIRECTORY ${TEST_DIR}
-         COMMENT "Updation test folder")
-   else()
-      add_custom_command(TARGET ${TEST_EXE} PRE_BUILD
-         COMMAND [ -d ${TEST_DIR} ] || mkdir ${TEST_DIR}
-         COMMAND cp -R --update ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST}/* .
-         WORKING_DIRECTORY  ${TEST_DIR}
-         COMMENT "Updating test folder")
-   endif()
+
+   add_custom_command(TARGET ${TEST_EXE} PRE_BUILD
+     COMMAND mkdir -p ${TEST_DIR}
+     COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST}/* .
+     WORKING_DIRECTORY ${TEST_DIR}
+     COMMENT "Copying files to test run directory")
 
    # Setup for running the a single test
    set(TEST_RUN run_${TEST_NAME}_SGS)
@@ -66,7 +59,7 @@ foreach( THIS_TEST ${SGS_TESTS})
 
    # Make sure that fcompare and fextract are always built before a test is run
    add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
- 
+
    add_test(NAME ${TEST_NAME}_SGS
       COMMAND make  ${TEST_RUN}
       WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
@@ -123,7 +116,7 @@ foreach( THIS_TEST ${MGS_TESTS})
    add_test(NAME ${TEST_NAME}_MGS
       COMMAND make  ${TEST_RUN}
       WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
-   
+
 endforeach( THIS_TEST ${MGS_TESTS} )
 
 
@@ -202,7 +195,7 @@ if ( AMREX_ENABLE_OMP )
       target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
 
       set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
-	 RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
+   RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
 
       target_link_libraries(${TEST_EXE} ${MFIX_LIBNAME} ${MFIX_EXTRA_LINK_LINE} )
 
@@ -212,7 +205,7 @@ if ( AMREX_ENABLE_OMP )
       # Setup for running the a single test
       set(TEST_RUN run_${TEST_NAME}_TGSO)
       add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-	 COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OMP=1 OMP_NUM_THREADS=4
+   COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OMP=1 OMP_NUM_THREADS=4
          ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_tiled
          WORKING_DIRECTORY  ${TEST_DIR} )
 
@@ -220,9 +213,9 @@ if ( AMREX_ENABLE_OMP )
       add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
 
       add_test(NAME ${TEST_NAME}_TGSO
-	 COMMAND make  ${TEST_RUN}
-	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
-      
+   COMMAND make  ${TEST_RUN}
+   WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+
    endforeach( THIS_TEST ${TGS_TESTS} )
 
 endif ()
@@ -256,7 +249,7 @@ if (AMREX_ENABLE_OMP AND AMREX_ENABLE_MPI)
       target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
 
       set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
-	 RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
+   RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
 
       target_link_libraries(${TEST_EXE} ${MFIX_LIBNAME} ${MFIX_EXTRA_LINK_LINE} )
 
@@ -266,7 +259,7 @@ if (AMREX_ENABLE_OMP AND AMREX_ENABLE_MPI)
       # Setup for running the a single test
       set(TEST_RUN run_${TEST_NAME}_TGPO)
       add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-	 COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=1 ENABLE_OMP=1 OMP_NUM_THREADS=2
+   COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=1 ENABLE_OMP=1 OMP_NUM_THREADS=2
          ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_multiple_tiled
          WORKING_DIRECTORY  ${TEST_DIR} )
 
@@ -274,9 +267,9 @@ if (AMREX_ENABLE_OMP AND AMREX_ENABLE_MPI)
       add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
 
       add_test(NAME ${TEST_NAME}_TGPO
-	 COMMAND make  ${TEST_RUN}
-	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
- 
+   COMMAND make  ${TEST_RUN}
+   WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+
    endforeach( THIS_TEST ${TGM_TESTS} )
 endif()
 
@@ -311,7 +304,7 @@ if ( AMREX_ENABLE_MPI )
       target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
 
       set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
-	 RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
+   RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
 
       target_link_libraries(${TEST_EXE} ${MFIX_LIBNAME} ${MFIX_EXTRA_LINK_LINE} )
 
@@ -321,7 +314,7 @@ if ( AMREX_ENABLE_MPI )
       # Setup for running the a single test
       set(TEST_RUN run_${TEST_NAME}_MGP)
       add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-	 COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=1 ENABLE_OMP=0 OMP_NUM_THREADS=1
+   COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=1 ENABLE_OMP=0 OMP_NUM_THREADS=1
          ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_multiple
          WORKING_DIRECTORY  ${TEST_DIR} )
 
@@ -329,8 +322,8 @@ if ( AMREX_ENABLE_MPI )
       add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
 
       add_test(NAME ${TEST_NAME}_MGP
-	 COMMAND make  ${TEST_RUN}
-	 WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+   COMMAND make  ${TEST_RUN}
+   WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
 
    endforeach( THIS_TEST ${MGP_TESTS} )
 endif (AMREX_ENABLE_MPI)
