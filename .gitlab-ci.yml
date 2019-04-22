@@ -34,7 +34,7 @@ variables:
     - make -C build mfix -j
     - cd build/mfix
     - make build_tests -j
-    - srun --partition shared ctest -R $TEST_REGEX
+    - $CTEST_CMD
   tags:
     - joule
   artifacts:
@@ -46,17 +46,17 @@ variables:
 
 single-grid-serial:
   variables:
-    TEST_REGEX: "SGS"
+    CTEST_CMD: "srun --partition shared ctest -R SGS"
   <<: *test_template
 
 multiple-grid-serial:
   variables:
-    TEST_REGEX: "MGS"
+    CTEST_CMD: "srun --partition shared ctest -R MGS"
   <<: *test_template
 
 tiled-grid-serial:
   variables:
-    TEST_REGEX: "TGS"
+    CTEST_CMD: "srun --partition shared ctest -R TGS"
   <<: *test_template
 
 
@@ -66,12 +66,12 @@ multiple-grid-parallel:
     CXX: "mpic++"
     ENABLE_MPI: "1"
     FC: "mpifort"
-    TEST_REGEX: "MGP"
+    CTEST_CMD: "sbatch -W ${CI_PROJECT_DIR}/.slurm-mgp"
   <<: *test_template
 
 
 tiled-grid-parallel-openmp:
   variables:
     ENABLE_OMP: "1"
-    TEST_REGEX: "TGP"
+    CTEST_CMD: "srun --partition shared ctest -R TGP"
   <<: *test_template
