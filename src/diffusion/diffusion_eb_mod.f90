@@ -34,8 +34,7 @@ contains
         bc_jlo, bc_jhi,        &
         bc_klo, bc_khi,        &
         dx, ng,                &
-        do_explicit_diffusion, &
-        eb_ho_dirichlet) bind(C)
+        do_explicit_diffusion) bind(C)
 
       use diffusion_mod, only: fill_vel_diff_bc
       use divop_mod,     only: compute_divop
@@ -98,7 +97,6 @@ contains
       ! If false then we include all only the off-diagonal terms here -- we do this
       !     by computing the full tensor then subtracting the diagonal terms
       integer(c_int),  intent(in   ) :: do_explicit_diffusion
-      integer(c_int),  intent(in   ) :: eb_ho_dirichlet
 
       ! Temporary array just to handle bc's
       integer(c_int) :: vlo(3), vhi(3)
@@ -158,8 +156,7 @@ contains
        & afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, &
        & cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi,    &
        & flags, flo, fhi, vfrac, vflo, vfhi, bcent, blo, bhi,           &
-       & domlo, domhi, dx, ng, mu, do_explicit_diffusion, eb_ho_dirichlet )
-
+       & domlo, domhi, dx, ng, mu, do_explicit_diffusion)
 
       ! Divide by ro*ep
       do n = 1, 3

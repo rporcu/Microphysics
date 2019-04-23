@@ -53,9 +53,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Should we use explicit vs implicit diffusion
         pp.query( "explicit_diffusion", explicit_diffusion );
 
-        // Should we use HO extrapolation at EB faces for the diffusion solve
-        pp.query( "eb_ho_dirichlet", eb_ho_dirichlet );
-
         pp.query("ooo_debug", ooo_debug);
 
         // The default type is "AsciiFile" but we can over-write that in the inputs file

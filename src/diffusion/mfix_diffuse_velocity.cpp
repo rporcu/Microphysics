@@ -88,12 +88,6 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
 
       // This sets the coefficient on the wall and defines it as a homogeneous Dirichlet bc for the solve.
       matrix.setEBHomogDirichlet ( lev, (*mu_g[lev]) );
-
-      // This tells the solver to use the higher order extrapolation to define d(phi)/dn at EB walls
-      // This may not be robust in the presence of small cells so it is an option, not required
-      //     (but does get Poiseuille flow right in the presence of walls at cell boundaries)
-      if (eb_ho_dirichlet == 1)
-         matrix.setEBHODirichlet ( );
    }
 
    // Loop over the velocity components
