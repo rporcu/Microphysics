@@ -95,7 +95,7 @@ if (ENABLE_CUDA)
       CUDA_RESOLVE_DEVICE_SYMBOLS OFF
       )
    
-   get_target_properties(MFIX_CUDA_SOURCES mfixcore SOURCES)
+   get_target_property(MFIX_CUDA_SOURCES mfixcore SOURCES)
    list(FILTER MFIX_CUDA_SOURCES INCLUDE REGEX "\\.cpp")
    set_source_files_properties(${MFIX_CUDA_SOURCES} PROPERTIES LANGUAGE CUDA)
    unset(MFIX_CUDA_SOURCES)  
