@@ -1,0 +1,100 @@
+########################################################################
+#  3D-Gasifier                                                         #
+#                                                                      #
+# Author: J. Musser                                         Date: 2013 #
+#                                                                      #
+#                                                                      #
+########################################################################
+
+  RUN_NAME = 'CLR-RISER'
+  DESCRIPTION = 'DEM Riser'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+  DT =      1.0d-4
+  DT_MIN =  1.0d-7
+  DT_MAX =  5.0d-5
+
+  DRAG_TYPE = 'WEN_YU'
+
+  gravity(1) = -9.81
+  gravity(2) =  0.00
+  gravity(3) =  0.00
+
+#_______________________________________________________________________
+# MATERIAL SECTION
+
+
+! Gas Section
+!---------------------------------------------------------------------//
+
+  RO_g0 = 1.0      ! (kg/m3)
+  MU_g0 = 2.0d-5   ! (Pa.sec)
+
+
+! PARTICLE SECTION
+!---------------------------------------------------------------------//
+  PARTICLE_TYPES = 1
+
+! Friction coefficient. (1)
+  MEW =   0.25                 ! particle-particle
+  MEW_W = 0.15                 ! particle-wall
+
+! Normal collision spring constant (N/m)
+  KN =    100.0                 ! inter-particle
+  KN_W =  100.0                 ! particle-wall
+
+! Restitution coefficient. (1)
+  DES_EN_INPUT =      0.85     ! particle-particle
+  DES_EN_WALL_INPUT = 0.85     ! particle-wall
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+
+! Freeboard
+!---------------------------------------------------------------------//
+  IC_X_w(1) =       0.0000   ! (m)
+  IC_X_e(1) =       3.7584   ! (m)
+  IC_Z_b(1) =       0.0000   ! (m)
+  IC_Z_t(1) =       0.2784   ! (m)
+  IC_Y_s(1) =       0.0000   ! (m)
+  IC_Y_n(1) =       0.2784   ! (m)
+
+  IC_EP_g(1) =      1.00     ! (-)
+
+  IC_P_g(1) =     101.325d3  ! (Pa -> 1 atm)
+
+  IC_U_g(1) =       0.0      ! (m/sec)
+  IC_V_g(1) =       0.0      ! (m/sec)
+  IC_W_g(1) =       0.0      ! (m/sec)
+
+
+! Riser
+!---------------------------------------------------------------------//
+  IC_X_w(5) =       0.0000   ! (m)
+  IC_X_e(5) =       0.1000   ! (m)
+  IC_Z_b(5) =       0.0000   ! (m)
+  IC_Z_t(5) =       0.2784   ! (m)
+  IC_Y_s(5) =       0.0000   ! (m)
+  IC_Y_n(5) =       0.2784   ! (m)
+
+  IC_EP_g(5) =      0.9990   ! (-)
+  IC_EP_s(5,1) =    0.0010   ! (-)
+
+  IC_P_g(5) =     101.325d3  ! (Pa -> 1 atm)
+
+  IC_U_g(5) =       0.0      ! (m/sec)
+  IC_V_g(5) =       0.0      ! (m/sec)
+  IC_W_g(5) =       0.0      ! (m/sec)
+
+  IC_U_s(5,1) =     0.0      ! (m/sec)
+  IC_V_s(5,1) =     0.0      ! (m/sec)
+  IC_W_s(5,1) =     0.0      ! (m/sec)
+
+  ic_dp_dist(5,1) =   'CONSTANT'
+  ic_dp_mean(5,1) =    870.0d-6   ! (m)
+
+  ic_ro_s_dist(5,1) = 'CONSTANT'
+  ic_ro_s_mean(5,1) =  860.0d0    ! (kg/m^3)

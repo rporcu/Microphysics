@@ -29,12 +29,6 @@ mfix::make_eb_cyclone()
 {
     ParmParse pp("hopper");
 
-    int max_level_here = 0;
-
-    // set up ebfactory
-
-    EBSupport m_eb_support_level = EBSupport::full;
-
     /****************************************************************************
      * Build the cyclone's inlet tube.                                          *
      ***************************************************************************/
@@ -119,26 +113,11 @@ mfix::make_eb_cyclone()
      ***************************************************************************/
 
     // Construct EB2 Index Space
-    Print() << "Building the cyclone geometry ..." << std::endl;
-
     auto cyc_if = EB2::makeUnion(my_cyclone, false_bottom);
 
-    // auto gshop_cyc = EB2::makeShop(EB2::makeUnion(my_cyclone, false_bottom));
     auto gshop_cyc = EB2::makeShop(cyc_if);
 
     build_eb_levels(gshop_cyc);
-
-    //_______________________________________________________________________
-    // Particles need the correct volfrac at the inflow
-    bool has_walls = false;
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
-    if (has_walls)
-    {
-        auto if_part = EB2::makeUnion(cyc_if, * walls);
-        auto gshop_part = EB2::makeShop(if_part);
-
-        build_particle_eb_levels(gshop_part);
-    }
 
     Print() << "Done making the fluid eb levels ..." << std::endl;
 }

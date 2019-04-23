@@ -5,14 +5,11 @@
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.fixed_dt         = 0
 
 mfix.cfl = 0.5
 
 #amr.max_step = 100
 amr.stop_time = 1.20
-
-mfix.explicit_diffusion = 0
 
 mfix.particle_init_type = "Auto"
 
@@ -79,6 +76,28 @@ mfix.write_eb_surface = false  # Needed to output eb-surfaces
 #! EB geometry
 #!-----------------------------------------------------------//
 
+#! BCs 
+#!-----------------------------------------------------------//
+xlo.location = 0.
+xlo.type = "mi"
+xlo.velocity = 0.015
+
+xhi.location = 0.008
+xhi.type = "po"
+xhi.pressure = 0.000
+
+ylo.location = 0.
+ylo.type = "nsw"
+
+yhi.location = 0.002
+yhi.type = "nsw"
+
+zlo.location = 0.
+zlo.type = "nsw"
+
+zhi.location = 0.002
+zhi.type = "nsw"
+
 #_______________________________________________________________________
 # Particle load balancing
 
@@ -98,7 +117,20 @@ amr.regrid_int         = 25
 
 #______________________________________________________________________
 # user data processing
-mfix.write_user = true
+amr.avg_int = 10
+amr.avg_file = "uio"
+
+amr.avg_vel_p =        1       0        0
+amr.avg_p_g   =        0       1        1
+amr.avg_ep_g  =        0       0        0
+amr.avg_vel_g =        0       0        0
+
+amr.avg_region_x_w =   0.000   0.0000   0.0002
+amr.avg_region_x_e =   0.008   0.0000   0.0002
+amr.avg_region_y_s =   0.000   0.000    0.000
+amr.avg_region_y_n =   0.002   0.002    0.002
+amr.avg_region_z_b =   0.000   0.000    0.000
+amr.avg_region_z_t =   0.002   0.002    0.002
 
 #_______________________________________________________________________
 # IO / Checkpointing

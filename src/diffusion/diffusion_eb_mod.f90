@@ -2,7 +2,7 @@ module eb_diffusion_mod
 
    use amrex_fort_module,   only: rt => amrex_real
    use iso_c_binding ,      only: c_int
-   use param,               only: zero, half, one, two
+   use param,               only: zero, half, one, two, two_thirds
    use amrex_error_module,  only: amrex_abort
    use amrex_mempool_module, only: amrex_allocate, amrex_deallocate
 
@@ -16,25 +16,25 @@ module eb_diffusion_mod
 contains
 
    subroutine compute_divtau_eb ( lo, hi,  &
-        divtau, dlo, dhi,    &
-        vel_in, vinlo, vinhi,&
-        mu, lambda, ro,      &
-        ep, slo, shi,        &
-        flags,    flo,  fhi, &
-        afrac_x, axlo, axhi, &
-        afrac_y, aylo, ayhi, &
-        afrac_z, azlo, azhi, &
-        cent_x,  cxlo, cxhi, &
-        cent_y,  cylo, cyhi, &
-        cent_z,  czlo, czhi, &
-        vfrac,   vflo, vfhi, &
-        bcent,    blo,  bhi, &
-        domlo,  domhi,       &
-        bc_ilo, bc_ihi,      &
-        bc_jlo, bc_jhi,      &
-        bc_klo, bc_khi,      &
-        dx, ng,              &
-        do_explicit_diffusion ) bind(C)
+        divtau, dlo, dhi,      &
+        vel_in, vinlo, vinhi,  &
+        mu, ro,                &
+        ep, slo, shi,          &
+        flags,    flo,  fhi,   &
+        afrac_x, axlo, axhi,   &
+        afrac_y, aylo, ayhi,   &
+        afrac_z, azlo, azhi,   &
+        cent_x,  cxlo, cxhi,   &
+        cent_y,  cylo, cyhi,   &
+        cent_z,  czlo, czhi,   &
+        vfrac,   vflo, vfhi,   &
+        bcent,    blo,  bhi,   &
+        domlo,  domhi,         &
+        bc_ilo, bc_ihi,        &
+        bc_jlo, bc_jhi,        &
+        bc_klo, bc_khi,        &
+        dx, ng,                &
+        do_explicit_diffusion) bind(C)
 
       use diffusion_mod, only: fill_vel_diff_bc
       use divop_mod,     only: compute_divop
@@ -69,7 +69,6 @@ contains
            &     ro(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),   &
            &     ep(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),   &
            &     mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),   &
-           & lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)),   &
            & afrac_x(axlo(1):axhi(1),axlo(2):axhi(2),axlo(3):axhi(3)), &
            & afrac_y(aylo(1):ayhi(1),aylo(2):ayhi(2),aylo(3):ayhi(3)), &
            & afrac_z(azlo(1):azhi(1),azlo(2):azhi(2),azlo(3):azhi(3)), &
@@ -78,13 +77,13 @@ contains
            & cent_z(czlo(1):czhi(1),czlo(2):czhi(2),czlo(3):czhi(3),2),&
            & vfrac(vflo(1):vfhi(1),vflo(2):vfhi(2),vflo(3):vfhi(3)),   &
            & bcent(blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3),3)
-           
+
       real(rt),  intent(inout) ::                                 &
            divtau(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3)
 
       integer,  intent(in   ) :: &
            flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
-      
+
       ! BC types
       integer, intent(in   ) ::  &
            bc_ilo(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
@@ -105,69 +104,65 @@ contains
 
       ! Temporary array to handle viscous fluxes at the cell faces (staggered)
       ! Just reserve space for the tile + 3 ghost layers
-      integer, parameter :: nh = 3 ! Number of Halo layers      
+      integer, parameter :: nh = 3 ! Number of Halo layers
       real(rt) :: fx(lo(1)-nh:hi(1)+nh+1,lo(2)-nh:hi(2)+nh  ,lo(3)-nh:hi(3)+nh  ,3)
       real(rt) :: fy(lo(1)-nh:hi(1)+nh  ,lo(2)-nh:hi(2)+nh+1,lo(3)-nh:hi(3)+nh  ,3)
       real(rt) :: fz(lo(1)-nh:hi(1)+nh  ,lo(2)-nh:hi(2)+nh  ,lo(3)-nh:hi(3)+nh+1,3)
-
+      integer(c_int) :: fxlo(3), fxhi(3), fylo(3), fyhi(3), fzlo(3), fzhi(3)
       integer(c_int) :: i, j, k, n
       real(rt)       :: idx, idy, idz
-     
+
       ! Check number of ghost cells
       if (ng < 4) call amrex_abort( "compute_divop(): ng must be >= 4")
-           
+
       idx = one / dx(1)
       idy = one / dx(2)
       idz = one / dx(3)
 
       vlo = lo - ng
-      vhi = hi + ng      
+      vhi = hi + ng
       call amrex_allocate( vel, vlo(1), vhi(1), vlo(2), vhi(2), vlo(3), vhi(3), 1, 3)
 
       ! Put values into ghost cells so we can easy take derivatives
       call fill_vel_diff_bc( vel_in, vinlo, vinhi, vel, lo, hi, domlo, domhi, ng, &
            bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi )
-      
+
       ! tau_xx, tau_xy, tau_xz on west faces
-      call compute_tau_x(vel, vlo, vhi, mu, slo, shi, lambda,  &
+      call compute_tau_x(vel, vlo, vhi, mu, slo, shi, &
            flags, flo, fhi, lo, hi, dx, fx, nh, domlo, domhi,  &
-           do_explicit_diffusion ) 
-      
+           do_explicit_diffusion )
+
       ! tau_yx, tau_yy, tau_yz on south faces
-      call compute_tau_y(vel, vlo, vhi, mu, slo, shi, lambda, &
+      call compute_tau_y(vel, vlo, vhi, mu, slo, shi, &
            flags, flo, fhi, lo, hi, dx, fy, nh, domlo, domhi,  &
-           do_explicit_diffusion ) 
-      
+           do_explicit_diffusion )
+
       ! tau_zx, tau_zy, tau_zz on bottom faces
-      call compute_tau_z(vel, vlo, vhi, mu, slo, shi, lambda, &
+      call compute_tau_z(vel, vlo, vhi, mu, slo, shi, &
            flags, flo, fhi, lo, hi, dx, fz, nh,  domlo, domhi,  &
            do_explicit_diffusion )
-      
-      divop: block
-         ! Compute div(tau) with EB algorithm
-         integer(c_int)  :: fxlo(3), fxhi(3), fylo(3), fyhi(3), fzlo(3), fzhi(3)
 
-         fxlo = lo-nh
-         fylo = lo-nh
-         fzlo = lo-nh
+      ! Compute div(tau) with EB algorithm
+      fxlo = lo-nh
+      fylo = lo-nh
+      fzlo = lo-nh
 
-         fxhi = hi + nh + [1,0,0]
-         fyhi = hi + nh + [0,1,0]
-         fzhi = hi + nh + [0,0,1]
-         
-         call compute_divop( lo, hi, divtau, dlo, dhi, vel, vlo, vhi,          &
-              & fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi, ep, slo, shi,  &
-              & afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, &
-              & cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi,    &
-              & flags, flo, fhi, vfrac, vflo, vfhi, bcent, blo, bhi,           &
-              & domlo, domhi, dx, ng, mu, lambda, do_explicit_diffusion )
-      end block divop
-      
+      fxhi = hi + nh + [1,0,0]
+      fyhi = hi + nh + [0,1,0]
+      fzhi = hi + nh + [0,0,1]
+
+      call compute_divop( lo, hi, divtau, dlo, dhi, vel, vlo, vhi,          &
+       & fx, fxlo, fxhi, fy, fylo, fyhi, fz, fzlo, fzhi, ep, slo, shi,  &
+       & afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, &
+       & cent_x, cxlo, cxhi, cent_y, cylo, cyhi, cent_z, czlo, czhi,    &
+       & flags, flo, fhi, vfrac, vflo, vfhi, bcent, blo, bhi,           &
+       & domlo, domhi, dx, ng, mu, do_explicit_diffusion)
+
       ! Divide by ro*ep
       do n = 1, 3
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
-               do i = lo(1), hi(1)                 
+               do i = lo(1), hi(1)
                   divtau(i,j,k,n) = divtau(i,j,k,n) / ( ro(i,j,k) * ep(i,j,k) )
                end do
             end do
@@ -175,7 +170,7 @@ contains
       end do
 
       call amrex_deallocate(vel)
-      
+
    end subroutine compute_divtau_eb
 
 
@@ -190,14 +185,14 @@ contains
    !  Therefore we always compute the fluxes in the whole ghost region,    !
    !  regardless of the BC. compute_divop() will take care of ignore what  !
    !  is not needed.                                                       !
-   !                                                                       !   
-   !<$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$>!   
+   !                                                                       !
+   !<$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$>!
 
    !-----------------------------------------------------------------------!
    !-----------------------------------------------------------------------!
    !-----------------------------------------------------------------------!
    !-----------------------------------------------------------------------!
-   subroutine compute_tau_x(vel, vlo, vhi, mu, slo, shi, lambda, &
+   subroutine compute_tau_x(vel, vlo, vhi, mu, slo, shi, &
         flag, fglo, fghi, lo, hi, dx, tau_x, ng, domlo, domhi,   &
         & do_explicit_diffusion)
 
@@ -211,8 +206,7 @@ contains
 
       real(rt), intent(in   ) :: dx(3), &
            vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3), &
-           mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer,  intent(in   ) :: &
            flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
@@ -244,7 +238,7 @@ contains
 
       do k = lo(3)-ng, hi(3)+ng
          do j = lo(2)-ng, hi(2)+ng
-            do i = lo(1)-ng, hi(1)+ng+1  
+            do i = lo(1)-ng, hi(1)+ng+1
 
                dudx = (vel(i,j,k,1) - vel(i-1,j,k,1))*idx
                dvdx = (vel(i,j,k,2) - vel(i-1,j,k,2))*idx
@@ -260,9 +254,9 @@ contains
                   jlom = jhim
                else if ( i == domhi(1)+1 ) then
                   jhip = jlop
-                  jhim = jlom 
+                  jhim = jlom
                end if
-               
+
                whi = weights(jhip-jhim)
                wlo = weights(jlop-jlom)
 
@@ -284,9 +278,9 @@ contains
                   klom = khim
                else if ( i == domhi(1)+1 ) then
                   khip = klop
-                  khim = klom 
+                  khim = klom
                end if
-               
+
                whi = weights(khip-khim)
                wlo = weights(klop-klom)
 
@@ -299,7 +293,7 @@ contains
                     +(vel(i-1,j,klop,3)-vel(i-1,j,klom,3))*wlo)
 
                mu_w     = half * (    mu(i,j,k) +     mu(i-1,j,k))
-               lambda_w = half * (lambda(i,j,k) + lambda(i-1,j,k))
+               lambda_w = -two_thirds * mu_w
 
                tau_x(i,j,k,1) = mu_w*(dudx + dudx) + lambda_w*(dudx + dvdy + dwdz)
                tau_x(i,j,k,2) = mu_w*(dudy + dvdx)
@@ -325,7 +319,7 @@ contains
    !-----------------------------------------------------------------------!
    !-----------------------------------------------------------------------!
 
-   subroutine compute_tau_y(vel, vlo, vhi, mu, slo, shi, lambda, &
+   subroutine compute_tau_y(vel, vlo, vhi, mu, slo, shi, &
         flag, fglo, fghi, lo, hi, dx, tau_y, ng, domlo,domhi,    &
         do_explicit_diffusion)
 
@@ -336,11 +330,11 @@ contains
       integer,  intent(in   ) :: fglo(3), fghi(3)
       integer,  intent(in   ) ::   lo(3),   hi(3)
       integer,  intent(in   ) ::domlo(3),domhi(3)
-      
+
       real(rt), intent(in   ) :: dx(3), &
            vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3), &
-           mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
 
       integer,  intent(in   ) :: &
            flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
@@ -348,7 +342,7 @@ contains
       real(rt), intent(  out) :: &
            tau_y(lo(1)-ng:, lo(2)-ng:, lo(3)-ng:,1: )
 
-      integer,  intent(in   ) :: ng ! Number of ghost layer to fill  
+      integer,  intent(in   ) :: ng ! Number of ghost layer to fill
 
       integer(c_int),  intent(in   ) :: do_explicit_diffusion
 
@@ -373,7 +367,7 @@ contains
 
       do k = lo(3)-ng, hi(3)+ng
          do j = lo(2)-ng, hi(2)+ng+1
-            do i = lo(1)-ng, hi(1)+ng  
+            do i = lo(1)-ng, hi(1)+ng
 
                dudy = (vel(i,j,k,1) - vel(i,j-1,k,1))*idy
                dvdy = (vel(i,j,k,2) - vel(i,j-1,k,2))*idy
@@ -389,7 +383,7 @@ contains
                   ilom = ihim
                else if ( j == domhi(2)+1 ) then
                   ihip = ilop
-                  ihim = ilom 
+                  ihim = ilom
                end if
 
                whi = weights(ihip-ihim)
@@ -413,7 +407,7 @@ contains
                   klom = khim
                else if ( j == domhi(2)+1 ) then
                   khip = klop
-                  khim = klom 
+                  khim = klom
                end if
 
                whi = weights(khip-khim)
@@ -428,7 +422,7 @@ contains
                     +(vel(i,j-1,klop,3)-vel(i,j-1,klom,3))*wlo)
 
                mu_s     = half * (    mu(i,j,k) +     mu(i,j-1,k))
-               lambda_s = half * (lambda(i,j,k) + lambda(i,j-1,k))
+               lambda_s = -two_thirds * mu_s
 
                tau_y(i,j,k,1) = mu_s*(dudy + dvdx)
                tau_y(i,j,k,2) = mu_s*(dvdy + dvdy) + lambda_s*(dudx + dvdy + dwdz)
@@ -456,7 +450,7 @@ contains
    !-----------------------------------------------------------------------!
    !-----------------------------------------------------------------------!
 
-   subroutine compute_tau_z(vel, vlo, vhi, mu, slo, shi, lambda, &
+   subroutine compute_tau_z(vel, vlo, vhi, mu, slo, shi, &
         flag, fglo, fghi, lo, hi, dx, tau_z, ng, domlo,domhi,    &
         do_explicit_diffusion)
 
@@ -467,18 +461,17 @@ contains
       integer,  intent(in   ) :: fglo(3), fghi(3)
       integer,  intent(in   ) ::   lo(3),   hi(3)
       integer,  intent(in   ) ::domlo(3),domhi(3)
-      
+
       real(rt), intent(in   ) :: dx(3), &
            vel(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3), &
-           mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-           lambda(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+           mu(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer,  intent(in   ) :: &
            flag(fglo(1):fghi(1),fglo(2):fghi(2),fglo(3):fghi(3))
 
       real(rt), intent(  out) :: &
            tau_z(lo(1)-ng:, lo(2)-ng:, lo(3)-ng:,1: )
-      
+
       integer,  intent(in   ) :: ng ! Number of ghost layer to fill
 
       integer(c_int),  intent(in   ) :: do_explicit_diffusion
@@ -504,8 +497,8 @@ contains
 
       do k = lo(3)-ng, hi(3)+ng+1
          do j = lo(2)-ng, hi(2)+ng
-            do i = lo(1)-ng, hi(1)+ng     
-               
+            do i = lo(1)-ng, hi(1)+ng
+
                dudz = (vel(i,j,k,1) - vel(i,j,k-1,1))*idz
                dvdz = (vel(i,j,k,2) - vel(i,j,k-1,2))*idz
                dwdz = (vel(i,j,k,3) - vel(i,j,k-1,3))*idz
@@ -520,9 +513,9 @@ contains
                   ilom = ihim
                else if ( k == domhi(3)+1 ) then
                   ihip = ilop
-                  ihim = ilom 
+                  ihim = ilom
                end if
-               
+
                whi = weights(ihip-ihim)
                wlo = weights(ilop-ilom)
 
@@ -530,7 +523,7 @@ contains
                     ((vel(ihip,j,k  ,1)-vel(ihim,j,k  ,1))*whi &
                     +(vel(ilop,j,k-1,1)-vel(ilom,j,k-1,1))*wlo)
                dwdx = (0.5d0*idx) * &
-                    
+
                     ((vel(ihip,j,k  ,3)-vel(ihim,j,k  ,3))*whi &
                     +(vel(ilop,j,k-1,3)-vel(ilom,j,k-1,3))*wlo)
 
@@ -538,13 +531,13 @@ contains
                jhim = j - get_neighbor_cells_int_single(flag(i,j,k  ),0,-1,0)
                jlop = j + get_neighbor_cells_int_single(flag(i,j,k-1),0 ,1,0)
                jlom = j - get_neighbor_cells_int_single(flag(i,j,k-1),0,-1,0)
-               
+
                if ( k == domlo(3) ) then
                   jlop = jhip
                   jlom = jhim
                else if ( k == domhi(3)+1 ) then
                   jhip = jlop
-                  jhim = jlom 
+                  jhim = jlom
                end if
 
                whi = weights(jhip-jhim)
@@ -559,7 +552,7 @@ contains
                     +(vel(i,jlop,k-1,3)-vel(i,jlom,k-1,3))*wlo)
 
                mu_b     = half * (    mu(i,j,k) +     mu(i,j,k-1))
-               lambda_b = half * (lambda(i,j,k) + lambda(i,j,k-1))
+               lambda_b = -two_thirds * mu_b
 
                tau_z(i,j,k,1) = mu_b*(dudz + dwdx)
                tau_z(i,j,k,2) = mu_b*(dvdz + dwdy)

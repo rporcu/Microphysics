@@ -392,42 +392,6 @@ MODULE INIT_NAMELIST_MODULE
 !#####################################################################!
 
 !<keyword category="Boundary Condition" required="false">
-!  <description>X coordinate of the west face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_X_W(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>X coordinate of the east face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_X_E(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Y coordinate of the south face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Y_S(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Y coordinate of the north face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Y_N(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Z coordinate of the bottom face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Z_B(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Z coordinate of the top face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Z_T(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
 !  <description>Z coordinate of the top face or edge.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
       BC_NORMAL(:,:) = UNDEFINED
@@ -469,20 +433,8 @@ MODULE INIT_NAMELIST_MODULE
 !      values of fluid and solids velocities are only used initially
 !      as MFIX computes these values at this inlet boundary.' />
 !
-!  <valid value='FREE_SLIP_WALL' alias='FSW'
-!    note='Velocity gradients at the wall vanish./>
-!
 !  <valid value='NO_SLIP_WALL' alias='NSW'
 !    note='All components of the velocity vanish at the wall./>
-!
-!  <valid value='PAR_SLIP_WALL' alias='PSW'
-!    note='Partial slip at the wall implemented as
-!      dv/dn + hw (v - vw) = 0, where n is the normal pointing from the
-!      fluid into the wall. The coefficients hw and vw should be
-!      specified. For free slip set hw = 0. For no slip leave hw
-!      undefined (hw=+inf) and set vw = 0. To set hw = +inf, leave it
-!      unspecified. />
-      BC_TYPE(:) = UNDEFINED_C
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">

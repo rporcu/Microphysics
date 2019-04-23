@@ -1,8 +1,6 @@
 add_sources( bc_fill_nd.F90 )
 add_sources( divop_mod.f90 )
-add_sources( fill_bc0.f90 )
 add_sources( compute_vort.f90 )
-add_sources( set_pressure_bcs.f90 )
 add_sources( set_velocity_bcs.f90 )
 add_sources( set_scalar_bcs.f90 )
 add_sources( mfix_util_F.H )

@@ -42,6 +42,22 @@ struct intData
     };
 };
 
+///
+/// We add a particle to the neighbor list if its center is within 3 particle radii
+///
+struct MFIXCheckPair
+{
+    template <class P>
+    AMREX_GPU_DEVICE AMREX_INLINE
+    bool operator()(const P& p1, const P& p2) const
+    {
+        return AMREX_D_TERM(   (p1.pos(0) - p2.pos(0))*(p1.pos(0) - p2.pos(0)) ,
+                             + (p1.pos(1) - p2.pos(1))*(p1.pos(1) - p2.pos(1)) ,
+                             + (p1.pos(2) - p2.pos(2))*(p1.pos(2) - p2.pos(2)) )
+            <= 9.0*p1.rdata(0)*p1.rdata(0);
+    }
+};
+
 class MFIXParIter
     : public amrex::ParIter<realData::count,intData::count,0,0>
 {
@@ -55,23 +71,6 @@ class MFIXParticleContainer final
 public:
 
     using MyConstParIter = ParConstIter<realData::count,intData::count,0,0>;
-    // Data type returned by MFIXParIter::ArrayOfStructs::data (accesses
-    // particle data represented by realData)
-    //using RealType       = typename ParticleType::RealType;
-    //using AoS            = ArrayOfStructs<realData::count, intData::count>;
-
-    ///
-    /// We add a particle to the neighbor list if its center is within 3 particle radii
-    ///
-    struct {
-        bool operator()(const ParticleType& p1, const ParticleType& p2) const
-        {
-            return AMREX_D_TERM(   (p1.pos(0) - p2.pos(0))*(p1.pos(0) - p2.pos(0))   ,
-                                   + (p1.pos(1) - p2.pos(1))*(p1.pos(1) - p2.pos(1)) ,
-                                   + (p1.pos(2) - p2.pos(2))*(p1.pos(2) - p2.pos(2)) )
-                <= 9.0*p1.rdata(0)*p1.rdata(0);
-        }
-    } MFIXCheckPair;
 
     // Get number of particles
     int NumberOfParticles(MFIXParIter& pti){
@@ -87,7 +86,7 @@ public:
     void InitParticlesAscii(const std::string& file);
     void InitParticlesAuto();
     void RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
-                          const MultiFab * ls_phi, const iMultiFab * ls_valid, int ls_refinement);
+                          const MultiFab * ls_phi, int ls_refinement);
 
     void Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba);
 
@@ -99,23 +98,19 @@ public:
 
     void EvolveParticles(int lev, int nstep, Real dt, Real time, EBFArrayBoxFactory * ebfactory,
             const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
-            MultiFab * cost, std::string & knapsack_weight_type, int subdt_io);
+            MultiFab * cost, std::string & knapsack_weight_type);
 
     void GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro)[10]);
 
     //Real GetMaxRadius(int lev);
 
     void UpdateMaxVelocity();
-    void UpdateMaxForces(std::map<PairIndex, Vector<Real>> pfor,
-                         std::map<PairIndex, Vector<Real>> wfor);
+    void UpdateMaxForces(std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> pfor,
+                         std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> wfor);
     RealVect GetMaxVelocity();
     Vector<RealVect> GetMaxForces();
 
     void BalanceParticleLoad_KDTree();
-    ///
-    /// Write out all particles at a level in the format fcompare_par can read
-    ///
-    void writeAllForComparison(int lev);
 
     ///
     /// Write out all particles in the format of the particle_input.dat files so we
@@ -161,8 +156,7 @@ public:
     ///
     /// Calculate particle-induced drag on the fluid
     ///
-    void CalcDragOnFluid(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
-                         const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+    void CalcDragOnFluid(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
                          const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
@@ -175,8 +169,7 @@ public:
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-    void PICMultiDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
-                            const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+    void PICMultiDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
                             const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
@@ -188,20 +181,23 @@ public:
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities
-    // 
+    //
     void ComputeAverageVelocities ( const int lev,
-				    const amrex::Real time,
-				    const string& basename,
-				    const vector<Real>& avg_region_x_w,
-				    const vector<Real>& avg_region_x_e,
-				    const vector<Real>& avg_region_y_s,
-				    const vector<Real>& avg_region_y_n,
-				    const vector<Real>& avg_region_z_b,
-				    const vector<Real>& avg_region_z_t );
+            const amrex::Real time,
+            const string& basename,
+            const Vector<int>& avg_vel_p,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_x_w,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_x_e,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_y_s,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_y_n,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_z_b,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_z_t );
 
 private:
 
     int nlev;
+
+    static Real gravity[3];
 
     ///
     /// We add a particle to the neighbor list if it's center is within 3 particle radii
@@ -223,6 +219,13 @@ private:
     RealVect loc_maxvel;
     RealVect loc_maxpfor;
     RealVect loc_maxwfor;
+
+    void time_advance(MFIXParIter& pti, int ntot, Real subdt,
+                      Gpu::ManagedDeviceVector<Real>& tow, Gpu::ManagedDeviceVector<Real>& fc);
+
+    void set_particle_properties(int pstate, Real pradius, Real pdensity,
+                                 Real& pvol, Real& pmass, Real& omoi, Real& omega);
+
 
 };
 #endif

@@ -16,7 +16,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
   use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
-  use bc, only: nsw_, fsw_, psw_, pinf_, pout_, minf_
+  use bc, only: pinf_, pout_, minf_
 
   implicit none
 
@@ -46,7 +46,7 @@ subroutine flip_particle_vol(slo, shi, vol, &
      do k=slo(3),shi(3)
         do j=slo(2),shi(2)
            if (bc_ilo_type(j,k,1) == PINF_ .or. &
-                bc_ilo_type(j,k,1) == MINF_ ) then
+               bc_ilo_type(j,k,1) == MINF_ ) then
               
                vol(ilo,j,k) = vol(ilo,j,k) + vol(ilo-1,j,k)
                vol(ilo-1,j,k) = 0.d0

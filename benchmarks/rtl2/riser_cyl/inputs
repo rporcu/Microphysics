@@ -5,14 +5,11 @@
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.fixed_dt         = 0
 
 mfix.cfl = 0.5
 
 #amr.max_step = 100
 amr.stop_time = 3.0
-
-mfix.explicit_diffusion = 0
 
 mfix.particle_init_type = "Auto"
 
@@ -45,8 +42,8 @@ amr.n_cell =  40   10   10
 
 # Fluid
 amr.max_grid_size_x = 1024
-amr.max_grid_size_y = 6
-amr.max_grid_size_z = 6
+amr.max_grid_size_y = 5
+amr.max_grid_size_z = 5
 
 # Particles (not with KDTree)
 #particles.max_grid_size_x =   32
@@ -90,6 +87,9 @@ cylinder.height = -1.0
 cylinder.direction = 0
 cylinder.center    =  0.004   0.001   0.001
 
+#! BCs 
+#!-----------------------------------------------------------//
+
 #_______________________________________________________________________
 # Particle load balancing
 
@@ -109,16 +109,20 @@ amr.regrid_int         = 25
 
 #_______________________________________________________________________
 # user data processing
-#mfix.write_user = true
-particles.avg_vel_file = mean_Vp  # particle averages interval
-particles.avg_vel_int = 10
-particles.avg_region_x_w = 0.0
-particles.avg_region_x_e = 0.008
-particles.avg_region_y_s = 0.0
-particles.avg_region_y_n = 0.002
-particles.avg_region_z_b = 0.0
-particles.avg_region_z_t = 0.002
+amr.avg_int = 10
+amr.avg_file = "uio"
 
+amr.avg_vel_p =        1 
+amr.avg_p_g   =        0 
+amr.avg_ep_g  =        0 
+amr.avg_vel_g =        0 
+
+amr.avg_region_x_w =   0.000 
+amr.avg_region_x_e =   0.008 
+amr.avg_region_y_s =   0.000 
+amr.avg_region_y_n =   0.002 
+amr.avg_region_z_b =   0.000 
+amr.avg_region_z_t =   0.002 
 
 #_______________________________________________________________________
 # IO / Checkpointing

@@ -21,33 +21,15 @@ module des_time_march_module
 
 contains
 
-   function des_is_continuum_coupled () result( is_coupled ) &
-        bind(C, name="des_continuum_coupled")
-
-      use discretelement, only: des_continuum_coupled
-
-      integer  :: is_coupled
-
-      is_coupled = 0
-
-      if ( des_continuum_coupled ) is_coupled = 1
-
-   end function des_is_continuum_coupled
-
-   subroutine des_init_time_loop ( tstart, dt, nsubsteps, subdt, subdt_io) &
+   subroutine des_init_time_loop ( tstart, dt, nsubsteps, subdt) &
         bind(C, name="des_init_time_loop")
 
       use discretelement,  only: dtsolid
-      use run,             only: glob_subdt_io => subdt_io, des_tstart, des_dt
+      use run,             only: des_tstart, des_dt
 
       real(rt),   intent(in   ) :: tstart, dt
-      integer(c_int), intent(in   ) :: subdt_io
       integer(c_int), intent(  out) :: nsubsteps
       real(rt),   intent(  out) :: subdt
-
-      ! set the global subdt_io (in run module) to toggle sub-dt I/O
-      glob_subdt_io = .true.
-      if ( subdt_io == 0 )  glob_subdt_io = .false.
 
       ! update the global des_tstart, and des_dt (in run module) corresponding to this
       ! des run: this enables usr[2,3]_des to know the time
@@ -64,6 +46,19 @@ contains
       end if
 
    end subroutine des_init_time_loop
+
+   subroutine call_usr2_des( np, particles ) &
+        bind(c, name="call_usr2_des")
+
+      use run,            only: call_usr
+      use particle_mod,   only: particle_t
+
+      integer(c_int),   intent(in)    :: np
+      type(particle_t), intent(inout) :: particles(np)
+
+      if ( call_usr ) call usr2_des(np, particles)
+
+   end subroutine call_usr2_des
 
    subroutine call_usr3_des( np, particles ) &
         bind(c, name="call_usr3_des")
@@ -85,8 +80,7 @@ contains
 
       use particle_mod
       use constant                       , only: gravity
-      use output_manager_module          , only: output_manager
-      use run                            , only: call_usr, subdt_io
+      use run                            , only: call_usr
       use bc                             , only: BC_shaker_A, BC_shaker_F
 
       integer(c_int),   intent(in   )     :: nf, np
@@ -101,9 +95,6 @@ contains
 
       ! call user functions.
       if ( call_usr ) call usr1_des
-
-      if ( subdt_io ) call output_manager(np,  &
-           stime, subdt, xlength, ylength, zlength, nstep, particles, 0)
 
       ! Update the time for the purpose of printing
       stime = stime + subdt

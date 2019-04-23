@@ -2,17 +2,38 @@
 
 RUN_NAME="DEM04"
 
+cleanup() {
+    rm -rf ${RUN_NAME}* const_plt*  &> /dev/null
+}
+
+write_data() {
+    echo "   " >> $1
+    echo "   Friction coefficient $2  (N/m)" >> $1
+    echo "   " >> $1
+
+    ${FJOIN_PAR} -f DEM04_par --end 50 --var $3 --var $4 --format 6 --dt 0.0004 >> $1
+
+}
+
 MFIX=./mfix
 if [ -n "$1" ]; then
     MFIX=$1
 fi
 
-rm -f POST_* &> /dev/null
+if [ -n "$2" ]; then
+    FJOIN_PAR=$2/fjoin_par
+fi
+
+rm -rf POST_* &> /dev/null
 
 for DES_MEW in 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0; do
-  rm -f ${RUN_NAME}* &> /dev/null
-  time -p ${MFIX} inputs \
-    MEW=${DES_MEW} MEW_W=${DES_MEW}
+
+    cleanup
+
+    time -p ${MFIX} inputs MEW=${DES_MEW} MEW_W=${DES_MEW}
+
+    write_data POST_VEL.dat ${DES_MEW}  9 14
+
 done
 
 post_dats=AUTOTEST/POST*.dat

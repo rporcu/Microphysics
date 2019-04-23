@@ -26,12 +26,8 @@
       SUBROUTINE WRITE_DAT_HEADER(FNAME, VAR)
 
       use run, only: DESCRIPTION
-      use discretelement, only: des_coll_model
-      use discretelement, only: particle_types
 
       IMPLICIT NONE
-
-      INTEGER :: M, N
 
       CHARACTER(len=*) :: FNAME
       CHARACTER(len=*) :: VAR
@@ -59,10 +55,7 @@
       ENDIF
 
 
-      select case (trim(des_coll_model))
-      case('LSD');      write(funit,1450) 'LINEAR SPRING-DASHPOT'
-      case('HERTZIAN'); write(funit,1450) 'HERTZIAN SPRING-DASHPOT'
-      end select
+      write(funit,1450) 'LINEAR SPRING-DASHPOT'
 1450  FORMAT(3/4X,'Collision model: ',A)
 
 

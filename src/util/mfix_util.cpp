@@ -9,7 +9,6 @@ mfix::check_for_nans (int lev)
     bool vg_has_nans = vel_g[lev] -> contains_nan (1);
     bool wg_has_nans = vel_g[lev] -> contains_nan (2);
     bool pg_has_nans =   p_g[lev] -> contains_nan (0);
-    bool ropg_has_nans = rop_g[lev] -> contains_nan (0);
 
     if (ug_has_nans)
   amrex::Print() << "WARNING: u_g contains NaNs!!!";
@@ -22,10 +21,6 @@ mfix::check_for_nans (int lev)
 
     if (pg_has_nans)
   amrex::Print() << "WARNING: p_g contains NaNs!!!";
-
-    if (ropg_has_nans)
-  amrex::Print() << "WARNING: rop_g contains NaNs!!!";
-
 }
 
 //
@@ -65,9 +60,9 @@ mfix::mfix_compute_vort ()
        Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-       for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
+       for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
           // Tilebox
           Box bx = mfi.tilebox ();
@@ -96,52 +91,111 @@ mfix::mfix_compute_vort ()
 Real
 mfix::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
 {
-   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
-                    0,  MFInfo(), *ebfactory[lev]);
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), ncomp, ngrow, 
+                    MFInfo(), *ebfactory[lev]);
 
-   MultiFab::Copy( mf_tmp, *mf[lev], comp, comp, 1, 0 );
+   MultiFab::Copy( mf_tmp, *mf[lev], comp, 0, 1, 0 );
    EB_set_covered( mf_tmp, 0.0 );
 
-   return mf_tmp.norm0( comp );
-}
-
-Real
-mfix::mfix_norm0 ( MultiFab& mf, int lev, int comp )
-{
-   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), mf.nComp(),
-                    0,  MFInfo(), *ebfactory[lev]);
-
-   MultiFab::Copy( mf_tmp, mf, comp, comp, 1, 0 );
-   EB_set_covered( mf_tmp, 0.0 );
-
-   return mf_tmp.norm0( comp );
+   return mf_tmp.norm0( 0 );
 }
 
 //
-// Subroutine to compute norm1 of EB multifab
+// Compute norm0 (max norm / inf norm) of EB multifab
+//
+Real
+mfix::mfix_norm0 ( MultiFab& mf, int lev, int comp )
+{
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow, 
+                    MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+
+   return mf_tmp.norm0( 0 );
+}
+
+//
+// Compute norm1 of EB multifab
 //
 Real
 mfix::mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
 {
-   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
-                    0,  MFInfo(), *ebfactory[lev]);
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), ncomp, ngrow, 
+                    MFInfo(), *ebfactory[lev]);
 
-   MultiFab::Copy( mf_tmp, *mf[lev], comp, comp, 1, 0 );
+   MultiFab::Copy( mf_tmp, *mf[lev], comp, 0, 1, 0 );
    EB_set_covered( mf_tmp, 0.0 );
 
-   return mf_tmp.norm1( comp, geom[lev].periodicity() );
+   return mf_tmp.norm1( 0, geom[lev].periodicity() );
 }
 
+//
+// Compute norm1 of EB multifab
+//
 Real
 mfix::mfix_norm1 ( MultiFab& mf, int lev, int comp )
 {
-   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), mf.nComp(),
-                    0,  MFInfo(), *ebfactory[lev]);
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow, 
+                    MFInfo(), *ebfactory[lev]);
 
-   MultiFab::Copy( mf_tmp, mf, comp, comp, 1, 0 );
+   MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
    EB_set_covered( mf_tmp, 0.0 );
 
-   return mf_tmp.norm1( comp, geom[lev].periodicity() );
+   return mf_tmp.norm1( 0, geom[lev].periodicity() );
+}
+
+//
+// Subroutine to compute norm0 of EB multifab
+//
+Real
+mfix::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf1,
+                   const Vector< std::unique_ptr<MultiFab>>& mf2,
+                   int lev, int comp1, int comp2 )
+{
+   BL_ASSERT((*mf1[lev]).boxArray() == (*mf2[lev]).boxArray());
+
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf1[lev]->boxArray(), mf1[lev]->DistributionMap(), ncomp, ngrow,
+                    MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy    ( mf_tmp, *mf1[lev], comp1, 0, 1, 0 );
+   MultiFab::Multiply( mf_tmp, *mf2[lev], comp2, 0, 1, 0 );
+
+   EB_set_covered( mf_tmp, 0.0 );
+
+   return mf_tmp.norm0( 0 );
+}
+
+
+//
+// Compute norm0 (max norm / inf norm) of product of EB multifabs
+//
+Real
+mfix::mfix_norm0 ( MultiFab& mf1, MultiFab& mf2, int lev, int comp1, int comp2)
+{
+   BL_ASSERT(mf1.boxArray() == mf2.boxArray());
+
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf1.boxArray(), mf1.DistributionMap(), ncomp, ngrow,  
+                    MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy    ( mf_tmp, mf1, comp1, 0, 1, 0 );
+   MultiFab::Multiply( mf_tmp, mf2, comp2, 0, 1, 0 );
+
+   EB_set_covered( mf_tmp, 0.0 );
+
+   return mf_tmp.norm0( 0 );
 }
 
 Real
@@ -165,14 +219,13 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
         const int* lo   = box.loVect();
         const int* hi   = box.hiVect();
 
-#pragma gpu
-  mfix_sum_mf(AMREX_INT_ANYD(lo),AMREX_INT_ANYD(hi),BL_TO_FORTRAN_N_ANYD(fab,comp),
-          AMREX_REAL_ANYD(dx),BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
-                    AMREX_MFITER_REDUCE_SUM(&sum));
+        mfix_sum_mf(lo, hi, BL_TO_FORTRAN_N_ANYD(fab, comp),
+                    dx, BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
+                    &sum);
     }
 
     if (!local)
-  ParallelDescriptor::ReduceRealSum(sum);
+        ParallelDescriptor::ReduceRealSum(sum);
 
     return sum;
 }

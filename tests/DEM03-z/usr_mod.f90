@@ -1,5 +1,6 @@
 module usr
 
+     use amrex_constants_module, only: M_PI
      use amrex_fort_module, only : c_real => amrex_real
 
      ! a dummy variable listed in usrnlst.inc
@@ -29,8 +30,8 @@ module usr
 !......................................................................!
       double precision function F1kw(y1)
 
+      use amrex_constants_module, only: M_PI
       use discretelement, only: KN_W
-      use constant, only: pi
 
       implicit none
 
@@ -38,7 +39,7 @@ module usr
       double precision, parameter :: lRad = 0.5d-3
       double precision :: lMass
 
-      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
+      lMass = (4.0D0/3.0D0)*M_PI*(lRad**3)*2.0d+4
       F1kw = -(KN_W/lMass)*(y1 - lRad)
 
       return
@@ -59,8 +60,8 @@ module usr
 !......................................................................!
       double precision function F1dw(x1)
 
+      use amrex_constants_module, only: M_PI
       use discretelement, only: DES_ETAN_WALL
-      use constant, only: pi
 
       implicit none
 
@@ -68,7 +69,7 @@ module usr
       double precision, parameter :: lRad = 0.5d-3
       double precision :: lMass
 
-      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
+      lMass = (4.0D0/3.0D0)*M_PI*(lRad**3)*2.0d+4
       F1dw = -(DES_ETAN_WALL(1)/lMass) * x1
 
       return
@@ -90,7 +91,6 @@ module usr
       double precision function F12k(y1, y2)
 
       use discretelement, only: KN
-      use constant, only: pi
 
       implicit none
 
@@ -98,7 +98,7 @@ module usr
       double precision, parameter :: lRad = 0.5d-3
       double precision :: lMass
 
-      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
+      lMass = (4.0D0/3.0D0)*M_PI*(lRad**3)*2.0d+4
 
       F12k = -(KN/lMass)*(2.0d0*lRad - (y2 - y1))
 
@@ -122,7 +122,6 @@ module usr
       double precision function F12d(x1, x2)
 
       use discretelement, only: DES_ETAN
-      use constant, only: pi
 
       implicit none
 
@@ -130,7 +129,7 @@ module usr
       double precision, parameter :: lRad = 0.5d-3
       double precision :: lMass
 
-      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
+      lMass = (4.0D0/3.0D0)*M_PI*(lRad**3)*2.0d+4
 
       F12d = -(DES_ETAN(1,2)/lMass)*(x1 - x2)
 
@@ -152,8 +151,8 @@ module usr
 !......................................................................!
       double precision function F2kw(y2,length)
 
+      use amrex_constants_module, only: M_PI
       use discretelement, only: KN_W
-      use constant, only: pi
 
       implicit none
 
@@ -162,7 +161,7 @@ module usr
       real(c_real), parameter  :: lRad = 0.5d-3
       real(c_real) :: lMass
 
-      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*1.0d+4
+      lMass = (4.0D0/3.0D0)*M_PI*(lRad**3)*1.0d+4
 
       F2kw = -(KN_W/lMass)*(lRad - (length - y2))
 
@@ -185,8 +184,8 @@ module usr
 !......................................................................!
       double precision function F2dw(x2)
 
+      use amrex_constants_module, only: M_PI
       use discretelement, only: DES_ETAN_WALL
-      use constant, only: pi
 
       implicit none
 
@@ -194,7 +193,7 @@ module usr
       double precision, parameter :: lRad = 0.5d-3
       double precision :: lMass
 
-      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*1.0d+4
+      lMass = (4.0D0/3.0D0)*M_PI*(lRad**3)*1.0d+4
 
       F2dw = -(DES_ETAN_WALL(2)/lMass) * x2
 
@@ -217,16 +216,14 @@ module usr
 !......................................................................!
       double precision function F21k(y1, y2)
 
-      use constant, only: pi
-
       implicit none
 
       double precision, intent(in) :: y1, y2 ! particle height
       double precision, parameter :: lRad = 0.5d-3
       double precision :: lMass1, lMass2
 
-      lMass1 = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
-      lMass2 = (4.0D0/3.0D0)*PI*(lRad**3)*1.0d+4
+      lMass1 = (4.0D0/3.0D0)*M_PI*(lRad**3)*2.0d+4
+      lMass2 = (4.0D0/3.0D0)*M_PI*(lRad**3)*1.0d+4
 
       F21k = -(lMass1/lMass2)* F12k(y1, y2)
 
@@ -249,16 +246,14 @@ module usr
 !......................................................................!
       double precision function F21d(x1, x2)
 
-      use constant, only: pi
-
       implicit none
 
       double precision, intent(in) :: x1, x2 ! particle height
       double precision, parameter :: lRad = 0.5d-3
       double precision :: lMass1, lMass2
 
-      lMass1 = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
-      lMass2 = (4.0D0/3.0D0)*PI*(lRad**3)*1.0d+4
+      lMass1 = (4.0D0/3.0D0)*M_PI*(lRad**3)*2.0d+4
+      lMass2 = (4.0D0/3.0D0)*M_PI*(lRad**3)*1.0d+4
 
       F21d = -(lMass1/lMass2) * F12d(x1,x2)
 

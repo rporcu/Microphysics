@@ -8,8 +8,8 @@ module compute_vort_module
 contains
 
    !
-   ! Compute the vorticity 
-   ! 
+   ! Compute the vorticity
+   !
    subroutine compute_vort ( lo, hi, vort, slo, shi, vel_g, vlo, vhi, dx) &
                             bind(C, name="compute_vort")
 
@@ -20,7 +20,7 @@ contains
       real(rt),   intent(in   ) :: dx(3)
       real(rt),   intent(  out) :: &
            vort(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      
+
       real(rt), intent(in   ) :: &
            vel_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),3)
 
@@ -40,9 +40,9 @@ contains
 
                uy = 0.5d0 * ody * ( vel_g(i,j+1,k,1) - vel_g(i,j-1,k,1))
                uz = 0.5d0 * odz * ( vel_g(i,j,k+1,1) - vel_g(i,j,k-1,1))
-               vx = 0.5d0 * odz * ( vel_g(i+1,j,k,2) - vel_g(i-1,j,k,2))
+               vx = 0.5d0 * odx * ( vel_g(i+1,j,k,2) - vel_g(i-1,j,k,2))
                vz = 0.5d0 * odz * ( vel_g(i,j,k+1,2) - vel_g(i,j,k-1,2))
-               wx = 0.5d0 * odz * ( vel_g(i+1,j,k,3) - vel_g(i-1,j,k,3))
+               wx = 0.5d0 * odx * ( vel_g(i+1,j,k,3) - vel_g(i-1,j,k,3))
                wy = 0.5d0 * ody * ( vel_g(i,j+1,k,3) - vel_g(i,j-1,k,3))
                vort(i,j,k) = sqrt((wy-vz)**2+(uz-wx)**2+(vx-uy)**2)
 

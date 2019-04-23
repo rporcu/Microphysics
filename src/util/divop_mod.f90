@@ -30,27 +30,28 @@ contains
    !
    !
    subroutine compute_divop ( lo, hi, &
-        div, dlo, dhi, &
-        vel,vllo,vlhi, &
-        fx,  fxlo, fxhi, &
-        fy,  fylo, fyhi, &
-        fz,  fzlo, fzhi, &
-        ep,  elo, ehi, &
-        afrac_x, axlo, axhi, &
-        afrac_y, aylo, ayhi, &
-        afrac_z, azlo, azhi, &
-        cent_x,  cxlo, cxhi, &
-        cent_y,  cylo, cyhi, &
-        cent_z,  czlo, czhi, &
-        flags,    flo,  fhi, &
-        vfrac,   vflo, vfhi, &
-        bcent,    blo,  bhi, &
-        domlo, domhi,        &
-        dx, ng, mu, lambda , & 
-        do_explicit_diffusion ) bind(C)
+        div, dlo, dhi,         &
+        vel,vllo,vlhi,         &
+        fx,  fxlo, fxhi,       &
+        fy,  fylo, fyhi,       &
+        fz,  fzlo, fzhi,       &
+        ep,  elo, ehi,         &
+        afrac_x, axlo, axhi,   &
+        afrac_y, aylo, ayhi,   &
+        afrac_z, azlo, azhi,   &
+        cent_x,  cxlo, cxhi,   &
+        cent_y,  cylo, cyhi,   &
+        cent_z,  czlo, czhi,   &
+        flags,    flo,  fhi,   &
+        vfrac,   vflo, vfhi,   &
+        bcent,    blo,  bhi,   &
+        domlo, domhi,          &
+        dx, ng,                &
+        mu,                    &
+        do_explicit_diffusion) bind(C)
 
       use bc
-      use eb_interpolation_mod, only: interp_to_face_centroid
+      use amrex_eb_util_module, only: amrex_eb_interpolate_to_face_centroid_per_cell
       use eb_wallflux_mod,      only: compute_diff_wallflux
 
       ! Tile bounds (cell centered)
@@ -99,8 +100,7 @@ contains
 
       ! Optional arrays (only for viscous calculations)
       real(ar),        intent(in   ), optional  ::                &
-           &     mu(elo(1):ehi(1),elo(2):ehi(2),elo(3):ehi(3)),   &
-           & lambda(elo(1):ehi(1),elo(2):ehi(2),elo(3):ehi(3))
+           &     mu(elo(1):ehi(1),elo(2):ehi(2),elo(3):ehi(3))
 
       real(ar),        intent(inout) ::                           &
            & div(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3)
@@ -125,7 +125,12 @@ contains
       integer(c_int)                 :: i, j, k, n, nbr(-1:1,-1:1,-1:1)
       integer(c_int)                 :: nwalls
       real(ar)                       :: idx, idy, idz
-      logical                        :: is_viscous
+      logical                        :: is_dirichlet
+      real(ar)                       :: fxp, fxm, fyp, fym, fzp, fzm
+      integer                        :: ii, jj, kk
+      real(ar)                       :: divnc, vtot, wtot
+      real(ar)                       :: epvfrac
+      integer                        :: iwall
 
       idx = one / dx(1)
       idy = one / dx(2)
@@ -135,13 +140,13 @@ contains
       if (ng < 4) call amrex_abort( "compute_divop(): ng must be >= 4")
 
       ! Check if we are computing divergence for viscous term by checking if
-      ! both mu and lambda are passed in
-      if ( present(mu) .and. present(lambda) ) then
-         is_viscous = .true.
-      else if ( .not. present(mu) .and. .not. present(lambda) ) then
-         is_viscous = .false.
+      ! mu was passed in
+      if ( present(mu) ) then
+         is_dirichlet = .true.
+      else if ( .not. present(mu)  ) then
+         is_dirichlet = .false.
       else
-         call amrex_abort("compute_divop(): either mu or lambda is not passed in")
+         call amrex_abort("compute_divop(): either mu is not passed in")
       end if
 
       if ( abs(dx(1) - dx(2)) > epsilon(0.0_ar) .or.&
@@ -149,12 +154,12 @@ contains
            abs(dx(3) - dx(2)) > epsilon(0.0_ar) ) then
          call amrex_abort("compute_divop(): grid spacing must be uniform")
       end if
-      
+
       !
       ! Allocate arrays to host viscous wall fluxes
       !
       nwalls = 0
-      if (is_viscous) then
+      if (is_dirichlet) then
          do k = lo(3)-2, hi(3)+2
             do j = lo(2)-2, hi(2)+2
                do i = lo(1)-2, hi(1)+2
@@ -192,165 +197,152 @@ contains
          !
          ! Step 1: compute conservative divergence on stencil (lo-2,hi+2)
          !
-         compute_divc: block
-            real(ar) :: fxp, fxm, fyp, fym, fzp, fzm
-            integer  :: iwall
+         iwall = 0
 
-            iwall = 0
+         divc = zero
 
-            divc = zero  
+         do k = lo(3)-2, hi(3)+2
+            do j = lo(2)-2, hi(2)+2
+               do i = lo(1)-2, hi(1)+2
 
-            do k = lo(3)-2, hi(3)+2
-               do j = lo(2)-2, hi(2)+2
-                  do i = lo(1)-2, hi(1)+2
+                  if (is_covered_cell(flags(i,j,k))) then
 
-                     if (is_covered_cell(flags(i,j,k))) then
+                     divc(i,j,k) = my_huge
 
-                        divc(i,j,k) = my_huge
+                  else if (is_single_valued_cell(flags(i,j,k))) then
 
-                     else if (is_single_valued_cell(flags(i,j,k))) then
+                     call get_neighbor_cells( flags(i,j,k), nbr )
 
-                        call get_neighbor_cells( flags(i,j,k), nbr )
+                     fxp = amrex_eb_interpolate_to_face_centroid_per_cell( &
+                         i+1, j, k, 1, fx, fxlo, n, afrac_x, axlo, cent_x, cxlo, nbr )
 
-                        ! interp_to_face_centroid returns the proper flux multiplied
-                        ! by the face area
-                        fxp = interp_to_face_centroid( i+1, j, k, 1, fx, fxlo, n,  &
-                             & afrac_x, axlo, cent_x, cxlo, nbr )
+                     fxm = amrex_eb_interpolate_to_face_centroid_per_cell( &
+                         i, j, k, 1, fx, fxlo, n, afrac_x, axlo, cent_x, cxlo, nbr )
 
-                        fxm = interp_to_face_centroid( i  , j, k, 1, fx, fxlo, n,  &
-                             & afrac_x, axlo, cent_x, cxlo, nbr )
+                     fyp = amrex_eb_interpolate_to_face_centroid_per_cell( &
+                         i, j+1, k, 2, fy, fylo, n, afrac_y, aylo, cent_y, cylo, nbr )
 
-                        fyp = interp_to_face_centroid( i, j+1, k, 2, fy, fylo, n,  &
-                             & afrac_y, aylo, cent_y, cylo, nbr )
+                     fym = amrex_eb_interpolate_to_face_centroid_per_cell( &
+                         i, j, k, 2, fy, fylo, n,  afrac_y, aylo, cent_y, cylo, nbr )
 
-                        fym = interp_to_face_centroid( i, j, k, 2, fy, fylo, n,  &
-                             & afrac_y, aylo, cent_y, cylo, nbr )
+                     fzp = amrex_eb_interpolate_to_face_centroid_per_cell( &
+                         i, j, k+1, 3, fz, fzlo, n,  afrac_z, azlo, cent_z, czlo, nbr )
 
-                        fzp = interp_to_face_centroid( i, j, k+1, 3, fz, fzlo, n,  &
-                             & afrac_z, azlo, cent_z, czlo, nbr )
+                     fzm = amrex_eb_interpolate_to_face_centroid_per_cell( &
+                         i, j, k, 3, fz, fzlo, n,  afrac_z, azlo, cent_z, czlo, nbr )
 
-                        fzm = interp_to_face_centroid( i, j, k, 3, fz, fzlo, n,  &
-                             & afrac_z, azlo, cent_z, czlo, nbr )
+                     divc(i,j,k) = ( ( fxp*afrac_x(i+1,j,k) - fxm*afrac_x(i,j,k) ) * idx + &
+                      &              ( fyp*afrac_y(i,j+1,k) - fym*afrac_y(i,j,k) ) * idy + &
+                      &              ( fzp*afrac_z(i,j,k+1) - fzm*afrac_z(i,j,k) ) * idz ) / vfrac(i,j,k)
 
+                     ! Add viscous wall fluxes (compute three components only
+                     ! during the first pass, i.e. for n=1
+                     iwall = iwall + 1
 
-                        divc(i,j,k) = ( ( fxp - fxm ) * idx + &
-                             &          ( fyp - fym ) * idy + &
-                             &          ( fzp - fzm ) * idz ) / vfrac(i,j,k)
-
-                        ! Add viscous wall fluxes (compute three components only
-                        ! during the first pass, i.e. for n=1
-                        iwall = iwall + 1
-                        if (is_viscous) then
-                           if (n==1) then
-                              call compute_diff_wallflux( divdiff_w(:,iwall), dx, i, j, k, &
-                                   vel, vllo, vlhi, lambda, mu, elo, ehi, bcent, blo, bhi,     &
-                                   afrac_x, axlo, axhi, afrac_y, aylo, ayhi, afrac_z, azlo, azhi, do_explicit_diffusion)
-                           end if
-                           divc(i,j,k) = divc(i,j,k) - divdiff_w(n,iwall) / ( dx(n) * vfrac(i,j,k) )
+                     if (is_dirichlet) then
+                        if (n==1) then
+                           call compute_diff_wallflux( divdiff_w(:,iwall), dx, i, j, k,       &
+                                                       vel, vllo, vlhi, mu, elo, ehi,         &
+                                                       bcent, blo, bhi, flags, flo, fhi,      &
+                                                       afrac_x, axlo, axhi,                   &
+                                                       afrac_y, aylo, ayhi,                   &
+                                                       afrac_z, azlo, azhi,                   &
+                                                       vfrac  , vflo, vfhi,                   &
+                                                       do_explicit_diffusion)
                         end if
-
-                     else
-
-                        divc(i,j,k) =   ( ( fx(i+1,j  ,k  ,n) - fx(i,j,k,n) ) * idx  &
-                             &          + ( fy(i  ,j+1,k  ,n) - fy(i,j,k,n) ) * idy  &
-                             &          + ( fz(i  ,j  ,k+1,n) - fz(i,j,k,n) ) * idz  )
-
+                        divc(i,j,k) = divc(i,j,k) - divdiff_w(n,iwall) / ( dx(n) * vfrac(i,j,k) )
                      end if
 
-                  end do
+                  else
+
+                     divc(i,j,k) =   ( ( fx(i+1,j  ,k  ,n) - fx(i,j,k,n) ) * idx  &
+                      &              + ( fy(i  ,j+1,k  ,n) - fy(i,j,k,n) ) * idy  &
+                      &              + ( fz(i  ,j  ,k+1,n) - fz(i,j,k,n) ) * idz  )
+
+                  end if
+
                end do
             end do
-         end block compute_divc
-
- 
+         end do
 
          !
          ! Step 2: compute delta M ( mass gain or loss ) on (lo-1,hi+1)
          !
          optmp = zero
-         block
-            integer   :: ii, jj, kk
-            real(ar)  :: divnc, vtot
-            real(ar)  :: epvfrac
 
-            do k = lo(3)-1, hi(3)+1
-               do j = lo(2)-1, hi(2)+1
-                  do i = lo(1)-1, hi(1)+1
-                     if (is_single_valued_cell(flags(i,j,k))) then
-                        divnc = zero
-                        vtot  = zero
-                        call get_neighbor_cells(flags(i,j,k),nbr)
-                        do kk = -1, 1
-                           do jj = -1, 1
-                              do ii = -1, 1
-                                 ! Check if we have to include also cell (i,j,k) itself
-                                 if ( ( ii /= 0 .or. jj /= 0 .or. kk /= 0) &
-                                      .and. (nbr(ii,jj,kk)==1) ) then
-                                    epvfrac = vfrac(i+ii,j+jj,k+kk) * ep(i+ii,j+jj,k+kk) * mask(i+ii,j+jj,k+kk)
-                                    vtot    = vtot  + epvfrac
-                                    divnc   = divnc + epvfrac*divc(i+ii,j+jj,k+kk)
-                                 end if
-                              end do
+         do k = lo(3)-1, hi(3)+1
+            do j = lo(2)-1, hi(2)+1
+               do i = lo(1)-1, hi(1)+1
+                  if (is_single_valued_cell(flags(i,j,k))) then
+                     divnc = zero
+                     vtot  = zero
+                     call get_neighbor_cells(flags(i,j,k),nbr)
+                     do kk = -1, 1
+                        do jj = -1, 1
+                           do ii = -1, 1
+                              ! Check if we have to include also cell (i,j,k) itself
+                              if ( ( ii /= 0 .or. jj /= 0 .or. kk /= 0) &
+                               .and. (nbr(ii,jj,kk)==1) ) then
+                                 epvfrac = vfrac(i+ii,j+jj,k+kk) * ep(i+ii,j+jj,k+kk) * mask(i+ii,j+jj,k+kk)
+                                 vtot    = vtot  + epvfrac
+                                 divnc   = divnc + epvfrac*divc(i+ii,j+jj,k+kk)
+                              end if
                            end do
                         end do
-                        divnc        = divnc / vtot
-                        epvfrac      = vfrac(i,j,k) * ep(i,j,k)
-                        optmp(i,j,k) = (one - vfrac(i,j,k)) * ( divnc - divc(i,j,k) )
-                        delm(i,j,k)  = - epvfrac * optmp(i,j,k)
-                     else
-                        delm(i,j,k) = zero
-                     end if
-                  end do
+                     end do
+                     divnc        = divnc / vtot
+                     epvfrac      = vfrac(i,j,k) * ep(i,j,k)
+                     optmp(i,j,k) = (one - vfrac(i,j,k)) * ( divnc - divc(i,j,k) )
+                     delm(i,j,k)  = - epvfrac * optmp(i,j,k)
+                  else
+                     delm(i,j,k) = zero
+                  end if
                end do
             end do
+         end do
 
-         end block
 
          !
          ! Step 3: redistribute excess/loss of mass
          !
-         block
-            real(ar) :: wtot
-            integer  :: ii, jj, kk
-
-            do k = lo(3)-1, hi(3)+1
-               do j = lo(2)-1, hi(2)+1
-                  do i = lo(1)-1, hi(1)+1
-                     if (is_single_valued_cell(flags(i,j,k))) then
-                        wtot = zero
-                        call get_neighbor_cells(flags(i,j,k),nbr)
-                        do kk = -1, 1
-                           do jj = -1, 1
-                              do ii = -1, 1
-                                 ! Check if we have to include also cell (i,j,k) itself
-                                 if ( ( ii /= 0 .or. jj /= 0 .or. kk /= 0) &
-                                      .and. (nbr(ii,jj,kk)==1) ) then
-                                    wtot = wtot + &
-                                         & ep(i+ii,j+jj,k+kk) * vfrac(i+ii,j+jj,k+kk) * mask(i+ii,j+jj,k+kk)
-                                 end if
-                              end do
+         do k = lo(3)-1, hi(3)+1
+            do j = lo(2)-1, hi(2)+1
+               do i = lo(1)-1, hi(1)+1
+                  if (is_single_valued_cell(flags(i,j,k))) then
+                     wtot = zero
+                     call get_neighbor_cells(flags(i,j,k),nbr)
+                     do kk = -1, 1
+                        do jj = -1, 1
+                           do ii = -1, 1
+                              ! Check if we have to include also cell (i,j,k) itself
+                              if ( ( ii /= 0 .or. jj /= 0 .or. kk /= 0) &
+                               .and. (nbr(ii,jj,kk)==1) ) then
+                                 wtot = wtot + &
+                                  & ep(i+ii,j+jj,k+kk) * vfrac(i+ii,j+jj,k+kk) * mask(i+ii,j+jj,k+kk)
+                              end if
                            end do
                         end do
+                     end do
 
-                        wtot = one/wtot
+                     wtot = one/wtot
 
-                        do kk = -1, 1
-                           do jj = -1, 1
-                              do ii = -1, 1
-                                 ! Check if we have to include also cell (i,j,k) itself
-                                 if ( ( ii /= 0 .or. jj /= 0 .or. kk /= 0) &
-                                      .and. (nbr(ii,jj,kk)==1) ) then
-                                    optmp(i+ii,j+jj,k+kk) = optmp(i+ii,j+jj,k+kk) + &
-                                         &                  delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk)
-                                 end if
-                              end do
+                     do kk = -1, 1
+                        do jj = -1, 1
+                           do ii = -1, 1
+                              ! Check if we have to include also cell (i,j,k) itself
+                              if ( ( ii /= 0 .or. jj /= 0 .or. kk /= 0) &
+                               .and. (nbr(ii,jj,kk)==1) ) then
+                                 optmp(i+ii,j+jj,k+kk) = optmp(i+ii,j+jj,k+kk) + &
+                                  &                  delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk)
+                              end if
                            end do
                         end do
-                     end if
-                  end do
+                     end do
+                  end if
                end do
             end do
-         end block
+         end do
+
 
 
          ! ****************************************************
@@ -369,8 +361,8 @@ contains
 
       !
       ! Delete working arrays
-      ! 
-      if (is_viscous) deallocate(divdiff_w)
+      !
+      if (is_dirichlet) deallocate(divdiff_w)
 
    end subroutine compute_divop
 

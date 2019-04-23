@@ -13,8 +13,8 @@
       use iso_c_binding , only: c_int
 
       use constant, only: gravity
-      use discretelement, only: des_continuum_coupled, des_coll_model_enum, hertzian, kn, kt, kn_w, kt_w, lsd
-      use discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etat_wall, des_etan_wall
+      use discretelement, only: des_continuum_coupled, kn, kt, kn_w, kt_w
+      use discretelement, only: des_etan, des_etat, des_etat_wall, des_etan_wall
       use fld_const, only: mw_avg, mu_g0, ro_g0
 
       use param, only: dim_ic, dim_bc
@@ -139,25 +139,9 @@
  1450 FORMAT(/7X,'Use ',A,' collsion model.',2/10X,&
          'Spring Coefficients:',T37,'Normal',7x,'Tangential')
 
-            IF(DES_COLL_MODEL_ENUM .EQ. LSD) THEN
-               write(unit_out,1450) 'Linear spring-dashpot'
-               write(unit_out,1455) 'Particle-particle', KN, KT
-               write(unit_out,1455) 'Particle-wall', KN_W, KT_W
-
-            ELSEIF(DES_COLL_MODEL_ENUM .EQ. HERTZIAN) THEN
-               write(unit_out,1450) 'Hertzian spring-dashpot'
-
-               do M = 1, MMAX
-                  do N = M, MMAX
-                     IF(M==N) THEN
-                       write(unit_out,1456)M,N,HERT_KN(M,N),HERT_KT(M,N)
-                     ELSE
-                       write(unit_out,1457)N,HERT_KN(M,N),HERT_KT(M,N)
-                     ENDIF
-                  ENDdo
-                  write(unit_out,1458) HERT_KWN(M),HERT_KWT(M)
-               ENDdo
-            ENDIF
+            write(unit_out,1450) 'Linear spring-dashpot'
+            write(unit_out,1455) 'Particle-particle', KN, KT
+            write(unit_out,1455) 'Particle-wall', KN_W, KT_W
 
             write(unit_out,1451)
  1451 FORMAT(/10X,'Damping Coefficients:',T37,'Normal',7x,'Tangential')

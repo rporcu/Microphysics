@@ -2,7 +2,6 @@
 
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
-#include "AMReX_RealVect.H"
 
 #ifdef BL_SINGLE_PRECISION_PARTICLES
 typedef float amrex_particle_real;
@@ -38,21 +37,14 @@ extern "C"
 
    void set_scalar_bcs (
       amrex::Real* ep_g, const int* slo, const int* shi,
-      amrex::Real* ro_g,    amrex::Real* rop_g,
-      amrex::Real* mu_g,    amrex::Real* lambda_g,
+      amrex::Real* ro_g, 
+      amrex::Real* mu_g,
       const int* bc_ilo, const int* bc_ihi,
       const int* bc_jlo, const int* bc_jhi,
       const int* bc_klo, const int* bc_khi,
       const int* domlo , const int* domhi,
       const int* nghost
       );
-
-   void set_pressure_bcs (
-      amrex::Real* p_g, const int* slo, const int* shi,
-      const int* bc_ilo, const int* bc_ihi,
-      const int* bc_jlo, const int* bc_jhi,
-      const int* bc_klo, const int* bc_khi,
-      const int* domlo , const int* domhi);
 
     void set_velocity_bcs (
         amrex::Real* time,
@@ -71,7 +63,8 @@ extern "C"
        const amrex::Real* phi,      const int* phlo, const int* phhi,
        const int n_refine,
        const void *     flags,      const int*  flo, const int*  fhi,
-       const amrex::Real* x0, const amrex::Real* dx );
+       const amrex::Real* x0, const amrex::Real* dx,
+       const int* band_width);
 
     void phifill (BL_FORT_FAB_ARG_3D(state),
                   const int* dlo, const int* dhi,

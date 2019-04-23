@@ -17,11 +17,7 @@ macro (add_tags_targets )
 
   set (AMREX_SRC_DIR ${AMREX_INSTALL_DIR}/../sourcedir/Src/)
 
-  if (ENABLE_PROJCC)
-    set (MFIX_SRC_DIR  ${PROJECT_SOURCE_DIR}/src_cc/)
-  else ()
-    set (MFIX_SRC_DIR  ${PROJECT_SOURCE_DIR}/src_staggered/)
-  endif ()
+  set (MFIX_SRC_DIR  ${PROJECT_SOURCE_DIR}/src_cc/)
 
   set (MFIX_MODS_DIR ${PROJECT_SOURCE_DIR}/mods/)
   set (MFIX_DES_DIR  ${PROJECT_SOURCE_DIR}/src_des/)

@@ -24,17 +24,8 @@ void mfix::make_eb_geometry ()
     MakeBCArrays();
     check_data();
 
-    Real dx = geom[0].CellSize(0);
-    Real dy = geom[0].CellSize(1);
-    Real dz = geom[0].CellSize(2);
-
-    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
-    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
-    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
-
-    Box domain(geom[0].Domain());
-
     int cyc_x=0, cyc_y=0, cyc_z=0;
+
     if (geom[0].isPeriodic(0)) cyc_x = 1;
     if (geom[0].isPeriodic(1)) cyc_y = 1;
     if (geom[0].isPeriodic(2)) cyc_z = 1;
@@ -44,14 +35,12 @@ void mfix::make_eb_geometry ()
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);
 
-
     /****************************************************************************
      *                                                                          *
      * mfix.geometry=<string> specifies the EB geometry. <string> can be on of  *
      * box, cylinder, hopper, clr, clr_riser, general (or blank)                *
      *                                                                          *
      ***************************************************************************/
-
 
     ParmParse pp("mfix");
 
@@ -62,8 +51,6 @@ void mfix::make_eb_geometry ()
      *                                                                          *
      * Legacy inputs:                                                           *
      *   -- mfix.hourglass = true <=> mfix.geometry=box                         *
-     *   -- mfix.clr       = true <=> mfix.geometry=clr                         *
-     *   -- mfix.clr_riser = true <=> mfix.geometry=clr_riser                   *
      *   -- mfix.use_walls = true <=> mfix.geometry=general                     *
      *   -- mfix.use_poy2  = true <=> mfix.geometry=general                     *
      *                                                                          *
@@ -71,13 +58,9 @@ void mfix::make_eb_geometry ()
 
 
     bool hourglass    = false;
-    bool clr          = false;
-    bool clr_riser    = false;
     bool eb_general   = false;
 
     pp.query("hourglass", hourglass);
-    pp.query("clr", clr);
-    pp.query("clr_riser", clr_riser);
 
     bool eb_poly2 = false;
     bool eb_walls = false;
@@ -87,7 +70,7 @@ void mfix::make_eb_geometry ()
     eb_general = eb_poly2 || eb_walls;
 
     // Avoid multiple (ambiguous) inputs
-    if (hourglass || clr || clr_riser || eb_general) {
+    if (hourglass || eb_general) {
         if (! geom_type.empty()) {
             amrex::Abort("The input file cannot specify both:\n"
                          "mfix.<geom_type>=true and mfix.geometry=<geom_type>\n"
@@ -96,8 +79,6 @@ void mfix::make_eb_geometry ()
     }
 
     if (hourglass)  geom_type = "hourglass";
-    if (clr)        geom_type = "clr";
-    if (clr_riser)  geom_type = "clr_riser";
     if (eb_general) geom_type = "general";
 
 
@@ -124,20 +105,23 @@ void mfix::make_eb_geometry ()
         amrex::Print() << "\n Building cyclone geometry." << std::endl;
         make_eb_cyclone();
         contains_ebs = true;
-    } else if(geom_type == "general") {
-        amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
-        // TODO: deal with inflow volfrac
-        make_eb_general();
+    } else if(geom_type == "air-reactor") {
+      amrex::Print() << "\n Building air-reactor geometry." << std::endl;
+        make_eb_air_reactor();
         contains_ebs = true;
+    } else if(geom_type == "general") {
+      amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
+      // TODO: deal with inflow volfrac
+      make_eb_general();
+      contains_ebs = true;
     } else {
         amrex::Print() << "\n No EB geometry declared in inputs => "
                        << " Will read walls from mfix.dat only."
                        << std::endl;
         make_eb_regular();
 
-        // NOTE: this is set internally depending if EBs where detected in the
-        // mfix.dat file.
-        //contains_ebs = false;
+        // NOTE: `mfix::contains_ebs` this is set internally depending if EBs
+        // where detected in the mfix.dat file.
     }
 }
 
@@ -172,7 +156,7 @@ void mfix::make_eb_factories () {
 
 void mfix::fill_eb_levelsets ()
 {
-
+    if (ooo_debug) amrex::Print() << "fill_eb_levelsets" << std::endl;
     /****************************************************************************
      *                                                                          *
      * Fill levels either as a single level with refinement, or as a proper     *
@@ -193,9 +177,12 @@ void mfix::fill_eb_levelsets ()
         LSFactory lsf(0, levelset__refinement, levelset__eb_refinement,
                       levelset__pad, levelset__eb_pad, part_ba, geom[0], part_dm );
 
+
         //___________________________________________________________________________
         // NOTE: Boxes are different (since we're not refining, we need to treat
-        // corners this way)
+        // corners this way). IMPORTANT: the box case is assembled from planes
+        // => fill the level-set with these (otherwise corners will be
+        // inaccurately resolved.)
 
         ParmParse pp("mfix");
 
@@ -205,9 +192,6 @@ void mfix::fill_eb_levelsets ()
 
         if (geom_type == "box")
         {
-            Print() << "HACK Altert! Building this level-set from an intersection of planes"
-                    << std::endl;
-
             ParmParse pp("box");
 
             if ( geom[0].isAllPeriodic() )
@@ -310,7 +294,6 @@ void mfix::fill_eb_levelsets ()
         if (contains_ebs)
         {
             MultiFab impfunc = MFUtil::regrid(lsf.get_ls_ba(), part_dm, * implicit_functions[1], true);
-            //lsf.Fill( * particle_ebfactory[0], impfunc);
             lsf.Fill( * ebfactory[0], impfunc);
         }
 
@@ -434,11 +417,6 @@ void mfix::intersect_ls_walls ()
 
     if (has_walls == false)
         return;
-
-    // // Ensure that the particle EB levels (and thus eb-factories) have the right
-    // // volfrac at the MI
-    // build_particle_eb_levels(gshop);
-    // make_eb_factories();
 
     if (nlev == 1)
     {

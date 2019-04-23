@@ -68,7 +68,7 @@
          maxHS = MAX_HEIGHT_HS(k)
 
 ! Write the results to a file.
-         WRITE(uHeight,"(3x,I2,5X,F15.8,3x,F15.8)") k, &
+         WRITE(uHeight,"(3x,I2,5X,F15.8,3x,F13.6)") k, &
             maxHS, MAX_HEIGHT(k)
 
       enddo

@@ -2,16 +2,12 @@
 
 set -euo pipefail
 
-# set case directory
-RUN_NAME="FLD01"
-
 MFIX=./mfix
 if [ -n "$1" ]; then
     MFIX=$1
 fi
 
 if [ -n "$2" ]; then
-    FCOMPARE=$2/plt_compare_diff_grids
     FEXTRACT=$2/fextract
 fi
 if [ -z "${FEXTRACT}" ]; then
@@ -34,9 +30,7 @@ else
     MPIRUN=""
 fi
 
-FCOMPARE=${FCOMPARE:-}
-
-rm -rf POST_* ${RUN_NAME}* &> /dev/null
+rm -rf const_plt* POST_* &> /dev/null
 time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
 ${FEXTRACT} -p FLD0100001/ -d 3 -v v_g -f 8 -s POST_VG.dat

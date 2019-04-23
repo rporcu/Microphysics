@@ -10,17 +10,24 @@ set ( MFIX_Fortran_MOD_PATH ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/
 set ( MFIX_INCLUDE_PATHS  include ${MFIX_Fortran_MOD_PATH})
 
 macro ( add_sources )
-  foreach ( item IN ITEMS ${ARGN} )
-    set ( source_name  ${CMAKE_CURRENT_LIST_DIR}/${item} )
-    string ( REPLACE "//" "/" source_name ${source_name})
-    target_sources ( ${MFIX_LIBNAME} PRIVATE ${source_name} )
+   foreach ( item IN ITEMS ${ARGN} )
+      set ( source_name  ${CMAKE_CURRENT_LIST_DIR}/${item} )
+      string ( REPLACE "//" "/" source_name ${source_name})
+      target_sources ( ${MFIX_LIBNAME} PRIVATE ${source_name} )
 
-    # Add folder to list of includes if necessary
-    get_filename_component ( filetype ${source_name} EXT )
-    if ( (${filetype} MATCHES ".h") OR (${filetype} MATCHES ".H" ) )
-      list (APPEND MFIX_INCLUDE_PATHS ${CMAKE_CURRENT_LIST_DIR})
-    endif()
-  endforeach()
+      # Add folder to list of includes if necessary
+      get_filename_component ( filetype ${source_name} EXT )
+      if ( (${filetype} MATCHES ".h") OR (${filetype} MATCHES ".H" ) )
+         list (APPEND MFIX_INCLUDE_PATHS ${CMAKE_CURRENT_LIST_DIR})
+      endif()
+
+      # If it's a cpp file and ENABLE_CUDA is on, then force cpp file
+      # to be compiled with CUDA compiler    
+      if ( ENABLE_CUDA AND ( ${filetype} STREQUAL ".cpp") ) 
+         set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}/${item}
+            PROPERTIES LANGUAGE CUDA )
+      endif ()
+   endforeach()
 endmacro()
 
 #
@@ -34,6 +41,14 @@ set_target_properties ( ${MFIX_LIBNAME}
    ${MFIX_Fortran_MOD_PATH}
    )
 
+if (ENABLE_CUDA)
+   set_target_properties( ${MFIX_LIBNAME}
+      PROPERTIES
+      CUDA_SEPARABLE_COMPILATION ON      # This adds -dc
+      CUDA_RESOLVE_DEVICE_SYMBOLS OFF
+      )
+endif ()
+
 #
 # Now, one by one, we add all the sources from all the subdirs
 # to the library defined above
@@ -41,6 +56,8 @@ set_target_properties ( ${MFIX_LIBNAME}
 
 #
 # Uncategorized
+#
+# IMPORTANT: DO NOT ADD main.cpp HERE!
 # 
 add_sources ( compute_dt.cpp )
 add_sources ( mfix_regrid.cpp )
@@ -49,7 +66,7 @@ add_sources ( compute_diveu.cpp )
 add_sources ( mfix_drag.cpp )
 add_sources ( mfix_evolve.cpp  )
 add_sources ( mfix.cpp  )
-add_sources ( main.cpp )
+# add_sources ( main.cpp ) <---- DO NOT ADD THIS HERE
 add_sources ( mfix_F.H )
 add_sources ( mfix.H )
 

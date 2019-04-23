@@ -7,10 +7,16 @@ if [ -n "$1" ]; then
     MFIX=$1
 fi
 
-rm -f POST_* &> /dev/null
+if [ -n "$2" ]; then
+    FJOIN_PAR=$2/fjoin_par
+fi
 
-rm -f ${RUN_NAME}* &> /dev/null
+rm -rf ${RUN_NAME}* const_plt* POST_* &> /dev/null
+
 time -p ${MFIX} inputs
+
+${FJOIN_PAR} -f DEM03_par --end 10 --var 3 --format 8 --dt 0.0001 --id 1 > POST_POS1.dat
+${FJOIN_PAR} -f DEM03_par --end 10 --var 3 --format 8 --dt 0.0001 --id 2 > POST_POS2.dat
 
 post_dats=../DEM03-y/AUTOTEST/POST*.dat
 

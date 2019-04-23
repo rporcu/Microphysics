@@ -20,12 +20,11 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
 
     // Extrapolate boundary values for density and volume fraction
     // The subsequent call to mfix_set_scalar_bcs will only overwrite
-    // rop_g and ep_g ghost values for PINF and POUT
+    // ep_g ghost values for PINF and POUT
     for (int lev = 0; lev < nlev; lev++)
     {
-       fill_mf_bc ( lev, *rop_g[lev] );
-       fill_mf_bc ( lev, *ep_g[lev] );
-       fill_mf_bc ( lev, *mu_g[lev] );
+        ep_g[lev]->FillBoundary(geom[lev].periodicity());
+        mu_g[lev]->FillBoundary(geom[lev].periodicity());
     }
 
     // Fill ghost nodes and reimpose boundary conditions
@@ -79,11 +78,10 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
           MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
           MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
           MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
-          MultiFab::Copy (*rop_go[lev], *rop_g[lev], 0, 0, rop_g[lev]->nComp(), rop_go[lev]->nGrow());
           MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
            // User hooks
-           for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+           for (MFIter mfi(*ep_g[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
               mfix_usr2();
         }
 
@@ -153,11 +151,6 @@ mfix::mfix_project_velocity ()
 
     amrex::Print() << "Initial projection:\n";
 
-    // Need to add this call here so that the MACProjection internal arrays
-    //  are allocated so that the cell-centered projection can use the MAC
-    //  data structures and set_velocity_bcs routine
-    mac_projection->update_internals();
-
     bool proj_2 = true;
     Real time = 0.0;
     mfix_apply_projection ( time, dummy_dt, proj_2 );
@@ -223,7 +216,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 //
 //  1. Compute
 //
-//     vel_g = vel_go + dt * R_u^n + dt * divtau*(1/rop_g)
+//     vel_g = vel_go + dt * R_u^n + dt * divtau*(1/(ro_g*ep_g))
 //
 //  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
 //     and explicit part of particles momentum exchange )
@@ -233,7 +226,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
 //
-//     vel_g = (vel_g + drag_u/rop_g) / ( 1 + dt * f_gds/rop_g )
+//     drag_coeff = drag(3)
+//     drag_coeff*velp = drag(0:2)
+//
+//     vel_g = (vel_g + (drag_coeff*velp)/(ro_g*ep_g) / ( 1 + dt * drag_coeff/(ro_g*ep_g)
 //
 //  4. Solve for phi
 //
@@ -249,7 +245,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 //
 void
 mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
-                      Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                            Vector< std::unique_ptr<MultiFab> >& divtau_old,
                             Real time, Real dt, bool proj_2)
 {
     // We use the new-time value for things computed on the "*" state
@@ -272,26 +268,14 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
         // Add the diffusion terms (either all if explicit_diffusion == true or just the
         //    off-diagonal terms if explicit_diffusion == false)
         MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
-
-        // Add the gravitational forcing
-        mfix_add_gravity ( lev, dt, vel_g);
-
-        // Convert velocities to momenta
-        for (int n = 0; n < 3; n++)
-            MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
-
-        // Add (-dt grad p to momenta)
-        MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
-        MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
-
-        // Convert momenta back to velocities
-        for (int n = 0; n < 3; n++)
-            MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
     }
+
+     // Add source terms
+     mfix_add_gravity_and_gp(dt);
 
     // Add the drag term implicitly
     if (solve_dem)
-        mfix_add_drag_terms ( dt );
+        mfix_add_drag_terms (dt);
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion_pred)
@@ -308,7 +292,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 //
 //  1. Compute
 //
-//     vel_g = vel_go + dt * (R_u^* + R_u^n) / 2 + dt * divtau*(1/rop_g)
+//     vel_g = vel_go + dt * (R_u^* + R_u^n) / 2 + dt * divtau*(1/(ro_g*ep_g))
 //
 //     where the starred variables are computed using "predictor-step" variables.
 //
@@ -320,7 +304,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 //  3. Add implicit forcing term ( AKA implicit part of particles
 //     momentum exchange )
 //
-//     vel_g = (vel_g + drag_u/rop_g) / ( 1 + dt * f_gds/rop_g )
+//     vel_g = (vel_g + (drag_coeff*velp)/(ro_g*ep_g) / ( 1 + dt * drag_coeff/(ro_g*ep_g)
 //
 //  4. Solve for phi
 //
@@ -380,26 +364,14 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
         //    off-diagonal terms if explicit_diffusion == false)
         MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau[lev]    , 0, 0, 3, 0);
         MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
-
-        // Add the gravitational forcing
-        mfix_add_gravity ( lev, dt, vel_g);
-
-        // Convert velocities to momenta
-        for (int n = 0; n < 3; n++)
-           MultiFab::Multiply(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
-
-        // Add (-dt grad p to momenta)
-        MultiFab::Saxpy (*vel_g[lev], -dt,  *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
-        MultiFab::Saxpy (*vel_g[lev], -dt, *gp0[lev], 0, 0, 3, vel_g[lev]->nGrow());
-
-        // Convert momenta back to velocities
-        for (int n = 0; n < 3; n++)
-            MultiFab::Divide(*vel_g[lev],(*ro_g[lev]),0,n,1,vel_g[lev]->nGrow());
     }
 
-    // Compute intermediate velocity if drag terms present
+     // Add source terms
+     mfix_add_gravity_and_gp(dt);
+
+    // Add the drag term implicitly
     if (solve_dem)
-        mfix_add_drag_terms (dt);
+        mfix_add_drag_terms(dt);
 
     // If doing implicit diffusion, solve here for u^*
     if (explicit_diffusion_corr == 0)
@@ -412,22 +384,35 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 }
 
 void
-mfix::mfix_add_gravity (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFab> >& vel)
-
+mfix::mfix_add_gravity_and_gp (Real dt)
 {
-    BL_PROFILE("mfix::mfix_add_gravity");
+    BL_PROFILE("mfix::mfix_add_gravity_and_gp");
+    for (int lev = 0; lev < nlev; lev++)
+    {
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-    {
-      // Tilebox
-      Box bx = mfi.tilebox ();
+       for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+       {
+         // Tilebox
+         Box bx = mfi.tilebox ();
 
-      add_gravity ( BL_TO_FORTRAN_BOX(bx),
-                    BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-                    &dt);
+         const auto& vel_fab = vel_g[lev]->array(mfi);
+         const auto&  gp_fab =    gp[lev]->array(mfi);
+         const auto& den_fab =  ro_g[lev]->array(mfi);
+
+         const auto grav_loc = gravity;
+         const auto  gp0_loc = gp0;
+
+         AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+         {
+             Real inv_dens = 1.0 / den_fab(i,j,k);
+             vel_fab(i,j,k,0) += dt * ( grav_loc[0]-(gp_fab(i,j,k,0)+gp0_loc[0])*inv_dens );
+             vel_fab(i,j,k,1) += dt * ( grav_loc[1]-(gp_fab(i,j,k,1)+gp0_loc[1])*inv_dens );
+             vel_fab(i,j,k,2) += dt * ( grav_loc[2]-(gp_fab(i,j,k,2)+gp0_loc[2])*inv_dens );
+         });
+       }
     }
 }
 
@@ -437,33 +422,42 @@ mfix::mfix_add_gravity (int lev, amrex::Real dt, Vector< std::unique_ptr<MultiFa
 // momentum exchange
 //
 void
-mfix::mfix_add_drag_terms ( amrex::Real dt )
-
+mfix::mfix_add_drag_terms (Real dt)
 {
+  /*
+     This adds both components of the drag term
+     So the drag term we add is beta * (particle_velocity - fluid_velocity)
+                              = dra(0:2) - drag(3) * fluid_velocity
+  */
+
   BL_PROFILE("mfix::mfix_add_drag");
 
   for (int lev = 0; lev < nlev; lev++)
-    {
-      // The volume fraction of each fluid cell (1 if uncovered, 0 if covered)
-      const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
-
+  {
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-      for (MFIter mfi(*vel_g[lev],true); mfi.isValid(); ++mfi)
-        {
-          // Tilebox
-          Box bx = mfi.tilebox();
+    for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    {
+      // Tilebox
+      Box bx = mfi.tilebox ();
 
-          add_drag_terms ( BL_TO_FORTRAN_BOX(bx),
-                           BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                           BL_TO_FORTRAN_ANYD((*f_gds[lev])[mfi]),
-                           BL_TO_FORTRAN_ANYD((*drag[lev])[mfi]),
-                           BL_TO_FORTRAN_ANYD((*rop_g[lev])[mfi]),
-                           BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
-                           &dt );
-        }
+      const auto&  vel_fab = vel_g[lev]->array(mfi);
+      const auto& drag_fab =  drag[lev]->array(mfi);
+      const auto&   ro_fab =  ro_g[lev]->array(mfi);
+      const auto&   ep_fab =  ep_g[lev]->array(mfi);
+
+      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      {
+          Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
+          Real denom = 1.0 / (1.0 + drag_fab(i,j,k,3) * orop);
+
+          vel_fab(i,j,k,0) = (vel_fab(i,j,k,0) + drag_fab(i,j,k,0) * orop) * denom;
+          vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + drag_fab(i,j,k,1) * orop) * denom;
+          vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;
+      });
     }
+  }
 }
 
 //

@@ -8,9 +8,6 @@
 
 mfix.steady_state_tol = 1.0e-10
 
-mfix.explicit_diffusion = 0
-mfix.fixed_dt           = 0
-
 amr.blocking_factor = 4
 
 #_______________________________________________________________________
@@ -54,6 +51,13 @@ fabarray.mfiter_tile_size = 1024 1024 1024
 particles.tile_size = 1024 1024 1024
 
 
+#! EB settings
+#!-----------------------------------------------------------//
+
+zlo.type = "nsw"
+zhi.type = "nsw"
+
+
 #_______________________________________________________________________
 # IO / Checkpointing
 
@@ -69,3 +73,5 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="restart-file"
+
+amr.plt_regtest = 1

@@ -15,6 +15,7 @@ Real stop_time    = -1.0;
 
 bool write_user   = false;
 bool write_eb_surface = false;
+bool write_ls         = false;
 
 std::string restart_file {""};
 
@@ -34,8 +35,14 @@ std::string static_plt_file {"const_plt"};
 bool plotfile_on_restart = false;
 
 int par_ascii_int = -1;
-int  last_par_ascii  = -1;
+int last_par_ascii  = -1;
 std::string par_ascii_file {"par"};
+
+int avg_int = -1;
+int last_avg  = -1;
+std::string avg_file {"avg_region"};
+
+std::string mfix_dat {"mfix.dat"};
 
 void set_ptr_to_mfix(mfix& my_mfix);
 
@@ -55,6 +62,9 @@ void ReadParameters ()
 
      pp.query("plotfile_on_restart", plotfile_on_restart);
 
+     pp.query("avg_int", avg_int );
+     pp.query("avg_file", avg_file);
+
      pp.query("par_ascii_file", par_ascii_file);
      pp.query("par_ascii_int", par_ascii_int);
 
@@ -68,8 +78,10 @@ void ReadParameters ()
   {
      ParmParse pp("mfix");
 
+     pp.query("input_deck", mfix_dat);
      pp.query("write_user", write_user);
      pp.query("write_eb_surface", write_eb_surface);
+     pp.query("write_ls", write_ls);
   }
 }
 
@@ -88,8 +100,7 @@ int main (int argc, char* argv[])
     BL_PROFILE_VAR("main()", pmain)
     BL_PROFILE_REGION_START("mfix::main()");
 
-    // Warn that this is the xp branch
-    amrex::Print() << "\n\nWARNING:\nMFIX was configured in Approximate Projection Mode\n\n";
+    amrex::Cuda::setLaunchRegion(false);
 
     // Setting format to NATIVE rather than default of NATIVE_32
     FArrayBox::setFormat(FABio::FAB_NATIVE);
@@ -118,6 +129,9 @@ int main (int argc, char* argv[])
     Real time=0.0L;
     int nstep = 0;  // Current time step
 
+    const char *cmfix_dat = mfix_dat.c_str();
+    int name_len=mfix_dat.length();
+
     // Loads parameters (data) from fortran backend. Most notably this
     // subroutine loads the parameters from the `mfix.dat` file:
     //     mfix_get_data -> get_data -> read_namelist
@@ -125,16 +139,18 @@ int main (int argc, char* argv[])
     //      (loads `mfix.dat`) ---------------+
     mfix_get_data( &solve_fluid, &solve_dem, &steady_state,
                    &dt, &dt_min, &dt_max,
-                   &stop_time, &call_udf
+                   &stop_time, &call_udf, &name_len, cmfix_dat
                   );
-
-    if ( ParallelDescriptor::IOProcessor() )
-       check_inputs(&dt);
 
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
     //                                                             |
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix my_mfix;
+
+    my_mfix.get_input_bcs();
+
+    if ( ParallelDescriptor::IOProcessor() )
+      check_inputs(&dt);
 
     my_mfix.SetParameters(steady_state);
 
@@ -184,11 +200,14 @@ int main (int argc, char* argv[])
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
 
+    if (solve_fluid)
+       my_mfix.mfix_setup_nodal_solver();
+
     // This checks if we want to regrid using the KDTree or KnapSack approach
     amrex::Print() << "Regridding at step " << nstep << std::endl;
     my_mfix.Regrid();
 
-    if (solve_dem)
+    if (solve_dem && write_ls)
         my_mfix.WriteStaticPlotFile(static_plt_file);
 
     my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time);
@@ -204,11 +223,6 @@ int main (int argc, char* argv[])
        std::cout << "Time spent in init      " << end_init << std::endl;
 
     int finish  = 0;
-    int estatus = 0;
-
-    // Call to output before entering time march loop
-    if (solve_fluid && ParallelDescriptor::IOProcessor()  && solve_dem )
-       my_mfix.output(estatus,finish,nstep,dt,time);
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
     // only if solve_fluid = T
@@ -238,6 +252,13 @@ int main (int argc, char* argv[])
        my_mfix.WriteParticleAscii( par_ascii_file, nstep );
        last_par_ascii = nstep;
     }
+
+    if ( avg_int > 0 )
+      {
+        my_mfix.WriteAverageRegions( avg_file, nstep, time );
+        last_avg = nstep;
+      }
+
 
     bool do_not_evolve =  !steady_state && ( (max_step == 0) ||
                      ( (stop_time >= 0.) && (time >  stop_time) ) ||
@@ -294,11 +315,14 @@ int main (int argc, char* argv[])
                         last_par_ascii = nstep;
                     }
 
-                    if (write_user) my_mfix.WriteUSER(dt, time);
-                }
 
-                if (ParallelDescriptor::IOProcessor() && solve_dem )
-                    my_mfix.output(estatus,finish,nstep,dt,time);
+                    if ( ( avg_int > 0) && ( nstep %  avg_int == 0 ) )
+                      {
+                        my_mfix.WriteAverageRegions( avg_file, nstep, time );
+                        last_avg = nstep;
+                      }
+
+                }
 
                 // Mechanism to terminate MFIX normally.
                 do_not_evolve =  steady_state || (

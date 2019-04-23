@@ -11,7 +11,7 @@
 void
 mfix::Regrid ()
 {
-
+    if (ooo_debug) amrex::Print() << "Regrid" << std::endl;
     BL_PROFILE_REGION_START("mfix::Regrid()");
 
     int base_lev = 0;
@@ -29,9 +29,6 @@ mfix::Regrid ()
 
        if (!dual_grid)
        {
-           bool ba_changed = (pc->ParticleBoxArray(base_lev)        != grids[base_lev]);
-           bool dm_changed = (pc->ParticleDistributionMap(base_lev) !=  dmap[base_lev]);
-
            SetBoxArray       (base_lev, pc->ParticleBoxArray(base_lev));
            SetDistributionMap(base_lev, pc->ParticleDistributionMap(base_lev));
 
@@ -140,7 +137,10 @@ mfix::Regrid ()
 
             Print() << "grids = " << grids[base_lev] << std::endl;
             Print() << "costs ba = " << costs.boxArray() << std::endl;
-            Print() << "particle_cost ba = " << particle_cost[base_lev]->boxArray() << std::endl;
+
+            if(solve_dem)
+              Print() << "particle_cost ba = " << particle_cost[base_lev]->boxArray() << std::endl;
+
             //Print() << "fluid cost ba = " << fluid_cost[base_lev]->boxArray() << std::endl;
 
             if (solve_dem) {
@@ -206,6 +206,8 @@ mfix::Regrid ()
             RegridLevelSetArray(i_lev);
         }
 
+    if (solve_fluid)
+       mfix_setup_nodal_solver();
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }

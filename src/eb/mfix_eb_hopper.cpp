@@ -27,8 +27,6 @@ mfix::make_eb_hopper()
 {
     ParmParse pp("hopper");
 
-    int max_level_here = 0;
-
     /****************************************************************************
      * Get hopper information from inputs file.                                 *
      ***************************************************************************/
@@ -53,9 +51,6 @@ mfix::make_eb_hopper()
      * Build standard EB Factories                                              *
      *                                                                          *
      ***************************************************************************/
-
-    // set up ebfactory
-    EBSupport m_eb_support_level = EBSupport::full;
 
     amrex::Print() << " " << std::endl;
     amrex::Print() << " Orifice Radius: " << orifice_radius << std::endl;
@@ -114,23 +109,9 @@ mfix::make_eb_hopper()
     auto my_hopper = EB2::translate(hopper1, center);
 
     // Construct EB2 Index Space
-    Print() << "Building the hopper geometry ..." << std::endl;
-
     auto gshop = EB2::makeShop(my_hopper);
 
     build_eb_levels(gshop);
-
-    //_______________________________________________________________________
-    // Particles need the correct volfrac at the inflow
-    bool has_walls = false;
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
-    if (has_walls)
-    {
-        auto if_part = EB2::makeUnion(my_hopper, * walls);
-        auto gshop_part = EB2::makeShop(if_part);
-
-        build_particle_eb_levels(gshop_part);
-    }
 
     Print() << "Done making the fluid eb levels ..." << std::endl;
 }

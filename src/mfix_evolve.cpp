@@ -53,6 +53,9 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     Real start_particles = ParallelDescriptor::second();
 
     BL_PROFILE_VAR("PARTICLES SOLVE",particlesSolve);
+
+    amrex::Cuda::setLaunchRegion(true);
+
     if (solve_dem)
     {
 
@@ -73,7 +76,7 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
             pc->EvolveParticles(ilev, nstep, dt, time, particle_ebfactory[ilev].get(),
                                 ls_data, & ls_valid, levelset__refinement,
-                                particle_cost[ilev].get(), knapsack_weight_type, subdt_io);
+                                particle_cost[ilev].get(), knapsack_weight_type);
         }
         else
         {
@@ -92,20 +95,13 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
                 pc->EvolveParticles(lev, nstep, dt, time, particle_ebfactory[lev].get(),
                                     ls_data, & ls_valid, 1,
-                                    particle_cost[lev].get(), knapsack_weight_type, subdt_io);
+                                    particle_cost[lev].get(), knapsack_weight_type);
             }
         }
 
-        //  Compute Eulerian velocities in selected regions
-        for (int lev = 0; lev < nlev; lev++)
-            if ( ( avg_vel_int > 0) && ( nstep % avg_vel_int == 0 ) )
-                pc -> ComputeAverageVelocities ( lev,
-                                                 time,
-                                                 avg_vel_file,
-                                                 avg_region_x_w, avg_region_x_e,
-                                                 avg_region_y_s, avg_region_y_n,
-                                                 avg_region_z_b, avg_region_z_t );
     }
+
+    amrex::Cuda::setLaunchRegion(false);
     BL_PROFILE_VAR_STOP(particlesSolve);
 
     Real end_particles = ParallelDescriptor::second() - start_particles;

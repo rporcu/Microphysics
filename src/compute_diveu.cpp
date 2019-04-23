@@ -44,13 +44,13 @@ mfix::mfix_compute_diveu (Real time)
       epu[lev]->FillBoundary (geom[lev].periodicity());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
       // Extrapolate Dirichlet values to ghost cells -- but do it differently in that
       //  no-slip walls are treated exactly like slip walls --
       // Note that this routine is essential to impose the correct inflow bc's on
       //  the product ep_g * vel_g
-      for (MFIter mfi((*epu[lev]), true); mfi.isValid(); ++mfi)
+      for (MFIter mfi((*epu[lev]), TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
           set_vec_bcs ( BL_TO_FORTRAN_ANYD((*epu[lev])[mfi]),
                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
@@ -61,6 +61,10 @@ mfix::mfix_compute_diveu (Real time)
         }
 
       epu[lev]->FillBoundary (geom[lev].periodicity());
+
+      // We set these to zero because if the values in the covered cells are undefined,
+      //   even though they are multiplied by zero in the divu computation, we can still get NaNs
+      EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
     }
 
   // Define the operator in order to compute the multi-level divergence
@@ -75,15 +79,15 @@ mfix::mfix_compute_diveu (Real time)
   int bc_lo[3], bc_hi[3];
   Box domain(geom[0].Domain());
 
-  set_ppe_bc(bc_lo, bc_hi,
-             domain.loVect(), domain.hiVect(),
-             &nghost,
-             bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-             bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-             bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
+  set_ppe_bcs(bc_lo, bc_hi,
+              domain.loVect(), domain.hiVect(),
+              &nghost,
+              bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
+              bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
+              bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
   matrix.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
-                             {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
+                       {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
 
   matrix.compDivergence(GetVecOfPtrs(diveu), GetVecOfPtrs(epu));
 

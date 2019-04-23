@@ -22,6 +22,8 @@ int mfix::nlev = 1;
 
 EBSupport mfix::m_eb_support_level = EBSupport::full;
 
+Real mfix::gravity[3] {0.0};
+Real mfix::gp0[3]     {0.0};
 
 mfix::~mfix ()
 {
@@ -119,20 +121,21 @@ mfix::ResizeArrays ()
     p_go.resize(nlevs_max);
 
     p0_g.resize(nlevs_max);
-    pp_g.resize(nlevs_max);
 
     ro_g.resize(nlevs_max);
     ro_go.resize(nlevs_max);
 
-    rop_g.resize(nlevs_max);
-    rop_go.resize(nlevs_max);
-
-    phi.resize(nlevs_max);
+    phi_nd.resize(nlevs_max);
     diveu.resize(nlevs_max);
 
-    // RHS and solution arrays for diffusive solve
-    rhs_diff.resize(nlevs_max);
-    phi_diff.resize(nlevs_max);
+    // RHS arrays for cell-centered solves
+    rhs_cc.resize(nlevs_max);
+
+    // Solution array for diffusion solves
+    phi_cc.resize(nlevs_max);
+
+    // Solution array for MAC projection
+    phi_mac.resize(nlevs_max);
 
     // Current (vel_g) and old (vel_go) velocities
     vel_g.resize(nlevs_max);
@@ -140,14 +143,10 @@ mfix::ResizeArrays ()
 
     // Pressure gradients
     gp.resize(nlevs_max);
-    gp0.resize(nlevs_max);
 
-    f_gds.resize(nlevs_max);
     drag.resize(nlevs_max);
 
     mu_g.resize(nlevs_max);
-    lambda_g.resize(nlevs_max);
-    trD_g.resize(nlevs_max);
 
     // Vorticity
     vort.resize(nlevs_max);
@@ -161,15 +160,10 @@ mfix::ResizeArrays ()
     yslopes.resize(nlevs_max);
     zslopes.resize(nlevs_max);
 
-    bcoeff.resize(nlevs_max);
-    for (int i = 0; i < nlevs_max; ++i ) {
-        bcoeff[i].resize(3);
-    }
-
-    bcoeff_diff.resize(nlevs_max);
-    for (int i = 0; i < nlevs_max; ++i ) {
-        bcoeff_diff[i].resize(3);
-    }
+    bcoeff_nd.resize(nlevs_max);
+    bcoeff_cc.resize(nlevs_max);
+      ep_face.resize(nlevs_max);
+      ro_face.resize(nlevs_max);
 
     // Fuid cost (load balancing)
     fluid_cost.resize(nlevs_max);
@@ -210,14 +204,9 @@ mfix::usr3()
           // We deliberately don't tile this loop
           for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
           {
-             const Box& sbx = (*p_g[lev])[mfi].box();
-             const Box& ubx = (*vel_g[lev])[mfi].box();
-
-             mfix_usr3((*vel_g[lev])[mfi].dataPtr(0), ubx.loVect(), ubx.hiVect(),
-                       (*vel_g[lev])[mfi].dataPtr(1), ubx.loVect(), ubx.hiVect(),
-                       (*vel_g[lev])[mfi].dataPtr(2), ubx.loVect(), ubx.hiVect(),
-                       (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-                        &dx, &dy, &dz);
+             mfix_usr3(BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                       BL_TO_FORTRAN_ANYD((  *p_g[lev])[mfi]),
+                       &dx, &dy, &dz);
           }
        }
     }
@@ -241,32 +230,6 @@ mfix::mfix_set_bc_type(int lev)
                 &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost);
 }
 
-void
-mfix::fill_mf_bc(int lev, MultiFab& mf)
-{
-    Box domain(geom[lev].Domain());
-
-    if (!mf.boxArray().ixType().cellCentered())
-	amrex::Error("fill_mf_bc only used for cell-centered arrays!");
-
-    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
-    mf.FillBoundary(geom[lev].periodicity());
-
-    // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
-    {
-	const Box& sbx = mf[mfi].box();
-	fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
-		 bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                 bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-		 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                 domain.loVect(), domain.hiVect(), &nghost);
-    }
-}
-
 void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 {
     BL_PROFILE("mfix::mfix_calc_volume_fraction()");
@@ -287,22 +250,12 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
           ep_g[lev]->setVal(1.);
     }
 
+    // This sets the values outside walls or periodic boundaries
     for (int lev = 0; lev < nlev; lev++)
-    {
-
-       // Now define rop_g = ro_g * ep_g
-       MultiFab::Copy(*rop_g[lev], *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow());
-       MultiFab::Multiply((*rop_g[lev]), (*ep_g[lev]), 0, 0, 1, rop_g[lev]->nGrow());
-
-       // This sets the values outside walls or periodic boundaries
-       fill_mf_bc(lev,*ep_g[lev]);
-       fill_mf_bc(lev,*rop_g[lev]);
-
-   }
-
+        ep_g[lev]->FillBoundary(geom[lev].periodicity());
 
     // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac
-    // Note ep_g = 1 - particle_volume / this_cell_volume where 
+    // Note ep_g = 1 - particle_volume / this_cell_volume where
     //    this_cell_volume = (volfrac * dx * dy * dz)
     // When we define the sum we add up (ep_g * volfrac) so that the total sum
     //    does not depend on whether a particle is in a full or cut cell.
@@ -314,6 +267,6 @@ void
 mfix::avgDown (int crse_lev, const MultiFab& S_fine, MultiFab& S_crse)
 {
     BL_PROFILE("mfix::avgDown()");
- 
+
     amrex::EB_average_down(S_fine, S_crse, 0, S_fine.nComp(), refRatio(crse_lev));
 }

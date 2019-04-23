@@ -20,8 +20,6 @@ void mfix::make_eb_box()
 {
     ParmParse pp("box");
 
-    int max_level_here = 0;
-
     /****************************************************************************
      *                                                                          *
      * Build standard EB Factories                                              *
@@ -29,10 +27,6 @@ void mfix::make_eb_box()
      ***************************************************************************/
 
     // set up ebfactory
-
-    EBSupport m_eb_support_level = EBSupport::full;
-
-    int max_coarsening_level = 100;
 
     amrex::Print() << " " << std::endl;
     amrex::Print() << "Now making the ebfactories ..." << std::endl;
@@ -129,18 +123,6 @@ void mfix::make_eb_box()
         auto gshop = EB2::makeShop(if_box);
 
         build_eb_levels(gshop);
-
-        //_______________________________________________________________________
-        // Particles need the correct volfrac at the inflow
-        bool has_walls = false;
-        std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
-        if (has_walls)
-        {
-            auto if_part = EB2::makeUnion(if_box, * walls);
-            auto gshop_part = EB2::makeShop(if_part);
-
-            build_particle_eb_levels(gshop_part);
-        }
 
         Print() << "Done making the eb levels ..." << std::endl;
         Print() << " " << std::endl;

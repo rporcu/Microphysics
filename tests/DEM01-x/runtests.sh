@@ -1,29 +1,60 @@
 #!/bin/bash -lex
 
+cleanup() {
+    rm -rf ${RUN_NAME}* const_plt*  &> /dev/null
+}
+
+write_data() {
+    echo "   " >> ${1}
+    echo "   Normal collision spring constant. $2  (N/m)" >> $1
+    echo "   Restitution coefficient.          $3  ( - )" >> $1
+    echo "   " >> ${1}
+    ${FJOIN_PAR} -f DEM01_par --end 100 --var $4 --format 8 --dt 0.005 >> $1
+}
+
 RUN_NAME="DEM01"
 
 MFIX=./mfix
 if [ -n "$1" ]; then
-   MFIX=$1
+    MFIX=$1
 fi
 
-rm -f POST_* &> /dev/null
+if [ -n "$2" ]; then
+    FJOIN_PAR=$2/fjoin_par
+fi
+
+cleanup
+
+echo "DEM01: FREELY FALLING PARTICLE W/WALL COLLISION" > POST_POS.dat
+echo "DEM01: FREELY FALLING PARTICLE W/WALL COLLISION" > POST_VEL.dat
 
 DES_KN=10000
 for DES_ETA in 0.9 0.8 0.7 0.6; do
-  rm -f ${RUN_NAME}* &> /dev/null
-  time -p ${MFIX} inputs \
-    DES_EN_INPUT=${DES_ETA} DES_EN_WALL_INPUT=${DES_ETA} \
-    KN=${DES_KN} KN_W=${DES_KN}
+
+    cleanup
+
+    time -p ${MFIX} inputs \
+         DES_EN_INPUT=${DES_ETA} DES_EN_WALL_INPUT=${DES_ETA} \
+         KN=${DES_KN} KN_W=${DES_KN}
+
+    write_data "POST_POS.dat" ${DES_KN} ${DES_ETA}  1
+    write_data "POST_VEL.dat" ${DES_KN} ${DES_ETA}  9
+
 done
 
 for DES_KN in 25000 50000 100000; do
-  for DES_ETA in 1.0 0.9 0.8 0.7 0.6; do
-    rm -f ${RUN_NAME}* &> /dev/null
-    time -p ${MFIX} inputs \
-      DES_EN_INPUT=${DES_ETA} DES_EN_WALL_INPUT=${DES_ETA} \
-      KN=${DES_KN} KN_W=${DES_KN}
-  done
+    for DES_ETA in 1.0 0.9 0.8 0.7 0.6; do
+
+        cleanup
+
+        time -p ${MFIX} inputs \
+             DES_EN_INPUT=${DES_ETA} DES_EN_WALL_INPUT=${DES_ETA} \
+             KN=${DES_KN} KN_W=${DES_KN}
+
+        write_data "POST_POS.dat" ${DES_KN} ${DES_ETA}  1
+        write_data "POST_VEL.dat" ${DES_KN} ${DES_ETA}  9
+
+    done
 done
 
 post_dats=../DEM01-y/AUTOTEST/POST*.dat

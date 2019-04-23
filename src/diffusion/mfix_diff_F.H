@@ -2,7 +2,6 @@
 
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
-#include "AMReX_RealVect.H"
 
 #ifdef BL_SINGLE_PRECISION_PARTICLES
 typedef float amrex_particle_real;
@@ -19,7 +18,7 @@ extern "C"
           const int* lo, const int* hi,
           amrex::Real* divtau, const int* dlo, const int* dhi,
           const amrex::Real* vel   , const int* vlo, const int* vhi,
-          const amrex::Real* mu   ,  const amrex::Real* lambda,
+          const amrex::Real* mu,
           const amrex::Real* ro,
           const amrex::Real* ep, const int* slo, const int* shi,
           const int* domlo, const int* domhi,
@@ -33,14 +32,14 @@ extern "C"
           const int* lo, const int* hi,
           amrex::Real* divtau, const int* dlo, const int* dhi,
           const amrex::Real* vel, const int* vlo, const int* vhi,
-          const amrex::Real* mu, const amrex::Real* lambda, const amrex::Real* ro,
+          const amrex::Real* mu, const amrex::Real* ro,
           const amrex::Real* ep   , const int* slo, const int* shi,
           const void* flag, const int* fglo, const int* fghi,
-          const amrex::Real* afrac_x,const int*  axlo,const int*  axhi, 
-          const amrex::Real* afrac_y,const int*  aylo,const int*  ayhi, 
-          const amrex::Real* afrac_z,const int*  azlo,const int*  azhi, 
-          const amrex::Real* cent_x,const int*   cxlo,const int*  cxhi, 
-          const amrex::Real* cent_y,const int*   cylo,const int*  cyhi, 
+          const amrex::Real* afrac_x,const int*  axlo,const int*  axhi,
+          const amrex::Real* afrac_y,const int*  aylo,const int*  ayhi,
+          const amrex::Real* afrac_z,const int*  azlo,const int*  azhi,
+          const amrex::Real* cent_x,const int*   cxlo,const int*  cxhi,
+          const amrex::Real* cent_y,const int*   cylo,const int*  cyhi,
           const amrex::Real* cent_z,const int*   czlo,const int*  czhi,
           const amrex::Real* vfrac, const int* vflo, const int*  vfhi,
           const amrex::Real* bcent, const int* blo,    const int* bhi,
@@ -58,12 +57,6 @@ extern "C"
           const int* bct_ilo, const int* bct_ihi,
           const int* bct_jlo, const int* bct_jhi,
           const int* bct_klo, const int* bct_khi);
-
-  void compute_bcoeff_diff (
-          const int* lo,  const int*  hi,
-          amrex::Real* bcoeff, const int* blo, const int* bhi,
-          const amrex::Real* mu_g, const int* slo, const int* shi,
-          const int* dir );
 
 #ifdef __cplusplus
 }

@@ -10,7 +10,6 @@ if [ -n "$1" ]; then
 fi
 
 if [ -n "$2" ]; then
-    FCOMPARE=$2/plt_compare_diff_grids
     FJOIN_PAR=$2/fjoin_par
 fi
 
@@ -22,17 +21,16 @@ echo "Using INPUTS file ${INPUTS}"
 
 if [ "$ENABLE_MPI" -eq "1" ]; then
     if [ "$ENABLE_OMP" -eq "1" ]; then
-	MPIRUN="mpirun -np 2"
+  MPIRUN="mpirun -np 2"
     else
-	MPIRUN="mpirun -np 4"
+  MPIRUN="mpirun -np 4"
     fi
 else
     MPIRUN=""
 fi
 
-FCOMPARE=${FCOMPARE:-}
+rm -rf ${RUN_NAME}* const_plt* POST_* &> /dev/null
 
-rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.stop_time=0.150"
 time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.restart=DEM06_chk00150"
 

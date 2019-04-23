@@ -90,9 +90,6 @@ build of AMReX.
 | ENABLE\_FPE     | Build with Floating-Point    | 0/1              | 0           |
 |                 | Exceptions checks            |                  |             |
 +-----------------+------------------------------+------------------+-------------+
-| ENABLE\_PTESTS  | Include tests for projection | 0/1              | 0           |
-|                 | method in Ctest suite        |                  |             |
-+-----------------+------------------------------+------------------+-------------+
 | AMREX\_ENABLE\_ | Enable build with MPI        | 0/1              | 1           |
 | MPI             |                              |                  |             |
 +-----------------+------------------------------+------------------+-------------+
@@ -142,7 +139,7 @@ build of AMReX.
 
 ``SUPERBUILD mode is enabled automatically when AMREX_INSTALL_DIR is not given.``
 
-Example: build mfix with custom fortran flags, AMReX profiling enabled
+Example: build mfix with custom Fortran flags, AMReX profiling enabled
 and single precision particles:
 
 ::
@@ -233,14 +230,6 @@ must point to the location of the AMReX ``fextract`` utility located in
 the directory, ``amrex/Tools/PostProcessing/F_Src``. Additionally,
 ``numdiff`` must be installed for comparing results.
 
-o To compare point-by-point field data, the environment variable
-``FCOMPARE`` must point the AMReX utility ``plt_compare_diff_grids``
-found in the directory, ``amrex/Tools/PostProcessing/F_Src``.
-Additionally, the environment variable ``MFIX_BENCHMARKS_HOME`` must
-point to the location of a local regression test data set. See
-*Generating local regression test data* for instructions on creating a
-local regression test data set.
-
 Run all tests
 -------------
 
@@ -314,7 +303,7 @@ To build the User's Guide,
     > cd doc/UsersGuide
     > make
 
-This will build a pdf of the MFIX-Exa User's Guide, which contains
+This will build a PDF of the MFIX-Exa User's Guide, which contains
 information about the equations being solved, run-time parameters,
 checkpoint/restart capability, options for visualization and more.
 

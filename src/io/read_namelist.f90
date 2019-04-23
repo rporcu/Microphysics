@@ -14,15 +14,15 @@ MODULE read_namelist_module
 !     Purpose: Read in the NAMELIST variables                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_NAMELIST(dt_inout)
+      SUBROUTINE READ_NAMELIST(mfix_dat, dt_inout)
 
       use bc
       use drag, only: drag_c1, drag_d1
       use constant, only: gravity
       use deprecated_or_unknown_module, only: deprecated_or_unknown
-      use discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input, particle_types
-      use discretelement, only: des_etat_fac, des_etat_w_fac, v_poisson, vw_poisson
-      use discretelement, only: des_explicitly_coupled, des_oneway_coupled, e_young, ew_young
+      use discretelement, only: des_en_input, des_en_wall_input, particle_types
+      use discretelement, only: des_etat_fac, des_etat_w_fac
+      use discretelement, only: des_explicitly_coupled, des_oneway_coupled
       use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, des_etat_w_fac
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
 
@@ -55,7 +55,8 @@ MODULE read_namelist_module
 
 ! Dummy Arguments:
 !------------------------------------------------------------------------//
-      real(rt), intent(  out) :: dt_inout
+      character(len=*), intent(in   ) :: mfix_dat
+      real(rt),         intent(  out) :: dt_inout
 
 ! Local Variables:
 !------------------------------------------------------------------------//
@@ -89,17 +90,17 @@ MODULE read_namelist_module
 
       ! Open the mfix.dat file. Report errors if the file is not located or
       ! there is difficulties opening it.
-      inquire(file='mfix.dat',exist=lEXISTS)
+      inquire(file=mfix_dat,exist=lEXISTS)
       IF(.NOT.lEXISTS) THEN
          WRITE(*,1000)
          stop 20010
 
  1000 FORMAT(2/,1X,70('*')/' From: READ_NAMELIST',/' Error 1000: ',    &
-         'The input data file, mfix.dat, is missing. Aborting.',/1x,   &
+         'The input data file, "//mfix_dat//", is missing. Aborting.',/1x,   &
          70('*'),2/)
 
       ELSE
-         OPEN(UNIT=UNIT_DAT, FILE='mfix.dat', STATUS='OLD', IOSTAT=IOS)
+         OPEN(UNIT=UNIT_DAT, FILE=mfix_dat, STATUS='OLD', IOSTAT=IOS)
          IF(IOS /= 0) THEN
             WRITE (*,1100)
             stop 20011
@@ -180,11 +181,9 @@ MODULE read_namelist_module
       include 'geometry.inc'
       include 'gas_phase.inc'
       include 'initial_conditions.inc'
-      include 'boundary_conditions.inc'
       include 'point_sources.inc'
       include 'usr_hooks.inc'
       include 'desnamelist.inc'
-      include 'usrnlst.inc'
 
       ERROR = .FALSE.
 
@@ -231,14 +230,6 @@ MODULE read_namelist_module
       READ(STRING, NML=INITIAL_CONDITIONS, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
-
-! Boundary condition keywords
-      STRING=''; STRING = '&BOUNDARY_CONDITIONS '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=BOUNDARY_CONDITIONS, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
-
-
 ! Point source keywords
       STRING=''; STRING = '&POINT_SOURCES '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
@@ -256,12 +247,6 @@ MODULE read_namelist_module
        STRING=''; STRING = '&DES_INPUT_DATA '//&
             trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
        READ(STRING, NML=DES_INPUT_DATA, IOSTAT=IOS)
-       IF(IOS == 0)  RETURN
-
-! User defined input parameters.
-       STRING=''; STRING = '&USR_INPUT_DATA '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-       READ(STRING, NML=USR_INPUT_DATA, IOSTAT=IOS)
        IF(IOS == 0)  RETURN
 
        ERROR = .TRUE.

@@ -43,7 +43,7 @@ contains
       use ic, only: ic_dp_max,  ic_ro_s_max
 
       use discretelement, only: particle_types
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -121,7 +121,7 @@ contains
       pc = init_pc
       nplp: do p=1,np
 
-         pvol = (pi/6.0d0)*dp(p)**3
+         pvol = (M_PI/6.0d0)*dp(p)**3
 
          pc = pc + 1
 
@@ -172,7 +172,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -224,7 +224,7 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ! Total to seed over the whole IC region
       max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
@@ -295,7 +295,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -347,7 +347,7 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ! Total to seed over the whole IC region
       max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
@@ -421,7 +421,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -473,7 +473,7 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ! Total to seed over the whole IC region
       max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
@@ -549,7 +549,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -606,7 +606,7 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ic_len = ic_dhi - ic_dlo - max_dp
       ic_dlo = ic_dlo + max_rp
@@ -714,7 +714,7 @@ contains
     bind(C, name="mfix_particle_generator_prop")
 
       use particle_mod
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       integer(c_int),   intent(in   ) :: nrp
       type(particle_t), intent(inout) :: particles(nrp)
@@ -732,7 +732,7 @@ contains
          rad  = rdata(p,4)
          rho  = rdata(p,5)
 
-         vol  = (4.0d0/3.0d0)*pi*rad**3
+         vol  = (4.0d0/3.0d0)*M_PI*rad**3
          mass = vol * rho
          omoi = 2.5d0/(mass * rad**2)
 
@@ -1017,138 +1017,5 @@ contains
 
       return
    end subroutine particle_write
-
-
-
-   !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-   !                                                                     !
-   !                                                                     !
-   !                                                                     !
-   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   subroutine rm_wall_collisions ( particles, nrp,           &
-    valid,     vlo,  vhi,     &
-    phi,       phlo, phhi,    &
-    dx,        n_refine     ) &
-    bind(C, name="rm_wall_collisions")
-
-      use particle_mod, only: particle_t
-
-      use param       , only: small_number, zero, one
-
-      use amrex_eb_levelset_module, only: amrex_eb_interp_levelset
-      use amrex_eb_levelset_module, only: amrex_eb_normal_levelset
-
-      implicit none
-
-      ! ** input varaibles
-
-      type(particle_t), intent(inout), target :: particles(nrp)
-      integer,          intent(in   )         :: nrp
-      integer,          intent(in   )         :: n_refine
-      integer,          intent(in   )         :: vlo(3),  vhi(3)
-      integer,          intent(in   )         :: phlo(3), phhi(3)
-
-      integer,          intent(in   )         :: valid( vlo(1): vhi(1),  vlo(2): vhi(2),  vlo(3): vhi(3) )
-      real(rt),         intent(in   )         :: phi(  phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
-      real(rt),         intent(in   )         :: dx (3)
-
-      ! pos: current particle's position
-      !  rp: current particle's radius
-      real(rt) :: pos(3), rp
-
-      !    plo: domain lo -- HACK this should get passed down
-      real(rt) :: plo(3), inv_dx(3), ls_value
-
-      integer :: p
-
-      inv_dx = 1.0_rt / dx
-      plo    = (/ 0.0_rt, 0.0_rt, 0.0_rt /)
-
-      ! itterate over particles
-      do p = 1, nrp
-
-         rp  = particles(p)%radius
-         pos = particles(p)%pos
-
-         ! interpolates levelset from nodal phi to position pos
-         call amrex_eb_interp_levelset(pos, plo, n_refine, &
-          phi, phlo, phhi, dx, ls_value);
-
-         if (ls_value < rp) particles(p)%id = -1
-
-      end do ! loop over particles
-
-   end subroutine rm_wall_collisions
-
-
-
-   subroutine rm_wall_collisions_eb ( particles,    nrp, &
-    &                                 valid,  vlo,  vhi, &
-    &                                 phi,   phlo, phhi, &
-    &                                 flags,  flo,  fhi, &
-    &                                 plo, dx, n_refine ) bind(C)
-
-      use particle_mod,             only: particle_t
-      use param,                    only: small_number, zero, one
-      use amrex_ebcellflag_module,  only: is_covered_cell
-      use amrex_eb_levelset_module, only: amrex_eb_interp_levelset, &
-       &                                  amrex_eb_normal_levelset
-
-      ! Particles
-      type(particle_t), intent(inout), target :: particles(nrp)
-      integer,          intent(in   )         :: nrp
-
-      ! Array bounds
-      integer,          intent(in   )         :: vlo(3),  vhi(3)
-      integer,          intent(in   )         :: phlo(3), phhi(3)
-      integer,          intent(in   )         :: flo(3),  fhi(3)
-
-      ! LS refinement
-      integer,          intent(in   )         :: n_refine
-
-      ! Grid spacing
-      real(rt),         intent(in   )         :: dx (3)
-
-      ! Coordinates of bottom-east-south corner of domain
-      real(rt),         intent(in   )         :: plo(3)
-
-      ! Arrays
-      integer,          intent(in   )         :: &
-       &    valid( vlo(1):vhi(1), vlo(2):vhi(2), vlo(3):vhi(3) ), &
-       &    flags( flo(1):fhi(1), flo(2):fhi(2), flo(3):fhi(3) )
-
-      real(rt),         intent(in   )         :: &
-       &      phi(  phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
-
-
-      ! Local variables
-      real(rt) :: odx(3), ls_value
-      integer  :: p, ic, jc, kc
-
-      odx = one / dx
-
-      do p = 1, nrp
-
-         associate( rp => particles(p)%radius, pos => particles(p)%pos )
-
-            ! Indeces of the cells containing the particle center
-            ic = floor( ( pos(1) - plo(1) ) * odx(1) )
-            jc = floor( ( pos(2) - plo(2) ) * odx(2) )
-            kc = floor( ( pos(3) - plo(3) ) * odx(3) )
-
-            if (is_covered_cell(flags(ic,jc,kc))) then
-               particles(p)%id = -1
-            else
-               ! interpolates level-set from nodal phi to position pos
-               call amrex_eb_interp_levelset( pos, plo, n_refine, &
-                &   phi, phlo, phhi, dx, ls_value)
-               if (ls_value < rp) particles(p)%id = -1
-            end if
-
-         end associate
-
-      end do
-
-   end subroutine rm_wall_collisions_eb
 
 end module par_gen_module

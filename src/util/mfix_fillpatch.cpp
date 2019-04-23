@@ -32,8 +32,6 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
 
     const Box& domain = geom.Domain();
 
-    AmrParGDB* my_gdb = mfix_for_fillpatching->GetParGDB();
-
     // This is a bit hack-y but does get us the right level
     int lev = 0;
     for (int ilev = 0; ilev < 10; ilev++)
@@ -90,6 +88,9 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
 void
 mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, const Vector<BCRec>& bcs)
 {
+    // Hack so that ghost cells are not undefined
+    mf.setVal(covered_val);
+
     if (lev == 0)
     {
         Vector<MultiFab*> smf;
@@ -179,15 +180,13 @@ mfix::mfix_set_scalar_bcs ()
      Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
      for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
      {
         set_scalar_bcs ( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
                         (*ro_g[lev])[mfi].dataPtr (),
-                        (*rop_g[lev])[mfi].dataPtr (),
                         (*mu_g[lev])[mfi].dataPtr (),
-                        (*lambda_g[lev])[mfi].dataPtr (),
                         bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                         bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                         bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
@@ -196,9 +195,11 @@ mfix::mfix_set_scalar_bcs ()
       }
         ep_g[lev] -> FillBoundary (geom[lev].periodicity());
         ro_g[lev] -> FillBoundary (geom[lev].periodicity());
-       rop_g[lev] -> FillBoundary (geom[lev].periodicity());
         mu_g[lev] -> FillBoundary (geom[lev].periodicity());
-    lambda_g[lev] -> FillBoundary (geom[lev].periodicity());
+
+        EB_set_covered(*ep_g[lev], 0, ep_g[lev]->nComp(), ep_g[lev]->nGrow(), covered_val);
+        EB_set_covered(*ro_g[lev], 0, ro_g[lev]->nComp(), ro_g[lev]->nGrow(), covered_val);
+        EB_set_covered(*mu_g[lev], 0, mu_g[lev]->nComp(), mu_g[lev]->nGrow(), covered_val);
   }
 }
 
@@ -212,11 +213,14 @@ mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
 
   for (int lev = 0; lev < nlev; lev++)
   {
+     // Set all values outside the domain to covered_val just to avoid use of undefined
+     vel_g[lev]->setDomainBndry(covered_val,geom[lev]);
+
      vel_g[lev] -> FillBoundary (geom[lev].periodicity());
      Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
      for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi)
      {
@@ -229,7 +233,10 @@ mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
                            &nghost, &extrap_dir_bcs );
      }
 
+     EB_set_covered(*vel_g[lev], 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow(), covered_val);
+
      // Do this after as well as before to pick up terms that got updated in the call above
      vel_g[lev] -> FillBoundary (geom[lev].periodicity());
+
   }
 }
