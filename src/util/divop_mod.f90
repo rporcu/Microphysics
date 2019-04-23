@@ -48,8 +48,7 @@ contains
         domlo, domhi,          &
         dx, ng,                &
         mu,                    &
-        do_explicit_diffusion, &
-        eb_ho_dirichlet ) bind(C)
+        do_explicit_diffusion) bind(C)
 
       use bc
       use amrex_eb_util_module, only: amrex_eb_interpolate_to_face_centroid_per_cell
@@ -114,7 +113,6 @@ contains
       ! If false then we include all only the off-diagonal terms here -- we do this
       !     by computing the full tensor then subtracting the diagonal terms
       integer(c_int),  intent(in   ), optional :: do_explicit_diffusion
-      integer(c_int),  intent(in   ), optional :: eb_ho_dirichlet
 
       ! Conservative div and EB stuff
       real(ar)  ::    &
@@ -250,8 +248,7 @@ contains
                                                        afrac_y, aylo, ayhi,                   &
                                                        afrac_z, azlo, azhi,                   &
                                                        vfrac  , vflo, vfhi,                   &
-                                                       do_explicit_diffusion,                 &
-                                                       eb_ho_dirichlet)
+                                                       do_explicit_diffusion)
                         end if
                         divc(i,j,k) = divc(i,j,k) - divdiff_w(n,iwall) / ( dx(n) * vfrac(i,j,k) )
                      end if

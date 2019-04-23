@@ -17,7 +17,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
     // set n_error_buf (used in AmrMesh) to default (can overwrite later)
     for (int i = 0; i < n_error_buf.size(); i++)
-        n_error_buf[i] = 8;
+        n_error_buf[i] = {8,8,8};
 
     {
         ParmParse pp("mfix");
@@ -52,9 +52,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
         // Should we use explicit vs implicit diffusion
         pp.query( "explicit_diffusion", explicit_diffusion );
-
-        // Should we use HO extrapolation at EB faces for the diffusion solve
-        pp.query( "eb_ho_dirichlet", eb_ho_dirichlet );
 
         pp.query("ooo_debug", ooo_debug);
 
