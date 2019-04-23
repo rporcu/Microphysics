@@ -15,11 +15,11 @@ amr.stop_time = 5.0
 mfix.particle_init_type = "Auto"
 
 amr.blocking_factor = 2
-
 mac.mg_verbose          = 1
 
 diffusion.mg_verbose = 0
 
+mfix.mg_use_hypre       = true
 mfix.mg_verbose         = 1
 mfix.mg_cg_verbose      = 0
 
@@ -93,14 +93,15 @@ airreactor.height1 = 1.024     # total riser height
 
 airreactor.outlet  = 0.768     # outlet height from bottom
 
+airreactor.offset  = 0.064     #  y/z offset to center in domain
 
-#! BCs 
+#! BCs
 #!-----------------------------------------------------------//
-xlo.location = 0.0
+#xlo.location = 0.0    # Not needed -- flush with domain extent
 xlo.type = "po"
 xlo.pressure = 0.0
 
-xhi.location = 0.512
+#xhi.location = 0.512  # Not needed -- flush with domain extent
 xhi.type = "mi"
 xhi.velocity = -1.5
 
@@ -134,7 +135,7 @@ amr.avg_vel_g =        0       0        0
 amr.avg_region_x_w =   0.000   0.000    0.002
 amr.avg_region_x_e =   0.512   0.000    0.002
 amr.avg_region_y_s =   0.000   0.000    0.000
-amr.avg_region_y_n =   0.128   0.128    0.128 
+amr.avg_region_y_n =   0.128   0.128    0.128
 amr.avg_region_z_b =   0.000   0.000    0.000
 amr.avg_region_z_t =   0.128   0.128    0.128
 

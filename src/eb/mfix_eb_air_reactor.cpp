@@ -35,6 +35,7 @@ mfix::make_eb_air_reactor()
     Real riser_height    = 3.70840;
     Real outlet_height   = 3.6322;
     Real c2c_height      = 0.0762;
+    Real offset          = 0.1392;
 
     pp.query("radius0", reactor_radius);
     pp.query("height0", reactor_height);
@@ -43,6 +44,8 @@ mfix::make_eb_air_reactor()
 
     pp.query("radius1", riser_radius  );
     pp.query("height1", riser_height  );
+
+    pp.query("offset",  offset        );
 
     pp.query("outlet",  outlet_height );
 
@@ -102,7 +105,7 @@ mfix::make_eb_air_reactor()
     auto airreactor1 = EB2::rotate(airreactor0, 2.0*std::atan(1.0), 1);
 
     // Translate to correct location
-    center = {0.0, 0.1392, 0.1392};
+    center = {0.0, offset, offset};
     auto airreactor2 = EB2::translate(airreactor1, center);
 
 
@@ -117,7 +120,7 @@ mfix::make_eb_air_reactor()
     EB2::PlaneIF outlet_body(point, normal);
 
     // Define point+normal to define a reactor top
-    point  = {0.0, 0.1392, 0.0};
+    point  = {0.0, offset, 0.0};
     normal = {0.0, -1.0, 0.0};
 
     EB2::PlaneIF outlet_side(point, normal);
@@ -125,7 +128,7 @@ mfix::make_eb_air_reactor()
     auto outlet1 = EB2::lathe(EB2::makeUnion(outlet_body, outlet_side));
 
     // Translate to correct location
-    center = {outlet_height, 0.1392, 0.0};
+    center = {outlet_height, offset, 0.0};
     auto outlet2 = EB2::translate(outlet1, center);
 
 
