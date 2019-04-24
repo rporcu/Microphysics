@@ -38,10 +38,6 @@ include( MFIX_Options )
 #
 # AMReX-related config options
 #
-set( AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags for AMReX (Superbuild only)" )
-
-set( AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
-
 option( AMREX_ENABLE_PIC "Build position-independent code" NO)
 
 option( AMREX_ENABLE_DP "Enable double precision" YES)

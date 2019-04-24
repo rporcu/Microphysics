@@ -15,7 +15,6 @@ include ( MFIX_Utils )
 #
 # Define the languages used by the project
 #
-enable_language (C)
 enable_language (CXX)
 enable_language (Fortran)
 
@@ -27,30 +26,16 @@ include ( MFIX_Options )
 #
 # AMReX-related config options
 #
-set( AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags for AMReX (Superbuild only)" )
-
-set( AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
-
 option( AMREX_ENABLE_PIC "Build position-independent code" NO)
-
 option( AMREX_ENABLE_DP "Enable double precision" YES)
-
 option( AMREX_ENABLE_ASSERTION "Enable assertions" NO)
-
 option( AMREX_ENABLE_BASE_PROFILE "Enable basic profiling" NO)
-
 option( AMREX_ENABLE_TINY_PROFILE "Enable tiny-profiling" NO)
-
 option( AMREX_ENABLE_TRACE_PROFILE "Enable trace-profiling" NO)
-
 option( AMREX_ENABLE_MEM_PROFILE   "Enable memory profiling" NO)
-
 option( AMREX_ENABLE_COMM_PROFILE  "Enable communicator-profiling" NO)
-
 option( AMREX_ENABLE_BACKTRACE "Enable backtracing" NO)
-
 option( AMREX_ENABLE_PROFPARSER "Enable profile parser" NO)
-
 option( AMREX_ENABLE_DP_PARTICLES "Enable double-precision particle data" YES)
 
 set(AMREX_CUDA_ARCH "Auto" CACHE STRING "CUDA architecture (Use 'Auto' for automatic detection)")
