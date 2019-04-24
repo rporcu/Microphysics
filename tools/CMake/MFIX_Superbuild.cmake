@@ -26,7 +26,7 @@ enable_language (Fortran)
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
 set (AMREX_GIT_COMMIT_MASTER   4eb4e7a25050ca83f02e551fcb9b8a591834395 )
-set (AMREX_GIT_COMMIT_DEVELOP f0b679622942397b081193135cda14d8154fb5a6 )
+set (AMREX_GIT_COMMIT_DEVELOP 0ad3b400bdcb37c2fbce2406adc122de53eee58e )
 set (AMREX_GIT_TAG)  # The commit id or branch to download
 
 
