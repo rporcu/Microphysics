@@ -63,7 +63,7 @@ INCLUDE_LOCATIONS += $(BLITZ_HOME)/include
 VPATH_LOCATIONS   += $(AMREX_HOME)/Src/Extern/Algoim
 VPATH_LOCATIONS   += $(ALGOIM_HOME)
 
-DEFINES += -DUSE_ALGOIM
+DEFINES += -DAMREX_USE_ALGOIM
 
 #These are the directories in AMReX
 
