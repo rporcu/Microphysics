@@ -404,6 +404,8 @@ private:
 
      Real mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
      Real mfix_norm1 ( MultiFab& mf, int lev, int comp );
+     Real mfix_max   ( MultiFab& mf, int lev, int comp );
+     Real mfix_min   ( MultiFab& mf, int lev, int comp );
      Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
      Real mfix_norm0 ( MultiFab& mf, int lev, int comp );
      Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf1,
