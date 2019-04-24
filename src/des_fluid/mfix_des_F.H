@@ -28,6 +28,10 @@ extern "C"
         amrex::Real* grav
         );
 
+    void get_domain_bc (
+        int* grav
+        );
+
     void mfix_deposit_cic_eb(
         const amrex_particle_real*, int ns, int np,
         amrex_real* vol,          const int* vlo, const int* vhi,

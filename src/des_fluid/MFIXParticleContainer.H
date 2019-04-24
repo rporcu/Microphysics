@@ -198,6 +198,7 @@ private:
     int nlev;
 
     static Real gravity[3];
+    static int domain_bc[6];
 
     ///
     /// We add a particle to the neighbor list if it's center is within 3 particle radii
