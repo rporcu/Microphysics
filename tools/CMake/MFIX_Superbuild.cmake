@@ -15,13 +15,13 @@ include ( MFIX_Utils )
 #
 # Define the languages used by the project
 #
-enable_language (C)
-enable_language (CXX)
-enable_language (Fortran)
+enable_language(CXX)
+enable_language(Fortran)
 
 #
 # Amrex-related variables
 #
+find_package(Git REQUIRED)
 
 # AMReX Git variables
 set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
@@ -33,7 +33,7 @@ set (AMREX_GIT_TAG)  # The commit id or branch to download
 #
 # MFIX-related options
 #
-include ( MFIX_Options )
+include( MFIX_Options )
 
 #
 # AMReX-related config options
