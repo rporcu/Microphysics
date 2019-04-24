@@ -151,6 +151,49 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
       Vector<std::string> pltFldNames;
       Vector< std::unique_ptr<MultiFab> > mf(nlev);
 
+      // Velocity components
+      if( plt_vel_g   == 1) {
+        pltFldNames.push_back("u_g");
+        pltFldNames.push_back("v_g");
+        pltFldNames.push_back("w_g");
+      }
+
+      // Pressure gradient
+      if( plt_gradp_g == 1) {
+        pltFldNames.push_back("gpx");
+        pltFldNames.push_back("gpy");
+        pltFldNames.push_back("gpz");
+      }
+
+      // Fluid volume fraction
+      if( plt_ep_g    == 1)
+        pltFldNames.push_back("ep_g");
+
+      // Fluid pressure
+      if( plt_p_g    == 1)
+        pltFldNames.push_back("p_g");
+
+      // Fluid density
+      if( plt_ro_g    == 1)
+        pltFldNames.push_back("ro_g");
+
+      // Fluid viscosity
+      if( plt_mu_g    == 1)
+        pltFldNames.push_back("mu_g");
+
+      // vorticity
+      if( plt_vort   == 1)
+        pltFldNames.push_back("vort");
+
+      // div(ep_g.u)
+      if( plt_diveu   == 1)
+        pltFldNames.push_back("diveu");
+
+      // EB cell volume fraction
+      if( plt_volfrac   == 1)
+        pltFldNames.push_back("volfrac");
+
+
       for (int lev = 0; lev < nlev; ++lev) {
 
         // Multifab to hold all the variables -- there can be only one!!!!
@@ -159,104 +202,69 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
 
         int lc=0;
 
-
         // Velocity components
         if( plt_vel_g   == 1) {
-
-          pltFldNames.push_back("u_g");
           MultiFab::Copy(*mf[lev], (*vel_g[lev]), 0, lc  , 1, 0);
-
-          pltFldNames.push_back("v_g");
           MultiFab::Copy(*mf[lev], (*vel_g[lev]), 1, lc+1, 1, 0);
-
-          pltFldNames.push_back("w_g");
           MultiFab::Copy(*mf[lev], (*vel_g[lev]), 2, lc+2, 1, 0);
-
           lc += 3;
         }
 
         // Pressure gradient
         if( plt_gradp_g == 1) {
-
-          pltFldNames.push_back("gpx");
           MultiFab::Copy(*mf[lev], (*gp[lev]), 0, lc  , 1, 0);
-
-          pltFldNames.push_back("gpy");
           MultiFab::Copy(*mf[lev], (*gp[lev]), 1, lc+1, 1, 0);
-
-          pltFldNames.push_back("gpz");
           MultiFab::Copy(*mf[lev], (*gp[lev]), 2, lc+2, 1, 0);
-
           lc += 3;
         }
 
         // Fluid volume fraction
         if( plt_ep_g    == 1) {
-
-          pltFldNames.push_back("ep_g");
           MultiFab::Copy(*mf[lev], (*ep_g[lev]), 0, lc, 1, 0);
-
           lc += 1;
         }
 
         // Fluid pressure
         if( plt_p_g    == 1) {
-
-          pltFldNames.push_back("p_g");
           MultiFab p_nd(p_g[lev]->boxArray(),dmap[lev],1,0);
           p_nd.setVal(0.);
           MultiFab::Copy(p_nd, (* p_g[lev]), 0, 0, 1, 0);
           MultiFab::Add (p_nd, (*p0_g[lev]), 0, 0, 1, 0);
           amrex::average_node_to_cellcenter(*mf[lev], lc, p_nd, 0, 1);
-
           lc += 1;
         }
 
         // Fluid density
         if( plt_ro_g    == 1) {
-          pltFldNames.push_back("ro_g");
           MultiFab::Copy(*mf[lev], (*ro_g[lev]), 0, lc, 1, 0);
-
           lc += 1;
         }
-
 
         // Fluid viscosity
         if( plt_mu_g    == 1) {
-          pltFldNames.push_back("mu_g");
           MultiFab::Copy(*mf[lev], (*mu_g[lev]), 0, lc, 1, 0);
-
           lc += 1;
         }
-
 
         // vorticity
         if( plt_vort   == 1) {
-          pltFldNames.push_back("vort");
           MultiFab::Copy(*mf[lev], (*vort[lev]), 0, lc, 1, 0);
-
           lc += 1;
         }
-
 
         // div(ep_g.u)
         if( plt_diveu   == 1) {
-          pltFldNames.push_back("diveu");
           amrex::average_node_to_cellcenter(*mf[lev], lc, (*diveu[lev]), 0, 1);
-
           lc += 1;
         }
 
-
         // EB cell volume fraction
         if( plt_volfrac   == 1) {
-          pltFldNames.push_back("volfrac");
           if (ebfactory[lev]) {
             MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, lc, 1, 0);
           } else {
             mf[lev]->setVal(1.0,lc,1,0);
           }
-
           lc += 1;
         }
 

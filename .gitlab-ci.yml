@@ -43,6 +43,7 @@ variables:
     when: on_failure
     paths:
       - build/mfix/Testing/
+  retry: 2
 
 single-grid-serial:
   variables:
