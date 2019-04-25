@@ -61,11 +61,6 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
           const auto& vmac_fab = (m_v_mac[lev])->array(mfi);
           const auto& wmac_fab = (m_w_mac[lev])->array(mfi);
 
-          // Face-centered areas
-          const auto& ax_fab = areafrac[0]->array(mfi);
-          const auto& ay_fab = areafrac[1]->array(mfi);
-          const auto& az_fab = areafrac[2]->array(mfi);
-
           if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
           {
              m_u_mac[lev] -> setVal( 1.2345e300, ubx, 0, 1);
@@ -124,6 +119,11 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
              });
 
           } else {
+
+             // Face-centered areas
+             const auto& ax_fab = areafrac[0]->array(mfi);
+             const auto& ay_fab = areafrac[1]->array(mfi);
+             const auto& az_fab = areafrac[2]->array(mfi);
 
              // This FAB has cut cells
              AMREX_CUDA_HOST_DEVICE_FOR_3D(ubx, i, j, k, 

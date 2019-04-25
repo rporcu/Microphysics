@@ -29,6 +29,8 @@ bool MFIXParticleContainer::use_neighbor_list  {true};
 bool MFIXParticleContainer::sort_neighbor_list {false};
 Real MFIXParticleContainer::gravity[3] {0.0};
 
+int  MFIXParticleContainer::domain_bc[6] {0};
+
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     : NeighborParticleContainer<realData::count,intData::count>
       (amr_core->GetParGDB(), 1)
@@ -51,153 +53,14 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     setIntCommComp(3, false);
 
     nlev = amr_core->maxLevel() + 1;
+
+    get_domain_bc(domain_bc);
 }
 
 void MFIXParticleContainer::AllocData ()
 {
     reserveData();
     resizeData();
-
-}
-
-void MFIXParticleContainer::InitParticlesAscii(const std::string& file)
-{
-
-  // only read the file on the IO proc
-  if (ParallelDescriptor::IOProcessor())  {
-    std::ifstream ifs;
-    ifs.open(file.c_str(), std::ios::in);
-
-    if (!ifs.good())
-      amrex::FileOpenFailed(file);
-
-    int np = -1;
-    ifs >> np >> std::ws;
-
-    // Issue an error if nparticles = 0 is specified
-    if ( np == -1 ){
-      Abort("\nCannot read number of particles from particle_input.dat: file is corrupt.\
-                   \nPerhaps you forgot to specify the number of particles on the first line??? ");
-    }
-
-    // we add all the particles to grid 0 and tile 0 and let
-    // Redistribute() put them in the right places.
-    const int lev  = 0;
-    const int grid = 0;
-    const int tile = 0;
-
-    auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
-
-    ParticleType p;
-    int        pstate, pphase;
-    Real       pradius, pdensity, pvolume, pomoi, pmass, pomega;
-
-    pstate = 1;
-
-    for (int i = 0; i < np; i++) {
-
-      // Read from input file
-      ifs >> pphase;
-      ifs >> p.pos(0);
-      ifs >> p.pos(1);
-      ifs >> p.pos(2);
-      ifs >> pradius;
-      ifs >> pdensity;
-      ifs >> p.rdata(realData::velx);
-      ifs >> p.rdata(realData::vely);
-      ifs >> p.rdata(realData::velz);
-
-      // Set id and cpu for this particle
-      p.id()  = ParticleType::NextID();
-      p.cpu() = ParallelDescriptor::MyProc();
-
-      // Compute other particle properties
-      set_particle_properties( pstate, pradius, pdensity, pvolume, pmass, pomoi, pomega);
-
-      // Set other particle properties
-      p.idata(intData::phase)     = pphase;
-      p.idata(intData::state)     = pstate;
-      p.rdata(realData::volume)   = pvolume;
-      p.rdata(realData::density)  = pdensity;
-      p.rdata(realData::mass)     = pmass;
-      p.rdata(realData::oneOverI) = pomoi;
-      p.rdata(realData::radius)   = pradius;
-      p.rdata(realData::omegax)   = pomega;
-      p.rdata(realData::omegay)   = pomega;
-      p.rdata(realData::omegaz)   = pomega;
-
-      // Initialize these for I/O purposes
-      p.rdata(realData::dragx)    = 0.0;
-      p.rdata(realData::dragy)    = 0.0;
-      p.rdata(realData::dragz)    = 0.0;
-
-      // Add everything to the data structure
-      particle_tile.push_back(p);
-
-      if (!ifs.good())
-          amrex::Abort("Error initializing particles from Ascii file. \n");
-    }
-  }
-  Redistribute();
-}
-
-void MFIXParticleContainer::InitParticlesAuto()
-{
-  int lev = 0;
-
-  Real dx = Geom(lev).CellSize(0);
-  Real dy = Geom(lev).CellSize(1);
-  Real dz = Geom(lev).CellSize(2);
-
-  int total_np = 0;
-
-  // This uses the particle tile size. Note that the default is to tile so if we
-  //      remove the true and don't explicitly add false it will still tile
-  for (MFIter mfi = MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-
-      // This is particles per grid so we reset to 0
-      int pcount = 0;
-
-      // Define the real particle data for one grid-at-a-time's worth of particles
-      // We don't know pcount (number of particles per grid) before this call
-
-      const Box& tilebx = mfi.tilebox();
-
-      mfix_particle_generator(&pcount, tilebx.loVect(), tilebx.hiVect(), &dx, &dy, &dz);
-
-      const int grid_id = mfi.index();
-      const int tile_id = mfi.LocalTileIndex();
-
-      // Now that we know pcount, go ahead and create a particle container for this
-      // grid and add the particles to it
-      auto&  particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
-
-      ParticleType p_new;
-      for (int i = 0; i < pcount; i++) {
-        // Set id and cpu for this particle
-        p_new.id()  = ParticleType::NextID();
-        p_new.cpu() = ParallelDescriptor::MyProc();
-
-        // Add to the data structure
-        particles.push_back(p_new);
-      }
-
-      const int np = pcount;
-      total_np += np;
-
-      // Now define the rest of the particle data and store it directly in the particles
-      // std::cout << pcount << " particles " << " in grid " << grid_id << std::endl;
-
-      if (pcount > 0)
-         mfix_particle_generator_prop(&np, particles.GetArrayOfStructs().data());
-  }
-
-  ParallelDescriptor::ReduceIntSum(total_np,ParallelDescriptor::IOProcessorNumber());
-  amrex::Print() << "Total number of generated particles: " << total_np << std::endl;
-
-  // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
-  // we do need this to move particles from tile 0 to the correct tile.
-  Redistribute();
 
 }
 
@@ -213,75 +76,6 @@ void MFIXParticleContainer::PrintParticleCounts() {
       amrex::AllPrintToFile("load_balance") << "Box:" << pti.index() << ", count: " << np << std::endl;
     }
   amrex::AllPrintToFile("load_balance") << "Total for this process: " << local_count << std::endl << std::endl;
-}
-
-void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba)
-{
-    int lev = 0;
-
-    Vector<Real> orig_domain_size;
-    orig_domain_size.resize(BL_SPACEDIM);
-    for (int d = 0; d < BL_SPACEDIM; d++)
-        orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
-
-    ParticleType p_rep;
-
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-    {
-        auto& particles = pti.GetArrayOfStructs();
-        int np = pti.numParticles();
-        Gpu::HostVector<ParticleType> host_particles(np);
-        Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
-
-        for (const auto& p: host_particles)
-        {
-           //
-           // Shift the position.
-           //
-           for (int k = 0; k < Nrep[2]; k++) {
-               for (int j = 0; j < Nrep[1]; j++) {
-                 for (int i = 0; i < Nrep[0]; i++) {
-
-                   if ( !(i == 0 && j == 0 && k == 0) )
-                   {
-                    p_rep.m_rdata.pos[0] = p.m_rdata.pos[0] + i * orig_domain_size[0];
-                    p_rep.m_rdata.pos[1] = p.m_rdata.pos[1] + j * orig_domain_size[1];
-                    p_rep.m_rdata.pos[2] = p.m_rdata.pos[2] + k * orig_domain_size[2];
-
-                    p_rep.rdata(realData::velx)   = p.rdata(realData::velx);
-                    p_rep.rdata(realData::vely)   = p.rdata(realData::vely);
-                    p_rep.rdata(realData::velz)   = p.rdata(realData::velz);
-
-                    // Set other particle properties
-                    p_rep.idata(intData::phase)     = p.idata(intData::phase);
-                    p_rep.idata(intData::state)     = p.idata(intData::state);
-                    p_rep.rdata(realData::volume)   = p.rdata(realData::volume);
-                    p_rep.rdata(realData::density)  = p.rdata(realData::density);
-                    p_rep.rdata(realData::mass)     = p.rdata(realData::mass);
-                    p_rep.rdata(realData::oneOverI) = p.rdata(realData::oneOverI);
-                    p_rep.rdata(realData::radius)   = p.rdata(realData::radius);
-                    p_rep.rdata(realData::omegax)   = p.rdata(realData::omegax);
-                    p_rep.rdata(realData::omegay)   = p.rdata(realData::omegay);
-                    p_rep.rdata(realData::omegaz)   = p.rdata(realData::omegaz);
-                    p_rep.rdata(realData::dragx)    = p.rdata(realData::dragx);
-                    p_rep.rdata(realData::dragy)    = p.rdata(realData::dragy);
-                    p_rep.rdata(realData::dragz)    = p.rdata(realData::dragz);
-
-                    // Set id and cpu for this particle
-                    p_rep.id()  = ParticleType::NextID();
-                    p_rep.cpu() = ParallelDescriptor::MyProc();
-
-                    // Add everything to the data structure
-                    particles.push_back(p_rep);
-
-                   } // not copying itself
-                 } // i
-              } // j
-           } // k
-        } // p
-    } // pti
-
-    Redistribute();
 }
 
 void MFIXParticleContainer:: printParticles()
@@ -345,6 +139,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
+
+    Real eps = std::numeric_limits<Real>::epsilon();
 
     amrex::Print() << "Evolving particles on level: " << lev << " ... " << std::endl;
 
@@ -763,6 +559,16 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             grav[1] = gravity[1];
             grav[2] = gravity[2];
 
+            const auto p_lo = Geom(lev).ProbLoArray();
+            const auto p_hi = Geom(lev).ProbHiArray();
+
+            int x_lo_bc = domain_bc[0];
+            int x_hi_bc = domain_bc[1];
+            int y_lo_bc = domain_bc[2];
+            int y_hi_bc = domain_bc[3];
+            int z_lo_bc = domain_bc[4];
+            int z_hi_bc = domain_bc[5];
+
             AMREX_FOR_1D ( nrp, i,
             {
                 ParticleType& p = pstruct[i];
@@ -781,6 +587,37 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 p.pos(0) += subdt * p.rdata(realData::velx);
                 p.pos(1) += subdt * p.rdata(realData::vely);
                 p.pos(2) += subdt * p.rdata(realData::velz);
+
+                if (x_lo_bc && p.pos(0) < p_lo[0]) 
+                {
+                    p.pos(0) = p_lo[0] + eps;
+                    p.rdata(realData::velx) = -p.rdata(realData::velx);
+                }
+                if (x_hi_bc && p.pos(0) > p_hi[0]) 
+                {
+                   p.pos(0) = p_hi[0] - eps;
+                   p.rdata(realData::velx) = -p.rdata(realData::velx);
+                }
+                if (y_lo_bc && p.pos(1) < p_lo[1]) 
+                {
+                    p.pos(1) = p_lo[1] + eps;
+                    p.rdata(realData::vely) = -p.rdata(realData::vely);
+                }
+                if (y_hi_bc && p.pos(1) > p_hi[1]) 
+                {
+                   p.pos(1) = p_hi[1] - eps;
+                   p.rdata(realData::vely) = -p.rdata(realData::vely);
+                }
+                if (z_lo_bc && p.pos(2) < p_lo[2]) 
+                {
+                   p.pos(2) = p_lo[2] + eps;
+                   p.rdata(realData::velz) = -p.rdata(realData::velz);
+                }
+                if (z_hi_bc && p.pos(2) > p_hi[2]) 
+                {
+                   p.pos(2) = p_hi[2] - eps;
+                   p.rdata(realData::velz) = -p.rdata(realData::velz);
+                }
             });
 
             Gpu::Device::streamSynchronize();

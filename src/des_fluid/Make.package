@@ -1,6 +1,5 @@
 f90EXE_sources += calc_particle_beta.f90
 f90EXE_sources += flip_particle_vol.f90
-f90EXE_sources += particle_pic.f90
 f90EXE_sources += set_gradp_bcs.f90
 f90EXE_sources += get_collision_coefficients.f90
 
@@ -9,6 +8,8 @@ F90EXE_headers += mfix_des_F.H
 CEXE_headers += mfix_des_K.H
 
 CEXE_sources += MFIXParticleContainer.cpp MFIX_DEM_Parms.cpp
+CEXE_sources += MFIX_PC_Init.cpp 
 CEXE_sources += MFIX_PC_RemoveOutOfRange.cpp 
+CEXE_sources += MFIX_PC_Replicate.cpp 
 CEXE_headers += MFIXParticleContainer.H MFIX_DEM_Parms.H
 

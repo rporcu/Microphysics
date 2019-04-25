@@ -186,7 +186,7 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
 void mfix::Init(Real dt, Real time)
 {
     if (ooo_debug) amrex::Print() << "Init" << std::endl;
-    InitIOData();
+    InitIOChkData();
     InitIOPltData();
 
     // Note that finest_level = last level

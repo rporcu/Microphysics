@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required(VERSION 3.14)
 
 #
 # Set the search path for cmake modules
@@ -72,7 +72,7 @@ set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
 
 
 # Import AMReX. Do it here so it is visibile to all targets
-find_package(AMReX 19.03.1.348 REQUIRED HINTS ${AMREX_INSTALL_DIR})
+find_package(AMReX 19.03.1.243 HINTS ${AMREX_INSTALL_DIR})
 echo_amrex_config_options ()
 list(APPEND CMAKE_MODULE_PATH ${AMREX_MODULES_PATH})
 
@@ -110,7 +110,7 @@ endif ()
 #
 # Core MFIX library
 #
-add_subdirectory (src)
+add_subdirectory(src)
 
 # Print out config summary
 print_mfix_configuration_summary (${MFIX_LIBNAME})
@@ -130,10 +130,6 @@ if ( ENABLE_CUDA)
       CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
       )
 endif ()
-
-# Configure type-checking target
-include ( MFIX_Typecheck )
-add_typecheck_target()
 
 # Tools
 set (MFIX_TOOLS_EXE ${PROJECT_BINARY_DIR}/tools/)

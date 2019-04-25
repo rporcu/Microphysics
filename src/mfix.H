@@ -202,7 +202,7 @@ public:
 
     void WriteEBSurface();
 
-    void InitIOData();
+    void InitIOChkData();
     void InitIOPltData();
 
     static std::string get_load_balance_type();
@@ -344,9 +344,6 @@ private:
      void ReMakeNewLevelFromScratch(int lev, const BoxArray & new_grids,
                                     const DistributionMapping & new_dmap);
 
-     void WriteHeader(const std::string & name, int nstep, Real dt, Real time,
-                      bool is_checkpoint) const;
-     void WritePlotHeader(const std::string & name, int nstep, Real dt, Real time) const;
      void WriteCheckHeader(const std::string & name, int nstep, Real dt, Real time) const;
 
      void WriteJobInfo(const std::string & dir ) const;
@@ -408,6 +405,8 @@ private:
 
      Real mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
      Real mfix_norm1 ( MultiFab& mf, int lev, int comp );
+     Real mfix_max   ( MultiFab& mf, int lev, int comp );
+     Real mfix_min   ( MultiFab& mf, int lev, int comp );
      Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
      Real mfix_norm0 ( MultiFab& mf, int lev, int comp );
      Real mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf1,
@@ -567,7 +566,7 @@ private:
      Real mac_mg_atol = 1.0e-14;
 
      // Max coarsening level
-     int  mac_mg_max_coarsening_level = 0;
+     int  mac_mg_max_coarsening_level = 100;
      // ***************************************************************
 
      // ***************************************************************
@@ -586,7 +585,7 @@ private:
      Real diff_mg_atol = 1.0e-14;
 
      // Max coarsening level
-     int  diff_mg_max_coarsening_level = 0;
+     int  diff_mg_max_coarsening_level = 100;
      // ***************************************************************
 
      // Tolerance to check for steady state

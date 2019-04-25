@@ -1,257 +1,125 @@
-#
-# Define a macro to add sources.
-# This will also accumulate include directories if
-# a header file is spotted
-# WARNING: this automagically prepends the correct
-# path (relative to the file invoking the macro)
-# to the source file.
-#
-set ( MFIX_Fortran_MOD_PATH ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mod )
-set ( MFIX_INCLUDE_PATHS  include ${MFIX_Fortran_MOD_PATH})
+add_library(mfixcore)
 
-macro ( add_sources )
-   foreach ( item IN ITEMS ${ARGN} )
-      set ( source_name  ${CMAKE_CURRENT_LIST_DIR}/${item} )
-      string ( REPLACE "//" "/" source_name ${source_name})
-      target_sources ( ${MFIX_LIBNAME} PRIVATE ${source_name} )
+# 
+# Path where to store module files
+# 
+set( MFIX_Fortran_MOD_PATH ${CMAKE_CURRENT_BINARY_DIR}/mod_files
+   CACHE INTERNAL "Fortran modules location")
 
-      # Add folder to list of includes if necessary
-      get_filename_component ( filetype ${source_name} EXT )
-      if ( (${filetype} MATCHES ".h") OR (${filetype} MATCHES ".H" ) )
-         list (APPEND MFIX_INCLUDE_PATHS ${CMAKE_CURRENT_LIST_DIR})
-      endif()
-
-      # If it's a cpp file and ENABLE_CUDA is on, then force cpp file
-      # to be compiled with CUDA compiler    
-      if ( ENABLE_CUDA AND ( ${filetype} STREQUAL ".cpp") ) 
-         set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}/${item}
-            PROPERTIES LANGUAGE CUDA )
-      endif ()
-   endforeach()
-endmacro()
-
-#
-# Fist, define the library we want to add
-#
-add_library ( ${MFIX_LIBNAME} "" )
-
-set_target_properties ( ${MFIX_LIBNAME}
+set_target_properties( mfixcore
    PROPERTIES
    Fortran_MODULE_DIRECTORY
    ${MFIX_Fortran_MOD_PATH}
    )
 
+target_include_directories( mfixcore
+   PUBLIC
+   $<BUILD_INTERFACE:${MFIX_Fortran_MOD_PATH}>)
+
+
+#
+# Add sources and header from current dir and all sub dirs
+# 
+
+# Uncategorized 
+target_include_directories(mfixcore
+   PUBLIC
+   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>)
+
+# IMPORTANT: DO NOT ADD main.cpp HERE!
+target_sources(mfixcore
+   PRIVATE
+   compute_dt.cpp
+   mfix_regrid.cpp
+   mfix_advance.cpp
+   compute_diveu.cpp
+   mfix_drag.cpp
+   mfix_evolve.cpp 
+   mfix.cpp 
+   #  main.cpp <---- DO NOT ADD THIS HERE
+   mfix_F.H
+   mfix.H
+   )
+
+# Fortran include files
+add_subdirectory(include)
+
+# I/0
+add_subdirectory(io)
+
+# Convection
+add_subdirectory(convection)
+
+# DES
+add_subdirectory(des_fluid)
+add_subdirectory(src_des)
+
+# Diffusion
+add_subdirectory(diffusion)
+
+# Projection
+add_subdirectory(projection)
+
+# Setup
+add_subdirectory(setup)
+
+# Utility functions
+add_subdirectory(util)
+
+# Setup check functions
+add_subdirectory(check_data)
+
+# Global module files
+add_subdirectory(mods)
+
+# User hooks (UDFs)
+add_subdirectory(usr)
+
+# Embedded boundary functions
+add_subdirectory(eb)
+
+# 
+# Link to imported AMReX
+# 
+target_link_libraries( mfixcore PUBLIC AMReX::amrex )
+
+
+#
+# If ENABLE_CUDA, set CUDA-specific properties and
+# make C++ files be compiled as CUDA sources
+#
 if (ENABLE_CUDA)
-   set_target_properties( ${MFIX_LIBNAME}
+   set_target_properties( mfixcore
       PROPERTIES
       CUDA_SEPARABLE_COMPILATION ON      # This adds -dc
       CUDA_RESOLVE_DEVICE_SYMBOLS OFF
       )
+   
+   get_target_property(MFIX_CUDA_SOURCES mfixcore SOURCES)
+   list(FILTER MFIX_CUDA_SOURCES INCLUDE REGEX "\\.cpp")
+   set_source_files_properties(${MFIX_CUDA_SOURCES} PROPERTIES LANGUAGE CUDA)
+   unset(MFIX_CUDA_SOURCES)  
 endif ()
-
-#
-# Now, one by one, we add all the sources from all the subdirs
-# to the library defined above
-# 
-
-#
-# Uncategorized
-#
-# IMPORTANT: DO NOT ADD main.cpp HERE!
-# 
-add_sources ( compute_dt.cpp )
-add_sources ( mfix_regrid.cpp )
-add_sources ( mfix_advance.cpp )
-add_sources ( compute_diveu.cpp )
-add_sources ( mfix_drag.cpp )
-add_sources ( mfix_evolve.cpp  )
-add_sources ( mfix.cpp  )
-# add_sources ( main.cpp ) <---- DO NOT ADD THIS HERE
-add_sources ( mfix_F.H )
-add_sources ( mfix.H )
-
-#
-# I/0
-# 
-include ( io/CMakeLists.txt )
-
-#
-# Convection
-#
-include ( convection/CMakeLists.txt )
-
-#
-# DES
-#
-include ( des_fluid/CMakeLists.txt )
-include ( src_des/CMakeLists.txt )
-
-#
-# Diffusion
-#
-include ( diffusion/CMakeLists.txt )
-
-#
-# Projection
-#
-include ( projection/CMakeLists.txt )
-
-#
-# Setup
-# 
-include ( setup/CMakeLists.txt )
-
-#
-# Utility functions
-# 
-include ( util/CMakeLists.txt )
-
-#
-# Setup check functions
-#
-include ( check_data/CMakeLists.txt )
-
-#
-# Global module files
-#
-include ( mods/CMakeLists.txt )
-
-#
-# User hooks (UDFs)
-#
-include ( usr/CMakeLists.txt )
-
-#
-# Embedded boundary functions
-#
-include ( eb/CMakeLists.txt )
-
-# Remove duplicates from include lists
-list ( REMOVE_DUPLICATES MFIX_INCLUDE_PATHS )
-target_include_directories ( ${MFIX_LIBNAME} PUBLIC ${MFIX_INCLUDE_PATHS} )
-
-#
-# Link to imported AMReX
-#
-target_link_libraries ( ${MFIX_LIBNAME} PUBLIC AMReX::amrex )
 
 #
 # Set the default flags 
 # 
 if ( NOT CMAKE_Fortran_FLAGS )
-   target_compile_options ( ${MFIX_LIBNAME}
-      PUBLIC
-      # GNU Debug
-      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
-      -O0 -ggdb -fbounds-check -fbacktrace -Wuninitialized -Wunused -finit-real=snan -finit-integer=2147483647>>>>
-      # GNU Release
-      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
-      >>>>
-      # Intel Debug
-      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:Fortran>:
-      -O0 -traceback -check bounds,uninit,pointers>>>>
-      # Intel Release
-      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:Fortran>:
-      -ip -qopt-report=5 -qopt-report-phase=vec>>>>
-      # Cray Debug
-      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:Fortran>:
-      -O0 -e i>>>>
-      # Cray Release 
-      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:Fortran>:
-      >>>>
-      # PGI Debug
-      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:PGI>:$<$<COMPILE_LANGUAGE:Fortran>:
-      -O0 -Mbounds -Mchkptr>>>>
-      # PGI Release
-      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:PGI>:$<$<COMPILE_LANGUAGE:Fortran>:
-      -gopt -fast>>>>
-      )	  
+   target_link_libraries(mfixcore PUBLIC AMReX::Flags_Fortran)
 endif ()
 
 if ( NOT CMAKE_CXX_FLAGS )
-   target_compile_options ( ${MFIX_LIBNAME}
-      PUBLIC
-      # GNU Debug
-      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
-      -O0 -fno-inline -ggdb -Wall -Wno-sign-compare>>>>
-      # GNU Release
-      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
-      >>>>
-      # Intel Debug
-      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:CXX>:
-      -O0 -traceback -Wcheck>>>>
-      # Intel Release
-      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:CXX>:
-      -ip -qopt-report=5 -qopt-report-phase=vec>>>>
-      # Cray Debug
-      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:CXX>:
-      -O0>>>>
-      # Cray Release 
-      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:CXX>:
-      >>>>
-      # PGI Debug
-      $<BUILD_INTERFACE:$<$<CONFIG:Debug>:$<$<C_COMPILER_ID:PGI>:$<$<COMPILE_LANGUAGE:CXX>:
-      -O0 -Mbounds>>>>
-      # PGI Release
-      $<BUILD_INTERFACE:$<$<CONFIG:Release>:$<$<C_COMPILER_ID:PGI>:$<$<COMPILE_LANGUAGE:CXX>:
-      -gopt -fast>>>>
-      )	  
+   target_link_libraries(mfixcore PUBLIC AMReX::Flags_CXX)  
 endif ()
 
-if (DEFINED ENABLE_FPE)
-   if (ENABLE_FPE)
-      target_compile_options ( ${MFIX_LIBNAME}
-   	 PUBLIC
-	 # GNU
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:Fortran>:
-	 -ffpe-trap=invalid,zero -ftrapv>>
-	 $<$<C_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:
-	 -ftrapv>>
-	 # Intel
-	 $<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:Fortran>:
-	 -fpe3>>
-	 $<$<C_COMPILER_ID:Intel>:$<$<COMPILE_LANGUAGE:CXX>:
-	 -fpe3>>
-	 # Cray
-	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:Fortran>:
-	 -K trap=fp>>
-	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:CXX>:
-	 -K trap=fp>>
-	 #  PGI
-	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:Fortran>:
-	 -Ktrap=divz,inv>>
-	 $<$<C_COMPILER_ID:Cray>:$<$<COMPILE_LANGUAGE:CXX>:
-	 >> )
-   endif ()
-else ()
-   message (AUTHOR_WARNING "Variable ENABLE_FPE is not defined")
+if (ENABLE_FPE)
+   target_link_libraries(mfixcore PUBLIC AMReX::Flags_FPE)
 endif ()
 
 
 #
-# Setup OpenMP
+# Add typecheck target for mfixcore
 #
-if (ENABLE_OMP)
-   find_package (OpenMP REQUIRED)
+include( MFIX_Typecheck )
+add_typecheck_target(mfixcore)
 
-   # Additional compiler flags
-   strip (OpenMP_C_FLAGS)
-   strip (OpenMP_CXX_FLAGS)
-   strip (OpenMP_Fortran_FLAGS)
-
-   target_compile_options ( ${MFIX_LIBNAME} PUBLIC
-      $<$<COMPILE_LANGUAGE:Fortran>:${OpenMP_Fortran_FLAGS}>
-      $<$<COMPILE_LANGUAGE:C>:${OpenMP_C_FLAGS}>
-      $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>
-      )
-
-   # The openMP flags are required also during linking phase
-   # The NON-clean way of achiving this is by adding a flag to the linker
-   # as follows. Notice that in more recent version of CMake, openMP becomes
-   # an imported target, thus provinding a clean way to do this
-   strip (OpenMP_CXX_FLAGS)
-   target_link_libraries( ${MFIX_LIBNAME} PUBLIC ${OpenMP_CXX_FLAGS} )
-else ()
-   # Cray compiler has OMP turned on by default
-   target_compile_options ( ${MFIX_LIBNAME} PUBLIC $<$<CXX_COMPILER_ID:Cray>:-h;noomp> $<$<C_COMPILER_ID:Cray>:-h;noomp> )
-endif()

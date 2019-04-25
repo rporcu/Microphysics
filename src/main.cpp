@@ -173,6 +173,10 @@ int main (int argc, char* argv[])
     // Create EB factories on new grids
     my_mfix.make_eb_factories();
 
+    // Write out EB sruface
+    if(write_eb_surface)
+      my_mfix.WriteEBSurface();
+
     if (solve_dem)
     {
         // Fill level-sets on each level
@@ -212,9 +216,6 @@ int main (int argc, char* argv[])
 
     my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time);
 
-    // Write out EB sruface
-    if(write_eb_surface)
-      my_mfix.WriteEBSurface();
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());

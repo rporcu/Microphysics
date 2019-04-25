@@ -15,84 +15,77 @@ include ( MFIX_Utils )
 #
 # Define the languages used by the project
 #
-enable_language (C)
-enable_language (CXX)
-enable_language (Fortran)
+enable_language(CXX)
+enable_language(Fortran)
 
 #
 # Amrex-related variables
 #
+find_package(Git REQUIRED)
+get_git_info( MFIX_GIT_BRANCH MFIX_GIT_COMMIT )
+set(MFIX_GIT_BRANCH "${MFIX_GIT_BRANCH}" CACHE INTERNAL "MFIX-Exa Git branch")
+set(MFIX_GIT_COMMIT "${MFIX_GIT_COMMIT}" CACHE INTERNAL "MFIX-Exa Git commit")
 
 # AMReX Git variables
-set (AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
-set (AMREX_GIT_COMMIT_MASTER   4eb4e7a25050ca83f02e551fcb9b8a591834395 )
-set (AMREX_GIT_COMMIT_DEVELOP b6201fd19a989be5dc6ee8c35597dfd91b37d2c3 )
-set (AMREX_GIT_TAG)  # The commit id or branch to download
+set(AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git"  CACHE INTERNAL "AMReX Git repository")
+
+set(AMREX_GIT_COMMIT_MASTER
+   4eb4e7a25050ca83f02e551fcb9b8a591834395
+   CACHE INTERNAL
+   "AMReX Git commit for master branch")
+
+set(AMREX_GIT_COMMIT_DEVELOP
+   6452b0c189128831deb0886765de8405b874e194
+   CACHE INTERNAL
+   "AMReX Git commit for development branch")
+
+# Set Git commit to use for AMReX
+if (MFIX_GIT_BRANCH MATCHES "master")
+   set (AMREX_GIT_TAG ${AMREX_GIT_COMMIT_MASTER})
+else ()
+   set (AMREX_GIT_TAG ${AMREX_GIT_COMMIT_DEVELOP})
+endif()
+
+set( AMREX_GIT_COMMIT "${AMREX_GIT_TAG}" CACHE STRING "AMReX git commit to use in superbuild")
+unset( AMREX_GIT_TAG )
+
+message(STATUS "AMReX commit: ${AMREX_GIT_COMMIT}")
 
 #
 # MFIX-related options
 #
-include ( MFIX_Options )
+include( MFIX_Options )
 
 #
 # AMReX-related config options
 #
-set( AMREX_Fortran_FLAGS "" CACHE STRING "User-defined Fortran compiler flags for AMReX (Superbuild only)" )
-
-set( AMREX_CXX_FLAGS "" CACHE STRING "User-defined C++ compiler flags for AMReX (Superbuild only)" )
-
 option( AMREX_ENABLE_PIC "Build position-independent code" NO)
-
 option( AMREX_ENABLE_DP "Enable double precision" YES)
-
 option( AMREX_ENABLE_ASSERTION "Enable assertions" NO)
-
 option( AMREX_ENABLE_BASE_PROFILE "Enable basic profiling" NO)
-
 option( AMREX_ENABLE_TINY_PROFILE "Enable tiny-profiling" NO)
-
 option( AMREX_ENABLE_TRACE_PROFILE "Enable trace-profiling" NO)
-
 option( AMREX_ENABLE_MEM_PROFILE   "Enable memory profiling" NO)
-
 option( AMREX_ENABLE_COMM_PROFILE  "Enable communicator-profiling" NO)
-
 option( AMREX_ENABLE_BACKTRACE "Enable backtracing" NO)
-
 option( AMREX_ENABLE_PROFPARSER "Enable profile parser" NO)
-
 option( AMREX_ENABLE_DP_PARTICLES "Enable double-precision particle data" YES)
 
-set(AMREX_CUDA_ARCH "Auto" CACHE STRING "CUDA architecture (Use 'Auto' for automatic detection)")
-
-set( AMREX_GIT_COMMIT "" CACHE STRING "AMReX git commit to use in superbuild")
-
-#
-# Set the git commit to use for amrex
-#
-get_git_info ( MFIX_GIT_BRANCH MFIX_GIT_COMMIT )
-
-if (AMREX_GIT_COMMIT)
-   set (AMREX_GIT_TAG ${AMREX_GIT_COMMIT})
-else ()
-   if (MFIX_GIT_BRANCH MATCHES "master")
-      set (AMREX_GIT_TAG ${AMREX_GIT_COMMIT_MASTER})
-   else ()
-      set (AMREX_GIT_TAG ${AMREX_GIT_COMMIT_DEVELOP})
-   endif()
+set(CUDA_ARCH_OPTION "")
+if (ENABLE_CUDA)
+   set(AMREX_CUDA_ARCH "Auto" CACHE STRING "CUDA architecture (Use 'Auto' for automatic detection)")
+   set(CUDA_ARCH_OPTION "-DCUDA_ARCH=${AMREX_CUDA_ARCH}")
 endif ()
-
-message (STATUS "AMReX commit: ${AMREX_GIT_TAG}")
 
 # Include cmake config files to build external projects
 include(ExternalProject)
 
 # This modify the dir structure in external project directory
-set_directory_properties ( PROPERTIES EP_BASE ${CMAKE_BINARY_DIR}/amrex )
+set_directory_properties( PROPERTIES EP_BASE ${CMAKE_BINARY_DIR}/amrex )
 
-set (AMREX_SUPERBUILD_INSTALLDIR ${CMAKE_BINARY_DIR}/amrex/installdir)
-set (AMREX_SUPERBUILD_BUILDDIR   ${CMAKE_BINARY_DIR}/amrex/builddir)
-set (AMREX_SUPERBUILD_SOURCEDIR  ${CMAKE_BINARY_DIR}/amrex/sourcedir)
+set(AMREX_SUPERBUILD_INSTALLDIR ${CMAKE_BINARY_DIR}/amrex/installdir)
+set(AMREX_SUPERBUILD_BUILDDIR   ${CMAKE_BINARY_DIR}/amrex/builddir)
+set(AMREX_SUPERBUILD_SOURCEDIR  ${CMAKE_BINARY_DIR}/amrex/sourcedir)
 
 set(USE_CCACHE "")
 find_program(CCACHE_FOUND ccache)
@@ -105,14 +98,14 @@ ExternalProject_Add ( amrex
    BINARY_DIR      ${AMREX_SUPERBUILD_BUILDDIR}
    SOURCE_DIR      ${AMREX_SUPERBUILD_SOURCEDIR}
    GIT_REPOSITORY  ${AMREX_GIT_REPO}
-   GIT_TAG         ${AMREX_GIT_TAG}
+   GIT_TAG         ${AMREX_GIT_COMMIT}
    GIT_PROGRESS    ON
    CMAKE_ARGS
    -DENABLE_PIC=${AMREX_ENABLE_PIC}
    -DENABLE_OMP=${ENABLE_OMP}
    -DENABLE_MPI=${ENABLE_MPI}
    -DENABLE_CUDA=${ENABLE_CUDA}
-   -DCUDA_ARCH=${AMREX_CUDA_ARCH}
+   ${CUDA_ARCH_OPTION}
    -DENABLE_DP=${AMREX_ENABLE_DP}
    -DENABLE_PARTICLES=YES
    -DENABLE_DP_PARTICLES=${AMREX_ENABLE_DP_PARTICLES}
@@ -154,7 +147,7 @@ ExternalProject_Add ( amrex
 #
 # Now have Cmake call itself to set up mfix
 #
-set (MFIX_SUPERBUILD_BUILDDIR   ${CMAKE_BINARY_DIR}/mfix)
+set(MFIX_SUPERBUILD_BUILDDIR   ${CMAKE_BINARY_DIR}/mfix)
 
 
 ExternalProject_Add ( mfix

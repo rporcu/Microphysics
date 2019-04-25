@@ -1,6 +1,5 @@
 set( SGS_TESTS
    FLD01-x FLD01-y FLD01-z
-   FLD01-x-ho FLD01-y-ho FLD01-z-ho
    FLD02-x FLD02-y FLD02-z
    FLD03-x FLD03-y FLD03-z
    DEM01-x DEM01-y DEM01-z
@@ -69,7 +68,6 @@ endforeach( THIS_TEST ${SGS_TESTS} )
 
 set( MGS_TESTS
    FLD01-x FLD01-y FLD01-z
-   FLD01-x-ho FLD01-y-ho FLD01-z-ho
    FLD02-x FLD02-y FLD02-z
    FLD03-x FLD03-y FLD03-z
    DEM06-x DEM06-y DEM06-z
@@ -123,7 +121,6 @@ endforeach( THIS_TEST ${MGS_TESTS} )
 
 set( TGS_TESTS
    FLD01-x FLD01-y FLD01-z
-   FLD01-x-ho FLD01-y-ho FLD01-z-ho
    FLD02-x FLD02-y FLD02-z
    FLD03-x FLD03-y FLD03-z
    DEM06-x DEM06-y DEM06-z
@@ -223,7 +220,6 @@ endif ()
 
 set( TGM_TESTS
    FLD01-x FLD01-y FLD01-z
-   FLD01-x-ho FLD01-y-ho FLD01-z-ho
    FLD02-x FLD02-y FLD02-z
    FLD03-x FLD03-y FLD03-z
    DEM06-x DEM06-y DEM06-z
@@ -278,7 +274,6 @@ endif()
 if ( AMREX_ENABLE_MPI )
    set( MGP_TESTS
       FLD01-x FLD01-y FLD01-z
-      FLD01-x-ho FLD01-y-ho FLD01-z-ho
       FLD02-x FLD02-y FLD02-z
       FLD03-x FLD03-y FLD03-z
       DEM06-x DEM06-y DEM06-z
