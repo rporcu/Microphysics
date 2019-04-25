@@ -565,7 +565,7 @@ private:
      Real mac_mg_atol = 1.0e-14;
 
      // Max coarsening level
-     int  mac_mg_max_coarsening_level = 0;
+     int  mac_mg_max_coarsening_level = 100;
      // ***************************************************************
 
      // ***************************************************************
@@ -584,7 +584,7 @@ private:
      Real diff_mg_atol = 1.0e-14;
 
      // Max coarsening level
-     int  diff_mg_max_coarsening_level = 0;
+     int  diff_mg_max_coarsening_level = 100;
      // ***************************************************************
 
      // Tolerance to check for steady state
