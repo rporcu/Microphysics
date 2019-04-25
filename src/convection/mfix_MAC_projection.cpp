@@ -110,6 +110,9 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    macproj.setDomainBC( ppe_lobc, ppe_hibc );
    macproj.setVerbose ( mac_mg_verbose);
 
+   // macproj doesn't have this yet
+   // macproj.setFinalSmooth(mac_mg_nuf);
+
    // The default bottom solver is BiCG
    // Other options include:
    ///   Hypre IJ AMG solver
@@ -117,11 +120,11 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    ///   regular smoothing
    //    macproj.getMLMG().setBottomSolver(MLMG::BottomSolver::smoother);
 
-   if (bottom_solver_type == "smoother")
+   if (mac_bottom_solver_type == "smoother")
    {
       macproj.setBottomSolver(MLMG::BottomSolver::smoother);
    }
-   else if (bottom_solver_type == "hypre")
+   else if (mac_bottom_solver_type == "hypre")
    {
       macproj.setBottomSolver(MLMG::BottomSolver::hypre);
    }

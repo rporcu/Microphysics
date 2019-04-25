@@ -39,12 +39,13 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_max_fmg_iter"        , nodal_mg_max_fmg_iter );
         pp.query( "mg_rtol"                , nodal_mg_rtol );
         pp.query( "mg_atol"                , nodal_mg_atol );
+        pp.query( "mg_nuf"                 , nodal_mg_nuf );
         pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
         pp.query( "mg_use_hypre"           , nodal_use_hypre );
 
         // Default bottom solver is bicgstab, but alternatives are "smoother" or "hypre"
-        bottom_solver_type = "bicgstab";
-        pp.query( "bottom_solver_type",  bottom_solver_type );
+        nodal_bottom_solver_type = "bicgstab";
+        pp.query( "bottom_solver_type",  nodal_bottom_solver_type );
 
         // Tolerance to check for steady state (projection only)
         pp.query( "steady_state_tol", steady_state_tol );
@@ -73,8 +74,12 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_verbose"   , mac_mg_verbose );
         pp.query( "mg_rtol"      , mac_mg_rtol );
         pp.query( "mg_atol"      , mac_mg_atol );
+        pp.query( "mg_nuf"       , mac_mg_nuf );
         pp.query( "mg_max_iter"  , mac_mg_max_iter );
         pp.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
+
+        mac_bottom_solver_type = "bicgstab";
+        pp.query( "bottom_solver_type", mac_bottom_solver_type );
 
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
                             load_balance_type == "KDTree"    ||
@@ -129,6 +134,10 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         ParmParse pp("diffusion");
         pp.query( "mg_verbose"   , diff_mg_verbose );
         pp.query( "mg_cg_verbose", diff_mg_cg_verbose );
+        pp.query( "mg_nuf"       , diff_mg_nuf );
+
+        diff_bottom_solver_type = "bicgstab";
+        pp.query( "bottom_solver_type", diff_bottom_solver_type );
     }
 
     solve_fluid  = solve_fluid_in;

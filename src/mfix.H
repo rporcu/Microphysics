@@ -507,9 +507,6 @@ private:
      Vector< std::unique_ptr<MultiFab> > m_v_mac;
      Vector< std::unique_ptr<MultiFab> > m_w_mac;
 
-     // What solver to use as the bottom solver in the MLMG solves.
-     std::string bottom_solver_type;
-
      // used if load_balance_type == "KnapSack"
      Vector<std::unique_ptr<MultiFab> > particle_cost;
      Vector<std::unique_ptr<MultiFab> > fluid_cost;
@@ -536,6 +533,8 @@ private:
      int  nodal_mg_max_fmg_iter = 0;
      Real nodal_mg_rtol = 1.0e-11;
      Real nodal_mg_atol = 1.0e-14;
+     int  nodal_mg_nuf = 10;
+     std::string nodal_bottom_solver_type;
 
      // Max coarsening level
      int  nodal_mg_max_coarsening_level = 100;
@@ -563,6 +562,8 @@ private:
      int  mac_mg_max_fmg_iter = 0;
      Real mac_mg_rtol = 1.0e-11;
      Real mac_mg_atol = 1.0e-14;
+     int  mac_mg_nuf = 10;
+     std::string mac_bottom_solver_type;
 
      // Max coarsening level
      int  mac_mg_max_coarsening_level = 100;
@@ -582,6 +583,8 @@ private:
      int  diff_mg_max_fmg_iter = 0;
      Real diff_mg_rtol = 1.0e-11;
      Real diff_mg_atol = 1.0e-14;
+     int  diff_mg_nuf = 10;
+     std::string diff_bottom_solver_type;
 
      // Max coarsening level
      int  diff_mg_max_coarsening_level = 100;
