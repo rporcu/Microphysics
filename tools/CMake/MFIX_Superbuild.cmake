@@ -71,8 +71,11 @@ option( AMREX_ENABLE_BACKTRACE "Enable backtracing" NO)
 option( AMREX_ENABLE_PROFPARSER "Enable profile parser" NO)
 option( AMREX_ENABLE_DP_PARTICLES "Enable double-precision particle data" YES)
 
-set(AMREX_CUDA_ARCH "Auto" CACHE STRING "CUDA architecture (Use 'Auto' for automatic detection)")
-
+set(CUDA_ARCH_OPTION "")
+if (ENABLE_CUDA)
+   set(AMREX_CUDA_ARCH "Auto" CACHE STRING "CUDA architecture (Use 'Auto' for automatic detection)")
+   set(CUDA_ARCH_OPTION "-DCUDA_ARCH=${AMREX_CUDA_ARCH}")
+endif ()
 
 # Include cmake config files to build external projects
 include(ExternalProject)
@@ -102,7 +105,7 @@ ExternalProject_Add ( amrex
    -DENABLE_OMP=${ENABLE_OMP}
    -DENABLE_MPI=${ENABLE_MPI}
    -DENABLE_CUDA=${ENABLE_CUDA}
-   -DCUDA_ARCH=${AMREX_CUDA_ARCH}
+   ${CUDA_ARCH_OPTION}
    -DENABLE_DP=${AMREX_ENABLE_DP}
    -DENABLE_PARTICLES=YES
    -DENABLE_DP_PARTICLES=${AMREX_ENABLE_DP_PARTICLES}
