@@ -18,4 +18,3 @@ target_sources( mfixcore
    get_eb_walls.f90
    writeEBsurface.cpp
    )
-print(CMAKE_CURRENT_SOURCE_DIR)
