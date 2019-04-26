@@ -3,6 +3,9 @@
 #
 macro (add_tags_targets )
 
+   message(WARNING "Skipping TAGS generation for now")
+   return()
+
   if (( NOT DEFINED AMREX_INSTALL_DIR ) OR
       ( NOT PROJECT_SOURCE_DIR ) )
     message (AUTHOR_WARNING "Some paths are not defined")
