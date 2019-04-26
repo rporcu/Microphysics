@@ -85,8 +85,6 @@ else ()
    list(APPEND CMAKE_MODULE_PATH ${amrex_src_dir}/Tools/CMake)
 endif ()
 
-print(CMAKE_MODULE_PATH)
-
 
 get_git_info ( )
 check_build_tree_path ()
@@ -101,6 +99,7 @@ set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
 set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
 if (ENABLE_CUDA)
+   include(AMReX_SetupCUDA)
    setup_cuda()
 endif ()
 
