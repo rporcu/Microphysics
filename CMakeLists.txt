@@ -77,20 +77,28 @@ else ()
       GIT_TAG                mr/cmake     
       )
 
-   FetchContent_MakeAvailable(amrex)
-   FetchContent_GetProperties(amrex SOURCE_DIR amrex_src_dir)
-   get_directory_property(amrex_targets DIRECTORY ${amrex_src_dir}/Src BUILDSYSTEM_TARGETS)
+   if (NOT amrex_POPULATED)
+      FetchContent_Populate(amrex)
+      message(STATUS "Done cloning AMReX")
+      
+      list(APPEND CMAKE_MODULE_PATH ${amrex_SOURCE_DIR}/Tools/CMake)
 
-   foreach (_target IN LISTS amrex_targets )
-      add_library(AMReX::${_target} ALIAS ${_target})
-   endforeach ()
-   
+      print(ENABLE_CUDA)
+      # 
+      if(ENABLE_CUDA)
+         include(AMReX_SetupCUDA)
+      endif ()
+      
+      add_subdirectory(${amrex_SOURCE_DIR} ${amrex_BINARY_DIR})
+      
+      get_directory_property(amrex_targets DIRECTORY ${amrex_SOURCE_DIR}/Src BUILDSYSTEM_TARGETS)
 
-   list(APPEND CMAKE_MODULE_PATH ${amrex_src_dir}/Tools/CMake)
-
-   if (ENABLE_CUDA)
-      include(AMReX_SetupCUDA)
+      foreach (_target IN LISTS amrex_targets )
+         add_library(AMReX::${_target} ALIAS ${_target})
+      endforeach ()
+      
    endif ()
+   
   
 endif ()
 
