@@ -50,6 +50,10 @@ if (AMReX_FOUND)
       message (WARNING "MFIX build type (${CMAKE_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
    endif ()
 
+   if (ENABLE_CUDA)
+      setup_cuda()
+   endif ()
+   
 else ()
 
    message(STATUS "No AMReX installation found: cloning AMReX repo")
@@ -83,6 +87,11 @@ else ()
    
 
    list(APPEND CMAKE_MODULE_PATH ${amrex_src_dir}/Tools/CMake)
+
+   if (ENABLE_CUDA)
+      include(AMReX_SetupCUDA)
+   endif ()
+  
 endif ()
 
 
@@ -98,10 +107,6 @@ set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
 
 set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
-if (ENABLE_CUDA)
-   include(AMReX_SetupCUDA)
-   setup_cuda()
-endif ()
 
 #
 # Core MFIX library
