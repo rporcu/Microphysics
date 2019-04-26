@@ -9,10 +9,11 @@ project(MFIX-Exa
 
 
 # Set the search path for cmake modules
-set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake )
+set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake )
 
 # Load utilities module
 include( MFIX_Utils )
+
 find_package(AMReX 19.03.1.243 CONFIG QUIET)
 
 if (AMReX_FOUND)
@@ -23,8 +24,6 @@ if (AMReX_FOUND)
    include( MFIX_Options )
 
    echo_amrex_config_options ()
-
-   list(APPEND CMAKE_MODULE_PATH ${AMREX_MODULES_PATH})
 
    if ( NOT ( AMREX_ENABLE_PARTICLES AND AMREX_ENABLE_AMRDATA
             AND AMREX_ENABLE_EB) )
@@ -71,9 +70,7 @@ else ()
    FetchContent_Declare(
       amrex
       GIT_REPOSITORY         ${AMREX_GIT_REPO}
-      GIT_TAG                mr/cmake
-      # FETCHCONTENT_QUIET     OFF
-      
+      GIT_TAG                mr/cmake     
       )
 
    FetchContent_MakeAvailable(amrex)
@@ -85,7 +82,10 @@ else ()
    endforeach ()
    
 
+   list(APPEND CMAKE_MODULE_PATH ${amrex_src_dir}/Tools/CMake)
 endif ()
+
+print(CMAKE_MODULE_PATH)
 
 
 get_git_info ( )
