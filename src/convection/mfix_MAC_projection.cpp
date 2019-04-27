@@ -107,8 +107,9 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    //
    MacProjector macproj( vel, GetVecOfArrOfPtrsConst(bcoeff_cc), geom);
 
-   macproj.setDomainBC( ppe_lobc, ppe_hibc );
-   macproj.setVerbose ( mac_mg_verbose);
+   macproj.setDomainBC  ( ppe_lobc, ppe_hibc );
+   macproj.setVerbose   ( mac_mg_verbose);
+   macproj.setCGVerbose ( mac_mg_cg_verbose);
 
    // macproj doesn't have this yet
    // macproj.setFinalSmooth(mac_mg_nuf);

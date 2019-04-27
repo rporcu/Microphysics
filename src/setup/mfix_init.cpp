@@ -72,6 +72,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
         ParmParse pp_mac("mac");
         pp_mac.query( "mg_verbose"   , mac_mg_verbose );
+        pp_mac.query( "mg_cg_verbose", mac_mg_cg_verbose );
         pp_mac.query( "mg_rtol"      , mac_mg_rtol );
         pp_mac.query( "mg_atol"      , mac_mg_atol );
         pp_mac.query( "mg_nuf"       , mac_mg_nuf );
