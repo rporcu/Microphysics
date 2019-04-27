@@ -1,4 +1,4 @@
-# Run time pf simulation
+# Ru time pf simulation
 amr.stop_time = 10.01
 ## mfix.fixed_dt = 1
 
