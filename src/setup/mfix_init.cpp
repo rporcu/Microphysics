@@ -41,9 +41,8 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_atol"                , nodal_mg_atol );
         pp.query( "mg_nuf"                 , nodal_mg_nuf );
         pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
-        pp.query( "mg_use_hypre"           , nodal_use_hypre );
 
-        // Default bottom solver is bicgstab, but alternatives are "smoother" or "hypre"
+        // Default bottom solver is bicgstab, but alternatives are "smoother", "cg" or "hypre"
         nodal_bottom_solver_type = "bicgstab";
         pp.query( "bottom_solver_type",  nodal_bottom_solver_type );
 

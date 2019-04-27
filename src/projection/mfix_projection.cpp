@@ -166,7 +166,14 @@ mfix::mfix_solve_poisson_equation ( Vector< std::unique_ptr<MultiFab> >& this_ph
     if (nodal_bottom_solver_type == "smoother")
     {
        nodal_solver->setBottomSolver(MLMG::BottomSolver::smoother);
-       nodal_solver->setFinalSmooth(10);
+    }
+    else if (nodal_bottom_solver_type == "bicg")
+    {
+       nodal_solver->setBottomSolver(MLMG::BottomSolver::bicgstab);
+    }
+    else if (nodal_bottom_solver_type == "cg")
+    {
+       nodal_solver->setBottomSolver(MLMG::BottomSolver::cg);
     }
     else if (nodal_bottom_solver_type == "hypre")
     {
