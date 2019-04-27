@@ -91,10 +91,9 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
    }
 
    // Loop over the velocity components
+   amrex::Print() << "Diffusing each velocity component " << std::endl;
    for (int i = 0; i < 3; i++)
    {
-      amrex::Print() << "Diffusing velocity component " << i << std::endl;
-
       MLMG  solver(matrix);
 
       // Set the verbosity
