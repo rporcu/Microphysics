@@ -124,6 +124,18 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    {
       macproj.setBottomSolver(MLMG::BottomSolver::smoother);
    }
+   else if (mac_bottom_solver_type == "cg")
+   {
+      macproj.setBottomSolver(MLMG::BottomSolver::cg);
+   }
+   else if (mac_bottom_solver_type == "bicgcg")
+   {
+      macproj.setBottomSolver(MLMG::BottomSolver::bicgcg);
+   }
+   else if (mac_bottom_solver_type == "cgbicg")
+   {
+      macproj.setBottomSolver(MLMG::BottomSolver::cgbicg);
+   }
    else if (mac_bottom_solver_type == "hypre")
    {
       macproj.setBottomSolver(MLMG::BottomSolver::hypre);

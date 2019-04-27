@@ -42,8 +42,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_nuf"                 , nodal_mg_nuf );
         pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
 
-        // Default bottom solver is bicgstab, but alternatives are "smoother", "cg" or "hypre"
-        nodal_bottom_solver_type = "bicgstab";
+        // Default bottom solver here is bicgcg, but alternatives are 
+        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
+        nodal_bottom_solver_type = "bicgcg";
         pp.query( "bottom_solver_type",  nodal_bottom_solver_type );
 
         // Tolerance to check for steady state (projection only)
@@ -77,7 +78,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp_mac.query( "mg_max_iter"  , mac_mg_max_iter );
         pp_mac.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
 
-        mac_bottom_solver_type = "bicgstab";
+        // Default bottom solver here is bicgcg, but alternatives are 
+        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
+        mac_bottom_solver_type = "bicgcg";
         pp_mac.query( "bottom_solver_type", mac_bottom_solver_type );
 
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
