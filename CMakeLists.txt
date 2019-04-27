@@ -74,7 +74,7 @@ else ()
    FetchContent_Declare(
       amrex
       GIT_REPOSITORY         ${AMREX_GIT_REPO}
-      GIT_TAG                mr/cmake     
+      GIT_TAG                58d8b8e255b0e60b771e03e522ef2f0c69a11cdd     
       )
 
    if (NOT amrex_POPULATED)
