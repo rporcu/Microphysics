@@ -20,8 +20,6 @@ diffusion.mg_verbose    = 0
 mfix.mg_verbose         = 1
 mfix.mg_cg_verbose      = 0
 
-mfix.bottom_solver_type = bicg
-
 #_______________________________________________________________________
 # Geometry / grids / tiles
 
