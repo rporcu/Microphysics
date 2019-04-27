@@ -105,6 +105,16 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       solver.setMaxIter (diff_mg_max_iter);
       solver.setMaxFmgIter (diff_mg_max_fmg_iter);
       solver.setCGMaxIter (diff_mg_cg_maxiter);
+      solver.setFinalSmooth(diff_mg_nuf);
+
+      if (diff_bottom_solver_type == "smoother")
+      {
+         solver.setBottomSolver(MLMG::BottomSolver::smoother);
+      }
+      else if (diff_bottom_solver_type == "hypre")
+      {
+         solver.setBottomSolver(MLMG::BottomSolver::hypre);
+      }
 
       // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
       for (int lev = 0; lev < nlev; lev++)

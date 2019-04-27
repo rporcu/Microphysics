@@ -107,8 +107,12 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    //
    MacProjector macproj( vel, GetVecOfArrOfPtrsConst(bcoeff_cc), geom);
 
-   macproj.setDomainBC( ppe_lobc, ppe_hibc );
-   macproj.setVerbose ( mac_mg_verbose);
+   macproj.setDomainBC  ( ppe_lobc, ppe_hibc );
+   macproj.setVerbose   ( mac_mg_verbose);
+   macproj.setCGVerbose ( mac_mg_cg_verbose);
+
+   // macproj doesn't have this yet
+   // macproj.setFinalSmooth(mac_mg_nuf);
 
    // The default bottom solver is BiCG
    // Other options include:
@@ -117,11 +121,23 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
    ///   regular smoothing
    //    macproj.getMLMG().setBottomSolver(MLMG::BottomSolver::smoother);
 
-   if (bottom_solver_type == "smoother")
+   if (mac_bottom_solver_type == "smoother")
    {
       macproj.setBottomSolver(MLMG::BottomSolver::smoother);
    }
-   else if (bottom_solver_type == "hypre")
+   else if (mac_bottom_solver_type == "cg")
+   {
+      macproj.setBottomSolver(MLMG::BottomSolver::cg);
+   }
+   else if (mac_bottom_solver_type == "bicgcg")
+   {
+      macproj.setBottomSolver(MLMG::BottomSolver::bicgcg);
+   }
+   else if (mac_bottom_solver_type == "cgbicg")
+   {
+      macproj.setBottomSolver(MLMG::BottomSolver::cgbicg);
+   }
+   else if (mac_bottom_solver_type == "hypre")
    {
       macproj.setBottomSolver(MLMG::BottomSolver::hypre);
    }

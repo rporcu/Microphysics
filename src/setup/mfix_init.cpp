@@ -39,12 +39,13 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_max_fmg_iter"        , nodal_mg_max_fmg_iter );
         pp.query( "mg_rtol"                , nodal_mg_rtol );
         pp.query( "mg_atol"                , nodal_mg_atol );
+        pp.query( "mg_nuf"                 , nodal_mg_nuf );
         pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
-        pp.query( "mg_use_hypre"           , nodal_use_hypre );
 
-        // Default bottom solver is bicgstab, but alternatives are "smoother" or "hypre"
-        bottom_solver_type = "bicgstab";
-        pp.query( "bottom_solver_type",  bottom_solver_type );
+        // Default bottom solver here is bicgcg, but alternatives are 
+        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
+        nodal_bottom_solver_type = "bicgcg";
+        pp.query( "bottom_solver_type",  nodal_bottom_solver_type );
 
         // Tolerance to check for steady state (projection only)
         pp.query( "steady_state_tol", steady_state_tol );
@@ -67,11 +68,18 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("load_balance_fluid", load_balance_fluid);
 
         ParmParse pp_mac("mac");
-        pp.query( "mg_verbose"   , mac_mg_verbose );
-        pp.query( "mg_rtol"      , mac_mg_rtol );
-        pp.query( "mg_atol"      , mac_mg_atol );
-        pp.query( "mg_max_iter"  , mac_mg_max_iter );
-        pp.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
+        pp_mac.query( "mg_verbose"   , mac_mg_verbose );
+        pp_mac.query( "mg_cg_verbose", mac_mg_cg_verbose );
+        pp_mac.query( "mg_rtol"      , mac_mg_rtol );
+        pp_mac.query( "mg_atol"      , mac_mg_atol );
+        pp_mac.query( "mg_nuf"       , mac_mg_nuf );
+        pp_mac.query( "mg_max_iter"  , mac_mg_max_iter );
+        pp_mac.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
+
+        // Default bottom solver here is bicgcg, but alternatives are 
+        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
+        mac_bottom_solver_type = "bicgcg";
+        pp_mac.query( "bottom_solver_type", mac_bottom_solver_type );
 
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
                             load_balance_type == "KDTree"    ||
@@ -93,7 +101,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         if (load_balance_type == "KnapSack")
             pp.query("knapsack_nmax", knapsack_nmax);
 
-
         // Parameters used be the level-set algorithm. Refer to LSFactory (or
         // mfix.H) for more details:
         //   -> refinement: how well resolved (fine) the (level-set/EB-facet)
@@ -103,9 +110,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         //                  problem domain the grid extends (avoids edge cases
         //                  in physical domain)
         pp.query("levelset__refinement", levelset__refinement);
-        //pp.query("levelset__eb_refinement", levelset__eb_refinement);
-        //pp.query("levelset__pad", levelset__pad);
-        //pp.query("levelset__eb_pad", levelset__eb_pad);
 
         // Not needed here... the role of refining EB is filled with AMR level-set
         levelset__eb_refinement = 1;
@@ -123,9 +127,13 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 
     {
-        ParmParse pp("diffusion");
-        pp.query( "mg_verbose"   , diff_mg_verbose );
-        pp.query( "mg_cg_verbose", diff_mg_cg_verbose );
+        ParmParse pp_diff("diffusion");
+        pp_diff.query( "mg_verbose"   , diff_mg_verbose );
+        pp_diff.query( "mg_cg_verbose", diff_mg_cg_verbose );
+        pp_diff.query( "mg_nuf"       , diff_mg_nuf );
+
+        diff_bottom_solver_type = "bicgstab";
+        pp_diff.query( "bottom_solver_type", diff_bottom_solver_type );
     }
 
     solve_fluid  = solve_fluid_in;
