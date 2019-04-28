@@ -183,7 +183,6 @@ void mfix::mfix_calc_drag_fluid(Real time)
                                   &ro, &mu, &beta, &iloc, &jloc, &kloc, &rad, &vol, &den);
 
                             particle.rdata(realData::dragx) = beta;
-                            if (ip < 100) std::cout << "BETA " << ip << " " << beta << std::endl;
                         }
                     }
                     else
@@ -265,8 +264,6 @@ void mfix::mfix_calc_drag_fluid(Real time)
                                         &beta, &iloc, &jloc, &kloc, &rad, &vol, &den);
 
                             particle.rdata(realData::dragx) = beta;
-                            std::cout << "BETA " << beta << std::endl;
-                            exit(0);
                         }
                     }
                 }
