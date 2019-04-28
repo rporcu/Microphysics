@@ -32,57 +32,15 @@ extern "C"
         int* grav
         );
 
-    void mfix_deposit_cic_eb(
-        const amrex_particle_real*, int ns, int np,
-        amrex_real* vol,          const int* vlo, const int* vhi,
-        const amrex_real* vratio, const int* slo, const int* shi,
-        const void*        flags, const int* flo, const int* fhi,
-        const amrex_real* plo, const amrex_real* dx,
-        const int* fortran_comp
-        );
-
-
-    void mfix_multi_deposit_cic_eb(
-        const amrex_particle_real*, int ns, int np,
-        amrex_real* mf_bx, amrex_real* mf_bu,
-        const int* lo, const int* hi,
-        const amrex_real* vratio, const int* vlo, const int* vhi,
-        const void*        flags, const int* flo, const int* fhi,
-        const amrex_real* plo, const amrex_real* dx,
-        const int* beta_comp, const int* beta_vel_comp
-        );
-
-    void mfix_interpolate_cic(
-        const amrex_particle_real*, int ns, int np,
-        const amrex::Real* acc, const int* lo, const int* hi, int ncomp,
-        const amrex::Real* plo, const amrex::Real* dx
-        );
-
-    void calc_particle_beta(
-        const amrex::Real*  ep_g, const int* slo, const int* shi,
-        const amrex::Real* ro_g,  const amrex::Real* mu_g,
-        const amrex::Real* vel_g, const int* ulo, const int* uhi,
-        const int* np, void* particles,
-        const amrex::Real* x0, const amrex::Real* dx
-        );
-
-    void calc_drag_particle(
-        const amrex::Real* gp , const int* gplo , const int* gphi,
-        const amrex::Real* gp0,
-        const amrex::Real* vel, const int* ulo, const int* uhi,
-        const int* np, void* particles, const amrex::Real* dx,
-        const amrex::Real* x0
-        );
-
-
-    void calc_drag_particle_eb(
-        const amrex::Real* gp , const int* gplo , const int* gphi,
-        const amrex::Real* gp0,
-        const amrex::Real* vel, const int* ulo,   const int* uhi,
-        const void*  flags    , const int* flo,   const int* fhi,
-        const int* np, void* particles, const amrex::Real* dx,
-        const amrex::Real* x0
-        );
+    void des_drag_gp(
+        const int* p_id, 
+        const amrex::Real* particle_vel ,
+        const amrex::Real*    fluid_vel ,
+        const amrex::Real* ep_g, const amrex::Real* ro, 
+        const amrex::Real* mu, const amrex::Real* f_gp, 
+        const int* i, const int* j, const int* k, 
+        const amrex::Real* rad, const amrex::Real* vol, 
+        const amrex::Real* ro_s);
 
     void calc_particle_collisions(
         void* rparticles, const int* nrp,

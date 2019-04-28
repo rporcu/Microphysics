@@ -4,7 +4,6 @@ target_include_directories( mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   calc_particle_beta.f90
    flip_particle_vol.f90
    set_gradp_bcs.f90 
    get_collision_coefficients.f90 
