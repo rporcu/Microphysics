@@ -297,7 +297,7 @@ void mfix::fill_eb_levelsets ()
             // DO NOT simply regrid the implicit_functions MultiFab <= far from
             // the EB, the IF might not be defined
             MultiFab impfunc(lsf.get_ls_ba(), lsf.get_dm(), 1, lsf.get_ls_pad());
-            eb_levels[0]->fillLevelSet(impfunc, lsf.get_ls_geom());
+            eb_levels[1]->fillLevelSet(impfunc, lsf.get_ls_geom());
             impfunc.FillBoundary(lsf.get_ls_geom().periodicity());
             // VisMF::Write(impfunc, "imfunc");
             // exit(0);

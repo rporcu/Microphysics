@@ -140,6 +140,16 @@ public:
         }
 
 
+        if (nlev == 1)
+        {
+            Box dom_ls = geom[0].Domain();
+            dom_ls.refine(levelset__refinement);
+            Geometry geom_ls(dom_ls);
+            Vector<Geometry> vgeom{geom_ls};
+            eb_levels[1] = LSCore<F>::BuildEBLevel(gshop, 0, vgeom, 100, 0);
+        }
+
+
         /************************************************************************
          *                                                                      *
          * Fill each level with implicit function values                        *
