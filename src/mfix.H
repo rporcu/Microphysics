@@ -244,6 +244,11 @@ public:
 
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
 
+     void mfix_calc_volume_fraction(Real & sum_vol);
+
+     template <typename F>
+     void mfix_calc_drag_fluid(F DragFunc, Real time);
+
 protected:
 
      //! Tagging cells for refinement
@@ -308,11 +313,6 @@ protected:
                         const Vector<BCRec> & bcr);
      void GetDataVel   (int lev, Real time, Vector<MultiFab *> & data,
                         Vector<Real> & datatime);
-
-     void mfix_calc_volume_fraction(Real & sum_vol);
-
-     template <typename F>
-     void mfix_calc_drag_fluid(F DragFunc, Real time);
 
      void mfix_calc_drag_fluid(Real time);
      void mfix_calc_drag_particle(Real time);
