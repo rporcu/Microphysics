@@ -287,9 +287,21 @@ void mfix::mfix_calc_drag_fluid(F DragFunc, Real time)
                             pvel[1] = particle.rdata(realData::vely);
                             pvel[2] = particle.rdata(realData::velz);
 
-                            Real beta; 
-                            des_drag_gp(&p_id, pvel, velfp, &ep, &ro, &mu, 
-                                        &beta, &iloc, &jloc, &kloc, &rad, &vol, &den);
+                            Real rop_g = ro * ep;
+
+                            Real vslp[3];
+                            vslp[0] = velfp[0] - pvel[0];
+                            vslp[1] = velfp[1] - pvel[1];
+                            vslp[2] = velfp[2] - pvel[2];
+                            
+                            Real vrel = sqrt(dot_product(vslp, vslp));
+                            Real dpm = 2.0*rad;
+                            Real phis = 1.0 - ep;
+                            
+                            Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis); 
+
+                            //                            des_drag_gp(&p_id, pvel, velfp, &ep, &ro, &mu, 
+                            //                                        &beta, &iloc, &jloc, &kloc, &rad, &vol, &den);
 
                             particle.rdata(realData::dragx) = beta;
                         }
