@@ -310,6 +310,10 @@ protected:
                         Vector<Real> & datatime);
 
      void mfix_calc_volume_fraction(Real & sum_vol);
+
+     template <typename F>
+     void mfix_calc_drag_fluid(F DragFunc, Real time);
+
      void mfix_calc_drag_fluid(Real time);
      void mfix_calc_drag_particle(Real time);
 

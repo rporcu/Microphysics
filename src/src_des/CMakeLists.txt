@@ -11,4 +11,5 @@ target_sources( mfixcore
    particle_generator.f90
    particle_mod.f90
    drag_mod.f90
+   des_drag_K.H
    )
