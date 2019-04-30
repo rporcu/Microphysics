@@ -15,20 +15,18 @@ void mfix::mfix_calc_drag_fluid(Real time)
 {
     if (true)
     {
-        mfix_calc_drag_fluid(compute_drag_bvk, time);
+        mfix_calc_drag_fluid(ComputeDragBVK(), time);
     }
     else
     {
-        mfix_calc_drag_fluid(compute_drag_koch_hill, time);        
-    }    
+        mfix_calc_drag_fluid(ComputeDragKochHill(), time);        
+    }
 }
 
 template <typename F>
 void mfix::mfix_calc_drag_fluid(F DragFunc, Real time)
 {
     BL_PROFILE("mfix::mfix_calc_drag_fluid()");
-
-    Real velfp[3];
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -109,9 +107,6 @@ void mfix::mfix_calc_drag_fluid(F DragFunc, Real time)
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         {
-            // Create fab to host reconstructed velocity field
-            FArrayBox vel_r;
-
             for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
             {
                 auto& particles = pti.GetArrayOfStructs();
@@ -131,20 +126,15 @@ void mfix::mfix_calc_drag_fluid(F DragFunc, Real time)
                 const auto&  ro_array =  ro_ptr->array(pti);
                 const auto&  mu_array =  mu_ptr->array(pti);
 
+                      auto particles_ptr = particles().dataPtr();
+
                 if (flags.getType(amrex::grow(bx,0)) != FabType::covered)
                 {
                     if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
                     {
-                        // calc_particle_beta( BL_TO_FORTRAN_ANYD((*ep_ptr)[pti]),
-                        //                     (*ro_ptr)[pti].dataPtr(),
-                        //                     (*mu_ptr)[pti].dataPtr(),
-                        //                     BL_TO_FORTRAN_ANYD((*vel_ptr)[pti]),
-                        //                     &np, particles.data(),
-                        //                     geom[lev].ProbLo(), geom[lev].CellSize());
-
-                        for (int ip = 0; ip < np; ++ip)
+                        AMREX_FOR_1D( np, ip,
                         {
-                            MFIXParticleContainer::ParticleType& particle = particles[ip];
+                            MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
 
                             // This part was in trilinear_interp before
                             // Pick upper cell in the stencil
@@ -164,6 +154,7 @@ void mfix::mfix_calc_drag_fluid(F DragFunc, Real time)
                             Real sy_hi = ly - j;  Real sy_lo = 1.0 - sy_hi;
                             Real sz_hi = lz - k;  Real sz_lo = 1.0 - sz_hi;
 
+                            Real velfp[3];
                             for (int n = 0; n < 3; n++)
                                velfp[n] = sx_lo*sy_lo*sz_lo*vel_array(i-1, j-1, k-1,n) +
                                           sx_lo*sy_lo*sz_hi*vel_array(i-1, j-1, k  ,n) +
@@ -203,20 +194,16 @@ void mfix::mfix_calc_drag_fluid(F DragFunc, Real time)
                             
                             Real vrel = sqrt(dot_product(vslp, vslp));
                             Real dpm = 2.0*rad;
-                            Real phis = 1.0 - ep;
-                            
+                            Real phis = 1.0 - ep;   
                             Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis); 
-
-                            // des_drag_gp(&p_id, pvel, velfp, &ep, 
-                            //  &ro, &mu, &beta, &iloc, &jloc, &kloc, &rad, &vol, &den);
-
                             particle.rdata(realData::dragx) = beta;
-                        }
+                        });
                     }
                     else
                     {
                         Box gbox = amrex::grow(bx,2);
-                        vel_r.resize(gbox,3);
+                        FArrayBox vel_r(gbox,3);
+                        Elixir vel_r_eli = vel_r.elixir();
 
                         reconstruct_velocity( BL_TO_FORTRAN_ANYD(vel_r),
                                               BL_TO_FORTRAN_ANYD((*vel_ptr)[pti]),
@@ -226,18 +213,11 @@ void mfix::mfix_calc_drag_fluid(F DragFunc, Real time)
                                               geom[lev].ProbLo(), geom[lev].CellSize(),
                                               &band_width);
 
-                        // calc_particle_beta( BL_TO_FORTRAN_ANYD((*ep_ptr)[pti]),
-                        //                     (*ro_ptr)[pti].dataPtr(),
-                        //                     (*mu_ptr)[pti].dataPtr(),
-                        //                     BL_TO_FORTRAN_ANYD(vel_r),
-                        //                     &np, particles.data(),
-                        //                     geom[lev].ProbLo(), geom[lev].CellSize());
-
                         const auto& vel_array = vel_r.array();
 
-                        for (int ip = 0; ip < np; ++ip)
+                        AMREX_FOR_1D( np, ip,
                         {
-                            MFIXParticleContainer::ParticleType& particle = particles[ip];
+                            MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
 
                             // This part was in trilinear_interp before
                             // Pick upper cell in the stencil
@@ -256,6 +236,8 @@ void mfix::mfix_calc_drag_fluid(F DragFunc, Real time)
                             Real sx_hi = lx - i;  Real sx_lo = 1.0 - sx_hi;
                             Real sy_hi = ly - j;  Real sy_lo = 1.0 - sy_hi;
                             Real sz_hi = lz - k;  Real sz_lo = 1.0 - sz_hi;
+
+                            Real velfp[3];                                
 
                             for (int n = 0; n < 3; n++)
                                velfp[n] = sx_lo*sy_lo*sz_lo*vel_array(i-1, j-1, k-1,n) +
@@ -299,12 +281,8 @@ void mfix::mfix_calc_drag_fluid(F DragFunc, Real time)
                             Real phis = 1.0 - ep;
                             
                             Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis); 
-
-                            //                            des_drag_gp(&p_id, pvel, velfp, &ep, &ro, &mu, 
-                            //                                        &beta, &iloc, &jloc, &kloc, &rad, &vol, &den);
-
                             particle.rdata(realData::dragx) = beta;
-                        }
+                        });
                     }
                 }
 
