@@ -30,7 +30,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
 
        Real small_vel = 1.e-10;
        Real  huge_vel = 1.e100;
-    
+
        // Then compute velocity at faces
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -42,24 +42,11 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
           Box ubx = mfi.tilebox(e_x);
           Box vbx = mfi.tilebox(e_y);
           Box wbx = mfi.tilebox(e_z);
-       
+      
           // Check efficiently if this tile contains any eb stuff
 
           const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
           const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
-
-          // Cell-centered velocity
-          const auto& ccvel_fab = vel_g[lev]->array(mfi);
-
-          // Cell-centered slopes
-          const auto& xslopes_fab = (xslopes[lev])->array(mfi);
-          const auto& yslopes_fab = (yslopes[lev])->array(mfi);
-          const auto& zslopes_fab = (zslopes[lev])->array(mfi);
-
-          // Face-centered velocity components
-          const auto& umac_fab = (m_u_mac[lev])->array(mfi);
-          const auto& vmac_fab = (m_v_mac[lev])->array(mfi);
-          const auto& wmac_fab = (m_w_mac[lev])->array(mfi);
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
           {
@@ -69,6 +56,20 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
           }
           else if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
           {
+
+             // Cell-centered velocity
+             const auto& ccvel_fab = vel_g[lev]->array(mfi);
+
+             // Cell-centered slopes
+             const auto& xslopes_fab = (xslopes[lev])->array(mfi);
+             const auto& yslopes_fab = (yslopes[lev])->array(mfi);
+             const auto& zslopes_fab = (zslopes[lev])->array(mfi);
+
+             // Face-centered velocity components
+             const auto& umac_fab = (m_u_mac[lev])->array(mfi);
+             const auto& vmac_fab = (m_v_mac[lev])->array(mfi);
+             const auto& wmac_fab = (m_w_mac[lev])->array(mfi);
+
              // No cut cells in tile + 1-cell witdh halo -> use non-eb routine
              AMREX_CUDA_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
              {
@@ -119,6 +120,19 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
              });
 
           } else {
+
+             // Cell-centered velocity
+             const auto& ccvel_fab = vel_g[lev]->array(mfi);
+
+             // Cell-centered slopes
+             const auto& xslopes_fab = (xslopes[lev])->array(mfi);
+             const auto& yslopes_fab = (yslopes[lev])->array(mfi);
+             const auto& zslopes_fab = (zslopes[lev])->array(mfi);
+
+             // Face-centered velocity components
+             const auto& umac_fab = (m_u_mac[lev])->array(mfi);
+             const auto& vmac_fab = (m_v_mac[lev])->array(mfi);
+             const auto& wmac_fab = (m_w_mac[lev])->array(mfi);
 
              // Face-centered areas
              const auto& ax_fab = areafrac[0]->array(mfi);
