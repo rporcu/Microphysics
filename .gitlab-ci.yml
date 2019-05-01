@@ -1,3 +1,5 @@
+image: mwm126/mfix-exa:latest
+
 before_script:
   - mkdir -p ccache
   - export CCACHE_BASEDIR=${CI_PROJECT_DIR}
@@ -18,25 +20,23 @@ variables:
   GIT_DEPTH: 1
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: normal
-  JOULE_MODULES: "ccache cmake/3.14.1 gnu/8.2.0 openmpi/3.1.3_gnu8.2"
 
 ###### Test jobs #####
 
 .test_job: &test_template
   script:
-    - module load git $JOULE_MODULES
     - git submodule update --init
     - cmake -S .
             -B build
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
             -DSUBMOD=1
-    - make -C build mfix -j
+    - make -C build mfix -j2
     - cd build/mfix
-    - make build_tests -j
+    - make build_tests -j2
     - $CTEST_CMD
   tags:
-    - joule
+    - mfix-exa
   artifacts:
     name: "$CI_JOB_NAME"
     expire_in: 1 week
@@ -47,17 +47,17 @@ variables:
 
 single-grid-serial:
   variables:
-    CTEST_CMD: "srun --partition shared ctest -R SGS"
+    CTEST_CMD: "srun ctest -R SGS"
   <<: *test_template
 
 multiple-grid-serial:
   variables:
-    CTEST_CMD: "srun --partition shared ctest -R MGS"
+    CTEST_CMD: "srun ctest -R MGS"
   <<: *test_template
 
 tiled-grid-serial:
   variables:
-    CTEST_CMD: "srun --partition shared ctest -R TGS"
+    CTEST_CMD: "srun ctest -R TGS"
   <<: *test_template
 
 
@@ -74,5 +74,5 @@ multiple-grid-parallel:
 tiled-grid-parallel-openmp:
   variables:
     ENABLE_OMP: "1"
-    CTEST_CMD: "srun --partition shared ctest -R TGP"
+    CTEST_CMD: "srun ctest -R TGP"
   <<: *test_template
