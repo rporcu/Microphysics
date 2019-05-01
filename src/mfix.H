@@ -146,7 +146,9 @@ public:
             dom_ls.refine(levelset__refinement);
             Geometry geom_ls(dom_ls);
             Vector<Geometry> vgeom{geom_ls};
+            // NOTE: lev here is index in vgeom
             eb_levels[1] = LSCore<F>::BuildEBLevel(gshop, 0, vgeom, 100, 0);
+            particle_eb_levels[1] = eb_levels[1];
         }
 
 

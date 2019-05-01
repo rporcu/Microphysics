@@ -413,7 +413,7 @@ void mfix::fill_eb_levelsets ()
             // DO NOT simply regrid the implicit_functions MultiFab <= far from the
             // EB, the IF might not be defined
             MultiFab impfunc(ba, part_dm, 1, levelset__pad);
-            eb_levels[0]->fillLevelSet(impfunc, geom[lev]);
+            eb_levels[lev]->fillLevelSet(impfunc, geom[lev]);
             impfunc.FillBoundary(geom[lev].periodicity());
 
             IntVect ebt_size{AMREX_D_DECL(32, 32, 32)}; // Fudge factors...
