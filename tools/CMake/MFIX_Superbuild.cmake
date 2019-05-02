@@ -35,7 +35,7 @@ set(AMREX_GIT_COMMIT_MASTER
    "AMReX Git commit for master branch")
 
 set(AMREX_GIT_COMMIT_DEVELOP
-   9e3aaa7053499b9f7f0c786a92ef860c6322f10d
+   ae63d370abd38012c71e4a084717eb1b0d66f184
    CACHE INTERNAL
    "AMReX Git commit for development branch")
 
