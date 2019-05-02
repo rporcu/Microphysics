@@ -17,7 +17,6 @@ MODULE read_namelist_module
       SUBROUTINE READ_NAMELIST(mfix_dat, dt_inout)
 
       use bc
-      use drag, only: drag_c1, drag_d1
       use constant, only: gravity
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use discretelement, only: des_en_input, des_en_wall_input, particle_types
