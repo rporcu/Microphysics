@@ -252,7 +252,7 @@ mfix::RegridArrays (int lev)
     ng = gp[lev]->nGrow();
     std::unique_ptr<MultiFab> gp_new(new MultiFab(grids[lev],dmap[lev],3,ng, MFInfo(), *ebfactory[lev]));
     gp_new->setVal(0.0);
-    gp_new->copy(*gp[lev],0,0,1,0,ng);
+    gp_new->copy(*gp[lev],0,0,gp[lev]->nComp(),0,ng);
     gp[lev] = std::move(gp_new);
 
     // Vorticity
