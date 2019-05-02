@@ -293,7 +293,15 @@ void mfix::fill_eb_levelsets ()
 
         if (contains_ebs)
         {
-            MultiFab impfunc = MFUtil::regrid(lsf.get_ls_ba(), part_dm, * implicit_functions[1], true);
+            // MultiFab impfunc = MFUtil::regrid(lsf.get_ls_ba(), part_dm, * implicit_functions[1], true);
+            // DO NOT simply regrid the implicit_functions MultiFab <= far from
+            // the EB, the IF might not be defined
+            MultiFab impfunc(lsf.get_ls_ba(), lsf.get_dm(), 1, lsf.get_ls_pad());
+            eb_levels[1]->fillLevelSet(impfunc, lsf.get_ls_geom());
+            impfunc.FillBoundary(lsf.get_ls_geom().periodicity());
+            // VisMF::Write(impfunc, "imfunc");
+            // exit(0);
+
             lsf.Fill( * ebfactory[0], impfunc);
         }
 
@@ -369,7 +377,13 @@ void mfix::fill_eb_levelsets ()
         iMultiFab valid(ba, part_dm, 1, levelset__pad);
 
         // NOTE: implicit function data might not be on the right grids
-        MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[0], true);
+        // MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[0], true);
+        // DO NOT simply regrid the implicit_functions MultiFab <= far from the
+        // EB, the IF might not be defined
+        MultiFab impfunc(ba, part_dm, 1, levelset__pad);
+        eb_levels[0]->fillLevelSet(impfunc, geom[0]);
+        impfunc.FillBoundary(geom[0].periodicity());
+
 
         LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
                              32, 1, 1, geom[0], geom[0]);
@@ -395,7 +409,12 @@ void mfix::fill_eb_levelsets ()
                                            levelset__eb_pad + 2}, EBSupport::full);
 
             // NOTE: implicit function data might not be on the right grids
-            MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[lev]);
+            // MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[lev]);
+            // DO NOT simply regrid the implicit_functions MultiFab <= far from the
+            // EB, the IF might not be defined
+            MultiFab impfunc(ba, part_dm, 1, levelset__pad);
+            eb_levels[lev]->fillLevelSet(impfunc, geom[lev]);
+            impfunc.FillBoundary(geom[lev].periodicity());
 
             IntVect ebt_size{AMREX_D_DECL(32, 32, 32)}; // Fudge factors...
             LSCoreBase::FillLevelSet(* level_sets[lev], * level_sets[lev], eb_factory, impfunc,

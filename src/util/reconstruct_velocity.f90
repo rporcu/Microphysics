@@ -94,6 +94,8 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
             if ( is_covered_cell(flags(i,j,k))                          .and. &
              &   minval(abs(phi(i:i+1,j:j+1,k:k+1))) <= phi_threshold ) then
 
+               if (0.eq.1) then
+
                ! Coordinates of cell center
                x_cc = ( real([i,j,k],rt) + half ) * dx
 
@@ -137,6 +139,10 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
                ! then use linear interpolation between x_m and x_c
 
                vel_out(i,j,k,:) = vel_i * phi_cc / phi_i
+               
+               else 
+                  vel_out(i,j,k,:) = 1.e200
+               end if
 
             end if
 
