@@ -141,7 +141,7 @@ subroutine reconstruct_velocity ( vel_out, volo, vohi,       &
                vel_out(i,j,k,:) = vel_i * phi_cc / phi_i
                
                else 
-                  vel_out(i,j,k,:) = 1.e200
+                  vel_out(i,j,k,:) = 1.e100
                end if
 
             end if
