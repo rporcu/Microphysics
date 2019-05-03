@@ -293,69 +293,15 @@ void mfix::fill_eb_levelsets ()
 
         if (contains_ebs)
         {
-            // MultiFab impfunc = MFUtil::regrid(lsf.get_ls_ba(), part_dm, * implicit_functions[1], true);
-            // DO NOT simply regrid the implicit_functions MultiFab <= far from
-            // the EB, the IF might not be defined
             MultiFab impfunc(lsf.get_ls_ba(), lsf.get_dm(), 1, lsf.get_ls_pad());
             eb_levels[1]->fillLevelSet(impfunc, lsf.get_ls_geom());
             impfunc.FillBoundary(lsf.get_ls_geom().periodicity());
-            // VisMF::Write(impfunc, "imfunc");
-            // exit(0);
 
             lsf.Fill( * ebfactory[0], impfunc);
         }
 
         level_sets[1] = lsf.copy_data(part_dm);
         level_sets[0] = lsf.coarsen_data();
-
-        //_______________________________________________________________________
-        // For reference: this (below) is how you would do it without the
-        // LSFactory
-
-
-        // const DistributionMapping & part_dm = pc->ParticleDistributionMap(0);
-        // const BoxArray &            part_ba = pc->ParticleBoxArray(0);
-
-        // //_______________________________________________________________________
-        // // Baseline Level-Set
-        // {
-        //     // NOTE: reference BoxArray is not nodal
-        //     BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-
-        //     level_sets[0].reset(new MultiFab);
-        //     level_sets[0]->define(ba, part_dm, 1, levelset__pad);
-        //     iMultiFab valid(ba, part_dm, 1, levelset__pad);
-
-        //     // NOTE: implicit function data might not be on the right grids
-        //     MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[0], true);
-
-        //     LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
-        //                          32, 1, 1, geom[0], geom[0]);
-        // }
-
-        // //_______________________________________________________________________
-        // // Refined Level-Set
-        // // TODO: Don't actually refine this thing if levelset refinement is 1
-        // {
-        //     // Set up refined geometry
-        //     Box dom = geom[0].Domain();
-        //     dom.refine(levelset__refinement);
-        //     Geometry geom_lev(dom);
-
-        //     // Set up refined BoxArray. NOTE: reference BoxArray is not nodal
-        //     BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-        //     ba.refine(levelset__refinement);
-
-        //     level_sets[1].reset(new MultiFab);
-        //     level_sets[1]->define(ba, part_dm, 1, levelset__pad);
-        //     iMultiFab valid_ref(ba, part_dm, 1, levelset__pad);
-
-        //     // NOTE: implicit function data might not be on the right grids
-        //     MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[1], true);
-
-        //     LSFactory::fill_data(* level_sets[1], valid_ref, * particle_ebfactory[0], impfunc,
-        //                          32, levelset__refinement, 1, geom_lev, geom[0]);
-        // }
     }
     else
     {
@@ -376,10 +322,6 @@ void mfix::fill_eb_levelsets ()
         level_sets[0]->define(ba, part_dm, 1, levelset__pad);
         iMultiFab valid(ba, part_dm, 1, levelset__pad);
 
-        // NOTE: implicit function data might not be on the right grids
-        // MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[0], true);
-        // DO NOT simply regrid the implicit_functions MultiFab <= far from the
-        // EB, the IF might not be defined
         MultiFab impfunc(ba, part_dm, 1, levelset__pad);
         eb_levels[0]->fillLevelSet(impfunc, geom[0]);
         impfunc.FillBoundary(geom[0].periodicity());
@@ -408,10 +350,6 @@ void mfix::fill_eb_levelsets ()
                                           {levelset__eb_pad + 2, levelset__eb_pad + 2,
                                            levelset__eb_pad + 2}, EBSupport::full);
 
-            // NOTE: implicit function data might not be on the right grids
-            // MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[lev]);
-            // DO NOT simply regrid the implicit_functions MultiFab <= far from the
-            // EB, the IF might not be defined
             MultiFab impfunc(ba, part_dm, 1, levelset__pad);
             eb_levels[lev]->fillLevelSet(impfunc, geom[lev]);
             impfunc.FillBoundary(geom[lev].periodicity());

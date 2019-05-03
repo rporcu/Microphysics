@@ -356,9 +356,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
      *                                                                          *
      ***************************************************************************/
 
-    Vector<std::string> static_names = {"level_sets", "implicit_functions", "volfrac"};
-    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets,
-                                                                       & implicit_functions};
+    Vector<std::string> static_names = {"level_sets", "volfrac"};
+    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets};
 
     const int ngrow = 0;
     const int ncomp = static_names.size();
@@ -383,8 +382,6 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
         {
             const BoxArray nd_ba = amrex::convert(grids[lev], IntVect::TheNodeVector());
             MultiFab mf_loc = MFUtil::regrid(nd_ba, dmap[lev], *(*(static_vars[dcomp]))[lev], true);
-            // amrex::average_node_to_cellcenter (MultiFab &cc, int dcomp, const MultiFab &nd,
-            //                                    int scomp, int ncomp, int ngrow=0)
             amrex::average_node_to_cellcenter(* mf[lev], dcomp, mf_loc, 0, 1, ngrow);
         }
 

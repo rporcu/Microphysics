@@ -181,7 +181,6 @@ mfix::ResizeArrays ()
     particle_eb_levels.resize(std::max(2, nlevs_max));
 
     level_sets.resize(std::max(2, nlevs_max));
-    implicit_functions.resize(std::max(2, nlevs_max));
 }
 
 void
