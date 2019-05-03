@@ -19,21 +19,16 @@ void mfix::mfix_calc_drag_fluid(Real time)
     // Now use the beta of individual particles to create the drag terms on the fluid
     // ******************************************************************************
     for (int lev = 0; lev < nlev; lev++)
-    {
-       drag[lev] ->setVal(0.0L);
-    }
+        drag[lev] ->setVal(0.0L);
 
     pc -> CalcDragOnFluid(drag, particle_ebfactory,
                           bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi,
                           nghost);
 
+
+    // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
     for (int lev = 0; lev < nlev; lev++)
-    {
-
-        // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
         drag[lev] -> FillBoundary(geom[lev].periodicity());
-
-    } // lev
 }
 
 void
@@ -43,8 +38,7 @@ mfix::mfix_calc_drag_particle(Real time)
 
     for (int lev = 0; lev < nlev; lev++)
     {
-
-        Box      domain(geom[lev].Domain());
+        Box domain(geom[lev].Domain());
         MultiFab gp_tmp;
 
         gp_tmp.define(grids[lev],dmap[lev],3,1);
@@ -218,8 +212,9 @@ mfix::mfix_calc_drag_particle(Real time)
                             //    extrapolated fluid quantities in a covered region
                             if (flags_array(iloc,jloc,kloc).isCovered())
                             {
-
                                 particle.rdata(realData::dragx) = 0.0;
+                                particle.rdata(realData::dragy) = 0.0;
+                                particle.rdata(realData::dragz) = 0.0;
 
                             } else {
 

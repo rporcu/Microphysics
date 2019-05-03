@@ -3,6 +3,7 @@
 #include <mfix_eb_F.H>
 #include <mfix.H>
 #include <mfix_des_F.H>
+#include <mfix_drag_K.H>
 #include <mfix_util_F.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
@@ -81,13 +82,8 @@ void mfix::mfix_calc_particle_beta()
 
         int band_width = 2;
 
-        Real x0 = geom[lev].ProbLo(0);
-        Real y0 = geom[lev].ProbLo(1);
-        Real z0 = geom[lev].ProbLo(2);
-
-        Real odx = 1./geom[lev].CellSize(0);
-        Real ody = 1./geom[lev].CellSize(1);
-        Real odz = 1./geom[lev].CellSize(2);
+        const auto dxi = geom[lev].InvCellSizeArray();
+        const auto plo = geom[lev].ProbLoArray();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -130,38 +126,12 @@ void mfix::mfix_calc_particle_beta()
                         {
                             MFIXParticleContainer::ParticleType& particle = particles[ip];
 
-                            // This part was in trilinear_interp before
-                            // Pick upper cell in the stencil
-                            Real lx = (particle.pos(0) - x0)*odx + 0.5;
-                            Real ly = (particle.pos(1) - y0)*ody + 0.5;
-                            Real lz = (particle.pos(2) - z0)*odz + 0.5;
+                            trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
     
-                            int i = std::floor(lx);
-                            int j = std::floor(ly);
-                            int k = std::floor(lz);
-    
-                            // If the particle has gone outside the fluid region then we will
-                            //    let the wall collision term bring it back and not use any
-                            //    extrapolated fluid quantities in a covered region
-                            // Weights
-                            Real sx_hi = lx - i;  Real sx_lo = 1.0 - sx_hi;
-                            Real sy_hi = ly - j;  Real sy_lo = 1.0 - sy_hi;
-                            Real sz_hi = lz - k;  Real sz_lo = 1.0 - sz_hi;
-
-                            for (int n = 0; n < 3; n++)
-                               velfp[n] = sx_lo*sy_lo*sz_lo*vel_array(i-1, j-1, k-1,n) +
-                                          sx_lo*sy_lo*sz_hi*vel_array(i-1, j-1, k  ,n) +
-                                          sx_lo*sy_hi*sz_lo*vel_array(i-1, j  , k-1,n) +
-                                          sx_lo*sy_hi*sz_hi*vel_array(i-1, j  , k  ,n) +
-                                          sx_hi*sy_lo*sz_lo*vel_array(i  , j-1, k-1,n) +
-                                          sx_hi*sy_lo*sz_hi*vel_array(i  , j-1, k  ,n) +
-                                          sx_hi*sy_hi*sz_lo*vel_array(i  , j  , k-1,n) +
-                                          sx_hi*sy_hi*sz_hi*vel_array(i  , j  , k  ,n);
-
                             // Indices of cell where particle is located
-                            int iloc = floor((particle.pos(0) - x0)*odx);
-                            int jloc = floor((particle.pos(1) - y0)*ody);
-                            int kloc = floor((particle.pos(2) - z0)*odz);
+                            int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
+                            int jloc = floor((particle.pos(1) - plo[1])*dxi[1]);
+                            int kloc = floor((particle.pos(2) - plo[2])*dxi[2]);
 
                             Real  ep = ep_array(iloc,jloc,kloc);
                             Real  ro = ro_array(iloc,jloc,kloc);
@@ -211,38 +181,12 @@ void mfix::mfix_calc_particle_beta()
                         {
                             MFIXParticleContainer::ParticleType& particle = particles[ip];
 
-                            // This part was in trilinear_interp before
-                            // Pick upper cell in the stencil
-                            Real lx = (particle.pos(0) - x0)*odx + 0.5;
-                            Real ly = (particle.pos(1) - y0)*ody + 0.5;
-                            Real lz = (particle.pos(2) - z0)*odz + 0.5;
-    
-                            int i = std::floor(lx);
-                            int j = std::floor(ly);
-                            int k = std::floor(lz);
-    
-                            // If the particle has gone outside the fluid region then we will
-                            //    let the wall collision term bring it back and not use any
-                            //    extrapolated fluid quantities in a covered region
-                            // Weights
-                            Real sx_hi = lx - i;  Real sx_lo = 1.0 - sx_hi;
-                            Real sy_hi = ly - j;  Real sy_lo = 1.0 - sy_hi;
-                            Real sz_hi = lz - k;  Real sz_lo = 1.0 - sz_hi;
-
-                            for (int n = 0; n < 3; n++)
-                               velfp[n] = sx_lo*sy_lo*sz_lo*vel_array(i-1, j-1, k-1,n) +
-                                          sx_lo*sy_lo*sz_hi*vel_array(i-1, j-1, k  ,n) +
-                                          sx_lo*sy_hi*sz_lo*vel_array(i-1, j  , k-1,n) +
-                                          sx_lo*sy_hi*sz_hi*vel_array(i-1, j  , k  ,n) +
-                                          sx_hi*sy_lo*sz_lo*vel_array(i  , j-1, k-1,n) +
-                                          sx_hi*sy_lo*sz_hi*vel_array(i  , j-1, k  ,n) +
-                                          sx_hi*sy_hi*sz_lo*vel_array(i  , j  , k-1,n) +
-                                          sx_hi*sy_hi*sz_hi*vel_array(i  , j  , k  ,n);
+                            trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
 
                             // Indices of cell where particle is located
-                            int iloc = floor((particle.pos(0) - x0)*odx);
-                            int jloc = floor((particle.pos(1) - y0)*ody);
-                            int kloc = floor((particle.pos(2) - z0)*odz);
+                            int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
+                            int jloc = floor((particle.pos(1) - plo[1])*dxi[1]);
+                            int kloc = floor((particle.pos(2) - plo[2])*dxi[2]);
 
                             Real  ep = ep_array(iloc,jloc,kloc);
                             Real  ro = ro_array(iloc,jloc,kloc);
