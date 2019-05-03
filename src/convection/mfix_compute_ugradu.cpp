@@ -219,12 +219,11 @@ mfix::mfix_compute_ugradu( Box& bx,
       wpls = velocity(i,j,k+1,2) - .5*z_slopes(i,j,k+1,2);
       wmns = velocity(i,j,k  ,2) + .5*z_slopes(i,j,k  ,2);
 
-      u_n = upwind( umns, upls, w(i,j,k+1) );
-      v_n = upwind( vmns, vpls, w(i,j,k+1) );
-      w_n = upwind( wmns, wpls, w(i,j,k+1) );
+      u_t = upwind( umns, upls, w(i,j,k+1) );
+      v_t = upwind( vmns, vpls, w(i,j,k+1) );
+      w_t = upwind( wmns, wpls, w(i,j,k+1) );
     }
-
-    //
+//
     // Define the convective terms -- conservatively
     //   ugradu = ( div(ep_g u^MAC u^cc) - u^cc div(ep_g u^MAC) ) / ep_g
     Real epu_hi_x = .5*(epsilon_g(i+1,j,k)+epsilon_g(i,j,k)) * u(i+1,j,k);
