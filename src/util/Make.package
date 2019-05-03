@@ -12,3 +12,4 @@ f90EXE_sources += reconstruct_velocity.f90
 CEXE_sources += mfix_fillpatch.cpp
 CEXE_sources += mfix_util.cpp
 FEXE_headers += mfix_util_F.H 
+F90EXE_headers += mfix_divop_F.H 

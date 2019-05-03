@@ -25,6 +25,8 @@ EBSupport mfix::m_eb_support_level = EBSupport::full;
 Real mfix::gravity[3] {0.0};
 Real mfix::gp0[3]     {0.0};
 
+BcList mfix::bc_list = BcList();
+
 mfix::~mfix ()
 {
 };
