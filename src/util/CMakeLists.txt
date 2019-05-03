@@ -10,6 +10,7 @@ target_sources( mfixcore
    set_velocity_bcs.f90
    set_scalar_bcs.f90
    mfix_util_F.H
+   mfix_divop_F.H
    mfix_util_f.f90
    mfix_util.cpp
    mfix_fillpatch.cpp

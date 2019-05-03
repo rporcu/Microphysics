@@ -1,5 +1,6 @@
 #include <mfix.H>
 #include <mfix_mac_F.H>
+#include <mfix_divop_F.H>
 
 #define MY_HUGE 1.e200
 
@@ -26,7 +27,6 @@ upwind( const Real velocity_minus,
 
 using namespace ugradu_auxiliary;
 
-
 //
 // Compute the three components of the convection term
 //
@@ -39,8 +39,6 @@ mfix::mfix_compute_ugradu( Box& bx,
                            const int lev)
 {
   const Real* dx = geom[lev].CellSize();
-  const amrex::Dim3 bx_low = amrex::lbound(bx);
-  const amrex::Dim3 bx_high = amrex::ubound(bx);
   const amrex::Dim3 dom_low = amrex::lbound(domain);
   const amrex::Dim3 dom_high = amrex::ubound(domain);
 
@@ -282,8 +280,6 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   AMREX_ASSERT_WITH_MESSAGE(nghost >= 4, "Compute divop(): ng must be >= 4");
 
   const Real* dx = geom[lev].CellSize();
-  const amrex::Dim3 bx_low = amrex::lbound(bx);
-  const amrex::Dim3 bx_high = amrex::ubound(bx);
   const amrex::Dim3 dom_low = amrex::lbound(domain);
   const amrex::Dim3 dom_high = amrex::ubound(domain);
 
