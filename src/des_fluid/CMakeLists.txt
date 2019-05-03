@@ -9,6 +9,7 @@ target_sources( mfixcore
    get_collision_coefficients.f90 
    mfix_des_F.H
    mfix_des_K.H
+   mfix_drag_K.H
    MFIXParticleContainer.cpp
    MFIXParticleContainer.H
    MFIX_DEM_Parms.cpp

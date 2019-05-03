@@ -277,6 +277,7 @@ protected:
                         Vector<Real> & datatime);
 
      void mfix_calc_volume_fraction(Real & sum_vol);
+     void mfix_calc_particle_beta();
      void mfix_calc_drag_fluid(Real time);
      void mfix_calc_drag_particle(Real time);
 
