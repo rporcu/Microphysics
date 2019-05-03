@@ -19,7 +19,7 @@
   DT =     1.0d-04
   DT_FAC = 1.0
 
-  DRAG_TYPE = 'KOCH_HILL'
+  DRAG_TYPE = 'BVK2'
 
   CALL_USR = .T.
   FULL_LOG = .T.

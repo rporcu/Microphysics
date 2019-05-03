@@ -1,6 +1,6 @@
 module par_gen_module
 
-   use amrex_fort_module, only : rt => amrex_real
+   use amrex_fort_module, only : rt => amrex_real, amrex_random
    use iso_c_binding , only: c_int
 
    implicit none
@@ -627,14 +627,13 @@ contains
       fails = 0
       pinc = 0
 
-      if (fix_seed) &
-         call init_random_seed(fix_seed)
-
       do while (np < seed .and. fails < maxfails)
 
          do
 
-            call random_number(rand3)
+            rand3(1) = amrex_random()
+            rand3(2) = amrex_random()
+            rand3(3) = amrex_random()
             pos = ic_dlo + ic_len*rand3(:)
 
             ! Grid containing the new particle
@@ -778,13 +777,13 @@ contains
       !-----------------------------------------------
 
       nsize = size(dp(:))
-      ! call init_random_seed(.false.)
 
       i=1
       do while(i<= ceiling(real(nsize/2.0)))
          w=1.0
          do while(w>=1.0)
-            call random_number(x)
+            x(1) = amrex_random()
+            x(2) = amrex_random()
             x = 2.0 * x - 1.0
             w = x(1)**2 + x(2)**2
          end do
@@ -849,8 +848,7 @@ contains
       integer :: nsize, lc
       real(rt) :: lscale
 
-      ! call init_random_seed(.false.)
-      call random_number(dp)
+      dp = amrex_random()
 
       lscale = dp_max - dp_min
 
@@ -862,45 +860,6 @@ contains
       return
 
    end subroutine uni_rno
-
-
-   !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-   !                                                                     !
-   !                                                                     !
-   !                                                                     !
-   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   subroutine init_random_seed(fix_seed)
-
-      implicit none
-
-      logical, intent(in)  :: fix_seed
-
-      !-----------------------------------------------
-      ! local variables
-      !-----------------------------------------------
-      integer              :: isize,idate(8)
-      integer,allocatable  :: iseed(:)
-      !-----------------------------------------------
-
-      call random_seed(size=isize)
-      allocate( iseed(isize) )
-      call random_seed(get=iseed)
-
-      ! Note -- "10" is arbitrary -- we just need something repeatable for
-      !     regression testing
-      if ( fix_seed ) then
-         iseed(:) = 10
-      else
-         call date_and_time(values=idate)
-         iseed = iseed * (idate(8)-500) ! idate(8) contains millisecond
-      end if
-
-      call random_seed(put=iseed)
-
-      if(allocated(iseed)) deallocate( iseed )
-
-   end subroutine init_random_seed
-
 
 
    !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv

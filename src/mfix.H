@@ -118,8 +118,7 @@ public:
 
 
     //! Construct EB levels from Geometry shop. This builds each EB level and
-    //! saves a pointer to each level into `eb_levels`. Also fills the implicit
-    //! function values for each level in `implicit_functions`.
+    //! saves a pointer to each level into `eb_levels`. 
     template<class F> void build_eb_levels (EB2::GeometryShop<F> gshop)
     {
 
@@ -139,7 +138,6 @@ public:
             particle_eb_levels[lev] = eb_levels[lev];
         }
 
-
         if (nlev == 1)
         {
             Box dom_ls = geom[0].Domain();
@@ -149,49 +147,6 @@ public:
             // NOTE: lev here is index in vgeom
             eb_levels[1] = LSCore<F>::BuildEBLevel(gshop, 0, vgeom, 100, 0);
             particle_eb_levels[1] = eb_levels[1];
-        }
-
-
-        /************************************************************************
-         *                                                                      *
-         * Fill each level with implicit function values                        *
-         *                                                                      *
-         ***********************************************************************/
-
-        if (nlev == 1)
-        {
-            //___________________________________________________________________
-            // Single-level case: fill normal and refined implicit functions
-
-            // Get BoxArray and distribution mapping from EB level as the
-            // mfix::grids and mfix::dmap vectors have not been built yet
-            const BoxArray & ba            = eb_levels[0]->boxArray();
-            const DistributionMapping & dm = eb_levels[0]->DistributionMap();
-
-            // Base (fluid) level
-            GShopLSFactory<F> gshop_lsf_1(gshop, geom[0], ba, dm, levelset__pad);
-            implicit_functions[0] = gshop_lsf_1.fill_impfunc();
-
-            // Refined level
-            GShopLSFactory<F> gshop_lsf_2(gshop, geom[0], ba, dm,
-                                          levelset__pad, levelset__refinement);
-            implicit_functions[1] = gshop_lsf_2.fill_impfunc();
-
-        }
-        else
-        {
-            //___________________________________________________________________
-            // Multi-level case: fill function for each level
-
-            for (int lev = 0; lev < nlev; lev ++)
-            {
-                const BoxArray & ba            = eb_levels[lev]->boxArray();
-                const DistributionMapping & dm = eb_levels[lev]->DistributionMap();
-
-                GShopLSFactory<F> gshop_lsf(gshop, geom[lev], ba, dm, levelset__pad);
-                implicit_functions[lev] = gshop_lsf.fill_impfunc();
-            }
-
         }
     }
 
@@ -487,7 +442,6 @@ private:
      // reconstruction in particle drag calculation. NOTE: this has at least 2
      // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions
      Vector< std::unique_ptr<MultiFab> > level_sets;
-     Vector< std::unique_ptr<MultiFab> > implicit_functions;
 
      // These are multi-component multifabs
      Vector< std::unique_ptr<MultiFab> > xslopes;

@@ -224,20 +224,12 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
            Print() << "Working on: " << chkscaVarsName[i] << std::endl;
            if (Nrep != IntVect::TheUnitVector())
            {
-               if ((chkscaVarsName[i] == "level_sets")
-                   || (chkscaVarsName[i] == "implicit_functions"))
+               if (chkscaVarsName[i] == "level_sets")
                {
                    Print() << "Skipping!" << std::endl;
                    continue;
                }
            }
-
-          // If we have created the walls using the domain boundary conditions and not
-          //    by creating them from implicit functions, then the implicit_functions mf
-          //    will be empty.  We don't want to fail when reading so we allow the code
-          //    to read it in an empty multifab just for this one.
-          int allow_empty_mf = 0;
-          if (chkscaVarsName[i] == "implicit_functions") allow_empty_mf = 1;
 
           MultiFab mf;
           VisMF::Read(mf,
@@ -245,9 +237,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                                                     restart_file, level_prefix,
                                                     chkscaVarsName[i]),
                                                     nullptr,
-                                                    ParallelDescriptor::IOProcessorNumber(),
-                                                    allow_empty_mf
-              );
+                                                    ParallelDescriptor::IOProcessorNumber());
 
           if (Nrep == IntVect::TheUnitVector()) {
 

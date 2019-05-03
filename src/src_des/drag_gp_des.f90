@@ -6,7 +6,7 @@
 !           and the particle velocity.                                 C
 !           Invoked from des_drag_gs and calc_des_drag_gs              C
 !                                                                      C
-!  Comments: The BVK drag model and all drag models with the           C
+!  Comments: The BVK2 drag model and all drag models with the          C
 !            polydisperse correction factor (i.e., suffix _PCF)        C
 !            require an average particle diameter. This has been       C
 !            loosely defined for discrete particles based on their     C
@@ -25,12 +25,10 @@
       use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
-      use drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend,&
-         drag_wen_yu, drag_koch_hill, drag_bvk
-      use drag, only: syam_obrien, gidaspow, gidaspow_blend, bvk,&
-         drag_type_enum, drag_type
-      use drag, only: wen_yu, koch_hill, user_drag
-      use drag, only: wen_yu_pcf, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
+      use drag,  only: drag_type_enum, drag_type
+      use drag,  only: drag_wen_yu, drag_gidaspow, drag_bvk2
+      use drag,  only: user_drag, wen_yu, gidaspow, bvk2, & 
+                       wen_yu_pcf, gidaspow_pcf
       use param, only: one
 
       IMPLICIT NONE
@@ -103,30 +101,21 @@
 ! determine the drag coefficient
       SELECT CASE(DRAG_TYPE_ENUM)
 
-      CASE (SYAM_OBRIEN)
-         CALL DRAG_SYAM_OBRIEN(DgA,ep_g,mu_g,ro_g,VREL,DPM)
-
-      CASE (GIDASPOW)
-         CALL DRAG_GIDASPOW(DgA,ep_g,mu_g,ro_g,rop_g,VREL,DPM)
-
-      CASE (GIDASPOW_BLend)
-         CALL drag_gidaspow_blend(DgA,ep_g,mu_g,ro_g,rop_g,VREL,DPM)
-
-      CASE (WEN_YU)
-         CALL DRAG_WEN_YU(DgA,ep_g,mu_g,rop_g,VREL,DPM)
-
-      CASE (KOCH_HILL)
-         CALL DRAG_KOCH_HILL(DgA,ep_g,mu_g,rop_g,VREL,DPM,DPM,phi_s)
-
       CASE (USER_DRAG)
          CALL DRAG_USR(I,J,K,p_id,DgA,ep_g,mu_g,ro_g,VREL,DPM,ro_s, &
                        fluid_vel(1), fluid_vel(2), fluid_vel(3))
 
-      CASE (BVK)
+      CASE (WEN_YU)
+         CALL DRAG_WEN_YU(DgA,ep_g,mu_g,rop_g,VREL,DPM)
+
+      CASE (GIDASPOW)
+         CALL DRAG_GIDASPOW(DgA,ep_g,mu_g,ro_g,rop_g,VREL,DPM)
+
+      CASE (BVK2)
          ! calculate the average particle diameter and particle ratio
          ! HACK HACK HACK HACK -- Dependence on rop_s was removed
 
-         CALL DRAG_BVK(DgA,ep_g,mu_g,rop_g,VREL,DPM,DPM,phi_s)
+         CALL DRAG_BVK2(DgA,ep_g,mu_g,rop_g,VREL,DPM,DPM,phi_s)
 
       CASE DEFAULT
          WRITE (*, '(A,A)') 'Unknown DRAG_TYPE: ', DRAG_TYPE
