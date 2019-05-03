@@ -33,6 +33,7 @@ target_sources(mfixcore
    mfix_regrid.cpp
    mfix_advance.cpp
    compute_diveu.cpp
+   mfix_calc_particle_beta.cpp
    mfix_drag.cpp
    mfix_evolve.cpp 
    mfix.cpp 

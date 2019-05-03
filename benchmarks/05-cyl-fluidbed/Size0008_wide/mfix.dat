@@ -1,14 +1,14 @@
 ########################################################################
 #                                                                      #
 # Author:                                               Date: xx-xxxx  #
-# Modified: J. Musser                                   Date: 08-2018  #
+# Modified: J. Musser                                   Date: 07-2017  #
 #                                                                      #
-# Description: Cylindrical Riser                                       #
+# Description: Fluidized bed.                                          #
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'B06'
-  DESCRIPTION = 'Cylindrical riser'
+  RUN_NAME = 'B05'
+  DESCRIPTION = 'Fluidized bed'
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
@@ -16,7 +16,7 @@
   DT =     1.0d-04
   DT_FAC = 1.0
 
-  DRAG_TYPE = 'BVK2'
+  DRAG_TYPE = 'BVK'
 
   CALL_USR = .T.
   FULL_LOG = .T.
@@ -32,7 +32,6 @@
 !---------------------------------------------------------------------//
   RO_g0 = 1.0      ! (kg/m3)
   MU_g0 = 2.0d-5   ! (Pa.sec)
-
 
 ! Particle Section
 !---------------------------------------------------------------------//
@@ -56,36 +55,42 @@
 
 ! Full domain coverage
   IC_Y_s(1) =   0.000  ! (m)
-  IC_Y_n(1) =   0.002  ! (m)
+  IC_Y_n(1) =   0.008  ! (m)
   IC_Z_b(1) =   0.000  ! (m)
-  IC_Z_t(1) =   0.002  ! (m)
+  IC_Z_t(1) =   0.008  ! (m)
   IC_X_w(1) =   0.000  ! (m)
   IC_X_e(1) =   0.008  ! (m)
 
-  IC_EP_g(1) =  0.983  ! (m)
+  IC_EP_g(1) =  1.000  ! (m)
 
-  IC_P_g(1)  =  0.000  ! (Pa)
-
-  IC_U_g(1) =   0.000  ! (m)
+  IC_U_g(1) =   0.015  ! (m)
   IC_V_g(1) =   0.000  ! (m)
   IC_W_g(1) =   0.000  ! (m)
 
-  IC_EP_s(1,1) =0.017  ! (m)
+! Initial solids
+  IC_Y_s(2) =   0.000  ! (m)
+  IC_Y_n(2) =   0.008  ! (m)
+  IC_Z_b(2) =   0.000  ! (m)
+  IC_Z_t(2) =   0.008  ! (m)
+  IC_X_w(2) =   0.0000 ! (m)
+  IC_X_e(2) =   0.0064 ! (m)
 
-  IC_U_s(1,1) = 0.000  ! (m)
-  IC_V_s(1,1) = 0.000  ! (m)
-  IC_W_s(1,1) = 0.000  ! (m)
+  IC_EP_g(2) =  0.725  ! (m)
 
-  ic_dp_dist(1,1) =   'CONSTANT'
-  ic_dp_mean(1,1) =    100.0d-6    ! (m)
+  IC_U_g(2) =   0.015  ! (m)
+  IC_V_g(2) =   0.000  ! (m)
+  IC_W_g(2) =   0.000  ! (m)
 
-  ic_ro_s_dist(1,1) = 'CONSTANT'
-  ic_ro_s_mean(1,1) =  1000.0d0    ! (kg/m^3)
+  IC_EP_s(2,1) =0.275  ! (m)
 
-  ic_pack_type(1) =  "PSEUDO_RANDOM"
+  IC_U_s(2,1) = 0.000  ! (m)
+  IC_V_s(2,1) = 0.000  ! (m)
+  IC_W_s(2,1) = 0.000  ! (m)
 
-#_______________________________________________________________________
-# BOUNDARY CONDITIONS SECTION
+  ic_dp_dist(2,1) =   'CONSTANT'
+  ic_dp_mean(2,1) =    100.0d-6    ! (m)
 
-  DELP_X = 2.0         ! (Pa)
+  ic_ro_s_dist(2,1) = 'CONSTANT'
+  ic_ro_s_mean(2,1) =  1000.0d0    ! (kg/m^3)
 
+  ic_pack_type(2) =  "PSEUDO_RANDOM"

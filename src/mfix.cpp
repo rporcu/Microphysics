@@ -74,10 +74,6 @@ mfix::mfix ()
 
     bcs_ls.resize(1);
 
-    // // periodic boundaries
-    // int bc_lo[] = {BCType::int_dir, BCType::int_dir, BCType::int_dir};
-    // int bc_hi[] = {BCType::int_dir, BCType::int_dir, BCType::int_dir};
-
     // walls (Neumann)
     int bc_lo[] = {FOEXTRAP, FOEXTRAP, FOEXTRAP};
     int bc_hi[] = {FOEXTRAP, FOEXTRAP, FOEXTRAP};
@@ -109,10 +105,6 @@ void
 mfix::ResizeArrays ()
 {
     int nlevs_max = maxLevel() + 1;
-
-    // EB levels used to construct each level's EB factory
-    eb_levels.resize(nlevs_max);
-    particle_eb_levels.resize(nlevs_max);
 
     ep_g.resize(nlevs_max);
     ep_go.resize(nlevs_max);
@@ -171,7 +163,6 @@ mfix::ResizeArrays ()
     // Fluid grid EB factory
     ebfactory.resize(nlevs_max);
 
-
     /****************************************************************************
      *                                                                          *
      * Initialize particle data (including level-set data)                      *
@@ -186,8 +177,10 @@ mfix::ResizeArrays ()
     // Particle grid EB factory
     particle_ebfactory.resize(nlevs_max);
 
+    eb_levels.resize(std::max(2, nlevs_max));
+    particle_eb_levels.resize(std::max(2, nlevs_max));
+
     level_sets.resize(std::max(2, nlevs_max));
-    implicit_functions.resize(std::max(2, nlevs_max));
 }
 
 void

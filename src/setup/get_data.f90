@@ -23,10 +23,8 @@ contains
     use discretelement, only: des_continuum_coupled, des_oneway_coupled
     use fld_const, only: ro_g0
 
-    use drag, only: drag_type, drag_type_enum, syam_obrien, gidaspow, &
-                    gidaspow_pcf, gidaspow_blend, gidaspow_blend_pcf, &
-                    wen_yu, wen_yu_pcf, koch_hill, koch_hill_pcf, bvk,&
-                    user_drag
+    use drag, only: drag_type, drag_type_enum, user_drag, wen_yu, &
+                    gidaspow, bvk2, wen_yu_pcf, gidaspow_pcf  
 
     use param, only: is_undefined, is_defined
 
@@ -53,17 +51,12 @@ contains
     endif
 
     select case(trim(adjustl(drag_type)))
-    case ('SYAM_OBRIEN'); drag_type_enum = syam_obrien
-    case ('GIDASPOW'); drag_type_enum = gidaspow
-    case ('GIDASPOW_BLEND'); drag_type_enum = gidaspow_blend
-    case ('WEN_YU'); drag_type_enum = wen_yu
-    case ('KOCH_HILL'); drag_type_enum = koch_hill
-    case ('BVK'); drag_type_enum = bvk
-    case ('GIDASPOW_PCF'); drag_type_enum = gidaspow_pcf
-    case ('GIDASPOW_BLEND_PCF'); drag_type_enum = gidaspow_blend_pcf
-    case ('WEN_YU_PCF'); drag_type_enum = wen_yu_pcf
-    case ('KOCH_HILL_PCF'); drag_type_enum = koch_hill_pcf
     case ('USER_DRAG','USR_DRAG'); drag_type_enum = user_drag
+    case ('WEN_YU'); drag_type_enum = wen_yu
+    case ('GIDASPOW'); drag_type_enum = gidaspow
+    case ('BVK2'); drag_type_enum = bvk2
+    case ('WEN_YU_PCF'); drag_type_enum = wen_yu_pcf
+    case ('GIDASPOW_PCF'); drag_type_enum = gidaspow_pcf
     end select
 
   end subroutine get_data
