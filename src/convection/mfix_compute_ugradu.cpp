@@ -41,6 +41,8 @@ mfix::mfix_compute_ugradu( Box& bx,
   const Real* dx = geom[lev].CellSize(); // extract with [0], [1], [2]
   const amrex::Dim3 bx_low = amrex::lbound(bx); // extract with %.x, %.y, %.z
   const amrex::Dim3 bx_high = amrex::ubound(bx); // extract with %.x, %.y, %.z
+  const amrex::Dim3 dom_low = amrex::lbound(domain); // extract with %.x, %.y, %.z
+  const amrex::Dim3 dom_high = amrex::ubound(domain); // extract with %.x, %.y, %.z
 
   Array4<Real> const& ugradu = conv[lev]->array(*mfi); 
   // extract FArrayBox data with Real* = %.dataPtr()
@@ -85,7 +87,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     //
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
-    if((i == bx_low.x) and
+    if((i == dom_low.x) and
        std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ilo_type(i-1,j,k,0) == bc[c];})) {
       u_w = velocity(i-1,j,k,0);
       v_w = velocity(i-1,j,k,1);
@@ -109,7 +111,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     //
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
-    if((i == bx_high.x) and
+    if((i == dom_high.x) and
        std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ihi_type(i+1,j,k,0) == bc[c];})) {
       u_e = velocity(i+1,j,k,0);
       v_e = velocity(i+1,j,k,1);
@@ -133,7 +135,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     //
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
-    if((j == bx_low.y) and
+    if((j == dom_low.y) and
        std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jlo_type(i,j-1,k,0) == bc[c];})) {
       u_s = velocity(i,j-1,k,0);
       v_s = velocity(i,j-1,k,1);
@@ -157,7 +159,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     //
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
-    if((j == bx_high.y) and
+    if((j == dom_high.y) and
        std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jhi_type(i,j+1,k,0) == bc[c];})) {
       u_n = velocity(i,j+1,k,0);
       v_n = velocity(i,j+1,k,1);
@@ -181,7 +183,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     //
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
-    if((k == bx_low.z) and
+    if((k == dom_low.z) and
        std::any_of(bc.begin(), bc.end(), [&](int c){return bc_klo_type(i,j,k-1,0) == bc[c];})) {
       u_b = velocity(i,j,k-1,0);
       v_b = velocity(i,j,k-1,1);
@@ -205,7 +207,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     //
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
-    if((k == bx_high.z) and
+    if((k == dom_high.z) and
        std::any_of(bc.begin(), bc.end(), [&](int c){return bc_khi_type(i,j,k+1,0) == bc[c];})) {
       u_t = velocity(i,j,k+1,0);
       v_t = velocity(i,j,k+1,1);
