@@ -464,13 +464,6 @@ mfix::RegridLevelSetArray (int a_lev)
        MFUtil::regrid(* new_level_set, nd_ba, dm, * level_sets[a_lev], true);
        level_sets[a_lev] = std::move(new_level_set);
 
-       std::unique_ptr<MultiFab> new_impfunc(new MultiFab);
-       //MFUtil::regrid(* new_impfunc, nd_ba, dmap[a_lev],
-       //               * particle_ebfactory[a_lev], * implicit_functions[a_lev], true);
-       MFUtil::regrid(* new_impfunc, nd_ba, dm, * implicit_functions[a_lev], true);
-
-       implicit_functions[a_lev] = std::move(new_impfunc);
-
        //________________________________________________________________________
        // If we're operating in single-level mode, the level-set has a second
        // (refined) MultiFab that also needs to be regridded.
@@ -485,17 +478,7 @@ mfix::RegridLevelSetArray (int a_lev)
            MFUtil::regrid(* new_level_set, ref_nd_ba, dm,
                           * level_sets[a_lev + 1], true);
            level_sets[a_lev + 1] = std::move(new_level_set);
-
-           std::unique_ptr<MultiFab> new_impfunc(new MultiFab);
-           MFUtil::regrid(* new_impfunc, ref_nd_ba, dm,
-                          * implicit_functions[a_lev + 1], true);
-           implicit_functions[a_lev + 1] = std::move(new_impfunc);
        }
-
-       // This is broken at the moment => using mfix::intersect_ls_walls () instead
-       // Print() << "Modifying level set to see inflow" << std::endl;
-       //mfix_set_ls_near_inflow(); //TODO move the level-set creation
-       // Print() << "Done regridding level-set on lev = " << a_lev << std::endl;
    }
 }
 
