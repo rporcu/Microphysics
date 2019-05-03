@@ -244,23 +244,6 @@ void mfix::mfix_calc_particle_beta()
                             int jloc = floor((particle.pos(1) - y0)*ody);
                             int kloc = floor((particle.pos(2) - z0)*odz);
 
-                            if (std::abs(velfp[0]) > 1.e20) 
-                            {
-                               std::cout << "BAD LOC " << iloc << " " << jloc << " " << kloc << std::endl;
-
-                               if (std::abs(vel_array(i-1,j-1,k-1,0)) > 1.e20) std::cout << "BAD VEL " << i-1 << " " << j-1 << " " << k-1 << std::endl;
-                               if (std::abs(vel_array(i-1,j-1,k  ,0)) > 1.e20) std::cout << "BAD VEL " << i-1 << " " << j-1 << " " << k   << std::endl;
-                               if (std::abs(vel_array(i-1,j  ,k-1,0)) > 1.e20) std::cout << "BAD VEL " << i-1 << " " << j   << " " << k-1 << std::endl;
-                               if (std::abs(vel_array(i-1,j  ,k  ,0)) > 1.e20) std::cout << "BAD VEL " << i-1 << " " << j   << " " << k   << std::endl;
-
-                               if (std::abs(vel_array(i-1,j-1,k-1,0)) > 1.e20) std::cout << "BAD VEL " << i   << " " << j-1 << " " << k-1 << std::endl;
-                               if (std::abs(vel_array(i  ,j-1,k  ,0)) > 1.e20) std::cout << "BAD VEL " << i   << " " << j-1 << " " << k   << std::endl;
-                               if (std::abs(vel_array(i  ,j  ,k-1,0)) > 1.e20) std::cout << "BAD VEL " << i   << " " << j   << " " << k-1 << std::endl;
-                               if (std::abs(vel_array(i  ,j  ,k  ,0)) > 1.e20) std::cout << "BAD VEL " << i   << " " << j   << " " << k   << std::endl;
-
-                               std::cout << " " << std::endl;
-                            }
-
                             Real  ep = ep_array(iloc,jloc,kloc);
                             Real  ro = ro_array(iloc,jloc,kloc);
                             Real  mu = mu_array(iloc,jloc,kloc);

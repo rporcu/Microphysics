@@ -243,7 +243,7 @@ mfix::mfix_calc_drag_particle(Real time)
 
                                } else {
 
-                                   trilinear_interp(particle, &velfp[0], gp_array, plo, dxi);
+                                   trilinear_interp(particle, &gradp[0], gp_array, plo, dxi);
 
                                }
 
