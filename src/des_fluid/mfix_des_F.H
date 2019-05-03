@@ -1,6 +1,18 @@
+#ifndef _MFIX_DES_F_H_
+#define _MFIX_DES_F_H_
+
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
+
+// Boundary conditions list auxiliary structure
+typedef struct BcList {
+  public:
+    BcList(): minf(0), pinf(0), pout(0) {};
+    int minf;
+    int pinf;
+    int pout;
+} BcList;
 
 #ifdef BL_SINGLE_PRECISION_PARTICLES
 typedef float amrex_particle_real;
@@ -26,6 +38,10 @@ extern "C"
 
     void get_gravity (
         amrex::Real* grav
+        );
+
+    void get_bc_list (
+        BcList& bc_list // TODO check if needs & or not
         );
 
     void get_domain_bc (
@@ -86,4 +102,6 @@ extern "C"
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
