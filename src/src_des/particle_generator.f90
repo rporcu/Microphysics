@@ -1,6 +1,6 @@
 module par_gen_module
 
-   use amrex_fort_module, only : rt => amrex_real
+   use amrex_fort_module, only : rt => amrex_real, amrex_random
    use iso_c_binding , only: c_int
 
    implicit none
@@ -634,7 +634,9 @@ contains
 
          do
 
-            call random_number(rand3)
+            rand3(1) = amrex_random()
+            rand3(2) = amrex_random()
+            rand3(3) = amrex_random()
             pos = ic_dlo + ic_len*rand3(:)
 
             ! Grid containing the new particle
@@ -784,7 +786,8 @@ contains
       do while(i<= ceiling(real(nsize/2.0)))
          w=1.0
          do while(w>=1.0)
-            call random_number(x)
+            x(1) = amrex_random()
+            x(2) = amrex_random()
             x = 2.0 * x - 1.0
             w = x(1)**2 + x(2)**2
          end do
@@ -850,7 +853,7 @@ contains
       real(rt) :: lscale
 
       ! call init_random_seed(.false.)
-      call random_number(dp)
+      dp = amrex_random()
 
       lscale = dp_max - dp_min
 
