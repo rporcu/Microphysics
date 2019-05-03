@@ -38,15 +38,13 @@ mfix::mfix_compute_ugradu( Box& bx,
                            Box& domain,
                            const int lev)
 {
-  const Real* dx = geom[lev].CellSize(); // extract with [0], [1], [2]
-  const amrex::Dim3 bx_low = amrex::lbound(bx); // extract with %.x, %.y, %.z
-  const amrex::Dim3 bx_high = amrex::ubound(bx); // extract with %.x, %.y, %.z
-  const amrex::Dim3 dom_low = amrex::lbound(domain); // extract with %.x, %.y, %.z
-  const amrex::Dim3 dom_high = amrex::ubound(domain); // extract with %.x, %.y, %.z
+  const Real* dx = geom[lev].CellSize();
+  const amrex::Dim3 bx_low = amrex::lbound(bx);
+  const amrex::Dim3 bx_high = amrex::ubound(bx);
+  const amrex::Dim3 dom_low = amrex::lbound(domain);
+  const amrex::Dim3 dom_high = amrex::ubound(domain);
 
   Array4<Real> const& ugradu = conv[lev]->array(*mfi); 
-  // extract FArrayBox data with Real* = %.dataPtr()
-  // extract FArrayBox Box with const Box& = %.box()
   
   Array4<Real> const& velocity = vel[lev]->array(*mfi);
   Array4<Real> const& epsilon_g = ep_g[lev]->array(*mfi);
@@ -88,7 +86,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((i == dom_low.x) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ilo_type(i-1,j,k,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ilo_type(i-1,j,k,0) == c;})) {
       u_w = velocity(i-1,j,k,0);
       v_w = velocity(i-1,j,k,1);
       w_w = velocity(i-1,j,k,2);
@@ -112,7 +110,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((i == dom_high.x) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ihi_type(i+1,j,k,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ihi_type(i+1,j,k,0) == c;})) {
       u_e = velocity(i+1,j,k,0);
       v_e = velocity(i+1,j,k,1);
       w_e = velocity(i+1,j,k,2);
@@ -136,7 +134,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((j == dom_low.y) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jlo_type(i,j-1,k,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jlo_type(i,j-1,k,0) == c;})) {
       u_s = velocity(i,j-1,k,0);
       v_s = velocity(i,j-1,k,1);
       w_s = velocity(i,j-1,k,2);
@@ -160,7 +158,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((j == dom_high.y) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jhi_type(i,j+1,k,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jhi_type(i,j+1,k,0) == c;})) {
       u_n = velocity(i,j+1,k,0);
       v_n = velocity(i,j+1,k,1);
       w_n = velocity(i,j+1,k,2);
@@ -184,7 +182,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((k == dom_low.z) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_klo_type(i,j,k-1,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_klo_type(i,j,k-1,0) == c;})) {
       u_b = velocity(i,j,k-1,0);
       v_b = velocity(i,j,k-1,1);
       w_b = velocity(i,j,k-1,2);
@@ -208,7 +206,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((k == dom_high.z) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_khi_type(i,j,k+1,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_khi_type(i,j,k+1,0) == c;})) {
       u_t = velocity(i,j,k+1,0);
       v_t = velocity(i,j,k+1,1);
       w_t = velocity(i,j,k+1,2);
@@ -225,7 +223,7 @@ mfix::mfix_compute_ugradu( Box& bx,
       v_t = upwind( vmns, vpls, w(i,j,k+1) );
       w_t = upwind( wmns, wpls, w(i,j,k+1) );
     }
-//
+
     // Define the convective terms -- conservatively
     //   ugradu = ( div(ep_g u^MAC u^cc) - u^cc div(ep_g u^MAC) ) / ep_g
     Real epu_hi_x = .5*(epsilon_g(i+1,j,k)+epsilon_g(i,j,k)) * u(i+1,j,k);
@@ -283,16 +281,14 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
 {
   AMREX_ASSERT_WITH_MESSAGE(nghost >= 4, "Compute divop(): ng must be >= 4");
 
-  const Real* dx = geom[lev].CellSize(); // extract with [0], [1], [2]
-  const amrex::Dim3 bx_low = amrex::lbound(bx); // extract with %.x, %.y, %.z
-  const amrex::Dim3 bx_high = amrex::ubound(bx); // extract with %.x, %.y, %.z
+  const Real* dx = geom[lev].CellSize();
+  const amrex::Dim3 bx_low = amrex::lbound(bx);
+  const amrex::Dim3 bx_high = amrex::ubound(bx);
   const amrex::Dim3 dom_low = amrex::lbound(domain);
   const amrex::Dim3 dom_high = amrex::ubound(domain);
 
-  Array4<Real> const& ugradu = conv[lev]->array(*mfi); // extract data with Real* = %.dataPtr()
-                                                       // extract Box with const Box& = %.box()
+  Array4<Real> const& ugradu = conv[lev]->array(*mfi);
 
-//  const auto& velocity = vel[lev]->array(*mfi);
   Array4<Real> const& velocity = vel[lev]->array(*mfi);
   Array4<Real> const& epsilon_g = ep_g[lev]->array(*mfi);
 
@@ -307,7 +303,6 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   Array4<Real> const& x_slopes = xslopes[lev]->array(*mfi);
   Array4<Real> const& y_slopes = yslopes[lev]->array(*mfi);
   Array4<Real> const& z_slopes = zslopes[lev]->array(*mfi);
-//  const FArrayBox& z_slopes((*zslopes[lev])[*mfi]);
 
   Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
   Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
@@ -351,11 +346,11 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   {
     if( areafrac_x(i,j,k) > 0 ) {
       if( i <= dom_low.x and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ilo_type(i-1,j,k,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ilo_type(i-1,j,k,0) == c;})) {
         u_face = velocity(dom_low.x-1,j,k,n);
       }
       else if( i >= dom_high.x+1 and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ihi_type(i+1,j,k,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ihi_type(i+1,j,k,0) == c;})) {
         u_face = velocity(dom_high.x+1,j,k,n);
       }
       else {
@@ -378,11 +373,11 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   {
     if( areafrac_y(i,j,k) > 0 ) {
       if( j <= dom_low.y and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jlo_type(i,j-1,k,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jlo_type(i,j-1,k,0) == c;})) {
         v_face = velocity(i,dom_low.y-1,k,n);
       }
       else if( j >= dom_high.y+1 and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jhi_type(i,j+1,k,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jhi_type(i,j+1,k,0) == c;})) {
         v_face = velocity(i,dom_high.y+1,k,n);
       }
       else {
@@ -405,11 +400,11 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   {
     if( areafrac_z(i,j,k) > 0 ) {
       if( k <= dom_low.z and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_klo_type(i,j,k-1,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_klo_type(i,j,k-1,0) == c;})) {
         w_face = velocity(i,j,dom_low.z-1,n);
       }
       else if( k >= dom_high.z+1 and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_khi_type(i,j,k+1,0) == bc[c];})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_khi_type(i,j,k+1,0) == c;})) {
         w_face = velocity(i,j,dom_high.z+1,n);
       }
       else {
@@ -425,26 +420,14 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
     fz(i,j,k,n) = .5*(epsilon_g(i,j,k-1)+epsilon_g(i,j,k)) * w(i,j,k) * w_face;
   });
 
-  AMREX_ASSERT_WITH_MESSAGE(not (fxfab.contains_nan() or fxfab.contains_inf()),
-      "Arithmetic error in fxfab");
-  AMREX_ASSERT_WITH_MESSAGE(not (fyfab.contains_nan() or fyfab.contains_inf()),
-      "Arithmetic error in fyfab");
-  AMREX_ASSERT_WITH_MESSAGE(not (fzfab.contains_nan() or fzfab.contains_inf()),
-      "Arithmetic error in fzfab");
-
   // Compute div(tau) with EB algorithm
-
-  // TODO translate this in c++
   compute_divop(
       BL_TO_FORTRAN_BOX(bx),
       BL_TO_FORTRAN_ANYD((*conv[lev])[*mfi]),
       BL_TO_FORTRAN_ANYD((*vel[lev])[*mfi]),
-      fxfab.dataPtr(), ubx.loVect(), ubx.hiVect(),
-      fyfab.dataPtr(), vbx.loVect(), vbx.hiVect(),
-      fzfab.dataPtr(), wbx.loVect(), wbx.hiVect(),
-//      BL_TO_FORTRAN_ANYD(fxfab),
-//      BL_TO_FORTRAN_ANYD(fyfab),
-//      BL_TO_FORTRAN_ANYD(fzfab),
+      BL_TO_FORTRAN_ANYD(fxfab),
+      BL_TO_FORTRAN_ANYD(fyfab),
+      BL_TO_FORTRAN_ANYD(fzfab),
       BL_TO_FORTRAN_ANYD((*ep_g[lev])[*mfi]),
       BL_TO_FORTRAN_ANYD((*areafrac[0])[*mfi]),
       BL_TO_FORTRAN_ANYD((*areafrac[1])[*mfi]),
@@ -502,7 +485,7 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv,
         for (MFIter mfi(*vel[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             // Tilebox
-            Box bx = mfi.tilebox (); // const Box& ??
+            Box bx = mfi.tilebox ();
             
             // this is to check efficiently if this tile contains any eb stuff
             const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
@@ -521,52 +504,11 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv,
                 if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
                 {
                     mfix_compute_ugradu(bx, conv, vel, &mfi, domain, lev);
-//                  compute_ugradu(
-//                      BL_TO_FORTRAN_BOX(bx),
-//                      BL_TO_FORTRAN_ANYD((   *conv[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((   *ep_g[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
-//                      (*xslopes[lev])[mfi].dataPtr(),
-//                      (*yslopes[lev])[mfi].dataPtr(),
-//                      BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-//                      domain.loVect(), domain.hiVect(),
-//                      bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-//                      bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-//                      bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-//                      geom[lev].CellSize(), &nghost);
                 }
                 else
                 {
                     mfix_compute_ugradu_eb(bx, conv, vel, &mfi, areafrac, facecent,
                                            volfrac, bndrycent, domain, flags, lev);
-//                  compute_ugradu_eb(
-//                      BL_TO_FORTRAN_BOX(bx),
-//                      BL_TO_FORTRAN_ANYD((   *conv[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((   *ep_g[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *areafrac[0])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *areafrac[1])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *areafrac[2])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *facecent[0])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *facecent[1])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *facecent[2])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(flags),
-//                      BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*bndrycent)[mfi]),
-//                      (*xslopes[lev])[mfi].dataPtr(),
-//                      (*yslopes[lev])[mfi].dataPtr(),
-//                      BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-//                      domain.loVect(), domain.hiVect(),
-//                      bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-//                      bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-//                      bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-//                      geom[lev].CellSize(), &nghost);
                 }
             }
         }
@@ -628,52 +570,11 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv,
                 if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
                 {
                     mfix_compute_ugradu(bx, conv, vel, &mfi, domain, lev);
-//                  compute_ugradu(
-//                      BL_TO_FORTRAN_BOX(bx),
-//                      BL_TO_FORTRAN_ANYD((   *conv[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((   *ep_g[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
-//                      (*xslopes[lev])[mfi].dataPtr(),
-//                      (*yslopes[lev])[mfi].dataPtr(),
-//                      BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-//                      domain.loVect(), domain.hiVect(),
-//                      bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-//                      bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-//                      bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-//                      geom[lev].CellSize(), &nghost);
                 }
                 else
                 {
                     mfix_compute_ugradu_eb(bx, conv, vel, &mfi, areafrac, facecent,
                                            volfrac, bndrycent, domain, flags, lev);
-//                  compute_ugradu_eb(
-//                      BL_TO_FORTRAN_BOX(bx),
-//                      BL_TO_FORTRAN_ANYD((   *conv[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((    *vel[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((   *ep_g[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_u_mac[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_v_mac[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*m_w_mac[lev])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *areafrac[0])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *areafrac[1])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *areafrac[2])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *facecent[0])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *facecent[1])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(( *facecent[2])[mfi]),
-//                      BL_TO_FORTRAN_ANYD(flags),
-//                      BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
-//                      BL_TO_FORTRAN_ANYD((*bndrycent)[mfi]),
-//                      (*xslopes[lev])[mfi].dataPtr(),
-//                      (*yslopes[lev])[mfi].dataPtr(),
-//                      BL_TO_FORTRAN_ANYD((*zslopes[lev])[mfi]),
-//                      domain.loVect(), domain.hiVect(),
-//                      bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-//                      bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-//                      bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-//                      geom[lev].CellSize(), &nghost);
                 }
             }
         }

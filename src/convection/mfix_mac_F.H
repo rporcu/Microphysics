@@ -72,9 +72,8 @@ void compute_divop (
   const amrex::Real* bcent, const int*  blo, const int*   bhi,
   const int* domlo, const int* domhi,
   const amrex::Real* dx, const int* ng,
-//  // TODO check
-  const amrex::Real* mu=NULL,
-  const int* do_explicit_diffusion=NULL
+  const amrex::Real* mu=nullptr,
+  const int* do_explicit_diffusion=nullptr
 );
 
 void set_mac_velocity_bcs( 
