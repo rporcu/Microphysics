@@ -627,9 +627,6 @@ contains
       fails = 0
       pinc = 0
 
-      if (fix_seed) &
-         call init_random_seed(fix_seed)
-
       do while (np < seed .and. fails < maxfails)
 
          do
@@ -780,7 +777,6 @@ contains
       !-----------------------------------------------
 
       nsize = size(dp(:))
-      ! call init_random_seed(.false.)
 
       i=1
       do while(i<= ceiling(real(nsize/2.0)))
@@ -852,7 +848,6 @@ contains
       integer :: nsize, lc
       real(rt) :: lscale
 
-      ! call init_random_seed(.false.)
       dp = amrex_random()
 
       lscale = dp_max - dp_min
@@ -865,45 +860,6 @@ contains
       return
 
    end subroutine uni_rno
-
-
-   !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-   !                                                                     !
-   !                                                                     !
-   !                                                                     !
-   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   subroutine init_random_seed(fix_seed)
-
-      implicit none
-
-      logical, intent(in)  :: fix_seed
-
-      !-----------------------------------------------
-      ! local variables
-      !-----------------------------------------------
-      integer              :: isize,idate(8)
-      integer,allocatable  :: iseed(:)
-      !-----------------------------------------------
-
-      call random_seed(size=isize)
-      allocate( iseed(isize) )
-      call random_seed(get=iseed)
-
-      ! Note -- "10" is arbitrary -- we just need something repeatable for
-      !     regression testing
-      if ( fix_seed ) then
-         iseed(:) = 10
-      else
-         call date_and_time(values=idate)
-         iseed = iseed * (idate(8)-500) ! idate(8) contains millisecond
-      end if
-
-      call random_seed(put=iseed)
-
-      if(allocated(iseed)) deallocate( iseed )
-
-   end subroutine init_random_seed
-
 
 
    !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
