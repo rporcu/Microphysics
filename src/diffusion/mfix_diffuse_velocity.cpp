@@ -137,7 +137,7 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       //
       // Finally, solve the system
       //
-      //  (1 - div dot mu grad) u = RHS
+      //  ((ro_g)*(ep_g) - div dot mu grad) u = RHS
       //
       solver.solve ( GetVecOfPtrs(phi_cc), GetVecOfConstPtrs(rhs_cc), diff_mg_rtol, diff_mg_atol );
 
