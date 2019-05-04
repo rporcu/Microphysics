@@ -46,7 +46,7 @@ struct ComputeDragBVK2
             amrex::Real F = 10.0*PHIS/EPg/EPg + EPg*EPg*(1.0 + 1.5*sqrt(PHIS));
 
 			F += RE*(0.11*PHIS*(1.0+PHIS) - 4.56e-3*oEPgfour + 
-					 std::pow(RE, -0.343*(0.169*EPg + 6.44e-2*oEPgfour)));
+					 std::pow(RE, -0.343)*(0.169*EPg + 6.44e-2*oEPgfour));
 
             // F += 0.413*RE/(24.0*EPg*EPg) *
             //     (1.0/EPg + 3.0*EPg*PHIS + 8.4/std::pow(RE, 0.343)) /
