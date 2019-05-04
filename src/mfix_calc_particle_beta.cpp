@@ -16,7 +16,7 @@ void mfix::mfix_calc_particle_beta(Real time)
 {
 	if (true)
     {
-        mfix_calc_particle_beta(ComputeDragBVK(), time);
+        mfix_calc_particle_beta(ComputeDragBVK2(), time);
     }
     else
     {
