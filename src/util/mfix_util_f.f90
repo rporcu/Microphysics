@@ -42,6 +42,25 @@
 
   end subroutine get_gravity
 
+  subroutine get_bc_list ( bc_list_out) bind(C)
+
+      use iso_c_binding
+      use bc, only: pinf_, pout_, minf_
+
+      type, bind(C) :: bc_list
+        integer(c_int) :: minf
+        integer(c_int) :: pinf
+        integer(c_int) :: pout
+      end type bc_list
+
+      type(bc_list), intent(out)  :: bc_list_out
+      
+      bc_list_out%minf = minf_
+      bc_list_out%pinf = pinf_
+      bc_list_out%pout = pout_
+
+  end subroutine get_bc_list
+
   subroutine get_domain_bc ( domain_bc_out ) bind(C)
 
       use iso_c_binding, only: c_int

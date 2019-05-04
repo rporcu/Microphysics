@@ -24,6 +24,7 @@
 #include <AMReX_EB_LSCore.H>
 
 #include <MFIXParticleContainer.H>
+#include <mfix_des_F.H>
 #include <AMReX_MLMG.H>
 #include <AMReX_MLNodeLaplacian.H>
 #include <mfix_eb_if.H>
@@ -76,17 +77,17 @@ public:
     void WriteAverageRegions ( std::string& avg_file, int nstep, Real time = 0.0 ) const;
 
     void ComputeAverageFluidVars ( const int lev,
-                                         const amrex::Real time,
-                                         const string&  basename,
-                                         const Vector<int>& avg_p_g,
-                                         const Vector<int>& avg_ep_g,
-                                         const Vector<int>& avg_vel_g,
-                                         const Vector<Real>& avg_region_x_w,
-                                         const Vector<Real>& avg_region_x_e,
-                                         const Vector<Real>& avg_region_y_s,
-                                         const Vector<Real>& avg_region_y_n,
-                                         const Vector<Real>& avg_region_z_b,
-                                         const Vector<Real>& avg_region_z_t ) const;
+                                   const amrex::Real time,
+                                   const string&  basename,
+                                   const Vector<int>& avg_p_g,
+                                   const Vector<int>& avg_ep_g,
+                                   const Vector<int>& avg_vel_g,
+                                   const Vector<Real>& avg_region_x_w,
+                                   const Vector<Real>& avg_region_x_e,
+                                   const Vector<Real>& avg_region_y_s,
+                                   const Vector<Real>& avg_region_y_n,
+                                   const Vector<Real>& avg_region_z_b,
+                                   const Vector<Real>& avg_region_z_t ) const;
 
     void Regrid ();
 
@@ -249,6 +250,8 @@ protected:
      static Real gp0[3];
      static Real gravity[3];
 
+     static BcList bc_list;
+
      //! The particles see an inflow face as a solid wall; thus instead of
      //! creating a separate EBfactory for particles, we simply modify the
      //! level-set near inflow to see it as a wall
@@ -339,6 +342,25 @@ private:
      void check_for_nans(int lev);
 
      void mfix_compute_dt(Real time, Real stop_time, Real & dt);
+
+     void mfix_compute_ugradu( Box& bx,
+                               Vector< std::unique_ptr<MultiFab> >& conv,
+                               Vector< std::unique_ptr<MultiFab> >& vel,
+                               MFIter* mfi,
+                               Box& domain,
+                               const int lev);
+
+     void mfix_compute_ugradu_eb( Box& bx,
+                                  Vector< std::unique_ptr<MultiFab> >& conv,
+                                  Vector< std::unique_ptr<MultiFab> >& vel,
+                                  MFIter* mfi,
+                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
+                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
+                                  const amrex::MultiFab* volfrac,
+                                  const amrex::MultiCutFab* bndrycent,
+                                  Box& domain,
+                                  const EBCellFlagFab& flags,
+                                  const int lev);
 
      void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv,
                                         Vector< std::unique_ptr<MultiFab> >& vel,
