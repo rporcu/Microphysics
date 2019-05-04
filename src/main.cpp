@@ -73,6 +73,9 @@ void ReadParameters ()
      pp.query("repl_y", repl_y);
      pp.query("repl_z", repl_z);
      pp.query("regrid_int",regrid_int);
+
+     if ( regrid_int == 0 )
+       amrex::Abort("regrid_int must be > 0 or < 0");
   }
 
   {
