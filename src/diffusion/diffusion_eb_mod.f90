@@ -158,21 +158,9 @@ contains
        & flags, flo, fhi, vfrac, vflo, vfhi, bcent, blo, bhi,           &
        & domlo, domhi, dx, ng, mu, do_explicit_diffusion)
 
-      ! Divide by ro*ep
-      do n = 1, 3
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
-                  divtau(i,j,k,n) = divtau(i,j,k,n) / ( ro(i,j,k) * ep(i,j,k) )
-               end do
-            end do
-         end do
-      end do
-
       call amrex_deallocate(vel)
 
    end subroutine compute_divtau_eb
-
 
 
    !<$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$>!
