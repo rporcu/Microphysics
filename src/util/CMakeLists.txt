@@ -14,6 +14,5 @@ target_sources( mfixcore
    mfix_util_f.f90
    mfix_util.cpp
    mfix_fillpatch.cpp
-   reconstruct_velocity.f90
    interpolation_m.f90
    )
