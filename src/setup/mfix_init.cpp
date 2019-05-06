@@ -160,6 +160,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
 		std::string drag_type;
 		pp.query("drag_type", drag_type);
+
 		if (drag_type == "WenYu")
 		{
 			m_drag_type = DragType::WenYu;
@@ -174,7 +175,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 		}
 		else if (drag_type == "UserDrag")
 		{
-			m_drag_type == DragType::UserDrag;
+			m_drag_type = DragType::UserDrag;
 		}
 		// Note - we will check for invalid drag types later, so we don't do it here
     }	
