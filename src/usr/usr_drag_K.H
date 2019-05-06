@@ -1,7 +1,7 @@
 #include <AMReX_REAL.H>
 #include <MFIX_DEM_Parms.H>
 
-struct ComputeDragUsr
+struct ComputeDragUser
 {
     /**
      *  \brief Returns: the calculated drag coefficient.

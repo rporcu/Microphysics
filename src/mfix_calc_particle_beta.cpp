@@ -7,9 +7,22 @@
 
 void mfix::mfix_calc_particle_beta(Real time)
 {
-	if (m_drag_type == DragType::BVK2)
+	if (m_drag_type == DragType::WenYu)
+    {
+        mfix_calc_particle_beta(ComputeDragWenYu(), time);
+    }
+	else if (m_drag_type == DragType::Gidaspow)
+    {
+        mfix_calc_particle_beta(ComputeDragGidaspow(), time);
+    }
+
+	else if (m_drag_type == DragType::BVK2)
     {
         mfix_calc_particle_beta(ComputeDragBVK2(), time);
+    }
+	else if (m_drag_type == DragType::UserDrag)
+    {
+        mfix_calc_particle_beta(ComputeDragUser(), time);
     }
     else
     {
