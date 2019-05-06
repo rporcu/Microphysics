@@ -64,20 +64,37 @@ mfix::mfix_compute_ugradu( Box& bx,
 
   Real i_dx(1/dx[0]), i_dy(1/dx[1]), i_dz(1/dx[2]);
 
-  Real u_w(0), v_w(0), w_w(0);
-  Real u_e(0), v_e(0), w_e(0);
-  Real u_s(0), v_s(0), w_s(0);
-  Real u_n(0), v_n(0), w_n(0);
-  Real u_b(0), v_b(0), w_b(0);
-  Real u_t(0), v_t(0), w_t(0);
-  Real upls(0), umns(0), vpls(0), vmns(0), wpls(0), wmns(0);
-
   // Vectorize the boundary conditions list in order to use it in lambda
   // functions
   Vector<int> bc = {bc_list.minf, bc_list.pinf, bc_list.pout};
 
   AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
   {
+      Real u_w(0);
+      Real v_w(0);
+      Real w_w(0);
+      Real u_e(0);
+      Real v_e(0);
+      Real w_e(0);
+      Real u_s(0);
+      Real v_s(0);
+      Real w_s(0);
+      Real u_n(0);
+      Real v_n(0);
+      Real w_n(0);
+      Real u_b(0);
+      Real v_b(0);
+      Real w_b(0);
+      Real u_t(0);
+      Real v_t(0);
+      Real w_t(0);
+      Real upls(0);
+      Real umns(0);
+      Real vpls(0);
+      Real vmns(0);
+      Real wpls(0);
+      Real wmns(0);
+
     //
     // West face
     //
@@ -324,9 +341,6 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   Array4<Real> const& fy = fyfab.array();
   Array4<Real> const& fz = fzfab.array();
 
-  Real u_face(0), v_face(0), w_face(0);
-  Real upls(0), umns(0), vpls(0), vmns(0), wpls(0), wmns(0);
-
   Vector<int> bc = {bc_list.minf, bc_list.pinf, bc_list.pout};
 
   //
@@ -340,6 +354,10 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   //
   AMREX_CUDA_HOST_DEVICE_FOR_4D(ubx, ncomp, i, j, k, n,
   {
+	  Real u_face(0); 
+	  Real upls(0); 
+	  Real umns(0); 
+
     if( areafrac_x(i,j,k) > 0 ) {
       if( i <= dom_low.x and
        std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ilo_type(dom_low.x-1,j,k,0) == c;})) {
@@ -367,6 +385,9 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   //
   AMREX_CUDA_HOST_DEVICE_FOR_4D(vbx, ncomp, i, j, k, n,
   {
+	  Real v_face(0); 
+	  Real vpls(0); 
+	  Real vmns(0); 
     if( areafrac_y(i,j,k) > 0 ) {
       if( j <= dom_low.y and
        std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jlo_type(i,dom_low.y-1,k,0) == c;})) {
@@ -394,6 +415,9 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   //
   AMREX_CUDA_HOST_DEVICE_FOR_4D(wbx, ncomp, i, j, k, n,
   {
+	  Real w_face(0); 
+	  Real wpls(0); 
+	  Real wmns(0); 
     if( areafrac_z(i,j,k) > 0 ) {
       if( k <= dom_low.z and
        std::any_of(bc.begin(), bc.end(), [&](int c){return bc_klo_type(i,j,dom_low.z-1,0) == c;})) {
