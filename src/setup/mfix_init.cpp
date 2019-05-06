@@ -573,6 +573,26 @@ void mfix::InitLevelData(Real dt, Real time)
          amrex::Abort("Bad particle_init_type");
       }
 
+	  std::string drag_type;
+	  pp.query("drag_type", drag_type);
+	  if (drag_type == "WenYu")
+	  {
+		  m_drag_type = DragType::WenYu;
+	  }
+	  else if (drag_type == "Gidaspow")
+	  {
+		  m_drag_type = DragType::Gidaspow;
+	  }
+	  else if (drag_type == "BVK2")
+	  {
+		  m_drag_type = DragType::BVK2;
+	  }
+	  else if (drag_type == "UserDrag")
+	  {
+		  m_drag_type == "UserDrag";
+	  }
+	  // Note - we will check for invalid drag types later, so we don't do it here
+
       pc->Redistribute();
 
       // used in load balancing
