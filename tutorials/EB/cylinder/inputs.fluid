@@ -68,6 +68,8 @@ amr.regrid_int         = 25
 mfix.knapsack_weight_type = "NumParticles"
 mfix.knapsack_weight_type = "RunTimeCosts"
 
+mfix.drag_type = "BVK2"
+
 #_______________________________________________________________________
 # EB Settings
 

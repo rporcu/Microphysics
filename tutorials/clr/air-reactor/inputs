@@ -26,6 +26,8 @@ mfix.fixed_dt = 0
 
 mfix.cfl = 0.5
 
+mfix.drag_type = "WenYu"
+
 #amr.stop_time = 0.20
 
 amr.blocking_factor = 8

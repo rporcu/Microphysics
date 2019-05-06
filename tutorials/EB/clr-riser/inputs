@@ -72,3 +72,5 @@ mfix.riser_c2c_height     =   0.01905
 
 mfix.riser_upper_radius   =   0.00794
 mfix.riser_upper_height   =   1.00000
+
+mfix.drag_type = "WenYu"
