@@ -27,5 +27,6 @@ struct ComputeDragUser
 							int i, int j, int k, int pid) const
     {
 		amrex::Abort("The user-defined drag routine was invoked, but no user-provided drag routine was found.");
+		return 0.0;
     }
 };
