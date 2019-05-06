@@ -119,9 +119,6 @@ void MFIXParticleContainer::ReadStaticParameters ()
 
         Vector<int> ts(BL_SPACEDIM);
 
-        if (pp.queryarr("tile_size", ts))
-            tile_size = IntVect(ts);
-
         initialized = true;
     }
 }
