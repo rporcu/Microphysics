@@ -20,7 +20,7 @@ void mfix::mfix_calc_particle_beta(Real time)
     }
     else
     {
-        mfix_calc_particle_beta(ComputeDragKochHill(), time);
+        mfix_calc_particle_beta(ComputeDragGidaspow(), time);
     }
 }
 
