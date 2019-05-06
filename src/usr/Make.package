@@ -10,3 +10,5 @@ f90EXE_sources += usr_drag.f90
 f90EXE_sources += usr_mod.f90
 f90EXE_sources += write_usr0.f90
 f90EXE_sources += write_usr1.f90
+
+CEXE_headers += usr_drag_K.H
