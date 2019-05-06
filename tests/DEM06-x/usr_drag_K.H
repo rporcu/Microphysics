@@ -26,7 +26,8 @@ struct ComputeDragUser
 							amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
 							int i, int j, int k, int pid) const
     {
-		amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : DEMParams::large_number;
+		amrex::Real ROg = ROPg / EPg;
+		amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROg/Mug : DEMParams::large_number;
 
 		amrex::Real Cd = 0.0;
 		if (RE > DEMParams::eps) Cd = (24.0/RE)*(1.0 + 0.15*std::pow(RE, 0.687));
