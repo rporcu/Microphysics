@@ -127,3 +127,5 @@ amr.plt_regtest = 1
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
+
+mfix.drag_type = "BVK2"

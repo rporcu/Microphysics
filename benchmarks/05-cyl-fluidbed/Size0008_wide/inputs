@@ -14,6 +14,7 @@ mac.mg_verbose   = 0
 mfix.mg_verbose  = 1
 
 mfix.particle_init_type = "Auto"
+mfix.drag_type = "BVK2"
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
