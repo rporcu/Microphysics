@@ -40,11 +40,6 @@ contains
 
     if(particle_types > 0) then
 
-       if(drag_type_enum == invalid_drag) then
-          write(err_msg, 1001) 'DRAG_TYPE', trim(adjustl(drag_type))
-          call flush_err_msg(abort=.true.)
-       endif
-
        if(is_undefined(mew)) then
           write(err_msg,1000) 'MEW'
           call flush_err_msg(abort=.true.)
