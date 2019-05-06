@@ -75,7 +75,7 @@
 !  Function name: Re                                                   !
 !  Author: J.Musser                                   Date:  May-2014  !
 !                                                                      !
-!  Purpose: Calculate the particle Reynods Number.                     !
+!  Purpose: Calculate the particle Reynolds Number.                    !
 !                                                                      !
 !  Ref: R. Garg, J. Galvin, T. Li, and S. Pannala, Documentation of    !
 !  open-source MFIX-DEM software for gas-solids flows," from URL:      !
