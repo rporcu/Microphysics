@@ -1,12 +1,7 @@
-#include <AMReX_ParmParse.H>
 #include <mfix_F.H>
-#include <mfix_eb_F.H>
 #include <mfix.H>
-#include <mfix_des_F.H>
+#include <mfix_des_K.H>
 #include <mfix_drag_K.H>
-#include <mfix_util_F.H>
-#include <AMReX_BC_TYPES.H>
-#include <AMReX_Box.H>
 #include <AMReX_EBMultiFabUtil.H>
 
 void mfix::mfix_calc_drag_fluid(Real time)
@@ -39,7 +34,7 @@ mfix::mfix_calc_drag_particle(Real time)
         Box      domain(geom[lev].Domain());
         MultiFab gp_tmp;
 
-        gp_tmp.define(grids[lev],dmap[lev],3,1);
+        gp_tmp.define(grids[lev],dmap[lev],3,1,MFInfo(),*ebfactory[lev]);
 
         MultiFab::Copy(gp_tmp, *gp[lev], 0, 0, 3, 1);
         gp_tmp.FillBoundary(geom[lev].periodicity());
@@ -73,7 +68,6 @@ mfix::mfix_calc_drag_particle(Real time)
         bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                              (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-
         // Pointers to Multifabs of interest
         MultiFab*  gp_ptr;
         MultiFab* vel_ptr;
@@ -81,6 +75,11 @@ mfix::mfix_calc_drag_particle(Real time)
         // Temporararies for dual grid case
         std::unique_ptr<MultiFab>   gp_pba;
         std::unique_ptr<MultiFab>  vel_pba;
+
+        // This is just a sanity check to make sure we're not using covered values
+        // We can remove these lines once we're confident in the algoirthm
+        EB_set_covered(*vel_g[0], 0, 3, 1, covered_val);
+        EB_set_covered( gp_tmp  , 0, 3, 1, covered_val);
 
         if (OnSameGrids)
         {
@@ -125,9 +124,10 @@ mfix::mfix_calc_drag_particle(Real time)
             {
                 auto& particles = pti.GetArrayOfStructs();
                 const int np = particles.size();
+
                 Box bx = pti.tilebox ();
 
-                // this is to check efficiently if this tile contains any eb stuff
+                // This is to check efficiently if this tile contains any eb stuff
                 const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_ptr)[pti]);
                 const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
@@ -144,10 +144,11 @@ mfix::mfix_calc_drag_particle(Real time)
                         for (int ip = 0; ip < np; ++ip)
                         {
                            MFIXParticleContainer::ParticleType& particle = particles[ip];
-                           Real pbeta = particle.rdata(realData::dragx);
 
                            trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
                            trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
+
+                           Real pbeta = particle.rdata(realData::dragx);
 
                            // Particle drag calculation
                            particle.rdata(realData::dragx) = pbeta * ( velfp[0] - particle.rdata(realData::velx) ) -
@@ -162,14 +163,9 @@ mfix::mfix_calc_drag_particle(Real time)
                     }
                     else // FAB not all regular
                     {
-                        // Phi is always on the particles grid -- we do not use the refined level here
+                        // phi is always on the particles grid -- we do not use the refined level here
                         const MultiFab & phi = * level_sets[lev];
                         const auto& phi_array = phi.array(pti);
-
-                        const MultiCutFab* bndrycent = &(ebfactory[lev] -> getBndryCent());
-                        const auto& bct_array = bndrycent->array(pti);
-
-                        const auto&  gp_array   =  gp_ptr->array(pti);
 
                         for (int ip = 0; ip < np; ++ip)
                         {
@@ -177,9 +173,9 @@ mfix::mfix_calc_drag_particle(Real time)
                             Real pbeta = particle.rdata(realData::dragx);
 
                             // This identifies which cell the particle is in
-                            int iloc = std::floor((particle.pos(0) - plo[0])*dxi[0]);
-                            int jloc = std::floor((particle.pos(1) - plo[1])*dxi[1]);
-                            int kloc = std::floor((particle.pos(2) - plo[2])*dxi[2]);
+                            int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
+                            int jloc = floor((particle.pos(1) - plo[1])*dxi[1]);
+                            int kloc = floor((particle.pos(2) - plo[2])*dxi[2]);
 
                             // Pick upper cell in the stencil
                             Real lx = (particle.pos(0) - plo[0])*dxi[0] + 0.5;
@@ -190,85 +186,54 @@ mfix::mfix_calc_drag_particle(Real time)
                             int j = std::floor(ly);
                             int k = std::floor(lz);
 
-                            // If the particle has gone outside the fluid region then we will
-                            //    let the wall collision term bring it back and not use any
-                            //    extrapolated fluid quantities in a covered region
+                            // Covered cell
                             if (flags_array(iloc,jloc,kloc).isCovered())
                             {
                                 particle.rdata(realData::dragx) = 0.0;
                                 particle.rdata(realData::dragy) = 0.0;
                                 particle.rdata(realData::dragz) = 0.0;
-                            }
 
-                            // Regular cell
-                            else if (flags_array(iloc,jloc,kloc).isRegular()) 
-                            {
+                            } else {
 
-                                // This cell is regular which means its not touching a covered cell
-                                trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
-                                trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
-
-                                particle.rdata(realData::dragx) = pbeta * ( velfp[0] - particle.rdata(realData::velx) ) -
-                                                                 (gradp[0] + gp0[0]) * particle.rdata(realData::volume);
- 
-                                particle.rdata(realData::dragy) = pbeta * ( velfp[1] - particle.rdata(realData::vely) ) -
-                                                                 (gradp[1] + gp0[1]) * particle.rdata(realData::volume);
- 
-                                particle.rdata(realData::dragz) = pbeta * ( velfp[2] - particle.rdata(realData::velz) ) -
-                                                                 (gradp[2] + gp0[2]) * particle.rdata(realData::volume);
-                            }
-
-                            // Cut cell
-                            else 
-                            {
-                                if (!flags_array(i-1,j-1,k-1).isCovered() &&
-                                    !flags_array(i  ,j-1,k-1).isCovered() &&
-                                    !flags_array(i-1,j  ,k-1).isCovered() &&
-                                    !flags_array(i  ,j  ,k-1).isCovered() &&
-                                    !flags_array(i-1,j-1,k  ).isCovered() &&
-                                    !flags_array(i  ,j-1,k  ).isCovered() &&
-                                    !flags_array(i-1,j  ,k  ).isCovered() &&
-                                    !flags_array(i  ,j  ,k  ).isCovered()) 
+                                // Regular cell
+                                if (flags_array(iloc,jloc,kloc).isRegular()) 
                                 {
-                                    // None of the cells in the stencil is covered; we can use the regular formula
                                     trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
                                     trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
+                                }
     
-                               } else {
-
-                                    // One of the cells in the stencil is covered
-
-                                    Real centroid_pos[3];
-                                    centroid_pos[0] = bct_array(iloc,jloc,kloc,0);
-                                    centroid_pos[1] = bct_array(iloc,jloc,kloc,1);
-                                    centroid_pos[2] = bct_array(iloc,jloc,kloc,2);
+                                // Cut cell but none of the cells in the stencil is covered; we can use the regular formula
+                                else if (!flags_array(i-1,j-1,k-1).isCovered() &&
+                                         !flags_array(i  ,j-1,k-1).isCovered() &&
+                                         !flags_array(i-1,j  ,k-1).isCovered() &&
+                                         !flags_array(i  ,j  ,k-1).isCovered() &&
+                                         !flags_array(i-1,j-1,k  ).isCovered() &&
+                                         !flags_array(i  ,j-1,k  ).isCovered() &&
+                                         !flags_array(i-1,j  ,k  ).isCovered() &&
+                                         !flags_array(i  ,j  ,k  ).isCovered()) 
+                                {
+                                    trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
+                                    trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
+        
+                                // Cut cell and at least one of the cells in the stencil is covered
+                                } else {
 
                                     Real anrm[3];
-                                    Real  pos[3];
-                                    pos[0] = plo[0] + (iloc + 0.5 + centroid_pos[0])*dx[0];
-                                    pos[1] = plo[1] + (jloc + 0.5 + centroid_pos[1])*dx[1];
-                                    pos[2] = plo[2] + (kloc + 0.5 + centroid_pos[2])*dx[2];
-
-                                    // We find the normal at the face centroid
-                                    normal_from_ls(anrm, pos, phi_array, plo, dxi);
-
-                                    // Scaled particle position relative to cell center (same as bndryCentroid scaling)
-                                    Real px = particle.pos(0)*dxi[0]-(iloc+.5);
-                                    Real py = particle.pos(1)*dxi[0]-(jloc+.5);
-                                    Real pz = particle.pos(2)*dxi[0]-(kloc+.5);
     
-                                    // Distance from plane:  (particle pos - centroid pos) dot (normal)
-                                    Real dist = (centroid_pos[0] - px) * anrm[0] + 
-                                                (centroid_pos[1] - py) * anrm[1] + 
-                                                (centroid_pos[2] - pz) * anrm[2];
-        
-                                    // NOTE THIS ALGORITHM INTERPOLATES TO POINT BETWEEN CELL CENTER AND BNDRY CENTROID
-                                    //      THAT IS SAME DISTANCE FROM WALL AS PARTICLE IS -- IT DOES NOT INTERPOLATE
-                                    //      TO CORRECT PARTICLE LOCATION
-                                    // Distance from cell center (iloc,jloc,kloc)
-                                    Real gx = centroid_pos[0] - dist*anrm[0];
-                                    Real gy = centroid_pos[1] - dist*anrm[1];
-                                    Real gz = centroid_pos[2] - dist*anrm[2];
+                                    // Compute distance of the particle from the wall.
+                                    // (This is the same function we call when computing the particle-wall collisions)
+                                    int ls_refinement = 1;
+                                    Real dist = interp_level_set(particle, ls_refinement, phi_array, plo, dxi);
+
+                                    // Compute the normal to the wall in this cell -- it doesn't matter
+                                    // whether we compute it "at the particle location" or "at the centroid location"
+                                    // because it interpolates from the same values of phi.
+                                    level_set_normal(particle, ls_refinement, &anrm[0], phi_array, plo, dxi);
+    
+                                    // Particle position must be in [-.5:.5] is relative to cell center and scaled by dx
+                                    Real gx = particle.pos(0)*dxi[0] - (iloc + 0.5);
+                                    Real gy = particle.pos(1)*dxi[1] - (jloc + 0.5);
+                                    Real gz = particle.pos(2)*dxi[2] - (kloc + 0.5);
     
                                     int ii,jj,kk;
 
@@ -282,7 +247,7 @@ mfix::mfix_calc_drag_particle(Real time)
                                         jj = jloc - 1;
                                     } else {
                                         jj = jloc + 1; 
-                                        gy = -gy;
+                                    gy = -gy;
                                     }
                                     if (anrm[2] < 0) {
                                         kk = kloc - 1;
@@ -295,17 +260,17 @@ mfix::mfix_calc_drag_particle(Real time)
                                     Real gxz = gx*gz;
                                     Real gyz = gy*gz;
                                     Real gxyz = gx*gy*gz;
-    
+
                                     for (int n = 0; n < 3; n++)
                                     {
                                        velfp[n] = (1.0+gx+gy+gz+gxy+gxz+gyz+gxyz) * vel_array(iloc,jloc,kloc,n)
                                                 + (-gz - gxz - gyz - gxyz)        * vel_array(iloc,jloc,kk  ,n)
                                                 + (-gy - gxy - gyz - gxyz)        * vel_array(iloc,jj  ,kloc,n)
-                                                + (gyz + gxyz)                    * vel_array(iloc,jj  ,kk ,n)
+                                                + (gyz + gxyz)                    * vel_array(iloc,jj  ,kk  ,n) 
                                                 + (-gx - gxy - gxz - gxyz)        * vel_array(ii  ,jloc,kloc,n)
-                                                + (gxz + gxyz)                    * vel_array(ii  ,jloc,kk ,n)
+                                                + (gxz + gxyz)                    * vel_array(ii  ,jloc,kk  ,n)
                                                 + (gxy + gxyz)                    * vel_array(ii  ,jj  ,kloc,n)
-                                                + (-gxyz)                         * vel_array(ii  ,jj  ,kk ,n);
+                                                + (-gxyz)                         * vel_array(ii  ,jj  ,kk  ,n);
                                        gradp[n] = (1.0+gx+gy+gz+gxy+gxz+gyz+gxyz) *  gp_array(iloc,jloc,kloc,n)
                                                 + (-gz - gxz - gyz - gxyz)        *  gp_array(iloc,jloc,kk  ,n)
                                                 + (-gy - gxy - gyz - gxyz)        *  gp_array(iloc,jj  ,kloc,n)
@@ -314,8 +279,16 @@ mfix::mfix_calc_drag_particle(Real time)
                                                 + (gxz + gxyz)                    *  gp_array(ii  ,jloc,kk ,n)
                                                 + (gxy + gxyz)                    *  gp_array(ii  ,jj  ,kloc,n)
                                                 + (-gxyz)                         *  gp_array(ii  ,jj  ,kk ,n);
+
+                                       // Keep the interpolated velocity between the cell value and the wall value (0)
+                                       if ( (velfp[n] > 0.0 && velfp[n] > vel_array(iloc,jloc,kloc,n)) ||  
+                                            (velfp[n] < 0.0 && velfp[n] < vel_array(iloc,jloc,kloc,n)) ) 
+                                           velfp[n] = vel_array(iloc,jloc,kloc,n);
+                                       if ( (gradp[n] > 0.0 && gradp[n] > gp_array(iloc,jloc,kloc,n)) ||  
+                                            (gradp[n] < 0.0 && gradp[n] < gp_array(iloc,jloc,kloc,n)) ) 
+                                           gradp[n] = gp_array(iloc,jloc,kloc,n);
                                     }
-                               }
+                               } // Cut cell
 
                                particle.rdata(realData::dragx) = pbeta * ( velfp[0] - particle.rdata(realData::velx) ) -
                                                                 (gradp[0] + gp0[0]) * particle.rdata(realData::volume);
@@ -326,7 +299,7 @@ mfix::mfix_calc_drag_particle(Real time)
                                particle.rdata(realData::dragz) = pbeta * ( velfp[2] - particle.rdata(realData::velz) ) -
                                                                 (gradp[2] + gp0[2]) * particle.rdata(realData::volume);
 
-                            } // Test on type of cell
+                            } // Not covered
                         } // particle loop
                 } // if box not all regular
 

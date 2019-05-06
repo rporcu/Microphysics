@@ -1,11 +1,8 @@
-#include <AMReX_ParmParse.H>
-
 #include <mfix_diff_F.H>
 #include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
-
 #include <AMReX_EBMultiFabUtil.H>
 
 // For multigrid
@@ -102,7 +99,6 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
 
       // Set the max number of iterations
       solver.setMaxIter (diff_mg_max_iter);
-      solver.setMaxFmgIter (diff_mg_max_fmg_iter);
       solver.setCGMaxIter (diff_mg_cg_maxiter);
       solver.setFinalSmooth(diff_mg_nuf);
 
@@ -137,7 +133,7 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       //
       // Finally, solve the system
       //
-      //  (1 - div dot mu grad) u = RHS
+      //  ((ro_g)*(ep_g) - div dot mu grad) u = RHS
       //
       solver.solve ( GetVecOfPtrs(phi_cc), GetVecOfConstPtrs(rhs_cc), diff_mg_rtol, diff_mg_atol );
 

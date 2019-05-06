@@ -342,11 +342,11 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   {
     if( areafrac_x(i,j,k) > 0 ) {
       if( i <= dom_low.x and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ilo_type(i-1,j,k,0) == c;})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ilo_type(dom_low.x-1,j,k,0) == c;})) {
         u_face = velocity(dom_low.x-1,j,k,n);
       }
       else if( i >= dom_high.x+1 and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ihi_type(i+1,j,k,0) == c;})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ihi_type(dom_high.x+1,j,k,0) == c;})) {
         u_face = velocity(dom_high.x+1,j,k,n);
       }
       else {
@@ -369,11 +369,11 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   {
     if( areafrac_y(i,j,k) > 0 ) {
       if( j <= dom_low.y and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jlo_type(i,j-1,k,0) == c;})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jlo_type(i,dom_low.y-1,k,0) == c;})) {
         v_face = velocity(i,dom_low.y-1,k,n);
       }
       else if( j >= dom_high.y+1 and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jhi_type(i,j+1,k,0) == c;})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jhi_type(i,dom_high.y+1,k,0) == c;})) {
         v_face = velocity(i,dom_high.y+1,k,n);
       }
       else {
@@ -396,11 +396,11 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   {
     if( areafrac_z(i,j,k) > 0 ) {
       if( k <= dom_low.z and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_klo_type(i,j,k-1,0) == c;})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_klo_type(i,j,dom_low.z-1,0) == c;})) {
         w_face = velocity(i,j,dom_low.z-1,n);
       }
       else if( k >= dom_high.z+1 and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_khi_type(i,j,k+1,0) == c;})) {
+       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_khi_type(i,j,dom_high.z+1,0) == c;})) {
         w_face = velocity(i,j,dom_high.z+1,n);
       }
       else {

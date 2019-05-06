@@ -523,7 +523,6 @@ private:
      // Control MLMG behavior
      int  nodal_mg_max_iter = 100;
      int  nodal_mg_cg_maxiter = 100;
-     int  nodal_mg_max_fmg_iter = 0;
      Real nodal_mg_rtol = 1.0e-11;
      Real nodal_mg_atol = 1.0e-14;
      int  nodal_mg_nuf = 10;
@@ -549,7 +548,6 @@ private:
      // Control MLMG behavior
      int  mac_mg_max_iter = 100;
      int  mac_mg_cg_maxiter = 100;
-     int  mac_mg_max_fmg_iter = 0;
      Real mac_mg_rtol = 1.0e-11;
      Real mac_mg_atol = 1.0e-14;
      int  mac_mg_nuf = 10;
@@ -570,7 +568,6 @@ private:
      // Control MLMG behavior
      int  diff_mg_max_iter = 100;
      int  diff_mg_cg_maxiter = 100;
-     int  diff_mg_max_fmg_iter = 0;
      Real diff_mg_rtol = 1.0e-11;
      Real diff_mg_atol = 1.0e-14;
      int  diff_mg_nuf = 10;

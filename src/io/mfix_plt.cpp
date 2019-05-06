@@ -1,12 +1,6 @@
-#include <AMReX_MultiFab.H>
 #include <AMReX_PlotFileUtil.H>
-
 #include <AMReX_VisMF.H>    // amrex::VisMF::Write(MultiFab)
 #include <AMReX_VectorIO.H> // amrex::[read,write]IntData(array_of_ints)
-#include <AMReX_AmrCore.H>
-
-#include <AMReX_buildInfo.H>
-
 #include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_ParmParse.H>
 

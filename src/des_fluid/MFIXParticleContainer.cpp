@@ -25,8 +25,6 @@
 using namespace amrex;
 using namespace std;
 
-bool MFIXParticleContainer::use_neighbor_list  {true};
-bool MFIXParticleContainer::sort_neighbor_list {false};
 Real MFIXParticleContainer::gravity[3] {0.0};
 
 int  MFIXParticleContainer::domain_bc[6] {0};
@@ -112,23 +110,7 @@ void MFIXParticleContainer::ReadStaticParameters ()
     get_gravity(gravity);
 
     if (!initialized)
-    {
-        ParmParse pp("particles");
-
-        do_tiling = true;  // because the default in amrex is false
-
-        pp.query("do_tiling",  do_tiling);
-
-        Vector<int> ts(BL_SPACEDIM);
-
-        if (pp.queryarr("tile_size", ts))
-            tile_size = IntVect(ts);
-
-        pp.query("use_neighbor_list", use_neighbor_list);
-        pp.query("sort_neighbor_list", sort_neighbor_list);
-
         initialized = true;
-    }
 }
 
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
@@ -238,7 +220,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             clearNeighbors();
             Redistribute(0, 0, 0, 1);
             fillNeighbors();
-            buildNeighborList(MFIXCheckPair(), sort_neighbor_list);
+            // send in "false" for sort_neighbor_list option
+            buildNeighborList(MFIXCheckPair(), false);
         } else {
             updateNeighbors();
         }

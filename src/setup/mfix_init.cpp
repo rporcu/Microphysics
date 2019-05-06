@@ -36,7 +36,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_cg_verbose"          , nodal_mg_cg_verbose );
         pp.query( "mg_max_iter"            , nodal_mg_max_iter );
         pp.query( "mg_cg_maxiter"          , nodal_mg_cg_maxiter );
-        pp.query( "mg_max_fmg_iter"        , nodal_mg_max_fmg_iter );
         pp.query( "mg_rtol"                , nodal_mg_rtol );
         pp.query( "mg_atol"                , nodal_mg_atol );
         pp.query( "mg_nuf"                 , nodal_mg_nuf );
@@ -132,7 +131,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp_diff.query( "mg_cg_verbose", diff_mg_cg_verbose );
         pp_diff.query( "mg_nuf"       , diff_mg_nuf );
 
-        diff_bottom_solver_type = "bicgstab";
+        // Default bottom solver here is bicgcg, but alternatives are 
+        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
+        diff_bottom_solver_type = "bicgcg";
         pp_diff.query( "bottom_solver_type", diff_bottom_solver_type );
     }
 

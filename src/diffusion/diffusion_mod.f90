@@ -336,11 +336,6 @@ contains
                 end do
              end if
 
-             !*************************************
-             !         div(tau)/rop
-             !*************************************
-             divtau(i,j,k,:) = divtau(i,j,k,:) / ( ep(i,j,k) * ro(i,j,k) )
-
           end do
        end do
     end do
@@ -349,7 +344,6 @@ contains
     call amrex_deallocate(divu)
 
     end subroutine compute_divtau
-
 
    !
    ! Set the boundary condition for diffusion solve
