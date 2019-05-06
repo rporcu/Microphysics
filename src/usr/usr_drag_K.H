@@ -28,4 +28,4 @@ struct ComputeDragUser
     {
 		amrex::Abort("The user-defined drag routine was invoked, but no user-provided drag routine was found.");
     }
-}
+};
