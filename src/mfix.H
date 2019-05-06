@@ -34,7 +34,8 @@ enum DragType
 	Invalid=-1,
 	WenYu,
 	Gidaspow,
-	BVK2
+	BVK2,
+	UserDrag
 };
 
 class mfix

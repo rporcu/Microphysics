@@ -589,7 +589,7 @@ void mfix::InitLevelData(Real dt, Real time)
 	  }
 	  else if (drag_type == "UserDrag")
 	  {
-		  m_drag_type == "UserDrag";
+		  m_drag_type == DragType::UserDrag;
 	  }
 	  // Note - we will check for invalid drag types later, so we don't do it here
 
