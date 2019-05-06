@@ -3,22 +3,28 @@
 
 struct ComputeDragWenYu
 {
-
-    /**
+	/**
      *  \brief Returns: the calculated drag coefficient.
      *
      *  Inputs:
-     *    EPg  - gas volume fraction
-     *    Mug  - gas laminar viscosity
-     *    ROpg - gas density * EP_g
-     *    vrel - magnitude of gas-solids relative velocity
-     *    DPM  - particle diamater of solids phase M
-     *    DPA  - average particle diameter
-     *    PHIS - solids volume fraction of solids phases
+     *    EPg     - gas volume fraction
+     *    Mug     - gas laminar viscosity
+     *    ROpg    - gas density * EP_g
+     *    vrel    - magnitude of gas-solids relative velocity
+     *    DPM     - particle diamater of solids phase M
+     *    DPA     - average particle diameter
+     *    PHIS    - solids volume fraction of solids phases
+	 *    fvelx   - x component of the fluid velocity at the particle position
+	 *    fvely   - y component of the fluid velocity at the particle position
+	 *    fvelz   - z component of the fluid velocity at the particle position
+	 *    i, j, k - particle cell indices
+	 *    pid     - particle id number
      */
     AMREX_GPU_HOST_DEVICE AMREX_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel, 
-                            amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS) const
+                            amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS,
+							amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
+							int i, int j, int k, int pid) const
     {
         amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : DEMParams::large_number;
 		
@@ -39,22 +45,28 @@ struct ComputeDragWenYu
 
 struct ComputeDragGidaspow
 {
-
     /**
      *  \brief Returns: the calculated drag coefficient.
      *
      *  Inputs:
-     *    EPg  - gas volume fraction
-     *    Mug  - gas laminar viscosity
-     *    ROpg - gas density * EP_g
-     *    vrel - magnitude of gas-solids relative velocity
-     *    DPM  - particle diamater of solids phase M
-     *    DPA  - average particle diameter
-     *    PHIS - solids volume fraction of solids phases
+     *    EPg     - gas volume fraction
+     *    Mug     - gas laminar viscosity
+     *    ROpg    - gas density * EP_g
+     *    vrel    - magnitude of gas-solids relative velocity
+     *    DPM     - particle diamater of solids phase M
+     *    DPA     - average particle diameter
+     *    PHIS    - solids volume fraction of solids phases
+	 *    fvelx   - x component of the fluid velocity at the particle position
+	 *    fvely   - y component of the fluid velocity at the particle position
+	 *    fvelz   - z component of the fluid velocity at the particle position
+	 *    i, j, k - particle cell indices
+	 *    pid     - particle id number
      */
     AMREX_GPU_HOST_DEVICE AMREX_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel, 
-                            amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS) const
+                            amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS,
+							amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
+							int i, int j, int k, int pid) const
     {
 		amrex::Real ROg = ROPg / EPg;
 
@@ -103,17 +115,24 @@ struct ComputeDragBVK2
      *  \brief Returns: the calculated drag coefficient.
      *
      *  Inputs:
-     *    EPg  - gas volume fraction
-     *    Mug  - gas laminar viscosity
-     *    ROpg - gas density * EP_g
-     *    vrel - magnitude of gas-solids relative velocity
-     *    DPM  - particle diamater of solids phase M
-     *    DPA  - average particle diameter
-     *    PHIS - solids volume fraction of solids phases
+     *    EPg     - gas volume fraction
+     *    Mug     - gas laminar viscosity
+     *    ROpg    - gas density * EP_g
+     *    vrel    - magnitude of gas-solids relative velocity
+     *    DPM     - particle diamater of solids phase M
+     *    DPA     - average particle diameter
+     *    PHIS    - solids volume fraction of solids phases
+	 *    fvelx   - x component of the fluid velocity at the particle position
+	 *    fvely   - y component of the fluid velocity at the particle position
+	 *    fvelz   - z component of the fluid velocity at the particle position
+	 *    i, j, k - particle cell indices
+	 *    pid     - particle id number
      */
     AMREX_GPU_HOST_DEVICE AMREX_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
-                            amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS) const
+                            amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS,
+							amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
+							int i, int j, int k, int pid) const
     {
         amrex::Real RE = (Mug > 0.0) ? DPA*vrel*ROPg/Mug : DEMParams::large_number;
     
