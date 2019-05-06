@@ -214,6 +214,25 @@ public:
 
 	template <typename F>
 	void mfix_calc_particle_beta(F DragFunc, Real time);
+
+     void mfix_compute_ugradu( Box& bx,
+                               Vector< std::unique_ptr<MultiFab> >& conv,
+                               Vector< std::unique_ptr<MultiFab> >& vel,
+                               MFIter* mfi,
+                               Box& domain,
+                               const int lev);
+
+     void mfix_compute_ugradu_eb( Box& bx,
+                                  Vector< std::unique_ptr<MultiFab> >& conv,
+                                  Vector< std::unique_ptr<MultiFab> >& vel,
+                                  MFIter* mfi,
+                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
+                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
+                                  const amrex::MultiFab* volfrac,
+                                  const amrex::MultiCutFab* bndrycent,
+                                  Box& domain,
+                                  const EBCellFlagFab& flags,
+                                  const int lev);
 	
 protected:
 
@@ -342,25 +361,6 @@ private:
      void check_for_nans(int lev);
 
      void mfix_compute_dt(Real time, Real stop_time, Real & dt);
-
-     void mfix_compute_ugradu( Box& bx,
-                               Vector< std::unique_ptr<MultiFab> >& conv,
-                               Vector< std::unique_ptr<MultiFab> >& vel,
-                               MFIter* mfi,
-                               Box& domain,
-                               const int lev);
-
-     void mfix_compute_ugradu_eb( Box& bx,
-                                  Vector< std::unique_ptr<MultiFab> >& conv,
-                                  Vector< std::unique_ptr<MultiFab> >& vel,
-                                  MFIter* mfi,
-                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
-                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
-                                  const amrex::MultiFab* volfrac,
-                                  const amrex::MultiCutFab* bndrycent,
-                                  Box& domain,
-                                  const EBCellFlagFab& flags,
-                                  const int lev);
 
      void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv,
                                         Vector< std::unique_ptr<MultiFab> >& vel,
