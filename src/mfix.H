@@ -29,6 +29,14 @@
 #include <AMReX_MLNodeLaplacian.H>
 #include <mfix_eb_if.H>
 
+enum DragType
+{
+	Invalid=-1,
+	WenYu,
+	Gidaspow,
+	BVK2
+};
+
 class mfix
     : public AmrCore
 {
@@ -211,6 +219,8 @@ public:
     void mfix_compute_MAC_velocity_at_faces(Real time, Vector< std::unique_ptr<MultiFab> >& vel);
 
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
+
+	static DragType m_drag_type;
 
 	template <typename F>
 	void mfix_calc_particle_beta(F DragFunc, Real time);
