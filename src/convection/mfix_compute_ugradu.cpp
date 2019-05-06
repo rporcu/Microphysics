@@ -62,7 +62,7 @@ mfix::mfix_compute_ugradu( Box& bx,
   Array4<int> const& bc_klo_type = bc_klo[lev]->array();
   Array4<int> const& bc_khi_type = bc_khi[lev]->array();
 
-  Real i_dx(1/dx[0]), i_dy(1/dx[1]), i_dz(1/dx[2]);
+  const Real i_dx(1/dx[0]), i_dy(1/dx[1]), i_dz(1/dx[2]);
 
   Real u_w(0), v_w(0), w_w(0);
   Real u_e(0), v_e(0), w_e(0);
@@ -74,7 +74,7 @@ mfix::mfix_compute_ugradu( Box& bx,
 
   // Vectorize the boundary conditions list in order to use it in lambda
   // functions
-  Vector<int> bc = {bc_list.minf, bc_list.pinf, bc_list.pout};
+  const Vector<int> bc = {bc_list.minf, bc_list.pinf, bc_list.pout};
 
   AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
   {
@@ -84,7 +84,10 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((i == dom_low.x) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ilo_type(i-1,j,k,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_ilo_type(dom_low.x-1,j,k,0) == c;}))
+    {
       u_w = velocity(i-1,j,k,0);
       v_w = velocity(i-1,j,k,1);
       w_w = velocity(i-1,j,k,2);
@@ -108,7 +111,10 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((i == dom_high.x) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ihi_type(i+1,j,k,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_ihi_type(dom_high.x+1,j,k,0) == c;}))
+    {
       u_e = velocity(i+1,j,k,0);
       v_e = velocity(i+1,j,k,1);
       w_e = velocity(i+1,j,k,2);
@@ -132,7 +138,10 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((j == dom_low.y) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jlo_type(i,j-1,k,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_jlo_type(i,dom_low.y-1,k,0) == c;}))
+    {
       u_s = velocity(i,j-1,k,0);
       v_s = velocity(i,j-1,k,1);
       w_s = velocity(i,j-1,k,2);
@@ -156,7 +165,10 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((j == dom_high.y) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jhi_type(i,j+1,k,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_jhi_type(i,dom_high.y+1,k,0) == c;}))
+    {
       u_n = velocity(i,j+1,k,0);
       v_n = velocity(i,j+1,k,1);
       w_n = velocity(i,j+1,k,2);
@@ -180,7 +192,10 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((k == dom_low.z) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_klo_type(i,j,k-1,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_klo_type(i,j,dom_low.z-1,0) == c;}))
+    {
       u_b = velocity(i,j,k-1,0);
       v_b = velocity(i,j,k-1,1);
       w_b = velocity(i,j,k-1,2);
@@ -204,7 +219,10 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((k == dom_high.z) and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_khi_type(i,j,k+1,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_khi_type(i,j,dom_high.z+1,0) == c;}))
+    {
       u_t = velocity(i,j,k+1,0);
       v_t = velocity(i,j,k+1,1);
       w_t = velocity(i,j,k+1,2);
@@ -342,11 +360,17 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   {
     if( areafrac_x(i,j,k) > 0 ) {
       if( i <= dom_low.x and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ilo_type(dom_low.x-1,j,k,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_ilo_type(dom_low.x-1,j,k,0) == c;}))
+      {
         u_face = velocity(dom_low.x-1,j,k,n);
       }
       else if( i >= dom_high.x+1 and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_ihi_type(dom_high.x+1,j,k,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_ihi_type(dom_high.x+1,j,k,0) == c;}))
+      {
         u_face = velocity(dom_high.x+1,j,k,n);
       }
       else {
@@ -369,11 +393,17 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   {
     if( areafrac_y(i,j,k) > 0 ) {
       if( j <= dom_low.y and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jlo_type(i,dom_low.y-1,k,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_jlo_type(i,dom_low.y-1,k,0) == c;}))
+      {
         v_face = velocity(i,dom_low.y-1,k,n);
       }
       else if( j >= dom_high.y+1 and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_jhi_type(i,dom_high.y+1,k,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_jhi_type(i,dom_high.y+1,k,0) == c;}))
+      {
         v_face = velocity(i,dom_high.y+1,k,n);
       }
       else {
@@ -396,11 +426,17 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   {
     if( areafrac_z(i,j,k) > 0 ) {
       if( k <= dom_low.z and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_klo_type(i,j,dom_low.z-1,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_klo_type(i,j,dom_low.z-1,0) == c;}))
+      {
         w_face = velocity(i,j,dom_low.z-1,n);
       }
       else if( k >= dom_high.z+1 and
-       std::any_of(bc.begin(), bc.end(), [&](int c){return bc_khi_type(i,j,dom_high.z+1,0) == c;})) {
+       std::any_of(bc.begin(),
+                   bc.end(),
+                   [&](int c){return bc_khi_type(i,j,dom_high.z+1,0) == c;}))
+      {
         w_face = velocity(i,j,dom_high.z+1,n);
       }
       else {
