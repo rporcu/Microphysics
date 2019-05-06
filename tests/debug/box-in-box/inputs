@@ -7,6 +7,8 @@ amr.stop_time = 0.0025
 
 mfix.fixed_dt=1
 
+mfix.drag_type = "WenYu"
+
 #! Fluid solver
 #!-----------------------------------------------------------//
 
