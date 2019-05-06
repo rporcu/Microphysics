@@ -211,9 +211,6 @@ private:
 
     static void ReadStaticParameters ();
 
-    static bool use_neighbor_list;
-    static bool sort_neighbor_list;
-
     // Local containers for: maxvel - the maximum (absolute) velocity
     //                       maxpfor - the max (abs) particle-particle force
     //                       maxwfor - the max (abs) particle-wall force

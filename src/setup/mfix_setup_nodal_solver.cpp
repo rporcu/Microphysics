@@ -41,7 +41,6 @@ mfix::mfix_setup_nodal_solver ()
     nodal_solver.reset(new MLMG(*nodal_matrix));
 
     nodal_solver->setMaxIter    (nodal_mg_max_iter);
-    nodal_solver->setMaxFmgIter (nodal_mg_max_fmg_iter);
 
     nodal_solver->setVerbose   (nodal_mg_verbose);
     nodal_solver->setCGVerbose (nodal_mg_cg_verbose);
