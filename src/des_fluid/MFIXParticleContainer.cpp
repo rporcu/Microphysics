@@ -110,17 +110,7 @@ void MFIXParticleContainer::ReadStaticParameters ()
     get_gravity(gravity);
 
     if (!initialized)
-    {
-        ParmParse pp("particles");
-
-        do_tiling = true;  // because the default in amrex is false
-
-        pp.query("do_tiling",  do_tiling);
-
-        Vector<int> ts(BL_SPACEDIM);
-
         initialized = true;
-    }
 }
 
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
