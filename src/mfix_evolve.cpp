@@ -1,9 +1,4 @@
-#include <AMReX_ParmParse.H>
-
-#include <mfix_F.H>
 #include <mfix.H>
-#include <AMReX_BC_TYPES.H>
-#include <AMReX_Box.H>
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
