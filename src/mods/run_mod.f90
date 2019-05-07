@@ -49,9 +49,6 @@
 ! Minimum Time step.
       real(rt) :: dt_min
 
-! Time step adjustment factor (<1.0)
-      real(rt) :: dt_fac
-
 ! Current time step (super-step)
 ! (updated by des_init_time_loop)
       real(rt) :: des_dt

@@ -20,7 +20,7 @@
       use param, only: dim_ic, dim_bc
       use param, only: half, undefined, zero, is_defined
       use constant, only: mmax
-      use run, only: description, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, tstop
+      use run, only: description, call_usr, dem_solids, dt_min, dt_max, run_name, tstop
       use scales, only: p_scale, p_ref
 
       use ic, only: write_out_ic
@@ -58,7 +58,7 @@
       write (unit_out, 1110) RUN_NAME
       write (unit_out, 1120) DESCRIPTION
       IF (IS_DEFINED(DT)) THEN
-         write (unit_out, 1135) time, tstop, dt, dt_max, dt_min, dt_fac
+         write (unit_out, 1135) time, tstop, dt, dt_max, dt_min
       ELSE
          write (unit_out, 1136)
       ENDIF
@@ -196,8 +196,7 @@
  1120 FORMAT(7X,'Brief description of the run (DESCRIPTION) :',/9X,A60)
  1135 FORMAT(7X,'Start-time (TIME) = ',G12.5,/7X,'Stop_time (TSTOP) = ',G12.5,/7X&
          ,'Time step (DT) = ',G12.5,/7X,'Max time step (DT_MAX) = ',G12.5,/7X&
-         ,'Min time step (DT_MIN) = ',G12.5,/7X,&
-         'Time step adjustment factor (DT_FAC) = ',G12.5)
+         ,'Min time step (DT_MIN) = ',G12.5,/7X)
  1136 FORMAT(7X,'* Steady state simulation.')
  1140 FORMAT(/7X,'* Gas momentum equation-',A,' is',A,'solved.')
  1149 FORMAT(/7X,'* User-defined subroutines are',A,'called.')
