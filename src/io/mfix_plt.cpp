@@ -32,6 +32,7 @@ mfix::InitIOPltData ()
       pp.query("plt_ro_g",    plt_ro_g   );
       pp.query("plt_mu_g",    plt_mu_g   );
       pp.query("plt_diveu",   plt_diveu  );
+      pp.query("plt_vort",    plt_vort   );
       pp.query("plt_volfrac", plt_volfrac);
       pp.query("plt_gradp_g", plt_gradp_g);
 
@@ -47,6 +48,7 @@ mfix::InitIOPltData ()
         plt_p_g     = 1;
         plt_ro_g    = 1;
         plt_mu_g    = 1;
+        plt_vort    = 1;
         plt_diveu   = 1;
         plt_volfrac = 1;
         plt_gradp_g = 1;
@@ -59,14 +61,13 @@ mfix::InitIOPltData ()
       if( plt_p_g     == 1) pltVarCount += 1;
       if( plt_ro_g    == 1) pltVarCount += 1;
       if( plt_mu_g    == 1) pltVarCount += 1;
+      if( plt_vort    == 1) pltVarCount += 1;
       if( plt_diveu   == 1) pltVarCount += 1;
       if( plt_volfrac == 1) pltVarCount += 1;
-
     }
 
   if(solve_dem)
     {
-
 
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
