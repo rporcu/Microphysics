@@ -13,7 +13,6 @@ int   max_step    = -1;
 int   regrid_int  = -1;
 Real stop_time    = -1.0;
 
-bool write_user   = false;
 bool write_eb_surface = false;
 bool write_ls         = false;
 
@@ -83,7 +82,6 @@ void ReadParameters ()
      ParmParse pp("mfix");
 
      pp.query("input_deck", mfix_dat);
-     pp.query("write_user", write_user);
      pp.query("write_eb_surface", write_eb_surface);
      pp.query("write_ls", write_ls);
   }
@@ -219,7 +217,6 @@ int main (int argc, char* argv[])
         my_mfix.WriteStaticPlotFile(static_plt_file);
 
     my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time);
-
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
