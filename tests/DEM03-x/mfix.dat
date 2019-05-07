@@ -20,7 +20,6 @@
 # RUN CONTROL SECTION
 
   DT =     1.0d-4
-  DT_MAX = 1.0d-4
 
   CALL_USR = .T.
 

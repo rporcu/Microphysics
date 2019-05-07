@@ -127,7 +127,7 @@ int main (int argc, char* argv[])
     int solve_dem;
     int steady_state;
     int call_udf;
-    Real dt, dt_min, dt_max;
+    Real dt;
     Real time=0.0L;
     int nstep = 0;  // Current time step
 
@@ -140,8 +140,7 @@ int main (int argc, char* argv[])
     //                                        |
     //      (loads `mfix.dat`) ---------------+
     mfix_get_data( &solve_fluid, &solve_dem, &steady_state,
-                   &dt, &dt_min, &dt_max,
-                   &stop_time, &call_udf, &name_len, cmfix_dat
+                   &dt, &stop_time, &call_udf, &name_len, cmfix_dat
                   );
 
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh

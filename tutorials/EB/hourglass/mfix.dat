@@ -17,7 +17,6 @@
   TSTOP = 0.1
 
   DT =     1.0d-04
-  DT_FAC = 1.0
 
   DRAG_TYPE = 'BVK2'
 

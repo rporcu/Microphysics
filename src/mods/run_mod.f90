@@ -43,12 +43,6 @@
 ! If .TRUE. call user-defined subroutines
       logical :: CALL_USR
 
-! Maximum Time step.
-      real(rt) :: dt_max
-
-! Minimum Time step.
-      real(rt) :: dt_min
-
 ! Current time step (super-step)
 ! (updated by des_init_time_loop)
       real(rt) :: des_dt

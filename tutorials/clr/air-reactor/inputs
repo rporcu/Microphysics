@@ -23,8 +23,10 @@ mfix.particle_init_type = "Auto"
 # Fluid solver
 #----------------------------------------------------------------------
 mfix.fixed_dt = 0
+mfix.cfl      = 0.5
 
-mfix.cfl = 0.5
+mfix.dt_min   = 1.e-7
+mfix.dt_max   = 5.e-5
 
 #amr.stop_time = 0.20
 
