@@ -100,7 +100,6 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       // Set the max number of iterations
       solver.setMaxIter (diff_mg_max_iter);
       solver.setCGMaxIter (diff_mg_cg_maxiter);
-      solver.setFinalSmooth(diff_mg_nuf);
 
       if (diff_bottom_solver_type == "smoother")
       {

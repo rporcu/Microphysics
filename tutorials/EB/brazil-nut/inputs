@@ -27,6 +27,8 @@ amr.plot_file = R_AMR_
 amr.par_ascii_int  = 1
 amr.par_ascii_file = vis
 
+mfix.dt_min = 1.e-9
+mfix.dt_max = 1.e-4
 
 amr.dual_grid  =  0
 #mfix.load_balance_type = "KDTree"

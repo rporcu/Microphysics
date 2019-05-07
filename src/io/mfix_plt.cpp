@@ -340,13 +340,11 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 
     Print() << "  Writing static quantities " << plotfilename << std::endl;
 
-
     /****************************************************************************
      *                                                                          *
      * Static (un-changing variables):                                          *
      *     1. level-set data                                                    *
-     *     2. EB implicit function data                                         *
-     *     3. volfrac (from EB) data                                            *
+     *     2. volfrac (from EB) data                                            *
      *                                                                          *
      ***************************************************************************/
 
@@ -384,8 +382,6 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                     m_eb_full_grow_cells}, m_eb_support_level);
 
-            //MultiFab::Copy (MultiFab &dst, const MultiFab &src,
-            //                int srccomp, int dstcomp, int numcomp, const IntVect &nghost)
             MultiFab::Copy(* mf[lev], ebf.getVolFrac(), 0, ncomp - 1, 1, ngrow);
 
         } else {

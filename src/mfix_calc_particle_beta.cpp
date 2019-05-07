@@ -127,8 +127,8 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 					  
                     if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
                     {
-						AMREX_FOR_1D( np, ip,
-						{
+			AMREX_FOR_1D( np, ip,
+			{
                             MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
 
 							Real velfp[3];
@@ -165,8 +165,9 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                             Real dpm = 2.0*rad;
                             Real phis = 1.0 - ep;   
                             Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
-													 velfp[0], velfp[1], velfp[2],
-													 iloc, jloc, kloc, p_id); 
+					             velfp[0], velfp[1], velfp[2],
+					             iloc, jloc, kloc, p_id); 
+
                             particle.rdata(realData::dragx) = beta;
                         });
                     }
@@ -176,7 +177,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                         const MultiFab & phi  = *level_sets[lev];
                         const auto& phi_array = phi.array(pti);
 
-						AMREX_FOR_1D( np, ip,
+			AMREX_FOR_1D( np, ip,
                         {
                             MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
 
@@ -318,7 +319,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 														 iloc, jloc, kloc, p_id); 
 								particle.rdata(realData::dragx) = beta;
                             } // Not covered
-						}); // ip
+			}); // ip
                 } // type of FAB
             } // if entire FAB not covered
         } // pti

@@ -13,7 +13,7 @@ contains
 !                                                                          !
 !**************************************************************************!
   subroutine mfix_get_data( &
-       fluid, dem, steady_state, dt, dt_minC, dt_maxC, tstopC, call_udf, &
+       fluid, dem, steady_state, dt, tstopC, call_udf, &
        namelen, mfix_datC) &
      bind(C, name="mfix_get_data")
 
@@ -21,7 +21,7 @@ contains
     use get_data_module, only: get_data
     use param, only: is_undefined
     use run, only: dem_solids, call_usr
-    use run, only: dt_min, dt_max, tstop
+    use run, only: tstop
 
     use iso_c_binding, only: C_CHAR, c_null_char
 
@@ -30,7 +30,6 @@ contains
     integer(c_int), intent(out) :: fluid
     integer(c_int), intent(out) :: dem, call_udf
     integer(c_int), intent(out) :: steady_state
-    real(rt),   intent(out) :: dt_minC, dt_maxC
     real(rt),   intent(in ) :: tstopC
     real(rt),   intent(out) :: dt
 
@@ -59,9 +58,6 @@ contains
     call_udf =  merge(1,0,call_usr)
 
     steady_state = merge(1,0,is_undefined(dt))
-
-    dt_minC  = dt_min
-    dt_maxC  = dt_max
 
     ! We now set tstop in the Fortran from the C++
     tstop    = tstopC

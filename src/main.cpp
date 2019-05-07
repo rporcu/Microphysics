@@ -13,7 +13,6 @@ int   max_step    = -1;
 int   regrid_int  = -1;
 Real stop_time    = -1.0;
 
-bool write_user   = false;
 bool write_eb_surface = false;
 bool write_ls         = false;
 
@@ -30,7 +29,7 @@ std::string check_file {"chk"};
 int   plot_int = -1;
 int   last_plt = -1;
 std::string plot_file {"plt"};
-std::string static_plt_file {"const_plt"};
+std::string static_plt_file {"plt_ls"};
 
 bool plotfile_on_restart = false;
 
@@ -69,6 +68,7 @@ void ReadParameters ()
      pp.query("par_ascii_int", par_ascii_int);
 
      pp.query("restart", restart_file);
+
      pp.query("repl_x", repl_x);
      pp.query("repl_y", repl_y);
      pp.query("repl_z", repl_z);
@@ -82,7 +82,6 @@ void ReadParameters ()
      ParmParse pp("mfix");
 
      pp.query("input_deck", mfix_dat);
-     pp.query("write_user", write_user);
      pp.query("write_eb_surface", write_eb_surface);
      pp.query("write_ls", write_ls);
   }
@@ -128,7 +127,7 @@ int main (int argc, char* argv[])
     int solve_dem;
     int steady_state;
     int call_udf;
-    Real dt, dt_min, dt_max;
+    Real dt;
     Real time=0.0L;
     int nstep = 0;  // Current time step
 
@@ -141,8 +140,7 @@ int main (int argc, char* argv[])
     //                                        |
     //      (loads `mfix.dat`) ---------------+
     mfix_get_data( &solve_fluid, &solve_dem, &steady_state,
-                   &dt, &dt_min, &dt_max,
-                   &stop_time, &call_udf, &name_len, cmfix_dat
+                   &dt, &stop_time, &call_udf, &name_len, cmfix_dat
                   );
 
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
@@ -218,7 +216,6 @@ int main (int argc, char* argv[])
         my_mfix.WriteStaticPlotFile(static_plt_file);
 
     my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time);
-
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());

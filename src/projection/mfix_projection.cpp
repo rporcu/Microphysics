@@ -161,8 +161,6 @@ mfix::mfix_solve_poisson_equation ( Vector< std::unique_ptr<MultiFab> >& this_ph
     for (int lev = 0; lev < nlev; lev++)
        nodal_matrix->setSigma(lev, *b[lev]);
 
-    nodal_solver->setFinalSmooth(nodal_mg_nuf);
-
     if (nodal_bottom_solver_type == "smoother")
     {
        nodal_solver->setBottomSolver(MLMG::BottomSolver::smoother);
