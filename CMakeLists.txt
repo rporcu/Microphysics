@@ -116,7 +116,7 @@ add_subdirectory(src)
 print_mfix_configuration_summary (${MFIX_LIBNAME})
 
 # We should check what this line does
-file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
+file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90 ${CMAKE_CURRENT_BINARY_DIR}/*.cpp)
 
 
 add_executable (${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} )
