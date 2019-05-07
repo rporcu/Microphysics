@@ -30,7 +30,7 @@ std::string check_file {"chk"};
 int   plot_int = -1;
 int   last_plt = -1;
 std::string plot_file {"plt"};
-std::string static_plt_file {"const_plt"};
+std::string static_plt_file {"plt_ls"};
 
 bool plotfile_on_restart = false;
 
