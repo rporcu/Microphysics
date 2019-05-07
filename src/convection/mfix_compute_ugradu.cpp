@@ -328,9 +328,9 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   // Number of Halo layers
   const int nh(3);
 
-  Box ubx = amrex::surroundingNodes(amrex::grow(bx,nh),0);
-  Box vbx = amrex::surroundingNodes(amrex::grow(bx,nh),1);
-  Box wbx = amrex::surroundingNodes(amrex::grow(bx,nh),2);
+  const Box ubx = amrex::surroundingNodes(amrex::grow(bx,nh),0);
+  const Box vbx = amrex::surroundingNodes(amrex::grow(bx,nh),1);
+  const Box wbx = amrex::surroundingNodes(amrex::grow(bx,nh),2);
 
   const int ncomp(3);
   
@@ -345,7 +345,7 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   Real u_face(0), v_face(0), w_face(0);
   Real upls(0), umns(0), vpls(0), vmns(0), wpls(0), wmns(0);
 
-  Vector<int> bc = {bc_list.minf, bc_list.pinf, bc_list.pout};
+  const Vector<int> bc = {bc_list.minf, bc_list.pinf, bc_list.pout};
 
   //
   // First compute the convective fluxes at the face center

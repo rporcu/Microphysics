@@ -8,6 +8,8 @@
 #include "AMReX_Particles.H"
 #include "AMReX_NeighborParticles.H"
 
+#include "mfix_des_F.H"
+
 using namespace amrex;
 using namespace std;
 
@@ -136,6 +138,7 @@ public:
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
+                            const BcList & bc_list,
                             int nghost);
 
     void CapSolidsVolFrac(amrex::MultiFab& eps);
@@ -151,6 +154,7 @@ public:
                        const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
                        const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
                        const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
+                       const BcList & bc_list,
                        int fortran_particle_comp, int nghost);
 
     ///

@@ -235,7 +235,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
        // This call deposits the particle volume onto the grid in a PIC-like manner
        pc->CalcVolumeFraction(ep_g, particle_ebfactory,
                               bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi,
-                              nghost);
+                              bc_list, nghost);
     }
     else
     {

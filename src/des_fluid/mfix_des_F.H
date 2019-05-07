@@ -5,6 +5,7 @@
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
 
+// TODO move this to another file
 // Boundary conditions list auxiliary structure
 typedef struct BcList {
   public:
@@ -40,8 +41,9 @@ extern "C"
         amrex::Real* grav
         );
 
+    // TODO move this to another file
     void get_bc_list (
-        BcList& bc_list // TODO check if needs & or not
+        BcList& bc_list
         );
 
     void get_domain_bc (
