@@ -69,6 +69,7 @@ void ReadParameters ()
      pp.query("par_ascii_int", par_ascii_int);
 
      pp.query("restart", restart_file);
+
      pp.query("repl_x", repl_x);
      pp.query("repl_y", repl_y);
      pp.query("repl_z", repl_z);

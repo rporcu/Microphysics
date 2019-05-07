@@ -522,7 +522,6 @@ private:
      int  nodal_mg_cg_maxiter = 100;
      Real nodal_mg_rtol = 1.0e-11;
      Real nodal_mg_atol = 1.0e-14;
-     int  nodal_mg_nuf = 10;
      std::string nodal_bottom_solver_type;
 
      // Max coarsening level
@@ -547,7 +546,6 @@ private:
      int  mac_mg_cg_maxiter = 100;
      Real mac_mg_rtol = 1.0e-11;
      Real mac_mg_atol = 1.0e-14;
-     int  mac_mg_nuf = 10;
      std::string mac_bottom_solver_type;
 
      // Max coarsening level
@@ -567,7 +565,6 @@ private:
      int  diff_mg_cg_maxiter = 100;
      Real diff_mg_rtol = 1.0e-11;
      Real diff_mg_atol = 1.0e-14;
-     int  diff_mg_nuf = 10;
      std::string diff_bottom_solver_type;
 
      // Max coarsening level

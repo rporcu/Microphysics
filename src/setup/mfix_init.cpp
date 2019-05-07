@@ -38,7 +38,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_cg_maxiter"          , nodal_mg_cg_maxiter );
         pp.query( "mg_rtol"                , nodal_mg_rtol );
         pp.query( "mg_atol"                , nodal_mg_atol );
-        pp.query( "mg_nuf"                 , nodal_mg_nuf );
         pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
 
         // Default bottom solver here is bicgcg, but alternatives are 
@@ -71,7 +70,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp_mac.query( "mg_cg_verbose", mac_mg_cg_verbose );
         pp_mac.query( "mg_rtol"      , mac_mg_rtol );
         pp_mac.query( "mg_atol"      , mac_mg_atol );
-        pp_mac.query( "mg_nuf"       , mac_mg_nuf );
         pp_mac.query( "mg_max_iter"  , mac_mg_max_iter );
         pp_mac.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
 
@@ -129,7 +127,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         ParmParse pp_diff("diffusion");
         pp_diff.query( "mg_verbose"   , diff_mg_verbose );
         pp_diff.query( "mg_cg_verbose", diff_mg_cg_verbose );
-        pp_diff.query( "mg_nuf"       , diff_mg_nuf );
 
         // Default bottom solver here is bicgcg, but alternatives are 
         // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
@@ -149,11 +146,8 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("max_grid_size_y", particle_max_grid_size_y);
         pp.query("max_grid_size_z", particle_max_grid_size_z);
 
-
         // Keep particles that are initially touching the wall. Used by DEM tests.
         pp.query("removeOutOfRange", removeOutOfRange );
-
-
     }
 
     {
@@ -655,14 +649,13 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
 
         for (int lev = 0; lev < nlev; lev++)
         {
-
             // We need to do this *after* restart (hence putting this here not
             // in Init) because we may want to move from KDTree to Knapsack, or
             // change the particle_max_grid_size on restart.
             if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
                  dual_grid && particle_max_grid_size_x > 0
-                 && particle_max_grid_size_y > 0
-                 && particle_max_grid_size_z > 0)
+                           && particle_max_grid_size_y > 0
+                           && particle_max_grid_size_z > 0)
             {
                 BoxArray particle_ba(geom[lev].Domain());
                 IntVect particle_max_grid_size(particle_max_grid_size_x,
@@ -673,7 +666,6 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
                 pc->Regrid(particle_dm, particle_ba);
             }
         }
-
 
         Real avg_dp[10], avg_ro[10];
         pc->GetParticleAvgProp( avg_dp, avg_ro );

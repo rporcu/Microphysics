@@ -598,7 +598,7 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv,
             }
             else
             {
-                // No cut cells in tile + nghost-cell witdh halo -> use non-eb routine
+                // No cut cells in tile grown by nghost -> use non-eb routine
                 if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
                 {
                     mfix_compute_ugradu(bx, conv, vel, &mfi, domain, lev);
