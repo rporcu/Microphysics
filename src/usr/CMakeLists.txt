@@ -16,5 +16,5 @@ target_sources( mfixcore
    usr_mod.f90
    write_usr0.f90
    write_usr1.f90
-   usr_drag_K.H
+   usr_drag.cpp
    )

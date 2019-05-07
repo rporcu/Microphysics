@@ -2,7 +2,6 @@
 #include <mfix_des_K.H>
 #include <mfix_drag_K.H>
 #include <des_drag_K.H>
-#include <usr_drag_K.H>
 
 #include <AMReX_EBMultiFabUtil.H>
 
