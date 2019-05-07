@@ -6,7 +6,6 @@ target_sources( mfixcore
    PRIVATE
    bc_fill_nd.F90
    divop_mod.f90
-   compute_vort.f90
    set_velocity_bcs.f90
    set_scalar_bcs.f90
    mfix_util_F.H

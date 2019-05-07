@@ -68,16 +68,6 @@ extern "C"
         amrex::Real* subdt, int* ncoll
         );
 
-    void flip_particle_vol(
-        const int* slo, const int* shi,
-        amrex::Real* ep_g,
-        const int* bc_ilo, const int* bc_ihi,
-        const int* bc_jlo, const int* bc_jhi,
-        const int* bc_klo, const int* bc_khi,
-        const int* domlo, const int* domhi,
-        const int* nghost
-        );
-
     void set_particle_properties(
         const int* pstate, amrex::Real* pradius, amrex::Real* pdensity,
         amrex::Real* pvol, amrex::Real* pmass, amrex::Real* omoi, amrex::Real* omega

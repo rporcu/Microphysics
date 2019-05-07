@@ -20,12 +20,6 @@ extern "C"
                        const BL_FORT_FAB_ARG_3D(vol),
                        amrex::Real* mass );
 
-    void compute_vort (
-        const int* lo,  const int*  hi,
-        amrex::Real* vort , const int* slo, const int* shi,
-        amrex::Real* vel_g, const int* ulo, const int* uhi,
-        const amrex::Real* dx );
-
    void set_scalar_bcs (
       amrex::Real* ep_g, const int* slo, const int* shi,
       amrex::Real* ro_g, 
