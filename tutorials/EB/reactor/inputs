@@ -22,6 +22,8 @@ amr.max_grid_size_z =  8
 fabarray.mfiter_tile_size =  32 32 32
 particles.tile_size =        32 32 32
 
+mfix.drag_type = "WenYu"
+
 #_______________________________________________________________________
 # IO / Checkpoing
 

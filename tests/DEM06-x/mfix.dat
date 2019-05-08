@@ -26,8 +26,6 @@
 
   DT =     1.00d-3
 
-  DRAG_TYPE = 'USER_DRAG'
-
   GRAVITY(1) = -9.80665d0
   GRAVITY(2) =  0.d0
   GRAVITY(3) =  0.d0

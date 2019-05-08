@@ -1,13 +1,39 @@
 #include <mfix.H>
 #include <mfix_des_K.H>
 #include <mfix_drag_K.H>
+#include <des_drag_K.H>
+
 #include <AMReX_EBMultiFabUtil.H>
 
-void mfix::mfix_calc_particle_beta()
+void mfix::mfix_calc_particle_beta(Real time)
+{
+	if (m_drag_type == DragType::WenYu)
+    {
+        mfix_calc_particle_beta(ComputeDragWenYu(), time);
+    }
+	else if (m_drag_type == DragType::Gidaspow)
+    {
+        mfix_calc_particle_beta(ComputeDragGidaspow(), time);
+    }
+
+	else if (m_drag_type == DragType::BVK2)
+    {
+        mfix_calc_particle_beta(ComputeDragBVK2(), time);
+    }
+	else if (m_drag_type == DragType::UserDrag)
+    {
+        mfix_calc_particle_beta(ComputeDragUser(), time);
+    }
+    else
+    {
+		amrex::Abort("Invalid Drag Type.");
+    }
+}
+
+template <typename F>
+void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 {
     BL_PROFILE("mfix::mfix_calc_particle_beta()");
-
-    Real velfp[3];
 
     // This is just a sanity check to make sure we're not using covered values
     // We can remove these lines once we're confident in the algoirthm 
@@ -26,7 +52,7 @@ void mfix::mfix_calc_particle_beta()
         MultiFab* mu_ptr;
         MultiFab* vel_ptr;
 
-        // This will be temporaries only for the dual grid case
+        // These will be temporaries only for the dual grid case
         std::unique_ptr<MultiFab>  ep_g_pba;
         std::unique_ptr<MultiFab>  ro_g_pba;
         std::unique_ptr<MultiFab>  mu_g_pba;
@@ -81,7 +107,7 @@ void mfix::mfix_calc_particle_beta()
             {
                 auto& particles = pti.GetArrayOfStructs();
                 const int np = particles.size();
-
+				
                 Box bx = pti.tilebox ();
 
                 // This is to check efficiently if this tile contains any eb stuff
@@ -94,15 +120,17 @@ void mfix::mfix_calc_particle_beta()
                     const auto&  ep_array =  ep_ptr->array(pti);
                     const auto&  ro_array =  ro_ptr->array(pti);
                     const auto&  mu_array =  mu_ptr->array(pti);
-
                     const auto& flags_array = flags.array();
 
+					auto particles_ptr = particles().dataPtr();
+					  
                     if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
                     {
-                        for (int ip = 0; ip < np; ++ip)
-                        {
-                            MFIXParticleContainer::ParticleType& particle = particles[ip];
+			AMREX_FOR_1D( np, ip,
+			{
+                            MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
 
+							Real velfp[3];
                             trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
 
                             // Indices of cell where particle is located
@@ -125,12 +153,22 @@ void mfix::mfix_calc_particle_beta()
                             pvel[1] = particle.rdata(realData::vely);
                             pvel[2] = particle.rdata(realData::velz);
 
-                            Real beta; 
-                            des_drag_gp(&p_id, pvel, velfp, &ep, 
-                                  &ro, &mu, &beta, &iloc, &jloc, &kloc, &rad, &vol, &den);
+                            Real rop_g = ro * ep;
+							
+                            Real vslp[3];
+                            vslp[0] = velfp[0] - pvel[0];
+                            vslp[1] = velfp[1] - pvel[1];
+                            vslp[2] = velfp[2] - pvel[2];
+                            
+                            Real vrel = sqrt(dot_product(vslp, vslp));
+                            Real dpm = 2.0*rad;
+                            Real phis = 1.0 - ep;   
+                            Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
+					             velfp[0], velfp[1], velfp[2],
+					             iloc, jloc, kloc, p_id); 
 
                             particle.rdata(realData::dragx) = beta;
-                        }
+                        });
                     }
                     else // FAB not all regular
                     {
@@ -138,9 +176,11 @@ void mfix::mfix_calc_particle_beta()
                         const MultiFab & phi  = *level_sets[lev];
                         const auto& phi_array = phi.array(pti);
 
-                        for (int ip = 0; ip < np; ++ip)
+			AMREX_FOR_1D( np, ip,
                         {
-                            MFIXParticleContainer::ParticleType& particle = particles[ip];
+                            MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
+
+							Real velfp[3];
 
                             // This identifies which cell the particle is in
                             int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
@@ -201,7 +241,9 @@ void mfix::mfix_calc_particle_beta()
                                     Real gy = particle.pos(1)*dxi[1] - (jloc + 0.5);
                                     Real gz = particle.pos(2)*dxi[2] - (kloc + 0.5);
     
-                                    int ii,jj,kk;
+                                    int ii;
+									int jj;
+									int kk;
 
                                     if (anrm[0] < 0) {
                                         ii = iloc - 1;
@@ -259,15 +301,24 @@ void mfix::mfix_calc_particle_beta()
                                 pvel[0] = particle.rdata(realData::velx);
                                 pvel[1] = particle.rdata(realData::vely);
                                 pvel[2] = particle.rdata(realData::velz);
-       
-                                Real beta; 
-                                des_drag_gp(&p_id, pvel, velfp, &ep, &ro, &mu, 
-                                            &beta, &iloc, &jloc, &kloc, &rad, &vol, &den);
-      
-                                particle.rdata(realData::dragx) = beta;
 
+								Real rop_g = ro * ep;
+								
+								Real vslp[3];
+								vslp[0] = velfp[0] - pvel[0];
+								vslp[1] = velfp[1] - pvel[1];
+								vslp[2] = velfp[2] - pvel[2];
+								
+								Real vrel = sqrt(dot_product(vslp, vslp));
+								Real dpm = 2.0*rad;
+								Real phis = 1.0 - ep;
+								
+								Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
+														 velfp[0], velfp[1], velfp[2],
+														 iloc, jloc, kloc, p_id); 
+								particle.rdata(realData::dragx) = beta;
                             } // Not covered
-                    } // ip
+			}); // ip
                 } // type of FAB
             } // if entire FAB not covered
         } // pti

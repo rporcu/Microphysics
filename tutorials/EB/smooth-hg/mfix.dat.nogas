@@ -16,8 +16,6 @@
 
   DT =     1.0d-04
 
-  DRAG_TYPE = 'WEN_YU'
-
   CALL_USR = .T.
   FULL_LOG = .T.
 

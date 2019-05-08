@@ -139,7 +139,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     call_udf     = call_udf_in;
 
     if (solve_dem)
-      {
+	{
         ParmParse pp("particles");
 
         pp.query("max_grid_size_x", particle_max_grid_size_x);
@@ -150,6 +150,32 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("removeOutOfRange", removeOutOfRange );
     }
 
+    if (solve_dem)
+	{
+        ParmParse pp("mfix");
+
+		std::string drag_type;
+		pp.query("drag_type", drag_type);
+
+		if (drag_type == "WenYu")
+		{
+			m_drag_type = DragType::WenYu;
+		}
+		else if (drag_type == "Gidaspow")
+		{
+			m_drag_type = DragType::Gidaspow;
+		}
+		else if (drag_type == "BVK2")
+		{
+			m_drag_type = DragType::BVK2;
+		}
+		else if (drag_type == "UserDrag")
+		{
+			m_drag_type = DragType::UserDrag;
+		}
+		// Note - we will check for invalid drag types later, so we don't do it here
+    }	
+	
     {
       ParmParse amr_pp("amr");
 

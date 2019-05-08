@@ -9,6 +9,8 @@
 #amr.max_step = 100
 amr.stop_time = 4.0
 
+mfix.drag_type = "WenYu"
+
 mfix.max_dt = 1.0d-3 
 mfix.min_dt = 1.0d-8
 mfix.cfl    = 0.5

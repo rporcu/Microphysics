@@ -1,3 +1,7 @@
+target_include_directories( mfixcore
+   PUBLIC
+   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>)
+
 target_sources( mfixcore
    PRIVATE 
    calc_particle_collisions.f90
@@ -11,4 +15,5 @@ target_sources( mfixcore
    particle_generator.f90
    particle_mod.f90
    drag_mod.f90
+   des_drag_K.H
    )

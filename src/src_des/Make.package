@@ -10,3 +10,4 @@ f90EXE_sources += init_collision.f90
 f90EXE_sources += particle_generator.f90
 f90EXE_sources += particle_mod.f90
 
+CEXE_headers += des_drag_K.H

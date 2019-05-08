@@ -29,6 +29,15 @@
 #include <AMReX_MLNodeLaplacian.H>
 #include <mfix_eb_if.H>
 
+enum DragType
+{
+	Invalid=-1,
+	WenYu,
+	Gidaspow,
+	BVK2,
+	UserDrag
+};
+
 class mfix
     : public AmrCore
 {
@@ -212,6 +221,30 @@ public:
 
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
 
+	static DragType m_drag_type;
+
+	template <typename F>
+	void mfix_calc_particle_beta(F DragFunc, Real time);
+
+     void mfix_compute_ugradu( Box& bx,
+                               Vector< std::unique_ptr<MultiFab> >& conv,
+                               Vector< std::unique_ptr<MultiFab> >& vel,
+                               MFIter* mfi,
+                               Box& domain,
+                               const int lev);
+
+     void mfix_compute_ugradu_eb( Box& bx,
+                                  Vector< std::unique_ptr<MultiFab> >& conv,
+                                  Vector< std::unique_ptr<MultiFab> >& vel,
+                                  MFIter* mfi,
+                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
+                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
+                                  const amrex::MultiFab* volfrac,
+                                  const amrex::MultiCutFab* bndrycent,
+                                  Box& domain,
+                                  const EBCellFlagFab& flags,
+                                  const int lev);
+	
 protected:
 
      //! Tagging cells for refinement
@@ -280,7 +313,7 @@ protected:
                         Vector<Real> & datatime);
 
      void mfix_calc_volume_fraction(Real & sum_vol);
-     void mfix_calc_particle_beta();
+     void mfix_calc_particle_beta(Real time);
      void mfix_calc_drag_fluid(Real time);
      void mfix_calc_drag_particle(Real time);
 
@@ -339,25 +372,6 @@ private:
      void check_for_nans(int lev);
 
      void mfix_compute_dt(Real time, Real stop_time, Real & dt);
-
-     void mfix_compute_ugradu( Box& bx,
-                               Vector< std::unique_ptr<MultiFab> >& conv,
-                               Vector< std::unique_ptr<MultiFab> >& vel,
-                               MFIter* mfi,
-                               Box& domain,
-                               const int lev);
-
-     void mfix_compute_ugradu_eb( Box& bx,
-                                  Vector< std::unique_ptr<MultiFab> >& conv,
-                                  Vector< std::unique_ptr<MultiFab> >& vel,
-                                  MFIter* mfi,
-                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
-                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
-                                  const amrex::MultiFab* volfrac,
-                                  const amrex::MultiCutFab* bndrycent,
-                                  Box& domain,
-                                  const EBCellFlagFab& flags,
-                                  const int lev);
 
      void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv,
                                         Vector< std::unique_ptr<MultiFab> >& vel,

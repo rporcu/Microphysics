@@ -36,6 +36,10 @@ namespace DEMParams
     AMREX_GPU_DEVICE_MANAGED amrex::Real en_w_input[NMAX];
     AMREX_GPU_DEVICE_MANAGED amrex::Real et_w_input[NMAX];
 
+    AMREX_GPU_DEVICE_MANAGED amrex::Real small_number = 1.0e-15;
+    AMREX_GPU_DEVICE_MANAGED amrex::Real large_number = 1.0e32;
+    AMREX_GPU_DEVICE_MANAGED amrex::Real eps = std::numeric_limits<amrex::Real>::epsilon();
+        
     void Initialize ()
     {
 

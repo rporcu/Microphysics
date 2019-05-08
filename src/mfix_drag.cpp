@@ -6,9 +6,7 @@
 
 void mfix::mfix_calc_drag_fluid(Real time)
 {
-    BL_PROFILE("mfix::mfix_calc_drag_fluid()");
-
-    mfix_calc_particle_beta();
+    mfix_calc_particle_beta(time);
 
     // ******************************************************************************
     // Now use the beta of individual particles to create the drag terms on the fluid
