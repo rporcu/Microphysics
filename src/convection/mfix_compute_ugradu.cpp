@@ -4,15 +4,18 @@
 
 #define MY_HUGE 1.e200
 
-namespace ugradu_auxiliary {
+namespace ugradu_aux {
 
 //
 // Compute upwind non-normal velocity
 //
+#ifdef AMREX_USE_CUDA
+__device__
+#endif
 Real
-upwind( const Real velocity_minus,
-        const Real velocity_plus,
-        const Real u_edge)
+upwind(const Real velocity_minus,
+       const Real velocity_plus,
+       const Real u_edge)
 {
   // Small value to protect against tiny velocities used in upwinding
   const Real small_velocity(1.e-10);
@@ -23,9 +26,25 @@ upwind( const Real velocity_minus,
   return u_edge > 0 ? velocity_minus : velocity_plus;
 }
 
+#ifdef AMREX_USE_CUDA
+__device__
+#endif
+bool
+is_equal_to_any(const int bc,
+                const int* bc_types,
+                const int size)
+{
+  for(int i(0); i < size; ++i)
+  {
+    if(bc == bc_types[i])
+      return true;
+  }
+  return false;
+}
+
 } // end namespace ugradu_auxiliary
 
-using namespace ugradu_auxiliary;
+using namespace ugradu_aux;
 
 //
 // Compute the three components of the convection term
@@ -66,34 +85,18 @@ mfix::mfix_compute_ugradu( Box& bx,
 
   // Vectorize the boundary conditions list in order to use it in lambda
   // functions
-  const Vector<int> bc = {bc_list.minf, bc_list.pinf, bc_list.pout};
+  const int bc_types[3] = {bc_list.minf, bc_list.pinf, bc_list.pout};
 
   AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
   {
-      Real u_w(0);
-      Real v_w(0);
-      Real w_w(0);
-      Real u_e(0);
-      Real v_e(0);
-      Real w_e(0);
-      Real u_s(0);
-      Real v_s(0);
-      Real w_s(0);
-      Real u_n(0);
-      Real v_n(0);
-      Real w_n(0);
-      Real u_b(0);
-      Real v_b(0);
-      Real w_b(0);
-      Real u_t(0);
-      Real v_t(0);
-      Real w_t(0);
-      Real upls(0);
-      Real umns(0);
-      Real vpls(0);
-      Real vmns(0);
-      Real wpls(0);
-      Real wmns(0);
+    Real u_w(0); Real v_w(0); Real w_w(0);
+    Real u_e(0); Real v_e(0); Real w_e(0);
+    Real u_s(0); Real v_s(0); Real w_s(0);
+    Real u_n(0); Real v_n(0); Real w_n(0);
+    Real u_b(0); Real v_b(0); Real w_b(0);
+    Real u_t(0); Real v_t(0); Real w_t(0);
+    Real umns(0); Real vmns(0); Real wmns(0);
+    Real upls(0); Real vpls(0); Real wpls(0);
 
     //
     // West face
@@ -101,9 +104,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((i == dom_low.x) and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_ilo_type(dom_low.x-1,j,k,0) == c;}))
+     ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0), bc_types, 3))
     {
       u_w = velocity(i-1,j,k,0);
       v_w = velocity(i-1,j,k,1);
@@ -128,9 +129,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((i == dom_high.x) and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_ihi_type(dom_high.x+1,j,k,0) == c;}))
+     ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0), bc_types, 3))
     {
       u_e = velocity(i+1,j,k,0);
       v_e = velocity(i+1,j,k,1);
@@ -155,9 +154,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((j == dom_low.y) and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_jlo_type(i,dom_low.y-1,k,0) == c;}))
+     ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0), bc_types, 3))
     {
       u_s = velocity(i,j-1,k,0);
       v_s = velocity(i,j-1,k,1);
@@ -182,9 +179,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((j == dom_high.y) and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_jhi_type(i,dom_high.y+1,k,0) == c;}))
+     ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0), bc_types, 3))
     {
       u_n = velocity(i,j+1,k,0);
       v_n = velocity(i,j+1,k,1);
@@ -209,9 +204,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((k == dom_low.z) and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_klo_type(i,j,dom_low.z-1,0) == c;}))
+     ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0), bc_types, 3))
     {
       u_b = velocity(i,j,k-1,0);
       v_b = velocity(i,j,k-1,1);
@@ -236,9 +229,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((k == dom_high.z) and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_khi_type(i,j,dom_high.z+1,0) == c;}))
+     ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0), bc_types, 3))
     {
       u_t = velocity(i,j,k+1,0);
       v_t = velocity(i,j,k+1,1);
@@ -300,17 +291,17 @@ mfix::mfix_compute_ugradu( Box& bx,
 // Compute [TODO description]
 //
 void
-mfix::mfix_compute_ugradu_eb( Box& bx,
-                              Vector< std::unique_ptr<MultiFab> >& conv, 
-                              Vector< std::unique_ptr<MultiFab> >& vel,
-                              MFIter* mfi,
-                              Array<const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
-                              Array<const MultiCutFab*,AMREX_SPACEDIM>& facecent,
-                              const amrex::MultiFab* volfrac,
-                              const amrex::MultiCutFab* bndrycent,
-                              Box& domain,
-                              const EBCellFlagFab& flags,
-                              const int lev)
+mfix::mfix_compute_ugradu_eb(Box& bx,
+                             Vector< std::unique_ptr<MultiFab> >& conv, 
+                             Vector< std::unique_ptr<MultiFab> >& vel,
+                             MFIter* mfi,
+                             Array<const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
+                             Array<const MultiCutFab*,AMREX_SPACEDIM>& facecent,
+                             const amrex::MultiFab* volfrac,
+                             const amrex::MultiCutFab* bndrycent,
+                             Box& domain,
+                             const EBCellFlagFab& flags,
+                             const int lev)
 {
   AMREX_ASSERT_WITH_MESSAGE(nghost >= 4, "Compute divop(): ng must be >= 4");
 
@@ -359,7 +350,7 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   Array4<Real> const& fy = fyfab.array();
   Array4<Real> const& fz = fzfab.array();
 
-  const Vector<int> bc = {bc_list.minf, bc_list.pinf, bc_list.pout};
+  const int bc_types[3] = {bc_list.minf, bc_list.pinf, bc_list.pout};
 
   //
   // First compute the convective fluxes at the face center
@@ -372,22 +363,17 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   //
   AMREX_CUDA_HOST_DEVICE_FOR_4D(ubx, ncomp, i, j, k, n,
   {
-	  Real u_face(0); 
-	  Real upls(0); 
-	  Real umns(0); 
+    Real u_face(0);
+    Real upls(0); Real umns(0);
 
     if( areafrac_x(i,j,k) > 0 ) {
       if( i <= dom_low.x and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_ilo_type(dom_low.x-1,j,k,0) == c;}))
+       ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0), bc_types, 3))
       {
         u_face = velocity(dom_low.x-1,j,k,n);
       }
       else if( i >= dom_high.x+1 and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_ihi_type(dom_high.x+1,j,k,0) == c;}))
+       ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0), bc_types, 3))
       {
         u_face = velocity(dom_high.x+1,j,k,n);
       }
@@ -409,21 +395,17 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   //
   AMREX_CUDA_HOST_DEVICE_FOR_4D(vbx, ncomp, i, j, k, n,
   {
-	  Real v_face(0); 
-	  Real vpls(0); 
-	  Real vmns(0); 
+    Real v_face(0);
+    Real vpls(0); Real vmns(0);
+
     if( areafrac_y(i,j,k) > 0 ) {
       if( j <= dom_low.y and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_jlo_type(i,dom_low.y-1,k,0) == c;}))
+       ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0), bc_types, 3))
       {
         v_face = velocity(i,dom_low.y-1,k,n);
       }
       else if( j >= dom_high.y+1 and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_jhi_type(i,dom_high.y+1,k,0) == c;}))
+       ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0), bc_types, 3))
       {
         v_face = velocity(i,dom_high.y+1,k,n);
       }
@@ -445,21 +427,17 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
   //
   AMREX_CUDA_HOST_DEVICE_FOR_4D(wbx, ncomp, i, j, k, n,
   {
-	  Real w_face(0); 
-	  Real wpls(0); 
-	  Real wmns(0); 
+    Real w_face(0);
+    Real wpls(0); Real wmns(0);
+
     if( areafrac_z(i,j,k) > 0 ) {
       if( k <= dom_low.z and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_klo_type(i,j,dom_low.z-1,0) == c;}))
+       ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0), bc_types, 3))
       {
         w_face = velocity(i,j,dom_low.z-1,n);
       }
       else if( k >= dom_high.z+1 and
-       std::any_of(bc.begin(),
-                   bc.end(),
-                   [&](int c){return bc_khi_type(i,j,dom_high.z+1,0) == c;}))
+       ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0), bc_types, 3))
       {
         w_face = velocity(i,j,dom_high.z+1,n);
       }
@@ -499,8 +477,7 @@ mfix::mfix_compute_ugradu_eb( Box& bx,
 
   AMREX_CUDA_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
   {
-    const Real coefficient(-1/epsilon_g(i,j,k));
-    ugradu(i,j,k,n) *= coefficient;
+    ugradu(i,j,k,n) *= (-1/epsilon_g(i,j,k));
   });
 }
 
