@@ -10,7 +10,6 @@ target_sources( mfixcore
    des_init_namelist.f90
    des_time_march.f90
    discretelement_mod.f90
-   drag_gp_des.f90
    init_collision.f90
    particle_generator.f90
    particle_mod.f90
