@@ -49,4 +49,4 @@ mfix.levelset__pad        = 16      # how far (in refined units) should the leve
 mfix.levelset__eb_refinement = 1   # resolution of the eb used for generating the levelset
 mfix.levelset__eb_pad        = 2   # how far the eb extends out of the problem domain
 
-mfix.drag_types = "Gidaspow"
+mfix.drag_type = "Gidaspow"

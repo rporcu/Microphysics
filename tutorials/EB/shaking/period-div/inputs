@@ -17,7 +17,7 @@ particles.tile_size       = 1024 1024 1024
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
 
-mfix.drag_types = "BVK2"
+mfix.drag_type = "BVK2"
 
 ### Simulation Runtime Parameters
 
