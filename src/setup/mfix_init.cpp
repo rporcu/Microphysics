@@ -155,7 +155,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         ParmParse pp("mfix");
 
 		std::string drag_type;
-		pp.query("drag_type", drag_type);
+		pp.get("drag_type", drag_type);
 
 		if (drag_type == "WenYu")
 		{
