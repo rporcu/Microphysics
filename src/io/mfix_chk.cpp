@@ -122,9 +122,10 @@ mfix::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time
 
           // Write scalar variables
           for (int i = 0; i < chkscalarVars.size(); i++ ) {
-              VisMF::Write( *((*chkscalarVars[i])[lev]),
-                amrex::MultiFabFileFullPrefix(lev, checkpointname,
-                      level_prefix, chkscaVarsName[i]));
+              if ( solve_dem || (chkscaVarsName[i] != "level_sets"))
+                 VisMF::Write( *((*chkscalarVars[i])[lev]),
+                   amrex::MultiFabFileFullPrefix(lev, checkpointname,
+                         level_prefix, chkscaVarsName[i]));
           }
        }
     }

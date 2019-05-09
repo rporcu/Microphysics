@@ -222,13 +222,10 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
        for (int i = 0; i < chkscalarVars.size(); i++ )
        {
            Print() << "Working on: " << chkscaVarsName[i] << std::endl;
-           if (Nrep != IntVect::TheUnitVector())
+           if (chkscaVarsName[i] == "level_sets")
            {
-               if (chkscaVarsName[i] == "level_sets")
-               {
-                   Print() << "Skipping!" << std::endl;
-                   continue;
-               }
+               Print() << "Skipping!" << std::endl;
+               continue;
            }
 
           MultiFab mf;
@@ -278,19 +275,17 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           pc->SetParticleDistributionMap(lev,  dmap[lev]);
         }
         pc->Redistribute();
+
+       int lev = 0;
+       if (Nrep == IntVect::TheUnitVector())
+       {
+           // We need to do this on restart regardless of whether we replicate
+           pc->Redistribute();
+       } else {
+          // This call to Replicate adds the new particles, then calls Redistribute()
+          pc->Replicate(Nrep, geom[lev], dmap[lev], grids[lev]);
+       }
     }
-
-    int lev = 0;
-    if (Nrep == IntVect::TheUnitVector())
-    {
-        // We need to do this on restart regardless of whether we replicate
-        pc->Redistribute();
-    } else {
-       // This call to Replicate adds the new particles, then calls Redistribute()
-       pc->Replicate(Nrep, geom[lev], dmap[lev], grids[lev]);
-    }
-
-
 
    /****************************************************************************
     * Load level set data from checkpoint file                                 *
@@ -299,83 +294,95 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     * (compared to the rest of the checkpoint data) => the level-set data is   *
     * stored in seperate ls_raw MultiFab.                                      *
     ****************************************************************************/
-    if (levelset__restart) {
-        // Load level-set Multifab
-        std::stringstream ls_data_path;
-        ls_data_path << restart_file << "/ls_raw";
+    if (solve_dem)
+    {
+        if (levelset__restart) {
+           // Load level-set Multifab
+           std::stringstream ls_data_path;
+           ls_data_path << restart_file << "/ls_raw";
+   
+           MultiFab ls_mf;
+           VisMF::Read(ls_mf, ls_data_path.str());
 
-        MultiFab ls_mf;
-        VisMF::Read(ls_mf, ls_data_path.str());
+           // Load LSFactory parameters: => in case the user has changed the inputs
+           int levelset_params[4] = { levelset__refinement,
+                                      levelset__pad,
+                                      levelset__eb_refinement,
+                                      levelset__eb_pad         };
 
-        // Load LSFactory parameters: => in case the user has changed the inputs
-        int levelset_params[4] = { levelset__refinement,
-                                   levelset__pad,
-                                   levelset__eb_refinement,
-                                   levelset__eb_pad         };
+           std::ifstream param_file;
+           std::stringstream param_file_name;
+           param_file_name << restart_file << "/LSFactory_params";
+           param_file.open(param_file_name.str());
 
-        std::ifstream param_file;
-        std::stringstream param_file_name;
-        param_file_name << restart_file << "/LSFactory_params";
-        param_file.open(param_file_name.str());
+           amrex::readIntData(levelset_params, 4, param_file, FPC::NativeIntDescriptor());
+           int ls_ref = levelset_params[0], ls_pad = levelset_params[1],
+               eb_ref = levelset_params[2], eb_pad = levelset_params[3];
+   
+           amrex::Print() << "     + Loaded level-set parameters:" << std::endl
+                          << "       ref = " << ls_ref << "    pad = " << ls_pad
+                          << "    eb_ref = " << eb_ref << " eb_pad = " << eb_pad
+                          << std::endl;
+   
+           // Inform the user if the checkpoint parameters do not match those in the
+           // inputs file. The checkpoint inputs overwrite the inputs file.
+           if(ls_ref != levelset__refinement)
+               amrex::Print() << "     * Overwrote levelset__refinement = " << levelset__refinement
+                              << " -> " << ls_ref << std::endl;
+           if   (ls_pad != levelset__pad)
+               amrex::Print() << "     * Overwrote levelset__pad = " << levelset__pad
+                              << " -> " << ls_pad << std::endl;
+           if(eb_ref != levelset__eb_refinement)
+               amrex::Print() << "     * Overwrote levelset__eb_refinement = " << levelset__eb_refinement
+                              << " -> " << eb_ref << std::endl;
+           if(eb_pad != levelset__eb_pad)
+               amrex::Print() << "     * Overwrote levelset__eb_pad = " << levelset__eb_pad
+                              << " -> " << eb_pad << std::endl;
 
-        amrex::readIntData(levelset_params, 4, param_file, FPC::NativeIntDescriptor());
-        int ls_ref = levelset_params[0], ls_pad = levelset_params[1],
-            eb_ref = levelset_params[2], eb_pad = levelset_params[3];
-
-        amrex::Print() << "     + Loaded level-set parameters:" << std::endl
-                       << "       ref = " << ls_ref << "    pad = " << ls_pad
-                       << "    eb_ref = " << eb_ref << " eb_pad = " << eb_pad
-                       << std::endl;
-
-        // Inform the user if the checkpoint parameters do not match those in the
-        // inputs file. The checkpoint inputs overwrite the inputs file.
-        if(ls_ref != levelset__refinement)
-            amrex::Print() << "     * Overwrote levelset__refinement = " << levelset__refinement
-                           << " -> " << ls_ref << std::endl;
-        if(ls_pad != levelset__pad)
-            amrex::Print() << "     * Overwrote levelset__pad = " << levelset__pad
-                           << " -> " << ls_pad << std::endl;
-        if(eb_ref != levelset__eb_refinement)
-            amrex::Print() << "     * Overwrote levelset__eb_refinement = " << levelset__eb_refinement
-                           << " -> " << eb_ref << std::endl;
-        if(eb_pad != levelset__eb_pad)
-            amrex::Print() << "     * Overwrote levelset__eb_pad = " << levelset__eb_pad
-                           << " -> " << eb_pad << std::endl;
-
-        // TODO: load level-set data from checkpoint file
-        // level_set->set_data(ls_mf);
-    } else {
-        fill_eb_levelsets();
+           // TODO: load level-set data from checkpoint file
+           // level_set->set_data(ls_mf);
+        } else {
+           fill_eb_levelsets();
+        }
     }
 
     if (solve_fluid)
     {
-        ep_g[lev]->FillBoundary(geom[lev].periodicity());
-       ep_go[lev]->FillBoundary(geom[lev].periodicity());
+        for (int lev = 0; lev <= finestLevel(); lev++)
+        {
+             ep_g[lev]->FillBoundary(geom[lev].periodicity());
+            ep_go[lev]->FillBoundary(geom[lev].periodicity());
 
-        ro_g[lev]->FillBoundary(geom[lev].periodicity());
-       ro_go[lev]->FillBoundary(geom[lev].periodicity());
+             ro_g[lev]->FillBoundary(geom[lev].periodicity());
+            ro_go[lev]->FillBoundary(geom[lev].periodicity());
 
-         mu_g[lev]->FillBoundary(geom[lev].periodicity());
-
-       // Fill the bc's just in case
-        vel_g[lev]->FillBoundary(geom[lev].periodicity());
-       vel_go[lev]->FillBoundary(geom[lev].periodicity());
+              mu_g[lev]->FillBoundary(geom[lev].periodicity());
+     
+            // Fill the bc's just in case
+             vel_g[lev]->FillBoundary(geom[lev].periodicity());
+            vel_go[lev]->FillBoundary(geom[lev].periodicity());
+        }
     }
 
     // used in load balancing
     if (load_balance_type == "KnapSack") {
         if (solve_dem)
         {
-           particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                 pc->ParticleDistributionMap(lev), 1, 0));
-           particle_cost[lev]->setVal(0.0);
+            for (int lev = 0; lev <= finestLevel(); lev++)
+            {
+               particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
+                                                     pc->ParticleDistributionMap(lev), 1, 0));
+               particle_cost[lev]->setVal(0.0);
+            }
         }
 
         if (solve_fluid)
         {
-           fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
-           fluid_cost[lev]->setVal(0.0);
+            for (int lev = 0; lev <= finestLevel(); lev++)
+            {
+               fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+               fluid_cost[lev]->setVal(0.0);
+            }
         }
     }
     amrex::Print() << "  Done with mfix::Restart " << std::endl;
