@@ -6,6 +6,8 @@
 #include <AMReX_VisMF.H>
 #include <AMReX_iMultiFab.H>
 
+#include <AMReX_buildInfo.H>
+
 #include <mfix.H>
 #include <mfix_F.H>
 
@@ -101,6 +103,10 @@ int main (int argc, char* argv[])
 
     BL_PROFILE_VAR("main()", pmain)
     BL_PROFILE_REGION_START("mfix::main()");
+
+    // Write out the MFIX git hash (the AMReX git hash is already written)
+    const char* githash_mfix = buildInfoGetGitHash(1);
+    amrex::Print() << "MFiX git hash: " << githash_mfix<< "\n";
 
     amrex::Cuda::setLaunchRegion(false);
 
