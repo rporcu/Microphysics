@@ -171,7 +171,7 @@ mfix::set_input_bcs(const std::string bcID, const int index,
 
   // Treat the first velocity as-usual.
   int velocity_size = velocity_in.size();
-  if(velocity_size == 1) velocity = velocity_in[0];
+  if(velocity_size > 0) velocity = velocity_in[0];
 
 
   const Real* plo = geom[0].ProbLo();
