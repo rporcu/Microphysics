@@ -152,28 +152,32 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
     if (solve_dem)
 	{
-        ParmParse pp("mfix");
+            ParmParse pp("mfix");
 
-		std::string drag_type;
-		pp.get("drag_type", drag_type);
+            std::string drag_type = "None";
+	    pp.query("drag_type", drag_type);
 
-		if (drag_type == "WenYu")
-		{
-			m_drag_type = DragType::WenYu;
-		}
-		else if (drag_type == "Gidaspow")
-		{
-			m_drag_type = DragType::Gidaspow;
-		}
-		else if (drag_type == "BVK2")
-		{
-			m_drag_type = DragType::BVK2;
-		}
+	    if (drag_type == "WenYu")
+	    {
+		m_drag_type = DragType::WenYu;
+	    }
+	    else if (drag_type == "Gidaspow")
+	    {
+		m_drag_type = DragType::WenYu;
+		m_drag_type = DragType::Gidaspow;
+	    }
+	    else if (drag_type == "BVK2")
+	    {
+	        m_drag_type = DragType::BVK2;
+	    }
 		else if (drag_type == "UserDrag")
-		{
-			m_drag_type = DragType::UserDrag;
-		}
-		// Note - we will check for invalid drag types later, so we don't do it here
+	    {
+		m_drag_type = DragType::UserDrag;
+	    }
+	    else 
+	    {
+                amrex::Abort("Don't know this drag_type!");
+	    }
     }	
 	
     {
