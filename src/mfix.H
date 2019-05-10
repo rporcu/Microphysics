@@ -584,8 +584,12 @@ private:
      int  diff_mg_max_coarsening_level = 100;
      // ***************************************************************
 
-     // Tolerance to check for steady state
-     Real steady_state_tol = 1.0e-5  ;
+     // Tolerance to check for steady state -- 
+     //    this must be specified in the inputs file
+     Real steady_state_tol;
+
+     // Maximum number of iterations to steady state -- 
+     //    this default may be over-written in the inputs file
      int  steady_state_max_iter = 100000000;
 
      int call_udf;
