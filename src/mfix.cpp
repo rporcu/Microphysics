@@ -9,7 +9,7 @@ std::string mfix::particle_init_type   = "AsciiFile";
 std::string mfix::load_balance_type    = "FixedSize";
 std::string mfix::knapsack_weight_type = "RunTimeCosts";
 int         mfix::load_balance_fluid   = 1;
-int         mfix::knapsack_nmax        = std::numeric_limits<int>::max();
+int         mfix::knapsack_nmax        = 128;
 DragType    mfix::m_drag_type          = DragType::Invalid;
 
 // Define unit vectors for easily convert indices
