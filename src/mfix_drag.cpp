@@ -28,6 +28,11 @@ mfix::mfix_calc_drag_particle(Real time)
 {
     BL_PROFILE("mfix::mfix_calc_drag_particle()");
 
+
+    // Extrapolate velocity Dirichlet bc's to ghost cells
+    int extrap_dir_bcs = 1;
+    mfix_set_velocity_bcs(time, extrap_dir_bcs);
+
     for (int lev = 0; lev < nlev; lev++)
     {
 
@@ -59,10 +64,6 @@ mfix::mfix_calc_drag_particle(Real time)
                             &nghost);
         }
 
-        // Extrapolate velocity Dirichlet bc's to ghost cells
-        // HACK -- NOTE WE ARE CALLING THIS ON ALL LEVELS BUT ONLY NEED IT ON ONE LEVEL
-        int extrap_dir_bcs = 1;
-        mfix_set_velocity_bcs(time, extrap_dir_bcs);
         gp_tmp.FillBoundary(geom[lev].periodicity());
 
         bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
@@ -196,12 +197,12 @@ mfix::mfix_calc_drag_particle(Real time)
                             } else {
 
                                 // Regular cell
-                                if (flags_array(iloc,jloc,kloc).isRegular()) 
+                                if (flags_array(iloc,jloc,kloc).isRegular())
                                 {
                                     trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
                                     trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
                                 }
-    
+
                                 // Cut cell but none of the cells in the stencil is covered; we can use the regular formula
                                 else if (!flags_array(i-1,j-1,k-1).isCovered() &&
                                          !flags_array(i  ,j-1,k-1).isCovered() &&
@@ -210,16 +211,16 @@ mfix::mfix_calc_drag_particle(Real time)
                                          !flags_array(i-1,j-1,k  ).isCovered() &&
                                          !flags_array(i  ,j-1,k  ).isCovered() &&
                                          !flags_array(i-1,j  ,k  ).isCovered() &&
-                                         !flags_array(i  ,j  ,k  ).isCovered()) 
+                                         !flags_array(i  ,j  ,k  ).isCovered())
                                 {
                                     trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
                                     trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
-        
+
                                 // Cut cell and at least one of the cells in the stencil is covered
                                 } else {
 
                                     Real anrm[3];
-    
+
                                     // Compute distance of the particle from the wall.
                                     // (This is the same function we call when computing the particle-wall collisions)
                                     int ls_refinement = 1;
@@ -229,33 +230,33 @@ mfix::mfix_calc_drag_particle(Real time)
                                     // whether we compute it "at the particle location" or "at the centroid location"
                                     // because it interpolates from the same values of phi.
                                     level_set_normal(particle, ls_refinement, &anrm[0], phi_array, plo, dxi);
-    
+
                                     // Particle position must be in [-.5:.5] is relative to cell center and scaled by dx
                                     Real gx = particle.pos(0)*dxi[0] - (iloc + 0.5);
                                     Real gy = particle.pos(1)*dxi[1] - (jloc + 0.5);
                                     Real gz = particle.pos(2)*dxi[2] - (kloc + 0.5);
-    
+
                                     int ii,jj,kk;
 
                                     if (anrm[0] < 0) {
                                         ii = iloc - 1;
                                     } else {
-                                        ii = iloc + 1; 
+                                        ii = iloc + 1;
                                         gx = -gx;
                                     }
                                     if (anrm[1] < 0) {
                                         jj = jloc - 1;
                                     } else {
-                                        jj = jloc + 1; 
+                                        jj = jloc + 1;
                                     gy = -gy;
                                     }
                                     if (anrm[2] < 0) {
                                         kk = kloc - 1;
                                     } else {
-                                        kk = kloc + 1; 
+                                        kk = kloc + 1;
                                         gz = -gz;
                                     }
-    
+
                                     Real gxy = gx*gy;
                                     Real gxz = gx*gz;
                                     Real gyz = gy*gz;
@@ -266,7 +267,7 @@ mfix::mfix_calc_drag_particle(Real time)
                                        velfp[n] = (1.0+gx+gy+gz+gxy+gxz+gyz+gxyz) * vel_array(iloc,jloc,kloc,n)
                                                 + (-gz - gxz - gyz - gxyz)        * vel_array(iloc,jloc,kk  ,n)
                                                 + (-gy - gxy - gyz - gxyz)        * vel_array(iloc,jj  ,kloc,n)
-                                                + (gyz + gxyz)                    * vel_array(iloc,jj  ,kk  ,n) 
+                                                + (gyz + gxyz)                    * vel_array(iloc,jj  ,kk  ,n)
                                                 + (-gx - gxy - gxz - gxyz)        * vel_array(ii  ,jloc,kloc,n)
                                                 + (gxz + gxyz)                    * vel_array(ii  ,jloc,kk  ,n)
                                                 + (gxy + gxyz)                    * vel_array(ii  ,jj  ,kloc,n)
@@ -281,11 +282,11 @@ mfix::mfix_calc_drag_particle(Real time)
                                                 + (-gxyz)                         *  gp_array(ii  ,jj  ,kk ,n);
 
                                        // Keep the interpolated velocity between the cell value and the wall value (0)
-                                       if ( (velfp[n] > 0.0 && velfp[n] > vel_array(iloc,jloc,kloc,n)) ||  
-                                            (velfp[n] < 0.0 && velfp[n] < vel_array(iloc,jloc,kloc,n)) ) 
+                                       if ( (velfp[n] > 0.0 && velfp[n] > vel_array(iloc,jloc,kloc,n)) ||
+                                            (velfp[n] < 0.0 && velfp[n] < vel_array(iloc,jloc,kloc,n)) )
                                            velfp[n] = vel_array(iloc,jloc,kloc,n);
-                                       if ( (gradp[n] > 0.0 && gradp[n] > gp_array(iloc,jloc,kloc,n)) ||  
-                                            (gradp[n] < 0.0 && gradp[n] < gp_array(iloc,jloc,kloc,n)) ) 
+                                       if ( (gradp[n] > 0.0 && gradp[n] > gp_array(iloc,jloc,kloc,n)) ||
+                                            (gradp[n] < 0.0 && gradp[n] < gp_array(iloc,jloc,kloc,n)) )
                                            gradp[n] = gp_array(iloc,jloc,kloc,n);
                                     }
                                } // Cut cell
@@ -306,12 +307,14 @@ mfix::mfix_calc_drag_particle(Real time)
             } // FAB not covered
         } // pti
 
-        // Reset velocity Dirichlet bc's to face values
-        // HACK -- NOTE WE ARE CALLING THIS ON ALL LEVELS BUT ONLY NEED IT ON ONE LEVEL
-        extrap_dir_bcs = 0;
-        mfix_set_velocity_bcs(time, extrap_dir_bcs);
 
         } // omp region
 
+
     } // lev
+
+    // Reset velocity Dirichlet bc's to face values
+    extrap_dir_bcs = 0;
+    mfix_set_velocity_bcs(time, extrap_dir_bcs);
+
 }
