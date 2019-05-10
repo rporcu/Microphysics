@@ -19,6 +19,8 @@ mfix.particle_init_type = "AsciiFile"
 
 amr.blocking_factor = 2
 
+mfix.mg_max_coarsening_level = 1
+
 mac.mg_verbose          = 1
 
 diffusion.mg_verbose = 0

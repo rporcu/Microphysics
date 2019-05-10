@@ -6,10 +6,8 @@
 #! Fluid solver
 #!-----------------------------------------------------------//
 
-amr.max_step = 10
-#amr.stop_time = 16.0
-
-mfix.drag_type = "WenYu"
+#amr.max_step = 10
+amr.stop_time = 16.0
 
 mfix.max_dt = 1.0d-3
 mfix.min_dt = 1.0d-8
@@ -17,11 +15,13 @@ mfix.cfl    = 0.5
 
 mfix.particle_init_type = "Auto"
 
+mfix.drag_type = "WenYu"
+
 amr.blocking_factor = 2
 
 mac.mg_verbose          = 1
 
-diffusion.mg_verbose = 0
+diffusion.mg_verbose    = 0
 
 mfix.mg_verbose         = 1
 mfix.mg_cg_verbose      = 0
@@ -35,19 +35,19 @@ amr.max_level = 0
 geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 0       0       0       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
-geometry.prob_hi     = 0.54735 0.28736 0.14368 # hi corner of physical domain
+geometry.prob_hi     = 0.65664 0.32832 0.16416 # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell =  160   84   42
+amr.n_cell =  192  96  48
 
 #! Grids
 #!-----------------------------------------------------------//
 # Maximum allowable size of each fluid subdomain in the problem domain;
 
 # Fluid
-amr.max_grid_size_x = 1024 #16
-amr.max_grid_size_y = 1024 #21
-amr.max_grid_size_z = 1024 #21
+amr.max_grid_size_x = 48
+amr.max_grid_size_y = 24
+amr.max_grid_size_z = 24
 
 # Particles (not with KDTree)
 #particles.max_grid_size_x =   32
@@ -79,29 +79,29 @@ mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
 #! EB geometry
 #!-----------------------------------------------------------//
-mfix.geometry = "cylinder"
+# Construct elliptical cylinder using Poly2 geometry:
+# (y/a)^2 + (z/b)^2 = 1
+mfix.use_walls       = true
+mfix.use_poly2       = true
+mfix.poly2_mirror    = true  # internal flow 
+#                        a0*x^0   a1*x^1   a2*x^2
+mfix.poly2_x_coeffs  =  -1.0     0.0      0.0
+mfix.poly2_y_coeffs  =   0.0     0.0     48.97
+mfix.poly2_z_coeffs  =   0.0     0.0     43.45
+mfix.poly2_translate =   0.0     0.16416  0.0
 
-cylinder.internal_flow = true
-cylinder.closed_bottom = true
-cylinder.bottom_offset = 1.0e-8
-
-cylinder.radius = 0.1429
-cylinder.height = -1.0
-
-cylinder.direction = 0
-cylinder.center    =  0.274   0.14368   0.0
 
 #! BCs 
 #!-----------------------------------------------------------//
-xlo.location = 0.0
+xlo.location = 0.000001
 xlo.type     = "mi"
-xlo.velocity = 1.3557
+xlo.velocity = 0.0
 
-xhi.location = 0.54735
+xhi.location = 0.65664
 xhi.type     = "po"
 xhi.pressure = 0.0
 
-zlo.location = 0.0
+zlo.location = 0.000001
 zlo.type     = "nsw"
 
 #_______________________________________________________________________
@@ -123,7 +123,7 @@ amr.regrid_int         = 100
 
 #______________________________________________________________________
 # user data processing
-amr.avg_int = 20
+amr.avg_int = 50
 amr.avg_file = "uio"
 
 amr.avg_vel_p =        1       0        0
@@ -132,11 +132,11 @@ amr.avg_ep_g  =        0       0        0
 amr.avg_vel_g =        0       0        0
 
 amr.avg_region_x_w =   0.0      0.001    0.004
-amr.avg_region_x_e =   0.54735  0.001    0.004
+amr.avg_region_x_e =   0.65664  0.001    0.004
 amr.avg_region_y_s =   0.0      0.0      0.0
-amr.avg_region_y_n =   0.28736  0.28736  0.28736
+amr.avg_region_y_n =   0.32832  0.32832  0.32832
 amr.avg_region_z_b =   0.0      0.0      0.0 
-amr.avg_region_z_t =   0.14368  0.14368  0.14368
+amr.avg_region_z_t =   0.16416  0.16416  0.16416
 
 #_______________________________________________________________________
 # IO / Checkpointing

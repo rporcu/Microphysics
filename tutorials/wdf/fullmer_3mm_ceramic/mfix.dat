@@ -52,41 +52,41 @@
 
 ! Full domain coverage
   IC_Y_s(1) =   0.0     ! (m)
-  IC_Y_n(1) =   0.28736 ! (m)
+  IC_Y_n(1) =   0.32832 ! (m)
   IC_Z_b(1) =   0.0     ! (m)
-  IC_Z_t(1) =   0.14368 ! (m)
+  IC_Z_t(1) =   0.16416 ! (m)
   IC_X_w(1) =   0.0     ! (m)
-  IC_X_e(1) =   0.54735 ! (m)
+  IC_X_e(1) =   0.65664 ! (m)
 
   IC_EP_g(1) =  1.000   ! (m)
 
-  IC_U_g(1) =   1.3557     ! (m)
+  IC_U_g(1) =   0.0     ! (m)
   IC_V_g(1) =   0.0     ! (m)
   IC_W_g(1) =   0.0     ! (m)
 
-!! Initial solids
-!  IC_Y_s(2) =   0.0     ! (m)
-!  IC_Y_n(2) =   0.28736 ! (m)
-!  IC_Z_b(2) =   0.0     ! (m)
-!  IC_Z_t(2) =   0.14368 ! (m)
-!  IC_X_w(2) =   0.0     ! (m)
-!  IC_X_e(2) =   0.442   ! (m)
-!
-!  IC_EP_g(2) =  0.5    ! (m)
-!
-!  IC_U_g(2) =   0.000  ! (m)
-!  IC_V_g(2) =   0.000  ! (m)
-!  IC_W_g(2) =   0.000  ! (m)
-!
-!  IC_EP_s(2,1) = 0.5   ! (m)
-!
-!  IC_U_s(2,1) = 0.000  ! (m)
-!  IC_V_s(2,1) = 0.000  ! (m)
-!  IC_W_s(2,1) = 0.000  ! (m)
-!
-!  ic_dp_dist(2,1) =   'CONSTANT'
-!  ic_dp_mean(2,1) =    3.113d-3    ! (m)
-!
-!  ic_ro_s_dist(2,1) = 'CONSTANT'
-!  ic_ro_s_mean(2,1) =  2615.0d0    ! (kg/m^3)
+! Initial solids
+  IC_Y_s(2) =   0.0     ! (m)
+  IC_Y_n(2) =   0.32832 ! (m)
+  IC_Z_b(2) =   0.0     ! (m)
+  IC_Z_t(2) =   0.16416 ! (m)
+  IC_X_w(2) =   0.0     ! (m)
+  IC_X_e(2) =   0.442   ! (m)
+
+  IC_EP_g(2) =  0.5    ! (m)
+
+  IC_U_g(2) =   0.000  ! (m)
+  IC_V_g(2) =   0.000  ! (m)
+  IC_W_g(2) =   0.000  ! (m)
+
+  IC_EP_s(2,1) = 0.5   ! (m)
+
+  IC_U_s(2,1) = 0.000  ! (m)
+  IC_V_s(2,1) = 0.000  ! (m)
+  IC_W_s(2,1) = 0.000  ! (m)
+
+  ic_dp_dist(2,1) =   'CONSTANT'
+  ic_dp_mean(2,1) =    3.113d-3    ! (m)
+
+  ic_ro_s_dist(2,1) = 'CONSTANT'
+  ic_ro_s_mean(2,1) =  2615.0d0    ! (kg/m^3)
   
