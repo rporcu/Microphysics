@@ -139,7 +139,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     call_udf     = call_udf_in;
 
     if (solve_dem)
-	{
+    {
         ParmParse pp("particles");
 
         pp.query("max_grid_size_x", particle_max_grid_size_x);
@@ -150,7 +150,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("removeOutOfRange", removeOutOfRange );
     }
 
-    if (solve_dem)
+    if (solve_dem && solve_fluid)
 	{
             ParmParse pp("mfix");
 
