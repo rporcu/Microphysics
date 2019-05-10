@@ -79,16 +79,14 @@ mfix::mfix_compute_vort ()
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
           {
-            Real uy, uz, vx, vz, wx, wy;
-
             AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
             {
-              uy = .5*ody*(velocity_g(i,j+1,k,0) - velocity_g(i,j-1,k,0));
-              uz = .5*odz*(velocity_g(i,j,k+1,0) - velocity_g(i,j,k-1,0));
-              vx = .5*odx*(velocity_g(i+1,j,k,1) - velocity_g(i-1,j,k,1));
-              vz = .5*odz*(velocity_g(i,j,k+1,1) - velocity_g(i,j,k-1,1));
-              wx = .5*odx*(velocity_g(i+1,j,k,2) - velocity_g(i-1,j,k,2));
-              wy = .5*ody*(velocity_g(i,j+1,k,2) - velocity_g(i,j-1,k,2));
+              Real uy = .5*ody*(velocity_g(i,j+1,k,0) - velocity_g(i,j-1,k,0));
+              Real uz = .5*odz*(velocity_g(i,j,k+1,0) - velocity_g(i,j,k-1,0));
+              Real vx = .5*odx*(velocity_g(i+1,j,k,1) - velocity_g(i-1,j,k,1));
+              Real vz = .5*odz*(velocity_g(i,j,k+1,1) - velocity_g(i,j,k-1,1));
+              Real wx = .5*odx*(velocity_g(i+1,j,k,2) - velocity_g(i-1,j,k,2));
+              Real wy = .5*ody*(velocity_g(i,j+1,k,2) - velocity_g(i,j-1,k,2));
 
               vorticity(i,j,k) = std::sqrt((wy-vz)*(wy-vz) +
                                            (uz-wx)*(uz-wx) +
