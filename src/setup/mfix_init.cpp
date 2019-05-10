@@ -24,6 +24,8 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
         // Options to control time stepping
         pp.query("cfl", cfl );
+
+        fixed_dt = -1.;
         pp.query("fixed_dt", fixed_dt );
         pp.query("dt_min", dt_min );
         pp.query("dt_max", dt_max );
