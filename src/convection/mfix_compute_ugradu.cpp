@@ -2,6 +2,8 @@
 #include <mfix_mac_F.H>
 #include <mfix_divop_F.H>
 
+#include <AMReX_Array.H>
+
 #define MY_HUGE 1.e200
 
 namespace ugradu_aux {
@@ -9,9 +11,7 @@ namespace ugradu_aux {
 //
 // Compute upwind non-normal velocity
 //
-#ifdef AMREX_USE_CUDA
-__device__
-#endif
+AMREX_GPU_HOST_DEVICE
 Real
 upwind(const Real velocity_minus,
        const Real velocity_plus,
@@ -26,9 +26,7 @@ upwind(const Real velocity_minus,
   return u_edge > 0 ? velocity_minus : velocity_plus;
 }
 
-#ifdef AMREX_USE_CUDA
-__device__
-#endif
+AMREX_GPU_HOST_DEVICE
 bool
 is_equal_to_any(const int bc,
                 const int* bc_types,
@@ -85,7 +83,7 @@ mfix::mfix_compute_ugradu( Box& bx,
 
   // Vectorize the boundary conditions list in order to use it in lambda
   // functions
-  const int bc_types[3] = {bc_list.minf, bc_list.pinf, bc_list.pout};
+  const GpuArray<int, 3> bc_types = {bc_list.minf, bc_list.pinf, bc_list.pout};
 
   AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
   {
@@ -104,7 +102,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((i == dom_low.x) and
-     ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0), bc_types, 3))
+	   ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0), bc_types.data(), 3))
     {
       u_w = velocity(i-1,j,k,0);
       v_w = velocity(i-1,j,k,1);
@@ -129,7 +127,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((i == dom_high.x) and
-     ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0), bc_types, 3))
+	   ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0), bc_types.data(), 3))
     {
       u_e = velocity(i+1,j,k,0);
       v_e = velocity(i+1,j,k,1);
@@ -154,7 +152,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((j == dom_low.y) and
-     ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0), bc_types, 3))
+	   ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0), bc_types.data(), 3))
     {
       u_s = velocity(i,j-1,k,0);
       v_s = velocity(i,j-1,k,1);
@@ -179,7 +177,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((j == dom_high.y) and
-     ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0), bc_types, 3))
+	   ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0), bc_types.data(), 3))
     {
       u_n = velocity(i,j+1,k,0);
       v_n = velocity(i,j+1,k,1);
@@ -204,7 +202,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((k == dom_low.z) and
-     ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0), bc_types, 3))
+	   ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0), bc_types.data(), 3))
     {
       u_b = velocity(i,j,k-1,0);
       v_b = velocity(i,j,k-1,1);
@@ -229,7 +227,7 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((k == dom_high.z) and
-     ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0), bc_types, 3))
+	   ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0), bc_types.data(), 3))
     {
       u_t = velocity(i,j,k+1,0);
       v_t = velocity(i,j,k+1,1);
@@ -350,7 +348,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   Array4<Real> const& fy = fyfab.array();
   Array4<Real> const& fz = fzfab.array();
 
-  const int bc_types[3] = {bc_list.minf, bc_list.pinf, bc_list.pout};
+  const GpuArray<int, 3> bc_types = {bc_list.minf, bc_list.pinf, bc_list.pout};
 
   //
   // First compute the convective fluxes at the face center
@@ -368,12 +366,12 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
 
     if( areafrac_x(i,j,k) > 0 ) {
       if( i <= dom_low.x and
-       ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0), bc_types, 3))
+		  ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0), bc_types.data(), 3))
       {
         u_face = velocity(dom_low.x-1,j,k,n);
       }
       else if( i >= dom_high.x+1 and
-       ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0), bc_types, 3))
+			   ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0), bc_types.data(), 3))
       {
         u_face = velocity(dom_high.x+1,j,k,n);
       }
@@ -400,12 +398,12 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
 
     if( areafrac_y(i,j,k) > 0 ) {
       if( j <= dom_low.y and
-       ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0), bc_types, 3))
+		  ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0), bc_types.data(), 3))
       {
         v_face = velocity(i,dom_low.y-1,k,n);
       }
       else if( j >= dom_high.y+1 and
-       ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0), bc_types, 3))
+			   ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0), bc_types.data(), 3))
       {
         v_face = velocity(i,dom_high.y+1,k,n);
       }
@@ -432,12 +430,12 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
 
     if( areafrac_z(i,j,k) > 0 ) {
       if( k <= dom_low.z and
-       ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0), bc_types, 3))
+		  ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0), bc_types.data(), 3))
       {
         w_face = velocity(i,j,dom_low.z-1,n);
       }
       else if( k >= dom_high.z+1 and
-       ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0), bc_types, 3))
+			   ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0), bc_types.data(), 3))
       {
         w_face = velocity(i,j,dom_high.z+1,n);
       }
