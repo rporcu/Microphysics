@@ -6,7 +6,7 @@
 !  Purpose: Echo user input.                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine write_out0(time, dt, dx, dy, dz, xlength, ylength, zlength, domlo, domhi) &
+      subroutine write_out0(time, dx, dy, dz, xlength, ylength, zlength, domlo, domhi) &
          bind(C, name="write_out0")
 
       use amrex_fort_module, only : rt => amrex_real
@@ -20,7 +20,7 @@
       use param, only: dim_ic, dim_bc
       use param, only: half, undefined, zero, is_defined
       use constant, only: mmax
-      use run, only: description, call_usr, dem_solids, run_name, tstop
+      use run, only: description, call_usr, dem_solids, run_name
       use scales, only: p_scale, p_ref
 
       use ic, only: write_out_ic
@@ -29,7 +29,7 @@
       implicit none
 
       integer(c_int), intent(in   ) :: domlo(3), domhi(3)
-      real(rt)  , intent(in   ) :: time, dt, dx, dy, dz
+      real(rt)  , intent(in   ) :: time, dx, dy, dz
       real(rt)  , intent(in   ) :: xlength, ylength, zlength
 
       integer :: M, N
@@ -57,11 +57,7 @@
       write (unit_out, 1100)
       write (unit_out, 1110) RUN_NAME
       write (unit_out, 1120) DESCRIPTION
-      IF (IS_DEFINED(DT)) THEN
-         write (unit_out, 1135) time, tstop, dt
-      ELSE
-         write (unit_out, 1136)
-      ENDIF
+      write (unit_out, 1135) time
 
       write (unit_out, 1140) 'X', ' '
       write (unit_out, 1140) 'Y', ' '
@@ -194,8 +190,7 @@
  1100 FORMAT(//,3X,'1. RUN CONTROL',/)
  1110 FORMAT(7X,'Run name(RUN_NAME): ',A60)
  1120 FORMAT(7X,'Brief description of the run (DESCRIPTION) :',/9X,A60)
- 1135 FORMAT(7X,'Start-time (TIME) = ',G12.5,/7X,'Stop_time (TSTOP) = ',G12.5,/7X&
-         ,'Time step (DT) = ',G12.5,/7X)
+ 1135 FORMAT(7X,'Start-time (TIME) = ',G12.5,/7X)
  1136 FORMAT(7X,'* Steady state simulation.')
  1140 FORMAT(/7X,'* Gas momentum equation-',A,' is',A,'solved.')
  1149 FORMAT(/7X,'* User-defined subroutines are',A,'called.')

@@ -14,7 +14,7 @@ MODULE read_namelist_module
 !     Purpose: Read in the NAMELIST variables                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_NAMELIST(mfix_dat, dt_inout)
+      SUBROUTINE READ_NAMELIST(mfix_dat)
 
       use bc
       use constant, only: gravity
@@ -55,7 +55,6 @@ MODULE read_namelist_module
 ! Dummy Arguments:
 !------------------------------------------------------------------------//
       character(len=*), intent(in   ) :: mfix_dat
-      real(rt),         intent(  out) :: dt_inout
 
 ! Local Variables:
 !------------------------------------------------------------------------//
@@ -153,8 +152,6 @@ MODULE read_namelist_module
 
       CLOSE(UNIT=UNIT_DAT)
 
-      dt_inout = dt
-
       RETURN
 
       CONTAINS
@@ -221,7 +218,6 @@ MODULE read_namelist_module
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=GAS_PHASE, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
-
 
 ! Initial condtion keywords
       STRING=''; STRING = '&INITIAL_CONDITIONS '//&

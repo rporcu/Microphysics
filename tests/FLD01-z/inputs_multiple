@@ -6,6 +6,7 @@
 #! Fluid solver
 #!-----------------------------------------------------------//
 
+mfix.steady_state     = 1
 mfix.steady_state_tol = 1.0e-10
 
 amr.blocking_factor = 4

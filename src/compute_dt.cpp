@@ -5,11 +5,13 @@
 #include <limits>
 
 void
-mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
+mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
 {
     // dt is always computed even when fixed_dt is set, 
     // so we can issue a warning if the value of fixed dt does not satisfy the CFL condition.
-    Real dt_new = dt;
+
+    Real dt_new;
+    Real old_dt = dt;
 
     /* 
        Compute new dt by using the formula derived in
@@ -43,7 +45,6 @@ mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
     Real c_cfl  = 0.0;
     Real v_cfl  = 0.0;
     Real f_cfl  = 0.0;
-    Real old_dt = dt;
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -83,10 +84,10 @@ mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
     // This may happen, for example, when the initial velocity field
     // is zero for an inviscid flow with no external forcing
     Real eps = std::numeric_limits<Real>::epsilon();
-    if ( tmp <= eps ) dt_new = 0.5 * old_dt;
+    if ( nstep > 1 && tmp <= eps ) dt_new = 0.5 * old_dt;
 
     // Don't let the timestep grow by more than 1% per step.
-    dt_new = std::min ( dt_new, 1.01*old_dt );
+    if (nstep > 1) dt_new = std::min ( dt_new, 1.01*old_dt );
 
     // Don't overshoot the final time if not running to steady state
     if (steady_state == 0 && stop_time > 0.) 
@@ -97,15 +98,20 @@ mfix::mfix_compute_dt(Real time, Real stop_time, Real& dt)
     // dt_new is the step calculated with a cfl contraint; dt is the value set by fixed_dt
     // When the test was on dt > dt_new, there were cases where they were effectively equal 
     //   but (dt > dt_new) was being set to true due to precision issues.
-    if ( fixed_dt )
+
+    if ( fixed_dt > 0.)
     {
-        if ( dt > dt_new*ope && cfl > 0)
+        if ( fixed_dt > dt_new*ope && cfl > 0)
         {
             amrex::Print() << "WARNING: fixed dt does not satisfy CFL condition: "
-                           << " fixed dt = "  << dt
-                           << " > dt based on cfl = " << dt_new
+                           << " fixed dt = "  << fixed_dt
+                           << " > dt based on cfl: " << dt_new
                            << endl;
             amrex::Abort ("Fixed dt is too large for fluid solve");
+        } else {
+
+            dt = fixed_dt;
+
         }
     }
     else

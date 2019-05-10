@@ -17,6 +17,10 @@ amr.max_level = 0
 amr.plot_int   = 10
 #amr.plot_file  = DEM06_plt
 
+amr.stop_time = 1.0
+
+mfix.fixed_dt = 0.5
+
 # Use projection method
 vortices_plane = 2
 

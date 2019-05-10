@@ -19,8 +19,6 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  DT = 1.0d-4
-
   CALL_USR = .TRUE.
 
   NLOG = 5000     ! time steps between updates to (.LOG) file

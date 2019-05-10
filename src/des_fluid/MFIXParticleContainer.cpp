@@ -124,7 +124,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     Real eps = std::numeric_limits<Real>::epsilon();
 
-    amrex::Print() << "Evolving particles on level: " << lev << " ... " << std::endl;
+    amrex::Print() << "Evolving particles on level: " << lev << " ... with fluid dt " << dt << std::endl;
 
     /****************************************************************************
      * DEBUG flag toggles:                                                      *

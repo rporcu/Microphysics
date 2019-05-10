@@ -10,7 +10,7 @@ contains
 !  Purpose: read and verify input data, open files                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine get_data(mfix_dat, dt)
+  subroutine get_data(mfix_dat)
 
     use init_namelist_module, only: init_namelist
     use read_namelist_module, only: read_namelist
@@ -31,13 +31,12 @@ contains
     implicit none
 
     character(len=*) :: mfix_dat
-    real(rt), intent(  out) :: dt
 
     ! This module call routines to initialize the namelist variables.
     call init_namelist
 
     ! Read in the namelist variables from the ascii input file.
-    call read_namelist(mfix_dat, dt)
+    call read_namelist(mfix_dat)
 
     ! Set flag for coupled simulations
     des_continuum_coupled = (particle_types>0) .and. (abs(ro_g0) > 0.0d0)
@@ -51,12 +50,12 @@ contains
     endif
 
     select case(trim(adjustl(drag_type)))
-    case ('USER_DRAG','USR_DRAG'); drag_type_enum = user_drag
-    case ('WEN_YU'); drag_type_enum = wen_yu
-    case ('GIDASPOW'); drag_type_enum = gidaspow
-    case ('BVK2'); drag_type_enum = bvk2
-    case ('WEN_YU_PCF'); drag_type_enum = wen_yu_pcf
-    case ('GIDASPOW_PCF'); drag_type_enum = gidaspow_pcf
+        case ('USER_DRAG','USR_DRAG'); drag_type_enum = user_drag
+        case ('WEN_YU'); drag_type_enum = wen_yu
+        case ('GIDASPOW'); drag_type_enum = gidaspow
+        case ('BVK2'); drag_type_enum = bvk2
+        case ('WEN_YU_PCF'); drag_type_enum = wen_yu_pcf
+        case ('GIDASPOW_PCF'); drag_type_enum = gidaspow_pcf
     end select
 
   end subroutine get_data

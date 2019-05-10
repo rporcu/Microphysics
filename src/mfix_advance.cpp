@@ -54,7 +54,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
 
     do
     {
-        mfix_compute_dt(time, stop_time, dt);
+        mfix_compute_dt(nstep, time, stop_time, dt);
 
         // Set new and old time to correctly use in fillpatching
         for (int lev = 0; lev < nlev; lev++)
@@ -76,7 +76,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
         {
            // Back up field variables to old
           MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
-          MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
+          MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow()); 
           MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
           MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
@@ -152,7 +152,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 {
 
    Real time = 0.0;
-   mfix_compute_dt(time,stop_time,dt);
+   int nstep = 0;
+   mfix_compute_dt(nstep,time,stop_time,dt);
 
    amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
 
@@ -244,7 +245,8 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
     {
         // If explicit_diffusion == true  then we compute the full diffusive terms here
         // If explicit_diffusion == false then we compute only the off-diagonal terms here
-        mfix_compute_divtau( lev, *divtau_old[lev], vel_go, explicit_diffusion_pred );
+
+        mfix_compute_divtau( lev, *divtau_old[lev], vel_go, explicit_diffusion_pred ); 
 
         // First add the convective term
         MultiFab::Saxpy (*vel_g[lev], dt, *conv_old[lev], 0, 0, 3, 0);

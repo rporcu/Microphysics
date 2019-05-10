@@ -53,7 +53,6 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     if (solve_dem)
     {
-
         if (nlev == 1)
         {
             //___________________________________________________________________
@@ -93,7 +92,6 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                     particle_cost[lev].get(), knapsack_weight_type);
             }
         }
-
     }
 
     amrex::Cuda::setLaunchRegion(false);

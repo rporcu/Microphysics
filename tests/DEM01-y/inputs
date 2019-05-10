@@ -1,6 +1,6 @@
 amr.stop_time = 0.5
 
-mfix.dt_max = 5.e-3
+mfix.fixed_dt = 5.e-3
 
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 4 4 4

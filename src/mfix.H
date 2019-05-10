@@ -58,13 +58,15 @@ public:
 
     void InitParams(int solve_fluid, int solve_dem, int call_udf );
 
-    void Init(Real dt, Real time);
+    bool IsSteadyState() { return (steady_state > 0); } 
 
-    void InitLevelData(Real dt, Real time);
+    void Init(Real time);
+
+    void InitLevelData(Real time);
 
     void mfix_setup_nodal_solver();
 
-    void PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time);
+    void PostInit(Real& dt, Real time, int nstep, int restart_flag, Real stop_time);
 
     void ResizeArrays();
 
@@ -209,9 +211,6 @@ public:
     const int * get_bc_khi_ptr(int lev) {return bc_khi[lev]->dataPtr();}
 
     int get_nghost() { return nghost; }
-
-    void SetParameters(int steady_state_in)
-    { steady_state = steady_state_in;}
 
     void mfix_add_drag_terms(Real dt);
 
@@ -371,7 +370,7 @@ private:
 
      void check_for_nans(int lev);
 
-     void mfix_compute_dt(Real time, Real stop_time, Real & dt);
+     void mfix_compute_dt(int nstep, Real time, Real stop_time, Real & dt);
 
      void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv,
                                         Vector< std::unique_ptr<MultiFab> >& vel,
@@ -604,7 +603,7 @@ private:
 
      // Options to control time stepping
      Real cfl = 0.5;
-     int fixed_dt = 0;
+     Real fixed_dt;
      Real dt_min  = 0.0;           // Min dt allowed
      Real dt_max  = 1.e14;         // Max dt allowed
 

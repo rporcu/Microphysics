@@ -30,9 +30,6 @@
 ! Brief description of the problem.
       CHARACTER(LEN=60) :: DESCRIPTION
 
-! Stop-time of the run.
-      real(rt) :: tstop
-
 ! Start-time of des-loop
 ! (updated by des_init_time_loop)
       real(rt) :: des_tstart

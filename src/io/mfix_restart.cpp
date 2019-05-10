@@ -267,7 +267,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
     // Make sure that the particle BoxArray is the same as the mesh data -- we can
     //      create a dual grid decomposition in the regrid operation
-    if ( solve_dem)
+    if (solve_dem)
     {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {

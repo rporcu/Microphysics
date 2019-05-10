@@ -45,9 +45,30 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         nodal_bottom_solver_type = "bicgcg";
         pp.query( "bottom_solver_type",  nodal_bottom_solver_type );
 
-        // Tolerance to check for steady state (projection only)
+        // Is this a steady-state calcualtion
+        steady_state = 0;
+        pp.query( "steady_state", steady_state );
+
+        // Tolerance to check for steady state 
+        steady_state_tol = -1.;
         pp.query( "steady_state_tol", steady_state_tol );
+
+        // Maximum number of iterations allowed to reach steady state
         pp.query( "steady_state_max_iter", steady_state_max_iter );
+
+        if (steady_state > 0)
+        {
+           if (steady_state_tol < 0) 
+              amrex::Abort("Must set steady_state_tol if running to steady state!");
+
+              amrex::Print() << "Running to steady state with max_iters = " << steady_state_max_iter <<
+                             " and tolerance " << steady_state_tol << std::endl;
+
+        } else {
+
+           if (steady_state_tol > 0) 
+              amrex::Abort("steady_state_tol set but not steady_state!");
+        }
 
         pp.query("ooo_debug", ooo_debug);
 
@@ -139,7 +160,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     call_udf     = call_udf_in;
 
     if (solve_dem)
-    {
+    {	
         ParmParse pp("particles");
 
         pp.query("max_grid_size_x", particle_max_grid_size_x);
@@ -150,8 +171,14 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("removeOutOfRange", removeOutOfRange );
     }
 
+    if (solve_dem && !solve_fluid)
+    {	
+        if (fixed_dt < 0)
+            amrex::Abort("If running particle-only must specify fixed_dt in the inputs file");
+    }
+
     if (solve_dem && solve_fluid)
-	{
+    {
             ParmParse pp("mfix");
 
             std::string drag_type = "None";
@@ -217,7 +244,7 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
 }
 
 
-void mfix::Init(Real dt, Real time)
+void mfix::Init( Real time)
 {
     if (ooo_debug) amrex::Print() << "Init" << std::endl;
     InitIOChkData();
@@ -362,7 +389,7 @@ void mfix::Init(Real dt, Real time)
     if ( ParallelDescriptor::IOProcessor() )
     {
        // Write the initial part of the standard output file
-       write_out0(&time, &dt, &dx, &dy, &dz, &xlen, &ylen, &zlen,
+       write_out0(&time, &dx, &dy, &dz, &xlen, &ylen, &zlen,
                   domain.loVect(), domain.hiVect());
 
        // Write the initial part of the special output file(s)
@@ -533,7 +560,7 @@ void mfix::check_data ()
 }
 
 
-void mfix::InitLevelData(Real dt, Real time)
+void mfix::InitLevelData(Real time)
 {
     if (ooo_debug) amrex::Print() << "InitLevelData" << std::endl;
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
@@ -629,7 +656,7 @@ void mfix::InitLevelData(Real dt, Real time)
 }
 
 void
-mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
+mfix::PostInit(Real& dt, Real time, int nstep, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
     if (solve_dem)
@@ -702,6 +729,9 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
         init_collision(avg_dp, avg_ro);
 
         DEMParams::Initialize();
+
+        if (!solve_fluid)
+            dt = fixed_dt;
     }
 
     if (solve_fluid)
