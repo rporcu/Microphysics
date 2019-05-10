@@ -218,7 +218,6 @@ int main (int argc, char* argv[])
         my_mfix.WriteStaticPlotFile(static_plt_file);
 
     my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time);
-    std::cout << " DT AFTER POST INIT " << dt << std::endl;
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
@@ -266,9 +265,6 @@ int main (int argc, char* argv[])
     bool do_not_evolve = !my_mfix.IsSteadyState() && ( (max_step == 0) ||
                      ( (stop_time >= 0.) && (time >  stop_time) ) ||
                      ( (stop_time <= 0.) && (max_step <= 0) ) );
-
-    std::cout << "STEADY   " << my_mfix.IsSteadyState() << std::endl;
-    std::cout << "STOPTIME " << stop_time << std::endl;
 
     { // Start profiling solve here
 
