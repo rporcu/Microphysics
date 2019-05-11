@@ -44,7 +44,6 @@ MODULE INIT_NAMELIST_MODULE
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
       use run, only: call_usr, description
       use run, only: run_name
-      use drag, only: drag_type
       use scales, only: p_ref, p_scale
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
@@ -74,41 +73,6 @@ MODULE INIT_NAMELIST_MODULE
 !  <description>Problem description. Limited to 60 characters.</description>
       DESCRIPTION = UNDEFINED_C
 !</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!     Available gas-solids drag models.
-!     Note: The extension _PCF following the specified drag model
-!     indicates that the polydisperse correction factor is available.
-!     For PCF details see:
-!     o Van der Hoef MA, Beetstra R, Kuipers JAM. (2005)
-!       Journal of Fluid Mechanics.528:233-254.
-!     o Beetstra, R., van der Hoef, M. A., Kuipers, J.A.M. (2007).
-!       AIChE Journal, 53:489-501.
-!     o Erratum (2007), AIChE Journal, Volume 53:3020
-!  </description>
-!
-!  <valid value="USER_DRAG" note="Invoke user-defined drag law. (usr_drag.f)"/>
-!
-!  <valid value="WEN_YU" note="Wen CY, Yu YH (1966).
-!   Chemical Engineering Progress Symposium Series 62:100-111."/>
-!
-!  <valid value="GIDASPOW" note="Ding J, Gidaspow D (1990).
-!   AIChE Journal 36:523-538 and Lathouwers D, Bellan J (2000).
-!   Proceedings of the 2000 U.S. DOE Hydrogen Program Review 
-!   NREL/CP-570-28890."/>
-!
-!  <valid value="BVK2" note="Tang, Peters, Kuipers, Kriebitzsch, 
-!   van der Hoef (2015). AIChE Journal, 61(2): 688-698. and 
-!   Beetstra, van der Hoef, Kuipers (2007). Chemical Engineering 
-!   Science 62:246-255"/>
-!
-!  <valid value="WEN_YU_PCF" note="see WEN_YU"/>
-!  <valid value="GIDASPOW_PCF" note="see GIDASPOW"/>
-!
-      DRAG_TYPE = 'WEN_YU'
-!</keyword>
-
 
 !#####################################################################!
 !                           Physical Parameters                       !

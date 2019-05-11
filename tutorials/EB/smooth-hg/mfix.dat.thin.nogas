@@ -22,8 +22,6 @@
   GRAVITY(2) =  0.d0
   GRAVITY(3) =  0.d0
 
-  DES_ONEWAY_COUPLED = .TRUE.
-
 #_______________________________________________________________________
 # MATERIAL SECTION
 

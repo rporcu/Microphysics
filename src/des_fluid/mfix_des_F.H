@@ -35,8 +35,6 @@ extern "C"
                                         amrex::Real* etan, amrex::Real* etan_w,
                                         amrex::Real* etat, amrex::Real* etat_w);
     
-    int des_continuum_coupled ();
-
     void get_gravity (
         amrex::Real* grav
         );

@@ -13,7 +13,7 @@
       use iso_c_binding , only: c_int
 
       use constant, only: gravity
-      use discretelement, only: des_continuum_coupled, kn, kt, kn_w, kt_w
+      use discretelement, only: kn, kt, kn_w, kt_w
       use discretelement, only: des_etan, des_etat, des_etat_wall, des_etan_wall
       use fld_const, only: mw_avg, mu_g0, ro_g0
 
@@ -117,18 +117,6 @@
  1401 FORMAT(7X,'Number of particulate phases (MMAX) = ',I2)
 
       IF(MMAX_TOT > 0) THEN
-
-         IF(DEM_SOLIDS) THEN
-            IF(.NOT.DES_CONTINUUM_COUPLED) THEN
-               write(unit_out,"(/7X,'Gas/Solids NOT coupled.')")
-            ELSE
-               write(unit_out,"(/7X,'Gas/Solids Coupling Information:')")
-               write(unit_out,1440) 'cell averaging'
-            ENDIF
-
- 1440 FORMAT(10X,'Use ',A,' to calculate gas/particle drag.')
-
-         ENDIF
 
          IF(DEM_SOLIDS) THEN
 

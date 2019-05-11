@@ -21,7 +21,6 @@ MODULE read_namelist_module
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use discretelement, only: des_en_input, des_en_wall_input, particle_types
       use discretelement, only: des_etat_fac, des_etat_w_fac
-      use discretelement, only: des_explicitly_coupled, des_oneway_coupled
       use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, des_etat_w_fac
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
 
@@ -40,7 +39,6 @@ MODULE read_namelist_module
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_w
       use run, only: call_usr, description
       use run, only: run_name
-      use drag, only: drag_type
       use scales, only: p_ref, p_scale
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment

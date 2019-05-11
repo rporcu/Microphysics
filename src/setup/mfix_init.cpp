@@ -192,7 +192,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 	    }
 	    else if (drag_type == "Gidaspow")
 	    {
-		m_drag_type = DragType::WenYu;
 		m_drag_type = DragType::Gidaspow;
 	    }
 	    else if (drag_type == "BVK2")

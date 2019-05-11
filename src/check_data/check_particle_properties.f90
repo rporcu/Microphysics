@@ -19,7 +19,6 @@ contains
 !---------------------------------------------------------------------//
 ! Runtime flag specifying DEM solids
     use discretelement, only: mew, mew_w
-    use drag, only: drag_type, drag_type_enum, invalid_drag
     use discretelement, only: particle_types
 
     use param, only: dim_m
