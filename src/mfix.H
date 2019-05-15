@@ -384,6 +384,11 @@ private:
                               Vector< std::unique_ptr<MultiFab> >& vel,
                               int explicit_diffusion_flag);
 
+     void mfix_compute_divtau2(int lev, 
+                               const Vector< std::unique_ptr<MultiFab> >& divtau,
+                               const Vector< std::unique_ptr<MultiFab> >& vel,
+                               int explicit_diffusion_flag);
+
      int steady_state_reached(Real dt, int iter);
 
      void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_old,
@@ -393,7 +398,8 @@ private:
                                Vector< std::unique_ptr<MultiFab> >& divtau_old,
                                Real time, Real dt, bool proj_2);
 
-     void mfix_diffuse_velocity(Real time, Real dt);
+     void mfix_diffuse_velocity       (Real time, Real dt);
+     void mfix_diffuse_velocity_tensor(Real time, Real dt);
 
      void mfix_compute_diveu(Real time);
 
@@ -487,14 +493,17 @@ private:
      // div (ep_g * u)
      Vector< std::unique_ptr<MultiFab> > diveu;
 
-     // RHS for cell-centered solves
-     Vector< std::unique_ptr<MultiFab> > rhs_cc;
-
-     // Solution for diffusion solves
-     Vector< std::unique_ptr<MultiFab> > phi_cc;
+     // RHS for MAC solve
+     Vector< std::unique_ptr<MultiFab> > mac_rhs;
 
      // Solution for MAC projection
-     Vector< std::unique_ptr<MultiFab> > phi_mac;
+     Vector< std::unique_ptr<MultiFab> > mac_phi;
+
+     // RHS for diffusive tensor solve
+     Vector< std::unique_ptr<MultiFab> > diff_rhs;
+
+     // Solution for diffusion solves
+     Vector< std::unique_ptr<MultiFab> > diff_phi;
 
      //
      Vector< std::unique_ptr<MultiFab> > fp;

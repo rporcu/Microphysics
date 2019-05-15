@@ -246,7 +246,13 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
         // If explicit_diffusion == true  then we compute the full diffusive terms here
         // If explicit_diffusion == false then we compute only the off-diagonal terms here
 
-        mfix_compute_divtau( lev, *divtau_old[lev], vel_go, explicit_diffusion_pred ); 
+#if 1
+        mfix_compute_divtau( lev,*divtau_old[lev], vel_go, explicit_diffusion_pred ); 
+#else
+        mfix_compute_divtau2( lev, divtau_old, vel_go, explicit_diffusion_pred ); 
+#endif
+
+        EB_set_covered(*divtau_old[lev], 0, divtau_old[lev]->nComp(), divtau_old[lev]->nGrow(), 0.0);
 
         // First add the convective term
         MultiFab::Saxpy (*vel_g[lev], dt, *conv_old[lev], 0, 0, 3, 0);
@@ -265,7 +271,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 
     // If doing implicit diffusion, solve here for u^*
     if (!explicit_diffusion_pred)
-        mfix_diffuse_velocity(new_time,dt);
+        mfix_diffuse_velocity_tensor(new_time,dt);
 
     // Project velocity field
     mfix_apply_projection ( new_time, dt, proj_2 );
@@ -361,7 +367,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 
     // If doing implicit diffusion, solve here for u^*
     if (explicit_diffusion_corr == 0)
-       mfix_diffuse_velocity(new_time,.5*dt);
+       mfix_diffuse_velocity_tensor(new_time,.5*dt);
 
     // Apply projection
     mfix_apply_projection (new_time, dt, proj_2);

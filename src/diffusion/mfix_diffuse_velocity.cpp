@@ -7,16 +7,17 @@
 
 // For multigrid
 #include <AMReX_MLMG.H>
-#include <AMReX_MLEBABecLap.H>
+#include <AMReX_MLTensorOp.H>
+#include <AMReX_MLEBTensorOp.H>
 
 //
-// Implicit diffusion
+// Implicit tensor solve
 //
 void
-mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
+mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
 
 {
-   BL_PROFILE("mfix::mfix_diffuse_velocity");
+   BL_PROFILE("mfix::mfix_diffuse_velocity_tensor");
 
    // Swap ghost cells and apply BCs to velocity
    mfix_set_velocity_bcs (time, 0);
@@ -35,39 +36,42 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
                 bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
                 bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
-   // Compute the coefficients
-   for (int lev = 0; lev < nlev; lev++)
-   {
-       average_cellcenter_to_face( GetArrOfPtrs(bcoeff_cc[lev]), *mu_g[lev], geom[lev] );
-
-      bcoeff_cc[lev][0] -> FillBoundary(geom[lev].periodicity());
-      bcoeff_cc[lev][1] -> FillBoundary(geom[lev].periodicity());
-      bcoeff_cc[lev][2] -> FillBoundary(geom[lev].periodicity());
-   }
-
    //
-   // First define the matrix (operator).
-   // Class MLABecLaplacian describes the following operator:
+   // First define the operator "ebtensorop"
    //
    //       (alpha * a - beta * (del dot b grad)) sol
    //
    LPInfo                       info;
-   MLEBABecLap matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
+   MLEBTensorOp ebtensorop(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
 
    // It is essential that we set MaxOrder of the solver to 2
    // if we want to use the standard sol(i)-sol(i-1) approximation
    // for the gradient at Dirichlet boundaries.
    // The solver's default order is 3 and this uses three points for the
    // gradient at a Dirichlet boundary.
-   matrix.setMaxOrder(2);
+   ebtensorop.setMaxOrder(2);
 
    // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
-   matrix.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
-                        {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
+   ebtensorop.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
+                            {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
+
+   // Compute the coefficients
+   for (int lev = 0; lev < nlev; lev++)
+   {
+       average_cellcenter_to_face( GetArrOfPtrs(bcoeff_cc[lev]), *mu_g[lev], geom[lev] );
+
+       bcoeff_cc[lev][0] -> FillBoundary(geom[lev].periodicity());
+       bcoeff_cc[lev][1] -> FillBoundary(geom[lev].periodicity());
+       bcoeff_cc[lev][2] -> FillBoundary(geom[lev].periodicity());
+
+       ebtensorop.setShearViscosity  (lev, GetArrOfConstPtrs(bcoeff_cc[lev]));
+       ebtensorop.setEBShearViscosity(lev, (*mu_g[lev]));
+   }
 
    // This sets alpha = 1 and beta = dt
-   matrix.setScalars ( 1.0, dt );
+   // ebtensorop.setScalars ( 1.0, dt );
 
+#if 0
    // Copy the PPE coefficient into the proper data strutcure
    for (int lev = 0; lev < nlev; lev++)
    {
@@ -86,12 +90,13 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       // This sets the coefficient on the wall and defines it as a homogeneous Dirichlet bc for the solve.
       matrix.setEBHomogDirichlet ( lev, (*mu_g[lev]) );
    }
+#endif
 
    // Loop over the velocity components
-   amrex::Print() << "Diffusing each velocity component " << std::endl;
-   for (int i = 0; i < 3; i++)
+   amrex::Print() << "Diffusing all velocity components together " << std::endl;
+   // for (int i = 0; i < 3; i++)
    {
-      MLMG  solver(matrix);
+      MLMG  solver(ebtensorop);
 
       // Set the verbosity
       solver.setVerbose   (diff_mg_verbose);
@@ -113,17 +118,17 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
       for (int lev = 0; lev < nlev; lev++)
       {
-         rhs_cc[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
-         phi_cc[lev]->copy(*vel_g[lev],i,0,1,nghost,nghost);
+         diff_rhs[lev]->copy(*vel_g[lev],0,0,3,nghost,nghost);
+         diff_phi[lev]->copy(*vel_g[lev],0,0,3,nghost,nghost);
 
-         EB_set_covered(*phi_cc[lev], 0, phi_cc[lev]->nComp(), phi_cc[lev]->nGrow(), covered_val);
-         phi_cc[lev] -> FillBoundary (geom[lev].periodicity());
+         EB_set_covered(*diff_phi[lev], 0, diff_phi[lev]->nComp(), diff_phi[lev]->nGrow(), covered_val);
+         diff_phi[lev] -> FillBoundary (geom[lev].periodicity());
 
-         matrix.setLevelBC ( lev, GetVecOfConstPtrs(phi_cc)[lev] );
+         ebtensorop.setLevelBC ( lev, GetVecOfConstPtrs(diff_phi)[lev] );
 
          // Define RHS = (ro_g) * (ep_g) * (vel_g)
-         MultiFab::Multiply((*rhs_cc[lev]), (*ro_g[lev]), 0, 0, 1, rhs_cc[lev]->nGrow());
-         MultiFab::Multiply((*rhs_cc[lev]), (*ep_g[lev]), 0, 0, 1, rhs_cc[lev]->nGrow());
+         MultiFab::Multiply((*diff_rhs[lev]), (*ro_g[lev]), 0, 0, 1, diff_rhs[lev]->nGrow());
+         MultiFab::Multiply((*diff_rhs[lev]), (*ep_g[lev]), 0, 0, 1, diff_rhs[lev]->nGrow());
       }
 
       // This ensures that ghost cells of sol are correctly filled when returned from the solver
@@ -134,12 +139,12 @@ mfix::mfix_diffuse_velocity (amrex::Real time, amrex::Real dt)
       //
       //  ((ro_g)*(ep_g) - div dot mu grad) u = RHS
       //
-      solver.solve ( GetVecOfPtrs(phi_cc), GetVecOfConstPtrs(rhs_cc), diff_mg_rtol, diff_mg_atol );
+      solver.solve ( GetVecOfPtrs(diff_phi), GetVecOfConstPtrs(diff_rhs), diff_mg_rtol, diff_mg_atol );
 
       for (int lev = 0; lev < nlev; lev++)
       {
-         phi_cc[lev] -> FillBoundary (geom[lev].periodicity());
-         vel_g[lev]->copy(*phi_cc[lev],0,i,1,nghost,nghost);
+         diff_phi[lev]->FillBoundary (geom[lev].periodicity());
+         vel_g[lev]->copy(*diff_phi[lev],0,0,3,nghost,nghost);
       }
    }
 
