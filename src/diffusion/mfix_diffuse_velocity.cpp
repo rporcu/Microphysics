@@ -54,12 +54,12 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
    ebtensorop.setDomainBC ( {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
                             {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]} );
 
+   // Solving (1.0 * a_coeff - dt * div (mu grad)) phi = rhs
+   ebtensorop.setScalars(1.0, dt);
+
    // Compute the coefficients
    for (int lev = 0; lev < nlev; lev++)
    {
-       // Multiply mu_g by dt before we pass it in to the solver (including one ghost cell)
-       mu_g[lev]->mult(dt,0,1,1);
-
        average_cellcenter_to_face( GetArrOfPtrs(bcoeff_cc[lev]), *mu_g[lev], geom[lev] );
 
        bcoeff_cc[lev][0] -> FillBoundary(geom[lev].periodicity());
@@ -138,11 +138,6 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
 
    amrex::Print() << "After diffusing all velocity components " << std::endl;
    mfix_print_max_vel(0);
-
-   // Multiply (dt * mu_g) by 1/dt to restore to the correct value (including one ghost cell)
-   Real dt_inv = 1.0/dt;
-   for (int lev = 0; lev < nlev; lev++)
-      mu_g[lev]->mult(dt_inv,0,1,1);
 
    // Swap ghost cells and apply BCs to velocity
    mfix_set_velocity_bcs (time, 0);
