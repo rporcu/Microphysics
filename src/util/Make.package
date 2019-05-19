@@ -9,5 +9,7 @@ f90EXE_sources += interpolation_m.f90
 
 CEXE_sources += mfix_fillpatch.cpp
 CEXE_sources += mfix_util.cpp
-FEXE_headers += mfix_util_F.H 
+CEXE_sources += mfix_divop.cpp
+FEXE_headers += mfix_util_F.H
+CEXE_headers += mfix_divop.hpp
 F90EXE_headers += mfix_divop_F.H 

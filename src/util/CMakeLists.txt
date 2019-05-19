@@ -6,10 +6,12 @@ target_sources( mfixcore
    PRIVATE
    bc_fill_nd.F90
    divop_mod.f90
+   mfix_divop.cpp
    set_velocity_bcs.f90
    set_scalar_bcs.f90
    mfix_util_F.H
    mfix_divop_F.H
+   mfix_divop.hpp
    mfix_util_f.f90
    mfix_util.cpp
    mfix_fillpatch.cpp

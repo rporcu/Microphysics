@@ -1,6 +1,6 @@
 #include <mfix.H>
 #include <mfix_mac_F.H>
-#include <mfix_divop_F.H>
+#include <mfix_divop.hpp>
 
 #include <AMReX_Array.H>
 
@@ -102,7 +102,8 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((i == dom_low.x) and
-	   ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0), bc_types.data(), 3))
+     ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0),
+                                 bc_types.data(), bc_types.size()))
     {
       u_w = velocity(i-1,j,k,0);
       v_w = velocity(i-1,j,k,1);
@@ -127,7 +128,8 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((i == dom_high.x) and
-	   ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0), bc_types.data(), 3))
+     ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0),
+                                 bc_types.data(), bc_types.size()))
     {
       u_e = velocity(i+1,j,k,0);
       v_e = velocity(i+1,j,k,1);
@@ -152,7 +154,8 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((j == dom_low.y) and
-	   ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0), bc_types.data(), 3))
+     ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0),
+                                 bc_types.data(), bc_types.size()))
     {
       u_s = velocity(i,j-1,k,0);
       v_s = velocity(i,j-1,k,1);
@@ -177,7 +180,8 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((j == dom_high.y) and
-	   ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0), bc_types.data(), 3))
+     ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0),
+                                 bc_types.data(), bc_types.size()))
     {
       u_n = velocity(i,j+1,k,0);
       v_n = velocity(i,j+1,k,1);
@@ -202,7 +206,8 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((k == dom_low.z) and
-	   ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0), bc_types.data(), 3))
+     ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0),
+                                 bc_types.data(), bc_types.size()))
     {
       u_b = velocity(i,j,k-1,0);
       v_b = velocity(i,j,k-1,1);
@@ -227,7 +232,8 @@ mfix::mfix_compute_ugradu( Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((k == dom_high.z) and
-	   ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0), bc_types.data(), 3))
+     ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0),
+                                 bc_types.data(), bc_types.size()))
     {
       u_t = velocity(i,j,k+1,0);
       v_t = velocity(i,j,k+1,1);
@@ -295,8 +301,8 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
                              MFIter* mfi,
                              Array<const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
                              Array<const MultiCutFab*,AMREX_SPACEDIM>& facecent,
-                             const amrex::MultiFab* volfrac,
-                             const amrex::MultiCutFab* bndrycent,
+                             const MultiFab* volfrac,
+                             const MultiCutFab* bndrycent,
                              Box& domain,
                              const EBCellFlagFab& flags,
                              const int lev)
@@ -366,12 +372,14 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
 
     if( areafrac_x(i,j,k) > 0 ) {
       if( i <= dom_low.x and
-		  ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0), bc_types.data(), 3))
+       ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0),
+                                   bc_types.data(), bc_types.size()))
       {
         u_face = velocity(dom_low.x-1,j,k,n);
       }
       else if( i >= dom_high.x+1 and
-			   ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0), bc_types.data(), 3))
+       ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0),
+                                   bc_types.data(), bc_types.size()))
       {
         u_face = velocity(dom_high.x+1,j,k,n);
       }
@@ -398,12 +406,14 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
 
     if( areafrac_y(i,j,k) > 0 ) {
       if( j <= dom_low.y and
-		  ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0), bc_types.data(), 3))
+       ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0),
+                                   bc_types.data(), bc_types.size()))
       {
         v_face = velocity(i,dom_low.y-1,k,n);
       }
       else if( j >= dom_high.y+1 and
-			   ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0), bc_types.data(), 3))
+       ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0),
+                                   bc_types.data(), bc_types.size()))
       {
         v_face = velocity(i,dom_high.y+1,k,n);
       }
@@ -430,12 +440,14 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
 
     if( areafrac_z(i,j,k) > 0 ) {
       if( k <= dom_low.z and
-		  ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0), bc_types.data(), 3))
+       ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0),
+                                   bc_types.data(), bc_types.size()))
       {
         w_face = velocity(i,j,dom_low.z-1,n);
       }
       else if( k >= dom_high.z+1 and
-			   ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0), bc_types.data(), 3))
+       ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0),
+                                   bc_types.data(), bc_types.size()))
       {
         w_face = velocity(i,j,dom_high.z+1,n);
       }
@@ -452,26 +464,14 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
     fz(i,j,k,n) = .5*(epsilon_g(i,j,k-1)+epsilon_g(i,j,k)) * w(i,j,k) * w_face;
   });
 
+  const int cyclic_x = geom[lev].isPeriodic(0) ? 1 : 0;
+  const int cyclic_y = geom[lev].isPeriodic(1) ? 1 : 0;
+  const int cyclic_z = geom[lev].isPeriodic(2) ? 1 : 0;
+
   // Compute div(tau) with EB algorithm
-  compute_divop(
-      BL_TO_FORTRAN_BOX(bx),
-      BL_TO_FORTRAN_ANYD((*conv[lev])[*mfi]),
-      BL_TO_FORTRAN_ANYD((*vel[lev])[*mfi]),
-      BL_TO_FORTRAN_ANYD(fxfab),
-      BL_TO_FORTRAN_ANYD(fyfab),
-      BL_TO_FORTRAN_ANYD(fzfab),
-      BL_TO_FORTRAN_ANYD((*ep_g[lev])[*mfi]),
-      BL_TO_FORTRAN_ANYD((*areafrac[0])[*mfi]),
-      BL_TO_FORTRAN_ANYD((*areafrac[1])[*mfi]),
-      BL_TO_FORTRAN_ANYD((*areafrac[2])[*mfi]),
-      BL_TO_FORTRAN_ANYD((*facecent[0])[*mfi]),
-      BL_TO_FORTRAN_ANYD((*facecent[1])[*mfi]),
-      BL_TO_FORTRAN_ANYD((*facecent[2])[*mfi]),
-      BL_TO_FORTRAN_ANYD(flags),
-      BL_TO_FORTRAN_ANYD((*volfrac)[*mfi]),
-      BL_TO_FORTRAN_ANYD((*bndrycent)[*mfi]),
-      domain.loVect(), domain.hiVect(),
-      geom[lev].CellSize(), &nghost);
+  compute_divop(bx, ugradu, velocity, fx, fy, fz, epsilon_g, mfi,
+                areafrac, facecent, flags, volfrac, bndrycent,
+                cyclic_x, cyclic_y, cyclic_z, domain, dx, &nghost);
 
   AMREX_CUDA_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
   {
