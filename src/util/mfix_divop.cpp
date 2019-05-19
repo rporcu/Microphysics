@@ -482,7 +482,7 @@ compute_divop(Box& bx,
               const int* do_explicit_diffusion)
 {
   // Check number of ghost cells
-  AMREX_ASSERT_WITH_MESSAGE(nghost >= 4, "Compute divop(): ng must be >=4");
+  AMREX_ASSERT_WITH_MESSAGE(*nghost >= 4, "Compute divop(): ng must be >=4");
 
   const amrex::Dim3 dom_low = amrex::lbound(domain);
   const amrex::Dim3 dom_high = amrex::ubound(domain);
