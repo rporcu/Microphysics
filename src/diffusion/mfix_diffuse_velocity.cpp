@@ -15,7 +15,6 @@
 //
 void
 mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
-
 {
    BL_PROFILE("mfix::mfix_diffuse_velocity_tensor");
 
@@ -58,6 +57,9 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
    // Compute the coefficients
    for (int lev = 0; lev < nlev; lev++)
    {
+       // Multiply mu_g by dt before we pass it in to the solver (including one ghost cell)
+       mu_g[lev]->mult(dt,0,1,1);
+
        average_cellcenter_to_face( GetArrOfPtrs(bcoeff_cc[lev]), *mu_g[lev], geom[lev] );
 
        bcoeff_cc[lev][0] -> FillBoundary(geom[lev].periodicity());
@@ -66,87 +68,81 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
 
        ebtensorop.setShearViscosity  (lev, GetArrOfConstPtrs(bcoeff_cc[lev]));
        ebtensorop.setEBShearViscosity(lev, (*mu_g[lev]));
+
+       // This sets the spatially varying A coefficients
+       MultiFab a_coeff( ro_g[lev]->boxArray(), ro_g[lev]->DistributionMap(), 1, ro_g[lev]->nGrow(),
+                         MFInfo(), *ebfactory[lev]);
+
+       MultiFab::Copy    ( a_coeff, *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow() );
+       MultiFab::Multiply( a_coeff, *ep_g[lev], 0, 0, 1, ep_g[lev]->nGrow() );
+ 
+       ebtensorop.setACoeffs ( lev, a_coeff );
    }
 
-   // This sets alpha = 1 and beta = dt
-   // ebtensorop.setScalars ( 1.0, dt );
+   amrex::Print() << "Diffusing all velocity components together " << std::endl;
+   mfix_print_max_vel(0);
 
-#if 0
-   // Copy the PPE coefficient into the proper data strutcure
+   MLMG  solver(ebtensorop);
+
+   // Set the verbosity
+   solver.setVerbose   (diff_mg_verbose);
+   solver.setCGVerbose (diff_mg_cg_verbose);
+
+   // Set the max number of iterations
+   solver.setMaxIter (diff_mg_max_iter);
+   solver.setCGMaxIter (diff_mg_cg_maxiter);
+
+   if (diff_bottom_solver_type == "smoother")
+   {
+      solver.setBottomSolver(MLMG::BottomSolver::smoother);
+   }
+   else if (diff_bottom_solver_type == "hypre")
+   {
+      solver.setBottomSolver(MLMG::BottomSolver::hypre);
+   }
+
+   // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
    for (int lev = 0; lev < nlev; lev++)
    {
-      // This sets the spatially varying A coefficients
-      MultiFab a_coeff( ro_g[lev]->boxArray(), ro_g[lev]->DistributionMap(), 1, ro_g[lev]->nGrow(),
-                        MFInfo(), *ebfactory[lev]);
+      diff_rhs[lev]->copy(*vel_g[lev],0,0,3,nghost,nghost);
+      diff_phi[lev]->copy(*vel_g[lev],0,0,3,nghost,nghost);
 
-      MultiFab::Copy    ( a_coeff, *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow() );
-      MultiFab::Multiply( a_coeff, *ep_g[lev], 0, 0, 1, ep_g[lev]->nGrow() );
+      EB_set_covered(*diff_phi[lev], 0, diff_phi[lev]->nComp(), diff_phi[lev]->nGrow(), covered_val);
+      diff_phi[lev] -> FillBoundary (geom[lev].periodicity());
 
-      matrix.setACoeffs ( lev, a_coeff );
+      ebtensorop.setLevelBC ( lev, GetVecOfConstPtrs(diff_phi)[lev] );
 
-      // This sets the spatially varying b coefficients
-      matrix.setBCoeffs ( lev, GetArrOfConstPtrs(bcoeff_cc[lev]) );
-
-      // This sets the coefficient on the wall and defines it as a homogeneous Dirichlet bc for the solve.
-      matrix.setEBHomogDirichlet ( lev, (*mu_g[lev]) );
+      // Define RHS = (ro_g) * (ep_g) * (vel_g)
+      for (int i = 0; i < 3; i++)
+      {
+         MultiFab::Multiply((*diff_rhs[lev]), (*ro_g[lev]), 0, i, 1, diff_rhs[lev]->nGrow());
+         MultiFab::Multiply((*diff_rhs[lev]), (*ep_g[lev]), 0, i, 1, diff_rhs[lev]->nGrow());
+      }
    }
-#endif
 
-   // Loop over the velocity components
-   amrex::Print() << "Diffusing all velocity components together " << std::endl;
-   // for (int i = 0; i < 3; i++)
+   // This ensures that ghost cells of sol are correctly filled when returned from the solver
+   solver.setFinalFillBC(true);
+
+   //
+   // Finally, solve the system
+   //
+   //  ((ro_g)*(ep_g) - div dot mu grad) u = RHS
+   //
+   solver.solve ( GetVecOfPtrs(diff_phi), GetVecOfConstPtrs(diff_rhs), diff_mg_rtol, diff_mg_atol );
+
+   for (int lev = 0; lev < nlev; lev++)
    {
-      MLMG  solver(ebtensorop);
-
-      // Set the verbosity
-      solver.setVerbose   (diff_mg_verbose);
-      solver.setCGVerbose (diff_mg_cg_verbose);
-
-      // Set the max number of iterations
-      solver.setMaxIter (diff_mg_max_iter);
-      solver.setCGMaxIter (diff_mg_cg_maxiter);
-
-      if (diff_bottom_solver_type == "smoother")
-      {
-         solver.setBottomSolver(MLMG::BottomSolver::smoother);
-      }
-      else if (diff_bottom_solver_type == "hypre")
-      {
-         solver.setBottomSolver(MLMG::BottomSolver::hypre);
-      }
-
-      // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
-      for (int lev = 0; lev < nlev; lev++)
-      {
-         diff_rhs[lev]->copy(*vel_g[lev],0,0,3,nghost,nghost);
-         diff_phi[lev]->copy(*vel_g[lev],0,0,3,nghost,nghost);
-
-         EB_set_covered(*diff_phi[lev], 0, diff_phi[lev]->nComp(), diff_phi[lev]->nGrow(), covered_val);
-         diff_phi[lev] -> FillBoundary (geom[lev].periodicity());
-
-         ebtensorop.setLevelBC ( lev, GetVecOfConstPtrs(diff_phi)[lev] );
-
-         // Define RHS = (ro_g) * (ep_g) * (vel_g)
-         MultiFab::Multiply((*diff_rhs[lev]), (*ro_g[lev]), 0, 0, 1, diff_rhs[lev]->nGrow());
-         MultiFab::Multiply((*diff_rhs[lev]), (*ep_g[lev]), 0, 0, 1, diff_rhs[lev]->nGrow());
-      }
-
-      // This ensures that ghost cells of sol are correctly filled when returned from the solver
-      solver.setFinalFillBC(true);
-
-      //
-      // Finally, solve the system
-      //
-      //  ((ro_g)*(ep_g) - div dot mu grad) u = RHS
-      //
-      solver.solve ( GetVecOfPtrs(diff_phi), GetVecOfConstPtrs(diff_rhs), diff_mg_rtol, diff_mg_atol );
-
-      for (int lev = 0; lev < nlev; lev++)
-      {
-         diff_phi[lev]->FillBoundary (geom[lev].periodicity());
-         vel_g[lev]->copy(*diff_phi[lev],0,0,3,nghost,nghost);
-      }
+      diff_phi[lev]->FillBoundary (geom[lev].periodicity());
+      vel_g[lev]->copy(*diff_phi[lev],0,0,3,nghost,nghost);
    }
+
+   amrex::Print() << "After diffusing all velocity components " << std::endl;
+   mfix_print_max_vel(0);
+
+   // Multiply (dt * mu_g) by 1/dt to restore to the correct value (including one ghost cell)
+   Real dt_inv = 1.0/dt;
+   for (int lev = 0; lev < nlev; lev++)
+      mu_g[lev]->mult(dt_inv,0,1,1);
 
    // Swap ghost cells and apply BCs to velocity
    mfix_set_velocity_bcs (time, 0);
