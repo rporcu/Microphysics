@@ -482,13 +482,25 @@ mfix::RegridLevelSetArray (int a_lev)
        {
            Print() << "Also regridding refined level-set" << std::endl;
 
-           BoxArray ref_nd_ba = amrex::convert(grids[a_lev], IntVect::TheNodeVector());
+           BoxArray ref_nd_ba = amrex::convert(ba, IntVect::TheNodeVector());
            ref_nd_ba.refine(levelset__refinement);
 
            std::unique_ptr<MultiFab> new_level_set(new MultiFab);
-           MFUtil::regrid(* new_level_set, ref_nd_ba, dm,
-                          * level_sets[a_lev + 1], true);
-           level_sets[a_lev + 1] = std::move(new_level_set);
+
+           if (level_sets[a_lev+1]->boxArray() == ref_nd_ba)
+           {       
+               MFUtil::regrid(* new_level_set, ref_nd_ba, dm, * level_sets[a_lev+1], true);
+           }
+           else
+           {
+               int nc = level_sets[a_lev+1]->nComp();
+               int ng = level_sets[a_lev+1]->nGrow();
+               const Periodicity& period = geom[a_lev].periodicity();
+               new_level_set->define(ref_nd_ba, dm, nc, ng);
+               new_level_set->copy(*level_sets[a_lev+1], 0, 0, nc, 0, ng, period);
+           }
+           
+           level_sets[a_lev+1] = std::move(new_level_set);
        }
    }
 }
