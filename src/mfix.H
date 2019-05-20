@@ -46,11 +46,10 @@ public:
     mfix ();
     ~mfix ();
 
-     // Face-based coefficients b in implicit diffusion solve
-     //    and in MAC projection
-     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff_cc;
-     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
-     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
+    // Face-based coefficients b in MAC projection and implicit diffusion solve
+    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff_cc;
+    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
+    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
 
     // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_lobc;
