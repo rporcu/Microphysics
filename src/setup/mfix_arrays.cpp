@@ -456,12 +456,23 @@ mfix::RegridLevelSetArray (int a_lev)
 
        Print() << "Regridding level-set on lev = " << a_lev << std::endl;
 
-       const BoxArray nd_ba = amrex::convert(grids[a_lev], IntVect::TheNodeVector());
+       const BoxArray nd_ba = amrex::convert(ba, IntVect::TheNodeVector());
 
        std::unique_ptr<MultiFab> new_level_set(new MultiFab);
-       // MFUtil::regrid(* new_level_set, nd_ba, dmap[a_lev],
-       //                * particle_ebfactory[a_lev], * level_sets[a_lev], true);
-       MFUtil::regrid(* new_level_set, nd_ba, dm, * level_sets[a_lev], true);
+
+       if (level_sets[a_lev]->boxArray() == nd_ba)
+       {       
+           MFUtil::regrid(* new_level_set, nd_ba, dm, * level_sets[a_lev], true);
+       }
+       else
+       {
+           int nc = level_sets[a_lev]->nComp();
+           int ng = level_sets[a_lev]->nGrow();
+           const Periodicity& period = geom[a_lev].periodicity();
+           new_level_set->define(nd_ba, dm, nc, ng);
+           new_level_set->copy(*level_sets[a_lev], 0, 0, nc, 0, ng, period);
+       }
+       
        level_sets[a_lev] = std::move(new_level_set);
 
        //________________________________________________________________________
