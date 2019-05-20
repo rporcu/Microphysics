@@ -89,8 +89,8 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             case ( minf_)
 
-               gp(i,domlo(2)-1,k,2) = gp(i,domlo(2),k,1  )
                gp(i,domlo(2)-1,k,1) = zero
+               gp(i,domlo(2)-1,k,2) = gp(i,domlo(2),k,2  )
                gp(i,domlo(2)-1,k,3) = zero
 
             end select
@@ -111,8 +111,8 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             case ( minf_)
 
-               gp(i,domhi(2)+1,k,2) = gp(i,domhi(2),k,2)
                gp(i,domhi(2)+1,k,1) = zero
+               gp(i,domhi(2)+1,k,2) = gp(i,domhi(2),k,2)
                gp(i,domhi(2)+1,k,3) = zero
 
             end select
@@ -133,9 +133,9 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             case ( minf_)
 
-               gp(i,j,domlo(3)-1,3) = gp(i,j,domlo(3),3)
                gp(i,j,domlo(3)-1,1) = zero
                gp(i,j,domlo(3)-1,2) = zero
+               gp(i,j,domlo(3)-1,3) = gp(i,j,domlo(3),3)
 
             end select
       end do
@@ -155,9 +155,9 @@ subroutine set_gradp_bcs ( slo, shi, gp, glo, ghi, &
 
             case ( minf_)
 
-               gp(i,j,domhi(3)+1,3) = gp(i,j,domhi(3),3)
                gp(i,j,domhi(3)+1,1) = zero
                gp(i,j,domhi(3)+1,2) = zero
+               gp(i,j,domhi(3)+1,3) = gp(i,j,domhi(3),3)
 
             end select
       end do
