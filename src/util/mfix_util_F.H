@@ -14,12 +14,6 @@ extern "C"
 {
 #endif
 
-    void mfix_sum_mf ( const int* lo, const int* hi,
-                       const BL_FORT_FAB_ARG_3D(rho),
-                       const amrex::Real* dx,
-                       const BL_FORT_FAB_ARG_3D(vol),
-                       amrex::Real* mass );
-
    void set_scalar_bcs (
       amrex::Real* ep_g, const int* slo, const int* shi,
       amrex::Real* ro_g, 
