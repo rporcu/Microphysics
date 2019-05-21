@@ -9,6 +9,8 @@
 
 #include <AMReX_EBMultiFabUtil.H>
 
+#include <AMReX_Geometry.H>
+
 #include <mfix.H>
 #include <mfix_F.H>
 
@@ -70,13 +72,15 @@ mfix::WriteCheckHeader(const std::string& name, int nstep, Real dt, Real time) c
       HeaderFile << dt << "\n";
       HeaderFile << time << "\n";
 
+      Geometry geometry;
+
       // Geometry
       for (int i = 0; i < BL_SPACEDIM; ++i)
-            HeaderFile << Geometry::ProbLo(i) << ' ';
+            HeaderFile << geometry.ProbLo(i) << ' ';
       HeaderFile << '\n';
 
       for (int i = 0; i < BL_SPACEDIM; ++i)
-         HeaderFile << Geometry::ProbHi(i) << ' ';
+         HeaderFile << geometry.ProbHi(i) << ' ';
       HeaderFile << '\n';
 
       // BoxArray

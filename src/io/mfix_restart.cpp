@@ -9,6 +9,8 @@
 
 #include <AMReX_EBMultiFabUtil.H>
 
+#include <AMReX_Geometry.H>
+
 #include <mfix.H>
 #include <mfix_F.H>
 
@@ -109,7 +111,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               prob_hi[d] = Nrep[d]*prob_hi[d];
            }
         }
-        Geometry::ProbDomain(RealBox(prob_lo,prob_hi));
+        Geometry geometry;
+        geometry.ProbDomain(RealBox(prob_lo,prob_hi));
 
         for (int lev = 0; lev < nlevs; ++lev) {
 
