@@ -454,7 +454,7 @@ step3(const Box& grown1_bx,
   });
 }
 
-} // end namespace amrex::divop_aux
+} // end namespace divop_aux
 
 using namespace divop_aux;
 

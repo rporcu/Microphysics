@@ -2,6 +2,7 @@
 #include <mfix.H>
 #include <mfix_des_K.H>
 #include <mfix_drag_K.H>
+#include <mfix_set_gradp_bcs.hpp>
 #include <AMReX_EBMultiFabUtil.H>
 
 void mfix::mfix_calc_drag_fluid(Real time)
@@ -55,13 +56,17 @@ mfix::mfix_calc_drag_particle(Real time)
         for (MFIter mfi(gp_tmp, TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.tilebox();
-            set_gradp_bcs ( bx.loVect(), bx.hiVect(),
-                            BL_TO_FORTRAN_ANYD(gp_tmp[mfi]),
-                            bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                            bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                            bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                            domain.loVect(), domain.hiVect(),
-                            &nghost);
+            Array4<Real> const& gp = gp_tmp[mfi].array();
+
+            Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
+            Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
+            Array4<int> const& bc_jlo_type = bc_jlo[lev]->array();
+            Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
+            Array4<int> const& bc_klo_type = bc_klo[lev]->array();
+            Array4<int> const& bc_khi_type = bc_khi[lev]->array();
+
+            set_gradp_bcs(bx, gp, bc_ilo_type, bc_ihi_type, bc_jlo_type,
+                          bc_jhi_type, bc_klo_type, bc_khi_type, domain, bc_list, &nghost);
         }
 
         gp_tmp.FillBoundary(geom[lev].periodicity());

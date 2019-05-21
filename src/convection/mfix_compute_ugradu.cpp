@@ -40,7 +40,7 @@ is_equal_to_any(const int bc,
   return false;
 }
 
-} // end namespace ugradu_auxiliary
+} // end namespace ugradu_aux
 
 using namespace ugradu_aux;
 
