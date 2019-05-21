@@ -366,14 +366,27 @@ void compute_diff_wallfluxes(Real* divw,
 void
 step2(const Box& grown1_bx,
       const Box& grown2_bx,
-      Array4<Real> const& optmp,
-      Array4<Real> const& ep_g,
-      Array4<Real> const& divc,
-      Array4<Real> const& delm,
-      Array4<const Real> const& vfrac,
-      Array4<Real> const& mask,
-      Array4<const EBCellFlag> const& flags)
+      MFIter* mfi,
+      FArrayBox& optmp_fbx,
+      MultiFab& ep_g,
+      FArrayBox& divc_fbx,
+      FArrayBox& delm_fbx,
+      const MultiFab* volfrac,
+      FArrayBox& mask_fbx,
+      const EBCellFlagFab& flags_fab)
 {
+  Array4<Real> const& epsilon_g = ep_g.array(*mfi);
+
+  Array4<const EBCellFlag> const& flags = flags_fab.array();
+
+  Array4<const Real> const& vfrac = volfrac->array(*mfi);
+
+  Array4<Real> const& delm = delm_fbx.array();
+
+  Array4<Real> const& optmp = optmp_fbx.array();
+  Array4<Real> const& divc = divc_fbx.array();
+  Array4<Real> const& mask = mask_fbx.array();
+
   // TODO isn't it already initialized with zeroes?
   AMREX_CUDA_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
   {
@@ -397,13 +410,14 @@ step2(const Box& grown1_bx,
             if((ii != 0 or jj != 0 or kk != 0) and 
                 (flags(i,j,k).isConnected({AMREX_D_DECL(ii,jj,kk)}) == 1))
             {
-              epvfrac = vfrac(i+ii,j+jj,k+kk) * ep_g(i+ii,j+jj,k+kk) * mask(i+ii,j+jj,k+kk);
+              epvfrac = vfrac(i+ii,j+jj,k+kk) * epsilon_g(i+ii,j+jj,k+kk) * 
+                        mask(i+ii,j+jj,k+kk);
               vtot += epvfrac;
               divnc += epvfrac * divc(i+ii,j+jj,k+kk);
             }
 
       divnc /= vtot;
-      epvfrac = vfrac(i,j,k) * ep_g(i,j,k);
+      epvfrac = vfrac(i,j,k) * epsilon_g(i,j,k);
       optmp(i,j,k) = (1 - vfrac(i,j,k)) * (divnc - divc(i,j,k));
       delm(i,j,k) = -1 * epvfrac * optmp(i,j,k);
     }
@@ -414,13 +428,25 @@ step2(const Box& grown1_bx,
 
 void
 step3(const Box& grown1_bx,
-      Array4<Real> const& optmp,
-      Array4<Real> const& ep_g,
-      Array4<Real> const& delm,
-      Array4<const Real> const& vfrac,
-      Array4<Real> const& mask,
-      Array4<const EBCellFlag> const& flags)
+      MFIter* mfi,
+      FArrayBox& optmp_fbx,
+      MultiFab& ep_g,
+      FArrayBox& delm_fbx,
+      const MultiFab* volfrac,
+      FArrayBox& mask_fbx,
+      const EBCellFlagFab& flags_fab)
 {
+  Array4<Real> const& epsilon_g = ep_g.array(*mfi);
+
+  Array4<const EBCellFlag> const& flags = flags_fab.array();
+
+  Array4<const Real> const& vfrac = volfrac->array(*mfi);
+
+  Array4<Real> const& delm = delm_fbx.array();
+
+  Array4<Real> const& optmp = optmp_fbx.array();
+  Array4<Real> const& mask = mask_fbx.array();
+
   AMREX_CUDA_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
   {
     if(flags(i,j,k).isSingleValued())
@@ -435,7 +461,8 @@ step3(const Box& grown1_bx,
             if((ii != 0 or jj != 0 or kk != 0) and
                 (flags(i,j,k).isConnected({AMREX_D_DECL(ii,jj,kk)}) == 1))
             {
-              wtot += ep_g(i+ii,j+jj,k+kk) * vfrac(i+ii,j+jj,k+kk) * mask(i+ii,j+jj,k+kk);
+              wtot += epsilon_g(i+ii,j+jj,k+kk) * vfrac(i+ii,j+jj,k+kk) * 
+                      mask(i+ii,j+jj,k+kk);
             }
 
       wtot = 1/wtot;
@@ -460,13 +487,13 @@ using namespace divop_aux;
 
 void
 compute_divop(Box& bx,
-              Array4<Real> const& divergence,
-              Array4<Real> const& velocity,
-              Array4<Real> const& fx,
-              Array4<Real> const& fy,
-              Array4<Real> const& fz,
-              Array4<Real> const& ep_g,
+              MultiFab& conv,
+              MultiFab& vel,
+              MultiFab& ep_g,
               MFIter* mfi,
+              FArrayBox& fxfab,
+              FArrayBox& fyfab,
+              FArrayBox& fzfab,
               Array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac,
               Array<const MultiCutFab*, AMREX_SPACEDIM>& facecent,
               const EBCellFlagFab& flags_fab,
@@ -488,6 +515,14 @@ compute_divop(Box& bx,
   const amrex::Dim3 dom_high = amrex::ubound(domain);
 
   const Real i_dx (1/dx[0]), i_dy(1/dx[1]), i_dz(1/dx[2]);
+
+  Array4<Real> const& divergence = conv.array(*mfi);
+  Array4<Real> const& velocity = vel.array(*mfi);
+  Array4<Real> const& epsilon_g = ep_g.array(*mfi);
+
+  Array4<Real> const& fx = fxfab.array();
+  Array4<Real> const& fy = fyfab.array();
+  Array4<Real> const& fz = fzfab.array();
 
   Array4<const Real> const& areafrac_x = areafrac[0]->array(*mfi);
   Array4<const Real> const& areafrac_y = areafrac[1]->array(*mfi);
@@ -519,14 +554,16 @@ compute_divop(Box& bx,
   const Box& grown1_bx = amrex::grow(bx,1);
   const Box& grown2_bx = amrex::grow(bx,2);
 
-  FArrayBox divc_fbx(grown2_bx);
+  FArrayBox delm_fbx(grown1_bx);
+
   FArrayBox optmp_fbx(grown2_bx);
-  FArrayBox delm_fbx(grown2_bx);
+  FArrayBox divc_fbx(grown2_bx);
   FArrayBox mask_fbx(grown2_bx);
 
-  Array4<Real> const& divc = divc_fbx.array();
-  Array4<Real> const& optmp = optmp_fbx.array();
   Array4<Real> const& delm = delm_fbx.array();
+
+  Array4<Real> const& optmp = optmp_fbx.array();
+  Array4<Real> const& divc = divc_fbx.array();
   Array4<Real> const& mask = mask_fbx.array();
 
   //
@@ -654,12 +691,14 @@ compute_divop(Box& bx,
     //
     // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
     //
-    step2(grown1_bx, grown2_bx, optmp, ep_g, divc, delm, vfrac, mask, flags);
+    step2(grown1_bx, grown2_bx, mfi, optmp_fbx, ep_g, divc_fbx, delm_fbx, 
+        volfrac, mask_fbx, flags_fab);
 
     //
     // Step 3: redistribute excess/loss of mass
     //
-    step3(grown1_bx, optmp, ep_g, delm, vfrac, mask, flags);
+    step3(grown1_bx, mfi, optmp_fbx, ep_g, delm_fbx, 
+        volfrac, mask_fbx, flags_fab);
 
     //
     // Resume the correct sign, AKA return the negative
