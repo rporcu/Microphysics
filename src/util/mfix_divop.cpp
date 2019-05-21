@@ -210,14 +210,20 @@ void compute_dphidn_3d(Real* dphidn,
                        const int i,
                        const int j,
                        const int k,
-                       Array4<Real> const& velocity,
-                       Array4<const Real> const& bndrycent,
+                       MFIter* mfi,
+                       MultiFab& vel,
+                       const MultiFab* volfrac,
+                       const MultiCutFab* bndrycent_fab,
                        const Real* phib,
                        const Real anrmx,
                        const Real anrmy,
-                       const Real anrmz,
-                       Array4<const Real> const& vfrac)
+                       const Real anrmz)
 {
+  Array4<Real> const& velocity = vel.array(*mfi);
+
+  Array4<const Real> const& vfrac = volfrac->array(*mfi);
+  Array4<const Real> const& bndrycent = bndrycent_fab->array(*mfi);
+
   Real bct[3] = {bndrycent(i,j,k,0), bndrycent(i,j,k,1), bndrycent(i,j,k,2)};
 
   Real vf = vfrac(i,j,k);
@@ -274,16 +280,23 @@ void compute_diff_wallfluxes(Real* divw,
                              const int i,
                              const int j,
                              const int k,
-                             Array4<Real> const& velocity,
+                             MFIter* mfi,
+                             MultiFab& vel,
+                             Array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac,
+                             const MultiFab* volfrac,
+                             const MultiCutFab* bndrycent_fab,
                              const Array4<Real>* mu,
-                             Array4<const Real> const& bndrycent,
-                             Array4<const EBCellFlag> const& flags,
-                             Array4<const Real> const& afrac_x,
-                             Array4<const Real> const& afrac_y,
-                             Array4<const Real> const& afrac_z,
-                             Array4<const Real> const& vfrac,
                              const int* do_explicit_diffusion)
 {
+  Array4<Real> const& velocity = vel.array(*mfi);
+
+  Array4<const Real> const& afrac_x = areafrac[0]->array(*mfi);
+  Array4<const Real> const& afrac_y = areafrac[1]->array(*mfi);
+  Array4<const Real> const& afrac_z = areafrac[2]->array(*mfi);
+
+  Array4<const Real> const& vfrac = volfrac->array(*mfi);
+  Array4<const Real> const& bndrycent = bndrycent_fab->array(*mfi);
+
   const Real dxinv[3] = {1/dx[0], 1/dx[1], 1/dx[2]};
 
   Real dapx = afrac_x(i+1,j,k) - afrac_x(i,j,k);
@@ -308,8 +321,8 @@ void compute_diff_wallfluxes(Real* divw,
 
   Real dveldn[3] = {0, 0, 0};
 
-  compute_dphidn_3d(dveldn, i, j, k, velocity, bndrycent, phib,
-                    anrmx, anrmy, anrmz, vfrac);
+  compute_dphidn_3d(dveldn, i, j, k, mfi, vel, volfrac, bndrycent_fab, phib,
+                    anrmx, anrmy, anrmz);
 
   // transform them to d/dx, d/dy and d/dz given transverse derivatives are zero
   Real dudx = dveldn[0] * anrmx;
@@ -672,9 +685,9 @@ compute_divop(Box& bx,
           if(n==0)
           {
             // TODO check: possible data race on iwall??
-            compute_diff_wallfluxes(divdiff_w[iwall], dx, i, j, k, velocity, mu,
-                                    bndrycent, flags, areafrac_x, areafrac_y, areafrac_z,
-                                    vfrac, do_explicit_diffusion);
+            compute_diff_wallfluxes(divdiff_w[iwall], dx, i, j, k, mfi, vel,
+                                    areafrac, volfrac, bndrycent_fab, 
+                                    mu, do_explicit_diffusion);
           }
 
           divc(i,j,k) -= divdiff_w[iwall][n] / (dx[n]*vfrac(i,j,k));
