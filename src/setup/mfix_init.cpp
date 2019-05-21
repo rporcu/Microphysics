@@ -722,6 +722,16 @@ mfix::PostInit(Real& dt, Real time, int nstep, int restart_flag, Real stop_time)
                 particle_ba.maxSize(particle_max_grid_size);
                 DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
                 pc->Regrid(particle_dm, particle_ba);
+
+                particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
+                                                      pc->ParticleDistributionMap(lev), 1, 0));
+                particle_cost[lev]->setVal(0.0);
+
+                // This calls re-creates a proper particle_ebfactories
+                //  and regrids all the multifabs that depend on it
+                if (solve_dem)
+                    RegridLevelSetArray(lev);
+
             }
         }
 

@@ -111,7 +111,7 @@ mfix::Regrid ()
                 particle_cost[lev]->setVal(0.0);
 
                 // This calls re-creates a proper particle_ebfactories
-                //  and regrids all the multifab that depend on it
+                //  and regrids all the multifabs that depend on it
                 if (solve_dem)
                     RegridLevelSetArray(lev);
             }
