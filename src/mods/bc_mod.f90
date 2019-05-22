@@ -80,6 +80,29 @@ module bc
   integer, parameter :: nsw_       = 100 ! wall with no-slip b.c.
 
 contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+! Subroutines: get_bc_u_g, get_bc_v_g, get_bc_w_g                      !
+!                                                                      !
+! Purpose: Getters for the boundary conditions values                  !
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  real(rt) function get_bc_u_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_u_g = bc_u_g(pID)
+    return
+  end function get_bc_u_g
+
+  real(rt) function get_bc_v_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_v_g = bc_u_g(pID)
+    return
+  end function get_bc_v_g
+
+  real(rt) function get_bc_w_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_w_g = bc_u_g(pID)
+    return
+  end function get_bc_w_g
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

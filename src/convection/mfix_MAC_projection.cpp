@@ -1,7 +1,12 @@
-#include <mfix_mac_F.H>
+#include <AMReX_REAL.H>
+#include <AMReX_BLFort.H>
+#include <AMReX_SPACE.H>
+
 #include <mfix_proj_F.H>
 #include <mfix_F.H>
 #include <mfix.H>
+#include <mfix_set_mac_velocity_bcs.hpp>
+
 #include <AMReX_EBFArrayBox.H>
 #include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_MultiFabUtil.H>
@@ -35,12 +40,12 @@ using namespace amrex;
 //  WARNING: this method returns the MAC velocity with up-to-date BCs in place
 // 
 void 
-mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u, 
-	                     Vector< std::unique_ptr<MultiFab> >& v,
-			     Vector< std::unique_ptr<MultiFab> >& w,
-		 	     Vector< std::unique_ptr<MultiFab> >& ep,
-			     const Vector< std::unique_ptr<MultiFab> >& ro,
-			     Real time, int steady_state)
+mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u, 
+                            Vector< std::unique_ptr<MultiFab> >& v,
+                            Vector< std::unique_ptr<MultiFab> >& w,
+                            Vector< std::unique_ptr<MultiFab> >& ep,
+                            const Vector< std::unique_ptr<MultiFab> >& ro,
+                            Real time, int steady_state)
 {
    BL_PROFILE("mfix::apply_MAC_projection()");
 
@@ -199,24 +204,21 @@ mfix::set_MC_velocity_bcs ( int lev,
    w[lev] -> FillBoundary( geom[lev].periodicity() );
      
    Box domain(geom[lev].Domain()); 
-	
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
    for (MFIter mfi((*rhs_cc[lev]), false); mfi.isValid(); ++mfi)
    {
       const Box& bx = (*rhs_cc[lev])[mfi].box();
-	
-      set_mac_velocity_bcs ( &time, bx.loVect(), bx.hiVect(),
-                             BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
-                             BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
-                             BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
-                             bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                             bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                             bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                             domain.loVect(), domain.hiVect(),
-                             &nghost );
-   }	
+
+      set_mac_velocity_bcs(&time, bc_list, bx, &mfi,
+                           *u[lev], *v[lev], *w[lev],
+                           *bc_ilo[lev], *bc_ihi[lev],
+                           *bc_jlo[lev], *bc_jhi[lev],
+                           *bc_klo[lev], *bc_khi[lev],
+                           domain, &nghost);
+   }
 }
 
 #if 0

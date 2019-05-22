@@ -1,8 +1,10 @@
 #include <mfix.H>
 #include <mfix_F.H>
 #include <mfix_proj_F.H>
-#include <mfix_mac_F.H>
 
+#include <AMReX_REAL.H>
+#include <AMReX_BLFort.H>
+#include <AMReX_SPACE.H>
 #include <AMReX_EBMultiFabUtil.H>
 
 //

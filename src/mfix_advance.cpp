@@ -1,7 +1,10 @@
-#include <mfix_mac_F.H>
 #include <mfix_proj_F.H>
 #include <mfix_F.H>
 #include <mfix.H>
+
+#include <AMReX_REAL.H>
+#include <AMReX_BLFort.H>
+#include <AMReX_SPACE.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_VisMF.H>

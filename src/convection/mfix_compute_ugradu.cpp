@@ -1,7 +1,9 @@
 #include <mfix.H>
-#include <mfix_mac_F.H>
 #include <mfix_divop.hpp>
 
+#include <AMReX_REAL.H>
+#include <AMReX_BLFort.H>
+#include <AMReX_SPACE.H>
 #include <AMReX_Array.H>
 
 #define MY_HUGE 1.e200
