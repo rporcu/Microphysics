@@ -154,31 +154,34 @@ set_mac_velocity_bcs(Real* time,
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(ulo_bx_yz, i, j, k,
     {
-      const int bcv = bct_ilo(j,k,1);
+      const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
+      const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if(((bct_ilo(j,k,0) == bc_list.pinf) or (bct_ilo(j,k,0) == bc_list.pout)) and (i != dom_lo[0]))
+      if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (i != dom_lo[0]))
         u_g(i,j,k) = u_g(dom_lo[0],j,k);
-      else if(bct_ilo(j,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         u_g(i,j,k) = get_bc_u_g(bcv);
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(vlo_bx_yz, i, j, k,
     {
-      const int bcv = bct_ilo(j,k,1);
+      const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
+      const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct_ilo(j,k,0) == bc_list.pinf) or (bct_ilo(j,k,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         v_g(i,j,k) = v_g(dom_lo[0],j,k);
-      else if(bct_ilo(j,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         v_g(i,j,k) = 0;
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(wlo_bx_yz, i, j, k,
     {
-      const int bcv = bct_ilo(j,k,1);
+      const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
+      const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct_ilo(j,k,0) == bc_list.pinf) or (bct_ilo(j,k,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         w_g(i,j,k) = w_g(dom_lo[0],j,k);
-      else if(bct_ilo(j,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         w_g(i,j,k) = 0;
     });
   }
@@ -187,31 +190,34 @@ set_mac_velocity_bcs(Real* time,
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(uhi_bx_yz, i, j, k,
     {
-      const int bcv = bct_ihi(j,k,1);
+      const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
+      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if(((bct_ihi(j,k,0) == bc_list.pinf) or (bct_ihi(j,k,0) == bc_list.pout)) and (i != dom_hi[0]+1))
+      if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (i != dom_hi[0]+1))
         u_g(i,j,k) = u_g(dom_hi[0]+1,j,k);
-      else if(bct_ihi(j,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         u_g(i,j,k) = get_bc_u_g(bcv);
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(vhi_bx_yz, i, j, k,
     {
-      const int bcv = bct_ihi(j,k,1);
+      const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
+      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct_ihi(j,k,0) == bc_list.pinf) or (bct_ihi(j,k,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         v_g(i,j,k) = v_g(dom_hi[0],j,k);
-      else if(bct_ihi(j,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         v_g(i,j,k) = 0;
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(whi_bx_yz, i, j, k,
     {
-      const int bcv = bct_ihi(j,k,1);
+      const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
+      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct_ihi(j,k,0) == bc_list.pinf) or (bct_ihi(j,k,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         w_g(i,j,k) = w_g(dom_hi[0],j,k);
-      else if(bct_ihi(j,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         w_g(i,j,k) = 0;
     });
   }
@@ -220,31 +226,34 @@ set_mac_velocity_bcs(Real* time,
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(ulo_bx_xz, i, j, k,
     {
-      const int bcv = bct_jlo(i,k,1);
+      const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
+      const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct_jlo(i,k,0) == bc_list.pinf) or (bct_jlo(i,k,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         u_g(i,j,k) = u_g(i,dom_lo[1],k);
-      else if(bct_jlo(i,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         u_g(i,j,k) = 0;
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(vlo_bx_xz, i, j, k,
     {
-      const int bcv = bct_jlo(i,k,1);
+      const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
+      const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if(((bct_jlo(i,k,0) == bc_list.pinf) or (bct_jlo(i,k,0) == bc_list.pout)) and (j != dom_lo[1]))
+      if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (j != dom_lo[1]))
         v_g(i,j,k) = v_g(i,dom_lo[1],k);
-      else if(bct_jlo(i,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         v_g(i,j,k) = get_bc_v_g(bcv);
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(wlo_bx_xz, i, j, k,
     {
-      const int bcv = bct_jlo(i,k,1);
+      const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
+      const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct_jlo(i,k,0) == bc_list.pinf) or (bct_jlo(i,k,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         w_g(i,j,k) = w_g(i,dom_lo[1],k);
-      else if(bct_jlo(i,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         w_g(i,j,k) = 0;
     });
   }
@@ -253,31 +262,34 @@ set_mac_velocity_bcs(Real* time,
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(uhi_bx_xz, i, j, k,
     {
-      const int bcv = bct_jhi(i,k,1);
+      const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
+      const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct_jhi(i,k,0) == bc_list.pinf) or (bct_jhi(i,k,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         u_g(i,j,k) = u_g(i,dom_hi[1],k);
-      else if(bct_jhi(i,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         u_g(i,j,k) = 0;
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(vhi_bx_xz, i, j, k,
     {
-      const int bcv = bct_jhi(i,k,1);
+      const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
+      const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if(((bct_jhi(i,k,0) == bc_list.pinf) or (bct_jhi(i,k,0) == bc_list.pout)) and (j != dom_hi[1]+1))
+      if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (j != dom_hi[1]+1))
         v_g(i,j,k) = v_g(i,dom_hi[1]+1,k);
-      else if(bct_jhi(i,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         v_g(i,j,k) = get_bc_v_g(bcv);
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(whi_bx_xz, i, j, k,
     {
-      const int bcv = bct_jhi(i,k,1);
+      const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
+      const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct_jhi(i,k,0) == bc_list.pinf) or (bct_jhi(i,k,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         w_g(i,j,k) = w_g(i,dom_hi[1],k);
-      else if(bct_jhi(i,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         w_g(i,j,k) = 0;
     });
   }
@@ -286,31 +298,34 @@ set_mac_velocity_bcs(Real* time,
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(ulo_bx_xy, i, j, k,
     {
-      const int bcv = bct_klo(i,j,1);
+      const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
+      const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct_klo(i,j,0) == bc_list.pinf) or (bct_klo(i,j,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         u_g(i,j,k) = u_g(i,j,dom_lo[2]);
-      else if(bct_klo(i,j,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         u_g(i,j,k) = 0;
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(vlo_bx_xy, i, j, k,
     {
-      const int bcv = bct_klo(i,j,1);
+      const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
+      const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct_klo(i,j,0) == bc_list.pinf) or (bct_klo(i,j,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         v_g(i,j,k) = v_g(i,j,dom_lo[2]);
-      else if(bct_klo(i,j,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         v_g(i,j,k) = 0;
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(wlo_bx_xy, i, j, k,
     {
-      const int bcv = bct_klo(i,j,1);
+      const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
+      const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if(((bct_klo(i,j,0) == bc_list.pinf) or (bct_klo(i,j,0) == bc_list.pout)) and (k != dom_lo[2]))
+      if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (k != dom_lo[2]))
         w_g(i,j,k) = w_g(i,j,dom_lo[2]);
-      else if(bct_klo(i,j,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         w_g(i,j,k) = get_bc_w_g(bcv);
     });
   }
@@ -319,31 +334,34 @@ set_mac_velocity_bcs(Real* time,
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(uhi_bx_xy, i, j, k,
     {
-      const int bcv = bct_khi(i,j,1);
+      const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
+      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct_khi(i,j,0) == bc_list.pinf) or (bct_khi(i,j,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         u_g(i,j,k) = u_g(i,j,dom_hi[2]);
-      else if(bct_khi(i,j,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         u_g(i,j,k) = 0;
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(vhi_bx_xy, i, j, k,
     {
-      const int bcv = bct_khi(i,j,1);
+      const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
+      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct_khi(i,j,0) == bc_list.pinf) or (bct_khi(i,j,0) == bc_list.pout))
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
         v_g(i,j,k) = v_g(i,j,dom_hi[2]);
-      else if(bct_khi(i,j,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         v_g(i,j,k) = 0;
     });
 
     AMREX_CUDA_HOST_DEVICE_FOR_3D(whi_bx_xy, i, j, k,
     {
-      const int bcv = bct_khi(i,j,1);
+      const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
+      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if(((bct_khi(i,j,0) == bc_list.pinf) or (bct_khi(i,j,0) == bc_list.pout)) and (k != dom_hi[2]+1))
+      if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (k != dom_hi[2]+1))
         w_g(i,j,k) = w_g(i,j,dom_hi[2]+1);
-      else if(bct_khi(i,j,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
         w_g(i,j,k) = get_bc_w_g(bcv);
     });
   }

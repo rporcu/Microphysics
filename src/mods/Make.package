@@ -10,4 +10,4 @@ f90EXE_sources += param_mod.f90
 f90EXE_sources += run_mod.f90  
 f90EXE_sources += utilities_mod.f90
 
-CEXE_headers += bc_mod_F.H
+F90EXE_headers += bc_mod_F.H
