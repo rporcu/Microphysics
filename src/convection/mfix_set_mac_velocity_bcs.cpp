@@ -265,7 +265,7 @@ set_mac_velocity_bcs(Real* time,
     {
       const int bcv = bct_jhi(i,k,1);
 
-      if(((bct_jhi(i,k,0) == bc_list.pinf) or (bct_jhi(i,k,0) == bc_list.pout)) and (j != dom_hi[1+1]))
+      if(((bct_jhi(i,k,0) == bc_list.pinf) or (bct_jhi(i,k,0) == bc_list.pout)) and (j != dom_hi[1]+1))
         v_g(i,j,k) = v_g(i,dom_hi[1]+1,k);
       else if(bct_jhi(i,k,0) == bc_list.minf)
         v_g(i,j,k) = get_bc_v_g(bcv);
