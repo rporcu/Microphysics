@@ -56,17 +56,10 @@ mfix::mfix_calc_drag_particle(Real time)
         for (MFIter mfi(gp_tmp, TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.tilebox();
-            Array4<Real> const& gp = gp_tmp[mfi].array();
 
-            Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
-            Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
-            Array4<int> const& bc_jlo_type = bc_jlo[lev]->array();
-            Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
-            Array4<int> const& bc_klo_type = bc_klo[lev]->array();
-            Array4<int> const& bc_khi_type = bc_khi[lev]->array();
-
-            set_gradp_bcs(bx, gp, bc_ilo_type, bc_ihi_type, bc_jlo_type,
-                          bc_jhi_type, bc_klo_type, bc_khi_type, domain, bc_list, &nghost);
+            set_gradp_bcs(bx, gp_tmp[mfi], *bc_ilo[lev], *bc_ihi[lev], *bc_jlo[lev],
+                          *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev], domain,
+                          bc_list, &nghost);
         }
 
         gp_tmp.FillBoundary(geom[lev].periodicity());

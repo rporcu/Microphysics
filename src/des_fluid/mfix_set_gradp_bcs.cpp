@@ -4,21 +4,29 @@ using namespace amrex;
 
 void
 set_gradp_bcs (const Box& bx,
-               Array4<Real> const& gp,
-               Array4<int> const& bct_ilo, 
-               Array4<int> const& bct_ihi,
-               Array4<int> const& bct_jlo,
-               Array4<int> const& bct_jhi,
-               Array4<int> const& bct_klo,
-               Array4<int> const& bct_khi,
+               FArrayBox& gp_fab,
+               IArrayBox& bct_ilo_fab, 
+               IArrayBox& bct_ihi_fab,
+               IArrayBox& bct_jlo_fab,
+               IArrayBox& bct_jhi_fab,
+               IArrayBox& bct_klo_fab,
+               IArrayBox& bct_khi_fab,
                Box& domain,
                BcList& bc_list,
                const int* ng)
 {
   // Extract the lower and upper boundaries of Box bx and Domain
   const IntVect bx_lo(bx.loVect()), bx_hi(bx.hiVect());
-  const amrex::Dim3 dom_lo = amrex::lbound(domain);
-  const amrex::Dim3 dom_hi = amrex::ubound(domain);
+  const IntVect dom_lo(domain.loVect()), dom_hi(domain.hiVect());
+
+  Array4<Real> const& gp = gp_fab.array();
+
+  Array4<int> const& bct_ilo = bct_ilo_fab.array();
+  Array4<int> const& bct_ihi = bct_ihi_fab.array();
+  Array4<int> const& bct_jlo = bct_jlo_fab.array();
+  Array4<int> const& bct_jhi = bct_jhi_fab.array();
+  Array4<int> const& bct_klo = bct_klo_fab.array();
+  Array4<int> const& bct_khi = bct_khi_fab.array();
 
   // Create a 2D Box collapsing bx on x-direction
   IntVect bx_yz_hi(bx_hi);
@@ -35,116 +43,128 @@ set_gradp_bcs (const Box& bx,
   bx_xy_hi[2] = bx_lo[2];
   const Box bx_xy(bx_lo, bx_xy_hi);
 
-  if(bx_lo[0] <= dom_lo.x)
+  if(bx_lo[0] <= dom_lo[0])
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_yz, i, j, k,
     {
-      if((bct_ilo(j,k,0) == bc_list.pinf) or (bct_ilo(j,k,0) == bc_list.pout))
+      const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
+
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
       {
-        gp(dom_lo.x-1,j,k,0) = gp(dom_lo.x,j,k,0);
-        gp(dom_lo.x-1,j,k,1) = gp(dom_lo.x,j,k,1);
-        gp(dom_lo.x-1,j,k,2) = gp(dom_lo.x,j,k,2);
+        gp(dom_lo[0]-1,j,k,0) = gp(dom_lo[0],j,k,0);
+        gp(dom_lo[0]-1,j,k,1) = gp(dom_lo[0],j,k,1);
+        gp(dom_lo[0]-1,j,k,2) = gp(dom_lo[0],j,k,2);
       }
-      else if(bct_ilo(j,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
       {
-        gp(dom_lo.x-1,j,k,0) = gp(dom_lo.x,j,k,0);
-        gp(dom_lo.x-1,j,k,1) = 0;
-        gp(dom_lo.x-1,j,k,2) = 0;
+        gp(dom_lo[0]-1,j,k,0) = gp(dom_lo[0],j,k,0);
+        gp(dom_lo[0]-1,j,k,1) = 0;
+        gp(dom_lo[0]-1,j,k,2) = 0;
       }
     });
   }
 
-  if(bx_hi[0] >= dom_hi.x+1)
+  if(bx_hi[0] >= dom_hi[0]+1)
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_yz, i, j, k,
     {
-      if((bct_ihi(j,k,0) == bc_list.pinf) or (bct_ihi(j,k,0) == bc_list.pout))
+      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
+
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
       {
-        gp(dom_hi.x+1,j,k,0) = gp(dom_hi.x,j,k,0);
-        gp(dom_hi.x+1,j,k,1) = gp(dom_hi.x,j,k,1);
-        gp(dom_hi.x+1,j,k,2) = gp(dom_hi.x,j,k,2);
+        gp(dom_hi[0]+1,j,k,0) = gp(dom_hi[0],j,k,0);
+        gp(dom_hi[0]+1,j,k,1) = gp(dom_hi[0],j,k,1);
+        gp(dom_hi[0]+1,j,k,2) = gp(dom_hi[0],j,k,2);
       }
-      else if(bct_ihi(j,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
       {
-        gp(dom_hi.x+1,j,k,0) = gp(dom_hi.x,j,k,0);
-        gp(dom_hi.x+1,j,k,1) = 0;
-        gp(dom_hi.x+1,j,k,2) = 0;
+        gp(dom_hi[0]+1,j,k,0) = gp(dom_hi[0],j,k,0);
+        gp(dom_hi[0]+1,j,k,1) = 0;
+        gp(dom_hi[0]+1,j,k,2) = 0;
       }
     });
   }
 
-  if(bx_lo[1] <= dom_lo.y)
+  if(bx_lo[1] <= dom_lo[1])
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xz, i, j, k,
     {
-      if((bct_jlo(i,k,0) == bc_list.pinf) or (bct_jlo(i,k,0) == bc_list.pout))
+      const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
+
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
       {
-        gp(i,dom_lo.y-1,k,0) = gp(i,dom_lo.y,k,0);
-        gp(i,dom_lo.y-1,k,1) = gp(i,dom_lo.y,k,1);
-        gp(i,dom_lo.y-1,k,2) = gp(i,dom_lo.y,k,2);
+        gp(i,dom_lo[1]-1,k,0) = gp(i,dom_lo[1],k,0);
+        gp(i,dom_lo[1]-1,k,1) = gp(i,dom_lo[1],k,1);
+        gp(i,dom_lo[1]-1,k,2) = gp(i,dom_lo[1],k,2);
       }
-      else if(bct_jlo(i,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
       {
-        gp(i,dom_lo.y-1,k,0) = 0;
-        gp(i,dom_lo.y-1,k,1) = gp(i,dom_lo.y,k,1);
-        gp(i,dom_lo.y-1,k,2) = 0;
+        gp(i,dom_lo[1]-1,k,0) = 0;
+        gp(i,dom_lo[1]-1,k,1) = gp(i,dom_lo[1],k,1);
+        gp(i,dom_lo[1]-1,k,2) = 0;
       }
     });
   }
 
-  if(bx_hi[1] >= dom_hi.y+1)
+  if(bx_hi[1] >= dom_hi[1]+1)
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xz, i, j, k,
     {
-      if((bct_jhi(i,k,0) == bc_list.pinf) or (bct_jhi(i,k,0) == bc_list.pout))
+      const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
+
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
       {
-        gp(i,dom_hi.y+1,k,0) = gp(i,dom_hi.y,k,0);
-        gp(i,dom_hi.y+1,k,1) = gp(i,dom_hi.y,k,1);
-        gp(i,dom_hi.y+1,k,2) = gp(i,dom_hi.y,k,2);
+        gp(i,dom_hi[1]+1,k,0) = gp(i,dom_hi[1],k,0);
+        gp(i,dom_hi[1]+1,k,1) = gp(i,dom_hi[1],k,1);
+        gp(i,dom_hi[1]+1,k,2) = gp(i,dom_hi[1],k,2);
       }
-      else if(bct_jhi(i,k,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
       {
-        gp(i,dom_hi.y+1,k,0) = 0;
-        gp(i,dom_hi.y+1,k,1) = gp(i,dom_hi.y,k,1);
-        gp(i,dom_hi.y+1,k,2) = 0;
+        gp(i,dom_hi[1]+1,k,0) = 0;
+        gp(i,dom_hi[1]+1,k,1) = gp(i,dom_hi[1],k,1);
+        gp(i,dom_hi[1]+1,k,2) = 0;
       }
     });
   }
 
-  if(bx_lo[2] <= dom_lo.z)
+  if(bx_lo[2] <= dom_lo[2])
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xy, i, j, k,
     {
-      if((bct_klo(i,j,0) == bc_list.pinf) or (bct_klo(i,j,0) == bc_list.pout))
+      const int bct = bct_klo(i,j,dom_lo[2]-1,0);
+
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
       {
-        gp(i,j,dom_lo.z-1,0) = gp(i,j,dom_lo.z,0);
-        gp(i,j,dom_lo.z-1,1) = gp(i,j,dom_lo.z,1);
-        gp(i,j,dom_lo.z-1,2) = gp(i,j,dom_lo.z,2);
+        gp(i,j,dom_lo[2]-1,0) = gp(i,j,dom_lo[2],0);
+        gp(i,j,dom_lo[2]-1,1) = gp(i,j,dom_lo[2],1);
+        gp(i,j,dom_lo[2]-1,2) = gp(i,j,dom_lo[2],2);
       }
-      else if(bct_klo(i,j,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
       {
-        gp(i,j,dom_lo.z-1,0) = 0;
-        gp(i,j,dom_lo.z-1,1) = 0;
-        gp(i,j,dom_lo.z-1,2) = gp(i,j,dom_lo.z,2);
+        gp(i,j,dom_lo[2]-1,0) = 0;
+        gp(i,j,dom_lo[2]-1,1) = 0;
+        gp(i,j,dom_lo[2]-1,2) = gp(i,j,dom_lo[2],2);
       }
     });
   }
 
-  if(bx_hi[2] >= dom_hi.z+1)
+  if(bx_hi[2] >= dom_hi[2]+1)
   {
     AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xy, i, j, k,
     {
-      if((bct_khi(i,j,0) == bc_list.pinf) or (bct_khi(i,j,0) == bc_list.pout))
+      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
+
+      if((bct == bc_list.pinf) or (bct == bc_list.pout))
       {
-        gp(i,j,dom_hi.z+1,0) = gp(i,j,dom_hi.z,0);
-        gp(i,j,dom_hi.z+1,1) = gp(i,j,dom_hi.z,1);
-        gp(i,j,dom_hi.z+1,2) = gp(i,j,dom_hi.z,2);
+        gp(i,j,dom_hi[2]+1,0) = gp(i,j,dom_hi[2],0);
+        gp(i,j,dom_hi[2]+1,1) = gp(i,j,dom_hi[2],1);
+        gp(i,j,dom_hi[2]+1,2) = gp(i,j,dom_hi[2],2);
       }
-      else if(bct_khi(i,j,0) == bc_list.minf)
+      else if(bct == bc_list.minf)
       {
-        gp(i,j,dom_hi.z+1,0) = 0;
-        gp(i,j,dom_hi.z+1,1) = 0;
-        gp(i,j,dom_hi.z+1,2) = gp(i,j,dom_hi.z,2);
+        gp(i,j,dom_hi[2]+1,0) = 0;
+        gp(i,j,dom_hi[2]+1,1) = 0;
+        gp(i,j,dom_hi[2]+1,2) = gp(i,j,dom_hi[2],2);
       }
     });
   }

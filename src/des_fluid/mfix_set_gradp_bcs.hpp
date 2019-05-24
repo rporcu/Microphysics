@@ -10,13 +10,13 @@
 
 void 
 set_gradp_bcs (const Box& bx,
-               Array4<Real> const& gp,
-               Array4<int> const& bct_ilo, 
-               Array4<int> const& bct_ihi,
-               Array4<int> const& bct_jlo,
-               Array4<int> const& bct_jhi,
-               Array4<int> const& bct_klo,
-               Array4<int> const& bct_khi,
+               FArrayBox& gp_fab,
+               IArrayBox& bct_ilo_fab, 
+               IArrayBox& bct_ihi_fab,
+               IArrayBox& bct_jlo_fab,
+               IArrayBox& bct_jhi_fab,
+               IArrayBox& bct_klo_fab,
+               IArrayBox& bct_khi_fab,
                Box& domain,
                BcList& bc_list,
                const int* ng);

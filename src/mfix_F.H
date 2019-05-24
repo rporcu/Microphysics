@@ -169,16 +169,6 @@ extern "C"
 
     void mfix_finl_err_msg();
 
-    void set_gradp_bcs (
-             const int* slo, const int* shi,
-             amrex::Real* gp, const int* glo, const int* ghi,
-             const int* bc_ilo, const int* bc_ihi,
-             const int* bc_jlo, const int* bc_jhi,
-             const int* bc_klo, const int* bc_khi,
-             const int* domlo , const int* domhi,
-             const int* ng
-       );
-
     void init_periodic_vortices (
             const int* lo,  const int*  hi,
             amrex::Real* vel,  const int* ulo, const int* uhi,
