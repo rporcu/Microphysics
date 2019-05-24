@@ -45,6 +45,11 @@ namespace DEMParams
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real en_w_input[NMAX];
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real et_w_input[NMAX];
 
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real small_number;
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real large_number;
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real eps;
+    
+    
     void Initialize ();
 
 }

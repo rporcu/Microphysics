@@ -27,11 +27,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 
       SUBROUTINE DES_INIT_NAMELIST
 
-
-      use discretelement, only: des_continuum_coupled
-      use discretelement, only: des_explicitly_coupled
-      use discretelement, only: des_oneway_coupled
-
       use discretelement, only: kn, kn_w
       use discretelement, only: kt_fac, kt_w_fac
 
@@ -51,49 +46,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 !-----------------------------------------------
 
 !-----------------------------------------------
-
-!#####################################################################!
-! DEM/PIC COMMON:      Discrete Element Simulation                    !
-!#####################################################################!
-
-!<keyword category="Discrete Element Simulation" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    To switch between pure granular or coupled simulations of carried
-!    and dispersed phase flows.
-!  </description>
-!  <valid value=".true." note="Performs coupled simulations. "/>
-      des_continuum_coupled = .FALSE.
-!</keyword>
-
-!<keyword category="Discrete Element Simulation" required="false"
-!  dem="true" pic="true">
-!  <description>Run one-way coupled simulations. The fluid does not
-! see the particles in terms of drag force. The effect of particle volume
-! is still felt by the fluid through non-unity voidage values.
-! </description>
-      DES_ONEWAY_COUPLED = .FALSE.
-!</keyword>
-
-!<keyword category="Discrete Element Simulation" required="false" dem="true">
-!  <description>
-!    Enable/Disable explicit coupling of DEM solids and the fluid. This
-!    algorithm is presently limited to hydrodynamic simulations.
-!  </description>
-!  <valid value=".FALSE." note="The fluid and particles calculate
-!    interphase forces at their respective time scales. The fluid phase
-!    calculates the interphase coupling forces once per fluid time step.
-!    Similarly, DEM particles calculate the interface coupling forces at
-!    each solids time-step. The DEM must also bin particles to the fluid
-!    grid and recalculate the fluid volume fraction every time-step."/>
-!  <valid value=".TRUE." note="Interphase forces are calculated during
-!    the fluid time step and stored for each particle. The interphase
-!    forces are then distributed among the solids time-steps. This
-!    approach can substantially reduce the computational overhead for
-!    coupled simulations."/>
-      DES_EXPLICITLY_COUPLED = .FALSE.
-!</keyword>
-
 
 !#####################################################################!
 ! DEM ONLY:            Discrete Element Model                         !

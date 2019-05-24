@@ -1,11 +1,10 @@
-amr.stop_time = 0.05
+amr.stop_time = 0.02
 
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 10 10 10
 
 # Maximum allowable size of each subdomain in the problem domain;
 #    this is used to decompose the domain for parallel calculations.
-#amr.max_grid_size = 1024
 amr.max_grid_size_x = 10
 amr.max_grid_size_y = 10
 amr.max_grid_size_z = 10
@@ -21,8 +20,8 @@ particles.tile_size = 1024 1024 1024
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
 
-amr.plot_int  =   -1
-amr.check_int  = 500
+amr.plot_int    = 500
+amr.check_int   = -1
 amr.plt_regtest = 1
 
 #amr.restart_file = chk00100
@@ -35,7 +34,9 @@ geometry.prob_hi     = 0.0015   0.0015  0.0015   # hi corner of physical domain
 
 mfix.geometry = box
 
-box.Lo = 0.0  0.0  0.0
+box.Lo = 0.0      0.0     0.0
 box.Hi = 0.0015   0.0015  0.0015
 
 box.offset = 1.0e-15
+
+mfix.drag_type = "BVK2"

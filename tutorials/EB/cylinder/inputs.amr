@@ -46,7 +46,7 @@ amr.stop_time = 0.20
 
 mfix.particle_init_type = "Auto"
 
-
+mfix.drag_type = "BVK2"
 
 #_______________________________________________________________________
 # Particle load balancing

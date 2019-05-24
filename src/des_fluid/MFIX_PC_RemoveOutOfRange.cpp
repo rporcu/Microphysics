@@ -98,7 +98,23 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
                                             + phi_fab(i+1, j,   k+1) * wx_hi * wy_lo * wz_hi
                                             + phi_fab(i+1, j+1, k+1) * wx_hi * wy_hi * wz_hi;
 
-                            if (phi_interp < p.rdata(realData::radius)) p.id() = -1;
+                            if (phi_interp < p.rdata(realData::radius))
+                            {
+                                 p.id() = -1;
+                            } 
+#if 0
+                            else {
+                                 std::cout << " 1 "
+                                           << p.pos(0) << " "
+                                           << p.pos(1) << " "
+                                           << p.pos(2) << " "
+                                           << p.rdata(realData::radius)  << " "
+                                           << p.rdata(realData::density) << " "
+                                           << p.rdata(realData::velx)    << " "
+                                           << p.rdata(realData::vely)    << " "
+                                           << p.rdata(realData::velz) << std::endl;
+                            }
+#endif
                         }
                     }
                 }

@@ -29,8 +29,7 @@ mfix::mfix_setup_nodal_solver ()
     LPInfo                       info;
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
     nodal_matrix.reset(new MLNodeLaplacian( geom, grids, dmap, info, 
-                                            GetVecOfConstPtrs(ebfactory), 
-                                            nodal_use_hypre) );
+                                            GetVecOfConstPtrs(ebfactory))); 
 
     nodal_matrix->setGaussSeidel(true);
     nodal_matrix->setHarmonicAverage(false);
@@ -42,7 +41,6 @@ mfix::mfix_setup_nodal_solver ()
     nodal_solver.reset(new MLMG(*nodal_matrix));
 
     nodal_solver->setMaxIter    (nodal_mg_max_iter);
-    nodal_solver->setMaxFmgIter (nodal_mg_max_fmg_iter);
 
     nodal_solver->setVerbose   (nodal_mg_verbose);
     nodal_solver->setCGVerbose (nodal_mg_cg_verbose);

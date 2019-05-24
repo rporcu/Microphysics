@@ -12,16 +12,13 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_get_data( &
-       fluid, dem, steady_state, dt, dt_minC, dt_maxC, tstopC, call_udf, &
-       namelen, mfix_datC) &
-     bind(C, name="mfix_get_data")
+  subroutine mfix_get_data( fluid, dem, call_udf, namelen, mfix_datC) &
+    bind(C, name="mfix_get_data")
 
     use fld_const, only: ro_g0
     use get_data_module, only: get_data
     use param, only: is_undefined
     use run, only: dem_solids, call_usr
-    use run, only: dt_min, dt_max, tstop
 
     use iso_c_binding, only: C_CHAR, c_null_char
 
@@ -29,10 +26,6 @@ contains
 
     integer(c_int), intent(out) :: fluid
     integer(c_int), intent(out) :: dem, call_udf
-    integer(c_int), intent(out) :: steady_state
-    real(rt),   intent(out) :: dt_minC, dt_maxC
-    real(rt),   intent(in ) :: tstopC
-    real(rt),   intent(out) :: dt
 
     integer(c_int), intent(in   ) :: namelen
     character(kind=c_char, len=1), dimension (namelen), intent (in) :: mfix_datC
@@ -50,21 +43,13 @@ contains
     enddo
     ! write(*,*) "Full file name: >"//trim(mfix_dat)//"<"
 
-    call get_data(mfix_dat, dt)
+    call get_data(mfix_dat)
 
-! Flags for fluid setup
+    ! We evolve the fluid if ro_go > 0
     fluid =  merge(1,0,abs(ro_g0) > tiny(0.0d0))
 
     dem      =  merge(1,0,dem_solids)
     call_udf =  merge(1,0,call_usr)
-
-    steady_state = merge(1,0,is_undefined(dt))
-
-    dt_minC  = dt_min
-    dt_maxC  = dt_max
-
-    ! We now set tstop in the Fortran from the C++
-    tstop    = tstopC
 
   end subroutine mfix_get_data
 

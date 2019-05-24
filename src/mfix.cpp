@@ -1,5 +1,3 @@
-#include <AMReX_ParmParse.H>
-
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
 #include <mfix.H>
@@ -11,7 +9,8 @@ std::string mfix::particle_init_type   = "AsciiFile";
 std::string mfix::load_balance_type    = "FixedSize";
 std::string mfix::knapsack_weight_type = "RunTimeCosts";
 int         mfix::load_balance_fluid   = 1;
-int         mfix::knapsack_nmax        = std::numeric_limits<int>::max();
+int         mfix::knapsack_nmax        = 128;
+DragType    mfix::m_drag_type          = DragType::Invalid;
 
 // Define unit vectors for easily convert indices
 amrex::IntVect mfix::e_x(1,0,0);
@@ -24,6 +23,8 @@ EBSupport mfix::m_eb_support_level = EBSupport::full;
 
 Real mfix::gravity[3] {0.0};
 Real mfix::gp0[3]     {0.0};
+
+BcList mfix::bc_list = BcList();
 
 mfix::~mfix ()
 {
@@ -74,10 +75,6 @@ mfix::mfix ()
 
     bcs_ls.resize(1);
 
-    // // periodic boundaries
-    // int bc_lo[] = {BCType::int_dir, BCType::int_dir, BCType::int_dir};
-    // int bc_hi[] = {BCType::int_dir, BCType::int_dir, BCType::int_dir};
-
     // walls (Neumann)
     int bc_lo[] = {FOEXTRAP, FOEXTRAP, FOEXTRAP};
     int bc_hi[] = {FOEXTRAP, FOEXTRAP, FOEXTRAP};
@@ -110,10 +107,6 @@ mfix::ResizeArrays ()
 {
     int nlevs_max = maxLevel() + 1;
 
-    // EB levels used to construct each level's EB factory
-    eb_levels.resize(nlevs_max);
-    particle_eb_levels.resize(nlevs_max);
-
     ep_g.resize(nlevs_max);
     ep_go.resize(nlevs_max);
 
@@ -129,13 +122,16 @@ mfix::ResizeArrays ()
     diveu.resize(nlevs_max);
 
     // RHS arrays for cell-centered solves
-    rhs_cc.resize(nlevs_max);
+    diff_rhs.resize(nlevs_max);
 
     // Solution array for diffusion solves
-    phi_cc.resize(nlevs_max);
+    diff_phi.resize(nlevs_max);
+
+    // RHS array for MAC projection
+    mac_rhs.resize(nlevs_max);
 
     // Solution array for MAC projection
-    phi_mac.resize(nlevs_max);
+    mac_phi.resize(nlevs_max);
 
     // Current (vel_g) and old (vel_go) velocities
     vel_g.resize(nlevs_max);
@@ -171,7 +167,6 @@ mfix::ResizeArrays ()
     // Fluid grid EB factory
     ebfactory.resize(nlevs_max);
 
-
     /****************************************************************************
      *                                                                          *
      * Initialize particle data (including level-set data)                      *
@@ -186,8 +181,10 @@ mfix::ResizeArrays ()
     // Particle grid EB factory
     particle_ebfactory.resize(nlevs_max);
 
+    eb_levels.resize(std::max(2, nlevs_max));
+    particle_eb_levels.resize(std::max(2, nlevs_max));
+
     level_sets.resize(std::max(2, nlevs_max));
-    implicit_functions.resize(std::max(2, nlevs_max));
 }
 
 void
@@ -242,7 +239,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
        // This call deposits the particle volume onto the grid in a PIC-like manner
        pc->CalcVolumeFraction(ep_g, particle_ebfactory,
                               bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi,
-                              nghost);
+                              bc_list, nghost);
     }
     else
     {

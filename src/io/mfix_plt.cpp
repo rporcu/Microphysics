@@ -1,12 +1,6 @@
-#include <AMReX_MultiFab.H>
 #include <AMReX_PlotFileUtil.H>
-
 #include <AMReX_VisMF.H>    // amrex::VisMF::Write(MultiFab)
 #include <AMReX_VectorIO.H> // amrex::[read,write]IntData(array_of_ints)
-#include <AMReX_AmrCore.H>
-
-#include <AMReX_buildInfo.H>
-
 #include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_ParmParse.H>
 
@@ -38,6 +32,7 @@ mfix::InitIOPltData ()
       pp.query("plt_ro_g",    plt_ro_g   );
       pp.query("plt_mu_g",    plt_mu_g   );
       pp.query("plt_diveu",   plt_diveu  );
+      pp.query("plt_vort",    plt_vort   );
       pp.query("plt_volfrac", plt_volfrac);
       pp.query("plt_gradp_g", plt_gradp_g);
 
@@ -53,6 +48,7 @@ mfix::InitIOPltData ()
         plt_p_g     = 1;
         plt_ro_g    = 1;
         plt_mu_g    = 1;
+        plt_vort    = 1;
         plt_diveu   = 1;
         plt_volfrac = 1;
         plt_gradp_g = 1;
@@ -65,14 +61,13 @@ mfix::InitIOPltData ()
       if( plt_p_g     == 1) pltVarCount += 1;
       if( plt_ro_g    == 1) pltVarCount += 1;
       if( plt_mu_g    == 1) pltVarCount += 1;
+      if( plt_vort    == 1) pltVarCount += 1;
       if( plt_diveu   == 1) pltVarCount += 1;
       if( plt_volfrac == 1) pltVarCount += 1;
-
     }
 
   if(solve_dem)
     {
-
 
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
@@ -346,19 +341,16 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 
     Print() << "  Writing static quantities " << plotfilename << std::endl;
 
-
     /****************************************************************************
      *                                                                          *
      * Static (un-changing variables):                                          *
      *     1. level-set data                                                    *
-     *     2. EB implicit function data                                         *
-     *     3. volfrac (from EB) data                                            *
+     *     2. volfrac (from EB) data                                            *
      *                                                                          *
      ***************************************************************************/
 
-    Vector<std::string> static_names = {"level_sets", "implicit_functions", "volfrac"};
-    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets,
-                                                                       & implicit_functions};
+    Vector<std::string> static_names = {"level_sets", "volfrac"};
+    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets};
 
     const int ngrow = 0;
     const int ncomp = static_names.size();
@@ -383,8 +375,6 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
         {
             const BoxArray nd_ba = amrex::convert(grids[lev], IntVect::TheNodeVector());
             MultiFab mf_loc = MFUtil::regrid(nd_ba, dmap[lev], *(*(static_vars[dcomp]))[lev], true);
-            // amrex::average_node_to_cellcenter (MultiFab &cc, int dcomp, const MultiFab &nd,
-            //                                    int scomp, int ncomp, int ngrow=0)
             amrex::average_node_to_cellcenter(* mf[lev], dcomp, mf_loc, 0, 1, ngrow);
         }
 
@@ -393,8 +383,6 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
                                     m_eb_full_grow_cells}, m_eb_support_level);
 
-            //MultiFab::Copy (MultiFab &dst, const MultiFab &src,
-            //                int srccomp, int dstcomp, int numcomp, const IntVect &nghost)
             MultiFab::Copy(* mf[lev], ebf.getVolFrac(), 0, ncomp - 1, 1, ngrow);
 
         } else {

@@ -24,6 +24,8 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
         // Options to control time stepping
         pp.query("cfl", cfl );
+
+        fixed_dt = -1.;
         pp.query("fixed_dt", fixed_dt );
         pp.query("dt_min", dt_min );
         pp.query("dt_max", dt_max );
@@ -36,22 +38,39 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_cg_verbose"          , nodal_mg_cg_verbose );
         pp.query( "mg_max_iter"            , nodal_mg_max_iter );
         pp.query( "mg_cg_maxiter"          , nodal_mg_cg_maxiter );
-        pp.query( "mg_max_fmg_iter"        , nodal_mg_max_fmg_iter );
         pp.query( "mg_rtol"                , nodal_mg_rtol );
         pp.query( "mg_atol"                , nodal_mg_atol );
         pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
-        pp.query( "mg_use_hypre"           , nodal_use_hypre );
 
-        // Default bottom solver is bicgstab, but alternatives are "smoother" or "hypre"
-        bottom_solver_type = "bicgstab";
-        pp.query( "bottom_solver_type",  bottom_solver_type );
+        // Default bottom solver here is bicgcg, but alternatives are 
+        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
+        nodal_bottom_solver_type = "bicgcg";
+        pp.query( "bottom_solver_type",  nodal_bottom_solver_type );
 
-        // Tolerance to check for steady state (projection only)
+        // Is this a steady-state calcualtion
+        steady_state = 0;
+        pp.query( "steady_state", steady_state );
+
+        // Tolerance to check for steady state 
+        steady_state_tol = -1.;
         pp.query( "steady_state_tol", steady_state_tol );
+
+        // Maximum number of iterations allowed to reach steady state
         pp.query( "steady_state_max_iter", steady_state_max_iter );
 
-        // Should we use explicit vs implicit diffusion
-        pp.query( "explicit_diffusion", explicit_diffusion );
+        if (steady_state > 0)
+        {
+           if (steady_state_tol < 0) 
+              amrex::Abort("Must set steady_state_tol if running to steady state!");
+
+              amrex::Print() << "Running to steady state with max_iters = " << steady_state_max_iter <<
+                             " and tolerance " << steady_state_tol << std::endl;
+
+        } else {
+
+           if (steady_state_tol > 0) 
+              amrex::Abort("steady_state_tol set but not steady_state!");
+        }
 
         pp.query("ooo_debug", ooo_debug);
 
@@ -70,11 +89,17 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("load_balance_fluid", load_balance_fluid);
 
         ParmParse pp_mac("mac");
-        pp.query( "mg_verbose"   , mac_mg_verbose );
-        pp.query( "mg_rtol"      , mac_mg_rtol );
-        pp.query( "mg_atol"      , mac_mg_atol );
-        pp.query( "mg_max_iter"  , mac_mg_max_iter );
-        pp.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
+        pp_mac.query( "mg_verbose"   , mac_mg_verbose );
+        pp_mac.query( "mg_cg_verbose", mac_mg_cg_verbose );
+        pp_mac.query( "mg_rtol"      , mac_mg_rtol );
+        pp_mac.query( "mg_atol"      , mac_mg_atol );
+        pp_mac.query( "mg_max_iter"  , mac_mg_max_iter );
+        pp_mac.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
+
+        // Default bottom solver here is bicgcg, but alternatives are 
+        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
+        mac_bottom_solver_type = "bicgcg";
+        pp_mac.query( "bottom_solver_type", mac_bottom_solver_type );
 
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
                             load_balance_type == "KDTree"    ||
@@ -96,7 +121,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         if (load_balance_type == "KnapSack")
             pp.query("knapsack_nmax", knapsack_nmax);
 
-
         // Parameters used be the level-set algorithm. Refer to LSFactory (or
         // mfix.H) for more details:
         //   -> refinement: how well resolved (fine) the (level-set/EB-facet)
@@ -106,9 +130,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         //                  problem domain the grid extends (avoids edge cases
         //                  in physical domain)
         pp.query("levelset__refinement", levelset__refinement);
-        //pp.query("levelset__eb_refinement", levelset__eb_refinement);
-        //pp.query("levelset__pad", levelset__pad);
-        //pp.query("levelset__eb_pad", levelset__eb_pad);
 
         // Not needed here... the role of refining EB is filled with AMR level-set
         levelset__eb_refinement = 1;
@@ -126,9 +147,14 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 
     {
-        ParmParse pp("diffusion");
-        pp.query( "mg_verbose"   , diff_mg_verbose );
-        pp.query( "mg_cg_verbose", diff_mg_cg_verbose );
+        ParmParse pp_diff("diffusion");
+        pp_diff.query( "mg_verbose"   , diff_mg_verbose );
+        pp_diff.query( "mg_cg_verbose", diff_mg_cg_verbose );
+
+        // Default bottom solver here is bicgcg, but alternatives are 
+        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
+        diff_bottom_solver_type = "bicgcg";
+        pp_diff.query( "bottom_solver_type", diff_bottom_solver_type );
     }
 
     solve_fluid  = solve_fluid_in;
@@ -136,20 +162,52 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     call_udf     = call_udf_in;
 
     if (solve_dem)
-      {
+    {	
         ParmParse pp("particles");
 
         pp.query("max_grid_size_x", particle_max_grid_size_x);
         pp.query("max_grid_size_y", particle_max_grid_size_y);
         pp.query("max_grid_size_z", particle_max_grid_size_z);
 
-
         // Keep particles that are initially touching the wall. Used by DEM tests.
         pp.query("removeOutOfRange", removeOutOfRange );
-
-
     }
 
+    if (solve_dem && !solve_fluid)
+    {	
+        if (fixed_dt < 0)
+            amrex::Abort("If running particle-only must specify fixed_dt in the inputs file");
+    }
+
+    if (solve_dem && solve_fluid)
+    {
+            ParmParse pp("mfix");
+
+            std::string drag_type = "None";
+	    pp.query("drag_type", drag_type);
+
+	    if (drag_type == "WenYu")
+	    {
+		m_drag_type = DragType::WenYu;
+	    }
+	    else if (drag_type == "Gidaspow")
+	    {
+		m_drag_type = DragType::Gidaspow;
+	    }
+	    else if (drag_type == "BVK2")
+	    {
+	        m_drag_type = DragType::BVK2;
+	    }
+		else if (drag_type == "UserDrag")
+	    {
+		m_drag_type = DragType::UserDrag;
+	    }
+	    else 
+	    {
+                amrex::Abort("Don't know this drag_type!");
+	    }
+    }	
+	
     {
       ParmParse amr_pp("amr");
 
@@ -170,6 +228,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 
     get_gravity(gravity);
+    get_bc_list(bc_list);
 }
 
 
@@ -186,7 +245,7 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
 }
 
 
-void mfix::Init(Real dt, Real time)
+void mfix::Init( Real time)
 {
     if (ooo_debug) amrex::Print() << "Init" << std::endl;
     InitIOChkData();
@@ -331,7 +390,7 @@ void mfix::Init(Real dt, Real time)
     if ( ParallelDescriptor::IOProcessor() )
     {
        // Write the initial part of the standard output file
-       write_out0(&time, &dt, &dx, &dy, &dz, &xlen, &ylen, &zlen,
+       write_out0(&time, &dx, &dy, &dz, &xlen, &ylen, &zlen,
                   domain.loVect(), domain.hiVect());
 
        // Write the initial part of the special output file(s)
@@ -502,7 +561,7 @@ void mfix::check_data ()
 }
 
 
-void mfix::InitLevelData(Real dt, Real time)
+void mfix::InitLevelData(Real time)
 {
     if (ooo_debug) amrex::Print() << "InitLevelData" << std::endl;
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
@@ -598,7 +657,7 @@ void mfix::InitLevelData(Real dt, Real time)
 }
 
 void
-mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
+mfix::PostInit(Real& dt, Real time, int nstep, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
     if (solve_dem)
@@ -648,14 +707,13 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
 
         for (int lev = 0; lev < nlev; lev++)
         {
-
             // We need to do this *after* restart (hence putting this here not
             // in Init) because we may want to move from KDTree to Knapsack, or
             // change the particle_max_grid_size on restart.
             if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
                  dual_grid && particle_max_grid_size_x > 0
-                 && particle_max_grid_size_y > 0
-                 && particle_max_grid_size_z > 0)
+                           && particle_max_grid_size_y > 0
+                           && particle_max_grid_size_z > 0)
             {
                 BoxArray particle_ba(geom[lev].Domain());
                 IntVect particle_max_grid_size(particle_max_grid_size_x,
@@ -664,15 +722,27 @@ mfix::PostInit(Real dt, Real time, int nstep, int restart_flag, Real stop_time)
                 particle_ba.maxSize(particle_max_grid_size);
                 DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
                 pc->Regrid(particle_dm, particle_ba);
+
+                particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
+                                                      pc->ParticleDistributionMap(lev), 1, 0));
+                particle_cost[lev]->setVal(0.0);
+
+                // This calls re-creates a proper particle_ebfactories
+                //  and regrids all the multifabs that depend on it
+                if (solve_dem)
+                    RegridLevelSetArray(lev);
+
             }
         }
-
 
         Real avg_dp[10], avg_ro[10];
         pc->GetParticleAvgProp( avg_dp, avg_ro );
         init_collision(avg_dp, avg_ro);
 
         DEMParams::Initialize();
+
+        if (!solve_fluid)
+            dt = fixed_dt;
     }
 
     if (solve_fluid)

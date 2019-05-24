@@ -13,11 +13,6 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  DT =     5.0d-05
-  DT_FAC = 1.0
-
-  DRAG_TYPE = 'WEN_YU'
-
   CALL_USR = .T.
   FULL_LOG = .T.
 

@@ -28,14 +28,6 @@
 ! End Output/debug controls
 !-----------------------------------------------------------------<<<
 
-! DES - Continuum
-      logical :: des_continuum_coupled
-      logical :: des_explicitly_coupled
-
-! With this logic the particles see the fluid but the fluid does
-! not see the particles.
-      logical :: des_oneway_coupled
-
 ! Value of solids time step based on particle properties
       real(rt) :: dtsolid
 

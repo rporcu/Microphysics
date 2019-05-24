@@ -1,5 +1,7 @@
 amr.stop_time = 0.0025
 
+mfix.fixed_dt = 1.e-4
+
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 2 5 5
 
@@ -13,7 +15,7 @@ amr.blocking_factor = 1
 amr.max_level = 0
 
 # Geometry
-geometry.coord_sys   = 0                  # 0: Cartesian   
+geometry.coord_sys   = 0                  # 0: Cartesian
 geometry.is_periodic = 0     1     1      # Is periodic in each direction?
 geometry.prob_lo     = 0.    0.    0.       # lo corner of physical domain
 geometry.prob_hi     = 0.2   0.5   0.5      # hi corner of physical domain
@@ -24,4 +26,7 @@ box.Lo = 0.0  0.0  0.0
 box.Hi = 1.0  1.0  1.0
 
 box.offset = 1.0e-15
+
+amr.par_ascii_int  = 1
+amr.par_ascii_file = DEM05_par
 amr.plt_regtest = 1

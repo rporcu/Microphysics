@@ -1,30 +1,36 @@
 
 amrex.fpe_trap_invalid = 1
 
-#_______________________________________________________________________
+#----------------------------------------------------------------------
 # Solver settings
+#----------------------------------------------------------------------
 
-#amrex.fpe_trap_invalid = 1
+# MAC solver
+mac.mg_verbose     = 0
+mac.mg_cg_verbose  = 0
+
+# Nodal solver
+mfix.mg_verbose    = 1
+mfix.mg_cg_verbose = 0
+
+#----------------------------------------------------------------------
+# Particle initialization
+#----------------------------------------------------------------------
+
 mfix.particle_init_type = "Auto"
 
-#! Fluid solver
-#!-----------------------------------------------------------//
+#----------------------------------------------------------------------
+# Fluid solver
+#----------------------------------------------------------------------
 mfix.fixed_dt = 0
+mfix.cfl      = 0.5
 
-mfix.cfl = 0.5
+mfix.dt_min   = 1.e-7
+mfix.dt_max   = 5.e-5
 
-amr.max_step = 50
+mfix.drag_type = "WenYu"
+
 #amr.stop_time = 0.20
-
-mfix.explicit_diffusion = 0
-
-mac.mg_verbose =  0
-#mac.mg_rtol             = 1.e-10
-#mac.bottom_solver_type  = "bicg"
-
-mfix.mg_verbose         = 0
-#mfix.mg_rtol            = 1.e-10
-#mfix.bottom_solver_type = "bicg"
 
 amr.blocking_factor = 8
 
@@ -44,21 +50,19 @@ geometry.prob_hi     = 3.7584  0.2784  0.2784  # hi corner of physical domain
 #amr.n_cell =  1728 128 128
 amr.n_cell =  432 32 32
 
-
 #! Grids
 #!-----------------------------------------------------------//
 # Maximum allowable size of each fluid subdomain in the problem domain;
 
 # Fluid
-amr.max_grid_size_x = 3232
-amr.max_grid_size_y = 3232
-amr.max_grid_size_z = 3232
+amr.max_grid_size_x = 32
+amr.max_grid_size_y = 32
+amr.max_grid_size_z = 32
 
 # Particles (not with KDTree)
 #particles.max_grid_size_x =   64
 #particles.max_grid_size_y =   64
 #particles.max_grid_size_z =   64
-
 
 #! Tiles
 #!-----------------------------------------------------------//
@@ -76,14 +80,15 @@ particles.tile_size = 1024 1024 1024
 # Level-set refinement and padding
 mfix.levelset__refinement = 2 # levelset resolution
 
-mfix.write_eb_surface = true  # Needed to output eb-surfaces
+mfix.write_eb_surface = false  # Needed to output eb-surfaces
+mfix.write_ls         = false  # Needed to output level set
 
 
 #! EB geometry
 #!-----------------------------------------------------------//
 
 xlo.type = mi
-xlo.velocity = 0.0
+xlo.velocity = 0.01
 
 zhi.type = po
 zhi.pressure = 101325.0

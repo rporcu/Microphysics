@@ -10,7 +10,11 @@ mfix.cfl = 0.5
 
 amr.max_step = 100
 
+mac.mg_verbose   = 0
+mfix.mg_verbose  = 1
+
 mfix.particle_init_type = "Auto"
+mfix.drag_type = "BVK2"
 
 #_______________________________________________________________________
 # Geometry / grids / tiles

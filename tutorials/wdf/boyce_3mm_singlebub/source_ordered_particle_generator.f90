@@ -31,62 +31,75 @@
         INTEGER :: accept, touch, ia
         INTEGER :: i, j, k
         INTEGER :: n, np, np1
-        INTEGER :: ii, jj, kk, mirror_i, mirror_j, mirror_k
+        INTEGER :: ii, jj, kk 
+        INTEGER :: Ni, Nj, Nseed
 !
         DOUBLE PRECISION :: xp, yp, zp
-        DOUBLE PRECISION :: xl, yl, zl
+        DOUBLE PRECISION :: rl, yl, x0l, z0l
         DOUBLE PRECISION :: diameter, radius, density, T_0
         DOUBLE PRECISION :: dia, rad, dist, mean_u, mean_v, mean_w, temp
-        DOUBLE PRECISION :: ru1, ru2, ru3, ru4
+        DOUBLE PRECISION :: dx, dy, dz
+        DOUBLE PRECISION, DIMENSION(4) :: ru 
 !
         DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: x, y, z
         DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: u, v, w
 !
-        OPEN(unit=10, file="Pgen.in", status='old')
+!(hardcoded below)        OPEN(unit=10, file="Pgen.in", status='old')
         OPEN(unit=20, file="particle_input.dat", status='replace')
 !
-        READ (10,*) code
-        READ (10,*) diameter
-        READ (10,*) density
-        READ (10,*) T_0
-        READ (10,*) np
-        READ (10,*) xl
-        READ (10,*) yl
-        READ (10,*) zl
+!       Pgen.in 
+!
+        code     = 1           ! 0 = classic, else exa
+        diameter = 2.93d-3     ! dp
+        density  = 1040.0      ! rho_s
+        T_0      = 1.0d-6      ! T_0
+        np       = 260655      ! Np (serial)
+        rl       = 0.095d0     ! R
+        yl       = 0.3d0       ! Ly
+        x0l      = 0.096d0     ! x0
+        z0l      = 0.096d0     ! z0
 !
         ALLOCATE(x(np),y(np),z(np))
         ALLOCATE(u(np),v(np),w(np))
 !
         radius = 0.5d0*diameter
-        rad = (1.0d0 + 1.0d-2)*radius  ! so that particles don't touch each other to begin with
+        rad = (1.0d0 + 1.0d-3)*radius  ! so that particles don't touch each other to begin with
         dia = 2.0d0*rad
+        ru(:) = 0.0d0
 
         CALL RANDOM_SEED
 
-        DO i = 1, np
- 10       CONTINUE
-          CALL random_particle(radius,xp,yp,zp,xl,yl,zl) 
-          x(i) = xp
-          y(i) = yp
-          z(i) = zp
-          dist = 0.0d0
-          DO j = 1, i-1
-              dist = DSQRT((x(i)-x(j))**2 + (y(i)-y(j))**2 +&
-                           (z(i)-z(j))**2) 
-              IF (dist .LE. dia) GOTO 10 !failed, try again
+!       Calc vec sizes and dels
+        Ni = FLOOR(rl/rad)        
+        Nj = FLOOR(yl/dia)        
+        dx = 2.0d0*rl/DBLE(Ni)
+        dy = yl/DBLE(Nj)
+
+        Nseed = 1
+        DO jj = 1, Nj
+          DO kk = 1, Ni
+            DO ii = 1, Ni
+              IF (Nseed .GT. np) CYCLE     !failed, we already generated all needed particles
+              xp = (DBLE(ii) - 0.5d0)*dx - rl
+              yp = (DBLE(jj) - 0.5d0)*dy + rad !+1rad buffer
+              zp = (DBLE(kk) - 0.5d0)*dx - rl
+              dist = DSQRT((xp**2 + zp**2))/(rl - dia)  !+1rad buffer
+              IF (dist .GE. 1.0d0) CYCLE   !failed, outside cyl radius
+              x(Nseed) = xp
+              y(Nseed) = yp
+              z(Nseed) = zp
+              Nseed = Nseed + 1
+            END DO
           END DO
         END DO
-!
+
 !       generate random particle velocities 
         DO i = 1, np
-          CALL RANDOM_NUMBER(ru1)
-          CALL RANDOM_NUMBER(ru2)
-          CALL RANDOM_NUMBER(ru3)
-          CALL RANDOM_NUMBER(ru4)
+          CALL RANDOM_NUMBER(ru)
 !         random velocities uniform -> standard normal via Box-Muller 
-          u(i) = DSQRT(-2.0d0*DLOG(DBLE(ru1)))*COS(2.0d0*PI*ru2)
-          v(i) = DSQRT(-2.0d0*DLOG(DBLE(ru1)))*SIN(2.0d0*PI*ru2)
-          w(i) = DSQRT(-2.0d0*DLOG(DBLE(ru3)))*COS(2.0d0*PI*ru4)
+          u(i) = DSQRT(-2.0d0*DLOG(DBLE(ru(1))))*COS(2.0d0*PI*ru(2))
+          v(i) = DSQRT(-2.0d0*DLOG(DBLE(ru(1))))*SIN(2.0d0*PI*ru(2))
+          w(i) = DSQRT(-2.0d0*DLOG(DBLE(ru(3))))*COS(2.0d0*PI*ru(4))
         END DO
 
 !       calc the average mean velocity in each direction 
@@ -126,51 +139,15 @@
  13     FORMAT (1(i4,2x),3(e22.14,2x),2(e12.4,2x),3(e22.14,2x))
         DO i = 1, np
           IF (code .EQ. 0) THEN
-            WRITE(20,12) x(i), y(i), z(i), radius, density, u(i), v(i), w(i)
+            WRITE(20,12) x(i) + x0l, y(i), z(i) + z0l, radius, density, u(i), v(i), w(i)
           ELSE
-            WRITE(20,13) 1, x(i), y(i), z(i), radius, density, u(i), v(i), w(i)
+            WRITE(20,13) 1, y(i), x(i) + x0l, z(i) + z0l, radius, density, u(i), v(i), w(i)
           ENDIF
         END DO
+
+        CLOSE(20)
 
         STOP
       END PROGRAM 
 !
-!
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-! Random particle 
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-!
-      SUBROUTINE random_particle(rad, xp1, yp1, zp1, xl1, yl1, zl1)
-!----------------------------------------------------------------------
-! Dummy arguements
-!----------------------------------------------------------------------
-        DOUBLE PRECISION, INTENT(IN)  ::  rad, xl1, yl1, zl1
-        DOUBLE PRECISION, INTENT(OUT) ::  xp1, yp1, zp1
-!----------------------------------------------------------------------
-! Local variables
-!----------------------------------------------------------------------
-        INTEGER ::  i, Nfail
-        DOUBLE PRECISION ::  rad1 
-        DOUBLE PRECISION ::  pxy(3)
-
-        Nfail = 100000
-        DO i = 1, Nfail
-          call random_number(pxy)
-          xp1 = dble(pxy(1))*xl1  
-          yp1 = dble(pxy(2))*yl1
-          zp1 = dble(pxy(3))*zl1
-          rad1 = (1.0d0 + 1.0d-2)*rad
-          IF((xp1.GE.rad1).AND.(xp1.LE.xl1-rad1).AND.(yp1.GE.rad1)&
-                .AND.(yp1.LE.yl1-rad1).AND.(zp1.GE.rad1)&
-                .AND.(zp1.LE.zl1-rad1)) EXIT
-        END DO
-
-        IF(i .GT. Nfail) THEN
-          WRITE(*,*) 'error in subroutine random_particle'
-          WRITE(*,*) 'not able to place particle, i>Nfail'
-          STOP
-        ENDIF
-           
-        RETURN
-      END SUBROUTINE random_particle
 !

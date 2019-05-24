@@ -15,7 +15,7 @@ extern "C"
 #endif
     void mfix_add_argument(char* fname, int* nlen);
 
-    void write_out0(amrex::Real* time, amrex::Real* dt,
+    void write_out0(amrex::Real* time, 
              amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
              amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
              const int* domlo, const int* domhi);
@@ -28,10 +28,9 @@ extern "C"
 
     void mfix_get_data(
              int* fluid, int* dem,
-             int* steady_state, amrex::Real* dt, amrex::Real* dt_min, amrex::Real* dt_max,
-             amrex::Real* tstop, int* call_udf, int* name_len, const char *cmfix_dat);
+             int* call_udf, int* name_len, const char *cmfix_dat);
 
-    void check_inputs(amrex::Real* dt);
+    void check_inputs();
 
     void mfix_set_cyclic(int* cyc_x, int* cyc_y, int* cyc_z);
 

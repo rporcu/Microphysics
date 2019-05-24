@@ -38,3 +38,5 @@ box.Lo = 0.0  0.0  0.0
 box.Hi = 0.0240   0.0015  0.0240
 
 box.offset = 1.0e-15
+
+mfix.drag_type = "BVK2"

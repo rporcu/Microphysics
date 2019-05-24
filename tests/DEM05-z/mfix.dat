@@ -19,8 +19,6 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  DT = 1.0d-4
-
   CALL_USR = .T.
 
   FULL_LOG = .T.  ! display residuals on screen

@@ -5,12 +5,12 @@
 
 amr.stop_time = 0.35
 
-mfix.fixed_dt=1
+mfix.fixed_dt = 1.e-3
+
+mfix.drag_type = "UserDrag"
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-
-mfix.explicit_diffusion = 0
 
 amr.blocking_factor = 5
 

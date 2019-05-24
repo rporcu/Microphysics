@@ -19,7 +19,6 @@ contains
 !---------------------------------------------------------------------//
 ! Runtime flag specifying DEM solids
     use discretelement, only: mew, mew_w
-    use drag, only: drag_type, drag_type_enum, invalid_drag
     use discretelement, only: particle_types
 
     use param, only: dim_m
@@ -39,11 +38,6 @@ contains
     call init_err_msg("CHECK_SOLIDS_PHASES")
 
     if(particle_types > 0) then
-
-       if(drag_type_enum == invalid_drag) then
-          write(err_msg, 1001) 'DRAG_TYPE', trim(adjustl(drag_type))
-          call flush_err_msg(abort=.true.)
-       endif
 
        if(is_undefined(mew)) then
           write(err_msg,1000) 'MEW'

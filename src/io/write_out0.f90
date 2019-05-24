@@ -6,21 +6,21 @@
 !  Purpose: Echo user input.                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine write_out0(time, dt, dx, dy, dz, xlength, ylength, zlength, domlo, domhi) &
+      subroutine write_out0(time, dx, dy, dz, xlength, ylength, zlength, domlo, domhi) &
          bind(C, name="write_out0")
 
       use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
       use constant, only: gravity
-      use discretelement, only: des_continuum_coupled, kn, kt, kn_w, kt_w
+      use discretelement, only: kn, kt, kn_w, kt_w
       use discretelement, only: des_etan, des_etat, des_etat_wall, des_etan_wall
       use fld_const, only: mw_avg, mu_g0, ro_g0
 
       use param, only: dim_ic, dim_bc
       use param, only: half, undefined, zero, is_defined
       use constant, only: mmax
-      use run, only: description, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, tstop
+      use run, only: description, call_usr, dem_solids, run_name
       use scales, only: p_scale, p_ref
 
       use ic, only: write_out_ic
@@ -29,7 +29,7 @@
       implicit none
 
       integer(c_int), intent(in   ) :: domlo(3), domhi(3)
-      real(rt)  , intent(in   ) :: time, dt, dx, dy, dz
+      real(rt)  , intent(in   ) :: time, dx, dy, dz
       real(rt)  , intent(in   ) :: xlength, ylength, zlength
 
       integer :: M, N
@@ -57,11 +57,7 @@
       write (unit_out, 1100)
       write (unit_out, 1110) RUN_NAME
       write (unit_out, 1120) DESCRIPTION
-      IF (IS_DEFINED(DT)) THEN
-         write (unit_out, 1135) time, tstop, dt, dt_max, dt_min, dt_fac
-      ELSE
-         write (unit_out, 1136)
-      ENDIF
+      write (unit_out, 1135) time
 
       write (unit_out, 1140) 'X', ' '
       write (unit_out, 1140) 'Y', ' '
@@ -123,18 +119,6 @@
       IF(MMAX_TOT > 0) THEN
 
          IF(DEM_SOLIDS) THEN
-            IF(.NOT.DES_CONTINUUM_COUPLED) THEN
-               write(unit_out,"(/7X,'Gas/Solids NOT coupled.')")
-            ELSE
-               write(unit_out,"(/7X,'Gas/Solids Coupling Information:')")
-               write(unit_out,1440) 'cell averaging'
-            ENDIF
-
- 1440 FORMAT(10X,'Use ',A,' to calculate gas/particle drag.')
-
-         ENDIF
-
-         IF(DEM_SOLIDS) THEN
 
  1450 FORMAT(/7X,'Use ',A,' collsion model.',2/10X,&
          'Spring Coefficients:',T37,'Normal',7x,'Tangential')
@@ -194,10 +178,7 @@
  1100 FORMAT(//,3X,'1. RUN CONTROL',/)
  1110 FORMAT(7X,'Run name(RUN_NAME): ',A60)
  1120 FORMAT(7X,'Brief description of the run (DESCRIPTION) :',/9X,A60)
- 1135 FORMAT(7X,'Start-time (TIME) = ',G12.5,/7X,'Stop_time (TSTOP) = ',G12.5,/7X&
-         ,'Time step (DT) = ',G12.5,/7X,'Max time step (DT_MAX) = ',G12.5,/7X&
-         ,'Min time step (DT_MIN) = ',G12.5,/7X,&
-         'Time step adjustment factor (DT_FAC) = ',G12.5)
+ 1135 FORMAT(7X,'Start-time (TIME) = ',G12.5,/7X)
  1136 FORMAT(7X,'* Steady state simulation.')
  1140 FORMAT(/7X,'* Gas momentum equation-',A,' is',A,'solved.')
  1149 FORMAT(/7X,'* User-defined subroutines are',A,'called.')

@@ -12,14 +12,8 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  DT     = 1.00E-04
-  DT_MIN = 1.00E-09
-  DT_MAX = 1.00E-04
-
   FULL_LOG = .T.
   CALL_USR = .F.
-
-  DRAG_TYPE = 'GIDASPOW_BLEND'
 
   GRAVITY(1) = -9.80665E+00
   GRAVITY(2) = 0.0d0

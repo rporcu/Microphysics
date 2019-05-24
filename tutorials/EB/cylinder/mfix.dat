@@ -13,11 +13,6 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  DT =     1.0d-04
-  DT_FAC = 1.0
-
-  DRAG_TYPE = 'KOCH_HILL'
-
   CALL_USR = .T.
   FULL_LOG = .T.
 

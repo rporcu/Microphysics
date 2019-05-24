@@ -66,6 +66,12 @@ mfix::mfix_compute_vort ()
        {
           // Tilebox
           Box bx = mfi.tilebox ();
+          const Real* dx = geom[lev].CellSize();
+
+          Array4<Real> const& vorticity = vort[lev]->array(mfi);
+          Array4<Real> const& velocity_g = vel_g[lev]->array(mfi);
+
+          const Real odx(1./dx[0]), ody(1./dx[1]), odz(1./dx[2]);
 
           // This is to check efficiently if this tile contains any eb stuff
           const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
@@ -73,11 +79,19 @@ mfix::mfix_compute_vort ()
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
           {
-            compute_vort (
-                        BL_TO_FORTRAN_BOX(bx),
-                        BL_TO_FORTRAN_ANYD((* vort[lev])[mfi]),
-                        BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                        geom[lev].CellSize());
+            AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
+            {
+              Real uy = .5*ody*(velocity_g(i,j+1,k,0) - velocity_g(i,j-1,k,0));
+              Real uz = .5*odz*(velocity_g(i,j,k+1,0) - velocity_g(i,j,k-1,0));
+              Real vx = .5*odx*(velocity_g(i+1,j,k,1) - velocity_g(i-1,j,k,1));
+              Real vz = .5*odz*(velocity_g(i,j,k+1,1) - velocity_g(i,j,k-1,1));
+              Real wx = .5*odx*(velocity_g(i+1,j,k,2) - velocity_g(i-1,j,k,2));
+              Real wy = .5*ody*(velocity_g(i,j+1,k,2) - velocity_g(i,j-1,k,2));
+
+              vorticity(i,j,k) = std::sqrt((wy-vz)*(wy-vz) +
+                                           (uz-wx)*(uz-wx) +
+                                           (vx-uy)*(vx-uy));
+            });
           } else {
              vort[lev]->setVal( 0.0, bx, 0, 1);
           }

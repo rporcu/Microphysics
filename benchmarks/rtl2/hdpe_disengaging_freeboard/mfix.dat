@@ -13,11 +13,6 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  DT =     1.0d-04
-  DT_FAC = 1.0
-
-  DRAG_TYPE = 'GIDASPOW_BLEND'
-
   CALL_USR = .T.
   FULL_LOG = .T.
 

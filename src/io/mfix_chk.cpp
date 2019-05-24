@@ -9,6 +9,8 @@
 
 #include <AMReX_EBMultiFabUtil.H>
 
+#include <AMReX_Geometry.H>
+
 #include <mfix.H>
 #include <mfix_F.H>
 
@@ -30,8 +32,8 @@ mfix::InitIOChkData ()
     // to plotfile/checkfile.
     vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
-    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets", "implicit_functions"};
-    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &ep_g,  &mu_g,  &level_sets,  &implicit_functions};
+    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets"};
+    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &ep_g,  &mu_g,  &level_sets};
 }
 
 
@@ -70,13 +72,15 @@ mfix::WriteCheckHeader(const std::string& name, int nstep, Real dt, Real time) c
       HeaderFile << dt << "\n";
       HeaderFile << time << "\n";
 
+      Geometry geometry;
+
       // Geometry
       for (int i = 0; i < BL_SPACEDIM; ++i)
-            HeaderFile << Geometry::ProbLo(i) << ' ';
+            HeaderFile << geometry.ProbLo(i) << ' ';
       HeaderFile << '\n';
 
       for (int i = 0; i < BL_SPACEDIM; ++i)
-         HeaderFile << Geometry::ProbHi(i) << ' ';
+         HeaderFile << geometry.ProbHi(i) << ' ';
       HeaderFile << '\n';
 
       // BoxArray
@@ -122,9 +126,10 @@ mfix::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time
 
           // Write scalar variables
           for (int i = 0; i < chkscalarVars.size(); i++ ) {
-              VisMF::Write( *((*chkscalarVars[i])[lev]),
-                amrex::MultiFabFileFullPrefix(lev, checkpointname,
-                      level_prefix, chkscaVarsName[i]));
+              if ( solve_dem || (chkscaVarsName[i] != "level_sets"))
+                 VisMF::Write( *((*chkscalarVars[i])[lev]),
+                   amrex::MultiFabFileFullPrefix(lev, checkpointname,
+                         level_prefix, chkscaVarsName[i]));
           }
        }
     }

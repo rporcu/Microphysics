@@ -38,3 +38,5 @@ ylo.velocity =  0.015
 
 yhi.type = "po"
 yhi.pressure = 0.0
+
+mfix.drag_type = "BVK2"

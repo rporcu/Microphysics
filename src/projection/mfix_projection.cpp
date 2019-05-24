@@ -161,6 +161,31 @@ mfix::mfix_solve_poisson_equation ( Vector< std::unique_ptr<MultiFab> >& this_ph
     for (int lev = 0; lev < nlev; lev++)
        nodal_matrix->setSigma(lev, *b[lev]);
 
+    if (nodal_bottom_solver_type == "smoother")
+    {
+       nodal_solver->setBottomSolver(MLMG::BottomSolver::smoother);
+    }
+    else if (nodal_bottom_solver_type == "bicg")
+    {
+       nodal_solver->setBottomSolver(MLMG::BottomSolver::bicgstab);
+    }
+    else if (nodal_bottom_solver_type == "cg")
+    {
+       nodal_solver->setBottomSolver(MLMG::BottomSolver::cg);
+    }
+    else if (nodal_bottom_solver_type == "bicgcg")
+    {
+       nodal_solver->setBottomSolver(MLMG::BottomSolver::bicgcg);
+    }
+    else if (nodal_bottom_solver_type == "cgbicg")
+    {
+       nodal_solver->setBottomSolver(MLMG::BottomSolver::cgbicg);
+    }
+    else if (nodal_bottom_solver_type == "hypre")
+    {
+       nodal_solver->setBottomSolver(MLMG::BottomSolver::hypre);
+    }
+
     //
     // Solve div( eps_g/rho * grad(phi) ) = div(eps_g*u)
     //

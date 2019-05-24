@@ -6,6 +6,8 @@
 #include <AMReX_VisMF.H>
 #include <AMReX_iMultiFab.H>
 
+#include <AMReX_buildInfo.H>
+
 #include <mfix.H>
 #include <mfix_F.H>
 
@@ -13,7 +15,6 @@ int   max_step    = -1;
 int   regrid_int  = -1;
 Real stop_time    = -1.0;
 
-bool write_user   = false;
 bool write_eb_surface = false;
 bool write_ls         = false;
 
@@ -30,7 +31,7 @@ std::string check_file {"chk"};
 int   plot_int = -1;
 int   last_plt = -1;
 std::string plot_file {"plt"};
-std::string static_plt_file {"const_plt"};
+std::string static_plt_file {"plt_ls"};
 
 bool plotfile_on_restart = false;
 
@@ -69,17 +70,20 @@ void ReadParameters ()
      pp.query("par_ascii_int", par_ascii_int);
 
      pp.query("restart", restart_file);
+
      pp.query("repl_x", repl_x);
      pp.query("repl_y", repl_y);
      pp.query("repl_z", repl_z);
      pp.query("regrid_int",regrid_int);
+
+     if ( regrid_int == 0 )
+       amrex::Abort("regrid_int must be > 0 or < 0");
   }
 
   {
      ParmParse pp("mfix");
 
      pp.query("input_deck", mfix_dat);
-     pp.query("write_user", write_user);
      pp.query("write_eb_surface", write_eb_surface);
      pp.query("write_ls", write_ls);
   }
@@ -99,6 +103,10 @@ int main (int argc, char* argv[])
 
     BL_PROFILE_VAR("main()", pmain)
     BL_PROFILE_REGION_START("mfix::main()");
+
+    // Write out the MFIX git hash (the AMReX git hash is already written)
+    const char* githash_mfix = buildInfoGetGitHash(1);
+    amrex::Print() << "MFiX git hash: " << githash_mfix<< "\n";
 
     amrex::Cuda::setLaunchRegion(false);
 
@@ -123,11 +131,11 @@ int main (int argc, char* argv[])
 
     int solve_fluid;
     int solve_dem;
-    int steady_state;
     int call_udf;
-    Real dt, dt_min, dt_max;
     Real time=0.0L;
     int nstep = 0;  // Current time step
+
+    Real dt = -1.;
 
     const char *cmfix_dat = mfix_dat.c_str();
     int name_len=mfix_dat.length();
@@ -137,10 +145,7 @@ int main (int argc, char* argv[])
     //     mfix_get_data -> get_data -> read_namelist
     //                                        |
     //      (loads `mfix.dat`) ---------------+
-    mfix_get_data( &solve_fluid, &solve_dem, &steady_state,
-                   &dt, &dt_min, &dt_max,
-                   &stop_time, &call_udf, &name_len, cmfix_dat
-                  );
+    mfix_get_data( &solve_fluid, &solve_dem, &call_udf, &name_len, cmfix_dat);
 
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
     //                                                             |
@@ -150,9 +155,7 @@ int main (int argc, char* argv[])
     my_mfix.get_input_bcs();
 
     if ( ParallelDescriptor::IOProcessor() )
-      check_inputs(&dt);
-
-    my_mfix.SetParameters(steady_state);
+      check_inputs();
 
     // Set global static pointer to mfix object. Used by fill-patch utility
     set_ptr_to_mfix(my_mfix);
@@ -168,7 +171,7 @@ int main (int argc, char* argv[])
     my_mfix.make_eb_geometry();
 
     // Initialize derived internals
-    my_mfix.Init(dt, time);
+    my_mfix.Init(time);
 
     // Create EB factories on new grids
     my_mfix.make_eb_factories();
@@ -187,7 +190,7 @@ int main (int argc, char* argv[])
     int restart_flag = 0;
     if (restart_file.empty())
     {
-        my_mfix.InitLevelData(dt,time);
+        my_mfix.InitLevelData(time);
     }
     else
     {
@@ -215,7 +218,6 @@ int main (int argc, char* argv[])
         my_mfix.WriteStaticPlotFile(static_plt_file);
 
     my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time);
-
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
@@ -260,8 +262,7 @@ int main (int argc, char* argv[])
         last_avg = nstep;
       }
 
-
-    bool do_not_evolve =  !steady_state && ( (max_step == 0) ||
+    bool do_not_evolve = !my_mfix.IsSteadyState() && ( (max_step == 0) ||
                      ( (stop_time >= 0.) && (time >  stop_time) ) ||
                      ( (stop_time <= 0.) && (max_step <= 0) ) );
 
@@ -278,7 +279,7 @@ int main (int argc, char* argv[])
 
                 Real strt_step = ParallelDescriptor::second();
 
-                if (!steady_state && regrid_int > -1 && nstep%regrid_int == 0)
+                if (!my_mfix.IsSteadyState() && regrid_int > -1 && nstep%regrid_int == 0)
                 {
                    amrex::Print() << "Regridding at step " << nstep << std::endl;
                    my_mfix.Regrid();
@@ -291,7 +292,7 @@ int main (int argc, char* argv[])
                 if (ParallelDescriptor::IOProcessor())
                     std::cout << "Time per step        " << end_step << std::endl;
 
-                if (!steady_state)
+                if (!my_mfix.IsSteadyState())
                 {
                     time += prev_dt;
                     nstep++;
@@ -326,7 +327,7 @@ int main (int argc, char* argv[])
                 }
 
                 // Mechanism to terminate MFIX normally.
-                do_not_evolve =  steady_state || (
+                do_not_evolve =  my_mfix.IsSteadyState() || (
                      ( (stop_time >= 0.) && (time+0.1*dt >= stop_time) ) ||
                      ( max_step >= 0 && nstep >= max_step ) );
                 if ( do_not_evolve ) finish = 1;
@@ -334,7 +335,7 @@ int main (int argc, char* argv[])
         }
     }
 
-    if (steady_state)
+    if (my_mfix.IsSteadyState())
         nstep = 1;
 
     // Dump plotfile at the final time

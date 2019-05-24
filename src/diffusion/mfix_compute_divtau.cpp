@@ -1,5 +1,3 @@
-#include <AMReX_ParmParse.H>
-
 #include <mfix_diff_F.H>
 #include <mfix.H>
 #include <AMReX_BC_TYPES.H>
@@ -12,7 +10,8 @@
 void
 mfix::mfix_compute_divtau ( int lev,
                             MultiFab& divtau,
-                            Vector< std::unique_ptr<MultiFab> >& vel)
+                            Vector< std::unique_ptr<MultiFab> >& vel,
+                            int explicit_diffusion)
 {
    BL_PROFILE("mfix::mfix_compute_divtau");
    Box domain(geom[lev].Domain());
@@ -33,8 +32,8 @@ mfix::mfix_compute_divtau ( int lev,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-   for (MFIter mfi(*vel[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-
+   for (MFIter mfi(*vel[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) 
+   {
       // Tilebox
       Box bx = mfi.tilebox ();
 
@@ -89,5 +88,11 @@ mfix::mfix_compute_divtau ( int lev,
 
          }
       }
+   }
+   // Divide by (ro_g ep_g)
+   for (int n = 0; n < 3; n++) 
+   {
+       MultiFab::Divide( divtau, *ep_g[lev], 0, n, 1, 0 );
+       MultiFab::Divide( divtau, *ro_g[lev], 0, n, 1, 0 );
    }
 }

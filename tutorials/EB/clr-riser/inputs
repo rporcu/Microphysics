@@ -1,5 +1,8 @@
 amr.stop_time = 30.0
 
+mfix.dt_min = 1.e-7
+mfix.dt_max = 5.e-5
+
 # Geometry
 geometry.coord_sys   = 0                  # 0: Cartesian
 geometry.is_periodic = 0      0     0     # Is periodic in each direction?
@@ -72,3 +75,5 @@ mfix.riser_c2c_height     =   0.01905
 
 mfix.riser_upper_radius   =   0.00794
 mfix.riser_upper_height   =   1.00000
+
+mfix.drag_type = "WenYu"

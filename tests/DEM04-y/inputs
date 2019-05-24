@@ -1,5 +1,7 @@
 amr.stop_time = 0.02
 
+mfix.fixed_dt = 4.e-4
+
 particles.removeOutOfRange = 0
 
 # Number of grid cells in each direction at the coarsest level
