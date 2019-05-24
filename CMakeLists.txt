@@ -7,7 +7,6 @@ project(MFIX-Exa
    LANGUAGES  C CXX Fortran
    )
 
-
 # Set the search path for cmake modules
 set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake )
 
@@ -55,55 +54,61 @@ if (AMReX_FOUND)
    endif ()
    
 else ()
-
+ 
    message(STATUS "No AMReX installation found: cloning AMReX repo")
-   
-   set(AMREX_GIT_REPO "https://github.com/AMReX-Codes/amrex.git" )
-   set(AMREX_GIT_COMMIT_MASTER   4eb4e7a25050ca83f02e551fcb9b8a591834395 )
-   set(AMREX_GIT_COMMIT_DEVELOP 6452b0c189128831deb0886765de8405b874e194 )
 
-   # Amrex as sub-project
-   include(FetchContent)
+   if (NOT EXISTS  "${PROJECT_SOURCE_DIR}/.git")
+      message(FATAL_ERROR
+         "${PROJECT_SOURCE_DIR} is not a Git repo: missing .git")
+   endif ()
+
+   find_package(Git REQUIRED)
+
+   set(AMREX_SRC_DIR "${PROJECT_SOURCE_DIR}/subprojects/amrex" CACHE INTERNAL "Path to AMReX source (submodule)")
+
+   if (NOT EXISTS "${AMREX_SRC_DIR}/.git")
+      message(STATUS "Initializing git submodule for AMReX")
+
+      execute_process(
+         COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+         RESULT_VARIABLE GIT_SUBMOD_RESULT
+         )
+      
+      if ( NOT GIT_SUBMOD_RESULT EQUAL "0")
+         message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+      endif()
+
+      unset(GIT_SUBMOD_RESULT)
+      
+   endif ()  
 
    set(ENABLE_TUTORIALS OFF)
    set(ENABLE_PARTICLES ON)
    set(ENABLE_EB ON)
    set(ENABLE_3D_NODAL_MLMG ON)
    set(ENABLE_AMRDATA ON)
-   
-   FetchContent_Declare(
-      amrex
-      GIT_REPOSITORY         ${AMREX_GIT_REPO}
-      GIT_TAG                58d8b8e255b0e60b771e03e522ef2f0c69a11cdd     
-      )
 
-   if (NOT amrex_POPULATED)
-      FetchContent_Populate(amrex)
-      message(STATUS "Done cloning AMReX")
-      
-      list(APPEND CMAKE_MODULE_PATH ${amrex_SOURCE_DIR}/Tools/CMake)
+   list(APPEND CMAKE_MODULE_PATH ${AMREX_SRC_DIR}/Tools/CMake)
 
-      # If CUDA is required, enable the language BEFORE adding the AMReX directory
-      # Since AMReX_SetupCUDA has an include guard, it will be included only once here.
-      # The reason for enabling CUDA before adding the AMReX subdirectory is that
-      # the top-most directory needs to setup the CUDA language before a CUDA-enabled target
-      # from a sub-project is included via add_subdirectory.
-      # IMPORTANT: if you don't do this, AMReX will perform this step in a sub-scope and therefore
-      # it will not setup CUDA here!
-      if(ENABLE_CUDA)
-         include(AMReX_SetupCUDA)
-      endif ()
-      
-      add_subdirectory(${amrex_SOURCE_DIR} ${amrex_BINARY_DIR})
-      
-      get_directory_property(amrex_targets DIRECTORY ${amrex_SOURCE_DIR}/Src BUILDSYSTEM_TARGETS)
-
-      foreach (_target IN LISTS amrex_targets )
-         add_library(AMReX::${_target} ALIAS ${_target})
-      endforeach ()
-      
+   # If CUDA is required, enable the language BEFORE adding the AMReX directory
+   # Since AMReX_SetupCUDA has an include guard, it will be included only once here.
+   # The reason for enabling CUDA before adding the AMReX subdirectory is that
+   # the top-most directory needs to setup the CUDA language before a CUDA-enabled target
+   # from a sub-project is included via add_subdirectory.
+   # IMPORTANT: if you don't do this, AMReX will perform this step in a sub-scope and therefore
+   # it will not setup CUDA here!
+   if(ENABLE_CUDA)
+      include(AMReX_SetupCUDA)
    endif ()
    
+   add_subdirectory(${AMREX_SRC_DIR})
+   
+   get_directory_property(amrex_targets DIRECTORY ${AMREX_SRC_DIR}/Src BUILDSYSTEM_TARGETS)
+
+   foreach (_target IN LISTS amrex_targets )
+      add_library(AMReX::${_target} ALIAS ${_target})
+   endforeach ()  
   
 endif ()
 
@@ -115,8 +120,6 @@ set_default_config_flags ()
 # Set some cache variable for the whole project
 set ( MFIX_LIBNAME "mfixcore" CACHE INTERNAL "Name of MFIX core library")
 set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
-
-
 
 set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
