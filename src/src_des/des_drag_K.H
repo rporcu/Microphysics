@@ -103,7 +103,7 @@ struct ComputeDragGidaspow
 	amrex::Real WenYu = 0.75*C_d*vrel*ROPg*std::pow(EPg, -2.65) / DPM;
 
 	// switch function
-	amrex::Real PHI_gs = std::atan(150.0*1.75*(EPg - 0.8))/M_PI / DPM;
+	amrex::Real PHI_gs = std::atan(150.0*1.75*(EPg - 0.8))/M_PI + 0.5;
 
 	// blend the models
 	if (RE < DEMParams::eps) return 0.0;
