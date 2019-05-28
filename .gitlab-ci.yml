@@ -30,9 +30,8 @@ variables:
             -B build
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
-            -DSUBMOD=1
     - make -C build mfix -j2
-    - cd build/mfix
+    - cd build
     - make build_tests -j2
     - $CTEST_CMD
   tags:
@@ -42,7 +41,7 @@ variables:
     expire_in: 1 week
     when: on_failure
     paths:
-      - build/mfix/Testing/
+      - build/Testing/
   retry: 2
 
 single-grid-serial:
