@@ -219,30 +219,32 @@ public:
 
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
 
-	static DragType m_drag_type;
+    static DragType m_drag_type;
 
-	template <typename F>
-	void mfix_calc_particle_beta(F DragFunc, Real time);
+    static amrex::Real tcoll_ratio; // input parameter defaulted to 50 used in file src_des/init_collision.f90
 
-     void mfix_compute_ugradu( Box& bx,
-                               Vector< std::unique_ptr<MultiFab> >& conv,
-                               Vector< std::unique_ptr<MultiFab> >& vel,
-                               MFIter* mfi,
-                               Box& domain,
-                               const int lev);
+    template <typename F>
+    void mfix_calc_particle_beta(F DragFunc, Real time);
 
-     void mfix_compute_ugradu_eb( Box& bx,
-                                  Vector< std::unique_ptr<MultiFab> >& conv,
-                                  Vector< std::unique_ptr<MultiFab> >& vel,
-                                  MFIter* mfi,
-                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
-                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
-                                  const amrex::MultiFab* volfrac,
-                                  const amrex::MultiCutFab* bndrycent,
-                                  Box& domain,
-                                  const EBCellFlagFab& flags,
-                                  const int lev);
-	
+    void mfix_compute_ugradu( Box& bx,
+                              Vector< std::unique_ptr<MultiFab> >& conv,
+                              Vector< std::unique_ptr<MultiFab> >& vel,
+                              MFIter* mfi,
+                              Box& domain,
+                              const int lev);
+
+    void mfix_compute_ugradu_eb( Box& bx,
+                                 Vector< std::unique_ptr<MultiFab> >& conv,
+                                 Vector< std::unique_ptr<MultiFab> >& vel,
+                                 MFIter* mfi,
+                                 Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
+                                 Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
+                                 const amrex::MultiFab* volfrac,
+                                 const amrex::MultiCutFab* bndrycent,
+                                 Box& domain,
+                                 const EBCellFlagFab& flags,
+                                 const int lev);
+
 protected:
 
      //! Tagging cells for refinement

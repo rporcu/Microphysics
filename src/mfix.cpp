@@ -11,6 +11,7 @@ std::string mfix::knapsack_weight_type = "RunTimeCosts";
 int         mfix::load_balance_fluid   = 1;
 int         mfix::knapsack_nmax        = 128;
 DragType    mfix::m_drag_type          = DragType::Invalid;
+amrex::Real mfix::tcoll_ratio          = 50.;
 
 // Define unit vectors for easily convert indices
 amrex::IntVect mfix::e_x(1,0,0);
