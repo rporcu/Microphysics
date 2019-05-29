@@ -175,8 +175,8 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
     if (solve_dem && !solve_fluid)
     {	
-        if (fixed_dt < 0)
-            amrex::Abort("If running particle-only must specify fixed_dt in the inputs file");
+        if (fixed_dt <= 0.0)
+            amrex::Abort("If running particle-only must specify a positive fixed_dt in the inputs file");
     }
 
     if (solve_dem && solve_fluid)
