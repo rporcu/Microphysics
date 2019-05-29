@@ -69,12 +69,12 @@ module param
          is_defined_i = (x /= undefined_i)
       end function is_defined_i
 
-      pure logical function is_undefined_db(x)
+      pure logical function is_undefined_db(x) bind(C)
          real(rt), intent(in) :: x
          is_undefined_db = equal(x, undefined)
       end function is_undefined_db
 
-      pure logical function is_undefined_i(x)
+      pure logical function is_undefined_i(x) bind(C)
          integer, intent(in) :: x
          is_undefined_i = (x == undefined_i)
       end function is_undefined_i

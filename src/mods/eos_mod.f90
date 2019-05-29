@@ -77,7 +77,7 @@ contains
 !        Phil. Mag. 5:507-531, 1893.                                   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  real(rt) function sutherland(tg)
+  real(rt) function sutherland(tg) bind(C)
 
    implicit none
 

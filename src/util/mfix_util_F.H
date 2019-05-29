@@ -17,16 +17,6 @@ extern "C"
 {
 #endif
 
-  void set_scalar_bcs (
-      amrex::Real* ep_g, const int* slo, const int* shi,
-      amrex::Real* ro_g, 
-      amrex::Real* mu_g,
-      const int* bc_ilo, const int* bc_ihi,
-      const int* bc_jlo, const int* bc_jhi,
-      const int* bc_klo, const int* bc_khi,
-      const int* domlo , const int* domhi,
-      const int* nghost);
-
   void set_velocity_bcs (
       amrex::Real* time,
       amrex::Real* vel_g, const int* ulo, const int* uhi,

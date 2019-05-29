@@ -82,9 +82,11 @@ module bc
 contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-! Subroutines: get_bc_u_g, get_bc_v_g, get_bc_w_g                      !
+! Subroutines: get_bc_u_g, get_bc_v_g, get_bc_w_g, get_bc_t_g          !
+!              get_bc_ep_g                                             !
 !                                                                      !
 ! Purpose: Getters for the boundary conditions values                  !
+!                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
   real(rt) function get_bc_u_g(pID) bind(C)
     integer(c_int), intent(in) :: pID
@@ -103,6 +105,18 @@ contains
     get_bc_w_g = bc_w_g(pID)
     return
   end function get_bc_w_g
+
+  real(rt) function get_bc_t_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_t_g = bc_t_g(pID)
+    return
+  end function get_bc_t_g
+
+  real(rt) function get_bc_ep_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_ep_g = bc_u_g(pID)
+    return
+  end function get_bc_ep_g
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

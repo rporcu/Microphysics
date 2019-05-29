@@ -1,6 +1,7 @@
 #include <mfix.H>
 #include <mfix_F.H>
 #include <mfix_util_F.H>
+#include <mfix_set_scalar_bcs.hpp>
 #include <AMReX_FillPatchUtil.H>
 #include <AMReX_EBMultiFabUtil.H>
 
@@ -184,15 +185,11 @@ mfix::mfix_set_scalar_bcs ()
 #endif
      for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
      {
-        set_scalar_bcs ( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-                        (*ro_g[lev])[mfi].dataPtr (),
-                        (*mu_g[lev])[mfi].dataPtr (),
-                        bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                        bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                        bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                        domain.loVect(), domain.hiVect(),
-                        &nghost );
-      }
+       set_scalar_bcs(bc_list, (*ep_g[lev])[mfi], (*ro_g[lev])[mfi],
+                      (*mu_g[lev])[mfi], *bc_ilo[lev], *bc_ihi[lev],
+                      *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev],
+                      domain, &nghost);
+     }
         ep_g[lev] -> FillBoundary (geom[lev].periodicity());
         ro_g[lev] -> FillBoundary (geom[lev].periodicity());
         mu_g[lev] -> FillBoundary (geom[lev].periodicity());
