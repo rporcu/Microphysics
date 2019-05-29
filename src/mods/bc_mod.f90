@@ -114,7 +114,7 @@ contains
 
   real(rt) function get_bc_ep_g(pID) bind(C)
     integer(c_int), intent(in) :: pID
-    get_bc_ep_g = bc_u_g(pID)
+    get_bc_ep_g = bc_ep_g(pID)
     return
   end function get_bc_ep_g
 
