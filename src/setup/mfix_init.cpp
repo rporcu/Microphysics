@@ -63,8 +63,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
            if (steady_state_tol < 0) 
               amrex::Abort("Must set steady_state_tol if running to steady state!");
 
-              amrex::Print() << "Running to steady state with max_iters = " << steady_state_max_iter <<
-                             " and tolerance " << steady_state_tol << std::endl;
+              amrex::Print() << "Running to steady state with max_iters = " 
+                             << steady_state_max_iter << " and tolerance " 
+                             << steady_state_tol << std::endl;
 
         } else {
 
@@ -87,6 +88,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("load_balance_type", load_balance_type);
         pp.query("knapsack_weight_type", knapsack_weight_type);
         pp.query("load_balance_fluid", load_balance_fluid);
+
+        // The default value for the rescaling ratio of the collision time is 50
+        pp.query("tcoll_ratio", tcoll_ratio);
 
         ParmParse pp_mac("mac");
         pp_mac.query( "mg_verbose"   , mac_mg_verbose );
@@ -162,7 +166,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     call_udf     = call_udf_in;
 
     if (solve_dem)
-    {	
+    {
         ParmParse pp("particles");
 
         pp.query("max_grid_size_x", particle_max_grid_size_x);
@@ -174,40 +178,40 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 
     if (solve_dem && !solve_fluid)
-    {	
-        if (fixed_dt < 0)
-            amrex::Abort("If running particle-only must specify fixed_dt in the inputs file");
+    {
+        if (fixed_dt <= 0.0)
+            amrex::Abort("If running particle-only must specify a positive fixed_dt in the inputs file");
     }
 
     if (solve_dem && solve_fluid)
     {
-            ParmParse pp("mfix");
+      ParmParse pp("mfix");
 
-            std::string drag_type = "None";
-	    pp.query("drag_type", drag_type);
-
-	    if (drag_type == "WenYu")
-	    {
-		m_drag_type = DragType::WenYu;
-	    }
-	    else if (drag_type == "Gidaspow")
-	    {
-		m_drag_type = DragType::Gidaspow;
-	    }
-	    else if (drag_type == "BVK2")
-	    {
-	        m_drag_type = DragType::BVK2;
-	    }
-		else if (drag_type == "UserDrag")
-	    {
-		m_drag_type = DragType::UserDrag;
-	    }
-	    else 
-	    {
-                amrex::Abort("Don't know this drag_type!");
-	    }
-    }	
-	
+      std::string drag_type = "None";
+      pp.query("drag_type", drag_type);
+  
+      if (drag_type == "WenYu")
+      {
+        m_drag_type = DragType::WenYu;
+      }
+      else if (drag_type == "Gidaspow")
+      {
+        m_drag_type = DragType::Gidaspow;
+      }
+      else if (drag_type == "BVK2")
+      {
+        m_drag_type = DragType::BVK2;
+      }
+      else if (drag_type == "UserDrag")
+      {
+        m_drag_type = DragType::UserDrag;
+      }
+      else 
+      {
+        amrex::Abort("Don't know this drag_type!");
+      }
+    }
+  
     {
       ParmParse amr_pp("amr");
 

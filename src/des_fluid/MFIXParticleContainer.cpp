@@ -961,10 +961,8 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
             }
 
 #ifdef _OPENMP
-            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
-                                        BL_TO_FORTRAN_3D(fab), ncomp);
+            fab.atomicAdd(local_vol, tile_box, tile_box, 0, 0, ncomp);
 #endif
-
         }
        }
 
@@ -1333,8 +1331,7 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
             }
 
 #ifdef _OPENMP
-            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
-                                        BL_TO_FORTRAN_3D(drag_fab), drag_fab.nComp());
+            drag_fab.atomicAdd(local_vol, grown_tilebox, grown_tilebox, 0, 0, drag_fab.nComp());
 #endif
 
          }

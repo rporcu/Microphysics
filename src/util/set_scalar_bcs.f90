@@ -247,7 +247,7 @@ subroutine set_scalar_bcs ( ep_g, slo, shi, ro_g, mu_g,&
                   bc_mu_g     = mu_g0
                endif
 
-                   ep_g(i,j,domhi(3)+1) = 2.0_ar*bc_ep_g(bcv) - ep_g(i,j,domhi(3)+1)
+                   ep_g(i,j,domhi(3)+1) = 2.0_ar*bc_ep_g(bcv) - ep_g(i,j,domhi(3))
                    ro_g(i,j,domhi(3)+1:shi(3)) = bc_ro_g
                    mu_g(i,j,domhi(3)+1:shi(3)) = bc_mu_g
 

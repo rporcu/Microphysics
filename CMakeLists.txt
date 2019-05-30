@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.14)
 
 project(MFIX-Exa
    # VERSION <version>
-   DESCRIPTION "A multiphase modeling tool for the exascale"
+   DESCRIPTION  "A multiphase modeling tool for the exascale"
    HOMEPAGE_URL "https://amrex-codes.github.io/MFIX-Exa/"
-   LANGUAGES  C CXX Fortran
+   LANGUAGES    C CXX Fortran
    )
 
 # Set the search path for cmake modules
@@ -19,7 +19,7 @@ if (AMReX_FOUND)
 
    message(STATUS "AMReX found: configuration file located at ${AMReX_DIR}")
    
-   # Load required modules
+   # Load required options
    include( MFIX_Options )
 
    echo_amrex_config_options ()
@@ -45,9 +45,15 @@ if (AMReX_FOUND)
       message(FATAL_ERROR "Option ENABLE_CUDA requires AMReX to be built with CUDA support")
    endif ()
 
+   #
+   # Should we check this???
+   # 
    if ( NOT ( "${CMAKE_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
       message (WARNING "MFIX build type (${CMAKE_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
    endif ()
+   #
+   #
+   #
 
    if (ENABLE_CUDA)
       setup_cuda()
