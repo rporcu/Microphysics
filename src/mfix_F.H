@@ -123,15 +123,6 @@ extern "C"
              const int* ng
        );
 
-    void set_vec_bcs (
-             amrex::Real* vec, const int* ulo, const int* uhi,
-             const int* bc_ilo, const int* bc_ihi,
-             const int* bc_jlo, const int* bc_jhi,
-             const int* bc_klo, const int* bc_khi,
-             const int* domlo , const int* domhi,
-             const int* ng
-       );
-
     void mfix_cap_eps(const int* slo, const int* shi, amrex::Real* ep_g);
 
     void zero_wall_norm_vel(

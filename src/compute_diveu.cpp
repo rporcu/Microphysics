@@ -1,6 +1,8 @@
 #include <mfix_F.H>
 #include <mfix_proj_F.H>
 #include <mfix.H>
+#include <mfix_set_velocity_bcs.hpp>
+
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_VisMF.H>
 #include <AMReX_MultiFab.H>
@@ -52,12 +54,9 @@ mfix::mfix_compute_diveu (Real time)
       //  the product ep_g * vel_g
       for (MFIter mfi((*epu[lev]), TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
-          set_vec_bcs ( BL_TO_FORTRAN_ANYD((*epu[lev])[mfi]),
-                        bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                        bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                        bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                        domain.loVect(), domain.hiVect(),
-                        &nghost);
+          set_vec_bcs(bc_list, (*epu[lev])[mfi], *bc_ilo[lev], *bc_ihi[lev],
+                      *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev],
+                      domain, &nghost);
         }
 
       epu[lev]->FillBoundary (geom[lev].periodicity());

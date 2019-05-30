@@ -8,6 +8,8 @@ target_sources( mfixcore
    divop_mod.f90
    mfix_divop.cpp
    set_velocity_bcs.f90
+   mfix_set_velocity_bcs.hpp
+   mfix_set_velocity_bcs.cpp
    mfix_set_scalar_bcs.hpp
    mfix_set_scalar_bcs.cpp
    mfix_util_F.H
