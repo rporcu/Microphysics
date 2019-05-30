@@ -741,7 +741,7 @@ mfix::PostInit(Real& dt, Real time, int nstep, int restart_flag, Real stop_time)
 
         Real avg_dp[10], avg_ro[10];
         pc->GetParticleAvgProp( avg_dp, avg_ro );
-        init_collision(avg_dp, avg_ro);
+        init_collision(avg_dp, avg_ro, tcoll_ratio);
 
         DEMParams::Initialize();
 

@@ -141,7 +141,8 @@ extern "C"
              const int* ng
         );
 
-    void init_collision(amrex::Real *sum_dp, amrex::Real *sum_roi
+    void init_collision(amrex::Real *sum_dp, amrex::Real *sum_roi,
+                        const amrex::Real& tcoll_ratio
         );
 
     void fill_bc0(

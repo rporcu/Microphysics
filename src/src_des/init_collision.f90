@@ -4,7 +4,7 @@
 !  Purpose: DES - allocating DES arrays                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine init_collision(d_p_in, ro_s_in)&
+subroutine init_collision(d_p_in, ro_s_in, tcoll_ratio)&
      bind(C, name="init_collision")
 
   use amrex_fort_module, only : rt => amrex_real
@@ -15,6 +15,7 @@ subroutine init_collision(d_p_in, ro_s_in)&
   implicit none
 
   real(rt), intent(in) :: d_p_in(dim_m), ro_s_in(dim_m)
+  real(rt), intent(in) :: tcoll_ratio
   real(rt)             :: d_p0(dim_m),   ro_s0(dim_m)
 
   integer :: ptype
@@ -121,7 +122,7 @@ contains
   enddo
 
   ! Store the smalled calculated collision time scale.
-  dtsolid = tcoll/50.d0
+  dtsolid = tcoll/tcoll_ratio
 
   end subroutine init_collision_lsd
 
