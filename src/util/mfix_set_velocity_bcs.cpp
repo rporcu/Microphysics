@@ -335,7 +335,10 @@ set_vec_bcs(const BcList& bc_list,
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(dom_lo[0],j,k,n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
+      {
+        const int n_comp = n+1;
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+      }
     });
   }
 
@@ -349,7 +352,10 @@ set_vec_bcs(const BcList& bc_list,
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(dom_hi[0],j,k,n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
+      {
+        const int n_comp = n+1;
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+      }
     });
   }
 
@@ -363,7 +369,10 @@ set_vec_bcs(const BcList& bc_list,
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(i,dom_lo[1],k,n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
+      {
+        const int n_comp = n+1;
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+      }
     });
   }
 
@@ -377,7 +386,10 @@ set_vec_bcs(const BcList& bc_list,
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(i,dom_hi[1],k,n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
+      {
+        const int n_comp = n+1;
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+      }
     });
   }
 
@@ -391,7 +403,10 @@ set_vec_bcs(const BcList& bc_list,
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(i,j,dom_lo[2],n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
+      {
+        const int n_comp = n+1;
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+      }
     });
   }
 
@@ -405,7 +420,10 @@ set_vec_bcs(const BcList& bc_list,
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(i,j,dom_hi[2],n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
+      {
+        const int n_comp = n+1;
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+      }
     });
   }
 }
