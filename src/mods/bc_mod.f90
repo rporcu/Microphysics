@@ -36,6 +36,9 @@ module bc
   real(rt) :: BC_U_g(dim_bc), BC_U_s(dim_bc, dim_m)
   real(rt) :: BC_V_g(dim_bc), BC_V_s(dim_bc, dim_m)
   real(rt) :: BC_W_g(dim_bc), BC_W_s(dim_bc, dim_m)
+  
+  ! Array containing BC_U_g, BC_V_g, BC_W_g
+  real(rt) :: BC_Vel_g(dim_bc,3)
 
   ! Volumetric flow rate through a mass inflow boundary
   real(rt) :: BC_VolFlow_g(dim_bc), BC_VolFlow_s(dim_bc, dim_m)
@@ -105,6 +108,12 @@ contains
     get_bc_w_g = bc_w_g(pID)
     return
   end function get_bc_w_g
+
+  real(rt) function get_bc_vel_g(n,pID) bind(C)
+    integer(c_int), intent(in) :: n,pID
+    get_bc_vel_g = bc_vel_g(n,pID)
+    return
+  end function get_bc_vel_g
 
   real(rt) function get_bc_t_g(pID) bind(C)
     integer(c_int), intent(in) :: pID

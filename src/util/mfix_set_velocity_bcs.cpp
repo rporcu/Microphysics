@@ -332,15 +332,10 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      Real bc_vec_g[3]; 
-      bc_vec_g[0] = get_bc_u_g(bcv);
-      bc_vec_g[1] = get_bc_v_g(bcv);
-      bc_vec_g[2] = get_bc_w_g(bcv);
-
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(dom_lo[0],j,k,n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * bc_vec_g[n];
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
     });
   }
 
@@ -351,15 +346,10 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      Real bc_vec_g[3]; 
-      bc_vec_g[0] = get_bc_u_g(bcv);
-      bc_vec_g[1] = get_bc_v_g(bcv);
-      bc_vec_g[2] = get_bc_w_g(bcv);
-
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(dom_hi[0],j,k,n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * bc_vec_g[n];
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
     });
   }
 
@@ -370,15 +360,10 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      Real bc_vec_g[3]; 
-      bc_vec_g[0] = get_bc_u_g(bcv);
-      bc_vec_g[1] = get_bc_v_g(bcv);
-      bc_vec_g[2] = get_bc_w_g(bcv);
-
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(i,dom_lo[1],k,n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * bc_vec_g[n];
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
     });
   }
 
@@ -389,15 +374,10 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      Real bc_vec_g[3]; 
-      bc_vec_g[0] = get_bc_u_g(bcv);
-      bc_vec_g[1] = get_bc_v_g(bcv);
-      bc_vec_g[2] = get_bc_w_g(bcv);
-
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(i,dom_hi[1],k,n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * bc_vec_g[n];
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
     });
   }
 
@@ -408,15 +388,10 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      Real bc_vec_g[3]; 
-      bc_vec_g[0] = get_bc_u_g(bcv);
-      bc_vec_g[1] = get_bc_v_g(bcv);
-      bc_vec_g[2] = get_bc_w_g(bcv);
-
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(i,j,dom_lo[2],n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * bc_vec_g[n];
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
     });
   }
 
@@ -427,15 +402,10 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      Real bc_vec_g[3]; 
-      bc_vec_g[0] = get_bc_u_g(bcv);
-      bc_vec_g[1] = get_bc_v_g(bcv);
-      bc_vec_g[2] = get_bc_w_g(bcv);
-
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vec(i,j,k,n) = vec(i,j,dom_hi[2],n);
       else if(bct == bc_list.minf)
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * bc_vec_g[n];
+        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n);
     });
   }
 }

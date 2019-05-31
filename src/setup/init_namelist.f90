@@ -520,6 +520,13 @@ MODULE INIT_NAMELIST_MODULE
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
+!  <description>XYZ-components of gas velocity at the BC plane.</description>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
+!  <arg index="2" id="Component" min="1" max="3"/>
+      BC_VEL_G(:,:) = ZERO
+!</keyword>
+
+!<keyword category="Boundary Condition" required="false">
 !  <description>Gas volumetric flow rate through the boundary.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
       BC_VOLFLOW_G(:) = UNDEFINED
