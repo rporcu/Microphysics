@@ -128,9 +128,11 @@ mfix::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
 {
     BL_PROFILE("mfix::WriteParticleASCII()");
 
-    const std::string& par_filename = amrex::Concatenate(par_ascii_file,nstep);
+    if(solve_dem) {
 
-    pc -> WriteAsciiFile(par_filename);
+        const std::string& par_filename = amrex::Concatenate(par_ascii_file,nstep);
+        pc -> WriteAsciiFile(par_filename);
+    }
 }
 
 
@@ -142,18 +144,20 @@ mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
   for (int lev = 0; lev < nlev; lev++)
     {
 
-      ComputeAverageFluidVars( lev,
-                               time,
-                               avg_file,
-                               avg_p_g,
-                               avg_ep_g,
-                               avg_vel_g,
-                               avg_region_x_w, avg_region_x_e,
-                               avg_region_y_s, avg_region_y_n,
-                               avg_region_z_b, avg_region_z_t );
-
+      if (solve_fluid) {
+        ComputeAverageFluidVars( lev,
+                                 time,
+                                 avg_file,
+                                 avg_p_g,
+                                 avg_ep_g,
+                                 avg_vel_g,
+                                 avg_region_x_w, avg_region_x_e,
+                                 avg_region_y_s, avg_region_y_n,
+                                 avg_region_z_b, avg_region_z_t );
+      }
 
       //  Compute Eulerian velocities in selected regions
+      if(solve_dem) {
         pc -> ComputeAverageVelocities ( lev,
                                          time,
                                          avg_file,
@@ -161,7 +165,7 @@ mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
                                          avg_region_x_w, avg_region_x_e,
                                          avg_region_y_s, avg_region_y_n,
                                          avg_region_z_b, avg_region_z_t );
-
+      }
     }
 
 }
