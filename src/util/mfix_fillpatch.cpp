@@ -1,6 +1,7 @@
 #include <mfix.H>
 #include <mfix_F.H>
 #include <mfix_util_F.H>
+#include <mfix_set_velocity_bcs.hpp>
 #include <mfix_set_scalar_bcs.hpp>
 #include <AMReX_FillPatchUtil.H>
 #include <AMReX_EBMultiFabUtil.H>
@@ -52,12 +53,12 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
     // We only do this to make it not const
     Real time = time_in;
 
-    const int* bc_ilo_ptr = mfix_for_fillpatching->get_bc_ilo_ptr(lev);
-    const int* bc_ihi_ptr = mfix_for_fillpatching->get_bc_ihi_ptr(lev);
-    const int* bc_jlo_ptr = mfix_for_fillpatching->get_bc_jlo_ptr(lev);
-    const int* bc_jhi_ptr = mfix_for_fillpatching->get_bc_jhi_ptr(lev);
-    const int* bc_klo_ptr = mfix_for_fillpatching->get_bc_klo_ptr(lev);
-    const int* bc_khi_ptr = mfix_for_fillpatching->get_bc_khi_ptr(lev);
+    const IArrayBox& bc_ilo = mfix_for_fillpatching->get_bc_ilo(lev);
+    const IArrayBox& bc_ihi = mfix_for_fillpatching->get_bc_ihi(lev);
+    const IArrayBox& bc_jlo = mfix_for_fillpatching->get_bc_jlo(lev);
+    const IArrayBox& bc_jhi = mfix_for_fillpatching->get_bc_jhi(lev);
+    const IArrayBox& bc_klo = mfix_for_fillpatching->get_bc_klo(lev);
+    const IArrayBox& bc_khi = mfix_for_fillpatching->get_bc_khi(lev);
 
     int nghost = mfix_for_fillpatching->get_nghost();
 
@@ -74,13 +75,9 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
     }
 
 #else
-    set_velocity_bcs ( &time,
-                       BL_TO_FORTRAN_ANYD(dest),
-                       bc_ilo_ptr, bc_ihi_ptr,
-                       bc_jlo_ptr, bc_jhi_ptr,
-                       bc_klo_ptr, bc_khi_ptr,
-                       domain.loVect(), domain.hiVect(),
-                       &nghost, &extrap_dir_bcs );
+    set_velocity_bcs(&time, mfix_for_fillpatching->get_bc_list_values(), dest,
+                     bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi,
+                     domain, &nghost, &extrap_dir_bcs);
 #endif
 }
 
@@ -185,11 +182,12 @@ mfix::mfix_set_scalar_bcs ()
 #endif
      for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
      {
-       set_scalar_bcs(bc_list, (*ep_g[lev])[mfi], (*ro_g[lev])[mfi],
-                      (*mu_g[lev])[mfi], *bc_ilo[lev], *bc_ihi[lev],
-                      *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev],
-                      domain, &nghost);
-     }
+        set_scalar_bcs(bc_list,
+                       (*ep_g[lev])[mfi], (*ro_g[lev])[mfi], (*mu_g[lev])[mfi],
+                       *bc_ilo[lev], *bc_ihi[lev], *bc_jlo[lev], *bc_jhi[lev],
+                       *bc_klo[lev], *bc_khi[lev],
+                       domain, &nghost);
+      }
         ep_g[lev] -> FillBoundary (geom[lev].periodicity());
         ro_g[lev] -> FillBoundary (geom[lev].periodicity());
         mu_g[lev] -> FillBoundary (geom[lev].periodicity());
@@ -221,13 +219,11 @@ mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
 #endif
      for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi)
      {
-        set_velocity_bcs ( &time,
-                           BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                           bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                           bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                           bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                           domain.loVect(), domain.hiVect(),
-                           &nghost, &extrap_dir_bcs );
+        set_velocity_bcs(&time, bc_list, (*vel_g[lev])[mfi],
+                         *bc_ilo[lev], *bc_ihi[lev],
+                         *bc_jlo[lev], *bc_jhi[lev],
+                         *bc_klo[lev], *bc_khi[lev],
+                         domain, &nghost, &extrap_dir_bcs);
      }
 
      EB_set_covered(*vel_g[lev], 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow(), covered_val);

@@ -210,7 +210,16 @@ public:
     const int * get_bc_klo_ptr(int lev) {return bc_klo[lev]->dataPtr();}
     const int * get_bc_khi_ptr(int lev) {return bc_khi[lev]->dataPtr();}
 
+    const IArrayBox& get_bc_ilo(int lev) {return *bc_ilo[lev];}
+    const IArrayBox& get_bc_ihi(int lev) {return *bc_ihi[lev];}
+    const IArrayBox& get_bc_jlo(int lev) {return *bc_jlo[lev];}
+    const IArrayBox& get_bc_jhi(int lev) {return *bc_jhi[lev];}
+    const IArrayBox& get_bc_klo(int lev) {return *bc_klo[lev];}
+    const IArrayBox& get_bc_khi(int lev) {return *bc_khi[lev];}
+
     int get_nghost() { return nghost; }
+
+    const BcList& get_bc_list_values() {return bc_list;}
 
     void mfix_add_drag_terms(Real dt);
 
