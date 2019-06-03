@@ -4,30 +4,43 @@
 !  Purpose: DES - allocating DES arrays                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine init_collision(d_p_in, ro_s_in, tcoll_ratio)&
+subroutine init_collision(min_dp_in, min_ro_in, &
+     &                    max_dp_in, max_ro_in, &
+     &                    avg_dp_in, avg_ro_in, &
+     &                    tcoll_ratio)    &
      bind(C, name="init_collision")
 
   use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding,     only: c_int
   use param,             only: zero, dim_m
   use constant,          only: mmax
+  use discretelement,    only: dp_max, dp_min, dp_avg
+  use discretelement,    only: ro_max, ro_min, ro_avg
 
   implicit none
 
-  real(rt), intent(in) :: d_p_in(dim_m), ro_s_in(dim_m)
+  real(rt), intent(in) :: min_dp_in(dim_m), min_ro_in(dim_m)
+  real(rt), intent(in) :: max_dp_in(dim_m), max_ro_in(dim_m)
+  real(rt), intent(in) :: avg_dp_in(dim_m), avg_ro_in(dim_m)
   real(rt), intent(in) :: tcoll_ratio
+
   real(rt)             :: d_p0(dim_m),   ro_s0(dim_m)
 
   integer :: ptype
 
-   d_p0 =  d_p_in
-  ro_s0 = ro_s_in
-
   ! Work around for cases that have no particles.
   do ptype =1, mmax
 
-     if( d_p_in(ptype) == zero)  d_p0(ptype) =  100.0d-6
-     if(ro_s_in(ptype) == zero) ro_s0(ptype) = 1000.0d0
+     d_p0(ptype)  = merge( min_dp_in(ptype),  100.0d-6, min_dp_in(ptype) > zero)
+     ro_s0(ptype) = merge( max_ro_in(ptype), 1000.0d+0, max_ro_in(ptype) > zero)
+
+     dp_max(ptype) = max_dp_in(ptype)
+     dp_min(ptype) = min_dp_in(ptype)
+     dp_avg(ptype) = avg_dp_in(ptype)
+
+     ro_max(ptype) = max_ro_in(ptype)
+     ro_min(ptype) = min_ro_in(ptype)
+     ro_avg(ptype) = avg_ro_in(ptype)
 
   enddo
 
@@ -98,8 +111,9 @@ contains
 
         ! Calculate the collision time scale.
         tcoll_tmp = M_PI/sqrt(kn/mass_eff -                          &
-          ((des_etan(m,l)/mass_eff)**2)/4.d0)
+             ((des_etan(m,l)/mass_eff)**2)/4.d0)
         tcoll = min(tcoll_tmp, tcoll)
+
      end do
 
      ! Particle-Wall Collision Parameters

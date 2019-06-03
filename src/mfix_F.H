@@ -15,7 +15,7 @@ extern "C"
 #endif
     void mfix_add_argument(char* fname, int* nlen);
 
-    void write_out0(amrex::Real* time, 
+    void write_out0(amrex::Real* time,
              amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
              amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
              const int* domlo, const int* domhi);
@@ -141,7 +141,9 @@ extern "C"
              const int* ng
         );
 
-    void init_collision(amrex::Real *sum_dp, amrex::Real *sum_roi,
+    void init_collision(amrex::Real *min_dp, amrex::Real *min_roi,
+                        amrex::Real *max_dp, amrex::Real *max_roi,
+                        amrex::Real *sum_dp, amrex::Real *sum_roi,
                         const amrex::Real& tcoll_ratio
         );
 

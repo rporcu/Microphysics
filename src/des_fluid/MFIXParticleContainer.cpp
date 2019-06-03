@@ -193,7 +193,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
             has_wall = (int_has_wall > 0);
         }
-        
+
         tile_has_walls[index] = has_wall;
 
         BL_PROFILE_VAR_STOP(has_wall);
@@ -221,6 +221,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             Redistribute(0, 0, 0, 1);
             fillNeighbors();
             // send in "false" for sort_neighbor_list option
+
             buildNeighborList(MFIXCheckPair(), false);
         } else {
             updateNeighbors();
@@ -571,32 +572,32 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 p.pos(1) += subdt * p.rdata(realData::vely);
                 p.pos(2) += subdt * p.rdata(realData::velz);
 
-                if (x_lo_bc && p.pos(0) < p_lo[0]) 
+                if (x_lo_bc && p.pos(0) < p_lo[0])
                 {
                     p.pos(0) = p_lo[0] + eps;
                     p.rdata(realData::velx) = -p.rdata(realData::velx);
                 }
-                if (x_hi_bc && p.pos(0) > p_hi[0]) 
+                if (x_hi_bc && p.pos(0) > p_hi[0])
                 {
                    p.pos(0) = p_hi[0] - eps;
                    p.rdata(realData::velx) = -p.rdata(realData::velx);
                 }
-                if (y_lo_bc && p.pos(1) < p_lo[1]) 
+                if (y_lo_bc && p.pos(1) < p_lo[1])
                 {
                     p.pos(1) = p_lo[1] + eps;
                     p.rdata(realData::vely) = -p.rdata(realData::vely);
                 }
-                if (y_hi_bc && p.pos(1) > p_hi[1]) 
+                if (y_hi_bc && p.pos(1) > p_hi[1])
                 {
                    p.pos(1) = p_hi[1] - eps;
                    p.rdata(realData::vely) = -p.rdata(realData::vely);
                 }
-                if (z_lo_bc && p.pos(2) < p_lo[2]) 
+                if (z_lo_bc && p.pos(2) < p_lo[2])
                 {
                    p.pos(2) = p_lo[2] + eps;
                    p.rdata(realData::velz) = -p.rdata(realData::velz);
                 }
-                if (z_hi_bc && p.pos(2) > p_hi[2]) 
+                if (z_hi_bc && p.pos(2) > p_hi[2])
                 {
                    p.pos(2) = p_hi[2] - eps;
                    p.rdata(realData::velz) = -p.rdata(realData::velz);
@@ -980,17 +981,17 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
          const amrex::Dim3& dom_hi = amrex::ubound(domain);
 
          // Create a 2D Box collapsing sbx on x-direction
-         IntVect sbx_yz_hi(sbx.hiVect()); 
+         IntVect sbx_yz_hi(sbx.hiVect());
          sbx_yz_hi[0] = sbx_lo[0];
          const Box sbx_yz(sbx_lo, sbx_yz_hi);
 
          // Create a 2D Box collapsing sbx on y-direction
-         IntVect sbx_xz_hi(sbx.hiVect()); 
+         IntVect sbx_xz_hi(sbx.hiVect());
          sbx_xz_hi[1] = sbx_lo[1];
          const Box sbx_xz(sbx_lo, sbx_xz_hi);
 
          // Create a 2D Box collapsing sbx on z-direction
-         IntVect sbx_xy_hi(sbx.hiVect()); 
+         IntVect sbx_xy_hi(sbx.hiVect());
          sbx_xy_hi[2] = sbx_lo[2];
          const Box sbx_xy(sbx_lo, sbx_xy_hi);
 
@@ -1516,7 +1517,9 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
     }
 }
 
-void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro)[10])
+void MFIXParticleContainer::GetParticleAvgProp(Real (&min_dp)[10], Real (&min_ro)[10],
+                                               Real (&max_dp)[10], Real (&max_ro)[10],
+                                               Real (&avg_dp)[10], Real (&avg_ro)[10])
 {
    // The number of phases was previously hard set at 10, however lowering
    //  this number would make this code faster.
@@ -1528,6 +1531,12 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
      Real p_num  = 0.0; //number of particle
      Real p_diam = 0.0; //particle diameters
      Real p_dens = 0.0; //particle density
+
+     Real min_diam =  1.0e32;
+     Real min_den  =  1.0e32;
+
+     Real max_diam = -1.0e32;
+     Real max_den  = -1.0e32;
 
      for (int lev = 0; lev < nlev; lev++)
      {
@@ -1547,6 +1556,13 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
                     p_num  += 1.0;
                     p_diam += p.rdata(realData::radius) * 2.0;
                     p_dens += p.rdata(realData::density);
+
+                    min_diam = amrex::min(min_diam, p.rdata(realData::radius) * 2.0 );
+                    min_den  = amrex::min(min_den,  p.rdata(realData::density) );
+
+                    max_diam = amrex::max(max_diam, p.rdata(realData::radius) * 2.0 );
+                    max_den  = amrex::max(max_den,  p.rdata(realData::density) );
+
                 }
             }
         }
@@ -1554,14 +1570,29 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
 
      // A single MPI call passes all three variables
      ParallelDescriptor::ReduceRealSum({p_num,p_diam,p_dens});
+     ParallelDescriptor::ReduceRealMin({min_diam, min_den});
+     ParallelDescriptor::ReduceRealMax({max_diam, max_den});
 
      //calculate averages or set = zero if no particles of that phase
      if (p_num==0){
        avg_dp[phse-1] = 0.0;
        avg_ro[phse-1] = 0.0;
+
+       min_dp[phse-1] = 0.0;
+       min_ro[phse-1] = 0.0;
+
+       max_dp[phse-1] = 0.0;
+       max_ro[phse-1] = 0.0;
+
      } else {
        avg_dp[phse-1] = p_diam/p_num;
        avg_ro[phse-1] = p_dens/p_num;
+
+       min_dp[phse-1] = min_diam;
+       min_ro[phse-1] = min_den;
+
+       max_dp[phse-1] = max_diam;
+       max_ro[phse-1] = max_den;
      }
    }
 }
@@ -1901,7 +1932,7 @@ void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)
 {
     for (MFIter mfi(mf_to_be_filled); mfi.isValid(); ++mfi) {
        const Box& sbx = mf_to_be_filled[mfi].box();
-       
+
 //       const Real max_pack = 0.42;
        const Real max_pack = 0.21;
 
