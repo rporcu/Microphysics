@@ -92,24 +92,6 @@ extern "C"
         const amrex::Real* dx
     );
 
-    void init_fluid(const int* slo, const int* shi,
-             const int*  lo, const int*  hi,
-             const int* domlo , const int* domhi,
-             amrex::Real* ep_g,
-             amrex::Real* ro_g,
-             amrex::Real* p_g,
-             amrex::Real* vel_g,
-             amrex::Real* mu_g,
-             amrex::Real* dx,    amrex::Real* dy,       amrex::Real* dz,
-             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength
-       );
-
-    void init_fluid_restart(
-             const int* slo, const int* shi,
-             const int*  lo, const int*  hi,
-             amrex::Real* mu_g
-       );
-
     void set_p0(const int*  lo   , const int*  hi,
              const int* domlo , const int* domhi,
              amrex::Real* p0_g , const int* rlo, const int* rhi,
@@ -159,14 +141,6 @@ extern "C"
              amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
 
     void mfix_finl_err_msg();
-
-    void init_periodic_vortices (
-            const int* lo,  const int*  hi,
-            amrex::Real* vel,  const int* ulo, const int* uhi,
-            const amrex::Real* dx, const amrex::Real* dy,
-            const amrex::Real* dz,
-            const int*  domlo
-       );
 
     void mfix_collect_fluid(
             const int*    lo,  const int*   hi,

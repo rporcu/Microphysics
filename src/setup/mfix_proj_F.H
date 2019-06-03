@@ -1,3 +1,6 @@
+#ifndef __MFIX_PROJ_F_H_
+#define __MFIX_PROJ_F_H_
+
 #include <AMReX_REAL.H>
 
 #include <AMReX_BLFort.H>
@@ -24,4 +27,6 @@ extern "C"
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

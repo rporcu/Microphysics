@@ -1,10 +1,12 @@
 #include <AMReX_ParmParse.H>
 
+#include <mfix.H>
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
 #include <mfix_des_F.H>
+#include <mfix_init_fluid.hpp>
+
 #include <AMReX_EBAmrUtil.H>
-#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_EBFabFactory.H>
@@ -822,20 +824,14 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 
         if ( is_restarting ) {
 
-            init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
-                 (*mu_g[lev])[mfi].dataPtr() );
+            init_fluid_restart(bx, (*mu_g[lev])[mfi]);
 
           } else {
 
-            init_fluid(sbx.loVect(), sbx.hiVect(),
-                 bx.loVect(),  bx.hiVect(),
-                 domain.loVect(), domain.hiVect(),
-                 (*ep_g[lev])[mfi].dataPtr(),
-                 (*ro_g[lev])[mfi].dataPtr(),
-                 (*p_g[lev])[mfi].dataPtr(),
-                 (*vel_g[lev])[mfi].dataPtr(),
-                 (*mu_g[lev])[mfi].dataPtr(),
-                 &dx, &dy, &dz, &xlen, &ylen, &zlen);
+            init_fluid(sbx, bx, domain,
+                       (*ep_g[lev])[mfi], (*ro_g[lev])[mfi], (*p_g[lev])[mfi],
+                       (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
+                       dx, dy, dz, xlen, ylen, zlen);
           }
        }
     }

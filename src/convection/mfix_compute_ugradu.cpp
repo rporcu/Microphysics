@@ -1,12 +1,11 @@
 #include <mfix.H>
 #include <mfix_divop.hpp>
+#include <param_mod_F.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
 #include <AMReX_Array.H>
-
-#define MY_HUGE 1.e200
 
 namespace ugradu_aux {
 
@@ -393,7 +392,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
       }
     }
     else {
-      u_face = MY_HUGE; 
+      u_face = get_my_huge(); 
     }
     fx(i,j,k,n) = .5*(epsilon_g(i-1,j,k)+epsilon_g(i,j,k)) * u(i,j,k) * u_face;
   });
@@ -427,7 +426,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
       }
     }
     else {
-      v_face = MY_HUGE;
+      v_face = get_my_huge();
     }
     fy(i,j,k,n) = .5*(epsilon_g(i,j-1,k)+epsilon_g(i,j,k)) * v(i,j,k) * v_face;
   });
@@ -461,7 +460,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
       }
     }
     else {
-      w_face = MY_HUGE;
+      w_face = get_my_huge();
     }
     fz(i,j,k,n) = .5*(epsilon_g(i,j,k-1)+epsilon_g(i,j,k)) * w(i,j,k) * w_face;
   });

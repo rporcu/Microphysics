@@ -1,6 +1,7 @@
 module param
 
   use amrex_fort_module, only : rt => amrex_real
+  use iso_c_binding,     only : c_int
 
 ! Parameters limiting user-specifed input.
 !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -58,13 +59,29 @@ module param
       end interface is_undefined
 
    contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+! Subroutines: get_bc_u_g, get_bc_v_g, get_bc_w_g, get_bc_t_g          !
+!                                                                      !
+! Purpose: Getters for params values                                   !
+!                                                                      !
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+      integer(c_int) function get_dim_ic() bind(C)
+        get_dim_ic = dim_ic
+        return
+      end function get_dim_ic
 
-      pure logical function is_defined_db(x)
+      real(rt) function get_my_huge() bind(C)
+        get_my_huge = my_huge
+        return
+      end function get_my_huge
+
+      pure logical function is_defined_db(x) bind(C)
          real(rt), intent(in) :: x
          is_defined_db = .not.equal(x, undefined)
       end function is_defined_db
 
-      pure logical function is_defined_i(x)
+      pure logical function is_defined_i(x) bind(C)
          integer, intent(in) :: x
          is_defined_i = (x /= undefined_i)
       end function is_defined_i

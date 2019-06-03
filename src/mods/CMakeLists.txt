@@ -13,6 +13,7 @@ target_sources( mfixcore
    fld_constants_mod_F.H
    ps_mod.f90
    ic_mod.f90
+   ic_mod_F.H
    utilities_mod.f90
    scales_mod.f90
    output_mod.f90
