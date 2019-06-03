@@ -136,8 +136,8 @@ set_velocity_bcs(Real* time,
   {
     AMREX_CUDA_HOST_DEVICE_FOR_4D(bx_yz_hi_3D, 3, i, j, k, n,
     {
-      const int bcv = bct_ilo(dom_hi[0]+1,j,k,1);
-      const int bct = bct_ilo(dom_hi[0]+1,j,k,0);
+      const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
+      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout))
         vel(i,j,k,n) = vel(dom_hi[0],j,k,n);
