@@ -43,10 +43,8 @@ void init_fluid(const Box& sbx,
 
       // Set the initial fluid density and viscosity
       Array4<Real> const& ro_g = ro_g_fab.array();
-      const IntVect ro_g_lo(ro_g_fab.loVect()), ro_g_hi(ro_g_fab.hiVect());
-      const Box local_box(ro_g_lo, ro_g_hi);
 
-      AMREX_CUDA_HOST_DEVICE_FOR_3D(local_box, i, j, k, {ro_g(i,j,k) = get_ro_g0();});
+      AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx, i, j, k, {ro_g(i,j,k) = get_ro_g0();});
 
       calc_mu_g(bx, mu_g_fab);
 }
@@ -58,15 +56,11 @@ void init_helix(const Box& bx,
                 const Real dy,
                 const Real dz)
 {
-  // Local variables
-  int i, j, k, plane;
-  Real x, y, z, r, fac;
-
   Array4<Real> const& velocity = vel_g_fab.array();
 
-  plane = 3;
+  const int plane = 3;
 
-  fac = 0.01;
+  amrex::Real fac = 0.01;
 
   switch (plane)
   {
@@ -99,8 +93,8 @@ void init_helix(const Box& bx,
     case 3:  // around z-axis
       AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
-        Real x = (i+.5)*dx - .0016;
-        Real y = (j+.5)*dy - .0016;
+        Real x = (i+.5)*dx;
+        Real y = (j+.5)*dy;
         Real r = std::sqrt(x*x + y*y);
 
         velocity(i,j,k,0) =  fac * (y/r);
@@ -122,14 +116,11 @@ void init_periodic_vortices(const Box& bx,
                             const Real dy,
                             const Real dz)
 {
-  // Local variables
-  int i, j, k, plane;
-  Real x, y, z;
-  Real twopi = 8. * std::atan(1);
+  const amrex::Real twopi = 8. * std::atan(1);
 
   Array4<Real> const& velocity = vel_g_fab.array();
 
-  plane = 1;
+  const int plane = 1;
 
   switch (plane)
   {
@@ -211,14 +202,6 @@ void set_ic(const Box& sbx,
 
   Array4<Real> const& velocity = vel_g_fab.array();
 
-  // indices
-  int istart, iend;
-  int jstart, jend;
-  int kstart, kend;
-
-  // Temporary variables for storing IC values
-  Real ugx, vgx, wgx;
-
   int i_w, j_s, k_b;
   int i_e, j_n, k_t;
 
@@ -227,10 +210,9 @@ void set_ic(const Box& sbx,
   {
     if (ic_defined(icv))
     {
-      calc_cell_ic(dx, dy, dz,
-                   get_ic_x_w(icv), get_ic_y_s(icv), get_ic_z_b(icv),
-                   get_ic_x_e(icv), get_ic_y_n(icv), get_ic_z_t(icv),
-                   i_w, i_e, j_s, j_n, k_b, k_t);
+      calc_cell_ic(dx, dy, dz, get_ic_x_w(icv), get_ic_y_s(icv),
+                   get_ic_z_b(icv), get_ic_x_e(icv), get_ic_y_n(icv),
+                   get_ic_z_t(icv), i_w, i_e, j_s, j_n, k_b, k_t);
 
       // Use the volume fraction already calculated from particle data
       const Real ugx = get_ic_u_g(icv);
@@ -246,6 +228,13 @@ void set_ic(const Box& sbx,
 
       if (is_defined_db(ugx))
       {
+        const IntVect low(istart, jstart, kstart), hi(iend, jend, kend);
+        const Box box(low, hi);
+        AMREX_CUDA_HOST_DEVICE_FOR_3D(box, i, j, k,
+        {
+          velocity(i,j,k,0) = ugx;
+        });
+
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
         AMREX_CUDA_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,0) = ugx;});
@@ -267,6 +256,13 @@ void set_ic(const Box& sbx,
 
       if (is_defined_db(vgx))
       {
+        const IntVect low(istart, jstart, kstart), hi(iend, jend, kend);
+        const Box box(low, hi);
+        AMREX_CUDA_HOST_DEVICE_FOR_3D(box, i, j, k,
+        {
+          velocity(i,j,k,1) = vgx;
+        });
+
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
         AMREX_CUDA_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,1) = vgx;});
@@ -288,6 +284,13 @@ void set_ic(const Box& sbx,
 
       if (is_defined_db(wgx))
       {
+        const IntVect low(istart, jstart, kstart), hi(iend, jend, kend);
+        const Box box(low, hi);
+        AMREX_CUDA_HOST_DEVICE_FOR_3D(box, i, j, k,
+        {
+          velocity(i,j,k,2) = wgx;
+        });
+
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
         AMREX_CUDA_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,2) = wgx;});
