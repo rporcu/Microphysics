@@ -374,6 +374,16 @@ step2(const Box& grown1_bx,
       Array4<Real> const& mask,
       Array4<const EBCellFlag> const& flags)
 {
+  // TODO isn't it already initialized with zeroes?
+  AMREX_CUDA_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
+  {
+    optmp(i,j,k) = 0;
+  });
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+
   AMREX_CUDA_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
   {
     if(flags(i,j,k).isSingleValued())
@@ -593,12 +603,9 @@ compute_divop(Box& bx,
           divdiff_w[1] = 0;
           divdiff_w[2] = 0;
 
-          if(n==0)
-          {
-            compute_diff_wallfluxes(divdiff_w, dx, i, j, k, velocity, mu,
-                                    bndrycent, flags, areafrac_x, areafrac_y, areafrac_z,
-                                    vfrac, do_explicit_diffusion);
-          }
+          compute_diff_wallfluxes(divdiff_w, dx, i, j, k, velocity, mu,
+                                  bndrycent, flags, areafrac_x, areafrac_y, areafrac_z,
+                                  vfrac, do_explicit_diffusion);
 
           divc(i,j,k) -= divdiff_w[n] / (dx[n]*vfrac(i,j,k));
         }
