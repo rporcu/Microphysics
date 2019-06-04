@@ -453,7 +453,7 @@ step3(const Box& grown1_bx,
             {
 #ifdef AMREX_USE_CUDA
               Cuda::Atomic::Add(&optmp(i+ii,j+jj,k+kk),
-                                optmp(i+ii,j+jj,k+kk) + delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk));
+                                delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk));
 #else
               optmp(i+ii,j+jj,k+kk) += 
                 delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk);
@@ -599,9 +599,6 @@ compute_divop(Box& bx,
         if(is_dirichlet)
         {
           Real divdiff_w[3];
-          divdiff_w[0] = 0;
-          divdiff_w[1] = 0;
-          divdiff_w[2] = 0;
 
           compute_diff_wallfluxes(divdiff_w, dx, i, j, k, velocity, mu,
                                   bndrycent, flags, areafrac_x, areafrac_y, areafrac_z,
