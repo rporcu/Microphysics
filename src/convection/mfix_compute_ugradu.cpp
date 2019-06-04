@@ -40,7 +40,7 @@ is_equal_to_any(const int bc,
   return false;
 }
 
-} // end namespace ugradu_aux
+} // end namespace ugradu_auxiliary
 
 using namespace ugradu_aux;
 
@@ -469,7 +469,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   const int cyclic_z = geom[lev].isPeriodic(2) ? 1 : 0;
 
   // Compute div(tau) with EB algorithm
-  compute_divop(bx, *conv[lev], *vel[lev], *ep_g[lev], mfi, fxfab, fyfab, fzfab, 
+  compute_divop(bx, ugradu, velocity, fx, fy, fz, epsilon_g, mfi,
                 areafrac, facecent, flags, volfrac, bndrycent,
                 cyclic_x, cyclic_y, cyclic_z, domain, dx, &nghost);
 
