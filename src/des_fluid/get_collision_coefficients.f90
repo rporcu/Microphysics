@@ -42,6 +42,6 @@ subroutine get_lsd_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out
    etan_w_out = des_etan_wall
    etat_w_out = des_etat_wall
 
-   neighborhood = (3.0d0*maxval(dp_max(1:mmax)))**2
+   neighborhood = (3.0d0*maxval(dp_max(1:mmax)/2.0d0))**2
 
 end subroutine get_lsd_collision_coefficients
