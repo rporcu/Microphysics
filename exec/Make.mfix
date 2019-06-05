@@ -33,7 +33,6 @@ INCLUDE_LOCATIONS += $(TOP)/src/include
 VPATH_LOCATIONS   += $(TOP)/src/include
 
 Pdirs   := Base AmrCore Boundary Particle EB
-Pdirs   += Extern/Algoim
 
 ifeq ($(USE_HYPRE), TRUE)
 Pdirs   += Extern/HYPRE
