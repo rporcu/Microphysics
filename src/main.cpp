@@ -108,7 +108,7 @@ int main (int argc, char* argv[])
     const char* githash_mfix = buildInfoGetGitHash(1);
     amrex::Print() << "MFiX git hash: " << githash_mfix<< "\n";
 
-    amrex::Cuda::setLaunchRegion(false);
+    amrex::Gpu::setLaunchRegion(false);
 
     // Setting format to NATIVE rather than default of NATIVE_32
     FArrayBox::setFormat(FABio::FAB_NATIVE);
