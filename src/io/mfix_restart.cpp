@@ -111,11 +111,11 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               prob_hi[d] = Nrep[d]*prob_hi[d];
            }
         }
-        Geometry geometry;
-        geometry.ProbDomain(RealBox(prob_lo,prob_hi));
 
         for (int lev = 0; lev < nlevs; ++lev) {
 
+            Geom(lev).ProbDomain(RealBox(prob_lo,prob_hi));
+            
             BoxArray orig_ba,ba;
             orig_ba.readFrom(is);
             GotoNextLine(is);
