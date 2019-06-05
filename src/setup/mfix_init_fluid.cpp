@@ -117,6 +117,7 @@ void init_periodic_vortices(const Box& bx,
                             const Real dz)
 {
   const amrex::Real twopi = 8. * std::atan(1);
+//  const amrex::Real twopi = 2 * M_PI;
 
   Array4<Real> const& velocity = vel_g_fab.array();
 
@@ -206,7 +207,7 @@ void set_ic(const Box& sbx,
   int i_e, j_n, k_t;
 
   // Set the initial conditions.
-  for(int icv(0); icv < get_dim_ic(); ++icv)
+  for(int icv(1); icv <= get_dim_ic(); ++icv)
   {
     if (ic_defined(icv))
     {
@@ -228,17 +229,11 @@ void set_ic(const Box& sbx,
 
       if (is_defined_db(ugx))
       {
-        const IntVect low(istart, jstart, kstart), hi(iend, jend, kend);
-        const Box box(low, hi);
-        AMREX_CUDA_HOST_DEVICE_FOR_3D(box, i, j, k,
-        {
-          velocity(i,j,k,0) = ugx;
-        });
-
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
         AMREX_CUDA_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,0) = ugx;});
 
+        // TODO the following two are probably not needed
         if(slo[0] < domlo[0] and domlo[0] == istart)
         {
           const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
@@ -256,17 +251,11 @@ void set_ic(const Box& sbx,
 
       if (is_defined_db(vgx))
       {
-        const IntVect low(istart, jstart, kstart), hi(iend, jend, kend);
-        const Box box(low, hi);
-        AMREX_CUDA_HOST_DEVICE_FOR_3D(box, i, j, k,
-        {
-          velocity(i,j,k,1) = vgx;
-        });
-
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
         AMREX_CUDA_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,1) = vgx;});
 
+        // TODO the following two are probably not needed
         if (slo[1] < domlo[1] and domlo[1] == jstart)
         {
           const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
@@ -274,7 +263,7 @@ void set_ic(const Box& sbx,
           AMREX_CUDA_HOST_DEVICE_FOR_3D(box2, i, j, k, {velocity(i,j,k,1) = vgx;});
         }
 
-        if (shi[1] > domhi[1] and domhi[1] == jend  )
+        if (shi[1] > domhi[1] and domhi[1] == jend)
         {
           const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
           const Box box3(low3, hi3);
@@ -284,17 +273,11 @@ void set_ic(const Box& sbx,
 
       if (is_defined_db(wgx))
       {
-        const IntVect low(istart, jstart, kstart), hi(iend, jend, kend);
-        const Box box(low, hi);
-        AMREX_CUDA_HOST_DEVICE_FOR_3D(box, i, j, k,
-        {
-          velocity(i,j,k,2) = wgx;
-        });
-
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
         AMREX_CUDA_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,2) = wgx;});
 
+        // TODO the following two are probably not needed
         if (slo[2] < domlo[2] and domlo[2] == kstart)
         {
           const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
