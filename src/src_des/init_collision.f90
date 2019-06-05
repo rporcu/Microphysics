@@ -29,10 +29,13 @@ subroutine init_collision(min_dp_in, min_ro_in, &
   integer :: ptype
 
   ! Work around for cases that have no particles.
-  do ptype =1, mmax
+  do ptype = 1, mmax
 
-     d_p0(ptype)  = merge( min_dp_in(ptype),  100.0d-6, min_dp_in(ptype) > zero)
-     ro_s0(ptype) = merge( max_ro_in(ptype), 1000.0d+0, max_ro_in(ptype) > zero)
+     ! d_p0(ptype)  = merge( min_dp_in(ptype),  100.0d-6, min_dp_in(ptype) > zero)
+     ! ro_s0(ptype) = merge( max_ro_in(ptype), 1000.0d+0, max_ro_in(ptype) > zero)
+
+     d_p0(ptype)  = merge( avg_dp_in(ptype),  100.0d-6, avg_dp_in(ptype) > zero)
+     ro_s0(ptype) = merge( avg_ro_in(ptype), 1000.0d+0, avg_ro_in(ptype) > zero)
 
      dp_max(ptype) = max_dp_in(ptype)
      dp_min(ptype) = min_dp_in(ptype)
