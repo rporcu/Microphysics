@@ -128,7 +128,7 @@ set_velocity_bcs(Real* time,
 
         if(bct == bc_list.minf)
           vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i+1,j,k,n);
-      });  
+      });
     }
   }
 

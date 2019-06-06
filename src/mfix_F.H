@@ -70,28 +70,6 @@ extern "C"
              const int* ng
     );
 
-    void set_bc0(
-             const int* slo, const int* shi,
-             amrex::Real* ep_g,
-             amrex::Real* ro_g,
-             amrex::Real* mu_g,
-             const int* bc_ilo, const int* bc_ihi,
-             const int* bc_jlo, const int* bc_jhi,
-             const int* bc_klo, const int* bc_khi,
-             const int* domlo , const int* domhi,
-             const int* ng
-    );
-
-    void set_ls_inflow(
-        amrex::Real* ls_phi , const int* phi_lo, const int* phi_hi,
-        const int* bc_ilo, const int* bc_ihi,
-        const int* bc_jlo, const int* bc_jhi,
-        const int* bc_klo, const int* bc_khi,
-        const int* domlo , const int* domhi,
-        const int* ng    , const int* n     ,
-        const amrex::Real* dx
-    );
-
     void set_p0(const int*  lo   , const int*  hi,
              const int* domlo , const int* domhi,
              amrex::Real* p0_g , const int* rlo, const int* rhi,

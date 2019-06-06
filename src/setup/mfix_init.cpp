@@ -4,6 +4,8 @@
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
 #include <mfix_des_F.H>
+#include <mfix_set_bc0.hpp>
+#include <mfix_set_ls_inflow.hpp>
 #include <mfix_init_fluid.hpp>
 
 #include <AMReX_EBAmrUtil.H>
@@ -889,21 +891,16 @@ mfix::mfix_set_bc0()
 
      // Don't tile this -- at least for now
      for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-       {
-         const Box& sbx = (*ep_g[lev])[mfi].box();
+     {
+       const Box& sbx = (*ep_g[lev])[mfi].box();
 
-         set_bc0(sbx.loVect(), sbx.hiVect(),
-                 (*ep_g[lev])[mfi].dataPtr(),
-                  (*ro_g[lev])[mfi].dataPtr(),
-                  (*mu_g[lev])[mfi].dataPtr(),
-                 bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                 bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                 domain.loVect(), domain.hiVect(), &nghost);
-       }
+       set_bc0(sbx, bc_list, (*ep_g[lev])[mfi], (*ro_g[lev])[mfi],
+               (*mu_g[lev])[mfi], *bc_ilo[lev], *bc_ihi[lev], *bc_jlo[lev],
+               *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev], domain, &nghost);
+     }
 
-      ep_g[lev]->FillBoundary(geom[lev].periodicity());
-      ro_g[lev]->FillBoundary(geom[lev].periodicity());
+     ep_g[lev]->FillBoundary(geom[lev].periodicity());
+     ro_g[lev]->FillBoundary(geom[lev].periodicity());
    }
 
    // Put velocity Dirichlet bc's on faces
@@ -983,19 +980,17 @@ void mfix::mfix_set_ls_near_inflow()
         {
             Box domain(geom[lev].Domain());
 
-            MultiFab * ls_phi = level_sets[lev].get();
-            const Real * dx   = geom[lev].CellSize();
+            MultiFab* ls_phi = level_sets[lev].get();
+            const Real* dx   = geom[lev].CellSize();
 
             // Don't tile this
-            for (MFIter mfi(* ls_phi); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
-                set_ls_inflow( BL_TO_FORTRAN_ANYD(ls_fab),
-                               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                               domain.loVect(), domain.hiVect(), &levelset_nghost, &n, dx);
+                set_ls_inflow(ls_fab, bc_list, *bc_ilo[lev], *bc_ihi[lev],
+                              *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev],
+                              *bc_khi[lev], domain, &levelset_nghost, n, dx);
             }
         }
     }
@@ -1017,11 +1012,9 @@ void mfix::mfix_set_ls_near_inflow()
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
-                set_ls_inflow( BL_TO_FORTRAN_ANYD(ls_fab),
-                               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                               domain.loVect(), domain.hiVect(), &levelset_nghost, &n, dx);
+                set_ls_inflow( ls_fab, bc_list, *bc_ilo[lev], *bc_ihi[lev],
+                               *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev],
+                               *bc_khi[lev], domain, &levelset_nghost, n, dx);
             }
         }
 
@@ -1038,11 +1031,9 @@ void mfix::mfix_set_ls_near_inflow()
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
-                set_ls_inflow( BL_TO_FORTRAN_ANYD(ls_fab),
-                               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                               domain.loVect(), domain.hiVect(), &levelset_nghost, &n, dx);
+                set_ls_inflow( ls_fab, bc_list, *bc_ilo[lev], *bc_ihi[lev],
+                               *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev],
+                               *bc_khi[lev], domain, &levelset_nghost, n, dx);
             }
         }
     }

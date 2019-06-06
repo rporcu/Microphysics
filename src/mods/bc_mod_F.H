@@ -14,6 +14,9 @@ extern "C"
 amrex::Real get_bc_u_g(const int& pID);
 amrex::Real get_bc_v_g(const int& pID);
 amrex::Real get_bc_w_g(const int& pID);
+amrex::Real get_bc_t_g(const int& pID);
+
+amrex::Real get_bc_ep_g(const int& pID);
 
 amrex::Real get_bc_vel_g(const int& pID, const int& n);
 

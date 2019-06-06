@@ -7,11 +7,12 @@ f90EXE_sources += interpolation_m.f90
 
 CEXE_headers += mfix_set_velocity_bcs.hpp
 CEXE_sources += mfix_set_velocity_bcs.cpp
+
+CEXE_headers += mfix_set_scalar_bcs.hpp
 CEXE_sources += mfix_set_scalar_bcs.cpp
 CEXE_sources += mfix_fillpatch.cpp
 CEXE_sources += mfix_util.cpp
 CEXE_sources += mfix_divop.cpp
 F90EXE_headers += mfix_util_F.H
 CEXE_headers += mfix_divop.hpp
-CEXE_headers += mfix_set_scalar_bcs.hpp
 F90EXE_headers += mfix_divop_F.H 
