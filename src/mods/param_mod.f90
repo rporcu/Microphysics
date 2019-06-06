@@ -82,7 +82,7 @@ module param
       end function is_defined_db
 
       pure logical function is_defined_i(x) bind(C)
-         integer, intent(in) :: x
+         integer(c_int), intent(in) :: x
          is_defined_i = (x /= undefined_i)
       end function is_defined_i
 
@@ -92,7 +92,7 @@ module param
       end function is_undefined_db
 
       pure logical function is_undefined_i(x) bind(C)
-         integer, intent(in) :: x
+         integer(c_int), intent(in) :: x
          is_undefined_i = (x == undefined_i)
       end function is_undefined_i
 

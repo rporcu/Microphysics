@@ -44,7 +44,9 @@ void init_fluid(const Box& sbx,
       // Set the initial fluid density and viscosity
       Array4<Real> const& ro_g = ro_g_fab.array();
 
-      AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx, i, j, k, {ro_g(i,j,k) = get_ro_g0();});
+      const Real ro_g0 = get_ro_g0();
+
+      AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx, i, j, k, {ro_g(i,j,k) = ro_g0;});
 
       calc_mu_g(bx, mu_g_fab);
 }
@@ -60,15 +62,15 @@ void init_helix(const Box& bx,
 
   const int plane = 3;
 
-  amrex::Real fac = 0.01;
+  const amrex::Real fac = 0.01;
 
   switch (plane)
   {
     case 1:  // around x-axis
       AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
-        Real y = (j+.5)*dy - .0016;
-        Real z = (k+.5)*dz - .0016;
+        Real y = (Real(j) + .5) * dy - .0016;
+        Real z = (Real(k) + .5) * dz - .0016;
         Real r = std::sqrt(y*y + z*z);
 
         velocity(i,j,k,0) = 0.0;
@@ -80,8 +82,8 @@ void init_helix(const Box& bx,
     case 2:  // around y-axis
       AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
-        Real x = (i+.5)*dx - .0016;
-        Real z = (k+.5)*dz - .0016;
+        Real x = (Real(i) + .5) * dx - .0016;
+        Real z = (Real(k) + .5) * dz - .0016;
         Real r = std::sqrt(x*x + z*z);
 
         velocity(i,j,k,0) =  fac * (z/r);
@@ -93,8 +95,8 @@ void init_helix(const Box& bx,
     case 3:  // around z-axis
       AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
-        Real x = (i+.5)*dx;
-        Real y = (j+.5)*dy;
+        Real x = (Real(i) + .5) * dx;
+        Real y = (Real(j) + .5) * dy;
         Real r = std::sqrt(x*x + y*y);
 
         velocity(i,j,k,0) =  fac * (y/r);
@@ -129,8 +131,8 @@ void init_periodic_vortices(const Box& bx,
       // x-direction
       AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
-        Real x = (i+.5)*dx;
-        Real y = (j+.5)*dy;
+        Real x = (Real(i) + .5) * dx;
+        Real y = (Real(j) + .5) * dy;
 
         velocity(i,j,k,0) = std::tanh(30*(.25 - std::abs(y-.5)));
         velocity(i,j,k,1) = .05 * std::sin(twopi*x);
@@ -142,8 +144,8 @@ void init_periodic_vortices(const Box& bx,
       // x-direction
       AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
-        Real x = (i+.5)*dx;
-        Real z = (k+.5)*dz;
+        Real x = (Real(i) + .5) * dx;
+        Real z = (Real(k) + .5) * dz;
 
         velocity(i,j,k,0) = std::tanh(30*(.25 - std::abs(z-.5)));
         velocity(i,j,k,1) = 0.;
@@ -155,8 +157,8 @@ void init_periodic_vortices(const Box& bx,
       // x-direction
       AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
-        Real y = (j+.5)*dy;
-        Real z = (k+.5)*dz;
+        Real y = (Real(j) + .5) * dy;
+        Real z = (Real(k) + .5) * dz;
 
         velocity(i,j,k,0) = 0.;
         velocity(i,j,k,1) = std::tanh(30*(.25 - std::abs(z-.5)));
