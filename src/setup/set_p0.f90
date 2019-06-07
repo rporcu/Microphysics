@@ -150,7 +150,7 @@ subroutine set_p0(lo, hi, domlo, domhi, &
 
       delp_dir = 2
 
-      bcv_lo = bct_klo(domlo(1),domlo(1),2)
+      bcv_lo = bct_klo(domlo(1),domlo(2),2)
       p_lo   = scale_pressure(bc_p_g(bcv_lo))
 
       bcv_hi = bct_khi(domlo(1),domlo(2),2)
