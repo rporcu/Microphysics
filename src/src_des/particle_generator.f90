@@ -227,18 +227,18 @@ contains
        ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ! Total to seed over the whole IC region
-      max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
+      max_seed(2) = int((ic_y_n(icv) - ic_y_s(icv) - max_dp)/max_dp)
       max_seed(3) = int((ic_z_t(icv) - ic_z_b(icv) - max_dp)/(sqrt3*max_rp))
-      max_seed(2) = int(seed / (max_seed(1)*max_seed(3)))
+      max_seed(1) = int(seed / (max_seed(2)*max_seed(3)))
 
       ! local grid seed loop hi/lo
-      seed_lo(1) = nint((ic_dlo(1) - i_w*dx) / max_dp)
+      seed_lo(2) = nint((ic_dlo(2) - j_s*dy) / max_dp)
       seed_lo(3) = nint((ic_dlo(3) - k_b*dz) / (sqrt3 * max_rp))
-      seed_lo(2) = nint((ic_dlo(2) - j_s*dy) / ((sqrt6o3x2) * max_rp))
+      seed_lo(1) = nint((ic_dlo(1) - i_w*dx) / ((sqrt6o3x2) * max_rp))
 
-      seed_hi(1) = nint((ic_dhi(1) - i_w*dx) /  max_dp - seed_lo(1)*max_dp)
-      seed_hi(3) = nint((ic_dhi(3) - k_b*dz) / (sqrt3 * max_rp) - seed_lo(1)*max_dp)
-      seed_hi(2) = nint((ic_dhi(2) - j_s*dy) / ((sqrt6o3x2) * max_rp) - seed_lo(1)*max_dp)
+      seed_hi(2) = nint((ic_dhi(2) - j_s*dy) /  max_dp - seed_lo(2)*max_dp)
+      seed_hi(3) = nint((ic_dhi(3) - k_b*dz) / (sqrt3 * max_rp) - seed_lo(2)*max_dp)
+      seed_hi(1) = nint((ic_dhi(1) - i_w*dx) / ((sqrt6o3x2) * max_rp) - seed_lo(2)*max_dp)
 
       seed_hi(1) = min(max_seed(1), seed_hi(1)-1)
       seed_hi(3) = min(max_seed(3), seed_hi(3)-1)
@@ -247,17 +247,17 @@ contains
       pos = -1.0d20
       np = 0
 
-      do j=seed_lo(2), seed_hi(2)
+      do i=seed_lo(1), seed_hi(1)
 
-         pos(2) = j_s*dy + max_rp*(1.0d0 + j*sqrt6o3x2)
+         pos(1) = i_w*dx + max_rp*(1.0d0 + i*sqrt6o3x2)
 
          do k=seed_lo(3), seed_hi(3)
 
-            pos(3) = k_b*dz + max_rp*(1.0d0 + sqrt3*(k+(mod(j,2)/3.0d0)))
+            pos(3) = k_b*dz + max_rp*(1.0d0 + sqrt3*(k+(mod(i,2)/3.0d0)))
 
-            do i=seed_lo(1), seed_hi(1)
+            do j=seed_lo(2), seed_hi(2)
 
-               pos(1) = i_w*dx + max_rp* (1.0d0 + 2.0d0*i + mod(j+k,2))
+               pos(2) = j_s*dy + max_rp* (1.0d0 + 2.0d0*j + mod(i+k,2))
 
                np = np + 1 ! local to type
                pc = pc + 1 ! local to routine
