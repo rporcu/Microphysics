@@ -26,7 +26,7 @@
       ! particle no. indices
       integer :: ii, ll, jj
 
-      ! the overlap occuring between particle-particle or particle-wall
+      ! the overlap occurring between particle-particle or particle-wall
       ! collision in the normal direction
       real(rt) :: overlap_n, overlap_t(3)
 

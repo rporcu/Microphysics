@@ -91,7 +91,7 @@
          stop 20002
 ! RUN_NAME legnth just right.
       ELSE
-! Specify the .LOG file name based on MPI Rank extenion.
+! Specify the .LOG file name based on MPI Rank extension.
          WRITE(LOGFILE,"(A)") RUN_NAME(1:(NB-1))
       ENDIF
 

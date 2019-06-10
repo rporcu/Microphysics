@@ -295,7 +295,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     *                                                                          *
     * Since the level-set data could be defined on a different BoxArray        *
     * (compared to the rest of the checkpoint data) => the level-set data is   *
-    * stored in seperate ls_raw MultiFab.                                      *
+    * stored in separate ls_raw MultiFab.                                      *
     ****************************************************************************/
     if (solve_dem)
     {

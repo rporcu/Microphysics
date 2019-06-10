@@ -249,7 +249,7 @@ subroutine set_p0(lo, hi, domlo, domhi, &
       gp0(3) = -dpodz
    endif
 
-   GOTO 100   ! pressure in all intial condition region cells was defined
+   GOTO 100   ! pressure in all initial condition region cells was defined
 
    ! ----------------------------------------------------------------<<<
 

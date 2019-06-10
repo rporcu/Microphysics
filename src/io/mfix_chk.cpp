@@ -154,7 +154,7 @@ mfix::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time
         //    level_sets.size() == std::max(2, nlev)
         VisMF::Write( * level_sets[1], raw_ls_name.str() );
 
-        // Also save the paramters necessary to re-buid the LSFactory
+        // Also save the parameters necessary to re-build the LSFactory
         int levelset_params[] = { levelset__refinement,
                                   levelset__pad,
                                   levelset__eb_refinement,
@@ -167,4 +167,3 @@ mfix::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time
         amrex::writeIntData(levelset_params, 4, param_file);
    }
 }
-

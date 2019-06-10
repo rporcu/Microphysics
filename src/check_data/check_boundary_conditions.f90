@@ -117,7 +117,7 @@ module check_boundary_conditions_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine check_bc_range(BCV)
 
-      ! Gas phase BC varaibles
+      ! Gas phase BC variables
       use bc, only: BC_EP_g, BC_X_g, BC_P_g
       use bc, only: BC_U_g, BC_V_g, BC_W_g
 
@@ -143,7 +143,7 @@ module check_boundary_conditions_module
 
 ! Local Variables:
 !---------------------------------------------------------------------//
-! Generic loop varaibles.
+! Generic loop variables.
       integer :: M, N
 !......................................................................!
 

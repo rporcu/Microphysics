@@ -526,7 +526,7 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv,
             {
                 // If tile is completely covered by EB geometry, set slopes
                 // value to some very large number so we know if
-                // we accidentaly use these covered slopes later in calculations
+                // we accidentally use these covered slopes later in calculations
                 conv[lev] -> setVal( 1.2345e300, bx, 0, 3);
             }
             else
@@ -592,7 +592,7 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv,
             {
                 // If tile is completely covered by EB geometry, set slopes
                 // value to some very large number so we know if
-                // we accidentaly use these covered slopes later in calculations
+                // we accidentally use these covered slopes later in calculations
                 conv[lev] -> setVal( 1.2345e300, bx, 0, 3);
             }
             else

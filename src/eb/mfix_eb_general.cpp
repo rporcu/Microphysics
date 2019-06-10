@@ -310,7 +310,7 @@ mfix::get_poly(int max_order, std::string field_prefix) {
         field_names[i] = field_name.str();
     }
 
-    // There are two more fields assoicated with the PolynomialIF:
+    // There are two more fields associated with the PolynomialIF:
     //      <field_prefix>_mirror    (true if fluid is inside the PolynomialIF)
     //      <field_prefix>_translate (vector representing center-axis position)
     std::stringstream mirror_field, translate_field;

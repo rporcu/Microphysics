@@ -33,7 +33,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
        {
            // If tile is completely covered by EB geometry, set slopes
            // value to some very large number so we know if
-           // we accidentaly use these covered slopes later in calculations
+           // we accidentally use these covered slopes later in calculations
            xslopes[lev] -> setVal( 1.2345e300, bx, 0, 3);
            yslopes[lev] -> setVal( 1.2345e300, bx, 0, 3);
            zslopes[lev] -> setVal( 1.2345e300, bx, 0, 3);

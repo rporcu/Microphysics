@@ -47,7 +47,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         nodal_bottom_solver_type = "bicgcg";
         pp.query( "bottom_solver_type",  nodal_bottom_solver_type );
 
-        // Is this a steady-state calcualtion
+        // Is this a steady-state calculation
         steady_state = 0;
         pp.query( "steady_state", steady_state );
 

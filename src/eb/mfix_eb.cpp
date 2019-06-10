@@ -160,7 +160,7 @@ void mfix::fill_eb_levelsets ()
     /****************************************************************************
      *                                                                          *
      * Fill levels either as a single level with refinement, or as a proper     *
-     * multi-level hirearchy                                                    *
+     * multi-level hierarchy                                                    *
      *                                                                          *
      ***************************************************************************/
 
