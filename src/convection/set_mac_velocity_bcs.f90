@@ -17,7 +17,7 @@ subroutine set_mac_velocity_bcs ( time, slo, shi, u_g, ulo, uhi, v_g, vlo, vhi, 
 
    implicit none
 
-   ! Time (necesary if we have time-dependent boundary conditions)
+   ! Time (necessary if we have time-dependent boundary conditions)
    real(ar),      intent(in   ) ::  time
 
    ! Array bounds
