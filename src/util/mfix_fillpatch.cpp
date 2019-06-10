@@ -30,7 +30,10 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
     if (numcomp != 3)
          amrex::Abort("Must have numcomp = 3 in VelFillBox");
 
-    FArrayBox dest_fab(dest);
+    IntVect dest_lo(dest.begin.x, dest.begin.y, dest.begin.z),
+            dest_hi(dest.end.x, dest.end.y, dest.end.z);
+    const Box dest_box(dest_lo, dest_hi);
+    FArrayBox dest_fab(dest_box, numcomp, dest.p);
 
     const Box& domain = geom.Domain();
 
