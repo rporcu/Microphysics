@@ -30,6 +30,8 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
     if (numcomp != 3)
          amrex::Abort("Must have numcomp = 3 in VelFillBox");
 
+    FArrayBox dest_fab(dest);
+
     const Box& domain = geom.Domain();
 
     // This is a bit hack-y but does get us the right level
@@ -74,7 +76,7 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
 
 #else
     set_velocity_bcs ( &time,
-                       dest.p, bx.loVect(), bx.hiVect(),
+                       dest_fab.dataPtr(), dest_fab.loVect(), dest_fab.hiVect(),
                        bc_ilo_ptr, bc_ihi_ptr,
                        bc_jlo_ptr, bc_jhi_ptr,
                        bc_klo_ptr, bc_khi_ptr,
