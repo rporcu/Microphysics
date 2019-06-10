@@ -375,7 +375,7 @@ step2(const Box& grown1_bx,
       Array4<const EBCellFlag> const& flags)
 {
   // TODO isn't it already initialized with zeroes?
-  AMREX_CUDA_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
   {
     optmp(i,j,k) = 0;
   });
@@ -384,7 +384,7 @@ step2(const Box& grown1_bx,
   Gpu::Device::synchronize();
 #endif
 
-  AMREX_CUDA_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
   {
     if(flags(i,j,k).isSingleValued())
     {
@@ -425,7 +425,7 @@ step3(const Box& grown1_bx,
       Array4<Real> const& mask,
       Array4<const EBCellFlag> const& flags)
 {
-  AMREX_CUDA_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
   {
     if(flags(i,j,k).isSingleValued())
     {
@@ -543,7 +543,7 @@ compute_divop(Box& bx,
   // periodic
   // It is set to 1 when a cell can be used in computations, 0 otherwise
   //
-  AMREX_CUDA_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
   {
     if(((not cyclic_x) and (i < dom_low.x or i > dom_high.x)) or
        ((not cyclic_y) and (j < dom_low.y or j > dom_high.y)) or
@@ -566,7 +566,7 @@ compute_divop(Box& bx,
     // Step 1: compute conservative divergence on stencil (lo-2,hi-2)
     //
 
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
     {
       if(flags(i,j,k).isCovered())
         divc(i,j,k) = MY_HUGE;
@@ -640,7 +640,7 @@ compute_divop(Box& bx,
     //
     // Resume the correct sign, AKA return the negative
     //
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
     {
       divergence(i,j,k,n) = divc(i,j,k) + optmp(i,j,k);
     });

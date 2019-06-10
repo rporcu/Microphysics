@@ -1007,7 +1007,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
          if(sbx_lo[0] < dom_lo.x)
          {
            const int ilo = dom_lo.x;
-           AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx_yz, i, j, k,
+           AMREX_GPU_HOST_DEVICE_FOR_3D(sbx_yz, i, j, k,
            {
              if(bc_ilo_type(dom_lo.x-1,j,k,0) == bc_list.pinf or
                 bc_ilo_type(dom_lo.x-1,j,k,0) == bc_list.minf)
@@ -1021,7 +1021,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
          if(sbx_hi[0] > dom_hi.x)
          {
            const int ihi = dom_hi.x;
-           AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx_yz, i, j, k,
+           AMREX_GPU_HOST_DEVICE_FOR_3D(sbx_yz, i, j, k,
            {
              if(bc_ihi_type(dom_hi.x+1,j,k,0) == bc_list.pinf or
                 bc_ihi_type(dom_hi.x+1,j,k,0) == bc_list.minf)
@@ -1035,7 +1035,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
          if(sbx_lo[1] < dom_lo.y)
          {
            const int jlo = dom_lo.y;
-           AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx_xz, i, j, k,
+           AMREX_GPU_HOST_DEVICE_FOR_3D(sbx_xz, i, j, k,
            {
              if(bc_jlo_type(i,dom_lo.y-1,k,0) == bc_list.pinf or
                 bc_jlo_type(i,dom_lo.y-1,k,0) == bc_list.minf)
@@ -1049,7 +1049,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
          if(sbx_lo[1] > dom_hi.y)
          {
            const int jhi = dom_hi.y;
-           AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx_xz, i, j, k,
+           AMREX_GPU_HOST_DEVICE_FOR_3D(sbx_xz, i, j, k,
            {
              if(bc_jhi_type(i,dom_hi.y+1,k,0) == bc_list.pinf or
                 bc_jhi_type(i,dom_hi.y+1,k,0) == bc_list.minf)
@@ -1063,7 +1063,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
          if(sbx_lo[2] < dom_lo.z)
          {
            const int klo = dom_lo.z;
-           AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx_xy, i, j, k,
+           AMREX_GPU_HOST_DEVICE_FOR_3D(sbx_xy, i, j, k,
            {
              if(bc_klo_type(i,j,dom_lo.z-1,0) == bc_list.pinf or
                 bc_klo_type(i,j,dom_lo.z-1,0) == bc_list.minf)
@@ -1077,7 +1077,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
          if(sbx_lo[2] > dom_hi.z)
          {
            const int khi = dom_hi.z;
-           AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx_xy, i, j, k,
+           AMREX_GPU_HOST_DEVICE_FOR_3D(sbx_xy, i, j, k,
            {
              if(bc_khi_type(i,j,dom_hi.z+1,0) == bc_list.pinf or
                 bc_khi_type(i,j,dom_hi.z+1,0) == bc_list.minf)
@@ -1940,7 +1940,7 @@ void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)
 
 // These lines are commented because this code represents a functionality which
 // may be added in future developments
-//       AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+//       AMREX_GPU_HOST_DEVICE_FOR_3D(sbx, i, j, k,
 //       {
 //         ep_g(i,j,k) = std::max(max_pack, ep_g(i,j,k));
 //       });

@@ -19,7 +19,7 @@ void set_ptr_to_mfix(mfix& mfix_for_fillpatching_in)
 // We can't get around this so instead we create an mfix object
 //    and use that to access the quantities that aren't passed here.
 inline
-void VelFillBox (Box const& bx, FArrayBox& dest,
+void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
                  const int dcomp, const int numcomp,
                  GeometryData const& geom, const Real time_in,
                  const BCRec* bcr, const int bcomp,
@@ -74,7 +74,7 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
 
 #else
     set_velocity_bcs ( &time,
-                       BL_TO_FORTRAN_ANYD(dest),
+                       dest.p, bx.loVect(), bx.hiVect(),
                        bc_ilo_ptr, bc_ihi_ptr,
                        bc_jlo_ptr, bc_jhi_ptr,
                        bc_klo_ptr, bc_khi_ptr,
