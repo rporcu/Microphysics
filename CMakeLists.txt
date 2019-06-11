@@ -104,6 +104,7 @@ endif ()
 set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
 if (ENABLE_CUDA)
+   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std=c++11 -Xcompiler=-std=c++11")
    setup_cuda()
 endif ()
 
