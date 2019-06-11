@@ -452,7 +452,7 @@ step3(const Box& grown1_bx,
                 (flags(i,j,k).isConnected({AMREX_D_DECL(ii,jj,kk)}) == 1))
             {
 #ifdef AMREX_USE_CUDA
-              Cuda::Atomic::Add(&optmp(i+ii,j+jj,k+kk),
+              Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk),
                                 delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk));
 #else
               optmp(i+ii,j+jj,k+kk) += 
