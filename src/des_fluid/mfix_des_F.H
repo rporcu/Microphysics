@@ -27,14 +27,15 @@ extern "C"
 #endif
 
     void get_collision_model(int* coll_model_flag);
-    
+
     void get_lsd_collision_coefficients(int* nphase,
                                         amrex::Real* kt, amrex::Real* kt_w,
                                         amrex::Real* kn, amrex::Real* kn_w,
                                         amrex::Real* mew, amrex::Real* mew_w,
                                         amrex::Real* etan, amrex::Real* etan_w,
-                                        amrex::Real* etat, amrex::Real* etat_w);
-    
+                                        amrex::Real* etat, amrex::Real* etat_w,
+                                        amrex::Real* neighborhood);
+
     void get_gravity (
         amrex::Real* grav
         );
@@ -49,13 +50,13 @@ extern "C"
         );
 
     void des_drag_gp(
-        const int* p_id, 
+        const int* p_id,
         const amrex::Real* particle_vel ,
         const amrex::Real*    fluid_vel ,
-        const amrex::Real* ep_g, const amrex::Real* ro, 
-        const amrex::Real* mu, const amrex::Real* f_gp, 
-        const int* i, const int* j, const int* k, 
-        const amrex::Real* rad, const amrex::Real* vol, 
+        const amrex::Real* ep_g, const amrex::Real* ro,
+        const amrex::Real* mu, const amrex::Real* f_gp,
+        const int* i, const int* j, const int* k,
+        const amrex::Real* rad, const amrex::Real* vol,
         const amrex::Real* ro_s);
 
     void calc_particle_collisions(

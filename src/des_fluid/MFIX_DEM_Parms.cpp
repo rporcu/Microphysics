@@ -39,7 +39,9 @@ namespace DEMParams
     AMREX_GPU_DEVICE_MANAGED amrex::Real small_number = 1.0e-15;
     AMREX_GPU_DEVICE_MANAGED amrex::Real large_number = 1.0e32;
     AMREX_GPU_DEVICE_MANAGED amrex::Real eps = std::numeric_limits<amrex::Real>::epsilon();
-        
+
+    AMREX_GPU_DEVICE_MANAGED amrex::Real neighborhood = 1.0;
+
     void Initialize ()
     {
 
@@ -47,7 +49,8 @@ namespace DEMParams
                                        &kt, &kt_w, &kn, &kn_w,
                                        &mew, &mew_w,
                                        &etan[0][0], &etan_w[0],
-                                       &etat[0][0], &etat_w[0]);
+                                       &etat[0][0], &etat_w[0],
+                                       &neighborhood);
     }
 
 

@@ -375,12 +375,16 @@ step2(const Box& grown1_bx,
       Array4<const EBCellFlag> const& flags)
 {
   // TODO isn't it already initialized with zeroes?
-  AMREX_CUDA_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
   {
     optmp(i,j,k) = 0;
   });
 
-  AMREX_CUDA_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+
+  AMREX_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
   {
     if(flags(i,j,k).isSingleValued())
     {
@@ -421,7 +425,7 @@ step3(const Box& grown1_bx,
       Array4<Real> const& mask,
       Array4<const EBCellFlag> const& flags)
 {
-  AMREX_CUDA_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
   {
     if(flags(i,j,k).isSingleValued())
     {
@@ -447,8 +451,13 @@ step3(const Box& grown1_bx,
             if((ii != 0 or jj != 0 or kk != 0) and
                 (flags(i,j,k).isConnected({AMREX_D_DECL(ii,jj,kk)}) == 1))
             {
+#ifdef AMREX_USE_CUDA
+              Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk),
+                                delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk));
+#else
               optmp(i+ii,j+jj,k+kk) += 
                 delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk);
+#endif
             }
     }
   });
@@ -530,42 +539,11 @@ compute_divop(Box& bx,
   Array4<Real> const& mask = mask_fbx.array();
 
   //
-  // Allocate arrays to host viscous wall fluxes
-  //
-  Real** divdiff_w;
-
-  int nwalls = 0;
-
-  if(is_dirichlet)
-  {
-#ifdef AMREX_USE_CUDA
-    Gpu::DeviceScalar<int> nwalls_gpu(nwalls);
-    int* pnwalls = nwalls_gpu.dataPtr();
-#endif
-
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
-    {
-      if(flags(i,j,k).isSingleValued())
-      {
-#ifdef AMREX_USE_CUDA
-        Cuda::Atomic::Add(pnwalls,1);
-#else
-        nwalls++;
-#endif  
-      }
-    });
-
-    divdiff_w = new Real*[nwalls];
-    for(unsigned int i(0); i < nwalls; i++)
-      divdiff_w[i] = new Real[3];
-  }
-
-  //
   // Array "mask" is used to sever the link to ghost cells when the BCs are not
   // periodic
   // It is set to 1 when a cell can be used in computations, 0 otherwise
   //
-  AMREX_CUDA_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
   {
     if(((not cyclic_x) and (i < dom_low.x or i > dom_high.x)) or
        ((not cyclic_y) and (j < dom_low.y or j > dom_high.y)) or
@@ -575,6 +553,10 @@ compute_divop(Box& bx,
       mask(i,j,k) = 1;
   });
 
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+
   //
   // We use the EB algorithm to compute the divergence at cell centers
   //
@@ -583,22 +565,11 @@ compute_divop(Box& bx,
     //
     // Step 1: compute conservative divergence on stencil (lo-2,hi-2)
     //
-    int iwall(0);
-#ifdef AMREX_USE_CUDA
-    Gpu::DeviceScalar<int> iwall_gpu(iwall);
-    int* piwall = iwall_gpu.dataPtr();
-#endif
 
-    // TODO isn't it already initialized with zeroes?
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
-    {
-      divc(i,j,k) = 0;
-    });
-
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
     {
       if(flags(i,j,k).isCovered())
-        divc(i,j,k) = MY_HUGE; // TODO this quantity is frequent in the code
+        divc(i,j,k) = MY_HUGE;
       else if(flags(i,j,k).isSingleValued())
       {
         EBCellFlag flag = flags(i,j,k);
@@ -624,23 +595,16 @@ compute_divop(Box& bx,
 
         // Add viscous wall fluxes (compute three components only during the
         // first pass, i.e. for n=0)
-#ifdef AMREX_USE_CUDA
-        Cuda::Atomic::Add(piwall,1);
-#else
-        iwall++;
-#endif
 
         if(is_dirichlet)
         {
-          if(n==0)
-          {
-            // TODO check: possible data race on iwall??
-            compute_diff_wallfluxes(divdiff_w[iwall], dx, i, j, k, velocity, mu,
-                                    bndrycent, flags, areafrac_x, areafrac_y, areafrac_z,
-                                    vfrac, do_explicit_diffusion);
-          }
+          Real divdiff_w[3];
 
-          divc(i,j,k) -= divdiff_w[iwall][n] / (dx[n]*vfrac(i,j,k));
+          compute_diff_wallfluxes(divdiff_w, dx, i, j, k, velocity, mu,
+                                  bndrycent, flags, areafrac_x, areafrac_y, areafrac_z,
+                                  vfrac, do_explicit_diffusion);
+
+          divc(i,j,k) -= divdiff_w[n] / (dx[n]*vfrac(i,j,k));
         }
       }
       else
@@ -651,31 +615,35 @@ compute_divop(Box& bx,
       }
     });
 
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+
     //
     // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
     //
     step2(grown1_bx, grown2_bx, optmp, ep_g, divc, delm, vfrac, mask, flags);
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
     //
     // Step 3: redistribute excess/loss of mass
     //
     step3(grown1_bx, optmp, ep_g, delm, vfrac, mask, flags);
 
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+
     //
     // Resume the correct sign, AKA return the negative
     //
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
     {
       divergence(i,j,k,n) = divc(i,j,k) + optmp(i,j,k);
     });
 
-  }
-
-  if(is_dirichlet)
-  {
-    for(unsigned int i(0); i < nwalls; i++)
-      delete[] divdiff_w[i];
-
-    delete[] divdiff_w;
   }
 }

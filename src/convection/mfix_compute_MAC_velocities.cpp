@@ -71,7 +71,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
              const auto& wmac_fab = (m_w_mac[lev])->array(mfi);
 
              // No cut cells in tile + 1-cell witdh halo -> use non-eb routine
-             AMREX_CUDA_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
+             AMREX_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
              {
                  // X-faces
                  Real upls     = ccvel_fab(i  ,j,k,0) - 0.5 * xslopes_fab(i  ,j,k,0);
@@ -87,7 +87,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
                  }
              });
 
-             AMREX_CUDA_HOST_DEVICE_FOR_3D(vbx, i, j, k,
+             AMREX_HOST_DEVICE_FOR_3D(vbx, i, j, k,
              {
                  // Y-faces
                  Real upls     = ccvel_fab(i,j  ,k,1) - 0.5 * yslopes_fab(i,j  ,k,1);
@@ -103,7 +103,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
                  }
              });
 
-             AMREX_CUDA_HOST_DEVICE_FOR_3D(wbx, i, j, k,
+             AMREX_HOST_DEVICE_FOR_3D(wbx, i, j, k,
              {
                  // Z-faces
                  Real upls     = ccvel_fab(i,j,k  ,2) - 0.5 * zslopes_fab(i,j,k  ,2);
@@ -140,7 +140,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
              const auto& az_fab = areafrac[2]->array(mfi);
 
              // This FAB has cut cells
-             AMREX_CUDA_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
+             AMREX_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
              {
                  // X-faces
                  if (ax_fab(i,j,k) > 0.0)
@@ -161,7 +161,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
                  }
              });
 
-             AMREX_CUDA_HOST_DEVICE_FOR_3D(vbx, i, j, k,
+             AMREX_HOST_DEVICE_FOR_3D(vbx, i, j, k,
              {
                  // Y-faces
                  if (ay_fab(i,j,k) > 0.0)
@@ -182,7 +182,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
                  }
              });
 
-             AMREX_CUDA_HOST_DEVICE_FOR_3D(wbx, i, j, k,
+             AMREX_HOST_DEVICE_FOR_3D(wbx, i, j, k,
              {
                  // Z-faces
                  if (az_fab(i,j,k) > 0.0)

@@ -79,7 +79,7 @@ mfix::mfix_compute_vort ()
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
           {
-            AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
+            AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
             {
               Real uy = .5*ody*(velocity_g(i,j+1,k,0) - velocity_g(i,j-1,k,0));
               Real uz = .5*odz*(velocity_g(i,j,k+1,0) - velocity_g(i,j,k-1,0));

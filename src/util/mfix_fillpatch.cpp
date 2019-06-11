@@ -19,7 +19,7 @@ void set_ptr_to_mfix(mfix& mfix_for_fillpatching_in)
 // We can't get around this so instead we create an mfix object
 //    and use that to access the quantities that aren't passed here.
 inline
-void VelFillBox (Box const& bx, FArrayBox& dest,
+void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
                  const int dcomp, const int numcomp,
                  GeometryData const& geom, const Real time_in,
                  const BCRec* bcr, const int bcomp,
@@ -60,27 +60,15 @@ void VelFillBox (Box const& bx, FArrayBox& dest,
 
     int nghost = mfix_for_fillpatching->get_nghost();
 
-#if 0
+    FArrayBox dest_fab(dest);
 
-    const Real* dx = geom.CellSize();
-    Real xlo[AMREX_SPACEDIM];
-
-    for (int icomp = 0; icomp < numcomp; ++icomp)
-    {
-        generic_fill(BL_TO_FORTRAN_N_ANYD(dest,dcomp+icomp),
-                     BL_TO_FORTRAN_BOX(domain),
-                     &icomp, dx, xlo, &time, bcr[bcomp+icomp].vect());
-    }
-
-#else
     set_velocity_bcs ( &time,
-                       BL_TO_FORTRAN_ANYD(dest),
+                       dest_fab.dataPtr(), dest_fab.loVect(), dest_fab.hiVect(),
                        bc_ilo_ptr, bc_ihi_ptr,
                        bc_jlo_ptr, bc_jhi_ptr,
                        bc_klo_ptr, bc_khi_ptr,
                        domain.loVect(), domain.hiVect(),
                        &nghost, &extrap_dir_bcs );
-#endif
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
@@ -121,8 +109,6 @@ mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, cons
                                   refRatio(lev-1), mapper, bcs, 0);
 
     }
-
-    // if (lev == 1) std::cout << " MF IN FILLPATCH " <<  mf[0] << std::endl;
 }
 
 // utility to copy in data from phi_old and/or phi_new into another multifab

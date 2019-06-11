@@ -2,7 +2,7 @@ module param
 
   use amrex_fort_module, only : rt => amrex_real
 
-! Parameters limiting user-specifed input.
+! Parameters limiting user-specified input.
 !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   ! Maximum number of items for specifying initial conditions
   integer, parameter :: dim_ic = 500
@@ -29,7 +29,7 @@ module param
 ! Parameters describing problem size: (set from user input)
 !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-! Parameters for testing if user input was specifed.
+! Parameters for testing if user input was specified.
       real(rt), parameter :: undefined = 9.87654321d31
       integer,      parameter :: undefined_i = 987654321
       character,    parameter :: undefined_c = ' '
