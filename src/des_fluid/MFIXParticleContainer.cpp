@@ -420,6 +420,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             AMREX_FOR_1D ( nrp, i,
             {
                 ParticleType& p1 = pstruct[i];
+                
                 for (const auto& p2 : nbor_data.getNeighbors(i))
                 {
                     Real dx = p2.pos(0) - p1.pos(0);
@@ -431,7 +432,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                     if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                     {
-                        Cuda::Atomic::Add(pncoll, 1);
+                        Gpu::Atomic::Add(pncoll, 1);
                         Real dist_mag = sqrt(r2);
                         AMREX_ASSERT(dist_mag >= eps);
 

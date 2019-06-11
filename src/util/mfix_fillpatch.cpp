@@ -30,11 +30,6 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
     if (numcomp != 3)
          amrex::Abort("Must have numcomp = 3 in VelFillBox");
 
-    IntVect dest_lo(dest.begin.x, dest.begin.y, dest.begin.z),
-            dest_hi(dest.end.x, dest.end.y, dest.end.z);
-    const Box dest_box(dest_lo, dest_hi);
-    FArrayBox dest_fab(dest_box, numcomp, dest.p);
-
     const Box& domain = geom.Domain();
 
     // This is a bit hack-y but does get us the right level
@@ -65,19 +60,8 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
 
     int nghost = mfix_for_fillpatching->get_nghost();
 
-#if 0
+    FArrayBox dest_fab(dest);
 
-    const Real* dx = geom.CellSize();
-    Real xlo[AMREX_SPACEDIM];
-
-    for (int icomp = 0; icomp < numcomp; ++icomp)
-    {
-        generic_fill(BL_TO_FORTRAN_N_ANYD(dest,dcomp+icomp),
-                     BL_TO_FORTRAN_BOX(domain),
-                     &icomp, dx, xlo, &time, bcr[bcomp+icomp].vect());
-    }
-
-#else
     set_velocity_bcs ( &time,
                        dest_fab.dataPtr(), dest_fab.loVect(), dest_fab.hiVect(),
                        bc_ilo_ptr, bc_ihi_ptr,
@@ -85,7 +69,6 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
                        bc_klo_ptr, bc_khi_ptr,
                        domain.loVect(), domain.hiVect(),
                        &nghost, &extrap_dir_bcs );
-#endif
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
@@ -126,8 +109,6 @@ mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, cons
                                   refRatio(lev-1), mapper, bcs, 0);
 
     }
-
-    // if (lev == 1) std::cout << " MF IN FILLPATCH " <<  mf[0] << std::endl;
 }
 
 // utility to copy in data from phi_old and/or phi_new into another multifab
