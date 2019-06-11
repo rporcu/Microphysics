@@ -10,113 +10,23 @@ project(MFIX-Exa
 # Set the search path for cmake modules
 set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake )
 
-# Load utilities module
+# Load utilities and MFIX options module
 include( MFIX_Utils )
 
-find_package(AMReX 19.03.1.243 CONFIG QUIET)
+# Creates `compile_commands.json` in the build build directory
+#  `compile_commands.json` contains compiler flags used by plugins like YouCompleteMe
+set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
-if (AMReX_FOUND)
-
-   message(STATUS "AMReX found: configuration file located at ${AMReX_DIR}")
-   
-   # Load required options
-   include( MFIX_Options )
-
-   echo_amrex_config_options ()
-
-   if ( NOT ( AMREX_ENABLE_PARTICLES AND AMREX_ENABLE_AMRDATA
-            AND AMREX_ENABLE_EB) )
-      message ( FATAL_ERROR "AMReX installation missing required components!")
-   endif ()
-
-   if (ENABLE_OMP AND (NOT AMREX_ENABLE_OMP) )
-      message(FATAL_ERROR "Option ENABLE_OMP requires AMReX to be built with OpenMP support")
-   endif ()
-
-   if (ENABLE_MPI AND (NOT AMREX_ENABLE_MPI) )
-      message(FATAL_ERROR "Option ENABLE_MPI requires AMReX to be built with MPI support")
-   endif ()
-
-   if (ENABLE_HYPRE AND (NOT AMREX_ENABLE_HYPRE) )
-      message(FATAL_ERROR "Option ENABLE_HYPRE requires AMReX to be built with HYPRE support")
-   endif ()
-
-   if (ENABLE_CUDA AND (NOT AMREX_ENABLE_CUDA) )
-      message(FATAL_ERROR "Option ENABLE_CUDA requires AMReX to be built with CUDA support")
-   endif ()
-
-   #
-   # Should we check this???
-   # 
-   if ( NOT ( "${CMAKE_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
-      message (WARNING "MFIX build type (${CMAKE_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
-   endif ()
-   #
-   #
-   #
-
-   if (ENABLE_CUDA)
-      setup_cuda()
-   endif ()
-   
+# Set default build type to Release
+if ( NOT CMAKE_BUILD_TYPE )
+   message(STATUS "Setting build type to Release as none was specified.")
+   set( CMAKE_BUILD_TYPE Release )
 else ()
- 
-   message(STATUS "No AMReX installation found: cloning AMReX repo")
+   message(STATUS "Build type set by user to '${CMAKE_BUILD_TYPE}'.")
+endif()
 
-   if (NOT EXISTS  "${PROJECT_SOURCE_DIR}/.git")
-      message(FATAL_ERROR
-         "${PROJECT_SOURCE_DIR} is not a Git repo: missing .git")
-   endif ()
-
-   find_package(Git REQUIRED)
-
-   set(AMREX_SRC_DIR "${PROJECT_SOURCE_DIR}/subprojects/amrex" CACHE INTERNAL "Path to AMReX source (submodule)")
-
-   if (NOT EXISTS "${AMREX_SRC_DIR}/.git")
-      message(STATUS "Initializing git submodule for AMReX")
-
-      execute_process(
-         COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-         RESULT_VARIABLE GIT_SUBMOD_RESULT
-         )
-      
-      if ( NOT GIT_SUBMOD_RESULT EQUAL "0")
-         message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
-      endif()
-
-      unset(GIT_SUBMOD_RESULT)
-      
-   endif ()  
-
-   set(ENABLE_TUTORIALS OFF)
-   set(ENABLE_PARTICLES ON)
-   set(ENABLE_EB ON)
-   set(ENABLE_AMRDATA ON)
-
-   list(APPEND CMAKE_MODULE_PATH ${AMREX_SRC_DIR}/Tools/CMake)
-
-   # If CUDA is required, enable the language BEFORE adding the AMReX directory
-   # Since AMReX_SetupCUDA has an include guard, it will be included only once here.
-   # The reason for enabling CUDA before adding the AMReX subdirectory is that
-   # the top-most directory needs to setup the CUDA language before a CUDA-enabled target
-   # from a sub-project is included via add_subdirectory.
-   # IMPORTANT: if you don't do this, AMReX will perform this step in a sub-scope and therefore
-   # it will not setup CUDA here!
-   if(ENABLE_CUDA)
-      include(AMReX_SetupCUDA)
-   endif ()
-   
-   add_subdirectory(${AMREX_SRC_DIR})
-   
-   get_directory_property(amrex_targets DIRECTORY ${AMREX_SRC_DIR}/Src BUILDSYSTEM_TARGETS)
-
-   foreach (_target IN LISTS amrex_targets )
-      add_library(AMReX::${_target} ALIAS ${_target})
-   endforeach ()  
-  
-endif ()
-
+# Setup AMReX
+include(MFIXSetupAMReX)
 
 get_git_info ( )
 check_build_tree_path ()
