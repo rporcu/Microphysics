@@ -464,7 +464,7 @@ step3(const Box& grown1_bx,
   Array4<Real> const& optmp = optmp_fbx.array();
   Array4<Real> const& mask = mask_fbx.array();
 
-  AMREX_CUDA_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
   {
     if(flags(i,j,k).isSingleValued())
     {
@@ -650,9 +650,9 @@ compute_divop(Box& bx,
         {
           Real divdiff_w[3];
 
-          compute_diff_wallfluxes(divdiff_w, dx, i, j, k, velocity, mu,
-                                  bndrycent, flags, areafrac_x, areafrac_y, areafrac_z,
-                                  vfrac, do_explicit_diffusion);
+          compute_diff_wallfluxes(divdiff_w, dx, i, j, k, mfi, vel,
+                                  areafrac, volfrac, bndrycent_fab, 
+                                  mu, do_explicit_diffusion);
 
           divc(i,j,k) -= divdiff_w[n] / (dx[n]*vfrac(i,j,k));
         }

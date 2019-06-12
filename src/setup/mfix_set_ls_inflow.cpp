@@ -70,7 +70,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
 
   if (nlft > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
     {
       bct[0] = bct_ilo(dom_lo[0]-1,j/nref,k/nref,0);
       bct[1] = bct_ilo(dom_lo[0]-1,j/nref,k/nref+1,0);
@@ -102,7 +102,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
 
   if (nrgt > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
     {
       bct[0] = bct_ihi(dom_hi[0]+1,j/nref,k/nref,0);
       bct[1] = bct_ihi(dom_hi[0]+1,j/nref,k/nref+1,0);
@@ -134,7 +134,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
   
   if (nbot > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
     {
       bct[0] = bct_jlo(i/nref,dom_lo[1]-1,k/nref,0);
       bct[1] = bct_jlo(i/nref,dom_lo[1]-1,k/nref+1,0);
@@ -166,7 +166,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
   
   if (ntop > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
     {
       bct[0] = bct_jhi(i/nref,dom_hi[1]+1,k/nref,0);
       bct[1] = bct_jhi(i/nref,dom_hi[1]+1,k/nref+1,0);
@@ -198,7 +198,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
 
   if (ndwn > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
     {
       bct[0] = bct_klo(i/nref,j/nref,dom_lo[2]-1,0);
       bct[1] = bct_klo(i/nref,j/nref+1,dom_lo[2]-1,0);
@@ -230,7 +230,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
   
   if (ntop > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
     {
       bct[0] = bct_khi(i/nref,j/nref,dom_hi[2]+1,0);
       bct[1] = bct_khi(i/nref,j/nref+1,dom_hi[2]+1,0);

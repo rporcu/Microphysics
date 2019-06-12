@@ -212,15 +212,13 @@ mfix::set_MC_velocity_bcs ( int lev,
    {
       const Box& bx = (*mac_rhs[lev])[mfi].box();
 
-      set_mac_velocity_bcs ( &time, bx.loVect(), bx.hiVect(),
-                             BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
-                             BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
-                             BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
-                             bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                             bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                             bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                             domain.loVect(), domain.hiVect(),
-                             &nghost );
+      set_mac_velocity_bcs(&time, bc_list, bx, &mfi,
+                           *u[lev], *v[lev], *w[lev],
+                           *bc_ilo[lev], *bc_ihi[lev],
+                           *bc_jlo[lev], *bc_jhi[lev],
+                           *bc_klo[lev], *bc_khi[lev],
+                           domain, &nghost);
+
    }
 }
 

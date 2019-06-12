@@ -121,7 +121,7 @@ void set_scalar_bcs(const BcList& bc_list,
 
   if (nlft > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_yz_lo_3D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo_3D, i, j, k,
     {
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
@@ -144,7 +144,7 @@ void set_scalar_bcs(const BcList& bc_list,
       }
     });
 
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_yz_lo_2D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo_2D, i, j, k,
     {
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
@@ -156,7 +156,7 @@ void set_scalar_bcs(const BcList& bc_list,
 
   if (nrgt > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_yz_hi_3D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_yz_hi_3D, i, j, k,
     {
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
@@ -179,7 +179,7 @@ void set_scalar_bcs(const BcList& bc_list,
       }
     });
 
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_yz_hi_2D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_yz_hi_2D, i, j, k,
     {
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
@@ -191,7 +191,7 @@ void set_scalar_bcs(const BcList& bc_list,
 
   if (nbot > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xz_lo_3D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_xz_lo_3D, i, j, k,
     {
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
@@ -214,7 +214,7 @@ void set_scalar_bcs(const BcList& bc_list,
       }
     });
 
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xz_lo_2D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_xz_lo_2D, i, j, k,
     {
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
@@ -226,7 +226,7 @@ void set_scalar_bcs(const BcList& bc_list,
 
   if (ntop > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xz_hi_3D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_xz_hi_3D, i, j, k,
     {
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -249,7 +249,7 @@ void set_scalar_bcs(const BcList& bc_list,
       }
     });
 
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xz_hi_2D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_xz_hi_2D, i, j, k,
     {
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -261,7 +261,7 @@ void set_scalar_bcs(const BcList& bc_list,
 
   if (ndwn > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xy_lo_3D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_xy_lo_3D, i, j, k,
     {
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
@@ -284,7 +284,7 @@ void set_scalar_bcs(const BcList& bc_list,
       }
     });
 
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xy_lo_2D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_xy_lo_2D, i, j, k,
     {
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
@@ -296,7 +296,7 @@ void set_scalar_bcs(const BcList& bc_list,
 
   if (nup > 0)
   {
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xy_hi_3D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_xy_hi_3D, i, j, k,
     {
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
@@ -319,7 +319,7 @@ void set_scalar_bcs(const BcList& bc_list,
       }
     });
 
-    AMREX_CUDA_HOST_DEVICE_FOR_3D(bx_xy_hi_2D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_xy_hi_2D, i, j, k,
     {
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);

@@ -277,7 +277,7 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
         const unsigned int offset = comp * fab_numPts;
 
-        AMREX_CUDA_HOST_DEVICE_FOR_3D(box, i, j, k,
+        AMREX_HOST_DEVICE_FOR_3D(box, i, j, k,
         {
           Real dm(0);
 

@@ -64,13 +64,11 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
 
     FArrayBox dest_fab(dest);
 
-    set_velocity_bcs ( &time,
-                       dest_fab.dataPtr(), dest_fab.loVect(), dest_fab.hiVect(),
-                       bc_ilo_ptr, bc_ihi_ptr,
-                       bc_jlo_ptr, bc_jhi_ptr,
-                       bc_klo_ptr, bc_khi_ptr,
-                       domain.loVect(), domain.hiVect(),
-                       &nghost, &extrap_dir_bcs );
+    const BcList& bc_list = mfix_for_fillpatching->get_bc_list_values();
+
+    set_velocity_bcs ( &time, bc_list, dest_fab,
+                       bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi,
+                       domain, &nghost, &extrap_dir_bcs );
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
