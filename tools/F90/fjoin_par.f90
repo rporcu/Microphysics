@@ -163,6 +163,11 @@ program fjoin_par
       lc2 = lc2 + 1
    enddo
 
+   call dealloc_particles()
+   if(allocated(fbase)) then
+      deallocate(fbase)
+   end if
+
 
 contains
 

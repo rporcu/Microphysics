@@ -33,7 +33,6 @@ INCLUDE_LOCATIONS += $(TOP)/src/include
 VPATH_LOCATIONS   += $(TOP)/src/include
 
 Pdirs   := Base AmrCore Boundary Particle EB
-Pdirs   += Extern/Algoim
 
 ifeq ($(USE_HYPRE), TRUE)
 Pdirs   += Extern/HYPRE
@@ -53,17 +52,6 @@ VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/C_CellMG
 include $(AMREX_HOME)/Src/LinearSolvers/MLMG/Make.package
 INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/MLMG
 VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/MLMG
-
-ALGOIM_HOME ?= ../../algoim
-BLITZ_HOME  ?= ../../blitz
-
-INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/Extern/Algoim
-INCLUDE_LOCATIONS += $(ALGOIM_HOME)/src
-INCLUDE_LOCATIONS += $(BLITZ_HOME)/include
-VPATH_LOCATIONS   += $(AMREX_HOME)/Src/Extern/Algoim
-VPATH_LOCATIONS   += $(ALGOIM_HOME)
-
-DEFINES += -DAMREX_USE_ALGOIM
 
 #These are the directories in AMReX
 

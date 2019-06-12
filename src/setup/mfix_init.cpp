@@ -46,16 +46,16 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "mg_atol"                , nodal_mg_atol );
         pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
 
-        // Default bottom solver here is bicgcg, but alternatives are 
+        // Default bottom solver here is bicgcg, but alternatives are
         // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
         nodal_bottom_solver_type = "bicgcg";
         pp.query( "bottom_solver_type",  nodal_bottom_solver_type );
 
-        // Is this a steady-state calcualtion
+        // Is this a steady-state calculation
         steady_state = 0;
         pp.query( "steady_state", steady_state );
 
-        // Tolerance to check for steady state 
+        // Tolerance to check for steady state
         steady_state_tol = -1.;
         pp.query( "steady_state_tol", steady_state_tol );
 
@@ -64,15 +64,16 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
         if (steady_state > 0)
         {
-           if (steady_state_tol < 0) 
+           if (steady_state_tol < 0)
               amrex::Abort("Must set steady_state_tol if running to steady state!");
 
-              amrex::Print() << "Running to steady state with max_iters = " << steady_state_max_iter <<
-                             " and tolerance " << steady_state_tol << std::endl;
+              amrex::Print() << "Running to steady state with max_iters = "
+                             << steady_state_max_iter << " and tolerance "
+                             << steady_state_tol << std::endl;
 
         } else {
 
-           if (steady_state_tol > 0) 
+           if (steady_state_tol > 0)
               amrex::Abort("steady_state_tol set but not steady_state!");
         }
 
@@ -92,6 +93,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("knapsack_weight_type", knapsack_weight_type);
         pp.query("load_balance_fluid", load_balance_fluid);
 
+        // The default value for the rescaling ratio of the collision time is 50
+        pp.query("tcoll_ratio", tcoll_ratio);
+
         ParmParse pp_mac("mac");
         pp_mac.query( "mg_verbose"   , mac_mg_verbose );
         pp_mac.query( "mg_cg_verbose", mac_mg_cg_verbose );
@@ -100,7 +104,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp_mac.query( "mg_max_iter"  , mac_mg_max_iter );
         pp_mac.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
 
-        // Default bottom solver here is bicgcg, but alternatives are 
+        // Default bottom solver here is bicgcg, but alternatives are
         // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
         mac_bottom_solver_type = "bicgcg";
         pp_mac.query( "bottom_solver_type", mac_bottom_solver_type );
@@ -155,7 +159,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp_diff.query( "mg_verbose"   , diff_mg_verbose );
         pp_diff.query( "mg_cg_verbose", diff_mg_cg_verbose );
 
-        // Default bottom solver here is bicgcg, but alternatives are 
+        // Default bottom solver here is bicgcg, but alternatives are
         // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
         diff_bottom_solver_type = "bicgcg";
         pp_diff.query( "bottom_solver_type", diff_bottom_solver_type );
@@ -166,7 +170,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     call_udf     = call_udf_in;
 
     if (solve_dem)
-    {	
+    {
         ParmParse pp("particles");
 
         pp.query("max_grid_size_x", particle_max_grid_size_x);
@@ -178,40 +182,40 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 
     if (solve_dem && !solve_fluid)
-    {	
-        if (fixed_dt < 0)
-            amrex::Abort("If running particle-only must specify fixed_dt in the inputs file");
+    {
+        if (fixed_dt <= 0.0)
+            amrex::Abort("If running particle-only must specify a positive fixed_dt in the inputs file");
     }
 
     if (solve_dem && solve_fluid)
     {
-            ParmParse pp("mfix");
+      ParmParse pp("mfix");
 
-            std::string drag_type = "None";
-	    pp.query("drag_type", drag_type);
+      std::string drag_type = "None";
+      pp.query("drag_type", drag_type);
 
-	    if (drag_type == "WenYu")
-	    {
-		m_drag_type = DragType::WenYu;
-	    }
-	    else if (drag_type == "Gidaspow")
-	    {
-		m_drag_type = DragType::Gidaspow;
-	    }
-	    else if (drag_type == "BVK2")
-	    {
-	        m_drag_type = DragType::BVK2;
-	    }
-		else if (drag_type == "UserDrag")
-	    {
-		m_drag_type = DragType::UserDrag;
-	    }
-	    else 
-	    {
-                amrex::Abort("Don't know this drag_type!");
-	    }
-    }	
-	
+      if (drag_type == "WenYu")
+      {
+        m_drag_type = DragType::WenYu;
+      }
+      else if (drag_type == "Gidaspow")
+      {
+        m_drag_type = DragType::Gidaspow;
+      }
+      else if (drag_type == "BVK2")
+      {
+        m_drag_type = DragType::BVK2;
+      }
+      else if (drag_type == "UserDrag")
+      {
+        m_drag_type = DragType::UserDrag;
+      }
+      else
+      {
+        amrex::Abort("Don't know this drag_type!");
+      }
+    }
+
     {
       ParmParse amr_pp("amr");
 
@@ -739,9 +743,18 @@ mfix::PostInit(Real& dt, Real time, int nstep, int restart_flag, Real stop_time)
             }
         }
 
+        Real min_dp[10], min_ro[10];
+        Real max_dp[10], max_ro[10];
         Real avg_dp[10], avg_ro[10];
-        pc->GetParticleAvgProp( avg_dp, avg_ro );
-        init_collision(avg_dp, avg_ro);
+
+        pc->GetParticleAvgProp( min_dp, min_ro,
+                                max_dp, max_ro,
+                                avg_dp, avg_ro );
+
+        init_collision(min_dp, min_ro,
+                       max_dp, max_ro,
+                       avg_dp, avg_ro,
+                       tcoll_ratio);
 
         DEMParams::Initialize();
 

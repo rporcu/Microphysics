@@ -86,7 +86,7 @@ mfix::mfix_compute_ugradu( Box& bx,
   // functions
   const GpuArray<int, 3> bc_types = {bc_list.minf, bc_list.pinf, bc_list.pout};
 
-  AMREX_CUDA_HOST_DEVICE_FOR_3D(bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
   {
     Real u_w(0); Real v_w(0); Real w_w(0);
     Real u_e(0); Real v_e(0); Real w_e(0);
@@ -366,7 +366,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   //
   // ===================== X =====================
   //
-  AMREX_CUDA_HOST_DEVICE_FOR_4D(ubx, ncomp, i, j, k, n,
+  AMREX_HOST_DEVICE_FOR_4D(ubx, ncomp, i, j, k, n,
   {
     Real u_face(0);
     Real upls(0); Real umns(0);
@@ -400,7 +400,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   //
   // ===================== Y =====================
   //
-  AMREX_CUDA_HOST_DEVICE_FOR_4D(vbx, ncomp, i, j, k, n,
+  AMREX_HOST_DEVICE_FOR_4D(vbx, ncomp, i, j, k, n,
   {
     Real v_face(0);
     Real vpls(0); Real vmns(0);
@@ -434,7 +434,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   //
   // ===================== Z =====================
   //
-  AMREX_CUDA_HOST_DEVICE_FOR_4D(wbx, ncomp, i, j, k, n,
+  AMREX_HOST_DEVICE_FOR_4D(wbx, ncomp, i, j, k, n,
   {
     Real w_face(0);
     Real wpls(0); Real wmns(0);
@@ -474,7 +474,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
                 areafrac, facecent, flags, volfrac, bndrycent,
                 cyclic_x, cyclic_y, cyclic_z, domain, dx, &nghost);
 
-  AMREX_CUDA_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
+  AMREX_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
   {
     ugradu(i,j,k,n) *= (-1/epsilon_g(i,j,k));
   });
@@ -527,7 +527,7 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv,
             {
                 // If tile is completely covered by EB geometry, set slopes
                 // value to some very large number so we know if
-                // we accidentaly use these covered slopes later in calculations
+                // we accidentally use these covered slopes later in calculations
                 conv[lev] -> setVal( 1.2345e300, bx, 0, 3);
             }
             else
@@ -593,7 +593,7 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv,
             {
                 // If tile is completely covered by EB geometry, set slopes
                 // value to some very large number so we know if
-                // we accidentaly use these covered slopes later in calculations
+                // we accidentally use these covered slopes later in calculations
                 conv[lev] -> setVal( 1.2345e300, bx, 0, 3);
             }
             else

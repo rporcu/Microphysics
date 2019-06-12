@@ -46,11 +46,10 @@ public:
     mfix ();
     ~mfix ();
 
-     // Face-based coefficients b in implicit diffusion solve
-     //    and in MAC projection
-     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff_cc;
-     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
-     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
+    // Face-based coefficients b in MAC projection and implicit diffusion solve
+    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff_cc;
+    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
+    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
 
     // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_lobc;
@@ -229,30 +228,32 @@ public:
 
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
 
-	static DragType m_drag_type;
+    static DragType m_drag_type;
 
-	template <typename F>
-	void mfix_calc_particle_beta(F DragFunc, Real time);
+    static amrex::Real tcoll_ratio; // input parameter defaulted to 50 used in file src_des/init_collision.f90
 
-     void mfix_compute_ugradu( Box& bx,
-                               Vector< std::unique_ptr<MultiFab> >& conv,
-                               Vector< std::unique_ptr<MultiFab> >& vel,
-                               MFIter* mfi,
-                               Box& domain,
-                               const int lev);
+    template <typename F>
+    void mfix_calc_particle_beta(F DragFunc, Real time);
 
-     void mfix_compute_ugradu_eb( Box& bx,
-                                  Vector< std::unique_ptr<MultiFab> >& conv,
-                                  Vector< std::unique_ptr<MultiFab> >& vel,
-                                  MFIter* mfi,
-                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
-                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
-                                  const amrex::MultiFab* volfrac,
-                                  const amrex::MultiCutFab* bndrycent,
-                                  Box& domain,
-                                  const EBCellFlagFab& flags,
-                                  const int lev);
-	
+    void mfix_compute_ugradu( Box& bx,
+                              Vector< std::unique_ptr<MultiFab> >& conv,
+                              Vector< std::unique_ptr<MultiFab> >& vel,
+                              MFIter* mfi,
+                              Box& domain,
+                              const int lev);
+
+    void mfix_compute_ugradu_eb( Box& bx,
+                                 Vector< std::unique_ptr<MultiFab> >& conv,
+                                 Vector< std::unique_ptr<MultiFab> >& vel,
+                                 MFIter* mfi,
+                                 Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
+                                 Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
+                                 const amrex::MultiFab* volfrac,
+                                 const amrex::MultiCutFab* bndrycent,
+                                 Box& domain,
+                                 const EBCellFlagFab& flags,
+                                 const int lev);
+
 protected:
 
      //! Tagging cells for refinement
@@ -393,6 +394,11 @@ private:
                               Vector< std::unique_ptr<MultiFab> >& vel,
                               int explicit_diffusion_flag);
 
+     void mfix_compute_divtau2(int lev, 
+                               const Vector< std::unique_ptr<MultiFab> >& divtau,
+                               const Vector< std::unique_ptr<MultiFab> >& vel,
+                               int explicit_diffusion_flag);
+
      int steady_state_reached(Real dt, int iter);
 
      void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_old,
@@ -402,7 +408,8 @@ private:
                                Vector< std::unique_ptr<MultiFab> >& divtau_old,
                                Real time, Real dt, bool proj_2);
 
-     void mfix_diffuse_velocity(Real time, Real dt);
+     void mfix_diffuse_velocity       (Real time, Real dt);
+     void mfix_diffuse_velocity_tensor(Real time, Real dt);
 
      void mfix_compute_diveu(Real time);
 
@@ -496,14 +503,17 @@ private:
      // div (ep_g * u)
      Vector< std::unique_ptr<MultiFab> > diveu;
 
-     // RHS for cell-centered solves
-     Vector< std::unique_ptr<MultiFab> > rhs_cc;
-
-     // Solution for diffusion solves
-     Vector< std::unique_ptr<MultiFab> > phi_cc;
+     // RHS for MAC solve
+     Vector< std::unique_ptr<MultiFab> > mac_rhs;
 
      // Solution for MAC projection
-     Vector< std::unique_ptr<MultiFab> > phi_mac;
+     Vector< std::unique_ptr<MultiFab> > mac_phi;
+
+     // RHS for diffusive tensor solve
+     Vector< std::unique_ptr<MultiFab> > diff_rhs;
+
+     // Solution for diffusion solves
+     Vector< std::unique_ptr<MultiFab> > diff_phi;
 
      //
      Vector< std::unique_ptr<MultiFab> > fp;

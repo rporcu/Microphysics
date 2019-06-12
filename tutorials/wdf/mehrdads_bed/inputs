@@ -5,22 +5,26 @@
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.fixed_dt        = 1.0e-4
 
 mfix.cfl = 0.5
+mfix.dt_max = 0.0001
+mfix.tcoll_ratio = 20.
 
-mfix.drag_type = "BVK2"
-
-amr.max_step = 5
-#amr.stop_time = 0.20
+#amr.max_step = 100
+amr.stop_time = 15.0
 
 mfix.particle_init_type = "Auto"
 
-mac.mg_verbose =  0
-mac.mg_rtol             = 1.e-10
+mfix.drag_type = "Gidaspow"
 
-mfix.mg_verbose         = 0
-mfix.mg_rtol            = 1.e-10
+amr.blocking_factor = 2
+
+mac.mg_verbose          = 1
+
+diffusion.mg_verbose = 0
+
+mfix.mg_verbose         = 1
+mfix.mg_cg_verbose      = 0
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -31,72 +35,74 @@ amr.max_level = 0
 geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 0       0       0       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
-geometry.prob_hi     = 0.048   0.012   0.012   # hi corner of physical domain
+geometry.prob_hi     = 0.150   0.050   0.005  # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell =  256  64  64
+amr.n_cell =  180   60   6
 
 #! Grids
 #!-----------------------------------------------------------//
 # Maximum allowable size of each fluid subdomain in the problem domain;
 
 # Fluid
-amr.max_grid_size_x = 256
-amr.max_grid_size_y = 64
-amr.max_grid_size_z = 64
+amr.max_grid_size_x = 18
+amr.max_grid_size_y = 15
+amr.max_grid_size_z = 6
 
 # Particles (not with KDTree)
-#particles.max_grid_size_x =   32
-#particles.max_grid_size_y =   32
-#particles.max_grid_size_z =   32
+particles.max_grid_size_x =  9
+particles.max_grid_size_y =  15
+particles.max_grid_size_z =  6
 
 #! Tiles
 #!-----------------------------------------------------------//
 
 # Fluid: Maximum tile size within each grid
-fabarray.mfiter_tile_size =  1024 1024 1024
+fabarray.mfiter_tile_size = 1024 1024 1024
 
 # Particles: Maximum particle title size
 particles.tile_size = 1024 1024 1024
-particles.do_tiling=false
+
 
 #! EB settings
 #!-----------------------------------------------------------//
 
 # Level-set refinement and padding
-mfix.levelset__refinement    = 1 # levelset resolution
-mfix.levelset__pad           = 8 # levelset ghost cells
+mfix.levelset__refinement    = 4 # levelset resolution
+mfix.levelset__pad           = 4 # levelset ghost cells
 
 # EB refinement and padding
 # => only needed when using multiple grids
-#mfix.levelset__eb_pad        = 8 # EB extends into neighboring grids
+mfix.levelset__eb_pad        = 2 # EB extends into neighboring grids
 
 mfix.write_eb_surface = false  # Needed to output eb-surfaces
 
 #! EB geometry
 #!-----------------------------------------------------------//
+#! none
 
-mfix.geometry = "cylinder"
+#! BCs 
+#!-----------------------------------------------------------//
+xlo.type = "mi"
+xlo.velocity = 0.0
 
-cylinder.internal_flow = true
-cylinder.closed_bottom = true
-cylinder.bottom_offset = 1.0e-8
+xhi.type = "po"
+xhi.pressure = 0.0
 
-cylinder.radius = 0.0054
-cylinder.height = -1.0
+ylo.type = "nsw"
+yhi.type = "nsw"
 
-cylinder.direction = 0
-cylinder.center    =  0.024  0.006   0.006
-
+zlo.type = "nsw"
+zhi.type = "nsw"
 
 #_______________________________________________________________________
 # Particle load balancing
 
-mfix.load_balance_type = "FixedSize"
-#mfix.load_balance_type = "KnapSack"
+#mfix.load_balance_type = "FixedSize"
+mfix.load_balance_type = "KnapSack"
 
-amr.dual_grid          =  0
-amr.regrid_int         = -1
+amr.dual_grid          = 0
+amr.regrid_int         = 10000
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -106,26 +112,35 @@ amr.regrid_int         = -1
 #mfix.knapsack_weight_type = "NumParticles"
 #mfix.knapsack_weight_type = "RunTimeCosts"
 
+#______________________________________________________________________
+# user data processing
+amr.avg_int = 10
+amr.avg_file = "uio"
+
+amr.avg_vel_p =        0        0
+amr.avg_p_g   =        1        1
+amr.avg_ep_g  =        0        0
+amr.avg_vel_g =        0        0
+
+amr.avg_region_x_w =   0.0001   0.001
+amr.avg_region_x_e =   0.0001   0.001
+amr.avg_region_y_s =   0.000    0.000
+amr.avg_region_y_n =   0.050    0.050 
+amr.avg_region_z_b =   0.000    0.000
+amr.avg_region_z_t =   0.150    0.150 
+
 #_______________________________________________________________________
 # IO / Checkpointing
 
-amr.par_ascii_int  = -1
+amr.par_ascii_int  = 1000
 amr.par_ascii_file ="vis"
 
-amr.plot_int       = -1
+amr.plot_int       = 10000
 amr.plot_file      ="plt"
 
-amr.check_int      = -1
+amr.check_int      = 10000
 amr.check_file     ="chk"
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
-
-xlo.type = "mi"
-xlo.velocity = 0.015
-
-xhi.type = "po"
-xhi.pressure = 0.0
-
-amr.plt_regtest = 1

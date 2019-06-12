@@ -106,7 +106,7 @@ contains
       j = floor(ly)
       k = floor(lz)
 
-      ! Weigths
+      ! Weights
       sx_hi = lx - i;  sx_lo = one - sx_hi
       sy_hi = ly - j;  sy_lo = one - sy_hi
       sz_hi = lz - k;  sz_lo = one - sz_hi
@@ -175,7 +175,7 @@ contains
       j = floor(ly)
       k = floor(lz)
 
-      ! Weigths
+      ! Weights
       sx_hi = lx - i;  sx_lo = one - sx_hi
       sy_hi = ly - j;  sy_lo = one - sy_hi
       sz_hi = lz - k;  sz_lo = one - sz_hi
@@ -253,7 +253,7 @@ contains
           & "interpolation stencil include covered cells.")
       end if
 
-      ! Weigths
+      ! Weights
       sx_hi = lx - i;  sx_lo = one - sx_hi
       sy_hi = ly - j;  sy_lo = one - sy_hi
       sz_hi = lz - k;  sz_lo = one - sz_hi
@@ -331,7 +331,7 @@ contains
           & "interpolation stencil include covered cells.")
       end if
 
-      ! Weigths
+      ! Weights
       sx_hi = lx - i;  sx_lo = one - sx_hi
       sy_hi = ly - j;  sy_lo = one - sy_hi
       sz_hi = lz - k;  sz_lo = one - sz_hi

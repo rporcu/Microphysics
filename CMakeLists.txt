@@ -104,6 +104,7 @@ endif ()
 set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
 if (ENABLE_CUDA)
+   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std=c++14 -Xcompiler=-std=c++14")
    setup_cuda()
 endif ()
 
@@ -124,7 +125,6 @@ target_link_libraries ( ${MFIX_EXENAME} ${MFIX_LIBNAME} )
 
 if ( ENABLE_CUDA)
    set_source_files_properties(${MAIN} PROPERTIES LANGUAGE CUDA )
-   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std=c++14 -Xcompiler=-std=c++14")
    set_target_properties( ${MFIX_EXENAME}
       PROPERTIES
       CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag

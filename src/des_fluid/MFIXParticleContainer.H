@@ -9,6 +9,7 @@
 #include "AMReX_NeighborParticles.H"
 
 #include "mfix_des_F.H"
+#include "MFIX_DEM_Parms.H"
 
 using namespace amrex;
 using namespace std;
@@ -56,7 +57,7 @@ struct MFIXCheckPair
         return AMREX_D_TERM(   (p1.pos(0) - p2.pos(0))*(p1.pos(0) - p2.pos(0)) ,
                              + (p1.pos(1) - p2.pos(1))*(p1.pos(1) - p2.pos(1)) ,
                              + (p1.pos(2) - p2.pos(2))*(p1.pos(2) - p2.pos(2)) )
-            <= 9.0*p1.rdata(0)*p1.rdata(0);
+            <= DEMParams::neighborhood;
     }
 };
 
@@ -102,7 +103,9 @@ public:
             const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
             MultiFab * cost, std::string & knapsack_weight_type);
 
-    void GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro)[10]);
+    void GetParticleAvgProp(Real (&min_dp)[10], Real (&min_ro)[10],
+                            Real (&max_dp)[10], Real (&max_ro)[10],
+                            Real (&avg_dp)[10], Real (&avg_ro)[10]);
 
     //Real GetMaxRadius(int lev);
 

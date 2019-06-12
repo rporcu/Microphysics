@@ -71,11 +71,27 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     if(NOT GIT_SUBMOD_RESULT EQUAL "0")
       message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
     endif()
+
+    if(AMREX_GIT_COMMIT)
+      message(STATUS "Using custom AMReX SHA:  AMREX_GIT_COMMIT=${AMREX_GIT_COMMIT}")
+      execute_process(COMMAND ${GIT_EXECUTABLE} fetch --all
+        WORKING_DIRECTORY ${AMREX_SUPERBUILD_SOURCEDIR}
+        RESULT_VARIABLE GIT_SUBMOD_RESULT)
+      if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+        message(FATAL_ERROR "git pull failed with ${GIT_SUBMOD_RESULT}")
+      endif()
+      execute_process(COMMAND ${GIT_EXECUTABLE} checkout ${AMREX_GIT_COMMIT}
+        WORKING_DIRECTORY ${AMREX_SUPERBUILD_SOURCEDIR}
+        RESULT_VARIABLE GIT_SUBMOD_RESULT)
+      if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+        message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}")
+      endif()
+    endif()
   endif()
 endif()
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/subprojects/amrex/CMakeLists.txt")
-  message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
+if(NOT EXISTS "${AMREX_SUPERBUILD_SOURCEDIR}/CMakeLists.txt")
+  message(FATAL_ERROR "AMReX not available at ${AMREX_SUPERBUILD_SOURCEDIR}. Unable to build.")
 endif()
 
 
@@ -108,7 +124,6 @@ ExternalProject_Add ( amrex
    -DENABLE_FPE=${ENABLE_FPE}
    -DENABLE_ASSERTIONS=${AMREX_ENABLE_ASSERTION}
    -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-   -DENABLE_3D_NODAL_MLMG=YES
    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
    -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}

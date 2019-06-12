@@ -35,7 +35,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
        {
            // If tile is completely covered by EB geometry, set slopes
            // value to some very large number so we know if
-           // we accidentaly use these covered slopes later in calculations
+           // we accidentally use these covered slopes later in calculations
            xslopes[lev] -> setVal( 1.2345e300, bx, 0, 3);
            yslopes[lev] -> setVal( 1.2345e300, bx, 0, 3);
            zslopes[lev] -> setVal( 1.2345e300, bx, 0, 3);
@@ -51,7 +51,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                const auto&  zs_fab = zslopes[lev]->array(mfi);
 
                int ncomp = Sborder.nComp();
-               AMREX_CUDA_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
+               AMREX_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
                {
                    // X direction
                    Real du_xl = 2.0*(vel_fab(i  ,j,k,n) - vel_fab(i-1,j,k,n));
@@ -91,7 +91,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
 
                int ncomp = Sborder.nComp();
 
-               AMREX_CUDA_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
+               AMREX_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
                {
                    if (flag_fab(i,j,k).isCovered())
                    {
@@ -156,7 +156,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
 
            int ncomp = Sborder.nComp();
 
-           AMREX_CUDA_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
+           AMREX_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
            {
                if ( (i == domain.smallEnd(0)) && !flag_fab(i,j,k).isCovered() && ilo_ifab(i-1,j,k,0) == 20)
                {

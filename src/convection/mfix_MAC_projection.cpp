@@ -97,12 +97,12 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
       
       if (m_verbose)
       {
-         EB_computeDivergence(*rhs_cc[lev],
+         EB_computeDivergence(*mac_rhs[lev],
                               GetArrOfConstPtrs(vel[lev]),
                               geom[lev]);
 
          Print() << "  * On level "<< lev
-                 << " max(abs(diveu)) = " << mfix_norm0(rhs_cc,lev,0) << "\n";
+                 << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
       }  
    }
 
@@ -145,9 +145,9 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
 
    if (steady_state)
    {
-       // Solve using phi_mac as an initial guess -- note that phi_mac is
+       // Solve using mac_phi as an initial guess -- note that mac_phi is
        //       stored from iteration to iteration
-       macproj.project(GetVecOfPtrs(phi_mac), mac_mg_rtol,mac_mg_atol);
+       macproj.project(GetVecOfPtrs(mac_phi), mac_mg_rtol,mac_mg_atol);
    } 
    else 
    {
@@ -167,12 +167,12 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
          vel[lev][1]->FillBoundary( geom[lev].periodicity() );
          vel[lev][2]->FillBoundary( geom[lev].periodicity() );
          
-         EB_computeDivergence(*rhs_cc[lev],
+         EB_computeDivergence(*mac_rhs[lev],
                               GetArrOfConstPtrs(vel[lev]),
                               geom[lev]);
 
          Print() << "  * On level "<< lev
-                 << " max(abs(diveu)) = " << mfix_norm0(rhs_cc,lev,0) << "\n";
+                 << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
       } 
 
       // Now convert (eps u, eps v, eps w) back to u,v,w
@@ -208,16 +208,19 @@ mfix::set_MC_velocity_bcs ( int lev,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-   for (MFIter mfi((*rhs_cc[lev]), false); mfi.isValid(); ++mfi)
+   for (MFIter mfi((*mac_rhs[lev]), false); mfi.isValid(); ++mfi)
    {
-      const Box& bx = (*rhs_cc[lev])[mfi].box();
+      const Box& bx = (*mac_rhs[lev])[mfi].box();
 
-      set_mac_velocity_bcs(&time, bc_list, bx, &mfi,
-                           *u[lev], *v[lev], *w[lev],
-                           *bc_ilo[lev], *bc_ihi[lev],
-                           *bc_jlo[lev], *bc_jhi[lev],
-                           *bc_klo[lev], *bc_khi[lev],
-                           domain, &nghost);
+      set_mac_velocity_bcs ( &time, bx.loVect(), bx.hiVect(),
+                             BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
+                             BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
+                             BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
+                             bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+                             bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+                             bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+                             domain.loVect(), domain.hiVect(),
+                             &nghost );
    }
 }
 

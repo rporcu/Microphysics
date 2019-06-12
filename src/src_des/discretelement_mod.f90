@@ -61,6 +61,14 @@
 ! coeff of restitution input in one D array, solid wall
       real(rt) :: DES_EN_WALL_INPUT(DIM_M)
 
+      real(rt) :: dp_max(dim_m) = -1.0d0
+      real(rt) :: dp_min(dim_m) = -1.0d0
+      real(rt) :: dp_avg(dim_m) = -1.0d0
+
+      real(rt) :: ro_max(dim_m) = -1.0d0
+      real(rt) :: ro_min(dim_m) = -1.0d0
+      real(rt) :: ro_avg(dim_m) = -1.0d0
+
 ! End particle-particle and particle-wall collision model parameters
 !-----------------------------------------------------------------<<<
 

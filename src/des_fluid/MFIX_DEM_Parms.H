@@ -48,8 +48,9 @@ namespace DEMParams
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real small_number;
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real large_number;
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real eps;
-    
-    
+
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real neighborhood;
+
     void Initialize ();
 
 }

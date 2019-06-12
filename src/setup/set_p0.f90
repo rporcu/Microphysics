@@ -150,7 +150,7 @@ subroutine set_p0(lo, hi, domlo, domhi, &
 
       delp_dir = 2
 
-      bcv_lo = bct_klo(domlo(1),domlo(1),2)
+      bcv_lo = bct_klo(domlo(1),domlo(2),2)
       p_lo   = scale_pressure(bc_p_g(bcv_lo))
 
       bcv_hi = bct_khi(domlo(1),domlo(2),2)
@@ -249,7 +249,7 @@ subroutine set_p0(lo, hi, domlo, domhi, &
       gp0(3) = -dpodz
    endif
 
-   GOTO 100   ! pressure in all intial condition region cells was defined
+   GOTO 100   ! pressure in all initial condition region cells was defined
 
    ! ----------------------------------------------------------------<<<
 

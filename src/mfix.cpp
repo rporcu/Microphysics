@@ -11,6 +11,7 @@ std::string mfix::knapsack_weight_type = "RunTimeCosts";
 int         mfix::load_balance_fluid   = 1;
 int         mfix::knapsack_nmax        = 128;
 DragType    mfix::m_drag_type          = DragType::Invalid;
+amrex::Real mfix::tcoll_ratio          = 50.;
 
 // Define unit vectors for easily convert indices
 amrex::IntVect mfix::e_x(1,0,0);
@@ -122,13 +123,16 @@ mfix::ResizeArrays ()
     diveu.resize(nlevs_max);
 
     // RHS arrays for cell-centered solves
-    rhs_cc.resize(nlevs_max);
+    diff_rhs.resize(nlevs_max);
 
     // Solution array for diffusion solves
-    phi_cc.resize(nlevs_max);
+    diff_phi.resize(nlevs_max);
+
+    // RHS array for MAC projection
+    mac_rhs.resize(nlevs_max);
 
     // Solution array for MAC projection
-    phi_mac.resize(nlevs_max);
+    mac_phi.resize(nlevs_max);
 
     // Current (vel_g) and old (vel_go) velocities
     vel_g.resize(nlevs_max);
