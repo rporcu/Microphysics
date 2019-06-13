@@ -37,7 +37,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Options to control verbosity level
         pp.query("verbose", m_verbose);
 
-        // Options to control MGML behavior
+        // Options to control MLMG behavior
         pp.query( "mg_verbose"             , nodal_mg_verbose );
         pp.query( "mg_cg_verbose"          , nodal_mg_cg_verbose );
         pp.query( "mg_max_iter"            , nodal_mg_max_iter );
