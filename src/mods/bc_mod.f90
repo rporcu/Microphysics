@@ -109,9 +109,9 @@ contains
     return
   end function get_bc_w_g
 
-  real(rt) function get_bc_vel_g(n,pID) bind(C)
-    integer(c_int), intent(in) :: n,pID
-    get_bc_vel_g = bc_vel_g(n,pID)
+  real(rt) function get_bc_vel_g(pID,n) bind(C)
+    integer(c_int), intent(in) :: pID,n
+    get_bc_vel_g = bc_vel_g(pID,n)
     return
   end function get_bc_vel_g
 
