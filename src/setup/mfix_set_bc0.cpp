@@ -190,8 +190,8 @@ void set_bc0(const Box& sbx,
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xy_hi_3D, i, j, k,
     {
-      const int bcv = bct_ihi(i,j,dom_hi[2]+1,1);
-      const int bct = bct_ihi(i,j,dom_hi[2]+1,0);
+      const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
+      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
