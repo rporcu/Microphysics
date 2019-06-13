@@ -57,11 +57,6 @@ if (AMReX_FOUND)
       message (WARNING "MFIX build type (${CMAKE_BUILD_TYPE}) type does not match AMReX build type (${AMReX_BUILD_TYPE})")
    endif ()
    
-
-   if (ENABLE_CUDA)
-      setup_cuda()
-   endif ()
-   
 else ()
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~ SUPERBUILD MODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
