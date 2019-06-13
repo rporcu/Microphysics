@@ -363,6 +363,8 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   // possible
   //
 
+  amrex::Real my_huge = get_my_huge();
+
   //
   // ===================== X =====================
   //
@@ -392,7 +394,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
       }
     }
     else {
-      u_face = get_my_huge(); 
+        u_face = my_huge;
     }
     fx(i,j,k,n) = .5*(epsilon_g(i-1,j,k)+epsilon_g(i,j,k)) * u(i,j,k) * u_face;
   });
@@ -426,7 +428,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
       }
     }
     else {
-      v_face = get_my_huge();
+      v_face = my_huge;
     }
     fy(i,j,k,n) = .5*(epsilon_g(i,j-1,k)+epsilon_g(i,j,k)) * v(i,j,k) * v_face;
   });
@@ -460,7 +462,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
       }
     }
     else {
-      w_face = get_my_huge();
+      w_face = my_huge;
     }
     fz(i,j,k,n) = .5*(epsilon_g(i,j,k-1)+epsilon_g(i,j,k)) * w(i,j,k) * w_face;
   });
