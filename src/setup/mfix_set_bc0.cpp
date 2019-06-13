@@ -188,7 +188,7 @@ void set_bc0(const Box& sbx,
 
   if (nup > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_yz_hi_3D, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(bx_xy_hi_3D, i, j, k,
     {
       const int bcv = bct_ihi(i,j,dom_hi[2]+1,1);
       const int bct = bct_ihi(i,j,dom_hi[2]+1,0);
