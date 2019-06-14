@@ -1,11 +1,12 @@
 #include <param_mod_F.H>
 
-#include <limits>
-
 #include <AMReX_REAL.H>
 
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
+
+#include <limits>
+#include <cmath>
 
 AMREX_GPU_HOST_DEVICE
 bool is_equal(const amrex::Real& x, const amrex::Real& y)
