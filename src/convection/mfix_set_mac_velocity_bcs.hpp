@@ -31,6 +31,7 @@ set_mac_velocity_bcs(Real* time,
                      IArrayBox& bct_klo_fab,
                      IArrayBox& bct_khi_fab,
                      Box& domain,
+                     Real** m_bc_vel_g,
                      const int* nghost);
 
 #endif

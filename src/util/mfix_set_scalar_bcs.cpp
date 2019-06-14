@@ -12,7 +12,7 @@
 
 #include <mfix_set_scalar_bcs.hpp>
 #include <bc_mod_F.H>
-#include <eos_mod_F.H>
+#include <eos_mod.hpp>
 #include <fld_constants_mod_F.H>
 #include <param_mod_F.H>
 
@@ -29,6 +29,8 @@ void set_scalar_bcs(const BcList& bc_list,
                     const IArrayBox& bct_klo_fab,
                     const IArrayBox& bct_khi_fab,
                     const Box& domain,
+                    Real* m_bc_ep_g,
+                    Real* m_bc_t_g,
                     const int* ng)
 {
   IntVect dom_lo(domain.loVect());
@@ -58,8 +60,6 @@ void set_scalar_bcs(const BcList& bc_list,
 
   const Real ro_g0 = get_ro_g0();
   const Real mu_g0 = get_mu_g0();
-
-  Real bc_ro_g(ro_g0), bc_mu_g(0);
 
   // Create InVects for following 2D Boxes
   IntVect bx_yz_lo_lo_2D(ep_g_lo), bx_yz_lo_hi_2D(ep_g_hi);
@@ -119,10 +119,15 @@ void set_scalar_bcs(const BcList& bc_list,
   const Box bx_xy_lo_3D(ep_g_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, ep_g_hi);
 
+  const Real undefined = get_undefined();
+
   if (nlft > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo_3D, i, j, k,
     {
+      Real bc_ro_g(ro_g0);
+      Real bc_mu_g(0);
+
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
@@ -134,8 +139,8 @@ void set_scalar_bcs(const BcList& bc_list,
       }
       else if(bct == bc_list.minf)
       {
-        if(is_undefined_db(mu_g0))
-          bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if(is_equal(mu_g0, undefined))
+          bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
@@ -150,7 +155,7 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
       if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*get_bc_ep_g(bcv) - ep_g(i+1,j,k);
+        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i+1,j,k);
     });
   }
 
@@ -158,6 +163,9 @@ void set_scalar_bcs(const BcList& bc_list,
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_yz_hi_3D, i, j, k,
     {
+      Real bc_ro_g(ro_g0);
+      Real bc_mu_g(0);
+
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
@@ -169,8 +177,8 @@ void set_scalar_bcs(const BcList& bc_list,
       }
       else if(bct == bc_list.minf)
       {
-        if(is_undefined_db(mu_g0))
-          bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if(is_equal(mu_g0, undefined))
+          bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
@@ -185,14 +193,21 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
       if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*get_bc_ep_g(bcv) - ep_g(i-1,j,k);
+        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i-1,j,k);
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
   if (nbot > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xz_lo_3D, i, j, k,
     {
+      Real bc_ro_g(ro_g0);
+      Real bc_mu_g(0);
+
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
@@ -204,8 +219,8 @@ void set_scalar_bcs(const BcList& bc_list,
       }
       else if(bct == bc_list.minf)
       {
-        if(is_undefined_db(mu_g0))
-          bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if(is_equal(mu_g0, undefined))
+          bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
@@ -220,7 +235,7 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
       if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*get_bc_ep_g(bcv) - ep_g(i,j+1,k);
+        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i,j+1,k);
     });
   }
 
@@ -228,6 +243,9 @@ void set_scalar_bcs(const BcList& bc_list,
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xz_hi_3D, i, j, k,
     {
+      Real bc_ro_g(ro_g0);
+      Real bc_mu_g(0);
+
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
@@ -239,8 +257,8 @@ void set_scalar_bcs(const BcList& bc_list,
       }
       else if(bct == bc_list.minf)
       {
-        if(is_undefined_db(mu_g0))
-          bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if(is_equal(mu_g0, undefined))
+          bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
@@ -255,14 +273,21 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
       if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*get_bc_ep_g(bcv) - ep_g(i,j-1,k);
+        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i,j-1,k);
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
   if (ndwn > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xy_lo_3D, i, j, k,
     {
+      Real bc_ro_g(ro_g0);
+      Real bc_mu_g(0);
+
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
@@ -274,8 +299,8 @@ void set_scalar_bcs(const BcList& bc_list,
       }
       else if(bct == bc_list.minf)
       {
-        if(is_undefined_db(mu_g0))
-          bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if(is_equal(mu_g0, undefined))
+          bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
@@ -290,7 +315,7 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
       if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*get_bc_ep_g(bcv) - ep_g(i,j,k+1);
+        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i,j,k+1);
     });
   }
 
@@ -298,6 +323,9 @@ void set_scalar_bcs(const BcList& bc_list,
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xy_hi_3D, i, j, k,
     {
+      Real bc_ro_g(ro_g0);
+      Real bc_mu_g(0);
+
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
@@ -309,8 +337,8 @@ void set_scalar_bcs(const BcList& bc_list,
       }
       else if(bct == bc_list.minf)
       {
-        if(is_undefined_db(mu_g0))
-          bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if(is_equal(mu_g0, undefined))
+          bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
@@ -325,7 +353,11 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
       if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*get_bc_ep_g(bcv) - ep_g(i,j,k-1);
+        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i,j,k-1);
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }

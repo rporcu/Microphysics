@@ -8,7 +8,8 @@ target_sources( mfixcore
    bc_mod_F.H
    constant_mod.f90
    eos_mod.f90
-   eos_mod_F.H
+   eos_mod.hpp
+   eos_mod.cpp
    fld_constants_mod.f90
    fld_constants_mod_F.H
    ps_mod.f90
@@ -19,5 +20,6 @@ target_sources( mfixcore
    output_mod.f90
    param_mod.f90
    param_mod_F.H
+   param_mod_F.cpp
    run_mod.f90
    )

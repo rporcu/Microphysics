@@ -58,9 +58,6 @@ set_gradp_bcs (const Box& bx,
   const Box bx_xy_lo(bx_lo_xy_lo, bx_lo_xy_hi);
   const Box bx_xy_hi(bx_hi_xy_lo, bx_hi_xy_hi);
 
-  //TODO possible data races!!!
-  // one solution could be to make a copy of gp
-
   if(gp_lo[0] <= dom_lo[0])
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo, i, j, k,
@@ -102,6 +99,10 @@ set_gradp_bcs (const Box& bx,
       }
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
   if(gp_lo[1] <= dom_lo[1])
   {
@@ -145,6 +146,10 @@ set_gradp_bcs (const Box& bx,
     });
   }
 
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+
   if(gp_lo[2] <= dom_lo[2])
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xy_lo, i, j, k,
@@ -186,4 +191,9 @@ set_gradp_bcs (const Box& bx,
       }
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+
 }

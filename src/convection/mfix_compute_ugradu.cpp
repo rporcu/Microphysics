@@ -289,6 +289,10 @@ mfix::mfix_compute_ugradu( Box& bx,
     ugradu(i,j,k,1) *= coefficient; 
     ugradu(i,j,k,2) *= coefficient; 
   });
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }
 
 
@@ -357,6 +361,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
 
   const GpuArray<int, 3> bc_types = {bc_list.minf, bc_list.pinf, bc_list.pout};
 
+  const Real my_huge = get_my_huge();
   //
   // First compute the convective fluxes at the face center
   // Do this on ALL faces on the tile, i.e. INCLUDE as many ghost faces as
@@ -394,7 +399,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
       }
     }
     else {
-        u_face = my_huge;
+      u_face = my_huge; 
     }
     fx(i,j,k,n) = .5*(epsilon_g(i-1,j,k)+epsilon_g(i,j,k)) * u(i,j,k) * u_face;
   });
@@ -467,6 +472,10 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
     fz(i,j,k,n) = .5*(epsilon_g(i,j,k-1)+epsilon_g(i,j,k)) * w(i,j,k) * w_face;
   });
 
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+
   const int cyclic_x = geom[lev].isPeriodic(0) ? 1 : 0;
   const int cyclic_y = geom[lev].isPeriodic(1) ? 1 : 0;
   const int cyclic_z = geom[lev].isPeriodic(2) ? 1 : 0;
@@ -480,6 +489,10 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   {
     ugradu(i,j,k,n) *= (-1/epsilon_g(i,j,k));
   });
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }
 
 

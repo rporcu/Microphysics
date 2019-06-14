@@ -64,11 +64,13 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
 
     FArrayBox dest_fab(dest);
 
-    const BcList& bc_list = mfix_for_fillpatching->get_bc_list_values();
+    const BcList& bc_list   = mfix_for_fillpatching->get_bc_list_values();
+    Real** m_bc_vel_g = mfix_for_fillpatching->get_bc_vel_g_values();
+    Real* m_bc_ep_g = mfix_for_fillpatching->get_bc_ep_g_values();
 
     set_velocity_bcs ( &time, bc_list, dest_fab,
                        bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi,
-                       domain, &nghost, &extrap_dir_bcs );
+                       domain, m_bc_vel_g, m_bc_ep_g, &nghost, &extrap_dir_bcs );
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
@@ -174,7 +176,7 @@ mfix::mfix_set_scalar_bcs ()
                        (*ep_g[lev])[mfi], (*ro_g[lev])[mfi], (*mu_g[lev])[mfi],
                        *bc_ilo[lev], *bc_ihi[lev], *bc_jlo[lev], *bc_jhi[lev],
                        *bc_klo[lev], *bc_khi[lev],
-                       domain, &nghost);
+                       domain, m_bc_ep_g, m_bc_t_g, &nghost);
       }
         ep_g[lev] -> FillBoundary (geom[lev].periodicity());
         ro_g[lev] -> FillBoundary (geom[lev].periodicity());
@@ -211,7 +213,7 @@ mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
                          *bc_ilo[lev], *bc_ihi[lev],
                          *bc_jlo[lev], *bc_jhi[lev],
                          *bc_klo[lev], *bc_khi[lev],
-                         domain, &nghost, &extrap_dir_bcs);
+                         domain, m_bc_vel_g, m_bc_ep_g, &nghost, &extrap_dir_bcs);
      }
 
      EB_set_covered(*vel_g[lev], 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow(), covered_val);

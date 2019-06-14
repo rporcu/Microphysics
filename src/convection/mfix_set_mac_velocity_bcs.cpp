@@ -24,6 +24,7 @@ set_mac_velocity_bcs(Real* time,
                      IArrayBox& bct_klo_fab,
                      IArrayBox& bct_khi_fab,
                      Box& domain,
+                     Real** m_bc_vel_g,
                      const int* nghost)
 {
   IntVect bx_lo(bx.loVect());
@@ -160,7 +161,7 @@ set_mac_velocity_bcs(Real* time,
       if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (i != dom_lo[0]))
         u_g(i,j,k) = u_g(dom_lo[0],j,k);
       else if(bct == bc_list.minf)
-        u_g(i,j,k) = get_bc_u_g(bcv);
+        u_g(i,j,k) = m_bc_vel_g[bcv][0];
     });
 
     AMREX_HOST_DEVICE_FOR_3D(vlo_bx_yz, i, j, k,
@@ -196,7 +197,7 @@ set_mac_velocity_bcs(Real* time,
       if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (i != dom_hi[0]+1))
         u_g(i,j,k) = u_g(dom_hi[0]+1,j,k);
       else if(bct == bc_list.minf)
-        u_g(i,j,k) = get_bc_u_g(bcv);
+        u_g(i,j,k) = m_bc_vel_g[bcv][0];
     });
 
     AMREX_HOST_DEVICE_FOR_3D(vhi_bx_yz, i, j, k,
@@ -222,6 +223,10 @@ set_mac_velocity_bcs(Real* time,
     });
   }
 
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+
   if (nbot > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(ulo_bx_xz, i, j, k,
@@ -243,7 +248,7 @@ set_mac_velocity_bcs(Real* time,
       if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (j != dom_lo[1]))
         v_g(i,j,k) = v_g(i,dom_lo[1],k);
       else if(bct == bc_list.minf)
-        v_g(i,j,k) = get_bc_v_g(bcv);
+        v_g(i,j,k) = m_bc_vel_g[bcv][1];
     });
 
     AMREX_HOST_DEVICE_FOR_3D(wlo_bx_xz, i, j, k,
@@ -279,7 +284,7 @@ set_mac_velocity_bcs(Real* time,
       if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (j != dom_hi[1]+1))
         v_g(i,j,k) = v_g(i,dom_hi[1]+1,k);
       else if(bct == bc_list.minf)
-        v_g(i,j,k) = get_bc_v_g(bcv);
+        v_g(i,j,k) = m_bc_vel_g[bcv][1];
     });
 
     AMREX_HOST_DEVICE_FOR_3D(whi_bx_xz, i, j, k,
@@ -293,6 +298,10 @@ set_mac_velocity_bcs(Real* time,
         w_g(i,j,k) = 0;
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
   if (ndwn > 0)
   {
@@ -326,7 +335,7 @@ set_mac_velocity_bcs(Real* time,
       if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (k != dom_lo[2]))
         w_g(i,j,k) = w_g(i,j,dom_lo[2]);
       else if(bct == bc_list.minf)
-        w_g(i,j,k) = get_bc_w_g(bcv);
+        w_g(i,j,k) = m_bc_vel_g[bcv][2];
     });
   }
 
@@ -362,7 +371,12 @@ set_mac_velocity_bcs(Real* time,
       if(((bct == bc_list.pinf) or (bct == bc_list.pout)) and (k != dom_hi[2]+1))
         w_g(i,j,k) = w_g(i,j,dom_hi[2]+1);
       else if(bct == bc_list.minf)
-        w_g(i,j,k) = get_bc_w_g(bcv);
+        w_g(i,j,k) = m_bc_vel_g[bcv][2];
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+
 }

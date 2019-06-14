@@ -48,6 +48,10 @@ void init_fluid(const Box& sbx,
 
       AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k, {ro_g(i,j,k) = ro_g0;});
 
+#ifdef AMREX_USE_CUDA
+      Gpu::Device::synchronize();
+#endif
+
       calc_mu_g(bx, mu_g_fab);
 }
 
@@ -109,6 +113,10 @@ void init_helix(const Box& bx,
       amrex::Abort("Error: wrong plane number");
       break;
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }
 
 void init_periodic_vortices(const Box& bx,
@@ -118,8 +126,8 @@ void init_periodic_vortices(const Box& bx,
                             const Real dy,
                             const Real dz)
 {
-  const amrex::Real twopi = 8. * std::atan(1);
-//  const amrex::Real twopi = 2 * M_PI;
+//  const amrex::Real twopi = 8. * std::atan(1);
+  const amrex::Real twopi = 2 * M_PI;
 
   Array4<Real> const& velocity = vel_g_fab.array();
 
@@ -170,6 +178,10 @@ void init_periodic_vortices(const Box& bx,
       amrex::Abort("Error: wrong plane number");
       break;
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -205,14 +217,14 @@ void set_ic(const Box& sbx,
 
   Array4<Real> const& velocity = vel_g_fab.array();
 
-  int i_w, j_s, k_b;
-  int i_e, j_n, k_t;
-
   // Set the initial conditions.
   for(int icv(1); icv <= get_dim_ic(); ++icv)
   {
     if (ic_defined(icv))
     {
+      int i_w(0), j_s(0), k_b(0);
+      int i_e(0), j_n(0), k_t(0);
+
       calc_cell_ic(dx, dy, dz, get_ic_x_w(icv), get_ic_y_s(icv),
                    get_ic_z_b(icv), get_ic_x_e(icv), get_ic_y_n(icv),
                    get_ic_z_t(icv), i_w, i_e, j_s, j_n, k_b, k_t);
@@ -295,5 +307,10 @@ void set_ic(const Box& sbx,
         }
       }
     }
+
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
+
   }
 }

@@ -217,7 +217,7 @@ mfix::set_MC_velocity_bcs ( int lev,
                            *bc_ilo[lev], *bc_ihi[lev],
                            *bc_jlo[lev], *bc_jhi[lev],
                            *bc_klo[lev], *bc_khi[lev],
-                           domain, &nghost);
+                           domain, m_bc_vel_g, &nghost);
 
    }
 }
