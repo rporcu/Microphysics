@@ -368,8 +368,6 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   // possible
   //
 
-  amrex::Real my_huge = get_my_huge();
-
   //
   // ===================== X =====================
   //
