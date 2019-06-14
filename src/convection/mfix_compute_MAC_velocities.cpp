@@ -207,6 +207,10 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
        } // MFIter
     }   // end loop over levels
 
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
+
     // Note that we will call set_velocity_bcs in mac_projection so we don't need to call it here
     // set_velocity_bcs( lev, m_u_mac, m_v_mac, m_w_mac, time );
 

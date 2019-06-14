@@ -12,7 +12,9 @@ extern "C"
 #include <AMReX_SPACE.H>
 
 amrex::Real get_ro_g0();
+
 amrex::Real get_mu_g0();
+
 amrex::Real get_mw_avg();
 
 #endif

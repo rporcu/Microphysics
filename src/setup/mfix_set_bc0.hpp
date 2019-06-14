@@ -31,6 +31,8 @@ void set_bc0(const Box& sbx,
              const IArrayBox& bct_klo_fab,
              const IArrayBox& bct_khi_fab,
              const Box& domain,
+             Real* m_bc_ep_g,
+             Real* m_bc_t_g,
              const int* ng);
 
 #endif

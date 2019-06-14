@@ -61,7 +61,7 @@ module param
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-! Subroutines: get_bc_u_g, get_bc_v_g, get_bc_w_g, get_bc_t_g          !
+! Subroutines: getters                                                 !
 !                                                                      !
 ! Purpose: Getters for params values                                   !
 !                                                                      !
@@ -71,18 +71,28 @@ module param
         return
       end function get_dim_ic
 
+      integer(c_int) function get_dim_bc() bind(C)
+        get_dim_bc = dim_bc
+        return
+      end function get_dim_bc
+
       real(rt) function get_my_huge() bind(C)
         get_my_huge = my_huge
         return
       end function get_my_huge
+
+      real(rt) function get_undefined() bind(C)
+        get_undefined = undefined
+        return
+      end function get_undefined
 
       pure logical function is_defined_db(x) bind(C)
          real(rt), intent(in) :: x
          is_defined_db = .not.equal(x, undefined)
       end function is_defined_db
 
-      pure logical function is_defined_i(x) bind(C)
-         integer(c_int), intent(in) :: x
+      pure logical function is_defined_i(x)
+         integer, intent(in) :: x
          is_defined_i = (x /= undefined_i)
       end function is_defined_i
 
@@ -91,8 +101,8 @@ module param
          is_undefined_db = equal(x, undefined)
       end function is_undefined_db
 
-      pure logical function is_undefined_i(x) bind(C)
-         integer(c_int), intent(in) :: x
+      pure logical function is_undefined_i(x)
+         integer, intent(in) :: x
          is_undefined_i = (x == undefined_i)
       end function is_undefined_i
 

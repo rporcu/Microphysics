@@ -1033,6 +1033,10 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            });
          }
 
+#ifdef AMREX_USE_CUDA
+         Gpu::Device::synchronize();
+#endif
+
          if(sbx_lo[1] < dom_lo.y)
          {
            const int jlo = dom_lo.y;
@@ -1047,7 +1051,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            });
          }
 
-         if(sbx_lo[1] > dom_hi.y)
+         if(sbx_hi[1] > dom_hi.y)
          {
            const int jhi = dom_hi.y;
            AMREX_HOST_DEVICE_FOR_3D(sbx_xz, i, j, k,
@@ -1060,6 +1064,10 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
              }
            });
          }
+
+#ifdef AMREX_USE_CUDA
+         Gpu::Device::synchronize();
+#endif
 
          if(sbx_lo[2] < dom_lo.z)
          {
@@ -1075,7 +1083,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            });
          }
 
-         if(sbx_lo[2] > dom_hi.z)
+         if(sbx_hi[2] > dom_hi.z)
          {
            const int khi = dom_hi.z;
            AMREX_HOST_DEVICE_FOR_3D(sbx_xy, i, j, k,
@@ -1090,6 +1098,10 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
          }
        }
     }
+
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
 
     int  src_nghost = 1;
     int dest_nghost = 0;

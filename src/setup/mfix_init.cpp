@@ -909,7 +909,8 @@ mfix::mfix_set_bc0()
 
        set_bc0(sbx, bc_list, (*ep_g[lev])[mfi], (*ro_g[lev])[mfi],
                (*mu_g[lev])[mfi], *bc_ilo[lev], *bc_ihi[lev], *bc_jlo[lev],
-               *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev], domain, &nghost);
+               *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev], domain,
+               m_bc_ep_g, m_bc_t_g, &nghost);
      }
 
      ep_g[lev]->FillBoundary(geom[lev].periodicity());

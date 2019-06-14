@@ -16,6 +16,8 @@ set_velocity_bcs(Real* time,
                  const IArrayBox& bct_klo_fab,
                  const IArrayBox& bct_khi_fab,
                  const Box& domain,
+                 Real** m_bc_vel_g,
+                 Real * m_bc_ep_g,
                  const int* ng,
                  const int* extrap_dir_bcs)
 {
@@ -114,7 +116,7 @@ set_velocity_bcs(Real* time,
       else if(bct == bc_list.minf)
       {
         if(n == 0)
-          vel(i,j,k,n) = get_bc_u_g(bcv);
+          vel(i,j,k,n) = m_bc_vel_g[bcv][0];
         else
           vel(i,j,k,n) = 0;
       }
@@ -122,6 +124,11 @@ set_velocity_bcs(Real* time,
 
     if(*extrap_dir_bcs > 0)
     {
+
+#ifdef AMREX_USE_CUDA
+      Gpu::Device::synchronize();
+#endif
+
       AMREX_HOST_DEVICE_FOR_4D(bx_yz_lo_2D, 3, i, j, k, n,
       {
         const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
@@ -144,7 +151,7 @@ set_velocity_bcs(Real* time,
       else if(bct == bc_list.minf)
       {
         if(n == 0)
-          vel(i,j,k,n) = get_bc_u_g(bcv);
+          vel(i,j,k,n) = m_bc_vel_g[bcv][0];
         else
           vel(i,j,k,n) = 0;
       }
@@ -152,6 +159,11 @@ set_velocity_bcs(Real* time,
 
     if(*extrap_dir_bcs > 0)
     {
+
+#ifdef AMREX_USE_CUDA
+      Gpu::Device::synchronize();
+#endif
+
       AMREX_HOST_DEVICE_FOR_4D(bx_yz_hi_2D, 3, i, j, k, n,
       {
         const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
@@ -161,6 +173,10 @@ set_velocity_bcs(Real* time,
       });
     }
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
   if (nbot > 0)
   {
@@ -174,7 +190,7 @@ set_velocity_bcs(Real* time,
       else if(bct == bc_list.minf)
       {
         if(n == 1)
-          vel(i,j,k,n) = get_bc_v_g(bcv);
+          vel(i,j,k,n) = m_bc_vel_g[bcv][1];
         else
           vel(i,j,k,n) = 0;
       }
@@ -182,6 +198,11 @@ set_velocity_bcs(Real* time,
 
     if(*extrap_dir_bcs > 0)
     {
+
+#ifdef AMREX_USE_CUDA
+      Gpu::Device::synchronize();
+#endif
+
       AMREX_HOST_DEVICE_FOR_4D(bx_xz_lo_2D, 3, i, j, k, n,
       {
         const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
@@ -204,7 +225,7 @@ set_velocity_bcs(Real* time,
       else if(bct == bc_list.minf)
       {
         if(n == 1)
-          vel(i,j,k,n) = get_bc_v_g(bcv);
+          vel(i,j,k,n) = m_bc_vel_g[bcv][1];
         else
           vel(i,j,k,n) = 0;
       }
@@ -212,6 +233,11 @@ set_velocity_bcs(Real* time,
 
     if(*extrap_dir_bcs > 0)
     {
+
+#ifdef AMREX_USE_CUDA
+        Gpu::Device::synchronize();
+#endif
+
       AMREX_HOST_DEVICE_FOR_4D(bx_xz_hi_2D, 3, i, j, k, n,
       {
         const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -221,6 +247,10 @@ set_velocity_bcs(Real* time,
       });
     }
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
   if (ndwn > 0)
   {
@@ -234,7 +264,7 @@ set_velocity_bcs(Real* time,
       else if(bct == bc_list.minf)
       {
         if(n == 2)
-          vel(i,j,k,n) = get_bc_w_g(bcv);
+          vel(i,j,k,n) = m_bc_vel_g[bcv][2];
         else
           vel(i,j,k,n) = 0;
       }
@@ -242,6 +272,11 @@ set_velocity_bcs(Real* time,
 
     if(*extrap_dir_bcs > 0)
     {
+
+#ifdef AMREX_USE_CUDA
+      Gpu::Device::synchronize();
+#endif
+
       AMREX_HOST_DEVICE_FOR_4D(bx_xy_lo_2D, 3, i, j, k, n,
       {
         const int bct = bct_klo(i,j,dom_lo[2]-1,0);
@@ -264,7 +299,7 @@ set_velocity_bcs(Real* time,
       else if(bct == bc_list.minf)
       {
         if(n == 2)
-          vel(i,j,k,n) = get_bc_w_g(bcv);
+          vel(i,j,k,n) = m_bc_vel_g[bcv][2];
         else
           vel(i,j,k,n) = 0;
       }
@@ -272,6 +307,11 @@ set_velocity_bcs(Real* time,
 
     if(*extrap_dir_bcs > 0)
     {
+
+#ifdef AMREX_USE_CUDA
+      Gpu::Device::synchronize();
+#endif
+
       AMREX_HOST_DEVICE_FOR_4D(bx_xy_hi_2D, 3, i, j, k, n,
       {
         const int bct = bct_khi(i,j,dom_hi[2]+1,0);
@@ -281,6 +321,10 @@ set_velocity_bcs(Real* time,
       });
     }
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }
 
 
@@ -293,6 +337,8 @@ set_vec_bcs(const BcList& bc_list,
             const IArrayBox& bct_jhi_fab,
             const IArrayBox& bct_klo_fab,
             const IArrayBox& bct_khi_fab,
+            Real** m_bc_vel_g,
+            Real* m_bc_ep_g,
             const Box& domain,
             const int* ng)
 {
@@ -354,8 +400,7 @@ set_vec_bcs(const BcList& bc_list,
         vec(i,j,k,n) = vec(dom_lo[0],j,k,n);
       else if(bct == bc_list.minf)
       {
-        const int n_comp = n+1;
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
       }
     });
   }
@@ -371,11 +416,14 @@ set_vec_bcs(const BcList& bc_list,
         vec(i,j,k,n) = vec(dom_hi[0],j,k,n);
       else if(bct == bc_list.minf)
       {
-        const int n_comp = n+1;
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
       }
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
   if (nbot > 0)
   {
@@ -388,8 +436,7 @@ set_vec_bcs(const BcList& bc_list,
         vec(i,j,k,n) = vec(i,dom_lo[1],k,n);
       else if(bct == bc_list.minf)
       {
-        const int n_comp = n+1;
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
       }
     });
   }
@@ -405,11 +452,14 @@ set_vec_bcs(const BcList& bc_list,
         vec(i,j,k,n) = vec(i,dom_hi[1],k,n);
       else if(bct == bc_list.minf)
       {
-        const int n_comp = n+1;
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
       }
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
   if (ndwn > 0)
   {
@@ -422,8 +472,7 @@ set_vec_bcs(const BcList& bc_list,
         vec(i,j,k,n) = vec(i,j,dom_lo[2],n);
       else if(bct == bc_list.minf)
       {
-        const int n_comp = n+1;
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
       }
     });
   }
@@ -439,9 +488,12 @@ set_vec_bcs(const BcList& bc_list,
         vec(i,j,k,n) = vec(i,j,dom_hi[2],n);
       else if(bct == bc_list.minf)
       {
-        const int n_comp = n+1;
-        vec(i,j,k,n) = get_bc_ep_g(bcv) * get_bc_vel_g(bcv,n_comp);
+        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
       }
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }

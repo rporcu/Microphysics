@@ -1,12 +1,11 @@
 #include <mfix_calc_mu_g.hpp>
 #include <fld_constants_mod_F.H>
-#include <eos_mod_F.H>
+#include <eos_mod.hpp>
 #include <param_mod_F.H>
 
 void calc_mu_g(const Box& bx,
                FArrayBox& mu_g_fab)
 {
-  int i, j, k;
   Real mu_val;
 
   const Real mu_g0 = get_mu_g0();
@@ -20,4 +19,8 @@ void calc_mu_g(const Box& bx,
     mu_val = mu_g0;
 
   AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k, {mu_g(i,j,k) = mu_val;});
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }

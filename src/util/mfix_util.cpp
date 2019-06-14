@@ -97,6 +97,10 @@ mfix::mfix_compute_vort ()
           }
        }
     }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }
 
 //
@@ -284,12 +288,16 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
           dm = rho(i+offset,j,k) * vol(i,j,k);
 
 #ifdef AMREX_USE_CUDA
-          Cuda::Atomic::Add(&sum,dm);
+          Gpu::Atomic::Add(psum,dm);
 #else
           sum += dm;
 #endif
         });
     }
+
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
 
     if (!local)
         ParallelDescriptor::ReduceRealSum(sum);

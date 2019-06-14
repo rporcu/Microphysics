@@ -56,7 +56,7 @@ mfix::mfix_compute_diveu (Real time)
         {
           set_vec_bcs(bc_list, (*epu[lev])[mfi], *bc_ilo[lev], *bc_ihi[lev],
                       *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev],
-                      domain, &nghost);
+                      m_bc_vel_g, m_bc_ep_g, domain, &nghost);
         }
 
       epu[lev]->FillBoundary (geom[lev].periodicity());

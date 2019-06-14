@@ -48,17 +48,16 @@ extern "C"
 
     void check_bc_flow();
 
-    void mfix_set_bc_mod(const int* pID, const int* pType,
-             const amrex::Real* pLo, const amrex::Real* pHi,
-             amrex::Real* pLoc,
-             amrex::Real* pPg,
-             amrex::Real* pVel);
+    void set_bc_mod(const int* pID, const int* pType,
+                    const amrex::Real* pLo, const amrex::Real* pHi,
+                    amrex::Real* pLoc,
+                    amrex::Real* pPg,
+                    amrex::Real* pVel);
 
-  void mfix_set_bc_mod_add_mi(const int* pPlane,
-                       amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
-                       amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
-                       amrex::Real* pPg, amrex::Real* pVel
-                              );
+  void set_bc_mod_add_mi(const int* pPlane,
+                         amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
+                         amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
+                         amrex::Real* pPg, amrex::Real* pVel);
 
     void set_bc_type(
              const int* bc_ilo, const int* bc_ihi,

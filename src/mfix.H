@@ -219,6 +219,9 @@ public:
     int get_nghost() { return nghost; }
 
     const BcList& get_bc_list_values() {return bc_list;}
+    Real** get_bc_vel_g_values() {return m_bc_vel_g;}
+    Real* get_bc_t_g_values() {return m_bc_t_g;}
+    Real* get_bc_ep_g_values() {return m_bc_ep_g;}
 
     void mfix_add_drag_terms(Real dt);
 
@@ -227,6 +230,17 @@ public:
     void mfix_compute_MAC_velocity_at_faces(Real time, Vector< std::unique_ptr<MultiFab> >& vel);
 
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
+
+    void mfix_set_bc_mod(const int* pID, const int* pType,
+                         const amrex::Real* pLo, const amrex::Real* pHi,
+                         amrex::Real* pLoc,
+                         amrex::Real* pPg,
+                         amrex::Real* pVel);
+
+    void mfix_set_bc_mod_add_mi(const int* pPlane,
+                                amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
+                                amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
+                                amrex::Real* pPg, amrex::Real* pVel);
 
     static DragType m_drag_type;
 
@@ -253,6 +267,8 @@ public:
                                  Box& domain,
                                  const EBCellFlagFab& flags,
                                  const int lev);
+
+     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
 protected:
 
@@ -290,6 +306,10 @@ protected:
      static Real gravity[3];
 
      static BcList bc_list;
+
+     static Real** m_bc_vel_g;
+     static Real* m_bc_t_g;
+     static Real* m_bc_ep_g;
 
      //! The particles see an inflow face as a solid wall; thus instead of
      //! creating a separate EBfactory for particles, we simply modify the
@@ -432,8 +452,6 @@ private:
                        const Vector< std::unique_ptr<MultiFab>>& mf2,
                        int lev, int comp1, int comp2 );
      Real mfix_norm0 ( MultiFab& mf1, MultiFab& mf2, int lev, int comp1, int comp2 );
-
-     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
      static int nlev;
 

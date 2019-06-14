@@ -24,6 +24,8 @@ set_velocity_bcs(Real* time,
                  const IArrayBox& bct_klo_fab,
                  const IArrayBox& bct_khi_fab,
                  const Box& domain,
+                 Real** m_bc_vel_g,
+                 Real* m_bc_ep_g,
                  const int* ng,
                  const int* extrap_dir_bcs);
 
@@ -36,6 +38,8 @@ set_vec_bcs(const BcList& bc_list,
             const IArrayBox& bct_jhi_fab,
             const IArrayBox& bct_klo_fab,
             const IArrayBox& bct_khi_fab,
+            Real** m_bc_vel_g,
+            Real* m_bc_ep_g,
             const Box& domain,
             const int* ng);
 

@@ -1,6 +1,6 @@
 #include <mfix_set_bc0.hpp>
 #include <bc_mod_F.H>
-#include <eos_mod_F.H>
+#include <eos_mod.hpp>
 #include <fld_constants_mod_F.H>
 #include <param_mod_F.H>
 
@@ -16,9 +16,10 @@ void set_bc0(const Box& sbx,
              const IArrayBox& bct_klo_fab,
              const IArrayBox& bct_khi_fab,
              const Box& domain,
+             Real* m_bc_ep_g,
+             Real* m_bc_t_g,
              const int* ng)
 {
-  Real bc_ro_g, bc_mu_g;
   const Real ro_g0(get_ro_g0());
   const Real mu_g0(get_mu_g0());
 
@@ -71,6 +72,8 @@ void set_bc0(const Box& sbx,
   const Box bx_xy_lo_3D(sbx_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, sbx_hi);
 
+  const Real undefined = get_undefined();
+
   if (nlft > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo_3D, i, j, k,
@@ -80,14 +83,15 @@ void set_bc0(const Box& sbx,
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
-        bc_ro_g = ro_g0;
+        Real bc_ro_g(ro_g0);
+        Real bc_mu_g(0);
 
-        if (is_undefined_db(mu_g0))
-          bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if (is_equal(mu_g0, undefined))
+          bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = get_bc_ep_g(bcv);
+        ep_g(i,j,k) = m_bc_ep_g[bcv];
         ro_g(i,j,k) = bc_ro_g;
         mu_g(i,j,k) = bc_mu_g;
       }
@@ -103,19 +107,24 @@ void set_bc0(const Box& sbx,
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
-        bc_ro_g = ro_g0;
+        Real bc_ro_g(ro_g0);
+        Real bc_mu_g(0);
 
-        if (is_undefined_db(mu_g0))
-          bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if (is_equal(mu_g0, undefined))
+          bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = get_bc_ep_g(bcv);
+        ep_g(i,j,k) = m_bc_ep_g[bcv];
         ro_g(i,j,k) = bc_ro_g;
         mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
   if (nbot > 0)
   {
@@ -126,14 +135,15 @@ void set_bc0(const Box& sbx,
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
-        bc_ro_g = ro_g0;
+        Real bc_ro_g(ro_g0);
+        Real bc_mu_g(0);
 
-        if (is_undefined_db(mu_g0))
-           bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if (is_equal(mu_g0, undefined))
+           bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
            bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = get_bc_ep_g(bcv);
+        ep_g(i,j,k) = m_bc_ep_g[bcv];
         ro_g(i,j,k) = bc_ro_g;
         mu_g(i,j,k) = bc_mu_g;
       }
@@ -149,19 +159,24 @@ void set_bc0(const Box& sbx,
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
-        bc_ro_g = ro_g0;
+        Real bc_ro_g(ro_g0);
+        Real bc_mu_g(0);
 
-        if (is_undefined_db(mu_g0))
-           bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if (is_equal(mu_g0, undefined))
+           bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
            bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = get_bc_ep_g(bcv);
+        ep_g(i,j,k) = m_bc_ep_g[bcv];
         ro_g(i,j,k) = bc_ro_g;
         mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
   if (ndwn > 0)
   {
@@ -172,14 +187,15 @@ void set_bc0(const Box& sbx,
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
-        bc_ro_g = ro_g0;
+        Real bc_ro_g(ro_g0);
+        Real bc_mu_g(0);
 
-        if (is_undefined_db(mu_g0))
-           bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if (is_equal(mu_g0, undefined))
+           bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
            bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = get_bc_ep_g(bcv);
+        ep_g(i,j,k) = m_bc_ep_g[bcv];
         ro_g(i,j,k) = bc_ro_g;
         mu_g(i,j,k) = bc_mu_g;
       }
@@ -195,17 +211,22 @@ void set_bc0(const Box& sbx,
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
-        bc_ro_g = ro_g0;
+        Real bc_ro_g(ro_g0);
+        Real bc_mu_g(0);
 
-        if (is_undefined_db(mu_g0))
-           bc_mu_g = sutherland(get_bc_t_g(bcv));
+        if (is_equal(mu_g0, undefined))
+           bc_mu_g = sutherland(m_bc_t_g[bcv]);
         else
            bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = get_bc_ep_g(bcv);
+        ep_g(i,j,k) = m_bc_ep_g[bcv];
         ro_g(i,j,k) = bc_ro_g;
         mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }

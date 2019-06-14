@@ -61,39 +61,4 @@ contains
     return
   end function droodp_g
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Function: sutherland                                                !
-!                                                                      !
-!  Purpose: Compute a default value of gas viscosity where gas is      !
-!  assumed to be air                                                   !
-!                                                                      !
-!  Literature/Document References:                                     !
-!     Perry, R. H., and Chilton, C. H., Chemical Engineers' Handbook,  !
-!        5th Edition, McGraw-Hill Inc., 1973, pp. 248, eqn. 3-133.     !
-!     Arnold, J. H., Vapor viscosities and the Sutherland equation,    !
-!        Journal of Chemical Physics, 1 (2), 1933, pp. 170-176.        !
-!     Sutherland, W., The Viscosity of Gases and Molecular Force,      !
-!        Phil. Mag. 5:507-531, 1893.                                   !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  real(rt) function sutherland(tg) bind(C)
-
-   implicit none
-
-   ! Dummy arguments
-   !---------------------------------------------------------------------//
-   ! gas temperature
-   real(rt), intent(in) :: tg
-
-   ! Gas viscosity   (in Poise or Pa.s)
-   ! Calculating gas viscosity using Sutherland's formula with
-   ! Sutherland's constant (C) given by Vogel's equation C = 1.47*Tb.
-   ! For air  C = 110 (Tb=74.82)
-   !         mu = 1.71*10-4 poise at T = 273K
-
-   sutherland = 1.7d-5 * (tg/273.0d0)**1.5d0 * (383.d0/(tg+110.d0))
-   return
- end function sutherland
-
 end module eos
