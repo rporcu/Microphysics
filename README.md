@@ -128,7 +128,7 @@ Specify the MFIX-Exa source directory location under the `[source]` heading.
 [source]
 dir = /home/user/exa-rt/mfix
 branch = develop
-cmakeSetupOpts = -DAMREX_INSTALL_DIR=/home/user/exa-rt/amrex/installdir
+cmakeSetupOpts = -DAMReX_ROOT=/home/user/exa-rt/amrex/installdir
 ```
 4. Run the AMReX regression test tool. The second argument is a user
 supplied comment.
