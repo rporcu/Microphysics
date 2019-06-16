@@ -328,7 +328,9 @@ protected:
                                  Real time, int steady_state);
 
      void mfix_set_scalar_bcs ();
-     void mfix_set_velocity_bcs (Real time, int extrap_dir_bcs);
+     void mfix_set_velocity_bcs (Real time, 
+                                 Vector< std::unique_ptr<MultiFab> >& vel,
+                                 int extrap_dir_bcs);
 
      void set_MC_velocity_bcs ( int lev,
                                 Vector< std::unique_ptr<MultiFab> >& u,

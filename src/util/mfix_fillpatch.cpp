@@ -192,34 +192,35 @@ mfix::mfix_set_scalar_bcs ()
 // Set the BCs for velocity only
 //
 void
-mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
+mfix::mfix_set_velocity_bcs (Real time, 
+                             Vector< std::unique_ptr<MultiFab> > & vel,
+                             int extrap_dir_bcs)
 {
   BL_PROFILE("mfix::mfix_set_velocity_bcs()");
 
   for (int lev = 0; lev < nlev; lev++)
   {
      // Set all values outside the domain to covered_val just to avoid use of undefined
-     vel_g[lev]->setDomainBndry(covered_val,geom[lev]);
+     vel[lev]->setDomainBndry(covered_val,geom[lev]);
 
-     vel_g[lev] -> FillBoundary (geom[lev].periodicity());
+     vel[lev] -> FillBoundary (geom[lev].periodicity());
      Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-     for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*vel[lev], true); mfi.isValid(); ++mfi)
      {
-        set_velocity_bcs(&time, bc_list, (*vel_g[lev])[mfi],
+        set_velocity_bcs(&time, bc_list, (*vel[lev])[mfi],
                          *bc_ilo[lev], *bc_ihi[lev],
                          *bc_jlo[lev], *bc_jhi[lev],
                          *bc_klo[lev], *bc_khi[lev],
                          domain, m_bc_vel_g, m_bc_ep_g, &nghost, &extrap_dir_bcs);
      }
 
-     EB_set_covered(*vel_g[lev], 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow(), covered_val);
+     EB_set_covered(*vel[lev], 0, vel[lev]->nComp(), vel[lev]->nGrow(), covered_val);
 
      // Do this after as well as before to pick up terms that got updated in the call above
-     vel_g[lev] -> FillBoundary (geom[lev].periodicity());
-
+     vel[lev] -> FillBoundary (geom[lev].periodicity());
   }
 }

@@ -32,7 +32,7 @@ mfix::mfix_calc_drag_particle(Real time)
 
     // Extrapolate velocity Dirichlet bc's to ghost cells
     int extrap_dir_bcs = 1;
-    mfix_set_velocity_bcs(time, extrap_dir_bcs);
+    mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -313,6 +313,6 @@ mfix::mfix_calc_drag_particle(Real time)
 
     // Reset velocity Dirichlet bc's to face values
     extrap_dir_bcs = 0;
-    mfix_set_velocity_bcs(time, extrap_dir_bcs);
+    mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);
 
 }

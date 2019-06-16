@@ -92,5 +92,5 @@ mfix::mfix_compute_diveu (Real time)
 
   // Restore velocities to carry Dirichlet values on faces
   int extrap_dir_bcs = 0;
-  mfix_set_velocity_bcs (time, extrap_dir_bcs);
+  mfix_set_velocity_bcs (time, vel_g, extrap_dir_bcs);
 }

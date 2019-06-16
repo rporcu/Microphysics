@@ -920,7 +920,7 @@ mfix::mfix_set_bc0()
    // Put velocity Dirichlet bc's on faces
    Real time = 0.0;
    int extrap_dir_bcs = 0;
-   mfix_set_velocity_bcs(time,extrap_dir_bcs);
+   mfix_set_velocity_bcs(time,vel_g,extrap_dir_bcs);
 
   for (int lev = 0; lev < nlev; lev++)
      vel_g[lev]->FillBoundary(geom[lev].periodicity());
