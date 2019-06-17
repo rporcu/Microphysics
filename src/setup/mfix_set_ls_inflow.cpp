@@ -251,7 +251,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
   Gpu::Device::synchronize();
 #endif
 
-  if (ntop > 0)
+  if (nup > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
     {
