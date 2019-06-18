@@ -11,7 +11,6 @@ module ic
 
   use param, only: dim_ic, dim_m, dim_n_g, dim_n_s
 
-
   ! Boundary condition coordinates
   real(rt) :: IC_X_w(dim_ic), IC_X_e(dim_ic)
   real(rt) :: IC_Y_s(dim_ic), IC_Y_n(dim_ic)
@@ -51,6 +50,66 @@ module ic
   character(len=16) :: ic_pack_type(dim_ic)
 
 contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+! Subroutines: get_ic_u_g, get_ic_v_g, get_ic_w_g & many others        !
+!                                                                      !
+! Purpose: Getters for the boundary conditions values                  !
+!                                                                      !
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  real(rt) function get_ic_u_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_ic_u_g = ic_u_g(pID)
+    return
+  end function get_ic_u_g
+
+  real(rt) function get_ic_v_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_ic_v_g = ic_v_g(pID)
+    return
+  end function get_ic_v_g
+
+  real(rt) function get_ic_w_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_ic_w_g = ic_w_g(pID)
+    return
+  end function get_ic_w_g
+
+  real(rt) function get_ic_x_w(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_ic_x_w = ic_x_w(pID)
+    return
+  end function get_ic_x_w
+
+  real(rt) function get_ic_y_s(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_ic_y_s = ic_y_s(pID)
+    return
+  end function get_ic_y_s
+
+  real(rt) function get_ic_z_b(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_ic_z_b = ic_z_b(pID)
+    return
+  end function get_ic_z_b
+
+  real(rt) function get_ic_x_e(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_ic_x_e = ic_x_e(pID)
+    return
+  end function get_ic_x_e
+
+  real(rt) function get_ic_y_n(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_ic_y_n = ic_y_n(pID)
+    return
+  end function get_ic_y_n
+
+  real(rt) function get_ic_z_t(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_ic_z_t = ic_z_t(pID)
+    return
+  end function get_ic_z_t
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -59,11 +118,11 @@ contains
 ! Purpose: Return if a IC region has been defined based on coordinates !
 ! defined in the input deck.                                           !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  logical function ic_defined(icv)
+  logical function ic_defined(icv) bind(C)
 
     use param, only: is_defined
 
-    integer, intent(in) :: icv
+    integer(c_int), intent(in) :: icv
 
     ic_defined = &
          is_defined(ic_x_w(icv)) .or. is_defined(ic_x_e(icv)) .or. &

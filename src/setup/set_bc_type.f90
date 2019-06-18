@@ -165,8 +165,8 @@ module set_bc_type_module
 !  Author: J. Musser                                  Date: 05-FEB-17  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-subroutine mfix_set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel) &
-     bind(c,name='mfix_set_bc_mod')
+subroutine set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel) &
+     bind(c,name='set_bc_mod')
 
   use bc, only: bc_defined
   use bc, only: bc_type, bc_plane
@@ -178,7 +178,7 @@ subroutine mfix_set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel) &
 
   use bc, only: bc_ep_g, bc_ep_s
   use bc, only: bc_p_g
-  use bc, only: bc_u_g, bc_v_g, bc_w_g
+  use bc, only: bc_vel_g
 
   implicit none
 
@@ -251,14 +251,14 @@ subroutine mfix_set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel) &
 
      bc_p_g(pID) =   pPg;
 
-     bc_u_g(pID) = 0.0d0;
-     bc_v_g(pID) = 0.0d0;
-     bc_w_g(pID) = 0.0d0;
+     bc_vel_g(pID,1) = 0.0d0;
+     bc_vel_g(pID,2) = 0.0d0;
+     bc_vel_g(pID,3) = 0.0d0;
 
      select case(pId)
-     case(1,2); bc_u_g(pID) = pVel;
-     case(3,4); bc_v_g(pID) = pVel;
-     case(5,6); bc_w_g(pID) = pVel;
+     case(1,2); bc_vel_g(pID,1) = pVel;
+     case(3,4); bc_vel_g(pID,2) = pVel;
+     case(5,6); bc_vel_g(pID,3) = pVel;
      end select
 
      bc_defined(pID) = .true.
@@ -298,7 +298,7 @@ subroutine mfix_set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel) &
   end select
 
 
-end subroutine mfix_set_bc_mod
+end subroutine set_bc_mod
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -308,8 +308,8 @@ end subroutine mfix_set_bc_mod
 !  Author: J. Musser                                  Date: 05-FEB-17  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-subroutine mfix_set_bc_mod_add_mi(pPlane, xLo, yLo, zLo, xHi, yHi, zHi, pPg, pVel) &
-     bind(c,name='mfix_set_bc_mod_add_mi')
+subroutine set_bc_mod_add_mi(pPlane, xLo, yLo, zLo, xHi, yHi, zHi, pPg, pVel) &
+     bind(c,name='set_bc_mod_add_mi')
 
   use bc, only: bc_defined
   use bc, only: bc_type, bc_plane
@@ -321,7 +321,7 @@ subroutine mfix_set_bc_mod_add_mi(pPlane, xLo, yLo, zLo, xHi, yHi, zHi, pPg, pVe
 
   use bc, only: bc_ep_g, bc_ep_s
   use bc, only: bc_p_g
-  use bc, only: bc_u_g, bc_v_g, bc_w_g
+  use bc, only: bc_vel_g
 
   implicit none
 
@@ -350,32 +350,32 @@ subroutine mfix_set_bc_mod_add_mi(pPlane, xLo, yLo, zLo, xHi, yHi, zHi, pPg, pVe
 
   bc_p_g(pID) =   pPg;
 
-  bc_u_g(pID) = 0.0d0;
-  bc_v_g(pID) = 0.0d0;
-  bc_w_g(pID) = 0.0d0;
+  bc_vel_g(pID,1) = 0.0d0;
+  bc_vel_g(pID,2) = 0.0d0;
+  bc_vel_g(pID,3) = 0.0d0;
 
   select case(pPlane)
   case(1)
      bc_plane(pID) = 'E'
-     bc_u_g(pID) = pVel;
+     bc_vel_g(pID,1) = pVel;
   case(2)
      bc_plane(pID) = 'W'
-     bc_u_g(pID) = pVel;
+     bc_vel_g(pID,1) = pVel;
   case(3)
      bc_plane(pID) = 'N'
-     bc_v_g(pID) = pVel;
+     bc_vel_g(pID,2) = pVel;
   case(4)
      bc_plane(pID) = 'S'
-     bc_v_g(pID) = pVel;
+     bc_vel_g(pID,2) = pVel;
   case(5)
      bc_plane(pID) = 'T'
-     bc_w_g(pID) = pVel;
+     bc_vel_g(pID,3) = pVel;
   case(6)
      bc_plane(pID) = 'B'
-     bc_w_g(pID) = pVel;
+     bc_vel_g(pID,3) = pVel;
   end select
 
-end subroutine mfix_set_bc_mod_add_mi
+end subroutine set_bc_mod_add_mi
 
 
 end module set_bc_type_module

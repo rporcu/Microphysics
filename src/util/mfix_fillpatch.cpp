@@ -1,6 +1,8 @@
 #include <mfix.H>
 #include <mfix_F.H>
 #include <mfix_util_F.H>
+#include <mfix_set_velocity_bcs.hpp>
+#include <mfix_set_scalar_bcs.hpp>
 #include <AMReX_FillPatchUtil.H>
 #include <AMReX_EBMultiFabUtil.H>
 
@@ -51,24 +53,24 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
     // We only do this to make it not const
     Real time = time_in;
 
-    const int* bc_ilo_ptr = mfix_for_fillpatching->get_bc_ilo_ptr(lev);
-    const int* bc_ihi_ptr = mfix_for_fillpatching->get_bc_ihi_ptr(lev);
-    const int* bc_jlo_ptr = mfix_for_fillpatching->get_bc_jlo_ptr(lev);
-    const int* bc_jhi_ptr = mfix_for_fillpatching->get_bc_jhi_ptr(lev);
-    const int* bc_klo_ptr = mfix_for_fillpatching->get_bc_klo_ptr(lev);
-    const int* bc_khi_ptr = mfix_for_fillpatching->get_bc_khi_ptr(lev);
+    const IArrayBox& bc_ilo = mfix_for_fillpatching->get_bc_ilo(lev);
+    const IArrayBox& bc_ihi = mfix_for_fillpatching->get_bc_ihi(lev);
+    const IArrayBox& bc_jlo = mfix_for_fillpatching->get_bc_jlo(lev);
+    const IArrayBox& bc_jhi = mfix_for_fillpatching->get_bc_jhi(lev);
+    const IArrayBox& bc_klo = mfix_for_fillpatching->get_bc_klo(lev);
+    const IArrayBox& bc_khi = mfix_for_fillpatching->get_bc_khi(lev);
 
     int nghost = mfix_for_fillpatching->get_nghost();
 
     FArrayBox dest_fab(dest);
 
-    set_velocity_bcs ( &time,
-                       dest_fab.dataPtr(), dest_fab.loVect(), dest_fab.hiVect(),
-                       bc_ilo_ptr, bc_ihi_ptr,
-                       bc_jlo_ptr, bc_jhi_ptr,
-                       bc_klo_ptr, bc_khi_ptr,
-                       domain.loVect(), domain.hiVect(),
-                       &nghost, &extrap_dir_bcs );
+    const BcList& bc_list   = mfix_for_fillpatching->get_bc_list_values();
+    Real** m_bc_vel_g = mfix_for_fillpatching->get_bc_vel_g_values();
+    Real* m_bc_ep_g = mfix_for_fillpatching->get_bc_ep_g_values();
+
+    set_velocity_bcs ( &time, bc_list, dest_fab,
+                       bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi,
+                       domain, m_bc_vel_g, m_bc_ep_g, &nghost, &extrap_dir_bcs );
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
@@ -170,14 +172,11 @@ mfix::mfix_set_scalar_bcs ()
 #endif
      for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
      {
-        set_scalar_bcs ( BL_TO_FORTRAN_ANYD((*ep_g[lev])[mfi]),
-                        (*ro_g[lev])[mfi].dataPtr (),
-                        (*mu_g[lev])[mfi].dataPtr (),
-                        bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                        bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                        bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                        domain.loVect(), domain.hiVect(),
-                        &nghost );
+        set_scalar_bcs(bc_list,
+                       (*ep_g[lev])[mfi], (*ro_g[lev])[mfi], (*mu_g[lev])[mfi],
+                       *bc_ilo[lev], *bc_ihi[lev], *bc_jlo[lev], *bc_jhi[lev],
+                       *bc_klo[lev], *bc_khi[lev],
+                       domain, m_bc_ep_g, m_bc_t_g, &nghost);
       }
         ep_g[lev] -> FillBoundary (geom[lev].periodicity());
         ro_g[lev] -> FillBoundary (geom[lev].periodicity());
@@ -193,36 +192,35 @@ mfix::mfix_set_scalar_bcs ()
 // Set the BCs for velocity only
 //
 void
-mfix::mfix_set_velocity_bcs (Real time, int extrap_dir_bcs)
+mfix::mfix_set_velocity_bcs (Real time, 
+                             Vector< std::unique_ptr<MultiFab> > & vel,
+                             int extrap_dir_bcs)
 {
   BL_PROFILE("mfix::mfix_set_velocity_bcs()");
 
   for (int lev = 0; lev < nlev; lev++)
   {
      // Set all values outside the domain to covered_val just to avoid use of undefined
-     vel_g[lev]->setDomainBndry(covered_val,geom[lev]);
+     vel[lev]->setDomainBndry(covered_val,geom[lev]);
 
-     vel_g[lev] -> FillBoundary (geom[lev].periodicity());
+     vel[lev] -> FillBoundary (geom[lev].periodicity());
      Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-     for (MFIter mfi(*vel_g[lev], true); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*vel[lev], true); mfi.isValid(); ++mfi)
      {
-        set_velocity_bcs ( &time,
-                           BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                           bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                           bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                           bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                           domain.loVect(), domain.hiVect(),
-                           &nghost, &extrap_dir_bcs );
+        set_velocity_bcs(&time, bc_list, (*vel[lev])[mfi],
+                         *bc_ilo[lev], *bc_ihi[lev],
+                         *bc_jlo[lev], *bc_jhi[lev],
+                         *bc_klo[lev], *bc_khi[lev],
+                         domain, m_bc_vel_g, m_bc_ep_g, &nghost, &extrap_dir_bcs);
      }
 
-     EB_set_covered(*vel_g[lev], 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow(), covered_val);
+     EB_set_covered(*vel[lev], 0, vel[lev]->nComp(), vel[lev]->nGrow(), covered_val);
 
      // Do this after as well as before to pick up terms that got updated in the call above
-     vel_g[lev] -> FillBoundary (geom[lev].periodicity());
-
+     vel[lev] -> FillBoundary (geom[lev].periodicity());
   }
 }

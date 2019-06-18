@@ -23,7 +23,7 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
 
     // Swap ghost cells and apply BCs to velocity -- we need to do this to make sure
     //      that the divergence operator can see inflow values
-    mfix_set_velocity_bcs(time, 0);
+    mfix_set_velocity_bcs(time, vel_g, 0);
 
     mfix_compute_diveu(time);
 
@@ -57,7 +57,7 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
         }
     }
 
-    mfix_set_velocity_bcs (time, 0);
+    mfix_set_velocity_bcs (time, vel_g, 0);
 
     // Compute right hand side, AKA div(ep_g* u) / dt
 
@@ -134,7 +134,7 @@ mfix::mfix_apply_projection ( amrex::Real time, amrex::Real scaling_factor, bool
     }
 
     // Swap ghost cells and apply BCs to velocity
-    mfix_set_velocity_bcs (time, 0);
+    mfix_set_velocity_bcs (time, vel_g, 0);
 
     mfix_compute_diveu(time);
 

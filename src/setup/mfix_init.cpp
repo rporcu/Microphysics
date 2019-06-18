@@ -1,10 +1,14 @@
 #include <AMReX_ParmParse.H>
 
+#include <mfix.H>
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
 #include <mfix_des_F.H>
+#include <mfix_set_bc0.hpp>
+#include <mfix_set_ls_inflow.hpp>
+#include <mfix_init_fluid.hpp>
+
 #include <AMReX_EBAmrUtil.H>
-#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_EBFabFactory.H>
@@ -33,7 +37,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Options to control verbosity level
         pp.query("verbose", m_verbose);
 
-        // Options to control MGML behavior
+        // Options to control MLMG behavior
         pp.query( "mg_verbose"             , nodal_mg_verbose );
         pp.query( "mg_cg_verbose"          , nodal_mg_cg_verbose );
         pp.query( "mg_max_iter"            , nodal_mg_max_iter );
@@ -275,8 +279,7 @@ void mfix::Init( Real time)
     SetUseNewChop();
 
     // This Builds the new Grids
-    InitFromScratch(0.);
-
+    // InitFromScratch(0.);
 
     /****************************************************************************
      *                                                                          *
@@ -289,68 +292,13 @@ void mfix::Init( Real time)
     DistributionMapping dm(ba, ParallelDescriptor::NProcs());
     MakeNewLevelFromScratch(0, time, ba, dm);
 
-    // HACK: The particle generator is sensitive to the dmap => manually set
-    // dmap until this is fixed.
-    //if (ParallelDescriptor::NProcs() == 4)
-    //{
-    //    // Legacy case of BENCH05 test
-    //    DistributionMapping dm(Vector<int>{0,3,2,1});
-    //    MakeNewLevelFromScratch(0, time, ba, dm);
-    //}
-    //else
-    //{
-    //    DistributionMapping dm(ba, ParallelDescriptor::NProcs());
-    //    MakeNewLevelFromScratch(0, time, ba, dm);
-    //}
-
-
-
     for (int lev = 1; lev <= finest_level; lev++)
     {
-        //HACK: I commented this out, but I don't know if I should have.
-
-        // if (use_amr_ls)
-        // {
-        //    const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
-        //    BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0});
-
-        //    std::cout << "Level " << lev << " grids: " << ba_ref << std::endl;
-        //    if (m_verbose > 0)
-        //      std::cout << "Setting refined region at level " << lev
-        //                << " to " << ba_ref << std::endl;
-        //    DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
-        //    MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
-        // }
-        // else
-        // {
-        //    // This refines the central half of the domain
-        //    int ilo = ba[0].size()[0] / 2;
-        //    int ihi = 3*ba[0].size()[0]/2-1;
-        //    IntVect lo(ilo,ilo,ilo);
-        //    IntVect hi(ihi,ihi,ihi);
-        //    Box bx(lo,hi);
-        //    BoxArray ba_ref(bx);
-
-        //    // This refines the whole domain
-        //    // BoxArray ba_ref(ba);
-        //    // ba_ref.refine(2);
-
-        //    if (m_verbose > 0)
-        //    {
-        //      std::cout << "Setting refined region at level " << lev
-        //                << " to " << ba_ref << std::endl;
-        //    }
-        //    DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
-        //    MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
-        // }
-
        if (m_verbose > 0)
-       {
             std::cout << "Setting refined region at level " << lev
                       << " to " << grids[lev] << std::endl;
-       }
 
-        MakeNewLevelFromScratch(lev, time, grids[lev], dmap[lev]);
+       MakeNewLevelFromScratch(lev, time, grids[lev], dmap[lev]);
     }
 
     /****************************************************************************
@@ -835,20 +783,14 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 
         if ( is_restarting ) {
 
-            init_fluid_restart(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(),
-                 (*mu_g[lev])[mfi].dataPtr() );
+            init_fluid_restart(bx, (*mu_g[lev])[mfi]);
 
           } else {
 
-            init_fluid(sbx.loVect(), sbx.hiVect(),
-                 bx.loVect(),  bx.hiVect(),
-                 domain.loVect(), domain.hiVect(),
-                 (*ep_g[lev])[mfi].dataPtr(),
-                 (*ro_g[lev])[mfi].dataPtr(),
-                 (*p_g[lev])[mfi].dataPtr(),
-                 (*vel_g[lev])[mfi].dataPtr(),
-                 (*mu_g[lev])[mfi].dataPtr(),
-                 &dx, &dy, &dz, &xlen, &ylen, &zlen);
+            init_fluid(sbx, bx, domain,
+                       (*ep_g[lev])[mfi], (*ro_g[lev])[mfi], (*p_g[lev])[mfi],
+                       (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
+                       dx, dy, dz, xlen, ylen, zlen);
           }
        }
     }
@@ -906,27 +848,23 @@ mfix::mfix_set_bc0()
 
      // Don't tile this -- at least for now
      for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-       {
-         const Box& sbx = (*ep_g[lev])[mfi].box();
+     {
+       const Box& sbx = (*ep_g[lev])[mfi].box();
 
-         set_bc0(sbx.loVect(), sbx.hiVect(),
-                 (*ep_g[lev])[mfi].dataPtr(),
-                  (*ro_g[lev])[mfi].dataPtr(),
-                  (*mu_g[lev])[mfi].dataPtr(),
-                 bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                 bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                 domain.loVect(), domain.hiVect(), &nghost);
-       }
+       set_bc0(sbx, bc_list, (*ep_g[lev])[mfi], (*ro_g[lev])[mfi],
+               (*mu_g[lev])[mfi], *bc_ilo[lev], *bc_ihi[lev], *bc_jlo[lev],
+               *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev], domain,
+               m_bc_ep_g, m_bc_t_g, &nghost);
+     }
 
-      ep_g[lev]->FillBoundary(geom[lev].periodicity());
-      ro_g[lev]->FillBoundary(geom[lev].periodicity());
+     ep_g[lev]->FillBoundary(geom[lev].periodicity());
+     ro_g[lev]->FillBoundary(geom[lev].periodicity());
    }
 
    // Put velocity Dirichlet bc's on faces
    Real time = 0.0;
    int extrap_dir_bcs = 0;
-   mfix_set_velocity_bcs(time,extrap_dir_bcs);
+   mfix_set_velocity_bcs(time,vel_g,extrap_dir_bcs);
 
   for (int lev = 0; lev < nlev; lev++)
      vel_g[lev]->FillBoundary(geom[lev].periodicity());
@@ -1000,19 +938,17 @@ void mfix::mfix_set_ls_near_inflow()
         {
             Box domain(geom[lev].Domain());
 
-            MultiFab * ls_phi = level_sets[lev].get();
-            const Real * dx   = geom[lev].CellSize();
+            MultiFab* ls_phi = level_sets[lev].get();
+            const Real* dx   = geom[lev].CellSize();
 
             // Don't tile this
-            for (MFIter mfi(* ls_phi); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
-                set_ls_inflow( BL_TO_FORTRAN_ANYD(ls_fab),
-                               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                               domain.loVect(), domain.hiVect(), &levelset_nghost, &n, dx);
+                set_ls_inflow(ls_fab, bc_list, *bc_ilo[lev], *bc_ihi[lev],
+                              *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev],
+                              *bc_khi[lev], domain, &levelset_nghost, n, dx);
             }
         }
     }
@@ -1034,11 +970,9 @@ void mfix::mfix_set_ls_near_inflow()
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
-                set_ls_inflow( BL_TO_FORTRAN_ANYD(ls_fab),
-                               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                               domain.loVect(), domain.hiVect(), &levelset_nghost, &n, dx);
+                set_ls_inflow( ls_fab, bc_list, *bc_ilo[lev], *bc_ihi[lev],
+                               *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev],
+                               *bc_khi[lev], domain, &levelset_nghost, n, dx);
             }
         }
 
@@ -1055,11 +989,9 @@ void mfix::mfix_set_ls_near_inflow()
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
-                set_ls_inflow( BL_TO_FORTRAN_ANYD(ls_fab),
-                               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                               domain.loVect(), domain.hiVect(), &levelset_nghost, &n, dx);
+                set_ls_inflow( ls_fab, bc_list, *bc_ilo[lev], *bc_ihi[lev],
+                               *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev],
+                               *bc_khi[lev], domain, &levelset_nghost, n, dx);
             }
         }
     }

@@ -1,9 +1,8 @@
 #include <mfix_divop.hpp>
+#include <param_mod_F.H>
 
 #include <cmath>
 #include <limits>
-
-#define MY_HUGE 1.e200
 
 namespace divop_aux {
 
@@ -16,7 +15,7 @@ interp_to_face_centroid_x(const int i,
                           const int n,
                           Array4<const Real> const& afrac,
                           Array4<const Real> const& cent,
-                          EBCellFlag& flag)
+                          const EBCellFlag& flag)
 {
   Real result(0);
 
@@ -82,7 +81,7 @@ interp_to_face_centroid_y(const int i,
                           const int n,
                           Array4<const Real> const& afrac,
                           Array4<const Real> const& cent,
-                          EBCellFlag& flag)
+                          const EBCellFlag& flag)
 {
   Real result(0);
 
@@ -148,7 +147,7 @@ interp_to_face_centroid_z(const int i,
                           const int n,
                           Array4<const Real> const& afrac,
                           Array4<const Real> const& cent,
-                          EBCellFlag& flag)
+                          const EBCellFlag& flag)
 {
   Real result(0);
 
@@ -205,175 +204,30 @@ interp_to_face_centroid_z(const int i,
   return result;
 }
 
-AMREX_GPU_HOST_DEVICE
-void compute_dphidn_3d(Real* dphidn,
-                       const int i,
-                       const int j,
-                       const int k,
-                       Array4<Real> const& velocity,
-                       Array4<const Real> const& bndrycent,
-                       const Real* phib,
-                       const Real anrmx,
-                       const Real anrmy,
-                       const Real anrmz,
-                       Array4<const Real> const& vfrac)
-{
-  Real bct[3] = {bndrycent(i,j,k,0), bndrycent(i,j,k,1), bndrycent(i,j,k,2)};
-
-  Real vf = vfrac(i,j,k);
-
-  //Real dx_eb = amrex_get_dx_eb(vf);
-  Real dx_eb = std::max(0.3, (vf*vf - 0.25)/(2.*vf));
-
-  const double coeff = std::max(abs(anrmx), std::max(abs(anrmy),abs(anrmz)));
-
-  Real dg = dx_eb / coeff;
-
-  Real gx = bct[0] - dg*anrmx;
-  Real gy = bct[1] - dg*anrmy;
-  Real gz = bct[2] - dg*anrmz;
-
-  double sx =  std::copysign(1., anrmx);
-  double sy =  std::copysign(1., anrmy);
-  double sz =  std::copysign(1., anrmz);
-  
-  gx *= sx;
-  gy *= sy;
-  gz *= sz;
-
-  int ii = i - int(sx);
-  int jj = j - int(sy);
-  int kk = k - int(sz);
-
-  Real gxy = gx*gy;
-  Real gxz = gx*gz;
-  Real gyz = gy*gz;
-
-  Real gxyz = gx*gy*gz;
-
-  for(unsigned int n(0); n < 3; ++n)
-  {
-    Real phig(0);
-
-    phig = (1 + gx + gy + gz + gxy + gxz + gyz + gxyz) * velocity(i ,j ,k ,n) -
-           (gz + gxz + gyz + gxyz)                     * velocity(i ,j ,kk,n) -
-           (gy + gxy + gyz + gxyz)                     * velocity(i ,jj,k ,n) +
-           (gyz + gxyz)                                * velocity(i ,jj,kk,n) -
-           (gx + gxy + gxz + gxyz)                     * velocity(ii,j ,k ,n) +
-           (gxz + gxyz)                                * velocity(ii,j ,kk,n) +
-           (gxy + gxyz)                                * velocity(ii,jj,k ,n) -
-           (gxyz)                                      * velocity(ii,jj,kk,n);
-
-    dphidn[n] = (phib[n] - phig)/dg;
-  }
-}
-
-AMREX_GPU_HOST_DEVICE
-void compute_diff_wallfluxes(Real* divw,
-                             const Real* dx,
-                             const int i,
-                             const int j,
-                             const int k,
-                             Array4<Real> const& velocity,
-                             const Array4<Real>* mu,
-                             Array4<const Real> const& bndrycent,
-                             Array4<const EBCellFlag> const& flags,
-                             Array4<const Real> const& afrac_x,
-                             Array4<const Real> const& afrac_y,
-                             Array4<const Real> const& afrac_z,
-                             Array4<const Real> const& vfrac,
-                             const int* do_explicit_diffusion)
-{
-  const Real dxinv[3] = {1/dx[0], 1/dx[1], 1/dx[2]};
-
-  Real dapx = afrac_x(i+1,j,k) - afrac_x(i,j,k);
-  Real dapy = afrac_y(i,j+1,k) - afrac_y(i,j,k);
-  Real dapz = afrac_z(i,j,k+1) - afrac_z(i,j,k);
-
-  Real apnorm = std::sqrt(dapx*dapx + dapy*dapy + dapz*dapz);
-
-  const Real tolerance = std::numeric_limits<Real>::epsilon();
-
-  //if (apnorm == 0)
-  if (apnorm <= tolerance)
-    amrex::Abort("compute_diff_wallflux: we are in trouble.");
-
-  Real apnorminv = 1/apnorm;
-  Real anrmx = -1 * dapx * apnorminv; // unit vector pointing toward the wall
-  Real anrmy = -1 * dapy * apnorminv;
-  Real anrmz = -1 * dapz * apnorminv;
-
-  // Value on wall -- here we enforce no-slip therefore 0 for all components
-  const Real phib[3] = {0, 0, 0};
-
-  Real dveldn[3] = {0, 0, 0};
-
-  compute_dphidn_3d(dveldn, i, j, k, velocity, bndrycent, phib,
-                    anrmx, anrmy, anrmz, vfrac);
-
-  // transform them to d/dx, d/dy and d/dz given transverse derivatives are zero
-  Real dudx = dveldn[0] * anrmx;
-  Real dudy = dveldn[0] * anrmy;
-  Real dudz = dveldn[0] * anrmz;
-
-  Real dvdx = dveldn[1] * anrmx;
-  Real dvdy = dveldn[1] * anrmy;
-  Real dvdz = dveldn[1] * anrmz;
-
-  Real dwdx = dveldn[2] * anrmx;
-  Real dwdy = dveldn[2] * anrmy;
-  Real dwdz = dveldn[2] * anrmz;
-
-  Real divu = dudx + dvdy + dwdz;
-  Real tautmp = -(2./3) * (*mu)(i,j,k) * divu; // This MUST be verified
-
-  Real tauxx = (*mu)(i,j,k) * (dudx + dudx) + tautmp;
-  Real tauxy = (*mu)(i,j,k) * (dudy + dvdx);
-  Real tauxz = (*mu)(i,j,k) * (dudz + dwdx);
-
-  Real tauyx = (*mu)(i,j,k) * (dvdx + dudy);
-  Real tauyy = (*mu)(i,j,k) * (dvdy + dvdy) + tautmp;
-  Real tauyz = (*mu)(i,j,k) * (dvdz + dwdy);
-
-  Real tauzx = (*mu)(i,j,k) * (dwdx + dudz);
-  Real tauzy = (*mu)(i,j,k) * (dwdy + dvdz);
-  Real tauzz = (*mu)(i,j,k) * (dwdz + dwdz) + tautmp;
-
-  if(*do_explicit_diffusion == 0)
-  {
-    //
-    // Subtract diagonal terms of stress tensor, to be obtained through
-    // implicit solve instead.
-    //
-    tauxx -= (*mu)(i,j,k) * dudx;
-    tauxy -= (*mu)(i,j,k) * dudy;
-    tauxz -= (*mu)(i,j,k) * dudz;
-
-    tauyx -= (*mu)(i,j,k) * dvdx;
-    tauyy -= (*mu)(i,j,k) * dvdy;
-    tauyz -= (*mu)(i,j,k) * dvdz;
-
-    tauzx -= (*mu)(i,j,k) * dwdx;
-    tauzy -= (*mu)(i,j,k) * dwdy;
-    tauzz -= (*mu)(i,j,k) * dwdz;
-  }
-
-  divw[0] = dxinv[0] * (dapx*tauxx + dapy*tauxy + dapz*tauxz);
-  divw[1] = dxinv[1] * (dapx*tauyx + dapy*tauyy + dapz*tauyz);
-  divw[2] = dxinv[2] * (dapx*tauzx + dapy*tauzy + dapz*tauzz);
-}
-
 void
 step2(const Box& grown1_bx,
       const Box& grown2_bx,
-      Array4<Real> const& optmp,
-      Array4<Real> const& ep_g,
-      Array4<Real> const& divc,
-      Array4<Real> const& delm,
-      Array4<const Real> const& vfrac,
-      Array4<Real> const& mask,
-      Array4<const EBCellFlag> const& flags)
+      MFIter* mfi,
+      FArrayBox& optmp_fbx,
+      MultiFab& ep_g,
+      FArrayBox& divc_fbx,
+      FArrayBox& delm_fbx,
+      const MultiFab* volfrac,
+      FArrayBox& mask_fbx,
+      const EBCellFlagFab& flags_fab)
 {
+  Array4<Real> const& epsilon_g = ep_g.array(*mfi);
+
+  Array4<const EBCellFlag> const& flags = flags_fab.array();
+
+  Array4<const Real> const& vfrac = volfrac->array(*mfi);
+
+  Array4<Real> const& delm = delm_fbx.array();
+
+  Array4<Real> const& optmp = optmp_fbx.array();
+  Array4<Real> const& divc = divc_fbx.array();
+  Array4<Real> const& mask = mask_fbx.array();
+
   // TODO isn't it already initialized with zeroes?
   AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
   {
@@ -401,30 +255,47 @@ step2(const Box& grown1_bx,
             if((ii != 0 or jj != 0 or kk != 0) and 
                 (flags(i,j,k).isConnected({AMREX_D_DECL(ii,jj,kk)}) == 1))
             {
-              epvfrac = vfrac(i+ii,j+jj,k+kk) * ep_g(i+ii,j+jj,k+kk) * mask(i+ii,j+jj,k+kk);
+              epvfrac = vfrac(i+ii,j+jj,k+kk) * epsilon_g(i+ii,j+jj,k+kk) * 
+                        mask(i+ii,j+jj,k+kk);
               vtot += epvfrac;
               divnc += epvfrac * divc(i+ii,j+jj,k+kk);
             }
 
       divnc /= vtot;
-      epvfrac = vfrac(i,j,k) * ep_g(i,j,k);
+      epvfrac = vfrac(i,j,k) * epsilon_g(i,j,k);
       optmp(i,j,k) = (1 - vfrac(i,j,k)) * (divnc - divc(i,j,k));
       delm(i,j,k) = -1 * epvfrac * optmp(i,j,k);
     }
     else
       delm(i,j,k) = 0;
   });
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }
 
 void
 step3(const Box& grown1_bx,
-      Array4<Real> const& optmp,
-      Array4<Real> const& ep_g,
-      Array4<Real> const& delm,
-      Array4<const Real> const& vfrac,
-      Array4<Real> const& mask,
-      Array4<const EBCellFlag> const& flags)
+      MFIter* mfi,
+      FArrayBox& optmp_fbx,
+      MultiFab& ep_g,
+      FArrayBox& delm_fbx,
+      const MultiFab* volfrac,
+      FArrayBox& mask_fbx,
+      const EBCellFlagFab& flags_fab)
 {
+  Array4<Real> const& epsilon_g = ep_g.array(*mfi);
+
+  Array4<const EBCellFlag> const& flags = flags_fab.array();
+
+  Array4<const Real> const& vfrac = volfrac->array(*mfi);
+
+  Array4<Real> const& delm = delm_fbx.array();
+
+  Array4<Real> const& optmp = optmp_fbx.array();
+  Array4<Real> const& mask = mask_fbx.array();
+
   AMREX_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
   {
     if(flags(i,j,k).isSingleValued())
@@ -439,7 +310,8 @@ step3(const Box& grown1_bx,
             if((ii != 0 or jj != 0 or kk != 0) and
                 (flags(i,j,k).isConnected({AMREX_D_DECL(ii,jj,kk)}) == 1))
             {
-              wtot += ep_g(i+ii,j+jj,k+kk) * vfrac(i+ii,j+jj,k+kk) * mask(i+ii,j+jj,k+kk);
+              wtot += epsilon_g(i+ii,j+jj,k+kk) * vfrac(i+ii,j+jj,k+kk) * 
+                      mask(i+ii,j+jj,k+kk);
             }
 
       wtot = 1/wtot;
@@ -461,21 +333,25 @@ step3(const Box& grown1_bx,
             }
     }
   });
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 }
 
-} // end namespace amrex::divop_aux
+} // end namespace divop_aux
 
 using namespace divop_aux;
 
 void
 compute_divop(Box& bx,
-              Array4<Real> const& divergence,
-              Array4<Real> const& velocity,
-              Array4<Real> const& fx,
-              Array4<Real> const& fy,
-              Array4<Real> const& fz,
-              Array4<Real> const& ep_g,
+              MultiFab& conv,
+              MultiFab& vel,
+              MultiFab& ep_g,
               MFIter* mfi,
+              FArrayBox& fxfab,
+              FArrayBox& fyfab,
+              FArrayBox& fzfab,
               Array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac,
               Array<const MultiCutFab*, AMREX_SPACEDIM>& facecent,
               const EBCellFlagFab& flags_fab,
@@ -497,6 +373,14 @@ compute_divop(Box& bx,
   const amrex::Dim3 dom_high = amrex::ubound(domain);
 
   const Real i_dx (1/dx[0]), i_dy(1/dx[1]), i_dz(1/dx[2]);
+
+  Array4<Real> const& divergence = conv.array(*mfi);
+  Array4<Real> const& velocity = vel.array(*mfi);
+  Array4<Real> const& epsilon_g = ep_g.array(*mfi);
+
+  Array4<Real> const& fx = fxfab.array();
+  Array4<Real> const& fy = fyfab.array();
+  Array4<Real> const& fz = fzfab.array();
 
   Array4<const Real> const& areafrac_x = areafrac[0]->array(*mfi);
   Array4<const Real> const& areafrac_y = areafrac[1]->array(*mfi);
@@ -528,14 +412,16 @@ compute_divop(Box& bx,
   const Box& grown1_bx = amrex::grow(bx,1);
   const Box& grown2_bx = amrex::grow(bx,2);
 
-  FArrayBox divc_fbx(grown2_bx);
+  FArrayBox delm_fbx(grown1_bx);
+
   FArrayBox optmp_fbx(grown2_bx);
-  FArrayBox delm_fbx(grown2_bx);
+  FArrayBox divc_fbx(grown2_bx);
   FArrayBox mask_fbx(grown2_bx);
 
-  Array4<Real> const& divc = divc_fbx.array();
-  Array4<Real> const& optmp = optmp_fbx.array();
   Array4<Real> const& delm = delm_fbx.array();
+
+  Array4<Real> const& optmp = optmp_fbx.array();
+  Array4<Real> const& divc = divc_fbx.array();
   Array4<Real> const& mask = mask_fbx.array();
 
   //
@@ -557,6 +443,8 @@ compute_divop(Box& bx,
   Gpu::Device::synchronize();
 #endif
 
+  const Real my_huge = get_my_huge();
+
   //
   // We use the EB algorithm to compute the divergence at cell centers
   //
@@ -569,10 +457,12 @@ compute_divop(Box& bx,
     AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
     {
       if(flags(i,j,k).isCovered())
-        divc(i,j,k) = MY_HUGE;
+      {
+        divc(i,j,k) = my_huge;
+      }
       else if(flags(i,j,k).isSingleValued())
       {
-        EBCellFlag flag = flags(i,j,k);
+        const EBCellFlag& flag = flags(i,j,k);
 
         Real fxp = interp_to_face_centroid_x(i+1, j, k, fx, n,
                                              areafrac_x, facecent_x, flag);
@@ -599,10 +489,131 @@ compute_divop(Box& bx,
         if(is_dirichlet)
         {
           Real divdiff_w[3];
+          for(unsigned ncomp(0); ncomp < 3; ++ncomp) divdiff_w[ncomp] = 0;
 
-          compute_diff_wallfluxes(divdiff_w, dx, i, j, k, velocity, mu,
-                                  bndrycent, flags, areafrac_x, areafrac_y, areafrac_z,
-                                  vfrac, do_explicit_diffusion);
+          // Compute diff wallfluxes
+          {
+            Real dxinv[3];
+            for(unsigned ncomp(0); ncomp < 3; ++ncomp) dxinv[ncomp] = 1./dx[ncomp];
+
+            Real dapx = areafrac_x(i+1,j,k) - areafrac_x(i,j,k);
+            Real dapy = areafrac_y(i,j+1,k) - areafrac_y(i,j,k);
+            Real dapz = areafrac_z(i,j,k+1) - areafrac_z(i,j,k);
+
+            Real apnorm = std::sqrt(dapx*dapx + dapy*dapy + dapz*dapz);
+
+            //if (apnorm == 0)
+            if (apnorm <= tolerance)
+              amrex::Abort("compute_diff_wallflux: we are in trouble.");
+
+            Real apnorminv = 1/apnorm;
+            Real anrmx = -1 * dapx * apnorminv; // unit vector pointing toward the wall
+            Real anrmy = -1 * dapy * apnorminv;
+            Real anrmz = -1 * dapz * apnorminv;
+
+            // Value on wall -- here we enforce no-slip therefore 0 for all components
+            Real phib[3];
+            for(unsigned ncomp(0); ncomp < 3; ++ncomp) phib[ncomp] = 0;
+
+            Real dveldn[3];
+            for(unsigned ncomp(0); ncomp < 3; ++ncomp) dveldn[ncomp] = 0;
+
+            Real bct[3];
+            for(unsigned ncomp(0); ncomp < 3; ++ncomp) bct[ncomp] = bndrycent(i,j,k,ncomp);
+
+            Real vf = vfrac(i,j,k);
+
+            //Real dx_eb = amrex_get_dx_eb(vf);
+            Real dx_eb = std::max(0.3, (vf*vf - 0.25)/(2.*vf));
+
+            // Compute dphi_dn_3D
+            const double coeff = std::max(abs(anrmx), std::max(abs(anrmy),abs(anrmz)));
+
+            Real dg = dx_eb / coeff;
+
+            Real gx = bct[0] - dg*anrmx;
+            Real gy = bct[1] - dg*anrmy;
+            Real gz = bct[2] - dg*anrmz;
+
+            double sx = std::copysign(1., anrmx);
+            double sy = std::copysign(1., anrmy);
+            double sz = std::copysign(1., anrmz);
+            
+            gx *= sx; gy *= sy; gz *= sz;
+
+            int ii = i - int(sx); int jj = j - int(sy); int kk = k - int(sz);
+
+            Real gxy = gx*gy; Real gxz = gx*gz; Real gyz = gy*gz;
+
+            Real gxyz = gx*gy*gz;
+            
+            for(unsigned int n(0); n < 3; ++n)
+            {
+              Real phig(0);
+
+              phig = (1 + gx + gy + gz + gxy + gxz + gyz + gxyz) * velocity(i ,j ,k ,n) -
+                     (gz + gxz + gyz + gxyz)                     * velocity(i ,j ,kk,n) -
+                     (gy + gxy + gyz + gxyz)                     * velocity(i ,jj,k ,n) +
+                     (gyz + gxyz)                                * velocity(i ,jj,kk,n) -
+                     (gx + gxy + gxz + gxyz)                     * velocity(ii,j ,k ,n) +
+                     (gxz + gxyz)                                * velocity(ii,j ,kk,n) +
+                     (gxy + gxyz)                                * velocity(ii,jj,k ,n) -
+                     (gxyz)                                      * velocity(ii,jj,kk,n);
+
+              dveldn[n] = (phib[n] - phig)/dg;
+            }
+
+            // transform them to d/dx, d/dy and d/dz given transverse derivatives are zero
+            Real dudx = dveldn[0] * anrmx;
+            Real dudy = dveldn[0] * anrmy;
+            Real dudz = dveldn[0] * anrmz;
+
+            Real dvdx = dveldn[1] * anrmx;
+            Real dvdy = dveldn[1] * anrmy;
+            Real dvdz = dveldn[1] * anrmz;
+
+            Real dwdx = dveldn[2] * anrmx;
+            Real dwdy = dveldn[2] * anrmy;
+            Real dwdz = dveldn[2] * anrmz;
+
+            Real divu = dudx + dvdy + dwdz;
+            Real tautmp = -(2./3) * (*mu)(i,j,k) * divu; // This MUST be verified
+
+            Real tauxx = (*mu)(i,j,k) * (dudx + dudx) + tautmp;
+            Real tauxy = (*mu)(i,j,k) * (dudy + dvdx);
+            Real tauxz = (*mu)(i,j,k) * (dudz + dwdx);
+
+            Real tauyx = (*mu)(i,j,k) * (dvdx + dudy);
+            Real tauyy = (*mu)(i,j,k) * (dvdy + dvdy) + tautmp;
+            Real tauyz = (*mu)(i,j,k) * (dvdz + dwdy);
+
+            Real tauzx = (*mu)(i,j,k) * (dwdx + dudz);
+            Real tauzy = (*mu)(i,j,k) * (dwdy + dvdz);
+            Real tauzz = (*mu)(i,j,k) * (dwdz + dwdz) + tautmp;
+
+            if(*do_explicit_diffusion == 0)
+            {
+              //
+              // Subtract diagonal terms of stress tensor, to be obtained through
+              // implicit solve instead.
+              //
+              tauxx -= (*mu)(i,j,k) * dudx;
+              tauxy -= (*mu)(i,j,k) * dudy;
+              tauxz -= (*mu)(i,j,k) * dudz;
+
+              tauyx -= (*mu)(i,j,k) * dvdx;
+              tauyy -= (*mu)(i,j,k) * dvdy;
+              tauyz -= (*mu)(i,j,k) * dvdz;
+
+              tauzx -= (*mu)(i,j,k) * dwdx;
+              tauzy -= (*mu)(i,j,k) * dwdy;
+              tauzz -= (*mu)(i,j,k) * dwdz;
+            }
+
+            divdiff_w[0] = dxinv[0] * (dapx*tauxx + dapy*tauxy + dapz*tauxz);
+            divdiff_w[1] = dxinv[1] * (dapx*tauyx + dapy*tauyy + dapz*tauyz);
+            divdiff_w[2] = dxinv[2] * (dapx*tauzx + dapy*tauzy + dapz*tauzz);
+          }
 
           divc(i,j,k) -= divdiff_w[n] / (dx[n]*vfrac(i,j,k));
         }
@@ -616,26 +627,20 @@ compute_divop(Box& bx,
     });
 
 #ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
+    Gpu::Device::synchronize();
 #endif
 
     //
     // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
     //
-    step2(grown1_bx, grown2_bx, optmp, ep_g, divc, delm, vfrac, mask, flags);
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
+    step2(grown1_bx, grown2_bx, mfi, optmp_fbx, ep_g, divc_fbx, delm_fbx, 
+        volfrac, mask_fbx, flags_fab);
 
     //
     // Step 3: redistribute excess/loss of mass
     //
-    step3(grown1_bx, optmp, ep_g, delm, vfrac, mask, flags);
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
+    step3(grown1_bx, mfi, optmp_fbx, ep_g, delm_fbx, 
+        volfrac, mask_fbx, flags_fab);
 
     //
     // Resume the correct sign, AKA return the negative
@@ -644,6 +649,10 @@ compute_divop(Box& bx,
     {
       divergence(i,j,k,n) = divc(i,j,k) + optmp(i,j,k);
     });
+
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
 
   }
 }

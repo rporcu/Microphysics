@@ -43,16 +43,16 @@ contains
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine calc_cell_ic(dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
-     i_w, i_e, j_s, j_n, k_b, k_t)
+     i_w, i_e, j_s, j_n, k_b, k_t) bind(C)
 
      use param, only: equal
 
      implicit none
 
-     real(rt), intent(in   ) :: dx, dy, dz
-     real(rt), intent(in   ) :: x_w, y_s, z_b, x_e, y_n, z_t
+     real(rt), intent(in) :: dx, dy, dz
+     real(rt), intent(in) :: x_w, y_s, z_b, x_e, y_n, z_t
 
-     integer,      intent(  out) :: i_w, j_s, k_b, i_e, j_n, k_t
+     integer(c_int), intent(out) :: i_w, j_s, k_b, i_e, j_n, k_t
 
      i_w = calc_cell(x_w, dx) + 1
      i_e = calc_cell(x_e, dx)

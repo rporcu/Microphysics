@@ -1,7 +1,10 @@
-#include <mfix_mac_F.H>
 #include <mfix_proj_F.H>
 #include <mfix_F.H>
 #include <mfix.H>
+
+#include <AMReX_REAL.H>
+#include <AMReX_BLFort.H>
+#include <AMReX_SPACE.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
@@ -28,7 +31,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
     }
 
     // Fill ghost nodes and reimpose boundary conditions
-    mfix_set_velocity_bcs (time, 0);
+    mfix_set_velocity_bcs (time, vel_g, 0);
     mfix_set_scalar_bcs ();
 
     //
@@ -159,7 +162,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
    // Fill ghost cells
    mfix_set_scalar_bcs ();
-   mfix_set_velocity_bcs (time, 0);
+   mfix_set_velocity_bcs (time, vel_g, 0);
 
    // Copy vel_g into vel_go
    for (int lev = 0; lev < nlev; lev++)
@@ -192,7 +195,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
           MultiFab::Copy (*vel_g[lev], *vel_go[lev], 0, 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow());
 
        // Reset the boundary values (necessary if they are time-dependent)
-       mfix_set_velocity_bcs (time, 0);
+       mfix_set_velocity_bcs (time, vel_g, 0);
    }
 }
 
@@ -272,7 +275,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
     // Project velocity field
     mfix_apply_projection ( new_time, dt, proj_2 );
 
-    mfix_set_velocity_bcs (new_time, 0);
+    mfix_set_velocity_bcs (new_time, vel_g, 0);
 }
 
 //
@@ -357,7 +360,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
     // Apply projection
     mfix_apply_projection (new_time, dt, proj_2);
 
-    mfix_set_velocity_bcs (new_time, 0);
+    mfix_set_velocity_bcs (new_time, vel_g, 0);
 }
 
 void
@@ -457,7 +460,7 @@ mfix::steady_state_reached (Real dt, int iter)
     int condition2[nlev];
 
     Real time = 0.;
-    mfix_set_velocity_bcs (time, 0);
+    mfix_set_velocity_bcs (time, vel_g, 0);
 
     //
     // Make sure velocity is up to date

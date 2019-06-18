@@ -48,8 +48,6 @@ public:
 
     // Face-based coefficients b in MAC projection and implicit diffusion solve
     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff_cc;
-    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
-    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
 
     // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_lobc;
@@ -209,7 +207,19 @@ public:
     const int * get_bc_klo_ptr(int lev) {return bc_klo[lev]->dataPtr();}
     const int * get_bc_khi_ptr(int lev) {return bc_khi[lev]->dataPtr();}
 
+    const IArrayBox& get_bc_ilo(int lev) {return *bc_ilo[lev];}
+    const IArrayBox& get_bc_ihi(int lev) {return *bc_ihi[lev];}
+    const IArrayBox& get_bc_jlo(int lev) {return *bc_jlo[lev];}
+    const IArrayBox& get_bc_jhi(int lev) {return *bc_jhi[lev];}
+    const IArrayBox& get_bc_klo(int lev) {return *bc_klo[lev];}
+    const IArrayBox& get_bc_khi(int lev) {return *bc_khi[lev];}
+
     int get_nghost() { return nghost; }
+
+    const BcList& get_bc_list_values() {return bc_list;}
+    Real** get_bc_vel_g_values() {return m_bc_vel_g;}
+    Real* get_bc_t_g_values() {return m_bc_t_g;}
+    Real* get_bc_ep_g_values() {return m_bc_ep_g;}
 
     void mfix_add_drag_terms(Real dt);
 
@@ -218,6 +228,17 @@ public:
     void mfix_compute_MAC_velocity_at_faces(Real time, Vector< std::unique_ptr<MultiFab> >& vel);
 
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
+
+    void mfix_set_bc_mod(const int* pID, const int* pType,
+                         const amrex::Real* pLo, const amrex::Real* pHi,
+                         amrex::Real* pLoc,
+                         amrex::Real* pPg,
+                         amrex::Real* pVel);
+
+    void mfix_set_bc_mod_add_mi(const int* pPlane,
+                                amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
+                                amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
+                                amrex::Real* pPg, amrex::Real* pVel);
 
     static DragType m_drag_type;
 
@@ -244,6 +265,8 @@ public:
                                  Box& domain,
                                  const EBCellFlagFab& flags,
                                  const int lev);
+
+     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
 protected:
 
@@ -282,6 +305,10 @@ protected:
 
      static BcList bc_list;
 
+     static Real** m_bc_vel_g;
+     static Real* m_bc_t_g;
+     static Real* m_bc_ep_g;
+
      //! The particles see an inflow face as a solid wall; thus instead of
      //! creating a separate EBfactory for particles, we simply modify the
      //! level-set near inflow to see it as a wall
@@ -299,7 +326,9 @@ protected:
                                  Real time, int steady_state);
 
      void mfix_set_scalar_bcs ();
-     void mfix_set_velocity_bcs (Real time, int extrap_dir_bcs);
+     void mfix_set_velocity_bcs (Real time, 
+                                 Vector< std::unique_ptr<MultiFab> >& vel,
+                                 int extrap_dir_bcs);
 
      void set_MC_velocity_bcs ( int lev,
                                 Vector< std::unique_ptr<MultiFab> >& u,
@@ -423,8 +452,6 @@ private:
                        const Vector< std::unique_ptr<MultiFab>>& mf2,
                        int lev, int comp1, int comp2 );
      Real mfix_norm0 ( MultiFab& mf1, MultiFab& mf2, int lev, int comp1, int comp2 );
-
-     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
      static int nlev;
 
