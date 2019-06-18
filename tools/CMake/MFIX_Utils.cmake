@@ -1,4 +1,3 @@
-
 #
 # Stop if in-source build
 #

@@ -25,6 +25,12 @@ else ()
    message(STATUS "Build type set by user to '${CMAKE_BUILD_TYPE}'.")
 endif()
 
+set(USE_CCACHE "")
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+  set( CMAKE_CXX_COMPILER_LAUNCHER ccache )
+endif()
+
 # Setup AMReX
 include(MFIXSetupAMReX)
 

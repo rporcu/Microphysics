@@ -1,5 +1,5 @@
 #
-# This module 
+# This module
 #
 
 set(AMREX_MINIMUM_VERSION 19.05.1 CACHE INTERNAL "Minimum required AMReX version")
@@ -11,7 +11,7 @@ find_package( AMReX ${AMREX_MINIMUM_VERSION} CONFIG QUIET )
 
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~ STANDALONE MODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 if (AMReX_FOUND)
 
    # We are in this branch because an AMReX installation has been found.
@@ -51,17 +51,17 @@ if (AMReX_FOUND)
       )
 
    message(STATUS "AMReX found: configuration file located at ${AMReX_DIR}")
-   
+
    # IS it worth checking this???
    if ( NOT ( "${CMAKE_BUILD_TYPE}" STREQUAL "${AMReX_BUILD_TYPE}" ) )
       message (WARNING "MFIX build type (${CMAKE_BUILD_TYPE}) type does not match AMReX build type (${AMReX_BUILD_TYPE})")
    endif ()
-   
+
 else ()
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~ SUPERBUILD MODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
-   
+#
+
    message(STATUS "No AMReX installation found: cloning AMReX repo")
 
    if (NOT EXISTS  "${PROJECT_SOURCE_DIR}/.git")
@@ -69,26 +69,27 @@ else ()
          "${PROJECT_SOURCE_DIR} is not a Git repo: missing .git")
    endif ()
 
-   find_package(Git REQUIRED)
-
-   set(AMREX_SRC_DIR "${PROJECT_SOURCE_DIR}/subprojects/amrex" CACHE INTERNAL "Path to AMReX source (submodule)")
+   set(AMREX_SRC_DIR "${PROJECT_SOURCE_DIR}/subprojects/amrex"
+     CACHE INTERNAL "Path to AMReX source (submodule)")
 
    if (NOT EXISTS "${AMREX_SRC_DIR}/.git")
       message(STATUS "Initializing git submodule for AMReX")
+
+      find_package(Git REQUIRED)
 
       execute_process(
          COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
          RESULT_VARIABLE GIT_SUBMOD_RESULT
          )
-      
+
       if ( NOT GIT_SUBMOD_RESULT EQUAL "0")
          message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
       endif()
 
       unset(GIT_SUBMOD_RESULT)
-      
-   endif ()  
+
+   endif ()
 
    set(ENABLE_TUTORIALS OFF)
    set(ENABLE_PARTICLES ON)
@@ -107,13 +108,13 @@ else ()
    if(ENABLE_CUDA)
       include(AMReX_SetupCUDA)
    endif ()
-   
+
    add_subdirectory(${AMREX_SRC_DIR})
-   
+
    get_directory_property(amrex_targets DIRECTORY ${AMREX_SRC_DIR}/Src BUILDSYSTEM_TARGETS)
 
    foreach (_target IN LISTS amrex_targets )
       add_library(AMReX::${_target} ALIAS ${_target})
-   endforeach ()  
-  
+   endforeach ()
+
 endif ()
