@@ -279,8 +279,7 @@ void mfix::Init( Real time)
     SetUseNewChop();
 
     // This Builds the new Grids
-    InitFromScratch(0.);
-
+    // InitFromScratch(0.);
 
     /****************************************************************************
      *                                                                          *
