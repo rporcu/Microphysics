@@ -61,9 +61,31 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
 
    if (m_verbose)
       Print() << " >> Before projection\n" ; 
+
+   // ep_face and ro_face are now temporaries, no need to keep them outside this routine
+   Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
+   Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
+
+   ep_face.resize(finest_level+1);
+   ro_face.resize(finest_level+1);
    
    for ( int lev=0; lev <= finest_level; ++lev )
    {
+      BoxArray x_edge_ba = grids[lev];
+      x_edge_ba.surroundingNodes(0);
+      BoxArray y_edge_ba = grids[lev];
+      y_edge_ba.surroundingNodes(1);
+      BoxArray z_edge_ba = grids[lev];
+      z_edge_ba.surroundingNodes(2);
+
+      ep_face[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ep_face[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ep_face[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+
+      ro_face[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ro_face[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ro_face[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+
       // Compute ep at faces
       ep[lev]->FillBoundary(geom[lev].periodicity());
      

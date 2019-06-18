@@ -292,68 +292,13 @@ void mfix::Init( Real time)
     DistributionMapping dm(ba, ParallelDescriptor::NProcs());
     MakeNewLevelFromScratch(0, time, ba, dm);
 
-    // HACK: The particle generator is sensitive to the dmap => manually set
-    // dmap until this is fixed.
-    //if (ParallelDescriptor::NProcs() == 4)
-    //{
-    //    // Legacy case of BENCH05 test
-    //    DistributionMapping dm(Vector<int>{0,3,2,1});
-    //    MakeNewLevelFromScratch(0, time, ba, dm);
-    //}
-    //else
-    //{
-    //    DistributionMapping dm(ba, ParallelDescriptor::NProcs());
-    //    MakeNewLevelFromScratch(0, time, ba, dm);
-    //}
-
-
-
     for (int lev = 1; lev <= finest_level; lev++)
     {
-        //HACK: I commented this out, but I don't know if I should have.
-
-        // if (use_amr_ls)
-        // {
-        //    const MultiFab * ls_lev = amr_level_set->getLevelSet(lev);
-        //    BoxArray ba_ref = amrex::convert(ls_lev->boxArray(),IntVect{0,0,0});
-
-        //    std::cout << "Level " << lev << " grids: " << ba_ref << std::endl;
-        //    if (m_verbose > 0)
-        //      std::cout << "Setting refined region at level " << lev
-        //                << " to " << ba_ref << std::endl;
-        //    DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
-        //    MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
-        // }
-        // else
-        // {
-        //    // This refines the central half of the domain
-        //    int ilo = ba[0].size()[0] / 2;
-        //    int ihi = 3*ba[0].size()[0]/2-1;
-        //    IntVect lo(ilo,ilo,ilo);
-        //    IntVect hi(ihi,ihi,ihi);
-        //    Box bx(lo,hi);
-        //    BoxArray ba_ref(bx);
-
-        //    // This refines the whole domain
-        //    // BoxArray ba_ref(ba);
-        //    // ba_ref.refine(2);
-
-        //    if (m_verbose > 0)
-        //    {
-        //      std::cout << "Setting refined region at level " << lev
-        //                << " to " << ba_ref << std::endl;
-        //    }
-        //    DistributionMapping dm_ref(ba_ref, ParallelDescriptor::NProcs());
-        //    MakeNewLevelFromScratch(lev, time, ba_ref, dm_ref);
-        // }
-
        if (m_verbose > 0)
-       {
             std::cout << "Setting refined region at level " << lev
                       << " to " << grids[lev] << std::endl;
-       }
 
-        MakeNewLevelFromScratch(lev, time, grids[lev], dmap[lev]);
+       MakeNewLevelFromScratch(lev, time, grids[lev], dmap[lev]);
     }
 
     /****************************************************************************

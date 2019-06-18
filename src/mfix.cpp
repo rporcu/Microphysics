@@ -184,8 +184,6 @@ mfix::ResizeArrays ()
 
     bcoeff_nd.resize(nlevs_max);
     bcoeff_cc.resize(nlevs_max);
-      ep_face.resize(nlevs_max);
-      ro_face.resize(nlevs_max);
 
     // Fuid cost (load balancing)
     fluid_cost.resize(nlevs_max);
