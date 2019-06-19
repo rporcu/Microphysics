@@ -52,6 +52,9 @@ void
 mfix::mfix_compute_ugradu( Box& bx,
                            Vector< std::unique_ptr<MultiFab> >& conv, 
                            Vector< std::unique_ptr<MultiFab> >& vel,
+                           Vector< std::unique_ptr<MultiFab> >& u_mac,
+                           Vector< std::unique_ptr<MultiFab> >& v_mac,
+                           Vector< std::unique_ptr<MultiFab> >& w_mac,
                            MFIter* mfi,
                            Box& domain,
                            const int lev)
@@ -65,9 +68,9 @@ mfix::mfix_compute_ugradu( Box& bx,
   Array4<Real> const& velocity = vel[lev]->array(*mfi);
   Array4<Real> const& epsilon_g = ep_g[lev]->array(*mfi);
   
-  Array4<Real> const& u = m_u_mac[lev]->array(*mfi);
-  Array4<Real> const& v = m_v_mac[lev]->array(*mfi);
-  Array4<Real> const& w = m_w_mac[lev]->array(*mfi);
+  Array4<Real> const& u = u_mac[lev]->array(*mfi);
+  Array4<Real> const& v = v_mac[lev]->array(*mfi);
+  Array4<Real> const& w = w_mac[lev]->array(*mfi);
 
   Array4<Real> const& x_slopes = xslopes[lev]->array(*mfi);
   Array4<Real> const& y_slopes = yslopes[lev]->array(*mfi);
@@ -303,6 +306,9 @@ void
 mfix::mfix_compute_ugradu_eb(Box& bx,
                              Vector< std::unique_ptr<MultiFab> >& conv, 
                              Vector< std::unique_ptr<MultiFab> >& vel,
+                             Vector< std::unique_ptr<MultiFab> >& u_mac,
+                             Vector< std::unique_ptr<MultiFab> >& v_mac,
+                             Vector< std::unique_ptr<MultiFab> >& w_mac,
                              MFIter* mfi,
                              Array<const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
                              Array<const MultiCutFab*,AMREX_SPACEDIM>& facecent,
@@ -327,9 +333,9 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   Array4<const Real> const& areafrac_y = areafrac[1]->array(*mfi);
   Array4<const Real> const& areafrac_z = areafrac[2]->array(*mfi);
 
-  Array4<Real> const& u = m_u_mac[lev]->array(*mfi);
-  Array4<Real> const& v = m_v_mac[lev]->array(*mfi);
-  Array4<Real> const& w = m_w_mac[lev]->array(*mfi);
+  Array4<Real> const& u = u_mac[lev]->array(*mfi);
+  Array4<Real> const& v = v_mac[lev]->array(*mfi);
+  Array4<Real> const& w = w_mac[lev]->array(*mfi);
 
   Array4<Real> const& x_slopes = xslopes[lev]->array(*mfi);
   Array4<Real> const& y_slopes = yslopes[lev]->array(*mfi);
@@ -507,7 +513,31 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv,
 
     amrex::Print() << "In predictor at time " << time << std::endl;
 
-    mfix_compute_MAC_velocity_at_faces( time, vel );
+    // MAC velocity
+    Vector< std::unique_ptr<MultiFab> > u_mac;
+    Vector< std::unique_ptr<MultiFab> > v_mac;
+    Vector< std::unique_ptr<MultiFab> > w_mac;
+
+    u_mac.resize(nlev);
+    v_mac.resize(nlev);
+    w_mac.resize(nlev);
+
+    for (int lev=0; lev < nlev; ++lev)
+    {
+       BoxArray x_edge_ba = grids[lev];
+       x_edge_ba.surroundingNodes(0);
+       u_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+
+       BoxArray y_edge_ba = grids[lev];
+       y_edge_ba.surroundingNodes(1);
+       v_mac[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+
+       BoxArray z_edge_ba = grids[lev];
+       z_edge_ba.surroundingNodes(2);
+       w_mac[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+    }
+
+    mfix_compute_MAC_velocity_at_faces( time, vel, u_mac, v_mac, w_mac );
 
     for (int lev=0; lev < nlev; ++lev)
     {
@@ -548,11 +578,11 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv,
                 // No cut cells in tile + nghost-cell witdh halo -> use non-eb routine
                 if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
                 {
-                    mfix_compute_ugradu(bx, conv, vel, &mfi, domain, lev);
+                    mfix_compute_ugradu(bx, conv, vel, u_mac, v_mac, w_mac, &mfi, domain, lev);
                 }
                 else
                 {
-                    mfix_compute_ugradu_eb(bx, conv, vel, &mfi, areafrac, facecent,
+                    mfix_compute_ugradu_eb(bx, conv, vel, u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
                                            volfrac, bndrycent, domain, flags, lev);
                 }
             }
@@ -573,7 +603,31 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv,
 
     amrex::Print() << "In corrector at time " << time << std::endl;
 
-    mfix_compute_MAC_velocity_at_faces( time, vel );
+    // MAC velocity
+    Vector< std::unique_ptr<MultiFab> > u_mac;
+    Vector< std::unique_ptr<MultiFab> > v_mac;
+    Vector< std::unique_ptr<MultiFab> > w_mac;
+
+    u_mac.resize(nlev);
+    v_mac.resize(nlev);
+    w_mac.resize(nlev);
+
+    for (int lev=0; lev < nlev; ++lev)
+    {
+       BoxArray x_edge_ba = grids[lev];
+       x_edge_ba.surroundingNodes(0);
+       u_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+
+       BoxArray y_edge_ba = grids[lev];
+       y_edge_ba.surroundingNodes(1);
+       v_mac[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+
+       BoxArray z_edge_ba = grids[lev];
+       z_edge_ba.surroundingNodes(2);
+       w_mac[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+    }
+
+    mfix_compute_MAC_velocity_at_faces( time, vel, u_mac, v_mac, w_mac );
 
     for (int lev=0; lev < nlev; ++lev)
     {
@@ -614,11 +668,11 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv,
                 // No cut cells in tile grown by nghost -> use non-eb routine
                 if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
                 {
-                    mfix_compute_ugradu(bx, conv, vel, &mfi, domain, lev);
+                    mfix_compute_ugradu(bx, conv, vel, u_mac, v_mac, w_mac, &mfi, domain, lev);
                 }
                 else
                 {
-                    mfix_compute_ugradu_eb(bx, conv, vel, &mfi, areafrac, facecent,
+                    mfix_compute_ugradu_eb(bx, conv, vel, u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
                                            volfrac, bndrycent, domain, flags, lev);
                 }
             }
