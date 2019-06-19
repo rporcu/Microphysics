@@ -173,6 +173,11 @@ mfix::ResizeArrays ()
     // Vorticity
     vort.resize(nlevs_max);
 
+    // MAC velocities used for defining convective term
+    m_u_mac.resize(nlevs_max);
+    m_v_mac.resize(nlevs_max);
+    m_w_mac.resize(nlevs_max);
+
     xslopes.resize(nlevs_max);
     yslopes.resize(nlevs_max);
     zslopes.resize(nlevs_max);

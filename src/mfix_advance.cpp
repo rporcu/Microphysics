@@ -13,23 +13,11 @@
 #include <AMReX_Array.H>
 #include <AMReX_BLassert.H>
 
-#ifdef AMREX_MEM_PROFILING
-#include <AMReX_MemProfiler.H>
-#endif
-
 void
 mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluid");
     BL_PROFILE("mfix::EvolveFluid");
-
-#ifdef AMREX_MEM_PROFILING
-        {
-            std::ostringstream ss;
-            ss << "EvolveFluid Start";
-            MemProfiler::report(ss.str());
-        }
-#endif
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
 
@@ -138,14 +126,6 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
         ++iter;
     }
     while ( keep_looping );
-
-#ifdef AMREX_MEM_PROFILING
-        {
-            std::ostringstream ss;
-            ss << "EvolveFluid Stop";
-            MemProfiler::report(ss.str());
-        }
-#endif
 
     BL_PROFILE_REGION_STOP("mfix::EvolveFluid");
 }

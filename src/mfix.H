@@ -225,11 +225,7 @@ public:
 
     void mfix_add_gravity_and_gp(Real dt);
 
-    void mfix_compute_MAC_velocity_at_faces(Real time, 
-                                            Vector< std::unique_ptr<MultiFab> >& vel,
-                                            Vector< std::unique_ptr<MultiFab> >& u_mac,
-                                            Vector< std::unique_ptr<MultiFab> >& v_mac,
-                                            Vector< std::unique_ptr<MultiFab> >& w_mac);
+    void mfix_compute_MAC_velocity_at_faces(Real time, Vector< std::unique_ptr<MultiFab> >& vel);
 
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
 
@@ -254,9 +250,6 @@ public:
     void mfix_compute_ugradu( Box& bx,
                               Vector< std::unique_ptr<MultiFab> >& conv,
                               Vector< std::unique_ptr<MultiFab> >& vel,
-                              Vector< std::unique_ptr<MultiFab> >& u_mac,
-                              Vector< std::unique_ptr<MultiFab> >& v_mac,
-                              Vector< std::unique_ptr<MultiFab> >& w_mac,
                               MFIter* mfi,
                               Box& domain,
                               const int lev);
@@ -264,9 +257,6 @@ public:
     void mfix_compute_ugradu_eb( Box& bx,
                                  Vector< std::unique_ptr<MultiFab> >& conv,
                                  Vector< std::unique_ptr<MultiFab> >& vel,
-                                 Vector< std::unique_ptr<MultiFab> >& u_mac,
-                                 Vector< std::unique_ptr<MultiFab> >& v_mac,
-                                 Vector< std::unique_ptr<MultiFab> >& w_mac,
                                  MFIter* mfi,
                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
                                  Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
@@ -551,6 +541,11 @@ private:
 
      // Pressure increment
      Vector< std::unique_ptr<MultiFab> > phi_nd;
+
+     // MAC velocity
+     Vector< std::unique_ptr<MultiFab> > m_u_mac;
+     Vector< std::unique_ptr<MultiFab> > m_v_mac;
+     Vector< std::unique_ptr<MultiFab> > m_w_mac;
 
      // used if load_balance_type == "KnapSack"
      Vector<std::unique_ptr<MultiFab> > particle_cost;

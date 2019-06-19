@@ -2,10 +2,7 @@
 
 void
 mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
-                                           Vector< std::unique_ptr<MultiFab> >& vel,
-                                           Vector< std::unique_ptr<MultiFab> >& u_mac,
-                                           Vector< std::unique_ptr<MultiFab> >& v_mac,
-                                           Vector< std::unique_ptr<MultiFab> >& w_mac)
+                                           Vector< std::unique_ptr<MultiFab> >& vel)
 
 {
     BL_PROFILE("mfix::mfix_compute_MAC_velocity_at_faces");
@@ -53,9 +50,9 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
           {
-             u_mac[lev] -> setVal( 1.2345e300, ubx, 0, 1);
-             v_mac[lev] -> setVal( 1.2345e300, vbx, 0, 1);
-             w_mac[lev] -> setVal( 1.2345e300, wbx, 0, 1);
+             m_u_mac[lev] -> setVal( 1.2345e300, ubx, 0, 1);
+             m_v_mac[lev] -> setVal( 1.2345e300, vbx, 0, 1);
+             m_w_mac[lev] -> setVal( 1.2345e300, wbx, 0, 1);
           }
           else if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
           {
@@ -69,9 +66,9 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
              const auto& zslopes_fab = (zslopes[lev])->array(mfi);
 
              // Face-centered velocity components
-             const auto& umac_fab = (u_mac[lev])->array(mfi);
-             const auto& vmac_fab = (v_mac[lev])->array(mfi);
-             const auto& wmac_fab = (w_mac[lev])->array(mfi);
+             const auto& umac_fab = (m_u_mac[lev])->array(mfi);
+             const auto& vmac_fab = (m_v_mac[lev])->array(mfi);
+             const auto& wmac_fab = (m_w_mac[lev])->array(mfi);
 
              // No cut cells in tile + 1-cell witdh halo -> use non-eb routine
              AMREX_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
@@ -133,9 +130,9 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
              const auto& zslopes_fab = (zslopes[lev])->array(mfi);
 
              // Face-centered velocity components
-             const auto& umac_fab = (u_mac[lev])->array(mfi);
-             const auto& vmac_fab = (v_mac[lev])->array(mfi);
-             const auto& wmac_fab = (w_mac[lev])->array(mfi);
+             const auto& umac_fab = (m_u_mac[lev])->array(mfi);
+             const auto& vmac_fab = (m_v_mac[lev])->array(mfi);
+             const auto& wmac_fab = (m_w_mac[lev])->array(mfi);
 
              // Face-centered areas
              const auto& ax_fab = areafrac[0]->array(mfi);
@@ -214,6 +211,9 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
     Gpu::Device::synchronize();
 #endif
 
+    // Note that we will call set_velocity_bcs in mac_projection so we don't need to call it here
+    // set_velocity_bcs( lev, m_u_mac, m_v_mac, m_w_mac, time );
+
     // Do projection on all AMR levels in one shot 
-    apply_MAC_projection (u_mac, v_mac, w_mac, ep_g, ro_g, time, steady_state );
+    apply_MAC_projection (m_u_mac, m_v_mac, m_w_mac, ep_g, ro_g, time, steady_state );
 }
