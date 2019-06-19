@@ -160,9 +160,9 @@ contains
       !
       nwalls = 0
       if (is_dirichlet) then
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
+         do k = lo(3)-2, hi(3)+2
+            do j = lo(2)-2, hi(2)+2
+               do i = lo(1)-2, hi(1)+2
                   if (is_single_valued_cell(flags(i,j,k))) nwalls = nwalls + 1
                end do
             end do
@@ -201,9 +201,9 @@ contains
 
          divc = zero
 
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
+         do k = lo(3)-2, hi(3)+2
+            do j = lo(2)-2, hi(2)+2
+               do i = lo(1)-2, hi(1)+2
 
                   if (is_covered_cell(flags(i,j,k))) then
 
@@ -333,7 +333,7 @@ contains
                               if ( ( ii /= 0 .or. jj /= 0 .or. kk /= 0) &
                                .and. (nbr(ii,jj,kk)==1) ) then
                                  optmp(i+ii,j+jj,k+kk) = optmp(i+ii,j+jj,k+kk) + &
-                                  &                  delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk)
+                                  &                  delm(i,j,k) * wtot * mask(i,j,k)
                               end if
                            end do
                         end do
