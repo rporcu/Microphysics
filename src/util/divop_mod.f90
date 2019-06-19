@@ -160,9 +160,9 @@ contains
       !
       nwalls = 0
       if (is_dirichlet) then
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
+         do k = lo(3)-2, hi(3)+2
+            do j = lo(2)-2, hi(2)+2
+               do i = lo(1)-2, hi(1)+2
                   if (is_single_valued_cell(flags(i,j,k))) nwalls = nwalls + 1
                end do
             end do
@@ -201,9 +201,9 @@ contains
 
          divc = zero
 
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
+         do k = lo(3)-2, hi(3)+2
+            do j = lo(2)-2, hi(2)+2
+               do i = lo(1)-2, hi(1)+2
 
                   if (is_covered_cell(flags(i,j,k))) then
 
