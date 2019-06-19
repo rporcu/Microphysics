@@ -527,14 +527,17 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv,
        BoxArray x_edge_ba = grids[lev];
        x_edge_ba.surroundingNodes(0);
        u_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+       u_mac[lev]->setVal(covered_val);
 
        BoxArray y_edge_ba = grids[lev];
        y_edge_ba.surroundingNodes(1);
        v_mac[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+       v_mac[lev]->setVal(covered_val);
 
        BoxArray z_edge_ba = grids[lev];
        z_edge_ba.surroundingNodes(2);
        w_mac[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+       w_mac[lev]->setVal(covered_val);
     }
 
     mfix_compute_MAC_velocity_at_faces( time, vel, u_mac, v_mac, w_mac );
@@ -617,14 +620,17 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv,
        BoxArray x_edge_ba = grids[lev];
        x_edge_ba.surroundingNodes(0);
        u_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+       u_mac[lev]->setVal(covered_val);
 
        BoxArray y_edge_ba = grids[lev];
        y_edge_ba.surroundingNodes(1);
        v_mac[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+       v_mac[lev]->setVal(covered_val);
 
        BoxArray z_edge_ba = grids[lev];
        z_edge_ba.surroundingNodes(2);
        w_mac[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+       w_mac[lev]->setVal(covered_val);
     }
 
     mfix_compute_MAC_velocity_at_faces( time, vel, u_mac, v_mac, w_mac );
