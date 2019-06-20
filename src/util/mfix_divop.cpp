@@ -456,7 +456,7 @@ compute_divop(Box& bx,
     // Step 1: compute conservative divergence on stencil (lo-2,hi-2)
     //
 
-    AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+    AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
     {
       if(flags(i,j,k).isCovered())
       {
