@@ -93,9 +93,6 @@ contains
     integer(c_int) :: vlo(3), vhi(3)
     real(rt), dimension(:,:,:,:), pointer, contiguous :: vel
 
-    ! Temporaty array to handle div(u) at the nodes
-    real(rt), dimension(:,:,:  ), pointer, contiguous :: divu
-
     integer(c_int)                 :: i, j, k, n
     real(rt)                       :: idx, idy, idz
     real(rt)                       :: du, dv, dw
@@ -115,44 +112,12 @@ contains
     vlo = lo - ng
     vhi = hi + ng
     call amrex_allocate( vel, vlo(1), vhi(1)  , vlo(2), vhi(2)  , vlo(3), vhi(3)  , 1, 3)
-    call amrex_allocate(divu, vlo(1), vhi(1)+1, vlo(2), vhi(2)+1, vlo(3), vhi(3)+1)
 
     ! Put values into ghost cells so we can easy take derivatives
     call fill_vel_diff_bc(vel_in, vinlo, vinhi, vel, lo, hi, domlo, domhi, ng, &
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
                           bc_klo_type, bc_khi_type)
-
-    !
-    ! Compute div(u) at the nodes
-    !
-    do k = lo(3), hi(3)+1
-       do j = lo(2), hi(2)+1
-          do i = lo(1), hi(1)+1
-
-             ! Divergence
-             du = (   vel(i  ,j  ,k  ,1) + vel(i  ,j-1,k  ,1) &
-                  &  +vel(i  ,j  ,k-1,1) + vel(i  ,j-1,k-1,1) &
-                  &  -vel(i-1,j  ,k  ,1) - vel(i-1,j-1,k  ,1) &
-                  &  -vel(i-1,j  ,k-1,1) - vel(i-1,j-1,k-1,1) )
-
-             dv = (   vel(i  ,j  ,k  ,2) + vel(i-1,j  ,k  ,2) &
-                  &  +vel(i  ,j  ,k-1,2) + vel(i-1,j  ,k-1,2) &
-                  &  -vel(i  ,j-1,k  ,2) - vel(i-1,j-1,k  ,2) &
-                  &  -vel(i  ,j-1,k-1,2) - vel(i-1,j-1,k-1,2) )
-
-             dw = (   vel(i  ,j  ,k  ,3) + vel(i-1,j  ,k  ,3) &
-                  &  +vel(i  ,j-1,k  ,3) + vel(i-1,j-1,k  ,3) &
-                  &  -vel(i  ,j  ,k-1,3) - vel(i-1,j  ,k-1,3) &
-                  &  -vel(i  ,j-1,k-1,3) - vel(i-1,j-1,k-1,3) )
-
-             divu(i,j,k) = ( du*idx + dv*idy + dw*idz ) * q4
-
-          end do
-       end do
-    end do
-
-
 
     do k = lo(3), hi(3)
        do j = lo(2), hi(2)
@@ -212,16 +177,22 @@ contains
 
              txz_b = mu_b * ( du*idz + dw*idx )
 
+             ! Hi-x-side divu term
+             du =   vel(i+1,j  ,k,1) - vel(i,  j  ,k,1) 
+             dv = ( vel(i+1,j+1,k,2) - vel(i+1,j-1,k,2) + vel(i,j+1,k,2) - vel(i,j-1,k,2) ) * q4
+             dw = ( vel(i+1,j,k+1,3) - vel(i+1,j,k-1,3) + vel(i,j,k+1,3) - vel(i,j,k-1,3) ) * q4
+             divu_e = lambda_e * (du * idx + dv * idy + dw * idz)
 
-             ! Div term
-             divu_e = lambda_e * ( divu(i+1,j,k) + divu(i+1,j+1,k) + divu(i+1,j,k+1) + divu(i+1,j+1,k+1)) * q4
-             divu_w = lambda_w * ( divu(i  ,j,k) + divu(i  ,j+1,k) + divu(i  ,j,k+1) + divu(i  ,j+1,k+1)) * q4
-
+             ! Lo-x-side divu term
+             du =   vel(i  ,j  ,k,1) - vel(i-1,j  ,k,1)
+             dv = ( vel(i-1,j+1,k,2) - vel(i-1,j-1,k,2) + vel(i,j+1,k,2) - vel(i,j-1,k,2) ) * q4
+             dw = ( vel(i-1,j,k+1,3) - vel(i-1,j,k-1,3) + vel(i,j,k+1,3) - vel(i,j,k-1,3) ) * q4
+             divu_w = lambda_w * (du * idx + dv * idy + dw * idz)
 
              ! Assemble
              divtau(i,j,k,1) = ( txx_e - txx_w ) * idx  + &
                   &            ( txy_n - txy_s ) * idy  + &
-                  &            ( txz_t - txz_b ) * idz  + &
+                  &            ( txz_t - txz_b ) * idz  + & 
                   &            ( divu_e - divu_w ) * idx
 
              !*************************************
@@ -263,10 +234,17 @@ contains
 
              tyz_b = mu_b * ( dv*idz + dw*idy )
 
+             ! Hi-y-side divu term
+             du = ( vel(i+1,j+1,k,1) - vel(i-1,j+1,k,1) + vel(i+1,j,k,1) - vel(i-1,j,k,1) ) * q4
+             dv =   vel(i  ,j+1,k,2) - vel(i  ,j  ,k,2) 
+             dw = ( vel(i,j+1,k+1,3) - vel(i,j+1,k-1,3) + vel(i,j,k+1,3) - vel(i,j,k-1,3) ) * q4
+             divu_n = lambda_n * (du * idx + dv * idy + dw * idz)
 
-             ! Div term
-             divu_n = lambda_n * ( divu(i,j+1,k) + divu(i,j+1,k+1) + divu(i+1,j+1,k+1) + divu(i+1,j+1,k) ) * q4
-             divu_s = lambda_s * ( divu(i,j  ,k) + divu(i,j  ,k+1) + divu(i+1,j  ,k+1) + divu(i+1,j  ,k) ) * q4
+             ! Lo-y-side divu term
+             du = ( vel(i+1,j-1,k,1) - vel(i-1,j-1,k,1) + vel(i+1,j,k,1) - vel(i-1,j,k,1) ) * q4
+             dv =   vel(i,j  ,k  ,2) - vel(i  ,j-1,k,2) 
+             dw = ( vel(i,j-1,k+1,3) - vel(i,j-1,k-1,3) + vel(i,j,k+1,3) - vel(i,j,k-1,3) ) * q4
+             divu_s = lambda_s * (du * idx + dv * idy + dw * idz)
 
              ! Assemble
              divtau(i,j,k,2) = ( txy_e - txy_w ) * idx  + &
@@ -314,9 +292,17 @@ contains
              tzz_t = two * mu_t * ( vel(i,j,k+1,3) - vel(i,j,k  ,3) ) * idz
              tzz_b = two * mu_b * ( vel(i,j,k  ,3) - vel(i,j,k-1,3) ) * idz
 
-             ! Div term
-             divu_t = lambda_t * ( divu(i,j,k+1) + divu(i+1,j,k+1) + divu(i+1,j+1,k+1) + divu(i,j+1,k+1) ) * q4
-             divu_b = lambda_b * ( divu(i,j,k  ) + divu(i+1,j,k  ) + divu(i+1,j+1,k  ) + divu(i,j+1,k  ) ) * q4
+             ! Hi-z-side divu term
+             du = ( vel(i+1,j,k+1,1) - vel(i-1,j,k+1,1) + vel(i+1,j,k,1) - vel(i-1,j,k,1) ) * q4
+             dv = ( vel(i,j+1,k+1,2) - vel(i,j-1,k+1,2) + vel(i,j+1,k,2) - vel(i,j-1,k,2) ) * q4
+             dw =   vel(i  ,j,k+1,3) - vel(i  ,j,k  ,3) 
+             divu_t = lambda_t * (du * idx + dv * idy + dw * idz)
+
+             ! Lo-z-side divu term
+             du = ( vel(i+1,j,k-1,1) - vel(i-1,j,k-1,1) + vel(i+1,j,k,1) - vel(i-1,j,k,1) ) * q4
+             dv = ( vel(i,j+1,k-1,2) - vel(i,j-1,k-1,2) + vel(i,j+1,k,2) - vel(i,j-1,k,2) ) * q4
+             dw =   vel(i  ,j,k  ,3) - vel(i  ,j,k-1,3) 
+             divu_b = lambda_b * (du * idx + dv * idy + dw * idz)
 
              ! Assemble
              divtau(i,j,k,3) = ( txz_e - txz_w ) * idx  + &
@@ -324,24 +310,11 @@ contains
                   &            ( tzz_t - tzz_b ) * idz  + &
                   &            ( divu_t - divu_b ) * idz
 
-             if (do_explicit_diffusion .eq. 0) then
-                do n = 1, 3
-                   txx = ( mu_e * ( vel(i+1,j,k,n) - vel(i  ,j,k,n) ) &
-                          -mu_w * ( vel(i  ,j,k,n) - vel(i-1,j,k,n) ) ) * idx * idx
-                   tyy = ( mu_n * ( vel(i,j+1,k,n) - vel(i,j  ,k,n) ) &
-                          -mu_s * ( vel(i,j  ,k,n) - vel(i,j-1,k,n) ) ) * idy * idy
-                   tzz = ( mu_t * ( vel(i,j,k+1,n) - vel(i,j,k  ,n) ) &
-                          -mu_b * ( vel(i,j,k  ,n) - vel(i,j,k-1,n) ) ) * idz * idz
-                   divtau(i,j,k,n) = divtau(i,j,k,n) - (txx + tyy + tzz)
-                end do
-             end if
-
           end do
        end do
     end do
 
     call amrex_deallocate(vel)
-    call amrex_deallocate(divu)
 
     end subroutine compute_divtau
 
