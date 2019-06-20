@@ -1,6 +1,9 @@
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
 #include <mfix.H>
+#include <param_mod_F.H>
+#include <bc_mod_F.H>
+
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_EBMultiFabUtil.H>
@@ -25,10 +28,32 @@ EBSupport mfix::m_eb_support_level = EBSupport::full;
 Real mfix::gravity[3] {0.0};
 Real mfix::gp0[3]     {0.0};
 
-BcList mfix::bc_list = BcList();
+BcList mfix::bc_list    = BcList();
+Real** mfix::m_bc_vel_g =  nullptr;
+Real*  mfix::m_bc_t_g   =  nullptr;
+Real*  mfix::m_bc_ep_g  =  nullptr;
 
 mfix::~mfix ()
 {
+    if(m_bc_vel_g != nullptr)
+    {
+      const int dim_bc = get_dim_bc();
+
+      for(unsigned i(1); i <= dim_bc; ++i)
+        delete[] m_bc_vel_g[i];
+      
+      delete[] m_bc_vel_g;
+    }
+    
+    if(m_bc_t_g != nullptr)
+    {
+      delete[] m_bc_t_g;
+    }
+    
+    if(m_bc_ep_g != nullptr)
+    {
+      delete[] m_bc_ep_g;
+    }
 };
 
 
@@ -148,19 +173,12 @@ mfix::ResizeArrays ()
     // Vorticity
     vort.resize(nlevs_max);
 
-    // MAC velocities used for defining convective term
-    m_u_mac.resize(nlevs_max);
-    m_v_mac.resize(nlevs_max);
-    m_w_mac.resize(nlevs_max);
-
     xslopes.resize(nlevs_max);
     yslopes.resize(nlevs_max);
     zslopes.resize(nlevs_max);
 
     bcoeff_nd.resize(nlevs_max);
     bcoeff_cc.resize(nlevs_max);
-      ep_face.resize(nlevs_max);
-      ro_face.resize(nlevs_max);
 
     // Fuid cost (load balancing)
     fluid_cost.resize(nlevs_max);
@@ -221,11 +239,99 @@ mfix::mfix_set_bc_type(int lev)
     Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
     Box domain(geom[lev].Domain());
 
+    const int dim_bc = get_dim_bc();
+
+    if(m_bc_vel_g == nullptr)
+    {
+      m_bc_vel_g = new Real* [dim_bc+1];
+      for(unsigned i(1); i <= dim_bc; ++i)
+        m_bc_vel_g[i] = new Real [3];
+    }
+
     set_bc_type(bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                 bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
                 domain.loVect(),domain.hiVect(),
                 &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost);
+
+    for(unsigned i(1); i <= dim_bc; ++i)
+      for(unsigned n(0); n < 3; ++n)
+        m_bc_vel_g[i][n] = get_bc_vel_g(i,n+1);
+}
+
+void mfix::mfix_set_bc_mod(const int* pID, const int* pType,
+                           const amrex::Real* pLo, const amrex::Real* pHi,
+                           amrex::Real* pLoc,
+                           amrex::Real* pPg,
+                           amrex::Real* pVel)
+{
+  const int dim_bc = get_dim_bc();
+
+  if(m_bc_vel_g == nullptr)
+  {
+    m_bc_vel_g = new Real* [dim_bc+1];
+    for(unsigned i(1); i <= dim_bc; ++i)
+      m_bc_vel_g[i] = new Real [3];
+  }
+
+  if(m_bc_t_g == nullptr)
+  {
+    m_bc_t_g = new Real [dim_bc+1];
+  }
+
+  if(m_bc_ep_g == nullptr)
+  {
+    m_bc_ep_g = new Real [dim_bc+1];
+  }
+
+  set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel); 
+
+  for(unsigned i(1); i <= dim_bc; ++i)
+  {
+    for(unsigned n(0); n < 3; ++n)
+      m_bc_vel_g[i][n] = get_bc_vel_g(i,n+1);
+    
+    m_bc_t_g[i] = get_bc_t_g(i);
+    
+    m_bc_ep_g[i] = get_bc_ep_g(i);
+  }
+}
+
+void mfix::mfix_set_bc_mod_add_mi(const int* pPlane,
+                                  amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
+                                  amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
+                                  amrex::Real* pPg, amrex::Real* pVel)
+{
+  const int dim_bc = get_dim_bc();
+
+  if(m_bc_vel_g == nullptr)
+  {
+    m_bc_vel_g = new Real* [dim_bc+1];
+    for(unsigned i(1); i <= dim_bc; ++i)
+      m_bc_vel_g[i] = new Real [3];
+  }
+
+  if(m_bc_t_g == nullptr)
+  {
+    m_bc_t_g = new Real [dim_bc+1];
+  }
+
+  if(m_bc_ep_g == nullptr)
+  {
+    m_bc_ep_g = new Real [dim_bc+1];
+  }
+
+  set_bc_mod_add_mi(pPlane, xLo, yLo, zLo, xHi, yHi, zHi, pPg, pVel);
+  
+  for(unsigned i(1); i <= dim_bc; ++i)
+  {
+    for(unsigned n(0); n < 3; ++n)
+      m_bc_vel_g[i][n] = get_bc_vel_g(i,n+1);
+    
+    m_bc_t_g[i] = get_bc_t_g(i);
+    
+    m_bc_ep_g[i] = get_bc_ep_g(i);
+  }
 }
 
 void mfix::mfix_calc_volume_fraction(Real& sum_vol)

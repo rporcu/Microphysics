@@ -1,3 +1,6 @@
+#ifndef _MFIX_F_H_
+#define _MFIX_F_H_
+
 #include <AMReX_REAL.H>
 
 #include <AMReX_BLFort.H>
@@ -45,17 +48,16 @@ extern "C"
 
     void check_bc_flow();
 
-    void mfix_set_bc_mod(const int* pID, const int* pType,
-             const amrex::Real* pLo, const amrex::Real* pHi,
-             amrex::Real* pLoc,
-             amrex::Real* pPg,
-             amrex::Real* pVel);
+    void set_bc_mod(const int* pID, const int* pType,
+                    const amrex::Real* pLo, const amrex::Real* pHi,
+                    amrex::Real* pLoc,
+                    amrex::Real* pPg,
+                    amrex::Real* pVel);
 
-  void mfix_set_bc_mod_add_mi(const int* pPlane,
-                       amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
-                       amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
-                       amrex::Real* pPg, amrex::Real* pVel
-                              );
+  void set_bc_mod_add_mi(const int* pPlane,
+                         amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
+                         amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
+                         amrex::Real* pPg, amrex::Real* pVel);
 
     void set_bc_type(
              const int* bc_ilo, const int* bc_ihi,
@@ -67,46 +69,6 @@ extern "C"
              const int* ng
     );
 
-    void set_bc0(
-             const int* slo, const int* shi,
-             amrex::Real* ep_g,
-             amrex::Real* ro_g,
-             amrex::Real* mu_g,
-             const int* bc_ilo, const int* bc_ihi,
-             const int* bc_jlo, const int* bc_jhi,
-             const int* bc_klo, const int* bc_khi,
-             const int* domlo , const int* domhi,
-             const int* ng
-    );
-
-    void set_ls_inflow(
-        amrex::Real* ls_phi , const int* phi_lo, const int* phi_hi,
-        const int* bc_ilo, const int* bc_ihi,
-        const int* bc_jlo, const int* bc_jhi,
-        const int* bc_klo, const int* bc_khi,
-        const int* domlo , const int* domhi,
-        const int* ng    , const int* n     ,
-        const amrex::Real* dx
-    );
-
-    void init_fluid(const int* slo, const int* shi,
-             const int*  lo, const int*  hi,
-             const int* domlo , const int* domhi,
-             amrex::Real* ep_g,
-             amrex::Real* ro_g,
-             amrex::Real* p_g,
-             amrex::Real* vel_g,
-             amrex::Real* mu_g,
-             amrex::Real* dx,    amrex::Real* dy,       amrex::Real* dz,
-             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength
-       );
-
-    void init_fluid_restart(
-             const int* slo, const int* shi,
-             const int*  lo, const int*  hi,
-             amrex::Real* mu_g
-       );
-
     void set_p0(const int*  lo   , const int*  hi,
              const int* domlo , const int* domhi,
              amrex::Real* p0_g , const int* rlo, const int* rhi,
@@ -117,15 +79,6 @@ extern "C"
              const int* bc_ilo, const int* bc_ihi,
              const int* bc_jlo, const int* bc_jhi,
              const int* bc_klo, const int* bc_khi,
-             const int* ng
-       );
-
-    void set_vec_bcs (
-             amrex::Real* vec, const int* ulo, const int* uhi,
-             const int* bc_ilo, const int* bc_ihi,
-             const int* bc_jlo, const int* bc_jhi,
-             const int* bc_klo, const int* bc_khi,
-             const int* domlo , const int* domhi,
              const int* ng
        );
 
@@ -169,24 +122,6 @@ extern "C"
 
     void mfix_finl_err_msg();
 
-    void set_gradp_bcs (
-             const int* slo, const int* shi,
-             amrex::Real* gp, const int* glo, const int* ghi,
-             const int* bc_ilo, const int* bc_ihi,
-             const int* bc_jlo, const int* bc_jhi,
-             const int* bc_klo, const int* bc_khi,
-             const int* domlo , const int* domhi,
-             const int* ng
-       );
-
-    void init_periodic_vortices (
-            const int* lo,  const int*  hi,
-            amrex::Real* vel,  const int* ulo, const int* uhi,
-            const amrex::Real* dx, const amrex::Real* dy,
-            const amrex::Real* dz,
-            const int*  domlo
-       );
-
     void mfix_collect_fluid(
             const int*    lo,  const int*   hi,
             const int* domlo , const int* domhi,
@@ -209,4 +144,6 @@ extern "C"
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

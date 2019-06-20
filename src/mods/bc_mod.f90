@@ -33,9 +33,12 @@ module bc
   real(rt) :: BC_P_g(dim_bc)
 
   ! Velocities at a specified boundary
-  real(rt) :: BC_U_g(dim_bc), BC_U_s(dim_bc, dim_m)
-  real(rt) :: BC_V_g(dim_bc), BC_V_s(dim_bc, dim_m)
-  real(rt) :: BC_W_g(dim_bc), BC_W_s(dim_bc, dim_m)
+  real(rt) :: BC_U_s(dim_bc, dim_m)
+  real(rt) :: BC_V_s(dim_bc, dim_m)
+  real(rt) :: BC_W_s(dim_bc, dim_m)
+  
+  ! Array containing BC_U_g, BC_V_g, BC_W_g
+  real(rt) :: BC_Vel_g(dim_bc,3)
 
   ! Volumetric flow rate through a mass inflow boundary
   real(rt) :: BC_VolFlow_g(dim_bc), BC_VolFlow_s(dim_bc, dim_m)
@@ -80,6 +83,30 @@ module bc
   integer, parameter :: nsw_       = 100 ! wall with no-slip b.c.
 
 contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+! Subroutines: get_bc_vel_g, get_bc_t_g get_bc_ep_g                    !
+!                                                                      !
+! Purpose: Getters for the boundary conditions values                  !
+!                                                                      !
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  real(rt) function get_bc_vel_g(pID,n) bind(C)
+    integer(c_int), intent(in) :: pID,n
+    get_bc_vel_g = bc_vel_g(pID,n)
+    return
+  end function get_bc_vel_g
+
+  real(rt) function get_bc_t_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_t_g = bc_t_g(pID)
+    return
+  end function get_bc_t_g
+
+  real(rt) function get_bc_ep_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_ep_g = bc_ep_g(pID)
+    return
+  end function get_bc_ep_g
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -190,9 +217,9 @@ contains
                write (unit_out,1648) bc_massflow_g(bcv)
              if(is_defined(bc_volflow_g(bcv)))  &
                write (unit_out,1649) bc_volflow_g(bcv)
-             write (unit_out, 1650) bc_u_g(bcv)
-             write (unit_out, 1651) bc_v_g(bcv)
-             write (unit_out, 1652) bc_w_g(bcv)
+             write (unit_out, 1650) bc_vel_g(bcv,1)
+             write (unit_out, 1651) bc_vel_g(bcv,2)
+             write (unit_out, 1652) bc_vel_g(bcv,3)
 
 1640  format(9X,'Gas phase volume fraction (BC_EP_g) ....... ',g12.5)
 1641  format(9X,'Gas pressure (BC_P_g) ..................... ',g12.5)

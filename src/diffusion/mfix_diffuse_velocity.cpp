@@ -19,7 +19,7 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
    BL_PROFILE("mfix::mfix_diffuse_velocity_tensor");
 
    // Swap ghost cells and apply BCs to velocity
-   mfix_set_velocity_bcs (time, 0);
+   mfix_set_velocity_bcs (time, vel_g, 0);
 
    // The boundary conditions need only be set once -- we do this at level 0
    int bc_lo[3], bc_hi[3];
@@ -140,5 +140,5 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
    mfix_print_max_vel(0);
 
    // Swap ghost cells and apply BCs to velocity
-   mfix_set_velocity_bcs (time, 0);
+   mfix_set_velocity_bcs (time, vel_g, 0);
 }

@@ -2,6 +2,7 @@
 #include <mfix.H>
 #include <mfix_des_K.H>
 #include <mfix_drag_K.H>
+#include <mfix_set_gradp_bcs.hpp>
 #include <AMReX_EBMultiFabUtil.H>
 
 void mfix::mfix_calc_drag_fluid(Real time)
@@ -31,7 +32,7 @@ mfix::mfix_calc_drag_particle(Real time)
 
     // Extrapolate velocity Dirichlet bc's to ghost cells
     int extrap_dir_bcs = 1;
-    mfix_set_velocity_bcs(time, extrap_dir_bcs);
+    mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -55,13 +56,10 @@ mfix::mfix_calc_drag_particle(Real time)
         for (MFIter mfi(gp_tmp, TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.tilebox();
-            set_gradp_bcs ( bx.loVect(), bx.hiVect(),
-                            BL_TO_FORTRAN_ANYD(gp_tmp[mfi]),
-                            bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                            bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                            bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                            domain.loVect(), domain.hiVect(),
-                            &nghost);
+
+            set_gradp_bcs(bx, gp_tmp[mfi], *bc_ilo[lev], *bc_ihi[lev], *bc_jlo[lev],
+                          *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev], domain,
+                          bc_list, &nghost);
         }
 
         gp_tmp.FillBoundary(geom[lev].periodicity());
@@ -315,6 +313,6 @@ mfix::mfix_calc_drag_particle(Real time)
 
     // Reset velocity Dirichlet bc's to face values
     extrap_dir_bcs = 0;
-    mfix_set_velocity_bcs(time, extrap_dir_bcs);
+    mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);
 
 }

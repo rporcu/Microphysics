@@ -1,7 +1,12 @@
-#include <mfix_mac_F.H>
+#include <AMReX_REAL.H>
+#include <AMReX_BLFort.H>
+#include <AMReX_SPACE.H>
+
 #include <mfix_proj_F.H>
 #include <mfix_F.H>
 #include <mfix.H>
+#include <mfix_set_mac_velocity_bcs.hpp>
+
 #include <AMReX_EBFArrayBox.H>
 #include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_MultiFabUtil.H>
@@ -35,12 +40,12 @@ using namespace amrex;
 //  WARNING: this method returns the MAC velocity with up-to-date BCs in place
 // 
 void 
-mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u, 
-	                     Vector< std::unique_ptr<MultiFab> >& v,
-			     Vector< std::unique_ptr<MultiFab> >& w,
-		 	     Vector< std::unique_ptr<MultiFab> >& ep,
-			     const Vector< std::unique_ptr<MultiFab> >& ro,
-			     Real time, int steady_state)
+mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u, 
+                            Vector< std::unique_ptr<MultiFab> >& v,
+                            Vector< std::unique_ptr<MultiFab> >& w,
+                            Vector< std::unique_ptr<MultiFab> >& ep,
+                            const Vector< std::unique_ptr<MultiFab> >& ro,
+                            Real time, int steady_state)
 {
    BL_PROFILE("mfix::apply_MAC_projection()");
 
@@ -56,9 +61,31 @@ mfix::apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
 
    if (m_verbose)
       Print() << " >> Before projection\n" ; 
+
+   // ep_face and ro_face are now temporaries, no need to keep them outside this routine
+   Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
+   Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
+
+   ep_face.resize(finest_level+1);
+   ro_face.resize(finest_level+1);
    
    for ( int lev=0; lev <= finest_level; ++lev )
    {
+      BoxArray x_edge_ba = grids[lev];
+      x_edge_ba.surroundingNodes(0);
+      BoxArray y_edge_ba = grids[lev];
+      y_edge_ba.surroundingNodes(1);
+      BoxArray z_edge_ba = grids[lev];
+      z_edge_ba.surroundingNodes(2);
+
+      ep_face[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ep_face[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ep_face[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+
+      ro_face[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ro_face[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ro_face[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+
       // Compute ep at faces
       ep[lev]->FillBoundary(geom[lev].periodicity());
      
@@ -199,24 +226,22 @@ mfix::set_MC_velocity_bcs ( int lev,
    w[lev] -> FillBoundary( geom[lev].periodicity() );
      
    Box domain(geom[lev].Domain()); 
-	
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
    for (MFIter mfi((*mac_rhs[lev]), false); mfi.isValid(); ++mfi)
    {
       const Box& bx = (*mac_rhs[lev])[mfi].box();
-	
-      set_mac_velocity_bcs ( &time, bx.loVect(), bx.hiVect(),
-                             BL_TO_FORTRAN_ANYD((*u[lev])[mfi]),
-                             BL_TO_FORTRAN_ANYD((*v[lev])[mfi]),
-                             BL_TO_FORTRAN_ANYD((*w[lev])[mfi]),
-                             bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                             bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                             bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                             domain.loVect(), domain.hiVect(),
-                             &nghost );
-   }	
+
+      set_mac_velocity_bcs(&time, bc_list, bx, &mfi,
+                           *u[lev], *v[lev], *w[lev],
+                           *bc_ilo[lev], *bc_ihi[lev],
+                           *bc_jlo[lev], *bc_jhi[lev],
+                           *bc_klo[lev], *bc_khi[lev],
+                           domain, m_bc_vel_g, &nghost);
+
+   }
 }
 
 #if 0

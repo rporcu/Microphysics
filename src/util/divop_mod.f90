@@ -333,7 +333,7 @@ contains
                               if ( ( ii /= 0 .or. jj /= 0 .or. kk /= 0) &
                                .and. (nbr(ii,jj,kk)==1) ) then
                                  optmp(i+ii,j+jj,k+kk) = optmp(i+ii,j+jj,k+kk) + &
-                                  &                  delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk)
+                                  &                  delm(i,j,k) * wtot * mask(i,j,k)
                               end if
                            end do
                         end do

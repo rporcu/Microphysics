@@ -1,8 +1,10 @@
 #include <mfix.H>
 #include <mfix_F.H>
 #include <mfix_proj_F.H>
-#include <mfix_mac_F.H>
 
+#include <AMReX_REAL.H>
+#include <AMReX_BLFort.H>
+#include <AMReX_SPACE.H>
 #include <AMReX_EBMultiFabUtil.H>
 
 //
@@ -136,6 +138,10 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                });
            } // end of cut cell region
 
+#ifdef AMREX_USE_CUDA
+           Gpu::Device::synchronize();
+#endif
+
            // TODO -- do we have domain and ilo_fab, etc on GPU???
            // TODO -- we need to use "MINF" from the Fortran, not hard-wire this to 20
 
@@ -221,6 +227,10 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
            });
         } // not covered
     } // MFIter
+
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
 
     xslopes[lev] -> FillBoundary(geom[lev].periodicity());
     yslopes[lev] -> FillBoundary(geom[lev].periodicity());
