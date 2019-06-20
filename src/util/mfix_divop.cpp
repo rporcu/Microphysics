@@ -325,10 +325,10 @@ step3(const Box& grown1_bx,
             {
 #ifdef AMREX_USE_CUDA
               Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk),
-                                delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk));
+                                delm(i,j,k) * wtot * mask(i,j,k));
 #else
               optmp(i+ii,j+jj,k+kk) += 
-                delm(i,j,k) * wtot * mask(i+ii,j+jj,k+kk);
+                delm(i,j,k) * wtot * mask(i,j,k);
 #endif
             }
     }
