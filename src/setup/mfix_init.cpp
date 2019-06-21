@@ -278,9 +278,6 @@ void mfix::Init( Real time)
     // rejects cuts if they don't improve the efficiency
     SetUseNewChop();
 
-    // This Builds the new Grids
-    // InitFromScratch(0.);
-
     /****************************************************************************
      *                                                                          *
      * MFIX-specific grid creation                                              *

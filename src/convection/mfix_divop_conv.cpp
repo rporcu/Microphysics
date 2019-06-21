@@ -1,10 +1,10 @@
-#include <mfix_divop.hpp>
+#include <mfix_divop_conv.hpp>
 #include <param_mod_F.H>
 
 #include <cmath>
 #include <limits>
 
-namespace divop_aux {
+namespace divop_conv_aux {
 
 AMREX_GPU_HOST_DEVICE
 Real 
@@ -339,14 +339,14 @@ step3(const Box& grown1_bx,
 #endif
 }
 
-} // end namespace divop_aux
+} // end namespace divop_conv_aux
 
-using namespace divop_aux;
+using namespace divop_conv_aux;
 
 void
-compute_divop(Box& bx,
+compute_divop_conv(
+              Box& bx,
               MultiFab& conv,
-              MultiFab& vel,
               MultiFab& ep_g,
               MFIter* mfi,
               FArrayBox& fxfab,
@@ -357,26 +357,18 @@ compute_divop(Box& bx,
               const EBCellFlagFab& flags_fab,
               const MultiFab* volfrac,
               const MultiCutFab* bndrycent_fab,
+              Box& domain,
               const int cyclic_x,
               const int cyclic_y,
               const int cyclic_z,
-              Box& domain,
-              const Real* dx,
-              const int* nghost,
-              const Array4<Real>* mu, 
-              const int* do_explicit_diffusion)
+              const Real* dx)
 {
-  // Check number of ghost cells
-  AMREX_ASSERT_WITH_MESSAGE(*nghost >= 4, "Compute divop(): ng must be >=4");
-
   const amrex::Dim3 dom_low = amrex::lbound(domain);
   const amrex::Dim3 dom_high = amrex::ubound(domain);
 
   const Real i_dx (1/dx[0]), i_dy(1/dx[1]), i_dz(1/dx[2]);
 
   Array4<Real> const& divergence = conv.array(*mfi);
-  Array4<Real> const& velocity = vel.array(*mfi);
-  Array4<Real> const& epsilon_g = ep_g.array(*mfi);
 
   Array4<Real> const& fx = fxfab.array();
   Array4<Real> const& fy = fyfab.array();
@@ -394,13 +386,6 @@ compute_divop(Box& bx,
 
   Array4<const Real> const& vfrac = volfrac->array(*mfi);
   Array4<const Real> const& bndrycent = bndrycent_fab->array(*mfi);
-
-  bool is_dirichlet(false);
-
-  // Check if we are computing divergence for viscous term by checking if mu was
-  // passed in
-  if(mu != nullptr)
-    is_dirichlet = true;
 
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
@@ -450,8 +435,6 @@ compute_divop(Box& bx,
   //
   for(unsigned int n(0); n < 3; ++n)
   {
-    AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k, { divc(i,j,k) = 0; });
-
     //
     // Step 1: compute conservative divergence on stencil (lo-2,hi-2)
     //
@@ -484,147 +467,13 @@ compute_divop(Box& bx,
         divc(i,j,k) = ((fxp*areafrac_x(i+1,j,k) - (fxm*areafrac_x(i,j,k))) * i_dx +
                        (fyp*areafrac_y(i,j+1,k) - (fym*areafrac_y(i,j,k))) * i_dy +
                        (fzp*areafrac_z(i,j,k+1) - (fzm*areafrac_z(i,j,k))) * i_dz) / vfrac(i,j,k);
-
-        // Add viscous wall fluxes (compute three components only during the
-        // first pass, i.e. for n=0)
-
-        if(is_dirichlet)
-        {
-          Real divdiff_w[3];
-          for(unsigned ncomp(0); ncomp < 3; ++ncomp) divdiff_w[ncomp] = 0;
-
-          // Compute diff wallfluxes
-          {
-            Real dxinv[3];
-            for(unsigned ncomp(0); ncomp < 3; ++ncomp) dxinv[ncomp] = 1./dx[ncomp];
-
-            Real dapx = areafrac_x(i+1,j,k) - areafrac_x(i,j,k);
-            Real dapy = areafrac_y(i,j+1,k) - areafrac_y(i,j,k);
-            Real dapz = areafrac_z(i,j,k+1) - areafrac_z(i,j,k);
-
-            Real apnorm = std::sqrt(dapx*dapx + dapy*dapy + dapz*dapz);
-
-            //if (apnorm == 0)
-            if (apnorm <= tolerance)
-              amrex::Abort("compute_diff_wallflux: we are in trouble.");
-
-            Real apnorminv = 1/apnorm;
-            Real anrmx = -1 * dapx * apnorminv; // unit vector pointing toward the wall
-            Real anrmy = -1 * dapy * apnorminv;
-            Real anrmz = -1 * dapz * apnorminv;
-
-            // Value on wall -- here we enforce no-slip therefore 0 for all components
-            Real phib[3];
-            for(unsigned ncomp(0); ncomp < 3; ++ncomp) phib[ncomp] = 0;
-
-            Real dveldn[3];
-            for(unsigned ncomp(0); ncomp < 3; ++ncomp) dveldn[ncomp] = 0;
-
-            Real bct[3];
-            for(unsigned ncomp(0); ncomp < 3; ++ncomp) bct[ncomp] = bndrycent(i,j,k,ncomp);
-
-            Real vf = vfrac(i,j,k);
-
-            //Real dx_eb = amrex_get_dx_eb(vf);
-            Real dx_eb = std::max(0.3, (vf*vf - 0.25)/(2.*vf));
-
-            // Compute dphi_dn_3D
-            const double coeff = std::max(abs(anrmx), std::max(abs(anrmy),abs(anrmz)));
-
-            Real dg = dx_eb / coeff;
-
-            Real gx = bct[0] - dg*anrmx;
-            Real gy = bct[1] - dg*anrmy;
-            Real gz = bct[2] - dg*anrmz;
-
-            double sx = std::copysign(1., anrmx);
-            double sy = std::copysign(1., anrmy);
-            double sz = std::copysign(1., anrmz);
-            
-            gx *= sx; gy *= sy; gz *= sz;
-
-            int ii = i - int(sx); int jj = j - int(sy); int kk = k - int(sz);
-
-            Real gxy = gx*gy; Real gxz = gx*gz; Real gyz = gy*gz;
-
-            Real gxyz = gx*gy*gz;
-            
-            for(unsigned int n(0); n < 3; ++n)
-            {
-              Real phig(0);
-
-              phig = (1 + gx + gy + gz + gxy + gxz + gyz + gxyz) * velocity(i ,j ,k ,n) -
-                     (gz + gxz + gyz + gxyz)                     * velocity(i ,j ,kk,n) -
-                     (gy + gxy + gyz + gxyz)                     * velocity(i ,jj,k ,n) +
-                     (gyz + gxyz)                                * velocity(i ,jj,kk,n) -
-                     (gx + gxy + gxz + gxyz)                     * velocity(ii,j ,k ,n) +
-                     (gxz + gxyz)                                * velocity(ii,j ,kk,n) +
-                     (gxy + gxyz)                                * velocity(ii,jj,k ,n) -
-                     (gxyz)                                      * velocity(ii,jj,kk,n);
-
-              dveldn[n] = (phib[n] - phig)/dg;
-            }
-
-            // transform them to d/dx, d/dy and d/dz given transverse derivatives are zero
-            Real dudx = dveldn[0] * anrmx;
-            Real dudy = dveldn[0] * anrmy;
-            Real dudz = dveldn[0] * anrmz;
-
-            Real dvdx = dveldn[1] * anrmx;
-            Real dvdy = dveldn[1] * anrmy;
-            Real dvdz = dveldn[1] * anrmz;
-
-            Real dwdx = dveldn[2] * anrmx;
-            Real dwdy = dveldn[2] * anrmy;
-            Real dwdz = dveldn[2] * anrmz;
-
-            Real divu = dudx + dvdy + dwdz;
-            Real tautmp = -(2./3) * (*mu)(i,j,k) * divu; // This MUST be verified
-
-            Real tauxx = (*mu)(i,j,k) * (dudx + dudx) + tautmp;
-            Real tauxy = (*mu)(i,j,k) * (dudy + dvdx);
-            Real tauxz = (*mu)(i,j,k) * (dudz + dwdx);
-
-            Real tauyx = (*mu)(i,j,k) * (dvdx + dudy);
-            Real tauyy = (*mu)(i,j,k) * (dvdy + dvdy) + tautmp;
-            Real tauyz = (*mu)(i,j,k) * (dvdz + dwdy);
-
-            Real tauzx = (*mu)(i,j,k) * (dwdx + dudz);
-            Real tauzy = (*mu)(i,j,k) * (dwdy + dvdz);
-            Real tauzz = (*mu)(i,j,k) * (dwdz + dwdz) + tautmp;
-
-            if(*do_explicit_diffusion == 0)
-            {
-              //
-              // Subtract diagonal terms of stress tensor, to be obtained through
-              // implicit solve instead.
-              //
-              tauxx -= (*mu)(i,j,k) * dudx;
-              tauxy -= (*mu)(i,j,k) * dudy;
-              tauxz -= (*mu)(i,j,k) * dudz;
-
-              tauyx -= (*mu)(i,j,k) * dvdx;
-              tauyy -= (*mu)(i,j,k) * dvdy;
-              tauyz -= (*mu)(i,j,k) * dvdz;
-
-              tauzx -= (*mu)(i,j,k) * dwdx;
-              tauzy -= (*mu)(i,j,k) * dwdy;
-              tauzz -= (*mu)(i,j,k) * dwdz;
-            }
-
-            divdiff_w[0] = dxinv[0] * (dapx*tauxx + dapy*tauxy + dapz*tauxz);
-            divdiff_w[1] = dxinv[1] * (dapx*tauyx + dapy*tauyy + dapz*tauyz);
-            divdiff_w[2] = dxinv[2] * (dapx*tauzx + dapy*tauzy + dapz*tauzz);
-          }
-
-          divc(i,j,k) -= divdiff_w[n] / (dx[n]*vfrac(i,j,k));
-        }
       }
-      else
+      else 
       {
         divc(i,j,k) = ((fx(i+1,j,k,n) - fx(i,j,k,n)) * i_dx +
                        (fy(i,j+1,k,n) - fy(i,j,k,n)) * i_dy +
                        (fz(i,j,k+1,n) - fz(i,j,k,n)) * i_dz);
+       
       }
     });
 

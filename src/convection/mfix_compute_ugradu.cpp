@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include <mfix_divop.hpp>
+#include <mfix_divop_conv.hpp>
 #include <param_mod_F.H>
 
 #include <AMReX_REAL.H>
@@ -318,7 +318,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
                              const EBCellFlagFab& flags,
                              const int lev)
 {
-  AMREX_ASSERT_WITH_MESSAGE(nghost >= 4, "Compute divop(): ng must be >= 4");
+  AMREX_ASSERT_WITH_MESSAGE(nghost >= 4, "Compute divop_conv(): ng must be >= 4");
 
   const Real* dx = geom[lev].CellSize();
   const amrex::Dim3 dom_low = amrex::lbound(domain);
@@ -480,26 +480,27 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   Gpu::Device::synchronize();
 #endif
 
-  const int cyclic_x = geom[lev].isPeriodic(0) ? 1 : 0;
-  const int cyclic_y = geom[lev].isPeriodic(1) ? 1 : 0;
-  const int cyclic_z = geom[lev].isPeriodic(2) ? 1 : 0;
+  const int cyclic_x = geom[0].isPeriodic(0) ? 1 : 0;
+  const int cyclic_y = geom[0].isPeriodic(1) ? 1 : 0;
+  const int cyclic_z = geom[0].isPeriodic(2) ? 1 : 0;
 
   // Compute div(tau) with EB algorithm
-  compute_divop(bx, *conv[lev], *vel[lev], *ep_g[lev], mfi, fxfab, fyfab, fzfab, 
-                areafrac, facecent, flags, volfrac, bndrycent,
-                cyclic_x, cyclic_y, cyclic_z, domain, dx, &nghost);
+  compute_divop_conv(bx, *conv[lev], *ep_g[lev], mfi, fxfab, fyfab, fzfab, 
+                     areafrac, facecent, flags, volfrac, bndrycent, domain,
+                     cyclic_x, cyclic_y, cyclic_z, dx);
 
-  AMREX_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
+  AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
   {
-    ugradu(i,j,k,n) *= (-1/epsilon_g(i,j,k));
+    const Real coefficient(-1/epsilon_g(i,j,k));
+    ugradu(i,j,k,0) *= coefficient; 
+    ugradu(i,j,k,1) *= coefficient; 
+    ugradu(i,j,k,2) *= coefficient; 
   });
 
 #ifdef AMREX_USE_CUDA
   Gpu::Device::synchronize();
 #endif
 }
-
-
 
 //
 // Compute acc using the vel passed in

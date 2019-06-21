@@ -420,14 +420,8 @@ private:
                                         Vector< std::unique_ptr<MultiFab> >& vel,
                                         Real time);
 
-     void mfix_compute_divtau(int lev, MultiFab& divtau,
-                              Vector< std::unique_ptr<MultiFab> >& vel,
-                              int explicit_diffusion_flag);
-
-     void mfix_compute_divtau2(int lev, 
-                               const Vector< std::unique_ptr<MultiFab> >& divtau,
-                               const Vector< std::unique_ptr<MultiFab> >& vel,
-                               int explicit_diffusion_flag);
+     void mfix_compute_divtau(Vector< std::unique_ptr<MultiFab> >& divtau,
+                              Vector< std::unique_ptr<MultiFab> >& vel);
 
      int steady_state_reached(Real dt, int iter);
 

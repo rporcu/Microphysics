@@ -264,14 +264,9 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 
     int explicit_diffusion_pred = 1;
 
+    mfix_compute_divtau( divtau_old, vel_go);
     for (int lev = 0; lev < nlev; lev++)
     {
-#if 1
-        mfix_compute_divtau( lev,*divtau_old[lev], vel_go, explicit_diffusion_pred ); 
-#else
-        mfix_compute_divtau2( lev, divtau_old, vel_go, explicit_diffusion_pred ); 
-#endif
-
         EB_set_covered(*divtau_old[lev], 0, divtau_old[lev]->nComp(), divtau_old[lev]->nGrow(), 0.0);
 
         // First add the convective term

@@ -2,6 +2,9 @@ CEXE_headers += mfix_set_mac_velocity_bcs.hpp
 
 CEXE_sources += mfix_compute_ugradu.cpp
 CEXE_sources += mfix_compute_MAC_velocities.cpp 
+CEXE_sources += mfix_divop_conv.cpp
 CEXE_sources += mfix_MAC_projection.cpp 
 CEXE_sources += mfix_slopes.cpp
 CEXE_sources += mfix_set_mac_velocity_bcs.cpp
+
+CEXE_headers += mfix_divop_conv.hpp

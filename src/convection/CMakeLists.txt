@@ -2,8 +2,10 @@ target_include_directories(mfixcore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIS
 
 target_sources( mfixcore
    PRIVATE
-   mfix_set_mac_velocity_bcs.hpp
+   mfix_divop_conv.cpp
+   mfix_divop_conv.hpp
    mfix_set_mac_velocity_bcs.cpp
+   mfix_set_mac_velocity_bcs.hpp
    mfix_compute_ugradu.cpp
    mfix_compute_MAC_velocities.cpp
    mfix_MAC_projection.cpp
