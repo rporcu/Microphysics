@@ -1,10 +1,10 @@
-#include <mfix_divop_diff.hpp>
+#include <mfix_redist_diff.hpp>
 #include <param_mod_F.H>
 
 #include <cmath>
 #include <limits>
 
-namespace divop_diff_aux {
+namespace redist_diff_aux {
 
 void
 step2(const Box& grown1_bx,
@@ -49,7 +49,7 @@ step2(const Box& grown1_bx,
           for(int kk(-1); kk <= 1; kk++)
             // Check if we have to include also cell (i,j,k) itself
             if((ii != 0 or jj != 0 or kk != 0) and 
-                (flags(i,j,k).isConnected({AMREX_D_DECL(ii,jj,kk)}) == 1))
+                (flags(i,j,k).isConnected(ii,jj,kk) == 1))
             {
               epvfrac = vfrac(i+ii,j+jj,k+kk) * epsilon_g(i+ii,j+jj,k+kk) * 
                         mask(i+ii,j+jj,k+kk);
@@ -60,7 +60,7 @@ step2(const Box& grown1_bx,
       divnc /= vtot;
       epvfrac = vfrac(i,j,k) * epsilon_g(i,j,k);
       optmp(i,j,k) = (1 - vfrac(i,j,k)) * (divnc - divc(i,j,k,n));
-      delm(i,j,k) = -1 * epvfrac * optmp(i,j,k);
+      delm(i,j,k) = (-1 * epvfrac * optmp(i,j,k)) * mask(i,j,k);
     }
     else
       delm(i,j,k) = 0;
@@ -104,7 +104,7 @@ step3(const Box& grown1_bx,
           for(int kk(-1); kk <= 1; kk++)
             // Check if we have to include also cell (i,j,k) itself
             if((ii != 0 or jj != 0 or kk != 0) and
-                (flags(i,j,k).isConnected({AMREX_D_DECL(ii,jj,kk)}) == 1))
+                (flags(i,j,k).isConnected(ii,jj,kk) == 1))
             {
               wtot += epsilon_g(i+ii,j+jj,k+kk) * vfrac(i+ii,j+jj,k+kk) * 
                       mask(i+ii,j+jj,k+kk);
@@ -119,12 +119,11 @@ step3(const Box& grown1_bx,
             if((ii != 0 or jj != 0 or kk != 0) and
                 (flags(i,j,k).isConnected(ii,jj,kk) == 1))
             {
+              // Note: delm has already been multiplied by mask
 #ifdef AMREX_USE_CUDA
-              Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk),
-                                delm(i,j,k) * wtot * mask(i,j,k));
+              Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk), delm(i,j,k) * wtot);
 #else
-              optmp(i+ii,j+jj,k+kk) += 
-                delm(i,j,k) * wtot * mask(i,j,k);
+              optmp(i+ii,j+jj,k+kk) += delm(i,j,k) * wtot;
 #endif
             }
     }
@@ -135,24 +134,23 @@ step3(const Box& grown1_bx,
 #endif
 }
 
-} // end namespace divop_diff_aux
+} // end namespace redist_diff_aux
 
-using namespace divop_diff_aux;
+using namespace redist_diff_aux;
 
 void
-compute_divop_diff(Box& bx,
-                   MultiFab& divtau,
-                   MultiFab& ep_g,
-                   MultiFab& divtau_aux,
-                   MFIter* mfi,
-                   const EBCellFlagFab& flags_fab,
-                   const MultiFab* volfrac,
-                   const int cyclic_x,
-                   const int cyclic_y,
-                   const int cyclic_z,
-                   Box& domain,
-                   const Real* dx,
-                   const int* nghost)
+compute_redist_diff(Box& bx,
+                    MultiFab& divtau,
+                    MultiFab& ep_g,
+                    MultiFab& divtau_aux,
+                    MFIter* mfi,
+                    const EBCellFlagFab& flags_fab,
+                    const MultiFab* volfrac,
+                    const int cyclic_x,
+                    const int cyclic_y,
+                    const int cyclic_z,
+                    Box& domain,
+                    const Real* dx)
 {
   const amrex::Dim3 dom_low = amrex::lbound(domain);
   const amrex::Dim3 dom_high = amrex::ubound(domain);

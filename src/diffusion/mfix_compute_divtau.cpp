@@ -1,4 +1,4 @@
-#include <mfix_divop_diff.hpp>
+#include <mfix_redist_diff.hpp>
 #include <mfix_diff_F.H>
 #include <mfix.H>
 #include <AMReX_BC_TYPES.H>
@@ -125,9 +125,9 @@ mfix::mfix_compute_divtau ( Vector< std::unique_ptr<MultiFab> >& divtau,
             {
 
                 // Do redistribution at EB boundaries
-                compute_divop_diff(
+                compute_redist_diff(
                    bx, *divtau[lev], *ep_g[lev], *divtau_aux[lev], &mfi, flags,
-                   volfrac, cyclic_x, cyclic_y, cyclic_z, domain, dx, &nghost);
+                   volfrac, cyclic_x, cyclic_y, cyclic_z, domain, dx);
             }
          }
       }
