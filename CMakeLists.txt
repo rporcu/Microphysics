@@ -1,66 +1,38 @@
 cmake_minimum_required(VERSION 3.14)
 
-#
+project(MFIX-Exa
+   # VERSION <version>
+   DESCRIPTION  "A multiphase modeling tool for the exascale"
+   HOMEPAGE_URL "https://amrex-codes.github.io/MFIX-Exa/"
+   LANGUAGES    C CXX Fortran
+   )
+
 # Set the search path for cmake modules
-#
-set ( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake )
+set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake )
 
-#
-# Here we set the only option that decide if superbuild
-# is enabled or not
-#
-set ( AMREX_INSTALL_DIR "" CACHE PATH
-   "Path to installation directory (leave empty for superbuild)")
+# Load utilities and MFIX options module
+include( MFIX_Utils )
 
-set ( SUPERBUILD  ON )
+# Creates `compile_commands.json` in the build build directory
+#  `compile_commands.json` contains compiler flags used by plugins like YouCompleteMe
+set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
-if ( AMREX_INSTALL_DIR )
-   set ( SUPERBUILD OFF )
-endif ()
+# Set default build type to Release
+if ( NOT CMAKE_BUILD_TYPE )
+   message(STATUS "Setting build type to Release as none was specified.")
+   set( CMAKE_BUILD_TYPE Release )
+else ()
+   message(STATUS "Build type set by user to '${CMAKE_BUILD_TYPE}'.")
+endif()
 
-#
-# Now decide if invoking superbuild. If so, this listfile will be
-# re-read by the MFIX_Superbuild.cmake
-# Also add targets to clean sub-projects
-#
-if ( SUPERBUILD )
-  if ( SUBMOD )
-    include( MFIX_Superbuild2 )
-  else()
-    include( MFIX_Superbuild )
- endif ()
+set(USE_CCACHE "")
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+  set( CMAKE_CXX_COMPILER_LAUNCHER ccache )
+endif()
 
-   add_custom_target(clean_mfix
-      COMMAND make clean
-      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/mfix
-      COMMENT "Cleaning mfix"
-      )
-
-   add_custom_target(clean_amrex
-      COMMAND cd builddir && make clean
-      COMMAND rm -rf installdir/*
-      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/amrex
-      COMMENT "Cleaning amrex"
-      )
-
-   add_custom_target(realclean)
-   add_dependencies(realclean clean_mfix clean_amrex)
-   return ()
-endif ()
-
-#
-# This is where the MFIX-standalone config starts
-#
-project (MFIX-Exa)
-
-# Define the languages used by the project
-enable_language (C)
-enable_language (CXX)
-enable_language (Fortran)
-
-# Load required modules
-include ( MFIX_Options )
-include ( MFIX_Utils )
+# Setup AMReX
+include(MFIXSetupAMReX)
 
 get_git_info ( )
 check_build_tree_path ()
@@ -70,43 +42,8 @@ set_default_config_flags ()
 set ( MFIX_LIBNAME "mfixcore" CACHE INTERNAL "Name of MFIX core library")
 set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
 
+set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
-# Import AMReX. Do it here so it is visibile to all targets
-find_package(AMReX 19.03.1.243 HINTS ${AMREX_INSTALL_DIR})
-echo_amrex_config_options ()
-list(APPEND CMAKE_MODULE_PATH ${AMREX_MODULES_PATH})
-
-if ( NOT ( AMREX_ENABLE_PARTICLES AND AMREX_ENABLE_AMRDATA
-   AND AMREX_ENABLE_EB) )
-   message ( FATAL_ERROR "AMReX installation missing required components!")
-endif ()
-
-if (ENABLE_OMP AND (NOT AMREX_ENABLE_OMP) )
-   message(FATAL_ERROR "Option ENABLE_OMP requires AMReX to be built with OpenMP support")
-endif ()
-
-if (ENABLE_MPI AND (NOT AMREX_ENABLE_MPI) )
-   message(FATAL_ERROR "Option ENABLE_MPI requires AMReX to be built with MPI support")
-endif ()
-
-if (ENABLE_HYPRE AND (NOT AMREX_ENABLE_HYPRE) )
-   message(FATAL_ERROR "Option ENABLE_HYPRE requires AMReX to be built with HYPRE support")
-endif ()
-
-if (ENABLE_CUDA AND (NOT AMREX_ENABLE_CUDA) )
-   message(FATAL_ERROR "Option ENABLE_CUDA requires AMReX to be built with CUDA support")
-endif ()
-
-if ( NOT ( "${CMAKE_BUILD_TYPE}" STREQUAL "${AMREX_BUILD_TYPE}" ) )
-   message (WARNING "MFIX build type (${CMAKE_BUILD_TYPE}) type does not match AMReX build type (${AMREX_BUILD_TYPE})")
-endif ()
-
-set ( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
-
-if (ENABLE_CUDA)
-   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std=c++14 -Xcompiler=-std=c++14")
-   setup_cuda()
-endif ()
 
 #
 # Core MFIX library
