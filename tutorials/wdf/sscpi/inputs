@@ -1,0 +1,135 @@
+#_______________________________________________________________________
+# Solver settings
+
+#amrex.fpe_trap_invalid = 1
+
+#! Fluid solver
+#!-----------------------------------------------------------//
+
+amr.stop_time = 65.00001
+mfix.dt_min = 1.0e-8
+mfix.dt_max = 2.0e-4
+mfix.cfl = 0.5
+mfix.tcoll_ratio = 20.
+
+mac.mg_verbose   = 0
+mfix.mg_verbose  = 1
+
+mfix.particle_init_type = "Auto"
+mfix.drag_type = "Gidaspow"
+
+#_______________________________________________________________________
+# Geometry / grids / tiles
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+geometry.coord_sys   = 0                       # 0: Cartesian
+geometry.is_periodic = 0       0       0       # Is periodic in each direction?
+geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
+geometry.prob_hi     = 1.2192  0.2286  0.0762   # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell =  192  36  12
+amr.blocking_factor_x = 2
+amr.blocking_factor_y = 2
+amr.blocking_factor_z = 2
+
+#! Grids
+#!-----------------------------------------------------------//
+# Maximum allowable size of each fluid subdomain in the problem domain;
+
+# Fluid
+amr.max_grid_size_x =   48
+amr.max_grid_size_y =   12
+amr.max_grid_size_z = 1024
+
+# Particles (not with KDTree)
+#particles.max_grid_size_x =   32
+#particles.max_grid_size_y =   32
+#particles.max_grid_size_z =   32
+
+#! Tiles
+#!-----------------------------------------------------------//
+
+# Fluid: Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Particles: Maximum particle title size
+particles.tile_size = 1024 1024 1024
+
+
+#! EB settings
+#!-----------------------------------------------------------//
+# Level-set refinement and padding
+mfix.levelset__refinement    = 4 # levelset resolution
+
+#mfix.write_eb_surface = true  # Needed to output eb-surfaces
+
+#! EB geometry
+#!-----------------------------------------------------------//
+#! none
+
+#! BCs          case :  2     3     4       (*Umf)
+#!      xlo.velocity =  2.19  3.28  4.38    (m/s)
+#!-----------------------------------------------------------//
+xlo.type = "mi"          
+xlo.velocity = 2.19 
+
+xhi.type = "po"
+xhi.pressure = 0.0
+
+ylo.type = "nsw"
+yhi.type = "nsw"
+
+zlo.type = "nsw"
+zhi.type = "nsw"
+
+#_______________________________________________________________________
+# Particle load balancing
+
+mfix.load_balance_type = "FixedSize"
+#mfix.load_balance_type = "KnapSack"
+
+amr.dual_grid          =  0
+amr.regrid_int         = -1
+
+#! KnapSack settings
+#!-----------------------------------------------------------//
+#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+#this option is only relevant if load_balance_type = KnapSack
+
+#mfix.knapsack_weight_type = "NumParticles"
+#mfix.knapsack_weight_type = "RunTimeCosts"
+
+#______________________________________________________________________
+## user data processing
+amr.avg_int = 5
+amr.avg_file = "uio"
+
+amr.avg_vel_p =        0       0       0       0       1        1        1        1        1       
+amr.avg_p_g   =        1       1       1       1       0        0        0        0        0       
+amr.avg_ep_g  =        0       0       0       0       0        0        0        0        0       
+amr.avg_vel_g =        0       0       0       0       0        0        0        0        0       
+amr.avg_region_x_w =   0.0380  0.0382  0.3428  0.3430  0.05334  0.05334  0.05334  0.05334  0.05334   
+amr.avg_region_x_e =   0.0380  0.0382  0.3428  0.3430  0.09906  0.09906  0.09906  0.09906  0.09906 
+amr.avg_region_y_s =   0.0     0.0     0.0     0.0     0.0      0.04572  0.09144  0.13716  0.18288      
+amr.avg_region_y_n =   0.2286  0.2286  0.2286  0.2286  0.04572  0.09144  0.13716  0.18288  0.22860      
+amr.avg_region_z_b =   0.0     0.0     0.0     0.0     0.003    0.003    0.003    0.003    0.003    
+amr.avg_region_z_t =   0.0762  0.0762  0.0762  0.0762  0.003    0.003    0.003    0.003    0.003    
+
+#_______________________________________________________________________
+# IO / Checkpointing
+
+amr.par_ascii_int  = 10000
+amr.par_ascii_file ="vis"
+
+amr.plot_int       = 10000
+amr.plot_file      ="plt"
+
+amr.check_int      = 10000
+amr.check_file     ="chk"
+
+#! Restart from checkpoint
+#!-----------------------------------------------------------//
+#amr.restart   ="chk00100"

@@ -1,0 +1,96 @@
+########################################################################
+#                                                                      #
+# Author: J.Musser                                       Date: 06-2015 #
+#                                                                      #
+# NETL's Small-scale challenge problem #1, for details see:            #
+#   Gopalan et al., Measurements of pressure drop and particle         #
+#   velocity in a pseudo 2-D rectangular bed with Geldart Group D      #
+#   particles, Powder Tech., 291 299-310 (2016)                        #
+#                                                                      #
+# wdf - slight mods                                      Date: 07-2017 #
+# wdf - update                                           Date: 06-2018 #
+#                                                                      #
+########################################################################
+
+  RUN_NAME = 'R'
+  DESCRIPTION = 'NETL Small Scale Challenge Problem-I'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+  CALL_USR = .T.
+  FULL_LOG = .T.
+
+  GRAVITY(1) = -9.80665
+  GRAVITY(2) =  0.00
+  GRAVITY(3) =  0.00
+
+#_______________________________________________________________________
+# MATERIAL SECTION
+
+! Gas Section
+!---------------------------------------------------------------------//
+  RO_g0 = 1.2      ! (kg/m3)
+  MU_g0 = 1.8d-5   ! (Pa.sec)
+
+! Particle Section
+!---------------------------------------------------------------------//
+
+  PARTICLE_TYPES=1
+
+! Friction coefficient.
+  MEW =   0.35               ! particle-particle
+  MEW_W = 0.35               ! particle-wall
+
+! Normal collision spring constant. (N/m)
+  KN =   2529.0              ! particle-particle
+  KN_W = 2529.0              ! particle-wall
+
+! Restitution coefficient.
+  DES_EN_INPUT = 0.84        ! particle-particle
+  DES_EN_WALL_INPUT = 0.92   ! particle-wall
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+! Full domain coverage
+  IC_X_w(1) =   0.000  ! (m)
+  IC_X_e(1) =   1.2192 ! (m)
+  IC_Y_s(1) =   0.000  ! (m)
+  IC_Y_n(1) =   0.2286 ! (m)
+  IC_Z_b(1) =   0.000  ! (m)
+  IC_Z_t(1) =   0.0762 ! (m)
+
+  IC_EP_g(1) =  1.000  ! (m)
+
+  IC_U_g(1) =   0.000  ! (m)
+  IC_V_g(1) =   0.000  ! (m)
+  IC_W_g(1) =   0.000  ! (m)
+
+! Initial solids
+  IC_X_w(2) =   0.000  ! (m)
+  IC_X_e(2) =   0.200  ! (m)  !PARTICLES = 92948
+  IC_Y_s(2) =   0.000  ! (m)
+  IC_Y_n(2) =   0.2286 ! (m)
+  IC_Z_b(2) =   0.000  ! (m)
+  IC_Z_t(2) =   0.0762 ! (m)
+
+  IC_EP_g(2) =  0.53   ! (m)
+
+  IC_U_g(2) =   0.000  ! (m)
+  IC_V_g(2) =   0.000  ! (m)
+  IC_W_g(2) =   0.000  ! (m)
+
+  IC_EP_s(2,1) =0.47   ! (m)
+
+  IC_U_s(2,1) = 0.000  ! (m)
+  IC_V_s(2,1) = 0.000  ! (m)
+  IC_W_s(2,1) = 0.000  ! (m)
+
+  ic_dp_dist(2,1) =   'CONSTANT'
+  ic_dp_mean(2,1) =    3.256d-3    ! (m)
+
+  ic_ro_s_dist(2,1) = 'CONSTANT'
+  ic_ro_s_mean(2,1) =  1131.0d+0   ! (kg/m^3)
+
+  ic_pack_type(2) =  "HCP"
