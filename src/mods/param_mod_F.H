@@ -17,9 +17,9 @@ int get_dim_bc();
 
 amrex::Real get_my_huge();
 
-int is_defined_db(const amrex::Real& x);
+int is_defined_db_cpp(const amrex::Real& x);
 
-int is_undefined_db(const amrex::Real& x);
+int is_undefined_db_cpp(const amrex::Real& x);
 
 amrex::Real get_undefined();
 

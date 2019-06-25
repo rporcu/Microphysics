@@ -91,7 +91,7 @@ module param
          is_defined_db = .not.equal(x, undefined)
       end function is_defined_db
 
-      integer(c_int) function is_defined_db_cpp(x) bind(C, name='is_defined_db')
+      integer(c_int) function is_defined_db_cpp(x) 
          real(rt), intent(in) :: x
          if(.not.equal(x, undefined)) then
            is_defined_db_cpp = 1
@@ -110,7 +110,7 @@ module param
          is_undefined_db = equal(x, undefined)
       end function is_undefined_db
 
-      integer(c_int) function is_undefined_db_cpp(x) bind(C, name='is_undefined_db')
+      integer(c_int) function is_undefined_db_cpp(x) 
          real(rt), intent(in) :: x
          if(equal(x, undefined)) then
            is_undefined_db_cpp = 1

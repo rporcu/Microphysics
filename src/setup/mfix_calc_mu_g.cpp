@@ -13,7 +13,7 @@ void calc_mu_g(const Box& bx,
   Array4<Real> const& mu_g = mu_g_fab.array();
 
   // Set the initial viscosity
-  if(is_undefined_db(mu_g0))
+  if(is_undefined_db_cpp(mu_g0))
     mu_val = sutherland(293.15);
   else
     mu_val = mu_g0;

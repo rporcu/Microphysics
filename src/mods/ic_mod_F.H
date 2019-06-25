@@ -11,7 +11,7 @@ extern "C"
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
 
-int ic_defined(const int& icv);
+int ic_defined_cpp(const int& icv);
 
 amrex::Real get_ic_u_g(const int& icv);
 
