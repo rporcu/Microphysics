@@ -7,7 +7,7 @@
 module ic
 
   use amrex_fort_module, only : rt => amrex_real
-  use iso_c_binding , only: c_int, c_bool
+  use iso_c_binding , only: c_int
 
   use param, only: dim_ic, dim_m, dim_n_g, dim_n_s
 
@@ -118,7 +118,7 @@ contains
 ! Purpose: Return if a IC region has been defined based on coordinates !
 ! defined in the input deck.                                           !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  logical(c_bool) function ic_defined(icv) bind(C)
+  logical function ic_defined(icv) bind(C)
 
     use param, only: is_defined
 
