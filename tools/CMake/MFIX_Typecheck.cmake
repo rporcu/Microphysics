@@ -130,16 +130,16 @@ function( add_typecheck_target _target)
    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
    # STEP 2: create CPPD files from C++ headers
    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-   if (AMREX_ENABLE_DP)
-      set (AMREX_REAL double)
+   if (AMReX_DP_FOUND)
+      set(AMREX_REAL double)
    else ()
-      set (AMREX_REAL  float)
+      set(AMREX_REAL  float)
    endif ()
 
-   if (AMREX_ENABLE_DP_PARTICLES)
-      set (AMREX_PARTICLE_REAL double)
+   if (AMReX_DPARTICLES_FOUND)
+      set(AMREX_PARTICLE_REAL double)
    else ()
-      set (AMREX_PARTICLE_REAL  float)
+      set(AMREX_PARTICLE_REAL  float)
    endif ()
 
    #
@@ -149,11 +149,28 @@ function( add_typecheck_target _target)
       string(REPLACE ";" ";-I" _includes "-I${_includes}")
    endif ()
 
-   # get rid of genex in define list
-   string( GENEX_STRIP "${_defines}" _defines )
-   if (_defines)
-      string(REPLACE ";" ";-D" _defines "-D${_defines}")
+   # expand genex-es
+   include(AMReX_Utils)
+   
+   evaluate_genex(_cxx_defines _defines
+      LANG CXX
+      COMP GNU
+      CONFIG ${CMAKE_BUILD_TYPE}
+      INTERFACE BUILD)
+   
+   evaluate_genex(_fortran_defines _defines
+      LANG Fortran
+      COMP GNU
+      CONFIG ${CMAKE_BUILD_TYPE}
+      INTERFACE BUILD) 
+   
+   if (_cxx_defines)
+      string(REPLACE ";" ";-D" _cxx_defines "-D${_cxx_defines}")
    endif ()
+
+   if (_fortran_defines)
+      string(REPLACE ";" ";-D" _fortran_defines "-D${_fortran_defines}")
+   endif () 
 
    set (_cppd)
    foreach ( _file IN LISTS _fheaders )
@@ -163,24 +180,24 @@ function( add_typecheck_target _target)
       add_custom_command(
          OUTPUT  ${_cppd_file}
          COMMAND ${CMAKE_C_COMPILER}
-   ARGS    ${_defines} ${_includes} -E -P -x c -std=c99 ${_fullname} > ${_cppd_file}
-   COMMAND sed
-   ARGS -i -e 's/amrex::Real/${AMREX_REAL}/g' ${_cppd_file}
-   COMMAND sed
-   ARGS -i -e 's/amrex_real/${AMREX_REAL}/g' ${_cppd_file}
-   COMMAND sed
-   ARGS -i -e 's/amrex_particle_real/${AMREX_PARTICLE_REAL}/g' ${_cppd_file}
-   COMMAND sed
-   ARGS -i -e '/typedef\\s*${AMREX_REAL}/d' ${_cppd_file}
+         ARGS    ${_cxx_defines} ${_includes} -E -P -x c -std=c99 ${_fullname} > ${_cppd_file}
+         COMMAND sed
+         ARGS -i -e 's/amrex::Real/${AMREX_REAL}/g' ${_cppd_file}
+         COMMAND sed
+         ARGS -i -e 's/amrex_real/${AMREX_REAL}/g' ${_cppd_file}
+         COMMAND sed
+         ARGS -i -e 's/amrex_particle_real/${AMREX_PARTICLE_REAL}/g' ${_cppd_file}
+         COMMAND sed
+         ARGS -i -e '/typedef\\s*${AMREX_REAL}/d' ${_cppd_file}
          COMMAND sed
          ARGS -i -e 's/AMREX_GPU_DEVICE/ /g' ${_cppd_file}
          COMMAND sed
          ARGS -i -e 's/AMREX_GPU_HOST_DEVICE/ /g' ${_cppd_file}
-   COMMAND sed
-   ARGS -i -e 's/\\&/*/g' ${_cppd_file}
+         COMMAND sed
+         ARGS -i -e 's/\\&/*/g' ${_cppd_file}
          DEPENDS ${_file}
-   WORKING_DIRECTORY ${TYPECHECK_DIR}
-   COMMENT "Generating ${_fname}-cppd.h" )
+         WORKING_DIRECTORY ${TYPECHECK_DIR}
+         COMMENT "Generating ${_fname}-cppd.h" )
       list(APPEND _cppd ${_cppd_file})
    endforeach ()
 
@@ -196,7 +213,7 @@ function( add_typecheck_target _target)
       add_custom_command(
          OUTPUT   ${_orig_file}
          COMMAND  ${CMAKE_Fortran_COMPILER}
-         ARGS     ${_defines} ${_includes} -fsyntax-only -fdump-fortran-original ${_fullname} > ${_orig_file}
+         ARGS     ${_fortran_defines} ${_includes} -fsyntax-only -fdump-fortran-original ${_fullname} > ${_orig_file}
          DEPENDS  ${_file} ${_typecheckobjs}
          WORKING_DIRECTORY    ${TYPECHECK_DIR}
          COMMENT  "Generating ${_fname}.orig" )
@@ -210,7 +227,7 @@ function( add_typecheck_target _target)
    set(_outfile  "${TYPECHECK_DIR}/${_target}_typecheck.ou" )
 
    add_custom_target( typecheck_${_target}
-      COMMAND python3  ${AMREX_TYPECHECKER}
+      COMMAND python3  ${AMReX_TYPECHECKER}
       --workdir ${TYPECHECK_DIR} --output ${_outfile}
       DEPENDS ${_cppd} ${_orig}
       WORKING_DIRECTORY ${TYPECHECK_DIR}
