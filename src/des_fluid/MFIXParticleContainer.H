@@ -14,6 +14,16 @@
 using namespace amrex;
 using namespace std;
 
+// Boundary conditions list auxiliary structure
+//
+typedef struct BcList {
+  public:
+    BcList(): minf(0), pinf(0), pout(0) {};
+    int minf;
+    int pinf;
+    int pout;
+} BcList;
+
 struct realData
 {
     enum { // Particle data stored in p.m_data

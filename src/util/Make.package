@@ -1,5 +1,4 @@
 F90EXE_sources += bc_fill_nd.F90
-f90EXE_sources += mfix_util_f.f90
 f90EXE_sources += interpolation_m.f90
 
 CEXE_headers += mfix_set_velocity_bcs.hpp

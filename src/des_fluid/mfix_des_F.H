@@ -5,16 +5,6 @@
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
 
-// TODO move this to another file
-// Boundary conditions list auxiliary structure
-typedef struct BcList {
-  public:
-    BcList(): minf(0), pinf(0), pout(0) {};
-    int minf;
-    int pinf;
-    int pout;
-} BcList;
-
 #ifdef BL_SINGLE_PRECISION_PARTICLES
 typedef float amrex_particle_real;
 #else
@@ -35,19 +25,6 @@ extern "C"
                                         amrex::Real* etan, amrex::Real* etan_w,
                                         amrex::Real* etat, amrex::Real* etat_w,
                                         amrex::Real* neighborhood);
-
-    void get_gravity (
-        amrex::Real* grav
-        );
-
-    // TODO move this to another file
-    void get_bc_list (
-        BcList& bc_list
-        );
-
-    void get_domain_bc (
-        int* grav
-        );
 
     void des_drag_gp(
         const int* p_id,

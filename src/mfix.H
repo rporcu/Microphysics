@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <string>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -31,11 +32,11 @@
 
 enum DragType
 {
-	Invalid=-1,
-	WenYu,
-	Gidaspow,
-	BVK2,
-	UserDrag
+  Invalid=-1,
+  WenYu,
+  Gidaspow,
+  BVK2,
+  UserDrag
 };
 
 class mfix
@@ -86,7 +87,7 @@ public:
 
     void ComputeAverageFluidVars ( const int lev,
                                    const amrex::Real time,
-                                   const string&  basename,
+                                   const std::string&  basename,
                                    const Vector<int>& avg_p_g,
                                    const Vector<int>& avg_ep_g,
                                    const Vector<int>& avg_vel_g,

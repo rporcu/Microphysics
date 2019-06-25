@@ -3,7 +3,8 @@
 #include <mfix.H>
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
-#include <mfix_des_F.H>
+#include <bc_mod_F.H>
+#include <constant_mod_F.H>
 #include <mfix_set_bc0.hpp>
 #include <mfix_set_ls_inflow.hpp>
 #include <mfix_init_fluid.hpp>
@@ -236,7 +237,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 
     get_gravity(gravity);
-    get_bc_list(bc_list);
+    get_bc_list(bc_list.minf, bc_list.pinf, bc_list.pout);
 }
 
 

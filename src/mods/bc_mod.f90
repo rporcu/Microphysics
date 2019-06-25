@@ -108,6 +108,32 @@ contains
     return
   end function get_bc_ep_g
 
+  subroutine get_bc_list (minf, pinf, pout) bind(C)
+    integer(c_int), intent(out) :: minf
+    integer(c_int), intent(out) :: pinf
+    integer(c_int), intent(out) :: pout
+    minf = minf_
+    pinf = pinf_
+    pout = pout_
+  end subroutine get_bc_list
+
+  subroutine get_domain_bc (domain_bc_out) bind(C)
+    integer(c_int), intent(out)  :: domain_bc_out(6)
+    integer :: bcv
+    ! Default is that we reflect particles off domain boundaries if not periodic
+    domain_bc_out(1:6) = 1
+    if (cyclic_x) domain_bc_out(1:2) = 0
+    if (cyclic_y) domain_bc_out(3:4) = 0
+    if (cyclic_z) domain_bc_out(5:6) = 0
+
+    do bcv = 1,6
+       select case (trim(bc_type(bcv)))
+         case ('P_OUTFLOW','PO')
+            domain_bc_out(bcv) = 0
+       end select
+    end do
+  end subroutine get_domain_bc
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 ! Subroutine: set_cyclic                                               !

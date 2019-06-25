@@ -6,7 +6,6 @@ target_sources( mfixcore
    PRIVATE
    bc_fill_nd.F90
    mfix_util_F.H
-   mfix_util_f.f90
    mfix_util.cpp
    mfix_fillpatch.cpp
    interpolation_m.f90

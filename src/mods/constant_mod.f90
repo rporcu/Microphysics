@@ -27,5 +27,13 @@
 !-----------------------------------------------------------------------
 ! Number of solids phases
       integer :: mmax = 0
+      
+      contains
+
+      subroutine get_gravity (grav_out) bind(C)
+          use amrex_fort_module, only: rt => amrex_real
+          real(rt), intent(out)  :: grav_out(3)
+          grav_out(:) = gravity(:)
+      end subroutine get_gravity
 
       END MODULE constant

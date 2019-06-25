@@ -12,6 +12,7 @@ f90EXE_sources += utilities_mod.f90
 
 F90EXE_headers += bc_mod_F.H
 F90EXE_headers += ic_mod_F.H
+F90EXE_headers += constant_mod_F.H  
 CEXE_headers += eos_mod.hpp
 CEXE_sources += eos_mod.cpp
 F90EXE_headers += fld_constants_mod_F.H
