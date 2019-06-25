@@ -17,9 +17,9 @@ int get_dim_bc();
 
 amrex::Real get_my_huge();
 
-bool is_defined_db(const amrex::Real& x);
+int is_defined_db(const amrex::Real& x);
 
-bool is_undefined_db(const amrex::Real& x);
+int is_undefined_db(const amrex::Real& x);
 
 amrex::Real get_undefined();
 
@@ -28,6 +28,6 @@ amrex::Real get_undefined();
 #endif
 
 AMREX_GPU_HOST_DEVICE
-bool is_equal(const amrex::Real& x, const amrex::Real& y);
+int is_equal(const amrex::Real& x, const amrex::Real& y);
 
 #endif

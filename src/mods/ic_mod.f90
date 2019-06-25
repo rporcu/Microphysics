@@ -118,18 +118,28 @@ contains
 ! Purpose: Return if a IC region has been defined based on coordinates !
 ! defined in the input deck.                                           !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  logical function ic_defined(icv) bind(C)
-
+  logical function ic_defined(icv)
     use param, only: is_defined
-
-    integer(c_int), intent(in) :: icv
+    integer, intent(in) :: icv
 
     ic_defined = &
          is_defined(ic_x_w(icv)) .or. is_defined(ic_x_e(icv)) .or. &
          is_defined(ic_y_s(icv)) .or. is_defined(ic_y_n(icv)) .or. &
          is_defined(ic_z_b(icv)) .or. is_defined(ic_z_t(icv))
-
    end function ic_defined
+
+  integer(c_int) function ic_defined_cpp(icv) bind(C, name='ic_defined')
+    use param, only: is_defined
+    integer(c_int), intent(in) :: icv
+
+    if(is_defined(ic_x_w(icv)) .or. is_defined(ic_x_e(icv)) .or. &
+       is_defined(ic_y_s(icv)) .or. is_defined(ic_y_n(icv)) .or. &
+       is_defined(ic_z_b(icv)) .or. is_defined(ic_z_t(icv))) then
+      ic_defined_cpp = 1
+    else
+      ic_defined_cpp = 0
+    endif
+   end function ic_defined_cpp
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
