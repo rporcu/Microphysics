@@ -592,8 +592,8 @@ private:
      int  mac_mg_cg_verbose = 0;
 
      // Control MLMG behavior
-     int  mac_mg_max_iter = 100;
-     int  mac_mg_cg_maxiter = 100;
+     int  mac_mg_max_iter = 200;
+     int  mac_mg_cg_maxiter = 200;
      Real mac_mg_rtol = 1.0e-11;
      Real mac_mg_atol = 1.0e-14;
      std::string mac_bottom_solver_type;
