@@ -275,7 +275,7 @@ int main (int argc, char* argv[])
         {
             while (finish == 0)
             {
-                mfix_usr1(&time);
+                my_mfix.mfix_usr1_cpp(&time);
 
                 Real strt_step = ParallelDescriptor::second();
 

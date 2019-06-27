@@ -53,24 +53,9 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
     // We only do this to make it not const
     Real time = time_in;
 
-    const IArrayBox& bc_ilo = mfix_for_fillpatching->get_bc_ilo(lev);
-    const IArrayBox& bc_ihi = mfix_for_fillpatching->get_bc_ihi(lev);
-    const IArrayBox& bc_jlo = mfix_for_fillpatching->get_bc_jlo(lev);
-    const IArrayBox& bc_jhi = mfix_for_fillpatching->get_bc_jhi(lev);
-    const IArrayBox& bc_klo = mfix_for_fillpatching->get_bc_klo(lev);
-    const IArrayBox& bc_khi = mfix_for_fillpatching->get_bc_khi(lev);
-
-    int nghost = mfix_for_fillpatching->get_nghost();
-
     FArrayBox dest_fab(dest);
 
-    const BcList& bc_list   = mfix_for_fillpatching->get_bc_list_values();
-    Real** m_bc_vel_g = mfix_for_fillpatching->get_bc_vel_g_values();
-    Real* m_bc_ep_g = mfix_for_fillpatching->get_bc_ep_g_values();
-
-    set_velocity_bcs ( &time, bc_list, dest_fab,
-                       bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi,
-                       domain, m_bc_vel_g, m_bc_ep_g, &nghost, &extrap_dir_bcs );
+    mfix_for_fillpatching->set_velocity_bcs (&time, lev, dest_fab, domain, &extrap_dir_bcs);
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
@@ -211,11 +196,7 @@ mfix::mfix_set_velocity_bcs (Real time,
 #endif
      for (MFIter mfi(*vel[lev], true); mfi.isValid(); ++mfi)
      {
-        set_velocity_bcs(&time, bc_list, (*vel[lev])[mfi],
-                         *bc_ilo[lev], *bc_ihi[lev],
-                         *bc_jlo[lev], *bc_jhi[lev],
-                         *bc_klo[lev], *bc_khi[lev],
-                         domain, m_bc_vel_g, m_bc_ep_g, &nghost, &extrap_dir_bcs);
+        set_velocity_bcs(&time, lev, (*vel[lev])[mfi], domain, &extrap_dir_bcs);
      }
 
      EB_set_covered(*vel[lev], 0, vel[lev]->nComp(), vel[lev]->nGrow(), covered_val);
