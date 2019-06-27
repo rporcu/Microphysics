@@ -6,26 +6,18 @@
 //  Date: December 20, 2017
 // 
 
-#include <mfix_set_mac_velocity_bcs.hpp>
+#include <mfix.H>
 #include <bc_mod_F.H>
 
 void
-set_mac_velocity_bcs(Real* time,
-                     BcList& bc_list,
-                     const Box& bx,
-                     MFIter* mfi,
-                     MultiFab& u_g_fab,
-                     MultiFab& v_g_fab,
-                     MultiFab& w_g_fab,
-                     IArrayBox& bct_ilo_fab,
-                     IArrayBox& bct_ihi_fab,
-                     IArrayBox& bct_jlo_fab,
-                     IArrayBox& bct_jhi_fab,
-                     IArrayBox& bct_klo_fab,
-                     IArrayBox& bct_khi_fab,
-                     Box& domain,
-                     Real** m_bc_vel_g,
-                     const int* nghost)
+mfix::set_mac_velocity_bcs(Real* time,
+                           const Box& bx,
+                           MFIter* mfi,
+                           const int lev,
+                           Vector< std::unique_ptr<MultiFab> >& u,
+                           Vector< std::unique_ptr<MultiFab> >& v,
+                           Vector< std::unique_ptr<MultiFab> >& w,
+                           Box& domain)
 {
   IntVect bx_lo(bx.loVect());
   IntVect bx_hi(bx.hiVect());
@@ -33,25 +25,25 @@ set_mac_velocity_bcs(Real* time,
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
 
-  Array4<Real> const& u_g = u_g_fab.array(*mfi);
-  Array4<Real> const& v_g = v_g_fab.array(*mfi);
-  Array4<Real> const& w_g = w_g_fab.array(*mfi);
+  Array4<Real> const& u_g = u[lev]->array(*mfi);
+  Array4<Real> const& v_g = v[lev]->array(*mfi);
+  Array4<Real> const& w_g = w[lev]->array(*mfi);
 
-  IntVect u_lo(u_g_fab[*mfi].loVect());
-  IntVect u_hi(u_g_fab[*mfi].hiVect());
+  IntVect u_lo((*u[lev])[*mfi].loVect());
+  IntVect u_hi((*u[lev])[*mfi].hiVect());
 
-  IntVect v_lo(v_g_fab[*mfi].loVect());
-  IntVect v_hi(v_g_fab[*mfi].hiVect());
+  IntVect v_lo((*v[lev])[*mfi].loVect());
+  IntVect v_hi((*v[lev])[*mfi].hiVect());
 
-  IntVect w_lo(w_g_fab[*mfi].loVect());
-  IntVect w_hi(w_g_fab[*mfi].hiVect());
+  IntVect w_lo((*w[lev])[*mfi].loVect());
+  IntVect w_hi((*w[lev])[*mfi].hiVect());
 
-  Array4<int> const& bct_ilo = bct_ilo_fab.array();
-  Array4<int> const& bct_ihi = bct_ihi_fab.array();
-  Array4<int> const& bct_jlo = bct_jlo_fab.array();
-  Array4<int> const& bct_jhi = bct_jhi_fab.array();
-  Array4<int> const& bct_klo = bct_klo_fab.array();
-  Array4<int> const& bct_khi = bct_khi_fab.array();
+  Array4<int> const& bct_ilo = bc_ilo[lev]->array();
+  Array4<int> const& bct_ihi = bc_ihi[lev]->array();
+  Array4<int> const& bct_jlo = bc_jlo[lev]->array();
+  Array4<int> const& bct_jhi = bc_jhi[lev]->array();
+  Array4<int> const& bct_klo = bc_klo[lev]->array();
+  Array4<int> const& bct_khi = bc_khi[lev]->array();
 
   const int nlft = std::max(0, dom_lo[0]-bx_lo[0]);
   const int nbot = std::max(0, dom_lo[1]-bx_lo[1]);
@@ -149,7 +141,7 @@ set_mac_velocity_bcs(Real* time,
   const Box vhi_bx_xy(vhi_bx_xy_lo, vhi_bx_xy_hi);
   const Box whi_bx_xy(whi_bx_xy_lo, whi_bx_xy_hi);
 
-  mfix_usr1(time);
+  mfix_usr1_cpp(time);
 
   if (nlft > 0)
   {

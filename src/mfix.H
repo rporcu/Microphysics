@@ -102,6 +102,8 @@ public:
 
     void Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time);
 
+    void mfix_usr1_cpp(amrex::Real* time);
+
     void usr3();
 
     void output(int estatus, int finish, int nstep, Real dt, Real time)
@@ -201,27 +203,6 @@ public:
 
     bool contains_ebs = false;
 
-    const int * get_bc_ilo_ptr(int lev) {return bc_ilo[lev]->dataPtr();}
-    const int * get_bc_ihi_ptr(int lev) {return bc_ihi[lev]->dataPtr();}
-    const int * get_bc_jlo_ptr(int lev) {return bc_jlo[lev]->dataPtr();}
-    const int * get_bc_jhi_ptr(int lev) {return bc_jhi[lev]->dataPtr();}
-    const int * get_bc_klo_ptr(int lev) {return bc_klo[lev]->dataPtr();}
-    const int * get_bc_khi_ptr(int lev) {return bc_khi[lev]->dataPtr();}
-
-    const IArrayBox& get_bc_ilo(int lev) {return *bc_ilo[lev];}
-    const IArrayBox& get_bc_ihi(int lev) {return *bc_ihi[lev];}
-    const IArrayBox& get_bc_jlo(int lev) {return *bc_jlo[lev];}
-    const IArrayBox& get_bc_jhi(int lev) {return *bc_jhi[lev];}
-    const IArrayBox& get_bc_klo(int lev) {return *bc_klo[lev];}
-    const IArrayBox& get_bc_khi(int lev) {return *bc_khi[lev];}
-
-    int get_nghost() { return nghost; }
-
-    const BcList& get_bc_list_values() {return bc_list;}
-    Real** get_bc_vel_g_values() {return m_bc_vel_g;}
-    Real* get_bc_t_g_values() {return m_bc_t_g;}
-    Real* get_bc_ep_g_values() {return m_bc_ep_g;}
-
     void mfix_add_drag_terms(Real dt);
 
     void mfix_add_gravity_and_gp(Real dt);
@@ -231,6 +212,21 @@ public:
                                             Vector< std::unique_ptr<MultiFab> >& u_mac,
                                             Vector< std::unique_ptr<MultiFab> >& v_mac,
                                             Vector< std::unique_ptr<MultiFab> >& w_mac);
+
+    void set_velocity_bcs(Real* time,
+                          const int lev,
+                          FArrayBox& vel_fab,
+                          const Box& domain,
+                          const int* extrap_dir_bcs);
+
+    void set_mac_velocity_bcs(Real* time,
+                              const Box& bx,
+                              MFIter* mfi,
+                              const int lev,
+                              Vector< std::unique_ptr<MultiFab> >& u,
+                              Vector< std::unique_ptr<MultiFab> >& v,
+                              Vector< std::unique_ptr<MultiFab> >& w,
+                              Box& domain);
 
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
 
@@ -474,12 +470,12 @@ private:
      // intersection/union
      int ct_ls_mf;
 
-     Vector< std::unique_ptr<IArrayBox> > bc_ilo ;
-     Vector< std::unique_ptr<IArrayBox> > bc_ihi ;
-     Vector< std::unique_ptr<IArrayBox> > bc_jlo ;
-     Vector< std::unique_ptr<IArrayBox> > bc_jhi ;
-     Vector< std::unique_ptr<IArrayBox> > bc_klo ;
-     Vector< std::unique_ptr<IArrayBox> > bc_khi ;
+     Vector< std::unique_ptr<IArrayBox> > bc_ilo;
+     Vector< std::unique_ptr<IArrayBox> > bc_ihi;
+     Vector< std::unique_ptr<IArrayBox> > bc_jlo;
+     Vector< std::unique_ptr<IArrayBox> > bc_jhi;
+     Vector< std::unique_ptr<IArrayBox> > bc_klo;
+     Vector< std::unique_ptr<IArrayBox> > bc_khi;
 
      Vector< std::unique_ptr<iMultiFab> > flag;
 
@@ -592,8 +588,8 @@ private:
      int  mac_mg_cg_verbose = 0;
 
      // Control MLMG behavior
-     int  mac_mg_max_iter = 100;
-     int  mac_mg_cg_maxiter = 100;
+     int  mac_mg_max_iter = 200;
+     int  mac_mg_cg_maxiter = 200;
      Real mac_mg_rtol = 1.0e-11;
      Real mac_mg_atol = 1.0e-14;
      std::string mac_bottom_solver_type;

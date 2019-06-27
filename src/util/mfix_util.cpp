@@ -266,7 +266,7 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 #endif
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:sum)
+#pragma omp parallel reduction(+:sum) if (Gpu::notInLaunchRegion())
 #endif
     for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
     {

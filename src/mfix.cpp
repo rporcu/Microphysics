@@ -207,6 +207,24 @@ mfix::ResizeArrays ()
 }
 
 void
+mfix::mfix_usr1_cpp(amrex::Real* time)
+{
+  mfix_usr1(time);
+
+  const int dim_bc = get_dim_bc();
+
+  for(unsigned i(1); i <= dim_bc; ++i)
+  {
+    for(unsigned n(0); n < 3; ++n)
+      m_bc_vel_g[i][n] = get_bc_vel_g(i,n+1);
+    
+    m_bc_t_g[i] = get_bc_t_g(i);
+    
+    m_bc_ep_g[i] = get_bc_ep_g(i);
+  }
+}
+
+void
 mfix::usr3()
 {
     if (solve_fluid)

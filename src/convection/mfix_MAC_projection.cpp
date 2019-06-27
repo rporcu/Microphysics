@@ -5,7 +5,6 @@
 #include <mfix_proj_F.H>
 #include <mfix_F.H>
 #include <mfix.H>
-#include <mfix_set_mac_velocity_bcs.hpp>
 
 #include <AMReX_EBFArrayBox.H>
 #include <AMReX_EBMultiFabUtil.H>
@@ -136,7 +135,9 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
    macproj.setDomainBC  ( ppe_lobc, ppe_hibc );
    macproj.setVerbose   ( mac_mg_verbose);
    macproj.setCGVerbose ( mac_mg_cg_verbose);
-
+   macproj.setMaxIter   ( mac_mg_max_iter);
+   macproj.setCGMaxIter ( mac_mg_cg_maxiter);   
+   macproj.setMaxCoarseningLevel ( mac_mg_max_coarsening_level);
    // The default bottom solver is BiCG
    // Other options include:
    ///   Hypre IJ AMG solver
@@ -234,13 +235,7 @@ mfix::set_MC_velocity_bcs ( int lev,
    {
       const Box& bx = (*mac_rhs[lev])[mfi].box();
 
-      set_mac_velocity_bcs(&time, bc_list, bx, &mfi,
-                           *u[lev], *v[lev], *w[lev],
-                           *bc_ilo[lev], *bc_ihi[lev],
-                           *bc_jlo[lev], *bc_jhi[lev],
-                           *bc_klo[lev], *bc_khi[lev],
-                           domain, m_bc_vel_g, &nghost);
-
+      set_mac_velocity_bcs(&time, bx, &mfi, lev, u, v, w, domain);
    }
 }
 

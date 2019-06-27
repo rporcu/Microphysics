@@ -41,6 +41,7 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
    //       (alpha * a - beta * (del dot b grad)) sol
    //
    LPInfo                       info;
+   info.setMaxCoarseningLevel(diff_mg_max_coarsening_level);
    MLEBTensorOp ebtensorop(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
 
    // It is essential that we set MaxOrder of the solver to 2

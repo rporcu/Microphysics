@@ -1,25 +1,17 @@
 #include <mfix_set_velocity_bcs.hpp>
 #include <bc_mod_F.H>
+#include <mfix.H>
 
 //              
 //  This subroutine sets the BCs for the velocity components only.
 //
 
 void
-set_velocity_bcs(Real* time,
-                 const BcList& bc_list,
-                 FArrayBox& vel_fab,
-                 const IArrayBox& bct_ilo_fab,
-                 const IArrayBox& bct_ihi_fab,
-                 const IArrayBox& bct_jlo_fab,
-                 const IArrayBox& bct_jhi_fab,
-                 const IArrayBox& bct_klo_fab,
-                 const IArrayBox& bct_khi_fab,
-                 const Box& domain,
-                 Real** m_bc_vel_g,
-                 Real * m_bc_ep_g,
-                 const int* ng,
-                 const int* extrap_dir_bcs)
+mfix::set_velocity_bcs(Real* time,
+                       const int lev,
+                       FArrayBox& vel_fab,
+                       const Box& domain,
+                       const int* extrap_dir_bcs)
 {
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
@@ -29,12 +21,12 @@ set_velocity_bcs(Real* time,
   IntVect vel_lo(vel_fab.loVect());
   IntVect vel_hi(vel_fab.hiVect());
 
-  Array4<const int> const& bct_ilo = bct_ilo_fab.array();
-  Array4<const int> const& bct_ihi = bct_ihi_fab.array();
-  Array4<const int> const& bct_jlo = bct_jlo_fab.array();
-  Array4<const int> const& bct_jhi = bct_jhi_fab.array();
-  Array4<const int> const& bct_klo = bct_klo_fab.array();
-  Array4<const int> const& bct_khi = bct_khi_fab.array();
+  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
+  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
+  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
+  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
+  Array4<const int> const& bct_klo = bc_klo[lev]->array();
+  Array4<const int> const& bct_khi = bc_khi[lev]->array();
 
   const int nlft = std::max(0, dom_lo[0]-vel_lo[0]);
   const int nbot = std::max(0, dom_lo[1]-vel_lo[1]);
@@ -102,7 +94,7 @@ set_velocity_bcs(Real* time,
   const Box bx_xy_lo_3D(vel_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, vel_hi);
 
-  mfix_usr1(time);
+  mfix_usr1_cpp(time);
 
   if (nlft > 0)
   {
