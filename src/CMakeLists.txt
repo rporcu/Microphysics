@@ -1,4 +1,4 @@
-add_library(mfixcore)
+add_library(mfixcore OBJECT)
 
 # 
 # Path where to store module files
