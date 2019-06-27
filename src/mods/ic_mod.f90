@@ -128,7 +128,7 @@ contains
          is_defined(ic_z_b(icv)) .or. is_defined(ic_z_t(icv))
    end function ic_defined
 
-  integer(c_int) function ic_defined_cpp(icv) 
+  integer(c_int) function ic_defined_cpp(icv) bind(C)
     use param, only: is_defined
     integer(c_int), intent(in) :: icv
 
