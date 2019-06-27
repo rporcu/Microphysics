@@ -219,6 +219,12 @@ public:
                           const Box& domain,
                           const int* extrap_dir_bcs);
 
+    void 
+    set_gradp_bcs(const Box& bx,
+                  const int lev,
+                  FArrayBox& gp_fab,
+                  Box& domain);
+
     void set_mac_velocity_bcs(Real* time,
                               const Box& bx,
                               MFIter* mfi,
@@ -228,7 +234,19 @@ public:
                               Vector< std::unique_ptr<MultiFab> >& w,
                               Box& domain);
 
+    void set_ls_inflow(const int lev,
+                       FArrayBox& ls_phi_fab,
+                       const Box& domain,
+                       const int* levelset_nghost,
+                       const int& nref,
+                       const Real* dx);
+
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
+
+    void set_bc0(const Box& sbx,
+                 MFIter* mfi,
+                 const int lev,
+                 const Box& domain);
 
     void mfix_set_bc_mod(const int* pID, const int* pType,
                          const amrex::Real* pLo, const amrex::Real* pHi,

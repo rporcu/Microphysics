@@ -14,9 +14,7 @@ target_sources( mfixcore
    mfix_init_fluid.hpp
    mfix_init_fluid.cpp
    init_namelist.f90
-   mfix_set_bc0.hpp
    mfix_set_bc0.cpp
-   mfix_set_ls_inflow.hpp
    mfix_set_ls_inflow.cpp
    set_bc_type.f90
    set_delp_dir.f90 

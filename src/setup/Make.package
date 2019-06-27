@@ -10,9 +10,7 @@ f90EXE_sources += set_p0.f90
 f90EXE_sources += set_ps.f90 
 f90EXE_sources += set_ppe_bcs.f90 
 
-CEXE_headers += mfix_set_bc0.hpp
 CEXE_sources += mfix_set_bc0.cpp
-CEXE_headers += mfix_set_ls_inflow.hpp
 CEXE_sources += mfix_set_ls_inflow.cpp
 CEXE_headers += mfix_init_fluid.hpp 
 CEXE_sources += mfix_init_fluid.cpp 

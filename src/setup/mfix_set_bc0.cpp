@@ -1,31 +1,21 @@
-#include <mfix_set_bc0.hpp>
+#include <mfix.H>
 #include <bc_mod_F.H>
 #include <eos_mod.hpp>
 #include <fld_constants_mod_F.H>
 #include <param_mod_F.H>
 
-void set_bc0(const Box& sbx,
-             const BcList& bc_list,
-             FArrayBox& ep_g_fab,
-             FArrayBox& ro_g_fab,
-             FArrayBox& mu_g_fab,
-             const IArrayBox& bct_ilo_fab,
-             const IArrayBox& bct_ihi_fab,
-             const IArrayBox& bct_jlo_fab,
-             const IArrayBox& bct_jhi_fab,
-             const IArrayBox& bct_klo_fab,
-             const IArrayBox& bct_khi_fab,
-             const Box& domain,
-             Real* m_bc_ep_g,
-             Real* m_bc_t_g,
-             const int* ng)
+void 
+mfix::set_bc0(const Box& sbx,
+              MFIter* mfi,
+              const int lev,
+              const Box& domain)
 {
   const Real ro_g0(get_ro_g0());
   const Real mu_g0(get_mu_g0());
 
-  Array4<Real> const& ep_g = ep_g_fab.array();
-  Array4<Real> const& ro_g = ro_g_fab.array();
-  Array4<Real> const& mu_g = mu_g_fab.array();
+  Array4<Real> const& a_ep_g = ep_g[lev]->array(*mfi);
+  Array4<Real> const& a_ro_g = ro_g[lev]->array(*mfi);
+  Array4<Real> const& a_mu_g = mu_g[lev]->array(*mfi);
 
   const IntVect sbx_lo(sbx.loVect());
   const IntVect sbx_hi(sbx.hiVect());
@@ -33,12 +23,12 @@ void set_bc0(const Box& sbx,
   const IntVect dom_lo(domain.loVect());
   const IntVect dom_hi(domain.hiVect());
 
-  Array4<const int> const& bct_ilo = bct_ilo_fab.array();
-  Array4<const int> const& bct_ihi = bct_ihi_fab.array();
-  Array4<const int> const& bct_jlo = bct_jlo_fab.array();
-  Array4<const int> const& bct_jhi = bct_jhi_fab.array();
-  Array4<const int> const& bct_klo = bct_klo_fab.array();
-  Array4<const int> const& bct_khi = bct_khi_fab.array();
+  Array4<const int> const& a_bc_ilo = bc_ilo[lev]->array();
+  Array4<const int> const& a_bc_ihi = bc_ihi[lev]->array();
+  Array4<const int> const& a_bc_jlo = bc_jlo[lev]->array();
+  Array4<const int> const& a_bc_jhi = bc_jhi[lev]->array();
+  Array4<const int> const& a_bc_klo = bc_klo[lev]->array();
+  Array4<const int> const& a_bc_khi = bc_khi[lev]->array();
 
   const int nlft = std::max(0,dom_lo[0]-sbx_lo[0]);
   const int nbot = std::max(0,dom_lo[1]-sbx_lo[1]);
@@ -78,8 +68,8 @@ void set_bc0(const Box& sbx,
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo_3D, i, j, k,
     {
-      const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
-      const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
+      const int bcv = a_bc_ilo(dom_lo[0]-1,j,k,1);
+      const int bct = a_bc_ilo(dom_lo[0]-1,j,k,0);
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
@@ -91,9 +81,9 @@ void set_bc0(const Box& sbx,
         else
           bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = m_bc_ep_g[bcv];
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        a_ep_g(i,j,k) = m_bc_ep_g[bcv];
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
@@ -102,8 +92,8 @@ void set_bc0(const Box& sbx,
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_yz_hi_3D, i, j, k,
     {
-      const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
-      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
+      const int bcv = a_bc_ihi(dom_hi[0]+1,j,k,1);
+      const int bct = a_bc_ihi(dom_hi[0]+1,j,k,0);
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
@@ -115,9 +105,9 @@ void set_bc0(const Box& sbx,
         else
           bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = m_bc_ep_g[bcv];
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        a_ep_g(i,j,k) = m_bc_ep_g[bcv];
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
@@ -130,8 +120,8 @@ void set_bc0(const Box& sbx,
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xz_lo_3D, i, j, k,
     {
-      const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
-      const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
+      const int bcv = a_bc_jlo(i,dom_lo[1]-1,k,1);
+      const int bct = a_bc_jlo(i,dom_lo[1]-1,k,0);
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
@@ -143,9 +133,9 @@ void set_bc0(const Box& sbx,
         else
            bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = m_bc_ep_g[bcv];
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        a_ep_g(i,j,k) = m_bc_ep_g[bcv];
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
@@ -154,8 +144,8 @@ void set_bc0(const Box& sbx,
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xz_hi_3D, i, j, k,
     {
-      const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
-      const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
+      const int bcv = a_bc_jhi(i,dom_hi[1]+1,k,1);
+      const int bct = a_bc_jhi(i,dom_hi[1]+1,k,0);
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
@@ -167,9 +157,9 @@ void set_bc0(const Box& sbx,
         else
            bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = m_bc_ep_g[bcv];
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        a_ep_g(i,j,k) = m_bc_ep_g[bcv];
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
@@ -182,8 +172,8 @@ void set_bc0(const Box& sbx,
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xy_lo_3D, i, j, k,
     {
-      const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
-      const int bct = bct_klo(i,j,dom_lo[2]-1,0);
+      const int bcv = a_bc_klo(i,j,dom_lo[2]-1,1);
+      const int bct = a_bc_klo(i,j,dom_lo[2]-1,0);
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
@@ -195,9 +185,9 @@ void set_bc0(const Box& sbx,
         else
            bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = m_bc_ep_g[bcv];
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        a_ep_g(i,j,k) = m_bc_ep_g[bcv];
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
@@ -206,8 +196,8 @@ void set_bc0(const Box& sbx,
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xy_hi_3D, i, j, k,
     {
-      const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
-      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
+      const int bcv = a_bc_khi(i,j,dom_hi[2]+1,1);
+      const int bct = a_bc_khi(i,j,dom_hi[2]+1,0);
 
       if((bct == bc_list.pinf) or (bct == bc_list.pout) or (bct == bc_list.minf))
       {
@@ -219,9 +209,9 @@ void set_bc0(const Box& sbx,
         else
            bc_mu_g = mu_g0;
 
-        ep_g(i,j,k) = m_bc_ep_g[bcv];
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        a_ep_g(i,j,k) = m_bc_ep_g[bcv];
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
