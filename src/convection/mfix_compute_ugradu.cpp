@@ -87,7 +87,8 @@ mfix::mfix_compute_ugradu( Box& bx,
 
   // Vectorize the boundary conditions list in order to use it in lambda
   // functions
-  const GpuArray<int, 3> bc_types = {bc_list.minf, bc_list.pinf, bc_list.pout};
+  const GpuArray<int, 3> bc_types =
+    {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};
 
   AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
   {
@@ -365,7 +366,8 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   Array4<Real> const& fy = fyfab.array();
   Array4<Real> const& fz = fzfab.array();
 
-  const GpuArray<int, 3> bc_types = {bc_list.minf, bc_list.pinf, bc_list.pout};
+  const GpuArray<int, 3> bc_types =
+    {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};
 
   const Real my_huge = get_my_huge();
   //

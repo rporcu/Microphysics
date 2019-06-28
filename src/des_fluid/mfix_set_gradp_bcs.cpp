@@ -51,19 +51,23 @@ mfix::set_gradp_bcs (const Box& bx,
   const Box bx_xy_lo(bx_lo_xy_lo, bx_lo_xy_hi);
   const Box bx_xy_hi(bx_hi_xy_lo, bx_hi_xy_hi);
 
+  const int minf = bc_list.get_minf();
+  const int pinf = bc_list.get_pinf();
+  const int pout = bc_list.get_pout();
+
   if(gp_lo[0] <= dom_lo[0])
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo, i, j, k,
     {
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
         gp(i,j,k,0) = gp(i+1,j,k,0);
         gp(i,j,k,1) = gp(i+1,j,k,1);
         gp(i,j,k,2) = gp(i+1,j,k,2);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         gp(i,j,k,0) = gp(i+1,j,k,0);
         gp(i,j,k,1) = 0;
@@ -78,13 +82,13 @@ mfix::set_gradp_bcs (const Box& bx,
     {
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
         gp(i,j,k,0) = gp(i-1,j,k,0);
         gp(i,j,k,1) = gp(i-1,j,k,1);
         gp(i,j,k,2) = gp(i-1,j,k,2);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         gp(i,j,k,0) = gp(i-1,j,k,0);
         gp(i,j,k,1) = 0;
@@ -103,13 +107,13 @@ mfix::set_gradp_bcs (const Box& bx,
     {
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
         gp(i,j,k,0) = gp(i,j+1,k,0);
         gp(i,j,k,1) = gp(i,j+1,k,1);
         gp(i,j,k,2) = gp(i,j+1,k,2);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         gp(i,j,k,0) = 0;
         gp(i,j,k,1) = gp(i,j+1,k,1);
@@ -124,13 +128,13 @@ mfix::set_gradp_bcs (const Box& bx,
     {
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
         gp(i,j,k,0) = gp(i,j-1,k,0);
         gp(i,j,k,1) = gp(i,j-1,k,1);
         gp(i,j,k,2) = gp(i,j-1,k,2);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         gp(i,j,k,0) = 0;
         gp(i,j,k,1) = gp(i,j-1,k,1);
@@ -149,13 +153,13 @@ mfix::set_gradp_bcs (const Box& bx,
     {
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
         gp(i,j,k,0) = gp(i,j,k+1,0);
         gp(i,j,k,1) = gp(i,j,k+1,1);
         gp(i,j,k,2) = gp(i,j,k+1,2);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         gp(i,j,k,0) = 0;
         gp(i,j,k,1) = 0;
@@ -170,13 +174,13 @@ mfix::set_gradp_bcs (const Box& bx,
     {
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
         gp(i,j,k,0) = gp(i,j,k-1,0);
         gp(i,j,k,1) = gp(i,j,k-1,1);
         gp(i,j,k,2) = gp(i,j,k-1,2);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         gp(i,j,k,0) = 0;
         gp(i,j,k,1) = 0;

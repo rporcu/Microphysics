@@ -28,36 +28,15 @@ EBSupport mfix::m_eb_support_level = EBSupport::full;
 Real mfix::gravity[3] {0.0};
 Real mfix::gp0[3]     {0.0};
 
-BcList mfix::bc_list    = BcList();
-Real** mfix::m_bc_vel_g =  nullptr;
-Real*  mfix::m_bc_t_g   =  nullptr;
-Real*  mfix::m_bc_ep_g  =  nullptr;
-
-mfix::~mfix ()
-{
-    if(m_bc_vel_g != nullptr)
-    {
-      const int dim_bc = get_dim_bc();
-
-      for(unsigned i(1); i <= dim_bc; ++i)
-        delete[] m_bc_vel_g[i];
-      
-      delete[] m_bc_vel_g;
-    }
-    
-    if(m_bc_t_g != nullptr)
-    {
-      delete[] m_bc_t_g;
-    }
-    
-    if(m_bc_ep_g != nullptr)
-    {
-      delete[] m_bc_ep_g;
-    }
-};
-
+mfix::~mfix () {};
 
 mfix::mfix ()
+  : bc_list(get_minf(), get_pinf(), get_pout())
+  , m_bc_u_g(get_dim_bc()+1, 0)
+  , m_bc_v_g(get_dim_bc()+1, 0)
+  , m_bc_w_g(get_dim_bc()+1, 0)
+  , m_bc_t_g(get_dim_bc()+1, 0)
+  , m_bc_ep_g(get_dim_bc()+1, 0)
 {
 
     // NOTE: Geometry on all levels has just been defined in the AmrCore
@@ -215,8 +194,9 @@ mfix::mfix_usr1_cpp(amrex::Real* time)
 
   for(unsigned i(1); i <= dim_bc; ++i)
   {
-    for(unsigned n(0); n < 3; ++n)
-      m_bc_vel_g[i][n] = get_bc_vel_g(i,n+1);
+    m_bc_u_g[i] = get_bc_u_g(i);
+    m_bc_v_g[i] = get_bc_v_g(i);
+    m_bc_w_g[i] = get_bc_w_g(i);
     
     m_bc_t_g[i] = get_bc_t_g(i);
     
@@ -259,13 +239,6 @@ mfix::mfix_set_bc_type(int lev)
 
     const int dim_bc = get_dim_bc();
 
-    if(m_bc_vel_g == nullptr)
-    {
-      m_bc_vel_g = new Real* [dim_bc+1];
-      for(unsigned i(1); i <= dim_bc; ++i)
-        m_bc_vel_g[i] = new Real [3];
-    }
-
     set_bc_type(bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                 bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
                 bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
@@ -273,8 +246,11 @@ mfix::mfix_set_bc_type(int lev)
                 &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost);
 
     for(unsigned i(1); i <= dim_bc; ++i)
-      for(unsigned n(0); n < 3; ++n)
-        m_bc_vel_g[i][n] = get_bc_vel_g(i,n+1);
+    {
+      m_bc_u_g[i] = get_bc_u_g(i);
+      m_bc_v_g[i] = get_bc_v_g(i);
+      m_bc_w_g[i] = get_bc_w_g(i);  
+    }
 }
 
 void mfix::mfix_set_bc_mod(const int* pID, const int* pType,
@@ -285,29 +261,13 @@ void mfix::mfix_set_bc_mod(const int* pID, const int* pType,
 {
   const int dim_bc = get_dim_bc();
 
-  if(m_bc_vel_g == nullptr)
-  {
-    m_bc_vel_g = new Real* [dim_bc+1];
-    for(unsigned i(1); i <= dim_bc; ++i)
-      m_bc_vel_g[i] = new Real [3];
-  }
-
-  if(m_bc_t_g == nullptr)
-  {
-    m_bc_t_g = new Real [dim_bc+1];
-  }
-
-  if(m_bc_ep_g == nullptr)
-  {
-    m_bc_ep_g = new Real [dim_bc+1];
-  }
-
   set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel); 
 
   for(unsigned i(1); i <= dim_bc; ++i)
   {
-    for(unsigned n(0); n < 3; ++n)
-      m_bc_vel_g[i][n] = get_bc_vel_g(i,n+1);
+    m_bc_u_g[i] = get_bc_u_g(i);
+    m_bc_v_g[i] = get_bc_v_g(i);
+    m_bc_w_g[i] = get_bc_w_g(i);
     
     m_bc_t_g[i] = get_bc_t_g(i);
     
@@ -322,29 +282,13 @@ void mfix::mfix_set_bc_mod_add_mi(const int* pPlane,
 {
   const int dim_bc = get_dim_bc();
 
-  if(m_bc_vel_g == nullptr)
-  {
-    m_bc_vel_g = new Real* [dim_bc+1];
-    for(unsigned i(1); i <= dim_bc; ++i)
-      m_bc_vel_g[i] = new Real [3];
-  }
-
-  if(m_bc_t_g == nullptr)
-  {
-    m_bc_t_g = new Real [dim_bc+1];
-  }
-
-  if(m_bc_ep_g == nullptr)
-  {
-    m_bc_ep_g = new Real [dim_bc+1];
-  }
-
   set_bc_mod_add_mi(pPlane, xLo, yLo, zLo, xHi, yHi, zHi, pPg, pVel);
   
   for(unsigned i(1); i <= dim_bc; ++i)
   {
-    for(unsigned n(0); n < 3; ++n)
-      m_bc_vel_g[i][n] = get_bc_vel_g(i,n+1);
+    m_bc_u_g[i] = get_bc_u_g(i);
+    m_bc_v_g[i] = get_bc_v_g(i);
+    m_bc_w_g[i] = get_bc_w_g(i);
     
     m_bc_t_g[i] = get_bc_t_g(i);
     

@@ -4,7 +4,7 @@ module check_bc_flow_module
    use param,  only: dim_bc, dim_m
 
    use bc, only: bc_plane
-   use bc, only: bc_vel_g
+   use bc, only: bc_u_g, bc_v_g, bc_w_g
    use bc, only: bc_u_s, bc_v_s, bc_w_s
 
 ! Use the error manager for posting error messages.
@@ -87,7 +87,7 @@ contains
     select case (bc_plane(bcv))
 
     case ('W')
-       if(bc_vel_g(bcv,1) > zero) then
+       if(bc_u_g(bcv) > zero) then
           write(err_msg,1300) trim(ivar('BC_U_g',bcv)), '<'
           call flush_err_msg(abort=.true.)
        endif
@@ -99,7 +99,7 @@ contains
        enddo
 
     case('E')
-       if(bc_vel_g(bcv,1) < zero) then
+       if(bc_u_g(bcv) < zero) then
           write(err_msg,1300) trim(ivar('BC_U_g',bcv)), '>'
           call flush_err_msg
        endif
@@ -111,7 +111,7 @@ contains
        enddo
 
     case('S')
-       if(bc_vel_g(bcv,2) > zero) then
+       if(bc_v_g(bcv) > zero) then
           write(err_msg,1300) trim(ivar('BC_V_g',bcv)), '<'
           call flush_err_msg
        endif
@@ -123,7 +123,7 @@ contains
        enddo
 
     case('N')
-       if(bc_vel_g(bcv,2) < zero) then
+       if(bc_v_g(bcv) < zero) then
           write(err_msg,1300) trim(ivar('BC_V_g',bcv)), '>'
           call flush_err_msg
        endif
@@ -135,7 +135,7 @@ contains
        enddo
 
     case('B')
-       if(bc_vel_g(bcv,3) > zero) then
+       if(bc_w_g(bcv) > zero) then
           write(err_msg,1300) trim(ivar('BC_W_g',bcv)), '<'
           call flush_err_msg
        endif
@@ -147,7 +147,7 @@ contains
        enddo
 
     case('T')
-       if(bc_vel_g(bcv,3) < zero) then
+       if(bc_w_g(bcv) < zero) then
           write(err_msg,1300) trim(ivar('BC_W_g',bcv)), '>'
           call flush_err_msg
        endif
@@ -191,7 +191,7 @@ contains
     select case (bc_plane(BCV))
 
     case ('W')
-       if(bc_vel_g(bcv,1) < zero) then
+       if(bc_u_g(bcv) < zero) then
           write(err_msg,1300) trim(ivar('BC_U_g',bcv)), '>'
           call flush_err_msg
        endif
@@ -203,7 +203,7 @@ contains
        enddo
 
     case('E')
-       if(bc_vel_g(bcv,1) > zero) then
+       if(bc_u_g(bcv) > zero) then
           write(err_msg,1300) trim(ivar('BC_U_g',bcv)), '<'
           call flush_err_msg
        endif
@@ -215,7 +215,7 @@ contains
        enddo
 
     case('S')
-       if(bc_vel_g(bcv,2) < zero) then
+       if(bc_v_g(bcv) < zero) then
           write(err_msg,1300) trim(ivar('BC_V_g',bcv)), '>'
           call flush_err_msg
        endif
@@ -227,7 +227,7 @@ contains
        enddo
 
     case('N')
-       if(bc_vel_g(bcv,2) > zero) then
+       if(bc_v_g(bcv) > zero) then
           write(err_msg,1300) trim(ivar('BC_V_g',bcv)), '<'
           call flush_err_msg
        endif
@@ -239,7 +239,7 @@ contains
        enddo
 
     case('B')
-       if(bc_vel_g(bcv,3) < zero) then
+       if(bc_w_g(bcv) < zero) then
           write(err_msg,1300) trim(ivar('BC_W_g',bcv)), '>'
           call flush_err_msg
        endif
@@ -251,7 +251,7 @@ contains
        enddo
 
     case('T')
-       if(bc_vel_g(bcv,3) > zero) then
+       if(bc_w_g(bcv) > zero) then
           write(err_msg,1300) trim(ivar('BC_W_g',bcv)), '<'
           call flush_err_msg
        endif

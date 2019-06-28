@@ -9,8 +9,6 @@ target_sources( mfixcore
    mfix_util.cpp
    mfix_fillpatch.cpp
    interpolation_m.f90
-   mfix_set_velocity_bcs.hpp
    mfix_set_velocity_bcs.cpp
-   mfix_set_scalar_bcs.hpp
    mfix_set_scalar_bcs.cpp
    )

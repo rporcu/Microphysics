@@ -61,6 +61,10 @@ mfix::set_ls_inflow(const int lev,
   const int ntop = std::max(0, sbx_hi[1]-(nref*dom_hi[1]+1));
   const int nup  = std::max(0, sbx_hi[2]-(nref*dom_hi[2]+1));
 
+  const int minf = bc_list.get_minf();
+  const int pinf = bc_list.get_pinf();
+  const int pout = bc_list.get_pout();
+
   if (nlft > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
@@ -71,7 +75,7 @@ mfix::set_ls_inflow(const int lev,
       bct[2] = bct_ilo(dom_lo[0]-1,j/nref+1,k/nref,0);
       bct[3] = bct_ilo(dom_lo[0]-1,j/nref+1,k/nref+1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(i < 0)
         {
@@ -108,7 +112,7 @@ mfix::set_ls_inflow(const int lev,
       bct[2] = bct_ihi(dom_hi[0]+1,j/nref+1,k/nref,0);
       bct[3] = bct_ihi(dom_hi[0]+1,j/nref+1,k/nref+1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(i < (dom_hi[0]+1)*nref)
         {
@@ -145,7 +149,7 @@ mfix::set_ls_inflow(const int lev,
       bct[2] = bct_jlo(i/nref+1,dom_lo[1]-1,k/nref,0);
       bct[3] = bct_jlo(i/nref+1,dom_lo[1]-1,k/nref+1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(j < 0)
         {
@@ -182,7 +186,7 @@ mfix::set_ls_inflow(const int lev,
       bct[2] = bct_jhi(i/nref+1,dom_hi[1]+1,k/nref,0);
       bct[3] = bct_jhi(i/nref+1,dom_hi[1]+1,k/nref+1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(j < (dom_hi[1]+1)*nref)
         {
@@ -219,7 +223,7 @@ mfix::set_ls_inflow(const int lev,
       bct[2] = bct_klo(i/nref+1,j/nref,dom_lo[2]-1,0);
       bct[3] = bct_klo(i/nref+1,j/nref+1,dom_lo[2]-1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(k < 0)
         {
@@ -256,7 +260,7 @@ mfix::set_ls_inflow(const int lev,
       bct[2] = bct_khi(i/nref+1,j/nref,dom_hi[2]+1,0);
       bct[3] = bct_khi(i/nref+1,j/nref+1,dom_hi[2]+1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(k < (dom_hi[2]+1)*nref)
         {
