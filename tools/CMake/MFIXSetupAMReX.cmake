@@ -91,6 +91,7 @@ else ()
 
    endif ()
 
+   set(ENABLE_DP ON)
    set(ENABLE_TUTORIALS OFF)
    set(ENABLE_PARTICLES ON)
    set(ENABLE_EB ON)

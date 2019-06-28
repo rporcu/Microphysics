@@ -121,6 +121,6 @@ endif ()
 #
 # Add typecheck target for mfixcore
 #
-include( MFIX_Typecheck )
+include( AMReXTypecheck )
 add_typecheck_target(mfixcore)
 

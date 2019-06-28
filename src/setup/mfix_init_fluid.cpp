@@ -220,7 +220,7 @@ void set_ic(const Box& sbx,
   // Set the initial conditions.
   for(int icv(1); icv <= get_dim_ic(); ++icv)
   {
-    if (ic_defined(icv))
+    if (ic_defined_cpp(icv))
     {
       int i_w(0), j_s(0), k_b(0);
       int i_e(0), j_n(0), k_t(0);
@@ -241,7 +241,7 @@ void set_ic(const Box& sbx,
       const int jend   = std::min(shi[1], j_n);
       const int kend   = std::min(shi[2], k_t);
 
-      if (is_defined_db(ugx))
+      if (is_defined_db_cpp(ugx))
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
@@ -263,7 +263,7 @@ void set_ic(const Box& sbx,
         }
       }
 
-      if (is_defined_db(vgx))
+      if (is_defined_db_cpp(vgx))
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
@@ -285,7 +285,7 @@ void set_ic(const Box& sbx,
         }
       }
 
-      if (is_defined_db(wgx))
+      if (is_defined_db_cpp(wgx))
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
