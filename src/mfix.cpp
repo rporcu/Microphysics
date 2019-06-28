@@ -31,14 +31,13 @@ Real mfix::gp0[3]     {0.0};
 mfix::~mfix () {};
 
 mfix::mfix ()
-  : bc_list(get_minf(), get_pinf(), get_pout())
+  : bc_list(10, 11, 20) //TODO fix this
   , m_bc_u_g(get_dim_bc()+1, 0)
   , m_bc_v_g(get_dim_bc()+1, 0)
   , m_bc_w_g(get_dim_bc()+1, 0)
   , m_bc_t_g(get_dim_bc()+1, 0)
   , m_bc_ep_g(get_dim_bc()+1, 0)
 {
-
     // NOTE: Geometry on all levels has just been defined in the AmrCore
     // constructor. No valid BoxArray and DistributionMapping have been defined.
     // But the arrays for them have been resized.

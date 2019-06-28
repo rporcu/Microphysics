@@ -18,17 +18,17 @@ using namespace std;
 //
 typedef class BcList {
   public:
-    BcList(const int minf, const int pinf, const int pout)
-      : minf_(minf)
-      , pinf_(pinf)
+    BcList(const int pinf, const int pout, const int minf)
+      : pinf_(pinf)
       , pout_(pout) 
+      , minf_(minf)
     {}
 
-    int get_minf() const {return minf_;};
     int get_pinf() const {return pinf_;};
     int get_pout() const {return pout_;};
+    int get_minf() const {return minf_;};
   private:
-    int minf_, pinf_, pout_;
+    int pinf_, pout_, minf_;
 } BcList;
 
 struct realData
