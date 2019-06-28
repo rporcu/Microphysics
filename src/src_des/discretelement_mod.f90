@@ -28,24 +28,6 @@
 ! End Output/debug controls
 !-----------------------------------------------------------------<<<
 
-! DES - Continuum
-      logical :: des_continuum_coupled
-      logical :: des_explicitly_coupled
-
-! With this logic the particles see the fluid but the fluid does
-! not see the particles.
-      logical :: des_oneway_coupled
-
-! Collision model, options are as follows
-!   linear spring dashpot model (default/undefined)
-!   'hertzian' model
-      character(len=64) :: des_coll_model
-      integer,parameter :: invalid_coll=-1
-      integer,parameter :: hertzian=0
-      integer,parameter :: lsd=1
-
-      integer :: des_coll_model_enum = invalid_coll
-
 ! Value of solids time step based on particle properties
       real(rt) :: dtsolid
 
@@ -74,19 +56,18 @@
       real(rt) :: MEW, MEW_W
 
 ! coeff of restituion input in one D array, solid solid
-! Tangential rest. coef. are used for hertzian collision model but not linear
       real(rt) :: DES_EN_INPUT(DIM_M+DIM_M*(DIM_M-1)/2)
-      real(rt) :: DES_ET_INPUT(DIM_M+DIM_M*(DIM_M-1)/2)
 
 ! coeff of restitution input in one D array, solid wall
       real(rt) :: DES_EN_WALL_INPUT(DIM_M)
-      real(rt) :: DES_ET_WALL_INPUT(DIM_M)
 
-! Hertzian collision model:
-      real(rt) :: E_YOUNG(DIM_M), Ew_YOUNG
-      real(rt) :: V_POISSON(DIM_M), Vw_POISSON
-      real(rt) :: HERT_KN(DIM_M, DIM_M), HERT_KWN(DIM_M)
-      real(rt) :: HERT_KT(DIM_M, DIM_M), HERT_KWT(DIM_M)
+      real(rt) :: dp_max(dim_m) = -1.0d0
+      real(rt) :: dp_min(dim_m) = -1.0d0
+      real(rt) :: dp_avg(dim_m) = -1.0d0
+
+      real(rt) :: ro_max(dim_m) = -1.0d0
+      real(rt) :: ro_min(dim_m) = -1.0d0
+      real(rt) :: ro_avg(dim_m) = -1.0d0
 
 ! End particle-particle and particle-wall collision model parameters
 !-----------------------------------------------------------------<<<

@@ -11,123 +11,11 @@
 
 # Building MFIX-Exa
 
-There are two options to building MFIX-Exa:
-
-o __SUPERBUILD (default):__  Utilities download and build AMReX as
-   part of the MFIX-Exa build process. This method is strongly
-   encouraged as it ensures configure options for MFIX-Exa and
-   AMReX are consistent.
-
-o __Using an existing AMReX Library:__  MFIX-Exa is linked to an
-   existing AMReX installation. This is ideal for continuous
-   integration severs (CI) and regression testing applications.
-   AMReX library version must meet MFIX-Exa requirements.
-
-## SUPERBUILD Instructions (recommended)
-
-When building in __SUPERBUILD__ mode, MFIX-Exa build system will take 
-care of downloading, configuring and installing AMReX as part of the
-MFIX-Exa build. The following commands build MFIX-Exa and AMReX in a single step.
-
-```shell
-> git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
-> cd mfix
-> mkdir build
-> cd build
-> cmake CONFIG_OPTIONS ..
-> make -j
-```
-AMReX is built the first time the `make` command is issued.
-No external installation of AMReX is needed. However, internet access
-to the AMReX github repository is required.
-The optional string `CONFIG_OPTIONS` allows to customize the build of both AMReX and MFIX-Exa.
-`CONFIG_OPTIONS` is a list of one or more configuration options given in the form
-__-D__*OPTION=VALUE*`.
- 
-The table below lists configuration options, possible values, and their effect on the build.
-Options prefixed by `AMREX_` are specific to the build of AMReX.
-
-| Option name                  |  Description                                       | Possible values              | Default value       |
-| -----------------------------|----------------------------------------------------|------------------------------|---------------------|
-| DEBUG                        | Build in debug mode                                |   ON/OFF                     |   OFF               |
-| CMAKE_Fortran_FLAGS          | User-defined Fortran flags  for MFIX build         | valid F90 compiler flags     |   None              |
-| CMAKE_CXX_FLAGS              | User-defined C++ flags for MFIX build              | valid C++ compiler flags     |   None              |
-| AMREX_Fortran_FLAGS          | User-defined Fortran flags  for AMReX build        | valid F90 compiler flags     |   None              |
-| AMREX_CXX_FLAGS              | User-defined C++ flags for AMReX build             | valid C++ compiler flags     |   None              |
-| ENABLE_MPI                   | Enable build with MPI                              |   0/1                        |   1                 |
-| ENABLE_OMP                   | Enable build with OpenMP                           |   0/1                        |   0                 |
-| ENABLE_FPE                   | Build with Floating-Point Exceptions checks        |   0/1                        |   0                 |
-| ENABLE_PTESTS                | Include tests for projection method in Ctest suite |   0/1                        |   0                 |
-| AMREX_ENABLE_DP              | Enable double precision                            |   0/1                        |   1                 |
-| AMREX_ENABLE_DP_PARTICLES    | Enable double precision in particles classes       |   0/1                        |   1                 |
-| AMREX_ENABLE_BASE_PROFILE    | Include profiling info                             |   0/1                        |   0                 |
-| AMREX_ENABLE_TINY_PROFILE    | Include tiny profiling info                        |   0/1                        |   0                 |
-| AMREX_ENABLE_COMM_PROFILE    | Include communicators profiling info               |   0/1                        |   0                 |               
-| AMREX_ENABLE_TRACE_PROFILE   | Include trace profiling info                       |   0/1                        |   0                 |              
-| AMREX_ENABLE_MEM_PROFILE     | Include memory profiling info                      |   0/1                        |   0                 |
-| AMREX_ENABLE_BACKTRACE       | Include backtrace info                             |   0/1                        |   0                 |
-| AMREX_ENABLE_PROFPARSER      | Include profile parser                             |   0/1                        |   0                 |
-| AMREX_ENABLE_PIC             | Build position-independent code                    |   0/1                        |   0                 |              
-| AMREX_ENABLE_ASSERTION       | Build position-independent code                    |   0/1                        |   0                 |
-| AMREX_GIT_COMMIT             | AMReX commit to be used in the build               | valid git commit id/branch   |   None              |
-| AMREX_INSTALL_DIR            | Global path to AMReX install directory             | valid global path            |   None (superbuild) |
- 
-`SUPERBUILD mode is enabled automatically when AMREX_INSTALL_DIR is not given.`
-
-Example: build mfix with custom fortran flags, AMReX profiling enabled and single precision particles:
-
-```
-cmake -DMFIX_FFLAGS_OVERRIDES="custom flags" -DAMREX_ENABLE_BASE_PROFILE=1 -DAMREX_ENABLE_DP_PARTICLES=0 ..
-```  
-
-## Building MFIX-Exa using a separate AMReX installation (no superbuild)
-
-### Build AMReX Library
-
-Clone AMReX from the official Git repository and checkout the _development_ branch.
-```shell
-> git clone https://github.com/AMReX-Codes/amrex.git
-> cd amrex
-> git checkout development
-```
-Next, configure, build and install AMReX as follows: 
-```shell
-> cmake AMREX_CONFIG_OPTIONS -DENABLE_PARTICLES=1 -DENABLE_AMRDATA=1 -DENABLE_EB=1 -DENABLE_3D_NODAL_MLMG=1 -DCMAKE_INSTALL_PREFIX:PATH=/absolute/path/to/installdir .
-> make install
-```
-Here,`AMREX_CONFIG_OPTIONS` are optional configure options for AMReX. Please refer to the AMReX user guide
-for a list of all the possible configuration options. The only options required are __-DENABLE_PARTICLES=1__, __-DENABLE_AMRDATA=1__, and  __-DENABLE_EB=1__.
-
-### Building MFIX-Exa
-Clone and build MFIX-Exa.
-```shell
-> git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
-> mkdir build
-> cd build
-> cmake CONFIG_OPTIONS -DAMREX_INSTALL_DIR=/absolute/path/to/amrex/installdir ..
-> make -j
-```
-Here, `CONFIG_OPTIONS` are MFIX-Exa specific configuration options, that is, any option NOT prefixed by `AMREX_`
-in the table above. Options prefixed by `AMREX_` are always ignored 
-when using an external AMReX installation.
-
-## Few more notes on building MFIX-Exa
-The system defaults compilers can be overwritten as follows:
-```shell
-> cmake -DCMAKE_CXX_COMPILER=<c++-compiler> -DCMAKE_Fortran_COMPILER=<f90-compiler> CONFIG_OPTIONS  ..
-```
-When building on a platform that uses the `module` utility, use either the above command (with full
-path to the compilers) or the following:
-```shell
-> cmake -DCMAKE_CXX_COMPILER=CC -DCMAKE_Fortran_COMPILER=ftn CONFIG_OPTIONS  ..
-```
-
-MFIX-Exa uses the same compiler flags used to build AMReX, unless `CMAKE_Fortran_FLAGS`/`CMAKE_CXX_FLAGS` is explicitly
-provided, or the environmental variables `FFLAGS`/`CXXFLAGS` are set.
+Refer to the **[MFiX-Exa user guide](https://amrex-codes.github.io/MFIX-Exa/docs_html/GettingStarted.html)** for instructions on how to build MFiX-Exa.
 
 
 # Running MFIX Test Suite
-MFIX-Exa comes  with several tests aimed at evaluating software functionalities.
+MFIX-Exa comes with several tests aimed at evaluating software functionalities.
 The source files as well as the required input files for each test are located in
 the `tests` directory. The `tests` directory is copied to the build directory
 during MFIX-Exa configuration process. When a test is run (see below), output
@@ -140,14 +28,6 @@ o To compare results to archived flow slices stored in `AUTOTEST`
   must point to the location of the AMReX `fextract` utility located
   in the directory, `amrex/Tools/PostProcessing/F_Src`. Additionally,
   `numdiff` must be installed for comparing results.
-
-o To compare point-by-point field data, the environment variable
-  `FCOMPARE` must point the AMReX utility `plt_compare_diff_grids`
-  found in the directory, `amrex/Tools/PostProcessing/F_Src`.
-  Additionally, the environment variable `MFIX_BENCHMARKS_HOME`
-  must point to the location of a local regression test data set.
-  See _Generating local regression test data_ for instructions on
-  creating a local regression test data set.
 
 ## Run all tests
 ```shell
@@ -185,22 +65,22 @@ If GRID variable is not defined, the default is to run the tests for all grid ty
 
 ## Run a user-defined case
 ```shell
-> ./mfix inputs-myrun 
+> ./mfix inputs-myrun
 ```
 _inputs-myrun_ is a text file containing the AMReX input parameters; this can be named anything
 as long as it is the __first__ argument following the executable.  Note that many of the problem
-parameters are still defined in _mfix.dat_. 
+parameters are still defined in _mfix.dat_.
 
 # See the User's Guide for more about MFIX-Exa
 
-To build the User's Guide, 
+To build the User's Guide,
 
 ```shell
 > cd doc/UsersGuide
-> make 
+> make
 ```
 
-This will build a pdf of the MFIX-Exa User's Guide, which contains information
+This will build a PDF of the MFIX-Exa User's Guide, which contains information
 about the equations being solved, run-time parameters, checkpoint/restart
 capability, options for visualization and more.
 
@@ -219,12 +99,13 @@ mkdir /home/user/exa-rt/benchmark
 cd /home/user/exa-rt
 git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
 git clone https://github.com/AMReX-Codes/amrex.git
+git clone https://github.com/AMReX-Codes/regression_testing.git
 ```
 
 2. Create a local copy the regression test setup file from the
 MFIX repository.
 ```shell
-cp mfix/RegressionTesting/MFIX-tests.ini MFIX-local.ini
+cp mfix/tools/MFIX-tests.ini MFIX-local.ini
 ```
 
 3. Edit the local setup file.
@@ -240,18 +121,20 @@ Specify the AMReX source directory location under the `[AMReX]` heading.
 [AMReX]
 dir = /home/user/exa-rt/amrex
 branch = development
+cmakeSetupOpts = -DENABLE_AMRDATA=ON -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_PARTICLES=ON -DENABLE_EB=ON 
 ```
 Specify the MFIX-Exa source directory location under the `[source]` heading.
 ```shell
 [source]
 dir = /home/user/exa-rt/mfix
 branch = develop
+cmakeSetupOpts = -DAMReX_ROOT=/home/user/exa-rt/amrex/installdir
 ```
 4. Run the AMReX regression test tool. The second argument is a user
 supplied comment.
 ```shell
 cd /home/user/exa-rt
-amrex/Tools/RegressionTesting/regtest.py --make_benchmarks "MFIX" MFIX-local.ini
+regression_testing/regtest.py --make_benchmarks "MFIX" MFIX-local.ini
 ```
 
 

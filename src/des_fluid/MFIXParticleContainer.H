@@ -8,8 +8,28 @@
 #include "AMReX_Particles.H"
 #include "AMReX_NeighborParticles.H"
 
+#include "mfix_des_F.H"
+#include "MFIX_DEM_Parms.H"
+
 using namespace amrex;
 using namespace std;
+
+// Boundary conditions list auxiliary structure
+//
+typedef class BcList {
+  public:
+    BcList(const int pinf, const int pout, const int minf)
+      : pinf_(pinf)
+      , pout_(pout) 
+      , minf_(minf)
+    {}
+
+    int get_pinf() const {return pinf_;};
+    int get_pout() const {return pout_;};
+    int get_minf() const {return minf_;};
+  private:
+    int pinf_, pout_, minf_;
+} BcList;
 
 struct realData
 {
@@ -42,6 +62,22 @@ struct intData
     };
 };
 
+///
+/// We add a particle to the neighbor list if its center is within 3 particle radii
+///
+struct MFIXCheckPair
+{
+    template <class P>
+    AMREX_GPU_DEVICE AMREX_INLINE
+    bool operator()(const P& p1, const P& p2) const
+    {
+        return AMREX_D_TERM(   (p1.pos(0) - p2.pos(0))*(p1.pos(0) - p2.pos(0)) ,
+                             + (p1.pos(1) - p2.pos(1))*(p1.pos(1) - p2.pos(1)) ,
+                             + (p1.pos(2) - p2.pos(2))*(p1.pos(2) - p2.pos(2)) )
+            <= DEMParams::neighborhood;
+    }
+};
+
 class MFIXParIter
     : public amrex::ParIter<realData::count,intData::count,0,0>
 {
@@ -55,23 +91,6 @@ class MFIXParticleContainer final
 public:
 
     using MyConstParIter = ParConstIter<realData::count,intData::count,0,0>;
-    // Data type returned by MFIXParIter::ArrayOfStructs::data (accesses
-    // particle data represented by realData)
-    //using RealType       = typename ParticleType::RealType;
-    //using AoS            = ArrayOfStructs<realData::count, intData::count>;
-
-    ///
-    /// We add a particle to the neighbor list if its center is within 3 particle radii
-    ///
-    struct {
-        bool operator()(const ParticleType& p1, const ParticleType& p2) const
-        {
-            return AMREX_D_TERM(   (p1.pos(0) - p2.pos(0))*(p1.pos(0) - p2.pos(0))   ,
-                                   + (p1.pos(1) - p2.pos(1))*(p1.pos(1) - p2.pos(1)) ,
-                                   + (p1.pos(2) - p2.pos(2))*(p1.pos(2) - p2.pos(2)) )
-                <= 9.0*p1.rdata(0)*p1.rdata(0);
-        }
-    } MFIXCheckPair;
 
     // Get number of particles
     int NumberOfParticles(MFIXParIter& pti){
@@ -101,21 +120,19 @@ public:
             const MultiFab * ls_phi, const iMultiFab * ls_valid, const int ls_refinement,
             MultiFab * cost, std::string & knapsack_weight_type);
 
-    void GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro)[10]);
+    void GetParticleAvgProp(Real (&min_dp)[10], Real (&min_ro)[10],
+                            Real (&max_dp)[10], Real (&max_ro)[10],
+                            Real (&avg_dp)[10], Real (&avg_ro)[10]);
 
     //Real GetMaxRadius(int lev);
 
     void UpdateMaxVelocity();
-    void UpdateMaxForces(std::map<PairIndex, Vector<Real>> pfor,
-                         std::map<PairIndex, Vector<Real>> wfor);
+    void UpdateMaxForces(std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> pfor,
+                         std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> wfor);
     RealVect GetMaxVelocity();
     Vector<RealVect> GetMaxForces();
 
     void BalanceParticleLoad_KDTree();
-    ///
-    /// Write out all particles at a level in the format fcompare_par can read
-    ///
-    void writeAllForComparison(int lev);
 
     ///
     /// Write out all particles in the format of the particle_input.dat files so we
@@ -141,6 +158,7 @@ public:
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
+                            const BcList & bc_list,
                             int nghost);
 
     void CapSolidsVolFrac(amrex::MultiFab& eps);
@@ -156,13 +174,13 @@ public:
                        const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
                        const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
                        const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
+                       const BcList & bc_list,
                        int fortran_particle_comp, int nghost);
 
     ///
     /// Calculate particle-induced drag on the fluid
     ///
-    void CalcDragOnFluid(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
-                         const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+    void CalcDragOnFluid(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
                          const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
@@ -175,8 +193,7 @@ public:
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-    void PICMultiDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_mf,
-                            const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & beta_vel_mf,
+    void PICMultiDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
                             const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory> > & ebfactory,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
                             const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
@@ -193,18 +210,19 @@ public:
             const amrex::Real time,
             const string& basename,
             const Vector<int>& avg_vel_p,
-            const Vector<Real>& avg_region_x_w,
-            const Vector<Real>& avg_region_x_e,
-            const Vector<Real>& avg_region_y_s,
-            const Vector<Real>& avg_region_y_n,
-            const Vector<Real>& avg_region_z_b,
-            const Vector<Real>& avg_region_z_t );
+            const Gpu::ManagedDeviceVector<Real>& avg_region_x_w,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_x_e,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_y_s,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_y_n,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_z_b,
+            const Gpu::ManagedDeviceVector<Real>& avg_region_z_t );
 
 private:
 
     int nlev;
 
     static Real gravity[3];
+    static int domain_bc[6];
 
     ///
     /// We add a particle to the neighbor list if it's center is within 3 particle radii
@@ -217,9 +235,6 @@ private:
 
     static void ReadStaticParameters ();
 
-    static bool use_neighbor_list;
-    static bool sort_neighbor_list;
-
     // Local containers for: maxvel - the maximum (absolute) velocity
     //                       maxpfor - the max (abs) particle-particle force
     //                       maxwfor - the max (abs) particle-wall force
@@ -227,7 +242,8 @@ private:
     RealVect loc_maxpfor;
     RealVect loc_maxwfor;
 
-    void time_advance(MFIXParIter& pti, int ntot, Real subdt, Vector<Real>& tow, Vector<Real>& fc);
+    void time_advance(MFIXParIter& pti, int ntot, Real subdt,
+                      Gpu::ManagedDeviceVector<Real>& tow, Gpu::ManagedDeviceVector<Real>& fc);
 
     void set_particle_properties(int pstate, Real pradius, Real pdensity,
                                  Real& pvol, Real& pmass, Real& omoi, Real& omega);

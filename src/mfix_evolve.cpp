@@ -1,9 +1,4 @@
-#include <AMReX_ParmParse.H>
-
-#include <mfix_F.H>
 #include <mfix.H>
-#include <AMReX_BC_TYPES.H>
-#include <AMReX_Box.H>
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
@@ -53,9 +48,11 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     Real start_particles = ParallelDescriptor::second();
 
     BL_PROFILE_VAR("PARTICLES SOLVE",particlesSolve);
+
+    amrex::Gpu::setLaunchRegion(true);
+
     if (solve_dem)
     {
-
         if (nlev == 1)
         {
             //___________________________________________________________________
@@ -95,8 +92,9 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                     particle_cost[lev].get(), knapsack_weight_type);
             }
         }
-
     }
+
+    amrex::Gpu::setLaunchRegion(false);
     BL_PROFILE_VAR_STOP(particlesSolve);
 
     Real end_particles = ParallelDescriptor::second() - start_particles;

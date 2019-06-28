@@ -17,18 +17,19 @@ particles.tile_size       = 1024 1024 1024
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
 
+mfix.drag_type = "BVK2"
 
 ### Simulation Runtime Parameters
 
 #  Run time of simulation
 amr.stop_time = 3.20
 #amr.restart   ="chk32000"
-# Projection Method
-#mfix.use_proj_method   = 1
-# Regrinding and Load Balancing
+
+# Regridding and Load Balancing
 amr.dual_grid          = 0
 amr.regrid_int         = 25
 mfix.load_balance_type = "KnapSack"
+
 # default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
 # this option is only relevant if load_balance_type = KnapSack
 mfix.knapsack_weight_type = "NumParticles"

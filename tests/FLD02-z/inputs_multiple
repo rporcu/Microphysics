@@ -6,11 +6,9 @@ amrex.fpe_trap_invalid = 1
 #! Fluid solver
 #!-----------------------------------------------------------//
 
+mfix.steady_state     = 1
 mfix.steady_state_tol = 1.0e-5
 mfix.steady_state_max_iter = 500
-
-mfix.explicit_diffusion = 0
-mfix.fixed_dt           = 0
 
 amr.blocking_factor = 4
 
@@ -55,6 +53,28 @@ fabarray.mfiter_tile_size = 1024 1024 1024
 particles.tile_size = 1024 1024 1024
 
 
+#! EB settings
+#!-----------------------------------------------------------//
+
+zlo.type = "mi"
+zlo.velocity =     10.0
+
+zhi.type = "po"
+zhi.pressure = 101325.0
+
+xlo.type = "nsw"
+xlo.location = 0.005
+
+xhi.type = "nsw"
+xhi.location = 0.015
+
+ylo.type = "nsw"
+ylo.location = 0.005
+
+yhi.type = "nsw"
+yhi.location = 0.015
+
+
 #_______________________________________________________________________
 # IO / Checkpointing
 
@@ -70,3 +90,5 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="restart-file"
+
+amr.plt_regtest = 1

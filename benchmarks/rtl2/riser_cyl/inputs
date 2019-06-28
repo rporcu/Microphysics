@@ -5,25 +5,21 @@
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.fixed_dt         = 0
 
 mfix.cfl = 0.5
 
-#amr.max_step = 100
 amr.stop_time = 3.0
 
-mfix.explicit_diffusion = 0
-
 mfix.particle_init_type = "Auto"
+mfix.drag_type = "BVK2"
 
 amr.blocking_factor = 2
 
-mac.mg_verbose          = 1
+mac.mg_verbose     = 0
+mac.mg_cg_verbose  = 0
 
-diffusion.mg_verbose = 0
-
-mfix.mg_verbose         = 1
-mfix.mg_cg_verbose      = 0
+mfix.mg_verbose    = 1
+mfix.mg_cg_verbose = 0
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -45,8 +41,8 @@ amr.n_cell =  40   10   10
 
 # Fluid
 amr.max_grid_size_x = 1024
-amr.max_grid_size_y = 6
-amr.max_grid_size_z = 6
+amr.max_grid_size_y = 5
+amr.max_grid_size_z = 5
 
 # Particles (not with KDTree)
 #particles.max_grid_size_x =   32
@@ -66,13 +62,8 @@ particles.tile_size = 1024 1024 1024
 #! EB settings
 #!-----------------------------------------------------------//
 
-# Level-set refinement and padding
+# Level-set refinement 
 mfix.levelset__refinement    = 4 # levelset resolution
-mfix.levelset__pad           = 4 # levelset influence in refined units
-
-# EB refinement and padding
-# => only needed when using multiple grids
-mfix.levelset__eb_pad        = 2 # EB extends into neighboring grids
 
 mfix.write_eb_surface = false  # Needed to output eb-surfaces
 
@@ -89,6 +80,9 @@ cylinder.height = -1.0
 
 cylinder.direction = 0
 cylinder.center    =  0.004   0.001   0.001
+
+#! BCs 
+#!-----------------------------------------------------------//
 
 #_______________________________________________________________________
 # Particle load balancing

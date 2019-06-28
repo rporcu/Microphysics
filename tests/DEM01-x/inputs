@@ -1,5 +1,7 @@
 amr.stop_time = 0.5
 
+mfix.fixed_dt = 5.e-3
+
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 4 4 4
 
@@ -28,3 +30,5 @@ amr.check_file = DEM01_chk
 
 amr.par_ascii_int  = 1
 amr.par_ascii_file = DEM01_par
+
+amr.plt_regtest = 1

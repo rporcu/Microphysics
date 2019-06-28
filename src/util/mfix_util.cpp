@@ -9,7 +9,6 @@ mfix::check_for_nans (int lev)
     bool vg_has_nans = vel_g[lev] -> contains_nan (1);
     bool wg_has_nans = vel_g[lev] -> contains_nan (2);
     bool pg_has_nans =   p_g[lev] -> contains_nan (0);
-    bool ropg_has_nans = rop_g[lev] -> contains_nan (0);
 
     if (ug_has_nans)
   amrex::Print() << "WARNING: u_g contains NaNs!!!";
@@ -22,10 +21,6 @@ mfix::check_for_nans (int lev)
 
     if (pg_has_nans)
   amrex::Print() << "WARNING: p_g contains NaNs!!!";
-
-    if (ropg_has_nans)
-  amrex::Print() << "WARNING: rop_g contains NaNs!!!";
-
 }
 
 //
@@ -71,6 +66,12 @@ mfix::mfix_compute_vort ()
        {
           // Tilebox
           Box bx = mfi.tilebox ();
+          const Real* dx = geom[lev].CellSize();
+
+          Array4<Real> const& vorticity = vort[lev]->array(mfi);
+          Array4<Real> const& velocity_g = vel_g[lev]->array(mfi);
+
+          const Real odx(1./dx[0]), ody(1./dx[1]), odz(1./dx[2]);
 
           // This is to check efficiently if this tile contains any eb stuff
           const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
@@ -78,70 +79,175 @@ mfix::mfix_compute_vort ()
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
           {
-            compute_vort (
-                        BL_TO_FORTRAN_BOX(bx),
-                        BL_TO_FORTRAN_ANYD((* vort[lev])[mfi]),
-                        BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                        geom[lev].CellSize());
+            AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+            {
+              Real uy = .5*ody*(velocity_g(i,j+1,k,0) - velocity_g(i,j-1,k,0));
+              Real uz = .5*odz*(velocity_g(i,j,k+1,0) - velocity_g(i,j,k-1,0));
+              Real vx = .5*odx*(velocity_g(i+1,j,k,1) - velocity_g(i-1,j,k,1));
+              Real vz = .5*odz*(velocity_g(i,j,k+1,1) - velocity_g(i,j,k-1,1));
+              Real wx = .5*odx*(velocity_g(i+1,j,k,2) - velocity_g(i-1,j,k,2));
+              Real wy = .5*ody*(velocity_g(i,j+1,k,2) - velocity_g(i,j-1,k,2));
+
+              vorticity(i,j,k) = std::sqrt((wy-vz)*(wy-vz) +
+                                           (uz-wx)*(uz-wx) +
+                                           (vx-uy)*(vx-uy));
+            });
           } else {
              vort[lev]->setVal( 0.0, bx, 0, 1);
           }
        }
     }
+
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+}
+
+//
+// Compute norm0 of EB multifab
+//
+Real
+mfix::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
+{
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), ncomp, ngrow, 
+                    MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy( mf_tmp, *mf[lev], comp, 0, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+
+   return mf_tmp.norm0( 0 );
+}
+
+//
+// Compute norm0 of EB multifab
+//
+Real
+mfix::mfix_norm0 ( MultiFab& mf, int lev, int comp )
+{
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow, 
+                    MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+
+   return mf_tmp.norm0( 0 );
+}
+
+//
+// Compute max of EB multifab
+//
+Real
+mfix::mfix_max ( MultiFab& mf, int lev, int comp )
+{
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow, 
+                    MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
+   EB_set_covered( mf_tmp, -1.e100 );
+
+   return mf_tmp.max( 0 );
+}
+
+//
+// Compute min of EB multifab
+//
+Real
+mfix::mfix_min ( MultiFab& mf, int lev, int comp )
+{
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow, 
+                    MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
+   EB_set_covered( mf_tmp, 1.e100 );
+
+   return mf_tmp.min( 0 );
+}
+
+//
+// Compute norm1 of EB multifab
+//
+Real
+mfix::mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
+{
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), ncomp, ngrow, 
+                    MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy( mf_tmp, *mf[lev], comp, 0, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+
+   return mf_tmp.norm1( 0, geom[lev].periodicity() );
+}
+
+//
+// Compute norm1 of EB multifab
+//
+Real
+mfix::mfix_norm1 ( MultiFab& mf, int lev, int comp )
+{
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow, 
+                    MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
+   EB_set_covered( mf_tmp, 0.0 );
+
+   return mf_tmp.norm1( 0, geom[lev].periodicity() );
 }
 
 //
 // Subroutine to compute norm0 of EB multifab
 //
 Real
-mfix::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
+mfix::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf1,
+                   const Vector< std::unique_ptr<MultiFab>>& mf2,
+                   int lev, int comp1, int comp2 )
 {
-   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
-                    0,  MFInfo(), *ebfactory[lev]);
+   BL_ASSERT((*mf1[lev]).boxArray() == (*mf2[lev]).boxArray());
 
-   MultiFab::Copy( mf_tmp, *mf[lev], comp, comp, 1, 0 );
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf1[lev]->boxArray(), mf1[lev]->DistributionMap(), ncomp, ngrow,
+                    MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy    ( mf_tmp, *mf1[lev], comp1, 0, 1, 0 );
+   MultiFab::Multiply( mf_tmp, *mf2[lev], comp2, 0, 1, 0 );
+
    EB_set_covered( mf_tmp, 0.0 );
 
-   return mf_tmp.norm0( comp );
+   return mf_tmp.norm0( 0 );
 }
 
-Real
-mfix::mfix_norm0 ( MultiFab& mf, int lev, int comp )
-{
-   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), mf.nComp(),
-                    0,  MFInfo(), *ebfactory[lev]);
-
-   MultiFab::Copy( mf_tmp, mf, comp, comp, 1, 0 );
-   EB_set_covered( mf_tmp, 0.0 );
-
-   return mf_tmp.norm0( comp );
-}
 
 //
-// Subroutine to compute norm1 of EB multifab
+// Compute norm0 (max norm / inf norm) of product of EB multifabs
 //
 Real
-mfix::mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
+mfix::mfix_norm0 ( MultiFab& mf1, MultiFab& mf2, int lev, int comp1, int comp2)
 {
-   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
-                    0,  MFInfo(), *ebfactory[lev]);
+   BL_ASSERT(mf1.boxArray() == mf2.boxArray());
 
-   MultiFab::Copy( mf_tmp, *mf[lev], comp, comp, 1, 0 );
+   int ncomp = 1;
+   int ngrow = 0;
+   MultiFab mf_tmp( mf1.boxArray(), mf1.DistributionMap(), ncomp, ngrow,  
+                    MFInfo(), *ebfactory[lev]);
+
+   MultiFab::Copy    ( mf_tmp, mf1, comp1, 0, 1, 0 );
+   MultiFab::Multiply( mf_tmp, mf2, comp2, 0, 1, 0 );
+
    EB_set_covered( mf_tmp, 0.0 );
 
-   return mf_tmp.norm1( comp, geom[lev].periodicity() );
-}
-
-Real
-mfix::mfix_norm1 ( MultiFab& mf, int lev, int comp )
-{
-   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), mf.nComp(),
-                    0,  MFInfo(), *ebfactory[lev]);
-
-   MultiFab::Copy( mf_tmp, mf, comp, comp, 1, 0 );
-   EB_set_covered( mf_tmp, 0.0 );
-
-   return mf_tmp.norm1( comp, geom[lev].periodicity() );
+   return mf_tmp.norm0( 0 );
 }
 
 Real
@@ -154,25 +260,47 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
+#ifdef AMREX_USE_CUDA
+    Gpu::DeviceScalar<Real> sum_gpu(sum);
+    Real* psum = sum_gpu.dataPtr();
+#endif
+
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:sum) if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(mf,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
     {
         const FArrayBox& fab = mf[mfi];
 
-        const Box& box  = mfi.tilebox();
-        const int* lo   = box.loVect();
-        const int* hi   = box.hiVect();
+        const unsigned int fab_numPts = fab.numPts();
+        Array4<const Real> const& rho = fab.array();
 
-#pragma gpu
-  mfix_sum_mf(AMREX_INT_ANYD(lo),AMREX_INT_ANYD(hi),BL_TO_FORTRAN_N_ANYD(fab,comp),
-          AMREX_REAL_ANYD(dx),BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),
-                    AMREX_MFITER_REDUCE_SUM(&sum));
+        const Box& box  = mfi.tilebox();
+
+        Array4<const Real> const& vol = volfrac->array(mfi);
+
+        const unsigned int offset = comp * fab_numPts;
+
+        AMREX_HOST_DEVICE_FOR_3D(box, i, j, k,
+        {
+          Real dm(0);
+
+          dm = rho(i+offset,j,k) * vol(i,j,k);
+
+#ifdef AMREX_USE_CUDA
+          Gpu::Atomic::Add(psum,dm);
+#else
+          sum += dm;
+#endif
+        });
     }
 
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
+
     if (!local)
-  ParallelDescriptor::ReduceRealSum(sum);
+        ParallelDescriptor::ReduceRealSum(sum);
 
     return sum;
 }

@@ -30,9 +30,6 @@
 ! Brief description of the problem.
       CHARACTER(LEN=60) :: DESCRIPTION
 
-! Stop-time of the run.
-      real(rt) :: tstop
-
 ! Start-time of des-loop
 ! (updated by des_init_time_loop)
       real(rt) :: des_tstart
@@ -42,15 +39,6 @@
 
 ! If .TRUE. call user-defined subroutines
       logical :: CALL_USR
-
-! Maximum Time step.
-      real(rt) :: dt_max
-
-! Minimum Time step.
-      real(rt) :: dt_min
-
-! Time step adjustment factor (<1.0)
-      real(rt) :: dt_fac
 
 ! Current time step (super-step)
 ! (updated by des_init_time_loop)

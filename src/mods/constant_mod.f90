@@ -23,12 +23,17 @@
 ! Universal gas constant; (Pa.m3/kmol.K)
       real(rt), parameter :: gas_const = 8314.56D0
 
-! Pi, the ubiquitous irrational number
-      real(rt), PARAMETER :: pi = 4.d0*atan(1.d0)
-
 ! Solids phase constants
 !-----------------------------------------------------------------------
 ! Number of solids phases
       integer :: mmax = 0
+      
+      contains
+
+      subroutine get_gravity (grav_out) bind(C)
+          use amrex_fort_module, only: rt => amrex_real
+          real(rt), intent(out)  :: grav_out(3)
+          grav_out(:) = gravity(:)
+      end subroutine get_gravity
 
       END MODULE constant

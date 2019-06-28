@@ -17,8 +17,10 @@ amr.max_level = 0
 amr.plot_int   = 10
 #amr.plot_file  = DEM06_plt
 
-# Use projection method
-mfix.use_proj_method = 1
+amr.stop_time = 1.0
+
+mfix.fixed_dt = 0.5
+
 vortices_plane=1
 
 # Geometry
@@ -26,3 +28,5 @@ geometry.coord_sys   = 0                  # 0: Cartesian
 geometry.is_periodic = 1     1     1      # Is periodic in each direction?
 geometry.prob_lo     = 0.    0.    0.       # lo corner of physical domain
 geometry.prob_hi     = 1.    1.    1.     # hi corner of physical domain
+
+amr.plt_regtest = 1

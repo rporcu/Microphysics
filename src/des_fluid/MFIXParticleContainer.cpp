@@ -19,13 +19,17 @@
 #include "mfix_des_F.H"
 #include "mfix_eb_F.H"
 #include "mfix_util_F.H"
+#include "mfix_des_K.H"
+#include "bc_mod_F.H"
+#include "constant_mod_F.H"
+#include "MFIX_DEM_Parms.H"
 
 using namespace amrex;
 using namespace std;
 
-bool MFIXParticleContainer::use_neighbor_list  {true};
-bool MFIXParticleContainer::sort_neighbor_list {false};
 Real MFIXParticleContainer::gravity[3] {0.0};
+
+int  MFIXParticleContainer::domain_bc[6] {0};
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     : NeighborParticleContainer<realData::count,intData::count>
@@ -49,153 +53,14 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     setIntCommComp(3, false);
 
     nlev = amr_core->maxLevel() + 1;
+
+    get_domain_bc(domain_bc);
 }
 
 void MFIXParticleContainer::AllocData ()
 {
     reserveData();
     resizeData();
-
-}
-
-void MFIXParticleContainer::InitParticlesAscii(const std::string& file)
-{
-
-  // only read the file on the IO proc
-  if (ParallelDescriptor::IOProcessor())  {
-    std::ifstream ifs;
-    ifs.open(file.c_str(), std::ios::in);
-
-    if (!ifs.good())
-      amrex::FileOpenFailed(file);
-
-    int np = -1;
-    ifs >> np >> std::ws;
-
-    // Issue an error if nparticles = 0 is specified
-    if ( np == -1 ){
-      Abort("\nCannot read number of particles from particle_input.dat: file is corrupt.\
-                   \nPerhaps you forgot to specify the number of particles on the first line??? ");
-    }
-
-    // we add all the particles to grid 0 and tile 0 and let
-    // Redistribute() put them in the right places.
-    const int lev  = 0;
-    const int grid = 0;
-    const int tile = 0;
-
-    auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
-
-    ParticleType p;
-    int        pstate, pphase;
-    Real       pradius, pdensity, pvolume, pomoi, pmass, pomega;
-
-    pstate = 1;
-
-    for (int i = 0; i < np; i++) {
-
-      // Read from input file
-      ifs >> pphase;
-      ifs >> p.pos(0);
-      ifs >> p.pos(1);
-      ifs >> p.pos(2);
-      ifs >> pradius;
-      ifs >> pdensity;
-      ifs >> p.rdata(realData::velx);
-      ifs >> p.rdata(realData::vely);
-      ifs >> p.rdata(realData::velz);
-
-      // Set id and cpu for this particle
-      p.id()  = ParticleType::NextID();
-      p.cpu() = ParallelDescriptor::MyProc();
-
-      // Compute other particle properties
-      set_particle_properties( pstate, pradius, pdensity, pvolume, pmass, pomoi, pomega);
-
-      // Set other particle properties
-      p.idata(intData::phase)     = pphase;
-      p.idata(intData::state)     = pstate;
-      p.rdata(realData::volume)   = pvolume;
-      p.rdata(realData::density)  = pdensity;
-      p.rdata(realData::mass)     = pmass;
-      p.rdata(realData::oneOverI) = pomoi;
-      p.rdata(realData::radius)   = pradius;
-      p.rdata(realData::omegax)   = pomega;
-      p.rdata(realData::omegay)   = pomega;
-      p.rdata(realData::omegaz)   = pomega;
-
-      // Initialize these for I/O purposes
-      p.rdata(realData::dragx)    = 0.0;
-      p.rdata(realData::dragy)    = 0.0;
-      p.rdata(realData::dragz)    = 0.0;
-
-      // Add everything to the data structure
-      particle_tile.push_back(p);
-
-      if (!ifs.good())
-          amrex::Abort("Error initializing particles from Ascii file. \n");
-    }
-  }
-  Redistribute();
-}
-
-void MFIXParticleContainer::InitParticlesAuto()
-{
-  int lev = 0;
-
-  Real dx = Geom(lev).CellSize(0);
-  Real dy = Geom(lev).CellSize(1);
-  Real dz = Geom(lev).CellSize(2);
-
-  int total_np = 0;
-
-  // This uses the particle tile size. Note that the default is to tile so if we
-  //      remove the true and don't explicitly add false it will still tile
-  for (MFIter mfi = MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-
-      // This is particles per grid so we reset to 0
-      int pcount = 0;
-
-      // Define the real particle data for one grid-at-a-time's worth of particles
-      // We don't know pcount (number of particles per grid) before this call
-
-      const Box& tilebx = mfi.tilebox();
-
-      mfix_particle_generator(&pcount, tilebx.loVect(), tilebx.hiVect(), &dx, &dy, &dz);
-
-      const int grid_id = mfi.index();
-      const int tile_id = mfi.LocalTileIndex();
-
-      // Now that we know pcount, go ahead and create a particle container for this
-      // grid and add the particles to it
-      auto&  particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
-
-      ParticleType p_new;
-      for (int i = 0; i < pcount; i++) {
-        // Set id and cpu for this particle
-        p_new.id()  = ParticleType::NextID();
-        p_new.cpu() = ParallelDescriptor::MyProc();
-
-        // Add to the data structure
-        particles.push_back(p_new);
-      }
-
-      const int np = pcount;
-      total_np += np;
-
-      // Now define the rest of the particle data and store it directly in the particles
-      // std::cout << pcount << " particles " << " in grid " << grid_id << std::endl;
-
-      if (pcount > 0)
-         mfix_particle_generator_prop(&np, particles.GetArrayOfStructs().data());
-  }
-
-  ParallelDescriptor::ReduceIntSum(total_np,ParallelDescriptor::IOProcessorNumber());
-  amrex::Print() << "Total number of generated particles: " << total_np << std::endl;
-
-  // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
-  // we do need this to move particles from tile 0 to the correct tile.
-  Redistribute();
 
 }
 
@@ -211,72 +76,6 @@ void MFIXParticleContainer::PrintParticleCounts() {
       amrex::AllPrintToFile("load_balance") << "Box:" << pti.index() << ", count: " << np << std::endl;
     }
   amrex::AllPrintToFile("load_balance") << "Total for this process: " << local_count << std::endl << std::endl;
-}
-
-void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba)
-{
-    int lev = 0;
-
-    Vector<Real> orig_domain_size;
-    orig_domain_size.resize(BL_SPACEDIM);
-    for (int d = 0; d < BL_SPACEDIM; d++)
-        orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
-
-    ParticleType p_rep;
-
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-    {
-        auto& particles = pti.GetArrayOfStructs();
-
-        for (const auto& p: particles)
-        {
-           //
-           // Shift the position.
-           //
-           for (int k = 0; k < Nrep[2]; k++) {
-               for (int j = 0; j < Nrep[1]; j++) {
-                 for (int i = 0; i < Nrep[0]; i++) {
-
-                   if ( !(i == 0 && j == 0 && k == 0) )
-                   {
-                    p_rep.m_rdata.pos[0] = p.m_rdata.pos[0] + i * orig_domain_size[0];
-                    p_rep.m_rdata.pos[1] = p.m_rdata.pos[1] + j * orig_domain_size[1];
-                    p_rep.m_rdata.pos[2] = p.m_rdata.pos[2] + k * orig_domain_size[2];
-
-                    p_rep.rdata(realData::velx)   = p.rdata(realData::velx);
-                    p_rep.rdata(realData::vely)   = p.rdata(realData::vely);
-                    p_rep.rdata(realData::velz)   = p.rdata(realData::velz);
-
-                    // Set other particle properties
-                    p_rep.idata(intData::phase)     = p.idata(intData::phase);
-                    p_rep.idata(intData::state)     = p.idata(intData::state);
-                    p_rep.rdata(realData::volume)   = p.rdata(realData::volume);
-                    p_rep.rdata(realData::density)  = p.rdata(realData::density);
-                    p_rep.rdata(realData::mass)     = p.rdata(realData::mass);
-                    p_rep.rdata(realData::oneOverI) = p.rdata(realData::oneOverI);
-                    p_rep.rdata(realData::radius)   = p.rdata(realData::radius);
-                    p_rep.rdata(realData::omegax)   = p.rdata(realData::omegax);
-                    p_rep.rdata(realData::omegay)   = p.rdata(realData::omegay);
-                    p_rep.rdata(realData::omegaz)   = p.rdata(realData::omegaz);
-                    p_rep.rdata(realData::dragx)    = p.rdata(realData::dragx);
-                    p_rep.rdata(realData::dragy)    = p.rdata(realData::dragy);
-                    p_rep.rdata(realData::dragz)    = p.rdata(realData::dragz);
-
-                    // Set id and cpu for this particle
-                    p_rep.id()  = ParticleType::NextID();
-                    p_rep.cpu() = ParallelDescriptor::MyProc();
-
-                    // Add everything to the data structure
-                    particles.push_back(p_rep);
-
-                   } // not copying itself
-                 } // i
-              } // j
-           } // k
-        } // p
-    } // pti
-
-    Redistribute();
 }
 
 void MFIXParticleContainer:: printParticles()
@@ -313,36 +112,21 @@ void MFIXParticleContainer::ReadStaticParameters ()
     get_gravity(gravity);
 
     if (!initialized)
-    {
-        ParmParse pp("particles");
-
-        do_tiling = true;  // because the default in amrex is false
-
-        pp.query("do_tiling",  do_tiling);
-
-        Vector<int> ts(BL_SPACEDIM);
-
-        if (pp.queryarr("tile_size", ts))
-            tile_size = IntVect(ts);
-
-        pp.query("use_neighbor_list", use_neighbor_list);
-        pp.query("sort_neighbor_list", sort_neighbor_list);
-
         initialized = true;
-    }
 }
 
 void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
                                             EBFArrayBoxFactory * ebfactory,
                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
                                             const int ls_refinement,
-                                            MultiFab * cost, std::string & knapsack_weight_type
-                                            )
+                                            MultiFab * cost, std::string & knapsack_weight_type)
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
-    amrex::Print() << "Evolving particles on level: " << lev << " ... " << std::endl;
+    Real eps = std::numeric_limits<Real>::epsilon();
+
+    amrex::Print() << "Evolving particles on level: " << lev << " ... with fluid dt " << dt << std::endl;
 
     /****************************************************************************
      * DEBUG flag toggles:                                                      *
@@ -365,39 +149,57 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
     const Real* dx = Geom(lev).CellSize();
 
-    Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
-    Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
-    Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
-
     /****************************************************************************
      * Init substeps                                                            *
      ***************************************************************************/
 
     int   nsubsteps;
-    Real  subdt, stime = time;
+    Real  subdt;
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
+
+    /****************************************************************************
+     * Get particle EB geometric info
+     ***************************************************************************/
+    const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
 
     /****************************************************************************
      * Init temporary storage:                                                  *
      *   -> particle-particle, and particle-wall forces                         *
      *   -> particle-particle, and particle-wall torques                        *
      ***************************************************************************/
+    std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> tow;
+    std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> fc, pfor, wfor;
 
-    std::map<PairIndex, Vector<Real>> tow;
-    std::map<PairIndex, Vector<Real>> fc, pfor, wfor;
+    std::map<PairIndex, bool> tile_has_walls;
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
+        const Box& bx = pti.tilebox();
         PairIndex index(pti.index(), pti.LocalTileIndex());
-        tow[index] = Vector<Real>();
-        fc[index] = Vector<Real>();
-        pfor[index] = Vector<Real>();
-        wfor[index] = Vector<Real>();
-    }
+        tow[index]  = Gpu::ManagedDeviceVector<Real>();
+        fc[index]   = Gpu::ManagedDeviceVector<Real>();
+        pfor[index] = Gpu::ManagedDeviceVector<Real>();
+        wfor[index] = Gpu::ManagedDeviceVector<Real>();
 
-    /****************************************************************************
-     * Get particle EB geometric info
-     ***************************************************************************/
-    const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
+        // Only call the routine for wall collisions if we actually have walls
+        BL_PROFILE_VAR("ls_has_walls", has_wall);
+        bool has_wall = false;
+        if ((ebfactory != NULL)
+            && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
+        {
+            has_wall = true;
+        }
+        else
+        {
+            int int_has_wall = 0;
+            Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
+            ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
+            has_wall = (int_has_wall > 0);
+        }
+
+        tile_has_walls[index] = has_wall;
+
+        BL_PROFILE_VAR_STOP(has_wall);
+    }
 
     /****************************************************************************
      * Iterate over sub-steps                                                   *
@@ -418,11 +220,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         // redistribute operation)
         if (n % 25 == 0) {
             clearNeighbors();
-            Redistribute();
+            Redistribute(0, 0, 0, 1);
             fillNeighbors();
-            buildNeighborList(MFIXCheckPair, sort_neighbor_list);
+            // send in "false" for sort_neighbor_list option
+
+            buildNeighborList(MFIXCheckPair(), false);
         } else {
-            updateNeighbors(lev);
+            updateNeighbors();
         }
 
 #ifdef _OPENMP
@@ -430,29 +234,30 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
-
-            /********************************************************************
-             * Particle-tile's book-keeping                                     *
-             *******************************************************************/
-
             // Timer used for load-balancing
             Real wt = ParallelDescriptor::second();
 
-            // Real particles
-            const int nrp    = NumberOfParticles(pti);
+            const Box& bx = pti.tilebox();
+            PairIndex index(pti.index(), pti.LocalTileIndex());
+
+            const int nrp = GetParticles(lev)[index].numRealParticles();
             RealType* particles  = pti.GetArrayOfStructs().data();
 
+            auto& plev = GetParticles(lev);
+            auto& ptile = plev[index];
+            auto& aos   = ptile.GetArrayOfStructs();
+            ParticleType* pstruct = aos().dataPtr();
+
             // Neighbor particles
-            PairIndex index(pti.index(), pti.LocalTileIndex());
+#ifdef AMREX_USE_CUDA
+            int size_ng = aos.numNeighborParticles();
+#else
             int size_ng = neighbors[lev][index].size();
             int size_nl = neighbor_list[lev][index].size();
+#endif
 
             // Number of particles including neighbor particles
             int ntot = nrp + size_ng;
-
-            // Particle tile box: used to check if the tile-box contains walls
-            // => if not, then don't check for wall collisions.
-            const Box& bx = pti.tilebox();
 
             // Particle-particle (and particle-wall) forces and torques. We need
             // these to be zero every time we start a new batch (i.e tile and
@@ -461,6 +266,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             fc[index].clear();
             tow[index].resize(ntot*3,0.0);
             fc[index].resize(ntot*3,0.0);
+
+            Real* fc_ptr = fc[index].dataPtr();
+            Real* tow_ptr = tow[index].dataPtr();
 
             // For debugging: keep track of particle-particle (pfor) and
             // particle-wall (wfor) forces
@@ -473,95 +281,349 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              * Particle-Wall collision forces (and torques)                     *
              *******************************************************************/
 
-            // Only call the routine for wall collisions if we actually have
-            // walls
-
-            bool has_wall = false;
-            if ((ebfactory != NULL)
-                && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
+            if (tile_has_walls[index])
             {
-                    has_wall = true;
-            }
-            else
-            {
-                int int_has_wall = 0;
-                Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
-                ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
-                has_wall = (int_has_wall > 0);
-            }
-
-
-            if (has_wall)
-            {
-                //const MultiCutFab * bndrycent = &(ebfactory->getBndryCent());
-
                 // Calculate forces and torques from particle-wall collisions
+#ifndef AMREX_USE_CUDA
                 BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-                calc_wall_collisions_ls(particles, & ntot, & nrp,
-                                        tow[index].dataPtr(), fc[index].dataPtr(), & subdt,
-                                        BL_TO_FORTRAN_3D((* ls_valid)[pti]),
-                                        BL_TO_FORTRAN_3D((* ls_phi)[pti]),
-                                        dx, & ls_refinement);
+#endif
+                auto& geom = this->Geom(lev);
+                const auto dxi = geom.InvCellSizeArray();
+                const auto plo = geom.ProbLoArray();
+                const auto phiarr = ls_phi->array(pti);
+
+                AMREX_FOR_1D ( nrp, i,
+                {
+                    ParticleType& p = pstruct[i];
+                    Real rp = p.rdata(realData::radius);
+
+                    Real ls_value = interp_level_set(p, ls_refinement, phiarr, plo, dxi);
+
+                    Real overlap_n = rp - ls_value;
+
+                    if (ls_value < rp)
+                    {
+                        Real normal[3];
+                        level_set_normal(p, ls_refinement, &normal[0], phiarr, plo, dxi);
+
+                        normal[0] *= -1;
+                        normal[1] *= -1;
+                        normal[2] *= -1;
+
+                        Real v_rot[3];
+                        v_rot[0] = ls_value * p.rdata(realData::omegax);
+                        v_rot[1] = ls_value * p.rdata(realData::omegay);
+                        v_rot[2] = ls_value * p.rdata(realData::omegaz);
+
+                        Real vreltrans[3];
+                        Real cprod[3];
+
+                        cross_product(v_rot, normal, cprod);
+                        vreltrans[0] = p.rdata(realData::velx) + cprod[0];
+                        vreltrans[1] = p.rdata(realData::vely) + cprod[1];
+                        vreltrans[2] = p.rdata(realData::velz) + cprod[2];
+
+                        Real vreltrans_norm = dot_product(vreltrans, normal);
+
+                        Real vrel_t[3];
+                        vrel_t[0] = vreltrans[0] - vreltrans_norm*normal[0];
+                        vrel_t[1] = vreltrans[1] - vreltrans_norm*normal[1];
+                        vrel_t[2] = vreltrans[2] - vreltrans_norm*normal[2];
+
+                        int phase = p.idata(intData::phase);
+
+                        Real kn_des_w   = DEMParams::kn_w;
+                        Real etan_des_w = DEMParams::etan_w[phase-1];
+
+                        // NOTE - we don't use the tangential components right now,
+                        // but we might in the future
+                        // Real kt_des_w = DEMParams::kt_w;
+                        // Real etat_des_w = DEMParams::etat_w[phase-1];
+
+                        Real fn[3];
+                        Real ft[3];
+                        Real overlap_t[3];
+                        Real mag_overlap_t;
+
+                        // calculate the normal contact force
+                        fn[0] = -(kn_des_w*overlap_n*normal[0] + etan_des_w*vreltrans_norm*normal[0]);
+                        fn[1] = -(kn_des_w*overlap_n*normal[1] + etan_des_w*vreltrans_norm*normal[1]);
+                        fn[2] = -(kn_des_w*overlap_n*normal[2] + etan_des_w*vreltrans_norm*normal[2]);
+
+                        // calculate the tangential displacement
+                        overlap_t[0] = subdt*vrel_t[0];
+                        overlap_t[1] = subdt*vrel_t[1];
+                        overlap_t[2] = subdt*vrel_t[2];
+
+                        mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
+
+                        if (mag_overlap_t > 0.0) {
+                            Real fnmd = DEMParams::mew * sqrt(dot_product(fn, fn));
+                            Real tangent[3];
+                            tangent[0] = overlap_t[0]/mag_overlap_t;
+                            tangent[1] = overlap_t[1]/mag_overlap_t;
+                            tangent[2] = overlap_t[2]/mag_overlap_t;
+                            ft[0] = -fnmd * tangent[0];
+                            ft[1] = -fnmd * tangent[1];
+                            ft[2] = -fnmd * tangent[2];
+                        } else {
+                            ft[0] = 0.0;
+                            ft[1] = 0.0;
+                            ft[2] = 0.0;
+                        }
+
+                        // each particle updates its force (no need for atomics)
+                        fc_ptr[i         ] += fn[0] + ft[0];
+                        fc_ptr[i + ntot  ] += fn[1] + ft[1];
+                        fc_ptr[i + 2*ntot] += fn[2] + ft[2];
+
+                        Real tow_force[3];
+
+                        cross_product(normal, ft, tow_force);
+
+                        tow_ptr[i         ] += ls_value*tow_force[0];
+                        tow_ptr[i + ntot  ] += ls_value*tow_force[1];
+                        tow_ptr[i + 2*ntot] += ls_value*tow_force[2];
+                    }
+                });
 
                 // Debugging: copy data from the fc (all forces) vector to
                 // the wfor (wall forces) vector.
                 if (debug_level > 0) {
+                    Gpu::Device::streamSynchronize();
                     for (int i = 0; i < wfor[index].size(); i++ ) {
                         wfor[index][i] = fc[index][i];
                     }
                 }
-
+#ifndef AMREX_USE_CUDA
                 BL_PROFILE_VAR_STOP(calc_wall_collisions);
+#endif
             }
 
             /********************************************************************
              * Particle-Particle collision forces (and torques)                 *
              *******************************************************************/
 
-#if 1
+#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
+#endif
 
+#ifdef AMREX_USE_CUDA
+            auto nbor_data = m_neighbor_list[index].data();
+
+            constexpr Real small_number = 1.0e-15;
+            Gpu::DeviceScalar<int> ncoll_gpu(ncoll);
+            int* pncoll = ncoll_gpu.dataPtr();
+
+#if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
+            Real eps = std::numeric_limits<Real>::epsilon();
+#endif
+            // now we loop over the neighbor list and compute the forces
+            AMREX_FOR_1D ( nrp, i,
+            {
+                ParticleType& p1 = pstruct[i];
+                
+                for (const auto& p2 : nbor_data.getNeighbors(i))
+                {
+                    Real dx = p2.pos(0) - p1.pos(0);
+                    Real dy = p2.pos(1) - p1.pos(1);
+                    Real dz = p2.pos(2) - p1.pos(2);
+
+                    Real r2 = dx*dx + dy*dy + dz*dz;
+                    Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
+
+                    if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
+                    {
+                        Gpu::Atomic::Add(pncoll, 1);
+                        Real dist_mag = sqrt(r2);
+                        AMREX_ASSERT(dist_mag >= eps);
+
+                        Real normal[3];
+                        normal[0] = dx / dist_mag;
+                        normal[1] = dy / dist_mag;
+                        normal[2] = dz / dist_mag;
+
+                        Real overlap_n = r_lm - dist_mag;
+                        Real vrel_trans_norm;
+                        Real vrel_t[3];
+
+                        cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
+
+                        int phase1 = p1.idata(intData::phase);
+                        int phase2 = p2.idata(intData::phase);
+
+                        Real kn_des = DEMParams::kn;
+                        Real etan_des = DEMParams::etan[phase1-1][phase2-1];
+
+                        // NOTE - we don't use the tangential components right now,
+                        // but we might in the future
+                        // Real kt_des = DEMParams::kt;
+                        // Real etat_des = DEMParams::etat[phase1-1][phase2-1];
+
+                        Real fn[3];
+                        Real ft[3];
+                        Real overlap_t[3];
+                        Real mag_overlap_t;
+
+                        // calculate the normal contact force
+                        fn[0] = -(kn_des*overlap_n*normal[0] + etan_des*vrel_trans_norm*normal[0]);
+                        fn[1] = -(kn_des*overlap_n*normal[1] + etan_des*vrel_trans_norm*normal[1]);
+                        fn[2] = -(kn_des*overlap_n*normal[2] + etan_des*vrel_trans_norm*normal[2]);
+
+                        // calculate the tangential overlap
+                        overlap_t[0] = subdt*vrel_t[0];
+                        overlap_t[1] = subdt*vrel_t[1];
+                        overlap_t[2] = subdt*vrel_t[2];
+                        mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
+
+                        if (mag_overlap_t > 0.0) {
+                            Real fnmd = DEMParams::mew * sqrt(dot_product(fn, fn));
+                            Real tangent[3];
+                            tangent[0] = overlap_t[0]/mag_overlap_t;
+                            tangent[1] = overlap_t[1]/mag_overlap_t;
+                            tangent[2] = overlap_t[2]/mag_overlap_t;
+                            ft[0] = -fnmd * tangent[0];
+                            ft[1] = -fnmd * tangent[1];
+                            ft[2] = -fnmd * tangent[2];
+                        } else {
+                            ft[0] = 0.0;
+                            ft[1] = 0.0;
+                            ft[2] = 0.0;
+                        }
+
+                        // each particle updates its force (no need for atomics)
+                        fc_ptr[i         ] += fn[0] + ft[0];
+                        fc_ptr[i + ntot  ] += fn[1] + ft[1];
+                        fc_ptr[i + 2*ntot] += fn[2] + ft[2];
+
+                        Real r1 = p1.rdata(realData::radius);
+                        Real r2 = p2.rdata(realData::radius);
+
+                        Real dist_cl = 0.5 * (dist_mag + (r1*r1 - r2*r2) / dist_mag);
+                        dist_cl = dist_mag - dist_cl;
+
+                        Real tow_force[3];
+
+                        cross_product(normal, ft, tow_force);
+
+                        tow_ptr[i         ] += dist_cl*tow_force[0];
+                        tow_ptr[i + ntot  ] += dist_cl*tow_force[1];
+                        tow_ptr[i + 2*ntot] += dist_cl*tow_force[2];
+                        }
+                    }
+            });
+#else
             calc_particle_collisions ( particles                          , &nrp,
                                        neighbors[lev][index].dataPtr()    , &size_ng,
                                        neighbor_list[lev][index].dataPtr(), &size_nl,
                                        tow[index].dataPtr(), fc[index].dataPtr(),
                                        &subdt, &ncoll);
+#endif
 
             // Debugging: copy data from the fc (all forces) vector to the wfor
             // (wall forces) vector. Note that since fc already contains the
             // wall forces, these need to be subtracted here.
-            if (debug_level > 0) {
+            if (debug_level > 0)
+            {
                 for (int i = 0; i < pfor[index].size(); i++ ) {
                     pfor[index][i] = fc[index][i] - wfor[index][i];
                 }
             }
 
-            BL_PROFILE_VAR_STOP(calc_particle_collisions);
-#else
-            Vector<Real> x(nrp);
-            Vector<Real> y(nrp);
-            Vector<Real> z(nrp);
-            particle_get_position (particles, nrp, x, y, z);
-
-            BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
-            calc_particle_collisions_soa ( particles                          , &nrp,
-                                           neighbors[lev][index].dataPtr()    , &size_ng,
-                                           neighbor_list[lev][index].dataPtr(), &size_nl,
-                                           tow[index].dataPtr(), fc[index].dataPtr(), &subdt, &ncoll);
+#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR_STOP(calc_particle_collisions);
 #endif
 
+#ifndef AMREX_USE_CUDA
+            BL_PROFILE_VAR("des_time_march()", des_time_march);
+#endif
             /********************************************************************
              * Move particles based on collision forces and torques             *
              *******************************************************************/
 
-            time_advance(pti, ntot, subdt, tow[index], fc[index]);
+            GpuArray<Real, 3> grav;
+            grav[0] = gravity[0];
+            grav[1] = gravity[1];
+            grav[2] = gravity[2];
+
+            const auto p_lo = Geom(lev).ProbLoArray();
+            const auto p_hi = Geom(lev).ProbHiArray();
+
+            int x_lo_bc = domain_bc[0];
+            int x_hi_bc = domain_bc[1];
+            int y_lo_bc = domain_bc[2];
+            int y_hi_bc = domain_bc[3];
+            int z_lo_bc = domain_bc[4];
+            int z_hi_bc = domain_bc[5];
+
+            AMREX_FOR_1D ( nrp, i,
+            {
+                ParticleType& p = pstruct[i];
+
+                p.rdata(realData::velx) += subdt * (
+                    (p.rdata(realData::dragx) + fc_ptr[i       ]) /  p.rdata(realData::mass) + grav[0]);
+                p.rdata(realData::vely) += subdt * (
+                    (p.rdata(realData::dragy) + fc_ptr[i + ntot]) /  p.rdata(realData::mass) + grav[1]);
+                p.rdata(realData::velz) += subdt * (
+                    (p.rdata(realData::dragz) + fc_ptr[i+2*ntot]) /  p.rdata(realData::mass) + grav[2]);
+
+                p.rdata(realData::omegax) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i       ];
+                p.rdata(realData::omegay) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i+  ntot];
+                p.rdata(realData::omegaz) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i+2*ntot];
+
+                p.pos(0) += subdt * p.rdata(realData::velx);
+                p.pos(1) += subdt * p.rdata(realData::vely);
+                p.pos(2) += subdt * p.rdata(realData::velz);
+
+                if (x_lo_bc && p.pos(0) < p_lo[0])
+                {
+                    p.pos(0) = p_lo[0] + eps;
+                    p.rdata(realData::velx) = -p.rdata(realData::velx);
+                }
+                if (x_hi_bc && p.pos(0) > p_hi[0])
+                {
+                   p.pos(0) = p_hi[0] - eps;
+                   p.rdata(realData::velx) = -p.rdata(realData::velx);
+                }
+                if (y_lo_bc && p.pos(1) < p_lo[1])
+                {
+                    p.pos(1) = p_lo[1] + eps;
+                    p.rdata(realData::vely) = -p.rdata(realData::vely);
+                }
+                if (y_hi_bc && p.pos(1) > p_hi[1])
+                {
+                   p.pos(1) = p_hi[1] - eps;
+                   p.rdata(realData::vely) = -p.rdata(realData::vely);
+                }
+                if (z_lo_bc && p.pos(2) < p_lo[2])
+                {
+                   p.pos(2) = p_lo[2] + eps;
+                   p.rdata(realData::velz) = -p.rdata(realData::velz);
+                }
+                if (z_hi_bc && p.pos(2) > p_hi[2])
+                {
+                   p.pos(2) = p_hi[2] - eps;
+                   p.rdata(realData::velz) = -p.rdata(realData::velz);
+                }
+            });
+
+            Gpu::Device::streamSynchronize();
+
+#ifndef AMREX_USE_CUDA
+            BL_PROFILE_VAR_STOP(des_time_march);
+#endif
+
+#ifdef AMREX_USE_CUDA
+            ncoll = ncoll_gpu.dataValue();
+#endif
+            call_usr2_des(&nrp, pstruct);
 
             /********************************************************************
              * Update runtime cost (used in load-balancing)                     *
              *******************************************************************/
 
-            if (cost) {
+            if (cost)
+            {
                 // Runtime cost is either (weighted by tile box size):
                 //   * time spent
                 //   * number of particles
@@ -587,8 +649,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
          *        update max velocities and forces                              *
          ***********************************************************************/
 
+        if (debug_level > 0) ncoll_total += ncoll;
+
         if (debug_level > 1) {
-            ncoll_total += ncoll;
             ParallelDescriptor::ReduceIntSum(ncoll, ParallelDescriptor::IOProcessorNumber());
             Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
         }
@@ -621,28 +684,27 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                            << " pwz= " << max_forces[1][2] << std::endl;
 
         }
-
     } // end of loop over substeps
 
     // Redistribute particles at the end of all substeps (note that the particle
     // neighbour list needs to be reset when redistributing).
     clearNeighbors();
-    Redistribute();
+    Redistribute(0, 0, 0, 1);
 
     /****************************************************************************
      * DEBUG: output the total number of collisions over all substeps           *
      *        output the maximum velocity and forces over all substeps          *
      ***************************************************************************/
     if (debug_level > 0) {
-       ParallelDescriptor::ReduceIntSum(ncoll_total, ParallelDescriptor::IOProcessorNumber());
-       Print() << "Number of collisions: " << ncoll_total << " in " << nsubsteps << " substeps " << std::endl;
+        ParallelDescriptor::ReduceIntSum(ncoll_total, ParallelDescriptor::IOProcessorNumber());
+        amrex::Print() << "Number of collisions: " << ncoll_total << " in " << nsubsteps << " substeps " << std::endl;
     }
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
         const int nrp   = NumberOfParticles(pti);
         void* particles = pti.GetArrayOfStructs().data();
 
@@ -675,22 +737,23 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     BL_PROFILE_REGION_STOP("mfix_dem::EvolveParticles()");
 }
 
-void MFIXParticleContainer::CalcVolumeFraction(const Vector<std::unique_ptr<MultiFab>> & mf_to_be_filled,
-                                               const Vector<std::unique_ptr<EBFArrayBoxFactory>> & ebfactory,
-                                               const Vector<std::unique_ptr<IArrayBox>> & bc_ilo,
-                                               const Vector<std::unique_ptr<IArrayBox>> & bc_ihi,
-                                               const Vector<std::unique_ptr<IArrayBox>> & bc_jlo,
-                                               const Vector<std::unique_ptr<IArrayBox>> & bc_jhi,
-                                               const Vector<std::unique_ptr<IArrayBox>> & bc_klo,
-                                               const Vector<std::unique_ptr<IArrayBox>> & bc_khi,
-                                               int nghost )
+void MFIXParticleContainer::
+CalcVolumeFraction(const Vector<std::unique_ptr<MultiFab>> & mf_to_be_filled,
+                   const Vector<std::unique_ptr<EBFArrayBoxFactory>> & ebfactory,
+                   const Vector<std::unique_ptr<IArrayBox>> & bc_ilo,
+                   const Vector<std::unique_ptr<IArrayBox>> & bc_ihi,
+                   const Vector<std::unique_ptr<IArrayBox>> & bc_jlo,
+                   const Vector<std::unique_ptr<IArrayBox>> & bc_jhi,
+                   const Vector<std::unique_ptr<IArrayBox>> & bc_klo,
+                   const Vector<std::unique_ptr<IArrayBox>> & bc_khi,
+                   const BcList & bc_list,
+                   int nghost )
 {
-
     // NOTE: ebfactory HAS to be the PARTICLE EB factory!
     int fortran_volume_comp = 5;
     PICDeposition(mf_to_be_filled, ebfactory,
                   bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
-                  fortran_volume_comp,nghost);
+                  bc_list, fortran_volume_comp,nghost);
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -714,33 +777,35 @@ void MFIXParticleContainer::CalcVolumeFraction(const Vector<std::unique_ptr<Mult
     }
 }
 
-void MFIXParticleContainer::CalcDragOnFluid(const Vector<std::unique_ptr<MultiFab>> & beta_mf,
-                                            const Vector<std::unique_ptr<MultiFab>> & beta_vel_mf,
-                                            const Vector<std::unique_ptr<EBFArrayBoxFactory>> & ebfactory,
-                                            const Vector<std::unique_ptr<IArrayBox>> & bc_ilo,
-                                            const Vector<std::unique_ptr<IArrayBox>> & bc_ihi,
-                                            const Vector<std::unique_ptr<IArrayBox>> & bc_jlo,
-                                            const Vector<std::unique_ptr<IArrayBox>> & bc_jhi,
-                                            const Vector<std::unique_ptr<IArrayBox>> & bc_klo,
-                                            const Vector<std::unique_ptr<IArrayBox>> & bc_khi,
-                                            int nghost )
+void MFIXParticleContainer::
+CalcDragOnFluid(const Vector<std::unique_ptr<MultiFab>> & drag_mf,
+                const Vector<std::unique_ptr<EBFArrayBoxFactory>> & ebfactory,
+                const Vector<std::unique_ptr<IArrayBox>> & bc_ilo,
+                const Vector<std::unique_ptr<IArrayBox>> & bc_ihi,
+                const Vector<std::unique_ptr<IArrayBox>> & bc_jlo,
+                const Vector<std::unique_ptr<IArrayBox>> & bc_jhi,
+                const Vector<std::unique_ptr<IArrayBox>> & bc_klo,
+                const Vector<std::unique_ptr<IArrayBox>> & bc_khi,
+                int nghost )
 {
     int fortran_beta_comp = 15;
     int fortran_vel_comp  =  9;
-    PICMultiDeposition(beta_mf, beta_vel_mf, ebfactory,
+    PICMultiDeposition(drag_mf, ebfactory,
                        bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi,
                        fortran_beta_comp, fortran_vel_comp, nghost);
 }
 
-void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
-                                          const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory>  >& ebfactory,
-                                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
-                                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
-                                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
-                                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
-                                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
-                                          const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
-                                          int fortran_particle_comp, int nghost )
+void MFIXParticleContainer::
+PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
+              const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory>  >& ebfactory,
+              const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
+              const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
+              const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
+              const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
+              const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
+              const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
+              const BcList & bc_list,
+              int fortran_particle_comp, int nghost )
 {
     BL_PROFILE("MFIXParticleContainer::PICDeposition()");
 
@@ -749,7 +814,7 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
     MultiFab* mf_pointer[nlev];
 
     // Start the timers ...
-    const Real      strttime    = ParallelDescriptor::second();
+    const Real strttime = ParallelDescriptor::second();
 
     if (nlev > 2)
       amrex::Abort("For right now MFIXParticleContainer::PICDeposition can only handle up to 2 levels");
@@ -786,8 +851,9 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
 
     // We always use the coarse dx
     const Geometry& gm          = Geom(0);
-    const Real*     plo         = gm.ProbLo();
-    const Real*     dx          = gm.CellSize();
+    const auto      plo         = gm.ProbLoArray();
+    const auto      dx          = gm.CellSizeArray();
+    const auto      dxi         = gm.InvCellSizeArray();
 
     using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
 
@@ -795,21 +861,20 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
 
     for (int lev = 0; lev < nlev; lev++)
     {
+        Vector<int> ngrow = {1,1,1};
+        std::unique_ptr<EBFArrayBoxFactory> crse_factory;
 
-       Vector<int> ngrow = {1,1,1};
-       std::unique_ptr<EBFArrayBoxFactory> crse_factory;
+        if (lev == 0) {
+            flags   = &(ebfactory[lev]->getMultiEBCellFlagFab());
+        } else {
+            // std::unique_ptr<EBFArrayBoxFactory>
+            crse_factory = makeEBFabFactory(
+                  gm, mf_pointer[lev]->boxArray(), mf_pointer[lev]->DistributionMap(),
+                  ngrow, EBSupport::volume);
+            flags   = &(crse_factory->getMultiEBCellFlagFab());
+        }
 
-       if (lev == 0) {
-          flags   = &(ebfactory[lev]->getMultiEBCellFlagFab());
-       } else {
-          // std::unique_ptr<EBFArrayBoxFactory>
-          crse_factory = makeEBFabFactory(
-                 gm, mf_pointer[lev]->boxArray(), mf_pointer[lev]->DistributionMap(),
-                 ngrow, EBSupport::volume);
-          flags   = &(crse_factory->getMultiEBCellFlagFab());
-       }
-
-       const MultiFab* volfrac = (lev == 0) ? &(ebfactory[lev]->getVolFrac()) : &(crse_factory->getVolFrac());
+        const MultiFab* volfrac = (lev == 0) ? &(ebfactory[lev]->getVolFrac()) : &(crse_factory->getVolFrac());
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -818,41 +883,90 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
         FArrayBox local_vol;
         for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
             const auto& particles = pti.GetArrayOfStructs();
-            int nstride = particles.dataShape().first;
+            const ParticleType* pstruct = particles().dataPtr();
+
             const long nrp = pti.numParticles();
             FArrayBox& fab = (*mf_pointer[lev])[pti];
-            Real* data_ptr;
-            const int *lo, *hi;
 #ifdef _OPENMP
             Box tile_box = pti.tilebox();
             tile_box.grow(1);
             local_vol.resize(tile_box,ncomp);
             local_vol = 0.0;
-            data_ptr = local_vol.dataPtr();
-            lo = tile_box.loVect();
-            hi = tile_box.hiVect();
 #else
-            data_ptr = fab.dataPtr();
             const Box& box = fab.box();
-            lo = box.loVect();
-            hi = box.hiVect();
 #endif
 
             const Box& bx  = pti.tilebox(); // I need a box without ghosts
 
-            if ((*flags)[pti].getType(bx) != FabType::covered ) {
-                mfix_deposit_cic_eb(particles.data(), nstride, nrp,
-                                    data_ptr, lo, hi,
-                                    BL_TO_FORTRAN_ANYD((*volfrac)[pti]),
-                                    BL_TO_FORTRAN_ANYD((*flags)[pti]),
-                                    plo, dx, &fortran_particle_comp);
+            if ((*flags)[pti].getType(bx) != FabType::covered )
+            {
+                auto volarr = fab.array();
+                auto flagsarr = (*flags)[pti].array();
+                auto vratioarr = (*volfrac)[pti].array();
+
+                AMREX_FOR_1D ( nrp, ip,
+                {
+                    const ParticleType& p = pstruct[ip];
+
+                    amrex::Real reg_cell_vol = dx[0]*dx[1]*dx[2];
+
+                    amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
+                    amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
+                    amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
+
+                    int i = std::floor(x);
+                    int j = std::floor(y);
+                    int k = std::floor(z);
+
+                    amrex::Real wx_hi = x - i;
+                    amrex::Real wy_hi = y - j;
+                    amrex::Real wz_hi = z - k;
+
+                    amrex::Real wx_lo = 1.0 - wx_hi;
+                    amrex::Real wy_lo = 1.0 - wy_hi;
+                    amrex::Real wz_lo = 1.0 - wz_hi;
+
+                    amrex::Real weights[2][2][2];
+
+                    weights[0][0][0] = vratioarr(i-1, j-1, k-1) * wx_lo * wy_lo * wz_lo;
+                    weights[0][0][1] = vratioarr(i-1, j-1, k  ) * wx_lo * wy_lo * wz_hi;
+                    weights[0][1][0] = vratioarr(i-1, j  , k-1) * wx_lo * wy_hi * wz_lo;
+                    weights[0][1][1] = vratioarr(i-1, j  , k  ) * wx_lo * wy_hi * wz_hi;
+                    weights[1][0][0] = vratioarr(i  , j-1, k-1) * wx_hi * wy_lo * wz_lo;
+                    weights[1][0][1] = vratioarr(i  , j-1, k  ) * wx_hi * wy_lo * wz_hi;
+                    weights[1][1][0] = vratioarr(i  , j  , k-1) * wx_hi * wy_hi * wz_lo;
+                    weights[1][1][1] = vratioarr(i  , j  , k  ) * wx_hi * wy_hi * wz_hi;
+
+                    amrex::Real total_weight = 0.0;
+                    for (int ii = 0; ii <= 1; ++ii)
+                        for (int jj = 0; jj <= 1; ++jj)
+                            for (int kk = 0; kk <= 1; ++kk)
+                                total_weight += weights[ii][jj][kk];
+
+                    for (int ii = 0; ii <= 1; ++ii)
+                        for (int jj = 0; jj <= 1; ++jj)
+                            for (int kk = 0; kk <= 1; ++kk)
+                                weights[ii][jj][kk] /= total_weight;
+
+                    amrex::Real pvol = p.rdata(realData::volume);
+
+                    for (int ii = -1; ii <= 0; ++ii) {
+                        for (int jj = -1; jj <= 0; ++jj) {
+                            for (int kk = -1; kk <= 0; ++kk) {
+                                if (flagsarr(i+ii,j+jj,k+kk) == EBCellFlag::TheCoveredCell())
+                                    continue;
+                                amrex::Real this_cell_vol = vratioarr(i+ii,j+jj,k+kk) * reg_cell_vol;
+                                amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk),
+                                                        weights[ii+1][jj+1][kk+1]*pvol/this_cell_vol);
+                            }
+                        }
+                    }
+                });
             }
 
 #ifdef _OPENMP
-            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_vol),
-                                        BL_TO_FORTRAN_3D(fab), ncomp);
+            fab.atomicAdd(local_vol, tile_box, tile_box, 0, 0, ncomp);
 #endif
-
         }
        }
 
@@ -860,19 +974,140 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
        // when BC is pressure inlet and mass inflow.
        Box domain(Geom(lev).Domain());
 
+       const int minf = bc_list.get_minf();
+       const int pinf = bc_list.get_pinf();
+       const int pout = bc_list.get_pout();
+
        for (MFIter mfi(*mf_pointer[lev]); mfi.isValid(); ++mfi) {
 
          const Box& sbx = (*mf_pointer[lev])[mfi].box();
 
-         flip_particle_vol(sbx.loVect(), sbx.hiVect(),
-                           (*mf_pointer[lev])[mfi].dataPtr(),
-                           (*bc_ilo[lev]).dataPtr(), (*bc_ihi[lev]).dataPtr(),
-                           (*bc_jlo[lev]).dataPtr(), (*bc_jhi[lev]).dataPtr(),
-                           (*bc_klo[lev]).dataPtr(), (*bc_khi[lev]).dataPtr(),
-                           domain.loVect(), domain.hiVect(),
-                           &nghost );
+         // Extract the lower and upper boundaries of Box sbx and Domain
+         const IntVect sbx_lo(sbx.loVect()), sbx_hi(sbx.hiVect());
+         const amrex::Dim3& dom_lo = amrex::lbound(domain);
+         const amrex::Dim3& dom_hi = amrex::ubound(domain);
+
+         // Create a 2D Box collapsing sbx on x-direction
+         IntVect sbx_yz_hi(sbx.hiVect());
+         sbx_yz_hi[0] = sbx_lo[0];
+         const Box sbx_yz(sbx_lo, sbx_yz_hi);
+
+         // Create a 2D Box collapsing sbx on y-direction
+         IntVect sbx_xz_hi(sbx.hiVect());
+         sbx_xz_hi[1] = sbx_lo[1];
+         const Box sbx_xz(sbx_lo, sbx_xz_hi);
+
+         // Create a 2D Box collapsing sbx on z-direction
+         IntVect sbx_xy_hi(sbx.hiVect());
+         sbx_xy_hi[2] = sbx_lo[2];
+         const Box sbx_xy(sbx_lo, sbx_xy_hi);
+
+         Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
+         Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
+         Array4<int> const& bc_jlo_type = bc_jlo[lev]->array();
+         Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
+         Array4<int> const& bc_klo_type = bc_klo[lev]->array();
+         Array4<int> const& bc_khi_type = bc_khi[lev]->array();
+
+         Array4<Real> const& vol = mf_pointer[lev]->array(mfi);
+
+         if(sbx_lo[0] < dom_lo.x)
+         {
+           const int ilo = dom_lo.x;
+           AMREX_HOST_DEVICE_FOR_3D(sbx_yz, i, j, k,
+           {
+             if(bc_ilo_type(dom_lo.x-1,j,k,0) == pinf or
+                bc_ilo_type(dom_lo.x-1,j,k,0) == minf)
+             {
+               vol(ilo,j,k) += vol(ilo-1,j,k);
+               vol(ilo-1,j,k) = 0;
+             }
+           });
+         }
+
+         if(sbx_hi[0] > dom_hi.x)
+         {
+           const int ihi = dom_hi.x;
+           AMREX_HOST_DEVICE_FOR_3D(sbx_yz, i, j, k,
+           {
+             if(bc_ihi_type(dom_hi.x+1,j,k,0) == pinf or
+                bc_ihi_type(dom_hi.x+1,j,k,0) == minf)
+             {
+               vol(ihi,j,k) += vol(ihi+1,j,k);
+               vol(ihi+1,j,k) = 0;
+             }
+           });
+         }
+
+#ifdef AMREX_USE_CUDA
+         Gpu::Device::synchronize();
+#endif
+
+         if(sbx_lo[1] < dom_lo.y)
+         {
+           const int jlo = dom_lo.y;
+           AMREX_HOST_DEVICE_FOR_3D(sbx_xz, i, j, k,
+           {
+             if(bc_jlo_type(i,dom_lo.y-1,k,0) == pinf or
+                bc_jlo_type(i,dom_lo.y-1,k,0) == minf)
+             {
+               vol(i,jlo,k) += vol(i,jlo-1,k);
+               vol(i,jlo-1,k) = 0;
+             }
+           });
+         }
+
+         if(sbx_hi[1] > dom_hi.y)
+         {
+           const int jhi = dom_hi.y;
+           AMREX_HOST_DEVICE_FOR_3D(sbx_xz, i, j, k,
+           {
+             if(bc_jhi_type(i,dom_hi.y+1,k,0) == pinf or
+                bc_jhi_type(i,dom_hi.y+1,k,0) == minf)
+             {
+               vol(i,jhi,k) += vol(i,jhi+1,k);
+               vol(i,jhi+1,k) = 0;
+             }
+           });
+         }
+
+#ifdef AMREX_USE_CUDA
+         Gpu::Device::synchronize();
+#endif
+
+         if(sbx_lo[2] < dom_lo.z)
+         {
+           const int klo = dom_lo.z;
+           AMREX_HOST_DEVICE_FOR_3D(sbx_xy, i, j, k,
+           {
+             if(bc_klo_type(i,j,dom_lo.z-1,0) == pinf or
+                bc_klo_type(i,j,dom_lo.z-1,0) == minf)
+             {
+               vol(i,j,klo) += vol(i,j,klo-1);
+               vol(i,j,klo-1) = 0;
+             }
+           });
+         }
+
+         if(sbx_hi[2] > dom_hi.z)
+         {
+           const int khi = dom_hi.z;
+           AMREX_HOST_DEVICE_FOR_3D(sbx_xy, i, j, k,
+           {
+             if(bc_khi_type(i,j,dom_hi.z+1,0) == pinf or
+                bc_khi_type(i,j,dom_hi.z+1,0) == minf)
+             {
+               vol(i,j,khi) += vol(i,j,khi+1);
+               vol(i,j,khi+1) = 0;
+             }
+           });
+         }
        }
     }
+
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
 
     int  src_nghost = 1;
     int dest_nghost = 0;
@@ -927,69 +1162,60 @@ void MFIXParticleContainer::PICDeposition(const amrex::Vector< std::unique_ptr<M
     }
 }
 
-void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& beta_mf,
-                                               const amrex::Vector< std::unique_ptr<MultiFab> >& beta_vel_mf,
-                                               const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory>  >& ebfactory,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
-                                               const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
-                                               int fortran_beta_comp, int fortran_vel_comp, int nghost )
+void MFIXParticleContainer::
+PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
+                   const amrex::Vector< std::unique_ptr<EBFArrayBoxFactory>  >& ebfactory,
+                   const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
+                   const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
+                   const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
+                   const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
+                   const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
+                   const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
+                   int fortran_beta_comp, int fortran_vel_comp, int nghost )
 {
     BL_PROFILE("MFIXParticleContainer::PICMultiDeposition()");
 
-    const Real      strttime    = ParallelDescriptor::second();
+    const Real strttime = ParallelDescriptor::second();
 
     if (nlev > 2)
-      amrex::Abort("For right now MFIXParticleContainer::PICMultiDeposition can only handle up to 2 levels");
+        amrex::Abort("For right now MFIXParticleContainer::PICMultiDeposition can only handle up to 2 levels");
 
-    for (int lev = 0; lev < nlev; lev++)
-       AMREX_ASSERT(OnSameGrids(lev,*beta_mf[lev])==OnSameGrids(lev,*beta_vel_mf[lev]));
-
-    MultiFab*  beta_ptr[nlev];
-    MultiFab*  beta_vel_ptr[nlev];
+    MultiFab*  drag_ptr[nlev];
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       if (lev == 0 && OnSameGrids(lev, *beta_mf[lev])) {
+       if (lev == 0 && OnSameGrids(lev, *drag_mf[lev])) {
           // If we are already working with the internal mf defined on the
           // particle_box_array, then we just work with this.
-              beta_ptr[lev] = beta_mf[lev].get();
-          beta_vel_ptr[lev] = beta_vel_mf[lev].get();
+          drag_ptr[lev] = drag_mf[lev].get();
 
-       } else if (lev == 0 && !OnSameGrids(lev, *beta_mf[lev]))  {
+       } else if (lev == 0 && !OnSameGrids(lev, *drag_mf[lev]))  {
           // If beta_mf is not defined on the particle_box_array, then we need
           // to make a temporary here and copy into beta_mf at the end.
-          beta_ptr[lev]     = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                                           beta_mf[lev]->nComp(), beta_mf[lev]->nGrow());
-          beta_vel_ptr[lev] = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
-                                           beta_vel_mf[lev]->nComp(), beta_vel_mf[lev]->nGrow());
+          drag_ptr[lev] = new MultiFab(ParticleBoxArray(lev), ParticleDistributionMap(lev),
+                                       drag_mf[lev]->nComp(), drag_mf[lev]->nGrow());
 
        } else {
           // If lev > 0 we make a temporary at the coarse resolution
           BoxArray ba_crse(amrex::coarsen(ParticleBoxArray(lev),this->m_gdb->refRatio(0)));
-              beta_ptr[lev] = new MultiFab(ba_crse, ParticleDistributionMap(lev),beta_mf[lev]->nComp()    ,1);
-          beta_vel_ptr[lev] = new MultiFab(ba_crse, ParticleDistributionMap(lev),beta_vel_mf[lev]->nComp(),1);
+          drag_ptr[lev] = new MultiFab(ba_crse, ParticleDistributionMap(lev),drag_mf[lev]->nComp(),1);
        }
 
        // We must have ghost cells for each FAB so that a particle in one grid can spread
        // its effect to an adjacent grid by first putting the value into ghost cells of its
        // own grid.  The mf->sumBoundary call then adds the value from one grid's ghost cell
        // to another grid's valid region.
-       if (beta_ptr[lev]->nGrow() < 1)
+       if (drag_ptr[lev]->nGrow() < 1)
           amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
-           beta_ptr[lev]->setVal(0.0,0,1,    beta_ptr[lev]->nGrow());
-       beta_vel_ptr[lev]->setVal(0.0,0,3,beta_vel_ptr[lev]->nGrow());
+       drag_ptr[lev]->setVal(0.0,0,4,drag_ptr[lev]->nGrow());
     }
-
 
     // We always use the coarse dx
     const Geometry& gm          = Geom(0);
-    const Real*     plo         = gm.ProbLo();
-    const Real*     dx          = gm.CellSize();
+    const auto      plo         = gm.ProbLoArray();
+    const auto      dx          = gm.CellSizeArray();
+    const auto      dxi         = gm.InvCellSizeArray();
 
     using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
     const FabArray<EBCellFlagFab>* flags;
@@ -1004,7 +1230,7 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
         } else {
            // std::unique_ptr<EBFArrayBoxFactory>
            crse_factory = makeEBFabFactory(
-                  gm, beta_ptr[lev]->boxArray(), beta_ptr[lev]->DistributionMap(),
+                  gm, drag_ptr[lev]->boxArray(), drag_ptr[lev]->DistributionMap(),
                   ngrow, EBSupport::volume);
            flags   = &(crse_factory->getMultiEBCellFlagFab());
         }
@@ -1018,18 +1244,15 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
 
         const int* lo;
         const int* hi;
-        Real* bx_dataptr;
-        Real* bu_dataptr;
 
-        FArrayBox local_x_vol, local_u_vol;
+        FArrayBox local_vol;
          for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
 
             const auto& particles = pti.GetArrayOfStructs();
-            int nstride = particles.dataShape().first;
-            const long np = pti.numParticles();
+            const ParticleType* pstruct = particles().dataPtr();
+            const long nrp = pti.numParticles();
 
-            FArrayBox& beta_fab = (*beta_ptr[lev])[pti];
-            FArrayBox& beta_vel_fab = (*beta_vel_ptr[lev])[pti];
+            FArrayBox& drag_fab = (*drag_ptr[lev])[pti];
 
 #ifdef _OPENMP
             // Note that we actually grow the tilebox rather than calling growntilebox
@@ -1037,23 +1260,16 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
             Box grown_tilebox = pti.tilebox();
             grown_tilebox.grow(1);
 
-            int ncomp = BL_SPACEDIM;
-            local_x_vol.resize(grown_tilebox,1);
-            local_u_vol.resize(grown_tilebox,ncomp);
+            int ncomp = 4;
+            local_vol.resize(grown_tilebox,ncomp);
 
-            local_x_vol = 0.0;
-            local_u_vol = 0.0;
-
-            bx_dataptr = local_x_vol.dataPtr();
-            bu_dataptr = local_u_vol.dataPtr();
+            local_vol = 0.0;
 
             lo = grown_tilebox.loVect();
             hi = grown_tilebox.hiVect();
 #else
-            bx_dataptr = beta_fab.dataPtr();
-            bu_dataptr = beta_vel_fab.dataPtr();
 
-            const Box& bx  = beta_fab.box();
+            const Box& bx  = drag_fab.box();
 
             lo = bx.loVect();
             hi = bx.hiVect();
@@ -1062,19 +1278,80 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
 
             if ((*flags)[pti].getType(box) != FabType::covered )
             {
-                mfix_multi_deposit_cic_eb(particles.data(), nstride, np,
-                                          bx_dataptr, bu_dataptr, lo, hi,
-                                          BL_TO_FORTRAN_ANYD((*volfrac)[pti]),
-                                          BL_TO_FORTRAN_ANYD((*flags)[pti]),
-                                          plo, dx, &fortran_beta_comp,
-                                          &fortran_vel_comp);
-           }
+                auto drag_arr = drag_fab.array();
+                auto flagsarr = (*flags)[pti].array();
+                auto vratioarr = (*volfrac)[pti].array();
+
+                AMREX_FOR_1D ( nrp, ip,
+                {
+                    const ParticleType& p = pstruct[ip];
+
+                    amrex::Real reg_cell_vol = dx[0]*dx[1]*dx[2];
+
+                    amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
+                    amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
+                    amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
+
+                    int i = std::floor(x);
+                    int j = std::floor(y);
+                    int k = std::floor(z);
+
+                    amrex::Real wx_hi = x - i;
+                    amrex::Real wy_hi = y - j;
+                    amrex::Real wz_hi = z - k;
+
+                    amrex::Real wx_lo = 1.0 - wx_hi;
+                    amrex::Real wy_lo = 1.0 - wy_hi;
+                    amrex::Real wz_lo = 1.0 - wz_hi;
+
+                    amrex::Real weights[2][2][2];
+
+                    weights[0][0][0] = vratioarr(i-1, j-1, k-1) * wx_lo * wy_lo * wz_lo;
+                    weights[0][0][1] = vratioarr(i-1, j-1, k  ) * wx_lo * wy_lo * wz_hi;
+                    weights[0][1][0] = vratioarr(i-1, j  , k-1) * wx_lo * wy_hi * wz_lo;
+                    weights[0][1][1] = vratioarr(i-1, j  , k  ) * wx_lo * wy_hi * wz_hi;
+                    weights[1][0][0] = vratioarr(i  , j-1, k-1) * wx_hi * wy_lo * wz_lo;
+                    weights[1][0][1] = vratioarr(i  , j-1, k  ) * wx_hi * wy_lo * wz_hi;
+                    weights[1][1][0] = vratioarr(i  , j  , k-1) * wx_hi * wy_hi * wz_lo;
+                    weights[1][1][1] = vratioarr(i  , j  , k  ) * wx_hi * wy_hi * wz_hi;
+
+                    amrex::Real total_weight = 0.0;
+                    for (int ii = 0; ii <= 1; ++ii)
+                        for (int jj = 0; jj <= 1; ++jj)
+                            for (int kk = 0; kk <= 1; ++kk)
+                                total_weight += weights[ii][jj][kk];
+
+                    for (int ii = 0; ii <= 1; ++ii)
+                        for (int jj = 0; jj <= 1; ++jj)
+                            for (int kk = 0; kk <= 1; ++kk)
+                                weights[ii][jj][kk] /= total_weight;
+
+                    amrex::Real pbeta = p.rdata(realData::dragx);
+                    amrex::Real pvx   = p.rdata(realData::velx) * pbeta;
+                    amrex::Real pvy   = p.rdata(realData::vely) * pbeta;
+                    amrex::Real pvz   = p.rdata(realData::velz) * pbeta;
+
+                    for (int ii = -1; ii <= 0; ++ii) {
+                        for (int jj = -1; jj <= 0; ++jj) {
+                            for (int kk = -1; kk <= 0; ++kk) {
+                                if (flagsarr(i+ii,j+jj,k+kk) == EBCellFlag::TheCoveredCell())
+                                    continue;
+
+                                amrex::Real this_cell_vol = vratioarr(i+ii,j+jj,k+kk) * reg_cell_vol;
+                                amrex::Real weight_vol = weights[ii+1][jj+1][kk+1]/this_cell_vol;
+
+                                amrex::Gpu::Atomic::Add(&drag_arr(i+ii,j+jj,k+kk,0),weight_vol*pvx);
+                                amrex::Gpu::Atomic::Add(&drag_arr(i+ii,j+jj,k+kk,1),weight_vol*pvy);
+                                amrex::Gpu::Atomic::Add(&drag_arr(i+ii,j+jj,k+kk,2),weight_vol*pvz);
+                                amrex::Gpu::Atomic::Add(&drag_arr(i+ii,j+jj,k+kk,3),weight_vol*pbeta);
+                            }
+                        }
+                    }
+                });
+            }
 
 #ifdef _OPENMP
-            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_x_vol),
-                                        BL_TO_FORTRAN_3D(beta_fab), beta_fab.nComp());
-            amrex_atomic_accumulate_fab(BL_TO_FORTRAN_3D(local_u_vol),
-                                        BL_TO_FORTRAN_3D(beta_vel_fab), beta_vel_fab.nComp());
+            drag_fab.atomicAdd(local_vol, grown_tilebox, grown_tilebox, 0, 0, drag_fab.nComp());
 #endif
 
          }
@@ -1085,12 +1362,10 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
     int dest_nghost = 0;
     for (int lev = 1; lev < nlev; lev++)
     {
-            beta_ptr[0]->copy(    *beta_ptr[lev],0,0,beta_ptr[0]->nComp()    ,src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
-        beta_vel_ptr[0]->copy(*beta_vel_ptr[lev],0,0,beta_vel_ptr[0]->nComp(),src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
+        drag_ptr[0]->copy(*drag_ptr[lev],0,0,drag_ptr[0]->nComp(),src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
     }
 
-    beta_ptr[0]->SumBoundary(gm.periodicity());
-    beta_vel_ptr[0]->SumBoundary(gm.periodicity());
+    drag_ptr[0]->SumBoundary(gm.periodicity());
 
     if (nlev > 1)
     {
@@ -1109,14 +1384,8 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
         {
             PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
             PhysBCFunct<BndryFuncArray> fphysbc(Geom(lev  ), bcs, bfunc);
-                beta_mf[lev]->setVal(0.0);
-            beta_vel_mf[lev]->setVal(0.0);
-            amrex::InterpFromCoarseLevel(*beta_mf[lev], time, *beta_ptr[lev-1],
-                                         0, 0, 1, Geom(lev-1), Geom(lev),
-                                         cphysbc, 0, fphysbc, 0,
-                                         ref_ratio, mapper,
-                                         bcs, 0);
-            amrex::InterpFromCoarseLevel(*beta_vel_mf[lev], time, *beta_vel_ptr[lev-1],
+            drag_mf[lev]->setVal(0.0);
+            amrex::InterpFromCoarseLevel(*drag_mf[lev], time, *drag_ptr[lev-1],
                                          0, 0, 1, Geom(lev-1), Geom(lev),
                                          cphysbc, 0, fphysbc, 0,
                                          ref_ratio, mapper,
@@ -1128,18 +1397,15 @@ void MFIXParticleContainer::PICMultiDeposition(const amrex::Vector< std::unique_
     // to copy here from mf_pointer into mf_to_be_filled. I believe that we don't
     // need any information in ghost cells so we don't copy those.
 
-    if (beta_ptr[0] != beta_mf[0].get())
+    if (drag_ptr[0] != drag_mf[0].get())
     {
-           beta_mf[0]->copy(    *beta_ptr[0],0,0,beta_mf[0]->nComp());
-       beta_vel_mf[0]->copy(*beta_vel_ptr[0],0,0,beta_vel_mf[0]->nComp());
+       drag_mf[0]->copy(*drag_ptr[0],0,0,drag_mf[0]->nComp());
     }
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       if (beta_ptr[lev] != beta_mf[lev].get())
-          delete beta_ptr[lev];
-       if (beta_vel_ptr[lev] != beta_vel_mf[lev].get())
-          delete beta_vel_ptr[lev];
+       if (drag_ptr[lev] != drag_mf[lev].get())
+          delete drag_ptr[lev];
     }
 
     if (m_verbose > 1) {
@@ -1158,8 +1424,11 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
         auto& particles = pti.GetArrayOfStructs();
+        int np = pti.numParticles();
+        Gpu::HostVector<ParticleType> host_particles(np);
+        Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
-        for (const auto& p: particles)
+        for (const auto& p: host_particles)
         {
            const IntVect& iv = Index(p, lev);
 
@@ -1169,33 +1438,6 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
                 << " position " << xyz << endl;
        }
     }
-}
-
-void
-MFIXParticleContainer::writeAllForComparison(int lev)
-{
-  int Np_tot = 0;
-
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:Np_tot) if (Gpu::notInLaunchRegion())
-#endif
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-      Np_tot += pti.numParticles();
-
-  ParallelDescriptor::ReduceIntSum(Np_tot,ParallelDescriptor::IOProcessorNumber());
-
-  cout << Np_tot << std::endl;
-
-  // Not threaded because its print to terminal
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-  {
-      auto& particles = pti.GetArrayOfStructs();
-
-      for (const auto& p: particles)
-         cout << p.pos(0)   << " " << p.pos(1)   << " " << p.pos(2) <<  " " <<
-                 p.rdata(1) << " " << p.rdata(2) << " " << p.rdata(2) <<  " " <<
-                 ParallelDescriptor::MyProc() << " " << p.id() << std::endl;
-  }
 }
 
 void
@@ -1256,27 +1498,31 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
             for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
               auto& particles = pti.GetArrayOfStructs();
+              int np = pti.numParticles();
 
-    int index = 0;
-                for (const auto& p: particles)
-                {
-        if (p.id() > 0) {
-                        File << p.idata(intData::phase) << ' ';
-                        File << p.pos(0) << ' ';
-                        File << p.pos(1) << ' ';
-                        File << p.pos(2) << ' ';
-                        File << p.rdata(realData::radius) << ' ';
-                        File << p.rdata(realData::density) << ' ';
-                        File << p.rdata(realData::velx) << ' ';
-                        File << p.rdata(realData::vely) << ' ';
-                        File << p.rdata(realData::velz) << ' ';
+              Gpu::HostVector<ParticleType> host_particles(np);
+              Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
 
-                        File << '\n';
+              int index = 0;
+              for (const auto& p: host_particles)
+              {
+                  if (p.id() > 0) {
+                      File << p.idata(intData::phase) << ' ';
+                      File << p.pos(0) << ' ';
+                      File << p.pos(1) << ' ';
+                      File << p.pos(2) << ' ';
+                      File << p.rdata(realData::radius) << ' ';
+                      File << p.rdata(realData::density) << ' ';
+                      File << p.rdata(realData::velx) << ' ';
+                      File << p.rdata(realData::vely) << ' ';
+                      File << p.rdata(realData::velz) << ' ';
 
-                        index++;
-                    }
-                }
+                      File << '\n';
+
+                      index++;
+                  }
               }
+            }
 
             File.flush();
 
@@ -1290,7 +1536,9 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
     }
 }
 
-void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro)[10])
+void MFIXParticleContainer::GetParticleAvgProp(Real (&min_dp)[10], Real (&min_ro)[10],
+                                               Real (&max_dp)[10], Real (&max_ro)[10],
+                                               Real (&avg_dp)[10], Real (&avg_ro)[10])
 {
    // The number of phases was previously hard set at 10, however lowering
    //  this number would make this code faster.
@@ -1303,6 +1551,12 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
      Real p_diam = 0.0; //particle diameters
      Real p_dens = 0.0; //particle density
 
+     Real min_diam =  1.0e32;
+     Real min_den  =  1.0e32;
+
+     Real max_diam = -1.0e32;
+     Real max_den  = -1.0e32;
+
      for (int lev = 0; lev < nlev; lev++)
      {
 #ifdef _OPENMP
@@ -1310,33 +1564,59 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&avg_dp)[10], Real (&avg_ro
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
-          auto& particles = pti.GetArrayOfStructs();
+            auto& particles = pti.GetArrayOfStructs();
 
-          for (const auto& p: particles){
-            if ( phse==p.idata(intData::phase) ){
-              p_num  += 1.0;
-              p_diam += p.rdata(realData::radius) * 2.0;
-              p_dens += p.rdata(realData::density);
+            Gpu::HostVector<ParticleType> host_particles(pti.numParticles());
+            Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+
+            for (const auto& p: host_particles){
+                if ( phse==p.idata(intData::phase) )
+                {
+                    p_num  += 1.0;
+                    p_diam += p.rdata(realData::radius) * 2.0;
+                    p_dens += p.rdata(realData::density);
+
+                    min_diam = amrex::min(min_diam, p.rdata(realData::radius) * 2.0 );
+                    min_den  = amrex::min(min_den,  p.rdata(realData::density) );
+
+                    max_diam = amrex::max(max_diam, p.rdata(realData::radius) * 2.0 );
+                    max_den  = amrex::max(max_den,  p.rdata(realData::density) );
+
+                }
             }
-          }
         }
      }
 
      // A single MPI call passes all three variables
      ParallelDescriptor::ReduceRealSum({p_num,p_diam,p_dens});
+     ParallelDescriptor::ReduceRealMin({min_diam, min_den});
+     ParallelDescriptor::ReduceRealMax({max_diam, max_den});
 
      //calculate averages or set = zero if no particles of that phase
      if (p_num==0){
        avg_dp[phse-1] = 0.0;
        avg_ro[phse-1] = 0.0;
+
+       min_dp[phse-1] = 0.0;
+       min_ro[phse-1] = 0.0;
+
+       max_dp[phse-1] = 0.0;
+       max_ro[phse-1] = 0.0;
+
      } else {
        avg_dp[phse-1] = p_diam/p_num;
        avg_ro[phse-1] = p_dens/p_num;
+
+       min_dp[phse-1] = min_diam;
+       min_ro[phse-1] = min_den;
+
+       max_dp[phse-1] = max_diam;
+       max_ro[phse-1] = max_den;
      }
    }
 }
 
-void MFIXParticleContainer::UpdateMaxVelocity()
+void MFIXParticleContainer::UpdateMaxVelocity ()
 {
     Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
 
@@ -1348,7 +1628,11 @@ void MFIXParticleContainer::UpdateMaxVelocity()
        for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
        {
            auto & particles = pti.GetArrayOfStructs();
-           for(const auto & particle : particles)
+           int np = pti.numParticles();
+           Gpu::HostVector<ParticleType> host_particles(np);
+           Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+
+           for(const auto & particle : host_particles)
            {
               max_vel_x = std::max(Real(std::fabs(particle.rdata(realData::velx))), max_vel_x);
               max_vel_y = std::max(Real(std::fabs(particle.rdata(realData::vely))), max_vel_y);
@@ -1359,8 +1643,8 @@ void MFIXParticleContainer::UpdateMaxVelocity()
     loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
 }
 
-void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Vector<Real>> pfor,
-                                             std::map<PairIndex, Vector<Real>> wfor)
+void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> pfor,
+                                             std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> wfor)
 {
     Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
     Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
@@ -1370,34 +1654,41 @@ void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Vector<Real>> p
 #ifdef _OPENMP
 #pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z) if (Gpu::notInLaunchRegion())
 #endif
-       for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
-       {
-        PairIndex index(pti.index(), pti.LocalTileIndex());
+        for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
+        {
+            PairIndex index(pti.index(), pti.LocalTileIndex());
 
-        // Note the particle force data layout:
-        //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
-        // Where n is the total number of particle and neighbor particles.
-        const int nrp     = NumberOfParticles(pti);
-        const int size_ng = neighbors[lev][index].size();
-        // Number of particles including neighbor particles
-        const int ntot = nrp + size_ng;
+            // Note the particle force data layout:
+            //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
+            // Where n is the total number of particle and neighbor particles.
+            const int nrp     = NumberOfParticles(pti);
+#ifdef AMREX_USE_CUDA
+            auto& plev = GetParticles(lev);
+            auto& ptile = plev[index];
+            auto& aos   = ptile.GetArrayOfStructs();
+            int size_ng = aos.numNeighborParticles();
+#else
+            int size_ng = neighbors[lev][index].size();
+#endif
+            // Number of particles including neighbor particles
+            const int ntot = nrp + size_ng;
 
-        // Find max (abs) of particle-particle forces:
-        for(int i = 0; i < ntot; i++ )
-            max_pfor_x = std::max(Real(std::fabs(pfor[index][i])), max_pfor_x);
-        for(int i = ntot; i < 2 * ntot; i++ )
-            max_pfor_y = std::max(Real(std::fabs(pfor[index][i])), max_pfor_y);
-        for(int i = 2 * ntot; i < 3 * ntot; i++ )
-            max_pfor_z = std::max(Real(std::fabs(pfor[index][i])), max_pfor_z);
+            // Find max (abs) of particle-particle forces:
+            for(int i = 0; i < ntot; i++ )
+                max_pfor_x = std::max(Real(std::fabs(pfor[index][i])), max_pfor_x);
+            for(int i = ntot; i < 2 * ntot; i++ )
+                max_pfor_y = std::max(Real(std::fabs(pfor[index][i])), max_pfor_y);
+            for(int i = 2 * ntot; i < 3 * ntot; i++ )
+                max_pfor_z = std::max(Real(std::fabs(pfor[index][i])), max_pfor_z);
 
-        // Find max (abs) of particle-wall forces:
-        for(int i = 0; i < ntot; i++ )
-            max_wfor_x = std::max(Real(std::fabs(wfor[index][i])), max_wfor_x);
-        for(int i = ntot; i < 2 * ntot; i++ )
-            max_wfor_y = std::max(Real(std::fabs(wfor[index][i])), max_wfor_y);
-        for(int i = 2 * ntot; i < 3 * ntot; i++ )
-            max_wfor_z = std::max(Real(std::fabs(wfor[index][i])), max_wfor_z);
-       }
+            // Find max (abs) of particle-wall forces:
+            for(int i = 0; i < ntot; i++ )
+                max_wfor_x = std::max(Real(std::fabs(wfor[index][i])), max_wfor_x);
+            for(int i = ntot; i < 2 * ntot; i++ )
+                max_wfor_y = std::max(Real(std::fabs(wfor[index][i])), max_wfor_y);
+            for(int i = 2 * ntot; i < 3 * ntot; i++ )
+                max_wfor_z = std::max(Real(std::fabs(wfor[index][i])), max_wfor_z);
+        }
     }
 
     loc_maxpfor = RealVect(max_pfor_x, max_pfor_y, max_pfor_z);
@@ -1490,16 +1781,17 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
   }
 }
 
-void MFIXParticleContainer::ComputeAverageVelocities ( const int lev,
-                   const amrex::Real time,
-                   const string&  basename,
-                   const Vector<int>& avg_vel_p,
-                   const Vector<Real>& avg_region_x_w,
-                   const Vector<Real>& avg_region_x_e,
-                   const Vector<Real>& avg_region_y_s,
-                   const Vector<Real>& avg_region_y_n,
-                   const Vector<Real>& avg_region_z_b,
-                   const Vector<Real>& avg_region_z_t )
+void MFIXParticleContainer::
+ComputeAverageVelocities ( const int lev,
+                           const amrex::Real time,
+                           const string&  basename,
+                           const Vector<int>& avg_vel_p,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_x_w,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_x_e,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_y_s,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_y_n,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_z_b,
+                           const Gpu::ManagedDeviceVector<Real>& avg_region_z_t )
 {
 
   // Count number of calls -- Used to determin when to create file from scratch
@@ -1659,45 +1951,19 @@ void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)
 {
     for (MFIter mfi(mf_to_be_filled); mfi.isValid(); ++mfi) {
        const Box& sbx = mf_to_be_filled[mfi].box();
-       mfix_cap_eps(sbx.loVect(), sbx.hiVect(), (mf_to_be_filled)[mfi].dataPtr());
+
+//       const Real max_pack = 0.42;
+       const Real max_pack = 0.21;
+
+       Array4<Real> const& ep_g = mf_to_be_filled.array(mfi);
+
+// These lines are commented because this code represents a functionality which
+// may be added in future developments
+//       AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+//       {
+//         ep_g(i,j,k) = std::max(max_pack, ep_g(i,j,k));
+//       });
     }
-}
-
-void MFIXParticleContainer::time_advance(MFIXParIter& pti, int ntot, Real subdt, Vector<Real>& tow, Vector<Real>& fc)
-{
-    BL_PROFILE_VAR("des_time_loop()", des_time_loop);
-    auto & my_particles = pti.GetArrayOfStructs();
-    int cnt = 0;
-
-    // The C++ version below replaces this Fortran call
-    // des_time_loop ( &nrp,  particles,
-    //                 &ntot, tow[index].dataPtr(), fc[index].dataPtr(), &subdt,
-    //                 &xlen, &ylen, &zlen, &stime, &n);
-
-    for(auto & particle : my_particles)
-    {
-       particle.rdata(realData::velx) += subdt * (
-           (particle.rdata(realData::dragx) + fc[cnt       ]) /  particle.rdata(realData::mass) + gravity[0]);
-       particle.rdata(realData::vely) += subdt * (
-           (particle.rdata(realData::dragy) + fc[cnt+  ntot]) /  particle.rdata(realData::mass) + gravity[1]);
-       particle.rdata(realData::velz) += subdt * (
-           (particle.rdata(realData::dragz) + fc[cnt+2*ntot]) /  particle.rdata(realData::mass) + gravity[2]);
-
-       particle.rdata(realData::omegax) += subdt * particle.rdata(realData::oneOverI) * tow[cnt       ];
-       particle.rdata(realData::omegay) += subdt * particle.rdata(realData::oneOverI) * tow[cnt+  ntot];
-       particle.rdata(realData::omegaz) += subdt * particle.rdata(realData::oneOverI) * tow[cnt+2*ntot];
-
-       cnt += 1;
-
-       particle.pos(0) += subdt * particle.rdata(realData::velx);
-       particle.pos(1) += subdt * particle.rdata(realData::vely);
-       particle.pos(2) += subdt * particle.rdata(realData::velz);
-    }
-
-    const int nrp = NumberOfParticles(pti);
-    call_usr2_des(&nrp,my_particles.data());
-
-    BL_PROFILE_VAR_STOP(des_time_loop);
 }
 
 void MFIXParticleContainer::set_particle_properties(int pstate, Real pradius, Real pdensity,

@@ -25,7 +25,6 @@ MODULE INIT_NAMELIST_MODULE
 
       use bc
       use ic
-      use drag, only: drag_c1, drag_d1
       use constant, only: gravity
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use des_init_namelist_module, only: des_init_namelist
@@ -44,8 +43,7 @@ MODULE INIT_NAMELIST_MODULE
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
       use run, only: call_usr, description
-      use run, only: dt_fac, dt_max, dt_min, run_name
-      use drag, only: drag_type
+      use run, only: run_name
       use scales, only: p_ref, p_scale
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
@@ -75,92 +73,6 @@ MODULE INIT_NAMELIST_MODULE
 !  <description>Problem description. Limited to 60 characters.</description>
       DESCRIPTION = UNDEFINED_C
 !</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>Maximum time step size.</description>
-!  <dependent keyword="TIME" value="DEFINED"/>
-!  <range min="0.0" max="+Inf" />
-      dt_max = ONE
-!</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>Minimum time step size.</description>
-!  <dependent keyword="TIME" value="DEFINED"/>
-!  <range min="0.0" max="+Inf" />
-      dt_min = 1.0D-6
-!</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!    Factor for adjusting time step.
-!    * The value must be less than or equal to 1.0.
-!    * A value of 1.0 keeps the time step constant which may help overcome
-!      initial non-convergence.
-!  </description>
-!  <dependent keyword="TIME" value="DEFINED"/>
-!  <range min="0.0" max="1" />
-      dt_fac = 0.9D0
-!</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!     Available gas-solids drag models.
-!     Note: The extension _PCF following the specified drag model
-!     indicates that the polydisperse correction factor is available.
-!     For PCF details see:
-!     o Van der Hoef MA, Beetstra R, Kuipers JAM. (2005)
-!       Journal of Fluid Mechanics.528:233-254.
-!     o Beetstra, R., van der Hoef, M. A., Kuipers, J.A.M. (2007).
-!       AIChE Journal, 53:489-501.
-!     o Erratum (2007), AIChE Journal, Volume 53:3020
-!  </description>
-!
-!  <valid value="SYAM_OBRIEN" note="Syamlal M, OBrien TJ (1988).
-!   International Journal of Multiphase Flow 14:473-481.
-!   Two additional parameters may be specified: DRAG_C1, DRAG_D1"/>
-!
-!  <valid value="GIDASPOW" note="Ding J, Gidaspow D (1990).
-!   AIChE Journal 36:523-538"/>
-!
-!  <valid value="GIDASPOW_BLEND" note="Lathouwers D, Bellan J (2000).
-!    Proceedings of the 2000 U.S. DOE
-!        Hydrogen Program Review NREL/CP-570-28890."/>
-!
-!  <valid value="WEN_YU" note="Wen CY, Yu YH (1966).
-!   Chemical Engineering Progress Symposium Series 62:100-111."/>
-!
-!  <valid value="KOCH_HILL" note="Hill RJ, Koch DL, Ladd JC (2001).
-!   Journal of Fluid Mechanics, 448: 213-241. and 448:243-278."/>
-!
-!  <valid value="BVK" note="Beetstra, van der Hoef, Kuipers (2007).
-!   Chemical Engineering Science 62:246-255"/>
-!
-!  <valid value="useR_DRAG" note="Invoke user-defined drag law. (usr_drag.f)"/>
-!
-!  <valid value="GIDASPOW_PCF" note="see GIDASPOW"/>
-!  <valid value="GIDASPOW_BLEND_PCF" note="see GIDASPOW_BLEND"/>
-!  <valid value="WEN_YU_PCF" note="see WEN_YU"/>
-!  <valid value="KOCH_HILL_PCF" note="see KOCH_HILL"/>
-!
-      DRAG_TYPE = 'SYAM_OBRIEN'
-!</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!    Quantity for calibrating Syamlal-O'Brien drag correlation using Umf
-!    data.  This is determined using the Umf spreadsheet.
-!  </description>
-      DRAG_C1 = 0.8d0
-!</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!    Quantity for calibrating Syamlal-O'Brien drag correlation using Umf
-!    data.  This is determined using the Umf spreadsheet.
-!  </description>
-      DRAG_D1 = 2.65d0
-!</keyword>
-
 
 !#####################################################################!
 !                           Physical Parameters                       !
@@ -392,42 +304,6 @@ MODULE INIT_NAMELIST_MODULE
 !#####################################################################!
 
 !<keyword category="Boundary Condition" required="false">
-!  <description>X coordinate of the west face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_X_W(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>X coordinate of the east face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_X_E(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Y coordinate of the south face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Y_S(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Y coordinate of the north face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Y_N(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Z coordinate of the bottom face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Z_B(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Z coordinate of the top face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_Z_T(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
 !  <description>Z coordinate of the top face or edge.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
       BC_NORMAL(:,:) = UNDEFINED
@@ -469,20 +345,8 @@ MODULE INIT_NAMELIST_MODULE
 !      values of fluid and solids velocities are only used initially
 !      as MFIX computes these values at this inlet boundary.' />
 !
-!  <valid value='FREE_SLIP_WALL' alias='FSW'
-!    note='Velocity gradients at the wall vanish./>
-!
 !  <valid value='NO_SLIP_WALL' alias='NSW'
 !    note='All components of the velocity vanish at the wall./>
-!
-!  <valid value='PAR_SLIP_WALL' alias='PSW'
-!    note='Partial slip at the wall implemented as
-!      dv/dn + hw (v - vw) = 0, where n is the normal pointing from the
-!      fluid into the wall. The coefficients hw and vw should be
-!      specified. For free slip set hw = 0. For no slip leave hw
-!      undefined (hw=+inf) and set vw = 0. To set hw = +inf, leave it
-!      unspecified. />
-      BC_TYPE(:) = UNDEFINED_C
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -617,22 +481,10 @@ MODULE INIT_NAMELIST_MODULE
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
-!  <description>X-component of gas velocity at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_U_G(:) = ZERO
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
 !  <description>X-component of solids-phase velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
       BC_U_S(:,:) = ZERO
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Y-component of gas velocity at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_V_G(:) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -643,16 +495,28 @@ MODULE INIT_NAMELIST_MODULE
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
-!  <description>Z-component of gas velocity at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
-      BC_W_G(:) = ZERO
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
 !  <description>Z-component of solids-phase velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
       BC_W_S(:,:) = ZERO
+!</keyword>
+
+!<keyword category="Boundary Condition" required="false">
+!  <description>X-component of gas velocity at the BC plane.</description>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
+      BC_U_G(:) = ZERO
+!</keyword>
+
+!<keyword category="Boundary Condition" required="false">
+!  <description>Y-component of gas velocity at the BC plane.</description>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
+      BC_V_G(:) = ZERO
+!</keyword>
+
+!<keyword category="Boundary Condition" required="false">
+!  <description>Z-component of gas velocity at the BC plane.</description>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
+      BC_W_G(:) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">

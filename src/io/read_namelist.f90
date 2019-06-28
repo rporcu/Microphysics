@@ -14,15 +14,13 @@ MODULE read_namelist_module
 !     Purpose: Read in the NAMELIST variables                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_NAMELIST(mfix_dat, dt_inout)
+      SUBROUTINE READ_NAMELIST(mfix_dat)
 
       use bc
-      use drag, only: drag_c1, drag_d1
       use constant, only: gravity
       use deprecated_or_unknown_module, only: deprecated_or_unknown
-      use discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input, particle_types
-      use discretelement, only: des_etat_fac, des_etat_w_fac, v_poisson, vw_poisson
-      use discretelement, only: des_explicitly_coupled, des_oneway_coupled, e_young, ew_young
+      use discretelement, only: des_en_input, des_en_wall_input, particle_types
+      use discretelement, only: des_etat_fac, des_etat_w_fac
       use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, des_etat_w_fac
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
 
@@ -40,8 +38,7 @@ MODULE read_namelist_module
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_w
       use run, only: call_usr, description
-      use run, only: dt_fac, dt_max, dt_min, run_name
-      use drag, only: drag_type
+      use run, only: run_name
       use scales, only: p_ref, p_scale
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
@@ -56,7 +53,6 @@ MODULE read_namelist_module
 ! Dummy Arguments:
 !------------------------------------------------------------------------//
       character(len=*), intent(in   ) :: mfix_dat
-      real(rt),         intent(  out) :: dt_inout
 
 ! Local Variables:
 !------------------------------------------------------------------------//
@@ -154,8 +150,6 @@ MODULE read_namelist_module
 
       CLOSE(UNIT=UNIT_DAT)
 
-      dt_inout = dt
-
       RETURN
 
       CONTAINS
@@ -181,11 +175,9 @@ MODULE read_namelist_module
       include 'geometry.inc'
       include 'gas_phase.inc'
       include 'initial_conditions.inc'
-      include 'boundary_conditions.inc'
       include 'point_sources.inc'
       include 'usr_hooks.inc'
       include 'desnamelist.inc'
-      include 'usrnlst.inc'
 
       ERROR = .FALSE.
 
@@ -225,20 +217,11 @@ MODULE read_namelist_module
       READ(STRING, NML=GAS_PHASE, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
-
 ! Initial condtion keywords
       STRING=''; STRING = '&INITIAL_CONDITIONS '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=INITIAL_CONDITIONS, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
-
-
-! Boundary condition keywords
-      STRING=''; STRING = '&BOUNDARY_CONDITIONS '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=BOUNDARY_CONDITIONS, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
-
 
 ! Point source keywords
       STRING=''; STRING = '&POINT_SOURCES '//&
@@ -257,12 +240,6 @@ MODULE read_namelist_module
        STRING=''; STRING = '&DES_INPUT_DATA '//&
             trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
        READ(STRING, NML=DES_INPUT_DATA, IOSTAT=IOS)
-       IF(IOS == 0)  RETURN
-
-! User defined input parameters.
-       STRING=''; STRING = '&USR_INPUT_DATA '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-       READ(STRING, NML=USR_INPUT_DATA, IOSTAT=IOS)
        IF(IOS == 0)  RETURN
 
        ERROR = .TRUE.

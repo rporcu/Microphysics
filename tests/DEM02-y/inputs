@@ -1,5 +1,7 @@
 amr.stop_time = 10.0
 
+mfix.fixed_dt = 2.e-4
+
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 4 4 4
 
@@ -19,3 +21,4 @@ geometry.prob_lo     = 0.    0.    0.       # lo corner of physical domain
 geometry.prob_hi     = 1.0   1.0   1.0      # hi corner of physical domain
 
 mfix.geometry = box
+amr.plt_regtest = 1

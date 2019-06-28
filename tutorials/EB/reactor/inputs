@@ -22,6 +22,7 @@ amr.max_grid_size_z =  8
 fabarray.mfiter_tile_size =  32 32 32
 particles.tile_size =        32 32 32
 
+mfix.drag_type = "WenYu"
 
 #_______________________________________________________________________
 # IO / Checkpoing
@@ -37,10 +38,10 @@ amr.check_file = "chk"
 #_______________________________________________________________________
 # Solver settings
 
-#! Fluid solver
-#!-----------------------------------------------------------//
-mfix.use_proj_method = 1
 mfix.fixed_dt = 1
+
+mfix.dt_min   = 1.e-7
+mfix.dt_max   = 5.e-5
 
 amr.stop_time = 0.001
 

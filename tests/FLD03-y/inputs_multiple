@@ -3,12 +3,11 @@
 
 #amrex.fpe_trap_invalid = 1
 
-mfix.steady_state_tol=1.0e-10
+mfix.steady_state     = 1
+mfix.steady_state_tol = 1.0e-10
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-
-mfix.explicit_diffusion = 0
 
 amr.blocking_factor = 4
 
@@ -40,6 +39,20 @@ amr.max_grid_size_z =  1024
 # Fluid: Maximum tile size within each grid
 fabarray.mfiter_tile_size = 1024 1024 1024
 
+
+#! EB settings
+#!-----------------------------------------------------------//
+
+ylo.type = "pi"
+ylo.pressure = 12.0
+
+yhi.type = "po"
+yhi.pressure =  0.0
+
+zlo.type = "nsw"
+zhi.type = "nsw"
+
+
 #_______________________________________________________________________
 # IO / Checkpointing
 
@@ -48,3 +61,5 @@ amr.plot_file = FLD03
 
 amr.check_int = -1
 amr.par_ascii_int = -1
+
+amr.plt_regtest = 1

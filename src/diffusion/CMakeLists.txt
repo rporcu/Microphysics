@@ -1,5 +1,13 @@
-add_sources( diffusion_mod.f90 )
-add_sources( diffusion_eb_mod.f90)
-add_sources( eb_wallflux_mod.f90 )
-add_sources( mfix_diffusion.cpp )
-add_sources( mfix_diff_F.H )
+target_include_directories(mfixcore
+   PUBLIC
+   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>)
+
+target_sources( mfixcore
+   PRIVATE 
+   mfix_compute_divtau.cpp
+   mfix_diffuse_velocity.cpp
+   mfix_redist_diff.cpp
+   mfix_redist_diff.hpp
+   mfix_diff_F.H
+   set_diff_bcs.f90
+   )

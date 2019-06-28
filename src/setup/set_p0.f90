@@ -81,13 +81,12 @@ subroutine set_p0(lo, hi, domlo, domhi, &
    ntop = max(0,shi(2)-domhi(2))
    nup  = max(0,shi(3)-domhi(3))
 
-
    ! ---------------------------------------------------------------->>>
    !     If the bc's are pressure inflow/outflow then be sure to capture that in p0 and gp0
    ! ---------------------------------------------------------------->>>
 
    if ( (bct_ilo(domlo(2),domlo(3),1) .eq. pinf_)   .and. &
-    (bct_ihi(domlo(2),domlo(3),1) .eq. pout_) ) then
+        (bct_ihi(domlo(2),domlo(3),1) .eq. pout_) ) then
 
       delp_dir = 0
 
@@ -102,7 +101,7 @@ subroutine set_p0(lo, hi, domlo, domhi, &
       pj  = p_hi
 
    else if ( bct_ihi(domlo(2),domlo(3),1) .eq. pinf_  .and. &
-    bct_ilo(domlo(2),domlo(3),1) .eq. pout_) then
+             bct_ilo(domlo(2),domlo(3),1) .eq. pout_) then
 
       delp_dir = 0
 
@@ -117,8 +116,7 @@ subroutine set_p0(lo, hi, domlo, domhi, &
       pj  = p_hi
 
    else if ( bct_jlo(domlo(1),domlo(3),1) .eq. pinf_  .and. &
-    bct_jhi(domlo(1),domlo(3),1) .eq. pout_) then
-
+             bct_jhi(domlo(1),domlo(3),1) .eq. pout_) then
 
       delp_dir = 1
 
@@ -133,7 +131,7 @@ subroutine set_p0(lo, hi, domlo, domhi, &
       pj  = p_hi
 
    else if ( bct_jhi(domlo(1),domlo(3),1) .eq. pinf_  .and. &
-    bct_jlo(domlo(1),domlo(3),1) .eq. pout_) then
+             bct_jlo(domlo(1),domlo(3),1) .eq. pout_) then
 
       delp_dir = 1
 
@@ -148,11 +146,11 @@ subroutine set_p0(lo, hi, domlo, domhi, &
       pj = p_hi
 
    else if ( bct_klo(domlo(1),domlo(2),1) .eq. pinf_  .and. &
-    bct_khi(domlo(1),domlo(2),1) .eq. pout_) then
+             bct_khi(domlo(1),domlo(2),1) .eq. pout_) then
 
       delp_dir = 2
 
-      bcv_lo = bct_klo(domlo(1),domlo(1),2)
+      bcv_lo = bct_klo(domlo(1),domlo(2),2)
       p_lo   = scale_pressure(bc_p_g(bcv_lo))
 
       bcv_hi = bct_khi(domlo(1),domlo(2),2)
@@ -164,7 +162,7 @@ subroutine set_p0(lo, hi, domlo, domhi, &
 
 
    else if ( bct_khi(domlo(1),domlo(2),1) .eq. pinf_  .and. &
-    bct_klo(domlo(1),domlo(2),1) .eq. pout_) then
+             bct_klo(domlo(1),domlo(2),1) .eq. pout_) then
 
       delp_dir = 2
 
@@ -181,6 +179,8 @@ subroutine set_p0(lo, hi, domlo, domhi, &
    end if
 
    ! ---------------------------------------------------------------->>>
+   !  Set default value of pj to zero in case no initial conditions are set
+   pj = zero
 
    !  Make sure that ic_p_g is set if using delp pressure conditions
    do icv = 1, dim_ic
@@ -249,8 +249,7 @@ subroutine set_p0(lo, hi, domlo, domhi, &
       gp0(3) = -dpodz
    endif
 
-
-   GOTO 100   ! pressure in all intial condition region cells was defined
+   GOTO 100   ! pressure in all initial condition region cells was defined
 
    ! ----------------------------------------------------------------<<<
 

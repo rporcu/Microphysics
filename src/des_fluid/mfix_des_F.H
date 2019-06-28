@@ -1,3 +1,6 @@
+#ifndef _MFIX_DES_F_H_
+#define _MFIX_DES_F_H_
+
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
@@ -13,82 +16,25 @@ extern "C"
 {
 #endif
 
-    int des_continuum_coupled ();
+    void get_collision_model(int* coll_model_flag);
 
-    void get_gravity (
-        amrex::Real* grav
-        );
+    void get_lsd_collision_coefficients(int* nphase,
+                                        amrex::Real* kt, amrex::Real* kt_w,
+                                        amrex::Real* kn, amrex::Real* kn_w,
+                                        amrex::Real* mew, amrex::Real* mew_w,
+                                        amrex::Real* etan, amrex::Real* etan_w,
+                                        amrex::Real* etat, amrex::Real* etat_w,
+                                        amrex::Real* neighborhood);
 
-    void calc_volume_fraction(
-        const int*  lo, const int*  hi,
-        const int* slo, const int* shi,
-        const int*  np, void* particles,
-        amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-        amrex::Real* ep_g
-        );
-
-
-    void mfix_deposit_cic_eb(
-        const amrex_particle_real*, int ns, int np,
-        amrex_real* vol,          const int* vlo, const int* vhi,
-        const amrex_real* vratio, const int* slo, const int* shi,
-        const void*        flags, const int* flo, const int* fhi,
-        const amrex_real* plo, const amrex_real* dx,
-        const int* fortran_comp
-        );
-
-
-    void mfix_multi_deposit_cic_eb(
-        const amrex_particle_real*, int ns, int np,
-        amrex_real* mf_bx, amrex_real* mf_bu,
-        const int* lo, const int* hi,
-        const amrex_real* vratio, const int* vlo, const int* vhi,
-        const void*        flags, const int* flo, const int* fhi,
-        const amrex_real* plo, const amrex_real* dx,
-        const int* beta_comp, const int* beta_vel_comp
-        );
-
-    void mfix_interpolate_cic(
-        const amrex_particle_real*, int ns, int np,
-        const amrex::Real* acc, const int* lo, const int* hi, int ncomp,
-        const amrex::Real* plo, const amrex::Real* dx
-        );
-
-    void calc_particle_beta(
-        const amrex::Real*  ep_g, const int* slo, const int* shi,
-        const amrex::Real* ro_g,  const amrex::Real* mu_g,
-        const amrex::Real* vel_g, const int* ulo, const int* uhi,
-        const int* np, void* particles,
-        const amrex::Real* x0, const amrex::Real* dx
-        );
-
-
-    void calc_drag_particle(
-        const amrex::Real* gp , const int* gplo , const int* gphi,
-        const amrex::Real* gp0,
-        const amrex::Real* vel, const int* ulo, const int* uhi,
-        const int* np, void* particles, const amrex::Real* dx,
-        const amrex::Real* x0
-        );
-
-
-    void calc_drag_particle_eb(
-        const amrex::Real* gp , const int* gplo , const int* gphi,
-        const amrex::Real* gp0,
-        const amrex::Real* vel, const int* ulo,   const int* uhi,
-        const void*  flags    , const int* flo,   const int* fhi,
-        const int* np, void* particles, const amrex::Real* dx,
-        const amrex::Real* x0
-        );
-
-    void calc_wall_collisions(
-        void* rparticles, const int* ntot, const int* nrp,
-        amrex::Real* tow, amrex::Real* fc, amrex::Real* subdt,
-        const void* flag, const int* fglo, const int* fghi,
-        const amrex_real* normal, const int* nlo, const int* nhi,
-        const amrex_real* bcent,  const int* blo, const int* bhi,
-        const amrex::Real* dx
-        );
+    void des_drag_gp(
+        const int* p_id,
+        const amrex::Real* particle_vel ,
+        const amrex::Real*    fluid_vel ,
+        const amrex::Real* ep_g, const amrex::Real* ro,
+        const amrex::Real* mu, const amrex::Real* f_gp,
+        const int* i, const int* j, const int* k,
+        const amrex::Real* rad, const amrex::Real* vol,
+        const amrex::Real* ro_s);
 
     void calc_particle_collisions(
         void* rparticles, const int* nrp,
@@ -96,26 +42,6 @@ extern "C"
         const int* nbor_list, const int* size_nl,
         amrex::Real* tow, amrex::Real* fc,
         amrex::Real* subdt, int* ncoll
-        );
-
-    void flip_particle_vol(
-        const int* slo, const int* shi,
-        amrex::Real* ep_g,
-        const int* bc_ilo, const int* bc_ihi,
-        const int* bc_jlo, const int* bc_jhi,
-        const int* bc_klo, const int* bc_khi,
-        const int* domlo, const int* domhi,
-        const int* nghost
-        );
-
-    void flip_drag_terms(
-        amrex::Real* beta  , const int* blo, const int* bhi,
-        amrex::Real* beta_u, const int* dlo, const int* dhi,
-        const int* bc_ilo, const int* bc_ihi,
-        const int* bc_jlo, const int* bc_jhi,
-        const int* bc_klo, const int* bc_khi,
-        const int* domlo, const int* domhi,
-        const int* nghost
         );
 
     void set_particle_properties(
@@ -138,18 +64,12 @@ extern "C"
         const  amrex::Real* tstart, const amrex::Real* dt, int* nsubsteps, amrex::Real* subdt
         );
 
-    void des_time_loop(
-        const int* nrp,  void* rparticles,
-        const int* nf, amrex::Real* tow, amrex::Real* fc,
-        amrex::Real* subdt,
-        amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-        amrex::Real* stime, int* nstep
-        );
-
     void call_usr3_des(const int* np, void* particles);
 
     void call_usr2_des(const int* np, void* particles);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

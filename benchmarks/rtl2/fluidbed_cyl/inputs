@@ -5,25 +5,22 @@
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.fixed_dt         = 0
 
 mfix.cfl = 0.5
 
-#amr.max_step = 100
+#amr.max_step = 20
 amr.stop_time = 1.20
 
-mfix.explicit_diffusion = 0
-
 mfix.particle_init_type = "Auto"
+mfix.drag_type = "BVK2"
 
 amr.blocking_factor = 2
 
-mac.mg_verbose          = 1
-
+mac.mg_verbose       = 1
 diffusion.mg_verbose = 0
 
-mfix.mg_verbose         = 1
-mfix.mg_cg_verbose      = 0
+mfix.mg_verbose      = 1
+mfix.mg_cg_verbose   = 0
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -89,6 +86,16 @@ cylinder.height = -1.0
 
 cylinder.direction = 0
 cylinder.center    =  0.004   0.001   0.001
+
+#! BCs 
+#!-----------------------------------------------------------//
+xlo.location = 0.0
+xlo.type = "mi"
+xlo.velocity = 0.015
+
+xhi.location = 0.008
+xhi.type = "po"
+xhi.pressure = 0.0
 
 #_______________________________________________________________________
 # Particle load balancing

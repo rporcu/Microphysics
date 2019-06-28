@@ -22,8 +22,6 @@ void mfix::make_eb_cylinder()
 {
     ParmParse pp("cylinder");
 
-    int max_level_here = 0;
-
     /****************************************************************************
      * Get cylinder information from inputs file.                               *
      ***************************************************************************/
@@ -49,9 +47,6 @@ void mfix::make_eb_cylinder()
      *                                                                          *
      ***************************************************************************/
 
-    // set up ebfactory
-    EBSupport m_eb_support_level = EBSupport::full;
-
     amrex::Print() << " " << std::endl;
     amrex::Print() << " Internal Flow: " << inside << std::endl;
     amrex::Print() << " Radius:    " << radius    << std::endl;
@@ -60,10 +55,6 @@ void mfix::make_eb_cylinder()
     amrex::Print() << " Center:    " << center[0] << ", "
                    << center[1] << ", "
                    << center[2] << std::endl;
-
-
-    // Create the cylinder -- used for both fluid and particles
-    amrex::Print() << "Building the cylinder (side wall) geometry ..." << std::endl;
 
     // Build the Cylinder geometry first representing the curved walls (this is
     // always present regardless of user input).

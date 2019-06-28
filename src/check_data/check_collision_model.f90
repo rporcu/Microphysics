@@ -12,7 +12,7 @@ module check_collision_model
   implicit none
 
   private
-  public :: check_collision_model_lsd, check_collision_model_hertz
+  public :: check_collision_model_lsd
 
 contains
 
@@ -113,127 +113,5 @@ contains
 
   end subroutine check_collision_model_lsd
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: CHECK_COLLISION_MODEL_HERTZ                             !
-!                                                                      !
-!  Purpose: Check user input data for Hertzian collisions.             !
-!                                                                      !
-!  References:                                                         !
-!   - Schafer et al., J. Phys. I France, 1996, 6, 5-20 (see page 7&13) !
-!   -  Van der Hoef et al., Advances in Chemical Engineering, 2006, 31,!
-!      65-149 (pages 94-95)                                            !
-!   - Silbert et al., Physical Review E, 2001, 64, 051302 1-14 (page 5)!
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine check_collision_model_hertz
-
-  use constant,       only: mmax
-  use discretelement, only: des_en_input, des_en_wall_input,  &
-    des_et_input, des_et_wall_input, e_young, ew_young, v_poisson, vw_poisson
-
-    integer           :: m, l, lc
-    character(len=64) :: msg
-
-    ! Initialize the error manager.
-    call init_err_msg("CHECK_SOLIDS_DEM_COLL_HERTZ")
-
-    lc=0
-    do m=1,mmax
-       if(is_undefined(e_young(m))) then
-          MSG=''; write(MSG,"('Phase ',I2,' Youngs modulus')") M
-          write(err_msg,1002) 'E_YOUNG', msg
-          call flush_err_msg(abort=.true.)
-       endif
-       if(is_undefined(v_poisson(m))) then
-          MSG=''; write(MSG,"('Phase ',I2,' Poissons ratio')") M
-          write(err_msg,1002) 'V_POISSON', msg
-          call flush_err_msg(abort=.true.)
-       elseif(v_poisson(m) > 0.5d0 .or.                              &
-            v_poisson(m) <= -one) then
-          write(err_msg,1001) trim(ivar('V_POISSON',m)),             &
-               ival(v_poisson(m))
-          call flush_err_msg(abort=.true.)
-       endif
-    enddo
-
-    ! check young's modulus and poisson ratio
-    if(is_undefined(ew_young)) then
-       MSG='Wall value for Youngs modulus'
-       write(err_msg,1002) 'EW_YOUNG', msg
-       call flush_err_msg(abort=.true.)
-    endif
-
-    if(is_undefined(vw_poisson)) then
-       MSG='Wall value for Poissons ratio'
-       write(err_msg,1002) 'VW_POISSON', msg
-       call flush_err_msg(abort=.true.)
-    elseif (vw_poisson > 0.5d0 .or. vw_poisson <= -one) then
-       write(err_msg,1001) 'VW_POISSON',ival(vw_poisson)
-       call flush_err_msg(abort=.true.)
-    endif
-
-    do m=1,mmax
-       do l=m,mmax
-          lc = lc+1
-
-          ! Check particle-particle normal restitution coefficient
-          if(is_undefined(des_en_input(lc))) then
-             write(err_msg,1000) trim(ivar('DES_EN_INPUT',lc))
-             call flush_err_msg(abort=.true.)
-
-          elseif(des_en_input(lc) > one .or.                         &
-               des_en_input(lc) < zero) then
-             write(err_msg,1001) trim(ivar('DES_EN_INPUT',lc)),      &
-                  trim(ival(des_en_input(lc)))
-             call flush_err_msg(abort=.true.)
-          endif
-
-          ! Check particle-particle tangential restitution coefficient
-          if(is_undefined(des_et_input(m))) then
-             write(err_msg,1000) trim(ivar('DES_ET_INPUT',m))
-             call flush_err_msg(abort=.true.)
-          elseif(des_et_input(m) > one .or.                          &
-               des_et_input(m) < zero) then
-             write(err_msg,1001) trim(ivar('DES_ET_INPUT',m)),       &
-                  ival(des_et_input(m))
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
-
-       ! Check particle-wall normal restitution coefficient.
-       if(is_undefined(des_en_wall_input(m))) then
-          write(err_msg,1000) trim(ivar('DES_EN_WALL_INPUT',m))
-          call flush_err_msg(abort=.true.)
-       elseif(des_en_wall_input(m) > one .or.                        &
-            des_en_wall_input(m) < zero) then
-          write(err_msg,1001) trim(ivar('DES_EN_WALL_INPUT',m)),     &
-               trim(ival(des_en_wall_input(m)))
-          call flush_err_msg(abort=.true.)
-       endif
-
-       ! Check particle-wall tangential restitution coefficient
-       if(is_undefined(des_et_wall_input(m))) then
-          write(err_msg,1000) trim(ivar('DES_ET_WALL_INPUT',m))
-          call flush_err_msg(abort=.true.)
-       elseif(des_et_wall_input(m) > one .or.                        &
-            des_et_wall_input(m) < zero) then
-          write(err_msg,1001) trim(ivar('DES_ET_WALL_INPUT',m)),     &
-               trim(ival(des_et_wall_input(m)))
-          call flush_err_msg(abort=.true.)
-       endif
-    enddo
-
-    call finl_err_msg
-
-1000 format('Error 1000: Required input not specified: ',A,/&
-       'Please correct the input deck.')
-
-1001 format('Error 1001: Illegal or unknown input: ',A,' = ',A,/      &
-          'Please correct the input deck.')
-
-1002 format('Error 1002: Required input not specified: ',A,/          &
-         'Description:',A,/'Please correct the input deck.')
-
-  end subroutine check_collision_model_hertz
 
 end module check_collision_model

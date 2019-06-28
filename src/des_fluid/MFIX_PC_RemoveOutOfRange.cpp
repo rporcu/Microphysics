@@ -37,12 +37,9 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
 
         const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
 
-        for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti) 
+        for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti)
         {
             // Real particles
-            const int nrp = NumberOfParticles(pti);
-
-            void * particles  = pti.GetArrayOfStructs().data();
 
             const Box & bx = pti.tilebox();
 
@@ -51,25 +48,30 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
             {
                 if ((*flags)[pti].getType(bx) == FabType::covered)
                 {
-                    for (auto & p: pti.GetArrayOfStructs())
+                    for (int ip = 0; ip < pti.numParticles(); ++ip)
+                    {
+                        ParticleType& p = pti.GetArrayOfStructs()[ip];
                         p.id() = -1;
+                    }
                 }
                 else
                 {
                     const auto& flag_fab =  flags->array(pti);
                     const auto&  phi_fab = ls_phi->array(pti);
-                    for (auto & p: pti.GetArrayOfStructs())
+                    for (int ip = 0; ip < pti.numParticles(); ++ip)
                     {
-                       int ic = floor( ( p.pos(0) - plo[0] ) / dx[0] );
-                       int jc = floor( ( p.pos(1) - plo[1] ) / dx[1] );
-                       int kc = floor( ( p.pos(2) - plo[2] ) / dx[2] );
+                        ParticleType& p = pti.GetArrayOfStructs()[ip];
 
-                       if (flag_fab(ic,jc,kc).isCovered())
-                       {
+                        int ic = floor( ( p.pos(0) - plo[0] ) / dx[0] );
+                        int jc = floor( ( p.pos(1) - plo[1] ) / dx[1] );
+                        int kc = floor( ( p.pos(2) - plo[2] ) / dx[2] );
+
+                        if (flag_fab(ic,jc,kc).isCovered())
+                        {
                             p.id() = -1;
-                       } 
-                       else 
-                       { // Interpolates level-set from nodal phi to position pos
+                        }
+                        else
+                        { // Interpolates level-set from nodal phi to position pos
 
                             Real x = ( p.pos(0) - plo[0] ) / dx_ls[0];
                             Real y = ( p.pos(1) - plo[1] ) / dx_ls[1];
@@ -96,8 +98,24 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
                                             + phi_fab(i+1, j,   k+1) * wx_hi * wy_lo * wz_hi
                                             + phi_fab(i+1, j+1, k+1) * wx_hi * wy_hi * wz_hi;
 
-                            if (phi_interp < p.rdata(realData::radius)) p.id() = -1;
-                       }
+                            if (phi_interp < p.rdata(realData::radius))
+                            {
+                                 p.id() = -1;
+                            } 
+#if 0
+                            else {
+                                 std::cout << " 1 "
+                                           << p.pos(0) << " "
+                                           << p.pos(1) << " "
+                                           << p.pos(2) << " "
+                                           << p.rdata(realData::radius)  << " "
+                                           << p.rdata(realData::density) << " "
+                                           << p.rdata(realData::velx)    << " "
+                                           << p.rdata(realData::vely)    << " "
+                                           << p.rdata(realData::velz) << std::endl;
+                            }
+#endif
+                        }
                     }
                 }
             }

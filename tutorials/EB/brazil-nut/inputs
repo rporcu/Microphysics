@@ -14,10 +14,6 @@ fabarray.mfiter_tile_size = 1024 1024 1024
 # Maximum particle tile size
 particles.tile_size       = 1024 1024 1024
 
-# SIMPLE or Projection Method for p-v coupling
-## mfix.use_proj_method = 1
-## mfix.fixed_dt = 1
-
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
 
@@ -31,6 +27,8 @@ amr.plot_file = R_AMR_
 amr.par_ascii_int  = 1
 amr.par_ascii_file = vis
 
+mfix.dt_min = 1.e-9
+mfix.dt_max = 1.e-4
 
 amr.dual_grid  =  0
 #mfix.load_balance_type = "KDTree"
@@ -51,4 +49,4 @@ mfix.levelset__pad        = 16      # how far (in refined units) should the leve
 mfix.levelset__eb_refinement = 1   # resolution of the eb used for generating the levelset
 mfix.levelset__eb_pad        = 2   # how far the eb extends out of the problem domain
 
-
+mfix.drag_type = "Gidaspow"

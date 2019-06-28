@@ -5,12 +5,12 @@
 
 amr.stop_time = 0.35
 
-mfix.fixed_dt=1
+mfix.fixed_dt = 1.e-3
+
+mfix.drag_type = "UserDrag"
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-
-mfix.explicit_diffusion = 0
 
 amr.blocking_factor = 5
 
@@ -55,6 +55,16 @@ fabarray.mfiter_tile_size = 1024 1024 1024
 particles.tile_size = 1024 1024 1024
 
 
+#! EB settings
+#!-----------------------------------------------------------//
+
+zlo.type = "mi"
+zlo.velocity =  0.4
+
+zhi.type = "po"
+zhi.pressure = 0.0
+
+
 #_______________________________________________________________________
 # IO / Checkpointing
 
@@ -66,3 +76,5 @@ amr.check_file = DEM06_chk
 
 amr.par_ascii_int  = 10
 amr.par_ascii_file = DEM06_par
+
+amr.plt_regtest = 1

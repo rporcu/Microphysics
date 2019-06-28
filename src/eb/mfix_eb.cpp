@@ -24,17 +24,8 @@ void mfix::make_eb_geometry ()
     MakeBCArrays();
     check_data();
 
-    Real dx = geom[0].CellSize(0);
-    Real dy = geom[0].CellSize(1);
-    Real dz = geom[0].CellSize(2);
-
-    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
-    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
-    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
-
-    Box domain(geom[0].Domain());
-
     int cyc_x=0, cyc_y=0, cyc_z=0;
+
     if (geom[0].isPeriodic(0)) cyc_x = 1;
     if (geom[0].isPeriodic(1)) cyc_y = 1;
     if (geom[0].isPeriodic(2)) cyc_z = 1;
@@ -44,14 +35,12 @@ void mfix::make_eb_geometry ()
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);
 
-
     /****************************************************************************
      *                                                                          *
      * mfix.geometry=<string> specifies the EB geometry. <string> can be on of  *
      * box, cylinder, hopper, clr, clr_riser, general (or blank)                *
      *                                                                          *
      ***************************************************************************/
-
 
     ParmParse pp("mfix");
 
@@ -62,8 +51,6 @@ void mfix::make_eb_geometry ()
      *                                                                          *
      * Legacy inputs:                                                           *
      *   -- mfix.hourglass = true <=> mfix.geometry=box                         *
-     *   -- mfix.clr       = true <=> mfix.geometry=clr                         *
-     *   -- mfix.clr_riser = true <=> mfix.geometry=clr_riser                   *
      *   -- mfix.use_walls = true <=> mfix.geometry=general                     *
      *   -- mfix.use_poy2  = true <=> mfix.geometry=general                     *
      *                                                                          *
@@ -71,13 +58,9 @@ void mfix::make_eb_geometry ()
 
 
     bool hourglass    = false;
-    bool clr          = false;
-    bool clr_riser    = false;
     bool eb_general   = false;
 
     pp.query("hourglass", hourglass);
-    pp.query("clr", clr);
-    pp.query("clr_riser", clr_riser);
 
     bool eb_poly2 = false;
     bool eb_walls = false;
@@ -87,7 +70,7 @@ void mfix::make_eb_geometry ()
     eb_general = eb_poly2 || eb_walls;
 
     // Avoid multiple (ambiguous) inputs
-    if (hourglass || clr || clr_riser || eb_general) {
+    if (hourglass || eb_general) {
         if (! geom_type.empty()) {
             amrex::Abort("The input file cannot specify both:\n"
                          "mfix.<geom_type>=true and mfix.geometry=<geom_type>\n"
@@ -96,8 +79,6 @@ void mfix::make_eb_geometry ()
     }
 
     if (hourglass)  geom_type = "hourglass";
-    if (clr)        geom_type = "clr";
-    if (clr_riser)  geom_type = "clr_riser";
     if (eb_general) geom_type = "general";
 
 
@@ -124,11 +105,15 @@ void mfix::make_eb_geometry ()
         amrex::Print() << "\n Building cyclone geometry." << std::endl;
         make_eb_cyclone();
         contains_ebs = true;
-    } else if(geom_type == "general") {
-        amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
-        // TODO: deal with inflow volfrac
-        make_eb_general();
+    } else if(geom_type == "air-reactor") {
+      amrex::Print() << "\n Building air-reactor geometry." << std::endl;
+        make_eb_air_reactor();
         contains_ebs = true;
+    } else if(geom_type == "general") {
+      amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
+      // TODO: deal with inflow volfrac
+      make_eb_general();
+      contains_ebs = true;
     } else {
         amrex::Print() << "\n No EB geometry declared in inputs => "
                        << " Will read walls from mfix.dat only."
@@ -171,11 +156,11 @@ void mfix::make_eb_factories () {
 
 void mfix::fill_eb_levelsets ()
 {
-
+    if (ooo_debug) amrex::Print() << "fill_eb_levelsets" << std::endl;
     /****************************************************************************
      *                                                                          *
      * Fill levels either as a single level with refinement, or as a proper     *
-     * multi-level hirearchy                                                    *
+     * multi-level hierarchy                                                    *
      *                                                                          *
      ***************************************************************************/
 
@@ -308,61 +293,15 @@ void mfix::fill_eb_levelsets ()
 
         if (contains_ebs)
         {
-            MultiFab impfunc = MFUtil::regrid(lsf.get_ls_ba(), part_dm, * implicit_functions[1], true);
+            MultiFab impfunc(lsf.get_ls_ba(), lsf.get_dm(), 1, lsf.get_ls_pad());
+            eb_levels[1]->fillLevelSet(impfunc, lsf.get_ls_geom());
+            impfunc.FillBoundary(lsf.get_ls_geom().periodicity());
+
             lsf.Fill( * ebfactory[0], impfunc);
         }
 
         level_sets[1] = lsf.copy_data(part_dm);
         level_sets[0] = lsf.coarsen_data();
-
-        //_______________________________________________________________________
-        // For reference: this (below) is how you would do it without the
-        // LSFactory
-
-
-        // const DistributionMapping & part_dm = pc->ParticleDistributionMap(0);
-        // const BoxArray &            part_ba = pc->ParticleBoxArray(0);
-
-        // //_______________________________________________________________________
-        // // Baseline Level-Set
-        // {
-        //     // NOTE: reference BoxArray is not nodal
-        //     BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-
-        //     level_sets[0].reset(new MultiFab);
-        //     level_sets[0]->define(ba, part_dm, 1, levelset__pad);
-        //     iMultiFab valid(ba, part_dm, 1, levelset__pad);
-
-        //     // NOTE: implicit function data might not be on the right grids
-        //     MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[0], true);
-
-        //     LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
-        //                          32, 1, 1, geom[0], geom[0]);
-        // }
-
-        // //_______________________________________________________________________
-        // // Refined Level-Set
-        // // TODO: Don't actually refine this thing if levelset refinement is 1
-        // {
-        //     // Set up refined geometry
-        //     Box dom = geom[0].Domain();
-        //     dom.refine(levelset__refinement);
-        //     Geometry geom_lev(dom);
-
-        //     // Set up refined BoxArray. NOTE: reference BoxArray is not nodal
-        //     BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-        //     ba.refine(levelset__refinement);
-
-        //     level_sets[1].reset(new MultiFab);
-        //     level_sets[1]->define(ba, part_dm, 1, levelset__pad);
-        //     iMultiFab valid_ref(ba, part_dm, 1, levelset__pad);
-
-        //     // NOTE: implicit function data might not be on the right grids
-        //     MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[1], true);
-
-        //     LSFactory::fill_data(* level_sets[1], valid_ref, * particle_ebfactory[0], impfunc,
-        //                          32, levelset__refinement, 1, geom_lev, geom[0]);
-        // }
     }
     else
     {
@@ -383,8 +322,10 @@ void mfix::fill_eb_levelsets ()
         level_sets[0]->define(ba, part_dm, 1, levelset__pad);
         iMultiFab valid(ba, part_dm, 1, levelset__pad);
 
-        // NOTE: implicit function data might not be on the right grids
-        MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[0], true);
+        MultiFab impfunc(ba, part_dm, 1, levelset__pad);
+        eb_levels[0]->fillLevelSet(impfunc, geom[0]);
+        impfunc.FillBoundary(geom[0].periodicity());
+
 
         LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
                              32, 1, 1, geom[0], geom[0]);
@@ -409,8 +350,9 @@ void mfix::fill_eb_levelsets ()
                                           {levelset__eb_pad + 2, levelset__eb_pad + 2,
                                            levelset__eb_pad + 2}, EBSupport::full);
 
-            // NOTE: implicit function data might not be on the right grids
-            MultiFab impfunc = MFUtil::regrid(ba, part_dm, * implicit_functions[lev]);
+            MultiFab impfunc(ba, part_dm, 1, levelset__pad);
+            eb_levels[lev]->fillLevelSet(impfunc, geom[lev]);
+            impfunc.FillBoundary(geom[lev].periodicity());
 
             IntVect ebt_size{AMREX_D_DECL(32, 32, 32)}; // Fudge factors...
             LSCoreBase::FillLevelSet(* level_sets[lev], * level_sets[lev], eb_factory, impfunc,

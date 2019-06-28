@@ -5,15 +5,10 @@ amrex.fpe_trap_invalid = 1
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.fixed_dt = 0
 
 mfix.cfl = 0.5
 
 amr.stop_time = 0.20
-
-mfix.explicit_diffusion = 1
-
-mfix.use_mac_proj       = true
 
 mfix.particle_init_type = "Auto"
 
@@ -77,6 +72,11 @@ hopper.funnel_height  = 0.00199
 hopper.direction = 0
 hopper.center    =  0.0000  0.0010  0.0010
 
+xlo.type = "po"
+xlo.velocity = 0.0
+
+xhi.type = "po"
+xhi.pressure = 0.0
 
 #_______________________________________________________________________
 # Particle load balancing
@@ -111,3 +111,5 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
+
+mfix.drag_type = "BVK2"

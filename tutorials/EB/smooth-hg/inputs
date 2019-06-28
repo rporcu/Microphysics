@@ -23,7 +23,7 @@ fabarray.mfiter_tile_size =  1024  1024  1024
 # Maximum particle title size
 particles.tile_size =        1024  1024  1024
 
-
+mfix.drag_type = "WenYu"
 
 #_______________________________________________________________________
 # IO / Checkpointing
@@ -40,16 +40,6 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00200"
-
-
-
-#_______________________________________________________________________
-# Solver settings
-
-#! Fluid solver
-#!-----------------------------------------------------------//
-#mfix.use_proj_method = 1
-#mfix.fixed_dt        = 1
 
 amr.stop_time = 20
 

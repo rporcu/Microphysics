@@ -9,6 +9,7 @@ module bc
   use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
+  use param, only: undefined
   use param, only: dim_bc, dim_m, dim_n_g, dim_n_s
 
   ! Type of boundary:
@@ -19,13 +20,11 @@ module bc
   logical :: cyclic_y = .false.
   logical :: cyclic_z = .false.
 
-  ! Boundary condition coordinates
-  real(rt) :: BC_X_w(dim_bc), BC_X_e(dim_bc)
-  real(rt) :: BC_Y_s(dim_bc), BC_Y_n(dim_bc)
-  real(rt) :: BC_Z_b(dim_bc), BC_Z_t(dim_bc)
+  logical :: bc_defined(1:dim_bc) = .false.
 
-  real(rt) :: BC_Normal(dim_bc,3)
-  real(rt) :: BC_Center(dim_bc,3)
+  ! Boundary condition location (EB planes)
+  real(rt) :: BC_Normal(1:dim_bc,1:3) = undefined
+  real(rt) :: BC_Center(1:dim_bc,1:3) = undefined
 
   ! Void fraction in a specified boundary
   real(rt) :: BC_EP_g(dim_bc), BC_EP_s(dim_bc, dim_m)
@@ -34,9 +33,14 @@ module bc
   real(rt) :: BC_P_g(dim_bc)
 
   ! Velocities at a specified boundary
-  real(rt) :: BC_U_g(dim_bc), BC_U_s(dim_bc, dim_m)
-  real(rt) :: BC_V_g(dim_bc), BC_V_s(dim_bc, dim_m)
-  real(rt) :: BC_W_g(dim_bc), BC_W_s(dim_bc, dim_m)
+  real(rt) :: BC_U_s(dim_bc, dim_m)
+  real(rt) :: BC_V_s(dim_bc, dim_m)
+  real(rt) :: BC_W_s(dim_bc, dim_m)
+  
+  ! Array containing BC_U_g, BC_V_g, BC_W_g
+  real(rt) :: BC_U_g(dim_bc)
+  real(rt) :: BC_V_g(dim_bc)
+  real(rt) :: BC_W_g(dim_bc)
 
   ! Volumetric flow rate through a mass inflow boundary
   real(rt) :: BC_VolFlow_g(dim_bc), BC_VolFlow_s(dim_bc, dim_m)
@@ -79,13 +83,76 @@ module bc
   integer, parameter :: pout_      =  11 ! pressure outflow cell
   integer, parameter :: minf_      =  20 ! mass flux inflow cell
   integer, parameter :: nsw_       = 100 ! wall with no-slip b.c.
-  integer, parameter :: fsw_       = 101 ! wall with free-slip
-  integer, parameter :: psw_       = 102 ! wall with partial-slip b.c.
-  integer, parameter :: cycl_      =  50 ! cyclic b.c.
-  integer, parameter :: cycp_      =  51 ! cyclic b.c. with pressure drop
-
 
 contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+! Subroutines: getters                                                 !
+!                                                                      !
+! Purpose: Getters for the boundary conditions values                  !
+!                                                                      !
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  real(rt) function get_bc_u_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_u_g = bc_u_g(pID)
+    return
+  end function get_bc_u_g
+
+  real(rt) function get_bc_v_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_v_g = bc_v_g(pID)
+    return
+  end function get_bc_v_g
+
+  real(rt) function get_bc_w_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_w_g = bc_w_g(pID)
+    return
+  end function get_bc_w_g
+
+  real(rt) function get_bc_t_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_t_g = bc_t_g(pID)
+    return
+  end function get_bc_t_g
+
+  real(rt) function get_bc_ep_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_ep_g = bc_ep_g(pID)
+    return
+  end function get_bc_ep_g
+
+  integer(c_int) function get_minf() bind(C)
+    get_minf = minf
+    return
+  end function get_minf
+
+  integer(c_int) function get_pinf() bind(C)
+    get_pinf = pinf
+    return
+  end function get_pinf
+
+  integer(c_int) function get_pout() bind(C)
+    get_pout = pout
+    return
+  end function get_pout
+
+  subroutine get_domain_bc (domain_bc_out) bind(C)
+    integer(c_int), intent(out)  :: domain_bc_out(6)
+    integer :: bcv
+    ! Default is that we reflect particles off domain boundaries if not periodic
+    domain_bc_out(1:6) = 1
+    if (cyclic_x) domain_bc_out(1:2) = 0
+    if (cyclic_y) domain_bc_out(3:4) = 0
+    if (cyclic_z) domain_bc_out(5:6) = 0
+
+    do bcv = 1,6
+       select case (trim(bc_type(bcv)))
+         case ('P_OUTFLOW','PO')
+            domain_bc_out(bcv) = 0
+       end select
+    end do
+  end subroutine get_domain_bc
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -103,30 +170,6 @@ contains
     cyclic_z = (cyc_z == 1)
 
   end subroutine set_cyclic
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-! Subroutine: bc_defined                                               !
-!                                                                      !
-! Purpose: Return if a BC region has been defined based on coordinates !
-! defined in the input deck.                                           !
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  logical function bc_defined(icv)
-
-    use param, only: is_defined
-
-    integer, intent(in) :: icv
-
-    bc_defined = is_defined(bc_x_w(icv)) .or. is_defined(bc_x_e(icv)) .or. &
-                 is_defined(bc_y_s(icv)) .or. is_defined(bc_y_n(icv)) .or. &
-                 is_defined(bc_z_b(icv)) .or. is_defined(bc_z_t(icv))
-
-! An IC is defined for restart runs only if it is a 'PATCH'.
-    if(bc_type(icv) == 'DUMMY') bc_defined = .false.
-
-  end function bc_defined
-
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -152,8 +195,6 @@ contains
     integer(c_int), intent(in) :: domlo(3), domhi(3)
 
     integer :: bcv, m
-    integer :: i_w, j_s, k_b
-    integer :: i_e, j_n, k_t
 
     logical :: flow_bc
 
@@ -197,84 +238,19 @@ contains
           select case (trim(bc_type(bcv)))
           case ('MASS_INFLOW','MI')
              write (unit_out,"(9x,'Inlet with specified mass flux')")
-             call calc_cell_bc_flow(&
-               xlength, ylength, zlength, dx, dy, dz, &
-               bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
-               bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
-               i_w, i_e, j_s, j_n, k_b, k_t)
              flow_bc = .true.
           case ('MASS_OUTFLOW','MO')
              write (unit_out,"(9x,'Outlet with specified mass flux')")
-             call calc_cell_bc_flow(&
-               xlength, ylength, zlength, dx, dy, dz, &
-               bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
-               bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
-               i_w, i_e, j_s, j_n, k_b, k_t)
           case ('P_INFLOW','PI')
              write (unit_out,"(9x,'Inlet with specified gas pressure')")
-             call calc_cell_bc_flow(&
-               xlength, ylength, zlength, dx, dy, dz, &
-               bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
-               bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
-               i_w, i_e, j_s, j_n, k_b, k_t)
              flow_bc = .true.
           case ('P_OUTFLOW','PO')
              write (unit_out,"(9x,'Outlet with specified gas pressure')")
-             call calc_cell_bc_flow(&
-               xlength, ylength, zlength, dx, dy, dz, &
-               bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
-               bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
-               i_w, i_e, j_s, j_n, k_b, k_t)
              flow_bc = .true.
-          case ('FREE_SLIP_WALL','FSW')
-             write (unit_out,"(9x,'Velocity gradients are zero')")
-             call calc_cell_bc_wall(domlo, domhi, &
-               xlength, ylength, zlength, dx, dy, dz, &
-               bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
-               bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
-               i_w, i_e, j_s, j_n, k_b, k_t)
-             flow_bc = .false.
           case ('NO_SLIP_WALL','NSW')
              write (unit_out,"(9x,'Velocity is zero at wall')")
-             call calc_cell_bc_wall(domlo, domhi, &
-               xlength, ylength, zlength, dx, dy, dz, &
-               bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
-               bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
-               i_w, i_e, j_s, j_n, k_b, k_t)
-             flow_bc = .false.
-          case ('PAR_SLIP_WALL','PSW')
-             write (unit_out,"(9x,'Partial slip condition at wall')")
-             call calc_cell_bc_wall(domlo, domhi, &
-               xlength, ylength, zlength, dx, dy, dz, &
-               bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
-               bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
-               i_w, i_e, j_s, j_n, k_b, k_t)
              flow_bc = .false.
           end select
-
-          write (unit_out, 1620) &
-            bc_x_w(bcv), dx*dble(i_w-1), bc_x_e(bcv), dx*dble(i_e), &
-            bc_y_s(bcv), dy*dble(j_s-1), bc_y_n(bcv), dy*dble(j_n), &
-            bc_z_b(bcv), dz*dble(k_b-1), bc_z_t(bcv), dz*dble(k_t)
-
-1620  format(9x,45X,' Specified  ',5X,' Simulated  ',/&
-         9X,'X coordinate of west face   (BC_X_w) ...... ',g12.5, 5x, g12.5/,&
-         9x,'X coordinate of east face   (BC_X_e) ...... ',g12.5, 5x, g12.5/,&
-         9x,'Y coordinate of south face  (BC_Y_s) ...... ',g12.5, 5x, g12.5/,&
-         9x,'Y coordinate of north face  (BC_Y_n) ...... ',g12.5, 5x, g12.5/,&
-         9x,'Z coordinate of bottom face (BC_Z_b) ...... ',g12.5, 5x, g12.5/,&
-         9x,'Z coordinate of top face    (BC_Z_t) ...... ',g12.5, 5x, g12.5/)
-
-          write (unit_out, 1630) i_w, i_e, j_s, j_n, k_b, k_t
-
-1630  format(&
-         9X,'I index of cell at west   (BC_I_w) ',24('.'),1x,I4,/,&
-         9X,'I index of cell at east   (BC_I_e) ',24('.'),1x,I4,/,&
-         9X,'J index of cell at south  (BC_J_s) ',24('.'),1x,I4,/,&
-         9X,'J index of cell at north  (BC_J_n) ',24('.'),1x,I4,/,&
-         9X,'K index of cell at bottom (BC_K_b) ',24('.'),1x,I4,/,&
-         9X,'K index of cell at top    (BC_K_t) ',24('.'),1x,I4)
-
 
           if(flow_bc) then
              write (unit_out, "(' ')")
@@ -321,16 +297,6 @@ contains
 1670  format(9X,'X-component of solids phase-',I2,' velocity (BC_U_s) ...... ',g12.5)
 1671  format(9X,'Y-component of solids phase-',I2,' velocity (BC_V_s) ...... ',g12.5)
 1672  format(9X,'Z-component of solids phase-',I2,' velocity (BC_W_s) ...... ',g12.5)
-
-          else
-             if (bc_type(bcv) == 'PAR_SLIP_WALL' .or. bc_type(bcv) == 'PSW') &
-               write (unit_out, 1675) bc_hw_g(bcv), &
-               bc_uw_g(bcv), bc_vw_g(bcv), bc_ww_g(bcv)
-
-1675  format(9X,'Partial slip coefficient (BC_hw_g) .... ',G12.5,/,&
-             9X,'Slip velocity U at wall (BC_Uw_g) ..... ',G12.5,/,&
-             9X,'Slip velocity V at wall (BC_Vw_g) ..... ',G12.5,/,&
-             9X,'Slip velocity W at wall (BC_Ww_g) ..... ',G12.5)
 
           endif
        endif

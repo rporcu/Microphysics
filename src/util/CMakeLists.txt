@@ -1,13 +1,14 @@
-add_sources( bc_fill_nd.F90 )
-add_sources( divop_mod.f90 )
-add_sources( fill_bc0.f90 )
-add_sources( compute_vort.f90 )
-add_sources( set_pressure_bcs.f90 )
-add_sources( set_velocity_bcs.f90 )
-add_sources( set_scalar_bcs.f90 )
-add_sources( mfix_util_F.H )
-add_sources( mfix_util_f.f90 )
-add_sources( mfix_util.cpp )
-add_sources( mfix_fillpatch.cpp )
-add_sources( reconstruct_velocity.f90 )
-add_sources( interpolation_m.f90 )
+target_include_directories(mfixcore
+   PUBLIC
+   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>)
+
+target_sources( mfixcore
+   PRIVATE
+   bc_fill_nd.F90
+   mfix_util_F.H
+   mfix_util.cpp
+   mfix_fillpatch.cpp
+   interpolation_m.f90
+   mfix_set_velocity_bcs.cpp
+   mfix_set_scalar_bcs.cpp
+   )

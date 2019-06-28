@@ -9,16 +9,6 @@
   RUN_NAME = 'CLR-RISER'
   DESCRIPTION = 'DEM Riser'
 
-#_______________________________________________________________________
-# RUN CONTROL SECTION
-
-  DT =      1.0d-4
-  DT_MIN =  1.0d-7
-  DT_MAX =  5.0d-5
-
-  DRAG_TYPE = 'WEN_YU'
-
-#_______________________________________________________________________
 # MATERIAL SECTION
 
 

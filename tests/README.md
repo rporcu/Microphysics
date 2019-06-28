@@ -30,12 +30,11 @@ A spherical particle is rolled on a rough surface. The angular and translational
 ***_DEM05:_ Oblique particle collision** [1]
 
 Ninety-three cases of oblique particle collision are tested simultaneously; the particles collide
-only with the hard surface, not each other.  Rather than having the particles fall vertically and 
+only with the hard surface, not each other.  Rather than having the particles fall vertically and
 hit an angled surface, the wall is kept level (flat) and the particles are given initial trajectories,
-resulting in oblique collisions. The particles are initially positioned close to the wall and 
-gravity is suppressed.  The post-collision angle and angular velocity are reported for each particle. 
-This case serves to verify the normal and tangential components of both the linear spring-dashpot model 
-and Hertzian model.
+resulting in oblique collisions. The particles are initially positioned close to the wall and
+gravity is suppressed.  The post-collision angle and angular velocity are reported for each particle.
+This case serves to verify the normal and tangential components of both the linear spring-dashpot model.
 
 ***_DEM06:_ Single particle terminal velocity** [1]
 

@@ -5,15 +5,10 @@ amrex.fpe_trap_invalid = 1
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.fixed_dt         = 0
 
 mfix.cfl = 0.5
 
 amr.stop_time = 0.20
-
-mfix.explicit_diffusion = 1
-
-mfix.use_mac_proj       = true
 
 mfix.particle_init_type = "Auto"
 
@@ -130,3 +125,5 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
+
+mfix.drag_type = "BVK2"

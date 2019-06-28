@@ -1,5 +1,7 @@
 amr.stop_time = .001
 
+mfix.fixed_dt = 1.e-4
+
 particles.removeOutOfRange = 0
 
 # Number of grid cells in each direction at the coarsest level
@@ -30,3 +32,4 @@ amr.check_file = DEM03_chk
 
 amr.par_ascii_int  = 1
 amr.par_ascii_file = DEM03_par
+amr.plt_regtest = 1

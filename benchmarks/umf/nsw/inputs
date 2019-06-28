@@ -7,16 +7,14 @@ mfix.write_user = true  # Pg and EPg volume averaging in mfix.dat
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.fixed_dt         = 0
 
 mfix.dt_max = 5.0e-5
 mfix.cfl = 0.5
 
 amr.stop_time = 0.50
 
-mfix.explicit_diffusion = 1
-
 mfix.particle_init_type = "Auto"
+mfix.drag_type = "WenYu"
 
 mac.mg_verbose          = 0
 #mac.mg_rtol             = 1.e-6

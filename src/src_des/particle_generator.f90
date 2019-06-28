@@ -1,6 +1,6 @@
 module par_gen_module
 
-   use amrex_fort_module, only : rt => amrex_real
+   use amrex_fort_module, only : rt => amrex_real, amrex_random
    use iso_c_binding , only: c_int
 
    implicit none
@@ -43,7 +43,7 @@ contains
       use ic, only: ic_dp_max,  ic_ro_s_max
 
       use discretelement, only: particle_types
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -121,7 +121,7 @@ contains
       pc = init_pc
       nplp: do p=1,np
 
-         pvol = (pi/6.0d0)*dp(p)**3
+         pvol = (M_PI/6.0d0)*dp(p)**3
 
          pc = pc + 1
 
@@ -172,7 +172,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -224,21 +224,21 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ! Total to seed over the whole IC region
-      max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
+      max_seed(2) = int((ic_y_n(icv) - ic_y_s(icv) - max_dp)/max_dp)
       max_seed(3) = int((ic_z_t(icv) - ic_z_b(icv) - max_dp)/(sqrt3*max_rp))
-      max_seed(2) = int(seed / (max_seed(1)*max_seed(3)))
+      max_seed(1) = int(seed / (max_seed(2)*max_seed(3)))
 
       ! local grid seed loop hi/lo
-      seed_lo(1) = nint((ic_dlo(1) - i_w*dx) / max_dp)
+      seed_lo(2) = nint((ic_dlo(2) - j_s*dy) / max_dp)
       seed_lo(3) = nint((ic_dlo(3) - k_b*dz) / (sqrt3 * max_rp))
-      seed_lo(2) = nint((ic_dlo(2) - j_s*dy) / ((sqrt6o3x2) * max_rp))
+      seed_lo(1) = nint((ic_dlo(1) - i_w*dx) / ((sqrt6o3x2) * max_rp))
 
-      seed_hi(1) = nint((ic_dhi(1) - i_w*dx) /  max_dp - seed_lo(1)*max_dp)
-      seed_hi(3) = nint((ic_dhi(3) - k_b*dz) / (sqrt3 * max_rp) - seed_lo(1)*max_dp)
-      seed_hi(2) = nint((ic_dhi(2) - j_s*dy) / ((sqrt6o3x2) * max_rp) - seed_lo(1)*max_dp)
+      seed_hi(2) = nint((ic_dhi(2) - j_s*dy) /  max_dp - seed_lo(2)*max_dp)
+      seed_hi(3) = nint((ic_dhi(3) - k_b*dz) / (sqrt3 * max_rp) - seed_lo(2)*max_dp)
+      seed_hi(1) = nint((ic_dhi(1) - i_w*dx) / ((sqrt6o3x2) * max_rp) - seed_lo(2)*max_dp)
 
       seed_hi(1) = min(max_seed(1), seed_hi(1)-1)
       seed_hi(3) = min(max_seed(3), seed_hi(3)-1)
@@ -247,17 +247,17 @@ contains
       pos = -1.0d20
       np = 0
 
-      do j=seed_lo(2), seed_hi(2)
+      do i=seed_lo(1), seed_hi(1)
 
-         pos(2) = j_s*dy + max_rp*(1.0d0 + j*sqrt6o3x2)
+         pos(1) = i_w*dx + max_rp*(1.0d0 + i*sqrt6o3x2)
 
          do k=seed_lo(3), seed_hi(3)
 
-            pos(3) = k_b*dz + max_rp*(1.0d0 + sqrt3*(k+(mod(j,2)/3.0d0)))
+            pos(3) = k_b*dz + max_rp*(1.0d0 + sqrt3*(k+(mod(i,2)/3.0d0)))
 
-            do i=seed_lo(1), seed_hi(1)
+            do j=seed_lo(2), seed_hi(2)
 
-               pos(1) = i_w*dx + max_rp* (1.0d0 + 2.0d0*i + mod(j+k,2))
+               pos(2) = j_s*dy + max_rp* (1.0d0 + 2.0d0*j + mod(i+k,2))
 
                np = np + 1 ! local to type
                pc = pc + 1 ! local to routine
@@ -295,7 +295,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -347,7 +347,7 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ! Total to seed over the whole IC region
       max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
@@ -421,7 +421,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -473,7 +473,7 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ! Total to seed over the whole IC region
       max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
@@ -549,7 +549,7 @@ contains
       use param, only: is_defined
 
       use calc_cell_module, only: calc_cell_ic
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       implicit none
 
@@ -606,7 +606,7 @@ contains
 
       ! Particle count is based on mean particle size
       seed = ic_vol * ic_ep_s(icv,type) / &
-       ((pi/6.0d0)*ic_dp_mean(icv,type)**3)
+       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
 
       ic_len = ic_dhi - ic_dlo - max_dp
       ic_dlo = ic_dlo + max_rp
@@ -627,14 +627,13 @@ contains
       fails = 0
       pinc = 0
 
-      if (fix_seed) &
-         call init_random_seed(fix_seed)
-
       do while (np < seed .and. fails < maxfails)
 
          do
 
-            call random_number(rand3)
+            rand3(1) = amrex_random()
+            rand3(2) = amrex_random()
+            rand3(3) = amrex_random()
             pos = ic_dlo + ic_len*rand3(:)
 
             ! Grid containing the new particle
@@ -714,7 +713,7 @@ contains
     bind(C, name="mfix_particle_generator_prop")
 
       use particle_mod
-      use constant, only: pi
+      use amrex_constants_module, only: M_PI
 
       integer(c_int),   intent(in   ) :: nrp
       type(particle_t), intent(inout) :: particles(nrp)
@@ -732,7 +731,7 @@ contains
          rad  = rdata(p,4)
          rho  = rdata(p,5)
 
-         vol  = (4.0d0/3.0d0)*pi*rad**3
+         vol  = (4.0d0/3.0d0)*M_PI*rad**3
          mass = vol * rho
          omoi = 2.5d0/(mass * rad**2)
 
@@ -778,13 +777,13 @@ contains
       !-----------------------------------------------
 
       nsize = size(dp(:))
-      ! call init_random_seed(.false.)
 
       i=1
       do while(i<= ceiling(real(nsize/2.0)))
          w=1.0
          do while(w>=1.0)
-            call random_number(x)
+            x(1) = amrex_random()
+            x(2) = amrex_random()
             x = 2.0 * x - 1.0
             w = x(1)**2 + x(2)**2
          end do
@@ -849,8 +848,7 @@ contains
       integer :: nsize, lc
       real(rt) :: lscale
 
-      ! call init_random_seed(.false.)
-      call random_number(dp)
+      dp = amrex_random()
 
       lscale = dp_max - dp_min
 
@@ -862,45 +860,6 @@ contains
       return
 
    end subroutine uni_rno
-
-
-   !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-   !                                                                     !
-   !                                                                     !
-   !                                                                     !
-   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   subroutine init_random_seed(fix_seed)
-
-      implicit none
-
-      logical, intent(in)  :: fix_seed
-
-      !-----------------------------------------------
-      ! local variables
-      !-----------------------------------------------
-      integer              :: isize,idate(8)
-      integer,allocatable  :: iseed(:)
-      !-----------------------------------------------
-
-      call random_seed(size=isize)
-      allocate( iseed(isize) )
-      call random_seed(get=iseed)
-
-      ! Note -- "10" is arbitrary -- we just need something repeatable for
-      !     regression testing
-      if ( fix_seed ) then
-         iseed(:) = 10
-      else
-         call date_and_time(values=idate)
-         iseed = iseed * (idate(8)-500) ! idate(8) contains millisecond
-      end if
-
-      call random_seed(put=iseed)
-
-      if(allocated(iseed)) deallocate( iseed )
-
-   end subroutine init_random_seed
-
 
 
    !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -1017,71 +976,5 @@ contains
 
       return
    end subroutine particle_write
-
-   subroutine rm_wall_collisions_eb ( particles,    nrp, &
-    &                                 phi,   phlo, phhi, &
-    &                                 flags,  flo,  fhi, &
-    &                                 plo, dx, n_refine ) bind(C)
-
-      use particle_mod,             only: particle_t
-      use param,                    only: small_number, zero, one
-      use amrex_ebcellflag_module,  only: is_covered_cell
-      use amrex_eb_levelset_module, only: amrex_eb_interp_levelset, &
-       &                                  amrex_eb_normal_levelset
-
-      ! Particles
-      type(particle_t), intent(inout), target :: particles(nrp)
-      integer,          intent(in   )         :: nrp
-
-      ! Array bounds
-      integer,          intent(in   )         :: phlo(3), phhi(3)
-      integer,          intent(in   )         :: flo(3),  fhi(3)
-
-      ! LS refinement
-      integer,          intent(in   )         :: n_refine
-
-      ! Grid spacing
-      real(rt),         intent(in   )         :: dx (3)
-
-      ! Coordinates of bottom-east-south corner of domain
-      real(rt),         intent(in   )         :: plo(3)
-
-      ! Arrays
-      integer,          intent(in   )         :: &
-       &    flags( flo(1):fhi(1), flo(2):fhi(2), flo(3):fhi(3) )
-
-      real(rt),         intent(in   )         :: &
-       &      phi(  phlo(1):phhi(1), phlo(2):phhi(2), phlo(3):phhi(3) )
-
-
-      ! Local variables
-      real(rt) :: odx(3), ls_value
-      integer  :: p, ic, jc, kc
-
-      odx = one / dx
-
-      do p = 1, nrp
-
-         associate( rp => particles(p)%radius, pos => particles(p)%pos )
-
-            ! Indeces of the cells containing the particle center
-            ic = floor( ( pos(1) - plo(1) ) * odx(1) )
-            jc = floor( ( pos(2) - plo(2) ) * odx(2) )
-            kc = floor( ( pos(3) - plo(3) ) * odx(3) )
-
-            if (is_covered_cell(flags(ic,jc,kc))) then
-               particles(p)%id = -1
-            else
-               ! interpolates level-set from nodal phi to position pos
-               call amrex_eb_interp_levelset( pos, plo, n_refine, &
-                                              phi, phlo, phhi, dx, ls_value)
-               if (ls_value < rp) particles(p)%id = -1
-            end if
-
-         end associate
-
-      end do
-
-   end subroutine rm_wall_collisions_eb
 
 end module par_gen_module

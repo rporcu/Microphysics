@@ -2,15 +2,12 @@
 
 set -euo pipefail
 
-RUN_NAME="DEM07"
-
 MFIX=./mfix
 if [ -n "$1" ]; then
     MFIX=$1
 fi
 
 if [ -n "$2" ]; then
-    FCOMPARE=$2/plt_compare_diff_grids
     FJOIN_PAR=$2/fjoin_par
 fi
 

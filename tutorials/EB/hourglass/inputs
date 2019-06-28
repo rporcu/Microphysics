@@ -48,3 +48,5 @@ geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 0       0       1       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
 geometry.prob_hi     = 0.0128  0.0128  0.0384  # hi corner of physical domain
+
+mfix.drag_type = "BVK2"

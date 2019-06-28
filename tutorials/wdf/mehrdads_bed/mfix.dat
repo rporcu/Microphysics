@@ -1,0 +1,88 @@
+########################################################################
+#                                                                      #
+# Author: Mehrdad Shahnam                               Date: xx-2017  #
+# Modified: J. Musser, wdf                              Date: 07-2018  #
+#                                                                      #
+# Description: Mehrdad's ordered L-R bubbling bed                      #
+#                                                                      #
+# Reference: A. Bakshi, et al., Comprehensive multivariate sensitivity #
+#            analysis of CFD-DEM simulations: Critical model parameters#
+#            and their impact on fluidization hydrodynamics, Powder    #
+#            Tech., 338, 519-537 (2018).                               #
+#                                                                      #
+#            particle properties, excpet dp, are taken from:           #
+#            C.Q. LaMarche et al., Fluidized-bed measurements of       #
+#            carefully-characterized, mildly-cohesive (Group A)        #
+#            particles, Chem. Eng. J., 310, 259-271 (2017).            #
+#                                                                      #
+########################################################################
+
+  RUN_NAME = 'R'
+  DESCRIPTION = 'Mehrdads bed'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+  CALL_USR = .T.
+  FULL_LOG = .T.
+
+  GRAVITY(1) = -9.80665
+  GRAVITY(2) =  0.00
+  GRAVITY(3) =  0.00
+
+#_______________________________________________________________________
+# MATERIAL SECTION
+
+! Gas Section
+!---------------------------------------------------------------------//
+  RO_g0 = 1.2      ! (kg/m3)
+  MU_g0 = 1.8d-5   ! (Pa.sec)
+
+! Particle Section
+!---------------------------------------------------------------------//
+
+  PARTICLE_TYPES=1
+
+! Restitution coefficient.
+  DES_EN_INPUT = 0.970       ! particle-particle
+  DES_EN_WALL_INPUT = 0.955  ! particle-wall
+
+! Friction coefficient.
+  MEW =   0.273              ! particle-particle
+  MEW_W = 0.250              ! particle-wall
+
+! Normal collision spring constant. (N/m)
+  KN =    41.3               ! particle-particle
+  KN_W =  41.3               ! particle-wall
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+! Full domain coverage w/ random particles
+  IC_X_w(1) =   0.000  ! (m)
+  IC_X_e(1) =   0.150  ! (m)
+  IC_Y_s(1) =   0.000  ! (m)
+  IC_Y_n(1) =   0.050  ! (m)
+  IC_Z_b(1) =   0.000  ! (m)
+  IC_Z_t(1) =   0.005  ! (m)
+
+  IC_EP_g(1) =  0.8513 ! (m)
+
+  IC_U_g(1) =   0.000  ! (m)
+  IC_V_g(1) =   0.000  ! (m)
+  IC_W_g(1) =   0.000  ! (m)
+
+  IC_EP_s(1,1) = 0.1487 ! (m)
+
+  IC_U_s(1,1) = 0.000  ! (m)
+  IC_V_s(1,1) = 0.000  ! (m)
+  IC_W_s(1,1) = 0.000  ! (m)
+
+  ic_dp_dist(1,1) =   'CONSTANT'
+  ic_dp_mean(1,1) =    400.0d-6    ! (m)
+
+  ic_ro_s_dist(1,1) = 'CONSTANT'
+  ic_ro_s_mean(1,1) =  2500.0d0    ! (kg/m^3)
+
+  ic_pack_type(1) =  "PSEUDO_RANDOM"
+
