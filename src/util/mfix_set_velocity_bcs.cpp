@@ -1,4 +1,4 @@
-#include <mfix_set_velocity_bcs.hpp>
+#include <mfix.H>
 #include <bc_mod_F.H>
 #include <mfix.H>
 
@@ -96,6 +96,14 @@ mfix::set_velocity_bcs(Real* time,
 
   mfix_usr1_cpp(time);
 
+  const int minf = bc_list.get_minf();
+  const int pinf = bc_list.get_pinf();
+  const int pout = bc_list.get_pout();
+
+  amrex::Real* p_bc_u_g = m_bc_u_g.data();
+  amrex::Real* p_bc_v_g = m_bc_v_g.data();
+  amrex::Real* p_bc_w_g = m_bc_w_g.data();
+
   if (nlft > 0)
   {
     AMREX_HOST_DEVICE_FOR_4D(bx_yz_lo_3D, 3, i, j, k, n,
@@ -103,12 +111,12 @@ mfix::set_velocity_bcs(Real* time,
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vel(i,j,k,n) = vel(dom_lo[0],j,k,n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(n == 0)
-          vel(i,j,k,n) = m_bc_vel_g[bcv][0];
+          vel(i,j,k,n) = p_bc_u_g[bcv];
         else
           vel(i,j,k,n) = 0;
       }
@@ -125,7 +133,7 @@ mfix::set_velocity_bcs(Real* time,
       {
         const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-        if(bct == bc_list.minf)
+        if(bct == minf)
           vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i+1,j,k,n);
       });
     }
@@ -138,12 +146,12 @@ mfix::set_velocity_bcs(Real* time,
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vel(i,j,k,n) = vel(dom_hi[0],j,k,n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(n == 0)
-          vel(i,j,k,n) = m_bc_vel_g[bcv][0];
+          vel(i,j,k,n) = p_bc_u_g[bcv];
         else
           vel(i,j,k,n) = 0;
       }
@@ -160,7 +168,7 @@ mfix::set_velocity_bcs(Real* time,
       {
         const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-        if(bct == bc_list.minf)
+        if(bct == minf)
           vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i-1,j,k,n);
       });
     }
@@ -177,12 +185,12 @@ mfix::set_velocity_bcs(Real* time,
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vel(i,j,k,n) = vel(i,dom_lo[1],k,n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(n == 1)
-          vel(i,j,k,n) = m_bc_vel_g[bcv][1];
+          vel(i,j,k,n) = p_bc_v_g[bcv];
         else
           vel(i,j,k,n) = 0;
       }
@@ -199,7 +207,7 @@ mfix::set_velocity_bcs(Real* time,
       {
         const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-        if(bct == bc_list.minf)
+        if(bct == minf)
           vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i,j+1,k,n);
       });
     }
@@ -212,12 +220,12 @@ mfix::set_velocity_bcs(Real* time,
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vel(i,j,k,n) = vel(i,dom_hi[1],k,n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(n == 1)
-          vel(i,j,k,n) = m_bc_vel_g[bcv][1];
+          vel(i,j,k,n) = p_bc_v_g[bcv];
         else
           vel(i,j,k,n) = 0;
       }
@@ -234,7 +242,7 @@ mfix::set_velocity_bcs(Real* time,
       {
         const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-        if(bct == bc_list.minf)
+        if(bct == minf)
           vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i,j-1,k,n);
       });
     }
@@ -251,12 +259,12 @@ mfix::set_velocity_bcs(Real* time,
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vel(i,j,k,n) = vel(i,j,dom_lo[2],n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(n == 2)
-          vel(i,j,k,n) = m_bc_vel_g[bcv][2];
+          vel(i,j,k,n) = p_bc_w_g[bcv];
         else
           vel(i,j,k,n) = 0;
       }
@@ -273,7 +281,7 @@ mfix::set_velocity_bcs(Real* time,
       {
         const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-        if(bct == bc_list.minf)
+        if(bct == minf)
           vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i,j,k+1,n);
       });
     }
@@ -286,12 +294,12 @@ mfix::set_velocity_bcs(Real* time,
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vel(i,j,k,n) = vel(i,j,dom_hi[2],n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(n == 2)
-          vel(i,j,k,n) = m_bc_vel_g[bcv][2];
+          vel(i,j,k,n) = p_bc_w_g[bcv];
         else
           vel(i,j,k,n) = 0;
       }
@@ -308,7 +316,7 @@ mfix::set_velocity_bcs(Real* time,
       {
         const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-        if(bct == bc_list.minf)
+        if(bct == minf)
           vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i,j,k-1,n);
       });
     }
@@ -321,18 +329,9 @@ mfix::set_velocity_bcs(Real* time,
 
 
 void
-set_vec_bcs(const BcList& bc_list,
-            FArrayBox& vec_fab,
-            const IArrayBox& bct_ilo_fab,
-            const IArrayBox& bct_ihi_fab,
-            const IArrayBox& bct_jlo_fab,
-            const IArrayBox& bct_jhi_fab,
-            const IArrayBox& bct_klo_fab,
-            const IArrayBox& bct_khi_fab,
-            Real** m_bc_vel_g,
-            Real* m_bc_ep_g,
-            const Box& domain,
-            const int* ng)
+mfix::set_vec_bcs(const int lev,
+                  FArrayBox& vec_fab,
+                  const Box& domain)
 {
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
@@ -342,12 +341,12 @@ set_vec_bcs(const BcList& bc_list,
   IntVect vec_lo(vec_fab.loVect());
   IntVect vec_hi(vec_fab.hiVect());
 
-  Array4<const int> const& bct_ilo = bct_ilo_fab.array();
-  Array4<const int> const& bct_ihi = bct_ihi_fab.array();
-  Array4<const int> const& bct_jlo = bct_jlo_fab.array();
-  Array4<const int> const& bct_jhi = bct_jhi_fab.array();
-  Array4<const int> const& bct_klo = bct_klo_fab.array();
-  Array4<const int> const& bct_khi = bct_khi_fab.array();
+  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
+  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
+  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
+  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
+  Array4<const int> const& bct_klo = bc_klo[lev]->array();
+  Array4<const int> const& bct_khi = bc_khi[lev]->array();
 
   const int nlft = std::max(0, dom_lo[0]-vec_lo[0]);
   const int nbot = std::max(0, dom_lo[1]-vec_lo[1]);
@@ -381,6 +380,16 @@ set_vec_bcs(const BcList& bc_list,
   const Box bx_xy_lo_3D(vec_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, vec_hi);
 
+  const int minf = bc_list.get_minf();
+  const int pinf = bc_list.get_pinf();
+  const int pout = bc_list.get_pout();
+
+  amrex::Real* p_bc_u_g = m_bc_u_g.data();
+  amrex::Real* p_bc_v_g = m_bc_v_g.data();
+  amrex::Real* p_bc_w_g = m_bc_w_g.data();
+
+  amrex::Real* p_bc_ep_g = m_bc_ep_g.data();
+
   if (nlft > 0)
   {
     AMREX_HOST_DEVICE_FOR_4D(bx_yz_lo_3D, 3, i, j, k, n,
@@ -388,11 +397,16 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vec(i,j,k,n) = vec(dom_lo[0],j,k,n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
-        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
+        if(n == 0)
+          vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
+        if(n == 1)
+          vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
+        if(n == 2)
+          vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
   }
@@ -404,11 +418,16 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vec(i,j,k,n) = vec(dom_hi[0],j,k,n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
-        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
+        if(n == 0)
+          vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
+        if(n == 1)
+          vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
+        if(n == 2)
+          vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
   }
@@ -424,11 +443,16 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vec(i,j,k,n) = vec(i,dom_lo[1],k,n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
-        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
+        if(n == 0)
+          vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
+        if(n == 1)
+          vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
+        if(n == 2)
+          vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
   }
@@ -440,11 +464,16 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vec(i,j,k,n) = vec(i,dom_hi[1],k,n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
-        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
+        if(n == 0)
+          vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
+        if(n == 1)
+          vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
+        if(n == 2)
+          vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
   }
@@ -460,11 +489,16 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vec(i,j,k,n) = vec(i,j,dom_lo[2],n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
-        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
+        if(n == 0)
+          vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
+        if(n == 1)
+          vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
+        if(n == 2)
+          vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
   }
@@ -476,11 +510,16 @@ set_vec_bcs(const BcList& bc_list,
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
         vec(i,j,k,n) = vec(i,j,dom_hi[2],n);
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
-        vec(i,j,k,n) = m_bc_ep_g[bcv] * m_bc_vel_g[bcv][n];
+        if(n == 0)
+          vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
+        if(n == 1)
+          vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
+        if(n == 2)
+          vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
   }

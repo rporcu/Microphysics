@@ -5,8 +5,6 @@
 #include <mfix_eb_F.H>
 #include <bc_mod_F.H>
 #include <constant_mod_F.H>
-#include <mfix_set_bc0.hpp>
-#include <mfix_set_ls_inflow.hpp>
 #include <mfix_init_fluid.hpp>
 
 #include <AMReX_EBAmrUtil.H>
@@ -243,7 +241,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
     }
 
     get_gravity(gravity);
-    get_bc_list(bc_list.minf, bc_list.pinf, bc_list.pout);
 }
 
 
@@ -855,10 +852,7 @@ mfix::mfix_set_bc0()
      {
        const Box& sbx = (*ep_g[lev])[mfi].box();
 
-       set_bc0(sbx, bc_list, (*ep_g[lev])[mfi], (*ro_g[lev])[mfi],
-               (*mu_g[lev])[mfi], *bc_ilo[lev], *bc_ihi[lev], *bc_jlo[lev],
-               *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev], domain,
-               m_bc_ep_g, m_bc_t_g, &nghost);
+       set_bc0(sbx, &mfi, lev, domain);
      }
 
      ep_g[lev]->FillBoundary(geom[lev].periodicity());
@@ -950,9 +944,7 @@ void mfix::mfix_set_ls_near_inflow()
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
-                set_ls_inflow(ls_fab, bc_list, *bc_ilo[lev], *bc_ihi[lev],
-                              *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev],
-                              *bc_khi[lev], domain, &levelset_nghost, n, dx);
+                set_ls_inflow(lev, ls_fab, domain, &levelset_nghost, n, dx);
             }
         }
     }
@@ -974,9 +966,7 @@ void mfix::mfix_set_ls_near_inflow()
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
-                set_ls_inflow( ls_fab, bc_list, *bc_ilo[lev], *bc_ihi[lev],
-                               *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev],
-                               *bc_khi[lev], domain, &levelset_nghost, n, dx);
+                set_ls_inflow( lev, ls_fab, domain, &levelset_nghost, n, dx);
             }
         }
 
@@ -993,9 +983,7 @@ void mfix::mfix_set_ls_near_inflow()
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
-                set_ls_inflow( ls_fab, bc_list, *bc_ilo[lev], *bc_ihi[lev],
-                               *bc_jlo[lev], *bc_jhi[lev], *bc_klo[lev],
-                               *bc_khi[lev], domain, &levelset_nghost, n, dx);
+                set_ls_inflow( lev, ls_fab, domain, &levelset_nghost, n, dx);
             }
         }
     }

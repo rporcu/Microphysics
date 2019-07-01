@@ -16,12 +16,19 @@ using namespace std;
 
 // Boundary conditions list auxiliary structure
 //
-typedef struct BcList {
+typedef class BcList {
   public:
-    BcList(): minf(0), pinf(0), pout(0) {};
-    int minf;
-    int pinf;
-    int pout;
+    BcList(const int pinf, const int pout, const int minf)
+      : pinf_(pinf)
+      , pout_(pout) 
+      , minf_(minf)
+    {}
+
+    int get_pinf() const {return pinf_;};
+    int get_pout() const {return pout_;};
+    int get_minf() const {return minf_;};
+  private:
+    int pinf_, pout_, minf_;
 } BcList;
 
 struct realData

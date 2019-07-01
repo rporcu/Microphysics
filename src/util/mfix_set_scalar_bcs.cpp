@@ -10,7 +10,7 @@
 //
 //
 
-#include <mfix_set_scalar_bcs.hpp>
+#include <mfix.H>
 #include <bc_mod_F.H>
 #include <eos_mod.hpp>
 #include <fld_constants_mod_F.H>
@@ -18,37 +18,27 @@
 
 using namespace amrex;
 
-void set_scalar_bcs(const BcList& bc_list,
-                    FArrayBox& ep_g_fab,
-                    FArrayBox& ro_g_fab,
-                    FArrayBox& mu_g_fab,
-                    const IArrayBox& bct_ilo_fab,
-                    const IArrayBox& bct_ihi_fab,
-                    const IArrayBox& bct_jlo_fab,
-                    const IArrayBox& bct_jhi_fab,
-                    const IArrayBox& bct_klo_fab,
-                    const IArrayBox& bct_khi_fab,
-                    const Box& domain,
-                    Real* m_bc_ep_g,
-                    Real* m_bc_t_g,
-                    const int* ng)
+void 
+mfix::set_scalar_bcs(MFIter* mfi,
+                     const int lev,
+                     const Box& domain)
 {
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
 
-  Array4<Real> const& ep_g = ep_g_fab.array();
-  Array4<Real> const& ro_g = ro_g_fab.array();
-  Array4<Real> const& mu_g = mu_g_fab.array();
+  Array4<amrex::Real> const& ep_g_a = ep_g[lev]->array(*mfi);
+  Array4<amrex::Real> const& ro_g_a = ro_g[lev]->array(*mfi);
+  Array4<amrex::Real> const& mu_g_a = mu_g[lev]->array(*mfi);
 
-  IntVect ep_g_lo(ep_g_fab.loVect());
-  IntVect ep_g_hi(ep_g_fab.hiVect());
+  IntVect ep_g_lo((*ep_g[lev])[*mfi].loVect());
+  IntVect ep_g_hi((*ep_g[lev])[*mfi].hiVect());
 
-  Array4<const int> const& bct_ilo = bct_ilo_fab.array();
-  Array4<const int> const& bct_ihi = bct_ihi_fab.array();
-  Array4<const int> const& bct_jlo = bct_jlo_fab.array();
-  Array4<const int> const& bct_jhi = bct_jhi_fab.array();
-  Array4<const int> const& bct_klo = bct_klo_fab.array();
-  Array4<const int> const& bct_khi = bct_khi_fab.array();
+  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
+  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
+  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
+  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
+  Array4<const int> const& bct_klo = bc_klo[lev]->array();
+  Array4<const int> const& bct_khi = bc_khi[lev]->array();
 
   const int nlft = std::max(0, dom_lo[0]-ep_g_lo[0]);
   const int nbot = std::max(0, dom_lo[1]-ep_g_lo[1]);
@@ -121,6 +111,13 @@ void set_scalar_bcs(const BcList& bc_list,
 
   const Real undefined = get_undefined();
 
+  const int minf = bc_list.get_minf();
+  const int pinf = bc_list.get_pinf();
+  const int pout = bc_list.get_pout();
+
+  amrex::Real* p_bc_ep_g = m_bc_ep_g.data();
+  amrex::Real* p_bc_t_g = m_bc_t_g.data();
+
   if (nlft > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo_3D, i, j, k,
@@ -131,21 +128,21 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
-        ep_g(i,j,k) = ep_g(dom_lo[0],j,k);
-        ro_g(i,j,k) = ro_g(dom_lo[0],j,k);
-        mu_g(i,j,k) = mu_g(dom_lo[0],j,k);
+        ep_g_a(i,j,k) = ep_g_a(dom_lo[0],j,k);
+        ro_g_a(i,j,k) = ro_g_a(dom_lo[0],j,k);
+        mu_g_a(i,j,k) = mu_g_a(dom_lo[0],j,k);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(is_equal(mu_g0, undefined))
-          bc_mu_g = sutherland(m_bc_t_g[bcv]);
+          bc_mu_g = sutherland(p_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        ro_g_a(i,j,k) = bc_ro_g;
+        mu_g_a(i,j,k) = bc_mu_g;
       }
     });
 
@@ -154,8 +151,8 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i+1,j,k);
+      if(bct == minf)
+        ep_g_a(i,j,k) = 2*p_bc_ep_g[bcv] - ep_g_a(i+1,j,k);
     });
   }
 
@@ -169,21 +166,21 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
-        ep_g(i,j,k) = ep_g(dom_hi[0],j,k);
-        ro_g(i,j,k) = ro_g(dom_hi[0],j,k);
-        mu_g(i,j,k) = mu_g(dom_hi[0],j,k);
+        ep_g_a(i,j,k) = ep_g_a(dom_hi[0],j,k);
+        ro_g_a(i,j,k) = ro_g_a(dom_hi[0],j,k);
+        mu_g_a(i,j,k) = mu_g_a(dom_hi[0],j,k);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(is_equal(mu_g0, undefined))
-          bc_mu_g = sutherland(m_bc_t_g[bcv]);
+          bc_mu_g = sutherland(p_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        ro_g_a(i,j,k) = bc_ro_g;
+        mu_g_a(i,j,k) = bc_mu_g;
       }
     });
 
@@ -192,8 +189,8 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i-1,j,k);
+      if(bct == minf)
+        ep_g_a(i,j,k) = 2*p_bc_ep_g[bcv] - ep_g_a(i-1,j,k);
     });
   }
 
@@ -211,21 +208,21 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
-        ep_g(i,j,k) = ep_g(i,dom_lo[1],k);
-        ro_g(i,j,k) = ro_g(i,dom_lo[1],k);
-        mu_g(i,j,k) = mu_g(i,dom_lo[1],k);
+        ep_g_a(i,j,k) = ep_g_a(i,dom_lo[1],k);
+        ro_g_a(i,j,k) = ro_g_a(i,dom_lo[1],k);
+        mu_g_a(i,j,k) = mu_g_a(i,dom_lo[1],k);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(is_equal(mu_g0, undefined))
-          bc_mu_g = sutherland(m_bc_t_g[bcv]);
+          bc_mu_g = sutherland(p_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        ro_g_a(i,j,k) = bc_ro_g;
+        mu_g_a(i,j,k) = bc_mu_g;
       }
     });
 
@@ -234,8 +231,8 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i,j+1,k);
+      if(bct == minf)
+        ep_g_a(i,j,k) = 2*p_bc_ep_g[bcv] - ep_g_a(i,j+1,k);
     });
   }
 
@@ -249,21 +246,21 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
-        ep_g(i,j,k) = ep_g(i,dom_hi[1],k);
-        ro_g(i,j,k) = ro_g(i,dom_hi[1],k);
-        mu_g(i,j,k) = mu_g(i,dom_hi[1],k);
+        ep_g_a(i,j,k) = ep_g_a(i,dom_hi[1],k);
+        ro_g_a(i,j,k) = ro_g_a(i,dom_hi[1],k);
+        mu_g_a(i,j,k) = mu_g_a(i,dom_hi[1],k);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(is_equal(mu_g0, undefined))
-          bc_mu_g = sutherland(m_bc_t_g[bcv]);
+          bc_mu_g = sutherland(p_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        ro_g_a(i,j,k) = bc_ro_g;
+        mu_g_a(i,j,k) = bc_mu_g;
       }
     });
 
@@ -272,8 +269,8 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i,j-1,k);
+      if(bct == minf)
+        ep_g_a(i,j,k) = 2*p_bc_ep_g[bcv] - ep_g_a(i,j-1,k);
     });
   }
 
@@ -291,21 +288,21 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
-        ep_g(i,j,k) = ep_g(i,j,dom_lo[2]);
-        ro_g(i,j,k) = ro_g(i,j,dom_lo[2]);
-        mu_g(i,j,k) = mu_g(i,j,dom_lo[2]);
+        ep_g_a(i,j,k) = ep_g_a(i,j,dom_lo[2]);
+        ro_g_a(i,j,k) = ro_g_a(i,j,dom_lo[2]);
+        mu_g_a(i,j,k) = mu_g_a(i,j,dom_lo[2]);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(is_equal(mu_g0, undefined))
-          bc_mu_g = sutherland(m_bc_t_g[bcv]);
+          bc_mu_g = sutherland(p_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        ro_g_a(i,j,k) = bc_ro_g;
+        mu_g_a(i,j,k) = bc_mu_g;
       }
     });
 
@@ -314,8 +311,8 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i,j,k+1);
+      if(bct == minf)
+        ep_g_a(i,j,k) = 2*p_bc_ep_g[bcv] - ep_g_a(i,j,k+1);
     });
   }
 
@@ -329,21 +326,21 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct == bc_list.pinf) or (bct == bc_list.pout))
+      if((bct == pinf) or (bct == pout))
       {
-        ep_g(i,j,k) = ep_g(i,j,dom_hi[2]);
-        ro_g(i,j,k) = ro_g(i,j,dom_hi[2]);
-        mu_g(i,j,k) = mu_g(i,j,dom_hi[2]);
+        ep_g_a(i,j,k) = ep_g_a(i,j,dom_hi[2]);
+        ro_g_a(i,j,k) = ro_g_a(i,j,dom_hi[2]);
+        mu_g_a(i,j,k) = mu_g_a(i,j,dom_hi[2]);
       }
-      else if(bct == bc_list.minf)
+      else if(bct == minf)
       {
         if(is_equal(mu_g0, undefined))
-          bc_mu_g = sutherland(m_bc_t_g[bcv]);
+          bc_mu_g = sutherland(p_bc_t_g[bcv]);
         else
           bc_mu_g = mu_g0;
 
-        ro_g(i,j,k) = bc_ro_g;
-        mu_g(i,j,k) = bc_mu_g;
+        ro_g_a(i,j,k) = bc_ro_g;
+        mu_g_a(i,j,k) = bc_mu_g;
       }
     });
 
@@ -352,8 +349,8 @@ void set_scalar_bcs(const BcList& bc_list,
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if(bct == bc_list.minf)
-        ep_g(i,j,k) = 2*m_bc_ep_g[bcv] - ep_g(i,j,k-1);
+      if(bct == minf)
+        ep_g_a(i,j,k) = 2*p_bc_ep_g[bcv] - ep_g_a(i,j,k-1);
     });
   }
 

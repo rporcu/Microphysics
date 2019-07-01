@@ -119,7 +119,7 @@ module check_boundary_conditions_module
 
       ! Gas phase BC variables
       use bc, only: BC_EP_g, BC_X_g, BC_P_g
-      use bc, only: BC_Vel_g
+      use bc, only: BC_U_g, BC_V_g, BC_W_g
 
       ! Solids phase BC variables.
       use bc, only: BC_EP_s, BC_X_s
@@ -153,15 +153,15 @@ module check_boundary_conditions_module
 
 
 ! Check gas phase variables.
-      if(.not.equal(bc_vel_g(bcv,1),zero)) then
+      if(.not.equal(bc_u_g(bcv),zero)) then
          write(err_msg,1100) trim(ivar('BC_U_g',bcv))
          call flush_err_msg(abort=.true.)
       endif
-      if(.not.equal(bc_vel_g(bcv,2),zero)) then
+      if(.not.equal(bc_v_g(bcv),zero)) then
          write(err_msg,1100) trim(ivar('BC_V_g',bcv))
          call flush_err_msg(abort=.true.)
       endif
-      if (.not.equal(bc_vel_g(bcv,3),zero)) then
+      if (.not.equal(bc_w_g(bcv),zero)) then
          write(err_msg,1100) trim(ivar('BC_W_g',bcv))
          call flush_err_msg(abort=.true.)
       endif
