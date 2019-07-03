@@ -123,17 +123,17 @@ contains
   end function get_bc_ep_g
 
   integer(c_int) function get_minf() bind(C)
-    get_minf = minf
+    get_minf = minf_
     return
   end function get_minf
 
   integer(c_int) function get_pinf() bind(C)
-    get_pinf = pinf
+    get_pinf = pinf_
     return
   end function get_pinf
 
   integer(c_int) function get_pout() bind(C)
-    get_pout = pout
+    get_pout = pout_
     return
   end function get_pout
 
