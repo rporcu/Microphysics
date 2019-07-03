@@ -871,7 +871,7 @@ mfix::mfix_set_bc0()
 void
 mfix::mfix_set_p0()
 {
-    if (ooo_debug) amrex::Print() << "mfix_set_p0" << std::endl;
+  if (ooo_debug) amrex::Print() << "mfix_set_p0" << std::endl;
   Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
   Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
   Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);

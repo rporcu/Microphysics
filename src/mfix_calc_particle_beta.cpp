@@ -99,7 +99,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         {
-            const auto dx  = geom[lev].CellSizeArray();
+            //const auto dx  = geom[lev].CellSizeArray(); // SET_BUT_NOT_USED
             const auto dxi = geom[lev].InvCellSizeArray();
             const auto plo = geom[lev].ProbLoArray();
 
@@ -144,7 +144,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 
                             Real rad = particle.rdata(realData::radius);
                             Real vol = particle.rdata(realData::volume);
-                            Real den = particle.rdata(realData::density);
+                            //Real den = particle.rdata(realData::density); // UNUSED_VARIABLE
 
                             int p_id = particle.id();
 
@@ -229,7 +229,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                                     // Compute distance of the particle from the wall.
                                     // (This is the same function we call when computing the particle-wall collisions)
                                     int ls_refinement = 1;
-                                    Real dist = interp_level_set(particle, ls_refinement, phi_array, plo, dxi);
+                                    //Real dist = interp_level_set(particle, ls_refinement, phi_array, plo, dxi); // UNUSED_VARIABLE
 
                                     // Compute the normal to the wall in this cell -- it doesn't matter
                                     // whether we compute it "at the particle location" or "at the centroid location"
@@ -293,7 +293,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
           
                                 Real rad = particle.rdata(realData::radius);
                                 Real vol = particle.rdata(realData::volume);
-                                Real den = particle.rdata(realData::density);
+                                //Real den = particle.rdata(realData::density); // UNUSED_VARIABLE
          
                                 int p_id = particle.id();
         

@@ -20,7 +20,7 @@ contains
     use constant, only: mmax
     use discretelement, only: particle_types
 
-    use fld_const, only: ro_g0
+!    use fld_const, only: ro_g0 ! UNUSED_VARIABLE
 
     use param, only: is_undefined, is_defined
 

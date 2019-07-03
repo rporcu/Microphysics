@@ -256,7 +256,7 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
     BL_PROFILE("mfix::volWgtSum()");
 
     Real        sum     = 0.0;
-    const Real* dx      = geom[lev].CellSize();
+    //const Real* dx      = geom[lev].CellSize(); // UNUSED_VARIABLE
 
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
