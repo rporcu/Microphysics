@@ -62,8 +62,6 @@ mfix::set_ls_inflow(const int lev,
   const int nup  = std::max(0, sbx_hi[2]-(nref*dom_hi[2]+1));
 
   const int minf = bc_list.get_minf();
-  const int pinf = bc_list.get_pinf();
-  const int pout = bc_list.get_pout();
 
   if (nlft > 0)
   {

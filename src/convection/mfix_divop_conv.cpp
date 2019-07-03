@@ -385,7 +385,6 @@ compute_divop_conv(
   Array4<const EBCellFlag> const& flags = flags_fab.array();
 
   Array4<const Real> const& vfrac = volfrac->array(*mfi);
-  Array4<const Real> const& bndrycent = bndrycent_fab->array(*mfi);
 
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
@@ -402,8 +401,6 @@ compute_divop_conv(
   FArrayBox optmp_fbx(grown2_bx);
   FArrayBox divc_fbx(grown2_bx);
   FArrayBox mask_fbx(grown2_bx);
-
-  Array4<Real> const& delm = delm_fbx.array();
 
   Array4<Real> const& optmp = optmp_fbx.array();
   Array4<Real> const& divc = divc_fbx.array();
