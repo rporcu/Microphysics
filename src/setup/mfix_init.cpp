@@ -881,11 +881,16 @@ mfix::mfix_set_p0()
 
   IntVect press_per = IntVect(geom[0].isPeriodic(0),geom[0].isPeriodic(1),geom[0].isPeriodic(2));
 
- // Here we set a separate periodicity flag for p0_g because when we use
- // pressure drop (delp) boundary conditions we fill all variables *except* p0
- // periodically
+  // Here we set a separate periodicity flag for p0_g because when we use
+  // pressure drop (delp) boundary conditions we fill all variables *except* p0
+  // periodically
   if (delp_dir > -1) press_per[delp_dir] = 0;
   p0_periodicity = Periodicity(press_per);
+
+  // Initialize gp0 to 0
+  gp0[0] = 0.0;
+  gp0[1] = 0.0;
+  gp0[2] = 0.0;
 
   for (int lev = 0; lev < nlev; lev++)
   {
@@ -895,6 +900,12 @@ mfix::mfix_set_p0()
      Real dz = geom[lev].CellSize(2);
 
      Box domain(geom[lev].Domain());
+
+     // We put this outside the MFIter loop because we need gp0 even on ranks with no boxes
+     // because we will use it in computing dt separately on every rank
+     set_gp0(domain.loVect(), domain.hiVect(),
+             gp0,
+             &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir);
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time
@@ -906,7 +917,6 @@ mfix::mfix_set_p0()
         set_p0(bx.loVect(),  bx.hiVect(),
                domain.loVect(), domain.hiVect(),
                BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
-               gp0,
                &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
                bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),

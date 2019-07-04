@@ -302,21 +302,21 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                                 pvel[1] = particle.rdata(realData::vely);
                                 pvel[2] = particle.rdata(realData::velz);
 
-								Real rop_g = ro * ep;
+				Real rop_g = ro * ep;
 								
-								Real vslp[3];
-								vslp[0] = velfp[0] - pvel[0];
-								vslp[1] = velfp[1] - pvel[1];
-								vslp[2] = velfp[2] - pvel[2];
+				Real vslp[3];
+				vslp[0] = velfp[0] - pvel[0];
+				vslp[1] = velfp[1] - pvel[1];
+				vslp[2] = velfp[2] - pvel[2];
+				
+				Real vrel = sqrt(dot_product(vslp, vslp));
+				Real dpm = 2.0*rad;
+				Real phis = 1.0 - ep;
 								
-								Real vrel = sqrt(dot_product(vslp, vslp));
-								Real dpm = 2.0*rad;
-								Real phis = 1.0 - ep;
-								
-								Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
-														 velfp[0], velfp[1], velfp[2],
-														 iloc, jloc, kloc, p_id); 
-								particle.rdata(realData::dragx) = beta;
+				Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
+							 velfp[0], velfp[1], velfp[2],
+							 iloc, jloc, kloc, p_id); 
+				particle.rdata(realData::dragx) = beta;
                             } // Not covered
 			}); // ip
                 } // type of FAB
