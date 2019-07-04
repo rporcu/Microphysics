@@ -6,7 +6,7 @@
 #! Fluid solver
 #!-----------------------------------------------------------//
 
-amr.stop_time = 11.0
+amr.stop_time = 10.0
 mfix.dt_min = 1.0e-8
 mfix.dt_max = 1.0e-4
 mfix.cfl = 0.5
@@ -129,15 +129,15 @@ amr.avg_region_z_t =   0.160    0.160
 #_______________________________________________________________________
 # IO / Checkpointing
 
-amr.par_ascii_int  = 100
+amr.par_ascii_int  = 1000
 amr.par_ascii_file ="vis"
 
-amr.plot_int       = 10000
+amr.plot_int       = 1000
 amr.plot_file      ="plt"
 
-amr.check_int      = 10000
+amr.check_int      = 1000
 amr.check_file     ="chk"
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
-amr.restart   = "chk100730"
+##amr.restart   = "chk100730"

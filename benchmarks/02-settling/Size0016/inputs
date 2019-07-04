@@ -24,7 +24,7 @@ amr.max_level = 0
 amr.plot_int  =   -1
 amr.check_int  = 500
 
-#amr.restart_file = chk00100
+#amr.restart = chk00100
 
 # Geometry
 geometry.coord_sys   = 0                         # 0: Cartesian
