@@ -47,7 +47,7 @@ subroutine set_p0(lo, hi, domlo, domhi, &
     bct_klo(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
     bct_khi(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
 
-   real(ar) :: offset = - 0.5_ar
+   real(ar) :: offset = -0.5_ar
 
    !-----------------------------------------------
    ! Local variables
@@ -178,6 +178,7 @@ subroutine set_p0(lo, hi, domlo, domhi, &
    !  Make sure that ic_p_g is set if using delp pressure conditions
    do icv = 1, dim_ic
       if (ic_defined(icv)) then
+
          if ( (delp_dir .ge. 0) .and. (delp_dir .eq. delp_dir_in) ) then
             if (.not. is_defined(ic_p_g(icv))) then
                print *,'MUST DEFINE ic_p_g if using the DELP pressure condition'
@@ -192,10 +193,11 @@ subroutine set_p0(lo, hi, domlo, domhi, &
             end if
 
          else
-            if (is_undefined(ic_p_g(icv))) goto 60
-            if (gravity(1).ne.0.d0 .or. gravity(2).ne.0.d0 .or. gravity(3).ne.0.d0) goto 60
+            if ( (is_undefined(ic_p_g(icv))) .or. &
+                 (gravity(1).ne.0.d0 .or. gravity(2).ne.0.d0 .or. gravity(3).ne.0.d0) ) goto 60
             p0_g(:,:,:) = ic_p_g(icv)
          end if
+
       end if
    end do
 
@@ -259,7 +261,8 @@ subroutine set_p0(lo, hi, domlo, domhi, &
    ! pressure at the outlet
    if (is_undefined(pj)) then
       p0_g = zero
-      goto 100
+      pj   = zero
+      ! goto 100
    endif
 
    ! ----------------------------------------------------------------<<<
