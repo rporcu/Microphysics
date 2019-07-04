@@ -33,30 +33,31 @@
 ! Particle Section
 !---------------------------------------------------------------------//
 
+!test  PARTICLE_TYPES=0
   PARTICLE_TYPES=1
 
 ! Friction coefficient.
-  MEW =   0.35               ! particle-particle
-  MEW_W = 0.35               ! particle-wall
+  MEW =   0.10               ! particle-particle
+  MEW_W = 0.09               ! particle-wall
 
 ! Normal collision spring constant. (N/m)
-  KN =   2529.0              ! particle-particle
-  KN_W = 2529.0              ! particle-wall
+  KN =   2519.0              ! particle-particle
+  KN_W = 2519.0              ! particle-wall
 
 ! Restitution coefficient.
-  DES_EN_INPUT = 0.84        ! particle-particle
-  DES_EN_WALL_INPUT = 0.92   ! particle-wall
+  DES_EN_INPUT = 0.97        ! particle-particle
+  DES_EN_WALL_INPUT = 0.97   ! particle-wall
 
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
 
 ! Full domain coverage
   IC_X_w(1) =   0.000  ! (m)
-  IC_X_e(1) =   1.2192 ! (m)
+  IC_X_e(1) =   0.800  ! (m)
   IC_Y_s(1) =   0.000  ! (m)
-  IC_Y_n(1) =   0.2286 ! (m)
+  IC_Y_n(1) =   0.160  ! (m)
   IC_Z_b(1) =   0.000  ! (m)
-  IC_Z_t(1) =   0.0762 ! (m)
+  IC_Z_t(1) =   0.020  ! (m)
 
   IC_EP_g(1) =  1.000  ! (m)
 
