@@ -179,7 +179,7 @@
  1110 FORMAT(7X,'Run name(RUN_NAME): ',A60)
  1120 FORMAT(7X,'Brief description of the run (DESCRIPTION) :',/9X,A60)
  1135 FORMAT(7X,'Start-time (TIME) = ',G12.5,/7X)
- 1136 FORMAT(7X,'* Steady state simulation.')
+! 1136 FORMAT(7X,'* Steady state simulation.') ! LABEL_SET_BUT_NOT_USED
  1140 FORMAT(/7X,'* Gas momentum equation-',A,' is',A,'solved.')
  1149 FORMAT(/7X,'* User-defined subroutines are',A,'called.')
 !

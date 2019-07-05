@@ -2,7 +2,6 @@
 #include <mfix.H>
 #include <mfix_des_K.H>
 #include <mfix_drag_K.H>
-#include <mfix_set_gradp_bcs.hpp>
 #include <AMReX_EBMultiFabUtil.H>
 
 void mfix::mfix_calc_drag_fluid(Real time)
@@ -57,9 +56,7 @@ mfix::mfix_calc_drag_particle(Real time)
         {
             const Box& bx = mfi.tilebox();
 
-            set_gradp_bcs(bx, gp_tmp[mfi], *bc_ilo[lev], *bc_ihi[lev], *bc_jlo[lev],
-                          *bc_jhi[lev], *bc_klo[lev], *bc_khi[lev], domain,
-                          bc_list, &nghost);
+            set_gradp_bcs(bx, lev, gp_tmp[mfi], domain);
         }
 
         gp_tmp.FillBoundary(geom[lev].periodicity());
@@ -116,7 +113,7 @@ mfix::mfix_calc_drag_particle(Real time)
             Real gradp[3];
 
             const auto dxi = geom[lev].InvCellSizeArray();
-            const auto dx  = geom[lev].CellSizeArray();
+            //const auto dx  = geom[lev].CellSizeArray(); // SET_BUT_NOT_USED
             const auto plo = geom[lev].ProbLoArray();
 
             for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
@@ -222,7 +219,7 @@ mfix::mfix_calc_drag_particle(Real time)
                                     // Compute distance of the particle from the wall.
                                     // (This is the same function we call when computing the particle-wall collisions)
                                     int ls_refinement = 1;
-                                    Real dist = interp_level_set(particle, ls_refinement, phi_array, plo, dxi);
+                                    //Real dist = interp_level_set(particle, ls_refinement, phi_array, plo, dxi); // UNUSED_VARIABLE
 
                                     // Compute the normal to the wall in this cell -- it doesn't matter
                                     // whether we compute it "at the particle location" or "at the centroid location"

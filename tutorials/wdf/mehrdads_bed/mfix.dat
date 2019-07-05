@@ -10,11 +10,6 @@
 #            and their impact on fluidization hydrodynamics, Powder    #
 #            Tech., 338, 519-537 (2018).                               #
 #                                                                      #
-#            particle properties, excpet dp, are taken from:           #
-#            C.Q. LaMarche et al., Fluidized-bed measurements of       #
-#            carefully-characterized, mildly-cohesive (Group A)        #
-#            particles, Chem. Eng. J., 310, 259-271 (2017).            #
-#                                                                      #
 ########################################################################
 
   RUN_NAME = 'R'
@@ -60,29 +55,31 @@
 
 ! Full domain coverage w/ random particles
   IC_X_w(1) =   0.000  ! (m)
-  IC_X_e(1) =   0.150  ! (m)
+  IC_X_e(1) =   0.160  ! (m)
   IC_Y_s(1) =   0.000  ! (m)
   IC_Y_n(1) =   0.050  ! (m)
   IC_Z_b(1) =   0.000  ! (m)
   IC_Z_t(1) =   0.005  ! (m)
 
-  IC_EP_g(1) =  0.8513 ! (m)
+!  IC_EP_g(1) =  0.8513 ! (m)
+  IC_EP_g(1) =  1.0d0  ! (m)
 
   IC_U_g(1) =   0.000  ! (m)
   IC_V_g(1) =   0.000  ! (m)
   IC_W_g(1) =   0.000  ! (m)
 
-  IC_EP_s(1,1) = 0.1487 ! (m)
+!  IC_EP_s(1,1) = 0.1487 ! (m)
+!
+!  IC_U_s(1,1) = 0.000  ! (m)
+!  IC_V_s(1,1) = 0.000  ! (m)
+!  IC_W_s(1,1) = 0.000  ! (m)
+!
+!  ic_dp_dist(1,1) =   'CONSTANT'
+!  ic_dp_mean(1,1) =    400.0d-6    ! (m)
+!
+!  ic_ro_s_dist(1,1) = 'CONSTANT'
+!  ic_ro_s_mean(1,1) =  2500.0d0    ! (kg/m^3)
+!
+!  ic_pack_type(1) =  "PSEUDO_RANDOM"
 
-  IC_U_s(1,1) = 0.000  ! (m)
-  IC_V_s(1,1) = 0.000  ! (m)
-  IC_W_s(1,1) = 0.000  ! (m)
-
-  ic_dp_dist(1,1) =   'CONSTANT'
-  ic_dp_mean(1,1) =    400.0d-6    ! (m)
-
-  ic_ro_s_dist(1,1) = 'CONSTANT'
-  ic_ro_s_mean(1,1) =  2500.0d0    ! (kg/m^3)
-
-  ic_pack_type(1) =  "PSEUDO_RANDOM"
 

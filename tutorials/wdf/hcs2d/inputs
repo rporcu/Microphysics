@@ -1,0 +1,72 @@
+# fluid solver
+amr.stop_time = 25.
+mfix.dt_max = 3.25e-4
+mfix.cfl = 0.5
+mfix.tcoll_ratio = 20.
+
+mfix.particle_init_type = "AsciiFile"
+
+mfix.drag_type = "BVK2"
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell = 128 128 4
+
+# Maximum allowable size of each subdomain in the problem domain;
+#    this is used to decompose the domain for parallel calculations.
+amr.max_grid_size_x = 32
+amr.max_grid_size_y = 32
+amr.max_grid_size_z = 4
+
+# Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Maximum particle title size
+##particles.tile_size = 8  8  4 
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level  = 0
+
+
+# Geometry
+geometry.coord_sys   = 0                      # 0: Cartesian
+geometry.is_periodic = 1       1      1       # Is periodic in each direction?
+geometry.prob_lo     = 0.      0.     0.      # lo corner of physical domain
+geometry.prob_hi     = 0.256   0.256  0.008   # hi corner of physical domain
+
+# EB geometry
+# none
+
+# BCs 
+# none
+
+# user data processing
+amr.avg_int = 100
+amr.avg_file = "uio"
+
+amr.avg_vel_p =        1 
+amr.avg_p_g   =        0 
+amr.avg_ep_g  =        0 
+amr.avg_vel_g =        0 
+
+amr.avg_region_x_w =   0.000
+amr.avg_region_x_e =   0.256
+amr.avg_region_y_s =   0.000 
+amr.avg_region_y_n =   0.256 
+amr.avg_region_z_b =   0.000 
+amr.avg_region_z_t =   0.008 
+
+
+#_______________________________________________________________________
+## IO / Checkpointing
+
+amr.par_ascii_int  = 5000
+amr.par_ascii_file ="vis"
+
+amr.plot_int       = 5000
+amr.plot_file      ="plt"
+amr.plt_regtest    = 0
+
+amr.check_int      = 5000
+amr.check_file     ="chk"
+
+

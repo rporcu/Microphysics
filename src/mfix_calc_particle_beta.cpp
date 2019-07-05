@@ -99,7 +99,6 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         {
-            const auto dx  = geom[lev].CellSizeArray();
             const auto dxi = geom[lev].InvCellSizeArray();
             const auto plo = geom[lev].ProbLoArray();
 
@@ -122,7 +121,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                     const auto&  mu_array =  mu_ptr->array(pti);
                     const auto& flags_array = flags.array();
 
-					auto particles_ptr = particles().dataPtr();
+		    auto particles_ptr = particles().dataPtr();
 					  
                     if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
                     {
@@ -130,7 +129,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 			{
                             MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
 
-							Real velfp[3];
+			    Real velfp[3];
                             trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
 
                             // Indices of cell where particle is located
@@ -144,7 +143,6 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 
                             Real rad = particle.rdata(realData::radius);
                             Real vol = particle.rdata(realData::volume);
-                            Real den = particle.rdata(realData::density);
 
                             int p_id = particle.id();
 
@@ -180,7 +178,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                         {
                             MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
 
-							Real velfp[3];
+  			    Real velfp[3];
 
                             // This identifies which cell the particle is in
                             int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
@@ -229,7 +227,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                                     // Compute distance of the particle from the wall.
                                     // (This is the same function we call when computing the particle-wall collisions)
                                     int ls_refinement = 1;
-                                    Real dist = interp_level_set(particle, ls_refinement, phi_array, plo, dxi);
+                                    //Real dist = interp_level_set(particle, ls_refinement, phi_array, plo, dxi); // UNUSED_VARIABLE
 
                                     // Compute the normal to the wall in this cell -- it doesn't matter
                                     // whether we compute it "at the particle location" or "at the centroid location"
@@ -242,8 +240,8 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                                     Real gz = particle.pos(2)*dxi[2] - (kloc + 0.5);
     
                                     int ii;
-									int jj;
-									int kk;
+				    int jj;
+				    int kk;
 
                                     if (anrm[0] < 0) {
                                         ii = iloc - 1;
@@ -293,7 +291,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
           
                                 Real rad = particle.rdata(realData::radius);
                                 Real vol = particle.rdata(realData::volume);
-                                Real den = particle.rdata(realData::density);
+                                //Real den = particle.rdata(realData::density); // UNUSED_VARIABLE
          
                                 int p_id = particle.id();
         
@@ -302,21 +300,22 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                                 pvel[1] = particle.rdata(realData::vely);
                                 pvel[2] = particle.rdata(realData::velz);
 
-								Real rop_g = ro * ep;
+				Real rop_g = ro * ep;
 								
-								Real vslp[3];
-								vslp[0] = velfp[0] - pvel[0];
-								vslp[1] = velfp[1] - pvel[1];
-								vslp[2] = velfp[2] - pvel[2];
+				Real vslp[3];
+				vslp[0] = velfp[0] - pvel[0];
+				vslp[1] = velfp[1] - pvel[1];
+				vslp[2] = velfp[2] - pvel[2];
+				
+				Real vrel = sqrt(dot_product(vslp, vslp));
+				Real dpm = 2.0*rad;
+				Real phis = 1.0 - ep;
 								
-								Real vrel = sqrt(dot_product(vslp, vslp));
-								Real dpm = 2.0*rad;
-								Real phis = 1.0 - ep;
-								
-								Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
-														 velfp[0], velfp[1], velfp[2],
-														 iloc, jloc, kloc, p_id); 
-								particle.rdata(realData::dragx) = beta;
+				Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
+							 velfp[0], velfp[1], velfp[2],
+							 iloc, jloc, kloc, p_id); 
+				particle.rdata(realData::dragx) = beta;
+
                             } // Not covered
 			}); // ip
                 } // type of FAB

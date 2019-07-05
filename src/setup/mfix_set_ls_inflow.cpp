@@ -1,4 +1,4 @@
-#include <mfix_set_ls_inflow.hpp>
+#include <mfix.H>
 
 namespace set_ls_inflow_aux {
 
@@ -20,18 +20,13 @@ is_equal_to_any(const int bc,
 
 using namespace set_ls_inflow_aux;
 
-void set_ls_inflow(FArrayBox& ls_phi_fab,
-                   const BcList& bc_list,
-                   const IArrayBox& bct_ilo_fab,
-                   const IArrayBox& bct_ihi_fab,
-                   const IArrayBox& bct_jlo_fab,
-                   const IArrayBox& bct_jhi_fab,
-                   const IArrayBox& bct_klo_fab,
-                   const IArrayBox& bct_khi_fab,
-                   const Box& domain,
-                   const int* ng,
-                   const int& nref,
-                   const Real* dx)
+void 
+mfix::set_ls_inflow(const int lev,
+                    FArrayBox& ls_phi_fab,
+                    const Box& domain,
+                    const int* ng,
+                    const int& nref,
+                    const Real* dx)
 {
   const Real offset(1.e-8);
 
@@ -44,12 +39,12 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
   const IntVect dom_lo(domain.loVect());
   const IntVect dom_hi(domain.hiVect());
 
-  Array4<const int> const& bct_ilo = bct_ilo_fab.array();
-  Array4<const int> const& bct_ihi = bct_ihi_fab.array();
-  Array4<const int> const& bct_jlo = bct_jlo_fab.array();
-  Array4<const int> const& bct_jhi = bct_jhi_fab.array();
-  Array4<const int> const& bct_klo = bct_klo_fab.array();
-  Array4<const int> const& bct_khi = bct_khi_fab.array();
+  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
+  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
+  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
+  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
+  Array4<const int> const& bct_klo = bc_klo[lev]->array();
+  Array4<const int> const& bct_khi = bc_khi[lev]->array();
   
   // Here if the level set (slo,shi) is at a finer resolution (by nref) than
   //  the boundary condition routines,
@@ -58,13 +53,15 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
   const amrex::GpuArray<const Real, AMREX_SPACEDIM> dx_fine = 
     {dx[0]/Real(nref), dx[1]/Real(nref), dx[2]/Real(nref)};
 
-  const int nlft = std::max(0, nref*dom_lo[0]-sbx_lo[0]);
-  const int nbot = std::max(0, nref*dom_lo[1]-sbx_lo[1]);
-  const int ndwn = std::max(0, nref*dom_lo[2]-sbx_lo[2]);
+  const int nlft = amrex::max(0, nref*dom_lo[0]-sbx_lo[0]);
+  const int nbot = amrex::max(0, nref*dom_lo[1]-sbx_lo[1]);
+  const int ndwn = amrex::max(0, nref*dom_lo[2]-sbx_lo[2]);
 
-  const int nrgt = std::max(0, sbx_hi[0]-(nref*dom_hi[0]+1));
-  const int ntop = std::max(0, sbx_hi[1]-(nref*dom_hi[1]+1));
-  const int nup  = std::max(0, sbx_hi[2]-(nref*dom_hi[2]+1));
+  const int nrgt = amrex::max(0, sbx_hi[0]-(nref*dom_hi[0]+1));
+  const int ntop = amrex::max(0, sbx_hi[1]-(nref*dom_hi[1]+1));
+  const int nup  = amrex::max(0, sbx_hi[2]-(nref*dom_hi[2]+1));
+
+  const int minf = bc_list.get_minf();
 
   if (nlft > 0)
   {
@@ -76,14 +73,14 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
       bct[2] = bct_ilo(dom_lo[0]-1,j/nref+1,k/nref,0);
       bct[3] = bct_ilo(dom_lo[0]-1,j/nref+1,k/nref+1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(i < 0)
         {
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(i)*(dx_fine[0]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
         }
         if(i == 0)
         {
@@ -93,7 +90,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
         if(i > 0)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
         }
       }
     });
@@ -113,12 +110,12 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
       bct[2] = bct_ihi(dom_hi[0]+1,j/nref+1,k/nref,0);
       bct[3] = bct_ihi(dom_hi[0]+1,j/nref+1,k/nref+1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(i < (dom_hi[0]+1)*nref)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(dom_hi[0]-i+1)*(dx_fine[0]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(dom_hi[0]-i+1)*(dx_fine[0]) - offset);
         }
         if(i == (dom_hi[0]+1)*nref)
         {
@@ -130,7 +127,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(dom_hi[0]-i+1)*(dx_fine[0]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
         }
       }
     });
@@ -150,14 +147,14 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
       bct[2] = bct_jlo(i/nref+1,dom_lo[1]-1,k/nref,0);
       bct[3] = bct_jlo(i/nref+1,dom_lo[1]-1,k/nref+1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(j < 0)
         {
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(j)*(dx_fine[1]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
         }
         if(j == 0)
         {
@@ -167,7 +164,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
         if(j > 0)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
         }
       }
     });
@@ -187,12 +184,12 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
       bct[2] = bct_jhi(i/nref+1,dom_hi[1]+1,k/nref,0);
       bct[3] = bct_jhi(i/nref+1,dom_hi[1]+1,k/nref+1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(j < (dom_hi[1]+1)*nref)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(dom_hi[1]-j+1)*(dx_fine[1]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(dom_hi[1]-j+1)*(dx_fine[1]) - offset);
         }
         if(j == (dom_hi[1]+1)*nref)
         {
@@ -204,7 +201,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(dom_hi[1]-j+1)*(dx_fine[1]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
         }
       }
     });
@@ -224,14 +221,14 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
       bct[2] = bct_klo(i/nref+1,j/nref,dom_lo[2]-1,0);
       bct[3] = bct_klo(i/nref+1,j/nref+1,dom_lo[2]-1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(k < 0)
         {
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(k)*(dx_fine[2]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
         }
         if(k == 0)
         {
@@ -241,7 +238,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
         if(k > 0)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
         }
       }
     });
@@ -261,12 +258,12 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
       bct[2] = bct_khi(i/nref+1,j/nref,dom_hi[2]+1,0);
       bct[3] = bct_khi(i/nref+1,j/nref+1,dom_hi[2]+1,0);
 
-      if(is_equal_to_any(bc_list.minf, &bct[0], 4))
+      if(is_equal_to_any(minf, &bct[0], 4))
       {
         if(k < (dom_hi[2]+1)*nref)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(dom_hi[2]-k+1)*(dx_fine[2]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(dom_hi[2]-k+1)*(dx_fine[2]) - offset);
         }
         if(k == (dom_hi[2]+1)*nref)
         {
@@ -278,7 +275,7 @@ void set_ls_inflow(FArrayBox& ls_phi_fab,
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(dom_hi[2]-k+1)*(dx_fine[2]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
         }
       }
     });

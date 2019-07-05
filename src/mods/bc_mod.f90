@@ -38,7 +38,9 @@ module bc
   real(rt) :: BC_W_s(dim_bc, dim_m)
   
   ! Array containing BC_U_g, BC_V_g, BC_W_g
-  real(rt) :: BC_Vel_g(dim_bc,3)
+  real(rt) :: BC_U_g(dim_bc)
+  real(rt) :: BC_V_g(dim_bc)
+  real(rt) :: BC_W_g(dim_bc)
 
   ! Volumetric flow rate through a mass inflow boundary
   real(rt) :: BC_VolFlow_g(dim_bc), BC_VolFlow_s(dim_bc, dim_m)
@@ -85,16 +87,28 @@ module bc
 contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-! Subroutines: get_bc_vel_g, get_bc_t_g get_bc_ep_g                    !
+! Subroutines: getters                                                 !
 !                                                                      !
 ! Purpose: Getters for the boundary conditions values                  !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  real(rt) function get_bc_vel_g(pID,n) bind(C)
-    integer(c_int), intent(in) :: pID,n
-    get_bc_vel_g = bc_vel_g(pID,n)
+  real(rt) function get_bc_u_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_u_g = bc_u_g(pID)
     return
-  end function get_bc_vel_g
+  end function get_bc_u_g
+
+  real(rt) function get_bc_v_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_v_g = bc_v_g(pID)
+    return
+  end function get_bc_v_g
+
+  real(rt) function get_bc_w_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_w_g = bc_w_g(pID)
+    return
+  end function get_bc_w_g
 
   real(rt) function get_bc_t_g(pID) bind(C)
     integer(c_int), intent(in) :: pID
@@ -108,14 +122,20 @@ contains
     return
   end function get_bc_ep_g
 
-  subroutine get_bc_list (minf, pinf, pout) bind(C)
-    integer(c_int), intent(out) :: minf
-    integer(c_int), intent(out) :: pinf
-    integer(c_int), intent(out) :: pout
-    minf = minf_
-    pinf = pinf_
-    pout = pout_
-  end subroutine get_bc_list
+  integer(c_int) function get_minf() bind(C)
+    get_minf = minf_
+    return
+  end function get_minf
+
+  integer(c_int) function get_pinf() bind(C)
+    get_pinf = pinf_
+    return
+  end function get_pinf
+
+  integer(c_int) function get_pout() bind(C)
+    get_pout = pout_
+    return
+  end function get_pout
 
   subroutine get_domain_bc (domain_bc_out) bind(C)
     integer(c_int), intent(out)  :: domain_bc_out(6)
@@ -243,9 +263,9 @@ contains
                write (unit_out,1648) bc_massflow_g(bcv)
              if(is_defined(bc_volflow_g(bcv)))  &
                write (unit_out,1649) bc_volflow_g(bcv)
-             write (unit_out, 1650) bc_vel_g(bcv,1)
-             write (unit_out, 1651) bc_vel_g(bcv,2)
-             write (unit_out, 1652) bc_vel_g(bcv,3)
+             write (unit_out, 1650) bc_u_g(bcv)
+             write (unit_out, 1651) bc_v_g(bcv)
+             write (unit_out, 1652) bc_w_g(bcv)
 
 1640  format(9X,'Gas phase volume fraction (BC_EP_g) ....... ',g12.5)
 1641  format(9X,'Gas pressure (BC_P_g) ..................... ',g12.5)

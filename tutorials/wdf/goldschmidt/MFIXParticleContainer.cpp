@@ -237,7 +237,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             // Timer used for load-balancing
             Real wt = ParallelDescriptor::second();
 
-            //const Box& bx = pti.tilebox(); // UNUSED_VARIABLE
+            const Box& bx = pti.tilebox();
             PairIndex index(pti.index(), pti.LocalTileIndex());
 
             const int nrp = GetParticles(lev)[index].numRealParticles();
@@ -893,7 +893,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
             local_vol.resize(tile_box,ncomp);
             local_vol = 0.0;
 #else
-            //const Box& box = fab.box(); // UNUSED_VARIABLE
+            const Box& box = fab.box();
 #endif
 
             const Box& bx  = pti.tilebox(); // I need a box without ghosts
@@ -976,6 +976,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
 
        const int minf = bc_list.get_minf();
        const int pinf = bc_list.get_pinf();
+       const int pout = bc_list.get_pout();
 
        for (MFIter mfi(*mf_pointer[lev]); mfi.isValid(); ++mfi) {
 
@@ -1241,8 +1242,8 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
 #endif
         {
 
-        //const int* lo; // SET_BUT_NOT_USED
-        //const int* hi; // SET_BUT_NOT_USED
+        const int* lo;
+        const int* hi;
 
         FArrayBox local_vol;
          for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
@@ -1264,14 +1265,14 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
 
             local_vol = 0.0;
 
-            //lo = grown_tilebox.loVect(); // SET_BUT_NOT_USED
-            //hi = grown_tilebox.hiVect(); // SET_BUT_NOT_USED
+            lo = grown_tilebox.loVect();
+            hi = grown_tilebox.hiVect();
 #else
 
-            //const Box& bx  = drag_fab.box(); // UNUSED_VARIABLE
+            const Box& bx  = drag_fab.box();
 
-            //lo = bx.loVect(); // SET_BUT_NOT_USED
-            //hi = bx.hiVect(); // SET_BUT_NOT_USED
+            lo = bx.loVect();
+            hi = bx.hiVect();
 #endif
             const Box& box = pti.tilebox(); // I need a box without ghosts
 
@@ -1862,9 +1863,14 @@ ComputeAverageVelocities ( const int lev,
                       if ( avg_region.contains ( &(particles[p].m_rdata.pos[0]) ) )
                         {
                           sum_np++;
-                          sum_velx += particles[p].rdata(realData::velx);
-                          sum_vely += particles[p].rdata(realData::vely);
-                          sum_velz += particles[p].rdata(realData::velz);
+//wdf switch U/V/W to X/Y/Z
+//                        sum_velx += particles[p].rdata(realData::velx);
+//                        sum_vely += particles[p].rdata(realData::vely);
+//                        sum_velz += particles[p].rdata(realData::velz);
+                          sum_velx += particles[p].pos(0);
+                          sum_vely += particles[p].pos(1);
+                          sum_velz += particles[p].pos(2);
+//wdf
                         }
 
                     }
@@ -1949,12 +1955,12 @@ ComputeAverageVelocities ( const int lev,
 void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)
 {
     for (MFIter mfi(mf_to_be_filled); mfi.isValid(); ++mfi) {
-       //const Box& sbx = mf_to_be_filled[mfi].box(); // UNUSED_VARIABLE
+       const Box& sbx = mf_to_be_filled[mfi].box();
 
 //       const Real max_pack = 0.42;
-       //const Real max_pack = 0.21; // UNUSED_VARIABLE
+       const Real max_pack = 0.21;
 
-       //Array4<Real> const& ep_g = mf_to_be_filled.array(mfi); // UNUSED_VARIABLE
+       Array4<Real> const& ep_g = mf_to_be_filled.array(mfi);
 
 // These lines are commented because this code represents a functionality which
 // may be added in future developments

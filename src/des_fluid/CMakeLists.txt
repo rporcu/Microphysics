@@ -5,7 +5,6 @@ target_include_directories( mfixcore
 target_sources( mfixcore
    PRIVATE
    mfix_set_gradp_bcs.cpp
-   mfix_set_gradp_bcs.hpp
    get_collision_coefficients.f90 
    mfix_des_F.H
    mfix_des_K.H

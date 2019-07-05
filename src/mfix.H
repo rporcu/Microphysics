@@ -219,6 +219,23 @@ public:
                           const Box& domain,
                           const int* extrap_dir_bcs);
 
+     void set_scalar_bcs(MFIter* mfi,
+                         const int lev,
+                         const Box& domain);
+ 
+     void mfix_set_velocity_bcs (Real time, 
+                                 Vector< std::unique_ptr<MultiFab> >& vel,
+                                 int extrap_dir_bcs);
+
+    void set_vec_bcs(const int lev,
+                     FArrayBox& vec_fab,
+                     const Box& domain);
+
+    void set_gradp_bcs(const Box& bx,
+                       const int lev,
+                       FArrayBox& gp_fab,
+                       Box& domain);
+
     void set_mac_velocity_bcs(Real* time,
                               const Box& bx,
                               MFIter* mfi,
@@ -228,7 +245,19 @@ public:
                               Vector< std::unique_ptr<MultiFab> >& w,
                               Box& domain);
 
+    void set_ls_inflow(const int lev,
+                       FArrayBox& ls_phi_fab,
+                       const Box& domain,
+                       const int* levelset_nghost,
+                       const int& nref,
+                       const Real* dx);
+
     void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
+
+    void set_bc0(const Box& sbx,
+                 MFIter* mfi,
+                 const int lev,
+                 const Box& domain);
 
     void mfix_set_bc_mod(const int* pID, const int* pType,
                          const amrex::Real* pLo, const amrex::Real* pHi,
@@ -310,11 +339,13 @@ protected:
      static Real gp0[3];
      static Real gravity[3];
 
-     static BcList bc_list;
+     const BcList bc_list;
 
-     static Real** m_bc_vel_g;
-     static Real* m_bc_t_g;
-     static Real* m_bc_ep_g;
+     amrex::Cuda::ManagedVector<amrex::Real> m_bc_u_g;
+     amrex::Cuda::ManagedVector<amrex::Real> m_bc_v_g;
+     amrex::Cuda::ManagedVector<amrex::Real> m_bc_w_g;
+     amrex::Cuda::ManagedVector<amrex::Real> m_bc_t_g;
+     amrex::Cuda::ManagedVector<amrex::Real> m_bc_ep_g;
 
      //! The particles see an inflow face as a solid wall; thus instead of
      //! creating a separate EBfactory for particles, we simply modify the
@@ -333,10 +364,7 @@ protected:
                                  Real time, int steady_state);
 
      void mfix_set_scalar_bcs ();
-     void mfix_set_velocity_bcs (Real time, 
-                                 Vector< std::unique_ptr<MultiFab> >& vel,
-                                 int extrap_dir_bcs);
-
+     
      void set_MC_velocity_bcs ( int lev,
                                 Vector< std::unique_ptr<MultiFab> >& u,
                                 Vector< std::unique_ptr<MultiFab> >& v,
