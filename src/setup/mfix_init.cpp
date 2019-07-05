@@ -905,7 +905,11 @@ mfix::mfix_set_p0()
      // because we will use it in computing dt separately on every rank
      set_gp0(domain.loVect(), domain.hiVect(),
              gp0,
-             &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir);
+             &dx, &dy, &dz, &xlen, &ylen, &zlen, 
+             bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
+             bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
+             bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
+             &nghost, &delp_dir);
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time
@@ -927,7 +931,6 @@ mfix::mfix_set_p0()
      p0_g[lev]->FillBoundary(p0_periodicity);
    }
 }
-
 
 void mfix::mfix_set_ls_near_inflow()
 {
