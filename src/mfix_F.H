@@ -86,7 +86,10 @@ extern "C"
              amrex::Real* gp0,
              amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
              amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-             int* delp_dir
+             const int* bc_ilo, const int* bc_ihi,
+             const int* bc_jlo, const int* bc_jhi,
+             const int* bc_klo, const int* bc_khi,
+             const int* ng, int* delp_dir
        );
 
     void mfix_cap_eps(const int* slo, const int* shi, amrex::Real* ep_g);

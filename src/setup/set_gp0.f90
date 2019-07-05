@@ -6,7 +6,9 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine set_gp0(domlo, domhi, gp0, &
-                   dx, dy, dz, xlength, ylength, zlength, delp_dir_in) &
+                   dx, dy, dz, xlength, ylength, zlength, &
+                   bct_ilo, bct_ihi, bct_jlo, bct_jhi, &
+                   bct_klo, bct_khi, ng, delp_dir_in) &
                    bind(C, name="set_gp0")
 
    use bc       , only: delp_x, delp_y, delp_z
@@ -33,6 +35,14 @@ subroutine set_gp0(domlo, domhi, gp0, &
    real(ar), intent(in) :: xlength, ylength, zlength
    integer , intent(in) :: delp_dir_in
 
+   integer(c_int), intent(in   ) :: ng, &
+    bct_ilo(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+    bct_ihi(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+    bct_jlo(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+    bct_jhi(domlo(1)-ng:domhi(1)+ng,domlo(3)-ng:domhi(3)+ng,2), &
+    bct_klo(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2), &
+    bct_khi(domlo(1)-ng:domhi(1)+ng,domlo(2)-ng:domhi(2)+ng,2)
+
    real(ar) :: offset = - 0.5_ar
 
    !-----------------------------------------------
@@ -43,13 +53,97 @@ subroutine set_gp0(domlo, domhi, gp0, &
    integer :: icv, bcv, bcv_lo, bcv_hi
    integer :: delp_dir
 
-   ! Gas pressure at the axial location j
-   real(ar) :: pj, p_lo, p_hi
-
    ! Average pressure drop per unit length
    real(ar) :: dpodx, dpody, dpodz
 
+   real(ar) :: p_lo, p_hi
+
    delp_dir = delp_dir_in
+
+   ! ---------------------------------------------------------------->>>
+   !     If the bc's are pressure inflow/outflow then be sure to capture that in p0 and gp0
+   ! ---------------------------------------------------------------->>>
+
+   if ( (bct_ilo(domlo(2),domlo(3),1) .eq. pinf_)   .and. &
+        (bct_ihi(domlo(2),domlo(3),1) .eq. pout_) ) then
+
+      delp_dir = 0
+
+      bcv_lo = bct_ilo(domlo(2),domlo(3),2)
+      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+      bcv_hi = bct_ihi(domlo(2),domlo(3),2)
+      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+      delp_x = p_lo - p_hi
+
+   else if ( bct_ihi(domlo(2),domlo(3),1) .eq. pinf_  .and. &
+             bct_ilo(domlo(2),domlo(3),1) .eq. pout_) then
+
+      delp_dir = 0
+
+      bcv_lo = bct_ilo(domlo(2),domlo(3),2)
+      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+      bcv_hi = bct_ihi(domlo(2),domlo(3),2)
+      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+      delp_x = p_lo - p_hi
+
+   else if ( bct_jlo(domlo(1),domlo(3),1) .eq. pinf_  .and. &
+             bct_jhi(domlo(1),domlo(3),1) .eq. pout_) then
+
+      delp_dir = 1
+
+      bcv_lo = bct_jlo(domlo(1),domlo(3),2)
+      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+      bcv_hi = bct_jhi(domlo(1),domlo(3),2)
+      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+      delp_y = p_lo - p_hi
+
+   else if ( bct_jhi(domlo(1),domlo(3),1) .eq. pinf_  .and. &
+             bct_jlo(domlo(1),domlo(3),1) .eq. pout_) then
+
+      delp_dir = 1
+
+      bcv_lo = bct_jlo(domlo(1),domlo(3),2)
+      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+      bcv_hi = bct_jhi(domlo(1),domlo(3),2)
+      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+      delp_y = p_lo - p_hi
+
+   else if ( bct_klo(domlo(1),domlo(2),1) .eq. pinf_  .and. &
+             bct_khi(domlo(1),domlo(2),1) .eq. pout_) then
+
+      delp_dir = 2
+
+      bcv_lo = bct_klo(domlo(1),domlo(2),2)
+      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+      bcv_hi = bct_khi(domlo(1),domlo(2),2)
+      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+      delp_z = p_lo - p_hi
+
+
+   else if ( bct_khi(domlo(1),domlo(2),1) .eq. pinf_  .and. &
+             bct_klo(domlo(1),domlo(2),1) .eq. pout_) then
+
+      delp_dir = 2
+
+      bcv_lo = bct_klo(domlo(1),domlo(2),2)
+      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+
+      bcv_hi = bct_khi(domlo(1),domlo(2),2)
+      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+
+      delp_z = p_lo - p_hi
+
+   end if
 
    !  Make sure that ic_p_g is set if using delp pressure conditions
    do icv = 1, dim_ic
