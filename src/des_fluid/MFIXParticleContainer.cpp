@@ -953,7 +953,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
                     for (int ii = -1; ii <= 0; ++ii) {
                         for (int jj = -1; jj <= 0; ++jj) {
                             for (int kk = -1; kk <= 0; ++kk) {
-                                if (flagsarr(i+ii,j+jj,k+kk) == EBCellFlag::TheCoveredCell())
+                                if (flagsarr(i+ii,j+jj,k+kk).isCovered())
                                     continue;
                                 amrex::Real this_cell_vol = vratioarr(i+ii,j+jj,k+kk) * reg_cell_vol;
                                 amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk),
@@ -1333,7 +1333,7 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
                     for (int ii = -1; ii <= 0; ++ii) {
                         for (int jj = -1; jj <= 0; ++jj) {
                             for (int kk = -1; kk <= 0; ++kk) {
-                                if (flagsarr(i+ii,j+jj,k+kk) == EBCellFlag::TheCoveredCell())
+                                if (flagsarr(i+ii,j+jj,k+kk).isCovered())
                                     continue;
 
                                 amrex::Real this_cell_vol = vratioarr(i+ii,j+jj,k+kk) * reg_cell_vol;
