@@ -1,3 +1,8 @@
+#_______________________________________________________________________
+# Solver settings
+
+amrex.fpe_trap_invalid = 1
+
 # fluid solver
 amr.stop_time = 25.
 mfix.dt_max = 3.25e-4
