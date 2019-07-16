@@ -1898,9 +1898,15 @@ ComputeAverageVelocities ( const int lev,
               //
               // Compute averages (NaN if NP=0 )
               //
-              region_velx[nr] /= region_np[nr];
-              region_vely[nr] /= region_np[nr];
-              region_velz[nr] /= region_np[nr];
+              if (region_np[nr]==0){
+              	region_velx[nr] = 0.0;
+              	region_vely[nr] = 0.0;
+              	region_velz[nr] = 0.0;
+              }else{
+                region_velx[nr] /= region_np[nr];
+                region_vely[nr] /= region_np[nr];
+                region_velz[nr] /= region_np[nr];
+              }
 
               //
               // Print to file
