@@ -434,14 +434,18 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                     if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                     {
-                        Gpu::Atomic::Add(pncoll, 1);
-                        Real dist_mag = sqrt(r2);
+                        if (debug_level > 0) 
+                           Gpu::Atomic::Add(pncoll, 1);
+
+                        Real dist_mag     = sqrt(r2);
                         AMREX_ASSERT(dist_mag >= eps);
 
+                        Real dist_mag_inv = 1.d0/dist_mag;
+
                         Real normal[3];
-                        normal[0] = dx / dist_mag;
-                        normal[1] = dy / dist_mag;
-                        normal[2] = dz / dist_mag;
+                        normal[0] = dx * dist_mag_inv;
+                        normal[1] = dy * dist_mag_inv;
+                        normal[2] = dz * dist_mag_inv;
 
                         Real overlap_n = r_lm - dist_mag;
                         Real vrel_trans_norm;
@@ -499,7 +503,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         Real r1 = p1.rdata(realData::radius);
                         Real r2 = p2.rdata(realData::radius);
 
-                        Real dist_cl = 0.5 * (dist_mag + (r1*r1 - r2*r2) / dist_mag);
+                        Real dist_cl = 0.5 * (dist_mag + (r1*r1 - r2*r2) * dist_mag_inv);
                         dist_cl = dist_mag - dist_cl;
 
                         Real tow_force[3];
