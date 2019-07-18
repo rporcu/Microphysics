@@ -1,7 +1,7 @@
 EBASE     ?= mfix
 
 USE_PARTICLES = TRUE
-USE_MG        = TRUE
+USE_MG        = FALSE
 USE_EB        = TRUE
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
@@ -10,9 +10,6 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 Bdirs 	:= UnitTests/CalcVolFrac
 Bdirs 	+= src/des_fluid
 Bdirs 	+= src/io
-Bdirs 	+= src/convection
-Bdirs 	+= src/diffusion
-Bdirs 	+= src/projection
 Bdirs 	+= src/setup
 Bdirs 	+= src/util
 
