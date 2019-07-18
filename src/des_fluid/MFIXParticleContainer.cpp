@@ -440,7 +440,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         Real dist_mag     = sqrt(r2);
                         AMREX_ASSERT(dist_mag >= eps);
 
-                        Real dist_mag_inv = 1.d0/dist_mag;
+                        Real dist_mag_inv = 1.e0/dist_mag;
 
                         Real normal[3];
                         normal[0] = dx * dist_mag_inv;
