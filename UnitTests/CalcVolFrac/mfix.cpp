@@ -8,6 +8,9 @@
 #include <AMReX_Box.H>
 #include <AMReX_EBMultiFabUtil.H>
 
+#include <fstream>
+#include <iostream>
+
 std::string mfix::particle_init_type   = "AsciiFile";
 std::string mfix::load_balance_type    = "FixedSize";
 std::string mfix::knapsack_weight_type = "RunTimeCosts";
@@ -312,7 +315,19 @@ void mfix::calcVol()
     //    does not depend on whether a particle is in a full or cut cell.
     int lev = 0; int comp = 0;
     sum_vol = volWgtSum(lev,*ep_g[lev],comp);
-    amrex::Print() << "Sum Vol "<< sum_vol<<std::endl;
+
+    ofstream result;
+#if AMREX_USE_CUDA
+      result.open("volume_sum_GPU.out");
+#else
+      result.open("volume_sum.out");
+#endif
+
+    result << "Volume sum result : \t"
+           << std::scientific << std::setw(10) << std::setprecision(5)
+           << sum_vol << std::endl;
+
+    result.close();
 }
 
 
