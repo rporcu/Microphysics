@@ -1,6 +1,6 @@
-#include <mfix_F.H>
 #include <mfix_eb_F.H>
 #include <mfix.H>
+#include <mfix_F.H>
 #include <param_mod_F.H>
 #include <bc_mod_F.H>
 
@@ -114,50 +114,6 @@ mfix::ResizeArrays ()
     ep_g.resize(nlevs_max);
     ep_go.resize(nlevs_max);
 
-    p_g.resize(nlevs_max);
-    p_go.resize(nlevs_max);
-
-    p0_g.resize(nlevs_max);
-
-    ro_g.resize(nlevs_max);
-    ro_go.resize(nlevs_max);
-
-    phi_nd.resize(nlevs_max);
-    diveu.resize(nlevs_max);
-
-    // RHS arrays for cell-centered solves
-    diff_rhs.resize(nlevs_max);
-
-    // Solution array for diffusion solves
-    diff_phi.resize(nlevs_max);
-
-    // RHS array for MAC projection
-    mac_rhs.resize(nlevs_max);
-
-    // Solution array for MAC projection
-    mac_phi.resize(nlevs_max);
-
-    // Current (vel_g) and old (vel_go) velocities
-    vel_g.resize(nlevs_max);
-    vel_go.resize(nlevs_max);
-
-    // Pressure gradients
-    gp.resize(nlevs_max);
-
-    drag.resize(nlevs_max);
-
-    mu_g.resize(nlevs_max);
-
-    // Vorticity
-    vort.resize(nlevs_max);
-
-    xslopes.resize(nlevs_max);
-    yslopes.resize(nlevs_max);
-    zslopes.resize(nlevs_max);
-
-    bcoeff_nd.resize(nlevs_max);
-    bcoeff_cc.resize(nlevs_max);
-
 
     /****************************************************************************
      *                                                                          *
@@ -169,13 +125,6 @@ mfix::ResizeArrays ()
 
     // Particle costs (load balancing)
     particle_cost.resize(nlevs_max);
-
-}
-
-void
-mfix::ResizeEBArrays ()
-{
-    int nlevs_max = maxLevel() + 1;
 
     // Fuid cost (load balancing)
     fluid_cost.resize(nlevs_max);
@@ -190,8 +139,8 @@ mfix::ResizeEBArrays ()
     particle_eb_levels.resize(std::max(2, nlevs_max));
 
     level_sets.resize(std::max(2, nlevs_max));
-}
 
+}
 
 void
 mfix::mfix_usr1_cpp(amrex::Real* time)
@@ -340,6 +289,14 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 void mfix::calcVol()
 {
     Real sum_vol;
+       for (int lev = 0; lev < nlev; lev++){
+    // Void fraction
+    ep_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    ep_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    ep_g[lev]->setVal(1.0);
+    ep_go[lev]->setVal(1.0);
+}
+
        pc->CalcVolumeFraction(ep_g, particle_ebfactory,
                               bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi,
                               bc_list, nghost);
