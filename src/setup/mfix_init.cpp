@@ -39,7 +39,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Options to control MLMG behavior
         pp.query( "mg_verbose"             , nodal_mg_verbose );
         pp.query( "mg_cg_verbose"          , nodal_mg_cg_verbose );
-        pp.query( "mg_max_iter"            , nodal_mg_max_iter );
+        pp.query( "mg_maxiter"             , nodal_mg_maxiter );
         pp.query( "mg_cg_maxiter"          , nodal_mg_cg_maxiter );
         pp.query( "mg_rtol"                , nodal_mg_rtol );
         pp.query( "mg_atol"                , nodal_mg_atol );
@@ -59,15 +59,15 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "steady_state_tol", steady_state_tol );
 
         // Maximum number of iterations allowed to reach steady state
-        pp.query( "steady_state_max_iter", steady_state_max_iter );
+        pp.query( "steady_state_maxiter", steady_state_maxiter );
 
         if (steady_state > 0)
         {
            if (steady_state_tol < 0)
               amrex::Abort("Must set steady_state_tol if running to steady state!");
 
-              amrex::Print() << "Running to steady state with max_iters = "
-                             << steady_state_max_iter << " and tolerance "
+              amrex::Print() << "Running to steady state with maxiter = "
+                             << steady_state_maxiter << " and tolerance "
                              << steady_state_tol << std::endl;
 
         } else {
@@ -100,7 +100,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp_mac.query( "mg_cg_verbose", mac_mg_cg_verbose );
         pp_mac.query( "mg_rtol"      , mac_mg_rtol );
         pp_mac.query( "mg_atol"      , mac_mg_atol );
-        pp_mac.query( "mg_max_iter"  , mac_mg_max_iter );
+        pp_mac.query( "mg_maxiter"   , mac_mg_maxiter );
         pp_mac.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
         pp_mac.query( "mg_max_coarsening_level", mac_mg_max_coarsening_level );
 
@@ -160,7 +160,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp_diff.query( "mg_cg_verbose", diff_mg_cg_verbose );
         pp_diff.query( "mg_rtol"      , diff_mg_rtol );
         pp_diff.query( "mg_atol"      , diff_mg_atol );
-        pp_diff.query( "mg_max_iter"  , diff_mg_max_iter );
+        pp_diff.query( "mg_maxiter"   , diff_mg_maxiter );
         pp_diff.query( "mg_cg_maxiter", diff_mg_cg_maxiter );
         pp_diff.query( "mg_max_coarsening_level", diff_mg_max_coarsening_level );
 

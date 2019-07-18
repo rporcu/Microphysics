@@ -135,7 +135,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
    macproj.setDomainBC  ( ppe_lobc, ppe_hibc );
    macproj.setVerbose   ( mac_mg_verbose);
    macproj.setCGVerbose ( mac_mg_cg_verbose);
-   macproj.setMaxIter   ( mac_mg_max_iter);
+   macproj.setMaxIter   ( mac_mg_maxiter);
    macproj.setCGMaxIter ( mac_mg_cg_maxiter);   
    macproj.setMaxCoarseningLevel ( mac_mg_max_coarsening_level);
    // The default bottom solver is BiCG

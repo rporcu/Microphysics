@@ -564,7 +564,7 @@ mfix::steady_state_reached (Real dt, int iter)
        reached = reached && (condition1[lev] || condition2[lev]);
     }
 
-    reached = reached || (iter >= steady_state_max_iter);
+    reached = reached || (iter >= steady_state_maxiter);
 
     // Count # access
     naccess++;
