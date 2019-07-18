@@ -295,8 +295,10 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
         });
     }
 
-#ifdef AMREX_USE_CUDA
     Gpu::Device::synchronize();
+
+#ifdef AMREX_USE_CUDA
+    sum = sum_gpu.dataValue();
 #endif
 
     if (!local)
