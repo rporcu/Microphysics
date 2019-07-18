@@ -16,7 +16,7 @@ amr.blocking_factor = 2
 
 mac.mg_verbose          = 1
 
-diffusion.mg_verbose = 0
+diff.mg_verbose = 0
 
 mfix.mg_verbose         = 1
 mfix.mg_cg_verbose      = 0

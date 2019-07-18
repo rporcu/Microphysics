@@ -18,7 +18,7 @@ mfix.drag_type = "Gidaspow"
 amr.blocking_factor = 2
 mac.mg_verbose          = 1
 
-diffusion.mg_verbose = 0
+diff.mg_verbose = 0
 
 mfix.mg_use_hypre       = true
 mfix.mg_verbose         = 1
