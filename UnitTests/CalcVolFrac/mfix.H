@@ -596,7 +596,7 @@ private:
      int  nodal_mg_cg_verbose = 0;
 
      // Control MLMG behavior
-     int  nodal_mg_max_iter = 100;
+     int  nodal_mg_maxiter = 100;
      int  nodal_mg_cg_maxiter = 100;
      Real nodal_mg_rtol = 1.0e-11;
      Real nodal_mg_atol = 1.0e-14;
@@ -620,7 +620,7 @@ private:
      int  mac_mg_cg_verbose = 0;
 
      // Control MLMG behavior
-     int  mac_mg_max_iter = 200;
+     int  mac_mg_maxiter = 200;
      int  mac_mg_cg_maxiter = 200;
      Real mac_mg_rtol = 1.0e-11;
      Real mac_mg_atol = 1.0e-14;
@@ -639,7 +639,7 @@ private:
      int  diff_mg_cg_verbose = 0;
 
      // Control MLMG behavior
-     int  diff_mg_max_iter = 100;
+     int  diff_mg_maxiter = 100;
      int  diff_mg_cg_maxiter = 100;
      Real diff_mg_rtol = 1.0e-11;
      Real diff_mg_atol = 1.0e-14;
@@ -655,7 +655,7 @@ private:
 
      // Maximum number of iterations to steady state -- 
      //    this default may be over-written in the inputs file
-     int  steady_state_max_iter = 100000000;
+     int  steady_state_maxiter = 100000000;
 
      int call_udf;
      bool dual_grid = false;
