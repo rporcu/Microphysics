@@ -114,6 +114,7 @@ mfix::ResizeArrays ()
     ep_g.resize(nlevs_max);
     ep_go.resize(nlevs_max);
 
+
     /****************************************************************************
      *                                                                          *
      * Initialize particle data (including level-set data)                      *
