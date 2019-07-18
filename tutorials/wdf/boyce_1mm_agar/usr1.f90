@@ -26,7 +26,7 @@ subroutine usr1(time)
 !  inj_dt =  51.4d-3
 !  inj_dt =  25.0d-3
 
-  if ((time .GE. 1.0d0 - inj_dt) .AND. (time .LE. 1.0d0)) then
+  if (time .LE. 2.0d0 + inj_dt) then
     bc_u_g(10) = 50.0d0
   else
     bc_u_g(10) = 0.0d0
