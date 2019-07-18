@@ -438,60 +438,7 @@ contains
       integer :: k_b, k_t
 
       integer  :: i,j,k
-      real(rt) :: ic_vol
-      real(rt) :: ic_dlo(3), ic_dhi(3)
-      real(rt) :: max_dp, max_rp
       real(rt) :: pos(3)
-
-      integer :: seed, max_seed(3), seed_lo(3), seed_hi(3)
-
-      call calc_cell_ic(dx, dy, dz, &
-       ic_x_w(icv), ic_y_s(icv), ic_z_b(icv), &
-       ic_x_e(icv), ic_y_n(icv), ic_z_t(icv), &
-       i_w, i_e, j_s, j_n, k_b, k_t)
-
-      ! Start/end of IC domain bounds
-      ic_dlo(1) = (max(lo(1), i_w)    ) * dx
-      ic_dlo(2) = (max(lo(2), j_s)    ) * dy
-      ic_dlo(3) = (max(lo(3), k_b)    ) * dz
-      ic_dhi(1) = (min(hi(1), i_e) + 1) * dx
-      ic_dhi(2) = (min(hi(2), j_n) + 1) * dy
-      ic_dhi(3) = (min(hi(3), k_t) + 1) * dz
-
-      ! physical volume of IC region
-      ic_vol = (ic_x_e(icv) - ic_x_w(icv)) * &
-       (ic_y_n(icv) - ic_y_s(icv)) * &
-       (ic_z_t(icv) - ic_z_b(icv))
-
-      ! Spacing is based on maximum particle size
-      if(is_defined(ic_dp_max(icv,type))) then
-         max_dp = ic_dp_max(icv,type)
-      else
-         max_dp = ic_dp_mean(icv,type)
-      endif
-      max_rp = 0.5d0 * max_dp
-
-      ! Particle count is based on mean particle size
-      seed = ic_vol * ic_ep_s(icv,type) / &
-       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
-
-      ! Total to seed over the whole IC region
-      max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
-      max_seed(3) = int((ic_z_t(icv) - ic_z_b(icv) - max_dp)/(sqrt3*max_rp))
-      max_seed(2) = int(seed / (max_seed(1)*max_seed(3)))
-
-      ! local grid seed loop hi/lo
-      seed_lo(1) = nint((ic_dlo(1) - i_w*dx) / max_dp)
-      seed_lo(3) = nint((ic_dlo(3) - k_b*dz) / (sqrt3 * max_rp))
-      seed_lo(2) = nint((ic_dlo(2) - j_s*dy) / ((sqrt6o3x2) * max_rp))
-
-      seed_hi(1) = nint((ic_dhi(1) - i_w*dx) /  max_dp - seed_lo(1)*max_dp)
-      seed_hi(3) = nint((ic_dhi(3) - k_b*dz) / (sqrt3 * max_rp) - seed_lo(1)*max_dp)
-      seed_hi(2) = nint((ic_dhi(2) - j_s*dy) / ((sqrt6o3x2) * max_rp) - seed_lo(1)*max_dp)
-
-      seed_hi(1) = min(max_seed(1), seed_hi(1)-1)
-      seed_hi(3) = min(max_seed(3), seed_hi(3)-1)
-      seed_hi(2) = min(max_seed(2), seed_hi(2)-1)
 
       pos = -1.0d20
       np = 0
