@@ -161,7 +161,7 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
             {
                 auto drag_arr = drag_fab.array();
                 auto flagsarr = (*flags)[pti].array();
-                auto vratioarr = (*volfrac)[pti].array();
+                auto vfrac = (*volfrac)[pti].array();
 
                 AMREX_FOR_1D ( nrp, ip,
                 {
@@ -187,14 +187,14 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
 
                     amrex::Real weights[2][2][2];
 
-                    weights[0][0][0] = vratioarr(i-1, j-1, k-1) * wx_lo * wy_lo * wz_lo;
-                    weights[0][0][1] = vratioarr(i-1, j-1, k  ) * wx_lo * wy_lo * wz_hi;
-                    weights[0][1][0] = vratioarr(i-1, j  , k-1) * wx_lo * wy_hi * wz_lo;
-                    weights[0][1][1] = vratioarr(i-1, j  , k  ) * wx_lo * wy_hi * wz_hi;
-                    weights[1][0][0] = vratioarr(i  , j-1, k-1) * wx_hi * wy_lo * wz_lo;
-                    weights[1][0][1] = vratioarr(i  , j-1, k  ) * wx_hi * wy_lo * wz_hi;
-                    weights[1][1][0] = vratioarr(i  , j  , k-1) * wx_hi * wy_hi * wz_lo;
-                    weights[1][1][1] = vratioarr(i  , j  , k  ) * wx_hi * wy_hi * wz_hi;
+                    weights[0][0][0] = vfrac(i-1, j-1, k-1) * wx_lo * wy_lo * wz_lo;
+                    weights[0][0][1] = vfrac(i-1, j-1, k  ) * wx_lo * wy_lo * wz_hi;
+                    weights[0][1][0] = vfrac(i-1, j  , k-1) * wx_lo * wy_hi * wz_lo;
+                    weights[0][1][1] = vfrac(i-1, j  , k  ) * wx_lo * wy_hi * wz_hi;
+                    weights[1][0][0] = vfrac(i  , j-1, k-1) * wx_hi * wy_lo * wz_lo;
+                    weights[1][0][1] = vfrac(i  , j-1, k  ) * wx_hi * wy_lo * wz_hi;
+                    weights[1][1][0] = vfrac(i  , j  , k-1) * wx_hi * wy_hi * wz_lo;
+                    weights[1][1][1] = vfrac(i  , j  , k  ) * wx_hi * wy_hi * wz_hi;
 
                     amrex::Real total_weight = 0.0;
                     for (int ii = 0; ii <= 1; ++ii)
@@ -218,7 +218,8 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
                                 if (flagsarr(i+ii,j+jj,k+kk).isCovered())
                                     continue;
 
-                                amrex::Real this_cell_vol = vratioarr(i+ii,j+jj,k+kk) * reg_cell_vol;
+                                amrex::Real this_cell_vol = vfrac(i+ii,j+jj,k+kk) * reg_cell_vol;
+
                                 amrex::Real weight_vol = weights[ii+1][jj+1][kk+1]/this_cell_vol;
 
                                 amrex::Gpu::Atomic::Add(&drag_arr(i+ii,j+jj,k+kk,0),weight_vol*pvx);
