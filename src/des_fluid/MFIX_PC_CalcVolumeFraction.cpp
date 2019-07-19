@@ -218,36 +218,35 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
 
                     amrex::Real weights[2][2][2];
 
-                    weights[0][0][0] = vfrac(i-1, j-1, k-1) * wx_lo * wy_lo * wz_lo;
-                    weights[0][0][1] = vfrac(i-1, j-1, k  ) * wx_lo * wy_lo * wz_hi;
-                    weights[0][1][0] = vfrac(i-1, j  , k-1) * wx_lo * wy_hi * wz_lo;
-                    weights[0][1][1] = vfrac(i-1, j  , k  ) * wx_lo * wy_hi * wz_hi;
-                    weights[1][0][0] = vfrac(i  , j-1, k-1) * wx_hi * wy_lo * wz_lo;
-                    weights[1][0][1] = vfrac(i  , j-1, k  ) * wx_hi * wy_lo * wz_hi;
-                    weights[1][1][0] = vfrac(i  , j  , k-1) * wx_hi * wy_hi * wz_lo;
-                    weights[1][1][1] = vfrac(i  , j  , k  ) * wx_hi * wy_hi * wz_hi;
+                    weights[0][0][0] = wx_lo * wy_lo * wz_lo;
+                    weights[0][0][1] = wx_lo * wy_lo * wz_hi;
+                    weights[0][1][0] = wx_lo * wy_hi * wz_lo;
+                    weights[0][1][1] = wx_lo * wy_hi * wz_hi;
+                    weights[1][0][0] = wx_hi * wy_lo * wz_lo;
+                    weights[1][0][1] = wx_hi * wy_lo * wz_hi;
+                    weights[1][1][0] = wx_hi * wy_hi * wz_lo;
+                    weights[1][1][1] = wx_hi * wy_hi * wz_hi;
 
                     amrex::Real total_weight = 0.0;
                     for (int ii = 0; ii <= 1; ++ii)
                         for (int jj = 0; jj <= 1; ++jj)
                             for (int kk = 0; kk <= 1; ++kk)
-                                total_weight += weights[ii][jj][kk];
+                                total_weight += weights[ii][jj][kk] * vfrac(i-1+ii,j-1+jj,k-1+kk);
 
                     for (int ii = 0; ii <= 1; ++ii)
                         for (int jj = 0; jj <= 1; ++jj)
                             for (int kk = 0; kk <= 1; ++kk)
                                 weights[ii][jj][kk] /= total_weight;
 
-                    amrex::Real pvol = p.rdata(realData::volume);
+                    amrex::Real pvol = p.rdata(realData::volume) / reg_cell_vol;
 
                     for (int ii = -1; ii <= 0; ++ii) {
                         for (int jj = -1; jj <= 0; ++jj) {
                             for (int kk = -1; kk <= 0; ++kk) {
                                 if (flagsarr(i+ii,j+jj,k+kk).isCovered())
                                     continue;
-                                amrex::Real this_cell_vol = vfrac(i+ii,j+jj,k+kk) * reg_cell_vol;
                                 amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk),
-                                                        weights[ii+1][jj+1][kk+1]*pvol/this_cell_vol);
+                                                        weights[ii+1][jj+1][kk+1]*pvol);
                             }
                         }
                     }
