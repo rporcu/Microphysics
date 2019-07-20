@@ -281,7 +281,10 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 
     // Add the drag term implicitly
     if (solve_dem)
-        mfix_add_drag_terms (dt);
+    {
+//      mfix_add_drag_implicit (dt);
+        mfix_add_drag_explicit (dt);
+    }
 
     // If doing implicit diffusion, solve here for u^*
     if (explicit_diffusion_pred == 0)
@@ -367,7 +370,10 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
 
     // Add the drag term implicitly
     if (solve_dem)
-        mfix_add_drag_terms(dt);
+    {
+        mfix_add_drag_implicit(dt);
+//      mfix_add_drag_explicit(dt);
+    }
 
     // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
     mfix_diffuse_velocity_tensor(new_time,.5*dt);
@@ -402,13 +408,62 @@ mfix::mfix_add_gravity_and_gp (Real dt)
 
          AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
          {
+
              Real inv_dens = 1.0 / den_fab(i,j,k);
              vel_fab(i,j,k,0) += dt * ( grav_loc[0]-(gp_fab(i,j,k,0)+gp0_loc[0])*inv_dens );
              vel_fab(i,j,k,1) += dt * ( grav_loc[1]-(gp_fab(i,j,k,1)+gp0_loc[1])*inv_dens );
              vel_fab(i,j,k,2) += dt * ( grav_loc[2]-(gp_fab(i,j,k,2)+gp0_loc[2])*inv_dens );
+
          });
        }
     }
+}
+
+//
+// Explicit solve for the intermediate velocity.
+// Currently this means accounting for the implicit part of the fluid/particle
+// momentum exchange
+//
+void
+mfix::mfix_add_drag_explicit (Real dt)
+{
+  /*
+     This adds both components of the drag term
+     So the drag term we add is beta * (particle_velocity - fluid_velocity)
+                              = drag(0:2) - drag(3) * fluid_velocity
+  */
+
+  BL_PROFILE("mfix::mfix_add_drag_explicit");
+
+  for (int lev = 0; lev < nlev; lev++)
+  {
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    {
+      // Tilebox
+      Box bx = mfi.tilebox ();
+
+      const auto&  vel_fab = vel_g[lev]->array(mfi);
+      const auto& drag_fab =  drag[lev]->array(mfi);
+      const auto&   ro_fab =  ro_g[lev]->array(mfi);
+      const auto&   ep_fab =  ep_g[lev]->array(mfi);
+
+      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      {
+          Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
+
+          Real drag_0 = (drag_fab(i,j,k,0) - drag_fab(i,j,k,3)*vel_fab(i,j,k,0)) * orop;
+          Real drag_1 = (drag_fab(i,j,k,1) - drag_fab(i,j,k,3)*vel_fab(i,j,k,1)) * orop;
+          Real drag_2 = (drag_fab(i,j,k,2) - drag_fab(i,j,k,3)*vel_fab(i,j,k,2)) * orop;
+
+          vel_fab(i,j,k,0) += drag_0;
+          vel_fab(i,j,k,1) += drag_1;
+          vel_fab(i,j,k,2) += drag_2;
+      });
+    }
+  }
 }
 
 //
@@ -417,7 +472,7 @@ mfix::mfix_add_gravity_and_gp (Real dt)
 // momentum exchange
 //
 void
-mfix::mfix_add_drag_terms (Real dt)
+mfix::mfix_add_drag_implicit (Real dt)
 {
   /*
      This adds both components of the drag term
@@ -425,7 +480,7 @@ mfix::mfix_add_drag_terms (Real dt)
                               = dra(0:2) - drag(3) * fluid_velocity
   */
 
-  BL_PROFILE("mfix::mfix_add_drag");
+  BL_PROFILE("mfix::mfix_add_drag_implicit");
 
   for (int lev = 0; lev < nlev; lev++)
   {
@@ -450,6 +505,7 @@ mfix::mfix_add_drag_terms (Real dt)
           vel_fab(i,j,k,0) = (vel_fab(i,j,k,0) + drag_fab(i,j,k,0) * orop) * denom;
           vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + drag_fab(i,j,k,1) * orop) * denom;
           vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;
+
       });
     }
   }

@@ -203,7 +203,8 @@ public:
 
     bool contains_ebs = false;
 
-    void mfix_add_drag_terms(Real dt);
+    void mfix_add_drag_explicit(Real dt);
+    void mfix_add_drag_implicit(Real dt);
 
     void mfix_add_gravity_and_gp(Real dt);
 
