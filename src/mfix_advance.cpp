@@ -282,8 +282,8 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
     // Add the drag term implicitly
     if (solve_dem)
     {
-//      mfix_add_drag_implicit (dt);
-        mfix_add_drag_explicit (dt);
+        mfix_add_drag_implicit (dt);
+//      mfix_add_drag_explicit (dt);
     }
 
     // If doing implicit diffusion, solve here for u^*
