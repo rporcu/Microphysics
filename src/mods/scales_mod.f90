@@ -17,6 +17,16 @@
 
       contains
 
+      real(rt) function get_p_ref() bind(C)
+      IMPLICIT NONE
+      get_p_ref = p_ref
+      END function get_p_ref
+
+      real(rt) function get_p_scale() bind(C)
+      IMPLICIT NONE
+      get_p_scale = p_scale
+      END function get_p_scale
+
       real(rt) function scale_pressure(XXX)
       IMPLICIT NONE
       real(rt), intent(IN) :: XXX

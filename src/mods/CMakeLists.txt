@@ -18,6 +18,8 @@ target_sources( mfixcore
    ic_mod_F.H
    utilities_mod.f90
    scales_mod.f90
+   scales_mod_F.H
+   scales_mod_F.cpp
    output_mod.f90
    param_mod.f90
    param_mod_F.H
