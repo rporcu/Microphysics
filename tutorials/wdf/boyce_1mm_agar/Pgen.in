@@ -2,7 +2,7 @@
 5          !pgtype   1-5 = rand box, rand cyc, rand cyl, sq box, sq cyl
 1.02d-3    !diameter particle diameter
 1040.0d0   !density  particle density
-6167444    !np       number of particles for h0 = 100, 150, 200 (mm) set Np = 3154672, 4689611, 6167444
+6167444    !np       number of particles
 0.190d0    !xl       domain x-dir size
 0.300d0     !yl       domain y-dir size
 0.190d0    !zl       domain z-dir size
