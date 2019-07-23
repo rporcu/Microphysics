@@ -76,17 +76,6 @@
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !                                                                     !
-!  Function: GET PARTICLES_TYPES                                      !
-!                                                                     !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-      integer(c_int) function get_particle_types() bind(C)
-        get_particle_types = particle_types
-        return
-      end function get_particle_types
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-!                                                                     !
 !  Subroutine: DES_CROSSPRDCT                                         !
 !  Purpose: Calculate the cross product of two 3D vectors.            !
 !                                                                     !
