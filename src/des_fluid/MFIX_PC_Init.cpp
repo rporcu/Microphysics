@@ -128,7 +128,10 @@ void MFIXParticleContainer::InitParticlesAuto()
 
       const Box& tilebx = mfi.tilebox();
 
-      mfix_particle_generator(&pcount, tilebx.loVect(), tilebx.hiVect(), &dx, &dy, &dz);
+      const IntVect lo(tilebx.loVect());
+      const IntVect hi(tilebx.hiVect());
+
+      m_particles_generator.generate(pcount, lo, hi, dx, dy, dz);
 
       const int grid_id = mfi.index();
       const int tile_id = mfi.LocalTileIndex();
@@ -154,7 +157,7 @@ void MFIXParticleContainer::InitParticlesAuto()
       // std::cout << pcount << " particles " << " in grid " << grid_id << std::endl;
 
       if (pcount > 0)
-         mfix_particle_generator_prop(&np, particles.GetArrayOfStructs().data());
+         m_particles_generator.generate_prop(np, particles.GetArrayOfStructs().data());
   }
 
   ParallelDescriptor::ReduceIntSum(total_np,ParallelDescriptor::IOProcessorNumber());
