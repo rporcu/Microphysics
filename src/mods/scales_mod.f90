@@ -9,6 +9,8 @@
       use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
+      implicit none
+
       ! reference pressure
       real(rt) :: P_ref
 

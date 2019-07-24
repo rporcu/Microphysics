@@ -25,6 +25,7 @@ class ParticlesGenerator {
 
     // Particle generator
     void generate(int& pc,
+                  int iter,
                   const amrex::IntVect& lo,
                   const amrex::IntVect& hi,
                   const amrex::Real dx,

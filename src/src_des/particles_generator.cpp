@@ -4,12 +4,14 @@
 #include <ic_mod_F.H>
 #include <discretelement_mod_F.H>
 #include <calc_cell_F.H>
+#include <random_nb_mod_F.H>
 
 #include <limits>
 #include <string>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 #include <cmath>
 
 namespace generator_aux {
@@ -58,6 +60,7 @@ ParticlesGenerator::~ParticlesGenerator()
 
 void 
 ParticlesGenerator::generate(int& pc,
+                             int iter,
                              const IntVect& lo,
                              const IntVect& hi,
                              const amrex::Real dx,
@@ -568,9 +571,9 @@ ParticlesGenerator::random_fill(const int icv,
     bool stop = false;
 
     do {
-      pos[0] = ic_dlo[0] + ic_len[0]*amrex::Random();
-      pos[1] = ic_dlo[1] + ic_len[1]*amrex::Random();
-      pos[2] = ic_dlo[2] + ic_len[2]*amrex::Random();
+      pos[0] = ic_dlo[0] + ic_len[0]*get_random();
+      pos[1] = ic_dlo[1] + ic_len[1]*get_random();
+      pos[2] = ic_dlo[2] + ic_len[2]*get_random();
 
       // Grid containing the new particle
       const int idx_x = std::floor(pos[0]*Oodx[0]);
@@ -622,9 +625,12 @@ ParticlesGenerator::random_fill(const int icv,
 
         grow_pdata(pc);
 
-        m_rdata[pc*nr + 0] = pos[0];
-        m_rdata[pc*nr + 1] = pos[1];
-        m_rdata[pc*nr + 2] = pos[2];
+        const int np_idx = np-1;
+        const int pc_idx = pc-1;
+
+        m_rdata[pc_idx*nr + 0] = pos[0];
+        m_rdata[pc_idx*nr + 1] = pos[1];
+        m_rdata[pc_idx*nr + 2] = pos[2];
 
         const int local_idx_x = idx_x - lo[0];
         const int local_idx_y = idx_y - lo[1];
@@ -633,13 +639,12 @@ ParticlesGenerator::random_fill(const int icv,
         const int local_idx =
           local_idx_x + local_idx_y*x_dim + local_idx_z*x_dim*y_dim;
 
-        const int idx_pinc = pinc[local_idx] + 1;
+        const int pinc_value = pinc[local_idx];
+        pbin[local_idx + pinc_value*x_dim*y_dim*z_dim] = np_idx;
 
-        pinc[local_idx] = idx_pinc;
+        pinc[local_idx] = pinc_value + 1;
 
-        pbin[local_idx + idx_pinc*x_dim*y_dim*z_dim] = np;
-
-        if(idx_pinc + 1 >= nb)
+        if(pinc_value + 2 >= nb)
         {
           nb += 2;
           pbin.resize(x_dim*y_dim*z_dim*nb, 0);
