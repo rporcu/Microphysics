@@ -122,7 +122,6 @@ void MFIXParticleContainer::InitParticlesAuto()
 
       // This is particles per grid so we reset to 0
       int pcount = 0;
-      int iter_count(1);
 
       // Define the real particle data for one grid-at-a-time's worth of particles
       // We don't know pcount (number of particles per grid) before this call
@@ -132,7 +131,7 @@ void MFIXParticleContainer::InitParticlesAuto()
       const IntVect lo(tilebx.loVect());
       const IntVect hi(tilebx.hiVect());
 
-      m_particles_generator.generate(pcount, iter_count, lo, hi, dx, dy, dz);
+      m_particles_generator.generate(pcount, lo, hi, dx, dy, dz);
 
       const int grid_id = mfi.index();
       const int tile_id = mfi.LocalTileIndex();
@@ -159,8 +158,6 @@ void MFIXParticleContainer::InitParticlesAuto()
 
       if (pcount > 0)
          m_particles_generator.generate_prop(np, particles.GetArrayOfStructs().data());
-
-      iter_count++;
   }
 
   ParallelDescriptor::ReduceIntSum(total_np,ParallelDescriptor::IOProcessorNumber());

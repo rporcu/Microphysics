@@ -60,7 +60,6 @@ ParticlesGenerator::~ParticlesGenerator()
 
 void 
 ParticlesGenerator::generate(int& pc,
-                             int iter,
                              const IntVect& lo,
                              const IntVect& hi,
                              const amrex::Real dx,
