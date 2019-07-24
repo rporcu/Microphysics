@@ -289,11 +289,15 @@ ParticlesGenerator::hex_close_pack(const int icv,
   const amrex::Real sqrt3_copy(sqrt3);
   const amrex::Real sqrt6o3x2_copy(sqrt6o3x2);
 
+  const amrex::Real seed_lo_x = seed_lo[0];
+  const amrex::Real seed_lo_y = seed_lo[1];
+  const amrex::Real seed_lo_z = seed_lo[2];
+
   AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
   {
-    const int local_i = i - seed_lo[0];
-    const int local_j = j - seed_lo[1];
-    const int local_k = k - seed_lo[2];
+    const int local_i = i - seed_lo_x;
+    const int local_j = j - seed_lo_y;
+    const int local_k = k - seed_lo_z;
 
     const int local_pc =
       pc + (local_j + local_k*delta_bx_y + local_i*delta_bx_y*delta_bx_z);
