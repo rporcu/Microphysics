@@ -915,41 +915,41 @@ ParticlesGenerator::write(const int nrp,
   output_file.open("test.vtp");
 
   // Write the necessary header information for a PolyData file type
-  output_file << "<?xml version=""1.0""?>" << std::endl;
-  output_file << "<VTKFile type=""PolyData"" " <<
-                 " version=""0.1"" byte_order=""LittleEndian"">" << std::endl;
+  output_file << "<?xml version=\"1.0\"?>" << std::endl;
+  output_file << "<VTKFile type=\"PolyData\"" << " "
+              << "version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
   output_file << "   " << "<PolyData>" << std::endl;
 
   // Write Piece tag and identify the number of parts in the system.
-  output_file << "      " << "<Piece NumberOfPoints="""
+  output_file << "      " << "<Piece NumberOfPoints=\""
               << std::fixed << std::setw(10) << std::setprecision(10)
-              << nrp << """ NumberOfVerts=""0"" "
-              << "NumberOfLines=""0"" NumberOfStrips=""0"" NumberOfPolys=""0"">" << std::endl;
+              << std::setfill('0') << nrp << "\" NumberOfVerts=\"0\" "
+              << "NumberOfLines=\"0\" NumberOfStrips=\"0\" NumberOfPolys=\"0\">" << std::endl;
 
   output_file << "         " << "<PointData>" << std::endl;
 
   output_file << "            "
-    << "<DataArray type=""Float32"" Name=""radius"" &NumberOfComponents=""1"" format=""ascii"">"
+    << "<DataArray type=\"Float32\" Name=\"radius\" NumberOfComponents=\"1\" format=\"ascii\">"
     << std::endl;
 
   // TODO openMP
   for(int lc1 = 0; lc1 < nrp; ++lc1)
   {
-    output_file << "              "
+    output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
-                << amrex::Real(parts[lc1].radius) << std::endl;
+                << std::setfill(' ') << amrex::Real(parts[lc1].radius) << std::endl;
   }
 
   output_file << "            " << "</DataArray>" << std::endl;
 
   output_file << "            "
-    << "<DataArray type=""Float32"" Name=""density"" &NumberOfComponents=""1"" format=""ascii"">" 
+    << "<DataArray type=\"Float32\" Name=\"density\" NumberOfComponents=\"1\" format=\"ascii\">" 
     << std::endl;
 
   // TODO openMP
   for(int lc1 = 0; lc1 < nrp; ++lc1)
   {
-    output_file << "              "
+    output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
                 << amrex::Real(parts[lc1].density) << std::endl;
   }
@@ -960,17 +960,17 @@ ParticlesGenerator::write(const int nrp,
 
   output_file << "         " << "<Points>" << std::endl;
 
-  output_file << "            " << "<DataArray type=""Float32"" "
-              << "Name=""Position"" NumberOfComponents=""3"" format=""ascii"">"
+  output_file << "            " << "<DataArray type=\"Float32\" "
+              << "Name=\"Position\" NumberOfComponents=\"3\" format=\"ascii\">"
               << std::endl;
 
   // TODO openMP
   for(int lc1 = 0; lc1 < nrp; lc1++)
   {
-    output_file << "              "
+    output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
-                << amrex::Real(parts[lc1].pos[0]) << "   "
-                << amrex::Real(parts[lc1].pos[1]) << "   "
+                << amrex::Real(parts[lc1].pos[0]) << "    "
+                << amrex::Real(parts[lc1].pos[1]) << "    "
                 << amrex::Real(parts[lc1].pos[2]) << std::endl;
   }
 
