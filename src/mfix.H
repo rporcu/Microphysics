@@ -260,6 +260,15 @@ public:
                  const int lev,
                  const Box& domain);
 
+    void set_p0(const Box& bx,
+                MFIter* mfi,
+                const int lev,
+                const Box& domain,
+                const Real xlen,
+                const Real ylen,
+                const Real zlen,
+                const int delp_dir_in);
+
     void mfix_set_bc_mod(const int* pID, const int* pType,
                          const amrex::Real* pLo, const amrex::Real* pHi,
                          amrex::Real* pLoc,
@@ -347,6 +356,7 @@ protected:
      amrex::Cuda::ManagedVector<amrex::Real> m_bc_w_g;
      amrex::Cuda::ManagedVector<amrex::Real> m_bc_t_g;
      amrex::Cuda::ManagedVector<amrex::Real> m_bc_ep_g;
+     amrex::Cuda::ManagedVector<amrex::Real> m_bc_p_g;
 
      //! The particles see an inflow face as a solid wall; thus instead of
      //! creating a separate EBfactory for particles, we simply modify the
@@ -499,6 +509,7 @@ private:
      // intersection/union
      int ct_ls_mf;
 
+     // Boundary conditions types
      Vector< std::unique_ptr<IArrayBox> > bc_ilo;
      Vector< std::unique_ptr<IArrayBox> > bc_ihi;
      Vector< std::unique_ptr<IArrayBox> > bc_jlo;
@@ -506,6 +517,7 @@ private:
      Vector< std::unique_ptr<IArrayBox> > bc_klo;
      Vector< std::unique_ptr<IArrayBox> > bc_khi;
 
+     // Boundary conditions flags
      Vector< std::unique_ptr<iMultiFab> > flag;
 
      // Void fraction

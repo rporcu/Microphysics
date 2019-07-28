@@ -915,18 +915,10 @@ mfix::mfix_set_p0()
      //    over bc's on faces and it makes more sense to do this one grid at a time
      for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
      {
+       const Box& bx = mfi.validbox();
 
-        const Box& bx = mfi.validbox();
-
-        set_p0(bx.loVect(),  bx.hiVect(),
-               domain.loVect(), domain.hiVect(),
-               BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
-               &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
-               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-               &nghost );
-      }
+       set_p0(bx, &mfi, lev, domain, xlen, ylen, zlen, delp_dir);
+     }
 
      p0_g[lev]->FillBoundary(p0_periodicity);
    }

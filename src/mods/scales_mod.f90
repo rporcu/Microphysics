@@ -9,6 +9,8 @@
       use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
+      implicit none
+
       ! reference pressure
       real(rt) :: P_ref
 
@@ -16,6 +18,16 @@
       real(rt) :: P_scale
 
       contains
+
+      real(rt) function get_p_ref() bind(C)
+      IMPLICIT NONE
+      get_p_ref = p_ref
+      END function get_p_ref
+
+      real(rt) function get_p_scale() bind(C)
+      IMPLICIT NONE
+      get_p_scale = p_scale
+      END function get_p_scale
 
       real(rt) function scale_pressure(XXX)
       IMPLICIT NONE
