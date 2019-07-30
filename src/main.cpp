@@ -52,9 +52,6 @@ void ReadParameters ()
   {
      ParmParse pp("amr");
 
-     pp.query("stop_time", stop_time);
-     pp.query("max_step", max_step);
-
      pp.query("check_file", check_file);
      pp.query("check_int", check_int);
 
@@ -82,6 +79,9 @@ void ReadParameters ()
 
   {
      ParmParse pp("mfix");
+
+     pp.query("stop_time", stop_time);
+     pp.query("max_step", max_step);
 
      pp.query("input_deck", mfix_dat);
      pp.query("write_eb_surface", write_eb_surface);

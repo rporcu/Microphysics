@@ -6,8 +6,8 @@ amrex.fpe_trap_invalid = 1
 #! Fluid solver
 #!-----------------------------------------------------------//
 
-#amr.max_step = 100
-amr.stop_time = 4.0
+#mfix.max_step = 100
+mfix.stop_time = 4.0
 
 mfix.drag_type = "WenYu"
 

@@ -3,8 +3,8 @@
 
 amrex.fpe_trap_invalid = 1
 
-amr.max_step = 1
-#amr.stop_time = 0.0025
+mfix.max_step = 1
+#mfix.stop_time = 0.0025
 
 mfix.fixed_dt = 1.e-4
 

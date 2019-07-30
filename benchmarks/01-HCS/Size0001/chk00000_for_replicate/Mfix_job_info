@@ -32,8 +32,8 @@ MFIX git hash: 17.07-930-g1ed8e1f-dirty
 ===============================================================================
  Inputs File Parameters
 ===============================================================================
-amr.stop_time = 0.0025
-amr.stop_time = 0.0
+mfix.stop_time = 0.0025
+mfix.stop_time = 0.0
 amr.n_cell = 32 32 32
 amr.max_grid_size_x = 32
 amr.max_grid_size_y = 32

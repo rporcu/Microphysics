@@ -9,8 +9,8 @@
 mfix.cfl = 0.5
 mfix.dt_max = 0.0005
 
-#amr.max_step = 100
-amr.stop_time = 5.0
+#mfix.max_step = 100
+mfix.stop_time = 5.0
 
 mfix.particle_init_type = "Auto"
 mfix.drag_type = "Gidaspow"

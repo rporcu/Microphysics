@@ -1,4 +1,4 @@
-amr.stop_time = 0.05
+mfix.stop_time = 0.05
 
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 160 10 160

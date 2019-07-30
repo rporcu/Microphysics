@@ -11,7 +11,7 @@ mfix.write_user = true  # Pg and EPg volume averaging in mfix.dat
 mfix.dt_max = 5.0e-5
 mfix.cfl = 0.5
 
-amr.stop_time = 0.50
+mfix.stop_time = 0.50
 
 mfix.particle_init_type = "Auto"
 mfix.drag_type = "WenYu"
