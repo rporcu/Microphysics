@@ -835,6 +835,10 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
      // Iterate to compute the initial pressure
      if (initial_iterations > 0)
         mfix_initial_iterations(dt,stop_time);
+  }else{
+     //Calculation of sum_vol_orig for a restarting point  
+     sum_vol_orig = volWgtSum(0,*ep_g[0],0);
+     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
   }
 }
 
