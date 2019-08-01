@@ -1,7 +1,7 @@
 #_______________________________________________________________________
 # Solver settings
 
-#amrex.fpe_trap_invalid = 1
+amrex.fpe_trap_invalid = 1
 
 #! Fluid solver
 #!-----------------------------------------------------------//
@@ -11,8 +11,8 @@ mfix.cfl = 0.5
 
 mfix.drag_type = "BVK2"
 
-amr.max_step = 5
-#amr.stop_time = 0.20
+mfix.max_step = 5
+#mfix.stop_time = 0.20
 
 mfix.particle_init_type = "Auto"
 

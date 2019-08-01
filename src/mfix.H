@@ -203,7 +203,8 @@ public:
 
     bool contains_ebs = false;
 
-    void mfix_add_drag_terms(Real dt);
+    void mfix_add_drag_explicit(Real dt);
+    void mfix_add_drag_implicit(Real dt);
 
     void mfix_add_gravity_and_gp(Real dt);
 
@@ -258,6 +259,15 @@ public:
                  MFIter* mfi,
                  const int lev,
                  const Box& domain);
+
+    void set_p0(const Box& bx,
+                MFIter* mfi,
+                const int lev,
+                const Box& domain,
+                const Real xlen,
+                const Real ylen,
+                const Real zlen,
+                const int delp_dir_in);
 
     void mfix_set_bc_mod(const int* pID, const int* pType,
                          const amrex::Real* pLo, const amrex::Real* pHi,
@@ -346,6 +356,7 @@ protected:
      amrex::Cuda::ManagedVector<amrex::Real> m_bc_w_g;
      amrex::Cuda::ManagedVector<amrex::Real> m_bc_t_g;
      amrex::Cuda::ManagedVector<amrex::Real> m_bc_ep_g;
+     amrex::Cuda::ManagedVector<amrex::Real> m_bc_p_g;
 
      //! The particles see an inflow face as a solid wall; thus instead of
      //! creating a separate EBfactory for particles, we simply modify the
@@ -498,6 +509,7 @@ private:
      // intersection/union
      int ct_ls_mf;
 
+     // Boundary conditions types
      Vector< std::unique_ptr<IArrayBox> > bc_ilo;
      Vector< std::unique_ptr<IArrayBox> > bc_ihi;
      Vector< std::unique_ptr<IArrayBox> > bc_jlo;
@@ -505,6 +517,7 @@ private:
      Vector< std::unique_ptr<IArrayBox> > bc_klo;
      Vector< std::unique_ptr<IArrayBox> > bc_khi;
 
+     // Boundary conditions flags
      Vector< std::unique_ptr<iMultiFab> > flag;
 
      // Void fraction
@@ -592,7 +605,7 @@ private:
      int  nodal_mg_cg_verbose = 0;
 
      // Control MLMG behavior
-     int  nodal_mg_max_iter = 100;
+     int  nodal_mg_maxiter = 100;
      int  nodal_mg_cg_maxiter = 100;
      Real nodal_mg_rtol = 1.0e-11;
      Real nodal_mg_atol = 1.0e-14;
@@ -616,7 +629,7 @@ private:
      int  mac_mg_cg_verbose = 0;
 
      // Control MLMG behavior
-     int  mac_mg_max_iter = 200;
+     int  mac_mg_maxiter = 200;
      int  mac_mg_cg_maxiter = 200;
      Real mac_mg_rtol = 1.0e-11;
      Real mac_mg_atol = 1.0e-14;
@@ -635,7 +648,7 @@ private:
      int  diff_mg_cg_verbose = 0;
 
      // Control MLMG behavior
-     int  diff_mg_max_iter = 100;
+     int  diff_mg_maxiter = 100;
      int  diff_mg_cg_maxiter = 100;
      Real diff_mg_rtol = 1.0e-11;
      Real diff_mg_atol = 1.0e-14;
@@ -651,7 +664,7 @@ private:
 
      // Maximum number of iterations to steady state -- 
      //    this default may be over-written in the inputs file
-     int  steady_state_max_iter = 100000000;
+     int  steady_state_maxiter = 100000000;
 
      int call_udf;
      bool dual_grid = false;

@@ -8,7 +8,7 @@ amrex.fpe_trap_invalid = 1
 
 mfix.cfl = 0.5
 
-amr.max_step = 10
+mfix.max_step = 10
 
 mfix.particle_init_type = "Auto"
 mfix.drag_type = "BVK2"
@@ -16,7 +16,7 @@ mfix.drag_type = "BVK2"
 amr.blocking_factor = 2
 
 mac.mg_verbose          = 0
-diffusion.mg_verbose    = 0
+diff.mg_verbose    = 0
 mfix.mg_verbose         = 0
 mfix.mg_cg_verbose      = 0
 

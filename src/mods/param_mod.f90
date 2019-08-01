@@ -71,6 +71,11 @@ module param
         return
       end function get_dim_ic
 
+      integer(c_int) function get_dim_m() bind(C)
+        get_dim_m = dim_m
+        return
+      end function get_dim_m
+
       integer(c_int) function get_dim_bc() bind(C)
         get_dim_bc = dim_bc
         return

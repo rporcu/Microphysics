@@ -6,12 +6,13 @@ f90EXE_sources += init_namelist.f90
 
 f90EXE_sources += set_bc_type.f90 
 f90EXE_sources += set_delp_dir.f90
-f90EXE_sources += set_p0.f90 
+f90EXE_sources += set_gp0.f90 
 f90EXE_sources += set_ps.f90 
 f90EXE_sources += set_ppe_bcs.f90 
 
 CEXE_sources += mfix_set_bc0.cpp
 CEXE_sources += mfix_set_ls_inflow.cpp
+CEXE_sources += mfix_set_p0.cpp 
 CEXE_headers += mfix_init_fluid.hpp 
 CEXE_sources += mfix_init_fluid.cpp 
 CEXE_headers += mfix_calc_mu_g.hpp

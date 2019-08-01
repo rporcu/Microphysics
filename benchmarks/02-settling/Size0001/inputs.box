@@ -1,4 +1,4 @@
-amr.stop_time = 0.02
+mfix.stop_time = 0.02
 
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 10 10 10
@@ -24,7 +24,7 @@ amr.plot_int    = 500
 amr.check_int   = -1
 amr.plt_regtest = 1
 
-#amr.restart_file = chk00100
+#amr.restart = chk00100
 
 # Geometry
 geometry.coord_sys   = 0                         # 0: Cartesian

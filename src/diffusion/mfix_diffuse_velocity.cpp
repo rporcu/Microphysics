@@ -90,7 +90,7 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
    solver.setCGVerbose (diff_mg_cg_verbose);
 
    // Set the max number of iterations
-   solver.setMaxIter (diff_mg_max_iter);
+   solver.setMaxIter (diff_mg_maxiter);
    solver.setCGMaxIter (diff_mg_cg_maxiter);
 
    if (diff_bottom_solver_type == "smoother")

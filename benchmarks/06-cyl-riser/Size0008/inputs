@@ -8,7 +8,7 @@ amrex.fpe_trap_invalid = 1
 
 mfix.cfl = 0.5
 
-amr.stop_time = 0.20
+mfix.stop_time = 0.20
 
 mfix.particle_init_type = "Auto"
 
@@ -16,7 +16,7 @@ amr.blocking_factor = 2
 
 mac.mg_verbose          = 1
 
-diffusion.mg_verbose = 0
+diff.mg_verbose = 0
 
 mfix.mg_verbose         = 1
 mfix.mg_cg_verbose      = 0

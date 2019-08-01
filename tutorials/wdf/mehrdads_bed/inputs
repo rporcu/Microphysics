@@ -1,30 +1,28 @@
 #_______________________________________________________________________
 # Solver settings
 
-#amrex.fpe_trap_invalid = 1
+amrex.fpe_trap_invalid = 1
 
 #! Fluid solver
 #!-----------------------------------------------------------//
 
+mfix.stop_time = 10.0
+mfix.dt_min = 1.0e-8
+mfix.dt_max = 1.0e-4
 mfix.cfl = 0.5
-mfix.dt_max = 0.0001
 mfix.tcoll_ratio = 20.
 
-#amr.max_step = 100
-amr.stop_time = 15.0
+mfix.mg_cg_maxiter = 1000
+mac.mg_cg_maxiter  = 1000
 
-mfix.particle_init_type = "Auto"
-
-mfix.drag_type = "Gidaspow"
-
-amr.blocking_factor = 2
-
+#!mfix.mg_verbose         = 1
+#!mfix.mg_cg_verbose      = 1
 mac.mg_verbose          = 1
+mac.mg_cg_verbose       = 1
+#!diff.mg_verbose    = 1
 
-diffusion.mg_verbose = 0
-
-mfix.mg_verbose         = 1
-mfix.mg_cg_verbose      = 0
+mfix.particle_init_type = "AsciiFile"
+mfix.drag_type = "Gidaspow"
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -35,24 +33,25 @@ amr.max_level = 0
 geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 0       0       0       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
-geometry.prob_hi     = 0.150   0.050   0.005  # hi corner of physical domain
+geometry.prob_hi     = 0.160   0.050   0.005  # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell =  180   60   6
+amr.n_cell =  256   80   8
+amr.blocking_factor = 2
 
 #! Grids
 #!-----------------------------------------------------------//
 # Maximum allowable size of each fluid subdomain in the problem domain;
 
 # Fluid
-amr.max_grid_size_x = 18
-amr.max_grid_size_y = 15
-amr.max_grid_size_z = 6
+amr.max_grid_size_x =   32
+amr.max_grid_size_y =   16
+amr.max_grid_size_z = 1024
 
 # Particles (not with KDTree)
-particles.max_grid_size_x =  9
-particles.max_grid_size_y =  15
-particles.max_grid_size_z =  6
+##particles.max_grid_size_x =  8
+##particles.max_grid_size_y =  8
+##particles.max_grid_size_z =  8
 
 #! Tiles
 #!-----------------------------------------------------------//
@@ -98,11 +97,9 @@ zhi.type = "nsw"
 #_______________________________________________________________________
 # Particle load balancing
 
-#mfix.load_balance_type = "FixedSize"
-mfix.load_balance_type = "KnapSack"
-
 amr.dual_grid          = 0
-amr.regrid_int         = 10000
+#!mfix.load_balance_type = "KnapSack"  #!"FixedSize"
+#!amr.regrid_int         = 1000
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -127,7 +124,7 @@ amr.avg_region_x_e =   0.0001   0.001
 amr.avg_region_y_s =   0.000    0.000
 amr.avg_region_y_n =   0.050    0.050 
 amr.avg_region_z_b =   0.000    0.000
-amr.avg_region_z_t =   0.150    0.150 
+amr.avg_region_z_t =   0.160    0.160 
 
 #_______________________________________________________________________
 # IO / Checkpointing
@@ -135,12 +132,12 @@ amr.avg_region_z_t =   0.150    0.150
 amr.par_ascii_int  = 1000
 amr.par_ascii_file ="vis"
 
-amr.plot_int       = 10000
+amr.plot_int       = 1000
 amr.plot_file      ="plt"
 
-amr.check_int      = 10000
+amr.check_int      = 1000
 amr.check_file     ="chk"
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
-#amr.restart   ="chk00100"
+##amr.restart   = "chk100730"

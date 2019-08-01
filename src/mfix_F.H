@@ -54,10 +54,10 @@ extern "C"
                     amrex::Real* pPg,
                     amrex::Real* pVel);
 
-  void set_bc_mod_add_mi(const int* pPlane,
-                         amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
-                         amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
-                         amrex::Real* pPg, amrex::Real* pVel);
+    void set_bc_mod_add_mi(const int* pPlane,
+                           amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
+                           amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
+                           amrex::Real* pPg, amrex::Real* pVel);
 
     void set_bc_type(
              const int* bc_ilo, const int* bc_ihi,
@@ -69,17 +69,15 @@ extern "C"
              const int* ng
     );
 
-    void set_p0(const int*  lo   , const int*  hi,
+    void set_gp0(
              const int* domlo , const int* domhi,
-             amrex::Real* p0_g , const int* rlo, const int* rhi,
              amrex::Real* gp0,
              amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
              amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-             int* delp_dir,
              const int* bc_ilo, const int* bc_ihi,
              const int* bc_jlo, const int* bc_jhi,
              const int* bc_klo, const int* bc_khi,
-             const int* ng
+             const int* ng, int* delp_dir
        );
 
     void mfix_cap_eps(const int* slo, const int* shi, amrex::Real* ep_g);

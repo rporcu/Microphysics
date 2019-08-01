@@ -7,7 +7,7 @@
 module bc
 
   use amrex_fort_module, only : rt => amrex_real
-  use iso_c_binding , only: c_int
+  use iso_c_binding , only: c_int, c_char, c_null_char
 
   use param, only: undefined
   use param, only: dim_bc, dim_m, dim_n_g, dim_n_s
@@ -92,6 +92,23 @@ contains
 ! Purpose: Getters for the boundary conditions values                  !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  pure logical function get_bc_defined(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_defined = bc_defined(pID)
+    return
+  end function get_bc_defined
+
+  subroutine get_bc_type(pID, c_string) bind(C)
+    integer(c_int), intent(in) :: pID
+    character(len=1, kind=c_char), intent(inout) :: c_string(16)
+    integer :: N,I
+    N = len_trim(BC_Type(pID))
+    do I=1,N
+      c_string(I) = BC_Type(pID)(I:I)
+    enddo
+    c_string(N+1) = c_null_char
+  end subroutine get_bc_type
+
   real(rt) function get_bc_u_g(pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_bc_u_g = bc_u_g(pID)
@@ -122,18 +139,54 @@ contains
     return
   end function get_bc_ep_g
 
+  real(rt) function get_bc_p_g(pID) bind(C)
+    integer(c_int), intent(in) :: pID
+    get_bc_p_g = bc_p_g(pID)
+    return
+  end function get_bc_p_g
+  
+  real(rt) function get_delp_x() bind(C)
+    get_delp_x = delp_x
+  end function get_delp_x
+
+  real(rt) function get_delp_y() bind(C)
+    get_delp_y = delp_y
+  end function get_delp_y
+
+  real(rt) function get_delp_z() bind(C)
+    get_delp_z = delp_z
+  end function get_delp_z
+
+  subroutine set_delp_x(delp_x_in) bind(C)
+    real(rt), intent(in) :: delp_x_in
+    delp_x = delp_x_in
+    return
+  end subroutine set_delp_x
+
+  subroutine set_delp_y(delp_y_in) bind(C)
+    real(rt), intent(in) :: delp_y_in
+    delp_y = delp_y_in
+    return
+  end subroutine set_delp_y
+
+  subroutine set_delp_z(delp_z_in) bind(C)
+    real(rt), intent(in) :: delp_z_in
+    delp_z = delp_z_in
+    return
+  end subroutine set_delp_z
+
   integer(c_int) function get_minf() bind(C)
-    get_minf = minf
+    get_minf = minf_
     return
   end function get_minf
 
   integer(c_int) function get_pinf() bind(C)
-    get_pinf = pinf
+    get_pinf = pinf_
     return
   end function get_pinf
 
   integer(c_int) function get_pout() bind(C)
-    get_pout = pout
+    get_pout = pout_
     return
   end function get_pout
 

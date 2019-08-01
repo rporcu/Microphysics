@@ -13,6 +13,8 @@ extern "C"
 
 int get_dim_ic();
 
+int get_dim_m();
+
 int get_dim_bc();
 
 amrex::Real get_my_huge();

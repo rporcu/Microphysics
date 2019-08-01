@@ -53,17 +53,15 @@ mfix::set_ls_inflow(const int lev,
   const amrex::GpuArray<const Real, AMREX_SPACEDIM> dx_fine = 
     {dx[0]/Real(nref), dx[1]/Real(nref), dx[2]/Real(nref)};
 
-  const int nlft = std::max(0, nref*dom_lo[0]-sbx_lo[0]);
-  const int nbot = std::max(0, nref*dom_lo[1]-sbx_lo[1]);
-  const int ndwn = std::max(0, nref*dom_lo[2]-sbx_lo[2]);
+  const int nlft = amrex::max(0, nref*dom_lo[0]-sbx_lo[0]);
+  const int nbot = amrex::max(0, nref*dom_lo[1]-sbx_lo[1]);
+  const int ndwn = amrex::max(0, nref*dom_lo[2]-sbx_lo[2]);
 
-  const int nrgt = std::max(0, sbx_hi[0]-(nref*dom_hi[0]+1));
-  const int ntop = std::max(0, sbx_hi[1]-(nref*dom_hi[1]+1));
-  const int nup  = std::max(0, sbx_hi[2]-(nref*dom_hi[2]+1));
+  const int nrgt = amrex::max(0, sbx_hi[0]-(nref*dom_hi[0]+1));
+  const int ntop = amrex::max(0, sbx_hi[1]-(nref*dom_hi[1]+1));
+  const int nup  = amrex::max(0, sbx_hi[2]-(nref*dom_hi[2]+1));
 
   const int minf = bc_list.get_minf();
-  const int pinf = bc_list.get_pinf();
-  const int pout = bc_list.get_pout();
 
   if (nlft > 0)
   {
@@ -82,7 +80,7 @@ mfix::set_ls_inflow(const int lev,
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(i)*(dx_fine[0]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
         }
         if(i == 0)
         {
@@ -92,7 +90,7 @@ mfix::set_ls_inflow(const int lev,
         if(i > 0)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
         }
       }
     });
@@ -117,7 +115,7 @@ mfix::set_ls_inflow(const int lev,
         if(i < (dom_hi[0]+1)*nref)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(dom_hi[0]-i+1)*(dx_fine[0]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(dom_hi[0]-i+1)*(dx_fine[0]) - offset);
         }
         if(i == (dom_hi[0]+1)*nref)
         {
@@ -129,7 +127,7 @@ mfix::set_ls_inflow(const int lev,
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(dom_hi[0]-i+1)*(dx_fine[0]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(i)*(dx_fine[0]) - offset);
         }
       }
     });
@@ -156,7 +154,7 @@ mfix::set_ls_inflow(const int lev,
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(j)*(dx_fine[1]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
         }
         if(j == 0)
         {
@@ -166,7 +164,7 @@ mfix::set_ls_inflow(const int lev,
         if(j > 0)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
         }
       }
     });
@@ -191,7 +189,7 @@ mfix::set_ls_inflow(const int lev,
         if(j < (dom_hi[1]+1)*nref)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(dom_hi[1]-j+1)*(dx_fine[1]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(dom_hi[1]-j+1)*(dx_fine[1]) - offset);
         }
         if(j == (dom_hi[1]+1)*nref)
         {
@@ -203,7 +201,7 @@ mfix::set_ls_inflow(const int lev,
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(dom_hi[1]-j+1)*(dx_fine[1]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(j)*(dx_fine[1]) - offset);
         }
       }
     });
@@ -230,7 +228,7 @@ mfix::set_ls_inflow(const int lev,
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(k)*(dx_fine[2]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
         }
         if(k == 0)
         {
@@ -240,7 +238,7 @@ mfix::set_ls_inflow(const int lev,
         if(k > 0)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
         }
       }
     });
@@ -265,7 +263,7 @@ mfix::set_ls_inflow(const int lev,
         if(k < (dom_hi[2]+1)*nref)
         {
           if(ls_phi(i,j,k) > 0)
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(dom_hi[2]-k+1)*(dx_fine[2]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(dom_hi[2]-k+1)*(dx_fine[2]) - offset);
         }
         if(k == (dom_hi[2]+1)*nref)
         {
@@ -277,7 +275,7 @@ mfix::set_ls_inflow(const int lev,
           if(ls_phi(i,j,k) > 0)
             ls_phi(i,j,k) = Real(dom_hi[2]-k+1)*(dx_fine[2]) - offset;
           else
-            ls_phi(i,j,k) = std::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
+            ls_phi(i,j,k) = amrex::min(ls_phi(i,j,k), Real(k)*(dx_fine[2]) - offset);
         }
       }
     });

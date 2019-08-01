@@ -1,0 +1,65 @@
+########################################################################
+#                                                                      #
+# Author: J.Musser & wdf                                 Date: 07-2019 #
+#                                                                      #
+# Link's 3-D spout-fluid bed, for details see:                         #
+#   Link, et al., PEPT and discrete particle simulation study of       #
+#   spout-fluid bed regimes, 54 1189-1202 (2008)                       #
+#                                                                      #
+########################################################################
+
+  RUN_NAME = 'R'
+  DESCRIPTION = 'Links spout-fluid bed'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+  CALL_USR = .T.
+  FULL_LOG = .T.
+
+  GRAVITY(1) = -9.80665
+  GRAVITY(2) =  0.00
+  GRAVITY(3) =  0.00
+
+#_______________________________________________________________________
+# MATERIAL SECTION
+
+! Gas Section
+!---------------------------------------------------------------------//
+  RO_g0 = 1.2      ! (kg/m3)
+  MU_g0 = 1.8d-5   ! (Pa.sec)
+
+! Particle Section
+!---------------------------------------------------------------------//
+
+  PARTICLE_TYPES=1
+
+! Friction coefficient.
+  MEW =   0.10               ! particle-particle
+  MEW_W = 0.10               ! particle-wall
+
+! Normal collision spring constant. (N/m)
+  KN =   110.                ! particle-particle
+  KN_W = 110.                ! particle-wall
+
+! Restitution coefficient.
+  DES_EN_INPUT = 0.95        ! particle-particle
+  DES_EN_WALL_INPUT = 0.95   ! particle-wall
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+! Full domain coverage
+  IC_X_w(1) =   0.000  ! (m)
+  IC_X_e(1) =   0.176  ! (m)
+  IC_Y_s(1) =   0.000  ! (m)
+  IC_Y_n(1) =   0.044  ! (m)
+  IC_Z_b(1) =   0.000  ! (m)
+  IC_Z_t(1) =   0.011  ! (m)
+
+  IC_EP_g(1) =  1.000  ! (m)
+
+  IC_U_g(1) =   0.000  ! (m)
+  IC_V_g(1) =   0.000  ! (m)
+  IC_W_g(1) =   0.000  ! (m)
+

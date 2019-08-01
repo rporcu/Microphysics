@@ -99,7 +99,10 @@ if (ENABLE_CUDA)
    get_target_property(MFIX_CUDA_SOURCES mfixcore SOURCES)
    list(FILTER MFIX_CUDA_SOURCES INCLUDE REGEX "\\.cpp")
    set_source_files_properties(${MFIX_CUDA_SOURCES} PROPERTIES LANGUAGE CUDA)
-   unset(MFIX_CUDA_SOURCES)  
+   unset(MFIX_CUDA_SOURCES)
+
+   # Manually added linking to Curand for Random numbers generation on GPU
+   target_link_libraries(mfixcore PUBLIC curand)
 endif ()
 
 #
