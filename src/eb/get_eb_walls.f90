@@ -43,6 +43,18 @@ subroutine mfix_get_walls(bcv, exists, normal, center) &
 
         endif
 
+     case('PRESSURE_OUTFLOW'   ,'PO')
+
+        exists = 1;
+
+        ! Hack to override default plane orientation
+        if(is_defined(bc_center(bcv,1))) then
+
+           normal = bc_normal(bcv,:)
+           center = bc_center(bcv,:)
+
+        endif
+
         end select
   endif
 
