@@ -109,6 +109,10 @@ void mfix::make_eb_geometry ()
       amrex::Print() << "\n Building air-reactor geometry." << std::endl;
         make_eb_air_reactor();
         contains_ebs = true;
+    } else if(geom_type == "prototype clr") {
+      amrex::Print() << "\n Building full-loop clr." << std::endl;
+      make_eb_proto_clr();
+      contains_ebs = true;
     } else if(geom_type == "general") {
       amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
       // TODO: deal with inflow volfrac

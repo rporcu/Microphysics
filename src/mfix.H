@@ -56,7 +56,7 @@ public:
 
     void InitParams(int solve_fluid, int solve_dem, int call_udf );
 
-    bool IsSteadyState() { return (steady_state > 0); } 
+    bool IsSteadyState() { return (steady_state > 0); }
 
     void Init(Real time);
 
@@ -130,7 +130,7 @@ public:
 
 
     //! Construct EB levels from Geometry shop. This builds each EB level and
-    //! saves a pointer to each level into `eb_levels`. 
+    //! saves a pointer to each level into `eb_levels`.
     template<class F> void build_eb_levels (EB2::GeometryShop<F> gshop)
     {
 
@@ -208,7 +208,7 @@ public:
 
     void mfix_add_gravity_and_gp(Real dt);
 
-    void mfix_compute_MAC_velocity_at_faces(Real time, 
+    void mfix_compute_MAC_velocity_at_faces(Real time,
                                             Vector< std::unique_ptr<MultiFab> >& vel,
                                             Vector< std::unique_ptr<MultiFab> >& u_mac,
                                             Vector< std::unique_ptr<MultiFab> >& v_mac,
@@ -223,8 +223,8 @@ public:
      void set_scalar_bcs(MFIter* mfi,
                          const int lev,
                          const Box& domain);
- 
-     void mfix_set_velocity_bcs (Real time, 
+
+     void mfix_set_velocity_bcs (Real time,
                                  Vector< std::unique_ptr<MultiFab> >& vel,
                                  int extrap_dir_bcs);
 
@@ -375,7 +375,7 @@ protected:
                                  Real time, int steady_state);
 
      void mfix_set_scalar_bcs ();
-     
+
      void set_MC_velocity_bcs ( int lev,
                                 Vector< std::unique_ptr<MultiFab> >& u,
                                 Vector< std::unique_ptr<MultiFab> >& v,
@@ -408,6 +408,7 @@ private:
      void make_eb_hopper();
      void make_eb_cyclone();
      void make_eb_air_reactor();
+     void make_eb_proto_clr();
      void make_eb_hourglass();
      void make_eb_clr();
      void make_eb_clr_riser();
@@ -658,11 +659,11 @@ private:
      int  diff_mg_max_coarsening_level = 100;
      // ***************************************************************
 
-     // Tolerance to check for steady state -- 
+     // Tolerance to check for steady state --
      //    this must be specified in the inputs file
      Real steady_state_tol;
 
-     // Maximum number of iterations to steady state -- 
+     // Maximum number of iterations to steady state --
      //    this default may be over-written in the inputs file
      int  steady_state_maxiter = 100000000;
 
