@@ -5,13 +5,19 @@ amrex.fpe_trap_invalid = 1
 # Solver settings
 #----------------------------------------------------------------------
 
-# MAC solver
-mac.mg_verbose     = 0
-mac.mg_cg_verbose  = 0
 
 # Nodal solver
+mfix.mg_cg_verbose = 1
+mfix.mg_cg_maxiter = 1000
+
 mfix.mg_verbose    = 1
-mfix.mg_cg_verbose = 0
+mfix.mg_maxiter    = 1000
+
+# MAC solver
+mac.mg_verbose     = 1
+mac.mg_maxiter     = 1000
+mac.mg_cg_maxiter  = 1000
+
 
 #----------------------------------------------------------------------
 # Particle initialization
@@ -32,7 +38,7 @@ mfix.drag_type = "WenYu"
 
 mfix.stop_time = 0.0e-5
 
-amr.blocking_factor = 4
+amr.blocking_factor = 16
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -80,7 +86,7 @@ particles.tile_size = 1024 1024 1024
 # Level-set refinement and padding
 mfix.levelset__refinement = 2 # levelset resolution
 
-mfix.write_eb_surface = true   # Needed to output eb-surfaces
+mfix.write_eb_surface = false  # Needed to output eb-surfaces
 mfix.write_ls         = false  # Needed to output level set
 
 
@@ -90,8 +96,8 @@ mfix.write_ls         = false  # Needed to output level set
 xlo.type = mi
 xlo.velocity = 0.01
 
-zhi.type = po
-zhi.pressure = 101325.0
+xhi.type = po
+xhi.pressure = 101325.0
 
 mfix.geometry = "prototype clr"
 
@@ -128,3 +134,4 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
+amr.plt_regtest = 1
