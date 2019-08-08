@@ -102,7 +102,7 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     if (ParallelDescriptor::IOProcessor()) {
         std::cout << "   Time per fluid step   " << end_fluid << std::endl;
-        std::cout << "Time per particle step   " << end_particles << std::endl;
+        std::cout << "   Time per particle step   " << end_particles << std::endl;
     }
 
     BL_PROFILE_REGION_STOP("mfix::Evolve");

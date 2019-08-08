@@ -610,7 +610,7 @@ void mfix::InitLevelData(Real time)
 }
 
 void
-mfix::PostInit(Real& dt, Real time, int nstep, int restart_flag, Real stop_time)
+mfix::PostInit(Real& dt, Real time, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
     if (solve_dem)

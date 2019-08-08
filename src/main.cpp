@@ -217,7 +217,7 @@ int main (int argc, char* argv[])
     if (solve_dem && write_ls)
         my_mfix.WriteStaticPlotFile(static_plt_file);
 
-    my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time);
+    my_mfix.PostInit(dt, time, restart_flag, stop_time);
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
@@ -290,7 +290,7 @@ int main (int argc, char* argv[])
                 Real end_step = ParallelDescriptor::second() - strt_step;
                 ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
                 if (ParallelDescriptor::IOProcessor())
-                    std::cout << "Time per step        " << end_step << std::endl;
+                    std::cout << "   Time per step        " << end_step << std::endl;
 
                 if (!my_mfix.IsSteadyState())
                 {

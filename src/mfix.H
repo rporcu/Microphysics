@@ -64,7 +64,7 @@ public:
 
     void mfix_setup_nodal_solver();
 
-    void PostInit(Real& dt, Real time, int nstep, int restart_flag, Real stop_time);
+    void PostInit(Real& dt, Real time, int restart_flag, Real stop_time);
 
     void ResizeArrays();
 
@@ -494,8 +494,6 @@ private:
      Real mfix_norm0 ( MultiFab& mf1, MultiFab& mf2, int lev, int comp1, int comp2 );
 
      static int nlev;
-
-     Vector<int> istep = {1} ;
 
      // Particle container
      std::unique_ptr<MFIXParticleContainer> pc;
