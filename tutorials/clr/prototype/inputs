@@ -16,11 +16,13 @@ mfix.max_step   = 10
 mfix.mg_verbose    = 2
 mfix.mg_cg_verbose = 0
 mfix.mg_cg_maxiter = 1000
+mfix.mg_rtol       = 1.e-8
 
 # MAC solver
 mac.mg_verbose     = 2
 mac.mg_cg_verbose  = 0
 mac.mg_cg_maxiter  = 1000
+mac.mg_rtol        = 1.e-8
 
 #----------------------------------------------------------------------
 # Particle initialization
@@ -38,7 +40,7 @@ mfix.dt_min   = 1.e-7
 mfix.dt_max   = 5.e-5
 
 mfix.do_initial_proj    = 1
-mfix.initial_iterations = 2
+mfix.initial_iterations = 1
 
 mfix.drag_type = "WenYu"
 
