@@ -136,7 +136,6 @@ mfix::mfix_calc_drag_particle(Real time)
 
                     if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
                     {
-
                         for (int ip = 0; ip < np; ++ip)
                         {
                            MFIXParticleContainer::ParticleType& particle = particles[ip];
@@ -191,27 +190,22 @@ mfix::mfix_calc_drag_particle(Real time)
 
                             } else {
 
-                                // Regular cell
-                                if (flags_array(iloc,jloc,kloc).isRegular())
-                                {
-                                    trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
-                                    trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
-                                }
-
-                                // Cut cell but none of the cells in the stencil is covered; we can use the regular formula
-                                else if (!flags_array(i-1,j-1,k-1).isCovered() &&
-                                         !flags_array(i  ,j-1,k-1).isCovered() &&
-                                         !flags_array(i-1,j  ,k-1).isCovered() &&
-                                         !flags_array(i  ,j  ,k-1).isCovered() &&
-                                         !flags_array(i-1,j-1,k  ).isCovered() &&
-                                         !flags_array(i  ,j-1,k  ).isCovered() &&
-                                         !flags_array(i-1,j  ,k  ).isCovered() &&
-                                         !flags_array(i  ,j  ,k  ).isCovered())
+                                // Cut or regular cell and none of the cells in the stencil is covered
+                                // (Note we can't assume regular cell has no covered cells in the stencil
+                                //      because of the diagonal case)
+                                if (!flags_array(i-1,j-1,k-1).isCovered() &&
+                                    !flags_array(i  ,j-1,k-1).isCovered() &&
+                                    !flags_array(i-1,j  ,k-1).isCovered() &&
+                                    !flags_array(i  ,j  ,k-1).isCovered() &&
+                                    !flags_array(i-1,j-1,k  ).isCovered() &&
+                                    !flags_array(i  ,j-1,k  ).isCovered() &&
+                                    !flags_array(i-1,j  ,k  ).isCovered() &&
+                                    !flags_array(i  ,j  ,k  ).isCovered())
                                 {
                                     trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
                                     trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
 
-                                // Cut cell and at least one of the cells in the stencil is covered
+                                // At least one of the cells in the stencil is covered
                                 } else {
 
                                     Real anrm[3];
