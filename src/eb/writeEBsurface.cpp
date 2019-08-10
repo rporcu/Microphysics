@@ -74,6 +74,6 @@ void mfix::WriteEBSurface()
     if (my_flag.getType(bx) == FabType::covered or my_flag.getType(bx) == FabType::regular) continue;
 
     mfix_eb_grid_coverage(&cpu, dx, bx.loVect(), bx.hiVect(),
-         my_flag.dataPtr(), my_flag.loVect(), my_flag.hiVect());
+                          my_flag.dataPtr(), my_flag.loVect(), my_flag.hiVect());
   }
 }

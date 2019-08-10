@@ -183,10 +183,6 @@ compute_redist_diff(Box& bx,
       mask(i,j,k) = 1;
   });
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   //
   // Here we do the redistribution steps
   //
@@ -194,7 +190,9 @@ compute_redist_diff(Box& bx,
   {
     // Set this to zero here
     optmp_fbx.setVal(0.0);
-      
+ 
+    Gpu::streamSynchronize();
+
     //
     // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
     //
@@ -214,9 +212,7 @@ compute_redist_diff(Box& bx,
       divergence(i,j,k,n) = divc(i,j,k,n) + optmp(i,j,k);
     });
 
-#ifdef AMREX_USE_CUDA
-    Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 
   }
 }

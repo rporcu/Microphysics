@@ -421,10 +421,6 @@ compute_divop_conv(
       mask(i,j,k) = 1;
   });
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   const Real my_huge = get_my_huge();
 
   //
@@ -474,9 +470,7 @@ compute_divop_conv(
       }
     });
 
-#ifdef AMREX_USE_CUDA
-    Gpu::Device::synchronize();
-#endif
+    Gpu::streamSynchronize();
 
     //
     // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
@@ -498,9 +492,7 @@ compute_divop_conv(
       divergence(i,j,k,n) = divc(i,j,k) + optmp(i,j,k);
     });
 
-#ifdef AMREX_USE_CUDA
-    Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 
   }
 }
