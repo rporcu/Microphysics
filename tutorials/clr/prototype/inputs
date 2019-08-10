@@ -2,22 +2,25 @@
 amrex.fpe_trap_invalid = 1
 
 #----------------------------------------------------------------------
+# Run settings
+#----------------------------------------------------------------------
+
+mfix.max_step   = 10
+#mfix.stop_time = 10.0
+
+#----------------------------------------------------------------------
 # Solver settings
 #----------------------------------------------------------------------
 
-
 # Nodal solver
-mfix.mg_cg_verbose = 1
+mfix.mg_verbose    = 2
+mfix.mg_cg_verbose = 0
 mfix.mg_cg_maxiter = 1000
 
-mfix.mg_verbose    = 1
-mfix.mg_maxiter    = 1000
-
 # MAC solver
-mac.mg_verbose     = 1
-mac.mg_maxiter     = 1000
+mac.mg_verbose     = 2
+mac.mg_cg_verbose  = 0
 mac.mg_cg_maxiter  = 1000
-
 
 #----------------------------------------------------------------------
 # Particle initialization
@@ -34,11 +37,10 @@ mfix.cfl      = 0.5
 mfix.dt_min   = 1.e-7
 mfix.dt_max   = 5.e-5
 
+mfix.do_initial_proj    = 1
+mfix.initial_iterations = 2
+
 mfix.drag_type = "WenYu"
-
-mfix.stop_time = 0.0e-5
-
-amr.blocking_factor = 16
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -55,6 +57,8 @@ geometry.prob_hi     = 3.8400  0.3200  0.9600  # hi corner of physical domain
 # Number of grid cells in each direction at the coarsest level
 #amr.n_cell =  1728 128 128
 amr.n_cell =  384 32 96
+
+amr.blocking_factor = 16
 
 #! Grids
 #!-----------------------------------------------------------//
@@ -89,7 +93,6 @@ mfix.levelset__refinement = 2 # levelset resolution
 mfix.write_eb_surface = false  # Needed to output eb-surfaces
 mfix.write_ls         = false  # Needed to output level set
 
-
 #! EB geometry
 #!-----------------------------------------------------------//
 
@@ -101,6 +104,7 @@ xhi.pressure = 101325.0
 
 mfix.geometry = "prototype clr"
 
+eb2.small_volfrac = 1.e-6
 
 #_______________________________________________________________________
 # Particle load balancing
