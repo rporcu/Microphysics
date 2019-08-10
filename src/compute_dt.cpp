@@ -106,7 +106,7 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
             amrex::Print() << "WARNING: fixed dt does not satisfy CFL condition: "
                            << " fixed dt = "  << fixed_dt
                            << " > dt based on cfl: " << dt_new
-                           << endl;
+                           << std::endl;
             amrex::Abort ("Fixed dt is too large for fluid solve");
         } else {
 
