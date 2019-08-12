@@ -58,7 +58,7 @@ ParticlesGenerator::ParticlesGenerator()
 ParticlesGenerator::~ParticlesGenerator()
 {}
 
-void 
+void
 ParticlesGenerator::generate(int& pc,
                              const IntVect& lo,
                              const IntVect& hi,
@@ -66,51 +66,66 @@ ParticlesGenerator::generate(int& pc,
                              const amrex::Real dy,
                              const amrex::Real dz)
 {
-  int np(0);
+
   const int init_pc(pc);
 
   const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
 
+  int np(0);
   int icv(1);
-
-  // Get the IC index
-  for(; icv <= get_dim_ic(); icv++)
-    if(ic_defined_cpp(icv) and std::abs(get_ic_ep_g(icv)-1.0) > tolerance)
-      break;
-
-  if(icv > get_dim_ic())
-    return;
-
   int type(1);
 
-  // Get the solids type index
-  for(; type <= get_particle_types(); type++)
-    if(get_ic_ep_s(icv,type) > tolerance)
-      break;
 
-  char ic_pack_type[16];
-  get_ic_pack_type(icv, ic_pack_type);
+  // Get the IC index
+  int icv0(1);
+  for(; icv0 <= get_dim_ic(); icv0++) {
 
-  std::string ic_pack_type_str(ic_pack_type);
+    if(ic_defined_cpp(icv0) and std::abs(get_ic_ep_g(icv0)-1.0) > tolerance) {
 
-  if(ic_pack_type_str.compare("HCP") == 0)
-    hex_close_pack(icv, type, lo, hi, np, pc, dx, dy, dz);
-  else if(ic_pack_type_str.compare("RANDOM") == 0)
-    random_fill(icv, type, lo, hi, np, pc, dx, dy, dz, false);
-  else if(ic_pack_type_str.compare("PSEUDO_RANDOM") == 0)
-    random_fill(icv, type, lo, hi, np, pc, dx, dy, dz, true);
-  else if(ic_pack_type_str.compare("ONEPER") == 0)
-    one_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz);
-  else if(ic_pack_type_str.compare("EIGHTPER") == 0)
-    eight_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz);
-  else
-  {
-    amrex::Print() << "Unknown particle generator fill type" << std::endl;
-    exit(1000);
+      // Get the solids type index
+      int type0(1);
+      for(; type <= get_particle_types(); type0++)
+        if(get_ic_ep_s(icv0,type0) > tolerance)
+          break;
+
+      char ic_pack_type[16];
+      get_ic_pack_type(icv0, ic_pack_type);
+
+      std::string ic_pack_type_str(ic_pack_type);
+
+      int np0(0);
+
+      if(ic_pack_type_str.compare("HCP") == 0)
+        hex_close_pack(icv0, type0, lo, hi, np0, pc, dx, dy, dz);
+      else if(ic_pack_type_str.compare("RANDOM") == 0)
+        random_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, false);
+      else if(ic_pack_type_str.compare("PSEUDO_RANDOM") == 0)
+        random_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, true);
+      else if(ic_pack_type_str.compare("ONEPER") == 0)
+        one_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz);
+      else if(ic_pack_type_str.compare("EIGHTPER") == 0)
+        eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz);
+      else
+        {
+          amrex::Print() << "Unknown particle generator fill type" << std::endl;
+          exit(1000);
+        }
+
+      // HACK -- the original code assumed that only one IC region would have
+      // particles. This saves the IC region and and type to use later.
+      if(np0 > 0){
+
+        type = type0;
+        icv  = icv0;
+        np  += np0;
+        break;
+      }
+
+    }
   }
 
   // No more work.
-  if(np == 0) 
+  if(np == 0)
     return;
 
   amrex::Cuda::ManagedVector<amrex::Real> dp(np, 0);
@@ -207,7 +222,7 @@ ParticlesGenerator::generate(int& pc,
 //  TODO: * generalize fill direction to follow gravity.                !
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void 
+void
 ParticlesGenerator::hex_close_pack(const int icv,
                                    const int type,
                                    const IntVect& lo,
@@ -223,7 +238,7 @@ ParticlesGenerator::hex_close_pack(const int icv,
 
   amrex::Real ic_dlo[3], ic_dhi[3];
   amrex::Real max_dp, max_rp;
-  
+
   int seed, max_seed[3], seed_lo[3], seed_hi[3];
 
   calc_cell_ic(dx, dy, dz, get_ic_x_w(icv), get_ic_y_s(icv), get_ic_z_b(icv),
@@ -283,7 +298,7 @@ ParticlesGenerator::hex_close_pack(const int icv,
 
   np = delta_bx_x * delta_bx_y * delta_bx_z;
   grow_pdata(pc + np);
-  
+
   amrex::Real* p_rdata = m_rdata.data();
 
   const amrex::Real sqrt3_copy(sqrt3);
@@ -301,7 +316,7 @@ ParticlesGenerator::hex_close_pack(const int icv,
 
     const int local_pc =
       pc + (local_j + local_k*delta_bx_y + local_i*delta_bx_y*delta_bx_z);
-    
+
     p_rdata[local_pc*nr + 0] = i_w*dx + max_rp*(1. + i*sqrt6o3x2_copy);
     p_rdata[local_pc*nr + 1] = j_s*dy + max_rp*(1. + 2.*j + ((i+k)%2));
     p_rdata[local_pc*nr + 2] = k_b*dz + max_rp*(1. + sqrt3_copy*(k+((i%2)/3.)));
@@ -320,7 +335,7 @@ ParticlesGenerator::hex_close_pack(const int icv,
 //           per cell                                                   !
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void 
+void
 ParticlesGenerator::one_per_fill(const int icv,
                                  const int type,
                                  const IntVect& lo,
@@ -336,7 +351,7 @@ ParticlesGenerator::one_per_fill(const int icv,
 
   amrex::Real ic_dlo[3], ic_dhi[3];
   amrex::Real max_dp, max_rp;
-  
+
   int seed, max_seed[3], seed_lo[3], seed_hi[3];
 
   calc_cell_ic(dx, dy, dz, get_ic_x_w(icv), get_ic_y_s(icv), get_ic_z_b(icv),
@@ -390,7 +405,7 @@ ParticlesGenerator::one_per_fill(const int icv,
   const int lo_x = std::max<int>(lo[0], std::ceil(get_ic_x_w(icv)/dx - .5));
   const int lo_y = std::max<int>(lo[1], std::ceil(get_ic_y_s(icv)/dy - .5));
   const int lo_z = std::max<int>(lo[2], std::ceil(get_ic_z_b(icv)/dz - .5));
-  
+
   const int hi_x = std::min<int>(hi[0], std::floor(get_ic_x_e(icv)/dx - .5));
   const int hi_y = std::min<int>(hi[1], std::floor(get_ic_y_n(icv)/dy - .5));
   const int hi_z = std::min<int>(hi[2], std::floor(get_ic_z_t(icv)/dz - .5));
@@ -433,7 +448,7 @@ ParticlesGenerator::one_per_fill(const int icv,
 //           per cell                                                   !
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void 
+void
 ParticlesGenerator::eight_per_fill(const int icv,
                                    const int type,
                                    const IntVect& lo,
@@ -447,7 +462,7 @@ ParticlesGenerator::eight_per_fill(const int icv,
   const int lo_x = std::max<int>(2*lo[0], std::ceil(get_ic_x_w(icv)*(2/dx) - .5));
   const int lo_y = std::max<int>(2*lo[1], std::ceil(get_ic_y_s(icv)*(2/dy) - .5));
   const int lo_z = std::max<int>(2*lo[2], std::ceil(get_ic_z_b(icv)*(2/dz) - .5));
-  
+
   const int hi_x = std::min<int>(2*hi[0]+1, std::floor(get_ic_x_e(icv)*(2/dx) - .5));
   const int hi_y = std::min<int>(2*hi[1]+1, std::floor(get_ic_y_n(icv)*(2/dy) - .5));
   const int hi_z = std::min<int>(2*hi[2]+1, std::floor(get_ic_z_t(icv)*(2/dz) - .5));
@@ -490,7 +505,7 @@ ParticlesGenerator::eight_per_fill(const int icv,
 //           particles in the ic region.                                !
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void 
+void
 ParticlesGenerator::random_fill(const int icv,
                                 const int type,
                                 const IntVect& lo,
@@ -507,12 +522,12 @@ ParticlesGenerator::random_fill(const int icv,
 
   amrex::Real ic_dlo[3], ic_dhi[3], ic_len[3];
   amrex::Real max_dp, max_rp;
-  
+
   amrex::Vector<amrex::Real> pos(3, -1.e20);
 
   const amrex::Real Oodx[3] = {1/dx, 1/dy, 1/dz};
 
-  int seed; 
+  int seed;
   // int max_seed[3], seed_lo[3], seed_hi[3]; // UNUSED_VARIABLE
 
   const int maxfails = 1000;
@@ -679,7 +694,7 @@ ParticlesGenerator::random_fill(const int icv,
 //           bounds                                                     !
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void 
+void
 ParticlesGenerator::generate_prop(const int nrp,
                                   void* particles)
 {
@@ -779,7 +794,7 @@ ParticlesGenerator::nor_rno(amrex::Cuda::ManagedVector<amrex::Real>& dp,
       if((2*i+1) < nsize)
         p_dp[2*i+1] = dp2;
 
-      i++; 
+      i++;
     }
   }
 
@@ -790,7 +805,7 @@ ParticlesGenerator::nor_rno(amrex::Cuda::ManagedVector<amrex::Real>& dp,
     std::accumulate(dp.begin(), dp.end(), lmean);
 
     lmean /= nsize;
-    
+
     for(i = 0; i < nsize; i++)
       lvariance += (dp[i]-lmean)*(dp[i]-lmean);
 
@@ -835,7 +850,7 @@ ParticlesGenerator::nor_rno(amrex::Cuda::ManagedVector<amrex::Real>& dp,
 //                                                                     !
 //                                                                     !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-void 
+void
 ParticlesGenerator::uni_rno(amrex::Cuda::ManagedVector<amrex::Real>& dp,
                             const amrex::Real dp_min,
                             const amrex::Real dp_max)
@@ -850,7 +865,7 @@ ParticlesGenerator::uni_rno(amrex::Cuda::ManagedVector<amrex::Real>& dp,
   const unsigned int nsize = dp.size();
 
   AMREX_HOST_DEVICE_FOR_1D(nsize, lc,
-  { 
+  {
     p_dp[lc] = dp_min + lscale*p_dp[lc];
   });
 
@@ -943,7 +958,7 @@ ParticlesGenerator::write(const int nrp,
   output_file << "            " << "</DataArray>" << std::endl;
 
   output_file << "            "
-    << "<DataArray type=\"Float32\" Name=\"density\" NumberOfComponents=\"1\" format=\"ascii\">" 
+    << "<DataArray type=\"Float32\" Name=\"density\" NumberOfComponents=\"1\" format=\"ascii\">"
     << std::endl;
 
   // TODO openMP
