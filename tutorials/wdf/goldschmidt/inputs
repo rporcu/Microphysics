@@ -93,7 +93,7 @@ yhi.type = "nsw"
 yhi.location = 0.155
 
 zlo.type = "nsw"
-zlo.locaiton = 0.0025
+zlo.location = 0.0025
 
 zhi.type = "nsw"
 zhi.location = 0.0175
