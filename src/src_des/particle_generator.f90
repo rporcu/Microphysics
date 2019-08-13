@@ -56,11 +56,11 @@ contains
       real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
 
       ! local index for initial condition
-      integer :: icv
+      integer :: icv, icv0
 
       ! indices
       integer  :: p
-      integer  :: np, type, init_pc
+      integer  :: np, np0, type, type0, init_pc
 
       real(rt) :: pvol
 
@@ -68,28 +68,42 @@ contains
 
       init_pc = pc
 
+      np = 0
+      icv = 1
+      type = 1
+
       ! Get the IC index
-      do icv = 1, dim_ic
-         if (ic_defined(icv) .and. abs(ic_ep_g(icv)-1.0d0)>epsilon(0.0d0)) exit
+      do icv0 = 1, dim_ic
+         if (ic_defined(icv0) .and. abs(ic_ep_g(icv0)-1.0d0)>epsilon(0.0d0)) then
+
+            ! Get the solids type index
+            do type0 = 1, particle_types
+               if(ic_ep_s(icv0,type0) > epsilon(0.d0)) exit
+            enddo
+
+            np0 = 0
+
+            select case(trim(ic_pack_type(icv0)))
+                case('HCP'   ); call hex_close_pack(icv0, type0, lo, hi, np0, pc, dx, dy, dz)
+                case('RANDOM'); call random_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, .false.)
+                case('PSEUDO_RANDOM'); call random_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, .true. )
+                case('ONEPER'); call one_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz)
+                case('EIGHTPER'); call eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz)
+                case DEFAULT
+                   write(*,*) "Unknown particle generator fill type"
+                   stop 1000
+            end select
+
+            ! HACK -- the original code assumed that only one IC region would have
+            ! particles. This saves the IC region and and type to use later.
+            if(np0 .gt. 0) then
+              type = type0
+              icv = icv0
+              np = np+np0
+              exit
+            endif
+         endif
       enddo
-
-      if(icv > dim_ic) return
-
-      ! Get the solids type index
-      do type=1, particle_types
-         if(ic_ep_s(icv,type) > epsilon(0.d0)) exit
-      enddo
-
-      select case(trim(ic_pack_type(icv)))
-          case('HCP'   ); call hex_close_pack(icv, type, lo, hi, np, pc, dx, dy, dz)
-          case('RANDOM'); call random_fill(icv, type, lo, hi, np, pc, dx, dy, dz, .false.)
-          case('PSEUDO_RANDOM'); call random_fill(icv, type, lo, hi, np, pc, dx, dy, dz, .true. )
-          case('ONEPER'); call one_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
-          case('EIGHTPER'); call eight_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
-          case DEFAULT
-             write(*,*) "Unknown particle generator fill type"
-             stop 1000
-      end select
 
       ! No more work.
       if(np == 0) return
