@@ -84,7 +84,7 @@ ParticlesGenerator::generate(int& pc,
 
       // Get the solids type index
       int type0(1);
-      for(; type <= get_particle_types(); type0++)
+      for(; type0 <= get_particle_types(); type0++)
         if(get_ic_ep_s(icv0,type0) > tolerance)
           break;
 
