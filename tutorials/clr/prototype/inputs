@@ -140,4 +140,4 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
-amr.plt_regtest = 1
+amr.plt_regtest = 0
