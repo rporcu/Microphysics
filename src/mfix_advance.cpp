@@ -472,7 +472,7 @@ mfix::mfix_add_drag_implicit (Real dt)
   /*
      This adds both components of the drag term
      So the drag term we add is beta * (particle_velocity - fluid_velocity)
-                              = dra(0:2) - drag(3) * fluid_velocity
+                              = drag(0:2) - drag(3) * fluid_velocity
   */
 
   BL_PROFILE("mfix::mfix_add_drag_implicit");
