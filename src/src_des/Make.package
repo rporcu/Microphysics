@@ -11,6 +11,5 @@ f90EXE_sources += particle_mod.f90
 f90EXE_headers += discretelement_mod_F.H
 f90EXE_headers += random_nb_mod_F.H
 
-CEXE_headers += particles_generator.hpp
-CEXE_sources += particles_generator.cpp
+f90EXE_sources += particle_generator.f90
 CEXE_headers += des_drag_K.H
