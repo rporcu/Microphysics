@@ -287,7 +287,6 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
           
                                 Real rad = particle.rdata(realData::radius);
                                 Real vol = particle.rdata(realData::volume);
-                                //Real den = particle.rdata(realData::density); // UNUSED_VARIABLE
          
                                 int p_id = particle.id();
         

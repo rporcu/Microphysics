@@ -179,7 +179,7 @@ public:
         make_wall(int dir, // direction (long edge) of wall
                   Real position, Real height, Real width );
 
-    void WriteEBSurface();
+    void WriteMyEBSurface();
 
     void InitIOChkData();
     void InitIOPltData();

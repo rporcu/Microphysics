@@ -1,6 +1,5 @@
 target_sources( mfixcore
    PRIVATE
-   eb_to_pvd.f90
    read_namelist.f90
    write_error.f90
    write_user.f90

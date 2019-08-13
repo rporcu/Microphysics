@@ -178,7 +178,7 @@ int main (int argc, char* argv[])
 
     // Write out EB sruface
     if(write_eb_surface)
-      my_mfix.WriteEBSurface();
+      my_mfix.WriteMyEBSurface();
 
     if (solve_dem)
     {
