@@ -52,8 +52,8 @@ contains
       real(rt),   intent(in   ) :: dx, dy, dz
 
 
-      real(rt), parameter :: sqrt3 = sqrt(3.0)
-      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+      real(rt), parameter :: sqrt3 = dsqrt(3.0d0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0d0*dsqrt(6.0d0)/3.0d0
 
       ! local index for initial condition
       integer :: icv, icv0
@@ -115,7 +115,7 @@ contains
       if(ic_dp_dist(icv,type) == 'NORMAL') then
          call nor_rno(dp, ic_dp_mean(icv,type), ic_dp_std(icv,type), &
           ic_dp_min(icv,type), ic_dp_max(icv,type))
-
+      
       else if(ic_dp_dist(icv,type) == 'UNIFORM') then
          call uni_rno(dp, ic_dp_min(icv,type), ic_dp_max(icv,type))
       else
@@ -125,7 +125,7 @@ contains
       if(ic_ro_s_dist(icv,type) == 'NORMAL') then
          call nor_rno(ro_s, ic_ro_s_mean(icv,type), ic_ro_s_std(icv,type), &
           ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
-
+      
       else if(ic_ro_s_dist(icv,type) == 'UNIFORM') then
          call uni_rno(ro_s, ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
       else
@@ -194,8 +194,8 @@ contains
       integer(c_int), intent(inout) :: np, pc
       real(rt),       intent(in   ) :: dx, dy, dz
 
-      real(rt), parameter :: sqrt3 = sqrt(3.0)
-      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+      real(rt), parameter :: sqrt3 = dsqrt(3.0d0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0d0*dsqrt(6.0d0)/3.0d0
 
       ! indices
       integer :: i_w, i_e
@@ -317,8 +317,8 @@ contains
       integer(c_int), intent(inout) :: np, pc
       real(rt),       intent(in   ) :: dx, dy, dz
 
-      real(rt), parameter :: sqrt3 = sqrt(3.0)
-      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+      real(rt), parameter :: sqrt3 = dsqrt(3.0d0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0d0*dsqrt(6.0d0)/3.0d0
 
       ! indices
       integer :: i_w, i_e
@@ -443,8 +443,8 @@ contains
       integer(c_int), intent(inout) :: np, pc
       real(rt),       intent(in   ) :: dx, dy, dz
 
-      real(rt), parameter :: sqrt3 = sqrt(3.0)
-      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+      real(rt), parameter :: sqrt3 = dsqrt(3.0d0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0d0*dsqrt(6.0d0)/3.0d0
 
       ! indices
       integer :: i_w, i_e
@@ -519,8 +519,8 @@ contains
       logical       , intent(in   ) :: fix_seed
       real(rt),       intent(in   ) :: dx, dy, dz
 
-      real(rt), parameter :: sqrt3 = sqrt(3.0)
-      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+      real(rt), parameter :: sqrt3 = dsqrt(3.0d0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0d0*dsqrt(6.0d0)/3.0d0
 
       ! indices
       integer :: i_w, i_e
@@ -749,7 +749,7 @@ contains
             w = x(1)**2 + x(2)**2
          end do
 
-         w = sqrt( (-2.0 * log( w ) ) / w )
+         w = dsqrt( (-2.0d0 * dlog( w ) ) / w )
 
          dp1 = x(1) * w * sigma + mean
          dp2 = x(2) * w * sigma + mean
@@ -772,7 +772,7 @@ contains
          end do
 
          lvariance = lvariance/nsize
-         lsigma = sqrt(lvariance)
+         lsigma = dsqrt(lvariance)
 
          write(*,*) '   '
          write(*,1000) ! Divider
