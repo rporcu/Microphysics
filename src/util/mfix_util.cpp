@@ -29,7 +29,7 @@ mfix::check_for_nans (int lev)
 void
 mfix::mfix_print_max_vel(int lev)
 {
-    amrex::Print() << "max(abs(u/v/w/p))  = " <<
+    amrex::Print() << "   max(abs(u/v/w/p))  = " <<
        mfix_norm0(vel_g, lev, 0) << "  " <<
        mfix_norm0(vel_g, lev, 1) << "  " <<
        mfix_norm0(vel_g, lev, 2) << "  " <<
@@ -43,7 +43,7 @@ mfix::mfix_print_max_vel(int lev)
 void
 mfix::mfix_print_max_gp (int lev)
 {
-    amrex::Print() << "max(abs(gpx/gpy/gpz))  = " <<
+    amrex::Print() << "   max(abs(gpx/gpy/gpz))  = " <<
        mfix_norm0(gp, lev, 0) << "  " <<
        mfix_norm0(gp, lev, 1) << "  " <<
        mfix_norm0(gp, lev, 2) << "  " << std::endl;
