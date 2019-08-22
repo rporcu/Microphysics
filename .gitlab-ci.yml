@@ -66,7 +66,8 @@ multiple-grid-parallel:
     CXX: "mpic++"
     ENABLE_MPI: "1"
     FC: "mpifort"
-    CTEST_CMD: "sbatch -W ${CI_PROJECT_DIR}/.slurm-mgp"
+    # CTEST_CMD: "sbatch -W ${CI_PROJECT_DIR}/.slurm-mgp"  # For Joule
+    CTEST_CMD: "srun ctest -R MGP"  # For AWS
   <<: *test_template
 
 
