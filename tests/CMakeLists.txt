@@ -171,7 +171,7 @@ foreach( THIS_TEST ${TGS_TESTS})
 endforeach( THIS_TEST ${TGS_TESTS} )
 
 
-if ( AMREX_ENABLE_OMP )
+if ( ENABLE_OMP )
 
    foreach( THIS_TEST ${TGS_TESTS})
 
@@ -225,7 +225,7 @@ set( TGM_TESTS
    DEM06-x DEM06-y DEM06-z
    )
 
-if (AMREX_ENABLE_OMP AND AMREX_ENABLE_MPI)
+if ( ENABLE_OMP AND ENABLE_MPI )
    foreach( THIS_TEST ${TGM_TESTS})
 
       STRING(REPLACE "/" "_" TEST_NAME ${THIS_TEST} )
@@ -271,7 +271,7 @@ endif()
 
 
 
-if ( AMREX_ENABLE_MPI )
+if ( ENABLE_MPI )
    set( MGP_TESTS
       FLD01-x FLD01-y FLD01-z
       FLD02-x FLD02-y FLD02-z
@@ -321,4 +321,4 @@ if ( AMREX_ENABLE_MPI )
    WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
 
    endforeach( THIS_TEST ${MGP_TESTS} )
-endif (AMREX_ENABLE_MPI)
+endif ()
