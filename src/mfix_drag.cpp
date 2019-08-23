@@ -107,9 +107,6 @@ mfix::mfix_calc_drag_particle(Real time)
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     {
-      amrex::Cuda::ManagedVector<amrex::Real> velfp(3,0);
-      amrex::Cuda::ManagedVector<amrex::Real> gradp(3,0);
-
       const auto dxi = geom[lev].InvCellSizeArray();
       //const auto dx  = geom[lev].CellSizeArray(); // SET_BUT_NOT_USED
       const auto plo = geom[lev].ProbLoArray();
@@ -134,36 +131,36 @@ mfix::mfix_calc_drag_particle(Real time)
 
           const auto& flags_array = flags.array();
 
-          amrex::Real* p_velfp = velfp.data();
-          amrex::Real* p_gradp = gradp.data();
-
-          amrex::Real gp0_x = gp0[0];
-          amrex::Real gp0_y = gp0[1];
-          amrex::Real gp0_z = gp0[2];
+          const amrex::Real gp0_x = gp0[0];
+          const amrex::Real gp0_y = gp0[1];
+          const amrex::Real gp0_z = gp0[2];
 
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             AMREX_FOR_1D (np, ip,
             {
+              amrex::Real velfp[3];
+              amrex::Real gradp[3];
+
               MFIXParticleContainer::ParticleType& particle = pstruct[ip];
 
-              trilinear_interp(particle, p_velfp, vel_array, plo, dxi);
-              trilinear_interp(particle, p_gradp,  gp_array, plo, dxi);
+              trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
+              trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
 
               Real pbeta = particle.rdata(realData::dragx);
 
               // Particle drag calculation
               particle.rdata(realData::dragx) =
-                pbeta * ( p_velfp[0] - particle.rdata(realData::velx) ) -
-                (p_gradp[0] + gp0_x) * particle.rdata(realData::volume);
+                pbeta * ( velfp[0] - particle.rdata(realData::velx) ) -
+                (gradp[0] + gp0_x) * particle.rdata(realData::volume);
 
               particle.rdata(realData::dragy) =
-                pbeta * ( p_velfp[1] - particle.rdata(realData::vely) ) -
-                (p_gradp[1] + gp0_y) * particle.rdata(realData::volume);
+                pbeta * ( velfp[1] - particle.rdata(realData::vely) ) -
+                (gradp[1] + gp0_y) * particle.rdata(realData::volume);
 
               particle.rdata(realData::dragz) =
-                pbeta * ( p_velfp[2] - particle.rdata(realData::velz) ) -
-                (p_gradp[2] + gp0_z) * particle.rdata(realData::volume);
+                pbeta * ( velfp[2] - particle.rdata(realData::velz) ) -
+                (gradp[2] + gp0_z) * particle.rdata(realData::volume);
             });
           }
           else // FAB not all regular
@@ -174,6 +171,9 @@ mfix::mfix_calc_drag_particle(Real time)
 
             AMREX_FOR_1D (np, ip,
             {
+              amrex::Real velfp[3];
+              amrex::Real gradp[3];
+
               MFIXParticleContainer::ParticleType& particle = pstruct[ip];
               Real pbeta = particle.rdata(realData::dragx);
 
@@ -212,8 +212,8 @@ mfix::mfix_calc_drag_particle(Real time)
                     not flags_array(i-1,j  ,k  ).isCovered() and
                     not flags_array(i  ,j  ,k  ).isCovered())
                 {
-                  trilinear_interp(particle, p_velfp, vel_array, plo, dxi);
-                  trilinear_interp(particle, p_gradp,  gp_array, plo, dxi);
+                  trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
+                  trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
                 } 
                 // At least one of the cells in the stencil is covered
                 else
@@ -299,31 +299,37 @@ mfix::mfix_calc_drag_particle(Real time)
 
                     // Keep the interpolated velocity between the cell value
                     // and the wall value (0)
-                    if ( (p_velfp[n] > 0.0 and p_velfp[n] > vel_array(iloc,jloc,kloc,n)) or
-                         (p_velfp[n] < 0.0 and p_velfp[n] < vel_array(iloc,jloc,kloc,n)) )
-                      p_velfp[n] = vel_array(iloc,jloc,kloc,n);
+                    if ( (velfp[n] > 0.0 and velfp[n] > vel_array(iloc,jloc,kloc,n)) or
+                         (velfp[n] < 0.0 and velfp[n] < vel_array(iloc,jloc,kloc,n)) )
+                      velfp[n] = vel_array(iloc,jloc,kloc,n);
 
-                    if ( (p_gradp[n] > 0.0 and p_gradp[n] > gp_array(iloc,jloc,kloc,n)) or
-                         (p_gradp[n] < 0.0 and p_gradp[n] < gp_array(iloc,jloc,kloc,n)) )
-                      p_gradp[n] = gp_array(iloc,jloc,kloc,n);
+                    if ( (gradp[n] > 0.0 and gradp[n] > gp_array(iloc,jloc,kloc,n)) or
+                         (gradp[n] < 0.0 and gradp[n] < gp_array(iloc,jloc,kloc,n)) )
+                      gradp[n] = gp_array(iloc,jloc,kloc,n);
                   }
                 } // Cut cell
 
                 particle.rdata(realData::dragx) =
-                  pbeta * ( p_velfp[0] - particle.rdata(realData::velx) ) -
-                  (p_gradp[0] + gp0_x) * particle.rdata(realData::volume);
+                  pbeta * ( velfp[0] - particle.rdata(realData::velx) ) -
+                  (gradp[0] + gp0_x) * particle.rdata(realData::volume);
 
                 particle.rdata(realData::dragy) =
-                  pbeta * ( p_velfp[1] - particle.rdata(realData::vely) ) -
-                  (p_gradp[1] + gp0_y) * particle.rdata(realData::volume);
+                  pbeta * ( velfp[1] - particle.rdata(realData::vely) ) -
+                  (gradp[1] + gp0_y) * particle.rdata(realData::volume);
 
                 particle.rdata(realData::dragz) =
-                  pbeta * ( p_velfp[2] - particle.rdata(realData::velz) ) -
-                  (p_gradp[2] + gp0_z) * particle.rdata(realData::volume);
+                  pbeta * ( velfp[2] - particle.rdata(realData::velz) ) -
+                  (gradp[2] + gp0_z) * particle.rdata(realData::volume);
 
               } // Not covered
             }); // particle loop
+
+            Gpu::streamSynchronize();
+
           } // if box not all regular
+
+          Gpu::streamSynchronize();
+
         } // FAB not covered
       } // pti
     } // omp region
