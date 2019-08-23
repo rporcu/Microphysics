@@ -206,6 +206,8 @@ public:
     void mfix_add_drag_explicit(Real dt);
     void mfix_add_drag_implicit(Real dt);
 
+    void mfix_calc_drag_particle(Real time);
+
     void mfix_add_gravity_and_gp(Real dt);
 
     void mfix_compute_MAC_velocity_at_faces(Real time,
@@ -390,7 +392,6 @@ protected:
      void mfix_calc_volume_fraction(Real & sum_vol);
      void mfix_calc_particle_beta(Real time);
      void mfix_calc_drag_fluid(Real time);
-     void mfix_calc_drag_particle(Real time);
 
      void AllocateArrays (int lev);
 
