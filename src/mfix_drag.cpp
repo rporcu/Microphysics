@@ -278,7 +278,7 @@ mfix::mfix_calc_drag_particle(Real time)
 
                   for (int n = 0; n < 3; n++)
                   {
-                    p_velfp[n] =
+                    velfp[n] =
                         (1.0+gx+gy+gz+gxy+gxz+gyz+gxyz) * vel_array(iloc,jloc,kloc,n)
                       + (-gz - gxz - gyz - gxyz)        * vel_array(iloc,jloc,kk  ,n)
                       + (-gy - gxy - gyz - gxyz)        * vel_array(iloc,jj  ,kloc,n)
@@ -287,7 +287,7 @@ mfix::mfix_calc_drag_particle(Real time)
                       + (gxz + gxyz)                    * vel_array(ii  ,jloc,kk  ,n)
                       + (gxy + gxyz)                    * vel_array(ii  ,jj  ,kloc,n)
                       + (-gxyz)                         * vel_array(ii  ,jj  ,kk  ,n);
-                    p_gradp[n] =
+                    gradp[n] =
                         (1.0+gx+gy+gz+gxy+gxz+gyz+gxyz) *  gp_array(iloc,jloc,kloc,n)
                       + (-gz - gxz - gyz - gxyz)        *  gp_array(iloc,jloc,kk  ,n)
                       + (-gy - gxy - gyz - gxyz)        *  gp_array(iloc,jj  ,kloc,n)
