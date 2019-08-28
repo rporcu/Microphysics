@@ -192,6 +192,8 @@ public:
 
     void mfix_compute_vort();
 
+    void mfix_compute_dt(int nstep, Real time, Real stop_time, Real & dt);
+
     ///
     /// Parameters describing the level-set grid:
     ///
@@ -447,8 +449,6 @@ private:
                                    Real dt);
 
      void check_for_nans(int lev);
-
-     void mfix_compute_dt(int nstep, Real time, Real stop_time, Real & dt);
 
      void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv,
                                         Vector< std::unique_ptr<MultiFab> >& vel,

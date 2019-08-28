@@ -66,6 +66,12 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
             const auto&  flags     = vel_fab.getEBCellFlagFab();
             const auto&  flags_fab = flags.array();
 
+            Cuda::ManagedVector<amrex::Real> gp0_dev = {gp0[0], gp0[1], gp0[2]};
+            amrex::Real* p_gp0_dev = gp0_dev.data();
+
+            Cuda::ManagedVector<amrex::Real> gravity_dev = {gravity[0], gravity[1], gravity[2]};
+            amrex::Real* p_gravity_dev = gravity_dev.data();
+
             // Compute CFL on a per cell basis
             if (flags.getType(bx) != FabType::covered) {
 
@@ -80,10 +86,10 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
                         // Compute the three components of the net acceleration
                         // Explicit particle forcing is given by 
                         for (int n(0); n < 3; ++n) {
-                            Real delp = gp0[n] + gradp(i,j,k,n);
+                            Real delp = p_gp0_dev[n] + gradp(i,j,k,n);
                             Real fp   = drag_fab(i,j,k,n) - drag_fab(i,j,k,3) * vel(i,j,k,n);
                             
-                            acc[n] = gravity[n] + qro * ( - delp + fp*qep );
+                            acc[n] = p_gravity_dev[n] + qro * ( - delp + fp*qep );
                         }
                         
                         Real c_cfl   = abs(vel(i,j,k,0))*odx + abs(vel(i,j,k,1))*ody + abs(vel(i,j,k,2))*odz;                        
