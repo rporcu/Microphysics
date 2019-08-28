@@ -433,7 +433,7 @@ private:
 
      static void GotoNextLine(std::istream & is);
 
-     void EvolveFluid(int nstep, Real & dt, Real & time, Real stop_time);
+     void EvolveFluid(int nstep, Real & dt, Real & time, Real stop_time, Real drag_timing);
 
      // Projection-related methods
      void mfix_solve_poisson_equation( Vector< std::unique_ptr<MultiFab> >& phi,

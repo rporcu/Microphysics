@@ -6,37 +6,48 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 {
     BL_PROFILE_REGION_START("mfix::Evolve");
 
+
+    Real coupling_timing;
     Real sum_vol;
     if (solve_dem && solve_fluid)
     {
+      Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
       if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
-      {
-         amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
-         amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
-      }
+        {
+          amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
+          amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
+        }
+      coupling_timing = ParallelDescriptor::second() - start_coupling;
     }
 
     Real start_fluid = ParallelDescriptor::second();
+    Real drag_timing = 0.;
 
     BL_PROFILE_VAR("FLUID SOLVE",fluidSolve);
     for (int lev = 0; lev < nlev; lev++)
     {
        if (solve_fluid)
        {
-          EvolveFluid(nstep,dt,time,stop_time);
+         EvolveFluid(nstep,dt,time,stop_time, drag_timing);
           prev_dt = dt;
        }
     }
     BL_PROFILE_VAR_STOP(fluidSolve);
 
+    Real end_fluid = ParallelDescriptor::second() - start_fluid - drag_timing;
+    ParallelDescriptor::ReduceRealMax(end_fluid, ParallelDescriptor::IOProcessorNumber());
+
+
     // This returns the drag force on the particle
     Real new_time = time+dt;
-    if (solve_dem && solve_fluid)
-       mfix_calc_drag_particle(new_time);
+    if (solve_dem && solve_fluid){
+      Real start_coupling = ParallelDescriptor::second();
+      mfix_calc_drag_particle(new_time);
+      coupling_timing += ParallelDescriptor::second() - start_coupling + drag_timing;
+      ParallelDescriptor::ReduceRealMax(coupling_timing, ParallelDescriptor::IOProcessorNumber());
+    }
 
-    Real end_fluid = ParallelDescriptor::second() - start_fluid;
-    ParallelDescriptor::ReduceRealMax(end_fluid, ParallelDescriptor::IOProcessorNumber());
 
 
     /****************************************************************************
@@ -101,8 +112,9 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     ParallelDescriptor::ReduceRealMax(end_particles, ParallelDescriptor::IOProcessorNumber());
 
     if (ParallelDescriptor::IOProcessor()) {
-        std::cout << "   Time per fluid step   " << end_fluid << std::endl;
-        std::cout << "   Time per particle step   " << end_particles << std::endl;
+      if(solve_fluid) std::cout << "   Time per fluid step      " << end_fluid << std::endl;
+      if(solve_dem  ) std::cout << "   Time per particle step   " << end_particles << std::endl;
+      if (solve_dem && solve_fluid) std::cout << "   Coupling time per step   " << coupling_timing << std::endl;
     }
 
     BL_PROFILE_REGION_STOP("mfix::Evolve");

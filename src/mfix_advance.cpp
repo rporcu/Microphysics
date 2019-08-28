@@ -18,7 +18,7 @@
 #endif
 
 void
-mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
+mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupling_timing )
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluid");
     BL_PROFILE("mfix::EvolveFluid");
@@ -91,7 +91,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
         {
            // Back up field variables to old
           MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
-          MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow()); 
+          MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
           MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
           MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
@@ -106,8 +106,12 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
         Real new_time = time+dt;
 
         // Calculate drag coefficient
-        if (solve_dem)
+        if (solve_dem) {
+          Real start_drag = ParallelDescriptor::second();
           mfix_calc_drag_fluid(time);
+          coupling_timing += ParallelDescriptor::second() - start_drag;
+        }
+
 
         // Predictor step
         bool proj_2_pred = true;
@@ -116,8 +120,10 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
         // Calculate drag coefficient
         if (solve_dem)
         {
+          Real start_drag = ParallelDescriptor::second();
           amrex::Print() << "\nRecalculating drag ..." << std::endl;
           mfix_calc_drag_fluid(new_time);
+          coupling_timing += ParallelDescriptor::second() - start_drag;
         }
 
         bool proj_2_corr = true;
@@ -177,17 +183,17 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     Real time = 0.0;
     int nstep = 0;
     mfix_compute_dt(nstep,time,stop_time,dt);
- 
+
     amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
- 
+
     // Fill ghost cells
     mfix_set_scalar_bcs ();
     mfix_set_velocity_bcs (time, vel_g, 0);
- 
+
     // Copy vel_g into vel_go
     for (int lev = 0; lev < nlev; lev++)
        MultiFab::Copy (*vel_go[lev], *vel_g[lev],   0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
- 
+
     if (solve_dem)
        mfix_calc_drag_fluid(time);
 
@@ -275,7 +281,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
         // First add the convective term
         MultiFab::Saxpy (*vel_g[lev], dt, *conv_old[lev], 0, 0, 3, 0);
 
-        // Add the explicit diffusion terms 
+        // Add the explicit diffusion terms
         MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
     }
 
