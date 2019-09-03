@@ -61,6 +61,7 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     BL_PROFILE_VAR("PARTICLES SOLVE",particlesSolve);
 
     amrex::Gpu::setLaunchRegion(true);
+    int nsubsteps;
 
     if (solve_dem)
     {
@@ -81,7 +82,8 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
             pc->EvolveParticles(ilev, nstep, dt, time, particle_ebfactory[ilev].get(),
                                 ls_data, & ls_valid, levelset__refinement,
-                                particle_cost[ilev].get(), knapsack_weight_type);
+                                particle_cost[ilev].get(), knapsack_weight_type,
+                                nsubsteps);
         }
         else
         {
@@ -100,7 +102,8 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
                 pc->EvolveParticles(lev, nstep, dt, time, particle_ebfactory[lev].get(),
                                     ls_data, & ls_valid, 1,
-                                    particle_cost[lev].get(), knapsack_weight_type);
+                                    particle_cost[lev].get(), knapsack_weight_type,
+                                    nsubsteps);
             }
         }
     }
@@ -113,7 +116,7 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     if (ParallelDescriptor::IOProcessor()) {
       if(solve_fluid) std::cout << "   Time per fluid step      " << end_fluid << std::endl;
-      if(solve_dem  ) std::cout << "   Time per particle step   " << end_particles << std::endl;
+      if(solve_dem  ) std::cout << "   Time per " << nsubsteps << " particle steps " << end_particles << std::endl;
       if (solve_dem && solve_fluid) std::cout << "   Coupling time per step   " << coupling_timing << std::endl;
     }
 

@@ -119,7 +119,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                                             EBFArrayBoxFactory * ebfactory,
                                             const MultiFab * ls_phi, const iMultiFab * ls_valid,
                                             const int ls_refinement,
-                                            MultiFab * cost, std::string & knapsack_weight_type)
+                                            MultiFab * cost, std::string & knapsack_weight_type,
+                                            int &nsubsteps)
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
@@ -153,7 +154,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
      * Init substeps                                                            *
      ***************************************************************************/
 
-    int   nsubsteps;
     Real  subdt;
     des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
 
@@ -422,7 +422,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             AMREX_FOR_1D ( nrp, i,
             {
                 ParticleType& p1 = pstruct[i];
-                
+
                 for (const auto& p2 : nbor_data.getNeighbors(i))
                 {
                     Real dx = p2.pos(0) - p1.pos(0);
@@ -434,7 +434,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                     if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                     {
-                        if (debug_level > 0) 
+                        if (debug_level > 0)
                            Gpu::Atomic::Add(pncoll, 1);
 
                         Real dist_mag     = sqrt(r2);
@@ -1223,9 +1223,9 @@ ComputeAverageVelocities ( const int lev,
               // Compute averages (NaN if NP=0 )
               //
               if (region_np[nr]==0){
-              	region_velx[nr] = 0.0;
-              	region_vely[nr] = 0.0;
-              	region_velz[nr] = 0.0;
+                region_velx[nr] = 0.0;
+                region_vely[nr] = 0.0;
+                region_velz[nr] = 0.0;
               }else{
                 region_velx[nr] /= region_np[nr];
                 region_vely[nr] /= region_np[nr];

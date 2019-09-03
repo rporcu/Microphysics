@@ -16,7 +16,7 @@ typedef class BcList {
   public:
     BcList(const int pinf, const int pout, const int minf)
       : pinf_(pinf)
-      , pout_(pout) 
+      , pout_(pout)
       , minf_(minf)
     {}
 
@@ -124,7 +124,8 @@ public:
                          const amrex::iMultiFab * ls_valid,
                          const int ls_refinement,
                          amrex::MultiFab * cost,
-                         std::string & knapsack_weight_type);
+                         std::string & knapsack_weight_type,
+                         int & nsubsteps);
 
     void GetParticleAvgProp(amrex::Real (&min_dp)[10], amrex::Real (&min_ro)[10],
                             amrex::Real (&max_dp)[10], amrex::Real (&max_ro)[10],
