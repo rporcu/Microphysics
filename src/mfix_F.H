@@ -16,6 +16,9 @@ typedef double amrex_particle_real;
 extern "C"
 {
 #endif
+
+    void writeBuildInfo();
+
     void mfix_add_argument(char* fname, int* nlen);
 
     void write_out0(amrex::Real* time,
