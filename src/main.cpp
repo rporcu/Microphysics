@@ -91,6 +91,18 @@ void ReadParameters ()
 
 int main (int argc, char* argv[])
 {
+
+
+    // check to see if it contains --describe
+    if (argc >= 2) {
+        for (auto i = 1; i < argc; i++) {
+            if (std::string(argv[i]) == "--describe") {
+                writeBuildInfo();
+                return 0;
+            }
+        }
+    }
+
     // Issue an error if AMR input file is not given
     if ( argc < 2 )
        amrex::Abort("AMReX input file missing");
