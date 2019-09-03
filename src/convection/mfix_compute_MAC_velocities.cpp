@@ -53,9 +53,9 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
           {
-             u_mac[lev] -> setVal( 1.2345e300, ubx, 0, 1);
-             v_mac[lev] -> setVal( 1.2345e300, vbx, 0, 1);
-             w_mac[lev] -> setVal( 1.2345e300, wbx, 0, 1);
+             (*u_mac[lev])[mfi].setVal( 1.2345e300, ubx, 0, 1);
+             (*v_mac[lev])[mfi].setVal( 1.2345e300, vbx, 0, 1);
+             (*w_mac[lev])[mfi].setVal( 1.2345e300, wbx, 0, 1);
           }
           else if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
           {
