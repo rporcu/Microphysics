@@ -93,7 +93,7 @@ mfix::mfix_compute_vort ()
                                            (vx-uy)*(vx-uy));
             });
           } else {
-             (*vort[lev])[mfi].setVal(0.0);
+             (*vort[lev])[mfi].setVal(0.0, bx, 0, 1);
           }
        }
     }
