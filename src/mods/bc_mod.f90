@@ -92,9 +92,13 @@ contains
 ! Purpose: Getters for the boundary conditions values                  !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  pure logical function get_bc_defined(pID) bind(C)
+  integer(c_int) function get_bc_defined(pID) bind(C)
     integer(c_int), intent(in) :: pID
-    get_bc_defined = bc_defined(pID)
+    if(bc_defined(pID)) then
+      get_bc_defined = 1
+    else
+      get_bc_defined = 0
+    endif
     return
   end function get_bc_defined
 

@@ -112,10 +112,10 @@ mfix::set_p0(const Box& bx,
     delp_dir = 0;
 
     const int bcv_lo = bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],1);
-    const Real p_lo  = scale_pressure(m_bc_p_g[bcv_lo], P_ref, P_scale);
+    const Real p_lo  = scale_pressure_cpp(m_bc_p_g[bcv_lo], P_ref, P_scale);
 
     const int bcv_hi = bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],1);
-    const Real p_hi  = scale_pressure(m_bc_p_g[bcv_hi], P_ref, P_scale);
+    const Real p_hi  = scale_pressure_cpp(m_bc_p_g[bcv_hi], P_ref, P_scale);
 
     delp_x = p_lo - p_hi;
     set_delp_x(delp_x);
@@ -131,10 +131,10 @@ mfix::set_p0(const Box& bx,
     delp_dir = 1;
 
     const int bcv_lo = bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],1);
-    const Real p_lo  = scale_pressure(m_bc_p_g[bcv_lo], P_ref, P_scale);
+    const Real p_lo  = scale_pressure_cpp(m_bc_p_g[bcv_lo], P_ref, P_scale);
 
     const int bcv_hi = bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],1);
-    const Real p_hi  = scale_pressure(m_bc_p_g[bcv_hi], P_ref, P_scale);
+    const Real p_hi  = scale_pressure_cpp(m_bc_p_g[bcv_hi], P_ref, P_scale);
 
     delp_y = p_lo - p_hi;
     set_delp_y(delp_y);
@@ -150,10 +150,10 @@ mfix::set_p0(const Box& bx,
     delp_dir = 2;
 
     const int bcv_lo = bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,1);
-    const Real p_lo  = scale_pressure(m_bc_p_g[bcv_lo], P_ref, P_scale);
+    const Real p_lo  = scale_pressure_cpp(m_bc_p_g[bcv_lo], P_ref, P_scale);
 
     const int bcv_hi = bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,1);
-    const Real p_hi  = scale_pressure(m_bc_p_g[bcv_hi], P_ref, P_scale);
+    const Real p_hi  = scale_pressure_cpp(m_bc_p_g[bcv_hi], P_ref, P_scale);
 
     delp_z = p_lo - p_hi;
     set_delp_z(delp_z);
@@ -228,7 +228,7 @@ mfix::set_p0(const Box& bx,
     AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
     {
       const amrex::Real local_pj = pj + dpodx*dx * (sbx_hi[0] - i + 1);
-      array4_p0_g(i,j,k) = scale_pressure(local_pj, P_ref, P_scale);
+      array4_p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
     });
 
     pj += dpodx * dx * (sbx_hi[0] - sbx_lo[0] + 1);
@@ -242,7 +242,7 @@ mfix::set_p0(const Box& bx,
     AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
     {
       const amrex::Real local_pj = pj + dpody*dy * (sbx_hi[1] - j + 1);
-      array4_p0_g(i,j,k) = scale_pressure(local_pj, P_ref, P_scale);
+      array4_p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
     });
 
     pj += dpody * dy * (sbx_hi[1] - sbx_lo[1] + 1);
@@ -256,7 +256,7 @@ mfix::set_p0(const Box& bx,
     AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
     {
       const amrex::Real local_pj = pj + (dpodz*dz * (sbx_hi[2] - k + 1));
-      array4_p0_g(i,j,k) = scale_pressure(local_pj, P_ref, P_scale);
+      array4_p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
     });
 
     pj += dpodz * dz * (sbx_hi[2] - sbx_lo[2] + 1);
@@ -370,7 +370,7 @@ void goto_60(const Box& sbx,
       AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj + dpodx*dx * (bx_hi_x - i);
-        p0_g(i,j,k) = scale_pressure(local_pj, P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
       });
       
       pj += (bx_delta_x + lower_stride) * dpodx*dx;
@@ -382,7 +382,7 @@ void goto_60(const Box& sbx,
       AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj - dpodx*dx * (i - bx_lo_x);
-        p0_g(i,j,k) = scale_pressure(local_pj, P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
       });
       
       pj -= (bx_delta_x + upper_stride) * dpodx*dx;
@@ -410,7 +410,7 @@ void goto_60(const Box& sbx,
       AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj + dpody*dy * (bx_hi_y - j);
-        p0_g(i,j,k) = scale_pressure(local_pj, P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
       });
       
       pj += (bx_delta_y + lower_stride) * dpody*dy;
@@ -422,7 +422,7 @@ void goto_60(const Box& sbx,
       AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj - dpody*dy * (j - bx_lo_y);
-        p0_g(i,j,k) = scale_pressure(local_pj, P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
       });
       
       pj -= (bx_delta_y + upper_stride) * dpody*dy;
@@ -450,7 +450,7 @@ void goto_60(const Box& sbx,
       AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj + dpodz*dz * (bx_hi_z - k);
-        p0_g(i,j,k) = scale_pressure(local_pj, P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
       });
       
       pj += (bx_delta_z + lower_stride) * dpodz*dz;
@@ -462,7 +462,7 @@ void goto_60(const Box& sbx,
       AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj - dpodz*dz * (k - bx_lo_z);
-        p0_g(i,j,k) = scale_pressure(local_pj, P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
       });
       
       pj -= (bx_delta_z + upper_stride) * dpodz*dz;
@@ -518,7 +518,7 @@ void goto_100(const Box& sbx,
       if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
       {
         const int bcv = bct_ilo(dom_lo[0]-1, jbc, kbc, 1);
-        p0_g(i,j,k) = scale_pressure(m_bc_p_g[bcv], P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(m_bc_p_g[bcv], P_ref, P_scale);
       }
     });
   }
@@ -537,7 +537,7 @@ void goto_100(const Box& sbx,
       if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
       {
         const int bcv = bct_ihi(dom_hi[0]+1, jbc, kbc, 1);
-        p0_g(i,j,k) = scale_pressure(m_bc_p_g[bcv], P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(m_bc_p_g[bcv], P_ref, P_scale);
       }
     });
   }
@@ -560,7 +560,7 @@ void goto_100(const Box& sbx,
       if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
       {
         const int bcv = bct_jlo(ibc, dom_lo[1]-1, kbc, 1);
-        p0_g(i,j,k) = scale_pressure(m_bc_p_g[bcv], P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(m_bc_p_g[bcv], P_ref, P_scale);
       }
     });
   }
@@ -579,7 +579,7 @@ void goto_100(const Box& sbx,
       if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
       {
         const int bcv = bct_jhi(ibc, dom_hi[1]+1, kbc, 1);
-        p0_g(i,j,k) = scale_pressure(m_bc_p_g[bcv], P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(m_bc_p_g[bcv], P_ref, P_scale);
       }
     });
   }
@@ -602,7 +602,7 @@ void goto_100(const Box& sbx,
       if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
       {
         const int bcv = bct_klo(ibc, jbc, dom_lo[2]-1, 1);
-        p0_g(i,j,k) = scale_pressure(m_bc_p_g[bcv], P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(m_bc_p_g[bcv], P_ref, P_scale);
       }
     });
   }
@@ -621,7 +621,7 @@ void goto_100(const Box& sbx,
       if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
       {
         const int bcv = bct_khi(ibc, jbc, dom_hi[2]+1, 1);
-        p0_g(i,j,k) = scale_pressure(m_bc_p_g[bcv], P_ref, P_scale);
+        p0_g(i,j,k) = scale_pressure_cpp(m_bc_p_g[bcv], P_ref, P_scale);
       }
     });
   }
