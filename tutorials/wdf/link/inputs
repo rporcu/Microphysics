@@ -1,0 +1,155 @@
+#_______________________________________________________________________
+# Solver settings
+
+amrex.fpe_trap_invalid = 1
+
+#! Fluid solver
+#!-----------------------------------------------------------//
+
+mfix.stop_time = 22.001
+mfix.dt_min = 1.0e-8
+mfix.dt_max = 2.0e-4
+mfix.cfl = 0.5
+mfix.tcoll_ratio = 20.
+
+mfix.mg_maxiter    = 1000
+mfix.mg_cg_maxiter = 1000
+mac.mg_maxiter     = 1000
+mac.mg_cg_maxiter  = 1000
+
+mac.mg_verbose   = 0
+mfix.mg_verbose  = 1
+
+mfix.particle_init_type = "AsciiFile"
+particles.removeOutOfRange = 0
+mfix.drag_type = "Gidaspow"
+
+#_______________________________________________________________________
+# Geometry / grids / tiles
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+geometry.coord_sys   = 0                       # 0: Cartesian
+geometry.is_periodic = 0       0       0       # Is periodic in each direction?
+geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
+geometry.prob_hi     = 1.056   0.176   0.099   # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell =  96  16  9
+amr.blocking_factor_x = 2
+amr.blocking_factor_y = 2
+amr.blocking_factor_z = 3
+
+#! Grids
+#!-----------------------------------------------------------//
+# Maximum allowable size of each fluid subdomain in the problem domain;
+
+# Fluid
+amr.max_grid_size_x =   16
+amr.max_grid_size_y =    8
+amr.max_grid_size_z = 1024
+
+# Particles (not with KDTree)
+#particles.max_grid_size_x =   32
+#particles.max_grid_size_y =   32
+#particles.max_grid_size_z =   32
+
+#! Tiles
+#!-----------------------------------------------------------//
+
+# Fluid: Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Particles: Maximum particle title size
+particles.tile_size = 1024 1024 1024
+
+
+#! EB settings
+#!-----------------------------------------------------------//
+# Level-set refinement and padding
+mfix.levelset__refinement    = 4 # levelset resolution
+
+#mfix.write_eb_surface = true  # Needed to output eb-surfaces
+
+#! EB geometry
+#!-----------------------------------------------------------//
+#! none
+
+#! BCs                
+# case    xlo.velocity
+#   b1    2.5  60.
+#   b2    2.5  90.
+#   b3    3.5  65.         
+#!-----------------------------------------------------------//
+xlo.type = "mi"          
+xlo.velocity = 2.5 60.
+
+xlo.ylo = 0.077
+xlo.yhi = 0.099
+xlo.zlo = 0.044
+xlo.zhi = 0.055
+
+xhi.type = "po"
+xhi.pressure = 0.0
+
+ylo.type = "nsw"
+yhi.type = "nsw"
+
+ylo.location = 0.011
+yhi.location = 0.165
+
+zlo.type = "nsw"
+zhi.type = "nsw"
+
+zlo.location = 0.0075
+zhi.location = 0.0915
+
+#_______________________________________________________________________
+# Particle load balancing
+
+mfix.load_balance_type = "FixedSize"
+#mfix.load_balance_type = "KnapSack"
+
+amr.dual_grid          =  0
+amr.regrid_int         = -1
+
+#! KnapSack settings
+#!-----------------------------------------------------------//
+#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+#this option is only relevant if load_balance_type = KnapSack
+
+#mfix.knapsack_weight_type = "NumParticles"
+#mfix.knapsack_weight_type = "RunTimeCosts"
+
+#______________________________________________________________________
+## user data processing
+amr.avg_int = 50
+amr.avg_file = "uio"
+
+amr.avg_vel_p =       1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     
+amr.avg_p_g   =       0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     
+amr.avg_ep_g  =       0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     
+amr.avg_vel_g =       0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     
+amr.avg_region_x_w =  0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 
+amr.avg_region_x_e =  0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 
+amr.avg_region_y_s =  0.011 0.022 0.033 0.044 0.055 0.066 0.077 0.088 0.099 0.110 0.121 0.132 0.143 0.154 0.011 0.022 0.033 0.044 0.055 0.066 0.077 0.088 0.099 0.110 0.121 0.132 0.143 0.154 
+amr.avg_region_y_n =  0.022 0.033 0.044 0.055 0.066 0.077 0.088 0.099 0.110 0.121 0.132 0.143 0.154 0.165 0.022 0.033 0.044 0.055 0.066 0.077 0.088 0.099 0.110 0.121 0.132 0.143 0.154 0.165 
+amr.avg_region_z_b =  0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 
+amr.avg_region_z_t =  0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 
+
+#_______________________________________________________________________
+# IO / Checkpointing
+
+amr.par_ascii_int  = 10000
+amr.par_ascii_file ="vis"
+
+amr.plot_int       = 10000
+amr.plot_file      ="plt"
+
+amr.check_int      = 5000
+amr.check_file     ="chk"
+
+#! Restart from checkpoint
+#!-----------------------------------------------------------//
+#amr.restart   ="chk00100"

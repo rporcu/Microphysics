@@ -56,7 +56,7 @@ public:
 
     void InitParams(int solve_fluid, int solve_dem, int call_udf );
 
-    bool IsSteadyState() { return (steady_state > 0); } 
+    bool IsSteadyState() { return (steady_state > 0); }
 
     void Init(Real time);
 
@@ -64,7 +64,7 @@ public:
 
     void mfix_setup_nodal_solver();
 
-    void PostInit(Real& dt, Real time, int nstep, int restart_flag, Real stop_time);
+    void PostInit(Real& dt, Real time, int restart_flag, Real stop_time);
 
     void ResizeArrays();
 
@@ -130,7 +130,7 @@ public:
 
 
     //! Construct EB levels from Geometry shop. This builds each EB level and
-    //! saves a pointer to each level into `eb_levels`. 
+    //! saves a pointer to each level into `eb_levels`.
     template<class F> void build_eb_levels (EB2::GeometryShop<F> gshop)
     {
 
@@ -179,7 +179,7 @@ public:
         make_wall(int dir, // direction (long edge) of wall
                   Real position, Real height, Real width );
 
-    void WriteEBSurface();
+    void WriteMyEBSurface();
 
     void InitIOChkData();
     void InitIOPltData();
@@ -192,6 +192,8 @@ public:
 
     void mfix_compute_vort();
 
+    void mfix_compute_dt(int nstep, Real time, Real stop_time, Real & dt);
+
     ///
     /// Parameters describing the level-set grid:
     ///
@@ -203,11 +205,14 @@ public:
 
     bool contains_ebs = false;
 
-    void mfix_add_drag_terms(Real dt);
+    void mfix_add_drag_explicit(Real dt);
+    void mfix_add_drag_implicit(Real dt);
+
+    void mfix_calc_drag_particle(Real time);
 
     void mfix_add_gravity_and_gp(Real dt);
 
-    void mfix_compute_MAC_velocity_at_faces(Real time, 
+    void mfix_compute_MAC_velocity_at_faces(Real time,
                                             Vector< std::unique_ptr<MultiFab> >& vel,
                                             Vector< std::unique_ptr<MultiFab> >& u_mac,
                                             Vector< std::unique_ptr<MultiFab> >& v_mac,
@@ -222,8 +227,8 @@ public:
      void set_scalar_bcs(MFIter* mfi,
                          const int lev,
                          const Box& domain);
- 
-     void mfix_set_velocity_bcs (Real time, 
+
+     void mfix_set_velocity_bcs (Real time,
                                  Vector< std::unique_ptr<MultiFab> >& vel,
                                  int extrap_dir_bcs);
 
@@ -258,6 +263,15 @@ public:
                  MFIter* mfi,
                  const int lev,
                  const Box& domain);
+
+    void set_p0(const Box& bx,
+                MFIter* mfi,
+                const int lev,
+                const Box& domain,
+                const Real xlen,
+                const Real ylen,
+                const Real zlen,
+                const int delp_dir_in);
 
     void mfix_set_bc_mod(const int* pID, const int* pType,
                          const amrex::Real* pLo, const amrex::Real* pHi,
@@ -346,6 +360,7 @@ protected:
      amrex::Cuda::ManagedVector<amrex::Real> m_bc_w_g;
      amrex::Cuda::ManagedVector<amrex::Real> m_bc_t_g;
      amrex::Cuda::ManagedVector<amrex::Real> m_bc_ep_g;
+     amrex::Cuda::ManagedVector<amrex::Real> m_bc_p_g;
 
      //! The particles see an inflow face as a solid wall; thus instead of
      //! creating a separate EBfactory for particles, we simply modify the
@@ -364,7 +379,7 @@ protected:
                                  Real time, int steady_state);
 
      void mfix_set_scalar_bcs ();
-     
+
      void set_MC_velocity_bcs ( int lev,
                                 Vector< std::unique_ptr<MultiFab> >& u,
                                 Vector< std::unique_ptr<MultiFab> >& v,
@@ -379,7 +394,6 @@ protected:
      void mfix_calc_volume_fraction(Real & sum_vol);
      void mfix_calc_particle_beta(Real time);
      void mfix_calc_drag_fluid(Real time);
-     void mfix_calc_drag_particle(Real time);
 
      void AllocateArrays (int lev);
 
@@ -397,6 +411,7 @@ private:
      void make_eb_hopper();
      void make_eb_cyclone();
      void make_eb_air_reactor();
+     void make_eb_proto_clr();
      void make_eb_hourglass();
      void make_eb_clr();
      void make_eb_clr_riser();
@@ -418,7 +433,7 @@ private:
 
      static void GotoNextLine(std::istream & is);
 
-     void EvolveFluid(int nstep, Real & dt, Real & time, Real stop_time);
+     void EvolveFluid(int nstep, Real & dt, Real & time, Real stop_time, Real drag_timing);
 
      // Projection-related methods
      void mfix_solve_poisson_equation( Vector< std::unique_ptr<MultiFab> >& phi,
@@ -434,8 +449,6 @@ private:
                                    Real dt);
 
      void check_for_nans(int lev);
-
-     void mfix_compute_dt(int nstep, Real time, Real stop_time, Real & dt);
 
      void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv,
                                         Vector< std::unique_ptr<MultiFab> >& vel,
@@ -484,8 +497,6 @@ private:
 
      static int nlev;
 
-     Vector<int> istep = {1} ;
-
      // Particle container
      std::unique_ptr<MFIXParticleContainer> pc;
 
@@ -498,6 +509,7 @@ private:
      // intersection/union
      int ct_ls_mf;
 
+     // Boundary conditions types
      Vector< std::unique_ptr<IArrayBox> > bc_ilo;
      Vector< std::unique_ptr<IArrayBox> > bc_ihi;
      Vector< std::unique_ptr<IArrayBox> > bc_jlo;
@@ -505,6 +517,7 @@ private:
      Vector< std::unique_ptr<IArrayBox> > bc_klo;
      Vector< std::unique_ptr<IArrayBox> > bc_khi;
 
+     // Boundary conditions flags
      Vector< std::unique_ptr<iMultiFab> > flag;
 
      // Void fraction
@@ -592,7 +605,7 @@ private:
      int  nodal_mg_cg_verbose = 0;
 
      // Control MLMG behavior
-     int  nodal_mg_max_iter = 100;
+     int  nodal_mg_maxiter = 100;
      int  nodal_mg_cg_maxiter = 100;
      Real nodal_mg_rtol = 1.0e-11;
      Real nodal_mg_atol = 1.0e-14;
@@ -616,7 +629,7 @@ private:
      int  mac_mg_cg_verbose = 0;
 
      // Control MLMG behavior
-     int  mac_mg_max_iter = 200;
+     int  mac_mg_maxiter = 200;
      int  mac_mg_cg_maxiter = 200;
      Real mac_mg_rtol = 1.0e-11;
      Real mac_mg_atol = 1.0e-14;
@@ -635,7 +648,7 @@ private:
      int  diff_mg_cg_verbose = 0;
 
      // Control MLMG behavior
-     int  diff_mg_max_iter = 100;
+     int  diff_mg_maxiter = 100;
      int  diff_mg_cg_maxiter = 100;
      Real diff_mg_rtol = 1.0e-11;
      Real diff_mg_atol = 1.0e-14;
@@ -645,13 +658,13 @@ private:
      int  diff_mg_max_coarsening_level = 100;
      // ***************************************************************
 
-     // Tolerance to check for steady state -- 
+     // Tolerance to check for steady state --
      //    this must be specified in the inputs file
      Real steady_state_tol;
 
-     // Maximum number of iterations to steady state -- 
+     // Maximum number of iterations to steady state --
      //    this default may be over-written in the inputs file
-     int  steady_state_max_iter = 100000000;
+     int  steady_state_maxiter = 100000000;
 
      int call_udf;
      bool dual_grid = false;

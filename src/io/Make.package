@@ -1,5 +1,4 @@
 f90EXE_sources += deprecated.f90
-f90EXE_sources += eb_to_pvd.f90
 f90EXE_sources += error_manager_mod.f90
 f90EXE_sources += parse_line.f90
 f90EXE_sources += read_namelist.f90
@@ -9,6 +8,7 @@ f90EXE_sources += write_out0.f90
 f90EXE_sources += write_user.f90
 
 CEXE_sources += mfixIO.cpp
+CEXE_sources += mfix_build_info.cpp
 CEXE_sources += mfix_chk.cpp
 CEXE_sources += mfix_plt.cpp
 CEXE_sources += mfix_restart.cpp

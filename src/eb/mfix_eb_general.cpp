@@ -14,6 +14,7 @@
 #include <mfix.H>
 #include <mfix_eb_F.H>
 
+using namespace std;
 
 void mfix::make_eb_general() {
 
@@ -301,7 +302,7 @@ mfix::get_poly(int max_order, std::string field_prefix) {
 
     // Coefficients vector is stored in the inputs database with the field name:
     //      <field_prefix>_[x,y,z]_coeffs
-    const std::array<const string, 3> var_names{"x", "y", "z"};
+    const std::array<const std::string, 3> var_names{"x", "y", "z"};
     std::array<      string, 3> field_names;
     for(int i = 0; i < 3; i++) {
         std::stringstream field_name;

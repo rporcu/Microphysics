@@ -67,6 +67,13 @@
 !
         ALLOCATE(x(np),y(np),z(np))
         ALLOCATE(u(np),v(np),w(np))
+        x(:) = 0.0d0
+        y(:) = 0.0d0
+        z(:) = 0.0d0
+        u(:) = 0.0d0
+        v(:) = 0.0d0
+        w(:) = 0.0d0
+     
 !
         radius = 0.5d0*diameter
         rad = (1.0d0 + 1.0d-4)*radius  ! so that particles don't touch each other to begin with
@@ -175,9 +182,9 @@
               DO kk = 1, Nk
                 DO ii = 1, Ni
                   IF (i .GT. np) CYCLE     !failed, we already generated all needed particles
-                  x(i) = (DBLE(ii) - 0.5d0)*dx
+                  x(i) = (DBLE(ii) - 0.5d0)*dx - xl/2.0d0
                   y(i) = (DBLE(jj) - 0.5d0)*dy
-                  z(i) = (DBLE(kk) - 0.5d0)*dx
+                  z(i) = (DBLE(kk) - 0.5d0)*dx - zl/2.0d0
                   dist = (x(i)/(xl/2.0d0-dia))**2 &  !+1rad buffer
                        + (z(i)/(zl/2.0d0-dia))**2
                   if (dist .LT. 1.0d0) i = i + 1

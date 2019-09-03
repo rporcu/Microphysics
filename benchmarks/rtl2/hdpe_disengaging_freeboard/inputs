@@ -9,8 +9,8 @@
 mfix.cfl = 0.5
 mfix.dt_max = 0.0005
 
-#amr.max_step = 100
-amr.stop_time = 5.0
+#mfix.max_step = 100
+mfix.stop_time = 5.0
 
 mfix.particle_init_type = "Auto"
 mfix.drag_type = "Gidaspow"
@@ -18,7 +18,7 @@ mfix.drag_type = "Gidaspow"
 amr.blocking_factor = 2
 mac.mg_verbose          = 1
 
-diffusion.mg_verbose = 0
+diff.mg_verbose = 0
 
 mfix.mg_use_hypre       = true
 mfix.mg_verbose         = 1

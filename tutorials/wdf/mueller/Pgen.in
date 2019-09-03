@@ -1,0 +1,15 @@
+1          !phase    0 = classic, else exa phase index
+4          !pgtype   1-5 = rand box, rand cyc, rand cyl, sq box, sq cyl
+1.2d-3     !diameter particle diameter
+1000.0d0   !density  particle density
+9240       !np       number of particles
+0.04d0     !xl       domain x-dir size
+0.12d0     !yl       domain y-dir size
+0.01d0     !zl       domain z-dir size
+2.0d-3     !x0       shift in x-dir
+2.0d-3     !y0       shift in y-dir
+0.5d-3     !z0       shift in z-dir
+1.0d-4     !T_0      thermal speed 
+0.0d0      !Us       mean vel in x-dir
+0.0d0      !Vs       mean vel in y-dir
+0.0d0      !Ws       mean vel in z-dir

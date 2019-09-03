@@ -39,7 +39,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         // Options to control MLMG behavior
         pp.query( "mg_verbose"             , nodal_mg_verbose );
         pp.query( "mg_cg_verbose"          , nodal_mg_cg_verbose );
-        pp.query( "mg_max_iter"            , nodal_mg_max_iter );
+        pp.query( "mg_maxiter"             , nodal_mg_maxiter );
         pp.query( "mg_cg_maxiter"          , nodal_mg_cg_maxiter );
         pp.query( "mg_rtol"                , nodal_mg_rtol );
         pp.query( "mg_atol"                , nodal_mg_atol );
@@ -59,15 +59,15 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "steady_state_tol", steady_state_tol );
 
         // Maximum number of iterations allowed to reach steady state
-        pp.query( "steady_state_max_iter", steady_state_max_iter );
+        pp.query( "steady_state_maxiter", steady_state_maxiter );
 
         if (steady_state > 0)
         {
            if (steady_state_tol < 0)
               amrex::Abort("Must set steady_state_tol if running to steady state!");
 
-              amrex::Print() << "Running to steady state with max_iters = "
-                             << steady_state_max_iter << " and tolerance "
+              amrex::Print() << "Running to steady state with maxiter = "
+                             << steady_state_maxiter << " and tolerance "
                              << steady_state_tol << std::endl;
 
         } else {
@@ -100,7 +100,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp_mac.query( "mg_cg_verbose", mac_mg_cg_verbose );
         pp_mac.query( "mg_rtol"      , mac_mg_rtol );
         pp_mac.query( "mg_atol"      , mac_mg_atol );
-        pp_mac.query( "mg_max_iter"  , mac_mg_max_iter );
+        pp_mac.query( "mg_maxiter"   , mac_mg_maxiter );
         pp_mac.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
         pp_mac.query( "mg_max_coarsening_level", mac_mg_max_coarsening_level );
 
@@ -160,7 +160,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp_diff.query( "mg_cg_verbose", diff_mg_cg_verbose );
         pp_diff.query( "mg_rtol"      , diff_mg_rtol );
         pp_diff.query( "mg_atol"      , diff_mg_atol );
-        pp_diff.query( "mg_max_iter"  , diff_mg_max_iter );
+        pp_diff.query( "mg_maxiter"   , diff_mg_maxiter );
         pp_diff.query( "mg_cg_maxiter", diff_mg_cg_maxiter );
         pp_diff.query( "mg_max_coarsening_level", diff_mg_max_coarsening_level );
 
@@ -610,7 +610,7 @@ void mfix::InitLevelData(Real time)
 }
 
 void
-mfix::PostInit(Real& dt, Real time, int nstep, int restart_flag, Real stop_time)
+mfix::PostInit(Real& dt, Real time, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
     if (solve_dem)
@@ -759,7 +759,8 @@ mfix::MakeBCArrays ()
 void
 mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 {
-    if (ooo_debug) amrex::Print() << "make_init_fluid" << std::endl;
+    if (ooo_debug) amrex::Print() << "mfix_init_fluid" << std::endl;
+
     Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
     Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
     Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
@@ -835,6 +836,10 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
      // Iterate to compute the initial pressure
      if (initial_iterations > 0)
         mfix_initial_iterations(dt,stop_time);
+  }else{
+     //Calculation of sum_vol_orig for a restarting point  
+     sum_vol_orig = volWgtSum(0,*ep_g[0],0);
+     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
   }
 }
 
@@ -915,18 +920,10 @@ mfix::mfix_set_p0()
      //    over bc's on faces and it makes more sense to do this one grid at a time
      for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
      {
+       const Box& bx = mfi.validbox();
 
-        const Box& bx = mfi.validbox();
-
-        set_p0(bx.loVect(),  bx.hiVect(),
-               domain.loVect(), domain.hiVect(),
-               BL_TO_FORTRAN_ANYD((*p0_g[lev])[mfi]),
-               &dx, &dy, &dz, &xlen, &ylen, &zlen, &delp_dir,
-               bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-               bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-               bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-               &nghost );
-      }
+       set_p0(bx, &mfi, lev, domain, xlen, ylen, zlen, delp_dir);
+     }
 
      p0_g[lev]->FillBoundary(p0_periodicity);
    }

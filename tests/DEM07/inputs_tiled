@@ -1,11 +1,11 @@
 #_______________________________________________________________________
 # Solver settings
 
-#amrex.fpe_trap_invalid = 1
+amrex.fpe_trap_invalid = 1
 
-amr.stop_time = 0.0025
+mfix.stop_time = 0.0025
 
-mfix.fixed_dt = 1.e-4
+mfix.fixed_dt = 5.e-5
 
 mfix.drag_type = "BVK2"
 

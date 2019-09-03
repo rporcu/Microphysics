@@ -8,7 +8,7 @@ amrex.fpe_trap_invalid = 1
 
 mfix.cfl = 0.5
 
-amr.max_step = 10
+mfix.max_step = 10
 
 mac.mg_verbose   = 0
 mfix.mg_verbose  = 1

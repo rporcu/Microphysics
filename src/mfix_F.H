@@ -16,6 +16,9 @@ typedef double amrex_particle_real;
 extern "C"
 {
 #endif
+
+    void writeBuildInfo();
+
     void mfix_add_argument(char* fname, int* nlen);
 
     void write_out0(amrex::Real* time,
@@ -68,18 +71,6 @@ extern "C"
              amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen,
              const int* ng
     );
-
-    void set_p0(const int*  lo   , const int*  hi,
-             const int* domlo , const int* domhi,
-             amrex::Real* p0_g , const int* rlo, const int* rhi,
-             amrex::Real* dx,       amrex::Real* dy,       amrex::Real* dz,
-             amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-             int* delp_dir,
-             const int* bc_ilo, const int* bc_ihi,
-             const int* bc_jlo, const int* bc_jhi,
-             const int* bc_klo, const int* bc_khi,
-             const int* ng
-       );
 
     void set_gp0(
              const int* domlo , const int* domhi,

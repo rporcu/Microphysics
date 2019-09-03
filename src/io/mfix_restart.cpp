@@ -114,7 +114,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
         for (int lev = 0; lev < nlevs; ++lev) {
 
-            Geom(lev).ProbDomain(RealBox(prob_lo,prob_hi));
+            RealBox rb(prob_lo,prob_hi);
+            Geom(lev).ProbDomain(rb);
+            Geom(lev).ResetDefaultProbDomain(rb);
             
             BoxArray orig_ba,ba;
             orig_ba.readFrom(is);

@@ -1,12 +1,12 @@
 #_______________________________________________________________________
 # Solver settings
 
-#amrex.fpe_trap_invalid = 1
+amrex.fpe_trap_invalid = 1
 
 #! Fluid solver
 #!-----------------------------------------------------------//
 
-amr.stop_time = 65.00001
+mfix.stop_time = 55.001
 mfix.dt_min = 1.0e-8
 mfix.dt_max = 2.0e-4
 mfix.cfl = 0.5
@@ -21,6 +21,7 @@ mac.mg_verbose   = 0
 mfix.mg_verbose  = 1
 
 mfix.particle_init_type = "AsciiFile"  #!"AsciiFile" or "Auto"
+particles.removeOutOfRange = 0
 mfix.drag_type = "Gidaspow"
 
 #_______________________________________________________________________
@@ -92,7 +93,7 @@ yhi.type = "nsw"
 yhi.location = 0.155
 
 zlo.type = "nsw"
-zlo.locaiton = 0.0025
+zlo.location = 0.0025
 
 zhi.type = "nsw"
 zhi.location = 0.0175

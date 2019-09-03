@@ -18,8 +18,8 @@ target_sources( mfixcore
    mfix_set_ls_inflow.cpp
    set_bc_type.f90
    set_delp_dir.f90 
+   mfix_set_p0.cpp
    set_gp0.f90
-   set_p0.f90
    set_ps.f90
    set_ppe_bcs.f90
    mfix_init.cpp

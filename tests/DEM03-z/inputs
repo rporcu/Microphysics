@@ -1,4 +1,5 @@
-amr.stop_time = .001
+mfix.stop_time = .001
+amrex.fpe_trap_invalid = 1
 
 mfix.fixed_dt = 1.e-4
 

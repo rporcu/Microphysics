@@ -52,15 +52,15 @@ contains
       real(rt),   intent(in   ) :: dx, dy, dz
 
 
-      real(rt), parameter :: sqrt3 = sqrt(3.0)
-      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+      real(rt), parameter :: sqrt3 = dsqrt(3.0d0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0d0*dsqrt(6.0d0)/3.0d0
 
       ! local index for initial condition
-      integer :: icv
+      integer :: icv, icv0
 
       ! indices
       integer  :: p
-      integer  :: np, type, init_pc
+      integer  :: np, np0, type, type0, init_pc
 
       real(rt) :: pvol
 
@@ -68,28 +68,42 @@ contains
 
       init_pc = pc
 
+      np = 0
+      icv = 1
+      type = 1
+
       ! Get the IC index
-      do icv = 1, dim_ic
-         if (ic_defined(icv) .and. abs(ic_ep_g(icv)-1.0d0)>epsilon(0.0d0)) exit
+      do icv0 = 1, dim_ic
+         if (ic_defined(icv0) .and. abs(ic_ep_g(icv0)-1.0d0)>epsilon(0.0d0)) then
+
+            ! Get the solids type index
+            do type0 = 1, particle_types
+               if(ic_ep_s(icv0,type0) > epsilon(0.d0)) exit
+            enddo
+
+            np0 = 0
+
+            select case(trim(ic_pack_type(icv0)))
+                case('HCP'   ); call hex_close_pack(icv0, type0, lo, hi, np0, pc, dx, dy, dz)
+                case('RANDOM'); call random_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, .false.)
+                case('PSEUDO_RANDOM'); call random_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, .true. )
+                case('ONEPER'); call one_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz)
+                case('EIGHTPER'); call eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz)
+                case DEFAULT
+                   write(*,*) "Unknown particle generator fill type"
+                   stop 1000
+            end select
+
+            ! HACK -- the original code assumed that only one IC region would have
+            ! particles. This saves the IC region and and type to use later.
+            if(np0 .gt. 0) then
+              type = type0
+              icv = icv0
+              np = np+np0
+              exit
+            endif
+         endif
       enddo
-
-      if(icv > dim_ic) return
-
-      ! Get the solids type index
-      do type=1, particle_types
-         if(ic_ep_s(icv,type) > epsilon(0.d0)) exit
-      enddo
-
-      select case(trim(ic_pack_type(icv)))
-          case('HCP'   ); call hex_close_pack(icv, type, lo, hi, np, pc, dx, dy, dz)
-          case('RANDOM'); call random_fill(icv, type, lo, hi, np, pc, dx, dy, dz, .false.)
-          case('PSEUDO_RANDOM'); call random_fill(icv, type, lo, hi, np, pc, dx, dy, dz, .true. )
-          case('ONEPER'); call one_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
-          case('EIGHTPER'); call eight_per_fill(icv, type, lo, hi, np, pc, dx, dy, dz)
-          case DEFAULT
-             write(*,*) "Unknown particle generator fill type"
-             stop 1000
-      end select
 
       ! No more work.
       if(np == 0) return
@@ -101,7 +115,7 @@ contains
       if(ic_dp_dist(icv,type) == 'NORMAL') then
          call nor_rno(dp, ic_dp_mean(icv,type), ic_dp_std(icv,type), &
           ic_dp_min(icv,type), ic_dp_max(icv,type))
-
+      
       else if(ic_dp_dist(icv,type) == 'UNIFORM') then
          call uni_rno(dp, ic_dp_min(icv,type), ic_dp_max(icv,type))
       else
@@ -111,7 +125,7 @@ contains
       if(ic_ro_s_dist(icv,type) == 'NORMAL') then
          call nor_rno(ro_s, ic_ro_s_mean(icv,type), ic_ro_s_std(icv,type), &
           ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
-
+      
       else if(ic_ro_s_dist(icv,type) == 'UNIFORM') then
          call uni_rno(ro_s, ic_ro_s_min(icv,type), ic_ro_s_max(icv,type))
       else
@@ -180,8 +194,8 @@ contains
       integer(c_int), intent(inout) :: np, pc
       real(rt),       intent(in   ) :: dx, dy, dz
 
-      real(rt), parameter :: sqrt3 = sqrt(3.0)
-      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+      real(rt), parameter :: sqrt3 = dsqrt(3.0d0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0d0*dsqrt(6.0d0)/3.0d0
 
       ! indices
       integer :: i_w, i_e
@@ -303,8 +317,8 @@ contains
       integer(c_int), intent(inout) :: np, pc
       real(rt),       intent(in   ) :: dx, dy, dz
 
-      real(rt), parameter :: sqrt3 = sqrt(3.0)
-      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+      real(rt), parameter :: sqrt3 = dsqrt(3.0d0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0d0*dsqrt(6.0d0)/3.0d0
 
       ! indices
       integer :: i_w, i_e
@@ -429,8 +443,8 @@ contains
       integer(c_int), intent(inout) :: np, pc
       real(rt),       intent(in   ) :: dx, dy, dz
 
-      real(rt), parameter :: sqrt3 = sqrt(3.0)
-      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+      real(rt), parameter :: sqrt3 = dsqrt(3.0d0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0d0*dsqrt(6.0d0)/3.0d0
 
       ! indices
       integer :: i_w, i_e
@@ -438,60 +452,7 @@ contains
       integer :: k_b, k_t
 
       integer  :: i,j,k
-      real(rt) :: ic_vol
-      real(rt) :: ic_dlo(3), ic_dhi(3)
-      real(rt) :: max_dp, max_rp
       real(rt) :: pos(3)
-
-      integer :: seed, max_seed(3), seed_lo(3), seed_hi(3)
-
-      call calc_cell_ic(dx, dy, dz, &
-       ic_x_w(icv), ic_y_s(icv), ic_z_b(icv), &
-       ic_x_e(icv), ic_y_n(icv), ic_z_t(icv), &
-       i_w, i_e, j_s, j_n, k_b, k_t)
-
-      ! Start/end of IC domain bounds
-      ic_dlo(1) = (max(lo(1), i_w)    ) * dx
-      ic_dlo(2) = (max(lo(2), j_s)    ) * dy
-      ic_dlo(3) = (max(lo(3), k_b)    ) * dz
-      ic_dhi(1) = (min(hi(1), i_e) + 1) * dx
-      ic_dhi(2) = (min(hi(2), j_n) + 1) * dy
-      ic_dhi(3) = (min(hi(3), k_t) + 1) * dz
-
-      ! physical volume of IC region
-      ic_vol = (ic_x_e(icv) - ic_x_w(icv)) * &
-       (ic_y_n(icv) - ic_y_s(icv)) * &
-       (ic_z_t(icv) - ic_z_b(icv))
-
-      ! Spacing is based on maximum particle size
-      if(is_defined(ic_dp_max(icv,type))) then
-         max_dp = ic_dp_max(icv,type)
-      else
-         max_dp = ic_dp_mean(icv,type)
-      endif
-      max_rp = 0.5d0 * max_dp
-
-      ! Particle count is based on mean particle size
-      seed = ic_vol * ic_ep_s(icv,type) / &
-       ((M_PI/6.0d0)*ic_dp_mean(icv,type)**3)
-
-      ! Total to seed over the whole IC region
-      max_seed(1) = int((ic_x_e(icv) - ic_x_w(icv) - max_dp)/max_dp)
-      max_seed(3) = int((ic_z_t(icv) - ic_z_b(icv) - max_dp)/(sqrt3*max_rp))
-      max_seed(2) = int(seed / (max_seed(1)*max_seed(3)))
-
-      ! local grid seed loop hi/lo
-      seed_lo(1) = nint((ic_dlo(1) - i_w*dx) / max_dp)
-      seed_lo(3) = nint((ic_dlo(3) - k_b*dz) / (sqrt3 * max_rp))
-      seed_lo(2) = nint((ic_dlo(2) - j_s*dy) / ((sqrt6o3x2) * max_rp))
-
-      seed_hi(1) = nint((ic_dhi(1) - i_w*dx) /  max_dp - seed_lo(1)*max_dp)
-      seed_hi(3) = nint((ic_dhi(3) - k_b*dz) / (sqrt3 * max_rp) - seed_lo(1)*max_dp)
-      seed_hi(2) = nint((ic_dhi(2) - j_s*dy) / ((sqrt6o3x2) * max_rp) - seed_lo(1)*max_dp)
-
-      seed_hi(1) = min(max_seed(1), seed_hi(1)-1)
-      seed_hi(3) = min(max_seed(3), seed_hi(3)-1)
-      seed_hi(2) = min(max_seed(2), seed_hi(2)-1)
 
       pos = -1.0d20
       np = 0
@@ -558,8 +519,8 @@ contains
       logical       , intent(in   ) :: fix_seed
       real(rt),       intent(in   ) :: dx, dy, dz
 
-      real(rt), parameter :: sqrt3 = sqrt(3.0)
-      real(rt), parameter :: sqrt6o3x2 = 2.0*sqrt(6.0)/3.0
+      real(rt), parameter :: sqrt3 = dsqrt(3.0d0)
+      real(rt), parameter :: sqrt6o3x2 = 2.0d0*dsqrt(6.0d0)/3.0d0
 
       ! indices
       integer :: i_w, i_e
@@ -788,7 +749,7 @@ contains
             w = x(1)**2 + x(2)**2
          end do
 
-         w = sqrt( (-2.0 * log( w ) ) / w )
+         w = dsqrt( (-2.0d0 * dlog( w ) ) / w )
 
          dp1 = x(1) * w * sigma + mean
          dp2 = x(2) * w * sigma + mean
@@ -811,7 +772,7 @@ contains
          end do
 
          lvariance = lvariance/nsize
-         lsigma = sqrt(lvariance)
+         lsigma = dsqrt(lvariance)
 
          write(*,*) '   '
          write(*,1000) ! Divider

@@ -24,11 +24,12 @@ subroutine usr1(time)
 !      xlo.velocity =  2.19  3.28  4.38    (m/s)      !
 !-----------------------------------------------------!
 
-! pull final U from BC ID 101 
-  usr_U = bc_u_g(101)
+  usr_U = 2.19d0
+! usr_U = 3.28d0
+! usr_U = 4.38d0
 
 ! ramp up over 2s 
-  bc_u_g(1) = min(1.0d0, max(usr_U, 0.5d0*usr_U*time))
+  bc_u_g(1) = min(usr_U, max(1.0d0, 0.5d0*usr_U*time))
 
   return
 

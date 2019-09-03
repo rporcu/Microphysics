@@ -1,12 +1,12 @@
 #_______________________________________________________________________
 # Solver settings
 
-#amrex.fpe_trap_invalid = 1
+amrex.fpe_trap_invalid = 1
 
 #! Fluid solver
 #!-----------------------------------------------------------//
 
-amr.stop_time = 10.0
+mfix.stop_time = 10.0
 mfix.dt_min = 1.0e-8
 mfix.dt_max = 1.0e-4
 mfix.cfl = 0.5
@@ -19,7 +19,7 @@ mac.mg_cg_maxiter  = 1000
 #!mfix.mg_cg_verbose      = 1
 mac.mg_verbose          = 1
 mac.mg_cg_verbose       = 1
-#!diffusion.mg_verbose    = 1
+#!diff.mg_verbose    = 1
 
 mfix.particle_init_type = "AsciiFile"
 mfix.drag_type = "Gidaspow"

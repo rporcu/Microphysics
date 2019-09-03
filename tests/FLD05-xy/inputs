@@ -1,3 +1,8 @@
+# Time stepping 
+mfix.stop_time = 1.0
+
+mfix.fixed_dt = 0.5
+
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 64 64 64
 
@@ -16,10 +21,6 @@ amr.max_level = 0
 
 amr.plot_int   = 10
 #amr.plot_file  = DEM06_plt
-
-amr.stop_time = 1.0
-
-mfix.fixed_dt = 0.5
 
 vortices_plane=1
 

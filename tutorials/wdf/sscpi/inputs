@@ -1,21 +1,27 @@
 #_______________________________________________________________________
 # Solver settings
 
-#amrex.fpe_trap_invalid = 1
+amrex.fpe_trap_invalid = 1
 
 #! Fluid solver
 #!-----------------------------------------------------------//
 
-amr.stop_time = 65.00001
+mfix.stop_time = 55.00001
 mfix.dt_min = 1.0e-8
 mfix.dt_max = 2.0e-4
 mfix.cfl = 0.5
 mfix.tcoll_ratio = 20.
 
+mfix.mg_maxiter    = 1000
+mfix.mg_cg_maxiter = 1000
+mac.mg_maxiter     = 1000
+mac.mg_cg_maxiter  = 1000
+
 mac.mg_verbose   = 0
 mfix.mg_verbose  = 1
 
 mfix.particle_init_type = "AsciiFile"
+particles.removeOutOfRange = 0
 mfix.drag_type = "Gidaspow"
 
 #_______________________________________________________________________
@@ -40,7 +46,7 @@ amr.blocking_factor_z = 2
 # Maximum allowable size of each fluid subdomain in the problem domain;
 
 # Fluid
-amr.max_grid_size_x =   48
+amr.max_grid_size_x =   24
 amr.max_grid_size_y =   12
 amr.max_grid_size_z = 1024
 
@@ -111,8 +117,8 @@ amr.avg_vel_p =        0       0       0       0       1        1        1      
 amr.avg_p_g   =        1       1       1       1       0        0        0        0        0       
 amr.avg_ep_g  =        0       0       0       0       0        0        0        0        0       
 amr.avg_vel_g =        0       0       0       0       0        0        0        0        0       
-amr.avg_region_x_w =   0.0380  0.0382  0.3428  0.3430  0.05334  0.05334  0.05334  0.05334  0.05334   
-amr.avg_region_x_e =   0.0380  0.0382  0.3428  0.3430  0.09906  0.09906  0.09906  0.09906  0.09906 
+amr.avg_region_x_w =   0.044   0.045   0.348   0.350   0.05334  0.05334  0.05334  0.05334  0.05334   
+amr.avg_region_x_e =   0.044   0.045   0.348   0.350   0.09906  0.09906  0.09906  0.09906  0.09906 
 amr.avg_region_y_s =   0.0     0.0     0.0     0.0     0.0      0.04572  0.09144  0.13716  0.18288      
 amr.avg_region_y_n =   0.2286  0.2286  0.2286  0.2286  0.04572  0.09144  0.13716  0.18288  0.22860      
 amr.avg_region_z_b =   0.0     0.0     0.0     0.0     0.0      0.0      0.0      0.0      0.0     

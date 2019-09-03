@@ -8,7 +8,7 @@
 
 mfix.cfl = 0.5
 
-amr.max_step = 100
+mfix.max_step = 100
 
 mac.mg_verbose   = 0
 mfix.mg_verbose  = 1

@@ -37,6 +37,7 @@ mfix::mfix ()
   , m_bc_w_g(get_dim_bc()+1, 0)
   , m_bc_t_g(get_dim_bc()+1, 0)
   , m_bc_ep_g(get_dim_bc()+1, 0)
+  , m_bc_p_g(get_dim_bc()+1, 0)
 {
     // NOTE: Geometry on all levels has just been defined in the AmrCore
     // constructor. No valid BoxArray and DistributionMapping have been defined.
@@ -57,8 +58,6 @@ mfix::mfix ()
      * Initialize time steps                                                    *
      *                                                                          *
      ***************************************************************************/
-
-    istep.resize(nlev, 0);
 
     t_old.resize(nlev,-1.e100);
     t_new.resize(nlev,0.0);
@@ -271,6 +270,8 @@ void mfix::mfix_set_bc_mod(const int* pID, const int* pType,
     m_bc_t_g[i] = get_bc_t_g(i);
     
     m_bc_ep_g[i] = get_bc_ep_g(i);
+    
+    m_bc_p_g[i] = get_bc_p_g(i);
   }
 }
 
@@ -292,6 +293,8 @@ void mfix::mfix_set_bc_mod_add_mi(const int* pPlane,
     m_bc_t_g[i] = get_bc_t_g(i);
     
     m_bc_ep_g[i] = get_bc_ep_g(i);
+    
+    m_bc_p_g[i] = get_bc_p_g(i);
   }
 }
 

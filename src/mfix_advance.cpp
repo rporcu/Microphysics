@@ -18,7 +18,7 @@
 #endif
 
 void
-mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
+mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupling_timing )
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluid");
     BL_PROFILE("mfix::EvolveFluid");
@@ -91,7 +91,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
         {
            // Back up field variables to old
           MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
-          MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow()); 
+          MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
           MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
           MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
@@ -106,8 +106,12 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
         Real new_time = time+dt;
 
         // Calculate drag coefficient
-        if (solve_dem)
+        if (solve_dem) {
+          Real start_drag = ParallelDescriptor::second();
           mfix_calc_drag_fluid(time);
+          coupling_timing += ParallelDescriptor::second() - start_drag;
+        }
+
 
         // Predictor step
         bool proj_2_pred = true;
@@ -116,8 +120,10 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time )
         // Calculate drag coefficient
         if (solve_dem)
         {
+          Real start_drag = ParallelDescriptor::second();
           amrex::Print() << "\nRecalculating drag ..." << std::endl;
           mfix_calc_drag_fluid(new_time);
+          coupling_timing += ParallelDescriptor::second() - start_drag;
         }
 
         bool proj_2_corr = true;
@@ -174,19 +180,22 @@ void
 mfix::mfix_initial_iterations (Real dt, Real stop_time)
 {
 
-   Real time = 0.0;
-   int nstep = 0;
-   mfix_compute_dt(nstep,time,stop_time,dt);
+    Real time = 0.0;
+    int nstep = 0;
+    mfix_compute_dt(nstep,time,stop_time,dt);
 
-   amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
+    amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
 
-   // Fill ghost cells
-   mfix_set_scalar_bcs ();
-   mfix_set_velocity_bcs (time, vel_g, 0);
+    // Fill ghost cells
+    mfix_set_scalar_bcs ();
+    mfix_set_velocity_bcs (time, vel_g, 0);
 
-   // Copy vel_g into vel_go
-   for (int lev = 0; lev < nlev; lev++)
-      MultiFab::Copy (*vel_go[lev], *vel_g[lev],   0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
+    // Copy vel_g into vel_go
+    for (int lev = 0; lev < nlev; lev++)
+       MultiFab::Copy (*vel_go[lev], *vel_g[lev],   0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
+
+    if (solve_dem)
+       mfix_calc_drag_fluid(time);
 
     // Create temporary multifabs to hold conv and divtau
     Vector<std::unique_ptr<MultiFab> > conv;
@@ -272,7 +281,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
         // First add the convective term
         MultiFab::Saxpy (*vel_g[lev], dt, *conv_old[lev], 0, 0, 3, 0);
 
-        // Add the explicit diffusion terms 
+        // Add the explicit diffusion terms
         MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
     }
 
@@ -281,7 +290,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_old,
 
     // Add the drag term implicitly
     if (solve_dem)
-        mfix_add_drag_terms (dt);
+        mfix_add_drag_implicit (dt);
 
     // If doing implicit diffusion, solve here for u^*
     if (explicit_diffusion_pred == 0)
@@ -362,12 +371,12 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_old,
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
 
-     // Add source terms
-     mfix_add_gravity_and_gp(dt);
+    // Add source terms
+    mfix_add_gravity_and_gp(dt);
 
     // Add the drag term implicitly
     if (solve_dem)
-        mfix_add_drag_terms(dt);
+        mfix_add_drag_implicit(dt);
 
     // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
     mfix_diffuse_velocity_tensor(new_time,.5*dt);
@@ -412,20 +421,67 @@ mfix::mfix_add_gravity_and_gp (Real dt)
 }
 
 //
+// Explicit solve for the intermediate velocity.
+// Currently this means accounting for the implicit part of the fluid/particle
+// momentum exchange
+//
+void
+mfix::mfix_add_drag_explicit (Real dt)
+{
+  /*
+     This adds both components of the drag term
+     So the drag term we add is beta * (particle_velocity - fluid_velocity)
+                              = drag(0:2) - drag(3) * fluid_velocity
+  */
+
+  BL_PROFILE("mfix::mfix_add_drag_explicit");
+
+  for (int lev = 0; lev < nlev; lev++)
+  {
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    {
+      // Tilebox
+      Box bx = mfi.tilebox ();
+
+      const auto&  vel_fab = vel_g[lev]->array(mfi);
+      const auto& drag_fab =  drag[lev]->array(mfi);
+      const auto&   ro_fab =  ro_g[lev]->array(mfi);
+      const auto&   ep_fab =  ep_g[lev]->array(mfi);
+
+      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      {
+          Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
+
+          Real drag_0 = (drag_fab(i,j,k,0) - drag_fab(i,j,k,3)*vel_fab(i,j,k,0)) * orop;
+          Real drag_1 = (drag_fab(i,j,k,1) - drag_fab(i,j,k,3)*vel_fab(i,j,k,1)) * orop;
+          Real drag_2 = (drag_fab(i,j,k,2) - drag_fab(i,j,k,3)*vel_fab(i,j,k,2)) * orop;
+
+          vel_fab(i,j,k,0) += drag_0;
+          vel_fab(i,j,k,1) += drag_1;
+          vel_fab(i,j,k,2) += drag_2;
+      });
+    }
+  }
+}
+
+//
 // Implicit solve for the intermediate velocity.
 // Currently this means accounting for the implicit part of the fluid/particle
 // momentum exchange
 //
 void
-mfix::mfix_add_drag_terms (Real dt)
+mfix::mfix_add_drag_implicit (Real dt)
 {
   /*
      This adds both components of the drag term
      So the drag term we add is beta * (particle_velocity - fluid_velocity)
-                              = dra(0:2) - drag(3) * fluid_velocity
+                              = drag(0:2) - drag(3) * fluid_velocity
   */
 
-  BL_PROFILE("mfix::mfix_add_drag");
+  BL_PROFILE("mfix::mfix_add_drag_implicit");
 
   for (int lev = 0; lev < nlev; lev++)
   {
@@ -564,7 +620,7 @@ mfix::steady_state_reached (Real dt, int iter)
        reached = reached && (condition1[lev] || condition2[lev]);
     }
 
-    reached = reached || (iter >= steady_state_max_iter);
+    reached = reached || (iter >= steady_state_maxiter);
 
     // Count # access
     naccess++;
