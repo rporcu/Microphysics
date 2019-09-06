@@ -100,8 +100,8 @@ endmacro()
 #
 # Print Configuration Summary
 #
-function( print_mfix_configuration_summary mfix_libname )
-
+function( print_mfix_configuration_summary mfix_libname ) 
+   
   if(NOT TARGET ${mfix_libname})
     message(AUTHOR_WARNING "Target ${mfix_libname} is not defined.")
     return()
@@ -114,174 +114,67 @@ function( print_mfix_configuration_summary mfix_libname )
 
   string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPERCASE)
 
-  #
-  # Get preprocessor flags
-  #
-  get_target_property( MFIX_DEFINES AMReX::amrex INTERFACE_COMPILE_DEFINITIONS )
-  replace_genex( MFIX_DEFINES MFIX_Fortran_DEFINES LANGUAGE Fortran )
-  replace_genex( MFIX_DEFINES MFIX_CXX_DEFINES LANGUAGE CXX )
-  string(REPLACE " " ";-D" MFIX_Fortran_DEFINES "-D${MFIX_Fortran_DEFINES}")
-  string(REPLACE " " ";-D" MFIX_CXX_DEFINES "-D${MFIX_CXX_DEFINES}")
 
-  #
-  # Get compiler flags flags
-  #
-  get_target_property( MFIX_FLAGS ${mfix_libname} INTERFACE_COMPILE_OPTIONS )
-  replace_genex( MFIX_FLAGS MFIX_Fortran_FLAGS LANGUAGE Fortran )
-  replace_genex( MFIX_FLAGS MFIX_CXX_FLAGS LANGUAGE CXX )
+  # Get AMReX cmake functions 
+  include(AMReXGenexHelpers)
+  include(AMReXTargetHelpers)
 
-  if(NOT MFIX_Fortran_FLAGS)
-    set(MFIX_Fortran_FLAGS ${CMAKE_Fortran_FLAGS})
-  endif()
+  get_target_properties_flattened(${mfix_libname} _includes _defines _flags _link_line)
 
-  if(NOT MFIX_CXX_FLAGS)
-    set(MFIX_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-  endif()
+  set(_lang CXX Fortran) 
+  set(_prop _includes _defines _flags _link_line )
 
-  string( REPLACE ";" " " MFIX_CXX_FLAGS "${MFIX_CXX_FLAGS}" )
-  string( REPLACE ";" " " MFIX_Fortran_FLAGS "${MFIX_Fortran_FLAGS}" )
 
-  #
-  # Get extra includes
-  #
-  get_target_property( MFIX_INCLUDES AMReX::amrex INTERFACE_INCLUDE_DIRECTORIES )
-  list( REMOVE_DUPLICATES MFIX_INCLUDES )
+  # Loop over all combinations of language and property and extract 
+  # what you need 
+  foreach( _p IN LISTS _prop )
+     foreach( _l IN LISTS _lang )
 
-  #
-  # Get extra libraries
-  #
-  get_target_property( TMP AMReX::amrex INTERFACE_LINK_LIBRARIES )
-  replace_genex( TMP MFIX_LINK_LINE )
-  string(REPLACE ";" " " MFIX_LINK_LINE "${MFIX_LINK_LINE}")
+        string(TOLOWER ${_l} _ll) # Lower case language name
 
+        # _${_ll}${_p} is a variable named as _lang_property,
+        # both lower case. 
+        evaluate_genex(${_p} _${_ll}${_p}
+           LANG ${_l}
+           COMP ${CMAKE_${_l}_COMPILER_ID}
+           CONFIG ${CMAKE_BUILD_TYPE}
+           INTERFACE BUILD)
+
+        if (_${_ll}${_p})
+
+           list(REMOVE_DUPLICATES _${_ll}${_p})
+           
+           if ("${_p}" STREQUAL "_defines")
+              string(REPLACE ";" " -D" _${_ll}${_p} "-D${_${_ll}${_p}}")
+           elseif ("${_p}" STREQUAL "_includes")
+              string(REPLACE ";" " -I" _${_ll}${_p} "-I${_${_ll}${_p}}")
+           else()
+              string(REPLACE ";" " " _${_ll}${_p} "${_${_ll}${_p}}")
+           endif ()              
+
+        endif ()
+        
+     endforeach()
+  endforeach ()
+
+  
   #
   # Config summary
   #
   message( STATUS "MFIX configuration summary: " )
-  message( STATUS "   C++ defines           = ${MFIX_CXX_DEFINES}" )
-  message( STATUS "   Fortran defines       = ${MFIX_Fortran_DEFINES}" )
+  message( STATUS "   C++ defines           = ${_cxx_defines}" )
+  message( STATUS "   Fortran defines       = ${_fortran_defines}" )
   message( STATUS "   C++ compiler          = ${CMAKE_CXX_COMPILER}" )
   message( STATUS "   Fortran compiler      = ${CMAKE_Fortran_COMPILER}" )
-  message( STATUS "   C++ flags             = ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPERCASE}} ${MFIX_CXX_FLAGS}" )
-  message( STATUS "   Fortran flags         = ${CMAKE_Fortran_FLAGS_${CMAKE_BUILD_TYPE_UPPERCASE}} ${MFIX_Fortran_FLAGS}" )
-  message( STATUS "   MFIX includes         = ${MFIX_INCLUDES}" )
-  message( STATUS "   MFIX extra link line  = ${MFIX_LINK_LINE}" )
+  message( STATUS "   C++ flags             = ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPERCASE}} ${CMAKE_CXX_FLAGS} ${_cxx_flags}" )
+  message( STATUS "   Fortran flags         = ${CMAKE_Fortran_FLAGS_${CMAKE_BUILD_TYPE_UPPERCASE}} ${CMAKE_Fortran_FLAGS} ${_fortran_flags}" )
+  if (ENABLE_CUDA)
+     message( STATUS "   CUDA flags            = ${CMAKE_CUDA_FLAGS_${CMAKE_BUILD_TYPE_UPPERCASE}} ${CMAKE_CUDA_FLAGS}" )
+  endif ()
+  message( STATUS "   MFIX includes         = ${_cxx_includes}" )
+  message( STATUS "   MFIX link line        = ${_cxx_link_line}" )
 
 endfunction()
 
 
-#
-#  Helper macro to replace genex in list
-#
-macro( replace_genex input_list output_list )
 
-  cmake_parse_arguments( ARG "" "LANGUAGE" "" ${ARGN} )
-
-  set(tmp_list ${${input_list}})
-
-  # Replace all ; with a place holder (*)
-  string( REPLACE ";" "*" tmp_list "${tmp_list}" )
-
-  # Add tmp_list delimiter only where it suits us
-  string( REPLACE ">*" ">;" tmp_list "${tmp_list}" )
-  string( REPLACE "*$" ";$" tmp_list "${tmp_list}" )
-  string( REPLACE "*/" ";/" tmp_list "${tmp_list}" )
-  string( REPLACE "*" " "   tmp_list "${tmp_list}" )
-
-  #
-  # First remove entries related to:
-  # 1) a compiler other than the one currently in use
-  # 2) a build type other than the current one
-  #
-  foreach( item IN ITEMS ${tmp_list} )
-    string( REPLACE "$<" "" item ${item} )
-    string( REPLACE ">" "" item ${item} )
-    string( REPLACE ":" "" item ${item} )
-
-    # Accept build interface generator expressions
-    string(REPLACE "BUILD_INTERFACE" "" item ${item})
-
-    # Skip genex for compilers other than the one in use
-    string( FIND ${item} "C_COMPILER_ID" idx1 )
-    if( ${idx1} GREATER -1 )
-      string( FIND ${item} "C_COMPILER_ID${CMAKE_C_COMPILER_ID}" idx2 )
-      if( ${idx2} GREATER -1 )
-        string( REPLACE "C_COMPILER_ID${CMAKE_C_COMPILER_ID}" "" item ${item} )
-      else()
-        continue()
-      endif()
-    endif()
-
-    string( FIND ${item} "STREQUAL" idx1 )
-    if( ${idx1} GREATER -1 )
-      string( FIND ${item} "\"${CMAKE_Fortran_COMPILER_ID}\",\"${CMAKE_Fortran_COMPILER_ID}\"" idx2 )
-      if( ${idx2} GREATER -1 )
-        string( REPLACE "STREQUAL\"${CMAKE_Fortran_COMPILER_ID}\",\"${CMAKE_Fortran_COMPILER_ID}\"" "" item ${item} )
-      else()
-        continue()
-      endif()
-    endif()
-
-    string( FIND ${item} "CXX_COMPILER_ID" idx1 )
-    if( ${idx1} GREATER -1 )
-      string( FIND ${item} "CXX_COMPILER_ID${CMAKE_CXX_COMPILER_ID}" idx2 )
-      if( ${idx2} GREATER -1 )
-        string( REPLACE "CXX_COMPILER_ID${CMAKE_CXX_COMPILER_ID}" "" item ${item} )
-      else()
-        continue()
-      endif()
-    endif()
-
-    string( FIND ${item} "CONFIG" idx3 )
-    if( ${idx3} GREATER -1 )
-      string(FIND ${item} "${CMAKE_BUILD_TYPE}" idx4)
-      if( ${idx4} GREATER -1 )
-        string( REPLACE "CONFIG${CMAKE_BUILD_TYPE}" "" item ${item} )
-      else()
-        continue()
-      endif()
-    endif()
-
-    # Extract by Language part
-    if( ARG_LANGUAGE )
-      string( FIND ${item} "COMPILE_LANGUAGE" idx1 )
-      if(${idx1} GREATER -1)
-        if( ${ARG_LANGUAGE} STREQUAL Fortran )
-          string( FIND ${item} "Fortran" idx2 )
-          if( ${idx2} GREATER -1 )
-            string( REPLACE "COMPILE_LANGUAGEFortran" "" item ${item} )
-          else()
-            continue()
-          endif()
-        elseif(${ARG_LANGUAGE} STREQUAL CXX)
-          string( FIND ${item} "CXX" idx2 )
-          if( ${idx2} GREATER -1 )
-            string( REPLACE "COMPILE_LANGUAGECXX" "" item ${item} )
-          else()
-            continue()
-          endif()
-        endif()
-      endif()
-    endif()
-
-    # Now item should be ok to be added to final list
-    list( APPEND ${output_list} ${item} )
-
-  endforeach()
-
-  if(${output_list})
-    list( REMOVE_DUPLICATES ${output_list} )
-  endif()
-
-endmacro()
-
-
-#
-# Strip string from trailing and leading whitespace
-# after veryfing it is not empty
-#
-macro(strip var)
-  if(${var})
-    string( STRIP "${${var}}" ${var} )
-  endif()
-endmacro()
