@@ -127,3 +127,9 @@ endif ()
 include( AMReXTypecheck )
 add_typecheck_target(mfixcore)
 
+
+#
+# Add AMReX "build info" capabilities
+#
+include(AMReXBuildInfo)
+generate_buildinfo(mfixcore ${CMAKE_SOURCE_DIR} REQUIRED)
