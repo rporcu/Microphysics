@@ -47,6 +47,8 @@ std::string mfix_dat {"mfix.dat"};
 
 void set_ptr_to_mfix(mfix& my_mfix);
 
+void writeBuildInfo ();
+
 void ReadParameters ()
 {
   {

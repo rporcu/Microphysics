@@ -1,22 +1,13 @@
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_VisMF.H>    // amrex::VisMF::Write(MultiFab)
-#include <AMReX_VectorIO.H> // amrex::[read,write]IntData(array_of_ints)
-#include <AMReX_EBMultiFabUtil.H>
-#include <AMReX_ParmParse.H>
-
 #include "AMReX_buildInfo.H"
 #include <mfix.H>
-#include <mfix_F.H>
 
 namespace
 {
     const std::string level_prefix {"Level_"};
 }
 
-
 void writeBuildInfo ()
 {
-
   std::string PrettyLine = std::string(78, '=') + "\n";
   std::string OtherLine = std::string(78, '-') + "\n";
   std::string SkipSpace = std::string(8, ' ');
@@ -71,6 +62,4 @@ void writeBuildInfo ()
   }
 
   std::cout << "\n\n";
-
-
 }
