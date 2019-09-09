@@ -143,7 +143,8 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
 #endif
 
            // TODO -- do we have domain and ilo_fab, etc on GPU???
-           // TODO -- we need to use "MINF" from the Fortran, not hard-wire this to 20
+
+           const int minf = bc_list.get_minf();
 
            const auto& vel_fab  =      Sborder.array(mfi);
            const auto&  xs_fab  = xslopes[lev]->array(mfi);
@@ -162,7 +163,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
 
            AMREX_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
            {
-               if ( (i == domain.smallEnd(0)) && !flag_fab(i,j,k).isCovered() && ilo_ifab(i-1,j,k,0) == 20)
+               if ( (i == domain.smallEnd(0)) && !flag_fab(i,j,k).isCovered() && ilo_ifab(i-1,j,k,0) == minf)
                {
                    Real du_xl = 2.0*(vel_fab(i  ,j,k,n) - vel_fab(i-1,j,k,n));
                    Real du_xr = 2.0*(vel_fab(i+1,j,k,n) - vel_fab(i  ,j,k,n));
@@ -172,7 +173,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                    xslope          = (du_xr*du_xl > 0.0) ? xslope : 0.0;
                    xs_fab(i,j,k,n) = (du_xc       > 0.0) ? xslope : -xslope;
                }
-               if ( (i == domain.bigEnd(0)) && !flag_fab(i,j,k).isCovered() && ihi_ifab(i+1,j,k,0) == 20)
+               if ( (i == domain.bigEnd(0)) && !flag_fab(i,j,k).isCovered() && ihi_ifab(i+1,j,k,0) == minf)
                {
                    Real du_xl = 2.0*(vel_fab(i  ,j,k,n) - vel_fab(i-1,j,k,n));
                    Real du_xr = 2.0*(vel_fab(i+1,j,k,n) - vel_fab(i  ,j,k,n));
@@ -183,7 +184,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                    xs_fab(i,j,k,n) = (du_xc       > 0.0) ? xslope : -xslope;
                }
 
-               if ( (j == domain.smallEnd(1)) && !flag_fab(i,j,k).isCovered() && jlo_ifab(i,j-1,k,0) == 20)
+               if ( (j == domain.smallEnd(1)) && !flag_fab(i,j,k).isCovered() && jlo_ifab(i,j-1,k,0) == minf)
                {
                    Real du_yl = 2.0*(vel_fab(i,j  ,k,n) - vel_fab(i,j-1,k,n));
                    Real du_yr = 2.0*(vel_fab(i,j+1,k,n) - vel_fab(i,j  ,k,n));
@@ -193,7 +194,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                    yslope          = (du_yr*du_yl > 0.0) ? yslope : 0.0;
                    ys_fab(i,j,k,n) = (du_yc       > 0.0) ? yslope : -yslope;
                }
-               if ( (j == domain.bigEnd(1)) && !flag_fab(i,j,k).isCovered() && jhi_ifab(i,j+1,k,0) == 20)
+               if ( (j == domain.bigEnd(1)) && !flag_fab(i,j,k).isCovered() && jhi_ifab(i,j+1,k,0) == minf)
                {
                    Real du_yl = 2.0*(vel_fab(i,j  ,k,n) - vel_fab(i,j-1,k,n));
                    Real du_yr = 2.0*(vel_fab(i,j+1,k,n) - vel_fab(i,j  ,k,n));
@@ -204,7 +205,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                    ys_fab(i,j,k,n) = (du_yc       > 0.0) ? yslope : -yslope;
                }
 
-               if ( (k == domain.smallEnd(2)) && !flag_fab(i,j,k).isCovered() && klo_ifab(i,j,k-1,0) == 20)
+               if ( (k == domain.smallEnd(2)) && !flag_fab(i,j,k).isCovered() && klo_ifab(i,j,k-1,0) == minf)
                {
                    Real du_zl = 2.0*(vel_fab(i,j,k  ,n) - vel_fab(i,j,k-1,n));
                    Real du_zr = 2.0*(vel_fab(i,j,k+1,n) - vel_fab(i,j,k  ,n));
@@ -214,7 +215,7 @@ mfix::mfix_compute_velocity_slopes (int lev, Real time, MultiFab& Sborder)
                    zslope          = (du_zr*du_zl > 0.0) ? zslope : 0.0;
                    zs_fab(i,j,k,n) = (du_zc       > 0.0) ? zslope : -zslope;
                }
-               if ( (k == domain.bigEnd(2)) && !flag_fab(i,j,k).isCovered() && khi_ifab(i,j,k+1,0) == 20)
+               if ( (k == domain.bigEnd(2)) && !flag_fab(i,j,k).isCovered() && khi_ifab(i,j,k+1,0) == minf)
                {
                    Real du_zl = 2.0*(vel_fab(i,j,k  ,n) - vel_fab(i,j,k-1,n));
                    Real du_zr = 2.0*(vel_fab(i,j,k+1,n) - vel_fab(i,j,k  ,n));
