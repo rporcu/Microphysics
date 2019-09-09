@@ -29,10 +29,10 @@ interp_to_face_centroid_x(const int i,
   {
     if (cent(i,j,k,0) < 0)
     {
-      frac_y = -1 * cent(i,j,k,0) * flag.isConnected({AMREX_D_DECL(0,-1,0)});
+      frac_y = -1 * cent(i,j,k,0) * flag.isConnected({0,-1,0});
       if (cent(i,j,k,1) <= 0)
       {
-        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,0,-1)});
+        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({0,0,-1});
         result = (1-frac_z) * (   frac_y * var(i,j-1,k  ,n)  +
                               (1-frac_y) * var(i,j  ,k  ,n)) +
                      frac_z * (   frac_y * var(i,j-1,k-1,n)  +
@@ -40,7 +40,7 @@ interp_to_face_centroid_x(const int i,
       }
       else
       {
-        frac_z = cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,0,1)});
+        frac_z = cent(i,j,k,1) * flag.isConnected({0,0,1});
         result = (1-frac_z) * (   frac_y * var(i,j-1,k  ,n)  +
                               (1-frac_y) * var(i,j  ,k  ,n)) +
                      frac_z * (   frac_y * var(i,j-1,k+1,n)  +
@@ -49,10 +49,10 @@ interp_to_face_centroid_x(const int i,
     }
     else
     {
-      frac_y = cent(i,j,k,0) * flag.isConnected({AMREX_D_DECL(0,1,0)});
+      frac_y = cent(i,j,k,0) * flag.isConnected({0,1,0});
       if (cent(i,j,k,1) <= 0)
       {
-        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,0,-1)});
+        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({0,0,-1});
         result = (1-frac_z) * (   frac_y * var(i,j+1,k  ,n)  +
                               (1-frac_y) * var(i,j  ,k  ,n)) +
                      frac_z * (   frac_y * var(i,j+1,k-1,n)  +
@@ -60,7 +60,7 @@ interp_to_face_centroid_x(const int i,
       }
       else
       {
-        frac_z = cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,0,1)});
+        frac_z = cent(i,j,k,1) * flag.isConnected({0,0,1});
         result = (1-frac_z) * (   frac_y * var(i,j+1,k  ,n)  +
                               (1-frac_y) * var(i,j  ,k  ,n)) +
                      frac_z * (   frac_y * var(i,j+1,k+1,n)  +
@@ -95,10 +95,10 @@ interp_to_face_centroid_y(const int i,
   {
     if (cent(i,j,k,0) < 0)
     {
-      frac_x = -1 * cent(i,j,k,0) * flag.isConnected({AMREX_D_DECL(-1,0,0)});
+      frac_x = -1 * cent(i,j,k,0) * flag.isConnected({-1,0,0});
       if (cent(i,j,k,1) <= 0)
       {
-        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,0,-1)});
+        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({0,0,-1});
         result = (1-frac_z) * (   frac_x * var(i-1,j,k  ,n)  +
                               (1-frac_x) * var(i  ,j,k  ,n)) +
                      frac_z * (   frac_x * var(i-1,j,k-1,n)  +
@@ -106,7 +106,7 @@ interp_to_face_centroid_y(const int i,
       }
       else
       {
-         frac_z =  cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,0,1)});
+         frac_z =  cent(i,j,k,1) * flag.isConnected({0,0,1});
          result = (1-frac_z) * (   frac_x * var(i-1,j,k  ,n)  +
                                (1-frac_x) * var(i  ,j,k  ,n)) +
                       frac_z * (   frac_x * var(i-1,j,k+1,n)  +
@@ -115,10 +115,10 @@ interp_to_face_centroid_y(const int i,
     }
     else
     {
-      frac_x = cent(i,j,k,0) * flag.isConnected({AMREX_D_DECL(1,0,0)});
+      frac_x = cent(i,j,k,0) * flag.isConnected({1,0,0});
       if (cent(i,j,k,1) <= 0)
       {
-        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,0,-1)});
+        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({0,0,-1});
         result = (1-frac_z) * (   frac_x * var(i+1,j,k  ,n)  +
                               (1-frac_x) * var(i  ,j,k  ,n)) +
                      frac_z * (   frac_x * var(i+1,j,k-1,n)  +
@@ -126,7 +126,7 @@ interp_to_face_centroid_y(const int i,
       }
       else
       {
-        frac_z =  cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,0,1)});
+        frac_z =  cent(i,j,k,1) * flag.isConnected({0,0,1});
         result = (1-frac_z) * (   frac_x * var(i+1,j,k  ,n)  +
                               (1-frac_x) * var(i  ,j,k  ,n)) +
                      frac_z * (   frac_x * var(i+1,j,k+1,n)  +
@@ -161,10 +161,10 @@ interp_to_face_centroid_z(const int i,
   {
     if (cent(i,j,k,0) < 0)
     {
-      frac_x = -1 * cent(i,j,k,0) * flag.isConnected({AMREX_D_DECL(-1,0,0)});
+      frac_x = -1 * cent(i,j,k,0) * flag.isConnected({-1,0,0});
       if (cent(i,j,k,1) <= 0)
       {
-        frac_y = -1 * cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,-1,0)});
+        frac_y = -1 * cent(i,j,k,1) * flag.isConnected({0,-1,0});
         result = (1-frac_y) * (   frac_x * var(i-1,j  ,k,n)  +
                               (1-frac_x) * var(i  ,j  ,k,n)) +
                      frac_y * (   frac_x * var(i-1,j-1,k,n)  +
@@ -172,7 +172,7 @@ interp_to_face_centroid_z(const int i,
       }
       else
       {
-        frac_y =  cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,1,0)});
+        frac_y =  cent(i,j,k,1) * flag.isConnected({0,1,0});
         result = (1-frac_y) * (   frac_x * var(i-1,j  ,k,n)  +
                               (1-frac_x) * var(i  ,j  ,k,n)) +
                      frac_y * (   frac_x * var(i-1,j+1,k,n)  +
@@ -181,10 +181,10 @@ interp_to_face_centroid_z(const int i,
     }
     else
     {
-      frac_x = cent(i,j,k,0) * flag.isConnected({AMREX_D_DECL(1,0,0)});
+      frac_x = cent(i,j,k,0) * flag.isConnected({1,0,0});
       if (cent(i,j,k,1) <= 0)
       {
-        frac_y = -1 * cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,-1,0)});
+        frac_y = -1 * cent(i,j,k,1) * flag.isConnected({0,-1,0});
         result = (1-frac_y) * (   frac_x * var(i+1,j  ,k,n)  +
                               (1-frac_x) * var(i  ,j  ,k,n)) +
                      frac_y * (   frac_x * var(i+1,j-1,k,n)  +
@@ -192,7 +192,7 @@ interp_to_face_centroid_z(const int i,
       }
       else
       {
-        frac_y =  cent(i,j,k,1) * flag.isConnected({AMREX_D_DECL(0,1,0)});
+        frac_y =  cent(i,j,k,1) * flag.isConnected({0,1,0});
         result = (1-frac_y) * (   frac_x * var(i+1,j  ,k,n)  +
                               (1-frac_x) * var(i  ,j  ,k,n)) +
                      frac_y * (   frac_x * var(i+1,j+1,k,n)  +
@@ -250,7 +250,7 @@ step2(const Box& grown1_bx,
         for(int jj(-1); jj <= 1; jj++)
           for(int kk(-1); kk <= 1; kk++)
             if((ii != 0 or jj != 0 or kk != 0) and 
-                (flags(i,j,k).isConnected({AMREX_D_DECL(ii,jj,kk)}) == 1))
+                (flags(i,j,k).isConnected({ii,jj,kk}) == 1))
             {
               epvfrac = vfrac(i+ii,j+jj,k+kk) * epsilon_g(i+ii,j+jj,k+kk) * 
                         mask(i+ii,j+jj,k+kk);
@@ -303,7 +303,7 @@ step3(const Box& grown1_bx,
         for(int jj(-1); jj <= 1; jj++)
           for(int kk(-1); kk <= 1; kk++)
             if((ii != 0 or jj != 0 or kk != 0) and
-                (flags(i,j,k).isConnected({AMREX_D_DECL(ii,jj,kk)}) == 1))
+                (flags(i,j,k).isConnected({ii,jj,kk}) == 1))
             {
               wtot += epsilon_g(i+ii,j+jj,k+kk) * vfrac(i+ii,j+jj,k+kk) * 
                       mask(i+ii,j+jj,k+kk);
@@ -315,7 +315,7 @@ step3(const Box& grown1_bx,
         for(int jj(-1); jj <= 1; jj++)
           for(int kk(-1); kk <= 1; kk++)
             if((ii != 0 or jj != 0 or kk != 0) and
-                (flags(i,j,k).isConnected({AMREX_D_DECL(ii,jj,kk)}) == 1))
+                (flags(i,j,k).isConnected({ii,jj,kk}) == 1))
             {
 #ifdef AMREX_USE_CUDA
               Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk),

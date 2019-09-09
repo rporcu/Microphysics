@@ -29,8 +29,8 @@ mfix::get_walls(bool & has_walls) {
             amrex::Print() << "Normal " << normal << std::endl;
             amrex::Print() << "Center " << center << std::endl;
 
-            RealArray p = {AMREX_D_DECL(center[0], center[1], center[2])};
-            RealArray n = {AMREX_D_DECL(normal[0], normal[1], normal[2])};
+            RealArray p = {center[0], center[1], center[2]};
+            RealArray n = {normal[0], normal[1], normal[2]};
 
             planes.emplace_back(p, n, false);
         }
@@ -60,8 +60,8 @@ mfix::get_real_walls(bool & has_real_walls) {
             amrex::Print() << "Normal " << normal << std::endl;
             amrex::Print() << "Center " << center << std::endl;
 
-            RealArray p = {AMREX_D_DECL(center[0], center[1], center[2])};
-            RealArray n = {AMREX_D_DECL(normal[0], normal[1], normal[2])};
+            RealArray p = {center[0], center[1], center[2]};
+            RealArray n = {normal[0], normal[1], normal[2]};
 
             planes.emplace_back(p, n, false);
         }

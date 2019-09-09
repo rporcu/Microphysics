@@ -233,8 +233,8 @@ mfix::ComputeAverageFluidVars ( const int lev,
     {
 
       // Create Real box for this region
-      RealBox avg_region ( {AMREX_D_DECL(avg_region_x_w[nr],avg_region_y_s[nr],avg_region_z_b[nr])},
-                           {AMREX_D_DECL(avg_region_x_e[nr],avg_region_y_n[nr],avg_region_z_t[nr])} );
+      RealBox avg_region ( {avg_region_x_w[nr], avg_region_y_s[nr], avg_region_z_b[nr]},
+                           {avg_region_x_e[nr], avg_region_y_n[nr], avg_region_z_t[nr]} );
 
       // Jump to next iteration if this averaging region is not valid
       if ( !avg_region.ok () )
