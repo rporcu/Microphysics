@@ -301,7 +301,8 @@ mfix::mfix_compute_ugradu( Box& bx,
 
 
 //
-// Compute [TODO description]
+// Compute the three components of the convection term when we have embedded
+// boundaries
 //
 void
 mfix::mfix_compute_ugradu_eb(Box& bx,

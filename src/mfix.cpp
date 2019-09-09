@@ -31,8 +31,7 @@ Real mfix::gp0[3]     {0.0};
 mfix::~mfix () {};
 
 mfix::mfix ()
-  : bc_list(10, 11, 20) //TODO fix this
-  , m_bc_u_g(get_dim_bc()+1, 0)
+  : m_bc_u_g(get_dim_bc()+1, 0)
   , m_bc_v_g(get_dim_bc()+1, 0)
   , m_bc_w_g(get_dim_bc()+1, 0)
   , m_bc_t_g(get_dim_bc()+1, 0)

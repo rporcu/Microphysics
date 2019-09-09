@@ -96,12 +96,12 @@ void
 mfix::set_input_bcs(const std::string bcID, const int index,
                     const int cyclic, const Real domloc) {
 
-  const int und_  =   0;
-  const int ig_   =   9;
-  const int pinf_ =  10;
-  const int pout_ =  11;
-  const int minf_ =  20;
-  const int nsw_  = 100;
+  const int und_  = bc_list.get_undefined();
+  const int ig_   = bc_list.get_ig();
+  const int pinf_ = bc_list.get_pinf();
+  const int pout_ = bc_list.get_pout();
+  const int minf_ = bc_list.get_minf();
+  const int nsw_  = bc_list.get_nsw();
 
   // Default a BC to ignore.
   int itype = ig_;

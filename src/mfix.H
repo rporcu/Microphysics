@@ -29,6 +29,7 @@
 #include <AMReX_MLMG.H>
 #include <AMReX_MLNodeLaplacian.H>
 #include <mfix_eb_if.H>
+#include <MFIX_BcList.H>
 
 enum DragType
 {
@@ -353,7 +354,7 @@ protected:
      static Real gp0[3];
      static Real gravity[3];
 
-     const BcList bc_list;
+     BcList bc_list;
 
      amrex::Cuda::ManagedVector<amrex::Real> m_bc_u_g;
      amrex::Cuda::ManagedVector<amrex::Real> m_bc_v_g;

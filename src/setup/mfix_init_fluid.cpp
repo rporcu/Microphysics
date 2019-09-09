@@ -247,7 +247,6 @@ void set_ic(const Box& sbx,
         const Box box1(low1, hi1);
         AMREX_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,0) = ugx;});
 
-        // TODO the following two are probably not needed
         if(slo[0] < domlo[0] and domlo[0] == istart)
         {
           const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
@@ -269,7 +268,6 @@ void set_ic(const Box& sbx,
         const Box box1(low1, hi1);
         AMREX_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,1) = vgx;});
 
-        // TODO the following two are probably not needed
         if (slo[1] < domlo[1] and domlo[1] == jstart)
         {
           const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
@@ -291,7 +289,6 @@ void set_ic(const Box& sbx,
         const Box box1(low1, hi1);
         AMREX_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,2) = wgx;});
 
-        // TODO the following two are probably not needed
         if (slo[2] < domlo[2] and domlo[2] == kstart)
         {
           const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);

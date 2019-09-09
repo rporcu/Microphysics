@@ -9,23 +9,7 @@
 
 #include "mfix_des_F.H"
 #include "MFIX_DEM_Parms.H"
-
-// Boundary conditions list auxiliary structure
-//
-typedef class BcList {
-  public:
-    BcList(const int pinf, const int pout, const int minf)
-      : pinf_(pinf)
-      , pout_(pout)
-      , minf_(minf)
-    {}
-
-    int get_pinf() const {return pinf_;};
-    int get_pout() const {return pout_;};
-    int get_minf() const {return minf_;};
-  private:
-    int pinf_, pout_, minf_;
-} BcList;
+#include <MFIX_BcList.H>
 
 struct realData
 {
