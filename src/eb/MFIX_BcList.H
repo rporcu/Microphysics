@@ -19,12 +19,12 @@ class BcList {
       , nsw_(nsw)
     {}
 
-    const int get_undefined() const {return und_;};
-    const int get_ig() const {return ig_;};
-    const int get_pinf() const {return pinf_;};
-    const int get_pout() const {return pout_;};
-    const int get_minf() const {return minf_;};
-    const int get_nsw() const {return nsw_;};
+    int get_undefined() const {return und_;};
+    int get_ig() const {return ig_;};
+    int get_pinf() const {return pinf_;};
+    int get_pout() const {return pout_;};
+    int get_minf() const {return minf_;};
+    int get_nsw() const {return nsw_;};
 
   private:
     const int und_;
