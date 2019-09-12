@@ -30,7 +30,7 @@ variables:
             -B build
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
-    - make -C build mfix -j2
+    - make -C build mfix -j2 VERBOSE=1
     - cd build
     - make build_tests -j2
     - $CTEST_CMD
