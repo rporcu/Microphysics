@@ -258,7 +258,11 @@ public:
                        const int& nref,
                        const Real* dx);
 
-    void mfix_compute_velocity_slopes(int lev, Real time, MultiFab& vel);
+    void mfix_compute_slopes(int lev, Real time, MultiFab& Sborder,
+                             Vector<std::unique_ptr<MultiFab>>& xslopes_in,
+                             Vector<std::unique_ptr<MultiFab>>& yslopes_in,
+                             Vector<std::unique_ptr<MultiFab>>& zslopes_in,
+                             int slopes_comp);
 
     void set_bc0(const Box& sbx,
                  MFIter* mfi,
