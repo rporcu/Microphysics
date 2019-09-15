@@ -161,12 +161,6 @@ mfix::mfix_solve_poisson_equation ( Vector< std::unique_ptr<MultiFab> >& this_ph
     for (int lev = 0; lev < nlev; lev++)
        nodal_matrix->setSigma(lev, *b[lev]);
 
-    // We must call setLevelBC regardless of the boundary conditions.
-    // If Dirichlet then the values of this_phi in the ghost cells outside the domain
-    //    boundary will be used; if Neumann then the default is homogeneous
-    for (int lev = 0; lev < nlev; lev++)
-       nodal_matrix->setLevelBC(lev, GetVecOfConstPtrs(this_phi)[lev]);
-
     if (nodal_bottom_solver_type == "smoother")
     {
        nodal_solver->setBottomSolver(MLMG::BottomSolver::smoother);

@@ -22,7 +22,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
        mfix_compute_slopes(lev, time, Sborder, xslopes, yslopes, zslopes, 0);
 
        // Copy each FAB back from Sborder into the vel array, complete with filled ghost cells
-       MultiFab::Copy (*vel[lev],  Sborder,  0, 0,  vel[lev]->nComp(),  vel[lev]->nGrow());
+       MultiFab::Copy (*vel_in[lev],  Sborder,  0, 0,  vel_in[lev]->nComp(),  vel_in[lev]->nGrow());
 
        // Get EB geometric info
        Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
