@@ -2,7 +2,7 @@
 
 void
 mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
-                                           Vector< std::unique_ptr<MultiFab> >& vel,
+                                           Vector< std::unique_ptr<MultiFab> >& vel_in,
                                            Vector< std::unique_ptr<MultiFab> >& u_mac,
                                            Vector< std::unique_ptr<MultiFab> >& v_mac,
                                            Vector< std::unique_ptr<MultiFab> >& w_mac)
@@ -15,7 +15,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
        Box domain(geom[lev].Domain());   
 
        // State with ghost cells
-       MultiFab Sborder(grids[lev], dmap[lev], vel_g[lev]->nComp(), nghost,  MFInfo(), *ebfactory[lev]);
+       MultiFab Sborder(grids[lev], dmap[lev], vel_in[lev]->nComp(), nghost,  MFInfo(), *ebfactory[lev]);
        FillPatchVel(lev, time, Sborder, 0, Sborder.nComp(), bcs_u);
     
        // First compute the slopes
@@ -48,7 +48,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
       
           // Check efficiently if this tile contains any eb stuff
 
-          const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
+          const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_in[lev])[mfi]);
           const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
@@ -61,7 +61,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
           {
 
              // Cell-centered velocity
-             const auto& ccvel_fab = vel_g[lev]->array(mfi);
+             const auto& ccvel_fab = vel_in[lev]->array(mfi);
 
              // Cell-centered slopes
              const auto& xslopes_fab = (xslopes[lev])->array(mfi);
@@ -125,7 +125,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
           } else {
 
              // Cell-centered velocity
-             const auto& ccvel_fab = vel_g[lev]->array(mfi);
+             const auto& ccvel_fab = vel_in[lev]->array(mfi);
 
              // Cell-centered slopes
              const auto& xslopes_fab = (xslopes[lev])->array(mfi);
