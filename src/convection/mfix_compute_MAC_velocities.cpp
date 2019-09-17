@@ -14,15 +14,9 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
     {
        Box domain(geom[lev].Domain());   
 
-       // State with ghost cells
-       MultiFab Sborder(grids[lev], dmap[lev], vel_in[lev]->nComp(), nghost,  MFInfo(), *ebfactory[lev]);
-       FillPatchVel(lev, time, Sborder, 0, Sborder.nComp(), bcs_u);
-    
        // First compute the slopes
-       mfix_compute_slopes(lev, time, Sborder, xslopes, yslopes, zslopes, 0);
-
-       // Copy each FAB back from Sborder into the vel array, complete with filled ghost cells
-       MultiFab::Copy (*vel_in[lev],  Sborder,  0, 0,  vel_in[lev]->nComp(),  vel_in[lev]->nGrow());
+       int slopes_comp = 0;
+       mfix_compute_slopes(lev, time, *vel_in[lev], xslopes_u, yslopes_u, zslopes_u, slopes_comp);
 
        // Get EB geometric info
        Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
@@ -38,7 +32,7 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-       for (MFIter mfi(Sborder,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+       for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
            // Tilebox
           Box  bx = mfi.tilebox();
@@ -64,9 +58,9 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
              const auto& ccvel_fab = vel_in[lev]->array(mfi);
 
              // Cell-centered slopes
-             const auto& xslopes_fab = (xslopes[lev])->array(mfi);
-             const auto& yslopes_fab = (yslopes[lev])->array(mfi);
-             const auto& zslopes_fab = (zslopes[lev])->array(mfi);
+             const auto& xslopes_fab = (xslopes_u[lev])->array(mfi);
+             const auto& yslopes_fab = (yslopes_u[lev])->array(mfi);
+             const auto& zslopes_fab = (zslopes_u[lev])->array(mfi);
 
              // Face-centered velocity components
              const auto& umac_fab = (u_mac[lev])->array(mfi);
@@ -128,9 +122,9 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
              const auto& ccvel_fab = vel_in[lev]->array(mfi);
 
              // Cell-centered slopes
-             const auto& xslopes_fab = (xslopes[lev])->array(mfi);
-             const auto& yslopes_fab = (yslopes[lev])->array(mfi);
-             const auto& zslopes_fab = (zslopes[lev])->array(mfi);
+             const auto& xslopes_fab = (xslopes_u[lev])->array(mfi);
+             const auto& yslopes_fab = (yslopes_u[lev])->array(mfi);
+             const auto& zslopes_fab = (zslopes_u[lev])->array(mfi);
 
              // Face-centered velocity components
              const auto& umac_fab = (u_mac[lev])->array(mfi);

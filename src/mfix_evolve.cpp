@@ -6,7 +6,6 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 {
     BL_PROFILE_REGION_START("mfix::Evolve");
 
-
     Real coupling_timing;
     Real sum_vol;
     if (solve_dem && solve_fluid)

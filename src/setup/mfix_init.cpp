@@ -86,6 +86,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query("initial_iterations", initial_iterations);
         pp.query("do_initial_proj"   , do_initial_proj);
 
+        pp.query( "advect_density", advect_density );
+        pp.query( "advect_tracer" , advect_tracer );
+
         // The default type is "FixedSize" but we can over-write that in the inputs file
         //  with "KDTree" or "KnapSack"
         pp.query("load_balance_type", load_balance_type);
@@ -266,7 +269,6 @@ void mfix::Init( Real time)
     // Note that finest_level = last level
     finest_level = nlev-1;
 
-
     /****************************************************************************
      *                                                                          *
      * Generate levels using ErrorEst tagging. This approach has been based on  *
@@ -443,7 +445,7 @@ void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 
 
 void mfix::MakeNewLevelFromScratch (int lev, Real time,
-                               const BoxArray& new_grids, const DistributionMapping& new_dmap)
+                                    const BoxArray& new_grids, const DistributionMapping& new_dmap)
 {
     if (ooo_debug) amrex::Print() << "MakeNewLevelFromScratch" << std::endl;
     if (m_verbose > 0)
@@ -790,7 +792,8 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
           } else {
 
             init_fluid(sbx, bx, domain,
-                       (*ep_g[lev])[mfi], (*ro_g[lev])[mfi], (*p_g[lev])[mfi],
+                       (*ep_g[lev])[mfi], (*ro_g[lev])[mfi], 
+                       (*trac[lev])[mfi], (*p_g[lev])[mfi],
                        (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
                        dx, dy, dz, xlen, ylen, zlen);
           }
@@ -805,9 +808,10 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 
   for (int lev = 0; lev < nlev; lev++)
   {
-         ep_g[lev]->FillBoundary(geom[lev].periodicity());
-         ro_g[lev]->FillBoundary(geom[lev].periodicity());
-         mu_g[lev]->FillBoundary(geom[lev].periodicity());
+     ep_g[lev]->FillBoundary(geom[lev].periodicity());
+     ro_g[lev]->FillBoundary(geom[lev].periodicity());
+     trac[lev]->FillBoundary(geom[lev].periodicity());
+     mu_g[lev]->FillBoundary(geom[lev].periodicity());
 
      vel_g[lev]->FillBoundary(geom[lev].periodicity());
   }
@@ -827,7 +831,9 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 
      Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
 
-     mfix_set_scalar_bcs();
+     // This sets bcs for ep_g and mu_g
+     Real time = 0.0;
+     mfix_set_scalar_bcs(time,ro_g,trac,ep_g,mu_g);
 
      // Project the initial velocity field
      if (do_initial_proj)
@@ -835,12 +841,15 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 
      // Iterate to compute the initial pressure
      if (initial_iterations > 0)
+
         mfix_initial_iterations(dt,stop_time);
-  }else{
-     //Calculation of sum_vol_orig for a restarting point  
-     sum_vol_orig = volWgtSum(0,*ep_g[0],0);
-     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
-  }
+
+     } else {
+
+        //Calculation of sum_vol_orig for a restarting point  
+        sum_vol_orig = volWgtSum(0,*ep_g[0],0);
+        Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+     }
 }
 
 void
@@ -862,6 +871,7 @@ mfix::mfix_set_bc0()
 
      ep_g[lev]->FillBoundary(geom[lev].periodicity());
      ro_g[lev]->FillBoundary(geom[lev].periodicity());
+     trac[lev]->FillBoundary(geom[lev].periodicity());
    }
 
    // Put velocity Dirichlet bc's on faces

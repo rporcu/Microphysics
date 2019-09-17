@@ -219,19 +219,27 @@ public:
                                             Vector< std::unique_ptr<MultiFab> >& v_mac,
                                             Vector< std::unique_ptr<MultiFab> >& w_mac);
 
+    void mfix_set_velocity_bcs (Real time,
+                                Vector< std::unique_ptr<MultiFab> >& vel,
+                                int extrap_dir_bcs);
+
+    void mfix_set_scalar_bcs (Real time,
+                              Vector< std::unique_ptr<MultiFab> >& ro_g,
+                              Vector< std::unique_ptr<MultiFab> >& trac,
+                              Vector< std::unique_ptr<MultiFab> >& ep_g,
+                              Vector< std::unique_ptr<MultiFab> >& mu_g);
+
     void set_velocity_bcs(Real* time,
                           const int lev,
                           FArrayBox& vel_fab,
                           const Box& domain,
                           const int* extrap_dir_bcs);
 
-     void set_scalar_bcs(MFIter* mfi,
-                         const int lev,
-                         const Box& domain);
-
-     void mfix_set_velocity_bcs (Real time,
-                                 Vector< std::unique_ptr<MultiFab> >& vel,
-                                 int extrap_dir_bcs);
+    void set_scalar_bcs(Real* time,
+                        const int lev,
+                        FArrayBox& scal_fab,
+                        const int comp,
+                        const Box& domain);
 
     void set_vec_bcs(const int lev,
                      FArrayBox& vec_fab,
@@ -397,18 +405,21 @@ protected:
                                  const Vector< std::unique_ptr<MultiFab> >& ro,
                                  Real time, int steady_state);
 
-     void mfix_set_scalar_bcs ();
-
      void set_MC_velocity_bcs ( int lev,
                                 Vector< std::unique_ptr<MultiFab> >& u,
                                 Vector< std::unique_ptr<MultiFab> >& v,
                                 Vector< std::unique_ptr<MultiFab> >& w,
                                 Real time);
 
-     void FillPatchVel (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
-                        const Vector<BCRec> & bcr);
-     void GetDataVel   (int lev, Real time, Vector<MultiFab *> & data,
-                        Vector<Real> & datatime);
+     void FillPatchVel    (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
+                           const Vector<BCRec> & bcr);
+     void GetDataVel      (int lev, Real time, Vector<MultiFab *> & data,
+                           Vector<Real> & datatime);
+
+     void FillPatchScalar(int lev, Real time, MultiFab & mf, int icomp, 
+                          const Vector<BCRec> & bcr);
+     void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data, int icomp, 
+                         Vector<Real> & datatime);
 
      void mfix_calc_volume_fraction(Real & sum_vol);
      void mfix_calc_particle_beta(Real time);
@@ -469,12 +480,18 @@ private:
 
      void check_for_nans(int lev);
 
-     void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv,
+     void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv_u,
+                                        Vector< std::unique_ptr<MultiFab> >& conv_s,
                                         Vector< std::unique_ptr<MultiFab> >& vel,
+                                        Vector< std::unique_ptr<MultiFab> >& ro_g,
+                                        Vector< std::unique_ptr<MultiFab> >& trac,
                                         Real time);
 
-     void mfix_compute_ugradu_corrector(Vector< std::unique_ptr<MultiFab> >& conv,
+     void mfix_compute_ugradu_corrector(Vector< std::unique_ptr<MultiFab> >& conv_u,
+                                        Vector< std::unique_ptr<MultiFab> >& conv_s,
                                         Vector< std::unique_ptr<MultiFab> >& vel,
+                                        Vector< std::unique_ptr<MultiFab> >& ro_g,
+                                        Vector< std::unique_ptr<MultiFab> >& trac,
                                         Real time);
 
      void mfix_compute_divtau(Vector< std::unique_ptr<MultiFab> >& divtau,
@@ -482,10 +499,12 @@ private:
 
      int steady_state_reached(Real dt, int iter);
 
-     void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_old,
+     void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_u_old,
+                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                                Vector< std::unique_ptr<MultiFab> >& divtau_old,
                                Real time, Real dt, bool proj_2);
-     void mfix_apply_corrector(Vector< std::unique_ptr<MultiFab> >& conv_old,
+     void mfix_apply_corrector(Vector< std::unique_ptr<MultiFab> >& conv_u_old,
+                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                                Vector< std::unique_ptr<MultiFab> >& divtau_old,
                                Real time, Real dt, bool proj_2);
 
@@ -551,6 +570,10 @@ private:
      Vector< std::unique_ptr<MultiFab> > ro_g ;
      Vector< std::unique_ptr<MultiFab> > ro_go;
 
+     // Tracer in gas
+     Vector< std::unique_ptr<MultiFab> > trac;
+     Vector< std::unique_ptr<MultiFab> > trac_o;
+
      // Gas velocity
      Vector< std::unique_ptr<MultiFab> > vel_g ;
      Vector< std::unique_ptr<MultiFab> > vel_go;
@@ -575,9 +598,12 @@ private:
      Vector< std::unique_ptr<MultiFab> > level_sets;
 
      // These are multi-component multifabs
-     Vector< std::unique_ptr<MultiFab> > xslopes;
-     Vector< std::unique_ptr<MultiFab> > yslopes;
-     Vector< std::unique_ptr<MultiFab> > zslopes;
+     Vector< std::unique_ptr<MultiFab> > xslopes_u;
+     Vector< std::unique_ptr<MultiFab> > yslopes_u;
+     Vector< std::unique_ptr<MultiFab> > zslopes_u;
+     Vector< std::unique_ptr<MultiFab> > xslopes_s;
+     Vector< std::unique_ptr<MultiFab> > yslopes_s;
+     Vector< std::unique_ptr<MultiFab> > zslopes_s;
 
      // div (ep_g * u)
      Vector< std::unique_ptr<MultiFab> > diveu;
@@ -611,6 +637,9 @@ private:
 
      int solve_fluid;
      int solve_dem;
+
+     bool advect_density = false;
+     bool advect_tracer  = false;
 
      // Options to control mfix verbosity level
      int m_verbose = 0;

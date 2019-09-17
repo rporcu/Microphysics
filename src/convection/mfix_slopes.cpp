@@ -44,9 +44,9 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
        else
        {
            const auto& state_fab =      Sborder.array(mfi);
-           const auto&  xs_fab = xslopes[lev]->array(mfi);
-           const auto&  ys_fab = yslopes[lev]->array(mfi);
-           const auto&  zs_fab = zslopes[lev]->array(mfi);
+           const auto&  xs_fab = xslopes_in[lev]->array(mfi);
+           const auto&  ys_fab = yslopes_in[lev]->array(mfi);
+           const auto&  zs_fab = zslopes_in[lev]->array(mfi);
 
            // No cut cells in tile + 1-cell witdh halo -> use non-eb routine
            if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
