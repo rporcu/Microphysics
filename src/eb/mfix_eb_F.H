@@ -16,7 +16,7 @@ extern "C"
 
     void mfix_get_walls(
             int* bcv, int* exists,
-            void* normal, void* center
+            void* normal, void* center, int* po_noParOut 
         );
 
     void mfix_get_real_walls(

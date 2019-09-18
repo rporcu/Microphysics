@@ -17,13 +17,18 @@ mfix::get_walls(bool & has_walls) {
 
     has_walls = false;  // will be set to true if there are any walls
 
+    int po_noParOut = 0; // default behavior for PO's -- letting particles exit the domain
+    ParmParse pp("mfix");
+    pp.query("po_no_par_out", po_noParOut); // control keyword for PO's to let or not 
+                                            // particles exit the domain
+
     // Walls can be defined per phase => Itterarte over all phases and check
     // each for walls in the mfix.dat
     Vector<EB2::PlaneIF> planes;
     for (int i = 1; i <= 6; i++) {
         int exists;
         RealVect normal, center;
-        mfix_get_walls(& i, & exists, & normal, & center);
+        mfix_get_walls(& i, & exists, & normal, & center, & po_noParOut);
         if(exists) {
             has_walls = true;
             amrex::Print() << "Normal " << normal << std::endl;
