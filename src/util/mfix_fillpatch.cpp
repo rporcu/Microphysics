@@ -9,6 +9,8 @@ namespace
   mfix* mfix_for_fillpatching;
 }
 
+// This interface must match the definition of the interface for
+//    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
 void set_ptr_to_mfix(mfix& mfix_for_fillpatching_in)
 {
    mfix_for_fillpatching = &mfix_for_fillpatching_in;
@@ -16,8 +18,6 @@ void set_ptr_to_mfix(mfix& mfix_for_fillpatching_in)
 
 // This interface must match the definition of the interface for
 //    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
-// We can't get around this so instead we create an mfix object
-//    and use that to access the quantities that aren't passed here.
 inline
 void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
                  const int dcomp, const int numcomp,
@@ -54,6 +54,42 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
     FArrayBox dest_fab(dest);
 
     mfix_for_fillpatching->set_velocity_bcs (&time, lev, dest_fab, domain, &extrap_dir_bcs);
+}
+
+// This interface must match the definition of the interface for
+//    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
+inline
+void ScalarFillBox (Box const& bx, Array4<amrex::Real> const& dest,
+                    const int dcomp, const int numcomp,
+                    GeometryData const& geom, const Real time_in,
+                    const BCRec* bcr, const int bcomp,
+                    const int orig_comp)
+{
+    if (dcomp != 0)
+         amrex::Abort("Must have dcomp = 0 in ScalarFillBox");
+    if (numcomp != 4)
+         amrex::Abort("Must have numcomp = 4 in ScalarFillBox");
+
+    const Box& domain = geom.Domain();
+
+    // This is a bit hack-y but does get us the right level
+    int lev = 0;
+    for (int ilev = 0; ilev < 10; ilev++)
+    {
+       const Geometry& lev_geom = mfix_for_fillpatching->GetParGDB()->Geom(ilev);
+       if (domain.length()[0] == (lev_geom.Domain()).length()[0])
+       {
+         lev = ilev;
+         break;
+       }
+    }
+
+    // We only do this to make it not const
+    Real time = time_in;
+
+    FArrayBox dest_fab(dest);
+
+    mfix_for_fillpatching->set_scalar_bcs (&time, lev, dest_fab, dcomp, domain);
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
@@ -96,7 +132,49 @@ mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, cons
     }
 }
 
-// utility to copy in data from phi_old and/or phi_new into another multifab
+// Compute a new multifab by copying array from valid region and filling ghost cells
+// works for single level and 2-level cases (fill fine grid ghost by interpolating from coarse)
+// NOTE: icomp here refers to whether we are filling 0: density, 1: tracer, 2: ep_g, 3: mu_g
+void
+mfix::FillPatchScalar (int lev, Real time, MultiFab& mf, int icomp, const Vector<BCRec>& bcs)
+{
+    // Hack so that ghost cells are not undefined
+    mf.setVal(covered_val);
+
+    if (lev == 0)
+    {
+        Vector<MultiFab*> smf;
+        Vector<Real> stime;
+
+        GetDataScalar(0, time, smf, icomp, stime);
+
+        CpuBndryFuncFab bfunc(ScalarFillBox);
+        PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
+        amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, 1, 
+                                    geom[lev], physbc, 0);
+    }
+    else
+    {
+        Vector<MultiFab*> cmf, fmf;
+        Vector<Real> ctime, ftime;
+        GetDataScalar(lev-1, time, cmf, icomp, ctime);
+        GetDataScalar(lev  , time, fmf, icomp, ftime);
+
+        CpuBndryFuncFab bfunc(ScalarFillBox);
+        PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bfunc);
+        PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev  ],bcs,bfunc);
+
+        Interpolater* mapper = &cell_cons_interp;
+
+        amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
+                                  0, 0, 1, geom[lev-1], geom[lev],
+                                  cphysbc, 0, fphysbc, 0,
+                                  refRatio(lev-1), mapper, bcs, 0);
+
+    }
+}
+
+// Utility to copy in data from phi_old and/or phi_new into another multifab
 void
 mfix::GetDataVel (int lev, Real time, Vector<MultiFab*>& data, Vector<Real>& datatime)
 {
@@ -104,20 +182,6 @@ mfix::GetDataVel (int lev, Real time, Vector<MultiFab*>& data, Vector<Real>& dat
     datatime.clear();
 
     const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
-
-    if (lev > 0)
-    {
-       std::cout << "GETTING DATA AT LEVEL " << lev << std::endl;
-       std::cout << "GETTING DATA AT TIME " << t_old[lev] << " < " << time << " < " << t_new[lev] << std::endl;
-
-       std::cout << "NORM OF OLD U " <<  mfix_norm0(vel_go,lev,0)  << std::endl;;
-       std::cout << "NORM OF OLD V " <<  mfix_norm0(vel_go,lev,1)  << std::endl;;
-       std::cout << "NORM OF OLD W " <<  mfix_norm0(vel_go,lev,2)  << std::endl;;
-
-       std::cout << "NORM OF NEW U " <<  mfix_norm0(vel_g,lev,0)  << std::endl;;
-       std::cout << "NORM OF NEW V " <<  mfix_norm0(vel_g,lev,1)  << std::endl;;
-       std::cout << "NORM OF NEW W " <<  mfix_norm0(vel_g,lev,2)  << std::endl;;
-    }
 
     if (time > t_new[lev] - teps && time < t_new[lev] + teps)
     {
@@ -138,64 +202,54 @@ mfix::GetDataVel (int lev, Real time, Vector<MultiFab*>& data, Vector<Real>& dat
     }
 }
 
-//
-// Set the BCs for all the variables EXCEPT pressure or velocity.
-//
+// Utility to copy in data from phi_old and/or phi_new into another multifab
 void
-mfix::mfix_set_scalar_bcs ()
+mfix::GetDataScalar (int lev, Real time, Vector<MultiFab*>& data, int icomp, Vector<Real>& datatime)
 {
-  BL_PROFILE("mfix::mfix_set_scalar_bcs()");
+    data.clear();
+    datatime.clear();
 
-  for (int lev = 0; lev < nlev; lev++)
-  {
-     Box domain(geom[lev].Domain());
+    const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
 
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-     for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
-     {
-        set_scalar_bcs(&mfi, lev, domain);
-      }
-        ep_g[lev] -> FillBoundary (geom[lev].periodicity());
-        ro_g[lev] -> FillBoundary (geom[lev].periodicity());
-        mu_g[lev] -> FillBoundary (geom[lev].periodicity());
+    if (icomp == 3) 
+       data.push_back(mu_g[lev].get());
 
-        EB_set_covered(*ep_g[lev], 0, ep_g[lev]->nComp(), ep_g[lev]->nGrow(), covered_val);
-        EB_set_covered(*ro_g[lev], 0, ro_g[lev]->nComp(), ro_g[lev]->nGrow(), covered_val);
-        EB_set_covered(*mu_g[lev], 0, mu_g[lev]->nComp(), mu_g[lev]->nGrow(), covered_val);
-  }
+    if (time > t_new[lev] - teps && time < t_new[lev] + teps)
+    {
+        if (icomp == 0) {
+           data.push_back(ro_g[lev].get());
+        } else if (icomp == 1) {
+           data.push_back(trac[lev].get());
+        } else if (icomp == 2) {
+           data.push_back(ep_g[lev].get());
+        }
+        datatime.push_back(t_new[lev]);
+    }
+    else if (time > t_old[lev] - teps && time < t_old[lev] + teps)
+    {
+        if (icomp == 0) {
+           data.push_back(ro_go[lev].get());
+        } else if (icomp == 1) {
+           data.push_back(trac_o[lev].get());
+        } else if (icomp == 2) {
+           data.push_back(ep_go[lev].get());
+        }
+        datatime.push_back(t_old[lev]);
+    }
+    else
+    {
+        if (icomp == 0) {
+           data.push_back(ro_go[lev].get());
+           data.push_back( ro_g[lev].get());
+        } else if (icomp == 1) {
+           data.push_back(trac_o[lev].get());
+           data.push_back( trac[lev].get());
+        } else if (icomp == 2) {
+           data.push_back(ep_go[lev].get());
+           data.push_back( ep_g[lev].get());
+        }
+        datatime.push_back(t_old[lev]);
+        datatime.push_back(t_new[lev]);
+    }
 }
 
-//
-// Set the BCs for velocity only
-//
-void
-mfix::mfix_set_velocity_bcs (Real time, 
-                             Vector< std::unique_ptr<MultiFab> > & vel,
-                             int extrap_dir_bcs)
-{
-  BL_PROFILE("mfix::mfix_set_velocity_bcs()");
-
-  for (int lev = 0; lev < nlev; lev++)
-  {
-     // Set all values outside the domain to covered_val just to avoid use of undefined
-     vel[lev]->setDomainBndry(covered_val,geom[lev]);
-
-     vel[lev] -> FillBoundary (geom[lev].periodicity());
-     Box domain(geom[lev].Domain());
-
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-     for (MFIter mfi(*vel[lev], true); mfi.isValid(); ++mfi)
-     {
-        set_velocity_bcs(&time, lev, (*vel[lev])[mfi], domain, &extrap_dir_bcs);
-     }
-
-     EB_set_covered(*vel[lev], 0, vel[lev]->nComp(), vel[lev]->nGrow(), covered_val);
-
-     // Do this after as well as before to pick up terms that got updated in the call above
-     vel[lev] -> FillBoundary (geom[lev].periodicity());
-  }
-}

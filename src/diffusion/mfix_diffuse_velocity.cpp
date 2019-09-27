@@ -105,19 +105,19 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
    // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
    for (int lev = 0; lev < nlev; lev++)
    {
-      diff_rhs[lev]->copy(*vel_g[lev],0,0,3,nghost,nghost);
-      diff_phi[lev]->copy(*vel_g[lev],0,0,3,nghost,nghost);
+       MultiFab::Copy((*diff_rhs[lev]),(*vel_g[lev]), 0, 0, AMREX_SPACEDIM, 0);
+       MultiFab::Copy((*diff_phi[lev]),(*vel_g[lev]), 0, 0, AMREX_SPACEDIM, diff_phi[lev]->nGrow());
 
-      EB_set_covered(*diff_phi[lev], 0, diff_phi[lev]->nComp(), diff_phi[lev]->nGrow(), covered_val);
-      diff_phi[lev] -> FillBoundary (geom[lev].periodicity());
+       EB_set_covered(*diff_phi[lev], 0, diff_phi[lev]->nComp(), diff_phi[lev]->nGrow(), covered_val);
+       diff_phi[lev] -> FillBoundary (geom[lev].periodicity());
 
-      ebtensorop.setLevelBC ( lev, GetVecOfConstPtrs(diff_phi)[lev] );
+       ebtensorop.setLevelBC ( lev, GetVecOfConstPtrs(diff_phi)[lev] );
 
       // Define RHS = (ro_g) * (ep_g) * (vel_g)
       for (int i = 0; i < 3; i++)
       {
-         MultiFab::Multiply((*diff_rhs[lev]), (*ro_g[lev]), 0, i, 1, diff_rhs[lev]->nGrow());
-         MultiFab::Multiply((*diff_rhs[lev]), (*ep_g[lev]), 0, i, 1, diff_rhs[lev]->nGrow());
+         MultiFab::Multiply((*diff_rhs[lev]), (*ro_g[lev]), 0, i, 1, 0);
+         MultiFab::Multiply((*diff_rhs[lev]), (*ep_g[lev]), 0, i, 1, 0);
       }
    }
 
@@ -133,8 +133,8 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
 
    for (int lev = 0; lev < nlev; lev++)
    {
-      diff_phi[lev]->FillBoundary (geom[lev].periodicity());
-      vel_g[lev]->copy(*diff_phi[lev],0,0,3,nghost,nghost);
+       diff_phi[lev]->FillBoundary (geom[lev].periodicity());
+       MultiFab::Copy( *vel_g[lev], *diff_phi[lev], 0, 0, AMREX_SPACEDIM, 1);
    }
 
    amrex::Print() << "After diffusing all velocity components " << std::endl;

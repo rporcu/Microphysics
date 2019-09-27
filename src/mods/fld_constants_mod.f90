@@ -12,6 +12,9 @@ module fld_const
    ! Specified constant gas density
    real(rt) :: ro_g0
 
+   ! Specified constant tracer value
+   real(rt) :: trac_0
+
    ! Specified constant gas viscosity
    real(rt) :: mu_g0
 
@@ -29,6 +32,11 @@ contains
     get_ro_g0 = ro_g0
     return
   end function get_ro_g0
+
+  real(rt) function get_trac0() bind(C)
+    get_trac0 = trac_0
+    return
+  end function get_trac0
 
   real(rt) function get_mu_g0() bind(C)
     get_mu_g0 = mu_g0

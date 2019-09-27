@@ -7,9 +7,11 @@ CEXE_sources += mfix_eb_box.cpp
 CEXE_sources += mfix_eb_cyclone.cpp
 CEXE_sources += mfix_eb_cylinder.cpp
 CEXE_sources += mfix_eb_hopper.cpp
+CEXE_sources += mfix_eb_proto_clr.cpp
 CEXE_sources += mfix_eb_regular.cpp
 CEXE_sources += mfix_eb_general.cpp
 CEXE_sources += get_walls.cpp
 CEXE_headers += mfix_eb_if.H
+CEXE_headers += MFIX_BcList.H
 
 FEXE_headers += mfix_eb_F.H

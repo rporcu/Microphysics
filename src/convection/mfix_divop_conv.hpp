@@ -1,17 +1,14 @@
 #ifndef _MFIX_DIVOP_CONV_HPP_
 #define _MFIX_DIVOP_CONV_HPP_
 
-#include <mfix_F.H>
 #include <mfix.H>
-#include <AMReX_REAL.H>
-#include <AMReX_BLFort.H>
-#include <AMReX_SPACE.H>
 
 void 
 compute_divop_conv(
               Box& bx,
               MultiFab& divergence,
               MultiFab& ep_g,
+              int conv_comp, int ncomp,
               MFIter* mfi,
               FArrayBox& fx,
               FArrayBox& fy,

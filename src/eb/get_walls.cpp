@@ -17,20 +17,25 @@ mfix::get_walls(bool & has_walls) {
 
     has_walls = false;  // will be set to true if there are any walls
 
+    int po_noParOut = 0; // default behavior for PO's -- letting particles exit the domain
+    ParmParse pp("mfix");
+    pp.query("po_no_par_out", po_noParOut); // control keyword for PO's to let or not 
+                                            // particles exit the domain
+
     // Walls can be defined per phase => Itterarte over all phases and check
     // each for walls in the mfix.dat
     Vector<EB2::PlaneIF> planes;
     for (int i = 1; i <= 6; i++) {
         int exists;
         RealVect normal, center;
-        mfix_get_walls(& i, & exists, & normal, & center);
+        mfix_get_walls(& i, & exists, & normal, & center, & po_noParOut);
         if(exists) {
             has_walls = true;
             amrex::Print() << "Normal " << normal << std::endl;
             amrex::Print() << "Center " << center << std::endl;
 
-            RealArray p = {AMREX_D_DECL(center[0], center[1], center[2])};
-            RealArray n = {AMREX_D_DECL(normal[0], normal[1], normal[2])};
+            RealArray p = {center[0], center[1], center[2]};
+            RealArray n = {normal[0], normal[1], normal[2]};
 
             planes.emplace_back(p, n, false);
         }
@@ -60,8 +65,8 @@ mfix::get_real_walls(bool & has_real_walls) {
             amrex::Print() << "Normal " << normal << std::endl;
             amrex::Print() << "Center " << center << std::endl;
 
-            RealArray p = {AMREX_D_DECL(center[0], center[1], center[2])};
-            RealArray n = {AMREX_D_DECL(normal[0], normal[1], normal[2])};
+            RealArray p = {center[0], center[1], center[2]};
+            RealArray n = {normal[0], normal[1], normal[2]};
 
             planes.emplace_back(p, n, false);
         }
@@ -96,12 +101,12 @@ void
 mfix::set_input_bcs(const std::string bcID, const int index,
                     const int cyclic, const Real domloc) {
 
-  const int und_  =   0;
-  const int ig_   =   9;
-  const int pinf_ =  10;
-  const int pout_ =  11;
-  const int minf_ =  20;
-  const int nsw_  = 100;
+  const int und_  = bc_list.get_undefined();
+  const int ig_   = bc_list.get_ig();
+  const int pinf_ = bc_list.get_pinf();
+  const int pout_ = bc_list.get_pout();
+  const int minf_ = bc_list.get_minf();
+  const int nsw_  = bc_list.get_nsw();
 
   // Default a BC to ignore.
   int itype = ig_;

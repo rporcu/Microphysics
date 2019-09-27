@@ -12,11 +12,12 @@
 #include <mfix.H>
 #include <mfix_F.H>
 
+using namespace std;
+
 namespace
 {
     const std::string level_prefix {"Level_"};
 }
-
 
 void
 mfix::GotoNextLine (std::istream& is)
@@ -32,7 +33,8 @@ void mfix::WriteJobInfo (const std::string& dir) const
        // job_info file with details about the run
        std::ofstream jobInfoFile;
        std::string FullPathJobInfoFile = dir;
-       std::string PrettyLine = "===============================================================================\n";
+       std::string PrettyLine = "========================================="
+                                "======================================\n";
 
        FullPathJobInfoFile += "/job_info";
        jobInfoFile.open(FullPathJobInfoFile.c_str(), std::ios::out);
@@ -173,7 +175,7 @@ mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
 
 void
 mfix::ComputeAverageFluidVars ( const int lev,
-                   const amrex::Real time, const string&  basename,
+                   const amrex::Real time, const std::string&  basename,
                    const Vector<int>& avg_p_g,
                    const Vector<int>& avg_ep_g,
                    const Vector<int>& avg_vel_g,
@@ -206,7 +208,7 @@ mfix::ComputeAverageFluidVars ( const int lev,
   const int var_count = 6;
 
   // Array to hold the data for global collection.
-  vector<Real> regions_data(var_count*nregions, 0.0);
+  std::vector<Real> regions_data(var_count*nregions, 0.0);
 
   Box domain(geom[lev].Domain());
 
@@ -231,8 +233,8 @@ mfix::ComputeAverageFluidVars ( const int lev,
     {
 
       // Create Real box for this region
-      RealBox avg_region ( {AMREX_D_DECL(avg_region_x_w[nr],avg_region_y_s[nr],avg_region_z_b[nr])},
-                           {AMREX_D_DECL(avg_region_x_e[nr],avg_region_y_n[nr],avg_region_z_t[nr])} );
+      RealBox avg_region ( {avg_region_x_w[nr], avg_region_y_s[nr], avg_region_z_b[nr]},
+                           {avg_region_x_e[nr], avg_region_y_n[nr], avg_region_z_t[nr]} );
 
       // Jump to next iteration if this averaging region is not valid
       if ( !avg_region.ok () )

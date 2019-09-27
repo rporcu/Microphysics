@@ -43,11 +43,9 @@ step2(const Box& grown1_bx,
 
       Real epvfrac = 0;
 
-      // TODO unroll this
       for(int ii(-1); ii <= 1; ii++)
         for(int jj(-1); jj <= 1; jj++)
           for(int kk(-1); kk <= 1; kk++)
-            // Check if we have to include also cell (i,j,k) itself
             if((ii != 0 or jj != 0 or kk != 0) and 
                 (flags(i,j,k).isConnected(ii,jj,kk) == 1))
             {
@@ -98,11 +96,9 @@ step3(const Box& grown1_bx,
     {
       Real wtot = 0;
       
-      // TODO unroll this
       for(int ii(-1); ii <= 1; ii++)
         for(int jj(-1); jj <= 1; jj++)
           for(int kk(-1); kk <= 1; kk++)
-            // Check if we have to include also cell (i,j,k) itself
             if((ii != 0 or jj != 0 or kk != 0) and
                 (flags(i,j,k).isConnected(ii,jj,kk) == 1))
             {
@@ -115,7 +111,6 @@ step3(const Box& grown1_bx,
       for(int ii(-1); ii <= 1; ii++)
         for(int jj(-1); jj <= 1; jj++)
           for(int kk(-1); kk <= 1; kk++)
-            // Check if we have to include also cell (i,j,k) itself
             if((ii != 0 or jj != 0 or kk != 0) and
                 (flags(i,j,k).isConnected(ii,jj,kk) == 1))
             {
@@ -183,10 +178,6 @@ compute_redist_diff(Box& bx,
       mask(i,j,k) = 1;
   });
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   //
   // Here we do the redistribution steps
   //
@@ -194,7 +185,9 @@ compute_redist_diff(Box& bx,
   {
     // Set this to zero here
     optmp_fbx.setVal(0.0);
-      
+ 
+    Gpu::streamSynchronize();
+
     //
     // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
     //
@@ -214,9 +207,7 @@ compute_redist_diff(Box& bx,
       divergence(i,j,k,n) = divc(i,j,k,n) + optmp(i,j,k);
     });
 
-#ifdef AMREX_USE_CUDA
-    Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 
   }
 }

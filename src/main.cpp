@@ -47,6 +47,8 @@ std::string mfix_dat {"mfix.dat"};
 
 void set_ptr_to_mfix(mfix& my_mfix);
 
+void writeBuildInfo ();
+
 void ReadParameters ()
 {
   {
@@ -91,6 +93,18 @@ void ReadParameters ()
 
 int main (int argc, char* argv[])
 {
+
+
+    // check to see if it contains --describe
+    if (argc >= 2) {
+        for (auto i = 1; i < argc; i++) {
+            if (std::string(argv[i]) == "--describe") {
+                writeBuildInfo();
+                return 0;
+            }
+        }
+    }
+
     // Issue an error if AMR input file is not given
     if ( argc < 2 )
        amrex::Abort("AMReX input file missing");
@@ -178,7 +192,7 @@ int main (int argc, char* argv[])
 
     // Write out EB sruface
     if(write_eb_surface)
-      my_mfix.WriteEBSurface();
+      my_mfix.WriteMyEBSurface();
 
     if (solve_dem)
     {
@@ -217,7 +231,7 @@ int main (int argc, char* argv[])
     if (solve_dem && write_ls)
         my_mfix.WriteStaticPlotFile(static_plt_file);
 
-    my_mfix.PostInit(dt, time, nstep, restart_flag, stop_time);
+    my_mfix.PostInit(dt, time, restart_flag, stop_time);
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
@@ -290,7 +304,7 @@ int main (int argc, char* argv[])
                 Real end_step = ParallelDescriptor::second() - strt_step;
                 ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
                 if (ParallelDescriptor::IOProcessor())
-                    std::cout << "Time per step        " << end_step << std::endl;
+                    std::cout << "   Time per step        " << end_step << std::endl;
 
                 if (!my_mfix.IsSteadyState())
                 {

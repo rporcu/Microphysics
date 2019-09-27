@@ -31,8 +31,7 @@ Real mfix::gp0[3]     {0.0};
 mfix::~mfix () {};
 
 mfix::mfix ()
-  : bc_list(10, 11, 20) //TODO fix this
-  , m_bc_u_g(get_dim_bc()+1, 0)
+  : m_bc_u_g(get_dim_bc()+1, 0)
   , m_bc_v_g(get_dim_bc()+1, 0)
   , m_bc_w_g(get_dim_bc()+1, 0)
   , m_bc_t_g(get_dim_bc()+1, 0)
@@ -59,8 +58,6 @@ mfix::mfix ()
      *                                                                          *
      ***************************************************************************/
 
-    istep.resize(nlev, 0);
-
     t_old.resize(nlev,-1.e100);
     t_new.resize(nlev,0.0);
 
@@ -72,7 +69,7 @@ mfix::mfix ()
      ***************************************************************************/
 
     bcs_u.resize(3); // one for each velocity component
-    bcs_s.resize(1); // just one for now
+    bcs_s.resize(2); // density and tracer
     bcs_f.resize(1); // just one
 
     //___________________________________________________________________________
@@ -123,6 +120,9 @@ mfix::ResizeArrays ()
     ro_g.resize(nlevs_max);
     ro_go.resize(nlevs_max);
 
+    trac.resize(nlevs_max);
+    trac_o.resize(nlevs_max);
+
     phi_nd.resize(nlevs_max);
     diveu.resize(nlevs_max);
 
@@ -152,9 +152,13 @@ mfix::ResizeArrays ()
     // Vorticity
     vort.resize(nlevs_max);
 
-    xslopes.resize(nlevs_max);
-    yslopes.resize(nlevs_max);
-    zslopes.resize(nlevs_max);
+    xslopes_u.resize(nlevs_max);
+    yslopes_u.resize(nlevs_max);
+    zslopes_u.resize(nlevs_max);
+
+    xslopes_s.resize(nlevs_max);
+    yslopes_s.resize(nlevs_max);
+    zslopes_s.resize(nlevs_max);
 
     bcoeff_nd.resize(nlevs_max);
     bcoeff_cc.resize(nlevs_max);

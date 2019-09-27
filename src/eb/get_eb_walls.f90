@@ -5,7 +5,7 @@
 !  Author: J. Musser                                  Date: 05-FEB-17  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine mfix_get_walls(bcv, exists, normal, center) &
+subroutine mfix_get_walls(bcv, exists, normal, center, po_noParOut) &
      bind(c,name='mfix_get_walls')
 
   use amrex_fort_module, only : rt => amrex_real
@@ -18,7 +18,7 @@ subroutine mfix_get_walls(bcv, exists, normal, center) &
 
   implicit none
 
-  integer(c_int), intent(in   ) :: bcv
+  integer(c_int), intent(in   ) :: bcv, po_noParOut
   integer(c_int), intent(  out) :: exists
 
   real(rt),   intent(  out) :: normal(3), center(3)
@@ -42,8 +42,20 @@ subroutine mfix_get_walls(bcv, exists, normal, center) &
            center = bc_center(bcv,:)
 
         endif
+     case('PRESSURE_OUTFLOW'   ,'PO')
+        if (po_noParOut .eq. 1) then
+           exists = 1;
 
-        end select
+           ! Hack to override default plane orientation
+           if(is_defined(bc_center(bcv,1))) then
+
+              normal = bc_normal(bcv,:)
+              center = bc_center(bcv,:)
+
+           endif
+        endif
+
+     end select
   endif
 
 end subroutine mfix_get_walls

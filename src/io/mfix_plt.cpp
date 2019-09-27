@@ -129,7 +129,6 @@ mfix::InitIOPltData ()
 
 }
 
-
 void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time ) const
 {
     BL_PROFILE("mfix::WritePlotFile()");
@@ -272,6 +271,8 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
         mf2[lev] = mf[lev].get();
       }
 
+      Vector<int> istep;
+      istep.resize(nlev,nstep);
       amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf2, pltFldNames,
                                      Geom(), time, istep, refRatio());
 
@@ -300,6 +301,8 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
         mf2[lev] = mf[lev].get();
 
       // Write only the Headers corresponding to the "empty" mf/mf2 MultiFabs
+      Vector<int> istep;
+      istep.resize(nlev,nstep);
       amrex::WriteMultiLevelPlotfileHeaders(plotfilename, finest_level+1, mf2, names,
                                             Geom(), time, istep, refRatio());
 
@@ -333,7 +336,6 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
 
     }
 }
-
 
 void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 {
@@ -399,6 +401,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
     }
 
     Real time = 0.;
+    Vector<int> istep;
+    istep.resize(nlev,0);
     amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf_ptr, static_names,
                                    Geom(), time, istep, refRatio());
 

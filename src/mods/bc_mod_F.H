@@ -11,7 +11,7 @@ extern "C"
 {
 #endif
 
-bool get_bc_defined(const int& pID);
+int get_bc_defined(const int& pID);
 void get_bc_type(const int& pID, char c_string[]);
 
 amrex::Real get_bc_u_g(const int& pID);

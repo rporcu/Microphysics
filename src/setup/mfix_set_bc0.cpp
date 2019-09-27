@@ -12,9 +12,11 @@ mfix::set_bc0(const Box& sbx,
 {
   const Real ro_g0(get_ro_g0());
   const Real mu_g0(get_mu_g0());
+  const Real trac_0(get_trac0());
 
   Array4<Real> const& a_ep_g = ep_g[lev]->array(*mfi);
   Array4<Real> const& a_ro_g = ro_g[lev]->array(*mfi);
+  Array4<Real> const& a_trac = trac[lev]->array(*mfi);
   Array4<Real> const& a_mu_g = mu_g[lev]->array(*mfi);
 
   const IntVect sbx_lo(sbx.loVect());
@@ -81,6 +83,7 @@ mfix::set_bc0(const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         Real bc_ro_g(ro_g0);
+        Real bc_trac(trac_0);
         Real bc_mu_g(0);
 
         if (is_equal(mu_g0, undefined))
@@ -90,6 +93,7 @@ mfix::set_bc0(const Box& sbx,
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;
+        a_trac(i,j,k) = bc_trac;
         a_mu_g(i,j,k) = bc_mu_g;
       }
     });
@@ -105,6 +109,7 @@ mfix::set_bc0(const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         Real bc_ro_g(ro_g0);
+        Real bc_trac(trac_0);
         Real bc_mu_g(0);
 
         if (is_equal(mu_g0, undefined))
@@ -114,7 +119,8 @@ mfix::set_bc0(const Box& sbx,
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;
-        a_mu_g(i,j,k) = bc_mu_g;
+        a_trac(i,j,k) = bc_trac;
+          a_mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
@@ -133,16 +139,18 @@ mfix::set_bc0(const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         Real bc_ro_g(ro_g0);
+        Real bc_trac(trac_0);
         Real bc_mu_g(0);
 
         if (is_equal(mu_g0, undefined))
            bc_mu_g = sutherland(p_bc_t_g[bcv]);
         else
            bc_mu_g = mu_g0;
-
+  
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;
-        a_mu_g(i,j,k) = bc_mu_g;
+        a_trac(i,j,k) = bc_trac;
+          a_mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
@@ -157,6 +165,7 @@ mfix::set_bc0(const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         Real bc_ro_g(ro_g0);
+        Real bc_trac(trac_0);
         Real bc_mu_g(0);
 
         if (is_equal(mu_g0, undefined))
@@ -164,9 +173,10 @@ mfix::set_bc0(const Box& sbx,
         else
            bc_mu_g = mu_g0;
 
-        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
+         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;
-        a_mu_g(i,j,k) = bc_mu_g;
+        a_trac(i,j,k) = bc_trac;
+          a_mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
@@ -185,6 +195,7 @@ mfix::set_bc0(const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         Real bc_ro_g(ro_g0);
+        Real bc_trac(trac_0);
         Real bc_mu_g(0);
 
         if (is_equal(mu_g0, undefined))
@@ -194,7 +205,8 @@ mfix::set_bc0(const Box& sbx,
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;
-        a_mu_g(i,j,k) = bc_mu_g;
+        a_trac(i,j,k) = bc_trac;
+          a_mu_g(i,j,k) = bc_mu_g;
       }
     });
   }
@@ -209,6 +221,7 @@ mfix::set_bc0(const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         Real bc_ro_g(ro_g0);
+        Real bc_trac(trac_0);
         Real bc_mu_g(0);
 
         if (is_equal(mu_g0, undefined))
@@ -218,7 +231,8 @@ mfix::set_bc0(const Box& sbx,
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;
-        a_mu_g(i,j,k) = bc_mu_g;
+        a_trac(i,j,k) = bc_trac;
+          a_mu_g(i,j,k) = bc_mu_g;
       }
     });
   }

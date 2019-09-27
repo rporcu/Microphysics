@@ -20,13 +20,13 @@ amrex::Real get_p_scale();
 #endif
 
 AMREX_GPU_HOST_DEVICE
-amrex::Real scale_pressure(const amrex::Real XXX,
-                           const amrex::Real P_ref,
-                           const amrex::Real P_scale);
+amrex::Real scale_pressure_cpp(const amrex::Real XXX,
+                               const amrex::Real P_ref,
+                               const amrex::Real P_scale);
 
 AMREX_GPU_HOST_DEVICE
-amrex::Real unscale_pressure(const amrex::Real XXX,
-                             const amrex::Real P_ref,
-                             const amrex::Real P_scale);
+amrex::Real unscale_pressure_cpp(const amrex::Real XXX,
+                                 const amrex::Real P_ref,
+                                 const amrex::Real P_scale);
 
 #endif

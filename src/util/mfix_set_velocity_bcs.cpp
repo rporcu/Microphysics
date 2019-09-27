@@ -1,10 +1,39 @@
+#include <AMReX_EBMultiFabUtil.H>
 #include <mfix.H>
 #include <bc_mod_F.H>
 #include <mfix.H>
 
 //              
-//  This subroutine sets the BCs for the velocity components only.
+//  These subroutines set the BCs for the velocity components only.
 //
+
+void
+mfix::mfix_set_velocity_bcs (Real time, 
+                             Vector< std::unique_ptr<MultiFab> > & vel_in,
+                             int extrap_dir_bcs)
+{
+  BL_PROFILE("mfix::mfix_set_velocity_bcs()");
+
+  for (int lev = 0; lev < nlev; lev++)
+  {
+     // Set all values outside the domain to covered_val just to avoid use of undefined
+     vel_in[lev]->setDomainBndry(covered_val,geom[lev]);
+
+     vel_in[lev] -> FillBoundary (geom[lev].periodicity());
+     Box domain(geom[lev].Domain());
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+     for (MFIter mfi(*vel_in[lev], true); mfi.isValid(); ++mfi)
+        set_velocity_bcs(&time, lev, (*vel_in[lev])[mfi], domain, &extrap_dir_bcs);
+
+     EB_set_covered(*vel_in[lev], 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow(), covered_val);
+
+     // Do this after as well as before to pick up terms that got updated in the call above
+     vel_in[lev] -> FillBoundary (geom[lev].periodicity());
+  }
+}
 
 void
 mfix::set_velocity_bcs(Real* time,
