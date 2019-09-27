@@ -6,7 +6,6 @@
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
-#include <AMReX_EBMultiFabUtil.H>
 
 std::string mfix::particle_init_type   = "AsciiFile";
 std::string mfix::load_balance_type    = "FixedSize";

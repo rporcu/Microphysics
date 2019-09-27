@@ -1,7 +1,5 @@
-#include <AMReX_EBMultiFabUtil.H>
 #include <mfix.H>
 #include <bc_mod_F.H>
-#include <mfix.H>
 
 //              
 //  These subroutines set the BCs for the velocity components only.

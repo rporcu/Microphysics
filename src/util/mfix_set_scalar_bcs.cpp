@@ -1,4 +1,3 @@
-#include <AMReX_EBMultiFabUtil.H>
 #include <mfix.H>
 #include <bc_mod_F.H>
 #include <eos_mod.hpp>

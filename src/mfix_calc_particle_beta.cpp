@@ -3,8 +3,6 @@
 #include <mfix_drag_K.H>
 #include <des_drag_K.H>
 
-#include <AMReX_EBMultiFabUtil.H>
-
 void mfix::mfix_calc_particle_beta(Real time)
 {
 	if (m_drag_type == DragType::WenYu)

@@ -5,7 +5,6 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_VisMF.H>
 #include <AMReX_MultiFab.H>
-#include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_Array.H>
 #include <AMReX_BLassert.H>
 

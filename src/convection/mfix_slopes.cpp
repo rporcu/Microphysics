@@ -1,5 +1,3 @@
-
-#include <AMReX_EBMultiFabUtil.H>
 #include <mfix.H>
 
 //

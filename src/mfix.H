@@ -14,6 +14,7 @@
 #include <AMReX_BLProfiler.H>
 #include <AMReX_PhysBCFunct.H>
 
+#include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_EBFabFactory.H>
 #include <AMReX_EBFArrayBox.H>
 #include <AMReX_EB2.H>

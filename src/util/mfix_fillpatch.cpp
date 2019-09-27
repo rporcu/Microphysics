@@ -2,7 +2,6 @@
 #include <mfix_F.H>
 #include <mfix_util_F.H>
 #include <AMReX_FillPatchUtil.H>
-#include <AMReX_EBMultiFabUtil.H>
 
 namespace
 {
