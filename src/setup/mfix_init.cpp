@@ -837,7 +837,8 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 
      // This sets bcs for ep_g and mu_g
      Real time = 0.0;
-     mfix_set_scalar_bcs(time,ro_g,trac,ep_g,mu_g);
+     mfix_set_scalar_bcs(time,ro_g ,trac  ,ep_g,mu_g);
+     mfix_set_scalar_bcs(time,ro_go,trac_o,ep_g,mu_g);
 
      // Project the initial velocity field
      if (do_initial_proj)

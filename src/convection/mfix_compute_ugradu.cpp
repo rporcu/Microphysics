@@ -520,7 +520,7 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv_u
     }
 
     // Predict normal velocity to faces
-    mfix_predict_vels_on_faces(time, vel_in, u_mac, v_mac, w_mac);
+    mfix_predict_vels_on_faces(time, vel_in, u_mac, v_mac, w_mac, ep_g);
 
     // Do projection on all AMR levels in one shot
     apply_MAC_projection (u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time, steady_state );
@@ -715,7 +715,7 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv_u
     }
 
     // Predict normal velocity to faces
-    mfix_predict_vels_on_faces(time, vel_in, u_mac, v_mac, w_mac);
+    mfix_predict_vels_on_faces(time, vel_in, u_mac, v_mac, w_mac, ep_g);
 
     // Do projection on all AMR levels in one shot
     apply_MAC_projection (u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time, steady_state );

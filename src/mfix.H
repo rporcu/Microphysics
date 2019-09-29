@@ -218,7 +218,8 @@ public:
                                     Vector< std::unique_ptr<MultiFab> >& vel,
                                     Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                     Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                    Vector< std::unique_ptr<MultiFab> >& ep_w_mac); 
+                                    Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+                                    Vector< std::unique_ptr<MultiFab> >& ep_g); 
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< std::unique_ptr<MultiFab> >& vel,

@@ -5,7 +5,8 @@ mfix::mfix_predict_vels_on_faces ( Real time,
                                    Vector< std::unique_ptr<MultiFab> >& vel_in,
                                    Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                    Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                   Vector< std::unique_ptr<MultiFab> >& ep_w_mac)
+                                   Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+                                   Vector< std::unique_ptr<MultiFab> >& ep_g)
 
 {
     BL_PROFILE("mfix::mfix_predict_vels_on_faces");
