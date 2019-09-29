@@ -1,5 +1,5 @@
 CEXE_sources += mfix_compute_ugradu.cpp
-CEXE_sources += mfix_compute_MAC_velocities.cpp 
+CEXE_sources += mfix_predict_vels_on_faces.cpp
 CEXE_sources += mfix_divop_conv.cpp
 CEXE_sources += mfix_MAC_projection.cpp 
 CEXE_sources += mfix_slopes.cpp

@@ -798,6 +798,10 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
                        dx, dy, dz, xlen, ylen, zlen);
           }
        }
+
+       // Make sure to fill the "old state" before we start ...
+       MultiFab::Copy(  *ro_go[lev], *ro_g[lev], 0, 0, 1, 0);
+       MultiFab::Copy( *trac_o[lev], *trac[lev], 0, 0, 1, 0);
     }
 
     mfix_set_p0();

@@ -41,8 +41,8 @@ void
 mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac, 
                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                            Vector< std::unique_ptr<MultiFab> >& ep,
-                            const Vector< std::unique_ptr<MultiFab> >& ro,
+                            Vector< std::unique_ptr<MultiFab> >& ep_in,
+                            Vector< std::unique_ptr<MultiFab> >& ro_in,
                             Real time, int steady_state)
 {
    BL_PROFILE("mfix::apply_MAC_projection()");
@@ -60,37 +60,49 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
    if (m_verbose)
       Print() << " >> Before projection\n" ; 
 
-   // ep_face is a temporary, no need to keep it outside this routine
-   Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
+    // Set bc's on scalars to be sure ro_face and ep_face see correct bcs
+    mfix_set_scalar_bcs(time,ro_in,trac,ep_in,mu_g);
 
-   // ro_face is a temporary, no need to keep it outside this routine
+   // ro_face and ep_face are temporary, no need to keep it outside this routine
    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
+   Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
 
    ep_face.resize(finest_level+1);
    ro_face.resize(finest_level+1);
-   
+
    for ( int lev=0; lev <= finest_level; ++lev )
    {
-      BoxArray x_edge_ba = grids[lev];
-      x_edge_ba.surroundingNodes(0);
-      BoxArray y_edge_ba = grids[lev];
-      y_edge_ba.surroundingNodes(1);
-      BoxArray z_edge_ba = grids[lev];
-      z_edge_ba.surroundingNodes(2);
+      ep_in[lev]->FillBoundary(geom[lev].periodicity());
+      ro_in[lev]->FillBoundary(geom[lev].periodicity());
 
-      ro_face[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-      ro_face[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-      ro_face[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-     
-      average_cellcenter_to_face( GetArrOfPtrs(bcoeff[lev]), *ep[lev], geom[lev] );
-      average_cellcenter_to_face( GetArrOfPtrs(ro_face[lev]), *ro[lev], geom[lev] );
+      ep_face[lev][0].reset(new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ep_face[lev][1].reset(new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ep_face[lev][2].reset(new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+
+      ro_face[lev][0].reset(new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ro_face[lev][1].reset(new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+      ro_face[lev][2].reset(new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+
+      // Define ep and rho on faces
+      average_cellcenter_to_face( GetArrOfPtrs(ep_face[lev]), *ep_in[lev], geom[lev] );
+      average_cellcenter_to_face( GetArrOfPtrs(ro_face[lev]), *ro_in[lev], geom[lev] );
+
+      // Compute ep*u at faces and store it in ep_u_mac, ep_v_mac, ep_w_mac
+      MultiFab::Multiply( *ep_u_mac[lev], *(ep_face[lev][0]), 0, 0, 1, 0 );
+      MultiFab::Multiply( *ep_v_mac[lev], *(ep_face[lev][1]), 0, 0, 1, 0 );
+      MultiFab::Multiply( *ep_w_mac[lev], *(ep_face[lev][2]), 0, 0, 1, 0 );
+   
+      // Compute ep_face into bcoeff
+      MultiFab::Copy( *bcoeff[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0 );
+      MultiFab::Copy( *bcoeff[lev][1], *(ep_face[lev][1]), 0, 0, 1, 0 );
+      MultiFab::Copy( *bcoeff[lev][2], *(ep_face[lev][2]), 0, 0, 1, 0 );
 
       // Compute beta coefficients for div(beta*grad(phi)) = RHS:  beta = ep / ro
       MultiFab::Divide( *bcoeff[lev][0], *(ro_face[lev][0]), 0, 0, 1, 0 );
       MultiFab::Divide( *bcoeff[lev][1], *(ro_face[lev][1]), 0, 0, 1, 0 );
       MultiFab::Divide( *bcoeff[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0 );
 
-      // Store in temporaries
+      // Store (ep * u) in temporaries
       (vel[lev])[0] = ep_u_mac[lev].get();
       (vel[lev])[1] = ep_v_mac[lev].get();
       (vel[lev])[2] = ep_w_mac[lev].get();
@@ -187,17 +199,16 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                  << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
       } 
 
+      // Now convert (eps u, eps v, eps w) back to u,v,w
+      MultiFab::Divide( *ep_u_mac[lev], *(ep_face[lev][0]), 0, 0, 1, 0 );
+      MultiFab::Divide( *ep_v_mac[lev], *(ep_face[lev][1]), 0, 0, 1, 0 );
+      MultiFab::Divide( *ep_w_mac[lev], *(ep_face[lev][2]), 0, 0, 1, 0 ); 
+
       // Set bcs on (ep * u_mac)
       set_MAC_velocity_bcs( lev, ep_u_mac, ep_v_mac, ep_w_mac, time );
 
-      // Define bcoeff to be ep_face by multiplying by ro_face
-      MultiFab::Multiply( *bcoeff[lev][0], *(ro_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Multiply( *bcoeff[lev][1], *(ro_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Multiply( *bcoeff[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0 );
-
-      // Now convert (eps u, eps v, eps w) back to u,v,w
-      MultiFab::Divide( *ep_u_mac[lev], *(bcoeff[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Divide( *ep_v_mac[lev], *(bcoeff[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Divide( *ep_w_mac[lev], *(bcoeff[lev][2]), 0, 0, 1, 0 ); 
+      ep_u_mac[lev]->FillBoundary(geom[lev].periodicity());
+      ep_v_mac[lev]->FillBoundary(geom[lev].periodicity());
+      ep_w_mac[lev]->FillBoundary(geom[lev].periodicity());
    }
 }

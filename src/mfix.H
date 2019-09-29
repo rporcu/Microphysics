@@ -214,12 +214,11 @@ public:
 
     void mfix_add_gravity_and_gp(Real dt);
 
-    void mfix_compute_MAC_velocity_at_faces(Real time,
-                                            Vector< std::unique_ptr<MultiFab> >& vel,
-                                            Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                                            Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                            Vector< std::unique_ptr<MultiFab> >& ep_w_mac, 
-                                            Vector< std::unique_ptr<MultiFab> >& ep_in);
+    void mfix_predict_vels_on_faces(Real time,
+                                    Vector< std::unique_ptr<MultiFab> >& vel,
+                                    Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                                    Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                                    Vector< std::unique_ptr<MultiFab> >& ep_w_mac); 
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< std::unique_ptr<MultiFab> >& vel,
@@ -391,11 +390,11 @@ protected:
      void mfix_initial_iterations ( Real dt, Real stop_time );
      void mfix_apply_projection   ( Real dt, Real scaling_factor, bool proj_2 );
 
-     void apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& u,
-                                 Vector< std::unique_ptr<MultiFab> >& v,
-                                 Vector< std::unique_ptr<MultiFab> >& w,
+     void apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                                 Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                                 Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                                  Vector< std::unique_ptr<MultiFab> >& ep,
-                                 const Vector< std::unique_ptr<MultiFab> >& ro,
+                                 Vector< std::unique_ptr<MultiFab> >& ro,
                                  Real time, int steady_state);
 
      void set_MAC_velocity_bcs ( int lev,
@@ -476,6 +475,7 @@ private:
      void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv_u,
                                         Vector< std::unique_ptr<MultiFab> >& conv_s,
                                         Vector< std::unique_ptr<MultiFab> >& vel,
+                                        Vector< std::unique_ptr<MultiFab> >& ep_g,
                                         Vector< std::unique_ptr<MultiFab> >& ro_g,
                                         Vector< std::unique_ptr<MultiFab> >& trac,
                                         Real time);
@@ -483,6 +483,7 @@ private:
      void mfix_compute_ugradu_corrector(Vector< std::unique_ptr<MultiFab> >& conv_u,
                                         Vector< std::unique_ptr<MultiFab> >& conv_s,
                                         Vector< std::unique_ptr<MultiFab> >& vel,
+                                        Vector< std::unique_ptr<MultiFab> >& ep_g,
                                         Vector< std::unique_ptr<MultiFab> >& ro_g,
                                         Vector< std::unique_ptr<MultiFab> >& trac,
                                         Real time);

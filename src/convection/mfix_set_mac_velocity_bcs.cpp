@@ -79,25 +79,25 @@ mfix::set_MAC_velocity_bcs ( int lev,
 
       // Fix lo and hi limits
       // Box 'yz'
-      ulo_bx_yz_lo[0] = u_lo[0];
+      ulo_bx_yz_lo[0] = dom_lo[0];
       ulo_bx_yz_hi[0] = dom_lo[0];
 
       uhi_bx_yz_lo[0] = dom_hi[0]+1;
-      uhi_bx_yz_hi[0] = u_hi[0];
+      uhi_bx_yz_hi[0] = dom_hi[0]+1;
 
       // Box 'xz'
-      vlo_bx_xz_lo[1] = v_lo[1];
+      vlo_bx_xz_lo[1] = dom_lo[1];
       vlo_bx_xz_hi[1] = dom_lo[1];
 
       vhi_bx_xz_lo[1] = dom_hi[1]+1;
-      vhi_bx_xz_hi[1] = v_hi[1];
+      vhi_bx_xz_hi[1] = dom_hi[1]+1;
 
       // Box 'xy'
-      wlo_bx_xy_lo[2] = w_lo[2];
+      wlo_bx_xy_lo[2] = dom_lo[2];
       wlo_bx_xy_hi[2] = dom_lo[2];
 
       whi_bx_xy_lo[2] = dom_hi[2]+1;
-      whi_bx_xy_hi[2] = w_hi[2];
+      whi_bx_xy_hi[2] = dom_hi[2]+1;
 
       // Create 2D boxes for CUDA loops
       const Box ulo_bx_yz(ulo_bx_yz_lo, ulo_bx_yz_hi);
@@ -128,7 +128,7 @@ mfix::set_MAC_velocity_bcs ( int lev,
     {
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
-      if(bct == minf) ep_u(i,j,k) = p_bc_u_g[bcv] * p_bc_e_g[bcv];
+      if (bct == minf) ep_u(i,j,k) = p_bc_u_g[bcv] * p_bc_e_g[bcv];
     });
   }
 

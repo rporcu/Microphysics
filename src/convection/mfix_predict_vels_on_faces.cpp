@@ -1,20 +1,14 @@
 #include <mfix.H>
 
 void
-mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
-                                           Vector< std::unique_ptr<MultiFab> >& vel_in,
-                                           Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                                           Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                           Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                           Vector< std::unique_ptr<MultiFab> >& ep_in)
+mfix::mfix_predict_vels_on_faces ( Real time,
+                                   Vector< std::unique_ptr<MultiFab> >& vel_in,
+                                   Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                                   Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                                   Vector< std::unique_ptr<MultiFab> >& ep_w_mac)
 
 {
-    BL_PROFILE("mfix::mfix_compute_MAC_velocity_at_faces");
-
-    // ep_face is a temporary, no need to keep them outside this routine
-    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
-
-    ep_face.resize(finest_level+1);
+    BL_PROFILE("mfix::mfix_predict_vels_on_faces");
 
     for (int lev=0; lev < nlev; ++lev)
     {
@@ -208,35 +202,8 @@ mfix::mfix_compute_MAC_velocity_at_faces ( Real time,
 
           } // Cut cells
        } // MFIter
-
-      ep_in[lev]->FillBoundary(geom[lev].periodicity());
-
-      BoxArray x_edge_ba = grids[lev];
-      x_edge_ba.surroundingNodes(0);
-      BoxArray y_edge_ba = grids[lev];
-      y_edge_ba.surroundingNodes(1);
-      BoxArray z_edge_ba = grids[lev];
-      z_edge_ba.surroundingNodes(2);
-
-      ep_face[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-      ep_face[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-      ep_face[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-
-      average_cellcenter_to_face( GetArrOfPtrs(ep_face[lev]), *ep_in[lev], geom[lev] );
-
-      // Compute ep*u at faces and store it in ep_u_mac, ep_v_mac, ep_w_mac
-      MultiFab::Multiply( *ep_u_mac[lev], *(ep_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Multiply( *ep_v_mac[lev], *(ep_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Multiply( *ep_w_mac[lev], *(ep_face[lev][2]), 0, 0, 1, 0 );
-
-      // Set velocity bcs -- after we multiply by ep
-      set_MAC_velocity_bcs( lev, ep_u_mac, ep_v_mac, ep_w_mac, time );
     }
-
 #ifdef AMREX_USE_CUDA
     Gpu::Device::synchronize();
 #endif
-
-    // Do projection on all AMR levels in one shot 
-    apply_MAC_projection (ep_u_mac, ep_v_mac, ep_w_mac, ep_g, ro_g, time, steady_state );
 }

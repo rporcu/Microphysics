@@ -451,6 +451,7 @@ void
 mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv_u_in, 
                                      Vector< std::unique_ptr<MultiFab> >& conv_s_in,
                                      Vector< std::unique_ptr<MultiFab> >& vel_in,
+                                     Vector< std::unique_ptr<MultiFab> >& ep_g_in,
                                      Vector< std::unique_ptr<MultiFab> >& ro_g_in,
                                      Vector< std::unique_ptr<MultiFab> >& trac_in,
                                      Real time)
@@ -518,7 +519,11 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv_u
        w_mac[lev]->setVal(covered_val);
     }
 
-    mfix_compute_MAC_velocity_at_faces( time, vel_in, u_mac, v_mac, w_mac, ep_g );
+    // Predict normal velocity to faces
+    mfix_predict_vels_on_faces(time, vel_in, u_mac, v_mac, w_mac);
+
+    // Do projection on all AMR levels in one shot
+    apply_MAC_projection (u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time, steady_state );
 
     int slopes_comp; int conv_comp; int state_comp; int num_comp;
 
@@ -641,6 +646,7 @@ void
 mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv_u_in, 
                                      Vector< std::unique_ptr<MultiFab> >& conv_s_in,
                                      Vector< std::unique_ptr<MultiFab> >& vel_in,
+                                     Vector< std::unique_ptr<MultiFab> >& ep_g_in,
                                      Vector< std::unique_ptr<MultiFab> >& ro_g_in,
                                      Vector< std::unique_ptr<MultiFab> >& trac_in,
                                      Real time)
@@ -708,7 +714,11 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv_u
        w_mac[lev]->setVal(covered_val);
     }
 
-    mfix_compute_MAC_velocity_at_faces( time, vel_in, u_mac, v_mac, w_mac, ep_g);
+    // Predict normal velocity to faces
+    mfix_predict_vels_on_faces(time, vel_in, u_mac, v_mac, w_mac);
+
+    // Do projection on all AMR levels in one shot
+    apply_MAC_projection (u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time, steady_state );
 
     int slopes_comp; int conv_comp; int state_comp; int num_comp;
 
