@@ -518,7 +518,7 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv_u
        w_mac[lev]->setVal(covered_val);
     }
 
-    mfix_compute_MAC_velocity_at_faces( time, vel_in, u_mac, v_mac, w_mac );
+    mfix_compute_MAC_velocity_at_faces( time, vel_in, u_mac, v_mac, w_mac, ep_g );
 
     int slopes_comp; int conv_comp; int state_comp; int num_comp;
 
@@ -708,7 +708,7 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv_u
        w_mac[lev]->setVal(covered_val);
     }
 
-    mfix_compute_MAC_velocity_at_faces( time, vel_in, u_mac, v_mac, w_mac );
+    mfix_compute_MAC_velocity_at_faces( time, vel_in, u_mac, v_mac, w_mac, ep_g);
 
     int slopes_comp; int conv_comp; int state_comp; int num_comp;
 

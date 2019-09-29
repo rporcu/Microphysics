@@ -72,13 +72,13 @@ mfix::mfix_compute_divtau ( Vector< std::unique_ptr<MultiFab> >& divtau,
    // Compute the coefficients
    for (int lev = 0; lev < nlev; lev++)
    {
-       average_cellcenter_to_face( GetArrOfPtrs(bcoeff_cc[lev]), *mu_g[lev], geom[lev] );
+       average_cellcenter_to_face( GetArrOfPtrs(bcoeff[lev]), *mu_g[lev], geom[lev] );
 
-       bcoeff_cc[lev][0] -> FillBoundary(geom[lev].periodicity());
-       bcoeff_cc[lev][1] -> FillBoundary(geom[lev].periodicity());
-       bcoeff_cc[lev][2] -> FillBoundary(geom[lev].periodicity());
+       bcoeff[lev][0] -> FillBoundary(geom[lev].periodicity());
+       bcoeff[lev][1] -> FillBoundary(geom[lev].periodicity());
+       bcoeff[lev][2] -> FillBoundary(geom[lev].periodicity());
 
-       ebtensorop.setShearViscosity  (lev, GetArrOfConstPtrs(bcoeff_cc[lev]));
+       ebtensorop.setShearViscosity  (lev, GetArrOfConstPtrs(bcoeff[lev]));
        ebtensorop.setEBShearViscosity(lev, (*mu_g[lev]));
 
        ebtensorop.setLevelBC ( lev, GetVecOfConstPtrs(vel)[lev] );

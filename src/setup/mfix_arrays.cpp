@@ -119,21 +119,21 @@ mfix::AllocateArrays (int lev)
     // Create a BoxArray on x-faces.
     BoxArray x_edge_ba = grids[lev];
     x_edge_ba.surroundingNodes(0);
-    bcoeff_cc[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+    bcoeff[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
 
     // Create a BoxArray on y-faces.
     BoxArray y_edge_ba = grids[lev];
     y_edge_ba.surroundingNodes(1);
-    bcoeff_cc[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+    bcoeff[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
 
     // Create a BoxArray on z-faces.
     BoxArray z_edge_ba = grids[lev];
     z_edge_ba.surroundingNodes(2);
-    bcoeff_cc[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+    bcoeff[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
 
-    bcoeff_cc[lev][0]->setVal(0.);
-    bcoeff_cc[lev][1]->setVal(0.);
-    bcoeff_cc[lev][2]->setVal(0.);
+    bcoeff[lev][0]->setVal(0.);
+    bcoeff[lev][1]->setVal(0.);
+    bcoeff[lev][2]->setVal(0.);
 }
 
 
@@ -348,8 +348,8 @@ mfix::RegridArrays (int lev)
 
     // MAC/diffusion coefficient on x-faces
     std::unique_ptr<MultiFab> bcx_mac_new(new MultiFab(x_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
-    bcoeff_cc[lev][0] = std::move(bcx_mac_new);
-    bcoeff_cc[lev][0] -> setVal(0.0);
+    bcoeff[lev][0] = std::move(bcx_mac_new);
+    bcoeff[lev][0] -> setVal(0.0);
 
    //****************************************************************************
 
@@ -358,8 +358,8 @@ mfix::RegridArrays (int lev)
 
     // MAC/diffusion coefficient on y-faces
     std::unique_ptr<MultiFab> bcy_mac_new(new MultiFab(y_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
-    bcoeff_cc[lev][1] = std::move(bcy_mac_new);
-    bcoeff_cc[lev][1] -> setVal(0.0);
+    bcoeff[lev][1] = std::move(bcy_mac_new);
+    bcoeff[lev][1] -> setVal(0.0);
 
    //****************************************************************************
 
@@ -368,8 +368,8 @@ mfix::RegridArrays (int lev)
 
     // MAC/diffusion coefficient on z-faces
     std::unique_ptr<MultiFab> bcz_mac_new(new MultiFab(z_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
-    bcoeff_cc[lev][2] = std::move(bcz_mac_new);
-    bcoeff_cc[lev][2] -> setVal(0.0);
+    bcoeff[lev][2] = std::move(bcz_mac_new);
+    bcoeff[lev][2] -> setVal(0.0);
 
     // ********************************************************************************
     // Make sure we fill the ghost cells as appropriate -- this is copied from init_fluid

@@ -38,9 +38,9 @@ using namespace amrex;
 //  WARNING: this method returns the MAC velocity with up-to-date BCs in place
 // 
 void 
-mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u, 
-                            Vector< std::unique_ptr<MultiFab> >& v,
-                            Vector< std::unique_ptr<MultiFab> >& w,
+mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac, 
+                            Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                            Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                             Vector< std::unique_ptr<MultiFab> >& ep,
                             const Vector< std::unique_ptr<MultiFab> >& ro,
                             Real time, int steady_state)
@@ -60,8 +60,10 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
    if (m_verbose)
       Print() << " >> Before projection\n" ; 
 
-   // ep_face and ro_face are now temporaries, no need to keep them outside this routine
+   // ep_face is a temporary, no need to keep it outside this routine
    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
+
+   // ro_face is a temporary, no need to keep it outside this routine
    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
 
    ep_face.resize(finest_level+1);
@@ -76,41 +78,22 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
       BoxArray z_edge_ba = grids[lev];
       z_edge_ba.surroundingNodes(2);
 
-      ep_face[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-      ep_face[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-      ep_face[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-
       ro_face[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
       ro_face[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
       ro_face[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-
-      // Compute ep at faces
-      ep[lev]->FillBoundary(geom[lev].periodicity());
      
-      average_cellcenter_to_face( GetArrOfPtrs(ep_face[lev]), *ep[lev], geom[lev] );
+      average_cellcenter_to_face( GetArrOfPtrs(bcoeff[lev]), *ep[lev], geom[lev] );
       average_cellcenter_to_face( GetArrOfPtrs(ro_face[lev]), *ro[lev], geom[lev] );
 
-      MultiFab::Copy( *bcoeff_cc[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Copy( *bcoeff_cc[lev][1], *(ep_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Copy( *bcoeff_cc[lev][2], *(ep_face[lev][2]), 0, 0, 1, 0 );
-
-      // Set velocity bcs -- before we multiply by ep
-      set_MAC_velocity_bcs( lev, u, v, w, time );
-
-      // Compute ep*u at faces and store it in u, v, w
-      MultiFab::Multiply( *u[lev], *(ep_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Multiply( *v[lev], *(ep_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Multiply( *w[lev], *(ep_face[lev][2]), 0, 0, 1, 0 );
-
       // Compute beta coefficients for div(beta*grad(phi)) = RHS:  beta = ep / ro
-      MultiFab::Divide( *bcoeff_cc[lev][0], *(ro_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Divide( *bcoeff_cc[lev][1], *(ro_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Divide( *bcoeff_cc[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0 );
+      MultiFab::Divide( *bcoeff[lev][0], *(ro_face[lev][0]), 0, 0, 1, 0 );
+      MultiFab::Divide( *bcoeff[lev][1], *(ro_face[lev][1]), 0, 0, 1, 0 );
+      MultiFab::Divide( *bcoeff[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0 );
 
       // Store in temporaries
-      (vel[lev])[0] = u[lev].get();
-      (vel[lev])[1] = v[lev].get();
-      (vel[lev])[2] = w[lev].get();
+      (vel[lev])[0] = ep_u_mac[lev].get();
+      (vel[lev])[1] = ep_v_mac[lev].get();
+      (vel[lev])[2] = ep_w_mac[lev].get();
 
       for (int i=0; i<AMREX_SPACEDIM; ++i)
          (vel[lev])[i]->FillBoundary( geom[lev].periodicity() );
@@ -136,7 +119,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
    //
    // Perform MAC projection
    //
-   MacProjector macproj( vel, GetVecOfArrOfPtrsConst(bcoeff_cc), geom, lp_info);
+   MacProjector macproj( vel, GetVecOfArrOfPtrsConst(bcoeff), geom, lp_info);
 
    macproj.setDomainBC  ( ppe_lobc, ppe_hibc );
    macproj.setVerbose   ( mac_mg_verbose);
@@ -204,12 +187,17 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
                  << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
       } 
 
-      // Now convert (eps u, eps v, eps w) back to u,v,w
-      MultiFab::Divide( *u[lev], *(ep_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Divide( *v[lev], *(ep_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Divide( *w[lev], *(ep_face[lev][2]), 0, 0, 1, 0 ); 
+      // Set bcs on (ep * u_mac)
+      set_MAC_velocity_bcs( lev, ep_u_mac, ep_v_mac, ep_w_mac, time );
 
-      // Set velocity bcs
-      set_MAC_velocity_bcs( lev, u, v, w, time );
+      // Define bcoeff to be ep_face by multiplying by ro_face
+      MultiFab::Multiply( *bcoeff[lev][0], *(ro_face[lev][0]), 0, 0, 1, 0 );
+      MultiFab::Multiply( *bcoeff[lev][1], *(ro_face[lev][1]), 0, 0, 1, 0 );
+      MultiFab::Multiply( *bcoeff[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0 );
+
+      // Now convert (eps u, eps v, eps w) back to u,v,w
+      MultiFab::Divide( *ep_u_mac[lev], *(bcoeff[lev][0]), 0, 0, 1, 0 );
+      MultiFab::Divide( *ep_v_mac[lev], *(bcoeff[lev][1]), 0, 0, 1, 0 );
+      MultiFab::Divide( *ep_w_mac[lev], *(bcoeff[lev][2]), 0, 0, 1, 0 ); 
    }
 }
