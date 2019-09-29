@@ -95,7 +95,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
       MultiFab::Copy( *bcoeff_cc[lev][2], *(ep_face[lev][2]), 0, 0, 1, 0 );
 
       // Set velocity bcs -- before we multiply by ep
-      set_MC_velocity_bcs( lev, u, v, w, time );
+      set_MAC_velocity_bcs( lev, u, v, w, time );
 
       // Compute ep*u at faces and store it in u, v, w
       MultiFab::Multiply( *u[lev], *(ep_face[lev][0]), 0, 0, 1, 0 );
@@ -117,9 +117,10 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
       
       if (m_verbose)
       {
+         bool already_on_centroid = false;
          EB_computeDivergence(*mac_rhs[lev],
                               GetArrOfConstPtrs(vel[lev]),
-                              geom[lev]);
+                              geom[lev], already_on_centroid);
 
          Print() << "  * On level "<< lev
                  << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
@@ -174,12 +175,12 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
    {
        // Solve using mac_phi as an initial guess -- note that mac_phi is
        //       stored from iteration to iteration
-       macproj.project(GetVecOfPtrs(mac_phi), mac_mg_rtol,mac_mg_atol);
+       macproj.project(GetVecOfPtrs(mac_phi), mac_mg_rtol,mac_mg_atol,MLMG::Location::FaceCenter);
    } 
    else 
    {
        // Solve with initial guess of zero
-       macproj.project(mac_mg_rtol,mac_mg_atol);
+       macproj.project(mac_mg_rtol,mac_mg_atol,MLMG::Location::FaceCenter);
    }
 
    // Get MAC velocities at face CENTER by dividing solution by ep at faces
@@ -194,9 +195,10 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
          vel[lev][1]->FillBoundary( geom[lev].periodicity() );
          vel[lev][2]->FillBoundary( geom[lev].periodicity() );
          
+         bool already_on_centroid = false;
          EB_computeDivergence(*mac_rhs[lev],
                               GetArrOfConstPtrs(vel[lev]),
-                              geom[lev]);
+                              geom[lev], already_on_centroid);
 
          Print() << "  * On level "<< lev
                  << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
@@ -208,54 +210,6 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u,
       MultiFab::Divide( *w[lev], *(ep_face[lev][2]), 0, 0, 1, 0 ); 
 
       // Set velocity bcs
-      set_MC_velocity_bcs( lev, u, v, w, time );
+      set_MAC_velocity_bcs( lev, u, v, w, time );
    }
 }
-
-
-
-//
-// Set the BCs for velocity only
-// 
-void
-mfix::set_MC_velocity_bcs ( int lev,
-                             Vector< std::unique_ptr<MultiFab> >& u,
-                             Vector< std::unique_ptr<MultiFab> >& v,
-                             Vector< std::unique_ptr<MultiFab> >& w,
-                             amrex::Real time)
-{
-   BL_PROFILE("MacProjection::set_MAC_velocity_bcs()");
-
-   u[lev] -> FillBoundary( geom[lev].periodicity() );
-   v[lev] -> FillBoundary( geom[lev].periodicity() );
-   w[lev] -> FillBoundary( geom[lev].periodicity() );
-     
-   Box domain(geom[lev].Domain()); 
-
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-   for (MFIter mfi((*mac_rhs[lev]), false); mfi.isValid(); ++mfi)
-   {
-      const Box& bx = (*mac_rhs[lev])[mfi].box();
-
-      set_mac_velocity_bcs(&time, bx, &mfi, lev, u, v, w, domain);
-   }
-}
-
-#if 0
-//
-// Norm 0 for EB Multifab
-//
-Real
-MacProjection::norm0 (const Vector<std::unique_ptr<MultiFab>>& mf, int lev)
-{
-   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
-                    0,  MFInfo(), *(*m_ebfactory)[lev]);
-  
-   MultiFab::Copy( mf_tmp, *mf[lev], 0, 0, 1, 0 );
-   EB_set_covered( mf_tmp, 0.0 );
-  
-   return mf_tmp.norm0(0);
-}
-#endif

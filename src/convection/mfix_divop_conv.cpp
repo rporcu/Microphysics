@@ -437,20 +437,14 @@ compute_divop_conv(
       {
         const EBCellFlag& flag = flags(i,j,k);
 
-        Real fxp = interp_to_face_centroid_x(i+1, j, k, fx, n,
-                                             areafrac_x, facecent_x, flag);
-        Real fxm = interp_to_face_centroid_x(i  , j, k, fx, n,
-                                             areafrac_x, facecent_x, flag);
+        Real fxp = interp_to_face_centroid_x(i+1, j, k, fx, n, areafrac_x, facecent_x, flag);
+        Real fxm = interp_to_face_centroid_x(i  , j, k, fx, n, areafrac_x, facecent_x, flag);
 
-        Real fyp = interp_to_face_centroid_y(i, j+1, k, fy, n,
-                                             areafrac_y, facecent_y, flag);
-        Real fym = interp_to_face_centroid_y(i, j  , k, fy, n,
-                                             areafrac_y, facecent_y, flag);
+        Real fyp = interp_to_face_centroid_y(i, j+1, k, fy, n, areafrac_y, facecent_y, flag);
+        Real fym = interp_to_face_centroid_y(i, j  , k, fy, n, areafrac_y, facecent_y, flag);
         
-        Real fzp = interp_to_face_centroid_z(i, j, k+1, fz, n,
-                                             areafrac_z, facecent_z, flag);
-        Real fzm = interp_to_face_centroid_z(i, j, k  , fz, n,
-                                             areafrac_z, facecent_z, flag);
+        Real fzp = interp_to_face_centroid_z(i, j, k+1, fz, n, areafrac_z, facecent_z, flag);
+        Real fzm = interp_to_face_centroid_z(i, j, k  , fz, n, areafrac_z, facecent_z, flag);
 
         divc(i,j,k) = ((fxp*areafrac_x(i+1,j,k) - (fxm*areafrac_x(i,j,k))) * i_dx +
                        (fyp*areafrac_y(i,j+1,k) - (fym*areafrac_y(i,j,k))) * i_dy +

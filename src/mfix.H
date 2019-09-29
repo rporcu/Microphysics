@@ -104,7 +104,7 @@ public:
 
     void Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time);
 
-    void mfix_usr1_cpp(amrex::Real* time);
+    void mfix_usr1_cpp(Real time);
 
     void usr3();
 
@@ -216,9 +216,9 @@ public:
 
     void mfix_compute_MAC_velocity_at_faces(Real time,
                                             Vector< std::unique_ptr<MultiFab> >& vel,
-                                            Vector< std::unique_ptr<MultiFab> >& u_mac,
-                                            Vector< std::unique_ptr<MultiFab> >& v_mac,
-                                            Vector< std::unique_ptr<MultiFab> >& w_mac);
+                                            Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                                            Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                                            Vector< std::unique_ptr<MultiFab> >& ep_w_mac);
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< std::unique_ptr<MultiFab> >& vel,
@@ -230,13 +230,13 @@ public:
                               Vector< std::unique_ptr<MultiFab> >& ep_g,
                               Vector< std::unique_ptr<MultiFab> >& mu_g);
 
-    void set_velocity_bcs(Real* time,
+    void set_velocity_bcs(Real time,
                           const int lev,
                           FArrayBox& vel_fab,
                           const Box& domain,
                           const int* extrap_dir_bcs);
 
-    void set_scalar_bcs(Real* time,
+    void set_scalar_bcs(Real time,
                         const int lev,
                         FArrayBox& scal_fab,
                         const int comp,
@@ -250,15 +250,6 @@ public:
                        const int lev,
                        FArrayBox& gp_fab,
                        Box& domain);
-
-    void set_mac_velocity_bcs(Real* time,
-                              const Box& bx,
-                              MFIter* mfi,
-                              const int lev,
-                              Vector< std::unique_ptr<MultiFab> >& u,
-                              Vector< std::unique_ptr<MultiFab> >& v,
-                              Vector< std::unique_ptr<MultiFab> >& w,
-                              Box& domain);
 
     void set_ls_inflow(const int lev,
                        FArrayBox& ls_phi_fab,
@@ -314,9 +305,9 @@ public:
                              Vector< std::unique_ptr<MultiFab> >& yslopes,
                              Vector< std::unique_ptr<MultiFab> >& zslopes,
                              const int slopes_comp,
-                             Vector< std::unique_ptr<MultiFab> >& u_mac,
-                             Vector< std::unique_ptr<MultiFab> >& v_mac,
-                             Vector< std::unique_ptr<MultiFab> >& w_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                              MFIter* mfi,
                              Box& domain,
                              const int lev,
@@ -331,9 +322,9 @@ public:
                                 Vector< std::unique_ptr<MultiFab> >& yslopes,
                                 Vector< std::unique_ptr<MultiFab> >& zslopes,
                                 const int slopes_comp,
-                                Vector< std::unique_ptr<MultiFab> >& u_mac,
-                                Vector< std::unique_ptr<MultiFab> >& v_mac,
-                                Vector< std::unique_ptr<MultiFab> >& w_mac,
+                                Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                                Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                                Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                                 MFIter* mfi,
                                 Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
                                 Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
@@ -406,11 +397,11 @@ protected:
                                  const Vector< std::unique_ptr<MultiFab> >& ro,
                                  Real time, int steady_state);
 
-     void set_MC_velocity_bcs ( int lev,
-                                Vector< std::unique_ptr<MultiFab> >& u,
-                                Vector< std::unique_ptr<MultiFab> >& v,
-                                Vector< std::unique_ptr<MultiFab> >& w,
-                                Real time);
+     void set_MAC_velocity_bcs ( int lev,
+                                 Vector< std::unique_ptr<MultiFab> >& u,
+                                 Vector< std::unique_ptr<MultiFab> >& v,
+                                 Vector< std::unique_ptr<MultiFab> >& w,
+                                 Real time);
 
      void FillPatchVel    (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
                            const Vector<BCRec> & bcr);

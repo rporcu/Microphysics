@@ -24,7 +24,7 @@ mfix::mfix_set_velocity_bcs (Real time,
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
      for (MFIter mfi(*vel_in[lev], true); mfi.isValid(); ++mfi)
-        set_velocity_bcs(&time, lev, (*vel_in[lev])[mfi], domain, &extrap_dir_bcs);
+        set_velocity_bcs(time, lev, (*vel_in[lev])[mfi], domain, &extrap_dir_bcs);
 
      EB_set_covered(*vel_in[lev], 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow(), covered_val);
 
@@ -34,7 +34,7 @@ mfix::mfix_set_velocity_bcs (Real time,
 }
 
 void
-mfix::set_velocity_bcs(Real* time,
+mfix::set_velocity_bcs(Real time,
                        const int lev,
                        FArrayBox& vel_fab,
                        const Box& domain,

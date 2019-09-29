@@ -189,9 +189,9 @@ mfix::ResizeArrays ()
 }
 
 void
-mfix::mfix_usr1_cpp(amrex::Real* time)
+mfix::mfix_usr1_cpp(Real time)
 {
-  mfix_usr1(time);
+  mfix_usr1(&time);
 
   const int dim_bc = get_dim_bc();
 

@@ -27,10 +27,10 @@ mfix::mfix_set_scalar_bcs (Real time,
 #endif
      for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
      {
-        set_scalar_bcs(&time, lev, (*ro_g[lev])[mfi], 0, domain);
-        set_scalar_bcs(&time, lev, (*trac[lev])[mfi], 1, domain);
-        set_scalar_bcs(&time, lev, (*ep_g[lev])[mfi], 2, domain);
-        set_scalar_bcs(&time, lev, (*mu_g[lev])[mfi], 3, domain);
+        set_scalar_bcs(time, lev, (*ro_g[lev])[mfi], 0, domain);
+        set_scalar_bcs(time, lev, (*trac[lev])[mfi], 1, domain);
+        set_scalar_bcs(time, lev, (*ep_g[lev])[mfi], 2, domain);
+        set_scalar_bcs(time, lev, (*mu_g[lev])[mfi], 3, domain);
      }
 
      ro_g_in[lev] -> FillBoundary (geom[lev].periodicity());
@@ -46,7 +46,7 @@ mfix::mfix_set_scalar_bcs (Real time,
 }
 
 void 
-mfix::set_scalar_bcs(Real* time,
+mfix::set_scalar_bcs(Real time,
                      const int lev,
                      FArrayBox& scal_fab,
                      int comp,
