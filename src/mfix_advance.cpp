@@ -289,7 +289,12 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     int explicit_diffusion_pred = 1;
 
-    mfix_compute_divtau( divtau_old, vel_go);
+    if (explicit_diffusion_pred == 1)
+       mfix_compute_divtau( divtau_old, vel_go, time);
+    else
+       for (int lev = 0; lev < nlev; lev++)
+          divtau_old[lev]->setVal(0.);
+     
     for (int lev = 0; lev < nlev; lev++)
     {
         EB_set_covered(*divtau_old[lev], 0, divtau_old[lev]->nComp(), divtau_old[lev]->nGrow(), 0.0);

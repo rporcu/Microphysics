@@ -15,7 +15,8 @@
 //
 void
 mfix::mfix_compute_divtau ( Vector< std::unique_ptr<MultiFab> >& divtau,
-                            Vector< std::unique_ptr<MultiFab> >& vel    )
+                            Vector< std::unique_ptr<MultiFab> >& vel   ,
+                            Real time)
 {
    BL_PROFILE("mfix::mfix_diffuse_explicit");
 
@@ -28,7 +29,6 @@ mfix::mfix_compute_divtau ( Vector< std::unique_ptr<MultiFab> >& divtau,
    }
 
    // Swap ghost cells and apply BCs to velocity
-   Real time = 0;
    int extrap_dir_bcs = 0;
    mfix_set_velocity_bcs (time, vel, extrap_dir_bcs);
 

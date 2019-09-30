@@ -490,7 +490,8 @@ private:
                                         Real time);
 
      void mfix_compute_divtau(Vector< std::unique_ptr<MultiFab> >& divtau,
-                              Vector< std::unique_ptr<MultiFab> >& vel);
+                              Vector< std::unique_ptr<MultiFab> >& vel,
+                              Real time);
 
      int steady_state_reached(Real dt, int iter);
 
