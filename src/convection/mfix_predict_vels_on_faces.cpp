@@ -55,12 +55,12 @@ mfix::mfix_predict_vels_on_faces ( Real time,
        // Define ep on face centers
        average_cellcenter_to_face( GetArrOfPtrs(ep_face[lev]), *ep_in[lev], geom[lev] );
 
-       MultiFab upls(grids[lev], dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab umns(grids[lev], dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab vpls(grids[lev], dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab vmns(grids[lev], dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab wpls(grids[lev], dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab wmns(grids[lev], dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab upls(ep_face[lev][0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab umns(ep_face[lev][0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab vpls(ep_face[lev][1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab vmns(ep_face[lev][1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab wpls(ep_face[lev][2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab wmns(ep_face[lev][2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
 
        // First compute the slopes
        int slopes_comp = 0;
@@ -80,6 +80,8 @@ mfix::mfix_predict_vels_on_faces ( Real time,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
+
+       // Predict to centers
        for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
            // Tilebox
@@ -182,6 +184,80 @@ mfix::mfix_predict_vels_on_faces ( Real time,
              const auto& yslopes_fab = (yslopes_u[lev])->array(mfi);
              const auto& zslopes_fab = (zslopes_u[lev])->array(mfi);
 
+             // Face-centered left and right states
+             const auto& upls_fab = upls.array(mfi);
+             const auto& vpls_fab = vpls.array(mfi);
+             const auto& wpls_fab = wpls.array(mfi);
+             const auto& umns_fab = umns.array(mfi);
+             const auto& vmns_fab = vmns.array(mfi);
+             const auto& wmns_fab = wmns.array(mfi);
+
+             // Face-centered areas
+             const auto& apx_fab = areafrac[0]->array(mfi);
+             const auto& apy_fab = areafrac[1]->array(mfi);
+             const auto& apz_fab = areafrac[2]->array(mfi);
+
+             // This FAB has cut cells
+             AMREX_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
+             {
+                 // X-faces
+                 if (apx_fab(i,j,k) > 0.0)
+                 {
+                    upls_fab(i,j,k) = ccvel_fab(i  ,j,k,0) - 0.5 * xslopes_fab(i  ,j,k,0);
+                    umns_fab(i,j,k) = ccvel_fab(i-1,j,k,0) + 0.5 * xslopes_fab(i-1,j,k,0);
+                 }
+             });
+
+
+             AMREX_HOST_DEVICE_FOR_3D(vbx, i, j, k,
+             {
+                 // Y-faces
+                 if (apy_fab(i,j,k) > 0.0)
+                 {
+                    vpls_fab(i,j,k) = ccvel_fab(i,j  ,k,1) - 0.5 * yslopes_fab(i,j  ,k,1);
+                    vmns_fab(i,j,k) = ccvel_fab(i,j-1,k,1) + 0.5 * yslopes_fab(i,j-1,k,1);
+                 }
+             });
+
+             AMREX_HOST_DEVICE_FOR_3D(wbx, i, j, k,
+             {
+                 // Z-faces
+                 if (apz_fab(i,j,k) > 0.0) {
+                    wpls_fab(i,j,k) = ccvel_fab(i,j,k  ,2) - 0.5 * zslopes_fab(i,j,k  ,2);
+                    wmns_fab(i,j,k) = ccvel_fab(i,j,k-1,2) + 0.5 * zslopes_fab(i,j,k-1,2);
+                 }
+             });
+          } // Cut cells
+       } // MFIter
+
+       // Make sure to fill face-centered values outside our grid before interpolating
+       upls.FillBoundary();
+       umns.FillBoundary();
+       vpls.FillBoundary();
+       vmns.FillBoundary();
+       wpls.FillBoundary();
+       wmns.FillBoundary();
+
+       // Do interpolation to centroids -- only for cut cells
+       for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+       {
+           // Tilebox
+          Box  bx = mfi.tilebox();
+          Box ubx = mfi.tilebox(e_x);
+          Box vbx = mfi.tilebox(e_y);
+          Box wbx = mfi.tilebox(e_z);
+      
+          // Check efficiently if this tile contains any eb stuff
+
+          const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_in[lev])[mfi]);
+          const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
+
+          if ( !(flags.getType(amrex::grow(bx,0)) == FabType::covered ||
+                 flags.getType(amrex::grow(bx,1)) == FabType::regular ) )
+          {
+             // Cell-centered velocity
+             const auto& ccvel_fab = vel_in[lev]->array(mfi);
+
              // Face-centered velocity components
              const auto& umac_fab = (ep_u_mac[lev])->array(mfi);
              const auto& vmac_fab = (ep_v_mac[lev])->array(mfi);
@@ -211,17 +287,6 @@ mfix::mfix_predict_vels_on_faces ( Real time,
              const auto& fcz_fab = facecent[2]->array(mfi);
 
              const auto& ccm_fab = cc_mask.const_array(mfi);
-
-             // This FAB has cut cells
-             AMREX_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
-             {
-                 // X-faces
-                 if (apx_fab(i,j,k) > 0.0)
-                 {
-                    upls_fab(i,j,k) = ccvel_fab(i  ,j,k,0) - 0.5 * xslopes_fab(i  ,j,k,0);
-                    umns_fab(i,j,k) = ccvel_fab(i-1,j,k,0) + 0.5 * xslopes_fab(i-1,j,k,0);
-                 }
-             });
 
              AMREX_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
              {
@@ -280,16 +345,6 @@ mfix::mfix_predict_vels_on_faces ( Real time,
 
              AMREX_HOST_DEVICE_FOR_3D(vbx, i, j, k,
              {
-                 // Y-faces
-                 if (apy_fab(i,j,k) > 0.0)
-                 {
-                    vpls_fab(i,j,k) = ccvel_fab(i,j  ,k,1) - 0.5 * yslopes_fab(i,j  ,k,1);
-                    vmns_fab(i,j,k) = ccvel_fab(i,j-1,k,1) + 0.5 * yslopes_fab(i,j-1,k,1);
-                 }
-             });
-
-             AMREX_HOST_DEVICE_FOR_3D(vbx, i, j, k,
-             {
                 if (apy_fab(i,j,k) == 0.0)
 
                     vmac_fab(i,j,k) = huge_vel;
@@ -338,15 +393,6 @@ mfix::mfix_predict_vels_on_faces ( Real time,
                        }
                        vmac_fab(i,j,k) *= epy_fab(i,j,k);
                     }
-                 }
-             });
-
-             AMREX_HOST_DEVICE_FOR_3D(wbx, i, j, k,
-             {
-                 // Z-faces
-                 if (apz_fab(i,j,k) > 0.0) {
-                    wpls_fab(i,j,k) = ccvel_fab(i,j,k  ,2) - 0.5 * zslopes_fab(i,j,k  ,2);
-                    wmns_fab(i,j,k) = ccvel_fab(i,j,k-1,2) + 0.5 * zslopes_fab(i,j,k-1,2);
                  }
              });
 

@@ -258,6 +258,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
                              Array<const MultiCutFab*,AMREX_SPACEDIM>& facecent,
                              const MultiFab* volfrac,
                              const MultiCutFab* bndrycent,
+                             const iMultiFab* cc_mask,
                              Box& domain,
                              const EBCellFlagFab& flags,
                              const int lev,
@@ -299,6 +300,10 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   const Box ubx = amrex::surroundingNodes(amrex::grow(bx,nh),0);
   const Box vbx = amrex::surroundingNodes(amrex::grow(bx,nh),1);
   const Box wbx = amrex::surroundingNodes(amrex::grow(bx,nh),2);
+
+  const Box ubx_inner = amrex::surroundingNodes(amrex::grow(bx,nh-1),0);
+  const Box vbx_inner = amrex::surroundingNodes(amrex::grow(bx,nh-1),1);
+  const Box wbx_inner = amrex::surroundingNodes(amrex::grow(bx,nh-1),2);
   
   FArrayBox fxfab(ubx, ncomp);
   FArrayBox fyfab(vbx, ncomp);
@@ -307,6 +312,21 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   Array4<Real> const& fx = fxfab.array();
   Array4<Real> const& fy = fyfab.array();
   Array4<Real> const& fz = fzfab.array();
+  
+  FArrayBox s_on_x_face(ubx, ncomp);
+  FArrayBox s_on_y_face(vbx, ncomp);
+  FArrayBox s_on_z_face(wbx, ncomp);
+
+  Array4<Real> const& sx = s_on_x_face.array();
+  Array4<Real> const& sy = s_on_y_face.array();
+  Array4<Real> const& sz = s_on_z_face.array();
+
+  // Face centroids
+  const auto& fcx_fab = facecent[0]->array(*mfi);
+  const auto& fcy_fab = facecent[1]->array(*mfi);
+  const auto& fcz_fab = facecent[2]->array(*mfi);
+
+  const auto& ccm_fab = cc_mask->const_array(*mfi);
 
   const GpuArray<int, 3> bc_types =
     {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};
@@ -323,7 +343,6 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   //
   AMREX_HOST_DEVICE_FOR_4D(ubx, ncomp, i, j, k, n,
   {
-    Real u_face(0);
     Real upls(0); Real umns(0);
 
     if( areafrac_x(i,j,k) > 0 ) {
@@ -331,25 +350,40 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
        ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0),
                                    bc_types.data(), bc_types.size()))
       {
-        u_face = state(dom_low.x-1,j,k,state_comp+n);
+        sx(i,j,k,n) = state(dom_low.x-1,j,k,state_comp+n);
       }
       else if( i >= dom_high.x+1 and
        ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0),
                                    bc_types.data(), bc_types.size()))
       {
-        u_face = state(dom_high.x+1,j,k,state_comp+n);
+        sx(i,j,k,n) = state(dom_high.x+1,j,k,state_comp+n);
       }
       else {
         upls = state(i  ,j,k,state_comp+n) - .5*x_slopes(i  ,j,k,slopes_comp+n);
         umns = state(i-1,j,k,state_comp+n) + .5*x_slopes(i-1,j,k,slopes_comp+n);
 
-        u_face = upwind( umns, upls, u(i,j,k) );
+        sx(i,j,k,n) = upwind( umns, upls, u(i,j,k) );
       }
     }
     else {
-      u_face = my_huge; 
+        sx(i,j,k,n) = my_huge; 
     }
-    fx(i,j,k,n) = u(i,j,k) * u_face;
+  });
+
+  AMREX_HOST_DEVICE_FOR_4D(ubx_inner, ncomp, i, j, k, n,
+  {
+    int jj = j + static_cast<int>(std::copysign(1.0, fcx_fab(i,j,k,0)));
+    int kk = k + static_cast<int>(std::copysign(1.0, fcx_fab(i,j,k,1)));
+
+    Real fracy = (ccm_fab(i-1,jj,k) || ccm_fab(i,jj,k)) ? std::abs(fcx_fab(i,j,k,0)) : 0.0;
+    Real fracz = (ccm_fab(i-1,j,kk) || ccm_fab(i,j,kk)) ? std::abs(fcx_fab(i,j,k,1)) : 0.0;
+
+    Real s_on_x_centroid = (1.0-fracy)*(1.0-fracz)*sx(i, j,k )+
+                                fracy *(1.0-fracz)*sx(i,jj,k )+
+                                fracz *(1.0-fracy)*sx(i, j,kk)+
+                                fracy *     fracz *sx(i,jj,kk);
+
+    fx(i,j,k,n) = u(i,j,k) * s_on_x_centroid;
   });
 
   //
@@ -357,7 +391,6 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
   //
   AMREX_HOST_DEVICE_FOR_4D(vbx, ncomp, i, j, k, n,
   {
-    Real v_face(0);
     Real vpls(0); Real vmns(0);
 
     if( areafrac_y(i,j,k) > 0 ) {
@@ -365,25 +398,41 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
        ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0),
                                    bc_types.data(), bc_types.size()))
       {
-        v_face = state(i,dom_low.y-1,k,state_comp+n);
+        sy(i,j,k,n) = state(i,dom_low.y-1,k,state_comp+n);
       }
       else if( j >= dom_high.y+1 and
        ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0),
                                    bc_types.data(), bc_types.size()))
       {
-        v_face = state(i,dom_high.y+1,k,state_comp+n);
+        sy(i,j,k,n) = state(i,dom_high.y+1,k,state_comp+n);
       }
       else {
         vpls = state(i,j  ,k,state_comp+n) - .5*y_slopes(i,j  ,k,slopes_comp+n);
         vmns = state(i,j-1,k,state_comp+n) + .5*y_slopes(i,j-1,k,slopes_comp+n);
 
-        v_face = upwind( vmns, vpls, v(i,j,k) );
+        sy(i,j,k,n) = upwind( vmns, vpls, v(i,j,k) );
       }
     }
     else {
-      v_face = my_huge;
+        sy(i,j,k,n) = my_huge;
     }
-    fy(i,j,k,n) = v(i,j,k) * v_face;
+  });
+
+  AMREX_HOST_DEVICE_FOR_4D(vbx_inner, ncomp, i, j, k, n,
+  {
+    int ii = i + static_cast<int>(std::copysign(1.0,fcy_fab(i,j,k,0)));
+    int kk = k + static_cast<int>(std::copysign(1.0,fcy_fab(i,j,k,1)));
+
+    Real fracx = (ccm_fab(ii,j-1,k) || ccm_fab(ii,j,k)) ? std::abs(fcy_fab(i,j,k,0)) : 0.0;
+    Real fracz = (ccm_fab(i,j-1,kk) || ccm_fab(i,j,kk)) ? std::abs(fcy_fab(i,j,k,1)) : 0.0;
+
+    Real s_on_y_centroid = (1.0-fracx)*(1.0-fracz)*sy(i ,j,k )+
+                                fracx *(1.0-fracz)*sy(ii,j,k )+
+                                fracz *(1.0-fracx)*sy(i ,j,kk)+
+                                fracx *     fracz *sy(ii,j,kk);
+
+    fy(i,j,k,n) = v(i,j,k) * s_on_y_centroid;
+
   });
 
   //
@@ -399,25 +448,41 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
        ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0),
                                    bc_types.data(), bc_types.size()))
       {
-        w_face = state(i,j,dom_low.z-1,state_comp+n);
+        sz(i,j,k,n) = state(i,j,dom_low.z-1,state_comp+n);
       }
       else if( k >= dom_high.z+1 and
        ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0),
                                    bc_types.data(), bc_types.size()))
       {
-        w_face = state(i,j,dom_high.z+1,state_comp+n);
+        sz(i,j,k,n) = state(i,j,dom_high.z+1,state_comp+n);
       }
       else {
         wpls = state(i,j,k  ,state_comp+n) - .5*z_slopes(i,j,k  ,slopes_comp+n);
         wmns = state(i,j,k-1,state_comp+n) + .5*z_slopes(i,j,k-1,slopes_comp+n);
 
-        w_face = upwind( wmns, wpls, w(i,j,k) );
+        sz(i,j,k,n) = upwind( wmns, wpls, w(i,j,k) );
       }
     }
     else {
-      w_face = my_huge;
+        sz(i,j,k,n) = my_huge;
     }
-    fz(i,j,k,n) = w(i,j,k) * w_face;
+  });
+
+  AMREX_HOST_DEVICE_FOR_4D(wbx_inner, ncomp, i, j, k, n,
+  {
+
+    int ii = i + static_cast<int>(std::copysign(1.0,fcz_fab(i,j,k,0)));
+    int jj = j + static_cast<int>(std::copysign(1.0,fcz_fab(i,j,k,1)));
+
+    Real fracx = (ccm_fab(ii,j,k-1) || ccm_fab(ii,j,k)) ? std::abs(fcz_fab(i,j,k,0)) : 0.0;
+    Real fracy = (ccm_fab(i,jj,k-1) || ccm_fab(i,jj,k)) ? std::abs(fcz_fab(i,j,k,1)) : 0.0;
+
+    Real s_on_z_centroid = (1.0-fracx)*(1.0-fracy)*sz(i ,j ,k,n)+
+                                fracx *(1.0-fracy)*sz(ii,j ,k,n)+
+                                fracy *(1.0-fracx)*sz(i ,jj,k,n)+
+                                fracx *     fracy *sz(ii,jj,k,n);
+
+    fz(i,j,k,n) = w(i,j,k) * s_on_z_centroid;
   });
 
 #ifdef AMREX_USE_CUDA
@@ -519,10 +584,14 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv_u
        w_mac[lev]->setVal(covered_val);
     }
 
-    // Predict normal velocity to faces
+    // Predict normal velocity to faces -- note that the {u_mac, v_mac, w_mac}
+    //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
+    //    on face CENTROIDS
     mfix_predict_vels_on_faces(time, vel_in, u_mac, v_mac, w_mac, ep_g);
 
-    // Do projection on all AMR levels in one shot
+    // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
+    //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
+    //    on face CENTROIDS
     apply_MAC_projection (u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time, steady_state );
 
     int slopes_comp; int conv_comp; int state_comp; int num_comp;
@@ -530,6 +599,35 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv_u
     for (int lev=0; lev < nlev; ++lev)
     {
         Box domain(geom[lev].Domain());
+
+        // Create cc_mask
+        iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+       {
+           std::vector< std::pair<int,Box> > isects;
+           const std::vector<IntVect>& pshifts = geom[lev].periodicity().shiftIntVect();
+           const BoxArray& ba = cc_mask.boxArray();
+           for (MFIter mfi(cc_mask); mfi.isValid(); ++mfi)
+           {
+               Array4<int> const& fab = cc_mask.array(mfi);
+               const Box& bx = mfi.fabbox();
+               for (const auto& iv : pshifts)
+               {
+                   ba.intersections(bx+iv, isects);
+                   for (const auto& is : isects)
+                   {
+                       const Box& b = is.second-iv;
+                       AMREX_HOST_DEVICE_PARALLEL_FOR_3D ( b, i, j, k,
+                       {
+                           fab(i,j,k) = 1;
+                       });
+                   }
+               }
+           }
+        }
     
         // Get EB geometric info
         Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
@@ -612,21 +710,21 @@ mfix::mfix_compute_ugradu_predictor( Vector< std::unique_ptr<MultiFab> >& conv_u
                     mfix_compute_ugradu_eb(bx, conv_u_in, conv_comp, vel_in, state_comp, num_comp,
                                            xslopes_u, yslopes_u, zslopes_u, slopes_comp,
                                            u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
-                                           volfrac, bndrycent, domain, flags, lev, false);
+                                           volfrac, bndrycent, &cc_mask, domain, flags, lev, false);
 
                     conv_comp = 0; state_comp = 0; num_comp = 1; slopes_comp = 0;
                     if (advect_density)
                        mfix_compute_ugradu_eb(bx, conv_s_in, conv_comp, ro_g_in, state_comp, num_comp,
                                               xslopes_s, yslopes_s, zslopes_s, slopes_comp,
                                               u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
-                                              volfrac, bndrycent, domain, flags, lev, true);
+                                              volfrac, bndrycent, &cc_mask, domain, flags, lev, true);
 
                     conv_comp = 1; state_comp = 0; num_comp = 1; slopes_comp = 1;
                     if (advect_tracer)
                        mfix_compute_ugradu_eb(bx, conv_s_in, conv_comp, trac_in, state_comp, num_comp,
                                               xslopes_s, yslopes_s, zslopes_s, slopes_comp,
                                               u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
-                                              volfrac, bndrycent, domain, flags, lev, true);
+                                              volfrac, bndrycent, &cc_mask, domain, flags, lev, true);
                 }
             }
         } // MFIter
@@ -714,10 +812,14 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv_u
        w_mac[lev]->setVal(covered_val);
     }
 
-    // Predict normal velocity to faces
+    // Predict normal velocity to faces -- note that the {u_mac, v_mac, w_mac}
+    //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
+    //    on face CENTROIDS
     mfix_predict_vels_on_faces(time, vel_in, u_mac, v_mac, w_mac, ep_g);
 
-    // Do projection on all AMR levels in one shot
+    // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
+    //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
+    //    on face CENTROIDS
     apply_MAC_projection (u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time, steady_state );
 
     int slopes_comp; int conv_comp; int state_comp; int num_comp;
@@ -725,6 +827,35 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv_u
     for (int lev=0; lev < nlev; ++lev)
     {
         Box domain(geom[lev].Domain());
+
+        // Create cc_mask
+        iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+       {
+           std::vector< std::pair<int,Box> > isects;
+           const std::vector<IntVect>& pshifts = geom[lev].periodicity().shiftIntVect();
+           const BoxArray& ba = cc_mask.boxArray();
+           for (MFIter mfi(cc_mask); mfi.isValid(); ++mfi)
+           {
+               Array4<int> const& fab = cc_mask.array(mfi);
+               const Box& bx = mfi.fabbox();
+               for (const auto& iv : pshifts)
+               {
+                   ba.intersections(bx+iv, isects);
+                   for (const auto& is : isects)
+                   {
+                       const Box& b = is.second-iv;
+                       AMREX_HOST_DEVICE_PARALLEL_FOR_3D ( b, i, j, k,
+                       {
+                           fab(i,j,k) = 1;
+                       });
+                   }
+               }
+           }
+        }
     
         // Get EB geometric info
         Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
@@ -807,21 +938,21 @@ mfix::mfix_compute_ugradu_corrector( Vector< std::unique_ptr<MultiFab> >& conv_u
                     mfix_compute_ugradu_eb(bx, conv_u_in, conv_comp, vel_in, state_comp, num_comp,
                                            xslopes_u, yslopes_u, zslopes_u, slopes_comp,
                                            u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
-                                           volfrac, bndrycent, domain, flags, lev, false);
+                                           volfrac, bndrycent, &cc_mask, domain, flags, lev, false);
 
                     conv_comp = 0; state_comp = 0; num_comp = 1; slopes_comp = 0;
                     if (advect_density)
                        mfix_compute_ugradu_eb(bx, conv_s_in, conv_comp, ro_g_in, state_comp, num_comp,
                                               xslopes_s, yslopes_s, zslopes_s, slopes_comp,
                                               u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
-                                              volfrac, bndrycent, domain, flags, lev, true);
+                                              volfrac, bndrycent, &cc_mask, domain, flags, lev, true);
 
                     conv_comp = 1; state_comp = 0; num_comp = 1; slopes_comp = 1;
                     if (advect_tracer)
                        mfix_compute_ugradu_eb(bx, conv_s_in, conv_comp, trac_in, state_comp, num_comp,
                                               xslopes_s, yslopes_s, zslopes_s, slopes_comp,
                                               u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
-                                              volfrac, bndrycent, domain, flags, lev, true);
+                                              volfrac, bndrycent, &cc_mask, domain, flags, lev, true);
                 }
             }
         } // MFIter

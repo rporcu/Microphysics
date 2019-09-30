@@ -331,6 +331,7 @@ public:
                                 Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
                                 const amrex::MultiFab* volfrac,
                                 const amrex::MultiCutFab* bndrycent,
+                                const amrex::iMultiFab* cc_mask,
                                 Box& domain,
                                 const EBCellFlagFab& flags,
                                 const int lev,
