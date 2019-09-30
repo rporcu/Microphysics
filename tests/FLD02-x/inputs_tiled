@@ -12,6 +12,8 @@ mfix.steady_state_maxiter =500
 
 amr.blocking_factor = 4
 
+mac.mg_rtol = 1.e-13
+
 #_______________________________________________________________________
 # Geometry / grids / tiles
 
