@@ -378,10 +378,10 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
     Real fracy = (ccm_fab(i-1,jj,k) || ccm_fab(i,jj,k)) ? std::abs(fcx_fab(i,j,k,0)) : 0.0;
     Real fracz = (ccm_fab(i-1,j,kk) || ccm_fab(i,j,kk)) ? std::abs(fcx_fab(i,j,k,1)) : 0.0;
 
-    Real s_on_x_centroid = (1.0-fracy)*(1.0-fracz)*sx(i, j,k )+
-                                fracy *(1.0-fracz)*sx(i,jj,k )+
-                                fracz *(1.0-fracy)*sx(i, j,kk)+
-                                fracy *     fracz *sx(i,jj,kk);
+    Real s_on_x_centroid = (1.0-fracy)*(1.0-fracz)*sx(i, j,k ,n)+
+                                fracy *(1.0-fracz)*sx(i,jj,k ,n)+
+                                fracz *(1.0-fracy)*sx(i, j,kk,n)+
+                                fracy *     fracz *sx(i,jj,kk,n);
 
     fx(i,j,k,n) = u(i,j,k) * s_on_x_centroid;
   });
@@ -426,10 +426,10 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
     Real fracx = (ccm_fab(ii,j-1,k) || ccm_fab(ii,j,k)) ? std::abs(fcy_fab(i,j,k,0)) : 0.0;
     Real fracz = (ccm_fab(i,j-1,kk) || ccm_fab(i,j,kk)) ? std::abs(fcy_fab(i,j,k,1)) : 0.0;
 
-    Real s_on_y_centroid = (1.0-fracx)*(1.0-fracz)*sy(i ,j,k )+
-                                fracx *(1.0-fracz)*sy(ii,j,k )+
-                                fracz *(1.0-fracx)*sy(i ,j,kk)+
-                                fracx *     fracz *sy(ii,j,kk);
+    Real s_on_y_centroid = (1.0-fracx)*(1.0-fracz)*sy(i ,j,k ,n)+
+                                fracx *(1.0-fracz)*sy(ii,j,k ,n)+
+                                fracz *(1.0-fracx)*sy(i ,j,kk,n)+
+                                fracx *     fracz *sy(ii,j,kk,n);
 
     fy(i,j,k,n) = v(i,j,k) * s_on_y_centroid;
 
