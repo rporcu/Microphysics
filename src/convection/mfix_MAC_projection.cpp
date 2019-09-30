@@ -87,11 +87,6 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
       average_cellcenter_to_face( GetArrOfPtrs(ep_face[lev]), *ep_in[lev], geom[lev] );
       average_cellcenter_to_face( GetArrOfPtrs(ro_face[lev]), *ro_in[lev], geom[lev] );
 
-      // Compute ep*u at faces and store it in ep_u_mac, ep_v_mac, ep_w_mac
-      MultiFab::Multiply( *ep_u_mac[lev], *(ep_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Multiply( *ep_v_mac[lev], *(ep_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Multiply( *ep_w_mac[lev], *(ep_face[lev][2]), 0, 0, 1, 0 );
-   
       // Compute ep_face into bcoeff
       MultiFab::Copy( *bcoeff[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0 );
       MultiFab::Copy( *bcoeff[lev][1], *(ep_face[lev][1]), 0, 0, 1, 0 );

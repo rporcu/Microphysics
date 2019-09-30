@@ -6,14 +6,27 @@ mfix::mfix_predict_vels_on_faces ( Real time,
                                    Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                    Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                                    Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                   Vector< std::unique_ptr<MultiFab> >& ep_g)
+                                   Vector< std::unique_ptr<MultiFab> >& ep_in)
 
 {
     BL_PROFILE("mfix::mfix_predict_vels_on_faces");
 
+   // ep_face is temporary, no need to keep it outside this routine
+   Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
+   ep_face.resize(finest_level+1);
+
     for (int lev=0; lev < nlev; ++lev)
     {
        Box domain(geom[lev].Domain());   
+
+       // We will need these ep on face centers to interpolate to face centroids below
+       ep_in[lev]->FillBoundary(geom[lev].periodicity());
+       ep_face[lev][0].reset(new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+       ep_face[lev][1].reset(new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+       ep_face[lev][2].reset(new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+
+       // Define ep on face centers
+       average_cellcenter_to_face( GetArrOfPtrs(ep_face[lev]), *ep_in[lev], geom[lev] );
 
        // First compute the slopes
        int slopes_comp = 0;
@@ -203,6 +216,11 @@ mfix::mfix_predict_vels_on_faces ( Real time,
 
           } // Cut cells
        } // MFIter
+
+       // Define ep_u_mac, ep_v_mac, ep_w_mac = ep_face * {u_mac, v_mac, w_mac}
+       MultiFab::Multiply( *ep_u_mac[lev], *(ep_face[lev][0]), 0, 0, 1, 0 );
+       MultiFab::Multiply( *ep_v_mac[lev], *(ep_face[lev][1]), 0, 0, 1, 0 );
+       MultiFab::Multiply( *ep_w_mac[lev], *(ep_face[lev][2]), 0, 0, 1, 0 );
     }
 #ifdef AMREX_USE_CUDA
     Gpu::Device::synchronize();
