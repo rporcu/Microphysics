@@ -199,11 +199,6 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                  << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
       } 
 
-      // Now convert (eps u, eps v, eps w) back to u,v,w
-      MultiFab::Divide( *ep_u_mac[lev], *(ep_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Divide( *ep_v_mac[lev], *(ep_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Divide( *ep_w_mac[lev], *(ep_face[lev][2]), 0, 0, 1, 0 ); 
-
       // Set bcs on (ep * u_mac)
       set_MAC_velocity_bcs( lev, ep_u_mac, ep_v_mac, ep_w_mac, time );
 

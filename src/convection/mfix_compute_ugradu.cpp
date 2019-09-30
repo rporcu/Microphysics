@@ -205,22 +205,22 @@ mfix::mfix_compute_ugradu( Box& bx,
       state_t = upwind( state_mns, state_pls, w(i,j,k+1) );
     }
 
-    Real epu_hi_x = .5*(epsilon_g(i+1,j,k)+epsilon_g(i,j,k)) * u(i+1,j,k);
-    Real epu_lo_x = .5*(epsilon_g(i-1,j,k)+epsilon_g(i,j,k)) * u(i  ,j,k);
-    Real epv_hi_y = .5*(epsilon_g(i,j+1,k)+epsilon_g(i,j,k)) * v(i,j+1,k);
-    Real epv_lo_y = .5*(epsilon_g(i,j-1,k)+epsilon_g(i,j,k)) * v(i,j  ,k);
-    Real epw_hi_z = .5*(epsilon_g(i,j,k+1)+epsilon_g(i,j,k)) * w(i,j,k+1);
-    Real epw_lo_z = .5*(epsilon_g(i,j,k-1)+epsilon_g(i,j,k)) * w(i,j,k  );
+    Real epu_hi_x = u(i+1,j,k);
+    Real epu_lo_x = u(i  ,j,k);
+    Real epv_hi_y = v(i,j+1,k);
+    Real epv_lo_y = v(i,j  ,k);
+    Real epw_hi_z = w(i,j,k+1);
+    Real epw_lo_z = w(i,j,k  );
 
     ugradu(i,j,k,conv_comp+n) = (epu_hi_x*state_e - epu_lo_x*state_w) * i_dx +
                                 (epv_hi_y*state_n - epv_lo_y*state_s) * i_dy +
                                 (epw_hi_z*state_t - epw_lo_z*state_b) * i_dz;
     if (!is_conservative)
     {
-       Real divumac = (epu_hi_x - epu_lo_x) * i_dx +
-                      (epv_hi_y - epv_lo_y) * i_dy + 
-                      (epw_hi_z - epw_lo_z) * i_dz;
-       ugradu(i,j,k,conv_comp+n) = ugradu(i,j,k,conv_comp+n) - state(i,j,k,state_comp+n)*divumac;
+       Real diveumac = (epu_hi_x - epu_lo_x) * i_dx +
+                       (epv_hi_y - epv_lo_y) * i_dy + 
+                       (epw_hi_z - epw_lo_z) * i_dz;
+       ugradu(i,j,k,conv_comp+n) = ugradu(i,j,k,conv_comp+n) - state(i,j,k,state_comp+n)*diveumac;
     }
 
     //
@@ -349,7 +349,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
     else {
       u_face = my_huge; 
     }
-    fx(i,j,k,n) = .5*(epsilon_g(i-1,j,k)+epsilon_g(i,j,k)) * u(i,j,k) * u_face;
+    fx(i,j,k,n) = u(i,j,k) * u_face;
   });
 
   //
@@ -383,7 +383,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
     else {
       v_face = my_huge;
     }
-    fy(i,j,k,n) = .5*(epsilon_g(i,j-1,k)+epsilon_g(i,j,k)) * v(i,j,k) * v_face;
+    fy(i,j,k,n) = v(i,j,k) * v_face;
   });
 
   //
@@ -417,7 +417,7 @@ mfix::mfix_compute_ugradu_eb(Box& bx,
     else {
       w_face = my_huge;
     }
-    fz(i,j,k,n) = .5*(epsilon_g(i,j,k-1)+epsilon_g(i,j,k)) * w(i,j,k) * w_face;
+    fz(i,j,k,n) = w(i,j,k) * w_face;
   });
 
 #ifdef AMREX_USE_CUDA
