@@ -297,6 +297,20 @@ public:
     template <typename F>
     void mfix_calc_particle_beta(F DragFunc, Real time);
 
+    void mfix_compute_fluxes(int lev,
+                             Vector< std::unique_ptr<MultiFab> >& conv,
+                             const int conv_comp,
+                             Vector< std::unique_ptr<MultiFab> >& state,
+                             const int state_comp, const int n_comp,
+                             Vector< std::unique_ptr<MultiFab> >& xslopes,
+                             Vector< std::unique_ptr<MultiFab> >& yslopes,
+                             Vector< std::unique_ptr<MultiFab> >& zslopes,
+                             const int slopes_comp,
+                             Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+                             const bool is_conservative);
+
     void mfix_compute_ugradu(Box& bx,
                              Vector< std::unique_ptr<MultiFab> >& conv,
                              const int conv_comp,
@@ -310,8 +324,7 @@ public:
                              Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                              Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                              MFIter* mfi,
-                             Box& domain,
-                             const int lev,
+                             Box& domain, const int lev,
                              const bool is_conservative);
 
     void mfix_compute_ugradu_eb(Box& bx,

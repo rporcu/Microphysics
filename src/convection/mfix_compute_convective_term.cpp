@@ -58,6 +58,11 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
     Vector< std::unique_ptr<MultiFab> > v_mac;
     Vector< std::unique_ptr<MultiFab> > w_mac;
 
+    // Temporaries to store fluxes and convective term
+    Array< std::unique_ptr<MultiFab>,AMREX_SPACEDIM> fx;
+    Array< std::unique_ptr<MultiFab>,AMREX_SPACEDIM> fy;
+    Array< std::unique_ptr<MultiFab>,AMREX_SPACEDIM> fz;
+
     u_mac.resize(nlev);
     v_mac.resize(nlev);
     w_mac.resize(nlev);
@@ -78,6 +83,18 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
        z_edge_ba.surroundingNodes(2);
        w_mac[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
        w_mac[lev]->setVal(covered_val);
+
+       for (int n = 0; n < 3; ++n )
+       {
+           fx[n].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+           fy[n].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+           fz[n].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+
+           // We need this to avoid FPE
+           fx[n]->setVal(covered_val);
+           fy[n]->setVal(covered_val);
+           fz[n]->setVal(covered_val);
+       }
     }
 
     // Predict normal velocity to faces -- note that the {u_mac, v_mac, w_mac}
@@ -94,48 +111,6 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
 
     for (int lev=0; lev < nlev; ++lev)
     {
-        Box domain(geom[lev].Domain());
-
-        // Create cc_mask
-        iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
-
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-       {
-           std::vector< std::pair<int,Box> > isects;
-           const std::vector<IntVect>& pshifts = geom[lev].periodicity().shiftIntVect();
-           const BoxArray& ba = cc_mask.boxArray();
-           for (MFIter mfi(cc_mask); mfi.isValid(); ++mfi)
-           {
-               Array4<int> const& fab = cc_mask.array(mfi);
-               const Box& bx = mfi.fabbox();
-               for (const auto& iv : pshifts)
-               {
-                   ba.intersections(bx+iv, isects);
-                   for (const auto& is : isects)
-                   {
-                       const Box& b = is.second-iv;
-                       AMREX_HOST_DEVICE_PARALLEL_FOR_3D ( b, i, j, k,
-                       {
-                           fab(i,j,k) = 1;
-                       });
-                   }
-               }
-           }
-        }
-    
-        // Get EB geometric info
-        Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
-        Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
-        const amrex::MultiFab*                    volfrac;
-        const amrex::MultiCutFab*                 bndrycent;
-
-        areafrac  =   ebfactory[lev] -> getAreaFrac();
-        facecent  =   ebfactory[lev] -> getFaceCent();
-        volfrac   = &(ebfactory[lev] -> getVolFrac());
-        bndrycent = &(ebfactory[lev] -> getBndryCent());
-
         if (advect_tracer)
         {
             // Convert tracer to (rho * tracer) so we can use conservative update
@@ -157,73 +132,23 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
 
         // Initialize conv_s to 0 for both density and tracer
         conv_s_in[lev]->setVal(0.,0,conv_s_in[lev]->nComp(),conv_s_in[lev]->nGrow());
-       
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-        for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-        {
-            // Tilebox
-            Box bx = mfi.tilebox ();
-            
-            // this is to check efficiently if this tile contains any eb stuff
-            const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_in[lev])[mfi]);
-            const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
-            if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
-            {
-                // If tile is completely covered by EB geometry, set slopes
-                // value to some very large number so we know if
-                // we accidentally use these covered slopes later in calculations
-                (*conv_u_in[lev])[mfi].setVal( 1.2345e300, bx, 0, conv_u_in[lev]->nComp());
-                (*conv_s_in[lev])[mfi].setVal( 1.2345e300, bx, 0, conv_s_in[lev]->nComp());
-            }
-            else
-            {
-                // No cut cells in tile + nghost-cell witdh halo -> use non-eb routine
-                if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
-                {
-                    conv_comp = 0; state_comp = 0; num_comp = 3; slopes_comp = 0;
-                    mfix_compute_ugradu(bx, conv_u_in, conv_comp, vel_in, state_comp, num_comp,
-                                        xslopes_u, yslopes_u, zslopes_u, slopes_comp,
-                                        u_mac, v_mac, w_mac, &mfi, domain, lev, false);
+        conv_comp = 0; state_comp = 0; num_comp = 3; slopes_comp = 0;
+        mfix_compute_fluxes(lev, conv_u_in, conv_comp, vel_in, state_comp, num_comp,
+                            xslopes_u, yslopes_u, zslopes_u, slopes_comp,
+                            u_mac, v_mac, w_mac, false);
 
-                    conv_comp = 0; state_comp = 0; num_comp = 1; slopes_comp = 0;
-                    if (advect_density)
-                       mfix_compute_ugradu(bx, conv_s_in, conv_comp, ro_g_in, state_comp, num_comp,
-                                           xslopes_s, yslopes_s, zslopes_s, slopes_comp,
-                                           u_mac, v_mac, w_mac, &mfi, domain, lev, false);
+        conv_comp = 0; state_comp = 0; num_comp = 1; slopes_comp = 0;
+        if (advect_density)
+            mfix_compute_fluxes(lev, conv_s_in, conv_comp, ro_g_in, state_comp, num_comp,
+                                xslopes_s, yslopes_s, zslopes_s, slopes_comp,
+                                u_mac, v_mac, w_mac, false);
 
-                    conv_comp = 1; state_comp = 0; num_comp = 1; slopes_comp = 1;
-                    if (advect_tracer)
-                       mfix_compute_ugradu(bx, conv_s_in, conv_comp, trac_in, state_comp, num_comp,
-                                           xslopes_s, yslopes_s, zslopes_s, slopes_comp,
-                                           u_mac, v_mac, w_mac, &mfi, domain, lev, false);
-                }
-                else
-                {
-                    conv_comp = 0; state_comp = 0; num_comp = 3; slopes_comp = 0;
-                    mfix_compute_ugradu_eb(bx, conv_u_in, conv_comp, vel_in, state_comp, num_comp,
-                                           xslopes_u, yslopes_u, zslopes_u, slopes_comp,
-                                           u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
-                                           volfrac, bndrycent, &cc_mask, domain, flags, lev, false);
-
-                    conv_comp = 0; state_comp = 0; num_comp = 1; slopes_comp = 0;
-                    if (advect_density)
-                       mfix_compute_ugradu_eb(bx, conv_s_in, conv_comp, ro_g_in, state_comp, num_comp,
-                                              xslopes_s, yslopes_s, zslopes_s, slopes_comp,
-                                              u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
-                                              volfrac, bndrycent, &cc_mask, domain, flags, lev, true);
-
-                    conv_comp = 1; state_comp = 0; num_comp = 1; slopes_comp = 1;
-                    if (advect_tracer)
-                       mfix_compute_ugradu_eb(bx, conv_s_in, conv_comp, trac_in, state_comp, num_comp,
-                                              xslopes_s, yslopes_s, zslopes_s, slopes_comp,
-                                              u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
-                                              volfrac, bndrycent, &cc_mask, domain, flags, lev, true);
-                }
-            }
-        } // MFIter
+        conv_comp = 1; state_comp = 0; num_comp = 1; slopes_comp = 1;
+        if (advect_tracer)
+            mfix_compute_fluxes(lev, conv_s_in, conv_comp, trac_in, state_comp, num_comp,
+                                xslopes_s, yslopes_s, zslopes_s, slopes_comp,
+                                u_mac, v_mac, w_mac, false);
 
         if (advect_tracer)
         {

@@ -48,10 +48,102 @@ using namespace ugradu_aux;
 //
 // Compute the three components of the convection term
 //
+void 
+mfix::mfix_compute_fluxes(int lev,
+                          Vector< std::unique_ptr<MultiFab> >& conv_in, 
+                          const int conv_comp, 
+                          Vector< std::unique_ptr<MultiFab> >& state_in,
+                          const int state_comp, const int ncomp,
+                          Vector< std::unique_ptr<MultiFab> >& xslopes_in,
+                          Vector< std::unique_ptr<MultiFab> >& yslopes_in,
+                          Vector< std::unique_ptr<MultiFab> >& zslopes_in,
+                          const int slopes_comp,
+                          Vector< std::unique_ptr<MultiFab> >& u_mac,
+                          Vector< std::unique_ptr<MultiFab> >& v_mac,
+                          Vector< std::unique_ptr<MultiFab> >& w_mac,
+                          const bool is_conservative)
+{
+        Box domain(geom[lev].Domain());
+
+        // Get EB geometric info
+        Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
+        Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
+        const amrex::MultiFab*                    volfrac;
+        const amrex::MultiCutFab*                 bndrycent;
+
+        areafrac  =   ebfactory[lev] -> getAreaFrac();
+        facecent  =   ebfactory[lev] -> getFaceCent();
+        volfrac   = &(ebfactory[lev] -> getVolFrac());
+        bndrycent = &(ebfactory[lev] -> getBndryCent());
+
+        // Create cc_mask
+        iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+       {
+           std::vector< std::pair<int,Box> > isects;
+           const std::vector<IntVect>& pshifts = geom[lev].periodicity().shiftIntVect();
+           const BoxArray& ba = cc_mask.boxArray();
+           for (MFIter mfi(cc_mask); mfi.isValid(); ++mfi)
+           {
+               Array4<int> const& fab = cc_mask.array(mfi);
+               const Box& bx = mfi.fabbox();
+               for (const auto& iv : pshifts)
+               {
+                   ba.intersections(bx+iv, isects);
+                   for (const auto& is : isects)
+                   {
+                       const Box& b = is.second-iv;
+                       AMREX_HOST_DEVICE_PARALLEL_FOR_3D ( b, i, j, k,
+                       {
+                           fab(i,j,k) = 1;
+                       });
+                   }
+               }
+           }
+        }
+
+        for (MFIter mfi(*state_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        {
+            // Tilebox
+            Box bx = mfi.tilebox ();
+
+            // this is to check efficiently if this tile contains any eb stuff
+            const EBFArrayBox&  conv_fab = static_cast<EBFArrayBox const&>((*conv_in[lev])[mfi]);
+            const EBCellFlagFab&  flags = conv_fab.getEBCellFlagFab();
+
+            if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
+            {
+                // If tile is completely covered by EB geometry, set slopes
+                // value to some very large number so we know if
+                // we accidentally use these covered slopes later in calculations
+                (*conv_in[lev])[mfi].setVal( 1.2345e300, bx, 0, conv_in[lev]->nComp());
+            }
+            else
+            {
+                // No cut cells in tile + nghost-cell witdh halo -> use non-eb routine
+                if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
+                {
+                    mfix_compute_ugradu(bx, conv_in, conv_comp, state_in, state_comp, ncomp,
+                                        xslopes_u, yslopes_u, zslopes_u, slopes_comp,
+                                        u_mac, v_mac, w_mac, &mfi, domain, lev, false);
+                }
+                else
+                {
+                    mfix_compute_ugradu_eb(bx, conv_in, conv_comp, state_in, state_comp, ncomp,
+                                           xslopes_u, yslopes_u, zslopes_u, slopes_comp,
+                                           u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
+                                           volfrac, bndrycent, &cc_mask, domain, flags, lev, false);
+                }
+            }
+        } // MFIter
+}
+
 void
 mfix::mfix_compute_ugradu( Box& bx,
-                           Vector< std::unique_ptr<MultiFab> >& conv_in, 
-                           const int conv_comp, 
+                           Vector< std::unique_ptr<MultiFab> >& conv_in, const int conv_comp, 
                            Vector< std::unique_ptr<MultiFab> >& state_in,
                            const int state_comp, const int ncomp,
                            Vector< std::unique_ptr<MultiFab> >& xslopes_in,
