@@ -285,7 +285,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     Real new_time = time + dt;
 
     // Compute the explicit advective term R_u^n
-    mfix_compute_ugradu_predictor( conv_u_old, conv_s_old, vel_go, ep_g, ro_go, trac_o ,time );
+    mfix_compute_convective_term( conv_u_old, conv_s_old, vel_go, ep_g, ro_go, trac_o ,time );
 
     int explicit_diffusion_pred = 1;
 
@@ -382,7 +382,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     }
 
     // Compute the explicit advective term R_u^*
-    mfix_compute_ugradu_corrector( conv_u, conv_s, vel_g, ep_g, ro_g, trac, new_time );
+    mfix_compute_convective_term( conv_u, conv_s, vel_g, ep_g, ro_g, trac, new_time );
 
     // Add the convective terms so u_g = u_go + dt/2 (R_u^* + R_u^n)
     for (int lev = 0; lev < nlev; lev++)

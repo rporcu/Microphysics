@@ -474,20 +474,12 @@ private:
 
      void check_for_nans(int lev);
 
-     void mfix_compute_ugradu_predictor(Vector< std::unique_ptr<MultiFab> >& conv_u,
-                                        Vector< std::unique_ptr<MultiFab> >& conv_s,
-                                        Vector< std::unique_ptr<MultiFab> >& vel,
-                                        Vector< std::unique_ptr<MultiFab> >& ep_g,
-                                        Vector< std::unique_ptr<MultiFab> >& ro_g,
-                                        Vector< std::unique_ptr<MultiFab> >& trac,
-                                        Real time);
-
-     void mfix_compute_ugradu_corrector(Vector< std::unique_ptr<MultiFab> >& conv_u,
-                                        Vector< std::unique_ptr<MultiFab> >& conv_s,
-                                        Vector< std::unique_ptr<MultiFab> >& vel,
-                                        Vector< std::unique_ptr<MultiFab> >& ep_g,
-                                        Vector< std::unique_ptr<MultiFab> >& ro_g,
-                                        Vector< std::unique_ptr<MultiFab> >& trac,
+     void mfix_compute_convective_term(Vector< std::unique_ptr<MultiFab> >& conv_u,
+                                       Vector< std::unique_ptr<MultiFab> >& conv_s,
+                                       Vector< std::unique_ptr<MultiFab> >& vel,
+                                       Vector< std::unique_ptr<MultiFab> >& ep_g,
+                                       Vector< std::unique_ptr<MultiFab> >& ro_g,
+                                       Vector< std::unique_ptr<MultiFab> >& trac,
                                         Real time);
 
      void mfix_compute_divtau(Vector< std::unique_ptr<MultiFab> >& divtau,
