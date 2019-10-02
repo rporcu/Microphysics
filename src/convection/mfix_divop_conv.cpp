@@ -63,9 +63,8 @@ step2(const Box& grown1_bx,
             }
 
       divnc /= vtot;
-      epvfrac = vfrac(i,j,k) * epsilon_g(i,j,k);
-      optmp(i,j,k,n) = (1 - vfrac(i,j,k)) * (divnc - divc(i,j,k,n));
-      delm(i,j,k,n) = -1 * epvfrac * optmp(i,j,k,n);
+      optmp(i,j,k,n) =  (1 - vfrac(i,j,k)) * (divnc - divc(i,j,k,n));
+       delm(i,j,k,n) = -(    vfrac(i,j,k)) * optmp(i,j,k,n);
     }
     else
       delm(i,j,k,n) = 0;
@@ -115,6 +114,8 @@ step3(const Box& grown1_bx,
             }
 
       wtot = 1/wtot;
+
+// TO DO -- SHOULD WE REMOVE THE EP_G FROM BELOW WHEN DIV COMES IN AS DIV(ep u u) NOT DIV(u u)????
       
       for(int ii(-1); ii <= 1; ii++)
         for(int jj(-1); jj <= 1; jj++)
@@ -125,8 +126,7 @@ step3(const Box& grown1_bx,
 #ifdef AMREX_USE_CUDA
               Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk,n), delm(i,j,k,n) * wtot * mask(i,j,k));
 #else
-              optmp(i+ii,j+jj,k+kk,n) += 
-                delm(i,j,k,n) * wtot * mask(i,j,k);
+              optmp(i+ii,j+jj,k+kk,n) += delm(i,j,k,n) * wtot * mask(i,j,k);
 #endif
             }
     }
