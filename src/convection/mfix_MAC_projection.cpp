@@ -105,7 +105,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
       for (int i=0; i<AMREX_SPACEDIM; ++i)
          (vel[lev])[i]->FillBoundary( geom[lev].periodicity() );
       
-      if (m_verbose)
+ //   if (m_verbose)
       {
          bool already_on_centroid = false;
          EB_computeDivergence(*mac_rhs[lev],
@@ -192,6 +192,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
 
          Print() << "  * On level "<< lev
                  << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
+         exit(0); 
       } 
 
       // Set bcs on (ep * u_mac)

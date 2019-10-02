@@ -1,7 +1,7 @@
 #include <mfix.H>
 
 void
-mfix::mfix_predict_vels_on_faces ( Real time,
+mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                                    Vector< std::unique_ptr<MultiFab> >& vel_in,
                                    Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                    Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
@@ -11,14 +11,11 @@ mfix::mfix_predict_vels_on_faces ( Real time,
 {
     BL_PROFILE("mfix::mfix_predict_vels_on_faces");
 
-    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
-    ep_face.resize(finest_level+1);
+    Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> ep_face;
 
-    for (int lev=0; lev < nlev; ++lev)
-    {
-       Box domain(geom[lev].Domain());   
+    Box domain(geom[lev].Domain());   
 
-       iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
+    iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -48,19 +45,23 @@ mfix::mfix_predict_vels_on_faces ( Real time,
 
        // We will need these ep on face centers to interpolate to face centroids below
        ep_in[lev]->FillBoundary(geom[lev].periodicity());
-       ep_face[lev][0].reset(new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-       ep_face[lev][1].reset(new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-       ep_face[lev][2].reset(new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
+
+       ep_face[0].reset(new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
+       ep_face[1].reset(new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
+       ep_face[2].reset(new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
 
        // Define ep on face centers
-       average_cellcenter_to_face( GetArrOfPtrs(ep_face[lev]), *ep_in[lev], geom[lev] );
+       average_cellcenter_to_face( GetArrOfPtrs(ep_face), *ep_in[lev], geom[lev] );
+       ep_face[0]->FillBoundary();
+       ep_face[1]->FillBoundary();
+       ep_face[2]->FillBoundary();
 
-       MultiFab upls(ep_face[lev][0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab umns(ep_face[lev][0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab vpls(ep_face[lev][1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab vmns(ep_face[lev][1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab wpls(ep_face[lev][2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab wmns(ep_face[lev][2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab upls(ep_face[0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab umns(ep_face[0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab vpls(ep_face[1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab vmns(ep_face[1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab wpls(ep_face[2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab wmns(ep_face[2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
 
        // First compute the slopes
        int slopes_comp = 0;
@@ -76,20 +77,25 @@ mfix::mfix_predict_vels_on_faces ( Real time,
        Real small_vel = 1.e-10;
        Real  huge_vel = 1.e100;
 
-       // Then compute velocity at faces
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-
-       // Predict to centers
+       // Then predict to face centers
        for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
            // Tilebox
-          Box  bx = mfi.tilebox();
-          Box ubx = mfi.tilebox(e_x);
-          Box vbx = mfi.tilebox(e_y);
-          Box wbx = mfi.tilebox(e_z);
-      
+          // Box  bx = mfi.tilebox();
+          // Box ubx = mfi.tilebox(e_x);
+          // Box vbx = mfi.tilebox(e_y);
+          // Box wbx = mfi.tilebox(e_z);
+
+          Box        bx       = mfi.validbox();
+
+          const Box ubx       = amrex::surroundingNodes(bx,0);
+          const Box vbx       = amrex::surroundingNodes(bx,1);
+          const Box wbx       = amrex::surroundingNodes(bx,2);
+
+          const Box ubx_grown = amrex::surroundingNodes(amrex::grow(bx,1),0);
+          const Box vbx_grown = amrex::surroundingNodes(amrex::grow(bx,1),1);
+          const Box wbx_grown = amrex::surroundingNodes(amrex::grow(bx,1),2);
+
           // Check efficiently if this tile contains any eb stuff
 
           const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_in[lev])[mfi]);
@@ -198,7 +204,7 @@ mfix::mfix_predict_vels_on_faces ( Real time,
              const auto& apz_fab = areafrac[2]->array(mfi);
 
              // This FAB has cut cells
-             AMREX_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
+             AMREX_HOST_DEVICE_FOR_3D(ubx_grown, i, j, k, 
              {
                  // X-faces
                  if (apx_fab(i,j,k) > 0.0)
@@ -209,7 +215,7 @@ mfix::mfix_predict_vels_on_faces ( Real time,
              });
 
 
-             AMREX_HOST_DEVICE_FOR_3D(vbx, i, j, k,
+             AMREX_HOST_DEVICE_FOR_3D(vbx_grown, i, j, k,
              {
                  // Y-faces
                  if (apy_fab(i,j,k) > 0.0)
@@ -219,7 +225,7 @@ mfix::mfix_predict_vels_on_faces ( Real time,
                  }
              });
 
-             AMREX_HOST_DEVICE_FOR_3D(wbx, i, j, k,
+             AMREX_HOST_DEVICE_FOR_3D(wbx_grown, i, j, k,
              {
                  // Z-faces
                  if (apz_fab(i,j,k) > 0.0) {
@@ -238,6 +244,9 @@ mfix::mfix_predict_vels_on_faces ( Real time,
        wpls.FillBoundary();
        wmns.FillBoundary();
 
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
        // Do interpolation to centroids -- only for cut cells
        for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
@@ -277,9 +286,9 @@ mfix::mfix_predict_vels_on_faces ( Real time,
              const auto& apz_fab = areafrac[2]->array(mfi);
 
              // Face-centered ep
-             const auto& epx_fab = (ep_face[lev][0])->array(mfi);
-             const auto& epy_fab = (ep_face[lev][1])->array(mfi);
-             const auto& epz_fab = (ep_face[lev][2])->array(mfi);
+             const auto& epx_fab = (ep_face[0])->array(mfi);
+             const auto& epy_fab = (ep_face[1])->array(mfi);
+             const auto& epz_fab = (ep_face[2])->array(mfi);
 
              // Face centroids
              const auto& fcx_fab = facecent[0]->array(mfi);
@@ -380,6 +389,7 @@ mfix::mfix_predict_vels_on_faces ( Real time,
                        }
                        vmac_fab(i,j,k) *= ep_on_centroid;
                     }
+                       vmac_fab(i,j,k) = 0.0;
 
                  } else {
 
@@ -448,11 +458,8 @@ mfix::mfix_predict_vels_on_faces ( Real time,
                        wmac_fab(i,j,k) *= epz_fab(i,j,k);
                  }
              });
-
           } // Cut cells
        } // MFIter
-
-    }   // end loop over levels
 
 #ifdef AMREX_USE_CUDA
     Gpu::Device::synchronize();

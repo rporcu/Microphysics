@@ -214,7 +214,7 @@ public:
 
     void mfix_add_gravity_and_gp(Real dt);
 
-    void mfix_predict_vels_on_faces(Real time,
+    void mfix_predict_vels_on_faces(int lev, Real time,
                                     Vector< std::unique_ptr<MultiFab> >& vel,
                                     Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                     Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
@@ -296,59 +296,6 @@ public:
 
     template <typename F>
     void mfix_calc_particle_beta(F DragFunc, Real time);
-
-    void mfix_compute_fluxes(int lev,
-                             Vector< std::unique_ptr<MultiFab> >& conv,
-                             const int conv_comp,
-                             Vector< std::unique_ptr<MultiFab> >& state,
-                             const int state_comp, const int n_comp,
-                             Vector< std::unique_ptr<MultiFab> >& xslopes,
-                             Vector< std::unique_ptr<MultiFab> >& yslopes,
-                             Vector< std::unique_ptr<MultiFab> >& zslopes,
-                             const int slopes_comp,
-                             Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                             const bool is_conservative);
-
-    void mfix_compute_ugradu(Box& bx,
-                             Vector< std::unique_ptr<MultiFab> >& conv,
-                             const int conv_comp,
-                             Vector< std::unique_ptr<MultiFab> >& state,
-                             const int state_comp, const int n_comp,
-                             Vector< std::unique_ptr<MultiFab> >& xslopes,
-                             Vector< std::unique_ptr<MultiFab> >& yslopes,
-                             Vector< std::unique_ptr<MultiFab> >& zslopes,
-                             const int slopes_comp,
-                             Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                             MFIter* mfi,
-                             Box& domain, const int lev,
-                             const bool is_conservative);
-
-    void mfix_compute_ugradu_eb(Box& bx,
-                                Vector< std::unique_ptr<MultiFab> >& conv,
-                                const int conv_comp,
-                                Vector< std::unique_ptr<MultiFab> >& state,
-                                const int state_comp, const int n_comp,
-                                Vector< std::unique_ptr<MultiFab> >& xslopes,
-                                Vector< std::unique_ptr<MultiFab> >& yslopes,
-                                Vector< std::unique_ptr<MultiFab> >& zslopes,
-                                const int slopes_comp,
-                                Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                                Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                MFIter* mfi,
-                                Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
-                                Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
-                                const amrex::MultiFab* volfrac,
-                                const amrex::MultiCutFab* bndrycent,
-                                const amrex::iMultiFab* cc_mask,
-                                Box& domain,
-                                const EBCellFlagFab& flags,
-                                const int lev,
-                                const bool is_conservative);
 
      Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
@@ -494,6 +441,61 @@ private:
                                        Vector< std::unique_ptr<MultiFab> >& ro_g,
                                        Vector< std::unique_ptr<MultiFab> >& trac,
                                         Real time);
+
+    void mfix_compute_fluxes(const int lev,
+                             Vector< std::unique_ptr<MultiFab> >& a_fx,
+                             Vector< std::unique_ptr<MultiFab> >& a_fy,
+                             Vector< std::unique_ptr<MultiFab> >& a_fz,
+                             Vector< std::unique_ptr<MultiFab> >& state,
+                             const int state_comp, const int n_comp,
+                             Vector< std::unique_ptr<MultiFab> >& xslopes,
+                             Vector< std::unique_ptr<MultiFab> >& yslopes,
+                             Vector< std::unique_ptr<MultiFab> >& zslopes,
+                             const int slopes_comp,
+                             Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac);
+
+    void mfix_compute_ugradu(const int lev, Box& bx,
+                             Vector< std::unique_ptr<MultiFab> >& a_fx,
+                             Vector< std::unique_ptr<MultiFab> >& a_fy,
+                             Vector< std::unique_ptr<MultiFab> >& a_fz,
+                             Vector< std::unique_ptr<MultiFab> >& state,
+                             const int state_comp, const int n_comp,
+                             Vector< std::unique_ptr<MultiFab> >& xslopes,
+                             Vector< std::unique_ptr<MultiFab> >& yslopes,
+                             Vector< std::unique_ptr<MultiFab> >& zslopes,
+                             const int slopes_comp,
+                             Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+                             MFIter* mfi, Box& domain);
+
+    void mfix_compute_ugradu_eb(const int lev, Box& bx,
+                                Vector< std::unique_ptr<MultiFab> >& a_fx,
+                                Vector< std::unique_ptr<MultiFab> >& a_fy,
+                                Vector< std::unique_ptr<MultiFab> >& a_fz,
+                                Vector< std::unique_ptr<MultiFab> >& state,
+                                const int state_comp, const int n_comp,
+                                Vector< std::unique_ptr<MultiFab> >& xslopes,
+                                Vector< std::unique_ptr<MultiFab> >& yslopes,
+                                Vector< std::unique_ptr<MultiFab> >& zslopes,
+                                const int slopes_comp,
+                                Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                                Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                                Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+                                MFIter* mfi,
+                                Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
+                                Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
+                                const amrex::MultiFab* volfrac,
+                                const amrex::MultiCutFab* bndrycent,
+                                const amrex::iMultiFab* cc_mask,
+                                Box& domain, const EBCellFlagFab& flags);
+
+    void mfix_redistribute( int lev,
+                            MultiFab& conv_tmp_in,
+                            Vector< std::unique_ptr<MultiFab> >& conv_out,
+                            int conv_comp, int ncomp);
 
      void mfix_compute_divtau(Vector< std::unique_ptr<MultiFab> >& divtau,
                               Vector< std::unique_ptr<MultiFab> >& vel,

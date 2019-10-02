@@ -3,24 +3,22 @@
 
 #include <mfix.H>
 
+
 void 
-compute_divop_conv(
-              Box& bx,
-              MultiFab& divergence,
-              MultiFab& ep_g,
-              int conv_comp, int ncomp,
-              MFIter* mfi,
-              FArrayBox& fx,
-              FArrayBox& fy,
-              FArrayBox& fz,
-              Array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac,
-              Array<const MultiCutFab*, AMREX_SPACEDIM>& facecent,
-              const EBCellFlagFab& flags_fab,
-              const MultiFab* volfrac,
-              const MultiCutFab* bndrycent_fab,
-              Box& domain,
-              const int cyclic_x,
-              const int cyclic_y,
-              const int cyclic_z,
-              const Real* dx);
+mfix_apply_eb_redistribution ( Box& bx,
+                               MultiFab& conv,
+                               MultiFab& divc,
+                               MultiFab& ep_g,
+                               MFIter* mfi,
+                               const int conv_comp,
+                               const int ncomp,
+                               const EBCellFlagFab& flags_fab,
+                               const MultiFab* volfrac,
+                               Box& domain,
+                               const int cyclic_x,
+                               const int cyclic_y,
+                               const int cyclic_z,
+                               const Real* dx);
+
+
 #endif

@@ -25,10 +25,17 @@ mfix::set_MAC_velocity_bcs ( int lev,
 #endif
    for (MFIter mfi((*mac_rhs[lev]), false); mfi.isValid(); ++mfi)
    {
-      const Box& bx = (*mac_rhs[lev])[mfi].box();
+      const Box& ubx = (*ep_u_mac[lev])[mfi].box();
+      IntVect ubx_lo(ubx.loVect());
+      IntVect ubx_hi(ubx.hiVect());
 
-      IntVect bx_lo(bx.loVect());
-      IntVect bx_hi(bx.hiVect());
+      const Box& vbx = (*ep_v_mac[lev])[mfi].box();
+      IntVect vbx_lo(vbx.loVect());
+      IntVect vbx_hi(vbx.hiVect());
+
+      const Box& wbx = (*ep_w_mac[lev])[mfi].box();
+      IntVect wbx_lo(wbx.loVect());
+      IntVect wbx_hi(wbx.hiVect());
 
       IntVect dom_lo(domain.loVect());
       IntVect dom_hi(domain.hiVect());
@@ -53,51 +60,51 @@ mfix::set_MAC_velocity_bcs ( int lev,
       Array4<int> const& bct_klo = bc_klo[lev]->array();
       Array4<int> const& bct_khi = bc_khi[lev]->array();
 
-      const int nlft = std::max(0, dom_lo[0]-bx_lo[0]);
-      const int nbot = std::max(0, dom_lo[1]-bx_lo[1]);
-      const int ndwn = std::max(0, dom_lo[2]-bx_lo[2]);
+      const int nlft = std::max(0, dom_lo[0]-ubx_lo[0]);
+      const int nbot = std::max(0, dom_lo[1]-vbx_lo[1]);
+      const int ndwn = std::max(0, dom_lo[2]-wbx_lo[2]);
 
-      const int nrgt = std::max(0, bx_hi[0]-dom_hi[0]);
-      const int ntop = std::max(0, bx_hi[1]-dom_hi[1]);
-      const int nup  = std::max(0, bx_hi[2]-dom_hi[2]);
+      const int nrgt = std::max(0, ubx_hi[0]-dom_hi[0]);
+      const int ntop = std::max(0, vbx_hi[1]-dom_hi[1]);
+      const int nup  = std::max(0, wbx_hi[2]-dom_hi[2]);
 
       // Create InVects for following Boxes
-      IntVect ulo_bx_yz_lo(bx_lo);
-      IntVect ulo_bx_yz_hi(bx_hi);
-      IntVect uhi_bx_yz_lo(bx_lo);
-      IntVect uhi_bx_yz_hi(bx_hi);
+      IntVect ulo_bx_yz_lo(ubx_lo);
+      IntVect ulo_bx_yz_hi(ubx_hi);
+      IntVect uhi_bx_yz_lo(ubx_lo);
+      IntVect uhi_bx_yz_hi(ubx_hi);
 
-      IntVect vlo_bx_xz_lo(bx_lo);
-      IntVect vlo_bx_xz_hi(bx_hi);
-      IntVect vhi_bx_xz_lo(bx_lo);
-      IntVect vhi_bx_xz_hi(bx_hi);
+      IntVect vlo_bx_xz_lo(vbx_lo);
+      IntVect vlo_bx_xz_hi(vbx_hi);
+      IntVect vhi_bx_xz_lo(vbx_lo);
+      IntVect vhi_bx_xz_hi(vbx_hi);
 
-      IntVect wlo_bx_xy_lo(bx_lo);
-      IntVect wlo_bx_xy_hi(bx_hi);
-      IntVect whi_bx_xy_lo(bx_lo);
-      IntVect whi_bx_xy_hi(bx_hi);
+      IntVect wlo_bx_xy_lo(wbx_lo);
+      IntVect wlo_bx_xy_hi(wbx_hi);
+      IntVect whi_bx_xy_lo(wbx_lo);
+      IntVect whi_bx_xy_hi(wbx_hi);
 
       // Fix lo and hi limits
       // Box 'yz'
-      ulo_bx_yz_lo[0] = u_lo[0];
+      ulo_bx_yz_lo[0] = dom_lo[0];
       ulo_bx_yz_hi[0] = dom_lo[0];
 
       uhi_bx_yz_lo[0] = dom_hi[0]+1;
-      uhi_bx_yz_hi[0] = u_hi[0];
+      uhi_bx_yz_hi[0] = dom_hi[0]+1;
 
       // Box 'xz'
-      vlo_bx_xz_lo[1] = v_lo[1];
+      vlo_bx_xz_lo[1] = dom_lo[1];
       vlo_bx_xz_hi[1] = dom_lo[1];
 
       vhi_bx_xz_lo[1] = dom_hi[1]+1;
-      vhi_bx_xz_hi[1] = v_hi[1];
+      vhi_bx_xz_hi[1] = dom_hi[1]+1;
 
       // Box 'xy'
-      wlo_bx_xy_lo[2] = w_lo[2];
+      wlo_bx_xy_lo[2] = dom_lo[2];
       wlo_bx_xy_hi[2] = dom_lo[2];
 
       whi_bx_xy_lo[2] = dom_hi[2]+1;
-      whi_bx_xy_hi[2] = w_hi[2];
+      whi_bx_xy_hi[2] = dom_hi[2]+1;
 
       // Create 2D boxes for CUDA loops
       const Box ulo_bx_yz(ulo_bx_yz_lo, ulo_bx_yz_hi);
