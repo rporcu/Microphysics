@@ -73,29 +73,6 @@ step2(const Box& grown1_bx,
 #ifdef AMREX_USE_CUDA
   Gpu::Device::synchronize();
 #endif
-}
-
-void
-step3(const Box& grown1_bx,
-      MFIter* mfi,
-      FArrayBox& optmp_fbx,
-      MultiFab& ep_g,
-      FArrayBox& delm_fbx,
-      const MultiFab* volfrac,
-      FArrayBox& mask_fbx,
-      const EBCellFlagFab& flags_fab,
-      const int icomp, const int ncomp)
-{
-  Array4<Real> const& epsilon_g = ep_g.array(*mfi);
-
-  Array4<const EBCellFlag> const& flags = flags_fab.array();
-
-  Array4<const Real> const& vfrac = volfrac->array(*mfi);
-
-  Array4<Real> const& delm = delm_fbx.array();
-
-  Array4<Real> const& optmp = optmp_fbx.array();
-  Array4<Real> const& mask = mask_fbx.array();
 
   AMREX_HOST_DEVICE_FOR_4D(grown1_bx, ncomp, i, j, k, n,
   {
@@ -113,6 +90,10 @@ step3(const Box& grown1_bx,
                       mask(i+ii,j+jj,k+kk);
             }
 
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
+
       wtot = 1/wtot;
 
 // TO DO -- SHOULD WE REMOVE THE EP_G FROM BELOW WHEN DIV COMES IN AS DIV(ep u u) NOT DIV(u u)????
@@ -124,9 +105,9 @@ step3(const Box& grown1_bx,
                 (flags(i,j,k).isConnected({ii,jj,kk}) == 1))
             {
 #ifdef AMREX_USE_CUDA
-              Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk,n), delm(i,j,k,n) * wtot * mask(i,j,k));
+              Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk,n), delm(i,j,k,n) * wtot * mask(i+ii,j+jj,k+kk));
 #else
-              optmp(i+ii,j+jj,k+kk,n) += delm(i,j,k,n) * wtot * mask(i,j,k);
+              optmp(i+ii,j+jj,k+kk,n) += delm(i,j,k,n) * wtot * mask(i+ii,j+jj,k+kk);
 #endif
             }
     }
@@ -204,12 +185,6 @@ mfix_apply_eb_redistribution ( Box& bx,
   //
   step2(grown1_bx, grown2_bx, mfi, optmp_fbx, ep_g, divc_fbx, delm_fbx, 
         volfrac, mask_fbx, flags_fab, icomp, ncomp);
-
-  //
-  // Step 3: redistribute excess/loss of mass
-  //
-  step3(grown1_bx, mfi, optmp_fbx, ep_g, delm_fbx, 
-        volfrac, mask_fbx, flags_fab, icomp, ncomp);  
 
   //
   // Resume the correct sign, AKA return the negative
