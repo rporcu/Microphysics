@@ -109,7 +109,7 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
     // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
     //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
     //    on face CENTROIDS
-    apply_MAC_projection (u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time, steady_state );
+    apply_MAC_projection (u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time);
 
     bool already_on_centroids = true;
 

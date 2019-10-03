@@ -59,7 +59,7 @@ step2(const Box& grown1_bx,
               epvfrac = vfrac(i+ii,j+jj,k+kk) * epsilon_g(i+ii,j+jj,k+kk) * 
                         mask(i+ii,j+jj,k+kk);
               vtot += epvfrac;
-              divnc += epvfrac * divc(i+ii,j+jj,k+kk);
+              divnc += epvfrac * divc(i+ii,j+jj,k+kk,n);
             }
 
       divnc /= vtot;

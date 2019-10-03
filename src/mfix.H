@@ -357,7 +357,7 @@ protected:
                                  Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                                  Vector< std::unique_ptr<MultiFab> >& ep,
                                  Vector< std::unique_ptr<MultiFab> >& ro,
-                                 Real time, int steady_state);
+                                 Real time);
 
      void set_MAC_velocity_bcs ( int lev,
                                  Vector< std::unique_ptr<MultiFab> >& u,

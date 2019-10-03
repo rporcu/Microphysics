@@ -135,9 +135,6 @@ mfix::mfix_compute_fluxes(int lev,
                                            xslopes_u, yslopes_u, zslopes_u, slopes_comp,
                                            u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
                                            volfrac, bndrycent, &cc_mask, domain, flags);
-//      std::cout << "FLX " << (*a_fx[0])[0] << std::endl;
-//      std::cout << "FLY " << (*a_fy[0])[0] << std::endl;
-//      std::cout << "FLZ " << (*a_fz[0])[0] << std::endl;
                 }
             }
         } // MFIter
@@ -159,7 +156,6 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
                            Vector< std::unique_ptr<MultiFab> >& w_mac,
                            MFIter* mfi, Box& domain)
 {
-  const Real* dx = geom[lev].CellSize();
   const amrex::Dim3 dom_low = amrex::lbound(domain);
   const amrex::Dim3 dom_high = amrex::ubound(domain);
   
@@ -183,8 +179,6 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
   Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
   Array4<int> const& bc_klo_type = bc_klo[lev]->array();
   Array4<int> const& bc_khi_type = bc_khi[lev]->array();
-
-  const Real i_dx(1/dx[0]), i_dy(1/dx[1]), i_dz(1/dx[2]);
 
   // Vectorize the boundary conditions list in order to use it in lambda
   // functions
@@ -338,7 +332,6 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
                              const iMultiFab* cc_mask,
                              Box& domain, const EBCellFlagFab& flags)
 {
-  const Real* dx = geom[lev].CellSize();
   const amrex::Dim3 dom_low = amrex::lbound(domain);
   const amrex::Dim3 dom_high = amrex::ubound(domain);
 
@@ -366,9 +359,6 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
   Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
   Array4<int> const& bc_klo_type = bc_klo[lev]->array();
   Array4<int> const& bc_khi_type = bc_khi[lev]->array();
-
-  // Number of Halo layers
-  const int nh(3);
 
   const Box ubx       = amrex::surroundingNodes(bx,0);
   const Box vbx       = amrex::surroundingNodes(bx,1);
@@ -509,7 +499,6 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
   //
   AMREX_HOST_DEVICE_FOR_4D(wbx_grown, ncomp, i, j, k, n,
   {
-    Real w_face(0);
     Real wpls(0); Real wmns(0);
 
     if( areafrac_z(i,j,k) > 0 ) {

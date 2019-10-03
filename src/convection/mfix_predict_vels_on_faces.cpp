@@ -43,30 +43,6 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
            }
        }
 
-       // We will need these ep on face centers to interpolate to face centroids below
-       ep_in[lev]->FillBoundary(geom[lev].periodicity());
-
-       ep_face[0].reset(new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
-       ep_face[1].reset(new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
-       ep_face[2].reset(new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
-
-       // Define ep on face centers
-       average_cellcenter_to_face( GetArrOfPtrs(ep_face), *ep_in[lev], geom[lev] );
-       ep_face[0]->FillBoundary();
-       ep_face[1]->FillBoundary();
-       ep_face[2]->FillBoundary();
-
-       MultiFab upls(ep_face[0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab umns(ep_face[0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab vpls(ep_face[1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab vmns(ep_face[1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab wpls(ep_face[2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-       MultiFab wmns(ep_face[2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-
-       // First compute the slopes
-       int slopes_comp = 0;
-       mfix_compute_slopes(lev, time, *vel_in[lev], xslopes_u, yslopes_u, zslopes_u, slopes_comp);
-
        // Get EB geometric info
        Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
        Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
@@ -77,15 +53,54 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
        Real small_vel = 1.e-10;
        Real  huge_vel = 1.e100;
 
-       // Then predict to face centers
-       for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-       {
-           // Tilebox
-          // Box  bx = mfi.tilebox();
-          // Box ubx = mfi.tilebox(e_x);
-          // Box vbx = mfi.tilebox(e_y);
-          // Box wbx = mfi.tilebox(e_z);
 
+       // ****************************************************************************
+       // We will need ep on face centers to interpolate to face centroids below
+       // ****************************************************************************
+
+       ep_face[0].reset(new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
+       ep_face[1].reset(new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
+       ep_face[2].reset(new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
+
+       // This is to make sure ep_face is defined everywhere
+       ep_face[0]->setVal(covered_val);
+       ep_face[1]->setVal(covered_val);
+       ep_face[2]->setVal(covered_val);
+
+       ep_in[lev]->FillBoundary(geom[lev].periodicity());
+       average_cellcenter_to_face( GetArrOfPtrs(ep_face), *ep_in[lev], geom[lev] );
+
+       ep_face[0]->FillBoundary();
+       ep_face[1]->FillBoundary();
+       ep_face[2]->FillBoundary();
+
+       // ****************************************************************************
+       // We will store the left and right states in arrays for interpolation
+       // ****************************************************************************
+
+       MultiFab upls(ep_face[0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab umns(ep_face[0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+
+       MultiFab vpls(ep_face[1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab vmns(ep_face[1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+
+       MultiFab wpls(ep_face[2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+       MultiFab wmns(ep_face[2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+
+       // ****************************************************************************
+       // First compute the slopes
+       // ****************************************************************************
+       int slopes_comp = 0;
+       mfix_compute_slopes(lev, time, *vel_in[lev], xslopes_u, yslopes_u, zslopes_u, slopes_comp);
+
+       // ****************************************************************************
+       // Then predict to face centers
+       // NOTE - THIS LOOP IS NO LONGER TILED
+       // ****************************************************************************
+
+       // for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+       for (MFIter mfi(*vel_in[lev],false); mfi.isValid(); ++mfi)
+       {
           Box        bx       = mfi.validbox();
 
           const Box ubx       = amrex::surroundingNodes(bx,0);
@@ -96,8 +111,6 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
           const Box vbx_grown = amrex::surroundingNodes(amrex::grow(bx,1),1);
           const Box wbx_grown = amrex::surroundingNodes(amrex::grow(bx,1),2);
 
-          // Check efficiently if this tile contains any eb stuff
-
           const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_in[lev])[mfi]);
           const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
@@ -107,6 +120,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
              (*ep_v_mac[lev])[mfi].setVal( 1.2345e300, vbx, 0, 1);
              (*ep_w_mac[lev])[mfi].setVal( 1.2345e300, wbx, 0, 1);
           }
+  
+          // No cut cells in this FAB
           else if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
           {
 
@@ -180,9 +195,9 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                  }
              });
 
+          // Cut cells in this FAB
           } else {
 
-             // Cell-centered velocity
              const auto& ccvel_fab = vel_in[lev]->array(mfi);
 
              // Cell-centered slopes
@@ -236,7 +251,9 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
           } // Cut cells
        } // MFIter
 
+       // ****************************************************************************
        // Make sure to fill face-centered values outside our grid before interpolating
+       // ****************************************************************************
        upls.FillBoundary();
        umns.FillBoundary();
        vpls.FillBoundary();
@@ -244,10 +261,12 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
        wpls.FillBoundary();
        wmns.FillBoundary();
 
+       // ****************************************************************************
+       // Do interpolation to centroids -- only for cut cells
+       // ****************************************************************************
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-       // Do interpolation to centroids -- only for cut cells
        for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
            // Tilebox
@@ -264,9 +283,6 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
           if ( !(flags.getType(amrex::grow(bx,0)) == FabType::covered ||
                  flags.getType(amrex::grow(bx,1)) == FabType::regular ) )
           {
-             // Cell-centered velocity
-             const auto& ccvel_fab = vel_in[lev]->array(mfi);
-
              // Face-centered velocity components
              const auto& umac_fab = (ep_u_mac[lev])->array(mfi);
              const auto& vmac_fab = (ep_v_mac[lev])->array(mfi);
@@ -354,17 +370,17 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
 
              AMREX_HOST_DEVICE_FOR_3D(vbx, i, j, k,
              {
-                if (apy_fab(i,j,k) == 0.0)
+                if (apy_fab(i,j,k) == 0.0) {
 
                     vmac_fab(i,j,k) = huge_vel;
 
-                else if (apy_fab(i,j,k) < 1.0) {
+                } else if (apy_fab(i,j,k) < 1.0) {
 
                     int ii = i + static_cast<int>(std::copysign(1.0,fcy_fab(i,j,k,0)));
                     int kk = k + static_cast<int>(std::copysign(1.0,fcy_fab(i,j,k,1)));
 
-                    Real fracx = (ccm_fab(ii,j-1,k) || ccm_fab(ii,j,k)) ? std::abs(fcy_fab(i,j,k,0)) : 0.0;
-                    Real fracz = (ccm_fab(i,j-1,kk) || ccm_fab(i,j,kk)) ? std::abs(fcy_fab(i,j,k,1)) : 0.0;
+                    Real fracx = (ccm_fab(ii,j-1,k ) || ccm_fab(ii,j,k)) ? std::abs(fcy_fab(i,j,k,0)) : 0.0;
+                    Real fracz = (ccm_fab( i,j-1,kk) || ccm_fab(i,j,kk)) ? std::abs(fcy_fab(i,j,k,1)) : 0.0;
 
                     Real vpls_on_centroid = (1.0-fracx)*(1.0-fracz)*vpls_fab(i ,j,k )+
                                                  fracx *(1.0-fracz)*vpls_fab(ii,j,k )+
