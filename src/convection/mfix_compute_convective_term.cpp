@@ -215,7 +215,7 @@ mfix::mfix_redistribute( int lev,
     conv_tmp_in.FillBoundary(geom[lev].periodicity());
 
     // Get EB geometric info
-    Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
+    // Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac; SET_BUT_NEVER_USED
     const amrex::MultiFab*                    volfrac;
 
     areafrac  =   ebfactory[lev] -> getAreaFrac();

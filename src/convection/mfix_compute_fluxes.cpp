@@ -191,7 +191,8 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
 
   AMREX_HOST_DEVICE_FOR_4D(ubx, ncomp, i, j, k, n,
   {
-    Real state_w(0)  ; Real state_e(0);
+    Real state_w(0)  ;
+    //Real state_e(0); DECLARED_BUT_NEVER_REFERENCED
     Real state_mns(0); Real state_pls(0);
 
     //
@@ -220,7 +221,8 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
 
   AMREX_HOST_DEVICE_FOR_4D(vbx, ncomp, i, j, k, n,
   {
-    Real state_s(0)  ; Real state_n(0);
+    Real state_s(0)  ;
+    //Real state_n(0); DECLARED_BUT_NEVER_REFERENCED
     Real state_mns(0); Real state_pls(0);
 
     //
@@ -249,7 +251,8 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
 
   AMREX_HOST_DEVICE_FOR_4D(wbx, ncomp, i, j, k, n,
   {
-    Real state_b(0)  ; Real state_t(0);
+    Real state_b(0)  ;
+    // Real state_t(0); DECLARED_BUT_NEVER_REFERENCED
     Real state_mns(0); Real state_pls(0);
     //
     // Bottom face

@@ -6,8 +6,6 @@
 
 namespace divop_conv_aux {
 
-AMREX_GPU_HOST_DEVICE
-
 void
 step2(const Box& grown1_bx,
       const Box& grown2_bx,
