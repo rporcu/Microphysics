@@ -173,23 +173,25 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
   Array4<Real> const& y_slopes = yslopes_in[lev]->array(*mfi);
   Array4<Real> const& z_slopes = zslopes_in[lev]->array(*mfi);
 
-  Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
-  Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
-  Array4<int> const& bc_jlo_type = bc_jlo[lev]->array();
-  Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
-  Array4<int> const& bc_klo_type = bc_klo[lev]->array();
-  Array4<int> const& bc_khi_type = bc_khi[lev]->array();
+  Array4<int> const& bct_ilo = bc_ilo[lev]->array();
+  Array4<int> const& bct_ihi = bc_ihi[lev]->array();
+  Array4<int> const& bct_jlo = bc_jlo[lev]->array();
+  Array4<int> const& bct_jhi = bc_jhi[lev]->array();
+  Array4<int> const& bct_klo = bc_klo[lev]->array();
+  Array4<int> const& bct_khi = bc_khi[lev]->array();
+
+  const Box ubx       = amrex::surroundingNodes(bx,0);
+  const Box vbx       = amrex::surroundingNodes(bx,1);
+  const Box wbx       = amrex::surroundingNodes(bx,2);
 
   // Vectorize the boundary conditions list in order to use it in lambda
   // functions
   const GpuArray<int, 3> bc_types =
     {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};
 
-  AMREX_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n,
+  AMREX_HOST_DEVICE_FOR_4D(ubx, ncomp, i, j, k, n,
   {
     Real state_w(0)  ; Real state_e(0);
-    Real state_s(0)  ; Real state_n(0);
-    Real state_b(0)  ; Real state_t(0);
     Real state_mns(0); Real state_pls(0);
 
     //
@@ -197,35 +199,29 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
     //
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
-    if((i == dom_low.x) and
-     ugradu_aux::is_equal_to_any(bc_ilo_type(dom_low.x-1,j,k,0),
+    if ((i == dom_low.x) and
+     ugradu_aux::is_equal_to_any(bct_ilo(dom_low.x-1,j,k,0),
                                  bc_types.data(), bc_types.size()))
     {
       state_w = state(i-1,j,k,state_comp+n);
+
+    } else if ((i == dom_high.x+1) and
+     ugradu_aux::is_equal_to_any(bct_ihi(dom_high.x+1,j,k,0),
+                                 bc_types.data(), bc_types.size()))
+    {
+      state_w = state(i,j,k,state_comp+n);
     } else {
       state_pls = state(i  ,j,k,state_comp+n) - .5*x_slopes(i  ,j,k,slopes_comp+n);
       state_mns = state(i-1,j,k,state_comp+n) + .5*x_slopes(i-1,j,k,slopes_comp+n);
       state_w = upwind( state_mns, state_pls, u(i,j,k) );
-      fx(i,j,k,n) = u(i,j,k) * state_w;
     }
+    fx(i,j,k,n) = u(i,j,k) * state_w;
+  });
 
-    //
-    // East face
-    //
-    // In the case of MINF       we are using the prescribed Dirichlet value
-    // In the case of PINF, POUT we are using the upwind value
-    if((i == dom_high.x) and
-     ugradu_aux::is_equal_to_any(bc_ihi_type(dom_high.x+1,j,k,0),
-                                 bc_types.data(), bc_types.size()))
-    {
-      state_e = state(i+1,j,k,state_comp+n);
-    } else {
-      state_pls = state(i+1,j,k,state_comp+n) - .5*x_slopes(i+1,j,k,slopes_comp+n);
-      state_mns = state(i  ,j,k,state_comp+n) + .5*x_slopes(i  ,j,k,slopes_comp+n);
-
-      state_e = upwind( state_mns, state_pls, u(i+1,j,k) );
-      fx(i+1,j,k,n) = u(i+1,j,k) * state_e;
-    }
+  AMREX_HOST_DEVICE_FOR_4D(vbx, ncomp, i, j, k, n,
+  {
+    Real state_s(0)  ; Real state_n(0);
+    Real state_mns(0); Real state_pls(0);
 
     //
     // South face
@@ -233,71 +229,50 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((j == dom_low.y) and
-     ugradu_aux::is_equal_to_any(bc_jlo_type(i,dom_low.y-1,k,0),
+     ugradu_aux::is_equal_to_any(bct_jlo(i,dom_low.y-1,k,0),
                                  bc_types.data(), bc_types.size()))
     {
       state_s = state(i,j-1,k,state_comp+n);
+    } else if ((j == dom_high.y+1) and
+     ugradu_aux::is_equal_to_any(bct_jhi(i,dom_high.y+1,k,0),
+                                 bc_types.data(), bc_types.size()))
+    {
+      state_s = state(i,j,k,state_comp+n);
     } else {
       state_pls = state(i,j  ,k,state_comp+n) - .5*y_slopes(i,j  ,k,slopes_comp+n);
       state_mns = state(i,j-1,k,state_comp+n) + .5*y_slopes(i,j-1,k,slopes_comp+n);
 
       state_s = upwind( state_mns, state_pls, v(i,j,k) );
-      fy(i,j,k,n) = v(i,j,k) * state_s;
     }
+    fy(i,j,k,n) = v(i,j,k) * state_s;
+  });
 
-    //
-    // North face
-    //
-    // In the case of MINF       we are using the prescribed Dirichlet value
-    // In the case of PINF, POUT we are using the upwind value
-    if((j == dom_high.y) and
-     ugradu_aux::is_equal_to_any(bc_jhi_type(i,dom_high.y+1,k,0),
-                                 bc_types.data(), bc_types.size()))
-    {
-      state_n = state(i,j+1,k,state_comp+n);
-    } else {
-      state_pls = state(i,j+1,k,state_comp+n) - .5*y_slopes(i,j+1,k,slopes_comp+n);
-      state_mns = state(i,j  ,k,state_comp+n) + .5*y_slopes(i,j  ,k,slopes_comp+n);
-
-      state_n = upwind( state_mns, state_pls, v(i,j+1,k) );
-      fy(i,j+1,k,n) = v(i,j+1,k) * state_n;
-    }
-
+  AMREX_HOST_DEVICE_FOR_4D(wbx, ncomp, i, j, k, n,
+  {
+    Real state_b(0)  ; Real state_t(0);
+    Real state_mns(0); Real state_pls(0);
     //
     // Bottom face
     //
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
     if((k == dom_low.z) and
-     ugradu_aux::is_equal_to_any(bc_klo_type(i,j,dom_low.z-1,0),
+     ugradu_aux::is_equal_to_any(bct_klo(i,j,dom_low.z-1,0),
                                  bc_types.data(), bc_types.size()))
     {
       state_b = state(i,j,k-1,state_comp+n);
+    } else if ((k == dom_high.z+1) and
+     ugradu_aux::is_equal_to_any(bct_khi(i,j,dom_high.z+1,0),
+                                 bc_types.data(), bc_types.size()))
+    {
+      state_b = state(i,j,k,state_comp+n);
     } else {
       state_pls = state(i,j,k  ,state_comp+n) - .5*z_slopes(i,j,k  ,slopes_comp+n);
       state_mns = state(i,j,k-1,state_comp+n) + .5*z_slopes(i,j,k-1,slopes_comp+n);
 
       state_b = upwind( state_mns, state_pls, w(i,j,k) );
-      fz(i,j,k,n) = w(i,j,k) * state_b;
     }
-
-    //
-    // Top face
-    //
-    // In the case of MINF       we are using the prescribed Dirichlet value
-    // In the case of PINF, POUT we are using the upwind value
-    if((k == dom_high.z) and
-     ugradu_aux::is_equal_to_any(bc_khi_type(i,j,dom_high.z+1,0),
-                                 bc_types.data(), bc_types.size()))
-    {
-      state_t = state(i,j,k+1,state_comp+n);
-    } else {
-      state_pls = state(i,j,k+1,state_comp+n) - .5*z_slopes(i,j,k+1,slopes_comp+n);
-      state_mns = state(i,j,k  ,state_comp+n) + .5*z_slopes(i,j,k  ,slopes_comp+n);
-
-      state_t = upwind( state_mns, state_pls, w(i,j,k+1) );
-      fz(i,j,k+1,n) = w(i,j,k+1) * state_t;
-    }
+    fz(i,j,k,n) = w(i,j,k) * state_b;
   });
 
 #ifdef AMREX_USE_CUDA

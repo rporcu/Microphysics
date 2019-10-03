@@ -150,22 +150,20 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
         // Initialize conv_s to 0 for both density and tracer
         conv_s_in[lev]->setVal(0.,0,conv_s_in[lev]->nComp(),conv_s_in[lev]->nGrow());
 
-        //  USE THIS ONCE MULTI-COMPONENT WORKS AGAIN
-        // conv_comp = 0; state_comp = 0; num_comp = 3; slopes_comp = 0;
-        // mfix_compute_fluxes(lev, fx, fy, fz, conv_u_in, conv_comp+i, vel_in, state_comp+ num_comp,
-        //                       xslopes_u, yslopes_u, zslopes_u, slopes_comp,
-        //                       u_mac, v_mac, w_mac, false);
-        // EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
-        // mfix_redistribute(lev, conv_tmp, conv_u_in, conv_comp, num_comp);
-
-     
+        // **************************************************
+        // Compute div (ep_g u u) -- the update for velocity
+        // **************************************************
         conv_comp = 0; state_comp = 0; num_comp = 3; slopes_comp = 0;
         mfix_compute_fluxes(lev, fx, fy, fz, vel_in, state_comp, num_comp,
                             xslopes_u, yslopes_u, zslopes_u, slopes_comp,
                             u_mac, v_mac, w_mac);
+
         EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
         mfix_redistribute(lev, conv_tmp, conv_u_in, conv_comp, num_comp);
 
+        // **************************************************
+        // Compute div (ep_g rho u) -- the update for density
+        // **************************************************
         if (advect_density)
         {
             conv_comp = 0; state_comp = 0; num_comp = 1; slopes_comp = 0;
@@ -176,6 +174,9 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
             mfix_redistribute(lev, conv_tmp, conv_s_in, conv_comp, num_comp);
         }
 
+        // **********************************************************
+        // Compute div (ep_g rho trac u) -- the update for (rho*trac)
+        // **********************************************************
         if (advect_tracer)
         {
             conv_comp = 1; state_comp = 0; num_comp = 1; slopes_comp = 1;
