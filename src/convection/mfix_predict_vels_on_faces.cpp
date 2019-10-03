@@ -405,7 +405,6 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                        }
                        vmac_fab(i,j,k) *= ep_on_centroid;
                     }
-                       vmac_fab(i,j,k) = 0.0;
 
                  } else {
 
