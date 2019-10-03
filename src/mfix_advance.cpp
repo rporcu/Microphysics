@@ -302,8 +302,27 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
         // First add the convective term
         MultiFab::Saxpy (*vel_g[lev], dt, *conv_u_old[lev], 0, 0, 3, 0);
 
+        // Make sure to do this multiply before we update density!
+        if (advect_tracer)
+        {
+           int conv_comp = 1;
+           MultiFab::Multiply(*trac[lev],*ro_g[lev],0,0,1,0);
+           MultiFab::Saxpy   (*trac[lev], dt, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        }
+
+        if (advect_density)
+        {
+           int conv_comp = 0;
+           MultiFab::Saxpy (*ro_g[lev], dt, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        }
+
+        // Make sure to do this divide after we update density!
+        if (advect_tracer)
+           MultiFab::Divide  (*trac[lev],*ro_g[lev],0,0,1,0);
+
         // Add the explicit diffusion terms
-        MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
+        if (explicit_diffusion_pred == 1)
+           MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
     }
 
     // Add source terms
