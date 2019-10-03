@@ -198,9 +198,8 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
         conv_s_in[lev] -> mult(-1.0);
 
     } // lev
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
+  
+  Gpu::streamSynchronize();
 }
 
 void
@@ -218,7 +217,7 @@ mfix::mfix_redistribute( int lev,
     // Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac; SET_BUT_NEVER_USED
     const amrex::MultiFab*                    volfrac;
 
-    areafrac  =   ebfactory[lev] -> getAreaFrac();
+    //areafrac  =   ebfactory[lev] -> getAreaFrac();
     volfrac   = &(ebfactory[lev] -> getVolFrac());
 
     for (MFIter mfi(*conv_out[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)

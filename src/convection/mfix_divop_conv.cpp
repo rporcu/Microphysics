@@ -36,10 +36,6 @@ step2(const Box& grown1_bx,
     optmp(i,j,k,n) = 0;
   });
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   AMREX_HOST_DEVICE_FOR_4D(grown1_bx, ncomp, i, j, k, n,
   {
     if(flags(i,j,k).isSingleValued())
@@ -68,10 +64,6 @@ step2(const Box& grown1_bx,
       delm(i,j,k,n) = 0;
   });
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   AMREX_HOST_DEVICE_FOR_4D(grown1_bx, ncomp, i, j, k, n,
   {
     if(flags(i,j,k).isSingleValued())
@@ -87,10 +79,6 @@ step2(const Box& grown1_bx,
               wtot += epsilon_g(i+ii,j+jj,k+kk) * vfrac(i+ii,j+jj,k+kk) * 
                       mask(i+ii,j+jj,k+kk);
             }
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
 
       wtot = 1/wtot;
 
@@ -111,9 +99,7 @@ step2(const Box& grown1_bx,
     }
   });
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 }
 
 } // end namespace divop_conv_aux
@@ -174,10 +160,6 @@ mfix_apply_eb_redistribution ( Box& bx,
       mask(i,j,k) = 1;
   });
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   //
   // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
   //
@@ -193,7 +175,5 @@ mfix_apply_eb_redistribution ( Box& bx,
      divergence(i,j,k,icomp+n) = divcarr(i,j,k,n) + optmp(i,j,k,n);
   });
 
-#ifdef AMREX_USE_CUDA
-    Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 }
