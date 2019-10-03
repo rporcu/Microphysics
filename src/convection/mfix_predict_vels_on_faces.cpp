@@ -146,6 +146,11 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
              const auto& vmns_fab = vmns.array(mfi);
              const auto& wmns_fab = wmns.array(mfi);
 
+             // Face-centered ep
+             const auto& epx_fab = (ep_face[0])->array(mfi);
+             const auto& epy_fab = (ep_face[1])->array(mfi);
+             const auto& epz_fab = (ep_face[2])->array(mfi);
+
              // No cut cells in tile + 1-cell witdh halo -> use non-eb routine
              AMREX_HOST_DEVICE_FOR_3D(ubx, i, j, k, 
              {
@@ -160,6 +165,7 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                     } else if (avg >= 0)             { umac_fab(i,j,k) = umns_fab(i,j,k);
                     } else                           { umac_fab(i,j,k) = upls_fab(i,j,k);
                     }
+                    umac_fab(i,j,k) *= epx_fab(i,j,k);
                  }
              });
 
@@ -176,6 +182,7 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                     } else if (avg >= 0)             { vmac_fab(i,j,k) = vmns_fab(i,j,k);
                     } else                           { vmac_fab(i,j,k) = vpls_fab(i,j,k);
                     }
+                    vmac_fab(i,j,k) *= epy_fab(i,j,k);
                  }
              });
 
@@ -192,6 +199,7 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                     } else if (avg >= 0)             { wmac_fab(i,j,k) = wmns_fab(i,j,k);
                     } else                           { wmac_fab(i,j,k) = wpls_fab(i,j,k);
                     }
+                    wmac_fab(i,j,k) *= epz_fab(i,j,k);
                  }
              });
 
