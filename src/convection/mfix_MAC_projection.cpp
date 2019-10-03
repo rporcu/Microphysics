@@ -43,7 +43,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                             Vector< std::unique_ptr<MultiFab> >& ep_in,
                             Vector< std::unique_ptr<MultiFab> >& ro_in,
-                            Real time, int steady_state)
+                            Real time)
 {
    BL_PROFILE("mfix::apply_MAC_projection()");
 
@@ -105,7 +105,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
       for (int i=0; i<AMREX_SPACEDIM; ++i)
          (vel[lev])[i]->FillBoundary( geom[lev].periodicity() );
       
-      if (m_verbose)
+ //   if (m_verbose)
       {
          bool already_on_centroid = false;
          EB_computeDivergence(*mac_rhs[lev],
@@ -165,12 +165,12 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
    {
        // Solve using mac_phi as an initial guess -- note that mac_phi is
        //       stored from iteration to iteration
-       macproj.project(GetVecOfPtrs(mac_phi), mac_mg_rtol,mac_mg_atol,MLMG::Location::FaceCenter);
+       macproj.project(GetVecOfPtrs(mac_phi), mac_mg_rtol,mac_mg_atol,MLMG::Location::FaceCentroid);
    } 
    else 
    {
        // Solve with initial guess of zero
-       macproj.project(mac_mg_rtol,mac_mg_atol,MLMG::Location::FaceCenter);
+       macproj.project(mac_mg_rtol,mac_mg_atol,MLMG::Location::FaceCentroid);
    }
 
    // Get MAC velocities at face CENTER by dividing solution by ep at faces

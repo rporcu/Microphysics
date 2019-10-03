@@ -285,7 +285,16 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     Real new_time = time + dt;
 
     // Compute the explicit advective term R_u^n
-    mfix_compute_ugradu_predictor( conv_u_old, conv_s_old, vel_go, ep_g, ro_go, trac_o ,time );
+    mfix_compute_convective_term( conv_u_old, conv_s_old, vel_go, ep_g, ro_go, trac_o ,time );
+  
+    // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
+    for (int lev = 0; lev < nlev; lev++)
+       for (int i = 0; i < 3; i++)
+          MultiFab::Divide  (*conv_u_old[lev],*ep_g[lev],0,i,1,0);
+
+    for (int lev = 0; lev < nlev; lev++)
+       for (int i = 0; i < 2; i++)
+          MultiFab::Divide  (*conv_s_old[lev],*ep_g[lev],0,i,1,0);
 
     int explicit_diffusion_pred = 1;
 
@@ -302,8 +311,27 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
         // First add the convective term
         MultiFab::Saxpy (*vel_g[lev], dt, *conv_u_old[lev], 0, 0, 3, 0);
 
+        // Make sure to do this multiply before we update density!
+        if (advect_tracer)
+        {
+           int conv_comp = 1;
+           MultiFab::Multiply(*trac[lev],*ro_g[lev],0,0,1,0);
+           MultiFab::Saxpy   (*trac[lev], dt, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        }
+
+        if (advect_density)
+        {
+           int conv_comp = 0;
+           MultiFab::Saxpy (*ro_g[lev], dt, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        }
+
+        // Make sure to do this divide after we update density!
+        if (advect_tracer)
+           MultiFab::Divide  (*trac[lev],*ro_g[lev],0,0,1,0);
+
         // Add the explicit diffusion terms
-        MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
+        if (explicit_diffusion_pred == 1)
+           MultiFab::Saxpy (*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
     }
 
     // Add source terms
@@ -382,7 +410,16 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     }
 
     // Compute the explicit advective term R_u^*
-    mfix_compute_ugradu_corrector( conv_u, conv_s, vel_g, ep_g, ro_g, trac, new_time );
+    mfix_compute_convective_term( conv_u, conv_s, vel_g, ep_g, ro_g, trac, new_time );
+  
+    // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
+    for (int lev = 0; lev < nlev; lev++)
+       for (int i = 0; i < 3; i++)
+          MultiFab::Divide  (*conv_u[lev],*ep_g[lev],0,i,1,0);
+
+    for (int lev = 0; lev < nlev; lev++)
+       for (int i = 0; i < 2; i++)
+          MultiFab::Divide  (*conv_s[lev],*ep_g[lev],0,i,1,0);
 
     // Add the convective terms so u_g = u_go + dt/2 (R_u^* + R_u^n)
     for (int lev = 0; lev < nlev; lev++)

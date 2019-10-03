@@ -7,202 +7,6 @@
 namespace divop_conv_aux {
 
 AMREX_GPU_HOST_DEVICE
-Real 
-interp_to_face_centroid_x(const int i,
-                          const int j,
-                          const int k,
-                          Array4<Real> const& var,
-                          const int n,
-                          Array4<const Real> const& afrac,
-                          Array4<const Real> const& cent,
-                          const EBCellFlag& flag)
-{
-  Real result(0);
-
-  Real frac_y(0), frac_z(0);
-
-  if (afrac(i,j,k) == 0)
-    result = 0;
-  else if (afrac(i,j,k) == 1)
-    result = var(i,j,k,n);
-  else
-  {
-    if (cent(i,j,k,0) < 0)
-    {
-      frac_y = -1 * cent(i,j,k,0) * flag.isConnected({0,-1,0});
-      if (cent(i,j,k,1) <= 0)
-      {
-        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({0,0,-1});
-        result = (1-frac_z) * (   frac_y * var(i,j-1,k  ,n)  +
-                              (1-frac_y) * var(i,j  ,k  ,n)) +
-                     frac_z * (   frac_y * var(i,j-1,k-1,n)  +
-                              (1-frac_y) * var(i,j  ,k-1,n));
-      }
-      else
-      {
-        frac_z = cent(i,j,k,1) * flag.isConnected({0,0,1});
-        result = (1-frac_z) * (   frac_y * var(i,j-1,k  ,n)  +
-                              (1-frac_y) * var(i,j  ,k  ,n)) +
-                     frac_z * (   frac_y * var(i,j-1,k+1,n)  +
-                              (1-frac_y) * var(i,j  ,k+1,n));
-      }
-    }
-    else
-    {
-      frac_y = cent(i,j,k,0) * flag.isConnected({0,1,0});
-      if (cent(i,j,k,1) <= 0)
-      {
-        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({0,0,-1});
-        result = (1-frac_z) * (   frac_y * var(i,j+1,k  ,n)  +
-                              (1-frac_y) * var(i,j  ,k  ,n)) +
-                     frac_z * (   frac_y * var(i,j+1,k-1,n)  +
-                              (1-frac_y) * var(i,j  ,k-1,n));
-      }
-      else
-      {
-        frac_z = cent(i,j,k,1) * flag.isConnected({0,0,1});
-        result = (1-frac_z) * (   frac_y * var(i,j+1,k  ,n)  +
-                              (1-frac_y) * var(i,j  ,k  ,n)) +
-                     frac_z * (   frac_y * var(i,j+1,k+1,n)  +
-                              (1-frac_y) * var(i,j  ,k+1,n));
-      }
-    }
-  }
-
-  return result;
-}
-
-AMREX_GPU_HOST_DEVICE
-Real 
-interp_to_face_centroid_y(const int i,
-                          const int j,
-                          const int k,
-                          Array4<Real> const& var,
-                          const int n,
-                          Array4<const Real> const& afrac,
-                          Array4<const Real> const& cent,
-                          const EBCellFlag& flag)
-{
-  Real result(0);
-
-  Real frac_x(0), frac_z(0);
-
-  if (afrac(i,j,k) == 0)
-    result = 0;
-  else if (afrac(i,j,k) == 1)
-    result = var(i,j,k,n);
-  else
-  {
-    if (cent(i,j,k,0) < 0)
-    {
-      frac_x = -1 * cent(i,j,k,0) * flag.isConnected({-1,0,0});
-      if (cent(i,j,k,1) <= 0)
-      {
-        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({0,0,-1});
-        result = (1-frac_z) * (   frac_x * var(i-1,j,k  ,n)  +
-                              (1-frac_x) * var(i  ,j,k  ,n)) +
-                     frac_z * (   frac_x * var(i-1,j,k-1,n)  +
-                              (1-frac_x) * var(i  ,j,k-1,n));
-      }
-      else
-      {
-         frac_z =  cent(i,j,k,1) * flag.isConnected({0,0,1});
-         result = (1-frac_z) * (   frac_x * var(i-1,j,k  ,n)  +
-                               (1-frac_x) * var(i  ,j,k  ,n)) +
-                      frac_z * (   frac_x * var(i-1,j,k+1,n)  +
-                               (1-frac_x) * var(i  ,j,k+1,n));
-      }
-    }
-    else
-    {
-      frac_x = cent(i,j,k,0) * flag.isConnected({1,0,0});
-      if (cent(i,j,k,1) <= 0)
-      {
-        frac_z = -1 * cent(i,j,k,1) * flag.isConnected({0,0,-1});
-        result = (1-frac_z) * (   frac_x * var(i+1,j,k  ,n)  +
-                              (1-frac_x) * var(i  ,j,k  ,n)) +
-                     frac_z * (   frac_x * var(i+1,j,k-1,n)  +
-                              (1-frac_x) * var(i  ,j,k-1,n));
-      }
-      else
-      {
-        frac_z =  cent(i,j,k,1) * flag.isConnected({0,0,1});
-        result = (1-frac_z) * (   frac_x * var(i+1,j,k  ,n)  +
-                              (1-frac_x) * var(i  ,j,k  ,n)) +
-                     frac_z * (   frac_x * var(i+1,j,k+1,n)  +
-                              (1-frac_x) * var(i  ,j,k+1,n));
-      }
-    } 
-  }
-
-  return result;
-}
-
-AMREX_GPU_HOST_DEVICE
-Real 
-interp_to_face_centroid_z(const int i,
-                          const int j,
-                          const int k,
-                          Array4<Real> const& var,
-                          const int n,
-                          Array4<const Real> const& afrac,
-                          Array4<const Real> const& cent,
-                          const EBCellFlag& flag)
-{
-  Real result(0);
-
-  Real frac_x(0), frac_y(0);
-
-  if (afrac(i,j,k) == 0)
-    result = 0;
-  else if (afrac(i,j,k) == 1)
-    result = var(i,j,k,n);
-  else
-  {
-    if (cent(i,j,k,0) < 0)
-    {
-      frac_x = -1 * cent(i,j,k,0) * flag.isConnected({-1,0,0});
-      if (cent(i,j,k,1) <= 0)
-      {
-        frac_y = -1 * cent(i,j,k,1) * flag.isConnected({0,-1,0});
-        result = (1-frac_y) * (   frac_x * var(i-1,j  ,k,n)  +
-                              (1-frac_x) * var(i  ,j  ,k,n)) +
-                     frac_y * (   frac_x * var(i-1,j-1,k,n)  +
-                              (1-frac_x) * var(i  ,j-1,k,n));
-      }
-      else
-      {
-        frac_y =  cent(i,j,k,1) * flag.isConnected({0,1,0});
-        result = (1-frac_y) * (   frac_x * var(i-1,j  ,k,n)  +
-                              (1-frac_x) * var(i  ,j  ,k,n)) +
-                     frac_y * (   frac_x * var(i-1,j+1,k,n)  +
-                              (1-frac_x) * var(i  ,j+1,k,n));
-      }
-    }
-    else
-    {
-      frac_x = cent(i,j,k,0) * flag.isConnected({1,0,0});
-      if (cent(i,j,k,1) <= 0)
-      {
-        frac_y = -1 * cent(i,j,k,1) * flag.isConnected({0,-1,0});
-        result = (1-frac_y) * (   frac_x * var(i+1,j  ,k,n)  +
-                              (1-frac_x) * var(i  ,j  ,k,n)) +
-                     frac_y * (   frac_x * var(i+1,j-1,k,n)  +
-                              (1-frac_x) * var(i  ,j-1,k,n));
-      }
-      else
-      {
-        frac_y =  cent(i,j,k,1) * flag.isConnected({0,1,0});
-        result = (1-frac_y) * (   frac_x * var(i+1,j  ,k,n)  +
-                              (1-frac_x) * var(i  ,j  ,k,n)) +
-                     frac_y * (   frac_x * var(i+1,j+1,k,n)  +
-                              (1-frac_x) * var(i  ,j+1,k,n));
-      }
-    }
-  }
-
-  return result;
-}
 
 void
 step2(const Box& grown1_bx,
@@ -214,7 +18,8 @@ step2(const Box& grown1_bx,
       FArrayBox& delm_fbx,
       const MultiFab* volfrac,
       FArrayBox& mask_fbx,
-      const EBCellFlagFab& flags_fab)
+      const EBCellFlagFab& flags_fab,
+      const int icomp, const int ncomp)
 {
   Array4<Real> const& epsilon_g = ep_g.array(*mfi);
 
@@ -228,22 +33,21 @@ step2(const Box& grown1_bx,
   Array4<Real> const& divc = divc_fbx.array();
   Array4<Real> const& mask = mask_fbx.array();
 
-  AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_4D(grown2_bx, ncomp, i, j, k, n,
   {
-    optmp(i,j,k) = 0;
+    optmp(i,j,k,n) = 0;
   });
 
 #ifdef AMREX_USE_CUDA
   Gpu::Device::synchronize();
 #endif
 
-  AMREX_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_4D(grown1_bx, ncomp, i, j, k, n,
   {
     if(flags(i,j,k).isSingleValued())
     {
       Real divnc = 0;
       Real vtot = 0;
-
       Real epvfrac = 0;
 
       for(int ii(-1); ii <= 1; ii++)
@@ -255,16 +59,15 @@ step2(const Box& grown1_bx,
               epvfrac = vfrac(i+ii,j+jj,k+kk) * epsilon_g(i+ii,j+jj,k+kk) * 
                         mask(i+ii,j+jj,k+kk);
               vtot += epvfrac;
-              divnc += epvfrac * divc(i+ii,j+jj,k+kk);
+              divnc += epvfrac * divc(i+ii,j+jj,k+kk,n);
             }
 
       divnc /= vtot;
-      epvfrac = vfrac(i,j,k) * epsilon_g(i,j,k);
-      optmp(i,j,k) = (1 - vfrac(i,j,k)) * (divnc - divc(i,j,k));
-      delm(i,j,k) = -1 * epvfrac * optmp(i,j,k);
+      optmp(i,j,k,n) =  (1 - vfrac(i,j,k)) * (divnc - divc(i,j,k,n));
+       delm(i,j,k,n) = -(    vfrac(i,j,k)) * optmp(i,j,k,n);
     }
     else
-      delm(i,j,k) = 0;
+      delm(i,j,k,n) = 0;
   });
 
 #ifdef AMREX_USE_CUDA
@@ -280,7 +83,8 @@ step3(const Box& grown1_bx,
       FArrayBox& delm_fbx,
       const MultiFab* volfrac,
       FArrayBox& mask_fbx,
-      const EBCellFlagFab& flags_fab)
+      const EBCellFlagFab& flags_fab,
+      const int icomp, const int ncomp)
 {
   Array4<Real> const& epsilon_g = ep_g.array(*mfi);
 
@@ -293,7 +97,7 @@ step3(const Box& grown1_bx,
   Array4<Real> const& optmp = optmp_fbx.array();
   Array4<Real> const& mask = mask_fbx.array();
 
-  AMREX_HOST_DEVICE_FOR_3D(grown1_bx, i, j, k,
+  AMREX_HOST_DEVICE_FOR_4D(grown1_bx, ncomp, i, j, k, n,
   {
     if(flags(i,j,k).isSingleValued())
     {
@@ -310,6 +114,8 @@ step3(const Box& grown1_bx,
             }
 
       wtot = 1/wtot;
+
+// TO DO -- SHOULD WE REMOVE THE EP_G FROM BELOW WHEN DIV COMES IN AS DIV(ep u u) NOT DIV(u u)????
       
       for(int ii(-1); ii <= 1; ii++)
         for(int jj(-1); jj <= 1; jj++)
@@ -318,11 +124,9 @@ step3(const Box& grown1_bx,
                 (flags(i,j,k).isConnected({ii,jj,kk}) == 1))
             {
 #ifdef AMREX_USE_CUDA
-              Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk),
-                                delm(i,j,k) * wtot * mask(i,j,k));
+              Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk,n), delm(i,j,k,n) * wtot * mask(i,j,k));
 #else
-              optmp(i+ii,j+jj,k+kk) += 
-                delm(i,j,k) * wtot * mask(i,j,k);
+              optmp(i+ii,j+jj,k+kk,n) += delm(i,j,k,n) * wtot * mask(i,j,k);
 #endif
             }
     }
@@ -338,48 +142,25 @@ step3(const Box& grown1_bx,
 using namespace divop_conv_aux;
 
 void
-compute_divop_conv(
-              Box& bx,
-              MultiFab& conv,
-              MultiFab& ep_g,
-              int conv_comp, int ncomp,
-              MFIter* mfi,
-              FArrayBox& fxfab,
-              FArrayBox& fyfab,
-              FArrayBox& fzfab,
-              Array<const MultiCutFab*, AMREX_SPACEDIM>& areafrac,
-              Array<const MultiCutFab*, AMREX_SPACEDIM>& facecent,
-              const EBCellFlagFab& flags_fab,
-              const MultiFab* volfrac,
-              const MultiCutFab* bndrycent_fab,
-              Box& domain,
-              const int cyclic_x,
-              const int cyclic_y,
-              const int cyclic_z,
-              const Real* dx)
+mfix_apply_eb_redistribution ( Box& bx,
+                               MultiFab& conv,
+                               MultiFab& divc,
+                               MultiFab& ep_g,
+                               MFIter* mfi,
+                               const int icomp,
+                               const int ncomp,
+                               const EBCellFlagFab& flags_fab,
+                               const MultiFab* volfrac,
+                               Box& domain,
+                               const int cyclic_x,
+                               const int cyclic_y,
+                               const int cyclic_z,
+                               const Real* dx)
 {
   const amrex::Dim3 dom_low = amrex::lbound(domain);
   const amrex::Dim3 dom_high = amrex::ubound(domain);
 
-  const Real i_dx (1/dx[0]), i_dy(1/dx[1]), i_dz(1/dx[2]);
-
   Array4<Real> const& divergence = conv.array(*mfi);
-
-  Array4<Real> const& fx = fxfab.array();
-  Array4<Real> const& fy = fyfab.array();
-  Array4<Real> const& fz = fzfab.array();
-
-  Array4<const Real> const& areafrac_x = areafrac[0]->array(*mfi);
-  Array4<const Real> const& areafrac_y = areafrac[1]->array(*mfi);
-  Array4<const Real> const& areafrac_z = areafrac[2]->array(*mfi);
-
-  Array4<const Real> const& facecent_x = facecent[0]->array(*mfi);
-  Array4<const Real> const& facecent_y = facecent[1]->array(*mfi);
-  Array4<const Real> const& facecent_z = facecent[2]->array(*mfi);
-
-  Array4<const EBCellFlag> const& flags = flags_fab.array();
-
-  Array4<const Real> const& vfrac = volfrac->array(*mfi);
 
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
@@ -391,14 +172,12 @@ compute_divop_conv(
   const Box& grown1_bx = amrex::grow(bx,1);
   const Box& grown2_bx = amrex::grow(bx,2);
 
-  FArrayBox delm_fbx(grown1_bx);
-
-  FArrayBox optmp_fbx(grown2_bx);
-  FArrayBox divc_fbx(grown2_bx);
-  FArrayBox mask_fbx(grown2_bx);
+  FArrayBox  delm_fbx(grown1_bx,ncomp);
+  FArrayBox  optmp_fbx(grown2_bx,ncomp);
+  FArrayBox  mask_fbx(grown2_bx);
+  FArrayBox& divc_fbx =  divc[*mfi];    
 
   Array4<Real> const& optmp = optmp_fbx.array();
-  Array4<Real> const& divc = divc_fbx.array();
   Array4<Real> const& mask = mask_fbx.array();
 
   //
@@ -416,72 +195,32 @@ compute_divop_conv(
       mask(i,j,k) = 1;
   });
 
-  const Real my_huge = get_my_huge();
+#ifdef AMREX_USE_CUDA
+  Gpu::Device::synchronize();
+#endif
 
   //
-  // We use the EB algorithm to compute the divergence at cell centers
+  // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
   //
-  for(unsigned int n(0); n < ncomp; ++n)
+  step2(grown1_bx, grown2_bx, mfi, optmp_fbx, ep_g, divc_fbx, delm_fbx, 
+        volfrac, mask_fbx, flags_fab, icomp, ncomp);
+
+  //
+  // Step 3: redistribute excess/loss of mass
+  //
+  step3(grown1_bx, mfi, optmp_fbx, ep_g, delm_fbx, 
+        volfrac, mask_fbx, flags_fab, icomp, ncomp);  
+
+  //
+  // Resume the correct sign, AKA return the negative
+  //
+  Array4<Real> const& divcarr = divc.array(*mfi);
+  AMREX_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n, 
   {
-    //
-    // Step 1: compute conservative divergence on stencil (lo-2,hi-2)
-    //
+     divergence(i,j,k,icomp+n) = divcarr(i,j,k,n) + optmp(i,j,k,n);
+  });
 
-    AMREX_HOST_DEVICE_FOR_3D(grown2_bx, i, j, k,
-    {
-      if(flags(i,j,k).isCovered())
-      {
-        divc(i,j,k) = my_huge;
-      }
-      else if(flags(i,j,k).isSingleValued())
-      {
-        const EBCellFlag& flag = flags(i,j,k);
-
-        Real fxp = interp_to_face_centroid_x(i+1, j, k, fx, n, areafrac_x, facecent_x, flag);
-        Real fxm = interp_to_face_centroid_x(i  , j, k, fx, n, areafrac_x, facecent_x, flag);
-
-        Real fyp = interp_to_face_centroid_y(i, j+1, k, fy, n, areafrac_y, facecent_y, flag);
-        Real fym = interp_to_face_centroid_y(i, j  , k, fy, n, areafrac_y, facecent_y, flag);
-        
-        Real fzp = interp_to_face_centroid_z(i, j, k+1, fz, n, areafrac_z, facecent_z, flag);
-        Real fzm = interp_to_face_centroid_z(i, j, k  , fz, n, areafrac_z, facecent_z, flag);
-
-        divc(i,j,k) = ((fxp*areafrac_x(i+1,j,k) - (fxm*areafrac_x(i,j,k))) * i_dx +
-                       (fyp*areafrac_y(i,j+1,k) - (fym*areafrac_y(i,j,k))) * i_dy +
-                       (fzp*areafrac_z(i,j,k+1) - (fzm*areafrac_z(i,j,k))) * i_dz) / vfrac(i,j,k);
-      }
-      else 
-      {
-        divc(i,j,k) = ((fx(i+1,j,k,n) - fx(i,j,k,n)) * i_dx +
-                       (fy(i,j+1,k,n) - fy(i,j,k,n)) * i_dy +
-                       (fz(i,j,k+1,n) - fz(i,j,k,n)) * i_dz);
-       
-      }
-    });
-
-    Gpu::streamSynchronize();
-
-    //
-    // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
-    //
-    step2(grown1_bx, grown2_bx, mfi, optmp_fbx, ep_g, divc_fbx, delm_fbx, 
-        volfrac, mask_fbx, flags_fab);
-
-    //
-    // Step 3: redistribute excess/loss of mass
-    //
-    step3(grown1_bx, mfi, optmp_fbx, ep_g, delm_fbx, 
-        volfrac, mask_fbx, flags_fab);
-
-    //
-    // Resume the correct sign, AKA return the negative
-    //
-    AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
-    {
-      divergence(i,j,k,conv_comp+n) = divc(i,j,k) + optmp(i,j,k);
-    });
-
-  Gpu::streamSynchronize();
-
-  }
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
 }
