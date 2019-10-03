@@ -469,8 +469,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                        } else if (avg >= 0)             { wmac_fab(i,j,k) = wmns_fab(i,j,k);
                        } else                           { wmac_fab(i,j,k) = wpls_fab(i,j,k);
                        }
-                    }
                        wmac_fab(i,j,k) *= epz_fab(i,j,k);
+                    }
                  }
              });
           } // Cut cells
