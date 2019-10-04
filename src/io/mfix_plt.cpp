@@ -29,6 +29,7 @@ mfix::InitIOPltData ()
       pp.query("plt_ep_g",    plt_ep_g   );
       pp.query("plt_p_g",     plt_p_g    );
       pp.query("plt_ro_g",    plt_ro_g   );
+      pp.query("plt_trac",    plt_trac   );
       pp.query("plt_mu_g",    plt_mu_g   );
       pp.query("plt_diveu",   plt_diveu  );
       pp.query("plt_vort",    plt_vort   );
@@ -41,11 +42,12 @@ mfix::InitIOPltData ()
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
 
-      if(plt_ccse_regtest != 0) {
+      if (plt_ccse_regtest != 0) {
         plt_vel_g   = 1;
         plt_ep_g    = 1;
         plt_p_g     = 1;
         plt_ro_g    = 1;
+        plt_trac    = 1;
         plt_mu_g    = 1;
         plt_vort    = 1;
         plt_diveu   = 1;
@@ -59,6 +61,7 @@ mfix::InitIOPltData ()
       if( plt_ep_g    == 1) pltVarCount += 1;
       if( plt_p_g     == 1) pltVarCount += 1;
       if( plt_ro_g    == 1) pltVarCount += 1;
+      if( plt_trac    == 1) pltVarCount += 1;
       if( plt_mu_g    == 1) pltVarCount += 1;
       if( plt_vort    == 1) pltVarCount += 1;
       if( plt_diveu   == 1) pltVarCount += 1;
@@ -73,7 +76,7 @@ mfix::InitIOPltData ()
 
       // All flags are true by default so we only need to turn off the
       // variables we don't want if not doing CCSE regression tests.
-      if(plt_ccse_regtest == 0) {
+      if (plt_ccse_regtest == 0) {
 
         int input_value = 0;
         pp.query("plt_radius",   input_value );
@@ -112,7 +115,6 @@ mfix::InitIOPltData ()
         write_real_comp[11] = input_value;
         write_real_comp[12] = input_value;
         write_real_comp[13] = input_value;
-
 
         input_value = 0;
         pp.query("plt_phase",   input_value );
@@ -169,6 +171,10 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
       // Fluid density
       if( plt_ro_g    == 1)
         pltFldNames.push_back("ro_g");
+
+      // Tracer in fluid
+      if( plt_trac    == 1)
+        pltFldNames.push_back("trac");
 
       // Fluid viscosity
       if( plt_mu_g    == 1)
@@ -230,6 +236,12 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
         // Fluid density
         if( plt_ro_g    == 1) {
           MultiFab::Copy(*mf[lev], (*ro_g[lev]), 0, lc, 1, 0);
+          lc += 1;
+        }
+
+        // Fluid density
+        if( plt_trac    == 1) {
+          MultiFab::Copy(*mf[lev], (*trac[lev]), 0, lc, 1, 0);
           lc += 1;
         }
 

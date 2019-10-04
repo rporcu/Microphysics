@@ -643,7 +643,7 @@ private:
      int solve_dem;
 
      bool advect_density = false;
-     bool advect_tracer  = false;
+     bool advect_tracer  = true;
 
      // Options to control mfix verbosity level
      int m_verbose = 0;
@@ -773,6 +773,7 @@ private:
      int plt_ep_g    = 1;
      int plt_p_g     = 0;
      int plt_ro_g    = 0;
+     int plt_trac    = 0;
      int plt_mu_g    = 0;
      int plt_diveu   = 0;
      int plt_volfrac = 0;
