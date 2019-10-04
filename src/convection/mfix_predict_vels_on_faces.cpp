@@ -27,6 +27,7 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
            for (MFIter mfi(cc_mask); mfi.isValid(); ++mfi)
            {
                Array4<int> const& fab = cc_mask.array(mfi);
+
                const Box& bx = mfi.fabbox();
                for (const auto& iv : pshifts)
                {
@@ -40,6 +41,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                        });
                    }
                }
+
+               Gpu::streamSynchronize();
            }
        }
 
@@ -203,6 +206,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                  }
              });
 
+             Gpu::streamSynchronize();
+
           // Cut cells in this FAB
           } else {
 
@@ -256,6 +261,9 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                     wmns_fab(i,j,k) = ccvel_fab(i,j,k-1,2) + 0.5 * zslopes_fab(i,j,k-1,2);
                  }
              });
+
+             Gpu::streamSynchronize();
+
           } // Cut cells
        } // MFIter
 
@@ -481,10 +489,9 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                     }
                  }
              });
+
+             Gpu::streamSynchronize();
+
           } // Cut cells
        } // MFIter
-
-#ifdef AMREX_USE_CUDA
-    Gpu::Device::synchronize();
-#endif
 }

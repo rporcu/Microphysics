@@ -233,10 +233,6 @@ mfix::set_scalar_bcs(Real time,
      }
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (nbot > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xz_lo_3D, i, j, k,
@@ -314,10 +310,6 @@ mfix::set_scalar_bcs(Real time,
        });
      }
   }
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
 
   if (ndwn > 0)
   {
@@ -397,7 +389,5 @@ mfix::set_scalar_bcs(Real time,
     }
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 }

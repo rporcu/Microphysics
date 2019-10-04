@@ -228,6 +228,8 @@ PICMultiDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& drag_mf,
                         }
                     }
                 });
+
+                Gpu::streamSynchronize();
             }
 
 #ifdef _OPENMP

@@ -170,6 +170,7 @@ mfix_apply_eb_redistribution ( Box& bx,
   // Resume the correct sign, AKA return the negative
   //
   Array4<Real> const& divcarr = divc.array(*mfi);
+
   AMREX_HOST_DEVICE_FOR_4D(bx, ncomp, i, j, k, n, 
   {
      divergence(i,j,k,icomp+n) = divcarr(i,j,k,n) + optmp(i,j,k,n);

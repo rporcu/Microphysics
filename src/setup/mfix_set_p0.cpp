@@ -206,7 +206,7 @@ mfix::set_p0(const Box& bx,
       }
     }
   }
-
+  
   // ---------------------------------------------------------------->>>
 
   // Here the pressure in each cell is determined from a specified pressure
@@ -261,6 +261,8 @@ mfix::set_p0(const Box& bx,
 
     pj += dpodz * dz * (sbx_hi[2] - sbx_lo[2] + 1);
   }
+
+  Gpu::streamSynchronize();
 
   // pressure in all intial condition region cells was defined
   goto_100(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), bct_ilo, bct_ihi,
@@ -469,6 +471,8 @@ void goto_60(const Box& sbx,
     }
   }
 
+  Gpu::streamSynchronize();
+
   goto_100(sbx, domain, bc_list, p0_g, m_bc_p_g, bct_ilo, bct_ihi,
            bct_jlo, bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup,
            nghost);
@@ -542,10 +546,6 @@ void goto_100(const Box& sbx,
     });
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (nbot > 0)
   {
     const Box sbx_lo_y(sbx_lo, {sbx_hi[0], dom_lo[1], sbx_hi[2]});
@@ -583,10 +583,6 @@ void goto_100(const Box& sbx,
       }
     });
   }
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
 
   if (ndwn > 0)
   {
@@ -626,9 +622,7 @@ void goto_100(const Box& sbx,
     });
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 
   return;
 }

@@ -91,15 +91,15 @@ mfix::mfix_compute_vort ()
                                            (uz-wx)*(uz-wx) +
                                            (vx-uy)*(vx-uy));
             });
-          } else {
+          }
+          else
+          {
              (*vort[lev])[mfi].setVal(0.0, bx, 0, 1);
           }
+
+          Gpu::streamSynchronize();
        }
     }
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
 }
 
 //

@@ -96,10 +96,6 @@ mfix::set_ls_inflow(const int lev,
     });
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (nrgt > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
@@ -133,10 +129,6 @@ mfix::set_ls_inflow(const int lev,
     });
   }
   
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (nbot > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
@@ -170,10 +162,6 @@ mfix::set_ls_inflow(const int lev,
     });
   }
   
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (ntop > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
@@ -207,10 +195,6 @@ mfix::set_ls_inflow(const int lev,
     });
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (ndwn > 0)
   {
     AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
@@ -243,10 +227,6 @@ mfix::set_ls_inflow(const int lev,
       }
     });
   }
-  
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
 
   if (nup > 0)
   {
@@ -281,7 +261,5 @@ mfix::set_ls_inflow(const int lev,
     });
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 }

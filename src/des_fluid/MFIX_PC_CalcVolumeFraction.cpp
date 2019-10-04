@@ -251,6 +251,8 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
                         }
                     }
                 });
+
+                Gpu::streamSynchronize();
             }
 
 #ifdef _OPENMP
@@ -327,10 +329,6 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            });
          }
 
-#ifdef AMREX_USE_CUDA
-         Gpu::Device::synchronize();
-#endif
-
          if(sbx_lo[1] < dom_lo.y)
          {
            const int jlo = dom_lo.y;
@@ -359,10 +357,6 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            });
          }
 
-#ifdef AMREX_USE_CUDA
-         Gpu::Device::synchronize();
-#endif
-
          if(sbx_lo[2] < dom_lo.z)
          {
            const int klo = dom_lo.z;
@@ -390,12 +384,10 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
              }
            });
          }
+
+         Gpu::streamSynchronize();
        }
     }
-
-#ifdef AMREX_USE_CUDA
-    Gpu::Device::synchronize();
-#endif
 
     int  src_nghost = 1;
     int dest_nghost = 0;

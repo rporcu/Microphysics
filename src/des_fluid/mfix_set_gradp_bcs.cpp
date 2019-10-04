@@ -97,10 +97,6 @@ mfix::set_gradp_bcs (const Box& bx,
     });
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if(gp_lo[1] <= dom_lo[1])
   {
     AMREX_HOST_DEVICE_FOR_3D(bx_xz_lo, i, j, k,
@@ -142,10 +138,6 @@ mfix::set_gradp_bcs (const Box& bx,
       }
     });
   }
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
 
   if(gp_lo[2] <= dom_lo[2])
   {
@@ -189,8 +181,6 @@ mfix::set_gradp_bcs (const Box& bx,
     });
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 
 }

@@ -171,6 +171,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> fc, pfor, wfor;
 
     std::map<PairIndex, bool> tile_has_walls;
+
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
         const Box& bx = pti.tilebox();
@@ -387,6 +388,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     }
                 });
 
+                Gpu::streamSynchronize();
+
                 // Debugging: copy data from the fc (all forces) vector to
                 // the wfor (wall forces) vector.
                 if (debug_level > 0) {
@@ -516,6 +519,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         }
                     }
             });
+
+            Gpu::streamSynchronize();
 #else
             calc_particle_collisions ( particles                          , &nrp,
                                        neighbors[lev][index].dataPtr()    , &size_ng,

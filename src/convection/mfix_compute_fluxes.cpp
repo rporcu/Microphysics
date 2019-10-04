@@ -89,6 +89,7 @@ mfix::mfix_compute_fluxes(int lev,
            for (MFIter mfi(cc_mask); mfi.isValid(); ++mfi)
            {
                Array4<int> const& fab = cc_mask.array(mfi);
+               
                const Box& bx = mfi.fabbox();
                for (const auto& iv : pshifts)
                {
@@ -102,6 +103,8 @@ mfix::mfix_compute_fluxes(int lev,
                        });
                    }
                }
+
+               Gpu::streamSynchronize();
            }
         }
 
@@ -278,9 +281,7 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
     fz(i,j,k,n) = w(i,j,k) * state_b;
   });
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 }
 
 
@@ -523,7 +524,5 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
        fz(i,j,k,n) = my_huge;
   });
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 }

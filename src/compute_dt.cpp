@@ -73,8 +73,8 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
             amrex::Real* p_gravity_dev = gravity_dev.data();
 
             // Compute CFL on a per cell basis
-            if (flags.getType(bx) != FabType::covered) {
-
+            if (flags.getType(bx) != FabType::covered)
+            {
                 AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,                                    
                 {
                     if (!flags_fab(i,j,k).isCovered()) {
@@ -109,11 +109,11 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
                     }
                 });
             }
+
+            Gpu::streamSynchronize();
         }      
     }
 
-    Gpu::streamSynchronize();
-    
 #ifdef AMREX_USE_CUDA
     cfl_max = cfl_max_gpu.dataValue();
 #endif

@@ -20,7 +20,5 @@ void calc_mu_g(const Box& bx,
 
   AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k, {mu_g(i,j,k) = mu_val;});
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
+  Gpu::streamSynchronize();
 }
