@@ -66,8 +66,8 @@ void ScalarFillBox (Box const& bx, Array4<amrex::Real> const& dest,
 {
     if (dcomp != 0)
          amrex::Abort("Must have dcomp = 0 in ScalarFillBox");
-    if (numcomp != 4)
-         amrex::Abort("Must have numcomp = 4 in ScalarFillBox");
+    if (numcomp != 1)
+         amrex::Abort("Must have numcomp = 1 in ScalarFillBox");
 
     const Box& domain = geom.Domain();
 
