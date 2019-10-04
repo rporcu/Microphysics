@@ -74,6 +74,7 @@ hopper.center    =  0.0000  0.0010  0.0010
 
 xlo.type = "po"
 xlo.velocity = 0.0
+xlo.pressure = 0.0
 
 xhi.type = "po"
 xhi.pressure = 0.0

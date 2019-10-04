@@ -101,6 +101,7 @@ void mfix::make_eb_geometry ()
     } else if (geom_type == "hopper") {
         amrex::Print() << "\n Building hopper geometry." << std::endl;
         make_eb_hopper();
+        contains_ebs = true;
     } else if (geom_type == "cyclone") {
         amrex::Print() << "\n Building cyclone geometry." << std::endl;
         make_eb_cyclone();
