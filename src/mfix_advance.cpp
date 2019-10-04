@@ -94,10 +94,11 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         for (int lev = 0; lev < nlev; lev++)
         {
            // Back up field variables to old
-          MultiFab::Copy (*ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
-          MultiFab::Copy ( *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
-          MultiFab::Copy (*ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
-          MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
+          MultiFab::Copy ( *ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
+          MultiFab::Copy (  *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
+          MultiFab::Copy ( *ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
+          MultiFab::Copy (*trac_o[lev],  *trac[lev],  0, 0,  trac[lev]->nComp(), trac_o[lev]->nGrow());
+          MultiFab::Copy (*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(),  vel_go[lev]->nGrow());
 
            // User hooks
            for (MFIter mfi(*ep_g[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
@@ -286,7 +287,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     // Compute the explicit advective term R_u^n
     mfix_compute_convective_term( conv_u_old, conv_s_old, vel_go, ep_g, ro_go, trac_o ,time );
-  
+
     // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
     for (int lev = 0; lev < nlev; lev++)
        for (int i = 0; i < 3; i++)
@@ -303,7 +304,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     else
        for (int lev = 0; lev < nlev; lev++)
           divtau_old[lev]->setVal(0.);
-     
+
     for (int lev = 0; lev < nlev; lev++)
     {
         EB_set_covered(*divtau_old[lev], 0, divtau_old[lev]->nComp(), divtau_old[lev]->nGrow(), 0.0);
@@ -315,7 +316,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
         if (advect_tracer)
         {
            int conv_comp = 1;
-           MultiFab::Multiply(*trac[lev],*ro_g[lev],0,0,1,0);
+           MultiFab::Multiply(*trac[lev],*ro_go[lev],0,0,1,0);
            MultiFab::Saxpy   (*trac[lev], dt, *conv_s_old[lev], conv_comp, 0, 1, 0);
         }
 
@@ -411,19 +412,41 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     // Compute the explicit advective term R_u^*
     mfix_compute_convective_term( conv_u, conv_s, vel_g, ep_g, ro_g, trac, new_time );
-  
+
     // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
     for (int lev = 0; lev < nlev; lev++)
        for (int i = 0; i < 3; i++)
           MultiFab::Divide  (*conv_u[lev],*ep_g[lev],0,i,1,0);
 
     for (int lev = 0; lev < nlev; lev++)
-       for (int i = 0; i < 2; i++)
+    {
+        for (int i = 0; i < 2; i++)
           MultiFab::Divide  (*conv_s[lev],*ep_g[lev],0,i,1,0);
 
-    // Add the convective terms so u_g = u_go + dt/2 (R_u^* + R_u^n)
-    for (int lev = 0; lev < nlev; lev++)
-    {
+        // Make sure to do this multiply before we update density!
+        if (advect_tracer)
+        {
+          int conv_comp = 1;
+          MultiFab::Multiply(*trac_o[lev],*ro_go[lev],0,0,1,0);
+
+          // Add the convective terms so trac = trac_o + dt/2 (R_s^* + R_s^n)
+          MultiFab::LinComb (*trac[lev], 1.0, *trac_o[lev], 0, dt/2.0, *conv_s[lev]    , conv_comp, 0, 1, 0);
+          MultiFab::Saxpy   (*trac[lev],                       dt/2.0, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        }
+
+        if (advect_density)
+        {
+           int conv_comp = 0;
+           // Add the convective terms so trac = trac_o + dt/2 (R_s^* + R_s^n)
+           MultiFab::LinComb (*ro_g[lev], 1.0, *ro_go[lev], 0, dt/2.0, *conv_s[lev]    , conv_comp, 0, 1, 0);
+           MultiFab::Saxpy   (*ro_g[lev],                      dt/2.0, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        }
+
+        // Make sure to do this divide after we update density!
+        if (advect_tracer)
+           MultiFab::Divide  (*trac[lev],*ro_g[lev],0,0,1,0);
+
+        // Add the convective terms so u_g = u_go + dt/2 (R_u^* + R_u^n)
         MultiFab::LinComb (*vel_g[lev], 1.0, *vel_go[lev], 0, dt/2.0, *conv_u[lev]    , 0, 0, 3, 0);
         MultiFab::Saxpy   (*vel_g[lev],                       dt/2.0, *conv_u_old[lev], 0, 0, 3, 0);
     }
