@@ -105,9 +105,9 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
       for (int i=0; i<AMREX_SPACEDIM; ++i)
          (vel[lev])[i]->FillBoundary( geom[lev].periodicity() );
       
- //   if (m_verbose)
+      if (m_verbose)
       {
-         bool already_on_centroid = false;
+         bool already_on_centroid = true;
          EB_computeDivergence(*mac_rhs[lev],
                               GetArrOfConstPtrs(vel[lev]),
                               geom[lev], already_on_centroid);
@@ -176,7 +176,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
    // Get MAC velocities at face CENTER by dividing solution by ep at faces
    if (m_verbose)
       Print() << " >> After projection\n" ; 
-   
+
    for ( int lev=0; lev <= finest_level ; ++lev )
    {   
       if (m_verbose)
@@ -185,7 +185,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
          vel[lev][1]->FillBoundary( geom[lev].periodicity() );
          vel[lev][2]->FillBoundary( geom[lev].periodicity() );
          
-         bool already_on_centroid = false;
+         bool already_on_centroid = true;
          EB_computeDivergence(*mac_rhs[lev],
                               GetArrOfConstPtrs(vel[lev]),
                               geom[lev], already_on_centroid);
