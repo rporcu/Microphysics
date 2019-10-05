@@ -298,6 +298,7 @@ public:
     void mfix_calc_particle_beta(F DragFunc, Real time);
 
      Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
+     Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
      void set_MAC_velocity_bcs ( int lev,
                                  Vector< std::unique_ptr<MultiFab> >& u,

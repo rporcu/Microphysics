@@ -305,3 +305,61 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
     return sum;
 }
+
+Real
+mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
+{
+    BL_PROFILE("mfix::volEpsWgtSum()");
+
+    Real        sum     = 0.0;
+    //const Real* dx      = geom[lev].CellSize(); // UNUSED_VARIABLE
+
+    const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
+
+#ifdef AMREX_USE_CUDA
+    Gpu::DeviceScalar<Real> sum_gpu(sum);
+    Real* psum = sum_gpu.dataPtr();
+#endif
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:sum) if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
+    {
+        const FArrayBox& fab = mf[mfi];
+
+        const unsigned int fab_numPts = fab.numPts();
+        Array4<const Real> const& rho = fab.array();
+
+        const Box& box  = mfi.tilebox();
+
+        Array4<const Real> const& vol = volfrac->array(mfi);
+        Array4<const Real> const&  ep = ep_g[lev]->array(mfi);
+
+        const unsigned int offset = comp * fab_numPts;
+
+        AMREX_HOST_DEVICE_FOR_3D(box, i, j, k,
+        {
+          Real dm(0);
+
+          dm = rho(i+offset,j,k) * vol(i,j,k) * ep(i,j,k);
+
+#ifdef AMREX_USE_CUDA
+          Gpu::Atomic::Add(psum,dm);
+#else
+          sum += dm;
+#endif
+        });
+    }
+
+    Gpu::Device::synchronize();
+
+#ifdef AMREX_USE_CUDA
+    sum = sum_gpu.dataValue();
+#endif
+
+    if (!local)
+        ParallelDescriptor::ReduceRealSum(sum);
+
+    return sum;
+}
