@@ -225,8 +225,8 @@ void init_periodic_tracer(const Box& bx,
             Real y = (Real(j) + .5) * dy - .00073;
             Real z = (Real(k) + .5) * dz - .00123;
             trac(i,j,k) = A*( std::sin(C*(y+z) - 0.00042) + 1.0) * exp(x);
-            vel(i,j,k,2) += 0.1*( std::sin(C*(x+z) - 0.00042) + 1.0) * exp(y);
-            vel(i,j,k,3) += 0.1*( std::sin(C*(x+y) - 0.00042) + 1.0) * exp(z);
+            vel(i,j,k,1) += 0.1*( std::sin(C*(x+z) - 0.00042) + 1.0) * exp(y);
+            vel(i,j,k,2) += 0.1*( std::sin(C*(x+y) - 0.00042) + 1.0) * exp(z);
         });
         break;
 
