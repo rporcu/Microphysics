@@ -219,7 +219,7 @@ public:
                                     Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                     Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                                     Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                    Vector< std::unique_ptr<MultiFab> >& ep_g); 
+                                    Vector< std::unique_ptr<MultiFab> >& ep_g);
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< std::unique_ptr<MultiFab> >& vel,
@@ -421,9 +421,9 @@ protected:
      void GetDataVel      (int lev, Real time, Vector<MultiFab *> & data,
                            Vector<Real> & datatime);
 
-     void FillPatchScalar(int lev, Real time, MultiFab & mf, int icomp, 
+     void FillPatchScalar(int lev, Real time, MultiFab & mf, int icomp,
                           const Vector<BCRec> & bcr);
-     void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data, int icomp, 
+     void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data, int icomp,
                          Vector<Real> & datatime);
 
      void mfix_calc_volume_fraction(Real & sum_vol);
