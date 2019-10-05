@@ -1,5 +1,12 @@
 #_______________________________________________________________________
-# Solver settings
+# Testing tracer conservation
+
+mfix.advect_density           = false
+mfix.advect_tracer            = true
+mfix.test_tracer_conservation = true
+
+#_______________________________________________________________________
+# Debugging settings
 
 amrex.fpe_trap_invalid = 1
 

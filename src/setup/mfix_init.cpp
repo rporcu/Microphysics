@@ -88,6 +88,10 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
         pp.query( "advect_density", advect_density );
         pp.query( "advect_tracer" , advect_tracer );
+        pp.query( "test_tracer_conservation" , test_tracer_conservation );
+
+        if (test_tracer_conservation && !advect_tracer)
+           amrex::Abort("No point in testing tracer conservation with advect_tracer = false");
 
         // The default type is "FixedSize" but we can over-write that in the inputs file
         //  with "KDTree" or "KnapSack"
