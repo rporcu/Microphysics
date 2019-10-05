@@ -129,13 +129,13 @@ mfix::mfix_compute_fluxes(int lev,
                 if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
                 {
                     mfix_compute_ugradu(lev, bx, a_fx, a_fy, a_fz, state_in, state_comp, ncomp,
-                                        xslopes_u, yslopes_u, zslopes_u, slopes_comp,
+                                        xslopes_in, yslopes_in, zslopes_in, slopes_comp,
                                         u_mac, v_mac, w_mac, &mfi, domain);
                 }
                 else
                 {
                     mfix_compute_ugradu_eb(lev, bx, a_fx, a_fy, a_fz, state_in, state_comp, ncomp,
-                                           xslopes_u, yslopes_u, zslopes_u, slopes_comp,
+                                           xslopes_in, yslopes_in, zslopes_in, slopes_comp,
                                            u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
                                            volfrac, bndrycent, &cc_mask, domain, flags);
                 }
