@@ -50,13 +50,13 @@ step2(const Box& grown1_bx,
             if((ii != 0 or jj != 0 or kk != 0) and 
                 (flags(i,j,k).isConnected({ii,jj,kk}) == 1))
             {
-              epvfrac = vfrac(i+ii,j+jj,k+kk) * epsilon_g(i+ii,j+jj,k+kk) * 
-                        mask(i+ii,j+jj,k+kk);
-              vtot += epvfrac;
+              epvfrac = vfrac(i+ii,j+jj,k+kk) * epsilon_g(i+ii,j+jj,k+kk) * mask(i+ii,j+jj,k+kk);
+              vtot  += epvfrac;
               divnc += epvfrac * divc(i+ii,j+jj,k+kk,n);
             }
 
       divnc /= vtot;
+
       optmp(i,j,k,n) =  (1 - vfrac(i,j,k)) * (divnc - divc(i,j,k,n));
        delm(i,j,k,n) = -(    vfrac(i,j,k)) * optmp(i,j,k,n);
     }
@@ -76,14 +76,16 @@ step2(const Box& grown1_bx,
             if((ii != 0 or jj != 0 or kk != 0) and
                 (flags(i,j,k).isConnected({ii,jj,kk}) == 1))
             {
-              wtot += epsilon_g(i+ii,j+jj,k+kk) * vfrac(i+ii,j+jj,k+kk) * 
-                      mask(i+ii,j+jj,k+kk);
+              wtot += epsilon_g(i+ii,j+jj,k+kk) * vfrac(i+ii,j+jj,k+kk) * mask(i+ii,j+jj,k+kk);
             }
 
       wtot = 1/wtot;
 
-// TO DO -- SHOULD WE REMOVE THE EP_G FROM BELOW WHEN DIV COMES IN AS DIV(ep u u) NOT DIV(u u)????
       
+      // Note -- based on testing conservation of a conservatively advected tracer ( (rho T)_t + div (rho U T) = 0)
+      //         we do *not* want the epsilon-weighting in defining delm but we *do* need the epsilon weighting below
+      // Caveat -- to test in the presence of epsilon != 1 we must turn off the advection of particles or the
+      //        sum will change because of the change in epsilon
       for(int ii(-1); ii <= 1; ii++)
         for(int jj(-1); jj <= 1; jj++)
           for(int kk(-1); kk <= 1; kk++)
@@ -91,9 +93,9 @@ step2(const Box& grown1_bx,
                 (flags(i,j,k).isConnected({ii,jj,kk}) == 1))
             {
 #ifdef AMREX_USE_CUDA
-              Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk,n), delm(i,j,k,n) * wtot * mask(i+ii,j+jj,k+kk));
+              Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk,n), delm(i,j,k,n) * wtot * mask(i+ii,j+jj,k+kk) * epsilon_g(i+ii,j+jj,k+kk));
 #else
-              optmp(i+ii,j+jj,k+kk,n) += delm(i,j,k,n) * wtot * mask(i+ii,j+jj,k+kk);
+              optmp(i+ii,j+jj,k+kk,n) += delm(i,j,k,n) * wtot * mask(i+ii,j+jj,k+kk) * epsilon_g(i+ii,j+jj,k+kk);
 #endif
             }
     }
@@ -139,7 +141,8 @@ mfix_apply_eb_redistribution ( Box& bx,
 
   FArrayBox  delm_fbx(grown1_bx,ncomp);
   FArrayBox  optmp_fbx(grown2_bx,ncomp);
-  FArrayBox  mask_fbx(grown2_bx);
+  FArrayBox  mask_fbx(grown2_bx); 
+
   FArrayBox& divc_fbx =  divc[*mfi];    
 
   Array4<Real> const& optmp = optmp_fbx.array();
