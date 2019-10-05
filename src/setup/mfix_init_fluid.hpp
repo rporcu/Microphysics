@@ -23,7 +23,8 @@ void init_fluid(const Box& sbx,
                 const Real dz,
                 const Real xlength,
                 const Real ylength,
-                const Real zlength);
+                const Real zlength,
+                bool test_tracer_conservation);
 
 void init_helix(const Box& bx,
                 const Box& domain,
@@ -38,6 +39,14 @@ void init_periodic_vortices(const Box& bx,
                             const Real dx,
                             const Real dy,
                             const Real dz);
+
+void init_periodic_tracer(const Box& bx,
+                          const Box& domain,
+                          FArrayBox& vel_fab,
+                          FArrayBox& trac_fab,
+                          const Real dx,
+                          const Real dy,
+                          const Real dz);
 
 void init_fluid_restart(const Box& bx,
                         FArrayBox& mu_g);

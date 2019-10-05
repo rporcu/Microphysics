@@ -795,7 +795,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
                        (*ep_g[lev])[mfi], (*ro_g[lev])[mfi], 
                        (*trac[lev])[mfi], (*p_g[lev])[mfi],
                        (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
-                       dx, dy, dz, xlen, ylen, zlen);
+                       dx, dy, dz, xlen, ylen, zlen, &test_tracer_conservation);
           }
        }
 

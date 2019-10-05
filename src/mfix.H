@@ -646,6 +646,8 @@ private:
      bool advect_density = false;
      bool advect_tracer  = true;
 
+     bool test_tracer_conservation  = false;
+
      // Options to control mfix verbosity level
      int m_verbose = 0;
 

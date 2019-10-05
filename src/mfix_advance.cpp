@@ -149,6 +149,9 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
     }
     while ( keep_looping );
 
+    if (test_tracer_conservation)
+       amrex::Print() << "Sum tracer volume wgt = " << volWgtSum(0,*trac[0],0) << " " << volEpsWgtSum(0,*trac[0],0) << std::endl;
+
 #ifdef AMREX_MEM_PROFILING
         {
             std::ostringstream ss;

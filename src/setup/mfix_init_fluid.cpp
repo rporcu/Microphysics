@@ -19,22 +19,23 @@ void init_helix(const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
 //  Subroutine: init_fluid                                              !
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   
+
 void init_fluid(const Box& sbx,
                 const Box& bx,
                 const Box& domain,
-                const FArrayBox& ep_g_fab, 
-                      FArrayBox& ro_g_fab, 
-                      FArrayBox& trac_fab, 
-                const FArrayBox& p_g, 
+                const FArrayBox& ep_g_fab,
+                      FArrayBox& ro_g_fab,
+                      FArrayBox& trac_fab,
+                const FArrayBox& p_g,
                       FArrayBox& vel_g_fab,
-                      FArrayBox& mu_g_fab, 
+                      FArrayBox& mu_g_fab,
                 const Real dx,
                 const Real dy,
                 const Real dz,
                 const Real xlength,
                 const Real ylength,
-                const Real zlength)
+                const Real zlength,
+                bool test_tracer_conservation)
 {
       // Set user specified initial conditions (IC)
       set_ic(sbx, domain, dx, dy, dz, vel_g_fab);
@@ -52,7 +53,12 @@ void init_fluid(const Box& sbx,
       AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k, {ro_g(i,j,k) = ro_g0;});
       AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k, {trac(i,j,k) = trac_0;});
 
-      Gpu::streamSynchronize();
+      if (test_tracer_conservation)
+         init_periodic_tracer(bx, domain, vel_g_fab, trac_fab, dx, dy, dz);
+
+#ifdef AMREX_USE_CUDA
+      Gpu::Device::synchronize();
+#endif
 
       calc_mu_g(bx, mu_g_fab);
 }
@@ -116,7 +122,9 @@ void init_helix(const Box& bx,
       break;
   }
 
+#ifdef AMREX_USE_CUDA
   Gpu::streamSynchronize();
+#endif
 }
 
 void init_periodic_vortices(const Box& bx,
@@ -179,7 +187,79 @@ void init_periodic_vortices(const Box& bx,
       break;
   }
 
+#ifdef AMREX_USE_CUDA
   Gpu::streamSynchronize();
+#endif
+}
+
+
+void init_periodic_tracer(const Box& bx,
+                          const Box& domain,
+                          FArrayBox& vel_g_fab,
+                          FArrayBox& trac_fab,
+                          const Real dx,
+                          const Real dy,
+                          const Real dz)
+{
+//  const amrex::Real twopi = 8. * std::atan(1);
+    const amrex::Real twopi(2 * M_PI);
+
+    Array4<Real> const& trac = trac_fab.array();
+    Array4<Real> const&  vel = vel_g_fab.array();
+
+    const int dir(1);
+    const amrex::Real A(1.0);
+
+    int N(0);         // N points in periodic direction
+    amrex::Real L(0); // domain size
+    amrex::Real C(0); // sin coefficient
+
+    switch (dir)
+    {
+    case 1:  // x-direction
+        L = Real(domain.bigEnd(0)+1) * dx;
+        C = twopi / L;
+        AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+        {
+            Real x = (Real(i) + .5) * dx - .00037;
+            Real y = (Real(j) + .5) * dy - .00073;
+            Real z = (Real(k) + .5) * dz - .00123;
+            trac(i,j,k) = A*( std::sin(C*(y+z) - 0.00042) + 1.0) * exp(x);
+            vel(i,j,k,2) += 0.1*( std::sin(C*(x+z) - 0.00042) + 1.0) * exp(y);
+            vel(i,j,k,3) += 0.1*( std::sin(C*(x+y) - 0.00042) + 1.0) * exp(z);
+        });
+        break;
+
+    case 2: // y-direction
+        L = Real(domain.bigEnd(1)+1) * dy;
+        C = twopi / L;
+        AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+        {
+            Real y = (Real(j) + .5) * dy;
+
+            trac(i,j,k) = A*(std::sin(C*y) + 1.0);
+        });
+        break;
+
+    case 3: // z-direction
+        L = Real(domain.bigEnd(2)+1) * dz;
+        C = twopi / L;
+        AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+        {
+            Real z = (Real(k) + .5) * dz;
+
+            trac(i,j,k) = A*(std::sin(C*z) + 1.0);
+        });
+        break;
+
+    default:
+        amrex::Abort("Error: wrong direction number");
+        break;
+    }
+
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
 }
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
