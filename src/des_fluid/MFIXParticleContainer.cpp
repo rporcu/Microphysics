@@ -435,12 +435,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     Real r2 = dx*dx + dy*dy + dz*dz;
                     Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
 
-                    if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
+                    if ( r2 <= (r_lm - small_number)*(r_lm - small_number) and (p1.id() != p2.id()))
                     {
                         if (debug_level > 0)
                            Gpu::Atomic::Add(pncoll, 1);
 
                         Real dist_mag     = sqrt(r2);
+
                         AMREX_ASSERT(dist_mag >= eps);
 
                         Real dist_mag_inv = 1.e0/dist_mag;
