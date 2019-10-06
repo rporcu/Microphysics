@@ -20,9 +20,11 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine check_gas_properties
 
-    use fld_const, only: mu_g0, ro_g0, mw_avg
+    use fld_const, only: mu_g0, ro_g0, trac_0, mw_avg
 
     call init_err_msg("CHECK_GAS_PHASE")
+
+    trac_0 = 0.d0
 
     ! We now require that ro_g0 be defined and positive in mfix.dat
     if (is_defined(ro_g0)) then

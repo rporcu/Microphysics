@@ -818,8 +818,10 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
   {
      ep_g[lev]->FillBoundary(geom[lev].periodicity());
      ro_g[lev]->FillBoundary(geom[lev].periodicity());
-     trac[lev]->FillBoundary(geom[lev].periodicity());
      mu_g[lev]->FillBoundary(geom[lev].periodicity());
+
+    if (advect_tracer)
+       trac[lev]->FillBoundary(geom[lev].periodicity());
 
      vel_g[lev]->FillBoundary(geom[lev].periodicity());
   }
@@ -880,7 +882,8 @@ mfix::mfix_set_bc0()
 
      ep_g[lev]->FillBoundary(geom[lev].periodicity());
      ro_g[lev]->FillBoundary(geom[lev].periodicity());
-     trac[lev]->FillBoundary(geom[lev].periodicity());
+     if (advect_tracer)
+        trac[lev]->FillBoundary(geom[lev].periodicity());
    }
 
    // Put velocity Dirichlet bc's on faces

@@ -28,20 +28,26 @@ mfix::mfix_set_scalar_bcs (Real time,
      for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
      {
         set_scalar_bcs(time, lev, (*ro_g_in[lev])[mfi], 0, domain);
-        set_scalar_bcs(time, lev, (*trac_in[lev])[mfi], 1, domain);
         set_scalar_bcs(time, lev, (*ep_g_in[lev])[mfi], 2, domain);
         set_scalar_bcs(time, lev, (*mu_g_in[lev])[mfi], 3, domain);
+
+        if (advect_tracer)
+           set_scalar_bcs(time, lev, (*trac_in[lev])[mfi], 1, domain);
      }
 
      ro_g_in[lev] -> FillBoundary (geom[lev].periodicity());
      ep_g_in[lev] -> FillBoundary (geom[lev].periodicity());
-     trac_in[lev] -> FillBoundary (geom[lev].periodicity());
      mu_g_in[lev] -> FillBoundary (geom[lev].periodicity());
 
+     if (advect_tracer)
+        trac_in[lev] -> FillBoundary (geom[lev].periodicity());
+
      EB_set_covered(*ro_g_in[lev], 0, ro_g_in[lev]->nComp(), ro_g_in[lev]->nGrow(), covered_val);
-     EB_set_covered(*trac_in[lev], 0, trac_in[lev]->nComp(), trac_in[lev]->nGrow(), covered_val);
      EB_set_covered(*ep_g_in[lev], 0, ep_g_in[lev]->nComp(), ep_g_in[lev]->nGrow(), covered_val);
      EB_set_covered(*mu_g_in[lev], 0, mu_g_in[lev]->nComp(), mu_g_in[lev]->nGrow(), covered_val);
+
+     if (advect_tracer)
+        EB_set_covered(*trac_in[lev], 0, trac_in[lev]->nComp(), trac_in[lev]->nGrow(), covered_val);
   }
 }
 
