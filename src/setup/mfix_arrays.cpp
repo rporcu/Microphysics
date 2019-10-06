@@ -2,6 +2,96 @@
 #include <AMReX_EB_utils.H>
 
 void
+mfix::ResizeArrays ()
+{
+    int nlevs_max = maxLevel() + 1;
+
+    ep_g.resize(nlevs_max);
+    ep_go.resize(nlevs_max);
+
+    p_g.resize(nlevs_max);
+    p_go.resize(nlevs_max);
+
+    p0_g.resize(nlevs_max);
+
+    ro_g.resize(nlevs_max);
+    ro_go.resize(nlevs_max);
+
+    trac.resize(nlevs_max);
+    trac_o.resize(nlevs_max);
+
+    phi_nd.resize(nlevs_max);
+    diveu.resize(nlevs_max);
+
+    // RHS arrays for cell-centered solves
+    diff_rhs.resize(nlevs_max);
+
+    // Solution array for diffusion solves
+    diff_phi.resize(nlevs_max);
+
+    // MAC velocities at faces
+    u_mac.resize(nlevs_max);
+    v_mac.resize(nlevs_max);
+    w_mac.resize(nlevs_max);
+
+    // RHS array for MAC projection
+    mac_rhs.resize(nlevs_max);
+
+    // Solution array for MAC projection
+    mac_phi.resize(nlevs_max);
+
+    // Current (vel_g) and old (vel_go) velocities
+    vel_g.resize(nlevs_max);
+    vel_go.resize(nlevs_max);
+
+    // Pressure gradients
+    gp.resize(nlevs_max);
+
+    drag.resize(nlevs_max);
+
+    mu_g.resize(nlevs_max);
+
+    // Vorticity
+    vort.resize(nlevs_max);
+
+    xslopes_u.resize(nlevs_max);
+    yslopes_u.resize(nlevs_max);
+    zslopes_u.resize(nlevs_max);
+
+    xslopes_s.resize(nlevs_max);
+    yslopes_s.resize(nlevs_max);
+    zslopes_s.resize(nlevs_max);
+
+    bcoeff_nd.resize(nlevs_max);
+    bcoeff.resize(nlevs_max);
+
+    // Fuid cost (load balancing)
+    fluid_cost.resize(nlevs_max);
+
+    // Fluid grid EB factory
+    ebfactory.resize(nlevs_max);
+
+    /****************************************************************************
+     *                                                                          *
+     * Initialize particle data (including level-set data)                      *
+     * NOTE: the level-set data (as well as implicit functions) live on at      *
+     *       least two levels                                                   *
+     *                                                                          *
+     ***************************************************************************/
+
+    // Particle costs (load balancing)
+    particle_cost.resize(nlevs_max);
+
+    // Particle grid EB factory
+    particle_ebfactory.resize(nlevs_max);
+
+    eb_levels.resize(std::max(2, nlevs_max));
+    particle_eb_levels.resize(std::max(2, nlevs_max));
+
+    level_sets.resize(std::max(2, nlevs_max));
+}
+
+void
 mfix::AllocateArrays (int lev)
 {
     if (ooo_debug) amrex::Print() << "AllocateArrays" << std::endl;
@@ -153,7 +243,6 @@ mfix::AllocateArrays (int lev)
     w_mac[lev]->setVal(covered_val);
 
 }
-
 
 void
 mfix::RegridArrays (int lev)
