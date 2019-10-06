@@ -21,19 +21,10 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
 {
     BL_PROFILE("mfix::mfix_compute_convective_term");
 
-    // MAC velocity
-    Vector< std::unique_ptr<MultiFab> > u_mac;
-    Vector< std::unique_ptr<MultiFab> > v_mac;
-    Vector< std::unique_ptr<MultiFab> > w_mac;
-
     // Temporaries to store fluxes 
     Vector< std::unique_ptr<MultiFab> > fx;
     Vector< std::unique_ptr<MultiFab> > fy;
     Vector< std::unique_ptr<MultiFab> > fz;
-
-    u_mac.resize(nlev);
-    v_mac.resize(nlev);
-    w_mac.resize(nlev);
 
     fx.resize(nlev);
     fy.resize(nlev);
@@ -71,25 +62,12 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
                MultiFab::Copy (*trac_in[lev], Sborder_s, 0, 0, 1, trac_in[lev]->nGrow());
             }
         }
-
-        BoxArray x_edge_ba = grids[lev];
-        x_edge_ba.surroundingNodes(0);
- 
-        BoxArray y_edge_ba = grids[lev];
-        y_edge_ba.surroundingNodes(1);
- 
-        BoxArray z_edge_ba = grids[lev];
-        z_edge_ba.surroundingNodes(2);
-
-        u_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]));
-        v_mac[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]));
-        w_mac[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]));
  
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
         //    note we can also use them to just hold the single density or tracer comp
-        fx[lev].reset(new MultiFab(x_edge_ba,dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
-        fy[lev].reset(new MultiFab(y_edge_ba,dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
-        fz[lev].reset(new MultiFab(z_edge_ba,dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
+        fx[lev].reset(new MultiFab(u_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
+        fy[lev].reset(new MultiFab(v_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
+        fz[lev].reset(new MultiFab(w_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
  
         // We need this to avoid FPE
         u_mac[lev]->setVal(covered_val);

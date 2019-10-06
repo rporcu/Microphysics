@@ -131,6 +131,11 @@ mfix::ResizeArrays ()
     // Solution array for diffusion solves
     diff_phi.resize(nlevs_max);
 
+    // MAC velocities at faces
+    u_mac.resize(nlevs_max);
+    v_mac.resize(nlevs_max);
+    w_mac.resize(nlevs_max);
+
     // RHS array for MAC projection
     mac_rhs.resize(nlevs_max);
 

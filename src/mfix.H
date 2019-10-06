@@ -625,6 +625,11 @@ private:
      // Solution for diffusion solves
      Vector< std::unique_ptr<MultiFab> > diff_phi;
 
+     // MAC velocities
+     Vector< std::unique_ptr<MultiFab> > u_mac;
+     Vector< std::unique_ptr<MultiFab> > v_mac;
+     Vector< std::unique_ptr<MultiFab> > w_mac;
+
      //
      Vector< std::unique_ptr<MultiFab> > fp;
 

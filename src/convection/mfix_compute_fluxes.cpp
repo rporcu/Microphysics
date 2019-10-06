@@ -59,9 +59,9 @@ mfix::mfix_compute_fluxes(int lev,
                           Vector< std::unique_ptr<MultiFab> >& yslopes_in,
                           Vector< std::unique_ptr<MultiFab> >& zslopes_in,
                           const int slopes_comp,
-                          Vector< std::unique_ptr<MultiFab> >& u_mac,
-                          Vector< std::unique_ptr<MultiFab> >& v_mac,
-                          Vector< std::unique_ptr<MultiFab> >& w_mac)
+                          Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                          Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                          Vector< std::unique_ptr<MultiFab> >& ep_w_mac)
 {
         Box domain(geom[lev].Domain());
 
@@ -130,13 +130,13 @@ mfix::mfix_compute_fluxes(int lev,
                 {
                     mfix_compute_ugradu(lev, bx, a_fx, a_fy, a_fz, state_in, state_comp, ncomp,
                                         xslopes_in, yslopes_in, zslopes_in, slopes_comp,
-                                        u_mac, v_mac, w_mac, &mfi, domain);
+                                        ep_u_mac, ep_v_mac, ep_w_mac, &mfi, domain);
                 }
                 else
                 {
                     mfix_compute_ugradu_eb(lev, bx, a_fx, a_fy, a_fz, state_in, state_comp, ncomp,
                                            xslopes_in, yslopes_in, zslopes_in, slopes_comp,
-                                           u_mac, v_mac, w_mac, &mfi, areafrac, facecent,
+                                           ep_u_mac, ep_v_mac, ep_w_mac, &mfi, areafrac, facecent,
                                            volfrac, bndrycent, &cc_mask, domain, flags);
                 }
             }
@@ -154,9 +154,9 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
                            Vector< std::unique_ptr<MultiFab> >& yslopes_in,
                            Vector< std::unique_ptr<MultiFab> >& zslopes_in,
                            const int slopes_comp,
-                           Vector< std::unique_ptr<MultiFab> >& u_mac,
-                           Vector< std::unique_ptr<MultiFab> >& v_mac,
-                           Vector< std::unique_ptr<MultiFab> >& w_mac,
+                           Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                           Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                           Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                            MFIter* mfi, Box& domain)
 {
   const amrex::Dim3 dom_low = amrex::lbound(domain);
@@ -164,9 +164,9 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
   
   Array4<Real> const& state     = state_in[lev]->array(*mfi);
   
-  Array4<Real> const& u = u_mac[lev]->array(*mfi);
-  Array4<Real> const& v = v_mac[lev]->array(*mfi);
-  Array4<Real> const& w = w_mac[lev]->array(*mfi);
+  Array4<Real> const& u = ep_u_mac[lev]->array(*mfi);
+  Array4<Real> const& v = ep_v_mac[lev]->array(*mfi);
+  Array4<Real> const& w = ep_w_mac[lev]->array(*mfi);
 
   Array4<Real> const& fx = a_fx[lev]->array(*mfi);
   Array4<Real> const& fy = a_fy[lev]->array(*mfi);
@@ -300,9 +300,9 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
                              Vector< std::unique_ptr<MultiFab> >& yslopes_in,
                              Vector< std::unique_ptr<MultiFab> >& zslopes_in,
                              const int slopes_comp,
-                             Vector< std::unique_ptr<MultiFab> >& u_mac,
-                             Vector< std::unique_ptr<MultiFab> >& v_mac,
-                             Vector< std::unique_ptr<MultiFab> >& w_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                              MFIter* mfi,
                              Array<const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
                              Array<const MultiCutFab*,AMREX_SPACEDIM>& facecent,
@@ -320,9 +320,9 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
   Array4<const Real> const& areafrac_y = areafrac[1]->array(*mfi);
   Array4<const Real> const& areafrac_z = areafrac[2]->array(*mfi);
 
-  Array4<Real> const& u = u_mac[lev]->array(*mfi);
-  Array4<Real> const& v = v_mac[lev]->array(*mfi);
-  Array4<Real> const& w = w_mac[lev]->array(*mfi);
+  Array4<Real> const& u = ep_u_mac[lev]->array(*mfi);
+  Array4<Real> const& v = ep_v_mac[lev]->array(*mfi);
+  Array4<Real> const& w = ep_w_mac[lev]->array(*mfi);
 
   Array4<Real> const& fx = a_fx[lev]->array(*mfi);
   Array4<Real> const& fy = a_fy[lev]->array(*mfi);

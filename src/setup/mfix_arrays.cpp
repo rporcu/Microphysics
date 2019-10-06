@@ -119,21 +119,39 @@ mfix::AllocateArrays (int lev)
     // Create a BoxArray on x-faces.
     BoxArray x_edge_ba = grids[lev];
     x_edge_ba.surroundingNodes(0);
+
+    // x-face-based coefficient for MAC and diffusive solves
     bcoeff[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+    bcoeff[lev][0]->setVal(0.);
+
+    // U velocity at x-faces (MAC)
+    u_mac[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]));
+    u_mac[lev]->setVal(covered_val); // Covered val as initial value
 
     // Create a BoxArray on y-faces.
     BoxArray y_edge_ba = grids[lev];
     y_edge_ba.surroundingNodes(1);
+
+    // y-face-based coefficient for MAC and diffusive solves
     bcoeff[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+    bcoeff[lev][1]->setVal(0.);
+
+    // V velocity at y-faces (MAC)
+    v_mac[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]));
+    v_mac[lev]->setVal(covered_val);
 
     // Create a BoxArray on z-faces.
     BoxArray z_edge_ba = grids[lev];
     z_edge_ba.surroundingNodes(2);
-    bcoeff[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
 
-    bcoeff[lev][0]->setVal(0.);
-    bcoeff[lev][1]->setVal(0.);
+    // z-face-based coefficient for MAC and diffusive solves
+    bcoeff[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
     bcoeff[lev][2]->setVal(0.);
+
+    // W velocity at z-faces (MAC)
+    w_mac[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]));
+    w_mac[lev]->setVal(covered_val);
+
 }
 
 
@@ -351,7 +369,12 @@ mfix::RegridArrays (int lev)
     bcoeff[lev][0] = std::move(bcx_mac_new);
     bcoeff[lev][0] -> setVal(0.0);
 
-   //****************************************************************************
+    // x component of MAC velocity
+    std::unique_ptr<MultiFab> u_mac_new(new MultiFab(x_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
+    u_mac[lev] = std::move(u_mac_new);
+    u_mac[lev] -> setVal(0.0);
+
+    //****************************************************************************
 
     BoxArray y_ba = grids[lev];
     y_ba = y_ba.surroundingNodes(1);
@@ -360,6 +383,11 @@ mfix::RegridArrays (int lev)
     std::unique_ptr<MultiFab> bcy_mac_new(new MultiFab(y_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
     bcoeff[lev][1] = std::move(bcy_mac_new);
     bcoeff[lev][1] -> setVal(0.0);
+
+    // y component of MAC velocity
+    std::unique_ptr<MultiFab> v_mac_new(new MultiFab(y_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
+    v_mac[lev] = std::move(v_mac_new);
+    v_mac[lev] -> setVal(0.0);
 
    //****************************************************************************
 
@@ -370,6 +398,11 @@ mfix::RegridArrays (int lev)
     std::unique_ptr<MultiFab> bcz_mac_new(new MultiFab(z_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
     bcoeff[lev][2] = std::move(bcz_mac_new);
     bcoeff[lev][2] -> setVal(0.0);
+
+    // z component of MAC velocity
+    std::unique_ptr<MultiFab> w_mac_new(new MultiFab(z_ba,dmap[lev],1,nghost,MFInfo(), *ebfactory[lev]));
+    w_mac[lev] = std::move(w_mac_new);
+    w_mac[lev] -> setVal(0.0);
 
     // ********************************************************************************
     // Make sure we fill the ghost cells as appropriate -- this is copied from init_fluid
