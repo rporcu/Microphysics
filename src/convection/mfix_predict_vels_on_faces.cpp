@@ -42,7 +42,7 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                    }
                }
 
-               Gpu::streamSynchronize();
+               Gpu::synchronize();
            }
        }
 
@@ -206,7 +206,7 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                  }
              });
 
-             Gpu::streamSynchronize();
+             Gpu::synchronize();
 
           // Cut cells in this FAB
           } else {
@@ -262,7 +262,7 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                  }
              });
 
-             Gpu::streamSynchronize();
+             Gpu::synchronize();
 
           } // Cut cells
        } // MFIter
@@ -490,7 +490,7 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                  }
              });
 
-             Gpu::streamSynchronize();
+             Gpu::synchronize();
 
           } // Cut cells
        } // MFIter

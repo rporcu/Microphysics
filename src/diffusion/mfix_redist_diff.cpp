@@ -60,7 +60,7 @@ step2(const Box& grown1_bx,
       delm(i,j,k) = 0;
   });
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }
 
 void
@@ -117,7 +117,7 @@ step3(const Box& grown1_bx,
     }
   });
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }
 
 } // end namespace redist_diff_aux
@@ -177,7 +177,7 @@ compute_redist_diff(Box& bx,
     // Set this to zero here
     optmp_fbx.setVal(0.0);
  
-    Gpu::streamSynchronize();
+    Gpu::synchronize();
 
     //
     // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
@@ -199,5 +199,5 @@ compute_redist_diff(Box& bx,
     });
   }
   
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }

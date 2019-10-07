@@ -252,7 +252,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
                     }
                 });
 
-                Gpu::streamSynchronize();
+                Gpu::synchronize();
             }
 
 #ifdef _OPENMP
@@ -385,7 +385,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            });
          }
 
-         Gpu::streamSynchronize();
+         Gpu::synchronize();
        }
     }
 

@@ -177,7 +177,7 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
 
     } // lev
   
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }
 
 void

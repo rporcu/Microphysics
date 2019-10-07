@@ -181,6 +181,6 @@ mfix::set_gradp_bcs (const Box& bx,
     });
   }
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 
 }

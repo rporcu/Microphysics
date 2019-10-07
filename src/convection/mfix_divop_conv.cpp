@@ -101,7 +101,7 @@ step2(const Box& grown1_bx,
     }
   });
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }
 
 } // end namespace divop_conv_aux
@@ -179,5 +179,5 @@ mfix_apply_eb_redistribution ( Box& bx,
      divergence(i,j,k,icomp+n) = divcarr(i,j,k,n) + optmp(i,j,k,n);
   });
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }

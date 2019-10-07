@@ -262,7 +262,7 @@ mfix::set_p0(const Box& bx,
     pj += dpodz * dz * (sbx_hi[2] - sbx_lo[2] + 1);
   }
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 
   // pressure in all intial condition region cells was defined
   goto_100(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), bct_ilo, bct_ihi,
@@ -471,7 +471,7 @@ void goto_60(const Box& sbx,
     }
   }
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 
   goto_100(sbx, domain, bc_list, p0_g, m_bc_p_g, bct_ilo, bct_ihi,
            bct_jlo, bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup,
@@ -622,7 +622,7 @@ void goto_100(const Box& sbx,
     });
   }
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 
   return;
 }

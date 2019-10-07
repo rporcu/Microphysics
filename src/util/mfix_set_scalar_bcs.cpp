@@ -395,5 +395,5 @@ mfix::set_scalar_bcs(Real time,
     }
   }
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }

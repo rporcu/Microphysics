@@ -97,7 +97,7 @@ mfix::mfix_compute_vort ()
              (*vort[lev])[mfi].setVal(0.0, bx, 0, 1);
           }
 
-          Gpu::streamSynchronize();
+          Gpu::synchronize();
        }
     }
 }
@@ -294,7 +294,7 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
         });
     }
 
-    Gpu::Device::synchronize();
+    Gpu::synchronize();
 
 #ifdef AMREX_USE_CUDA
     sum = sum_gpu.dataValue();
@@ -352,7 +352,7 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
         });
     }
 
-    Gpu::Device::synchronize();
+    Gpu::synchronize();
 
 #ifdef AMREX_USE_CUDA
     sum = sum_gpu.dataValue();

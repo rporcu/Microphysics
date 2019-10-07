@@ -504,7 +504,7 @@ mfix::mfix_add_gravity_and_gp (Real dt)
              vel_fab(i,j,k,2) += dt * ( grav_loc[2]-(gp_fab(i,j,k,2)+gp0_loc[2])*inv_dens );
          });
 
-         Gpu::streamSynchronize();
+         Gpu::synchronize();
        }
     }
 }
@@ -553,7 +553,7 @@ mfix::mfix_add_drag_explicit (Real dt)
           vel_fab(i,j,k,2) += drag_2;
       });
 
-      Gpu::streamSynchronize();
+      Gpu::synchronize();
     }
   }
 }
@@ -599,7 +599,7 @@ mfix::mfix_add_drag_implicit (Real dt)
           vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;
       });
 
-      Gpu::streamSynchronize();
+      Gpu::synchronize();
     }
   }
 }

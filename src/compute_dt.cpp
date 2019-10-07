@@ -110,7 +110,7 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
                 });
             }
 
-            Gpu::streamSynchronize();
+            Gpu::synchronize();
         }      
     }
 

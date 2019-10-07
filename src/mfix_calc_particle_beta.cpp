@@ -329,10 +329,10 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
               } // Not covered
             }); // ip
 
-            Gpu::streamSynchronize();
+            Gpu::synchronize();
           } // type of FAB
 
-          Gpu::streamSynchronize();
+          Gpu::synchronize();
         } // if entire FAB not covered
       } // pti
     } // GPU region

@@ -129,7 +129,7 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                    }
                });
 
-               Gpu::streamSynchronize();
+               Gpu::synchronize();
 
            } // end of cut cell region
 
@@ -212,7 +212,7 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                }
            });
            
-           Gpu::streamSynchronize();
+           Gpu::synchronize();
 
         } // not covered
     } // MFIter

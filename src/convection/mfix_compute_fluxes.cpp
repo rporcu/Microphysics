@@ -104,7 +104,7 @@ mfix::mfix_compute_fluxes(int lev,
                    }
                }
 
-               Gpu::streamSynchronize();
+               Gpu::synchronize();
            }
         }
 
@@ -281,7 +281,7 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
     fz(i,j,k,n) = w(i,j,k) * state_b;
   });
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }
 
 
@@ -524,5 +524,5 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
        fz(i,j,k,n) = my_huge;
   });
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }

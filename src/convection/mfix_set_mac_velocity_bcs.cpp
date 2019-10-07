@@ -189,6 +189,6 @@ mfix::set_MAC_velocity_bcs ( int lev,
       });
     }
 
-    Gpu::streamSynchronize();
+    Gpu::synchronize();
   }
 }

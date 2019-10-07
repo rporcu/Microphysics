@@ -56,9 +56,7 @@ void init_fluid(const Box& sbx,
       if (test_tracer_conservation)
          init_periodic_tracer(bx, domain, vel_g_fab, trac_fab, dx, dy, dz);
 
-#ifdef AMREX_USE_CUDA
-      Gpu::Device::synchronize();
-#endif
+      Gpu::synchronize();
 
       calc_mu_g(bx, mu_g_fab);
 }
@@ -122,9 +120,7 @@ void init_helix(const Box& bx,
       break;
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::streamSynchronize();
-#endif
+  Gpu::synchronize();
 }
 
 void init_periodic_vortices(const Box& bx,
@@ -187,9 +183,7 @@ void init_periodic_vortices(const Box& bx,
       break;
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::streamSynchronize();
-#endif
+  Gpu::synchronize();
 }
 
 
@@ -257,9 +251,7 @@ void init_periodic_tracer(const Box& bx,
         break;
     }
 
-#ifdef AMREX_USE_CUDA
-    Gpu::Device::synchronize();
-#endif
+    Gpu::synchronize();
 }
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -383,6 +375,6 @@ void set_ic(const Box& sbx,
       }
     }
 
-    Gpu::streamSynchronize();
+    Gpu::synchronize();
   }
 }

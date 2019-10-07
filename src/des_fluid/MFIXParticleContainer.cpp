@@ -388,12 +388,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     }
                 });
 
-                Gpu::streamSynchronize();
+                Gpu::synchronize();
 
                 // Debugging: copy data from the fc (all forces) vector to
                 // the wfor (wall forces) vector.
                 if (debug_level > 0) {
-                    Gpu::Device::streamSynchronize();
+                    Gpu::synchronize();
                     for (int i = 0; i < wfor[index].size(); i++ ) {
                         wfor[index][i] = fc[index][i];
                     }
@@ -521,7 +521,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     }
             });
 
-            Gpu::streamSynchronize();
+            Gpu::synchronize();
 #else
             calc_particle_collisions ( particles                          , &nrp,
                                        neighbors[lev][index].dataPtr()    , &size_ng,
@@ -617,7 +617,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 }
             });
 
-            Gpu::Device::streamSynchronize();
+            Gpu::synchronize();
 
 #ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR_STOP(des_time_march);

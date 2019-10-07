@@ -314,7 +314,7 @@ mfix::set_velocity_bcs(Real time,
     }
   }
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }
 
 
@@ -506,5 +506,5 @@ mfix::set_vec_bcs(const int lev,
     });
   }
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }

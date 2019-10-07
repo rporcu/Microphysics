@@ -323,11 +323,11 @@ mfix::mfix_calc_drag_particle(Real time)
               } // Not covered
             }); // particle loop
 
-            Gpu::streamSynchronize();
+            Gpu::synchronize();
 
           } // if box not all regular
 
-          Gpu::streamSynchronize();
+          Gpu::synchronize();
 
         } // FAB not covered
       } // pti

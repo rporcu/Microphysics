@@ -229,5 +229,5 @@ mfix::set_bc0(const Box& sbx,
     });
   }
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }

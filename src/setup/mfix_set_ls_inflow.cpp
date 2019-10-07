@@ -261,5 +261,5 @@ mfix::set_ls_inflow(const int lev,
     });
   }
 
-  Gpu::streamSynchronize();
+  Gpu::synchronize();
 }
