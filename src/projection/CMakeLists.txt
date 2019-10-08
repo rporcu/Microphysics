@@ -1,9 +1,11 @@
 target_include_directories(mfixcore
-   PUBLIC
-   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
-   )
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+    )
 
 target_sources( mfixcore
-   PRIVATE
-   mfix_projection.cpp
-   )
+    PRIVATE
+    MFIX_NodalProjection.H
+    MFIX_NodalProjection.cpp
+    mfix_projection.cpp
+    )

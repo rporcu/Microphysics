@@ -7,6 +7,8 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
+#include <MFIX_NodalProjection.H>
+
 std::string mfix::particle_init_type   = "AsciiFile";
 std::string mfix::load_balance_type    = "FixedSize";
 std::string mfix::knapsack_weight_type = "RunTimeCosts";
@@ -104,7 +106,7 @@ mfix::mfix ()
 }
 
 void
-mfix::mfix_usr1_cpp(Real time)
+mfix::mfix_usr1_cpp(Real time) const
 {
   mfix_usr1(&time);
 
@@ -115,9 +117,9 @@ mfix::mfix_usr1_cpp(Real time)
     m_bc_u_g[i] = get_bc_u_g(i);
     m_bc_v_g[i] = get_bc_v_g(i);
     m_bc_w_g[i] = get_bc_w_g(i);
-    
+
     m_bc_t_g[i] = get_bc_t_g(i);
-    
+
     m_bc_ep_g[i] = get_bc_ep_g(i);
   }
 }
@@ -167,7 +169,7 @@ mfix::mfix_set_bc_type(int lev)
     {
       m_bc_u_g[i] = get_bc_u_g(i);
       m_bc_v_g[i] = get_bc_v_g(i);
-      m_bc_w_g[i] = get_bc_w_g(i);  
+      m_bc_w_g[i] = get_bc_w_g(i);
     }
 }
 
@@ -179,18 +181,18 @@ void mfix::mfix_set_bc_mod(const int* pID, const int* pType,
 {
   const int dim_bc = get_dim_bc();
 
-  set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel); 
+  set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel);
 
   for(unsigned i(1); i <= dim_bc; ++i)
   {
     m_bc_u_g[i] = get_bc_u_g(i);
     m_bc_v_g[i] = get_bc_v_g(i);
     m_bc_w_g[i] = get_bc_w_g(i);
-    
+
     m_bc_t_g[i] = get_bc_t_g(i);
-    
+
     m_bc_ep_g[i] = get_bc_ep_g(i);
-    
+
     m_bc_p_g[i] = get_bc_p_g(i);
   }
 }
@@ -203,17 +205,17 @@ void mfix::mfix_set_bc_mod_add_mi(const int* pPlane,
   const int dim_bc = get_dim_bc();
 
   set_bc_mod_add_mi(pPlane, xLo, yLo, zLo, xHi, yHi, zHi, pPg, pVel);
-  
+
   for(unsigned i(1); i <= dim_bc; ++i)
   {
     m_bc_u_g[i] = get_bc_u_g(i);
     m_bc_v_g[i] = get_bc_v_g(i);
     m_bc_w_g[i] = get_bc_w_g(i);
-    
+
     m_bc_t_g[i] = get_bc_t_g(i);
-    
+
     m_bc_ep_g[i] = get_bc_ep_g(i);
-    
+
     m_bc_p_g[i] = get_bc_p_g(i);
   }
 }

@@ -1,14 +1,14 @@
 #include <mfix.H>
 #include <bc_mod_F.H>
 
-//              
+//
 //  These subroutines set the BCs for the velocity components only.
 //
 
 void
-mfix::mfix_set_velocity_bcs (Real time, 
+mfix::mfix_set_velocity_bcs (Real time,
                              Vector< std::unique_ptr<MultiFab> > & vel_in,
-                             int extrap_dir_bcs)
+                             int extrap_dir_bcs) const
 {
   BL_PROFILE("mfix::mfix_set_velocity_bcs()");
 
@@ -38,7 +38,7 @@ mfix::set_velocity_bcs(Real time,
                        const int lev,
                        FArrayBox& vel_fab,
                        const Box& domain,
-                       const int* extrap_dir_bcs)
+                       const int* extrap_dir_bcs) const
 {
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
@@ -127,9 +127,9 @@ mfix::set_velocity_bcs(Real time,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
-  amrex::Real* p_bc_u_g = m_bc_u_g.data();
-  amrex::Real* p_bc_v_g = m_bc_v_g.data();
-  amrex::Real* p_bc_w_g = m_bc_w_g.data();
+  const amrex::Real* p_bc_u_g = m_bc_u_g.data();
+  const amrex::Real* p_bc_v_g = m_bc_v_g.data();
+  const amrex::Real* p_bc_w_g = m_bc_w_g.data();
 
   if (nlft > 0)
   {
@@ -321,7 +321,7 @@ mfix::set_velocity_bcs(Real time,
 void
 mfix::set_vec_bcs(const int lev,
                   FArrayBox& vec_fab,
-                  const Box& domain)
+                  const Box& domain) const
 {
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
@@ -374,9 +374,9 @@ mfix::set_vec_bcs(const int lev,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
-  amrex::Real* p_bc_u_g = m_bc_u_g.data();
-  amrex::Real* p_bc_v_g = m_bc_v_g.data();
-  amrex::Real* p_bc_w_g = m_bc_w_g.data();
+  const amrex::Real* p_bc_u_g = m_bc_u_g.data();
+  const amrex::Real* p_bc_v_g = m_bc_v_g.data();
+  const amrex::Real* p_bc_w_g = m_bc_w_g.data();
 
   amrex::Real* p_bc_ep_g = m_bc_ep_g.data();
 

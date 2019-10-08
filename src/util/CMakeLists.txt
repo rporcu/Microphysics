@@ -11,4 +11,6 @@ target_sources( mfixcore
    interpolation_m.f90
    mfix_set_velocity_bcs.cpp
    mfix_set_scalar_bcs.cpp
+   MFIX_MFHelpers.H
+   MFIX_MFHelpers.cpp
    )

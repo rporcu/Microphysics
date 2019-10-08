@@ -1,6 +1,8 @@
 #include <mfix_proj_F.H>
 #include <mfix.H>
 
+#include <MFIX_NodalProjection.H>
+
 void
 mfix::mfix_setup_nodal_solver ()
 {
@@ -21,28 +23,30 @@ mfix::mfix_setup_nodal_solver ()
     ppe_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
     ppe_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
 
-    //
-    // First define the matrix (operator).
-    //
-    //        (del dot b sigma grad)) phi
-    //
-    LPInfo                       info;
-    info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
-    nodal_matrix.reset(new MLNodeLaplacian( geom, grids, dmap, info, 
-                                            GetVecOfConstPtrs(ebfactory))); 
+    nodal_projector.reset(new NodalProjection(this, ppe_lobc, ppe_hibc));
 
-    nodal_matrix->setGaussSeidel(true);
-    nodal_matrix->setHarmonicAverage(false);
-    nodal_matrix->setDomainBC ( ppe_lobc, ppe_hibc);
+    // //
+    // // First define the matrix (operator).
+    // //
+    // //        (del dot b sigma grad)) phi
+    // //
+    // LPInfo                       info;
+    // info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
+    // nodal_matrix.reset(new MLNodeLaplacian( geom, grids, dmap, info,
+    //                                         GetVecOfConstPtrs(ebfactory)));
 
-    //
-    // Then setup the solver ----------------------
-    //
-    nodal_solver.reset(new MLMG(*nodal_matrix));
+    // nodal_matrix->setGaussSeidel(true);
+    // nodal_matrix->setHarmonicAverage(false);
+    // nodal_matrix->setDomainBC ( ppe_lobc, ppe_hibc);
 
-    nodal_solver->setMaxIter    (nodal_mg_maxiter);
+    // //
+    // // Then setup the solver ----------------------
+    // //
+    // nodal_solver.reset(new MLMG(*nodal_matrix));
 
-    nodal_solver->setVerbose   (nodal_mg_verbose);
-    nodal_solver->setCGVerbose (nodal_mg_cg_verbose);
-    nodal_solver->setCGMaxIter (nodal_mg_cg_maxiter);
+    // nodal_solver->setMaxIter    (nodal_mg_maxiter);q
+
+    // nodal_solver->setVerbose   (nodal_mg_verbose);
+    // nodal_solver->setCGVerbose (nodal_mg_cg_verbose);
+    // nodal_solver->setCGMaxIter (nodal_mg_cg_maxiter);
 }

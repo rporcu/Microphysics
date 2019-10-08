@@ -12,6 +12,9 @@
 #include <AMReX_Array.H>
 #include <AMReX_BLassert.H>
 
+#include <MFIX_MFHelpers.H>
+#include <MFIX_NodalProjection.H>
+
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
 #endif
@@ -173,7 +176,13 @@ mfix::mfix_project_velocity ()
 
     bool proj_2 = true;
     Real time = 0.0;
-    mfix_apply_projection ( time, dummy_dt, proj_2 );
+
+    // Apply projection -- depdt=0 for now
+    Vector< std::unique_ptr< MultiFab > > depdt(nlev);
+    for (int lev(0); lev < nlev; ++lev )
+        depdt[lev] -> setVal(0.0);
+
+    mfix_apply_nodal_projection( depdt, time, dummy_dt, proj_2 );
 
    // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
    for (int lev = 0; lev < nlev; lev++)
@@ -349,8 +358,12 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     if (explicit_diffusion_pred == 0)
         mfix_diffuse_velocity_tensor(new_time,dt);
 
-    // Project velocity field
-    mfix_apply_projection ( new_time, dt, proj_2 );
+    // Project velocity field -- depdt=0 for now
+    Vector< std::unique_ptr< MultiFab > > depdt(nlev);
+    for (int lev(0); lev < nlev; ++lev )
+        depdt[lev] -> setVal(0.0);
+
+    mfix_apply_nodal_projection( depdt, new_time, dt, proj_2 );
 
     mfix_set_velocity_bcs (new_time, vel_g, 0);
 }
@@ -468,8 +481,12 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
     mfix_diffuse_velocity_tensor(new_time,.5*dt);
 
-    // Apply projection
-    mfix_apply_projection (new_time, dt, proj_2);
+    // Apply projection -- depdt=0 for now
+    Vector< std::unique_ptr< MultiFab > > depdt(nlev);
+    for (int lev(0); lev < nlev; ++lev )
+        depdt[lev] -> setVal(0.0);
+
+    mfix_apply_nodal_projection( depdt, new_time, dt, proj_2 );
 
     mfix_set_velocity_bcs (new_time, vel_g, 0);
 }
@@ -727,4 +744,85 @@ mfix::steady_state_reached (Real dt, int iter)
     } else {
        return reached;
     };
+}
+
+
+
+void
+mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt,
+                                    amrex::Real a_time,
+                                    amrex::Real a_dt,
+                                    bool proj_2 )
+{
+    BL_PROFILE("mfix::mfix_apply_projection");
+
+    for (int lev(0); lev < nlev; ++lev)
+    {
+
+        // Here we add (dt * (1/rho gradp)) to ustar
+        if (proj_2)
+        {
+            // Convert velocities to momenta
+            for (int n(0); n < 3; ++n)
+                MultiFab::Multiply(*vel_g[lev], *ro_g[lev] , 0, n, 1, vel_g[lev]->nGrow() );
+
+            MultiFab::Saxpy(*vel_g[lev], a_dt, *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
+
+            // Convert momenta back to velocities
+            for (int n(0); n < 3; n++)
+                MultiFab::Divide(*vel_g[lev], *ro_g[lev], 0, n, 1, vel_g[lev]->nGrow() );
+
+        }
+
+        // Print level infos
+        amrex::Print() << "AT LEVEL " << lev << " BEFORE PROJECTION: \n";
+        mfix_print_max_vel(lev);
+        mfix_print_max_gp(lev);
+        amrex::Print() << "Min and Max of ep_g "
+                       << MFHelpers::min(*ep_g[lev],0) << " "
+                       << MFHelpers::max(*ep_g[lev],0) << std::endl;
+    }
+
+    // Perform projection
+    nodal_projector -> project( vel_g, ep_g, ro_g, a_depdt, a_time, a_dt );
+
+    // Get phi and fluxes
+    Vector< const amrex::MultiFab* >  phi(nlev);
+    Vector< const amrex::MultiFab* >  gradphi(nlev);
+
+    phi     = nodal_projector -> getPhi();
+    gradphi = nodal_projector -> getGradPhi();
+
+    //
+    for (int lev(0); lev < nlev; ++lev)
+    {
+        if (proj_2)
+        {
+            // p := phi
+            MultiFab::Copy(*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+            MultiFab::Copy( *gp[lev], *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
+        }
+        else
+        {
+            // p := p + phi
+            MultiFab::Add(*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+            MultiFab::Add( *gp[lev], *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
+        }
+    }
+
+    for (int lev = nlev-1; lev > 0; lev--)
+    {
+        avgDown(lev-1, *vel_g[lev], *vel_g[lev-1]);
+        avgDown(lev-1, *   gp[lev],    *gp[lev-1]);
+    }
+
+    // Swap ghost cells and apply BCs to velocity
+    mfix_set_velocity_bcs(a_time, vel_g, 0);
+
+    // Print level info after projection
+    for (int lev(0); lev < nlev; lev++)
+    {
+        amrex::Print() << "AT LEVEL " << lev << " AFTER PROJECTION: \n";
+        mfix_print_max_vel(lev);
+    }
 }
