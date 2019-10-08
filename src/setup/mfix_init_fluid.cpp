@@ -201,48 +201,73 @@ void init_periodic_tracer(const Box& bx,
     Array4<Real> const& trac = trac_fab.array();
     Array4<Real> const&  vel = vel_g_fab.array();
 
-    const int dir(1);
+    int dir(0);
     const amrex::Real A(1.0);
 
     int N(0);         // N points in periodic direction
     amrex::Real L(0); // domain size
     amrex::Real C(0); // sin coefficient
 
+    dir += (domain.bigEnd(1) == domain.bigEnd(2)) ? 1 : 0;
+    dir += (domain.bigEnd(0) == domain.bigEnd(2)) ? 2 : 0;
+    dir += (domain.bigEnd(0) == domain.bigEnd(1)) ? 4 : 0;
+
     switch (dir)
-    {
-    case 1:  // x-direction
+      {
+      case 1:  // x-direction
+
         L = Real(domain.bigEnd(0)+1) * dx;
         C = twopi / L;
         AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
         {
+
             Real x = (Real(i) + .5) * dx - .00037;
+
             Real y = (Real(j) + .5) * dy - .00073;
             Real z = (Real(k) + .5) * dz - .00123;
+
             trac(i,j,k) = A*( std::sin(C*(y+z) - 0.00042) + 1.0) * exp(x);
+
             vel(i,j,k,1) += 0.1*( std::sin(C*(x+z) - 0.00042) + 1.0) * exp(y);
             vel(i,j,k,2) += 0.1*( std::sin(C*(x+y) - 0.00042) + 1.0) * exp(z);
         });
         break;
 
     case 2: // y-direction
+
         L = Real(domain.bigEnd(1)+1) * dy;
         C = twopi / L;
         AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
         {
-            Real y = (Real(j) + .5) * dy;
 
-            trac(i,j,k) = A*(std::sin(C*y) + 1.0);
+            Real y = (Real(j) + .5) * dy - .00037;
+
+            Real x = (Real(i) + .5) * dx - .00073;
+            Real z = (Real(k) + .5) * dz - .00123;
+
+            trac(i,j,k) = A*( std::sin(C*(x+z) - 0.00042) + 1.0) * exp(y);
+
+            vel(i,j,k,0) += 0.1*( std::sin(C*(y+z) - 0.00042) + 1.0) * exp(x);
+            vel(i,j,k,2) += 0.1*( std::sin(C*(y+x) - 0.00042) + 1.0) * exp(z);
+
         });
         break;
 
-    case 3: // z-direction
+    case 4: // z-direction
+
         L = Real(domain.bigEnd(2)+1) * dz;
         C = twopi / L;
         AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
         {
-            Real z = (Real(k) + .5) * dz;
+            Real z = (Real(k) + .5) * dz - .00037;
 
-            trac(i,j,k) = A*(std::sin(C*z) + 1.0);
+            Real x = (Real(i) + .5) * dx - .00123;
+            Real y = (Real(j) + .5) * dy - .00073;
+
+            trac(i,j,k) = A*( std::sin(C*(x+y) - 0.00042) + 1.0) * exp(z);
+
+            vel(i,j,k,0) += 0.1*( std::sin(C*(z+y) - 0.00042) + 1.0) * exp(x);
+            vel(i,j,k,1) += 0.1*( std::sin(C*(z+x) - 0.00042) + 1.0) * exp(y);
         });
         break;
 
