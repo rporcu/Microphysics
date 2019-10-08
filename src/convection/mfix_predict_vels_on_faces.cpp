@@ -98,21 +98,21 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
 
        // ****************************************************************************
        // Then predict to face centers
-       // NOTE - THIS LOOP IS NO LONGER TILED
        // ****************************************************************************
 
-       // for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-       for (MFIter mfi(*vel_in[lev],false); mfi.isValid(); ++mfi)
+       for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
-          Box        bx       = mfi.validbox();
 
-          const Box ubx       = amrex::surroundingNodes(bx,0);
-          const Box vbx       = amrex::surroundingNodes(bx,1);
-          const Box wbx       = amrex::surroundingNodes(bx,2);
+          // Tilebox
+          const Box  bx = mfi.tilebox();
 
-          const Box ubx_grown = amrex::surroundingNodes(amrex::grow(bx,1),0);
-          const Box vbx_grown = amrex::surroundingNodes(amrex::grow(bx,1),1);
-          const Box wbx_grown = amrex::surroundingNodes(amrex::grow(bx,1),2);
+          const Box ubx = mfi.tilebox(e_x);
+          const Box vbx = mfi.tilebox(e_y);
+          const Box wbx = mfi.tilebox(e_z);
+
+          const Box ubx_grown = mfi.growntilebox(e_x);
+          const Box vbx_grown = mfi.growntilebox(e_y);
+          const Box wbx_grown = mfi.growntilebox(e_z);
 
           const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_in[lev])[mfi]);
           const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
@@ -285,11 +285,12 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
 #endif
        for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
-           // Tilebox
-          Box  bx = mfi.tilebox();
-          Box ubx = mfi.tilebox(e_x);
-          Box vbx = mfi.tilebox(e_y);
-          Box wbx = mfi.tilebox(e_z);
+          // Tilebox
+          const Box  bx = mfi.tilebox();
+
+          const Box ubx = mfi.tilebox(e_x);
+          const Box vbx = mfi.tilebox(e_y);
+          const Box wbx = mfi.tilebox(e_z);
       
           // Check efficiently if this tile contains any eb stuff
 
