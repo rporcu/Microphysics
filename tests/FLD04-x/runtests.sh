@@ -34,18 +34,15 @@ else
     MPIRUN=""
 fi
 
-rm -rf TRACER*
 rm -rf POST_* const_plt* chk* plt* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} ${MFIX} ${INPUTS} "mfix.input_deck=mfix.dat.no_particles" | tee ${RUN_NAME}.STD
-grep "Sum tracer volume" ${RUN_NAME}.STD | sed 's/.* //' &> TRACER-NO-PARTICLES.dat
+grep "Sum tracer volume" ${RUN_NAME}.STD | sed 's/.* //' &> POST-NO-PARTICLES.dat
 
-echo "skipping particles for now"
+rm -rf POST_* const_plt* chk* plt* ${RUN_NAME}* &> /dev/null
+time -p ${MPIRUN} ${MFIX} ${INPUTS} "mfix.input_deck=mfix.dat.particles" | tee ${RUN_NAME}.STD
+grep "Sum tracer volume" ${RUN_NAME}.STD | sed 's/.* //' &> POST-PARTICLES.dat
 
-#rm -rf POST_* const_plt* chk* plt* ${RUN_NAME}* &> /dev/null
-#time -p ${MPIRUN} ${MFIX} ${INPUTS} "mfix.input_deck=mfix.dat.particles" | tee ${RUN_NAME}.STD
-#grep "Sum tracer volume" ${RUN_NAME}.STD | sed 's/.* //' &> TRACER-PARTICLES.dat
-
-# post_dats=POST*.dat
-# for result in ${post_dats}; do
-#     diff -u -I '#.*' "../FLD03-y/AUTOTEST/${result}" "${result}"
-# done
+post_dats=POST*.dat
+for result in ${post_dats}; do
+    diff -u -I '#.*' "../FLD04-y/AUTOTEST/${result}" "${result}"
+done

@@ -5,7 +5,7 @@
 ***_FLD01:_ 2D Channel (Poiseuille) flow in a periodic domain [1]
 ***_FLD02:_ 2D Couette flow in a channel [1]
 ***_FLD03:_ 2D Channel (Poiseuille) flow with specified pressure boundaries  [1]
-***_FLD04:_ Lid-driven cavity in a square domain
+***_FLD04:_ Tracer tranport with and without particles
 
 ## Overview of DEM and Fluid/DEM coupled cases
 

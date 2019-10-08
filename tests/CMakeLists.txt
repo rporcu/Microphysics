@@ -71,6 +71,7 @@ set( MGS_TESTS
    FLD01-x FLD01-y FLD01-z
    FLD02-x FLD02-y FLD02-z
    FLD03-x FLD03-y FLD03-z
+   FLD04-x FLD04-y FLD04-z
    DEM06-x DEM06-y DEM06-z
    DEM07
    )
@@ -124,6 +125,7 @@ set( TGS_TESTS
    FLD01-x FLD01-y FLD01-z
    FLD02-x FLD02-y FLD02-z
    FLD03-x FLD03-y FLD03-z
+   FLD04-x FLD04-y FLD04-z
    DEM06-x DEM06-y DEM06-z
    DEM07
    )
@@ -223,6 +225,7 @@ set( TGM_TESTS
    FLD01-x FLD01-y FLD01-z
    FLD02-x FLD02-y FLD02-z
    FLD03-x FLD03-y FLD03-z
+   FLD04-x FLD04-y FLD04-z
    DEM06-x DEM06-y DEM06-z
    )
 
@@ -277,6 +280,7 @@ if ( ENABLE_MPI )
       FLD01-x FLD01-y FLD01-z
       FLD02-x FLD02-y FLD02-z
       FLD03-x FLD03-y FLD03-z
+      FLD04-x FLD04-y FLD04-z
       DEM06-x DEM06-y DEM06-z
       DEM07
       )
