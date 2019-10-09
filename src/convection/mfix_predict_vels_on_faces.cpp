@@ -90,6 +90,14 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
        MultiFab wpls(ep_face[2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
        MultiFab wmns(ep_face[2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
 
+       // We need this just to avoid FPE (eg for outflow faces)
+       upls.setVal(covered_val);
+       umns.setVal(covered_val);
+       vpls.setVal(covered_val);
+       vmns.setVal(covered_val);
+       wpls.setVal(covered_val);
+       wmns.setVal(covered_val);
+
        // ****************************************************************************
        // First compute the slopes
        // ****************************************************************************

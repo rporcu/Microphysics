@@ -164,6 +164,8 @@ public:
         }
     }
 
+    const Geometry get_geom_ref(int lev){ return geom[lev]; }
+
     void get_input_bcs();
 
     void set_input_bcs(const std::string bcID, const int index,
@@ -421,7 +423,7 @@ protected:
      void GetDataVel      (int lev, Real time, Vector<MultiFab *> & data,
                            Vector<Real> & datatime);
 
-     void FillPatchScalar(int lev, Real time, MultiFab & mf, int icomp,
+     void FillPatchScalar(int lev, Real time, MultiFab & mf, int icomp, int ncomp, 
                           const Vector<BCRec> & bcr);
      void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data, int icomp,
                          Vector<Real> & datatime);
