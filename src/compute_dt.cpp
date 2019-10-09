@@ -51,8 +51,8 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
 #ifdef _OPENMP
 #pragma omp parallel reduction(max:cfl_max) if (Gpu::notInLaunchRegion())
 #endif
-        for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-
+        for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        {
             const auto& vel       =   vel_g[lev] -> array(mfi);
             const auto& ep        =    ep_g[lev] -> array(mfi);
             const auto& ro        =    ro_g[lev] -> array(mfi);
@@ -66,16 +66,14 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
             const auto&  flags     = vel_fab.getEBCellFlagFab();
             const auto&  flags_fab = flags.array();
 
-            Cuda::ManagedVector<amrex::Real> gp0_dev = {gp0[0], gp0[1], gp0[2]};
-            amrex::Real* p_gp0_dev = gp0_dev.data();
+            const GpuArray<Real, 3> gp0_dev = {gp0[0], gp0[1], gp0[2]};
 
-            Cuda::ManagedVector<amrex::Real> gravity_dev = {gravity[0], gravity[1], gravity[2]};
-            amrex::Real* p_gravity_dev = gravity_dev.data();
+            const GpuArray<Real, 3> gravity_dev = {gravity[0], gravity[1], gravity[2]};
 
             // Compute CFL on a per cell basis
             if (flags.getType(bx) != FabType::covered)
             {
-                AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,                                    
+                AMREX_FOR_3D(bx, i, j, k,                                    
                 {
                     if (!flags_fab(i,j,k).isCovered()) {
                         
@@ -86,10 +84,10 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
                         // Compute the three components of the net acceleration
                         // Explicit particle forcing is given by 
                         for (int n(0); n < 3; ++n) {
-                            Real delp = p_gp0_dev[n] + gradp(i,j,k,n);
+                            Real delp = gp0_dev[n] + gradp(i,j,k,n);
                             Real fp   = drag_fab(i,j,k,n) - drag_fab(i,j,k,3) * vel(i,j,k,n);
                             
-                            acc[n] = p_gravity_dev[n] + qro * ( - delp + fp*qep );
+                            acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                         }
                         
                         Real c_cfl   = abs(vel(i,j,k,0))*odx + abs(vel(i,j,k,1))*ody + abs(vel(i,j,k,2))*odz;                        
@@ -109,9 +107,9 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
                     }
                 });
             }
-
-            Gpu::synchronize();
-        }      
+            // NOTE: here we do not need host-device synchronization since it is
+            // already provided by the MFIter destructor
+        }
     }
 
 #ifdef AMREX_USE_CUDA

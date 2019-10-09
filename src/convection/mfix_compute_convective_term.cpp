@@ -176,8 +176,6 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
         conv_s_in[lev] -> mult(-1.0);
 
     } // lev
-  
-  Gpu::synchronize();
 }
 
 void

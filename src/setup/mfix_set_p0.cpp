@@ -202,7 +202,7 @@ mfix::set_p0(const Box& bx,
 
         const Real ic_p_g = get_ic_p_g(icv);
 
-        AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k, {array4_p0_g(i,j,k) = ic_p_g;});
+        AMREX_FOR_3D(sbx, i, j, k, {array4_p0_g(i,j,k) = ic_p_g;});
       }
     }
   }
@@ -225,7 +225,7 @@ mfix::set_p0(const Box& bx,
     const amrex::Real dpodx = delp_x / xlen;
     pj -= dpodx * dx * (bx_hi[0] - dom_hi[0] + nghost + 2 + offset);
 
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_FOR_3D(sbx, i, j, k,
     {
       const amrex::Real local_pj = pj + dpodx*dx * (sbx_hi[0] - i + 1);
       array4_p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
@@ -239,7 +239,7 @@ mfix::set_p0(const Box& bx,
     const Real dpody = delp_y / ylen;
     pj -= dpody * dy * (bx_hi[1] - dom_hi[1] + nghost + 2 + offset);
 
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_FOR_3D(sbx, i, j, k,
     {
       const amrex::Real local_pj = pj + dpody*dy * (sbx_hi[1] - j + 1);
       array4_p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
@@ -253,7 +253,7 @@ mfix::set_p0(const Box& bx,
     const Real dpodz = delp_z / zlen;
     pj -= dpodz * dz * (bx_hi[2] - dom_hi[2] + nghost + 2 + offset);
 
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_FOR_3D(sbx, i, j, k,
     {
       const amrex::Real local_pj = pj + (dpodz*dz * (sbx_hi[2] - k + 1));
       array4_p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
@@ -330,7 +330,7 @@ void goto_60(const Box& sbx,
   // pressure at the outlet
   if (is_undefined_db_cpp(pj))
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k, 
+    AMREX_FOR_3D(sbx, i, j, k, 
     {
       p0_g(i,j,k) = 0;
     });
@@ -369,7 +369,7 @@ void goto_60(const Box& sbx,
     {
       pj += upper_stride * dpodx * dx;
 
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj + dpodx*dx * (bx_hi_x - i);
         p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
@@ -381,7 +381,7 @@ void goto_60(const Box& sbx,
     {
       pj -= lower_stride * dpodx * dx;
 
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj - dpodx*dx * (i - bx_lo_x);
         p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
@@ -409,7 +409,7 @@ void goto_60(const Box& sbx,
     {
       pj += upper_stride * dpody * dy;
 
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj + dpody*dy * (bx_hi_y - j);
         p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
@@ -421,7 +421,7 @@ void goto_60(const Box& sbx,
     {
       pj -= lower_stride * dpody * dy;
 
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj - dpody*dy * (j - bx_lo_y);
         p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
@@ -449,7 +449,7 @@ void goto_60(const Box& sbx,
     {
       pj += upper_stride * dpodz * dz;
 
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj + dpodz*dz * (bx_hi_z - k);
         p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
@@ -461,7 +461,7 @@ void goto_60(const Box& sbx,
     {
       pj -= lower_stride * dpodz * dz;
 
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         const amrex::Real local_pj = pj - dpodz*dz * (k - bx_lo_z);
         p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);
@@ -512,7 +512,7 @@ void goto_100(const Box& sbx,
   {
     const Box sbx_lo_x(sbx_lo, {dom_lo[0], sbx_hi[1], sbx_hi[2]});
 
-    AMREX_HOST_DEVICE_FOR_3D(sbx_lo_x, i, j, k,
+    AMREX_FOR_3D(sbx_lo_x, i, j, k,
     {
       const int jbc = (j > dom_hi[1]+nghost) ? j-1 : j;
       const int kbc = (k > dom_hi[2]+nghost) ? k-1 : k;
@@ -531,7 +531,7 @@ void goto_100(const Box& sbx,
   {
     const Box sbx_hi_x({dom_hi[0]+1, sbx_lo[1], sbx_lo[2]}, sbx_hi);
 
-    AMREX_HOST_DEVICE_FOR_3D(sbx_hi_x, i, j, k,
+    AMREX_FOR_3D(sbx_hi_x, i, j, k,
     {
       const int jbc = (j > dom_hi[1]+nghost) ? j-1 : j;
       const int kbc = (k > dom_hi[2]+nghost) ? k-1 : k;
@@ -550,7 +550,7 @@ void goto_100(const Box& sbx,
   {
     const Box sbx_lo_y(sbx_lo, {sbx_hi[0], dom_lo[1], sbx_hi[2]});
 
-    AMREX_HOST_DEVICE_FOR_3D(sbx_lo_y, i, j, k,
+    AMREX_FOR_3D(sbx_lo_y, i, j, k,
     {
       const int ibc = (i > dom_hi[0]+nghost) ? i-1 : i;
       const int kbc = (k > dom_hi[2]+nghost) ? k-1 : k;
@@ -569,7 +569,7 @@ void goto_100(const Box& sbx,
   {
     const Box sbx_hi_y({sbx_lo[0], dom_hi[1]+1, sbx_lo[2]}, sbx_hi);
 
-    AMREX_HOST_DEVICE_FOR_3D(sbx_hi_y, i, j, k,
+    AMREX_FOR_3D(sbx_hi_y, i, j, k,
     {
       const int ibc = (i > dom_hi[0]+nghost) ? i-1 : i;
       const int kbc = (k > dom_hi[2]+nghost) ? k-1 : k;
@@ -588,7 +588,7 @@ void goto_100(const Box& sbx,
   {
     const Box sbx_lo_z(sbx_lo, {sbx_hi[0], sbx_hi[1], dom_lo[2]});
 
-    AMREX_HOST_DEVICE_FOR_3D(sbx_lo_z, i, j, k,
+    AMREX_FOR_3D(sbx_lo_z, i, j, k,
     {
       const int ibc = (i > dom_hi[0]+nghost) ? i-1 : i;
       const int jbc = (j > dom_hi[1]+nghost) ? j-1 : j;
@@ -607,7 +607,7 @@ void goto_100(const Box& sbx,
   {
     const Box sbx_hi_z({sbx_lo[0], sbx_lo[1], dom_hi[2]+1}, sbx_hi);
 
-    AMREX_HOST_DEVICE_FOR_3D(sbx_hi_z, i, j, k,
+    AMREX_FOR_3D(sbx_hi_z, i, j, k,
     {
       const int ibc = (i > dom_hi[0]+nghost) ? i-1 : i;
       const int jbc = (j > dom_hi[1]+nghost) ? j-1 : j;

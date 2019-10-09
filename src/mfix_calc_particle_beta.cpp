@@ -164,6 +164,8 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 
               particle.rdata(realData::dragx) = beta;
             });
+
+            Gpu::synchronize();
           }
           else // FAB not all regular
           {
@@ -331,8 +333,6 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 
             Gpu::synchronize();
           } // type of FAB
-
-          Gpu::synchronize();
         } // if entire FAB not covered
       } // pti
     } // GPU region
