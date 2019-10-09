@@ -1114,13 +1114,13 @@ void MFIXParticleContainer::
 ComputeAverageVelocities ( const int lev,
                            const amrex::Real time,
                            const string&  basename,
-                           const Vector<int>& avg_vel_p,
-                           const Gpu::ManagedDeviceVector<Real>& avg_region_x_w,
-                           const Gpu::ManagedDeviceVector<Real>& avg_region_x_e,
-                           const Gpu::ManagedDeviceVector<Real>& avg_region_y_s,
-                           const Gpu::ManagedDeviceVector<Real>& avg_region_y_n,
-                           const Gpu::ManagedDeviceVector<Real>& avg_region_z_b,
-                           const Gpu::ManagedDeviceVector<Real>& avg_region_z_t )
+                           const amrex::Vector<Real>& avg_vel_p,
+                           const amrex::Vector<Real>& avg_region_x_w,
+                           const amrex::Vector<Real>& avg_region_x_e,
+                           const amrex::Vector<Real>& avg_region_y_s,
+                           const amrex::Vector<Real>& avg_region_y_n,
+                           const amrex::Vector<Real>& avg_region_z_b,
+                           const amrex::Vector<Real>& avg_region_z_t )
 {
 
   // Count number of calls -- Used to determin when to create file from scratch

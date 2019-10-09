@@ -90,15 +90,15 @@ public:
     void ComputeAverageFluidVars ( const int lev,
                                    const amrex::Real time,
                                    const std::string&  basename,
-                                   const Vector<int>& avg_p_g,
-                                   const Vector<int>& avg_ep_g,
-                                   const Vector<int>& avg_vel_g,
-                                   const Vector<Real>& avg_region_x_w,
-                                   const Vector<Real>& avg_region_x_e,
-                                   const Vector<Real>& avg_region_y_s,
-                                   const Vector<Real>& avg_region_y_n,
-                                   const Vector<Real>& avg_region_z_b,
-                                   const Vector<Real>& avg_region_z_t ) const;
+                                   const amrex::Vector<amrex::Real>& avg_p_g,
+                                   const amrex::Vector<amrex::Real>& avg_ep_g,
+                                   const amrex::Vector<amrex::Real>& avg_vel_g,
+                                   const amrex::Vector<amrex::Real>& avg_region_x_w,
+                                   const amrex::Vector<amrex::Real>& avg_region_x_e,
+                                   const amrex::Vector<amrex::Real>& avg_region_y_s,
+                                   const amrex::Vector<amrex::Real>& avg_region_y_n,
+                                   const amrex::Vector<amrex::Real>& avg_region_z_b,
+                                   const amrex::Vector<amrex::Real>& avg_region_z_t ) const;
 
     void Regrid ();
 
@@ -763,18 +763,18 @@ private:
      // Options to control the computing of particle eulerian velocities
      //
 
-     Vector<int> avg_p_g  ;
-     Vector<int> avg_ep_g ;
-     Vector<int> avg_vel_g;
+     amrex::Vector<Real> avg_p_g  ;
+     amrex::Vector<Real> avg_ep_g ;
+     amrex::Vector<Real> avg_vel_g;
 
-     Vector<int> avg_vel_p;
+     amrex::Vector<Real> avg_vel_p;
 
-     Vector<Real> avg_region_x_e;
-     Vector<Real> avg_region_x_w;
-     Vector<Real> avg_region_y_s;
-     Vector<Real> avg_region_y_n;
-     Vector<Real> avg_region_z_b;
-     Vector<Real> avg_region_z_t;
+     amrex::Vector<Real> avg_region_x_e;
+     amrex::Vector<Real> avg_region_x_w;
+     amrex::Vector<Real> avg_region_y_s;
+     amrex::Vector<Real> avg_region_y_n;
+     amrex::Vector<Real> avg_region_z_b;
+     amrex::Vector<Real> avg_region_z_t;
 
      // Flags for saving fluid data in plot files
      int plt_vel_g   = 1;
