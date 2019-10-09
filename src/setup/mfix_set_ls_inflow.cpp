@@ -50,7 +50,7 @@ mfix::set_ls_inflow(const int lev,
   //  the boundary condition routines,
   //  the domain boundaries (domlo,domhi), and dx,
   //     then we make sure to adjust by nref
-  const amrex::GpuArray<const Real, AMREX_SPACEDIM> dx_fine = 
+  const amrex::GpuArray<const Real, 3> dx_fine = 
     {dx[0]/Real(nref), dx[1]/Real(nref), dx[2]/Real(nref)};
 
   const int nlft = amrex::max(0, nref*dom_lo[0]-sbx_lo[0]);
@@ -65,7 +65,7 @@ mfix::set_ls_inflow(const int lev,
 
   if (nlft > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_FOR_3D(sbx, i, j, k,
     {
       int bct[4];
       bct[0] = bct_ilo(dom_lo[0]-1,j/nref,k/nref,0);
@@ -98,7 +98,7 @@ mfix::set_ls_inflow(const int lev,
 
   if (nrgt > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_FOR_3D(sbx, i, j, k,
     {
       int bct[4];
       bct[0] = bct_ihi(dom_hi[0]+1,j/nref,k/nref,0);
@@ -131,7 +131,7 @@ mfix::set_ls_inflow(const int lev,
   
   if (nbot > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_FOR_3D(sbx, i, j, k,
     {
       int bct[4];
       bct[0] = bct_jlo(i/nref,dom_lo[1]-1,k/nref,0);
@@ -164,7 +164,7 @@ mfix::set_ls_inflow(const int lev,
   
   if (ntop > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_FOR_3D(sbx, i, j, k,
     {
       int bct[4];
       bct[0] = bct_jhi(i/nref,dom_hi[1]+1,k/nref,0);
@@ -197,7 +197,7 @@ mfix::set_ls_inflow(const int lev,
 
   if (ndwn > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_FOR_3D(sbx, i, j, k,
     {
       int bct[4];
       bct[0] = bct_klo(i/nref,j/nref,dom_lo[2]-1,0);
@@ -230,7 +230,7 @@ mfix::set_ls_inflow(const int lev,
 
   if (nup > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    AMREX_FOR_3D(sbx, i, j, k,
     {
       int bct[4];
       bct[0] = bct_khi(i/nref,j/nref,dom_hi[2]+1,0);

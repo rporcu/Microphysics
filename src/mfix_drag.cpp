@@ -161,6 +161,8 @@ mfix::mfix_calc_drag_particle(Real time)
                 pbeta * ( velfp[2] - particle.rdata(realData::velz) ) -
                 (gradp[2] + gp0_z) * particle.rdata(realData::volume);
             });
+            
+            Gpu::synchronize();
           }
           else // FAB not all regular
           {
@@ -324,11 +326,7 @@ mfix::mfix_calc_drag_particle(Real time)
             }); // particle loop
 
             Gpu::synchronize();
-
           } // if box not all regular
-
-          Gpu::synchronize();
-
         } // FAB not covered
       } // pti
     } // omp region

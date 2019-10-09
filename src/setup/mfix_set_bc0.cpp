@@ -75,7 +75,7 @@ mfix::set_bc0(const Box& sbx,
 
   if (nlft > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo_3D, i, j, k,
+    AMREX_FOR_3D(bx_yz_lo_3D, i, j, k,
     {
       const int bcv = a_bc_ilo(dom_lo[0]-1,j,k,1);
       const int bct = a_bc_ilo(dom_lo[0]-1,j,k,0);
@@ -101,7 +101,7 @@ mfix::set_bc0(const Box& sbx,
   
   if (nrgt > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_yz_hi_3D, i, j, k,
+    AMREX_FOR_3D(bx_yz_hi_3D, i, j, k,
     {
       const int bcv = a_bc_ihi(dom_hi[0]+1,j,k,1);
       const int bct = a_bc_ihi(dom_hi[0]+1,j,k,0);
@@ -127,7 +127,7 @@ mfix::set_bc0(const Box& sbx,
 
   if (nbot > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xz_lo_3D, i, j, k,
+    AMREX_FOR_3D(bx_xz_lo_3D, i, j, k,
     {
       const int bcv = a_bc_jlo(i,dom_lo[1]-1,k,1);
       const int bct = a_bc_jlo(i,dom_lo[1]-1,k,0);
@@ -153,7 +153,7 @@ mfix::set_bc0(const Box& sbx,
 
   if (ntop > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xz_hi_3D, i, j, k,
+    AMREX_FOR_3D(bx_xz_hi_3D, i, j, k,
     {
       const int bcv = a_bc_jhi(i,dom_hi[1]+1,k,1);
       const int bct = a_bc_jhi(i,dom_hi[1]+1,k,0);
@@ -179,7 +179,7 @@ mfix::set_bc0(const Box& sbx,
 
   if (ndwn > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xy_lo_3D, i, j, k,
+    AMREX_FOR_3D(bx_xy_lo_3D, i, j, k,
     {
       const int bcv = a_bc_klo(i,j,dom_lo[2]-1,1);
       const int bct = a_bc_klo(i,j,dom_lo[2]-1,0);
@@ -205,7 +205,7 @@ mfix::set_bc0(const Box& sbx,
 
   if (nup > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xy_hi_3D, i, j, k,
+    AMREX_FOR_3D(bx_xy_hi_3D, i, j, k,
     {
       const int bcv = a_bc_khi(i,j,dom_hi[2]+1,1);
       const int bct = a_bc_khi(i,j,dom_hi[2]+1,0);

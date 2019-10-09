@@ -50,13 +50,13 @@ void init_fluid(const Box& sbx,
       const Real ro_g0  = get_ro_g0();
       const Real trac_0 = get_trac0();
 
-      AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k, {ro_g(i,j,k) = ro_g0;});
-      AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k, {trac(i,j,k) = trac_0;});
+      AMREX_FOR_3D(sbx, i, j, k, {ro_g(i,j,k) = ro_g0;});
+      AMREX_FOR_3D(sbx, i, j, k, {trac(i,j,k) = trac_0;});
+
+      Gpu::synchronize();
 
       if (test_tracer_conservation)
          init_periodic_tracer(bx, domain, vel_g_fab, trac_fab, dx, dy, dz);
-
-      Gpu::synchronize();
 
       calc_mu_g(bx, mu_g_fab);
 }
@@ -77,7 +77,7 @@ void init_helix(const Box& bx,
   switch (plane)
   {
     case 1:  // around x-axis
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         Real y = (Real(j) + .5) * dy - .0016;
         Real z = (Real(k) + .5) * dz - .0016;
@@ -90,7 +90,7 @@ void init_helix(const Box& bx,
       break;
 
     case 2:  // around y-axis
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         Real x = (Real(i) + .5) * dx - .0016;
         Real z = (Real(k) + .5) * dz - .0016;
@@ -103,7 +103,7 @@ void init_helix(const Box& bx,
       break;
 
     case 3:  // around z-axis
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         Real x = (Real(i) + .5) * dx;
         Real y = (Real(j) + .5) * dy;
@@ -141,7 +141,7 @@ void init_periodic_vortices(const Box& bx,
   {
     case 1:  // x-y plane
       // x-direction
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         Real x = (Real(i) + .5) * dx;
         Real y = (Real(j) + .5) * dy;
@@ -154,7 +154,7 @@ void init_periodic_vortices(const Box& bx,
 
     case 2:  // x-z plane
       // x-direction
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         Real x = (Real(i) + .5) * dx;
         Real z = (Real(k) + .5) * dz;
@@ -167,7 +167,7 @@ void init_periodic_vortices(const Box& bx,
 
     case 3:  // y-z plane
       // x-direction
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
         Real y = (Real(j) + .5) * dy;
         Real z = (Real(k) + .5) * dz;
@@ -218,7 +218,7 @@ void init_periodic_tracer(const Box& bx,
 
         L = Real(domain.bigEnd(0)+1) * dx;
         C = twopi / L;
-        AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+        AMREX_FOR_3D(bx, i, j, k,
         {
 
             Real x = (Real(i) + .5) * dx - .00037;
@@ -237,7 +237,7 @@ void init_periodic_tracer(const Box& bx,
 
         L = Real(domain.bigEnd(1)+1) * dy;
         C = twopi / L;
-        AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+        AMREX_FOR_3D(bx, i, j, k,
         {
 
             Real y = (Real(j) + .5) * dy - .00037;
@@ -257,7 +257,7 @@ void init_periodic_tracer(const Box& bx,
 
         L = Real(domain.bigEnd(2)+1) * dz;
         C = twopi / L;
-        AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+        AMREX_FOR_3D(bx, i, j, k,
         {
             Real z = (Real(k) + .5) * dz - .00037;
 
@@ -340,20 +340,20 @@ void set_ic(const Box& sbx,
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
-        AMREX_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,0) = ugx;});
+        AMREX_FOR_3D(box1, i, j, k, {velocity(i,j,k,0) = ugx;});
 
         if(slo[0] < domlo[0] and domlo[0] == istart)
         {
           const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
           const Box box2(low2, hi2);
-          AMREX_HOST_DEVICE_FOR_3D(box2, i, j, k, {velocity(i,j,k,0) = ugx;});
+          AMREX_FOR_3D(box2, i, j, k, {velocity(i,j,k,0) = ugx;});
         }
 
         if(shi[0] > domhi[0] and domhi[0] == iend)
         {
           const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
           const Box box3(low3, hi3);
-          AMREX_HOST_DEVICE_FOR_3D(box3, i, j, k, {velocity(i,j,k,0) = ugx;});
+          AMREX_FOR_3D(box3, i, j, k, {velocity(i,j,k,0) = ugx;});
         }
       }
 
@@ -361,20 +361,20 @@ void set_ic(const Box& sbx,
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
-        AMREX_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,1) = vgx;});
+        AMREX_FOR_3D(box1, i, j, k, {velocity(i,j,k,1) = vgx;});
 
         if (slo[1] < domlo[1] and domlo[1] == jstart)
         {
           const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
           const Box box2(low2, hi2);
-          AMREX_HOST_DEVICE_FOR_3D(box2, i, j, k, {velocity(i,j,k,1) = vgx;});
+          AMREX_FOR_3D(box2, i, j, k, {velocity(i,j,k,1) = vgx;});
         }
 
         if (shi[1] > domhi[1] and domhi[1] == jend)
         {
           const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
           const Box box3(low3, hi3);
-          AMREX_HOST_DEVICE_FOR_3D(box3, i, j, k, {velocity(i,j,k,1) = vgx;});
+          AMREX_FOR_3D(box3, i, j, k, {velocity(i,j,k,1) = vgx;});
         }
       }
 
@@ -382,24 +382,25 @@ void set_ic(const Box& sbx,
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
-        AMREX_HOST_DEVICE_FOR_3D(box1, i, j, k, {velocity(i,j,k,2) = wgx;});
+        AMREX_FOR_3D(box1, i, j, k, {velocity(i,j,k,2) = wgx;});
 
         if (slo[2] < domlo[2] and domlo[2] == kstart)
         {
           const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
           const Box box2(low2, hi2);
-          AMREX_HOST_DEVICE_FOR_3D(box2, i, j, k, {velocity(i,j,k,2) = wgx;});
+          AMREX_FOR_3D(box2, i, j, k, {velocity(i,j,k,2) = wgx;});
         }
 
         if (shi[2] > domhi[2] and domhi[2] == kend)
         {
           const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
           const Box box3(low3, hi3);
-          AMREX_HOST_DEVICE_FOR_3D(box3, i, j, k, {velocity(i,j,k,2) = wgx;});
+          AMREX_FOR_3D(box3, i, j, k, {velocity(i,j,k,2) = wgx;});
         }
       }
     }
-
-    Gpu::synchronize();
   }
+
+  Gpu::synchronize();
+
 }
