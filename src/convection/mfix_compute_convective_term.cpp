@@ -50,16 +50,16 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
 
             if (advect_density)
             {
-               int icomp = 0;
-               FillPatchScalar(lev, time, Sborder_s, icomp, bcs_s);
-               MultiFab::Copy (*ro_g_in[lev], Sborder_s, 0, 0, 1, ro_g_in[lev]->nGrow());
+               state_comp =  0; num_comp = 1;
+               FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
+               MultiFab::Copy (*ro_g_in[lev], Sborder_s, 0, 0, num_comp, ro_g_in[lev]->nGrow());
             }
 
             if (advect_tracer)
             {
-               int icomp = 1;
-               FillPatchScalar(lev, time, Sborder_s, icomp, bcs_s);
-               MultiFab::Copy (*trac_in[lev], Sborder_s, 0, 0, 1, trac_in[lev]->nGrow());
+               state_comp =  1; num_comp = 1;
+               FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
+               MultiFab::Copy (*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
             }
         }
  
