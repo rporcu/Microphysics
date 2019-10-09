@@ -651,7 +651,7 @@ private:
      int solve_dem;
 
      bool advect_density = false;
-     bool advect_tracer  = true;
+     bool advect_tracer  = false;
 
      bool test_tracer_conservation  = false;
 

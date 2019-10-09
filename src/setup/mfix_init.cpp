@@ -93,6 +93,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         if (test_tracer_conservation && !advect_tracer)
            amrex::Abort("No point in testing tracer conservation with advect_tracer = false");
 
+        if (advect_tracer && !advect_density)
+           amrex::Abort("Cant advect tracer without advecting density");
+
         // The default type is "FixedSize" but we can over-write that in the inputs file
         //  with "KDTree" or "KnapSack"
         pp.query("load_balance_type", load_balance_type);
