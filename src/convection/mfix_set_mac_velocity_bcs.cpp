@@ -189,6 +189,7 @@ mfix::set_MAC_velocity_bcs ( int lev,
       });
     }
 
-    Gpu::synchronize();
+    // NOTE: here we do not need host-device synchronization since it is already
+    // included in the MFIter destructor
   }
 }
