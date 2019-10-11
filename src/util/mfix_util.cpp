@@ -7,9 +7,6 @@ void setFabVal (amrex::FArrayBox& fab,
                 int comp,
                 int num_comp)
 {
-  if(num_comp == 0)
-    num_comp = fab.nComp();
-
   const auto& fab_array = fab.array();
 
   AMREX_FOR_4D(bx, num_comp, i, j, k, n, { fab_array(i,j,k,n+comp) = val; });
