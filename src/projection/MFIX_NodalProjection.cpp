@@ -154,7 +154,7 @@ NodalProjection::setup ()
     }
 
     // Regrid if necessary
-    int nghost(4);      // We use 1 ghost node only -- it should be enough
+    int nghost(1);      // We use 1 ghost node only -- it should be enough
 
     bool need_regrid(false);  // if BA and DM changed on any level, we need
                               // to update the matrix and the solver as well
@@ -314,7 +314,7 @@ NodalProjection::computeRHS (       Vector< std::unique_ptr< amrex::MultiFab > >
         EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
 
     }
-    
+
     // Restore velocities to carry Dirichlet values on faces -- Do we still need this?
     int extrap_dir_bcs = 0;
     m_mfix -> mfix_set_velocity_bcs(a_time, a_vel, extrap_dir_bcs);
