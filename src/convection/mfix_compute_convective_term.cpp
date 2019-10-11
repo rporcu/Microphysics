@@ -1,6 +1,7 @@
 #include <mfix.H>
 #include <mfix_divop_conv.hpp>
 #include <param_mod_F.H>
+#include <mfix_util_F.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
@@ -205,7 +206,7 @@ mfix::mfix_redistribute( int lev,
                  // If tile is completely covered by EB geometry, set slopes
              // value to some very large number so we know if
              // we accidentally use these covered slopes later in calculations
-             (*conv_out[lev])[mfi].setVal( get_my_huge(), bx, conv_comp, ncomp);
+             setFabVal((*conv_out[lev])[mfi], get_my_huge(), bx, conv_comp, ncomp);
           }
           else
           {

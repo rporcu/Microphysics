@@ -1,5 +1,6 @@
 #include <mfix_redist_diff.hpp>
 #include <param_mod_F.H>
+#include <mfix_util_F.H>
 
 #include <cmath>
 #include <limits>
@@ -175,7 +176,7 @@ compute_redist_diff(Box& bx,
   for(unsigned int n(0); n < 3; ++n)
   {
     // Set this to zero here
-    optmp_fbx.setVal(0.0);
+    setFabVal(optmp_fbx, 0.0, grown2_bx);
  
     //
     // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)

@@ -1,4 +1,5 @@
 #include <mfix.H>
+#include <mfix_util_F.H>
 
 void
 mfix::mfix_predict_vels_on_faces ( int lev, Real time,
@@ -127,9 +128,9 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
           {
-             (*ep_u_mac[lev])[mfi].setVal( 1.2345e300, ubx, 0, 1);
-             (*ep_v_mac[lev])[mfi].setVal( 1.2345e300, vbx, 0, 1);
-             (*ep_w_mac[lev])[mfi].setVal( 1.2345e300, wbx, 0, 1);
+            setFabVal((*ep_u_mac[lev])[mfi], 1.2345e300, ubx, 0, 1);
+            setFabVal((*ep_v_mac[lev])[mfi], 1.2345e300, ubx, 0, 1);
+            setFabVal((*ep_w_mac[lev])[mfi], 1.2345e300, ubx, 0, 1);
           }
   
           // No cut cells in this FAB

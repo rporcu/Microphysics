@@ -6,6 +6,15 @@
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
 
+#include <AMReX_FArrayBox.H>
+#include <AMReX_Box.H>
+
+void setFabVal (amrex::FArrayBox& fab,
+                amrex::Real val,
+                amrex::Box bx,
+                int comp = 0,
+                int num_comp = 0);
+
 #ifdef BL_SINGLE_PRECISION_PARTICLES
 typedef float amrex_particle_real;
 #else
