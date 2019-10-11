@@ -666,10 +666,10 @@ mfix::steady_state_reached (Real dt, int iter)
 
        MultiFab::LinComb (tmp, 1.0, *p_g[lev], 0, -1.0, *p_go[lev], 0, 0, 1, 0);
 
-       Real delta_u = mfix_norm0(temp_vel,lev,0);
-       Real delta_v = mfix_norm0(temp_vel,lev,1);
-       Real delta_w = mfix_norm0(temp_vel,lev,2);
-       Real delta_p = mfix_norm0(tmp,lev,0);
+       Real delta_u = temp_vel.norm0(0,0,false,true);
+       Real delta_v = temp_vel.norm0(1,0,false,true);
+       Real delta_w = temp_vel.norm0(2,0,false,true);
+       Real delta_p = temp_vel.norm0(0,0,false,true);
 
        Real tol = steady_state_tol;
 

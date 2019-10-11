@@ -14,11 +14,11 @@ using namespace amrex;
 
 //
 // Computes the following decomposition:
-// 
+//
 //    u + c*grad(phi)/ro = u*  with  div(ep*u) = 0
 //
 // Inputs:
-// 
+//
 //   lev    = the AMR level
 //   u,v,w  = the MAC velocity field to be projected
 //   ep     = the cell-centered volume fraction
@@ -27,7 +27,7 @@ using namespace amrex;
 // Outputs:
 //
 //  phi     = the projection auxiliary function
-//  u,v,w   = the PROJECTED MAC velocity field 
+//  u,v,w   = the PROJECTED MAC velocity field
 //
 // Notes:
 //
@@ -36,9 +36,9 @@ using namespace amrex;
 //       div(ep*grad(phi)/ro) = div(ep * u*)
 //
 //  WARNING: this method returns the MAC velocity with up-to-date BCs in place
-// 
-void 
-mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac, 
+//
+void
+mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                             Vector< std::unique_ptr<MultiFab> >& ep_in,
@@ -58,7 +58,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
    vel.resize(finest_level+1);
 
    if (m_verbose)
-      Print() << " >> Before projection\n" ; 
+      Print() << " >> Before projection\n" ;
 
     // Set bc's on scalars to be sure ro_face and ep_face see correct bcs
     mfix_set_scalar_bcs(time,ro_in,trac,ep_in,mu_g);
@@ -104,7 +104,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
 
       for (int i=0; i<AMREX_SPACEDIM; ++i)
          (vel[lev])[i]->FillBoundary( geom[lev].periodicity() );
-      
+
       if (m_verbose)
       {
          bool already_on_centroid = true;
@@ -113,8 +113,9 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                               geom[lev], already_on_centroid);
 
          Print() << "  * On level "<< lev
-                 << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
-      }  
+                 << " max(abs(diveu)) = "
+                 << mac_rhs[lev]->norm0(0,0,false,true) << "\n";
+      }
    }
 
    //
@@ -132,7 +133,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
    macproj.setVerbose   ( mac_mg_verbose);
    macproj.setCGVerbose ( mac_mg_cg_verbose);
    macproj.setMaxIter   ( mac_mg_maxiter);
-   macproj.setCGMaxIter ( mac_mg_cg_maxiter);   
+   macproj.setCGMaxIter ( mac_mg_cg_maxiter);
    // The default bottom solver is BiCG
    // Other options include:
    ///   Hypre IJ AMG solver
@@ -166,8 +167,8 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
        // Solve using mac_phi as an initial guess -- note that mac_phi is
        //       stored from iteration to iteration
        macproj.project(GetVecOfPtrs(mac_phi), mac_mg_rtol,mac_mg_atol,MLMG::Location::FaceCentroid);
-   } 
-   else 
+   }
+   else
    {
        // Solve with initial guess of zero
        macproj.project(mac_mg_rtol,mac_mg_atol,MLMG::Location::FaceCentroid);
@@ -175,24 +176,25 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
 
    // Get MAC velocities at face CENTER by dividing solution by ep at faces
    if (m_verbose)
-      Print() << " >> After projection\n" ; 
+      Print() << " >> After projection\n" ;
 
    for ( int lev=0; lev <= finest_level ; ++lev )
-   {   
+   {
       if (m_verbose)
       {
          vel[lev][0]->FillBoundary( geom[lev].periodicity() );
          vel[lev][1]->FillBoundary( geom[lev].periodicity() );
          vel[lev][2]->FillBoundary( geom[lev].periodicity() );
-         
+
          bool already_on_centroid = true;
          EB_computeDivergence(*mac_rhs[lev],
                               GetArrOfConstPtrs(vel[lev]),
                               geom[lev], already_on_centroid);
 
          Print() << "  * On level "<< lev
-                 << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
-      } 
+                 << " max(abs(diveu)) = "
+                 << mac_rhs[lev]->norm0(0,0,false,true) << "\n";
+      }
 
       // Set bcs on (ep * u_mac)
       set_MAC_velocity_bcs( lev, ep_u_mac, ep_v_mac, ep_w_mac, time );
