@@ -173,12 +173,15 @@ mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
 void
 mfix::ComputeAverageFluidVars ( const int lev,
                    const amrex::Real time, const std::string&  basename,
-                   const Vector<int>& avg_p_g,
-                   const Vector<int>& avg_ep_g,
-                   const Vector<int>& avg_vel_g,
-                   const Vector<Real>& avg_region_x_w, const Vector<Real>& avg_region_x_e,
-                   const Vector<Real>& avg_region_y_s, const Vector<Real>& avg_region_y_n,
-                   const Vector<Real>& avg_region_z_b, const Vector<Real>& avg_region_z_t ) const
+                   const amrex::Vector<Real>& avg_p_g,
+                   const amrex::Vector<Real>& avg_ep_g,
+                   const amrex::Vector<Real>& avg_vel_g,
+                   const amrex::Vector<Real>& avg_region_x_w,
+                   const amrex::Vector<Real>& avg_region_x_e,
+                   const amrex::Vector<Real>& avg_region_y_s,
+                   const amrex::Vector<Real>& avg_region_y_n,
+                   const amrex::Vector<Real>& avg_region_z_b,
+                   const amrex::Vector<Real>& avg_region_z_t ) const
 {
 
   int nregions = avg_region_x_w.size();

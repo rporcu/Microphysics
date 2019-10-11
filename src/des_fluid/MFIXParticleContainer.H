@@ -208,13 +208,13 @@ public:
     void ComputeAverageVelocities(const int lev,
                                   const amrex::Real time,
                                   const std::string& basename,
-                                  const amrex::Vector<int>& avg_vel_p,
-                                  const amrex::Gpu::ManagedDeviceVector<amrex::Real>& avg_region_x_w,
-                                  const amrex::Gpu::ManagedDeviceVector<amrex::Real>& avg_region_x_e,
-                                  const amrex::Gpu::ManagedDeviceVector<amrex::Real>& avg_region_y_s,
-                                  const amrex::Gpu::ManagedDeviceVector<amrex::Real>& avg_region_y_n,
-                                  const amrex::Gpu::ManagedDeviceVector<amrex::Real>& avg_region_z_b,
-                                  const amrex::Gpu::ManagedDeviceVector<amrex::Real>& avg_region_z_t );
+                                  const amrex::Vector<amrex::Real>& avg_vel_p,
+                                  const amrex::Vector<amrex::Real>& avg_region_x_w,
+                                  const amrex::Vector<amrex::Real>& avg_region_x_e,
+                                  const amrex::Vector<amrex::Real>& avg_region_y_s,
+                                  const amrex::Vector<amrex::Real>& avg_region_y_n,
+                                  const amrex::Vector<amrex::Real>& avg_region_z_b,
+                                  const amrex::Vector<amrex::Real>& avg_region_z_t );
 
 private:
     int nlev;

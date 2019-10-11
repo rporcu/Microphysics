@@ -513,7 +513,7 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          const auto grav_loc = gravity;
          const auto  gp0_loc = gp0;
 
-         AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+         AMREX_FOR_3D(bx, i, j, k,
          {
              Real inv_dens = 1.0 / den_fab(i,j,k);
              vel_fab(i,j,k,0) += dt * ( grav_loc[0]-(gp_fab(i,j,k,0)+gp0_loc[0])*inv_dens );
@@ -521,7 +521,8 @@ mfix::mfix_add_gravity_and_gp (Real dt)
              vel_fab(i,j,k,2) += dt * ( grav_loc[2]-(gp_fab(i,j,k,2)+gp0_loc[2])*inv_dens );
          });
 
-         Gpu::synchronize();
+         // NOTE: here we do not need host-device synchronization since it is
+         // already included in the MFIter destructor
        }
     }
 }
@@ -557,7 +558,7 @@ mfix::mfix_add_drag_explicit (Real dt)
       const auto&   ro_fab =  ro_g[lev]->array(mfi);
       const auto&   ep_fab =  ep_g[lev]->array(mfi);
 
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
           Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
 
@@ -570,7 +571,8 @@ mfix::mfix_add_drag_explicit (Real dt)
           vel_fab(i,j,k,2) += drag_2;
       });
 
-      Gpu::synchronize();
+      // NOTE: here we do not need host-device synchronization since it is
+      // already included in the MFIter destructor
     }
   }
 }
@@ -606,7 +608,7 @@ mfix::mfix_add_drag_implicit (Real dt)
       const auto&   ro_fab =  ro_g[lev]->array(mfi);
       const auto&   ep_fab =  ep_g[lev]->array(mfi);
 
-      AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+      AMREX_FOR_3D(bx, i, j, k,
       {
           Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
           Real denom = 1.0 / (1.0 + drag_fab(i,j,k,3) * orop);
@@ -615,8 +617,9 @@ mfix::mfix_add_drag_implicit (Real dt)
           vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + drag_fab(i,j,k,1) * orop) * denom;
           vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;
       });
-
-      Gpu::synchronize();
+ 
+      // NOTE: here we do not need host-device synchronization since it is
+      // already included in the MFIter destructor
     }
   }
 }

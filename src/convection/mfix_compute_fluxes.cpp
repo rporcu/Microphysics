@@ -86,6 +86,7 @@ mfix::mfix_compute_fluxes(int lev,
            std::vector< std::pair<int,Box> > isects;
            const std::vector<IntVect>& pshifts = geom[lev].periodicity().shiftIntVect();
            const BoxArray& ba = cc_mask.boxArray();
+
            for (MFIter mfi(cc_mask); mfi.isValid(); ++mfi)
            {
                Array4<int> const& fab = cc_mask.array(mfi);
@@ -97,14 +98,14 @@ mfix::mfix_compute_fluxes(int lev,
                    for (const auto& is : isects)
                    {
                        const Box& b = is.second-iv;
-                       AMREX_HOST_DEVICE_PARALLEL_FOR_3D ( b, i, j, k,
+                       AMREX_FOR_3D ( b, i, j, k,
                        {
                            fab(i,j,k) = 1;
                        });
                    }
                }
-
-               Gpu::synchronize();
+               // NOTE: here we do not need host-device synchronization since it
+               // is already included in the MFIter destructor
            }
         }
 
@@ -119,9 +120,12 @@ mfix::mfix_compute_fluxes(int lev,
 
             if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
             {
-                 a_fx[lev]->setVal(covered_val);
-                 a_fy[lev]->setVal(covered_val);
-                 a_fz[lev]->setVal(covered_val);
+                 const Box ubx = amrex::surroundingNodes(bx,0);
+                 const Box vbx = amrex::surroundingNodes(bx,1);
+                 const Box wbx = amrex::surroundingNodes(bx,2);
+                 a_fx[lev]->setVal(covered_val, ubx, 0, ncomp);
+                 a_fy[lev]->setVal(covered_val, vbx, 0, ncomp);
+                 a_fz[lev]->setVal(covered_val, wbx, 0, ncomp);
             }
             else
             {
@@ -192,7 +196,7 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
   const GpuArray<int, 3> bc_types =
     {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};
 
-  AMREX_HOST_DEVICE_FOR_4D(ubx, ncomp, i, j, k, n,
+  AMREX_FOR_4D(ubx, ncomp, i, j, k, n,
   {
     Real state_w(0)  ;
     //Real state_e(0); DECLARED_BUT_NEVER_REFERENCED
@@ -222,7 +226,7 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
     fx(i,j,k,n) = u(i,j,k) * state_w;
   });
 
-  AMREX_HOST_DEVICE_FOR_4D(vbx, ncomp, i, j, k, n,
+  AMREX_FOR_4D(vbx, ncomp, i, j, k, n,
   {
     Real state_s(0)  ;
     //Real state_n(0); DECLARED_BUT_NEVER_REFERENCED
@@ -252,7 +256,7 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
     fy(i,j,k,n) = v(i,j,k) * state_s;
   });
 
-  AMREX_HOST_DEVICE_FOR_4D(wbx, ncomp, i, j, k, n,
+  AMREX_FOR_4D(wbx, ncomp, i, j, k, n,
   {
     Real state_b(0)  ;
     // Real state_t(0); DECLARED_BUT_NEVER_REFERENCED
@@ -375,7 +379,7 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
   //
   // ===================== X =====================
   //
-  AMREX_HOST_DEVICE_FOR_4D(ubx_grown, ncomp, i, j, k, n,
+  AMREX_FOR_4D(ubx_grown, ncomp, i, j, k, n,
   {
     Real upls(0); Real umns(0);
 
@@ -403,7 +407,7 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
     }
   });
 
-  AMREX_HOST_DEVICE_FOR_4D(ubx, ncomp, i, j, k, n,
+  AMREX_FOR_4D(ubx, ncomp, i, j, k, n,
   {
     if( areafrac_x(i,j,k) > 0 ) {
        int jj = j + static_cast<int>(std::copysign(1.0, fcx_fab(i,j,k,0)));
@@ -425,7 +429,7 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
   //
   // ===================== Y =====================
   //
-  AMREX_HOST_DEVICE_FOR_4D(vbx_grown, ncomp, i, j, k, n,
+  AMREX_FOR_4D(vbx_grown, ncomp, i, j, k, n,
   {
     Real vpls(0); Real vmns(0);
 
@@ -454,7 +458,7 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
     }
   });
 
-  AMREX_HOST_DEVICE_FOR_4D(vbx, ncomp, i, j, k, n,
+  AMREX_FOR_4D(vbx, ncomp, i, j, k, n,
   {
     if ( areafrac_y(i,j,k) > 0 ) {
        int ii = i + static_cast<int>(std::copysign(1.0,fcy_fab(i,j,k,0)));
@@ -476,7 +480,7 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
   //
   // ===================== Z =====================
   //
-  AMREX_HOST_DEVICE_FOR_4D(wbx_grown, ncomp, i, j, k, n,
+  AMREX_FOR_4D(wbx_grown, ncomp, i, j, k, n,
   {
     Real wpls(0); Real wmns(0);
 
@@ -505,7 +509,7 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
     }
   });
 
-  AMREX_HOST_DEVICE_FOR_4D(wbx, ncomp, i, j, k, n,
+  AMREX_FOR_4D(wbx, ncomp, i, j, k, n,
   {
     if( areafrac_z(i,j,k) > 0 ) {
        int ii = i + static_cast<int>(std::copysign(1.0,fcz_fab(i,j,k,0)));

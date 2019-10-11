@@ -44,23 +44,18 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
         // Copy each FAB back from Sborder_u into the vel array, complete with filled ghost cells
         MultiFab::Copy (*vel_in[lev], Sborder_u, 0, 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow());
 
-        if (advect_density || advect_tracer)
+        MultiFab Sborder_s(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]);
+
+        // We FillPatch density even if not advecting it because we need it in the projections
+        state_comp =  0; num_comp = 1;
+        FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
+        MultiFab::Copy (*ro_g_in[lev], Sborder_s, 0, 0, num_comp, ro_g_in[lev]->nGrow());
+
+        if (advect_tracer)
         {
-            MultiFab Sborder_s(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]);
-
-            if (advect_density)
-            {
-               int icomp = 0;
-               FillPatchScalar(lev, time, Sborder_s, icomp, bcs_s);
-               MultiFab::Copy (*ro_g_in[lev], Sborder_s, 0, 0, 1, ro_g_in[lev]->nGrow());
-            }
-
-            if (advect_tracer)
-            {
-               int icomp = 1;
-               FillPatchScalar(lev, time, Sborder_s, icomp, bcs_s);
-               MultiFab::Copy (*trac_in[lev], Sborder_s, 0, 0, 1, trac_in[lev]->nGrow());
-            }
+           state_comp =  1; num_comp = 1;
+           FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
+           MultiFab::Copy (*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
         }
  
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
@@ -176,8 +171,6 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
         conv_s_in[lev] -> mult(-1.0);
 
     } // lev
-  
-  Gpu::synchronize();
 }
 
 void

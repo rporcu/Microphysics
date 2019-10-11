@@ -35,7 +35,8 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
     int lev = 0;
     for (int ilev = 0; ilev < 10; ilev++)
     {
-       const Geometry& lev_geom = mfix_for_fillpatching->GetParGDB()->Geom(ilev);
+//     const Geometry& lev_geom = mfix_for_fillpatching->GetParGDB()->Geom(ilev);
+       const Geometry& lev_geom = mfix_for_fillpatching->get_geom_ref(ilev);
        if (domain.length()[0] == (lev_geom.Domain()).length()[0])
        {
          lev = ilev;
@@ -135,10 +136,13 @@ mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, cons
 // works for single level and 2-level cases (fill fine grid ghost by interpolating from coarse)
 // NOTE: icomp here refers to whether we are filling 0: density, 1: tracer, 2: ep_g, 3: mu_g
 void
-mfix::FillPatchScalar (int lev, Real time, MultiFab& mf, int icomp, const Vector<BCRec>& bcs)
+mfix::FillPatchScalar (int lev, Real time, MultiFab& mf, int icomp, int ncomp, const Vector<BCRec>& bcs)
 {
     // Hack so that ghost cells are not undefined
     mf.setVal(covered_val);
+
+    // icomp tells us which scalar we are fill-patching
+    // But we send "0) into FillPatch since each scalar is stored in its own array
 
     if (lev == 0)
     {
@@ -149,7 +153,7 @@ mfix::FillPatchScalar (int lev, Real time, MultiFab& mf, int icomp, const Vector
 
         CpuBndryFuncFab bfunc(ScalarFillBox);
         PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
-        amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, 1, 
+        amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, ncomp, 
                                     geom[lev], physbc, 0);
     }
     else
@@ -166,7 +170,7 @@ mfix::FillPatchScalar (int lev, Real time, MultiFab& mf, int icomp, const Vector
         Interpolater* mapper = &cell_cons_interp;
 
         amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
-                                  0, 0, 1, geom[lev-1], geom[lev],
+                                  0, 0, ncomp, geom[lev-1], geom[lev],
                                   cphysbc, 0, fphysbc, 0,
                                   refRatio(lev-1), mapper, bcs, 0);
 

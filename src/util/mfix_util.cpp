@@ -78,7 +78,7 @@ mfix::mfix_compute_vort ()
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
           {
-            AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+            AMREX_FOR_3D(bx, i, j, k,
             {
               Real uy = .5*ody*(velocity_g(i,j+1,k,0) - velocity_g(i,j-1,k,0));
               Real uz = .5*odz*(velocity_g(i,j,k+1,0) - velocity_g(i,j,k-1,0));
@@ -97,7 +97,8 @@ mfix::mfix_compute_vort ()
              (*vort[lev])[mfi].setVal(0.0, bx, 0, 1);
           }
 
-          Gpu::synchronize();
+          // NOTE: here we do not need host-device synchronization since it is
+          // aready included in the MFIter destructor
        }
     }
 }
@@ -280,7 +281,7 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
         const unsigned int offset = comp * fab_numPts;
 
-        AMREX_HOST_DEVICE_FOR_3D(box, i, j, k,
+        AMREX_FOR_3D(box, i, j, k,
         {
           Real dm(0);
 
@@ -292,9 +293,10 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
           sum += dm;
 #endif
         });
-    }
 
-    Gpu::synchronize();
+        // NOTE: here we do not need host-device synchronization since it is
+        // already included in the MFIter destructor
+    }
 
 #ifdef AMREX_USE_CUDA
     sum = sum_gpu.dataValue();
@@ -338,7 +340,7 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
         const unsigned int offset = comp * fab_numPts;
 
-        AMREX_HOST_DEVICE_FOR_3D(box, i, j, k,
+        AMREX_FOR_3D(box, i, j, k,
         {
           Real dm(0);
 
@@ -350,9 +352,10 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
           sum += dm;
 #endif
         });
-    }
 
-    Gpu::synchronize();
+        // NOTE: here we do not need host-device synchronization since it is
+        // already included in the MFIter destructor
+    }
 
 #ifdef AMREX_USE_CUDA
     sum = sum_gpu.dataValue();

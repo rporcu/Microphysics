@@ -92,15 +92,15 @@ public:
     void ComputeAverageFluidVars ( const int lev,
                                    const amrex::Real time,
                                    const std::string&  basename,
-                                   const Vector<int>& avg_p_g,
-                                   const Vector<int>& avg_ep_g,
-                                   const Vector<int>& avg_vel_g,
-                                   const Vector<Real>& avg_region_x_w,
-                                   const Vector<Real>& avg_region_x_e,
-                                   const Vector<Real>& avg_region_y_s,
-                                   const Vector<Real>& avg_region_y_n,
-                                   const Vector<Real>& avg_region_z_b,
-                                   const Vector<Real>& avg_region_z_t ) const;
+                                   const amrex::Vector<amrex::Real>& avg_p_g,
+                                   const amrex::Vector<amrex::Real>& avg_ep_g,
+                                   const amrex::Vector<amrex::Real>& avg_vel_g,
+                                   const amrex::Vector<amrex::Real>& avg_region_x_w,
+                                   const amrex::Vector<amrex::Real>& avg_region_x_e,
+                                   const amrex::Vector<amrex::Real>& avg_region_y_s,
+                                   const amrex::Vector<amrex::Real>& avg_region_y_n,
+                                   const amrex::Vector<amrex::Real>& avg_region_z_b,
+                                   const amrex::Vector<amrex::Real>& avg_region_z_t ) const;
 
     void Regrid ();
 
@@ -166,6 +166,8 @@ public:
             }
         }
 
+    const Geometry get_geom_ref(int lev){ return geom[lev]; }
+
     void get_input_bcs();
 
     void set_input_bcs(const std::string bcID, const int index,
@@ -180,8 +182,8 @@ public:
         > get_poly(int max_order, std::string field_prefix);
 
     std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
-        make_wall(int dir, // direction (long edge) of wall
-                  Real position, Real height, Real width );
+    make_wall(int dir, // direction (long edge) of wall
+              Real position, Real height, Real width );
 
     void WriteMyEBSurface();
 
@@ -216,16 +218,16 @@ public:
 
     void mfix_add_gravity_and_gp(Real dt);
 
-    void mfix_predict_vels_on_faces(int lev, Real time,
-                                    Vector< std::unique_ptr<MultiFab> >& vel,
-                                    Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                                    Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                    Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                    Vector< std::unique_ptr<MultiFab> >& ep_g);
+    void mfix_predict_vels_on_faces ( int lev, Real time,
+                                      Vector< std::unique_ptr<MultiFab> >& vel,
+                                      Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                                      Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                                      Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+                                      Vector< std::unique_ptr<MultiFab> >& ep_g);
 
-    void mfix_set_velocity_bcs (Real time,
-                                Vector< std::unique_ptr<MultiFab> >& vel,
-                                int extrap_dir_bcs) const;
+    void mfix_set_velocity_bcs ( Real time,
+                                 Vector< std::unique_ptr<MultiFab> >& vel,
+                                 int extrap_dir_bcs) const;
 
     void mfix_set_scalar_bcs (Real time,
                               Vector< std::unique_ptr<MultiFab> >& ro_g,
@@ -425,6 +427,7 @@ protected:
                                        amrex::Real a_dt,
                                        bool proj_2 );
 
+
     void apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                 Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                                 Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
@@ -437,8 +440,9 @@ protected:
     void GetDataVel      (int lev, Real time, Vector<MultiFab *> & data,
                           Vector<Real> & datatime);
 
-    void FillPatchScalar(int lev, Real time, MultiFab & mf, int icomp,
+    void FillPatchScalar(int lev, Real time, MultiFab & mf, int icomp, int ncomp,
                          const Vector<BCRec> & bcr);
+
     void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data, int icomp,
                         Vector<Real> & datatime);
 
@@ -665,7 +669,7 @@ private:
     int solve_dem;
 
     bool advect_density = false;
-    bool advect_tracer  = true;
+    bool advect_tracer  = false;
 
     bool test_tracer_conservation  = false;
 
@@ -779,18 +783,18 @@ private:
     // Options to control the computing of particle eulerian velocities
     //
 
-    Vector<int> avg_p_g  ;
-    Vector<int> avg_ep_g ;
-    Vector<int> avg_vel_g;
+    amrex::Vector<Real> avg_p_g  ;
+    amrex::Vector<Real> avg_ep_g ;
+    amrex::Vector<Real> avg_vel_g;
 
-    Vector<int> avg_vel_p;
+    amrex::Vector<Real> avg_vel_p;
 
-    Vector<Real> avg_region_x_e;
-    Vector<Real> avg_region_x_w;
-    Vector<Real> avg_region_y_s;
-    Vector<Real> avg_region_y_n;
-    Vector<Real> avg_region_z_b;
-    Vector<Real> avg_region_z_t;
+    amrex::Vector<Real> avg_region_x_e;
+    amrex::Vector<Real> avg_region_x_w;
+    amrex::Vector<Real> avg_region_y_s;
+    amrex::Vector<Real> avg_region_y_n;
+    amrex::Vector<Real> avg_region_z_b;
+    amrex::Vector<Real> avg_region_z_t;
 
     // Flags for saving fluid data in plot files
     int plt_vel_g   = 1;

@@ -163,7 +163,7 @@ mfix::set_scalar_bcs(Real time,
 
   if (nlft > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo_3D, i, j, k,
+    AMREX_FOR_3D(bx_yz_lo_3D, i, j, k,
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -189,7 +189,7 @@ mfix::set_scalar_bcs(Real time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo_2D, i, j, k,
+       AMREX_FOR_3D(bx_yz_lo_2D, i, j, k,
        {
          const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
          const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
@@ -202,7 +202,7 @@ mfix::set_scalar_bcs(Real time,
 
   if (nrgt > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_yz_hi_3D, i, j, k,
+    AMREX_FOR_3D(bx_yz_hi_3D, i, j, k,
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -228,7 +228,7 @@ mfix::set_scalar_bcs(Real time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_yz_hi_2D, i, j, k,
+       AMREX_FOR_3D(bx_yz_hi_2D, i, j, k,
        {
          const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
          const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
@@ -241,7 +241,7 @@ mfix::set_scalar_bcs(Real time,
 
   if (nbot > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xz_lo_3D, i, j, k,
+    AMREX_FOR_3D(bx_xz_lo_3D, i, j, k,
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -267,7 +267,7 @@ mfix::set_scalar_bcs(Real time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_xz_lo_2D, i, j, k,
+       AMREX_FOR_3D(bx_xz_lo_2D, i, j, k,
        {
          const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
          const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
@@ -280,7 +280,7 @@ mfix::set_scalar_bcs(Real time,
 
   if (ntop > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xz_hi_3D, i, j, k,
+    AMREX_FOR_3D(bx_xz_hi_3D, i, j, k,
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -306,7 +306,7 @@ mfix::set_scalar_bcs(Real time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_xz_hi_2D, i, j, k,
+       AMREX_FOR_3D(bx_xz_hi_2D, i, j, k,
        {
          const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
          const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -319,7 +319,7 @@ mfix::set_scalar_bcs(Real time,
 
   if (ndwn > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xy_lo_3D, i, j, k,
+    AMREX_FOR_3D(bx_xy_lo_3D, i, j, k,
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -345,7 +345,7 @@ mfix::set_scalar_bcs(Real time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_xy_lo_2D, i, j, k,
+       AMREX_FOR_3D(bx_xy_lo_2D, i, j, k,
        {
          const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
          const int bct = bct_klo(i,j,dom_lo[2]-1,0);
@@ -358,7 +358,7 @@ mfix::set_scalar_bcs(Real time,
 
   if (nup > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xy_hi_3D, i, j, k,
+    AMREX_FOR_3D(bx_xy_hi_3D, i, j, k,
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -384,7 +384,7 @@ mfix::set_scalar_bcs(Real time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_xy_hi_2D, i, j, k,
+       AMREX_FOR_3D(bx_xy_hi_2D, i, j, k,
        {
          const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
          const int bct = bct_khi(i,j,dom_hi[2]+1,0);
