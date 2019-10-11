@@ -757,7 +757,7 @@ mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt
                                     amrex::Real a_dt,
                                     bool proj_2 )
 {
-    BL_PROFILE("mfix::mfix_apply_projection");
+    BL_PROFILE("mfix::mfix_apply_nodal_projection");
 
     for (int lev(0); lev < nlev; ++lev)
     {

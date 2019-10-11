@@ -420,7 +420,6 @@ protected:
 
     void mfix_project_velocity   ();
     void mfix_initial_iterations ( Real dt, Real stop_time );
-    void mfix_apply_projection   ( Real dt, Real scaling_factor, bool proj_2 );
 
     void mfix_apply_nodal_projection ( Vector< std::unique_ptr< amrex::MultiFab > >& a_depdt,
                                        amrex::Real a_time,

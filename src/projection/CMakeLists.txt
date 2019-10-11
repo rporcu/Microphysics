@@ -7,5 +7,4 @@ target_sources( mfixcore
     PRIVATE
     MFIX_NodalProjection.H
     MFIX_NodalProjection.cpp
-    mfix_projection.cpp
     )
