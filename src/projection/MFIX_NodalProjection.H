@@ -6,7 +6,7 @@
 
 class NodalProjection
 {
-   
+
 public:
 
     NodalProjection () {};
@@ -24,11 +24,13 @@ public:
                   const Vector< std::unique_ptr< amrex::MultiFab > >& a_ro,
                   const Vector< std::unique_ptr< amrex::MultiFab > >& a_depdt,
                         Real a_time, Real a_scale_factor = 1.0 );
-    
+
     Vector< const amrex::MultiFab* > getPhi () const {return GetVecOfConstPtrs(m_phi);};
-    
-    Vector< const amrex::MultiFab* > getGradPhi () const {return GetVecOfConstPtrs(m_fluxes);};     
-   
+
+    Vector< const amrex::MultiFab* > getGradPhi () const {return GetVecOfConstPtrs(m_fluxes);};
+
+    Vector< const amrex::MultiFab* > getRHS () const {return GetVecOfConstPtrs(m_rhs);};
+
 
 private:
 
@@ -37,7 +39,7 @@ private:
     // Verbosity
     int  m_mg_verbose = 0;
     int  m_mg_cg_verbose = 0;
-    
+
     // Control MLMG behavior
     int  m_mg_maxiter = 100;
     int  m_mg_cg_maxiter = 100;
@@ -61,11 +63,11 @@ private:
     // Cell-centered data
     Vector< std::unique_ptr< amrex::MultiFab > >  m_fluxes;
     Vector< std::unique_ptr< amrex::MultiFab > >  m_sigma;
-    
+
     // Node-centered data
     Vector< std::unique_ptr< amrex::MultiFab > >  m_phi;
     Vector< std::unique_ptr< amrex::MultiFab > >  m_rhs;
-    
+
     // Linear operator
     std::unique_ptr< amrex::MLNodeLaplacian > m_matrix;
 
@@ -76,12 +78,12 @@ private:
     void readParameters ();
 
     void setup ();
-    
+
     void computeRHS (       Vector< std::unique_ptr< amrex::MultiFab > >& a_vel,
                       const Vector< std::unique_ptr< amrex::MultiFab > >& a_ep,
                       const Vector< std::unique_ptr< amrex::MultiFab > >& a_depdt,
                             Real a_time );
-    
+
 };
 
 

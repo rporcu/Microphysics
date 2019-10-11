@@ -617,7 +617,7 @@ mfix::mfix_add_drag_implicit (Real dt)
           vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + drag_fab(i,j,k,1) * orop) * denom;
           vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;
       });
- 
+
       // NOTE: here we do not need host-device synchronization since it is
       // already included in the MFIter destructor
     }
@@ -789,16 +789,22 @@ mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt
     // Perform projection
     nodal_projector -> project( vel_g, ep_g, ro_g, a_depdt, a_time, a_dt );
 
-    // Get phi and fluxes
+    // Get phi and fluxes and rhs
+    // The latter is needed for plotting purposes only
     Vector< const amrex::MultiFab* >  phi(nlev);
     Vector< const amrex::MultiFab* >  gradphi(nlev);
+    Vector< const amrex::MultiFab* >  rhs(nlev);
 
     phi     = nodal_projector -> getPhi();
     gradphi = nodal_projector -> getGradPhi();
+    rhs     = nodal_projector -> getRHS();
 
     //
     for (int lev(0); lev < nlev; ++lev)
     {
+        // Copy RHS into diveu so we can plot its value
+        MultiFab::Copy(*diveu[lev], *rhs[lev], 0, 0, 1, diveu[lev]->nGrow());
+
         if (proj_2)
         {
             // p := phi
