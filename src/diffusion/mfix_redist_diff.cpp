@@ -8,16 +8,15 @@
 namespace redist_diff_aux {
 
 void
-step2(const Box& grown1_bx,
-      const Box& grown2_bx,
-      MFIter* mfi,
-      MultiFab& divtau_aux,
-      MultiFab& ep_g,
-      FArrayBox& delm_fbx,
-      FArrayBox& optmp_fbx,
-      FArrayBox& mask_fbx,
-      const MultiFab* volfrac,
-      const EBCellFlagFab& flags_fab)
+compute_delta_mass(const Box& grown1_bx,
+                   MFIter* mfi,
+                   MultiFab& divtau_aux,
+                   MultiFab& ep_g,
+                   FArrayBox& delm_fbx,
+                   FArrayBox& optmp_fbx,
+                   FArrayBox& mask_fbx,
+                   const MultiFab* volfrac,
+                   const EBCellFlagFab& flags_fab)
 {
   Array4<Real> const& divc = divtau_aux.array(*mfi);
   Array4<Real> const& epsilon_g = ep_g.array(*mfi);
@@ -66,14 +65,14 @@ step2(const Box& grown1_bx,
 }
 
 void
-step3(const Box& grown1_bx,
-      MFIter* mfi,
-      MultiFab& ep_g,
-      FArrayBox& delm_fbx,
-      FArrayBox& optmp_fbx,
-      FArrayBox& mask_fbx,
-      const MultiFab* volfrac,
-      const EBCellFlagFab& flags_fab)
+redistribute_mass(const Box& grown1_bx,
+                  MFIter* mfi,
+                  MultiFab& ep_g,
+                  FArrayBox& delm_fbx,
+                  FArrayBox& optmp_fbx,
+                  FArrayBox& mask_fbx,
+                  const MultiFab* volfrac,
+                  const EBCellFlagFab& flags_fab)
 {
   Array4<Real> const& epsilon_g = ep_g.array(*mfi);
 
@@ -185,13 +184,14 @@ compute_redist_diff(Box& bx,
   //
   // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
   //
-  step2(grown1_bx, grown2_bx, mfi, divtau_aux, ep_g, delm_fbx, optmp_fbx,
+  compute_delta_mass(grown1_bx, mfi, divtau_aux, ep_g, delm_fbx, optmp_fbx,
       mask_fbx, volfrac, flags_fab);
 
   //
   // Step 3: redistribute excess/loss of mass
   //
-  step3(grown1_bx, mfi, ep_g, delm_fbx, optmp_fbx, mask_fbx, volfrac, flags_fab);
+  redistribute_mass(grown1_bx, mfi, ep_g, delm_fbx, optmp_fbx, mask_fbx,
+      volfrac, flags_fab);
 
   //
   // Resume the correct sign, AKA return the negative
