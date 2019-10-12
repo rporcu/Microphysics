@@ -1,6 +1,17 @@
 #include <mfix.H>
 #include <mfix_util_F.H>
 
+void setFabVal (amrex::FArrayBox& fab,
+                amrex::Real val,
+                amrex::Box bx,
+                int comp,
+                int num_comp)
+{
+  const auto& fab_array = fab.array();
+
+  AMREX_FOR_4D(bx, num_comp, i, j, k, n, { fab_array(i,j,k,n+comp) = val; });
+}
+
 void
 mfix::check_for_nans (int lev)
 {
@@ -94,7 +105,7 @@ mfix::mfix_compute_vort ()
           }
           else
           {
-             (*vort[lev])[mfi].setVal(0.0, bx, 0, 1);
+            setFabVal((*vort[lev])[mfi], 0.0, bx, 0, 1);
           }
 
           // NOTE: here we do not need host-device synchronization since it is

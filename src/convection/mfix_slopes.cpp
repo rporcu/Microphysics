@@ -1,4 +1,5 @@
 #include <mfix.H>
+#include <mfix_util_F.H>
 
 //
 // Compute the slopes of Sborder (velocity, density or tracer)
@@ -35,9 +36,9 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
            // If tile is completely covered by EB geometry, set slopes
            // value to some very large number so we know if
            // we accidentally use these covered slopes later in calculations
-           (*xslopes_in[lev])[mfi].setVal( 1.2345e300, bx, slopes_comp, ncomp);
-           (*yslopes_in[lev])[mfi].setVal( 1.2345e300, bx, slopes_comp, ncomp);
-           (*zslopes_in[lev])[mfi].setVal( 1.2345e300, bx, slopes_comp, ncomp);
+           setFabVal((*xslopes_in[lev])[mfi], 1.2345e300, bx, slopes_comp, ncomp);
+           setFabVal((*yslopes_in[lev])[mfi], 1.2345e300, bx, slopes_comp, ncomp);
+           setFabVal((*zslopes_in[lev])[mfi], 1.2345e300, bx, slopes_comp, ncomp);
        }
        else
        {

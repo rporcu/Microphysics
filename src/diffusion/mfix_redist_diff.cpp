@@ -1,5 +1,6 @@
 #include <mfix_redist_diff.hpp>
 #include <param_mod_F.H>
+#include <mfix_util_F.H>
 
 #include <cmath>
 #include <limits>
@@ -7,17 +8,15 @@
 namespace redist_diff_aux {
 
 void
-step2(const Box& grown1_bx,
-      const Box& grown2_bx,
-      const int n,
-      MFIter* mfi,
-      MultiFab& divtau_aux,
-      MultiFab& ep_g,
-      FArrayBox& delm_fbx,
-      FArrayBox& optmp_fbx,
-      FArrayBox& mask_fbx,
-      const MultiFab* volfrac,
-      const EBCellFlagFab& flags_fab)
+compute_delta_mass(const Box& grown1_bx,
+                   MFIter* mfi,
+                   MultiFab& divtau_aux,
+                   MultiFab& ep_g,
+                   FArrayBox& delm_fbx,
+                   FArrayBox& optmp_fbx,
+                   FArrayBox& mask_fbx,
+                   const MultiFab* volfrac,
+                   const EBCellFlagFab& flags_fab)
 {
   Array4<Real> const& divc = divtau_aux.array(*mfi);
   Array4<Real> const& epsilon_g = ep_g.array(*mfi);
@@ -30,7 +29,7 @@ step2(const Box& grown1_bx,
 
   Array4<const EBCellFlag> const& flags = flags_fab.array();
 
-  AMREX_FOR_3D(grown1_bx, i, j, k,
+  AMREX_FOR_4D(grown1_bx, 3, i, j, k, n,
   {
     if(flags(i,j,k).isSingleValued())
     {
@@ -53,25 +52,27 @@ step2(const Box& grown1_bx,
 
       divnc /= vtot;
       epvfrac = vfrac(i,j,k) * epsilon_g(i,j,k);
-      optmp(i,j,k) = (1 - vfrac(i,j,k)) * (divnc - divc(i,j,k,n));
-      delm(i,j,k) = (-1 * epvfrac * optmp(i,j,k)) * mask(i,j,k);
+
+      Real optmp_value = (1 - vfrac(i,j,k)) * (divnc - divc(i,j,k,n));
+      optmp(i,j,k,n) = optmp_value;
+      delm(i,j,k,n) = (-1 * epvfrac * optmp_value) * mask(i,j,k);
     }
     else
-      delm(i,j,k) = 0;
+      delm(i,j,k,n) = 0;
   });
 
   Gpu::synchronize();
 }
 
 void
-step3(const Box& grown1_bx,
-      MFIter* mfi,
-      MultiFab& ep_g,
-      FArrayBox& delm_fbx,
-      FArrayBox& optmp_fbx,
-      FArrayBox& mask_fbx,
-      const MultiFab* volfrac,
-      const EBCellFlagFab& flags_fab)
+redistribute_mass(const Box& grown1_bx,
+                  MFIter* mfi,
+                  MultiFab& ep_g,
+                  FArrayBox& delm_fbx,
+                  FArrayBox& optmp_fbx,
+                  FArrayBox& mask_fbx,
+                  const MultiFab* volfrac,
+                  const EBCellFlagFab& flags_fab)
 {
   Array4<Real> const& epsilon_g = ep_g.array(*mfi);
 
@@ -107,12 +108,16 @@ step3(const Box& grown1_bx,
             if((ii != 0 or jj != 0 or kk != 0) and
                 (flags(i,j,k).isConnected(ii,jj,kk) == 1))
             {
-              // Note: delm has already been multiplied by mask
+              for(int n(0); n < 3; ++n)
+              {
+                
+                // Note: delm has already been multiplied by mask
 #ifdef AMREX_USE_CUDA
-              Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk), delm(i,j,k) * wtot);
+                Gpu::Atomic::Add(&optmp(i+ii,j+jj,k+kk,n), delm(i,j,k,n) * wtot);
 #else
-              optmp(i+ii,j+jj,k+kk) += delm(i,j,k) * wtot;
+                optmp(i+ii,j+jj,k+kk,n) += delm(i,j,k,n) * wtot;
 #endif
+              }
             }
     }
   });
@@ -147,8 +152,8 @@ compute_redist_diff(Box& bx,
   const Box& grown1_bx = amrex::grow(bx,1);
   const Box& grown2_bx = amrex::grow(bx,2);
 
-  FArrayBox delm_fbx(grown1_bx);
-  FArrayBox optmp_fbx(grown2_bx);
+  FArrayBox delm_fbx(grown1_bx, 3);
+  FArrayBox optmp_fbx(grown2_bx, 3);
   FArrayBox mask_fbx(grown2_bx);
 
   Array4<Real> const& optmp = optmp_fbx.array();
@@ -172,30 +177,29 @@ compute_redist_diff(Box& bx,
   //
   // Here we do the redistribution steps
   //
-  for(unsigned int n(0); n < 3; ++n)
+    
+  // Set this to zero here
+  setFabVal(optmp_fbx, 0.0, grown2_bx, 0, 3);
+
+  //
+  // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
+  //
+  compute_delta_mass(grown1_bx, mfi, divtau_aux, ep_g, delm_fbx, optmp_fbx,
+      mask_fbx, volfrac, flags_fab);
+
+  //
+  // Step 3: redistribute excess/loss of mass
+  //
+  redistribute_mass(grown1_bx, mfi, ep_g, delm_fbx, optmp_fbx, mask_fbx,
+      volfrac, flags_fab);
+
+  //
+  // Resume the correct sign, AKA return the negative
+  //
+  AMREX_FOR_4D(bx, 3, i, j, k, n,
   {
-    // Set this to zero here
-    optmp_fbx.setVal(0.0);
- 
-    //
-    // Step 2: compute delta M (mass gain or loss) on (lo-1,lo+1)
-    //
-    step2(grown1_bx, grown2_bx, n, mfi, divtau_aux, ep_g, delm_fbx, optmp_fbx,
-        mask_fbx, volfrac, flags_fab);
-
-    //
-    // Step 3: redistribute excess/loss of mass
-    //
-    step3(grown1_bx, mfi, ep_g, delm_fbx, optmp_fbx, mask_fbx, volfrac, flags_fab);
-
-    //
-    // Resume the correct sign, AKA return the negative
-    //
-    AMREX_FOR_3D(bx, i, j, k,
-    {
-      divergence(i,j,k,n) = divc(i,j,k,n) + optmp(i,j,k);
-    });
-  }
+    divergence(i,j,k,n) = divc(i,j,k,n) + optmp(i,j,k,n);
+  });
   
   Gpu::synchronize();
 }
