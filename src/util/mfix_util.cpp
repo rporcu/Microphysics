@@ -103,39 +103,6 @@ mfix::mfix_compute_vort ()
     }
 }
 
-// //
-// // Compute norm0 of EB multifab
-// //
-// Real
-// mfix::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp ) const
-// {
-//    int ncomp = 1;
-//    int ngrow = 0;
-//    MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), ncomp, ngrow,
-//                     MFInfo(), *ebfactory[lev]);
-
-//    MultiFab::Copy( mf_tmp, *mf[lev], comp, 0, 1, 0 );
-//    EB_set_covered( mf_tmp, 0.0 );
-
-//    return mf_tmp.norm0( 0 );
-// }
-
-// //
-// // Compute norm0 of EB multifab
-// //
-// Real
-// mfix::mfix_norm0 ( MultiFab& mf, int lev, int comp ) const
-// {
-//    int ncomp = 1;
-//    int ngrow = 0;
-//    MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow,
-//                     MFInfo(), *ebfactory[lev]);
-
-//    MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
-//    EB_set_covered( mf_tmp, 0.0 );
-
-//    return mf_tmp.norm0( 0 );
-// }
 
 //
 // Compute max of EB multifab
@@ -170,85 +137,6 @@ mfix::mfix_min ( MultiFab& mf, int lev, int comp )
 
    return mf_tmp.min( 0 );
 }
-
-//
-// Compute norm1 of EB multifab
-//
-Real
-mfix::mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
-{
-   int ncomp = 1;
-   int ngrow = 0;
-   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), ncomp, ngrow,
-                    MFInfo(), *ebfactory[lev]);
-
-   MultiFab::Copy( mf_tmp, *mf[lev], comp, 0, 1, 0 );
-   EB_set_covered( mf_tmp, 0.0 );
-
-   return mf_tmp.norm1( 0, geom[lev].periodicity() );
-}
-
-//
-// Compute norm1 of EB multifab
-//
-Real
-mfix::mfix_norm1 ( MultiFab& mf, int lev, int comp )
-{
-   int ncomp = 1;
-   int ngrow = 0;
-   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow,
-                    MFInfo(), *ebfactory[lev]);
-
-   MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
-   EB_set_covered( mf_tmp, 0.0 );
-
-   return mf_tmp.norm1( 0, geom[lev].periodicity() );
-}
-
-// //
-// // Subroutine to compute norm0 of EB multifab
-// //
-// Real
-// mfix::mfix_norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf1,
-//                    const Vector< std::unique_ptr<MultiFab>>& mf2,
-//                    int lev, int comp1, int comp2 ) const
-// {
-//    BL_ASSERT((*mf1[lev]).boxArray() == (*mf2[lev]).boxArray());
-
-//    int ncomp = 1;
-//    int ngrow = 0;
-//    MultiFab mf_tmp( mf1[lev]->boxArray(), mf1[lev]->DistributionMap(), ncomp, ngrow,
-//                     MFInfo(), *ebfactory[lev]);
-
-//    MultiFab::Copy    ( mf_tmp, *mf1[lev], comp1, 0, 1, 0 );
-//    MultiFab::Multiply( mf_tmp, *mf2[lev], comp2, 0, 1, 0 );
-
-//    EB_set_covered( mf_tmp, 0.0 );
-
-//    return mf_tmp.norm0( 0 );
-// }
-
-
-// //
-// // Compute norm0 (max norm / inf norm) of product of EB multifabs
-// //
-// Real
-// mfix::mfix_norm0 ( MultiFab& mf1, MultiFab& mf2, int lev, int comp1, int comp2) const
-// {
-//    BL_ASSERT(mf1.boxArray() == mf2.boxArray());
-
-//    int ncomp = 1;
-//    int ngrow = 0;
-//    MultiFab mf_tmp( mf1.boxArray(), mf1.DistributionMap(), ncomp, ngrow,
-//                     MFInfo(), *ebfactory[lev]);
-
-//    MultiFab::Copy    ( mf_tmp, mf1, comp1, 0, 1, 0 );
-//    MultiFab::Multiply( mf_tmp, mf2, comp2, 0, 1, 0 );
-
-//    EB_set_covered( mf_tmp, 0.0 );
-
-//    return mf_tmp.norm0( 0 );
-// }
 
 Real
 mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)

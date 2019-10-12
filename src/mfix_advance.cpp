@@ -678,14 +678,16 @@ mfix::steady_state_reached (Real dt, int iter)
        //
        // Second stop condition
        //
-       Real du_n1 = mfix_norm1(temp_vel, lev, 0);
-       Real dv_n1 = mfix_norm1(temp_vel, lev, 1);
-       Real dw_n1 = mfix_norm1(temp_vel, lev, 2);
-       Real dp_n1 = mfix_norm1(tmp, lev, 0);
-       Real uo_n1 = mfix_norm1(vel_go, lev, 0);
-       Real vo_n1 = mfix_norm1(vel_go, lev, 1);
-       Real wo_n1 = mfix_norm1(vel_go, lev, 2);
-       Real po_n1 = mfix_norm1(p_go, lev, 0);
+       Periodicity period = geom[lev].periodicity();
+
+       Real du_n1 = temp_vel.norm1(0,period,true);
+       Real dv_n1 = temp_vel.norm1(1,period,true);
+       Real dw_n1 = temp_vel.norm1(2,period,true);
+       Real dp_n1 =      tmp.norm1(0,period,true);
+       Real uo_n1 = vel_go[lev]->norm1(0,period,true);
+       Real vo_n1 = vel_go[lev]->norm1(1,period,true);
+       Real wo_n1 = vel_go[lev]->norm1(2,period,true);
+       Real po_n1 =   p_go[lev]->norm1(0,period,true);
 
        Real tmp1, tmp2, tmp3, tmp4;
 

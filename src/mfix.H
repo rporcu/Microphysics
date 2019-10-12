@@ -546,8 +546,6 @@ private:
 
     void mfix_set_bc_type(int lev);
 
-    Real mfix_norm1 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp );
-    Real mfix_norm1 ( MultiFab& mf, int lev, int comp );
     Real mfix_max   ( MultiFab& mf, int lev, int comp );
     Real mfix_min   ( MultiFab& mf, int lev, int comp );
 
