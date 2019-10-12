@@ -25,13 +25,6 @@ namespace MFHelpers
 
     // Copies src to dst including all components and nGrow ghost cells
     void copy (amrex::MultiFab& dst, amrex::MultiFab& src, int nGrow);
-
-    // Compute max of component "comp" of EB MultiFab
-    amrex::Real max ( amrex::MultiFab& mf, int comp );
-
-    // Compute min of component "comp" of EB MultiFab
-    amrex::Real min ( amrex::MultiFab& mf, int comp );
-
 }
 
 

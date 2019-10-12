@@ -94,36 +94,3 @@ MFHelpers::copy (MultiFab& dst, MultiFab& src, int nGrow)
 
     MultiFab::Copy(dst, src, 0, 0,  dst.nComp(), nGrow);
 }
-//
-// Compute max of component "comp" of EB MultiFab
-//
-Real
-MFHelpers::max ( MultiFab& mf, int comp )
-{
-    int ncomp(1);
-    int ngrow(0);
-    MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow,
-                     MFInfo(), mf.Factory());
-
-    MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
-    EB_set_covered( mf_tmp, -1.e100 );
-
-    return mf_tmp.max( 0 );
-}
-
-//
-// Compute min of component "comp" of EB MultiFab
-//
-Real
-MFHelpers::min ( MultiFab& mf, int comp )
-{
-    int ncomp(1);
-    int ngrow(0);
-    MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow,
-                     MFInfo(), mf.Factory());
-
-    MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
-    EB_set_covered( mf_tmp, +1.e100 );
-
-    return mf_tmp.min( 0 );
-}

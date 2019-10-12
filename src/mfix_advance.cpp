@@ -784,8 +784,8 @@ mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt
         mfix_print_max_vel(lev);
         mfix_print_max_gp(lev);
         amrex::Print() << "Min and Max of ep_g "
-                       << MFHelpers::min(*ep_g[lev],0) << " "
-                       << MFHelpers::max(*ep_g[lev],0) << std::endl;
+                       << ep_g[lev]->min(0) << " "
+                       << ep_g[lev]->max(0) << std::endl;
     }
 
     // Perform projection
