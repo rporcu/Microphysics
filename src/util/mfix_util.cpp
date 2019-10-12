@@ -10,6 +10,8 @@ void setFabVal (amrex::FArrayBox& fab,
   const auto& fab_array = fab.array();
 
   AMREX_FOR_4D(bx, num_comp, i, j, k, n, { fab_array(i,j,k,n+comp) = val; });
+
+  Gpu::synchronize();
 }
 
 void
