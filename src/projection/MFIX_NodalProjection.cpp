@@ -55,7 +55,7 @@ NodalProjection::project (      Vector< std::unique_ptr< amrex::MultiFab > >& a_
     {
         amrex::Print() << "AT LEVEL " << lev << " BEFORE NODAL PROJECTION: \n";
         amrex::Print() << "  max(abs(dep/dt + diveu)) = "
-                       << MFHelpers::norm0(m_rhs, lev, 0) << "\n";
+                       << m_rhs[lev]->norm0(0,0,false,true) << "\n";
     }
 
     // Compute and set matrix coefficients
@@ -107,7 +107,7 @@ NodalProjection::project (      Vector< std::unique_ptr< amrex::MultiFab > >& a_
     {
         amrex::Print() << "AT LEVEL " << lev << " AFTER NODAL PROJECTION: \n";
         amrex::Print() << "  max(abs(dep/dt + diveu)) = "
-                       << MFHelpers::norm0(m_rhs, lev, 0) << "\n";    }
+                       << m_rhs[lev]->norm0(0,0,false,true) << "\n";    }
 
 }
 

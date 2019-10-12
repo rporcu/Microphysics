@@ -94,44 +94,6 @@ MFHelpers::copy (MultiFab& dst, MultiFab& src, int nGrow)
 
     MultiFab::Copy(dst, src, 0, 0,  dst.nComp(), nGrow);
 }
-
-
-//
-// Compute norm 0 of component "comp" of EB Multifab
-//
-Real
-MFHelpers::norm0 ( MultiFab& mf, int comp )
-{
-    int ncomp(1);
-    int ngrow(0);
-    MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow,
-                     MFInfo(), mf.Factory() );
-
-   MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
-   EB_set_covered( mf_tmp, 0.0 );
-
-   return mf_tmp.norm0( 0 );
-}
-
-
-
-//
-// Compute norm 0 of component "comp" of EB Multifab on level "lev"
-//
-Real
-MFHelpers::norm0 ( const Vector< std::unique_ptr<MultiFab>>& mf, int lev, int comp )
-{
-    int ncomp(1);
-    int ngrow(0);
-    MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), ncomp, ngrow,
-                     MFInfo(), mf[lev] -> Factory() );
-
-   MultiFab::Copy( mf_tmp, *mf[lev], comp, 0, 1, 0 );
-   EB_set_covered( mf_tmp, 0.0 );
-
-   return mf_tmp.norm0( 0 );
-}
-
 //
 // Compute max of component "comp" of EB MultiFab
 //

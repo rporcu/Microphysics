@@ -644,9 +644,6 @@ private:
     //
     Vector< std::unique_ptr<MultiFab> > fp;
 
-    // Cell-centered coefficients b in nodal solve
-    Vector< std::unique_ptr<MultiFab> > bcoeff_nd;
-
     // Pressure increment
     Vector< std::unique_ptr<MultiFab> > phi_nd;
 

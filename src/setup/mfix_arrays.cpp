@@ -62,7 +62,6 @@ mfix::ResizeArrays ()
     yslopes_s.resize(nlevs_max);
     zslopes_s.resize(nlevs_max);
 
-    bcoeff_nd.resize(nlevs_max);
     bcoeff.resize(nlevs_max);
 
     // Fuid cost (load balancing)
@@ -200,10 +199,6 @@ mfix::AllocateArrays (int lev)
     // X-face-based arrays
     // ********************************************************************************
 
-    // When the pressure is on nodes, bcoeff_nd is at cell centers
-    bcoeff_nd[lev].reset(new  MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    bcoeff_nd[lev]->setVal(0.);
-
     // ****************************************************************
 
     // Create a BoxArray on x-faces.
@@ -336,10 +331,6 @@ mfix::RegridArrays (int lev)
     phi_nd[lev] = std::move(phi_new);
     phi_nd[lev]->setVal(0.);
 
-    std::unique_ptr<MultiFab> bc0_new(new MultiFab(grids[lev],dmap[lev],1,bcoeff_nd[lev]->nGrow(),
-                                                   MFInfo(), *ebfactory[lev] ));
-    bcoeff_nd[lev] = std::move(bc0_new);
-    bcoeff_nd[lev]->setVal(0.);
 
     // Molecular viscosity
     ng = mu_g[lev]->nGrow();
@@ -385,7 +376,7 @@ mfix::RegridArrays (int lev)
     drag[lev]->setVal(0.);
 
     // Array to store the rhs for tensor diffusion solve
-    std::unique_ptr<MultiFab> diff_rhs_new(new  MultiFab(grids[lev], dmap[lev], 3, diff_rhs[lev]->nComp(), 
+    std::unique_ptr<MultiFab> diff_rhs_new(new  MultiFab(grids[lev], dmap[lev], 3, diff_rhs[lev]->nComp(),
                                                          MFInfo(), *ebfactory[lev]));
     diff_rhs[lev] = std::move(diff_rhs_new);
     diff_rhs[lev] -> setVal(0.);
@@ -570,7 +561,7 @@ mfix::RegridLevelSetArray (int a_lev)
        std::unique_ptr<MultiFab> new_level_set(new MultiFab);
 
        if (level_sets[a_lev]->boxArray() == nd_ba)
-       {       
+       {
            MFUtil::regrid(* new_level_set, nd_ba, dm, * level_sets[a_lev], true);
        }
        else
@@ -581,7 +572,7 @@ mfix::RegridLevelSetArray (int a_lev)
            new_level_set->define(nd_ba, dm, nc, ng);
            new_level_set->copy(*level_sets[a_lev], 0, 0, nc, 0, ng, period);
        }
-       
+
        level_sets[a_lev] = std::move(new_level_set);
 
        //________________________________________________________________________
@@ -597,7 +588,7 @@ mfix::RegridLevelSetArray (int a_lev)
            std::unique_ptr<MultiFab> new_level_set(new MultiFab);
 
            if (level_sets[a_lev+1]->boxArray() == ref_nd_ba)
-           {       
+           {
                MFUtil::regrid(* new_level_set, ref_nd_ba, dm, * level_sets[a_lev+1], true);
            }
            else
@@ -608,7 +599,7 @@ mfix::RegridLevelSetArray (int a_lev)
                new_level_set->define(ref_nd_ba, dm, nc, ng);
                new_level_set->copy(*level_sets[a_lev+1], 0, 0, nc, 0, ng, period);
            }
-           
+
            level_sets[a_lev+1] = std::move(new_level_set);
        }
    }
