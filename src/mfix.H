@@ -546,9 +546,6 @@ private:
 
     void mfix_set_bc_type(int lev);
 
-    Real mfix_max   ( MultiFab& mf, int lev, int comp );
-    Real mfix_min   ( MultiFab& mf, int lev, int comp );
-
     static int nlev;
 
     // Particle container

@@ -116,41 +116,6 @@ mfix::mfix_compute_vort ()
     }
 }
 
-
-//
-// Compute max of EB multifab
-//
-Real
-mfix::mfix_max ( MultiFab& mf, int lev, int comp )
-{
-   int ncomp = 1;
-   int ngrow = 0;
-   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow,
-                    MFInfo(), *ebfactory[lev]);
-
-   MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
-   EB_set_covered( mf_tmp, -1.e100 );
-
-   return mf_tmp.max( 0 );
-}
-
-//
-// Compute min of EB multifab
-//
-Real
-mfix::mfix_min ( MultiFab& mf, int lev, int comp )
-{
-   int ncomp = 1;
-   int ngrow = 0;
-   MultiFab mf_tmp( mf.boxArray(), mf.DistributionMap(), ncomp, ngrow,
-                    MFInfo(), *ebfactory[lev]);
-
-   MultiFab::Copy( mf_tmp, mf, comp, 0, 1, 0 );
-   EB_set_covered( mf_tmp, 1.e100 );
-
-   return mf_tmp.min( 0 );
-}
-
 Real
 mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 {
