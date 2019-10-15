@@ -93,7 +93,7 @@ mfix::mfix_compute_divtau ( Vector< std::unique_ptr<MultiFab> >& divtau,
     //
     for (int lev = 0; lev < nlev; lev++)
     {
-        mfix_redistribute(lev, *divtau_aux[lev], divtau, 0, 3);
+        mfix_redistribute(lev, *divtau_aux[lev], *divtau[lev], 0, 3);
 
         // Divide by (ro_g ep_g)
         for (int n = 0; n < 3; n++)
