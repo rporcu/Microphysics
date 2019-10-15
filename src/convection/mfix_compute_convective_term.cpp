@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include <mfix_divop_conv.hpp>
+// #include <mfix_divop_conv.hpp>
 #include <param_mod_F.H>
 #include <mfix_util_F.H>
 
@@ -12,7 +12,7 @@
 // Compute the three components of the convection term
 //
 void
-mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_in, 
+mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_in,
                                     Vector< std::unique_ptr<MultiFab> >& conv_s_in,
                                     Vector< std::unique_ptr<MultiFab> >& vel_in,
                                     Vector< std::unique_ptr<MultiFab> >& ep_g_in,
@@ -22,7 +22,7 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
 {
     BL_PROFILE("mfix::mfix_compute_convective_term");
 
-    // Temporaries to store fluxes 
+    // Temporaries to store fluxes
     Vector< std::unique_ptr<MultiFab> > fx;
     Vector< std::unique_ptr<MultiFab> > fy;
     Vector< std::unique_ptr<MultiFab> > fz;
@@ -58,13 +58,13 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
            FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
            MultiFab::Copy (*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
         }
- 
+
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
         //    note we can also use them to just hold the single density or tracer comp
         fx[lev].reset(new MultiFab(u_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
         fy[lev].reset(new MultiFab(v_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
         fz[lev].reset(new MultiFab(w_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
- 
+
         // We need this to avoid FPE
         u_mac[lev]->setVal(covered_val);
         v_mac[lev]->setVal(covered_val);
@@ -73,7 +73,7 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
         fx[lev]->setVal(covered_val);
         fy[lev]->setVal(covered_val);
         fz[lev]->setVal(covered_val);
- 
+
         // Predict normal velocity to faces -- note that the {u_mac, v_mac, w_mac}
         //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
         //    on face CENTROIDS
@@ -174,61 +174,60 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
     } // lev
 }
 
-void
-mfix::mfix_redistribute( int lev, 
-                         MultiFab& conv_tmp_in, 
-                         Vector< std::unique_ptr<MultiFab> >& conv_out,
-                         int conv_comp, int ncomp) 
-{
-    Box domain(geom[lev].Domain());
+// void
+// mfix::mfix_redistribute( int lev,
+//                          MultiFab& conv_tmp_in,
+//                          Vector< std::unique_ptr<MultiFab> >& conv_out,
+//                          int conv_comp, int ncomp)
+// {
+//     Box domain(geom[lev].Domain());
 
-    EB_set_covered(conv_tmp_in, covered_val);
-    conv_tmp_in.FillBoundary(geom[lev].periodicity());
+//     EB_set_covered(conv_tmp_in, covered_val);
+//     conv_tmp_in.FillBoundary(geom[lev].periodicity());
 
-    // Get EB geometric info
-    // Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac; SET_BUT_NEVER_USED
-    const amrex::MultiFab*                    volfrac;
+//     // Get EB geometric info
+//     // Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac; SET_BUT_NEVER_USED
+//     const amrex::MultiFab*                    volfrac;
 
-    //areafrac  =   ebfactory[lev] -> getAreaFrac();
-    volfrac   = &(ebfactory[lev] -> getVolFrac());
+//     //areafrac  =   ebfactory[lev] -> getAreaFrac();
+//     volfrac   = &(ebfactory[lev] -> getVolFrac());
 
-    for (MFIter mfi(*conv_out[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-    {
-          // Tilebox
-          Box bx = mfi.tilebox ();
+//     for (MFIter mfi(*conv_out[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+//     {
+//           // Tilebox
+//           Box bx = mfi.tilebox ();
 
-          // this is to check efficiently if this tile contains any eb stuff
-          const EBFArrayBox&  conv_fab = static_cast<EBFArrayBox const&>((*conv_out[lev])[mfi]);
-          const EBCellFlagFab&  flags = conv_fab.getEBCellFlagFab();
+//           // this is to check efficiently if this tile contains any eb stuff
+//           const EBFArrayBox&  conv_fab = static_cast<EBFArrayBox const&>((*conv_out[lev])[mfi]);
+//           const EBCellFlagFab&  flags = conv_fab.getEBCellFlagFab();
 
-          if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
-          {
-                 // If tile is completely covered by EB geometry, set slopes
-             // value to some very large number so we know if
-             // we accidentally use these covered slopes later in calculations
-             setFabVal((*conv_out[lev])[mfi], get_my_huge(), bx, conv_comp, ncomp);
-          }
-          else
-          {
-             // No cut cells in tile + nghost-cell witdh halo -> use non-eb routine
-             if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
-             {
-                (*conv_out[lev])[mfi].copy(conv_tmp_in[mfi],conv_comp,0,ncomp);
-             }
-             else
-             {
-                const int cyclic_x = geom[0].isPeriodic(0) ? 1 : 0;
-                const int cyclic_y = geom[0].isPeriodic(1) ? 1 : 0;
-                const int cyclic_z = geom[0].isPeriodic(2) ? 1 : 0;
+//           if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
+//           {
+//                  // If tile is completely covered by EB geometry, set slopes
+//              // value to some very large number so we know if
+//              // we accidentally use these covered slopes later in calculations
+//              setFabVal((*conv_out[lev])[mfi], get_my_huge(), bx, conv_comp, ncomp);
+//           }
+//           else
+//           {
+//              // No cut cells in tile + nghost-cell witdh halo -> use non-eb routine
+//              if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
+//              {
+//                 (*conv_out[lev])[mfi].copy(conv_tmp_in[mfi],conv_comp,0,ncomp);
+//              }
+//              else
+//              {
+//                 const int cyclic_x = geom[0].isPeriodic(0) ? 1 : 0;
+//                 const int cyclic_y = geom[0].isPeriodic(1) ? 1 : 0;
+//                 const int cyclic_z = geom[0].isPeriodic(2) ? 1 : 0;
 
-                // Compute div(tau) with EB algorithm
-                mfix_apply_eb_redistribution(bx, *conv_out[lev], conv_tmp_in, *ep_g[lev], &mfi,
-                                             conv_comp, ncomp, flags, volfrac, domain,
-                                             cyclic_x, cyclic_y, cyclic_z,
-                                             geom[lev].CellSize());
+//                 // Compute div(tau) with EB algorithm
+//                 mfix_apply_eb_redistribution(bx, *conv_out[lev], conv_tmp_in, *ep_g[lev], &mfi,
+//                                              conv_comp, ncomp, flags, volfrac, domain,
+//                                              cyclic_x, cyclic_y, cyclic_z,
+//                                              geom[lev].CellSize());
 
-             }
-          }
-    }
-}
-
+//              }
+//           }
+//     }
+// }

@@ -512,10 +512,28 @@ private:
                                       Vector< std::unique_ptr<MultiFab> >& trac,
                                       Real time);
 
-    void mfix_redistribute( int lev,
-                            MultiFab& conv_tmp_in,
-                            Vector< std::unique_ptr<MultiFab> >& conv_out,
-                            int conv_comp, int ncomp);
+    //
+    // Redistribution routines
+    //
+    void mfix_apply_eb_redistribution ( Box& bx,
+                                        MultiFab& conv,
+                                        MultiFab& divc,
+                                        MultiFab& ep_g,
+                                        MFIter* mfi,
+                                        const int conv_comp,
+                                        const int ncomp,
+                                        const EBCellFlagFab& flags_fab,
+                                        const MultiFab* volfrac,
+                                        Box& domain,
+                                        const int cyclic_x,
+                                        const int cyclic_y,
+                                        const int cyclic_z,
+                                        const Real* dx);
+
+    void mfix_redistribute ( int lev,
+                             MultiFab& conv_tmp_in,
+                             Vector< std::unique_ptr<MultiFab> >& conv_out,
+                             int conv_comp, int ncomp);
 
     void mfix_compute_divtau(Vector< std::unique_ptr<MultiFab> >& divtau,
                              Vector< std::unique_ptr<MultiFab> >& vel,
