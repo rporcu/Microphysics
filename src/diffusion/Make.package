@@ -1,9 +1,5 @@
-
-CEXE_sources += mfix_compute_divtau.cpp 
-CEXE_sources += mfix_redist_diff.cpp 
-CEXE_sources += mfix_diffuse_velocity.cpp 
+CEXE_sources += mfix_compute_divtau.cpp
+CEXE_sources += mfix_diffuse_velocity.cpp
 
 f90EXE_headers += mfix_diff_F.H
 f90EXE_sources += set_diff_bcs.f90
-
-CEXE_headers += mfix_redist_diff.hpp 

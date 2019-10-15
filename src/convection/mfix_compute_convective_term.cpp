@@ -1,5 +1,4 @@
 #include <mfix.H>
-// #include <mfix_divop_conv.hpp>
 #include <param_mod_F.H>
 #include <mfix_util_F.H>
 
@@ -173,61 +172,3 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
 
     } // lev
 }
-
-// void
-// mfix::mfix_redistribute( int lev,
-//                          MultiFab& conv_tmp_in,
-//                          Vector< std::unique_ptr<MultiFab> >& conv_out,
-//                          int conv_comp, int ncomp)
-// {
-//     Box domain(geom[lev].Domain());
-
-//     EB_set_covered(conv_tmp_in, covered_val);
-//     conv_tmp_in.FillBoundary(geom[lev].periodicity());
-
-//     // Get EB geometric info
-//     // Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac; SET_BUT_NEVER_USED
-//     const amrex::MultiFab*                    volfrac;
-
-//     //areafrac  =   ebfactory[lev] -> getAreaFrac();
-//     volfrac   = &(ebfactory[lev] -> getVolFrac());
-
-//     for (MFIter mfi(*conv_out[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-//     {
-//           // Tilebox
-//           Box bx = mfi.tilebox ();
-
-//           // this is to check efficiently if this tile contains any eb stuff
-//           const EBFArrayBox&  conv_fab = static_cast<EBFArrayBox const&>((*conv_out[lev])[mfi]);
-//           const EBCellFlagFab&  flags = conv_fab.getEBCellFlagFab();
-
-//           if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
-//           {
-//                  // If tile is completely covered by EB geometry, set slopes
-//              // value to some very large number so we know if
-//              // we accidentally use these covered slopes later in calculations
-//              setFabVal((*conv_out[lev])[mfi], get_my_huge(), bx, conv_comp, ncomp);
-//           }
-//           else
-//           {
-//              // No cut cells in tile + nghost-cell witdh halo -> use non-eb routine
-//              if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
-//              {
-//                 (*conv_out[lev])[mfi].copy(conv_tmp_in[mfi],conv_comp,0,ncomp);
-//              }
-//              else
-//              {
-//                 const int cyclic_x = geom[0].isPeriodic(0) ? 1 : 0;
-//                 const int cyclic_y = geom[0].isPeriodic(1) ? 1 : 0;
-//                 const int cyclic_z = geom[0].isPeriodic(2) ? 1 : 0;
-
-//                 // Compute div(tau) with EB algorithm
-//                 mfix_apply_eb_redistribution(bx, *conv_out[lev], conv_tmp_in, *ep_g[lev], &mfi,
-//                                              conv_comp, ncomp, flags, volfrac, domain,
-//                                              cyclic_x, cyclic_y, cyclic_z,
-//                                              geom[lev].CellSize());
-
-//              }
-//           }
-//     }
-// }

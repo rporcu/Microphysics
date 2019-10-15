@@ -3,11 +3,9 @@ target_include_directories(mfixcore
    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>)
 
 target_sources( mfixcore
-   PRIVATE 
+   PRIVATE
    mfix_compute_divtau.cpp
    mfix_diffuse_velocity.cpp
-   mfix_redist_diff.cpp
-   mfix_redist_diff.hpp
    mfix_diff_F.H
    set_diff_bcs.f90
    )
