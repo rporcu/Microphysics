@@ -2,9 +2,6 @@
 #include <AMReX.H>
 #include <mfix.H>
 #include <AMReX_EBMultiFabUtil.H>
-#include <MFIX_MFHelpers.H>
-
-
 
 void
 NodalProjection::define (const mfix* a_mfix,
