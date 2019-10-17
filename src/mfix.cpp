@@ -250,7 +250,19 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     // When we define the sum we add up (ep_g * volfrac) so that the total sum
     //    does not depend on whether a particle is in a full or cut cell.
     int lev = 0; int comp = 0;
+
+#ifdef AMREX_USE_CUDA
+     bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
+
+     if(notInLaunchRegionStatus)
+       Gpu::setLaunchRegion(true);
+#endif
+
     sum_vol = volWgtSum(lev,*ep_g[lev],comp);
+
+#ifdef AMREX_USE_CUDA
+    Gpu::setLaunchRegion(notInLaunchRegionStatus);
+#endif
 }
 
 void

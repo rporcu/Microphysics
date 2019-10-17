@@ -25,7 +25,7 @@ mfix::mfix_set_scalar_bcs (Real time,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-     for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*ep_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
      {
         set_scalar_bcs(time, lev, (*ro_g_in[lev])[mfi], 0, domain);
         set_scalar_bcs(time, lev, (*ep_g_in[lev])[mfi], 2, domain);

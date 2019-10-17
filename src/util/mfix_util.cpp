@@ -134,7 +134,7 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:sum) if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(mf,TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
         const FArrayBox& fab = mf[mfi];
 
@@ -192,7 +192,7 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:sum) if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
+    for (MFIter mfi(mf,TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
         const FArrayBox& fab = mf[mfi];
 

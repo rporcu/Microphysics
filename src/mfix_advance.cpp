@@ -76,7 +76,18 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
     do
     {
+#ifdef AMREX_USE_CUDA
+     bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
+
+     if(notInLaunchRegionStatus)
+       Gpu::setLaunchRegion(true);
+#endif
+
         mfix_compute_dt(nstep, time, stop_time, dt);
+
+#ifdef AMREX_USE_CUDA
+        Gpu::setLaunchRegion(notInLaunchRegionStatus);
+#endif
 
         // Set new and old time to correctly use in fillpatching
         for (int lev = 0; lev < nlev; lev++)
@@ -153,7 +164,20 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
     while ( keep_looping );
 
     if (test_tracer_conservation)
+    {
+#ifdef AMREX_USE_CUDA
+      bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
+
+      if(notInLaunchRegionStatus)
+        Gpu::setLaunchRegion(true);
+#endif
+
        amrex::Print() << "Sum tracer volume wgt = " << volWgtSum(0,*trac[0],0) << " " << volEpsWgtSum(0,*trac[0],0) << std::endl;
+
+#ifdef AMREX_USE_CUDA
+       Gpu::setLaunchRegion(notInLaunchRegionStatus);
+#endif
+    }
 
 #ifdef AMREX_MEM_PROFILING
         {
@@ -198,7 +222,19 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     Real time = 0.0;
     int nstep = 0;
+
+#ifdef AMREX_USE_CUDA
+     bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
+
+     if(notInLaunchRegionStatus)
+       Gpu::setLaunchRegion(true);
+#endif
+
     mfix_compute_dt(nstep,time,stop_time,dt);
+
+#ifdef AMREX_USE_CUDA
+    Gpu::setLaunchRegion(notInLaunchRegionStatus);
+#endif
 
     amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
 
@@ -348,7 +384,18 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     }
 
     // Add source terms
+#ifdef AMREX_USE_CUDA
+     bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
+
+     if(notInLaunchRegionStatus)
+       Gpu::setLaunchRegion(true);
+#endif
+
     mfix_add_gravity_and_gp(dt);
+
+#ifdef AMREX_USE_CUDA
+    Gpu::setLaunchRegion(notInLaunchRegionStatus);
+#endif
 
     // Add the drag term implicitly
     if (solve_dem)
@@ -472,7 +519,18 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
         MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
 
     // Add source terms
+#ifdef AMREX_USE_CUDA
+     bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
+
+     if(notInLaunchRegionStatus)
+       Gpu::setLaunchRegion(true);
+#endif
+
     mfix_add_gravity_and_gp(dt);
+
+#ifdef AMREX_USE_CUDA
+    Gpu::setLaunchRegion(notInLaunchRegionStatus);
+#endif
 
     // Add the drag term implicitly
     if (solve_dem)
@@ -510,8 +568,8 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          const auto&  gp_fab =    gp[lev]->array(mfi);
          const auto& den_fab =  ro_g[lev]->array(mfi);
 
-         const auto grav_loc = gravity;
-         const auto  gp0_loc = gp0;
+         const GpuArray<Real,3> grav_loc = {gravity[0], gravity[1], gravity[2]};
+         const GpuArray<Real,3>  gp0_loc = {gp0[0], gp0[1], gp0[2]};
 
          AMREX_FOR_3D(bx, i, j, k,
          {
