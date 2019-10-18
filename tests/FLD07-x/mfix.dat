@@ -1,0 +1,46 @@
+#########################################################################
+#                                                                       #
+# Author: Avinash Vaidheeswaran                         Date: July 2016 #
+# Couette flow problem:                                                 #
+#                                                                       #
+#   The south wall is held stationary and the north wall moves          #
+# with a velocity U. Cyclic boundary conditions along x direction with  #
+# favorable pressure gradient                                           #
+#                                                                       #
+#                                                                       #
+#########################################################################
+
+  run_name = 'fld07'
+  description = 'developing pipe flow'
+
+#_______________________________________________________________________
+# run control section
+
+  gravity(1:3) = 3*0.0
+
+  call_usr = .f.
+  full_log = .t.
+
+#_______________________________________________________________________
+# gas-phase section
+
+  ro_g0 = 1.00      ! (kg/m3)
+  mu_g0 = 1.00d-3   ! (Pa.s)
+
+#_______________________________________________________________________
+# initial conditions section
+
+  ic_x_w(1) =   0.0   ! (m)
+  ic_x_e(1) =   3.2   ! (m)
+  ic_y_s(1) =   0.0   ! (m)
+  ic_y_n(1) =   3.2   ! (m)
+  ic_z_b(1) =   0.0   ! (m)
+  ic_z_t(1) =   0.8   ! (m)
+
+  ic_ep_g(1) =  1.0
+
+  ic_p_g(1) =   0.0   ! (Pa)
+
+  ic_u_g(1) =   1.0   ! (m/sec)
+  ic_v_g(1) =   0.0   ! (m/sec)
+  ic_w_g(1) =   0.0   ! (m/sec)
